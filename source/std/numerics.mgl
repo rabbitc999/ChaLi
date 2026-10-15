@@ -1,0 +1,54 @@
+module std::numerics;
+
+/* 标量数值方法。重计算（导数/辛普森/二分/RK4/牛顿）下沉到宿主 C++（glue/std_numerics.hpp）；
+ * 两个 ODE 求解器只做 List 编排，留在 Magel，调用 Numerics::rk4Step（→ 宿主）。 */
+import std::math;
+
+float64 numericsDerivative(float64 fn(float64) function, float64 x, float64 step);
+float64 numericsIntegrateSimpson(float64 fn(float64) function,
+                                 float64 begin, float64 end, int64 intervals);
+float64 numericsBisect(float64 fn(float64) function, float64 left, float64 right,
+                       float64 tolerance, int64 maxIterations);
+float64 numericsRk4Step(float64 fn(float64, float64) derivative,
+                        float64 time, float64 value, float64 step);
+float64 numericsNewton(float64 fn(float64) function, float64 initial,
+                       float64 tolerance, int64 maxIterations);
+std::lang::List<float64> numericsSolveOdeEuler(
+    float64 fn(float64, float64) rate,
+    float64 initialTime, float64 initialValue, float64 step, int64 steps);
+std::lang::List<float64> numericsSolveOdeRK4(
+    float64 fn(float64, float64) rate,
+    float64 initialTime, float64 initialValue, float64 step, int64 steps);
+
+struct Numerics {
+    static float64 derivative(float64 fn(float64) function, float64 x, float64 step) {
+        return numericsDerivative(function, x, step);
+    }
+    static float64 integrateSimpson(float64 fn(float64) function,
+                                    float64 begin, float64 end, int64 intervals) {
+        return numericsIntegrateSimpson(function, begin, end, intervals);
+    }
+    static float64 bisect(float64 fn(float64) function, float64 left, float64 right,
+                          float64 tolerance, int64 maxIterations) {
+        return numericsBisect(function, left, right, tolerance, maxIterations);
+    }
+    static float64 rk4Step(float64 fn(float64, float64) derivative,
+                           float64 time, float64 value, float64 step) {
+        return numericsRk4Step(derivative, time, value, step);
+    }
+    static float64 newton(float64 fn(float64) function, float64 initial,
+                          float64 tolerance, int64 maxIterations) {
+        return numericsNewton(function, initial, tolerance, maxIterations);
+    }
+
+    static std::lang::List<float64> solveOdeEuler(
+        float64 fn(float64, float64) rate,
+        float64 initialTime, float64 initialValue, float64 step, int64 steps) {
+        return numericsSolveOdeEuler(rate, initialTime, initialValue, step, steps);
+    }
+    static std::lang::List<float64> solveOdeRK4(
+        float64 fn(float64, float64) rate,
+        float64 initialTime, float64 initialValue, float64 step, int64 steps) {
+        return numericsSolveOdeRK4(rate, initialTime, initialValue, step, steps);
+    }
+};

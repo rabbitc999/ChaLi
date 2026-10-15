@@ -1,0 +1,15 @@
+module std::path;
+
+/* 从 lang.mgl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::path;` 才能用）。 */
+std::lang::String __pathJoin(std::lang::String left, std::lang::String right);
+std::lang::String __pathFileName(std::lang::String path);
+std::lang::String __pathExtension(std::lang::String path);
+std::lang::String __pathNormalize(std::lang::String path);
+
+struct PathString {
+    static std::lang::String join(std::lang::String left, std::lang::String right) { return __pathJoin(left, right); }
+    static std::lang::String fileName(std::lang::String path) { return __pathFileName(path); }
+    static std::lang::String extension(std::lang::String path) { return __pathExtension(path); }
+    static std::lang::String normalize(std::lang::String path) { return __pathNormalize(path); }
+};
+

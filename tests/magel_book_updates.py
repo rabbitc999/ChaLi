@@ -1,0 +1,35 @@
+"""执行书本中标记的新增完整程序，并核对 LaTeX 生成内容。"""
+from pathlib import Path
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+ROOT=Path(__file__).resolve().parents[1]
+COMPILER=ROOT/('magel.exe' if os.name=='nt' else 'magel')
+sys.path.insert(0,str(ROOT/'doc/book/latex/tools'))
+from md2tex import Converter, FILES
+
+
+def main():
+    """新章节示例须产生所列输出，生成章节须与 Markdown 一致。"""
+    count=0
+    with tempfile.TemporaryDirectory(prefix='magel-book-') as folder:
+        work=Path(folder)
+        for source,target in FILES:
+            path=ROOT/'doc/book'/source
+            text=path.read_text(encoding='utf-8')
+            mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-')) else 'chapter'
+            expected=Converter(mode).convert(text)
+            assert (ROOT/'doc/book/latex/chapters'/target).read_text(encoding='utf-8')==expected,target
+            for code,output in re.findall(r'<!-- verify-book -->\s*```magel\n(.*?)```\s*```text\n(.*?)```',text,re.S):
+                count+=1;file=work/f'example{count}.mgl';file.write_text(code,encoding='utf-8')
+                result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(work/f'output{count}')],cwd=work,
+                    env=dict(os.environ,MAGEL_LANG='zh',MAGEL_NO_STDIN_INPUT='1'),capture_output=True,encoding='utf-8',timeout=60)
+                assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
+    assert count>=8,count
+    print(f'新增 {count} 个书本完整程序输出与全部 LaTeX 生成章节一致。')
+
+
+if __name__=='__main__':main()

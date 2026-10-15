@@ -1,0 +1,70 @@
+module std::text;
+
+/*
+ * 字符串工具族：`std::text::Text::*` 的宿主签名与实现。
+ *
+ * 从编译器的**注入正文**里搬出来（以前每次编译都拼进每份产物，现在要 `import std::text;`）。
+ * 实现下沉到宿主 C++ 胶水（`glue/std_text.hpp`，走 `Registry::bindTyped`），不再占用
+ * VM 内部原生表；`std::text::__strFind` 等签名语义与原 VM native 表逐条一致。
+ * 约定：除 `charAt` 外都返回新串；宽度与位置一律按字节算（与 `len(s)` 同一把尺）。
+ */
+int64 __strLen(std::lang::String text);
+int64 __strFind(std::lang::String text, std::lang::String needle);
+int64 __strRFind(std::lang::String text, std::lang::String needle);
+int64 __strCompare(std::lang::String left, std::lang::String right);
+bool __strStartsWith(std::lang::String text, std::lang::String prefix);
+bool __strEndsWith(std::lang::String text, std::lang::String suffix);
+std::lang::String __strUpper(std::lang::String text);
+std::lang::String __strLower(std::lang::String text);
+std::lang::String __strTrim(std::lang::String text, int64 mode);
+std::lang::String __strReplace(std::lang::String text, std::lang::String from, std::lang::String to);
+std::lang::String __strRepeat(std::lang::String text, int64 count);
+std::lang::String __strPad(std::lang::String text, int64 width, char fill, bool left);
+
+std::lang::List<std::lang::String> __strSplit(std::lang::String text, std::lang::String separator);
+std::lang::String __strJoin(std::lang::List<std::lang::String> parts, std::lang::String separator);
+
+struct Text {
+    /** 子串第一次出现的位置；找不到 -1（空子串给 0）。 */
+    static int64 find(std::lang::String text, std::lang::String needle) { return __strFind(text, needle); }
+    /** 子串最后一次出现的位置；找不到 -1。 */
+    static int64 rfind(std::lang::String text, std::lang::String needle) { return __strRFind(text, needle); }
+    /** 含不含子串（等价 `find >= 0`）。 */
+    static bool contains(std::lang::String text, std::lang::String needle) { return __strFind(text, needle) >= 0; }
+    static bool startsWith(std::lang::String text, std::lang::String prefix) { return __strStartsWith(text, prefix); }
+    static bool endsWith(std::lang::String text, std::lang::String suffix) { return __strEndsWith(text, suffix); }
+    /** 字典序比较：左小 -1、相等 0、左大 1。 */
+    static int64 compare(std::lang::String left, std::lang::String right) { return __strCompare(left, right); }
+    /** ASCII 大小写（VM 里不认区域设置，结果可复现）。 */
+    static std::lang::String toUpper(std::lang::String text) { return __strUpper(text); }
+    static std::lang::String toLower(std::lang::String text) { return __strLower(text); }
+    /** 去掉两端 / 左端 / 右端的空白（空格 \t \n \r \v \f）。 */
+    static std::lang::String trim(std::lang::String text) { return __strTrim(text, 0); }
+    static std::lang::String ltrim(std::lang::String text) { return __strTrim(text, 1); }
+    static std::lang::String rtrim(std::lang::String text) { return __strTrim(text, 2); }
+    /** 全部替换；`from` 为空时返回原串的副本。 */
+    static std::lang::String replace(std::lang::String text, std::lang::String from, std::lang::String to) {
+        return __strReplace(text, from, to);
+    }
+    /** 重复 `count` 次（`count <= 0` 给空串）。 */
+    static std::lang::String repeat(std::lang::String text, int64 count) { return __strRepeat(text, count); }
+    /** 补到 `width` 字节宽；已经够宽就原样返回副本。 */
+    static std::lang::String padStart(std::lang::String text, int64 width, char fill) {
+        return __strPad(text, width, fill, true);
+    }
+    static std::lang::String padEnd(std::lang::String text, int64 width, char fill) {
+        return __strPad(text, width, fill, false);
+    }
+    /** 第 `index` 个字节；越界报错（和 `text[index]` 一样）。 */
+    static char charAt(std::lang::String text, int64 index) { return text[index]; }
+
+    /** 按分隔符切成列表；分隔符为空时整串作为一个元素。 */
+    static std::lang::List<std::lang::String> split(std::lang::String text, std::lang::String separator) {
+        return __strSplit(text, separator);
+    }
+
+    /** 用分隔符把列表拼成一串（空列表给空串）。 */
+    static std::lang::String join(std::lang::List<std::lang::String> parts, std::lang::String separator) {
+        return __strJoin(parts, separator);
+    }
+};

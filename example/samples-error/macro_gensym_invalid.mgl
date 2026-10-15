@@ -1,0 +1,5 @@
+/* 宏体内只接受 `$1`～`$9` 一位数字；`$10` 在定义宏时就报错。 */
+$macro BAD(x)
+    int64 $10 = x;
+$end_macro
+int64 main() { return 0; }

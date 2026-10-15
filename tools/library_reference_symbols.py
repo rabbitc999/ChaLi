@@ -1,0 +1,156 @@
+"""标准库类型与字段的人工说明，供参考手册及编辑器共用。"""
+from magel_lsp import documentation
+
+TYPE_DESCRIPTIONS = {
+    'TryBranch': '传播分支：Continue 产生成功值，Break 携带失败载荷退出当前函数。',
+    'ErrorResidual': 'Result 的错误传播载荷，保留错误类型身份。',
+    'NoneResidual': 'Option 无值分支的传播载荷。',
+    'Try': '只读拆分传播值的显式编译期协议。',
+    'TryMove': '移动拥有值后拆分传播值的显式编译期协议。',
+    'FromResidual': '以静态方法从传播载荷构造函数返回值的编译期协议。',
+    'List': '可变长度的顺序值容器，支持按下标访问、追加、删除与复制。',
+    'Set': '保存唯一元素的值集合，支持存在检查和集合运算。',
+    'Map': '从唯一键到值的映射，支持键查询和按遍历位置读取。',
+    'BigInteger': '任意精度有符号整数，算术由大数运行时实现。',
+    'BigDecimal': '可配置精度的十进制大数。',
+    'Any': '拥有一个装箱值的类型擦除容器；通过类型检查安全读取。',
+    'Queue': '先进先出的值队列；出队返回 Option，空队列返回 None。',
+    'RingBuffer': '容量固定的环形值缓冲区；满时写入返回 false。',
+    'FixedVector': '容量固定的顺序容器；保存的元素数量不得超过 capacity。',
+    'Channel': '当前执行上下文中的值消息队列，不提供跨线程同步。',
+    'DateTimeError': '日期、时间、格式、可表示范围或宿主时钟不可用的错误。',
+    'Timer': '宿主定时事件的资源包装；通过方法创建、停止与释放。',
+    'SeekOrigin': '文件定位的基准：文件开始、当前位置或文件末尾。',
+    'Reader': '按字节读取数据的接口。', 'Writer': '按字节写入数据的接口。',
+    'Seek': '改变资源读写位置的接口。', 'ToString': '将值转换成拥有字符串的接口。',
+    'Formattable': '按格式说明生成文本的接口。',
+    'FileStream': '拥有文件句柄的字节流；通过 Result 报告读写与定位错误。',
+    'IterConstListState': '持有列表只读租约的迭代状态，逐项返回 const&。',
+    'IterMutListState': '持有列表可写租约的迭代状态，逐项返回 mut&。',
+    'Vector': '稠密数值向量，元素按顺序存储。',
+    'LuFactorization': 'LU 分解结果，包含下三角、上三角及置换矩阵。',
+    'EigenDecomposition': '特征分解结果，包含特征值与对应特征向量。',
+    'SingularValueDecomposition': '奇异值分解结果，包含 U、奇异值及 V 的转置。',
+    'JordanDecomposition': 'Jordan 分解结果，包含 Jordan 矩阵与变换基。',
+    'MemoryStats': '当前活跃分配的字节数、块数及历史字节峰值快照。',
+    'Memory': '内存统计与宿主内存管理操作的静态入口。',
+    'Arena': '拥有宿主 arena 句柄的资源包装，集中管理 arena 分配。',
+    'Numerics': '数值计算算法的静态入口。', 'NumberTheory': '整数数论算法的静态入口。',
+    'Parse': '文本到数值和布尔值的解析入口。', 'PathString': '路径文本组合与拆分的静态入口。',
+    'Probe': '记录值并验证复制、移动与析构行为的辅助类型。',
+    'Random': '拥有伪随机生成器状态的资源包装，可指定种子。',
+    'ParameterInfo': '反射参数的名称与类型身份。',
+    'AnnotationParameter': '注解参数的名称、类型及可选默认值。',
+    'AnnotationInfo': '注解定义的名称、类型身份与参数声明。',
+    'Annotation': '注解实例的定义身份与实际参数值。',
+    'FuncInfo': '函数反射信息，包含参数、返回类型和注解。',
+    'MethodInfo': '方法反射信息，包含函数签名及 static、const、构造器等标志。',
+    'FieldInfo': '实例字段反射信息，包含字节偏移、类型身份和拥有属性。',
+    'StaticMemberInfo': '静态成员反射信息，包含类型身份与拥有属性。',
+    'VariantInfo': '枚举变体的名称、标签与载荷参数。',
+    'StructInfo': '结构体反射信息，包含字段、方法、静态成员、实现接口及注解。',
+    'EnumInfo': '枚举反射信息，包含变体、方法、静态成员、实现接口及注解。',
+    'InterfaceInfo': '接口反射信息，包含方法、实现者类型及注解。',
+    'Regex': '拥有已编译正则表达式句柄的资源包装。',
+    'Text': '字符串查找、比较、裁剪和替换的静态入口。',
+    'Option': '可选值：Value(T) 表示存在，None 表示缺失。',
+    'Result': '操作结果：Ok(T) 表示成功，Err(E) 保存错误。',
+    'Pair': '包含 first 和 second 的两个值，分别使用 K 与 V 类型。',
+    'Math': '核心数学常量和数值操作的静态入口。',
+    'Drop': '显式释放拥有资源的析构协议。',
+    'Closeable': '关闭外部资源的协议。',
+    'Hash': '为值提供哈希计算的接口。',
+    'ExplicitConvert': '显式类型转换的接口。', 'ImplicitConvert': '隐式类型转换的接口。',
+    'Index': '自定义下标访问接口；与小写 index 连续存储函数区分。',
+    'Iterator': '供 foreach 获取和推进迭代状态的接口。',
+}
+OPERATORS = dict(Add='加法', Subtract='减法', Multiply='乘法', Divide='除法', Modulo='取模',
+                 Equal='相等比较', NotEqual='不等比较', Less='小于比较', LessOrEqual='小于等于比较',
+                 Greater='大于比较', GreaterOrEqual='大于等于比较', And='按位与', Or='按位或',
+                 Xor='按位异或', ShiftLeft='左移', ShiftRight='右移', Negate='取负', BitNot='按位取反', Positive='取正')
+FIELDS = {
+    'name':'声明或选项的名称。', 'typeId':'编译器登记的类型身份，不是对象地址。',
+    'values':'按声明顺序保存的元素存储。', 'capacity':'最多可保存的元素数量。',
+    'pending':'等待消费的元素或队列。', 'first':'第一项，类型为 K。', 'second':'第二项，类型为 V。',
+    're':'复数的实部。', 'im':'复数的虚部。', 'handle':'宿主资源句柄；应通过所属类型的方法操作。',
+    'bytes':'字节数据，保留零字节。', 'offset':'相对起始位置的字节偏移。',
+    'bigEndian':'是否按大端序解析多字节数值。', 'argument':'导致错误的命令行实参。',
+    'message':'供用户阅读的错误原因。', 'shortName':'单字符短选项名称。',
+    'takesValue':'选项是否需要附加值。', 'required':'是否要求调用方显式提供该选项。',
+    'defaultValue':'没有显式提供值时使用的默认值。', 'description':'用于帮助或展示的说明文本。',
+    'definitions':'解析器登记的选项定义。', 'options':'已解析的选项名称与值。',
+    'positional':'按输入顺序保存的位置实参。', 'helpRequested':'输入是否请求显示帮助。',
+    'program':'帮助文本中显示的程序名称。', 'line':'错误所在行号，从 1 开始。',
+    'column':'错误所在列号，从 1 开始。', 'year':'公历年份。', 'month':'月份，1–12。',
+    'day':'当月日期，从 1 开始。', 'hour':'小时，0–23。', 'minute':'分钟，0–59。',
+    'callback':'宿主事件发生时执行的回调。', 'timer':'定时事件的宿主资源。',
+    'thread':'执行回调的宿主任務标识。', 'arguments':'绑定到事件回调的实际参数。',
+    'bound':'是否已建立事件绑定。', 'size':'文件或响应报告的字节长度。',
+    'isFile':'目标是否为普通文件。', 'isDirectory':'目标是否为目录。',
+    'modifiedUnixSeconds':'最后修改时间，以 Unix 秒表示。', 'error':'最近操作的错误说明。',
+    'count':'本次操作实际处理的数量。', 'paths':'目录枚举返回的路径。',
+    'state':'以 Any 持有的具体迭代游标状态。', 'buffered':'是否已缓存 peek 取得的下一项。',
+    'position':'下一项在源存储中的位置。', 'current':'当前迭代位置或正在消费的游标。',
+    'stop':'区间结束边界。', 'step':'每次推进的步长。', 'done':'游标是否已经结束。',
+    'source':'被适配的源游标或连续存储。', 'predicate':'用于筛选或判断停止条件的回调。',
+    'remaining':'尚需跳过或允许消费的元素数量。', 'left':'第一个输入游标。',
+    'right':'第二个输入游标。', 'switched':'是否已切换到第二个输入游标。',
+    'index':'当前元素序号，从 0 开始。', 'started':'是否已消费首个元素。',
+    'action':'逐项执行的观察或处理回调。', 'initial':'用于重新开始遍历的初始游标。',
+    'empty':'输入是否已确认没有元素。', 'skipping':'是否仍处于跳过前缀的阶段。',
+    'accumulator':'扫描过程中保存的累积状态。', 'anchor':'用于维持缓冲元素借用有效性的源状态。',
+    'lease':'保持源列表存储有效的迭代租约。', 'length':'连续存储中可访问的元素数量。',
+    'value':'保存的单个值。', 'document':'拥有底层解析文档的宿主句柄。',
+    'node':'当前值在解析文档中的节点标识。', 'rows':'矩阵的行数。', 'cols':'矩阵的列数。',
+    'lower':'LU 分解的下三角矩阵。', 'upper':'LU 分解的上三角矩阵。',
+    'permutation':'LU 分解的置换矩阵。', 'eigenvalues':'分解得到的特征值。',
+    'eigenvectors':'与特征值对应的特征向量。', 'singularValues':'分解得到的奇异值。',
+    'u':'奇异值分解的左奇异向量矩阵。', 'vTranspose':'右奇异向量矩阵 V 的转置。',
+    'jordan':'Jordan 标准形矩阵。', 'basis':'将原矩阵转换到分解形式的基矩阵。',
+    'data':'视图引用的连续存储；视图不延长来源的生命周期。',
+    'liveBytes':'当前活跃分配的字节数。', 'liveBlocks':'当前活跃分配的块数。',
+    'peakBytes':'历史活跃分配字节数的峰值。', 'opened':'外部资源是否处于打开状态。',
+    'ok':'当前解析或请求是否成功。', 'host':'URL 中的主机名。', 'port':'网络端口。',
+    'path':'请求目标路径。', 'status':'HTTP 响应状态码。', 'reason':'HTTP 状态原因文本。',
+    'headers':'HTTP 响应头。', 'body':'HTTP 响应正文。', 'socket':'HTTP 客户端使用的 TCP 连接。',
+    'connected':'客户端是否已建立连接。', 'annotationId':'注解定义的身份。',
+    'annotations':'附加在该声明上的注解实例。', 'args':'注解实例的实际参数值。',
+    'params':'按声明顺序保存的参数信息。', 'returnTypeId':'函数返回类型的身份。',
+    'function':'方法的完整函数签名与注解信息。', 'isStatic':'方法是否为静态方法。',
+    'isConstructor':'方法是否为构造器。', 'isConst':'方法是否只读访问接收者。',
+    'hasDefaultBody':'接口方法是否提供默认实现。', 'isOwned':'成员是否负责所存资源的所有权。',
+    'tag':'枚举变体的数值标签。', 'payloads':'枚举变体的载荷参数声明。',
+    'fields':'结构体的实例字段信息。', 'methods':'类型或接口的方法信息。',
+    'staticMembers':'类型的静态成员信息。', 'implementedInterfaces':'该类型实现的接口身份。',
+    'implementedBy':'实现该接口的具体类型身份。', 'variants':'枚举的变体信息。',
+    'kind':'单元格种类：NULL、整数、浮点或文本。', 'intValue':'整数单元格保存的值。',
+    'realValue':'浮点单元格保存的值。', 'textValue':'文本单元格保存的字符串。',
+    'cells':'该行按列顺序保存的单元格。', 'affected':'操作影响的记录数量。',
+    'columns':'结果集按顺序保存的列名。', 'driver':'数据库后端驱动。',
+    'PI':'圆周率常量。', 'E':'自然对数底数常量。',
+}
+OVERRIDES = {('DateTime','second'):'秒，0–59，不表示闰秒。',
+             ('ResultSet','rows'):'按查询顺序保存的数据行。',
+             ('BinaryReader','offset'):'下一次读取在 bytes 中的字节位置。',
+             ('AnnotationParameter','defaultValue'):'可选的注解默认实参；None 表示没有默认值。'}
+
+
+def symbol_description(row):
+    """返回类型或字段的实际含义；缺失人工说明时让生成门禁失败。"""
+    name, owner, kind = row['name'], row['owner'], row['kind']
+    if kind in ('struct','enum','interface'):
+        if name in TYPE_DESCRIPTIONS:
+            return TYPE_DESCRIPTIONS[name]
+        operation = name.removeprefix('Right')
+        if operation in OPERATORS:
+            return ('右操作数' if name.startswith('Right') else '左操作数') + '的' + OPERATORS[operation] + '重载接口。'
+        if row['comment']:
+            return documentation(row['comment'])
+        raise ValueError('缺少类型说明：' + name)
+    if (owner, name) in OVERRIDES:
+        return OVERRIDES[owner, name]
+    if name in FIELDS:
+        return FIELDS[name]
+    if row['comment']:
+        return documentation(row['comment'])
+    raise ValueError('缺少字段说明：' + owner + '::' + name)

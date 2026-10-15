@@ -1,0 +1,1 @@
+magel：前处理：example/samples-error/macro_gensym_invalid.mgl 第 2 行：宏 BAD 占位符 `$10` 不支持两位数字，请用 `$0` 到 `$9`

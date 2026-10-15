@@ -1,0 +1,142 @@
+{
+  "name": "Magel",
+  "scopeName": "source.magel",
+  "patterns": [
+    {
+      "name": "comment.block.magel",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    {
+      "name": "comment.line.double-slash.magel",
+      "match": "//.*$"
+    },
+    {
+      "name": "string.interpolated.magel",
+      "begin": "\\bf\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.magel"
+        },
+        {
+          "begin": "(?<!\\\\)\\{",
+          "end": "\\}",
+          "name": "meta.interpolation.magel",
+          "patterns": [
+            {
+              "include": "#interpolationBlock"
+            },
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "string.quoted.double.magel",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.magel"
+        }
+      ]
+    },
+    {
+      "name": "string.quoted.single.magel",
+      "begin": "'",
+      "end": "'",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.magel"
+        }
+      ]
+    },
+    {
+      "match": "^(\\s*)(\\$macro)\\s+(?:expr\\s+)?([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "2": {
+          "name": "keyword.control.macro.magel"
+        },
+        "3": {
+          "name": "entity.name.function.macro.magel"
+        }
+      }
+    },
+    {
+      "match": "^(\\s*)(\\$replace)\\s+(?:expr\\s+)?([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "2": {
+          "name": "keyword.control.macro.magel"
+        },
+        "3": {
+          "name": "entity.name.function.macro.magel"
+        }
+      }
+    },
+    {
+      "name": "keyword.control.macro.magel",
+      "match": "\\$(?:end_macro|end_for|delete_macro|if|elif|else|end_if|let)\\b"
+    },
+    {
+      "name": "keyword.control.for.magel",
+      "match": "^\\s*\\$for\\b"
+    },
+    {
+      "name": "variable.language.magel",
+      "match": "\\$(?:line|file|module|concat|stringify|argc|count|typecheck)\\b"
+    },
+    {
+      "name": "keyword.control.preprocessor.magel",
+      "match": "^\\s*%(?:include|include_once|import|if|ifdef|ifndef|elif|else|endif|define|undefine|symbol|unsymbol|warning|error)\\b"
+    },
+    {
+      "name": "keyword.control.magel",
+      "match": "\\b(?:_|abi|auto|break|cast|const|continue|copy|defer|delete|do|drop|elif|else|enum|export|fn|for|foreach|if|impl|import|in|inline|interface|loop|match|module|move|mut|new|return|scope|static|struct|type|while)\\b"
+    },
+    {
+      "name": "keyword.declaration.annotation.magel",
+      "match": "@annotation\\b"
+    },
+    {
+      "match": "(@[A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "entity.name.tag.magel"
+        }
+      }
+    },
+    {
+      "name": "storage.type.magel",
+      "match": "\\b(?:bool|char|float32|float64|int8|int16|int32|int64|uint8|uint16|uint32|uint64|void)\\b"
+    },
+    {
+      "name": "constant.language.magel",
+      "match": "\\b(?:true|false)\\b"
+    },
+    {
+      "name": "constant.numeric.magel",
+      "match": "\\b(?:0[xX][0-9A-Fa-f_]+u?|[bB]_?[01][01_]*u?|\\d+u|\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?f?)\\b"
+    }
+  ],
+  "repository": {
+    "interpolationBlock": {
+      "name": "meta.block.magel",
+      "begin": "\\{",
+      "end": "\\}",
+      "patterns": [
+        {
+          "include": "#interpolationBlock"
+        },
+        {
+          "include": "$self"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,208 @@
+# Magel —— 代码编写要求与提交要求
+
+本文件源于 ParseEngine 仓库的 `AGENTS.md`，按 Magel 自己的路径、命令与
+远端改写了其中仓库相关的地方；通用规则（文法、注释、提交）两份保持一致。
+
+本文件只写**通用的代码编写要求与提交要求**；具体功能的设计与实现进度以代码、文档和
+回归测试为准。
+
+硬性要求：
+1. **必须写完整的文法文件**：`source/magel.gram` 是 Magel 的**权威语法定义**，产生式要覆盖
+   完整语法结构（文档 / 块 / 语句 / 参数 / 列表 / 嵌套），关键字用
+   `%token NAME "字面量"` **逐个登记**，标点/字符串/数字/标识符各走
+   `%token` / `%token regex` / `%identifier`，注释走 `%trivia`，空白走 `%space`；
+   语义动作（`$$` / `$n`）只调用 `%code` 里的语义层。
+2. **`.gram` 不能当"词法的提取器"**：禁止用一个大 `KW` / 一个万能 Token / 一条
+   "任意 token 流"的产生式把整门语言糊过去，也禁止把每个关键字只当成待提取的词素
+   堆进正则——那种写法等于没有文法，评审一律退回。关键字、块、命令都要能在产生式
+   里被点名与组合。
+3. **解析流程放进解析器生成器**：块栈、逐行折叠、驱动 `Parser::Engine::runText`
+   的流程用 `%code` / `%epilogue include` 内嵌进生成产物，不再手写解析驱动。
+   `magel_parser.cpp` / `magel_parser.hpp` / `magel_parser_user.h` / `magel_main.cpp`
+   都是 `sh gen.sh` 的生成物，不入库；`Makefile` 是手写的，`gen.sh` 不会覆盖它。
+4. **引用到的库各自拷一份进本项目**：`library/json/`、`library/toml/`、`library/preprocess/`、`library/simple_ast/`、
+   `library/stackvm/`、`library/bignum/`、`library/template/` 是 ParseEngine 仓库 `library/` 同名目录的副本；
+   控制台头是 `library/console/utf8.hpp`，由 [`tools/sync_tool_console.py`](tools/sync_tool_console.py)
+   从 `library/console/utf8.hpp` 逐字节同步。本项目要能单独克隆、单独构建，**不依赖
+   `library/`**；改副本时想清楚要不要一起改外面的原件（反之亦然）。
+5. **固化生成资产**：标准库 `.mgl` 与生成器运行时资产在构建期内嵌成 C++ 源
+   （[`tools/embed_stdlib.py`](tools/embed_stdlib.py) → `source/magel_stdlib_embedded.cpp`），
+   运行时不读磁盘，保证单个可执行文件可用。
+6. **完整文档注释**：头文件的公开类型/函数与 `.cpp` 中的所有具名函数定义都要中文
+   Doxygen 文档注释，包括内部辅助函数、成员函数、构造/析构函数及测试入口。
+   注释写在对应定义前，使用 `/** ... */`、`@brief`、逐项 `@param`、`@retval`；
+   需要补充前提、所有权、错误处理或副作用时用 `@note`，已有 `@return` 注释仍有效。
+   无参数时不写空的 `@param`，无返回值及构造/析构函数不虚构返回值。
+   注释必须解释实际功能、参数用途与返回含义，不能只复述函数名或填占位语句。
+   必须使用多行文档块：`/**` 与 `*/` 各占一行，`@brief`、每个 `@param`、
+   `@return` / `@retval`、`@note` 各占独立一行，不把多个标签挤在一行，
+   不使用 `/** @brief ... */` 紧凑形式或 `///` 代替函数文档块。
+7. **一份 VM 按宏裁剪**：`library/stackvm/` 是桌面与板端唯一的 VM 核心；`source/mcu_vm/` 只保留
+   板端宿主、静态池和外设适配，不维护 VM 源码副本。修改共享核心时验证桌面口径与
+   板端 `-fno-exceptions -fno-rtti` 口径，宏和预算见 [`source/mcu_vm/README.md`](source/mcu_vm/README.md)。
+   FK 板级库在 `example/mcu/FK-STM32H743XIH6/sdk/` 内维护副本，不依赖原工作区；修改导入文件
+   时复核并更新 `sdk-snapshot.json` 的本地 LF 哈希，保留原哈希、编码及组件许可证。
+8. 文档索引用 [`doc/README.md`](doc/README.md)；最后 `git add -A` → commit →
+   `git push origin master`（远端 <https://gitee.com/rabbitc999/magel.git>）。
+9. **VS Code 插件版本与程序版本一致**：以根目录 [`VERSION`](VERSION) 为准，
+   [`vscode/package.json`](vscode/package.json) 的 `version`、内嵌的 Magel 编译器版本与
+   VSIX 打包版本必须一致。程序版本变更时同步更新插件版本；交付前在 `vscode/` 下
+   执行 `npm run package`，按当前 Magel 版本重新生成
+   `vscode/dist/magel-editor-<版本>.vsix`，并核对包内清单与编译器版本。
+10. **编译器默认编入反射**：构建、测试及交付 Magel 编译器时，默认同时启用
+    `MAGEL_WITH_REFLECTION=1` 与 `STACKVM_WITH_REFLECTION=1`，以根目录 `features.mk`
+    的默认值为准；不得只开启前端或只开启运行时。本规则包括 VS Code 插件内嵌的编译器。
+    显式验证无反射裁剪配置时才覆盖为 `0`；独立板端 VM 按板端预算与宏配置构建。
+    编入反射能力后，沿用前端默认启用反射的行为；单次源程序编译需要关闭时，
+    显式使用 `--no-reflection`，不要把省略 `--reflection` 当作关闭反射。
+11. **VM 与四元式默认最高优化**：日常构建、运行、测试及交付默认使用当前实现支持的
+    最高优化模式；新增优化级别或优化开关时同步维护默认配置，不得默认降级。
+    VM 默认启用寄存器执行核心、执行准备与融合、跳转折叠、整数专用操作码、
+    基本块执行和运行时服务快速路径；编译器支持时启用标签地址分派，不支持时沿用
+    对应平台的最佳可用分派方式。四元式默认执行完整的 `stackvm::optimize` 优化流程，
+    使用优化器的标准迭代预算（当前 `maxRounds = 4`），不要减少优化轮次或跳过优化阶段。
+    只有用户明确要求，或为调试、差分测试、性能对照验证时，才显式关闭或降低优化；
+    `MAGEL_NO_OPT`、独立 VM 的 `--no-opt` 等关闭开关不得成为日常默认配置。
+12. **IR 术语约定**：本项目后续沟通中，用户说的“IR”默认指 Magel 的四元式中间表示；
+    “IR 优化”“IR 输出”“IR 检查”等均按四元式理解。涉及其他中间表示时须明确其名称。
+13. **C 导出仅供 AOT 使用**：`export` 声明用于 AOT 生成的 C 接口，允许语法检查及
+    AOT 导出。库输出支持 `.dll` / `.so` 共享库和 `.o` 可重定位文件，至少一个 `export`，
+    允许省略 `main`；不支持 `.lib` / `.a` 静态库，不能把 `.o` 描述为可直接动态加载的共享库。
+    VM 执行和 VM 字节码导出遇到此声明必须报错，不得忽略声明后继续运行。
+14. **胶水调用按 VM/AOT 一致口径维护**：同步回调复用 `NativeCallContext::invoke` 与
+    `magel_glue::Function`，新增或修改时使用同一份胶水验证两端参数、返回值、闭包、
+    重入和错误传播；检查函数指针调用的实参数量，保留原始运行时诊断。函数值与上下文
+    的生命周期按接口约定维护，不把运行时地址转换为宿主机器函数指针。
+
+## C/C++ 格式与函数文档注释
+
+匿名函数语法只使用 `fn`；`lambda` 兼容语法已移除，不得在 Magel 源码、示例或补全中恢复。
+
+根目录 [`.clang-format`](.clang-format) 是全项目 C/C++ 源码及头文件的唯一格式规范，
+采用用户提供的配置：四空格缩进、不用 Tab、自定义大括号换行、指针符号靠变量、
+不限制行宽、不排序 include。具体行为以配置文件为准，不手工维护另一套格式。
+本次仅采纳参考《命名规范》的函数文档注释要求，其余命名、前缀、类型后缀等要求不引入。
+
+工程生成器 `source/magel-generator/` 与代码导出器 `source/magel-emit/` 不适用本次
+格式及函数注释整理；解析器、驱动、内嵌标准库与消息表等自动生成资产从生成源维护，
+不直接批量改写。排除清单统一记录在 [`.clang-format-ignore`](.clang-format-ignore)。
+其余 `source/`、`library/`、`tools/`、测试和示例中的手写 C/C++ 文件均适用格式规范。
+本项目的库副本在本项目内整理；不要因此覆盖外部 ParseEngine 仓库。
+有逐字节同步关系的文件仍须使用对应同步脚本保持一致。
+
+使用支持 `.clang-format-ignore` 的 clang-format（19 或更新版本）：
+
+```sh
+python tools/format_cpp.py           # 整理受版本控制的 C/C++ 文件
+python tools/format_cpp.py --check   # 只检查格式
+```
+
+函数注释示例（按实际签名和行为填写，说明仅在需要时添加）：
+
+```cpp
+/**
+ * @brief 从文本中查找指定名称的配置项。
+ * @param text 待查询的配置文本。
+ * @param name 配置项名称。
+ * @retval 返回配置项内容；名称不存在时返回空字符串。
+ * @note 不修改输入文本。
+ */
+```
+
+## 图形口径（图标与文档配图）
+
+Magel 的图标与总览图都由**仓库里的 Python 脚本画**（PIL），没有外部设计稿：
+
+| 用途 | 脚本 | 产物 |
+| --- | --- | --- |
+| 语言标志 / 插件图标 | [`tools/make_icon.py`](tools/make_icon.py) | `doc/images/magel-logo.png`（512）、`doc/images/magel.ico`（16→256 多尺寸）、`vscode/icon.png`（256） |
+| 总览图 | [`tools/make_overview.py`](tools/make_overview.py)（画布与配色在 [`tools/overview_canvas.py`](tools/overview_canvas.py)） | `doc/overview/Magel-overview.{png,svg}` |
+| 编译与运行流程（中英文） | [`tools/make_pipeline_diagrams.py`](tools/make_pipeline_diagrams.py)（复用总览图配色） | `doc/images/magel-compilation{,-en}.{png,svg}`、`doc/images/magel-execution{,-en}.{png,svg}` |
+
+**图标取色**（深色版式，新图沿用这一套，别另起炉灶）：
+
+| 名字 | 值 | 用途 |
+| --- | --- | --- |
+| 底色（上 → 下） | `#1b2b4b` → `#0d1728` | 圆角底 |
+| 底描边 | `#345480` | 底块内描边 |
+| 金（强调） | `#ffd166` | 魔术棒火花、`Value` 字样、重点标记 |
+| 白（主字） | `#f4f7fb` | 主字形（图标里的 `C`） |
+| 棒身 | `#56462c` 描边 / `#f7f3e8` 亮芯 | 魔术棒 |
+
+总览图是**浅色版式**，配色在 `tools/overview_canvas.py` 顶部的常量里（`BG` / `PANEL` / `PTITLE` …）。
+
+**画法约定**：在 3 倍逻辑画布上画（512 → 1536）再用 LANCZOS 降采样，线端补圆（`draw.line` 没有圆头）；
+字体按平台挑（Windows Segoe UI Bold → Linux DejaVu → macOS Arial），取不到就退回 PIL 默认字体。
+
+**图标语义**：魔术棒（“魔”）+ `C`（C 系语法）+ `Value`（值语义）——这三样是这门语言的自我描述，
+改图标时别丢了其中任何一个。
+
+产物入库、脚本随时可重跑（确定性：同样的输入必然同样的字节）；改了脚本就把产物一起提交。
+
+## 文档链接检查
+
+`doc/` 只收录持续维护的功能、使用、设计与测试文档，不收录发布声明或发布说明。
+文档文件名、标题和介绍按功能组织，不附带语言版本号或“本版新增”等发布措辞。
+版本发布历史与逐版本变更统一维护在根目录 `CHANGELOG.md`，发布说明需要的历史信息写入对应版本节。
+中英文功能文档同步维护；改名时同步更新所有引用，不保留带版本号的发布页副本。
+
+当前能力、默认配置和实现边界统一维护在 [`doc/17-capabilities.md`](doc/17-capabilities.md) 及英文对应页。
+修改说明时核对权威文法、`features.mk`、实际宿主配置与回归，不从旧路线图推断已实现能力；
+根目录工具链、独立生成工程、前端 `[embedded]` 门禁和 MCU 宏裁剪分别说明。
+标准库目录引用 API 索引，不在总览另写易漂移的模块总数。历史基准保留实际版本、日期、
+配置和原始数据，不能在改 tag 时把旧测量标成当前版本。书稿改动同步生成 LaTeX 和 PDF。
+
+[`doc/`](doc/README.md) 与 [`doc/en/`](doc/en/README.md) 中已有的中英文对应页同步维护；
+尚无独立英文译文的底层规格由英文索引链接中文原文，不把这种链接描述成完整译文。
+跨页引用一律走
+**相对路径**（引用仓库根写 `../`、引用 [`doc/examples/`](doc/examples/) 写 `examples/`、
+引用 [`doc/library/`](doc/library/) 写 `library/`）。挪了文件或改了名忘了改链接，页面上就是个死链，
+没人点就发现不了。
+
+| 脚本 | 管什么 |
+| --- | --- |
+| [`tools/check_doc_links.py`](tools/check_doc_links.py) | `doc/` 下所有 `.md` 的相对链接与图片是否存在。外部协议（`http(s)://`、`mailto:`）与纯锚点跳过，`foo.md#小节` 只校验 `#` 前那截路径；`doc/book/`（独立入门书，另有校验脚本）不在门禁内，脚本会打印跳过页数 |
+| [`tools/export_magel_ebnf.py`](tools/export_magel_ebnf.py) | [`doc/14-grammar-ebnf.md`](doc/14-grammar-ebnf.md) 的 EBNF 附录与 `source/magel.gram` / `source/magel_token.gram` 是否同步；`--check` 只比对，不带参数则按文法重新生成 |
+
+```sh
+python tools/check_doc_links.py                 # 扫 doc/ 全部页面
+python tools/check_doc_links.py doc/README.md   # 只查指定页，可传多个
+python tools/export_magel_ebnf.py --check       # 只校验 EBNF 附录是否与文法同步
+python tools/export_magel_ebnf.py               # 按文法重写 EBNF 附录
+```
+
+两条都已接进 [`ci.sh`](ci.sh) 的文档门禁，有缺失就红。
+
+## CHANGELOG 与版本口径
+
+语言版本单线推进：现在是 **1.0.0**（此前 1.x 已重排为 `0.18.0`–`0.18.6`，本次 `1.0.0` 为稳定基线），
+`0.x` 留给「随时可能不兼容」的预发布阶段。**不要再把号推回 2.x**：
+2026-10-15 做过一次整体平移，原先走到 2.5.3 的历史序列已下移到 `0.7.0` 起，
+旧号与新号的对照写在 [`CHANGELOG.md`](CHANGELOG.md) 顶部的「版本编号重排说明」里。
+新发兼容性不兼容时升主版本，兼容新增升次版本，修复升补丁版本。
+
+[`CHANGELOG.md`](CHANGELOG.md) 每一节的版本号要和 [`VERSION`](VERSION)、和发布 tag 对齐，
+节内的日期行与条目形态也要稳定；「改了 `VERSION` 忘了写一节」「打了 tag 却没有对应记录」
+这类漂移不能靠人眼发现。
+
+| 脚本 | 管什么 |
+| --- | --- |
+| [`tools/changelog.py`](tools/changelog.py) | `--check` 校验 `VERSION` ↔ 顶级节、`vX.Y.Z` tag ↔ 对应节、版本号唯一且自新到旧递减、每节至少有 `### YYYY-MM-DD` 日期行与一条 `- ` 条目、顶级节不留占位符；`--render` 从「上一版本以来的提交」（`--include-working` 并入未提交改动）归纳出新一节草案，`--write` 直接写到顶部。草案条目取自 git，措辞仍要人改 |
+
+```sh
+python tools/changelog.py --check              # 校验 CHANGELOG 与 VERSION / tag 对齐
+python tools/changelog.py --render --from v0.12.1 --version 0.12.2 --title "一句话标题"
+python tools/changelog.py --render --from <sha> --include-working --write   # 发版途中起草
+```
+
+已接进 [`ci.sh`](ci.sh) 的文档门禁，有漂移就红。
+
+## Git 提交信息（全仓库强制约束）
+
+Git 提交身份按以下条件强制规范，适用于新建、补写、amend 及历史重写提交：
+
+- 分别检查作者（author）与提交者（committer）的身份名称。名称同时包含“小兔”和“糖糖”时，该身份的名称必须统一为 **`小兔糖糖OvO`**，邮箱必须同时统一为 **`rabbitc999@outlook.com`**。
+- 不满足上述条件的身份保留其真实名称和邮箱，不得批量覆盖其他贡献者或平台提交者的身份。这里的“名称”指 Git 作者／提交者名称；提交标题仍遵守下方的中文要求。
+- 当前工作身份满足上述条件，仓库本地配置使用 `git config --local user.name "小兔糖糖OvO"` 和 `git config --local user.email "rabbitc999@outlook.com"`。提交前用 `git var GIT_AUTHOR_IDENT`、`git var GIT_COMMITTER_IDENT` 核对实际身份，避免环境变量或其他配置导致名称、邮箱不符合要求。
+
+本仓库所有 Git 提交的标题及正文（如有）**必须使用中文**，禁止使用纯英文提交说明。文件名、命令、API 标识符和必要的技术术语可以保留原文，但改动说明必须用中文表达。此约束适用于本仓库的所有修改。

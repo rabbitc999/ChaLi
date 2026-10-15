@@ -1,0 +1,21 @@
+module std::numtheory;
+
+/* 整数数论。实现下沉到宿主 C++（glue/std_numtheory.hpp），本文件只留宿主签名 + 极薄 wrapper。
+ * 语义与拆分前一致：模乘用逐位加法避免 uint64 乘法溢出，isPrime 用确定性 Miller-Rabin。 */
+uint64 numtheoryGcd(uint64 left, uint64 right);
+uint64 numtheoryLcm(uint64 left, uint64 right);
+uint64 numtheoryAddMod(uint64 left, uint64 right, uint64 modulus);
+uint64 numtheoryMulMod(uint64 left, uint64 right, uint64 modulus);
+uint64 numtheoryPowMod(uint64 base, uint64 exponent, uint64 modulus);
+bool numtheoryIsPrime(uint64 value);
+int64 numtheoryModInverse(int64 value, int64 modulus);
+
+struct NumberTheory {
+    static uint64 gcd(uint64 left, uint64 right) { return numtheoryGcd(left, right); }
+    static uint64 lcm(uint64 left, uint64 right) { return numtheoryLcm(left, right); }
+    static uint64 addMod(uint64 left, uint64 right, uint64 modulus) { return numtheoryAddMod(left, right, modulus); }
+    static uint64 mulMod(uint64 left, uint64 right, uint64 modulus) { return numtheoryMulMod(left, right, modulus); }
+    static uint64 powMod(uint64 base, uint64 exponent, uint64 modulus) { return numtheoryPowMod(base, exponent, modulus); }
+    static bool isPrime(uint64 value) { return numtheoryIsPrime(value); }
+    static int64 modInverse(int64 value, int64 modulus) { return numtheoryModInverse(value, modulus); }
+};

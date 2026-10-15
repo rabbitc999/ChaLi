@@ -1,0 +1,10 @@
+/* 错误样例：变长形式的事件参数必须是 std::lang::Any，裸标量编译期就会被拒。 */
+import std::event;
+
+void onArguments(int64 event, std::lang::List<std::lang::Any> arguments) { }
+
+int64 main() {
+    Timer events = Timer::everyNanos(0);
+    std::event::bindEventArguments(events.handle, onArguments, 1, 2);
+    return 0;
+}

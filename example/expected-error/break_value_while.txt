@@ -1,0 +1,1 @@
+magel：example/samples-error/break_value_while.mgl 第 3 行第 9 列：`break value;` 只能用于 `loop` 或 if 表达式，while / for 只接受 `break;`

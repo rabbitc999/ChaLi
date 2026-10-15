@@ -1,0 +1,78 @@
+% !Mode:: "TeX:UTF-8"
+% 《玩转 Magel 语言》导言区：文档类选项、文档信息、代码样式、提示盒。
+% 由 book.tex 与 tools/check_chapters.py 的试编译壳共同引用。
+
+\usepackage{tabularx}
+\pdfstringdefDisableCommands{\def\allowbreak{}}
+\setlength{\emergencystretch}{1em}
+\usetikzlibrary{arrows.meta,backgrounds,decorations.pathreplacing,fit,positioning,shapes.geometric}
+
+\newif\ifrelease
+% 正式发布时取消下面一行的注释，并将另一行注释掉：
+% \releasetrue
+% 非正式版本（草稿/预览）使用下面一行：
+\releasefalse
+
+% ------------------------- 文档信息 -------------------------
+\title{玩转 Magel 语言}
+\subtitle{一本从零开始、一章只讲一件事的 Magel 入门书}
+\author{小兔糖糖OvO}
+\institute{它想让你读懂一门语言的设计，而不只是记住写法}
+\extrainfo{书里每一段标了输出的代码，都是用 \texttt{magel run} 实测跑过、逐行比对过的。}
+
+\date{Magel 1.0.0 · 2026年10月15日}
+\cover{figure/cover.pdf}
+
+% ------------------------- 代码样式 -------------------------
+% magel 源码：带行号、关键字着色
+\lstdefinestyle{magel}{
+  language=C,
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\color{black},
+  keywordstyle=\color{red!40!orange},
+  commentstyle=\color{gray},
+  stringstyle=\color[RGB]{128,0,0},
+  backgroundcolor=\color{gray!5},
+  frame=tb, framerule=1pt,
+  breaklines=true, columns=flexible,
+  showstringspaces=false, tabsize=4,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morekeywords={int8,int16,int32,int64,uint8,uint16,uint32,uint64,float32,float64,bool,char,string,String,auto,const,let,struct,enum,interface,generic,fn,match,if,elif,else,while,for,loop,foreach,in,return,break,continue,module,import,as,new,delete,move,copy,mut,ref,self,static,true,false,void,abi,annotation,Option,Result,Some,None,Ok,Err,List,Map,Set,Pair,Any,Drop,Closeable,main,println,print,assert,defer,scope,exit,type,yield}
+}
+% 程序输出
+\lstdefinestyle{out}{
+  language=,
+  basicstyle=\ttfamily\small,
+  numbers=none,
+  backgroundcolor=\color{gray!5},
+  frame=tb, framerule=1pt,
+  breaklines=true, columns=flexible,
+  showstringspaces=false,
+}
+% 命令行
+\lstdefinestyle{sh}{
+  language=bash,
+  basicstyle=\ttfamily\small,
+  numbers=none,
+  keywordstyle=\color{red!40!orange},
+  backgroundcolor=\color{gray!5},
+  frame=tb, framerule=1pt,
+  breaklines=true, columns=flexible,
+  showstringspaces=false,
+}
+% 配置文件（toml / json）
+\lstdefinestyle{cfg}{
+  language=,
+  basicstyle=\ttfamily\small,
+  numbers=none,
+  backgroundcolor=\color{gray!5},
+  frame=tb, framerule=1pt,
+  breaklines=true, columns=flexible,
+  showstringspaces=false,
+}
+
+% ------------------------- 提示盒（模板 anybox 的书稿入口） -------------------------
+\newenvironment{tip}[1]{\smallskip\begin{anybox}{#1}}{\end{anybox}}

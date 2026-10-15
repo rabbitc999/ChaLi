@@ -1,0 +1,6 @@
+/* 地址即使复用，释放前建立的借用也不能复活。 */
+int64 main(){
+    int64 mut& first=new;int64 mut& stale=first;delete first;
+    int64 mut& second=new;*second=22;
+    std::lang::println("{}",*stale);delete second;return 0;
+}
