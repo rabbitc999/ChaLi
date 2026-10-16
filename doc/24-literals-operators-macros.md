@@ -196,6 +196,36 @@ a * 7 = 42
 
 `match`、`when` 这类名字不再占关键字，可以拿来当宏名。`$concat` 只拼标识符，读取原始实参，不受定义端括号标注影响。
 
+## 有序多括号文本宏
+
+宏在 Lexer 之前展开；参数是原始文本，不构建 AST，也不检查参数类型。`$macro` 保持全小写，宏体仍写在声明后的行中，以 `$end_macro` 结束。
+
+```magel
+$macro CODE<..Types>[..Attrs](..Args){..Body}
+    println("types: {}", $stringify(Types));
+    println("attrs: {}", $stringify(Attrs));
+    println("args: {}", $stringify(Args));
+    Body
+$end_macro
+
+void main() {
+    $CODE<int64, String>[readonly](x, y){
+        println("multi-line body");
+        if (true) {
+            println("nested braces");
+        }
+    }
+}
+```
+
+定义中的 `< >`、`[ ]`、`( )`、`{ }` 可以任意排序和重复，如 `$macro FOO()()`、`$macro BAR[](x)()`。调用必须提供定义中对应顺序的各组；`$FOO()()` 与 `$BAR[](value)()` 均消耗全部声明组。现有单组 `NAME()` 仍表示对象宏，以 `$NAME` 调用。
+
+每组可使用固定形参和一个末尾 `..rest`，例如 `<T, ..Types>[..Attrs](x, ..Args){..Body}`；不同组独立绑定，形参名称不能重复。每组变长捕获可以为空，不会吞入下一组；`$for` 可分别遍历各组尾参，也可嵌套遍历。旧单圆括号宏的 `...rest`、参数括号保护与 `expr` 写法继续有效。
+
+实参按当前层的逗号切分，嵌套括号、字符串与注释内的逗号不切分；变长参数重新连接时保留原有逗号及其两侧文本。`List<List<int64>>` 中的 `>>` 按两个字符闭合，不经过运算符词法分析。非尖括号组内不配对的 `<` / `>` 保留为普通文本，可写比较与移位；成对的尖括号参与分组，含歧义的比较表达式可用圆括号明确边界。
+
+大括号实参可以跨任意多行并包含其他括号组，字符串和注释中的括号不参与闭合。宏体和捕获实参使用内部来源标记记录文件与行，捕获片段额外记录列偏移；标记在送入 Lexer 前移除，通过分行和空格占位恢复诊断位置，调用后同一行及后续行也恢复原位置。括号种类、顺序、结构或参数绑定不匹配时报“宏Token分组不匹配”，不解释为类型错误。回归见 [`magel_macro_groups_test.cpp`](../tests/magel_macro_groups_test.cpp)。
+
 ## 迁移清单
 
 | 你原来写的 | 现在改成 |

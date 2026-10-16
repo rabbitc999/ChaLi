@@ -41,6 +41,8 @@ private:
         std::vector<std::string> params;
         bool variadic = false;
         std::string variadicParam;
+        std::string groupedSignature;
+        std::string groupedShape;
         /**
          * 括号里空着（`$macro NAME()`）= 对象宏：裸写 `NAME` 取用，不带括号。
          */

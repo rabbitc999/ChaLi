@@ -344,12 +344,14 @@ inline Memory::String substituteMacroLocals(const Memory::String &text,
  * @param tail 尾参元素。
  * @param protect 是否保护各元素。
  * @param depth 嵌套深度。
+ * @param groupTails 多括号宏中各组的独立尾参；为空时使用原有单尾参。
  * @return 是否成功。
  */
 inline bool expandMacroControls(Memory::String &body,
                                 Memory::Map<Memory::String, Memory::String> &values,
                                 Memory::Map<Memory::String, Memory::String> &rawValues, std::size_t argc, Memory::String &error,
-                                const Memory::String &variadicParam, const Memory::Vector<Memory::String> &tail, bool protect, unsigned depth = 0)
+                                const Memory::String &variadicParam, const Memory::Vector<Memory::String> &tail, bool protect, unsigned depth = 0,
+                                const Memory::Map<Memory::String, Memory::Vector<Memory::String>> *groupTails = nullptr)
 {
     if (depth > 64)
     {
@@ -414,20 +416,28 @@ inline bool expandMacroControls(Memory::String &body,
                 }
                 at += 2;
                 const auto list = trim(line.substr(at));
-                if (variadicParam.empty() || list != variadicParam)
+                const auto *elements = &tail;
+                if (groupTails != nullptr)
+                {
+                    const auto found = groupTails->find(list);
+                    elements = found == groupTails->end() ? nullptr : &found->second;
+                }
+                else if (variadicParam.empty() || list != variadicParam)
+                    elements = nullptr;
+                if (elements == nullptr)
                 {
                     error = "$for 只能遍历变长尾参：" + list;
                     return false;
                 }
                 const auto inner = body.substr(stop + 1, closeBegin - stop - 1);
-                for (const auto &element : tail)
+                for (const auto &element : *elements)
                 {
                     Memory::Map<Memory::String, Memory::String> replacement{ { variable, protect ? "(" + element + ")" : element } };
                     auto expanded = substituteMacroLocals(inner, replacement);
                     auto innerValues = values, innerRaw = rawValues;
                     innerValues[variable] = element;
                     innerRaw[variable] = element;
-                    if (!expandMacroControls(expanded, innerValues, innerRaw, argc, error, variadicParam, tail, protect, depth + 1)) return false;
+                    if (!expandMacroControls(expanded, innerValues, innerRaw, argc, error, variadicParam, tail, protect, depth + 1, groupTails)) return false;
                     output += expanded;
                 }
             }

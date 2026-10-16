@@ -62,7 +62,20 @@ def target_of(match):
 def check(page):
     """检查单个页面，返回缺失的 (页面, 目标) 列表。"""
     missing = []
-    text = page.read_text(encoding="utf-8")
+    # 宏的 [..Attrs](..Args) 是代码而非 Markdown 链接；围栏与行内代码不参与链接扫描。
+    lines = []
+    fence = None
+    for line in page.read_text(encoding="utf-8").splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence is not None:
+            if marker and marker[1][0] == fence[0] and len(marker[1]) >= len(fence) and not marker[2].strip():
+                fence = None
+            continue
+        if marker:
+            fence = marker[1]
+            continue
+        lines.append(re.sub(r"(`+).*?\1", "", line))
+    text = "\n".join(lines)
     for match in LINK.finditer(text):
         target = target_of(match).split("#")[0].strip()
         if not target or target.startswith(SKIP_SCHEMES):

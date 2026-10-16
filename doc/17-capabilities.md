@@ -8,6 +8,8 @@
 
 ## 语言与资源
 
+宏在 Lexer 前做文本替换，支持四种括号按定义顺序组合及重复、每组独立 `..rest` 和跨行大括号实参；捕获文本与调用后代码保留原始行列位置。详见[多括号文本宏](24-literals-operators-macros.md#有序多括号文本宏)。
+
 入口支持 `int64 main` 和 `void main`，无参或接收 `List<String>`；void 入口正常退出码为 0，panic 仍失败。`struct`、`enum`、`interface` 声明的尾分号可选。
 
 | 范围 | 当前能力与约束 |

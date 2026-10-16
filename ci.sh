@@ -136,6 +136,9 @@ run_step "编译宏临时编号单元测试" g++ -std=c++17 -O1 -DMAGEL_CUSTOM_A
 run_step "运行宏临时编号单元测试" tmp/ci/magel-macro-slots
 run_step "编译宏结构化拼接与字符串化单元测试" g++ -std=c++17 -O1 -DMAGEL_CUSTOM_ALLOCATOR=0 -Ilibrary -Ilibrary/preprocess tests/magel_macro_structured_test.cpp -o tmp/ci/magel-macro-structured
 run_step "运行宏结构化拼接与字符串化单元测试" tmp/ci/magel-macro-structured
+run_step "编译宏多括号文本分组回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=0 -DMAGEL_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 -Ilibrary -Ilibrary/preprocess tests/magel_macro_groups_test.cpp -o tmp/ci/magel-macro-groups
+run_step "运行宏多括号文本分组回归" tmp/ci/magel-macro-groups
+run_step "验证宏多括号完整前端行列映射" python tests/magel_macro_groups.py
 
 run_step "编译宏参数括号规则回归" g++ -std=c++17 -O1 -DMAGEL_CUSTOM_ALLOCATOR=0 -Ilibrary -Ilibrary/preprocess tests/magel_macro_parentheses_test.cpp -o tmp/ci/magel-macro-parentheses
 run_step "运行宏参数括号规则回归" tmp/ci/magel-macro-parentheses

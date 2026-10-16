@@ -74,7 +74,7 @@ endif
 # 避免只改泛型 / 宏展开头或降级实现时 make 误判为无需重编。
 magel_tool.o magel_main.o: source/magel_project.hpp source/magel_cli.hpp
 
-magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_macro_controls.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
 magel_parser.o: source/magel_types.h source/magel_epilogue.cpp source/magel_generic.hpp $(wildcard source/epilogue/*.cpp) library/sqlite/sqlite3.h source/magel_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
 
 # 外部静态库更新后必须重链；只把它们写进 LDLIBS 不会让 make 追踪时间戳。
@@ -152,7 +152,7 @@ EMBEDDED_LSP_BUILD := build/magel-embedded-lsp
 
 $(EMBEDDED_LSP_BUILD):
 	$(MAGEL_RUNTIME_MKDIR)
-$(EMBEDDED_LSP_BUILD)/mc.o: $(LSP_DIR)/mc.cpp $(LSP_DIR)/mc.hpp $(LSP_LIB_DIR)/types.hpp | $(EMBEDDED_LSP_BUILD)
+$(EMBEDDED_LSP_BUILD)/mc.o: $(LSP_DIR)/mc.cpp $(LSP_DIR)/mc.hpp $(LSP_LIB_DIR)/types.hpp source/magel_macro.hpp source/magel_macro_controls.hpp | $(EMBEDDED_LSP_BUILD)
 	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
 $(EMBEDDED_LSP_BUILD)/server.o: $(LSP_DIR)/server.cpp $(LSP_DIR)/server.hpp $(LSP_DIR)/mc.hpp library/json/json.hpp | $(EMBEDDED_LSP_BUILD)
 	$(CXX) $(CXXFLAGS) -I. -c $< -o $@

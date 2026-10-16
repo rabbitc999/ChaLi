@@ -1,4 +1,5 @@
 #include "mc.hpp"
+#include "../magel_macro.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -239,7 +240,8 @@ void McDocument::setText(std::string text)
     /* 登记一条宏声明（`$macro` 与 `$replace` 共用）：语义高亮 + 重复定义检查。
      * 口径和编译器一致：同名 + 同参数个数 + 同变长性才算重复。 */
     const auto recordMacro = [&](std::size_t line, const std::smatch &match,
-                                 std::vector<std::string> params, std::string variadicParam) {
+                                 std::vector<std::string> params, std::string variadicParam,
+                                 std::string groupedSignature = {}, std::string groupedShape = {}) {
         const std::string name = match[1].str();
         const std::size_t column = static_cast<std::size_t>(match.position(1));
         const Range declared = range(line, column, name.size());
@@ -249,12 +251,14 @@ void McDocument::setText(std::string text)
         entry.params = std::move(params);
         entry.variadic = !variadicParam.empty();
         entry.variadicParam = std::move(variadicParam);
+        entry.groupedSignature = std::move(groupedSignature);
+        entry.groupedShape = std::move(groupedShape);
         /* 括号里空着就是对象宏：裸写宏名取用，`NAME(...)` 反而是错的。 */
-        entry.objectMacro = !entry.variadic && entry.params.empty();
+        entry.objectMacro = entry.groupedSignature.empty() && !entry.variadic && entry.params.empty();
         entry.range = declared;
         const bool duplicated = std::any_of(
             macros_.begin(), macros_.end(), [&](const Macro &item) {
-                return !item.deleted && item.name == name && item.params.size() == entry.params.size() && item.variadic == entry.variadic;
+                return !item.deleted && item.name == name && item.params.size() == entry.params.size() && item.variadic == entry.variadic && item.groupedShape == entry.groupedShape;
             });
         if (duplicated)
             diagnostics_.push_back({ declared, Severity::Error, "magel-macro-duplicate",
@@ -277,6 +281,27 @@ void McDocument::setText(std::string text)
                 continue;
             }
             std::smatch match;
+            magel_macro::Macro parsed;
+            Memory::String parsedName, problem;
+            if (magel_macro::header(Memory::String(code.c_str()), parsedName, parsed, problem) && !parsed.groups.empty())
+            {
+                const std::regex groupedHeader(R"(^\s*\$macro\s+(?:expr\s+)?([A-Za-z_][A-Za-z_0-9]*))");
+                std::regex_search(code, match, groupedHeader);
+                std::vector<std::string> params;
+                std::string shape;
+                for (const auto &group : parsed.groups)
+                {
+                    shape += group.opening;
+                    shape += std::to_string(group.params.size());
+                    shape += group.rest.empty() ? '-' : '+';
+                    for (const auto &param : group.params) params.emplace_back(param.c_str());
+                    if (!group.rest.empty()) params.emplace_back(group.rest.c_str());
+                }
+                const auto signature = trim(code.substr(static_cast<std::size_t>(match.position(1))));
+                recordMacro(line, match, std::move(params), {}, signature, shape);
+                active = macros_.size() - 1;
+                continue;
+            }
             if (!std::regex_match(code, match, header))
             {
                 diagnostics_.push_back({ range(line, first, 6), Severity::Error,
@@ -396,7 +421,7 @@ void McDocument::setText(std::string text)
             if (begin > 0 && code[begin - 1] == '$') continue; /* `$xxx` 是指令，不是宏调用 */
             std::vector<std::size_t> candidates;
             for (std::size_t index = 0; index < macros_.size(); ++index)
-                if (!macros_[index].deleted && macros_[index].name == name)
+                if (!macros_[index].deleted && macros_[index].name == name && macros_[index].groupedSignature.empty())
                     candidates.push_back(index);
             if (candidates.empty()) continue;
             std::size_t open = i;
@@ -492,7 +517,7 @@ HoverResult McDocument::hover(Position position) const
 {
     for (const auto &macro : macros_)
         if (!macro.deleted && contains(macro.range, position))
-            return { true, macro.range, "`$macro " + macro.name + "(...)`" };
+            return { true, macro.range, "`$macro " + (macro.groupedSignature.empty() ? macro.name + "(...)" : macro.groupedSignature) + "`" };
     for (const auto &occurrence : occurrences_)
         if (contains(occurrence.range, position))
         {
@@ -531,6 +556,11 @@ std::vector<CompletionItem> McDocument::completion(Position) const
     for (const auto &macro : macros_)
     {
         if (macro.deleted) continue; /* `$delete_macro` 撤掉的宏不再提示 */
+        if (!macro.groupedSignature.empty())
+        {
+            result.push_back({ macro.name, "function", "MAGEL 多括号文本宏", "$" + macro.groupedSignature });
+            continue;
+        }
         if (macro.objectMacro)
         {
             result.push_back({ macro.name, "constant", "MAGEL 对象宏（裸写，不带括号）", macro.name });

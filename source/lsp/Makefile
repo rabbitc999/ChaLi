@@ -28,7 +28,7 @@ TESTS       := $(BUILD_DIR)/magel-lsp-tests
 
 SOURCES := mc.cpp server.cpp ../../library/json/json.cpp
 OBJECTS := $(BUILD_DIR)/mc.o $(BUILD_DIR)/server.o $(BUILD_DIR)/json.o
-INCLUDES := -I. -I$(LSP_LIB_DIR)
+INCLUDES := -I. -I$(LSP_LIB_DIR) -I$(ROOT_DIR)/library -I$(ROOT_DIR)/library/preprocess
 
 # Windows 用 PowerShell 建目录、cmd 清理；其余平台用 POSIX 写法。
 ifeq ($(OS),Windows_NT)
@@ -54,7 +54,7 @@ $(SERVER): $(OBJECTS) main.cpp | $(BUILD_DIR)
 $(TESTS): $(OBJECTS) test_mc.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(UTF8FLAGS) $(INCLUDES) test_mc.cpp $(OBJECTS) -o $@
 
-$(BUILD_DIR)/mc.o: mc.cpp mc.hpp $(LSP_LIB_DIR)/types.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/mc.o: mc.cpp mc.hpp $(LSP_LIB_DIR)/types.hpp ../magel_macro.hpp ../magel_macro_controls.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(UTF8FLAGS) $(INCLUDES) -c mc.cpp -o $@
 
 $(BUILD_DIR)/server.o: server.cpp server.hpp mc.hpp ../../library/json/json.hpp | $(BUILD_DIR)

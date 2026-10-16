@@ -196,6 +196,36 @@ a * 7 = 42
 
 Names such as `match` and `when` no longer occupy keywords, so they can be used as macro names. Note that `$concat` only pastes identifiers, so a parameter used for pasting **must not be back-quoted** — back-quoting wraps it in parentheses, and the result is no longer an identifier.
 
+## Ordered bracket groups in text macros
+
+Macros expand before the Lexer. Arguments remain raw text; grouping neither builds AST nodes nor checks argument types. The keyword is lowercase `$macro`, with the expansion body on following lines and `$end_macro` as its terminator.
+
+```magel
+$macro CODE<..Types>[..Attrs](..Args){..Body}
+    println("types: {}", $stringify(Types));
+    println("attrs: {}", $stringify(Attrs));
+    println("args: {}", $stringify(Args));
+    Body
+$end_macro
+
+void main() {
+    $CODE<int64, String>[readonly](x, y){
+        println("multi-line body");
+        if (true) {
+            println("nested braces");
+        }
+    }
+}
+```
+
+The declaration determines the order of `< >`, `[ ]`, `( )`, and `{ }`. Repeated groups are supported: `$macro FOO()()` and `$macro BAR[](x)()` are called as `$FOO()()` and `$BAR[](value)()`. The existing single empty `NAME()` declaration still defines an object macro called as `$NAME`.
+
+Each group accepts fixed parameters and one final `..rest`, for example `<T, ..Types>[..Attrs](x, ..Args){..Body}`. Names must be unique across the declaration. Each variadic capture may be empty and stays inside its own group. `$for` can traverse each group's tail independently, including nested loops across groups. Existing single-parenthesis `...rest`, argument protection, and `expr` macros remain supported.
+
+Only commas at the current nesting level split arguments. Nested brackets, strings, and comments shield their commas; joining a variadic capture preserves the original comma separators and surrounding text. `List<List<int64>>` closes character by character without operator tokenization. Unpaired `<` and `>` inside other bracket groups remain ordinary text, allowing comparisons and shifts. Paired angle brackets participate in grouping; parentheses can disambiguate comparison expressions.
+
+Brace arguments may span multiple lines and contain nested groups. Brackets in strings and comments do not close groups. Internal markers retain file and line origins, plus column offsets for captured fragments. Before lexing, markers are removed and line breaks and spaces restore diagnostic positions, including code after a call on the same line and subsequent lines. Bracket kind, order, structure, or binding mismatches report `宏Token分组不匹配` rather than type errors. See [`magel_macro_groups_test.cpp`](../../tests/magel_macro_groups_test.cpp).
+
 ## Migration checklist
 
 | You used to write | Write this instead |

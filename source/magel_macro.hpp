@@ -19,8 +19,22 @@
 namespace magel_macro
 {
 
+/**
+ * @brief 定义中一组独立的文本参数，保留括号种类与局部变长尾参。
+ */
+struct ParameterGroup
+{
+    char opening = '(';
+    Memory::Vector<Memory::String> params;
+    Memory::String rest;
+};
+
+/**
+ * @brief 保存宏的原始文本、调用分组和既有表达式保护规则。
+ */
 struct Macro
 {
+    Memory::Vector<ParameterGroup> groups;
     Memory::Vector<Memory::String> params;
     /**
      * 使用 `(参数名)` 标注或处于 expr 宏中的形参：每次出现在宏体里都替换成 `(实参)`，给表达式宏当护栏。
@@ -45,9 +59,10 @@ struct Macro
 /**
  * @brief 编码内部宏来源标记；解析前移除。
  * @param origin 原始位置。
+ * @param column 原文中从零计数的列偏移。
  * @return 标记文本。
  */
-inline Memory::String debugMarker(const preprocess::LineOrigin &origin)
+inline Memory::String debugMarker(const preprocess::LineOrigin &origin, std::size_t column = 0)
 {
     const char *digits = "0123456789abcdef";
     Memory::String hex;
@@ -56,7 +71,7 @@ inline Memory::String debugMarker(const preprocess::LineOrigin &origin)
         hex += digits[c >> 4];
         hex += digits[c & 15];
     }
-    return "/*__magel_source:" + Memory::toString(origin.line) + ":" + hex + "__*/";
+    return "/*__magel_source:" + Memory::toString(origin.line) + ":" + hex + ":" + Memory::toString(column) + "__*/";
 }
 
 /**
@@ -212,7 +227,12 @@ inline Memory::String origin(const preprocess::Result &result, std::size_t line)
  */
 
 /**
- * 形参表之后的收尾：`$macro` 要求这一行到此为止，`$replace` 把剩余内容当宏体。
+ * @brief 完成形参表解析，或收取单行替换宏的宏体。
+ * @param line 声明源码。
+ * @param i 参数表后的位置。
+ * @param problem 输出声明尾部的错误。
+ * @param inlineBody 非空时接收剩余文本，否则禁止多余内容。
+ * @retval 声明尾部有效返回 true。
  */
 inline bool headerTail(const Memory::String &line, std::size_t i, Memory::String &problem,
                        Memory::String *inlineBody)
@@ -231,9 +251,19 @@ inline bool headerTail(const Memory::String &line, std::size_t i, Memory::String
     *inlineBody = trim(line.substr(i));
     return true;
 }
-inline bool header(const Memory::String &line, Memory::String &name, Macro &macro,
-                   Memory::String &problem, Memory::String *inlineBody = nullptr,
-                   const Memory::String &keyword = Memory::String("$macro"))
+/**
+ * @brief 保持单圆括号宏的对象形态、表达式保护和三点尾参解析。
+ * @param line 声明源码。
+ * @param name 输出宏名。
+ * @param macro 输出原有参数形态。
+ * @param problem 输出声明错误。
+ * @param inlineBody 非空时接收单行宏体。
+ * @param keyword 当前声明关键字。
+ * @retval 解析成功返回 true。
+ */
+inline bool legacyHeader(const Memory::String &line, Memory::String &name, Macro &macro,
+                         Memory::String &problem, Memory::String *inlineBody = nullptr,
+                         const Memory::String &keyword = Memory::String("$macro"))
 {
     problem.clear();
     const std::size_t at = line.find(keyword);
@@ -338,11 +368,264 @@ inline bool header(const Memory::String &line, Memory::String &name, Macro &macr
     return headerTail(line, i, problem, inlineBody);
 }
 
+/**
+ * @brief 返回文本分组左括号对应的右括号。
+ * @param ch 待检查字符。
+ * @retval 右括号；非左括号返回零。
+ */
+inline char groupClose(char ch)
+{
+    switch (ch)
+    {
+    case '(': return ')';
+    case '[': return ']';
+    case '{': return '}';
+    case '<': return '>';
+    default: return 0;
+    }
+}
+
+/**
+ * @brief 按字符栈切分一组文本，不解释运算符或类型。
+ * @param text 原始文本。
+ * @param open 左括号位置。
+ * @param parts 输出当前层的逗号分隔片段。
+ * @param end 输出右括号后一位置。
+ * @retval 成功返回 true；缺少或交叉闭合括号返回 false。
+ * @note 字符串和注释中的括号不参与分组，连续右尖括号逐字符处理。
+ */
+inline bool groupArguments(const Memory::String &text, std::size_t open,
+                           Memory::Vector<Memory::String> &parts, std::size_t &end)
+{
+    if (open >= text.size() || !groupClose(text[open])) return false;
+    Memory::Vector<char> closes{ groupClose(text[open]) };
+    std::size_t begin = open + 1;
+    for (std::size_t i = begin; i < text.size(); ++i)
+    {
+        const char ch = text[i];
+        if (ch == '\"' || ch == '\'')
+        {
+            const char quote = ch;
+            while (++i < text.size())
+            {
+                if (text[i] == '\\' && i + 1 < text.size())
+                    ++i;
+                else if (text[i] == quote)
+                    break;
+            }
+            continue;
+        }
+        if (text.compare(i, 2, "//") == 0)
+        {
+            i = text.find('\n', i + 2);
+            if (i == Memory::String::npos) return false;
+            continue;
+        }
+        if (text.compare(i, 2, "/*") == 0)
+        {
+            i = text.find("*/", i + 2);
+            if (i == Memory::String::npos) return false;
+            ++i;
+            continue;
+        }
+        if (ch == '<' && closes.back() != '>')
+        {
+            // 非尖括号组中的未配对尖括号按普通文本保留，比较表达式无需语言解析。
+            Memory::Vector<Memory::String> ignored;
+            std::size_t angleEnd = i;
+            if (!groupArguments(text, i, ignored, angleEnd)) continue;
+        }
+        if (ch == '>' && closes.back() != '>') continue;
+        if (const char close = groupClose(ch))
+            closes.push_back(close);
+        else if (ch == ')' || ch == ']' || ch == '}' || ch == '>')
+        {
+            if (closes.back() != ch) return false;
+            closes.pop_back();
+            if (closes.empty())
+            {
+                const auto part = text.substr(begin, i - begin);
+                if (!parts.empty() || !trim(part).empty()) parts.push_back(part);
+                end = i + 1;
+                return true;
+            }
+        }
+        else if (ch == ',' && closes.size() == 1)
+        {
+            parts.push_back(text.substr(begin, i - begin));
+            begin = i + 1;
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief 在原有宏声明解析上扩展有序括号组与每组独立的双点尾参。
+ * @param line 声明行。
+ * @param name 输出宏名。
+ * @param macro 输出宏参数定义。
+ * @param problem 输出分组或声明错误。
+ * @param inlineBody 单行替换宏的输出宏体。
+ * @param keyword 当前声明关键字。
+ * @retval 声明有效返回 true。
+ */
+inline bool header(const Memory::String &line, Memory::String &name, Macro &macro,
+                   Memory::String &problem, Memory::String *inlineBody = nullptr,
+                   const Memory::String &keyword = Memory::String("$macro"))
+{
+    std::size_t i = line.find(keyword) + keyword.size();
+    spaces(line, i);
+    if (line.compare(i, 5, "expr ") == 0)
+    {
+        i += 5;
+        spaces(line, i);
+    }
+    if (i >= line.size() || !identStart(line[i]))
+        return legacyHeader(line, name, macro, problem, inlineBody, keyword);
+    const std::size_t nameBegin = i++;
+    while (i < line.size() && identPart(line[i])) ++i;
+    name = line.substr(nameBegin, i - nameBegin);
+    spaces(line, i);
+    const std::size_t first = i;
+    Memory::Vector<ParameterGroup> groups;
+    Memory::Set<Memory::String> names;
+    while (i < line.size() && groupClose(line[i]))
+    {
+        ParameterGroup group;
+        group.opening = line[i];
+        Memory::Vector<Memory::String> declarations;
+        std::size_t end = i;
+        if (!groupArguments(line, i, declarations, end))
+        {
+            problem = "宏Token分组不匹配";
+            return false;
+        }
+        for (std::size_t n = 0; n < declarations.size(); ++n)
+        {
+            auto param = trim(declarations[n]);
+            const bool rest = param.compare(0, 2, "..") == 0;
+            if (rest) param = trim(param.substr(param.compare(0, 3, "...") == 0 ? 3 : 2));
+            if (!identifierText(param) || !names.insert(param).second || (rest && n + 1 != declarations.size()))
+            {
+                // 单圆括号原有的表达式保护标注仍交给原解析逻辑。
+                return legacyHeader(line, name, macro, problem, inlineBody, keyword);
+            }
+            if (rest)
+                group.rest = param;
+            else
+                group.params.push_back(param);
+        }
+        groups.push_back(std::move(group));
+        i = end;
+        spaces(line, i);
+    }
+    const bool structured = groups.size() > 1 || (!groups.empty() && groups[0].opening != '(')
+                            || (line.find("..", first) != Memory::String::npos && line.find("...", first) == Memory::String::npos);
+    if (!structured) return legacyHeader(line, name, macro, problem, inlineBody, keyword);
+    macro.groups = std::move(groups);
+    macro.functionLike = true;
+    for (const auto &group : macro.groups)
+    {
+        for (const auto &param : group.params) macro.params.push_back(param);
+        if (!group.rest.empty()) macro.params.push_back(group.rest);
+    }
+    return headerTail(line, i, problem, inlineBody);
+}
+
 inline bool directive(const Memory::String &line, const Memory::String &word)
 {
     std::size_t i = 0;
     spaces(line, i);
     return line.compare(i, word.size(), word) == 0 && (i + word.size() == line.size() || !identPart(line[i + word.size()]));
+}
+
+/**
+ * @brief 比较两份宏定义的文本调用形态，忽略形参名称。
+ * @param left 已有宏。
+ * @param right 新宏。
+ * @retval 括号顺序、每组元数及尾参形态相同返回 true。
+ */
+inline bool sameShape(const Macro &left, const Macro &right)
+{
+    if (left.groups.size() != right.groups.size()) return false;
+    if (left.groups.empty()) return left.params.size() == right.params.size() && left.variadic == right.variadic;
+    for (std::size_t n = 0; n < left.groups.size(); ++n)
+    {
+        const auto &a = left.groups[n];
+        const auto &b = right.groups[n];
+        if (a.opening != b.opening || a.params.size() != b.params.size() || a.rest.empty() != b.rest.empty()) return false;
+    }
+    return true;
+}
+
+/**
+ * @brief 找出当前行开始的结构化宏调用所占源码范围。
+ * @param text 完整源码。
+ * @param start 当前行起点。
+ * @param stop 当前行终点，不含换行。
+ * @param macros 当前可见宏。
+ * @retval 返回应一起送入文本展开的末尾位置。
+ * @note 只扫描字符、注释和引号，不调用词法器或解析器。
+ */
+inline std::size_t groupedLineEnd(const Memory::String &text, std::size_t start, std::size_t stop,
+                                  const Memory::Map<Memory::String, Memory::Vector<Macro>> &macros)
+{
+    for (std::size_t i = start; i < stop; ++i)
+    {
+        if (text.compare(i, 2, "//") == 0)
+        {
+            auto next = text.find('\n', i + 2);
+            if (next == Memory::String::npos || next >= stop) break;
+            i = next;
+            continue;
+        }
+        if (text.compare(i, 2, "/*") == 0)
+        {
+            auto next = text.find("*/", i + 2);
+            if (next == Memory::String::npos) break;
+            i = next + 1;
+            continue;
+        }
+        if (text[i] == '\"' || text[i] == '\'')
+        {
+            const char quote = text[i];
+            while (++i < stop)
+            {
+                if (text[i] == '\\' && i + 1 < stop)
+                    ++i;
+                else if (text[i] == quote)
+                    break;
+            }
+            continue;
+        }
+        if (text[i] != '$') continue;
+        std::size_t end = i + 1;
+        while (end < text.size() && identPart(text[end])) ++end;
+        auto found = macros.find(text.substr(i + 1, end - i - 1));
+        if (found == macros.end()) continue;
+        for (const auto &macro : found->second)
+        {
+            if (macro.groups.empty()) continue;
+            std::size_t cursor = end;
+            bool matched = true;
+            for (const auto &group : macro.groups)
+            {
+                spaces(text, cursor);
+                Memory::Vector<Memory::String> ignored;
+                if (cursor >= text.size() || text[cursor] != group.opening || !groupArguments(text, cursor, ignored, cursor))
+                {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched && cursor > stop)
+            {
+                stop = text.find('\n', cursor);
+                if (stop == Memory::String::npos) stop = text.size();
+            }
+        }
+    }
+    return stop;
 }
 
 /**
@@ -442,55 +725,18 @@ inline bool findBlockDirective(const Memory::String &text, Memory::String &found
     return false;
 }
 
+/**
+ * @brief 使用同一字符分组器读取原有圆括号调用与内建文本操作。
+ * @param s 调用文本。
+ * @param open 左括号位置。
+ * @param args 输出当前层的原始参数。
+ * @param end 输出右括号后的偏移。
+ * @retval 分组成功返回 true。
+ */
 inline bool arguments(const Memory::String &s, std::size_t open,
                       Memory::Vector<Memory::String> &args, std::size_t &end)
 {
-    std::size_t begin = open + 1;
-    int depth = 0;
-    char quote = 0;
-    for (std::size_t i = begin; i < s.size(); ++i)
-    {
-        const char ch = s[i];
-        if (quote)
-        {
-            if (ch == '\\' && i + 1 < s.size())
-            {
-                ++i;
-                continue;
-            }
-            if (ch == quote) quote = 0;
-            continue;
-        }
-        if (ch == '"' || ch == '\'')
-        {
-            quote = ch;
-            continue;
-        }
-        if (ch == '(' || ch == '[' || ch == '{')
-        {
-            ++depth;
-            continue;
-        }
-        if (ch == ')' && depth == 0)
-        {
-            Memory::String arg = s.substr(begin, i - begin);
-            if (!args.empty() || arg.find_first_not_of(" \t") != Memory::String::npos)
-                args.push_back(arg);
-            end = i + 1;
-            return true;
-        }
-        if (ch == ')' || ch == ']' || ch == '}')
-        {
-            --depth;
-            continue;
-        }
-        if (ch == ',' && depth == 0)
-        {
-            args.push_back(s.substr(begin, i - begin));
-            begin = i + 1;
-        }
-    }
-    return false;
+    return groupArguments(s, open, args, end);
 }
 
 /**
@@ -887,6 +1133,126 @@ inline bool checkPlaceholders(const Memory::String &text, Memory::String &proble
     return true;
 }
 
+/**
+ * @brief 为原始调用片段记录文件、行及列，供展开后还原诊断位置。
+ * @param source 当前调用所在文本。
+ * @param begin 片段起点。
+ * @param length 片段字节长度。
+ * @param site 当前输入文本的来源。
+ * @retval 带内部来源标记的原始片段。
+ * @note 引号和块注释内部不插入标记，避免改变字面文本。
+ */
+inline Memory::String mappedPiece(const Memory::String &source, std::size_t begin, std::size_t length, const Site &site)
+{
+    if (!site.result) return source.substr(begin, length);
+    // 嵌套展开的片段已经带有逐行来源；直接保留，避免把内部标记字节算进原始列号。
+    const auto piece = source.substr(begin, length);
+    if (piece.find("/*__magel_source:") != Memory::String::npos) return piece;
+    std::size_t row = site.line;
+    std::size_t column = 0;
+    preprocess::LineOrigin currentOrigin = row < site.result->lineMap.size() ? site.result->lineMap[row] : preprocess::LineOrigin{ siteFile(site), row + 1 };
+    bool explicitOrigin = false;
+    for (std::size_t i = 0; i < begin; ++i)
+    {
+        if (source.compare(i, sizeof("/*__magel_source:") - 1, "/*__magel_source:") == 0)
+        {
+            const auto end = source.find("__*/", i);
+            const auto colon = source.find(':', i + sizeof("/*__magel_source:") - 1);
+            const auto columnAt = source.find(':', colon + 1);
+            if (end < begin && colon < end && columnAt < end)
+            {
+                currentOrigin.line = static_cast<std::size_t>(std::strtoull(source.c_str() + i + sizeof("/*__magel_source:") - 1, nullptr, 10));
+                currentOrigin.file.clear();
+                for (auto n = colon + 1; n + 1 < columnAt; n += 2)
+                {
+                    const auto byte = source.substr(n, 2);
+                    currentOrigin.file += static_cast<char>(std::strtoul(byte.c_str(), nullptr, 16));
+                }
+                column = static_cast<std::size_t>(std::strtoull(source.c_str() + columnAt + 1, nullptr, 10));
+                explicitOrigin = true;
+                i = end + 3;
+                continue;
+            }
+        }
+        if (source[i] == '\n')
+        {
+            ++row;
+            column = 0;
+            if (explicitOrigin)
+                ++currentOrigin.line;
+            else
+                currentOrigin = row < site.result->lineMap.size() ? site.result->lineMap[row] : preprocess::LineOrigin{ siteFile(site), row + 1 };
+        }
+        else
+            ++column;
+    }
+    const auto marker = [&]() {
+        return debugMarker(currentOrigin, column);
+    };
+    Memory::String out = marker();
+    char quote = 0;
+    bool block = false, lineComment = false;
+    bool multilineToken = false;
+    for (std::size_t i = begin; i < begin + length; ++i)
+    {
+        const char ch = source[i];
+        out += ch;
+        bool restore = false;
+        if (quote)
+        {
+            if (ch == '\\' && i + 1 < begin + length)
+            {
+                out += source[++i];
+                ++column;
+            }
+            else if (ch == quote)
+            {
+                quote = 0;
+                restore = multilineToken;
+                multilineToken = false;
+            }
+        }
+        else if (block)
+        {
+            if (ch == '*' && i + 1 < begin + length && source[i + 1] == '/')
+            {
+                out += source[++i];
+                ++column;
+                block = false;
+                restore = multilineToken;
+                multilineToken = false;
+            }
+        }
+        else if (!lineComment)
+        {
+            if (ch == '\"' || ch == '\'')
+                quote = ch;
+            else if (source.compare(i, 2, "/*") == 0)
+                block = true;
+            else if (source.compare(i, 2, "//") == 0)
+                lineComment = true;
+        }
+        if (ch == '\n')
+        {
+            ++row;
+            column = 0;
+            if (explicitOrigin)
+                ++currentOrigin.line;
+            else
+                currentOrigin = row < site.result->lineMap.size() ? site.result->lineMap[row] : preprocess::LineOrigin{ siteFile(site), row + 1 };
+            lineComment = false;
+            if (quote || block) multilineToken = true;
+            if (!quote && !block && i + 1 < begin + length) out += marker();
+        }
+        else
+        {
+            ++column;
+            if (restore && i + 1 < begin + length) out += marker();
+        }
+    }
+    return out;
+}
+
 inline bool expand(const Memory::String &source,
                    const Memory::Map<Memory::String, Memory::Vector<Macro>> &macros,
                    Memory::String &output, Memory::String &error,
@@ -1067,8 +1433,67 @@ inline bool expand(const Memory::String &source,
         std::size_t end = i;
         std::size_t open = i;
         while (open < source.size() && (source[open] == ' ' || source[open] == '\t')) ++open;
+        const Macro *picked = nullptr;
+        std::size_t groupedArgc = 0;
+        bool groupedCandidate = false;
+        for (const auto &item : candidates)
+        {
+            if (item.groups.empty()) continue;
+            groupedCandidate = true;
+            std::size_t cursor = open;
+            Memory::Vector<Memory::String> bound;
+            std::size_t supplied = 0;
+            bool matched = true;
+            for (const auto &group : item.groups)
+            {
+                spaces(source, cursor);
+                const std::size_t groupBegin = cursor + 1;
+                Memory::Vector<Memory::String> pieces;
+                if (cursor >= source.size() || source[cursor] != group.opening || !groupArguments(source, cursor, pieces, cursor) || pieces.size() < group.params.size() || (group.rest.empty() && pieces.size() != group.params.size()))
+                {
+                    matched = false;
+                    break;
+                }
+                std::size_t pieceBegin = groupBegin;
+                supplied += pieces.size();
+                for (auto &piece : pieces)
+                {
+                    const auto length = piece.size();
+                    piece = mappedPiece(source, pieceBegin, length, site);
+                    pieceBegin += length + 1;
+                }
+                for (std::size_t n = 0; n < group.params.size(); ++n) bound.push_back(pieces[n]);
+                if (!group.rest.empty())
+                {
+                    Memory::String tail;
+                    for (std::size_t n = group.params.size(); n < pieces.size(); ++n)
+                    {
+                        if (n != group.params.size()) tail += ',';
+                        tail += pieces[n];
+                    }
+                    bound.push_back(std::move(tail));
+                }
+            }
+            if (matched)
+            {
+                const bool fixed = std::all_of(item.groups.begin(), item.groups.end(), [](const ParameterGroup &group) { return group.rest.empty(); });
+                if (!picked || fixed)
+                {
+                    picked = &item;
+                    args = std::move(bound);
+                    end = cursor;
+                    groupedArgc = supplied;
+                }
+                if (fixed) break;
+            }
+        }
+        if (!picked && groupedCandidate && std::all_of(candidates.begin(), candidates.end(), [](const Macro &item) { return !item.groups.empty(); }))
+        {
+            error = "宏Token分组不匹配：$" + name;
+            return false;
+        }
         const bool called = open < source.size() && source[open] == '(';
-        if (called && std::any_of(candidates.begin(), candidates.end(), [](const Macro &item) { return item.functionLike; }))
+        if (!picked && called && std::any_of(candidates.begin(), candidates.end(), [](const Macro &item) { return item.functionLike && item.groups.empty(); }))
         {
             if (!arguments(source, open, args, end))
             {
@@ -1077,8 +1502,7 @@ inline bool expand(const Memory::String &source,
             }
         }
         /* 按元数挑形态：个数正好对上的固定形态优先，其次变长形态，最后才是对象宏。 */
-        const Macro *picked = nullptr;
-        if (!called)
+        if (!picked && !called)
         {
             for (const Macro &item : candidates)
                 if (!item.functionLike)
@@ -1108,17 +1532,17 @@ inline bool expand(const Memory::String &source,
                 return false;
             }
         }
-        else
+        else if (!picked)
         {
             for (const Macro &item : candidates)
-                if (item.functionLike && !item.variadic && item.params.size() == args.size())
+                if (item.groups.empty() && item.functionLike && !item.variadic && item.params.size() == args.size())
                 {
                     picked = &item;
                     break;
                 }
             if (picked == nullptr)
                 for (const Macro &item : candidates)
-                    if (item.functionLike && item.variadic && args.size() >= item.params.size())
+                    if (item.groups.empty() && item.functionLike && item.variadic && args.size() >= item.params.size())
                     {
                         picked = &item;
                         break;
@@ -1143,6 +1567,7 @@ inline bool expand(const Memory::String &source,
             return false;
         }
         const Macro &macro = *picked;
+        const auto actualArgc = macro.groups.empty() ? args.size() : groupedArgc;
         const std::size_t fixedCount = macro.params.size();
         if (stack.size() >= 64)
         {
@@ -1193,8 +1618,20 @@ inline bool expand(const Memory::String &source,
         Memory::String bodyText = macro.body;
         const Memory::Vector<Memory::String> tailArgs(
             expandedArgs.begin() + static_cast<std::ptrdiff_t>(fixedCount), expandedArgs.end());
-        if (!expandMacroControls(bodyText, values, rawValues, args.size(), error,
-                                 macro.variadic ? macro.variadicParam : Memory::String(), tailArgs, macro.parenthesizeVariadic)) return false;
+        Memory::Map<Memory::String, Memory::Vector<Memory::String>> groupTails;
+        std::size_t argumentIndex = 0;
+        for (const auto &group : macro.groups)
+        {
+            argumentIndex += group.params.size();
+            if (!group.rest.empty())
+            {
+                std::size_t ignored = 0;
+                groupArguments("(" + expandedArgs[argumentIndex++] + ")", 0, groupTails[group.rest], ignored);
+            }
+        }
+        if (!expandMacroControls(bodyText, values, rawValues, actualArgc, error,
+                                 macro.variadic ? macro.variadicParam : Memory::String(), tailArgs, macro.parenthesizeVariadic, 0,
+                                 macro.groups.empty() ? nullptr : &groupTails)) return false;
         /* 每次展开分配一个新 ID：`$0`…`$9` 拿它拼出本次展开专属的临时名。
          * 放在 `$for` 之后 —— 同一次展开里的每轮 `$for` 共用这一个 ID。 */
         const std::size_t expandId = nextExpandId++;
@@ -1287,7 +1724,7 @@ inline bool expand(const Memory::String &source,
             }
             if (body.compare(b, 5, "$argc") == 0 && (b + 5 == body.size() || !identPart(body[b + 5])))
             {
-                substituted += Memory::toString(args.size());
+                substituted += Memory::toString(actualArgc);
                 b += 5;
                 continue;
             }
@@ -1345,6 +1782,7 @@ inline bool expand(const Memory::String &source,
                     replacement = "(" + replacement + ")";
             }
             substituted += replacement;
+            if (isParam && !macro.groups.empty()) substituted += mappedPiece(body, b, 0, site);
         }
         /* expr 宏统一保护整个展开结果。 */
         if (macro.parenthesizeResult) substituted = "(" + substituted + ")";
@@ -1352,7 +1790,11 @@ inline bool expand(const Memory::String &source,
         if (!expand(substituted, macros, output, error, stack, nestedComment, site, nextExpandId))
             return false;
         stack.pop_back();
-        if (site.result && site.line < site.result->lineMap.size()) output += debugMarker(site.result->lineMap[site.line]);
+        if (site.result && site.line < site.result->lineMap.size())
+        {
+            const auto suffix = mappedPiece(source, end, 0, site);
+            output += macro.groups.empty() ? debugMarker(site.result->lineMap[site.line]) : suffix;
+        }
         i = end;
     }
     return true;
@@ -1361,6 +1803,11 @@ inline bool expand(const Memory::String &source,
 inline bool run(preprocess::Result &result, Memory::String &error,
                 const Memory::Map<Memory::String, Memory::String> *moduleByFile = nullptr)
 {
+    if (result.lineMap.empty())
+    {
+        const auto rows = 1 + static_cast<std::size_t>(std::count(result.text.begin(), result.text.end(), '\n'));
+        for (std::size_t row = 0; row < rows; ++row) result.lineMap.push_back({ {}, row + 1 });
+    }
     /* 同名宏可以按"实参个数"重载：一个名字挂一组形态（`$macro F(a)` 与 `$macro F(a, b)` 并存）。 */
     Memory::Map<Memory::String, Memory::Vector<Macro>> macros;
     Memory::String output;
@@ -1447,7 +1894,12 @@ inline bool run(preprocess::Result &result, Memory::String &error,
     std::size_t lineNumber = 0;
     for (std::size_t start = 0; start < result.text.size();)
     {
-        const std::size_t stop = result.text.find('\n', start);
+        std::size_t stop = result.text.find('\n', start);
+        if (!defining && !comment && !directive(result.text.substr(start, (stop == Memory::String::npos ? result.text.size() : stop) - start), "$macro") && !directive(result.text.substr(start, (stop == Memory::String::npos ? result.text.size() : stop) - start), "$replace"))
+        {
+            stop = groupedLineEnd(result.text, start, stop == Memory::String::npos ? result.text.size() : stop, macros);
+            if (stop == result.text.size()) stop = Memory::String::npos;
+        }
         const bool newline = stop != Memory::String::npos;
         const Memory::String line = result.text.substr(start, (newline ? stop : result.text.size()) - start);
         Memory::String replacement;
@@ -1531,7 +1983,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
                 }
                 if (bodyLines++) current.body += '\n';
                 auto at = lineNumber < result.lineMap.size() ? result.lineMap[lineNumber] : preprocess::LineOrigin{};
-                at.file += " [宏 " + current.debugName + "]";
+                if (current.groups.empty()) at.file += " [宏 " + current.debugName + "]";
                 bool controlDirective = false;
                 for (const auto *keyword : { "$for", "$end_for", "$if", "$elif", "$else", "$end_if", "$let" })
                     if (directive(line, keyword)) controlDirective = true;
@@ -1589,7 +2041,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
             }
             for (const Macro &existing : macros[name])
             {
-                if (existing.params.size() == current.params.size() && existing.variadic == current.variadic)
+                if (sameShape(existing, current))
                 {
                     error = origin(result, lineNumber) + "：重复定义宏 " + name + "（同参数个数）";
                     return false;
@@ -1633,7 +2085,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
             }
             current.debugName = name;
             auto at = lineNumber < result.lineMap.size() ? result.lineMap[lineNumber] : preprocess::LineOrigin{};
-            at.file += " [宏 " + name + "]";
+            if (current.groups.empty()) at.file += " [宏 " + name + "]";
             current.body = debugMarker(at) + inlineBody;
             {
                 Memory::String placeholderProblem;
@@ -1645,7 +2097,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
             }
             for (const Macro &existing : macros[name])
             {
-                if (existing.params.size() == current.params.size() && existing.variadic == current.variadic)
+                if (sameShape(existing, current))
                 {
                     error = origin(result, lineNumber) + "：重复定义宏 " + name + "（同参数个数）";
                     return false;
@@ -1698,7 +2150,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
         lineMap.push_back(lineNumber < result.lineMap.size() ? result.lineMap[lineNumber] : preprocess::LineOrigin{});
         output += replacement;
         if (newline) output += '\n';
-        ++lineNumber;
+        lineNumber += 1 + static_cast<std::size_t>(std::count(line.begin(), line.end(), '\n'));
         start = newline ? stop + 1 : result.text.size();
     }
     if (defining)
@@ -1725,7 +2177,9 @@ inline bool run(preprocess::Result &result, Memory::String &error,
                 currentOrigin.file.clear();
                 auto digit = [](char c) { return c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 :
                                                                                                          -1; };
-                for (auto n = colon + 1; n + 1 < end; n += 2)
+                auto columnAt = output.find(':', colon + 1);
+                if (columnAt == Memory::String::npos || columnAt > end) columnAt = end;
+                for (auto n = colon + 1; n + 1 < columnAt; n += 2)
                 {
                     const int hi = digit(output[n]), lo = digit(output[n + 1]);
                     if (hi < 0 || lo < 0)
@@ -1734,6 +2188,11 @@ inline bool run(preprocess::Result &result, Memory::String &error,
                         return false;
                     }
                     currentOrigin.file += static_cast<char>((hi << 4) | lo);
+                }
+                if (columnAt < end)
+                {
+                    const auto column = static_cast<std::size_t>(std::strtoull(output.substr(columnAt + 1, end - columnAt - 1).c_str(), nullptr, 10));
+                    mapped.append(column, ' ');
                 }
                 i = end + 4;
                 continue;

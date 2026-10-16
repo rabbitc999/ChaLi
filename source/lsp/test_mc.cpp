@@ -42,6 +42,18 @@ void testFraming()
  */
 void testMcMacros()
 {
+    {
+        lsp::McDocument grouped;
+        grouped.setText("$macro CODE<..Types>[..Attrs](..Args){..Body}\nBody\n$end_macro\n"
+                        "$CODE<List<List<int64>>>[readonly](x){\n    work();\n}\n");
+        CHECK(grouped.diagnostics().empty());
+        CHECK(grouped.symbols().size() == 1);
+        CHECK(grouped.hover({ 0, 8 }).markdown.find("<..Types>[..Attrs](..Args){..Body}") != std::string::npos);
+        bool completed = false;
+        for (const auto &item : grouped.completion({ 3, 1 }))
+            if (item.label == "CODE") completed = item.insertText == "$CODE<..Types>[..Attrs](..Args){..Body}";
+        CHECK(completed);
+    }
     lsp::McDocument model;
     model.setText("$macro ADD(x, y)\n((x) + (y))\n$end_macro\n"
                   "int main() { return ADD(1, 2); }\n");
