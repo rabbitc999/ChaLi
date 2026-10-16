@@ -3598,13 +3598,119 @@ simple_ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, co
 }
 
 /**
+ * @brief 用符号与绝对值保存完整 64 位整数，避免比较时丢失精度。
+ */
+struct MMatchInteger
+{
+    bool negative = false;
+    std::uint64_t magnitude = 0;
+};
+/**
+ * @brief 比较两个数学整数，兼容负数与 uint64 的完整范围。
+ * @param left 左值。
+ * @param right 右值。
+ * @retval 小于返回负一，等于返回零，大于返回一。
+ */
+int CompareMatchInteger(const MMatchInteger &left, const MMatchInteger &right)
+{
+    if (left.negative != right.negative) return left.negative ? -1 : 1;
+    const int order = left.magnitude < right.magnitude ? -1 : left.magnitude > right.magnitude ? 1 :
+                                                                                                 0;
+    return left.negative ? -order : order;
+}
+
+bool IntervalConstantTree(int id, Memory::Set<int> &active);
+/**
+ * @brief 静态读取整数模式端点；运行时表达式不参与重叠判断。
+ * @param id 端点表达式。
+ * @param subject 匹配主体类型，用于解释完整 uint64 字面量。
+ * @param out 输出无损整数。
+ * @retval 可求出的整数常量返回真，动态或非整数端点返回假。
+ */
+bool ReadMatchInteger(int id, const std::shared_ptr<MType> &subject, MMatchInteger *out)
+{
+    const auto type = ExprType(id);
+    if (!type || type->kind != MType::Int) return false;
+    Memory::Set<int> active;
+    if (!IntervalConstantTree(id, active)) return false;
+    MConstant value;
+    if (!EvaluateConstant(id, &value) || value.kind != MConstant::Integer) return false;
+    const bool unsignedValue = value.isUnsigned || (subject->isUnsigned && subject->bits == 64 && N(id).kind == MNode::Int && N(id).i < 0);
+    out->negative = !unsignedValue && value.integer < 0;
+    out->magnitude = out->negative ? std::uint64_t(0) - std::uint64_t(value.integer) : std::uint64_t(value.integer);
+    return true;
+}
+/**
+ * @brief 保存整数单值或区间模式的静态覆盖范围。
+ */
+struct MMatchIntegerRange
+{
+    MMatchInteger lo, hi;
+    bool hiClosed = true;
+};
+/**
+ * @brief 检查当前整数模式与此前模式是否有共同整数，登记非致命警告。
+ * @param patternId 模式节点编号。
+ * @param subject 匹配主体的整数类型。
+ * @param previous 同一 match 中此前可静态确定的覆盖范围。
+ * @note 空区间和动态端点不参与检查；有守卫的模式仍检查覆盖范围重叠。
+ */
+void CheckMatchIntegerOverlap(int patternId, const std::shared_ptr<MType> &subject, Memory::Vector<MMatchIntegerRange> *previous)
+{
+    const MNode pattern = N(patternId);
+    MMatchIntegerRange current;
+    bool loClosed = true;
+    if (IsRangePattern(pattern, &loClosed, &current.hiClosed))
+    {
+        if (pattern.kids.size() != 2 || !ReadMatchInteger(pattern.kids[0], subject, &current.lo) || !ReadMatchInteger(pattern.kids[1], subject, &current.hi)) return;
+    }
+    else
+    {
+        if (!ReadMatchInteger(patternId, subject, &current.lo)) return;
+        current.hi = current.lo;
+    }
+    // 将整数半开区间归一为闭区间，不对最大整数做加一运算。
+    if (!current.hiClosed)
+    {
+        if (!current.hi.negative && current.hi.magnitude > 0)
+            --current.hi.magnitude;
+        else
+        {
+            current.hi.negative = true;
+            ++current.hi.magnitude;
+        }
+        current.hiClosed = true;
+    }
+    const unsigned bits = subject->bits;
+    const MMatchInteger minimum{ !subject->isUnsigned, subject->isUnsigned ? 0 : std::uint64_t(1) << (bits - 1) };
+    const MMatchInteger maximum{ false, subject->isUnsigned ? (bits == 64 ? UINT64_MAX : (std::uint64_t(1) << bits) - 1) : (std::uint64_t(1) << (bits - 1)) - 1 };
+    if (CompareMatchInteger(current.lo, minimum) < 0) current.lo = minimum;
+    if (CompareMatchInteger(current.hi, maximum) > 0) current.hi = maximum;
+    if (CompareMatchInteger(current.lo, current.hi) > 0) return;
+    for (const auto &range : *previous)
+    {
+        if (CompareMatchInteger(current.lo, range.hi) <= 0 && CompareMatchInteger(range.lo, current.hi) <= 0)
+        {
+            Memory::AllocationScope persistent(Memory::defaultRuntimeAllocator());
+            const Memory::String message = "[MGL1601] match 整数模式与前面的模式重叠；仍按分支顺序和守卫选择匹配项";
+            bool duplicate = false;
+            for (const auto &warning : g_warnings)
+                if (warning.message == message && warning.line == pattern.sourceLine && warning.column == pattern.sourceColumn) duplicate = true;
+            if (!duplicate && g_warnings.size() < 100u) g_warnings.push_back({ message, pattern.sourceLine, pattern.sourceColumn });
+            break;
+        }
+    }
+    previous->push_back(current);
+}
+
+/**
  * @brief 将 switch 或 match 分支降级为条件跳转。
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
 simple_ast::NodePtr LowerSwitch(int id)
 {
-    const MNode &node = N(id);
+    const MNode node = N(id);
     const std::shared_ptr<MType> subjectType = ExprType(node.kids[0]);
     const Memory::Vector<int> cases = N(node.kids[1]).kids;
     if (IsEnumType(subjectType)) return LowerEnumSwitch(id, subjectType, cases);
@@ -3618,9 +3724,10 @@ simple_ast::NodePtr LowerSwitch(int id)
     bool hasDefault = false;
     Memory::Set<Memory::String> constants;
     Memory::Set<double> floatingConstants;
+    Memory::Vector<MMatchIntegerRange> integerRanges;
     for (const int caseId : cases)
     {
-        const MNode &item = N(caseId);
+        const MNode item = N(caseId);
         if (item.i < 0)
         {
             if (item.guard >= 0) continue;
@@ -3632,7 +3739,7 @@ simple_ast::NodePtr LowerSwitch(int id)
             hasDefault = true;
             continue;
         }
-        const MNode &pattern = N(static_cast<int>(item.i));
+        const MNode pattern = N(static_cast<int>(item.i));
         if (pattern.kind == MNode::Tuple)
             return Fail("match 区间仅支持 [a,b) 和 [a,b]，不支持左开区间"), Bad();
         bool loClosed = false;
@@ -3668,6 +3775,7 @@ simple_ast::NodePtr LowerSwitch(int id)
                 if (!type || (type->kind != MType::Int && type->kind != MType::Double && type->kind != MType::Bool))
                     return Fail("数值区间的端点必须是数值类型"), Bad();
             }
+            if (subjectType->kind == MType::Int) CheckMatchIntegerOverlap(static_cast<int>(item.i), subjectType, &integerRanges);
             continue;
         }
         if (subjectType->kind == MType::Double)
@@ -3706,6 +3814,7 @@ simple_ast::NodePtr LowerSwitch(int id)
             Fail("分支常量 " + Memory::toString(caseValue) + " 超出 " + Describe(subjectType) + " 的取值范围");
             return Bad();
         }
+        if (subjectType->kind == MType::Int) CheckMatchIntegerOverlap(static_cast<int>(item.i), subjectType, &integerRanges);
         const Memory::String key = Memory::String(caseIsBool ? "bool:" : "int:") + Memory::toString(caseValue);
         if (item.guard < 0 && !constants.insert(key).second)
         {
@@ -3753,7 +3862,7 @@ simple_ast::NodePtr LowerSwitch(int id)
             setup.push_back(simple_ast::Node::label(next));
             continue;
         }
-        const MNode &pattern = N(static_cast<int>(item.i));
+        const MNode pattern = N(static_cast<int>(item.i));
         if (pattern.kind == MNode::Tuple)
             return Fail("match 区间仅支持 [a,b) 和 [a,b]，不支持左开区间"), Bad();
         bool loClosed = false;

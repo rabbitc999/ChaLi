@@ -3,6 +3,10 @@
   "scopeName": "source.magel",
   "patterns": [
     {
+      "name": "keyword.control.magel",
+      "match": "#level\\b|\\bALL\\b"
+    },
+    {
       "name": "comment.block.magel",
       "begin": "/\\*",
       "end": "\\*/"

@@ -17,6 +17,8 @@ def main():
     compiler = parser.parse_args().magel.resolve()
     WORK.mkdir(parents=True, exist_ok=True)
     rejected = {
+        "break_level_moved_after": "S s;loop{loop{S taken=std::lang::move(&s);break #level(2);};};int64 x=s.value;",
+        "break_all_moved_after": "S s;loop{loop{S taken=std::lang::move(&s);break #level(ALL);};};int64 x=s.value;",
         "break_duplicate_move": 'auto result=loop{String source="x";break source,source;};',
         "capture_float_write": "float32 a=1;auto f=float32 fn move(){a};a=2;",
         "capture_float_read": "float32 a=1;auto f=float32 fn move(){a};float32 x=a;",
@@ -43,6 +45,8 @@ def main():
         "write_freed": "S mut& p=new;delete p;p.value=1;",
     }
     accepted = {
+        "break_level_skips_read": "S s;loop{loop{S taken=std::lang::move(&s);break #level(2);};int64 x=s.value;};",
+        "break_all_skips_read": "S s;loop{loop{S taken=std::lang::move(&s);break #level(ALL);};int64 x=s.value;};",
         "break_external_copy": "S source;S value=loop{break source;};int64 x=source.value;",
         "break_value_loop_escape": "S value={loop{S source;while(true){break source;}int64 x=source.value;};};",
         "break_destructure_reentry": 'for(int64 i=0;i<3;i++){String value=loop{auto(text,n)=("x",1);break text;};}',

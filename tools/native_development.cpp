@@ -3108,7 +3108,7 @@ class Server
                 }
                 diagnostics.push_back(
                     object({ { "range", object({ { "start", a }, { "end", b } }) },
-                             { "severity", 1 },
+                             { "severity", str(entry, "severity") == "warning" ? 2 : 1 },
                              { "source", "magel" },
                              { "code", get(entry, "code") },
                              { "message", message } }));

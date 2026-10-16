@@ -2891,10 +2891,12 @@ simple_ast::NodePtr LowerStmtImpl(int id)
     {
         /* 跳出去就不再回来：先把这个循环里**更深**的块中的所有者变量
          * 软释放掉，再跳（见"生命周期"一节）。 */
-        MBlockContext *const context = FindBreakContext(!node.kids.empty());
+        MBlockContext *const context = FindBreakContext(!node.kids.empty(), node.i);
         if (context == nullptr)
         {
-            Fail(node.kids.empty() ? "break 只能用在循环里面" : "break 值; 需要外层值表达式接收结果");
+            Fail(node.i != 0       ? "break #level 指定的循环层数超出当前函数的嵌套循环范围" :
+                 node.kids.empty() ? "break 只能用在循环里面" :
+                                     "break 值; 需要外层值表达式接收结果");
             return nullptr;
         }
         // break 的值可包含内层 loop，压栈可能使 g_blockStack 中的指针失效。
@@ -3391,22 +3393,54 @@ enum MReturnFlow
     FlowValueEscape = 16,
 };
 
-int StatementReturnFlow(int statementId, bool transparentLoops);
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth);
+
+/**
+ * @brief 分析表达式求值期间的函数返回、值退出及层级退出路径。
+ * @param id 表达式节点编号。
+ * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @param exits 收集越出表达式的层级退出。
+ * @param depth 当前分析根内已进入的循环层数。
+ * @retval 返回表达式可能继续或提前退出的路径位掩码。
+ */
+int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
+{
+    if (id < 0) return FlowNext;
+    const MNode node = N(id);
+    if (node.kind == MNode::Lambda) return FlowNext;
+    if (node.kind == MNode::Loop)
+    {
+        if (node.s.empty()) return StatementReturnFlowImpl(id, transparentLoops, exits, depth);
+        const int flow = StatementReturnFlowImpl(node.kids[0], true, exits, depth);
+        return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);
+    }
+    int flow = FlowNext;
+    for (const int child : node.kids)
+    {
+        if ((flow & FlowNext) == 0) break;
+        const int evaluated = ExpressionReturnFlow(child, transparentLoops, exits, depth);
+        flow = (flow & ~FlowNext) | evaluated;
+        if (node.kind == MNode::Bin && (node.s == "&&" || node.s == "||")) flow |= FlowNext;
+    }
+    return flow;
+}
 
 /**
  * @brief 分析语句列表是否在所有路径上返回。
  * @param listId 语句列表在节点池中的编号。
  * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @param exits 收集仍需向外传递的层级退出。
+ * @param depth 当前分析根内已进入的循环层数。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementListReturnFlow(int listId, bool transparentLoops)
+int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
 {
     if (listId < 0) return FlowNext;
     int flow = FlowNext;
     for (const int statementId : N(listId).kids)
     {
         if ((flow & FlowNext) == 0) break;
-        flow = (flow & ~FlowNext) | StatementReturnFlow(statementId, transparentLoops);
+        flow = (flow & ~FlowNext) | StatementReturnFlowImpl(statementId, transparentLoops, exits, depth);
     }
     return flow;
 }
@@ -3415,9 +3449,11 @@ int StatementListReturnFlow(int listId, bool transparentLoops)
  * @brief 分析单条语句的控制流返回情况。
  * @param statementId 语句在节点池中的编号。
  * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @param exits 收集仍需向外传递的层级退出。
+ * @param depth 当前分析根内已进入的循环层数。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementReturnFlow(int statementId, bool transparentLoops)
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
 {
     if (statementId < 0) return FlowNext;
     const MNode &statement = N(statementId);
@@ -3430,44 +3466,72 @@ int StatementReturnFlow(int statementId, bool transparentLoops)
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
             if (value.kind == MNode::Loop)
             {
-                if (value.s.empty()) return StatementReturnFlow(statement.kids[0], transparentLoops);
-                const int flow = StatementReturnFlow(value.kids[0], true);
+                if (value.s.empty()) return StatementReturnFlowImpl(statement.kids[0], transparentLoops, exits, depth);
+                const int flow = StatementReturnFlowImpl(value.kids[0], true, exits, depth);
                 return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);
             }
         }
-        return FlowNext;
+        return statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+    case MNode::Declare:
+    {
+        int flow = FlowNext;
+        for (const int declaration : N(statement.kids[0]).kids)
+        {
+            if ((flow & FlowNext) == 0) break;
+            const auto item = N(declaration);
+            if (!item.kids.empty()) flow = (flow & ~FlowNext) | ExpressionReturnFlow(item.kids[0], transparentLoops, exits, depth);
+        }
+        return flow;
+    }
+    case MNode::Destructure:
+        return ExpressionReturnFlow(statement.kids[1], transparentLoops, exits, depth);
     case MNode::Return:
-        return FlowReturn;
+    {
+        const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+        return (flow & ~FlowNext) | ((flow & FlowNext) ? FlowReturn : 0);
+    }
     case MNode::Break:
+        if (statement.i != 0)
+        {
+            exits->insert(statement.i);
+            return 0;
+        }
         return statement.kids.empty() ? FlowEscape : FlowValueEscape;
     case MNode::Continue:
         return FlowContinue;
     case MNode::Block:
-        return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops);
+        return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops, exits, depth);
     case MNode::If:
     {
-        int flow = StatementReturnFlow(statement.kids[1], transparentLoops);
+        int flow = StatementReturnFlowImpl(statement.kids[1], transparentLoops, exits, depth);
         for (const int elifId : N(statement.kids[2]).kids)
-            flow |= StatementReturnFlow(N(elifId).kids[1], transparentLoops);
-        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlow(statement.kids[3], transparentLoops);
+            flow |= StatementReturnFlowImpl(N(elifId).kids[1], transparentLoops, exits, depth);
+        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlowImpl(statement.kids[3], transparentLoops, exits, depth);
         return flow;
     }
     case MNode::While:
     case MNode::For:
     case MNode::Foreach:
-    {
-        const int bodyId = statement.kind == MNode::For ? statement.kids[3] : statement.kids[1];
-        return FlowNext | (StatementReturnFlow(bodyId, transparentLoops) & (FlowReturn | (transparentLoops ? FlowValueEscape : 0)));
-    }
     case MNode::Loop:
-    {
-        const int body = StatementReturnFlow(statement.kids[0], transparentLoops);
-        return (body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0))) | ((body & (FlowEscape | (transparentLoops ? 0 : FlowValueEscape))) ? FlowNext : 0);
-    }
     case MNode::DoWhile:
     {
-        const int body = StatementReturnFlow(statement.kids[0], transparentLoops);
-        return (body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0))) | ((body & (FlowNext | FlowEscape | FlowContinue | (transparentLoops ? 0 : FlowValueEscape))) ? FlowNext : 0);
+        const int bodyId = statement.kind == MNode::For                                      ? statement.kids[3] :
+                           statement.kind == MNode::Loop || statement.kind == MNode::DoWhile ? statement.kids[0] :
+                                                                                               statement.kids[1];
+        Memory::Set<long long> nested;
+        int body = StatementReturnFlowImpl(bodyId, transparentLoops, &nested, depth + 1);
+        for (const long long level : nested)
+        {
+            if (level == 1 || (level < 0 && depth == 0 && FindBreakContext(false, -1) == nullptr))
+                body |= FlowEscape;
+            else
+                exits->insert(level < 0 ? level : level - 1);
+        }
+        const int propagated = body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0));
+        if (statement.kind == MNode::While || statement.kind == MNode::For || statement.kind == MNode::Foreach)
+            return FlowNext | propagated;
+        const int normal = FlowEscape | (transparentLoops ? 0 : FlowValueEscape) | (statement.kind == MNode::DoWhile ? FlowNext | FlowContinue : 0);
+        return propagated | ((body & normal) ? FlowNext : 0);
     }
     case MNode::Switch:
     {
@@ -3478,7 +3542,7 @@ int StatementReturnFlow(int statementId, bool transparentLoops)
         {
             const MNode &item = N(caseId);
             if (item.i < 0) hasDefault = true;
-            int branch = StatementListReturnFlow(item.kids[0], transparentLoops);
+            int branch = StatementListReturnFlow(item.kids[0], transparentLoops, exits, depth);
             if (statement.s != "match" && (branch & FlowEscape) != 0)
                 branch = (branch & ~FlowEscape) | FlowNext;
             flow |= branch;
@@ -3512,11 +3576,24 @@ int StatementReturnFlow(int statementId, bool transparentLoops)
             }
         }
         if (!hasDefault) flow |= FlowNext;
-        return flow == 0 ? FlowNext : flow;
+        return flow;
     }
     default:
         return FlowNext;
     }
+}
+
+/**
+ * @brief 分析语句返回路径并将越出分析根的循环退出报告给调用方。
+ * @param statementId 分析根语句编号。
+ * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @retval 返回正常继续、函数返回及退出路径的位掩码。
+ */
+int StatementReturnFlow(int statementId, bool transparentLoops)
+{
+    Memory::Set<long long> exits;
+    const int flow = StatementReturnFlowImpl(statementId, transparentLoops, &exits, 0);
+    return flow | (exits.empty() ? 0 : FlowEscape);
 }
 
 /**

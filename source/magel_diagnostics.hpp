@@ -41,6 +41,7 @@ inline Memory::String quote(const Memory::String &text)
  */
 inline const char *code(const Memory::String &message)
 {
+    if (message.find("[MGL1601]") != Memory::String::npos) return "MGL1601";
     if (message.find("[MGL1205]") != Memory::String::npos) return "MGL1205";
     if (message.find("[MGL1301]") != Memory::String::npos) return "MGL1301";
     if (message.find("[MGL1204]") != Memory::String::npos) return "MGL1204";
@@ -58,6 +59,7 @@ struct Diagnostic
 {
     Memory::String message, file;
     std::size_t line = 1, column = 1;
+    bool warning = false;
 };
 /**
  * @brief 将全部诊断写入一个 JSON 文档。
@@ -85,8 +87,8 @@ inline void reportMany(const Memory::Vector<Diagnostic> &diagnostics)
         const auto notes = note == Memory::String::npos ? Memory::String("[]") : "[" + quote(message.substr(note + 7)) + "]";
         if (!first) std::fputc(',', stdout);
         first = false;
-        std::printf("{\"code\":%s,\"severity\":\"error\",\"message\":%s,\"span\":{\"file\":%s,\"line\":%zu,\"column\":%zu,\"endLine\":%zu,\"endColumn\":%zu},\"source\":%s,\"notes\":%s}",
-                    quote(code(message)).c_str(), quote(note == Memory::String::npos ? message : message.substr(0, note)).c_str(),
+        std::printf("{\"code\":%s,\"severity\":%s,\"message\":%s,\"span\":{\"file\":%s,\"line\":%zu,\"column\":%zu,\"endLine\":%zu,\"endColumn\":%zu},\"source\":%s,\"notes\":%s}",
+                    quote(code(message)).c_str(), diagnostic.warning ? "\"warning\"" : "\"error\"", quote(note == Memory::String::npos ? message : message.substr(0, note)).c_str(),
                     quote(diagnostic.file).c_str(), line, column, line, source.size() >= column ? source.size() + 1u : column + 1u,
                     quote(source).c_str(), notes.c_str());
     }

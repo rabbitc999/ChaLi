@@ -31,6 +31,7 @@ def main():
             'block_expression': 'block expression OK\n',
             'break_values': 'break values OK\n',
             'break_move': 'break move OK\n',
+            'break_level': 'break level OK\n',
             'print_interpolation': 'value=3;next=1 2;literal={x};percent=100%\nnested=value 3\nsaved=3\ninterpolation print OK\n',
         }
         for name, expected in examples.items():
@@ -47,6 +48,19 @@ def main():
                     assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), result
                     print(f'[通过] {name} {backend} O{level}', flush=True)
         for body in (
+            'auto f=int64 fn(){loop{int64 x={break #level(ALL);break 1;};};};f();',
+            'break #level(1);',
+            'break #level(ALL);',
+            'loop { break #level(0); };',
+            'loop { break #level(-1); };',
+            'loop { break #level(2); };',
+            'loop { break #level(999999999999999999999999); };',
+            'loop { int64 n=1; break #level(n); };',
+            'loop { break #level(1+1); };',
+            'loop { auto f=fn(){break #level(ALL);}; };',
+            'auto result=loop { if(true){break 1;} loop{break #level(2);}; };',
+            'auto f=int64 fn(){loop{loop{break #level(2);};};};f();',
+            'auto f=int64 fn(){loop{loop{break #level(ALL);};};};f();',
             'int32 x = { int32 y = 3; };',
             'int32 x = { if (true) { break 3; } };',
             'int32 x = { break; };',

@@ -55,6 +55,7 @@ Memory::Vector<int> g_top;              /* 顶层声明（程序） */
 int g_globalType = -1;                  /* 当前声明语句的类型（declarator 用它） */
 Memory::String g_error;
 Memory::Vector<MDiagnostic> g_diagnostics;
+Memory::Vector<MDiagnostic> g_warnings;
 Memory::Vector<magel_borrow_checker::Fact> g_borrowFacts;
 std::size_t g_errorLine = 0;
 std::size_t g_errorColumn = 0;
@@ -1883,6 +1884,27 @@ int M_Break(int value)
 int M_Continue() { return M_New(MNode::Continue); }
 
 /**
+ * @brief 构造指定循环层数的退出语句并校验正整数层数。
+ * @param level 整数字面量节点编号；负一表示退出全部循环。
+ * @retval 返回保存层数的退出节点编号；非法层数登记语义错误。
+ */
+int M_BreakLevel(int level)
+{
+    const int id = M_Break(-1);
+    if (level < 0)
+        g_nodes[id].i = -1;
+    else
+    {
+        const MNode value = g_nodes[level];
+        if (value.kind != MNode::Int || value.i <= 0 || value.unsignedLiteral)
+            return M_ParseBad("break #level(N) 的 N 必须是正整数字面量");
+        else
+            g_nodes[id].i = value.i;
+    }
+    return id;
+}
+
+/**
  * @brief 构造并登记指针释放语句。
  * @param pointer 待释放或校验的指针。
  * @retval 生成的语法节点在节点池中的编号。
@@ -2617,6 +2639,12 @@ const Memory::Vector<MDiagnostic> &M_Diagnostics()
     }
     return g_diagnostics;
 }
+
+/**
+ * @brief 读取编译期警告；警告不改变编译返回状态。
+ * @return 本次编译保存的警告列表。
+ */
+const Memory::Vector<MDiagnostic> &M_Warnings() { return g_warnings; }
 
 /**
  * @brief 设置源码文件映射与缺省文件名。

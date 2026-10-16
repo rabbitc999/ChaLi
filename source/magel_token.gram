@@ -56,6 +56,8 @@
 %define MATCH "match"
 %define DO "do"
 %define BREAK "break"
+%token BREAK_LEVEL "#level"
+%token ALL "ALL"
 %define CONTINUE "continue"
 %token DEFER "defer"
 %token SCOPE_EXIT "scope"

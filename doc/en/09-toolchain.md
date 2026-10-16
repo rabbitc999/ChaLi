@@ -302,6 +302,8 @@ The compiler continues at recoverable statement and function boundaries. Plain o
 `--diagnostics=json` emits one document containing the full `diagnostics` array, with original file and line mappings.
 Identical messages at the same location are merged and the list is capped at 100 entries. Unrecoverable syntax or type-registration failures stop that phase.
 
+Overlapping integer match ranges or single-value patterns report warning `MGL1601` with JSON `severity: "warning"`. Warnings alone keep exit status 0 and may share a diagnostics array with errors.
+
 The independent `source/magel_borrow_checker.hpp` module checks lifetimes after all functions and generic instances have been lowered.
 Semantic analysis only records resolved borrow sources and storage operations; the checker receives facts without accessing symbols or generating code.
 Escaping stores, returns of local sources, and by-value Any arguments hiding non-global references report `MGL1204`, alongside other semantic errors.

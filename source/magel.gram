@@ -461,6 +461,8 @@ stmt := block                  { $$ = $1; }
       | DELETE unary SEMI      { $$ = M_Delete($2); }
       /* 无值 break / continue 控制最近循环；带值 break 穿透无值循环，交给最近值出口。 */
       | BREAK SEMI             { $$ = M_Break(-1); }
+      | BREAK BREAK_LEVEL LPAREN NUMBER RPAREN SEMI { $$ = M_BreakLevel($4); }
+      | BREAK BREAK_LEVEL LPAREN ALL RPAREN SEMI { $$ = M_BreakLevel(-1); }
       | BREAK expr SEMI        { $$ = M_Break($2); }
       | BREAK tuple_items SEMI { $$ = M_Break(M_Tuple($2)); }
       | CONTINUE SEMI          { $$ = M_Continue(); }

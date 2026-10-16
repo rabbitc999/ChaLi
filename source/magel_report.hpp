@@ -557,7 +557,7 @@ inline std::size_t anchoredColumn(const Memory::String &file, std::size_t line, 
  * @return 三行文本；拿不到源文时返回空串。
  */
 inline Memory::String renderSnippet(const Memory::String &file, std::size_t line,
-                                    std::size_t column, std::size_t length)
+                                    std::size_t column, std::size_t length = 0u)
 {
     if (file.empty() || line == 0u) return Memory::String();
     const std::vector<std::string> &lines = cachedFileLines(file);

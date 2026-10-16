@@ -510,6 +510,12 @@ int M_Match(int subject, int cases);
  * @retval 生成的退出语句节点编号。
  */
 int M_Break(int value);
+/**
+ * @brief 构造指定循环层数的无值退出语句。
+ * @param level 正整数节点编号；负一表示 ALL。
+ * @retval 返回退出语句节点编号。
+ */
+int M_BreakLevel(int level);
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
 int M_Case(int value, int stmts);
 /**
@@ -650,6 +656,12 @@ int M_Drop(int value);
  * @retval 生成的退出语句节点编号。
  */
 int M_Break(int value);
+/**
+ * @brief 构造指定循环层数的无值退出语句。
+ * @param level 正整数节点编号；负一表示 ALL。
+ * @retval 返回退出语句节点编号。
+ */
+int M_BreakLevel(int level);
 /**
  * @brief `continue;`：直接进入最内层循环的下一轮。
  *
@@ -1065,3 +1077,9 @@ struct MDiagnostic
  * @return 按发现顺序保存的诊断列表。
  */
 const Memory::Vector<MDiagnostic> &M_Diagnostics();
+
+/**
+ * @brief 获取本次编译的非致命警告。
+ * @return 按发现顺序保存、已去重的警告列表。
+ */
+const Memory::Vector<MDiagnostic> &M_Warnings();

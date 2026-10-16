@@ -80,7 +80,7 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
     {
     case MNode::Break:
         if (statement.kids.empty())
-            *hasPlain = *hasPlain || loopDepth == 0;
+            *hasPlain = *hasPlain || (statement.i == 0 && loopDepth == 0);
         else
         {
             if (expected)

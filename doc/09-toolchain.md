@@ -342,6 +342,8 @@ make reflection     # 等价 make MAGEL_WITH_REFLECTION=1 STACKVM_WITH_REFLECTIO
 `--diagnostics=json` 在同一个 JSON 文档的 `diagnostics` 数组中输出全部诊断，并映射到原始文件与行号。
 同一位置的相同消息合并，最多保留 100 条，避免级联错误；无法恢复的语法或类型注册错误仍会停止当前阶段。
 
+整数 match 的区间／单值覆盖重叠报告 `MGL1601` 警告，JSON 的 `severity` 为 `warning`；只有警告时进程仍返回 0。警告与错误可出现在同一个诊断数组中。
+
 生命周期检查由独立模块 `source/magel_borrow_checker.hpp` 执行。语义分析只解析类型、记录借用来源与存储操作，
 全部函数和泛型实例完成降级后才将事实交给检查器；检查器不访问符号表、不生成代码，也不在语义分析过程中判定逃逸。
 保存短命引用、返回局部来源及按值 Any 隐藏非全局引用都会产生 `MGL1204`，可以与其他语义错误一并报告。

@@ -1013,6 +1013,7 @@ bool WriteArtifacts(const Memory::String &prefix, const simple_ast::CodegenResul
 void ResetState()
 {
     g_diagnostics.clear();
+    g_warnings.clear();
     g_borrowFacts.clear();
     g_borrowFlows.clear();
     g_borrowFlowCapture = nullptr;

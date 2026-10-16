@@ -162,6 +162,8 @@ Box<int64 fn(int64)> box;
 | `MATCH` | `match` |
 | `DO` | `do` |
 | `BREAK` | `break` |
+| `BREAK_LEVEL` | `#level` |
+| `ALL` | `ALL` |
 | `CONTINUE` | `continue` |
 | `DEFER` | `defer` |
 | `SCOPE_EXIT` | `scope` |
@@ -525,6 +527,8 @@ stmt = block
     | "return", ";"
     | "delete", unary, ";"
     | "break", ";"
+    | "break", "#level", "(", NUMBER, ")", ";"
+    | "break", "#level", "(", "ALL", ")", ";"
     | "break", expr, ";"
     | "break", tuple_items, ";"
     | "continue", ";"

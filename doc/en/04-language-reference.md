@@ -406,6 +406,10 @@ Ranges support only the half-open `[a, b)` and closed `[a, b]` forms. Left-open 
 > Scalar branches accept **constants or ranges only**. A variable, function call or other expression
 > produces: "match branch must be an integer / float / bool constant or a range pattern".
 
+Integer match patterns with compile-time bounds are checked for overlapping coverage. `[15,25]` and `[10,20]`, or `15 =>` and `[15,20]`, produce warning `MGL1601`, regardless of which pattern comes first. `[10,15)` and `[15,20]` do not overlap. Empty ranges are ignored. Comparisons preserve full int64/uint64 precision and consider only values representable by the subject type. Constant-expression bounds are checked; runtime bounds are not inferred. Floating-point and string patterns are outside this warning.
+
+Warnings do not prevent compilation or change branch order. Patterns are tested in source order, followed by their guards. Guarded patterns can also receive coverage warnings; this does not prove that a branch is unreachable. Duplicate unguarded single-value patterns remain compilation errors. CLI warnings include source locations, JSON uses `severity: "warning"`, and the editor displays warning severity.
+
 ### Guards
 
 Bind a variable, then add a condition with `if`:
@@ -763,6 +767,26 @@ Duplicate names, unknown variables, parameter conflicts, and mut/move captures o
 Intervals are internal lazy `Iterator<T>` values using the existing foreach protocol, without allocating a list. Bounds are evaluated once each, from left to right. Both endpoints must fit T, including an exclusive upper endpoint. Constant violations are rejected at compile time; dynamic values are checked before iteration. int8 spans -128..127, so `foreach(int8 x in [0,255])` is rejected. Reversed intervals are errors; [a,a) is empty and [a,a] yields one value.
 
 A closed interval finishes at its last value without incrementing the maximum integer. uint8 255 and uint64 18446744073709551615 are valid inclusive upper bounds. Changing the iteration variable does not change the iterator state. Existing break, continue, return and lambda capture rules apply.
+
+## Breaking out of nested loops
+
+`break #level(N);` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break #level(1);` is equivalent to `break;`. `break #level(ALL);` exits every enclosing loop in the current function and resumes after the outermost loop.
+
+Only `loop`, `while`, `do-while`, `for` and `foreach` count. Ordinary blocks, value blocks, `if` and `match` do not count. N must be a positive decimal integer literal, not a variable or expression. Zero, negative numbers, excessive depths and use outside a loop are rejected. Exits cannot cross function or `fn` boundaries. These forms carry no result; targeting a loop expression that requires a value is rejected. Use `break value;` to supply a result.
+
+```magel
+loop {
+    while (true) {
+        for (int64 i = 0; i < 10; i++) {
+            if (i == 3) { break #level(2); }
+        }
+    }
+    // The for and while loops have ended; execution is still inside loop.
+    break #level(ALL);
+};
+```
+
+Scope cleanup runs from inner to outer scopes, including `defer`, `scope(exit)` and resource cleanup. Statements and update expressions bypassed by the exit do not run. See the [nested-loop exit example](../../example/samples/break_level.mgl).
 
 ## Block expressions and interpolated output
 

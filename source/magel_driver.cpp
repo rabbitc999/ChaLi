@@ -1170,6 +1170,18 @@ int magel_main_entry(int argc, char **argv)
     }
     const int code = M_Compile("magel", prefix.c_str(), run, emitBinary ? 1 : 0,
                                inputText.c_str());
+    Memory::Vector<magel_diagnostics::Diagnostic> warnings;
+    for (const auto &item : M_Warnings())
+    {
+        const auto original = item.line && item.line <= processed.lineMap.size() ? processed.lineMap[item.line - 1] : preprocess::LineOrigin{ sourceLabel, item.line };
+        warnings.push_back({ item.message, original.file, original.line, item.column ? item.column : 1u, true });
+        if (!jsonDiagnostics)
+        {
+            std::fprintf(stderr, "magel：警告：%s:%zu:%zu：%s\n", original.file.c_str(), original.line, item.column ? item.column : 1u, item.message.c_str());
+            const auto snippet = magel_report::renderSnippet(original.file, original.line, item.column ? item.column : 1u);
+            if (!snippet.empty()) std::fputs(snippet.c_str(), stderr);
+        }
+    }
     if (runtimeStats && run && !Memory::runtimeMemoryStatsAvailable) std::fputs("运行时分配器：malloc/free，峰值内存不可用\n", stderr);
     if (runtimeStats && run && Memory::runtimeMemoryStatsAvailable) std::fprintf(stderr, "运行时分配器：峰值 %zu 字节（容量 %zu 字节；运行后已清零）\n", M_RuntimePeakBytes(), memoryBytes);
     if (code != 0)
@@ -1236,10 +1248,11 @@ int magel_main_entry(int argc, char **argv)
                 }
             }
         }
+        diagnostics.insert(diagnostics.end(), warnings.begin(), warnings.end());
         if (jsonDiagnostics) magel_diagnostics::reportMany(diagnostics);
         return code;
     }
-    if (jsonDiagnostics) magel_diagnostics::success();
+    if (jsonDiagnostics) magel_diagnostics::reportMany(warnings);
     if (cache && run == 0 && !checkOnly)
     {
         cache->saveOutputs(prefix, incrementalInput, emitBinary,

@@ -84,6 +84,7 @@ struct MBorrowFlowBuilder
     const MBorrowFlowCapture &capture;
     magel_borrow_checker::FlowGraph graph;
     mutable Memory::Map<Memory::String, MBorrowOrigins> summaries;
+    Memory::Vector<std::size_t> loopStops;   ///< 按词法嵌套登记循环出口，供层级退出选择。
     Memory::Vector<std::size_t> valueStops;  ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
     /**
      * @brief 将方法体返回来源替换为调用点的具体接收者或实参。
@@ -499,7 +500,9 @@ struct MBorrowFlowBuilder
                                                                                                  node.kids[1];
             const bool ownValue = capture.valueLoops.count(id) != 0u;
             if (ownValue) valueStops.push_back(next);
+            loopStops.push_back(next);
             auto bodyEntry = statement(body, update, next, update);
+            loopStops.pop_back();
             if (ownValue) valueStops.pop_back();
             const auto iteration = capture.foreachBindings.find(id);
             if (iteration != capture.foreachBindings.end())
@@ -529,7 +532,12 @@ struct MBorrowFlowBuilder
             }
             return expression(node.kids[0], branch);
         }
-        if (node.kind == MNode::Break) return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
+        if (node.kind == MNode::Break)
+        {
+            if (node.i < 0 && !loopStops.empty()) return loopStops.front();
+            if (node.i > 0 && static_cast<unsigned long long>(node.i) <= loopStops.size()) return loopStops[loopStops.size() - node.i];
+            return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
+        }
         if (node.kind == MNode::Continue) return repeat;
         if (node.kind == MNode::Return) return node.kids.empty() ? static_cast<std::size_t>(-1) : expression(node.kids[0], static_cast<std::size_t>(-1));
         if (node.kind == MNode::Delete && !node.kids.empty()) return address(node.kids[0], add(reference(node.kids[0]) ? MBorrowFlowNode::Destroy : MBorrowFlowNode::Drop, place(node.kids[0]), {}, next, id));

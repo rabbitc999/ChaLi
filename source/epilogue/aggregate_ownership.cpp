@@ -999,13 +999,24 @@ bool IsOwnedKind(const std::shared_ptr<MType> &type)
 /**
  * @brief 查找最近的值出口或循环出口，带值退出跳过没有结果槽的循环。
  * @param hasValue 是否查找接收结果值的出口；为 false 时查找最近循环。
+ * @param level 零表示默认出口，正数指定循环层数，负一选择最外层循环。
  * @retval 找到时返回上下文指针，否则返回空指针。
  */
-MBlockContext *FindBreakContext(bool hasValue = true)
+MBlockContext *FindBreakContext(bool hasValue = true, long long level = 0)
 {
+    MBlockContext *outermost = nullptr;
     for (auto it = g_blockStack.rbegin(); it != g_blockStack.rend(); ++it)
-        if (!it->breakLabel.empty() && (hasValue ? !it->breakValue.empty() : !it->valueOnly)) return &*it;
-    return nullptr;
+    {
+        if (level != 0)
+        {
+            if (it->continueLabel.empty()) continue;
+            outermost = &*it;
+            if (level > 0 && --level == 0) return outermost;
+        }
+        else if (!it->breakLabel.empty() && (hasValue ? !it->breakValue.empty() : !it->valueOnly))
+            return &*it;
+    }
+    return level < 0 ? outermost : nullptr;
 }
 
 /**
