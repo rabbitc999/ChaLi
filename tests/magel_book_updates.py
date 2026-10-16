@@ -30,6 +30,15 @@ def main():
         else:
             assert environments.pop() == name
     assert not environments
+    try:
+        Converter().convert('| chapter | title |\n| 24 | project |\n| 25 | MCU |')
+    except ValueError as error:
+        assert '分隔行' in str(error)
+    else:
+        raise AssertionError('没有表头分隔行的表格不能静默丢行')
+    preface=(ROOT/'doc/book/latex/chapters/preface.tex').read_text(encoding='utf-8')
+    for chapter in range(1, 26):
+        assert preface.count(r'\hyperref[ch:%02d]{%02d} &' % (chapter, chapter)) == 1, chapter
     count=0
     with tempfile.TemporaryDirectory(prefix='magel-book-') as folder:
         work=Path(folder)

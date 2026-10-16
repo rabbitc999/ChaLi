@@ -350,3 +350,28 @@ Checked AOT source tracking retains the per-thread call stack and synchronizatio
 
 
 Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/magel-frontend/`, keeping the repository root clear.
+
+## Toolchain release script
+
+Run `python tools/release.py` from the repository root, or use `sh tools/release.sh`. The default workflow reads VERSION, checks the extension version, generates the book and manual, builds the PDF, embeds assets, builds with both reflection flags and normal maximum optimizations, runs release regressions, installs locked extension dependencies, and packages the VSIX. Windows builds statically link MinGW runtime libraries. Build tools must be on PATH; `--toolchain-dir` can prepend their directory.
+
+```sh
+python tools/release.py --dry-run
+python tools/release.py --toolchain-dir D:/MINGW64_YACC/bin
+python tools/release.py --package-only
+python tools/release.py --package-only --out-dir dist/review
+```
+
+`--package-only` reuses existing compiler, VSIX, and PDF assets, but still verifies versions, embedded compiler bytes, reflection build configuration, and Windows DLL dependencies. It does not regenerate the PDF or run source regressions. The default full workflow runs selected release regressions; `--ci` additionally runs the complete ci.sh gate. `--jobs` controls build parallelism.
+
+Outputs in dist/ include the compiler, VSIX, Magel-book.pdf, a platform ZIP with examples, release.json, and SHA256SUMS.txt. Metadata records the source commit and dirty working-tree status. ZIP replacement is atomic after successful creation. Missing inputs and version drift fail explicitly.
+
+The script does not commit, change tags, or upload attachments by default. After committing source and generated assets, explicitly publish a clean master and version tag:
+
+```sh
+python tools/release.py --package-only --push-tag
+# Explicitly permit replacing an existing tag pointing elsewhere:
+python tools/release.py --package-only --push-tag --replace-tag
+```
+
+Remote replacement uses the observed old tag object as a force-with-lease condition, rejecting concurrent changes. Maintainers upload release attachments separately. The old --build option remains accepted; the full workflow already builds by default.

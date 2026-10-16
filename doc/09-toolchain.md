@@ -389,3 +389,28 @@ AOT 的 checked 源码定位保留线程调用栈和同步保护；同一源文�
 
 
 解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/magel-frontend/`，不会散落到仓库根目录。
+
+## 工具链发布脚本
+
+在仓库根运行 `python tools/release.py`，或使用兼容入口 `sh tools/release.sh`。默认从 `VERSION` 读取版本，要求插件清单同步，然后生成书稿和手册、构建 PDF、内嵌资产、按双反射和默认最高优化构建编译器、执行发布回归、安装锁定的插件开发依赖并打包 VSIX。Windows 编译器静态链接 MinGW 运行库；构建工具必须在 PATH 中，也可通过 `--toolchain-dir` 指定工具目录。
+
+```sh
+python tools/release.py --dry-run
+python tools/release.py --toolchain-dir D:/MINGW64_YACC/bin
+python tools/release.py --package-only
+python tools/release.py --package-only --out-dir dist/review
+```
+
+`--package-only` 复用已有编译器、VSIX 和 PDF，仍验证程序／插件版本、内嵌编译器字节、双反射构建配置和 Windows DLL 依赖。它不重新生成 PDF 或执行源码回归；完整流程默认执行所列发布回归，额外的全仓库门禁用 `--ci`。`--jobs` 控制构建并发数。
+
+产物默认在 `dist/`：编译器、VSIX、`Magel-book.pdf`、包含样例的 `magel-<VERSION>-<系统>-<架构>.zip`、`release.json` 和 `SHA256SUMS.txt`。元数据记录源码提交及工作区是否存在未提交改动，ZIP 在写入成功后原子替换。缺少必要输入或版本漂移会直接失败，不再静默跳过。
+
+默认不提交代码、不操作标签、不上传发布附件。提交源码和生成资产后，可以显式推送干净的 master 和版本标签：
+
+```sh
+python tools/release.py --package-only --push-tag
+# 已有标签指向其他提交，且确实需要替换时：
+python tools/release.py --package-only --push-tag --replace-tag
+```
+
+替换远端标签使用读取到的旧标签对象号作为 `--force-with-lease` 条件；并发变动会拒绝覆盖。附件仍由维护者上传。旧脚本的 `--build` 保留为兼容参数，当前完整流程默认就会构建。

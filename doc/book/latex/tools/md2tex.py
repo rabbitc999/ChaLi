@@ -200,8 +200,9 @@ class Converter:
 
     def conv_table(self, rows_raw):
         rows = [self.split_row(r) for r in rows_raw]
-        if len(rows) < 2:
-            return ''
+        if len(rows) < 2 or len(rows[0]) != len(rows[1]) or not all(
+                re.fullmatch(r':?-{3,}:?', cell.strip()) for cell in rows[1]):
+            raise ValueError('Markdown 表格缺少合法的表头分隔行：' + rows_raw[0])
         header, sep, body = rows[0], rows[1], rows[2:]
         ncol = len(header)
         aligns = []
