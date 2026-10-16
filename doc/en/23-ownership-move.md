@@ -60,3 +60,8 @@ Match accepts only half-open `[a,b)` and closed `[a,b]` ranges; `(a,b)` and `(a,
 Intervals are internal lazy `Iterator<T>` values using the existing foreach protocol, without allocating a list. Bounds are evaluated once each, from left to right. Both endpoints must fit T, including an exclusive upper endpoint. Constant violations are rejected at compile time; dynamic values are checked before iteration. int8 spans -128..127, so `foreach(int8 x in [0,255])` is rejected. Reversed intervals are errors; [a,a) is empty and [a,a] yields one value.
 
 A closed interval finishes at its last value without incrementing the maximum integer. uint8 255 and uint64 18446744073709551615 are valid inclusive upper bounds. Changing the iteration variable does not change the iterator state. Existing break, continue, return and lambda capture rules apply.
+
+
+## Value breaks
+
+Explicit `break i;` prefers moving writable locals inside the receiving value expression, copies external variables and adopts temporary results. Exit callbacks retain access to a valid source through conservative result copying. See [moving and cleaning up value breaks](04-language-reference.md#moving-and-cleaning-up-value-breaks).

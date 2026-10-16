@@ -2685,6 +2685,38 @@ simple_ast::NodePtr DiscardFreshValue(int valueId)
     return simple_ast::Node::exprStmt(value);
 }
 
+/**
+ * @brief 为退出时结束生命周期的可写局部变量选择移动，外部变量及清理所需来源保留复制语义。
+ * @param value 原始退出值节点编号。
+ * @param scopeDepth 结果接收者外侧的名字作用域深度。
+ * @retval 适配后的退出值节点编号，元组按元素递归处理。
+ */
+int PrepareBreakValue(int value, std::size_t scopeDepth)
+{
+    if (value < 0) return value;
+    const auto expression = N(value);
+    if (expression.kind == MNode::Tuple)
+    {
+        Memory::Vector<int> items;
+        for (const int child : expression.kids) items.push_back(PrepareBreakValue(child, scopeDepth));
+        g_nodes[value].kids = std::move(items);
+        return value;
+    }
+    if (expression.kind != MNode::Var) return value;
+    const auto variable = FindIn(expression.module, expression.s);
+    if (!variable || variable->isConst || !variable->type || variable->type->kind == MType::Ptr || variable->type->kind == MType::Array || variable->type->kind == MType::Host)
+        return value;
+    if (variable->elementReference && std::none_of(g_referenceStorage.begin(), g_referenceStorage.end(), [&](const auto &entry) { return entry.second == variable->emitted; }))
+        return value;
+    // 清理回调可能通过别名访问来源；保留独立结果，随后按原顺序执行回调。
+    for (const auto &scope : g_ownedScopes)
+        if (!scope.finalizers.empty()) return value;
+    for (std::size_t index = g_scope.size(); index > scopeDepth + 1u; --index)
+        for (const auto &entry : g_scope[index - 1u])
+            if (&entry.second == variable) return M_BreakValue(value);
+    return value;
+}
+
 simple_ast::NodePtr LowerStmtImpl(int id);
 /**
  * @brief 降级单条语句并维护诊断上下文。
@@ -2867,8 +2899,14 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         }
         // break 的值可包含内层 loop，压栈可能使 g_blockStack 中的指针失效。
         const MBlockContext breakContext = *context;
+        int valueId = node.kids.empty() ? -1 : node.kids[0];
+        if (valueId >= 0 && node.type2 != 1)
+        {
+            valueId = PrepareBreakValue(valueId, breakContext.valueScopeDepth);
+            g_nodes[id].kids[0] = valueId;
+        }
         Memory::Vector<simple_ast::NodePtr> out;
-        if (!node.kids.empty())
+        if (valueId >= 0)
         {
             if (breakContext.breakValue.empty() || !breakContext.breakType || breakContext.breakType->kind == MType::Void)
             {
@@ -2882,13 +2920,13 @@ simple_ast::NodePtr LowerStmtImpl(int id)
             const auto breakSlot = breakContext.breakValue;
             Memory::Set<Memory::String> borrowed;
             if (ContainsBorrowedReferences(breakType, &borrowed))
-                g_borrowFacts.push_back({ magel_borrow_checker::Fact::Store, BorrowSourceDepth(node.kids[0]),
+                g_borrowFacts.push_back({ magel_borrow_checker::Fact::Store, BorrowSourceDepth(valueId),
                                           breakContext.valueScopeDepth, g_reductionLine, "（分支退出值不能借用已结束的分支局部变量）" });
-            const simple_ast::NodePtr value = IsObjectLike(breakType) ? MaterializeObjectValue(node.kids[0], breakType) : MaterializeStringValue(node.kids[0], breakType);
+            const simple_ast::NodePtr value = IsObjectLike(breakType) ? MaterializeObjectValue(valueId, breakType) : MaterializeStringValue(valueId, breakType);
             g_freshSink = savedSink;
             out.insert(out.end(), fresh.begin(), fresh.end());
             if (breakType->kind == MType::Struct)
-                out.push_back(StoreStructValue(simple_ast::Node::var(breakSlot), node.kids[0], value, breakType));
+                out.push_back(StoreStructValue(simple_ast::Node::var(breakSlot), valueId, value, breakType));
             else
                 out.push_back(simple_ast::Node::assign(breakSlot, value));
         }

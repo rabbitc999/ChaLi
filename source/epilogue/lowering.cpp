@@ -3133,6 +3133,7 @@ simple_ast::NodePtr LowerDestructure(int id)
         // 与普通 auto 声明一致；M_Decl 的未设置标记不能被误读成 const。
         g_nodes[child].type2 = 0;
         out.push_back(LowerLocalDecl(M_LocalDecl(childType, M_List1(child), 0)));
+        CaptureBorrowDeclaration(patternId, Find(pattern.s));
         return g_error.empty();
     };
     if (!bind(node.kids[0], M_Var(M_Name(name.c_str())), type)) return Bad();
@@ -3812,6 +3813,7 @@ simple_ast::NodePtr LowerLoop(int id, Memory::String *valueName)
         out.push_back(simple_ast::Node::declare(slot, LowerType(type, slot)));
         if (type->kind == MType::Struct) out.push_back(DefaultInit(slot, type));
     }
+    if (g_borrowFlowCapture && !slot.empty()) g_borrowFlowCapture->valueLoops.insert(id);
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, !node.s.empty() ? Memory::String() : loopLabel, g_ownedScopes.size(), slot, type, !node.s.empty(), g_scope.size() - 1u });

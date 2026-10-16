@@ -818,3 +818,14 @@ A `fn` expression can be passed directly to a named function or a function value
 checked against its parameter's function type, which also provides context for omitted parameter
 types. See [`fn_inline_arguments.mgl`](../../example/samples/fn_inline_arguments.mgl) for a nested
 function result combined with tuple values.
+
+
+## Moving and cleaning up value breaks
+
+Explicit `break i;` prefers moving a writable local variable declared inside the receiving value expression, equivalent to `break std::lang::move(&i);` for that source. Variables outside that expression remain usable and are copied. Crossing loops does not change this boundary. Direct variables in tuples, including nested tuples, follow the same rule. Const values, read-only sources, reference bindings, fields and indexing retain existing value semantics; use explicit `move(&value)` when a transfer is required. If scope exit callbacks are present, an independent result is conservatively saved so callbacks can still read or modify the source.
+
+Expressions such as `break i + 1;` and `break makeText();` are evaluated once and their result temporaries are copied or adopted; the expression itself is not treated as an addressable variable. Compound expressions such as tuples retain existing construction and value-parameter rules before the exit adopts their final result. Ordinary branch tail expressions `{ value }` retain their existing value semantics. Explicitly construct a copy using string concatenation, container copy or a type-provided copying method when needed. To force a move of an external variable, write `break move(&external);`; subsequent access follows the existing moved-binding restrictions.
+
+The result is saved before exit callbacks and automatic cleanup. Moving clears the source storage and ends its binding lifetime without invoking close/drop on the source; the final receiver owns cleanup. Types implementing both Closeable and Drop close before dropping. Copies own independent resources, so source and result are cleaned up at their respective lifetime ends. Exits across loops clean up every scope that is left without releasing resources already transferred to the result.
+
+Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.mgl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM/AOT behavior. See [ownership transfer](23-ownership-move.md) for general rules.

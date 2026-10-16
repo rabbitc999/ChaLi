@@ -1047,6 +1047,16 @@ void ResetState()
     for (const auto &node : g_nodes)
         if (node.kind == MNode::FuncDef && node.s.rfind("__magel_lambda_", 0) == 0)
             for (const int child : node.kids) prepareCaptureStorage(child);
+    // 带值退出在作用域绑定后才选择内部变量移动，提前准备其可能使用的稳定引用槽。
+    std::function<void(int)> prepareBreakStorage = [&](int id) {
+        if (id < 0) return;
+        const auto &node = N(id);
+        if (node.kind == MNode::Var) g_addressTakenNames.insert(node.s);
+        if (node.kind == MNode::Tuple)
+            for (const int child : node.kids) prepareBreakStorage(child);
+    };
+    for (const auto &node : g_nodes)
+        if (node.kind == MNode::Break && node.type2 != 1 && !node.kids.empty()) prepareBreakStorage(node.kids[0]);
     for (const auto &specification : magel_lambda::captureSpecifications)
         for (const auto &capture : specification.second) g_addressTakenNames.insert(capture.first);
     /* 迭代器入口隐式借用或转移容器，必须在局部声明降级前准备引用槽。 */

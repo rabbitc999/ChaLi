@@ -95,3 +95,5 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 - [Matching, interpolation, generics and scope cleanup](27-match-interpolation-scope.md)
 - Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.mgl), [VM / AOT regressions](../../tests/magel_block_expression.py).
+
+- Implicit moves in value breaks: [semantics and cleanup order](04-language-reference.md#moving-and-cleaning-up-value-breaks), [resource identity and destructor sample](../../example/samples/break_move.mgl).

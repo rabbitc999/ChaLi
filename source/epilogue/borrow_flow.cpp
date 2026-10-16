@@ -17,6 +17,7 @@ struct MBorrowFlowCapture
     Memory::Map<int, bool> declarationReferences;
     Memory::Map<int, MBorrowPlace> redeclarations;
     Memory::Map<int, MBorrowPlace> foreachBindings;
+    Memory::Set<int> valueLoops;  ///< 实际分配了结果槽的循环，独立语句也可能接收并丢弃结果。
 };
 Memory::Vector<magel_borrow_checker::FlowGraph> g_borrowFlows;
 MBorrowFlowCapture *g_borrowFlowCapture = nullptr;
@@ -83,6 +84,7 @@ struct MBorrowFlowBuilder
     const MBorrowFlowCapture &capture;
     magel_borrow_checker::FlowGraph graph;
     mutable Memory::Map<Memory::String, MBorrowOrigins> summaries;
+    Memory::Vector<std::size_t> valueStops;  ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
     /**
      * @brief 将方法体返回来源替换为调用点的具体接收者或实参。
      * @param id 调用节点。
@@ -372,7 +374,13 @@ struct MBorrowFlowBuilder
             if ((callee.kind == MNode::Member || callee.kind == MNode::Arrow) && !callee.kids.empty()) next = callee.s == "drop" ? address(callee.kids[0], next) : expression(callee.kids[0], next);
             return next;
         }
-        if (node.kind == MNode::Loop && !node.s.empty()) return statement(node.kids[0], next, next, next);
+        if (node.kind == MNode::Loop)
+        {
+            valueStops.push_back(next);
+            const auto entry = node.s.empty() ? statement(id, next, next, next) : statement(node.kids[0], next, next, next);
+            valueStops.pop_back();
+            return entry;
+        }
         if (node.kind == MNode::Bin && (node.s == "&&" || node.s == "||"))
         {
             const auto right = expression(node.kids[1], next);
@@ -405,6 +413,20 @@ struct MBorrowFlowBuilder
     {
         if (id < 0) return next;
         const auto node = N(id);
+        if (node.kind == MNode::ExprStmt && !node.kids.empty() && N(node.kids[0]).kind == MNode::Loop && N(node.kids[0]).s.empty())
+            return statement(node.kids[0], next, stop, repeat);
+        if (node.kind == MNode::Destructure && !node.i)
+        {
+            std::function<void(int)> initialize = [&](int pattern) {
+                const auto found = capture.declarations.find(pattern);
+                if (found != capture.declarations.end())
+                    next = add(MBorrowFlowNode::Initialize, found->second, {}, next, pattern);
+                else
+                    for (const int child : N(pattern).kids) initialize(child);
+            };
+            initialize(node.kids[0]);
+            return expression(node.kids[1], next);
+        }
         if (node.kind == MNode::Block || node.kind == MNode::List)
         {
             const auto children = node.kind == MNode::Block ? N(node.i).kids : node.kids;
@@ -475,7 +497,10 @@ struct MBorrowFlowBuilder
             const int body = node.kind == MNode::For ? node.kids[3] : node.kind == MNode::Loop ? node.kids[0] :
                                                                   node.kind == MNode::DoWhile  ? node.kids[0] :
                                                                                                  node.kids[1];
+            const bool ownValue = capture.valueLoops.count(id) != 0u;
+            if (ownValue) valueStops.push_back(next);
             auto bodyEntry = statement(body, update, next, update);
+            if (ownValue) valueStops.pop_back();
             const auto iteration = capture.foreachBindings.find(id);
             if (iteration != capture.foreachBindings.end())
                 bodyEntry = add(MBorrowFlowNode::Initialize, iteration->second, {}, bodyEntry, id);
@@ -504,7 +529,7 @@ struct MBorrowFlowBuilder
             }
             return expression(node.kids[0], branch);
         }
-        if (node.kind == MNode::Break) return node.kids.empty() ? stop : expression(node.kids[0], stop);
+        if (node.kind == MNode::Break) return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
         if (node.kind == MNode::Continue) return repeat;
         if (node.kind == MNode::Return) return node.kids.empty() ? static_cast<std::size_t>(-1) : expression(node.kids[0], static_cast<std::size_t>(-1));
         if (node.kind == MNode::Delete && !node.kids.empty()) return address(node.kids[0], add(reference(node.kids[0]) ? MBorrowFlowNode::Destroy : MBorrowFlowNode::Drop, place(node.kids[0]), {}, next, id));

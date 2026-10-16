@@ -1842,7 +1842,29 @@ int M_Construct(int typeId, int args, int skipName)
     return id;
 }
 /**
- * @brief 构造并登记循环退出语句。
+ * @brief 将退出值中的直接变量转换为标准库移动调用，元组逐项应用相同规则。
+ * @param value 原始退出表达式编号。
+ * @retval 转换后的退出表达式编号；临时表达式保持原样。
+ */
+int M_BreakValue(int value)
+{
+    if (value < 0) return value;
+    const MNode expression = g_nodes[static_cast<std::size_t>(value)];
+    if (expression.kind == MNode::Tuple)
+    {
+        Memory::Vector<int> items;
+        for (const int child : expression.kids) items.push_back(M_BreakValue(child));
+        g_nodes[static_cast<std::size_t>(value)].kids = std::move(items);
+        return value;
+    }
+    if (expression.kind != MNode::Var) return value;
+    const int address = M_UnOp(4, value);
+    const int callee = M_New(MNode::EnumCtor, "std::lang");
+    g_nodes[static_cast<std::size_t>(callee)].s2 = "move";
+    return M_CallOn(callee, M_List1(address));
+}
+/**
+ * @brief 构造带移动退出值的循环或块退出语句。
  * @param value 值表达式或字面量的语义值。
  * @retval 生成的语法节点在节点池中的编号。
  */

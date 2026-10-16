@@ -505,7 +505,9 @@ int M_Switch(int subject, int cases);
 /* `match (表达式) { 模式 => { ... } }`：分支表是 Case 节点的列表，不要求显式 break。 */
 int M_Match(int subject, int cases);
 /**
- * `break [value];`：跳出最内层循环；只有 `loop` 接受返回值。
+ * @brief 构造循环或块退出，显式退出优先移动内部可写局部变量并复制外部变量。
+ * @param value 退出表达式编号；负值表示退出最近循环而不产生结果。
+ * @retval 生成的退出语句节点编号。
  */
 int M_Break(int value);
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
@@ -643,7 +645,9 @@ int M_Construct(int typeId, int args, int skipName);
 int M_Delete(int pointer);
 int M_Drop(int value);
 /**
- * `break [value];`：跳出最内层循环；只有 `loop` 接受返回值。
+ * @brief 构造循环或块退出，显式退出优先移动内部可写局部变量并复制外部变量。
+ * @param value 退出表达式编号；负值表示退出最近循环而不产生结果。
+ * @retval 生成的退出语句节点编号。
  */
 int M_Break(int value);
 /**

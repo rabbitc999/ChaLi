@@ -1,5 +1,6 @@
 """验证块表达式、变长列表宏及插值输出在解释与 AOT 后端的一致性。"""
 import argparse
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -13,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--magel', type=Path, default=ROOT / 'magel.exe')
     parser.add_argument('--front-end-only', action='store_true')
+    parser.add_argument('--sample', action='append', help='只运行指定正常样例，可重复；错误诊断仍全部检查')
     options = parser.parse_args()
     compiler = options.magel.resolve()
     env = dict(os.environ, MAGEL_LANG='zh', MAGEL_NO_STDIN_INPUT='1')
@@ -28,9 +30,12 @@ def main():
         examples = {
             'block_expression': 'block expression OK\n',
             'break_values': 'break values OK\n',
+            'break_move': 'break move OK\n',
             'print_interpolation': 'value=3;next=1 2;literal={x};percent=100%\nnested=value 3\nsaved=3\ninterpolation print OK\n',
         }
         for name, expected in examples.items():
+            if options.sample and name not in options.sample:
+                continue
             for backend in ('run',) if options.front_end_only else ('run', 'aot'):
                 for level in (0, 2):
                     output = work / (name + backend + str(level) + '.exe')
@@ -58,12 +63,32 @@ def main():
             'int64 const& x = { loop { int64 local = 1; break &local; }; };',
             'int64 const& x = { for (int64 local=0;local<1;local++) { break &local; } int64 local=2;break &local; };',
             'println(f"value={1}", 2);',
+            'auto result=loop{String source="x";break source,source;};',
+            '(int64 const&,int64) result={loop{int64 local=1;break &local,2;};};',
         ):
             source = work / 'invalid.mgl'
             source.write_text('int64 main(){' + body + 'return 0;}', encoding='utf-8')
             result = invoke([compiler, '--check', source])
             assert result.returncode != 0, (body, result.stdout, result.stderr)
             print(f'[通过] 拒绝 {body}', flush=True)
+        equivalents = (
+            ('int64', '1'),
+            ('String', '"x"'),
+        )
+        for type_name, initial in equivalents:
+            diagnostics = []
+            for form in ('break source,source;', 'break std::lang::move(&source),std::lang::move(&source);'):
+                source = work / 'equivalent.mgl'
+                source.write_text('int64 main(){auto result=loop{' + type_name + ' source=' + initial + ';' + form + '};return 0;}', encoding='utf-8')
+                result = invoke([compiler, 'check', source, 'json'])
+                assert result.returncode != 0, (form, result)
+                diagnostic = json.loads(result.stdout)['diagnostics'][0]
+                diagnostics.append((diagnostic['code'], diagnostic['message']))
+                for backend in ('run', 'aot'):
+                    result = invoke([compiler, backend, source, '--out', work / 'invalid-output'])
+                    assert result.returncode != 0 and diagnostic['message'] in result.stderr + result.stdout, (backend, form, result)
+            assert diagnostics[0] == diagnostics[1], diagnostics
+            print('[通过] 隐式移动与显式移动的诊断及 VM/AOT 拒绝行为一致', flush=True)
 
 
 if __name__ == '__main__':
