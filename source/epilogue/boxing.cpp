@@ -30,6 +30,7 @@ bool CheckObjValue(int valueId, Memory::String *reason)
     switch (type->kind)
     {
     case MType::Int:
+    case MType::Char:
     case MType::Bool:
     case MType::Double:
     case MType::String:
@@ -76,7 +77,9 @@ simple_ast::NodePtr LowerObjSet(const simple_ast::NodePtr &receiver, int valueId
     const std::shared_ptr<MType> valueType = ExprType(valueId);
     const bool objectValue = IsObjectLike(valueType);
     const simple_ast::NodePtr value =
-        objectValue ? MaterializeObjectValue(valueId, valueType) : LowerExpr(valueId);
+        objectValue                                                 ? MaterializeObjectValue(valueId, valueType) :
+        valueType->kind == MType::String && NeedsOwnedTemp(valueId) ? OwnedStringTemp(valueId) :
+                                                                      LowerExpr(valueId);
     return simple_ast::Node::call(
         "__vm_obj_set", { "__magel_o", "__magel_v", "__magel_t", "__magel_s", "__magel_obj", "__magel_n" },
         { receiver, value, simple_ast::Node::i(TypeIdOf(valueType)),
@@ -87,9 +90,27 @@ simple_ast::NodePtr LowerObjSet(const simple_ast::NodePtr &receiver, int valueId
 }
 
 /**
+ * @brief 为 Any 目标或直接接口绑定建立拥有独立句柄的临时值。
+ * @param valueId 待装箱的源表达式节点。
+ * @param target 目标 Any 或接口引用类型。
+ * @retval 完整表达式结束时清理、需要时可移交所有权的装箱结果。
+ * @note 沿用显式 set 的类型与地址寿命检查，源表达式只求值一次。
+ */
+simple_ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target)
+{
+    using simple_ast::Node;
+    const auto name = AllocateName("__magel_box_value");
+    Memory::Vector<simple_ast::NodePtr> prefix;
+    prefix.push_back(Node::declare(name, LowerType(target, name)));
+    prefix.push_back(Node::assign(name, Node::call("__vm_obj_new", {}, {})));
+    prefix.push_back(Node::exprStmt(LowerObjSet(Node::var(name), valueId, "Any 自动装箱")));
+    return OwnedObjectTempNode(Node::sequence(std::move(prefix), Node::var(name)), target);
+}
+
+/**
  * @brief 这个表达式是不是 `某个obj.get()`。
  *
- * `obj.get()` 是**唯一**产出接口引用（胖引用）的地方，也是它自己决定"取成什么类型"
+ * `obj.get()` 可产出接口引用（胖引用），它也需要根据上下文决定"取成什么类型"
  * 的地方 —— 所以这两处判断都要认得它：`LowerValueForType` 里给它放行，
  * `ExprType` 里按上下文给类型。
  */
@@ -698,6 +719,15 @@ simple_ast::NodePtr LowerCall(int id)
                                                 simple_ast::Node::call("__vm_obj_name", { "__magel_o" }, { receiver }),
                                                 simple_ast::Node::i(0));
             }
+            if (methodName == "clear")
+            {
+                if (!CheckMutableReceiver(receiverId)) return Bad();
+                if (!argIds.empty()) return Fail("Any.clear() 不接受参数"), Bad();
+                return simple_ast::Node::call("__vm_obj_set",
+                                              { "__magel_o", "__magel_v", "__magel_t", "__magel_s", "__magel_obj", "__magel_n" },
+                                              { receiver, simple_ast::Node::i(0), simple_ast::Node::i(0),
+                                                simple_ast::Node::i(0), simple_ast::Node::i(0), simple_ast::Node::str("") });
+            }
             if (methodName == "__isTypeTag")
             {
                 if (node.module != "std::lang") return Fail("内部 Any 类型标签仅供核心库使用；请使用 isType<T>"), Bad();
@@ -825,7 +855,7 @@ simple_ast::NodePtr LowerCall(int id)
                 const char *native = IsInterfacePointer(target) ? "__vm_obj_get_ptr" : "__vm_obj_get";
                 return simple_ast::Node::call(native, names, values);
             }
-            Fail("std::lang::Any 只有 set / getValue / getReference / getOptional / isEmpty / copy 方法，没有 " + methodName);
+            Fail("std::lang::Any 只有 set / getValue / getReference / getOptional / isEmpty / clear / copy 方法，没有 " + methodName);
             return Bad();
         }
         /* ---- 接口引用上的方法：运行期按"胖引用里的类型号"分派到具体实现 ----

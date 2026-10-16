@@ -11,8 +11,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -35,18 +33,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 a=(1, 2) b=(99, 2)
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -70,8 +64,6 @@ Magel 两个都不是。它给的是第三种：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Bag
 {
@@ -91,18 +83,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 original=1 copy=2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -112,8 +100,6 @@ original=1 copy=2
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -127,18 +113,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello Hello
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -152,8 +134,6 @@ hello Hello
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -177,18 +157,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 a=(1, 2)
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -227,17 +203,19 @@ Rust 里 \texttt{let b =\allowbreak{} a;} 之后 \texttt{a} 就不能用了—�
 所以什么时候要小心？
 
 \begin{itemize}
+
 \item 大对象当参数：函数要读一个几 MB 的结构体，别按值传。
+
 \item 循环里赋值：\texttt{foreach} 里每轮都在复制元素（小元素无所谓，大结构体就很痛）。
+
 \item 深层嵌套的结构体：复制是递归到底的，层数越多越贵。
+
 \end{itemize}
 
 那怎么避免？答案是第 7 章：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void inspect(BigData const& data)
 {
@@ -250,15 +228,17 @@ void update(BigData mut& data)
 }
 // 要改，不复制
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 注意这是你主动的选择，不是编译器偷偷帮你优化掉复制。这一点很重要：
 
 \begin{itemize}
+
 \item 你写了 \texttt{const\&}，说明「我知道这里不复制」；
+
 \item 你写了按值，说明「我接受这次复制，我需要一份独立的副本」。
+
 \end{itemize}
 
 编译器不会在你背后做决定，所以性能上发生了什么，读代码就能看出来。
@@ -269,8 +249,6 @@ void update(BigData mut& data)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Message
 {
@@ -287,39 +265,41 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{move(\allowbreak{}\&source)\allowbreak{}} 做的事情，按顺序是：
 
 \begin{enumerate}
+
 \item 把 \texttt{source} 原有的资源句柄交给结果，不深拷贝资源；
+
 \item 清空源存储并结束源值生命周期，不执行它的 \texttt{close} / \texttt{drop}；
+
 \item 接收方取得所有权，最终由接收方执行清理。
+
 \end{enumerate}
 
 三条规矩：
 
 \begin{itemize}
+
 \item 参数必须写 \texttt{\&source}，也就是传一个 \texttt{T mut\&}。传普通值或者只读引用会编译报错。
+
 \item 移动之后不能再读 \texttt{source}：
+
+\end{itemize}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Message
 {
@@ -335,23 +315,23 @@ int64 main()
   return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：text
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 要再用这个名字，须重新声明（如 \texttt{Type source =\allowbreak{} something;}）建立新的绑定；旧绑定禁止读写。
+
+\begin{itemize}
+
 \item \texttt{move} 可以省去资源的深拷贝：接收方取得原有字符串和容器的句柄，源值不能再读。需要继续使用源值时保留普通复制，临时只读访问则使用 \texttt{const\&}。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -367,10 +347,15 @@ magel：[MGL1205] 借用来源已移动或销毁，不能继续访问（源对�
 买到的：
 
 \begin{enumerate}
+
 \item 没有别名共享，也就没有「谁改了它」。 一个函数拿到的是副本，它不可能在你不知情的时候改掉你的数据。调试「这个值怎么变了」的时间大幅减少。
+
 \item 不需要所有权标注、不需要生命周期参数。 复制出来的值跟源没有任何关系，所以不存在「它活得比源久」的问题——第 7 章你会看到，引用才需要关心这个。
+
 \item 容器、返回值、参数传递的行为完全一致。 一套规则走遍全语言，没有「这里共享那里复制」的记忆负担。
+
 \item 确定性释放变得自然。 每个值有明确的归属（哪个变量、哪一层作用域），离开作用域就能干净地清掉——这是第 8 章。
+
 \end{enumerate}
 
 一句话：Magel 用「多一点复制」换「少一点你可能想不通的事」。

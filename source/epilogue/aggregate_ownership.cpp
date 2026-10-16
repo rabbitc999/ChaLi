@@ -1194,6 +1194,22 @@ Memory::String IntegerRangeText(const std::shared_ptr<MType> &type)
 }
 
 /**
+ * @brief 检查具体实现引用能否绑定为目标接口视图。
+ * @param target 目标接口引用类型。
+ * @param source 具体实现的引用类型。
+ * @retval 接口实现及引用可变性均符合时返回 true。
+ */
+bool CanBindInterfaceReference(const std::shared_ptr<MType> &target, const std::shared_ptr<MType> &source);
+
+/**
+ * @brief 将具体值装入拥有独立清理记录的动态值或接口视图。
+ * @param valueId 源表达式节点编号。
+ * @param target 目标 Any 或接口引用类型。
+ * @retval 持有装箱结果的低层表达式。
+ */
+simple_ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target);
+
+/**
  * @brief 隐式转换：**整数字面量落进浮点槽位**时，直接写成浮点字面量。
  *
  * `float64 d = 2;` / `d = 2;` / `f(2)`（形参是 float64）/ `return 2;`（返回 float64）——
@@ -1207,15 +1223,15 @@ Memory::String IntegerRangeText(const std::shared_ptr<MType> &type)
  */
 simple_ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> &target)
 {
-    /* 接口引用（胖引用）**只能从 `obj` 解包来**：它多带一个"类型号"，拿裸地址是凑不出的。
-     * 这一层是"声明初始化 / 赋值 / 实参 / return"的共同入口，在这里拦最省事
-     * （`o.get()` 那条自己会产出胖引用，所以放行）。 */
+    /* 接口引用绑定时同时保存具体实现类型号与原引用地址；沿用既有胖引用分派。
+     * 已有接口引用及 Any 提取保持原有路径。 */
     if (target && IsInterfacePointer(target) && !IsObjGetCall(valueId))
     {
         const std::shared_ptr<MType> source = (target && target->kind == MType::Ptr ? RawExprType(valueId) : ExprType(valueId));
         if (!IsInterfacePointer(source))
         {
-            Fail("接口引用 " + Describe(target) + " 只能从 obj 解包来，不能拿 " + Describe(source) + " 凑：先 `o.set(具体对象);` 再 `" + Describe(target) + " q = o.get();`（接口引用是「地址 + 类型号」的胖引用）");
+            if (CanBindInterfaceReference(target, source)) return LowerBoxedValue(valueId, target);
+            Fail("接口引用 " + Describe(target) + " 需要实现该接口且可变性兼容的具体类型引用，实际是 " + Describe(source));
             return Bad();
         }
     }
@@ -1230,6 +1246,8 @@ simple_ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> 
         Fail("bool 与数值之间不能隐式转换：" + Describe(actual) + " -> " + Describe(target) + "（请显式强转）");
         return Bad();
     }
+    if (target && actual && target->kind == MType::Obj && actual->kind != MType::Obj && !objGet && !HasImplicitConversion(actual, target))
+        return LowerBoxedValue(valueId, target);
     const MNode &value = N(valueId);
     /* 字面量落进整型槽位：这是「字面量适配」（`uint8 b = 255;`），不是隐式转换。
      * 字符字面量照旧放行；十进制整数字面量（含 `-300` 这种常量取负）要求值落在目标

@@ -651,7 +651,7 @@ List<T> sortValue<T>(List<T> items);
 std::algorithms::sortValue<T>(items);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:370](../../source/epilogue/boxing.cpp#L370)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:391](../../source/epilogue/boxing.cpp#L391)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -690,7 +690,7 @@ int64 findValue<T>(List<T> items,T value);
 std::algorithms::findValue<T>(items, value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:398](../../source/epilogue/boxing.cpp#L398)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:419](../../source/epilogue/boxing.cpp#L419)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -729,7 +729,7 @@ int64 binarySearchValue<T>(List<T> items,T value);
 std::algorithms::binarySearchValue<T>(items, value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:398](../../source/epilogue/boxing.cpp#L398)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:419](../../source/epilogue/boxing.cpp#L419)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -768,7 +768,7 @@ T minValue<T>(T first,T rest...);
 std::algorithms::minValue<T>(first, rest);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:252](../../source/epilogue/boxing.cpp#L252)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:273](../../source/epilogue/boxing.cpp#L273)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -807,7 +807,7 @@ T maxValue<T>(T first,T rest...);
 std::algorithms::maxValue<T>(first, rest);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:252](../../source/epilogue/boxing.cpp#L252)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:273](../../source/epilogue/boxing.cpp#L273)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -847,7 +847,7 @@ T clampValue<T>(T value,T low,T high);
 std::algorithms::clampValue<T>(value, low, high);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:370](../../source/epilogue/boxing.cpp#L370)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:391](../../source/epilogue/boxing.cpp#L391)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -886,7 +886,7 @@ bool allValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::allValue<T>(items, predicate);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:409](../../source/epilogue/boxing.cpp#L409)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:430](../../source/epilogue/boxing.cpp#L430)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -925,7 +925,7 @@ bool anyValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::anyValue<T>(items, predicate);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:409](../../source/epilogue/boxing.cpp#L409)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:430](../../source/epilogue/boxing.cpp#L430)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -965,7 +965,7 @@ T foldValue<T>(List<T> items,T initial,T fn(T,T) folder);
 std::algorithms::foldValue<T>(items, initial, folder);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:370](../../source/epilogue/boxing.cpp#L370)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:391](../../source/epilogue/boxing.cpp#L391)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1004,7 +1004,7 @@ List<R> mapValue<T>(List<T> items,R fn(T) mapper);
 std::algorithms::mapValue<T>(items, mapper);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:287](../../source/epilogue/boxing.cpp#L287)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:308](../../source/epilogue/boxing.cpp#L308)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1043,7 +1043,7 @@ List<T> filterValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::filterValue<T>(items, predicate);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:309](../../source/epilogue/boxing.cpp#L309)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:330](../../source/epilogue/boxing.cpp#L330)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1082,7 +1082,7 @@ T reduceValue<T>(List<T> items,T fn(T,T) folder);
 std::algorithms::reduceValue<T>(items, folder);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:347](../../source/epilogue/boxing.cpp#L347)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:368](../../source/epilogue/boxing.cpp#L368)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1122,7 +1122,7 @@ T reduceValue<T>(List<T> items,T initial,T fn(T,T) folder);
 std::algorithms::reduceValue<T>(items, initial, folder);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:347](../../source/epilogue/boxing.cpp#L347)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:368](../../source/epilogue/boxing.cpp#L368)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1160,7 +1160,7 @@ T sumValue<T>(List<T> items);
 std::algorithms::sumValue<T>(items);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:274](../../source/epilogue/boxing.cpp#L274)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:295](../../source/epilogue/boxing.cpp#L295)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1199,7 +1199,7 @@ int64 countValue<T>(List<T> items,T value);
 std::algorithms::countValue<T>(items, value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:324](../../source/epilogue/boxing.cpp#L324)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:345](../../source/epilogue/boxing.cpp#L345)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。
 
@@ -1238,6 +1238,6 @@ int64 countValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::countValue<T>(items, predicate);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:324](../../source/epilogue/boxing.cpp#L324)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:345](../../source/epilogue/boxing.cpp#L345)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.mgl](../../example/samples/std_algorithms_extra.mgl)。

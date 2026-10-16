@@ -404,6 +404,48 @@ Memory::String DescribeTypes(const Memory::Vector<std::shared_ptr<MType>> &types
 }
 
 /**
+ * @brief 检查具体结构体引用是否可以直接形成接口视图。
+ * @param target 目标接口引用，决定只读或可写权限。
+ * @param source 源具体结构体引用。
+ * @retval 源类型实现目标接口且不增加写权限时返回 true。
+ * @note 这里只检查类型关系，借用来源与逃逸由现有生命周期检查处理。
+ */
+bool CanBindInterfaceReference(const std::shared_ptr<MType> &target, const std::shared_ptr<MType> &source)
+{
+    return IsInterfacePointer(target) && source && source->kind == MType::Ptr && !IsInterfacePointer(source) && source->elem && source->elem->kind == MType::Struct && (target->readOnly || !source->readOnly) && ImplementsInterface(source->elem->name, target->elem->name);
+}
+
+/**
+ * @brief 判断具体类型是否具有 Any 支持的装箱表示。
+ * @param type 待装箱的源类型。
+ * @retval 类型可由现有装箱原语保存时返回 true。
+ * @note 存储地址的寿命及引用逃逸仍由表达式降级阶段检查。
+ */
+bool AnyAcceptsType(const std::shared_ptr<MType> &type)
+{
+    if (!type) return false;
+    switch (type->kind)
+    {
+    case MType::Int:
+    case MType::Char:
+    case MType::Bool:
+    case MType::Double:
+    case MType::String:
+    case MType::Func:
+    case MType::Struct:
+    case MType::Array:
+    case MType::Container:
+    case MType::BigInt:
+    case MType::BigFloat:
+    case MType::Obj:
+        return true;
+    case MType::Ptr:
+        return type->elem && type->elem->kind != MType::Void;
+    default: return false;
+    }
+}
+
+/**
  * @brief 形参能不能接住实参：完全一致最好，其次只允许 int64 → float64 的加宽。
  * @param param 目标形参的类型描述。
  * @param argument 待解析的参数文本。
@@ -445,8 +487,9 @@ bool Acceptable(const std::shared_ptr<MType> &param, const std::shared_ptr<MType
     {
         return true;
     }
+    if (CanBindInterfaceReference(param, argument)) return true;
     if (HasImplicitConversion(argument, param)) return true;
-    return false;
+    return param->kind == MType::Obj && AnyAcceptsType(argument);
 }
 
 /**

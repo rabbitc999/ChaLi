@@ -30,6 +30,8 @@
 字符串下标和切片以 UTF-8 字节为单位，码点操作使用 `std::utf8`。
 详见[语言参考](04-language-reference.md)、[核心概念](03-core-concepts.md)与[移动规则](23-ownership-move.md)。
 
+明确的 `Any` 目标支持自动装箱，包括泛型实参、字段、返回值及异构 List/Set/Map；精确解包、清空与借用检查沿用值语义。接口引用可直接绑定实现类型引用，无需 Any 中转；视图仍借用原对象。详见 [Any 与接口绑定](22-any-generics-data.md)。
+
 ## 执行、优化与交付
 
 | 方式 | 实现 | 部署要求 |

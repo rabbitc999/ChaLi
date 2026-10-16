@@ -6,8 +6,11 @@
 这一章讲怎么跨过 Magel 和 C 的边界，两个方向：
 
 \begin{itemize}
+
 \item Magel 调 C——用 \texttt{abi} 块调动态库里导出的函数；
+
 \item C 调 Magel——把你的函数交给 C 的运行时。
+
 \end{itemize}
 
 \section{三种集成方式}
@@ -35,8 +38,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=c]
 #include <stdint.h>
 
@@ -54,7 +55,6 @@ MAGEL_ABI_EXPORT const char *abi_name(void) {
     return "native";
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -62,12 +62,9 @@ MAGEL_ABI_EXPORT const char *abi_name(void) {
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 gcc -shared -o native.dll native.c
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -75,8 +72,6 @@ gcc -shared -o native.dll native.c
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 abi "./native.dll"
 {
@@ -90,18 +85,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 42 native
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -109,14 +100,11 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 abi "<动态库路径>" {
     <返回类型> <Magel侧名字>(<形参表>) = "<库里的符号名>";
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -132,8 +120,6 @@ abi "<动态库路径>" {
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=c]
 API Point move_point(Point p, int32_t dx, int32_t dy) {
     p.x += dx; p.y += dy;
@@ -142,7 +128,6 @@ API Point move_point(Point p, int32_t dx, int32_t dy) {
 API void bump(int32_t *value) { ++*value; }
 API const char *greet(void) { return "hello from C"; }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -150,8 +135,6 @@ Magel 侧：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -182,29 +165,29 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 2 / 11 22
 42
 hello from C
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 三个要点：
 
 \begin{enumerate}
+
 \item 结构体按值传——C 的 \texttt{Point p} 对应 Magel 的 \texttt{Point p}，布局默认按 C 规则对齐。所以 Magel 这边得声明一个字段顺序、类型都一致的 \texttt{struct}；
+
 \item C 的 \texttt{int32\_t *value} 对应 \texttt{int32 mut\& value}（第 7 章的可变引用），调用处写 \texttt{bump(\allowbreak{}\&n)\allowbreak{}}——取地址用 \texttt{\&}，和 Magel 内部引用是同一套写法；
+
 \item C 的 \texttt{const char *} 对应 \texttt{String}。
+
 \end{enumerate}
 
 \subsection{支持的类型一览}
@@ -232,8 +215,6 @@ Magel 写法 & 含义 \\
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 abi "./native.dll"
 {
@@ -241,7 +222,6 @@ abi "./native.dll"
     void packed_fill(Packed[] values, int32 count) = "packed_fill";
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -249,15 +229,12 @@ abi "./native.dll"
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 abi "./native.dll"
 {
     Option<Packed const&> packed_snapshot() = "packed_snapshot";
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -277,8 +254,6 @@ abi "./native.dll"
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <string>
@@ -295,7 +270,6 @@ bool bindMagelGlue(magel_glue::Registry &registry, Memory::String *error)
                }, error);
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -303,8 +277,6 @@ Magel 侧就像声明普通函数：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int32 demo_cpp_text_size(String text);
 
@@ -314,15 +286,17 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 两条约定：
 
 \begin{itemize}
+
 \item 复杂宿主对象一律用整数句柄过边界——不要把 C++ 对象本体塞进 Magel 值里，而是用 \texttt{magel\_glue:\allowbreak{}:\allowbreak{}Handle<\allowbreak{}Tag,\allowbreak{} Abi\allowbreak{}Type>\allowbreak{}} 给它一个「名义类型」，Magel 侧拿到的是个整数；
+
 \item 泛型函数实例化后键名带后缀：\texttt{demo\_cpp\_identity<\allowbreak{}int32>\allowbreak{}} 对应键名\texttt{demo\_cpp\_identity\_\_int32}。
+
 \end{itemize}
 
 宿主类型的名字是编译期就绑死的，所以这条路比 \texttt{abi} 强类型、报错也早，胶水需要编入宿主或 AOT 产物；AOT 可直接通过 --glue 指定文件。
@@ -335,8 +309,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 type HostHandle<T> = uint64;
 impl uint64 : ExplicitConvert<HostHandle<int32>> = demo_counter_from_uint;
@@ -358,18 +330,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 42 42
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

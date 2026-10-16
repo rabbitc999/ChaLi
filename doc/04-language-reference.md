@@ -435,15 +435,15 @@ interface Shape {
 - 结构体可实现多个接口，同名同签名的要求只算一条（去重）。
 - 接口名可作引用目标类型：`Shape mut& view`。那是"胖引用"（地址 + 类型号），`.area()` 在**运行期**按类型号挑实现。
 
-运行期多态的常见路径是把对象装进 `std::lang::Any` 再按接口取引用：
+接口视图可直接绑定实现类型的引用，声明、赋值、实参及返回值都适用，不需要 Any 中转：
 
 ```magel
-Any boxed;
-Circle mut& pc = new;
-pc->r = 4;
-boxed.set(&pc);
-Shape mut& view = boxed.getReference();   // 类型号校验在这里
+Circle circle;
+circle.r = 4;
+Shape const& view = &circle;
 ```
+
+只读来源不能绑定可写视图；复制接口视图不延长具体对象的寿命，局部对象的视图不能逃出作用域。已经装箱的 Any 仍可通过 `getReference`／`tryGetReference` 提取接口视图。
 
 完整例子见 [`example/samples/interface.mgl`](../example/samples/interface.mgl)。Any 的安全提取使用 `isType<T>(&box)`、`tryGet<T>(&box)`、`tryGetReference<T>(&box)` 和 `tryGetMut<T>(&box)`；`nameof` 与盒子的 `.name()` 已删除，见 [Any、显式泛型与通用数据工具](22-any-generics-data.md)。
 

@@ -7,12 +7,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 std::iter::range(1, 100).filter(是偶数).map(乘十).take(3).collect()
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -22,31 +19,29 @@ std::iter::range(1, 100).filter(是偶数).map(乘十).take(3).collect()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 起点.中间操作.中间操作.….终结操作
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item 起点：从哪儿开始——一个区间、一个列表；
+
 \item 中间操作：\texttt{map} / \texttt{filter} / \texttt{take}……可以串好几个；
+
 \item 终结操作：\texttt{collect} / \texttt{fold} / \texttt{count}……干活的是它。
+
 \end{itemize}
 
 要 import：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -56,8 +51,6 @@ import std::iter;
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -68,18 +61,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5 5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -95,8 +84,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -110,18 +97,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 4 25
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -129,8 +112,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -146,18 +127,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5 -> 2 4 10
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -168,17 +145,19 @@ int64 main()
 中间操作只是搭管道，真正让数据流动的是终结操作。常用的三个：
 
 \begin{itemize}
+
 \item \texttt{collect(\allowbreak{})\allowbreak{}} —— 收成一个 \texttt{List}；
+
 \item \texttt{count(\allowbreak{})\allowbreak{}} —— 数一共多少个；
+
 \item \texttt{fold(\allowbreak{}初值,\allowbreak{} 函数)\allowbreak{}} —— 从头到尾累积，最灵活。
+
 \end{itemize}
 
 \texttt{fold} 是「求和、求积、求最大」这类操作的通用形式。求和：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -193,19 +172,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5050
 100
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -215,8 +190,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -237,26 +210,25 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 1
 2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{all(\allowbreak{}pred)\allowbreak{}} 全满足吗；\texttt{any(\allowbreak{}pred)\allowbreak{}} 有满足的吗——都返回 \texttt{bool}；
+
 \item \texttt{find(\allowbreak{}pred)\allowbreak{}} 返回第一个满足的（\texttt{Option}，第 16 章——所以后面能接 \texttt{.\allowbreak{}unwrap(\allowbreak{})\allowbreak{}}）。
+
 \end{itemize}
 
 \section{串成一条链}
@@ -265,8 +237,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -287,18 +257,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 6 12 18
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -310,8 +276,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -337,34 +301,36 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 0
 5 10
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{inspect} 是个「顺手看一眼」的中间操作——每过一项就调用一次 \texttt{note}。可注意：
 
 \begin{itemize}
+
 \item 第一次打印 \texttt{seen} 是 0——虽然链子搭好了，一项都还没走；
+
 \item 直到 \texttt{.\allowbreak{}collect(\allowbreak{})\allowbreak{}} 那一刻，才真的从头跑到尾，\texttt{seen} 变成 5。
+
 \end{itemize}
 
 中间操作是惰性的：不接终结操作，它们一行都不执行。 这条设计有两个好处：
 
 \begin{enumerate}
+
 \item 省事——\texttt{take(\allowbreak{}3)\allowbreak{}} 时，源数据只要产出 3 个就够了，后面的根本不碰；
+
 \item 能做无限序列——\texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}repeat(\allowbreak{}x)\allowbreak{}} 可以永远产下去，只要你用 \texttt{take} 限住。
+
 \end{enumerate}
 
 \begin{tip}{提示}
@@ -377,8 +343,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -396,18 +360,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 60
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -417,8 +377,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::iter;
 
@@ -438,18 +396,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 10 20 30
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -475,8 +429,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 foreach (int64 a in list)
 {
@@ -494,7 +446,6 @@ foreach (int64 mut& p in span)
 }
 /* 引用形态：拿到元素地址 */
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -502,8 +453,6 @@ foreach (int64 mut& p in span)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 partial = 0;
 foreach (int64 i in [0, 10])
@@ -522,18 +471,14 @@ foreach (int64 i in [0, 10])
 }
 println("break/continue: {}", partial);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 break/continue: 12
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -545,8 +490,6 @@ break/continue: 12
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::collections;
 
@@ -573,19 +516,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 array: 10 20 30
 list: 5 6
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -597,8 +536,6 @@ list: 5 6
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 std::memory::Span<int64> span = std::memory::Span<int64>::from(raw, len(raw));
 foreach (int64 mut& p in span)
@@ -606,7 +543,6 @@ foreach (int64 mut& p in span)
     * p = *p + 1;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -614,8 +550,6 @@ foreach (int64 mut& p in span)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 List<int64> list;
 list.push(1);
@@ -623,18 +557,14 @@ foreach (int64 mut& x in list)
 {
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：foreach 变量类型与 Vector<T> 元素不一致：写的是 int64 mut&，容器元素是 int64
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

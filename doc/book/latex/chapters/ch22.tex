@@ -26,8 +26,6 @@ AOT 本地程序 & \texttt{magel aot app.\allowbreak{}mgl …} & 不经过 VM �
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -35,18 +33,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello, delivery
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -54,12 +48,9 @@ hello, delivery
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run src/main.mgl
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -71,21 +62,22 @@ magel run src/main.mgl
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel svmb src/main.mgl --out build/app
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 产物是一组文件，其中主角是 \texttt{build/\allowbreak{}app.\allowbreak{}svmb}——交给 StackVM 加载执行。这是交付的主推形态，原因有三：
 
 \begin{enumerate}
+
 \item 不需要编译器：只要一个 VM（几百 KB）就能跑；
+
 \item 跨平台：同一份 \texttt{.\allowbreak{}svmb} 在各平台的 VM 上都能跑，不用维护多份构建；
+
 \item 可加固：能压缩符号（见 22.5）。
+
 \end{enumerate}
 
 \texttt{--out} 决定产物前缀，同时会生成配套的 \texttt{.\allowbreak{}quad} / \texttt{.\allowbreak{}data.\allowbreak{}bin} / \texttt{.\allowbreak{}layout}。下发给客户默认只需要那个 \texttt{.\allowbreak{}svmb}。
@@ -100,14 +92,11 @@ magel svmb src/main.mgl --out build/app
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel aot math.mgl --out math.dll  # Windows GCC 目标
 magel aot math.mgl --out math.so   # Linux GCC 目标
 magel aot math.mgl --out math.o    # 目标文件，供宿主链接
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -115,12 +104,9 @@ magel aot math.mgl --out math.o    # 目标文件，供宿主链接
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel aot src/main.mgl out build/native
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -128,34 +114,25 @@ magel aot src/main.mgl out build/native
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 已生成可执行文件：build/native（运行方式：aot）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./build/native
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello, delivery
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -180,23 +157,17 @@ AOT 的做法是先生成 C++，再编成目标平台的本地程序，所以机
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel aot src/main.mgl out build/native checked
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
   优化级别：-O3
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -208,12 +179,9 @@ magel aot src/main.mgl out build/native checked
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel svmb src/main.mgl --out build/app --compress-symbols
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -227,15 +195,12 @@ magel svmb src/main.mgl --out build/app --compress-symbols
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cfg]
 [embedded]
 enabled = true
 restrict_modules = ["std::math"]     # 在内置禁用之外再追加
 max_memory = 1048576                 # 运行内存上限（字节）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -243,8 +208,6 @@ max_memory = 1048576                 # 运行内存上限（字节）
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::net;
 
@@ -254,7 +217,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -262,13 +224,10 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式运行时里没有后端；
 诊断位置及具体文案以当前编译器为准；restrict_modules 只追加限制
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -280,12 +239,9 @@ magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 嵌入式也能跑普通程序
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -312,13 +268,10 @@ magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl --memory-size 1048576
 magel run app.mgl --watchdog --max-restarts 2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -334,13 +287,10 @@ AOT 生成的 C++ 里带着一个可以直接调的入口：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 static int runMagel(int argumentCount, const char *const *arguments,
                     void *buffer, std::size_t memoryBytes);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

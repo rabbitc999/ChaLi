@@ -12207,7 +12207,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1000,
+    "line": 1030,
     "page": "std-lang.md",
     "anchor": "api-70"
   },
@@ -12248,7 +12248,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1000,
+    "line": 1030,
     "page": "std-lang.md",
     "anchor": "api-71"
   },
@@ -12286,7 +12286,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1004,
+    "line": 1034,
     "page": "std-lang.md",
     "anchor": "api-72"
   },
@@ -12318,7 +12318,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1050,
+    "line": 1080,
     "page": "std-lang.md",
     "anchor": "api-73"
   },
@@ -12343,7 +12343,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1011,
+    "line": 1041,
     "page": "std-lang.md",
     "anchor": "api-74"
   },
@@ -12368,7 +12368,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1060,
+    "line": 1090,
     "page": "std-lang.md",
     "anchor": "api-75"
   },
@@ -12393,7 +12393,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-76"
   },
@@ -12418,7 +12418,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-77"
   },
@@ -12443,7 +12443,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-78"
   },
@@ -12468,7 +12468,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-79"
   },
@@ -12493,7 +12493,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-80"
   },
@@ -12518,7 +12518,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-81"
   },
@@ -12543,7 +12543,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-82"
   },
@@ -12568,7 +12568,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1065,
+    "line": 1095,
     "page": "std-lang.md",
     "anchor": "api-83"
   },
@@ -12600,7 +12600,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1084,
+    "line": 1114,
     "page": "std-lang.md",
     "anchor": "api-84"
   },
@@ -12634,7 +12634,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 590,
+    "line": 611,
     "page": "std-lang.md",
     "anchor": "api-85"
   },
@@ -12666,7 +12666,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 531,
+    "line": 552,
     "page": "std-lang.md",
     "anchor": "api-86"
   },
@@ -12774,7 +12774,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1101,
+    "line": 1131,
     "page": "std-lang.md",
     "anchor": "api-89"
   },
@@ -12818,7 +12818,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1101,
+    "line": 1131,
     "page": "std-lang.md",
     "anchor": "api-90"
   },
@@ -13691,7 +13691,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 664,
+    "line": 685,
     "page": "std-lang.md",
     "anchor": "api-119"
   },
@@ -13716,7 +13716,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 654,
+    "line": 675,
     "page": "std-lang.md",
     "anchor": "api-120"
   },
@@ -13741,7 +13741,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 664,
+    "line": 685,
     "page": "std-lang.md",
     "anchor": "api-121"
   },
@@ -13766,7 +13766,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 654,
+    "line": 675,
     "page": "std-lang.md",
     "anchor": "api-122"
   },
@@ -13798,7 +13798,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 643,
+    "line": 664,
     "page": "std-lang.md",
     "anchor": "api-123"
   },
@@ -13823,7 +13823,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 654,
+    "line": 675,
     "page": "std-lang.md",
     "anchor": "api-124"
   },
@@ -13848,9 +13848,34 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 694,
+    "line": 715,
     "page": "std-lang.md",
     "anchor": "api-125"
+  },
+  {
+    "module": "std::lang",
+    "name": "Any::clear",
+    "owner": "Any",
+    "signature": "void clear()",
+    "documentation": "释放盒子拥有的载荷并恢复空状态；保留盒子自身的键身份。\n\n**返回值**：void。",
+    "comment": "",
+    "parameters": [],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.clear();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 722,
+    "page": "std-lang.md",
+    "anchor": "api-126"
   },
   {
     "module": "std::lang",
@@ -13880,9 +13905,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 708,
+    "line": 738,
     "page": "std-lang.md",
-    "anchor": "api-126"
+    "anchor": "api-127"
   },
   {
     "module": "std::lang",
@@ -13905,9 +13930,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 103,
+    "line": 124,
     "page": "std-lang.md",
-    "anchor": "api-127"
+    "anchor": "api-128"
   },
   {
     "module": "std::lang",
@@ -13930,9 +13955,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 103,
+    "line": 124,
     "page": "std-lang.md",
-    "anchor": "api-128"
+    "anchor": "api-129"
   },
   {
     "module": "std::lang",
@@ -13955,9 +13980,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 103,
+    "line": 124,
     "page": "std-lang.md",
-    "anchor": "api-129"
+    "anchor": "api-130"
   },
   {
     "module": "std::lang",
@@ -13995,7 +14020,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-130"
+    "anchor": "api-131"
   },
   {
     "module": "std::lang",
@@ -14033,7 +14058,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-131"
+    "anchor": "api-132"
   },
   {
     "module": "std::lang",
@@ -14071,7 +14096,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-132"
+    "anchor": "api-133"
   },
   {
     "module": "std::lang",
@@ -14109,7 +14134,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-133"
+    "anchor": "api-134"
   },
   {
     "module": "std::lang",
@@ -14147,7 +14172,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-134"
+    "anchor": "api-135"
   },
   {
     "module": "std::lang",
@@ -14185,7 +14210,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-135"
+    "anchor": "api-136"
   },
   {
     "module": "std::lang",
@@ -14221,9 +14246,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 865,
+    "line": 895,
     "page": "std-lang.md",
-    "anchor": "api-136"
+    "anchor": "api-137"
   },
   {
     "module": "std::lang",
@@ -14261,7 +14286,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-137"
+    "anchor": "api-138"
   },
   {
     "module": "std::lang",
@@ -14299,7 +14324,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-138"
+    "anchor": "api-139"
   },
   {
     "module": "std::lang",
@@ -14337,7 +14362,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-139"
+    "anchor": "api-140"
   },
   {
     "module": "std::lang",
@@ -14375,7 +14400,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-140"
+    "anchor": "api-141"
   },
   {
     "module": "std::lang",
@@ -14411,9 +14436,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1447,
+    "line": 1477,
     "page": "std-lang.md",
-    "anchor": "api-141"
+    "anchor": "api-142"
   },
   {
     "module": "std::lang",
@@ -14445,7 +14470,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-142"
+    "anchor": "api-143"
   },
   {
     "module": "std::lang",
@@ -14477,7 +14502,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-143"
+    "anchor": "api-144"
   },
   {
     "module": "std::lang",
@@ -14509,7 +14534,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-144"
+    "anchor": "api-145"
   },
   {
     "module": "std::lang",
@@ -14541,7 +14566,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-145"
+    "anchor": "api-146"
   },
   {
     "module": "std::lang",
@@ -14573,7 +14598,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-146"
+    "anchor": "api-147"
   },
   {
     "module": "std::lang",
@@ -14605,7 +14630,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-147"
+    "anchor": "api-148"
   },
   {
     "module": "std::lang",
@@ -14637,7 +14662,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-148"
+    "anchor": "api-149"
   },
   {
     "module": "std::lang",
@@ -14669,7 +14694,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-149"
+    "anchor": "api-150"
   },
   {
     "module": "std::lang",
@@ -14701,7 +14726,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-150"
+    "anchor": "api-151"
   },
   {
     "module": "std::lang",
@@ -14733,7 +14758,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-151"
+    "anchor": "api-152"
   },
   {
     "module": "std::lang",
@@ -14765,7 +14790,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-152"
+    "anchor": "api-153"
   },
   {
     "module": "std::lang",
@@ -14797,7 +14822,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-153"
+    "anchor": "api-154"
   },
   {
     "module": "std::lang",
@@ -14829,7 +14854,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-154"
+    "anchor": "api-155"
   },
   {
     "module": "std::lang",
@@ -14861,7 +14886,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-155"
+    "anchor": "api-156"
   },
   {
     "module": "std::lang",
@@ -14893,7 +14918,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-156"
+    "anchor": "api-157"
   },
   {
     "module": "std::lang",
@@ -14925,7 +14950,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-157"
+    "anchor": "api-158"
   },
   {
     "module": "std::lang",
@@ -14957,7 +14982,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-158"
+    "anchor": "api-159"
   },
   {
     "module": "std::lang",
@@ -14989,7 +15014,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-159"
+    "anchor": "api-160"
   },
   {
     "module": "std::lang",
@@ -15021,7 +15046,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-160"
+    "anchor": "api-161"
   },
   {
     "module": "std::lang",
@@ -15053,7 +15078,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-161"
+    "anchor": "api-162"
   },
   {
     "module": "std::lang",
@@ -15085,7 +15110,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-162"
+    "anchor": "api-163"
   },
   {
     "module": "std::lang",
@@ -15117,7 +15142,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-163"
+    "anchor": "api-164"
   },
   {
     "module": "std::lang",
@@ -15149,7 +15174,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-164"
+    "anchor": "api-165"
   },
   {
     "module": "std::lang",
@@ -15181,7 +15206,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-165"
+    "anchor": "api-166"
   },
   {
     "module": "std::lang",
@@ -15213,7 +15238,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-166"
+    "anchor": "api-167"
   },
   {
     "module": "std::lang",
@@ -15245,7 +15270,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-167"
+    "anchor": "api-168"
   },
   {
     "module": "std::lang",
@@ -15277,7 +15302,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-168"
+    "anchor": "api-169"
   },
   {
     "module": "std::lang",
@@ -15309,7 +15334,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-169"
+    "anchor": "api-170"
   },
   {
     "module": "std::lang",
@@ -15341,7 +15366,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-170"
+    "anchor": "api-171"
   },
   {
     "module": "std::lang",
@@ -15373,7 +15398,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-171"
+    "anchor": "api-172"
   },
   {
     "module": "std::lang",
@@ -15405,7 +15430,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-172"
+    "anchor": "api-173"
   },
   {
     "module": "std::lang",
@@ -15437,7 +15462,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-173"
+    "anchor": "api-174"
   },
   {
     "module": "std::lang",
@@ -15469,7 +15494,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-174"
+    "anchor": "api-175"
   },
   {
     "module": "std::lang",
@@ -15501,7 +15526,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-175"
+    "anchor": "api-176"
   },
   {
     "module": "std::lang",
@@ -15535,7 +15560,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-176"
+    "anchor": "api-177"
   },
   {
     "module": "std::lang",
@@ -15567,7 +15592,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-177"
+    "anchor": "api-178"
   },
   {
     "module": "std::lang",
@@ -15592,7 +15617,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-178"
+    "anchor": "api-179"
   },
   {
     "module": "std::lang",
@@ -15617,7 +15642,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-179"
+    "anchor": "api-180"
   },
   {
     "module": "std::lang",
@@ -15649,7 +15674,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-180"
+    "anchor": "api-181"
   },
   {
     "module": "std::lang",
@@ -15681,7 +15706,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-181"
+    "anchor": "api-182"
   },
   {
     "module": "std::lang",
@@ -15713,7 +15738,7 @@
     "source": "source/std/lang.mgl",
     "line": 2,
     "page": "std-lang.md",
-    "anchor": "api-182"
+    "anchor": "api-183"
   },
   {
     "module": "std::lang",
@@ -15745,7 +15770,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-183"
+    "anchor": "api-184"
   },
   {
     "module": "std::lang",
@@ -15777,7 +15802,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-184"
+    "anchor": "api-185"
   },
   {
     "module": "std::linalg",
@@ -27549,7 +27574,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 370,
+    "line": 391,
     "page": "std-algorithms.md",
     "anchor": "api-12"
   },
@@ -27587,7 +27612,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 398,
+    "line": 419,
     "page": "std-algorithms.md",
     "anchor": "api-13"
   },
@@ -27625,7 +27650,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 398,
+    "line": 419,
     "page": "std-algorithms.md",
     "anchor": "api-14"
   },
@@ -27663,7 +27688,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 252,
+    "line": 273,
     "page": "std-algorithms.md",
     "anchor": "api-15"
   },
@@ -27701,7 +27726,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 252,
+    "line": 273,
     "page": "std-algorithms.md",
     "anchor": "api-16"
   },
@@ -27745,7 +27770,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 370,
+    "line": 391,
     "page": "std-algorithms.md",
     "anchor": "api-17"
   },
@@ -27783,7 +27808,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 409,
+    "line": 430,
     "page": "std-algorithms.md",
     "anchor": "api-18"
   },
@@ -27821,7 +27846,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 409,
+    "line": 430,
     "page": "std-algorithms.md",
     "anchor": "api-19"
   },
@@ -27865,7 +27890,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 370,
+    "line": 391,
     "page": "std-algorithms.md",
     "anchor": "api-20"
   },
@@ -27905,7 +27930,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 287,
+    "line": 308,
     "page": "std-algorithms.md",
     "anchor": "api-21"
   },
@@ -27945,7 +27970,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 309,
+    "line": 330,
     "page": "std-algorithms.md",
     "anchor": "api-22"
   },
@@ -27985,7 +28010,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 347,
+    "line": 368,
     "page": "std-algorithms.md",
     "anchor": "api-23"
   },
@@ -28031,7 +28056,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 347,
+    "line": 368,
     "page": "std-algorithms.md",
     "anchor": "api-24"
   },
@@ -28065,7 +28090,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 274,
+    "line": 295,
     "page": "std-algorithms.md",
     "anchor": "api-25"
   },
@@ -28105,7 +28130,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 324,
+    "line": 345,
     "page": "std-algorithms.md",
     "anchor": "api-26"
   },
@@ -28145,7 +28170,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 324,
+    "line": 345,
     "page": "std-algorithms.md",
     "anchor": "api-27"
   }

@@ -13,34 +13,32 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String name = "Magel";
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item 双引号括起来的是 \texttt{String}；
+
 \item \texttt{String} 是 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}String} 的简写，属于核心模块 \texttt{lang}，不用 import；
+
 \item 里面有转义：\texttt{"\textbackslash\{\}n"}（换行）、\texttt{"\textbackslash\{\}t"}（制表）、\texttt{"\textbackslash\{\}""}（一个双引号）、\texttt{"\textbackslash\{\}\textbackslash\{\}"}（一个反斜杠）。
+
 \end{itemize}
 
 一个重要区别：单引号是 \texttt{char}（一个字符），双引号是 \texttt{String}。这两者不能混：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 char letter = 'M';
 // 一个字符
 String word = "Magel";
 // 一串字符
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -48,8 +46,6 @@ String word = "Magel";
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -65,38 +61,38 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 Magel 2026
 len=10 首个字符=M
 切片 [0:5] = Magel
 切片 [5:]  =  2026
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{+} 拼接两个字符串。和数字的 \texttt{+} 不是一回事——\texttt{1 + "a"} 是编译错误。
+
 \item \texttt{s[\allowbreak{}i]\allowbreak{}} 取第 \texttt{i} 个「字符」（先按这个理解，12.4 节纠正它）。
+
 \item 切片写 \texttt{s[\allowbreak{}from:\allowbreak{}to]\allowbreak{}}，左闭右开：\texttt{joined[\allowbreak{}0:\allowbreak{}5]\allowbreak{}} 是下标 0、1、2、3、4 这五个。
+
 \item \texttt{s[\allowbreak{}from:\allowbreak{}]\allowbreak{}} 从 \texttt{from} 一直到结尾，\texttt{s[\allowbreak{}:\allowbreak{}to]\allowbreak{}} 从开头到 \texttt{to}。
+
 \item \texttt{len(\allowbreak{}s)\allowbreak{}} 是长度。
+
 \end{itemize}
 
 改单个字符也可以，但要赋一个 \texttt{char} 给它：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -107,18 +103,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 Hello
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -126,14 +118,11 @@ Hello
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 String original = "hello";
 String copy = original;
 copy[0] = (char)72;      // 只改 copy
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -145,8 +134,6 @@ copy[0] = (char)72;      // 只改 copy
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -164,30 +151,31 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 值=42，下一个是 43
 255 的十六进制是 ff，二进制是 11111111
 圆周率约 3.14
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 占位符的要点：
 
 \begin{itemize}
+
 \item \texttt{\{\}} 是位置占位符，按实参顺序填，类型由实参推导，字符串 / 整数 / 浮点都能填；
+
 \item \texttt{\{:\allowbreak{}x\}} / \texttt{\{:\allowbreak{}X\}} / \texttt{\{:\allowbreak{}b\}} 把整数按十六进制 / 大写十六进制 / 二进制打印——只有整数和 \texttt{bool} 能用这几个样式。写别的样式（比如 \texttt{\{:\allowbreak{}5\}}、\texttt{\{:\allowbreak{}03\}}）会直接报「整数和 bool 的格式仅支持 \texttt{:\allowbreak{}b}、\texttt{:\allowbreak{}x}、\texttt{:\allowbreak{}X}」；
+
 \item 浮点用 \texttt{\{索引:\allowbreak{}小数位数F\}}，索引 从 1 数起：\texttt{\{1:\allowbreak{}2F\}} 表示「把第 1 个实参保留 2 位小数」；
+
 \item 补零 / 对齐没有单独的样式，要用 \texttt{std:\allowbreak{}:\allowbreak{}text:\allowbreak{}:\allowbreak{}Text:\allowbreak{}:\allowbreak{}pad\allowbreak{}Start}（见 12.6 节）——想知道 \texttt{序号 007} 怎么写，翻到 12.6 节的那个例子。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -202,8 +190,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -214,20 +200,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len(s) = 6
 第 0 个字节 = 228
 第 3 个字节 = 230
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -236,9 +218,13 @@ len(s) = 6
 原因是 Magel 的字符串在内存里是 UTF-8 字节串，而 UTF-8 里一个汉字占 3 个字节。所以：
 
 \begin{itemize}
+
 \item \texttt{"中文"} = 6 个字节；
+
 \item \texttt{"Magel"} = 5 个字节（和字符数相同，因为都是 ASCII）；
+
 \item \texttt{len}、下标、切片，都按字节算。
+
 \end{itemize}
 
 \texttt{(\allowbreak{}int64)\allowbreak{}s[\allowbreak{}0]\allowbreak{}} 得到的 \texttt{228}（十六进制 \texttt{0x\allowbreak{}E4}）是「中」这个字的第一个字节，\texttt{(\allowbreak{}int64)\allowbreak{}s[\allowbreak{}3]\allowbreak{}} 得到的 \texttt{230}（\texttt{0x\allowbreak{}E6}）是「文」的第一个字节。
@@ -249,15 +235,12 @@ len(s) = 6
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：字符串下标落在多字节字符中间（String 按字节算）
 出错位置：hello.mgl:2（main）
 调用栈（外 → 内）：
   main  hello.mgl:2 [thread 0 coroutine 0 ip 41]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -265,12 +248,9 @@ magel：运行期错误：字符串下标落在多字节字符中间（String �
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：切片端点落在多字节字符中间（String 的切片按字节算）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -281,9 +261,13 @@ magel：运行期错误：切片端点落在多字节字符中间（String 的�
 别用下标切中文。 三种办法：
 
 \begin{enumerate}
+
 \item 整个串用：\texttt{println(\allowbreak{}"\{\}",\allowbreak{} s)\allowbreak{}} 打印是对的——因为整串的边界永远合法；
+
 \item 按分隔符切：用 \texttt{std:\allowbreak{}:\allowbreak{}text:\allowbreak{}:\allowbreak{}Text:\allowbreak{}:\allowbreak{}split(\allowbreak{}s,\allowbreak{} "，")\allowbreak{}}（12.6 节）。分隔符本身是完整的字符，切出来的每一段边界也合法；
+
 \item 遍历要自己算：想知道 UTF-8 里每个字有几个字节，看首字节的高位就行：| 首字节范围 | 这个字占几字节 | | --- | --- | | \texttt{0x00}–\texttt{0x7F} | 1（ASCII） | | \texttt{0x\allowbreak{}C0}–\texttt{0x\allowbreak{}DF} | 2 | | \texttt{0x\allowbreak{}E0}–\texttt{0x\allowbreak{}EF} | 3（含常见汉字） | | \texttt{0x\allowbreak{}F0}–\texttt{0x\allowbreak{}F7} | 4 | 按这张表跳过续字节（\texttt{0x80}–\texttt{0x\allowbreak{}BF}），就能一个个字地走。
+
 \end{enumerate}
 
 简单说：处理中文文本，用 \texttt{std:\allowbreak{}:\allowbreak{}text} 那些按字符/子串工作的函数，不要自己拿下标去数。
@@ -292,8 +276,6 @@ magel：运行期错误：切片端点落在多字节字符中间（String 的�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -301,18 +283,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 0 1 0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -322,8 +300,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 if (name == "")
 {
@@ -334,7 +310,6 @@ if (name != expected)
     println("不匹配");
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -346,8 +321,6 @@ if (name != expected)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::text;
 
@@ -370,14 +343,11 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [Hello, Magel!]
 ABC abc
@@ -387,7 +357,6 @@ ABC abc
 [bbb]
 [007][ababab]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -424,8 +393,6 @@ ABC abc
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String text = "";
 foreach (String line in lines)
@@ -434,7 +401,6 @@ foreach (String line in lines)
     // 每轮都复制一遍已经拼好的部分
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -444,8 +410,6 @@ foreach (String line in lines)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::text;
 
@@ -461,20 +425,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 第一行
 第二行
 第三行
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -486,8 +446,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -497,18 +455,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 count=4, inner=3, {literal}
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -520,8 +474,6 @@ count=4, inner=3, {literal}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -531,7 +483,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

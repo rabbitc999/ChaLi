@@ -13,8 +13,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 maxOf(int64 a, int64 b)
 {
@@ -25,7 +23,6 @@ int64 maxOf(int64 a, int64 b)
     return b;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -33,8 +30,6 @@ int64 maxOf(int64 a, int64 b)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String maxOf(String a, String b)
 {
@@ -45,7 +40,6 @@ String maxOf(String a, String b)
     return b;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -57,8 +51,6 @@ String maxOf(String a, String b)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 T maxOf<T>(T a, T b)
 {
@@ -76,27 +68,26 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 9
 pear
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{T} 是一个占位符，代表「先不定，等调用时再说」的类型：
 
 \begin{itemize}
+
 \item \texttt{max\allowbreak{}Of(\allowbreak{}3,\allowbreak{} 9)\allowbreak{}} —— 编译器一看实参是 \texttt{int64}，就把 \texttt{T} 当成 \texttt{int64}；
+
 \item \texttt{max\allowbreak{}Of(\allowbreak{}"apple",\allowbreak{} "pear")\allowbreak{}} —— 这次 \texttt{T} 是 \texttt{String}。
+
 \end{itemize}
 
 一个定义，两种类型。 加第三种也不用改 \texttt{max\allowbreak{}Of} 一个字。
@@ -111,8 +102,6 @@ pear
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 T maxOf<T>(T a, T b)
 {
@@ -130,19 +119,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 9
 pear
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -150,8 +135,6 @@ pear
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 T maxOf<T>(T a, T b)
 {
@@ -168,7 +151,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -176,13 +158,10 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：泛型函数 maxOf 的类型实参推导冲突，请显式指定类型实参
 note: 第 2 个实参实际为 float64，形参模式为 ...
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -194,8 +173,6 @@ note: 第 2 个实参实际为 float64，形参模式为 ...
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Duo<T, U>
 {
@@ -212,18 +189,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 a
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -237,8 +210,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Box<T>
 {
@@ -264,19 +235,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 41
 hi
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -290,8 +257,6 @@ hi
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 interface Valued
 {
@@ -320,18 +285,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 42
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -341,8 +302,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 interface Valued
 {
@@ -360,18 +319,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：read_value 的类型实参 int64 未实现接口 Valued
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -386,13 +341,15 @@ magel：read_value 的类型实参 int64 未实现接口 Valued
 三个直接后果：
 
 \begin{enumerate}
+
 \item 没有运行期分派。 调用 \texttt{max\allowbreak{}Of(\allowbreak{}3,\allowbreak{} 9)\allowbreak{}} 和调用一个手写的 \texttt{max\allowbreak{}Of(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{}} 一样快，机器码是同一份；这跟第 13 章的接口胖引用完全不同（那个要查类型号）。
+
 \item 泛型代码的检查发生在实例化时。 \texttt{max\allowbreak{}Of<\allowbreak{}T>\allowbreak{}} 的函数体里写着 \texttt{a >\allowbreak{} b}，编译器在没看到具体类型之前不会去挑它的毛病；等你拿一个不支持 \texttt{>\allowbreak{}} 的类型来实例化，它才报错——而且报的是那个实例的错：
+
+\end{enumerate}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 T twiceOf<T>(T v)
 {
@@ -412,24 +369,24 @@ int64 main()
  return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：没有匹配的运算符接口实现：P + P（由左操作数实现 Add<R,T> 这类左接口，
 或由右操作数实现 RightAdd<R,T> 这类右接口）；不会偷偷按数值算
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{twice\allowbreak{}Of<\allowbreak{}int64>\allowbreak{}} 和 \texttt{twice\allowbreak{}Of<\allowbreak{}String>\allowbreak{}} 都没问题（整数 \texttt{+} 整数、字符串 \texttt{+} 字符串），只有 \texttt{twice\allowbreak{}Of<\allowbreak{}P>\allowbreak{}} 这一份不行。
+
+\begin{enumerate}[start=3]
+
 \item 代码会变大。 每个实例都是一份独立的机器码，用一百种类型就生成一百份。这是泛型的代价，换来的是运行期的干净。
+
 \end{enumerate}
 
 \begin{tip}{提示}
@@ -442,8 +399,6 @@ magel：没有匹配的运算符接口实现：P + P（由左操作数实现 Add
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Wrap<T, U = T>
 {
@@ -451,7 +406,6 @@ struct Wrap<T, U = T>
     U b;
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -482,8 +436,11 @@ struct Wrap<T, U = T>
 经验法则：
 
 \begin{itemize}
+
 \item 编译期就知道类型 \ensuremath{\rightarrow} 泛型；运行期才定 \ensuremath{\rightarrow} 接口。
+
 \item 两者能合起来用：泛型加约束 \texttt{<\allowbreak{}T:\allowbreak{} Shape>\allowbreak{}} 就是「泛型 + 接口」，既零开销、又能调接口方法。
+
 \end{itemize}
 
 \subsection{编译期整数参数}
@@ -492,8 +449,6 @@ struct Wrap<T, U = T>
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Buffer<T, N: int64>
 {
@@ -511,18 +466,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 4 7
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -530,15 +481,12 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Matrix<T, rows: int64, cols: int64>
 {
     T data[rows][cols];
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -550,8 +498,6 @@ struct Matrix<T, rows: int64, cols: int64>
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 interface Container
 {
@@ -577,18 +523,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 10
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -600,8 +542,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 T fromLocal<T>(T value)
 {
@@ -634,18 +574,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 generic generic 9
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

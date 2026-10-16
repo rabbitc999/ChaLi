@@ -33,6 +33,8 @@ String indexing and slicing use UTF-8 bytes; use `std::utf8` for code-point oper
 See the [language reference](04-language-reference.md), [core concepts](03-core-concepts.md) and
 [move rules](23-ownership-move.md).
 
+Explicit Any targets support contextual boxing in generics and heterogeneous List/Set/Map, exact extraction, clearing, and borrow checks. Interface references bind directly to implementing concrete references without an Any intermediary; views still borrow their source. See [Any and interface binding](22-any-generics-data.md).
+
 ## Execution, optimization and delivery
 
 | Mode | Implementation | Deployment requirements |

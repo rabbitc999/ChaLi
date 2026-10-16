@@ -21,8 +21,6 @@ Magel 内建三种容器，不用 \texttt{import}：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -48,14 +46,11 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=3 at1=10 has10=1 idx=2
 insert 后：7 len=4
@@ -63,7 +58,6 @@ pop=20 len=3
 remove(0) 后：30 len=2
 clear 后：len=0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -91,8 +85,6 @@ clear 后：len=0
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 position = scores.indexOf(99);
 if (position >= 0)
@@ -104,7 +96,6 @@ else
     println("没有这个值");
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -112,8 +103,6 @@ else
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -123,21 +112,17 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：vec 下标越界：5（长度 1）
 出错位置：hello.mgl:4（main）
 调用栈（外 → 内）：
   main  hello.mgl:4 [thread 0 coroutine 0 ip 25]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -147,8 +132,6 @@ magel：运行期错误：vec 下标越界：5（长度 1）
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -168,30 +151,30 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=2 amy=11 hasBob=0 cid=33
 查一个没有的键：0
 amy -> 11
 cid -> 33
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 写法：
 
 \begin{itemize}
+
 \item \texttt{put(\allowbreak{}k,\allowbreak{} v)\allowbreak{}} 和 \texttt{m[\allowbreak{}k]\allowbreak{} =\allowbreak{} v} 是一回事，后者顺手一点；
+
 \item \texttt{m[\allowbreak{}k]\allowbreak{}} 读；\texttt{has(\allowbreak{}k)\allowbreak{}} 判断有没有；\texttt{remove(\allowbreak{}k)\allowbreak{}} 删掉并返回是否删到了；
+
 \item 遍历用 \texttt{key\allowbreak{}At(\allowbreak{}i)\allowbreak{}} / \texttt{val\allowbreak{}At(\allowbreak{}i)\allowbreak{}} 按下标走，\texttt{i} 从 0 到 \texttt{len(\allowbreak{})\allowbreak{} - 1}。Map 的遍历顺序是按升序键排列的，所以同一份数据每次遍历结果一致；
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -202,8 +185,6 @@ cid -> 33
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -219,28 +200,27 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=2 has5=1 has9=0
 按升序看：at0=3 at1=5
 remove(5) 拿回 1，现在 len=1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{Set} 的两个特点：
 
 \begin{itemize}
+
 \item 自动去重：\texttt{add(\allowbreak{}5)\allowbreak{}} 两次，长度还是 1；
+
 \item 自动排序：遍历出来是升序（\texttt{at(\allowbreak{}0)\allowbreak{}} 是最小的）。
+
 \end{itemize}
 
 \texttt{remove} 返回的是「有没有删到」。所以「删一个可能不存在的元素」不用先查\texttt{has}，看返回值就知道。
@@ -251,8 +231,6 @@ remove(5) 拿回 1，现在 len=1
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -276,20 +254,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 3
 3
 2 2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -311,12 +285,9 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：集合字面量类型不匹配：map 不能初始化 List<int64>
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -330,8 +301,6 @@ magel：集合字面量类型不匹配：map 不能初始化 List<int64>
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -349,19 +318,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 3 4
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -386,8 +351,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -402,18 +365,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 original=1 copy=2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -421,8 +380,6 @@ original=1 copy=2
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void addOne(List<int64> numbers)
 {
@@ -430,7 +387,6 @@ void addOne(List<int64> numbers)
     // 改的是副本！
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -438,8 +394,6 @@ void addOne(List<int64> numbers)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void addOne(List<int64> mut& numbers)
 {
@@ -447,7 +401,6 @@ void addOne(List<int64> mut& numbers)
 }
 // 调用：addOne(&numbers);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -457,8 +410,6 @@ void addOne(List<int64> mut& numbers)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Player
 {
@@ -486,19 +437,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 表里还是 30
 表里还是 30
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -514,8 +461,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -530,19 +475,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 块里的表：len=2
 done
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -554,8 +495,6 @@ done
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -578,18 +517,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 总和 108 最高 55
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -597,8 +532,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 for (int64 i = 0; i < scores.len(); i = i + 1)
 {
@@ -606,13 +539,68 @@ for (int64 i = 0; i < scores.len(); i = i + 1)
     // 这样才改到表里
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{tip}{提示}
 遍历时不要增删元素。 \texttt{foreach} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。
 \end{tip}
+
+\subsection{用 \texttt{Any} 保存不同类型的元素}
+
+\texttt{List<\allowbreak{}Any>\allowbreak{}} 明确要求元素装箱；\texttt{Set<\allowbreak{}Any>\allowbreak{}} 和 \texttt{Map} 的键或值槽也可以明确写成 \texttt{Any}。普通的 \texttt{List<\allowbreak{}int64>\allowbreak{}} 仍只接受能转换为 \texttt{int64} 的值。
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+int64 main()
+{
+    List<Any> values = {1, "two", true};
+    values.push(1.5);
+    Any text = values[1];
+    println("{} {}", values.len(), tryGet<String>(&text).unwrap());
+
+    Set<Any> unique;
+    Any key = "key";
+    unique.add(key);
+    unique.add(key);
+    unique.add(2);
+    println("{}", unique.len());
+
+    Map<Any, Any> mixed;
+    mixed.put(key, "stored");
+    mixed.put(3, true);
+    Any saved = mixed[key];
+    println("{} {}", mixed.len(), tryGet<String>(&saved).unwrap());
+
+    Map<String, Any> record = {"count": 3, "name": "Magel"};
+    Any count = record["count"];
+    println("{}", tryGet<int64>(&count).unwrap());
+    saved.clear();
+    println("{}", saved.isEmpty());
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+4 two
+2
+2 stored
+3
+1
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{Any} 保留精确类型，\texttt{try\allowbreak{}Get<\allowbreak{}T>\allowbreak{}} 返回拥有值的副本；类型不匹配时返回 \texttt{None}。\texttt{clear(\allowbreak{})\allowbreak{}} 释放盒子当前载荷并恢复空状态，不影响之前复制出的值。字符串、嵌套容器按值复制，盒子和容器在离开作用域时自动清理。
+
+\texttt{Any} 键比较身份，不比较装箱内容。 复制 \texttt{key} 保留身份，所以重复插入会去重，并且可以用它查询映射。两次独立装箱相同内容是不同键；需要按字符串内容查询时使用 \texttt{Map<\allowbreak{}String,\allowbreak{} Any>\allowbreak{}}。异构集合的排列也不要当成按载荷数值或文本排序。
+
+装箱不会延长引用寿命。局部结构体、数组等多槽值的地址不能被保存在更长寿命的盒子里；需要接口视图时可直接绑定实现类型的引用，无须经过 \texttt{Any}。
 
 \section{小结}
 
@@ -631,12 +619,19 @@ for (int64 i = 0; i < scores.len(); i = i + 1)
 要记住的：
 
 \begin{itemize}
+
 \item 字面量：左边写 \texttt{List<\allowbreak{}T>\allowbreak{}} / \texttt{Set<\allowbreak{}T>\allowbreak{}} / \texttt{Map<\allowbreak{}K,\allowbreak{}V>\allowbreak{}} 决定 \texttt{\{.\allowbreak{}.\allowbreak{}.\allowbreak{}\}} 是什么，带冒号的是 \texttt{Map}；
+
 \item 越界是明确的运行期错误，不是未定义行为；
+
 \item \texttt{Map} 读不存在的键得到缺省值（不报错），先 \texttt{has} 再取；
+
 \item 容器是值：赋值、传参、存取元素都是复制；传参默认写 \texttt{const\&} / \texttt{mut\&}；
+
 \item 遍历用 \texttt{foreach}，遍历出来是副本；遍历时不要增删；
+
 \item 容器在出作用域时自动释放。
+
 \end{itemize}
 
 \section{下一步}

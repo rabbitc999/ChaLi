@@ -449,16 +449,15 @@ interface Shape {
 - An interface name may be used as a reference target type: `Shape mut& view`. That is a "fat
   reference" (address + type id), so `.area()` picks the implementation **at run time** by type id.
 
-The usual route to runtime polymorphism is to box the object into `std::lang::Any` and take an
-interface reference out:
+Interface references bind directly to concrete references whose types implement the interface:
 
 ```magel
-Any boxed;
-Circle mut& pc = new;
-pc->r = 4;
-boxed.set(&pc);
-Shape mut& view = boxed.getReference();   // type-id check happens here
+Circle circle;
+circle.r = 4;
+Shape const& view = &circle;
 ```
+
+The same conversion works in assignments, arguments, and returns without an Any intermediary. A read-only source cannot become mutable. Views borrow their source; copying a view does not extend the concrete object's lifetime. Existing Any values can still expose interface views through checked reference extraction.
 
 See [`example/samples/interface.mgl`](../../example/samples/interface.mgl).
 

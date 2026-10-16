@@ -19,8 +19,6 @@ Magel 把「可能失败」这件事写进类型里：返回 \texttt{Option<\all
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Option<int64> findFirst(List<int64> xs, int64 target)
 {
@@ -46,29 +44,30 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 1
 7
 -1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item 造值：\texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}Value(\allowbreak{}x)\allowbreak{}}，空：\texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}None}；
+
 \item \texttt{is\allowbreak{}Value(\allowbreak{})\allowbreak{}} / \texttt{is\allowbreak{}None(\allowbreak{})\allowbreak{}} 是 \texttt{bool}，问「有没有」；
+
 \item \texttt{unwrap(\allowbreak{})\allowbreak{}} 取值——空的时候它会 panic（见 16.4）；
+
 \item \texttt{unwrap\allowbreak{}Or(\allowbreak{}-1)\allowbreak{}} 取值，但空的时给个兜底值——这是最常用的一个。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -81,8 +80,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Result<int64, String> safeDiv(int64 a, int64 b)
 {
@@ -101,27 +98,27 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 1
 5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{Ok(\allowbreak{}v)\allowbreak{}} / \texttt{Err(\allowbreak{}e)\allowbreak{}} 造两个状态；
+
 \item \texttt{is\allowbreak{}Ok(\allowbreak{})\allowbreak{}} / \texttt{is\allowbreak{}Err(\allowbreak{})\allowbreak{}} 判断；\texttt{unwrap(\allowbreak{})\allowbreak{}} / \texttt{unwrap\allowbreak{}Or(\allowbreak{}…)\allowbreak{}} / \texttt{expect(\allowbreak{}…)\allowbreak{}} 取值；
+
 \item 出错原因 \texttt{E} 类型随便挑：字符串、错误码、甚至一个自己的枚举。
+
 \end{itemize}
 
 \texttt{Option} 与 \texttt{Result} 的关系：\texttt{Option<\allowbreak{}T>\allowbreak{}} 差不多就是 \texttt{Result<\allowbreak{}T,\allowbreak{} (\allowbreak{})\allowbreak{}>\allowbreak{}}——「失败了，但没什么可说的」。要带原因，就用 \texttt{Result}。
@@ -130,8 +127,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -162,19 +157,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 err 坏了
 v=3
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -201,8 +192,6 @@ v=3
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -211,21 +200,17 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：called Option.unwrap() on None
 出错位置：<内建 lang>:122（__magel_match_next_59）
 调用栈（外 → 内）：
   main  hello.mgl:3 [thread 0 coroutine 0 ip 40]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -233,8 +218,6 @@ magel：运行期错误：panic：called Option.unwrap() on None
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -243,18 +226,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：必须要有值
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -266,8 +245,6 @@ magel：运行期错误：panic：必须要有值
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Option<int64> quarter(int64 n)
 {
@@ -286,7 +263,6 @@ Option<int64> quarter(int64 n)
     return q;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -294,8 +270,6 @@ Option<int64> quarter(int64 n)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Option<int64> half(int64 n)
 {
@@ -320,36 +294,33 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 2
 0
 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{int64 h =\allowbreak{} half(\allowbreak{}n)\allowbreak{}?;} 读作：
 
 \begin{itemize}
+
 \item \texttt{half(\allowbreak{}n)\allowbreak{}} 有值 \ensuremath{\rightarrow} \texttt{?} 把值取出来赋给 \texttt{h}，继续往下；
+
 \item \texttt{half(\allowbreak{}n)\allowbreak{}} 是 \texttt{None} \ensuremath{\rightarrow} 整个 \texttt{quarter} 立刻返回 \texttt{None}，后面的代码不执行。
+
 \end{itemize}
 
 \texttt{?} 对 \texttt{Result} 一样管用，而且会把 \texttt{Err} 原样往上传：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Result<int64, String> safeDiv(int64 a, int64 b)
 {
@@ -373,19 +344,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 10
 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -393,8 +360,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Option<int64> half(int64 n)
 {
@@ -417,18 +382,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：使用 `?` 的函数也必须返回同样的可空枚举，现在返回 int64
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -439,13 +400,15 @@ magel：使用 `?` 的函数也必须返回同样的可空枚举，现在返回 
 上面都是「可恢复的错误」——调用者能处理。但有些情况属于程序写错了，不该继续跑：数组越界、不变量被破坏、参数是 null 级别的荒谬……这时候就该立刻中止，别带着坏状态往下走。
 
 \begin{itemize}
+
 \item \texttt{panic(\allowbreak{}"消息")\allowbreak{}} 无条件中止，打印消息；
+
 \item \texttt{assert(\allowbreak{}条件,\allowbreak{} "消息")\allowbreak{}} 条件不成立就 panic。消息可省。
+
+\end{itemize}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 mustPositive(int64 n)
 {
@@ -462,28 +425,21 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
-\end{itemize}
 
 \texttt{assert} 失败的样子：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -493,21 +449,17 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：x 必须为正
 出错位置：<内建 lang>:111（assert$bool$string）
 调用栈（外 → 内）：
   main  hello.mgl:3 [thread 0 coroutine 0 ip 13]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -550,8 +502,6 @@ magel：运行期错误：panic：x 必须为正
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Step: Try<int64, NoneResidual>
 {
@@ -583,18 +533,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -603,8 +549,11 @@ int64 main()
 现在逐步看 \texttt{int64 value =\allowbreak{} step?;}：
 
 \begin{enumerate}
+
 \item 成功路径：调用 \texttt{add\allowbreak{}One(\allowbreak{}Step:\allowbreak{}:\allowbreak{}Value(\allowbreak{}4)\allowbreak{})\allowbreak{}}，\texttt{step.\allowbreak{}branch(\allowbreak{})\allowbreak{}} 得到 \texttt{Continue(\allowbreak{}4)\allowbreak{}}。\texttt{step?} 的结果是里面的 \texttt{4}，类型是 \texttt{int64}，所以局部变量 \texttt{value} 得到 \texttt{4}。函数继续执行下一句，返回 \texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}Value(\allowbreak{}5)\allowbreak{}}。
+
 \item 失败路径：调用 \texttt{add\allowbreak{}One(\allowbreak{}Step:\allowbreak{}:\allowbreak{}Empty)\allowbreak{}}，\texttt{step.\allowbreak{}branch(\allowbreak{})\allowbreak{}} 得到 \texttt{Break(\allowbreak{}None\allowbreak{}Residual:\allowbreak{}:\allowbreak{}None)\allowbreak{}}。编译器取出失败载荷，交给当前返回类型 \texttt{Option<\allowbreak{}int64>\allowbreak{}} 的静态 \texttt{from\allowbreak{}Residual} 方法。该方法产生 \texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}None}；编译器保存返回结果、执行离开函数所需的作用域清理，然后立即返回。局部变量 \texttt{value} 不会完成初始化，后面的 \texttt{value + 1} 也不会执行。
+
 \end{enumerate}
 
 标准库已经让 \texttt{Option<\allowbreak{}T>\allowbreak{}} 实现了 \texttt{From\allowbreak{}Residual<\allowbreak{}Option<\allowbreak{}T>\allowbreak{},\allowbreak{} None\allowbreak{}Residual>\allowbreak{}}，所以它能接住 \texttt{Step} 产生的失败载荷。这里不要求 \texttt{Step} 和 \texttt{Option<\allowbreak{}int64>\allowbreak{}} 是同一种类型；把两端连接起来的是完全匹配的 \texttt{None\allowbreak{}Residual}。
@@ -613,8 +562,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 拆分结果 = step.branch()              // 操作数和拆分调用各求值一次
 如果拆分结果是 Continue(成功值)：
@@ -625,7 +572,6 @@ int64 main()
     执行当前函数退出路径上已登记的作用域清理
     返回 返回结果
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

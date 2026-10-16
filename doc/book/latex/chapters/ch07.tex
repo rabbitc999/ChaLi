@@ -4,8 +4,11 @@
 第 6 章那条规则（赋值就是复制）解决了很多麻烦，但留下了两个：
 
 \begin{enumerate}
+
 \item 函数改不到外面。 一份副本改不了原对象，那「就地排序」「累加计数」怎么写？
+
 \item 大对象复制很贵。 几 MB 的结构体按值传一次，就是在搬内存。
+
 \end{enumerate}
 
 答案都是同一个东西：引用。
@@ -18,14 +21,11 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 T mut&      可变引用：能读，也能写
 T const&    只读引用：只能读
 T &         和 T const& 完全等价（简写）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -33,8 +33,6 @@ T &         和 T const& 完全等价（简写）
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -47,18 +45,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 9 9
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -72,8 +66,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -83,18 +75,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：只读引用（`T const&`）不能写入元素
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -106,8 +94,6 @@ magel：只读引用（`T const&`）不能写入元素
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void bump(int64 mut& counter)
 {
@@ -122,26 +108,25 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 两处变化：
 
 \begin{itemize}
+
 \item 形参从 \texttt{int64 counter} 变成 \texttt{int64 mut\& counter}（要改，所以是 \texttt{mut\&}）；
+
 \item 调用时写 \texttt{bump(\allowbreak{}\&number)\allowbreak{}} —— 多了一个 \texttt{\&}。
+
 \end{itemize}
 
 那个 \texttt{\&} 很关键，它是「签字」：我主动允许这个函数改我的 \texttt{number}。 看到 \texttt{bump(\allowbreak{}\&number)\allowbreak{}} 的人，不用跳进 \texttt{bump} 就知道 \texttt{number} 可能被改。
@@ -156,8 +141,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Player
 {
@@ -185,26 +168,25 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 amy 的总分 30
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \texttt{total(\allowbreak{}\&p)\allowbreak{}} 一次都没复制那个 \texttt{Player}。\texttt{const\&} 说了两件事：
 
 \begin{itemize}
+
 \item 不复制：性能上你知道发生了什么；
+
 \item 不修改：调用方可以放心把东西交出去。
+
 \end{itemize}
 
 什么时候该用 \texttt{const\&}？ 一个大致的门槛：
@@ -229,12 +211,9 @@ Magel 没有 \texttt{null}。 没有 \texttt{nullptr}，没有 \texttt{nil}，�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：引用声明必须初始化，缺省值请使用 Option<T mut&>
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -242,14 +221,11 @@ magel：引用声明必须初始化，缺省值请使用 Option<T mut&>
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 first = 1;
 int64 mut& keep = &first;
 // 声明的同时必须绑定
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -257,8 +233,6 @@ int64 mut& keep = &first;
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -267,18 +241,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：`&` 只能取数据区里对象的地址（数组元素 / 结构体字段 / 字符串字节；栈上的标量变量取不了）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -296,8 +266,6 @@ Magel 的处理方式是：编译期跟踪每个引用的来源，来源活得�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 mut& bad()
 {
@@ -306,18 +274,14 @@ int64 mut& bad()
     // local 在函数返回时就没了
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 local）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -327,8 +291,6 @@ magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Holder
 {
@@ -350,18 +312,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期（Holder，所属类型 ，来源 holder）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -373,8 +331,6 @@ magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 mut& larger(int64 mut& a, int64 mut& b)
 {
@@ -395,18 +351,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 99
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

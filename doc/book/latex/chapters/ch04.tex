@@ -11,8 +11,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 add(int64 a, int64 b)
 {
@@ -31,19 +29,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [log] start
 3
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -51,14 +45,11 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 int64        add      ( int64 a , int64 b )   { ... }
  ↑            ↑         ↑
  返回类型     名字      参数表：每个参数都要写类型
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -66,8 +57,6 @@ int64        add      ( int64 a , int64 b )   { ... }
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void trace(int64 number)
 {
@@ -79,7 +68,6 @@ void trace(int64 number)
     println("n={}", number);
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -93,8 +81,6 @@ void trace(int64 number)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void shout(String text)
 {
@@ -109,18 +95,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hi
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -138,8 +120,6 @@ hi
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 clamp(int64 value)
 {
@@ -150,7 +130,6 @@ int64 clamp(int64 value)
     return value;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -164,6 +143,8 @@ int64 clamp(int64 value)
 
 \texttt{return} 后面既可以写普通值，也可以写块、\texttt{if}、\texttt{match} 或 \texttt{loop}。它们先给出一个结果，函数再返回这个结果。
 
+\par
+\medskip
 \begin{lstlisting}[style=magel]
 int64 fromBlock()
 {
@@ -209,15 +190,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
+\par
+\medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 6 7 9
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -233,8 +213,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 add(int64 a, int64 b)
 {
@@ -252,18 +230,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 4
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -275,8 +249,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 add(int64 a, int64 b)
 {
@@ -289,18 +261,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：调用 函数 add 找不到匹配的重载：(int64, float64)；没有参数类型能对上的重载（候选：add）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -312,8 +280,6 @@ magel：调用 函数 add 找不到匹配的重载：(int64, float64)；没有�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 add(int64 a, int64 b = 10)
 {
@@ -326,49 +292,46 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 12 5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 两条规矩：
 
 \begin{itemize}
+
 \item 带默认值的参数必须排在后面并且连续——不能「第 1 个有默认值、第 2 个没有」：
+
+\end{itemize}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：函数 add 的默认参数后不能有必填参数
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
+
+\begin{itemize}
+
 \item 省略时只能从尾部往前省。\texttt{add(\allowbreak{}2)\allowbreak{}} 省掉了 \texttt{b}，没问题；\texttt{add(\allowbreak{})\allowbreak{}} 不行，因为 \texttt{a} 没有默认值：
+
+\end{itemize}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：调用 函数 add 找不到匹配的重载：()；没有参数类型能对上的重载（候选：add）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
-\end{itemize}
 
 默认值在每次省略该参数时重新求值。所以别在默认值里写「记录调用次数」这种带副作用的表达式——每次都会算一遍。
 
@@ -382,8 +345,6 @@ magel：调用 函数 add 找不到匹配的重载：()；没有参数类型能�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 total(int64... items)
 {
@@ -401,18 +362,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6 5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -426,8 +383,6 @@ Magel 的返回值可以是一个元组（tuple）——把几个值打包起来
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 (int64, String) describe(int64 id)
 {
@@ -441,25 +396,25 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7 player
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item 返回类型写成 \texttt{(\allowbreak{}int64,\allowbreak{} String)\allowbreak{}}，就是「一个 \texttt{int64} 加一个 \texttt{String}」；
+
 \item \texttt{return (\allowbreak{}id,\allowbreak{} "player")\allowbreak{};} 把两个值打包成元组；
+
 \item 取的时候用 \texttt{.\allowbreak{}0} / \texttt{.\allowbreak{}1} —— 这是位置，不是名字，从 0 开始数。
+
 \end{itemize}
 
 \texttt{return} 后面的括号可以省，\texttt{return id,\allowbreak{} "player";} 和上一种写法等价。
@@ -468,8 +423,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 (int32, String) pair(int32 key, String name)
 {
@@ -485,18 +438,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7 player
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -512,15 +461,12 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
     ...
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -528,8 +474,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main(List<String> arguments)
 {
@@ -541,20 +485,16 @@ int64 main(List<String> arguments)
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 收到 2 个参数
   Alice
   two words
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -564,12 +504,9 @@ int64 main(List<String> arguments)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel app.mgl Alice "two words"
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -577,12 +514,9 @@ magel app.mgl Alice "two words"
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl -- Alice "two words"
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -611,8 +545,11 @@ magel run app.mgl -- Alice "two words"
 还有两处本章故意没讲透：
 
 \begin{itemize}
+
 \item \texttt{static} 方法（写在类型上、用 \texttt{Type:\allowbreak{}:\allowbreak{}method(\allowbreak{})\allowbreak{}} 调）和第 2 章那个\texttt{Random:\allowbreak{}:\allowbreak{}with\allowbreak{}Seed} —— 那是结构体的东西，第 9 章讲；
+
 \item 把函数当值传递（\texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 类型、\texttt{fn}）—— 第 15 章讲。
+
 \end{itemize}
 
 \section{下一步}

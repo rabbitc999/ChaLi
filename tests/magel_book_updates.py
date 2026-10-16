@@ -17,6 +17,19 @@ def main():
     book=(ROOT/'doc/book/latex/book.tex').read_text(encoding='utf-8')
     assert not re.search(r'^\s*\\part\*?\{',book,re.M), '书稿直接按章节排列，不使用 part 分组'
     assert len(re.findall(r'\\input\{chapters/ch\d+\}',book))==25
+    fixture = "1. 先声明：\n\n   ```magel\n   int64 value = 1;\n   ```\n\n2. 再读取：\n\n   ```magel\n   println(\"{}\", value);\n   ```\n\n- 无序说明：\n\n  ```text\n  output\n  ```"
+    rendered = Converter().convert(fixture)
+    assert r'\begin{enumerate}[start=2]' in rendered
+    assert 'minipage' not in rendered and 'samepage' not in rendered
+    environments=[]
+    for tag, name in re.findall(r'\\(begin|end)\{([^}]+)\}', rendered):
+        if tag == 'begin':
+            if name == 'lstlisting':
+                assert not any(item in ('enumerate', 'itemize') for item in environments)
+            environments.append(name)
+        else:
+            assert environments.pop() == name
+    assert not environments
     count=0
     with tempfile.TemporaryDirectory(prefix='magel-book-') as folder:
         work=Path(folder)
@@ -26,6 +39,15 @@ def main():
             mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-')) else 'chapter'
             expected=Converter(mode).convert(text)
             assert (ROOT/'doc/book/latex/chapters'/target).read_text(encoding='utf-8')==expected,target
+            assert 'minipage' not in expected and 'samepage' not in expected, target
+            list_depth=0
+            for match in re.finditer(r'\\(begin|end)\{(enumerate|itemize|lstlisting)\}', expected):
+                direction, environment=match.groups()
+                if environment == 'lstlisting':
+                    assert list_depth == 0, (target, match.start())
+                else:
+                    list_depth += 1 if direction == 'begin' else -1
+            assert list_depth == 0, target
             for code,output in re.findall(r'<!-- verify-book -->\s*```magel\n(.*?)```\s*```text\n(.*?)```',text,re.S):
                 count+=1;file=work/f'example{count}.mgl';file.write_text(code,encoding='utf-8')
                 result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(work/f'output{count}')],cwd=work,

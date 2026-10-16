@@ -33,12 +33,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe run example/sql-magel/example/ipage-student-server/main.mgl -- --db magel_book_students --mysql-user root --mysql-password 123456 --init example/sql-magel/tests/fixture_ipage.sql --listen-port 8080 --allow-origin http://127.0.0.1:5500
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -48,12 +45,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python -m http.server 5500 --bind 127.0.0.1 --directory example/sql-magel/example/ipage-student-server/web
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -154,8 +148,6 @@ ER 图中的 \texttt{user} 是认证表，没有指向学生表的外键。\text
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 while (maximum == 0 || handled < maximum)
 {
@@ -171,7 +163,6 @@ while (maximum == 0 || handled < maximum)
     handled = handled + 1;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -196,20 +187,25 @@ while (maximum == 0 || handled < maximum)
 \texttt{route(\allowbreak{}App mut\& app,\allowbreak{} Request const\& request)\allowbreak{}} 的参数说明了职责：它可能改变应用的会话状态，但只读取本次请求。代码的先后顺序很重要：
 
 \begin{enumerate}
+
 \item 请求解析失败：立即生成错误响应。
+
 \item OPTIONS：直接生成预检响应。
+
 \item GET \texttt{/\allowbreak{}api/\allowbreak{}health}：执行 \texttt{SELECT 1}，确认数据库实际可用。
+
 \item \texttt{/\allowbreak{}api/\allowbreak{}login}：只允许 POST，并调用 \texttt{app.\allowbreak{}login}。
+
 \item 非 \texttt{/\allowbreak{}api/\allowbreak{}} 路径：返回 404，明确告诉调用方静态页面由另一个服务器提供。
+
 \item 其余 API：提取 Bearer 令牌、查找会话，然后按资源分发。
+
 \end{enumerate}
 
 核心的会话检查只有两行：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Session session = app.findSession(bearerToken(request.authorization));
 if (!session.valid)
@@ -217,7 +213,6 @@ if (!session.valid)
     return errorResponse(401, "未登录或会话已失效，请重新登录");
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -233,8 +228,6 @@ if (!session.valid)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 if (request.method == "GET")
 {
@@ -253,7 +246,6 @@ if (request.method == "POST")
     return app.createStudent(&request);
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -273,14 +265,11 @@ SQL 值通过当前数据库连接的 \texttt{db.\allowbreak{}quote(\allowbreak{
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 " FROM student st"
 " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
 " LEFT JOIN selection se ON se.student_id = st.student_id"
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -302,13 +291,10 @@ CORS 响应头让浏览器决定是否允许页面读取跨源响应，它不取
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python tests/magel_ipage_student_server.py --backends run
 python tests/magel_ipage_student_server_browser.py --browser "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -318,12 +304,9 @@ python tests/magel_ipage_student_server_browser.py --browser "C:/Program Files (
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe aot example/sql-magel/example/ipage-student-server/main.mgl --out build/student-server.exe
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

@@ -15,13 +15,10 @@ Magel 只有一个命令行程序，叫 \texttt{magel}，解释、编译、建�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 sh gen.sh      # 用 IELR 从 magel.gram 生成前端
 make           # 构建 magel 与 libparser.a
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -31,12 +28,9 @@ make           # 构建 magel 与 libparser.a
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel help
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -52,8 +46,6 @@ magel help
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -61,18 +53,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 Hello, Magel!
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -80,12 +68,9 @@ Hello, Magel!
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run hello.mgl
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -95,12 +80,9 @@ magel run hello.mgl
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel hello.mgl
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -136,8 +118,6 @@ magel hello.mgl
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -145,7 +125,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -153,24 +132,25 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 语法错误：hello.mgl 第 3 行第 5 列：期望 条件(if) / 自增(++) / 自减(--) / 加号(+) 等 44 个之一，实际是 返回(return)
    |
  3 |     return 0;
    |     ~~~~~~
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 三件事值得注意：
 
 \begin{itemize}
+
 \item 它告诉你第 3 行第 5 列，还把出问题的那段源码抄给你、底下画上波浪线。第 1 行少了个分号，报的却是第 3 行——这是解析器在往后看：它读完第 2 行还在等一个分号，结果等来了 \texttt{return}，于是「在 \texttt{return} 这里」断了。看到报错位置和你以为的不一致时，先看报错位置的前面。
+
 \item 内部记号名被翻译成了人话：\texttt{条件(\allowbreak{}if)\allowbreak{}}、\texttt{返回(\allowbreak{}return)\allowbreak{}}。你没看错，就是中文。报错语言跟着系统走，可以用 \texttt{magel lang en} 或环境变量 \texttt{MAGEL\_LANG} 换掉。
+
 \item 那句「等 44 个之一」说了它在等什么。这种话现在看不懂没关系，以后你写多了，一眼就知道是「这里少了个东西」。
+
 \end{itemize}
 
 重要：这个错误是编译期就报出来的，程序一个字符都没执行。这就是 Magel 和其他很多语言不同的地方——能编译期拦住的，绝不放到运行期。
@@ -179,12 +159,9 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel check hello.mgl
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -199,10 +176,15 @@ magel check hello.mgl
 \texttt{magel run} 看着像「执行脚本」，其实它在一个进程里做完了四件事：
 
 \begin{enumerate}
+
 \item 预处理 —— 处理 \texttt{\%include}、\texttt{\%define}、\texttt{\%if} 这类指令（第 19 章讲）；
+
 \item 解析与类型检查 —— 语法、类型、引用的生命周期都在这里查，不通过就不执行；
+
 \item 降级为四元式 —— 把程序翻译成虚拟机认识的中间表示；
+
 \item 解释执行 —— 在当前进程里跑起来。
+
 \end{enumerate}
 
 前三步就是「编译」，第四步才是「执行」。把 \texttt{run} 换成别的场景词，前三步是一样的，只是最后一步换了形态：
@@ -227,11 +209,17 @@ magel check hello.mgl
 这一章你认识了：
 
 \begin{itemize}
+
 \item 入口函数固定叫 \texttt{main}，返回 \texttt{int64} 或 \texttt{void}；\texttt{void main} 正常完成时退出码为 0，panic 仍失败；
+
 \item \texttt{println(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 打印一行，来自核心库，不用 import；
+
 \item 分号断句、花括号划范围，和 C 系语言一样；
+
 \item \texttt{magel run} 跑，\texttt{magel check} 只查；
+
 \item 报错会给出行列位置和画了波浪线的源码，而且大多在编译期就报出来了。
+
 \end{itemize}
 
 还有一件事本章没讲：\texttt{println} 为什么不用 \texttt{import}？因为它属于核心模块 \texttt{lang}，而 \texttt{lang} 是自动加载的。别的模块就没这个待遇了，第 18 章会讲清楚。

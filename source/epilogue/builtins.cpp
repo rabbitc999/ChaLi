@@ -399,7 +399,9 @@ std::shared_ptr<MType> LoopValueType(int id)
     Memory::Vector<std::shared_ptr<MType>> values;
     bool hasPlain = false;
     const auto node = N(id);
-    const auto expected = (!node.s.empty() || node.returnExpression) && node.type >= 0 ? T(node.type) : nullptr;
+    const auto contextual = (!node.s.empty() || node.returnExpression) && node.type >= 0 ? T(node.type) : nullptr;
+    // Any 在整个值表达式求值后装箱；分支仍须先确定一致的具体结果类型。
+    const auto expected = contextual && contextual->kind != MType::Obj ? contextual : nullptr;
     if (node.s == "block")
     {
         if (StatementReturnFlow(node.kids[0], true) & 1)
@@ -991,6 +993,7 @@ std::shared_ptr<MType> RawExprType(int id)
                 if (baseType && baseType->kind == MType::Obj)
                 {
                     if (calleeNode.s == "copy") return baseType;
+                    if (calleeNode.s == "clear") return T(M_TypeVoid());
                     if (calleeNode.s == "isEmpty" || calleeNode.s == "__isTypeTag") return T(M_TypeBool());
                     if (calleeNode.s == "getValue" || calleeNode.s == "getReference" || calleeNode.s == "getOptional")
                         return node.type >= 0 ? T(node.type) : g_expectedObjGet ? g_expectedObjGet :

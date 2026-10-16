@@ -61,7 +61,7 @@ struct Map<K,V> {
 struct BigInteger { String str(); BigInteger copy(); };
 struct BigDecimal { String str(); BigDecimal copy(); int64 setPrecision(int64 digits); };
 struct Any {
-    Any copy(); bool isEmpty(); int64 set(T value);
+    Any copy(); bool isEmpty(); void clear(); int64 set(T value);
     T getValue(); T mut& getReference(); Option<T mut&> getOptional();
 };
 struct Math { static const float64 PI; static const float64 E; };

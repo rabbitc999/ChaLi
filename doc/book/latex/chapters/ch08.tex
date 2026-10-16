@@ -19,8 +19,6 @@ Magel 的答案很短：离开作用域的时候，自动释放。
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -33,19 +31,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 里面能看到 1 和 2
 外面只剩 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -74,8 +68,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Resource: Drop
 {
@@ -97,20 +89,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 drop conn
 after block
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -126,8 +114,6 @@ after block
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Inner: Drop
 {
@@ -155,20 +141,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 drop outer
 drop inner x
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -192,8 +174,6 @@ drop inner x
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Handle: Closeable
 {
@@ -215,20 +195,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 close 1
 after block
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -242,8 +218,6 @@ after block
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Handle: Closeable
 {
@@ -266,20 +240,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 close
 closed early
 after
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -289,12 +259,9 @@ after
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 先 close()，再 drop()
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -306,8 +273,6 @@ after
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -326,25 +291,24 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4
 deleted
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{Point mut\& p =\allowbreak{} new;} —— 在堆上建一个 \texttt{Point}，\texttt{p} 是指向它的引用；
+
 \item \texttt{delete p;} —— 释放它。
+
 \end{itemize}
 
 \texttt{p} 的类型是引用（\texttt{Point mut\&}），因为堆上的东西没有名字，你只能拿着一个地址。
@@ -357,8 +321,6 @@ deleted
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Box: Drop
 {
@@ -379,19 +341,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 drop 7
 twice ok
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -401,8 +359,6 @@ twice ok
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -419,18 +375,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -443,15 +395,21 @@ magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 会被检查的：
 
 \begin{itemize}
+
 \item 数组越界、整数运算溢出，都会被抓到并给出定位，不是未定义行为；
+
 \item 悬垂引用、释放后访问、移动后访问，编译期或运行期报 \texttt{MGL1204} / \texttt{MGL1205}。
+
 \end{itemize}
 
 资源在哪儿：
 
 \begin{itemize}
+
 \item PC 上默认内存池 512 MiB（可用 \texttt{--memory-size 字节} 调整，最小 64）；
+
 \item 嵌入式目标按板子配置，见第 22 章。
+
 \end{itemize}
 
 长时间运行的服务可以用 \texttt{std:\allowbreak{}:\allowbreak{}watchdog} 开「软重启」：内存申请失败、显式请求重启、越过内存水位、或开启超时后整整一个周期没 \texttt{kick(\allowbreak{})\allowbreak{}} 时，重启自身逻辑而不杀进程。
@@ -459,9 +417,13 @@ magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 最后说清它不做什么。 Magel 不试图消除所有错误。它针对性地消除三类：
 
 \begin{enumerate}
+
 \item 空指针解引用 —— 没有 \texttt{null}，引用必须绑定真实对象（第 7 章）；
+
 \item 悬垂引用 —— 来源作用域检查（第 7 章）；
+
 \item 忘记释放 —— 作用域 + \texttt{Drop} / \texttt{Closeable} 自动收尾（本章）。
+
 \end{enumerate}
 
 剩下的逻辑错误仍然是你自己的责任。 比如「算错了平均值」「把用户的年龄存成了负数」「该关的连接关了两次但业务上不允许」——这些语言帮不了你，只能靠第 16 章的错误处理和第 18 章的测试。
@@ -472,8 +434,6 @@ magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -488,20 +448,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 body
 second
 first
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

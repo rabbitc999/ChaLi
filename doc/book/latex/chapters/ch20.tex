@@ -11,12 +11,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 @annotation Route(path: String, level: int32 = 2)
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -28,8 +25,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 @annotation Route(path: String, level: int32 = 2)
 
@@ -45,18 +40,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 200
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -87,8 +78,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 @Component
 @Route("/read", level: 3)
@@ -97,7 +86,6 @@ int64 read()
     return self.value;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -107,8 +95,6 @@ int64 read()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::reflect;
 
@@ -128,36 +114,34 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 Point 2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 几个要点：
 
 \begin{itemize}
+
 \item \texttt{@Reflect} 是「暴露」标记：只有被 \texttt{@Reflect} 标过的声明，运行期才查得到。没标的类型，\texttt{get\allowbreak{}Struct\allowbreak{}Info} 会返回 \texttt{None}（不是报错）；
+
 \item \texttt{get\allowbreak{}Struct\allowbreak{}Info<\allowbreak{}Point>\allowbreak{}(\allowbreak{})\allowbreak{}} 用类型参数取元数据，返回 \texttt{Option<\allowbreak{}Struct\allowbreak{}Info>\allowbreak{}}（第 16 章）；
+
 \item \texttt{Struct\allowbreak{}Info} 里写着 \texttt{name}、\texttt{fields}、\texttt{methods}、\texttt{static\allowbreak{}Members}、\texttt{annotations}……——一个类型能问的都在里头。
+
 \end{itemize}
 
 读注解的实参：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::reflect;
 
@@ -178,26 +162,26 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 2 2
 /health
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{get\allowbreak{}Func\allowbreak{}Annotations(\allowbreak{}"函数名")\allowbreak{}} 按名字取函数上的注解列表；
+
 \item 这一份列表里有两项：\texttt{@Reflect}（0 个实参）和 \texttt{@Route}（2 个实参）；
+
 \item 实参是一串 \texttt{std:\allowbreak{}:\allowbreak{}reflect:\allowbreak{}:\allowbreak{}Reflect\allowbreak{}Value}（一个能装任意类型的小盒子），用 \texttt{as\allowbreak{}Text(\allowbreak{})\allowbreak{}} / \texttt{as\allowbreak{}I32(\allowbreak{})\allowbreak{}} 等按类型取出来，都返回 \texttt{Result}。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -210,8 +194,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::reflect;
 
@@ -230,18 +212,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -251,8 +229,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::reflect;
 
@@ -278,18 +254,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -301,8 +273,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 @annotation Route(path: String, level: int32 = 2)
 
@@ -318,18 +288,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 200
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -350,13 +316,10 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl
 magel svmb app.mgl --no-reflection --out build/board-app
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

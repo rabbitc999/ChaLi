@@ -31,7 +31,7 @@
 | [`std::io`](std-io.md) | 文件与流接口 | 33 |
 | [`std::iter`](std-iter.md) | 惰性迭代器 | 104 |
 | [`std::json`](std-json.md) | JSON 只读文档 | 27 |
-| [`std::lang`](std-lang.md) | 核心库 | 185 |
+| [`std::lang`](std-lang.md) | 核心库 | 186 |
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 48 |
 | [`std::math`](std-math.md) | 标量数学 | 26 |
 | [`std::memory`](std-memory.md) | 内存视图与 arena | 9 |

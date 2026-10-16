@@ -4,10 +4,15 @@
 第 1、2 章你已经写过不少变量了，但都是「照抄」。这一章把它讲清楚：
 
 \begin{itemize}
+
 \item 变量是什么、为什么每个变量都要写类型；
+
 \item Magel 有哪些基础类型；
+
 \item 数字、字符、字符串分别怎么写；
+
 \item 以及本章的重头戏：Magel 什么时候替你转类型、什么时候非要你签字。
+
 \end{itemize}
 
 这一章会让你第一次觉得 Magel「有点死板」。请忍着别关页面——第 3.8 节会把这份死板值不值讲清楚。
@@ -16,12 +21,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 score = 30;
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -45,9 +47,13 @@ int64 score = 30;
 三个必须记住的细节：
 
 \begin{enumerate}
+
 \item 分号结尾。Magel 不用换行来表示语句结束，写成一整行也行。
+
 \item 区分大小写。\texttt{score} 和 \texttt{Score} 是两个不同的名字。
+
 \item 变量必须先声明再用。写到没声明过的名字是编译错误，不是「默认 0」。
+
 \end{enumerate}
 
 \section{为什么非要写类型}
@@ -55,17 +61,19 @@ int64 score = 30;
 很多现代语言会帮你推：\texttt{let score =\allowbreak{} 30} 就够了。Magel 能推（下一节就讲 \texttt{auto}），但声明时默认要求你写出来。理由和它的整体性格一致：
 
 \begin{itemize}
+
 \item 读代码的人不用猜。 \texttt{int64 score =\allowbreak{} get\allowbreak{}Score(\allowbreak{})\allowbreak{};} 一眼就知道这里是整数；\texttt{let score =\allowbreak{} get\allowbreak{}Score(\allowbreak{})\allowbreak{}} 得跳去看 \texttt{get\allowbreak{}Score} 的签名。
+
 \item 它不猜你的意思。 记住第 2 章那条报错——\texttt{2026} 不能直接交给要 \texttt{uint64} 的函数。Magel 宁可让你写一个 \texttt{(\allowbreak{}uint64)\allowbreak{}}，也不愿意在某处悄悄换一下。
+
 \item 出错点离原因近。 类型写错，报错就在那一行；不写类型，错可能传到十层外面才炸。
+
 \end{itemize}
 
 \section{整型家族}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -77,18 +85,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 127 70000 9000000000 255
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -108,8 +112,11 @@ int64 main()
 日常直接用 \texttt{int64}。 只有两种情况才去挑更窄的：
 
 \begin{itemize}
+
 \item 要跟硬件、文件格式、二进制协议对齐（这时你知道必须是 8 位还是 16 位）；
+
 \item 要省内存（嵌入式板子上，一个 8 位字段和 64 位字段差 8 倍）。
+
 \end{itemize}
 
 为什么没有 \texttt{int}、\texttt{long} 这种名字？ 因为那些名字的含义会随平台变，而这门语言要「一份逻辑从 MCU 跑到云端」——平台上不确定的东西，类型里不能含糊。
@@ -118,8 +125,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -129,18 +134,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3.25 1.5
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -156,8 +157,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -169,18 +168,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 0 M Magel
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -188,8 +183,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -207,18 +200,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 yes
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -227,30 +216,33 @@ Magel 没有三目运算符。写 \texttt{ready ? "yes" :\allowbreak{} "no"} 是
 \end{tip}
 
 \begin{itemize}
+
 \item \texttt{bool} 只有 \texttt{true} 和 \texttt{false} 两个字面量，没有「非零即真」：
+
+\end{itemize}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：if 条件必须是 bool，现在给的是 int64（数值条件请显式写成 `(bool)值` 或比较表达式）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 硬要拿数字当布尔，得签字写成 \texttt{(\allowbreak{}bool)\allowbreak{}值}——但十有八九你真正想要的是一个比较表达式。
+
+\begin{itemize}
+
 \item \texttt{char} 是单个字符，用单引号：\texttt{'M'}。它和整数不是一回事，\texttt{char c =\allowbreak{} 65;} 会报错，得写 \texttt{(\allowbreak{}char)\allowbreak{}65}。
+
 \item \texttt{String} 是字符串，用双引号，类型是 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}String} 的简写。它属于核心模块 \texttt{lang}，所以不用 import。字符串的内容是第 12 章的主题。
+
 \end{itemize}
 
 \section{常量 \texttt{const} 与推导 \texttt{auto}}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -260,18 +252,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 100 100
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -281,15 +269,12 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 auto info = describe(7);
 // 想省一次手写类型
 auto picked = range(1, 6).map(square).collect();
 // 类型根本写不出来
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -301,8 +286,6 @@ auto picked = range(1, 6).map(square).collect();
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -312,20 +295,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 255 10 3.14
 2.5e+03 0.0025
 1e+09
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -358,8 +337,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 floatingKind(float32 value)
 {
@@ -388,19 +365,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 32 64 255
 18446744073709551615
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -414,8 +387,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -431,18 +402,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 100 200 100
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -466,8 +433,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -478,25 +443,25 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：不能隐式转换：int64 -> int32（请显式强转）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item 缩窄：位宽变小（\texttt{int64 → int32}、\texttt{float64 → float32}、\texttt{uint8 → int8}）——装不下，要签字；
+
 \item 有符号 \ensuremath{\rightarrow} 无符号：哪怕目标更宽也不行（\texttt{int32 → uint32}、\texttt{int64 → uint64}）——负数塞不进无符号，要签字；
+
 \item 跨大类：浮点 \ensuremath{\rightarrow} 整型、\texttt{char} / \texttt{bool} \ensuremath{\leftrightarrow} 整型——含义会变，要签字。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -506,24 +471,29 @@ magel：不能隐式转换：int64 -> int32（请显式强转）
 这么一管，麻烦是麻烦了点，但它买到的是三件事：
 
 \begin{enumerate}
+
 \item 每一处精度损失都是有意的。 \texttt{int64} 里装着 90 亿，你要往 \texttt{int32} 里塞——这一下你必然写了 \texttt{(\allowbreak{}int32)\allowbreak{}}，将来出了问题，你能顺着这个强转找到是谁决定的。
+
 \item 重载能被准确选中。 第 2 章那条「找不到匹配的重载 \texttt{(\allowbreak{}int64)\allowbreak{}}」就是这套规则的副产品：因为不替你「凑合着转」，编译器只能说「你要 \texttt{uint64}，给我的是 \texttt{int64}」——它把真相告诉你了，而不是塞进某个它认为差不多的重载。
+
 \item 跨平台的结果是确定的。 在 32 位板子上 \texttt{long} 是 4 字节、PC 上是 8 字节，这种「同一个表达式换台机器结果不同」的坑，Magel 用「类型必须对上」堵掉了。
+
 \end{enumerate}
 
 什么时候你会想骂它？ 写累加、写混合计算的时候。这时候记住两句话：
 
 \begin{itemize}
+
 \item 拿不准就用 \texttt{int64} / \texttt{float64}，让变量类型统一，转换就少了；
+
 \item 真要转，把它写在最显眼的地方（用括号包住，别藏在表达式中间）。
+
 \end{itemize}
 
 \section{显式强转：\texttt{(\allowbreak{}目标类型)\allowbreak{}值}}
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -535,18 +505,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 70000 44 A
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -555,9 +521,13 @@ int64 main()
 三行分别演示了三件事：
 
 \begin{itemize}
+
 \item \texttt{(\allowbreak{}int32)\allowbreak{}big} —— 缩窄。70000 装得进 \texttt{int32}，值不变。
+
 \item \texttt{(\allowbreak{}uint8)\allowbreak{}300} —— 截断。300 装不进 8 位，只留下低 8 位，得到 \texttt{44}。强转不会帮你检查装得下装不下——签了字就由你负责。
+
 \item \texttt{(\allowbreak{}char)\allowbreak{}65} —— 数字变字符，65 就是 \texttt{'A'}。
+
 \end{itemize}
 
 \begin{tip}{提示}
@@ -572,8 +542,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -583,18 +551,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 42
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -610,8 +574,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -622,18 +584,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 -300 -100
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -641,8 +599,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -651,18 +607,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：整数字面量 200 超出 int8 的取值范围（-128..127）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

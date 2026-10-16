@@ -6,9 +6,13 @@
 它要能：
 
 \begin{itemize}
+
 \item 加一条待办、列出全部、标记完成、删掉一条；
+
 \item 把数据存到文件里，下次打开还在；
+
 \item 处理「文件不存在」「序号不合法」这些真实世界的小意外。
+
 \end{itemize}
 
 写完你会发现：几乎没有新语法——全是前面学过的东西。
@@ -19,8 +23,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Task
 {
@@ -28,7 +30,6 @@ struct Task
     bool done;
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -38,13 +39,10 @@ struct Task
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1|买菜
 0|写作业
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -58,8 +56,6 @@ struct Task
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 List<Task> loadTasks()
 {
@@ -92,16 +88,19 @@ List<Task> loadTasks()
     return tasks;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 三处值得说：
 
 \begin{itemize}
+
 \item \texttt{File\allowbreak{}Stream:\allowbreak{}:\allowbreak{}open} 返回 \texttt{Result}（第 16 章）。打不开不是崩溃，是一个可以处理的结果——这正是 \texttt{Result} 存在的意义；
+
 \item \texttt{stream.\allowbreak{}read(\allowbreak{})\allowbreak{}} 一次读一行。读到头（EOF）返回的是空串 \texttt{Ok(\allowbreak{}"")\allowbreak{}}，不是错误——所以退出条件写成 \texttt{if (\allowbreak{}raw =\allowbreak{}=\allowbreak{} "")\allowbreak{} \{ break; \}}。这是实测踩出来的，别想当然写成 \texttt{is\allowbreak{}Err}；
+
 \item \texttt{raw[\allowbreak{}bar + 1:\allowbreak{}]\allowbreak{}} 是切片（第 12 章）。\texttt{|} 是 ASCII，字节边界天然合法，所以这里按字节切中文内容也没问题。
+
 \end{itemize}
 
 \section{写：把清单存回文件}
@@ -110,8 +109,6 @@ List<Task> loadTasks()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void saveTasks(List<Task> tasks)
 {
@@ -134,7 +131,6 @@ void saveTasks(List<Task> tasks)
     stream.close();
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -148,15 +144,12 @@ void saveTasks(List<Task> tasks)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main(List<String> args)
 {
     …
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -166,8 +159,6 @@ int64 main(List<String> args)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String command = args[0];
 List<Task> tasks = loadTasks();
@@ -189,23 +180,23 @@ if (command == "add")
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 两个小设计：
 
 \begin{itemize}
+
 \item \texttt{add} 后面的内容可以带空格：\texttt{join\allowbreak{}From(\allowbreak{}args,\allowbreak{} 1)\allowbreak{}} 把第 2 个参数起的部分用空格拼起来（\texttt{std:\allowbreak{}:\allowbreak{}text:\allowbreak{}:\allowbreak{}Text:\allowbreak{}:\allowbreak{}join}）。于是 \texttt{add 周五 下午 交 报告} 存的就是一整句；
+
 \item 每一档都 \texttt{return}：用返回码告诉外面「成功（0）」还是「用法错（1）」——这正是第 1 章 \texttt{main} 返回 0 那个约定的用法。
+
 \end{itemize}
 
 序号参数是字符串，要转成整数：\texttt{std:\allowbreak{}:\allowbreak{}parse:\allowbreak{}:\allowbreak{}Parse:\allowbreak{}:\allowbreak{}parse\allowbreak{}Int64} 返回 \texttt{Result}，所以用第 16 章的 \texttt{is\allowbreak{}Err} 来兜底：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 parseIntOr(String s, int64 fallback)
 {
@@ -217,7 +208,6 @@ int64 parseIntOr(String s, int64 fallback)
     return r.unwrap();
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -227,6 +217,8 @@ int64 parseIntOr(String s, int64 fallback)
 
 把上面几块拼起来。整份代码（这段可以整段复制出去跑）：
 
+\par
+\medskip
 \begin{lstlisting}[style=magel]
 import std::io;
 import std::text;
@@ -441,13 +433,13 @@ int64 main(List<String> args)
     return 1;
 }
 \end{lstlisting}
+\par
+\medskip
 
 直接 \texttt{magel run todo.\allowbreak{}mgl}（不带参数），它会打印用法：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 用法：todo <命令> [参数]
   add <内容>    加一条待办
@@ -456,7 +448,6 @@ int64 main(List<String> args)
   remove <序号> 删除一条
   clear         清空
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -468,22 +459,17 @@ int64 main(List<String> args)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- clear
 magel run todo.mgl -- add 买菜
 magel run todo.mgl -- add 写作业
 magel run todo.mgl -- list
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 已清空
 已添加，现在有 1 条
@@ -491,7 +477,6 @@ magel run todo.mgl -- list
 1 [ ] 买菜
 2 [ ] 写作业
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -503,22 +488,17 @@ magel run todo.mgl -- list
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- done 2
 magel run todo.mgl -- list
 magel run todo.mgl -- remove 1
 magel run todo.mgl -- list
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 完成：写作业
 1 [ ] 买菜
@@ -526,7 +506,6 @@ magel run todo.mgl -- list
 已删除第 1 条
 1 [x] 写作业
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -534,12 +513,9 @@ magel run todo.mgl -- list
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1|写作业
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -547,28 +523,22 @@ magel run todo.mgl -- list
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- done abc
 magel run todo.mgl -- add 周五 下午 交 报告
 magel run todo.mgl -- list
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 序号超出范围
 已添加，现在有 2 条
 1 [x] 写作业
 2 [ ] 周五 下午 交 报告
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -624,14 +594,23 @@ magel run todo.mgl -- list
 回顾一下你走过的路：
 
 \begin{itemize}
+
 \item 第 1–2 章：跑起来，把小块知识串成第一个程序；
+
 \item 第 3–5 章：语言基础（类型、函数、控制流）；
+
 \item 第 6–8 章：Magel 的骨头（值语义、引用、资源与作用域）——这三章决定了你和这门语言相处得顺不顺；
+
 \item 第 9–12 章：组织数据；
+
 \item 第 13–16 章：抽象（接口、泛型、函数值、错误处理）；
+
 \item 第 17–20 章：工程与工具链；
+
 \item 第 21–22 章：与外部世界打交道、把程序交给别人；
+
 \item 第 23 章：把它们拼起来。
+
 \end{itemize}
 
 现在你已经能独立写 Magel 程序了。 遇到语法拿不准的，翻\href{https://gitee.com/rabbitc999/magel/blob/master/doc/04-language-reference.md}{语言参考}；想查某个标准库函数，翻\href{https://gitee.com/rabbitc999/magel/blob/master/doc/library/README.md}{库函数 API 参考}；想看官方给的可运行样例，翻 \href{https://gitee.com/rabbitc999/magel/tree/master/example/samples}{\texttt{example/\allowbreak{}samples/\allowbreak{}}}。

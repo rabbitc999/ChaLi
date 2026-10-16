@@ -9,8 +9,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String classify(int64 value)
 {
@@ -34,18 +32,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 负数 零 正数
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -53,14 +47,11 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 if (条件) { ... }
 elif (条件) { ... }
 else { ... }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -70,8 +61,6 @@ else { ... }
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -82,18 +71,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：if 条件必须是 bool，现在给的是 int64（数值条件请显式写成 `(bool)值` 或比较表达式）
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -113,8 +98,6 @@ Magel 没有三目运算符。 \texttt{cond ? a :\allowbreak{} b} 是语法错�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -152,18 +135,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 2
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -175,8 +154,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -190,21 +167,17 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3
 2
 1
 起飞！
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -214,8 +187,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -228,18 +199,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 10
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -247,14 +214,11 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 for ( 初始化 ; 条件 ; 每轮结束做什么 )
        ↑         ↑        ↑
       int64 k=0  k<5      k=k+1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -268,8 +232,6 @@ for ( 初始化 ; 条件 ; 每轮结束做什么 )
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -283,18 +245,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -306,8 +264,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -324,18 +280,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -345,8 +297,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 firstEven = loop
 {
@@ -358,7 +308,6 @@ int64 firstEven = loop
     }
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -368,8 +317,6 @@ int64 firstEven = loop
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 loop
 {
@@ -381,7 +328,6 @@ loop
 };
 // ← 这个分号不能少
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -391,8 +337,6 @@ loop
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -413,18 +357,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 最高分 55
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -432,12 +372,9 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 foreach ( 元素类型 名字 in 容器 ) { ... }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -446,9 +383,13 @@ foreach ( 元素类型 名字 in 容器 ) { ... }
 三个要点：
 
 \begin{itemize}
+
 \item 元素类型可以显式写成 \texttt{foreach (\allowbreak{}int64 score in scores)\allowbreak{}}，也可以由迭代源推导成 \texttt{foreach (\allowbreak{}score in scores)\allowbreak{}}。
+
 \item 遍历出来的 \texttt{score} 是元素的副本（还记得第 4 章吗），改它不影响容器。想改容器里的元素得用引用（第 7 章）。
+
 \item \texttt{foreach} 能遍历的不只是容器，凡是「能一个个吐出来的东西」都行，比如第 4 章的变长参数、第 17 章的迭代器。
+
 \end{itemize}
 
 显式 \texttt{foreach(\allowbreak{}auto item in values)\allowbreak{}} 与省略类型的 \texttt{foreach(\allowbreak{}item in values)\allowbreak{}} 使用相同的元素类型推断；容器按元素类型，整数区间按端点类型推断。
@@ -457,8 +398,6 @@ foreach ( 元素类型 名字 in 容器 ) { ... }
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -485,18 +424,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 分数 12
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -512,8 +447,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -541,18 +474,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 12
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -566,8 +495,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -580,18 +507,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 38
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -601,8 +524,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -615,19 +536,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 6
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -637,8 +554,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -647,18 +562,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1301] 同一表达式中，自增减目标与其他读写冲突：i
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -668,8 +579,6 @@ C 程序员会心头一紧——\texttt{i =\allowbreak{} i++} 在 C 里是未定
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -680,18 +589,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 0 1 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -699,8 +604,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -713,18 +616,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 11 0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -752,9 +651,13 @@ int64 main()
 三件本章没讲的事：
 
 \begin{itemize}
+
 \item \texttt{foreach} 遍历出来的元素是副本，怎么改到原来的——第 7 章；
+
 \item 分支多了 \texttt{if /\allowbreak{} elif} 会很难看，\texttt{match} 怎么救场——第 10 章；
+
 \item \texttt{loop} 里 \texttt{break} 出来的值，除了赋值还能怎么用——第 10 章的 \texttt{match}、第 16 章的 \texttt{?} 会陆续出现。
+
 \end{itemize}
 
 \section{下一步}

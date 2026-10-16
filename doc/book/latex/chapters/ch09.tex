@@ -9,8 +9,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -27,18 +25,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -46,15 +40,12 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 struct Point {        ← struct 名字 { 
     int64 x;          ← 字段：类型 名字;
     int64 y;
 }                     ← 类型声明到这里已经完整，后面的分号可省略
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -64,8 +55,6 @@ struct Point {        ← struct 名字 {
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Point p;
 // 声明
@@ -74,7 +63,6 @@ p.x = 3;
 println("{}", p.x);
 // 读字段
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -82,8 +70,6 @@ println("{}", p.x);
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -98,18 +84,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [0][0]
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -125,8 +107,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -155,18 +135,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 13 11
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -184,8 +160,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Counter
 {
@@ -211,18 +185,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 value=7 alive=1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -249,8 +219,6 @@ value=7 alive=1
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Counter
 {
@@ -269,18 +237,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -290,15 +254,12 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Counter c = new(7);
 // 栈上：跟着作用域走
 Counter mut& p = new(7);
 // 堆上：要自己 delete
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -307,21 +268,21 @@ Counter mut& p = new(7);
 区别只在左边有没有 \texttt{\&}：
 
 \begin{itemize}
+
 \item 左边是值，对象在栈上，出作用域自动清理；
+
 \item 左边是引用（\texttt{Counter mut\&}），对象在堆上，得自己 \texttt{delete p;}（第 8 章）。
+
 \end{itemize}
 
 想「就地」建堆对象、不写实参时，括号可以省掉：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Counter mut& p = new;
 // 等价于 new(0)，元素类型由 p 的类型定
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -329,12 +290,9 @@ Counter mut& p = new;
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：struct Counter 没有匹配的构造函数：(int64)
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -344,8 +302,6 @@ magel：struct Counter 没有匹配的构造函数：(int64)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Point
 {
@@ -379,18 +335,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4 1 2 30 40
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -404,8 +356,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Money: Add<Money, Money>
 {
@@ -431,18 +381,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 225 分
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -469,8 +415,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 struct Rect
 {
@@ -492,18 +436,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 12
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -511,8 +451,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 area(Rect const& rect)
 {
@@ -525,7 +463,6 @@ void resize(Rect mut& rect)
 }
 // 要改
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -539,8 +476,6 @@ void resize(Rect mut& rect)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 #derive(Equal, Hash, Clone)
 struct BookKey
@@ -571,19 +506,15 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 1 1
 left changed
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

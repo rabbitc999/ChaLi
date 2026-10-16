@@ -11,13 +11,10 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 桌面：.mgl → 解析与检查 → 优化四元式 → .svmb / .data.bin / .layout
 板端：加载三份文件 → 配置内存与胶水 → VM 执行 → 清理本轮状态 → 返回菜单
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -64,8 +61,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %include "board.mgl"
 
@@ -80,7 +75,6 @@ void main() {
     }
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -90,12 +84,9 @@ void main() {
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe svmb example/mcu/FK-STM32H743XIH6/programs/hello.mgl --no-reflection --out build/mcu-hello
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -117,14 +108,11 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 0:/magel/hello.svmb
 0:/magel/hello.data.bin
 0:/magel/hello.layout
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -196,8 +184,6 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 stackvm::NativeRegistry registry;
 stackvm::Machine machine;
@@ -210,7 +196,6 @@ RegisterBoard(registry);
 mcuConsole::SetRead(SerialRead, nullptr);
 const auto result = machine.run(program, {}, 10000000u);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -226,14 +211,11 @@ const auto result = machine.run(program, {}, 10000000u);
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void lcdClear(int64 color);
 bool boardExitRequested();
 void boardDelay(int64 milliseconds);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -241,14 +223,11 @@ void boardDelay(int64 milliseconds);
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 registry.add("lcdClear", 1, LcdClear);
 registry.add("boardExitRequested", 0, BoardExitRequested);
 registry.add("boardDelay", 1, BoardDelay);
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -268,14 +247,11 @@ registry.add("boardDelay", 1, BoardDelay);
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python tests/mcu_vm.py --magel magel.exe
 python tests/mcu_fk_controls.py
 python example/mcu/FK-STM32H743XIH6/tools/verify_sdk.py
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

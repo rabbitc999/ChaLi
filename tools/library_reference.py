@@ -93,6 +93,7 @@ def behavior(entry):
     module, owner, name = entry['module'], entry['owner'], entry['name']
     if module=='std::iter' and name in ITER: return ITER[name]
     if module=='std::linalg' and name=='add': return '返回同维向量/矩阵逐项相加的新值。'
+    if owner=='Any' and name=='clear': return '释放盒子拥有的载荷并恢复空状态；保留盒子自身的键身份。'
     if owner=='Any' and name=='set': return '以 value 的值副本和类型编号替换盒子内容。'
     if owner=='Any' and name=='get': return '依据接收上下文取得盒子内的值。'
     if entry.get('intrinsic') and owner.startswith(('Right','Add','Subtract','Multiply','Divide','Modulo','Equal','NotEqual','Less','Greater','And','Or','Xor','Shift','Negate','BitNot','Positive')):

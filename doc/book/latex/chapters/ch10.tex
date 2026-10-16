@@ -15,8 +15,6 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Message
 {
@@ -25,17 +23,21 @@ enum Message
     Text(String text)
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 读法是：
 
 \begin{itemize}
+
 \item \texttt{Message} 这个类型，有三种变体（variant）：\texttt{Quit}、\texttt{Move}、\texttt{Text}；
+
 \item \texttt{Quit} 不带数据；
+
 \item \texttt{Move} 带两个 \texttt{int32}；
+
 \item \texttt{Text} 带一个 \texttt{String}。
+
 \end{itemize}
 
 变体可以带字段，这在类型理论里叫「代数数据类型」——但用起来没那么玄：枚举就是「有几个可能形状，每个形状各自带自己的数据」。
@@ -46,14 +48,11 @@ enum Message
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Message first = Message::Quit;
 Message second = Message::Move((int32)3, (int32)7);
 Message third = Message::Text("hello");
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -65,8 +64,6 @@ Message third = Message::Text("hello");
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Message
 {
@@ -102,20 +99,16 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 quit
 move 3 7
 text hello
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -123,39 +116,37 @@ text hello
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 match (要看的东西) {
     模式 => { 该做什么 }
     模式 => { 该做什么 }
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 注意三个语法细节：
 
 \begin{enumerate}
+
 \item 被匹配的表达式要用括号包起来：\texttt{match (\allowbreak{}message)\allowbreak{} \{}。
+
 \item 箭头是 \texttt{=\allowbreak{}>\allowbreak{}}（和 C++ 的 \texttt{switch} 完全不同），每个分支的主体是一对花括号。
+
 \item \texttt{match} 后面不加分号——它是语句，不是表达式。这和 \texttt{loop} 正好相反（\texttt{loop} 是表达式，语句位置要写 \texttt{\};}）。写错了会报「期望 字符串 / 数字 / 标识符 ……，实际是 分号(;)」。
+
 \end{enumerate}
 
 分支里的变量是「自动绑定」的。 \texttt{Message:\allowbreak{}:\allowbreak{}Move(\allowbreak{}x,\allowbreak{} y)\allowbreak{} =\allowbreak{}>\allowbreak{} .\allowbreak{}.\allowbreak{}.\allowbreak{}} 里写的 \texttt{x}、\texttt{y} 不是提前声明的变量，而是当场从变体里取出来的（片段，一条 \texttt{match} 分支）：
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Message::Move(x, y) =>
 {
     println("move {} {}", x, y);
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -167,22 +158,17 @@ Message::Move(x, y) =>
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Color
 {
     Red, Green
 };
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Color
 {
@@ -207,18 +193,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：Color::Green
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -232,8 +214,6 @@ magel：enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 match (color)
 {
@@ -248,7 +228,6 @@ match (color)
     // 剩下的都到这儿
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -260,8 +239,6 @@ match (color)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Shape
 {
@@ -291,18 +268,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 12
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -314,8 +287,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 #derive(Equal, Hash, Clone)
 enum BookPacket
@@ -333,18 +304,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 1
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -356,8 +323,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 grade(int64 score)
 {
@@ -389,18 +354,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 2 1 0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -433,8 +394,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Choice
 {
@@ -463,18 +422,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -509,8 +464,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 enum Packet
 {
@@ -546,18 +499,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 copy original
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 

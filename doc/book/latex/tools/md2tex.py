@@ -195,11 +195,8 @@ class Converter:
         style = CODE_STYLE.get(lang, 'out')
         content = '\n'.join(buf).replace('✗', 'X')
         listing = '\\begin{lstlisting}[style=%s]\n%s\n\\end{lstlisting}' % (style, content)
-        # 短示例可整块放入一页，避免在条件分支中间翻页；长程序仍可正常分页。
-        visual_lines = sum(max(1, (disp_len(line) + 79) // 80) for line in content.splitlines())
-        if visual_lines <= 40:
-            return '\\par\n\\medskip\n\\noindent\n\\begin{minipage}{\\linewidth}\n' + listing + '\n\\end{minipage}\n\\par\n\\medskip'
-        return listing
+        # 不放进 minipage/samepage；长短示例均允许自然跨页，并保留框线外的段间距。
+        return '\\par\n\\medskip\n' + listing + '\n\\par\n\\medskip'
 
     def conv_table(self, rows_raw):
         rows = [self.split_row(r) for r in rows_raw]
@@ -294,20 +291,36 @@ class Converter:
 
     def conv_list(self, items, kind):
         env = 'itemize' if kind == 'list' else 'enumerate'
-        out = ['\\begin{%s}' % env]
-        for it in items:
+        out = []
+        opened = False
+        for index, it in enumerate(items):
             segs = self.merge_paras(it['segs'])
-            parts = []
+            started = False
+            after_code = False
             for seg in segs:
                 if seg[0] == 'p':
                     txt = self.inline(self.join_para(seg[1]))
-                    if txt:
-                        parts.append(txt)
+                    if not txt:
+                        continue
+                    if after_code:
+                        out.append(txt)
+                        continue
+                    if not opened:
+                        options = '[start=%d]' % (index + 1) if env == 'enumerate' and index else ''
+                        out.append('\\begin{%s}%s' % (env, options))
+                        opened = True
+                    out.append(('\\item ' if not started else '') + txt)
+                    started = True
                 else:
-                    parts.append(self.conv_code(seg[1], seg[2]))
-            out.append('\\item ' + '\n\n'.join(parts))
-        out.append('\\end{%s}' % env)
-        return '\n'.join(out)
+                    # 代码与其后的说明脱离列表环境，下一项按原编号继续。
+                    if opened:
+                        out.append('\\end{%s}' % env)
+                        opened = False
+                    out.append(self.conv_code(seg[1], seg[2]))
+                    after_code = True
+        if opened:
+            out.append('\\end{%s}' % env)
+        return '\n\n'.join(out)
 
     def merge_paras(self, segs):
         out = []

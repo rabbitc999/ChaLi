@@ -36,6 +36,62 @@ int64 main() {
 
 需要稳定的元数据身份、字段、方法或注解时使用 `std::reflect`。其 `getTypeId<T>()` 仍要求反射构建和 `--reflection`，与 Any 的内部运行期分派标签分开。私有 `__typeTag` 仅供核心库和反射生成代码使用，应用不能直接调用。
 
+## Any 目标转换与异构容器
+
+目标明确为 `Any` 时，编译器自动装箱具体值。这条规则统一用于函数实参与返回值、显式 `Any` 泛型实参、泛型字段、枚举载荷，以及容器的元素／键／值；无须先声明一个 `Any` 中转变量。已有 `Any` 值按值复制，不会再嵌套装箱。用户声明的直接 `ImplicitConvert<Any>` 优先于默认装箱。
+
+```magel
+T identity<T>(T value) { return value; }
+int64 main()
+{
+    List<Any> values = {1, "two", true};
+    values.push(1.5);
+    Any value = identity<Any>("generic");
+    Map<String, Any> record = {"count": 3, "name": "Magel"};
+    Set<Any> unique;
+    Any key = "key";
+    unique.add(key);
+    unique.add(key);
+    assert(unique.len() == 1);
+    assert(isType<String>(&value));
+    value.clear();
+    assert(value.isEmpty());
+    return 0;
+}
+```
+
+`List<Any>`、`Set<Any>`、`Map<Any, V>`、`Map<K, Any>` 和 `Map<Any, Any>` 均可显式声明；容器字面量仍由目标类型确定种类。普通 `List<int64>` 不会因此接收字符串，省略泛型实参也不会自动推导成 `Any`。返回块／if／match 的各分支仍先确定一致的具体结果类型，再对整个结果装箱；不能用返回类型 `Any` 绕过分支一致性检查。
+
+`Any.clear()` 需要可写接收者，释放当前拥有的载荷、恢复空状态，之后仍可 `set` 或重新赋值。装箱保留精确源类型，`int32` 与 `int64`、整数与浮点不会因装箱被合并；提取使用 `isType<T>`、`tryGet<T>` 或借用接口。临时值只求值一次，字符串和容器保存拥有值副本，清理沿用完整表达式及作用域规则，没有 GC。
+
+**Any 键按身份比较。** `Any` 复制保留身份，所以向 `Set` 重复插入同一个盒子会去重，`Map` 用它的副本可以取回原条目。两次独立装箱同一个整数或字符串产生不同身份；`map.put("key", value)` 自动装箱的键不能靠另一次独立装箱的 `"key"` 查找。需要按字符串内容查询时优先写 `Map<String, Any>`；需要异构键时保存 `Any key` 并用它查询。
+
+装箱不延长借用寿命。现有多槽结构体／枚举／数组按地址装箱，局部值和临时值不能借装箱逃出作用域；显式引用也受来源与逃逸检查约束。不能把 `void` 或不支持复制的宿主资源强行装箱。
+
+## 接口引用直接绑定
+
+```magel
+interface Readable { int64 read(); };
+struct Counter : Readable
+{
+    int64 value;
+    int64 read() { return self.value; }
+};
+int64 consume(Readable const& view) { return view.read(); }
+int64 main()
+{
+    Counter counter;
+    counter.value = 7;
+    Readable const& view = &counter;
+    println("{} {}", view.read(), consume(&counter));
+    return 0;
+}
+```
+
+声明初始化、赋值、实参和返回值的目标为接口引用时，可直接接收实现该接口的具体类型引用，不需要 `Any.set`／`getReference` 中转。编译器直接生成已有的“地址＋具体类型号”接口视图，沿用运行时方法分派。只读来源只能绑定只读视图，可写来源可绑定只读或可写视图；接口值仍不能任意强转或访问具体字段。
+
+视图借用原对象。复制视图只复制接口句柄，不复制具体对象；原对象必须活得更久，局部对象的接口视图不能从函数返回，也不能保存到更外层作用域。没有实现接口的类型在编译期报错；同名方法并不代替显式的接口实现。
+
 ## 泛型参数必须明确
 
 省略类型实参不再自动补成 Any。允许函数类型推导，也允许模板声明显式给出默认类型。

@@ -36,6 +36,57 @@ int64 main() {
 
 Stable metadata identities, fields, methods and annotations belong to `std::reflect`. Its `getTypeId<T>()` still requires a reflection build and `--reflection`. The private `__typeTag` operation is restricted to core-library and generated reflection code.
 
+## Any target conversions and heterogeneous containers
+
+An explicit `Any` target automatically boxes supported concrete values. This applies to arguments, returns, explicit generic instantiations such as `identity<Any>(value)`, generic fields, enum payloads, and container element/key/value positions. Existing Any values copy directly without another boxing layer. A user-defined direct `ImplicitConvert<Any>` takes precedence.
+
+```magel
+T identity<T>(T value) { return value; }
+int64 main()
+{
+    List<Any> values = {1, "two", true};
+    values.push(1.5);
+    Any value = identity<Any>("generic");
+    Map<String, Any> record = {"count": 3, "name": "Magel"};
+    Set<Any> unique;
+    Any key = "key";
+    unique.add(key);
+    unique.add(key);
+    assert(unique.len() == 1);
+    value.clear();
+    assert(value.isEmpty());
+    return 0;
+}
+```
+
+`List<Any>`, `Set<Any>`, and either or both Any positions in `Map<K,V>` are supported. The explicit target determines collection literals. Typed containers do not become dynamically typed, and omitted generic arguments do not default to Any. Return block/if/match branches must still agree on their concrete result type before the whole result is boxed.
+
+`Any.clear()` requires a writable receiver, releases the owned payload, and restores the empty state. The box remains reusable. Boxing preserves exact types and evaluates the source once. Strings and containers retain owned value copies; full-expression and scope cleanup remain deterministic, without GC. Use `isType<T>`, `tryGet<T>`, or the reference extraction helpers.
+
+**Any keys compare by identity.** Copies retain identity, so inserting the same box twice deduplicates and its copy can query a map entry. Independent boxing of equal payloads creates distinct keys. Preserve an `Any key` for heterogeneous-key queries; prefer `Map<String, Any>` for lookup by string contents. Boxing does not extend borrowed lifetimes. Multi-slot structs/enums/arrays retain the existing address-boxing restrictions; local or temporary storage cannot escape, and unsupported void/resource values cannot be boxed.
+
+## Direct interface reference binding
+
+```magel
+interface Readable { int64 read(); };
+struct Counter : Readable
+{
+    int64 value;
+    int64 read() { return self.value; }
+};
+int64 consume(Readable const& view) { return view.read(); }
+int64 main()
+{
+    Counter counter;
+    counter.value = 7;
+    Readable const& view = &counter;
+    println("{} {}", view.read(), consume(&counter));
+    return 0;
+}
+```
+
+Interface reference targets accept references to concrete types implementing that interface in initializers, assignments, arguments, and returns. No Any intermediary is needed. Lowering directly creates the existing address-and-type-tag view and reuses interface dispatch. Read-only sources cannot acquire mutable permissions. Copying the view copies its handle, not the underlying object; the original object must outlive every view. Missing implementations and escaping local references remain compile-time errors.
+
 ## Explicit generic arguments
 
 Missing type arguments no longer default to Any. Function inference and defaults explicitly written in a template declaration remain supported.

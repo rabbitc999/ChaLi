@@ -30,3 +30,5 @@ xelatex -interaction=nonstopmode -halt-on-error book.tex
 ## 示例排版
 
 Magel 代码使用四空格缩进，赋值及二元运算符两侧、逗号后保留空格；函数体和控制分支展开为多行，避免将声明、赋值与退出语句压在同一行。插值字符串的文字部分及宏的原始文本须保持原意。PDF 代码样式使用 `columns=fullflexible` 和 `keepspaces=true` 保留可见的缩进与词间空格，调整后须检查实际页面，并执行书稿程序回归。
+
+所有 `lstlisting` 允许自动换行和跨页，不用 `minipage`／`samepage` 整块保留短示例。列表项后的代码独立排版，不嵌套在 `enumerate` 或 `itemize` 中；拆开后的有序列表保留原编号。书稿回归同时检查这些结构约束。

@@ -6,8 +6,11 @@
 拆开有两条线：
 
 \begin{itemize}
+
 \item 语言层：\texttt{module} 声明一个文件属于哪个模块，\texttt{import} 把别的模块引进来；
+
 \item 工程层：\texttt{magel new} 起一个带目录结构的工程，\texttt{magel test} / \texttt{magel fmt} 管测试和风格。
+
 \end{itemize}
 
 \section{\texttt{module}：给文件一个名字}
@@ -16,12 +19,9 @@
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 module mylib::math;
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -37,8 +37,6 @@ module mylib::math;
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 module util::text;
 
@@ -47,7 +45,6 @@ String shout(String s)
     return s + "!";
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -55,8 +52,6 @@ String shout(String s)
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 module app;
 import util::text;
@@ -67,7 +62,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -75,21 +69,22 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hi!
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 几个要点：
 
 \begin{itemize}
+
 \item \texttt{import util:\allowbreak{}:\allowbreak{}text;} 之后，\texttt{util:\allowbreak{}:\allowbreak{}text} 里的公开函数按裸名就能调——直接写 \texttt{shout(\allowbreak{}"hi")\allowbreak{}}，不用写 \texttt{util:\allowbreak{}:\allowbreak{}text:\allowbreak{}:\allowbreak{}shout}；
+
 \item 模块名 \texttt{util:\allowbreak{}:\allowbreak{}text} 对应文件 \texttt{util/\allowbreak{}text.\allowbreak{}mgl}：\texttt{:\allowbreak{}:\allowbreak{}} 换成目录分隔符，末尾加 \texttt{.\allowbreak{}mgl}。文件名和模块名对不上，\texttt{import} 就找不到；
+
 \item 路径是相对当前文件解析的。
+
 \end{itemize}
 
 文件名 = 模块路径这条对应关系，是把「模块」和「目录结构」绑在一起的关键：看文件树就知道模块树。
@@ -104,12 +99,9 @@ hi!
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel new demo
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -117,8 +109,6 @@ magel new demo
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 demo/
 ├── .gitignore
@@ -129,7 +119,6 @@ demo/
 └── tests/
     └── test_main.mgl   # 测试
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -137,8 +126,6 @@ demo/
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -146,7 +133,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -156,8 +142,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cfg]
 [package]
 name = "hello"
@@ -167,13 +151,15 @@ version = "0.1.0"
 run = "interpret"
 main = "src/main.mgl"
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \begin{itemize}
+
 \item \texttt{[\allowbreak{}package]\allowbreak{}} 里是包名和版本；
+
 \item \texttt{[\allowbreak{}magel]\allowbreak{}} 里告诉工具链：入口是哪个文件（\texttt{main}）、默认用什么方式跑（\texttt{run}）。
+
 \end{itemize}
 
 工程根目录一旦有 \texttt{magel.\allowbreak{}toml}，在这个目录里执行命令就不用反复写路径了。
@@ -182,15 +168,12 @@ main = "src/main.mgl"
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 /build/
 /.magel/
 /magel_out*
 *.exe
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -200,23 +183,17 @@ main = "src/main.mgl"
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run src/main.mgl     # 运行
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 Hello, Magel!
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -224,12 +201,9 @@ Hello, Magel!
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel check src/main.mgl   # 只检查，不运行
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -239,8 +213,6 @@ magel check src/main.mgl   # 只检查，不运行
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -248,7 +220,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -256,12 +227,9 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel test tests
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -269,13 +237,10 @@ magel test tests
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [passed] tests/test_main.mgl
 通过 1，失败 0，跳过 0
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -287,14 +252,11 @@ magel test tests
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel fmt src/main.mgl            # 打印格式化后的源码到屏幕
 magel fmt src/main.mgl --write    # 直接写回文件
 magel fmt src/main.mgl --check    # 只检查「格式对不对」，不修改
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -302,23 +264,17 @@ magel fmt src/main.mgl --check    # 只检查「格式对不对」，不修改
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel fmt src/messy.mgl --check
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 需要格式化：src/messy.mgl
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -328,8 +284,6 @@ magel fmt src/messy.mgl --check
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -341,7 +295,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -349,8 +302,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main()
 {
@@ -362,7 +313,6 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -374,8 +324,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel man
 magel man std::text
@@ -384,7 +332,6 @@ magel man --search delimiter
 magel man --json std::text::Text::split
 magel man std::text::Text::split --run
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -404,8 +351,6 @@ LSP 将补全、悬停、语义着色、工作区查询、宏预览、编译诊�
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 inline int64 square(int64 value)
 {
@@ -418,18 +363,14 @@ int64 main()
     return 0;
 }
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 9
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
@@ -467,8 +408,6 @@ int64 main()
 
 \par
 \medskip
-\noindent
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel man api std
 magel man api std::text::Text
@@ -476,7 +415,6 @@ magel man keyword return
 magel man keyword '#derive'
 magel man macro
 \end{lstlisting}
-\end{minipage}
 \par
 \medskip
 
