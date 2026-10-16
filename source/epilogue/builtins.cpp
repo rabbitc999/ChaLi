@@ -950,6 +950,11 @@ std::shared_ptr<MType> RawExprType(int id)
     }
     case MNode::Call:
     {
+        /* 调用结果类型已钉在节点上：链式调用的 receiver 在推断、降级、所有权
+         * 各阶段会被反复查询，没有这个快路径的话每次查询都完整重推整条链，
+         * 代价随链长指数增长。类型由下方 ResolveCall 成功后回写，语义与
+         * MNode::Bin 的写回惯例一致。 */
+        if (node.type >= 0) return T(node.type);
         if (!node.kids.empty() && N(node.kids[0]).kind == MNode::Var && N(node.kids[0]).s == "__magel_default_to_string") return T(M_TypeString());
         /* 容器方法（`v.push(…)` / `m.valAt(i)`）与 `bint` 的 `.str()`：被调者是成员访问，
          * 但基类型不是结构体 —— 结果类型查方法表。 */
@@ -1155,7 +1160,13 @@ std::shared_ptr<MType> RawExprType(int id)
         Memory::String label;
         Memory::Vector<Memory::String> params;
         std::shared_ptr<MType> result;
-        if (ResolveCall(id, &label, &params, &result)) return result;
+        if (ResolveCall(id, &label, &params, &result))
+        {
+            /* 重载解析成功后结果类型确定（方法调用在推断阶段不做上下文定型），
+             * 钉在节点上供后续查询直接命中，避免链式调用指数级重推。 */
+            g_nodes[static_cast<std::size_t>(id)].type = M_AddType(result);
+            return result;
+        }
         return T(M_TypeInt());
     }
     case MNode::Bin:

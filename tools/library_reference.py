@@ -203,7 +203,7 @@ def render(data):
             adapters=re.search(r'adapters\{(.*?)\};',inference,re.S).group(1)
             for adapter in re.findall(r'"(\w+)"',adapters):
                 lines.append(f'| `cursor.{adapter}(...)` | `std::iter::{adapter}(cursor,...)` |')
-            lines+=['| `list.iter()` / `list.iterMut()` | `listIter(&list)` / `listIterMut(&list)` |','| `list.intoIter()` | `listIntoIter(&list)`，移动元素，源容器清空 |','| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)` |','| `text.chars()` / `range.intoIter()` | `chars(text)` / `fromRange(range)` |','']
+            lines+=['| `list.iter()` / `list.iterMut()` | `listIter(&list)` / `listIterMut(&list)` |','| `list.intoIter()` | `listIntoIter(&list)`，移动元素，源容器清空 |','| `set.iter()` / `map.iter()` | `setIter(&set)` / `mapIter(&map)`，借用快照，来源容器保持不变 |','| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)`，移动元素，源容器清空 |','| `text.chars()` / `range.intoIter()` | `chars(text)` / `fromRange(range)` |','']
         else:
             lines += ['聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。', '']
         types=[r for r in records if r['kind']!='function' and not r['name'].startswith('__') and not r['owner'].startswith('__')]

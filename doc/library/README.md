@@ -29,7 +29,7 @@
 | [`std::encoding`](std-encoding.md) | 文本编码 | 7 |
 | [`std::event`](std-event.md) | 中断事件与定时器 | 20 |
 | [`std::io`](std-io.md) | 文件与流接口 | 33 |
-| [`std::iter`](std-iter.md) | 惰性迭代器 | 104 |
+| [`std::iter`](std-iter.md) | 惰性迭代器 | 106 |
 | [`std::json`](std-json.md) | JSON 只读文档 | 27 |
 | [`std::lang`](std-lang.md) | 核心库 | 185 |
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 48 |

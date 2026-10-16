@@ -697,9 +697,11 @@ bool RewriteIteratorCall(int id)
                                                                              "listIntoIter";
         address = true;
     }
-    else if (IsContainer(type) && (type->name == "set" || type->name == "map") && callee.s == "intoIter")
+    else if (IsContainer(type) && (type->name == "set" || type->name == "map") && (callee.s == "iter" || callee.s == "intoIter"))
     {
-        function = type->name == "set" ? "setIntoIter" : "mapIntoIter";
+        /* `iter` 是借用快照（来源容器保持不变），`intoIter` 是搬空容器。 */
+        if (type->name == "set") function = callee.s == "iter" ? "setIter" : "setIntoIter";
+        else function = callee.s == "iter" ? "mapIter" : "mapIntoIter";
         address = true;
     }
     else if (type->kind == MType::String && callee.s == "chars")

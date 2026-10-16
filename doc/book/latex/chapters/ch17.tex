@@ -76,7 +76,7 @@ int64 main()
 
 还有一个重载可以指定步长：\texttt{range(\allowbreak{}start,\allowbreak{} stop,\allowbreak{} step)\allowbreak{}}。
 
-另一种起点是从现成的容器出发：\texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}}。稍后会讲它和 \texttt{range} 的一个区别。
+另一种起点是从现成的容器出发：\texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}}。它和 \texttt{range} 有一个重要区别——\texttt{range} 每次调用都造一条新链，而容器迭代器是一次性消费品（见 17.8）。
 
 \section{中间操作：\texttt{map} / \texttt{filter} / \texttt{take} / \texttt{skip} / \texttt{rev}}
 
@@ -423,6 +423,147 @@ int64 main()
 \end{tabular}
 \end{center}
 
+\section{迭代器是一次性消费品}
+
+17.2 留的那个问题现在回答：\texttt{range} 和 \texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 的区别是——迭代器只能从头到尾走一遍。走完之后再调 \texttt{next(\allowbreak{})\allowbreak{}}、再接 \texttt{all} / \texttt{any} / \texttt{fold}，得到的都是空：不会报错，就是没有数据。
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+import std::iter;
+
+int64 main()
+{
+    List<int64> xs;
+    xs.push(1);
+    xs.push(2);
+    xs.push(3);
+    xs.push(4);
+    auto first = xs.iter();
+    println("第一次 all: {}", first.all(fn(int64 const& x)
+    {
+        x > 0
+    }));
+    println("第二次 any: {}", first.any(fn(int64 const& x)
+    {
+        x > 2
+    }));
+    auto second = xs.iter();
+    println("新建后 any: {}", second.any(fn(int64 const& x)
+    {
+        x > 2
+    }));
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+第一次 all: 1
+第二次 any: 0
+新建后 any: 1
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{first} 被 \texttt{all} 走完就耗干了，第二次 \texttt{any} 是在空迭代器上问的——答案当然是「没有」。想再走一遍，就再调一次 \texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 造一条新的（\texttt{second} 那两行）。\texttt{range} 没这个烦恼，因为它每次调用本来就是一条新链。
+
+记住一句话：迭代器是一次性的，链子要走第二遍就重新造起点。
+
+\subsection{从列表造起点：\texttt{from\allowbreak{}List}}
+
+\texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}from\allowbreak{}List<\allowbreak{}T>\allowbreak{}(\allowbreak{}list)\allowbreak{}} 也是一条起点：把列表的元素复制进迭代器，原来的列表完好无损：
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+import std::iter;
+
+int64 main()
+{
+    List<int64> xs;
+    xs.push(2);
+    xs.push(4);
+    xs.push(6);
+    int64 total = fromList<int64>(xs).fold(0, fn(int64 acc, int64 x)
+    {
+        acc + x
+    });
+    println("{} {}", total, xs.len());
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+12 3
+\end{lstlisting}
+\par
+\medskip
+
+\subsection{\texttt{Set.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 与 \texttt{Map.\allowbreak{}iter(\allowbreak{})\allowbreak{}}}
+
+\texttt{Set<\allowbreak{}T>\allowbreak{}} 和 \texttt{Map<\allowbreak{}K,\allowbreak{}V>\allowbreak{}} 同样有 \texttt{.\allowbreak{}iter(\allowbreak{})\allowbreak{}}：借用快照——把元素（Map 是 \texttt{(\allowbreak{}K,\allowbreak{} V)\allowbreak{}} 元组）复制进迭代器，来源容器保持不变；对应的 \texttt{.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} 则把容器搬空。
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+import std::iter;
+
+int64 main()
+{
+    Set<int64> s;
+    s.add(1);
+    s.add(2);
+    s.add(3);
+    auto si = s.iter();
+    int64 sum = 0;
+    loop
+    {
+        match(si.next())
+        {
+            Value(v) => { sum = sum + v; }
+            None => { break; }
+        }
+    };
+    println("sum = {} len = {}", sum, s.len());
+    Map<int64, int64> m;
+    m.put(1, 10);
+    m.put(2, 20);
+    auto mi = m.iter();
+    int64 doubled = 0;
+    loop
+    {
+        match(mi.next())
+        {
+            Value(pair) => { doubled = doubled + pair.0 * pair.1; }
+            None => { break; }
+        }
+    };
+    println("doubled = {} len = {}", doubled, m.len());
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+sum = 6 len = 3
+doubled = 50 len = 2
+\end{lstlisting}
+\par
+\medskip
+
+迭代完了 \texttt{s.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 3、\texttt{m.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 2——借用快照不动原件。Map 的每一项是元组，用 \texttt{pair.\allowbreak{}0} 取键、\texttt{pair.\allowbreak{}1} 取值。
+
 \section{foreach：把链条跑起来}
 
 前面几节一直在"造一条链"，真正让它跑起来的是 \texttt{foreach}。三种写法：
@@ -449,7 +590,7 @@ foreach (int64 mut& p in span)
 \par
 \medskip
 
-能当迭代源的有：数组、\texttt{List<\allowbreak{}T>\allowbreak{}}、\texttt{std:\allowbreak{}:\allowbreak{}memory:\allowbreak{}:\allowbreak{}Span<\allowbreak{}T>\allowbreak{}}、自己写的 \texttt{Iterator<\allowbreak{}T>\allowbreak{}}，以及整数区间（见 17.10）。\texttt{break} / \texttt{continue} 照常可用：
+能当迭代源的有：数组、\texttt{List<\allowbreak{}T>\allowbreak{}}、\texttt{std:\allowbreak{}:\allowbreak{}memory:\allowbreak{}:\allowbreak{}Span<\allowbreak{}T>\allowbreak{}}、自己写的 \texttt{Iterator<\allowbreak{}T>\allowbreak{}}，以及整数区间（见 17.11）。\texttt{break} / \texttt{continue} 照常可用：
 
 \par
 \medskip
@@ -580,22 +721,24 @@ magel：foreach 变量类型与 Vector<T> 元素不一致：写的是 int64 mut&
 
 \section{小结}
 
-\begin{center}
-\begin{tabular}{ll}
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.081\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.899\linewidth-2\tabcolsep\relax}}
 \toprule
 你会了 & 关键点 \\
 \midrule
+\endhead
 三段式 & 起点 \texttt{.\allowbreak{}} 中间操作 \texttt{.\allowbreak{}} … \texttt{.\allowbreak{}} 终结操作 \\
-起点 & \texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}（左闭右开）、\texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}}、\texttt{xs.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} \\
+起点 & \texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}（左闭右开）、\texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}}、\texttt{from\allowbreak{}List(\allowbreak{}xs)\allowbreak{}}、\texttt{set.\allowbreak{}iter(\allowbreak{})\allowbreak{}} / \texttt{map.\allowbreak{}iter(\allowbreak{})\allowbreak{}}、\texttt{xs.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} \\
 中间操作 & \texttt{map} \texttt{filter} \texttt{take} \texttt{skip} \texttt{rev} \texttt{inspect} \texttt{enumerate} \texttt{chain} \texttt{zip} \\
 终结操作 & \texttt{collect} \texttt{fold} \texttt{count} \texttt{all} \texttt{any} \texttt{find} \texttt{last} \\
 组合 & 中间操作可无限串联，从上往下读即需求 \\
 惰性 & 不接终结操作就不执行；\texttt{take} 能省掉多余计算 \\
+一次性 & 迭代器只能走一遍；要走第二遍就重新造起点 \\
 引用坑 & \texttt{.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 元素是 \texttt{T const\&}；要独立值用 \texttt{.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} \\
 引入 & \texttt{import std:\allowbreak{}:\allowbreak{}iter;} \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+}
 
 \section{下一步}
 

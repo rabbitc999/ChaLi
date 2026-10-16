@@ -5,6 +5,13 @@
 
 ## 1.0.0 — fn 语法定型与稳定版本基线
 
+### 2026-10-17
+
+- 分析栈深度由文法指令 `%max_stack_depth 4096` 固定为 4096（此前沿用生成器缺省 64），嵌套闭包等深层语法结构不再触发 MGL1001「分析栈已满」。
+- 修复链式方法调用编译期指数级卡顿：`RawExprType` 的调用分支在重载解析成功后把结果类型钉回节点，后续各阶段查询直接命中，6 层及以上链式调用从超时（>40s）降为毫秒级。
+- `std::iter` 新增借用快照迭代器 `setIter` / `mapIter`（`set.iter()` / `map.iter()`）：把元素或 `(K, V)` 元组快照进迭代器，来源容器保持不变；`intoIter` 系列维持搬空语义。标准库参考文档与符号索引同步再生成。
+- 书稿补充：第 9 章 `return self;` 与链式调用的值语义、第 16 章 `Value(v)` / `None` 简写的适用条件、第 17 章迭代器一次性消费与 `fromList` / `set.iter()` / `map.iter()`；LaTeX 同步再生成。
+
 ### 2026-10-16
 
 - 标准库分层迁移（A/B 档）：`std::math` 的 `abs`/`min`/`max` 收敛为泛型入口，`min`/`max` 接受任意数量实参，`clamp` 保留 int64/float64 两份重载；`std::numtheory` 删除 `NumberTheory` 静态包装与全部只给胶水用的宿主私有名，改为模块级泛型自由函数 `gcd`/`lcm`/`addMod`/`mulMod`/`powMod`/`modInverse`/`isPrime`（`gcd`/`lcm` 变参，`modInverse` 全程非负中间量，无符号类型同样成立）；`std::numerics`、`std::text`、`std::path` 的实现全部下沉到 `.mgl`，删除对应宿主胶水头与模块裁剪开关，公开面 `Numerics::*`、`Text::*`、`PathString::*` 不变。迁移前后用差分探针逐值核对数学、数论、字符串（含 UTF-8）、路径与数值分析，停机文案与原宿主原文一致。

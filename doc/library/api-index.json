@@ -8750,6 +8750,38 @@
   },
   {
     "module": "std::iter",
+    "name": "setIter",
+    "owner": "",
+    "signature": "Iter<T> setIter<T>(std::lang::Set<T> const& source)",
+    "documentation": "借用集合构造迭代器：把元素快照进迭代器状态，来源集合保持不变；迭代器本身仍是一次性消费。\n\n**返回值**：Iter<T>。独立有状态的元素迭代器；迭代器本身仍是一次性消费。",
+    "comment": "/**\n * @brief 借用集合建立迭代器：把元素快照进迭代器状态，来源集合保持不变。\n * @param source 来源集合，只读借用。\n * @return 独立有状态的元素迭代器；迭代器本身仍是一次性消费。\n */",
+    "parameters": [
+      {
+        "name": "source",
+        "label": "std::lang::Set<T> const& source",
+        "documentation": "来源集合，只读借用。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Iter<T>",
+      "documentation": "独立有状态的元素迭代器；迭代器本身仍是一次性消费。"
+    },
+    "errors": {
+      "documentation": "next 消费游标，peek 缓存下一项而不丢弃。转换器惰性执行，collect/fold/count 等终结操作消费输入。sizeHint 返回下界和可选上界。iter/iterMut 引用源容器，intoIter 拥有值；借用有效性由借用检查器约束。repeat/cycle 可无限，须 take 等限制后才能收集。chars 当前按字节推进，不能把它当 Unicode 字素迭代器。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "std::iter::setIter<T>(source);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/iter.mgl",
+    "line": 1431,
+    "page": "std-iter.md",
+    "anchor": "api-94"
+  },
+  {
+    "module": "std::iter",
     "name": "mapIntoIter",
     "owner": "",
     "signature": "Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)",
@@ -8776,9 +8808,41 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1431,
+    "line": 1444,
     "page": "std-iter.md",
-    "anchor": "api-94"
+    "anchor": "api-95"
+  },
+  {
+    "module": "std::iter",
+    "name": "mapIter",
+    "owner": "",
+    "signature": "Iter<(K,V)> mapIter<K,V>(std::lang::Map<K,V> const& source)",
+    "documentation": "借用映射构造键值对元组迭代器：把键值对快照进迭代器状态，来源映射保持不变；迭代器本身仍是一次性消费。\n\n**返回值**：Iter<(K,V)>。独立有状态的元组迭代器；迭代器本身仍是一次性消费。",
+    "comment": "/**\n * @brief 借用映射建立迭代器：把 (键, 值) 元组快照进迭代器状态，来源映射保持不变。\n * @param source 来源映射，只读借用。\n * @return 独立有状态的元组迭代器；迭代器本身仍是一次性消费。\n */",
+    "parameters": [
+      {
+        "name": "source",
+        "label": "std::lang::Map<K,V> const& source",
+        "documentation": "来源映射，只读借用。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Iter<(K,V)>",
+      "documentation": "独立有状态的元组迭代器；迭代器本身仍是一次性消费。"
+    },
+    "errors": {
+      "documentation": "next 消费游标，peek 缓存下一项而不丢弃。转换器惰性执行，collect/fold/count 等终结操作消费输入。sizeHint 返回下界和可选上界。iter/iterMut 引用源容器，intoIter 拥有值；借用有效性由借用检查器约束。repeat/cycle 可无限，须 take 等限制后才能收集。chars 当前按字节推进，不能把它当 Unicode 字素迭代器。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "std::iter::mapIter<K,V>(source);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/iter.mgl",
+    "line": 1458,
+    "page": "std-iter.md",
+    "anchor": "api-96"
   },
   {
     "module": "std::iter",
@@ -8803,9 +8867,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1449,
+    "line": 1475,
     "page": "std-iter.md",
-    "anchor": "api-95"
+    "anchor": "api-97"
   },
   {
     "module": "std::iter",
@@ -8830,9 +8894,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1461,
+    "line": 1487,
     "page": "std-iter.md",
-    "anchor": "api-96"
+    "anchor": "api-98"
   },
   {
     "module": "std::iter",
@@ -8872,9 +8936,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1473,
+    "line": 1499,
     "page": "std-iter.md",
-    "anchor": "api-97"
+    "anchor": "api-99"
   },
   {
     "module": "std::iter",
@@ -8899,9 +8963,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1489,
+    "line": 1515,
     "page": "std-iter.md",
-    "anchor": "api-98"
+    "anchor": "api-100"
   },
   {
     "module": "std::iter",
@@ -8926,9 +8990,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1501,
+    "line": 1527,
     "page": "std-iter.md",
-    "anchor": "api-99"
+    "anchor": "api-101"
   },
   {
     "module": "std::iter",
@@ -8960,9 +9024,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1512,
+    "line": 1538,
     "page": "std-iter.md",
-    "anchor": "api-100"
+    "anchor": "api-102"
   },
   {
     "module": "std::iter",
@@ -8987,9 +9051,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1525,
+    "line": 1551,
     "page": "std-iter.md",
-    "anchor": "api-101"
+    "anchor": "api-103"
   },
   {
     "module": "std::iter",
@@ -9014,9 +9078,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1532,
+    "line": 1558,
     "page": "std-iter.md",
-    "anchor": "api-102"
+    "anchor": "api-104"
   },
   {
     "module": "std::iter",
@@ -9048,9 +9112,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/iter.mgl",
-    "line": 1542,
+    "line": 1568,
     "page": "std-iter.md",
-    "anchor": "api-103"
+    "anchor": "api-105"
   },
   {
     "module": "std::json",

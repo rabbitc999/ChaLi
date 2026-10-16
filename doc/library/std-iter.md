@@ -238,7 +238,8 @@ iterator pipelines OK
 | `cursor.collect(...)` | `std::iter::collect(cursor,...)` |
 | `list.iter()` / `list.iterMut()` | `listIter(&list)` / `listIterMut(&list)` |
 | `list.intoIter()` | `listIntoIter(&list)`，移动元素，源容器清空 |
-| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)` |
+| `set.iter()` / `map.iter()` | `setIter(&set)` / `mapIter(&map)`，借用快照，来源容器保持不变 |
+| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)`，移动元素，源容器清空 |
 | `text.chars()` / `range.intoIter()` | `chars(text)` / `fromRange(range)` |
 
 ## 类型、枚举、常量与字段
@@ -433,16 +434,18 @@ iterator pipelines OK
 | [listIter](#api-91) | `Iter<T const&> listIter<T>(std::lang::List<T> const& source)` |
 | [listIterMut](#api-92) | `Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source)` |
 | [setIntoIter](#api-93) | `Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source)` |
-| [mapIntoIter](#api-94) | `Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
-| [IterSpanState::next](#api-95) | `Option<T const&> next()` |
-| [IterSpanState::sizeHint](#api-96) | `(int64, Option<int64>) sizeHint()` |
-| [fromSpan](#api-97) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
-| [IterCharsState::next](#api-98) | `Option<char> next()` |
-| [IterCharsState::sizeHint](#api-99) | `(int64, Option<int64>) sizeHint()` |
-| [chars](#api-100) | `Iter<char> chars(std::lang::String source)` |
-| [IterRepeatState::next](#api-101) | `Option<T> next()` |
-| [IterRepeatState::sizeHint](#api-102) | `(int64, Option<int64>) sizeHint()` |
-| [repeat](#api-103) | `Iter<T> repeat<T>(T value)` |
+| [setIter](#api-94) | `Iter<T> setIter<T>(std::lang::Set<T> const& source)` |
+| [mapIntoIter](#api-95) | `Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
+| [mapIter](#api-96) | `Iter<(K,V)> mapIter<K,V>(std::lang::Map<K,V> const& source)` |
+| [IterSpanState::next](#api-97) | `Option<T const&> next()` |
+| [IterSpanState::sizeHint](#api-98) | `(int64, Option<int64>) sizeHint()` |
+| [fromSpan](#api-99) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
+| [IterCharsState::next](#api-100) | `Option<char> next()` |
+| [IterCharsState::sizeHint](#api-101) | `(int64, Option<int64>) sizeHint()` |
+| [chars](#api-102) | `Iter<char> chars(std::lang::String source)` |
+| [IterRepeatState::next](#api-103) | `Option<T> next()` |
+| [IterRepeatState::sizeHint](#api-104) | `(int64, Option<int64>) sizeHint()` |
+| [repeat](#api-105) | `Iter<T> repeat<T>(T value)` |
 
 <a id="api-0"></a>
 
@@ -3982,7 +3985,47 @@ std::iter::setIntoIter<T>(source);
 
 <a id="api-94"></a>
 
-### mapIntoIter（95）
+### setIter（95）
+
+**声明**
+
+```magel
+Iter<T> setIter<T>(std::lang::Set<T> const& source);
+```
+
+**行为**
+
+借用集合构造迭代器：把元素快照进迭代器状态，来源集合保持不变；迭代器本身仍是一次性消费。
+
+借用集合建立迭代器：把元素快照进迭代器状态，来源集合保持不变。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `source` | `std::lang::Set<T> const& source` | 来源集合，只读借用。 | 无 |
+
+**返回值**
+
+`Iter<T>`。独立有状态的元素迭代器；迭代器本身仍是一次性消费。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```magel
+std::iter::setIter<T>(source);
+```
+
+**源码**：[source/std/iter.mgl:1431](../../source/std/iter.mgl#L1431)。
+
+**完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
+
+<a id="api-95"></a>
+
+### mapIntoIter（96）
 
 **声明**
 
@@ -4014,13 +4057,53 @@ Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source);
 std::iter::mapIntoIter<K,V>(source);
 ```
 
-**源码**：[source/std/iter.mgl:1431](../../source/std/iter.mgl#L1431)。
+**源码**：[source/std/iter.mgl:1444](../../source/std/iter.mgl#L1444)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-95"></a>
+<a id="api-96"></a>
 
-### IterSpanState::next（96）
+### mapIter（97）
+
+**声明**
+
+```magel
+Iter<(K,V)> mapIter<K,V>(std::lang::Map<K,V> const& source);
+```
+
+**行为**
+
+借用映射构造键值对元组迭代器：把键值对快照进迭代器状态，来源映射保持不变；迭代器本身仍是一次性消费。
+
+借用映射建立迭代器：把 (键, 值) 元组快照进迭代器状态，来源映射保持不变。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `source` | `std::lang::Map<K,V> const& source` | 来源映射，只读借用。 | 无 |
+
+**返回值**
+
+`Iter<(K,V)>`。独立有状态的元组迭代器；迭代器本身仍是一次性消费。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```magel
+std::iter::mapIter<K,V>(source);
+```
+
+**源码**：[source/std/iter.mgl:1458](../../source/std/iter.mgl#L1458)。
+
+**完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
+
+<a id="api-97"></a>
+
+### IterSpanState::next（98）
 
 **声明**
 
@@ -4050,13 +4133,13 @@ Option<T const&> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.mgl:1449](../../source/std/iter.mgl#L1449)。
+**源码**：[source/std/iter.mgl:1475](../../source/std/iter.mgl#L1475)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-96"></a>
+<a id="api-98"></a>
 
-### IterSpanState::sizeHint（97）
+### IterSpanState::sizeHint（99）
 
 **声明**
 
@@ -4086,13 +4169,13 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.mgl:1461](../../source/std/iter.mgl#L1461)。
+**源码**：[source/std/iter.mgl:1487](../../source/std/iter.mgl#L1487)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-97"></a>
+<a id="api-99"></a>
 
-### fromSpan（98）
+### fromSpan（100）
 
 **声明**
 
@@ -4126,13 +4209,13 @@ Iter<T const&> fromSpan<T>(T const& source, int64 length);
 std::iter::fromSpan<T>(source, length);
 ```
 
-**源码**：[source/std/iter.mgl:1473](../../source/std/iter.mgl#L1473)。
+**源码**：[source/std/iter.mgl:1499](../../source/std/iter.mgl#L1499)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-98"></a>
+<a id="api-100"></a>
 
-### IterCharsState::next（99）
+### IterCharsState::next（101）
 
 **声明**
 
@@ -4162,13 +4245,13 @@ Option<char> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.mgl:1489](../../source/std/iter.mgl#L1489)。
+**源码**：[source/std/iter.mgl:1515](../../source/std/iter.mgl#L1515)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-99"></a>
+<a id="api-101"></a>
 
-### IterCharsState::sizeHint（100）
+### IterCharsState::sizeHint（102）
 
 **声明**
 
@@ -4198,13 +4281,13 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.mgl:1501](../../source/std/iter.mgl#L1501)。
+**源码**：[source/std/iter.mgl:1527](../../source/std/iter.mgl#L1527)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-100"></a>
+<a id="api-102"></a>
 
-### chars（101）
+### chars（103）
 
 **声明**
 
@@ -4236,13 +4319,13 @@ Iter<char> chars(std::lang::String source);
 std::iter::chars(source);
 ```
 
-**源码**：[source/std/iter.mgl:1512](../../source/std/iter.mgl#L1512)。
+**源码**：[source/std/iter.mgl:1538](../../source/std/iter.mgl#L1538)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-101"></a>
+<a id="api-103"></a>
 
-### IterRepeatState::next（102）
+### IterRepeatState::next（104）
 
 **声明**
 
@@ -4272,13 +4355,13 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.mgl:1525](../../source/std/iter.mgl#L1525)。
+**源码**：[source/std/iter.mgl:1551](../../source/std/iter.mgl#L1551)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-102"></a>
+<a id="api-104"></a>
 
-### IterRepeatState::sizeHint（103）
+### IterRepeatState::sizeHint（105）
 
 **声明**
 
@@ -4308,13 +4391,13 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.mgl:1532](../../source/std/iter.mgl#L1532)。
+**源码**：[source/std/iter.mgl:1558](../../source/std/iter.mgl#L1558)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。
 
-<a id="api-103"></a>
+<a id="api-105"></a>
 
-### repeat（104）
+### repeat（106）
 
 **声明**
 
@@ -4346,6 +4429,6 @@ Iter<T> repeat<T>(T value);
 std::iter::repeat<T>(value);
 ```
 
-**源码**：[source/std/iter.mgl:1542](../../source/std/iter.mgl#L1542)。
+**源码**：[source/std/iter.mgl:1568](../../source/std/iter.mgl#L1568)。
 
 **完整示例**：[example/samples/iter_pipeline.mgl](../../example/samples/iter_pipeline.mgl)。

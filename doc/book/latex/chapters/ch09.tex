@@ -154,6 +154,53 @@ int64 main()
 
 调用的写法是 \texttt{p.\allowbreak{}shift(\allowbreak{}10)\allowbreak{}} —— 用 \texttt{.\allowbreak{}}，因为 \texttt{p} 是一个具体的对象。（\texttt{:\allowbreak{}:\allowbreak{}} 是留给「属于类型、不属于对象」的东西的，下一节。）
 
+\subsection{\texttt{return self;}：让方法可以链着写}
+
+方法可以把 \texttt{self} 返回——返回类型写结构体自己，\texttt{return self;} 一行。惯用形状是「每个方法都返回自己」，这样就能链式调用：
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+struct Counter
+{
+    int64 total;
+
+    Counter add(int64 x)
+    {
+        self.total = self.total + x;
+        return self;
+    }
+};
+
+int64 main()
+{
+    Counter c;
+    c = c.add(1).add(2).add(3);
+    println("{}", c.total);
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+6
+\end{lstlisting}
+\par
+\medskip
+
+注意两件事：
+
+\begin{enumerate}
+
+\item 链式调用要把结果赋回去（\texttt{c =\allowbreak{} c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}…}）。结构体是值（9.6），\texttt{c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}} 返回的是一份副本——不赋回去，后面 \texttt{.\allowbreak{}add(\allowbreak{}2)\allowbreak{}} 都改在副本上，\texttt{c} 自己只吃到第一步：\texttt{c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}.\allowbreak{}add(\allowbreak{}2)\allowbreak{}.\allowbreak{}add(\allowbreak{}3)\allowbreak{};} 不回赋值的话，\texttt{c.\allowbreak{}total} 是 1，不是 6。
+
+\item \texttt{return self;} 走的是普通的值复制：方法结束时 \texttt{self} 指向的对象被复制一份交出去。想在原地改调用者，直接写 \texttt{void} 方法改 \texttt{self.\allowbreak{}} 字段就行，不用 \texttt{return self;}。
+
+\end{enumerate}
+
 \section{\texttt{static}：属于类型，不属于对象}
 
 有些东西和「某一个具体对象」无关，只跟类型有关。比如「一共造过多少个 Counter」——这个数不是某个 \texttt{Counter} 的字段，它是 \texttt{Counter} 这个类型的。

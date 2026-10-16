@@ -15,6 +15,7 @@
 %mode lalr
 %namespace magel
 %value_type int
+%max_stack_depth 4096
 
 %include "magel_token.gram"
 

@@ -226,8 +226,8 @@
 | [std::iter::IterBufferState::sizeHint](std-iter.md#api-75) | `(int64,Option<int64>) sizeHint()` |
 | [std::iter::IterChainState::next](std-iter.md#api-45) | `Option<T> next()` |
 | [std::iter::IterChainState::sizeHint](std-iter.md#api-46) | `(int64, Option<int64>) sizeHint()` |
-| [std::iter::IterCharsState::next](std-iter.md#api-98) | `Option<char> next()` |
-| [std::iter::IterCharsState::sizeHint](std-iter.md#api-99) | `(int64, Option<int64>) sizeHint()` |
+| [std::iter::IterCharsState::next](std-iter.md#api-100) | `Option<char> next()` |
+| [std::iter::IterCharsState::sizeHint](std-iter.md#api-101) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterConstListState::next](std-iter.md#api-87) | `Option<T const&> next()` |
 | [std::iter::IterConstListState::sizeHint](std-iter.md#api-88) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterCycleState::next](std-iter.md#api-63) | `Option<T> next()` |
@@ -254,16 +254,16 @@
 | [std::iter::IterNext::sizeHint](std-iter.md#api-1) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterRangeState::next](std-iter.md#api-17) | `Option<int64> next()` |
 | [std::iter::IterRangeState::sizeHint](std-iter.md#api-18) | `(int64, Option<int64>) sizeHint()` |
-| [std::iter::IterRepeatState::next](std-iter.md#api-101) | `Option<T> next()` |
-| [std::iter::IterRepeatState::sizeHint](std-iter.md#api-102) | `(int64, Option<int64>) sizeHint()` |
+| [std::iter::IterRepeatState::next](std-iter.md#api-103) | `Option<T> next()` |
+| [std::iter::IterRepeatState::sizeHint](std-iter.md#api-104) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterScanState::next](std-iter.md#api-66) | `Option<U> next()` |
 | [std::iter::IterScanState::sizeHint](std-iter.md#api-67) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterSkipState::next](std-iter.md#api-42) | `Option<T> next()` |
 | [std::iter::IterSkipState::sizeHint](std-iter.md#api-43) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterSkipWhileState::next](std-iter.md#api-36) | `Option<T> next()` |
 | [std::iter::IterSkipWhileState::sizeHint](std-iter.md#api-37) | `(int64, Option<int64>) sizeHint()` |
-| [std::iter::IterSpanState::next](std-iter.md#api-95) | `Option<T const&> next()` |
-| [std::iter::IterSpanState::sizeHint](std-iter.md#api-96) | `(int64, Option<int64>) sizeHint()` |
+| [std::iter::IterSpanState::next](std-iter.md#api-97) | `Option<T const&> next()` |
+| [std::iter::IterSpanState::sizeHint](std-iter.md#api-98) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterStepState::next](std-iter.md#api-54) | `Option<T> next()` |
 | [std::iter::IterStepState::sizeHint](std-iter.md#api-55) | `(int64, Option<int64>) sizeHint()` |
 | [std::iter::IterTakeState::next](std-iter.md#api-39) | `Option<T> next()` |
@@ -275,7 +275,7 @@
 | [std::iter::all](std-iter.md#api-81) | `bool all<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::any](std-iter.md#api-82) | `bool any<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::chain](std-iter.md#api-47) | `Iter<T> chain<T>(Iter<T> left, Iter<T> right)` |
-| [std::iter::chars](std-iter.md#api-100) | `Iter<char> chars(std::lang::String source)` |
+| [std::iter::chars](std-iter.md#api-102) | `Iter<char> chars(std::lang::String source)` |
 | [std::iter::collect](std-iter.md#api-69) | `std::lang::List<T> collect<T>(Iter<T> source)` |
 | [std::iter::countIter](std-iter.md#api-78) | `int64 countIter<T>(Iter<T> mut& source)` |
 | [std::iter::cycle](std-iter.md#api-65) | `Iter<T> cycle<T>(Iter<T> source)` |
@@ -288,7 +288,7 @@
 | [std::iter::forEach](std-iter.md#api-84) | `void forEach<T>(Iter<T> mut& source, void fn(T) action)` |
 | [std::iter::fromList](std-iter.md#api-16) | `Iter<T> fromList<T>(std::lang::List<T> values)` |
 | [std::iter::fromRange](std-iter.md#api-86) | `Iter<int64> fromRange(std::lang::__Range source)` |
-| [std::iter::fromSpan](std-iter.md#api-97) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
+| [std::iter::fromSpan](std-iter.md#api-99) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [std::iter::fromState](std-iter.md#api-13) | `Iter<T> fromState<T,S>(S state)` |
 | [std::iter::fuse](std-iter.md#api-59) | `Iter<T> fuse<T>(Iter<T> source)` |
 | [std::iter::inspect](std-iter.md#api-62) | `Iter<T> inspect<T>(Iter<T> source, void fn(T) action)` |
@@ -297,17 +297,19 @@
 | [std::iter::listIter](std-iter.md#api-91) | `Iter<T const&> listIter<T>(std::lang::List<T> const& source)` |
 | [std::iter::listIterMut](std-iter.md#api-92) | `Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source)` |
 | [std::iter::map](std-iter.md#api-23) | `Iter<U> map<T,U>(Iter<T> source, U fn(T) callback)` |
-| [std::iter::mapIntoIter](std-iter.md#api-94) | `Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
+| [std::iter::mapIntoIter](std-iter.md#api-95) | `Iter<(K,V)> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
+| [std::iter::mapIter](std-iter.md#api-96) | `Iter<(K,V)> mapIter<K,V>(std::lang::Map<K,V> const& source)` |
 | [std::iter::mapWhile](std-iter.md#api-32) | `Iter<U> mapWhile<T,U>(Iter<T> source, Option<U> fn(T) callback)` |
 | [std::iter::nth](std-iter.md#api-79) | `Option<T> nth<T>(Iter<T> mut& source, int64 index)` |
 | [std::iter::peekingTakeWhile](std-iter.md#api-77) | `(Iter<T>,Iter<T>) peekingTakeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::range](std-iter.md#api-20) | `Iter<int64> range(int64 start, int64 stop)` |
 | [std::iter::range](std-iter.md#api-19) | `Iter<int64> range(int64 start, int64 stop, int64 step)` |
-| [std::iter::repeat](std-iter.md#api-103) | `Iter<T> repeat<T>(T value)` |
+| [std::iter::repeat](std-iter.md#api-105) | `Iter<T> repeat<T>(T value)` |
 | [std::iter::rev](std-iter.md#api-76) | `Iter<T> rev<T>(Iter<T> source)` |
 | [std::iter::sameItems](std-iter.md#api-73) | `bool sameItems<T>(Iter<T> left, Iter<T> right)` |
 | [std::iter::scan](std-iter.md#api-68) | `Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)` |
 | [std::iter::setIntoIter](std-iter.md#api-93) | `Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source)` |
+| [std::iter::setIter](std-iter.md#api-94) | `Iter<T> setIter<T>(std::lang::Set<T> const& source)` |
 | [std::iter::skip](std-iter.md#api-44) | `Iter<T> skip<T>(Iter<T> source, int64 amount)` |
 | [std::iter::skipWhile](std-iter.md#api-38) | `Iter<T> skipWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::stepBy](std-iter.md#api-56) | `Iter<T> stepBy<T>(Iter<T> source, int64 step)` |
