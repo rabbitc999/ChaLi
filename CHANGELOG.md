@@ -7,6 +7,9 @@
 
 ### 2026-10-16
 
+- 标准库分层迁移（A/B 档）：`std::math` 的 `abs`/`min`/`max` 收敛为泛型入口，`min`/`max` 接受任意数量实参，`clamp` 保留 int64/float64 两份重载；`std::numtheory` 删除 `NumberTheory` 静态包装与全部只给胶水用的宿主私有名，改为模块级泛型自由函数 `gcd`/`lcm`/`addMod`/`mulMod`/`powMod`/`modInverse`/`isPrime`（`gcd`/`lcm` 变参，`modInverse` 全程非负中间量，无符号类型同样成立）；`std::numerics`、`std::text`、`std::path` 的实现全部下沉到 `.mgl`，删除对应宿主胶水头与模块裁剪开关，公开面 `Numerics::*`、`Text::*`、`PathString::*` 不变。迁移前后用差分探针逐值核对数学、数论、字符串（含 UTF-8）、路径与数值分析，停机文案与原宿主原文一致。
+- 标准库 `__` 前缀符号不再进入编辑器与手册：共享索引 `tools/magel_stdlib_api.json` 生成时剔除 `__` 前缀的函数、类型与所属类型并加断言防回归（此前 `std::lang::__Range` 会作为可补全类型出现），原生 LSP 与 Python 参考实现加载索引时同样过滤；`tools/check_std_naming.py` 新增门禁，带函数体的 `__` 函数必须声明为 `inline`（模块私有），无函数体的宿主声明不受此限，`std::event::__eventTrampoline`/`__bindEventArguments`、`std::watchdog::__wdOnTick` 已补齐。
+
 - 统一默认 `toString()` 与字符串转换：非 void 值展示值文本，结构体 `{...}`、List/数组 `[...]`、Set/Map `{...}`、元组 `(...)`，嵌套字符串转义，Any 复用实际载荷格式。用户无参方法与 `ImplicitConvert<String>` 补齐缺失入口，专用显式转换优先；VM/AOT 共用不依赖反射的原语，保留临时值清理和回调重入隔离，并同步 LSP、书稿和回归。
 
 - 统一发布脚本的构建、书稿、回归、VSIX、一致性校验、ZIP 与 SHA256 流程；远端推送与旧标签替换均须显式启用。修正章节地图第 23/24 章之间空行造成的拆表和第 25 章丢失，转换器拒绝缺少合法分隔行的表格。

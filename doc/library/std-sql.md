@@ -55,27 +55,27 @@ int64 main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-369"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
-| DataCell | <a id="symbol-370"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
-| DataCell | <a id="symbol-371"></a>`int64 intValue` | 整数单元格保存的值。 |
-| DataCell | <a id="symbol-372"></a>`float64 realValue` | 浮点单元格保存的值。 |
-| DataCell | <a id="symbol-373"></a>`std::lang::String textValue` | 文本单元格保存的字符串。 |
-| 模块 | <a id="symbol-374"></a>`struct DataRow` | 结果集的一行。 |
-| DataRow | <a id="symbol-375"></a>`std::lang::List<DataCell> cells` | 该行按列顺序保存的单元格。 |
-| 模块 | <a id="symbol-376"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
-| ResultSet | <a id="symbol-377"></a>`bool ok` | 当前解析或请求是否成功。 |
-| ResultSet | <a id="symbol-378"></a>`std::lang::String error` | 最近操作的错误说明。 |
-| ResultSet | <a id="symbol-379"></a>`int64 affected` | 操作影响的记录数量。 |
-| ResultSet | <a id="symbol-380"></a>`std::lang::List<std::lang::String> columns` | 结果集按顺序保存的列名。 |
-| ResultSet | <a id="symbol-381"></a>`std::lang::List<DataRow> rows` | 按查询顺序保存的数据行。 |
-| 模块 | <a id="symbol-382"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
+| 模块 | <a id="symbol-368"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
+| DataCell | <a id="symbol-369"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
+| DataCell | <a id="symbol-370"></a>`int64 intValue` | 整数单元格保存的值。 |
+| DataCell | <a id="symbol-371"></a>`float64 realValue` | 浮点单元格保存的值。 |
+| DataCell | <a id="symbol-372"></a>`std::lang::String textValue` | 文本单元格保存的字符串。 |
+| 模块 | <a id="symbol-373"></a>`struct DataRow` | 结果集的一行。 |
+| DataRow | <a id="symbol-374"></a>`std::lang::List<DataCell> cells` | 该行按列顺序保存的单元格。 |
+| 模块 | <a id="symbol-375"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
+| ResultSet | <a id="symbol-376"></a>`bool ok` | 当前解析或请求是否成功。 |
+| ResultSet | <a id="symbol-377"></a>`std::lang::String error` | 最近操作的错误说明。 |
+| ResultSet | <a id="symbol-378"></a>`int64 affected` | 操作影响的记录数量。 |
+| ResultSet | <a id="symbol-379"></a>`std::lang::List<std::lang::String> columns` | 结果集按顺序保存的列名。 |
+| ResultSet | <a id="symbol-380"></a>`std::lang::List<DataRow> rows` | 按查询顺序保存的数据行。 |
+| 模块 | <a id="symbol-381"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
 | Driver | `MySQL, SQLite, PostgreSQL, SqlServer, Odbc, MariaDB` | std::sql 支持的数据库引擎。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-383"></a>`struct Database` | 一个 SQL 数据库连接（MySQL / SQLite / PostgreSQL / SQL Server / ODBC）。 |
-| Database | <a id="symbol-384"></a>`int32 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
-| Database | <a id="symbol-385"></a>`bool opened` | 外部资源是否处于打开状态。 |
-| Database | <a id="symbol-386"></a>`Driver driver` | 数据库后端驱动。 |
-| Database | <a id="symbol-387"></a>`std::lang::String error` | 最近操作的错误说明。 |
-| Database | <a id="symbol-388"></a>`int64 affected` | 操作影响的记录数量。 |
+| 模块 | <a id="symbol-382"></a>`struct Database` | 一个 SQL 数据库连接（MySQL / SQLite / PostgreSQL / SQL Server / ODBC）。 |
+| Database | <a id="symbol-383"></a>`int32 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| Database | <a id="symbol-384"></a>`bool opened` | 外部资源是否处于打开状态。 |
+| Database | <a id="symbol-385"></a>`Driver driver` | 数据库后端驱动。 |
+| Database | <a id="symbol-386"></a>`std::lang::String error` | 最近操作的错误说明。 |
+| Database | <a id="symbol-387"></a>`int64 affected` | 操作影响的记录数量。 |
 
 ## 函数索引
 

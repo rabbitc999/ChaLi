@@ -82,12 +82,20 @@ class ApiIndex:
     """按导入闭包提供声明与注释；未保存文档优先于磁盘，循环导入只访问一次。"""
     def __init__(self):
         data = json.loads(Path(__file__).with_name('magel_stdlib_api.json').read_text(encoding='utf-8'))
-        self.standard = data['functions'] + data.get('symbols', [])
+        # `__` 前缀是编译器/宿主协议，标准库里带这个前缀的函数、类型都不给编辑器补全；
+        # 工程内同名符号属于用户自己的命名空间，不受此限。
+        self.standard = [row for row in data['functions'] + data.get('symbols', [])
+                         if not self.private(row.get('name', '')) and not self.private(row.get('owner', ''))]
         self.module_imports = data['modules']
         self.cache = {}
         self.symbols = {}
-        self.standard_type_names=set(data.get('types',[]))
+        self.standard_type_names={name for name in data.get('types', []) if not self.private(name)}
         self.type_names=set(self.standard_type_names)
+
+    @staticmethod
+    def private(name):
+        """判断是否属于 `__` 前缀的标准库内部协议名。"""
+        return name.startswith('__')
 
     def scan(self, uri, text):
         """缓存一份文档的公开声明，保留重载与声明坐标。"""

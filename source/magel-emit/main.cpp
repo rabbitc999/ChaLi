@@ -891,14 +891,6 @@ int runCli(int argc, char **argv)
         stripLocalInclude(&mathGlueHpp, "../magel_glue.hpp");
         stripLocalInclude(&randomGlueHpp, "magel_glue.hpp");
         stripLocalInclude(&randomGlueHpp, "../magel_glue.hpp");
-        Memory::String numtheoryGlueHpp;
-        if (!readWholeFile(mcDir + "/source/glue/std_numtheory.hpp", &numtheoryGlueHpp)) return 2;
-        stripLocalInclude(&numtheoryGlueHpp, "../magel_glue.hpp");
-        stripLocalInclude(&numtheoryGlueHpp, "magel_glue.hpp");
-        Memory::String numericsGlueHpp;
-        if (!readWholeFile(mcDir + "/source/glue/std_numerics.hpp", &numericsGlueHpp)) return 2;
-        stripLocalInclude(&numericsGlueHpp, "../magel_glue.hpp");
-        stripLocalInclude(&numericsGlueHpp, "magel_glue.hpp");
         Memory::String signalGlueHpp;
         if (!readWholeFile(mcDir + "/source/glue/std_signal.hpp", &signalGlueHpp)) return 2;
         stripLocalInclude(&signalGlueHpp, "../magel_glue.hpp");
@@ -936,10 +928,6 @@ int runCli(int argc, char **argv)
         stripLocalInclude(&compressGlueHpp, "../../library/lztext/lztext.hpp");
         stripLocalInclude(&compressGlueHpp, "../magel_glue.hpp");
         compressGlueHpp = lztextHeader + "\n" + lztextImpl + "\n" + compressGlueHpp;
-        Memory::String textGlueHpp;
-        if (!readWholeFile(mcDir + "/source/glue/std_text.hpp", &textGlueHpp)) return 2;
-        stripLocalInclude(&textGlueHpp, "../magel_glue.hpp");
-        stripLocalInclude(&textGlueHpp, "magel_glue.hpp");
         Memory::String linalgGlueHpp;
         if (!readWholeFile(mcDir + "/source/glue/std_linalg.hpp", &linalgGlueHpp)) return 2;
         stripLocalInclude(&linalgGlueHpp, "../magel_glue.hpp");
@@ -947,10 +935,6 @@ int runCli(int argc, char **argv)
         Memory::String filesystemGlueHpp;
         if (!readWholeFile(mcDir + "/source/glue/std_filesystem.hpp", &filesystemGlueHpp)) return 2;
         stripLocalInclude(&filesystemGlueHpp, "../magel_glue.hpp");
-        Memory::String pathGlueHpp;
-        if (!readWholeFile(mcDir + "/source/glue/std_path.hpp", &pathGlueHpp)) return 2;
-        stripLocalInclude(&pathGlueHpp, "../magel_glue.hpp");
-        stripLocalInclude(&pathGlueHpp, "magel_glue.hpp");
         Memory::String parseGlueHpp;
         if (!readWholeFile(mcDir + "/source/glue/std_parse.hpp", &parseGlueHpp)) return 2;
         stripLocalInclude(&parseGlueHpp, "../magel_glue.hpp");
@@ -977,25 +961,21 @@ int runCli(int argc, char **argv)
         guardGlue(mathGlueHpp, "GLUE_NO_STD_MATH");
         guardGlue(randomGlueHpp, "GLUE_NO_STD_RANDOM");
         guardGlue(regexGlueHpp, "GLUE_NO_STD_REGEX");
-        guardGlue(numtheoryGlueHpp, "GLUE_NO_STD_NUMTHEORY");
-        guardGlue(numericsGlueHpp, "GLUE_NO_STD_NUMERICS");
         guardGlue(signalGlueHpp, "GLUE_NO_STD_SIGNAL");
         guardGlue(jsonGlueHpp, "GLUE_NO_STD_JSON");
         guardGlue(tomlGlueHpp, "GLUE_NO_STD_TOML");
         structuredGlueHpp = "#if !defined(GLUE_NO_STD_JSON) || !defined(GLUE_NO_STD_TOML)\n" + structuredGlueHpp + "\n#endif\n";
         guardGlue(binaryGlueHpp, "GLUE_NO_STD_BINARY");
         guardGlue(compressGlueHpp, "GLUE_NO_STD_COMPRESS");
-        guardGlue(textGlueHpp, "GLUE_NO_STD_TEXT");
         guardGlue(linalgGlueHpp, "GLUE_NO_STD_LINALG");
-        guardGlue(pathGlueHpp, "GLUE_NO_STD_PATH");
         guardGlue(filesystemGlueHpp, "GLUE_NO_STD_FILESYSTEM");
         guardGlue(parseGlueHpp, "GLUE_NO_STD_PARSE");
         guardGlue(processGlueHpp, "GLUE_NO_STD_PROCESS");
         guardGlue(sqlGlueHpp, "GLUE_NO_STD_SQL");
         guardGlue(netGlueHpp, "GLUE_NO_STD_NET");
         standardGlue = structuredGlueHpp + "\n" + jsonGlueHpp + "\n" + tomlGlueHpp + "\n" + numericGlueHpp + "\n" + mathGlueHpp + "\n" + randomGlueHpp + "\n" + regexGlueHpp + "\n" +
-                       numtheoryGlueHpp + "\n" + numericsGlueHpp + "\n" + signalGlueHpp + "\n" +
-                       binaryGlueHpp + "\n" + compressGlueHpp + "\n" + textGlueHpp + "\n" + linalgGlueHpp + "\n" + pathGlueHpp + "\n" +
+                       signalGlueHpp + "\n" +
+                       binaryGlueHpp + "\n" + compressGlueHpp + "\n" + linalgGlueHpp + "\n" +
                        parseGlueHpp + "\n" + processGlueHpp + "\n" + sqlGlueHpp + "\n" +
                        netGlueHpp + "\n" + filesystemGlueHpp + "\n" + standardGlue;
         /* C 内存池与显式 STL allocator，一起内嵌进产物。 */
@@ -1062,16 +1042,12 @@ int runCli(int argc, char **argv)
     noStd("GLUE_NO_STD_MATH", quadText.find("std::math::") != Memory::String::npos || quadText.find("std::clock::") != Memory::String::npos);
     noStd("GLUE_NO_STD_RANDOM", quadText.find("std::random::") != Memory::String::npos);
     noStd("GLUE_NO_STD_REGEX", quadText.find("std::regex::") != Memory::String::npos);
-    noStd("GLUE_NO_STD_NUMTHEORY", quadText.find("std::numtheory::") != Memory::String::npos);
-    noStd("GLUE_NO_STD_NUMERICS", quadText.find("std::numerics::") != Memory::String::npos);
     noStd("GLUE_NO_STD_SIGNAL", quadText.find("std::signal::") != Memory::String::npos);
     noStd("GLUE_NO_STD_JSON", quadText.find("std::json::") != Memory::String::npos);
     noStd("GLUE_NO_STD_TOML", quadText.find("std::toml::") != Memory::String::npos);
     noStd("GLUE_NO_STD_BINARY", quadText.find("std::binary::") != Memory::String::npos);
     noStd("GLUE_NO_STD_COMPRESS", quadText.find("std::compress::") != Memory::String::npos);
-    noStd("GLUE_NO_STD_TEXT", quadText.find("std::text::") != Memory::String::npos);
     noStd("GLUE_NO_STD_LINALG", quadText.find("std::linalg::") != Memory::String::npos);
-    noStd("GLUE_NO_STD_PATH", quadText.find("std::path::") != Memory::String::npos);
     noStd("GLUE_NO_STD_PARSE", quadText.find("std::parse::") != Memory::String::npos);
     noStd("GLUE_NO_STD_PROCESS", quadText.find("std::process::") != Memory::String::npos);
     noStd("GLUE_NO_STD_SQL", quadText.find("std::sql::") != Memory::String::npos);

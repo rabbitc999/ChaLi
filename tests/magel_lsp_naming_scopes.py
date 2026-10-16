@@ -1,4 +1,4 @@
-"""使用真实原生 LSP 验证命名警告、限定作用域补全与标准库类型字段文档。"""
+"""使用真实原生 LSP 验证命名警告、限定作用域补全、标准库内部符号隐藏与标准库类型字段文档。"""
 from pathlib import Path
 import json
 import subprocess
@@ -51,6 +51,11 @@ def main():
         import_root = document(folder, 'import-root.mgl', 'import ', 'completion', 'import ')
         import_local = document(folder, 'import-local.mgl', 'import a::iter::', 'completion', 'a::iter::')
         std = document(folder, 'std.mgl', 'int64 main(){std::', 'completion', 'std::')
+        # `__` 前缀是编译器/宿主协议：标准库模块补全一个都不该带出来。
+        private = [document(folder, 'private-%d.mgl' % index,
+                            'import %s;\nint64 main(){ %s::' % (module, module), 'completion', module + '::')
+                   for index, module in enumerate(('std::lang', 'std::iter', 'std::math',
+                                                   'std::numtheory', 'std::numerics', 'std::text', 'std::path'))]
         local = document(folder, 'local.mgl', 'import a::iter;\nint64 main(){a::iter::', 'completion', 'a::iter::')
         unrelated = document(folder, 'unrelated.mgl', 'import a::iter;\nint64 main(){b::iter::', 'completion', 'b::iter::')
         member = document(folder, 'member.mgl', 'import a::iter;\nint64 main(){a::iter::LocalType::', 'completion', 'LocalType::')
@@ -89,12 +94,17 @@ def main():
         assert labels(import_local)=={'child'}, responses[import_local]
         assert 'lang' not in labels(imports) and 'iter' in labels(imports), responses[imports]
         assert 'lang' in labels(std) and 'iter' in labels(std) and 'pause' not in labels(std)
+        for index, request in enumerate(private):
+            module = ('std::lang', 'std::iter', 'std::math', 'std::numtheory', 'std::numerics', 'std::text', 'std::path')[index]
+            leaked = sorted(label for label in labels(request) if label.startswith('__'))
+            assert not leaked, (module, leaked)
+        assert 'range' in labels(private[0]) and 'abs' in labels(private[2]) and 'gcd' in labels(private[3])
         assert labels(local) == {'LocalType','localFunction','child'}, responses[local]
         assert labels(unrelated) == set(), responses[unrelated]
         assert labels(member) == {'field','method'}, responses[member]
         assert '公历年份' in responses[field]['contents']['value'], responses[field]
         assert 'LU 分解结果' in responses[type_hover]['contents']['value'], responses[type_hover]
-    print('LSP 命名警告、构造器豁免、模块及类型作用域、类型与字段文档全部通过。')
+    print('LSP 命名警告、构造器豁免、模块及类型作用域、类型与字段文档、标准库内部符号隐藏全部通过。')
 
 
 if __name__ == '__main__':

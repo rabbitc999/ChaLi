@@ -39,17 +39,17 @@ int64 main() {
     assert(rk4.at(10)>euler.at(10) &&
     std::math::abs(rk4.at(10)-std::math::E)<0.00001);
 
-    assert(std::numtheory::NumberTheory::gcd((uint64)54,(uint64)24)==6);
-    assert(std::numtheory::NumberTheory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::numtheory::NumberTheory::modInverse((int64)3,(int64)11)==4);
-    assert(std::numtheory::NumberTheory::modInverse((int64)-3,(int64)11)==7);
-    assert(std::numtheory::NumberTheory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::numtheory::NumberTheory::isPrime((uint64)97));
-    assert(!std::numtheory::NumberTheory::isPrime((uint64)561));
+    assert(std::numtheory::gcd((uint64)54,(uint64)24)==6);
+    assert(std::numtheory::lcm((uint64)6,(uint64)8)==24);
+    assert(std::numtheory::modInverse((int64)3,(int64)11)==4);
+    assert(std::numtheory::modInverse((int64)-3,(int64)11)==7);
+    assert(std::numtheory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(std::numtheory::isPrime((uint64)97));
+    assert(!std::numtheory::isPrime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::numtheory::NumberTheory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::numtheory::NumberTheory::isPrime((uint64)65537));
+    assert(std::numtheory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(std::numtheory::isPrime((uint64)65537));
     println("generic matrix numerics number theory OK");
     return 0;
 }

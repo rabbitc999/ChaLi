@@ -132,6 +132,8 @@ class Converter:
             if '..' in path or not os.path.isfile(os.path.join(BOOK, path)):
                 raise ValueError('无效书稿图片：' + path)
             return '\\begin{center}\n\\includegraphics[width=\\linewidth]{../' + path + '}\\par\n' + esc(image.group(1)) + '\n\\end{center}'
+        # 双反引号代码段先于单反引号处理，否则 ``x`` 会被拆成 `x` 加一对裸反引号。
+        s = re.sub(r'``([^`\n]+?)``', self._stash_code, s)
         s = re.sub(r'`([^`\n]+)`', self._stash_code, s)
         s = re.sub(r'\*\*(.+?)\*\*', r'\1', s)
         s = re.sub(r'\[([^\]]+)\]\(([^)\s]+)\)', self._stash_link, s)

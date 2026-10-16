@@ -1,70 +1,301 @@
 module std::text;
 
 /*
- * 字符串工具族：`std::text::Text::*` 的宿主签名与实现。
+ * 字符串查找、比较、裁剪和替换。原来下沉在宿主 C++（glue/std_text.hpp），现已改由本文件用
+ * Magel 表达，`__strLen` / `__strFind` 等宿主签名一并删除——公开入口仍是 `std::text::Text::*`。
  *
- * 从编译器的**注入正文**里搬出来（以前每次编译都拼进每份产物，现在要 `import std::text;`）。
- * 实现下沉到宿主 C++ 胶水（`glue/std_text.hpp`，走 `Registry::bindTyped`），不再占用
- * VM 内部原生表；`std::text::__strFind` 等签名语义与原 VM native 表逐条一致。
- * 约定：除 `charAt` 外都返回新串；宽度与位置一律按字节算（与 `len(s)` 同一把尺）。
+ * 约定照旧：除 `charAt` 外都返回新串；宽度与位置一律按字节算（与 `len(s)` 同一把尺）。
+ * 大小写转换只认 ASCII，不看区域设置。
+ *
+ * 实现上有两条同生共死的约束，改这块前先看清：
+ *
+ * 1) `String` 的下标不许落在多字节字符中间，否则运行期报错。原 C++ 是随便按字节扫的，
+ *    照搬到 `.mgl` 上会在中文文本里炸掉。这里所有逐字节扫描都先经 `std::lang::stringBytes`
+ *    取字节表（字节表下标没有边界限制），只在「已知是某个匹配的端点」或「已知是 ASCII
+ *    空白 / 分隔符」的位置才对原串切片，边界一定合法。
+ *
+ * 2) `String` 是值类型，`s = s + t` 每次都复制整串，逐块累加是 O(n²)（实测 20 万次单字节
+ *    追加约 1.4 秒）。所以：
+ *      - `repeat` 用二进制倍增，把 count 次拼接压到 O(log count) 次；
+ *      - `join` / `replace` 先把片段收进列表，再用平衡两两合并摊平（O(n log k)）。
+ *    原 C++ 靠 `std::string` 的摊还追加是 O(n)，这里做不到完全对齐，但也不会退化成二次。
  */
-int64 __strLen(std::lang::String text);
-int64 __strFind(std::lang::String text, std::lang::String needle);
-int64 __strRFind(std::lang::String text, std::lang::String needle);
-int64 __strCompare(std::lang::String left, std::lang::String right);
-bool __strStartsWith(std::lang::String text, std::lang::String prefix);
-bool __strEndsWith(std::lang::String text, std::lang::String suffix);
-std::lang::String __strUpper(std::lang::String text);
-std::lang::String __strLower(std::lang::String text);
-std::lang::String __strTrim(std::lang::String text, int64 mode);
-std::lang::String __strReplace(std::lang::String text, std::lang::String from, std::lang::String to);
-std::lang::String __strRepeat(std::lang::String text, int64 count);
-std::lang::String __strPad(std::lang::String text, int64 width, char fill, bool left);
 
-std::lang::List<std::lang::String> __strSplit(std::lang::String text, std::lang::String separator);
-std::lang::String __strJoin(std::lang::List<std::lang::String> parts, std::lang::String separator);
+/* ---------------------------------------------------------------- 私有辅助 */
+
+/** 取字符串的字节表；逐字节扫描的入口。 */
+inline std::lang::List<uint8> __textBytes(std::lang::String text)
+{
+    return std::lang::stringBytes(text);
+}
+
+/** 该字节是不是空白（空格 / `\t` / `\n` / `\r` / `\v` / `\f`，与 C 的 `isspace` 同集合）。 */
+inline bool __textIsSpace(uint8 byte)
+{
+    return byte == (uint8)32 || byte == (uint8)9 || byte == (uint8)10 || byte == (uint8)13
+        || byte == (uint8)11 || byte == (uint8)12;
+}
+
+/** `hay` 从 `at` 起是否与 `pattern` 逐字节相同。 */
+inline bool __textEqualsAt(std::lang::List<uint8> hay, int64 at, std::lang::List<uint8> pattern)
+{
+    if (at < 0) { return false; }
+    if (at + pattern.len() > hay.len()) { return false; }
+    int64 index = 0;
+    while (index < pattern.len()) {
+        if (hay[at + index] != pattern[index]) { return false; }
+        index = index + 1;
+    }
+    return true;
+}
+
+/** 从 `from` 起找 `needle` 首次出现的字节下标；找不到 -1。空针按 `std::string::find` 口径给 `from`。 */
+inline int64 __textFindFrom(std::lang::List<uint8> hay, std::lang::List<uint8> needle, int64 from)
+{
+    int64 hayLen = hay.len();
+    int64 needleLen = needle.len();
+    if (from < 0 || from > hayLen) { return 0 - 1; }
+    if (needleLen == 0) { return from; }
+    if (from + needleLen > hayLen) { return 0 - 1; }
+    int64 limit = hayLen - needleLen;
+    int64 at = from;
+    while (at <= limit) {
+        if (__textEqualsAt(hay, at, needle)) { return at; }
+        at = at + 1;
+    }
+    return 0 - 1;
+}
+
+/** 找 `needle` 最后出现的字节下标；找不到 -1。空针按 `std::string::rfind` 口径给长度。 */
+inline int64 __textRFind(std::lang::List<uint8> hay, std::lang::List<uint8> needle)
+{
+    int64 hayLen = hay.len();
+    int64 needleLen = needle.len();
+    if (needleLen == 0) { return hayLen; }
+    if (needleLen > hayLen) { return 0 - 1; }
+    int64 at = hayLen - needleLen;
+    while (at >= 0) {
+        if (__textEqualsAt(hay, at, needle)) { return at; }
+        at = at - 1;
+    }
+    return 0 - 1;
+}
+
+/** 把若干片段合并成一串。用平衡两两合并，避免逐块累加的二次开销。 */
+inline std::lang::String __textConcatAll(std::lang::List<std::lang::String> pieces)
+{
+    if (pieces.len() == 0) { return ""; }
+    std::lang::List<std::lang::String> level = pieces;
+    while (level.len() > 1) {
+        std::lang::List<std::lang::String> next;
+        int64 index = 0;
+        while (index + 1 < level.len()) {
+            next.push(level[index] + level[index + 1]);
+            index = index + 2;
+        }
+        if (index < level.len()) { next.push(level[index]); }
+        level = next;
+    }
+    return level[0];
+}
+
+/** 重复 `count` 次；`count <= 0` 给空串。二进制倍增，拼接次数是对数级。 */
+inline std::lang::String __textRepeat(std::lang::String text, int64 count)
+{
+    std::lang::String result = "";
+    if (count <= 0) { return result; }
+    std::lang::String block = text;
+    int64 remaining = count;
+    while (remaining > 0) {
+        if ((remaining & 1) != 0) { result = result + block; }
+        remaining = remaining >> 1;
+        if (remaining > 0) { block = block + block; }
+    }
+    return result;
+}
+
+/** ASCII 小写转大写，其余字节原样；按 UTF-8 宽度步进，只在字符边界上读写。 */
+inline std::lang::String __textUpper(std::lang::String text)
+{
+    std::lang::String result = text;
+    int64 index = 0;
+    int64 size = len(result);
+    while (index < size) {
+        int64 byte = (int64)result[index];
+        int64 width = 1;
+        if (byte >= 97 && byte <= 122) { result[index] = (char)(byte - 32); }
+        elif (byte >= 192 && byte < 224) { width = 2; }
+        elif (byte >= 224 && byte < 240) { width = 3; }
+        elif (byte >= 240) { width = 4; }
+        index = index + width;
+    }
+    return result;
+}
+
+/** ASCII 大写转小写，其余字节原样；按 UTF-8 宽度步进，只在字符边界上读写。 */
+inline std::lang::String __textLower(std::lang::String text)
+{
+    std::lang::String result = text;
+    int64 index = 0;
+    int64 size = len(result);
+    while (index < size) {
+        int64 byte = (int64)result[index];
+        int64 width = 1;
+        if (byte >= 65 && byte <= 90) { result[index] = (char)(byte + 32); }
+        elif (byte >= 192 && byte < 224) { width = 2; }
+        elif (byte >= 224 && byte < 240) { width = 3; }
+        elif (byte >= 240) { width = 4; }
+        index = index + width;
+    }
+    return result;
+}
+
+/** 去掉两端 / 左端 / 右端的空白。`mode`：0 两端、1 左端、2 右端。 */
+inline std::lang::String __textTrim(std::lang::String text, int64 mode)
+{
+    std::lang::List<uint8> bytes = __textBytes(text);
+    int64 begin = 0;
+    int64 end = bytes.len();
+    if (mode == 0 || mode == 1) {
+        while (begin < end && __textIsSpace(bytes[begin])) { begin = begin + 1; }
+    }
+    if (mode == 0 || mode == 2) {
+        while (end > begin && __textIsSpace(bytes[end - 1])) { end = end - 1; }
+    }
+    return text[begin:end];
+}
+
+/** 全部替换；`from` 为空时返回原串。 */
+inline std::lang::String __textReplace(std::lang::String text, std::lang::String from, std::lang::String to)
+{
+    if (len(from) == 0) { return text; }
+    std::lang::List<uint8> hay = __textBytes(text);
+    std::lang::List<uint8> needle = __textBytes(from);
+    std::lang::List<std::lang::String> pieces;
+    int64 at = 0;
+    int64 found = __textFindFrom(hay, needle, at);
+    while (found >= 0) {
+        pieces.push(text[at:found]);
+        pieces.push(to);
+        at = found + needle.len();
+        found = __textFindFrom(hay, needle, at);
+    }
+    pieces.push(text[at:]);
+    return __textConcatAll(pieces);
+}
+
+/** 按分隔符切成列表；分隔符为空时整串作为一个元素。 */
+inline std::lang::List<std::lang::String> __textSplit(std::lang::String text, std::lang::String separator)
+{
+    std::lang::List<uint8> hay = __textBytes(text);
+    std::lang::List<uint8> needle = __textBytes(separator);
+    std::lang::List<std::lang::String> parts;
+    int64 start = 0;
+    if (needle.len() > 0) {
+        int64 at = __textFindFrom(hay, needle, start);
+        while (at >= 0) {
+            parts.push(text[start:at]);
+            start = at + needle.len();
+            at = __textFindFrom(hay, needle, start);
+        }
+    }
+    parts.push(text[start:]);
+    return parts;
+}
+
+/** 用分隔符把列表拼成一串（空列表给空串）。 */
+inline std::lang::String __textJoin(std::lang::List<std::lang::String> parts, std::lang::String separator)
+{
+    if (parts.len() == 0) { return ""; }
+    std::lang::List<std::lang::String> pieces;
+    int64 index = 0;
+    while (index < parts.len()) {
+        if (index > 0) { pieces.push(separator); }
+        pieces.push(parts[index]);
+        index = index + 1;
+    }
+    return __textConcatAll(pieces);
+}
+
+/** 补到 `width` 字节宽；已经够宽就原样返回副本。 */
+inline std::lang::String __textPad(std::lang::String text, int64 width, char fill, bool left)
+{
+    /* `char` 是无符号单字节，恒在 0..255；这一档判不成，保留只为对齐原实现的入参校验。 */
+    if ((int64)fill < 0 || (int64)fill > 255) { return text; }
+    std::lang::String result = text;
+    if (width > 0 && len(result) < width) {
+        std::lang::String padding = __textRepeat(fill.toString(), width - len(result));
+        if (left) { result = padding + result; }
+        else { result = result + padding; }
+    }
+    return result;
+}
+
+/* ------------------------------------------------------------------- 公开面 */
 
 struct Text {
     /** 子串第一次出现的位置；找不到 -1（空子串给 0）。 */
-    static int64 find(std::lang::String text, std::lang::String needle) { return __strFind(text, needle); }
-    /** 子串最后一次出现的位置；找不到 -1。 */
-    static int64 rfind(std::lang::String text, std::lang::String needle) { return __strRFind(text, needle); }
+    static int64 find(std::lang::String text, std::lang::String needle) {
+        return __textFindFrom(__textBytes(text), __textBytes(needle), 0);
+    }
+    /** 子串最后一次出现的位置；找不到 -1（空子串给串长）。 */
+    static int64 rfind(std::lang::String text, std::lang::String needle) {
+        return __textRFind(__textBytes(text), __textBytes(needle));
+    }
     /** 含不含子串（等价 `find >= 0`）。 */
-    static bool contains(std::lang::String text, std::lang::String needle) { return __strFind(text, needle) >= 0; }
-    static bool startsWith(std::lang::String text, std::lang::String prefix) { return __strStartsWith(text, prefix); }
-    static bool endsWith(std::lang::String text, std::lang::String suffix) { return __strEndsWith(text, suffix); }
+    static bool contains(std::lang::String text, std::lang::String needle) {
+        return __textFindFrom(__textBytes(text), __textBytes(needle), 0) >= 0;
+    }
+    static bool startsWith(std::lang::String text, std::lang::String prefix) {
+        std::lang::List<uint8> hay = __textBytes(text);
+        std::lang::List<uint8> pattern = __textBytes(prefix);
+        if (hay.len() < pattern.len()) { return false; }
+        return __textEqualsAt(hay, 0, pattern);
+    }
+    static bool endsWith(std::lang::String text, std::lang::String suffix) {
+        std::lang::List<uint8> hay = __textBytes(text);
+        std::lang::List<uint8> pattern = __textBytes(suffix);
+        if (hay.len() < pattern.len()) { return false; }
+        return __textEqualsAt(hay, hay.len() - pattern.len(), pattern);
+    }
     /** 字典序比较：左小 -1、相等 0、左大 1。 */
-    static int64 compare(std::lang::String left, std::lang::String right) { return __strCompare(left, right); }
+    static int64 compare(std::lang::String left, std::lang::String right) {
+        if (left < right) { return 0 - 1; }
+        if (left > right) { return 1; }
+        return 0;
+    }
     /** ASCII 大小写（VM 里不认区域设置，结果可复现）。 */
-    static std::lang::String toUpper(std::lang::String text) { return __strUpper(text); }
-    static std::lang::String toLower(std::lang::String text) { return __strLower(text); }
+    static std::lang::String toUpper(std::lang::String text) { return __textUpper(text); }
+    static std::lang::String toLower(std::lang::String text) { return __textLower(text); }
     /** 去掉两端 / 左端 / 右端的空白（空格 \t \n \r \v \f）。 */
-    static std::lang::String trim(std::lang::String text) { return __strTrim(text, 0); }
-    static std::lang::String ltrim(std::lang::String text) { return __strTrim(text, 1); }
-    static std::lang::String rtrim(std::lang::String text) { return __strTrim(text, 2); }
+    static std::lang::String trim(std::lang::String text) { return __textTrim(text, 0); }
+    static std::lang::String ltrim(std::lang::String text) { return __textTrim(text, 1); }
+    static std::lang::String rtrim(std::lang::String text) { return __textTrim(text, 2); }
     /** 全部替换；`from` 为空时返回原串的副本。 */
     static std::lang::String replace(std::lang::String text, std::lang::String from, std::lang::String to) {
-        return __strReplace(text, from, to);
+        return __textReplace(text, from, to);
     }
     /** 重复 `count` 次（`count <= 0` 给空串）。 */
-    static std::lang::String repeat(std::lang::String text, int64 count) { return __strRepeat(text, count); }
+    static std::lang::String repeat(std::lang::String text, int64 count) {
+        return __textRepeat(text, count);
+    }
     /** 补到 `width` 字节宽；已经够宽就原样返回副本。 */
     static std::lang::String padStart(std::lang::String text, int64 width, char fill) {
-        return __strPad(text, width, fill, true);
+        return __textPad(text, width, fill, true);
     }
     static std::lang::String padEnd(std::lang::String text, int64 width, char fill) {
-        return __strPad(text, width, fill, false);
+        return __textPad(text, width, fill, false);
     }
     /** 第 `index` 个字节；越界报错（和 `text[index]` 一样）。 */
     static char charAt(std::lang::String text, int64 index) { return text[index]; }
 
     /** 按分隔符切成列表；分隔符为空时整串作为一个元素。 */
     static std::lang::List<std::lang::String> split(std::lang::String text, std::lang::String separator) {
-        return __strSplit(text, separator);
+        return __textSplit(text, separator);
     }
 
     /** 用分隔符把列表拼成一串（空列表给空串）。 */
     static std::lang::String join(std::lang::List<std::lang::String> parts, std::lang::String separator) {
-        return __strJoin(parts, separator);
+        return __textJoin(parts, separator);
     }
 };

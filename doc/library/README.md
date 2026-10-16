@@ -31,14 +31,14 @@
 | [`std::io`](std-io.md) | 文件与流接口 | 33 |
 | [`std::iter`](std-iter.md) | 惰性迭代器 | 104 |
 | [`std::json`](std-json.md) | JSON 只读文档 | 27 |
-| [`std::lang`](std-lang.md) | 核心库 | 186 |
+| [`std::lang`](std-lang.md) | 核心库 | 185 |
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 48 |
-| [`std::math`](std-math.md) | 标量数学 | 26 |
+| [`std::math`](std-math.md) | 标量数学 | 23 |
 | [`std::memory`](std-memory.md) | 内存视图与 arena | 9 |
 | [`std::message`](std-message.md) | 消息路由 | 4 |
 | [`std::net`](std-net.md) | TCP 与 HTTP | 29 |
-| [`std::numerics`](std-numerics.md) | 数值分析 | 14 |
-| [`std::numtheory`](std-numtheory.md) | 整数数论 | 14 |
+| [`std::numerics`](std-numerics.md) | 数值分析 | 7 |
+| [`std::numtheory`](std-numtheory.md) | 整数数论 | 7 |
 | [`std::parse`](std-parse.md) | 严格文本解析 | 4 |
 | [`std::path`](std-path.md) | 路径字符串 | 4 |
 | [`std::probe`](std-probe.md) | 最小宿主集成探针 | 1 |

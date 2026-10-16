@@ -71,9 +71,9 @@ sum=10
 
 | 模块 | 能干什么 |
 | --- | --- |
-| `std::math` | `sin` `cos` `sqrt` 等常用函数（常数见 `std::lang::Math`） |
+| `std::math` | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数见 `std::lang::Math`） |
 | `std::numerics` | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 |
-| `std::numtheory` | 整数数论：`gcd` `lcm` 取模运算，以及确定性的 `isPrime`（Miller-Rabin） |
+| `std::numtheory` | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`addMod` `mulMod` `powMod` `modInverse`，以及确定性的 `isPrime`（Miller-Rabin） |
 | `std::complex` | 复数 `Complex<T>`，加减乘除都是一等公民 |
 | `std::linalg` | 稠密向量与矩阵：`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | 确定性随机数（LCG）与熵播种；句柄型状态，实现 `Drop` |

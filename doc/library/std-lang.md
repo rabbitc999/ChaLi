@@ -265,127 +265,126 @@ int64 main() {
 | [tryGetReference](#api-62) | `Option<T const&> tryGetReference<T>(Any const& value)` |
 | [tryGetMut](#api-63) | `Option<T mut&> tryGetMut<T>(Any mut& value)` |
 | [stringBytes](#api-64) | `List<uint8> stringBytes(String text)` |
-| [__Range::iterator](#api-65) | `Option<int64> iterator(int64 index)` |
-| [range](#api-66) | `__Range range(int64 start, int64 stop)` |
-| [range](#api-67) | `__Range range(int64 start, int64 stop, int64 step)` |
-| [Drop::drop](#api-68) | `void drop()` |
-| [Closeable::close](#api-69) | `void close()` |
-| [print](#api-70) | `int64 print(String format, Any args...)` |
-| [println](#api-71) | `int64 println(String format, Any args...)` |
-| [format](#api-72) | `String format(String format, Any args...)` |
-| [putChar](#api-73) | `int64 putChar(char value)` |
-| [pause](#api-74) | `int64 pause()` |
-| [sweep](#api-75) | `int64 sweep()` |
-| [inputLine](#api-76) | `String inputLine()` |
-| [inputInt](#api-77) | `int64 inputInt()` |
-| [inputUInt](#api-78) | `uint64 inputUInt()` |
-| [inputFloat](#api-79) | `float64 inputFloat()` |
-| [inputBool](#api-80) | `bool inputBool()` |
-| [inputChar](#api-81) | `char inputChar()` |
-| [inputBigInteger](#api-82) | `BigInteger inputBigInteger()` |
-| [inputBigDecimal](#api-83) | `BigDecimal inputBigDecimal()` |
-| [panic](#api-84) | `int64 panic(String message)` |
-| [len](#api-85) | `int64 len(Any value)` |
-| [move](#api-86) | `T move<T>(T mut& value)` |
-| [toReference](#api-87) | `T mut& toReference<T>(Option<T mut&> value)` |
-| [toOptional](#api-88) | `Option<T mut&> toOptional<T>(T mut& value)` |
-| [memcpy](#api-89) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
-| [memset](#api-90) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
-| [List::copy](#api-91) | `List<T> copy()` |
-| [List::push](#api-92) | `int64 push(T value)` |
-| [List::insert](#api-93) | `int64 insert(int64 index, T value)` |
-| [List::at](#api-94) | `T at(int64 index)` |
-| [List::pop](#api-95) | `T pop()` |
-| [List::remove](#api-96) | `int64 remove(int64 index)` |
-| [List::indexOf](#api-97) | `int64 indexOf(T value)` |
-| [List::contains](#api-98) | `bool contains(T value)` |
-| [List::has](#api-99) | `bool has(T value)` |
-| [List::clear](#api-100) | `int64 clear()` |
-| [List::len](#api-101) | `int64 len()` |
-| [Set::copy](#api-102) | `Set<T> copy()` |
-| [Set::add](#api-103) | `int64 add(T value)` |
-| [Set::has](#api-104) | `int64 has(T value)` |
-| [Set::contains](#api-105) | `int64 contains(T value)` |
-| [Set::remove](#api-106) | `int64 remove(T value)` |
-| [Set::at](#api-107) | `T at(int64 index)` |
-| [Set::clear](#api-108) | `int64 clear()` |
-| [Set::len](#api-109) | `int64 len()` |
-| [Map::copy](#api-110) | `Map<K,V> copy()` |
-| [Map::put](#api-111) | `int64 put(K key,V value)` |
-| [Map::has](#api-112) | `int64 has(K key)` |
-| [Map::contains](#api-113) | `int64 contains(K key)` |
-| [Map::remove](#api-114) | `int64 remove(K key)` |
-| [Map::keyAt](#api-115) | `K keyAt(int64 index)` |
-| [Map::valAt](#api-116) | `V valAt(int64 index)` |
-| [Map::clear](#api-117) | `int64 clear()` |
-| [Map::len](#api-118) | `int64 len()` |
-| [BigInteger::str](#api-119) | `String str()` |
-| [BigInteger::copy](#api-120) | `BigInteger copy()` |
-| [BigDecimal::str](#api-121) | `String str()` |
-| [BigDecimal::copy](#api-122) | `BigDecimal copy()` |
-| [BigDecimal::setPrecision](#api-123) | `int64 setPrecision(int64 digits)` |
-| [Any::copy](#api-124) | `Any copy()` |
-| [Any::isEmpty](#api-125) | `bool isEmpty()` |
-| [Any::clear](#api-126) | `void clear()` |
-| [Any::set](#api-127) | `int64 set(T value)` |
-| [Any::getValue](#api-128) | `T getValue()` |
-| [Any::getReference](#api-129) | `T mut& getReference()` |
-| [Any::getOptional](#api-130) | `Option<T mut&> getOptional()` |
-| [eq](#api-131) | `bool eq(T left,T right)` |
-| [ne](#api-132) | `bool ne(T left,T right)` |
-| [lt](#api-133) | `bool lt(T left,T right)` |
-| [le](#api-134) | `bool le(T left,T right)` |
-| [gt](#api-135) | `bool gt(T left,T right)` |
-| [ge](#api-136) | `bool ge(T left,T right)` |
-| [add](#api-137) | `R add(T left,U right)` |
-| [sub](#api-138) | `R sub(T left,U right)` |
-| [mul](#api-139) | `R mul(T left,U right)` |
-| [div](#api-140) | `R div(T left,U right)` |
-| [mod](#api-141) | `R mod(T left,U right)` |
-| [index](#api-142) | `T index(T const& data,int64 index)` |
-| [Add::leftAdd](#api-143) | `R leftAdd(T value)` |
-| [RightAdd::rightAdd](#api-144) | `R rightAdd(T value)` |
-| [Subtract::leftSub](#api-145) | `R leftSub(T value)` |
-| [RightSubtract::rightSub](#api-146) | `R rightSub(T value)` |
-| [Multiply::leftMul](#api-147) | `R leftMul(T value)` |
-| [RightMultiply::rightMul](#api-148) | `R rightMul(T value)` |
-| [Divide::leftDiv](#api-149) | `R leftDiv(T value)` |
-| [RightDivide::rightDiv](#api-150) | `R rightDiv(T value)` |
-| [Modulo::leftMod](#api-151) | `R leftMod(T value)` |
-| [RightModulo::rightMod](#api-152) | `R rightMod(T value)` |
-| [Equal::leftEqual](#api-153) | `R leftEqual(T value)` |
-| [RightEqual::rightEqual](#api-154) | `R rightEqual(T value)` |
-| [NotEqual::leftNotEqual](#api-155) | `R leftNotEqual(T value)` |
-| [RightNotEqual::rightNotEqual](#api-156) | `R rightNotEqual(T value)` |
-| [Less::leftLess](#api-157) | `R leftLess(T value)` |
-| [RightLess::rightLess](#api-158) | `R rightLess(T value)` |
-| [LessOrEqual::leftLessEqual](#api-159) | `R leftLessEqual(T value)` |
-| [RightLessOrEqual::rightLessEqual](#api-160) | `R rightLessEqual(T value)` |
-| [Greater::leftGreater](#api-161) | `R leftGreater(T value)` |
-| [RightGreater::rightGreater](#api-162) | `R rightGreater(T value)` |
-| [GreaterOrEqual::leftGreaterEqual](#api-163) | `R leftGreaterEqual(T value)` |
-| [RightGreaterOrEqual::rightGreaterEqual](#api-164) | `R rightGreaterEqual(T value)` |
-| [And::leftBitAnd](#api-165) | `R leftBitAnd(T value)` |
-| [RightAnd::rightBitAnd](#api-166) | `R rightBitAnd(T value)` |
-| [Or::leftBitOr](#api-167) | `R leftBitOr(T value)` |
-| [RightOr::rightBitOr](#api-168) | `R rightBitOr(T value)` |
-| [Xor::leftBitXor](#api-169) | `R leftBitXor(T value)` |
-| [RightXor::rightBitXor](#api-170) | `R rightBitXor(T value)` |
-| [ShiftLeft::leftShiftLeft](#api-171) | `R leftShiftLeft(T value)` |
-| [RightShiftLeft::rightShiftLeft](#api-172) | `R rightShiftLeft(T value)` |
-| [ShiftRight::leftShiftRight](#api-173) | `R leftShiftRight(T value)` |
-| [RightShiftRight::rightShiftRight](#api-174) | `R rightShiftRight(T value)` |
-| [Negate::negate](#api-175) | `R negate(T value)` |
-| [BitNot::bitNot](#api-176) | `R bitNot(T value)` |
-| [Positive::positive](#api-177) | `R positive(T value)` |
-| [Hash::hash](#api-178) | `uint64 hash(T value)` |
-| [ExplicitConvert::explicitConvert](#api-179) | `T explicitConvert()` |
-| [ImplicitConvert::implicitConvert](#api-180) | `T implicitConvert()` |
-| [Index::index](#api-181) | `R index(T key)` |
-| [Iterator::iterator](#api-182) | `Option<R> iterator(int64 index)` |
-| [Result::mapErr](#api-183) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
-| [Option::okOr](#api-184) | `Result<T,E> okOr<E>(E error)` |
-| [Option::okOrElse](#api-185) | `Result<T,E> okOrElse<E>(E fn() factory)` |
+| [range](#api-65) | `__Range range(int64 start, int64 stop)` |
+| [range](#api-66) | `__Range range(int64 start, int64 stop, int64 step)` |
+| [Drop::drop](#api-67) | `void drop()` |
+| [Closeable::close](#api-68) | `void close()` |
+| [print](#api-69) | `int64 print(String format, Any args...)` |
+| [println](#api-70) | `int64 println(String format, Any args...)` |
+| [format](#api-71) | `String format(String format, Any args...)` |
+| [putChar](#api-72) | `int64 putChar(char value)` |
+| [pause](#api-73) | `int64 pause()` |
+| [sweep](#api-74) | `int64 sweep()` |
+| [inputLine](#api-75) | `String inputLine()` |
+| [inputInt](#api-76) | `int64 inputInt()` |
+| [inputUInt](#api-77) | `uint64 inputUInt()` |
+| [inputFloat](#api-78) | `float64 inputFloat()` |
+| [inputBool](#api-79) | `bool inputBool()` |
+| [inputChar](#api-80) | `char inputChar()` |
+| [inputBigInteger](#api-81) | `BigInteger inputBigInteger()` |
+| [inputBigDecimal](#api-82) | `BigDecimal inputBigDecimal()` |
+| [panic](#api-83) | `int64 panic(String message)` |
+| [len](#api-84) | `int64 len(Any value)` |
+| [move](#api-85) | `T move<T>(T mut& value)` |
+| [toReference](#api-86) | `T mut& toReference<T>(Option<T mut&> value)` |
+| [toOptional](#api-87) | `Option<T mut&> toOptional<T>(T mut& value)` |
+| [memcpy](#api-88) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
+| [memset](#api-89) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
+| [List::copy](#api-90) | `List<T> copy()` |
+| [List::push](#api-91) | `int64 push(T value)` |
+| [List::insert](#api-92) | `int64 insert(int64 index, T value)` |
+| [List::at](#api-93) | `T at(int64 index)` |
+| [List::pop](#api-94) | `T pop()` |
+| [List::remove](#api-95) | `int64 remove(int64 index)` |
+| [List::indexOf](#api-96) | `int64 indexOf(T value)` |
+| [List::contains](#api-97) | `bool contains(T value)` |
+| [List::has](#api-98) | `bool has(T value)` |
+| [List::clear](#api-99) | `int64 clear()` |
+| [List::len](#api-100) | `int64 len()` |
+| [Set::copy](#api-101) | `Set<T> copy()` |
+| [Set::add](#api-102) | `int64 add(T value)` |
+| [Set::has](#api-103) | `int64 has(T value)` |
+| [Set::contains](#api-104) | `int64 contains(T value)` |
+| [Set::remove](#api-105) | `int64 remove(T value)` |
+| [Set::at](#api-106) | `T at(int64 index)` |
+| [Set::clear](#api-107) | `int64 clear()` |
+| [Set::len](#api-108) | `int64 len()` |
+| [Map::copy](#api-109) | `Map<K,V> copy()` |
+| [Map::put](#api-110) | `int64 put(K key,V value)` |
+| [Map::has](#api-111) | `int64 has(K key)` |
+| [Map::contains](#api-112) | `int64 contains(K key)` |
+| [Map::remove](#api-113) | `int64 remove(K key)` |
+| [Map::keyAt](#api-114) | `K keyAt(int64 index)` |
+| [Map::valAt](#api-115) | `V valAt(int64 index)` |
+| [Map::clear](#api-116) | `int64 clear()` |
+| [Map::len](#api-117) | `int64 len()` |
+| [BigInteger::str](#api-118) | `String str()` |
+| [BigInteger::copy](#api-119) | `BigInteger copy()` |
+| [BigDecimal::str](#api-120) | `String str()` |
+| [BigDecimal::copy](#api-121) | `BigDecimal copy()` |
+| [BigDecimal::setPrecision](#api-122) | `int64 setPrecision(int64 digits)` |
+| [Any::copy](#api-123) | `Any copy()` |
+| [Any::isEmpty](#api-124) | `bool isEmpty()` |
+| [Any::clear](#api-125) | `void clear()` |
+| [Any::set](#api-126) | `int64 set(T value)` |
+| [Any::getValue](#api-127) | `T getValue()` |
+| [Any::getReference](#api-128) | `T mut& getReference()` |
+| [Any::getOptional](#api-129) | `Option<T mut&> getOptional()` |
+| [eq](#api-130) | `bool eq(T left,T right)` |
+| [ne](#api-131) | `bool ne(T left,T right)` |
+| [lt](#api-132) | `bool lt(T left,T right)` |
+| [le](#api-133) | `bool le(T left,T right)` |
+| [gt](#api-134) | `bool gt(T left,T right)` |
+| [ge](#api-135) | `bool ge(T left,T right)` |
+| [add](#api-136) | `R add(T left,U right)` |
+| [sub](#api-137) | `R sub(T left,U right)` |
+| [mul](#api-138) | `R mul(T left,U right)` |
+| [div](#api-139) | `R div(T left,U right)` |
+| [mod](#api-140) | `R mod(T left,U right)` |
+| [index](#api-141) | `T index(T const& data,int64 index)` |
+| [Add::leftAdd](#api-142) | `R leftAdd(T value)` |
+| [RightAdd::rightAdd](#api-143) | `R rightAdd(T value)` |
+| [Subtract::leftSub](#api-144) | `R leftSub(T value)` |
+| [RightSubtract::rightSub](#api-145) | `R rightSub(T value)` |
+| [Multiply::leftMul](#api-146) | `R leftMul(T value)` |
+| [RightMultiply::rightMul](#api-147) | `R rightMul(T value)` |
+| [Divide::leftDiv](#api-148) | `R leftDiv(T value)` |
+| [RightDivide::rightDiv](#api-149) | `R rightDiv(T value)` |
+| [Modulo::leftMod](#api-150) | `R leftMod(T value)` |
+| [RightModulo::rightMod](#api-151) | `R rightMod(T value)` |
+| [Equal::leftEqual](#api-152) | `R leftEqual(T value)` |
+| [RightEqual::rightEqual](#api-153) | `R rightEqual(T value)` |
+| [NotEqual::leftNotEqual](#api-154) | `R leftNotEqual(T value)` |
+| [RightNotEqual::rightNotEqual](#api-155) | `R rightNotEqual(T value)` |
+| [Less::leftLess](#api-156) | `R leftLess(T value)` |
+| [RightLess::rightLess](#api-157) | `R rightLess(T value)` |
+| [LessOrEqual::leftLessEqual](#api-158) | `R leftLessEqual(T value)` |
+| [RightLessOrEqual::rightLessEqual](#api-159) | `R rightLessEqual(T value)` |
+| [Greater::leftGreater](#api-160) | `R leftGreater(T value)` |
+| [RightGreater::rightGreater](#api-161) | `R rightGreater(T value)` |
+| [GreaterOrEqual::leftGreaterEqual](#api-162) | `R leftGreaterEqual(T value)` |
+| [RightGreaterOrEqual::rightGreaterEqual](#api-163) | `R rightGreaterEqual(T value)` |
+| [And::leftBitAnd](#api-164) | `R leftBitAnd(T value)` |
+| [RightAnd::rightBitAnd](#api-165) | `R rightBitAnd(T value)` |
+| [Or::leftBitOr](#api-166) | `R leftBitOr(T value)` |
+| [RightOr::rightBitOr](#api-167) | `R rightBitOr(T value)` |
+| [Xor::leftBitXor](#api-168) | `R leftBitXor(T value)` |
+| [RightXor::rightBitXor](#api-169) | `R rightBitXor(T value)` |
+| [ShiftLeft::leftShiftLeft](#api-170) | `R leftShiftLeft(T value)` |
+| [RightShiftLeft::rightShiftLeft](#api-171) | `R rightShiftLeft(T value)` |
+| [ShiftRight::leftShiftRight](#api-172) | `R leftShiftRight(T value)` |
+| [RightShiftRight::rightShiftRight](#api-173) | `R rightShiftRight(T value)` |
+| [Negate::negate](#api-174) | `R negate(T value)` |
+| [BitNot::bitNot](#api-175) | `R bitNot(T value)` |
+| [Positive::positive](#api-176) | `R positive(T value)` |
+| [Hash::hash](#api-177) | `uint64 hash(T value)` |
+| [ExplicitConvert::explicitConvert](#api-178) | `T explicitConvert()` |
+| [ImplicitConvert::implicitConvert](#api-179) | `T implicitConvert()` |
+| [Index::index](#api-180) | `R index(T key)` |
+| [Iterator::iterator](#api-181) | `Option<R> iterator(int64 index)` |
+| [Result::mapErr](#api-182) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
+| [Option::okOr](#api-183) | `Result<T,E> okOr<E>(E error)` |
+| [Option::okOrElse](#api-184) | `Result<T,E> okOrElse<E>(E fn() factory)` |
 
 <a id="api-0"></a>
 
@@ -2873,45 +2872,7 @@ stringBytes(text);
 
 <a id="api-65"></a>
 
-### __Range::iterator（66）
-
-**声明**
-
-```magel
-Option<int64> iterator(int64 index);
-```
-
-**行为**
-
-读取指定迭代位置；无元素时返回 None。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `index` | `int64 index` | 从 0 开始的位置 | 无 |
-
-**返回值**
-
-`Option<int64>`。读取指定迭代位置；无元素时返回 None。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```magel
-obj.iterator(index);
-```
-
-**源码**：[source/magel_generic.hpp:1674](../../source/magel_generic.hpp#L1674)。
-
-**完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
-
-<a id="api-66"></a>
-
-### range（67）
+### range（66）
 
 **声明**
 
@@ -2948,9 +2909,9 @@ range(start, stop);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-67"></a>
+<a id="api-66"></a>
 
-### range（68）
+### range（67）
 
 **声明**
 
@@ -2989,9 +2950,9 @@ range(start, stop, step);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-68"></a>
+<a id="api-67"></a>
 
-### Drop::drop（69）
+### Drop::drop（68）
 
 **声明**
 
@@ -3025,9 +2986,9 @@ obj.drop();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-69"></a>
+<a id="api-68"></a>
 
-### Closeable::close（70）
+### Closeable::close（69）
 
 **声明**
 
@@ -3061,9 +3022,9 @@ obj.close();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-70"></a>
+<a id="api-69"></a>
 
-### print（71）
+### print（70）
 
 **声明**
 
@@ -3100,9 +3061,9 @@ print(format, args);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-71"></a>
+<a id="api-70"></a>
 
-### println（72）
+### println（71）
 
 **声明**
 
@@ -3139,9 +3100,9 @@ println(format, args);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-72"></a>
+<a id="api-71"></a>
 
-### format（73）
+### format（72）
 
 **声明**
 
@@ -3178,9 +3139,9 @@ format(format, args);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-73"></a>
+<a id="api-72"></a>
 
-### putChar（74）
+### putChar（73）
 
 **声明**
 
@@ -3216,9 +3177,9 @@ putChar(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-74"></a>
+<a id="api-73"></a>
 
-### pause（75）
+### pause（74）
 
 **声明**
 
@@ -3252,9 +3213,9 @@ pause();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-75"></a>
+<a id="api-74"></a>
 
-### sweep（76）
+### sweep（75）
 
 **声明**
 
@@ -3288,9 +3249,9 @@ sweep();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-76"></a>
+<a id="api-75"></a>
 
-### inputLine（77）
+### inputLine（76）
 
 **声明**
 
@@ -3324,9 +3285,9 @@ inputLine();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-77"></a>
+<a id="api-76"></a>
 
-### inputInt（78）
+### inputInt（77）
 
 **声明**
 
@@ -3360,9 +3321,9 @@ inputInt();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-78"></a>
+<a id="api-77"></a>
 
-### inputUInt（79）
+### inputUInt（78）
 
 **声明**
 
@@ -3396,9 +3357,9 @@ inputUInt();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-79"></a>
+<a id="api-78"></a>
 
-### inputFloat（80）
+### inputFloat（79）
 
 **声明**
 
@@ -3432,9 +3393,9 @@ inputFloat();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-80"></a>
+<a id="api-79"></a>
 
-### inputBool（81）
+### inputBool（80）
 
 **声明**
 
@@ -3468,9 +3429,9 @@ inputBool();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-81"></a>
+<a id="api-80"></a>
 
-### inputChar（82）
+### inputChar（81）
 
 **声明**
 
@@ -3504,9 +3465,9 @@ inputChar();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-82"></a>
+<a id="api-81"></a>
 
-### inputBigInteger（83）
+### inputBigInteger（82）
 
 **声明**
 
@@ -3540,9 +3501,9 @@ inputBigInteger();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-83"></a>
+<a id="api-82"></a>
 
-### inputBigDecimal（84）
+### inputBigDecimal（83）
 
 **声明**
 
@@ -3576,9 +3537,9 @@ inputBigDecimal();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-84"></a>
+<a id="api-83"></a>
 
-### panic（85）
+### panic（84）
 
 **声明**
 
@@ -3614,9 +3575,9 @@ panic(message);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-85"></a>
+<a id="api-84"></a>
 
-### len（86）
+### len（85）
 
 **声明**
 
@@ -3654,9 +3615,9 @@ len(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-86"></a>
+<a id="api-85"></a>
 
-### move（87）
+### move（86）
 
 **声明**
 
@@ -3692,9 +3653,9 @@ move<T>(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-87"></a>
+<a id="api-86"></a>
 
-### toReference（88）
+### toReference（87）
 
 **声明**
 
@@ -3730,9 +3691,9 @@ toReference<T>(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-88"></a>
+<a id="api-87"></a>
 
-### toOptional（89）
+### toOptional（88）
 
 **声明**
 
@@ -3768,9 +3729,9 @@ toOptional<T>(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-89"></a>
+<a id="api-88"></a>
 
-### memcpy（90）
+### memcpy（89）
 
 **声明**
 
@@ -3808,9 +3769,9 @@ memcpy(destination, source, bytes);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-90"></a>
+<a id="api-89"></a>
 
-### memset（91）
+### memset（90）
 
 **声明**
 
@@ -3848,9 +3809,9 @@ memset(destination, value, bytes);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-91"></a>
+<a id="api-90"></a>
 
-### List::copy（92）
+### List::copy（91）
 
 **声明**
 
@@ -3884,9 +3845,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-92"></a>
+<a id="api-91"></a>
 
-### List::push（93）
+### List::push（92）
 
 **声明**
 
@@ -3922,9 +3883,9 @@ obj.push(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-93"></a>
+<a id="api-92"></a>
 
-### List::insert（94）
+### List::insert（93）
 
 **声明**
 
@@ -3961,9 +3922,9 @@ obj.insert(index, value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-94"></a>
+<a id="api-93"></a>
 
-### List::at（95）
+### List::at（94）
 
 **声明**
 
@@ -3999,9 +3960,9 @@ obj.at(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-95"></a>
+<a id="api-94"></a>
 
-### List::pop（96）
+### List::pop（95）
 
 **声明**
 
@@ -4035,9 +3996,9 @@ obj.pop();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-96"></a>
+<a id="api-95"></a>
 
-### List::remove（97）
+### List::remove（96）
 
 **声明**
 
@@ -4073,9 +4034,9 @@ obj.remove(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-97"></a>
+<a id="api-96"></a>
 
-### List::indexOf（98）
+### List::indexOf（97）
 
 **声明**
 
@@ -4111,9 +4072,9 @@ obj.indexOf(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-98"></a>
+<a id="api-97"></a>
 
-### List::contains（99）
+### List::contains（98）
 
 **声明**
 
@@ -4149,9 +4110,9 @@ obj.contains(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-99"></a>
+<a id="api-98"></a>
 
-### List::has（100）
+### List::has（99）
 
 **声明**
 
@@ -4187,9 +4148,9 @@ obj.has(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-100"></a>
+<a id="api-99"></a>
 
-### List::clear（101）
+### List::clear（100）
 
 **声明**
 
@@ -4223,9 +4184,9 @@ obj.clear();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-101"></a>
+<a id="api-100"></a>
 
-### List::len（102）
+### List::len（101）
 
 **声明**
 
@@ -4259,9 +4220,9 @@ obj.len();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-102"></a>
+<a id="api-101"></a>
 
-### Set::copy（103）
+### Set::copy（102）
 
 **声明**
 
@@ -4295,9 +4256,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-103"></a>
+<a id="api-102"></a>
 
-### Set::add（104）
+### Set::add（103）
 
 **声明**
 
@@ -4333,9 +4294,9 @@ obj.add(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-104"></a>
+<a id="api-103"></a>
 
-### Set::has（105）
+### Set::has（104）
 
 **声明**
 
@@ -4371,9 +4332,9 @@ obj.has(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-105"></a>
+<a id="api-104"></a>
 
-### Set::contains（106）
+### Set::contains（105）
 
 **声明**
 
@@ -4409,9 +4370,9 @@ obj.contains(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-106"></a>
+<a id="api-105"></a>
 
-### Set::remove（107）
+### Set::remove（106）
 
 **声明**
 
@@ -4447,9 +4408,9 @@ obj.remove(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-107"></a>
+<a id="api-106"></a>
 
-### Set::at（108）
+### Set::at（107）
 
 **声明**
 
@@ -4485,9 +4446,9 @@ obj.at(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-108"></a>
+<a id="api-107"></a>
 
-### Set::clear（109）
+### Set::clear（108）
 
 **声明**
 
@@ -4521,9 +4482,9 @@ obj.clear();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-109"></a>
+<a id="api-108"></a>
 
-### Set::len（110）
+### Set::len（109）
 
 **声明**
 
@@ -4557,9 +4518,9 @@ obj.len();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-110"></a>
+<a id="api-109"></a>
 
-### Map::copy（111）
+### Map::copy（110）
 
 **声明**
 
@@ -4593,9 +4554,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-111"></a>
+<a id="api-110"></a>
 
-### Map::put（112）
+### Map::put（111）
 
 **声明**
 
@@ -4632,9 +4593,9 @@ obj.put(key, value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-112"></a>
+<a id="api-111"></a>
 
-### Map::has（113）
+### Map::has（112）
 
 **声明**
 
@@ -4670,9 +4631,9 @@ obj.has(key);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-113"></a>
+<a id="api-112"></a>
 
-### Map::contains（114）
+### Map::contains（113）
 
 **声明**
 
@@ -4708,9 +4669,9 @@ obj.contains(key);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-114"></a>
+<a id="api-113"></a>
 
-### Map::remove（115）
+### Map::remove（114）
 
 **声明**
 
@@ -4746,9 +4707,9 @@ obj.remove(key);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-115"></a>
+<a id="api-114"></a>
 
-### Map::keyAt（116）
+### Map::keyAt（115）
 
 **声明**
 
@@ -4784,9 +4745,9 @@ obj.keyAt(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-116"></a>
+<a id="api-115"></a>
 
-### Map::valAt（117）
+### Map::valAt（116）
 
 **声明**
 
@@ -4822,9 +4783,9 @@ obj.valAt(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-117"></a>
+<a id="api-116"></a>
 
-### Map::clear（118）
+### Map::clear（117）
 
 **声明**
 
@@ -4858,9 +4819,9 @@ obj.clear();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-118"></a>
+<a id="api-117"></a>
 
-### Map::len（119）
+### Map::len（118）
 
 **声明**
 
@@ -4894,9 +4855,9 @@ obj.len();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-119"></a>
+<a id="api-118"></a>
 
-### BigInteger::str（120）
+### BigInteger::str（119）
 
 **声明**
 
@@ -4930,9 +4891,9 @@ obj.str();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-120"></a>
+<a id="api-119"></a>
 
-### BigInteger::copy（121）
+### BigInteger::copy（120）
 
 **声明**
 
@@ -4966,9 +4927,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-121"></a>
+<a id="api-120"></a>
 
-### BigDecimal::str（122）
+### BigDecimal::str（121）
 
 **声明**
 
@@ -5002,9 +4963,9 @@ obj.str();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-122"></a>
+<a id="api-121"></a>
 
-### BigDecimal::copy（123）
+### BigDecimal::copy（122）
 
 **声明**
 
@@ -5038,9 +4999,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-123"></a>
+<a id="api-122"></a>
 
-### BigDecimal::setPrecision（124）
+### BigDecimal::setPrecision（123）
 
 **声明**
 
@@ -5076,9 +5037,9 @@ obj.setPrecision(digits);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-124"></a>
+<a id="api-123"></a>
 
-### Any::copy（125）
+### Any::copy（124）
 
 **声明**
 
@@ -5112,9 +5073,9 @@ obj.copy();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-125"></a>
+<a id="api-124"></a>
 
-### Any::isEmpty（126）
+### Any::isEmpty（125）
 
 **声明**
 
@@ -5148,9 +5109,9 @@ obj.isEmpty();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-126"></a>
+<a id="api-125"></a>
 
-### Any::clear（127）
+### Any::clear（126）
 
 **声明**
 
@@ -5184,9 +5145,9 @@ obj.clear();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-127"></a>
+<a id="api-126"></a>
 
-### Any::set（128）
+### Any::set（127）
 
 **声明**
 
@@ -5222,9 +5183,9 @@ obj.set(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-128"></a>
+<a id="api-127"></a>
 
-### Any::getValue（129）
+### Any::getValue（128）
 
 **声明**
 
@@ -5258,9 +5219,9 @@ obj.getValue();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-129"></a>
+<a id="api-128"></a>
 
-### Any::getReference（130）
+### Any::getReference（129）
 
 **声明**
 
@@ -5294,9 +5255,9 @@ obj.getReference();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-130"></a>
+<a id="api-129"></a>
 
-### Any::getOptional（131）
+### Any::getOptional（130）
 
 **声明**
 
@@ -5330,9 +5291,9 @@ obj.getOptional();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-131"></a>
+<a id="api-130"></a>
 
-### eq（132）
+### eq（131）
 
 **声明**
 
@@ -5369,9 +5330,9 @@ eq(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-132"></a>
+<a id="api-131"></a>
 
-### ne（133）
+### ne（132）
 
 **声明**
 
@@ -5408,9 +5369,9 @@ ne(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-133"></a>
+<a id="api-132"></a>
 
-### lt（134）
+### lt（133）
 
 **声明**
 
@@ -5447,9 +5408,9 @@ lt(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-134"></a>
+<a id="api-133"></a>
 
-### le（135）
+### le（134）
 
 **声明**
 
@@ -5486,9 +5447,9 @@ le(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-135"></a>
+<a id="api-134"></a>
 
-### gt（136）
+### gt（135）
 
 **声明**
 
@@ -5525,9 +5486,9 @@ gt(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-136"></a>
+<a id="api-135"></a>
 
-### ge（137）
+### ge（136）
 
 **声明**
 
@@ -5564,9 +5525,9 @@ ge(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-137"></a>
+<a id="api-136"></a>
 
-### add（138）
+### add（137）
 
 **声明**
 
@@ -5605,9 +5566,9 @@ add(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-138"></a>
+<a id="api-137"></a>
 
-### sub（139）
+### sub（138）
 
 **声明**
 
@@ -5644,9 +5605,9 @@ sub(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-139"></a>
+<a id="api-138"></a>
 
-### mul（140）
+### mul（139）
 
 **声明**
 
@@ -5683,9 +5644,9 @@ mul(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-140"></a>
+<a id="api-139"></a>
 
-### div（141）
+### div（140）
 
 **声明**
 
@@ -5722,9 +5683,9 @@ div(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-141"></a>
+<a id="api-140"></a>
 
-### mod（142）
+### mod（141）
 
 **声明**
 
@@ -5761,9 +5722,9 @@ mod(left, right);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-142"></a>
+<a id="api-141"></a>
 
-### index（143）
+### index（142）
 
 **声明**
 
@@ -5802,9 +5763,9 @@ index(data, index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-143"></a>
+<a id="api-142"></a>
 
-### Add::leftAdd（144）
+### Add::leftAdd（143）
 
 **声明**
 
@@ -5840,9 +5801,9 @@ obj.leftAdd(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-144"></a>
+<a id="api-143"></a>
 
-### RightAdd::rightAdd（145）
+### RightAdd::rightAdd（144）
 
 **声明**
 
@@ -5878,9 +5839,9 @@ obj.rightAdd(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-145"></a>
+<a id="api-144"></a>
 
-### Subtract::leftSub（146）
+### Subtract::leftSub（145）
 
 **声明**
 
@@ -5916,9 +5877,9 @@ obj.leftSub(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-146"></a>
+<a id="api-145"></a>
 
-### RightSubtract::rightSub（147）
+### RightSubtract::rightSub（146）
 
 **声明**
 
@@ -5954,9 +5915,9 @@ obj.rightSub(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-147"></a>
+<a id="api-146"></a>
 
-### Multiply::leftMul（148）
+### Multiply::leftMul（147）
 
 **声明**
 
@@ -5992,9 +5953,9 @@ obj.leftMul(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-148"></a>
+<a id="api-147"></a>
 
-### RightMultiply::rightMul（149）
+### RightMultiply::rightMul（148）
 
 **声明**
 
@@ -6030,9 +5991,9 @@ obj.rightMul(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-149"></a>
+<a id="api-148"></a>
 
-### Divide::leftDiv（150）
+### Divide::leftDiv（149）
 
 **声明**
 
@@ -6068,9 +6029,9 @@ obj.leftDiv(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-150"></a>
+<a id="api-149"></a>
 
-### RightDivide::rightDiv（151）
+### RightDivide::rightDiv（150）
 
 **声明**
 
@@ -6106,9 +6067,9 @@ obj.rightDiv(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-151"></a>
+<a id="api-150"></a>
 
-### Modulo::leftMod（152）
+### Modulo::leftMod（151）
 
 **声明**
 
@@ -6144,9 +6105,9 @@ obj.leftMod(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-152"></a>
+<a id="api-151"></a>
 
-### RightModulo::rightMod（153）
+### RightModulo::rightMod（152）
 
 **声明**
 
@@ -6182,9 +6143,9 @@ obj.rightMod(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-153"></a>
+<a id="api-152"></a>
 
-### Equal::leftEqual（154）
+### Equal::leftEqual（153）
 
 **声明**
 
@@ -6220,9 +6181,9 @@ obj.leftEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-154"></a>
+<a id="api-153"></a>
 
-### RightEqual::rightEqual（155）
+### RightEqual::rightEqual（154）
 
 **声明**
 
@@ -6258,9 +6219,9 @@ obj.rightEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-155"></a>
+<a id="api-154"></a>
 
-### NotEqual::leftNotEqual（156）
+### NotEqual::leftNotEqual（155）
 
 **声明**
 
@@ -6296,9 +6257,9 @@ obj.leftNotEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-156"></a>
+<a id="api-155"></a>
 
-### RightNotEqual::rightNotEqual（157）
+### RightNotEqual::rightNotEqual（156）
 
 **声明**
 
@@ -6334,9 +6295,9 @@ obj.rightNotEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-157"></a>
+<a id="api-156"></a>
 
-### Less::leftLess（158）
+### Less::leftLess（157）
 
 **声明**
 
@@ -6372,9 +6333,9 @@ obj.leftLess(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-158"></a>
+<a id="api-157"></a>
 
-### RightLess::rightLess（159）
+### RightLess::rightLess（158）
 
 **声明**
 
@@ -6410,9 +6371,9 @@ obj.rightLess(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-159"></a>
+<a id="api-158"></a>
 
-### LessOrEqual::leftLessEqual（160）
+### LessOrEqual::leftLessEqual（159）
 
 **声明**
 
@@ -6448,9 +6409,9 @@ obj.leftLessEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-160"></a>
+<a id="api-159"></a>
 
-### RightLessOrEqual::rightLessEqual（161）
+### RightLessOrEqual::rightLessEqual（160）
 
 **声明**
 
@@ -6486,9 +6447,9 @@ obj.rightLessEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-161"></a>
+<a id="api-160"></a>
 
-### Greater::leftGreater（162）
+### Greater::leftGreater（161）
 
 **声明**
 
@@ -6524,9 +6485,9 @@ obj.leftGreater(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-162"></a>
+<a id="api-161"></a>
 
-### RightGreater::rightGreater（163）
+### RightGreater::rightGreater（162）
 
 **声明**
 
@@ -6562,9 +6523,9 @@ obj.rightGreater(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-163"></a>
+<a id="api-162"></a>
 
-### GreaterOrEqual::leftGreaterEqual（164）
+### GreaterOrEqual::leftGreaterEqual（163）
 
 **声明**
 
@@ -6600,9 +6561,9 @@ obj.leftGreaterEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-164"></a>
+<a id="api-163"></a>
 
-### RightGreaterOrEqual::rightGreaterEqual（165）
+### RightGreaterOrEqual::rightGreaterEqual（164）
 
 **声明**
 
@@ -6638,9 +6599,9 @@ obj.rightGreaterEqual(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-165"></a>
+<a id="api-164"></a>
 
-### And::leftBitAnd（166）
+### And::leftBitAnd（165）
 
 **声明**
 
@@ -6676,9 +6637,9 @@ obj.leftBitAnd(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-166"></a>
+<a id="api-165"></a>
 
-### RightAnd::rightBitAnd（167）
+### RightAnd::rightBitAnd（166）
 
 **声明**
 
@@ -6714,9 +6675,9 @@ obj.rightBitAnd(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-167"></a>
+<a id="api-166"></a>
 
-### Or::leftBitOr（168）
+### Or::leftBitOr（167）
 
 **声明**
 
@@ -6752,9 +6713,9 @@ obj.leftBitOr(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-168"></a>
+<a id="api-167"></a>
 
-### RightOr::rightBitOr（169）
+### RightOr::rightBitOr（168）
 
 **声明**
 
@@ -6790,9 +6751,9 @@ obj.rightBitOr(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-169"></a>
+<a id="api-168"></a>
 
-### Xor::leftBitXor（170）
+### Xor::leftBitXor（169）
 
 **声明**
 
@@ -6828,9 +6789,9 @@ obj.leftBitXor(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-170"></a>
+<a id="api-169"></a>
 
-### RightXor::rightBitXor（171）
+### RightXor::rightBitXor（170）
 
 **声明**
 
@@ -6866,9 +6827,9 @@ obj.rightBitXor(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-171"></a>
+<a id="api-170"></a>
 
-### ShiftLeft::leftShiftLeft（172）
+### ShiftLeft::leftShiftLeft（171）
 
 **声明**
 
@@ -6904,9 +6865,9 @@ obj.leftShiftLeft(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-172"></a>
+<a id="api-171"></a>
 
-### RightShiftLeft::rightShiftLeft（173）
+### RightShiftLeft::rightShiftLeft（172）
 
 **声明**
 
@@ -6942,9 +6903,9 @@ obj.rightShiftLeft(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-173"></a>
+<a id="api-172"></a>
 
-### ShiftRight::leftShiftRight（174）
+### ShiftRight::leftShiftRight（173）
 
 **声明**
 
@@ -6980,9 +6941,9 @@ obj.leftShiftRight(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-174"></a>
+<a id="api-173"></a>
 
-### RightShiftRight::rightShiftRight（175）
+### RightShiftRight::rightShiftRight（174）
 
 **声明**
 
@@ -7018,9 +6979,9 @@ obj.rightShiftRight(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-175"></a>
+<a id="api-174"></a>
 
-### Negate::negate（176）
+### Negate::negate（175）
 
 **声明**
 
@@ -7056,9 +7017,9 @@ obj.negate(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-176"></a>
+<a id="api-175"></a>
 
-### BitNot::bitNot（177）
+### BitNot::bitNot（176）
 
 **声明**
 
@@ -7094,9 +7055,9 @@ obj.bitNot(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-177"></a>
+<a id="api-176"></a>
 
-### Positive::positive（178）
+### Positive::positive（177）
 
 **声明**
 
@@ -7132,9 +7093,9 @@ obj.positive(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-178"></a>
+<a id="api-177"></a>
 
-### Hash::hash（179）
+### Hash::hash（178）
 
 **声明**
 
@@ -7170,9 +7131,9 @@ obj.hash(value);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-179"></a>
+<a id="api-178"></a>
 
-### ExplicitConvert::explicitConvert（180）
+### ExplicitConvert::explicitConvert（179）
 
 **声明**
 
@@ -7206,9 +7167,9 @@ obj.explicitConvert();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-180"></a>
+<a id="api-179"></a>
 
-### ImplicitConvert::implicitConvert（181）
+### ImplicitConvert::implicitConvert（180）
 
 **声明**
 
@@ -7242,9 +7203,9 @@ obj.implicitConvert();
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-181"></a>
+<a id="api-180"></a>
 
-### Index::index（182）
+### Index::index（181）
 
 **声明**
 
@@ -7280,9 +7241,9 @@ obj.index(key);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-182"></a>
+<a id="api-181"></a>
 
-### Iterator::iterator（183）
+### Iterator::iterator（182）
 
 **声明**
 
@@ -7318,9 +7279,9 @@ obj.iterator(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-183"></a>
+<a id="api-182"></a>
 
-### Result::mapErr（184）
+### Result::mapErr（183）
 
 **声明**
 
@@ -7356,9 +7317,9 @@ obj.mapErr<F>(mapper);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-184"></a>
+<a id="api-183"></a>
 
-### Option::okOr（185）
+### Option::okOr（184）
 
 **声明**
 
@@ -7394,9 +7355,9 @@ obj.okOr<E>(error);
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
-<a id="api-185"></a>
+<a id="api-184"></a>
 
-### Option::okOrElse（186）
+### Option::okOrElse（185）
 
 **声明**
 

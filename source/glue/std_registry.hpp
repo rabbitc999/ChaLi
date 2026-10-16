@@ -25,12 +25,6 @@
 #ifndef GLUE_NO_STD_REGEX
 #include "std_regex.hpp"
 #endif
-#ifndef GLUE_NO_STD_NUMTHEORY
-#include "std_numtheory.hpp"
-#endif
-#ifndef GLUE_NO_STD_NUMERICS
-#include "std_numerics.hpp"
-#endif
 #ifndef GLUE_NO_STD_SIGNAL
 #include "std_signal.hpp"
 #endif
@@ -50,14 +44,8 @@
 #ifndef GLUE_NO_STD_COMPRESS
 #include "std_compress.hpp"
 #endif
-#ifndef GLUE_NO_STD_TEXT
-#include "std_text.hpp"
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
-#endif
-#ifndef GLUE_NO_STD_PATH
-#include "std_path.hpp"
 #endif
 #ifndef GLUE_NO_STD_PARSE
 #include "std_parse.hpp"
@@ -117,22 +105,6 @@ inline bool bindStandardGlue(magel_glue::Registry &registry, Memory::String *err
         ok = false;
     }
 #endif
-#ifndef GLUE_NO_STD_NUMTHEORY
-    Memory::String numtheoryError;
-    if (!std_numtheory_glue::bind(registry, &numtheoryError))
-    {
-        if (error) *error = numtheoryError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_NUMERICS
-    Memory::String numericsError;
-    if (!std_numerics_glue::bind(registry, &numericsError))
-    {
-        if (error) *error = numericsError;
-        ok = false;
-    }
-#endif
 #ifndef GLUE_NO_STD_SIGNAL
     Memory::String signalError;
     if (!std_signal_glue::bind(registry, &signalError))
@@ -141,27 +113,11 @@ inline bool bindStandardGlue(magel_glue::Registry &registry, Memory::String *err
         ok = false;
     }
 #endif
-#ifndef GLUE_NO_STD_TEXT
-    Memory::String textError;
-    if (!std_text_glue::bind(registry, &textError))
-    {
-        if (error) *error = textError;
-        ok = false;
-    }
-#endif
 #ifndef GLUE_NO_STD_LINALG
     Memory::String linalgError;
     if (!std_linalg_glue::bind(registry, &linalgError))
     {
         if (error) *error = linalgError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_PATH
-    Memory::String pathError;
-    if (!std_path_glue::bind(registry, &pathError))
-    {
-        if (error) *error = pathError;
         ok = false;
     }
 #endif

@@ -22,12 +22,12 @@ MODULES = {
     'std::json': ('JSON 只读文档', 'parse 返回 Result<JsonValue,String>。节点共享同一宿主文档；任一节点 close 都关闭整个文档，重复关闭返回 false。asXxx 返回 Option，不符合类型时为 None；asFloat64 可读取整数。含零字节的文本/键使用 asBytes/findBytes/keyBytesAt。kind：0 null、1 bool、2 int、3 float、4 string、5 array、6 object、7 date-time。'),
     'std::toml': ('TOML 只读文档', 'parse 返回 Result<TomlValue,String>。节点共享文档生命周期，close 会使所有节点失效。表对应 isTable/isObject；时间值使用 isDateTime/asDateTime。asXxx 类型不符返回 None；含零字节的文本使用字节列表接口。kind 编码与 JSON 节点一致。'),
     'std::linalg': ('向量与矩阵', 'Vector<T>、Matrix<T> 拥有稠密数据。下标从 0 开始；加减、点积和乘法必须维度兼容，非法维度触发断言或宿主错误。fromArray 复制，toArray 返回独立数组；裸引用重载须提供有效 count。normalized 不接受零向量。浮点分解和 solve 使用宿主胶水，返回分解结构/解向量；奇异、非法形状或不满足算法条件时报告运行错误，不返回 Result。'),
-    'std::math': ('标量数学', '三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。'),
+    'std::math': ('标量数学', '三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。'),
     'std::memory': ('内存视图与 arena', 'Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。Arena.allocate 返回视图，reset/drop 后全部视图失效；不能继续解引用。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。'),
     'std::message': ('消息路由', '泛型 send/receive 按 T 在协程或线程间传递值副本；接收类型必须与发送的类型匹配。协程与线程句柄不可混用。线程功能需 --threads；带类型消息语法及宿主交互见语言参考与正式样例。'),
     'std::net': ('TCP 与 HTTP', 'TCP 返回句柄包装值，先检查 isOpen/lastError。receive/receiveLine 的空串需结合 status 区分关闭、超时和错误。端口 0 可让系统分配监听端口。HTTP 仅支持 http://，不支持 TLS；HTTP 状态码与传输错误分别检查。连接、监听器及客户端需关闭。'),
-    'std::numerics': ('数值分析', '回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。'),
-    'std::numtheory': ('整数数论', 'gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。'),
+    'std::numerics': ('数值分析', '回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。'),
+    'std::numtheory': ('整数数论', '实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。'),
     'std::parse': ('严格文本解析', '返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。'),
     'std::path': ('路径字符串', '只进行路径字符串处理，不创建文件、不验证目标存在；分隔符与规范化遵循宿主实现。不要把字符串规范化当作文件权限或符号链接安全校验。'),
     'std::probe': ('最小宿主集成探针', '用于验证模块导入和调用链，twice 执行整数乘二，遵循 int64 运算语义。'),
@@ -44,8 +44,8 @@ MODULES = {
 # 精确名称优先，其后由生成器读取源码注释或按同族接口补全。
 BEHAVIOR = {
     'sin':'计算正弦。', 'cos':'计算余弦。', 'tan':'计算正切。', 'asin':'计算反正弦，结果为弧度。', 'acos':'计算反余弦，结果为弧度。', 'atan':'计算反正切，结果为弧度。',
-    'exp':'计算 e 的 value 次幂。', 'ln':'计算自然对数。', 'log10':'计算以 10 为底的对数。', 'pow':'计算 value 的 exponent 次幂。', 'sqrt':'计算平方根。', 'abs':'返回绝对值。', 'floor':'向负无穷取整。', 'ceil':'向正无穷取整。', 'round':'舍入到最近整数，中点远离零。', 'trunc':'向零截断小数部分。', 'fmod':'计算浮点余数，结果符号与被除数一致。', 'isNaN':'判断是否为 NaN。', 'isInf':'判断是否为正无穷或负无穷。', 'min':'返回较小值。', 'max':'返回较大值。', 'clamp':'将 value 限制在闭区间 [low,high]。',
-    'gcd':'计算最大公约数。', 'lcm':'计算最小公倍数。', 'addMod':'计算 (left+right) mod modulus。', 'mulMod':'计算 (left×right) mod modulus，避免直接乘法的中间溢出。', 'powMod':'通过快速幂计算 base^exponent mod modulus。', 'isPrime':'判断 uint64 是否为素数。', 'modInverse':'计算模乘逆元；模数不大于 1 或不互素时报运行错误。',
+    'exp':'计算 e 的 value 次幂。', 'ln':'计算自然对数。', 'log10':'计算以 10 为底的对数。', 'pow':'计算 value 的 exponent 次幂。', 'sqrt':'计算平方根。', 'abs':'返回绝对值；泛型入口，整数最小值取负按位宽回绕，NaN 与负数零原样返回。', 'floor':'向负无穷取整。', 'ceil':'向正无穷取整。', 'round':'舍入到最近整数，中点远离零。', 'trunc':'向零截断小数部分。', 'fmod':'计算浮点余数，结果符号与被除数一致。', 'isNaN':'判断是否为 NaN。', 'isInf':'判断是否为正无穷或负无穷。', 'min':'返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。', 'max':'返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。', 'clamp':'将 value 限制在闭区间 [low,high]；low>high 时报运行错误。',
+    'gcd':'计算实参的最大公约数；泛型入口，接受任意数量实参，结果非负。', 'lcm':'计算实参的最小公倍数；泛型入口，接受任意数量实参，任一实参为零给零，乘积回绕时报运行错误。', 'addMod':'计算 (left+right) mod modulus；modulus 不为正时报运行错误。', 'mulMod':'计算 (left×right) mod modulus，避免直接乘法的中间溢出；modulus 不为正时报运行错误。', 'powMod':'通过快速幂计算 base^exponent mod modulus；modulus 不为正时报运行错误。', 'isPrime':'判断整数是否为素数；内部加宽到 uint64 做七个底数的确定性 Miller-Rabin。', 'modInverse':'计算模乘逆元；模数不大于 1 或不互素时报运行错误。',
     'nowMs':'读取单调时钟毫秒计数。', 'nowNanos':'读取单调时钟纳秒计数。', 'twice':'返回 x×2。',
     'withSeed':'用固定 seed 创建随机数状态。', 'fromEntropy':'用宿主熵源播种随机数状态。', 'nextUInt64':'推进生成器并返回 64 位随机值。', 'nextInt':'返回 [minimum,maximum) 内的随机整数。', 'nextFloat64':'返回 [0,1) 内的随机浮点数。', 'nextRange':'返回 [minimum,maximum) 内的随机浮点数。', 'nextBool':'推进生成器并返回随机布尔值。',
     'isValue':'判断 Option 是否含 Value。', 'isNone':'判断 Option 是否为 None。', 'isOk':'判断 Result 是否为 Ok。', 'isErr':'判断 Result 是否为 Err。', 'unwrap':'提取成功载荷；None/Err 时 panic。', 'unwrapOr':'提取成功载荷；None/Err 时返回 fallback。', 'expect':'提取成功载荷；None/Err 时以 message 触发 panic。', 'error':'提取 Err 载荷；Ok 时 panic。', 'transform':'成功时调用 mapper 转换载荷，失败分支保持不变。', 'andThen':'成功时调用返回同族 Option/Result 的 mapper，将结果展平。',
@@ -103,7 +103,7 @@ BEHAVIOR.update(dict(fileOpen='按路径和模式打开文件，返回 Result<Fi
 
 # 补充经宿主实现核对的边界，避免把错误误写为 Result/默认返回值。
 for key,extra in {
- 'std::numerics':' derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。',
+ 'std::numerics':' 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。',
  'std::signal':' FFT/IFFT 的长度必须为正的 2 的幂。',
  'std::sql':' DataCell.asInt/asReal 只转换数值类型，其他类型返回 0/0.0；text 对 NULL 返回 "NULL"。ResultSet.scalar/count 在空结果上返回空串/0，at/intAt/realAt/textAt 的行列索引必须有效。',
  'std::lang':' List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。',

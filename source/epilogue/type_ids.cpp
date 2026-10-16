@@ -89,7 +89,7 @@ Memory::String StandardCallName(const MNode &callee)
 {
     if (callee.kind == MNode::Var && CanUseImplicitLang(callee.module, callee.s))
         return callee.s;
-    /* `__` 前缀是**编译器内部名字**（`__fileTryOpen`、`__processRun`、`__strFind` …）：
+    /* `__` 前缀是**编译器内部名字**（`__fileTryOpen`、`__processRun`、`__stringBytes` …）：
      * 标准库模块（`magel/source/std/*.mgl`）里也要能直接调，所以不按模块过滤，
      * 这样"文件/进程包装搬进 std::io / std::process"之后它们仍然认得出来。
      * 用户侧不可能声明 `__` 开头的公开 API，所以放宽这一步不会让用户拿到不该有的名字。 */

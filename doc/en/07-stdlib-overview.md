@@ -48,9 +48,9 @@ No `import` needed.
 
 | Module | Contents |
 | --- | --- |
-| `std::math` | `sin` `cos` `sqrt` and friends; constants live in `std::lang::Math` |
+| `std::math` | `sin` `cos` `sqrt` and friends; `abs` `min` `max` are generic entry points (`min`/`max` take any number of arguments) while `clamp` keeps `int64`/`float64` overloads; constants live in `std::lang::Math` |
 | `std::numerics` | scalar numerical methods: derivative, Simpson integration, bisection, RK4, Newton |
-| `std::numtheory` | integer number theory: `gcd` `lcm`, modular arithmetic, deterministic Miller-Rabin `isPrime` |
+| `std::numtheory` | integer number theory: module-level generic `gcd` `lcm` (any number of arguments), `addMod` `mulMod` `powMod` `modInverse`, deterministic Miller-Rabin `isPrime` |
 | `std::complex` | complex numbers `Complex<T>` with arithmetic traits |
 | `std::linalg` | dense vectors and matrices, `luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | deterministic LCG and entropy seeding; handle-based state, implements `Drop` |

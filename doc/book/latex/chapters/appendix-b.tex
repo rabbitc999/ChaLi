@@ -77,14 +77,14 @@ sum=10
 \subsection{数学与数值}
 
 {\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.169\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.811\linewidth-2\tabcolsep\relax}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.108\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.872\linewidth-2\tabcolsep\relax}}
 \toprule
 模块 & 能干什么 \\
 \midrule
 \endhead
-\texttt{std:\allowbreak{}:\allowbreak{}math} & \texttt{sin} \texttt{cos} \texttt{sqrt} 等常用函数（常数见 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}Math}） \\
+\texttt{std:\allowbreak{}:\allowbreak{}math} & \texttt{sin} \texttt{cos} \texttt{sqrt} 等常用函数；\texttt{abs} \texttt{min} \texttt{max} 是泛型入口，\texttt{min}/\texttt{max} 可以给任意多个实参（常数见 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}Math}） \\
 \texttt{std:\allowbreak{}:\allowbreak{}numerics} & 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 \\
-\texttt{std:\allowbreak{}:\allowbreak{}numtheory} & 整数数论：\texttt{gcd} \texttt{lcm} 取模运算，以及确定性的 \texttt{is\allowbreak{}Prime}（Miller-Rabin） \\
+\texttt{std:\allowbreak{}:\allowbreak{}numtheory} & 整数数论：模块级泛型 \texttt{gcd} \texttt{lcm}（任意多个实参）、\texttt{add\allowbreak{}Mod} \texttt{mul\allowbreak{}Mod} \texttt{pow\allowbreak{}Mod} \texttt{mod\allowbreak{}Inverse}，以及确定性的 \texttt{is\allowbreak{}Prime}（Miller-Rabin） \\
 \texttt{std:\allowbreak{}:\allowbreak{}complex} & 复数 \texttt{Complex<\allowbreak{}T>\allowbreak{}}，加减乘除都是一等公民 \\
 \texttt{std:\allowbreak{}:\allowbreak{}linalg} & 稠密向量与矩阵：\texttt{lu\allowbreak{}Decompose} \texttt{symmetric\allowbreak{}Eigen} \texttt{svd} \texttt{jordan2} \texttt{diagonalize2} \\
 \texttt{std:\allowbreak{}:\allowbreak{}random} & 确定性随机数（LCG）与熵播种；句柄型状态，实现 \texttt{Drop} \\

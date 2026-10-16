@@ -47,16 +47,6 @@
 #define GLUE_NO_STD_REGEX 1
 #endif
 #endif
-#if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_NUMTHEORY)
-#ifndef GLUE_NO_STD_NUMTHEORY
-#define GLUE_NO_STD_NUMTHEORY 1
-#endif
-#endif
-#if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_NUMERICS)
-#ifndef GLUE_NO_STD_NUMERICS
-#define GLUE_NO_STD_NUMERICS 1
-#endif
-#endif
 #if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_SIGNAL)
 #ifndef GLUE_NO_STD_SIGNAL
 #define GLUE_NO_STD_SIGNAL 1
@@ -67,19 +57,9 @@
 #define GLUE_NO_STD_BINARY 1
 #endif
 #endif
-#if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_TEXT)
-#ifndef GLUE_NO_STD_TEXT
-#define GLUE_NO_STD_TEXT 1
-#endif
-#endif
 #if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_LINALG)
 #ifndef GLUE_NO_STD_LINALG
 #define GLUE_NO_STD_LINALG 1
-#endif
-#endif
-#if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_PATH)
-#ifndef GLUE_NO_STD_PATH
-#define GLUE_NO_STD_PATH 1
 #endif
 #endif
 #if defined(NO_MAGEL_STD) || defined(NO_MAGEL_STD_PARSE)

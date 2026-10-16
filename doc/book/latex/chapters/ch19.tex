@@ -998,11 +998,11 @@ int64 main() {
 \texttt{\$concat(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & 拼标识符 \\
 \texttt{\$stringify(\allowbreak{}x)\allowbreak{}} / \texttt{\$line} & 把参数变成字符串 / 当前行号 \\
 \texttt{\$delete\_macro N} & 取消宏（先撤后立，好重定义一个同名宏） \\
-`\texttt{ \$macro N(\allowbreak{}(\allowbreak{}a)\allowbreak{},\allowbreak{} (\allowbreak{}b)\allowbreak{})\allowbreak{} }` & 显式形参括号：该形参每次出现都替换成 \texttt{(\allowbreak{}实参)\allowbreak{}} \\
+\texttt{ \$macro N(\allowbreak{}(\allowbreak{}a)\allowbreak{},\allowbreak{} (\allowbreak{}b)\allowbreak{})\allowbreak{} } & 显式形参括号：该形参每次出现都替换成 \texttt{(\allowbreak{}实参)\allowbreak{}} \\
 \texttt{\$macro expr N(\allowbreak{}…)\allowbreak{} … \$end\_macro} & 宏名前的 \texttt{expr}：整段展开再包一层括号 \\
 \texttt{\$replace N(\allowbreak{}参数)\allowbreak{} 宏体} & 单行宏，没有 \texttt{\$end\_macro} \\
 \texttt{\$macro N(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{}rest)\allowbreak{}} & 变长尾参；\texttt{rest} 按 \texttt{,\allowbreak{} } 摊成一段文本 \\
-`\texttt{ \$macro N(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{}(\allowbreak{}rest)\allowbreak{})\allowbreak{} }` & 变长尾参逐元素加括号 \\
+\texttt{ \$macro N(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{}(\allowbreak{}rest)\allowbreak{})\allowbreak{} } & 变长尾参逐元素加括号 \\
 \texttt{\$for v in rest … \$end\_for} & 按变长尾参重复宏体里的这一段 \\
 \texttt{\$concat(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & 拼标识符（两个实参都必须是标识符） \\
 \texttt{\$stringify(\allowbreak{}x)\allowbreak{}} & 取实参的源码文本，结果是字符串字面量 \\

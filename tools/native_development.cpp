@@ -4307,12 +4307,15 @@ public:
                                      cache(std::make_shared<LspCache>(compiler)), outputMutex(std::make_shared<std::mutex>())
     {
         auto data = parse(magel_development_tool("tools/magel_stdlib_api.json"));
+        // `__` 前缀是编译器/宿主协议：标准库里带这个前缀的函数与类型不进补全。
+        // 工程内同名符号属于用户自己的命名空间，不受此限。
         for (auto &v : array(get(data, "types")))
-            library->types.insert(str(v));
+            if (!starts(str(v), "__")) library->types.insert(str(v));
         A entries = array(get(data, "functions"));
         for (const auto &symbol : array(get(data, "symbols"))) entries.push_back(symbol);
         for (auto &r : entries)
         {
+            if (starts(str(r, "name"), "__") || starts(str(r, "owner"), "__")) continue;
             Record entry;
             entry.module = str(r, "module");
             entry.name = tail(str(r, "name"));

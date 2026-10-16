@@ -153,15 +153,17 @@ struct EventBinding {
 };
 EventBinding __eventBinding;
 
-/* 事件句柄的中断蹦床：事件值透传给用户回调，自定义参数从登记表取。 */
-void __eventTrampoline(int64 event) {
+/* 事件句柄的中断蹦床：事件值透传给用户回调，自定义参数从登记表取。
+ * 只给本模块的 `__timerBind` 当回调，加 `inline` 让语言层面就挡住跨模块引用。 */
+inline void __eventTrampoline(int64 event) {
     if (!__eventBinding.bound) { return; }
     __eventBinding.callback(event, __eventBinding.arguments);
 }
 
-/* 登记主体：先校验再落表。回调没绑定（函数指针为 0）或句柄已释放时返回 0，不做任何事。 */
-int32 __bindEventArguments(EventHandle handle, void fn(int64, std::lang::List<std::lang::Any>) callback,
-                           std::lang::List<std::lang::Any> arguments) {
+/* 登记主体：先校验再落表。回调没绑定（函数指针为 0）或句柄已释放时返回 0，不做任何事。
+ * 只给本模块的两个 `bindEventArguments` 重载用，加 `inline` 让语言层面就挡住跨模块引用。 */
+inline int32 __bindEventArguments(EventHandle handle, void fn(int64, std::lang::List<std::lang::Any>) callback,
+                                  std::lang::List<std::lang::Any> arguments) {
     if (!__timerAlive(handle)) { return 0; }   /* 句柄无效 / 已释放 */
     if (callback == 0) { return 0; }           /* 没给回调函数 */
     if (__eventBinding.bound) { delete __eventBinding.arguments; }

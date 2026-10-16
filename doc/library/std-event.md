@@ -901,7 +901,7 @@ int32 bindEventArguments(EventHandle handle, void fn(int64, std::lang::List<std:
 std::event::bindEventArguments(handle, callback, arguments);
 ```
 
-**源码**：[source/std/event.mgl:178](../../source/std/event.mgl#L178)。
+**源码**：[source/std/event.mgl:180](../../source/std/event.mgl#L180)。
 
 **完整示例**：[example/samples/interrupt_arguments.mgl](../../example/samples/interrupt_arguments.mgl)。
 
@@ -943,7 +943,7 @@ int32 bindEventArguments(EventHandle handle, void fn(int64, std::lang::List<std:
 std::event::bindEventArguments(handle, callback, arguments);
 ```
 
-**源码**：[source/std/event.mgl:188](../../source/std/event.mgl#L188)。
+**源码**：[source/std/event.mgl:190](../../source/std/event.mgl#L190)。
 
 **完整示例**：[example/samples/interrupt_arguments.mgl](../../example/samples/interrupt_arguments.mgl)。
 
@@ -981,6 +981,6 @@ void unbindEventArguments();
 std::event::unbindEventArguments();
 ```
 
-**源码**：[source/std/event.mgl:195](../../source/std/event.mgl#L195)。
+**源码**：[source/std/event.mgl:197](../../source/std/event.mgl#L197)。
 
 **完整示例**：[example/samples/interrupt_arguments.mgl](../../example/samples/interrupt_arguments.mgl)。

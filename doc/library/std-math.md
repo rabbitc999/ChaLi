@@ -10,7 +10,7 @@ import std::math;
 
 ## 公共约定与错误边界
 
-三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。
+三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。
 
 ## 参考代码
 
@@ -135,21 +135,18 @@ int64 main() {
 | [log10](#api-8) | `float64 log10(float64 value)` |
 | [pow](#api-9) | `float64 pow(float64 value, float64 exponent)` |
 | [sqrt](#api-10) | `float64 sqrt(float64 value)` |
-| [abs](#api-11) | `float64 abs(float64 value)` |
-| [floor](#api-12) | `float64 floor(float64 value)` |
-| [ceil](#api-13) | `float64 ceil(float64 value)` |
-| [round](#api-14) | `float64 round(float64 value)` |
-| [trunc](#api-15) | `float64 trunc(float64 value)` |
-| [fmod](#api-16) | `float64 fmod(float64 value, float64 divisor)` |
-| [isNaN](#api-17) | `bool isNaN(float64 value)` |
-| [isInf](#api-18) | `bool isInf(float64 value)` |
-| [abs](#api-19) | `int64 abs(int64 value)` |
-| [min](#api-20) | `int64 min(int64 left, int64 right)` |
-| [max](#api-21) | `int64 max(int64 left, int64 right)` |
-| [clamp](#api-22) | `int64 clamp(int64 value, int64 low, int64 high)` |
-| [min](#api-23) | `float64 min(float64 left, float64 right)` |
-| [max](#api-24) | `float64 max(float64 left, float64 right)` |
-| [clamp](#api-25) | `float64 clamp(float64 value, float64 low, float64 high)` |
+| [floor](#api-11) | `float64 floor(float64 value)` |
+| [ceil](#api-12) | `float64 ceil(float64 value)` |
+| [round](#api-13) | `float64 round(float64 value)` |
+| [trunc](#api-14) | `float64 trunc(float64 value)` |
+| [fmod](#api-15) | `float64 fmod(float64 value, float64 divisor)` |
+| [isNaN](#api-16) | `bool isNaN(float64 value)` |
+| [isInf](#api-17) | `bool isInf(float64 value)` |
+| [abs](#api-18) | `T abs<T>(T value)` |
+| [min](#api-19) | `T min<T>(T... values)` |
+| [max](#api-20) | `T max<T>(T... values)` |
+| [clamp](#api-21) | `int64 clamp(int64 value, int64 low, int64 high)` |
+| [clamp](#api-22) | `float64 clamp(float64 value, float64 low, float64 high)` |
 
 <a id="api-0"></a>
 
@@ -187,7 +184,7 @@ float64 sin(float64 value);
 std::math::sin(value);
 ```
 
-**源码**：[source/std/math.mgl:7](../../source/std/math.mgl#L7)。
+**源码**：[source/std/math.mgl:18](../../source/std/math.mgl#L18)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -225,7 +222,7 @@ float64 cos(float64 value);
 std::math::cos(value);
 ```
 
-**源码**：[source/std/math.mgl:8](../../source/std/math.mgl#L8)。
+**源码**：[source/std/math.mgl:19](../../source/std/math.mgl#L19)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -263,7 +260,7 @@ float64 tan(float64 value);
 std::math::tan(value);
 ```
 
-**源码**：[source/std/math.mgl:9](../../source/std/math.mgl#L9)。
+**源码**：[source/std/math.mgl:20](../../source/std/math.mgl#L20)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -301,7 +298,7 @@ float64 asin(float64 value);
 std::math::asin(value);
 ```
 
-**源码**：[source/std/math.mgl:10](../../source/std/math.mgl#L10)。
+**源码**：[source/std/math.mgl:21](../../source/std/math.mgl#L21)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -339,7 +336,7 @@ float64 acos(float64 value);
 std::math::acos(value);
 ```
 
-**源码**：[source/std/math.mgl:11](../../source/std/math.mgl#L11)。
+**源码**：[source/std/math.mgl:22](../../source/std/math.mgl#L22)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -377,7 +374,7 @@ float64 atan(float64 value);
 std::math::atan(value);
 ```
 
-**源码**：[source/std/math.mgl:12](../../source/std/math.mgl#L12)。
+**源码**：[source/std/math.mgl:23](../../source/std/math.mgl#L23)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -415,7 +412,7 @@ float64 exp(float64 value);
 std::math::exp(value);
 ```
 
-**源码**：[source/std/math.mgl:13](../../source/std/math.mgl#L13)。
+**源码**：[source/std/math.mgl:24](../../source/std/math.mgl#L24)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -453,7 +450,7 @@ float64 ln(float64 value);
 std::math::ln(value);
 ```
 
-**源码**：[source/std/math.mgl:14](../../source/std/math.mgl#L14)。
+**源码**：[source/std/math.mgl:25](../../source/std/math.mgl#L25)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -491,7 +488,7 @@ float64 log10(float64 value);
 std::math::log10(value);
 ```
 
-**源码**：[source/std/math.mgl:15](../../source/std/math.mgl#L15)。
+**源码**：[source/std/math.mgl:26](../../source/std/math.mgl#L26)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -530,7 +527,7 @@ float64 pow(float64 value, float64 exponent);
 std::math::pow(value, exponent);
 ```
 
-**源码**：[source/std/math.mgl:16](../../source/std/math.mgl#L16)。
+**源码**：[source/std/math.mgl:27](../../source/std/math.mgl#L27)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
@@ -568,51 +565,13 @@ float64 sqrt(float64 value);
 std::math::sqrt(value);
 ```
 
-**源码**：[source/std/math.mgl:17](../../source/std/math.mgl#L17)。
+**源码**：[source/std/math.mgl:28](../../source/std/math.mgl#L28)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
 <a id="api-11"></a>
 
-### abs（12）
-
-**声明**
-
-```magel
-float64 abs(float64 value);
-```
-
-**行为**
-
-返回绝对值。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `value` | `float64 value` | 输入值或写入的新值 | 无 |
-
-**返回值**
-
-`float64`。返回绝对值。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```magel
-std::math::abs(value);
-```
-
-**源码**：[source/std/math.mgl:20](../../source/std/math.mgl#L20)。
-
-**完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
-
-<a id="api-12"></a>
-
-### floor（13）
+### floor（12）
 
 **声明**
 
@@ -644,13 +603,13 @@ float64 floor(float64 value);
 std::math::floor(value);
 ```
 
-**源码**：[source/std/math.mgl:21](../../source/std/math.mgl#L21)。
+**源码**：[source/std/math.mgl:29](../../source/std/math.mgl#L29)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-13"></a>
+<a id="api-12"></a>
 
-### ceil（14）
+### ceil（13）
 
 **声明**
 
@@ -682,13 +641,13 @@ float64 ceil(float64 value);
 std::math::ceil(value);
 ```
 
-**源码**：[source/std/math.mgl:22](../../source/std/math.mgl#L22)。
+**源码**：[source/std/math.mgl:30](../../source/std/math.mgl#L30)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-14"></a>
+<a id="api-13"></a>
 
-### round（15）
+### round（14）
 
 **声明**
 
@@ -720,13 +679,13 @@ float64 round(float64 value);
 std::math::round(value);
 ```
 
-**源码**：[source/std/math.mgl:23](../../source/std/math.mgl#L23)。
+**源码**：[source/std/math.mgl:31](../../source/std/math.mgl#L31)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-15"></a>
+<a id="api-14"></a>
 
-### trunc（16）
+### trunc（15）
 
 **声明**
 
@@ -758,13 +717,13 @@ float64 trunc(float64 value);
 std::math::trunc(value);
 ```
 
-**源码**：[source/std/math.mgl:24](../../source/std/math.mgl#L24)。
+**源码**：[source/std/math.mgl:32](../../source/std/math.mgl#L32)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-16"></a>
+<a id="api-15"></a>
 
-### fmod（17）
+### fmod（16）
 
 **声明**
 
@@ -797,13 +756,13 @@ float64 fmod(float64 value, float64 divisor);
 std::math::fmod(value, divisor);
 ```
 
-**源码**：[source/std/math.mgl:25](../../source/std/math.mgl#L25)。
+**源码**：[source/std/math.mgl:33](../../source/std/math.mgl#L33)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-17"></a>
+<a id="api-16"></a>
 
-### isNaN（18）
+### isNaN（17）
 
 **声明**
 
@@ -835,13 +794,13 @@ bool isNaN(float64 value);
 std::math::isNaN(value);
 ```
 
-**源码**：[source/std/math.mgl:26](../../source/std/math.mgl#L26)。
+**源码**：[source/std/math.mgl:34](../../source/std/math.mgl#L34)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-18"></a>
+<a id="api-17"></a>
 
-### isInf（19）
+### isInf（18）
 
 **声明**
 
@@ -873,33 +832,75 @@ bool isInf(float64 value);
 std::math::isInf(value);
 ```
 
-**源码**：[source/std/math.mgl:27](../../source/std/math.mgl#L27)。
+**源码**：[source/std/math.mgl:35](../../source/std/math.mgl#L35)。
+
+**完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
+
+<a id="api-18"></a>
+
+### abs（19）
+
+**声明**
+
+```magel
+T abs<T>(T value);
+```
+
+**行为**
+
+返回绝对值；泛型入口，整数最小值取负按位宽回绕，NaN 与负数零原样返回。
+
+返回 `value` 的绝对值；整数最小值取负回绕后仍是自身，NaN 与负数零原样返回。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `value` | `T value` | 输入值或写入的新值 | 无 |
+
+**返回值**
+
+`T`。返回绝对值；泛型入口，整数最小值取负按位宽回绕，NaN 与负数零原样返回。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```magel
+std::math::abs<T>(value);
+```
+
+**源码**：[source/std/math.mgl:38](../../source/std/math.mgl#L38)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
 <a id="api-19"></a>
 
-### abs（20）
+### min（20）
 
 **声明**
 
 ```magel
-int64 abs(int64 value);
+T min<T>(T... values);
 ```
 
 **行为**
 
-返回绝对值。
+返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。
+
+任意数量实参中的最小值；单个实参给自身，相等时给后一个（与逐对比较的顺序一致）。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
+| `values` | `T... values` | 参与操作的元素序列 | 无 |
 
 **返回值**
 
-`int64`。返回绝对值。
+`T`。返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。
 
 **错误与边界**
 
@@ -908,37 +909,38 @@ int64 abs(int64 value);
 **调用形式**
 
 ```magel
-std::math::abs(value);
+std::math::min<T>(values);
 ```
 
-**源码**：[source/std/math.mgl:31](../../source/std/math.mgl#L31)。
+**源码**：[source/std/math.mgl:45](../../source/std/math.mgl#L45)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
 <a id="api-20"></a>
 
-### min（21）
+### max（21）
 
 **声明**
 
 ```magel
-int64 min(int64 left, int64 right);
+T max<T>(T... values);
 ```
 
 **行为**
 
-返回较小值。
+返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。
+
+任意数量实参中的最大值；单个实参给自身，相等时给后一个（与逐对比较的顺序一致）。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `int64 left` | 左操作数或区间左端 | 无 |
-| `right` | `int64 right` | 右操作数或区间右端 | 无 |
+| `values` | `T... values` | 参与操作的元素序列 | 无 |
 
 **返回值**
 
-`int64`。返回较小值。
+`T`。返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。
 
 **错误与边界**
 
@@ -947,55 +949,16 @@ int64 min(int64 left, int64 right);
 **调用形式**
 
 ```magel
-std::math::min(left, right);
+std::math::max<T>(values);
 ```
 
-**源码**：[source/std/math.mgl:34](../../source/std/math.mgl#L34)。
+**源码**：[source/std/math.mgl:57](../../source/std/math.mgl#L57)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
 <a id="api-21"></a>
 
-### max（22）
-
-**声明**
-
-```magel
-int64 max(int64 left, int64 right);
-```
-
-**行为**
-
-返回较大值。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `left` | `int64 left` | 左操作数或区间左端 | 无 |
-| `right` | `int64 right` | 右操作数或区间右端 | 无 |
-
-**返回值**
-
-`int64`。返回较大值。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```magel
-std::math::max(left, right);
-```
-
-**源码**：[source/std/math.mgl:37](../../source/std/math.mgl#L37)。
-
-**完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
-
-<a id="api-22"></a>
-
-### clamp（23）
+### clamp（22）
 
 **声明**
 
@@ -1005,7 +968,9 @@ int64 clamp(int64 value, int64 low, int64 high);
 
 **行为**
 
-将 value 限制在闭区间 [low,high]。
+将 value 限制在闭区间 [low,high]；low>high 时报运行错误。
+
+把 `value` 夹进 `[low, high]`；`low > high` 直接停机（多半是写反了）。
 
 **参数**
 
@@ -1017,11 +982,12 @@ int64 clamp(int64 value, int64 low, int64 high);
 
 **返回值**
 
-`int64`。将 value 限制在闭区间 [low,high]。
+`int64`。将 value 限制在闭区间 [low,high]；low>high 时报运行错误。
 
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+实现包含 panic 分支；调用前应处理空值或失败状态。
 
 **调用形式**
 
@@ -1029,91 +995,13 @@ int64 clamp(int64 value, int64 low, int64 high);
 std::math::clamp(value, low, high);
 ```
 
-**源码**：[source/std/math.mgl:41](../../source/std/math.mgl#L41)。
+**源码**：[source/std/math.mgl:69](../../source/std/math.mgl#L69)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
 
-<a id="api-23"></a>
+<a id="api-22"></a>
 
-### min（24）
-
-**声明**
-
-```magel
-float64 min(float64 left, float64 right);
-```
-
-**行为**
-
-返回较小值。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `left` | `float64 left` | 左操作数或区间左端 | 无 |
-| `right` | `float64 right` | 右操作数或区间右端 | 无 |
-
-**返回值**
-
-`float64`。返回较小值。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```magel
-std::math::min(left, right);
-```
-
-**源码**：[source/std/math.mgl:45](../../source/std/math.mgl#L45)。
-
-**完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
-
-<a id="api-24"></a>
-
-### max（25）
-
-**声明**
-
-```magel
-float64 max(float64 left, float64 right);
-```
-
-**行为**
-
-返回较大值。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `left` | `float64 left` | 左操作数或区间左端 | 无 |
-| `right` | `float64 right` | 右操作数或区间右端 | 无 |
-
-**返回值**
-
-`float64`。返回较大值。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```magel
-std::math::max(left, right);
-```
-
-**源码**：[source/std/math.mgl:48](../../source/std/math.mgl#L48)。
-
-**完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。
-
-<a id="api-25"></a>
-
-### clamp（26）
+### clamp（23）
 
 **声明**
 
@@ -1123,7 +1011,9 @@ float64 clamp(float64 value, float64 low, float64 high);
 
 **行为**
 
-将 value 限制在闭区间 [low,high]。
+将 value 限制在闭区间 [low,high]；low>high 时报运行错误。
+
+把 `value` 夹进 `[low, high]`；`low > high` 直接停机（多半是写反了）。
 
 **参数**
 
@@ -1135,11 +1025,12 @@ float64 clamp(float64 value, float64 low, float64 high);
 
 **返回值**
 
-`float64`。将 value 限制在闭区间 [low,high]。
+`float64`。将 value 限制在闭区间 [low,high]；low>high 时报运行错误。
 
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+实现包含 panic 分支；调用前应处理空值或失败状态。
 
 **调用形式**
 
@@ -1147,6 +1038,6 @@ float64 clamp(float64 value, float64 low, float64 high);
 std::math::clamp(value, low, high);
 ```
 
-**源码**：[source/std/math.mgl:51](../../source/std/math.mgl#L51)。
+**源码**：[source/std/math.mgl:81](../../source/std/math.mgl#L81)。
 
 **完整示例**：[example/samples/std_math_clock_random.mgl](../../example/samples/std_math_clock_random.mgl)。

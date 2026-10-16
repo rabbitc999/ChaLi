@@ -144,7 +144,7 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-296"></a>`struct PathString` | 路径文本组合与拆分的静态入口。 |
+| 模块 | <a id="symbol-295"></a>`struct PathString` | 路径文本组合与拆分的静态入口。 |
 
 ## 函数索引
 
@@ -190,7 +190,7 @@ static std::lang::String join(std::lang::String left, std::lang::String right);
 std::path::PathString::join(left, right);
 ```
 
-**源码**：[source/std/path.mgl:10](../../source/std/path.mgl#L10)。
+**源码**：[source/std/path.mgl:131](../../source/std/path.mgl#L131)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。
 
@@ -228,7 +228,7 @@ static std::lang::String fileName(std::lang::String path);
 std::path::PathString::fileName(path);
 ```
 
-**源码**：[source/std/path.mgl:11](../../source/std/path.mgl#L11)。
+**源码**：[source/std/path.mgl:132](../../source/std/path.mgl#L132)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。
 
@@ -266,7 +266,7 @@ static std::lang::String extension(std::lang::String path);
 std::path::PathString::extension(path);
 ```
 
-**源码**：[source/std/path.mgl:12](../../source/std/path.mgl#L12)。
+**源码**：[source/std/path.mgl:133](../../source/std/path.mgl#L133)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。
 
@@ -304,6 +304,6 @@ static std::lang::String normalize(std::lang::String path);
 std::path::PathString::normalize(path);
 ```
 
-**源码**：[source/std/path.mgl:13](../../source/std/path.mgl#L13)。
+**源码**：[source/std/path.mgl:134](../../source/std/path.mgl#L134)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。

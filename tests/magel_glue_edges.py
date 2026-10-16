@@ -38,7 +38,9 @@ def main():
         result = run(executable)
         assert result.stdout == expected, (target, result.stdout)
         assert "程序结束" not in result.stderr, result.stderr
-    for macro in ("NO_MAGEL_STD_MATH", "NO_MAGEL_STD_TEXT"):
+    # 模块裁剪：只对仍有宿主胶水的模块有意义。std::text / std::path / std::numerics /
+    # std::numtheory 已整体迁到 .mgl（宿主绑定删净），没有可裁剪的胶水，故不再列入。
+    for macro in ("NO_MAGEL_STD_MATH",):
         executable = WORK / (macro + EXE)
         run("g++", "-std=c++17", "-O0", "-D" + macro,
             WORK / "aot" / ("cpp-aot" + EXE + ".aot.cpp"), "-o", executable)

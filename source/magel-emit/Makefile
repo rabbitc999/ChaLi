@@ -36,7 +36,7 @@ VM_DIR := ../../library/stackvm
 BIGINT_DIR := $(ROOT_DIR)/library/bignum
 
 $(TARGET): ../magel_i18n.hpp ../../library/console/utf8.hpp main.cpp module_build.hpp aot.cpp aot.hpp ../magel_stdlib_embedded.cpp ../allocator/magel_allocator.hpp ../allocator/magel_pool.c ../allocator/magel_pool.h \
-        ../magel_glue.hpp $(wildcard ../../library/json/*.hpp ../../library/json/*.cpp ../../library/toml/*.hpp ../../library/toml/*.cpp) ../glue/structured_data.hpp ../glue/std_json.hpp ../glue/std_toml.hpp ../glue/std_math.hpp ../glue/std_random.hpp ../glue/std_regex.hpp ../glue/lang_numeric.hpp ../glue/std_binary.hpp ../glue/std_text.hpp ../glue/std_path.hpp ../glue/std_parse.hpp ../glue/std_process.hpp ../glue/std_glue.cpp ../glue/cpp_glue.cpp ../runtime_allocator.hpp \
+        ../magel_glue.hpp $(wildcard ../../library/json/*.hpp ../../library/json/*.cpp ../../library/toml/*.hpp ../../library/toml/*.cpp) ../glue/structured_data.hpp ../glue/std_json.hpp ../glue/std_toml.hpp ../glue/std_math.hpp ../glue/std_random.hpp ../glue/std_regex.hpp ../glue/lang_numeric.hpp ../glue/std_binary.hpp ../glue/std_parse.hpp ../glue/std_process.hpp ../glue/std_glue.cpp ../glue/cpp_glue.cpp ../runtime_allocator.hpp \
         $(VM_DIR)/stackvm.cpp $(wildcard $(VM_DIR)/parts/*) $(VM_DIR)/register_core.hpp $(VM_DIR)/execution_plan.hpp $(VM_DIR)/allocation_index.hpp $(VM_DIR)/data_capacity_index.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp \
 		$(VM_DIR)/stackvm_glue.cpp $(VM_DIR)/stackvm_glue.hpp \
 		$(BIGINT_DIR)/bigint.cpp $(BIGINT_DIR)/bigint.hpp \

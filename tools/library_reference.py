@@ -171,7 +171,9 @@ def render(data):
            '## 模块目录', '', '| 模块 | 内容 | 函数重载数 |', '| --- | --- | ---: |']
     for module, records in data.items():
         title, contract=MODULES[module]
-        functions=[r for r in records if r['kind']=='function']
+        # `__` 前缀是编译器/宿主协议，不是应用 API：既不进参考页，也不进编辑器索引，
+        # 否则 LSP 会把 `__Range` 这类内部类型当成可补全的公开符号。
+        functions=[r for r in records if r['kind']=='function' and not r['owner'].startswith('__')]
         index.append(f'| [`{module}`]({filename(module)}) | {title} | {len(functions)} |')
         lines=[f'# {module} — {title}', '', '[返回库目录](README.md) · [全部符号](symbols.md)', '', '## 引入', '', '```magel', '// std::lang 自动加载' if module=='std::lang' else '// 编译器内建，无需 import std' if module=='std' else 'import '+module+';', '```', '', '## 公共约定与错误边界', '', contract, '']
         if module=='std::lang': lines=['std::lang::sweep() 不是垃圾回收器。它不做引用追踪、不判断对象存活、不自动调用。它只做一件事：清理已释放块的墓碑记录。', '']+lines
@@ -204,7 +206,7 @@ def render(data):
             lines+=['| `list.iter()` / `list.iterMut()` | `listIter(&list)` / `listIterMut(&list)` |','| `list.intoIter()` | `listIntoIter(&list)`，移动元素，源容器清空 |','| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)` |','| `text.chars()` / `range.intoIter()` | `chars(text)` / `fromRange(range)` |','']
         else:
             lines += ['聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。', '']
-        types=[r for r in records if r['kind']!='function']
+        types=[r for r in records if r['kind']!='function' and not r['name'].startswith('__') and not r['owner'].startswith('__')]
         if types:
             enum_types={r['name']:r for r in types if r['kind']=='enum'}
             lines+=['## 类型、枚举、常量与字段', '', '公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。', '', '| 所属类型 | 声明 | 说明 |', '| --- | --- | --- |']
@@ -310,8 +312,13 @@ def render(data):
         fallback=ROOT/(module.replace('::','/')+'.mgl')
         source=candidates[0] if candidates else fallback
         dependencies[module]=re.findall(r'\bimport\s+([\w:]+)\s*;',without_comments(source.read_text(encoding='utf-8'))) if source.exists() else []
-    output['../../tools/magel_stdlib_api.json']=json.dumps(dict(schemaVersion=1,modules=dependencies,types=sorted({r['name'] for records in data.values() for r in records if r['kind'] in ('struct','enum','interface')}),functions=api_index,symbols=symbol_index,
+    output['../../tools/magel_stdlib_api.json']=json.dumps(dict(schemaVersion=1,modules=dependencies,types=sorted({r['name'] for records in data.values() for r in records if r['kind'] in ('struct','enum','interface') and not r['name'].startswith('__')}),functions=api_index,symbols=symbol_index,
         reference=dict(modules=module_info,examples=examples,sourceLanguage='zh')),ensure_ascii=False,separators=(',', ':'))+'\n'
+    # 编辑器把本清单当作公开 API 直接补全；`__` 前缀是内部协议，漏进来就等于把它公开了。
+    leaked=sorted({row['name'] for row in api_index if row['name'].startswith('__') or row['owner'].startswith('__')} |
+                  {row['name'] for row in symbol_index if row['name'].startswith('__') or row['owner'].startswith('__')} |
+                  {name for name in json.loads(output['../../tools/magel_stdlib_api.json'])['types'] if name.startswith('__')})
+    if leaked: raise ValueError('编辑器索引泄漏了内部符号：'+', '.join(leaked))
     return {name: text.rstrip()+'\n' if name.endswith('.md') else text for name,text in output.items()}
 
 
@@ -334,4 +341,4 @@ if __name__ == '__main__':
             if not path.exists() or path.read_text(encoding='utf-8')!=text: stale.append(name)
         else: path.write_text(text,encoding='utf-8',newline='\n')
     if stale: sys.exit('参考文档需要更新：'+', '.join(stale))
-    print(('核对通过' if args.check else '已生成')+f'：{len(data)} 个模块，'+str(sum(r['kind']=='function' for records in data.values() for r in records))+' 个函数重载。')
+    print(('核对通过' if args.check else '已生成')+f'：{len(data)} 个模块，'+str(sum(r['kind']=='function' and not r['owner'].startswith('__') for records in data.values() for r in records))+' 个函数重载。')

@@ -493,8 +493,8 @@ int runCli(int argc, char **argv)
         }
     }
     for (const char *name : {"std_math.hpp", "std_random.hpp", "std_regex.hpp",
-                             "std_numtheory.hpp", "std_numerics.hpp", "std_signal.hpp",
-                             "structured_data.hpp", "std_json.hpp", "std_toml.hpp", "lang_numeric.hpp", "std_binary.hpp", "std_text.hpp", "std_linalg.hpp", "std_path.hpp", "std_parse.hpp",
+                             "std_signal.hpp",
+                             "structured_data.hpp", "std_json.hpp", "std_toml.hpp", "lang_numeric.hpp", "std_binary.hpp", "std_linalg.hpp", "std_parse.hpp",
                              "std_process.hpp", "std_sql.hpp", "std_net.hpp", "std_filesystem.hpp", "std_registry.hpp"})
         ok = copy(root / "magel/source/glue" / name, Memory::String("glue/") + name) && ok;
     Memory::String langSource;

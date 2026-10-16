@@ -44,34 +44,14 @@
 #include "std_regex.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_NUMTHEORY
-#ifndef PARSE_ENGINE_STD_NUMTHEORY_HPP
-#include "std_numtheory.hpp"
-#endif
-#endif
-#ifndef GLUE_NO_STD_NUMERICS
-#ifndef PARSE_ENGINE_STD_NUMERICS_HPP
-#include "std_numerics.hpp"
-#endif
-#endif
 #ifndef GLUE_NO_STD_SIGNAL
 #ifndef PARSE_ENGINE_STD_SIGNAL_HPP
 #include "std_signal.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_TEXT
-#ifndef PARSE_ENGINE_STD_TEXT_HPP
-#include "std_text.hpp"
-#endif
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #ifndef PARSE_ENGINE_STD_LINALG_HPP
 #include "std_linalg.hpp"
-#endif
-#endif
-#ifndef GLUE_NO_STD_PATH
-#ifndef PARSE_ENGINE_STD_PATH_HPP
-#include "std_path.hpp"
 #endif
 #endif
 #ifndef GLUE_NO_STD_PARSE
@@ -124,23 +104,11 @@ bool bindMagelStandardGlue(magel_glue::Registry &registry, Memory::String *error
 #ifndef GLUE_NO_STD_REGEX
     ok = std_regex::bind(registry, error) && ok;
 #endif
-#ifndef GLUE_NO_STD_NUMTHEORY
-    ok = std_numtheory_glue::bind(registry, error) && ok;
-#endif
-#ifndef GLUE_NO_STD_NUMERICS
-    ok = std_numerics_glue::bind(registry, error) && ok;
-#endif
 #ifndef GLUE_NO_STD_SIGNAL
     ok = std_signal_glue::bind(registry, error) && ok;
 #endif
-#ifndef GLUE_NO_STD_TEXT
-    ok = std_text_glue::bind(registry, error) && ok;
-#endif
 #ifndef GLUE_NO_STD_LINALG
     ok = std_linalg_glue::bind(registry, error) && ok;
-#endif
-#ifndef GLUE_NO_STD_PATH
-    ok = std_path_glue::bind(registry, error) && ok;
 #endif
 #ifndef GLUE_NO_STD_PARSE
     ok = std_parse_glue::bind(registry, error) && ok;

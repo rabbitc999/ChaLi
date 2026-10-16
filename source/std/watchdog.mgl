@@ -107,8 +107,8 @@ Result<bool, WatchdogError> requestRestart() {
  * 模块级变量里。这里只比一个"见到第几口"的水位：喂过了就重新计时，没喂就交给 ②。
  * 中断在**指令边界**交付，所以换定时器换到一半时可能正好进来一次：`__wdTimeoutOn`
  * 在换的过程中是 false，那种陈旧触发直接丢掉。
- */
-void __wdOnTick(int64 source) {
+ * 只给本模块的定时器当回调，加 `inline` 让语言层面就挡住跨模块引用。 */
+inline void __wdOnTick(int64 source) {
     if (!__wdTimeoutOn) { return; }
     bool fed = __wdKickSeq != __wdSeenSeq;
     __wdSeenSeq = __wdKickSeq;

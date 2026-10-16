@@ -9,6 +9,29 @@
 借用、移动及接口检查覆盖其实现，同时保留平台能力和高性能计算内核的宿主实现。
 优先保持现有公开 API、数值语义和运行时诊断；不预设迁移一定提高性能或减少体积。
 
+### 进度（截至 2026-10-16）
+
+已完成的迁移，验证口径只有正确性与边界；性能/体积对照尚未做，见「4. 验证与交付约束」。
+
+- **A 档 · 纯算术**：`std::math` 的 `abs`/`min`/`max`/`clamp` 与整个 `std::numtheory`
+  改用 `.mgl` 表达。`abs`/`min`/`max` 收敛为泛型入口，`min`/`max` 接受任意数量实参；
+  `clamp` 有两个参数错误分支的诊断，保留 `int64`/`float64` 两份重载。`std::numtheory`
+  删除了 `NumberTheory` 静态包装，公开面改为模块级泛型自由函数
+  `gcd`/`lcm`/`addMod`/`mulMod`/`powMod`/`modInverse`/`isPrime`，`gcd`/`lcm` 变参。
+- **B 档 · 组合与转换**：`std::numerics`、`std::text`、`std::path` 的实现迁入 `.mgl`，
+  对应宿主胶水头与 `NO_MAGEL_STD_NUMERICS` / `_TEXT` / `_PATH` 模块裁剪开关一并删除；
+  公开面 `Numerics::*`、`Text::*`、`PathString::*` 不变，调用点无需改动。
+- 只给胶水用的宿主私有名（`numtheoryXxx`、`numericsXxx`、`__strXxx`、`__pathXxx`
+  以及已无引用的 `std::math::abs` 绑定）随迁移删除；`.mgl` 内的私有辅助统一用
+  `inline`（模块私有），公开面继续由 `struct` 静态方法或模块级自由函数承担。
+- 迁移期间用差分探针逐值比对新旧实现：数学与数论的整数网格、字符串（含 UTF-8）
+  与路径的全部公开入口、数值分析各算法逐元素位相等；停机文案与原宿主
+  `ctx.fail` 原文一致，`panic：` 前缀由运行时统一添加。
+- **刻意保留的宿主实现**：`sin` 等基础数学调用与时钟、`std::random`、DFT/FFT、
+  正则、压缩、JSON/TOML 解析内核，以及全部平台操作（文件、网络、进程、外设）。
+- 尚未做：VM/AOT 的耗时、分配与产物体积对照；`std::signal` 等模块的输入输出转换
+  评估；涉及逐元素 Magel 闭调的容器算法试迁移。
+
 ### 1. 盘点实现与建立对照
 
 - 逐函数核对标准库 `.mgl` 与 `source/glue/` 的绑定关系，区分纯逻辑、容器组合、

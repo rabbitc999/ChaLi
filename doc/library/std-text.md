@@ -66,7 +66,7 @@ int64 main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-389"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
+| 模块 | <a id="symbol-388"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
 
 ## 函数索引
 
@@ -128,7 +128,7 @@ static int64 find(std::lang::String text, std::lang::String needle);
 std::text::Text::find(text, needle);
 ```
 
-**源码**：[source/std/text.mgl:29](../../source/std/text.mgl#L29)。
+**源码**：[source/std/text.mgl:238](../../source/std/text.mgl#L238)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -146,7 +146,7 @@ static int64 rfind(std::lang::String text, std::lang::String needle);
 
 返回子串最后出现的字节下标；找不到为 -1。
 
-子串最后一次出现的位置；找不到 -1。
+子串最后一次出现的位置；找不到 -1（空子串给串长）。
 
 **参数**
 
@@ -169,7 +169,7 @@ static int64 rfind(std::lang::String text, std::lang::String needle);
 std::text::Text::rfind(text, needle);
 ```
 
-**源码**：[source/std/text.mgl:31](../../source/std/text.mgl#L31)。
+**源码**：[source/std/text.mgl:242](../../source/std/text.mgl#L242)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -210,7 +210,7 @@ static bool contains(std::lang::String text, std::lang::String needle);
 std::text::Text::contains(text, needle);
 ```
 
-**源码**：[source/std/text.mgl:33](../../source/std/text.mgl#L33)。
+**源码**：[source/std/text.mgl:246](../../source/std/text.mgl#L246)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -249,7 +249,7 @@ static bool startsWith(std::lang::String text, std::lang::String prefix);
 std::text::Text::startsWith(text, prefix);
 ```
 
-**源码**：[source/std/text.mgl:34](../../source/std/text.mgl#L34)。
+**源码**：[source/std/text.mgl:249](../../source/std/text.mgl#L249)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -288,7 +288,7 @@ static bool endsWith(std::lang::String text, std::lang::String suffix);
 std::text::Text::endsWith(text, suffix);
 ```
 
-**源码**：[source/std/text.mgl:35](../../source/std/text.mgl#L35)。
+**源码**：[source/std/text.mgl:255](../../source/std/text.mgl#L255)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -329,7 +329,7 @@ static int64 compare(std::lang::String left, std::lang::String right);
 std::text::Text::compare(left, right);
 ```
 
-**源码**：[source/std/text.mgl:37](../../source/std/text.mgl#L37)。
+**源码**：[source/std/text.mgl:262](../../source/std/text.mgl#L262)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -369,7 +369,7 @@ ASCII 大小写（VM 里不认区域设置，结果可复现）。
 std::text::Text::toUpper(text);
 ```
 
-**源码**：[source/std/text.mgl:39](../../source/std/text.mgl#L39)。
+**源码**：[source/std/text.mgl:268](../../source/std/text.mgl#L268)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -407,7 +407,7 @@ static std::lang::String toLower(std::lang::String text);
 std::text::Text::toLower(text);
 ```
 
-**源码**：[source/std/text.mgl:40](../../source/std/text.mgl#L40)。
+**源码**：[source/std/text.mgl:269](../../source/std/text.mgl#L269)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -447,7 +447,7 @@ static std::lang::String trim(std::lang::String text);
 std::text::Text::trim(text);
 ```
 
-**源码**：[source/std/text.mgl:42](../../source/std/text.mgl#L42)。
+**源码**：[source/std/text.mgl:271](../../source/std/text.mgl#L271)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -485,7 +485,7 @@ static std::lang::String ltrim(std::lang::String text);
 std::text::Text::ltrim(text);
 ```
 
-**源码**：[source/std/text.mgl:43](../../source/std/text.mgl#L43)。
+**源码**：[source/std/text.mgl:272](../../source/std/text.mgl#L272)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -523,7 +523,7 @@ static std::lang::String rtrim(std::lang::String text);
 std::text::Text::rtrim(text);
 ```
 
-**源码**：[source/std/text.mgl:44](../../source/std/text.mgl#L44)。
+**源码**：[source/std/text.mgl:273](../../source/std/text.mgl#L273)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -565,7 +565,7 @@ static std::lang::String replace(std::lang::String text, std::lang::String from,
 std::text::Text::replace(text, from, to);
 ```
 
-**源码**：[source/std/text.mgl:46](../../source/std/text.mgl#L46)。
+**源码**：[source/std/text.mgl:275](../../source/std/text.mgl#L275)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -606,7 +606,7 @@ static std::lang::String repeat(std::lang::String text, int64 count);
 std::text::Text::repeat(text, count);
 ```
 
-**源码**：[source/std/text.mgl:50](../../source/std/text.mgl#L50)。
+**源码**：[source/std/text.mgl:279](../../source/std/text.mgl#L279)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -648,7 +648,7 @@ static std::lang::String padStart(std::lang::String text, int64 width, char fill
 std::text::Text::padStart(text, width, fill);
 ```
 
-**源码**：[source/std/text.mgl:52](../../source/std/text.mgl#L52)。
+**源码**：[source/std/text.mgl:283](../../source/std/text.mgl#L283)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -688,7 +688,7 @@ static std::lang::String padEnd(std::lang::String text, int64 width, char fill);
 std::text::Text::padEnd(text, width, fill);
 ```
 
-**源码**：[source/std/text.mgl:55](../../source/std/text.mgl#L55)。
+**源码**：[source/std/text.mgl:286](../../source/std/text.mgl#L286)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -729,7 +729,7 @@ static char charAt(std::lang::String text, int64 index);
 std::text::Text::charAt(text, index);
 ```
 
-**源码**：[source/std/text.mgl:59](../../source/std/text.mgl#L59)。
+**源码**：[source/std/text.mgl:290](../../source/std/text.mgl#L290)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -770,7 +770,7 @@ static std::lang::List<std::lang::String> split(std::lang::String text, std::lan
 std::text::Text::split(text, separator);
 ```
 
-**源码**：[source/std/text.mgl:62](../../source/std/text.mgl#L62)。
+**源码**：[source/std/text.mgl:293](../../source/std/text.mgl#L293)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。
 
@@ -811,6 +811,6 @@ static std::lang::String join(std::lang::List<std::lang::String> parts, std::lan
 std::text::Text::join(parts, separator);
 ```
 
-**源码**：[source/std/text.mgl:67](../../source/std/text.mgl#L67)。
+**源码**：[source/std/text.mgl:298](../../source/std/text.mgl#L298)。
 
 **完整示例**：[example/samples/std_glue_edges.mgl](../../example/samples/std_glue_edges.mgl)。

@@ -4533,7 +4533,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/event.mgl",
-    "line": 178,
+    "line": 180,
     "page": "std-event.md",
     "anchor": "api-17"
   },
@@ -4579,7 +4579,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/event.mgl",
-    "line": 188,
+    "line": 190,
     "page": "std-event.md",
     "anchor": "api-18"
   },
@@ -4606,7 +4606,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/event.mgl",
-    "line": 195,
+    "line": 197,
     "page": "std-event.md",
     "anchor": "api-19"
   },
@@ -12009,38 +12009,6 @@
   },
   {
     "module": "std::lang",
-    "name": "__Range::iterator",
-    "owner": "__Range",
-    "signature": "Option<int64> iterator(int64 index)",
-    "documentation": "读取指定迭代位置；无元素时返回 None。\n\n**返回值**：Option<int64>。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "index",
-        "label": "int64 index",
-        "documentation": "从 0 开始的位置",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "Option<int64>",
-      "documentation": "读取指定迭代位置；无元素时返回 None。"
-    },
-    "errors": {
-      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "obj.iterator(index);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/magel_generic.hpp",
-    "line": 1674,
-    "page": "std-lang.md",
-    "anchor": "api-65"
-  },
-  {
-    "module": "std::lang",
     "name": "range",
     "owner": "",
     "signature": "__Range range(int64 start, int64 stop)",
@@ -12075,7 +12043,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1682,
     "page": "std-lang.md",
-    "anchor": "api-66"
+    "anchor": "api-65"
   },
   {
     "module": "std::lang",
@@ -12121,7 +12089,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1690,
     "page": "std-lang.md",
-    "anchor": "api-67"
+    "anchor": "api-66"
   },
   {
     "module": "std::lang",
@@ -12146,7 +12114,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1900,
     "page": "std-lang.md",
-    "anchor": "api-68"
+    "anchor": "api-67"
   },
   {
     "module": "std::lang",
@@ -12171,7 +12139,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1908,
     "page": "std-lang.md",
-    "anchor": "api-69"
+    "anchor": "api-68"
   },
   {
     "module": "std::lang",
@@ -12209,7 +12177,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1048,
     "page": "std-lang.md",
-    "anchor": "api-70"
+    "anchor": "api-69"
   },
   {
     "module": "std::lang",
@@ -12250,7 +12218,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1048,
     "page": "std-lang.md",
-    "anchor": "api-71"
+    "anchor": "api-70"
   },
   {
     "module": "std::lang",
@@ -12288,7 +12256,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1052,
     "page": "std-lang.md",
-    "anchor": "api-72"
+    "anchor": "api-71"
   },
   {
     "module": "std::lang",
@@ -12320,7 +12288,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1098,
     "page": "std-lang.md",
-    "anchor": "api-73"
+    "anchor": "api-72"
   },
   {
     "module": "std::lang",
@@ -12345,7 +12313,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1059,
     "page": "std-lang.md",
-    "anchor": "api-74"
+    "anchor": "api-73"
   },
   {
     "module": "std::lang",
@@ -12370,7 +12338,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1108,
     "page": "std-lang.md",
-    "anchor": "api-75"
+    "anchor": "api-74"
   },
   {
     "module": "std::lang",
@@ -12395,7 +12363,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-76"
+    "anchor": "api-75"
   },
   {
     "module": "std::lang",
@@ -12420,7 +12388,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-77"
+    "anchor": "api-76"
   },
   {
     "module": "std::lang",
@@ -12445,7 +12413,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-78"
+    "anchor": "api-77"
   },
   {
     "module": "std::lang",
@@ -12470,7 +12438,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-79"
+    "anchor": "api-78"
   },
   {
     "module": "std::lang",
@@ -12495,7 +12463,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-80"
+    "anchor": "api-79"
   },
   {
     "module": "std::lang",
@@ -12520,7 +12488,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-81"
+    "anchor": "api-80"
   },
   {
     "module": "std::lang",
@@ -12545,7 +12513,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-82"
+    "anchor": "api-81"
   },
   {
     "module": "std::lang",
@@ -12570,7 +12538,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1113,
     "page": "std-lang.md",
-    "anchor": "api-83"
+    "anchor": "api-82"
   },
   {
     "module": "std::lang",
@@ -12602,7 +12570,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1132,
     "page": "std-lang.md",
-    "anchor": "api-84"
+    "anchor": "api-83"
   },
   {
     "module": "std::lang",
@@ -12636,7 +12604,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 629,
     "page": "std-lang.md",
-    "anchor": "api-85"
+    "anchor": "api-84"
   },
   {
     "module": "std::lang",
@@ -12668,7 +12636,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 558,
     "page": "std-lang.md",
-    "anchor": "api-86"
+    "anchor": "api-85"
   },
   {
     "module": "std::lang",
@@ -12700,7 +12668,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1630,
     "page": "std-lang.md",
-    "anchor": "api-87"
+    "anchor": "api-86"
   },
   {
     "module": "std::lang",
@@ -12732,7 +12700,7 @@
     "source": "source/magel_generic.hpp",
     "line": 1636,
     "page": "std-lang.md",
-    "anchor": "api-88"
+    "anchor": "api-87"
   },
   {
     "module": "std::lang",
@@ -12776,7 +12744,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1149,
     "page": "std-lang.md",
-    "anchor": "api-89"
+    "anchor": "api-88"
   },
   {
     "module": "std::lang",
@@ -12820,7 +12788,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1149,
     "page": "std-lang.md",
-    "anchor": "api-90"
+    "anchor": "api-89"
   },
   {
     "module": "std::lang",
@@ -12845,7 +12813,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 849,
     "page": "std-lang.md",
-    "anchor": "api-91"
+    "anchor": "api-90"
   },
   {
     "module": "std::lang",
@@ -12879,7 +12847,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 850,
     "page": "std-lang.md",
-    "anchor": "api-92"
+    "anchor": "api-91"
   },
   {
     "module": "std::lang",
@@ -12917,7 +12885,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 851,
     "page": "std-lang.md",
-    "anchor": "api-93"
+    "anchor": "api-92"
   },
   {
     "module": "std::lang",
@@ -12949,7 +12917,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 852,
     "page": "std-lang.md",
-    "anchor": "api-94"
+    "anchor": "api-93"
   },
   {
     "module": "std::lang",
@@ -12976,7 +12944,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 853,
     "page": "std-lang.md",
-    "anchor": "api-95"
+    "anchor": "api-94"
   },
   {
     "module": "std::lang",
@@ -13008,7 +12976,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 854,
     "page": "std-lang.md",
-    "anchor": "api-96"
+    "anchor": "api-95"
   },
   {
     "module": "std::lang",
@@ -13040,7 +13008,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 855,
     "page": "std-lang.md",
-    "anchor": "api-97"
+    "anchor": "api-96"
   },
   {
     "module": "std::lang",
@@ -13072,7 +13040,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 856,
     "page": "std-lang.md",
-    "anchor": "api-98"
+    "anchor": "api-97"
   },
   {
     "module": "std::lang",
@@ -13104,7 +13072,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 857,
     "page": "std-lang.md",
-    "anchor": "api-99"
+    "anchor": "api-98"
   },
   {
     "module": "std::lang",
@@ -13129,7 +13097,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 858,
     "page": "std-lang.md",
-    "anchor": "api-100"
+    "anchor": "api-99"
   },
   {
     "module": "std::lang",
@@ -13156,7 +13124,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 859,
     "page": "std-lang.md",
-    "anchor": "api-101"
+    "anchor": "api-100"
   },
   {
     "module": "std::lang",
@@ -13181,7 +13149,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 849,
     "page": "std-lang.md",
-    "anchor": "api-102"
+    "anchor": "api-101"
   },
   {
     "module": "std::lang",
@@ -13213,7 +13181,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 867,
     "page": "std-lang.md",
-    "anchor": "api-103"
+    "anchor": "api-102"
   },
   {
     "module": "std::lang",
@@ -13245,7 +13213,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 857,
     "page": "std-lang.md",
-    "anchor": "api-104"
+    "anchor": "api-103"
   },
   {
     "module": "std::lang",
@@ -13277,7 +13245,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 856,
     "page": "std-lang.md",
-    "anchor": "api-105"
+    "anchor": "api-104"
   },
   {
     "module": "std::lang",
@@ -13309,7 +13277,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 854,
     "page": "std-lang.md",
-    "anchor": "api-106"
+    "anchor": "api-105"
   },
   {
     "module": "std::lang",
@@ -13341,7 +13309,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 852,
     "page": "std-lang.md",
-    "anchor": "api-107"
+    "anchor": "api-106"
   },
   {
     "module": "std::lang",
@@ -13366,7 +13334,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 858,
     "page": "std-lang.md",
-    "anchor": "api-108"
+    "anchor": "api-107"
   },
   {
     "module": "std::lang",
@@ -13393,7 +13361,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 859,
     "page": "std-lang.md",
-    "anchor": "api-109"
+    "anchor": "api-108"
   },
   {
     "module": "std::lang",
@@ -13418,7 +13386,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 849,
     "page": "std-lang.md",
-    "anchor": "api-110"
+    "anchor": "api-109"
   },
   {
     "module": "std::lang",
@@ -13456,7 +13424,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 881,
     "page": "std-lang.md",
-    "anchor": "api-111"
+    "anchor": "api-110"
   },
   {
     "module": "std::lang",
@@ -13488,7 +13456,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 857,
     "page": "std-lang.md",
-    "anchor": "api-112"
+    "anchor": "api-111"
   },
   {
     "module": "std::lang",
@@ -13520,7 +13488,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 856,
     "page": "std-lang.md",
-    "anchor": "api-113"
+    "anchor": "api-112"
   },
   {
     "module": "std::lang",
@@ -13552,7 +13520,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 854,
     "page": "std-lang.md",
-    "anchor": "api-114"
+    "anchor": "api-113"
   },
   {
     "module": "std::lang",
@@ -13584,7 +13552,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 885,
     "page": "std-lang.md",
-    "anchor": "api-115"
+    "anchor": "api-114"
   },
   {
     "module": "std::lang",
@@ -13616,7 +13584,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 886,
     "page": "std-lang.md",
-    "anchor": "api-116"
+    "anchor": "api-115"
   },
   {
     "module": "std::lang",
@@ -13641,7 +13609,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 858,
     "page": "std-lang.md",
-    "anchor": "api-117"
+    "anchor": "api-116"
   },
   {
     "module": "std::lang",
@@ -13668,7 +13636,7 @@
     "source": "source/epilogue/aggregate_ownership.cpp",
     "line": 859,
     "page": "std-lang.md",
-    "anchor": "api-118"
+    "anchor": "api-117"
   },
   {
     "module": "std::lang",
@@ -13693,7 +13661,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 703,
     "page": "std-lang.md",
-    "anchor": "api-119"
+    "anchor": "api-118"
   },
   {
     "module": "std::lang",
@@ -13718,7 +13686,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 693,
     "page": "std-lang.md",
-    "anchor": "api-120"
+    "anchor": "api-119"
   },
   {
     "module": "std::lang",
@@ -13743,7 +13711,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 703,
     "page": "std-lang.md",
-    "anchor": "api-121"
+    "anchor": "api-120"
   },
   {
     "module": "std::lang",
@@ -13768,7 +13736,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 693,
     "page": "std-lang.md",
-    "anchor": "api-122"
+    "anchor": "api-121"
   },
   {
     "module": "std::lang",
@@ -13800,7 +13768,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 682,
     "page": "std-lang.md",
-    "anchor": "api-123"
+    "anchor": "api-122"
   },
   {
     "module": "std::lang",
@@ -13825,7 +13793,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 693,
     "page": "std-lang.md",
-    "anchor": "api-124"
+    "anchor": "api-123"
   },
   {
     "module": "std::lang",
@@ -13850,7 +13818,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 733,
     "page": "std-lang.md",
-    "anchor": "api-125"
+    "anchor": "api-124"
   },
   {
     "module": "std::lang",
@@ -13875,7 +13843,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 740,
     "page": "std-lang.md",
-    "anchor": "api-126"
+    "anchor": "api-125"
   },
   {
     "module": "std::lang",
@@ -13907,7 +13875,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 756,
     "page": "std-lang.md",
-    "anchor": "api-127"
+    "anchor": "api-126"
   },
   {
     "module": "std::lang",
@@ -13932,7 +13900,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-128"
+    "anchor": "api-127"
   },
   {
     "module": "std::lang",
@@ -13957,7 +13925,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-129"
+    "anchor": "api-128"
   },
   {
     "module": "std::lang",
@@ -13982,7 +13950,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-130"
+    "anchor": "api-129"
   },
   {
     "module": "std::lang",
@@ -14020,7 +13988,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-131"
+    "anchor": "api-130"
   },
   {
     "module": "std::lang",
@@ -14058,7 +14026,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-132"
+    "anchor": "api-131"
   },
   {
     "module": "std::lang",
@@ -14096,7 +14064,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-133"
+    "anchor": "api-132"
   },
   {
     "module": "std::lang",
@@ -14134,7 +14102,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-134"
+    "anchor": "api-133"
   },
   {
     "module": "std::lang",
@@ -14172,7 +14140,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-135"
+    "anchor": "api-134"
   },
   {
     "module": "std::lang",
@@ -14210,7 +14178,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-136"
+    "anchor": "api-135"
   },
   {
     "module": "std::lang",
@@ -14248,7 +14216,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 913,
     "page": "std-lang.md",
-    "anchor": "api-137"
+    "anchor": "api-136"
   },
   {
     "module": "std::lang",
@@ -14286,7 +14254,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-138"
+    "anchor": "api-137"
   },
   {
     "module": "std::lang",
@@ -14324,7 +14292,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-139"
+    "anchor": "api-138"
   },
   {
     "module": "std::lang",
@@ -14362,7 +14330,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-140"
+    "anchor": "api-139"
   },
   {
     "module": "std::lang",
@@ -14400,7 +14368,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-141"
+    "anchor": "api-140"
   },
   {
     "module": "std::lang",
@@ -14438,7 +14406,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1495,
     "page": "std-lang.md",
-    "anchor": "api-142"
+    "anchor": "api-141"
   },
   {
     "module": "std::lang",
@@ -14470,7 +14438,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-143"
+    "anchor": "api-142"
   },
   {
     "module": "std::lang",
@@ -14502,7 +14470,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-144"
+    "anchor": "api-143"
   },
   {
     "module": "std::lang",
@@ -14534,7 +14502,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-145"
+    "anchor": "api-144"
   },
   {
     "module": "std::lang",
@@ -14566,7 +14534,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-146"
+    "anchor": "api-145"
   },
   {
     "module": "std::lang",
@@ -14598,7 +14566,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-147"
+    "anchor": "api-146"
   },
   {
     "module": "std::lang",
@@ -14630,7 +14598,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-148"
+    "anchor": "api-147"
   },
   {
     "module": "std::lang",
@@ -14662,7 +14630,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-149"
+    "anchor": "api-148"
   },
   {
     "module": "std::lang",
@@ -14694,7 +14662,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-150"
+    "anchor": "api-149"
   },
   {
     "module": "std::lang",
@@ -14726,7 +14694,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-151"
+    "anchor": "api-150"
   },
   {
     "module": "std::lang",
@@ -14758,7 +14726,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-152"
+    "anchor": "api-151"
   },
   {
     "module": "std::lang",
@@ -14790,7 +14758,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-153"
+    "anchor": "api-152"
   },
   {
     "module": "std::lang",
@@ -14822,7 +14790,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-154"
+    "anchor": "api-153"
   },
   {
     "module": "std::lang",
@@ -14854,7 +14822,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-155"
+    "anchor": "api-154"
   },
   {
     "module": "std::lang",
@@ -14886,7 +14854,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-156"
+    "anchor": "api-155"
   },
   {
     "module": "std::lang",
@@ -14918,7 +14886,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-157"
+    "anchor": "api-156"
   },
   {
     "module": "std::lang",
@@ -14950,7 +14918,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-158"
+    "anchor": "api-157"
   },
   {
     "module": "std::lang",
@@ -14982,7 +14950,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-159"
+    "anchor": "api-158"
   },
   {
     "module": "std::lang",
@@ -15014,7 +14982,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-160"
+    "anchor": "api-159"
   },
   {
     "module": "std::lang",
@@ -15046,7 +15014,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-161"
+    "anchor": "api-160"
   },
   {
     "module": "std::lang",
@@ -15078,7 +15046,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-162"
+    "anchor": "api-161"
   },
   {
     "module": "std::lang",
@@ -15110,7 +15078,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-163"
+    "anchor": "api-162"
   },
   {
     "module": "std::lang",
@@ -15142,7 +15110,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-164"
+    "anchor": "api-163"
   },
   {
     "module": "std::lang",
@@ -15174,7 +15142,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-165"
+    "anchor": "api-164"
   },
   {
     "module": "std::lang",
@@ -15206,7 +15174,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-166"
+    "anchor": "api-165"
   },
   {
     "module": "std::lang",
@@ -15238,7 +15206,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-167"
+    "anchor": "api-166"
   },
   {
     "module": "std::lang",
@@ -15270,7 +15238,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-168"
+    "anchor": "api-167"
   },
   {
     "module": "std::lang",
@@ -15302,7 +15270,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-169"
+    "anchor": "api-168"
   },
   {
     "module": "std::lang",
@@ -15334,7 +15302,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-170"
+    "anchor": "api-169"
   },
   {
     "module": "std::lang",
@@ -15366,7 +15334,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-171"
+    "anchor": "api-170"
   },
   {
     "module": "std::lang",
@@ -15398,7 +15366,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-172"
+    "anchor": "api-171"
   },
   {
     "module": "std::lang",
@@ -15430,7 +15398,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-173"
+    "anchor": "api-172"
   },
   {
     "module": "std::lang",
@@ -15462,7 +15430,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-174"
+    "anchor": "api-173"
   },
   {
     "module": "std::lang",
@@ -15494,7 +15462,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-175"
+    "anchor": "api-174"
   },
   {
     "module": "std::lang",
@@ -15526,7 +15494,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-176"
+    "anchor": "api-175"
   },
   {
     "module": "std::lang",
@@ -15560,7 +15528,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-177"
+    "anchor": "api-176"
   },
   {
     "module": "std::lang",
@@ -15592,7 +15560,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-178"
+    "anchor": "api-177"
   },
   {
     "module": "std::lang",
@@ -15617,7 +15585,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-179"
+    "anchor": "api-178"
   },
   {
     "module": "std::lang",
@@ -15642,7 +15610,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-180"
+    "anchor": "api-179"
   },
   {
     "module": "std::lang",
@@ -15674,7 +15642,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-181"
+    "anchor": "api-180"
   },
   {
     "module": "std::lang",
@@ -15706,7 +15674,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-182"
+    "anchor": "api-181"
   },
   {
     "module": "std::lang",
@@ -15738,7 +15706,7 @@
     "source": "source/std/lang.mgl",
     "line": 2,
     "page": "std-lang.md",
-    "anchor": "api-183"
+    "anchor": "api-182"
   },
   {
     "module": "std::lang",
@@ -15770,7 +15738,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-184"
+    "anchor": "api-183"
   },
   {
     "module": "std::lang",
@@ -15802,7 +15770,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-185"
+    "anchor": "api-184"
   },
   {
     "module": "std::linalg",
@@ -17432,7 +17400,7 @@
       "documentation": "计算正弦。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17440,7 +17408,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 7,
+    "line": 18,
     "page": "std-math.md",
     "anchor": "api-0"
   },
@@ -17464,7 +17432,7 @@
       "documentation": "计算余弦。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17472,7 +17440,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 8,
+    "line": 19,
     "page": "std-math.md",
     "anchor": "api-1"
   },
@@ -17496,7 +17464,7 @@
       "documentation": "计算正切。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17504,7 +17472,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 9,
+    "line": 20,
     "page": "std-math.md",
     "anchor": "api-2"
   },
@@ -17528,7 +17496,7 @@
       "documentation": "计算反正弦，结果为弧度。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17536,7 +17504,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 10,
+    "line": 21,
     "page": "std-math.md",
     "anchor": "api-3"
   },
@@ -17560,7 +17528,7 @@
       "documentation": "计算反余弦，结果为弧度。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17568,7 +17536,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 11,
+    "line": 22,
     "page": "std-math.md",
     "anchor": "api-4"
   },
@@ -17592,7 +17560,7 @@
       "documentation": "计算反正切，结果为弧度。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17600,7 +17568,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 12,
+    "line": 23,
     "page": "std-math.md",
     "anchor": "api-5"
   },
@@ -17624,7 +17592,7 @@
       "documentation": "计算 e 的 value 次幂。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17632,7 +17600,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 13,
+    "line": 24,
     "page": "std-math.md",
     "anchor": "api-6"
   },
@@ -17656,7 +17624,7 @@
       "documentation": "计算自然对数。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17666,7 +17634,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 14,
+    "line": 25,
     "page": "std-math.md",
     "anchor": "api-7"
   },
@@ -17690,7 +17658,7 @@
       "documentation": "计算以 10 为底的对数。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17698,7 +17666,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 15,
+    "line": 26,
     "page": "std-math.md",
     "anchor": "api-8"
   },
@@ -17728,7 +17696,7 @@
       "documentation": "计算 value 的 exponent 次幂。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17736,7 +17704,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 16,
+    "line": 27,
     "page": "std-math.md",
     "anchor": "api-9"
   },
@@ -17760,7 +17728,7 @@
       "documentation": "计算平方根。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17770,43 +17738,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 17,
+    "line": 28,
     "page": "std-math.md",
     "anchor": "api-10"
-  },
-  {
-    "module": "std::math",
-    "name": "abs",
-    "owner": "",
-    "signature": "float64 abs(float64 value)",
-    "documentation": "返回绝对值。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "value",
-        "label": "float64 value",
-        "documentation": "输入值或写入的新值",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "返回绝对值。"
-    },
-    "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::math::abs(value);",
-    "examples": [
-      "example/samples/std_math_clock_random.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/math.mgl",
-    "line": 20,
-    "page": "std-math.md",
-    "anchor": "api-11"
   },
   {
     "module": "std::math",
@@ -17828,7 +17762,7 @@
       "documentation": "向负无穷取整。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17838,9 +17772,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 21,
+    "line": 29,
     "page": "std-math.md",
-    "anchor": "api-12"
+    "anchor": "api-11"
   },
   {
     "module": "std::math",
@@ -17862,7 +17796,7 @@
       "documentation": "向正无穷取整。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17872,9 +17806,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 22,
+    "line": 30,
     "page": "std-math.md",
-    "anchor": "api-13"
+    "anchor": "api-12"
   },
   {
     "module": "std::math",
@@ -17896,7 +17830,7 @@
       "documentation": "舍入到最近整数，中点远离零。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17906,9 +17840,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 23,
+    "line": 31,
     "page": "std-math.md",
-    "anchor": "api-14"
+    "anchor": "api-13"
   },
   {
     "module": "std::math",
@@ -17930,7 +17864,7 @@
       "documentation": "向零截断小数部分。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17940,9 +17874,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 24,
+    "line": 32,
     "page": "std-math.md",
-    "anchor": "api-15"
+    "anchor": "api-14"
   },
   {
     "module": "std::math",
@@ -17970,7 +17904,7 @@
       "documentation": "计算浮点余数，结果符号与被除数一致。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -17980,9 +17914,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 25,
+    "line": 33,
     "page": "std-math.md",
-    "anchor": "api-16"
+    "anchor": "api-15"
   },
   {
     "module": "std::math",
@@ -18004,7 +17938,7 @@
       "documentation": "判断是否为 NaN。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -18014,9 +17948,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 26,
+    "line": 34,
     "page": "std-math.md",
-    "anchor": "api-17"
+    "anchor": "api-16"
   },
   {
     "module": "std::math",
@@ -18038,7 +17972,7 @@
       "documentation": "判断是否为正无穷或负无穷。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
@@ -18048,131 +17982,119 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 27,
+    "line": 35,
     "page": "std-math.md",
-    "anchor": "api-18"
+    "anchor": "api-17"
   },
   {
     "module": "std::math",
     "name": "abs",
     "owner": "",
-    "signature": "int64 abs(int64 value)",
-    "documentation": "返回绝对值。\n\n**返回值**：int64。",
-    "comment": "",
+    "signature": "T abs<T>(T value)",
+    "documentation": "返回绝对值；泛型入口，整数最小值取负按位宽回绕，NaN 与负数零原样返回。\n\n**返回值**：T。",
+    "comment": "/** 返回 `value` 的绝对值；整数最小值取负回绕后仍是自身，NaN 与负数零原样返回。 */",
     "parameters": [
       {
         "name": "value",
-        "label": "int64 value",
+        "label": "T value",
         "documentation": "输入值或写入的新值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "int64",
-      "documentation": "返回绝对值。"
+      "type": "T",
+      "documentation": "返回绝对值；泛型入口，整数最小值取负按位宽回绕，NaN 与负数零原样返回。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::math::abs(value);",
+    "usage": "std::math::abs<T>(value);",
     "examples": [
       "example/samples/std_math_clock_random.mgl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 31,
+    "line": 38,
     "page": "std-math.md",
-    "anchor": "api-19"
+    "anchor": "api-18"
   },
   {
     "module": "std::math",
     "name": "min",
     "owner": "",
-    "signature": "int64 min(int64 left, int64 right)",
-    "documentation": "返回较小值。\n\n**返回值**：int64。",
-    "comment": "",
+    "signature": "T min<T>(T... values)",
+    "documentation": "返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。\n\n**返回值**：T。",
+    "comment": "/** 任意数量实参中的最小值；单个实参给自身，相等时给后一个（与逐对比较的顺序一致）。 */",
     "parameters": [
       {
-        "name": "left",
-        "label": "int64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "int64 right",
-        "documentation": "右操作数或区间右端",
+        "name": "values",
+        "label": "T... values",
+        "documentation": "参与操作的元素序列",
         "default": ""
       }
     ],
     "returns": {
-      "type": "int64",
-      "documentation": "返回较小值。"
+      "type": "T",
+      "documentation": "返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::math::min(left, right);",
+    "usage": "std::math::min<T>(values);",
     "examples": [
       "example/samples/std_math_clock_random.mgl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 34,
+    "line": 45,
     "page": "std-math.md",
-    "anchor": "api-20"
+    "anchor": "api-19"
   },
   {
     "module": "std::math",
     "name": "max",
     "owner": "",
-    "signature": "int64 max(int64 left, int64 right)",
-    "documentation": "返回较大值。\n\n**返回值**：int64。",
-    "comment": "",
+    "signature": "T max<T>(T... values)",
+    "documentation": "返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。\n\n**返回值**：T。",
+    "comment": "/** 任意数量实参中的最大值；单个实参给自身，相等时给后一个（与逐对比较的顺序一致）。 */",
     "parameters": [
       {
-        "name": "left",
-        "label": "int64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "int64 right",
-        "documentation": "右操作数或区间右端",
+        "name": "values",
+        "label": "T... values",
+        "documentation": "参与操作的元素序列",
         "default": ""
       }
     ],
     "returns": {
-      "type": "int64",
-      "documentation": "返回较大值。"
+      "type": "T",
+      "documentation": "返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::math::max(left, right);",
+    "usage": "std::math::max<T>(values);",
     "examples": [
       "example/samples/std_math_clock_random.mgl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 37,
+    "line": 57,
     "page": "std-math.md",
-    "anchor": "api-21"
+    "anchor": "api-20"
   },
   {
     "module": "std::math",
     "name": "clamp",
     "owner": "",
     "signature": "int64 clamp(int64 value, int64 low, int64 high)",
-    "documentation": "将 value 限制在闭区间 [low,high]。\n\n**返回值**：int64。",
-    "comment": "",
+    "documentation": "将 value 限制在闭区间 [low,high]；low>high 时报运行错误。\n\n**返回值**：int64。",
+    "comment": "/** 把 `value` 夹进 `[low, high]`；`low > high` 直接停机（多半是写反了）。 */",
     "parameters": [
       {
         "name": "value",
@@ -18195,12 +18117,12 @@
     ],
     "returns": {
       "type": "int64",
-      "documentation": "将 value 限制在闭区间 [low,high]。"
+      "documentation": "将 value 限制在闭区间 [low,high]；low>high 时报运行错误。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::math::clamp(value, low, high);",
     "examples": [
@@ -18208,97 +18130,17 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 41,
+    "line": 69,
     "page": "std-math.md",
-    "anchor": "api-22"
-  },
-  {
-    "module": "std::math",
-    "name": "min",
-    "owner": "",
-    "signature": "float64 min(float64 left, float64 right)",
-    "documentation": "返回较小值。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "float64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "float64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "返回较小值。"
-    },
-    "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::math::min(left, right);",
-    "examples": [
-      "example/samples/std_math_clock_random.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/math.mgl",
-    "line": 45,
-    "page": "std-math.md",
-    "anchor": "api-23"
-  },
-  {
-    "module": "std::math",
-    "name": "max",
-    "owner": "",
-    "signature": "float64 max(float64 left, float64 right)",
-    "documentation": "返回较大值。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "float64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "float64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "返回较大值。"
-    },
-    "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::math::max(left, right);",
-    "examples": [
-      "example/samples/std_math_clock_random.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/math.mgl",
-    "line": 48,
-    "page": "std-math.md",
-    "anchor": "api-24"
+    "anchor": "api-21"
   },
   {
     "module": "std::math",
     "name": "clamp",
     "owner": "",
     "signature": "float64 clamp(float64 value, float64 low, float64 high)",
-    "documentation": "将 value 限制在闭区间 [low,high]。\n\n**返回值**：float64。",
-    "comment": "",
+    "documentation": "将 value 限制在闭区间 [low,high]；low>high 时报运行错误。\n\n**返回值**：float64。",
+    "comment": "/** 把 `value` 夹进 `[low, high]`；`low > high` 直接停机（多半是写反了）。 */",
     "parameters": [
       {
         "name": "value",
@@ -18321,12 +18163,12 @@
     ],
     "returns": {
       "type": "float64",
-      "documentation": "将 value 限制在闭区间 [low,high]。"
+      "documentation": "将 value 限制在闭区间 [low,high]；low>high 时报运行错误。"
     },
     "errors": {
-      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。clamp 要求 low<=high。整数 abs 的最小负数沿用整数回绕语义；浮点 min/max 采用实现中的比较顺序，不等同于 fmin/fmax 的 NaN 规则。常数使用 std::lang::Math::PI/E。",
+      "documentation": "三角函数使用弧度，浮点运算转发到宿主 C++ 数学函数，定义域错误可产生 NaN/无穷。round 的中点远离零，trunc 向零。abs/min/max 是泛型入口，min/max 接受任意数量实参；折叠按成对原始顺序做（min(a,b,c)=min(min(a,b),c)），不等同于 fmin/fmax 的 NaN 规则：NaN 与任何值比较都为假，min(NaN,2.0) 仍是 2.0。clamp 保留 int64/float64 两份重载，要求 low<=high，否则停机。整数 abs 的最小负数沿用整数回绕语义。常数使用 std::lang::Math::PI/E。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::math::clamp(value, low, high);",
     "examples": [
@@ -18334,9 +18176,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/math.mgl",
-    "line": 51,
+    "line": 81,
     "page": "std-math.md",
-    "anchor": "api-25"
+    "anchor": "api-22"
   },
   {
     "module": "std::memory",
@@ -19714,373 +19556,11 @@
   },
   {
     "module": "std::numerics",
-    "name": "numericsDerivative",
-    "owner": "",
-    "signature": "float64 numericsDerivative(float64 fn(float64) function, float64 x, float64 step)",
-    "documentation": "宿主入口：用中心差分近似 function 在 x 的导数。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "function",
-        "label": "float64 fn(float64) function",
-        "documentation": "数值算法回调",
-        "default": ""
-      },
-      {
-        "name": "x",
-        "label": "float64 x",
-        "documentation": "输入横坐标/标量",
-        "default": ""
-      },
-      {
-        "name": "step",
-        "label": "float64 step",
-        "documentation": "步长或时间增量",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "宿主入口：用中心差分近似 function 在 x 的导数。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsDerivative(function, x, step);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 7,
-    "page": "std-numerics.md",
-    "anchor": "api-0"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsIntegrateSimpson",
-    "owner": "",
-    "signature": "float64 numericsIntegrateSimpson(float64 fn(float64) function, float64 begin, float64 end, int64 intervals)",
-    "documentation": "宿主入口：用复合 Simpson 法近似定积分。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "function",
-        "label": "float64 fn(float64) function",
-        "documentation": "数值算法回调",
-        "default": ""
-      },
-      {
-        "name": "begin",
-        "label": "float64 begin",
-        "documentation": "积分起点",
-        "default": ""
-      },
-      {
-        "name": "end",
-        "label": "float64 end",
-        "documentation": "积分终点",
-        "default": ""
-      },
-      {
-        "name": "intervals",
-        "label": "int64 intervals",
-        "documentation": "积分子区间数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "宿主入口：用复合 Simpson 法近似定积分。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsIntegrateSimpson(function, begin, end, intervals);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 8,
-    "page": "std-numerics.md",
-    "anchor": "api-1"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsBisect",
-    "owner": "",
-    "signature": "float64 numericsBisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)",
-    "documentation": "宿主入口：在括根区间内二分求根。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "function",
-        "label": "float64 fn(float64) function",
-        "documentation": "数值算法回调",
-        "default": ""
-      },
-      {
-        "name": "left",
-        "label": "float64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "float64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      },
-      {
-        "name": "tolerance",
-        "label": "float64 tolerance",
-        "documentation": "收敛误差容限",
-        "default": ""
-      },
-      {
-        "name": "maxIterations",
-        "label": "int64 maxIterations",
-        "documentation": "最大迭代次数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "宿主入口：在括根区间内二分求根。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsBisect(function, left, right, tolerance, maxIterations);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 10,
-    "page": "std-numerics.md",
-    "anchor": "api-2"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsRk4Step",
-    "owner": "",
-    "signature": "float64 numericsRk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)",
-    "documentation": "宿主入口：执行一次四阶 Runge-Kutta 更新。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "derivative",
-        "label": "float64 fn(float64, float64) derivative",
-        "documentation": "导数或变化率回调",
-        "default": ""
-      },
-      {
-        "name": "time",
-        "label": "float64 time",
-        "documentation": "当前时间，秒",
-        "default": ""
-      },
-      {
-        "name": "value",
-        "label": "float64 value",
-        "documentation": "输入值或写入的新值",
-        "default": ""
-      },
-      {
-        "name": "step",
-        "label": "float64 step",
-        "documentation": "步长或时间增量",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "宿主入口：执行一次四阶 Runge-Kutta 更新。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsRk4Step(derivative, time, value, step);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 12,
-    "page": "std-numerics.md",
-    "anchor": "api-3"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsNewton",
-    "owner": "",
-    "signature": "float64 numericsNewton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)",
-    "documentation": "宿主入口：从 initial 开始迭代 Newton 求根。\n\n**返回值**：float64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "function",
-        "label": "float64 fn(float64) function",
-        "documentation": "数值算法回调",
-        "default": ""
-      },
-      {
-        "name": "initial",
-        "label": "float64 initial",
-        "documentation": "迭代/累积初值",
-        "default": ""
-      },
-      {
-        "name": "tolerance",
-        "label": "float64 tolerance",
-        "documentation": "收敛误差容限",
-        "default": ""
-      },
-      {
-        "name": "maxIterations",
-        "label": "int64 maxIterations",
-        "documentation": "最大迭代次数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "float64",
-      "documentation": "宿主入口：从 initial 开始迭代 Newton 求根。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsNewton(function, initial, tolerance, maxIterations);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 14,
-    "page": "std-numerics.md",
-    "anchor": "api-4"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsSolveOdeEuler",
-    "owner": "",
-    "signature": "std::lang::List<float64> numericsSolveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)",
-    "documentation": "宿主入口：用 Euler 法求解标量初值问题并返回采样列表。\n\n**返回值**：std::lang::List<float64>。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "rate",
-        "label": "float64 fn(float64, float64) rate",
-        "documentation": "变化率回调",
-        "default": ""
-      },
-      {
-        "name": "initialTime",
-        "label": "float64 initialTime",
-        "documentation": "初始时间",
-        "default": ""
-      },
-      {
-        "name": "initialValue",
-        "label": "float64 initialValue",
-        "documentation": "初始状态值",
-        "default": ""
-      },
-      {
-        "name": "step",
-        "label": "float64 step",
-        "documentation": "步长或时间增量",
-        "default": ""
-      },
-      {
-        "name": "steps",
-        "label": "int64 steps",
-        "documentation": "更新步数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "std::lang::List<float64>",
-      "documentation": "宿主入口：用 Euler 法求解标量初值问题并返回采样列表。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsSolveOdeEuler(rate, initialTime, initialValue, step, steps);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 16,
-    "page": "std-numerics.md",
-    "anchor": "api-5"
-  },
-  {
-    "module": "std::numerics",
-    "name": "numericsSolveOdeRK4",
-    "owner": "",
-    "signature": "std::lang::List<float64> numericsSolveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)",
-    "documentation": "宿主入口：用四阶 RK 法求解标量初值问题并返回采样列表。\n\n**返回值**：std::lang::List<float64>。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "rate",
-        "label": "float64 fn(float64, float64) rate",
-        "documentation": "变化率回调",
-        "default": ""
-      },
-      {
-        "name": "initialTime",
-        "label": "float64 initialTime",
-        "documentation": "初始时间",
-        "default": ""
-      },
-      {
-        "name": "initialValue",
-        "label": "float64 initialValue",
-        "documentation": "初始状态值",
-        "default": ""
-      },
-      {
-        "name": "step",
-        "label": "float64 step",
-        "documentation": "步长或时间增量",
-        "default": ""
-      },
-      {
-        "name": "steps",
-        "label": "int64 steps",
-        "documentation": "更新步数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "std::lang::List<float64>",
-      "documentation": "宿主入口：用四阶 RK 法求解标量初值问题并返回采样列表。"
-    },
-    "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numerics::numericsSolveOdeRK4(rate, initialTime, initialValue, step, steps);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numerics.mgl",
-    "line": 19,
-    "page": "std-numerics.md",
-    "anchor": "api-6"
-  },
-  {
-    "module": "std::numerics",
     "name": "Numerics::derivative",
     "owner": "Numerics",
     "signature": "static float64 derivative(float64 fn(float64) function, float64 x, float64 step)",
     "documentation": "用中心差分近似 function 在 x 的导数。\n\n**返回值**：float64。",
-    "comment": "",
+    "comment": "/** 中心差分求导；`step` 不为正时停机。 */",
     "parameters": [
       {
         "name": "function",
@@ -20106,9 +19586,9 @@
       "documentation": "用中心差分近似 function 在 x 的导数。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::derivative(function, x, step);",
     "examples": [
@@ -20116,9 +19596,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 24,
+    "line": 134,
     "page": "std-numerics.md",
-    "anchor": "api-7"
+    "anchor": "api-0"
   },
   {
     "module": "std::numerics",
@@ -20126,7 +19606,7 @@
     "owner": "Numerics",
     "signature": "static float64 integrateSimpson(float64 fn(float64) function, float64 begin, float64 end, int64 intervals)",
     "documentation": "用复合 Simpson 法近似定积分。\n\n**返回值**：float64。",
-    "comment": "",
+    "comment": "/** 复合辛普森积分；分段数必须为正偶数，否则停机。 */",
     "parameters": [
       {
         "name": "function",
@@ -20158,9 +19638,9 @@
       "documentation": "用复合 Simpson 法近似定积分。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::integrateSimpson(function, begin, end, intervals);",
     "examples": [
@@ -20168,9 +19648,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 27,
+    "line": 142,
     "page": "std-numerics.md",
-    "anchor": "api-8"
+    "anchor": "api-1"
   },
   {
     "module": "std::numerics",
@@ -20178,7 +19658,7 @@
     "owner": "Numerics",
     "signature": "static float64 bisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)",
     "documentation": "在括根区间内二分求根。\n\n**返回值**：float64。",
-    "comment": "",
+    "comment": "/** 二分求根；区间 / 精度 / 迭代次数不合法或端点同号时停机。 */",
     "parameters": [
       {
         "name": "function",
@@ -20216,9 +19696,9 @@
       "documentation": "在括根区间内二分求根。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::bisect(function, left, right, tolerance, maxIterations);",
     "examples": [
@@ -20226,9 +19706,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 31,
+    "line": 151,
     "page": "std-numerics.md",
-    "anchor": "api-9"
+    "anchor": "api-2"
   },
   {
     "module": "std::numerics",
@@ -20236,7 +19716,7 @@
     "owner": "Numerics",
     "signature": "static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)",
     "documentation": "执行一次四阶 Runge-Kutta 更新。\n\n**返回值**：float64。",
-    "comment": "",
+    "comment": "/** 单步四阶龙格-库塔；`step` 不为正时停机。 */",
     "parameters": [
       {
         "name": "derivative",
@@ -20268,17 +19748,17 @@
       "documentation": "执行一次四阶 Runge-Kutta 更新。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::rk4Step(derivative, time, value, step);",
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 35,
+    "line": 168,
     "page": "std-numerics.md",
-    "anchor": "api-10"
+    "anchor": "api-3"
   },
   {
     "module": "std::numerics",
@@ -20286,7 +19766,7 @@
     "owner": "Numerics",
     "signature": "static float64 newton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)",
     "documentation": "从 initial 开始迭代 Newton 求根。\n\n**返回值**：float64。",
-    "comment": "",
+    "comment": "/** 牛顿法求根；精度 / 迭代次数不合法、导数过平或未收敛时停机。 */",
     "parameters": [
       {
         "name": "function",
@@ -20318,9 +19798,9 @@
       "documentation": "从 initial 开始迭代 Newton 求根。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::newton(function, initial, tolerance, maxIterations);",
     "examples": [
@@ -20328,9 +19808,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 39,
+    "line": 177,
     "page": "std-numerics.md",
-    "anchor": "api-11"
+    "anchor": "api-4"
   },
   {
     "module": "std::numerics",
@@ -20338,7 +19818,7 @@
     "owner": "Numerics",
     "signature": "static std::lang::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)",
     "documentation": "用 Euler 法求解标量初值问题并返回采样列表。\n\n**返回值**：std::lang::List<float64>。",
-    "comment": "",
+    "comment": "/** 显式欧拉法；步长或步数不合法时停机。 */",
     "parameters": [
       {
         "name": "rate",
@@ -20376,9 +19856,9 @@
       "documentation": "用 Euler 法求解标量初值问题并返回采样列表。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::solveOdeEuler(rate, initialTime, initialValue, step, steps);",
     "examples": [
@@ -20386,9 +19866,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 44,
+    "line": 187,
     "page": "std-numerics.md",
-    "anchor": "api-12"
+    "anchor": "api-5"
   },
   {
     "module": "std::numerics",
@@ -20396,7 +19876,7 @@
     "owner": "Numerics",
     "signature": "static std::lang::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)",
     "documentation": "用四阶 RK 法求解标量初值问题并返回采样列表。\n\n**返回值**：std::lang::List<float64>。",
-    "comment": "",
+    "comment": "/** 四阶龙格-库塔；步长或步数不合法时停机。 */",
     "parameters": [
       {
         "name": "rate",
@@ -20434,9 +19914,9 @@
       "documentation": "用四阶 RK 法求解标量初值问题并返回采样列表。"
     },
     "errors": {
-      "documentation": "回调应满足算法的连续性/可微性条件。积分子区间数、导数步长、误差容限、最大迭代次数及二分区间由宿主校验。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。数值结果是近似值，不保证任意模型收敛。 derivative/rk4Step 的 step>0；Simpson 的 intervals 为正偶数；ODE 的 steps>=0。二分要求 left<right、tolerance>0、maxIterations>0。",
+      "documentation": "回调应满足算法的连续性/可微性条件。实现已全部由 std::numerics 模块用 Magel 表达（原宿主胶水已删除），前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数，不再收窄到宿主 int。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
     "usage": "std::numerics::Numerics::solveOdeRK4(rate, initialTime, initialValue, step, steps);",
     "examples": [
@@ -20444,577 +19924,287 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numerics.mgl",
-    "line": 49,
+    "line": 198,
     "page": "std-numerics.md",
-    "anchor": "api-13"
+    "anchor": "api-6"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryGcd",
+    "name": "gcd",
     "owner": "",
-    "signature": "uint64 numtheoryGcd(uint64 left, uint64 right)",
-    "documentation": "宿主入口：计算最大公约数。\n\n**返回值**：uint64。",
-    "comment": "/* 整数数论。实现下沉到宿主 C++（glue/std_numtheory.hpp），本文件只留宿主签名 + 极薄 wrapper。\n * 语义与拆分前一致：模乘用逐位加法避免 uint64 乘法溢出，isPrime 用确定性 Miller-Rabin。 */",
+    "signature": "T gcd<T>(T... values)",
+    "documentation": "计算实参的最大公约数；泛型入口，接受任意数量实参，结果非负。\n\n**返回值**：T。",
+    "comment": "/** 任意数量实参的最大公约数；单个实参给它的绝对值，零实参在编译期报无法推导类型。 */",
     "parameters": [
       {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
+        "name": "values",
+        "label": "T... values",
+        "documentation": "参与操作的元素序列",
         "default": ""
       }
     ],
     "returns": {
-      "type": "uint64",
-      "documentation": "宿主入口：计算最大公约数。"
+      "type": "T",
+      "documentation": "计算实参的最大公约数；泛型入口，接受任意数量实参，结果非负。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::numtheory::numtheoryGcd(left, right);",
-    "examples": [],
+    "usage": "std::numtheory::gcd<T>(values);",
+    "examples": [
+      "example/samples/std_numerics_number_theory.mgl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 5,
+    "line": 96,
     "page": "std-numtheory.md",
     "anchor": "api-0"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryLcm",
+    "name": "lcm",
     "owner": "",
-    "signature": "uint64 numtheoryLcm(uint64 left, uint64 right)",
-    "documentation": "宿主入口：计算最小公倍数。\n\n**返回值**：uint64。",
-    "comment": "",
+    "signature": "T lcm<T>(T... values)",
+    "documentation": "计算实参的最小公倍数；泛型入口，接受任意数量实参，任一实参为零给零，乘积回绕时报运行错误。\n\n**返回值**：T。",
+    "comment": "/** 任意数量实参的最小公倍数；任一实参为零给零，乘积回绕时停机。 */",
     "parameters": [
       {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
+        "name": "values",
+        "label": "T... values",
+        "documentation": "参与操作的元素序列",
         "default": ""
       }
     ],
     "returns": {
-      "type": "uint64",
-      "documentation": "宿主入口：计算最小公倍数。"
+      "type": "T",
+      "documentation": "计算实参的最小公倍数；泛型入口，接受任意数量实参，任一实参为零给零，乘积回绕时报运行错误。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::numtheory::numtheoryLcm(left, right);",
-    "examples": [],
+    "usage": "std::numtheory::lcm<T>(values);",
+    "examples": [
+      "example/samples/std_numerics_number_theory.mgl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 6,
+    "line": 108,
     "page": "std-numtheory.md",
     "anchor": "api-1"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryAddMod",
+    "name": "addMod",
     "owner": "",
-    "signature": "uint64 numtheoryAddMod(uint64 left, uint64 right, uint64 modulus)",
-    "documentation": "宿主入口：计算 (left+right) mod modulus。\n\n**返回值**：uint64。",
-    "comment": "",
+    "signature": "T addMod<T>(T left, T right, T modulus)",
+    "documentation": "计算 (left+right) mod modulus；modulus 不为正时报运行错误。\n\n**返回值**：T。",
+    "comment": "/** 模加；模数不为正时停机。 */",
     "parameters": [
       {
         "name": "left",
-        "label": "uint64 left",
+        "label": "T left",
         "documentation": "左操作数或区间左端",
         "default": ""
       },
       {
         "name": "right",
-        "label": "uint64 right",
+        "label": "T right",
         "documentation": "右操作数或区间右端",
         "default": ""
       },
       {
         "name": "modulus",
-        "label": "uint64 modulus",
+        "label": "T modulus",
         "documentation": "模数",
         "default": ""
       }
     ],
     "returns": {
-      "type": "uint64",
-      "documentation": "宿主入口：计算 (left+right) mod modulus。"
+      "type": "T",
+      "documentation": "计算 (left+right) mod modulus；modulus 不为正时报运行错误。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
-    "usage": "std::numtheory::numtheoryAddMod(left, right, modulus);",
+    "usage": "std::numtheory::addMod<T>(left, right, modulus);",
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 7,
+    "line": 120,
     "page": "std-numtheory.md",
     "anchor": "api-2"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryMulMod",
+    "name": "mulMod",
     "owner": "",
-    "signature": "uint64 numtheoryMulMod(uint64 left, uint64 right, uint64 modulus)",
-    "documentation": "宿主入口：计算 (left×right) mod modulus，避免直接乘法的中间溢出。\n\n**返回值**：uint64。",
-    "comment": "",
+    "signature": "T mulMod<T>(T left, T right, T modulus)",
+    "documentation": "计算 (left×right) mod modulus，避免直接乘法的中间溢出；modulus 不为正时报运行错误。\n\n**返回值**：T。",
+    "comment": "/** 模乘，逐位加法避免乘法溢出；模数不为正时停机。 */",
     "parameters": [
       {
         "name": "left",
-        "label": "uint64 left",
+        "label": "T left",
         "documentation": "左操作数或区间左端",
         "default": ""
       },
       {
         "name": "right",
-        "label": "uint64 right",
+        "label": "T right",
         "documentation": "右操作数或区间右端",
         "default": ""
       },
       {
         "name": "modulus",
-        "label": "uint64 modulus",
+        "label": "T modulus",
         "documentation": "模数",
         "default": ""
       }
     ],
     "returns": {
-      "type": "uint64",
-      "documentation": "宿主入口：计算 (left×right) mod modulus，避免直接乘法的中间溢出。"
+      "type": "T",
+      "documentation": "计算 (left×right) mod modulus，避免直接乘法的中间溢出；modulus 不为正时报运行错误。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
-    "usage": "std::numtheory::numtheoryMulMod(left, right, modulus);",
-    "examples": [],
+    "usage": "std::numtheory::mulMod<T>(left, right, modulus);",
+    "examples": [
+      "example/samples/std_numerics_number_theory.mgl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 8,
+    "line": 130,
     "page": "std-numtheory.md",
     "anchor": "api-3"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryPowMod",
+    "name": "powMod",
     "owner": "",
-    "signature": "uint64 numtheoryPowMod(uint64 base, uint64 exponent, uint64 modulus)",
-    "documentation": "宿主入口：通过快速幂计算 base^exponent mod modulus。\n\n**返回值**：uint64。",
-    "comment": "",
+    "signature": "T powMod<T>(T base, T exponent, T modulus)",
+    "documentation": "通过快速幂计算 base^exponent mod modulus；modulus 不为正时报运行错误。\n\n**返回值**：T。",
+    "comment": "/** 模幂，平方-乘；模数不为正时停机。 */",
     "parameters": [
       {
         "name": "base",
-        "label": "uint64 base",
+        "label": "T base",
         "documentation": "幂底数",
         "default": ""
       },
       {
         "name": "exponent",
-        "label": "uint64 exponent",
+        "label": "T exponent",
         "documentation": "指数",
         "default": ""
       },
       {
         "name": "modulus",
-        "label": "uint64 modulus",
+        "label": "T modulus",
         "documentation": "模数",
         "default": ""
       }
     ],
     "returns": {
-      "type": "uint64",
-      "documentation": "宿主入口：通过快速幂计算 base^exponent mod modulus。"
+      "type": "T",
+      "documentation": "通过快速幂计算 base^exponent mod modulus；modulus 不为正时报运行错误。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
-    "usage": "std::numtheory::numtheoryPowMod(base, exponent, modulus);",
-    "examples": [],
+    "usage": "std::numtheory::powMod<T>(base, exponent, modulus);",
+    "examples": [
+      "example/samples/std_numerics_number_theory.mgl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 9,
+    "line": 140,
     "page": "std-numtheory.md",
     "anchor": "api-4"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryIsPrime",
+    "name": "modInverse",
     "owner": "",
-    "signature": "bool numtheoryIsPrime(uint64 value)",
-    "documentation": "宿主入口：判断 uint64 是否为素数。\n\n**返回值**：bool。",
-    "comment": "",
+    "signature": "T modInverse<T>(T value, T modulus)",
+    "documentation": "计算模乘逆元；模数不大于 1 或不互素时报运行错误。\n\n**返回值**：T。",
+    "comment": "/** 模逆元，扩展欧几里得；模数不大于 1 或不互素时停机。 */",
     "parameters": [
       {
         "name": "value",
-        "label": "uint64 value",
+        "label": "T value",
         "documentation": "输入值或写入的新值",
+        "default": ""
+      },
+      {
+        "name": "modulus",
+        "label": "T modulus",
+        "documentation": "模数",
         "default": ""
       }
     ],
     "returns": {
-      "type": "bool",
-      "documentation": "宿主入口：判断 uint64 是否为素数。"
+      "type": "T",
+      "documentation": "计算模乘逆元；模数不大于 1 或不互素时报运行错误。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
-      "panic": false
+      "panic": true
     },
-    "usage": "std::numtheory::numtheoryIsPrime(value);",
-    "examples": [],
+    "usage": "std::numtheory::modInverse<T>(value, modulus);",
+    "examples": [
+      "example/samples/std_numerics_number_theory.mgl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 10,
+    "line": 150,
     "page": "std-numtheory.md",
     "anchor": "api-5"
   },
   {
     "module": "std::numtheory",
-    "name": "numtheoryModInverse",
+    "name": "isPrime",
     "owner": "",
-    "signature": "int64 numtheoryModInverse(int64 value, int64 modulus)",
-    "documentation": "宿主入口：计算模乘逆元；模数不大于 1 或不互素时报运行错误。\n\n**返回值**：int64。",
-    "comment": "",
+    "signature": "bool isPrime<T>(T value)",
+    "documentation": "判断整数是否为素数；内部加宽到 uint64 做七个底数的确定性 Miller-Rabin。\n\n**返回值**：bool。",
+    "comment": "/** 确定性 Miller-Rabin 素性判定；七个底数覆盖完整 uint64 范围，窄整型在 uint64 上加宽计算。 */",
     "parameters": [
       {
         "name": "value",
-        "label": "int64 value",
-        "documentation": "输入值或写入的新值",
-        "default": ""
-      },
-      {
-        "name": "modulus",
-        "label": "int64 modulus",
-        "documentation": "模数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "int64",
-      "documentation": "宿主入口：计算模乘逆元；模数不大于 1 或不互素时报运行错误。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::numtheoryModInverse(value, modulus);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 11,
-    "page": "std-numtheory.md",
-    "anchor": "api-6"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::gcd",
-    "owner": "NumberTheory",
-    "signature": "static uint64 gcd(uint64 left, uint64 right)",
-    "documentation": "计算最大公约数。\n\n**返回值**：uint64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "uint64",
-      "documentation": "计算最大公约数。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::gcd(left, right);",
-    "examples": [
-      "example/samples/std_numerics_number_theory.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 14,
-    "page": "std-numtheory.md",
-    "anchor": "api-7"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::lcm",
-    "owner": "NumberTheory",
-    "signature": "static uint64 lcm(uint64 left, uint64 right)",
-    "documentation": "计算最小公倍数。\n\n**返回值**：uint64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "uint64",
-      "documentation": "计算最小公倍数。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::lcm(left, right);",
-    "examples": [
-      "example/samples/std_numerics_number_theory.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 15,
-    "page": "std-numtheory.md",
-    "anchor": "api-8"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::addMod",
-    "owner": "NumberTheory",
-    "signature": "static uint64 addMod(uint64 left, uint64 right, uint64 modulus)",
-    "documentation": "计算 (left+right) mod modulus。\n\n**返回值**：uint64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      },
-      {
-        "name": "modulus",
-        "label": "uint64 modulus",
-        "documentation": "模数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "uint64",
-      "documentation": "计算 (left+right) mod modulus。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::addMod(left, right, modulus);",
-    "examples": [],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 16,
-    "page": "std-numtheory.md",
-    "anchor": "api-9"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::mulMod",
-    "owner": "NumberTheory",
-    "signature": "static uint64 mulMod(uint64 left, uint64 right, uint64 modulus)",
-    "documentation": "计算 (left×right) mod modulus，避免直接乘法的中间溢出。\n\n**返回值**：uint64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "left",
-        "label": "uint64 left",
-        "documentation": "左操作数或区间左端",
-        "default": ""
-      },
-      {
-        "name": "right",
-        "label": "uint64 right",
-        "documentation": "右操作数或区间右端",
-        "default": ""
-      },
-      {
-        "name": "modulus",
-        "label": "uint64 modulus",
-        "documentation": "模数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "uint64",
-      "documentation": "计算 (left×right) mod modulus，避免直接乘法的中间溢出。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::mulMod(left, right, modulus);",
-    "examples": [
-      "example/samples/std_numerics_number_theory.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 17,
-    "page": "std-numtheory.md",
-    "anchor": "api-10"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::powMod",
-    "owner": "NumberTheory",
-    "signature": "static uint64 powMod(uint64 base, uint64 exponent, uint64 modulus)",
-    "documentation": "通过快速幂计算 base^exponent mod modulus。\n\n**返回值**：uint64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "base",
-        "label": "uint64 base",
-        "documentation": "幂底数",
-        "default": ""
-      },
-      {
-        "name": "exponent",
-        "label": "uint64 exponent",
-        "documentation": "指数",
-        "default": ""
-      },
-      {
-        "name": "modulus",
-        "label": "uint64 modulus",
-        "documentation": "模数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "uint64",
-      "documentation": "通过快速幂计算 base^exponent mod modulus。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::powMod(base, exponent, modulus);",
-    "examples": [
-      "example/samples/std_numerics_number_theory.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 18,
-    "page": "std-numtheory.md",
-    "anchor": "api-11"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::isPrime",
-    "owner": "NumberTheory",
-    "signature": "static bool isPrime(uint64 value)",
-    "documentation": "判断 uint64 是否为素数。\n\n**返回值**：bool。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "value",
-        "label": "uint64 value",
+        "label": "T value",
         "documentation": "输入值或写入的新值",
         "default": ""
       }
     ],
     "returns": {
       "type": "bool",
-      "documentation": "判断 uint64 是否为素数。"
+      "documentation": "判断整数是否为素数；内部加宽到 uint64 做七个底数的确定性 Miller-Rabin。"
     },
     "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
+      "documentation": "实现已全部迁到 .mgl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。",
       "preconditions": [],
       "panic": false
     },
-    "usage": "std::numtheory::NumberTheory::isPrime(value);",
+    "usage": "std::numtheory::isPrime<T>(value);",
     "examples": [
       "example/samples/std_numerics_number_theory.mgl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/numtheory.mgl",
-    "line": 19,
+    "line": 179,
     "page": "std-numtheory.md",
-    "anchor": "api-12"
-  },
-  {
-    "module": "std::numtheory",
-    "name": "NumberTheory::modInverse",
-    "owner": "NumberTheory",
-    "signature": "static int64 modInverse(int64 value, int64 modulus)",
-    "documentation": "计算模乘逆元；模数不大于 1 或不互素时报运行错误。\n\n**返回值**：int64。",
-    "comment": "",
-    "parameters": [
-      {
-        "name": "value",
-        "label": "int64 value",
-        "documentation": "输入值或写入的新值",
-        "default": ""
-      },
-      {
-        "name": "modulus",
-        "label": "int64 modulus",
-        "documentation": "模数",
-        "default": ""
-      }
-    ],
-    "returns": {
-      "type": "int64",
-      "documentation": "计算模乘逆元；模数不大于 1 或不互素时报运行错误。"
-    },
-    "errors": {
-      "documentation": "gcd/lcm 采用 uint64。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 使用适用于 uint64 的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时报告运行错误。lcm 溢出也报告运行错误。",
-      "preconditions": [],
-      "panic": false
-    },
-    "usage": "std::numtheory::NumberTheory::modInverse(value, modulus);",
-    "examples": [
-      "example/samples/std_numerics_number_theory.mgl"
-    ],
-    "sourceLanguage": "zh",
-    "source": "source/std/numtheory.mgl",
-    "line": 20,
-    "page": "std-numtheory.md",
-    "anchor": "api-13"
+    "anchor": "api-6"
   },
   {
     "module": "std::parse",
@@ -21188,7 +20378,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/path.mgl",
-    "line": 10,
+    "line": 131,
     "page": "std-path.md",
     "anchor": "api-0"
   },
@@ -21222,7 +20412,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/path.mgl",
-    "line": 11,
+    "line": 132,
     "page": "std-path.md",
     "anchor": "api-1"
   },
@@ -21256,7 +20446,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/path.mgl",
-    "line": 12,
+    "line": 133,
     "page": "std-path.md",
     "anchor": "api-2"
   },
@@ -21290,7 +20480,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/path.mgl",
-    "line": 13,
+    "line": 134,
     "page": "std-path.md",
     "anchor": "api-3"
   },
@@ -25069,7 +24259,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 29,
+    "line": 238,
     "page": "std-text.md",
     "anchor": "api-0"
   },
@@ -25079,7 +24269,7 @@
     "owner": "Text",
     "signature": "static int64 rfind(std::lang::String text, std::lang::String needle)",
     "documentation": "返回子串最后出现的字节下标；找不到为 -1。\n\n**返回值**：int64。",
-    "comment": "/** 子串最后一次出现的位置；找不到 -1。 */",
+    "comment": "/** 子串最后一次出现的位置；找不到 -1（空子串给串长）。 */",
     "parameters": [
       {
         "name": "text",
@@ -25107,7 +24297,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 31,
+    "line": 242,
     "page": "std-text.md",
     "anchor": "api-1"
   },
@@ -25145,7 +24335,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 33,
+    "line": 246,
     "page": "std-text.md",
     "anchor": "api-2"
   },
@@ -25183,7 +24373,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 34,
+    "line": 249,
     "page": "std-text.md",
     "anchor": "api-3"
   },
@@ -25221,7 +24411,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 35,
+    "line": 255,
     "page": "std-text.md",
     "anchor": "api-4"
   },
@@ -25259,7 +24449,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 37,
+    "line": 262,
     "page": "std-text.md",
     "anchor": "api-5"
   },
@@ -25291,7 +24481,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 39,
+    "line": 268,
     "page": "std-text.md",
     "anchor": "api-6"
   },
@@ -25323,7 +24513,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 40,
+    "line": 269,
     "page": "std-text.md",
     "anchor": "api-7"
   },
@@ -25355,7 +24545,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 42,
+    "line": 271,
     "page": "std-text.md",
     "anchor": "api-8"
   },
@@ -25387,7 +24577,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 43,
+    "line": 272,
     "page": "std-text.md",
     "anchor": "api-9"
   },
@@ -25419,7 +24609,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 44,
+    "line": 273,
     "page": "std-text.md",
     "anchor": "api-10"
   },
@@ -25463,7 +24653,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 46,
+    "line": 275,
     "page": "std-text.md",
     "anchor": "api-11"
   },
@@ -25501,7 +24691,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 50,
+    "line": 279,
     "page": "std-text.md",
     "anchor": "api-12"
   },
@@ -25545,7 +24735,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 52,
+    "line": 283,
     "page": "std-text.md",
     "anchor": "api-13"
   },
@@ -25589,7 +24779,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 55,
+    "line": 286,
     "page": "std-text.md",
     "anchor": "api-14"
   },
@@ -25627,7 +24817,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 59,
+    "line": 290,
     "page": "std-text.md",
     "anchor": "api-15"
   },
@@ -25667,7 +24857,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 62,
+    "line": 293,
     "page": "std-text.md",
     "anchor": "api-16"
   },
@@ -25707,7 +24897,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/text.mgl",
-    "line": 67,
+    "line": 298,
     "page": "std-text.md",
     "anchor": "api-17"
   },
