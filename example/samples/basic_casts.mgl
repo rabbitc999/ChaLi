@@ -10,7 +10,7 @@ int64 main() {
     float64 from_false = (float64)false;
 
     println("bool={},{},{} int64={},{},{},{} float64={:3F},{:3F}",
-           zero, nonzero, fraction, from_true, wrapped, signed_wrap, truncated,
-           single, from_false);
+    zero, nonzero, fraction, from_true, wrapped, signed_wrap, truncated,
+    single, from_false);
     return 0;
 }

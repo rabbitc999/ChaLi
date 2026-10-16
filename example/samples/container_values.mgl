@@ -39,8 +39,8 @@ int64 main() {
     Entry fromMap = lookup[fromList];
     Entry key = lookup.keyAt(0);
     println("{}:{} {}:{} {}:{} {}:{}", fromList.inner.number,
-                 fromList.label, fromSet.inner.number, fromSet.label,
-                 fromMap.inner.number, fromMap.label, key.inner.number, key.label);
+    fromList.label, fromSet.inner.number, fromSet.label,
+    fromMap.inner.number, fromMap.label, key.inner.number, key.label);
     Map<Entry, Entry> copiedLookup = lookup;
     lookup.clear();
     Entry copiedValue = copiedLookup[key];
@@ -59,7 +59,7 @@ int64 main() {
     measured.push(high);
     List<Metric> positive = std::algorithms::filterValue<Metric>(measured, positiveMetric);
     println("{} {} {}", std::algorithms::findValue<Metric>(measured, high),
-                 std::algorithms::countValue<Metric>(measured, low), positive.len());
+    std::algorithms::countValue<Metric>(measured, low), positive.len());
     float64 total = 0.0;
     foreach (Metric item in measured) { total = total + item.amount; }
     println("{}", total);

@@ -48,12 +48,12 @@ int64 main() {
 
     /* reduce 两种写法：两参拿第一个元素当初值，三参等同 fold。 */
     println("reduce {} {}", std::algorithms::reduceValue<int64>(values, addInt),
-                 std::algorithms::reduceValue<int64>(values, 100, addInt));
+    std::algorithms::reduceValue<int64>(values, 100, addInt));
     /* sum / count：count 的第二参是 fptr 就按判定数，是值就按相等数。 */
     println("sum    {} {}", std::algorithms::sumValue<int64>(values),
-                 std::algorithms::sumValue<float64>(halves));
+    std::algorithms::sumValue<float64>(halves));
     println("count  {} {}", std::algorithms::countValue<int64>(values, 1),
-                 std::algorithms::countValue<int64>(values, odd));
+    std::algorithms::countValue<int64>(values, odd));
 
     List<float64> reals;
     reals.push(1.5);

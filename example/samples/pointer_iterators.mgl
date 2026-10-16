@@ -32,41 +32,41 @@ int64 main() {
     std::memory::Span<int64> span = std::memory::Span<int64>::from(raw, len(raw));
     foreach (int64 mut& p in span) { *p = *p * 10; }
     println("scale  {} {} {} {} {} {}",
-                  raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
+    raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
 
     std::algorithms::sortReference<int64>(raw, len(raw));
     println("sort   {} {} {} {} {} {}",
-                  raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
+    raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
 
     println("find   {} {}",
-                  std::algorithms::findReference<int64>(raw, len(raw), 30),
-                  std::algorithms::binarySearchReference<int64>(raw, len(raw), 40));
+    std::algorithms::findReference<int64>(raw, len(raw), 30),
+    std::algorithms::binarySearchReference<int64>(raw, len(raw), 40));
     println("miss   {} {}",
-                  std::algorithms::findReference<int64>(raw, len(raw), 99),
-                  std::algorithms::binarySearchReference<int64>(raw, len(raw), 99));
+    std::algorithms::findReference<int64>(raw, len(raw), 99),
+    std::algorithms::binarySearchReference<int64>(raw, len(raw), 99));
 
     /* minReference / maxReference 返回元素地址；通过引用写回原缓冲区。 */
     int64 mut& low = std::algorithms::minReference<int64>(raw, len(raw)).unwrap();
     int64 mut& high = std::algorithms::maxReference<int64>(raw, len(raw)).unwrap();
     *high = 7;
     println("minmax {} {} {}",
-                  *low, *high, std::algorithms::sumReference<int64>(raw, len(raw)));
+    *low, *high, std::algorithms::sumReference<int64>(raw, len(raw)));
     println("count  {} {}",
-                  std::algorithms::countReference<int64>(raw, len(raw), 10),
-                  std::algorithms::countReference<int64>(raw, len(raw), 99));
+    std::algorithms::countReference<int64>(raw, len(raw), 10),
+    std::algorithms::countReference<int64>(raw, len(raw), 99));
 
     std::algorithms::reverseReference<int64>(raw, len(raw));
     println("rev    {} {} {} {} {} {}",
-                  raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
+    raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
 
     std::algorithms::shuffleReference<int64>(raw, len(raw), (uint64)4242);
     println("shuf   {} {} {} {} {} {}",
-                  raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
+    raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
 
     /* 空区间：两个引用版都返回 None，取值前先检查可选值。 */
     int64 mut& empty = raw;
     println("empty  {}",
-                  std::algorithms::minReference<int64>(empty, 0).isNone());
+    std::algorithms::minReference<int64>(empty, 0).isNone());
     delete raw;
 
     /* 结构体数组：Span 迭代给出 Item mut&，`node->字段` 写回元素。 */

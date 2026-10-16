@@ -1130,8 +1130,8 @@ bool RegisterTop()
         }
         if (declaration.external && sameName > 1u)
             return Fail("宿主函数不能重载或与 MAGEL 函数同名（胶水层按名称绑定）：" + declaration.source);
-        if (declaration.source == "main" && (!declaration.signature.result || declaration.signature.result->kind != MType::Int || declaration.signature.result->isUnsigned || declaration.signature.result->bits != 64))
-            return Fail("main 返回类型必须为 int64");
+        if (declaration.source == "main" && (!declaration.signature.result || (declaration.signature.result->kind != MType::Void && (declaration.signature.result->kind != MType::Int || declaration.signature.result->isUnsigned || declaration.signature.result->bits != 64))))
+            return Fail("main 返回类型必须为 int64 或 void");
         const bool argumentsMain = declaration.source == "main" && !declaration.signature.params.empty();
         declaration.label = declaration.source == "main" ? (argumentsMain ? Memory::String("__magel_main_arguments") : Memory::String("main")) : MangledName(ModuleSymbol(declaration.module, declaration.source), declaration.signature.params, sameName > 1u);
         /* 形参名字全程序唯一（同方法里的那段同理：stackvm 的类型表按名字走）。 */

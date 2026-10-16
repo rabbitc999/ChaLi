@@ -178,6 +178,7 @@ void RuntimeBridge::enterTrace(const Memory::String &function)
     std::lock_guard<std::mutex> guard(impl_->traceMutex);
     DebugFrame frame;
     frame.function = function;
+    frame.location.function = function;
     frame.threadId = impl_->threadId;
     impl_->activeTrace[std::this_thread::get_id()].push_back(std::move(frame));
 #else
@@ -197,9 +198,31 @@ void RuntimeBridge::locateTrace(const Memory::String &file, std::int32_t line)
     if (found != impl_->activeTrace.end() && !found->second.empty())
     {
         auto &frame = found->second.back();
-        frame.location.file = file;
+        if (frame.location.file != file) frame.location.file = file;
         frame.location.line = line;
-        frame.location.function = frame.function;
+    }
+#else
+    (void)file;
+    (void)line;
+#endif
+}
+/**
+ * @brief 更新字面量文件名的源码位置，热路径不创建临时拥有字符串。
+ * @param file 以零结尾的文件名；空指针表示空文件名。
+ * @param line 原始源码行号。
+ * @note 文件变化时才复制；始终沿用调用帧的互斥保护。
+ */
+void RuntimeBridge::locateTrace(const char *file, std::int32_t line)
+{
+#if STACKVM_WITH_PANIC_TRACE
+    std::lock_guard<std::mutex> guard(impl_->traceMutex);
+    auto found = impl_->activeTrace.find(std::this_thread::get_id());
+    if (found != impl_->activeTrace.end() && !found->second.empty())
+    {
+        auto &frame = found->second.back();
+        const char *name = file ? file : "";
+        if (frame.location.file != name) frame.location.file = name;
+        frame.location.line = line;
     }
 #else
     (void)file;
@@ -1654,76 +1677,67 @@ bool RuntimeBridge::callNative(const Memory::String &name,
 }
 
 /**
- * @brief 按运行时类型读取指定地址的值。
- * @param address 运行时内存地址。
- * @param isFloat 是否按浮点数表示读写数据。
- * @param out 接收处理结果的输出对象。
- * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
+ * @brief 直接读取静态标量，不构造 RuntimeValue。
+ * @param address 运行时虚拟地址。
+ * @param out 成功时接收读取结果。
+ * @retval 成功返回 true，非法地址按原内存访问路径报告错误并返回 false。
  */
-bool RuntimeBridge::loadMemory(std::int64_t address, bool isFloat, RuntimeValue &out)
+bool RuntimeBridge::loadInteger(std::int64_t address, std::int64_t &out)
 {
     const std::size_t target = static_cast<std::size_t>(address);
     if (impl_->heap->contains(target))
     {
-        if (isFloat)
-        {
-            double real = 0.0;
-            if (!impl_->heap->readDouble(target, real))
-            {
-                fail("panic：读堆内存失败：地址 " + Memory::toString(address));
-                return false;
-            }
-            out = RuntimeValue::ofFloat(real);
-            return true;
-        }
-        std::int64_t integer = 0;
-        if (!impl_->heap->readInt(target, integer))
-        {
-            fail("panic：读堆内存失败：地址 " + Memory::toString(address));
-            return false;
-        }
-        out = RuntimeValue::ofInt(integer);
-        return true;
+        const bool okay = impl_->heap->readInt(target, out);
+        if (!okay) fail("panic：读堆内存失败：地址 " + Memory::toString(address));
+        return okay;
     }
     if (data_ == nullptr)
     {
         fail("panic：没有数据区，无法按地址读");
         return false;
     }
-    if (isFloat)
-    {
-        double real = 0.0;
-        if (!data_->readDouble(target, real))
-        {
-            fail("panic：读数据区失败：地址 " + Memory::toString(address));
-            return false;
-        }
-        out = RuntimeValue::ofFloat(real);
-        return true;
-    }
-    std::int64_t integer = 0;
-    if (!data_->readInt(target, integer))
-    {
-        fail("panic：读数据区失败：地址 " + Memory::toString(address));
-        return false;
-    }
-    out = RuntimeValue::ofInt(integer);
-    return true;
+    const bool okay = data_->readInt(target, out);
+    if (!okay) fail("panic：读数据区失败：地址 " + Memory::toString(address));
+    return okay;
 }
 
 /**
- * @brief 按运行时类型将值写入指定地址。
- * @param address 运行时内存地址。
- * @param isFloat 是否按浮点数表示读写数据。
- * @param value 待转换、保存或参与计算的值。
- * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
+ * @brief 直接读取静态标量，不构造 RuntimeValue。
+ * @param address 运行时虚拟地址。
+ * @param out 成功时接收读取结果。
+ * @retval 成功返回 true，非法地址按原内存访问路径报告错误并返回 false。
  */
-bool RuntimeBridge::storeMemory(std::int64_t address, bool isFloat, const RuntimeValue &value)
+bool RuntimeBridge::loadFloat(std::int64_t address, double &out)
 {
     const std::size_t target = static_cast<std::size_t>(address);
     if (impl_->heap->contains(target))
     {
-        const bool okay = isFloat ? impl_->heap->writeDouble(target, value.isFloat ? value.real : value.number()) : impl_->heap->writeInt(target, (value.isFloat ? static_cast<std::int64_t>(value.number()) : value.integer));
+        const bool okay = impl_->heap->readDouble(target, out);
+        if (!okay) fail("panic：读堆内存失败：地址 " + Memory::toString(address));
+        return okay;
+    }
+    if (data_ == nullptr)
+    {
+        fail("panic：没有数据区，无法按地址读");
+        return false;
+    }
+    const bool okay = data_->readDouble(target, out);
+    if (!okay) fail("panic：读数据区失败：地址 " + Memory::toString(address));
+    return okay;
+}
+
+/**
+ * @brief 直接写入静态标量，不构造 RuntimeValue。
+ * @param address 运行时虚拟地址。
+ * @param value 待写入的标量值。
+ * @retval 成功返回 true，非法地址按原内存访问路径报告错误并返回 false。
+ */
+bool RuntimeBridge::storeInteger(std::int64_t address, std::int64_t value)
+{
+    const std::size_t target = static_cast<std::size_t>(address);
+    if (impl_->heap->contains(target))
+    {
+        const bool okay = impl_->heap->writeInt(target, value);
         if (!okay) fail("panic：写堆内存失败：地址 " + Memory::toString(address));
         return okay;
     }
@@ -1732,9 +1746,70 @@ bool RuntimeBridge::storeMemory(std::int64_t address, bool isFloat, const Runtim
         fail("panic：没有数据区，无法按地址写");
         return false;
     }
-    const bool okay = isFloat ? data_->writeDouble(target, value.isFloat ? value.real : value.number()) : data_->writeInt(target, (value.isFloat ? static_cast<std::int64_t>(value.number()) : value.integer));
+    const bool okay = data_->writeInt(target, value);
     if (!okay) fail("panic：写数据区失败：地址 " + Memory::toString(address));
     return okay;
+}
+
+/**
+ * @brief 直接写入静态标量，不构造 RuntimeValue。
+ * @param address 运行时虚拟地址。
+ * @param value 待写入的标量值。
+ * @retval 成功返回 true，非法地址按原内存访问路径报告错误并返回 false。
+ */
+bool RuntimeBridge::storeFloat(std::int64_t address, double value)
+{
+    const std::size_t target = static_cast<std::size_t>(address);
+    if (impl_->heap->contains(target))
+    {
+        const bool okay = impl_->heap->writeDouble(target, value);
+        if (!okay) fail("panic：写堆内存失败：地址 " + Memory::toString(address));
+        return okay;
+    }
+    if (data_ == nullptr)
+    {
+        fail("panic：没有数据区，无法按地址写");
+        return false;
+    }
+    const bool okay = data_->writeDouble(target, value);
+    if (!okay) fail("panic：写数据区失败：地址 " + Memory::toString(address));
+    return okay;
+}
+
+/**
+ * @brief 读取动态值，静态地址检查委托给对应标量路径。
+ * @param address 运行时虚拟地址。
+ * @param isFloat 是否按浮点读取。
+ * @param out 成功时接收带类型结果。
+ * @retval 读取成功返回 true，否则保留错误并返回 false。
+ */
+bool RuntimeBridge::loadMemory(std::int64_t address, bool isFloat, RuntimeValue &out)
+{
+    if (isFloat)
+    {
+        double value = 0;
+        if (!loadFloat(address, value)) return false;
+        out = RuntimeValue::ofFloat(value);
+    }
+    else
+    {
+        std::int64_t value = 0;
+        if (!loadInteger(address, value)) return false;
+        out = RuntimeValue::ofInt(value);
+    }
+    return true;
+}
+/**
+ * @brief 将动态值转换为目标标量后写入，沿用原有转换规则。
+ * @param address 运行时虚拟地址。
+ * @param isFloat 是否按浮点写入。
+ * @param value 待写入的带类型值。
+ * @retval 写入成功返回 true，否则保留错误并返回 false。
+ */
+bool RuntimeBridge::storeMemory(std::int64_t address, bool isFloat, const RuntimeValue &value)
+{
+    return isFloat ? storeFloat(address, value.isFloat ? value.real : value.number()) :
+                     storeInteger(address, value.isFloat ? static_cast<std::int64_t>(value.number()) : value.integer);
 }
 
 /**
@@ -1820,10 +1895,9 @@ bool RuntimeBridge::checkIndex(std::int64_t index, std::int64_t limit, const Mem
 bool RuntimeBridge::checkPointer(std::int64_t index, std::int64_t base, std::int64_t stride,
                                  const Memory::String &label)
 {
-    const Memory::String name = label.empty() ? Memory::String("这一块") : label;
     if (index < 0)
     {
-        error_ = "数组下标越界：" + name + " 的下标 " + Memory::toString(index) + "（不能为负）";
+        error_ = "数组下标越界：" + (label.empty() ? Memory::String("这一块") : label) + " 的下标 " + Memory::toString(index) + "（不能为负）";
         return false;
     }
     const std::size_t address = static_cast<std::size_t>(base);
@@ -1851,14 +1925,13 @@ bool RuntimeBridge::checkPointer(std::int64_t index, std::int64_t base, std::int
     }
     if (!found || capacity == 0u)
     {
-        fail("panic：数组下标检查失败：" + name + " 的地址 " + Memory::toString(base) + " 不在任何一块已分配内存里");
+        fail("panic：数组下标检查失败：" + (label.empty() ? Memory::String("这一块") : label) + " 的地址 " + Memory::toString(base) + " 不在任何一块已分配内存里");
         return false;
     }
     const std::int64_t step = (stride > 0) ? stride : 8;
-    const std::int64_t offset = index * step;
-    if (static_cast<std::size_t>(offset) + static_cast<std::size_t>(step) > capacity)
+    if (static_cast<std::uint64_t>(index) >= capacity / static_cast<std::uint64_t>(step))
     {
-        error_ = "数组下标越界：" + name + " 的下标 " + Memory::toString(index) + "（这一块只有 " + Memory::toString(capacity) + " 字节，元素 " + Memory::toString(step) + " 字节）";
+        error_ = "数组下标越界：" + (label.empty() ? Memory::String("这一块") : label) + " 的下标 " + Memory::toString(index) + "（这一块只有 " + Memory::toString(capacity) + " 字节，元素 " + Memory::toString(step) + " 字节）";
         return false;
     }
     return true;

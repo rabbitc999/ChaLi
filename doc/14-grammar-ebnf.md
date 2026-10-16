@@ -105,7 +105,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED MAGEL EBNF -->
 
-以下 122 条产生式由 `source/magel.gram` 导出，语义动作及解析优先级指令省略。
+以下 123 条产生式由 `source/magel.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -244,11 +244,11 @@ top = annotation_decl
     | annotation_list, top_decl
     | top_decl ;
 
-top_decl = struct_decl
+top_decl = struct_decl, type_decl_end
     | "module", module_name, ";"
     | "import", module_name, ";"
-    | enum_decl
-    | interface_decl
+    | enum_decl, type_decl_end
+    | interface_decl, type_decl_end
     | func_def
     | "export", func_def
     | "inline", func_def
@@ -258,6 +258,9 @@ top_decl = struct_decl
     | host_impl_decl
     | operator_def
     | global_decl ;
+
+type_decl_end = ""
+    | ";" ;
 
 annotation_decl = "@annotation", module_name
     | "@annotation", module_name, "(", annotation_params, ")" ;
@@ -289,8 +292,8 @@ annotation_arg = expr
 module_name = name_token
     | module_name, "::", name_token ;
 
-interface_decl = "interface", name_token, "{", iface_member_list, "}", ";"
-    | "interface", name_token, ":", iface_list, "{", iface_member_list, "}", ";" ;
+interface_decl = "interface", name_token, "{", iface_member_list, "}"
+    | "interface", name_token, ":", iface_list, "{", iface_member_list, "}" ;
 
 iface_member_list = ""
     | iface_member_list, iface_member ;
@@ -362,14 +365,14 @@ ptr_type = type, "&"
 
 array_type = type, "[", "]" ;
 
-struct_decl = "struct", name_token, "{", member_list, "}", ";"
-    | "struct", name_token, ":", iface_list, "{", member_list, "}", ";"
-    | "struct", name_token, name_token, "{", member_list, "}", ";"
-    | "struct", name_token, name_token, ":", iface_list, "{", member_list, "}", ";" ;
+struct_decl = "struct", name_token, "{", member_list, "}"
+    | "struct", name_token, ":", iface_list, "{", member_list, "}"
+    | "struct", name_token, name_token, "{", member_list, "}"
+    | "struct", name_token, name_token, ":", iface_list, "{", member_list, "}" ;
 
-enum_decl = "enum", name_token, "{", enum_variant_list, "}", ";"
-    | "enum", name_token, "{", enum_variant_list, ";", member_list, "}", ";"
-    | "enum", name_token, ":", iface_list, "{", enum_variant_list, ";", member_list, "}", ";" ;
+enum_decl = "enum", name_token, "{", enum_variant_list, "}"
+    | "enum", name_token, "{", enum_variant_list, ";", member_list, "}"
+    | "enum", name_token, ":", iface_list, "{", enum_variant_list, ";", member_list, "}" ;
 
 enum_variant_list = enum_variant
     | enum_variant_list, ",", enum_variant ;

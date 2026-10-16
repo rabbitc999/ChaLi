@@ -43,7 +43,7 @@ int64 main() {
     int64 data[4];
     data[0] = 5; data[1] = 6; data[2] = 7; data[3] = 8;
     println("at(data)={} {} {}", demo_pointer_at(data, 0),
-                  demo_pointer_at(data, 2), demo_pointer_at(data, 3));
+    demo_pointer_at(data, 2), demo_pointer_at(data, 3));
 
     /* 结构体数组也退化成 PointerBox mut&：改的是 boxes[0] 的字段。 */
     PointerBox boxes[2];
@@ -51,6 +51,6 @@ int64 main() {
     boxes[1].x = 3; boxes[1].y = 4;
     demo_pointer_offset(boxes, 100, 200);
     println("offset(boxes)={} {} / {} {}", boxes[0].x, boxes[0].y,
-                  boxes[1].x, boxes[1].y);
+    boxes[1].x, boxes[1].y);
     return 0;
 }

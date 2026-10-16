@@ -13,7 +13,7 @@ int64 main() {
     int64 before = std::memory::Memory::stats().liveBlocks;
     for (int64 i = 0; i < 300; i = i + 1) {
         Result<std::regex::Regex, std::regex::RegexError> item =
-            std::regex::Regex::compile(format("x{}y", i));
+        std::regex::Regex::compile(format("x{}y", i));
         assert(item.isOk());
     }
     int64 after = std::memory::Memory::stats().liveBlocks;

@@ -2,7 +2,7 @@ import std::io;
 
 int64 main() {
     Result<FileStream, IoError> opened =
-        std::io::FileStream::open("tmp/magel_std_io.txt", "w+");
+    std::io::FileStream::open("tmp/magel_std_io.txt", "w+");
     std::io::FileStream stream = opened.expect("open failed");
     /* `Result<_, IoError>` 的载荷带字符串（IoError 里有 message）——持资源的临时值
      * 不许直接链式调用，先落进变量。 */
@@ -18,7 +18,7 @@ int64 main() {
     stream.close();
 
     Result<std::io::FileStream, std::io::IoError> missing =
-        std::io::FileStream::open("tmp/no-such-magel-file.txt", "r");
+    std::io::FileStream::open("tmp/no-such-magel-file.txt", "r");
     println("{}", missing.isErr());
     return 0;
 }

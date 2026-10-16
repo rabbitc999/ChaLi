@@ -3027,6 +3027,9 @@ simple_ast::NodePtr LowerStmtImpl(int id)
     case MNode::ExprStmt:
     {
         const int valueId = node.kids.empty() ? -1 : node.kids[0];
+        // 独立花括号语句即使带尾分号也只是普通作用域，不创建可丢弃的隐式值出口。
+        if (valueId >= 0 && N(valueId).kind == MNode::Loop && N(valueId).s == "block")
+            return LowerStmt(N(valueId).kids[0]);
         /* 构造结果必须由值上下文接管，不能作为独立语句丢弃。 */
         if (valueId >= 0 && N(valueId).kind == MNode::EnumCtor && N(valueId).type2 == 1 && N(valueId).s2 == "new")
         {
@@ -3466,6 +3469,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
             if (value.kind == MNode::Loop)
             {
+                if (value.s == "block") return StatementReturnFlowImpl(value.kids[0], transparentLoops, exits, depth);
                 if (value.s.empty()) return StatementReturnFlowImpl(statement.kids[0], transparentLoops, exits, depth);
                 const int flow = StatementReturnFlowImpl(value.kids[0], true, exits, depth);
                 return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);

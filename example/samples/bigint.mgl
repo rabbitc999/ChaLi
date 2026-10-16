@@ -58,7 +58,7 @@ int64 main() {
     /* 4) 比较与负数 */
     BigInteger negative = BigInteger("-123456789012345678901234567890");
     println("负数 = {}，它 < 0 ? {}，取负之后 > 0 ? {}",
-           negative.str(), negative < 0, -negative > 0);
+    negative.str(), negative < 0, -negative > 0);
 
     /* 5) 转回机器数：放得下就给准确值 */
     BigInteger small = BigInteger("9223372036854775807");            /* int64 的最大值 */

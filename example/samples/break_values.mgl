@@ -55,6 +55,13 @@ int64 main() {
     assert(nearest == 8);
     int64 outer = { int64 inner = { break 1; }; assert(inner == 1); break 2; };
     assert(outer == 2);
+    int64 nestedResult = {
+        int64 y = loop { int64 z = loop { break 5; }; break z + 1; };
+        break y + 1;
+    };
+    assert(nestedResult == 7);
+    int64 throughStatementBlock = { { loop { break 8; }; }; };
+    assert(throughStatementBlock == 8);
     assert(returned() == 4);
     int64 continued = {
         int64 i = 0;

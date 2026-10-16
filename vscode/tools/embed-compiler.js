@@ -21,6 +21,8 @@ const locator = require('../src/locator');
 const EXT_ROOT = path.join(__dirname, '..');
 const TARGET_DIR = path.join(EXT_ROOT, 'bin');
 const TARGET = path.join(TARGET_DIR, 'magel' + locator.EXE);
+const SKILL_SOURCE = path.join(EXT_ROOT, '..', 'skills', 'magel-programming', 'SKILL.md');
+const SKILL_TARGET = path.join(EXT_ROOT, 'skills', 'magel-programming', 'SKILL.md');
 
 /**
  * 取 `--from <路径>`。
@@ -67,6 +69,8 @@ function findSource() {
 
 /** 复制（内容一致就跳过），并打印来源与大小。 */
 function main() {
+  fs.mkdirSync(path.dirname(SKILL_TARGET), { recursive: true });
+  fs.copyFileSync(SKILL_SOURCE, SKILL_TARGET);
   const source = findSource();
   if (!source.file) {
     console.error('找不到 magel 编译器：先在项目根目录跑 make（产出 ./magel[.exe]），');

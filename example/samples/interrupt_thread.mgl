@@ -30,7 +30,7 @@ void worker() {
     while (spin < 300) { spin = spin + 1; }
     t.stop();
     std::thread::send(std::thread::parent(),
-                      format("{}:{}", workerTicks > 0, t.thread()));
+    format("{}:{}", workerTicks > 0, t.thread()));
 }
 
 int64 main() {
@@ -43,6 +43,6 @@ int64 main() {
     std::thread::wait(task);
     mainTimer.stop();
     println("main-thread={} main-fired={} worker-fired:thread={} isolated={}",
-                  mainTimer.thread(), mainTicks > 0, reply, workerTicks == 0);
+    mainTimer.thread(), mainTicks > 0, reply, workerTicks == 0);
     return 0;
 }

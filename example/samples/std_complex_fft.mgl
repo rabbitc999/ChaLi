@@ -20,7 +20,7 @@ int64 main() {
     std::complex::Complex<float32> doubled=small+small;
     assert(doubled.re==(float32)2.0 && doubled.im==(float32)4.0);
     println("complex {} {} {} {} {} {}",sum.re,sum.im,product.re,product.im,
-                 quotient.re,quotient.im);
+    quotient.re,quotient.im);
     List<std::complex::Complex<float64>> input;
     input.push(std::complex::Complex<float64>::of(1.0,0.0));
     input.push(std::complex::Complex<float64>::of(2.0,0.0));
@@ -34,9 +34,9 @@ int64 main() {
         std::complex::Complex<float64> fastValue=spectrum.at(i), slowValue=slow.at(i);
         std::complex::Complex<float64> back=restored.at(i), original=input.at(i);
         assert(std::math::abs(fastValue.re-slowValue.re)<0.00000001 &&
-                    std::math::abs(fastValue.im-slowValue.im)<0.00000001);
+        std::math::abs(fastValue.im-slowValue.im)<0.00000001);
         assert(std::math::abs(back.re-original.re)<0.00000001 &&
-                    std::math::abs(back.im-original.im)<0.00000001);
+        std::math::abs(back.im-original.im)<0.00000001);
         i=i+1;
     }
     List<std::complex::Complex<float64>> oddLength;
@@ -44,11 +44,11 @@ int64 main() {
     List<std::complex::Complex<float64>> oddSpectrum=std::signal::dft(oddLength);
     List<std::complex::Complex<float64>> oddBack=std::signal::idft(oddSpectrum);
     assert(std::math::abs(oddBack.at(0).re-a.re)<0.00000001 &&
-                std::math::abs(oddBack.at(2).im-sum.im)<0.00000001);
+    std::math::abs(oddBack.at(2).im-sum.im)<0.00000001);
     println("fft {} {} {} {}",spectrum.at(0).re,spectrum.at(1).re,
-                 spectrum.at(2).re,spectrum.at(3).re);
+    spectrum.at(2).re,spectrum.at(3).re);
     println("inverse {} {} {} {}",restored.at(0).re,restored.at(1).re,
-                 restored.at(2).re,restored.at(3).re);
+    restored.at(2).re,restored.at(3).re);
     println("dft {}",slow.at(0).re);
     delete oddLength;
     delete oddSpectrum;

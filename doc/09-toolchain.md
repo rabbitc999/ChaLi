@@ -23,6 +23,16 @@ magel 场景 [文件.mgl] [配置词...] [-- 程序参数...]
 
 > Windows 上程序名是 `magel.exe`。Git Bash / MSYS 下写 `./magel` 能自动找到 `magel.exe`，光写 `magel` 会走 PATH 查找。
 
+## AOT 代码生成与优化
+
+AOT 默认使用 `checked`，启用可选分配护栏及 panic 调用记录；宿主 C++ 编译器默认使用 `-O3`；命令行 `--opt-level` / `-O*` 和项目 `opt_level` 仍可显式覆盖。`fast` 是显式选择的 `-Ofast`，不会作为默认值，避免默认改变浮点运算规则。四元式仍执行完整默认优化，反射默认启用。
+
+静态类型已知的整数、浮点内存访问直接调用对应的运行时标量接口，省去 `RuntimeValue` 的构造及拆箱；动态类型保留通用路径。固定数组索引的成功路径使用生成的比较，失败时调用同一诊断接口；指针数组仍验证存活分配及容量，索引容量判断先除后比，避免索引乘步长溢出。有效指针检查不再预先构造错误标签字符串。原有边界、失效地址、调用栈与清理行为保留。
+
+宿主调用的实参缓冲区由当前生成函数的调用帧持有并复用容量，减少循环内的临时容器分配；同步回调重入建立独立调用帧，不共用外层实参缓冲区。已知 Magel 函数仍直接调用，动态函数值和宿主调用保留原有检查。
+
+验证见 [AOT 优化回归](../tests/magel_aot_optimization.py) 与[同步回调回归](../tests/magel_native_callbacks.py)；性能对照的配置和边界见[性能文档](12-vm-performance.md)。
+
 ## AOT 库输出
 
 库源码通过 `export` 选择公开的 C 接口，允许没有 `main`：
@@ -67,11 +77,11 @@ Windows 工具链若采用动态 C++ 运行时，加载 DLL 时还须能找到�
 | `check FILE [json]` | 仅检查，可输出 JSON 诊断 |
 | `emit` | 只出 `.quad` / `.data.bin` / `.layout`，不执行 |
 | `svmb` | 只导出 `<前缀>.svmb`，不执行 |
-| `aot FILE [out EXE] [opt LEVEL] [checked\|unchecked]` | 导出 AOT（默认 `unchecked`） |
+| `aot FILE [out EXE] [opt LEVEL] [checked\|unchecked]` | 导出 AOT（默认 `checked`） |
 | `new DIR [name NAME]` | 新建应用工程（目标目录必须不存在） |
 | `gen` | 生成独立编译器工程（转发 `magel-generator compiler`） |
 | `clear out DIR` | 清理登记过的中间产物（不重新编译） |
-| `lang zh\|en\|ja\|auto` | 选择显示语言 |
+| `lang zh\|en\|auto` | 选择显示语言 |
 | `help` | 显示帮助 |
 
 开发场景：`test tests backend all`、`fmt check src`、`deps lock project . offline`、`lsp`。
@@ -182,7 +192,7 @@ expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candi
 
 选择方式（优先级从高到低）：
 
-1. `magel lang zh|en|ja|auto`；
+1. `magel lang zh|en|auto`；
 2. 环境变量 `MAGEL_LANG`；
 3. 系统语言（`LC_ALL` / `LC_MESSAGES` / `LANG`，Windows 用 `GetUserDefaultUILanguage()`）；
 4. 都没有 → 英文。
@@ -363,3 +373,16 @@ LSP 对类型名检查大驼峰（PascalCase），对函数和方法名检查小
 `magel lsp` 的 stdio JSON-RPC 服务由 `tools/native_development.cpp` 实现，标准库声明从内嵌 JSON 读取；不释放或调用 Python 脚本。普通语言服务也索引 `$macro`、`$replace` 和 `%define`，支持包含文件中的宏文档、定义及参数提示。VSCode 命令 **Magel: 预览宏展开** 调用 `magel/expandMacro`，返回真实预处理和宏展开后的完整源码，包含导入模块，尚未进行 lambda/泛型降低。预览使用只读文档，修改后可重新执行命令。
 
 验证入口：`python tests/magel_native_development.py --aot`（测试驱动使用 Python，受测程序 PATH 不含 Python）、`python tests/magel_native_lsp_parity.py`、`python tests/magel_online_dependencies.py`。旧 Python 实现保留供文档与回归对照，不参与用户运行流程。
+
+
+### MSVC 生成代码验证
+
+在 Windows 的 Visual Studio 2022 x64 Native Tools 命令提示符中，保留的 AOT C++ 源码可以交给 MSVC。2026-10-16 已对本次五项基准的生成源码使用以下命令完成编译、链接和运行，全部校验和正确（[验证记录](benchmarks/aot-msvc-probe-2026-10-16.json)）：
+
+```bat
+cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /DWIN32_LEAN_AND_MEAN /DNOMINMAX program.aot.cpp /Foprogram-msvc.obj /Feprogram-msvc.exe /link winhttp.lib ws2_32.lib
+```
+
+这里的 `program.aot.cpp` 是 `magel aot ... --keep-intermediate` 保留的源码，先在可用的 GCC AOT 流程中生成。当前 AOT 驱动仍使用 GCC 的 `-dumpmachine`、`-std=c++17`、`-pthread`、`-c` 和 `-o`，因此 `--cxx cl.exe` 还不能直接使用。直接集成需要分别适配目标探测、优化参数、编译／链接命令、模块缓存、SQLite C 编译及 DLL／目标文件输出。本次验证只覆盖普通可执行文件与基准所用运行时，不代表所有模块、胶水或库输出均已通过 MSVC 门禁；它也不是 MSVC 与 GCC 的性能对比。
+
+AOT 的 checked 源码定位保留线程调用栈和同步保护；同一源文件连续执行时只更新行号，避免每条四元式重复构造、复制文件名和函数名。错误路径仍读取当前帧的函数、文件与行号。

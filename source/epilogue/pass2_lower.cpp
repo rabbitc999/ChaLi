@@ -869,22 +869,26 @@ void AppendArgumentsMain(simple_ast::Program &program)
             continue;
         simple_ast::Function wrapper;
         wrapper.name = "main";
-        wrapper.result = LowerType(declaration.signature.result, "main");
+        const bool voidMain = declaration.signature.result->kind == MType::Void;
+        wrapper.result = voidMain ? simple_ast::Type::i64() : LowerType(declaration.signature.result, "main");
         const Memory::String arguments = "__magel_program_arguments";
         const Memory::String result = "__magel_program_result";
         Memory::Vector<simple_ast::NodePtr> body{
             Node::declare(arguments, LowerType(declaration.signature.params[0].type, arguments)),
             Node::assign(arguments, Node::call("__vm_program_arguments", {}, {})),
-            Node::declare(result, wrapper.result),
-            Node::assign(result, Node::call(declaration.label,
-                                            { declaration.signature.params[0].emitted },
-                                            { Node::var(arguments) })),
-            Node::exprStmt(Node::call("__vm_object_free", { "__magel_o" },
-                                      { Node::var(arguments) })),
         };
+        const auto call = Node::call(declaration.label, { declaration.signature.params[0].emitted }, { Node::var(arguments) });
+        if (voidMain)
+            body.push_back(Node::exprStmt(call));
+        else
+        {
+            body.push_back(Node::declare(result, wrapper.result));
+            body.push_back(Node::assign(result, call));
+        }
+        body.push_back(Node::exprStmt(Node::call("__vm_object_free", { "__magel_o" }, { Node::var(arguments) })));
         /* 带参数入口的引导也是"正常停机"的出口；全局清理由之后统一跑一次的
          * `InsertGlobalCleanupBeforeReturns` 补在 `ret` 前面。 */
-        body.push_back(Node::ret(Node::var(result)));
+        body.push_back(Node::ret(voidMain ? Node::i(0) : Node::var(result)));
         wrapper.body = Node::block(std::move(body));
         program.functions.push_back(std::move(wrapper));
         return;

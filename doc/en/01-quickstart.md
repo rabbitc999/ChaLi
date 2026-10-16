@@ -53,7 +53,7 @@ int64 main() {
 
 Three things worth noting:
 
-- The entry function is always `main`, returning `int64`.
+- The entry function is always `main`, returning `int64` or `void`. Normal completion of `void main` exits with code 0.
 - `println` comes from the automatically loaded core library; its full name is `println`, and
   the prefix can be dropped when there is no name clash.
 - Semicolons and braces work as in C-family languages — deliberately so. Magel borrows C's expression

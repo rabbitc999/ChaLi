@@ -101,8 +101,7 @@ void log(String message) { println("{}", message); }
 - Overloading is supported: selection is by argument types.
 - Variadic trailing parameters are written `T... items`, used with `foreach` or `std::iter`.
 - `static` methods belong to the type and are called `Type::method()`.
-- The entry point is always `int64 main()` or
-  `int64 main(std::lang::List<std::lang::String> arguments)`.
+- The entry point is named `main`, returns `int64` or `void`, and takes no parameters or `std::lang::List<std::lang::String> arguments`. Normal completion or `return;` from `void main` produces process exit code 0; panic still fails.
 
 ### Multiple return values and generic tuples
 
@@ -336,6 +335,8 @@ forms:
 ---
 
 ## 6. Structs
+
+Declarations of `struct`, `enum`, and `interface` end at the closing `}`. The trailing semicolon is optional, and existing `};` declarations remain valid. Fields, abstract interface methods, and ordinary statements retain their semicolon requirements.
 
 ```magel
 struct Point {
@@ -733,7 +734,7 @@ More capabilities (`json` / `toml` / `regex` / `sql` / `net` / `linalg` …): se
 
 Repeated `drop()` and `delete` have no additional effect. Assignment starts a new lifecycle; `const &` still cannot call `drop()`. Reads and writes after release, and reads after move, produce `MGL1205`; a moved binding cannot be written or rebound; a new declaration is required. The default heap reuses physical memory without reusing logical allocation identities, so repeated deletion through old references cannot affect new objects. See [borrow control flow and algorithm validation](11-algorithm-validation.md).
 
-The program entry `main` must return `int64`. Function pointers can be array elements: `int64 fn(int64) a[] = new[2];`; assign elements before calling `auto callback = a[0]; callback(value);`. Function types compose with arrays, tuples, containers and nested function types. Write an array-returning function type as `(int64[]) fn()` to distinguish it from an array of function pointers.
+The program entry `main` must return `int64` or `void`. Function pointers can be array elements: `int64 fn(int64) a[] = new[2];`; assign elements before calling `auto callback = a[0]; callback(value);`. Function types compose with arrays, tuples, containers and nested function types. Write an array-returning function type as `(int64[]) fn()` to distinguish it from an array of function pointers.
 
 Prefer return-first syntax: `int64 fn(int64, int64) callback` and `int64 fn(int64 x) { x + 1 }`. Starting with **0.12.0**, the old arrow forms are rejected. Omit the arrow for inferred results: `fn(int64 x) { x + 1 }`. Regenerate generic host glue and rebuild old caches when upgrading.
 
@@ -817,6 +818,8 @@ int64 a = { int64 b = { break 1; }; break b + 1; }; // a == 2
 ```
 
 See the [value break sample](../../example/samples/break_values.mgl) for nested loops and cleanup checks.
+
+A standalone brace statement remains an ordinary scope even with a trailing semicolon; it does not create a disposable value receiver. A value break without an enclosing receiving expression is an error. In nested initializers, `break 5;` completes the inner loop for z and `break z + 1;` completes the outer loop for y. A final `break y + 1;` inside a standalone outer block still has no receiver.
 
 `print` and `println` accept a single interpolated string or `String` expression. Braces and percent signs in the resulting text are printed literally. Traditional `println("{}", value)` formatting remains supported; interpolated output does not accept additional format arguments.
 

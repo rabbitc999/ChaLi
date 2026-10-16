@@ -594,9 +594,10 @@ struct Token
  * @brief 扫描源文本并产生词法项。
  * @param s 待处理的文本或节点文本值。
  * @param trivia 是否保留空白及注释词法项。
+ * @param multilineStrings 是否跨行扫描字符串，格式化时用于逐字保护字符串内容。
  * @retval 按处理顺序保存的结果元素集合。
  */
-std::vector<Token> lex(const std::string &s, bool trivia = false)
+std::vector<Token> lex(const std::string &s, bool trivia = false, bool multilineStrings = false)
 {
     std::vector<Token> out;
     size_t i = 0;
@@ -627,7 +628,7 @@ std::vector<Token> lex(const std::string &s, bool trivia = false)
         else if (c == '"' || c == '\'')
         {
             kind = 9;
-            while (i < s.size() && s[i] != '\n')
+            while (i < s.size() && (multilineStrings || s[i] != '\n'))
             {
                 char v = s[i++];
                 if (v == '\\' && i < s.size())
@@ -1714,7 +1715,7 @@ std::string format(const std::string &s)
 {
     std::string mask = s;
     std::set<int> protectedLines;
-    for (auto &t : lex(s, true))
+    for (auto &t : lex(s, true, true))
         if (t.kind == 8 || t.kind == 9)
         {
             int line = integer(get(position(s, t.a), "line"));

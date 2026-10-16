@@ -34,7 +34,7 @@ int64 main() {
     String text = std::text::Text::repeat("magel 文本压缩往返测试；", 40);
     List<uint8> packed = std::compress::compress(text);
     println("原文 {} 压缩后 {} 变小 {}", len(text), packed.len(),
-                  packed.len() < len(text));
+    packed.len() < len(text));
     String back = std::compress::decompress(packed);
     assert(back == text);
     println("往返一致 {}", back == text);

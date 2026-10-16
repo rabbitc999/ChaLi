@@ -34,8 +34,8 @@ BigInteger borrowInteger(BigInteger const& value) { return value; }
 BigDecimal borrowDecimal(BigDecimal const& value) { return value; }
 Map<String, int64> borrowMap(Map<String, int64> const& value) { return value; }
 void update(String mut& text, BigInteger mut& integer, BigDecimal mut& decimal,
-            Set<int64> mut& set, Map<String, int64> mut& map,
-            (int64, String) mut& tuple) {
+Set<int64> mut& set, Map<String, int64> mut& map,
+(int64, String) mut& tuple) {
     text = "changed";
     integer = integer + 1;
     decimal = decimal + BigDecimal("1.0");

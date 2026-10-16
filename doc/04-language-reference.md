@@ -102,7 +102,7 @@ void log(String message) { println("{}", message); }
 - 支持重载：按实参类型选。
 - 变长尾参写 `T... items`，配合 `foreach` 或 `std::iter`。
 - `static` 方法是类型级函数，用 `Type::method()` 调。
-- 入口固定是 `int64 main()` 或 `int64 main(std::lang::List<std::lang::String> arguments)`。
+- 入口名为 `main`，返回类型为 `int64` 或 `void`，参数为空或 `std::lang::List<std::lang::String> arguments`。`void main` 正常完成或执行 `return;` 时，进程退出码为 0；panic 仍以失败退出。
 
 ### 多值返回与泛型元组
 
@@ -325,6 +325,8 @@ int64 main() {
 ---
 
 ## 6. 结构体
+
+`struct`、`enum` 和 `interface` 声明在右花括号 `}` 处结束，末尾分号可省略，原有 `};` 写法仍然有效。结构体字段、接口抽象方法和普通语句的分号要求不变。
 
 ```magel
 struct Point {
@@ -703,7 +705,7 @@ abi "./native.dll" {
 
 `drop()` 与 `delete` 可以重复调用，同一对象只执行一次析构和释放。重新赋值开始新生命周期；`const &` 仍不能调用 `drop()`。释放后读写以及移动后读取产生 `MGL1205`；已移动的原绑定也禁止写入，只有新的声明可以创建可用绑定。默认堆复用物理内存但不复用逻辑分配身份，旧引用的再次 `delete` 不影响新对象。详见[借用控制流与算法验证](11-algorithm-validation.md)。
 
-函数入口 `main` 的返回类型必须是 `int64`，不接受 `void`、`uint64`、较窄整数、浮点数或引用。函数指针可作数组元素：`int64 fn(int64) a[] = new[2];`，赋值后可用 `auto callback = a[0]; callback(value);` 调用。固定数组、元组、容器和嵌套函数类型可组合；返回运行时数组的函数类型写作 `(int64[]) fn()`，圆括号将数组返回类型与函数指针数组区分开。
+函数入口 `main` 的返回类型必须是 `int64` 或 `void`，不接受 `uint64`、较窄整数、浮点数或引用。函数指针可作数组元素：`int64 fn(int64) a[] = new[2];`，赋值后可用 `auto callback = a[0]; callback(value);` 调用。固定数组、元组、容器和嵌套函数类型可组合；返回运行时数组的函数类型写作 `(int64[]) fn()`，圆括号将数组返回类型与函数指针数组区分开。
 
 函数类型和匿名函数的返回类型统一前置：`int64 fn(int64, int64) callback`、`int64 fn(int64 x) { x + 1 }`。旧 `fn(int64, int64) -> int64` 与 `fn(int64 x) -> int64 { x + 1 }` 已移除并报错；推导返回类型使用 `fn(int64 x) { x + 1 }`，不写箭头。升级后重新生成泛型宿主胶水并重建旧缓存。
 
@@ -783,6 +785,8 @@ int64 main() {
 };
 int64 a = { int64 b = { break 1; }; break b + 1; }; // a == 2
 ```
+
+独立花括号语句即使带尾分号也只是普通作用域，不自动建立可丢弃的值接收方；没有外层值表达式接收时，其中的 `break value;` 报错。嵌套初始化 `int64 y = loop { int64 z = loop { break 5; }; break z + 1; };` 中，内层退出给 z，外层退出给 y；最外层若仅为独立语句块，最后的 `break y + 1;` 仍没有接收方。
 
 完整的嵌套循环与清理检查见[带值退出示例](../example/samples/break_values.mgl)。
 

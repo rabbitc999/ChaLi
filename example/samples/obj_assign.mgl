@@ -15,7 +15,7 @@ int64 main() {
     b = "hello";
     println("copy={} text_type={}", (int64)copy.getValue(), isType<String>(&b));
     println("explicit={} assigned={}", (int64)explicit_copy.getValue(),
-           (int64)assigned_copy.getValue());
+    (int64)assigned_copy.getValue());
 
     b.set(9);
     println("set={}", (int64)b.getValue());

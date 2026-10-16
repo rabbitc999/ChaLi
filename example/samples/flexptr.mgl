@@ -46,7 +46,7 @@ int64 main() {
         k = k + 1;
     }
     println("row: {} {} {}，row[1].height = {}", row[0].width, row[1].width, row[2].width,
-           row[1].height);
+    row[1].height);
 
     /* ---- uint64：无符号计数 / 大小 ---- */
     uint64 bytes = 4;

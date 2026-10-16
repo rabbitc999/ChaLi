@@ -22,7 +22,7 @@ int64 main() {
         Signal::Value(value) => { payload = value; }
     }
     println("{} {} {} {} {}", applied, demo_cpp_enum_tag(idle),
-                 demo_cpp_enum_tag(copied),
-                 demo_cpp_enum_payload(copied), payload);
+    demo_cpp_enum_tag(copied),
+    demo_cpp_enum_payload(copied), payload);
     return 0;
 }

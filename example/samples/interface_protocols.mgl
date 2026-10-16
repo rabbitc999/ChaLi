@@ -1,7 +1,7 @@
 int64 builds = 0;
 
 struct Series : Index<int64, int64>, Iterator<int64>,
-                ImplicitConvert<int64>, ExplicitConvert<float64> {
+ImplicitConvert<int64>, ExplicitConvert<float64> {
     int64 first;
     int64 second;
     int64 third;
@@ -56,6 +56,6 @@ int64 main() {
     foreach (number in range(1, 5, -1)) { mismatched = mismatched + 1; }
     foreach (number in range(5, 1, 1)) { mismatched = mismatched + 1; }
     println("foreach={} typed={} builds={} range={}/{}/{}",
-           automatic, typed, builds, ascending, descending, mismatched);
+    automatic, typed, builds, ascending, descending, mismatched);
     return 0;
 }

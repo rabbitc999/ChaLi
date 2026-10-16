@@ -24,7 +24,7 @@ int64 main()
     point.x = 3;
     point.y = 4;
     println("point {}:{} area={} scaled={}", point.x, point.y, point.area(),
-                  point.scaled(10));
+    point.scaled(10));
 
     GlueDemoSignal signal = GlueDemoSignal::Tone(440);
     println("signal code={}", signal.code());

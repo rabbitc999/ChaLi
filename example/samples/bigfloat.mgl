@@ -25,10 +25,10 @@ int64 main() {
     BigDecimal rounded = BigDecimal("1.234567");
     rounded.setPrecision(4);
     println("rounded = {}, rounded + 0.001 = {}", rounded.str(),
-                 (rounded + BigDecimal("0.001")).str());
+    (rounded + BigDecimal("0.001")).str());
     println("huge + 0.25 = {}", exact.str());
     println("compare = {}, int64 = {}, float64 = {:3F}",
-           exact > huge, (int64)BigDecimal("42.9"), (float64)BigDecimal("1.25"));
+    exact > huge, (int64)BigDecimal("42.9"), (float64)BigDecimal("1.25"));
     BigDecimal typed;
     typed = inputBigDecimal();
     println("input + 0.5 = {}", (typed + BigDecimal("0.5")).str());

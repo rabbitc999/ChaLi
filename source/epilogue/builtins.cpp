@@ -171,7 +171,9 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
                         for (std::size_t i = 0; i < pattern.kids.size(); ++i)
                         {
                             const auto binder = N(pattern.kids[i]);
-                            g_scope.back()[binder.s] = MVar{ variant->payloads[i].type, binder.s, true };
+                            const auto type = variant->payloads[i].type;
+                            const bool frozen = statement.type2 == 1 ? type->kind == MType::Ptr : type->kind != MType::Ptr || type->readOnly;
+                            g_scope.back()[binder.s] = MVar{ type, binder.s, frozen };
                         }
             }
             for (const int child : Memory::Vector<int>(N(item.kids[0]).kids))
@@ -206,7 +208,9 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
         return;
     }
     case MNode::ExprStmt:
-        if (!statement.kids.empty() && N(statement.kids[0]).kind == MNode::Loop && N(statement.kids[0]).s.empty())
+        if (!statement.kids.empty() && N(statement.kids[0]).kind == MNode::Loop && N(statement.kids[0]).s == "block")
+            CollectLoopBreakValues(N(statement.kids[0]).kids[0], values, hasPlain, expected, borrowDepth, loopDepth);
+        else if (!statement.kids.empty() && N(statement.kids[0]).kind == MNode::Loop && N(statement.kids[0]).s.empty())
             CollectLoopBreakValues(N(statement.kids[0]).kids[0], values, hasPlain, expected, borrowDepth, loopDepth + 1);
         return;
     case MNode::Loop:

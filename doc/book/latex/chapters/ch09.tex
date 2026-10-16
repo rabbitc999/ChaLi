@@ -32,16 +32,10 @@ int64 main() {
 struct Point {        ← struct 名字 { 
     int64 x;          ← 字段：类型 名字;
     int64 y;
-};                    ← 必须有的分号
+}                     ← 类型声明到这里已经完整，后面的分号可省略
 \end{lstlisting}
 
-最后那个分号很容易忘。 忘了它，编译器会说「期望分号，实际是……」，指的位置却是下一个声明：
-
-\begin{lstlisting}[style=out]
-语法错误：hello.mgl 第 2 行第 1 列：期望 分号(;)，实际是 整数类型(int64)
-\end{lstlisting}
-
-看到这种「下一个声明的位置报缺分号」，先回头数一数上一段是不是少了个 \texttt{\}} 后面的 \texttt{;}。
+结构体声明在 \texttt{\}} 处结束，允许省略末尾的分号；原有 \texttt{\};} 写法仍有效。字段声明仍然需要分号。
 
 用法：声明一个变量，然后用 \texttt{.\allowbreak{}} 访问字段（片段，\texttt{Point} 假定已定义）。
 
@@ -337,20 +331,19 @@ void resize(Rect mut& rect) { ... }     // 要改
 
 \section{常见错误}
 
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.330\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.340\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.309\linewidth-2\tabcolsep\relax}}
+\begin{center}
+\begin{tabular}{lll}
 \toprule
 现象 & 原因 & 怎么办 \\
 \midrule
-\endhead
-\texttt{期望 分号(\allowbreak{};)\allowbreak{}}，指在下一段声明上 & 结构体结尾漏了 \texttt{;} & 补上 \texttt{\};} \\
+字段声明报缺少分号 & 字段末尾漏了 \texttt{;} & 字段仍写作 \texttt{int64 x;} \\
 \texttt{struct X 没有方法 f} & 方法名写错，或者定义忘了写 & 检查拼写与作用域 \\
 \texttt{不能隐式转换} & 字段类型和赋的值对不上 & 显式强转，或改字段类型 \\
 改不动调用方 & 结构体按值传了 & 形参写 \texttt{X mut\&}，调用写 \texttt{\&obj} \\
 \texttt{X} 没声明的类型 & 忘了写结构体定义，或忘了 \texttt{import} & 补上定义 / import \\
 \bottomrule
-\end{longtable}
-}
+\end{tabular}
+\end{center}
 
 顺带一句：结构体的方法里必须写 \texttt{self.\allowbreak{}}。漏掉会报「找不到这个名字」——这不是编译器啰嗦，是在帮你区分字段和局部变量。
 
@@ -361,7 +354,7 @@ void resize(Rect mut& rect) { ... }     // 要改
 \toprule
 你会了 & 关键点 \\
 \midrule
-定义 & \texttt{struct X \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \};} —— 结尾分号不能忘 \\
+定义 & \texttt{struct X \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} —— 结尾分号可选 \\
 字段 & 声明后自动清零；不支持声明处默认值 \\
 方法 & 写在结构体里，用 \texttt{self.\allowbreak{}x} 访问字段 \\
 \texttt{static} & 属于类型，用 \texttt{X:\allowbreak{}:\allowbreak{}name} 访问，里面没有 \texttt{self} \\

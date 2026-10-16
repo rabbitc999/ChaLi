@@ -4,7 +4,7 @@ bool hostBool(bool fn(bool) function, bool value);
 void hostNotify(void fn(int64) function, int64 value);
 void hostUpdate(void fn(int64 mut&) function, int64 mut& value);
 int64 hostCompose(int64 fn(int64 fn(int64), int64) outer,
-                  int64 fn(int64) inner, int64 value);
+int64 fn(int64) inner, int64 value);
 
 int64 notifications = 0;
 

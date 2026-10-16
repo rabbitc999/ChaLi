@@ -106,7 +106,7 @@ AOT 的做法是先生成 C++，再编成目标平台的本地程序，所以机
 \midrule
 \texttt{out 路径} / \texttt{--out 路径} & 产物路径 \\
 \texttt{opt LEVEL} / \texttt{--opt-level=\allowbreak{}N} & 优化级别（\texttt{-O0} / \texttt{-O2}…） \\
-\texttt{checked} / \texttt{unchecked} & 是否保留运行时检查（默认 \texttt{unchecked}） \\
+\texttt{checked} / \texttt{unchecked} & 是否保留运行时检查（默认 \texttt{checked}） \\
 \texttt{--separate-modules} & 按模块缓存目标文件，增量更快 \\
 \texttt{--module-cache DIR} & 指定模块缓存目录 \\
 \bottomrule
@@ -121,7 +121,7 @@ magel aot src/main.mgl out build/native checked opt 2
   优化级别：-O2
 \end{lstlisting}
 
-\texttt{checked} 会保留边界检查（下标越界等仍会报错）；\texttt{unchecked} 去掉这些检查，换来更高性能——自己权衡：性能敏感就用默认，安全敏感就写 \texttt{checked}。
+默认使用 \texttt{checked}，保留分配有效性检查和 panic 调用栈。显式使用 \texttt{unchecked} 可关闭这些可选检查；数组下标与基础地址检查仍然保留。性能对比应使用相同检查配置。
 
 \section{交付安全：符号压缩}
 

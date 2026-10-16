@@ -43,8 +43,8 @@ magel aot src/main.mgl --out build/app --opt-level=2
 
 Generates C++ and compiles it into a native program for the target platform. The artifact keeps
 the name given to `--out`; on Windows a name without an extension becomes `build/app.exe`,
-since the system only recognises executables by extension. The default is `unchecked`; keep
-bounds checks with `checked`:
+since the system only recognises executables by extension. The default is `checked`, enabling optional allocation guards and panic traces. Explicit
+`unchecked` disables these optional checks; array bounds checks are still retained. An explicit checked build:
 
 ```sh
 magel aot src/main.mgl --out build/app checked opt 2
@@ -54,7 +54,7 @@ magel aot src/main.mgl --out build/app checked opt 2
 | --- | --- |
 | `--out path` | artifact prefix |
 | `opt LEVEL` / `--opt-level=N` | optimisation level |
-| `checked` / `unchecked` | keep runtime checks or not (default `unchecked`) |
+| `checked` / `unchecked` | keep runtime checks or not (default `checked`) |
 | `--separate-modules` | cache per-module native object files and link once (faster increments) |
 | `--module-cache DIR` | directory for module object files |
 

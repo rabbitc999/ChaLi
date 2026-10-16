@@ -9,6 +9,8 @@ tested version, configuration and date; they do not automatically describe curre
 
 ## Language and resources
 
+Entry points support `int64 main` and `void main`, with no parameters or `List<String>` arguments. A void entry exits with code 0 on normal completion; panic still fails. Trailing semicolons on `struct`, `enum`, and `interface` declarations are optional.
+
 | Area | Implemented capability and contract |
 | --- | --- |
 | Types | Fixed-width integers, float32/float64, bool, char, String, big numbers; arrays, tuples, structs, payload enums, containers and function types |
@@ -40,7 +42,7 @@ enabled by default, including the register core, preparation/fusion, jump foldin
 Source and bytecode execution share the VM; there is no JIT mode.
 Library output supports `.dll` / `.so` shared libraries and relocatable `.o` files with C headers.
 Libraries require at least one `export` and may omit `main`. Static `.lib` / `.a` output is unsupported.
-See [library output](09-toolchain.md#aot-library-output). AOT supports checked/unchecked,
+See [library output](09-toolchain.md#aot-library-output). AOT defaults to `checked` and `-O3`, specializes scalar memory operations and successful array checks, and reuses native argument buffers within each invocation. AOT supports checked/unchecked,
 module caches and explicit GCC commands, paths or directories. Symbol compression does not provide
 encryption, a complete sandbox or a guarantee against reverse engineering.
 
@@ -86,3 +88,5 @@ completion, hover, signatures and cross-file navigation. DAP provides breakpoint
 variable inspection and expression evaluation are not implemented. Dependencies support local directories,
 fixed Git commits and hashed HTTP/HTTPS archives. Feature implementation, regression evidence and
 long-term production validation are separate claims.
+
+Tool interfaces support Chinese and English; unsupported system locales fall back to English and explicit Japanese selection is rejected. `man book`, `man keyword`, and `man skill` query embedded book, keyword and AI SKILL data. The VS Code package includes the same SKILL.

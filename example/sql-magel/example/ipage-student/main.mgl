@@ -50,7 +50,7 @@ Permission parsePermission(String text) {
 /** @brief 是否是数据库认得的权限字面量。 */
 bool isValidPermission(String text) {
     return text == "STUDENT" || text == "TEACHER"
-        || text == "ADMINISTRATOR" || text == "SUPER_ADMINISTRATOR";
+    || text == "ADMINISTRATOR" || text == "SUPER_ADMINISTRATOR";
 }
 
 /** @brief 代码枚举 -> 数据库 enum 字面量。 */
@@ -156,8 +156,8 @@ bool validPassword(String text) {
     while (i < len(text)) {
         int64 byte = (int64)text[i];
         bool alnum = (byte >= 48 && byte <= 57)
-                  || (byte >= 65 && byte <= 90)
-                  || (byte >= 97 && byte <= 122);
+        || (byte >= 65 && byte <= 90)
+        || (byte >= 97 && byte <= 122);
         if (!alnum) { return false; }
         if (byte >= 240) { i = i + 4; }
         elif (byte >= 224) { i = i + 3; }
@@ -420,7 +420,7 @@ struct App {
         }
         if (len(database) == 0) { database = "student"; }
         if (!self.db.execOk("CREATE DATABASE IF NOT EXISTS `" + database
-                            + "` DEFAULT CHARACTER SET utf8mb4")) {
+        + "` DEFAULT CHARACTER SET utf8mb4")) {
             println(">> 建库失败：{}", self.db.lastError());
             return false;
         }
@@ -512,8 +512,8 @@ struct App {
                 continue;
             }
             String sql = "SELECT user_id, user_name, user_permission FROM `user`"
-                         " WHERE user_name = " + self.db.quote(name)
-                         + " AND user_password = " + self.db.quote(password);
+            " WHERE user_name = " + self.db.quote(name)
+            + " AND user_password = " + self.db.quote(password);
             std::sql::ResultSet result = self.db.exec(sql);
             if (!result.ok) {
                 println(">> 查询用户失败：{}", result.error);
@@ -526,7 +526,7 @@ struct App {
                 self.level = permissionLevel(self.permission);
                 self.signedIn = true;
                 println(">> 登录成功：{}（{}）", self.userName,
-                              permissionLabel(self.permission));
+                permissionLabel(self.permission));
                 return true;
             }
             attempts = attempts + 1;
@@ -605,7 +605,7 @@ struct App {
             self.bar();
             println("        学生成绩信息管理系统");
             println("        当前用户：{}（{}）", self.userName,
-                          permissionLabel(self.permission));
+            permissionLabel(self.permission));
             self.bar();
             for (int64 i = 0; i < len(items); i = i + 1) {
                 println("          {}. {}", i + 1, items[i].label);
@@ -673,25 +673,25 @@ struct App {
     /** @brief 学生列表的公共 SELECT：连班级，带课程数与平均分（对应 Java 的 AGGREGATION 字段）。 */
     String studentListSql() {
         return "SELECT st.student_id AS 学生ID, st.student_name AS 学生姓名,"
-               " CASE st.student_sex WHEN 'MALE' THEN '男' ELSE '女' END AS 性别,"
-               " IFNULL(cl.sclass_name, '未分班') AS 班级,"
-               " CASE cl.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
-               "   WHEN 'THREE' THEN '高三' ELSE '-' END AS 年级,"
-               " COUNT(se.selection_id) AS 课程数,"
-               " IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS 平均分"
-               " FROM student st"
-               " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
-               " LEFT JOIN selection se ON se.student_id = st.student_id";
+        " CASE st.student_sex WHEN 'MALE' THEN '男' ELSE '女' END AS 性别,"
+        " IFNULL(cl.sclass_name, '未分班') AS 班级,"
+        " CASE cl.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
+        "   WHEN 'THREE' THEN '高三' ELSE '-' END AS 年级,"
+        " COUNT(se.selection_id) AS 课程数,"
+        " IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS 平均分"
+        " FROM student st"
+        " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
+        " LEFT JOIN selection se ON se.student_id = st.student_id";
     }
 
     /** @brief 显示全部学生（默认前 LIST_LIMIT 条）。 */
     void listStudents() {
         self.section("学生列表");
         self.show(self.db.exec(self.studentListSql()
-                               + " GROUP BY st.student_id, st.student_name, st.student_sex,"
-                                 " cl.sclass_name, cl.sclass_grade"
-                                 " ORDER BY st.student_id"
-                                 + format(" LIMIT {}", LIST_LIMIT)));
+        + " GROUP BY st.student_id, st.student_name, st.student_sex,"
+        " cl.sclass_name, cl.sclass_grade"
+        " ORDER BY st.student_id"
+        + format(" LIMIT {}", LIST_LIMIT)));
         self.waitReturn();
     }
 
@@ -707,10 +707,10 @@ struct App {
             condition = " WHERE cl.sclass_name LIKE " + self.db.quote("%" + className + "%");
         }
         self.show(self.db.exec(self.studentListSql() + condition
-                               + " GROUP BY st.student_id, st.student_name, st.student_sex,"
-                                 " cl.sclass_name, cl.sclass_grade"
-                                 " ORDER BY st.student_id"
-                               + format(" LIMIT {}", LIST_LIMIT)));
+        + " GROUP BY st.student_id, st.student_name, st.student_sex,"
+        " cl.sclass_name, cl.sclass_grade"
+        " ORDER BY st.student_id"
+        + format(" LIMIT {}", LIST_LIMIT)));
         self.waitReturn();
     }
 
@@ -742,8 +742,8 @@ struct App {
             classValue = classText;
         }
         std::sql::ResultSet result = self.db.exec(
-            "INSERT INTO student (student_name, student_sex, sclass_id) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(sex) + ", " + classValue + ")");
+        "INSERT INTO student (student_name, student_sex, sclass_id) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(sex) + ", " + classValue + ")");
         if (result.ok) {
             println(">> 添加成功！新学生ID：{}", self.db.scalar("SELECT LAST_INSERT_ID()"));
         } else {
@@ -760,15 +760,15 @@ struct App {
             return;
         }
         String name = self.db.scalar("SELECT student_name FROM student WHERE student_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) {
             println(">> 学生 {} 不存在", id);
             return;
         }
         int64 scores = self.db.count("SELECT COUNT(*) FROM selection WHERE student_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         std::sql::ResultSet result = self.db.exec("DELETE FROM student WHERE student_id = "
-                                                  + format("{}", id));
+        + format("{}", id));
         if (!result.ok) {
             println(">> 删除失败：{}", result.error);
             return;
@@ -785,8 +785,8 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT student_name, student_sex, IFNULL(sclass_id, 0) FROM student WHERE student_id = "
-            + format("{}", id));
+        "SELECT student_name, student_sex, IFNULL(sclass_id, 0) FROM student WHERE student_id = "
+        + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 学生 {} 不存在", id);
             return;
@@ -820,10 +820,10 @@ struct App {
             }
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE student SET student_name = " + self.db.quote(name)
-            + ", student_sex = " + self.db.quote(sex)
-            + ", sclass_id = " + classValue
-            + " WHERE student_id = " + format("{}", id));
+        "UPDATE student SET student_name = " + self.db.quote(name)
+        + ", student_sex = " + self.db.quote(sex)
+        + ", sclass_id = " + classValue
+        + " WHERE student_id = " + format("{}", id));
         if (result.ok) { println(">> 修改成功！"); }
         else { println(">> 修改失败：{}", result.error); }
     }
@@ -842,14 +842,14 @@ struct App {
     /** @brief 班级列表 SELECT：带学生数与班级平均分（对应 Java 的两个 AGGREGATION 字段）。 */
     String sclassListSql() {
         return "SELECT c.sclass_id AS 班级ID, c.sclass_name AS 班级名称,"
-               " c.sclass_administrator AS 班主任,"
-               " CASE c.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
-               "   WHEN 'THREE' THEN '高三' ELSE '未知' END AS 年级,"
-               " (SELECT COUNT(*) FROM student s WHERE s.sclass_id = c.sclass_id) AS 学生数,"
-               " IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM student s"
-               "   JOIN selection se ON se.student_id = s.student_id"
-               "   WHERE s.sclass_id = c.sclass_id), 0) AS 平均分"
-               " FROM sclass c";
+        " c.sclass_administrator AS 班主任,"
+        " CASE c.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
+        "   WHEN 'THREE' THEN '高三' ELSE '未知' END AS 年级,"
+        " (SELECT COUNT(*) FROM student s WHERE s.sclass_id = c.sclass_id) AS 学生数,"
+        " IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM student s"
+        "   JOIN selection se ON se.student_id = s.student_id"
+        "   WHERE s.sclass_id = c.sclass_id), 0) AS 平均分"
+        " FROM sclass c";
     }
 
     /** @brief 显示全部班级。 */
@@ -864,8 +864,8 @@ struct App {
         self.section("查询班级");
         String name = self.ask("请输入班级名称：");
         self.show(self.db.exec(self.sclassListSql()
-                               + " WHERE c.sclass_name LIKE " + self.db.quote("%" + name + "%")
-                               + " ORDER BY c.sclass_id"));
+        + " WHERE c.sclass_name LIKE " + self.db.quote("%" + name + "%")
+        + " ORDER BY c.sclass_id"));
         self.waitReturn();
     }
 
@@ -888,9 +888,9 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "INSERT INTO sclass (sclass_name, sclass_administrator, sclass_grade) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(administrator) + ", "
-            + self.db.quote(grade) + ")");
+        "INSERT INTO sclass (sclass_name, sclass_administrator, sclass_grade) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(administrator) + ", "
+        + self.db.quote(grade) + ")");
         if (result.ok) {
             println(">> 添加成功！新班级ID：{}", self.db.scalar("SELECT LAST_INSERT_ID()"));
         } else {
@@ -907,15 +907,15 @@ struct App {
             return;
         }
         String name = self.db.scalar("SELECT sclass_name FROM sclass WHERE sclass_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) {
             println(">> 班级 {} 不存在", id);
             return;
         }
         int64 members = self.db.count("SELECT COUNT(*) FROM student WHERE sclass_id = "
-                                      + format("{}", id));
+        + format("{}", id));
         std::sql::ResultSet result = self.db.exec("DELETE FROM sclass WHERE sclass_id = "
-                                                  + format("{}", id));
+        + format("{}", id));
         if (!result.ok) {
             println(">> 删除失败：{}", result.error);
             return;
@@ -932,8 +932,8 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT sclass_name, sclass_administrator, IFNULL(sclass_grade, '') FROM sclass"
-            " WHERE sclass_id = " + format("{}", id));
+        "SELECT sclass_name, sclass_administrator, IFNULL(sclass_grade, '') FROM sclass"
+        " WHERE sclass_id = " + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 班级 {} 不存在", id);
             return;
@@ -952,10 +952,10 @@ struct App {
             }
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE sclass SET sclass_name = " + self.db.quote(name)
-            + ", sclass_administrator = " + self.db.quote(administrator)
-            + ", sclass_grade = " + self.db.quote(grade)
-            + " WHERE sclass_id = " + format("{}", id));
+        "UPDATE sclass SET sclass_name = " + self.db.quote(name)
+        + ", sclass_administrator = " + self.db.quote(administrator)
+        + ", sclass_grade = " + self.db.quote(grade)
+        + " WHERE sclass_id = " + format("{}", id));
         if (result.ok) { println(">> 修改成功！"); }
         else { println(">> 修改失败：{}", result.error); }
     }
@@ -974,11 +974,11 @@ struct App {
     /** @brief 课程列表 SELECT：带选课人数与平均分。 */
     String courseListSql() {
         return "SELECT co.course_id AS 课程ID, co.course_name AS 课程名称,"
-               " CASE co.course_state WHEN 'START' THEN '开课' ELSE '结课' END AS 状态,"
-               " (SELECT COUNT(*) FROM selection se WHERE se.course_id = co.course_id) AS 选课人数,"
-               " IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM selection se"
-               "   WHERE se.course_id = co.course_id), 0) AS 平均分"
-               " FROM course co";
+        " CASE co.course_state WHEN 'START' THEN '开课' ELSE '结课' END AS 状态,"
+        " (SELECT COUNT(*) FROM selection se WHERE se.course_id = co.course_id) AS 选课人数,"
+        " IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM selection se"
+        "   WHERE se.course_id = co.course_id), 0) AS 平均分"
+        " FROM course co";
     }
 
     /** @brief 显示全部课程。 */
@@ -993,8 +993,8 @@ struct App {
         self.section("查询课程");
         String name = self.ask("请输入课程名称：");
         self.show(self.db.exec(self.courseListSql()
-                               + " WHERE co.course_name LIKE " + self.db.quote("%" + name + "%")
-                               + " ORDER BY co.course_id"));
+        + " WHERE co.course_name LIKE " + self.db.quote("%" + name + "%")
+        + " ORDER BY co.course_id"));
         self.waitReturn();
     }
 
@@ -1012,8 +1012,8 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "INSERT INTO course (course_name, course_state) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(state) + ")");
+        "INSERT INTO course (course_name, course_state) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(state) + ")");
         if (result.ok) {
             println(">> 添加成功！新课程ID：{}", self.db.scalar("SELECT LAST_INSERT_ID()"));
         } else {
@@ -1030,15 +1030,15 @@ struct App {
             return;
         }
         String name = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) {
             println(">> 课程 {} 不存在", id);
             return;
         }
         int64 scores = self.db.count("SELECT COUNT(*) FROM selection WHERE course_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         std::sql::ResultSet result = self.db.exec("DELETE FROM course WHERE course_id = "
-                                                  + format("{}", id));
+        + format("{}", id));
         if (!result.ok) {
             println(">> 删除失败：{}", result.error);
             return;
@@ -1055,8 +1055,8 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT course_name, course_state FROM course WHERE course_id = "
-            + format("{}", id));
+        "SELECT course_name, course_state FROM course WHERE course_id = "
+        + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 课程 {} 不存在", id);
             return;
@@ -1073,9 +1073,9 @@ struct App {
             }
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE course SET course_name = " + self.db.quote(name)
-            + ", course_state = " + self.db.quote(state)
-            + " WHERE course_id = " + format("{}", id));
+        "UPDATE course SET course_name = " + self.db.quote(name)
+        + ", course_state = " + self.db.quote(state)
+        + " WHERE course_id = " + format("{}", id));
         if (result.ok) { println(">> 修改成功！"); }
         else { println(">> 修改失败：{}", result.error); }
     }
@@ -1097,17 +1097,17 @@ struct App {
     /** @brief 成绩列表 SELECT：连学生与课程，并算出等级。 */
     String selectionListSql() {
         return "SELECT se.selection_id AS 成绩ID, se.student_id AS 学号,"
-               " st.student_name AS 学生姓名, se.course_id AS 课程ID,"
-               " co.course_name AS 课程, se.test_date AS 考试日期,"
-               " se.grade_number AS 成绩,"
-               " CASE WHEN se.grade_number >= 90 THEN '优秀'"
-               "   WHEN se.grade_number >= 80 THEN '良好'"
-               "   WHEN se.grade_number >= 70 THEN '中等'"
-               "   WHEN se.grade_number >= 60 THEN '及格'"
-               "   ELSE '不及格' END AS 等级"
-               " FROM selection se"
-               " JOIN student st ON st.student_id = se.student_id"
-               " JOIN course co ON co.course_id = se.course_id";
+        " st.student_name AS 学生姓名, se.course_id AS 课程ID,"
+        " co.course_name AS 课程, se.test_date AS 考试日期,"
+        " se.grade_number AS 成绩,"
+        " CASE WHEN se.grade_number >= 90 THEN '优秀'"
+        "   WHEN se.grade_number >= 80 THEN '良好'"
+        "   WHEN se.grade_number >= 70 THEN '中等'"
+        "   WHEN se.grade_number >= 60 THEN '及格'"
+        "   ELSE '不及格' END AS 等级"
+        " FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id";
     }
 
     /** @brief 显示全部成绩（默认前 LIST_LIMIT 条，避免一次刷 1800 行）。 */
@@ -1116,8 +1116,8 @@ struct App {
         int64 total = self.db.count("SELECT COUNT(*) FROM selection");
         println(">> 库中共 {} 条成绩，默认显示前 {} 条", total, LIST_LIMIT);
         self.show(self.db.exec(self.selectionListSql()
-                               + " ORDER BY se.selection_id"
-                               + format(" LIMIT {}", LIST_LIMIT)));
+        + " ORDER BY se.selection_id"
+        + format(" LIMIT {}", LIST_LIMIT)));
         self.waitReturn();
     }
 
@@ -1137,8 +1137,8 @@ struct App {
             condition = " WHERE co.course_name LIKE " + self.db.quote("%" + course + "%");
         }
         self.show(self.db.exec(self.selectionListSql() + condition
-                               + " ORDER BY se.student_id, se.course_id"
-                               + format(" LIMIT {}", LIST_LIMIT)));
+        + " ORDER BY se.student_id, se.course_id"
+        + format(" LIMIT {}", LIST_LIMIT)));
         self.waitReturn();
     }
 
@@ -1151,7 +1151,7 @@ struct App {
             return;
         }
         String studentName = self.db.scalar("SELECT student_name FROM student WHERE student_id = "
-                                            + studentText);
+        + studentText);
         if (len(studentName) == 0) {
             println(">> 学号 {} 不存在", studentText);
             return;
@@ -1162,7 +1162,7 @@ struct App {
             return;
         }
         String courseName = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                           + courseText);
+        + courseText);
         if (len(courseName) == 0) {
             println(">> 课程 {} 不存在", courseText);
             return;
@@ -1178,15 +1178,15 @@ struct App {
             return;
         }
         int64 exists = self.db.count("SELECT COUNT(*) FROM selection WHERE student_id = "
-                                     + studentText + " AND course_id = " + courseText);
+        + studentText + " AND course_id = " + courseText);
         if (exists > 0) {
             println(">> {} 的《{}》已有成绩，请改用「修改成绩」", studentName, courseName);
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "INSERT INTO selection (student_id, course_id, test_date, grade_number) VALUES ("
-            + studentText + ", " + courseText + ", " + self.db.quote(date) + ", "
-            + format("{}", grade) + ")");
+        "INSERT INTO selection (student_id, course_id, test_date, grade_number) VALUES ("
+        + studentText + ", " + courseText + ", " + self.db.quote(date) + ", "
+        + format("{}", grade) + ")");
         if (result.ok) {
             println(">> 录入成功！新成绩ID：{}", self.db.scalar("SELECT LAST_INSERT_ID()"));
         } else {
@@ -1203,25 +1203,25 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT se.student_id, st.student_name, co.course_name, se.grade_number"
-            " FROM selection se"
-            " JOIN student st ON st.student_id = se.student_id"
-            " JOIN course co ON co.course_id = se.course_id"
-            " WHERE se.selection_id = " + format("{}", id));
+        "SELECT se.student_id, st.student_name, co.course_name, se.grade_number"
+        " FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id"
+        " WHERE se.selection_id = " + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 成绩 {} 不存在", id);
             return;
         }
         println(">> 当前：{} 的《{}》= {}", current.textAt(0, 1),
-                      current.textAt(0, 2), current.textAt(0, 3));
+        current.textAt(0, 2), current.textAt(0, 3));
         int64 grade = self.askId("请输入新成绩（0-100）：");
         if (grade < 0 || grade > 100) {
             println(">> 成绩必须在 0 到 100 之间（@ValidatorRange(max = 100)）");
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE selection SET grade_number = " + format("{}", grade)
-            + " WHERE selection_id = " + format("{}", id));
+        "UPDATE selection SET grade_number = " + format("{}", grade)
+        + " WHERE selection_id = " + format("{}", id));
         if (result.ok) { println(">> 修改成功！"); }
         else { println(">> 修改失败：{}", result.error); }
     }
@@ -1235,16 +1235,16 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT st.student_name, co.course_name FROM selection se"
-            " JOIN student st ON st.student_id = se.student_id"
-            " JOIN course co ON co.course_id = se.course_id"
-            " WHERE se.selection_id = " + format("{}", id));
+        "SELECT st.student_name, co.course_name FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id"
+        " WHERE se.selection_id = " + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 成绩 {} 不存在", id);
             return;
         }
         std::sql::ResultSet result = self.db.exec("DELETE FROM selection WHERE selection_id = "
-                                                  + format("{}", id));
+        + format("{}", id));
         if (!result.ok) {
             println(">> 删除失败：{}", result.error);
             return;
@@ -1265,12 +1265,12 @@ struct App {
             condition = " WHERE course_id = " + text;
         }
         self.show(self.db.exec(
-            "SELECT COUNT(*) AS 人数, IFNULL(ROUND(AVG(grade_number), 1), 0) AS 平均分,"
-            " IFNULL(MAX(grade_number), 0) AS 最高分, IFNULL(MIN(grade_number), 0) AS 最低分,"
-            " SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) AS 及格人数,"
-            " ROUND(SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) * 100.0"
-            "   / IF(COUNT(*) = 0, 1, COUNT(*)), 1) AS 及格率百分比"
-            " FROM selection" + condition));
+        "SELECT COUNT(*) AS 人数, IFNULL(ROUND(AVG(grade_number), 1), 0) AS 平均分,"
+        " IFNULL(MAX(grade_number), 0) AS 最高分, IFNULL(MIN(grade_number), 0) AS 最低分,"
+        " SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) AS 及格人数,"
+        " ROUND(SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) * 100.0"
+        "   / IF(COUNT(*) = 0, 1, COUNT(*)), 1) AS 及格率百分比"
+        " FROM selection" + condition));
         self.waitReturn();
     }
 
@@ -1278,17 +1278,17 @@ struct App {
     void statByClass() {
         self.section("按班级统计");
         self.show(self.db.exec(
-            "SELECT c.sclass_id AS 班级ID, c.sclass_name AS 班级名称,"
-            " CASE c.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
-            "   WHEN 'THREE' THEN '高三' ELSE '未知' END AS 年级,"
-            " COUNT(DISTINCT st.student_id) AS 学生数,"
-            " COUNT(se.selection_id) AS 成绩记录数,"
-            " IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS 平均分"
-            " FROM sclass c"
-            " LEFT JOIN student st ON st.sclass_id = c.sclass_id"
-            " LEFT JOIN selection se ON se.student_id = st.student_id"
-            " GROUP BY c.sclass_id, c.sclass_name, c.sclass_grade"
-            " ORDER BY c.sclass_id"));
+        "SELECT c.sclass_id AS 班级ID, c.sclass_name AS 班级名称,"
+        " CASE c.sclass_grade WHEN 'ONE' THEN '高一' WHEN 'TWO' THEN '高二'"
+        "   WHEN 'THREE' THEN '高三' ELSE '未知' END AS 年级,"
+        " COUNT(DISTINCT st.student_id) AS 学生数,"
+        " COUNT(se.selection_id) AS 成绩记录数,"
+        " IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS 平均分"
+        " FROM sclass c"
+        " LEFT JOIN student st ON st.sclass_id = c.sclass_id"
+        " LEFT JOIN selection se ON se.student_id = st.student_id"
+        " GROUP BY c.sclass_id, c.sclass_name, c.sclass_grade"
+        " ORDER BY c.sclass_id"));
         self.waitReturn();
     }
 
@@ -1307,12 +1307,12 @@ struct App {
     void listUsers() {
         self.section("用户列表");
         self.show(self.db.exec(
-            "SELECT user_id AS 用户ID, user_name AS 用户名,"
-            " CASE user_permission WHEN 'STUDENT' THEN '学生'"
-            "   WHEN 'TEACHER' THEN '教师'"
-            "   WHEN 'ADMINISTRATOR' THEN '管理员'"
-            "   ELSE '超级管理员' END AS 权限"
-            " FROM `user` ORDER BY user_id"));
+        "SELECT user_id AS 用户ID, user_name AS 用户名,"
+        " CASE user_permission WHEN 'STUDENT' THEN '学生'"
+        "   WHEN 'TEACHER' THEN '教师'"
+        "   WHEN 'ADMINISTRATOR' THEN '管理员'"
+        "   ELSE '超级管理员' END AS 权限"
+        " FROM `user` ORDER BY user_id"));
         self.waitReturn();
     }
 
@@ -1325,7 +1325,7 @@ struct App {
             return;
         }
         int64 exists = self.db.count("SELECT COUNT(*) FROM `user` WHERE user_name = "
-                                     + self.db.quote(name));
+        + self.db.quote(name));
         if (exists > 0) {
             println(">> 用户名 {} 已被占用", name);
             return;
@@ -1345,9 +1345,9 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "INSERT INTO `user` (user_name, user_password, user_permission) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(password) + ", "
-            + self.db.quote(permissionText) + ")");
+        "INSERT INTO `user` (user_name, user_password, user_permission) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(password) + ", "
+        + self.db.quote(permissionText) + ")");
         if (result.ok) {
             println(">> 添加成功！新用户ID：{}", self.db.scalar("SELECT LAST_INSERT_ID()"));
         } else {
@@ -1364,7 +1364,7 @@ struct App {
             return;
         }
         String name = self.db.scalar("SELECT user_name FROM `user` WHERE user_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) {
             println(">> 用户 {} 不存在", id);
             return;
@@ -1378,7 +1378,7 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec("DELETE FROM `user` WHERE user_id = "
-                                                  + format("{}", id));
+        + format("{}", id));
         if (result.ok) { println(">> 已删除用户 {}（{}）", id, name); }
         else { println(">> 删除失败：{}", result.error); }
     }
@@ -1397,8 +1397,8 @@ struct App {
             return;
         }
         std::sql::ResultSet current = self.db.exec(
-            "SELECT user_name, user_permission FROM `user` WHERE user_id = "
-            + format("{}", id));
+        "SELECT user_name, user_permission FROM `user` WHERE user_id = "
+        + format("{}", id));
         if (!current.ok || current.rowCount() == 0) {
             println(">> 用户 {} 不存在", id);
             return;
@@ -1418,14 +1418,14 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE `user` SET user_permission = " + self.db.quote(permissionText)
-            + " WHERE user_id = " + format("{}", id));
+        "UPDATE `user` SET user_permission = " + self.db.quote(permissionText)
+        + " WHERE user_id = " + format("{}", id));
         if (!result.ok) {
             println(">> 修改失败：{}", result.error);
             return;
         }
         println(">> 用户 {}（{}）的权限已改为 {}", id, name,
-                      permissionLabel(parsePermission(permissionText)));
+        permissionLabel(parsePermission(permissionText)));
     }
 
     /** @brief 重置某个用户的口令。 */
@@ -1437,7 +1437,7 @@ struct App {
             return;
         }
         String name = self.db.scalar("SELECT user_name FROM `user` WHERE user_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) {
             println(">> 用户 {} 不存在", id);
             return;
@@ -1448,8 +1448,8 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE `user` SET user_password = " + self.db.quote(password)
-            + " WHERE user_id = " + format("{}", id));
+        "UPDATE `user` SET user_password = " + self.db.quote(password)
+        + " WHERE user_id = " + format("{}", id));
         if (result.ok) { println(">> 用户 {}（{}）的密码已重置", id, name); }
         else { println(">> 重置失败：{}", result.error); }
     }
@@ -1461,8 +1461,8 @@ struct App {
         self.section("修改我的密码");
         String oldPassword = self.ask("请输入当前密码：");
         int64 matched = self.db.count(
-            "SELECT COUNT(*) FROM `user` WHERE user_id = " + format("{}", self.userId)
-            + " AND user_password = " + self.db.quote(oldPassword));
+        "SELECT COUNT(*) FROM `user` WHERE user_id = " + format("{}", self.userId)
+        + " AND user_password = " + self.db.quote(oldPassword));
         if (matched == 0) {
             println(">> 当前密码不正确");
             return;
@@ -1473,8 +1473,8 @@ struct App {
             return;
         }
         std::sql::ResultSet result = self.db.exec(
-            "UPDATE `user` SET user_password = " + self.db.quote(newPassword)
-            + " WHERE user_id = " + format("{}", self.userId));
+        "UPDATE `user` SET user_password = " + self.db.quote(newPassword)
+        + " WHERE user_id = " + format("{}", self.userId));
         if (result.ok) { println(">> 密码修改成功！"); }
         else { println(">> 修改失败：{}", result.error); }
     }

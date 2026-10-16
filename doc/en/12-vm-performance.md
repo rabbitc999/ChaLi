@@ -139,3 +139,19 @@ contains code, firmware hashes and limitations; the raw records are
 [the initial capture](../../example/mcu/FK-STM32H743XIH6/results/benchmark.json) and
 [the isolated repeat](../../example/mcu/FK-STM32H743XIH6/results/benchmark-isolated.json).
 These physical MCU times cannot be compared directly with desktop times as a hardware-independent ranking.
+
+## Checked AOT and JDK comparison (2026-10-16)
+
+Both Magel builds use `-O3 --checked`, reflection, and the full quadruple optimizer. The baseline is commit `12c4dc4`; the candidate is the current 1.0.0 working tree. Each kernel runs 1,000,000 iterations, with three independent process rounds and five measurements per round. The table reports the median of 15 measurements in milliseconds. Every checksum is verified. Startup, compilation and printing are excluded; array/list initialization and cleanup are included.
+
+| Kernel | Before | After | Speedup | JDK 8 | JDK 22 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Integer recurrence | 387.8156 | 138.2660 | 2.80× | 3.0202 | 3.4046 |
+| Fixed array | 1046.6111 | 353.9385 | 2.96× | 0.7019 | 0.4898 |
+| Heap array | 1301.1306 | 428.8107 | 3.03× | 0.7017 | 0.4881 |
+| Container | 2941.7599 | 2115.1724 | 1.39× | 2.3144 | 3.5630 |
+| Function calls | 883.2179 | 387.9722 | 2.28× | 3.0226 | 3.4214 |
+
+The checked improvements combine typed scalar memory access, array success paths, per-frame native argument reuse, and reduced source-location string copying. Checks and panic traces remain enabled. Java uses Temurin 8u504-b01 and Oracle 22.0.1, with `-Xms256m -Xmx256m -Xbatch` and 20 warmup iterations per process; AOT uses one warmup. Java uses `long[64]` for both array kernels and `ArrayList<Long>` for the container, while Magel uses its own arrays and `List<int64>`. These are algorithm comparisons with different layouts and JIT behavior. Java remains substantially faster on these kernels; the results do not imply an overall language ranking.
+
+[Raw measurements and hashes](../benchmarks/aot-optimization-2026-10-16.json); [benchmark runner](../../tests/benchmark_aot_optimization.py).

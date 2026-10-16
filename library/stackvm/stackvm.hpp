@@ -1488,6 +1488,34 @@ public:
     bool callNative(const Memory::String &name, const Memory::Vector<RuntimeValue> &args,
                     RuntimeValue &result);
     [[nodiscard]] bool hasNative(const Memory::String &name) const;
+    /**
+     * @brief 按静态标量类型读取虚拟地址，保留堆和数据区的有效性检查。
+     * @param address 运行时虚拟地址。
+     * @param out 读取结果，仅成功时更新。
+     * @retval 成功返回 true，失败保留与通用内存访问一致的诊断并返回 false。
+     */
+    bool loadInteger(std::int64_t address, std::int64_t &out);
+    /**
+     * @brief 按静态标量类型读取虚拟地址，保留堆和数据区的有效性检查。
+     * @param address 运行时虚拟地址。
+     * @param out 读取结果，仅成功时更新。
+     * @retval 成功返回 true，失败保留与通用内存访问一致的诊断并返回 false。
+     */
+    bool loadFloat(std::int64_t address, double &out);
+    /**
+     * @brief 按静态标量类型写入虚拟地址，保留堆和数据区的有效性检查。
+     * @param address 运行时虚拟地址。
+     * @param value 待写入的标量值。
+     * @retval 成功返回 true，失败保留与通用内存访问一致的诊断并返回 false。
+     */
+    bool storeInteger(std::int64_t address, std::int64_t value);
+    /**
+     * @brief 按静态标量类型写入虚拟地址，保留堆和数据区的有效性检查。
+     * @param address 运行时虚拟地址。
+     * @param value 待写入的标量值。
+     * @retval 成功返回 true，失败保留与通用内存访问一致的诊断并返回 false。
+     */
+    bool storeFloat(std::int64_t address, double value);
     bool loadMemory(std::int64_t address, bool isFloat, RuntimeValue &out);
     bool storeMemory(std::int64_t address, bool isFloat, const RuntimeValue &value);
     [[nodiscard]] bool dataAddress(const Memory::String &symbol, std::int64_t &address) const;
@@ -1526,6 +1554,13 @@ public:
      * @param line 原始行号。
      */
     void locateTrace(const Memory::String &file, std::int32_t line);
+    /**
+     * @brief 用生成代码的文件名字面量更新当前帧，避免每条四元式构造临时字符串。
+     * @param file 以零结尾的 UTF-8 文件名；空指针按空文件名处理，变化时复制到帧中。
+     * @param line 原始源码行号。
+     * @note 保留线程同步及错误快照语义，不要求调用方长期保存文件名。
+     */
+    void locateTrace(const char *file, std::int32_t line);
     /**
      * @brief AOT 离开函数前保存首次错误快照并退栈。
      */

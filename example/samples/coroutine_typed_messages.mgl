@@ -41,7 +41,7 @@ int64 main() {
     std::message::sendCoroutine<float64>(std::coroutine::current(), 1.25);
     float64 decimal = std::message::receiveCoroutine<float64>();
     println("{} {} {} {}", reply.source, reply.values["front"], old,
-                 sharedTotal.get());
+    sharedTotal.get());
     println("{} {}", latest.len(), latest[1]);
     println("{} {}", text, decimal);
     return 0;

@@ -14,6 +14,9 @@ from md2tex import Converter, FILES
 
 def main():
     """新章节示例须产生所列输出，生成章节须与 Markdown 一致。"""
+    book=(ROOT/'doc/book/latex/book.tex').read_text(encoding='utf-8')
+    assert not re.search(r'^\s*\\part\*?\{',book,re.M), '书稿直接按章节排列，不使用 part 分组'
+    assert len(re.findall(r'\\input\{chapters/ch\d+\}',book))==25
     count=0
     with tempfile.TemporaryDirectory(prefix='magel-book-') as folder:
         work=Path(folder)

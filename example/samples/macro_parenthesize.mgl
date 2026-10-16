@@ -14,11 +14,11 @@
  */
 
 $macro TIMES_TWO((x))
-    x * 2
+x * 2
 $end_macro
 
 $macro expr PLUS((a), (b))
-    a + b
+a + b
 $end_macro
 
 /* 字符串化读取原始实参。 */

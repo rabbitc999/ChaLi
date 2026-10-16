@@ -22,26 +22,26 @@ int64 main() {
     db.exec("DROP TABLE IF EXISTS score");
     db.exec("CREATE TABLE score (student VARCHAR(32), course VARCHAR(32), value DECIMAL(5,1))");
     db.exec("INSERT INTO score (student, course, value) VALUES "
-            "('张三', 'Java', 92), ('张三', '高等数学', 78), ('李四', 'Java', 85)");
+    "('张三', 'Java', 92), ('张三', '高等数学', 78), ('李四', 'Java', 85)");
 
     println("== 全部成绩 ==");
     std::sql::ResultSet all =
-        db.exec("SELECT student, course, value FROM score ORDER BY student, course");
+    db.exec("SELECT student, course, value FROM score ORDER BY student, course");
     println("{}", all.render());
 
     println("== 按课程统计 ==");
     std::sql::ResultSet stats = db.exec(
-        "SELECT course, COUNT(*) AS people, AVG(value) AS avg_score, MAX(value) AS best "
-        "FROM score GROUP BY course ORDER BY course");
+    "SELECT course, COUNT(*) AS people, AVG(value) AS avg_score, MAX(value) AS best "
+    "FROM score GROUP BY course ORDER BY course");
     println("{}", stats.render());
 
     println("== 条件查询 ==");
     std::sql::ResultSet filtered =
-        db.exec("SELECT student, value FROM score WHERE value >= 85 ORDER BY value DESC");
+    db.exec("SELECT student, value FROM score WHERE value >= 85 ORDER BY value DESC");
     println("{}", filtered.render());
 
     println("行数={} 平均分={}", db.count("SELECT COUNT(*) FROM score"),
-                  db.scalar("SELECT AVG(value) FROM score"));
+    db.scalar("SELECT AVG(value) FROM score"));
 
     std::sql::ResultSet bad = db.exec("SELECT * FROM 不存在的表");
     println("故意写错：ok={} error={}", bad.ok, bad.error);

@@ -35,7 +35,7 @@ int64 main() {
 
     v[1] = 99;                                   /* 按下标改 */
     println("改 v[1]={}；contains(20)={} indexOf(99)={}",
-           v[1], v.contains(20), v.indexOf(99));
+    v[1], v.contains(20), v.indexOf(99));
 
     v.insert(0, 7);                               /* 插到最前面 */
     println("insert 之后：v[0]={} len={}", v[0], len(v));
@@ -64,9 +64,9 @@ int64 main() {
     ages.put("bob", 22);
     ages["cid"] = 33;                             /* `m[k] = v` 等价于 put */
     println("map: len={} amy={} has(bob)={} cid={}",
-           len(ages), ages["amy"], ages.has("bob"), ages["cid"]);
+    len(ages), ages["amy"], ages.has("bob"), ages["cid"]);
     println("没这个键：has(zoe)={} 下标读出来={}",
-           ages.has("zoe"), ages["zoe"]);
+    ages.has("zoe"), ages["zoe"]);
     println("remove(bob) 拿回 {}，现在 len={}", ages.remove("bob"), len(ages));
 
     /* ---------- 遍历：按下标 / 按升序键 ---------- */
@@ -79,7 +79,7 @@ int64 main() {
         joined = joined + names[i] + " ";         /* 字符串元素取出来是新的一份 */
     }
     println("std::lang::List<string> 遍历：{}（len={}，contains(bob)={}）",
-           joined, len(names), names.contains("bob"));
+    joined, len(names), names.contains("bob"));
 
     String keys = "";
     String values = "";
@@ -114,7 +114,7 @@ int64 main() {
     int64 set_has = object_set.has(set_key);
     int64 set_removed = object_set.remove(set_key);
     println("std::lang::Set<std::lang::Any> 取出再查：has={} remove={}",
-           set_has, set_removed);
+    set_has, set_removed);
 
     Map<Any, int64> object_map;
     object_map.put(box, 88);
@@ -122,7 +122,7 @@ int64 main() {
     Map<Any, int64> object_map_copy = object_map;
     delete box;                                  /* 键身份不依赖原变量继续存活 */
     println("std::lang::Map<std::lang::Any,int64> 取出再查：has={} 值={} 副本={}",
-           object_map.has(map_key), object_map[map_key], object_map_copy[map_key]);
+    object_map.has(map_key), object_map[map_key], object_map_copy[map_key]);
     Any unrelated;
     unrelated.set(77);
     println("std::lang::Map<std::lang::Any,int64> 同内容新对象：has={}", object_map.has(unrelated));

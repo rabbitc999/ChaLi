@@ -15,50 +15,50 @@
 
 /* 1) 宏内临时变量不再撞调用点的 `tmp`。 */
 $macro SWAP((a), (b))
-    int64 $0 = a;
-    a = b;
-    b = $0;
+int64 $0 = a;
+a = b;
+b = $0;
 $end_macro
 
 /* 2) 同一宏展开两次：两次的 `$0` 是两个不同的名字，能在同一作用域并存。 */
 $macro PAIR((v))
-    int64 $0 = v;
-    int64 $1 = 1;
-    int64 $9 = 9;
-    assert($1 + $9 == 10);
-    println("pair={}", $0);
+int64 $0 = v;
+int64 $1 = 1;
+int64 $9 = 9;
+assert($1 + $9 == 10);
+println("pair={}", $0);
 $end_macro
 
 /* 3) 嵌套：外层 OUTER 的 `$0` 与内层 INNER 的 `$0` 互不影响。 */
 $macro INNER((v))
-    int64 $0 = v;
-    println("inner={}", $0);
+int64 $0 = v;
+println("inner={}", $0);
 $end_macro
 
 $macro OUTER((v))
-    int64 $0 = v + 1;
-    println("outer={}", $0);
+int64 $0 = v + 1;
+println("outer={}", $0);
     $INNER(v)
 $end_macro
 
 /* 4) 重载宏：每个形态的每次调用各分配一个展开 ID（递归宏本身仍被拒绝）。 */
 $macro REPORT(a)
-    int64 $0 = a;
-    println("one={}", $0);
+int64 $0 = a;
+println("one={}", $0);
 $end_macro
 
 $macro REPORT(a, b)
-    int64 $0 = a + b;
-    println("two={}", $0);
+int64 $0 = a + b;
+println("two={}", $0);
 $end_macro
 
 /* 5) `$for` 里也能用 `$0`：同一次展开里重复出现就共用同一个名字。 */
 $macro SUM(...values)
-    int64 $0 = 0;
+int64 $0 = 0;
 $for item in values
     $0 = $0 + item;
 $end_for
-    println("sum={}", $0);
+println("sum={}", $0);
 $end_macro
 
 /* 6) `$replace` 单行宏同样支持 `$0`（这里宏体是一整条语句块）。 */
@@ -66,8 +66,8 @@ $replace SWAPV((a), (b)) { int64 $0 = a; a = b; b = $0; }
 
 /* 7) 字符串与注释里的 `$0` 原样保留，不参与替换。 */
 $macro LITERAL()
-    /* 注释里写 $0 也安全 */
-    println("literal={}", "$0 + $2");
+/* 注释里写 $0 也安全 */
+println("literal={}", "$0 + $2");
 $end_macro
 
 /* 8) `$stringify(形参)` 取原始实参，不替换里面的 `$0`。 */

@@ -151,12 +151,11 @@ VS Code 装了 `vscode/` 下的插件后，在「运行与调试」里选 **Mage
 - 波浪号的宽度就是出错 Token 的长度；制表符按 4 列制表位铺平，中文按 2 列算，所以列不会歪。
 - 出错位置落在 `%include` 进来的文件里时，指向**真正写错的那个文件**，不是展开后的主文件。
 - 不再显示 Token 内部名：`SEMI` → `分号(;)`、`IMPL` → `实现(impl)`、`VARIABLE` → `标识符`。
-- 报错文案跟随显示语言（`MAGEL_LANG=zh|en|ja` 或 `--lang`），同一处错误分别为：
+- 报错文案跟随显示语言（`MAGEL_LANG=zh|en` 或 `--lang`），同一处错误分别为：
 
   ```text
   期望 标识符 / 常量(const) / 可变(mut) / 新建(new) 等 17 个之一，实际是 实现(impl)
   expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candidates), found impl(impl)
-  識別子 / 定数(const) / 可変(mut) / 生成(new) 他 17 件のいずれかを期待しましたが、実際は 実装(impl) です
   ```
 
   语义错误（类型不匹配、未定义符号等）目前仍是中文——那些文案写在编译器核心里，

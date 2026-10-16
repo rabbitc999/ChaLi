@@ -13,9 +13,9 @@ int64 main() {
     /* find / rfind / contains / startsWith / endsWith / compare / charAt */
     String text = "abcabc";
     println("find {} rfind {} contains {}", std::text::Text::find(text, "bc"),
-                 std::text::Text::rfind(text, "bc"), std::text::Text::contains(text, "cab"));
+    std::text::Text::rfind(text, "bc"), std::text::Text::contains(text, "cab"));
     println("starts {} ends {} cmp {}", std::text::Text::startsWith(text, "ab"),
-                 std::text::Text::endsWith(text, "bc"), std::text::Text::compare("a", "b"));
+    std::text::Text::endsWith(text, "bc"), std::text::Text::compare("a", "b"));
     println("charAt {}", std::text::Text::charAt(text, 1));
 
     /* upper / lower / replace / repeat / pad */

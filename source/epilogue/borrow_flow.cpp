@@ -414,6 +414,8 @@ struct MBorrowFlowBuilder
     {
         if (id < 0) return next;
         const auto node = N(id);
+        if (node.kind == MNode::ExprStmt && !node.kids.empty() && N(node.kids[0]).kind == MNode::Loop && N(node.kids[0]).s == "block")
+            return statement(N(node.kids[0]).kids[0], next, stop, repeat);
         if (node.kind == MNode::ExprStmt && !node.kids.empty() && N(node.kids[0]).kind == MNode::Loop && N(node.kids[0]).s.empty())
             return statement(node.kids[0], next, stop, repeat);
         if (node.kind == MNode::Destructure && !node.i)

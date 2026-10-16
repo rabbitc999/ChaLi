@@ -10,7 +10,7 @@ int64 main() {
     assert(highBit == ((uint64)1 << 63));
 
     Result<std::regex::Regex, std::regex::RegexError> compiled =
-        std::regex::Regex::compile("[a-z]+[0-9]+");
+    std::regex::Regex::compile("[a-z]+[0-9]+");
     assert(compiled.isOk());
     std::regex::Regex lettersDigits = compiled.unwrap();
     std::regex::Regex digits = std::regex::Regex::compile("[0-9]+").unwrap();

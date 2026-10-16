@@ -3476,6 +3476,22 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
                     }
                     body.push_back(simple_ast::Node::assign(emitted, value));
                 }
+                if (valueMatch && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type))
+                {
+                    // 表达式分支的载荷副本与普通局部值一样，需要稳定槽供 break 隐式移动。
+                    const auto storage = AllocateName("__magel_match_value_storage");
+                    body.push_back(simple_ast::Node::declare(storage, simple_ast::Type::i64()));
+                    body.push_back(simple_ast::Node::assign(storage, simple_ast::Node::alloc(simple_ast::Node::i(8))));
+                    body.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage), simple_ast::Node::var(emitted), LowerType(payload.type, storage)));
+                    MarkOwned(storage);
+                    auto &names = g_ownedScopes.back().names;
+                    const auto slot = names.back();
+                    names.pop_back();
+                    names.insert(names.begin(), slot);
+                    g_referenceStorage[emitted] = storage;
+                    Find(sourceName)->emitted = storage;
+                    Find(sourceName)->elementReference = true;
+                }
             }
         }
         AppendMatchGuard(item, next, &body);

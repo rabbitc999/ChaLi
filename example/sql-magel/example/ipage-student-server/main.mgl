@@ -79,7 +79,7 @@ Permission parsePermission(String text) {
 /** @brief 是否是数据库认得的权限字面量。 */
 bool isValidPermission(String text) {
     return text == "STUDENT" || text == "TEACHER"
-        || text == "ADMINISTRATOR" || text == "SUPER_ADMINISTRATOR";
+    || text == "ADMINISTRATOR" || text == "SUPER_ADMINISTRATOR";
 }
 
 /** @brief 代码枚举 -> 中文显示名（与 Java 端 @ModelEnum 的 text 一致）。 */
@@ -212,8 +212,8 @@ bool validPassword(String text) {
     while (i < len(text)) {
         int64 byte = (int64)text[i];
         bool alnum = (byte >= 48 && byte <= 57)
-                  || (byte >= 65 && byte <= 90)
-                  || (byte >= 97 && byte <= 122);
+        || (byte >= 65 && byte <= 90)
+        || (byte >= 97 && byte <= 122);
         if (!alnum) { return false; }
         if (byte >= 240) { i = i + 4; }
         elif (byte >= 224) { i = i + 3; }
@@ -569,8 +569,8 @@ Response messageResponse(String message) {
  * @param items 已经拼好的 JSON 数组文本。 @param count 本次返回行数。 @param total 库中总行数。 */
 String listEnvelope(String items, int64 count, int64 total) {
     return "{\"items\":" + items + ",\"count\":" + format("{}", count)
-         + ",\"total\":" + format("{}", total)
-         + ",\"limit\":" + format("{}", LIST_LIMIT) + "}";
+    + ",\"total\":" + format("{}", total)
+    + ",\"limit\":" + format("{}", LIST_LIMIT) + "}";
 }
 
 /* ── JSON 入参读取 ────────────────────────────────────────────────────── */
@@ -643,7 +643,7 @@ struct App {
         }
         if (len(database) == 0) { database = "student"; }
         if (!self.db.execOk("CREATE DATABASE IF NOT EXISTS `" + database
-                            + "` DEFAULT CHARACTER SET utf8mb4")) {
+        + "` DEFAULT CHARACTER SET utf8mb4")) {
             println(">> 建库失败：{}", self.db.lastError());
             return false;
         }
@@ -785,9 +785,9 @@ struct App {
         }
         {
             ResultSet rows = self.db.exec(
-                "SELECT user_id, user_name, user_permission FROM `user`"
-                " WHERE user_name = " + self.db.quote(name)
-                + " AND user_password = " + self.db.quote(password));
+            "SELECT user_id, user_name, user_permission FROM `user`"
+            " WHERE user_name = " + self.db.quote(name)
+            + " AND user_password = " + self.db.quote(password));
             if (!rows.ok) {
                 root.close();
                 return errorResponse(500, "数据库查询失败：" + rows.error);
@@ -812,8 +812,8 @@ struct App {
         self.sessions.push(session);
 
         return jsonResponse(200, "{\"token\":" + jsonString(session.token)
-                                 + ",\"user\":" + self.userJson(&session)
-                                 + ",\"modules\":" + self.modulesJson(session.level) + "}");
+        + ",\"user\":" + self.userJson(&session)
+        + ",\"modules\":" + self.modulesJson(session.level) + "}");
     }
 
     /** @brief 注销：丢掉令牌对应的会话。 */
@@ -825,10 +825,10 @@ struct App {
     /** @brief 会话里的用户对象（不带令牌）。 */
     String userJson(Session const& session) {
         return "{\"id\":" + format("{}", session.userId)
-             + ",\"userName\":" + jsonString(session.userName)
-             + ",\"permission\":" + jsonString(session.permission)
-             + ",\"permissionLabel\":" + jsonString(permissionLabel(parsePermission(session.permission)))
-             + ",\"level\":" + format("{}", session.level) + "}";
+        + ",\"userName\":" + jsonString(session.userName)
+        + ",\"permission\":" + jsonString(session.permission)
+        + ",\"permissionLabel\":" + jsonString(permissionLabel(parsePermission(session.permission)))
+        + ",\"level\":" + format("{}", session.level) + "}";
     }
 
     /** @brief 当前等级可见的模块树（含每个动作的门槛），供前端渲染菜单与按钮。 */
@@ -839,14 +839,14 @@ struct App {
             if (i > 0) { out = out + ","; }
             ModuleSpec spec = modules[i];
             out = out + "{\"key\":" + jsonString(spec.key)
-                + ",\"label\":" + jsonString(spec.label)
-                + ",\"needLevel\":" + format("{}", spec.needLevel)
-                + ",\"actions\":[";
+            + ",\"label\":" + jsonString(spec.label)
+            + ",\"needLevel\":" + format("{}", spec.needLevel)
+            + ",\"actions\":[";
             for (int64 j = 0; j < len(spec.actions); j = j + 1) {
                 if (j > 0) { out = out + ","; }
                 out = out + "{\"key\":" + jsonString(spec.actions[j].key)
-                    + ",\"label\":" + jsonString(spec.actions[j].label)
-                    + ",\"needLevel\":" + format("{}", spec.actions[j].needLevel) + "}";
+                + ",\"label\":" + jsonString(spec.actions[j].label)
+                + ",\"needLevel\":" + format("{}", spec.actions[j].needLevel) + "}";
             }
             out = out + "]}";
         }
@@ -856,7 +856,7 @@ struct App {
     /** @brief `GET /api/session`：当前用户 + 可见模块。 */
     Response sessionResponse(Session const& session) {
         return jsonResponse(200, "{\"user\":" + self.userJson(&session)
-                                 + ",\"modules\":" + self.modulesJson(session.level) + "}");
+        + ",\"modules\":" + self.modulesJson(session.level) + "}");
     }
 
     /** @brief 修改自己的口令：先验旧口令，再校验新口令。 */
@@ -868,15 +868,15 @@ struct App {
         String next = textField(&root, "newPassword");
         root.close();
         int64 matched = self.db.count(
-            "SELECT COUNT(*) FROM `user` WHERE user_id = " + format("{}", session.userId)
-            + " AND user_password = " + self.db.quote(current));
+        "SELECT COUNT(*) FROM `user` WHERE user_id = " + format("{}", session.userId)
+        + " AND user_password = " + self.db.quote(current));
         if (matched == 0) { return errorResponse(400, "当前密码不正确"); }
         if (!validPassword(next)) {
             return errorResponse(400, "用户密码不合法：需要 4~18 位大小写字母或数字");
         }
         ResultSet updated = self.db.exec(
-            "UPDATE `user` SET user_password = " + self.db.quote(next)
-            + " WHERE user_id = " + format("{}", session.userId));
+        "UPDATE `user` SET user_password = " + self.db.quote(next)
+        + " WHERE user_id = " + format("{}", session.userId));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return messageResponse("密码修改成功！");
     }
@@ -889,19 +889,19 @@ struct App {
      */
     String studentListSql() {
         return "SELECT st.student_id, st.student_name, st.student_sex,"
-               " IFNULL(st.sclass_id, 0), IFNULL(cl.sclass_name, '未分班'), IFNULL(cl.sclass_grade, ''),"
-               " COUNT(se.selection_id),"
-               " CAST(IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS CHAR)"
-               " FROM student st"
-               " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
-               " LEFT JOIN selection se ON se.student_id = st.student_id";
+        " IFNULL(st.sclass_id, 0), IFNULL(cl.sclass_name, '未分班'), IFNULL(cl.sclass_grade, ''),"
+        " COUNT(se.selection_id),"
+        " CAST(IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS CHAR)"
+        " FROM student st"
+        " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
+        " LEFT JOIN selection se ON se.student_id = st.student_id";
     }
 
     /** @brief 学生列表分组的固定尾巴（去掉会让 ONLY_FULL_GROUP_BY 报错）。 */
     String studentGroupSql() {
         return " GROUP BY st.student_id, st.student_name, st.student_sex,"
-               " st.sclass_id, cl.sclass_name, cl.sclass_grade"
-               " ORDER BY st.student_id";
+        " st.sclass_id, cl.sclass_name, cl.sclass_grade"
+        " ORDER BY st.student_id";
     }
 
     /** @brief 学生一行 -> JSON 对象。 */
@@ -909,15 +909,15 @@ struct App {
         String sex = rows.textAt(index, 2);
         String grade = rows.textAt(index, 5);
         return "{\"id\":" + format("{}", rows.intAt(index, 0))
-             + ",\"name\":" + jsonString(rows.textAt(index, 1))
-             + ",\"sex\":" + jsonString(sex)
-             + ",\"sexLabel\":" + jsonString(sexLabel(sex))
-             + ",\"sclassId\":" + format("{}", rows.intAt(index, 3))
-             + ",\"sclassName\":" + jsonString(rows.textAt(index, 4))
-             + ",\"grade\":" + jsonString(grade)
-             + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
-             + ",\"courseCount\":" + format("{}", rows.intAt(index, 6))
-             + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 7)) + "}";
+        + ",\"name\":" + jsonString(rows.textAt(index, 1))
+        + ",\"sex\":" + jsonString(sex)
+        + ",\"sexLabel\":" + jsonString(sexLabel(sex))
+        + ",\"sclassId\":" + format("{}", rows.intAt(index, 3))
+        + ",\"sclassName\":" + jsonString(rows.textAt(index, 4))
+        + ",\"grade\":" + jsonString(grade)
+        + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
+        + ",\"courseCount\":" + format("{}", rows.intAt(index, 6))
+        + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 7)) + "}";
     }
 
     /**
@@ -935,7 +935,7 @@ struct App {
             }
         }
         ResultSet rows = self.db.exec(self.studentListSql() + condition + self.studentGroupSql()
-                                      + format(" LIMIT {}", LIST_LIMIT));
+        + format(" LIMIT {}", LIST_LIMIT));
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String items = "[";
         for (int64 i = 0; i < rows.rowCount(); i = i + 1) {
@@ -963,23 +963,23 @@ struct App {
         String classValue = "NULL";
         if (sclassId > 0) {
             String exists = self.db.scalar("SELECT sclass_id FROM sclass WHERE sclass_id = "
-                                           + format("{}", sclassId));
+            + format("{}", sclassId));
             if (len(exists) == 0) { return errorResponse(400, "班级 " + format("{}", sclassId) + " 不存在"); }
             classValue = format("{}", sclassId);
         }
         ResultSet inserted = self.db.exec(
-            "INSERT INTO student (student_name, student_sex, sclass_id) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(sex) + ", " + classValue + ")");
+        "INSERT INTO student (student_name, student_sex, sclass_id) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(sex) + ", " + classValue + ")");
         if (!inserted.ok) { return errorResponse(500, "添加失败：" + inserted.error); }
         int64 newId = self.db.count("SELECT LAST_INSERT_ID()");
         return jsonResponse(201, "{\"id\":" + format("{}", newId)
-                                 + ",\"message\":" + jsonString("添加成功！新学生ID：" + format("{}", newId)) + "}");
+        + ",\"message\":" + jsonString("添加成功！新学生ID：" + format("{}", newId)) + "}");
     }
 
     /** @brief 修改学生（PUT 是全量替换：没给班级就是不分班）。 */
     Response updateStudent(int64 id, Request const& request) {
         String exists = self.db.scalar("SELECT student_name FROM student WHERE student_id = "
-                                       + format("{}", id));
+        + format("{}", id));
         if (len(exists) == 0) { return errorResponse(404, "学生 " + format("{}", id) + " 不存在"); }
         JsonValue root;
         Response failure;
@@ -995,15 +995,15 @@ struct App {
         String classValue = "NULL";
         if (sclassId > 0) {
             String found = self.db.scalar("SELECT sclass_id FROM sclass WHERE sclass_id = "
-                                         + format("{}", sclassId));
+            + format("{}", sclassId));
             if (len(found) == 0) { return errorResponse(400, "班级 " + format("{}", sclassId) + " 不存在"); }
             classValue = format("{}", sclassId);
         }
         ResultSet updated = self.db.exec(
-            "UPDATE student SET student_name = " + self.db.quote(name)
-            + ", student_sex = " + self.db.quote(sex)
-            + ", sclass_id = " + classValue
-            + " WHERE student_id = " + format("{}", id));
+        "UPDATE student SET student_name = " + self.db.quote(name)
+        + ", student_sex = " + self.db.quote(sex)
+        + ", sclass_id = " + classValue
+        + " WHERE student_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":\"修改成功！\"}");
     }
@@ -1011,17 +1011,17 @@ struct App {
     /** @brief 删除学生（外键 ON DELETE CASCADE，会一并删掉选课成绩）。 */
     Response deleteStudent(int64 id) {
         String name = self.db.scalar("SELECT student_name FROM student WHERE student_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "学生 " + format("{}", id) + " 不存在"); }
         int64 scores = self.db.count("SELECT COUNT(*) FROM selection WHERE student_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         ResultSet deleted = self.db.exec("DELETE FROM student WHERE student_id = "
-                                         + format("{}", id));
+        + format("{}", id));
         if (!deleted.ok) { return errorResponse(500, "删除失败：" + deleted.error); }
         return jsonResponse(200, "{\"deleted\":true,\"cascade\":" + format("{}", scores)
-                                 + ",\"message\":" + jsonString(
-                                     "已删除学生 " + format("{}", id) + "（" + name
-                                     + "），连带删除 " + format("{}", scores) + " 条成绩记录") + "}");
+        + ",\"message\":" + jsonString(
+        "已删除学生 " + format("{}", id) + "（" + name
+        + "），连带删除 " + format("{}", scores) + " 条成绩记录") + "}");
     }
 
     /* -- 班级管理 ------------------------------------------------------ */
@@ -1029,23 +1029,23 @@ struct App {
     /** @brief 班级列表 SELECT：带学生数与班级平均分（对应 Java 的两个 AGGREGATION 字段）。 */
     String sclassListSql() {
         return "SELECT c.sclass_id, c.sclass_name, c.sclass_administrator, IFNULL(c.sclass_grade, ''),"
-               " (SELECT COUNT(*) FROM student s WHERE s.sclass_id = c.sclass_id),"
-               " CAST(IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM student s"
-               "   JOIN selection se ON se.student_id = s.student_id"
-               "   WHERE s.sclass_id = c.sclass_id), 0) AS CHAR)"
-               " FROM sclass c";
+        " (SELECT COUNT(*) FROM student s WHERE s.sclass_id = c.sclass_id),"
+        " CAST(IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM student s"
+        "   JOIN selection se ON se.student_id = s.student_id"
+        "   WHERE s.sclass_id = c.sclass_id), 0) AS CHAR)"
+        " FROM sclass c";
     }
 
     /** @brief 班级一行 -> JSON 对象。 */
     String sclassRow(ResultSet const& rows, int64 index) {
         String grade = rows.textAt(index, 3);
         return "{\"id\":" + format("{}", rows.intAt(index, 0))
-             + ",\"name\":" + jsonString(rows.textAt(index, 1))
-             + ",\"administrator\":" + jsonString(rows.textAt(index, 2))
-             + ",\"grade\":" + jsonString(grade)
-             + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
-             + ",\"studentCount\":" + format("{}", rows.intAt(index, 4))
-             + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 5)) + "}";
+        + ",\"name\":" + jsonString(rows.textAt(index, 1))
+        + ",\"administrator\":" + jsonString(rows.textAt(index, 2))
+        + ",\"grade\":" + jsonString(grade)
+        + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
+        + ",\"studentCount\":" + format("{}", rows.intAt(index, 4))
+        + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 5)) + "}";
     }
 
     /** @brief 班级列表 / 查询。 */
@@ -1083,19 +1083,19 @@ struct App {
         if (adminLimit.isValue()) { return errorResponse(400, adminLimit.unwrap()); }
         if (len(grade) == 0) { return errorResponse(400, "年级只能是 高一 / 高二 / 高三"); }
         ResultSet inserted = self.db.exec(
-            "INSERT INTO sclass (sclass_name, sclass_administrator, sclass_grade) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(administrator) + ", "
-            + self.db.quote(grade) + ")");
+        "INSERT INTO sclass (sclass_name, sclass_administrator, sclass_grade) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(administrator) + ", "
+        + self.db.quote(grade) + ")");
         if (!inserted.ok) { return errorResponse(500, "添加失败：" + inserted.error); }
         int64 newId = self.db.count("SELECT LAST_INSERT_ID()");
         return jsonResponse(201, "{\"id\":" + format("{}", newId)
-                                 + ",\"message\":" + jsonString("添加成功！新班级ID：" + format("{}", newId)) + "}");
+        + ",\"message\":" + jsonString("添加成功！新班级ID：" + format("{}", newId)) + "}");
     }
 
     /** @brief 修改班级（PUT 全量替换）。 */
     Response updateSclass(int64 id, Request const& request) {
         String exists = self.db.scalar("SELECT sclass_name FROM sclass WHERE sclass_id = "
-                                       + format("{}", id));
+        + format("{}", id));
         if (len(exists) == 0) { return errorResponse(404, "班级 " + format("{}", id) + " 不存在"); }
         JsonValue root;
         Response failure;
@@ -1112,10 +1112,10 @@ struct App {
         if (adminLimit.isValue()) { return errorResponse(400, adminLimit.unwrap()); }
         if (len(grade) == 0) { return errorResponse(400, "年级只能是 高一 / 高二 / 高三"); }
         ResultSet updated = self.db.exec(
-            "UPDATE sclass SET sclass_name = " + self.db.quote(name)
-            + ", sclass_administrator = " + self.db.quote(administrator)
-            + ", sclass_grade = " + self.db.quote(grade)
-            + " WHERE sclass_id = " + format("{}", id));
+        "UPDATE sclass SET sclass_name = " + self.db.quote(name)
+        + ", sclass_administrator = " + self.db.quote(administrator)
+        + ", sclass_grade = " + self.db.quote(grade)
+        + " WHERE sclass_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":\"修改成功！\"}");
     }
@@ -1123,17 +1123,17 @@ struct App {
     /** @brief 删除班级（外键 ON DELETE SET NULL，班内学生会变成「未分班」）。 */
     Response deleteSclass(int64 id) {
         String name = self.db.scalar("SELECT sclass_name FROM sclass WHERE sclass_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "班级 " + format("{}", id) + " 不存在"); }
         int64 members = self.db.count("SELECT COUNT(*) FROM student WHERE sclass_id = "
-                                      + format("{}", id));
+        + format("{}", id));
         ResultSet deleted = self.db.exec("DELETE FROM sclass WHERE sclass_id = "
-                                         + format("{}", id));
+        + format("{}", id));
         if (!deleted.ok) { return errorResponse(500, "删除失败：" + deleted.error); }
         return jsonResponse(200, "{\"deleted\":true,\"cascade\":0,\"detached\":" + format("{}", members)
-                                 + ",\"message\":" + jsonString(
-                                     "已删除班级 " + format("{}", id) + "（" + name + "），"
-                                     + format("{}", members) + " 名学生转为未分班") + "}");
+        + ",\"message\":" + jsonString(
+        "已删除班级 " + format("{}", id) + "（" + name + "），"
+        + format("{}", members) + " 名学生转为未分班") + "}");
     }
 
     /* -- 课程管理 ------------------------------------------------------ */
@@ -1141,21 +1141,21 @@ struct App {
     /** @brief 课程列表 SELECT：带选课人数与平均分。 */
     String courseListSql() {
         return "SELECT co.course_id, co.course_name, co.course_state,"
-               " (SELECT COUNT(*) FROM selection se WHERE se.course_id = co.course_id),"
-               " CAST(IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM selection se"
-               "   WHERE se.course_id = co.course_id), 0) AS CHAR)"
-               " FROM course co";
+        " (SELECT COUNT(*) FROM selection se WHERE se.course_id = co.course_id),"
+        " CAST(IFNULL((SELECT ROUND(AVG(se.grade_number), 1) FROM selection se"
+        "   WHERE se.course_id = co.course_id), 0) AS CHAR)"
+        " FROM course co";
     }
 
     /** @brief 课程一行 -> JSON 对象。 */
     String courseRow(ResultSet const& rows, int64 index) {
         String state = rows.textAt(index, 2);
         return "{\"id\":" + format("{}", rows.intAt(index, 0))
-             + ",\"name\":" + jsonString(rows.textAt(index, 1))
-             + ",\"state\":" + jsonString(state)
-             + ",\"stateLabel\":" + jsonString(courseStateLabel(state))
-             + ",\"studentCount\":" + format("{}", rows.intAt(index, 3))
-             + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 4)) + "}";
+        + ",\"name\":" + jsonString(rows.textAt(index, 1))
+        + ",\"state\":" + jsonString(state)
+        + ",\"stateLabel\":" + jsonString(courseStateLabel(state))
+        + ",\"studentCount\":" + format("{}", rows.intAt(index, 3))
+        + ",\"averageScore\":" + jsonNumber(rows.textAt(index, 4)) + "}";
     }
 
     /** @brief 课程列表 / 查询。 */
@@ -1189,18 +1189,18 @@ struct App {
         auto nameLimit = overLimit("课程名称", name, LIMIT_COURSE_NAME);
         if (nameLimit.isValue()) { return errorResponse(400, nameLimit.unwrap()); }
         ResultSet inserted = self.db.exec(
-            "INSERT INTO course (course_name, course_state) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(state) + ")");
+        "INSERT INTO course (course_name, course_state) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(state) + ")");
         if (!inserted.ok) { return errorResponse(500, "添加失败：" + inserted.error); }
         int64 newId = self.db.count("SELECT LAST_INSERT_ID()");
         return jsonResponse(201, "{\"id\":" + format("{}", newId)
-                                 + ",\"message\":" + jsonString("添加成功！新课程ID：" + format("{}", newId)) + "}");
+        + ",\"message\":" + jsonString("添加成功！新课程ID：" + format("{}", newId)) + "}");
     }
 
     /** @brief 修改课程（PUT 全量替换）。 */
     Response updateCourse(int64 id, Request const& request) {
         String exists = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                       + format("{}", id));
+        + format("{}", id));
         if (len(exists) == 0) { return errorResponse(404, "课程 " + format("{}", id) + " 不存在"); }
         JsonValue root;
         Response failure;
@@ -1213,9 +1213,9 @@ struct App {
         auto nameLimit = overLimit("课程名称", name, LIMIT_COURSE_NAME);
         if (nameLimit.isValue()) { return errorResponse(400, nameLimit.unwrap()); }
         ResultSet updated = self.db.exec(
-            "UPDATE course SET course_name = " + self.db.quote(name)
-            + ", course_state = " + self.db.quote(state)
-            + " WHERE course_id = " + format("{}", id));
+        "UPDATE course SET course_name = " + self.db.quote(name)
+        + ", course_state = " + self.db.quote(state)
+        + " WHERE course_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":\"修改成功！\"}");
     }
@@ -1223,17 +1223,17 @@ struct App {
     /** @brief 删除课程（外键 ON DELETE CASCADE，会一并删掉该课程的选课成绩）。 */
     Response deleteCourse(int64 id) {
         String name = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "课程 " + format("{}", id) + " 不存在"); }
         int64 scores = self.db.count("SELECT COUNT(*) FROM selection WHERE course_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         ResultSet deleted = self.db.exec("DELETE FROM course WHERE course_id = "
-                                         + format("{}", id));
+        + format("{}", id));
         if (!deleted.ok) { return errorResponse(500, "删除失败：" + deleted.error); }
         return jsonResponse(200, "{\"deleted\":true,\"cascade\":" + format("{}", scores)
-                                 + ",\"message\":" + jsonString(
-                                     "已删除课程 " + format("{}", id) + "（" + name
-                                     + "），连带删除 " + format("{}", scores) + " 条成绩记录") + "}");
+        + ",\"message\":" + jsonString(
+        "已删除课程 " + format("{}", id) + "（" + name
+        + "），连带删除 " + format("{}", scores) + " 条成绩记录") + "}");
     }
 
     /* -- 成绩管理 ------------------------------------------------------ */
@@ -1241,23 +1241,23 @@ struct App {
     /** @brief 成绩列表 SELECT：连学生与课程；等级在 Magel 侧算（gradeLevelLabel）。 */
     String selectionListSql() {
         return "SELECT se.selection_id, se.student_id, st.student_name, se.course_id,"
-               " co.course_name, se.test_date, se.grade_number"
-               " FROM selection se"
-               " JOIN student st ON st.student_id = se.student_id"
-               " JOIN course co ON co.course_id = se.course_id";
+        " co.course_name, se.test_date, se.grade_number"
+        " FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id";
     }
 
     /** @brief 成绩一行 -> JSON 对象。 */
     String selectionRow(ResultSet const& rows, int64 index) {
         int64 grade = rows.intAt(index, 6);
         return "{\"id\":" + format("{}", rows.intAt(index, 0))
-             + ",\"studentId\":" + format("{}", rows.intAt(index, 1))
-             + ",\"studentName\":" + jsonString(rows.textAt(index, 2))
-             + ",\"courseId\":" + format("{}", rows.intAt(index, 3))
-             + ",\"courseName\":" + jsonString(rows.textAt(index, 4))
-             + ",\"testDate\":" + jsonString(rows.textAt(index, 5))
-             + ",\"grade\":" + format("{}", grade)
-             + ",\"gradeLabel\":" + jsonString(gradeLevelLabel(grade)) + "}";
+        + ",\"studentId\":" + format("{}", rows.intAt(index, 1))
+        + ",\"studentName\":" + jsonString(rows.textAt(index, 2))
+        + ",\"courseId\":" + format("{}", rows.intAt(index, 3))
+        + ",\"courseName\":" + jsonString(rows.textAt(index, 4))
+        + ",\"testDate\":" + jsonString(rows.textAt(index, 5))
+        + ",\"grade\":" + format("{}", grade)
+        + ",\"gradeLabel\":" + jsonString(gradeLevelLabel(grade)) + "}";
     }
 
     /**
@@ -1279,8 +1279,8 @@ struct App {
             }
         }
         ResultSet rows = self.db.exec(self.selectionListSql() + condition
-                                      + " ORDER BY se.selection_id"
-                                      + format(" LIMIT {}", LIST_LIMIT));
+        + " ORDER BY se.selection_id"
+        + format(" LIMIT {}", LIST_LIMIT));
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String items = "[";
         for (int64 i = 0; i < rows.rowCount(); i = i + 1) {
@@ -1309,34 +1309,34 @@ struct App {
             return errorResponse(400, "成绩必须在 0 到 100 之间（@ValidatorRange(max = 100)）");
         }
         String studentName = self.db.scalar("SELECT student_name FROM student WHERE student_id = "
-                                            + format("{}", studentId));
+        + format("{}", studentId));
         if (len(studentName) == 0) { return errorResponse(400, "学号 " + format("{}", studentId) + " 不存在"); }
         String courseName = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                           + format("{}", courseId));
+        + format("{}", courseId));
         if (len(courseName) == 0) { return errorResponse(400, "课程 " + format("{}", courseId) + " 不存在"); }
         int64 exists = self.db.count("SELECT COUNT(*) FROM selection WHERE student_id = "
-                                     + format("{}", studentId)
-                                     + " AND course_id = " + format("{}", courseId));
+        + format("{}", studentId)
+        + " AND course_id = " + format("{}", courseId));
         if (exists > 0) {
             return errorResponse(409, studentName + " 的《" + courseName + "》已有成绩，请改用「修改成绩」");
         }
         ResultSet inserted = self.db.exec(
-            "INSERT INTO selection (student_id, course_id, test_date, grade_number) VALUES ("
-            + format("{}", studentId) + ", " + format("{}", courseId) + ", "
-            + self.db.quote(date) + ", " + format("{}", grade) + ")");
+        "INSERT INTO selection (student_id, course_id, test_date, grade_number) VALUES ("
+        + format("{}", studentId) + ", " + format("{}", courseId) + ", "
+        + self.db.quote(date) + ", " + format("{}", grade) + ")");
         if (!inserted.ok) { return errorResponse(500, "录入失败：" + inserted.error); }
         int64 newId = self.db.count("SELECT LAST_INSERT_ID()");
         return jsonResponse(201, "{\"id\":" + format("{}", newId)
-                                 + ",\"message\":" + jsonString("录入成功！新成绩ID：" + format("{}", newId)) + "}");
+        + ",\"message\":" + jsonString("录入成功！新成绩ID：" + format("{}", newId)) + "}");
     }
 
     /** @brief 修改成绩（按成绩ID定位，只改分数）。 */
     Response updateSelection(int64 id, Request const& request) {
         ResultSet current = self.db.exec(
-            "SELECT st.student_name, co.course_name FROM selection se"
-            " JOIN student st ON st.student_id = se.student_id"
-            " JOIN course co ON co.course_id = se.course_id"
-            " WHERE se.selection_id = " + format("{}", id));
+        "SELECT st.student_name, co.course_name FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id"
+        " WHERE se.selection_id = " + format("{}", id));
         if (!current.ok) { return errorResponse(500, "数据库查询失败：" + current.error); }
         if (current.rowCount() == 0) { return errorResponse(404, "成绩 " + format("{}", id) + " 不存在"); }
         JsonValue root;
@@ -1348,8 +1348,8 @@ struct App {
             return errorResponse(400, "成绩必须在 0 到 100 之间（@ValidatorRange(max = 100)）");
         }
         ResultSet updated = self.db.exec(
-            "UPDATE selection SET grade_number = " + format("{}", grade)
-            + " WHERE selection_id = " + format("{}", id));
+        "UPDATE selection SET grade_number = " + format("{}", grade)
+        + " WHERE selection_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":\"修改成功！\"}");
     }
@@ -1357,19 +1357,19 @@ struct App {
     /** @brief 删除成绩（按成绩ID定位）。 */
     Response deleteSelection(int64 id) {
         ResultSet current = self.db.exec(
-            "SELECT st.student_name, co.course_name FROM selection se"
-            " JOIN student st ON st.student_id = se.student_id"
-            " JOIN course co ON co.course_id = se.course_id"
-            " WHERE se.selection_id = " + format("{}", id));
+        "SELECT st.student_name, co.course_name FROM selection se"
+        " JOIN student st ON st.student_id = se.student_id"
+        " JOIN course co ON co.course_id = se.course_id"
+        " WHERE se.selection_id = " + format("{}", id));
         if (!current.ok) { return errorResponse(500, "数据库查询失败：" + current.error); }
         if (current.rowCount() == 0) { return errorResponse(404, "成绩 " + format("{}", id) + " 不存在"); }
         String studentName = current.textAt(0, 0);
         String courseName = current.textAt(0, 1);
         ResultSet deleted = self.db.exec("DELETE FROM selection WHERE selection_id = "
-                                         + format("{}", id));
+        + format("{}", id));
         if (!deleted.ok) { return errorResponse(500, "删除失败：" + deleted.error); }
         return jsonResponse(200, "{\"deleted\":true,\"message\":" + jsonString(
-                                     "已删除 " + studentName + " 的《" + courseName + "》成绩") + "}");
+        "已删除 " + studentName + " 的《" + courseName + "》成绩") + "}");
     }
 
     /** @brief 按课程统计：人数、平均分、最高分、最低分、及格率；courseId <= 0 表示统计全部。 */
@@ -1377,52 +1377,52 @@ struct App {
         String condition = "";
         if (courseId > 0) { condition = " WHERE course_id = " + format("{}", courseId); }
         ResultSet rows = self.db.exec(
-            "SELECT COUNT(*), CAST(IFNULL(ROUND(AVG(grade_number), 1), 0) AS CHAR),"
-            " CAST(IFNULL(MAX(grade_number), 0) AS CHAR), CAST(IFNULL(MIN(grade_number), 0) AS CHAR),"
-            " SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END),"
-            " CAST(ROUND(SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) * 100.0"
-            "   / IF(COUNT(*) = 0, 1, COUNT(*)), 1) AS CHAR)"
-            " FROM selection" + condition);
+        "SELECT COUNT(*), CAST(IFNULL(ROUND(AVG(grade_number), 1), 0) AS CHAR),"
+        " CAST(IFNULL(MAX(grade_number), 0) AS CHAR), CAST(IFNULL(MIN(grade_number), 0) AS CHAR),"
+        " SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END),"
+        " CAST(ROUND(SUM(CASE WHEN grade_number >= 60 THEN 1 ELSE 0 END) * 100.0"
+        "   / IF(COUNT(*) = 0, 1, COUNT(*)), 1) AS CHAR)"
+        " FROM selection" + condition);
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String courseName = "全部课程";
         if (courseId > 0) {
             String found = self.db.scalar("SELECT course_name FROM course WHERE course_id = "
-                                          + format("{}", courseId));
+            + format("{}", courseId));
             if (len(found) > 0) { courseName = found; }
         }
         return jsonResponse(200, "{\"courseId\":" + format("{}", courseId)
-                                 + ",\"courseName\":" + jsonString(courseName)
-                                 + ",\"studentCount\":" + format("{}", rows.intAt(0, 0))
-                                 + ",\"averageScore\":" + jsonNumber(rows.textAt(0, 1))
-                                 + ",\"maxScore\":" + jsonNumber(rows.textAt(0, 2))
-                                 + ",\"minScore\":" + jsonNumber(rows.textAt(0, 3))
-                                 + ",\"passCount\":" + format("{}", rows.intAt(0, 4))
-                                 + ",\"passRate\":" + jsonNumber(rows.textAt(0, 5)) + "}");
+        + ",\"courseName\":" + jsonString(courseName)
+        + ",\"studentCount\":" + format("{}", rows.intAt(0, 0))
+        + ",\"averageScore\":" + jsonNumber(rows.textAt(0, 1))
+        + ",\"maxScore\":" + jsonNumber(rows.textAt(0, 2))
+        + ",\"minScore\":" + jsonNumber(rows.textAt(0, 3))
+        + ",\"passCount\":" + format("{}", rows.intAt(0, 4))
+        + ",\"passRate\":" + jsonNumber(rows.textAt(0, 5)) + "}");
     }
 
     /** @brief 按班级统计：每班人数与平均分。 */
     Response statSelectionByClass() {
         ResultSet rows = self.db.exec(
-            "SELECT c.sclass_id, c.sclass_name, IFNULL(c.sclass_grade, ''),"
-            " COUNT(DISTINCT st.student_id), COUNT(se.selection_id),"
-            " CAST(IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS CHAR)"
-            " FROM sclass c"
-            " LEFT JOIN student st ON st.sclass_id = c.sclass_id"
-            " LEFT JOIN selection se ON se.student_id = st.student_id"
-            " GROUP BY c.sclass_id, c.sclass_name, c.sclass_grade"
-            " ORDER BY c.sclass_id");
+        "SELECT c.sclass_id, c.sclass_name, IFNULL(c.sclass_grade, ''),"
+        " COUNT(DISTINCT st.student_id), COUNT(se.selection_id),"
+        " CAST(IFNULL(ROUND(AVG(se.grade_number), 1), 0) AS CHAR)"
+        " FROM sclass c"
+        " LEFT JOIN student st ON st.sclass_id = c.sclass_id"
+        " LEFT JOIN selection se ON se.student_id = st.student_id"
+        " GROUP BY c.sclass_id, c.sclass_name, c.sclass_grade"
+        " ORDER BY c.sclass_id");
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String items = "[";
         for (int64 i = 0; i < rows.rowCount(); i = i + 1) {
             if (i > 0) { items = items + ","; }
             String grade = rows.textAt(i, 2);
             items = items + "{\"id\":" + format("{}", rows.intAt(i, 0))
-                  + ",\"name\":" + jsonString(rows.textAt(i, 1))
-                  + ",\"grade\":" + jsonString(grade)
-                  + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
-                  + ",\"studentCount\":" + format("{}", rows.intAt(i, 3))
-                  + ",\"selectionCount\":" + format("{}", rows.intAt(i, 4))
-                  + ",\"averageScore\":" + jsonNumber(rows.textAt(i, 5)) + "}";
+            + ",\"name\":" + jsonString(rows.textAt(i, 1))
+            + ",\"grade\":" + jsonString(grade)
+            + ",\"gradeLabel\":" + jsonString(gradeLabel(grade))
+            + ",\"studentCount\":" + format("{}", rows.intAt(i, 3))
+            + ",\"selectionCount\":" + format("{}", rows.intAt(i, 4))
+            + ",\"averageScore\":" + jsonNumber(rows.textAt(i, 5)) + "}";
         }
         return jsonResponse(200, listEnvelope(items + "]", rows.rowCount(), rows.rowCount()));
     }
@@ -1438,9 +1438,9 @@ struct App {
     String userRow(ResultSet const& rows, int64 index) {
         String permission = rows.textAt(index, 2);
         return "{\"id\":" + format("{}", rows.intAt(index, 0))
-             + ",\"userName\":" + jsonString(rows.textAt(index, 1))
-             + ",\"permission\":" + jsonString(permission)
-             + ",\"permissionLabel\":" + jsonString(permissionLabel(parsePermission(permission))) + "}";
+        + ",\"userName\":" + jsonString(rows.textAt(index, 1))
+        + ",\"permission\":" + jsonString(permission)
+        + ",\"permissionLabel\":" + jsonString(permissionLabel(parsePermission(permission))) + "}";
     }
 
     /** @brief 用户列表。 */
@@ -1467,7 +1467,7 @@ struct App {
         root.close();
         if (!validUserName(name)) { return errorResponse(400, "用户名不能为空且最长为 18 个字符"); }
         int64 exists = self.db.count("SELECT COUNT(*) FROM `user` WHERE user_name = "
-                                     + self.db.quote(name));
+        + self.db.quote(name));
         if (exists > 0) { return errorResponse(409, "用户名 " + name + " 已被占用"); }
         if (!validPassword(password)) {
             return errorResponse(400, "用户密码不合法：需要 4~18 位大小写字母或数字");
@@ -1479,27 +1479,27 @@ struct App {
             return errorResponse(400, "除 admin 以外的成员不能是超级管理员");
         }
         ResultSet inserted = self.db.exec(
-            "INSERT INTO `user` (user_name, user_password, user_permission) VALUES ("
-            + self.db.quote(name) + ", " + self.db.quote(password) + ", "
-            + self.db.quote(permission) + ")");
+        "INSERT INTO `user` (user_name, user_password, user_permission) VALUES ("
+        + self.db.quote(name) + ", " + self.db.quote(password) + ", "
+        + self.db.quote(permission) + ")");
         if (!inserted.ok) { return errorResponse(500, "添加失败：" + inserted.error); }
         int64 newId = self.db.count("SELECT LAST_INSERT_ID()");
         return jsonResponse(201, "{\"id\":" + format("{}", newId)
-                                 + ",\"message\":" + jsonString("添加成功！新用户ID：" + format("{}", newId)) + "}");
+        + ",\"message\":" + jsonString("添加成功！新用户ID：" + format("{}", newId)) + "}");
     }
 
     /** @brief 删除用户：admin 与当前登录用户不允许删除（Java 端 User.checker 的 DELETE 分支）。 */
     Response deleteUser(Session const& session, int64 id) {
         String name = self.db.scalar("SELECT user_name FROM `user` WHERE user_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "用户 " + format("{}", id) + " 不存在"); }
         if (name == "admin") { return errorResponse(400, "admin 用户不允许删除"); }
         if (id == session.userId) { return errorResponse(400, "不能删除当前登录的用户"); }
         ResultSet deleted = self.db.exec("DELETE FROM `user` WHERE user_id = "
-                                         + format("{}", id));
+        + format("{}", id));
         if (!deleted.ok) { return errorResponse(500, "删除失败：" + deleted.error); }
         return jsonResponse(200, "{\"deleted\":true,\"message\":" + jsonString(
-                                     "已删除用户 " + format("{}", id) + "（" + name + "）") + "}");
+        "已删除用户 " + format("{}", id) + "（" + name + "）") + "}");
     }
 
     /**
@@ -1510,7 +1510,7 @@ struct App {
      */
     Response updateUserPermission(int64 id, Request const& request) {
         String name = self.db.scalar("SELECT user_name FROM `user` WHERE user_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "用户 " + format("{}", id) + " 不存在"); }
         JsonValue root;
         Response failure;
@@ -1527,18 +1527,18 @@ struct App {
             return errorResponse(400, "其他成员不能为超级管理员");
         }
         ResultSet updated = self.db.exec(
-            "UPDATE `user` SET user_permission = " + self.db.quote(permission)
-            + " WHERE user_id = " + format("{}", id));
+        "UPDATE `user` SET user_permission = " + self.db.quote(permission)
+        + " WHERE user_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "修改失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":" + jsonString(
-                                     "用户 " + format("{}", id) + "（" + name + "）的权限已改为 "
-                                     + permissionLabel(parsePermission(permission))) + "}");
+        "用户 " + format("{}", id) + "（" + name + "）的权限已改为 "
+        + permissionLabel(parsePermission(permission))) + "}");
     }
 
     /** @brief 重置某个用户的口令。 */
     Response resetUserPassword(int64 id, Request const& request) {
         String name = self.db.scalar("SELECT user_name FROM `user` WHERE user_id = "
-                                     + format("{}", id));
+        + format("{}", id));
         if (len(name) == 0) { return errorResponse(404, "用户 " + format("{}", id) + " 不存在"); }
         JsonValue root;
         Response failure;
@@ -1549,11 +1549,11 @@ struct App {
             return errorResponse(400, "用户密码不合法：需要 4~18 位大小写字母或数字");
         }
         ResultSet updated = self.db.exec(
-            "UPDATE `user` SET user_password = " + self.db.quote(password)
-            + " WHERE user_id = " + format("{}", id));
+        "UPDATE `user` SET user_password = " + self.db.quote(password)
+        + " WHERE user_id = " + format("{}", id));
         if (!updated.ok) { return errorResponse(500, "重置失败：" + updated.error); }
         return jsonResponse(200, "{\"id\":" + format("{}", id) + ",\"message\":" + jsonString(
-                                     "用户 " + format("{}", id) + "（" + name + "）的密码已重置") + "}");
+        "用户 " + format("{}", id) + "（" + name + "）的密码已重置") + "}");
     }
 
     /* -- 下拉选项 ------------------------------------------------------ */
@@ -1561,16 +1561,16 @@ struct App {
     /** @brief 班级下拉选项（新增/编辑学生表单用）。 */
     Response sclassOptions() {
         ResultSet rows = self.db.exec("SELECT sclass_id, sclass_name, IFNULL(sclass_grade, '')"
-                                      " FROM sclass ORDER BY sclass_id");
+        " FROM sclass ORDER BY sclass_id");
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String items = "[";
         for (int64 i = 0; i < rows.rowCount(); i = i + 1) {
             if (i > 0) { items = items + ","; }
             String grade = rows.textAt(i, 2);
             items = items + "{\"id\":" + format("{}", rows.intAt(i, 0))
-                  + ",\"name\":" + jsonString(rows.textAt(i, 1))
-                  + ",\"grade\":" + jsonString(grade)
-                  + ",\"gradeLabel\":" + jsonString(gradeLabel(grade)) + "}";
+            + ",\"name\":" + jsonString(rows.textAt(i, 1))
+            + ",\"grade\":" + jsonString(grade)
+            + ",\"gradeLabel\":" + jsonString(gradeLabel(grade)) + "}";
         }
         return jsonResponse(200, listEnvelope(items + "]", rows.rowCount(), rows.rowCount()));
     }
@@ -1578,16 +1578,16 @@ struct App {
     /** @brief 课程下拉选项（录入成绩表单用）。 */
     Response courseOptions() {
         ResultSet rows = self.db.exec("SELECT course_id, course_name, course_state"
-                                      " FROM course ORDER BY course_id");
+        " FROM course ORDER BY course_id");
         if (!rows.ok) { return errorResponse(500, "数据库查询失败：" + rows.error); }
         String items = "[";
         for (int64 i = 0; i < rows.rowCount(); i = i + 1) {
             if (i > 0) { items = items + ","; }
             String state = rows.textAt(i, 2);
             items = items + "{\"id\":" + format("{}", rows.intAt(i, 0))
-                  + ",\"name\":" + jsonString(rows.textAt(i, 1))
-                  + ",\"state\":" + jsonString(state)
-                  + ",\"stateLabel\":" + jsonString(courseStateLabel(state)) + "}";
+            + ",\"name\":" + jsonString(rows.textAt(i, 1))
+            + ",\"state\":" + jsonString(state)
+            + ",\"stateLabel\":" + jsonString(courseStateLabel(state)) + "}";
         }
         return jsonResponse(200, listEnvelope(items + "]", rows.rowCount(), rows.rowCount()));
     }
@@ -2036,16 +2036,16 @@ Request readRequest(TcpSocket mut& socket, int64 port) {
  */
 bool sendResponse(TcpSocket mut& socket, Response const& response, String allowOrigin) {
     String text = "HTTP/1.1 " + format("{}", response.status) + " " + reason(response.status)
-                + "\r\nContent-Type: " + response.contentType
-                + "\r\nContent-Length: " + format("{}", len(response.body))
-                + "\r\nAccess-Control-Allow-Origin: " + allowOrigin
-                + "\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"
-                + "\r\nAccess-Control-Allow-Headers: Content-Type, Authorization"
-                + "\r\nAccess-Control-Max-Age: 600"
-                + "\r\nConnection: close"
-                + "\r\nCache-Control: no-store"
-                + "\r\nX-Content-Type-Options: nosniff"
-                + "\r\n\r\n" + response.body;
+    + "\r\nContent-Type: " + response.contentType
+    + "\r\nContent-Length: " + format("{}", len(response.body))
+    + "\r\nAccess-Control-Allow-Origin: " + allowOrigin
+    + "\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"
+    + "\r\nAccess-Control-Allow-Headers: Content-Type, Authorization"
+    + "\r\nAccess-Control-Max-Age: 600"
+    + "\r\nConnection: close"
+    + "\r\nCache-Control: no-store"
+    + "\r\nX-Content-Type-Options: nosniff"
+    + "\r\n\r\n" + response.body;
     return socket.send(text) == len(text);
 }
 

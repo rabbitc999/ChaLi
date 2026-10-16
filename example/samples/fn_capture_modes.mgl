@@ -38,12 +38,12 @@ int64 main(){
     assert(takeList()==41 && takeList()==42 && transferred[0]==2);
     {Record record;record.text="owned";record.values.push(1);
         {auto own=int64 fn copy(){record.values[0]+=1;return record.values[0];};
-         assert(own()==2);{auto second=own;assert(second()==3);}assert(drops==1);}
+            assert(own()==2);{auto second=own;assert(second()==3);}assert(drops==1);}
         assert(drops==2 && record.values[0]==1);}
     assert(drops==3);
     {Record record;record.text="moved";record.values.push(10);
         {auto own=int64 fn move(){record.values[0]+=1;return record.values[0];};
-         assert(own()==11 && drops==3);}
+            assert(own()==11 && drops==3);}
         assert(drops==4);}
     assert(drops==4);
     int64 referenced=20;int64 mut& alias=&referenced;

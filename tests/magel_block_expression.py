@@ -48,6 +48,10 @@ def main():
                     assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), result
                     print(f'[通过] {name} {backend} O{level}', flush=True)
         for body in (
+            '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;};',
+            '({int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;});',
+            '{break 1;};',
+            '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;}',
             'auto f=int64 fn(){loop{int64 x={break #level(ALL);break 1;};};};f();',
             'break #level(1);',
             'break #level(ALL);',
@@ -84,6 +88,10 @@ def main():
             source.write_text('int64 main(){' + body + 'return 0;}', encoding='utf-8')
             result = invoke([compiler, '--check', source])
             assert result.returncode != 0, (body, result.stdout, result.stderr)
+            if body in ('{break 1;};', '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;};'):
+                for backend in ('run', 'aot'):
+                    orphan = invoke([compiler, backend, source, '--out', work / 'orphan'])
+                    assert orphan.returncode != 0, orphan
             print(f'[通过] 拒绝 {body}', flush=True)
         equivalents = (
             ('int64', '1'),

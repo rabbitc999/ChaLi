@@ -28,7 +28,7 @@ int64 main() {
     Result<int64, std::parse::ParseError> empty = std::parse::Parse::parseInt64("");
     Result<int64, std::parse::ParseError> invalid = std::parse::Parse::parseInt64("4x");
     Result<int64, std::parse::ParseError> overflow =
-        std::parse::Parse::parseInt64("999999999999999999999999");
+    std::parse::Parse::parseInt64("999999999999999999999999");
     match (empty) {
         Result<int64, std::parse::ParseError>::Ok(value) => { println("empty=bad"); }
         Result<int64, std::parse::ParseError>::Err(error) => {

@@ -4,7 +4,7 @@ import std::io;
 
 int64 main() {
     Result<File, String> opened =
-        std::io::fileOpen("missing-file-for-magel-tests.txt", "r");
+    std::io::fileOpen("missing-file-for-magel-tests.txt", "r");
     match (opened) {
         Result<File, String>::Ok(handle) => {
             std::io::fileClose(handle);

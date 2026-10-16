@@ -42,8 +42,8 @@ int64 main() {
     values.push(3);
     List<int64> sorted = std::algorithms::sortValue<int64>(values);
     println("{} {} {} {} {}", sorted[0], sorted[1], sorted[2],
-                 std::algorithms::binarySearchValue<int64>(sorted, 3),
-                 std::algorithms::foldValue<int64>(sorted, 0, addValues));
+    std::algorithms::binarySearchValue<int64>(sorted, 3),
+    std::algorithms::foldValue<int64>(sorted, 0, addValues));
     println("{} {} {}", values[0], values[1], values[2]);
 
     List<float64> stableValues;
@@ -53,20 +53,20 @@ int64 main() {
     stableValues.push(1.0);
     List<float64> stableSorted = std::algorithms::sortValue<float64>(stableValues);
     println("{1:1F} {2:1F} {3:1F} {4:1F}", stableSorted[0], stableSorted[1],
-                 stableSorted[2], stableSorted[3]);
+    stableSorted[2], stableSorted[3]);
     println("{} {} {} {} {}", std::algorithms::findValue<int64>(sorted, 4),
-                 std::algorithms::minValue<int64>(9, 2), std::algorithms::maxValue<int64>(9, 2),
-                 std::algorithms::clampValue<int64>(12, 0, 10),
-                 std::algorithms::allValue<int64>(sorted, positive));
+    std::algorithms::minValue<int64>(9, 2), std::algorithms::maxValue<int64>(9, 2),
+    std::algorithms::clampValue<int64>(12, 0, 10),
+    std::algorithms::allValue<int64>(sorted, positive));
     println("{} {} {} {}", std::algorithms::minValue<int64>(9, 2, 7, -1),
-                 std::algorithms::maxValue<int64>(9, 2, 12, 7),
-                 std::algorithms::minValue<int64>(5), std::algorithms::maxValue<int64>(6));
+    std::algorithms::maxValue<int64>(9, 2, 12, 7),
+    std::algorithms::minValue<int64>(5), std::algorithms::maxValue<int64>(6));
 
     std::collections::Deque<int64> deque = std::collections::Deque<int64>::create();
     deque.pushBack(2);
     deque.pushFront(1);
     println("{} {} {}", deque.len(), deque.popFront().unwrap(),
-                 deque.popBack().unwrap());
+    deque.popBack().unwrap());
 
     std::collections::Queue<int64> queue = std::collections::Queue<int64>::create();
     queue.push(7);

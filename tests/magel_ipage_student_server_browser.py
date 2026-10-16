@@ -38,6 +38,13 @@ SCREENSHOT = ROOT / 'build/magel-ipage-server-ui.png'
 LIMIT = 600
 
 
+def capture_view(tools, target):
+    """保存真实浏览器界面，供书稿与人工核对使用。"""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    image = tools.call('Page.captureScreenshot', {'format': 'png'})
+    target.write_bytes(base64.b64decode(image['data']))
+
+
 def sidebar(tools):
     """侧栏当前的模块名列表。"""
     return tools.evaluate("[...document.querySelectorAll('#nav button')].map(b => b.textContent)")
@@ -84,7 +91,7 @@ def rows(tools, column=1):
 def fill_form(tools, values):
     """填写表单面板并提交。"""
     tools.evaluate(
-        "for (const [key, value] of Any.entries(%s)) "
+        "for (const [key, value] of Object.entries(%s)) "
         "  document.querySelector('#form-panel form').elements.namedItem(key).value = value;"
         "document.querySelector('#form-panel form').requestSubmit();"
         % json.dumps(values, ensure_ascii=False))
@@ -120,6 +127,7 @@ def browser_only(argv, work, server, url, screenshot):
 
             # 登录页应该把后端地址显示出来，方便确认前后端确实分开部署。
             assert '127.0.0.1' in tools.evaluate("document.querySelector('#api-base').textContent")
+            capture_view(tools, screenshot.with_stem(screenshot.stem + '-login'))
 
             # 口令错：提示里带剩余次数，且不进入应用。
             sign_in_expect_failure(tools, 'admin', 'wrong1')
@@ -132,6 +140,7 @@ def browser_only(argv, work, server, url, screenshot):
             tools.wait("document.querySelectorAll('#table-body tr').length === 5")
             assert tools.evaluate("[...document.querySelectorAll('#toolbar button')].some(b => b.textContent === '新增')") is False
             assert tools.evaluate("[...document.querySelectorAll('#table-body button')].some(b => b.textContent === '删除')") is False
+            capture_view(tools, screenshot.with_stem(screenshot.stem + '-student'))
             # 学生成绩列能看到等级。
             open_module(tools, '成绩管理')
             tools.wait("document.querySelectorAll('#table-body tr').length === 6")
@@ -193,6 +202,7 @@ def browser_only(argv, work, server, url, screenshot):
             tools.wait("document.querySelectorAll('#table-body .stat-cell').length === 7")
             assert tools.evaluate("document.querySelector('#table-body .stat-cell:nth-child(2) .v').textContent") == '6'
             assert tools.evaluate("document.querySelector('#table-body .stat-cell:nth-child(7) .v').textContent") == '83.3'
+            capture_view(tools, screenshot.with_stem(screenshot.stem + '-stats'))
             toolbar_click(tools, '返回列表')
             tools.wait("document.querySelectorAll('#table-body tr').length === 6")
 
@@ -210,9 +220,7 @@ def browser_only(argv, work, server, url, screenshot):
             tools.wait("document.querySelector('#app-message').textContent.includes('已删除学生')")
 
             # 留一张截图给人工复核。
-            image = tools.call('Page.captureScreenshot', {'format': 'png'})
-            screenshot.parent.mkdir(parents=True, exist_ok=True)
-            screenshot.write_bytes(base64.b64decode(image['data']))
+            capture_view(tools, screenshot)
 
             tools.call('Page.navigate', {'url': 'about:blank'})
             try:

@@ -20,6 +20,6 @@ int64 main()
     rect.width = 3;
     rect.height = 5;
     println("rect area={} scaled={} perimeter={}", rect.area(), rect.area(2),
-                  rect.perimeter());
+    rect.perimeter());
     return 0;
 }

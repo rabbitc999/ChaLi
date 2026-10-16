@@ -38,6 +38,8 @@ FILES = [
     ('21-与C互操作.md', 'ch21.tex'),
     ('22-交付与部署.md', 'ch22.tex'),
     ('23-综合项目.md', 'ch23.tex'),
+    ('24-学生信息管理系统.md', 'ch24.tex'),
+    ('25-单片机解释器.md', 'ch25.tex'),
     ('A-常见错误速查.md', 'appendix-a.tex'),
     ('B-标准库速查.md', 'appendix-b.tex'),
     ('README.md', 'preface.tex'),
@@ -124,6 +126,12 @@ class Converter:
     def inline(self, s):
         self.codes = []
         self.links = []
+        image = re.fullmatch(r'!\[([^\]]*)\]\((images/[^)]+)\)', s.strip())
+        if image:
+            path = image.group(2)
+            if '..' in path or not os.path.isfile(os.path.join(BOOK, path)):
+                raise ValueError('无效书稿图片：' + path)
+            return '\\begin{center}\n\\includegraphics[width=\\linewidth]{../' + path + '}\\par\n' + esc(image.group(1)) + '\n\\end{center}'
         s = re.sub(r'`([^`\n]+)`', self._stash_code, s)
         s = re.sub(r'\*\*(.+?)\*\*', r'\1', s)
         s = re.sub(r'\[([^\]]+)\]\(([^)\s]+)\)', self._stash_link, s)

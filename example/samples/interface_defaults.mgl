@@ -30,7 +30,7 @@ int64 main() {
     custom.number = 4;
     println("defaults={} override={}", base.doubled(), custom.doubled());
     println("chain={} iterator={}", base.next().next().doubled(),
-                 base.next().iterator(0).unwrap());
+    base.next().iterator(0).unwrap());
 
     Any first;
     Any second;

@@ -25,6 +25,16 @@ magel scenario [file.mgl] [config words...] [-- program arguments...]
 > On Windows the binary is `magel.exe`. Under Git Bash / MSYS write `./magel`, which resolves to
 > `magel.exe`; a bare `magel` goes through PATH lookup.
 
+## AOT code generation and optimization
+
+AOT defaults to `checked`, enabling allocation guards and panic traces, with host C++ optimization `-O3`. Explicit `--opt-level` / `-O*` options and project `opt_level` settings still override it. `fast` explicitly selects `-Ofast`; it is not the default because it can change floating-point rules. The full default quadruple optimizer and reflection remain enabled.
+
+Statically typed integer and floating-point memory operations call scalar runtime interfaces directly, avoiding `RuntimeValue` boxing. Dynamic values retain the generic path. Fixed-array checks use generated comparisons on successful accesses and the same runtime diagnostic on failure. Pointer arrays still validate live allocations and capacity, using division before comparison to avoid index-times-stride overflow. Successful pointer checks no longer construct a diagnostic label string. Bounds, invalid-address diagnostics, call stacks and cleanup remain intact.
+
+Native-call argument buffers belong to each generated function invocation and reuse capacity within that invocation. Synchronous callback reentry creates an independent invocation and cannot overwrite the outer arguments. Known Magel functions remain direct calls; dynamic function values and native calls retain their checks.
+
+See the [AOT optimization regression](../../tests/magel_aot_optimization.py), [synchronous callback regression](../../tests/magel_native_callbacks.py), and [performance methodology](12-vm-performance.md).
+
 ## AOT library output
 
 Use `export` to select the public C interface. Library source can omit `main`:
@@ -71,11 +81,11 @@ called during library initialization. See the [ABI example](../examples/abi_cont
 | `check FILE [json]` | check only, optionally emitting JSON diagnostics |
 | `emit` | produce `.quad` / `.data.bin` / `.layout` only, no execution |
 | `svmb` | export `<prefix>.svmb` only, no execution |
-| `aot FILE [out EXE] [opt LEVEL] [checked\|unchecked]` | export AOT (default `unchecked`) |
+| `aot FILE [out EXE] [opt LEVEL] [checked\|unchecked]` | export AOT (default `checked`) |
 | `new DIR [name NAME]` | create an application project (the destination must not exist) |
 | `gen` | generate a standalone compiler project (forwards to `magel-generator compiler`) |
 | `clear out DIR` | clean registered intermediate artifacts (no recompilation) |
-| `lang zh\|en\|ja\|auto` | choose the display language |
+| `lang zh\|en\|auto` | choose the display language |
 | `help` | show help |
 
 Development scenarios: `test tests backend all`, `fmt check src`, `deps lock project . offline`,
@@ -202,7 +212,7 @@ expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candi
 
 Selection order:
 
-1. `magel lang zh|en|ja|auto`;
+1. `magel lang zh|en|auto`;
 2. environment variable `MAGEL_LANG`;
 3. system language (`LC_ALL` / `LC_MESSAGES` / `LANG`; on Windows `GetUserDefaultUILanguage()`);
 4. none of the above → English.
@@ -324,3 +334,16 @@ After `import `, completion contains modules only. `import std::` omits the impl
 Standard type and field hover/completion descriptions share the [symbol metadata](../library/symbol-index.json) and the description columns in the API reference. The pause operation belongs to `std::lang`: use `std::lang::pause()` or the implicitly imported `pause()`.
 
 Typing `.` lists the receiver type's direct methods and fields. Receiver types come from explicit declarations and parameters, or from `auto` initializers that use constructors, variable assignments, fields, and declared function/method return types. Generic receivers substitute their type arguments into field and return types. Hovering `auto` or the variable name displays the inferred concrete type: `auto item = makeLeaf();` shows `Leaf item`. Member filtering preserves module qualification and local variable shadowing, so equally named types in different modules do not share candidates. Unknown initializers or ambiguous return types retain `auto`; the compiler performs full expression checking and overload resolution.
+
+
+### MSVC generated-code probe
+
+Retained AOT C++ can be compiled in the Visual Studio 2022 x64 Native Tools Command Prompt on Windows. On 2026-10-16, the generated source for all five benchmark kernels compiled, linked, ran, and produced the expected checksums using this command ([probe record](../benchmarks/aot-msvc-probe-2026-10-16.json)):
+
+```bat
+cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /DWIN32_LEAN_AND_MEAN /DNOMINMAX program.aot.cpp /Foprogram-msvc.obj /Feprogram-msvc.exe /link winhttp.lib ws2_32.lib
+```
+
+`program.aot.cpp` is retained by `magel aot ... --keep-intermediate`, initially generated through the available GCC AOT workflow. The current driver still uses GCC `-dumpmachine`, `-std=c++17`, `-pthread`, `-c`, and `-o`, so `--cxx cl.exe` does not work directly. Direct integration needs target detection, optimization flags, compilation/linking, module caching, SQLite C compilation, and DLL/object output adapters. This probe covers a regular executable and the runtime used by these kernels; it is neither full MSVC qualification for all modules, glue and library outputs nor an MSVC/GCC performance comparison.
+
+Checked AOT source tracking retains the per-thread call stack and synchronization. Consecutive instructions in the same source file update only the line number, avoiding repeated owning filename and function-name copies per quadruple. Error paths still report the current function, file and line.

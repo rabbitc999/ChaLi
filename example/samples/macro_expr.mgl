@@ -23,9 +23,9 @@ int64 main() {
     std::lang::List<int64> values;
     values.push(3);
     std::lang::println("{} {} {} {} {} {}", label,
-        3 * $ADD(1 + 2, 4 * 2),
-        3 * $EXPLICIT(1 + 2, 4 * 2),
-        3 * $MIXED(1 + 2, 4 * 2),
+    3 * $ADD(1 + 2, 4 * 2),
+    3 * $EXPLICIT(1 + 2, 4 * 2),
+    3 * $MIXED(1 + 2, 4 * 2),
         $PRODUCT(1 + 2, 4 + 1),
         $FIRST(values[0] + 1, 5 * 2));
     $PRINT(1 + 2, $ADD(2, 3))

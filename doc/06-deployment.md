@@ -38,7 +38,7 @@ magel svmb src/main.mgl --out build/app
 magel aot src/main.mgl --out build/app --opt-level=2
 ```
 
-生成 C++ 再编成目标平台的本地程序。产物名沿用 `--out` 给的名字；Windows 上没有扩展名时补成 `build/app.exe`，因为系统只按扩展名认可执行映像。默认 `unchecked`；要保留边界检查写 `checked`：
+生成 C++ 再编成目标平台的本地程序。产物名沿用 `--out` 给的名字；Windows 上没有扩展名时补成 `build/app.exe`，因为系统只按扩展名认可执行映像。默认 `checked`，开启额外分配护栏和 panic 调用记录；需要显式关闭这些可选检查时写 `unchecked`。显式指定检查模式的例子：
 
 ```sh
 magel aot src/main.mgl --out build/app checked opt 2
@@ -48,7 +48,7 @@ magel aot src/main.mgl --out build/app checked opt 2
 | --- | --- |
 | `--out 路径` | 产物前缀 |
 | `opt LEVEL` / `--opt-level=N` | 优化级别 |
-| `checked` / `unchecked` | 是否保留运行时检查（默认 `unchecked`） |
+| `checked` / `unchecked` | 是否保留运行时检查（默认 `checked`） |
 | `--separate-modules` | 按模块缓存本地目标文件并统一链接（增量更快） |
 | `--module-cache DIR` | 指定模块目标文件缓存目录 |
 

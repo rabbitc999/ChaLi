@@ -138,6 +138,7 @@ def asset_disk_path(relative):
 # 生成器（magel-emit / magel-generator）在运行期需要的运行时资产。相对路径键与仓库布局一致，
 # 磁盘读失败时按"整段后缀"或"唯一 basename"回退到这里的文本。
 GENERATOR_ASSETS = [
+    "tools/magel_manual.json",
     "tools/magel_stdlib_api.json",
     "stackvm/stackvm.hpp",
     "stackvm/execution_plan.hpp",
@@ -216,6 +217,8 @@ def collect():
 
 
 def main():
+    from embed_manual import OUTPUT, generate
+    OUTPUT.write_text(generate(), encoding="utf-8")
     modules = collect()
     assets = collect_generator_assets()
     # 整体拼接后再压缩：跨模块、跨资产的重复也能被利用，比率明显好于逐个压缩

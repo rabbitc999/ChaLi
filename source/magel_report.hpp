@@ -1,5 +1,5 @@
 #pragma once
-/* magel_report.hpp —— 报错呈现（驱动 / 语言服务共用的一层），中英日三语。
+/* magel_report.hpp —— 报错呈现（驱动 / 语言服务共用的一层），中英双语。
  *
  * 三件事：
  *   ① **Token 显示名**：解析器给的语法错误里写的是内部名（`SEMI` / `IMPL` /
@@ -8,9 +8,9 @@
  *      表与 `magel_token.gram` 一一对应；文法加了终结符要同步改这里。
  *      替换按**整词**做：只认全大写的标识符片段，且必须整段命中表，
  *      所以源码路径、类型名（`std::lang::List`）里的大小写都不会被误伤。
- *      这份是**名字表**不是**消息表**，所以就地三语、不进 `i18n/messages.tsv`
+ *      这份是**名字表**不是**消息表**，所以就地双语、不进 `i18n/messages.tsv`
  *      （那边按整条中文消息做键，装不了逐词替换）。
- *   ② **语法错误骨架的三语重建**：`magel_parser.cpp` 是生成文件，文案写死中文，
+ *   ② **语法错误骨架的双语重建**：`magel_parser.cpp` 是生成文件，文案写死中文，
  *      改不动。这里按中文骨架把「期望哪些 / 实际是什么」拆出来，再按当前语言
  *      重新拼一遍——英文是 `expected one of A / B, found C` 的语序，直接
  *      逐词替换中文串是翻不出来的。拆不动（碰上没见过的文案）就退回①。
@@ -33,18 +33,17 @@ namespace magel_report
 {
 
 /**
- * @brief 一个 Token 名在三种语言下的写法。
+ * @brief 一个 Token 名在两种语言下的写法。
  */
 struct TokenName
 {
     const char *zh;
     const char *en;
-    const char *ja;
 };
 
 /**
  * @brief 按当前显示语言挑一份写法。
- * @param name 三语名字。
+ * @param name 双语名字。
  * @return 当前语言的文本。
  */
 inline const char *pick(const TokenName &name)
@@ -52,131 +51,130 @@ inline const char *pick(const TokenName &name)
     switch (::magel_i18n::language())
     {
     case ::magel_i18n::Language::En: return name.en;
-    case ::magel_i18n::Language::Ja: return name.ja;
     default: return name.zh;
     }
 }
 
 /**
- * @brief 内部 Token 名 → 三语显示名。
+ * @brief 内部 Token 名 → 双语显示名。
  * @return 只读表。
  */
 inline const std::map<std::string, TokenName> &tokenDisplayNames()
 {
     static const std::map<std::string, TokenName> table = {
         /* 类别 Token（没有固定写法，只给名字）。 */
-        { "STRING", { "字符串", "string", "文字列" } },
-        { "NUMBER", { "数字", "number", "数値" } },
-        { "VARIABLE", { "标识符", "identifier", "識別子" } },
-        { "FLIT", { "浮点字面量", "float literal", "浮動小数点リテラル" } },
-        { "HEXLIT", { "十六进制字面量", "hex literal", "16進リテラル" } },
-        { "BINLIT", { "二进制字面量", "binary literal", "2進リテラル" } },
-        { "CHRLIT", { "字符字面量", "character literal", "文字リテラル" } },
-        { "TOKEN_END", { "文件结尾", "end of file", "ファイル終端" } },
-        { "INVALID", { "无效符号", "invalid symbol", "無効な記号" } },
+        { "STRING", { "字符串", "string" } },
+        { "NUMBER", { "数字", "number" } },
+        { "VARIABLE", { "标识符", "identifier" } },
+        { "FLIT", { "浮点字面量", "float literal" } },
+        { "HEXLIT", { "十六进制字面量", "hex literal" } },
+        { "BINLIT", { "二进制字面量", "binary literal" } },
+        { "CHRLIT", { "字符字面量", "character literal" } },
+        { "TOKEN_END", { "文件结尾", "end of file" } },
+        { "INVALID", { "无效符号", "invalid symbol" } },
         /* 注解与关键字。 */
-        { "ANNOTATION", { "注解声明(@annotation)", "annotation(@annotation)", "注釈(@annotation)" } },
-        { "AT", { "at(@)", "at(@)", "アットマーク(@)" } },
-        { "STRUCT", { "结构体(struct)", "structure(struct)", "構造体(struct)" } },
-        { "ENUM", { "枚举(enum)", "enum(enum)", "列挙(enum)" } },
-        { "INT8", { "整数类型(int8)", "integer type(int8)", "整数型(int8)" } },
-        { "INT16", { "整数类型(int16)", "integer type(int16)", "整数型(int16)" } },
-        { "INT32", { "整数类型(int32)", "integer type(int32)", "整数型(int32)" } },
-        { "INT64", { "整数类型(int64)", "integer type(int64)", "整数型(int64)" } },
-        { "UINT8", { "整数类型(uint8)", "integer type(uint8)", "整数型(uint8)" } },
-        { "UINT16", { "整数类型(uint16)", "integer type(uint16)", "整数型(uint16)" } },
-        { "UINT32", { "整数类型(uint32)", "integer type(uint32)", "整数型(uint32)" } },
-        { "UINT64", { "整数类型(uint64)", "integer type(uint64)", "整数型(uint64)" } },
-        { "FLOAT32", { "浮点类型(float32)", "float type(float32)", "浮動小数点型(float32)" } },
-        { "FLOAT64", { "浮点类型(float64)", "float type(float64)", "浮動小数点型(float64)" } },
-        { "VOID", { "空类型(void)", "void type(void)", "void 型(void)" } },
-        { "BOOL", { "布尔类型(bool)", "boolean type(bool)", "真偽型(bool)" } },
-        { "CHAR_T", { "字符类型(char)", "character type(char)", "文字型(char)" } },
-        { "TRUE", { "真(true)", "true(true)", "真(true)" } },
-        { "FALSE", { "假(false)", "false(false)", "偽(false)" } },
-        { "CONST", { "常量(const)", "constant(const)", "定数(const)" } },
-        { "MUT", { "可变(mut)", "mutable(mut)", "可変(mut)" } },
-        { "NEW", { "新建(new)", "new(new)", "生成(new)" } },
-        { "DELETE", { "删除(delete)", "delete(delete)", "削除(delete)" } },
-        { "DROP", { "丢弃(drop)", "drop(drop)", "破棄(drop)" } },
-        { "STATIC", { "静态(static)", "static(static)", "静的(static)" } },
-        { "FN", { "函数(fn)", "function(fn)", "関数(fn)" } },
-        { "AUTO", { "自动类型(auto)", "auto type(auto)", "型推論(auto)" } },
-        { "COPY", { "拷贝(copy)", "copy(copy)", "コピー(copy)" } },
-        { "MOVE", { "移动(move)", "move(move)", "ムーブ(move)" } },
-        { "INLINE", { "内联(inline)", "inline(inline)", "インライン(inline)" } },
-        { "IMPL", { "实现(impl)", "impl(impl)", "実装(impl)" } },
-        { "TYPE_KW", { "类型别名(type)", "type alias(type)", "型別名(type)" } },
-        { "ABI_KW", { "外部绑定(abi)", "abi binding(abi)", "ABI バインド(abi)" } },
-        { "MODULE", { "模块(module)", "module(module)", "モジュール(module)" } },
-        { "IMPORT", { "导入(import)", "import(import)", "インポート(import)" } },
-        { "CAST_KW", { "类型转换(cast)", "cast(cast)", "型変換(cast)" } },
-        { "SIZEOF", { "取大小(sizeof)", "sizeof(sizeof)", "サイズ取得(sizeof)" } },
-        { "IF", { "条件(if)", "if(if)", "条件分岐(if)" } },
-        { "ELIF", { "否则条件(elif)", "else-if(elif)", "別条件(elif)" } },
-        { "ELSE", { "否则(else)", "else(else)", "それ以外(else)" } },
-        { "WHILE", { "当型循环(while)", "while loop(while)", "while ループ(while)" } },
-        { "FOR", { "计数循环(for)", "for loop(for)", "for ループ(for)" } },
-        { "FOREACH", { "遍历(foreach)", "foreach(foreach)", "反復(foreach)" } },
-        { "IN", { "在(in)", "in(in)", "内含(in)" } },
-        { "LOOP", { "循环(loop)", "loop(loop)", "ループ(loop)" } },
-        { "RETURN", { "返回(return)", "return(return)", "復帰(return)" } },
-        { "MATCH", { "匹配(match)", "match(match)", "マッチ(match)" } },
-        { "DO", { "执行(do)", "do(do)", "実行(do)" } },
-        { "BREAK", { "跳出(break)", "break(break)", "中断(break)" } },
-        { "CONTINUE", { "继续(continue)", "continue(continue)", "継続(continue)" } },
-        { "WILDCARD", { "通配符(_)", "wildcard(_)", "ワイルドカード(_)" } },
-        { "INTERFACE", { "接口(interface)", "interface(interface)", "インターフェース(interface)" } },
-        { "TYPE_TAG", { "内部类型标签(__typeTag)", "internal type tag(__typeTag)", "内部型タグ(__typeTag)" } },
+        { "ANNOTATION", { "注解声明(@annotation)", "annotation(@annotation)" } },
+        { "AT", { "at(@)", "at(@)" } },
+        { "STRUCT", { "结构体(struct)", "structure(struct)" } },
+        { "ENUM", { "枚举(enum)", "enum(enum)" } },
+        { "INT8", { "整数类型(int8)", "integer type(int8)" } },
+        { "INT16", { "整数类型(int16)", "integer type(int16)" } },
+        { "INT32", { "整数类型(int32)", "integer type(int32)" } },
+        { "INT64", { "整数类型(int64)", "integer type(int64)" } },
+        { "UINT8", { "整数类型(uint8)", "integer type(uint8)" } },
+        { "UINT16", { "整数类型(uint16)", "integer type(uint16)" } },
+        { "UINT32", { "整数类型(uint32)", "integer type(uint32)" } },
+        { "UINT64", { "整数类型(uint64)", "integer type(uint64)" } },
+        { "FLOAT32", { "浮点类型(float32)", "float type(float32)" } },
+        { "FLOAT64", { "浮点类型(float64)", "float type(float64)" } },
+        { "VOID", { "空类型(void)", "void type(void)" } },
+        { "BOOL", { "布尔类型(bool)", "boolean type(bool)" } },
+        { "CHAR_T", { "字符类型(char)", "character type(char)" } },
+        { "TRUE", { "真(true)", "true(true)" } },
+        { "FALSE", { "假(false)", "false(false)" } },
+        { "CONST", { "常量(const)", "constant(const)" } },
+        { "MUT", { "可变(mut)", "mutable(mut)" } },
+        { "NEW", { "新建(new)", "new(new)" } },
+        { "DELETE", { "删除(delete)", "delete(delete)" } },
+        { "DROP", { "丢弃(drop)", "drop(drop)" } },
+        { "STATIC", { "静态(static)", "static(static)" } },
+        { "FN", { "函数(fn)", "function(fn)" } },
+        { "AUTO", { "自动类型(auto)", "auto type(auto)" } },
+        { "COPY", { "拷贝(copy)", "copy(copy)" } },
+        { "MOVE", { "移动(move)", "move(move)" } },
+        { "INLINE", { "内联(inline)", "inline(inline)" } },
+        { "IMPL", { "实现(impl)", "impl(impl)" } },
+        { "TYPE_KW", { "类型别名(type)", "type alias(type)" } },
+        { "ABI_KW", { "外部绑定(abi)", "abi binding(abi)" } },
+        { "MODULE", { "模块(module)", "module(module)" } },
+        { "IMPORT", { "导入(import)", "import(import)" } },
+        { "CAST_KW", { "类型转换(cast)", "cast(cast)" } },
+        { "SIZEOF", { "取大小(sizeof)", "sizeof(sizeof)" } },
+        { "IF", { "条件(if)", "if(if)" } },
+        { "ELIF", { "否则条件(elif)", "else-if(elif)" } },
+        { "ELSE", { "否则(else)", "else(else)" } },
+        { "WHILE", { "当型循环(while)", "while loop(while)" } },
+        { "FOR", { "计数循环(for)", "for loop(for)" } },
+        { "FOREACH", { "遍历(foreach)", "foreach(foreach)" } },
+        { "IN", { "在(in)", "in(in)" } },
+        { "LOOP", { "循环(loop)", "loop(loop)" } },
+        { "RETURN", { "返回(return)", "return(return)" } },
+        { "MATCH", { "匹配(match)", "match(match)" } },
+        { "DO", { "执行(do)", "do(do)" } },
+        { "BREAK", { "跳出(break)", "break(break)" } },
+        { "CONTINUE", { "继续(continue)", "continue(continue)" } },
+        { "WILDCARD", { "通配符(_)", "wildcard(_)" } },
+        { "INTERFACE", { "接口(interface)", "interface(interface)" } },
+        { "TYPE_TAG", { "内部类型标签(__typeTag)", "internal type tag(__typeTag)" } },
         /* 运算符与标点。 */
-        { "INCREMENT", { "自增(++)", "increment(++)", "インクリメント(++)" } },
-        { "DECREMENT", { "自减(--)", "decrement(--)", "デクリメント(--)" } },
-        { "PLUS", { "加号(+)", "plus(+)", "加算(+)" } },
-        { "MINUS", { "减号(-)", "minus(-)", "減算(-)" } },
-        { "STAR", { "星号(*)", "asterisk(*)", "アスタリスク(*)" } },
-        { "SLASH", { "除号(/)", "slash(/)", "除算(/)" } },
-        { "PERCENT", { "取余(%)", "percent(%)", "剰余(%)" } },
-        { "ASSIGN", { "赋值(=)", "assignment(=)", "代入(=)" } },
-        { "ADD_ASSIGN", { "加赋值(+=)", "add-assign(+=)", "加算代入(+=)" } },
-        { "SUB_ASSIGN", { "减赋值(-=)", "subtract-assign(-=)", "減算代入(-=)" } },
-        { "MUL_ASSIGN", { "乘赋值(*=)", "multiply-assign(*=)", "乗算代入(*=)" } },
-        { "DIV_ASSIGN", { "除赋值(/=)", "divide-assign(/=)", "除算代入(/=)" } },
-        { "MOD_ASSIGN", { "取余赋值(%=)", "remainder-assign(%=)", "剰余代入(%=)" } },
-        { "AND_ASSIGN", { "按位与赋值(&=)", "bitwise-and-assign(&=)", "ビット積代入(&=)" } },
-        { "OR_ASSIGN", { "按位或赋值(|=)", "bitwise-or-assign(|=)", "ビット和代入(|=)" } },
-        { "XOR_ASSIGN", { "按位异或赋值(^=)", "bitwise-xor-assign(^=)", "ビット排他代入(^=)" } },
-        { "SHL_ASSIGN", { "左移赋值(<<=)", "left-shift-assign(<<=)", "左シフト代入(<<=)" } },
-        { "SHR_ASSIGN", { "右移赋值(>>=)", "right-shift-assign(>>=)", "右シフト代入(>>=)" } },
-        { "EQ", { "等于(==)", "equal(==)", "等価(==)" } },
-        { "NE", { "不等于(!=)", "not-equal(!=)", "不等価(!=)" } },
-        { "LE", { "小于等于(<=)", "less-or-equal(<=)", "以下(<=)" } },
-        { "GE", { "大于等于(>=)", "greater-or-equal(>=)", "以上(>=)" } },
-        { "LT", { "小于(<)", "less-than(<)", "小なり(<)" } },
-        { "GT", { "大于(>)", "greater-than(>)", "大なり(>)" } },
-        { "AND", { "逻辑与(&&)", "logical-and(&&)", "論理積(&&)" } },
-        { "OR", { "逻辑或(||)", "logical-or(||)", "論理和(||)" } },
-        { "NOT", { "逻辑非(!)", "logical-not(!)", "論理否定(!)" } },
-        { "ARROW", { "箭头(->)", "arrow(->)", "アロー(->)" } },
-        { "ELLIPSIS", { "省略号(...)", "ellipsis(...)", "省略記号(...)" } },
-        { "DOT", { "点(.)", "dot(.)", "ドット(.)" } },
-        { "LPAREN", { "左圆括号(()", "left parenthesis(()", "左括弧(()" } },
-        { "RPAREN", { "右圆括号())", "right parenthesis())", "右括弧())" } },
-        { "LBRACE", { "左花括号({)", "left brace({)", "左波括弧({)" } },
-        { "RBRACE", { "右花括号(})", "right brace(})", "右波括弧(})" } },
-        { "LBRACKET", { "左方括号([)", "left bracket([)", "左角括弧([)" } },
-        { "RBRACKET", { "右方括号(])", "right bracket(])", "右角括弧(])" } },
-        { "SEMI", { "分号(;)", "semicolon(;)", "セミコロン(;)" } },
-        { "COMMA", { "逗号(,)", "comma(,)", "カンマ(,)" } },
-        { "COLON", { "冒号(:)", "colon(:)", "コロン(:)" } },
-        { "SCOPE", { "作用域(::)", "scope(::)", "スコープ(::)" } },
-        { "AMP", { "按位与(&)", "bitwise-and(&)", "ビット積(&)" } },
-        { "PIPE", { "按位或(|)", "bitwise-or(|)", "ビット和(|)" } },
-        { "CARET", { "按位异或(^)", "bitwise-xor(^)", "ビット排他(^)" } },
-        { "TILDE", { "按位取反(~)", "bitwise-not(~)", "ビット反転(~)" } },
-        { "SHL", { "左移(<<)", "left-shift(<<)", "左シフト(<<)" } },
-        { "SHR", { "右移(>>)", "right-shift(>>)", "右シフト(>>)" } },
-        { "FATARROW", { "胖箭头(=>)", "fat-arrow(=>)", "ファットアロー(=>)" } },
-        { "QUESTION", { "问号(?)", "question(?)", "疑問符(?)" } },
+        { "INCREMENT", { "自增(++)", "increment(++)" } },
+        { "DECREMENT", { "自减(--)", "decrement(--)" } },
+        { "PLUS", { "加号(+)", "plus(+)" } },
+        { "MINUS", { "减号(-)", "minus(-)" } },
+        { "STAR", { "星号(*)", "asterisk(*)" } },
+        { "SLASH", { "除号(/)", "slash(/)" } },
+        { "PERCENT", { "取余(%)", "percent(%)" } },
+        { "ASSIGN", { "赋值(=)", "assignment(=)" } },
+        { "ADD_ASSIGN", { "加赋值(+=)", "add-assign(+=)" } },
+        { "SUB_ASSIGN", { "减赋值(-=)", "subtract-assign(-=)" } },
+        { "MUL_ASSIGN", { "乘赋值(*=)", "multiply-assign(*=)" } },
+        { "DIV_ASSIGN", { "除赋值(/=)", "divide-assign(/=)" } },
+        { "MOD_ASSIGN", { "取余赋值(%=)", "remainder-assign(%=)" } },
+        { "AND_ASSIGN", { "按位与赋值(&=)", "bitwise-and-assign(&=)" } },
+        { "OR_ASSIGN", { "按位或赋值(|=)", "bitwise-or-assign(|=)" } },
+        { "XOR_ASSIGN", { "按位异或赋值(^=)", "bitwise-xor-assign(^=)" } },
+        { "SHL_ASSIGN", { "左移赋值(<<=)", "left-shift-assign(<<=)" } },
+        { "SHR_ASSIGN", { "右移赋值(>>=)", "right-shift-assign(>>=)" } },
+        { "EQ", { "等于(==)", "equal(==)" } },
+        { "NE", { "不等于(!=)", "not-equal(!=)" } },
+        { "LE", { "小于等于(<=)", "less-or-equal(<=)" } },
+        { "GE", { "大于等于(>=)", "greater-or-equal(>=)" } },
+        { "LT", { "小于(<)", "less-than(<)" } },
+        { "GT", { "大于(>)", "greater-than(>)" } },
+        { "AND", { "逻辑与(&&)", "logical-and(&&)" } },
+        { "OR", { "逻辑或(||)", "logical-or(||)" } },
+        { "NOT", { "逻辑非(!)", "logical-not(!)" } },
+        { "ARROW", { "箭头(->)", "arrow(->)" } },
+        { "ELLIPSIS", { "省略号(...)", "ellipsis(...)" } },
+        { "DOT", { "点(.)", "dot(.)" } },
+        { "LPAREN", { "左圆括号(()", "left parenthesis(()" } },
+        { "RPAREN", { "右圆括号())", "right parenthesis())" } },
+        { "LBRACE", { "左花括号({)", "left brace({)" } },
+        { "RBRACE", { "右花括号(})", "right brace(})" } },
+        { "LBRACKET", { "左方括号([)", "left bracket([)" } },
+        { "RBRACKET", { "右方括号(])", "right bracket(])" } },
+        { "SEMI", { "分号(;)", "semicolon(;)" } },
+        { "COMMA", { "逗号(,)", "comma(,)" } },
+        { "COLON", { "冒号(:)", "colon(:)" } },
+        { "SCOPE", { "作用域(::)", "scope(::)" } },
+        { "AMP", { "按位与(&)", "bitwise-and(&)" } },
+        { "PIPE", { "按位或(|)", "bitwise-or(|)" } },
+        { "CARET", { "按位异或(^)", "bitwise-xor(^)" } },
+        { "TILDE", { "按位取反(~)", "bitwise-not(~)" } },
+        { "SHL", { "左移(<<)", "left-shift(<<)" } },
+        { "SHR", { "右移(>>)", "right-shift(>>)" } },
+        { "FATARROW", { "胖箭头(=>)", "fat-arrow(=>)" } },
+        { "QUESTION", { "问号(?)", "question(?)" } },
     };
     return table;
 }
@@ -242,8 +240,8 @@ inline Memory::String humanizeMessage(const Memory::String &message)
  */
 inline Memory::String stripSyntaxPrefix(const Memory::String &message)
 {
-    /* 解析器是生成文件、文案写死中文；这里三种前缀都认，将来换语言也剥得掉。 */
-    for (const char *prefix : { "语法错误：", "Syntax error: ", "構文エラー：" })
+    /* 解析器是生成文件、文案写死中文；这里两种前缀都认，将来换语言也剥得掉。 */
+    for (const char *prefix : { "语法错误：", "Syntax error: " })
     {
         const std::size_t length = std::strlen(prefix);
         if (message.size() < length) continue;
@@ -286,15 +284,6 @@ inline std::string composeExpectation(const std::vector<std::string> &expected,
         out += ", found " + actual;
         return out;
     }
-    case ::magel_i18n::Language::Ja:
-    {
-        std::string out = listed;
-        if (truncated) out += " 他 " + count + " 件";
-        /* 期望太多只列前几个时，中文是「等 N 个之一」，日语放前面更顺。 */
-        out += multiple ? "のいずれかを期待しましたが、実際は " : "を期待しましたが、実際は ";
-        out += actual + " です";
-        return out;
-    }
     default:
     {
         std::string out = "期望 " + listed;
@@ -328,7 +317,6 @@ inline Memory::String localizeSyntaxMessage(const Memory::String &message)
         switch (::magel_i18n::language())
         {
         case ::magel_i18n::Language::En: fallback = "no valid action in this state"; break;
-        case ::magel_i18n::Language::Ja: fallback = "この状態では有効な動作がありません"; break;
         default: break;
         }
         return Memory::String(fallback);

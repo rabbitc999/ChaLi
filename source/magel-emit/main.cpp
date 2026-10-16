@@ -543,7 +543,7 @@ void printUsage(const Memory::String &program)
                  " [--target cpp-aot] [--glue FILE] [--stack-slots N] [--threads]\n"
               << "       " << program << " --target cpp-aot --quad FILE ... [--keep-intermediate]\n"
               << "              [--opt-level 0|1|2|3|s|fast | -O2] [--debug | --release]\n"
-              << "              [--checked | --unchecked] AOT 默认 unchecked；checked 开启额外护栏与 panic 跟踪\n"
+              << "              [--checked | --unchecked] AOT 默认 checked；unchecked 关闭可选护栏与 panic 跟踪\n"
               << "              [--cpp-output] [--cpp-output-dir DIR] [--execute-output FILE]\n"
               << "              [--shared | --object] 库模式允许省略 main，要求 export 函数\n"
               << "       " << program << " clear --out-dir DIR\n"
@@ -606,14 +606,14 @@ int runCli(int argc, char **argv)
     bool sharedLibrary = false;
     bool objectLibrary = false;
     bool aotDebug = false;
-    Memory::String optLevelText = "0";
+    Memory::String optLevelText = "3";
     /** `--cpp-output`：导出可执行文件时是否保留生成的 C++ 源码（缺省关闭）。 */
     bool cppOutput = false;
     /** `--cpp-output-dir DIR`：生成的 C++ 源码写到哪里（缺省与可执行文件同目录）。 */
     Memory::String cppOutputDir;
     /** `--execute-output FILE`：可执行文件 / 二进制的位置（等价扩展 `--out`）。 */
     bool hidePanicDetails = false; ///< 隐藏符号的上游配置禁止 panic 泄露调用记录。
-    bool unchecked = true; ///< AOT 默认关闭可选分配区域护栏及 panic 调用记录。
+    bool unchecked = false; ///< AOT 默认开启可选分配区域护栏及 panic 调用记录。
     Memory::String executeOutput;
     bool separateModules = false;
     Memory::String moduleCache;

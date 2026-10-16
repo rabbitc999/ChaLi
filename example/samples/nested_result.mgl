@@ -115,21 +115,21 @@ badTransport(TransportError error) {
 Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>
 badSyntax(SyntaxError error) {
     return Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>::Ok(
-        Result<Result<int64, SemanticError>, SyntaxError>::Err(error));
+    Result<Result<int64, SemanticError>, SyntaxError>::Err(error));
 }
 
 Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>
 badSemantic(SemanticError error) {
     return Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>::Ok(
-        Result<Result<int64, SemanticError>, SyntaxError>::Ok(
-            Result<int64, SemanticError>::Err(error)));
+    Result<Result<int64, SemanticError>, SyntaxError>::Ok(
+    Result<int64, SemanticError>::Err(error)));
 }
 
 Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>
 goodValue(int64 value) {
     return Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>::Ok(
-        Result<Result<int64, SemanticError>, SyntaxError>::Ok(
-            Result<int64, SemanticError>::Ok(value)));
+    Result<Result<int64, SemanticError>, SyntaxError>::Ok(
+    Result<int64, SemanticError>::Ok(value)));
 }
 
 /* 三层装载：Ok(Ok(Ok(v))) 全成功；哪层失败就把该层的 Err 放进对应槽。 */
@@ -166,7 +166,7 @@ loadField(String field, String endpoint, bool online, String text) {
 
 /* 逐层拆开这个嵌套对象并汇报（不把它再塞进一个 Result<String>，见下）。 */
 void report(String label,
-            Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError> nested) {
+Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError> nested) {
     match (nested) {
         Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>::Err(error) => {
             println("{} -> err transport:{}", label, describeTransport(error));
@@ -180,7 +180,7 @@ void report(String label,
                     match (semantic) {
                         Result<int64, SemanticError>::Err(error) => {
                             println("{} -> err semantic:{}", label,
-                                          describeSemantic(error));
+                            describeSemantic(error));
                         }
                         Result<int64, SemanticError>::Ok(value) => {
                             println("{} -> ok {}", label, value);
@@ -209,7 +209,7 @@ int64 main() {
 
     /* 也可以自己逐层拆：外层 -> 中层 -> 内层。 */
     Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError> nested =
-        loadField("count", "fast", true, "7");
+    loadField("count", "fast", true, "7");
     match (nested) {
         Result<Result<Result<int64, SemanticError>, SyntaxError>, TransportError>::Err(error) => {
             println("layer1 err {}", describeTransport(error));

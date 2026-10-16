@@ -6,14 +6,14 @@
 
 ```sh
 magel man
-magel man std::text
-magel man std::text::Text
-magel man std::text::Text::split
-magel man --search delimiter
-magel man --search split --exact
+magel man api std::text
+magel man api std::text::Text
+magel man api std::text::Text::split
+magel man api --search delimiter
+magel man api --search split --exact
 magel man --json std::text::Text::split
-magel man std::text::Text::split --run
-magel man --lang ja std::text::Text::split
+magel man api std::text::Text::split --run
+magel man --lang en std::text::Text::split
 ```
 
 | Form | Output |
@@ -25,14 +25,14 @@ magel man --lang ja std::text::Text::split
 | `--search KEYWORD` | Searches module and symbol names, parameters, descriptions, comments, and example code; case insensitive substring matching by default |
 | `--exact` | Searches complete fields, with case sensitivity; `split` can match a method's final name segment |
 | `--json` | Outputs JSON only, including diagnostics on failure |
-| `--lang zh|en|ja` | Overrides the toolchain display language for headings and diagnostics |
+| `--lang zh|en` | Overrides the toolchain display language for headings and diagnostics |
 | `--run` | Executes the first complete example associated with the target and appends its output |
 
 Standard library qualified targets are accepted, and a module prefix can omit `std::`. An unknown target produces up to eight suggestions and exit status 1. A search keyword cannot be combined with a specific target.
 
 Interactive terminals use colour unless `NO_COLOR` is set. Text over 24 lines uses `less -R` when less is available on PATH. Redirected and JSON output use plain UTF-8. Windows console APIs enable UTF-8 and virtual terminal colours.
 
-Library prose currently retains its existing Chinese source. English and Japanese modes translate the interface and diagnostics and identify the prose source language. JSON `language` identifies the display language; `sourceLanguage` identifies the documentation source language.
+Library prose currently retains its existing Chinese source. English mode translate the interface and diagnostics and identify the prose source language. JSON `language` identifies the display language; `sourceLanguage` identifies the documentation source language.
 
 ## Running examples
 
@@ -71,3 +71,15 @@ make -j4
 CI checks generated data with `--check`. [tests/magel_man.py](../../../tests/magel_man.py) covers modules, types, methods, search, JSON, three display languages, suggestions, and examples. `magel help` explains toolchain commands; `magel man` documents library APIs.
 
 [Documentation index](../../en/README.md)
+
+## Embedded book, keywords and AI SKILL
+
+`magel man book` exports all book Markdown and images into `book/` under the calling directory, preserving relative image paths and listing chapters; `magel man book 6` displays one. Appendix IDs `A` and `B`, file names, and full titles are accepted. `magel man keyword` lists keywords; `magel man keyword break` displays grammar, explanations, and examples generated from the authoritative grammar and language reference. `magel man skill` emits the complete AI SKILL, suitable for redirecting to `SKILL.md`. The VS Code package carries identical content at `skills/magel-programming/SKILL.md`.
+
+Data is compressed into the executable at build time. Queries require neither a repository nor network access. Book and SKILL prose remains Chinese; terminal Markdown retains image references, while the PDF includes the images. All three query forms accept `--json`; `--run` and `--exact` are rejected. Missing chapters or keywords return MGL1701. Run `python tools/embed_manual.py` after source changes; `--check` verifies synchronization and `gen.sh` refreshes the embedded assets.
+
+Export updates embedded book files without deleting unrelated files; output paths must stay within the calling directory’s book folder.
+
+Single-chapter terminal output renders images as `[图片]\(images/name)` links. JSON and exported Markdown retain the original image syntax.
+
+`magel man` and `magel man help` show usage. `magel man api` lists API categories; `magel man api XXX` queries the embedded `doc/library/` reference.

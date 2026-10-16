@@ -36,8 +36,8 @@ import std::toml;
 
 int64 main() {
     Result<std::json::JsonValue, String> parsed = std::json::parse(
-        "{\"name\":\"中文\",\"items\":[1,2,3],\"active\":true,\"nothing\":null,"
-        "\"ratio\":1.5,\"min\":-9223372036854775808}");
+    "{\"name\":\"中文\",\"items\":[1,2,3],\"active\":true,\"nothing\":null,"
+    "\"ratio\":1.5,\"min\":-9223372036854775808}");
     std::json::JsonValue root = parsed.unwrap();
     assert(root.isObject() && root.len() == 6);
     Option<String> firstKey = root.keyAt(0);
@@ -88,7 +88,7 @@ int64 main() {
     assert(root.close() && !items.isValid() && !root.close());
 
     Result<std::json::JsonValue, String> parsedZero =
-        std::json::parse("{\"a\\u0000b\":\"x\\u0000y\"}");
+    std::json::parse("{\"a\\u0000b\":\"x\\u0000y\"}");
     std::json::JsonValue zero = parsedZero.unwrap();
     Option<String> zeroKey = zero.keyAt(0);
     assert(zeroKey.isNone());
@@ -102,7 +102,7 @@ int64 main() {
     Option<List<uint8>> rawResult = zeroText.asBytes();
     List<uint8> raw = rawResult.unwrap();
     assert(raw.len() == 3 && raw[0] == (uint8)120 && raw[1] == (uint8)0 &&
-                 raw[2] == (uint8)121);
+    raw[2] == (uint8)121);
     assert(zero.close());
     Result<std::json::JsonValue, String> badJson = std::json::parse("{\"x\":}");
     assert(badJson.isErr() && len(badJson.error()) > 0);
@@ -110,9 +110,9 @@ int64 main() {
     assert(trailing.isErr());
 
     Result<std::toml::TomlValue, String> parsedConfig = std::toml::parse(
-        "title = \"Magel\"\nreleased = 1979-05-27T07:32:00Z\n[server]\nport = 8080\n"
-        "enabled = true\nvalues = [1, 2, 3]\n[[products]]\nname = \"one\"\n"
-        "[[products]]\nname = \"two\"\n");
+    "title = \"Magel\"\nreleased = 1979-05-27T07:32:00Z\n[server]\nport = 8080\n"
+    "enabled = true\nvalues = [1, 2, 3]\n[[products]]\nname = \"one\"\n"
+    "[[products]]\nname = \"two\"\n");
     std::toml::TomlValue config = parsedConfig.unwrap();
     assert(config.isTable());
     Option<String> titleKey = config.keyAt(0);

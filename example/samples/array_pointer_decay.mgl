@@ -41,7 +41,7 @@ int64 main() {
     int64 mut& first = runtime;
     first[2] = 99;
     println("runtime: {} {} {} {} (len={})", runtime[0], runtime[1], runtime[2],
-                  runtime[3], len(runtime));
+    runtime[3], len(runtime));
     delete runtime;
 
     /* 结构体数组 → Pair mut&：按元素步长下标 */
@@ -50,12 +50,12 @@ int64 main() {
     pairs[1].a = 3; pairs[1].b = 4;
     growAll(pairs, 2);
     println("pairs: {} {} / sum={}", pairs[0].sum(), pairs[1].sum(),
-                  pairs[0].a + pairs[1].b);
+    pairs[0].a + pairs[1].b);
 
     /* 字符串数组 → String const& */
     String words[2];
     words[0] = "hello"; words[1] = "hi";
     println("sizes: {} {}", textSize(words, 0), textSize(words, 1));
-    
+
     return 0;
 }

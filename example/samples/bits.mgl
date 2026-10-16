@@ -43,7 +43,7 @@ int64 main() {
     println("value={} shift={}", value, shift);
     println("value<<shift={}  value>>shift={}", value << shift, value >> shift);
     println("value&7={}  value|7={}  value^7={}  ~value={}", value & 7, value | 7, value ^ 7,
-           ~value);
+    ~value);
     println("popcount={}", popcount((uint64)value));   /* 有符号 → 无符号要显式强转 */
 
     /* do-while：先做一遍再判条件 */

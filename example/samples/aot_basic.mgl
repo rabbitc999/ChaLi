@@ -64,9 +64,9 @@ int64 classify(int64 x) {
 
 int64 matchClassify(int64 x) {
     match (x) {
-    [0, 10) => { return 1; }
-    [10, 20) => { return 2; }
-    _ => { return 0; }
+        [0, 10) => { return 1; }
+        [10, 20) => { return 2; }
+        _ => { return 0; }
     }
 }
 
@@ -120,7 +120,7 @@ int64 main() {
     ages.put("amy", 11);
     ages["bob"] = 22;
     println("list len={} first={} set len={} has5={} map amy={} bob={}",
-                  len(xs), xs[0], len(s), s.has(5), ages["amy"], ages["bob"]);
+    len(xs), xs[0], len(s), s.has(5), ages["amy"], ages["bob"]);
 
     /* 8. 字符串拼接与比较 */
     String hello = "hello";

@@ -34,7 +34,7 @@ int64 main() {
     /* 两参 of：归属线程默认就是创建 unbound 的线程（这里 = 入口线程 0）。 */
     Interrupt plain = Interrupt::of(unbound.handle, onUnbound);
     println("thread={} timer-thread={} bound={}", plain.thread, unbound.thread(),
-                  plain.callback == onUnbound);
+    plain.callback == onUnbound);
 
     plain.raise(7);                       /* 队列投递，指令边界交付 */
     int64 i = 0;

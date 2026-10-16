@@ -41,7 +41,7 @@ int64 main() {
         k = k + 1;
     }
     println("pts: ({},{}) ({},{}) ({},{})", pts[0].x, pts[0].y, pts[1].x, pts[1].y,
-           pts[2].x, pts[2].y);
+    pts[2].x, pts[2].y);
 
     /* 再要一片、长度不同：每一片各记各的长度 */
     int64 m = 2;

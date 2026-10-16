@@ -1,4 +1,4 @@
-"""验证内嵌终端手册、共享索引、三级解析、搜索、三语诊断与示例执行。"""
+"""验证内嵌终端手册、共享索引、三级解析、搜索、双语诊断与示例执行。"""
 from pathlib import Path
 import json
 import os
@@ -23,17 +23,49 @@ def main():
             assert result.returncode==code,(arguments,result.stdout,result.stderr)
             return result
         def query(*arguments,code=0):
+            if not arguments or arguments[0] not in ('book','keyword','skill','help'):
+                arguments=('api',*arguments)
             result=run('--json',*arguments,code=code)
             assert not result.stderr,result.stderr
             value=json.loads(result.stdout)
             assert value['schemaVersion']==1 and isinstance(value['diagnostics'],list),value
             return value
+        assert run().stdout==run('help').stdout==run('--help').stdout
+        assert json.loads(run('--json').stdout)['kind']=='help'
+        book=query('book')
+        assert len(book['chapters'])==28,book
+        exported=work/'book'
+        assert Path(book['directory'])==exported and book['exportedFiles']==35,book
+        for path in (ROOT/'doc/book').glob('*.md'):
+            assert (exported/path.name).read_text(encoding='utf-8')==path.read_text(encoding='utf-8')
+        for path in (ROOT/'doc/book/images').glob('*'):
+            assert (exported/'images'/path.name).read_bytes()==path.read_bytes()
+        sentinel=exported/'my-notes.txt';sentinel.write_text('keep',encoding='utf-8')
+        query('book')
+        assert sentinel.read_text(encoding='utf-8')=='keep'
+        chapter=query('book','24')['chapter']
+        assert chapter['content']==(ROOT/'doc/book/24-学生信息管理系统.md').read_text(encoding='utf-8')
+        assert 'student-system-login.png' in chapter['content']
+        rendered=run('book','24').stdout
+        assert '[图片](images/student-system-login.png)' in rendered and '![' not in rendered,rendered
+        assert query('book','6')['chapter']['id']=='06'
+        assert query('book','A')['chapter']['id']=='A'
+        assert query('book','不存在',code=1)['diagnostics'][0]['code']=='MGL1701'
+        keyword=query('keyword','break')['keyword']
+        assert 'break #level' in keyword['documentation'] and 'BREAK' in keyword['syntax'],keyword
+        assert 'struct' in query('keyword')['keywords']
+        assert query('keyword','not_a_keyword',code=1)['diagnostics'][0]['code']=='MGL1701'
+        skill=(ROOT/'skills/magel-programming/SKILL.md').read_text(encoding='utf-8')
+        assert run('skill').stdout==skill
+        assert query('skill')['content']==skill
+        run('book','6','--run',code=2)
         modules=query()
         assert {m['name'] for m in modules['modules']}==set(data['modules'])
         grouped=[m['name'] for g in modules['groups'] for m in g['modules']]
         assert len(grouped)==len(set(grouped))==len(data['modules']),grouped
         overview=query('std::text')
         assert overview['kind']=='module'
+        assert overview['documentation']==(ROOT/'doc/library/std-text.md').read_text(encoding='utf-8')
         expected=[r['name'] for r in data['functions']+data['symbols'] if r['module']=='std::text']
         assert sorted(r['name'] for r in overview['symbols'])==sorted(expected)
         owner=query('std::text::Text')
@@ -46,7 +78,7 @@ def main():
         assert entry['parameters']==records[0]['parameters']
         assert entry['returns']==records[0]['returns'] and entry['errors']==records[0]['errors']
         assert entry['examples'] and 'int64 main()' in entry['examples'][0]['code']
-        text=run('std::text::Text::split').stdout
+        text=run('api','std::text::Text::split').stdout
         assert all(word in text for word in ('参数','返回值','错误与边界','完整示例')) and '\x1b' not in text,text
         assert query('--search','SPLIT')['symbols']
         exact=query('--search','split','--exact')
@@ -56,7 +88,7 @@ def main():
         assert query('--search','delimiter')['symbols']
         assert query('--search','UTF-8')['modules']
         assert query('--search','parts[1]')['symbols']
-        for language,marker in [('zh','未找到手册目标'),('en','Manual target not found'),('ja','マニュアルの対象が見つかりません')]:
+        for language,marker in [('zh','未找到手册目标'),('en','Manual target not found')]:
             missing=query('std::text::Text::spilt','--lang',language,code=1)
             assert missing['language']==language and marker in missing['diagnostics'][0]['message'],missing
             assert 'std::text::Text::split' in missing['candidates'],missing
@@ -77,7 +109,7 @@ def main():
         assert no_example['diagnostics'][0]['code']=='MGL1702',no_example
     result=subprocess.run(['python',str(ROOT/'tools/library_reference.py'),'--check'],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',env=dict(os.environ,PYTHONIOENCODING='utf-8'))
     assert result.returncode==0,result.stdout+result.stderr
-    print('man 模块、类型/方法、参数与边界、全文/精确搜索、三语、候选、JSON、示例执行和共享索引同步通过。')
+    print('man 模块、类型/方法、参数与边界、全文/精确搜索、双语、候选、JSON、示例执行和共享索引同步通过。')
 
 
 if __name__=='__main__':main()

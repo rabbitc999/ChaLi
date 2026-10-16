@@ -55,7 +55,7 @@ int64 main()
     Table table;
     table.base = 7;
     println("size={} at={} x={} scale={} cast={}", table.size(), table[2], table * 3,
-                  table.scale(), cast<int64>(table));
+    table.scale(), cast<int64>(table));
 
     Countdown countdown;
     int64 total = 0;

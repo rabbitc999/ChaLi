@@ -61,7 +61,7 @@ int64 main() {
     int64 previous = std::message::receiveThread<int64>();
     std::thread::wait(task);
     println("{} {} {} {} {} {}", reply.id, reply.name, reply.readings.len(),
-                 previous, sharedCounter.get(), isolatedCounter);
+    previous, sharedCounter.get(), isolatedCounter);
     return 0;
 }
 ```

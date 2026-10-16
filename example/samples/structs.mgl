@@ -26,7 +26,7 @@ int64 main() {
     i = 0;
     while (i < 3) {
         println("items[{}]: id={} price={} total={}", i, items[i].id, items[i].price,
-               items[i].total());
+        items[i].total());
         i = i + 1;
     }
 

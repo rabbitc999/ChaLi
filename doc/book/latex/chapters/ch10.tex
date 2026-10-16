@@ -32,11 +32,7 @@ enum Message {
 
 变体可以带字段，这在类型理论里叫「代数数据类型」——但用起来没那么玄：枚举就是「有几个可能形状，每个形状各自带自己的数据」。
 
-结尾同样要分号（和 \texttt{struct} 一样）：
-
-\begin{lstlisting}[style=out]
-语法错误：hello.mgl 第 2 行第 1 列：期望 分号(;)，实际是 整数类型(int64)
-\end{lstlisting}
+枚举声明在 \texttt{\}} 处结束，尾分号可选，与 \texttt{struct} 和 \texttt{interface} 一致。
 
 造一个值用 \texttt{类型:\allowbreak{}:\allowbreak{}变体}（片段，\texttt{Message} 假定已定义）：
 
@@ -313,7 +309,7 @@ copy original
 \toprule
 你会了 & 关键点 \\
 \midrule
-定义枚举 & \texttt{enum X \{ A,\allowbreak{} B(\allowbreak{}int64 v)\allowbreak{} \};} —— 结尾分号别忘 \\
+定义枚举 & \texttt{enum X \{ A,\allowbreak{} B(\allowbreak{}int64 v)\allowbreak{} \}} —— 结尾分号可选 \\
 造值 & \texttt{X:\allowbreak{}:\allowbreak{}A}、\texttt{X:\allowbreak{}:\allowbreak{}B(\allowbreak{}3)\allowbreak{}} \\
 \texttt{match} & 可作语句或表达式；表达式分支给出同类型值，外层声明仍加分号 \\
 自动绑定 & \texttt{X:\allowbreak{}:\allowbreak{}B(\allowbreak{}v)\allowbreak{} =\allowbreak{}>\allowbreak{} .\allowbreak{}.\allowbreak{}.\allowbreak{}} 里的 \texttt{v} 是当场取出来的 \\

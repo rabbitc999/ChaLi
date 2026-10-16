@@ -42,7 +42,7 @@ Option<Node mut&> rebuild(String pre, int64 preStart, String inorder_text, int64
     /* 前序：根后面先是整棵左子树（offset 个），再接右子树 */
     node.left = rebuild(pre, preStart + 1, inorder_text, inStart, offset);
     node.right = rebuild(pre, preStart + offset + 1, inorder_text, inStart + offset + 1,
-                         count - offset - 1);
+    count - offset - 1);
     return Option<Node mut&>::Value(node);
 }
 

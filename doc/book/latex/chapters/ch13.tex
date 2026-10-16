@@ -43,7 +43,7 @@ interface Shape {
 换句话说，\texttt{Shape} 描述的不是「有什么数据」，而是「会做什么」。这种类型，学名就叫契约（contract）：谁签了它，谁就得履行这两条。
 
 \begin{tip}{提示}
-注意结尾那个 \texttt{;}。\texttt{interface}、\texttt{struct}、\texttt{enum} 的声明块后面都要分号，漏了会报「期望分号」——这是新手最常踩的坑之一（第 8 章也提过）。
+\texttt{interface}、\texttt{struct}、\texttt{enum} 的声明在 \texttt{\}} 处结束，末尾的 \texttt{;} 可省略。接口中的抽象方法声明仍需要分号。
 \end{tip}
 
 \section{结构体实现接口}

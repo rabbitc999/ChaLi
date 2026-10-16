@@ -1,6 +1,6 @@
 // 一元运算的拥有结果、临时接收者和按值操作数都应独立清理。
 struct UnaryValue : Drop, Negate<UnaryValue,UnaryValue>,
-                    Positive<UnaryValue,UnaryValue>, BitNot<UnaryValue,UnaryValue> {
+Positive<UnaryValue,UnaryValue>, BitNot<UnaryValue,UnaryValue> {
     static int64 drops;
     int64 number;
     String text;

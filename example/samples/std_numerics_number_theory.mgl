@@ -37,7 +37,7 @@ int64 main() {
     assert(std::math::abs(newton-std::math::sqrt(2.0))<0.000001);
     assert(euler.len()==11 && rk4.len()==11);
     assert(rk4.at(10)>euler.at(10) &&
-                std::math::abs(rk4.at(10)-std::math::E)<0.00001);
+    std::math::abs(rk4.at(10)-std::math::E)<0.00001);
 
     assert(std::numtheory::NumberTheory::gcd((uint64)54,(uint64)24)==6);
     assert(std::numtheory::NumberTheory::lcm((uint64)6,(uint64)8)==24);

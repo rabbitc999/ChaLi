@@ -1,4 +1,4 @@
-"""生成无运行期文件依赖的中英日静态消息表；校验重复键与格式参数。
+"""生成无运行期文件依赖的中英静态消息表；校验重复键与格式参数。
 
 这是 Magel 工程自己的一份（路径都以本项目根为基准）：读 `source/i18n/messages.tsv`，
 写进 `source/magel_i18n.hpp` 的静态表与 `tools/mageldev.py` 的 Python 内嵌表。
@@ -12,17 +12,17 @@ CATALOG=ROOT/'source/i18n/messages.tsv'
 HEADER=ROOT/'source/magel_i18n.hpp'
 
 def load(catalog=CATALOG):
-    """读取三语消息；保持 printf 参数顺序和换行原样。"""
+    """读取双语消息；保持 printf 参数顺序和换行原样。"""
     rows={}
     for line in catalog.read_text(encoding='utf-8-sig').splitlines():
         if not line or line.startswith('#'):continue
         parts=[x.replace(r'\p','|').replace(r'\n','\n').replace(r'\x20',' ') for x in line.split('|')]
-        if len(parts)!=3 or not all(parts):raise ValueError(f'消息需要三个非空字段：{line}')
+        if len(parts)!=2 or not all(parts):raise ValueError(f'消息需要两个非空字段：{line}')
         if parts[0] in rows and rows[parts[0]]!=parts[1:]:raise ValueError(f'重复键：{parts[0]}')
         formats=lambda s:re.findall(r'%(?:[-+ #0]*\d*(?:\.\d+)?(?:z|ll|l|h)?[sduifgxX])(?![A-Za-z_])',s)
-        if formats(parts[0])!=formats(parts[1]) or formats(parts[0])!=formats(parts[2]):raise ValueError(f'格式参数不一致：{line}')
+        if formats(parts[0])!=formats(parts[1]):raise ValueError(f'格式参数不一致：{line}')
         placeholders=lambda value:set(re.findall(r"\{([A-Za-z_][A-Za-z_0-9]*)\}",value))
-        if placeholders(parts[0])!=placeholders(parts[1]) or placeholders(parts[0])!=placeholders(parts[2]):raise ValueError(f'命名占位符不一致：{line}')
+        if placeholders(parts[0])!=placeholders(parts[1]):raise ValueError(f'命名占位符不一致：{line}')
         rows[parts[0]]=parts[1:]
     return rows
 
@@ -34,10 +34,11 @@ def generate(rows=None):
     text=HEADER.read_text(encoding='utf-8')
     text=re.sub(r'(?<=// MAGEL_CATALOG_BEGIN\n)[\s\S]*?(?=// MAGEL_CATALOG_END)',lambda _:body,text)
     HEADER.write_text(text,encoding='utf-8')
+    (ROOT/'source/mcu_vm/magel_i18n.hpp').write_text(text,encoding='utf-8')
     script=ROOT/'tools/mageldev.py'
     python=script.read_text(encoding='utf-8')
     table='_MESSAGES = '+json.dumps(rows,ensure_ascii=False,indent=2)+'\n'
     python=re.sub(r'(?<=# MAGEL_CATALOG_BEGIN\n)[\s\S]*?(?=# MAGEL_CATALOG_END)',lambda _:table,python)
     script.write_text(python,encoding='utf-8')
-    print(f'Magel: embedded {len(rows)} Chinese / English / Japanese messages')
+    print(f'Magel: embedded {len(rows)} Chinese / English messages')
 if __name__=='__main__':generate()

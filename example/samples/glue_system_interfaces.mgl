@@ -25,6 +25,6 @@ int64 main()
     GlueDemoBuffer buffer;
     buffer.base = 6;
     println("size={} at={} mul={} cast={} add={}", buffer.size(), buffer[3], buffer * 4,
-                  cast<int64>(buffer), buffer + 5);
+    cast<int64>(buffer), buffer + 5);
     return 0;
 }

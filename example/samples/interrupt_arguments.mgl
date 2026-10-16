@@ -56,7 +56,7 @@ int64 navFires = 0;
 void onNav(int64 event) {
     navFires = navFires + 1;
     println("trampoline x={} y={} yaw={} fired={}",
-                  navPose.x, navPose.y, navPose.yaw, navFires);
+    navPose.x, navPose.y, navPose.yaw, navFires);
 }
 
 int64 main() {

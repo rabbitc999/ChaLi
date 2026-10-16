@@ -29,11 +29,11 @@ top := annotation_decl { $$ = $1; }
      | annotation_list top_decl { $$ = M_Annotated($1, $2); }
      | top_decl { $$ = $1; } ;
 
-top_decl := struct_decl  { $$ = $1; }
+top_decl := struct_decl type_decl_end { $$ = $1; }
      | MODULE module_name SEMI { $$ = M_Module($2); }
      | IMPORT module_name SEMI { $$ = M_Import($2); }
-     | enum_decl    { $$ = $1; }
-     | interface_decl { $$ = $1; }
+     | enum_decl type_decl_end { $$ = $1; }
+     | interface_decl type_decl_end { $$ = $1; }
      | func_def     { $$ = $1; }
      | EXPORT func_def { $$ = M_ExportFunc($2); }
      | INLINE func_def { $$ = M_Inline($2); }
@@ -44,6 +44,10 @@ top_decl := struct_decl  { $$ = $1; }
      | operator_def { $$ = $1; }
 
      | global_decl  { $$ = $1; } ;
+
+/* 带花括号的类型声明在右花括号处结束；顶层兼容其后的可选分号。 */
+type_decl_end := %empty { $$ = -1; }
+               | SEMI { $$ = -1; } ;
 
 /* ---- 编译期注解：声明只在顶层，使用只包裹声明，不进入语句/表达式文法。 ---- */
 annotation_decl := ANNOTATION module_name
@@ -93,9 +97,9 @@ module_name := name_token { $$ = $1; }
  * 接口名还能当**引用的目标类型**用（`Shape const& q` / `Shape mut& q`）：那是
  * "胖引用"（地址 + 具体类型号），`q.area()` 在运行期按类型号挑到具体实现。
  */
-interface_decl := INTERFACE name_token LBRACE iface_member_list RBRACE SEMI
+interface_decl := INTERFACE name_token LBRACE iface_member_list RBRACE
     { $$ = M_Interface($2, $4); }
-  | INTERFACE name_token COLON iface_list LBRACE iface_member_list RBRACE SEMI
+  | INTERFACE name_token COLON iface_list LBRACE iface_member_list RBRACE
     { $$ = M_InterfaceInherit($2, $4, $6); } ;
 
 iface_member_list := %empty { $$ = M_List(); }
@@ -220,13 +224,13 @@ array_type := type LBRACKET RBRACKET { $$ = M_TypeRuntimeArray($1); } ;
  *
  * 可以继承接口（**多个**，逗号分开）：继承就意味着"这些函数我保证都有"，
  * 登记时逐个核对，漏了哪个直接报错。接口名也能当引用的目标类型（胖引用）。 */
-struct_decl := STRUCT name_token LBRACE member_list RBRACE SEMI
+struct_decl := STRUCT name_token LBRACE member_list RBRACE
     { $$ = M_Struct($2, $4, -1); }
-  | STRUCT name_token COLON iface_list LBRACE member_list RBRACE SEMI
+  | STRUCT name_token COLON iface_list LBRACE member_list RBRACE
     { $$ = M_Struct($2, $6, $4); }
-  | STRUCT name_token name_token LBRACE member_list RBRACE SEMI
+  | STRUCT name_token name_token LBRACE member_list RBRACE
     { $$ = M_PackedStruct($2, $3, $5, -1); }
-  | STRUCT name_token name_token COLON iface_list LBRACE member_list RBRACE SEMI
+  | STRUCT name_token name_token COLON iface_list LBRACE member_list RBRACE
     { $$ = M_PackedStruct($2, $3, $7, $5); } ;
 
 /* ---- enum：带标签联合体 ----
@@ -237,11 +241,11 @@ struct_decl := STRUCT name_token LBRACE member_list RBRACE SEMI
  * 可以使用限定名：`Outcome::Ok(42)` / `Outcome::Ok(value) => { ... }`。
  * 无歧义时也接受普通 name_token / 调用表达式作为变体简写，语义阶段按目标类型与
  * 载荷确定所属枚举；无载荷泛型变体只能从上下文推导类型参数。 */
-enum_decl := ENUM name_token LBRACE enum_variant_list RBRACE SEMI
+enum_decl := ENUM name_token LBRACE enum_variant_list RBRACE
     { $$ = M_Enum($2, $4); }
-  | ENUM name_token LBRACE enum_variant_list SEMI member_list RBRACE SEMI
+  | ENUM name_token LBRACE enum_variant_list SEMI member_list RBRACE
     { $$ = M_EnumWithMethods($2, $4, $6, -1); }
-  | ENUM name_token COLON iface_list LBRACE enum_variant_list SEMI member_list RBRACE SEMI
+  | ENUM name_token COLON iface_list LBRACE enum_variant_list SEMI member_list RBRACE
     { $$ = M_EnumWithMethods($2, $6, $8, $4); } ;
 
 enum_variant_list := enum_variant { $$ = M_List1($1); }

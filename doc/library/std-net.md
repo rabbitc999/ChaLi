@@ -73,8 +73,8 @@ int64 main() {
     String raw = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type: text/plain\r\n\r\nhello";
     std::net::HttpResponse response = std::net::parseResponse(raw);
     println("response ok={} status={} reason={} len={} type={} body={}",
-                  response.ok, response.status, response.reason,
-                  response.header("Content-Length"), response.header("content-type"), response.body);
+    response.ok, response.status, response.reason,
+    response.header("Content-Length"), response.header("content-type"), response.body);
     return 0;
 }
 ```

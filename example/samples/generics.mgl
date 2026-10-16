@@ -59,7 +59,7 @@ int64 main() {
     nested.second = summed;
 
     println("{} {} {} {}", row.third, row.second,
-           read_value<Number>(nested.second), defaults.second);
+    read_value<Number>(nested.second), defaults.second);
     println("specialized {} {}", specialized(6), specialized_auto(7));
     return 0;
 }

@@ -135,7 +135,7 @@ inline void success() { std::puts("{\"schemaVersion\":1,\"diagnostics\":[]}"); }
 /**
  * @brief 编码工具命令诊断，保持编译检查的 code、span、source、notes 字段。
  * @param id 稳定错误码。
- * @param message 三语选择后的消息。
+ * @param message 双语选择后的消息。
  * @param notes 候选或补充说明。
  * @return 可放入 diagnostics 数组的 JSON 对象。
  */

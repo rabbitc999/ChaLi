@@ -162,7 +162,7 @@ magel check hello.mgl
 这一章你认识了：
 
 \begin{itemize}
-\item 入口函数固定叫 \texttt{main}，返回 \texttt{int64}；
+\item 入口函数固定叫 \texttt{main}，返回 \texttt{int64} 或 \texttt{void}；\texttt{void main} 正常完成时退出码为 0，panic 仍失败；
 \item \texttt{println(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 打印一行，来自核心库，不用 import；
 \item 分号断句、花括号划范围，和 C 系语言一样；
 \item \texttt{magel run} 跑，\texttt{magel check} 只查；

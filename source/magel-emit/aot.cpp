@@ -548,6 +548,17 @@ Memory::String generateAotFile(const AotRequest &request,
                                        : (item.second.isFloat ? "0.0;\n" : "0;\n");
         }
 
+        bool hasNativeCalls = false;
+        for (const std::size_t quadIndex : fn.quads)
+        {
+            String nativeSuffix;
+            const auto &candidate = quads.quads[quadIndex];
+            if (baseOp(candidate.op, &nativeSuffix) == "call" &&
+                (program.labels.count(candidate.arg(0)) == 0u || labelId.count(candidate.arg(0)) == 0u)) hasNativeCalls = true;
+        }
+        // 缓冲区归当前调用帧所有；同步回调重入时使用独立调用帧，不覆盖外层参数。
+        if (hasNativeCalls) out += "    Memory::Vector<stackvm::RuntimeValue> magel_native_args;\n";
+
         /* `param` 攒下来的实参：保留形参名，调用点按名字绑定（VM 也是按名字），
          * 不能按位置——`decl` 顺序未必等于源码形参顺序。 */
         std::vector<std::pair<String, Expr>> pending;
@@ -867,10 +878,10 @@ Memory::String generateAotFile(const AotRequest &request,
                 else
                 {
                     String call = "    { stackvm::RuntimeValue magel_rv;\n";
-                    call += "      rt.callNative(\"" + target + "\", Memory::Vector<stackvm::RuntimeValue>{";
+                    call += "      magel_native_args.resize(" + intText(static_cast<long long>(pending.size())) + ");\n";
                     for (std::size_t i = 0; i < pending.size(); ++i)
                     {
-                        if (i != 0u) call += ", ";
+                        call += "      magel_native_args[" + intText(static_cast<long long>(i)) + "] = ";
                         const Expr &argument = pending[i].second;
                         if (argument.dynamic || argument.type.dynamic)
                             call += argument.text;
@@ -878,8 +889,9 @@ Memory::String generateAotFile(const AotRequest &request,
                             call += "stackvm::RuntimeValue::ofFloat(" + argument.text + ")";
                         else
                             call += "stackvm::RuntimeValue::ofInt((std::int64_t)(" + argument.text + "))";
+                        call += ";\n";
                     }
-                    call += "}, magel_rv);\n";
+                    call += "      rt.callNative(\"" + target + "\", magel_native_args, magel_rv);\n";
                     call += "      if (rt.failed()) return " + zero + ";\n";
                     if (!dest.empty() && dest != "_")
                     {
@@ -934,9 +946,9 @@ Memory::String generateAotFile(const AotRequest &request,
             {
                 const Expr index = exprOf(quad.arg(0));
                 const Expr limit = exprOf(quad.arg(1));
-                out += "    if (!rt.checkIndex((std::int64_t)(" + castTo(index, false) +
+                out += "    if ((std::int64_t)(" + castTo(index, false) + ") < 0 || (std::int64_t)(" + castTo(index, false) + ") >= (std::int64_t)(" + castTo(limit, false) + ")) { rt.checkIndex((std::int64_t)(" + castTo(index, false) +
                        "), (std::int64_t)(" + castTo(limit, false) + "), \"" + quad.arg(2) +
-                       "\")) return " + zero + ";\n";
+                       "\"); return " + zero + "; }\n";
                 continue;
             }
             if (base == "checkptr")
@@ -955,6 +967,12 @@ Memory::String generateAotFile(const AotRequest &request,
                 const Expr address = exprOf(quad.arg(0));
                 const String dest = quad.arg(2);
                 const bool isFloat = opType.isFloat;
+                const VarType staticDest = typeOfVar(fn, dest);
+                if (!staticDest.dynamic && staticDest.isFloat == isFloat)
+                {
+                    out += "    if (!rt." + String(isFloat ? "loadFloat" : "loadInteger") + "((std::int64_t)(" + castTo(address, false) + "), " + varName(fn, dest) + ")) return " + zero + ";\n";
+                    continue;
+                }
                 out += "    { stackvm::RuntimeValue magel_rv; if (!rt.loadMemory((std::int64_t)(" +
                        castTo(address, false) + "), " + (isFloat ? "true" : "false") +
                        ", magel_rv)) return " + zero + ";\n";
@@ -973,6 +991,11 @@ Memory::String generateAotFile(const AotRequest &request,
                 const Expr address = exprOf(quad.arg(0));
                 const Expr value = exprOf(quad.arg(1));
                 const bool isFloat = opType.isFloat;
+                if (!value.dynamic && !value.type.dynamic)
+                {
+                    out += "    if (!rt." + String(isFloat ? "storeFloat" : "storeInteger") + "((std::int64_t)(" + castTo(address, false) + "), " + castTo(value, isFloat) + ")) return " + zero + ";\n";
+                    continue;
+                }
                 out += "    { stackvm::RuntimeValue magel_rv = ";
                 if (value.dynamic || value.type.dynamic)
                     out += value.text + ";\n";

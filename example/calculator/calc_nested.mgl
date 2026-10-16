@@ -130,7 +130,7 @@ struct Lexer {
             } elif (isDigitChar(c)) {
                 String buf = "";
                 while (self.pos < self.n &&
-                       (isDigitChar(self.src[self.pos]) || self.src[self.pos] == '.')) {
+                (isDigitChar(self.src[self.pos]) || self.src[self.pos] == '.')) {
                     buf = buf + format("{}", self.src[self.pos]);
                     self.pos = self.pos + 1;
                 }
@@ -139,7 +139,7 @@ struct Lexer {
             } elif (isAlphaChar(c)) {
                 String buf = "";
                 while (self.pos < self.n &&
-                       (isAlphaChar(self.src[self.pos]) || isDigitChar(self.src[self.pos]))) {
+                (isAlphaChar(self.src[self.pos]) || isDigitChar(self.src[self.pos]))) {
                     buf = buf + format("{}", self.src[self.pos]);
                     self.pos = self.pos + 1;
                 }
@@ -155,7 +155,7 @@ struct Lexer {
                 self.pos = self.pos + 1;
             } else {
                 return Result<List<Token>, String>::Err(
-                    format("unexpected character '{}'", c));
+                format("unexpected character '{}'", c));
             }
         }
         out.push(Token::TkEnd);
@@ -458,7 +458,7 @@ struct VM {
             } elif (ins.op == OP_LOAD) {
                 if (self.vars.has(ins.text) == 0) {
                     return Result<float64, String>::Err(
-                        format("undefined variable '{}'", ins.text));
+                    format("undefined variable '{}'", ins.text));
                 }
                 self.stack.push(self.vars[ins.text]);
             } elif (ins.op == OP_STORE) {
@@ -605,7 +605,7 @@ int64 main(List<String> args) {
                 if (rep.defined != "") { names.add(rep.defined); }
                 println("[{}] ok    {}  =>  {}", i + 1, rep.source, rep.detail);
                 println("      tokens={} instrs={}  [{}]",
-                              rep.tokens, rep.instrs, rep.disasm);
+                rep.tokens, rep.instrs, rep.disasm);
             }
             Result<LineReport, String>::Err(msg) => {
                 errCount = errCount + 1;
@@ -642,8 +642,8 @@ int64 main(List<String> args) {
     }
 
     List<int64> squares = std::iter::range(1, 6)
-        .map(fn(value) { value * value })
-        .collect();
+    .map(fn(value) { value * value })
+    .collect();
     println("functional demo: squares 1..5 = {}", renderInts(squares));
 
     return 0;

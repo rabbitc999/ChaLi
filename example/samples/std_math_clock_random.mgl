@@ -21,7 +21,7 @@ import std::clock;
 int64 main() {
     /* --- Math：float64 取整 / 取余 / 特殊值判定（宿主 <cmath>） --- */
     println("{} {} {} {}", std::math::floor(2.7), std::math::ceil(2.1),
-                 std::math::round(2.5), std::math::trunc(-2.7));
+    std::math::round(2.5), std::math::trunc(-2.7));
     println("{} {}", std::math::fmod(7.5, 2.0), std::math::fmod(-7.5, 2.0));
 
     /* Magel 里浮点除零是运行期错误，所以 NaN / Inf 从宿主函数拿：
@@ -29,11 +29,11 @@ int64 main() {
     float64 notNumber = std::math::sqrt(-1.0);
     float64 infinite = std::math::ln(0.0);
     println("{} {} {} {}", std::math::isNaN(notNumber), std::math::isNaN(1.0),
-                 std::math::isInf(infinite), std::math::isInf(1.0));
+    std::math::isInf(infinite), std::math::isInf(1.0));
 
     /* --- Math：int64 版（Magel 重载转发到宿主胶水）+ float64 版 abs 仍然可用 --- */
     println("{} {} {} {}", std::math::abs(-5), std::math::min(3, 8),
-                 std::math::max(3, 8), std::math::clamp(12, 0, 10));
+    std::math::max(3, 8), std::math::clamp(12, 0, 10));
     println("{}", std::math::abs(-2.5));
 
     /* --- Clock：单调时钟。读数本身不可复现，只断言"拿到了、且不倒退"。 --- */
@@ -61,11 +61,11 @@ int64 main() {
 
     List<int64> mixed = std::algorithms::shuffleValue<int64>(items, (uint64)4242);
     println("{} {} {}", mixed.len(),
-                 mixed[0] + mixed[1] + mixed[2],   /* 洗牌不改总和 */
-                 items[0]);                        /* 原表不动 */
+    mixed[0] + mixed[1] + mixed[2],   /* 洗牌不改总和 */
+    items[0]);                        /* 原表不动 */
 
     List<int64> again = std::algorithms::shuffleValue<int64>(items, (uint64)4242);
     println("{} {} {}", again[0] == mixed[0], again[1] == mixed[1],
-                 again[2] == mixed[2]);
+    again[2] == mixed[2]);
     return 0;
 }

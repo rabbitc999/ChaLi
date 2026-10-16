@@ -6,13 +6,13 @@ int64 main(List<String> arguments) {
         panic("GUI 窗口创建失败");
     }
     if (gui::label((int32)10, (int32)20, (int32)20, (int32)360, (int32)26,
-                   "点击按钮开始计数") == 0 ||
-        gui::textBox((int32)11, (int32)20, (int32)58, (int32)240, (int32)28,
-                     "Magel") == 0 ||
-        gui::button((int32)1, (int32)20, (int32)110, (int32)110, (int32)34,
-                    "加一") == 0 ||
-        gui::button((int32)2, (int32)145, (int32)110, (int32)115, (int32)34,
-                    "问候") == 0) {
+    "点击按钮开始计数") == 0 ||
+    gui::textBox((int32)11, (int32)20, (int32)58, (int32)240, (int32)28,
+    "Magel") == 0 ||
+    gui::button((int32)1, (int32)20, (int32)110, (int32)110, (int32)34,
+    "加一") == 0 ||
+    gui::button((int32)2, (int32)145, (int32)110, (int32)115, (int32)34,
+    "问候") == 0) {
         gui::close();
         panic("GUI 控件创建失败");
     }

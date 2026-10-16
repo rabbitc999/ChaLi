@@ -10,13 +10,12 @@ std::string manLower(std::string text)
 }
 /**
  * @brief 按工具链语言选择显示语言标识。
- * @return zh、en 或 ja。
+ * @return zh 或 en。
  */
 std::string manLanguage()
 {
     const auto language = magel_i18n::language();
-    return language == magel_i18n::Language::Zh ? "zh" : language == magel_i18n::Language::Ja ? "ja" :
-                                                                                                "en";
+    return language == magel_i18n::Language::Zh ? "zh" : "en";
 }
 /**
  * @brief 手册能力域名称，翻译来自工具链消息目录。
@@ -151,7 +150,7 @@ public:
 int man(int argc, char **argv, const fs::path &compiler)
 {
     bool machine = false, exact = false, runExample = false, update = false;
-    std::string target, query;
+    std::string target, query, selector;
     for (int at = 2; at < argc; ++at)
     {
         const std::string arg = argv[at];
@@ -174,9 +173,10 @@ int man(int argc, char **argv, const fs::path &compiler)
         }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << MAGEL_TEXT("用法：magel man [目标] [--search 关键词] [--exact] [--json] [--run] [--lang zh|en|ja] [--update]\n");
-            return 0;
+            target = "help";
         }
+        else if (!starts(arg, "--") && (target == "book" || target == "keyword" || target == "api") && selector.empty())
+            selector = arg;
         else if (starts(arg, "--") || !target.empty())
         {
             std::cerr << MAGEL_TEXT("手册参数无效：") << arg << '\n';
@@ -185,7 +185,35 @@ int man(int argc, char **argv, const fs::path &compiler)
         else
             target = arg;
     }
-    if ((!query.empty() && !target.empty()) || (update && (runExample || !query.empty() || !target.empty())))
+    if (target == "help" || (target.empty() && query.empty() && !update))
+    {
+        const std::string usage = manLanguage() == "en" ? "Usage: magel man api <API> [--json] [--run]\n"
+                                                          "       magel man api --search <TEXT> [--exact] [--json]\n"
+                                                          "       magel man book [CHAPTER] [--json]\n"
+                                                          "       magel man keyword [KEYWORD] [--json]\n"
+                                                          "       magel man skill [--json]\n"
+                                                          "       magel man api\n"
+                                                          "       magel man help [--lang zh|en] [--json]\n\n"
+                                                          "API examples: magel man api std::text; magel man api String\n"
+                                                          "API documentation: embedded doc/library/.\n"
+                                                          "man book exports Markdown and images to ./book.\n" :
+                                                          "用法：magel man api <API> [--json] [--run]\n"
+                                                          "      magel man api --search <关键词> [--exact] [--json]\n"
+                                                          "      magel man book [章节] [--json]\n"
+                                                          "      magel man keyword [关键字] [--json]\n"
+                                                          "      magel man skill [--json]\n"
+                                                          "      magel man api\n"
+                                                          "      magel man help [--lang zh|en] [--json]\n\n"
+                                                          "API 示例：magel man api std::text；magel man api String\n"
+                                                          "API 文档来源：内嵌的 doc/library/。\n"
+                                                          "man book 将 Markdown 和图片导出到当前目录的 book 文件夹。\n";
+        if (machine)
+            std::cout << object({ { "schemaVersion", 1 }, { "kind", "help" }, { "language", manLanguage() }, { "content", usage }, { "diagnostics", A{} } }).dump() << '\n';
+        else
+            std::cout << usage;
+        return 0;
+    }
+    if ((!query.empty() && !target.empty() && target != "api") || (update && (runExample || !query.empty() || !target.empty())))
     {
         std::cerr << MAGEL_TEXT("手册参数不能组合使用") << '\n';
         return 2;
@@ -217,6 +245,123 @@ int man(int argc, char **argv, const fs::path &compiler)
         else
             std::cout << result.output << result.error << (result.code == 0 ? MAGEL_TEXT("手册数据已生成；重新构建后进入可执行文件。\n") : "");
         return result.code;
+    }
+    if (target == "api") target = selector;
+    if (target == "book" || target == "keyword" || target == "skill")
+    {
+        if (runExample || exact)
+        {
+            std::cerr << MAGEL_TEXT("手册参数不能组合使用") << '\n';
+            return 2;
+        }
+        const auto manual = parse(magel_development_tool("tools/magel_manual.json"));
+        J result = object({ { "schemaVersion", 1 }, { "kind", target }, { "language", manLanguage() }, { "sourceLanguage", "zh" }, { "diagnostics", A{} } });
+        std::string output;
+        bool found = true;
+        if (target == "skill")
+        {
+            output = str(manual, "skill");
+            result["content"] = output;
+        }
+        else if (target == "book")
+        {
+            A chapters;
+            const auto requested = manLower(selector);
+            for (const auto &chapter : array(get(manual, "book")))
+            {
+                if (selector.empty())
+                {
+                    chapters.push_back(object({ { "id", get(chapter, "id") }, { "title", get(chapter, "title") }, { "path", get(chapter, "path") } }));
+                    output += str(chapter, "id") + "  " + str(chapter, "title") + "\n";
+                }
+                else
+                {
+                    auto id = manLower(str(chapter, "id"));
+                    if (id.size() == 2u && id[0] == '0') id.erase(0u, 1u);
+                    const auto path = fs::u8path(str(chapter, "path"));
+                    if (requested == id || requested == manLower(str(chapter, "id")) || requested == manLower(path.filename().u8string()) || requested == manLower(path.stem().u8string()) || selector == str(chapter, "title") || (id == "index" && requested == "readme"))
+                    {
+                        result["chapter"] = chapter;
+                        output = str(chapter, "content");
+                        output = std::regex_replace(output, std::regex(R"(!\[[^\]]*\]\(([^)]+)\))"), "[图片]($1)");
+                        break;
+                    }
+                }
+            }
+            if (selector.empty())
+            {
+                const auto callingDirectory = fs::weakly_canonical(fs::current_path());
+                const auto destination = callingDirectory / "book";
+                fs::create_directories(destination);
+                const auto root = fs::weakly_canonical(destination);
+                if (root.parent_path() != callingDirectory) throw std::runtime_error("book export directory must remain inside the calling directory");
+                std::vector<std::pair<fs::path, std::string>> files;
+                for (const auto &chapter : array(get(manual, "book")))
+                    files.emplace_back(root / fs::u8path(str(chapter, "path")).filename(), str(chapter, "content"));
+                for (const auto &image : array(get(manual, "images")))
+                {
+                    const auto name = fs::u8path(str(image, "path"));
+                    if (name.is_absolute() || name.lexically_normal().u8string().find("..") != std::string::npos)
+                        throw std::runtime_error("invalid embedded book image path");
+                    const auto encoded = str(image, "hex");
+                    std::string bytes;
+                    bytes.reserve(encoded.size() / 2u);
+                    for (std::size_t at = 0; at + 1u < encoded.size(); at += 2u)
+                        bytes.push_back(static_cast<char>(std::stoul(encoded.substr(at, 2u), nullptr, 16)));
+                    files.emplace_back(root / name, std::move(bytes));
+                }
+                for (const auto &file : files)
+                {
+                    const auto relative = fs::weakly_canonical(file.first).lexically_relative(root);
+                    if (relative.empty() || relative.is_absolute() || *relative.begin() == "..")
+                        throw std::runtime_error("book export path escapes its destination");
+                }
+                for (const auto &file : files)
+                {
+                    fs::create_directories(file.first.parent_path());
+                    write(file.first, file.second);
+                }
+                result["chapters"] = chapters;
+                result["directory"] = root.u8string();
+                result["exportedFiles"] = static_cast<int>(files.size());
+                output = (manLanguage() == "zh" ? "书稿与图片已导出：" : "Book Markdown and images exported: ") + root.u8string() + "\n\n" + output + "\nmagel man book 6\nmagel man book 24\nmagel man book A\n";
+            }
+            else
+                found = !output.empty();
+        }
+        else
+        {
+            const auto &keywords = get(manual, "keywords");
+            if (selector.empty())
+            {
+                A names;
+                if (const auto *entries = keywords.asObject())
+                    for (const auto &entry : entries->members())
+                    {
+                        names.push_back(std::string(entry.key));
+                        output += std::string(entry.key) + "\n";
+                    }
+                result["keywords"] = names;
+            }
+            else if (const auto *entry = keywords.find(keywords.find(selector) ? selector : manLower(selector)))
+            {
+                result["keyword"] = *entry;
+                output = "# " + str(*entry, "name") + "\n\n" + str(*entry, "documentation") + "\n\n```text\n" + str(*entry, "syntax") + "\n```\n";
+            }
+            else
+                found = false;
+        }
+        if (!found)
+        {
+            const auto message = std::string(MAGEL_TEXT("未找到手册目标：")) + target + " " + selector;
+            result["diagnostics"] = A{ object({ { "code", "MGL1701" }, { "severity", "error" }, { "message", message } }) };
+            if (!machine) std::cerr << message << '\n';
+        }
+        if (machine)
+            std::cout << result.dump() << '\n';
+        else if (found)
+            ManTerminal().print(output);
+        return found ? 0 : 1;
     }
     const auto data = parse(magel_development_tool("tools/magel_stdlib_api.json"));
     const auto &reference = get(data, "reference"), &modules = get(reference, "modules"), &examples = get(reference, "examples");
@@ -306,6 +451,16 @@ int man(int argc, char **argv, const fs::path &compiler)
     result["target"] = target;
     result["modules"] = selectedModules;
     result["symbols"] = selected;
+    result["sourceDirectory"] = "doc/library";
+    std::string documentation;
+    if (kind == "module")
+    {
+        std::string filename = target;
+        for (std::size_t pos = 0; (pos = filename.find("::", pos)) != std::string::npos;) filename.replace(pos, 2, "-");
+        const auto manual = parse(magel_development_tool("tools/magel_manual.json"));
+        documentation = str(get(manual, "apiPages"), (filename + ".md").c_str());
+        result["documentation"] = documentation;
+    }
     if (kind == "modules")
     {
         A groups;
@@ -357,6 +512,7 @@ int man(int argc, char **argv, const fs::path &compiler)
     }
     ManTerminal terminal;
     std::ostringstream output;
+    if (!documentation.empty()) output << documentation << "\n";
     if (kind == "modules")
     {
         output << terminal.title(MAGEL_TEXT("Magel 标准库手册")) << '\n';

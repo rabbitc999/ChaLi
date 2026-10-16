@@ -217,7 +217,7 @@ On 2026-10-10 the project officially took the name **Magel** and reset the versi
   extension `.mgl`, and the project files `magel.toml` / `magel.lock`;
 - compiler macros were unified under the `MAGEL_` prefix, while the VM kept its `STACKVM_` capability
   contract and the `.svmb` binary protocol kept its meaning;
-- Chinese / English / Japanese display was added: `--lang`, `MAGEL_LANG` and system locale
+- Chinese / English display was added: `--lang`, `MAGEL_LANG` and system locale
   detection. User strings, file paths and JSON protocols are not translated, and diagnostic codes do
   not change with language.
 
@@ -401,8 +401,8 @@ Where the story stops is not "it will get better"; it is **what is genuinely not
   should only be stamped when the program actually uses annotations, `@Reflect` or `import std::reflect`.
 - **Lifetime checking is not a complete proof.** Arbitrary cross-function writes, every alias after
   an explicit `delete`, concurrent invalidation, and references held by the host still rest on
-  contracts. There are runtime range checks and panics, but AOT defaults to `unchecked` — a
-  deployment artifact cannot be described as always having full memory guardrails.
+  contracts. AOT defaults to `checked` with runtime allocation guards and panic traces, while explicit
+  `unchecked` disables optional checks. Arbitrary deployment artifacts cannot be described as always having complete memory guardrails.
 - **Performance has not been measured systematically.** AOT can emit a native program; do not expect
   it to beat hand-optimized C/C++.
 - **Ecosystem size and IDE maturity.** The standard library covers the common capabilities but

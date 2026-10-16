@@ -103,7 +103,7 @@ struct Lexer {
             } elif (isDigitChar(c)) {
                 String buf = "";
                 while (self.pos < self.n &&
-                       (isDigitChar(self.src[self.pos]) || self.src[self.pos] == '.')) {
+                (isDigitChar(self.src[self.pos]) || self.src[self.pos] == '.')) {
                     buf = buf + format("{}", self.src[self.pos]);
                     self.pos = self.pos + 1;
                 }
@@ -112,7 +112,7 @@ struct Lexer {
             } elif (isAlphaChar(c)) {
                 String buf = "";
                 while (self.pos < self.n &&
-                       (isAlphaChar(self.src[self.pos]) || isDigitChar(self.src[self.pos]))) {
+                (isAlphaChar(self.src[self.pos]) || isDigitChar(self.src[self.pos]))) {
                     buf = buf + format("{}", self.src[self.pos]);
                     self.pos = self.pos + 1;
                 }
@@ -128,7 +128,7 @@ struct Lexer {
                 self.pos = self.pos + 1;
             } else {
                 return Result<List<Token>, String>::Err(
-                    format("unexpected character '{}'", c));
+                format("unexpected character '{}'", c));
             }
         }
         out.push(Token::TkEnd);
@@ -325,7 +325,7 @@ struct Parser {
                 }
                 self.pos = self.pos + 1;
                 return Result<int64, String>::Ok(
-                    self.emit(K_CALL, 0.0, self.identAt(nameTok), start, argc));
+                self.emit(K_CALL, 0.0, self.identAt(nameTok), start, argc));
             }
             return Result<int64, String>::Ok(self.emit(K_VAR, 0.0, self.identAt(nameTok), 0, 0));
         }
@@ -416,9 +416,9 @@ int64 arithOpcode(String op) {
 
 /* Post-order walk of the arena: children first, then the node's own opcode. */
 void compileNode(List<Node> const& nodes,
-                 List<int64> const& kids,
-                 List<Instr> mut& code,
-                 int64 idx) {
+List<int64> const& kids,
+List<Instr> mut& code,
+int64 idx) {
     /* 当前帧保存独立节点值，递归返回后继续使用其字符串和字段。 */
     Node current = nodes[idx];
     int64 kind = current.kind;
@@ -514,7 +514,7 @@ struct VM {
             } elif (ins.op == OP_LOAD) {
                 if (self.vars.has(ins.text) == 0) {
                     return Result<float64, String>::Err(
-                        format("undefined variable '{}'", ins.text));
+                    format("undefined variable '{}'", ins.text));
                 }
                 self.stack.push(self.vars[ins.text]);
             } elif (ins.op == OP_STORE) {
@@ -679,7 +679,7 @@ int64 main(List<String> args) {
                 if (rep.defined != "") { names.add(rep.defined); }
                 println("[{}] ok    {}   =>   {}", i + 1, rep.source, rep.detail);
                 println("      tokens={} nodes={} instrs={}",
-                              rep.tokens, rep.nodes, rep.instrs);
+                rep.tokens, rep.nodes, rep.instrs);
                 println("      [{}]", rep.disasm);
             }
             Result<LineReport, String>::Err(msg) => {
@@ -719,8 +719,8 @@ int64 main(List<String> args) {
     }
 
     List<int64> squares = std::iter::range(1, 6)
-        .map(fn(value) { value * value })
-        .collect();
+    .map(fn(value) { value * value })
+    .collect();
     println("functional demo: squares 1..5 = {}", renderInts(squares));
 
     return 0;

@@ -7,19 +7,19 @@
  */
 int64 classify(int64 x) {
     match (x) {
-    [0, 10) => { return 1; }
-    [10, 20) => { return 2; }
-    [20, 30) => { return 3; }
-    [30, 40] => { return 4; }
-    _ => { return 0; }
+        [0, 10) => { return 1; }
+        [10, 20) => { return 2; }
+        [20, 30) => { return 3; }
+        [30, 40] => { return 4; }
+        _ => { return 0; }
     }
 }
 
 float64 classifyF(float64 x) {
     match (x) {
-    [0.0, 1.0) => { return 1.0; }
-    [1.0, 2.0] => { return 2.0; }
-    _ => { return 0.0; }
+        [0.0, 1.0) => { return 1.0; }
+        [1.0, 2.0] => { return 2.0; }
+        _ => { return 0.0; }
     }
 }
 

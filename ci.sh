@@ -174,6 +174,7 @@ if [ "$run_python" = 1 ]; then
     run_step "运行转换接口与资源清理回归" "$PYTHON" tests/magel_conversions.py --magel magel
     run_step "运行数值、数组安全与 float32 后缀回归" "$PYTHON" tests/magel_numeric_v101.py --magel magel
     run_step "运行无符号字面量与负号诊断回归" "$PYTHON" tests/magel_unsigned_suffix.py --magel magel
+    run_step "运行 AOT 数组与静态标量优化回归" "$PYTHON" tests/magel_aot_optimization.py --magel magel
     run_step "运行 match 整数模式重叠警告回归" "$PYTHON" tests/magel_match_overlap.py --magel magel
     run_step "运行块表达式、列表宏与插值输出回归" "$PYTHON" tests/magel_block_expression.py --magel magel
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/magel_fn.py --magel magel
@@ -260,6 +261,10 @@ if [ "$run_python" = 1 ]; then
     run_step "检查手册与标准库共享索引同步" "$PYTHON" tools/library_reference.py --check
     run_step "运行原生命令行手册回归" "$PYTHON" tests/magel_man.py
     run_step "运行行输入与文件文本读取回归" "$PYTHON" tests/magel_text_readers.py
+    run_step "检查内嵌书稿关键字与 SKILL 同步" "$PYTHON" tools/embed_manual.py --check
+    run_step "运行格式化多行字符串保真回归" "$PYTHON" tests/magel_formatter_literals.py
+    run_step "运行 void main 的 VM/AOT 回归" "$PYTHON" tests/magel_void_main.py
+    run_step "运行类型声明可选尾分号回归" "$PYTHON" tests/magel_type_decl_terminators.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/magel_book_updates.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/magel_inline_fn_arguments.py
     run_step "运行胶水调用 Magel 函数的 VM 与 AOT 一致性回归" "$PYTHON" tests/magel_native_callbacks.py
