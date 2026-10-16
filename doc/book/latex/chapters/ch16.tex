@@ -528,7 +528,25 @@ magel：运行期错误：panic：x 必须为正
 
 \subsection{用户自定义传播}
 
-\texttt{?} 通过 \texttt{Try<\allowbreak{}T,\allowbreak{}R>\allowbreak{}.\allowbreak{}branch} 判断是否继续，通过返回类型的 \texttt{From\allowbreak{}Residual<\allowbreak{}F,\allowbreak{}R>\allowbreak{}.\allowbreak{}from\allowbreak{}Residual} 将失败载荷转为函数结果，F 为实现类型自身。\texttt{Try\allowbreak{}Branch<\allowbreak{}T,\allowbreak{}R>\allowbreak{}} 有 Continue(T) 和 Break(R) 两种变体。
+\texttt{?} 不限于标准库的 \texttt{Option} 和 \texttt{Result}。自定义类型也可以规定“怎样取出成功值，怎样向调用者传播失败”。这需要两端配合：操作数类型实现 \texttt{Try<\allowbreak{}T,\allowbreak{} R>\allowbreak{}}，当前函数的返回类型实现匹配的 \texttt{From\allowbreak{}Residual<\allowbreak{}F,\allowbreak{} R>\allowbreak{}}。
+
+先看三个类型参数各自负责什么：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+类型参数 & 含义 & 本例中的类型 \\
+\midrule
+\texttt{T} & 成功后，\texttt{?} 表达式产生的值的类型 & \texttt{int64} \\
+\texttt{R} & 失败时传递给返回类型的载荷类型 & \texttt{None\allowbreak{}Residual} \\
+\texttt{F} & 接住失败的函数返回类型，也是 \texttt{From\allowbreak{}Residual} 的实现类型自身 & \texttt{Option<\allowbreak{}int64>\allowbreak{}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{Try<\allowbreak{}T,\allowbreak{} R>\allowbreak{}} 要求提供实例方法 \texttt{Try\allowbreak{}Branch<\allowbreak{}T,\allowbreak{} R>\allowbreak{} branch(\allowbreak{})\allowbreak{}}。它把操作数拆成两种情况：\texttt{Continue(\allowbreak{}T)\allowbreak{}} 表示继续执行，\texttt{Break(\allowbreak{}R)\allowbreak{}} 表示传播失败。这里的 \texttt{Continue} 和 \texttt{Break} 是枚举变体名；\texttt{Try\allowbreak{}Branch:\allowbreak{}:\allowbreak{}Break(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 本身不会退出函数，也不是退出循环的 \texttt{break;} 语句。真正的提前返回由 \texttt{?} 的编译器降级逻辑完成。
+
+\texttt{From\allowbreak{}Residual<\allowbreak{}F,\allowbreak{} R>\allowbreak{}} 则要求提供静态方法 \texttt{F from\allowbreak{}Residual(\allowbreak{}R residual)\allowbreak{}}。它只负责把失败载荷变成完整的函数返回值。编译器依据包含 \texttt{?} 的函数的返回类型选择这个方法，而不是依据接收成功值的局部变量类型选择。
 
 \par
 \medskip
@@ -580,7 +598,46 @@ int64 main()
 \par
 \medskip
 
-这里继续值为 int64，失败载荷为 NoneResidual，所以标准 Option 可以接住失败；自定义返回类型也可实现 FromResidual。传播表达式求值一次，失败就立即返回，并执行已登记的作用域清理。不同 Result 错误类型可先用 \texttt{map\allowbreak{}Err} 显式转换；Option 转 Result 可用 \texttt{ok\allowbreak{}Or} 或 \texttt{ok\allowbreak{}Or\allowbreak{}Else}。
+在 \texttt{Step} 的定义中，\texttt{Value(\allowbreak{}int64 value)\allowbreak{}} 保存成功值，\texttt{Empty} 表示没有值。\texttt{branch(\allowbreak{})\allowbreak{}} 将前者映射为 \texttt{Try\allowbreak{}Branch<\allowbreak{}int64,\allowbreak{} None\allowbreak{}Residual>\allowbreak{}:\allowbreak{}:\allowbreak{}Continue(\allowbreak{}value)\allowbreak{}}，将后者映射为 \texttt{Try\allowbreak{}Branch<\allowbreak{}int64,\allowbreak{} None\allowbreak{}Residual>\allowbreak{}:\allowbreak{}:\allowbreak{}Break(\allowbreak{}None\allowbreak{}Residual:\allowbreak{}:\allowbreak{}None)\allowbreak{}}。\texttt{None\allowbreak{}Residual} 是“没有值”这个失败情况的载荷类型；它本身不是 \texttt{Option<\allowbreak{}int64>\allowbreak{}}，也没有保存成功值。
+
+现在逐步看 \texttt{int64 value =\allowbreak{} step?;}：
+
+\begin{enumerate}
+\item 成功路径：调用 \texttt{add\allowbreak{}One(\allowbreak{}Step:\allowbreak{}:\allowbreak{}Value(\allowbreak{}4)\allowbreak{})\allowbreak{}}，\texttt{step.\allowbreak{}branch(\allowbreak{})\allowbreak{}} 得到 \texttt{Continue(\allowbreak{}4)\allowbreak{}}。\texttt{step?} 的结果是里面的 \texttt{4}，类型是 \texttt{int64}，所以局部变量 \texttt{value} 得到 \texttt{4}。函数继续执行下一句，返回 \texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}Value(\allowbreak{}5)\allowbreak{}}。
+\item 失败路径：调用 \texttt{add\allowbreak{}One(\allowbreak{}Step:\allowbreak{}:\allowbreak{}Empty)\allowbreak{}}，\texttt{step.\allowbreak{}branch(\allowbreak{})\allowbreak{}} 得到 \texttt{Break(\allowbreak{}None\allowbreak{}Residual:\allowbreak{}:\allowbreak{}None)\allowbreak{}}。编译器取出失败载荷，交给当前返回类型 \texttt{Option<\allowbreak{}int64>\allowbreak{}} 的静态 \texttt{from\allowbreak{}Residual} 方法。该方法产生 \texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}None}；编译器保存返回结果、执行离开函数所需的作用域清理，然后立即返回。局部变量 \texttt{value} 不会完成初始化，后面的 \texttt{value + 1} 也不会执行。
+\end{enumerate}
+
+标准库已经让 \texttt{Option<\allowbreak{}T>\allowbreak{}} 实现了 \texttt{From\allowbreak{}Residual<\allowbreak{}Option<\allowbreak{}T>\allowbreak{},\allowbreak{} None\allowbreak{}Residual>\allowbreak{}}，所以它能接住 \texttt{Step} 产生的失败载荷。这里不要求 \texttt{Step} 和 \texttt{Option<\allowbreak{}int64>\allowbreak{}} 是同一种类型；把两端连接起来的是完全匹配的 \texttt{None\allowbreak{}Residual}。
+
+下面用伪代码表示 \texttt{add\allowbreak{}One} 中传播的控制流；它只解释降级含义，不是另一套需要手写的 Magel 语法：
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+拆分结果 = step.branch()              // 操作数和拆分调用各求值一次
+如果拆分结果是 Continue(成功值)：
+    value = 成功值
+    继续执行 return Option<int64>::Value(value + 1)
+如果拆分结果是 Break(失败载荷)：
+    返回结果 = Option<int64>::fromResidual(失败载荷)
+    执行当前函数退出路径上已登记的作用域清理
+    返回 返回结果
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+因此输出第一项是 \texttt{5}，第二项是 \texttt{1}：第一次调用的 \texttt{unwrap(\allowbreak{})\allowbreak{}} 取出 \texttt{5}，第二次调用返回 \texttt{None}，\texttt{is\allowbreak{}None(\allowbreak{})\allowbreak{}} 得到真。本书的布尔输出用 \texttt{1} 表示真、\texttt{0} 表示假。第二次调用没有执行 \texttt{unwrap(\allowbreak{})\allowbreak{}}，不会因为没有值而触发 panic。
+
+类型检查发生在编译期。 编译器检查来源类型的传播协议、\texttt{branch(\allowbreak{})\allowbreak{}} 的结果类型，以及当前函数返回类型是否具有匹配的 \texttt{From\allowbreak{}Residual<\allowbreak{}F,\allowbreak{} R>\allowbreak{}}。例如把 \texttt{add\allowbreak{}One} 的返回类型改成 \texttt{int64}，即使某次运行传入的肯定是 \texttt{Step:\allowbreak{}:\allowbreak{}Value(\allowbreak{}4)\allowbreak{}}，也不能省去失败路径的检查：\texttt{int64} 没有对应的接收协议，编译就会失败。自定义返回类型也可以实现这个协议，但 \texttt{F} 必须是该返回类型自身，\texttt{R} 必须匹配来源的失败载荷。
+
+清理和所有权仍按普通函数退出规则处理。 \texttt{?} 不是异常，不会跳到调用者中的某个捕获块。失败时先得到完整的返回结果，再执行当前函数退出路径上已登记的 \texttt{defer}、\texttt{Drop}、\texttt{Closeable} 等清理；成功时继续当前作用域，不会提前执行整条退出路径的清理。编译器保存必要的中间值，避免重复求值，也不会把即将失效的局部存储引用作为可安全逃逸的结果。
+
+本例的具名变量 \texttt{step} 使用只读的 \texttt{Try.\allowbreak{}branch} 协议，\texttt{?} 不等于无条件移动操作数。需要消费所有权的传播另有 \texttt{Try\allowbreak{}Move<\allowbreak{}T,\allowbreak{} R>\allowbreak{}.\allowbreak{}into\allowbreak{}Branch(\allowbreak{})\allowbreak{}} 协议；显式移动传播必须由来源类型提供对应实现，不能仅靠加一个 \texttt{?} 获得移动能力。
+
+不同 \texttt{Result} 错误类型不会只因为都表示失败就自动互转，可以先用 \texttt{map\allowbreak{}Err} 显式转换；\texttt{Option} 转 \texttt{Result} 可以用 \texttt{ok\allowbreak{}Or} 或 \texttt{ok\allowbreak{}Or\allowbreak{}Else} 补上错误信息。选择接收协议和转换方式时，应以实际失败载荷类型为准。
 
 \section{小结}
 
