@@ -140,4 +140,6 @@ Magel 让业务逻辑成为一份可以独立交付的资产：写一次，从�
 
 - [匹配、插值、泛型与作用域清理](27-match-interpolation-scope.md)
 
+- [返回表达式、具名闭包与字段派生](28-declaration-sugars.md)
+
 - 带值退出的默认移动：[语义与清理顺序](04-language-reference.md#带值退出的移动与清理)、[资源身份和析构回归样例](../example/samples/break_move.mgl)。

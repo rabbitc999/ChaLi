@@ -83,3 +83,6 @@ CI 通过 `--check` 检查生成数据同步，通过 [tests/magel_man.py](../..
 单章终端输出将图片转换为 `[图片]\(images/文件名)` 链接；JSON 与导出的 Markdown 保留原始图片语法。
 
 单独执行 `magel man` 与 `magel man help` 均显示用法；`magel man api` 显示 API 分类，`magel man api XXX` 查询内嵌 `doc/library/` 的 API。
+
+
+`magel man macro` 查看宏定义、调用、有序多括号、独立变长参数与跨行大括号帮助；内容内嵌在编译器中，也支持 `--json`。

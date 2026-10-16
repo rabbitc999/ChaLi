@@ -609,6 +609,7 @@ struct MBlockContext
     std::shared_ptr<MType> breakType;
     bool valueOnly = false;            ///< 非循环值表达式不截获无值循环退出。
     std::size_t valueScopeDepth = 0u;  ///< 值出口的名字作用域深度。
+    bool returnExpression = false;     ///< 返回表达式的内部拥有者必须在清理前消费。
 };
 Memory::Vector<MBlockContext> g_blockStack;
 /**

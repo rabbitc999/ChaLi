@@ -278,7 +278,7 @@ VS Code 在 `(` 和 `,` 后显示参数提示；工作区符号搜索可查询�
 
 ```sh
 sh gen.sh      # 需要 ParseEngine 文法生成器
-make           # 构建 magel 与 libparser.a
+make           # 构建 magel 与 build/magel-frontend/libparser.a
 sh check.sh    # 运行正常与错误样例
 ```
 
@@ -386,3 +386,6 @@ cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /DWIN32_LEAN_AND_MEAN /DNOMINMAX prog
 这里的 `program.aot.cpp` 是 `magel aot ... --keep-intermediate` 保留的源码，先在可用的 GCC AOT 流程中生成。当前 AOT 驱动仍使用 GCC 的 `-dumpmachine`、`-std=c++17`、`-pthread`、`-c` 和 `-o`，因此 `--cxx cl.exe` 还不能直接使用。直接集成需要分别适配目标探测、优化参数、编译／链接命令、模块缓存、SQLite C 编译及 DLL／目标文件输出。本次验证只覆盖普通可执行文件与基准所用运行时，不代表所有模块、胶水或库输出均已通过 MSVC 门禁；它也不是 MSVC 与 GCC 的性能对比。
 
 AOT 的 checked 源码定位保留线程调用栈和同步保护；同一源文件连续执行时只更新行号，避免每条四元式重复构造、复制文件名和函数名。错误路径仍读取当前帧的函数、文件与行号。
+
+
+解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/magel-frontend/`，不会散落到仓库根目录。

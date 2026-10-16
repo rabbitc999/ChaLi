@@ -2,10 +2,10 @@
 source/magel-generator/**
 source/magel-emit/**
 # 自动生成资产从生成源维护，不直接格式化。
-magel_parser.cpp
-magel_parser.hpp
-magel_parser_user.h
-magel_main.cpp
+source/magel_parser.cpp
+source/magel_parser.hpp
+source/magel_parser_user.h
+source/magel_main.cpp
 source/magel_stdlib_embedded.cpp
 source/magel_i18n.hpp
 source/mcu_vm/magel_i18n.hpp

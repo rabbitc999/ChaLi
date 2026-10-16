@@ -75,7 +75,7 @@ AOT 程序执行本地机器码，并使用相应的运行时服务。
 
 ```sh
 sh gen.sh          # 首次构建先生成解析器，需要 ParseEngine 文法生成器
-make               # 构建 magel 与 libparser.a
+make               # 构建 magel 与 build/magel-frontend/libparser.a
 ./magel example/samples/hello.mgl
 sh check.sh        # 运行正常与错误样例
 ```
@@ -237,3 +237,6 @@ magel/
 ## 许可证
 
 MIT，见 `LICENSE`。
+
+
+解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/magel-frontend/`，不会散落到仓库根目录。

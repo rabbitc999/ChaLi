@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 
 ROOT=Path(__file__).resolve().parents[1]
-COMPILER=ROOT/('magel.exe' if os.name=='nt' else 'magel')
+COMPILER=Path(os.environ.get('MAGEL_BIN',str(ROOT/('magel.exe' if os.name=='nt' else 'magel'))))
 
 
 def main():
@@ -53,6 +53,10 @@ def main():
         assert query('book','不存在',code=1)['diagnostics'][0]['code']=='MGL1701'
         keyword=query('keyword','break')['keyword']
         assert 'break #level' in keyword['documentation'] and 'BREAK' in keyword['syntax'],keyword
+        macro = json.loads(run('macro', '--json').stdout)['keyword']
+        assert macro['name'] == 'macro' and '..Types' in macro['syntax']
+        assert all(text in macro['documentation'] for text in ('跨任意多行', '宏Token分组不匹配', '$end_macro', '>>'))
+        assert '多括号' in run('macro').stdout
         assert 'struct' in query('keyword')['keywords']
         assert query('keyword','not_a_keyword',code=1)['diagnostics'][0]['code']=='MGL1701'
         skill=(ROOT/'skills/magel-programming/SKILL.md').read_text(encoding='utf-8')

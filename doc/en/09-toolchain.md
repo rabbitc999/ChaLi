@@ -260,7 +260,7 @@ After cloning, generate the parser using ParseEngine and then build:
 
 ```sh
 sh gen.sh          # needs the ParseEngine grammar generator
-make               # build magel and libparser.a
+make               # build magel and build/magel-frontend/libparser.a
 sh check.sh        # run the normal and error samples
 ```
 
@@ -347,3 +347,6 @@ cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /DWIN32_LEAN_AND_MEAN /DNOMINMAX prog
 `program.aot.cpp` is retained by `magel aot ... --keep-intermediate`, initially generated through the available GCC AOT workflow. The current driver still uses GCC `-dumpmachine`, `-std=c++17`, `-pthread`, `-c`, and `-o`, so `--cxx cl.exe` does not work directly. Direct integration needs target detection, optimization flags, compilation/linking, module caching, SQLite C compilation, and DLL/object output adapters. This probe covers a regular executable and the runtime used by these kernels; it is neither full MSVC qualification for all modules, glue and library outputs nor an MSVC/GCC performance comparison.
 
 Checked AOT source tracking retains the per-thread call stack and synchronization. Consecutive instructions in the same source file update only the line number, avoiding repeated owning filename and function-name copies per quadruple. Error paths still report the current function, file and line.
+
+
+Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/magel-frontend/`, keeping the repository root clear.

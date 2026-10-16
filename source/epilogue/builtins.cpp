@@ -399,7 +399,7 @@ std::shared_ptr<MType> LoopValueType(int id)
     Memory::Vector<std::shared_ptr<MType>> values;
     bool hasPlain = false;
     const auto node = N(id);
-    const auto expected = !node.s.empty() && node.type >= 0 ? T(node.type) : nullptr;
+    const auto expected = (!node.s.empty() || node.returnExpression) && node.type >= 0 ? T(node.type) : nullptr;
     if (node.s == "block")
     {
         if (StatementReturnFlow(node.kids[0], true) & 1)
@@ -440,7 +440,7 @@ std::shared_ptr<MType> LoopValueType(int id)
     for (std::size_t index = expected ? 0u : 1u; index < values.size(); ++index)
     {
         const std::shared_ptr<MType> other = values[index];
-        if (expected ? !Acceptable(type, other, true) : TypeKey(type) != TypeKey(other))
+        if (expected && !node.returnExpression ? !Acceptable(type, other, true) : TypeKey(type) != TypeKey(other))
         {
             Fail((!node.s.empty() ? node.s + " 表达式的分支结果类型必须一致：" : Memory::String("同一个 loop 的 break 值类型必须一致：")) + Describe(type) + " 与 " + Describe(other));
             return T(M_TypeVoid());
@@ -1066,7 +1066,7 @@ std::shared_ptr<MType> RawExprType(int id)
                     return T(M_TypeInt());
                 }
                 const auto source = RawExprType(args[0]);
-                if (!source || source->kind != MType::Ptr || source->readOnly || IsReadOnlyAccess(args[0]))
+                if (!source || source->kind != MType::Ptr || (!node.implicitExitMove && (source->readOnly || IsReadOnlyAccess(args[0]))))
                 {
                     Fail("std::lang::move 只接受可写引用（T mut&），不能接收值或 const &");
                     return T(M_TypeInt());

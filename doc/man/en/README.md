@@ -83,3 +83,6 @@ Export updates embedded book files without deleting unrelated files; output path
 Single-chapter terminal output renders images as `[图片]\(images/name)` links. JSON and exported Markdown retain the original image syntax.
 
 `magel man` and `magel man help` show usage. `magel man api` lists API categories; `magel man api XXX` queries the embedded `doc/library/` reference.
+
+
+`magel man macro` displays embedded help for definitions, invocations, ordered bracket groups, independent variadic parameters and multiline braces. It also supports `--json`.

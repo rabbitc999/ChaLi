@@ -94,7 +94,7 @@ From the repository root:
 
 ```sh
 sh gen.sh          # generate the parser first; requires ParseEngine
-make               # build magel and libparser.a
+make               # build magel and build/magel-frontend/libparser.a
 ./magel example/samples/hello.mgl
 sh check.sh        # run the passing and the failing samples
 ```
@@ -284,3 +284,6 @@ section above.
 ## License
 
 MIT, see `LICENSE`.
+
+
+Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/magel-frontend/`, keeping the repository root clear.

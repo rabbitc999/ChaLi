@@ -30,6 +30,8 @@ top := annotation_decl { $$ = $1; }
      | top_decl { $$ = $1; } ;
 
 top_decl := struct_decl type_decl_end { $$ = $1; }
+     | derive_directive struct_decl type_decl_end { $$ = M_Derived($1, $2); }
+     | derive_directive enum_decl type_decl_end { $$ = M_Derived($1, $2); }
      | MODULE module_name SEMI { $$ = M_Module($2); }
      | IMPORT module_name SEMI { $$ = M_Import($2); }
      | enum_decl type_decl_end { $$ = $1; }
@@ -48,6 +50,9 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
 /* 带花括号的类型声明在右花括号处结束；顶层兼容其后的可选分号。 */
 type_decl_end := %empty { $$ = -1; }
                | SEMI { $$ = -1; } ;
+
+/* 编译器指令仅修饰类型声明，白名单和字段接口约束由语义层检查。 */
+derive_directive := DERIVE LPAREN iface_list RPAREN { $$ = $3; } ;
 
 /* ---- 编译期注解：声明只在顶层，使用只包裹声明，不进入语句/表达式文法。 ---- */
 annotation_decl := ANNOTATION module_name
@@ -459,7 +464,7 @@ stmt := block                  { $$ = $1; }
       | foreach_stmt           { $$ = $1; }
       | match_stmt %prec SEMI  { $$ = $1; }
       | match_stmt SEMI        { $$ = $1; }
-      | RETURN expr SEMI       { $$ = M_Return($2); }
+      | RETURN expr SEMI       { $$ = M_ReturnValue($2); }
       | RETURN tuple_items SEMI { $$ = M_Return(M_Tuple($2)); }
       | RETURN SEMI            { $$ = M_Return(-1); }
       | DELETE unary SEMI      { $$ = M_Delete($2); }
@@ -511,6 +516,21 @@ range_pattern := LBRACKET expr COMMA expr RPAREN { $$ = M_Range($2, $4, 1, 0); }
  * 所以递归里各层互不影响。 */
 decl_stmt := AUTO LPAREN destructure_items RPAREN ASSIGN expr SEMI
                { $$ = M_Destructure($3, $6); }
+           /* 具名闭包只属于声明语句；返回类型是参数和函数体的类型锚点。 */
+           | type name_token LPAREN param_list RPAREN block
+               { $$ = M_NamedFunction($1, $2, $4, $6, 0); }
+           | type name_token LPAREN param_list RPAREN MUT block
+               { $$ = M_NamedFunction($1, $2, $4, $7, 1); }
+           | type name_token LPAREN param_list RPAREN COPY block
+               { $$ = M_NamedFunction($1, $2, $4, $7, 2); }
+           | type name_token LPAREN param_list RPAREN MOVE block
+               { $$ = M_NamedFunction($1, $2, $4, $7, 3); }
+           | type name_token LPAREN param_list RPAREN SEMI
+               { $$ = M_NamedFunction($1, $2, $4, -1, 0); }
+           | ptr_type name_token LPAREN param_list RPAREN block
+               { $$ = M_NamedFunction($1, $2, $4, $6, 0); }
+           | ptr_type name_token LPAREN param_list RPAREN SEMI
+               { $$ = M_NamedFunction($1, $2, $4, -1, 0); }
            /* 与位与表达式共享前缀，见到初始化的 = 后才确定具名引用声明。 */
            | band_expr AMP name_token ASSIGN expr SEMI
                { $$ = M_ReadOnlyReferenceDecl($1, $3, $5); }

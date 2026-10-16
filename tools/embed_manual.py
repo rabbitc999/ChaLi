@@ -24,6 +24,7 @@ def generate():
         '10.': 'if elif else while do for loop continue in',
         '12.': 'module import export inline', '13.': 'mut',
         '15.': '@annotation', '16.': 'abi export', 'fn 捕获': 'fn copy move',
+        '返回控制表达式': 'return', '具名函数声明': 'fn mut copy move', '#derive': '#derive',
         'foreach 整数': 'foreach', '带值退出': 'break',
         '指定层数退出': 'break #level', '块表达式': 'break',
     }
@@ -45,6 +46,10 @@ def generate():
         syntax = '\n\n'.join(part.strip() for part in productions if re.search(r'\b' + re.escape(token) + r'\b', part))
         keywords[word] = dict(name=word, token=token, syntax=syntax,
                               documentation='\n\n'.join(selected), source=source)
+    macro_source = 'doc/24-literals-operators-macros.md'
+    macro_sections = re.split(r'(?=^## )', (ROOT / macro_source).read_text(encoding='utf-8'), flags=re.M)
+    keywords['macro'] = dict(name='macro', token='$macro', syntax='$macro NAME<..Types>[..Attrs](..Args){..Body}\n...\n$end_macro',
+                             documentation='\n\n'.join(section for section in macro_sections if section.startswith(('## 宏 DSL', '## 有序多括号'))), source=macro_source)
     assert 'break' in keywords and 'struct' in keywords and len(book) >= 28
     images = [dict(path='images/' + path.name, hex=path.read_bytes().hex())
               for path in sorted((ROOT / 'doc/book/images').glob('*')) if path.is_file()]

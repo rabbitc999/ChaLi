@@ -19,7 +19,7 @@
 3. **解析流程放进解析器生成器**：块栈、逐行折叠、驱动 `Parser::Engine::runText`
    的流程用 `%code` / `%epilogue include` 内嵌进生成产物，不再手写解析驱动。
    `magel_parser.cpp` / `magel_parser.hpp` / `magel_parser_user.h` / `magel_main.cpp`
-   都是 `sh gen.sh` 的生成物，不入库；`Makefile` 是手写的，`gen.sh` 不会覆盖它。
+   都是 `sh gen.sh` 生成到 `source/` 的产物，不入库；对象文件和静态库写入 `build/magel-frontend/`；`Makefile` 是手写的，`gen.sh` 不会覆盖它。
 4. **引用到的库各自拷一份进本项目**：`library/json/`、`library/toml/`、`library/preprocess/`、`library/simple_ast/`、
    `library/stackvm/`、`library/bignum/`、`library/template/` 是 ParseEngine 仓库 `library/` 同名目录的副本；
    控制台头是 `library/console/utf8.hpp`，由 [`tools/sync_tool_console.py`](tools/sync_tool_console.py)
@@ -85,6 +85,8 @@
 匿名函数语法只使用 `fn`；`lambda` 兼容语法已移除，不得在 Magel 源码、示例或补全中恢复。
 
 宏继续在 Lexer 前做纯文本替换；`$macro` 仅使用小写。多括号声明按定义顺序绑定，可重复使用 `< >`、`[ ]`、`( )`、`{ }`，每组独立捕获 `..rest`，大括号实参允许跨多行。分组不调用 Parser 或检查参数类型，连续 `>>` 按字符处理；维护捕获文本及调用后代码的文件、行列映射，分组失败统一报告“宏Token分组不匹配”。
+
+返回控制表达式通过 AST 隐藏结果绑定接管结果，分支类型必须精确一致，内部禁止嵌套 return、层级 break 或隐式提前返回；内部拥有者在清理前消费，外部来源复制，不能绕过借用来源寿命检查。具名局部函数只在声明语句层识别，返回类型为锚点，默认 const& 捕获，复用 fn 的捕获和所有权规则。`#derive` 只生成 Equal、Hash、Clone，禁止生成 Drop/Closeable；语义层提供字段元数据，文本宏引擎不解析类型或调用 Parser，生成代码由正常解析器与接口检查处理。
 
 带值退出 `break value;` 穿透无值循环，交给最近接收结果的块、if、match 或 loop 表达式；
 `break a, b;` 按元组产值。嵌套赋值块各自接收结果，无值 `break;` 仍退出最近循环，

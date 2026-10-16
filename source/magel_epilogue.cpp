@@ -11,6 +11,7 @@
 #include "magel_glue.hpp"
 #include "magel_generic.hpp"
 #include "magel_lambda.hpp"
+#include "magel_macro.hpp"
 #include "dap/dap_server.hpp"
 
 #include <cstdio>
@@ -1722,6 +1723,7 @@ int M_Return(int value)
     if (value >= 0) g_nodes[static_cast<std::size_t>(id)].kids.push_back(value);
     return id;
 }
+#include "epilogue/return_expression_ast.cpp"
 /**
  * @brief 构造并登记表达式语句。
  * @param value 值表达式或字面量的语义值。
@@ -2095,6 +2097,7 @@ int M_LambdaListed(int resultType, int params, int body, int groups, int default
     if (g_nodes[id].kind == MNode::Lambda) magel_lambda::captureSpecifications[g_nodes[id].s] = std::move(specifications);
     return id;
 }
+#include "epilogue/named_function_ast.cpp"
 /**
  * @brief 为函数声明添加内联标记。
  * @param declarationId 待标记的声明节点编号。
@@ -2301,6 +2304,7 @@ int M_EnumWithMethods(int nameId, int variants, int members, int interfacesId)
     g_nodes[static_cast<std::size_t>(id)].i = interfacesId;
     return id;
 }
+#include "epilogue/derive_ast.cpp"
 /**
  * @brief 构造并登记枚举变体声明。
  * @param nameId 名称池中的名称编号。
@@ -2809,6 +2813,7 @@ namespace
 #include "epilogue/reflection_metadata.cpp"
 #include "epilogue/reflection_queries.cpp"
 #include "epilogue/reflection_calls.cpp"
+#include "epilogue/derive.cpp"
 }  // namespace
 
 /**
@@ -2840,6 +2845,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     }
     /* 1. 降级成 simple_ast 的程序。 */
     simple_ast::Program program;
+    if (!ExpandDerivedDeclarations()) return 1;
     if (!PrepareGenericSignatures()) return 1;
     auto parsedNodes = g_nodes;
     auto parsedTypes = g_types;
@@ -2862,6 +2868,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 RestoreFirstDiagnostic();
                 return 1;
             }
+            if (!ValidateDerivedFields()) return 1;
             const bool lowered = LowerProgram(program);
             // 独立借用检查阶段：语义仅记录事实，全部单态化完成后才执行规则。
             for (const auto &diagnostic : magel_borrow_checker::check(g_borrowFacts))
@@ -2948,6 +2955,8 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             }
             parsedTop.insert(parsedTop.end(), g_top.begin(), g_top.end());
             g_top = parsedTop;
+            if (!ExpandDerivedDeclarations()) return 1;
+            parsedTop = g_top;
             parsedNodes = g_nodes;
             parsedTypes = g_types;
             parsedNames = g_names;

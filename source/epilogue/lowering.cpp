@@ -2757,6 +2757,12 @@ simple_ast::NodePtr LowerLocalDecl(int id)
         Memory::Vector<simple_ast::NodePtr> initializerFresh;
         MExpressionFreshScope initializerSink(&initializerFresh);
         const auto initializerStart = out.size();
+        if (group.returnExpression && g_returnType)
+        {
+            const auto typeId = M_AddType(g_returnType);
+            g_nodes[declId].type = typeId;
+            if (!N(declId).kids.empty()) g_nodes[N(declId).kids[0]].type = typeId;
+        }
         const MNode &decl = N(declId);
         if (!decl.kids.empty() && decl.type >= 0) InferExpression(decl.kids[0], T(decl.type));
         if (decl.type < 0 && decl.kids[0] < 0)
@@ -3941,7 +3947,7 @@ simple_ast::NodePtr LowerLoop(int id, Memory::String *valueName)
     if (g_borrowFlowCapture && !slot.empty()) g_borrowFlowCapture->valueLoops.insert(id);
 
     g_blockStack.push_back(
-        MBlockContext{ breakLabel, !node.s.empty() ? Memory::String() : loopLabel, g_ownedScopes.size(), slot, type, !node.s.empty(), g_scope.size() - 1u });
+        MBlockContext{ breakLabel, !node.s.empty() ? Memory::String() : loopLabel, g_ownedScopes.size(), slot, type, !node.s.empty(), g_scope.size() - 1u, node.returnExpression });
     const simple_ast::NodePtr body = LowerStmt(node.kids[0]);
     g_blockStack.pop_back();
 

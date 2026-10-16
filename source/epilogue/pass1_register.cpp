@@ -1002,7 +1002,7 @@ bool RegisterTop()
         const MNode &top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::FuncDef && top.kind != MNode::ExternFuncDecl) continue;
-        if (!CheckUserName(top.s)) return false;
+        if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;
         // 标准库小驼峰内建和其他 prelude 函数一样，允许用户函数遮蔽。
         MFunctionDecl declaration;
         declaration.source = top.s;

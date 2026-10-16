@@ -464,14 +464,15 @@ bool IsRegistryHostFunctionLabel(const Memory::String &label)
 /**
  * @brief std::lang::move 转移拥有资源，清空源存储但不执行源值的析构。
  * @param args 唯一可写引用实参；只求值一次。
+ * @param implicitExit 是否为编译器在内部变量生命周期结束处生成的消费。
  * @return 独立的拥有型值；原绑定禁止读写，须重新声明新绑定。
  */
-simple_ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args)
+simple_ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExit = false)
 {
     using simple_ast::Node;
     if (args.size() != 1u) return Fail("std::lang::move 需要一个 T mut& 参数"), Bad();
     const auto reference = RawExprType(args[0]);
-    if (!reference || reference->kind != MType::Ptr || reference->readOnly || IsReadOnlyAccess(args[0]))
+    if (!reference || reference->kind != MType::Ptr || (!implicitExit && (reference->readOnly || IsReadOnlyAccess(args[0]))))
         return Fail("std::lang::move 只接受可写引用（T mut&），不能接收值或 const &"), Bad();
     const auto type = reference->elem;
     if (!type || type->kind == MType::Void || type->kind == MType::Array || IsInterfaceType(type) || type->kind == MType::Host)
@@ -527,7 +528,7 @@ simple_ast::NodePtr LowerCall(int id)
     const Memory::String standardName = StandardCallName(callee);
     if (!standardName.empty()) callee.s = standardName;
     const Memory::Vector<int> args = N(node.kids[1]).kids;
-    if (standardName == "move") return LowerLanguageMove(args);
+    if (standardName == "move") return LowerLanguageMove(args, N(id).implicitExitMove);
     // 反射只读取已校验接口胖引用的实际身份，不开放任意对象地址装箱。
     if (g_reflectionEnabled && CallSymbol(callee).find("std::reflect::__reflect_actualType__") == 0)
     {
@@ -2689,31 +2690,44 @@ simple_ast::NodePtr DiscardFreshValue(int valueId)
  * @brief 为退出时结束生命周期的可写局部变量选择移动，外部变量及清理所需来源保留复制语义。
  * @param value 原始退出值节点编号。
  * @param scopeDepth 结果接收者外侧的名字作用域深度。
+ * @param returnExpression 是否要求返回表达式内部拥有者在清理前移动。
  * @retval 适配后的退出值节点编号，元组按元素递归处理。
  */
-int PrepareBreakValue(int value, std::size_t scopeDepth)
+int PrepareBreakValue(int value, std::size_t scopeDepth, bool returnExpression = false)
 {
     if (value < 0) return value;
     const auto expression = N(value);
     if (expression.kind == MNode::Tuple)
     {
         Memory::Vector<int> items;
-        for (const int child : expression.kids) items.push_back(PrepareBreakValue(child, scopeDepth));
+        for (const int child : expression.kids) items.push_back(PrepareBreakValue(child, scopeDepth, returnExpression));
         g_nodes[value].kids = std::move(items);
         return value;
     }
     if (expression.kind != MNode::Var) return value;
     const auto variable = FindIn(expression.module, expression.s);
-    if (!variable || variable->isConst || !variable->type || variable->type->kind == MType::Ptr || variable->type->kind == MType::Array || variable->type->kind == MType::Host)
+    if (!variable || (variable->isConst && !returnExpression) || !variable->type || variable->type->kind == MType::Ptr || variable->type->kind == MType::Array || variable->type->kind == MType::Host)
         return value;
     if (variable->elementReference && std::none_of(g_referenceStorage.begin(), g_referenceStorage.end(), [&](const auto &entry) { return entry.second == variable->emitted; }))
         return value;
     // 清理回调可能通过别名访问来源；保留独立结果，随后按原顺序执行回调。
     for (const auto &scope : g_ownedScopes)
-        if (!scope.finalizers.empty()) return value;
+        if (!returnExpression && !scope.finalizers.empty()) return value;
     for (std::size_t index = g_scope.size(); index > scopeDepth + 1u; --index)
         for (const auto &entry : g_scope[index - 1u])
-            if (&entry.second == variable) return M_BreakValue(value);
+            if (&entry.second == variable)
+            {
+                if (returnExpression)
+                    for (const auto &scope : g_ownedScopes)
+                        if (scope.deferredReads.count(variable->emitted) || scope.deferredBorrowDepth >= index - 1u)
+                        {
+                            Fail("[MGL1205] return 表达式的延迟清理仍借用即将移动的来源：" + expression.s);
+                            return value;
+                        }
+                const int moved = M_BreakValue(value);
+                g_nodes[moved].implicitExitMove = returnExpression;
+                return moved;
+            }
     return value;
 }
 
@@ -2835,6 +2849,21 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         }
         const auto callbackType = ExprType(node.kids[0]);
         const auto callback = TakeExpressionTempValue(LowerExpr(node.kids[0]), callbackType);
+        const auto captures = g_lambdaCaptures.find(ModuleSymbol(N(node.kids[0]).module, N(node.kids[0]).s));
+        if (captures != g_lambdaCaptures.end())
+            for (const auto &capture : captures->second)
+            {
+                if (capture.captureMode >= 2) continue;
+                const int source = M_New(MNode::Var, capture.source);
+                g_nodes[source].module = node.module;
+                const auto binding = FindIn(node.module, capture.source);
+                if (!binding) continue;
+                g_ownedScopes.back().deferredReads.insert(binding->emitted);
+                const auto place = EffectPlace(source);
+                if (!place.root.empty()) g_ownedScopes.back().deferredReads.insert(place.root);
+                if (HasBorrowedValue(binding->type))
+                    g_ownedScopes.back().deferredBorrowDepth = std::max(g_ownedScopes.back().deferredBorrowDepth, binding->borrowDepth);
+            }
         if (!receiverName.empty()) g_scope.back().erase(receiverName);
         const auto frame = AllocateName("__magel_defer_frame");
         g_ownedScopes.back().hasDeferred = true;
@@ -2904,7 +2933,7 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         int valueId = node.kids.empty() ? -1 : node.kids[0];
         if (valueId >= 0 && node.type2 != 1)
         {
-            valueId = PrepareBreakValue(valueId, breakContext.valueScopeDepth);
+            valueId = PrepareBreakValue(valueId, breakContext.valueScopeDepth, breakContext.returnExpression);
             g_nodes[id].kids[0] = valueId;
         }
         Memory::Vector<simple_ast::NodePtr> out;

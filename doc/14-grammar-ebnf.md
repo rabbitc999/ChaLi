@@ -105,7 +105,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED MAGEL EBNF -->
 
-以下 123 条产生式由 `source/magel.gram` 导出，语义动作及解析优先级指令省略。
+以下 124 条产生式由 `source/magel.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -163,6 +163,7 @@ Box<int64 fn(int64)> box;
 | `DO` | `do` |
 | `BREAK` | `break` |
 | `BREAK_LEVEL` | `#level` |
+| `DERIVE` | `#derive` |
 | `ALL` | `ALL` |
 | `CONTINUE` | `continue` |
 | `DEFER` | `defer` |
@@ -245,6 +246,8 @@ top = annotation_decl
     | top_decl ;
 
 top_decl = struct_decl, type_decl_end
+    | derive_directive, struct_decl, type_decl_end
+    | derive_directive, enum_decl, type_decl_end
     | "module", module_name, ";"
     | "import", module_name, ";"
     | enum_decl, type_decl_end
@@ -261,6 +264,8 @@ top_decl = struct_decl, type_decl_end
 
 type_decl_end = ""
     | ";" ;
+
+derive_directive = "#derive", "(", iface_list, ")" ;
 
 annotation_decl = "@annotation", module_name
     | "@annotation", module_name, "(", annotation_params, ")" ;
@@ -559,6 +564,13 @@ range_pattern = "[", expr, ",", expr, ")"
     | "[", expr, ",", expr, "]" ;
 
 decl_stmt = "auto", "(", destructure_items, ")", "=", expr, ";"
+    | type, name_token, "(", param_list, ")", block
+    | type, name_token, "(", param_list, ")", "mut", block
+    | type, name_token, "(", param_list, ")", "copy", block
+    | type, name_token, "(", param_list, ")", "move", block
+    | type, name_token, "(", param_list, ")", ";"
+    | ptr_type, name_token, "(", param_list, ")", block
+    | ptr_type, name_token, "(", param_list, ")", ";"
     | band_expr, "&", name_token, "=", expr, ";"
     | band_expr, "&", name_token, "=", expr, ",", declarator_list, ";"
     | type, declarator_list, ";"

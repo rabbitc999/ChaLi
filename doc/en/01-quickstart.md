@@ -19,7 +19,7 @@ Unpack it and put `bin/` on your PATH.
 
 ```sh
 sh gen.sh      # generate the front end from magel.gram with IELR (needs the ParseEngine generator)
-make           # build magel and libparser.a
+make           # build magel and build/magel-frontend/libparser.a
 ```
 
 `gen.sh` needs a [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) grammar generator.
@@ -139,3 +139,6 @@ More subcommands, `magel.toml` configuration and compile options: [Toolchain](09
 
 > Reading the English edition? Snippets are identical to the Chinese edition and are executed before
 > publication. See the [Chinese edition](../01-quickstart.md).
+
+
+Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/magel-frontend/`, keeping the repository root clear.

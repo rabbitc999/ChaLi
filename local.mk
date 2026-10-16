@@ -14,8 +14,8 @@ endif
 # 注意：`library/{simple_ast,stackvm,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
 # 改了这边不会自动同步到 ParseEngine 那份（反之亦然）——动其中一个时想清楚要不要一起改。
 #
-# 生成目录就是 magel 仓库根：产物（magel_parser.* / magel_main.cpp / Makefile / magel）
-# 落在根目录，真源在 source/ 与 library/ 下，重跑 `sh gen.sh` 只会覆盖生成物，不会动 local.mk。
+# 生成源码与报告位于 source/，对象文件与静态库位于 build/magel-frontend/。
+# 根目录只保留工具链入口与手写构建文件，重跑 gen.sh 不覆盖 local.mk。
 
 AST_DIR := library/simple_ast
 VM_DIR  := library/stackvm
@@ -41,26 +41,28 @@ MAGEL_INCLUDES := -I$(MAGEL_SOURCE_DIR) -I$(MAGEL_LIBRARY_DIR) \
 override CXXFLAGS += -DMAGEL_CUSTOM_ALLOCATOR=1 -pthread $(MAGEL_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
 
 # ---- 统一工具链：magel 同时是前端 / 导出器 / 工程生成器 ----
-# `magel_main.o` 只提供 `magel_main_entry`，真正的 main 在 magel_tool.cpp；
+# `$(FRONTEND_BUILD)/magel_main.o` 只提供 `magel_main_entry`，真正的 main 在 magel_tool.cpp；
 # magel-emit / magel-generator 各自去掉自己的 main，改成进程内 `runCli`。
 override CXXFLAGS += -DMAGEL_FRONT_END_NO_MAIN=1
 
-MAGEL_TOOL_OBJS := magel_tool.o source/magel-emit/main.o source/magel-emit/aot.o source/magel-generator/main.o
+MAGEL_TOOL_OBJS := $(FRONTEND_BUILD)/magel_tool.o $(FRONTEND_BUILD)/emit-main.o $(FRONTEND_BUILD)/emit-aot.o $(FRONTEND_BUILD)/generator-main.o
 DEMO_OBJS += $(MAGEL_TOOL_OBJS)
 $(TARGET): $(MAGEL_TOOL_OBJS)
 
-magel_tool.o: source/magel_tool.cpp source/magel_package.hpp tools/abi_import.hpp source/magel-emit/emit_cli.hpp source/magel-generator/generator_cli.hpp \
+$(MAGEL_TOOL_OBJS): | $(FRONTEND_BUILD)
+
+$(FRONTEND_BUILD)/magel_tool.o: source/magel_tool.cpp source/magel_package.hpp tools/abi_import.hpp source/magel-emit/emit_cli.hpp source/magel-generator/generator_cli.hpp \
         source/runtime_allocator.hpp source/allocator/magel_allocator.hpp
 	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
 
-source/magel-emit/main.o: source/magel-emit/main.cpp source/magel-emit/module_build.hpp source/magel-emit/emit_cli.hpp source/magel-emit/aot.hpp source/magel_stdlib_embedded.cpp \
+$(FRONTEND_BUILD)/emit-main.o: source/magel-emit/main.cpp source/magel-emit/module_build.hpp source/magel-emit/emit_cli.hpp source/magel-emit/aot.hpp source/magel_stdlib_embedded.cpp \
         library/template/engine.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
 	$(CXX) $(CXXFLAGS) -DMAGEL_EMIT_NO_MAIN=1 -I. -I$(VM_DIR) -c $< -o $@
 
-source/magel-emit/aot.o: source/magel-emit/aot.cpp source/magel-emit/aot.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/emit-aot.o: source/magel-emit/aot.cpp source/magel-emit/aot.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
 	$(CXX) $(CXXFLAGS) -I. -I$(VM_DIR) -c $< -o $@
 
-source/magel-generator/main.o: source/magel-generator/main.cpp source/magel-generator/generator_cli.hpp \
+$(FRONTEND_BUILD)/generator-main.o: source/magel-generator/main.cpp source/magel-generator/generator_cli.hpp \
         library/template/engine.hpp source/runtime_allocator.hpp
 	$(CXX) $(CXXFLAGS) -DMAGEL_GENERATOR_NO_MAIN=1 -I. -c $< -o $@
 
@@ -72,10 +74,10 @@ endif
 
 # `%main` / `%code` / `%epilogue` 的 include 会被生成器展开进 .cpp；显式列出原文件，
 # 避免只改泛型 / 宏展开头或降级实现时 make 误判为无需重编。
-magel_tool.o magel_main.o: source/magel_project.hpp source/magel_cli.hpp
+$(FRONTEND_BUILD)/magel_tool.o $(FRONTEND_BUILD)/magel_main.o: source/magel_project.hpp source/magel_cli.hpp
 
-magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_macro_controls.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
-magel_parser.o: source/magel_types.h source/magel_epilogue.cpp source/magel_generic.hpp $(wildcard source/epilogue/*.cpp) library/sqlite/sqlite3.h source/magel_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_macro_controls.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/magel_parser.o: source/magel_types.h source/magel_epilogue.cpp source/magel_generic.hpp $(wildcard source/epilogue/*.cpp) library/sqlite/sqlite3.h source/magel_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
 
 # 外部静态库更新后必须重链；只把它们写进 LDLIBS 不会让 make 追踪时间戳。
 $(TARGET): $(AST_LIB) $(VM_LIB) $(PP_LIB)
@@ -133,7 +135,7 @@ $(AST_LIB): build/magel-runtime/simple_ast.o
 	$(AR) $(ARFLAGS) $@ $^
 $(PP_LIB): build/magel-runtime/preprocess.o
 	$(AR) $(ARFLAGS) $@ $^
-magel_main.o magel_parser.o $(VM_BUILD)/stackvm.o $(VM_BUILD)/stackvm_glue.o $(VM_BUILD)/bigint.o $(VM_BUILD)/bigfloat.o: source/runtime_allocator.hpp source/allocator/magel_allocator.hpp source/allocator/magel_pool.c source/allocator/magel_pool.h
+$(FRONTEND_BUILD)/magel_main.o $(FRONTEND_BUILD)/magel_parser.o $(VM_BUILD)/stackvm.o $(VM_BUILD)/stackvm_glue.o $(VM_BUILD)/bigint.o $(VM_BUILD)/bigfloat.o: source/runtime_allocator.hpp source/allocator/magel_allocator.hpp source/allocator/magel_pool.c source/allocator/magel_pool.h
 
 .PHONY: config-force
 build/magel-runtime/buildConfig.json: config-force
@@ -141,7 +143,7 @@ build/magel-runtime/buildConfig.json: config-force
 $(LIB_OBJS) $(DEMO_OBJS) $(VM_BUILD)/stackvm.o $(VM_BUILD)/stackvm_glue.o $(VM_BUILD)/bigint.o $(VM_BUILD)/bigfloat.o build/magel-runtime/simple_ast.o build/magel-runtime/preprocess.o: build/magel-runtime/buildConfig.json
 
 # 结构化数据解析器直接编入胶水翻译单元。
-magel_main.o: $(wildcard library/json/*.hpp library/json/*.cpp library/toml/*.hpp library/toml/*.cpp)
+$(FRONTEND_BUILD)/magel_main.o: $(wildcard library/json/*.hpp library/json/*.cpp library/toml/*.hpp library/toml/*.cpp)
 
 # ---- Magel 宏/块 LSP（source/lsp）：编进编译器本体，不再另发可执行文件 --------------
 # `magel lsp --macros` 在**本进程内**跑它（见 magel_tool.cpp 的分派）；共用件
@@ -164,13 +166,13 @@ $(TARGET): $(MAGEL_LSP_OBJS)
 $(LIB_OBJS) $(DEMO_OBJS) $(VM_BUILD)/stackvm.o $(VM_BUILD)/stackvm_glue.o: source/magel_i18n.hpp library/console/utf8.hpp
 
 # 单态化符号由前端与宿主胶水共享；更新编码时必须重编相关目标。
-magel_main.o magel_parser.o build/magel-embedded-lsp/mc.o build/magel-embedded-lsp/server.o: source/magel_generic_name.hpp
+$(FRONTEND_BUILD)/magel_main.o $(FRONTEND_BUILD)/magel_parser.o build/magel-embedded-lsp/mc.o build/magel-embedded-lsp/server.o: source/magel_generic_name.hpp
 $(EMBEDDED_LSP_BUILD)/mc.o $(EMBEDDED_LSP_BUILD)/server.o: source/magel_generic.hpp
-magel_main.o magel_parser.o $(EMBEDDED_LSP_BUILD)/mc.o $(EMBEDDED_LSP_BUILD)/server.o: source/magel_lambda.hpp source/magel_report.hpp
+$(FRONTEND_BUILD)/magel_main.o $(FRONTEND_BUILD)/magel_parser.o $(EMBEDDED_LSP_BUILD)/mc.o $(EMBEDDED_LSP_BUILD)/server.o: source/magel_lambda.hpp source/magel_report.hpp
 
-magel_parser.o magel_main.o: source/magel_borrow_checker.hpp
+$(FRONTEND_BUILD)/magel_parser.o $(FRONTEND_BUILD)/magel_main.o: source/magel_borrow_checker.hpp
 
-magel_parser.o magel_main.o: source/magel_borrow_flow.hpp
+$(FRONTEND_BUILD)/magel_parser.o $(FRONTEND_BUILD)/magel_main.o: source/magel_borrow_flow.hpp
 
 # 原生语言服务和开发命令。
 MAGEL_NATIVE_DEVELOPMENT := build/magel-native-development.o
@@ -180,7 +182,7 @@ build/magel-native:
 	$(MAGEL_RUNTIME_MKDIR)
 $(MAGEL_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/magel_macro.hpp source/magel_module.hpp source/magel_stdlib_embedded.cpp | build/magel-native
 	$(CXX) $(CXXFLAGS) -MMD -MP -MF build/magel-native-development.d -I. -c $< -o $@
-magel_tool.o: tools/native_development.hpp
+$(FRONTEND_BUILD)/magel_tool.o: tools/native_development.hpp
 
 # 内置 ZIP/Gzip 的 Deflate 解压器；仅构建解压部分。
 MAGEL_MINIZ := build/magel-miniz-tinfl.o

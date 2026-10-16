@@ -235,6 +235,8 @@ struct MNode
     std::size_t sourceLine = 0;                         ///< 预处理后语法节点的起始行。
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。
     Memory::Vector<int> annotations;                    ///< 附着于本声明的注解使用节点。
+    Memory::Vector<Memory::String> derives;             ///< 请求按字段派生的接口名称。
+    bool derivesExpanded = false;                       ///< 已完成宏模板注入，泛型重放时不重复生成。
     Memory::Vector<MAnnotationValue> annotationValues;  ///< 按参数声明顺序归一后的常量。
     Memory::String s, s2;
     Memory::String abiLibrary;
@@ -248,12 +250,15 @@ struct MNode
      * `inline` 顶层函数仅在声明它的模块内部可见，不进入模块导出表。
      */
     bool moduleLocal = false;
-    bool reflectionBridge = false;  ///< 仅编译器生成的反射桥接节点可以读取内部接口身份。
+    bool reflectionBridge = false;      ///< 仅编译器生成的反射桥接节点可以读取内部接口身份。
+    bool generatedDeclaration = false;  ///< 由编译器自身的派生模板生成，允许内部辅助符号。
     long long i = 0;
     double d = 0.0;
     int guard = -1;                  ///< match 分支的可选 bool 守卫。
     bool unsignedLiteral = false;    ///< 整数字面量是否显式带有小写 u 后缀。
     bool checkedExpression = false;  ///< 完整表达式的副作用检查边界。
+    bool returnExpression = false;   ///< return 带值控制表达式的隐藏结果声明或值出口。
+    bool implicitExitMove = false;   ///< 编译器在离开内部拥有者作用域时生成的消费操作。
     int type = -1, type2 = -1;
     Memory::Vector<int> kids;
 };
@@ -605,6 +610,29 @@ int M_CheckType(int type, int value);
 int M_ArrayField(int type, int name, int dims);
 int M_Loop(int body);
 int M_Return(int value);
+/**
+ * @brief 将显式 return 的控制表达式脱糖为隐藏结果变量与普通返回。
+ * @param value 返回表达式的节点编号。
+ * @retval 普通返回或带隐藏声明的块节点。
+ */
+int M_ReturnValue(int value);
+/**
+ * @brief 把编译期派生白名单附着于结构体或枚举声明。
+ * @param traits 请求派生的接口名称列表。
+ * @param declaration 目标类型声明。
+ * @retval 带派生元数据的声明节点；非法请求返回诊断节点。
+ */
+int M_Derived(int traits, int declaration);
+/**
+ * @brief 在语句位置声明具有确定返回类型的函数值。
+ * @param resultType 返回类型编号。
+ * @param name 函数绑定名称编号。
+ * @param params 参数列表编号。
+ * @param body 函数体编号；负一表示只有声明。
+ * @param capture 默认捕获方式，与 fn 的捕获枚举一致。
+ * @retval 局部函数值声明节点。
+ */
+int M_NamedFunction(int resultType, int name, int params, int body, int capture);
 int M_ExprStmt(int value);
 /**
  * @brief 从与位与共享的具名类型前缀构造只读引用声明。

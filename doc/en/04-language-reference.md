@@ -856,3 +856,16 @@ Expressions such as `break i + 1;` and `break makeText();` are evaluated once an
 The result is saved before exit callbacks and automatic cleanup. Moving clears the source storage and ends its binding lifetime without invoking close/drop on the source; the final receiver owns cleanup. Types implementing both Closeable and Drop close before dropping. Copies own independent resources, so source and result are cleaned up at their respective lifetime ends. Exits across loops clean up every scope that is left without releasing resources already transferred to the result.
 
 Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.mgl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM/AOT behavior. See [ownership transfer](23-ownership-move.md) for general rules.
+
+
+## Returning control expressions
+
+`return { ... break value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on break; outer variables copy. Nested return, break #level, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value breaks. See [declarations and return expressions](28-declaration-sugars.md).
+
+## Named function declarations
+
+Statements accept `int64 add(int64 x) { return x + 1; }` and a local function binding prototype `int64 callback(int64 x);`. The declared result anchors checking. Captures default to const&, with explicit mut, copy or move before the body. Capture state moves into the binding; borrowed captures cannot outlive their sources. This syntax is absent from expression productions. See [named function rules](28-declaration-sugars.md).
+
+## Field derivation
+
+`#derive(Equal, Hash, Clone)` before a struct or enum uses existing text macros to generate field-based methods, followed by normal semantic checking and quadruple lowering. Nested fields must implement each requested interface. Drop and Closeable derivation is forbidden. Generic methods are generated after instantiation. See [derivation rules](28-declaration-sugars.md).

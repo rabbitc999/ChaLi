@@ -134,7 +134,7 @@ def main():
                  '-I'+str(ROOT/'library/simple_ast'), '-I'+str(ROOT/'library/stackvm'),
                  '-I'+str(ROOT/'library/preprocess'), ROOT/'tests/magel_annotations_test.cpp',
                  ROOT/'library/json/json.cpp',
-                 ROOT/'libparser.a', ROOT/'build/magel-runtime/libsimple_ast.a',
+                 ROOT/'build/magel-frontend/libparser.a', ROOT/'build/magel-runtime/libsimple_ast.a',
                  ROOT/'build/magel-stackvm/libstackvm.a',ROOT/'build/magel-runtime/libpreprocess.a',
                  '-lm','-o',unit]
         compiled=subprocess.run(list(map(str,command)),capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=180)

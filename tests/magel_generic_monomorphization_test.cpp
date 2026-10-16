@@ -90,5 +90,8 @@ int main()
     auto once = marked;
     markContainerTypeArguments(marked);
     require(marked == once, "容器标点归一化不幂等");
+    require(expand("#derive(Equal,Hash,Clone)\nstruct DerivedBox<T>{T value;};DerivedBox<int64> value;", result, error), error.c_str());
+    require(result.text.find("#derive(Equal,Hash,Clone)") != Memory::String::npos, "泛型实例丢失字段派生指令");
+    require(!expand("#derive(Equal,Equal) struct Bad<T>{T value;};", result, error) && error.find("重复请求") != Memory::String::npos, "未实例化泛型的重复派生没有报错");
     std::puts("generic monomorphization unit tests OK");
 }

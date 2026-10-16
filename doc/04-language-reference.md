@@ -824,3 +824,16 @@ $end_macro
 结果先保存，再执行退出路径上的延迟回调和自动清理。移动清空源存储并结束源绑定的生命周期，不调用源值的 close/drop；最终接收方负责资源回收。同时实现 Closeable 与 Drop 时先 close、后 drop。复制产生独立拥有值，来源与结果分别按各自生命周期清理。跨循环退出清理所有离开的作用域，不能释放已交给结果的资源。
 
 移动不延长借用寿命，直接引用及聚合内的引用都不能指向已经退出的局部对象。[移动与清理样例](../example/samples/break_move.mgl)验证求值次数、原始资源句柄身份、外部变量复制、析构次数、清理顺序及 VM/AOT 行为；[所有权移动](23-ownership-move.md)给出通用规则。
+
+
+## 返回控制表达式
+
+`return { ... break value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break #level，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](28-declaration-sugars.md)。
+
+## 具名函数声明
+
+语句位置可声明 `int64 add(int64 x) { return x + 1; }`，或先声明 `int64 callback(int64 x);` 再赋函数值。返回类型提供检查锚点，默认捕获 const&；块前可显式写 mut、copy 或 move。捕获状态移入声明绑定，借用不能逃逸来源。该语法不进入表达式产生式，见[具名函数规则](28-declaration-sugars.md)。
+
+## #derive 字段派生
+
+在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过现有文本宏遍历字段生成接口方法，再由通常的语义检查与四元式降级处理。嵌套字段必须实现对应接口，禁止派生 Drop 或 Closeable。泛型声明在实例化后生成方法，见[派生规则](28-declaration-sugars.md)。

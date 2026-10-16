@@ -45,6 +45,7 @@ struct Generic
     preprocess::LineOrigin origin;
     bool intrinsic = false;
     Memory::String requiredQualifier;
+    Memory::String derivation;  ///< 保留到具体实例的 #derive 指令，不交给文本宏做语义检查。
 };
 /**
  * @brief 可用于整数泛型实参的模块常量原文；求值时仍拒绝运行时初始化式。
@@ -322,8 +323,59 @@ inline std::size_t lineOf(const Memory::String &text, std::size_t offset)
 }
 
 /**
- * @brief 收集名称后置的类型参数；只处理顶层声明头，正文仍交给生成解析器。
- * @param source 原地归一化的源码，保留行数以便映射诊断。
+ * @brief 暂存泛型类型前的派生指令，在产生具体实例时恢复原文。
+ * @param source 待单态化源码；移走的指令以空白占位保持行号。
+ * @param directives 输出模板名到派生指令文本的映射。
+ * @param error 失败时接收非法派生请求的诊断。
+ * @return 指令扫描成功返回 true，不执行字段或接口语义检查。
+ */
+inline bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, Memory::String> &directives, Memory::String &error)
+{
+    auto mask = magel_lambda::codeMask(source);
+    int depth = 0;
+    for (std::size_t at = 0; at < mask.size(); ++at)
+    {
+        if (mask[at] == '{') ++depth;
+        if (mask[at] == '}') --depth;
+        if (depth || !wordAt(mask, at, "#derive")) continue;
+        std::size_t open = at + 7;
+        skipSpace(mask, open);
+        Memory::Vector<Memory::String> traits;
+        std::size_t end = open;
+        if (open >= mask.size() || mask[open] != '(' || !magel_macro::groupArguments(mask, open, traits, end)) continue;
+        auto type = end;
+        skipSpace(mask, type);
+        const bool structure = wordAt(mask, type, "struct");
+        if (!structure && !wordAt(mask, type, "enum")) continue;
+        type += structure ? 6 : 4;
+        skipSpace(mask, type);
+        const auto begin = type;
+        while (type < mask.size() && identPart(mask[type])) ++type;
+        const auto name = mask.substr(begin, type - begin);
+        skipSpace(mask, type);
+        if (type >= mask.size() || mask[type] != '<') continue;
+        Memory::Set<Memory::String> seenTraits;
+        if (traits.empty()) return error = "#derive 至少需要一个接口", false;
+        for (const auto &item : traits)
+        {
+            const auto trait = trim(item);
+            if (!seenTraits.insert(trait).second) return error = "#derive 重复请求接口：" + trait, false;
+            if (trait == "Drop" || trait == "drop" || trait == "Closeable")
+                return error = "#derive 禁止生成 Drop 或 Closeable：值语义已经自动递归清理字段", false;
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone")
+                return error = "#derive 只支持 Equal、Hash、Clone，不能生成 " + trait, false;
+        }
+        directives[name] = source.substr(at, end - at) + "\n";
+        for (auto i = at; i < end; ++i)
+            if (source[i] != '\n') source[i] = mask[i] = ' ';
+        at = end - 1;
+    }
+    return true;
+}
+
+/**
+ * @brief 归一化顶层声明中名称后置的泛型参数，正文仍由生成解析器处理。
+ * @param source 原地规范化的源码，保留行数以映射诊断。
  */
 inline void normalizeGenericSyntax(Memory::String &source)
 {
@@ -736,7 +788,17 @@ inline bool collect(Memory::String &source, const Memory::Vector<preprocess::Lin
 }
 
 /**
- * @brief 收集显式接口及传递继承，扫描时排除注释和字符串中的伪声明。
+ * @brief 生成具体泛型接口名称，供派生请求与普通接口约束使用相同身份。
+ * @param name 模板名称。
+ * @param args 实际类型参数。
+ * @return 带稳定类型指纹的实例名。
+ */
+inline Memory::String mangle(const Memory::String &name, const Memory::Vector<Memory::String> &args);
+
+/**
+ * @brief 收集显式及请求派生的接口身份，排除字符串和注释中的伪声明。
+ * @param source 已规范化的声明与普通源码。
+ * @param implemented 输出具体类型到接口身份集合的映射。
  */
 inline void collectInterfaces(const Memory::String &source,
                               Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented)
@@ -778,8 +840,18 @@ inline void collectInterfaces(const Memory::String &source,
         }
     }
     Memory::String module;
+    Memory::Vector<Memory::String> derived;
     for (std::size_t at = 0; at < text.size(); ++at)
     {
+        if (wordAt(text, at, "#derive"))
+        {
+            auto open = at + 7;
+            skipSpace(text, open);
+            auto end = open;
+            derived.clear();
+            if (open < text.size() && text[open] == '(' && magel_macro::groupArguments(text, open, derived, end)) at = end - 1;
+            continue;
+        }
         if (wordAt(text, at, "module"))
         {
             at += 6u;
@@ -789,13 +861,24 @@ inline void collectInterfaces(const Memory::String &source,
             module = text.substr(begin, at - begin);
             if (module == "__root") module.clear();
         }
-        bool structure = wordAt(text, at, "struct"), isInterface = wordAt(text, at, "interface");
-        if (!structure && !isInterface) continue;
-        at += structure ? 6 : 9;
+        bool structure = wordAt(text, at, "struct"), isInterface = wordAt(text, at, "interface"), enumeration = wordAt(text, at, "enum");
+        if (!structure && !isInterface && !enumeration) continue;
+        at += structure ? 6 : isInterface ? 9 :
+                                            4;
         skipSpace(text, at);
         std::size_t begin = at;
         while (at < text.size() && identPart(text[at])) ++at;
         auto name = text.substr(begin, at - begin);
+        for (const auto &item : derived)
+        {
+            const auto trait = trim(item);
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone") continue;
+            const auto owner = module.empty() ? name : module + "::" + name;
+            const auto interface = trait == "Equal" ? mangle(trait, { "bool", owner }) : mangle(trait, { owner });
+            implemented[name].insert(interface);
+            implemented[owner].insert(interface);
+        }
+        derived.clear();
         skipSpace(text, at);
         if (at >= text.size() || text[at] != ':') continue;
         ++at;
@@ -1193,7 +1276,7 @@ inline Memory::String substitute(const Expansion &expansion)
             result.replace(open, close - open + 1, body);
         }
     }
-    return result;
+    return expansion.generic->derivation + result;
 }
 
 /**
@@ -1407,6 +1490,8 @@ inline bool run(preprocess::Result &result, Memory::String &error)
     collectConstantArguments(result.text);
     session = Session{};
     collectCoreAliasShadows(result.text);
+    Memory::Map<Memory::String, Memory::String> derivedGenerics;
+    if (!collectGenericDerives(result.text, derivedGenerics, error)) return false;
     // 泛型方法的显式错误类型交给语义层补齐其余参数；跳过注释与字符串。
     for (std::size_t at = 0; at < result.text.size(); ++at)
     {
@@ -1513,6 +1598,8 @@ inline bool run(preprocess::Result &result, Memory::String &error)
     }
     addBuiltin("Hash", { Parameter{ "T", "", "std::lang::Any" } },
                "interface Hash { uint64 hash(T value); };", 10u);
+    addBuiltin("Clone", { Parameter{ "T", "", "std::lang::Any" } },
+               "interface Clone { T clone(); };", 10u);
     addBuiltin("ExplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },
                "interface ExplicitConvert { T explicitConvert(); };", 10u);
     addBuiltin("ImplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },
@@ -1889,6 +1976,8 @@ interface Closeable { void close(); };
                  noExpansions, noPending, error)) return false;
     normalizeGenericSyntax(result.text);
     if (!collect(result.text, result.lineMap, generics, error)) return false;
+    for (const auto &entry : derivedGenerics)
+        if (generics.count(entry.first)) generics[entry.first].derivation = entry.second;
     auto &implemented = session.implemented;
     collectInterfaces(result.text, implemented);
     auto &made = session.made;

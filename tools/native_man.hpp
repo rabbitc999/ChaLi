@@ -191,6 +191,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "       magel man api --search <TEXT> [--exact] [--json]\n"
                                                           "       magel man book [CHAPTER] [--json]\n"
                                                           "       magel man keyword [KEYWORD] [--json]\n"
+                                                          "       magel man macro [--json]\n"
                                                           "       magel man skill [--json]\n"
                                                           "       magel man api\n"
                                                           "       magel man help [--lang zh|en] [--json]\n\n"
@@ -201,6 +202,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "      magel man api --search <关键词> [--exact] [--json]\n"
                                                           "      magel man book [章节] [--json]\n"
                                                           "      magel man keyword [关键字] [--json]\n"
+                                                          "      magel man macro [--json]\n"
                                                           "      magel man skill [--json]\n"
                                                           "      magel man api\n"
                                                           "      magel man help [--lang zh|en] [--json]\n\n"
@@ -245,6 +247,11 @@ int man(int argc, char **argv, const fs::path &compiler)
         else
             std::cout << result.output << result.error << (result.code == 0 ? MAGEL_TEXT("手册数据已生成；重新构建后进入可执行文件。\n") : "");
         return result.code;
+    }
+    if (target == "macro")
+    {
+        target = "keyword";
+        selector = "macro";
     }
     if (target == "api") target = selector;
     if (target == "book" || target == "keyword" || target == "skill")

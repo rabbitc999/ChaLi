@@ -25,8 +25,9 @@ def build_matrix(work, vm_off, vm_on, cxx):
     if os.name == "nt":
         flags += ["-Wa,-mbig-obj"]
     run([cxx, *flags, "-DMAGEL_WITH_REFLECTION=0", "-DSTACKVM_WITH_REFLECTION=0",
-         "-I" + str(mc / "simple_ast"), "-I" + str(mc / "stackvm"), "-I" + str(mc / "preprocess"),
-         "-c", mc / "magel_parser.cpp", "-o", disabled_parser])
+         "-I" + str(mc), "-I" + str(mc / "source"), "-I" + str(mc / "library"),
+         "-I" + str(mc / "library/simple_ast"), "-I" + str(mc / "library/stackvm"), "-I" + str(mc / "library/preprocess"),
+         "-c", mc / "source/magel_parser.cpp", "-o", disabled_parser])
     entry = work / "entry.cpp"
     entry.write_text("int magel_main_entry(int, char **);\n"
                      "int main(int n, char **v) { return magel_main_entry(n, v); }\n", encoding="utf-8")
@@ -34,8 +35,8 @@ def build_matrix(work, vm_off, vm_on, cxx):
     for frontend in (0, 1):
         for vm, directory in ((0, vm_off), (1, vm_on)):
             binary = work / (f"compiler-{frontend}{vm}" + EXE)
-            parser = disabled_parser if not frontend else mc / "libparser.a"
-            run([cxx, *flags, entry, mc / "magel_main.o", parser,
+            parser = disabled_parser if not frontend else mc / "build/magel-frontend/libparser.a"
+            run([cxx, *flags, entry, mc / "build/magel-frontend/magel_main.o", parser,
                  ROOT / "build/magel-runtime/libsimple_ast.a",
                  directory / "libmagel_stackvm.a",
                  ROOT / "build/magel-runtime/libpreprocess.a", "-lm", "-o", binary])

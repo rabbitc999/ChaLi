@@ -32,7 +32,9 @@ struct MOwnedScope
     Memory::Vector<Item> names;
     /// 离开作用域前执行的借用清理（列表迭代元素写回并释放引用单元）。
     Memory::Vector<simple_ast::NodePtr> finalizers;
-    bool hasDeferred = false;  ///< 本作用域登记了延迟回调。
+    bool hasDeferred = false;                   ///< 本作用域登记了延迟回调。
+    Memory::Set<Memory::String> deferredReads;  ///< 清理回调仍要读取的原始存储身份。
+    std::size_t deferredBorrowDepth = 0;        ///< 间接闭包或聚合借用的保守来源深度。
     struct Destructor
     {
         Memory::String name;

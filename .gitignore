@@ -58,3 +58,10 @@ __pycache__/
 
 # 本机 AI 助手的工作区数据（记忆、会话草稿等），不进版本库。
 /.workbuddy/
+
+# source/ 下的解析器生成资产不入库。
+/source/magel_parser.cpp
+/source/magel_parser.hpp
+/source/magel_parser_user.h
+/source/magel_main.cpp
+/source/.parseengine-manifest

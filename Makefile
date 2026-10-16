@@ -36,13 +36,14 @@ ARFLAGS  = rcs
 
 # lztext：内嵌标准库 / 运行时资产的压缩存储与运行时解压（见 lztext/README.md）。
 # dap：VS Code 断点调试用的 DAP 服务端（见 dap/dap_server.hpp）。
-LIB_SRCS  := magel_parser.cpp library/lztext/lztext.cpp source/dap/dap_server.cpp
-DEMO_SRCS := magel_main.cpp
-HDRS      := magel_parser.hpp magel_parser_user.h
-LIB_OBJS  := $(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(LIB_SRCS)))
-DEMO_OBJS := $(patsubst %.cpp,%.o,$(DEMO_SRCS))
+FRONTEND_BUILD := build/magel-frontend
+LIB_SRCS  := source/magel_parser.cpp library/lztext/lztext.cpp source/dap/dap_server.cpp
+DEMO_SRCS := source/magel_main.cpp
+HDRS      := source/magel_parser.hpp source/magel_parser_user.h
+LIB_OBJS  := $(FRONTEND_BUILD)/magel_parser.o $(FRONTEND_BUILD)/lztext.o $(FRONTEND_BUILD)/dap_server.o
+DEMO_OBJS := $(FRONTEND_BUILD)/magel_main.o
 
-LIB    := libparser.a
+LIB    := $(FRONTEND_BUILD)/libparser.a
 TARGET := magel
 
 .PHONY: all lib demo run clean gen check samples reflection
@@ -53,18 +54,31 @@ lib: $(LIB)
 
 demo: $(TARGET)
 
-# 重新生成解析器 / 驱动源码（产物仍是本目录的 magel_parser.* / magel_main.cpp）。
+# 重新生成解析器 / 驱动源码（产物位于 source/ 的 magel_parser.* / magel_main.cpp）。
 gen:
 	$(SH) gen.sh
 
-$(LIB): $(LIB_OBJS)
+$(LIB): $(LIB_OBJS) | $(FRONTEND_BUILD)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(TARGET): $(DEMO_OBJS) $(LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS)
 
-%.o: %.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(FRONTEND_BUILD):
+ifeq ($(OS),Windows_NT)
+	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$@' | Out-Null"
+else
+	mkdir -p $@
+endif
+
+$(FRONTEND_BUILD)/%.o: source/%.cpp $(HDRS) | $(FRONTEND_BUILD)
+	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
+
+$(FRONTEND_BUILD)/lztext.o: library/lztext/lztext.cpp $(HDRS) | $(FRONTEND_BUILD)
+	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
+
+$(FRONTEND_BUILD)/dap_server.o: source/dap/dap_server.cpp $(HDRS) | $(FRONTEND_BUILD)
+	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
 
 # 编入注解与反射：前端（MAGEL_WITH_REFLECTION）与运行时（STACKVM_WITH_REFLECTION）
 # 默认同时开启，缺一个 `--reflection` 就会报缺宏；本目标保留为显式启用入口。

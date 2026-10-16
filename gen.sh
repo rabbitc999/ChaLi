@@ -1,5 +1,5 @@
 #!/bin/sh
-# 重新生成解析器 / 驱动 / 工程文件（产物落在本目录，--out-dir 缺省就是 `.`）。
+# 重新生成解析器 / 驱动 / 工程文件（产物统一落在 source/，构建文件仍由仓库维护）。
 #
 #   sh gen.sh
 #
@@ -79,10 +79,9 @@ python tools/embed_stdlib.py
 
 # --no-build-files：本目录的 Makefile 是手写、纳入版本管理的「生成代码 → 构建」
 # 工程文件（见 Makefile / local.mk），不能让生成器覆盖它，也别删它。
-# 解析器 / 驱动源码（magel_parser.* / magel_main.cpp）照旧生成到仓库根目录：
-# --out-dir 缺省就是当前目录（gen.sh 已 cd 到仓库根），文法放在 source/ 不影响产物落点。
+# 解析器、驱动、报告与生成清单统一写入 source/，不散落在仓库根目录。
 # 词法包含由本项目展开，兼容旧版外置生成器；权威定义仍为 source/magel.gram。
 expanded=source/.magel-build.gram
 trap 'rm -f "$expanded"' EXIT HUP INT TERM
 python tools/expand_grammar.py source/magel.gram "$expanded"
-"$ENGINE" "$expanded" --mode ielr --no-build-files
+"$ENGINE" "$expanded" --mode ielr --no-build-files --out-dir source

@@ -4,7 +4,7 @@
   "patterns": [
     {
       "name": "keyword.control.magel",
-      "match": "#level\\b|\\bALL\\b"
+      "match": "#level\\b|#derive\\b"
     },
     {
       "name": "comment.block.magel",
@@ -121,7 +121,7 @@
     },
     {
       "name": "constant.language.magel",
-      "match": "\\b(?:true|false)\\b"
+      "match": "\\b(?:true|false|ALL)\\b"
     },
     {
       "name": "constant.numeric.magel",

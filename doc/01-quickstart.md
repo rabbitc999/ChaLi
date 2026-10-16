@@ -17,7 +17,7 @@
 
 ```sh
 sh gen.sh      # 用 IELR 从 magel.gram 生成前端（需要 ParseEngine 文法生成器）
-make           # 构建 magel 与 libparser.a
+make           # 构建 magel 与 build/magel-frontend/libparser.a
 ```
 
 `gen.sh` 需要一份 [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) 文法生成器。
@@ -128,3 +128,6 @@ magel check hello.mgl
 | 查看帮助 | `magel help` |
 
 更多子命令、`magel.toml` 配置与编译选项见[工具链使用](09-toolchain.md)。
+
+
+解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/magel-frontend/`，不会散落到仓库根目录。
