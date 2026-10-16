@@ -194,7 +194,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "       magel man skill [--json]\n"
                                                           "       magel man api\n"
                                                           "       magel man help [--lang zh|en] [--json]\n\n"
-                                                          "API examples: magel man api std::text; magel man api String\n"
+                                                          "API examples: magel man api std::text; magel man api std::text::Text\n"
                                                           "API documentation: embedded doc/library/.\n"
                                                           "man book exports Markdown and images to ./book.\n" :
                                                           "用法：magel man api <API> [--json] [--run]\n"
@@ -204,7 +204,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "      magel man skill [--json]\n"
                                                           "      magel man api\n"
                                                           "      magel man help [--lang zh|en] [--json]\n\n"
-                                                          "API 示例：magel man api std::text；magel man api String\n"
+                                                          "API 示例：magel man api std::text；magel man api std::text::Text\n"
                                                           "API 文档来源：内嵌的 doc/library/。\n"
                                                           "man book 将 Markdown 和图片导出到当前目录的 book 文件夹。\n";
         if (machine)
