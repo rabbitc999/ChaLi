@@ -1050,87 +1050,37 @@ inline Memory::String sanitizeMacroName(const Memory::String &name)
 }
 
 /**
- * @brief 展开期给 `$0`～`$9` 生成的唯一名：`__magel_macro_<宏名净化>_<展开ID>_<n>`。
- *
- * 每个 `$macro` / `$replace` 展开分配一个新的展开 ID（`run` 里的全局递增计数器，
- * 不是 `__LINE__`，所以同一行展开多次也不会撞名）。同一次展开里同一个 `$n` 出现的
- * 每一处都换成同一个名字；不同展开、不同宏、嵌套/递归调用各自独立。
+ * @brief 识别美元符号后的十进制整数编号，不把编号转换成宿主整数。
+ * @param text 待扫描的原始文本。
+ * @param start 美元符号的位置。
+ * @return 合法编号后一位置；不是整数占位符时返回 start。
  */
-inline Memory::String gensymName(const Memory::String &macroName, std::size_t expandId,
-                                 int slot)
+inline std::size_t placeholderEnd(const Memory::String &text, std::size_t start)
 {
-    return "__magel_macro_" + sanitizeMacroName(macroName) + "_" + Memory::toString(expandId) + "_" + Memory::toString(slot);
+    if (start >= text.size() || text[start] != '$') return start;
+    std::size_t next = start + 1;
+    if (next < text.size() && (text[next] == '+' || text[next] == '-')) ++next;
+    const auto digits = next;
+    while (next < text.size() && text[next] >= '0' && text[next] <= '9') ++next;
+    return next == digits ? start : next;
 }
 
 /**
- * @brief 定义期校验宏体里的 `$n` 占位符：只接受 `$0`～`$9`。
- *
- * 字符串、行注释与块注释里的 `$` 不参与校验（和展开期的处理一致）。两位数字
- * （如 `$10`）在这里就报错，不需要宏被调用 —— 写错的宏从没被用过也能立刻发现。
- *
- * @param text 宏体（多行）。
- * @param problem 输出：失败原因。
- * @return 全部合法返回 true。
+ * @brief 为任意长度的整数编号产生当前展开独有的合法标识符。
+ * @param macroName 宏名称。
+ * @param expandId 当前宏调用的唯一展开编号。
+ * @param slot 十进制整数文本，允许符号和前导零。
+ * @return 相同整数在一次展开内对应相同名字，不同展开互相隔离。
+ * @note 不使用数值转换，因此编号不受 int64 或 uint64 上限限制。
  */
-inline bool checkPlaceholders(const Memory::String &text, Memory::String &problem)
+inline Memory::String gensymName(const Memory::String &macroName, std::size_t expandId, const Memory::String &slot)
 {
-    bool blockComment = false;
-    for (std::size_t i = 0; i < text.size();)
-    {
-        if (blockComment)
-        {
-            if (text.compare(i, 2, "*/") == 0)
-            {
-                blockComment = false;
-                i += 2;
-                continue;
-            }
-            ++i;
-            continue;
-        }
-        if (text.compare(i, 2, "/*") == 0)
-        {
-            blockComment = true;
-            i += 2;
-            continue;
-        }
-        if (text.compare(i, 2, "//") == 0)
-        {
-            const std::size_t end = text.find('\n', i);
-            if (end == Memory::String::npos) return true;
-            i = end + 1;
-            continue;
-        }
-        if (text[i] == '"' || text[i] == '\'')
-        {
-            const char quote = text[i++];
-            while (i < text.size())
-            {
-                if (text[i] == '\\' && i + 1 < text.size())
-                {
-                    i += 2;
-                    continue;
-                }
-                if (text[i++] == quote) break;
-            }
-            continue;
-        }
-        if (text[i] == '$' && i + 1 < text.size() && std::isdigit(static_cast<unsigned char>(text[i + 1])))
-        {
-            std::size_t j = i + 1;
-            while (j < text.size() && std::isdigit(static_cast<unsigned char>(text[j]))) ++j;
-            const Memory::String digits = text.substr(i + 1, j - i - 1);
-            if (digits.size() > 1)
-            {
-                problem = "占位符 `$" + digits + "` 不支持两位数字，请用 `$0` 到 `$9`";
-                return false;
-            }
-            i = j;
-            continue;
-        }
-        ++i;
-    }
-    return true;
+    const bool negative = !slot.empty() && slot[0] == '-';
+    std::size_t first = !slot.empty() && (slot[0] == '+' || slot[0] == '-') ? 1u : 0u;
+    while (first + 1u < slot.size() && slot[first] == '0') ++first;
+    const auto digits = slot.substr(first);
+    const auto normalized = negative && digits != "0" ? "negative_" + digits : digits;
+    return "__magel_macro_" + sanitizeMacroName(macroName) + "_" + Memory::toString(expandId) + "_" + normalized;
 }
 
 /**
@@ -1361,21 +1311,12 @@ inline bool expand(const Memory::String &source,
                     continue;
                 }
             }
-            /* `$0`～`$9` 是宏体专属的占位符；普通代码里出现一律编译期报错。
+            /* 整数编号 `$n` 是宏体专属的占位符；普通代码里出现一律编译期报错。
              * 字符串与注释在上面就已经整段抄过去了，所以这里的 `$n` 一定在代码里。 */
-            if (i + 1 < source.size() && std::isdigit(static_cast<unsigned char>(source[i + 1])))
+            if (const auto end = placeholderEnd(source, i); end > i)
             {
-                std::size_t j = i + 1;
-                while (j < source.size() && std::isdigit(static_cast<unsigned char>(source[j]))) ++j;
-                const Memory::String digits = source.substr(i + 1, j - i - 1);
-                if (digits.size() > 1)
-                {
-                    error = "占位符 `$" + digits + "` 不支持两位数字，请用 `$0` 到 `$9`";
-                }
-                else
-                {
-                    error = "占位符 `$" + digits + "` 只能出现在 `$macro` / `$replace` 的宏体内";
-                }
+                const auto digits = source.substr(i + 1, end - i - 1);
+                error = "占位符 `$" + digits + "` 只能出现在 `$macro` / `$replace` 的宏体内";
                 return false;
             }
         }
@@ -1632,7 +1573,7 @@ inline bool expand(const Memory::String &source,
         if (!expandMacroControls(bodyText, values, rawValues, actualArgc, error,
                                  macro.variadic ? macro.variadicParam : Memory::String(), tailArgs, macro.parenthesizeVariadic, 0,
                                  macro.groups.empty() ? nullptr : &groupTails)) return false;
-        /* 每次展开分配一个新 ID：`$0`…`$9` 拿它拼出本次展开专属的临时名。
+        /* 每次展开分配一个新 ID：整数编号 `$n` 拿它拼出本次展开专属的临时名。
          * 放在 `$for` 之后 —— 同一次展开里的每轮 `$for` 共用这一个 ID。 */
         const std::size_t expandId = nextExpandId++;
         Memory::String substituted;
@@ -1728,19 +1669,10 @@ inline bool expand(const Memory::String &source,
                 b += 5;
                 continue;
             }
-            if (body[b] == '$' && b + 1 < body.size() && std::isdigit(static_cast<unsigned char>(body[b + 1])))
+            if (const auto end = placeholderEnd(body, b); end > b)
             {
-                std::size_t j = b + 1;
-                while (j < body.size() && std::isdigit(static_cast<unsigned char>(body[j]))) ++j;
-                const Memory::String digits = body.substr(b + 1, j - b - 1);
-                if (digits.size() > 1)
-                {
-                    error = "宏 " + name + " 的占位符 `$" + digits + "` 不支持两位数字，请用 `$0` 到 `$9`";
-                    return false;
-                }
-                Memory::String replacement = gensymName(name, expandId, digits[0] - '0');
-                substituted += replacement;
-                b = j;
+                substituted += gensymName(name, expandId, body.substr(b + 1, end - b - 1));
+                b = end;
                 continue;
             }
             if (body[b] == '$')
@@ -1750,7 +1682,7 @@ inline bool expand(const Memory::String &source,
                 const char follow = b + 1 < body.size() ? body[b + 1] : '\0';
                 if (!identStart(follow))
                 {
-                    error = "宏 " + name + " 的宏体里 `$` 后面要跟 `$0`～`$9`、宏调用或 "
+                    error = "宏 " + name + " 的宏体里 `$` 后面要跟 整数编号 `$n`、宏调用或 "
                                            "`$line` / `$file` / `$module` / `$concat` / `$stringify`";
                     return false;
                 }
@@ -1813,10 +1745,10 @@ inline bool run(preprocess::Result &result, Memory::String &error,
     Memory::String output;
     Memory::Vector<preprocess::LineOrigin> lineMap;
     Memory::Vector<Memory::String> stack;
-    std::size_t nextExpandId = 0; /* `$0`～`$9` 生成名用的全局递增展开 ID。 */
+    std::size_t nextExpandId = 0; /* 整数编号 `$n` 生成名用的全局递增展开 ID。 */
     bool comment = false;
     bool defining = false;
-    /* 先扫一遍用户源码：`__magel_macro_` 前缀保留给 `$0`…`$9` 生成的临时名。
+    /* 先扫一遍用户源码：`__magel_macro_` 前缀保留给 整数编号 `$n` 生成的临时名。
      * 生成名要到展开期才出现，所以现在扫到的这一批一定是用户自己写的。 */
     {
         bool scanComment = false;
@@ -1866,7 +1798,7 @@ inline bool run(preprocess::Result &result, Memory::String &error,
                     while (i < line.size() && identPart(line[i])) ++i;
                     if (line.compare(begin, sizeof("__magel_macro_") - 1u, "__magel_macro_") == 0)
                     {
-                        error = origin(result, scanLine) + "：`__magel_macro_` 前缀保留给宏 `$0`～`$9` 生成的临时名，用户代码不能使用";
+                        error = origin(result, scanLine) + "：`__magel_macro_` 前缀保留给宏 整数编号 `$n` 生成的临时名，用户代码不能使用";
                         return false;
                     }
                     continue;
@@ -1917,12 +1849,6 @@ inline bool run(preprocess::Result &result, Memory::String &error,
                 if (i != line.size())
                 {
                     error = origin(result, lineNumber) + "：$end_macro 后有多余内容";
-                    return false;
-                }
-                Memory::String placeholderProblem;
-                if (!checkPlaceholders(current.body, placeholderProblem))
-                {
-                    error = origin(result, definitionLine) + "：宏 " + name + " " + placeholderProblem;
                     return false;
                 }
                 current.body = cleanPasteMarkers(current.body);
@@ -2087,14 +2013,6 @@ inline bool run(preprocess::Result &result, Memory::String &error,
             auto at = lineNumber < result.lineMap.size() ? result.lineMap[lineNumber] : preprocess::LineOrigin{};
             if (current.groups.empty()) at.file += " [宏 " + name + "]";
             current.body = debugMarker(at) + inlineBody;
-            {
-                Memory::String placeholderProblem;
-                if (!checkPlaceholders(current.body, placeholderProblem))
-                {
-                    error = origin(result, lineNumber) + "：宏 " + name + " " + placeholderProblem;
-                    return false;
-                }
-            }
             for (const Macro &existing : macros[name])
             {
                 if (sameShape(existing, current))

@@ -3879,7 +3879,7 @@ List<T> copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:842](../../source/epilogue/aggregate_ownership.cpp#L842)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3917,7 +3917,7 @@ int64 push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:843](../../source/epilogue/aggregate_ownership.cpp#L843)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:850](../../source/epilogue/aggregate_ownership.cpp#L850)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3956,7 +3956,7 @@ int64 insert(int64 index, T value);
 obj.insert(index, value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:844](../../source/epilogue/aggregate_ownership.cpp#L844)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:851](../../source/epilogue/aggregate_ownership.cpp#L851)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3994,7 +3994,7 @@ T at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:845](../../source/epilogue/aggregate_ownership.cpp#L845)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:852](../../source/epilogue/aggregate_ownership.cpp#L852)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4030,7 +4030,7 @@ T pop();
 obj.pop();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:846](../../source/epilogue/aggregate_ownership.cpp#L846)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:853](../../source/epilogue/aggregate_ownership.cpp#L853)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4068,7 +4068,7 @@ int64 remove(int64 index);
 obj.remove(index);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:847](../../source/epilogue/aggregate_ownership.cpp#L847)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:854](../../source/epilogue/aggregate_ownership.cpp#L854)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4106,7 +4106,7 @@ int64 indexOf(T value);
 obj.indexOf(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:848](../../source/epilogue/aggregate_ownership.cpp#L848)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:855](../../source/epilogue/aggregate_ownership.cpp#L855)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4144,7 +4144,7 @@ bool contains(T value);
 obj.contains(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:856](../../source/epilogue/aggregate_ownership.cpp#L856)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4182,7 +4182,7 @@ bool has(T value);
 obj.has(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:850](../../source/epilogue/aggregate_ownership.cpp#L850)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:857](../../source/epilogue/aggregate_ownership.cpp#L857)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4218,7 +4218,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:851](../../source/epilogue/aggregate_ownership.cpp#L851)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:858](../../source/epilogue/aggregate_ownership.cpp#L858)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4254,7 +4254,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:852](../../source/epilogue/aggregate_ownership.cpp#L852)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:859](../../source/epilogue/aggregate_ownership.cpp#L859)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4290,7 +4290,7 @@ Set<T> copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:842](../../source/epilogue/aggregate_ownership.cpp#L842)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4328,7 +4328,7 @@ int64 add(T value);
 obj.add(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:860](../../source/epilogue/aggregate_ownership.cpp#L860)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:867](../../source/epilogue/aggregate_ownership.cpp#L867)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4366,7 +4366,7 @@ int64 has(T value);
 obj.has(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:850](../../source/epilogue/aggregate_ownership.cpp#L850)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:857](../../source/epilogue/aggregate_ownership.cpp#L857)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4404,7 +4404,7 @@ int64 contains(T value);
 obj.contains(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:856](../../source/epilogue/aggregate_ownership.cpp#L856)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4442,7 +4442,7 @@ int64 remove(T value);
 obj.remove(value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:847](../../source/epilogue/aggregate_ownership.cpp#L847)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:854](../../source/epilogue/aggregate_ownership.cpp#L854)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4480,7 +4480,7 @@ T at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:845](../../source/epilogue/aggregate_ownership.cpp#L845)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:852](../../source/epilogue/aggregate_ownership.cpp#L852)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4516,7 +4516,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:851](../../source/epilogue/aggregate_ownership.cpp#L851)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:858](../../source/epilogue/aggregate_ownership.cpp#L858)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4552,7 +4552,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:852](../../source/epilogue/aggregate_ownership.cpp#L852)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:859](../../source/epilogue/aggregate_ownership.cpp#L859)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4588,7 +4588,7 @@ Map<K,V> copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:842](../../source/epilogue/aggregate_ownership.cpp#L842)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4627,7 +4627,7 @@ int64 put(K key,V value);
 obj.put(key, value);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:874](../../source/epilogue/aggregate_ownership.cpp#L874)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:881](../../source/epilogue/aggregate_ownership.cpp#L881)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4665,7 +4665,7 @@ int64 has(K key);
 obj.has(key);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:850](../../source/epilogue/aggregate_ownership.cpp#L850)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:857](../../source/epilogue/aggregate_ownership.cpp#L857)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4703,7 +4703,7 @@ int64 contains(K key);
 obj.contains(key);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:849](../../source/epilogue/aggregate_ownership.cpp#L849)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:856](../../source/epilogue/aggregate_ownership.cpp#L856)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4741,7 +4741,7 @@ int64 remove(K key);
 obj.remove(key);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:847](../../source/epilogue/aggregate_ownership.cpp#L847)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:854](../../source/epilogue/aggregate_ownership.cpp#L854)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4779,7 +4779,7 @@ K keyAt(int64 index);
 obj.keyAt(index);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:878](../../source/epilogue/aggregate_ownership.cpp#L878)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:885](../../source/epilogue/aggregate_ownership.cpp#L885)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4817,7 +4817,7 @@ V valAt(int64 index);
 obj.valAt(index);
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:879](../../source/epilogue/aggregate_ownership.cpp#L879)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:886](../../source/epilogue/aggregate_ownership.cpp#L886)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4853,7 +4853,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:851](../../source/epilogue/aggregate_ownership.cpp#L851)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:858](../../source/epilogue/aggregate_ownership.cpp#L858)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4889,7 +4889,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/epilogue/aggregate_ownership.cpp:852](../../source/epilogue/aggregate_ownership.cpp#L852)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/aggregate_ownership.cpp:859](../../source/epilogue/aggregate_ownership.cpp#L859)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 

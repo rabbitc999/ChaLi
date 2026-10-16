@@ -1,7 +1,7 @@
 \chapter{预处理与宏}
 \label{ch:19}
 
-你在第 9 章见过 \texttt{\%token}、第 15 章见过 \texttt{\$macro} 这类带 \texttt{\%} 和 \texttt{\$} 的写法。它们是 Magel 的预处理和宏——在代码被正式编译之前，先对源码做一次「文本层面」的加工。
+本章介绍以 \texttt{\%} 和 \texttt{\$} 开头的两类源码加工工具：Magel 的预处理和宏——在代码被正式编译之前，先对源码做一次「文本层面」的加工。
 
 这一章分两半：
 
@@ -367,6 +367,57 @@ repeated groups
 大括号参数可以跨多行。嵌套括号、字符串和注释中的逗号不会切开外层参数；不同括号组的变长捕获互相隔离。顺序、结构或绑定不匹配时报告“宏Token分组不匹配”。展开片段保留来源文件及行列映射，后续诊断仍定位原始源码。
 
 \texttt{\$macro EMPTY(\allowbreak{})\allowbreak{}(\allowbreak{})\allowbreak{}} 是两个连续空组，调用时也写 \texttt{\$EMPTY(\allowbreak{})\allowbreak{}(\allowbreak{})\allowbreak{}}。既有单组对象宏 \texttt{\$macro NAME(\allowbreak{})\allowbreak{}} 仍沿用 \texttt{\$NAME} 的对象宏调用方式。完整说明可直接执行 \texttt{magel man macro}，也支持 \texttt{--json}。
+
+\subsection{重复括号：两组独立的变长参数}
+
+同一种括号可以连续出现多次。下面的定义要求调用时也提供两组小括号；\texttt{A} 只收集第一组，\texttt{B} 只收集第二组，两个尾参互不串组。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+$macro example(...A)(...B)
+{
+    print("A=[");
+    $for var in A
+    print("{} ", var);
+    $end_for
+    println("]");
+    print("B=[");
+    $for var in B
+    print("{} ", var);
+    $end_for
+    println("]");
+}
+$end_macro
+
+int64 main()
+{
+    $example(1, 2, 3, 4)(3, 2, 4, 1);
+    $example(1, 2, 3, 4, 5, 6)(3, 2, 4, 1);
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+A=[1 2 3 4 ]
+B=[3 2 4 1 ]
+A=[1 2 3 4 5 6 ]
+B=[3 2 4 1 ]
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+每个 \texttt{\$for} 仅遍历对应分组绑定的原始文本。即使两组都用小括号，也不会合并成一个尾参；\texttt{\$example(\allowbreak{}1,\allowbreak{} 2,\allowbreak{} 3,\allowbreak{} 4,\allowbreak{} 3,\allowbreak{} 2,\allowbreak{} 4,\allowbreak{} 1)\allowbreak{}} 缺少第二组括号，会报告“宏Token分组不匹配”。这里同样可以把 \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}A} / \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}B} 写成 \texttt{.\allowbreak{}.\allowbreak{}A} / \texttt{.\allowbreak{}.\allowbreak{}B}。
 
 \section{宏的第一个坑：括号要自己加}
 
@@ -859,9 +910,9 @@ int64 main() {
 \par
 \medskip
 
-\section{\texttt{\$0}～\texttt{\$9}：宏内的唯一临时名}
+\section{\texttt{\$n} 整数编号：宏内的唯一临时名}
 
-宏是文本替换，宏体里起个临时变量很容易撞上调用点的同名变量。\texttt{\$0}～\texttt{\$9} 由编译器在每次展开时换成一个全局唯一的名字：
+宏是文本替换，宏体里起个临时变量很容易撞上调用点的同名变量。\texttt{\$n} 整数编号 由编译器在每次展开时换成一个全局唯一的名字：
 
 \par
 \medskip
@@ -899,7 +950,62 @@ x=2 y=1 tmp=111
 
 宏内的临时名和调用点的 \texttt{tmp} 互不干扰。同一次展开里同一个 \texttt{\$n} 处处同名；不同展开、不同宏、嵌套调用各自独立。
 
-只有一位数字合法（\texttt{\$10} 会报错），字符串和注释里的 \texttt{\$0} 原样保留。这是变量级近似卫生 —— 解决的是"宏内临时变量被捕获"，不是完整卫生宏：宏体里引用的自由名字（比如外部函数名）仍然绑到调用点。
+编号不限于一位数字：\texttt{\$10}、\texttt{\$123456789012345678901234567890} 和 \texttt{\$-1} 都合法。编号按十进制整数文本归一化，\texttt{\$0010} 与 \texttt{\$+10} 等同于 \texttt{\$10}，\texttt{\$-0} 等同于 \texttt{\$0}；不经过宿主整数转换，因此没有 int64 上限。字符串和注释里的 \texttt{\$0} 原样保留。这是变量级近似卫生 —— 解决的是"宏内临时变量被捕获"，不是完整卫生宏：宏体里引用的自由名字（比如外部函数名）仍然绑到调用点。
+
+\subsection{用多括号宏构造 List}
+
+下面把类型放进尖括号，把元素放进中括号；宏展开成带值块，最后通过 \texttt{break \$0;} 把构造好的列表交给初始化表达式。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+$macro vec<T>[...list]
+{
+    List<T> $0;
+    $for var in list
+    {
+        T $1 = var;
+        $0.push($1);
+    }
+    $end_for
+    break $0;
+}
+$end_macro
+
+int64 main()
+{
+    List<int32> myList = $vec<int32>[1, 2, 3];
+    foreach(auto var in myList)
+    {
+        println("{}", var);
+    }
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+1
+2
+3
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\texttt{T} 捕获文本 \texttt{int32}，\texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}list} 捕获当前中括号组的三个片段；这里也可以写成 \texttt{.\allowbreak{}.\allowbreak{}list}。\texttt{\$for} 逐项生成初始化与 \texttt{push} 语句，宏阶段不解析元素类型；展开后的 \texttt{T \$1 =\allowbreak{} var;} 由正常类型检查验证每个元素。
+
+\texttt{\$0} 和 \texttt{\$1} 是当前宏调用专属的临时名字。一次展开内所有 \texttt{\$0} 都指向同一个列表；每次循环生成的 \texttt{\{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是独立作用域，因此可以重复声明同一个 \texttt{\$1}。另一次调用会获得另一套名字。最后的 \texttt{break} 移交块内列表的所有权，离开作用域时仍正常清理其他局部值。
+
+\texttt{foreach(\allowbreak{}auto var in my\allowbreak{}List)\allowbreak{}} 从 \texttt{List<\allowbreak{}int32>\allowbreak{}} 推断 \texttt{var} 为 \texttt{int32}，不必重复写元素类型；也可以省略 \texttt{auto}，写成 \texttt{foreach(\allowbreak{}var in my\allowbreak{}List)\allowbreak{}}。这里的 \texttt{auto} 不会引入动态类型或运行时类型判断。
 
 \section{\texttt{\$line} / \texttt{\$file} / \texttt{\$module} 和 \texttt{\$assert}}
 
@@ -1003,7 +1109,7 @@ int64 main() {
 \texttt{\$for v in rest … \$end\_for} & 按变长尾参重复宏体里的这一段 \\
 \texttt{\$concat(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & 拼标识符（两个实参都必须是标识符） \\
 \texttt{\$stringify(\allowbreak{}x)\allowbreak{}} & 取实参的源码文本，结果是字符串字面量 \\
-\texttt{\$0}～\texttt{\$9} & 宏体内的唯一临时名（每次展开换一个新名字） \\
+\texttt{\$n} 整数编号 & 宏体内的唯一临时名（每次展开换一个新名字） \\
 \texttt{\$line} / \texttt{\$file} / \texttt{\$module} & 调用点行号 / 文件名 / 模块名（宏内外都能用） \\
 \bottomrule
 \end{longtable}

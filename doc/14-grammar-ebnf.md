@@ -606,6 +606,7 @@ loop_expr = "loop", block ;
 for_stmt = "for", "(", for_init, expr, ";", for_inc, ")", block ;
 
 foreach_stmt = "foreach", "(", name_token, "in", foreach_source, ")", block
+    | "foreach", "(", "auto", name_token, "in", foreach_source, ")", block
     | "foreach", "(", type, name_token, "in", foreach_source, ")", block
     | "foreach", "(", ptr_type, name_token, "in", foreach_source, ")", block ;
 

@@ -734,6 +734,8 @@ assert(transferred() == 2);
 
 ## foreach 整数区间
 
+`foreach(auto item in source)` 与 `foreach(item in source)` 共用元素类型推断；List 等迭代源保留其元素的完整类型，整数区间按端点推断。显式写类型时继续进行静态兼容性检查。
+
 `foreach (uint8 x in [0,255]) { ... }` 依次产生 0 到 255，共 256 项；`[0,255)` 不包含 255。支持 int8/uint8/int16/uint16/int32/uint32/int64/uint64。省略变量类型时按端点整型推导，普通整数字面量默认 int64。
 
 区间在内部表示为惰性 `Iterator<T>`，直接复用 foreach 的迭代协议，不创建列表。两个端点从左到右各求值一次，并且两个端点都必须在 T 的取值范围内，包括半开区间的上端点。常量错误在编译期拒绝，动态端点在循环前检查。int8 的范围是 -128..127，所以 `foreach(int8 x in [0,255])` 会报错。反向区间 a>b 报错；[a,a) 是空区间，[a,a] 恰好产生一项。

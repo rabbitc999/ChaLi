@@ -765,6 +765,8 @@ Duplicate names, unknown variables, parameter conflicts, and mut/move captures o
 
 ## Integer intervals in foreach
 
+`foreach(auto item in source)` and `foreach(item in source)` share element type inference. Lists and other iterators preserve their element type; integer intervals infer it from the endpoints. Explicit types still undergo static compatibility checks.
+
 `foreach (uint8 x in [0,255]) { ... }` yields 256 values, from 0 through 255; `[0,255)` excludes 255. All eight fixed-width signed and unsigned integer types are supported. Omitted variable types are inferred from the endpoints; ordinary integer literals default to int64.
 
 Intervals are internal lazy `Iterator<T>` values using the existing foreach protocol, without allocating a list. Bounds are evaluated once each, from left to right. Both endpoints must fit T, including an exclusive upper endpoint. Constant violations are rejected at compile time; dynamic values are checked before iteration. int8 spans -128..127, so `foreach(int8 x in [0,255])` is rejected. Reversed intervals are errors; [a,a) is empty and [a,a] yields one value.

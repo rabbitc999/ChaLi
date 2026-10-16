@@ -155,7 +155,7 @@ bool InitIsRuntimeArray(int id)
     if (id < 0) return false;
     const MNode &node = N(id);
     if (node.kind == MNode::NewPtr) return node.i >= 0; /* 带长度才是数组 */
-    if (node.kind == MNode::Call || (node.kind == MNode::EnumCtor && node.type2 == 1))
+    if (node.kind == MNode::Call || node.kind == MNode::Loop || (node.kind == MNode::EnumCtor && node.type2 == 1))
         return IsRuntimeArray(ExprType(id));
     return false;
 }

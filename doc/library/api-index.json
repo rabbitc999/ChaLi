@@ -12843,7 +12843,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 842,
+    "line": 849,
     "page": "std-lang.md",
     "anchor": "api-91"
   },
@@ -12877,7 +12877,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 843,
+    "line": 850,
     "page": "std-lang.md",
     "anchor": "api-92"
   },
@@ -12915,7 +12915,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 844,
+    "line": 851,
     "page": "std-lang.md",
     "anchor": "api-93"
   },
@@ -12947,7 +12947,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 845,
+    "line": 852,
     "page": "std-lang.md",
     "anchor": "api-94"
   },
@@ -12974,7 +12974,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 846,
+    "line": 853,
     "page": "std-lang.md",
     "anchor": "api-95"
   },
@@ -13006,7 +13006,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 847,
+    "line": 854,
     "page": "std-lang.md",
     "anchor": "api-96"
   },
@@ -13038,7 +13038,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 848,
+    "line": 855,
     "page": "std-lang.md",
     "anchor": "api-97"
   },
@@ -13070,7 +13070,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 849,
+    "line": 856,
     "page": "std-lang.md",
     "anchor": "api-98"
   },
@@ -13102,7 +13102,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 850,
+    "line": 857,
     "page": "std-lang.md",
     "anchor": "api-99"
   },
@@ -13127,7 +13127,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 851,
+    "line": 858,
     "page": "std-lang.md",
     "anchor": "api-100"
   },
@@ -13154,7 +13154,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 852,
+    "line": 859,
     "page": "std-lang.md",
     "anchor": "api-101"
   },
@@ -13179,7 +13179,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 842,
+    "line": 849,
     "page": "std-lang.md",
     "anchor": "api-102"
   },
@@ -13211,7 +13211,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 860,
+    "line": 867,
     "page": "std-lang.md",
     "anchor": "api-103"
   },
@@ -13243,7 +13243,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 850,
+    "line": 857,
     "page": "std-lang.md",
     "anchor": "api-104"
   },
@@ -13275,7 +13275,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 849,
+    "line": 856,
     "page": "std-lang.md",
     "anchor": "api-105"
   },
@@ -13307,7 +13307,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 847,
+    "line": 854,
     "page": "std-lang.md",
     "anchor": "api-106"
   },
@@ -13339,7 +13339,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 845,
+    "line": 852,
     "page": "std-lang.md",
     "anchor": "api-107"
   },
@@ -13364,7 +13364,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 851,
+    "line": 858,
     "page": "std-lang.md",
     "anchor": "api-108"
   },
@@ -13391,7 +13391,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 852,
+    "line": 859,
     "page": "std-lang.md",
     "anchor": "api-109"
   },
@@ -13416,7 +13416,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 842,
+    "line": 849,
     "page": "std-lang.md",
     "anchor": "api-110"
   },
@@ -13454,7 +13454,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 874,
+    "line": 881,
     "page": "std-lang.md",
     "anchor": "api-111"
   },
@@ -13486,7 +13486,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 850,
+    "line": 857,
     "page": "std-lang.md",
     "anchor": "api-112"
   },
@@ -13518,7 +13518,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 849,
+    "line": 856,
     "page": "std-lang.md",
     "anchor": "api-113"
   },
@@ -13550,7 +13550,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 847,
+    "line": 854,
     "page": "std-lang.md",
     "anchor": "api-114"
   },
@@ -13582,7 +13582,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 878,
+    "line": 885,
     "page": "std-lang.md",
     "anchor": "api-115"
   },
@@ -13614,7 +13614,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 879,
+    "line": 886,
     "page": "std-lang.md",
     "anchor": "api-116"
   },
@@ -13639,7 +13639,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 851,
+    "line": 858,
     "page": "std-lang.md",
     "anchor": "api-117"
   },
@@ -13666,7 +13666,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/aggregate_ownership.cpp",
-    "line": 852,
+    "line": 859,
     "page": "std-lang.md",
     "anchor": "api-118"
   },

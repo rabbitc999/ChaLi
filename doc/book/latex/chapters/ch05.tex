@@ -451,6 +451,8 @@ foreach ( 元素类型 名字 in 容器 ) { ... }
 \item \texttt{foreach} 能遍历的不只是容器，凡是「能一个个吐出来的东西」都行，比如第 4 章的变长参数、第 17 章的迭代器。
 \end{itemize}
 
+显式 \texttt{foreach(\allowbreak{}auto item in values)\allowbreak{}} 与省略类型的 \texttt{foreach(\allowbreak{}item in values)\allowbreak{}} 使用相同的元素类型推断；容器按元素类型，整数区间按端点类型推断。
+
 \section{\texttt{break} 与 \texttt{continue}}
 
 \par

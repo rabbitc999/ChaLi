@@ -3,6 +3,10 @@
   "scopeName": "source.magel",
   "patterns": [
     {
+      "match": "\\$[+-]?[0-9]+",
+      "name": "variable.other.macro-temporary.magel"
+    },
+    {
       "name": "keyword.control.magel",
       "match": "#level\\s*\\(\\s*[aA][lL][lL]\\s*\\)|#level\\b|#derive\\b"
     },

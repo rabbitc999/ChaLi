@@ -71,6 +71,8 @@ Transfer/copy are compiler pseudocode, not new VM opcodes. Existing `LowerLangua
 
 See [`M_ReturnValue`](../../source/epilogue/return_expression_ast.cpp), [`PrepareBreakValue` and `LowerLanguageMove`](../../source/epilogue/boxing.cpp), [`LowerLoop`](../../source/epilogue/lowering.cpp), and [borrow dataflow](../../source/magel_borrow_flow.hpp).
 
+Runtime arrays follow the same rule. An internal array in `return { String values[] = new[2]; ... break values; };` transfers its length-bearing allocation; the source handle is cleared and source element cleanup is skipped. An external runtime array receives a new allocation and per-element deep copies of strings, objects and aggregates. Hidden result bindings accept length-bearing block, if, match and loop expressions as well as allocations and calls. This compiler-only consumption does not enable source-level `move(&array)`; fixed arrays retain their existing storage/return constraints, and opaque host types are not assumed to own resources.
+
 ## Statement-level named functions
 
 ```magel

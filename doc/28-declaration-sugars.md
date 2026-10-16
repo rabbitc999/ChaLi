@@ -79,6 +79,8 @@ lowerReturnControl(E):
 
 核心代码见 [`M_ReturnValue`](../source/epilogue/return_expression_ast.cpp)、[`PrepareBreakValue` 与 `LowerLanguageMove`](../source/epilogue/boxing.cpp)、[`LowerLoop`](../source/epilogue/lowering.cpp) 和[借用控制流](../source/magel_borrow_flow.hpp)。
 
+运行时数组也沿用该规则：`return { String values[] = new[2]; ... break values; };` 的内部数组连同长度头一起转移，源句柄清零，清理时跳过源元素。外部运行时数组则重新分配长度相同的存储，字符串、对象和聚合元素逐项深复制。隐藏结果槽接受带长度的块、if、match 与 loop 结果，不再只接受 new 或函数调用。此编译器内部消费不开放为源码中的 `move(&array)`；定长数组仍按原有存储和返回类型约束处理，不透明宿主类型也不会被推断成拥有资源。
+
 ## 语句级具名函数
 
 ```magel

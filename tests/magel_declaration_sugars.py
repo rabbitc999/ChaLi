@@ -32,6 +32,7 @@ def main():
             executed = subprocess.run([str(output)], capture_output=True, text=True, encoding="utf-8", timeout=60)
             assert executed.returncode == 0 and executed.stdout.strip() == expected, (name, executed.stdout, executed.stderr)
     errors = [
+        ('int64[] bad(){return {int64 values[]=new[1];defer {println("{}",values[0]);}break values;};} void main(){}', "延迟清理仍借用"),
         ("T bad<T>(T value){return if(true){int32 small=1;break small;}else{break value;};} void main(){bad<int64>(2);}", "类型必须一致"),
         ("T bad<T>(T value){return {return value;};} void main(){bad<int64>(2);}", "禁止嵌套 return"),
         ("int64 bad(){ return { return 1; }; } void main(){}", "禁止嵌套 return"),

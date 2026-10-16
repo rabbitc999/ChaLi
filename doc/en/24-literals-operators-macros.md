@@ -226,6 +226,8 @@ Only commas at the current nesting level split arguments. Nested brackets, strin
 
 Brace arguments may span multiple lines and contain nested groups. Brackets in strings and comments do not close groups. Internal markers retain file and line origins, plus column offsets for captured fragments. Before lexing, markers are removed and line breaks and spaces restore diagnostic positions, including code after a call on the same line and subsequent lines. Bracket kind, order, structure, or binding mismatches report `宏Token分组不匹配` rather than type errors. See [`magel_macro_groups_test.cpp`](../../tests/magel_macro_groups_test.cpp).
 
+Inside a macro body, `$n` names an expansion-local temporary. The decimal integer n has no fixed width and may include a sign; `$0010`, `$+10` and `$10` identify the same slot. Normalization uses text rather than host integer conversion. Separate macro calls remain isolated, strings and comments are preserved, and placeholders remain invalid outside macro bodies.
+
 ## Migration checklist
 
 | You used to write | Write this instead |

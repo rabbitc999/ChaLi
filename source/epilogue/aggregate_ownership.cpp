@@ -115,11 +115,14 @@ simple_ast::NodePtr MakeArrayElementRelease(const Memory::String &name,
     g_needsArrayRelease[ArrayReleaseName(element)] = element;
     /* 运行时数组的长度存在对象里（句柄前 8 字节，和 `len(a)` 同一把尺）；
      * 定长数组的长度直接是编译期常量。 */
+    const auto storage = g_referenceStorage.find(name);
+    const auto value = storage == g_referenceStorage.end() ? simple_ast::Node::var(name) : simple_ast::Node::loadInt(simple_ast::Node::var(storage->second));
     const simple_ast::NodePtr count =
-        fixedCount >= 0 ? simple_ast::Node::i(fixedCount) : simple_ast::Node::loadInt(simple_ast::Node::binary("-", simple_ast::Node::var(name), simple_ast::Node::i(8)));
-    return simple_ast::Node::exprStmt(simple_ast::Node::call(
+        fixedCount >= 0 ? simple_ast::Node::i(fixedCount) : simple_ast::Node::loadInt(simple_ast::Node::binary("-", value, simple_ast::Node::i(8)));
+    const auto release = simple_ast::Node::exprStmt(simple_ast::Node::call(
         ArrayReleaseName(element), { "__magel_arr", "__magel_count" },
-        { simple_ast::Node::var(name), count }));
+        { value, count }));
+    return fixedCount >= 0 ? release : simple_ast::Node::ifThenElse(simple_ast::Node::binary("!=", value, simple_ast::Node::i(0)), release, nullptr);
 }
 
 /**
@@ -615,15 +618,19 @@ simple_ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray = 
     const auto storage = g_referenceStorage.find(emitted);
     const bool indirect = storage != g_referenceStorage.end();
     simple_ast::NodePtr value = indirect ? simple_ast::Node::loadInt(simple_ast::Node::var(storage->second)) : simple_ast::Node::var(emitted);
+    const auto handle = value;
     if (runtimeArray)
     {
         value = simple_ast::Node::binary("-", value, simple_ast::Node::i(8));
     }
+    const auto release = runtimeArray ? simple_ast::Node::ifThenElse(
+                                            simple_ast::Node::binary("!=", handle, simple_ast::Node::i(0)), simple_ast::Node::release(value), nullptr) :
+                                        simple_ast::Node::release(value);
     /* 软释放只检查当前地址是否活跃，无法区分堆地址复用后的新所有者。
      * 出块后保留旧地址，下一轮临时赋值前的 MakeDrop 就可能释放别人的新字符串。
      * 数组先释放元素、再释放块、最后清句柄；旧值在赋值路径中已由 DeferNewValue 保存。 */
     return simple_ast::Node::block({
-        simple_ast::Node::release(value),
+        release,
         indirect ? simple_ast::Node::storeAt(simple_ast::Node::var(storage->second),
                                              simple_ast::Node::i(0), simple_ast::Type::i64()) :
                    simple_ast::Node::assign(emitted, simple_ast::Node::i(0)),
@@ -1328,6 +1335,15 @@ simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
                                             const std::shared_ptr<MType> &type);
 
 /**
+ * @brief 复制运行时数组的元素及长度头，返回独立拥有的数组句柄。
+ * @param source 只求值一次的源数组句柄表达式。
+ * @param type 保留元素布局的运行时数组类型。
+ * @return 逐元素深拷贝后由调用方接管的数组表达式。
+ */
+simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, const std::shared_ptr<MType> &type);
+extern bool g_usesNewArray;
+
+/**
  * @brief 将字符串表达式保存为具有独立生存期的值。
  * @param valueId 表示输入值的节点或类型编号。
  * @param target 待访问或修改的目标。
@@ -1336,6 +1352,7 @@ simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
 simple_ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MType> &target)
 {
     const simple_ast::NodePtr value = LowerValueForType(valueId, target);
+    if (IsRuntimeArray(target) && valueId >= 0 && !IsFreshValue(valueId)) return CopyRuntimeArrayValue(value, target);
     if (!target || target->kind != MType::String) return value;
     if (valueId < 0) return value;
     if (N(valueId).kind == MNode::Str)
@@ -1366,6 +1383,14 @@ simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_
 {
     const simple_ast::NodePtr value = LowerValueForType(valueId, target);
     if (IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
+    if (IsRuntimeArray(target))
+    {
+        if (IsFreshValue(valueId)) return TakeExpressionTempValue(value, target);
+        const auto &source = N(valueId);
+        const auto *variable = source.kind == MNode::Var ? FindIn(source.module, source.s) : nullptr;
+        if (variable == nullptr || keep.count(variable->emitted) == 0u) return CopyRuntimeArrayValue(value, target);
+        return value;
+    }
     if (target && IsObjectLike(target) && valueId >= 0 && !IsFreshValue(valueId))
     {
         int sourceId = valueId;
@@ -1442,6 +1467,53 @@ simple_ast::NodePtr DeepCopyStructValue(const simple_ast::NodePtr &dst,
     return simple_ast::Node::block({ simple_ast::Node::exprStmt(simple_ast::Node::call(
                                          AggregateCopyName(type->name), { "__magel_agg_dst", "__magel_agg_src" }, { dst, src })),
                                      BeginAggregateLifetime(dst, StructStride(type)) });
+}
+
+/**
+ * @brief 将数组复制到新分配的带长度存储，逐项复制拥有资源。
+ * @param source 源数组表达式，整个复制过程仅求值一次。
+ * @param type 包含元素布局的运行时数组类型。
+ * @return 保存复制循环和独立结果句柄的序列表达式。
+ * @note 沿用内存读取检查、数组分配溢出检查与聚合深复制，不复制宿主机器地址。
+ */
+simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, const std::shared_ptr<MType> &type)
+{
+    using simple_ast::Node;
+    const auto input = AllocateName("__magel_array_copy_source");
+    const auto length = AllocateName("__magel_array_copy_length");
+    const auto result = AllocateName("__magel_array_copy_result");
+    const auto index = AllocateName("__magel_array_copy_index");
+    const auto loop = NewBlockLabel("array_copy");
+    const auto done = NewBlockLabel("array_copy_done");
+    const auto element = type->elem;
+    const int stride = ElementBytes(element);
+    const auto from = Node::offset(Node::var(input), Node::var(index), stride);
+    const auto into = Node::offset(Node::var(result), Node::var(index), stride);
+    g_usesNewArray = true;
+    Memory::Vector<simple_ast::NodePtr> out{
+        Node::declare(input, simple_ast::Type::i64()), Node::assign(input, source),
+        Node::declare(length, simple_ast::Type::i64()),
+        Node::assign(length, Node::loadInt(Node::binary("-", Node::var(input), Node::i(8)))),
+        Node::declare(result, LowerType(type, result)),
+        Node::assign(result, Node::call("__magel_new_array", { "__magel_len", "__magel_stride" }, { Node::var(length), Node::i(stride) })),
+        Node::declare(index, simple_ast::Type::i64()), Node::assign(index, Node::i(0)),
+        Node::label(loop), Node::ifThenElse(Node::binary(">=", Node::var(index), Node::var(length)), Node::jump(done), nullptr)
+    };
+    if (element->kind == MType::Struct)
+        out.push_back(DeepCopyStructValue(into, from, element));
+    else
+    {
+        auto value = element->kind == MType::Char ? Node::call("__vm_char_load", { "address" }, { from }) : Node::loadFrom(from, LowerType(element, input));
+        if (element->kind == MType::String)
+            value = Node::call("__vm_str_sub", { "source", "start", "end" }, { value, Node::i(0), Node::i(-1) });
+        else if (IsObjectLike(element))
+            value = Node::call(ObjectCopyFunction(element), { "value" }, { value });
+        out.push_back(element->kind == MType::Char ? Node::exprStmt(Node::call("__vm_char_store", { "address", "value" }, { into, value })) : Node::storeAt(into, value, LowerType(element, result)));
+    }
+    out.push_back(Node::assign(index, Node::binary("+", Node::var(index), Node::i(1))));
+    out.push_back(Node::jump(loop));
+    out.push_back(Node::label(done));
+    return Node::sequence(std::move(out), Node::var(result));
 }
 
 /**

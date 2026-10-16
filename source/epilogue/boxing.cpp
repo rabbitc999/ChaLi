@@ -475,7 +475,7 @@ simple_ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool impl
     if (!reference || reference->kind != MType::Ptr || (!implicitExit && (reference->readOnly || IsReadOnlyAccess(args[0]))))
         return Fail("std::lang::move 只接受可写引用（T mut&），不能接收值或 const &"), Bad();
     const auto type = reference->elem;
-    if (!type || type->kind == MType::Void || type->kind == MType::Array || IsInterfaceType(type) || type->kind == MType::Host)
+    if (!type || type->kind == MType::Void || (type->kind == MType::Array && !(implicitExit && IsRuntimeArray(type))) || IsInterfaceType(type) || type->kind == MType::Host)
         return Fail("std::lang::move 的目标必须是具有具体布局的可移动值"), Bad();
     // 内建只借用源槽，移动值的内部借用由结果存储与返回边界继续检查。
     RecordObjectArgumentBorrow(args[0], reference);
@@ -2706,7 +2706,7 @@ int PrepareBreakValue(int value, std::size_t scopeDepth, bool returnExpression =
     }
     if (expression.kind != MNode::Var) return value;
     const auto variable = FindIn(expression.module, expression.s);
-    if (!variable || (variable->isConst && !returnExpression) || !variable->type || variable->type->kind == MType::Ptr || variable->type->kind == MType::Array || variable->type->kind == MType::Host)
+    if (!variable || (variable->isConst && !returnExpression) || !variable->type || variable->type->kind == MType::Ptr || (variable->type->kind == MType::Array && !(returnExpression && IsRuntimeArray(variable->type))) || variable->type->kind == MType::Host)
         return value;
     if (variable->elementReference && std::none_of(g_referenceStorage.begin(), g_referenceStorage.end(), [&](const auto &entry) { return entry.second == variable->emitted; }))
         return value;
