@@ -4,7 +4,7 @@
   "patterns": [
     {
       "name": "keyword.control.magel",
-      "match": "#level\\b|#derive\\b"
+      "match": "#level\\s*\\(\\s*[aA][lL][lL]\\s*\\)|#level\\b|#derive\\b"
     },
     {
       "name": "comment.block.magel",

@@ -148,7 +148,7 @@ type := builtin_type { $$ = $1; }
       | container_type { $$ = $1; }
       | tuple_type     { $$ = $1; }
       | function_type { $$ = $1; }
-      | LPAREN function_type RPAREN { $$ = $2; } ;
+      | LPAREN function_type RPAREN %prec FN { $$ = $2; } ;
 
 /* 异构定长元组：至少两个元素；单元素括号仍只是普通分组。 */
 tuple_type := LPAREN tuple_items RPAREN { $$ = M_TypeTupleSyntax($2); } ;
@@ -374,7 +374,9 @@ host_impl_decl := IMPL type COLON name_token ASSIGN name_token SEMI
 function_type := fn_signature { $$ = M_FnSignatureType($1); } ;
 fn_signature := type FN LPAREN function_params RPAREN { $$ = M_FnSignature($1, $4); }
     | ptr_type FN LPAREN function_params RPAREN { $$ = M_FnSignature($1, $4); }
-    | LPAREN array_type RPAREN FN LPAREN function_params RPAREN { $$ = M_FnSignature($2, $6); } ;
+    | LPAREN array_type RPAREN FN LPAREN function_params RPAREN { $$ = M_FnSignature($2, $6); }
+    /* 括号包住返回函数类型时，继续共用签名，避免提前归约成分组表达式。 */
+    | LPAREN function_type RPAREN FN LPAREN function_params RPAREN { $$ = M_FnSignature($2, $6); } ;
 function_params := %empty { $$ = M_List(); }
                  | function_params_nonempty { $$ = $1; } ;
 function_params_nonempty := function_param { $$ = M_List1($1); }
@@ -472,6 +474,7 @@ stmt := block                  { $$ = $1; }
       | BREAK SEMI             { $$ = M_Break(-1); }
       | BREAK BREAK_LEVEL LPAREN NUMBER RPAREN SEMI { $$ = M_BreakLevel($4); }
       | BREAK BREAK_LEVEL LPAREN ALL RPAREN SEMI { $$ = M_BreakLevel(-1); }
+      | BREAK BREAK_LEVEL LPAREN VARIABLE RPAREN SEMI { $$ = M_BreakLevelNamed($4); }
       | BREAK expr SEMI        { $$ = M_Break($2); }
       | BREAK tuple_items SEMI { $$ = M_Break(M_Tuple($2)); }
       | CONTINUE SEMI          { $$ = M_Continue(); }

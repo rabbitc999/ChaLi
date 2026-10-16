@@ -360,7 +360,7 @@ The same round also removed two things: the `$match` macro DSL, and `##` pasting
 stringification. The reasoning is the same as above: **they were not new capabilities, just a
 second spelling of something that already existed**. `$match` was a miniature DSL stacked on top of
 a textual substitution macro — rarely used, but with a very large diagnostic surface. And `##` /
-`#param` were only compatibility aliases for `$concat` / `$stringify`; keeping both spellings
+`#param` were compatibility aliases for `$concat` / `$stringify` and have now been removed; keeping both spellings
 doubled the diagnostic surface for no gain. See the deletion list in the next section for details.
 
 ---

@@ -65,3 +65,4 @@ __pycache__/
 /source/magel_parser_user.h
 /source/magel_main.cpp
 /source/.parseengine-manifest
+/source/.magel-build.gram

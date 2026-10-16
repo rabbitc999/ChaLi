@@ -16,11 +16,15 @@ import std::math;
 import std::text;
 import std::iter;
 
-int64 main() {
+int64 main()
+{
     println("sqrt={}", std::math::sqrt(144.0));
     println("upper={}", std::text::Text::toUpper("magel"));
     int64 sum = 0;
-    foreach (int64 v in std::iter::range(1, 5)) { sum += v; }
+    foreach (int64 v in std::iter::range(1, 5))
+    {
+        sum += v;
+    }
     println("sum={}", sum);
     return 0;
 }

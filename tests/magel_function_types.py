@@ -57,6 +57,15 @@ int64 const& borrow(int64 const& value) { return value; }
 int64 sum(int64... values) { int64 total=0; foreach(int64 x in values){total=total+x;} return total; }
 int64[] numbers(){int64 values[]=new[2];values[0]=7;values[1]=8;return values;}
 int64 main() {
+    auto composeCallbacks = (int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) {
+        int64 fn copy(int64 x) { a(b(x)) }
+    };
+    auto composed = composeCallbacks(add, fptr);
+    assert(composed(5) == 8);
+    auto composedCopy = composed;
+    assert(composedCopy(7) == 10);
+    auto inferredComposition = composeCallbacks(fn(x){x*5},fn(x){x-1});
+    assert(inferredComposition(5) == 20);
     (int64 fn(int64)) fn(int64 fn(int64),int64) nestedFactory=chooseCallback<int64>;
     assert(nestedFactory(add,41)(9)==10);
     assert(invokeFactory<int64>(nestedFactory,add,9)==10);
@@ -124,8 +133,7 @@ int64 main() {
     expected = "function types OK\n"
     for backend in ("run", "aot"):
         target = WORK / (backend + EXE)
-        options = ["--opt-level=0"] if backend == "aot" else []
-        result = execute(compiler, backend, source, "--out", target, *options)
+        result = execute(compiler, backend, source, "--out", target)
         assert result.returncode == 0, (backend, result.stderr)
         if backend == "aot":
             result = execute(target)
@@ -149,6 +157,7 @@ int64 main() {
         result = execute(compiler, "--check", legacy)
         assert result.returncode != 0, (name, result)
     errors = {
+        "composition_parameter_escape": "void bad(){auto combine=(int64 fn(int64)) fn(int64 fn(int64) a,int64 fn(int64) b){int64 fn(int64 x){a(b(x))}};}",
         "nested_factory_signature": "int64 add(int64 x){return x+1;}int64 fn(int64) choose(int64 fn(int64) callback,int64 value){return callback;}(float64 fn(float64)) fn(int64 fn(int64),int64) bad=choose;",
         "old_declaration": "fptr callback(int64 value) -> int64;",
         "old_alias": "fptrdef Callback(int64 value) -> int64;",

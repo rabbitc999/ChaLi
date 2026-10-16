@@ -7,7 +7,7 @@
 你不需要会 C，也不需要懂编译原理。这本书从头讲起，每章只解决一个问题，代码都能直接粘下来跑。读完它，你能独立写出结构清楚、资源管得干净的 Magel 程序，并且知道遇到问题时该去查哪一篇官方文档。
 
 \begin{tip}{提示}
-本书按当前检出的 \href{https://gitee.com/rabbitc999/magel/tree/master/VERSION}{\texttt{VERSION}} 与\href{https://gitee.com/rabbitc999/magel/blob/master/doc/17-capabilities.md}{能力说明}维护。表达式、泛型、清理、宏和输入示例由\texttt{tests/\allowbreak{}magel\_v250.\allowbreak{}py}、\texttt{tests/\allowbreak{}magel\_v251.\allowbreak{}py}、\texttt{tests/\allowbreak{}magel\_text\_readers.\allowbreak{}py} 及\texttt{tests/\allowbreak{}magel\_book\_updates.\allowbreak{}py} 校验。LaTeX 正文章节由 Markdown 生成，PDF 见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/book/latex/book.pdf}{LaTeX 书本}。
+本书内容与 Magel 的当前\href{https://gitee.com/rabbitc999/magel/tree/master/VERSION}{语言版本}和\href{https://gitee.com/rabbitc999/magel/blob/master/doc/17-capabilities.md}{能力说明}保持同步。你可以按下方目录在线阅读，也可以下载 \href{https://gitee.com/rabbitc999/magel/blob/master/doc/book/latex/book.pdf}{PDF 电子书}，离线阅读或打印。
 \end{tip}
 
 \section*{这本书写给谁}
@@ -61,22 +61,22 @@ Windows 上程序名是 \texttt{magel.\allowbreak{}exe}。在 Git Bash / MSYS �
 \hyperref[ch:01]{01} & 第一个程序 & 装好工具链，跑出 \texttt{Hello,\allowbreak{} Magel!}，知道 \texttt{run} 和 \texttt{check} 的区别 \\
 \hyperref[ch:02]{02} & 猜数字 & 用一个小游戏把「变量、输入、循环、分支」串成一个能跑的程序 \\
 \hyperref[ch:03]{03} & 变量与类型 & 变量、常量、\texttt{auto}，以及 Magel 为什么不肯帮你偷偷转类型 \\
-\hyperref[ch:04]{04} & 函数 & 定义、参数、返回值、多值返回、重载与默认参数 \\
+\hyperref[ch:04]{04} & 函数 & 定义、参数、返回控制表达式、多值返回、重载与默认参数 \\
 \hyperref[ch:05]{05} & 控制流 & \texttt{if} / \texttt{while} / \texttt{for} / \texttt{loop} / \texttt{foreach}，以及把 \texttt{loop} 当表达式用 \\
 \hyperref[ch:06]{06} & 值语义 & 赋值就是复制。为什么不移动也能保证安全 \\
 \hyperref[ch:07]{07} & 引用 & \texttt{mut\&} / \texttt{const\&}、没有 \texttt{null}、引用不能活得比目标久 \\
 \hyperref[ch:08]{08} & 资源与作用域 & \texttt{Drop} / \texttt{Closeable} / \texttt{new} / \texttt{delete} / \texttt{move}，没有 GC 怎么活 \\
-\hyperref[ch:09]{09} & 结构体 & 把字段和方法收进一个类型，\texttt{self}、\texttt{static}、构造器 \\
+\hyperref[ch:09]{09} & 结构体 & 把字段和方法收进一个类型，构造器及 Equal/Hash/Clone 派生 \\
 \hyperref[ch:10]{10} & 枚举与模式匹配 & 代数数据类型，以及让编译器帮你查漏的 \texttt{match} \\
 \hyperref[ch:11]{11} & 容器 & \texttt{List} / \texttt{Map} / \texttt{Set}，以及容器也是值的后果 \\
 \hyperref[ch:12]{12} & 字符串与文本 & 拼接、下标（按字节！）、切片，以及 \texttt{std:\allowbreak{}:\allowbreak{}text} \\
 \hyperref[ch:13]{13} & 接口与运行期多态 & \texttt{interface}、默认实现、\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}Any} \\
 \hyperref[ch:14]{14} & 泛型 & 泛型函数与结构体、约束、编译期单态化 \\
-\hyperref[ch:15]{15} & 函数值与闭包 & \texttt{fn} 类型、\texttt{fn}、按值快照的捕获 \\
+\hyperref[ch:15]{15} & 函数值与闭包 & \texttt{fn} 类型、具名局部闭包与四种捕获方式 \\
 \hyperref[ch:16]{16} & 错误处理 & \texttt{Option} / \texttt{Result} / \texttt{?}，以及 \texttt{assert} 该用在哪 \\
 \hyperref[ch:17]{17} & 迭代器 & \texttt{std:\allowbreak{}:\allowbreak{}iter} 的惰性链：\texttt{range} / \texttt{map} / \texttt{filter} / \texttt{collect} \\
 \hyperref[ch:18]{18} & 模块与工程 & \texttt{module} / \texttt{import}、\texttt{magel new}、\texttt{magel.\allowbreak{}toml}、测试与格式化 \\
-\hyperref[ch:19]{19} & 预处理与宏 & \texttt{\%define} / \texttt{\%if} / \texttt{\%include} 与 \texttt{\$macro} \\
+\hyperref[ch:19]{19} & 预处理与宏 & 条件编译、文件包含与有序多括号文本宏 \\
 \hyperref[ch:20]{20} & 注解与反射 & \texttt{@annotation}、运行期查元数据、按名调用 \\
 \hyperref[ch:21]{21} & 与 C 互操作 & \texttt{abi} 块，调 C 的库、把自己的函数交给 C \\
 \hyperref[ch:22]{22} & 交付与部署 & \texttt{.\allowbreak{}svmb}、AOT、符号压缩、嵌入式与看门狗 \\

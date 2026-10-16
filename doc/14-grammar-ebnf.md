@@ -460,7 +460,8 @@ function_type = fn_signature ;
 
 fn_signature = type, "fn", "(", function_params, ")"
     | ptr_type, "fn", "(", function_params, ")"
-    | "(", array_type, ")", "fn", "(", function_params, ")" ;
+    | "(", array_type, ")", "fn", "(", function_params, ")"
+    | "(", function_type, ")", "fn", "(", function_params, ")" ;
 
 function_params = ""
     | function_params_nonempty ;
@@ -537,6 +538,7 @@ stmt = block
     | "break", ";"
     | "break", "#level", "(", NUMBER, ")", ";"
     | "break", "#level", "(", "ALL", ")", ";"
+    | "break", "#level", "(", VARIABLE, ")", ";"
     | "break", expr, ";"
     | "break", tuple_items, ";"
     | "continue", ";"

@@ -234,11 +234,11 @@ run_step "跑优化器声明元数据回归" tmp/ci/optimizer-metadata
 run_step "编 IR 控制流与优化差分回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -DSTACKVM_WITH_REFLECTION=1 -Ilibrary -Ilibrary/stackvm tests/stackvm_quad_optimization.cpp build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/quad-optimization
 run_step "跑 IR 控制流与优化差分回归" tmp/ci/quad-optimization
 
-run_step "编板端分配身份回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -Ilibrary/stackvm -Isource/mcu_vm tests/mcu_allocation_identity.cpp source/mcu_vm/embed_pool.c -o tmp/ci/mcu-identity
+run_step "编板端分配身份回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -Ilibrary/stackvm -Isource/stackvm_mcu tests/mcu_allocation_identity.cpp source/stackvm_mcu/embed_pool.c -o tmp/ci/mcu-identity
 run_step "跑板端分配身份回归" tmp/ci/mcu-identity
-run_step "编 SDRAM 启动及字节池索引回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DMCU_METADATA_BOOTSTRAP_MALLOC=1 -DMCU_METADATA_BYTES=64 -DMCU_RUNTIME_ARENA_BYTES=64 -DMCU_VM_ARENA_BYTES=64 -DMAGEL_CUSTOM_ALLOCATOR=1 -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -DSTACKVM_WITH_DEFAULT_HEAP=0 -Isource/mcu_vm -Ilibrary/stackvm -Ilibrary tests/mcu_metadata_bootstrap.cpp source/mcu_vm/mcu_metadata_heap.cpp source/mcu_vm/mcu_arenas.cpp source/mcu_vm/embed_pool.c -o tmp/ci/mcu-bootstrap
+run_step "编 SDRAM 启动及字节池索引回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DMCU_METADATA_BOOTSTRAP_MALLOC=1 -DMCU_METADATA_BYTES=64 -DMCU_RUNTIME_ARENA_BYTES=64 -DMCU_VM_ARENA_BYTES=64 -DMAGEL_CUSTOM_ALLOCATOR=1 -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -DSTACKVM_WITH_DEFAULT_HEAP=0 -Isource/stackvm_mcu -Ilibrary/stackvm -Ilibrary tests/mcu_metadata_bootstrap.cpp source/stackvm_mcu/mcu_metadata_heap.cpp source/stackvm_mcu/mcu_arenas.cpp source/stackvm_mcu/embed_pool.c -o tmp/ci/mcu-bootstrap
 run_step "跑 SDRAM 启动及字节池索引回归" tmp/ci/mcu-bootstrap
-run_step "编 watchdog 墓碑收尾回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -Ilibrary/stackvm tests/watchdog_tombstones.cpp source/mcu_vm/embed_pool.c build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/watchdog-tombstones
+run_step "编 watchdog 墓碑收尾回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -Ilibrary/stackvm tests/watchdog_tombstones.cpp source/stackvm_mcu/embed_pool.c build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/watchdog-tombstones
 run_step "跑 watchdog 墓碑收尾回归" tmp/ci/watchdog-tombstones
 run_step "检查两端共用执行文件" "$PYTHON" tools/sync_vm_execution.py --check
 run_step "编 VM 执行差分回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -Ilibrary/stackvm tests/stackvm_execution_plan.cpp build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/vm-execution

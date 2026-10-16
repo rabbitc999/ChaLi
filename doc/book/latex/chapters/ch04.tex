@@ -9,45 +9,79 @@
 
 \section{定义与调用}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 add(int64 a, int64 b) {
+int64 add(int64 a, int64 b)
+{
     return a + b;
 }
 
-void log(String message) {
+void log(String message)
+{
     println("[log] {}", message);
 }
 
-int64 main() {
+int64 main()
+{
     log("start");
     println("{}", add(1, 2));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [log] start
 3
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 拆开看一个函数的脑袋：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 int64        add      ( int64 a , int64 b )   { ... }
  ↑            ↑         ↑
  返回类型     名字      参数表：每个参数都要写类型
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{void} 表示「不返回东西」。 \texttt{log} 只做事、不交值，所以返回类型是 \texttt{void}。\texttt{void} 函数里不用写 \texttt{return}；想中途退出，写一个光秃秃的 \texttt{return;} 就行：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void trace(int64 number) {
-    if (number < 0) {
-        return;              // 负数不看，直接走
+void trace(int64 number)
+{
+    if (number < 0)
+    {
+        return;
+        // 负数不看，直接走
     }
     println("n={}", number);
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 函数可以写在 \texttt{main} 前面或后面，Magel 不要求「先声明后使用」。这一点比 C 舒服——不用再维护一份头文件里的原型。
 
@@ -57,22 +91,38 @@ void trace(int64 number) {
 
 这是本章最重要的一条规则，也是第 6 章那条大规则的小预告：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void shout(String text) {
+void shout(String text)
+{
     text = text + "!";
 }
 
-int64 main() {
+int64 main()
+{
     String word = "hi";
     shout(word);
     println("{}", word);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hi
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{shout} 里改了 \texttt{text}，\texttt{main} 里的 \texttt{word} 一点没变。
 
@@ -86,14 +136,23 @@ hi
 
 \section{返回值}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 clamp(int64 value) {
-    if (value < 0) {
+int64 clamp(int64 value)
+{
+    if (value < 0)
+    {
         return 0;
     }
     return value;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{return} 后面跟的值的类型，必须和函数声明的返回类型一致，不允许隐式转换（还记得第 3 章那条规矩吧）。返回 \texttt{int64} 的函数不能 \texttt{return 3.\allowbreak{}5;}。
 
@@ -101,28 +160,112 @@ int64 clamp(int64 value) {
 
 如果一条路忘了返回呢？ 编译期就会报错，不会让你跑到一半发现「这个函数返回了垃圾」。
 
-\section{重载：同名不同参}
+\subsection{返回一个带值的控制表达式}
 
-同一个名字，可以按实参类型挑不同的实现：
+\texttt{return} 后面既可以写普通值，也可以写块、\texttt{if}、\texttt{match} 或 \texttt{loop}。它们先给出一个结果，函数再返回这个结果。
 
 \begin{lstlisting}[style=magel]
-int64 add(int64 a, int64 b) {
-    return a + b;
+int64 fromBlock()
+{
+    return
+    {
+        int64 local = 3;
+        break local;
+    };
 }
 
-float64 add(float64 a, float64 b) {
-    return a + b;
+int64 choose(bool first)
+{
+    return if (first)
+    {
+        break 5;
+    }
+    else
+    {
+        break 6;
+    };
 }
 
-int64 main() {
-    println("{} {}", add(1, 2), add(1.5, 2.5));
+int64 fromMatch(int64 item)
+{
+    return match (item)
+    {
+        0 => { break 7; }
+        _ => { break 8; }
+    };
+}
+
+int64 fromLoop()
+{
+    return loop
+    {
+        break 9;
+    };
+}
+
+int64 main()
+{
+    println("{} {} {} {}", fromBlock(), choose(false), fromMatch(0), fromLoop());
     return 0;
 }
 \end{lstlisting}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+3 6 7 9
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+这里的 \texttt{break value;} 给出当前值表达式的结果，不是返回函数。只有表达式完成后，外层 \texttt{return} 才返回函数。所有可能给出结果的分支必须具有完全相同的类型；不能让一支是 \texttt{int32}、另一支是 \texttt{int64}，再指望编译器自动凑成同一种类型。
+
+在这个返回表达式内部，不能再嵌套当前函数的 \texttt{return}，也不能使用 \texttt{break \#level(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 跨层跳转；会提前返回的 \texttt{?} 同样需要改成显式匹配。表达式里新定义的独立函数有自己的返回边界。只含一个结果的 \texttt{\{ value \}} 分支仍可沿用前面的简写。
+
+内部拥有值变量通过 \texttt{break} 交出结果时会隐式移动，外部变量仍按值复制。移动先保存结果，再执行离开作用域的清理；不会把已经交出去的值再析构一次。引用不能因此逃出来源的生命周期。第 8 章的清理规则和第 14 章的泛型返回会继续解释这些边界。
+
+\section{重载：同名不同参}
+
+同一个名字，可以按实参类型挑不同的实现：
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+int64 add(int64 a, int64 b)
+{
+    return a + b;
+}
+
+float64 add(float64 a, float64 b)
+{
+    return a + b;
+}
+
+int64 main()
+{
+    println("{} {}", add(1, 2), add(1.5, 2.5));
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 4
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 选哪个是编译期定下来的，看实参类型：\texttt{add(\allowbreak{}1,\allowbreak{} 2)\allowbreak{}} 两个都是 \texttt{int64}，走第一份；\texttt{add(\allowbreak{}1.\allowbreak{}5,\allowbreak{} 2.\allowbreak{}5)\allowbreak{}} 两个都是 \texttt{float64}，走第二份。
 
@@ -130,20 +273,36 @@ int64 main() {
 
 找不到匹配的重载时，报错会把它拿到了什么类型和有哪些候选都列出来。比如只定义了 \texttt{int64} 的 \texttt{add}，却拿一个 \texttt{int64} 加一个 \texttt{float64} 去调：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 add(int64 a, int64 b) {
+int64 add(int64 a, int64 b)
+{
     return a + b;
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", add(1, 2.5));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：调用 函数 add 找不到匹配的重载：(int64, float64)；没有参数类型能对上的重载（候选：add）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 看到这种错，先看括号里它拿到了什么类型，再决定是改实参还是加一份重载。（顺便：\texttt{2.\allowbreak{}5} 是 \texttt{float64}，\texttt{add(\allowbreak{}1,\allowbreak{} 2.\allowbreak{}5)\allowbreak{}} 里的 \texttt{1} 也不会被「凑」成 \texttt{float64}——回想第 3 章：没有隐式转换。）
 
@@ -151,34 +310,64 @@ magel：调用 函数 add 找不到匹配的重载：(int64, float64)；没有�
 
 参数可以带默认值，调用时从尾部省略：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 add(int64 a, int64 b = 10) {
+int64 add(int64 a, int64 b = 10)
+{
     return a + b;
 }
 
-int64 main() {
+int64 main()
+{
     println("{} {}", add(2), add(2, 3));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 12 5
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两条规矩：
 
 \begin{itemize}
 \item 带默认值的参数必须排在后面并且连续——不能「第 1 个有默认值、第 2 个没有」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：函数 add 的默认参数后不能有必填参数
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 \item 省略时只能从尾部往前省。\texttt{add(\allowbreak{}2)\allowbreak{}} 省掉了 \texttt{b}，没问题；\texttt{add(\allowbreak{})\allowbreak{}} 不行，因为 \texttt{a} 没有默认值：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：调用 函数 add 找不到匹配的重载：()；没有参数类型能对上的重载（候选：add）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 \end{itemize}
 
 默认值在每次省略该参数时重新求值。所以别在默认值里写「记录调用次数」这种带副作用的表达式——每次都会算一遍。
@@ -191,24 +380,41 @@ magel：调用 函数 add 找不到匹配的重载：()；没有参数类型能�
 
 最后一项参数可以写成 \texttt{T.\allowbreak{}.\allowbreak{}.\allowbreak{}}，表示「这里可以给任意多个」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 total(int64... items) {
+int64 total(int64... items)
+{
     int64 sum = 0;
-    foreach (int64 item in items) {
+    foreach (int64 item in items)
+    {
         sum = sum + item;
     }
     return sum;
 }
 
-int64 main() {
+int64 main()
+{
     println("{} {}", total(1, 2, 3), total(5));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6 5
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{items} 在函数体里就是一个能遍历的容器。\texttt{foreach (\allowbreak{}int64 item in items)\allowbreak{}} 是「把 \texttt{items} 里的东西一个个拿出来，每轮叫它 \texttt{item}」——第 5 章细讲 \texttt{foreach}。
 
@@ -218,21 +424,37 @@ int64 main() {
 
 Magel 的返回值可以是一个元组（tuple）——把几个值打包起来：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-(int64, String) describe(int64 id) {
-    return (id, "player");
+(int64, String) describe(int64 id)
+{
+    return(id, "player");
 }
 
-int64 main() {
+int64 main()
+{
     auto info = describe(7);
     println("{} {}", info.0, info.1);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7 player
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item 返回类型写成 \texttt{(\allowbreak{}int64,\allowbreak{} String)\allowbreak{}}，就是「一个 \texttt{int64} 加一个 \texttt{String}」；
@@ -244,12 +466,18 @@ int64 main() {
 
 如果你不想用 \texttt{.\allowbreak{}0} / \texttt{.\allowbreak{}1}，可以直接拆开接：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-(int32, String) pair(int32 key, String name) {
+(int32, String) pair(int32 key, String name)
+{
     return key, name;
 }
 
-int64 main() {
+int64 main()
+{
     int32 key;
     String name;
     key, name = pair((int32)7, "player");
@@ -257,10 +485,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7 player
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这行 \texttt{key,\allowbreak{} name =\allowbreak{} pair(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 的意思是：把右边元组按位置拆给左边的每一个目标。左边必须是已经声明过的变量——声明新变量请写 \texttt{auto (\allowbreak{}key,\allowbreak{} name)\allowbreak{} =\allowbreak{} pair(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{};}。
 
@@ -272,41 +510,81 @@ int64 main() {
 
 到现在为止你写的都是不带参数的版本：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() { ... }
+int64 main()
+{
+    ...
+}
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 要读命令行参数，换成另一种：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main(List<String> arguments) {
+int64 main(List<String> arguments)
+{
     println("收到 {} 个参数", arguments.len());
-    foreach (String item in arguments) {
+    foreach (String item in arguments)
+    {
         println("  {}", item);
     }
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 收到 2 个参数
   Alice
   two words
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 只有这两种入口是合法的，别自己发明第三种。
 
 传参的写法要注意：直接给文件时，文件后面的都算程序参数。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel app.mgl Alice "two words"
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 但如果你把场景词 \texttt{run} 显式写出来，就得多一个 \texttt{--} 把「配置词」和「程序参数」隔开：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl -- Alice "two words"
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 不写 \texttt{--} 的话，\texttt{Alice} 会被当成另一个源文件，报「一次只能编译一个源文件」。
 

@@ -58,11 +58,25 @@ def main():
         assert all(text in macro['documentation'] for text in ('跨任意多行', '宏Token分组不匹配', '$end_macro', '>>'))
         assert '多括号' in run('macro').stdout
         assert 'struct' in query('keyword')['keywords']
+        assert '__typeTag' not in query('keyword')['keywords']
+        assert '#level' in query('keyword','ALL')['keyword']['documentation']
+        assert 'match' in query('keyword','_')['keyword']['documentation']
+        assert 'demo_counter_from_uint' in query('keyword','impl')['keyword']['documentation']
+        assert '1.0f' in query('keyword','float32')['keyword']['documentation']
+        assert '1u' in query('keyword','uint64')['keyword']['documentation']
+        assert '只是兼容别名' not in macro['documentation']
         assert query('keyword','not_a_keyword',code=1)['diagnostics'][0]['code']=='MGL1701'
         skill=(ROOT/'skills/magel-programming/SKILL.md').read_text(encoding='utf-8')
         assert run('skill').stdout==skill
         assert query('skill')['content']==skill
         run('book','6','--run',code=2)
+        for target in ('std', 'std::text::Text'):
+            missing_api=run(target,code=2)
+            assert 'magel man api '+target in missing_api.stderr and not missing_api.stdout,missing_api
+            report=json.loads(run('--json',target,code=2).stdout)
+            assert report['kind']=='usage' and report['diagnostics'][0]['code']=='MGL1701' and 'candidates' not in report,report
+        run('--search','split',code=2)
+        assert query('std')['kind']=='modules'
         modules=query()
         assert {m['name'] for m in modules['modules']}==set(data['modules'])
         grouped=[m['name'] for g in modules['groups'] for m in g['modules']]

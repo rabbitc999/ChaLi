@@ -78,6 +78,17 @@ int64 main() {
         assert(false);
     };
     assert(afterLoops() == 7);
+    // all 不是普通代码中的保留字；只有 #level 参数忽略大小写。
+    int64 all = 0;
+    loop { loop { all++; break #level(all); }; assert(false); };
+    loop { loop { all++; break #level(All); }; assert(false); };
+    loop { loop { all++; break #level(aLl); }; assert(false); };
+    loop { loop { all++; break #level(alL); }; assert(false); };
+    loop { loop { all++; break #level(ALl); }; assert(false); };
+    loop { loop { all++; break #level(AlL); }; assert(false); };
+    loop { loop { all++; break #level(aLL); }; assert(false); };
+    loop { loop { all++; break #level(ALL); }; assert(false); };
+    assert(all == 8);
     println("break level OK");
     return 0;
 }

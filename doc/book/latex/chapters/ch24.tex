@@ -31,17 +31,31 @@
 
 以下命令从 Magel 仓库根目录运行。第一个终端启动后端：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe run example/sql-magel/example/ipage-student-server/main.mgl -- --db magel_book_students --mysql-user root --mysql-password 123456 --init example/sql-magel/tests/fixture_ipage.sql --listen-port 8080 --allow-origin http://127.0.0.1:5500
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 将 MySQL 用户与口令替换为本机练习环境的配置。初始化只在缺少业务表时执行；重复练习需要重置数据时，先确认数据库名称，再显式添加 \texttt{--reinit}。
 
 第二个终端托管静态页面：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python -m http.server 5500 --bind 127.0.0.1 --directory example/sql-magel/example/ipage-student-server/web
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 打开 \texttt{http:\allowbreak{}/\allowbreak{}/\allowbreak{}127.\allowbreak{}0.\allowbreak{}0.\allowbreak{}1:\allowbreak{}5500/\allowbreak{}}。页面默认访问 \texttt{http:\allowbreak{}/\allowbreak{}/\allowbreak{}127.\allowbreak{}0.\allowbreak{}0.\allowbreak{}1:\allowbreak{}8080}；后端换端口时，可用查询参数 \texttt{?api=\allowbreak{}http:\allowbreak{}/\allowbreak{}/\allowbreak{}127.\allowbreak{}0.\allowbreak{}0.\allowbreak{}1:\allowbreak{}9000} 或修改 \texttt{web/\allowbreak{}config.\allowbreak{}js}。浏览器页面上的 API 地址可以帮助核对两端是否连接正确。
 
@@ -138,17 +152,28 @@ ER 图中的 \texttt{user} 是认证表，没有指向学生表的外键。\text
 
 随后才创建 \texttt{Tcp\allowbreak{}Listener}。当配置端口为 0 时，必须用 \texttt{listener.\allowbreak{}local\allowbreak{}Port(\allowbreak{})\allowbreak{}} 取得系统实际分配的端口；就绪文件写入的也是这个值，测试客户端据此连接。主循环的核心代码如下，摘自实际入口：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-while (maximum == 0 || handled < maximum) {
+while (maximum == 0 || handled < maximum)
+{
     TcpSocket socket = listener.accept((int32)1000);
-    if (!socket.isOpen()) { continue; }
+    if (!socket.isOpen())
+    {
+        continue;
+    }
     Request request = readRequest(&socket, actualPort);
-    Response response = route(&app, &request);
-    bool sent = sendResponse(&socket, &response, app.allowOrigin);
+    Response response = route(&app,&request);
+    bool sent = sendResponse(&socket,&response, app.allowOrigin);
     socket.close();
     handled = handled + 1;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 每条连接依次经过接收、路由、发送、关闭。\texttt{maximum} 为 0 时持续服务，正数用于确定性测试；请求处理完毕才增加计数。当前代码把发送结果保存为 \texttt{sent}，但没有重试发送失败的响应。循环退出后，入口再关闭监听器并调用 \texttt{app.\allowbreak{}stop(\allowbreak{})\allowbreak{}}。
 
@@ -181,10 +206,20 @@ while (maximum == 0 || handled < maximum) {
 
 核心的会话检查只有两行：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 Session session = app.findSession(bearerToken(request.authorization));
-if (!session.valid) { return errorResponse(401, "未登录或会话已失效，请重新登录"); }
+if (!session.valid)
+{
+    return errorResponse(401, "未登录或会话已失效，请重新登录");
+}
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{bearer\allowbreak{}Token} 检查 Bearer 前缀，\texttt{find\allowbreak{}Session} 在 \texttt{App.\allowbreak{}sessions} 中查找令牌，找不到时返回 \texttt{valid=\allowbreak{}false} 的会话值。登录函数在核对用户名和口令之后创建会话，并把令牌、用户信息和可见模块树一起返回。注销则删除会话表里的对应记录，所以后续使用旧令牌的请求会失败。
 
@@ -196,16 +231,31 @@ if (!session.valid) { return errorResponse(401, "未登录或会话已失效，�
 
 下面是实际的列表与新增分支摘录：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-if (request.method == "GET") {
-    if (!allow(session.level, "student", "list", &denial)) { return denial; }
+if (request.method == "GET")
+{
+    if (!allow(session.level, "student", "list",&denial))
+    {
+        return denial;
+    }
     return app.listStudents("", "");
 }
-if (request.method == "POST") {
-    if (!allow(session.level, "student", "add", &denial)) { return denial; }
+if (request.method == "POST")
+{
+    if (!allow(session.level, "student", "add",&denial))
+    {
+        return denial;
+    }
     return app.createStudent(&request);
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 同一个资源，动作不同，权限门槛也不同。\texttt{allow} 先通过 \texttt{action\allowbreak{}Need\allowbreak{}Level} 查权限表；动作不存在属于服务端配置错误，返回 500；当前等级不足则生成 403；通过后才调用业务方法。前端隐藏“新增”按钮只是界面提示，真正挡住直接 HTTP 请求的是这里。
 
@@ -221,11 +271,18 @@ SQL 值通过当前数据库连接的 \texttt{db.\allowbreak{}quote(\allowbreak{
 
 列表查询可以从 \texttt{student\allowbreak{}List\allowbreak{}Sql} 开始读：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 " FROM student st"
 " LEFT JOIN sclass cl ON cl.sclass_id = st.sclass_id"
 " LEFT JOIN selection se ON se.student_id = st.student_id"
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 LEFT JOIN 让“尚未分班”和“尚无成绩”的学生仍然出现在列表里。\texttt{COUNT(\allowbreak{}se.\allowbreak{}selection\_id)\allowbreak{}} 统计实际成绩记录；换成 COUNT(*) 会把连接产生的空行也算进去。平均分使用 AVG、ROUND 和 IFNULL，\texttt{student\allowbreak{}Group\allowbreak{}Sql} 补齐 GROUP BY 与排序，避免在 ONLY\_FULL\_GROUP\_BY 模式下依赖不确定的分组行为。
 
@@ -243,18 +300,32 @@ CORS 响应头让浏览器决定是否允许页面读取跨源响应，它不取
 
 项目已经提供两类回归，使用独立测试库；在准备好 MySQL 的机器上运行：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python tests/magel_ipage_student_server.py --backends run
 python tests/magel_ipage_student_server_browser.py --browser "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 接口回归覆盖登录、角色权限、五模块业务、统计与 HTTP 边界；浏览器回归真正从不同源访问 API，检查菜单、增删改查和 HTML 注入防护。本章截图来自该真实浏览器回归，数据来自仓库夹具。
 
 后端可通过 AOT 交付：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe aot example/sql-magel/example/ipage-student-server/main.mgl --out build/student-server.exe
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 AOT 默认 checked 和 O3。前端目录仍单独部署，MySQL 服务与客户端依赖也需要准备；不能因为后端生成了可执行文件，就认为数据库与页面已经一并打包。
 

@@ -14,9 +14,16 @@
 
 \section{变量：给值起个名字}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 score = 30;
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这一行的读法从左到右：
 
@@ -55,8 +62,13 @@ int64 score = 30;
 
 \section{整型家族}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int8 tiny = 127;
     int32 normal = 70000;
     int64 huge = 9000000000;
@@ -65,10 +77,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 127 70000 9000000000 255
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{center}
 \begin{tabular}{llll}
@@ -94,18 +116,33 @@ int64 main() {
 
 \section{浮点}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     float64 ratio = 3.25;
-    float32 single = (float32)1.5;
+    float32 single =(float32)1.5;
     println("{} {}", ratio, single);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3.25 1.5
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{float64}（双精度）是默认选手，\texttt{float32}（单精度）在数值算法、图形、嵌入式里省内存时用。
 
@@ -117,8 +154,13 @@ int64 main() {
 
 \section{\texttt{bool}、\texttt{char}、\texttt{String}}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     bool ready = true;
     bool done = false;
     char initial = 'M';
@@ -127,30 +169,58 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 0 M Magel
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 注意第一眼就有点怪的地方：\texttt{bool} 打印出来是 \texttt{1} 和 \texttt{0}，不是 \texttt{true} / \texttt{false}。它不是「字符串化的布尔」，打印时当整数处理了。要比对文本，得自己拼：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     bool ready = true;
     String label;
-    if (ready) {
+    if (ready)
+    {
         label = "yes";
-    } else {
+    }
+    else
+    {
         label = "no";
     }
     println("{}", label);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 yes
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{tip}{C 程序员注意}
 Magel 没有三目运算符。写 \texttt{ready ? "yes" :\allowbreak{} "no"} 是语法错误，老老实实用 \texttt{if /\allowbreak{} else}。可以使用 \texttt{if (\allowbreak{}条件)\allowbreak{} \{ 值一 \} else \{ 值二 \}} 条件表达式；只求值命中的分支。
@@ -159,9 +229,16 @@ Magel 没有三目运算符。写 \texttt{ready ? "yes" :\allowbreak{} "no"} 是
 \begin{itemize}
 \item \texttt{bool} 只有 \texttt{true} 和 \texttt{false} 两个字面量，没有「非零即真」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：if 条件必须是 bool，现在给的是 int64（数值条件请显式写成 `(bool)值` 或比较表达式）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 硬要拿数字当布尔，得签字写成 \texttt{(\allowbreak{}bool)\allowbreak{}值}——但十有八九你真正想要的是一个比较表达式。
 \item \texttt{char} 是单个字符，用单引号：\texttt{'M'}。它和整数不是一回事，\texttt{char c =\allowbreak{} 65;} 会报错，得写 \texttt{(\allowbreak{}char)\allowbreak{}65}。
@@ -170,27 +247,51 @@ magel：if 条件必须是 bool，现在给的是 int64（数值条件请显式�
 
 \section{常量 \texttt{const} 与推导 \texttt{auto}}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     const int64 LIMIT = 100;
     auto inferred = LIMIT;
     println("{} {}", LIMIT, inferred);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 100 100
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{const} 表示「这个值定下来就不改了」。给 const 变量再赋值是编译错误。数组长度、缓冲区大小这类东西应该写成 const——不是为了让编译器放心，是为了让下一个读代码的人放心。
 
 \texttt{auto} 表示「类型你替我推」。什么时候用？当右边已经写得很清楚的时候：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-auto info = describe(7);        // 想省一次手写类型
-auto picked = range(1, 6).map(square).collect();   // 类型根本写不出来
+auto info = describe(7);
+// 想省一次手写类型
+auto picked = range(1, 6).map(square).collect();
+// 类型根本写不出来
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 第二种情况才是 \texttt{auto} 真正的用武之地——后面第 14、17 章会出现那种「类型长得没法看、写出来反而更难读」的场合。
 
@@ -198,20 +299,35 @@ auto picked = range(1, 6).map(square).collect();   // 类型根本写不出来
 
 \section{字面量怎么写}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     println("{} {} {}", 0xFF, b1010, 3.14);
-    println("{} {}", 2.5e3, 2.5e-3);
+    println("{} {}", 2.5e3, 2.5e - 3);
     println("{}", 1e9);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 255 10 3.14
 2.5e+03 0.0025
 1e+09
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{center}
 \begin{tabular}{ll}
@@ -234,27 +350,101 @@ int64 main() {
 二进制的前缀是 \texttt{b} 而不是 \texttt{0b}：\texttt{b1010} 是 10，写 \texttt{0b1010} 会报词法错误。这条容易记混，见本章最后的表。\par 带指数的就是浮点。 \texttt{1e9} 和 \texttt{2.\allowbreak{}5e3} 一样是 \texttt{float64}，所以 \texttt{int64 x =\allowbreak{} 1e9;} 会报「不能隐式转换：float64 -> int64」——浮点往整数里放要签字（见 3.9 节）。
 \end{tip}
 
+\subsection{数字后缀：\texttt{1u} 与 \texttt{1.\allowbreak{}0f}}
+
+小写 \texttt{u} 表示无符号整数；没有类型上下文时默认是 \texttt{uint64}。无符号目标类型可以按自己的位宽接收这个字面量，并检查取值范围。它不会隐式变成有符号整数，也不能对无符号字面量直接写一元负号。
+
+小写 \texttt{f} 把浮点字面量定为 \texttt{float32}。不带后缀的 \texttt{1.\allowbreak{}0} 是 \texttt{float64}；\texttt{1f}、\texttt{1.\allowbreak{}0f}、\texttt{1e2f} 都是 float32 写法。后缀必须小写。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+int64 floatingKind(float32 value)
+{
+    return 32;
+}
+
+int64 floatingKind(float64 value)
+{
+    return 64;
+}
+
+uint64 unsignedValue(uint64 value)
+{
+    return value;
+}
+
+int64 main()
+{
+    auto one = 1u;
+    auto single = 1.0f;
+    uint8 narrow = 255u;
+    uint64 maximum = 18446744073709551615u;
+    println("{} {} {} {}", unsignedValue(one), floatingKind(single),
+            floatingKind(1.0), narrow);
+    println("{}", maximum);
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+1 32 64 255
+18446744073709551615
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\texttt{uint8 narrow =\allowbreak{} 256u;} 会因为超范围报错。\texttt{int64 signed\allowbreak{}Value =\allowbreak{} 1u;} 不能隐式转换，\texttt{-1u} 也会被拒绝；需要有符号负数时直接写 \texttt{-1}。\texttt{0xffu}、\texttt{b\_101u} 同样支持无符号后缀。十六进制和现有二进制写法支持数字间的下划线分隔，但十进制 \texttt{1\_000} 和 \texttt{0b1010} 并不是当前文法支持的写法。
+
 \section{隐式转换：只放行「变宽」}
 
 这是本章最重要的一节。
 
 先说结论，别被别的语言带偏：Magel 只放行一类转换——「变宽」，也就是「目标装得下源、不会悄悄丢东西」的方向。反过来（变窄、有符号放进无符号、浮点放进整数、\texttt{char}/\texttt{bool} 跟整数互放）一律要你签字。所以准确的说法不是「没有隐式转换」，而是只放行「装得下」的那半边。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int32 a = 100;
-    int64 b = a;        // 整型同符号变宽，放行
+    int64 b = a;
+    // 整型同符号变宽，放行
     uint8 u = 200;
-    int32 m = u;        // 无符号 -> 更宽的有符号，放行
-    float64 c = b;      // 整型 -> 浮点，放行
+    int32 m = u;
+    // 无符号 -> 更宽的有符号，放行
+    float64 c = b;
+    // 整型 -> 浮点，放行
     println("{} {} {}", b, m, c);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 100 200 100
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 放行清单（不用签字）：
 
@@ -274,18 +464,34 @@ int64 main() {
 
 下面这三类，方向是反的，必须自己签字：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 big = 70000;
-    int32 small = big;      // 缩窄：位宽变小
+    int32 small = big;
+    // 缩窄：位宽变小
     println("{}", small);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：不能隐式转换：int64 -> int32（请显式强转）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item 缩窄：位宽变小（\texttt{int64 → int32}、\texttt{float64 → float32}、\texttt{uint8 → int8}）——装不下，要签字；
@@ -314,20 +520,35 @@ magel：不能隐式转换：int64 -> int32（请显式强转）
 
 \section{显式强转：\texttt{(\allowbreak{}目标类型)\allowbreak{}值}}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 big = 70000;
-    int32 normal = (int32)big;
-    uint8 byte = (uint8)300;
-    char letter = (char)65;
+    int32 normal =(int32)big;
+    uint8 byte =(uint8)300;
+    char letter =(char)65;
     println("{} {} {}", normal, byte, letter);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 70000 44 A
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 写法就是 C 的老规矩：在值前面用括号写上目标类型。
 
@@ -345,6 +566,40 @@ int64 main() {
 
 反过来 \texttt{(\allowbreak{}int64)\allowbreak{}3.\allowbreak{}9} 得到 \texttt{1}：浮点转整数是直接砍掉小数位，不是四舍五入。要四舍五入得自己想办法（\texttt{std:\allowbreak{}:\allowbreak{}math} 里有取整函数，第 12 章提）。
 
+\subsection{\texttt{cast<\allowbreak{}T>\allowbreak{}(\allowbreak{}value)\allowbreak{}}：把目标类型写清楚}
+
+除了前面的 C 风格强转，也可以写 \texttt{cast<\allowbreak{}目标类型>\allowbreak{}(\allowbreak{}值)\allowbreak{}}。这是显式转换，不是允许普通赋值偷偷缩窄。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+int64 main()
+{
+    int64 original = 42;
+    int32 narrowed = cast<int32>(original);
+    println("{}", narrowed);
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+42
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+尖括号中是目标类型，圆括号中是被转换的表达式。自定义类型的显式转换要提供对应协议；宿主类型的 \texttt{impl} 绑定见第 21 章。转换也不会让一个引用越过来源的生命周期。
+
 \section{字面量的取值范围}
 
 这一节两条规矩，都是本书撰写时实测确认过的：
@@ -353,31 +608,63 @@ int64 main() {
 
 \texttt{-300} 在语法上是「一元负号 + 正数字面量 \texttt{300}」，但编译器把它当常量看值——只要值落在目标类型的范围内，就直接放行：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
-    int16 small = -300;      // -300 落在 int16（-32768..32767）里
+int64 main()
+{
+    int16 small = -300;
+    // -300 落在 int16（-32768..32767）里
     int8 tiny = -100;
     println("{} {}", small, tiny);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 -300 -100
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 规矩二：十进制字面量超出范围会报错，不静默回绕。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
-    int8 overflow = 200;     // int8 只到 127
+int64 main()
+{
+    int8 overflow = 200;
+    // int8 只到 127
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：整数字面量 200 超出 int8 的取值范围（-128..127）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{uint8 b =\allowbreak{} 255;} 没问题（255 在 \texttt{0.\allowbreak{}.\allowbreak{}255} 里），\texttt{uint8 b =\allowbreak{} 256;} 报同样的错。这条只管「字面量落进槽位」（初始化 / 赋值）；显式强转是另一回事——\texttt{(\allowbreak{}int8)\allowbreak{}200} 是你亲口签字，编译器只管按位截断（见 3.9 节）。
 
@@ -394,7 +681,7 @@ magel：整数字面量 200 超出 int8 的取值范围（-128..127）
 \midrule
 \texttt{0b1010} & 词法错误（前缀是 \texttt{b}，不是 \texttt{0b}） & \texttt{b1010} \\
 \texttt{1\_000} & 语法错误（下划线分隔不认） & \texttt{1000} \\
-\texttt{1.\allowbreak{}5f} & 语法错误（浮点后缀不认） & \texttt{(\allowbreak{}float32)\allowbreak{}1.\allowbreak{}5} \\
+\texttt{1.\allowbreak{}0F} / \texttt{1U} & 后缀必须小写 & \texttt{1.\allowbreak{}0f} / \texttt{1u} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -409,7 +696,7 @@ magel：整数字面量 200 超出 int8 的取值范围（-128..127）
 \endhead
 声明 & \texttt{int64 score =\allowbreak{} 30;}，类型在前、名字在后、分号结尾 \\
 整型 & \texttt{int8/\allowbreak{}16/\allowbreak{}32/\allowbreak{}64} + \texttt{uint8/\allowbreak{}16/\allowbreak{}32/\allowbreak{}64}，日常用 \texttt{int64} \\
-浮点 & \texttt{float64} 默认，\texttt{float32} 要显式强转 \\
+浮点 & 无后缀为 \texttt{float64}，\texttt{1.\allowbreak{}0f} 为 \texttt{float32}，也可显式转换 \\
 其它标量 & \texttt{bool} 只有 \texttt{true/\allowbreak{}false}（打印成 1/0）、\texttt{char} 用单引号 \\
 字符串 & \texttt{String} 用双引号，属核心模块 \texttt{lang}，不用 import \\
 常量 & \texttt{const int64 LIMIT =\allowbreak{} 100;} \\

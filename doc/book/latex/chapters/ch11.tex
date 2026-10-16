@@ -19,15 +19,20 @@ Magel 内建三种容器，不用 \texttt{import}：
 
 \section{\texttt{List<\allowbreak{}T>\allowbreak{}}：有序表}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     List<int64> scores;
     scores.push(30);
     scores.push(10);
     scores.push(20);
 
     println("len={} at1={} has10={} idx={}",
-            scores.len(), scores.at(1), scores.has(10), scores.indexOf(20));
+        scores.len(), scores.at(1), scores.has(10), scores.indexOf(20));
 
     scores.insert(0, 7);
     println("insert 后：{} len={}", scores[0], scores.len());
@@ -43,7 +48,14 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=3 at1=10 has10=1 idx=2
 insert 后：7 len=4
@@ -51,6 +63,9 @@ pop=20 len=3
 remove(0) 后：30 len=2
 clear 后：len=0
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 常用操作：
 
@@ -74,61 +89,102 @@ clear 后：len=0
 
 \texttt{index\allowbreak{}Of} 找不到时返回 \texttt{-1}——这是惯例，用的时候要判断：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 position = scores.indexOf(99);
-if (position >= 0) {
+if (position >= 0)
+{
     println("在位置 {}", position);
-} else {
+}
+else
+{
     println("没有这个值");
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \subsection{越界会被抓到}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     List<int64> numbers;
     numbers.push(1);
     println("{}", numbers[5]);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：vec 下标越界：5（长度 1）
 出错位置：hello.mgl:4（main）
 调用栈（外 → 内）：
   main  hello.mgl:4 [thread 0 coroutine 0 ip 25]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 不是未定义行为，是明确的运行期错误，还告诉你「下标 5、长度 1」。比起读到一块随机的内存，这个错误至少能让你立刻定位。
 
 \section{\texttt{Map<\allowbreak{}K,\allowbreak{} V>\allowbreak{}}：键 \ensuremath{\rightarrow} 值}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     Map<String, int64> ages;
     ages.put("amy", 11);
     ages["cid"] = 33;
 
     println("len={} amy={} hasBob={} cid={}",
-            ages.len(), ages["amy"], ages.has("bob"), ages["cid"]);
+        ages.len(), ages["amy"], ages.has("bob"), ages["cid"]);
 
     println("查一个没有的键：{}", ages["zoe"]);
 
-    for (int64 i = 0; i < ages.len(); i = i + 1) {
+    for (int64 i = 0; i < ages.len(); i = i + 1)
+    {
         println("{} -> {}", ages.keyAt(i), ages.valAt(i));
     }
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=2 amy=11 hasBob=0 cid=33
 查一个没有的键：0
 amy -> 11
 cid -> 33
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 写法：
 
@@ -144,12 +200,18 @@ cid -> 33
 
 \section{\texttt{Set<\allowbreak{}T>\allowbreak{}}：不重复，自动升序}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     Set<int64> unique;
     unique.add(5);
     unique.add(3);
-    unique.add(5);            // 重复的加不进去
+    unique.add(5);
+    // 重复的加不进去
 
     println("len={} has5={} has9={}", unique.len(), unique.has(5), unique.has(9));
     println("按升序看：at0={} at1={}", unique.at(0), unique.at(1));
@@ -157,12 +219,22 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 len=2 has5=1 has9=0
 按升序看：at0=3 at1=5
 remove(5) 拿回 1，现在 len=1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{Set} 的两个特点：
 
@@ -177,25 +249,49 @@ remove(5) 拿回 1，现在 len=1
 
 不想一行行 \texttt{push} 的时候，可以直接写：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
-    List<int64> order = {3, 1, 2};
+int64 main()
+{
+    List<int64> order =
+    {
+        3, 1, 2
+    };
     println("{} {}", order.len(), order[0]);
 
-    Set<int64> numbers = {3, 1, 2};
+    Set<int64> numbers =
+    {
+        3, 1, 2
+    };
     println("{}", numbers.len());
 
-    Map<String, int64> table = {"a": 1, "b": 2};
+    Map<String, int64> table =
+    {
+        "a": 1, "b": 2
+    };
     println("{} {}", table.len(), table["b"]);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 3
 3
 2 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 同样一对花括号，左边的类型决定它是什么。
 
@@ -213,9 +309,16 @@ int64 main() {
 
 跨类型写会报错——\texttt{List<\allowbreak{}int64>\allowbreak{} v =\allowbreak{} \{"a":\allowbreak{} 1\};} 里带了冒号，那是 \texttt{Map} 的形态：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：集合字面量类型不匹配：map 不能初始化 List<int64>
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 空表也有讲究：\texttt{List<\allowbreak{}int64>\allowbreak{} v =\allowbreak{} \{\};} 是空表，\texttt{Set<\allowbreak{}int64>\allowbreak{} v =\allowbreak{} \{\};} 是空集，类型必须写清楚（\texttt{auto x =\allowbreak{} \{.\allowbreak{}.\allowbreak{}.\allowbreak{}\};} 这种不给上下文的老写法仍然当成 \texttt{Set}）。
 
@@ -225,25 +328,42 @@ magel：集合字面量类型不匹配：map 不能初始化 List<int64>
 
 除了容器，还有两种数组：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
-    int64 fixed[3];              // 长度写在类型里
+int64 main()
+{
+    int64 fixed[3];
+    // 长度写在类型里
     fixed[0] = 1;
     fixed[1] = 2;
     fixed[2] = 3;
     println("{}", fixed[0] + fixed[1] + fixed[2]);
 
-    int64 runtime[] = new[4];    // 长度运行时决定
+    int64 runtime[] = new[4];
+    // 长度运行时决定
     runtime[0] = 10;
     println("{} {}", len(fixed), len(runtime));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 3 4
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{center}
 \begin{tabular}{lll}
@@ -264,71 +384,123 @@ int64 main() {
 
 第 6 章那条规则对容器照旧。这一点在容器上最容易踩：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     List<int64> original;
     original.push(1);
 
-    List<int64> copy = original;      // 整表复制一份
+    List<int64> copy = original;
+    // 整表复制一份
     copy.push(2);
 
     println("original={} copy={}", original.len(), copy.len());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 original=1 copy=2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{copy =\allowbreak{} original} 之后两张表毫无关系。 从 Java / Python 过来的人第一次写「把表传进函数想让它加元素」，会发现函数里加的东西外面看不到——
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void addOne(List<int64> numbers) {
-    numbers.push(1);          // 改的是副本！
+void addOne(List<int64> numbers)
+{
+    numbers.push(1);
+    // 改的是副本！
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 要真的改到外面那张表，写引用：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void addOne(List<int64> mut& numbers) {
+void addOne(List<int64> mut& numbers)
+{
     numbers.push(1);
 }
 // 调用：addOne(&numbers);
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这也是性能上的关键点：容器一般都有一份堆上的数据，按值传一次就是整份复制。容器参数默认写 \texttt{const\&} 或 \texttt{mut\&}，除非你确实想要一份独立副本。
 
 \subsection{容器里的东西也是副本}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Player {
+struct Player
+{
     String name;
     int64 score;
 };
 
-int64 main() {
+int64 main()
+{
     List<Player> players;
     Player p;
     p.name = "amy";
     p.score = 30;
-    players.push(p);              // 存进去的是一份副本
+    players.push(p);
+    // 存进去的是一份副本
 
-    p.score = 99;                 // 改原来的 p
+    p.score = 99;
+    // 改原来的 p
     println("表里还是 {}", players[0].score);
 
-    Player back = players[0];     // 取出来的也是副本
+    Player back = players[0];
+    // 取出来的也是副本
     back.score = 1;
     println("表里还是 {}", players[0].score);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 表里还是 30
 表里还是 30
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 存进去是副本、取出来也是副本。 想原地改容器里的元素，得用引用（第 7 章）：\texttt{foreach (\allowbreak{}Player mut\& item in players)\allowbreak{}} 那类写法在讲完引用之后你就理解了。
 
@@ -340,23 +512,39 @@ int64 main() {
 
 容器在离开作用域时自动释放（第 8 章）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     {
         List<int64> inner;
         inner.push(1);
         inner.push(2);
         println("块里的表：len={}", inner.len());
-    }                              // ← 这里把 inner 还回去了
+    }
+    // ← 这里把 inner 还回去了
     println("done");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 块里的表：len=2
 done
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 不用手动释放，也不用担心泄漏。要提前还就 \texttt{delete inner;}。
 
@@ -364,8 +552,13 @@ done
 
 遍历用 \texttt{foreach}，不要数下标：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     List<int64> scores;
     scores.push(12);
     scores.push(55);
@@ -373,9 +566,11 @@ int64 main() {
 
     int64 total = 0;
     int64 best = 0;
-    foreach (int64 score in scores) {
+    foreach (int64 score in scores)
+    {
         total = total + score;
-        if (score > best) {
+        if (score > best)
+        {
             best = score;
         }
     }
@@ -383,18 +578,37 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 总和 108 最高 55
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{foreach} 遍历出来的是元素的副本，所以「边遍历边改」改不到容器。要用下标改，就用 \texttt{for}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-for (int64 i = 0; i < scores.len(); i = i + 1) {
-    scores[i] = scores[i] + 10;      // 这样才改到表里
+for (int64 i = 0; i < scores.len(); i = i + 1)
+{
+    scores[i] = scores[i] + 10;
+    // 这样才改到表里
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{tip}{提示}
 遍历时不要增删元素。 \texttt{foreach} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。

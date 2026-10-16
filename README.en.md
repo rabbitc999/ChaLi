@@ -273,7 +273,7 @@ magel/
 ├── example/                        examples (samples, error samples, web-students, …)
 ├── tests/                          Python acceptance scripts
 ├── tools/                          helper scripts (icon, overview figure, …)
-├── mcu_vm/                         board-oriented VM branch
+├── stackvm_mcu/                         board-oriented VM branch
 ├── gui/                            cross-platform GUI example
 └── sql-magel/                      student information management sample project
 ```

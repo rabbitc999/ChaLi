@@ -50,7 +50,7 @@ int64 main(){
  return 0;
 }'''
         result=run(code);assert result.returncode==0,result.stderr
-        result=subprocess.run([str(COMPILER),'man','--json','std::lang::readLines'],capture_output=True,encoding='utf-8')
+        result=subprocess.run([str(COMPILER),'man','api','--json','std::lang::readLines'],capture_output=True,encoding='utf-8')
         item=json.loads(result.stdout)['symbols'][0]
         assert item['parameters'][0]['name']=='N' and '非负' in item['parameters'][0]['documentation'],item
     print('行输入与文件文本读取 VM/AOT、CRLF、空行、EOF、零读取、预算、零字节及手册通过。')

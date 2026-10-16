@@ -36,6 +36,7 @@ def main():
         ("T bad<T>(T value){return {return value;};} void main(){bad<int64>(2);}", "禁止嵌套 return"),
         ("int64 bad(){ return { return 1; }; } void main(){}", "禁止嵌套 return"),
         ("int64 bad(){ return loop { break #level(1); }; } void main(){}", "禁止 break #level"),
+        ("int64 bad(){ return loop { break #level(aLl); }; } void main(){}", "禁止 break #level"),
         ("int64 bad(bool yes){return if(yes){int32 small=1;break small;}else{int64 large=2;break large;};} void main(){}", "类型必须一致"),
         ("int64 bad(bool yes){return {if(yes){break 1;}};} void main(){}", "每条正常路径"),
         ("int64 const& bad(){return {int64 local=1;break &local;};} void main(){}", "MGL1204"),

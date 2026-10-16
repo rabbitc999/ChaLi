@@ -16,6 +16,10 @@
 
 同一个程序，调试时想多打日志、发布时想去掉——这是条件编译最典型的用途：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %define DEBUG 1
 
@@ -28,13 +32,27 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 debug on
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 把第一行改成 \texttt{\%define DEBUG 0}，同一份代码就输出另一个分支：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %define DEBUG 0
 
@@ -47,10 +65,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 debug off
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 几条要点：
 
@@ -70,6 +98,10 @@ debug off
 
 有时候你只关心「这个符号定义过没有」，不关心值：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main() {
 %ifdef FEATURE
@@ -80,10 +112,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 没有 FEATURE
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item \texttt{\%ifdef 符号}：定义过就走；
@@ -96,13 +138,27 @@ int64 main() {
 
 开关真正好用，是构建时才决定——同一份源码，编出不同版本：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl -D FEATURE
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 有 FEATURE
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{-D FEATURE} 等价于在文件开头写了 \texttt{\%define FEATURE}。于是同一份代码：
 
@@ -117,6 +173,10 @@ magel run app.mgl -D FEATURE
 
 \texttt{\%include} 在当前文件里原地展开另一个文件，像是把那边的文本复制过来：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %include "util.mgl"
 
@@ -125,6 +185,9 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 如果 \texttt{util.\allowbreak{}mgl} 里定义了 \texttt{twice\allowbreak{}Value}，这段就能跑，输出 \texttt{42}。
 
@@ -149,6 +212,10 @@ int64 main() {
 
 宏用 \texttt{\$macro 名字(\allowbreak{}参数)\allowbreak{} … \$end\_macro} 定义，调用时名字前加 \texttt{\$}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SQUARE(x)
 ((x) * (x))
@@ -160,16 +227,30 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 25
 25
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\$SQUARE(\allowbreak{}5)\allowbreak{}} 在编译前被文本替换成 \texttt{(\allowbreak{}(\allowbreak{}5)\allowbreak{} * (\allowbreak{}5)\allowbreak{})\allowbreak{}}；\texttt{\$SQUARE(\allowbreak{}2 + 3)\allowbreak{}} 变成\texttt{(\allowbreak{}(\allowbreak{}2 + 3)\allowbreak{} * (\allowbreak{}2 + 3)\allowbreak{})\allowbreak{}}。
 
 不带参数的叫对象宏，调用时也不用括号：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro GREETING()
 "hello, magel"
@@ -180,13 +261,27 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello, magel
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 宏还能拼出新名字。\texttt{\$concat(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} 把两段拼成一个标识符：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro CAT(a, b)
 $concat(a, b)
@@ -198,17 +293,89 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\$CAT(\allowbreak{}my,\allowbreak{} var)\allowbreak{}} 展开成 \texttt{myvar}——这在手写代码时基本没用，但代码生成器特别爱用它。
+
+\subsection{有序多括号分组}
+
+定义端可以按任意顺序组合 \texttt{<\allowbreak{} >\allowbreak{}}、\texttt{[\allowbreak{} ]\allowbreak{}}、\texttt{(\allowbreak{} )\allowbreak{}} 和 \texttt{\{ \}}，也可以重复同一种括号。调用必须照定义中的顺序写；每一组的 \texttt{.\allowbreak{}.\allowbreak{}参数} 只捕获本组当前层级的内容。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+$macro SHOW<..Types>[..Attrs](..Args){..Body}
+println("{}", $stringify(Types));
+println("{}", $stringify(Attrs));
+println("{}", $stringify(Args));
+Body
+$end_macro
+
+$macro EMPTY()()
+println("repeated groups");
+$end_macro
+
+int64 main()
+{
+    $SHOW<List<List<int64>>, String>[readonly](x, y){
+        int64 total = 2 + 3;
+        if (total > 0)
+        {
+            println("{}", total);
+        }
+    }
+    $EMPTY()()
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+List<List<int64>>, String
+readonly
+x, y
+5
+repeated groups
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+这里的 \texttt{readonly}、\texttt{x}、\texttt{y} 只是被捕获和字符串化的原文，不需要是有效变量。宏仍位于词法分析前，不把参数解析成 AST，也不检查参数类型。尖括号里的 \texttt{>\allowbreak{}>\allowbreak{}} 按两个闭合字符分组，不会被宏阶段当作右移运算符。
+
+大括号参数可以跨多行。嵌套括号、字符串和注释中的逗号不会切开外层参数；不同括号组的变长捕获互相隔离。顺序、结构或绑定不匹配时报告“宏Token分组不匹配”。展开片段保留来源文件及行列映射，后续诊断仍定位原始源码。
+
+\texttt{\$macro EMPTY(\allowbreak{})\allowbreak{}(\allowbreak{})\allowbreak{}} 是两个连续空组，调用时也写 \texttt{\$EMPTY(\allowbreak{})\allowbreak{}(\allowbreak{})\allowbreak{}}。既有单组对象宏 \texttt{\$macro NAME(\allowbreak{})\allowbreak{}} 仍沿用 \texttt{\$NAME} 的对象宏调用方式。完整说明可直接执行 \texttt{magel man macro}，也支持 \texttt{--json}。
 
 \section{宏的第一个坑：括号要自己加}
 
 宏是纯文本替换，它不懂运算优先级。看这个「反面教材」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro BAD_SQUARE(x)
 x * x
@@ -219,15 +386,29 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 11
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\$BAD\_SQUARE(\allowbreak{}2 + 3)\allowbreak{}} 被替换成 \texttt{2 + 3 * 2 + 3}——按优先级一算是 11，不是 25。\texttt{*} 只管到了紧挨着的数。
 
 所以写宏的铁律：参数、整个宏体、都要裹上括号。 19.5 里 \texttt{SQUARE} 写成\texttt{(\allowbreak{}(\allowbreak{}x)\allowbreak{} * (\allowbreak{}x)\allowbreak{})\allowbreak{}} 就是这个道理。对比一下：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SQUARE(x)
 ((x) * (x))
@@ -239,10 +420,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 25 36
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{five + 1} 被裹进括号，先加后乘，结果才对。
 
@@ -250,6 +441,10 @@ int64 main() {
 
 想按一个字面量分支？不行：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 main() {
 %if 1
@@ -258,15 +453,29 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：前处理：hello.mgl:2:4: error: 这里要写一个符号名 [bad-expression]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\%if} 后面必须是预处理符号（\texttt{\%define} 定义过的、或者 \texttt{-D} 传进来的）。要按数分支，先定义成符号：\texttt{\%define LEVEL 1}，再 \texttt{\%if LEVEL}。
 
 \texttt{\%error} 则是在活跃分支里主动报错——常用于「这种情况本不该编进来」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %define LEVEL 3
 
@@ -277,10 +486,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：前处理：hello.mgl:5:1: error: 不该编到这里 [error-directive]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 配套还有 \texttt{\%warning}（报警告，不中断），用法一样。
 
@@ -288,6 +507,10 @@ magel：前处理：hello.mgl:5:1: error: 不该编到这里 [error-directive]
 
 19.6 说宏体是文本替换，\texttt{\$TIMES\_TWO(\allowbreak{}1 + 2)\allowbreak{}} 会散成 \texttt{1 + 2 * 2}。第一种挡法是用括号标注形参：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro TIMES_TWO((x))
     x * 2
@@ -297,10 +520,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 括号标注只写在 \texttt{\$macro} 头这一行（\texttt{(\allowbreak{}x)\allowbreak{}}），宏体里引用形参照旧写裸名字 \texttt{x}；效果是这个形参每次出现都换成 \texttt{(\allowbreak{}实参)\allowbreak{}}，于是 \texttt{(\allowbreak{}1 + 2)\allowbreak{} * 2 =\allowbreak{} 6}。
 
@@ -308,6 +541,10 @@ int64 main() {
 
 第二种挡法是在宏名前面写 \texttt{expr} —— 它给整段展开结果再包一层括号：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro expr PLUS((a), (b))
     a + b
@@ -317,10 +554,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{10 /\allowbreak{} (\allowbreak{}(\allowbreak{}2)\allowbreak{} + (\allowbreak{}3)\allowbreak{})\allowbreak{} =\allowbreak{} 2}；只包形参的话是 \texttt{10 /\allowbreak{} (\allowbreak{}2)\allowbreak{} + (\allowbreak{}3)\allowbreak{} =\allowbreak{} 8}。\texttt{expr} 只写在头这一行，同时默认给全部实参加括号；\texttt{a} 与 \texttt{(\allowbreak{}a)\allowbreak{}} 完全等价，宏名还是 \texttt{PLUS}，调用处写 \texttt{\$PLUS(\allowbreak{}2,\allowbreak{} 3)\allowbreak{}}；调用点统一使用普通宏调用形式；旧的感叹号与反引号标注均已废除。
 
@@ -330,6 +577,10 @@ int64 main() {
 
 形参表末尾写 \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}名字}，剩下的实参全归它：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro REPORT(...rest)
 println("{} {} {}", rest);
@@ -339,10 +590,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 2 3
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{rest} 会按 \texttt{,\allowbreak{} } 拼成一段文本再替换，所以在调用位置就是"一串实参" （和 C 的 \texttt{\_\_VA\_ARGS\_\_} 一个意思）—— 上面正好当三个实参喂给 \texttt{println}。
 
@@ -350,6 +611,10 @@ int64 main() {
 
 同一个宏名可以按实参个数挂多种形态：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro REPORT(a)
 println("one {}", a);
@@ -363,11 +628,21 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 one 7
 two 1 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 挑形态的顺序：个数正好对上的固定形态 \ensuremath{\rightarrow} 变长形态。一个都对不上会报错并把候选列出来，不会悄悄挑一个不相干的形态。
 
@@ -375,6 +650,10 @@ two 1 2
 
 \texttt{\$for 变量 in 尾参名 … \$end\_for} 把宏体里那一段按尾参逐个重复：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SUM_SQUARES(...values)
 int64 total = 0;
@@ -388,10 +667,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 平方和 = 29
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\$for} 只能遍历变长尾参。每轮把循环变量整体换成该轮的实参文本，所以 \texttt{(\allowbreak{}v)\allowbreak{} * (\allowbreak{}v)\allowbreak{}} 这种"把变量包在中间"的写法是安全的。\texttt{\$for} 的结束符是 \texttt{\$end\_for}、宏体的结束符是 \texttt{\$end\_macro} —— 两个"结束"分开写，嵌套时不用数层数。\texttt{\$for} 里还能再嵌 \texttt{\$for}。
 
@@ -399,6 +688,10 @@ int64 main() {
 
 19.12 里靠手写 \texttt{(\allowbreak{}v)\allowbreak{}} 保平安。想让编译器代劳，就把尾参名放进括号，写成 \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}(\allowbreak{}values)\allowbreak{}}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SUM_SQUARES(...(values))
 int64 total = 0;
@@ -412,15 +705,29 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 平方和 = 13
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{values} 仍按 \texttt{,\allowbreak{} } 摊开，但每个元素各包一层括号，所以 \texttt{\$for} 的循环变量变成 \texttt{(\allowbreak{}元素)\allowbreak{}}：\texttt{(\allowbreak{}1+1)\allowbreak{}² + (\allowbreak{}2+1)\allowbreak{}² =\allowbreak{} 13}。不作括号标注就是 \texttt{1+1*1+1 + 2+1*2+1 =\allowbreak{} 8}。\texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}} 必须放在括号外；\texttt{(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{}values)\allowbreak{}} 会报错。
 
 \section{\texttt{\$concat}：拼出一个标识符}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro DECLARE(prefix, suffix, value)
 int64 $concat(prefix, suffix) = value;
@@ -431,10 +738,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 11
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{\$concat(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} 的两个实参必须都是标识符，拼出来的结果也是标识符，而且不重新参与宏展开。拼出来的是普通名字，所以能和真正的函数同名共存（宏调用必须带 \texttt{\$}，裸名是普通标识符）。
 
@@ -444,6 +761,10 @@ int64 main() {
 
 \section{\texttt{\$stringify}：取调用点写下的原文}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SOURCE(expr)
 $stringify(expr)
@@ -453,10 +774,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 + 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 结果是字符串字面量：实参在宏体里是形参名时取调用点的原始实参文本（不加括号），否则就取写下的字面文本。写日志、断言信息时特别好用 —— 变量名和它的值能一起打出来。
 
@@ -464,6 +795,10 @@ int64 main() {
 
 \texttt{\$replace} 把声明压进一行，头这一行剩下的内容就是宏体，没有 \texttt{\$end\_macro}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $replace expr ADD((a), (b)) a + b
 int64 main() {
@@ -471,10 +806,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 4
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 它支持 \texttt{\$macro} 的所有"行内"规则（参数括号、\texttt{expr}、\texttt{\$concat} / \texttt{\$stringify}、\texttt{\$line} / \texttt{\$file} / \texttt{\$module}），但装不下 \texttt{\$for} 这种块 —— 要块请用 \texttt{\$macro}。宏名和调用方式与 \texttt{\$macro} 完全一样，两种声明混着写也行。
 
@@ -482,6 +827,10 @@ int64 main() {
 
 同一名字、同一参数个数的宏不能重复定义。要"改"一个宏，先撤后立：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro REVISION()
 1
@@ -495,15 +844,29 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \section{\texttt{\$0}～\texttt{\$9}：宏内的唯一临时名}
 
 宏是文本替换，宏体里起个临时变量很容易撞上调用点的同名变量。\texttt{\$0}～\texttt{\$9} 由编译器在每次展开时换成一个全局唯一的名字：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro SWAP((a), (b))
     int64 $0 = a;
@@ -519,10 +882,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 x=2 y=1 tmp=111
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 宏内的临时名和调用点的 \texttt{tmp} 互不干扰。同一次展开里同一个 \texttt{\$n} 处处同名；不同展开、不同宏、嵌套调用各自独立。
 
@@ -530,6 +903,10 @@ x=2 y=1 tmp=111
 
 \section{\texttt{\$line} / \texttt{\$file} / \texttt{\$module} 和 \texttt{\$assert}}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 module demo;
 
@@ -542,10 +919,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 这里 在第 8 行，模块 demo
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 写在宏体里时，取的是调用点那一行（和 C 的 \texttt{\_\_LINE\_\_} 一个意思），所以基于它的报错总是指向你写宏调用的地方。\texttt{\$file} / \texttt{\$module} 展开成字符串字面量，可以直接拼接或喂给 \texttt{format}；根文件没写 \texttt{module} 时 \texttt{\$module} 是 \texttt{\_\_root}。\texttt{\$assert(\allowbreak{}条件)\allowbreak{}} / \texttt{\$assert(\allowbreak{}条件,\allowbreak{} "说明")\allowbreak{}} 是系统给的断言宏，用的就是这套机制。
 
@@ -553,6 +940,10 @@ int64 main() {
 
 \texttt{\$if} / \texttt{\$elif} / \texttt{\$else} / \texttt{\$end\_if} 在宏展开时选择分支，\texttt{\$let} 创建只属于当前宏调用的局部文本绑定。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 $macro expr PICK(value)
 $let selected = value
@@ -567,12 +958,22 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7 0
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
-\texttt{\$argc} 取得当前调用的实参数量，\texttt{\$count(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 计数变长尾参或局部文本列表，\texttt{\$typecheck(\allowbreak{}T,\allowbreak{} expr)\allowbreak{}} 将展开表达式送进指定类型检查。实参计数不匹配在展开期报错；递归最多 64 层，一次处理最多展开 100000 次。没有 \texttt{\$match} 迷你 DSL，也没有 \texttt{\#\#} 或 \texttt{\#形参} 兼容别名。
+\texttt{\$argc} 取得当前调用的实参数量，\texttt{\$count(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 计数变长尾参或局部文本列表，\texttt{\$typecheck(\allowbreak{}T,\allowbreak{} expr)\allowbreak{}} 将展开表达式送进指定类型检查。实参计数不匹配在展开期报错；递归最多 64 层，一次处理最多展开 100000 次。没有 \texttt{\$match} 迷你 DSL，\texttt{\#\#} 与 \texttt{\#形参} 均已移除，拼接和字符串化只用 \texttt{\$concat} / \texttt{\$stringify}。
 
 \texttt{\$macro expr ADD(\allowbreak{}a,\allowbreak{}b)\allowbreak{}} 中的参数自动括起来，定义里的 \texttt{(\allowbreak{}a)\allowbreak{}} 可作冗余标注；普通宏仍需 \texttt{(\allowbreak{}a)\allowbreak{}} 明确标记表达式实参。调用使用普通形式 \texttt{\$ADD(\allowbreak{}x+1,\allowbreak{}y*2)\allowbreak{}}，宏定义不接受反引号标注。
 

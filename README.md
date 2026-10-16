@@ -227,7 +227,7 @@ magel/
 ├── example/                        示例（samples、错误样例、web-students 等）
 ├── tests/                          Python 验收脚本
 ├── tools/                          图标与总览图等辅助脚本
-├── mcu_vm/                         面向板端的虚拟机分支
+├── stackvm_mcu/                         面向板端的虚拟机分支
 ├── gui/                            跨平台 GUI 示例
 └── sql-magel/                      学生信息管理示例工程
 ```

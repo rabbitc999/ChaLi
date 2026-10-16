@@ -17,21 +17,36 @@
 
 一个待办项有两样东西：内容和一个完成标记。用结构体（第 9 章）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Task {
+struct Task
+{
     String text;
     bool done;
 };
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 清单就是 \texttt{List<\allowbreak{}Task>\allowbreak{}}（第 11 章）。
 
 存储格式也要现在定下来——这是设计里最容易忽略、又最影响后面代码的一步。选一个人能直接看懂的格式：一行一条，\texttt{0} 或 \texttt{1} 表示完成，\texttt{|} 后面是内容。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1|买菜
 0|写作业
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这样出问题时，用记事本打开就能查。
 
@@ -41,17 +56,32 @@ struct Task {
 
 这里有个关键设计决定：文件不存在 = 空清单，不当错误。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-List<Task> loadTasks() {
+List<Task> loadTasks()
+{
     List<Task> tasks;
     Result<FileStream, IoError> opened = FileStream::open(storePath(), "r");
-    if (opened.isErr()) { return tasks; }
+    if (opened.isErr())
+    {
+        return tasks;
+    }
     FileStream stream = opened.unwrap();
-    while (true) {
+    while (true)
+    {
         Result<String, IoError> line = stream.read();
-        if (line.isErr()) { break; }
+        if (line.isErr())
+        {
+            break;
+        }
         String raw = std::text::Text::trim(line.unwrap());
-        if (raw == "") { break; }
+        if (raw == "")
+        {
+            break;
+        }
         Task t;
         t.done = std::text::Text::startsWith(raw, "1");
         int64 bar = std::text::Text::find(raw, "|");
@@ -62,6 +92,9 @@ List<Task> loadTasks() {
     return tasks;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 三处值得说：
 
@@ -75,19 +108,35 @@ List<Task> loadTasks() {
 
 反过来，写文件是先打开、逐行写、关闭：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void saveTasks(List<Task> tasks) {
+void saveTasks(List<Task> tasks)
+{
     Result<FileStream, IoError> opened = FileStream::open(storePath(), "w");
-    if (opened.isErr()) { println("无法写入 {}", storePath()); return; }
+    if (opened.isErr())
+    {
+        println("无法写入 {}", storePath());
+        return;
+    }
     FileStream stream = opened.unwrap();
-    foreach (Task t in tasks) {
+    foreach (Task t in tasks)
+    {
         String flag = "0";
-        if (t.done) { flag = "1"; }
+        if (t.done)
+        {
+            flag = "1";
+        }
         stream.write(flag + "|" + t.text + "\n");
     }
     stream.close();
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 模式 \texttt{"w"} 是覆盖写——每次保存都整份重写。对几千条以内的清单，这足够快，而且不会出现"改一半"的中间状态。
 
@@ -97,21 +146,40 @@ void saveTasks(List<Task> tasks) {
 
 程序接收命令行参数，靠的是带参的 \texttt{main}（第 4 章）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main(List<String> args) { … }
+int64 main(List<String> args)
+{
+    …
+}
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{args} 是不含程序名的参数列表。所以 \texttt{todo add 买菜} 传进来的是\texttt{[\allowbreak{}"add",\allowbreak{} "买菜"]\allowbreak{}}。
 
 命令分派就是一串 \texttt{if}（第 5 章），每种命令都返回一个退出码：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 String command = args[0];
 List<Task> tasks = loadTasks();
 
-if (command == "add") {
+if (command == "add")
+{
     String text = joinFrom(args, 1);
-    if (text == "") { println("add 后面要写内容"); return 1; }
+    if (text == "")
+    {
+        println("add 后面要写内容");
+        return 1;
+    }
     Task t;
     t.text = text;
     t.done = false;
@@ -121,6 +189,9 @@ if (command == "add") {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两个小设计：
 
@@ -131,13 +202,24 @@ if (command == "add") {
 
 序号参数是字符串，要转成整数：\texttt{std:\allowbreak{}:\allowbreak{}parse:\allowbreak{}:\allowbreak{}Parse:\allowbreak{}:\allowbreak{}parse\allowbreak{}Int64} 返回 \texttt{Result}，所以用第 16 章的 \texttt{is\allowbreak{}Err} 来兜底：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 parseIntOr(String s, int64 fallback) {
+int64 parseIntOr(String s, int64 fallback)
+{
     Result<int64, ParseError> r = std::parse::Parse::parseInt64(s);
-    if (r.isErr()) { return fallback; }
+    if (r.isErr())
+    {
+        return fallback;
+    }
     return r.unwrap();
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 传个 \texttt{done abc} 进来，\texttt{parse\allowbreak{}Int64} 失败 \ensuremath{\rightarrow} 返回兜底值 0 \ensuremath{\rightarrow} 后面「序号超出范围」的判断把它挡住。非法输入没有变成崩溃，而是变成一句人话提示。
 
@@ -150,23 +232,38 @@ import std::io;
 import std::text;
 import std::parse;
 
-struct Task {
+struct Task
+{
     String text;
     bool done;
 };
 
-String storePath() { return "todo.txt"; }
+String storePath()
+{
+    return "todo.txt";
+}
 
-List<Task> loadTasks() {
+List<Task> loadTasks()
+{
     List<Task> tasks;
     Result<FileStream, IoError> opened = FileStream::open(storePath(), "r");
-    if (opened.isErr()) { return tasks; }
+    if (opened.isErr())
+    {
+        return tasks;
+    }
     FileStream stream = opened.unwrap();
-    while (true) {
+    while (true)
+    {
         Result<String, IoError> line = stream.read();
-        if (line.isErr()) { break; }
+        if (line.isErr())
+        {
+            break;
+        }
         String raw = std::text::Text::trim(line.unwrap());
-        if (raw == "") { break; }
+        if (raw == "")
+        {
+            break;
+        }
         Task t;
         t.done = std::text::Text::startsWith(raw, "1");
         int64 bar = std::text::Text::find(raw, "|");
@@ -177,47 +274,69 @@ List<Task> loadTasks() {
     return tasks;
 }
 
-void saveTasks(List<Task> tasks) {
+void saveTasks(List<Task> tasks)
+{
     Result<FileStream, IoError> opened = FileStream::open(storePath(), "w");
-    if (opened.isErr()) { println("无法写入 {}", storePath()); return; }
+    if (opened.isErr())
+    {
+        println("无法写入 {}", storePath());
+        return;
+    }
     FileStream stream = opened.unwrap();
-    foreach (Task t in tasks) {
+    foreach (Task t in tasks)
+    {
         String flag = "0";
-        if (t.done) { flag = "1"; }
+        if (t.done)
+        {
+            flag = "1";
+        }
         stream.write(flag + "|" + t.text + "\n");
     }
     stream.close();
 }
 
-void printTasks(List<Task> tasks) {
-    if (tasks.len() == 0) {
+void printTasks(List<Task> tasks)
+{
+    if (tasks.len() == 0)
+    {
         println("（清单是空的，用 add 加一条）");
         return;
     }
     int64 i = 1;
-    foreach (Task t in tasks) {
+    foreach (Task t in tasks)
+    {
         String mark = "[ ]";
-        if (t.done) { mark = "[x]"; }
+        if (t.done)
+        {
+            mark = "[x]";
+        }
         println("{} {} {}", i, mark, t.text);
         i = i + 1;
     }
 }
 
-int64 parseIntOr(String s, int64 fallback) {
+int64 parseIntOr(String s, int64 fallback)
+{
     Result<int64, ParseError> r = std::parse::Parse::parseInt64(s);
-    if (r.isErr()) { return fallback; }
+    if (r.isErr())
+    {
+        return fallback;
+    }
     return r.unwrap();
 }
 
-String joinFrom(List<String> args, int64 start) {
+String joinFrom(List<String> args, int64 start)
+{
     List<String> rest;
-    for (int64 i = start; i < args.len(); i = i + 1) {
+    for (int64 i = start; i < args.len(); i = i + 1)
+    {
         rest.push(args[i]);
     }
     return std::text::Text::join(rest, " ");
 }
 
-void usage() {
+void usage()
+{
     println("用法：todo <命令> [参数]");
     println("  add <内容>    加一条待办");
     println("  list          列出全部");
@@ -226,15 +345,25 @@ void usage() {
     println("  clear         清空");
 }
 
-int64 main(List<String> args) {
-    if (args.len() == 0) { usage(); return 0; }
+int64 main(List<String> args)
+{
+    if (args.len() == 0)
+    {
+        usage();
+        return 0;
+    }
 
     String command = args[0];
     List<Task> tasks = loadTasks();
 
-    if (command == "add") {
+    if (command == "add")
+    {
         String text = joinFrom(args, 1);
-        if (text == "") { println("add 后面要写内容"); return 1; }
+        if (text == "")
+        {
+            println("add 后面要写内容");
+            return 1;
+        }
         Task t;
         t.text = text;
         t.done = false;
@@ -244,15 +373,25 @@ int64 main(List<String> args) {
         return 0;
     }
 
-    if (command == "list") {
+    if (command == "list")
+    {
         printTasks(tasks);
         return 0;
     }
 
-    if (command == "done") {
-        if (args.len() < 2) { println("done 后面要写序号"); return 1; }
+    if (command == "done")
+    {
+        if (args.len() < 2)
+        {
+            println("done 后面要写序号");
+            return 1;
+        }
         int64 index = parseIntOr(args[1], 0);
-        if (index < 1 || index > tasks.len()) { println("序号超出范围"); return 1; }
+        if (index < 1 || index > tasks.len())
+        {
+            println("序号超出范围");
+            return 1;
+        }
         Task t = tasks[index - 1];
         t.done = true;
         tasks[index - 1] = t;
@@ -261,14 +400,27 @@ int64 main(List<String> args) {
         return 0;
     }
 
-    if (command == "remove") {
-        if (args.len() < 2) { println("remove 后面要写序号"); return 1; }
+    if (command == "remove")
+    {
+        if (args.len() < 2)
+        {
+            println("remove 后面要写序号");
+            return 1;
+        }
         int64 index = parseIntOr(args[1], 0);
-        if (index < 1 || index > tasks.len()) { println("序号超出范围"); return 1; }
+        if (index < 1 || index > tasks.len())
+        {
+            println("序号超出范围");
+            return 1;
+        }
         List<Task> kept;
         int64 i = 1;
-        foreach (Task t in tasks) {
-            if (i != index) { kept.push(t); }
+        foreach (Task t in tasks)
+        {
+            if (i != index)
+            {
+                kept.push(t);
+            }
             i = i + 1;
         }
         saveTasks(kept);
@@ -276,7 +428,8 @@ int64 main(List<String> args) {
         return 0;
     }
 
-    if (command == "clear") {
+    if (command == "clear")
+    {
         List<Task> empty;
         saveTasks(empty);
         println("已清空");
@@ -291,6 +444,10 @@ int64 main(List<String> args) {
 
 直接 \texttt{magel run todo.\allowbreak{}mgl}（不带参数），它会打印用法：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 用法：todo <命令> [参数]
   add <内容>    加一条待办
@@ -299,6 +456,9 @@ int64 main(List<String> args) {
   remove <序号> 删除一条
   clear         清空
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 把这段存成 \texttt{todo.\allowbreak{}mgl}，下面就真能用了。
 
@@ -306,13 +466,24 @@ int64 main(List<String> args) {
 
 先清空，然后加两条、看一眼：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- clear
 magel run todo.mgl -- add 买菜
 magel run todo.mgl -- add 写作业
 magel run todo.mgl -- list
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 已清空
 已添加，现在有 1 条
@@ -320,6 +491,9 @@ magel run todo.mgl -- list
 1 [ ] 买菜
 2 [ ] 写作业
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{tip}{提示}
 \texttt{--} 后面的东西原样传给程序自己（第 1 章讲过 \texttt{run} 和 \texttt{check} 的区别时提过参数传递）。没有 \texttt{--}，\texttt{clear} 会被当成 \texttt{magel} 的选项。
@@ -327,13 +501,24 @@ magel run todo.mgl -- list
 
 标记完成、再看、然后删掉第一条：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- done 2
 magel run todo.mgl -- list
 magel run todo.mgl -- remove 1
 magel run todo.mgl -- list
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 完成：写作业
 1 [ ] 买菜
@@ -341,27 +526,51 @@ magel run todo.mgl -- list
 已删除第 1 条
 1 [x] 写作业
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 数据真的落盘了——\texttt{todo.\allowbreak{}txt} 里是这样（人能直接读懂）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1|写作业
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 再试几个「不老实」的输入：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run todo.mgl -- done abc
 magel run todo.mgl -- add 周五 下午 交 报告
 magel run todo.mgl -- list
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 序号超出范围
 已添加，现在有 2 条
 1 [x] 写作业
 2 [ ] 周五 下午 交 报告
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{done abc} 没有崩，而是回了一句「序号超出范围」；\texttt{add} 后面带空格的整句也完整存下来了。
 
@@ -387,7 +596,7 @@ magel run todo.mgl -- list
 \end{tabular}
 \end{center}
 
-没有出现：接口、泛型、lambda、宏、反射……它们不是必需，只是在需要的时候有用。一个能用的程序，往往是这些基础件的直白组合。
+没有出现：接口、泛型、fn、宏、反射……它们不是必需，只是在需要的时候有用。一个能用的程序，往往是这些基础件的直白组合。
 
 \section{接下来可以做什么}
 

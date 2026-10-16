@@ -9,10 +9,17 @@
 
 宿主机上的 Magel 编译器负责解析源码、检查类型与借用、优化四元式，最后导出 \texttt{.\allowbreak{}svmb}。板端读取字节码、数据区与布局信息，由共享 VM 执行；板端没有携带整套源码解析器，也不在运行时编译 C++。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 桌面：.mgl → 解析与检查 → 优化四元式 → .svmb / .data.bin / .layout
 板端：加载三份文件 → 配置内存与胶水 → VM 执行 → 清理本轮状态 → 返回菜单
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 {\small\setlength{\tabcolsep}{4pt}
 \begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.700\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.280\linewidth-2\tabcolsep\relax}}
@@ -21,7 +28,7 @@
 \midrule
 \endhead
 \href{https://gitee.com/rabbitc999/magel/tree/master/library/stackvm}{library/stackvm} & 桌面与板端共同的 VM 核心 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/source/mcu_vm/README.md}{source/mcu\_vm} & 裁剪配置、静态池和宿主适配 \\
+\href{https://gitee.com/rabbitc999/magel/blob/master/source/stackvm_mcu/README.md}{source/stackvm\_mcu} & 裁剪配置、静态池和宿主适配 \\
 \href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/main.c}{板端 main.c} & 上电后的独立程序入口 \\
 \href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/magel_board.cpp}{magel\_board.cpp} & 加载、菜单、执行与原生接口注册 \\
 \href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/programs/board.mgl}{programs/board.mgl} & Magel 可调用的外设函数签名 \\
@@ -55,6 +62,10 @@
 
 在 \texttt{programs/\allowbreak{}} 下创建练习源码，或使用 include 搜索路径找到 \texttt{board.\allowbreak{}mgl}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 %include "board.mgl"
 
@@ -69,14 +80,24 @@ void main() {
     }
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{board\allowbreak{}Exit\allowbreak{}Requested(\allowbreak{})\allowbreak{}} 让程序协作响应 MODE/ENTER 退出。键号为 0=MODE、1=ENTER、2=UP、3=DOWN，颜色为 RGB565。\texttt{board\allowbreak{}Delay} 的中断继续运行，程序也需要留出检查退出与输入的机会。
 
 这是板端程序，需要相应胶水，不能直接在普通桌面 VM 中调用 LCD 函数。编译时指定板端关闭的反射配置：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./magel.exe svmb example/mcu/FK-STM32H743XIH6/programs/hello.mgl --no-reflection --out build/mcu-hello
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 上例命令使用仓库已有的 \texttt{hello.\allowbreak{}mgl}；若保存了自己的练习程序，替换源路径并添加对应 include 目录即可。三份输出必须使用同一个前缀。
 
@@ -94,11 +115,18 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 程序加载使用 FatFS 的 \texttt{0:\allowbreak{}/\allowbreak{}magel/\allowbreak{}}。参考 BSP 中的 \texttt{0:\allowbreak{}} 对应外部 W25QXX 卷，不是自动识别任意 SD 卡。把每个程序的三份文件放在同一目录：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 0:/magel/hello.svmb
 0:/magel/hello.data.bin
 0:/magel/hello.layout
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 单个部署文件上限为 1 MiB。缺文件或映像损坏时，显示失败并返回菜单，不悄悄运行另一份程序。菜单最多 32 项，包含内置测速、正常退出、故意 panic 三个入口。
 
@@ -123,7 +151,7 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 这层不应直接知道 LCD 型号或 W25QXX 引脚。它通过字节堆、文件 API、输出下沉与原生注册表接收宿主能力，才能同时用于桌面和板端。
 
-\subsection{source/mcu\_vm：把桌面服务替换为有预算的宿主}
+\subsection{source/stackvm\_mcu：把桌面服务替换为有预算的宿主}
 
 \texttt{mcu\_host.\allowbreak{}cpp} 是可在桌面运行的 MCU 配置验证入口。它读取映像、安装内存池、挂接输出和原生胶水，再运行同一份字节码。它方便检查裁剪构建、程序结果和软重启，不能由此推断真实 LCD、串口或 SDRAM 已经验证。
 
@@ -166,6 +194,10 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 解码 \texttt{Program}、加载 \texttt{Data\allowbreak{}Area} 后，实际绑定与执行代码如下，摘自工程：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 stackvm::NativeRegistry registry;
 stackvm::Machine machine;
@@ -178,6 +210,9 @@ RegisterBoard(registry);
 mcuConsole::SetRead(SerialRead, nullptr);
 const auto result = machine.run(program, {}, 10000000u);
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这里先挂基础胶水，再追加板级接口，两者使用同一个注册表。注册表、数据区和字节池必须在 \texttt{run} 期间有效；\texttt{registry} 比 \texttt{machine} 更早构造，退出作用域时也会更晚析构。字节池是宿主长期提供的对象，不能拿临时池的地址交给机器。
 
@@ -189,19 +224,33 @@ const auto result = machine.run(program, {}, 10000000u);
 
 \texttt{board.\allowbreak{}mgl} 是 Magel 一侧的宿主函数声明，例如：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 void lcdClear(int64 color);
 bool boardExitRequested();
 void boardDelay(int64 milliseconds);
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 它们没有 Magel 函数体，编译器按声明检查调用。执行时，\texttt{Register\allowbreak{}Board} 把同名符号绑定到 C++ 回调：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 registry.add("lcdClear", 1, LcdClear);
 registry.add("boardExitRequested", 0, BoardExitRequested);
 registry.add("boardDelay", 1, BoardDelay);
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 声明、名字、参数个数、参数含义和返回值必须同时一致。只在 \texttt{board.\allowbreak{}mgl} 增加声明不会凭空产生硬件能力；只增加 C++ 回调却没有注册，也不能按名字调用。
 
@@ -217,11 +266,18 @@ registry.add("boardDelay", 1, BoardDelay);
 
 没有板子时，可先使用桌面上的独立 MCU 宿主回归：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 python tests/mcu_vm.py --magel magel.exe
 python tests/mcu_fk_controls.py
 python example/mcu/FK-STM32H743XIH6/tools/verify_sdk.py
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 MCU 宿主回归使用其定义的测试预算，检查裁剪构建、异常符号与选定字节码执行；它不替代 LCD、按键、串口和 SDRAM 的实机测试。板级 README 保留真实硬件的原始测速与恢复记录，历史数据应保留原日期和配置。
 

@@ -37,9 +37,9 @@
    必须使用多行文档块：`/**` 与 `*/` 各占一行，`@brief`、每个 `@param`、
    `@return` / `@retval`、`@note` 各占独立一行，不把多个标签挤在一行，
    不使用 `/** @brief ... */` 紧凑形式或 `///` 代替函数文档块。
-7. **一份 VM 按宏裁剪**：`library/stackvm/` 是桌面与板端唯一的 VM 核心；`source/mcu_vm/` 只保留
+7. **一份 VM 按宏裁剪**：`library/stackvm/` 是桌面与板端唯一的 VM 核心；`source/stackvm_mcu/` 只保留
    板端宿主、静态池和外设适配，不维护 VM 源码副本。修改共享核心时验证桌面口径与
-   板端 `-fno-exceptions -fno-rtti` 口径，宏和预算见 [`source/mcu_vm/README.md`](source/mcu_vm/README.md)。
+   板端 `-fno-exceptions -fno-rtti` 口径，宏和预算见 [`source/stackvm_mcu/README.md`](source/stackvm_mcu/README.md)。
    FK 板级库在 `example/mcu/FK-STM32H743XIH6/sdk/` 内维护副本，不依赖原工作区；修改导入文件
    时复核并更新 `sdk-snapshot.json` 的本地 LF 哈希，保留原哈希、编码及组件许可证。
 8. 文档索引用 [`doc/README.md`](doc/README.md)；最后 `git add -A` → commit →
@@ -90,7 +90,7 @@
 
 带值退出 `break value;` 穿透无值循环，交给最近接收结果的块、if、match 或 loop 表达式；
 `break a, b;` 按元组产值。嵌套赋值块各自接收结果，无值 `break;` 仍退出最近循环，
-`break #level(N);` 退出第 N 层循环，`break #level(ALL);` 退出当前函数内全部包围循环，
+`break #level(N);` 退出第 N 层循环，`break #level(ALL);` 退出当前函数内全部包围循环（ALL 参数不区分大小写，允许 all），
 普通块及 if/match 不计层数；层级退出不携带值，不得跨函数，跨层退出必须清理沿途作用域。显式 `break i;` 优先移动当前值表达式内部的可写局部变量，外部变量复制，
 元组逐项应用相同的移动或复制规则；普通分支末尾表达式仍沿用原有值语义。
 
@@ -222,3 +222,5 @@ Git 提交身份按以下条件强制规范，适用于新建、补写、amend �
 - 当前工作身份满足上述条件，仓库本地配置使用 `git config --local user.name "小兔糖糖OvO"` 和 `git config --local user.email "rabbitc999@outlook.com"`。提交前用 `git var GIT_AUTHOR_IDENT`、`git var GIT_COMMITTER_IDENT` 核对实际身份，避免环境变量或其他配置导致名称、邮箱不符合要求。
 
 本仓库所有 Git 提交的标题及正文（如有）**必须使用中文**，禁止使用纯英文提交说明。文件名、命令、API 标识符和必要的技术术语可以保留原文，但改动说明必须用中文表达。此约束适用于本仓库的所有修改。
+
+书稿 Magel 示例使用四空格缩进，运算符两侧及逗号后留空格，函数体和控制分支展开为多行，不把多条语句压成一行。排版不得改变字符串文本与宏原始文本；同步 Markdown、LaTeX、PDF，并检查 PDF 的代码空格、缩进和可复制性。

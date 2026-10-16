@@ -17,15 +17,25 @@ Magel 把「可能失败」这件事写进类型里：返回 \texttt{Option<\all
 
 \texttt{Option<\allowbreak{}T>\allowbreak{}} 只有两种状态：\texttt{Value(\allowbreak{}v)\allowbreak{}}（有个值）或者 \texttt{None}（没有）。拿「找第一个等于目标的元素」举例——找到了有值，没找到就是「没有」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Option<int64> findFirst(List<int64> xs, int64 target) {
-    foreach (int64 x in xs) {
-        if (x == target) { return Option<int64>::Value(x); }
+Option<int64> findFirst(List<int64> xs, int64 target)
+{
+    foreach (int64 x in xs)
+    {
+        if (x == target)
+        {
+            return Option<int64>::Value(x);
+        }
     }
     return Option<int64>::None;
 }
 
-int64 main() {
+int64 main()
+{
     List<int64> xs;
     xs.push(3);
     xs.push(7);
@@ -36,13 +46,23 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 1
 7
 -1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item 造值：\texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}Value(\allowbreak{}x)\allowbreak{}}，空：\texttt{Option<\allowbreak{}int64>\allowbreak{}:\allowbreak{}:\allowbreak{}None}；
@@ -59,25 +79,44 @@ int64 main() {
 
 \texttt{Option} 只说「有没有」，不说「为什么没有」。要带原因就用 \texttt{Result<\allowbreak{}T,\allowbreak{} E>\allowbreak{}}：\texttt{Ok(\allowbreak{}v)\allowbreak{}} 表示成功、带着结果；\texttt{Err(\allowbreak{}e)\allowbreak{}} 表示失败、带着原因 \texttt{e}（\texttt{e} 可以是任意类型）。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Result<int64, String> safeDiv(int64 a, int64 b) {
-    if (b == 0) { return Result<int64, String>::Err("除以零"); }
+Result<int64, String> safeDiv(int64 a, int64 b)
+{
+    if (b == 0)
+    {
+        return Result<int64, String>::Err("除以零");
+    }
     return Result<int64, String>::Ok(a / b);
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", safeDiv(10, 2).isOk());
     println("{}", safeDiv(10, 0).isErr());
     println("{}", safeDiv(10, 2).unwrap());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1
 1
 5
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item \texttt{Ok(\allowbreak{}v)\allowbreak{}} / \texttt{Err(\allowbreak{}e)\allowbreak{}} 造两个状态；
@@ -89,26 +128,55 @@ int64 main() {
 
 把两个状态都处理干净，用第 10 章的 \texttt{match}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     Result<int64, String> r = Result<int64, String>::Err("坏了");
-    match (r) {
-        Result<int64, String>::Ok(v) => { println("ok {}", v); }
-        Result<int64, String>::Err(e) => { println("err {}", e); }
+    match (r)
+    {
+        Result<int64, String>::Ok(v) =>
+        {
+            println("ok {}", v);
+        }
+        Result<int64, String>::Err(e) =>
+        {
+            println("err {}", e);
+        }
     }
     Option<int64> o = Option<int64>::Value(3);
-    match (o) {
-        Option<int64>::Value(v) => { println("v={}", v); }
-        Option<int64>::None => { println("none"); }
+    match (o)
+    {
+        Option<int64>::Value(v) =>
+        {
+            println("v={}", v);
+        }
+        Option<int64>::None =>
+        {
+            println("none");
+        }
     }
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 err 坏了
 v=3
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{match} 是唯一能安全取出载荷的办法——它逼你把两个分支都写全，不像 \texttt{unwrap} 那样偷偷 panic。
 
@@ -131,34 +199,64 @@ v=3
 
 \texttt{unwrap} 用错了，程序会在运行期直接崩：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     Option<int64> none = Option<int64>::None;
     println("{}", none.unwrap());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：called Option.unwrap() on None
 出错位置：<内建 lang>:122（__magel_match_next_59）
 调用栈（外 → 内）：
   main  hello.mgl:3 [thread 0 coroutine 0 ip 40]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{expect} 一样会 panic，只是消息换成你写的那句：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     Option<int64> none = Option<int64>::None;
     println("{}", none.expect("必须要有值"));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：必须要有值
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 一句话记法：\texttt{unwrap} / \texttt{expect} 是「你说它不可能是空」的赌注。只要那份自信的来源不是刚刚检查过，就用 \texttt{unwrap\allowbreak{}Or} 或 \texttt{match}。
 
@@ -166,42 +264,78 @@ magel：运行期错误：panic：必须要有值
 
 一层层写 \texttt{match} 太啰嗦。假设你要算 \texttt{half(\allowbreak{}half(\allowbreak{}n)\allowbreak{})\allowbreak{}}，每次都要检查中间结果有没有值：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Option<int64> quarter(int64 n) {
+Option<int64> quarter(int64 n)
+{
     Option<int64> h = half(n);
-    if (h.isNone()) { return Option<int64>::None; }   // 手写传播
+    if (h.isNone())
+    {
+        return Option<int64>::None;
+    }
+    // 手写传播
     Option<int64> q = half(h.unwrap());
-    if (q.isNone()) { return Option<int64>::None; }   // 又来一遍
+    if (q.isNone())
+    {
+        return Option<int64>::None;
+    }
+    // 又来一遍
     return q;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{?} 运算符把这个套路压成一行：「如果没值 / 失败了，就地返回同样的空」。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Option<int64> half(int64 n) {
-    if (n % 2 == 0) { return Option<int64>::Value(n / 2); }
+Option<int64> half(int64 n)
+{
+    if (n % 2 == 0)
+    {
+        return Option<int64>::Value(n / 2);
+    }
     return Option<int64>::None;
 }
 
-Option<int64> quarter(int64 n) {
+Option<int64> quarter(int64 n)
+{
     int64 h = half(n)?;
     return half(h);
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", quarter(8).unwrap());
     println("{}", quarter(4).isNone());
     println("{}", quarter(6).isNone());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 2
 0
 1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{int64 h =\allowbreak{} half(\allowbreak{}n)\allowbreak{}?;} 读作：
 
@@ -212,51 +346,91 @@ int64 main() {
 
 \texttt{?} 对 \texttt{Result} 一样管用，而且会把 \texttt{Err} 原样往上传：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Result<int64, String> safeDiv(int64 a, int64 b) {
-    if (b == 0) { return Result<int64, String>::Err("除以零"); }
+Result<int64, String> safeDiv(int64 a, int64 b)
+{
+    if (b == 0)
+    {
+        return Result<int64, String>::Err("除以零");
+    }
     return Result<int64, String>::Ok(a / b);
 }
 
-Result<int64, String> chain(int64 a, int64 b, int64 c) {
+Result<int64, String> chain(int64 a, int64 b, int64 c)
+{
     int64 q = safeDiv(a, b)?;
     return safeDiv(q, c);
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", chain(100, 5, 2).unwrap());
     println("{}", chain(100, 0, 2).isErr());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 10
 1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 用 \texttt{?} 有个硬条件：所在函数的返回类型必须接受操作数的失败载荷。 标准 Option/Result 按各自约定接收，错误类型不匹配时需显式映射。否则编译器拦下：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Option<int64> half(int64 n) {
-    if (n % 2 == 0) { return Option<int64>::Value(n / 2); }
+Option<int64> half(int64 n)
+{
+    if (n % 2 == 0)
+    {
+        return Option<int64>::Value(n / 2);
+    }
     return Option<int64>::None;
 }
 
-int64 quarter(int64 n) {
+int64 quarter(int64 n)
+{
     int64 h = half(n)?;
     return h;
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", quarter(8));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：使用 `?` 的函数也必须返回同样的可空枚举，现在返回 int64
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 道理很简单：\texttt{?} 可能要把 \texttt{None} 往外抛，那外层函数必须接得住——它得也返回 \texttt{Option<\allowbreak{}int64>\allowbreak{}}。想用 \texttt{?} 又不想让 \texttt{quarter} 变成 \texttt{Option}，是行不通的。
 
@@ -268,40 +442,74 @@ magel：使用 `?` 的函数也必须返回同样的可空枚举，现在返回 
 \item \texttt{panic(\allowbreak{}"消息")\allowbreak{}} 无条件中止，打印消息；
 \item \texttt{assert(\allowbreak{}条件,\allowbreak{} "消息")\allowbreak{}} 条件不成立就 panic。消息可省。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 mustPositive(int64 n) {
-    if (n <= 0) { panic("必须是正数"); }
+int64 mustPositive(int64 n)
+{
+    if (n <= 0)
+    {
+        panic("必须是正数");
+    }
     return n;
 }
 
-int64 main() {
+int64 main()
+{
     println("{}", mustPositive(5));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 \end{itemize}
 
 \texttt{assert} 失败的样子：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 x = -1;
     assert(x > 0, "x 必须为正");
     println("不会到这");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：运行期错误：panic：x 必须为正
 出错位置：<内建 lang>:111（assert$bool$string）
 调用栈（外 → 内）：
   main  hello.mgl:3 [thread 0 coroutine 0 ip 13]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 怎么选？
 
@@ -322,30 +530,55 @@ magel：运行期错误：panic：x 必须为正
 
 \texttt{?} 通过 \texttt{Try<\allowbreak{}T,\allowbreak{}R>\allowbreak{}.\allowbreak{}branch} 判断是否继续，通过返回类型的 \texttt{From\allowbreak{}Residual<\allowbreak{}F,\allowbreak{}R>\allowbreak{}.\allowbreak{}from\allowbreak{}Residual} 将失败载荷转为函数结果，F 为实现类型自身。\texttt{Try\allowbreak{}Branch<\allowbreak{}T,\allowbreak{}R>\allowbreak{}} 有 Continue(T) 和 Break(R) 两种变体。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-enum Step : Try<int64,NoneResidual> {
+enum Step: Try<int64, NoneResidual>
+{
     Value(int64 value), Empty;
-    TryBranch<int64,NoneResidual> branch() {
-        match(self) {
-            Step::Value(value)=>{return TryBranch<int64,NoneResidual>::Continue(value);}
-            Step::Empty=>{return TryBranch<int64,NoneResidual>::Break(NoneResidual::None);}
+    TryBranch<int64, NoneResidual> branch()
+    {
+        match (self)
+        {
+            Step::Value(value) =>
+            {
+                return TryBranch<int64, NoneResidual>::Continue(value);
+            }
+            Step::Empty =>
+            {
+                return TryBranch<int64, NoneResidual>::Break(NoneResidual::None);
+            }
         }
         panic("unreachable");
     }
 };
-Option<int64> addOne(Step step) {
-    int64 value=step?;
-    return Option<int64>::Value(value+1);
+Option<int64> addOne(Step step)
+{
+    int64 value = step?;
+    return Option<int64>::Value(value + 1);
 }
-int64 main() {
-    println("{} {}",addOne(Step::Value(4)).unwrap(),addOne(Step::Empty).isNone());
+int64 main()
+{
+    println("{} {}", addOne(Step::Value(4)).unwrap(), addOne(Step::Empty).isNone());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 5 1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这里继续值为 int64，失败载荷为 NoneResidual，所以标准 Option 可以接住失败；自定义返回类型也可实现 FromResidual。传播表达式求值一次，失败就立即返回，并执行已登记的作用域清理。不同 Result 错误类型可先用 \texttt{map\allowbreak{}Err} 显式转换；Option 转 Result 可用 \texttt{ok\allowbreak{}Or} 或 \texttt{ok\allowbreak{}Or\allowbreak{}Else}。
 

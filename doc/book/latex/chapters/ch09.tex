@@ -7,13 +7,19 @@
 
 \section{定义与使用}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-int64 main() {
+int64 main()
+{
     Point p;
     p.x = 3;
     p.y = 4;
@@ -21,48 +27,91 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 拆开看：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 struct Point {        ← struct 名字 { 
     int64 x;          ← 字段：类型 名字;
     int64 y;
 }                     ← 类型声明到这里已经完整，后面的分号可省略
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 结构体声明在 \texttt{\}} 处结束，允许省略末尾的分号；原有 \texttt{\};} 写法仍有效。字段声明仍然需要分号。
 
 用法：声明一个变量，然后用 \texttt{.\allowbreak{}} 访问字段（片段，\texttt{Point} 假定已定义）。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Point p;          // 声明
-p.x = 3;          // 写字段
-println("{}", p.x);   // 读字段
+Point p;
+// 声明
+p.x = 3;
+// 写字段
+println("{}", p.x);
+// 读字段
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 没赋过值的字段是 0，不是垃圾：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-int64 main() {
+int64 main()
+{
     Point p;
     println("[{}][{}]", p.x, p.y);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 [0][0]
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这条和很多 C 系语言不同——那里的未初始化字段是随机值。Magel 帮你清零了。
 
@@ -74,21 +123,29 @@ int64 main() {
 
 字段旁边可以直接写方法：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 
-    int64 sum() {
+    int64 sum()
+    {
         return self.x + self.y;
     }
 
-    void shift(int64 delta) {
+    void shift(int64 delta)
+    {
         self.x = self.x + delta;
     }
 };
 
-int64 main() {
+int64 main()
+{
     Point p;
     p.x = 1;
     p.y = 2;
@@ -98,10 +155,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 13 11
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两条要点：
 
@@ -115,31 +182,49 @@ int64 main() {
 
 有些东西和「某一个具体对象」无关，只跟类型有关。比如「一共造过多少个 Counter」——这个数不是某个 \texttt{Counter} 的字段，它是 \texttt{Counter} 这个类型的。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Counter {
+struct Counter
+{
     static int64 alive;
     int64 value;
 
-    Counter(int64 initial) {
+    Counter(int64 initial)
+    {
         self.value = initial;
         Counter::alive = Counter::alive + 1;
     }
 
-    static int64 count() {
+    static int64 count()
+    {
         return Counter::alive;
     }
 };
 
-int64 main() {
+int64 main()
+{
     Counter c = new(7);
     println("value={} alive={}", c.value, Counter::count());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 value=7 alive=1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 对照着看两种东西：
 
@@ -162,34 +247,60 @@ value=7 alive=1
 
 字段没赋过值是 0，但我们常常想要「造出来就是对的」。这就是构造器：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Counter {
+struct Counter
+{
     int64 value;
 
-    Counter(int64 initial) {
+    Counter(int64 initial)
+    {
         self.value = initial;
     }
 };
 
-int64 main() {
+int64 main()
+{
     Counter c = new(7);
     println("{}", c.value);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 7
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 构造器没有返回类型，名字和结构体同名。调用它用 \texttt{new(\allowbreak{}实参)\allowbreak{}}。
 
 两种情形要说清楚（片段，\texttt{Counter} 假定已定义）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Counter c = new(7);          // 栈上：跟着作用域走
-Counter mut& p = new(7);     // 堆上：要自己 delete
+Counter c = new(7);
+// 栈上：跟着作用域走
+Counter mut& p = new(7);
+// 堆上：要自己 delete
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 左边写什么类型，就调那个类型的构造器——\texttt{new(\allowbreak{}7)\allowbreak{}} 本身不带类型信息。
 
@@ -202,42 +313,86 @@ Counter mut& p = new(7);     // 堆上：要自己 delete
 
 想「就地」建堆对象、不写实参时，括号可以省掉：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-Counter mut& p = new;        // 等价于 new(0)，元素类型由 p 的类型定
+Counter mut& p = new;
+// 等价于 new(0)，元素类型由 p 的类型定
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{new} 给的是「按目标类型构造」——目标类型没写，或者那个类型没有匹配实参的构造器，编译器就报错：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：struct Counter 没有匹配的构造函数：(int64)
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
-\begin{tip}{提示}
-📌 关于 \texttt{static T new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}：这是「具名构造入口」写法，允许的。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 只认真构造器；要用具名入口得写 \texttt{Point:\allowbreak{}:\allowbreak{}new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
+\begin{tip}{关于 \texttt{static T new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
+这是「具名构造入口」写法，允许的。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 只认真构造器；要用具名入口得写 \texttt{Point:\allowbreak{}:\allowbreak{}new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
 \end{tip}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 
-    Point(int64 x, int64 y) { self.x = x; self.y = y; }              // 真构造器
-    static Point new(int64 x, int64 y) { self.x = x * 10; self.y = y * 10; }  // 具名入口
+    Point(int64 x, int64 y)
+    {
+        self.x = x;
+        self.y = y;
+    }
+    // 真构造器
+    static Point new(int64 x, int64 y)
+    {
+        self.x = x * 10;
+        self.y = y * 10;
+    }
+    // 具名入口
 };
 
-int64 main() {
-    Point o = new(3, 4);          // 真构造器
-    Point mut& p = new(1, 2);     // 真构造器 + 堆
-    Point q = Point::new(3, 4);   // 具名入口
+int64 main()
+{
+    Point o = new(3, 4);
+    // 真构造器
+    Point mut& p = new(1, 2);
+    // 真构造器 + 堆
+    Point q = Point::new(3, 4);
+    // 具名入口
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     delete p;
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4 1 2 30 40
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{static X new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 返回所属类型；丢弃它的返回值会报错（拥有值的构造结果必须有归属）。
 
@@ -247,18 +402,25 @@ int64 main() {
 
 想让 \texttt{a + b} 这种写法用在自己的类型上，靠实现内建接口：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Money : Add<Money, Money> {
+struct Money: Add<Money, Money>
+{
     int64 cents;
 
-    Money leftAdd(Money other) {
+    Money leftAdd(Money other)
+    {
         Money result;
         result.cents = self.cents + other.cents;
         return result;
     }
 };
 
-int64 main() {
+int64 main()
+{
     Money a;
     a.cents = 150;
     Money b;
@@ -269,10 +431,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 225 分
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{a + b} 被翻译成 \texttt{a.\allowbreak{}left\allowbreak{}Add(\allowbreak{}b)\allowbreak{}}。Magel 里没有 \texttt{operator+} 这种声明——运算符是「实现哪个接口」决定的：
 
@@ -295,17 +467,24 @@ int64 main() {
 
 第 6 章那条规则对结构体同样生效，而且这里最容易踩：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Rect {
+struct Rect
+{
     int64 width;
     int64 height;
 };
 
-int64 area(Rect rect) {
+int64 area(Rect rect)
+{
     return rect.width * rect.height;
 }
 
-int64 main() {
+int64 main()
+{
     Rect r;
     r.width = 3;
     r.height = 4;
@@ -313,21 +492,118 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 12
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{area(\allowbreak{}r)\allowbreak{}} 复制了一份 \texttt{r}。对小的 \texttt{Rect} 无所谓；对大的结构体就要写 \texttt{Rect const\&}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 area(Rect const& rect) { ... }    // 不复制
-void resize(Rect mut& rect) { ... }     // 要改
+int64 area(Rect const& rect)
+{
+    ...
+}
+// 不复制
+void resize(Rect mut& rect)
+{
+    ...
+}
+// 要改
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 另外，结构体可以嵌套结构体，也可以装进容器——赋值时都是整套复制，而且复制是递归到底的（第 6 章）。
 
 结构体还能实现 \texttt{Drop} / \texttt{Closeable} 来管理资源，那些第 8 章讲过了。
+
+\subsection{从字段派生 Equal、Hash 和 Clone}
+
+比较、哈希和显式克隆通常要逐个处理字段。可以在结构体前写 \texttt{\#derive(\allowbreak{}Equal,\allowbreak{} Hash,\allowbreak{} Clone)\allowbreak{}}，让编译器生成这些重复的方法。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+#derive(Equal, Hash, Clone)
+struct BookKey
+{
+    String label;
+    int64 id;
+}
+
+#derive(Equal, Hash, Clone)
+struct BookRecord
+{
+    BookKey key;
+}
+
+int64 main()
+{
+    BookRecord original;
+    original.key.label = "left";
+    original.key.id = 7;
+    BookRecord copied = original.clone();
+    Map<BookKey, int64> cache;
+    cache.put(original.key, 10);
+    println("{} {} {}", original == copied,
+            original.hash(original) == copied.hash(copied),
+            cache.has(original.key) != 0);
+    copied.key.label = "changed";
+    println("{} {}", original.key.label, copied.key.label);
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+1 1 1
+left changed
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+请求 & 生成的能力 & 调用方式 \\
+\midrule
+\texttt{Equal} & 按字段比较，生成 \texttt{left\allowbreak{}Equal} 方法 & 通常使用 \texttt{left =\allowbreak{}=\allowbreak{} right} \\
+\texttt{Hash} & 按字段组合哈希，生成 \texttt{hash} 方法 & \texttt{value.\allowbreak{}hash(\allowbreak{}value)\allowbreak{}}；容器按 Hash 协议使用 \\
+\texttt{Clone} & 按字段显式克隆，生成 \texttt{clone} 方法 & \texttt{value.\allowbreak{}clone(\allowbreak{})\allowbreak{}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这里的 \texttt{Book\allowbreak{}Record} 包含 \texttt{Book\allowbreak{}Key}，所以后者也必须实现对应接口。字段嵌套了缺少接口的结构体时会直接报错，即使这个类型暂时没有被调用。泛型结构体在具体类型实例化后检查其字段。已有同名方法不会被派生代码覆盖。
+
+不能写 \texttt{\#derive(\allowbreak{}Drop)\allowbreak{}} 或 \texttt{\#derive(\allowbreak{}Closeable)\allowbreak{}}。 拥有值离开作用域时已经会按语言规则清理，并递归清理字段；再生成一套析构方法会破坏所有权。派生只支持 Equal、Hash、Clone，不能把任意接口名当作代码生成请求。引用、函数值、宿主对象及原始数组也不会被自动按地址比较或哈希；它们需要类型明确提供语义。
+
+这些方法在编译时生成，运行时不做反射字段遍历，也不引入 GC。枚举的活动变体和载荷如何处理，见第 10 章。
 
 \section{常见错误}
 

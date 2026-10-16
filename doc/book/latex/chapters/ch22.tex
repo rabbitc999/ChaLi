@@ -24,22 +24,44 @@ AOT 本地程序 & \texttt{magel aot app.\allowbreak{}mgl …} & 不经过 VM �
 
 这一章下面都用同一个 hello 程序举例：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     println("hello, delivery");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello, delivery
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \section{解释执行：开发者的默认档}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run src/main.mgl
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 预处理 \ensuremath{\rightarrow} 解析检查 \ensuremath{\rightarrow} 降级成四元式 \ensuremath{\rightarrow} 在同一个进程里跑起来。改完立刻看结果，不用等任何构建。前面二十一章你一直用的是这个。
 
@@ -47,9 +69,16 @@ magel run src/main.mgl
 
 \section{字节码：\texttt{.\allowbreak{}svmb}}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel svmb src/main.mgl --out build/app
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 产物是一组文件，其中主角是 \texttt{build/\allowbreak{}app.\allowbreak{}svmb}——交给 StackVM 加载执行。这是交付的主推形态，原因有三：
 
@@ -69,57 +98,107 @@ magel svmb src/main.mgl --out build/app
 
 需要库时，源码可省略 main，使用 export 声明公开函数，再按产物选择命令：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel aot math.mgl --out math.dll  # Windows GCC 目标
 magel aot math.mgl --out math.so   # Linux GCC 目标
 magel aot math.mgl --out math.o    # 目标文件，供宿主链接
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 三者均附带 C 头文件，宿主创建上下文后调用导出函数。--shared / --object 可显式选择类型。.o 不能直接由动态加载器加载；最终链接需准备同一工具链的 C++ 运行时与系统库。不支持 .lib / .a 静态库输出，修改扩展名不能转换 Windows / Linux ABI。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel aot src/main.mgl out build/native
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 生成的 \texttt{build/\allowbreak{}native} 就是一个独立的本地程序，不要求另装 Magel VM；所需运行时服务已编入产物，系统库和使用的外部依赖仍须准备：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 已生成可执行文件：build/native（运行方式：aot）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 ./build/native
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello, delivery
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 AOT 的做法是先生成 C++，再编成目标平台的本地程序，所以机器上要有 C++ 工具链。
 
 常用选项：
 
-\begin{center}
-\begin{tabular}{ll}
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.327\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.653\linewidth-2\tabcolsep\relax}}
 \toprule
 选项 & 作用 \\
 \midrule
+\endhead
 \texttt{out 路径} / \texttt{--out 路径} & 产物路径 \\
-\texttt{opt LEVEL} / \texttt{--opt-level=\allowbreak{}N} & 优化级别（\texttt{-O0} / \texttt{-O2}…） \\
+\texttt{opt LEVEL} / \texttt{--opt-level=\allowbreak{}N} & 优化级别（默认保持数值语义的 \texttt{-O3}；对照调试时可显式降低） \\
 \texttt{checked} / \texttt{unchecked} & 是否保留运行时检查（默认 \texttt{checked}） \\
 \texttt{--separate-modules} & 按模块缓存目标文件，增量更快 \\
 \texttt{--module-cache DIR} & 指定模块缓存目录 \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
-magel aot src/main.mgl out build/native checked opt 2
+magel aot src/main.mgl out build/native checked
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
-  优化级别：-O2
+  优化级别：-O3
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 默认使用 \texttt{checked}，保留分配有效性检查和 panic 调用栈。显式使用 \texttt{unchecked} 可关闭这些可选检查；数组下标与基础地址检查仍然保留。性能对比应使用相同检查配置。
 
@@ -127,9 +206,16 @@ magel aot src/main.mgl out build/native checked opt 2
 
 普通 \texttt{.\allowbreak{}svmb} 保存可读符号名；对外交付时可以导出无名变长符号格式：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel svmb src/main.mgl --out build/app --compress-symbols
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 映射表另存为 \texttt{<\allowbreak{}前缀>\allowbreak{}.\allowbreak{}symbol\_map.\allowbreak{}json}，用 \texttt{--symbol-map FILE} 可指定路径。映射表由开发方保存，用于离线定位问题。
 
@@ -139,30 +225,52 @@ magel svmb src/main.mgl --out build/app --compress-symbols
 
 板子跑不了桌面那套内存预算，也不想为了省内存换一套裁剪过的语言。Magel 的做法是共享 VM 核心，前端配置控制模块门禁与资源上限，独立 MCU 宿主还通过宏、内存池和胶水选择平台能力。配置写进 \texttt{magel.\allowbreak{}toml}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cfg]
 [embedded]
 enabled = true
 restrict_modules = ["std::math"]     # 在内置禁用之外再追加
 max_memory = 1048576                 # 运行内存上限（字节）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 门禁在编译期。 程序一 import 被禁的模块，直接编译报错、带源码位置，不会等到上板才发现：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 import std::net;
 
-int64 main() {
+int64 main()
+{
     println("net 打开了");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 在开了 \texttt{[\allowbreak{}embedded]\allowbreak{}} 的工程里跑，会得到：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式运行时里没有后端；
 诊断位置及具体文案以当前编译器为准；restrict_modules 只追加限制
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 前端配置固定禁用清单：\texttt{std:\allowbreak{}:\allowbreak{}net}、\texttt{std:\allowbreak{}:\allowbreak{}process}、\texttt{std:\allowbreak{}:\allowbreak{}sql}、\texttt{std:\allowbreak{}:\allowbreak{}io}、\texttt{std:\allowbreak{}:\allowbreak{}thread}、\texttt{std:\allowbreak{}:\allowbreak{}coroutine}、\texttt{std:\allowbreak{}:\allowbreak{}concurrency}。
 
@@ -170,9 +278,16 @@ magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式
 
 去掉那行 \texttt{import std:\allowbreak{}:\allowbreak{}net;}，同一个工程照常跑：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 嵌入式也能跑普通程序
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 产物仍是普通的 \texttt{.\allowbreak{}svmb}，共同支持的功能遵循相同语义。目标 VM 的特征位、模块、胶水和内存预算须匹配，默认无反射的板端要求源程序显式 --no-reflection。
 
@@ -195,10 +310,17 @@ magel：模块：嵌入式模式不允许使用模块 std::net：它在嵌入式
 \end{tabular}
 \end{center}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run app.mgl --memory-size 1048576
 magel run app.mgl --watchdog --max-restarts 2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两行都照跑，输出 \texttt{hello,\allowbreak{} delivery}。
 
@@ -210,10 +332,17 @@ magel run app.mgl --watchdog --max-restarts 2
 
 AOT 生成的 C++ 里带着一个可以直接调的入口：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 static int runMagel(int argumentCount, const char *const *arguments,
                     void *buffer, std::size_t memoryBytes);
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 生成的代码里，\texttt{int main(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 被 \texttt{\#ifndef MAGEL\_NO\_MAIN} 包着——定义 \texttt{MAGEL\_NO\_MAIN} 再编译，就只剩 \texttt{run\allowbreak{}Magel} 给你的固件调用，不带自己的 \texttt{main}。
 

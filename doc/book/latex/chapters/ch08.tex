@@ -17,8 +17,13 @@ Magel 的答案很短：离开作用域的时候，自动释放。
 
 每一对 \texttt{\{ \}} 划出一个作用域。 在那个花括号里声明的东西，出了花括号就不存在了：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 outer = 1;
     {
         int64 inner = 2;
@@ -28,11 +33,21 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 里面能看到 1 和 2
 外面只剩 1
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这里面 \texttt{inner} 只活在里层那对大括号里。出了它，\texttt{inner} 就没了——想在外面用 \texttt{inner} 是编译错误，不是「值是 0」。
 
@@ -57,15 +72,22 @@ int64 main() {
 
 给一个结构体实现 \texttt{Drop}，它的 \texttt{drop(\allowbreak{})\allowbreak{}} 就会在这个值离开作用域时被调用：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Resource : Drop {
+struct Resource: Drop
+{
     String name;
-    void drop() {
+    void drop()
+    {
         println("drop {}", self.name);
     }
 };
 
-int64 main() {
+int64 main()
+{
     {
         Resource r;
         r.name = "conn";
@@ -75,12 +97,22 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 drop conn
 after block
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 注意 \texttt{drop conn} 出现的位置：在里层花括号结束的那一刻，而不是在程序末尾。这就是「确定性释放」——资源什么时候还，看代码结构就能读出来。
 
@@ -92,34 +124,53 @@ after block
 
 字段会被自动递归析构——一层层往下，直到最里面：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Inner : Drop {
+struct Inner: Drop
+{
     String tag;
-    void drop() {
+    void drop()
+    {
         println("drop inner {}", self.tag);
     }
 };
 
-struct Outer : Drop {
+struct Outer: Drop
+{
     Inner field;
-    void drop() {
+    void drop()
+    {
         println("drop outer");
     }
 };
 
-int64 main() {
+int64 main()
+{
     Outer o;
     o.field.tag = "x";
     println("using");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 drop outer
 drop inner x
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 顺序是：先跑 \texttt{Outer} 自己的 \texttt{drop(\allowbreak{})\allowbreak{}}，再析构它的字段。
 
@@ -139,15 +190,22 @@ drop inner x
 
 实现 \texttt{Closeable} 就是干这个的：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Handle : Closeable {
+struct Handle: Closeable
+{
     int64 id;
-    void close() {
+    void close()
+    {
         println("close {}", self.id);
     }
 };
 
-int64 main() {
+int64 main()
+{
     {
         Handle h;
         h.id = 1;
@@ -157,12 +215,22 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 using
 close 1
 after block
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 机制和 \texttt{Drop} 一样（离开作用域自动调 \texttt{close(\allowbreak{})\allowbreak{}}），但多了一条很实用的保证：
 
@@ -172,37 +240,63 @@ after block
 
 所以你可以放心地「提前关」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Handle : Closeable {
-    void close() {
+struct Handle: Closeable
+{
+    void close()
+    {
         println("close");
     }
 };
 
-int64 main() {
+int64 main()
+{
     {
         Handle h;
-        h.close();              // 提前关
+        h.close();
+        // 提前关
         println("closed early");
-    }                           // 这里不会再关一次
+    }
+    // 这里不会再关一次
     println("after");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 close
 closed early
 after
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{close} 只出现了一次。 这条保证让「提前关闭」变成一件可以随手做的事——不用记「我关过了吗」，也不用写一堆标志位。
 
 \subsection{两个都实现的时候，顺序固定}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 先 close()，再 drop()
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 不用记特例：关动作在前，销毁动作在后。
 
@@ -210,13 +304,19 @@ after
 
 前面所有东西都活在栈上，跟着作用域走。要手动控制生命周期时，用堆：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-int64 main() {
+int64 main()
+{
     Point mut& p = new;
     p.x = 3;
     p.y = 4;
@@ -226,11 +326,21 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3,4
 deleted
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \begin{itemize}
 \item \texttt{Point mut\& p =\allowbreak{} new;} —— 在堆上建一个 \texttt{Point}，\texttt{p} 是指向它的引用；
@@ -245,15 +355,22 @@ deleted
 
 \subsection{\texttt{delete} 两次没事}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Box : Drop {
+struct Box: Drop
+{
     int64 id;
-    void drop() {
+    void drop()
+    {
         println("drop {}", self.id);
     }
 };
 
-int64 main() {
+int64 main()
+{
     Box mut& b = new;
     b.id = 7;
     delete b;
@@ -262,23 +379,39 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 drop 7
 twice ok
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{drop} 只出现了一次。同一对象只析构、释放一次——重复 \texttt{delete} 不会崩，也不会执行两遍清理。\texttt{drop(\allowbreak{})\allowbreak{}} 手动调用同理。
 
 但释放之后不能再读：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-int64 main() {
+int64 main()
+{
     Point mut& p = new;
     p.x = 1;
     delete p;
@@ -286,10 +419,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{MGL1205} 也是第 6 章 \texttt{move} 之后读源值时报的码——同一个意思：「这东西已经不在了，别再碰」。
 
@@ -327,22 +470,40 @@ magel：[MGL1205] 借用来源已释放，不能继续访问：表达式
 
 \texttt{defer stmt;} 登记当前作用域离开时执行的动作，\texttt{scope(\allowbreak{}exit)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是块形式。普通结束和 \texttt{return}、\texttt{panic}、\texttt{break}、\texttt{continue} 都执行已登记动作一次；同一作用域按登记的逆序执行。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     {
         defer println("first");
-        scope(exit) { println("second"); }
+        scope (exit)
+        {
+            println("second");
+        }
         println("body");
     }
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 body
 second
 first
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{defer} 用于没有所有权关系的收尾，例如恢复状态或结束宿主操作。拥有型资源继续按 \texttt{Drop}、\texttt{Closeable} 的原规则清理。不要对同一资源再登记一份释放动作。
 

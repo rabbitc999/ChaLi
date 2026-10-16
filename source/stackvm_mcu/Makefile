@@ -8,13 +8,13 @@
 #   * `-STACKVM_WITH_HOST_IO=0`：整段不碰 `<fstream>`，只能用内存映像加载；
 #   * 关掉大整数/大浮点（要的话再加回来，见 README 的预算表）。
 #
-# 目标：`make` 出 build/mcu_vm/mcu-host（桌面可跑的板端宿主，用于等价性回归）。
+# 目标：`make` 出 build/stackvm_mcu/mcu-host（桌面可跑的板端宿主，用于等价性回归）。
 
 CXX ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -O1
 
 ROOT_DIR := ../..
-BUILD_DIR ?= $(ROOT_DIR)/build/mcu_vm
+BUILD_DIR ?= $(ROOT_DIR)/build/stackvm_mcu
 # 桌面与板端编译同一份核心，板端仅保留宿主和静态池适配。
 STACKVM_DIR := ../../library/stackvm
 EMBED_DIR := .

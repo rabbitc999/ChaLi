@@ -4,7 +4,7 @@
 
 \usepackage{tabularx}
 \pdfstringdefDisableCommands{\def\allowbreak{}}
-\setlength{\emergencystretch}{1em}
+\setlength{\emergencystretch}{3em}
 \usetikzlibrary{arrows.meta,backgrounds,decorations.pathreplacing,fit,positioning,shapes.geometric}
 
 \newif\ifrelease
@@ -35,7 +35,7 @@
   stringstyle=\color[RGB]{128,0,0},
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=flexible,
+  breaklines=true, columns=fullflexible, keepspaces=true,
   showstringspaces=false, tabsize=4,
   morecomment=[l]{//},
   morecomment=[s]{/*}{*/},
@@ -49,7 +49,7 @@
   numbers=none,
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=flexible,
+  breaklines=true, columns=fullflexible, keepspaces=true,
   showstringspaces=false,
 }
 % 命令行
@@ -60,7 +60,7 @@
   keywordstyle=\color{red!40!orange},
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=flexible,
+  breaklines=true, columns=fullflexible, keepspaces=true,
   showstringspaces=false,
 }
 % 配置文件（toml / json）
@@ -70,7 +70,7 @@
   numbers=none,
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=flexible,
+  breaklines=true, columns=fullflexible, keepspaces=true,
   showstringspaces=false,
 }
 

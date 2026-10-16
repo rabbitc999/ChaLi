@@ -27,7 +27,8 @@ Magel 的报错分三类，看**开头几个字**就能分清：
 
 <!-- fail -->
 ```magel
-int64 main() {
+int64 main()
+{
     int64 a = 1;
     int64 b = 0;
     println("{}", a / b);
@@ -89,9 +90,11 @@ magel：运行期错误：整数除零
 
 <!-- fail -->
 ```magel
-int64 main() {
+int64 main()
+{
     int64 big = 70000;
-    int32 small = big;      // 缩窄：位宽变小
+    int32 small = big;
+    // 缩窄：位宽变小
     println("{}", small);
     return 0;
 }
@@ -115,8 +118,10 @@ magel：不能隐式转换：int64 -> int32（请显式强转）
 
 <!-- fail -->
 ```magel
-int64 main() {
-    uint8 b = 256;      // uint8 只到 255
+int64 main()
+{
+    uint8 b = 256;
+    // uint8 只到 255
     return 0;
 }
 ```
@@ -140,8 +145,10 @@ magel：整数字面量 256 超出 uint8 的取值范围（0..255）
 
 <!-- fail -->
 ```magel
-int64 main() {
-    int64 mut& r = 5;      // 引用要从对象身上取地址，不能绑字面量
+int64 main()
+{
+    int64 mut& r = 5;
+    // 引用要从对象身上取地址，不能绑字面量
     return 0;
 }
 ```
@@ -156,7 +163,8 @@ magel：不能隐式转换：int64 -> int64 mut&（请显式强转）
 
 <!-- fail -->
 ```magel
-int64 main() {
+int64 main()
+{
     int64 mut& r;
     println("{}", r);
     return 0;
@@ -187,31 +195,28 @@ magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期�
 | 现象 | 真实消息 | 怎么办 |
 | --- | --- | --- |
 | 语句少写分号 | `语法错误：x.mgl 第 3 行第 5 列：期望 条件(if) / 自增(++) / 自减(--) / 加号(+) 等 44 个之一，实际是 返回(return)` | 看行号，上一句末尾补 `;` |
-| 声明块后少分号 | `语法错误：x.mgl 第 2 行第 1 列：期望 分号(;)，实际是 结构体(struct)` | `struct`/`enum`/`interface` 的 `}` 后面要有 `;` |
 
-**最容易被吞掉的分号**在声明块后面——这是新手第一名的坑：
+类型声明的尾部分号是可选的：`struct`、`enum`、`interface` 在 `}` 结束，可以再写 `;`，也可以不写。不要把合法的省略分号误当成错误；普通声明、赋值、返回和 `do ... while` 的分号仍然要保留。
 
-<!-- fail -->
+<!-- verify-book -->
 ```magel
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 }
-int64 main() {
-    Point p;
+
+int64 main()
+{
+    Point point;
+    println("{}", point.x);
     return 0;
 }
 ```
 
 ```text
-语法错误：x.mgl 第 5 行第 1 列：期望 分号(;)，实际是 整数类型(int64)
+0
 ```
-
-报错指在第 5 行（`int64 main()`），可问题在**第 4 行的 `}` 后面少了一个 `;`**。
-记住这条规律：
-
-> **凡是「大括号包起来的一段声明」——`struct` / `enum` / `interface`——收尾的
-> `}` 后面都要跟一个 `;`。** 函数体 `main() { … }` 反而**不要**。
 
 其它几条词法/语法坑（第 3 章 3.10 节实测过）：
 
@@ -219,7 +224,7 @@ int64 main() {
 | --- | --- | --- |
 | `0b1010` | 词法错误（前缀是 `b`） | `b1010` |
 | `1_000` | 语法错误（下划线分隔不认） | `1000` |
-| `1.5f` | 语法错误（浮点后缀不认） | `(float32)1.5` |
+| `1.0F` / `1U` | 后缀必须小写 | `1.0f` / `1u` |
 
 ---
 
@@ -244,7 +249,8 @@ int64 main() {
 
 <!-- fail -->
 ```magel
-int64 main() {
+int64 main()
+{
     Option<int64> none = None;
     println("{}", none.unwrap());
     return 0;

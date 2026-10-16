@@ -31,7 +31,7 @@ def main():
                 result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(work/f'output{count}')],cwd=work,
                     env=dict(os.environ,MAGEL_LANG='zh',MAGEL_NO_STDIN_INPUT='1'),capture_output=True,encoding='utf-8',timeout=60)
                 assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
-    assert count>=8,count
+    assert count>=24,count
     print(f'新增 {count} 个书本完整程序输出与全部 LaTeX 生成章节一致。')
 
 

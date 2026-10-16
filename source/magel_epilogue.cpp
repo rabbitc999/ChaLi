@@ -1907,6 +1907,20 @@ int M_BreakLevel(int level)
 }
 
 /**
+ * @brief 在层级退出参数中接受 ALL 的所有 ASCII 大小写组合。
+ * @param nameId 参数标识符在名称池中的编号。
+ * @retval ALL 返回退出全部循环的节点；非法名称返回错误节点。
+ * @note 不修改词法关键字表，避免占用普通变量名 all。
+ */
+int M_BreakLevelNamed(int nameId)
+{
+    const auto &name = g_names[nameId];
+    if (name.size() == 3 && (name[0] == 'a' || name[0] == 'A') && (name[1] == 'l' || name[1] == 'L') && (name[2] == 'l' || name[2] == 'L'))
+        return M_BreakLevel(-1);
+    return M_ParseBad("break #level 的参数必须是正整数字面量或 ALL（不区分大小写）");
+}
+
+/**
  * @brief 构造并登记指针释放语句。
  * @param pointer 待释放或校验的指针。
  * @retval 生成的语法节点在节点池中的编号。

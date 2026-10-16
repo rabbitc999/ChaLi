@@ -1,5 +1,7 @@
 # Command line manual
 
+API queries require the explicit `api` command: `magel man api std` lists standard-library modules, and `magel man api std::text::Text` describes a type. Commands such as `magel man std` or `magel man std::text::Text` report a usage error and show the corrected command.
+
 `magel man` queries the standard library index embedded in the executable. Normal queries need neither a network connection, Python, nor the source repository. The full library reference remains in [doc/library](../../library/README.md). This directory documents command behaviour, the JSON structure, and [LSP incremental hints and caching](lsp.md). [中文](../README.md)
 
 ## Queries

@@ -18,8 +18,8 @@ about how to use it.
 | Line comment | `// …` | |
 | Block comment | `/* … */` | nestable |
 | Identifier | `[A-Za-z_][A-Za-z0-9_]*` | case-sensitive |
-| Integer literal | `42`, `0xFF`, `0b1010`, `1_000`, `1u`, `0xffu`, `b_101u` | Lowercase `u`: unsigned, defaults to `uint64`; `-1u` is rejected |
-| Float literal | `3.14`, `1e9`, `1.5f`, `1f` | Unsuffixed: `float64`; lowercase `f`: `float32` (v0.18.1) |
+| Integer literal | `42`, `0xFF`, `b1010`, `1u`, `0xffu`, `b_101u` | Lowercase `u`: unsigned, defaults to `uint64`; `-1u` is rejected |
+| Float literal | `3.14`, `1e9`, `1.5f`, `1f` | Unsuffixed: `float64`; lowercase `f`: `float32` |
 | Character literal | `'M'`, `'\n'` | type `char` |
 | String literal | `"hello"` | type `std::lang::String` |
 | Boolean | `true` / `false` | |
@@ -742,6 +742,8 @@ Within the same block, a variable can be redeclared after its entire value has b
 
 For Any type checks and safe extraction, use `isType<T>`, `tryGet<T>`, `tryGetReference<T>` and `tryGetMut<T>`. `nameof` and the box’s `.name()` have been removed; see the [Any, explicit generics and data utilities](22-any-generics-data.md).
 
+An anonymous function returning another function may group its return type: `(int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) { int64 fn copy(int64 x) { a(b(x)) } }`. Neither trailing expression has a semicolon: the outer expression returns a closure and the inner expression returns an integer. The returned closure must own `a` and `b` rather than borrow parameters from an invocation that has ended. See the [function and closure examples](../book/15-函数值与闭包.md).
+
 ## fn capture modes
 
 External locals are captured by `const&` by default; `fn const(...)` is equivalent. Reads observe later changes in the source, while writes are rejected. `fn mut(...)` captures by `mut&` and writes back to the source. `fn copy(...)` owns mutable independent copies. `fn move(...)` transfers captured values into the closure and forbids reading or writing the old bindings; declare new bindings before reuse. Copying a closure duplicates owned state and preserves references to borrowed sources. Reference captures must not outlive their sources; owned captures may escape only when their contents do not borrow shorter-lived storage. Capture lists use `fn copy[a, b] mut[c] const[d] move[e](int64 x) { ... }`; unlisted external locals use `const&` by default. One trailing default mode may override this: `fn copy[a, b] mut(int64 x)` borrows other locals by `mut&`. Multiple defaults, such as `copy[a, b] mut const(...)`, are rejected.
@@ -771,7 +773,7 @@ A closed interval finishes at its last value without incrementing the maximum in
 
 ## Breaking out of nested loops
 
-`break #level(N);` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break #level(1);` is equivalent to `break;`. `break #level(ALL);` exits every enclosing loop in the current function and resumes after the outermost loop.
+`break #level(N);` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break #level(1);` is equivalent to `break;`. `break #level(ALL);` exits every enclosing loop in the current function and resumes after the outermost loop. ALL is case-insensitive here: `all`, `All` and other case variants are equivalent. This recognition is limited to the directive argument, so `all` remains available as an ordinary variable name.
 
 Only `loop`, `while`, `do-while`, `for` and `foreach` count. Ordinary blocks, value blocks, `if` and `match` do not count. N must be a positive decimal integer literal, not a variable or expression. Zero, negative numbers, excessive depths and use outside a loop are rejected. Exits cannot cross function or `fn` boundaries. These forms carry no result; targeting a loop expression that requires a value is rejected. Use `break value;` to supply a result.
 

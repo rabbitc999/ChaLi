@@ -521,6 +521,13 @@ int M_Break(int value);
  * @retval 返回退出语句节点编号。
  */
 int M_BreakLevel(int level);
+/**
+ * @brief 在层级退出的参数位置识别不区分大小写的 ALL。
+ * @param nameId 参数标识符在名称池中的编号。
+ * @retval 合法时返回退出全部循环的节点；其他名称登记参数错误。
+ * @note 普通表达式中的 all、All 等名称仍可作为变量名。
+ */
+int M_BreakLevelNamed(int nameId);
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
 int M_Case(int value, int stmts);
 /**

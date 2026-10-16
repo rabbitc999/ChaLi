@@ -147,12 +147,12 @@ magel：运算符 + 有多条声明匹配同一对操作数 A / int64，返回�
 
 **Swapping operands does not change evaluation order.** When `bump() + makeA()` becomes `makeA().leftAdd(bump())`, both operands are still evaluated left to right as written (the left one is parked in a temporary first), so side effects happen in the same order as they would without the swap.
 
-## A tighter macro DSL: no more `$match`, `##` or `#param`
+## Macro text concatenation and stringification
 
 The macro layer carried two sets of redundant spellings. Both are unsupported:
 
 - **`$match` / `$when` / `$end_when` / `$else` / `$end_else` / `$end_match`** are no longer directives. They were a miniature DSL stacked on top of a textual substitution macro — rarely used, but with a very large diagnostic surface. To generate code per branch, use `$for` together with overloads that distinguish shapes by argument count.
-- **`##` pasting and `#param` stringification** are no longer directives either. Use `$concat(a, b)` and `$stringify(x)`, which were always the recommended spellings; `##` / `#param` were only compatibility aliases. Keeping both spellings doubled the diagnostic surface for no gain.
+- **`##` pasting and `#param` stringification** are no longer directives either. Use `$concat(a, b)` and `$stringify(x)`. The former `##` / `#param` spellings have been removed and are rejected.
 
 Writing either is a syntax error:
 

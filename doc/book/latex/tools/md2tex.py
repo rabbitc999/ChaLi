@@ -194,7 +194,12 @@ class Converter:
     def conv_code(self, lang, buf):
         style = CODE_STYLE.get(lang, 'out')
         content = '\n'.join(buf).replace('✗', 'X')
-        return '\\begin{lstlisting}[style=%s]\n%s\n\\end{lstlisting}' % (style, content)
+        listing = '\\begin{lstlisting}[style=%s]\n%s\n\\end{lstlisting}' % (style, content)
+        # 短示例可整块放入一页，避免在条件分支中间翻页；长程序仍可正常分页。
+        visual_lines = sum(max(1, (disp_len(line) + 79) // 80) for line in content.splitlines())
+        if visual_lines <= 40:
+            return '\\par\n\\medskip\n\\noindent\n\\begin{minipage}{\\linewidth}\n' + listing + '\n\\end{minipage}\n\\par\n\\medskip'
+        return listing
 
     def conv_table(self, rows_raw):
         rows = [self.split_row(r) for r in rows_raw]

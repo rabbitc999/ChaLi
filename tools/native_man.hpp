@@ -195,6 +195,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "       magel man skill [--json]\n"
                                                           "       magel man api\n"
                                                           "       magel man help [--lang zh|en] [--json]\n\n"
+                                                          "API queries must include the api command.\n"
                                                           "API examples: magel man api std::text; magel man api std::text::Text\n"
                                                           "API documentation: embedded doc/library/.\n"
                                                           "man book exports Markdown and images to ./book.\n" :
@@ -206,6 +207,7 @@ int man(int argc, char **argv, const fs::path &compiler)
                                                           "      magel man skill [--json]\n"
                                                           "      magel man api\n"
                                                           "      magel man help [--lang zh|en] [--json]\n\n"
+                                                          "查询 API 时必须显式写 api 子命令。\n"
                                                           "API 示例：magel man api std::text；magel man api std::text::Text\n"
                                                           "API 文档来源：内嵌的 doc/library/。\n"
                                                           "man book 将 Markdown 和图片导出到当前目录的 book 文件夹。\n";
@@ -214,6 +216,17 @@ int man(int argc, char **argv, const fs::path &compiler)
         else
             std::cout << usage;
         return 0;
+    }
+    if (!update && target != "api" && target != "book" && target != "keyword" && target != "macro" && target != "skill")
+    {
+        const std::string example = "magel man api" + (target.empty() ? " --search " + query : " " + target);
+        const std::string message = manLanguage() == "en" ? "API queries require the api command. Use: " + example : "查询 API 需要显式添加 api 子命令，请使用：" + example;
+        const auto diagnostic = parse(magel_diagnostics::toolDiagnostic("MGL1701", message.c_str()).c_str());
+        if (machine)
+            std::cout << object({ { "schemaVersion", 1 }, { "kind", "usage" }, { "language", manLanguage() }, { "target", target }, { "diagnostics", A{ diagnostic } } }).dump() << '\n';
+        else
+            std::cerr << "MGL1701: " << message << '\n';
+        return 2;
     }
     if ((!query.empty() && !target.empty() && target != "api") || (update && (runExample || !query.empty() || !target.empty())))
     {
@@ -401,7 +414,7 @@ int man(int argc, char **argv, const fs::path &compiler)
             if (match) selected.push_back(expanded(symbol));
         }
     }
-    else if (target.empty())
+    else if (target.empty() || target == "std")
     {
         kind = "modules";
         if (const auto *entries = modules.asObject())

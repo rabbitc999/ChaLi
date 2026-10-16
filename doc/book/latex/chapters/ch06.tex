@@ -9,28 +9,46 @@
 
 \section{一个让人愣一下的例子}
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-int64 main() {
+int64 main()
+{
     Point a;
     a.x = 1;
     a.y = 2;
 
-    Point b = a;         // 把 a 赋给 b
-    b.x = 99;            // 改 b
+    Point b = a;
+    // 把 a 赋给 b
+    b.x = 99;
+    // 改 b
 
     println("a=({}, {}) b=({}, {})", a.x, a.y, b.x, b.y);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 a=(1, 2) b=(99, 2)
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 改了 \texttt{b}，\texttt{a} 没变。
 
@@ -50,46 +68,79 @@ Magel 两个都不是。它给的是第三种：
 
 这不是「只复制了数字、里面的东西还是共享的」。是整套复制：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Bag {
+struct Bag
+{
     List<int64> items;
 };
 
-int64 main() {
+int64 main()
+{
     Bag original;
     original.items.push(1);
 
-    Bag copy = original;      // 整只袋子复制一份，连同里面的表
+    Bag copy = original;
+    // 整只袋子复制一份，连同里面的表
     copy.items.push(2);
 
     println("original={} copy={}", original.items.len(), copy.items.len());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 original=1 copy=2
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{copy.\allowbreak{}items.\allowbreak{}push(\allowbreak{}2)\allowbreak{}} 只动了 \texttt{copy} 自己那份。\texttt{original} 里的表还是只有 1 个元素。
 
 字符串也一样：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     String original = "hello";
     String copy = original;
 
-    copy[0] = (char)72;      // 72 就是 'H'
+    copy[0] =(char)72;
+    // 72 就是 'H'
 
     println("{} {}", original, copy);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello Hello
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 改 \texttt{copy} 的第一个字符，\texttt{original} 安然无恙。
 
@@ -99,17 +150,24 @@ hello Hello
 
 第 4 章你已经见过这条规则，现在你知道它从哪来了：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point {
+struct Point
+{
     int64 x;
     int64 y;
 };
 
-void shift(Point point) {
+void shift(Point point)
+{
     point.x = point.x + 10;
 }
 
-int64 main() {
+int64 main()
+{
     Point a;
     a.x = 1;
     a.y = 2;
@@ -119,10 +177,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 a=(1, 2)
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{shift} 里改了 \texttt{point.\allowbreak{}x}，调用方的 \texttt{a} 一动不动。因为 \texttt{point} 是一份副本。
 
@@ -166,10 +234,25 @@ Rust 里 \texttt{let b =\allowbreak{} a;} 之后 \texttt{a} 就不能用了—�
 
 那怎么避免？答案是第 7 章：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void inspect(BigData const& data) { ... }   // 只读，不复制
-void update(BigData mut& data) { ... }      // 要改，不复制
+void inspect(BigData const& data)
+{
+    ...
+}
+// 只读，不复制
+void update(BigData mut& data)
+{
+    ...
+}
+// 要改，不复制
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 注意这是你主动的选择，不是编译器偷偷帮你优化掉复制。这一点很重要：
 
@@ -184,12 +267,18 @@ void update(BigData mut& data) { ... }      // 要改，不复制
 
 有时候你确实想要「把原有资源交给另一个值，原来的值不再使用」。Magel 把它写成一个函数：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Message {
+struct Message
+{
     String text;
 };
 
-int64 main() {
+int64 main()
+{
     Message source;
     source.text = "hello";
 
@@ -198,10 +287,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 hello
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{move(\allowbreak{}\&source)\allowbreak{}} 做的事情，按顺序是：
 
@@ -217,23 +316,39 @@ hello
 \item 参数必须写 \texttt{\&source}，也就是传一个 \texttt{T mut\&}。传普通值或者只读引用会编译报错。
 \item 移动之后不能再读 \texttt{source}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Message {
-    String text;
+struct Message
+{
+  String text;
 };
 
-int64 main() {
-    Message source;
-    source.text = "hello";
-    Message result = move(&source);
-    println("[{}] [{}]", source.text, result.text);
-    return 0;
+int64 main()
+{
+  Message source;
+  source.text = "hello";
+  Message result = move(&source);
+  println("[{}] [{}]", source.text, result.text);
+  return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：text
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 要再用这个名字，须重新声明（如 \texttt{Type source =\allowbreak{} something;}）建立新的绑定；旧绑定禁止读写。
 \item \texttt{move} 可以省去资源的深拷贝：接收方取得原有字符串和容器的句柄，源值不能再读。需要继续使用源值时保留普通复制，临时只读访问则使用 \texttt{const\&}。

@@ -79,13 +79,13 @@ values, events and watchdogs. The [API index](../library/README.md) defines the 
 pages do not maintain a separate module count. HTTP excludes TLS; external databases need their
 clients and services. Asynchronous event callbacks have separate lifetime contracts.
 
-Desktop and MCU builds share one VM core. `source/mcu_vm/` supplies a host without exceptions/RTTI,
+Desktop and MCU builds share one VM core. `source/stackvm_mcu/` supplies a host without exceptions/RTTI,
 pools and platform adapters. The front-end `[embedded]` module gate and standalone MCU build macros/glue
 are separate configurations. The H743 port provides SDRAM, FatFS, USART1, an LCD selector and keys,
 and starts one benchmark by default. Its 2/16/4 MiB pools total 22 MiB, which is not a small-SRAM footprint.
 The host can return to its menu after normal exit or language panic; hardware Faults, host corruption
 and unrecoverable exhaustion remain platform concerns. See [deployment](06-deployment.md), the
-[MCU host](../../source/mcu_vm/README.md) and [H743 project](../../example/mcu/FK-STM32H743XIH6/README.md).
+[MCU host](../../source/stackvm_mcu/README.md) and [H743 project](../../example/mcu/FK-STM32H743XIH6/README.md).
 
 The CLI provides projects, checks, formatting, tests and dependency locks/caches. LSP provides diagnostics,
 completion, hover, signatures and cross-file navigation. DAP provides breakpoints, stepping and stacks;
@@ -94,3 +94,6 @@ fixed Git commits and hashed HTTP/HTTPS archives. Feature implementation, regres
 long-term production validation are separate claims.
 
 Tool interfaces support Chinese and English; unsupported system locales fall back to English and explicit Japanese selection is rejected. `man book`, `man keyword`, and `man skill` query embedded book, keyword and AI SKILL data. The VS Code package includes the same SKILL.
+
+
+API manuals require `magel man api`; omitting `api` produces a usage error. `magel man macro` displays embedded macro help.

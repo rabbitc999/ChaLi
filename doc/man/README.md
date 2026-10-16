@@ -1,5 +1,7 @@
 # 命令行手册
 
+查询 API 必须显式写 `api` 子命令：`magel man api std` 列出标准库模块，`magel man api std::text::Text` 查看类型。省略 `api` 的 `magel man std` 或 `magel man std::text::Text` 会报参数错误并给出正确命令。
+
 `magel man` 从可执行文件中的标准库索引查询 API，无需网络、Python 或仓库目录。库 API 的完整网页参考仍在 [doc/library](../library/README.md)；本目录记录命令行为、数据结构及 [LSP 增量提示与缓存](lsp.md)。[English](en/README.md)
 
 ## 查询

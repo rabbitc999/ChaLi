@@ -16,27 +16,51 @@
 
 三种写法，先认脸：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 T mut&      可变引用：能读，也能写
 T const&    只读引用：只能读
 T &         和 T const& 完全等价（简写）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 实际用起来是这样：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 value = 7;
-    int64 mut& alias = &value;      // 造一个「指向 value」的可变引用
-    alias = 9;                      // 写引用 = 写 value
+    int64 mut& alias = &value;
+    // 造一个「指向 value」的可变引用
+    alias = 9;
+    // 写引用 = 写 value
     println("{} {}", value, alias);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 9 9
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 三个要点：
 
@@ -46,18 +70,33 @@ int64 main() {
 
 只读引用不能写。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 value = 7;
     int64 const& view = &value;
     view = 9;
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：只读引用（`T const&`）不能写入元素
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{T \&} 是 \texttt{T const\&} 的简写，写起来省一点。改不了的东西用 \texttt{const\&} 声明，本身就是一种文档：读代码的人一眼知道「这个函数不会动我的数据」。
 
@@ -65,22 +104,38 @@ magel：只读引用（`T const&`）不能写入元素
 
 第 6 章那个改不动调用方的 \texttt{bump}，加一个 \texttt{mut\&} 就改得动了：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-void bump(int64 mut& counter) {
+void bump(int64 mut& counter)
+{
     counter = counter + 1;
 }
 
-int64 main() {
+int64 main()
+{
     int64 number = 5;
     bump(&number);
     println("{}", number);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 6
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两处变化：
 
@@ -99,21 +154,29 @@ int64 main() {
 
 函数只是读一个对象，却不想复制它——用 \texttt{const\&}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Player {
+struct Player
+{
     String name;
     List<int64> scores;
 };
 
-int64 total(Player const& player) {
+int64 total(Player const& player)
+{
     int64 sum = 0;
-    foreach (int64 score in player.scores) {
+    foreach (int64 score in player.scores)
+    {
         sum = sum + score;
     }
     return sum;
 }
 
-int64 main() {
+int64 main()
+{
     Player p;
     p.name = "amy";
     p.scores.push(10);
@@ -122,10 +185,20 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 amy 的总分 30
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{total(\allowbreak{}\&p)\allowbreak{}} 一次都没复制那个 \texttt{Player}。\texttt{const\&} 说了两件事：
 
@@ -154,30 +227,60 @@ amy 的总分 30
 
 Magel 没有 \texttt{null}。 没有 \texttt{nullptr}，没有 \texttt{nil}，没有「先声明一个空引用，以后再让它指向什么」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：引用声明必须初始化，缺省值请使用 Option<T mut&>
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 引用只能当场绑定到一个确实存在的东西：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int64 first = 1;
-int64 mut& keep = &first;      // 声明的同时必须绑定
+int64 mut& keep = &first;
+// 声明的同时必须绑定
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 而且 \texttt{\&} 只能取「有实体对象」的地址——变量、字段、数组元素、字符串的字节。表达式的结果取不了地址：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 value = 1;
     int64 mut& bad = &(value + 1);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：`&` 只能取数据区里对象的地址（数组元素 / 结构体字段 / 字符串字节；栈上的标量变量取不了）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 （这条报错的措辞有点绕，别被最后半句带偏：取变量的地址是没问题的，上面第一个例子里 \texttt{\&value} 就是。它真正拒绝的是临时算出来的值——\texttt{value + 1} 这个结果没有存放的地方，自然也没有地址可指。）
 
@@ -191,43 +294,76 @@ magel：`&` 只能取数据区里对象的地址（数组元素 / 结构体字�
 
 Magel 的处理方式是：编译期跟踪每个引用的来源，来源活得不够久就拒绝编译。
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 mut& bad() {
+int64 mut& bad()
+{
     int64 local = 1;
-    return &local;              // local 在函数返回时就没了
+    return &local;
+    // local 在函数返回时就没了
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 local）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{local} 是函数里的局部变量，函数一返回它就消失了，可你还要把指向它的引用交出去——编译期直接拒绝。
 
 包几层也逃不掉。 把引用装进结构体再返回，一样拦得住：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Holder {
+struct Holder
+{
     int64 mut& slot;
 };
 
-Holder make() {
+Holder make()
+{
     int64 local = 5;
     Holder holder;
     holder.slot = &local;
     return holder;
 }
 
-int64 main() {
+int64 main()
+{
     Holder h = make();
     println("{}", h.slot);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期（Holder，所属类型 ，来源 holder）
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这条规则覆盖的范围（记住大意就行）：引用别名、显式权限转换、\texttt{Option} / \texttt{Result} 里的载荷、元组、容器、结构体字段——包多少层都沿来源传播。
 
@@ -235,26 +371,44 @@ magel：[MGL1204] 返回值中的引用不能超过局部来源的生命周期�
 
 来源比引用活得久就行。 最常见的合法情形是「来源是参数」：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 mut& larger(int64 mut& a, int64 mut& b) {
-    if (a >= b) {
+int64 mut& larger(int64 mut& a, int64 mut& b)
+{
+    if (a >= b)
+    {
         return a;
     }
     return b;
 }
 
-int64 main() {
+int64 main()
+{
     int64 x = 3;
     int64 y = 8;
-    larger(&x, &y) = 99;        // 把大的那个改成 99
+    larger(&x,&y) = 99;
+    // 把大的那个改成 99
     println("{} {}", x, y);
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 3 99
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 这里 \texttt{a}、\texttt{b} 指向的对象是调用方的，调用方活得比 \texttt{larger} 的返回值久，所以合法。
 

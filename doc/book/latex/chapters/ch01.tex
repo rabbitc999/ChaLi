@@ -13,18 +13,32 @@ Magel 只有一个命令行程序，叫 \texttt{magel}，解释、编译、建�
 
 这条路最全：从源码构建。 适合想改编译器的人，也适合想看清内部的人：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 sh gen.sh      # 用 IELR 从 magel.gram 生成前端
 make           # 构建 magel 与 libparser.a
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{gen.\allowbreak{}sh} 需要一份 \href{https://gitee.com/rabbitc999/ParseEngine}{ParseEngine} 文法生成器，细节见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/01-quickstart.md#1-安装}{快速开始}，这里不展开。
 
 装完了，敲一句：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel help
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 屏幕上滚出一大串用法，就说明装好了。先别急着读完那串帮助——那是给有经验的人查的，跟着这本书走，你会一个个认识里面的选项。
 
@@ -36,30 +50,59 @@ magel help
 
 新建一个文件 \texttt{hello.\allowbreak{}mgl}，内容如下：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     println("Hello, Magel!");
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 Hello, Magel!
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 然后运行它：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel run hello.mgl
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 屏幕上出现 \texttt{Hello,\allowbreak{} Magel!}，第一个程序就成了。
 
 \texttt{magel run} 这个写法看着啰嗦，其实 \texttt{run} 是可以省的——直接
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel hello.mgl
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 效果一样。但本书会一直写 \texttt{magel run}，因为把场景写出来在人多的时候少很多误会：\texttt{magel hello.\allowbreak{}mgl Alice} 和 \texttt{magel run hello.\allowbreak{}mgl Alice} 是同一件事，但 \texttt{magel check hello.\allowbreak{}mgl} 完全是另一件事。
 
@@ -91,21 +134,36 @@ magel hello.mgl
 
 现在故意把程序弄坏一次，看看会发生什么。把第二行末尾的分号删掉：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-int64 main() {
+int64 main()
+{
     int64 x = 1
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 再跑：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 语法错误：hello.mgl 第 3 行第 5 列：期望 条件(if) / 自增(++) / 自减(--) / 加号(+) 等 44 个之一，实际是 返回(return)
    |
  3 |     return 0;
    |     ~~~~~~
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 三件事值得注意：
 
@@ -119,9 +177,16 @@ int64 main() {
 
 如果你只想检查代码写没写对、不想真的跑它，用：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 magel check hello.mgl
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{check} 做前两步（预处理、解析与类型检查），不执行、也不产出文件。写代码的时候这个命令用得比 \texttt{run} 还多：先 check 再 run，能省掉很多「跑到一半才发现写错了」的时间。
 
@@ -150,7 +215,7 @@ magel check hello.mgl
 直接跑起来 & \texttt{magel run src/\allowbreak{}main.\allowbreak{}mgl} \\
 只检查、不跑 & \texttt{magel check src/\allowbreak{}main.\allowbreak{}mgl} \\
 导出字节码 \texttt{.\allowbreak{}svmb} & \texttt{magel svmb src/\allowbreak{}main.\allowbreak{}mgl out build/\allowbreak{}app} \\
-导出本地可执行程序 & \texttt{magel aot src/\allowbreak{}main.\allowbreak{}mgl out build/\allowbreak{}app.\allowbreak{}exe opt 2} \\
+导出本地可执行程序 & \texttt{magel aot src/\allowbreak{}main.\allowbreak{}mgl out build/\allowbreak{}app.\allowbreak{}exe} \\
 \bottomrule
 \end{tabular}
 \end{center}

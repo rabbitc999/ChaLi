@@ -33,6 +33,10 @@
 
 假设你有一个 C 文件 \texttt{native.\allowbreak{}c}：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=c]
 #include <stdint.h>
 
@@ -50,38 +54,71 @@ MAGEL_ABI_EXPORT const char *abi_name(void) {
     return "native";
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 先把它编成动态库（说句实话：「怎么编动态库」是 C 的事，和 Magel 无关）：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=sh]
 gcc -shared -o native.dll native.c
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 然后在 Magel 里声明想用的函数：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-abi "./native.dll" {
+abi "./native.dll"
+{
     int32 native_add(int32 left, int32 right) = "abi_add";
     String native_name() = "abi_name";
 }
 
-int64 main() {
+int64 main()
+{
     println("{} {}", native_add((int32)20, (int32)22), native_name());
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 42 native
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 \texttt{abi} 块的语法是：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 abi "<动态库路径>" {
     <返回类型> <Magel侧名字>(<形参表>) = "<库里的符号名>";
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 关键就是那个 \texttt{=\allowbreak{}}：等号右边是库里真实导出的符号名，左边是你想用的名字。两者可以不一样——给一批 C 函数起统一风格的 Magel 名，就靠它。
 
@@ -93,6 +130,10 @@ abi "<动态库路径>" {
 
 标量只是热身。真实场景里你还要传结构体（按值）、引用（原地改）、字符串：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=c]
 API Point move_point(Point p, int32_t dx, int32_t dy) {
     p.x += dx; p.y += dy;
@@ -101,19 +142,32 @@ API Point move_point(Point p, int32_t dx, int32_t dy) {
 API void bump(int32_t *value) { ++*value; }
 API const char *greet(void) { return "hello from C"; }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 Magel 侧：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-struct Point { int32 x; int32 y; };
+struct Point
+{
+    int32 x;
+    int32 y;
+};
 
-abi "./abi_demo.dll" {
+abi "./abi_demo.dll"
+{
     Point move_point(Point p, int32 dx, int32 dy) = "move_point";
     void bump(int32 mut& value) = "bump";
     String greet() = "greet";
 }
 
-int64 main() {
+int64 main()
+{
     Point p;
     p.x = 1;
     p.y = 2;
@@ -128,12 +182,22 @@ int64 main() {
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=out]
 1 2 / 11 22
 42
 hello from C
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 三个要点：
 
@@ -166,20 +230,36 @@ Magel 写法 & 含义 \\
 
 数组用 \texttt{T[\allowbreak{}]\allowbreak{}} 传，长度单独给一个参数；如果返回的数组长度由某个形参决定，在末尾用 \texttt{[\allowbreak{}count]\allowbreak{}} 标注：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-abi "./native.dll" {
+abi "./native.dll"
+{
     Packed[] packed_numbers(int32 count) = "packed_numbers" [count];
     void packed_fill(Packed[] values, int32 count) = "packed_fill";
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 「空」是这个边界上唯一允许出现空的地方。 Magel 内部的引用永远非空（第 7 章），但 C 函数可能返回空指针。这时候用 \texttt{Option<\allowbreak{}T mut\&>\allowbreak{}} / \texttt{Option<\allowbreak{}T const\&>\allowbreak{}} 接：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
-abi "./native.dll" {
+abi "./native.dll"
+{
     Option<Packed const&> packed_snapshot() = "packed_snapshot";
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 返回 \texttt{None} 就代表 C 那边给了个空指针；传参时也可以传\texttt{Option<\allowbreak{}Packet mut\&>\allowbreak{}:\allowbreak{}:\allowbreak{}None}，C 侧收到的就是空指针。
 
@@ -195,6 +275,10 @@ abi "./native.dll" {
 
 不想走动态库、想让 C++ 函数像普通函数一样调？写一个 \texttt{bind\allowbreak{}Magel\allowbreak{}Glue} 把它注册进工具链：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <string>
@@ -211,17 +295,28 @@ bool bindMagelGlue(magel_glue::Registry &registry, Memory::String *error)
                }, error);
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 Magel 侧就像声明普通函数：
 
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=magel]
 int32 demo_cpp_text_size(String text);
 
-int64 main() {
+int64 main()
+{
     println("{}", demo_cpp_text_size("hello"));
     return 0;
 }
 \end{lstlisting}
+\end{minipage}
+\par
+\medskip
 
 两条约定：
 
@@ -231,6 +326,54 @@ int64 main() {
 \end{itemize}
 
 宿主类型的名字是编译期就绑死的，所以这条路比 \texttt{abi} 强类型、报错也早，胶水需要编入宿主或 AOT 产物；AOT 可直接通过 --glue 指定文件。
+
+\subsection{\texttt{impl}：把宿主函数绑定到协议}
+
+结构体用继承列表声明普通接口实现；\texttt{impl 类型 :\allowbreak{} 接口 =\allowbreak{} 宿主绑定名;} 则把宿主函数接到单方法接口或转换协议。它不是一套任意 \texttt{impl Type \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 语法。
+
+下面使用工具链自带的演示胶水。实际项目需要先在 C++ 注册同名绑定，不能只写声明就假设运行时存在它。
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=magel]
+type HostHandle<T> = uint64;
+impl uint64 : ExplicitConvert<HostHandle<int32>> = demo_counter_from_uint;
+impl HostHandle<int32> : ExplicitConvert<uint64> = demo_counter_to_uint;
+
+interface HostValue
+{
+    int64 hostValue();
+}
+impl HostHandle<int32> : HostValue = demo_counter_to_uint;
+HostHandle<int32> demo_cpp_add(HostHandle<int32> left, HostHandle<int32> right);
+
+int64 main()
+{
+    HostHandle<int32> left = cast<HostHandle<int32>>((uint64)20);
+    HostHandle<int32> right = cast<HostHandle<int32>>((uint64)22);
+    HostHandle<int32> total = demo_cpp_add(left, right);
+    println("{} {}", cast<uint64>(total), total.hostValue());
+    return 0;
+}
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+\par
+\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=out]
+42 42
+\end{lstlisting}
+\end{minipage}
+\par
+\medskip
+
+接口签名、宿主参数和返回值必须一致。同步回调通过 \texttt{Native\allowbreak{}Call\allowbreak{}Context:\allowbreak{}:\allowbreak{}invoke} 与 \texttt{magel\_glue:\allowbreak{}:\allowbreak{}Function} 使用同一套 VM/AOT 规则；不要把函数值中的运行时地址当作宿主机器函数指针。完整胶水约定见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/08-host-integration.md}{宿主集成}。
 
 \section{反方向：宿主调用 Magel}
 
