@@ -401,7 +401,7 @@ std::shared_ptr<MType> LoopValueType(int id)
     const auto node = N(id);
     const auto contextual = (!node.s.empty() || node.returnExpression) && node.type >= 0 ? T(node.type) : nullptr;
     // Any 在整个值表达式求值后装箱；分支仍须先确定一致的具体结果类型。
-    const auto expected = contextual && contextual->kind != MType::Obj ? contextual : nullptr;
+    const auto expected = contextual && contextual->kind != MType::Obj && contextual->kind != MType::String ? contextual : nullptr;
     if (node.s == "block")
     {
         if (StatementReturnFlow(node.kids[0], true) & 1)
@@ -950,6 +950,7 @@ std::shared_ptr<MType> RawExprType(int id)
     }
     case MNode::Call:
     {
+        if (!node.kids.empty() && N(node.kids[0]).kind == MNode::Var && N(node.kids[0]).s == "__magel_default_to_string") return T(M_TypeString());
         /* 容器方法（`v.push(…)` / `m.valAt(i)`）与 `bint` 的 `.str()`：被调者是成员访问，
          * 但基类型不是结构体 —— 结果类型查方法表。 */
         if (node.kids.size() >= 2u)
@@ -958,6 +959,7 @@ std::shared_ptr<MType> RawExprType(int id)
             if (calleeNode.kind == MNode::Member || calleeNode.kind == MNode::Arrow)
             {
                 const std::shared_ptr<MType> baseType = ExprType(calleeNode.kids[0]);
+                if (calleeNode.s == "toString" && N(node.kids[1]).kids.empty()) return T(M_TypeString());
                 if (IsContainer(baseType))
                 {
                     const MContainerMethod *method = FindContainerMethod(baseType, calleeNode.s);

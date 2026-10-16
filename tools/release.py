@@ -15,11 +15,12 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = ('return_expression', 'named_function', 'derive', 'macro_groups',
-           'break_level', 'macro_gensym', 'foreach_interval', 'any_generics')
+           'break_level', 'macro_gensym', 'foreach_interval', 'any_generics', 'value_text')
 CHECKS = ('tests/magel_release.py', 'tools/changelog.py --check', 'tools/check_doc_links.py',
           'tools/export_magel_ebnf.py --check', 'tools/library_reference.py --check',
           'tools/embed_manual.py --check', 'tests/magel_book_updates.py',
-          'tests/magel_man.py', 'tests/magel_macro_groups.py', 'tests/magel_any_generics.py')
+          'tests/magel_man.py', 'tests/magel_macro_groups.py', 'tests/magel_any_generics.py',
+          'tests/magel_value_text.py')
 
 
 def run(command, cwd=ROOT, capture=False, env=None):
@@ -197,6 +198,7 @@ def main(argv=None):
             run([sys.executable, script], env=env)
         if args.ci:
             run(['sh', 'ci.sh'], env=env)
+        run(['sh', 'gen.sh'], env=env)
         command = ['make', '-j' + str(args.jobs), '-W', 'source/magel_main.cpp', 'TARGET=' + binary.name,
                    'MAGEL_WITH_REFLECTION=1', 'STACKVM_WITH_REFLECTION=1']
         if windows:

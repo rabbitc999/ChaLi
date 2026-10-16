@@ -869,6 +869,8 @@ inline void collectInterfaces(const Memory::String &source,
         std::size_t begin = at;
         while (at < text.size() && identPart(text[at])) ++at;
         auto name = text.substr(begin, at - begin);
+        if (isInterface && name == "ToString")
+            implemented["#string-protocol-declarations"].insert(module.empty() ? name : module + "::" + name);
         for (const auto &item : derived)
         {
             const auto trait = trim(item);
@@ -1474,6 +1476,16 @@ inline bool validateConstraints(const Memory::Map<Memory::String, Expansion> &ma
         {
             const auto &constraint = expansion.constraints[i];
             if (constraint.empty()) continue;
+            // 标准字符串能力由每个值类型的默认 toString 提供，具体方法签名由语义阶段核验。
+            const auto declarations = implemented.find("#string-protocol-declarations");
+            bool stringCapability = constraint == "std::io::ToString" ||
+                (constraint == "ToString" && declarations != implemented.end() && declarations->second.size() == 1 && declarations->second.count("std::io::ToString"));
+            const auto protocol = made.find(constraint);
+            if (protocol != made.end() && (protocol->second.generic->module == "std::lang" || protocol->second.generic->origin.file == "<内建 ImplicitConvert>") &&
+                protocol->second.generic->name == "ImplicitConvert" && protocol->second.args.size() == 1 &&
+                (protocol->second.args[0] == "String" || protocol->second.args[0] == "std::lang::String"))
+                stringCapability = true;
+            if (stringCapability && expansion.args[i] != "void") continue;
             const auto concrete = implemented.find(expansion.args[i]);
             if (concrete == implemented.end() || !concrete->second.count(constraint))
             {

@@ -160,6 +160,82 @@ bool AddInterfaceDefaults(const Memory::String &owner, MStructDef &definition)
 }
 
 /**
+ * @brief 为具体聚合补充默认无参 toString，隐式字符串转换实现可作为转发目标。
+ * @param owner 具体类型名，用于诊断。
+ * @param definition 待补充方法的类型定义。
+ * @param module 合成方法所属模块。
+ * @retval 方法签名合法时返回 true。
+ * @note 用户无参方法优先；仅补一层单向转发，不生成相互调用的两个方法。
+ */
+bool AddDefaultToString(const Memory::String &owner, MStructDef &definition, const Memory::String &module)
+{
+    bool present = false;
+    const MMethod *conversion = nullptr;
+    const MMethod *formatted = nullptr;
+    for (const auto &method : definition.methods)
+    {
+        if (method.superseded || method.isConstructor) continue;
+        if (method.source == "toString" && method.params.empty())
+        {
+            if (method.isStatic || !method.result || method.result->kind != MType::String)
+                return Fail(owner + ".toString() 必须是返回 String 的实例方法");
+            present = true;
+        }
+        if (!method.isStatic && method.source == "implicitConvert" && method.params.empty() && method.result && method.result->kind == MType::String) conversion = &method;
+        if (!method.isStatic && method.source == "toString" && method.params.size() == 1 && method.params[0].type->kind == MType::String && method.result && method.result->kind == MType::String) formatted = &method;
+    }
+    if (!present)
+    {
+        const auto begin = g_nodes.size();
+        const auto self = M_Var(M_Name("self"));
+        int call = -1;
+        if (conversion || formatted)
+        {
+            const auto method = conversion ? conversion->source : formatted->source;
+            const auto arguments = conversion ? M_List() : M_List1(M_New(MNode::Str, ""));
+            call = M_CallOn(M_Member(self, M_Name(method.c_str())), arguments);
+        }
+        else
+            call = M_CallOn(M_Var(M_Name("__magel_default_to_string")), M_List1(self));
+        MMethod method;
+        method.source = "toString";
+        method.defaultValueText = !conversion && !formatted;
+        method.result = T(M_TypeString());
+        method.bodyId = M_Block(M_List1(M_Return(call)));
+        method.module = module;
+        for (std::size_t index = begin; index < g_nodes.size(); ++index) g_nodes[index].module = module;
+        definition.methods.push_back(std::move(method));
+    }
+    bool requiresStringConversion = false;
+    for (const auto &interfaceName : definition.interfaces)
+    {
+        const auto found = g_interfaces.find(interfaceName);
+        if (found == g_interfaces.end()) continue;
+        for (const auto &required : found->second)
+            if (required.name == "implicitConvert" && required.params.empty() && required.result->kind == MType::String)
+                requiresStringConversion = true;
+    }
+    if (requiresStringConversion && !conversion)
+    {
+        const auto begin = g_nodes.size();
+        const auto self = M_Var(M_Name("self"));
+        const auto call = M_CallOn(M_Member(self, M_Name("toString")), M_List());
+        MMethod method;
+        method.source = "implicitConvert";
+        method.result = T(M_TypeString());
+        method.bodyId = M_Block(M_List1(M_Return(call)));
+        method.module = module;
+        for (std::size_t index = begin; index < g_nodes.size(); ++index) g_nodes[index].module = module;
+        definition.methods.push_back(std::move(method));
+    }
+    // 默认方法构成实际的 ToString 实现；未导入 std::io 时不强制加载 I/O 模块。
+    for (const auto &entry : g_interfaces)
+        if ((entry.first == "std::io::ToString" || entry.first == "ToString") && entry.second.size() == 1 && entry.second[0].name == "toString" && entry.second[0].params.empty() && entry.second[0].result->kind == MType::String && std::find(definition.interfaces.begin(), definition.interfaces.end(), entry.first) == definition.interfaces.end())
+            definition.interfaces.push_back(entry.first);
+    return true;
+}
+
+/**
  * @brief 核对"继承的接口是不是都**完全实现**了"。
  *
  * 两个接口要的是同一个函数（同名同签名）时只算一条 —— 这就是"接口函数相同会去重"：

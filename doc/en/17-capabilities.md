@@ -35,6 +35,8 @@ See the [language reference](04-language-reference.md), [core concepts](03-core-
 
 Explicit Any targets support contextual boxing in generics and heterogeneous List/Set/Map, exact extraction, clearing, and borrow checks. Interface references bind directly to implementing concrete references without an Any intermediary; views still borrow their source. See [Any and interface binding](22-any-generics-data.md).
 
+Every non-void value has default `toString()` and String conversion: structs `{...}`, List/arrays `[...]`, Set/Map `{...}`, and tuples `(...)`, with quoted and escaped nested strings. User toString and ImplicitConvert<String> supply missing counterparts; dedicated explicit conversions retain priority. Reflection is not required. See [value-text rules](04-language-reference.md#default-value-text-and-string-conversion).
+
 ## Execution, optimization and delivery
 
 | Mode | Implementation | Deployment requirements |

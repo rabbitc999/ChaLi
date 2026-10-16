@@ -814,6 +814,8 @@ int runCli(int argc, char **argv)
     }
     /* stackvm.cpp 按职责拆成了 parts/ 下的 .cpp：内嵌时展开成单文件。 */
     inlineLocalIncludes(&vmCpp, vmDir, "parts/");
+    inlineLocalIncludes(&vmCpp, vmDir, "value_text.hpp");
+    inlineLocalIncludes(&vmCpp, vmDir + "/parts", "machine_value_text.cpp");
     inlineLocalIncludes(&vmCpp, vmDir, "execution_plan.hpp");
     inlineLocalIncludes(&vmCpp, vmDir, "register_core.hpp");
     inlineLocalIncludes(&vmCpp, vmDir, "allocation_index.hpp");
@@ -1023,7 +1025,7 @@ int runCli(int argc, char **argv)
         stripLocalInclude(&runtimeAllocatorHpp, "magel_i18n.hpp");
         stripLocalInclude(&vmHpp, "../../source/magel_i18n.hpp");
         runtimeAllocatorHpp = i18nHeader + "\n#define MAGEL_CUSTOM_ALLOCATOR 1\n" + poolHeader + "\n" + poolSource + "\n" + adapter + "\n" + runtimeAllocatorHpp;
-        for (Memory::String *text : {&vmHpp, &vmGlueHpp, &magicGlueHpp, &regexGlueHpp, &standardGlue, &bigintHpp, &bigfloatHpp}) {
+        for (Memory::String *text : {&vmCpp, &vmHpp, &vmGlueHpp, &magicGlueHpp, &regexGlueHpp, &standardGlue, &bigintHpp, &bigfloatHpp}) {
             stripLocalInclude(text, "../allocator/magel_allocator.hpp");
             stripLocalInclude(text, "allocator/magel_allocator.hpp");
             stripLocalInclude(text, "../../source/allocator/magel_allocator.hpp");

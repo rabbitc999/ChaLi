@@ -184,6 +184,109 @@ int64 main()
 
 \texttt{+} 拼字符串、\texttt{format} 拼带变量的字符串、\texttt{println} 直接打印——三种手段各有各的位置。短的两三个用 \texttt{+}，带变量的用 \texttt{\{\}} 更清楚。
 
+\subsection{每个值都有 \texttt{to\allowbreak{}String(\allowbreak{})\allowbreak{}}}
+
+无参 \texttt{to\allowbreak{}String(\allowbreak{})\allowbreak{}} 返回这个值的文本，结果是独立拥有的 \texttt{String}。例如整数 \texttt{42} 得到 \texttt{"42"}，布尔值得到 \texttt{"true"} 或 \texttt{"false"}，字符串得到自身的值。结构体按声明顺序展示字段值，不加字段名或类型名前缀。
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+值的种类 & 默认表示 \\
+\midrule
+结构体的两个字符串字段 & \texttt{\{"one",\allowbreak{} "two"\}} \\
+List 或数组 & \texttt{[\allowbreak{}1,\allowbreak{} "two",\allowbreak{} true]\allowbreak{}} \\
+Set & \texttt{\{1,\allowbreak{} 2,\allowbreak{} 3\}} \\
+Map & \texttt{\{"count":\allowbreak{} 3,\allowbreak{} "name":\allowbreak{} "Magel"\}} \\
+元组 & \texttt{(\allowbreak{}1,\allowbreak{} "two",\allowbreak{} [\allowbreak{}1,\allowbreak{} "two",\allowbreak{} true]\allowbreak{})\allowbreak{}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+以下程序同时展示结构体、异构容器和元组。Set、Map 的顺序沿用容器的迭代顺序。
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+struct Pair
+{
+    String left;
+    String right;
+};
+
+int64 main()
+{
+    Pair pair;
+    pair.left = "one";
+    pair.right = "two";
+    List<Any> list = {1, "two", true};
+    Set<int64> set = {3, 1, 2};
+    Map<String, Any> map = {"name": "Magel", "count": 3};
+    auto tuple = (1, "two", list);
+
+    println("{}", pair.toString());
+    println("{}", list.toString());
+    println("{}", set.toString());
+    println("{}", map.toString());
+    println("{}", tuple.toString());
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+{"one", "two"}
+[1, "two", true]
+{1, 2, 3}
+{"count": 3, "name": "Magel"}
+(1, "two", [1, "two", true])
+\end{lstlisting}
+\par
+\medskip
+
+复合值里的字符串加双引号，双引号、反斜杠、换行等字符会转义；直接对字符串调用 \texttt{to\allowbreak{}String(\allowbreak{})\allowbreak{}} 不额外加引号。空 List 是 \texttt{[\allowbreak{}]\allowbreak{}}，空 Set 和 Map 是 \texttt{\{\}}。\texttt{Any} 展示其中实际保存的值，未装入值时显示 \texttt{Any(\allowbreak{})\allowbreak{}}。枚举按变体及载荷展示，例如 \texttt{Text(\allowbreak{}"payload")\allowbreak{}}。引用、函数和不透明宿主句柄只显示 \texttt{<\allowbreak{}类型>\allowbreak{}}，不会为显示而解引用或获取所有权。
+
+\subsection{自定义方法与字符串转换共用一套协议}
+
+结构体提供 \texttt{String to\allowbreak{}String(\allowbreak{})\allowbreak{}} 后，\texttt{String text =\allowbreak{} value;} 和缺少专用显式转换时的 \texttt{cast<\allowbreak{}String>\allowbreak{}(\allowbreak{}value)\allowbreak{}} 可复用它，无须再手写一个重复的 \texttt{Implicit\allowbreak{}Convert<\allowbreak{}String>\allowbreak{}}。反过来，已实现 \texttt{Implicit\allowbreak{}Convert<\allowbreak{}String>\allowbreak{}} 的类型会自动获得转调该实现的无参 \texttt{to\allowbreak{}String(\allowbreak{})\allowbreak{}}。只提供 \texttt{String to\allowbreak{}String(\allowbreak{}String style)\allowbreak{}} 时，无参版本传入空样式。默认实现也可满足标准 \texttt{To\allowbreak{}String} 和 \texttt{Implicit\allowbreak{}Convert<\allowbreak{}String>\allowbreak{}} 泛型约束。
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+struct Named
+{
+    String name;
+    String toString() { return "name=" + self.name; }
+};
+
+int64 main()
+{
+    Named value;
+    value.name = "Magel";
+    String text = value;
+    println("{}", text);
+    println("{}", cast<String>(value));
+    return 0;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+name=Magel
+name=Magel
+\end{lstlisting}
+\par
+\medskip
+
+若三个入口都由用户显式定义，各自实现优先：\texttt{value.\allowbreak{}to\allowbreak{}String(\allowbreak{})\allowbreak{}} 和结构体的 \texttt{\{\}} 格式化使用 \texttt{to\allowbreak{}String}；隐式字符串转换使用 \texttt{implicit\allowbreak{}Convert}；\texttt{cast<\allowbreak{}String>\allowbreak{}} 优先使用 \texttt{explicit\allowbreak{}Convert}。编译器只补缺失的桥接方法，避免互相调用形成递归。
+
+默认转换不消耗源值，也不依赖反射。临时源值在转换完成后正常清理。容器或聚合内部的自定义 \texttt{to\allowbreak{}String} 必须只读；容器遍历通过快照隔离用户回调的重入修改，错误仍保留原始诊断。默认递归展示有深度保护，重复对象路径显示 \texttt{<\allowbreak{}cycle>\allowbreak{}}。这套表示用于阅读和调试，不作为可逆序列化格式。完整验证例见仓库的 \texttt{example/\allowbreak{}samples/\allowbreak{}value\_text.\allowbreak{}mgl}。
+
 \section{下标是按字节算的}
 
 这一节是本章的重点。

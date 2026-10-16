@@ -2905,7 +2905,7 @@ Option<int64> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/magel_generic.hpp:1662](../../source/magel_generic.hpp#L1662)。
+**源码**：[source/magel_generic.hpp:1674](../../source/magel_generic.hpp#L1674)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -2944,7 +2944,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/magel_generic.hpp:1670](../../source/magel_generic.hpp#L1670)。
+**源码**：[source/magel_generic.hpp:1682](../../source/magel_generic.hpp#L1682)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -2985,7 +2985,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/magel_generic.hpp:1678](../../source/magel_generic.hpp#L1678)。
+**源码**：[source/magel_generic.hpp:1690](../../source/magel_generic.hpp#L1690)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3021,7 +3021,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/magel_generic.hpp:1888](../../source/magel_generic.hpp#L1888)。
+**源码**：[source/magel_generic.hpp:1900](../../source/magel_generic.hpp#L1900)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3057,7 +3057,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/magel_generic.hpp:1896](../../source/magel_generic.hpp#L1896)。
+**源码**：[source/magel_generic.hpp:1908](../../source/magel_generic.hpp#L1908)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3096,7 +3096,7 @@ int64 print(String format, Any args...);
 print(format, args);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1030](../../source/epilogue/boxing.cpp#L1030)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1048](../../source/epilogue/boxing.cpp#L1048)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3135,7 +3135,7 @@ int64 println(String format, Any args...);
 println(format, args);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1030](../../source/epilogue/boxing.cpp#L1030)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1048](../../source/epilogue/boxing.cpp#L1048)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3174,7 +3174,7 @@ String format(String format, Any args...);
 format(format, args);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1034](../../source/epilogue/boxing.cpp#L1034)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1052](../../source/epilogue/boxing.cpp#L1052)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3212,7 +3212,7 @@ int64 putChar(char value);
 putChar(value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1080](../../source/epilogue/boxing.cpp#L1080)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1098](../../source/epilogue/boxing.cpp#L1098)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3248,7 +3248,7 @@ int64 pause();
 pause();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1041](../../source/epilogue/boxing.cpp#L1041)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1059](../../source/epilogue/boxing.cpp#L1059)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3284,7 +3284,7 @@ int64 sweep();
 sweep();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1090](../../source/epilogue/boxing.cpp#L1090)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1108](../../source/epilogue/boxing.cpp#L1108)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3320,7 +3320,7 @@ String inputLine();
 inputLine();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3356,7 +3356,7 @@ int64 inputInt();
 inputInt();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3392,7 +3392,7 @@ uint64 inputUInt();
 inputUInt();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3428,7 +3428,7 @@ float64 inputFloat();
 inputFloat();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3464,7 +3464,7 @@ bool inputBool();
 inputBool();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3500,7 +3500,7 @@ char inputChar();
 inputChar();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3536,7 +3536,7 @@ BigInteger inputBigInteger();
 inputBigInteger();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3572,7 +3572,7 @@ BigDecimal inputBigDecimal();
 inputBigDecimal();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1095](../../source/epilogue/boxing.cpp#L1095)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1113](../../source/epilogue/boxing.cpp#L1113)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3610,7 +3610,7 @@ int64 panic(String message);
 panic(message);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1114](../../source/epilogue/boxing.cpp#L1114)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1132](../../source/epilogue/boxing.cpp#L1132)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3650,7 +3650,7 @@ int64 len(Any value);
 len(value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:611](../../source/epilogue/boxing.cpp#L611)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:629](../../source/epilogue/boxing.cpp#L629)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3688,7 +3688,7 @@ T move<T>(T mut& value);
 move<T>(value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:552](../../source/epilogue/boxing.cpp#L552)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:558](../../source/epilogue/boxing.cpp#L558)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3726,7 +3726,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/magel_generic.hpp:1618](../../source/magel_generic.hpp#L1618)（编译器内建，签名为等价调用形式）。
+**源码**：[source/magel_generic.hpp:1630](../../source/magel_generic.hpp#L1630)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3764,7 +3764,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/magel_generic.hpp:1624](../../source/magel_generic.hpp#L1624)（编译器内建，签名为等价调用形式）。
+**源码**：[source/magel_generic.hpp:1636](../../source/magel_generic.hpp#L1636)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3804,7 +3804,7 @@ int64 memcpy(char mut& destination, char const& source, int64 bytes);
 memcpy(destination, source, bytes);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1131](../../source/epilogue/boxing.cpp#L1131)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1149](../../source/epilogue/boxing.cpp#L1149)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -3844,7 +3844,7 @@ int64 memset(char mut& destination, int64 value, int64 bytes);
 memset(destination, value, bytes);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1131](../../source/epilogue/boxing.cpp#L1131)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1149](../../source/epilogue/boxing.cpp#L1149)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4926,7 +4926,7 @@ String str();
 obj.str();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:685](../../source/epilogue/boxing.cpp#L685)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:703](../../source/epilogue/boxing.cpp#L703)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4962,7 +4962,7 @@ BigInteger copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:675](../../source/epilogue/boxing.cpp#L675)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:693](../../source/epilogue/boxing.cpp#L693)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -4998,7 +4998,7 @@ String str();
 obj.str();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:685](../../source/epilogue/boxing.cpp#L685)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:703](../../source/epilogue/boxing.cpp#L703)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5034,7 +5034,7 @@ BigDecimal copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:675](../../source/epilogue/boxing.cpp#L675)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:693](../../source/epilogue/boxing.cpp#L693)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5072,7 +5072,7 @@ int64 setPrecision(int64 digits);
 obj.setPrecision(digits);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:664](../../source/epilogue/boxing.cpp#L664)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:682](../../source/epilogue/boxing.cpp#L682)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5108,7 +5108,7 @@ Any copy();
 obj.copy();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:675](../../source/epilogue/boxing.cpp#L675)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:693](../../source/epilogue/boxing.cpp#L693)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5144,7 +5144,7 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:715](../../source/epilogue/boxing.cpp#L715)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:733](../../source/epilogue/boxing.cpp#L733)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5180,7 +5180,7 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:722](../../source/epilogue/boxing.cpp#L722)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:740](../../source/epilogue/boxing.cpp#L740)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5218,7 +5218,7 @@ int64 set(T value);
 obj.set(value);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:738](../../source/epilogue/boxing.cpp#L738)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:756](../../source/epilogue/boxing.cpp#L756)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5254,7 +5254,7 @@ T getValue();
 obj.getValue();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:124](../../source/epilogue/boxing.cpp#L124)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:130](../../source/epilogue/boxing.cpp#L130)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5290,7 +5290,7 @@ T mut& getReference();
 obj.getReference();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:124](../../source/epilogue/boxing.cpp#L124)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:130](../../source/epilogue/boxing.cpp#L130)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5326,7 +5326,7 @@ Option<T mut&> getOptional();
 obj.getOptional();
 ```
 
-**源码**：[source/epilogue/boxing.cpp:124](../../source/epilogue/boxing.cpp#L124)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:130](../../source/epilogue/boxing.cpp#L130)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5601,7 +5601,7 @@ R add(T left,U right);
 add(left, right);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:895](../../source/epilogue/boxing.cpp#L895)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:913](../../source/epilogue/boxing.cpp#L913)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -5798,7 +5798,7 @@ T index(T const& data,int64 index);
 index(data, index);
 ```
 
-**源码**：[source/epilogue/boxing.cpp:1477](../../source/epilogue/boxing.cpp#L1477)（编译器内建，签名为等价调用形式）。
+**源码**：[source/epilogue/boxing.cpp:1495](../../source/epilogue/boxing.cpp#L1495)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 

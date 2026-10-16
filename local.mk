@@ -56,10 +56,10 @@ $(FRONTEND_BUILD)/magel_tool.o: source/magel_tool.cpp source/magel_package.hpp t
 	$(CXX) $(CXXFLAGS) -I. -c $< -o $@
 
 $(FRONTEND_BUILD)/emit-main.o: source/magel-emit/main.cpp source/magel-emit/module_build.hpp source/magel-emit/emit_cli.hpp source/magel-emit/aot.hpp source/magel_stdlib_embedded.cpp \
-        library/template/engine.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+        library/template/engine.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
 	$(CXX) $(CXXFLAGS) -DMAGEL_EMIT_NO_MAIN=1 -I. -I$(VM_DIR) -c $< -o $@
 
-$(FRONTEND_BUILD)/emit-aot.o: source/magel-emit/aot.cpp source/magel-emit/aot.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/emit-aot.o: source/magel-emit/aot.cpp source/magel-emit/aot.hpp source/runtime_allocator.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
 	$(CXX) $(CXXFLAGS) -I. -I$(VM_DIR) -c $< -o $@
 
 $(FRONTEND_BUILD)/generator-main.o: source/magel-generator/main.cpp source/magel-generator/generator_cli.hpp \
@@ -76,8 +76,8 @@ endif
 # 避免只改泛型 / 宏展开头或降级实现时 make 误判为无需重编。
 $(FRONTEND_BUILD)/magel_tool.o $(FRONTEND_BUILD)/magel_main.o: source/magel_project.hpp source/magel_cli.hpp
 
-$(FRONTEND_BUILD)/magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_macro_controls.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
-$(FRONTEND_BUILD)/magel_parser.o: source/magel_types.h source/magel_epilogue.cpp source/magel_generic.hpp $(wildcard source/epilogue/*.cpp) library/sqlite/sqlite3.h source/magel_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/magel_main.o: source/magel_analysis.hpp source/magel_diagnostics.hpp source/magel_stdlib_embedded.cpp source/magel_package.hpp source/magel_driver.cpp source/magel_incremental.hpp source/magel_module.hpp source/magel_macro.hpp source/magel_macro_controls.hpp source/magel_lambda.hpp source/magel_generic.hpp source/magel_glue.hpp $(wildcard source/glue/*.hpp) library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/magel_parser.o: source/magel_types.h source/magel_epilogue.cpp source/magel_generic.hpp $(wildcard source/epilogue/*.cpp) library/sqlite/sqlite3.h source/magel_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
 
 # 外部静态库更新后必须重链；只把它们写进 LDLIBS 不会让 make 追踪时间戳。
 $(TARGET): $(AST_LIB) $(VM_LIB) $(PP_LIB)
@@ -87,7 +87,7 @@ $(TARGET): $(AST_LIB) $(VM_LIB) $(PP_LIB)
 $(VM_BUILD):
 	$(MAGEL_RUNTIME_MKDIR)
 
-$(VM_BUILD)/stackvm.o: $(VM_DIR)/stackvm.cpp $(wildcard $(VM_DIR)/parts/*) $(VM_DIR)/register_core.hpp $(VM_DIR)/execution_plan.hpp $(VM_DIR)/allocation_index.hpp $(VM_DIR)/data_capacity_index.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/reflection.hpp $(VM_DIR)/stackvm_glue.hpp | $(VM_BUILD)
+$(VM_BUILD)/stackvm.o: $(VM_DIR)/stackvm.cpp $(wildcard $(VM_DIR)/parts/*) $(VM_DIR)/register_core.hpp $(VM_DIR)/execution_plan.hpp $(VM_DIR)/allocation_index.hpp $(VM_DIR)/data_capacity_index.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp $(VM_DIR)/stackvm_glue.hpp | $(VM_BUILD)
 	$(CXX) $(CXXFLAGS) -DSTACKVM_WITH_BIGINT=1 -DSTACKVM_WITH_BIGFLOAT=1 -I$(VM_DIR) -I$(MAGEL_LIBRARY_DIR)/bignum -c $< -o $@
 
 $(VM_BUILD)/stackvm_glue.o: $(VM_DIR)/stackvm_glue.cpp $(VM_DIR)/stackvm_glue.hpp | $(VM_BUILD)

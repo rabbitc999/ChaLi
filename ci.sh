@@ -271,6 +271,7 @@ if [ "$run_python" = 1 ]; then
     run_step "运行类型声明可选尾分号回归" "$PYTHON" tests/magel_type_decl_terminators.py
     run_step "运行发布脚本与归档一致性回归" "$PYTHON" tests/magel_release.py
     run_step "运行 Any 泛型装箱与异构容器回归" "$PYTHON" tests/magel_any_generics.py
+    run_step "运行默认值文本及字符串协议回归" "$PYTHON" tests/magel_value_text.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/magel_book_updates.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/magel_inline_fn_arguments.py
     run_step "运行胶水调用 Magel 函数的 VM 与 AOT 一致性回归" "$PYTHON" tests/magel_native_callbacks.py

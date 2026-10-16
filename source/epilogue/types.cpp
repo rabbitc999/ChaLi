@@ -631,7 +631,7 @@ const MConversionDecl *FindConversion(const std::shared_ptr<MType> &source,
 bool HasDeclaredConversion(const std::shared_ptr<MType> &source,
                            const std::shared_ptr<MType> &target, bool allowExplicit)
 {
-    return FindConversion(source, target, allowExplicit) != nullptr;
+    return FindConversion(source, target, allowExplicit) != nullptr || (source && target && source->kind != MType::Void && target->kind == MType::String);
 }
 
 /**
@@ -643,7 +643,7 @@ bool HasDeclaredConversion(const std::shared_ptr<MType> &source,
 bool HasImplicitConversion(const std::shared_ptr<MType> &source,
                            const std::shared_ptr<MType> &target)
 {
-    return FindConversion(source, target, false) != nullptr;
+    return FindConversion(source, target, false) != nullptr || (source && target && source->kind != MType::Void && target->kind == MType::String);
 }
 
 /* 内存内建 `memcpy` / `memset` 用到哪几个（用到才生成运行时小函数）。

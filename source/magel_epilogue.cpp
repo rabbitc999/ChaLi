@@ -8,6 +8,7 @@
  * ============================================================ */
 #include "simple_ast.hpp"
 #include "stackvm.hpp"
+#include "../library/stackvm/value_text.hpp"
 #include "magel_glue.hpp"
 #include "magel_generic.hpp"
 #include "magel_lambda.hpp"
@@ -2818,6 +2819,7 @@ namespace
 #include "epilogue/constants.cpp"
 #include "epilogue/lowering.cpp"
 #include "epilogue/interface_dispatch.cpp"
+#include "epilogue/value_text.cpp"
 #include "epilogue/boxing.cpp"
 #include "epilogue/annotations.cpp"
 #include "epilogue/pass1_register.cpp"

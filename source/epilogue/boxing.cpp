@@ -80,13 +80,19 @@ simple_ast::NodePtr LowerObjSet(const simple_ast::NodePtr &receiver, int valueId
         objectValue                                                 ? MaterializeObjectValue(valueId, valueType) :
         valueType->kind == MType::String && NeedsOwnedTemp(valueId) ? OwnedStringTemp(valueId) :
                                                                       LowerExpr(valueId);
-    return simple_ast::Node::call(
-        "__vm_obj_set", { "__magel_o", "__magel_v", "__magel_t", "__magel_s", "__magel_obj", "__magel_n" },
+    const auto call = simple_ast::Node::call(
+        "__vm_obj_set", { "__magel_o", "__magel_v", "__magel_t", "__magel_s", "__magel_obj", "__magel_n", "__magel_shape" },
         { receiver, value, simple_ast::Node::i(TypeIdOf(valueType)),
           simple_ast::Node::i(valueType->kind == MType::String ? 1 : 0),
           simple_ast::Node::i(valueType->kind == MType::Func ? -1 : objectValue ? 1 :
                                                                                   0),
-          simple_ast::Node::str(Describe(valueType)) });
+          simple_ast::Node::str(Describe(valueType)), simple_ast::Node::str(ValueTextLayout(valueType)) });
+    for (const auto &callback : ValueTextCallbacks(valueType))
+    {
+        call->names.push_back("callback" + Memory::toString(call->names.size()));
+        call->kids.push_back(callback);
+    }
+    return call;
 }
 
 /**
@@ -580,6 +586,11 @@ simple_ast::NodePtr LowerCall(int id)
                                       { "__magel_self", "__magel_readonly" },
                                       { LowerRawExpr(args[0]), simple_ast::Node::i(IsReadOnlyAccess(args[0]) ? 1 : 0) });
     }
+    if (callee.kind == MNode::Var && callee.s == "__magel_default_to_string")
+    {
+        if (args.size() != 1u) return Fail("内部默认字符串转换需要一个值"), Bad();
+        return LowerDefaultValueText(args[0]);
+    }
     const Memory::String algorithmName = AlgorithmCallName(callee);
     if (!algorithmName.empty())
     {
@@ -602,6 +613,13 @@ simple_ast::NodePtr LowerCall(int id)
             return Fail("只读引用（T const&）或 const 来源不能调用 drop；需要 T mut&"), Bad();
         const Memory::Vector<int> argIds = args;
         const std::shared_ptr<MType> baseType = ExprType(receiverId);
+        if (methodName == "toString" && argIds.empty())
+        {
+            std::shared_ptr<MType> result;
+            Memory::Vector<std::shared_ptr<MType>> parameters;
+            if (!IsInterfacePointer(baseType)) return LowerValueText(receiverId);
+            if (!FindInterfaceMethod(baseType->elem->name, methodName, &result, &parameters)) return LowerDefaultValueText(receiverId);
+        }
         /* ---- 运行时数组 `T[]` 的 `.len()` ----
          * 元素个数存在对象块头的前 8 字节（`new[n]` 建的时候写进去的），
          * 也就是"对象首地址 - 8"处那个槽。1.0.0 删掉 `sizeof` 之后，

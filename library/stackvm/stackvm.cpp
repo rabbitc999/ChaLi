@@ -6,6 +6,7 @@
  */
 
 #include "stackvm.hpp"
+#include "value_text.hpp"
 #include "allocation_index.hpp"
 #include "execution_plan.hpp"
 #include "data_capacity_index.hpp"

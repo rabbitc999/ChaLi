@@ -77,7 +77,8 @@ bool AcceptsArgumentCount(const Memory::Vector<MParam> &params, std::size_t coun
  */
 struct MMethod
 {
-    bool superseded = false; /* 同一个 struct 里重名同签名、被后面的定义顶掉了 */
+    bool defaultValueText = false;  ///< 此方法为无用户回调的默认字段表示。
+    bool superseded = false;        /* 同一个 struct 里重名同签名、被后面的定义顶掉了 */
 
     Memory::String source; /* 源程序里的方法名 */
     Memory::String name;   /* 四元式标签后缀（同名方法多于一个时带 `$类型` 后缀） */

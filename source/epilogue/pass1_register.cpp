@@ -328,7 +328,7 @@ bool RegisterTop()
     bool mathImported = false;
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         g_reductionLine = top.sourceLine;
         if (top.kind == MNode::ImportDecl && top.s == "std::math")
@@ -355,7 +355,7 @@ bool RegisterTop()
     /* ---- -0.5 宿主 ABI 类型：先登记并展开，后面的全局/函数签名才能直接使用 ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::HostTypeDecl) continue;
         if (!CheckUserName(top.s)) return false;
@@ -417,7 +417,7 @@ bool RegisterTop()
     /* ---- 0. 全局变量先占名字：降级名要求"全程序唯一"，形参与局部变量都排在它后面 ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::Declare) continue;
         for (const int declId : N(top.kids[0]).kids)
@@ -444,7 +444,7 @@ bool RegisterTop()
     /* ---- 0.25 enum：登记变体，并合成供 simple_ast 布局使用的值结构 ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::EnumDecl) continue;
         if (!CheckUserName(top.s)) return false;
@@ -506,7 +506,7 @@ bool RegisterTop()
      * 接口名和结构体名共用一个名字空间（都写成"一个名字"当类型用），所以两边都要防重。 */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::InterfaceDecl) continue;
         if (!CheckUserName(top.s)) return false;
@@ -589,7 +589,7 @@ bool RegisterTop()
         Memory::Set<Memory::String> done;
         for (const int topId : g_top)
         {
-            const MNode &top = N(topId);
+            const MNode top = N(topId);
             ReductionSourceScope source(topId);
             if (top.kind != MNode::InterfaceDecl) continue;
             if (!FlattenInterface(top.s, visiting, done)) return false;
@@ -599,7 +599,7 @@ bool RegisterTop()
     /* ---- 0.75 enum 方法与接口：变体仍负责构造，方法复用 struct 的 self/接口机制。 ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::EnumDecl || top.kids.size() < 2u) continue;
         MStructDef &definition = g_structs[top.s];
@@ -641,13 +641,13 @@ bool RegisterTop()
             g_nodes[static_cast<std::size_t>(memberId)].i =
                 static_cast<long long>(definition.methods.size()) - 1;
         }
-        if (!AddInterfaceDefaults(top.s, definition) || !VerifyInterfaces(top.s, definition, "enum")) return false;
+        if (!AddInterfaceDefaults(top.s, definition) || !AddDefaultToString(top.s, definition, top.module) || !VerifyInterfaces(top.s, definition, "enum")) return false;
     }
 
     /* ---- 1. struct：字段 + 普通方法（运算符重载是顶层特殊函数，第 2 步再挂上来） ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind == MNode::StructDecl)
         {
@@ -733,7 +733,7 @@ bool RegisterTop()
             }
             /* 继承的接口**必须完全实现**：同名、同返回类型、同形参类型，一个都不能少。
              * 两个接口要的是同一个函数时只算一条（去重），实现一遍就够。 */
-            if (!AddInterfaceDefaults(top.s, definition) || !VerifyInterfaces(top.s, definition)) return false;
+            if (!AddInterfaceDefaults(top.s, definition) || !AddDefaultToString(top.s, definition, top.module) || !VerifyInterfaces(top.s, definition)) return false;
             g_structs[top.s] = definition;
             continue;
         }
@@ -742,7 +742,7 @@ bool RegisterTop()
     /* 旧 operator+ 自由函数已由左右方向的运算符接口取代。 */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::OperatorDef) continue;
         return Fail("`" + top.s + top.s2 + "(...)` 自由函数式运算符重载已禁用；"
@@ -784,7 +784,7 @@ bool RegisterTop()
              * 类型分不开。这里把返回类型也写进修饰名，让两条都活下来 ——
              * `SameInterfaceSignature` 本来就比返回类型，挑哪条由调用点的期望类型定
              * （见 `FindOperator` 的 expected 参数）。 */
-            if (IsOperatorInterfaceMethod(method.source))
+            if (IsOperatorInterfaceMethod(method.source) || method.source == "implicitConvert" || method.source == "explicitConvert")
             {
                 bool resultDiffers = false;
                 for (const MMethod &other : definition.methods)
@@ -960,9 +960,20 @@ bool RegisterTop()
             }
         }
     }
+    for (const auto &entry : g_structs)
+    {
+        const auto owner = NamedType(entry.first);
+        if (FindConversion(owner, T(M_TypeString()), false)) continue;
+        for (const auto &method : entry.second.methods)
+            if (!method.superseded && !method.isStatic && method.source == "toString" && method.params.empty() && method.result->kind == MType::String)
+            {
+                g_conversions.push_back(MConversionDecl{ owner, method.result, entry.first + "." + method.name, { "self" }, true });
+                break;
+            }
+    }
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::HostImplDecl) continue;
         const std::shared_ptr<MType> owner = T(top.type);
@@ -996,10 +1007,19 @@ bool RegisterTop()
         }
     }
 
+    for (const auto &implementation : g_hostInterfaceImpls)
+    {
+        if (FindConversion(implementation.owner, T(M_TypeString()), false)) continue;
+        const MInterfaceMethod *required = nullptr;
+        Memory::String label;
+        if (FindHostInterfaceImplementation(implementation.owner, "toString", {}, &required, &label) && required && required->result && required->result->kind == MType::String)
+            g_conversions.push_back(MConversionDecl{ implementation.owner, required->result, label, { "__magel_self" }, true });
+    }
+
     /* ---- 4. 普通函数：先把同名的一起收齐，再按"是不是重载"分配标签 ---- */
     for (const int topId : g_top)
     {
-        const MNode &top = N(topId);
+        const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::FuncDef && top.kind != MNode::ExternFuncDecl) continue;
         if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;

@@ -2307,6 +2307,8 @@ struct RuntimeObject
      * Obj：类型名（**只为诊断文案**：`obj.get` 取错类型时要说清里面装的是什么）。
      */
     Memory::String objTypeName;
+    Memory::Vector<std::int64_t> objTextCallbacks;  ///< 文本覆盖方法及其字段存储布局。
+    Memory::String objTextShape;                    ///< 默认值文本布局；复制 Any 时一并保存。
     /// Obj：装着的值（数值 / 字符串副本；装指针时就是那个地址）。
     ObjectValue objValue;
     /// Obj：objValue.integer 是不是一份由这个盒子持有的运行期对象句柄。
@@ -6435,6 +6437,11 @@ Slot objNew(NativeContext &ctx, const Memory::Vector<Slot> &)
  */
 Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
+    if (args.size() != 6u && (args.size() < 7u || (args.size() - 7u) % 2u))
+    {
+        ctx.error = "obj.set 的内部文本回调参数不完整";
+        return Slot::fromInt(0);
+    }
     RuntimeObject *object = nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set");
     if (object == nullptr) return Slot::fromInt(0);
     ObjectValue value;
@@ -6446,6 +6453,15 @@ Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
         ctx.error = "obj.set 读不到类型名（地址 " + Memory::toString(nativeInt(args[5])) + "）";
         return Slot::fromInt(0);
     }
+    Memory::String textShape;
+    if (args.size() >= 7u && !nativeReadCString(ctx, static_cast<std::size_t>(nativeInt(args[6])), &textShape))
+    {
+        ctx.error = "obj.set 读不到文本布局";
+        return Slot::fromInt(0);
+    }
+    object->objTextShape = std::move(textShape);
+    object->objTextCallbacks.clear();
+    for (std::size_t index = 7; index < args.size(); ++index) object->objTextCallbacks.push_back(nativeInt(args[index]));
     if (object->objOwnsObject) ctx.objects->release(object->objValue.integer);
     object->objTag = nativeInt(args[2]);
     object->objTypeName = std::move(name);
@@ -7353,7 +7369,10 @@ struct SlotNativeTable
      */
     const SlotNativeEntry *end() const { return nullptr; }
 };
+#include "machine_value_text.cpp"
+
 const SlotNativeEntry kSlotNativeEntries[] = {
+    { "__vm_value_to_string", { -1, valueToString } },
     { "__vm_exit", { 1, programExit } },
     { "__vm_assert", { 1, programAssert } },
     { "__vm_panic", { 1, programPanic } },
@@ -7500,7 +7519,7 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "std::memory::__arenaDrop", { 1, arenaDrop } },
     /* 装箱格子（obj）：值 + 类型号；也是接口指针（胖指针）的运行时表示 */
     { "__vm_obj_new", { 0, objNew } },
-    { "__vm_obj_set", { 6, objSet } },
+    { "__vm_obj_set", { -1, objSet } },
     { "__vm_obj_get", { -1, objGet } }, /* 变参：后面跟一串"允许的类型号" */
     { "__vm_obj_has_tag", { -1, objHasTag } },
     { "__vm_obj_get_ptr", { -1, objGetPointer } },

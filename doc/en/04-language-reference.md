@@ -861,6 +861,14 @@ The result is saved before exit callbacks and automatic cleanup. Moving clears t
 Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.mgl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM/AOT behavior. See [ownership transfer](23-ownership-move.md) for general rules.
 
 
+## Default value text and string conversion
+
+Every non-void value supports `String toString()` and conversion to String. Numbers display their values; booleans display `true`/`false`. Structs display field values in declaration order as `{value, value}`, List/arrays as `[...]`, Set as `{...}`, Map as `{key: value, ...}`, and tuples as `(...)`. Nested strings are double-quoted and escaped; a top-level string returns its own text. Any displays its payload, or `Any()` when empty. Enums display their variant and payloads. References, functions and opaque resources display `<type>` without dereferencing. Depth and cycle guards bound recursion. This text is not a reversible serialization format.
+
+A user-defined no-argument `String toString()` supplies an implicit String conversion when no dedicated conversion exists. An existing `ImplicitConvert<String>` supplies a missing no-argument toString. If both are explicit, each retains its own behavior. `cast<String>` first chooses `ExplicitConvert<String>`, then implicit conversion or default value text. When only `toString(String style)` exists, the generated no-argument method supplies an empty style. Standard ToString and ImplicitConvert<String> generic constraints recognize the default capability; unrelated user interfaces with the same name do not.
+
+Struct `{}` formatting reuses the no-argument method; styled overloads retain their behavior. Conversion evaluates its source once, preserves ownership, cleans up temporary sources, and works without reflection. Nested user methods must be read-only. Container snapshots isolate callback reentry and mutation, and callback failures preserve their original diagnostics. See the [value-text sample](../../example/samples/value_text.mgl).
+
 ## Returning control expressions
 
 `return { ... break value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on break; outer variables copy. Nested return, break #level, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value breaks. See [declarations and return expressions](28-declaration-sugars.md).

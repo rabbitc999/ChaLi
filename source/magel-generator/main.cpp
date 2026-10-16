@@ -466,6 +466,7 @@ int runCli(int argc, char **argv)
         {"preprocess.hpp", root / "magel/library/preprocess/preprocess.hpp"},
         {"stackvm.cpp", root / "magel/library/stackvm/stackvm.cpp"},
         {"stackvm.hpp", root / "magel/library/stackvm/stackvm.hpp"},
+        {"value_text.hpp", root / "magel/library/stackvm/value_text.hpp"},
         {"reflection.hpp", root / "magel/library/stackvm/reflection.hpp"},
         {"execution_plan.hpp", root / "magel/library/stackvm/execution_plan.hpp"},
         {"register_core.hpp", root / "magel/library/stackvm/register_core.hpp"},
@@ -481,7 +482,7 @@ int runCli(int argc, char **argv)
     for (const auto &[name, source] : runtime) ok = copy(source, "runtime/" + name) && ok;
     /* `stackvm.cpp` 同样拆成 `parts/` 下的 `.cpp`，随 runtime/stackvm.cpp 一起复制。 */
     for (const char *name : {"symbol_build.cpp", "symbol_container.cpp",
-                             "machine_natives.cpp", "quads.cpp", "assembly.cpp",
+                             "machine_natives.cpp", "machine_value_text.cpp", "quads.cpp", "assembly.cpp",
                              "execution.cpp", "execution_fusion.inc", "register_execution.inc", "optimization_flow.inc", "aot_bridge.cpp"})
         ok = copy(root / "magel/library/stackvm/parts" / name,
                   Memory::String("runtime/parts/") + name) && ok;

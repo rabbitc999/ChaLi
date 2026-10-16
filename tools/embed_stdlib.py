@@ -141,6 +141,7 @@ GENERATOR_ASSETS = [
     "tools/magel_manual.json",
     "tools/magel_stdlib_api.json",
     "stackvm/stackvm.hpp",
+    "stackvm/value_text.hpp",
     "stackvm/execution_plan.hpp",
     "stackvm/register_core.hpp",
     "stackvm/allocation_index.hpp",

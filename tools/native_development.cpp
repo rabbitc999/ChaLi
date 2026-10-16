@@ -1819,6 +1819,7 @@ public:
         {
             auto receiver = infer(value.substr(0, dot), cursor, depth + 1);
             auto memberName = trim(value.substr(dot + 1));
+            if (call && memberName == "toString" && arguments.empty() && !receiver.empty()) return "std::lang::String";
             auto entries = members(receiver, base(memberName));
             if (call) entries = selectedCalls(entries, arguments, cursor, depth + 1);
             std::set<std::string> results;
@@ -2006,6 +2007,18 @@ public:
         auto owner = base(qualify(type));
         for (auto &r : records)
             if (!r.owner.empty() && r.name != tail(r.owner) && (includeStatic || !starts(r.signature, "static ")) && (r.module.empty() ? r.owner : r.module + "::" + r.owner) == owner && (name.empty() || r.name == name)) out.push_back(r);
+        if (!includeStatic && (name.empty() || name == "toString") && std::none_of(out.begin(), out.end(), [](const Record &record) { return record.name == "toString" && record.parameters.empty(); }))
+        {
+            Record method;
+            method.name = "toString";
+            method.owner = owner;
+            method.qualified = owner + "::toString";
+            method.signature = "String toString()";
+            method.type = "std::lang::String";
+            method.documentation = "返回拥有型字符串。默认结构体使用 {值, ...}，List 使用 [...]，Set/Map 使用 {...}，元组使用 (...)；嵌套字符串加引号。自定义无参 toString 或 ImplicitConvert<String> 优先。";
+            method.source = "source/epilogue/value_text.cpp";
+            out.push_back(std::move(method));
+        }
         return out;
     }
 };

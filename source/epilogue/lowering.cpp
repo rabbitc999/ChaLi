@@ -1927,7 +1927,8 @@ simple_ast::NodePtr LowerDeclaredConversion(int valueId,
 {
     const auto source = ExprType(valueId);
     const auto conversion = FindConversion(source, target, allowExplicit);
-    if (conversion == nullptr) return nullptr;
+    if (conversion == nullptr)
+        return source && target && source->kind != MType::Void && target->kind == MType::String ? LowerDefaultValueText(valueId) : nullptr;
     if (!CheckMethodReceiver(valueId, conversion->label)) return Bad();
     const auto receiver = source->kind == MType::Struct ? OwnedAggregateTempFor(valueId, source) : (source->kind == MType::String && N(valueId).kind == MNode::Str) ? OwnedObjectTempNode(MaterializeStringValue(valueId, source), source) :
                                                                                                (IsObjectLike(source) || source->kind == MType::String)              ? OwnedObjectTemp(valueId, source) :
@@ -4533,8 +4534,7 @@ simple_ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
             simple_ast::Node::call("__vm_bfloat_str", { "__magel_v" }, { LowerExpr(argId) }));
     if (type->kind != MType::Struct)
     {
-        Fail("{} 格式输出不支持 " + Describe(type));
-        return Bad();
+        return OwnedGeneratedString(LowerValueText(argId));
     }
     const auto owner = g_structs.find(type->name);
     if (owner == g_structs.end())
@@ -4555,12 +4555,11 @@ simple_ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
     if (chosen == nullptr && formatted != nullptr) chosen = formatted;
     if (chosen == nullptr)
     {
-        Fail("自定义类型 " + type->name + " 用于 std::lang::print 时必须实现 `std::lang::String toString()` 或 "
-                                          "`std::lang::String toString(std::lang::String format)`");
-        return Bad();
+        return OwnedGeneratedString(LowerValueText(argId));
     }
+    if (!CheckMethodReceiver(argId, type->name + "." + chosen->name)) return Bad();
     Memory::Vector<Memory::String> names{ "self" };
-    Memory::Vector<simple_ast::NodePtr> values{ LowerExpr(argId) };
+    Memory::Vector<simple_ast::NodePtr> values{ OwnedAggregateTempFor(argId, type) };
     if (!chosen->params.empty())
     {
         names.push_back(chosen->params[0].emitted);

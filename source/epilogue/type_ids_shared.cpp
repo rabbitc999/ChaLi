@@ -625,3 +625,30 @@ Memory::String NewBlockLabel(const Memory::String &kind)
 {
     return "__magel_" + kind + "_" + Memory::toString(++g_blockSerial);
 }
+
+/**
+ * @brief 生成默认文本表示的内部布局。
+ * @param type 待描述的具体类型。
+ * @param customRoot 是否包含根值的覆盖方法。
+ * @retval 静态布局文本。
+ */
+Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRoot = true);
+/**
+ * @brief 取得布局中只读自定义方法对应的调用实参。
+ * @param type 具体类型。
+ * @param customRoot 是否包含根值的覆盖方法。
+ * @retval 函数值与存储布局组成的成对实参。
+ */
+Memory::Vector<simple_ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MType> &type, bool customRoot = true);
+/**
+ * @brief 生成不调用用户覆盖方法的默认文本转换。
+ * @param valueId 源表达式。
+ * @retval 拥有结果字符串的表达式。
+ */
+simple_ast::NodePtr LowerDefaultValueText(int valueId);
+/**
+ * @brief 生成优先使用用户方法的统一字符串转换。
+ * @param valueId 源表达式。
+ * @retval 拥有结果字符串的表达式。
+ */
+simple_ast::NodePtr LowerValueText(int valueId);
