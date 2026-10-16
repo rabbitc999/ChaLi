@@ -778,7 +778,21 @@ int64 main() {
 }
 ```
 
-A value break selects the nearest value exit; nested loops own their break targets. A block expression does not create a loop, so `continue;` searches for an enclosing loop. Results are saved before local resources are cleaned up. Strings and lists retain value semantics, and references to expired locals cannot escape.
+A value break selects the nearest result-receiving expression, crossing intervening while, do-while, for, foreach and statement-position loop constructs. Nested loop, block, if and match expressions used in initializers, assignments, arguments or returns still receive their own exit values. Plain `break;` exits only the nearest loop and does not produce a result for an enclosing expression. `break a, b;` is equivalent to `break (a, b);`: each element is evaluated once from left to right to form one tuple, with element types constrained by the receiving tuple type. A block expression does not create a loop, so `continue;` searches for an enclosing loop. Results are saved before local resources are cleaned up. Strings and lists retain value semantics, and references to expired locals cannot escape.
+
+For example, a loop can directly complete an enclosing block assignment, while nested assignment blocks receive their own results:
+
+```magel
+(int64, String) found = {
+    for (int64 i = 0; i < 10; i++) {
+        if (i == 3) { break i, "found"; }
+    }
+    break -1, "missing";
+};
+int64 a = { int64 b = { break 1; }; break b + 1; }; // a == 2
+```
+
+See the [value break sample](../../example/samples/break_values.mgl) for nested loops and cleanup checks.
 
 `print` and `println` accept a single interpolated string or `String` expression. Braces and percent signs in the resulting text are printed literally. Traditional `println("{}", value)` formatting remains supported; interpolated output does not accept additional format arguments.
 

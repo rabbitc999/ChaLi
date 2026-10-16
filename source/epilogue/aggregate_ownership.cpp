@@ -997,14 +997,14 @@ bool IsOwnedKind(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 最近的 break 上下文；loop 还会在这里携带返回槽与返回类型。
- * @param hasValue 循环退出是否携带结果值。
- * @retval 对应对象的指针。
+ * @brief 查找最近的值出口或循环出口，带值退出跳过没有结果槽的循环。
+ * @param hasValue 是否查找接收结果值的出口；为 false 时查找最近循环。
+ * @retval 找到时返回上下文指针，否则返回空指针。
  */
 MBlockContext *FindBreakContext(bool hasValue = true)
 {
     for (auto it = g_blockStack.rbegin(); it != g_blockStack.rend(); ++it)
-        if (!it->breakLabel.empty() && (hasValue || !it->valueOnly)) return &*it;
+        if (!it->breakLabel.empty() && (hasValue ? !it->breakValue.empty() : !it->valueOnly)) return &*it;
     return nullptr;
 }
 

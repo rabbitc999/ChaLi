@@ -27,6 +27,7 @@ def main():
 
         examples = {
             'block_expression': 'block expression OK\n',
+            'break_values': 'break values OK\n',
             'print_interpolation': 'value=3;next=1 2;literal={x};percent=100%\nnested=value 3\nsaved=3\ninterpolation print OK\n',
         }
         for name, expected in examples.items():
@@ -47,6 +48,15 @@ def main():
             'int32 x = { break "wrong"; };',
             'int32 x = { int32 local = 1; break local; }; local = 2;',
             'int32 const& x = { int32 local = 1; break &local; };',
+            'while (true) { break 1; }',
+            'int64 x = { loop { break; }; };',
+            'int64 x = { while (false) { break 1; } };',
+            '(int64,String) x = { loop { break 1,2; }; };',
+            '(int64,int64) x = { loop { break 1,2,3; }; };',
+            'int64 x = { loop { auto f = int64 fn(){break 1;}; break 2; }; };',
+            'auto f = int64 fn(){ (if(true){loop{break 1;};}else{2}); };f();',
+            'int64 const& x = { loop { int64 local = 1; break &local; }; };',
+            'int64 const& x = { for (int64 local=0;local<1;local++) { break &local; } int64 local=2;break &local; };',
             'println(f"value={1}", 2);',
         ):
             source = work / 'invalid.mgl'

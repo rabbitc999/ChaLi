@@ -16,7 +16,7 @@ Conditions are tested in order. Once a branch matches, later conditions and othe
 
 Expected types flow from the surrounding initialization, assignment, parameter or return type. Unconstrained integer literals remain int64. Incompatible branches are rejected; no implicit Any boxing is introduced.
 
-A value break exits the nearest value-producing if or loop and cannot cross an inner loop. Plain break and continue retain their loop meaning. Return exits the current function. Results are saved before branch cleanup; references to expired branch locals are rejected.
+A value break exits the nearest result-receiving block, if, match or loop expression, crossing intervening loops that do not receive a value. `break a, b;` is equivalent to `break (a, b);` and produces one tuple. Nested expressions used in initializers, assignments, arguments or returns still receive their own value breaks. Plain break and continue retain their loop meaning. Return exits the current function. Results are saved before branch cleanup; references to expired branch locals are rejected.
 
 ## Custom propagation
 

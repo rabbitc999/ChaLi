@@ -526,6 +526,7 @@ stmt = block
     | "delete", unary, ";"
     | "break", ";"
     | "break", expr, ";"
+    | "break", tuple_items, ";"
     | "continue", ";"
     | expression_items, ";" ;
 

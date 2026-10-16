@@ -7,6 +7,7 @@
 #   ./ParseEngine.exe、./ParseEngine             —— 放到本项目根目录（最省事）
 #   ../ParseEngine/build/bin/ParseEngine[.exe]   —— 与 ParseEngine 仓库并排时
 #   ../build/bin/ParseEngine[.exe]               —— 还住在 ParseEngine 仓库里时
+# Windows 未找到时自动下载最新发布版 ParseEngine.exe 到本项目根目录。
 set -e
 cd "$(dirname "$0")"
 
@@ -24,6 +25,39 @@ if [ -z "${ENGINE:-}" ]; then
             break
         fi
     done
+fi
+if [ -z "${ENGINE:-}" ]; then
+    case "${OS:-}:$(uname -s)" in
+    Windows_NT:*|*:MINGW*|*:MSYS*|*:CYGWIN*)
+        echo "未找到 ParseEngine，正在下载最新发布版……"
+        python - <<'PY'
+import os
+from pathlib import Path
+import shutil
+import tempfile
+import urllib.request
+
+url = "https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe"
+temporary = None
+try:
+    with tempfile.NamedTemporaryFile(prefix=".ParseEngine-", suffix=".download", dir=".", delete=False) as output:
+        temporary = Path(output.name)
+        with urllib.request.urlopen(url, timeout=60) as response:
+            shutil.copyfileobj(response, output)
+    with temporary.open("rb") as downloaded:
+        if downloaded.read(2) != b"MZ":
+            raise ValueError("下载内容不是 Windows 可执行文件")
+    temporary.chmod(0o755)
+    os.replace(temporary, "ParseEngine.exe")
+except Exception as error:
+    raise SystemExit("下载 ParseEngine 失败：" + str(error))
+finally:
+    if temporary is not None:
+        temporary.unlink(missing_ok=True)
+PY
+        ENGINE=./ParseEngine.exe
+        ;;
+    esac
 fi
 if [ -z "${ENGINE:-}" ] || [ ! -x "$ENGINE" ]; then
     echo "找不到 ParseEngine 文法生成器（本项目只有 .gram，生成器是外部依赖）。任选一种：" >&2

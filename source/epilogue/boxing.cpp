@@ -2862,7 +2862,7 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         MBlockContext *const context = FindBreakContext(!node.kids.empty());
         if (context == nullptr)
         {
-            Fail("break 只能用在循环里面");
+            Fail(node.kids.empty() ? "break 只能用在循环里面" : "break 值; 需要外层值表达式接收结果");
             return nullptr;
         }
         // break 的值可包含内层 loop，压栈可能使 g_blockStack 中的指针失效。
@@ -2998,8 +2998,8 @@ simple_ast::NodePtr LowerStmtImpl(int id)
                         return Bad();
                     }
         }
-        /* `loop { ... };` 是无值循环；有值 loop 仍由普通表达式路径接住并丢弃结果。 */
-        if (valueId >= 0 && N(valueId).kind == MNode::Loop && LoopValueType(valueId)->kind == MType::Void)
+        /* 外层有值出口时，语句 loop 透明；其它有值 loop 仍走表达式路径并丢弃结果。 */
+        if (valueId >= 0 && N(valueId).kind == MNode::Loop && ((N(valueId).s.empty() && FindBreakContext(true) != nullptr) || LoopValueType(valueId)->kind == MType::Void))
             return LowerLoop(valueId, nullptr);
         /* 赋值当语句用（`x = 1;`、`a[i] = v;`、`p.x = v;`）；值上下文由 LowerUncheckedExpr 保存右值并返回。 */
         if (valueId >= 0 && N(valueId).kind == MNode::Assign)
@@ -3350,23 +3350,25 @@ enum MReturnFlow
     FlowReturn = 2,
     FlowEscape = 4,
     FlowContinue = 8,
+    FlowValueEscape = 16,
 };
 
-int StatementReturnFlow(int statementId);
+int StatementReturnFlow(int statementId, bool transparentLoops);
 
 /**
  * @brief 分析语句列表是否在所有路径上返回。
  * @param listId 语句列表在节点池中的编号。
- * @retval 分析语句列表是否在所有路径上返回。
+ * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementListReturnFlow(int listId)
+int StatementListReturnFlow(int listId, bool transparentLoops)
 {
     if (listId < 0) return FlowNext;
     int flow = FlowNext;
     for (const int statementId : N(listId).kids)
     {
         if ((flow & FlowNext) == 0) break;
-        flow = (flow & ~FlowNext) | StatementReturnFlow(statementId);
+        flow = (flow & ~FlowNext) | StatementReturnFlow(statementId, transparentLoops);
     }
     return flow;
 }
@@ -3374,9 +3376,10 @@ int StatementListReturnFlow(int listId)
 /**
  * @brief 分析单条语句的控制流返回情况。
  * @param statementId 语句在节点池中的编号。
- * @retval 分析单条语句的控制流返回情况。
+ * @param transparentLoops 是否让带值退出穿透语句循环。
+ * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementReturnFlow(int statementId)
+int StatementReturnFlow(int statementId, bool transparentLoops)
 {
     if (statementId < 0) return FlowNext;
     const MNode &statement = N(statementId);
@@ -3387,23 +3390,28 @@ int StatementReturnFlow(int statementId)
         {
             const MNode &value = N(statement.kids[0]);
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
-            if (value.kind == MNode::Loop) return StatementReturnFlow(statement.kids[0]);
+            if (value.kind == MNode::Loop)
+            {
+                if (value.s.empty()) return StatementReturnFlow(statement.kids[0], transparentLoops);
+                const int flow = StatementReturnFlow(value.kids[0], true);
+                return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);
+            }
         }
         return FlowNext;
     case MNode::Return:
         return FlowReturn;
     case MNode::Break:
-        return FlowEscape;
+        return statement.kids.empty() ? FlowEscape : FlowValueEscape;
     case MNode::Continue:
         return FlowContinue;
     case MNode::Block:
-        return StatementListReturnFlow(static_cast<int>(statement.i));
+        return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops);
     case MNode::If:
     {
-        int flow = StatementReturnFlow(statement.kids[1]);
+        int flow = StatementReturnFlow(statement.kids[1], transparentLoops);
         for (const int elifId : N(statement.kids[2]).kids)
-            flow |= StatementReturnFlow(N(elifId).kids[1]);
-        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlow(statement.kids[3]);
+            flow |= StatementReturnFlow(N(elifId).kids[1], transparentLoops);
+        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlow(statement.kids[3], transparentLoops);
         return flow;
     }
     case MNode::While:
@@ -3411,17 +3419,17 @@ int StatementReturnFlow(int statementId)
     case MNode::Foreach:
     {
         const int bodyId = statement.kind == MNode::For ? statement.kids[3] : statement.kids[1];
-        return FlowNext | (StatementReturnFlow(bodyId) & FlowReturn);
+        return FlowNext | (StatementReturnFlow(bodyId, transparentLoops) & (FlowReturn | (transparentLoops ? FlowValueEscape : 0)));
     }
     case MNode::Loop:
     {
-        const int body = StatementReturnFlow(statement.kids[0]);
-        return (body & FlowReturn) | ((body & FlowEscape) ? FlowNext : 0);
+        const int body = StatementReturnFlow(statement.kids[0], transparentLoops);
+        return (body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0))) | ((body & (FlowEscape | (transparentLoops ? 0 : FlowValueEscape))) ? FlowNext : 0);
     }
     case MNode::DoWhile:
     {
-        const int body = StatementReturnFlow(statement.kids[0]);
-        return body == FlowReturn ? FlowReturn : (FlowNext | (body & FlowReturn));
+        const int body = StatementReturnFlow(statement.kids[0], transparentLoops);
+        return (body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0))) | ((body & (FlowNext | FlowEscape | FlowContinue | (transparentLoops ? 0 : FlowValueEscape))) ? FlowNext : 0);
     }
     case MNode::Switch:
     {
@@ -3432,7 +3440,7 @@ int StatementReturnFlow(int statementId)
         {
             const MNode &item = N(caseId);
             if (item.i < 0) hasDefault = true;
-            int branch = StatementListReturnFlow(item.kids[0]);
+            int branch = StatementListReturnFlow(item.kids[0], transparentLoops);
             if (statement.s != "match" && (branch & FlowEscape) != 0)
                 branch = (branch & ~FlowEscape) | FlowNext;
             flow |= branch;
@@ -3578,7 +3586,7 @@ simple_ast::Function LowerFunction(const Memory::String &name, const Memory::Str
     function.owner = owner;
     if (!CheckDeclaredType(result, name)) return {}; /* 返回类型也得声明过 */
     if (!ValidateReturnForms(bodyId, result)) return {};
-    if (result && result->kind != MType::Void && (StatementReturnFlow(bodyId) & (FlowNext | FlowEscape | FlowContinue)) != 0)
+    if (result && result->kind != MType::Void && (StatementReturnFlow(bodyId) & (FlowNext | FlowEscape | FlowContinue | FlowValueEscape)) != 0)
     {
         Fail("返回类型为 " + Describe(result) + " 的函数 " + name + " 不是所有路径都有 return");
         return {};

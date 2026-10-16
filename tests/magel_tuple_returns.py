@@ -60,7 +60,7 @@ def main():
             "missing_assignment": ("int64 a,b;a,b;", "必须使用"),
             "tuple_readonly": ("(int64,int64) pair=(1,2);int64 b;pair.0,b=(3,4);", "元组"),
             "return_borrow": ("", "生命周期"),
-            "capture_write": ("const int64 a=0;int64 b;auto f=void fn(){a,b=(1,2);};f();", "捕获"),
+            "capture_write": ("const int64 a=0;int64 b;auto f=void fn(){a,b=(1,2);};f();", "不可变"),
         }
         for name, (body, diagnostic) in cases.items():
             code = "int64 main(){" + body + "return 0;}"

@@ -14,7 +14,7 @@ tested version, configuration and date; they do not automatically describe curre
 | Types | Fixed-width integers, float32/float64, bool, char, String, big numbers; arrays, tuples, structs, payload enums, containers and function types |
 | Abstraction | Overloads, generic monomorphization, interface constraints, associated types, constant generics, default type parameters, default interface methods and runtime interface dispatch |
 | Function values | Anonymous functions use `fn`; inline arguments, nested higher-order functions and const/mut/copy/move captures are supported |
-| Control flow | Match, guards, destructuring, ranges, if expressions, block expressions with `break value;`, macros and conditional compilation |
+| Control flow | Match, guards, destructuring, ranges, if expressions, block expressions with `break value;`, tuple exits with `break a, b;` and value breaks across non-value loops, macros and conditional compilation |
 | Errors and cleanup | Option, Result, custom error propagation, `?`, panic, defer, scope(exit), Drop and Closeable |
 | Ownership | Ordinary owned-value assignment and value arguments copy; move transfers resources. The old binding cannot be read, written or rebound; a complete move permits a new declaration using that name |
 | References | Non-null read-only/mutable references; `Option<T const&>` and `Option<T mut&>` represent an optional reference, with None constructing no reference |

@@ -120,6 +120,7 @@ Magel 让业务逻辑成为一份可以独立交付的资产：写一次，从�
 ## 其余入口
 
 - 多值返回与泛型元组：[语言参考 §4](04-language-reference.md#多值返回与泛型元组)，[解释执行 / AOT 回归](../tests/magel_tuple_returns.py)。
+- 带值退出与循环穿透：[语言参考](04-language-reference.md#块表达式与插值输出)、[完整示例](../example/samples/break_values.mgl)、[解释执行 / AOT 回归](../tests/magel_block_expression.py)。
 
 - [11 借用控制流与算法验证](11-algorithm-validation.md)：独立数据流检查、链表 / BST / DFS / BFS、NOIP2015 运输计划与暴力对照。
 

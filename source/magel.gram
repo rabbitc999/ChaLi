@@ -459,9 +459,10 @@ stmt := block                  { $$ = $1; }
       | RETURN tuple_items SEMI { $$ = M_Return(M_Tuple($2)); }
       | RETURN SEMI            { $$ = M_Return(-1); }
       | DELETE unary SEMI      { $$ = M_Delete($2); }
-      /* 循环控制：都在**最内层**那一层生效（match 不截获 break，continue 继续往外找） */
+      /* 无值 break / continue 控制最近循环；带值 break 穿透无值循环，交给最近值出口。 */
       | BREAK SEMI             { $$ = M_Break(-1); }
       | BREAK expr SEMI        { $$ = M_Break($2); }
+      | BREAK tuple_items SEMI { $$ = M_Break(M_Tuple($2)); }
       | CONTINUE SEMI          { $$ = M_Continue(); }
       /* 与集合字面量共享逗号表达式列表，避免块 / 集合前缀产生冲突。
        * 单项可为普通表达式或 (x,y)=tuple；多项必须以普通赋值结束。

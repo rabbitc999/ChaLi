@@ -24,6 +24,8 @@ make           # 构建 magel 与 libparser.a
 最省事是把它放到项目根目录 `./ParseEngine`（Windows 加 `.exe`）；也可以让它待在旁边的
 ParseEngine 仓库里，`gen.sh` 会自动去找 `../ParseEngine/build/bin/`。
 
+Windows 上未找到生成器时，`gen.sh` 自动从[最新发布版](https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe)下载 `ParseEngine.exe` 到项目根目录；已有生成器会直接复用。其他平台请提供可运行的本机生成器，或通过 `ENGINE` 指定路径。
+
 验证装好了：
 
 ```sh

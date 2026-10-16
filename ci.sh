@@ -161,6 +161,7 @@ if [ "$run_python" = 1 ]; then
 fi
 
 if [ "$run_python" = 1 ]; then
+    run_step "验证最新生成器下载与失败清理" "$PYTHON" tests/gen_download.py
     run_step "运行 foreach 整数区间迭代器回归" "$PYTHON" tests/magel_foreach_intervals.py --magel magel
     run_step "运行 match 两种区间与或模式回归" "$PYTHON" tests/magel_match_patterns.py --magel magel
     run_step "运行 lambda 捕获与回调回归" "$PYTHON" tests/magel_lambdas.py --magel magel --vm tmp/ci/stackvm/magel-stackvm

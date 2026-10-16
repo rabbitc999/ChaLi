@@ -3799,7 +3799,9 @@ simple_ast::NodePtr LowerSwitch(int id)
 simple_ast::NodePtr LowerLoop(int id, Memory::String *valueName)
 {
     const MNode node = N(id);
-    const std::shared_ptr<MType> type = LoopValueType(id);
+    // 语句位置的 loop 在外层已有值出口时不再截获带值 break。
+    const bool transparent = valueName == nullptr && node.s.empty() && FindBreakContext(true) != nullptr;
+    const std::shared_ptr<MType> type = transparent ? T(M_TypeVoid()) : LoopValueType(id);
     const Memory::String loopLabel = NewBlockLabel("loop");
     const Memory::String breakLabel = NewBlockLabel("brk");
     Memory::Vector<simple_ast::NodePtr> out;

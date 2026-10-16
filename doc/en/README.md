@@ -94,3 +94,4 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 - [Custom error propagation and if expressions](26-error-propagation-if.md)
 
 - [Matching, interpolation, generics and scope cleanup](27-match-interpolation-scope.md)
+- Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.mgl), [VM / AOT regressions](../../tests/magel_block_expression.py).

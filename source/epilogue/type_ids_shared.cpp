@@ -592,10 +592,9 @@ Memory::Vector<simple_ast::NodePtr> *g_freshSink = nullptr;
 std::shared_ptr<MType> g_returnType;
 
 /**
- * `break` / `continue` 的跳转目标栈（进入循环或 `match` 分支时压一条）。
+ * `break` / `continue` 的跳转目标栈（进入循环或值表达式时压一条）。
  *
- * `continueLabel` 为空 = 这一层只有 `break`（`match` 就是这种）—— 所以 `match` 里的
- * `continue` 会继续找外面那层循环。
+ * `continueLabel` 为空表示这一层不接收 continue；值表达式中的 continue 继续寻找外层循环。
  */
 struct MBlockContext
 {
@@ -606,9 +605,9 @@ struct MBlockContext
      * 的那些块里的所有者变量先释放掉（跳出去就不再回来了）。
      */
     std::size_t scopeDepth = 0;
-    Memory::String breakValue; /* `loop` 表达式接收 `break value` 的槽；其它结构为空 */
+    Memory::String breakValue; /* 值出口接收 break value 的槽；无值循环为空并允许带值退出穿透。 */
     std::shared_ptr<MType> breakType;
-    bool valueOnly = false;            ///< if 表达式不截获无值循环退出。
+    bool valueOnly = false;            ///< 非循环值表达式不截获无值循环退出。
     std::size_t valueScopeDepth = 0u;  ///< 值出口的名字作用域深度。
 };
 Memory::Vector<MBlockContext> g_blockStack;

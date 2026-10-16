@@ -54,12 +54,12 @@ bool FindInterfaceMethod(const Memory::String &iface, const Memory::String &meth
 bool ReadDims(int dimsId, Memory::Vector<int> *out);
 
 /**
- * @brief 在词法作用域内收集 loop 的退出值类型，不生成运行时代码或所有权登记。
+ * @brief 分析语句的正常完成、返回和循环退出路径，不生成运行时代码。
  * @param statementId 语句节点。
- * @param values 退出值的具体类型。
- * @param hasPlain 是否包含无值 break。
+ * @param transparentLoops 是否将语句循环中的带值退出归入外层值出口。
+ * @retval 返回各类可达控制流路径的位掩码。
  */
-int StatementReturnFlow(int statementId);
+int StatementReturnFlow(int statementId, bool transparentLoops = false);
 void PinLiteralInExpression(int id, const std::shared_ptr<MType> &target);
 /**
  * @brief 收集循环内 break 携带的结果表达式。
@@ -68,9 +68,11 @@ void PinLiteralInExpression(int id, const std::shared_ptr<MType> &target);
  * @param hasPlain 接收是否存在不带值退出分支的标志。
  * @param expected 期望的类型或匹配规则。
  * @param borrowDepth 借用来源的作用域深度。
+ * @param loopDepth 穿透的语句循环层数；内层无值 break 不属于当前值出口。
  */
 void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MType>> *values, bool *hasPlain,
-                            const std::shared_ptr<MType> &expected = nullptr, std::size_t *borrowDepth = nullptr)
+                            const std::shared_ptr<MType> &expected = nullptr, std::size_t *borrowDepth = nullptr,
+                            std::size_t loopDepth = 0)
 {
     if (statementId < 0) return;
     const MNode statement = N(statementId);
@@ -78,7 +80,7 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
     {
     case MNode::Break:
         if (statement.kids.empty())
-            *hasPlain = true;
+            *hasPlain = *hasPlain || loopDepth == 0;
         else
         {
             if (expected)
@@ -137,14 +139,14 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
     case MNode::Block:
         PushScope();
         for (const int child : Memory::Vector<int>(N(static_cast<int>(statement.i)).kids))
-            CollectLoopBreakValues(child, values, hasPlain, expected, borrowDepth);
+            CollectLoopBreakValues(child, values, hasPlain, expected, borrowDepth, loopDepth);
         PopScope();
         return;
     case MNode::If:
-        CollectLoopBreakValues(statement.kids[1], values, hasPlain, expected, borrowDepth);
+        CollectLoopBreakValues(statement.kids[1], values, hasPlain, expected, borrowDepth, loopDepth);
         for (const int elifId : N(statement.kids[2]).kids)
-            CollectLoopBreakValues(N(elifId).kids[1], values, hasPlain, expected, borrowDepth);
-        if (statement.kids[3] >= 0) CollectLoopBreakValues(statement.kids[3], values, hasPlain, expected, borrowDepth);
+            CollectLoopBreakValues(N(elifId).kids[1], values, hasPlain, expected, borrowDepth, loopDepth);
+        if (statement.kids[3] >= 0) CollectLoopBreakValues(statement.kids[3], values, hasPlain, expected, borrowDepth, loopDepth);
         return;
     case MNode::Switch:
         /* `match` 不截获 break，里面的 break 仍属于外层 loop。 */
@@ -173,16 +175,43 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
                         }
             }
             for (const int child : Memory::Vector<int>(N(item.kids[0]).kids))
-                CollectLoopBreakValues(child, values, hasPlain, expected, borrowDepth);
+                CollectLoopBreakValues(child, values, hasPlain, expected, borrowDepth, loopDepth);
             PopScope();
         }
         return;
     case MNode::While:
     case MNode::DoWhile:
+        CollectLoopBreakValues(statement.kids[statement.kind == MNode::While ? 1 : 0], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        return;
     case MNode::For:
+        PushScope();
+        CollectLoopBreakValues(statement.kids[0], values, hasPlain, expected, borrowDepth, loopDepth);
+        CollectLoopBreakValues(statement.kids[3], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        PopScope();
+        return;
     case MNode::Foreach:
+    {
+        const auto sourceType = ExprType(statement.kids[0]);
+        auto element = statement.type >= 0 ? T(statement.type) : nullptr;
+        if (!element && (IsContainer(sourceType) || sourceType->kind == MType::Array))
+            element = sourceType->elem;
+        if (!element)
+            if (const auto iterator = FindIterator(sourceType))
+                element = iterator->element->kind == MType::Ptr ? iterator->element->elem : iterator->element;
+        if (!element) return;
+        PushScope();
+        g_scope.back()[statement.s] = MVar{ element, statement.s, false };
+        CollectLoopBreakValues(statement.kids[1], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        PopScope();
+        return;
+    }
+    case MNode::ExprStmt:
+        if (!statement.kids.empty() && N(statement.kids[0]).kind == MNode::Loop && N(statement.kids[0]).s.empty())
+            CollectLoopBreakValues(N(statement.kids[0]).kids[0], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        return;
     case MNode::Loop:
-        return; /* 内层循环拥有自己的 break。 */
+        if (statement.s.empty()) CollectLoopBreakValues(statement.kids[0], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        return; /* 值位置的内层表达式在各自类型推导中接收 break。 */
     default:
         return;
     }
@@ -369,14 +398,14 @@ std::shared_ptr<MType> LoopValueType(int id)
     const auto expected = !node.s.empty() && node.type >= 0 ? T(node.type) : nullptr;
     if (node.s == "block")
     {
-        if (StatementReturnFlow(node.kids[0]) & 1)
+        if (StatementReturnFlow(node.kids[0], true) & 1)
             Fail("块表达式的每条正常路径必须使用 break 值; 产生结果");
     }
     if (node.s == "if")
     {
         const auto conditional = N(N(node.kids[0]).i).kids[0];
         if (N(conditional).kids[3] < 0) Fail("if 表达式必须包含 else 分支");
-        if (StatementReturnFlow(conditional) & 1) Fail("if 表达式的每条正常路径必须产生结果；简单分支不写分号，复杂分支使用 break 值;");
+        if (StatementReturnFlow(conditional, true) & 1) Fail("if 表达式的每条正常路径必须产生结果；简单分支不写分号，复杂分支使用 break 值;");
     }
     if (node.s == "match")
     {
@@ -388,7 +417,7 @@ std::shared_ptr<MType> LoopValueType(int id)
             const auto item = N(branch);
             if (item.i < 0 && item.guard < 0) fallback = true;
             const int block = M_Block(item.kids[0]);
-            if (StatementReturnFlow(block) & 1)
+            if (StatementReturnFlow(block, true) & 1)
                 Fail("match 表达式的每条正常分支必须产生结果；简单分支不写分号，复杂分支使用 break 值;");
         }
         if (!fallback && (subject->kind != MType::Struct || !g_enums.count(subject->name)))
