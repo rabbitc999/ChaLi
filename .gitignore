@@ -46,6 +46,7 @@ __pycache__/
 
 # VS Code 插件内嵌的编译器：只在打包（vsce package / npm run embed）时生成。
 /vscode/bin/
+/vscode/node_modules/
 
 # 发布归档和校验文件作为发布产物保留，不放入源码版本库。
 /dist/

@@ -92,6 +92,7 @@ function main() {
     run(process.execPath, [path.join('test', 'macros.js')]);
     run(process.execPath, [path.join('test', 'lspCancellation.js')]);
     run(process.execPath, [path.join('test', 'semanticProviders.js')]);
+    run(process.execPath, [path.join('test', 'macroHighlighting.js')]);
   }
   const [command, prefix] = vsce();
   fs.mkdirSync(outDir, { recursive: true });

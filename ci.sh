@@ -278,6 +278,7 @@ if [ "$run_python" = 1 ]; then
     run_step "运行 LSP 并行、增量依赖、缓存与自动清理回归" "$PYTHON" tests/magel_lsp_performance.py
     run_step "运行 lambda 捕获悬停与移动诊断定位回归" "$PYTHON" tests/magel_lsp_lambda_capture.py
     run_step "运行共享语义、宏分组提示与安全重构回归" "$PYTHON" tests/magel_lsp_semantic_features.py
+    run_step "运行宏体独立语义高亮回归" "$PYTHON" tests/magel_lsp_macro_highlighting.py
     run_step "运行 LSP 命名警告与作用域补全回归" "$PYTHON" tests/magel_lsp_naming_scopes.py
     run_step "运行 LSP 接收者类型与 auto 悬停回归" "$PYTHON" tests/magel_lsp_receiver_types.py
     run_step "运行 0.17.0 条件表达式与错误传播回归" "$PYTHON" tests/magel_v250.py

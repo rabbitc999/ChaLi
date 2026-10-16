@@ -6,6 +6,7 @@ dist/**
 .vscodeignore
 obj/**
 node_modules/**
+package-lock.json
 *.vsix
 # 注意：bin/ 是**内嵌的编译器**（tools/embed-compiler.js 打包前放进去的），
 # 必须随包发出去，所以这里不再忽略它。

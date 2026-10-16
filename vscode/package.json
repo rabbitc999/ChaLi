@@ -4,6 +4,10 @@
   "description": "Magel（.mgl）语言支持：用编译器自带的 `magel lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。",
   "version": "1.0.0",
   "publisher": "rabbitc999",
+  "devDependencies": {
+    "vscode-textmate": "9.2.0",
+    "vscode-oniguruma": "2.0.1"
+  },
   "author": {
     "name": "小兔糖糖OvO",
     "email": "rabbitc999@outlook.com"
@@ -27,7 +31,7 @@
   "scripts": {
     "embed": "node tools/embed-compiler.js",
     "check": "node tools/check-manifest.js",
-    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js",
+    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/macroHighlighting.js",
     "vscode:prepublish": "node tools/embed-compiler.js",
     "package": "node tools/package.js"
   },

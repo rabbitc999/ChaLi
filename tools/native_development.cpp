@@ -2966,6 +2966,7 @@ struct LspLibrary
     std::set<std::string> types;
 };
 #include "native_lsp_macro_help.hpp"
+#include "native_lsp_macro_tokens.hpp"
 class Server
 {
     fs::path compiler;
@@ -3548,9 +3549,13 @@ class Server
                 functions.insert(r.name);
         A data;
         int lastLine = 0, lastCol = 0;
+        const auto macroTokens = lspMacroTokens(s, t);
+        size_t coveredUntil = 0;
         for (auto &token : raw)
         {
+            if (token.a < coveredUntil) continue;
             int kind = 11, mod = 0;
+            size_t tokenEnd = token.b;
             auto word = token.word;
             auto at =
                 std::lower_bound(t.begin(), t.end(), token.a,
@@ -3558,7 +3563,15 @@ class Server
             size_t index = size_t(at - t.begin());
             auto prev = index ? t[index - 1].word : "",
                  next = index + 1 < t.size() ? t[index + 1].word : "";
-            if (token.kind)
+            const auto macro = macroTokens.find(token.a);
+            if (macro != macroTokens.end() && token.kind != 8 && token.kind != 9)
+            {
+                kind = macro->second.kind;
+                mod = macro->second.modifiers;
+                tokenEnd = macro->second.end;
+                coveredUntil = tokenEnd;
+            }
+            else if (token.kind)
                 kind = token.kind;
             else if (classes.count(token.a))
             {
@@ -3596,11 +3609,11 @@ class Server
                     kind = 4;
             }
             size_t start = token.a;
-            while (start < token.b)
+            while (start < tokenEnd)
             {
                 auto end = s.find('\n', start);
-                if (end == s.npos || end > token.b)
-                    end = token.b;
+                if (end == s.npos || end > tokenEnd)
+                    end = tokenEnd;
                 auto stop = end;
                 if (stop > start && s[stop - 1] == '\r')
                     --stop;
