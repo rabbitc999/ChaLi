@@ -88,7 +88,10 @@ and unrecoverable exhaustion remain platform concerns. See [deployment](06-deplo
 [MCU host](../../source/stackvm_mcu/README.md) and [H743 project](../../example/mcu/FK-STM32H743XIH6/README.md).
 
 The CLI provides projects, checks, formatting, tests and dependency locks/caches. LSP provides diagnostics,
-completion, hover, signatures and cross-file navigation. DAP provides breakpoints, stepping and stacks;
+completion, hover, signatures and cross-file navigation, plus complete inferred `auto` type hover, optional type inlays,
+grouped macro signatures, expansion origins, references and rename based on unique bindings. Ownership diagnostics
+can link related declarations and cleanup locations. Ambiguous overloads or macro template bindings reject refactoring;
+see [LSP details](../man/en/lsp.md). DAP provides breakpoints, stepping and stacks;
 variable inspection and expression evaluation are not implemented. Dependencies support local directories,
 fixed Git commits and hashed HTTP/HTTPS archives. Feature implementation, regression evidence and
 long-term production validation are separate claims.

@@ -47,6 +47,15 @@ void position(const preprocess::Result &result, const Memory::String &needle, st
  */
 int main()
 {
+    Memory::Vector<Memory::String> partial;
+    std::size_t partialEnd = 0;
+    bool closed = true;
+    assert(!magel_macro::groupArguments("(1, fn(a, b) { a + b }, /* editing", 0, partial, partialEnd));
+    partial.clear();
+    assert(magel_macro::groupArguments("(1, fn(a, b) { a + b }, /* editing", 0, partial, partialEnd, true, &closed));
+    assert(!closed && partial.size() == 3);
+    partial.clear();
+    assert(!magel_macro::groupArguments("(1, [2)}", 0, partial, partialEnd, true));
     const auto result = process(
         "$macro M<..Types>[..Attrs](..Args){..Body}\n"
         "$stringify(Types); $stringify(Attrs); $stringify(Args); Body\n"

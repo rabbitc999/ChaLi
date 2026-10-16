@@ -1055,15 +1055,18 @@ struct Binding
     std::string name, type, kind;
     size_t offset = 0, end = 0;
     std::vector<int> scope;
+    std::string iterable = {};
+    size_t context = 0, parameter = 0, limit = std::string::npos, headerEnd = 0;
 };
+#include "native_lsp_type_shapes.hpp"
 /**
  * @brief 为扫描到的符号建立名称绑定。
  * @param s 待处理的文本或节点文本值。
  * @param types 当前可见的类型定义集合。
  * @retval 按处理顺序保存的结果元素集合。
  */
-std::vector<Binding> bindings(const std::string &s,
-                              std::set<std::string> types)
+std::vector<Binding> scanBindings(const std::string &s,
+                                  std::set<std::string> types)
 {
     auto t = lex(s);
     types.insert(primitives.begin(), primitives.end());
@@ -1083,6 +1086,17 @@ std::vector<Binding> bindings(const std::string &s,
     }
     std::vector<Binding> out;
     std::vector<std::pair<size_t, size_t>> regions;
+    for (size_t i = 0; i + 2 < t.size(); ++i)
+        if ((t[i].word == "struct" || t[i].word == "enum" || t[i].word == "interface") && identifier(t[i + 1].word))
+            types.insert(t[i + 1].word);
+    for (size_t i = 1; i < t.size(); ++i)
+        if (t[i].word == "<" && identifier(t[i - 1].word))
+        {
+            const auto end = groupEnd(t, i, "<", ">");
+            if (end >= t.size() || (t[end].word != "(" && t[end].word != "{" && t[end].word != ":")) continue;
+            for (size_t j = i + 1; j + 1 < end; ++j)
+                if (identifier(t[j].word) && (t[j - 1].word == "<" || t[j - 1].word == ",")) types.insert(t[j].word);
+        }
     for (size_t i = 0; i < t.size(); ++i)
     {
         if (!types.count(t[i].word) && !(i + 1 < t.size() && t[i + 1].word == "::"))
@@ -1096,6 +1110,8 @@ std::vector<Binding> bindings(const std::string &s,
             j = groupEnd(t, j, "<", ">");
         while (j < t.size() && (t[j].word == "const" || t[j].word == "mut" || t[j].word == "&"))
             ++j;
+        while (j + 1 < t.size() && t[j].word == "fn" && t[j + 1].word == "(")
+            j = groupEnd(t, j + 1, "(", ")");
         if (j >= t.size() || !identifier(t[j].word) || keywords.count(t[j].word))
             continue;
         size_t next = j + 1;
@@ -1103,7 +1119,7 @@ std::vector<Binding> bindings(const std::string &s,
             next = groupEnd(t, next, "<", ">");
         auto following = next < t.size() ? t[next].word : "";
         bool function = following == "(";
-        if (!function && following != "=" && following != ";" && following != "," && following != "[" && following != ")")
+        if (!function && following != "=" && following != ";" && following != "," && following != "[" && following != ")" && following != "in")
             continue;
         std::string type = cleanSignature(s.substr(t[i].a, t[j].a - t[i].a));
         out.push_back({ t[j].word, type, function ? "function" : "variable", t[j].a,
@@ -1128,17 +1144,107 @@ std::vector<Binding> bindings(const std::string &s,
             }
         }
     }
+    // 具名函数与匿名函数共享参数作用域；函数类型中的形参没有函数体，不建立作用域。
+    for (size_t i = 0; i < t.size(); ++i)
+        if (t[i].word == "fn")
+        {
+            size_t open = i + 1;
+            if (open < t.size() && (t[open].word == "copy" || t[open].word == "move" || t[open].word == "mut" || t[open].word == "const")) ++open;
+            if (open >= t.size() || t[open].word != "(") continue;
+            const auto end = groupEnd(t, open, "(", ")");
+            if (end >= t.size() || t[end].word != "{") continue;
+            regions.push_back({ open, end });
+            size_t ordinal = 0, begin = open + 1;
+            for (size_t j = begin; j < end; ++j)
+            {
+                if (t[j].word == "(" || t[j].word == "[")
+                {
+                    j = groupEnd(t, j, t[j].word, t[j].word == "(" ? ")" : "]") - 1;
+                    continue;
+                }
+                if (t[j].word != "," && j + 1 != end) continue;
+                if (j == begin + 1 && identifier(t[begin].word) && !keywords.count(t[begin].word))
+                {
+                    Binding b{ t[begin].word, "auto", "parameter", t[begin].a, t[begin].b, scopes[end] };
+                    b.context = t[i].a;
+                    b.parameter = ordinal;
+                    b.limit = lspBlockLimit(t, end);
+                    out.push_back(std::move(b));
+                }
+                begin = j + 1;
+                ++ordinal;
+            }
+        }
     for (auto &b : out)
         for (auto &region : regions)
             if (b.offset > t[region.first].a && region.second && b.offset < t[region.second - 1].b)
             {
                 b.kind = "parameter";
-                if (region.second < t.size() && t[region.second].word == "{")
-                    b.scope = scopes[region.second];
+                size_t body = region.second;
+                while (body < t.size() && (t[body].word == "copy" || t[body].word == "move" || t[body].word == "mut" || t[body].word == "const")) ++body;
+                if (body < t.size() && t[body].word == "{")
+                {
+                    b.scope = scopes[body];
+                    b.limit = lspBlockLimit(t, body);
+                }
+                else if (region.second)
+                    b.limit = t[region.second - 1].b;
             }
+    for (size_t i = 0; i + 1 < t.size(); ++i)
+        if (t[i].word == "for" && t[i + 1].word == "(")
+        {
+            const auto end = groupEnd(t, i + 1, "(", ")");
+            if (end >= t.size()) continue;
+            for (auto &binding : out)
+            {
+                if (binding.offset <= t[i + 1].a || binding.offset >= t[end - 1].a || binding.scope != scopes[i]) continue;
+                binding.headerEnd = t[end - 1].b;
+                if (t[end].word == "{")
+                {
+                    binding.scope = scopes[end];
+                    binding.limit = lspBlockLimit(t, end);
+                }
+                else
+                {
+                    size_t stop = end;
+                    while (stop < t.size() && t[stop].word != ";") ++stop;
+                    binding.limit = stop < t.size() ? t[stop].b : std::string::npos;
+                }
+            }
+        }
+    for (size_t i = 0; i + 3 < t.size(); ++i)
+        if (t[i].word == "foreach" && t[i + 1].word == "(")
+        {
+            const auto end = groupEnd(t, i + 1, "(", ")");
+            size_t in = i + 2;
+            while (in < end && t[in].word != "in") ++in;
+            if (in >= end || in == i + 2 || end > t.size()) continue;
+            const auto &name = t[in - 1];
+            auto found = std::find_if(out.begin(), out.end(), [&](const Binding &b) { return b.offset == name.a; });
+            if (found == out.end())
+            {
+                out.push_back({ name.word, "auto", "variable", name.a, name.b, scopes[i] });
+                found = out.end() - 1;
+            }
+            found->iterable = s.substr(t[in].b, t[end - 1].a - t[in].b);
+            if (end < t.size() && t[end].word == "{")
+            {
+                found->scope = scopes[end];
+                found->limit = lspBlockLimit(t, end);
+            }
+            else
+            {
+                auto stop = end;
+                while (stop < t.size() && t[stop].word != ";") ++stop;
+                found->limit = stop < t.size() ? t[stop].b : std::string::npos;
+            }
+        }
+    std::sort(out.begin(), out.end(), [](const Binding &a, const Binding &b) { return a.offset < b.offset; });
+    out.erase(std::unique(out.begin(), out.end(), [](const Binding &a, const Binding &b) { return a.offset == b.offset; }), out.end());
     return out;
 }
 #include "native_lsp_cache.hpp"
+#include "native_lsp_bindings.hpp"
 /**
  * @brief 查询指定源码位置所属的词法作用域。
  * @param s 待处理的文本或节点文本值。
@@ -1174,7 +1280,8 @@ std::vector<int> scopeAt(const std::string &s, size_t cursor)
  */
 bool visible(const Binding &b, const std::vector<int> &scope, size_t cursor)
 {
-    return (b.offset <= cursor || b.scope.size() == 1) && b.scope.size() <= scope.size() && std::equal(b.scope.begin(), b.scope.end(), scope.begin());
+    const bool loopHeader = b.headerEnd && b.offset <= cursor && cursor < b.headerEnd && b.scope.size() <= scope.size() + 1 && std::equal(b.scope.begin(), b.scope.end() - 1, scope.begin());
+    return cursor < b.limit && (b.offset <= cursor || b.scope.size() == 1) && (loopHeader || (b.scope.size() <= scope.size() && std::equal(b.scope.begin(), b.scope.end(), scope.begin())));
 }
 /**
  * @brief 读取光标前的限定名或后缀表达式。
@@ -1184,10 +1291,25 @@ bool visible(const Binding &b, const std::vector<int> &scope, size_t cursor)
  */
 std::string expression(const std::string &s, size_t cursor)
 {
-    auto t = lex(s.substr(0, cursor));
-    if (t.empty()) return "";
-    size_t end = t.size();
-    if (t.back().word == ">")
+    std::vector<Token> fallback;
+    const std::vector<Token> *indexed = nullptr;
+    size_t end = 0;
+    if (activeUnit && activeUnit->text.get() == &s)
+    {
+        const auto &tokens = activeUnit->tokens;
+        const auto stop = std::lower_bound(tokens.begin(), tokens.end(), cursor, [](const Token &token, size_t value) { return token.a < value; });
+        end = size_t(stop - tokens.begin());
+        if (!end || tokens[end - 1].b <= cursor) indexed = &tokens;
+    }
+    if (!indexed)
+    {
+        fallback = lex(s.substr(0, cursor));
+        indexed = &fallback;
+        end = fallback.size();
+    }
+    const auto &t = *indexed;
+    if (!end) return "";
+    if (t[end - 1].word == ">")
     {
         int level = 1;
         size_t at = end - 1;
@@ -1392,6 +1514,212 @@ public:
                   const std::set<std::string> &known) : records(entries), source(text), vars(bindings(text, known)) {}
 
     /**
+     * @brief 取得绑定的声明类型或根据初始化、遍历源及调用上下文推断类型。
+     * @param binding 当前声明身份。
+     * @param cursor 查询位置，保留给共享推断入口。
+     * @param depth 推断递归深度。
+     * @return 唯一可确定的类型，未知时返回空串。
+     */
+    std::string bindingType(const Binding &binding, size_t cursor, int depth = 0) const
+    {
+        (void)cursor;
+        if (depth > 24) return "";
+        if (binding.kind == "function")
+        {
+            auto tokens = valueTokens(source.substr(binding.end));
+            size_t open = 0;
+            if (!tokens.empty() && tokens[0].word == "<") open = groupEnd(tokens, 0, "<", ">");
+            if (open >= tokens.size() || tokens[open].word != "(") return "";
+            const auto end = groupEnd(tokens, open, "(", ")");
+            if (!end || end > tokens.size()) return "";
+            return lspFunctionText(lspFunctionShape(binding.type + " fn" + source.substr(binding.end + tokens[open].a, tokens[end - 1].b - tokens[open].a)));
+        }
+        if (base(binding.type) != "auto") return qualify(binding.type);
+        if (!binding.iterable.empty())
+        {
+            auto type = infer(binding.iterable, binding.offset, depth + 1);
+            auto open = type.find('<');
+            const auto head = tail(type.substr(0, open));
+            if (head == "String") return "char";
+            if (open != type.npos && (head == "List" || head == "Set" || head == "Iterator" || head == "Range"))
+            {
+                auto tokens = valueTokens(type);
+                size_t begin = 0;
+                while (begin < tokens.size() && tokens[begin].word != "<") ++begin;
+                int nesting = 0;
+                for (size_t i = begin + 1; i < tokens.size(); ++i)
+                {
+                    if (!nesting && (tokens[i].word == "," || tokens[i].word == ">")) return qualify(trim(type.substr(tokens[begin].b, tokens[i].a - tokens[begin].b)));
+                    if (tokens[i].word == "<") ++nesting;
+                    if (tokens[i].word == ">") --nesting;
+                }
+            }
+            if (binding.iterable.find("..") != std::string::npos) return "int64";
+            return "";
+        }
+        if (binding.context)
+        {
+            auto expected = contextualType(binding.context, depth + 1);
+            auto shape = lspFunctionShape(expected);
+            return shape.valid && binding.parameter < shape.arguments.size() ? shape.arguments[binding.parameter] : "";
+        }
+        auto initializer = valueTokens(source.substr(binding.end));
+        if (initializer.empty() || initializer[0].word != "=") return "";
+        size_t end = 1;
+        int nesting = 0;
+        for (; end < initializer.size(); ++end)
+        {
+            const auto &word = initializer[end].word;
+            if (!nesting && (word == ";" || word == "," || word == "}")) break;
+            if (word == "(" || word == "[" || word == "{") ++nesting;
+            if (word == ")" || word == "]" || word == "}") --nesting;
+        }
+        if (end <= 1) return "";
+        const auto begin = initializer[1].a;
+        return infer(source.substr(binding.end + begin, initializer[end - 1].b - begin), binding.offset, depth + 1);
+    }
+
+    /**
+     * @brief 为省略类型的匿名函数查询初始化目标或外层调用的参数类型。
+     * @param at fn 关键字的源码偏移。
+     * @param depth 递归预算。
+     * @return 唯一的预期函数类型，歧义时返回空串。
+     */
+    std::string contextualType(size_t at, int depth = 0) const
+    {
+        if (depth > 24) return "";
+        for (const auto &binding : vars)
+            if (binding.end < at && base(binding.type) != "auto" && trim(source.substr(binding.end, at - binding.end)) == "=") return binding.type;
+        auto tokens = valueTokens(source.substr(0, at));
+        struct Frame
+        {
+            size_t open;
+            size_t argument;
+        };
+        std::vector<Frame> stack;
+        for (size_t i = 0; i < tokens.size(); ++i)
+        {
+            const auto &w = tokens[i].word;
+            if (w == "(" || w == "[" || w == "{")
+                stack.push_back({ i, 0 });
+            else if (w == ")" || w == "]" || w == "}")
+            {
+                if (!stack.empty()) stack.pop_back();
+            }
+            else if (w == "," && !stack.empty())
+                ++stack.back().argument;
+        }
+        if (stack.empty() || tokens[stack.back().open].word != "(") return "";
+        const auto &frame = stack.back();
+        auto name = expression(source, tokens[frame.open].a);
+        auto callable = lspFunctionShape(infer(name, at, depth + 1));
+        if (callable.valid && frame.argument < callable.arguments.size()) return callable.arguments[frame.argument];
+        std::set<std::string> expected;
+        for (const auto &record : records)
+            if (record.kind == "function" && (record.qualified == name || (record.owner.empty() && record.name == name)))
+            {
+                std::string args;
+                for (const auto &parameter : record.parameters) args += (args.empty() ? "" : ", ") + str(parameter, "label");
+                auto shape = lspFunctionShape("void fn(" + args + ")");
+                if (shape.valid && frame.argument < shape.arguments.size()) expected.insert(shape.arguments[frame.argument]);
+            }
+        return expected.size() == 1 ? *expected.begin() : "";
+    }
+
+    /**
+     * @brief 使用实参数量和唯一的精确类型匹配筛选重载，未知或需要转换时保留候选。
+     * @param entries 同名调用候选。
+     * @param arguments 原始实参文本。
+     * @param cursor 调用位置。
+     * @param depth 类型推断递归预算。
+     * @return 精确匹配集合，不能确定时返回原候选。
+     */
+    std::vector<Record> selectedCalls(const std::vector<Record> &entries, const Memory::Vector<Memory::String> &arguments, size_t cursor, int depth = 0) const
+    {
+        std::vector<Record> selected;
+        for (const auto &record : entries)
+        {
+            std::string params;
+            for (const auto &parameter : record.parameters) params += (params.empty() ? "" : ", ") + str(parameter, "label");
+            auto shape = lspFunctionShape("void fn(" + params + ")");
+            if (shape.arguments.size() != arguments.size()) continue;
+            bool exact = true;
+            for (size_t i = 0; i < arguments.size(); ++i)
+            {
+                const auto actual = infer(arguments[i].c_str(), cursor, depth + 1);
+                const auto expected = qualify(shape.arguments[i]);
+                if (actual.empty() || actual != expected)
+                {
+                    exact = false;
+                    break;
+                }
+            }
+            if (exact) selected.push_back(record);
+        }
+        return selected.empty() ? entries : selected;
+    }
+
+    /**
+     * @brief 将显式泛型实参或直接类型形参的推断结果代入调用返回类型。
+     * @param record 函数声明。
+     * @param result 尚未实例化的返回类型。
+     * @param callee 含可选尖括号实参的被调名称。
+     * @param arguments 调用实参。
+     * @param cursor 调用位置。
+     * @param depth 推断递归预算。
+     * @return 已替换的返回类型；未确定的形参保留原文。
+     */
+    std::string instantiateResult(const Record &record, std::string result, const std::string &callee, const Memory::Vector<Memory::String> &arguments, size_t cursor, int depth) const
+    {
+        auto tokens = valueTokens(record.signature);
+        std::vector<std::string> names;
+        for (size_t i = 0; i + 1 < tokens.size(); ++i)
+            if (tokens[i].word == record.name && tokens[i + 1].word == "<")
+            {
+                const auto end = groupEnd(tokens, i + 1, "<", ">");
+                for (size_t j = i + 2; j + 1 < end; ++j)
+                    if (identifier(tokens[j].word) && (tokens[j - 1].word == "<" || tokens[j - 1].word == ",")) names.push_back(tokens[j].word);
+                break;
+            }
+        if (names.empty()) return qualify(result, record.module);
+        std::map<std::string, std::string> values;
+        const auto open = callee.find('<');
+        if (open != callee.npos)
+        {
+            Memory::Vector<Memory::String> actual;
+            size_t end = open;
+            if (magel_macro::groupArguments(callee.c_str(), open, actual, end) && actual.size() == names.size())
+                for (size_t i = 0; i < names.size(); ++i) values[names[i]] = trim(actual[i].c_str());
+        }
+        else
+        {
+            std::string params;
+            for (const auto &parameter : record.parameters) params += (params.empty() ? "" : ", ") + str(parameter, "label");
+            const auto shape = lspFunctionShape("void fn(" + params + ")");
+            for (size_t i = 0; i < shape.arguments.size() && i < arguments.size(); ++i)
+                if (std::find(names.begin(), names.end(), shape.arguments[i]) != names.end())
+                {
+                    auto actual = infer(arguments[i].c_str(), cursor, depth + 1);
+                    if (actual.empty()) continue;
+                    auto old = values.find(shape.arguments[i]);
+                    if (old != values.end() && old->second != actual) return "";
+                    values[shape.arguments[i]] = actual;
+                }
+        }
+        std::string substituted;
+        size_t previous = 0;
+        for (const auto &token : valueTokens(result))
+        {
+            substituted += result.substr(previous, token.a - previous);
+            auto found = values.find(token.word);
+            if (found == values.end() && std::find(names.begin(), names.end(), token.word) != names.end()) return "";
+            substituted += found == values.end() ? token.word : found->second;
+            previous = token.b;
+        }
+        return qualify(substituted + result.substr(previous), record.module);
+    }
+
+    /**
      * @brief 解析表达式类型。
      * @param value 接收者或初始化式。
      * @param cursor 可见位置。
@@ -1406,6 +1734,13 @@ public:
         if (starts(value, "f\"")) return qualify("std::lang::String");
         auto t = valueTokens(value);
         if (t.empty()) return "";
+        const auto shape = lspFunctionShape(value);
+        if (shape.valid)
+        {
+            if (!shape.result.empty()) return lspFunctionText(shape);
+            auto at = source.find(value, cursor);
+            return at == source.npos ? "" : contextualType(at, depth + 1);
+        }
         if (t.back().word == "?")
         {
             auto sourceType = infer(value.substr(0, t.back().a), cursor, depth + 1);
@@ -1449,6 +1784,7 @@ public:
         if (t.front().word == "(" && groupEnd(t, 0, "(", ")") == t.size())
             return infer(value.substr(t.front().b, t.back().a - t.front().b), cursor, depth + 1);
         bool call = t.back().word == ")";
+        Memory::Vector<Memory::String> arguments;
         if (call)
         {
             int level = 0;
@@ -1463,6 +1799,8 @@ public:
                 }
             }
             value = trim(value.substr(0, t[open].a));
+            size_t ignored = 0;
+            magel_macro::groupArguments(originalValue.c_str(), t[open].a, arguments, ignored);
             if (value.empty()) return "";
         }
         int level = 0;
@@ -1482,6 +1820,7 @@ public:
             auto receiver = infer(value.substr(0, dot), cursor, depth + 1);
             auto memberName = trim(value.substr(dot + 1));
             auto entries = members(receiver, base(memberName));
+            if (call) entries = selectedCalls(entries, arguments, cursor, depth + 1);
             std::set<std::string> results;
             for (auto &r : entries)
                 if (call || r.kind == "member")
@@ -1519,25 +1858,17 @@ public:
             const Binding *best = nullptr;
             auto scope = scopeAt(source, cursor);
             for (auto &b : vars)
-                if (b.name == value && b.kind != "function" && visible(b, scope, cursor) && (!best || b.scope.size() > best->scope.size() || (b.scope.size() == best->scope.size() && b.offset > best->offset))) best = &b;
+                if (b.name == value && visible(b, scope, cursor) && (!best || b.scope.size() > best->scope.size() || (b.scope.size() == best->scope.size() && b.offset > best->offset))) best = &b;
             if (best)
             {
-                if (base(best->type) != "auto") return qualify(best->type);
-                auto initializer = valueTokens(source.substr(best->end));
-                if (initializer.empty() || initializer[0].word != "=") return "";
-                size_t end = 1;
-                int nesting = 0;
-                for (; end < initializer.size(); ++end)
+                if (best->kind == "function" && best->scope.size() == 1)
                 {
-                    auto w = initializer[end].word;
-                    if (!nesting && (w == ";" || w == "," || w == "}")) break;
-                    if (w == "(" || w == "[" || w == "{") ++nesting;
-                    if (w == ")" || w == "]" || w == "}") --nesting;
+                    size_t count = 0;
+                    for (const auto &record : records)
+                        if (record.kind == "function" && record.owner.empty() && (record.name == value || record.qualified == value)) ++count;
+                    if (count > 1) return "";
                 }
-                if (end <= 1) return "";
-                auto begin = initializer[1].a;
-                return infer(source.substr(best->end + begin, initializer[end - 1].b - begin),
-                             best->offset, depth + 1);
+                return bindingType(*best, cursor, depth + 1);
             }
             if (words.size() == 1)
             {
@@ -1568,11 +1899,19 @@ public:
         }
         for (auto &r : records)
             if (isType(r) && (r.qualified == name || r.name == name || ends(r.qualified, "::" + name))) return qualify(value);
+        std::vector<Record> functions;
+        for (const auto &record : records)
+            if (record.kind == "function" && (record.qualified == name || (record.owner.empty() && record.name == name) || ends(record.qualified, "::" + name))) functions.push_back(record);
+        if (functions.empty())
+        {
+            const auto callable = lspFunctionShape(infer(value, cursor, depth + 1));
+            if (callable.valid) return qualify(callable.result);
+        }
         std::set<std::string> results;
-        for (auto &r : records)
+        for (auto &r : selectedCalls(functions, arguments, cursor, depth + 1))
             if (r.kind == "function" && (r.qualified == name || (r.owner.empty() && r.name == name) || ends(r.qualified, "::" + name)))
             {
-                auto type = resultType(r, "");
+                auto type = instantiateResult(r, resultType(r, ""), value, arguments, cursor, depth + 1);
                 if (!type.empty() && base(type) != "auto") results.insert(type);
             }
         return results.size() == 1 ? *results.begin() : "";
@@ -2626,6 +2965,7 @@ struct LspLibrary
     std::map<std::string, std::vector<std::string>> imports;
     std::set<std::string> types;
 };
+#include "native_lsp_macro_help.hpp"
 class Server
 {
     fs::path compiler;
@@ -2647,6 +2987,7 @@ class Server
     std::string analysisGraph;
     std::set<std::string> usedDocuments;
     bool shutdown = false;
+    std::shared_ptr<std::atomic<bool>> requestCancelled;
     /**
      * @brief 初始化语言服务器的缓存与请求调度状态。
      * @param parent 语言服务器父进程的信息。
@@ -2831,6 +3172,7 @@ class Server
                     ec.clear();
                     continue;
                 }
+                if (requestCancelled && requestCancelled->load()) throw std::runtime_error("请求已取消");
                 auto name = it->path().filename().u8string();
                 if (it->is_directory(ec) && (name == ".git" || name == "build" || name == "node_modules" || name == ".magel" || name == "tmp" || name == "libraries" || name == "bin"))
                 {
@@ -3124,6 +3466,7 @@ class Server
                          { "message", std::string("编译器检查失败：") + e.what() } }));
         }
         // 命名风格只产生编辑器警告，和编译器错误独立，不改变程序是否可编译。
+        for (auto &diagnostic : diagnostics) diagnostic = ownershipInformation(document.first, u, std::move(diagnostic));
         static const std::regex methodName("[a-z][A-Za-z0-9]*");
         static const std::regex typeName("[A-Z][a-z0-9]*([A-Z][a-z0-9]+)*");
         for (const auto &record : unit->records)
@@ -3317,9 +3660,61 @@ class Server
             diagnostics.push_back(d.toString().c_str());
         if (!ok && !error.empty())
             diagnostics.push_back(error.c_str());
+        A mappings;
+        if (ok)
+            for (size_t line = 0; line < processed.lineMap.size(); ++line)
+            {
+                const auto &origin = processed.lineMap[line];
+                if (!origin.line) continue;
+                const auto file = std::string(origin.file.c_str());
+                const auto target = file.empty() || file == "<stdin>" ? u : uri(fs::u8path(file));
+                mappings.push_back(object({ { "expandedLine", int(line) }, { "uri", target }, { "sourceLine", int(origin.line - 1) } }));
+            }
+        A temporaries;
+        if (ok)
+        {
+            auto records = collect(u, s);
+            std::set<std::string> seen;
+            for (const auto &token : lex(processed.text.c_str()))
+            {
+                if (!starts(token.word, "__magel_macro_") || !seen.insert(token.word).second) continue;
+                for (const auto &record : records)
+                {
+                    if (record.kind != "macro" || record.source.empty() || !starts(record.signature, "$macro")) continue;
+                    const auto prefix = "__magel_macro_" + std::string(magel_macro::sanitizeMacroName(record.name.c_str()).c_str()) + "_";
+                    if (!starts(token.word, prefix)) continue;
+                    const auto split = token.word.find('_', prefix.size());
+                    if (split == token.word.npos) continue;
+                    const auto expansionId = token.word.substr(prefix.size(), split - prefix.size());
+                    if (expansionId.empty() || expansionId.find_first_not_of("0123456789") != expansionId.npos) continue;
+                    auto slot = token.word.substr(split + 1);
+                    if (starts(slot, "negative_")) slot = "-" + slot.substr(9);
+                    const auto digits = starts(slot, "-") ? slot.substr(1) : slot;
+                    if (digits.empty() || digits.find_first_not_of("0123456789") != digits.npos) continue;
+                    auto definition = source(record.source);
+                    J location = object({ { "uri", record.source }, { "range", range(definition, record.offset, record.offset + record.name.size()) } });
+                    const auto end = definition.find("$end_macro", record.offset);
+                    const Memory::String raw(definition.c_str());
+                    for (const auto &part : lex(definition, true))
+                    {
+                        if (part.a <= record.offset || part.a >= end || part.kind == 8 || part.kind == 9 || !starts(part.word, "$")) continue;
+                        const auto stop = magel_macro::placeholderEnd(raw, part.a);
+                        if (stop <= part.a + 1) continue;
+                        if (magel_macro::gensymName(record.name.c_str(), 0, raw.substr(part.a + 1, stop - part.a - 1)) != magel_macro::gensymName(record.name.c_str(), 0, slot.c_str())) continue;
+                        location = object({ { "uri", record.source }, { "range", range(definition, part.a, stop) } });
+                        break;
+                    }
+                    temporaries.push_back(object({ { "name", token.word }, { "slot", "$" + slot }, { "macro", record.name }, { "expansionId", token.word.substr(prefix.size(), split - prefix.size()) }, { "definition", location } }));
+                    break;
+                }
+            }
+        }
         return object({ { "text", ok ? std::string(processed.text.c_str()) : "" },
-                        { "diagnostics", diagnostics } });
+                        { "diagnostics", diagnostics },
+                        { "mappings", mappings },
+                        { "temporaries", temporaries } });
     }
+#include "native_lsp_features.hpp"
     /**
      * @brief 处理一个语言服务器请求并构造结果。
      * @param method 压缩方法编号或目标方法名称。
@@ -3349,11 +3744,14 @@ class Server
                           { "completionProvider",
                             object({ { "triggerCharacters", A{ ":", ".", "$", "%" } } }) },
                           { "definitionProvider", true },
+                          { "referencesProvider", true },
+                          { "renameProvider", object({ { "prepareProvider", true } }) },
+                          { "inlayHintProvider", true },
                           { "documentSymbolProvider", true },
                           { "workspaceSymbolProvider", true },
                           { "documentFormattingProvider", true },
                           { "signatureHelpProvider",
-                            object({ { "triggerCharacters", A{ "(", "," } },
+                            object({ { "triggerCharacters", A{ "(", ",", "[", "<", "{" } },
                                      { "retriggerCharacters", A{ "," } } }) },
                           { "semanticTokensProvider",
                             object({ { "legend", object({ { "tokenTypes", legend },
@@ -3382,6 +3780,9 @@ class Server
         size_t cursor = offsetAt(s, get(params, "position"));
         auto records = collect(u, s);
         auto vars = bindings(s, types);
+        if (method == "textDocument/references" || method == "textDocument/prepareRename" || method == "textDocument/rename")
+            return refactor(method, params, u, s, records, cursor);
+        if (method == "textDocument/inlayHint") return inlayHints(s, records, get(params, "range"));
         if (method == "magel/expandMacro")
             return preview(u, s);
         if (method == "textDocument/semanticTokens/full")
@@ -3416,6 +3817,8 @@ class Server
         }
         if (method == "textDocument/signatureHelp")
         {
+            auto macro = lspMacroSignature(s, cursor, records);
+            if (!macro.isNull()) return macro;
             auto t = lex(s.substr(0, cursor));
             struct Call
             {
@@ -3453,6 +3856,13 @@ class Server
                         continue;
                     auto entries = matching(records, name, s, cursor, types);
                     A signatures;
+                    const auto callable = lspFunctionShape(ReceiverTypes(records, s, types).infer(name, cursor));
+                    if (callable.valid)
+                    {
+                        A params;
+                        for (const auto &argument : callable.arguments) params.push_back(object({ { "label", argument } }));
+                        signatures.push_back(object({ { "label", lspFunctionText(callable) }, { "parameters", params } }));
+                    }
                     int active = 0;
                     bool chosen = false;
                     for (auto &r : entries)
@@ -3698,8 +4108,11 @@ class Server
         auto scope = scopeAt(s, cursor);
         const Binding *binding = nullptr;
         for (auto &b : vars)
-            if (b.name == token->word && visible(b, scope, cursor) && (!binding || b.scope.size() > binding->scope.size() || (b.scope.size() == binding->scope.size() && b.offset > binding->offset)))
+            if (b.name == token->word && (b.offset == token->a || visible(b, scope, cursor)) && (!binding || b.scope.size() > binding->scope.size() || (b.scope.size() == binding->scope.size() && b.offset > binding->offset)))
                 binding = &b;
+        const auto identity = resolveSymbol(u, s, records, std::min(cursor, token->b - 1));
+        if (identity.valid())
+            entries.erase(std::remove_if(entries.begin(), entries.end(), [&](const Record &entry) { return entry.source != identity.source || entry.offset != identity.offset; }), entries.end());
         if (name.find("::") == name.npos && name.find('.') == name.npos && binding && binding->kind != "function")
             entries.clear();
         if (method == "textDocument/definition")
@@ -3716,7 +4129,7 @@ class Server
         {
             if (token->word == "auto")
                 for (auto &b : vars)
-                    if (b.offset >= token->b && b.offset - token->b < 32 && std::all_of(tokens.begin(), tokens.end(), [&](const Token &part) { return part.a < token->b || part.a >= b.offset || part.word == "const" || part.word == "mut" || part.word == "&"; }))
+                    if (b.offset >= token->b && std::all_of(tokens.begin(), tokens.end(), [&](const Token &part) { return part.a < token->b || part.a >= b.offset || part.word == "const" || part.word == "mut" || part.word == "&"; }))
                     {
                         binding = &b;
                         break;
@@ -3731,12 +4144,18 @@ class Server
             if (content.empty() && binding)
             {
                 auto type = binding->type;
-                if (starts(type, "auto"))
+                if (starts(type, "auto") || binding->kind == "function")
                 {
-                    auto inferred = ReceiverTypes(records, s, types).infer(binding->name, std::max(cursor, binding->end));
+                    auto inferred = ReceiverTypes(records, s, types).bindingType(*binding, std::max(cursor, binding->end));
                     if (!inferred.empty()) type = inferred;
                 }
                 content = "```magel\n" + type + " " + binding->name + "\n```";
+                if (starts(binding->type, "auto"))
+                {
+                    content += "\n\n" + lspTypeDescription(type);
+                    content += binding->context ? "\n\n推断来源：外层调用的参数类型。" : !binding->iterable.empty() ? "\n\n推断来源：遍历对象的元素类型。" :
+                                                                                                                      "\n\n推断来源：变量初始化表达式。";
+                }
             }
             if (content.empty())
                 return J();
@@ -3809,10 +4228,11 @@ class Server
       try {
         if (cancelled->load()) throw std::runtime_error("请求已取消");
         Server view(*this,snapshot,folders);
+        view.requestCancelled=cancelled;
         const auto result = view.request(str(message,"method"),get(message,"params"));
         {
           std::lock_guard<std::mutex> lock(stateMutex);
-          if (u.empty()) {if(revision != version)cancelled->store(true);}
+          if (u.empty() || str(message,"method")=="textDocument/rename" || str(message,"method")=="textDocument/references") {if(revision != version)cancelled->store(true);}
           else {
             const auto current=documents.find(u);const auto previous=snapshot.find(u);
             if(current==documents.end() || previous==snapshot.end() || current->second!=previous->second)cancelled->store(true);

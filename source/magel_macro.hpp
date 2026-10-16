@@ -391,12 +391,16 @@ inline char groupClose(char ch)
  * @param open 左括号位置。
  * @param parts 输出当前层的逗号分隔片段。
  * @param end 输出右括号后一位置。
+ * @param allowIncomplete 是否允许编辑器读取尚未闭合的末尾分组；编译默认关闭。
+ * @param closed 可选输出，指出分组是否已完整闭合。
  * @retval 成功返回 true；缺少或交叉闭合括号返回 false。
  * @note 字符串和注释中的括号不参与分组，连续右尖括号逐字符处理。
  */
 inline bool groupArguments(const Memory::String &text, std::size_t open,
-                           Memory::Vector<Memory::String> &parts, std::size_t &end)
+                           Memory::Vector<Memory::String> &parts, std::size_t &end,
+                           bool allowIncomplete = false, bool *closed = nullptr)
 {
+    if (closed) *closed = false;
     if (open >= text.size() || !groupClose(text[open])) return false;
     Memory::Vector<char> closes{ groupClose(text[open]) };
     std::size_t begin = open + 1;
@@ -418,13 +422,13 @@ inline bool groupArguments(const Memory::String &text, std::size_t open,
         if (text.compare(i, 2, "//") == 0)
         {
             i = text.find('\n', i + 2);
-            if (i == Memory::String::npos) return false;
+            if (i == Memory::String::npos) break;
             continue;
         }
         if (text.compare(i, 2, "/*") == 0)
         {
             i = text.find("*/", i + 2);
-            if (i == Memory::String::npos) return false;
+            if (i == Memory::String::npos) break;
             ++i;
             continue;
         }
@@ -447,6 +451,7 @@ inline bool groupArguments(const Memory::String &text, std::size_t open,
                 const auto part = text.substr(begin, i - begin);
                 if (!parts.empty() || !trim(part).empty()) parts.push_back(part);
                 end = i + 1;
+                if (closed) *closed = true;
                 return true;
             }
         }
@@ -455,6 +460,12 @@ inline bool groupArguments(const Memory::String &text, std::size_t open,
             parts.push_back(text.substr(begin, i - begin));
             begin = i + 1;
         }
+    }
+    if (allowIncomplete)
+    {
+        parts.push_back(text.substr(begin));
+        end = text.size();
+        return true;
     }
     return false;
 }
@@ -1377,6 +1388,8 @@ inline bool expand(const Memory::String &source,
         const Macro *picked = nullptr;
         std::size_t groupedArgc = 0;
         bool groupedCandidate = false;
+        Memory::String groupProblem;
+        std::size_t furthestGroup = 0;
         for (const auto &item : candidates)
         {
             if (item.groups.empty()) continue;
@@ -1385,13 +1398,21 @@ inline bool expand(const Memory::String &source,
             Memory::Vector<Memory::String> bound;
             std::size_t supplied = 0;
             bool matched = true;
+            std::size_t groupIndex = 0;
             for (const auto &group : item.groups)
             {
                 spaces(source, cursor);
+                const std::size_t groupOpen = cursor;
                 const std::size_t groupBegin = cursor + 1;
                 Memory::Vector<Memory::String> pieces;
                 if (cursor >= source.size() || source[cursor] != group.opening || !groupArguments(source, cursor, pieces, cursor) || pieces.size() < group.params.size() || (group.rest.empty() && pieces.size() != group.params.size()))
                 {
+                    if (groupProblem.empty() || groupIndex >= furthestGroup)
+                    {
+                        furthestGroup = groupIndex;
+                        groupProblem = "；第 " + Memory::toString(groupIndex + 1) + " 组期待 " + Memory::String(1, group.opening) + Memory::String(1, groupClose(group.opening));
+                        groupProblem += groupOpen < source.size() && source[groupOpen] != group.opening ? "，实际遇到 " + Memory::String(1, source[groupOpen]) : "，请检查该组的闭合与文本实参分组";
+                    }
                     matched = false;
                     break;
                 }
@@ -1414,6 +1435,7 @@ inline bool expand(const Memory::String &source,
                     }
                     bound.push_back(std::move(tail));
                 }
+                ++groupIndex;
             }
             if (matched)
             {
@@ -1430,7 +1452,7 @@ inline bool expand(const Memory::String &source,
         }
         if (!picked && groupedCandidate && std::all_of(candidates.begin(), candidates.end(), [](const Macro &item) { return !item.groups.empty(); }))
         {
-            error = "宏Token分组不匹配：$" + name;
+            error = "宏Token分组不匹配：$" + name + groupProblem;
             return false;
         }
         const bool called = open < source.size() && source[open] == '(';

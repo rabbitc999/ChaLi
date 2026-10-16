@@ -10,6 +10,7 @@ struct LspUnit
     std::vector<std::string> imports, includes;
     std::vector<size_t> braces;
     std::vector<std::vector<int>> scopes;
+    std::vector<std::pair<size_t, size_t>> macroRegions;
     /**
      * @brief 构建词法与作用域索引。
      * @param source 原文。
@@ -20,8 +21,15 @@ struct LspUnit
         imports = directives(*text, "import");
         std::vector<int> scope{ 0 };
         int serial = 0;
+        size_t macroBegin = std::string::npos;
         for (const auto &token : tokens)
         {
+            if (token.word == "$macro") macroBegin = token.a;
+            if (token.word == "$end_macro" && macroBegin != std::string::npos)
+            {
+                macroRegions.push_back({ macroBegin, token.b });
+                macroBegin = std::string::npos;
+            }
             if (token.word == "{")
                 scope.push_back(++serial);
             else if (token.word == "}" && scope.size() > 1)
@@ -31,6 +39,7 @@ struct LspUnit
             braces.push_back(token.a);
             scopes.push_back(scope);
         }
+        if (macroBegin != std::string::npos) macroRegions.push_back({ macroBegin, text->size() });
         for (size_t at = 0; at + 2 < raw.size(); ++at)
             if (raw[at].word == "%" && (raw[at + 1].word == "include" || raw[at + 1].word == "include_once" || raw[at + 1].word == "import") && raw[at + 2].kind == 9)
                 includes.push_back(raw[at + 2].word.substr(1, raw[at + 2].word.size() - 2));
@@ -42,6 +51,7 @@ struct LspUnit
     size_t bytes() const
     {
         size_t total = sizeof(*this) + text->capacity() + positions.lines.capacity() * sizeof(size_t);
+        total += macroRegions.capacity() * sizeof(std::pair<size_t, size_t>);
         for (const auto *list : { &tokens, &raw })
         {
             total += list->capacity() * sizeof(Token);

@@ -129,6 +129,10 @@ function toDiagnostics(diagnostics) {
     );
     item.source = diagnostic.source || 'magel-lsp';
     if (diagnostic.code) item.code = diagnostic.code;
+    item.relatedInformation = (diagnostic.relatedInformation || []).map((related) =>
+      new vscode.DiagnosticRelatedInformation(
+        new vscode.Location(vscode.Uri.parse(related.location.uri), toRange(related.location.range)),
+        related.message));
     return item;
   });
 }
@@ -158,7 +162,7 @@ function registerProviders(context, deps) {
    * @param {object} params 参数。
    * @returns {Promise<any>} 结果；失败时返回 null。
    */
-  const request = async (method, params, token, document) => {
+  const request = async (method, params, token, document, throwError = false) => {
     const client = usableClient();
     if (!client) return null;
     try {
@@ -169,9 +173,14 @@ function registerProviders(context, deps) {
     } catch (error) {
       if (error.code === -32800 || error.code === -32801) return null;
       deps.logLine(`[请求失败] ${method}：${error.message}`);
+      if (throwError) throw error;
       return null;
     }
   };
+
+  require('./semanticProviders').registerSemanticProviders(vscode, context, {
+    request, selector: SELECTOR, toRange, toPosition,
+  });
 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(SELECTOR, {
@@ -279,7 +288,7 @@ function registerProviders(context, deps) {
         help.activeParameter = result.activeParameter || 0;
         return help;
       },
-    }, '(', ','),
+    }, '(', ',', '[', '<', '{'),
 
     vscode.languages.registerDefinitionProvider(SELECTOR, {
       /**

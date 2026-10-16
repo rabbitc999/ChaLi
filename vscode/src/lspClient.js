@@ -170,6 +170,9 @@ class LspClient extends EventEmitter {
           synchronization: { didSave: true, dynamicRegistration: false },
           publishDiagnostics: { relatedInformation: true },
           hover: { contentFormat: ['markdown', 'plaintext'] },
+          references: { dynamicRegistration: false },
+          rename: { prepareSupport: true },
+          inlayHint: { dynamicRegistration: false },
           completion: {
             completionItem: {
               snippetSupport: false,
@@ -177,7 +180,7 @@ class LspClient extends EventEmitter {
             },
           },
         },
-        workspace: { workspaceFolders: true },
+        workspace: { workspaceFolders: true, workspaceEdit: { documentChanges: true } },
       },
     });
     this.notify('initialized', {});
