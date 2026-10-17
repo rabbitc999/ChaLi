@@ -454,7 +454,7 @@ int runCli(int argc, char **argv)
                              "return_expression_ast.cpp", "named_function_ast.cpp", "derive_ast.cpp", "derive.cpp",
                              "types.cpp", "interfaces.cpp", "builtins.cpp", "generic_inference.cpp", "constants.cpp", "annotation_ast.cpp", "annotations.cpp", "reflection_metadata.cpp", "reflection_queries.cpp", "reflection_calls.cpp",
                              "lowering.cpp", "borrow_facts.cpp", "borrow_flow.cpp", "borrow_return_sources.cpp", "expression_effects.cpp", "interface_dispatch.cpp", "boxing.cpp",
-                             "pass1_register.cpp", "pass2_lower.cpp", "c_exports.cpp", "artifacts.cpp"})
+                             "pass1_register.cpp", "pass2_lower.cpp", "artifacts.cpp"})
         ok = copy(mc / "source/epilogue" / name, Memory::String("epilogue/") + name) && ok;
     const Memory::Map<Memory::String, fs::path> runtime{
         {"magel_allocator.hpp", root / "magel/source/allocator/magel_allocator.hpp"},

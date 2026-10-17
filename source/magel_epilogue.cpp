@@ -2878,7 +2878,6 @@ namespace
 #include "epilogue/annotations.cpp"
 #include "epilogue/pass1_register.cpp"
 #include "epilogue/pass2_lower.cpp"
-#include "epilogue/c_exports.cpp"
 #include "epilogue/artifacts.cpp"
 #include "epilogue/reflection_metadata.cpp"
 #include "epilogue/reflection_queries.cpp"
