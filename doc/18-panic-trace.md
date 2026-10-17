@@ -52,7 +52,7 @@ g++ -DNO_MAGEL_PANIC_TRACE ...
 
 关闭宏后，VM 每个函数帧的额外函数符号字段及自动捕获分支不编译进去；既有执行所必需的返回地址、局部变量和显式调试设施仍保留。关闭后保留空查询接口，使用方不必换 API。公开 `DebugFrame` 新增 `instruction`、`threadId` 和 `coroutineId`，更新库与调用方后须重新编译，不混用旧对象文件。
 
-`magel` 已继承 magel 的压缩默认值及 CLI 覆盖。直接解释运行会通过 `setPanicDetailsEnabled(false)` 禁止详情；VM 在解释运行时通过 `setPanicDetailsEnabled(false)` 关闭调试表/行信息，因此即使同时给 `--debug` 也不打印 panic 调用记录。独立 magel-emit 可显式使用这个开关；它是诊断隐藏选项，不意味着 C++/AOT 产物采用压缩字节码格式。
+`magel` 已继承 magel 的压缩默认值及 CLI 覆盖。直接解释运行会通过 `setPanicDetailsEnabled(false)` 禁止详情；解释运行通过 `setPanicDetailsEnabled(false)` 关闭调试表/行信息，因此即使同时给 `--debug` 也不打印 panic 调用记录。它是诊断隐藏选项，不意味着字节码采用压缩格式。
 
 ## 宿主查询接口
 
