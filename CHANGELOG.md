@@ -5,6 +5,21 @@
 
 ## 1.0.0 — fn 语法定型与稳定版本基线
 
+### 2026-10-18
+
+- `library/bignum` 任意精度库扩展：
+  - `BigInt` 新增快速幂 `powmod(BigInt 指数, BigInt 模数)`、`gcd` / `lcm`、非负取模 `modNonNegative`、扩展欧几里得 `extendedGcd`（返回 `ExtendedGcd{gcd,x,y}`）与模逆元 `modInverse`；素性用固定种子（可复现）的 Miller-Rabin `isProbablePrime` / `nextProbablePrime`；位运算 `&` / `|` / `^`（仅非负数，负数抛 `std::domain_error`）、`operator~`（按补码语义 `~x = -x-1`）、`bitLength` / `bitAt` / `setBit` / `clearBit` / `flipBit` / 移位；2..36 进制互转 `toString(base)` / `fromString(text, base, ok)`；通用整数 `integerRoot(value, k)`（k 次方根，二分，向下取整）。
+  - `BigFloat` 新增 `pow(k)` / `abs()` / `isInteger()` / `floor()` / `ceil()` / `trunc()`（取整返回 `BigInt`）与 `root(k, digits)`（k 次方根，低精度预热 + 精度倍增牛顿迭代，`sqrt` 之外任意次数均可收敛）。
+  - 转换语义：`BigInt` / `BigFloat` 接受 `int64` / `double` **隐式**构造；转回 `int64` / `double` 为 **显式**（`explicit operator`）。`BigFloat` 的显式转 `int64` 保留符号（此前按幅值转换会丢负号）。
+  - 单测扩展：`test_bigint.cpp` 273 条、`test_bigfloat.cpp` 136 条，全部通过。
+- Magel 语言层对接 `BigInteger` / `BigDecimal` 新方法（解释器与 AOT 同路）：
+  - `BigInteger`：`pow` / `powmod` / `gcd` / `lcm` / `mod`（非负取模）/ `modInverse` / `isProbablePrime` / `nextProbablePrime` / `bitLength` / `bitAnd` / `bitOr` / `bitXor` / `strRadix(base)` / `iroot(k)`。
+  - `BigDecimal`：`pow` / `abs` / `isInteger` / `floor` / `ceil` / `trunc` / `sqrt(digits)` / `root(k, digits)`。
+  - 实现链路：VM 原生 `__vm_bint_*` / `__vm_bfloat_*`（`library/stackvm/parts/machine_natives.cpp`，含无 BigInt 编译开关的桩）、方法降级（`source/epilogue/boxing.cpp`）与成员调用类型规则（`source/epilogue/builtins.cpp`）同步；实参按 int/bool/double 自动装箱为大数。
+  - 新样例 `example/samples/bigint_methods.mgl`（含期望输出），解释执行与 `magel aot` 导出产物输出一致。
+- 语言转换规则：`int64` 可**隐式**转为 `BigInteger` / `BigDecimal`，`double` 同样隐式转 `BigDecimal`；反向（大数 → `int64` / `double`）必须显式转换，编译期检查。
+- 标准库参考文档、符号索引、`magel_stdlib_api.json` 与内嵌手册同步再生成；`tools/library_reference_data.py` 新增 `BIG_BEHAVIOR`（按 `Owner::name` 精确匹配，避免与 `std::numerics` 同名顶层函数说明冲突）。
+
 ### 2026-10-17
 
 - **语法清理（不兼容，三项合一）**：

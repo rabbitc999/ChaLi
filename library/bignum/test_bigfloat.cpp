@@ -185,6 +185,85 @@ void testLargePrecision()
     CHECK(bigint::BigInt::karatsubaThreshold() == 96u);
 }
 
+/**
+ * @brief 整数次幂 / 绝对值 / 整数判断 / 取整 / k 次方根 / 隐式显式转换。
+ */
+void testPowRoundRoot()
+{
+    CHECK(BigFloat("1.5").pow(2).toString() == Memory::String("2.25"));
+    CHECK(BigFloat("-2").pow(3).toString() == Memory::String("-8"));
+    CHECK(BigFloat("-2").pow(2).toString() == Memory::String("4"));
+    CHECK(BigFloat("7.25").pow(0).toString() == Memory::String("1"));
+    CHECK(BigFloat("2").pow(100).toPlainString() == bigint::BigInt(2).pow(100).toString());
+    CHECK(BigFloat("1.5e10").pow(2).toPlainString() == Memory::String("225000000000000000000"));
+    CHECK(BigFloat("-3.5").abs().toString() == Memory::String("3.5"));
+    CHECK(BigFloat("3.5").abs().toString() == Memory::String("3.5"));
+    CHECK(BigFloat("0").abs().isZero());
+
+    CHECK(BigFloat("5").isInteger());
+    CHECK(BigFloat("5.0").isInteger());
+    CHECK(BigFloat("1e20").isInteger());
+    CHECK(BigFloat("0").isInteger());
+    CHECK(!BigFloat("5.5").isInteger());
+    CHECK(!BigFloat("0.5").isInteger());
+    CHECK(!BigFloat("1e-3").isInteger());
+    CHECK(!BigFloat("0.001").isInteger());
+    CHECK(BigFloat("0.001") * BigFloat("1000") == BigFloat("1"));
+
+    CHECK(BigFloat("2.7").floor() == bigint::BigInt(2));
+    CHECK(BigFloat("-2.7").floor() == bigint::BigInt(-3));
+    CHECK(BigFloat("2").floor() == bigint::BigInt(2));
+    CHECK(BigFloat("2.1").ceil() == bigint::BigInt(3));
+    CHECK(BigFloat("-2.1").ceil() == bigint::BigInt(-2));
+    CHECK(BigFloat("-2").ceil() == bigint::BigInt(-2));
+    CHECK(BigFloat("2.7").trunc() == bigint::BigInt(2));
+    CHECK(BigFloat("-2.7").trunc() == bigint::BigInt(-2));
+    CHECK(BigFloat("1e20").floor() == bigint::BigInt("100000000000000000000"));
+    CHECK(BigFloat("-1e20").ceil() == bigint::BigInt("-100000000000000000000"));
+    CHECK(BigFloat("0").floor().isZero());
+
+    CHECK(BigFloat("8").root(3, 10).toString() == Memory::String("2"));
+    CHECK(BigFloat("27").root(3, 15).toString() == Memory::String("3"));
+    CHECK(BigFloat("16").root(4, 10).toString() == Memory::String("2"));
+    CHECK(BigFloat("2").root(3, 12).toString() == Memory::String("1.25992104989"));
+    CHECK(BigFloat("1e30").root(3, 20).toPlainString() == Memory::String("10000000000"));
+    CHECK(BigFloat("1e-30").root(3, 20).toString() == Memory::String("1e-10"));
+    CHECK(BigFloat("12345").root(1, 10).toString() == Memory::String("12345"));
+    CHECK(BigFloat("0").root(5, 10).isZero());
+    CHECK(BigFloat("2").root(2, 30).toString(30) == BigFloat("2").sqrt(30).toString(30));
+
+    bool threw = false;
+    try
+    {
+        (void)BigFloat("-1").root(3, 10);
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)BigFloat("1").root(0, 10);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)BigFloat("1").root(3, 0);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+
+    /* int64 / double → BigFloat 隐式；BigFloat → int64 / double 显式。 */
+    BigFloat fromInt = 42;
+    CHECK(fromInt.toString() == Memory::String("42"));
+    BigFloat fromDouble = 1.5;
+    CHECK(fromDouble.toString() == Memory::String("1.5"));
+    CHECK(BigFloat(7) == BigFloat("7"));
+    CHECK(static_cast<std::int64_t>(BigFloat("2.9")) == 2);
+    CHECK(static_cast<std::int64_t>(BigFloat("-2.9")) == -2);
+    CHECK(static_cast<std::int64_t>(BigFloat("1e18")) == 1000000000000000000ll);
+    CHECK(static_cast<double>(BigFloat("0.5")) == 0.5);
+    CHECK(static_cast<double>(BigFloat("1e30")) == 1e30);
+}
+
 }  // namespace
 
 /**
@@ -197,6 +276,7 @@ int main()
     testArithmetic();
     testRoundCompare();
     testSqrt();
+    testPowRoundRoot();
     testLargePrecision();
     if (failures == 0)
     {

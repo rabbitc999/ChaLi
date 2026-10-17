@@ -58,8 +58,47 @@ struct Map<K,V> {
     Map<K,V> copy(); int64 put(K key,V value); int64 has(K key); int64 contains(K key);
     int64 remove(K key); K keyAt(int64 index); V valAt(int64 index); int64 clear(); int64 len();
 };
-struct BigInteger { String str(); BigInteger copy(); };
-struct BigDecimal { String str(); BigDecimal copy(); int64 setPrecision(int64 digits); };
+/** 任意精度整数：算术、数论、素性、位运算与进制互转，详见 example/samples/bigint_methods.mgl。 */
+struct BigInteger {
+    String str(); BigInteger copy();
+    /** 非负整数次幂（快速幂）。 */
+    BigInteger pow(int64 exponent);
+    /** 模幂：`this^exponent mod modulus`（指数可以是大整数）。 */
+    BigInteger powmod(BigInteger exponent, BigInteger modulus);
+    /** 最大公约数 / 最小公倍数（取绝对值）。 */
+    BigInteger gcd(BigInteger other); BigInteger lcm(BigInteger other);
+    /** 非负取模：结果落在 [0, |modulus|)。 */
+    BigInteger mod(BigInteger modulus);
+    /** 模逆元；两数不互素时运行期报错。 */
+    BigInteger modInverse(BigInteger modulus);
+    /** Miller-Rabin 概率素性测试（固定种子，可复现）。 */
+    bool isProbablePrime(int64 rounds);
+    /** 严格大于当前值的下一个（概率）素数。 */
+    BigInteger nextProbablePrime();
+    /** 二进制位长。 */
+    int64 bitLength();
+    /** 按位与 / 或 / 异或（仅非负数；负数运行期报错）。 */
+    BigInteger bitAnd(BigInteger other); BigInteger bitOr(BigInteger other); BigInteger bitXor(BigInteger other);
+    /** 2..36 进制字符串（数字用 0-9a-z，负数带 -）。 */
+    String strRadix(int64 base);
+    /** 整数 k 次方根（向下取整）。 */
+    BigInteger iroot(int64 k);
+};
+/** 任意精度十进制浮点：尾数 × 10^指数。 */
+struct BigDecimal { String str(); BigDecimal copy(); int64 setPrecision(int64 digits);
+    /** 精确非负整数次幂。 */
+    BigDecimal pow(int64 exponent);
+    /** 绝对值。 */
+    BigDecimal abs();
+    /** 是不是整数。 */
+    bool isInteger();
+    /** 向负无穷 / 向正无穷 / 向零取整，返回大整数。 */
+    BigInteger floor(); BigInteger ceil(); BigInteger trunc();
+    /** 平方根，保留 digits 位有效数字。 */
+    BigDecimal sqrt(int64 digits);
+    /** k 次方根，保留 digits 位有效数字。 */
+    BigDecimal root(int64 k, int64 digits);
+};
 struct Any {
     Any copy(); bool isEmpty(); void clear(); int64 set(T value);
     T getValue(); T mut& getReference(); Option<T mut&> getOptional();

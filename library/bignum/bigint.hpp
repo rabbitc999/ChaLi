@@ -41,6 +41,8 @@
 namespace bigint
 {
 
+struct ExtendedGcd;  ///< 扩展欧几里得结果（定义在类后）。
+
 /**
  * @brief 任意精度有符号大整数。
  */
@@ -54,9 +56,23 @@ public:
 
     /**
      * @brief 从 64 位有符号整数构造（`INT64_MIN` 也正确）。
+     *
+     * **隐式转换**：`int64 → BigInt` 直接赋值 / 传参可用。
      * @param value 值。
      */
     BigInt(std::int64_t value);
+
+    /**
+     * @brief 显式转 64 位有符号整数（按位截断，与 `toI64` 一致）。
+     *
+     * 收窄必须**显式**写：`static_cast<std::int64_t>(value)`。
+     */
+    explicit operator std::int64_t() const;
+
+    /**
+     * @brief 显式转双精度浮点（可能丢精度，与 `toDouble` 一致）。
+     */
+    explicit operator double() const;
 
     /**
      * @brief 从 64 位**无符号**整数构造（`uint64_t` 上界也不会被当成 -1）。
@@ -234,6 +250,153 @@ public:
      */
     [[nodiscard]] BigInt powmod(std::uint64_t exponent, const BigInt &modulus) const;
 
+    /**
+     * @brief 同余幂（**指数也是大整数**的快速幂）：`base ^ exponent mod modulus`。
+     *
+     * 素性测试等"指数大到装不进 64 位"的场景用这个；逐步取模，
+     * 结果落在 `[0, |modulus|)`。模为零抛 `std::domain_error`。
+     * @param exponent 指数（大整数，负指数抛 `std::invalid_argument`）。
+     * @param modulus 模数。
+     */
+    [[nodiscard]] BigInt powmod(const BigInt &exponent, const BigInt &modulus) const;
+
+    // ---- 位运算 / 位查询 ----
+    // 位语义只对**非负整数**定义（内部是"符号 + 幅值"表示，做带符号补码位运算
+    // 得先把两个操作数都扩到无穷位，不值当）；操作数为负时抛 `std::domain_error`。
+
+    /**
+     * @brief 按位与（两个操作数都非负；负数抛 `std::domain_error`）。
+     */
+    friend BigInt operator&(const BigInt &left, const BigInt &right);
+    /**
+     * @brief 按位或（两个操作数都非负；负数抛 `std::domain_error`）。
+     */
+    friend BigInt operator|(const BigInt &left, const BigInt &right);
+    /**
+     * @brief 按位异或（两个操作数都非负；负数抛 `std::domain_error`）。
+     */
+    friend BigInt operator^(const BigInt &left, const BigInt &right);
+    /**
+     * @brief 按位取反：补口语义 `~x = -x - 1`（只此一个允许负数结果）。
+     */
+    [[nodiscard]] BigInt operator~() const;
+
+    /**
+     * @brief 二进制位长度（0 返回 0）。
+     */
+    [[nodiscard]] std::size_t bitLength() const;
+    /**
+     * @brief 取第 bit 位是不是 1。
+     */
+    [[nodiscard]] bool bitAt(std::size_t bit) const;
+    /**
+     * @brief 把第 bit 位置 1。
+     */
+    void setBit(std::size_t bit);
+    /**
+     * @brief 把第 bit 位清 0。
+     */
+    void clearBit(std::size_t bit);
+    /**
+     * @brief 把第 bit 位取反。
+     */
+    void flipBit(std::size_t bit);
+    /**
+     * @brief 左移 bits 位（就地）。
+     */
+    void shiftLeft(std::size_t bits);
+    /**
+     * @brief 右移 bits 位（就地，向零截断）。
+     */
+    void shiftRight(std::size_t bits);
+
+    // ---- 判断 / 最值 ----
+
+    /**
+     * @brief 是不是偶数（0 算偶数）。
+     */
+    [[nodiscard]] bool isEven() const { return limbs_.empty() || (limbs_[0] & 1u) == 0u; }
+    /**
+     * @brief 是不是奇数。
+     */
+    [[nodiscard]] bool isOdd() const { return !limbs_.empty() && (limbs_[0] & 1u) != 0u; }
+    /**
+     * @brief 是不是负数。
+     */
+    [[nodiscard]] bool isNegative() const { return sign_ < 0; }
+    /**
+     * @brief 是不是正数（0 不算）。
+     */
+    [[nodiscard]] bool isPositive() const { return sign_ > 0; }
+
+    /**
+     * @brief 两者中较小的一个。
+     */
+    [[nodiscard]] static const BigInt &min(const BigInt &left, const BigInt &right)
+    {
+        return (left.compare(right) <= 0) ? left : right;
+    }
+    /**
+     * @brief 两者中较大的一个。
+     */
+    [[nodiscard]] static const BigInt &max(const BigInt &left, const BigInt &right)
+    {
+        return (left.compare(right) >= 0) ? left : right;
+    }
+
+    /**
+     * @brief 非负取模：结果落在 `[0, |modulus|)`（`operator%` 的余数符号跟被除数，
+     * 要"数学上"的余数用这个）。模为零抛 `std::domain_error`。
+     */
+    [[nodiscard]] BigInt modNonNegative(const BigInt &modulus) const;
+
+    /**
+     * @brief 扩展欧几里得：同时给出 `gcd(a, b)` 与裴蜀系数 `x`、`y`。
+     *
+     * 返回的 `g` 非负；`x`、`y` 按带符号的 `a`、`b` 计算（即恒有
+     * `a × x + b × y = g`）。
+     */
+    [[nodiscard]] static ExtendedGcd extendedGcd(const BigInt &a, const BigInt &b);
+
+    /**
+     * @brief 模逆元：`value × inverse ≡ 1 (mod modulus)`。
+     *
+     * 模为零抛 `std::domain_error`；`gcd(|value|, |modulus|) ≠ 1`（不可逆）抛
+     * `std::domain_error`。结果落在 `[0, |modulus|)`。
+     */
+    [[nodiscard]] static BigInt modInverse(const BigInt &value, const BigInt &modulus);
+
+    /**
+     * @brief 概率素性测试（Miller-Rabin）。
+     *
+     * 底数由固定种子的 xorshift 生成，同一输入多轮测试**完全确定**（可复现）。
+     * 缺省 25 轮，误判概率远小于实际使用需要；`rounds = 0` 等价于只做试除。
+     * @param rounds Miller-Rabin 轮数。
+     */
+    [[nodiscard]] bool isProbablePrime(std::size_t rounds = 25) const;
+
+    /**
+     * @brief 严格大于当前值的下一个（概率）素数；当前值已是素数也不会返回它自己。
+     */
+    [[nodiscard]] BigInt nextProbablePrime(std::size_t rounds = 25) const;
+
+    /**
+     * @brief `base`（2..36）进制字符串：数字用 `0-9a-z`，负数带 `-`，0 输出 `"0"`。
+     * @param base 进制；不在 2..36 抛 `std::invalid_argument`。
+     */
+    [[nodiscard]] Memory::String toString(unsigned int base) const;
+
+    /**
+     * @brief 从 `base`（2..36）进制字符串构造（不抛异常版）。
+     *
+     * 可带 `+` / `-` 号与前后空白；字母不分大小写。文本里有不属于该进制的
+     * 字符时返回 0 并把 `*ok` 写成 false。
+     * @param text 文本。
+     * @param base 进制；不在 2..36 抛 `std::invalid_argument`。
+     * @param ok 非空时写入是否解析成功。
+     */
+    static BigInt fromString(const Memory::String &text, unsigned int base, bool *ok = nullptr);
+
 private:
     int sign_ = 0;                         ///< -1 / 0 / 1
     Memory::Vector<std::uint32_t> limbs_;  ///< 小端 32 位 limb（高位不存 0）
@@ -289,26 +452,6 @@ private:
     static BigInt combineBlocks(const BigInt &high, const BigInt &low, std::size_t lowWidth);
 
     /**
-     * @brief 二进制位长度（0 返回 0）。
-     */
-    [[nodiscard]] std::size_t bitLength() const;
-    /**
-     * @brief 取第 bit 位是不是 1。
-     */
-    [[nodiscard]] bool bitAt(std::size_t bit) const;
-    /**
-     * @brief 把第 bit 位置 1。
-     */
-    void setBit(std::size_t bit);
-    /**
-     * @brief 左移 bits 位（就地）。
-     */
-    void shiftLeft(std::size_t bits);
-    /**
-     * @brief 右移 bits 位（就地）。
-     */
-    void shiftRight(std::size_t bits);
-    /**
      * @brief 幅值 = 幅值 × small + add（small < 2^32）。
      */
     void mulSmallAdd(std::uint32_t small, std::uint32_t add);
@@ -324,12 +467,32 @@ private:
 };
 
 /**
+ * @brief 扩展欧几里得的结果：`a × x + b × y = g = gcd(a, b)`。
+ */
+struct ExtendedGcd
+{
+    BigInt gcd;  ///< 最大公约数（非负）。
+    BigInt x;    ///< 满足 `a × x + b × y = gcd(a, b)` 的系数。
+    BigInt y;    ///< 同上。
+};
+
+/**
  * @brief 整数平方根（向下取整）：二分 / 牛顿迭代，只用大整数的加减乘除。
  *
  * 大浮点的 `sqrt` 靠它（先放大到 2×digits 位有效数字再开方）。
  * @param value 非负整数；为负时抛 `std::domain_error`。
  */
 [[nodiscard]] BigInt integerSqrt(const BigInt &value);
+
+/**
+ * @brief 整数 `k` 次方根（向下取整）：二分，只用大整数的加减乘除与幂。
+ *
+ * `k = 2` 等价于 `integerSqrt`。`k = 0` 抛 `std::invalid_argument`；
+ * `value` 为负抛 `std::domain_error`。
+ * @param value 非负整数。
+ * @param k 根次（≥ 1）。
+ */
+[[nodiscard]] BigInt integerRoot(const BigInt &value, std::uint64_t k);
 
 /**
  * @brief 10 的 `exponent` 次幂（大浮点对齐指数时大量使用；幂用 NTT 乘法）。

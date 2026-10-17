@@ -560,6 +560,7 @@ void BigInt::setBit(std::size_t bit)
     const std::size_t index = bit / 32u;
     if (index >= limbs_.size()) limbs_.resize(index + 1u, 0u);
     limbs_[index] |= (1u << (bit % 32u));
+    if (sign_ == 0) sign_ = 1; /* 对 0 置位后应变成 +1，而不是留在"零表示" */
 }
 
 /**
@@ -868,6 +869,32 @@ BigInt integerSqrt(const BigInt &value)
  * @retval 计算得到的大数值；复合赋值运算返回当前对象。
  */
 BigInt pow10(std::uint64_t exponent) { return BigInt(10).pow(exponent); }
+
+/**
+ * @brief 整数 `k` 次方根（向下取整）：二分，只用大整数的加减乘除与幂。
+ * @param value 非负整数。
+ * @param k 根次（≥ 1）。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt integerRoot(const BigInt &value, std::uint64_t k)
+{
+    if (k == 0u) throw std::invalid_argument("bigint: 根次必须为正");
+    if (value.sign() < 0) throw std::domain_error("bigint: 负数没有整数 k 次方根");
+    if (value.isZero() || k == 1u) return value;
+    /* 二分：high = 2^(bitLength / k + 1)，保证 high^k > value */
+    BigInt low(0);
+    BigInt high(1);
+    high.shiftLeft(value.bitLength() / k + 1u);
+    while (high - low > BigInt(1))
+    {
+        const BigInt middle = (low + high) / BigInt(2);
+        if (middle.pow(k) <= value)
+            low = middle;
+        else
+            high = middle;
+    }
+    return low;
+}
 
 /**
  * @brief 取一段小端 limb。
@@ -1434,6 +1461,278 @@ BigInt BigInt::powmod(std::uint64_t exponent, const BigInt &modulus) const
 }
 
 // ---------------------------------------------------------------------------
+//  位运算 / 位操作 / 判断
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief 按位与（两个操作数都非负；负数抛 `std::domain_error`）。
+ * @param left 左操作数。
+ * @param right 右操作数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt operator&(const BigInt &left, const BigInt &right)
+{
+    if (left.sign_ < 0 || right.sign_ < 0) throw std::domain_error("bigint: 位运算只支持非负整数");
+    BigInt out;
+    const std::size_t count = std::min(left.limbs_.size(), right.limbs_.size());
+    out.limbs_.assign(count, 0u);
+    for (std::size_t index = 0u; index < count; ++index)
+    {
+        out.limbs_[index] = left.limbs_[index] & right.limbs_[index];
+    }
+    out.normalize();
+    if (!out.limbs_.empty()) out.sign_ = 1;
+    return out;
+}
+
+/**
+ * @brief 按位或（两个操作数都非负；负数抛 `std::domain_error`）。
+ * @param left 左操作数。
+ * @param right 右操作数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt operator|(const BigInt &left, const BigInt &right)
+{
+    if (left.sign_ < 0 || right.sign_ < 0) throw std::domain_error("bigint: 位运算只支持非负整数");
+    BigInt out;
+    const std::size_t count = std::max(left.limbs_.size(), right.limbs_.size());
+    out.limbs_.assign(count, 0u);
+    for (std::size_t index = 0u; index < count; ++index)
+    {
+        const std::uint32_t a = (index < left.limbs_.size()) ? left.limbs_[index] : 0u;
+        const std::uint32_t b = (index < right.limbs_.size()) ? right.limbs_[index] : 0u;
+        out.limbs_[index] = a | b;
+    }
+    out.normalize();
+    if (!out.limbs_.empty()) out.sign_ = 1;
+    return out;
+}
+
+/**
+ * @brief 按位异或（两个操作数都非负；负数抛 `std::domain_error`）。
+ * @param left 左操作数。
+ * @param right 右操作数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt operator^(const BigInt &left, const BigInt &right)
+{
+    if (left.sign_ < 0 || right.sign_ < 0) throw std::domain_error("bigint: 位运算只支持非负整数");
+    BigInt out;
+    const std::size_t count = std::max(left.limbs_.size(), right.limbs_.size());
+    out.limbs_.assign(count, 0u);
+    for (std::size_t index = 0u; index < count; ++index)
+    {
+        const std::uint32_t a = (index < left.limbs_.size()) ? left.limbs_[index] : 0u;
+        const std::uint32_t b = (index < right.limbs_.size()) ? right.limbs_[index] : 0u;
+        out.limbs_[index] = a ^ b;
+    }
+    out.normalize();
+    if (!out.limbs_.empty()) out.sign_ = 1;
+    return out;
+}
+
+/**
+ * @brief 按位取反：补口语义 `~x = -x - 1`（唯一允许负数结果的位运算）。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt BigInt::operator~() const { return -*this - BigInt(1); }
+
+/**
+ * @brief 把第 bit 位清 0。
+ * @param bit 待写入或查询的二进制位。
+ */
+void BigInt::clearBit(std::size_t bit)
+{
+    const std::size_t index = bit / 32u;
+    if (index >= limbs_.size()) return;
+    limbs_[index] &= ~(1u << (bit % 32u));
+    normalize();
+}
+
+/**
+ * @brief 把第 bit 位取反。
+ * @param bit 待写入或查询的二进制位。
+ */
+void BigInt::flipBit(std::size_t bit)
+{
+    const std::size_t index = bit / 32u;
+    if (index >= limbs_.size())
+    {
+        setBit(bit); /* 超出位宽的翻转就是置 1 */
+        return;
+    }
+    limbs_[index] ^= (1u << (bit % 32u));
+    normalize();
+    if (!limbs_.empty() && sign_ == 0) sign_ = 1;
+}
+
+// ---------------------------------------------------------------------------
+//  数论：非负取模 / 快速幂（大指数）/ 扩展欧几里得 / 模逆元 / 素性
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief 非负取模：结果落在 `[0, |modulus|)`（模为零抛异常）。
+ * @param modulus 模数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt BigInt::modNonNegative(const BigInt &modulus) const
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    BigInt remainder;
+    divmod(modulus, nullptr, &remainder);
+    if (!remainder.isZero() && remainder.sign_ < 0) remainder += modulus.abs();
+    return remainder;
+}
+
+/**
+ * @brief 同余幂（**指数也是大整数**的快速幂）：`base ^ exponent mod modulus`。
+ * @param exponent 指数（大整数，负指数抛 `std::invalid_argument`）。
+ * @param modulus 模数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt BigInt::powmod(const BigInt &exponent, const BigInt &modulus) const
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    if (exponent.sign_ < 0) throw std::invalid_argument("bigint: 负指数没有模幂（请先求模逆元）");
+    const BigInt m = modulus.abs();
+    BigInt result(1);
+    result %= m;
+    BigInt base = modNonNegative(m);
+    BigInt remaining = exponent;
+    while (!remaining.isZero())
+    {
+        if (remaining.isOdd()) result = (result * base) % m;
+        remaining.shiftRight(1u);
+        if (!remaining.isZero()) base = (base * base) % m;
+    }
+    return result;
+}
+
+/**
+ * @brief 扩展欧几里得：同时给出 `gcd(a, b)` 与裴蜀系数 `x`、`y`。
+ * @param a 第一个数。
+ * @param b 第二个数。
+ * @retval `a × x + b × y = gcd(a, b)` 的三元组。
+ */
+ExtendedGcd BigInt::extendedGcd(const BigInt &a, const BigInt &b){
+    /* 在绝对值上跑迭代版扩展欧几里得，最后按原符号把系数翻回去。 */
+    BigInt oldR = a.abs();
+    BigInt r = b.abs();
+    BigInt oldS(1);
+    BigInt s;
+    BigInt oldT;
+    BigInt t(1);
+    while (!r.isZero())
+    {
+        BigInt quotient;
+        BigInt remainder;
+        oldR.divmod(r, &quotient, &remainder);
+        oldR = r;
+        r = remainder;
+        const BigInt nextS = oldS - quotient * s;
+        oldS = s;
+        s = nextS;
+        const BigInt nextT = oldT - quotient * t;
+        oldT = t;
+        t = nextT;
+    }
+    ExtendedGcd out;
+    out.gcd = oldR;
+    out.x = oldS;
+    out.y = oldT;
+    if (a.sign_ < 0) out.x = -out.x;
+    if (b.sign_ < 0) out.y = -out.y;
+    return out;
+}
+
+/**
+ * @brief 模逆元：`value × inverse ≡ 1 (mod modulus)`。
+ * @param value 待求逆的值。
+ * @param modulus 模数。
+ * @retval 落在 `[0, |modulus|)` 的逆元。
+ */
+BigInt BigInt::modInverse(const BigInt &value, const BigInt &modulus)
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    const ExtendedGcd result = extendedGcd(value, modulus);
+    if (result.gcd != BigInt(1))
+    {
+        throw std::domain_error("bigint: 模逆元不存在（两数不互素）");
+    }
+    return result.x.modNonNegative(modulus);
+}
+
+/**
+ * @brief 概率素性测试（Miller-Rabin，固定种子的确定性底数 + 小素数试除）。
+ * @param rounds Miller-Rabin 轮数。
+ * @retval 大概率是素数时为 true，一定是合数时为 false。
+ */
+bool BigInt::isProbablePrime(std::size_t rounds) const
+{
+    static const std::uint32_t kSmallPrimes[] = {2u, 3u, 5u, 7u, 11u, 13u, 17u, 19u, 23u, 29u, 31u, 37u};
+    if (sign_ < 0 || compare(BigInt(2)) < 0) return false;
+    for (const std::uint32_t prime : kSmallPrimes)
+    {
+        const BigInt remainder = *this % BigInt(prime);
+        if (remainder.isZero()) return *this == BigInt(prime);
+    }
+    /* 没被 ≤ 37 的素数整除、且自身小于 41²，此时一定是素数 */
+    if (compare(BigInt(41) * BigInt(41)) < 0) return true;
+
+    /* n − 1 = d × 2^s（d 奇） */
+    BigInt d = *this - BigInt(1);
+    std::size_t s = 0u;
+    while (d.isEven())
+    {
+        d.shiftRight(1u);
+        ++s;
+    }
+    /* xorshift64：固定种子，同一输入每轮底数完全确定（可复现）。 */
+    std::uint64_t state = 88172645463325252ull;
+    const BigInt minusOne = *this - BigInt(1);
+    const BigInt minusThree = *this - BigInt(3);
+    for (std::size_t round = 0u; round < rounds; ++round)
+    {
+        state ^= state << 13u;
+        state ^= state >> 7u;
+        state ^= state << 17u;
+        const BigInt base = BigInt::fromU64(state).modNonNegative(minusThree) + BigInt(2);
+        BigInt x = base.powmod(d, *this);
+        if (x == BigInt(1) || x == minusOne) continue;
+        bool witness = true;
+        for (std::size_t step = 1u; step < s; ++step)
+        {
+            x = (x * x) % *this;
+            if (x == minusOne)
+            {
+                witness = false;
+                break;
+            }
+        }
+        if (witness) return false;
+    }
+    return true;
+}
+
+/**
+ * @brief 严格大于当前值的下一个（概率）素数。
+ * @param rounds Miller-Rabin 轮数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt BigInt::nextProbablePrime(std::size_t rounds) const
+{
+    if (sign_ < 0 || compare(BigInt(2)) < 0) return BigInt(2);
+    BigInt candidate = *this + BigInt(1);
+    if (candidate.isEven()) ++candidate;
+    while (!candidate.isProbablePrime(rounds)) candidate += BigInt(2);
+    return candidate;
+}
+
+// ---------------------------------------------------------------------------
+//  整数 k 次方根
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 //  十进制互转 / 截断
 // ---------------------------------------------------------------------------
 
@@ -1480,6 +1779,85 @@ std::size_t BigInt::decimalDigits() const
 }
 
 /**
+ * @brief `base`（2..36）进制字符串：数字用 `0-9a-z`，负数带 `-`。
+ * @param base 进制；不在 2..36 抛 `std::invalid_argument`。
+ * @retval 生成或读取的结果文本。
+ */
+Memory::String BigInt::toString(unsigned int base) const
+{
+    if (base < 2u || base > 36u) throw std::invalid_argument("bigint: 进制必须在 2..36");
+    if (isZero()) return "0";
+    static const char *kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+    BigInt magnitude = abs();
+    Memory::String reversed;
+    while (!magnitude.isZero())
+    {
+        reversed.push_back(kAlphabet[magnitude.divSmall(base)]);
+    }
+    if (sign_ < 0) reversed.push_back('-');
+    Memory::String text;
+    for (std::size_t index = reversed.size(); index-- > 0u;) text.push_back(reversed[index]);
+    return text;
+}
+
+/**
+ * @brief 从 `base`（2..36）进制字符串构造（不抛异常版）。
+ * @param text 文本。
+ * @param base 进制；不在 2..36 抛 `std::invalid_argument`。
+ * @param ok 非空时写入是否解析成功。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigInt BigInt::fromString(const Memory::String &text, unsigned int base, bool *ok)
+{
+    auto report = [&](bool success) {
+        if (ok != nullptr) *ok = success;
+    };
+    if (base < 2u || base > 36u) throw std::invalid_argument("bigint: 进制必须在 2..36");
+
+    std::size_t index = 0u;
+    while (index < text.size() && (text[index] == ' ' || text[index] == '\t')) ++index;
+    int sign = 1;
+    if (index < text.size() && (text[index] == '+' || text[index] == '-'))
+    {
+        if (text[index] == '-') sign = -1;
+        ++index;
+    }
+    if (index >= text.size())
+    {
+        report(false);
+        return BigInt();
+    }
+    BigInt value;
+    bool any = false;
+    for (; index < text.size(); ++index)
+    {
+        const char ch = text[index];
+        if (ch == ' ' || ch == '\t') break; /* 交给后面的尾部空白检查 */
+        unsigned int digit;
+        if (ch >= '0' && ch <= '9') digit = static_cast<unsigned int>(ch - '0');
+        else if (ch >= 'a' && ch <= 'z') digit = static_cast<unsigned int>(ch - 'a') + 10u;
+        else if (ch >= 'A' && ch <= 'Z') digit = static_cast<unsigned int>(ch - 'A') + 10u;
+        else digit = base; /* 非法字符 */
+        if (digit >= base)
+        {
+            report(false);
+            return BigInt();
+        }
+        value.mulSmallAdd(base, digit);
+        any = true;
+    }
+    while (index < text.size() && (text[index] == ' ' || text[index] == '\t')) ++index;
+    if (!any || index != text.size())
+    {
+        report(false);
+        return BigInt();
+    }
+    if (!value.isZero()) value.sign_ = sign;
+    report(true);
+    return value;
+}
+
+/**
  * @brief 截断成 64 位无符号整数（只取低 64 位，符号位丢弃）。
  * @retval 取原数值低 64 位得到的无符号整数。
  */
@@ -1498,6 +1876,18 @@ std::uint64_t BigInt::toU64() const
  * @retval 取原数值低 64 位得到的有符号整数。
  */
 std::int64_t BigInt::toI64() const { return static_cast<std::int64_t>(toU64()); }
+
+/**
+ * @brief 显式转 64 位有符号整数（按位截断，与 `toI64` 一致）。
+ * @retval 取原数值低 64 位得到的有符号整数。
+ */
+BigInt::operator std::int64_t() const { return toI64(); }
+
+/**
+ * @brief 显式转双精度浮点（可能丢精度；符号跟着走）。
+ * @retval 保存转双精度浮点结果的对象。
+ */
+BigInt::operator double() const { return toDouble(); }
 
 /**
  * @brief 转双精度浮点（可能丢精度；符号跟着走）。

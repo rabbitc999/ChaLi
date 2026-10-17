@@ -679,7 +679,37 @@ simple_ast::NodePtr LowerCall(int id)
         }
         if (baseType && (baseType->kind == MType::BigInt || baseType->kind == MType::BigFloat))
         {
-            if (baseType->kind == MType::BigFloat && methodName == "setPrecision")
+            /* 把方法实参转成 `bint`（整数 / 浮点自动造临时大数，大数原样）。 */
+            const auto bigIntArg = [&](int index) -> simple_ast::NodePtr {
+                const std::shared_ptr<MType> argumentType = ExprType(argIds[index]);
+                if (argumentType && argumentType->kind == MType::BigInt)
+                    return OwnedObjectTemp(argIds[index], argumentType);
+                if (argumentType && argumentType->kind == MType::Double)
+                    return OwnedObjectTempNode(
+                        simple_ast::Node::call("__vm_bint_from_flt", { "__magel_v" },
+                                               { LowerExpr(argIds[index]) }),
+                        T(M_TypeBigInt()));
+                if (argumentType && (argumentType->kind == MType::Int || argumentType->kind == MType::Bool))
+                    return OwnedObjectTempNode(
+                        simple_ast::Node::call(argumentType->isUnsigned ? "__vm_bint_from_uint" : "__vm_bint_from_int",
+                                               { "__magel_v" }, { LowerExpr(argIds[index]) }),
+                        T(M_TypeBigInt()));
+                Fail("大数方法的参数只能是整数 / 大整数：实际是 " +
+                     (argumentType ? Describe(argumentType) : Memory::String("?")));
+                return Bad();
+            };
+            const auto intArg = [&](int index, const char *what) -> simple_ast::NodePtr {
+                const std::shared_ptr<MType> argumentType = ExprType(argIds[index]);
+                if (argumentType == nullptr || argumentType->kind != MType::Int)
+                {
+                    Fail(Memory::String(what) + " 需要一个整数参数");
+                    return Bad();
+                }
+                return LowerExpr(argIds[index]);
+            };
+            const bool isBigFloat = baseType->kind == MType::BigFloat;
+
+            if (isBigFloat && methodName == "setPrecision")
             {
                 if (!CheckMutableReceiver(receiverId)) return Bad();
                 if (argIds.size() != 1u || ExprType(argIds[0])->kind != MType::Int)
@@ -704,12 +734,132 @@ simple_ast::NodePtr LowerCall(int id)
             {
                 if (!argIds.empty())
                 {
-                    Fail("大整数的 `.str()` 不带参数");
+                    Fail("大整数的 `.str()` 不带参数；要别的进制用 `.strRadix(base)`");
                     return Bad();
                 }
                 return simple_ast::Node::call(
-                    baseType->kind == MType::BigFloat ? "__vm_bfloat_str" : "__vm_bint_str", { "__magel_v" },
+                    isBigFloat ? "__vm_bfloat_str" : "__vm_bint_str", { "__magel_v" },
                     { OwnedObjectTemp(receiverId, baseType) });
+            }
+
+            /* ---- 大整数方法 ---- */
+            if (!isBigFloat)
+            {
+                if (methodName == "pow")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.pow 需要一个整数指数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_pow", { "__magel_v", "__magel_e" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigInteger.pow") });
+                }
+                if (methodName == "powmod")
+                {
+                    if (argIds.size() != 2u) return Fail("BigInteger.powmod 需要 (指数, 模) 两个参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_powmod", { "__magel_v", "__magel_e", "__magel_m" },
+                                                  { OwnedObjectTemp(receiverId, baseType), bigIntArg(0), bigIntArg(1) });
+                }
+                if (methodName == "gcd" || methodName == "lcm")
+                {
+                    if (argIds.size() != 1u)
+                        return Fail(Memory::String("BigInteger.") + methodName + " 需要一个参数"), Bad();
+                    return simple_ast::Node::call(methodName == "gcd" ? "__vm_bint_gcd" : "__vm_bint_lcm",
+                                                  { "__magel_l", "__magel_r" },
+                                                  { OwnedObjectTemp(receiverId, baseType), bigIntArg(0) });
+                }
+                if (methodName == "mod")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.mod 需要一个模数参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_mod_nonneg", { "__magel_v", "__magel_m" },
+                                                  { OwnedObjectTemp(receiverId, baseType), bigIntArg(0) });
+                }
+                if (methodName == "modInverse")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.modInverse 需要一个模数参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_mod_inverse", { "__magel_v", "__magel_m" },
+                                                  { OwnedObjectTemp(receiverId, baseType), bigIntArg(0) });
+                }
+                if (methodName == "isProbablePrime")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.isProbablePrime 需要一个轮数参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_is_probable_prime", { "__magel_v", "__magel_rounds" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigInteger.isProbablePrime") });
+                }
+                if (methodName == "nextProbablePrime")
+                {
+                    if (!argIds.empty()) return Fail("BigInteger.nextProbablePrime 不带参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_next_probable_prime", { "__magel_v" },
+                                                  { OwnedObjectTemp(receiverId, baseType) });
+                }
+                if (methodName == "bitLength")
+                {
+                    if (!argIds.empty()) return Fail("BigInteger.bitLength 不带参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_bit_length", { "__magel_v" },
+                                                  { OwnedObjectTemp(receiverId, baseType) });
+                }
+                if (methodName == "bitAnd" || methodName == "bitOr" || methodName == "bitXor")
+                {
+                    if (argIds.size() != 1u)
+                        return Fail(Memory::String("BigInteger.") + methodName + " 需要一个参数"), Bad();
+                    return simple_ast::Node::call(
+                        methodName == "bitAnd" ? "__vm_bint_bit_and" :
+                        methodName == "bitOr" ? "__vm_bint_bit_or" : "__vm_bint_bit_xor",
+                        { "__magel_l", "__magel_r" },
+                        { OwnedObjectTemp(receiverId, baseType), bigIntArg(0) });
+                }
+                if (methodName == "strRadix")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.strRadix 需要一个进制参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_str_radix", { "__magel_v", "__magel_base" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigInteger.strRadix") });
+                }
+                if (methodName == "iroot")
+                {
+                    if (argIds.size() != 1u) return Fail("BigInteger.iroot 需要一个根次参数"), Bad();
+                    return simple_ast::Node::call("__vm_bint_iroot", { "__magel_v", "__magel_k" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigInteger.iroot") });
+                }
+            }
+            else
+            {
+                /* ---- 大浮点方法 ---- */
+                if (methodName == "pow")
+                {
+                    if (argIds.size() != 1u) return Fail("BigDecimal.pow 需要一个整数指数"), Bad();
+                    return simple_ast::Node::call("__vm_bfloat_pow", { "__magel_v", "__magel_e" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigDecimal.pow") });
+                }
+                if (methodName == "abs")
+                {
+                    if (!argIds.empty()) return Fail("BigDecimal.abs 不带参数"), Bad();
+                    return simple_ast::Node::call("__vm_bfloat_abs", { "__magel_v" },
+                                                  { OwnedObjectTemp(receiverId, baseType) });
+                }
+                if (methodName == "isInteger")
+                {
+                    if (!argIds.empty()) return Fail("BigDecimal.isInteger 不带参数"), Bad();
+                    return simple_ast::Node::call("__vm_bfloat_is_integer", { "__magel_v" },
+                                                  { OwnedObjectTemp(receiverId, baseType) });
+                }
+                if (methodName == "floor" || methodName == "ceil" || methodName == "trunc")
+                {
+                    if (!argIds.empty())
+                        return Fail(Memory::String("BigDecimal.") + methodName + " 不带参数"), Bad();
+                    return simple_ast::Node::call(
+                        methodName == "floor" ? "__vm_bfloat_floor" :
+                        methodName == "ceil" ? "__vm_bfloat_ceil" : "__vm_bfloat_trunc",
+                        { "__magel_v" }, { OwnedObjectTemp(receiverId, baseType) });
+                }
+                if (methodName == "sqrt")
+                {
+                    if (argIds.size() != 1u) return Fail("BigDecimal.sqrt 需要一个有效位数参数"), Bad();
+                    return simple_ast::Node::call("__vm_bfloat_sqrt", { "__magel_v", "__magel_digits" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigDecimal.sqrt") });
+                }
+                if (methodName == "root")
+                {
+                    if (argIds.size() != 2u) return Fail("BigDecimal.root 需要 (根次, 有效位数) 两个参数"), Bad();
+                    return simple_ast::Node::call("__vm_bfloat_root", { "__magel_v", "__magel_k", "__magel_digits" },
+                                                  { OwnedObjectTemp(receiverId, baseType), intArg(0, "BigDecimal.root"), intArg(1, "BigDecimal.root") });
+                }
             }
             Fail("大数没有这个方法：" + methodName);
             return Bad();

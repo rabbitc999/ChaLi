@@ -123,6 +123,45 @@ BigFloat::BigFloat(const Memory::String &text)
 }
 
 /**
+ * @brief 从 64 位有符号整数**隐式**构造。
+ * @param value 值。
+ */
+BigFloat::BigFloat(std::int64_t value)
+{
+    *this = fromInt(bigint::BigInt(value));
+}
+
+/**
+ * @brief 从 double **隐式**构造（语义同 `fromDouble`：最短往返写法）。
+ * @param value 值。
+ */
+BigFloat::BigFloat(double value)
+{
+    *this = fromDouble(value);
+}
+
+/**
+ * @brief 显式转 64 位有符号整数（向零截断；大数按位截断）。
+ * @retval 取原数值向零截断后的 64 位有符号整数。
+ */
+BigFloat::operator std::int64_t() const
+{
+    const bigint::BigInt truncated = trunc();
+    if (truncated.sign() < 0) return -static_cast<std::int64_t>(truncated.abs());
+    return static_cast<std::int64_t>(truncated);
+}
+
+/**
+ * @brief 显式转双精度浮点（可能丢精度；按 17 位有效数字往返）。
+ * @retval 保存转换结果的双精度浮点值。
+ */
+BigFloat::operator double() const
+{
+    if (isZero()) return 0.0;
+    return std::strtod(toString(17).c_str(), nullptr);
+}
+
+/**
  * @brief 从十进制文本构造（不抛异常版）。
  * @param text 文本。
  * @param ok 非空时写入是否解析成功。
@@ -603,6 +642,146 @@ BigFloat BigFloat::sqrt(int digits) const
     out.exp10_ = static_cast<int>(exponent / 2);
     out.normalize();
     return out.round(digits);
+}
+
+// ---------------------------------------------------------------------------
+//  整数次幂 / 绝对值 / 取整 / k 次方根
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief 精确整数次幂：`*this ^ exponent`。
+ * @param exponent 指数（无符号；`0` 次幂为 1）。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigFloat BigFloat::pow(std::uint64_t exponent) const
+{
+    if (exponent == 0u) return BigFloat::fromInt(bigint::BigInt(1));
+    /* 指数相乘可能超 int：先在 64 位上检查 */
+    const long long product = static_cast<long long>(exp10_) * static_cast<long long>(exponent);
+    if (product > std::numeric_limits<int>::max() / 2 || product < std::numeric_limits<int>::min() / 2)
+    {
+        throw std::overflow_error("bigfloat: 幂运算的十进制指数溢出");
+    }
+    BigFloat out;
+    out.mant_ = mant_.pow(exponent);
+    out.exp10_ = static_cast<int>(product);
+    out.normalize();
+    return out;
+}
+
+/**
+ * @brief 绝对值。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigFloat BigFloat::abs() const
+{
+    BigFloat out = *this;
+    out.mant_ = out.mant_.abs();
+    return out;
+}
+
+/**
+ * @brief 是不是整数（`5.0`、`1e20` 是；`0.5`、`1e-3` 不是；0 是）。
+ * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
+ */
+bool BigFloat::isInteger() const
+{
+    if (mant_.isZero() || exp10_ >= 0) return true;
+    /* 指数为负：值是整数当且仅当尾数能被 10^(-exp) 整除 */
+    const bigint::BigInt divisor = bigint::pow10(static_cast<std::uint64_t>(-exp10_));
+    bigint::BigInt remainder;
+    mant_.divmod(divisor, nullptr, &remainder);
+    return remainder.isZero();
+}
+
+/**
+ * @brief 向零截断。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+bigint::BigInt BigFloat::trunc() const
+{
+    if (mant_.isZero()) return bigint::BigInt();
+    if (exp10_ >= 0) return mant_ * bigint::pow10(static_cast<std::uint64_t>(exp10_));
+    bigint::BigInt quotient;
+    mant_.divmod(bigint::pow10(static_cast<std::uint64_t>(-exp10_)), &quotient, nullptr);
+    return quotient; /* divmod 的商已带被除数符号（向零截断） */
+}
+
+/**
+ * @brief 向负无穷取整。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+bigint::BigInt BigFloat::floor() const
+{
+    if (mant_.isZero() || exp10_ >= 0) return trunc();
+    bigint::BigInt quotient;
+    bigint::BigInt remainder;
+    mant_.divmod(bigint::pow10(static_cast<std::uint64_t>(-exp10_)), &quotient, &remainder);
+    if (mant_.sign() < 0 && !remainder.isZero()) --quotient;
+    return quotient;
+}
+
+/**
+ * @brief 向正无穷取整。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+bigint::BigInt BigFloat::ceil() const
+{
+    if (mant_.isZero() || exp10_ >= 0) return trunc();
+    bigint::BigInt quotient;
+    bigint::BigInt remainder;
+    mant_.divmod(bigint::pow10(static_cast<std::uint64_t>(-exp10_)), &quotient, &remainder);
+    if (mant_.sign() > 0 && !remainder.isZero()) ++quotient;
+    return quotient;
+}
+
+/**
+ * @brief `k` 次方根，结果保留 `digits` 位有效数字（牛顿迭代）。
+ * @param k 根次（≥ 1）。
+ * @param digits 有效位数。
+ * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ */
+BigFloat BigFloat::root(std::uint64_t k, int digits) const
+{
+    if (k == 0u) throw std::invalid_argument("bigfloat: 根次必须为正");
+    if (digits <= 0) throw std::invalid_argument("bigfloat: 有效位数必须是正数");
+    if (mant_.sign() < 0) throw std::domain_error("bigfloat: 负数不能开 k 次方");
+    if (isZero()) return BigFloat();
+    if (k == 1u) return round(digits);
+    if (k == 2u) return sqrt(digits);
+
+    /* 初值：尾数取整数 k 次方根、指数按 e / k 缩放 —— 量级差不超过一个 10 的
+     * 因子，牛顿迭代足够把它拉回来。 */
+    BigFloat guess;
+    guess.mant_ = bigint::integerRoot(mant_.abs(), k);
+    if (guess.mant_.isZero()) guess.mant_ = bigint::BigInt(1);
+    guess.exp10_ = static_cast<int>(static_cast<long long>(exp10_) / static_cast<long long>(k));
+    guess.normalize();
+
+    const BigFloat target = abs();
+    const BigFloat kBig = BigFloat::fromInt(bigint::BigInt::fromU64(k));
+    const BigFloat km1 = BigFloat::fromInt(bigint::BigInt::fromU64(k - 1u));
+    const int targetDigits = 2 * digits + 4;
+    /* 牛顿迭代 x ← ((k−1)·x + v / x^(k−1)) / k。先用低精度迭代到不动点
+     * （初值与真根可能差一个数量级，"每轮翻倍"要等误差进入二次收敛区才成立），
+     * 之后再按精度逐级翻倍，每级一次迭代即可。 */
+    BigFloat x = guess;
+    BigFloat previous;
+    for (int warmup = 0; warmup < 8; ++warmup)
+    {
+        previous = x;
+        const BigFloat quotient = target.divide(x.pow(k - 1u), 10);
+        x = (km1 * x + quotient).divide(kBig, 10);
+        if (x == previous) break;
+    }
+    int precision = 8; /* 预热后至少有 8 位正确数字 */
+    while (precision < targetDigits)
+    {
+        precision = std::min(precision * 2, targetDigits);
+        const BigFloat quotient = target.divide(x.pow(k - 1u), precision + 2);
+        x = (km1 * x + quotient).divide(kBig, precision + 2);
+    }
+    return x.round(digits);
 }
 
 }  // namespace bigfloat

@@ -273,6 +273,258 @@ void testPowerAndGcd()
     CHECK(BigInt(123).powmod(0, BigInt(97)).toString() == Memory::String("1"));
 }
 
+/**
+ * @brief 位运算 / 位操作 / 判断 / 最值。
+ */
+void testBits()
+{
+    const BigInt twelve(12);
+    CHECK(twelve.bitLength() == 4u);
+    CHECK(!twelve.bitAt(0u));
+    CHECK(twelve.bitAt(2u));
+    CHECK(!twelve.bitAt(4u));
+    CHECK(BigInt(0).bitLength() == 0u);
+    CHECK(BigInt(-12).bitLength() == 4u); /* 幅值的位长 */
+
+    BigInt value(12);
+    value.setBit(0u);
+    CHECK(value == BigInt(13));
+    value.clearBit(3u);
+    CHECK(value == BigInt(5));
+    value.flipBit(0u);
+    CHECK(value == BigInt(4));
+    value.flipBit(10u);
+    CHECK(value == BigInt(1028));
+    BigInt zero;
+    zero.setBit(5u);
+    CHECK(zero == BigInt(32)); /* 对 0 置位后应成为 +32，而非留在"零表示" */
+    BigInt shifted(1);
+    shifted.shiftLeft(10u);
+    CHECK(shifted == BigInt(1024));
+    shifted.shiftRight(11u);
+    CHECK(shifted.isZero());
+    shifted.setBit(3u);
+    shifted.shiftRight(100u);
+    CHECK(shifted.isZero());
+
+    CHECK((BigInt(12) & BigInt(10)) == BigInt(8));
+    CHECK((BigInt(12) | BigInt(10)) == BigInt(14));
+    CHECK((BigInt(12) ^ BigInt(10)) == BigInt(6));
+    const BigInt bigA = BigInt(2).pow(100) + BigInt(123);
+    const BigInt bigB = BigInt(2).pow(100) + BigInt(456);
+    CHECK((bigA & bigB) == BigInt(2).pow(100) + BigInt(123 & 456));
+    CHECK((bigA | bigB) == bigA + bigB - (bigA & bigB)); /* a | b = a + b − (a & b) */
+    CHECK((bigA ^ bigB) == bigA + bigB - BigInt(2) * (bigA & bigB));
+
+    bool threw = false;
+    try
+    {
+        (void)(BigInt(-1) & BigInt(1));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)(BigInt(1) | BigInt(-1));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)(BigInt(-1) ^ BigInt(-1));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    CHECK((~BigInt(5)) == BigInt(-6));
+    CHECK((~BigInt(0)) == BigInt(-1));
+    CHECK((~BigInt(-3)) == BigInt(2));
+
+    CHECK(BigInt(4).isEven());
+    CHECK(!BigInt(4).isOdd());
+    CHECK(BigInt(-3).isOdd());
+    CHECK(!BigInt(-3).isEven());
+    CHECK(BigInt(0).isEven());
+    CHECK(!BigInt(0).isOdd());
+    CHECK(BigInt(-7).isNegative());
+    CHECK(!BigInt(-7).isPositive());
+    CHECK(BigInt(7).isPositive());
+    CHECK(!BigInt(7).isNegative());
+    CHECK(!BigInt(0).isPositive());
+    CHECK(!BigInt(0).isNegative());
+    CHECK(BigInt::min(BigInt(-5), BigInt(3)) == BigInt(-5));
+    CHECK(BigInt::max(BigInt(-5), BigInt(3)) == BigInt(3));
+    CHECK(BigInt::min(BigInt(9), BigInt(9)) == BigInt(9));
+}
+
+/**
+ * @brief 数论：非负取模 / 大指数快速幂 / 扩展欧几里得 / 模逆元。
+ */
+void testNumberTheory()
+{
+    CHECK(BigInt(-7).modNonNegative(BigInt(3)) == BigInt(2));
+    CHECK(BigInt(7).modNonNegative(BigInt(-3)) == BigInt(1)); /* 模取绝对值 */
+    CHECK(BigInt(0).modNonNegative(BigInt(5)).isZero());
+    bool threw = false;
+    try
+    {
+        (void)BigInt(1).modNonNegative(BigInt(0));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+
+    const bigint::ExtendedGcd eg = BigInt::extendedGcd(BigInt(240), BigInt(46));
+    CHECK(eg.gcd == BigInt(2));
+    CHECK(eg.x == BigInt(-9));
+    CHECK(eg.y == BigInt(47));
+    CHECK(BigInt(240) * eg.x + BigInt(46) * eg.y == eg.gcd);
+    const bigint::ExtendedGcd eg2 = BigInt::extendedGcd(BigInt(-240), BigInt(46));
+    CHECK(eg2.gcd == BigInt(2));
+    CHECK(BigInt(-240) * eg2.x + BigInt(46) * eg2.y == eg2.gcd);
+
+    CHECK(BigInt::modInverse(BigInt(3), BigInt(11)) == BigInt(4));
+    CHECK((BigInt(3) * BigInt::modInverse(BigInt(3), BigInt(11))).modNonNegative(BigInt(11)) == BigInt(1));
+    CHECK(BigInt::modInverse(BigInt(-3), BigInt(11)) == BigInt(7)); /* −3 ≡ 8，8 × 7 ≡ 1 (mod 11) */
+    threw = false;
+    try
+    {
+        (void)BigInt::modInverse(BigInt(3), BigInt(12));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)BigInt::modInverse(BigInt(1), BigInt(0));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+
+    /* 大指数快速幂：与 64 位指数版一致、指数可加性、费马小定理。 */
+    const BigInt modulus("1000000007");
+    CHECK(BigInt(7).powmod(BigInt(300), modulus) == BigInt(7).powmod(300u, modulus));
+    const BigInt e1 = BigInt(2).pow(100) + BigInt(5);
+    const BigInt e2 = BigInt(3).pow(20);
+    const BigInt lhs = BigInt(3).powmod(e1 + e2, modulus);
+    const BigInt rhs = (BigInt(3).powmod(e1, modulus) * BigInt(3).powmod(e2, modulus)).modNonNegative(modulus);
+    CHECK(lhs == rhs);
+    CHECK(BigInt(3).powmod(modulus - BigInt(1), modulus) == BigInt(1));
+    threw = false;
+    try
+    {
+        (void)BigInt(2).powmod(BigInt(-1), modulus);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)BigInt(2).powmod(BigInt(3), BigInt(0));
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+}
+
+/**
+ * @brief 概率素性测试与下一个素数。
+ */
+void testPrimes()
+{
+    CHECK(!BigInt(-7).isProbablePrime());
+    CHECK(!BigInt(0).isProbablePrime());
+    CHECK(!BigInt(1).isProbablePrime());
+    CHECK(BigInt(2).isProbablePrime());
+    CHECK(BigInt(3).isProbablePrime());
+    CHECK(!BigInt(4).isProbablePrime());
+    CHECK(!BigInt(561).isProbablePrime());
+    CHECK(!BigInt(41041).isProbablePrime()); /* Carmichael 数：7 × 11 × 13 × 41 */
+    CHECK(BigInt(2147483647ll).isProbablePrime());             /* 2^31 − 1 */
+    CHECK(BigInt("2305843009213693951").isProbablePrime());    /* 2^61 − 1 */
+    CHECK(!BigInt("147573952589676412927").isProbablePrime()); /* 2^67 − 1（Mersenne 合数） */
+    CHECK(BigInt(1).nextProbablePrime() == BigInt(2));
+    CHECK(BigInt(10).nextProbablePrime() == BigInt(11));
+    CHECK(BigInt(2147483647ll).nextProbablePrime() == BigInt("2147483659"));
+    CHECK(BigInt(2147483647ll).nextProbablePrime() > BigInt(2147483647ll));
+}
+
+/**
+ * @brief 2..36 进制互转与 int64 隐式 / 显式转换。
+ */
+void testBaseConvert()
+{
+    CHECK(BigInt(255).toString(2) == Memory::String("11111111"));
+    CHECK(BigInt(255).toString(16) == Memory::String("ff"));
+    CHECK(BigInt(255).toString(36) == Memory::String("73"));
+    CHECK(BigInt(-255).toString(16) == Memory::String("-ff"));
+    CHECK(BigInt(0).toString(8) == Memory::String("0"));
+    bool threw = false;
+    try
+    {
+        (void)BigInt(1).toString(1);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)BigInt(1).toString(37);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+
+    CHECK(BigInt::fromString("ff", 16) == BigInt(255));
+    CHECK(BigInt::fromString("-FF", 16) == BigInt(-255));
+    CHECK(BigInt::fromString("zz", 36) == BigInt(1295));
+    CHECK(BigInt::fromString("1010", 2) == BigInt(10));
+    bool ok = true;
+    CHECK(BigInt::fromString("2", 2, &ok).isZero());
+    CHECK(!ok);
+    CHECK(BigInt::fromString("12g", 16, &ok).isZero());
+    CHECK(!ok);
+    CHECK(BigInt::fromString("", 10, &ok).isZero());
+    CHECK(!ok);
+    CHECK(BigInt::fromString("  7f  ", 16, &ok) == BigInt(127));
+    CHECK(ok);
+    threw = false;
+    try
+    {
+        (void)BigInt::fromString("1", 1);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+
+    const BigInt big = BigInt(2).pow(300) + BigInt(987654321);
+    for (unsigned int base = 2u; base <= 36u; ++base)
+    {
+        CHECK(BigInt::fromString(big.toString(base), base) == big);
+    }
+
+    /* int64 → BigInt 隐式；BigInt → int64 / double 显式。 */
+    CHECK(BigInt(123) == 123);
+    CHECK(-5 < BigInt(0));
+    BigInt fromInt64 = 9876543210ll;
+    CHECK(fromInt64.toString() == Memory::String("9876543210"));
+    CHECK(static_cast<std::int64_t>(BigInt(12345)) == 12345);
+    CHECK(static_cast<double>(BigInt(-42)) == -42.0);
+}
+
+/**
+ * @brief 整数 k 次方根。
+ */
+void testIntegerRoot()
+{
+    CHECK(bigint::integerRoot(BigInt(1000), 3) == BigInt(10));
+    CHECK(bigint::integerRoot(BigInt(999), 3) == BigInt(9));
+    CHECK(bigint::integerRoot(BigInt(16), 2) == BigInt(4));
+    CHECK(bigint::integerRoot(BigInt(1), 5) == BigInt(1));
+    CHECK(bigint::integerRoot(BigInt(0), 7).isZero());
+    CHECK(bigint::integerRoot(BigInt(10).pow(30), 3) == BigInt(10).pow(10));
+    CHECK(bigint::integerRoot(BigInt(2).pow(200), 4) == BigInt(2).pow(50));
+    CHECK(bigint::integerRoot(BigInt(2).pow(1000), 10) == BigInt(2).pow(100));
+    bool threw = false;
+    try
+    {
+        (void)bigint::integerRoot(BigInt(-8), 3);
+    } catch (const std::domain_error &) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try
+    {
+        (void)bigint::integerRoot(BigInt(8), 0);
+    } catch (const std::invalid_argument &) { threw = true; }
+    CHECK(threw);
+}
+
 }  // namespace
 
 /**
@@ -287,6 +539,11 @@ int main()
     testDivision();
     testNtt();
     testPowerAndGcd();
+    testBits();
+    testNumberTheory();
+    testPrimes();
+    testBaseConvert();
+    testIntegerRoot();
     if (failures == 0)
     {
         std::cout << "bigint-tests：全部通过（" << checks << " 项断言）\n";

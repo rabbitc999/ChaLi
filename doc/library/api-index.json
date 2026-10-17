@@ -12239,7 +12239,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1048,
+    "line": 1198,
     "page": "std-lang.md",
     "anchor": "api-69"
   },
@@ -12280,7 +12280,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1048,
+    "line": 1198,
     "page": "std-lang.md",
     "anchor": "api-70"
   },
@@ -12318,7 +12318,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1052,
+    "line": 1202,
     "page": "std-lang.md",
     "anchor": "api-71"
   },
@@ -12350,7 +12350,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1098,
+    "line": 1248,
     "page": "std-lang.md",
     "anchor": "api-72"
   },
@@ -12375,7 +12375,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1059,
+    "line": 1209,
     "page": "std-lang.md",
     "anchor": "api-73"
   },
@@ -12400,7 +12400,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1108,
+    "line": 1258,
     "page": "std-lang.md",
     "anchor": "api-74"
   },
@@ -12425,7 +12425,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-75"
   },
@@ -12450,7 +12450,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-76"
   },
@@ -12475,7 +12475,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-77"
   },
@@ -12500,7 +12500,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-78"
   },
@@ -12525,7 +12525,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-79"
   },
@@ -12550,7 +12550,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-80"
   },
@@ -12575,7 +12575,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-81"
   },
@@ -12600,7 +12600,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1113,
+    "line": 1263,
     "page": "std-lang.md",
     "anchor": "api-82"
   },
@@ -12632,7 +12632,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1132,
+    "line": 1282,
     "page": "std-lang.md",
     "anchor": "api-83"
   },
@@ -12806,7 +12806,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1149,
+    "line": 1299,
     "page": "std-lang.md",
     "anchor": "api-88"
   },
@@ -12850,7 +12850,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1149,
+    "line": 1299,
     "page": "std-lang.md",
     "anchor": "api-89"
   },
@@ -13723,7 +13723,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 703,
+    "line": 733,
     "page": "std-lang.md",
     "anchor": "api-118"
   },
@@ -13748,9 +13748,449 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 693,
+    "line": 723,
     "page": "std-lang.md",
     "anchor": "api-119"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::pow",
+    "owner": "BigInteger",
+    "signature": "BigInteger pow(int64 exponent)",
+    "documentation": "计算当前值的 exponent 次非负整数次幂（快速幂）；exponent 为负时报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 非负整数次幂（快速幂）。 */",
+    "parameters": [
+      {
+        "name": "exponent",
+        "label": "int64 exponent",
+        "documentation": "指数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "计算当前值的 exponent 次非负整数次幂（快速幂）；exponent 为负时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.pow(exponent);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 748,
+    "page": "std-lang.md",
+    "anchor": "api-120"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::powmod",
+    "owner": "BigInteger",
+    "signature": "BigInteger powmod(BigInteger exponent, BigInteger modulus)",
+    "documentation": "通过快速幂计算 this^exponent mod modulus；指数可以为大整数，modulus 为零或 exponent 为负时报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 模幂：`this^exponent mod modulus`（指数可以是大整数）。 */",
+    "parameters": [
+      {
+        "name": "exponent",
+        "label": "BigInteger exponent",
+        "documentation": "指数",
+        "default": ""
+      },
+      {
+        "name": "modulus",
+        "label": "BigInteger modulus",
+        "documentation": "模数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "通过快速幂计算 this^exponent mod modulus；指数可以为大整数，modulus 为零或 exponent 为负时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.powmod(exponent, modulus);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 754,
+    "page": "std-lang.md",
+    "anchor": "api-121"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::gcd",
+    "owner": "BigInteger",
+    "signature": "BigInteger gcd(BigInteger other)",
+    "documentation": "返回两数绝对值的最大公约数。\n\n**返回值**：BigInteger。",
+    "comment": "/** 最大公约数 / 最小公倍数（取绝对值）。 */",
+    "parameters": [
+      {
+        "name": "other",
+        "label": "BigInteger other",
+        "documentation": "另一操作数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "返回两数绝对值的最大公约数。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.gcd(other);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 760,
+    "page": "std-lang.md",
+    "anchor": "api-122"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::lcm",
+    "owner": "BigInteger",
+    "signature": "BigInteger lcm(BigInteger other)",
+    "documentation": "返回两数绝对值的最小公倍数；任一操作数为零给零。\n\n**返回值**：BigInteger。",
+    "comment": "",
+    "parameters": [
+      {
+        "name": "other",
+        "label": "BigInteger other",
+        "documentation": "另一操作数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "返回两数绝对值的最小公倍数；任一操作数为零给零。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.lcm(other);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 760,
+    "page": "std-lang.md",
+    "anchor": "api-123"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::mod",
+    "owner": "BigInteger",
+    "signature": "BigInteger mod(BigInteger modulus)",
+    "documentation": "非负取模：结果落在 [0, |modulus|)；modulus 为零时报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 非负取模：结果落在 [0, |modulus|)。 */",
+    "parameters": [
+      {
+        "name": "modulus",
+        "label": "BigInteger modulus",
+        "documentation": "模数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "非负取模：结果落在 [0, |modulus|)；modulus 为零时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.mod(modulus);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 768,
+    "page": "std-lang.md",
+    "anchor": "api-124"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::modInverse",
+    "owner": "BigInteger",
+    "signature": "BigInteger modInverse(BigInteger modulus)",
+    "documentation": "计算模乘逆元，结果落在 [0, |modulus|)；模数绝对值不大于 1 或两数不互素时报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 模逆元；两数不互素时运行期报错。 */",
+    "parameters": [
+      {
+        "name": "modulus",
+        "label": "BigInteger modulus",
+        "documentation": "模数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "计算模乘逆元，结果落在 [0, |modulus|)；模数绝对值不大于 1 或两数不互素时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.modInverse(modulus);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 774,
+    "page": "std-lang.md",
+    "anchor": "api-125"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::isProbablePrime",
+    "owner": "BigInteger",
+    "signature": "bool isProbablePrime(int64 rounds)",
+    "documentation": "Miller-Rabin 概率素性测试，固定随机种子可复现；rounds 为测试轮数（非负）。\n\n**返回值**：bool。",
+    "comment": "/** Miller-Rabin 概率素性测试（固定种子，可复现）。 */",
+    "parameters": [
+      {
+        "name": "rounds",
+        "label": "int64 rounds",
+        "documentation": "Miller-Rabin 素性测试轮数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "bool",
+      "documentation": "Miller-Rabin 概率素性测试，固定随机种子可复现；rounds 为测试轮数（非负）。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.isProbablePrime(rounds);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 780,
+    "page": "std-lang.md",
+    "anchor": "api-126"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::nextProbablePrime",
+    "owner": "BigInteger",
+    "signature": "BigInteger nextProbablePrime()",
+    "documentation": "返回严格大于当前值的下一个概率素数（25 轮测试）。\n\n**返回值**：BigInteger。",
+    "comment": "/** 严格大于当前值的下一个（概率）素数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "返回严格大于当前值的下一个概率素数（25 轮测试）。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.nextProbablePrime();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 786,
+    "page": "std-lang.md",
+    "anchor": "api-127"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::bitLength",
+    "owner": "BigInteger",
+    "signature": "int64 bitLength()",
+    "documentation": "返回当前值（绝对值）的二进制位长。\n\n**返回值**：int64。",
+    "comment": "/** 二进制位长。 */",
+    "parameters": [],
+    "returns": {
+      "type": "int64",
+      "documentation": "返回当前值（绝对值）的二进制位长。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.bitLength();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 792,
+    "page": "std-lang.md",
+    "anchor": "api-128"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::bitAnd",
+    "owner": "BigInteger",
+    "signature": "BigInteger bitAnd(BigInteger other)",
+    "documentation": "按位与；仅支持非负操作数，负数报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 按位与 / 或 / 异或（仅非负数；负数运行期报错）。 */",
+    "parameters": [
+      {
+        "name": "other",
+        "label": "BigInteger other",
+        "documentation": "另一操作数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "按位与；仅支持非负操作数，负数报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.bitAnd(other);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 798,
+    "page": "std-lang.md",
+    "anchor": "api-129"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::bitOr",
+    "owner": "BigInteger",
+    "signature": "BigInteger bitOr(BigInteger other)",
+    "documentation": "按位或；仅支持非负操作数，负数报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "",
+    "parameters": [
+      {
+        "name": "other",
+        "label": "BigInteger other",
+        "documentation": "另一操作数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "按位或；仅支持非负操作数，负数报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.bitOr(other);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 798,
+    "page": "std-lang.md",
+    "anchor": "api-130"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::bitXor",
+    "owner": "BigInteger",
+    "signature": "BigInteger bitXor(BigInteger other)",
+    "documentation": "按位异或；仅支持非负操作数，负数报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "",
+    "parameters": [
+      {
+        "name": "other",
+        "label": "BigInteger other",
+        "documentation": "另一操作数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "按位异或；仅支持非负操作数，负数报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.bitXor(other);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 798,
+    "page": "std-lang.md",
+    "anchor": "api-131"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::strRadix",
+    "owner": "BigInteger",
+    "signature": "String strRadix(int64 base)",
+    "documentation": "生成 base（2..36）进制文本，数字用 0-9a-z，负数带前导 -；越界进制报运行错误。\n\n**返回值**：String。",
+    "comment": "/** 2..36 进制字符串（数字用 0-9a-z，负数带 -）。 */",
+    "parameters": [
+      {
+        "name": "base",
+        "label": "int64 base",
+        "documentation": "幂底数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "String",
+      "documentation": "生成 base（2..36）进制文本，数字用 0-9a-z，负数带前导 -；越界进制报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.strRadix(base);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 808,
+    "page": "std-lang.md",
+    "anchor": "api-132"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigInteger::iroot",
+    "owner": "BigInteger",
+    "signature": "BigInteger iroot(int64 k)",
+    "documentation": "整数 k 次方根，向下取整；k 小于 1 报运行错误。\n\n**返回值**：BigInteger。",
+    "comment": "/** 整数 k 次方根（向下取整）。 */",
+    "parameters": [
+      {
+        "name": "k",
+        "label": "int64 k",
+        "documentation": "方根次数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "整数 k 次方根，向下取整；k 小于 1 报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.iroot(k);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 814,
+    "page": "std-lang.md",
+    "anchor": "api-133"
   },
   {
     "module": "std::lang",
@@ -13773,9 +14213,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 703,
+    "line": 733,
     "page": "std-lang.md",
-    "anchor": "api-120"
+    "anchor": "api-134"
   },
   {
     "module": "std::lang",
@@ -13798,9 +14238,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 693,
+    "line": 723,
     "page": "std-lang.md",
-    "anchor": "api-121"
+    "anchor": "api-135"
   },
   {
     "module": "std::lang",
@@ -13830,9 +14270,236 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 682,
+    "line": 712,
     "page": "std-lang.md",
-    "anchor": "api-122"
+    "anchor": "api-136"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::pow",
+    "owner": "BigDecimal",
+    "signature": "BigDecimal pow(int64 exponent)",
+    "documentation": "计算当前值的 exponent 次非负整数次幂，保持当前精度；exponent 为负时报运行错误。\n\n**返回值**：BigDecimal。",
+    "comment": "/** 精确非负整数次幂。 */",
+    "parameters": [
+      {
+        "name": "exponent",
+        "label": "int64 exponent",
+        "documentation": "指数",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigDecimal",
+      "documentation": "计算当前值的 exponent 次非负整数次幂，保持当前精度；exponent 为负时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.pow(exponent);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 748,
+    "page": "std-lang.md",
+    "anchor": "api-137"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::abs",
+    "owner": "BigDecimal",
+    "signature": "BigDecimal abs()",
+    "documentation": "返回绝对值。\n\n**返回值**：BigDecimal。",
+    "comment": "/** 绝对值。 */",
+    "parameters": [],
+    "returns": {
+      "type": "BigDecimal",
+      "documentation": "返回绝对值。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.abs();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 830,
+    "page": "std-lang.md",
+    "anchor": "api-138"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::isInteger",
+    "owner": "BigDecimal",
+    "signature": "bool isInteger()",
+    "documentation": "判断当前值是否为整数。\n\n**返回值**：bool。",
+    "comment": "/** 是不是整数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "bool",
+      "documentation": "判断当前值是否为整数。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.isInteger();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 836,
+    "page": "std-lang.md",
+    "anchor": "api-139"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::floor",
+    "owner": "BigDecimal",
+    "signature": "BigInteger floor()",
+    "documentation": "向负无穷取整，返回大整数。\n\n**返回值**：BigInteger。",
+    "comment": "/** 向负无穷 / 向正无穷 / 向零取整，返回大整数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "向负无穷取整，返回大整数。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.floor();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 842,
+    "page": "std-lang.md",
+    "anchor": "api-140"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::ceil",
+    "owner": "BigDecimal",
+    "signature": "BigInteger ceil()",
+    "documentation": "向正无穷取整，返回大整数。\n\n**返回值**：BigInteger。",
+    "comment": "",
+    "parameters": [],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "向正无穷取整，返回大整数。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.ceil();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 842,
+    "page": "std-lang.md",
+    "anchor": "api-141"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::trunc",
+    "owner": "BigDecimal",
+    "signature": "BigInteger trunc()",
+    "documentation": "向零截断小数部分，返回大整数。\n\n**返回值**：BigInteger。",
+    "comment": "",
+    "parameters": [],
+    "returns": {
+      "type": "BigInteger",
+      "documentation": "向零截断小数部分，返回大整数。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.trunc();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 842,
+    "page": "std-lang.md",
+    "anchor": "api-142"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::sqrt",
+    "owner": "BigDecimal",
+    "signature": "BigDecimal sqrt(int64 digits)",
+    "documentation": "计算平方根，保留 digits 位有效数字。\n\n**返回值**：BigDecimal。",
+    "comment": "/** 平方根，保留 digits 位有效数字。 */",
+    "parameters": [
+      {
+        "name": "digits",
+        "label": "int64 digits",
+        "documentation": "十进制有效数字精度",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigDecimal",
+      "documentation": "计算平方根，保留 digits 位有效数字。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.sqrt(digits);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 851,
+    "page": "std-lang.md",
+    "anchor": "api-143"
+  },
+  {
+    "module": "std::lang",
+    "name": "BigDecimal::root",
+    "owner": "BigDecimal",
+    "signature": "BigDecimal root(int64 k, int64 digits)",
+    "documentation": "计算 k 次方根，保留 digits 位有效数字；k 小于 1 或 digits 越界时报运行错误。\n\n**返回值**：BigDecimal。",
+    "comment": "/** k 次方根，保留 digits 位有效数字。 */",
+    "parameters": [
+      {
+        "name": "k",
+        "label": "int64 k",
+        "documentation": "方根次数",
+        "default": ""
+      },
+      {
+        "name": "digits",
+        "label": "int64 digits",
+        "documentation": "十进制有效数字精度",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "BigDecimal",
+      "documentation": "计算 k 次方根，保留 digits 位有效数字；k 小于 1 或 digits 越界时报运行错误。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.root(k, digits);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/epilogue/boxing.cpp",
+    "line": 857,
+    "page": "std-lang.md",
+    "anchor": "api-144"
   },
   {
     "module": "std::lang",
@@ -13855,9 +14522,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 693,
+    "line": 723,
     "page": "std-lang.md",
-    "anchor": "api-123"
+    "anchor": "api-145"
   },
   {
     "module": "std::lang",
@@ -13880,9 +14547,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 733,
+    "line": 883,
     "page": "std-lang.md",
-    "anchor": "api-124"
+    "anchor": "api-146"
   },
   {
     "module": "std::lang",
@@ -13905,9 +14572,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 740,
+    "line": 890,
     "page": "std-lang.md",
-    "anchor": "api-125"
+    "anchor": "api-147"
   },
   {
     "module": "std::lang",
@@ -13937,9 +14604,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 756,
+    "line": 906,
     "page": "std-lang.md",
-    "anchor": "api-126"
+    "anchor": "api-148"
   },
   {
     "module": "std::lang",
@@ -13964,7 +14631,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-127"
+    "anchor": "api-149"
   },
   {
     "module": "std::lang",
@@ -13989,7 +14656,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-128"
+    "anchor": "api-150"
   },
   {
     "module": "std::lang",
@@ -14014,7 +14681,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 130,
     "page": "std-lang.md",
-    "anchor": "api-129"
+    "anchor": "api-151"
   },
   {
     "module": "std::lang",
@@ -14052,7 +14719,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-130"
+    "anchor": "api-152"
   },
   {
     "module": "std::lang",
@@ -14090,7 +14757,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-131"
+    "anchor": "api-153"
   },
   {
     "module": "std::lang",
@@ -14128,7 +14795,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-132"
+    "anchor": "api-154"
   },
   {
     "module": "std::lang",
@@ -14166,7 +14833,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-133"
+    "anchor": "api-155"
   },
   {
     "module": "std::lang",
@@ -14204,7 +14871,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-134"
+    "anchor": "api-156"
   },
   {
     "module": "std::lang",
@@ -14242,7 +14909,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-135"
+    "anchor": "api-157"
   },
   {
     "module": "std::lang",
@@ -14278,9 +14945,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 913,
+    "line": 1063,
     "page": "std-lang.md",
-    "anchor": "api-136"
+    "anchor": "api-158"
   },
   {
     "module": "std::lang",
@@ -14318,7 +14985,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-137"
+    "anchor": "api-159"
   },
   {
     "module": "std::lang",
@@ -14356,7 +15023,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-138"
+    "anchor": "api-160"
   },
   {
     "module": "std::lang",
@@ -14394,7 +15061,7 @@
     "source": "source/epilogue/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "api-139"
+    "anchor": "api-161"
   },
   {
     "module": "std::lang",
@@ -14430,9 +15097,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1,
+    "line": 768,
     "page": "std-lang.md",
-    "anchor": "api-140"
+    "anchor": "api-162"
   },
   {
     "module": "std::lang",
@@ -14468,9 +15135,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/epilogue/boxing.cpp",
-    "line": 1495,
+    "line": 1645,
     "page": "std-lang.md",
-    "anchor": "api-141"
+    "anchor": "api-163"
   },
   {
     "module": "std::lang",
@@ -14502,7 +15169,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-142"
+    "anchor": "api-164"
   },
   {
     "module": "std::lang",
@@ -14534,7 +15201,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-143"
+    "anchor": "api-165"
   },
   {
     "module": "std::lang",
@@ -14566,7 +15233,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-144"
+    "anchor": "api-166"
   },
   {
     "module": "std::lang",
@@ -14598,7 +15265,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-145"
+    "anchor": "api-167"
   },
   {
     "module": "std::lang",
@@ -14630,7 +15297,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-146"
+    "anchor": "api-168"
   },
   {
     "module": "std::lang",
@@ -14662,7 +15329,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-147"
+    "anchor": "api-169"
   },
   {
     "module": "std::lang",
@@ -14694,7 +15361,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-148"
+    "anchor": "api-170"
   },
   {
     "module": "std::lang",
@@ -14726,7 +15393,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-149"
+    "anchor": "api-171"
   },
   {
     "module": "std::lang",
@@ -14758,7 +15425,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-150"
+    "anchor": "api-172"
   },
   {
     "module": "std::lang",
@@ -14790,7 +15457,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-151"
+    "anchor": "api-173"
   },
   {
     "module": "std::lang",
@@ -14822,7 +15489,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-152"
+    "anchor": "api-174"
   },
   {
     "module": "std::lang",
@@ -14854,7 +15521,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-153"
+    "anchor": "api-175"
   },
   {
     "module": "std::lang",
@@ -14886,7 +15553,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-154"
+    "anchor": "api-176"
   },
   {
     "module": "std::lang",
@@ -14918,7 +15585,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-155"
+    "anchor": "api-177"
   },
   {
     "module": "std::lang",
@@ -14950,7 +15617,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-156"
+    "anchor": "api-178"
   },
   {
     "module": "std::lang",
@@ -14982,7 +15649,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-157"
+    "anchor": "api-179"
   },
   {
     "module": "std::lang",
@@ -15014,7 +15681,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-158"
+    "anchor": "api-180"
   },
   {
     "module": "std::lang",
@@ -15046,7 +15713,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-159"
+    "anchor": "api-181"
   },
   {
     "module": "std::lang",
@@ -15078,7 +15745,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-160"
+    "anchor": "api-182"
   },
   {
     "module": "std::lang",
@@ -15110,7 +15777,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-161"
+    "anchor": "api-183"
   },
   {
     "module": "std::lang",
@@ -15142,7 +15809,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-162"
+    "anchor": "api-184"
   },
   {
     "module": "std::lang",
@@ -15174,7 +15841,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-163"
+    "anchor": "api-185"
   },
   {
     "module": "std::lang",
@@ -15206,7 +15873,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-164"
+    "anchor": "api-186"
   },
   {
     "module": "std::lang",
@@ -15238,7 +15905,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-165"
+    "anchor": "api-187"
   },
   {
     "module": "std::lang",
@@ -15270,7 +15937,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-166"
+    "anchor": "api-188"
   },
   {
     "module": "std::lang",
@@ -15302,7 +15969,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-167"
+    "anchor": "api-189"
   },
   {
     "module": "std::lang",
@@ -15334,7 +16001,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-168"
+    "anchor": "api-190"
   },
   {
     "module": "std::lang",
@@ -15366,7 +16033,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-169"
+    "anchor": "api-191"
   },
   {
     "module": "std::lang",
@@ -15398,7 +16065,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-170"
+    "anchor": "api-192"
   },
   {
     "module": "std::lang",
@@ -15430,7 +16097,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-171"
+    "anchor": "api-193"
   },
   {
     "module": "std::lang",
@@ -15462,7 +16129,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-172"
+    "anchor": "api-194"
   },
   {
     "module": "std::lang",
@@ -15494,7 +16161,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-173"
+    "anchor": "api-195"
   },
   {
     "module": "std::lang",
@@ -15526,7 +16193,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-174"
+    "anchor": "api-196"
   },
   {
     "module": "std::lang",
@@ -15558,7 +16225,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-175"
+    "anchor": "api-197"
   },
   {
     "module": "std::lang",
@@ -15592,7 +16259,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-176"
+    "anchor": "api-198"
   },
   {
     "module": "std::lang",
@@ -15624,7 +16291,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-177"
+    "anchor": "api-199"
   },
   {
     "module": "std::lang",
@@ -15649,7 +16316,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-178"
+    "anchor": "api-200"
   },
   {
     "module": "std::lang",
@@ -15674,7 +16341,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-179"
+    "anchor": "api-201"
   },
   {
     "module": "std::lang",
@@ -15706,7 +16373,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-180"
+    "anchor": "api-202"
   },
   {
     "module": "std::lang",
@@ -15738,7 +16405,7 @@
     "source": "source/magel_generic.hpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-181"
+    "anchor": "api-203"
   },
   {
     "module": "std::lang",
@@ -15770,7 +16437,7 @@
     "source": "source/std/lang.mgl",
     "line": 2,
     "page": "std-lang.md",
-    "anchor": "api-182"
+    "anchor": "api-204"
   },
   {
     "module": "std::lang",
@@ -15802,7 +16469,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-183"
+    "anchor": "api-205"
   },
   {
     "module": "std::lang",
@@ -15834,7 +16501,7 @@
     "source": "source/std/lang.mgl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-184"
+    "anchor": "api-206"
   },
   {
     "module": "std::linalg",

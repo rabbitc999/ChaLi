@@ -130,3 +130,30 @@ PARAMETERS['residual']='向当前函数返回类型传递的失败载荷。'
 BEHAVIOR.update({'mapErr':'仅在失败时调用 mapper 转换错误类型，成功值保持不变。','okOr':'将 None 转为给定错误，error 按普通实参规则求值。','okOrElse':'只在 None 时调用错误工厂，成功分支不调用。'})
 
 PARAMETERS.update({'error':'缺失时产生的错误值。','factory':'缺失时才调用的无参数错误工厂。'})
+
+# 大整数/大数十进制方法说明：与 std::numerics 顶层函数重名，按 Owner::name 精确匹配。
+BIG_BEHAVIOR = {
+    'BigInteger::pow':'计算当前值的 exponent 次非负整数次幂（快速幂）；exponent 为负时报运行错误。',
+    'BigInteger::powmod':'通过快速幂计算 this^exponent mod modulus；指数可以为大整数，modulus 为零或 exponent 为负时报运行错误。',
+    'BigInteger::gcd':'返回两数绝对值的最大公约数。',
+    'BigInteger::lcm':'返回两数绝对值的最小公倍数；任一操作数为零给零。',
+    'BigInteger::mod':'非负取模：结果落在 [0, |modulus|)；modulus 为零时报运行错误。',
+    'BigInteger::modInverse':'计算模乘逆元，结果落在 [0, |modulus|)；模数绝对值不大于 1 或两数不互素时报运行错误。',
+    'BigInteger::isProbablePrime':'Miller-Rabin 概率素性测试，固定随机种子可复现；rounds 为测试轮数（非负）。',
+    'BigInteger::nextProbablePrime':'返回严格大于当前值的下一个概率素数（25 轮测试）。',
+    'BigInteger::bitLength':'返回当前值（绝对值）的二进制位长。',
+    'BigInteger::bitAnd':'按位与；仅支持非负操作数，负数报运行错误。',
+    'BigInteger::bitOr':'按位或；仅支持非负操作数，负数报运行错误。',
+    'BigInteger::bitXor':'按位异或；仅支持非负操作数，负数报运行错误。',
+    'BigInteger::strRadix':'生成 base（2..36）进制文本，数字用 0-9a-z，负数带前导 -；越界进制报运行错误。',
+    'BigInteger::iroot':'整数 k 次方根，向下取整；k 小于 1 报运行错误。',
+    'BigDecimal::pow':'计算当前值的 exponent 次非负整数次幂，保持当前精度；exponent 为负时报运行错误。',
+    'BigDecimal::abs':'返回绝对值。',
+    'BigDecimal::isInteger':'判断当前值是否为整数。',
+    'BigDecimal::floor':'向负无穷取整，返回大整数。',
+    'BigDecimal::ceil':'向正无穷取整，返回大整数。',
+    'BigDecimal::trunc':'向零截断小数部分，返回大整数。',
+    'BigDecimal::sqrt':'计算平方根，保留 digits 位有效数字。',
+    'BigDecimal::root':'计算 k 次方根，保留 digits 位有效数字；k 小于 1 或 digits 越界时报运行错误。',
+}
+PARAMETERS.update({'rounds':'Miller-Rabin 素性测试轮数','k':'方根次数'})

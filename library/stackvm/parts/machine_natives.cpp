@@ -3857,6 +3857,268 @@ Slot bintToFloat(NativeContext &ctx, const Memory::Vector<Slot> &args)
 }
 
 /**
+ * @brief 跑一段会抛异常的大数运算，把异常翻译成 VM 错误。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param what 运算名称（拼进错误信息）。
+ * @param operation 待执行的运算（返回结果槽）。
+ * @retval 封装为原生值的运行时结果。
+ */
+template <typename Operation>
+Slot nativeGuardedBig(NativeContext &ctx, const char *what, Operation operation)
+{
+    try
+    {
+        return operation();
+    }
+    catch (const std::exception &error)
+    {
+        ctx.error = Memory::String(what) + "：" + error.what();
+        return Slot::fromInt(0);
+    }
+}
+
+/* ---- 大整数扩展方法：幂 / 数论 / 素性 / 位运算 / 进制 / 开方 ---- */
+
+/**
+ * @brief `__vm_bint_pow(值, 指数) -> bint`（`.pow(e)`，指数为非负 int64）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintPow(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数幂运算");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t exponent = nativeInt(args[1]);
+    if (exponent < 0)
+    {
+        ctx.error = "BigInteger.pow 的指数不能是负数";
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大整数幂运算", [&] {
+        return nativeNewBigInt(ctx, value->number.pow(static_cast<std::uint64_t>(exponent)));
+    });
+}
+
+/**
+ * @brief `__vm_bint_powmod(值, 指数, 模) -> bint`（`.powmod(e, m)`，指数是大整数）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintPowMod(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return nativeGuardedBig(ctx, "大整数模幂", [&] {
+        RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数模幂");
+        if (value == nullptr) return Slot::fromInt(0);
+        RuntimeObject *exponent = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数模幂");
+        if (exponent == nullptr) return Slot::fromInt(0);
+        RuntimeObject *modulus = nativeObject(ctx, args[2], ObjectKind::BigInt, "大整数模幂");
+        if (modulus == nullptr) return Slot::fromInt(0);
+        return nativeNewBigInt(ctx, value->number.powmod(exponent->number, modulus->number));
+    });
+}
+
+/**
+ * @brief `__vm_bint_gcd(左, 右) -> bint`（`.gcd(other)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintGcd(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *left = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数 gcd");
+    if (left == nullptr) return Slot::fromInt(0);
+    RuntimeObject *right = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数 gcd");
+    if (right == nullptr) return Slot::fromInt(0);
+    return nativeNewBigInt(ctx, bigint::BigInt::gcd(left->number, right->number));
+}
+
+/**
+ * @brief `__vm_bint_lcm(左, 右) -> bint`（`.lcm(other)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintLcm(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *left = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数 lcm");
+    if (left == nullptr) return Slot::fromInt(0);
+    RuntimeObject *right = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数 lcm");
+    if (right == nullptr) return Slot::fromInt(0);
+    return nativeNewBigInt(ctx, bigint::BigInt::lcm(left->number, right->number));
+}
+
+/**
+ * @brief `__vm_bint_mod_nonneg(值, 模) -> bint`（`.mod(m)`，结果落在 `[0, |m|)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintModNonNeg(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return nativeGuardedBig(ctx, "大整数非负取模", [&] {
+        RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数非负取模");
+        if (value == nullptr) return Slot::fromInt(0);
+        RuntimeObject *modulus = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数非负取模");
+        if (modulus == nullptr) return Slot::fromInt(0);
+        return nativeNewBigInt(ctx, value->number.modNonNegative(modulus->number));
+    });
+}
+
+/**
+ * @brief `__vm_bint_mod_inverse(值, 模) -> bint`（`.modInverse(m)`，不互素报错）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintModInverse(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return nativeGuardedBig(ctx, "大整数模逆元", [&] {
+        RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数模逆元");
+        if (value == nullptr) return Slot::fromInt(0);
+        RuntimeObject *modulus = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数模逆元");
+        if (modulus == nullptr) return Slot::fromInt(0);
+        return nativeNewBigInt(ctx, bigint::BigInt::modInverse(value->number, modulus->number));
+    });
+}
+
+/**
+ * @brief `__vm_bint_is_probable_prime(值, 轮数) -> bool`（`.isProbablePrime(rounds)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintIsProbablePrime(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数素性测试");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t rounds = nativeInt(args[1]);
+    if (rounds < 0)
+    {
+        ctx.error = "素性测试的轮数不能是负数";
+        return Slot::fromInt(0);
+    }
+    return Slot::fromInt(value->number.isProbablePrime(static_cast<std::size_t>(rounds)) ? 1 : 0);
+}
+
+/**
+ * @brief `__vm_bint_next_probable_prime(值) -> bint`（`.nextProbablePrime()`，25 轮）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintNextProbablePrime(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "找下一个素数");
+    if (value == nullptr) return Slot::fromInt(0);
+    return nativeGuardedBig(ctx, "找下一个素数", [&] {
+        return nativeNewBigInt(ctx, value->number.nextProbablePrime());
+    });
+}
+
+/**
+ * @brief `__vm_bint_bit_length(值) -> 整数`（`.bitLength()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintBitLength(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数位长");
+    if (value == nullptr) return Slot::fromInt(0);
+    return Slot::fromInt(static_cast<std::int64_t>(value->number.bitLength()));
+}
+
+/**
+ * @brief 大整数按位运算（`&` / `|` / `^`，只支持非负数）。
+ * @param op 运算字符。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintBitwise(NativeContext &ctx, const Memory::Vector<Slot> &args, char op)
+{
+    return nativeGuardedBig(ctx, "大整数位运算", [&] {
+        RuntimeObject *left = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数位运算");
+        if (left == nullptr) return Slot::fromInt(0);
+        RuntimeObject *right = nativeObject(ctx, args[1], ObjectKind::BigInt, "大整数位运算");
+        if (right == nullptr) return Slot::fromInt(0);
+        switch (op)
+        {
+        case '&': return nativeNewBigInt(ctx, left->number & right->number);
+        case '|': return nativeNewBigInt(ctx, left->number | right->number);
+        default: return nativeNewBigInt(ctx, left->number ^ right->number);
+        }
+    });
+}
+
+/**
+ * @brief `__vm_bint_bit_and(左, 右) -> bint`（`.bitAnd(other)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintBitAnd(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bintBitwise(ctx, args, '&'); }
+/**
+ * @brief `__vm_bint_bit_or(左, 右) -> bint`（`.bitOr(other)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintBitOr(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bintBitwise(ctx, args, '|'); }
+/**
+ * @brief `__vm_bint_bit_xor(左, 右) -> bint`（`.bitXor(other)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintBitXor(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bintBitwise(ctx, args, '^'); }
+
+/**
+ * @brief `__vm_bint_str_radix(值, 进制) -> 新串地址`（`.strRadix(base)`，2..36 进制）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintToStrRadix(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数转进制文本");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t base = nativeInt(args[1]);
+    if (base < 2 || base > 36)
+    {
+        ctx.error = "进制必须在 2..36 之间，现在是 " + Memory::toString(base);
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大整数转进制文本", [&] {
+        return Slot::fromInt(static_cast<std::int64_t>(
+            nativeAllocString(ctx, value->number.toString(static_cast<unsigned int>(base)))));
+    });
+}
+
+/**
+ * @brief `__vm_bint_iroot(值, k) -> bint`（`.iroot(k)`，整数 k 次方根向下取整）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bintIRoot(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigInt, "大整数开方");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t k = nativeInt(args[1]);
+    if (k <= 0)
+    {
+        ctx.error = "根次必须是正整数";
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大整数开方", [&] {
+        return nativeNewBigInt(ctx, bigint::integerRoot(value->number, static_cast<std::uint64_t>(k)));
+    });
+}
+
+/**
  * @brief `__vm_read_bint() -> bint`：把下一项输入按十进制读成一个大整数（`input_bstr`）。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
  * @retval 封装为原生值的运行时结果。
@@ -3905,6 +4167,20 @@ STACKVM_BINT_STUB(bintCmp)
 STACKVM_BINT_STUB(bintToStr)
 STACKVM_BINT_STUB(bintToInt)
 STACKVM_BINT_STUB(bintToFloat)
+STACKVM_BINT_STUB(bintPow)
+STACKVM_BINT_STUB(bintPowMod)
+STACKVM_BINT_STUB(bintGcd)
+STACKVM_BINT_STUB(bintLcm)
+STACKVM_BINT_STUB(bintModNonNeg)
+STACKVM_BINT_STUB(bintModInverse)
+STACKVM_BINT_STUB(bintIsProbablePrime)
+STACKVM_BINT_STUB(bintNextProbablePrime)
+STACKVM_BINT_STUB(bintBitLength)
+STACKVM_BINT_STUB(bintBitAnd)
+STACKVM_BINT_STUB(bintBitOr)
+STACKVM_BINT_STUB(bintBitXor)
+STACKVM_BINT_STUB(bintToStrRadix)
+STACKVM_BINT_STUB(bintIRoot)
 STACKVM_BINT_STUB(readBigInt)
 
 #undef STACKVM_BINT_STUB
@@ -4163,6 +4439,146 @@ Slot bfloatSetValuePrecision(NativeContext &ctx, const Memory::Vector<Slot> &arg
     return Slot::fromInt(previous);
 }
 
+/* ---- 大浮点数扩展方法：幂 / 绝对值 / 取整 / 开方 ---- */
+
+/**
+ * @brief `__vm_bfloat_pow(值, 指数) -> bfloat`（`.pow(e)`，精确整数次幂）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatPow(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数幂运算");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t exponent = nativeInt(args[1]);
+    if (exponent < 0)
+    {
+        ctx.error = "BigDecimal.pow 的指数不能是负数（负次幂请用除法自己算）";
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大浮点数幂运算", [&] {
+        return nativeNewBigFloat(ctx, value->decimal.pow(static_cast<std::uint64_t>(exponent)),
+                                 value->decimalPrecision);
+    });
+}
+
+/**
+ * @brief `__vm_bfloat_abs(值) -> bfloat`（`.abs()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatAbs(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数绝对值");
+    if (value == nullptr) return Slot::fromInt(0);
+    return nativeNewBigFloat(ctx, value->decimal.abs(), value->decimalPrecision);
+}
+
+/**
+ * @brief `__vm_bfloat_is_integer(值) -> bool`（`.isInteger()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatIsInteger(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数整数判断");
+    if (value == nullptr) return Slot::fromInt(0);
+    return Slot::fromInt(value->decimal.isInteger() ? 1 : 0);
+}
+
+/**
+ * @brief 大浮点数取整家族（floor / ceil / trunc，结果是大整数）。
+ * @param mode 取整方式：'f' 向负无穷 / 'c' 向正无穷 / 't' 向零。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatRoundToBigInt(NativeContext &ctx, const Memory::Vector<Slot> &args, char mode)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数取整");
+    if (value == nullptr) return Slot::fromInt(0);
+    switch (mode)
+    {
+    case 'f': return nativeNewBigInt(ctx, value->decimal.floor());
+    case 'c': return nativeNewBigInt(ctx, value->decimal.ceil());
+    default: return nativeNewBigInt(ctx, value->decimal.trunc());
+    }
+}
+
+/**
+ * @brief `__vm_bfloat_floor(值) -> bint`（`.floor()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatFloor(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bfloatRoundToBigInt(ctx, args, 'f'); }
+/**
+ * @brief `__vm_bfloat_ceil(值) -> bint`（`.ceil()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatCeil(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bfloatRoundToBigInt(ctx, args, 'c'); }
+/**
+ * @brief `__vm_bfloat_trunc(值) -> bint`（`.trunc()`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatTrunc(NativeContext &ctx, const Memory::Vector<Slot> &args) { return bfloatRoundToBigInt(ctx, args, 't'); }
+
+/**
+ * @brief `__vm_bfloat_sqrt(值, 有效位数) -> bfloat`（`.sqrt(digits)`）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatSqrt(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数开平方");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t digits = nativeInt(args[1]);
+    if (digits < 1 || digits > 100000)
+    {
+        ctx.error = "BigDecimal.sqrt 的有效位数必须在 1..100000 之间，现在是 " + Memory::toString(digits);
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大浮点数开平方", [&] {
+        return nativeNewBigFloat(ctx, value->decimal.sqrt(static_cast<int>(digits)), value->decimalPrecision);
+    });
+}
+
+/**
+ * @brief `__vm_bfloat_root(值, k, 有效位数) -> bfloat`（`.root(k, digits)`，k 次方根）。
+ * @param ctx 原生调用上下文，提供内存访问与错误报告。
+ * @param args 按接口约定顺序传入的实参列表。
+ * @retval 封装为原生值的运行时结果。
+ */
+Slot bfloatRoot(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    RuntimeObject *value = nativeObject(ctx, args[0], ObjectKind::BigFloat, "大浮点数开 k 次方");
+    if (value == nullptr) return Slot::fromInt(0);
+    const std::int64_t k = nativeInt(args[1]);
+    const std::int64_t digits = nativeInt(args[2]);
+    if (k <= 0)
+    {
+        ctx.error = "BigDecimal.root 的根次必须是正整数";
+        return Slot::fromInt(0);
+    }
+    if (digits < 1 || digits > 100000)
+    {
+        ctx.error = "BigDecimal.root 的有效位数必须在 1..100000 之间，现在是 " + Memory::toString(digits);
+        return Slot::fromInt(0);
+    }
+    return nativeGuardedBig(ctx, "大浮点数开 k 次方", [&] {
+        return nativeNewBigFloat(ctx, value->decimal.root(static_cast<std::uint64_t>(k), static_cast<int>(digits)),
+                                 value->decimalPrecision);
+    });
+}
+
 /**
  * @brief 从对象句柄读取大浮点数。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
@@ -4220,6 +4636,14 @@ STACKVM_BFLOAT_STUB(bfloatToStr)
 STACKVM_BFLOAT_STUB(bfloatToInt)
 STACKVM_BFLOAT_STUB(bfloatToFloat)
 STACKVM_BFLOAT_STUB(bfloatSetValuePrecision)
+STACKVM_BFLOAT_STUB(bfloatPow)
+STACKVM_BFLOAT_STUB(bfloatAbs)
+STACKVM_BFLOAT_STUB(bfloatIsInteger)
+STACKVM_BFLOAT_STUB(bfloatFloor)
+STACKVM_BFLOAT_STUB(bfloatCeil)
+STACKVM_BFLOAT_STUB(bfloatTrunc)
+STACKVM_BFLOAT_STUB(bfloatSqrt)
+STACKVM_BFLOAT_STUB(bfloatRoot)
 STACKVM_BFLOAT_STUB(readBigFloat)
 #undef STACKVM_BFLOAT_STUB
 
@@ -7411,6 +7835,20 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "__vm_bint_str", { 1, bintToStr } },
     { "__vm_bint_to_int", { 1, bintToInt } },
     { "__vm_bint_to_flt", { 1, bintToFloat } },
+    { "__vm_bint_pow", { 2, bintPow } },
+    { "__vm_bint_powmod", { 3, bintPowMod } },
+    { "__vm_bint_gcd", { 2, bintGcd } },
+    { "__vm_bint_lcm", { 2, bintLcm } },
+    { "__vm_bint_mod_nonneg", { 2, bintModNonNeg } },
+    { "__vm_bint_mod_inverse", { 2, bintModInverse } },
+    { "__vm_bint_is_probable_prime", { 2, bintIsProbablePrime } },
+    { "__vm_bint_next_probable_prime", { 1, bintNextProbablePrime } },
+    { "__vm_bint_bit_length", { 1, bintBitLength } },
+    { "__vm_bint_bit_and", { 2, bintBitAnd } },
+    { "__vm_bint_bit_or", { 2, bintBitOr } },
+    { "__vm_bint_bit_xor", { 2, bintBitXor } },
+    { "__vm_bint_str_radix", { 2, bintToStrRadix } },
+    { "__vm_bint_iroot", { 2, bintIRoot } },
     { "__vm_read_bint", { 0, readBigInt } },
     { "__vm_input_bint", { 0, readBigInt } },
     /* 任意精度十进制浮点（bfloat）：后端是 library/big_number */
@@ -7427,6 +7865,14 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "__vm_bfloat_cmp", { 2, bfloatCmp } },
     { "__vm_bfloat_str", { 1, bfloatToStr } },
     { "__vm_bfloat_to_int", { 1, bfloatToInt } },
+    { "__vm_bfloat_pow", { 2, bfloatPow } },
+    { "__vm_bfloat_abs", { 1, bfloatAbs } },
+    { "__vm_bfloat_is_integer", { 1, bfloatIsInteger } },
+    { "__vm_bfloat_floor", { 1, bfloatFloor } },
+    { "__vm_bfloat_ceil", { 1, bfloatCeil } },
+    { "__vm_bfloat_trunc", { 1, bfloatTrunc } },
+    { "__vm_bfloat_sqrt", { 2, bfloatSqrt } },
+    { "__vm_bfloat_root", { 3, bfloatRoot } },
     { "__vm_bfloat_to_flt", { 1, bfloatToFloat } },
     { "__vm_bfloat_set_value_precision", { 2, bfloatSetValuePrecision } },
     { "__vm_read_bfloat", { 0, readBigFloat } },

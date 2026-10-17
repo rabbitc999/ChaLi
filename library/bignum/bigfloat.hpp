@@ -43,6 +43,40 @@ public:
     explicit BigFloat(const Memory::String &text);
 
     /**
+     * @brief 从 64 位有符号整数**隐式**构造（`int64 → BigFloat` 直接赋值 / 传参可用）。
+     * @param value 值。
+     */
+    BigFloat(std::int64_t value);
+
+    /**
+     * @brief `int` 直通版：避免 `int` 到 `int64` / `double` 的二义重载决议。
+     */
+    BigFloat(int value) { *this = fromInt(bigint::BigInt(static_cast<std::int64_t>(value))); }
+
+    /**
+     * @brief `long` 直通版：同上。
+     */
+    BigFloat(long value) { *this = fromInt(bigint::BigInt(static_cast<std::int64_t>(value))); }
+
+    /**
+     * @brief 从 double **隐式**构造（取能往返的最短十进制写法，语义同 `fromDouble`）。
+     * @param value 值。
+     */
+    BigFloat(double value);
+
+    /**
+     * @brief 显式转 64 位有符号整数（向零截断；大数按位截断）。
+     *
+     * 收窄必须**显式**写：`static_cast<std::int64_t>(value)`。
+     */
+    explicit operator std::int64_t() const;
+
+    /**
+     * @brief 显式转双精度浮点（可能丢精度；按 17 位有效数字往返）。
+     */
+    explicit operator double() const;
+
+    /**
      * @brief 从十进制文本构造（不抛异常版）。
      * @param text 文本。
      * @param ok 非空时写入是否解析成功。
@@ -156,6 +190,44 @@ public:
      * @throws std::domain_error 负数开方时。
      */
     [[nodiscard]] BigFloat sqrt(int digits) const;
+
+    /**
+     * @brief `k` 次方根，结果保留 `digits` 位有效数字（牛顿迭代，`k = 2` 即 `sqrt`）。
+     * @param k 根次（≥ 1；为 0 抛 `std::invalid_argument`）。
+     * @param digits 有效位数。
+     * @throws std::domain_error 负数开方时。
+     */
+    [[nodiscard]] BigFloat root(std::uint64_t k, int digits) const;
+
+    /**
+     * @brief 精确整数次幂：`*this ^ exponent`（尾数直接走大整数幂，不丢精度）。
+     * @param exponent 指数（无符号；`0` 次幂为 1）。
+     * @throws std::overflow_error 结果的十进制指数超出 int 范围时。
+     */
+    [[nodiscard]] BigFloat pow(std::uint64_t exponent) const;
+
+    /**
+     * @brief 绝对值。
+     */
+    [[nodiscard]] BigFloat abs() const;
+
+    /**
+     * @brief 是不是整数（`5.0`、`1e20` 是；`0.5`、`1e-3` 不是；0 是）。
+     */
+    [[nodiscard]] bool isInteger() const;
+
+    /**
+     * @brief 向负无穷取整（返回大整数）。
+     */
+    [[nodiscard]] bigint::BigInt floor() const;
+    /**
+     * @brief 向正无穷取整（返回大整数）。
+     */
+    [[nodiscard]] bigint::BigInt ceil() const;
+    /**
+     * @brief 向零截断（返回大整数）。
+     */
+    [[nodiscard]] bigint::BigInt trunc() const;
 
     /**
      * @brief 调整成"尾数去掉十进制尾随零"的规范形（内部用）。

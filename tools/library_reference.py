@@ -5,7 +5,7 @@ import re
 import json
 import argparse
 import sys
-from library_reference_data import MODULES, BEHAVIOR, ITER, PARAMETERS
+from library_reference_data import MODULES, BEHAVIOR, ITER, PARAMETERS, BIG_BEHAVIOR
 
 ROOT = Path(__file__).resolve().parents[1]
 from magel_api import TOKEN, without_comments, parameters, declarations as scan_declarations
@@ -91,6 +91,7 @@ def comment_text(comment):
 def behavior(entry):
     """合并人工语义说明、同族宿主入口与声明注释。"""
     module, owner, name = entry['module'], entry['owner'], entry['name']
+    if owner+'::'+name in BIG_BEHAVIOR: return BIG_BEHAVIOR[owner+'::'+name]
     if module=='std::iter' and name in ITER: return ITER[name]
     if module=='std::linalg' and name=='add': return '返回同维向量/矩阵逐项相加的新值。'
     if owner=='Any' and name=='clear': return '释放盒子拥有的载荷并恢复空状态；保留盒子自身的键身份。'

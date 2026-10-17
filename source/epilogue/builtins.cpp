@@ -984,17 +984,32 @@ std::shared_ptr<MType> RawExprType(int id)
                                 + calleeNode.s),
                            T(M_TypeInt());
                 }
-                /* 大整数的 `.str()` 返回字符串，`.copy()` 返回新大整数。 */
+                /* 大整数的 `.str()` 返回字符串，`.copy()` 返回新大整数；
+                 * 扩展方法见下（幂 / 数论 / 素性 / 位运算 / 进制 / 开方）。 */
                 if (baseType && baseType->kind == MType::BigInt)
                 {
                     if (calleeNode.s == "str") return T(M_TypeString());
                     if (calleeNode.s == "copy") return baseType;
+                    if (calleeNode.s == "pow" || calleeNode.s == "powmod" || calleeNode.s == "gcd" ||
+                        calleeNode.s == "lcm" || calleeNode.s == "mod" || calleeNode.s == "modInverse" ||
+                        calleeNode.s == "nextProbablePrime" || calleeNode.s == "bitAnd" ||
+                        calleeNode.s == "bitOr" || calleeNode.s == "bitXor" || calleeNode.s == "iroot")
+                        return baseType;
+                    if (calleeNode.s == "isProbablePrime") return T(M_TypeBool());
+                    if (calleeNode.s == "bitLength") return T(M_TypeInt());
+                    if (calleeNode.s == "strRadix") return T(M_TypeString());
                 }
                 if (baseType && baseType->kind == MType::BigFloat)
                 {
                     if (calleeNode.s == "str") return T(M_TypeString());
                     if (calleeNode.s == "copy") return baseType;
                     if (calleeNode.s == "setPrecision") return T(M_TypeInt());
+                    if (calleeNode.s == "pow" || calleeNode.s == "abs" || calleeNode.s == "sqrt" ||
+                        calleeNode.s == "root")
+                        return baseType;
+                    if (calleeNode.s == "isInteger") return T(M_TypeBool());
+                    if (calleeNode.s == "floor" || calleeNode.s == "ceil" || calleeNode.s == "trunc")
+                        return T(M_TypeBigInt());
                 }
                 /* `obj`：`copy()` 给独立盒子；`name()` 给类型号，`get()` 看上下文。 */
                 if (baseType && baseType->kind == MType::Obj)

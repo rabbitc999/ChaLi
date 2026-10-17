@@ -1,16 +1,16 @@
 # big_number：任意精度大整数 + 十进制浮点（C++17）
 
-> **这份是 magel 自带的副本**：源在 `library/big_number`，magel 的虚拟机
-> （`magel/library/stackvm`）与 `magel-emit` 用这里的一份。两份是**独立维护**的。
-
 > **谁在用**：`library/stackvm` 的 `bint` 类型（虚拟机的任意精度整数）后端就是这个库的
 > `bigint::BigInt` —— 宿主语言（如 `magel` 的 Magel 语言）里的
 > `bint a = bint("…"); a + b;` 走到虚拟机内部就是这边的运算符重载。
 > 那一步是**可选的**：`make -C library/stackvm STACKVM_WITH_BIGINT=0` 能编出不带大整数的
-> 轻量虚拟机。
+> 轻量虚拟机。Magel 语言层的 `BigInteger` / `BigDecimal` 方法（`.pow()`、`.strRadix()`、
+> `.sqrt()` 等）也直接落在这些 C++ 成员上。
 
-`library/big_number` 是一个**只依赖标准库**的大数库：加 / 减 / 乘 / 除 / 取余 /
-幂 / 最大公约数 / 最小公倍数 / 同余幂，以及十进制字符串互转。实现参考
+这是一个**只依赖标准库**的大数库：加 / 减 / 乘 / 除 / 取余 /
+幂 / 最大公约数 / 最小公倍数 / 同余幂（含大指数）/ 数论（扩展欧几里得、模逆元、
+非负取模）/ 概率素性测试 / 位运算 / 2..36 进制互转 / 整数 k 次方根，
+以及十进制字符串互转。实现参考
 `eigenmath-plus/eigenmath_bigint.c` 的整数部分（同一套"符号 + 小端 limb + 有效长度"的
 结构），把手工内存管理换成 `std::vector`、把 C 接口换成 C++ 的运算符重载。
 
@@ -51,21 +51,41 @@ a += b; a -= b; a *= b; a /= b; a %= b; ++a; a--; // 就地运算
 a == b; a != b; a <  b; a <= b; a > b; a >= b;    // 比较（含负数）
 
 a.toString();          // 十进制字符串
+a.toString(16);        // 2..36 进制字符串（数字用 0-9a-z，负数带 -）
 a.decimalDigits();     // 十进制位数
 a.limbCount();         // 32 位 limb 个数
 a.isZero(); a.sign();  // 0 / ±1
+a.isEven(); a.isOdd(); a.isNegative(); a.isPositive();
 a.abs();
 a.toU64(); a.toI64(); a.toDouble();   // 截断（toDouble 会丢精度，符号跟着走）
+static_cast<std::int64_t>(a);         // 与 toI64 一致（显式收窄）
+static_cast<double>(a);               // 与 toDouble 一致（显式收窄）
 
 a.pow(300);                          // 快速幂（二进制）
 BigInt::gcd(a, b); BigInt::lcm(a, b); // 欧几里得 / 最小公倍数
-a.powmod(300, modulus);              // 同余幂（逐步取模）
+a.powmod(300, modulus);              // 同余幂（64 位指数，逐步取模）
+a.powmod(bigExponent, modulus);      // 同余幂（**指数也是大整数**，素性测试用）
+a.modNonNegative(modulus);           // 非负取模：结果落在 [0, |modulus|)
+BigInt::ExtendedGcd eg = BigInt::extendedGcd(a, b);  // a*eg.x + b*eg.y = eg.gcd
+BigInt::modInverse(a, modulus);      // 模逆元（不互素抛 std::domain_error）
+a.isProbablePrime(25);               // Miller-Rabin（固定种子，可复现）
+a.nextProbablePrime();               // 严格大于 a 的下一个（概率）素数
+
+a.bitLength(); a.bitAt(5);           // 位长 / 取位
+a.setBit(3); a.clearBit(3); a.flipBit(3);
+a.shiftLeft(10); a.shiftRight(10);   // 就地位移
+a & b; a | b; a ^ b;                 // 按位与 / 或 / 异或（仅非负数，负数抛异常）
+~a;                                  // 补口语义 ~x = -x - 1
+BigInt::min(a, b); BigInt::max(a, b);
+bigint::integerSqrt(a);              // 整数平方根（向下取整）
+bigint::integerRoot(a, 3);           // 整数 k 次方根（向下取整）
 
 BigInt q, r;
 if (a.divmod(b, &q, &r)) { /* a == q*b + r */ }   // 除零返回 false，不抛异常
 
 bool ok = false;
 BigInt parsed = BigInt::fromString("12a", &ok);   // 不抛异常的解析；ok == false
+BigInt hex = BigInt::fromString("-ff", 16);        // 2..36 进制解析（字母不分大小写）
 ```
 
 ## BigFloat API
@@ -91,6 +111,16 @@ x.toString(0);          // ≤ 0 = 不舍入（按值精确输出，显示阈值
 x.toPlainString();      // 恒定普通记法：1e20 → "100000000000000000000"
 x.divide(y, 50);        // 除法并指定有效位数
 x.sqrt(30);             // 平方根，保留 30 位（负数抛 std::domain_error）
+x.root(3, 30);          // k 次方根，牛顿迭代（k=2 即 sqrt）
+x.pow(5);               // 精确整数次幂（尾数走大整数幂，不丢精度）
+x.abs();                // 绝对值
+x.isInteger();          // 5.0 / 1e20 是整数，0.5 / 1e-3 不是
+x.floor(); x.ceil(); x.trunc();   // 取整，返回 bigint::BigInt
+
+BigFloat implicitInt = 42;        // int64 → BigFloat 隐式构造
+BigFloat implicitDouble = 0.5;    // double → BigFloat 隐式构造
+static_cast<std::int64_t>(x);     // 向零截断成 int64（显式收窄）
+static_cast<double>(x);           // 转 double（显式收窄，可能丢精度）
 ```
 
 精度口径与参考实现一致：**所有运算都在整数上做，多算几位再舍入**到目标有效位数。
