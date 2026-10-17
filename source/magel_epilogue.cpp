@@ -750,6 +750,16 @@ int M_Name(const char *text)
     g_names.push_back(text != nullptr ? text : "");
     return static_cast<int>(g_names.size()) - 1;
 }
+
+/**
+ * @brief 返回保留字 `yield` 对应的名称池编号，供 break 语法糖在限定名 / 声明名位置复用。
+ * @retval 名称池中 "yield" 的编号。
+ * @note 文法动作不支持字符串字面量，故单独抽出此无参辅助函数。
+ */
+int M_YieldName()
+{
+    return M_Name("yield");
+}
 /**
  * @brief 将运算符序号转换为名称池编号。
  * @param which 运算符或关键字查找表的序号。
@@ -1846,6 +1856,29 @@ int M_Construct(int typeId, int args, int skipName)
     return id;
 }
 /**
+ * @brief 语法糖 `heap T`：等价于 `new;`，在堆上分配 T（类型由左值推导，与 new; 一致）。
+ * @param typeName 类型名 T（仅作文法识别，实际分配类型仍按左值推导）。
+ * @retval heap 分配节点（M_NewPtr(-1)）。
+ * @note heap 是软关键字（%define），仅在 heap 引导的分配位置被识别为 HEAP token，
+ *       普通变量名仍可使用 heap；拼写由文法保证，这里不再做名字判定。
+ */
+int M_HeapSugar(int typeName)
+{
+    (void)typeName;
+    return M_NewPtr(-1);
+}
+/**
+ * @brief 语法糖 `heap new T(args)`：等价于 `new(args)`（堆上构造，类型由左值推导）。
+ * @param typeName 类型名 T。
+ * @param args 构造实参列表节点。
+ * @retval 构造节点（M_Construct(-1, args, -1)）。
+ */
+int M_HeapNewSugar(int typeName, int args)
+{
+    (void)typeName;
+    return M_Construct(-1, args, -1);
+}
+/**
  * @brief 将退出值中的直接变量转换为标准库移动调用，元组逐项应用相同规则。
  * @param value 原始退出表达式编号。
  * @retval 转换后的退出表达式编号；临时表达式保持原样。
@@ -1920,6 +1953,59 @@ int M_BreakLevelNamed(int nameId)
         return M_BreakLevel(-1);
     return M_ParseBad("break #level 的参数必须是正整数字面量或 ALL（不区分大小写）");
 }
+
+/**
+ * @brief 语法糖辅助：大小写无关地判定名称池中的名字是否等于给定文本。
+ * @param nameId 名称池编号。
+ * @param text 目标文本（ASCII）。
+ * @retval 名字与 text 大小写无关相等时返回 true。
+ * @note 与 M_BreakLevelNamed 一致，不引入关键字，保留 level / all 作为普通标识符。
+ */
+bool M_NameIs(int nameId, const char *text)
+{
+    if (nameId < 0 || nameId >= static_cast<int>(g_names.size()) || text == nullptr) return false;
+    const std::string &nm = g_names[static_cast<std::size_t>(nameId)];
+    for (size_t i = 0; text[i] != '\0'; ++i) {
+        char a = nm[i], b = text[i];
+        if (a >= 'a' && a <= 'z') a -= static_cast<char>('a' - 'A');
+        if (b >= 'a' && b <= 'z') b -= static_cast<char>('a' - 'A');
+        if (a != b) return false;
+    }
+    return nm.size() == std::strlen(text);
+}
+
+/**
+ * @brief 语法糖辅助：`break all;` 等价 break #level(ALL)。
+ * @param exprNode break 后的值表达式节点。
+ * @retval 裸名 all（大小写无关）返回退出全部循环的节点；否则原样按带值 break 处理。
+ * @note 沿用 M_BreakLevelNamed 的约定，all 仍可作普通变量名（如 break #level(all) 中）。
+ */
+int M_BreakAllSugar(int exprNode)
+{
+    if (exprNode < 0) return M_Break(exprNode);
+    const MNode &node = g_nodes[static_cast<std::size_t>(exprNode)];
+    if (node.kind == MNode::Var) {
+        const char *cs = node.s.c_str();
+        const size_t n = std::strlen(cs);
+        if (n == 3 && (cs[0] == 'a' || cs[0] == 'A') && (cs[1] == 'l' || cs[1] == 'L') && (cs[2] == 'l' || cs[2] == 'L'))
+            return M_BreakLevel(-1);
+    }
+    return M_Break(exprNode);
+}
+
+/**
+ * @brief `break level N;` / `break level all;` 语法糖的层级名判定辅助（文法动作不支持字符串字面量）。
+ * @param nameId 名称池编号。
+ * @retval 名字大小写无关等于 level / all 时返回 true。
+ */
+bool M_NameIsLevel(int nameId) { return M_NameIs(nameId, "level"); }
+bool M_NameIsAll(int nameId)   { return M_NameIs(nameId, "all"); }
+
+/**
+ * @brief `break level N;` 语法糖的参数错误节点（文法动作不支持字符串字面量）。
+ */
+int M_ParseBadLevelSugar()    { return M_ParseBad("break level 后必须跟正整数字面量层数，形如 break level 2;"); }
+int M_ParseBadLevelAllSugar() { return M_ParseBad("break level 后只能跟 all，形如 break level all;"); }
 
 /**
  * @brief 构造并登记指针释放语句。

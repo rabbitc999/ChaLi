@@ -237,6 +237,35 @@ int64 main() {
 `static T new(...)` 是**具名构造入口**，隐式带 `self`：体里往 `self`（或 `self.字段`）写值即可，
 **不写 `return`**，返回值由调用点接住。丢弃它的返回值会报错。
 
+`new` / 构造相关的写法还有几处等价的语法糖（语义完全一致，纯写法降级，不引入新语义）：
+
+| 语法糖 | 等价写法 | 含义 |
+| --- | --- | --- |
+| `heap T;` | `new;` | 在堆上分配 `T`，类型由左值推导（必须赋给 `T mut&`） |
+| `new T(实参);` | `new(实参);` | 显式写出构造类型 `T` 的构造调用 |
+| `heap new T(实参);` | `new(实参);` | 堆上构造（左值为 `T mut&` 时即堆构造） |
+
+```magel
+struct Point {
+    int64 x;
+    int64 y;
+    Point(int64 x, int64 y) { self.x = x; self.y = y; }
+    static Point new(int64 x, int64 y) { self.x = x; self.y = y; }
+};
+int64 main() {
+    Point mut& a = heap Point;            // 糖：heap T  ≡ new;
+    Point mut& b = new Point(3, 4);       // 糖：new T(args)  ≡ new(3, 4)
+    Point mut& c = heap new Point(5, 6);  // 糖：heap new T(args)  ≡ new(5, 6)
+    println("{} {} {} {}", a.x, b.x, b.y, c.y);
+    delete a; delete b; delete c;
+    return 0;
+}
+```
+
+`heap` 是软关键字：只在 `heap T` / `heap new T(...)` 引导的分配位置被识别为 `HEAP` token，
+普通变量名仍可使用 `heap`。`heap T` 的 `T` 只作文法识别，真正的分配 / 构造类型仍由左值推导，
+因此 `Point p = heap Point;`（左值是值而非引用）依旧报错，与旧规则一致。
+
 ---
 
 ## 5. 运算符
@@ -746,6 +775,8 @@ assert(transferred() == 2);
 
 `break #level(N);` 从当前循环算起，退出第 N 层包围当前位置的循环，并从目标循环之后继续；`break #level(1);` 等价于 `break;`。`break #level(ALL);` 退出当前函数内所有包围当前位置的循环，从最外层循环之后继续。ALL 参数不区分大小写，`all`、`All` 等写法等效；仅在该指令参数位置识别，不占用普通变量名 `all`。
 
+等价的语法糖（语义完全一致，纯写法降级）：`break level N;` ≡ `break #level(N);`，`break all;` ≡ `break #level(ALL);`，`break level all;` ≡ `break all;`。`break level` 之后必须跟正整数字面量层数或 `all`；`break level foo;`、`break level 0;`、`break level -1;` 均报错。
+
 只计算 `loop`、`while`、`do-while`、`for`、`foreach`，普通块、赋值块、`if`、`match` 均不计层数。N 必须是正十进制整数字面量，不能使用变量或表达式；零、负数、超出当前嵌套层数以及在循环外使用均报错。退出不能跨越函数或 `fn` 边界。层级退出不携带值，目标若为需要结果的循环表达式则报错，仍应使用 `break value;` 提供结果。
 
 ```magel
@@ -764,7 +795,7 @@ loop {
 
 ## 块表达式与插值输出
 
-非空语句块可以产生一个值，用于初始化、已有变量赋值、实参或返回值。每条正常完成的路径必须通过 `break 值;` 退出；普通语句块仍按原有规则执行，空 `{}` 保留集合字面量含义。
+非空语句块可以产生一个值，用于初始化、已有变量赋值、实参或返回值。每条正常完成的路径必须通过 `break 值;` 退出；普通语句块仍按原有规则执行，空 `{}` 保留集合字面量含义。等价的写法糖：`yield 值;` ≡ `break 值;`，同样只能写在值表达式里。`yield` 只在该糖里作关键字，作为普通标识符仍可用（如 `std::coroutine::yield()`），但不能写成 `yield(参数)` 调用形式。
 
 ```magel
 int64 main() {

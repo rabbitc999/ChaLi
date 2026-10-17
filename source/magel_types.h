@@ -372,6 +372,7 @@ void M_ListAdd(int list, int item);
 int M_BinOp(int kind, int left, int right);
 int M_UnOp(int kind, int operand);
 int M_Name(const char *text);
+int M_YieldName();
 /* 运算符名（OPNAME 用序号取，动作语言里不写字符串字面量） */
 int M_Op(int which);
 /**
@@ -528,6 +529,20 @@ int M_BreakLevel(int level);
  * @note 普通表达式中的 all、All 等名称仍可作为变量名。
  */
 int M_BreakLevelNamed(int nameId);
+/* 语法糖辅助：break level N; / break level all; 的层级名拼写判定（与 M_BreakLevelNamed 一致，
+ * 不占用 level / all 作为关键字）。
+ * @param nameId 名称池编号；text 为目标文本（ASCII，大小写无关比较）。
+ * @retval 名字与 text 大小写无关相等时返回 true。 */
+bool M_NameIs(int nameId, const char *text);
+/* 语法糖辅助：break all; 等价 break #level(ALL)。
+ * @param exprNode break 后的值表达式节点。
+ * @retval 裸名 all（大小写无关）返回退出全部循环的节点；否则原样按带值 break 处理。 */
+int M_BreakAllSugar(int exprNode);
+/* 语法糖辅助：break level / break level all 的层级名判定与错误节点（文法动作不支持字符串字面量）。 */
+bool M_NameIsLevel(int nameId);
+bool M_NameIsAll(int nameId);
+int M_ParseBadLevelSugar();
+int M_ParseBadLevelAllSugar();
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
 int M_Case(int value, int stmts);
 /**
@@ -680,6 +695,14 @@ int M_NewPtr(int count);
  * @return Construct 节点。
  */
 int M_Construct(int typeId, int args, int skipName);
+/**
+ * 语法糖 `heap T` 与 `heap new T(args)` 的解析辅助（heap 是软关键字 %define，仅在 heap
+ * 引导的分配位置识别为 HEAP token，普通变量名仍可使用 heap）。
+ * @param typeName 类型名 T（仅作文法识别，分配 / 构造类型仍按左值推导）。
+ * @param args 构造实参列表节点（仅 heap new T(args) 用）。
+ */
+int M_HeapSugar(int typeName);
+int M_HeapNewSugar(int typeName, int args);
 /**
  * `delete p;`：把可写引用指向的堆块还回去。
  */

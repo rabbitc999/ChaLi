@@ -1,0 +1,22 @@
+/* 新语法糖：heap T;  ≡ new;（在堆上分配 T，类型由左值推导）。 */
+struct Point {
+    int64 x;
+    int64 y;
+    Point(int64 x, int64 y) {
+        self.x = x;
+        self.y = y;
+    }
+    static Point new(int64 x, int64 y) {
+        self.x = x;
+        self.y = y;
+    }
+};
+
+int64 main() {
+    Point mut& p = heap Point;         /* 糖1：heap T  ≡ new; */
+    p.x = 7;
+    p.y = 8;
+    assert(p.x == 7 && p.y == 8);
+    println("new_test_heap ok: {} {}", p.x, p.y);
+    return 0;
+}

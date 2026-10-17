@@ -127,6 +127,7 @@ Box<int64 fn(int64)> box;
 | `CONST` | `const` |
 | `MUT` | `mut` |
 | `NEW` | `new` |
+| `HEAP` | `heap`（软关键字，仅分配位置识别） |
 | `DELETE` | `delete` |
 | `DROP` | `drop` |
 | `STATIC` | `static` |
@@ -539,6 +540,10 @@ stmt = block
     | "break", "#level", "(", NUMBER, ")", ";"
     | "break", "#level", "(", "ALL", ")", ";"
     | "break", "#level", "(", VARIABLE, ")", ";"
+    | "break", "level", NUMBER, ";"                  /* 糖：break level N;  ≡ break #level(N) */
+    | "break", "all", ";"                            /* 糖：break all;  ≡ break #level(ALL) */
+    | "break", "level", "all", ";"                   /* 糖：break level all;  ≡ break all; */
+    | "yield", expr, ";"                             /* 糖：yield 值;  ≡ break 值; */
     | "break", expr, ";"
     | "break", tuple_items, ";"
     | "continue", ";"
@@ -687,6 +692,9 @@ unary = "++", unary
     | "&", unary
     | "new", new_dims
     | "new", "(", call_args, ")"
+    | "new", name_token, "(", call_args, ")"            /* 糖：new T(args)  ≡ new(args) */
+    | "HEAP", name_token                              /* 糖：heap T  ≡ new; */
+    | "HEAP", "new", name_token, "(", call_args, ")"  /* 糖：heap new T(args)  ≡ new(args) */
     | cast_expr ;
 
 new_dims = ""

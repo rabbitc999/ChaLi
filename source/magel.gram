@@ -339,7 +339,11 @@ host_type_decl := TYPE_KW name_token ASSIGN type SEMI
 host_func_decl := type name_token LPAREN param_list RPAREN SEMI
     { $$ = M_ExternFunc($1, $2, $4); }
   | ptr_type name_token LPAREN param_list RPAREN SEMI
-    { $$ = M_ExternFunc($1, $2, $4); } ;
+    { $$ = M_ExternFunc($1, $2, $4); }
+  | type YIELD LPAREN param_list RPAREN SEMI
+    { $$ = M_ExternFunc($1, M_YieldName(), $4); }
+  | ptr_type YIELD LPAREN param_list RPAREN SEMI
+    { $$ = M_ExternFunc($1, M_YieldName(), $4); } ;
 
 /* 同一 C ABI 动态库的签名集中声明；右侧是实际导出符号。 */
 abi_block := ABI_KW STRING LBRACE abi_func_list RBRACE
@@ -476,8 +480,17 @@ stmt := block                  { $$ = $1; }
       | BREAK BREAK_LEVEL LPAREN NUMBER RPAREN SEMI { $$ = M_BreakLevel($4); }
       | BREAK BREAK_LEVEL LPAREN ALL RPAREN SEMI { $$ = M_BreakLevel(-1); }
       | BREAK BREAK_LEVEL LPAREN VARIABLE RPAREN SEMI { $$ = M_BreakLevelNamed($4); }
-      | BREAK expr SEMI        { $$ = M_Break($2); }
+      | BREAK expr SEMI        { $$ = M_BreakAllSugar($2); }
       | BREAK tuple_items SEMI { $$ = M_Break(M_Tuple($2)); }
+      /* —— break 语法糖（等价降级，不引入新语义；level / all 仍是普通标识符，
+       *    不占用关键字，沿用 M_BreakLevelNamed 的拼写约定）——
+       * 糖1：yield 值;  ≡ break 值;（仅值表达式内合法，语义检查同 break 值;）
+       * 糖2：break level N;  ≡ break #level(N);（N 为正整数字面量，仅循环层跳转）
+       * 糖3：break all;  ≡ break #level(ALL);（退出最外层循环）
+       * 糖4：break level all;  ≡ break all; */
+      | YIELD expr SEMI        { $$ = M_Break($2); }
+      | BREAK name_token NUMBER SEMI { $$ = M_NameIsLevel($2) ? M_BreakLevel($3) : M_ParseBadLevelSugar(); }
+      | BREAK name_token name_token SEMI { $$ = (M_NameIsLevel($2) && M_NameIsAll($3)) ? M_BreakLevel(-1) : M_ParseBadLevelAllSugar(); }
       | CONTINUE SEMI          { $$ = M_Continue(); }
       /* 与集合字面量共享逗号表达式列表，避免块 / 集合前缀产生冲突。
        * 单项可为普通表达式或 (x,y)=tuple；多项必须以普通赋值结束。
@@ -675,6 +688,13 @@ unary := INCREMENT unary { $$ = M_Update(1, 1, $2); }
        | AMP unary        { $$ = M_UnOp(4, $2); }   /* 取地址 `&x`（得到只读引用） */
        | NEW new_dims { $$ = M_NewPtr($2); }
        | NEW LPAREN call_args RPAREN { $$ = M_Construct(-1, $3, -1); }
+       /* 语法糖（等价降级，不引入新语义）：
+        *   new T(args)  ≡ new(args);            明确写出构造类型 T
+        *   heap T       ≡ new;                  明确写出堆分配类型 T
+        *   heap new T(args) ≡ new(args);         堆上构造（左值为 T mut& 时即堆构造） */
+       | NEW name_token LPAREN call_args RPAREN { $$ = M_Construct(-1, $4, -1); }
+       | HEAP name_token { $$ = M_HeapSugar($2); }
+       | HEAP NEW name_token LPAREN call_args RPAREN { $$ = M_HeapNewSugar($3, $5); }
        | cast_expr        { $$ = $1; } ;
 
 /* `new` 一个对象 / `new [n]` 一片：**类型不写在 new 后面**（声明里已经有了）。
@@ -831,12 +851,20 @@ map_literal_items := expr COLON expr { $$ = M_List2($1, $3); }
 
 qualified_ref := name_token SCOPE name_token
                    { $$ = M_EnumCtor($1, $3, M_List()); }
+               | name_token SCOPE YIELD
+                   { $$ = M_EnumCtor($1, M_YieldName(), M_List()); }
+               | YIELD SCOPE name_token
+                   { $$ = M_EnumCtor(M_YieldName(), $3, M_List()); }
+               | YIELD SCOPE YIELD
+                   { $$ = M_EnumCtor(M_YieldName(), M_YieldName(), M_List()); }
                | name_token SCOPE NEW
                    { $$ = M_EnumCtor($1, M_KeywordName(2), M_List()); }
+               | YIELD SCOPE NEW
+                   { $$ = M_EnumCtor(M_YieldName(), M_KeywordName(2), M_List()); }
                | qualified_ref SCOPE name_token
                    { $$ = M_QualifiedRef($1, $3); }
-               | qualified_ref SCOPE NEW
-                   { $$ = M_QualifiedRef($1, M_KeywordName(2)); } ;
+               | qualified_ref SCOPE YIELD
+                   { $$ = M_QualifiedRef($1, M_YieldName()); } ;
 
 /* ---------------------------------------------------------------
  * 标准**模块**表：`std::lang::X::y` 里的 X 命中这张表 → 按模块解析

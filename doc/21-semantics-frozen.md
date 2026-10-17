@@ -18,6 +18,7 @@
 - 每个非 void 值有默认 `toString()` 和字符串转换，结构体/Set/Map 使用大括号、List/数组使用中括号、元组使用小括号；嵌套字符串转义。用户无参 String toString 与 ImplicitConvert<String> 补齐彼此缺失入口，专用显式转换优先。默认路径不依赖反射，不转移源值；引用和不透明资源不解引用。
 - 整数 match 的静态单值／区间模式重叠发出非致命警告；开闭端点、空区间与完整 64 位精度参与判断，分支顺序与守卫语义保持不变。
 - 枚举分支用 match；错误值使用 Option/Result 及显式传播协议。块表达式可通过 `break value;` 给出结果；`break a, b;` 产生元组；显式 `break i;` 优先移动内部可写局部变量，外部变量复制，元组中的直接变量逐项应用同一规则。带值退出穿透无值循环并交给最近接收结果的表达式，普通无值退出仍只结束最近循环；`break #level(N);` 退出第 N 层循环，`break #level(ALL);` 退出当前函数内全部包围循环，非循环块不计层数且沿途清理。
+- 下列语法糖都是**纯写法降级**，不引入新语义，旧写法的红线不变：`yield 值;` ≡ `break 值;`；`break level N;` ≡ `break #level(N)`；`break all;` ≡ `break #level(ALL)`；`break level all;` ≡ `break all;`；`heap T;` ≡ `new;`；`new T(实参);` ≡ `new(实参);`；`heap new T(实参);` ≡ `new(实参);`。堆分配仍只能给引用（`T mut&`），构造函数 / 工厂重载仍按实参与目标类型选取（不匹配照常报错）。`heap` 为软关键字，仅在该分配位置识别，不占用普通变量名 `heap`。
 
 ## 执行与构建契约
 
