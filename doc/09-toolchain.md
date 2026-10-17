@@ -1,6 +1,6 @@
 # 09 工具链使用
 
-AOT 可以显式选择 GCC 工具链，支持 PATH 中的命令、编译器完整路径和工具链目录：
+解释执行可以显式选择 GCC 工具链：
 
 ```sh
 magel aot app.mgl --gcc-toolchain g++ --out app.exe
@@ -11,10 +11,9 @@ magel aot app.mgl --gcc-toolchain "D:/GCC" --out app.exe
 目录可以是含有 `bin/g++` 与 `bin/gcc` 的安装根目录，或直接指定 `bin` 目录。
 `gcc` 命令会推导同目录的 `g++`；也可通过 `--cxx`、`--cc` 分别覆盖。
 项目配置 `[magel] gcc_toolchain = "D:/GCC"` 提供默认值，命令行优先。
-选择的工具链必须能构建当前桌面 AOT 宿主；无操作系统的 `none-eabi` 目标请使用独立 MCU VM。
 路径或命令错误时直接报错，不回退到另一套编译器。
 
-`magel` 是统一入口：解释、导出字节码、AOT、建工程、跑测试都在同一个程序里。
+`magel` 是统一入口：解释、导出字节码、建工程、跑测试都在同一个程序里。
 
 ```sh
 magel 文件.mgl [程序参数...]
@@ -22,52 +21,6 @@ magel 场景 [文件.mgl] [配置词...] [-- 程序参数...]
 ```
 
 > Windows 上程序名是 `magel.exe`。Git Bash / MSYS 下写 `./magel` 能自动找到 `magel.exe`，光写 `magel` 会走 PATH 查找。
-
-## AOT 代码生成与优化
-
-AOT 默认使用 `checked`，启用可选分配护栏及 panic 调用记录；宿主 C++ 编译器默认使用 `-O3`；命令行 `--opt-level` / `-O*` 和项目 `opt_level` 仍可显式覆盖。`fast` 是显式选择的 `-Ofast`，不会作为默认值，避免默认改变浮点运算规则。四元式仍执行完整默认优化，反射默认启用。
-
-静态类型已知的整数、浮点内存访问直接调用对应的运行时标量接口，省去 `RuntimeValue` 的构造及拆箱；动态类型保留通用路径。固定数组索引的成功路径使用生成的比较，失败时调用同一诊断接口；指针数组仍验证存活分配及容量，索引容量判断先除后比，避免索引乘步长溢出。有效指针检查不再预先构造错误标签字符串。原有边界、失效地址、调用栈与清理行为保留。
-
-宿主调用的实参缓冲区由当前生成函数的调用帧持有并复用容量，减少循环内的临时容器分配；同步回调重入建立独立调用帧，不共用外层实参缓冲区。已知 Magel 函数仍直接调用，动态函数值和宿主调用保留原有检查。
-
-验证见 [AOT 优化回归](../tests/magel_aot_optimization.py) 与[同步回调回归](../tests/magel_native_callbacks.py)；性能对照的配置和边界见[性能文档](12-vm-performance.md)。
-
-## AOT 库输出
-
-库源码通过 `export` 选择公开的 C 接口，允许没有 `main`：
-
-```magel
-export int32 add(int32 left, int32 right) { return left + right; }
-```
-
-```sh
-# Windows 工具链生成 DLL
-magel aot math.mgl --out math.dll
-# Linux 工具链生成 ELF 共享库
-magel aot math.mgl --out math.so
-# 使用所选工具链的目标格式生成可重定位文件
-magel aot math.mgl --out math.o
-```
-
-扩展名自动选择类型；也可显式使用 `--shared` 或 `--object`。省略后缀时，
-共享库按 GCC 目标补 `.dll` / `.so`，目标文件补 `.o`。相互冲突的选项报错。
-`.dll` 要求 Windows GCC 目标，`.so` 要求 Linux GCC 目标，修改后缀不能转换平台 ABI。
-不支持 `.lib` / `.a` 静态库输出。
-
-三种产物均生成同名 `.h`，至少需要一个 `export`。宿主通过 `magel_create` 建立上下文，
-调用 `magel_<函数名>`，最后 `magel_destroy`；状态码非零时用 `magel_last_error` 读取错误。
-共享库可用系统动态加载器取得这些 C 符号。`.o` 是可重定位目标文件，需要宿主链接器处理，
-不是动态加载器直接加载的共享库。可用同一 GCC 工具链将 `.o` 链成宿主程序或共享库；
-最终链接需要 C++ 运行时及所用系统库，Linux 通常加 `-pthread -ldl`。
-Windows 工具链若采用动态 C++ 运行时，加载 DLL 时还须能找到它实际引用的
-`libstdc++`、`libgcc`、线程库等依赖 DLL；按该工具链的依赖部署或配置加载路径。
-
-`--make` 与 `--separate-modules` 均支持库输出，模块模式会合并本次需要的模块和运行时目标。
-库产物不定义宿主 `main`；源码若声明了 `main`，也不会被库初始化自动调用。
-完整可执行 C 客户端与无入口源码见 [ABI 示例](examples/abi_contracts/)，回归见 [库输出测试](../tests/magel_aot_libraries.py)。
-
----
 
 ## 1. 场景指令
 
@@ -77,7 +30,6 @@ Windows 工具链若采用动态 C++ 运行时，加载 DLL 时还须能找到�
 | `check FILE [json]` | 仅检查，可输出 JSON 诊断 |
 | `emit` | 只出 `.quad` / `.data.bin` / `.layout`，不执行 |
 | `svmb` | 只导出 `<前缀>.svmb`，不执行 |
-| `aot FILE [out EXE] [opt LEVEL] [checked\|unchecked]` | 导出 AOT（默认 `checked`） |
 | `new DIR [name NAME]` | 新建应用工程（目标目录必须不存在） |
 | `gen` | 生成独立编译器工程（转发 `magel-generator compiler`） |
 | `clear out DIR` | 清理登记过的中间产物（不重新编译） |
@@ -112,8 +64,6 @@ magel app.mgl Alice "two words"
 | `--reflection` / `--no-reflection` | 显式要求 / 关闭注解与反射（缺省开启） |
 | `--hard-realtime` | 禁止整个编译单元使用反射 |
 | `--diagnostics=json` | 检查并输出稳定 JSON 诊断 |
-| `--separate-modules` | AOT 按模块缓存本地目标文件并统一链接 |
-| `--module-cache DIR` | 指定 AOT 模块目标文件缓存目录 |
 | `--memory-size 字节` | 运行时堆容量（缺省 512 MiB，最小 64） |
 | `--watchdog` / `--no-watchdog` | 开 / 关软重启看门狗（缺省关） |
 | `--max-restarts N` | 最多软重启几次（缺省 3，隐含 `--watchdog`） |
@@ -245,9 +195,9 @@ magel run src/main.mgl
 
 所有新下载的在线依赖统一存到**生成器可执行文件所在目录的 `libraries/`**，多个项目共用。HTTP 包目录为 `名称-摘要`，Git 包目录为 `名称-提交号`；原有项目 `.magel/deps/` 中的 Git 缓存仍可使用。压缩包根目录（或唯一的顶层目录）必须包含 `magel.toml`，依赖包可以继续声明自己的 `[dependencies]` 和 `import_paths`，源码通过普通 `import` 递归导入模块。
 
-`magel.lock` 记录来源、目录、包版本及内容指纹，应纳入项目版本管理。同盘使用相对目录，Windows 跨盘使用绝对目录；切换生成器位置后重新运行 `deps lock`。编译始终使用已锁定的本地缓存，服务器关闭后仍可运行和导出 AOT。`--offline` 不下载，缺失缓存会明确报错；循环依赖、摘要错误及越界压缩路径也会报错。
+`magel.lock` 记录来源、目录、包版本及内容指纹，应纳入项目版本管理。同盘使用相对目录，Windows 跨盘使用绝对目录；切换生成器位置后重新运行 `deps lock`。编译始终使用已锁定的本地缓存，服务器关闭后仍可运行。`--offline` 不下载，缺失缓存会明确报错；循环依赖、摘要错误及越界压缩路径也会报错。
 
-本地 HTTP 服务器回归：`python tests/magel_online_dependencies.py`，覆盖嵌套导入、菱形依赖去重、共享缓存、离线 VM / AOT、LSP 注释及错误包处理。
+本地 HTTP 服务器回归：`python tests/magel_online_dependencies.py`，覆盖嵌套导入、菱形依赖去重、共享缓存、离线 VM、LSP 注释及错误包处理。
 
 `magel lsp` 提供标准库及项目导入模块的函数补全、悬停文档、重载参数提示与跨文件跳转。补全列表保留完整名称以说明来源，无冲突时插入简短名称；跨模块同名或当前作用域有遮蔽时使用限定名。同模块函数重载共享简短名称。标准库说明与 [API 参考](library/README.md) 共用声明数据，随工具链内嵌，运行时无需文档目录。
 
@@ -374,21 +324,6 @@ LSP 对类型名检查大驼峰（PascalCase），对函数和方法名检查小
 
 验证入口：`python tests/magel_native_development.py --aot`（测试驱动使用 Python，受测程序 PATH 不含 Python）、`python tests/magel_native_lsp_parity.py`、`python tests/magel_online_dependencies.py`。旧 Python 实现保留供文档与回归对照，不参与用户运行流程。
 
-
-### MSVC 生成代码验证
-
-在 Windows 的 Visual Studio 2022 x64 Native Tools 命令提示符中，保留的 AOT C++ 源码可以交给 MSVC。2026-10-16 已对本次五项基准的生成源码使用以下命令完成编译、链接和运行，全部校验和正确（[验证记录](benchmarks/aot-msvc-probe-2026-10-16.json)）：
-
-```bat
-cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /DWIN32_LEAN_AND_MEAN /DNOMINMAX program.aot.cpp /Foprogram-msvc.obj /Feprogram-msvc.exe /link winhttp.lib ws2_32.lib
-```
-
-这里的 `program.aot.cpp` 是 `magel aot ... --keep-intermediate` 保留的源码，先在可用的 GCC AOT 流程中生成。当前 AOT 驱动仍使用 GCC 的 `-dumpmachine`、`-std=c++17`、`-pthread`、`-c` 和 `-o`，因此 `--cxx cl.exe` 还不能直接使用。直接集成需要分别适配目标探测、优化参数、编译／链接命令、模块缓存、SQLite C 编译及 DLL／目标文件输出。本次验证只覆盖普通可执行文件与基准所用运行时，不代表所有模块、胶水或库输出均已通过 MSVC 门禁；它也不是 MSVC 与 GCC 的性能对比。
-
-AOT 的 checked 源码定位保留线程调用栈和同步保护；同一源文件连续执行时只更新行号，避免每条四元式重复构造、复制文件名和函数名。错误路径仍读取当前帧的函数、文件与行号。
-
-
-解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/magel-frontend/`，不会散落到仓库根目录。
 
 ## 工具链发布脚本
 

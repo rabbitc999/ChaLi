@@ -91,7 +91,7 @@ ctest --test-dir build/symbols --output-on-failure
 python magel/tests/test_magel_panic.py --magel magel/magel --exports
 ```
 
-源码入口：[VM 头文件](../library/stackvm/stackvm.hpp)、[VM 执行](../library/stackvm/parts/execution.cpp)、[AOT 桥](../library/stackvm/parts/aot_bridge.cpp)、[AOT 生成器](../source/magel-emit/aot.cpp)。
+源码入口：[VM 头文件](../library/stackvm/stackvm.hpp)、[VM 执行](../library/stackvm/parts/execution.cpp)、[AOT 桥](../library/stackvm/parts/aot_bridge.cpp)、AOT 生成器（AOT 导出器已移除）。
 
 ## Magel 行级来源
 

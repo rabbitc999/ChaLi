@@ -154,4 +154,4 @@ Both Magel builds use `-O3 --checked`, reflection, and the full quadruple optimi
 
 The checked improvements combine typed scalar memory access, array success paths, per-frame native argument reuse, and reduced source-location string copying. Checks and panic traces remain enabled. Java uses Temurin 8u504-b01 and Oracle 22.0.1, with `-Xms256m -Xmx256m -Xbatch` and 20 warmup iterations per process; AOT uses one warmup. Java uses `long[64]` for both array kernels and `ArrayList<Long>` for the container, while Magel uses its own arrays and `List<int64>`. These are algorithm comparisons with different layouts and JIT behavior. Java remains substantially faster on these kernels; the results do not imply an overall language ranking.
 
-[Raw measurements and hashes](../benchmarks/aot-optimization-2026-10-16.json); [benchmark runner](../../tests/benchmark_aot_optimization.py).
+[Raw measurements and hashes](../benchmarks/aot-optimization-2026-10-16.json); benchmark runner（已移除）.

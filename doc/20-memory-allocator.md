@@ -122,9 +122,9 @@ Magel 翻译单元及其依赖库必须一致定义 `MAGEL_CUSTOM_ALLOCATOR=1`�
 普通 `std::string` 宿主签名可以使用 Codec 转换，其宿主字符串由宿主释放。
 
 回归：[`runtime_allocator.c`](../tests/runtime_allocator.c)、
-[`runtime_allocator.cpp`](../tests/runtime_allocator.cpp)、[`magel_emit.py`](../tests/magel_emit.py)；
+[`runtime_allocator.cpp`](../tests/runtime_allocator.cpp)、AOT 导出回归（已随导出器移除）；
 它们都挂在发布门禁 `sh ci.sh` 上（见[06 部署](06-deployment.md)），
-修改分配器后先跑基础门禁，再按改动影响补充 ABI、逐库或其他专项；入口见 [`ci.sh`](../ci.sh) 的分配器小节。
+修改分配器后先跑基础门禁，再按改动影响补充 ABI、逐库或其他专项；
 
 ## 墓碑压缩与手动清扫
 
