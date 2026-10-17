@@ -451,8 +451,7 @@ int magel_main_entry(int argc, char **argv)
     }
     Memory::Vector<Memory::String> defineItems;
     Memory::Vector<Memory::String> programArguments;
-    /* 前置子命令（与统一入口一致）：run|interpret / emit / svmb。aot 需要 magel-emit，
-     * 独立编译器工程没有链进来，给明确指引而不是"不认识的选项"。 */
+    /* 前置子命令（与统一入口一致）：run|interpret / emit / svmb。 */
     int firstArgument = 1;
     if (argc > 1)
     {
@@ -469,11 +468,6 @@ int magel_main_entry(int argc, char **argv)
             emitBinary = true;
             firstArgument = 2;
         }
-        else if (first == "aot")
-        {
-            std::fprintf(stderr, MAGEL_TEXT("magel：这个构建不含 aot 导出；请用仓库的统一 magel 或 magel-emit\n"));
-            return 2;
-        }
     }
     for (int index = firstArgument; index < argc; ++index)
     {
@@ -483,7 +477,7 @@ int magel_main_entry(int argc, char **argv)
             PrintUsage(stdout);
             return 0;
         }
-        /* `--mode`：与统一入口一致的运行方式；独立构建只认 interpret / emit / svmb。 */
+        /* `--mode`：与统一入口一致的运行方式，只认 interpret / emit / svmb。 */
         if (argument == "--mode" || argument == "--run-mode")
         {
             if (index + 1 >= argc)
@@ -499,11 +493,6 @@ int magel_main_entry(int argc, char **argv)
             {
                 run = 0;
                 emitBinary = true;
-            }
-            else if (mode == "aot")
-            {
-                std::fprintf(stderr, MAGEL_TEXT("magel：这个构建不含 %s 导出；请用仓库的统一 magel 或 magel-emit\n"), mode.c_str());
-                return 2;
             }
             else
             {
