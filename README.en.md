@@ -10,7 +10,7 @@ Magel itself, targeting the case where *one* program runs from the desktop all t
 embedded board.
 
 The Magel compiler's front end is generated from this repository's `source/magel.gram` by
-[ParseEngine](https://gitee.com/rabbitc999/ParseEngine). It lowers `.mgl` source into StackVM
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It lowers `.mgl` source into StackVM
 quadruples and then assembles VM instructions. Programs can execute in memory, be saved as
 `.svmb` bytecode, or be exported as standalone deployable C++ programs.
 
@@ -107,7 +107,7 @@ Regenerate for the initial build and after changing these source files; commit t
 not the generated parser files:
 
 ```sh
-sh gen.sh          # regenerate the front end from magel.gram with IELR (needs the [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) grammar generator)
+sh gen.sh          # regenerate the front end from magel.gram with IELR (needs the [ParseEngine](https://github.com/rabbitc999/ParseEngine) grammar generator)
 ```
 
 - `source/magel.gram` / `source/magel_token.gram` (the grammar)

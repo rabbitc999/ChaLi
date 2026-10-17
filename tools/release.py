@@ -120,7 +120,7 @@ def package_assets(root, output, binary, vsix, version, target, revision, dirty)
             package.writestr('README.txt', f'Magel {version} ({target})\n提交：{revision}\n工作区存在未提交改动：{dirty}\n\n'
                              f'运行：{binary.name} run examples/any_generics.mgl\n宏帮助：{binary.name} man macro\n'
                              f'插件：code --install-extension {vsix.name}\n书本：Magel-book.pdf\n'
-                             '源码：https://gitee.com/rabbitc999/magel\n')
+                             '源码：https://github.com/rabbitc999/Magel\n')
         os.replace(temporary, archive)
     finally:
         if temporary is not None:

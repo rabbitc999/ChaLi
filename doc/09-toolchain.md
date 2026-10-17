@@ -300,9 +300,9 @@ sh gen.sh      # 用 IELR 从 magel.gram 生成前端（需要 ParseEngine 文�
 > 忘了跑 `gen.sh` 是最容易踩的坑：`magel_main.cpp` 是 `source/magel_driver.cpp` 的**生成副本**，
 > 只 `make` 不会重新生成它，于是你会看到"改了没生效"。
 
-`gen.sh` 需要一份 [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) 文法生成器。最省事是把它放到项目根目录 `./ParseEngine[.exe]`；也可以让它待在旁边的 ParseEngine 仓库里，`gen.sh` 会自动找 `../ParseEngine/build/bin/`。
+`gen.sh` 需要一份 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 文法生成器。最省事是把它放到项目根目录 `./ParseEngine[.exe]`；也可以让它待在旁边的 ParseEngine 仓库里，`gen.sh` 会自动找 `../ParseEngine/build/bin/`。
 
-Windows 上未找到生成器时，`gen.sh` 自动从[最新发布版](https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe)下载 `ParseEngine.exe` 到项目根目录；已有生成器会直接复用。其他平台请提供可运行的本机生成器，或通过 `ENGINE` 指定路径。
+Windows 上未找到生成器时，`gen.sh` 按顺序尝试 [Gitee](https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe) 与 [GitHub](https://github.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe) 两处的最新发布版，先成功的那个下载为项目根目录的 `ParseEngine.exe`；已有生成器会直接复用。其他平台请提供可运行的本机生成器，或通过 `ENGINE` 指定路径。
 
 ### 编入注解与反射
 

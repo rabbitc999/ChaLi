@@ -386,7 +386,7 @@ drop/delete 后访问 & 已终结来源不能继续当有效值使用；常见�
 
 这要求同时考虑对象的作用域和生命周期状态。仅把来源移到外层，并不能使已经移动或释放的值重新有效；重新声明的同名变量也不会让旧引用改指向新变量。
 
-复制拥有值可以获得独立数据；复制引用仍共享来源。容器和大对象的深复制有成本，需要省复制时显式选择有效引用。详细边界见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/11-algorithm-validation.md}{借用控制流验证}。
+复制拥有值可以获得独立数据；复制引用仍共享来源。容器和大对象的深复制有成本，需要省复制时显式选择有效引用。详细边界见\href{https://github.com/rabbitc999/Magel/blob/master/doc/11-algorithm-validation.md}{借用控制流验证}。
 
 \section{小结}
 

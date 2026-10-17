@@ -1,7 +1,7 @@
 \chapter{单片机上的 Magel 解释器}
 \label{ch:25}
 
-桌面项目把程序交给操作系统运行，单片机需要自己提供启动、内存、文件和外设。仓库已经有一套 \href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/README.md}{FK-STM32H743XIH6 板端工程}：LCD 选择程序，FatFS 读取映像，按键控制运行，串口输出诊断。
+桌面项目把程序交给操作系统运行，单片机需要自己提供启动、内存、文件和外设。仓库已经有一套 \href{https://github.com/rabbitc999/Magel/blob/master/example/mcu/FK-STM32H743XIH6/README.md}{FK-STM32H743XIH6 板端工程}：LCD 选择程序，FatFS 读取映像，按键控制运行，串口输出诊断。
 
 本章按实际工程追踪一次“生成程序、加载执行、出错恢复”的过程。硬件与工具链的完整参数以板级 README、CMake 和源码为准。
 
@@ -24,11 +24,11 @@
 源码入口 & 阅读重点 \\
 \midrule
 \endhead
-\href{https://gitee.com/rabbitc999/magel/tree/master/library/stackvm}{library/stackvm} & 桌面与板端共同的 VM 核心 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/source/stackvm_mcu/README.md}{source/stackvm\_mcu} & 裁剪配置、静态池和宿主适配 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/main.c}{板端 main.c} & 上电后的独立程序入口 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/magel_board.cpp}{magel\_board.cpp} & 加载、菜单、执行与原生接口注册 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/programs/board.mgl}{programs/board.mgl} & Magel 可调用的外设函数签名 \\
+\href{https://github.com/rabbitc999/Magel/tree/master/library/stackvm}{library/stackvm} & 桌面与板端共同的 VM 核心 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/source/stackvm_mcu/README.md}{source/stackvm\_mcu} & 裁剪配置、静态池和宿主适配 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/mcu/FK-STM32H743XIH6/main.c}{板端 main.c} & 上电后的独立程序入口 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/mcu/FK-STM32H743XIH6/magel_board.cpp}{magel\_board.cpp} & 加载、菜单、执行与原生接口注册 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/mcu/FK-STM32H743XIH6/programs/board.mgl}{programs/board.mgl} & Magel 可调用的外设函数签名 \\
 \bottomrule
 \end{longtable}
 }
@@ -102,7 +102,7 @@ LCD 文本当前支持可打印 ASCII，不能把桌面字符串支持 UTF-8 等
 
 \section{构建、加载与菜单}
 
-完整构建命令见\href{https://gitee.com/rabbitc999/magel/blob/master/example/mcu/FK-STM32H743XIH6/README.md#构建}{板级构建说明}。需要 CMake、Clang/LLVM、Make 和 Cortex-M7 硬浮点 Arm C/C++ 运行库；仓库提供运行库获取脚本。默认 SDK 来自本工程 \texttt{sdk/\allowbreak{}}，构建输出位于 \texttt{build-local/\allowbreak{}board-sdk/\allowbreak{}}。
+完整构建命令见\href{https://github.com/rabbitc999/Magel/blob/master/example/mcu/FK-STM32H743XIH6/README.md#构建}{板级构建说明}。需要 CMake、Clang/LLVM、Make 和 Cortex-M7 硬浮点 Arm C/C++ 运行库；仓库提供运行库获取脚本。默认 SDK 来自本工程 \texttt{sdk/\allowbreak{}}，构建输出位于 \texttt{build-local/\allowbreak{}board-sdk/\allowbreak{}}。
 
 程序加载使用 FatFS 的 \texttt{0:\allowbreak{}/\allowbreak{}magel/\allowbreak{}}。参考 BSP 中的 \texttt{0:\allowbreak{}} 对应外部 W25QXX 卷，不是自动识别任意 SD 卡。把每个程序的三份文件放在同一目录：
 

@@ -246,7 +246,7 @@ abi "./native.dll"
 
 \texttt{packed} 结构体用于对接 C 侧 \texttt{\#pragma pack} 的紧凑布局——C 里用\texttt{\#pragma pack(\allowbreak{}push,\allowbreak{} 1)\allowbreak{}} 压过的地方，Magel 侧就声明成 \texttt{struct X packed \{ … \}}。
 
-完整例子见 \href{https://gitee.com/rabbitc999/magel/tree/master/doc/examples/abi_buffers}{\texttt{doc/\allowbreak{}examples/\allowbreak{}abi\_buffers/\allowbreak{}}}——它覆盖了结构体嵌套、紧凑布局、数组读写、可空引用、返回值长度等全部边界情况。
+完整例子见 \href{https://github.com/rabbitc999/Magel/tree/master/doc/examples/abi_buffers}{\texttt{doc/\allowbreak{}examples/\allowbreak{}abi\_buffers/\allowbreak{}}}——它覆盖了结构体嵌套、紧凑布局、数组读写、可空引用、返回值长度等全部边界情况。
 
 \section{宿主胶水：把 C++ 函数注册进来}
 
@@ -341,7 +341,7 @@ int64 main()
 \par
 \medskip
 
-接口签名、宿主参数和返回值必须一致。同步回调通过 \texttt{Native\allowbreak{}Call\allowbreak{}Context:\allowbreak{}:\allowbreak{}invoke} 与 \texttt{magel\_glue:\allowbreak{}:\allowbreak{}Function} 使用同一套 VM/AOT 规则；不要把函数值中的运行时地址当作宿主机器函数指针。完整胶水约定见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/08-host-integration.md}{宿主集成}。
+接口签名、宿主参数和返回值必须一致。同步回调通过 \texttt{Native\allowbreak{}Call\allowbreak{}Context:\allowbreak{}:\allowbreak{}invoke} 与 \texttt{magel\_glue:\allowbreak{}:\allowbreak{}Function} 使用同一套 VM/AOT 规则；不要把函数值中的运行时地址当作宿主机器函数指针。完整胶水约定见\href{https://github.com/rabbitc999/Magel/blob/master/doc/08-host-integration.md}{宿主集成}。
 
 \section{反方向：宿主调用 Magel}
 
@@ -364,7 +364,7 @@ AOT C 导出 & Magel 用 export 声明，AOT 生成库和 C 头文件，宿主�
 
 export 只供 AOT，VM 执行和字节码导出遇到它会报错。普通同步回调不要求 export，支持闭包、高阶函数、引用和多层重入；函数值与上下文只在所属宿主回调期间同步使用。
 
-AOT 的 static runMagel 是生成 C++ 内部的整程序入口，不能当作通用动态库 C 导出或字节码加载器。完整 API 与可运行代码见\href{https://gitee.com/rabbitc999/magel/blob/master/doc/08-host-integration.md}{宿主集成}及\href{https://gitee.com/rabbitc999/magel/blob/master/example/native-callbacks/README.md}{胶水回调示例}。
+AOT 的 static runMagel 是生成 C++ 内部的整程序入口，不能当作通用动态库 C 导出或字节码加载器。完整 API 与可运行代码见\href{https://github.com/rabbitc999/Magel/blob/master/doc/08-host-integration.md}{宿主集成}及\href{https://github.com/rabbitc999/Magel/blob/master/example/native-callbacks/README.md}{胶水回调示例}。
 
 \section{小结}
 

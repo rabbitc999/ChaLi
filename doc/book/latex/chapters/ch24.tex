@@ -1,7 +1,7 @@
 \chapter{学生信息管理系统：前后端分离}
 \label{ch:24}
 
-第 23 章把业务放在命令行里。这一章把交互搬到浏览器：浏览器负责显示和表单，Magel 负责 HTTP、JSON、权限与数据库。我们直接使用仓库的\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/example/ipage-student-server/README.md}{前后端分离项目}，不另写一套只有页面的演示。
+第 23 章把业务放在命令行里。这一章把交互搬到浏览器：浏览器负责显示和表单，Magel 负责 HTTP、JSON、权限与数据库。我们直接使用仓库的\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/example/ipage-student-server/README.md}{前后端分离项目}，不另写一套只有页面的演示。
 
 \section{先找到三个入口}
 
@@ -11,23 +11,23 @@
 入口 & 职责 \\
 \midrule
 \endhead
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/example/ipage-student-server/main.mgl}{main.mgl} & Magel API 服务、登录会话、路由、业务校验、MySQL 访问 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/example/ipage-student-server/web/index.html}{web/index.html} & 页面外壳与登录表单 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/example/ipage-student-server/web/app.js}{web/app.js} & 调接口、渲染表格、提交表单 \\
-\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/example/ipage-student-server/web/config.js}{web/config.js} & 后端地址配置 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/example/ipage-student-server/main.mgl}{main.mgl} & Magel API 服务、登录会话、路由、业务校验、MySQL 访问 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/example/ipage-student-server/web/index.html}{web/index.html} & 页面外壳与登录表单 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/example/ipage-student-server/web/app.js}{web/app.js} & 调接口、渲染表格、提交表单 \\
+\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/example/ipage-student-server/web/config.js}{web/config.js} & 后端地址配置 \\
 \bottomrule
 \end{longtable}
 }
 
 一次请求经过浏览器、HTTP API、权限判断和 SQL，结果再以 JSON 返回。前端静态服务器与 API 是两个进程、两个端口；API 的 \texttt{/\allowbreak{}} 返回 404，页面由静态服务器提供。
 
-这个项目使用 MySQL。仓库还有一个更小的 \href{https://gitee.com/rabbitc999/magel/blob/master/example/web-students/README.md}{SQLite Web 示例}，它由同一服务提供页面，适合先练增删改查；本章讲的跨源部署、会话与权限来自前后端分离项目。
+这个项目使用 MySQL。仓库还有一个更小的 \href{https://github.com/rabbitc999/Magel/blob/master/example/web-students/README.md}{SQLite Web 示例}，它由同一服务提供页面，适合先练增删改查；本章讲的跨源部署、会话与权限来自前后端分离项目。
 
 \section{准备独立练习数据库}
 
-先构建 Magel，并准备能连接的 MySQL 服务及客户端库。MySQL 客户端库路径可用 \texttt{MYSQL\_LIBRARY} 指定，具体连接方式见 \href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/README.md}{SQL 示例说明}。
+先构建 Magel，并准备能连接的 MySQL 服务及客户端库。MySQL 客户端库路径可用 \texttt{MYSQL\_LIBRARY} 指定，具体连接方式见 \href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/README.md}{SQL 示例说明}。
 
-仓库内的\href{https://gitee.com/rabbitc999/magel/blob/master/example/sql-magel/tests/fixture_ipage.sql}{练习夹具}包含五张表及四种角色账号。脚本含有删除并重建表的语句，下面明确使用独立数据库 \texttt{magel\_book\_students}；不要把该参数改成已有业务库。
+仓库内的\href{https://github.com/rabbitc999/Magel/blob/master/example/sql-magel/tests/fixture_ipage.sql}{练习夹具}包含五张表及四种角色账号。脚本含有删除并重建表的语句，下面明确使用独立数据库 \texttt{magel\_book\_students}；不要把该参数改成已有业务库。
 
 以下命令从 Magel 仓库根目录运行。第一个终端启动后端：
 

@@ -14,6 +14,8 @@
   - 四处关键字表（文法词形、补全 `tools/mageldev.py`、原生 LSP `tools/native_development.cpp`、VSCode 高亮）同步：`foreach` 移除并补齐 `heap` / `yield`；`tools/check_keywords.py` 的高亮提取改为递归遍历 `repository`，门禁重新生效。样例、错误样例、回归、中英文文档、书稿 LaTeX 与内嵌手册全部迁移；`for-in` 相关诊断与提示同步改名；标准库 `Deque` / `Queue` / `Channel` / `Shared` / `Arena` 的 `create` 体改为写 `self`。
 - 修复具名构造入口结果被丢弃时漏报：判定原先按工厂名 `new` 匹配，改名 `create` 后失效，现按具名构造入口判定并报出 `X::create(...)` 的完整名字（`tests/magel_constructors.py` 的 discarded 系列覆盖）。
 - 修复构造函数重载在省略默认实参时静默挑第一条：`new T(...)` / `T::create(...)` 有多条候选接受同一实参个数且省略了默认实参时，现在按普通函数重载的同一套文案报出歧义（候选签名、省略的形参名与消歧建议），不再无声选中声明顺序靠前的那条。
+- `gen.sh` 的 ParseEngine 发行版下载新增 GitHub 源：`SOURCES` 按顺序尝试 Gitee 与 GitHub 的 `latest/ParseEngine.exe`，先成功的那个生效（GitHub 侧尚未发版时自动落到 Gitee）；`tests/gen_download.py` 补上「Gitee 失败转 GitHub」的用例。
+- 对外链接改到 GitHub：书稿与 LaTeX 生成器的仓库地址、README、插件清单、发布脚本里的项目链接统一为 `https://github.com/rabbitc999/Magel`，ParseEngine 链接改为 `https://github.com/rabbitc999/ParseEngine`；下载说明改为两处源按顺序尝试。
 - 文法非终结符 `foreach_stmt` / `foreach_source` 改名 `for_in_stmt` / `for_in_source`（`foreach` 关键字此前已删除，避免对外 EBNF 仍出现该名字），EBNF 附录、内嵌手册与内嵌标准库同步再生成；`Iterator` 的说明文案改为 `for-in`。
 - `AGENTS.md` 补充门禁范围约定：只改注释（不进入产物的文字）不必跑 `ci.sh` / `check.sh` 整套门禁，涉及文法、语义、标准库、内嵌资产、文档正文或测试时仍跑完整门禁。
 - 精简发布门禁 `ci.sh`：合并重复覆盖，删除与 `check.sh` 样例重复的套件、5 个 LSP 子套件（保留语义与原生对齐两组）、MCU / 板级与 VM 执行差分、以及分配器 / 借用检查器 / 优化器元数据 / IR 差分 / 墓碑压缩等成对 C++ 单测；同时删除 `tests/magel_v220.py`、`magel_v250.py`、`magel_v251.py`、`magel_lsp_v250.py`、`magel_lsp_v251.py` 五个已过时套件并修正文档里指向它们的链接。

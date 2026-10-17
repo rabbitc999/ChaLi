@@ -37,18 +37,32 @@ import shutil
 import tempfile
 import urllib.request
 
-url = "https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe"
+# 发行版下载地址：Gitee 与 GitHub 各一份，按顺序尝试，先成功的那个用。
+# 两个远端都发同样的 `latest/ParseEngine.exe`；哪边还没发版就自动落到下一个。
+SOURCES = ["https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe",
+           "https://github.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe"]
 temporary = None
 try:
-    with tempfile.NamedTemporaryFile(prefix=".ParseEngine-", suffix=".download", dir=".", delete=False) as output:
-        temporary = Path(output.name)
-        with urllib.request.urlopen(url, timeout=60) as response:
-            shutil.copyfileobj(response, output)
-    with temporary.open("rb") as downloaded:
-        if downloaded.read(2) != b"MZ":
-            raise ValueError("下载内容不是 Windows 可执行文件")
-    temporary.chmod(0o755)
-    os.replace(temporary, "ParseEngine.exe")
+    failures = []
+    for url in SOURCES:
+        try:
+            with tempfile.NamedTemporaryFile(prefix=".ParseEngine-", suffix=".download", dir=".", delete=False) as output:
+                temporary = Path(output.name)
+                with urllib.request.urlopen(url, timeout=60) as response:
+                    shutil.copyfileobj(response, output)
+            with temporary.open("rb") as downloaded:
+                if downloaded.read(2) != b"MZ":
+                    raise ValueError("下载内容不是 Windows 可执行文件")
+            temporary.chmod(0o755)
+            os.replace(temporary, "ParseEngine.exe")
+            break
+        except Exception as error:
+            failures.append(url + "（" + str(error) + "）")
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+                temporary = None
+    else:
+        raise ValueError("；".join(failures))
 except Exception as error:
     raise SystemExit("下载 ParseEngine 失败：" + str(error))
 finally:

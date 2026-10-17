@@ -593,7 +593,7 @@ int64 main()
 
 导入 \texttt{std:\allowbreak{}:\allowbreak{}io} 后，\texttt{File\allowbreak{}Stream.\allowbreak{}read\allowbreak{}String(\allowbreak{}count)\allowbreak{}} 从当前游标读至多 count 个字节，\texttt{read\allowbreak{}Line(\allowbreak{})\allowbreak{}} 读一行，\texttt{read\allowbreak{}All\allowbreak{}String(\allowbreak{}max\allowbreak{}Bytes)\allowbreak{}} 读到 EOF。三者返回 \texttt{Result<\allowbreak{}String,\allowbreak{}Io\allowbreak{}Error>\allowbreak{}}；全读默认预算 16 MiB，保留文件换行字节，零字节文本报错。已有按路径的 \texttt{read\allowbreak{}All\allowbreak{}Text(\allowbreak{}path)\allowbreak{}} 继续可用。直接持有 File 句柄时有 \texttt{file\allowbreak{}Read\allowbreak{}String}、\texttt{file\allowbreak{}Read\allowbreak{}Line}、\texttt{file\allowbreak{}Read\allowbreak{}All\allowbreak{}String} 包装，错误会 panic。
 
-完整验证程序见 \href{https://gitee.com/rabbitc999/magel/blob/master/example/samples/std_read_lines.mgl}{行输入} 与 \href{https://gitee.com/rabbitc999/magel/blob/master/example/samples/std_file_strings.mgl}{文件读取}。
+完整验证程序见 \href{https://github.com/rabbitc999/Magel/blob/master/example/samples/std_read_lines.mgl}{行输入} 与 \href{https://github.com/rabbitc999/Magel/blob/master/example/samples/std_file_strings.mgl}{文件读取}。
 
 \section{小结}
 

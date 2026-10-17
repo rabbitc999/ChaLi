@@ -9,7 +9,7 @@
 
 Magel 是一门静态类型、值语义优先、不带 GC 的通用编程语言，提供借用来源与控制流检查。它借用 C 的表达式与块语法，但类型、所有权与运行时行为由 Magel 自行定义，面向"同一份程序从桌面一直到嵌入式板端"的场景。
 
-Magel 编译器由本仓库的 `source/magel.gram` 经 [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) 生成前端，把 `.mgl` 源码降级为 StackVM 四元式，再组装为 VM 指令。程序可在内存中执行、保存为 `.svmb` 字节码，或导出为可独立部署的 C++ 程序。
+Magel 编译器由本仓库的 `source/magel.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.mgl` 源码降级为 StackVM 四元式，再组装为 VM 指令。程序可在内存中执行、保存为 `.svmb` 字节码，或导出为可独立部署的 C++ 程序。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -86,7 +86,7 @@ sh check.sh        # 运行正常与错误样例
 首次构建以及修改下面这些真源后需要重新生成；提交真源，不提交解析器生成物：
 
 ```sh
-sh gen.sh          # 用 IELR 从 magel.gram 重新生成前端（需要 [ParseEngine](https://gitee.com/rabbitc999/ParseEngine) 文法生成器）
+sh gen.sh          # 用 IELR 从 magel.gram 重新生成前端（需要 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 文法生成器）
 ```
 
 - `source/magel.gram` / `source/magel_token.gram`（文法）

@@ -337,13 +337,13 @@ magel man std::text::Text::split --run
 
 搜索默认忽略大小写，\texttt{--exact} 匹配完整字段；拼错目标会给候选。\texttt{--lang zh|en} 选择界面和诊断语言，库说明仍复用中文原文。\texttt{--run} 在临时目录运行完整示例并附上输出。普通查询不需要 Python、网络或仓库；开发用 \texttt{--update} 运行既有生成脚本，重新构建后才进入内嵌数据。
 
-完整命令和 JSON 结构见 \href{https://gitee.com/rabbitc999/magel/blob/master/doc/man/README.md}{doc/man}，标准库 API 说明仍在 \href{https://gitee.com/rabbitc999/magel/blob/master/doc/library/README.md}{doc/library}。
+完整命令和 JSON 结构见 \href{https://github.com/rabbitc999/Magel/blob/master/doc/man/README.md}{doc/man}，标准库 API 说明仍在 \href{https://github.com/rabbitc999/Magel/blob/master/doc/library/README.md}{doc/library}。
 
 \subsection{编辑器增量提示}
 
 LSP 将补全、悬停、语义着色、工作区查询、宏预览、编译诊断交给不同工作队列。修改按 UTF-16 编辑范围同步，同一源码版本复用索引。诊断延迟 250 毫秒合并连续编辑，保存立即检查；取消过期任务，并且不把旧版本结果写回编辑器。
 
-缓存在 magel 可执行文件旁的 \texttt{build/\allowbreak{}lsp/\allowbreak{}}，与工程目录无关。未保存的依赖修改和关闭会刷新引用者，不写回源文件。缓存自动清理七天未使用的普通文件，超过 256 MiB 时淘汰到 192 MiB，保护最近十分钟的文件；活跃任务可以暂时超过额度。索引内存也有淘汰阈值，缓存损坏或不可写会退回分析。详细策略见 \href{https://gitee.com/rabbitc999/magel/blob/master/doc/man/lsp.md}{LSP 增量提示与缓存}。
+缓存在 magel 可执行文件旁的 \texttt{build/\allowbreak{}lsp/\allowbreak{}}，与工程目录无关。未保存的依赖修改和关闭会刷新引用者，不写回源文件。缓存自动清理七天未使用的普通文件，超过 256 MiB 时淘汰到 192 MiB，保护最近十分钟的文件；活跃任务可以暂时超过额度。索引内存也有淘汰阈值，缓存损坏或不可写会退回分析。详细策略见 \href{https://github.com/rabbitc999/Magel/blob/master/doc/man/lsp.md}{LSP 增量提示与缓存}。
 
 \subsection{\texttt{inline}：函数定义的内联属性}
 
