@@ -48,4 +48,4 @@ Binding scans have a separate limit of sixteen entries and sixteen MiB in total;
 
 On the same Windows machine with a 600 function file, first hover took approximately 1.52 seconds in 0.17.1 and 0.16 seconds in 0.17.2. Repeated semantic token requests took about 0.70 and 0.02 seconds. These measurements describe language service requests; overall editor responsiveness also depends on project size, extensions, and machine load.
 
-[Command line manual](README.md) · [Documentation index](../../en/README.md)
+[Command line manual](README.md) · Documentation index

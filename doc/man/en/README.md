@@ -72,7 +72,7 @@ make -j4
 
 CI checks generated data with `--check`. [tests/magel_man.py](../../../tests/magel_man.py) covers modules, types, methods, search, JSON, three display languages, suggestions, and examples. `magel help` explains toolchain commands; `magel man` documents library APIs.
 
-[Documentation index](../../en/README.md)
+Documentation index
 
 ## Embedded book, keywords and AI SKILL
 
