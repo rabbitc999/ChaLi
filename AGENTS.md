@@ -47,8 +47,9 @@
    时复核并更新 `sdk-snapshot.json` 的本地 LF 哈希，保留原哈希、编码及组件许可证。
 8. 文档索引用 [`doc/README.md`](doc/README.md)；最后 `git add -A` → commit →
    `git push origin master`（远端 <https://gitee.com/rabbitc999/magel.git>）。
-   仓库里另配的 `github` 远端只是只读镜像，**不要向它推送任何分支或 tag**；
-   所有发布动作只对 `origin` 执行。
+   仓库里另配的 `github` 远端（<https://github.com/rabbitc999/Magel.git>）默认不动：
+   向它推送任何分支或 tag 之前，**必须先取得用户明确同意**；未经同意不得推送，
+   也不要把它当成 `origin` 的自动镜像顺手同步。
 9. **VS Code 插件版本与程序版本一致**：以根目录 [`VERSION`](VERSION) 为准，
    [`vscode/package.json`](vscode/package.json) 的 `version`、内嵌的 Magel 编译器版本与
    VSIX 打包版本必须一致。程序版本变更时同步更新插件版本；交付前在 `vscode/` 下
