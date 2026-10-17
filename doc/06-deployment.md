@@ -10,7 +10,6 @@
 | --- | --- | --- | --- | --- |
 | **解释执行** | `magel run app.mgl` | 每次都编译 | Magel 工具链 | 开发、脚本、工具 |
 | **字节码 + StackVM** | `magel svmb …` → VM 加载 | 快 | StackVM | 交付、嵌入式、程序映像更新 |
-| **AOT 本地程序** | `magel aot …` | 不经过 VM 装载，实际启动耗时由程序决定 | 运行时服务编入产物 | 桌面分发、性能敏感 |
 
 ### 解释执行
 
@@ -28,24 +27,7 @@ magel svmb src/main.mgl --out build/app
 
 产出 `build/app.svmb`，交给 StackVM 加载。交付形态的选择与加固见[交付安全](05-delivery-security.md)。
 
-### AOT 本地程序
-
-除可执行程序外，AOT 可输出 `.dll` / `.so` 共享库和 `.o` 可重定位文件，生成 C 头文件。
-库源码可无 `main`，至少通过一个 `export` 声明公开函数；不支持静态库。
-目标格式、链接和调用步骤见[库输出](09-toolchain.md#aot-库输出)。
-
-```sh
-magel aot src/main.mgl --out build/app --opt-level=2
-```
-
-生成 C++ 再编成目标平台的本地程序。产物名沿用 `--out` 给的名字；Windows 上没有扩展名时补成 `build/app.exe`，因为系统只按扩展名认可执行映像。默认 `checked`，开启额外分配护栏和 panic 调用记录；需要显式关闭这些可选检查时写 `unchecked`。显式指定检查模式的例子：
-
-```sh
-magel aot src/main.mgl --out build/app checked opt 2
-```
-
-| 选项 | 作用 |
-| --- | --- |
+--- | --- |
 | `--out 路径` | 产物前缀 |
 | `opt LEVEL` / `--opt-level=N` | 优化级别 |
 | `checked` / `unchecked` | 是否保留运行时检查（默认 `checked`） |
@@ -59,7 +41,6 @@ magel aot src/main.mgl --out build/app checked opt 2
 三种方式都能用。分发建议：
 
 - 内部工具、需要频繁更新的 → 字节码 + VM；
-- 给最终用户、追求启动速度 → AOT；
 - 需要跨平台且不想维护多份构建 → 字节码（同一份 `.svmb` 在各平台的 VM 上都能跑）。
 
 默认运行内存池 **512 MiB**，可用 `--memory-size 字节` 调整（最小 64）。
@@ -93,23 +74,8 @@ H743 的独立工程已接 SDRAM、FatFS、USART1、LCD 和按键，使用 2/16/
 
 ## 4. 嵌入到宿主程序
 
-AOT 生成的 C++ 里带着可直接调用的入口：
-
-```cpp
-static int runMagel(int argumentCount, const char *const *arguments,
-                    void *buffer, std::size_t memoryBytes);
-```
-
-| 参数 | 含义 |
-| --- | --- |
-| `argumentCount` / `arguments` | 传给 Magel `main` 的参数（不含程序名） |
-| `buffer` | 运行内存缓冲区；传 `nullptr` 由程序自行分配 |
-| `memoryBytes` | 缓冲区大小，也就是运行内存上限 |
-
-生成的文件里有 `#ifndef MAGEL_NO_MAIN` 包着 `int main(...)`——**定义 `MAGEL_NO_MAIN` 后再编译，就只剩 `runMagel` 可供你的固件调用**，不带自己的 `main`。
-
-该入口具有 translation-unit 内部链接，供集成生成 C++ 的宿主调用；需要稳定 C 接口时使用 AOT 的 `export` 和生成头文件。
-AOT 逻辑改变后须重编本地程序；要通过替换字节码更新设备程序，使用独立 VM 加载新映像，不承诺迁移运行中的栈与对象。
+独立 VM 的嵌入方式（`buffer` / `memoryBytes` 内存上限、`MAGEL_NO_MAIN` 之类的编译期开关）
+见本页第 3 节与[宿主集成与 C ABI](08-host-integration.md)。
 
 更完整的胶水绑定、类型映射、`abi` 块见[宿主集成与 C ABI](08-host-integration.md)。
 
@@ -150,11 +116,11 @@ Magel 自身就能当服务端跑：`std::net` 监听 HTTP、`std::sql` 访问�
 | 场景 | 推荐 |
 | --- | --- |
 | 开发调试 | 解释执行 |
-| 桌面交付给最终用户 | AOT（`checked` 或 `unchecked` 按性能需要） |
-| 需要隐藏源码 | 压缩字节码或 AOT，见[交付安全](05-delivery-security.md) |
+| 桌面交付给最终用户 | 压缩字节码，交给独立 VM 加载 |
+| 需要隐藏源码 | 压缩字节码，见[交付安全](05-delivery-security.md) |
 | MCU / 板端 | 字节码 + 共享核心的独立 MCU 宿主 |
-| 固件里调业务逻辑 | AOT + `MAGEL_NO_MAIN` + `runMagel` |
-| 长期运行的服务 | 字节码或 AOT + `--watchdog` |
+| 固件里调业务逻辑 | 独立 VM + `MAGEL_NO_MAIN` + `runMagel` |
+| 长期运行的服务 | 字节码 + `--watchdog` |
 
 ---
 
