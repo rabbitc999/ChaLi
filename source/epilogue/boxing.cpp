@@ -2973,7 +2973,7 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         {
             Fail(node.i != 0       ? "break #level 指定的循环层数超出当前函数的嵌套循环范围" :
                  node.kids.empty() ? "break 只能用在循环里面" :
-                                     "break 值; 需要外层值表达式接收结果");
+                                     "yield 值; 需要外层值表达式接收结果");
             return nullptr;
         }
         // break 的值可包含内层 loop，压栈可能使 g_blockStack 中的指针失效。
@@ -3108,13 +3108,13 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         if (valueId >= 0 && N(valueId).kind == MNode::Loop && N(valueId).s == "block")
             return LowerStmt(N(valueId).kids[0]);
         /* 构造结果必须由值上下文接管，不能作为独立语句丢弃。 */
-        if (valueId >= 0 && N(valueId).kind == MNode::EnumCtor && N(valueId).type2 == 1 && N(valueId).s2 == "new")
+        if (valueId >= 0 && N(valueId).kind == MNode::EnumCtor && N(valueId).type2 == 1 && N(valueId).s2 == "create")
         {
             if (const auto *owner = FindStruct(N(valueId).s))
                 for (const auto &method : owner->methods)
                     if (!method.superseded && method.isNamedConstructor)
                     {
-                        Fail("构造结果必须被接收，不能丢弃 `" + N(valueId).s + "::new(...)` 的拥有值");
+                        Fail("构造结果必须被接收，不能丢弃 `" + N(valueId).s + "::" + N(valueId).s2 + "(...)` 的拥有值");
                         return Bad();
                     }
         }

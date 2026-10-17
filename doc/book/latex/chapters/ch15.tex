@@ -15,7 +15,7 @@
 List<int64> filter(List<int64> xs, bool fn(int64) keep)
 {
     List<int64> out;
-    foreach (int64 x in xs)
+    for (int64 x in xs)
     {
         if (keep(x))
         {
@@ -1495,7 +1495,7 @@ int64 main()
 
 \section{下一步}
 
-\texttt{filter}、\texttt{map} 这类「把函数当参数」的操作，写起来越来越顺手了。但你自己写 \texttt{filter} 还得手搓 \texttt{List}、手搓 \texttt{foreach}——一不小心就写出一堆模板代码。
+\texttt{filter}、\texttt{map} 这类「把函数当参数」的操作，写起来越来越顺手了。但你自己写 \texttt{filter} 还得手搓 \texttt{List}、手搓 \texttt{for-in}——一不小心就写出一堆模板代码。
 
 第 16 章讲错误处理，先把「出错了怎么办」这件事说清楚；之后第六部分的迭代器，会把 \texttt{map} / \texttt{filter} 这些套路做成一条能直接用的链。
 

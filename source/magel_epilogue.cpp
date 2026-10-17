@@ -1941,25 +1941,11 @@ int M_BreakLevel(int level)
 }
 
 /**
- * @brief 在层级退出参数中接受 ALL 的所有 ASCII 大小写组合。
- * @param nameId 参数标识符在名称池中的编号。
- * @retval ALL 返回退出全部循环的节点；非法名称返回错误节点。
- * @note 不修改词法关键字表，避免占用普通变量名 all。
- */
-int M_BreakLevelNamed(int nameId)
-{
-    const auto &name = g_names[nameId];
-    if (name.size() == 3 && (name[0] == 'a' || name[0] == 'A') && (name[1] == 'l' || name[1] == 'L') && (name[2] == 'l' || name[2] == 'L'))
-        return M_BreakLevel(-1);
-    return M_ParseBad("break #level 的参数必须是正整数字面量或 ALL（不区分大小写）");
-}
-
-/**
  * @brief 语法糖辅助：大小写无关地判定名称池中的名字是否等于给定文本。
  * @param nameId 名称池编号。
  * @param text 目标文本（ASCII）。
  * @retval 名字与 text 大小写无关相等时返回 true。
- * @note 与 M_BreakLevelNamed 一致，不引入关键字，保留 level / all 作为普通标识符。
+ * @note 不引入关键字，保留 level / all 作为普通标识符。
  */
 bool M_NameIs(int nameId, const char *text)
 {
@@ -1975,25 +1961,6 @@ bool M_NameIs(int nameId, const char *text)
 }
 
 /**
- * @brief 语法糖辅助：`break all;` 等价 break #level(ALL)。
- * @param exprNode break 后的值表达式节点。
- * @retval 裸名 all（大小写无关）返回退出全部循环的节点；否则原样按带值 break 处理。
- * @note 沿用 M_BreakLevelNamed 的约定，all 仍可作普通变量名（如 break #level(all) 中）。
- */
-int M_BreakAllSugar(int exprNode)
-{
-    if (exprNode < 0) return M_Break(exprNode);
-    const MNode &node = g_nodes[static_cast<std::size_t>(exprNode)];
-    if (node.kind == MNode::Var) {
-        const char *cs = node.s.c_str();
-        const size_t n = std::strlen(cs);
-        if (n == 3 && (cs[0] == 'a' || cs[0] == 'A') && (cs[1] == 'l' || cs[1] == 'L') && (cs[2] == 'l' || cs[2] == 'L'))
-            return M_BreakLevel(-1);
-    }
-    return M_Break(exprNode);
-}
-
-/**
  * @brief `break level N;` / `break level all;` 语法糖的层级名判定辅助（文法动作不支持字符串字面量）。
  * @param nameId 名称池编号。
  * @retval 名字大小写无关等于 level / all 时返回 true。
@@ -2006,6 +1973,7 @@ bool M_NameIsAll(int nameId)   { return M_NameIs(nameId, "all"); }
  */
 int M_ParseBadLevelSugar()    { return M_ParseBad("break level 后必须跟正整数字面量层数，形如 break level 2;"); }
 int M_ParseBadLevelAllSugar() { return M_ParseBad("break level 后只能跟 all，形如 break level all;"); }
+int M_ParseBadBreakAllSugar() { return M_ParseBad("break 仅支持 break all 退出全部循环，带值退出请写 yield 值"); }
 
 /**
  * @brief 构造并登记指针释放语句。

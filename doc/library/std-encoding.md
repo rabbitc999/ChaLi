@@ -40,7 +40,7 @@ int64 main(){
     assert(encodeBase64(binary)=="APv/" && encodeBase64Url(binary)=="APv_");
     assert(decodeHex("00FBff").unwrap()[2]==(uint8)255);
     assert(!decodeHex("0").isOk() && !decodeHex("xz").isOk());
-    List<String> inputs1;inputs1.push("A");inputs1.push("A===");inputs1.push("Zg=");inputs1.push("Z=g=");inputs1.push("Zh==");inputs1.push("Zm9=");inputs1.push("Zg==\n");inputs1.push("====");foreach(String invalid in inputs1){assert(!decodeBase64(invalid).isOk());}
+    List<String> inputs1;inputs1.push("A");inputs1.push("A===");inputs1.push("Zg=");inputs1.push("Z=g=");inputs1.push("Zh==");inputs1.push("Zm9=");inputs1.push("Zg==\n");inputs1.push("====");for(String invalid in inputs1){assert(!decodeBase64(invalid).isOk());}
     assert(!decodeBase64Url("APv/").isOk() && !decodeBase64("APv_").isOk());
     println("encoding RFC vectors OK");return 0;
 }

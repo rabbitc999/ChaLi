@@ -26,8 +26,8 @@ def generate():
         '12.': 'module import export inline', '13.': 'mut',
         '15.': '@annotation', '16.': 'abi export', 'fn 捕获': 'fn copy move',
         '返回控制表达式': 'return', '具名函数声明': 'fn mut copy move', '#derive': '#derive',
-        'foreach 整数': 'foreach auto', '带值退出': 'break yield',
-        '指定层数退出': 'break #level ALL', '块表达式': 'break',
+        'for-in 整数': 'for auto in', '带值退出': 'break yield',
+        '指定层数退出': 'break', '块表达式': 'break',
     }
     token_source = (ROOT / 'source/magel_token.gram').read_text(encoding='utf-8')
     grammar = (ROOT / 'source/magel.gram').read_text(encoding='utf-8')

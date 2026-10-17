@@ -2,7 +2,7 @@ module std::memory;
 
 /* 从 lang.mgl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::memory;` 才能用）。 */
 /* `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
- * `foreach (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
+ * `for (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
  * 只要值就读 `span[i]` 或先 `T v = *p;`。*/
 struct Span<T>: Iterator<T mut&>, Index<T, int64> {
     T mut& data;
@@ -55,9 +55,7 @@ struct Arena : Drop {
     uint64 handle;
 
     static Arena create() {
-        Arena result;
-        result.handle = __arenaCreate();
-        return result;
+        self.handle = __arenaCreate();
     }
 
     Span<char> allocate(int64 bytes) {

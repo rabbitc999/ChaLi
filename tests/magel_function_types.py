@@ -54,7 +54,7 @@ T fn(T) makeGeneric<T>(T mut& bias) { return fn(T value) { value + bias }; }
 int64 fn(int64) make(int64 mut& bias) { return fn(int64 value) { value + bias }; }
 int64 nested(int64 fn(int64 fn(int64), int64) callback) { return callback(add, 7); }
 int64 const& borrow(int64 const& value) { return value; }
-int64 sum(int64... values) { int64 total=0; foreach(int64 x in values){total=total+x;} return total; }
+int64 sum(int64... values) { int64 total=0; for(int64 x in values){total=total+x;} return total; }
 int64[] numbers(){int64 values[]=new[2];values[0]=7;values[1]=8;return values;}
 int64 main() {
     auto composeCallbacks = (int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) {

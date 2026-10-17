@@ -51,7 +51,7 @@ int64 main() {
     List<int64> list; list.push(3);
     a = list[position()]++;
     assert(a == 3 && list[0] == 4 && calls == 2);
-    foreach (int64 element in list) { element++; }
+    for (int64 element in list) { element++; }
     assert(list[0] == 5);
     globalList.push(12);
     a = borrowedList()[0]++;

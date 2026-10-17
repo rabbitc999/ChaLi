@@ -171,7 +171,7 @@ int64 main() {
     int64 raw[3]; raw[0] = 7; raw[1] = 8; raw[2] = 9;
     assert((std::iter::fromSpan<int64>(&raw[0],3).map(read).fold(0,sum)) == (24));
     int64 total = 0;
-    foreach (int64 item in std::iter::range(1,4).map(squared)) { total = total + item; }
+    for (int64 item in std::iter::range(1,4).map(squared)) { total = total + item; }
     assert((total) == (14));
     assert((std::lang::range(1,5).intoIter().fold(0,sum)) == (10));
     assert((std::iter::range(5,1,-1).fold(0,sum)) == (14));

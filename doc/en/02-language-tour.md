@@ -81,8 +81,8 @@ sum=15 classify(7)=1
 
 `if / elif / else`, `while` and `for(init; cond; step)` are all present. Two more loop shapes:
 
-- `loop { … break v; }` — break with a value; `break` may carry an expression;
-- `foreach (T item in collection) { … }` — iterate a container.
+- `loop { … yield v; }` — loop with a value result; `yield` carries the expression;
+- `for (T item in collection) { … }` — iterate a container.
 
 `match` is next.
 
@@ -240,7 +240,7 @@ For **runtime** polymorphism, box the object into `std::lang::Any` and take an i
 (`Shape mut& view = boxed.getReference();`); the concrete type is decided at run time. See
 [`example/samples/interface.mgl`](../../example/samples/interface.mgl).
 
-Structs can also declare constructors (called as `T v = new(...)`), `Drop` destructors and operator
+Structs can also declare constructors (called as `T v = new T(...)`), `Drop` destructors and operator
 overloads — see [Language reference](04-language-reference.md).
 
 ---
@@ -263,7 +263,7 @@ int64 main() {
     players.push(a);
     players.push(b);
     int64 best = 0;
-    foreach (Player p in players) {
+    for (Player p in players) {
         if (p.score > best) { best = p.score; }
     }
     println("best={} count={}", best, players.len());
@@ -276,7 +276,7 @@ best=55 count=2
 ```
 
 `List<T>`, `Map<K, V>` and `Set<T>` are built in, with `push` / `len` / `[]` / `has` / `remove` and
-friends. `foreach` iterates by value.
+friends. `for-in` iterates by value.
 
 Chained iteration needs `import std::iter;`:
 

@@ -48,47 +48,47 @@ def main():
                     assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), result
                     print(f'[通过] {name} {backend} O{level}', flush=True)
         for body in (
-            '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;};',
-            '({int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;});',
-            '{break 1;};',
-            '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;}',
-            'auto f=int64 fn(){loop{int64 x={break #level(ALL);break 1;};};};f();',
-            'break #level(1);',
-            'break #level(ALL);',
-            'loop { break #level(0); };',
-            'loop { break #level(-1); };',
-            'loop { break #level(2); };',
-            'loop { break #level(999999999999999999999999); };',
-            'loop { int64 n=1; break #level(n); };',
-            'loop { break #level(1+1); };',
-            'loop { auto f=fn(){break #level(ALL);}; };',
-            'auto result=loop { if(true){break 1;} loop{break #level(2);}; };',
-            'auto f=int64 fn(){loop{loop{break #level(2);};};};f();',
-            'auto f=int64 fn(){loop{loop{break #level(ALL);};};};f();',
+            '{int64 y=loop{int64 z=loop{yield (5);};yield (z+1);};yield (y+1);};',
+            '({int64 y=loop{int64 z=loop{yield (5);};yield (z+1);};yield (y+1);});',
+            '{yield (1);};',
+            '{int64 y=loop{int64 z=loop{yield (5);};yield (z+1);};yield (y+1);}',
+            'auto f=int64 fn(){loop{int64 x={break all;yield (1);};};};f();',
+            'break level 1;',
+            'break all;',
+            'loop { break level 0; };',
+            'loop { break level -1; };',
+            'loop { break level 2; };',
+            'loop { break level 999999999999999999999999; };',
+            'loop { int64 n=1; break level n; };',
+            'loop { break level 1+1; };',
+            'loop { auto f=fn(){break all;}; };',
+            'auto result=loop { if(true){yield (1);} loop{break level 2;}; };',
+            'auto f=int64 fn(){loop{loop{break level 2;};};};f();',
+            'auto f=int64 fn(){loop{loop{break all;};};};f();',
             'int32 x = { int32 y = 3; };',
-            'int32 x = { if (true) { break 3; } };',
+            'int32 x = { if (true) { yield (3); } };',
             'int32 x = { break; };',
-            'int32 x = { break "wrong"; };',
-            'int32 x = { int32 local = 1; break local; }; local = 2;',
-            'int32 const& x = { int32 local = 1; break &local; };',
-            'while (true) { break 1; }',
+            'int32 x = { yield ("wrong"); };',
+            'int32 x = { int32 local = 1; yield (local); }; local = 2;',
+            'int32 const& x = { int32 local = 1; yield (&local); };',
+            'while (true) { yield (1); }',
             'int64 x = { loop { break; }; };',
-            'int64 x = { while (false) { break 1; } };',
-            '(int64,String) x = { loop { break 1,2; }; };',
-            '(int64,int64) x = { loop { break 1,2,3; }; };',
-            'int64 x = { loop { auto f = int64 fn(){break 1;}; break 2; }; };',
-            'auto f = int64 fn(){ (if(true){loop{break 1;};}else{2}); };f();',
-            'int64 const& x = { loop { int64 local = 1; break &local; }; };',
-            'int64 const& x = { for (int64 local=0;local<1;local++) { break &local; } int64 local=2;break &local; };',
+            'int64 x = { while (false) { yield (1); } };',
+            '(int64,String) x = { loop { yield (1,2); }; };',
+            '(int64,int64) x = { loop { yield (1,2,3); }; };',
+            'int64 x = { loop { auto f = int64 fn(){yield (1);}; yield (2); }; };',
+            'auto f = int64 fn(){ (if(true){loop{yield (1);};}else{2}); };f();',
+            'int64 const& x = { loop { int64 local = 1; yield (&local); }; };',
+            'int64 const& x = { for (int64 local=0;local<1;local++) { yield (&local); } int64 local=2;yield (&local); };',
             'println(f"value={1}", 2);',
-            'auto result=loop{String source="x";break source,source;};',
-            '(int64 const&,int64) result={loop{int64 local=1;break &local,2;};};',
+            'auto result=loop{String source="x";yield (source,source);};',
+            '(int64 const&,int64) result={loop{int64 local=1;yield (&local,2);};};',
         ):
             source = work / 'invalid.mgl'
             source.write_text('int64 main(){' + body + 'return 0;}', encoding='utf-8')
             result = invoke([compiler, '--check', source])
             assert result.returncode != 0, (body, result.stdout, result.stderr)
-            if body in ('{break 1;};', '{int64 y=loop{int64 z=loop{break 5;};break z+1;};break y+1;};'):
+            if body in ('{yield (1);};', '{int64 y=loop{int64 z=loop{yield (5);};yield (z+1);};yield (y+1);};'):
                 for backend in ('run', 'aot'):
                     orphan = invoke([compiler, backend, source, '--out', work / 'orphan'])
                     assert orphan.returncode != 0, orphan
@@ -99,7 +99,7 @@ def main():
         )
         for type_name, initial in equivalents:
             diagnostics = []
-            for form in ('break source,source;', 'break std::lang::move(&source),std::lang::move(&source);'):
+            for form in ('yield (source,source);', 'yield (std::lang::move(&source),std::lang::move(&source));'):
                 source = work / 'equivalent.mgl'
                 source.write_text('int64 main(){auto result=loop{' + type_name + ' source=' + initial + ';' + form + '};return 0;}', encoding='utf-8')
                 result = invoke([compiler, 'check', source, 'json'])

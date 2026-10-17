@@ -4,6 +4,6 @@ struct Values : Iterator<int64> {
 
 int64 main() {
     Values values;
-    foreach (String value in values) { std::lang::print("{}", value); }
+    for (String value in values) { std::lang::print("{}", value); }
     return 0;
 }

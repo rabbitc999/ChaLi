@@ -1,6 +1,6 @@
 int64 main() {
     while (true) {
-        break 7;
+        yield (7);
     }
     return 0;
 }

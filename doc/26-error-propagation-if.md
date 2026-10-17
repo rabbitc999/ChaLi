@@ -2,7 +2,7 @@
 
 ## 条件表达式
 
-`if` 可用于初始化、赋值、函数实参、返回值及嵌套表达式。简单分支只包含一个无分号表达式；复杂分支通过 `break 值;` 给出结果。
+`if` 可用于初始化、赋值、函数实参、返回值及嵌套表达式。简单分支只包含一个无分号表达式；复杂分支通过 `yield 值;` 给出结果。
 
 ```magel
 int32 p = 1;
@@ -10,7 +10,7 @@ bool odd = if (p % 2 == 1) { true } else { false };
 int32 value;
 value = if (p % 3 == 1) { 1 } elif (p % 3 == 2) { 2 } else {
     int32 fallback = 3;
-    break fallback;
+    yield fallback;
 };
 ```
 
@@ -18,7 +18,7 @@ value = if (p % 3 == 1) { 1 } elif (p % 3 == 2) { 2 } else {
 
 目标类型从初始化、赋值、实参或返回位置传递到分支；无上下文的整数字面量仍默认 `int64`。分支类型不兼容时报错，不自动装入 Any。
 
-`break 值;` 结束最近接收结果的块、if、match 或 loop 表达式，可以穿透中间的无值循环。`break a, b;` 等价于 `break (a, b);`，以一个元组作为结果。用于初始化、赋值、实参或返回值的内层表达式仍接收自己的带值退出；`break;` 和 `continue;` 保持循环控制含义。`return` 退出当前函数。分支结果在清理局部资源前保存，禁止借用已结束的分支局部变量。
+`yield 值;` 结束最近接收结果的块、if、match 或 loop 表达式，可以穿透中间的无值循环。`yield (a, b);` 以一个元组作为结果。用于初始化、赋值、实参或返回值的内层表达式仍接收自己的带值退出；`break;` 和 `continue;` 保持循环控制含义。`return` 退出当前函数。分支结果在清理局部资源前保存，禁止借用已结束的分支局部变量。
 
 ## 用户自定义错误传播
 
@@ -51,7 +51,7 @@ auto value = operation().mapErr<AppError>(toAppError)?;
 auto user = findUser(id).okOr<AppError>(AppError::UserMissing)?;
 ```
 
-`?` 可以写在 if 分支及条件中，其失败出口仍然是当前函数，不是 if 表达式。完整回归见 [条件表达式](../example/samples/if_expression.mgl)、[错误适配](../example/samples/error_adapters.mgl) 和 [VM/AOT 测试](../tests/magel_v250.py)。
+`?` 可以写在 if 分支及条件中，其失败出口仍然是当前函数，不是 if 表达式。完整回归见 [条件表达式](../example/samples/if_expression.mgl) 与 [错误适配](../example/samples/error_adapters.mgl) 两个样例（由 `sh check.sh` 跑 VM 与 AOT 双后端）。
 
 ## 迁移与工具
 

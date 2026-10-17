@@ -394,7 +394,7 @@ $macro example(...A)(...B)
     $for var in B
     listB.push(var);
     $end_for
-    break (listA, listB);
+    yield (listA, listB);
 }
 $end_macro
 
@@ -422,7 +422,7 @@ A=6 B=4
 \par
 \medskip
 
-两组 \texttt{\$for} 各自生成 \texttt{push}，\texttt{break (\allowbreak{}list\allowbreak{}A,\allowbreak{} list\allowbreak{}B)\allowbreak{};} 将两个列表组成元组交给调用者。\texttt{auto li} 的具体类型是 \texttt{(\allowbreak{}List<\allowbreak{}Any>\allowbreak{},\allowbreak{} List<\allowbreak{}Any>\allowbreak{})\allowbreak{}}；\texttt{li.\allowbreak{}0} 与 \texttt{li.\allowbreak{}1} 是两个列表。\texttt{try\allowbreak{}Get<\allowbreak{}T>\allowbreak{}} 按精确的装箱类型取副本，类型不匹配时返回 \texttt{None}。离开作用域自动释放列表及其元素，无须手写 \texttt{Drop}。
+两组 \texttt{\$for} 各自生成 \texttt{push}，\texttt{yield (\allowbreak{}list\allowbreak{}A,\allowbreak{} list\allowbreak{}B)\allowbreak{};} 将两个列表组成元组交给调用者。\texttt{auto li} 的具体类型是 \texttt{(\allowbreak{}List<\allowbreak{}Any>\allowbreak{},\allowbreak{} List<\allowbreak{}Any>\allowbreak{})\allowbreak{}}；\texttt{li.\allowbreak{}0} 与 \texttt{li.\allowbreak{}1} 是两个列表。\texttt{try\allowbreak{}Get<\allowbreak{}T>\allowbreak{}} 按精确的装箱类型取副本，类型不匹配时返回 \texttt{None}。离开作用域自动释放列表及其元素，无须手写 \texttt{Drop}。
 
 \section{宏的第一个坑：括号要自己加}
 
@@ -869,7 +869,7 @@ x=2 y=1 tmp=111
 
 \subsection{用多括号宏构造 List}
 
-下面把类型放进尖括号，把元素放进中括号；宏展开成带值块，最后通过 \texttt{break \$0;} 把构造好的列表交给初始化表达式。
+下面把类型放进尖括号，把元素放进中括号；宏展开成带值块，最后通过 \texttt{yield \$0;} 把构造好的列表交给初始化表达式。
 
 \par
 \medskip
@@ -883,14 +883,14 @@ $macro vec<T>[...list]
         $0.push($1);
     }
     $end_for
-    break $0;
+    yield $0;
 }
 $end_macro
 
 int64 main()
 {
     List<int32> myList = $vec<int32>[1, 2, 3];
-    foreach(auto var in myList)
+    for(auto var in myList)
     {
         println("{}", var);
     }
@@ -914,7 +914,7 @@ int64 main()
 
 \texttt{\$0} 和 \texttt{\$1} 是当前宏调用专属的临时名字。一次展开内所有 \texttt{\$0} 都指向同一个列表；每次循环生成的 \texttt{\{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是独立作用域，因此可以重复声明同一个 \texttt{\$1}。另一次调用会获得另一套名字。最后的 \texttt{break} 移交块内列表的所有权，离开作用域时仍正常清理其他局部值。
 
-\texttt{foreach(\allowbreak{}auto var in my\allowbreak{}List)\allowbreak{}} 从 \texttt{List<\allowbreak{}int32>\allowbreak{}} 推断 \texttt{var} 为 \texttt{int32}，不必重复写元素类型；也可以省略 \texttt{auto}，写成 \texttt{foreach(\allowbreak{}var in my\allowbreak{}List)\allowbreak{}}。这里的 \texttt{auto} 不会引入动态类型或运行时类型判断。
+\texttt{for(\allowbreak{}auto var in my\allowbreak{}List)\allowbreak{}} 从 \texttt{List<\allowbreak{}int32>\allowbreak{}} 推断 \texttt{var} 为 \texttt{int32}，不必重复写元素类型；也可以省略 \texttt{auto}，写成 \texttt{for(\allowbreak{}var in my\allowbreak{}List)\allowbreak{}}。这里的 \texttt{auto} 不会引入动态类型或运行时类型判断。
 
 \section{\texttt{\$line} / \texttt{\$file} / \texttt{\$module} 和 \texttt{\$assert}}
 

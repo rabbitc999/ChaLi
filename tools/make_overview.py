@@ -50,7 +50,7 @@ def draw() -> Canvas:
                 )),
                 ("表达与控制", (
                     ("模式匹配与错误传播", "match · Result<T,E> · ?"),
-                    ("循环与函数", "loop · foreach · lambda"),
+                    ("循环与函数", "loop · for-in · fn"),
                 )),
                 ("复用与扩展", (
                     ("模块", "module / import / inline"),

@@ -119,7 +119,7 @@ void saveTasks(List<Task> tasks)
         return;
     }
     FileStream stream = opened.unwrap();
-    foreach (Task t in tasks)
+    for (Task t in tasks)
     {
         String flag = "0";
         if (t.done)
@@ -136,7 +136,7 @@ void saveTasks(List<Task> tasks)
 
 模式 \texttt{"w"} 是覆盖写——每次保存都整份重写。对几千条以内的清单，这足够快，而且不会出现"改一半"的中间状态。
 
-\texttt{foreach (\allowbreak{}Task t in tasks)\allowbreak{}} 拿到的 \texttt{t} 是元素的副本（第 6 章值语义），因此这里只读不改；要改得按下标写回去（\texttt{done} 命令就这么做的）。
+\texttt{for (\allowbreak{}Task t in tasks)\allowbreak{}} 拿到的 \texttt{t} 是元素的副本（第 6 章值语义），因此这里只读不改；要改得按下标写回去（\texttt{done} 命令就这么做的）。
 
 \section{命令分派：\texttt{main} 是入口}
 
@@ -275,7 +275,7 @@ void saveTasks(List<Task> tasks)
         return;
     }
     FileStream stream = opened.unwrap();
-    foreach (Task t in tasks)
+    for (Task t in tasks)
     {
         String flag = "0";
         if (t.done)
@@ -295,7 +295,7 @@ void printTasks(List<Task> tasks)
         return;
     }
     int64 i = 1;
-    foreach (Task t in tasks)
+    for (Task t in tasks)
     {
         String mark = "[ ]";
         if (t.done)
@@ -407,7 +407,7 @@ int64 main(List<String> args)
         }
         List<Task> kept;
         int64 i = 1;
-        foreach (Task t in tasks)
+        for (Task t in tasks)
         {
             if (i != index)
             {
@@ -557,7 +557,7 @@ magel run todo.mgl -- list
 \texttt{struct Task \{ … \};} & 9 · 结构体 \\
 \texttt{List<\allowbreak{}Task>\allowbreak{}}、\texttt{push}、下标读写、\texttt{len} & 11 · 容器 \\
 \texttt{String} 拼接、切片、\texttt{trim}、\texttt{starts\allowbreak{}With}、\texttt{find}、\texttt{join} & 12 · 字符串 \\
-\texttt{if} / \texttt{foreach} / \texttt{for} / \texttt{while} & 5 · 控制流 \\
+\texttt{if} / \texttt{for-in} / \texttt{for} / \texttt{while} & 5 · 控制流 \\
 值语义（\texttt{t} 是副本；改完写回） & 6 · 值语义 \\
 \texttt{Result} / \texttt{is\allowbreak{}Err} / \texttt{unwrap} 处理失败 & 16 · 错误处理 \\
 \texttt{File\allowbreak{}Stream} 读写文件 & 18 · 模块与工程（\texttt{import}） \\

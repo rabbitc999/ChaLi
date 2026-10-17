@@ -17,7 +17,7 @@ int64 main() {
         if (count < 3) {
             continue;
         }
-        break count + 4;
+        yield (count + 4);
     };
     println("loop={}", answer);
 

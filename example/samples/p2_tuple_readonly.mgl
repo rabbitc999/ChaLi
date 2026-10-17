@@ -26,7 +26,7 @@ int64 main() {
     assert(borrowed.number == 3 && field == 3 && detached.number == 9);
     List<String> list; list.push("entry");
     auto lists = (list, 5);
-    foreach (String item in lists.0) { assert(item == "entry"); }
+    for (String item in lists.0) { assert(item == "entry"); }
     List<String> listCopy = lists.0;
     listCopy.push("copy");
     assert((lists.0).len() == 1 && listCopy.len() == 2);

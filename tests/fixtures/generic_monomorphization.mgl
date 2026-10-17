@@ -10,7 +10,7 @@ struct AuditPair<T,V> { T first; V second; };
 struct AuditOuter<T> {
     AuditPair<T,AuditFixed> item;
     AuditPair<AuditPair<T,AuditFixed>,String> deep;
-    static AuditOuter<T> new(T value) { self.item.first=value; }
+    static AuditOuter<T> create(T value) { self.item.first=value; }
     T get() { return item.first; }
     void replace(AuditPair<T,AuditFixed> value) { item=value; }
     AuditPair<T,AuditFixed> const& borrow() { return &item; }
@@ -55,7 +55,7 @@ int64 main(){
     AuditPair<int64,AuditFixed> replacement;replacement.first=7;replacement.second.value=9;
     a.replace(replacement);assert(a.get()==7 && a.item.second.value==9);
     assert(a.label()=="T AuditOuter<T> \\\" T");
-    AuditOuter<String> text=AuditOuter<String>::new("original");
+    AuditOuter<String> text=AuditOuter<String>::create("original");
     text.replace(text.item);assert(text.get()=="original");
     text.deep.first.first="deep";text.deep.second="tail";
     AuditOuter<String> copied=text;copied.item.first="copy";copied.deep.first.first="changed";

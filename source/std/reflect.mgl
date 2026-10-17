@@ -134,9 +134,9 @@ Option<std::reflect::EnumInfo> getEnumInfo<T>() { return __reflect_enum(getTypeI
 Option<std::reflect::InterfaceInfo> getInterfaceInfo<I>() { return __reflect_interface(getTypeId<I>()); }
 bool implementsInterface<T>(uint64 interfaceId) {
     Option<std::reflect::StructInfo> s = getStructInfo<T>();
-    if(s.isValue()) { foreach(uint64 id in s.unwrap().implementedInterfaces) { if(id==interfaceId) {return true;} } }
+    if(s.isValue()) { for(uint64 id in s.unwrap().implementedInterfaces) { if(id==interfaceId) {return true;} } }
     Option<std::reflect::EnumInfo> e = getEnumInfo<T>();
-    if(e.isValue()) { foreach(uint64 id in e.unwrap().implementedInterfaces) { if(id==interfaceId) {return true;} } }
+    if(e.isValue()) { for(uint64 id in e.unwrap().implementedInterfaces) { if(id==interfaceId) {return true;} } }
     return false;
 }
 List<std::reflect::Annotation> getAnnotations<T>() {
@@ -147,7 +147,7 @@ List<std::reflect::Annotation> getAnnotations<T>() {
 }
 List<std::reflect::Annotation> getFieldAnnotations<T>(std::lang::String name) {
     Option<std::reflect::StructInfo> s=getStructInfo<T>();
-    if(s.isValue()){foreach(FieldInfo f in s.unwrap().fields){if(f.name==name){return f.annotations;}}}
+    if(s.isValue()){for(FieldInfo f in s.unwrap().fields){if(f.name==name){return f.annotations;}}}
     List<std::reflect::Annotation> empty;return empty;
 }
 List<std::reflect::Annotation> getFuncAnnotations(std::lang::String name) {
@@ -161,14 +161,14 @@ List<std::reflect::MethodInfo> __methods<T>() {
     List<std::reflect::MethodInfo> empty;return empty;
 }
 List<std::reflect::Annotation> getMethodAnnotations<T>(std::lang::String name) {
-    foreach(MethodInfo m in __methods<T>()){if(m.function.name==name){return m.function.annotations;}}
+    for(MethodInfo m in __methods<T>()){if(m.function.name==name){return m.function.annotations;}}
     List<std::reflect::Annotation> empty;return empty;
 }
 List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::lang::String name) {
     Option<std::reflect::StructInfo> s=getStructInfo<T>();
-    if(s.isValue()){foreach(StaticMemberInfo m in s.unwrap().staticMembers){if(m.name==name){return m.annotations;}}}
+    if(s.isValue()){for(StaticMemberInfo m in s.unwrap().staticMembers){if(m.name==name){return m.annotations;}}}
     Option<std::reflect::EnumInfo> e=getEnumInfo<T>();
-    if(e.isValue()){foreach(StaticMemberInfo m in e.unwrap().staticMembers){if(m.name==name){return m.annotations;}}}
+    if(e.isValue()){for(StaticMemberInfo m in e.unwrap().staticMembers){if(m.name==name){return m.annotations;}}}
     List<std::reflect::Annotation> empty;return empty;
 }
 

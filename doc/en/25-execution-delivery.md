@@ -25,7 +25,7 @@ int64 main() {
 }
 ```
 
-Statement branches produce results with `break value;`. See [Custom error propagation and if expressions](26-error-propagation-if.md).
+Statement branches produce results with `yield value;`. See [Custom error propagation and if expressions](26-error-propagation-if.md).
 
 ## Deployment boundaries
 

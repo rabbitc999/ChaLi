@@ -34,8 +34,8 @@ int64 main() {
 
     Any first;
     Any second;
-    BaseScore mut& basePointer = new;
-    CustomScore mut& customPointer = new;
+    BaseScore mut& basePointer = heap BaseScore;
+    CustomScore mut& customPointer = heap CustomScore;
     basePointer->number = 5;
     customPointer->number = 6;
     first.set(&basePointer);

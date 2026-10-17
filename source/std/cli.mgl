@@ -39,7 +39,7 @@ struct CliParser {
         }
         if (option.name[0]=='-') { return false; }
         if (option.shortName!=(char)0 && !((option.shortName>='a' && option.shortName<='z') || (option.shortName>='A' && option.shortName<='Z'))) { return false; }
-        foreach (CliOption existing in self.definitions) {
+        for (CliOption existing in self.definitions) {
             if (existing.name==option.name || (option.shortName!=(char)0 && existing.shortName==option.shortName)) { return false; }
         }
         self.definitions.push(option); return true;
@@ -47,7 +47,7 @@ struct CliParser {
     /** 自动生成使用说明和长短选项帮助。 */
     String help() {
         String result="Usage: "+self.program+" [options] [arguments]\n"+self.description+"\n  -h, --help  Show help\n";
-        foreach (CliOption option in self.definitions) {
+        for (CliOption option in self.definitions) {
             result=result+"  ";
             if (option.shortName!=(char)0) { result=result+"-"+format("{}",option.shortName)+", "; }
             result=result+"--"+option.name;
@@ -61,7 +61,7 @@ struct CliParser {
     /** 解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。 */
     Result<CliArguments,CliError> parse(List<String> arguments) {
         CliArguments result; Map<String,bool> seen;
-        foreach (CliOption option in self.definitions) {
+        for (CliOption option in self.definitions) {
             String initial=option.defaultValue;
             if (!option.takesValue && len(initial)==0) { initial="false"; }
             result.options[option.name]=initial;
@@ -116,7 +116,7 @@ struct CliParser {
             }
         }
         if (!result.helpRequested) {
-            foreach (CliOption option in self.definitions) {
+            for (CliOption option in self.definitions) {
                 if (option.required && seen.has(option.name)==0) { return Result<CliArguments,CliError>::Err(cliError(option.name,"required option is missing")); }
             }
         }

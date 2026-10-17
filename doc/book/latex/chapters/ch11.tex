@@ -449,7 +449,7 @@ int64 main()
 \par
 \medskip
 
-存进去是副本、取出来也是副本。 想原地改容器里的元素，得用引用（第 7 章）：\texttt{foreach (\allowbreak{}Player mut\& item in players)\allowbreak{}} 那类写法在讲完引用之后你就理解了。
+存进去是副本、取出来也是副本。 想原地改容器里的元素，得用引用（第 7 章）：\texttt{for (\allowbreak{}Player mut\& item in players)\allowbreak{}} 那类写法在讲完引用之后你就理解了。
 
 \begin{tip}{提示}
 字符串元素也一样：取出来的是新的一份，所以容器活得比某根字符串久也没关系。
@@ -491,7 +491,7 @@ done
 
 \section{遍历}
 
-遍历用 \texttt{foreach}，不要数下标：
+遍历用 \texttt{for-in}，不要数下标：
 
 \par
 \medskip
@@ -505,7 +505,7 @@ int64 main()
 
     int64 total = 0;
     int64 best = 0;
-    foreach (int64 score in scores)
+    for (int64 score in scores)
     {
         total = total + score;
         if (score > best)
@@ -528,7 +528,7 @@ int64 main()
 \par
 \medskip
 
-\texttt{foreach} 遍历出来的是元素的副本，所以「边遍历边改」改不到容器。要用下标改，就用 \texttt{for}：
+\texttt{for-in} 遍历出来的是元素的副本，所以「边遍历边改」改不到容器。要用下标改，就用 \texttt{for}：
 
 \par
 \medskip
@@ -543,7 +543,7 @@ for (int64 i = 0; i < scores.len(); i = i + 1)
 \medskip
 
 \begin{tip}{提示}
-遍历时不要增删元素。 \texttt{foreach} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。
+遍历时不要增删元素。 \texttt{for-in} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。
 \end{tip}
 
 \subsection{用 \texttt{Any} 保存不同类型的元素}
@@ -628,7 +628,7 @@ int64 main()
 
 \item 容器是值：赋值、传参、存取元素都是复制；传参默认写 \texttt{const\&} / \texttt{mut\&}；
 
-\item 遍历用 \texttt{foreach}，遍历出来是副本；遍历时不要增删；
+\item 遍历用 \texttt{for-in}，遍历出来是副本；遍历时不要增删；
 
 \item 容器在出作用域时自动释放。
 
@@ -636,7 +636,7 @@ int64 main()
 
 \section{下一步}
 
-现在你会用容器了，但要写「取分数前 3 名」「把所有名字变大写」这种活儿，用 \texttt{foreach} 加手工判断会很啰嗦。
+现在你会用容器了，但要写「取分数前 3 名」「把所有名字变大写」这种活儿，用 \texttt{for-in} 加手工判断会很啰嗦。
 
 不过在那之前，先解决一个你已经在用的东西但没细讲过的：字符串。它的下标是按字节的——这跟中文直接相关，值得单独一章。
 

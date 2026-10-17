@@ -69,7 +69,7 @@ struct FileStream : Reader, Writer, Seek {
     Result<String,IoError> readString(int64 count) {
         if (count<0) { return Result<String,IoError>::Err(IoError::ReadFailed("negative byte count")); }
         List<uint8> bytes=self.readBytes(count)?;String text="";
-        foreach(uint8 byte in bytes) {
+        for(uint8 byte in bytes) {
             if(byte==(uint8)0) { return Result<String,IoError>::Err(IoError::ReadFailed("text contains a zero byte")); }
             text=text+format("{}",(char)byte);
         }
@@ -199,7 +199,7 @@ Result<int64,IoError> writeAllBytes(String path, List<uint8> bytes) {
 /** 读取完整文本；String 不支持内嵌零字节，此类文件应使用 readAllBytes。 */
 Result<String,IoError> readAllText(String path, int64 maxBytes=16777216) {
     List<uint8> bytes=readAllBytes(path,maxBytes)?; String text="";
-    foreach (uint8 byte in bytes) {
+    for (uint8 byte in bytes) {
         if (byte==(uint8)0) { return Result<String,IoError>::Err(IoError::ReadFailed("text contains a zero byte")); }
         text=text+format("{}",(char)byte);
     }

@@ -22,11 +22,11 @@ int64 main(){
         std::lang::assert(drops==3);
     }
     std::lang::assert(drops==3);
-    Item mut& first=new;first.text="heap";
+    Item mut& first = heap Item;first.text="heap";
     Item mut& stale=first;
     delete first;delete first;delete stale;first.drop();stale.drop();
     std::lang::assert(drops==4);
-    Item mut& second=new;second.value=22;second.text="fresh";
+    Item mut& second = heap Item;second.value=22;second.text="fresh";
     delete stale;delete first;
     std::lang::assert(second.value==22 && second.text=="fresh" && drops==4);
     second.drop();second.drop();delete second;delete second;second.drop();
@@ -38,8 +38,8 @@ int64 main(){
     std::lang::assert(drops==7);
     int64 data[]=new[2];data[0]=7;
     delete data;delete data;
-    int64 mut& number=new;delete number;
-    int64 mut& fresh=new;*fresh=99;
+    int64 mut& number = heap int64;delete number;
+    int64 mut& fresh = heap int64;*fresh=99;
     delete number;std::lang::assert(*fresh==99);delete fresh;delete fresh;
     List<int64> list;list.push(1);delete list;delete list;
     std::lang::println("idempotent destruction ok {}",drops);

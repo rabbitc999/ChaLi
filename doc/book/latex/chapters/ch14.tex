@@ -548,7 +548,7 @@ T fromLocal<T>(T value)
     return
     {
         T local = value;
-        break local;
+        yield local;
     };
 }
 
@@ -557,11 +557,11 @@ T chooseValue<T>(bool first, T left, T right)
     return if (first)
     {
         T local = left;
-        break local;
+        yield local;
     }
     else
     {
-        break right;
+        yield right;
     };
 }
 

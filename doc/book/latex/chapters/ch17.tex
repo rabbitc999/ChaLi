@@ -1,7 +1,7 @@
 \chapter{迭代器}
 \label{ch:17}
 
-第 15 章你手写过一个 \texttt{filter}：自己声明 \texttt{List}、自己 \texttt{foreach}、自己 \texttt{push}。能跑，但每换一种操作——求平方、取前几个、求和——都得再手搓一遍循环。
+第 15 章你手写过一个 \texttt{filter}：自己声明 \texttt{List}、自己 \texttt{for-in}、自己 \texttt{push}。能跑，但每换一种操作——求平方、取前几个、求和——都得再手搓一遍循环。
 
 这一章讲 \texttt{std:\allowbreak{}:\allowbreak{}iter}：它把这些套路做成了能随意拼的链。写起来像说话，读起来也像说话：
 
@@ -268,7 +268,7 @@ int64 main()
 \par
 \medskip
 
-一行一句、从上往下读，和需求一一对应：\texttt{map} 乘 2、\texttt{filter} 要 3 的倍数、\texttt{take(\allowbreak{}3)\allowbreak{}} 取三个、\texttt{collect} 收起来。没有 \texttt{foreach}、没有下标、没有临时变量。
+一行一句、从上往下读，和需求一一对应：\texttt{map} 乘 2、\texttt{filter} 要 3 的倍数、\texttt{take(\allowbreak{}3)\allowbreak{}} 取三个、\texttt{collect} 收起来。没有 \texttt{for-in}、没有下标、没有临时变量。
 
 \section{惰性：写了 \ensuremath{\neq} 跑了}
 
@@ -564,24 +564,24 @@ doubled = 50 len = 2
 
 迭代完了 \texttt{s.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 3、\texttt{m.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 2——借用快照不动原件。Map 的每一项是元组，用 \texttt{pair.\allowbreak{}0} 取键、\texttt{pair.\allowbreak{}1} 取值。
 
-\section{foreach：把链条跑起来}
+\section{for-in：把链条跑起来}
 
-前面几节一直在"造一条链"，真正让它跑起来的是 \texttt{foreach}。三种写法：
+前面几节一直在"造一条链"，真正让它跑起来的是 \texttt{for-in}。三种写法：
 
 \par
 \medskip
 \begin{lstlisting}[style=magel]
-foreach (int64 a in list)
+for (int64 a in list)
 {
     ...
 }
 /* 写上类型 */
-foreach (a in list)
+for (a in list)
 {
     ...
 }
 /* 省略类型，按元素推 */
-foreach (int64 mut& p in span)
+for (int64 mut& p in span)
 {
     ...
 }
@@ -596,7 +596,7 @@ foreach (int64 mut& p in span)
 \medskip
 \begin{lstlisting}[style=magel]
 int64 partial = 0;
-foreach (int64 i in [0, 10])
+for (int64 i in [0, 10])
 {
     if (i == 3)
     {
@@ -625,7 +625,7 @@ break/continue: 12
 
 \texttt{0 + 1 + 2}，跳过 \texttt{3}，再加 \texttt{4}、\texttt{5}，撞上 \texttt{6} 退出 —— 一共 12。
 
-\section{foreach 拿到的是元素引用（最容易踩的一个坑）}
+\section{for-in 拿到的是元素引用（最容易踩的一个坑）}
 
 循环变量不是副本，它是元素本身。 给它赋值会直接写回容器：
 
@@ -640,7 +640,7 @@ int64 main()
     raw[0] = 1;
     raw[1] = 2;
     raw[2] = 3;
-    foreach (int64 a in raw)
+    for (int64 a in raw)
     {
         a = a * 10;
     }
@@ -649,7 +649,7 @@ int64 main()
     List<int64> list;
     list.push(4);
     list.push(5);
-    foreach (int64 a in list)
+    for (int64 a in list)
     {
         a = a + 1;
     }
@@ -679,7 +679,7 @@ list: 5 6
 \medskip
 \begin{lstlisting}[style=magel]
 std::memory::Span<int64> span = std::memory::Span<int64>::from(raw, len(raw));
-foreach (int64 mut& p in span)
+for (int64 mut& p in span)
 {
     * p = *p + 1;
 }
@@ -694,7 +694,7 @@ foreach (int64 mut& p in span)
 \begin{lstlisting}[style=magel]
 List<int64> list;
 list.push(1);
-foreach (int64 mut& x in list)
+for (int64 mut& x in list)
 {
 }
 \end{lstlisting}
@@ -704,18 +704,18 @@ foreach (int64 mut& x in list)
 \par
 \medskip
 \begin{lstlisting}[style=out]
-magel：foreach 变量类型与 Vector<T> 元素不一致：写的是 int64 mut&，容器元素是 int64
+magel：for-in 变量类型与 Vector<T> 元素不一致：写的是 int64 mut&，容器元素是 int64
 \end{lstlisting}
 \par
 \medskip
 
 判断方法就一句：你要改的是"元素的值"还是"元素本身的位置" —— 前者写值形态，后者（指针视图、想省掉一次拷贝）才用 \texttt{mut\&}。
 
-\section{foreach 整数区间}
+\section{for-in 整数区间}
 
-\texttt{foreach (\allowbreak{}uint8 x in [\allowbreak{}0,\allowbreak{}255]\allowbreak{})\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 依次产生 0 到 255，共 256 项；\texttt{[\allowbreak{}0,\allowbreak{}255)\allowbreak{}} 不包含 255。支持 int8/uint8/int16/uint16/int32/uint32/int64/uint64。省略变量类型时按端点整型推导，普通整数字面量默认 int64。
+\texttt{for (\allowbreak{}uint8 x in [\allowbreak{}0,\allowbreak{}255]\allowbreak{})\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 依次产生 0 到 255，共 256 项；\texttt{[\allowbreak{}0,\allowbreak{}255)\allowbreak{}} 不包含 255。支持 int8/uint8/int16/uint16/int32/uint32/int64/uint64。省略变量类型时按端点整型推导，普通整数字面量默认 int64。
 
-区间在内部表示为惰性 \texttt{Iterator<\allowbreak{}T>\allowbreak{}}，直接复用 foreach 的迭代协议，不创建列表。两个端点从左到右各求值一次，并且两个端点都必须在 T 的取值范围内，包括半开区间的上端点。常量错误在编译期拒绝，动态端点在循环前检查。int8 的范围是 -128..127，所以 \texttt{foreach(\allowbreak{}int8 x in [\allowbreak{}0,\allowbreak{}255]\allowbreak{})\allowbreak{}} 会报错。反向区间 a>b 报错；[a,a) 是空区间，[a,a] 恰好产生一项。
+区间在内部表示为惰性 \texttt{Iterator<\allowbreak{}T>\allowbreak{}}，直接复用 for-in 的迭代协议，不创建列表。两个端点从左到右各求值一次，并且两个端点都必须在 T 的取值范围内，包括半开区间的上端点。常量错误在编译期拒绝，动态端点在循环前检查。int8 的范围是 -128..127，所以 \texttt{for(\allowbreak{}int8 x in [\allowbreak{}0,\allowbreak{}255]\allowbreak{})\allowbreak{}} 会报错。反向区间 a>b 报错；[a,a) 是空区间，[a,a] 恰好产生一项。
 
 闭区间到达上界后直接结束，不计算“最大整数 + 1”，因此 uint8 255 和 uint64 18446744073709551615 均可作为合法闭上界。循环变量是每轮取得的值，修改它不改变内部迭代进度；break、continue、返回与 fn 捕获沿用现有规则。
 

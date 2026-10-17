@@ -522,27 +522,16 @@ int M_Break(int value);
  * @retval 返回退出语句节点编号。
  */
 int M_BreakLevel(int level);
-/**
- * @brief 在层级退出的参数位置识别不区分大小写的 ALL。
- * @param nameId 参数标识符在名称池中的编号。
- * @retval 合法时返回退出全部循环的节点；其他名称登记参数错误。
- * @note 普通表达式中的 all、All 等名称仍可作为变量名。
- */
-int M_BreakLevelNamed(int nameId);
-/* 语法糖辅助：break level N; / break level all; 的层级名拼写判定（与 M_BreakLevelNamed 一致，
- * 不占用 level / all 作为关键字）。
+/* 语法糖辅助：break level N; / break level all; 的层级名拼写判定（不占用 level / all 作为关键字）。
  * @param nameId 名称池编号；text 为目标文本（ASCII，大小写无关比较）。
  * @retval 名字与 text 大小写无关相等时返回 true。 */
 bool M_NameIs(int nameId, const char *text);
-/* 语法糖辅助：break all; 等价 break #level(ALL)。
- * @param exprNode break 后的值表达式节点。
- * @retval 裸名 all（大小写无关）返回退出全部循环的节点；否则原样按带值 break 处理。 */
-int M_BreakAllSugar(int exprNode);
 /* 语法糖辅助：break level / break level all 的层级名判定与错误节点（文法动作不支持字符串字面量）。 */
 bool M_NameIsLevel(int nameId);
 bool M_NameIsAll(int nameId);
 int M_ParseBadLevelSugar();
 int M_ParseBadLevelAllSugar();
+int M_ParseBadBreakAllSugar();
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
 int M_Case(int value, int stmts);
 /**

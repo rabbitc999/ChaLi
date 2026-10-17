@@ -5,26 +5,26 @@ $macro vec(type, ...values)
 $for item in values
     { type $1 = item; $0.push($1); }
 $end_for
-    break $0;
+    yield ($0);
 }
 $end_macro
 
 int32 counter = 0;
 int32 next() { counter += 1; return counter; }
 int32 identity(int32 value) { return value; }
-int32 result() { return { int32 local = 11; break local; }; }
+int32 result() { return { int32 local = 11; yield (local); }; }
 
 int64 main() {
-    int32 a = { int32 b = 3; break b; };
+    int32 a = { int32 b = 3; yield (b); };
     assert(a == 3);
-    a = { int32 b = 4; break b; };
+    a = { int32 b = 4; yield (b); };
     assert(a == 4);
-    a = { int32 b = { break 5; }; break b + 1; };
+    a = { int32 b = { yield (5); }; yield (b + 1); };
     assert(a == 6);
-    a = { if (a == 6) { break 7; } else { break 8; } };
+    a = { if (a == 6) { yield (7); } else { yield (8); } };
     assert(a == 7);
-    assert(identity({ break 9; }) == 9 && result() == 11);
-    bool skipped = false && { counter += 1; break true; };
+    assert(identity({ yield (9); }) == 9 && result() == 11);
+    bool skipped = false && { counter += 1; yield (true); };
     assert(!skipped && counter == 0);
     List<int32> values = $vec(int32, next(), next(), next());
     assert(len(values) == 3 && values[0] == 1 && values[2] == 3 && counter == 3);
@@ -36,7 +36,7 @@ int64 main() {
     assert(words[0] == "hello" && words[1] == "世界");
     int32 sum = 0;
     for (int32 i = 0; i < 3; i += 1) {
-        sum += { if (i == 1) { continue; } break i; };
+        sum += { if (i == 1) { continue; } yield (i); };
     }
     assert(sum == 2);
     println("block expression OK");

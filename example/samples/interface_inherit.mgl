@@ -65,13 +65,13 @@ int64 main()
     println("two {} {} {} {}", two.area(), two.l(), two.r(), two.tag());
 
     /* 接口引用也认继承关系：Box 实现了 Combo，而 Combo 继承 Shape */
-    Box mut& heap = new;
-    heap->w = 6;
-    heap->h = 7;
+    Box mut& boxRef = heap Box;
+    boxRef->w = 6;
+    boxRef->h = 7;
     Any boxed;
-    boxed.set(&heap);
+    boxed.set(&boxRef);
     Shape mut& view = boxed.getReference();
     println("view {} {}", view.area(), view.describe());
-    delete heap;
+    delete boxRef;
     return 0;
 }

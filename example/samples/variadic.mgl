@@ -2,7 +2,7 @@
 
 int64 sum(int64... values) {
     int64 total = 0;
-    foreach (int64 value in values) {
+    for (int64 value in values) {
         total = total + value;
     }
     return total;
@@ -17,7 +17,7 @@ struct Counter {
 
     int64 add(int64... values) {
         int64 total = self.base;
-        foreach (int64 value in values) {
+        for (int64 value in values) {
             total = total + value;
         }
         return total;

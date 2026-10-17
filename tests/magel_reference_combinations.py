@@ -79,11 +79,11 @@ Option<int64 mut&> bad() {
         "constructor_chain": """
 struct Entry {
     String name;
-    static Entry new(String name) { self.name = name; }
+    static Entry create(String name) { self.name = name; }
     String const& borrow() { return &self.name; }
 };
 String const& bad() {
-    return Entry::new("temporary").borrow();
+    return Entry::create("temporary").borrow();
 }""",
         "static_factory_chain": """
 struct Entry {
@@ -193,7 +193,7 @@ std::iter::Iter<int64 const&> bad() {
     diagnostic = json.loads(result.stdout)["diagnostics"][0]
     assert diagnostic["code"] == "MGL1204" and Path(diagnostic["span"]["file"]).name == module.name, diagnostic
     assert diagnostic["span"]["line"] == 8 and diagnostic["span"]["column"] >= 1, diagnostic
-    assert diagnostic["source"].strip() == 'return Entry::new("temporary").borrow();', diagnostic
+    assert diagnostic["source"].strip() == 'return Entry::create("temporary").borrow();', diagnostic
     print(f"跨功能组合验证通过：{len(cases) + 1} 个拒绝场景，综合及跨模块样例解释执行 / AOT")
 
 

@@ -48,7 +48,7 @@ Result<List<uint8>,Utf8Error> encodeUtf8Bytes(List<uint32> points) {
 /** 编码为 String；U+0000 应使用 encodeUtf8Bytes，避免文本被零字节截断。 */
 Result<String,Utf8Error> encodeUtf8(List<uint32> points) {
     List<uint8> bytes=encodeUtf8Bytes(points)?;String result="";
-    foreach(uint8 byte in bytes){
+    for(uint8 byte in bytes){
         if(byte==(uint8)0){return Result<String,Utf8Error>::Err(Utf8Error::ZeroByteText);}
         result=result+format("{}",(char)byte);
     }

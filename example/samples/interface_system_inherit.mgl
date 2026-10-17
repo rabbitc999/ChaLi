@@ -59,7 +59,7 @@ int64 main()
 
     Countdown countdown;
     int64 total = 0;
-    foreach (int64 value in countdown) { total = total + value; }
+    for (int64 value in countdown) { total = total + value; }
 
     Adder adder;
     adder.base = 5;

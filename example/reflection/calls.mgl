@@ -35,7 +35,7 @@ int64 main(){
     assert(std::reflect::callMethodConst<Counter>(&obj,"read",empty).unwrap().asI64().unwrap()==4);
     assert(std::reflect::callMethodConst<Counter>(&obj,"bump",args).isErr());
     assert(std::reflect::callStatic<Counter>("answer",args).unwrap().asI64().unwrap()==42);
-    Counter mut& interfaceObj=new(4);Any boxed;boxed.set(&interfaceObj);Reader mut& reader=boxed.getReference();
+    Counter mut& interfaceObj=new Counter(4);Any boxed;boxed.set(&interfaceObj);Reader mut& reader=boxed.getReference();
     assert(std::reflect::callInterface<Reader>(reader,"bump",args).unwrap().asI64().unwrap()==6);
     assert(std::reflect::callInterfaceConst<Reader>(reader,"read",empty).unwrap().asI64().unwrap()==6);
     assert(std::reflect::callInterfaceConst<Reader>(reader,"bump",args).isErr());

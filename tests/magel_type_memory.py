@@ -56,8 +56,8 @@ def main():
             def test_invalid_types(self):
                 """拒绝不一致的退出类型、越过块作用域的变量和只读下标写入。"""
                 sources = {
-                    'loop_mismatch': 'int64 main(){auto value=loop{if(true){String value="text";break value;}else{int32 value=7;break value;}};return 0;}',
-                    'loop_scope': 'int64 main(){auto value=loop{{String hidden="text";}break hidden;};return 0;}',
+                    'loop_mismatch': 'int64 main(){auto value=loop{if(true){String value="text";yield (value);}else{int32 value=7;yield (value);}};return 0;}',
+                    'loop_scope': 'int64 main(){auto value=loop{{String hidden="text";}yield (hidden);};return 0;}',
                     'index_const': 'struct Source : Index<String const&,int64>{String value;String const& index(int64 key){return &self.value;}};int64 main(){Source source;source.value="old";source[0]="new";return 0;}',
                 }
                 for name, source in sources.items():

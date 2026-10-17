@@ -145,7 +145,7 @@ memory=ok
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
 | 模块 | <a id="symbol-258"></a>`struct Span<T>: Iterator<T mut&>, Index<T, int64>` | `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
-`foreach (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
+`for (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
 只要值就读 `span[i]` 或先 `T v = *p;`。 |
 | Span | <a id="symbol-259"></a>`T mut& data` | 视图引用的连续存储；视图不延长来源的生命周期。 |
 | Span | <a id="symbol-260"></a>`int64 length` | 连续存储中可访问的元素数量。 |
@@ -431,7 +431,7 @@ Span<char> allocate(int64 bytes);
 obj.allocate(bytes);
 ```
 
-**源码**：[source/std/memory.mgl:63](../../source/std/memory.mgl#L63)。
+**源码**：[source/std/memory.mgl:61](../../source/std/memory.mgl#L61)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。
 
@@ -467,7 +467,7 @@ void reset();
 obj.reset();
 ```
 
-**源码**：[source/std/memory.mgl:69](../../source/std/memory.mgl#L69)。
+**源码**：[source/std/memory.mgl:67](../../source/std/memory.mgl#L67)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。
 
@@ -503,6 +503,6 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/memory.mgl:70](../../source/std/memory.mgl#L70)。
+**源码**：[source/std/memory.mgl:68](../../source/std/memory.mgl#L68)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.mgl](../../example/samples/std_parse_random_path_memory.mgl)。

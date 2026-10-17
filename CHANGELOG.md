@@ -7,6 +7,17 @@
 
 ### 2026-10-17
 
+- **语法清理（不兼容，三项合一）**：
+  - `break` 侧：删除 `break #level(N);` / `break #level(ALL);` 与带值退出 `break 值;`，改为 `break level N;`（`level` 后跟正整数字面量或 `all`）、`break all;` / `break level all;` 与 `yield 值;`（块 / if / match / loop 的值出口）。
+  - `new` 侧：删除裸 `new;` / `new(实参);` 与工厂名 `static T new(...)`，改为 `heap T;`（堆分配）、`new T(实参);` / `heap new T(实参);`（构造），具名构造入口改名 `static T create(...)`（体里往 `self` 写值，不再 `return`）。`heap` 是保留关键字，不能当变量名；`heap T` 的类型位放宽为 `name_token | builtin_type`，`heap int64;` 这类内置类型堆分配不再被拒。
+  - `foreach` 侧：删除 `foreach` 关键字，区间遍历统一写 `for (变量 in 可迭代)`，与经典 `for (init; cond; inc)` 由 `in` 前看符号区分（IELR 表仍是 `%expect 0`）。
+  - 四处关键字表（文法词形、补全 `tools/mageldev.py`、原生 LSP `tools/native_development.cpp`、VSCode 高亮）同步：`foreach` 移除并补齐 `heap` / `yield`；`tools/check_keywords.py` 的高亮提取改为递归遍历 `repository`，门禁重新生效。样例、错误样例、回归、中英文文档、书稿 LaTeX 与内嵌手册全部迁移；`for-in` 相关诊断与提示同步改名；标准库 `Deque` / `Queue` / `Channel` / `Shared` / `Arena` 的 `create` 体改为写 `self`。
+- 修复具名构造入口结果被丢弃时漏报：判定原先按工厂名 `new` 匹配，改名 `create` 后失效，现按具名构造入口判定并报出 `X::create(...)` 的完整名字（`tests/magel_constructors.py` 的 discarded 系列覆盖）。
+- 修复构造函数重载在省略默认实参时静默挑第一条：`new T(...)` / `T::create(...)` 有多条候选接受同一实参个数且省略了默认实参时，现在按普通函数重载的同一套文案报出歧义（候选签名、省略的形参名与消歧建议），不再无声选中声明顺序靠前的那条。
+- 文法非终结符 `foreach_stmt` / `foreach_source` 改名 `for_in_stmt` / `for_in_source`（`foreach` 关键字此前已删除，避免对外 EBNF 仍出现该名字），EBNF 附录、内嵌手册与内嵌标准库同步再生成；`Iterator` 的说明文案改为 `for-in`。
+- `AGENTS.md` 补充门禁范围约定：只改注释（不进入产物的文字）不必跑 `ci.sh` / `check.sh` 整套门禁，涉及文法、语义、标准库、内嵌资产、文档正文或测试时仍跑完整门禁。
+- 精简发布门禁 `ci.sh`：合并重复覆盖，删除与 `check.sh` 样例重复的套件、5 个 LSP 子套件（保留语义与原生对齐两组）、MCU / 板级与 VM 执行差分、以及分配器 / 借用检查器 / 优化器元数据 / IR 差分 / 墓碑压缩等成对 C++ 单测；同时删除 `tests/magel_v220.py`、`magel_v250.py`、`magel_v251.py`、`magel_lsp_v250.py`、`magel_lsp_v251.py` 五个已过时套件并修正文档里指向它们的链接。
+
 - 分析栈深度由文法指令 `%max_stack_depth 4096` 固定为 4096（此前沿用生成器缺省 64），嵌套闭包等深层语法结构不再触发 MGL1001「分析栈已满」。
 - 修复链式方法调用编译期指数级卡顿：`RawExprType` 的调用分支在重载解析成功后把结果类型钉回节点，后续各阶段查询直接命中，6 层及以上链式调用从超时（>40s）降为毫秒级。
 - `std::iter` 新增借用快照迭代器 `setIter` / `mapIter`（`set.iter()` / `map.iter()`）：把元素或 `(K, V)` 元组快照进迭代器，来源容器保持不变；`intoIter` 系列维持搬空语义。标准库参考文档与符号索引同步再生成。

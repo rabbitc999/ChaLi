@@ -41,7 +41,7 @@ int64 main() {
     println("{} {} {}", words[0], words[1], words[2]);
     auto view = std::memory::Span<String>::from(&words[0], len(words));
     assert(view[0] == "apple" && view[2] == "pear");
-    foreach (String mut& item in view) {
+    for (String mut& item in view) {
         item[0] = 'X';
     }
     assert(words[0] == "Xpple" && words[1] == "Xig" && words[2] == "Xear");

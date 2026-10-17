@@ -61,7 +61,7 @@ int64 main() {
     println("{} {} {}", std::algorithms::findValue<Metric>(measured, high),
     std::algorithms::countValue<Metric>(measured, low), positive.len());
     float64 total = 0.0;
-    foreach (Metric item in measured) { total = total + item.amount; }
+    for (Metric item in measured) { total = total + item.amount; }
     println("{}", total);
     List<Boxed> boxed;
     Set<Boxed> boxedSet;

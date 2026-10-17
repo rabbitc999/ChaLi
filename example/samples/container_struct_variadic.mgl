@@ -2,7 +2,7 @@ struct Metric { int64 amount; };
 
 int64 sumMetrics(Metric... items) {
     int64 total = 0;
-    foreach (Metric item in items) { total = total + item.amount; }
+    for (Metric item in items) { total = total + item.amount; }
     return total;
 }
 

@@ -10,14 +10,14 @@
 String make() {
     return {
         String local = "owned";
-        break local;
+        yield local;
     };
 }
 int32 choose(bool yes) { return if (yes) { 1 } else { 2 }; }
-int64 count() { return loop { break 3; }; }
+int64 count() { return loop { yield 3; }; }
 ```
 
-`return` 仍接受普通表达式。块、`loop`、`if`、`match` 复用已有值出口；复杂分支使用 `break value;`，单表达式分支已有的隐式值出口继续有效。返回控制表达式的所有正常完成路径必须给出值，分支最终类型必须完全一致，不能靠分支之间的数值提升或用户转换消除差异。整数字面量仍接受函数返回类型提供的上下文。
+`return` 仍接受普通表达式。块、`loop`、`if`、`match` 复用已有值出口；复杂分支使用 `yield value;`，单表达式分支已有的隐式值出口继续有效。返回控制表达式的所有正常完成路径必须给出值，分支最终类型必须完全一致，不能靠分支之间的数值提升或用户转换消除差异。整数字面量仍接受函数返回类型提供的上下文。
 
 语法入口与 AST 脱糖：
 
@@ -32,10 +32,10 @@ Return(ControlExpr E)
 
 AST 阶段创建独立且不可被用户命名碰撞的结果绑定，声明组和控制表达式标记 `returnExpression`。`LowerLocalDecl` 把当前函数返回类型传入隐藏声明，`LoopValueType` 检查各分支的精确类型；控制表达式本身仍由 `LowerLoop` 分配单独的汇合槽。表达式只求值一次，先保存结果，再清理来源作用域，最后交给普通返回路径。
 
-返回控制表达式内禁止嵌套 `return`、`break #level(N)`、`break #level(ALL)`；会提前返回的 `?` 传播也要求改为显式匹配后 `break`。检查停在新的 `fn` 或具名函数边界，因此表达式内部声明的独立闭包可以拥有自己的 `return`。不会把内部函数的出口错误归给外层函数。
+返回控制表达式内禁止嵌套 `return`、`break level N`、`break all`；会提前返回的 `?` 传播也要求改为显式匹配后 `break`。检查停在新的 `fn` 或具名函数边界，因此表达式内部声明的独立闭包可以拥有自己的 `return`。不会把内部函数的出口错误归给外层函数。
 
 
-泛型函数使用同一条路径：`T take<T>(T value) { return { T local = value; break local; }; }`。loop、if 和 match 同样可返回 T；单态化先把 T 替换为具体类型，之后按该类型建立隐藏槽、检查分支并执行移动或复制。泛型参数本身不会豁免分支类型一致、借用与清理约束。示例覆盖整数、String 及包含 String 的结构体。
+泛型函数使用同一条路径：`T take<T>(T value) { return { T local = value; yield local; }; }`。loop、if 和 match 同样可返回 T；单态化先把 T 替换为具体类型，之后按该类型建立隐藏槽、检查分支并执行移动或复制。泛型参数本身不会豁免分支类型一致、借用与清理约束。示例覆盖整数、String 及包含 String 的结构体。
 
 ## 编译期所有权与状态追踪
 
@@ -79,7 +79,7 @@ lowerReturnControl(E):
 
 核心代码见 [`M_ReturnValue`](../source/epilogue/return_expression_ast.cpp)、[`PrepareBreakValue` 与 `LowerLanguageMove`](../source/epilogue/boxing.cpp)、[`LowerLoop`](../source/epilogue/lowering.cpp) 和[借用控制流](../source/magel_borrow_flow.hpp)。
 
-运行时数组也沿用该规则：`return { String values[] = new[2]; ... break values; };` 的内部数组连同长度头一起转移，源句柄清零，清理时跳过源元素。外部运行时数组则重新分配长度相同的存储，字符串、对象和聚合元素逐项深复制。隐藏结果槽接受带长度的块、if、match 与 loop 结果，不再只接受 new 或函数调用。此编译器内部消费不开放为源码中的 `move(&array)`；定长数组仍按原有存储和返回类型约束处理，不透明宿主类型也不会被推断成拥有资源。
+运行时数组也沿用该规则：`return { String values[] = new[2]; ... yield values; };` 的内部数组连同长度头一起转移，源句柄清零，清理时跳过源元素。外部运行时数组则重新分配长度相同的存储，字符串、对象和聚合元素逐项深复制。隐藏结果槽接受带长度的块、if、match 与 loop 结果，不再只接受 new 或函数调用。此编译器内部消费不开放为源码中的 `move(&array)`；定长数组仍按原有存储和返回类型约束处理，不透明宿主类型也不会被推断成拥有资源。
 
 ## 语句级具名函数
 
@@ -132,7 +132,7 @@ DerivedDecl(traits, declaration)
   => declaration.derives = traits
 ```
 
-`#derive` 与 `#level` 一样是独立登记的编译器指令 token。指令只修饰结构体和枚举声明。白名单为 Equal、Hash、Clone；Drop、Closeable、未知或重复的请求直接报错，不生成析构协议，也不覆盖已有同名方法。
+`#derive` 是独立登记的编译器指令 token。指令只修饰结构体和枚举声明。白名单为 Equal、Hash、Clone；Drop、Closeable、未知或重复的请求直接报错，不生成析构协议，也不覆盖已有同名方法。
 
 派生分为两个互相隔离的步骤：
 

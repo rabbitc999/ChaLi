@@ -28,7 +28,7 @@ struct OwnedNumber : ReadNumber, Drop {
     static int64 drops;
     String text;
     int64 number;
-    static OwnedNumber new(String text, int64 number) {
+    static OwnedNumber create(String text, int64 number) {
         self.text = text;
         self.number = number;
     }
@@ -94,26 +94,26 @@ int64 main() {
 
     OwnedNumber::drops = 0;
     {
-        String const& text = OwnedNumber::new("retained", 12).borrowText();
+        String const& text = OwnedNumber::create("retained", 12).borrowText();
         assert(text == "retained" && OwnedNumber::drops == 0);
     }
     assert(OwnedNumber::drops == 1);
-    int64 read = OwnedNumber::new("expression", 20).read() + value;
+    int64 read = OwnedNumber::create("expression", 20).read() + value;
     assert(read == 31 && OwnedNumber::drops == 2);
     {
-        OwnedNumber original = OwnedNumber::new("copy", 30);
+        OwnedNumber original = OwnedNumber::create("copy", 30);
         OwnedNumber copy = original;
         copy.text[0] = 'C';
         assert(original.text == "copy" && copy.text == "Copy");
     }
     assert(OwnedNumber::drops == 4);
     for (int64 i = 0; i < 3; i = i + 1) {
-        int64 observed = OwnedNumber::new("loop", i).read();
+        int64 observed = OwnedNumber::create("loop", i).read();
         assert(observed == i && OwnedNumber::drops == i + 5);
     }
-    bool skipped = false && OwnedNumber::new("skipped", 0).read() > 0;
+    bool skipped = false && OwnedNumber::create("skipped", 0).read() > 0;
     assert(!skipped && OwnedNumber::drops == 7);
-    OwnedNumber mut& allocated = new;
+    OwnedNumber mut& allocated = heap OwnedNumber;
     allocated.number = 40;
     Any erased;
     erased.set(&allocated);

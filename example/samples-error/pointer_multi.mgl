@@ -19,7 +19,7 @@ struct Slot<T> {
 
 int64 main() {
     Holder holder;
-    int32 mut& block = new;
+    int32 mut& block = heap int32;
     *block = 3;
     holder.slot = block;
 

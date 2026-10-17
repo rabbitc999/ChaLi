@@ -4385,7 +4385,7 @@ Slot vecInsert(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (object == nullptr) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
-        ctx.error = "活跃 foreach 引用期间不能移动或删除列表元素";
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
         return Slot::fromInt(0);
     }
     const std::int64_t index = nativeInt(args[1]);
@@ -4741,7 +4741,7 @@ Slot vecRemove(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (object == nullptr) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
-        ctx.error = "活跃 foreach 引用期间不能移动或删除列表元素";
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
         return Slot::fromInt(0);
     }
     std::size_t index = 0u;
@@ -4763,7 +4763,7 @@ Slot vecPop(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (object == nullptr) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
-        ctx.error = "活跃 foreach 引用期间不能移动或删除列表元素";
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
         return Slot::fromInt(0);
     }
     if (object->items.empty())
@@ -4805,7 +4805,7 @@ Slot vecClear(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (object == nullptr) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
-        ctx.error = "活跃 foreach 引用期间不能移动或删除列表元素";
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
         return Slot::fromInt(0);
     }
     for (const ObjectValue &value : object->items) ctx.objects->releaseValue(value);
@@ -4826,7 +4826,7 @@ Slot vecStableSort(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (object == nullptr) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
-        ctx.error = "活跃 foreach 引用期间不能移动或删除列表元素";
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
         return Slot::fromInt(0);
     }
     const std::size_t count = object->items.size();

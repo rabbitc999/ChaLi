@@ -26,26 +26,26 @@ def main():
         result = run(compiler, backend, source, "out", output)
         assert result.returncode == 0, result
         if backend == "aot": result = run(output)
-        assert result.returncode == 0 and result.stdout == "foreach intervals OK\n" and not result.stderr, result
+        assert result.returncode == 0 and result.stdout == "for intervals OK\n" and not result.stderr, result
 
     rejected = {
-        "int8_255": "foreach(int8 x in [0,255]){}",
-        "int8_256": "foreach(int8 x in [0,256]){}",
-        "uint8_256": "foreach(uint8 x in [0,256]){}",
-        "uint8_half_256": "foreach(uint8 x in [0,256)){}",
-        "int8_below": "foreach(int8 x in [-129,0]){}",
-        "uint8_negative": "foreach(uint8 x in [-1,2]){}",
-        "signed64_overflow": "foreach(int64 x in [0,18446744073709551615]){}",
-        "constant_expression": "foreach(int8 x in [0,100+100]){}",
-        "named_constant": "const int64 stop=255;foreach(int8 x in [0,stop]){}",
-        "reversed": "foreach(int8 x in [10,0]){}",
-        "non_integer": "foreach(float64 x in [0,1]){}",
-        "float_endpoint": "foreach(int8 x in [0.0,1.0]){}",
-        "string_endpoint": 'foreach(x in ["a","b"]){}',
-        "reference_variable": "foreach(int8 mut& x in [0,1]){}",
-        "borrow_escape": "int8 fn() saved=int8 fn(){return (int8)0;};foreach(int8 x in [0,1]){saved=int8 fn(){x};}",
-        "left_open": "foreach(x in (0,1)){}",
-        "left_open_right_closed": "foreach(x in (0,1]){}",
+        "int8_255": "for(int8 x in [0,255]){}",
+        "int8_256": "for(int8 x in [0,256]){}",
+        "uint8_256": "for(uint8 x in [0,256]){}",
+        "uint8_half_256": "for(uint8 x in [0,256)){}",
+        "int8_below": "for(int8 x in [-129,0]){}",
+        "uint8_negative": "for(uint8 x in [-1,2]){}",
+        "signed64_overflow": "for(int64 x in [0,18446744073709551615]){}",
+        "constant_expression": "for(int8 x in [0,100+100]){}",
+        "named_constant": "const int64 stop=255;for(int8 x in [0,stop]){}",
+        "reversed": "for(int8 x in [10,0]){}",
+        "non_integer": "for(float64 x in [0,1]){}",
+        "float_endpoint": "for(int8 x in [0.0,1.0]){}",
+        "string_endpoint": 'for(x in ["a","b"]){}',
+        "reference_variable": "for(int8 mut& x in [0,1]){}",
+        "borrow_escape": "int8 fn() saved=int8 fn(){return (int8)0;};for(int8 x in [0,1]){saved=int8 fn(){x};}",
+        "left_open": "for(x in (0,1)){}",
+        "left_open_right_closed": "for(x in (0,1]){}",
     }
     for name, body in rejected.items():
         source=work/(name+".mgl");source.write_text("int64 main(){"+body+"return 0;}\n",encoding="utf-8")
@@ -53,8 +53,8 @@ def main():
         assert result.returncode != 0 and result.stderr,(name,result)
         assert "terminate called" not in result.stderr,(name,result)
     for name, body in {
-        "dynamic_overflow": "int64 stop=256;foreach(uint8 x in [0,stop]){}",
-        "dynamic_reverse": "int64 start=4;int64 stop=2;foreach(int8 x in [start,stop]){}",
+        "dynamic_overflow": "int64 stop=256;for(uint8 x in [0,stop]){}",
+        "dynamic_reverse": "int64 start=4;int64 stop=2;for(int8 x in [start,stop]){}",
     }.items():
         source=work/(name+".mgl");source.write_text("int64 main(){"+body+"return 0;}\n",encoding="utf-8")
         for backend in ("run","aot"):
@@ -63,7 +63,7 @@ def main():
             if backend=="aot":
                 assert result.returncode==0,result
                 result=run(output)
-            assert result.returncode!=0 and "foreach 区间" in result.stdout+result.stderr,(name,backend,result)
+            assert result.returncode!=0 and "for-in 区间" in result.stdout+result.stderr,(name,backend,result)
     print(f"foreach 区间通过：八种整数、uint8 完整 256 项、VM/AOT、捕获组合、{len(rejected)} 个编译拒绝和两类动态错误")
 
 

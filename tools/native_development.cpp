@@ -558,15 +558,15 @@ J range(const std::string &s, size_t a, size_t b)
     return object({ { "start", position(s, a) }, { "end", position(s, b) } });
 }
 const std::set<std::string> keywords = {
-    "defer", "scope", "ALL",
+    "defer", "scope", "heap",
     "_", "abi", "auto", "bool", "break", "cast", "char",
     "const", "continue", "copy", "delete", "do", "drop", "elif", "else",
-    "enum", "export", "false", "float32", "float64", "fn", "for", "foreach",
+    "enum", "export", "false", "float32", "float64", "fn", "for",
     "if", "impl", "import", "in", "inline", "int16", "int32",
     "int64", "int8", "interface", "loop", "match", "module",
     "move", "mut", "new", "return", "static", "struct",
     "true", "type", "uint16", "uint32", "uint64", "uint8", "void",
-    "while"
+    "while", "yield"
 };
 const std::set<std::string> primitives = {
     "bool", "char", "float32", "float64", "int8", "int16", "int32",
@@ -1213,7 +1213,7 @@ std::vector<Binding> scanBindings(const std::string &s,
             }
         }
     for (size_t i = 0; i + 3 < t.size(); ++i)
-        if (t[i].word == "foreach" && t[i + 1].word == "(")
+        if (t[i].word == "for" && t[i + 1].word == "(")
         {
             const auto end = groupEnd(t, i + 1, "(", ")");
             size_t in = i + 2;

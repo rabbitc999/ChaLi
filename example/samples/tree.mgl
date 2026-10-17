@@ -37,7 +37,7 @@ Option<Node mut&> rebuild(String pre, int64 preStart, String inorder_text, int64
     while (offset < count && (int64)inorder_text[inStart + offset] != root) {
         offset = offset + 1;
     }
-    Node mut& node = new;
+    Node mut& node = heap Node;
     node.value = root;
     /* 前序：根后面先是整棵左子树（offset 个），再接右子树 */
     node.left = rebuild(pre, preStart + 1, inorder_text, inStart, offset);

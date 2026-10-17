@@ -8,7 +8,7 @@ $macro example(...A)(...B)
     $for var in B
     listB.push(var);
     $end_for
-    break (listA, listB);
+    yield (listA, listB);
 }
 $end_macro
 

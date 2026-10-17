@@ -1,7 +1,7 @@
 /** 使用 Option<Cell mut&> 表示链表尾部，引用本身始终绑定有效节点。 */
 struct Cell { int64 value; Option<Cell mut&> next; };
 Option<Cell mut&> push_front(Option<Cell mut&> head, int64 value) {
-    Cell mut& node = new;
+    Cell mut& node = heap Cell;
     node.value = value; node.next = head;
     return Option<Cell mut&>::Value(node);
 }

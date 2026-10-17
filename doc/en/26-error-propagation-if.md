@@ -2,21 +2,21 @@
 
 ## Conditional expressions
 
-Use `if` in initializers, assignments, arguments, returns and nested expressions. A simple branch contains one expression without a semicolon. A statement branch produces its result using `break value;`.
+Use `if` in initializers, assignments, arguments, returns and nested expressions. A simple branch contains one expression without a semicolon. A statement branch produces its result using `yield value;`.
 
 ```magel
 int32 value;
 value = if (ready) { 1 } elif (cached) { 2 } else {
     int32 fallback = 3;
-    break fallback;
+    yield fallback;
 };
 ```
 
-Conditions are tested in order. Once a branch matches, later conditions and other branches are not evaluated. Value contexts require an else branch and a result on every normal exit. A statement such as `{ value; }` discards its value. Statement branches require an explicit value break.
+Conditions are tested in order. Once a branch matches, later conditions and other branches are not evaluated. Value contexts require an else branch and a result on every normal exit. A statement such as `{ value; }` discards its value. Statement branches require an explicit `yield value;`.
 
 Expected types flow from the surrounding initialization, assignment, parameter or return type. Unconstrained integer literals remain int64. Incompatible branches are rejected; no implicit Any boxing is introduced.
 
-A value break exits the nearest result-receiving block, if, match or loop expression, crossing intervening loops that do not receive a value. `break a, b;` is equivalent to `break (a, b);` and produces one tuple. Nested expressions used in initializers, assignments, arguments or returns still receive their own value breaks. Plain break and continue retain their loop meaning. Return exits the current function. Results are saved before branch cleanup; references to expired branch locals are rejected.
+`yield value;` exits the nearest result-receiving block, if, match or loop expression, crossing intervening loops that do not receive a value. `yield (a, b);` produces one tuple. Nested expressions used in initializers, assignments, arguments or returns still receive their own value exits. Plain break and continue retain their loop meaning. Return exits the current function. Results are saved before branch cleanup; references to expired branch locals are rejected.
 
 ## Custom propagation
 
@@ -33,7 +33,7 @@ Result<T,E> uses ErrorResidual<E>; Option<T> uses NoneResidual. Different succes
 - `option.okOrElse<E>(factory)` calls the error factory only for None.
 - `result.ok()` explicitly discards error information.
 
-The propagation operator works in conditional branches and still exits the enclosing function. See [conditional expressions](../../example/samples/if_expression.mgl), [error adapters](../../example/samples/error_adapters.mgl) and the [VM/AOT regression](../../tests/magel_v250.py).
+The propagation operator works in conditional branches and still exits the enclosing function. See the [conditional expressions](../../example/samples/if_expression.mgl) and [error adapters](../../example/samples/error_adapters.mgl) samples, which `sh check.sh` runs on both VM and AOT.
 
 ## Migration and tooling
 

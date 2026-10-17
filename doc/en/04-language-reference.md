@@ -99,7 +99,7 @@ void log(String message) { println("{}", message); }
 - Parameters are **by value** (copies) by default. To avoid copying, or to allow mutation, write
   `T mut&` / `T const&`.
 - Overloading is supported: selection is by argument types.
-- Variadic trailing parameters are written `T... items`, used with `foreach` or `std::iter`.
+- Variadic trailing parameters are written `T... items`, used with `for-in` or `std::iter`.
 - `static` methods belong to the type and are called `Type::method()`.
 - The entry point is named `main`, returns `int64` or `void`, and takes no parameters or `std::lang::List<std::lang::String> arguments`. Normal completion or `return;` from `void main` produces process exit code 0; panic still fails.
 
@@ -191,7 +191,7 @@ struct Counter {
     static int64 count() { return Counter::alive; }
 };
 int64 main() {
-    Counter c = new(7);
+    Counter c = new Counter(7);
     println("value={} alive={}", c.value, Counter::count());
     return 0;
 }
@@ -201,7 +201,7 @@ int64 main() {
 value=7 alive=1
 ```
 
-Heap objects are written `T mut& p = new;` (no parentheses — the element type comes from
+Heap objects are written `T mut& p = heap T;` (no constructor arguments — the element type comes from
 `p`'s type) and freed with `delete p;`.
 
 `new(args)` carries no type information — **the declaration on the left decides which constructor
@@ -209,9 +209,9 @@ runs**:
 
 | Form | Which path |
 | --- | --- |
-| `T v = new(args);` | stack value, calls `T`'s **real constructor** (same name as `T`) |
-| `T mut& p = new(args);` | heap object, same real constructor, remember `delete p;` |
-| `T v = T::new(args);` | **named constructor entry point** `static T new(...)` |
+| `T v = new T(args);` | stack value, calls `T`'s **real constructor** (same name as `T`) |
+| `T mut& p = heap new T(args);` | heap object, same real constructor, remember `delete p;` |
+| `T v = T::create(args);` | **named constructor entry point** `static T create(...)` |
 | `T v = T::otherFactory();` | an ordinary static factory (any name) |
 
 ```magel
@@ -219,12 +219,12 @@ struct Point {
     int64 x;
     int64 y;
     Point(int64 x, int64 y) { self.x = x; self.y = y; }             // real constructor
-    static Point new(int64 x, int64 y) { self.x = x * 10; self.y = y * 10; }  // named entry point
+    static Point create(int64 x, int64 y) { self.x = x * 10; self.y = y * 10; }  // named entry point
 };
 int64 main() {
-    Point o = new(3, 4);          // real constructor → 3,4
-    Point mut& p = new(1, 2);     // real constructor + heap → 1,2
-    Point q = Point::new(3, 4);   // named constructor entry point → 30,40
+    Point o = new Point(3, 4);    // real constructor → 3,4
+    Point mut& p = heap new Point(1, 2);  // real constructor + heap → 1,2
+    Point q = Point::create(3, 4);  // named constructor entry point → 30,40
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     delete p;
     return 0;
@@ -235,7 +235,7 @@ int64 main() {
 3,4 1 2 30 40
 ```
 
-`static T new(...)` is a **named constructor entry point**: it also carries an implicit `self`, so the
+`static T create(...)` is a **named constructor entry point**: it also carries an implicit `self`, so the
 body just writes into `self` (or `self.field`) and does **not** write `return` — the value is taken by
 the call site. Discarding its result is an error.
 
@@ -525,7 +525,7 @@ int64 main() {
     int64 n = 0;
     loop {
         n = n + 1;
-        if (n >= 3) { break n; }
+        if (n >= 3) { yield n; }
     };
     println("loop={}", n);
     int64 total = 0;
@@ -549,8 +549,8 @@ for=9
 | `if / elif / else` | conditional branches |
 | `while (cond) { }` | test before body |
 | `for (init; cond; step) { }` | three-part |
-| `loop { … break v; }` | infinite loop; `break` may carry a value |
-| `foreach (T x in c) { }` | iterate a container / iterator |
+| `loop { … yield v; }` | infinite loop; `yield` carries the result |
+| `for (T x in c) { }` | iterate a container / iterator |
 | `break` / `continue` / `return` | exit / continue / return |
 
 > `loop { … }` is an **expression**; in statement position write `loop { … };`.
@@ -618,8 +618,8 @@ alias = 9;                    // writing through it writes value
 ```
 
 ```magel
-T mut& heap = new;            // heap object (element type from heap's type)
-delete heap;                  // free
+T mut& owned = heap T;         // heap object (element type from owned's type)
+delete owned;                  // free
 ```
 
 Rules and restrictions (escape checking, `MGL1204`): see
@@ -762,31 +762,31 @@ assert(transferred() == 2);
 
 Duplicate names, unknown variables, parameter conflicts, and mut/move captures of read-only sources are rejected. Listed variables are captured even when unused in the body. Capture applies to the whole variable. Copying or moving a reference does not own its referent or extend its lifetime. Direct global access uses global storage; explicitly list a global for a snapshot. Convert array values to containers or explicit references. File and process handles support move capture but cannot be copied, including through closure copies.
 
-## Integer intervals in foreach
+## Integer intervals in for-in
 
-`foreach(auto item in source)` and `foreach(item in source)` share element type inference. Lists and other iterators preserve their element type; integer intervals infer it from the endpoints. Explicit types still undergo static compatibility checks.
+`for(auto item in source)` and `for(item in source)` share element type inference. Lists and other iterators preserve their element type; integer intervals infer it from the endpoints. Explicit types still undergo static compatibility checks.
 
-`foreach (uint8 x in [0,255]) { ... }` yields 256 values, from 0 through 255; `[0,255)` excludes 255. All eight fixed-width signed and unsigned integer types are supported. Omitted variable types are inferred from the endpoints; ordinary integer literals default to int64.
+`for (uint8 x in [0,255]) { ... }` yields 256 values, from 0 through 255; `[0,255)` excludes 255. All eight fixed-width signed and unsigned integer types are supported. Omitted variable types are inferred from the endpoints; ordinary integer literals default to int64.
 
-Intervals are internal lazy `Iterator<T>` values using the existing foreach protocol, without allocating a list. Bounds are evaluated once each, from left to right. Both endpoints must fit T, including an exclusive upper endpoint. Constant violations are rejected at compile time; dynamic values are checked before iteration. int8 spans -128..127, so `foreach(int8 x in [0,255])` is rejected. Reversed intervals are errors; [a,a) is empty and [a,a] yields one value.
+Intervals are internal lazy `Iterator<T>` values using the existing for-in protocol, without allocating a list. Bounds are evaluated once each, from left to right. Both endpoints must fit T, including an exclusive upper endpoint. Constant violations are rejected at compile time; dynamic values are checked before iteration. int8 spans -128..127, so `for(int8 x in [0,255])` is rejected. Reversed intervals are errors; [a,a) is empty and [a,a] yields one value.
 
 A closed interval finishes at its last value without incrementing the maximum integer. uint8 255 and uint64 18446744073709551615 are valid inclusive upper bounds. Changing the iteration variable does not change the iterator state. Existing break, continue, return and lambda capture rules apply.
 
 ## Breaking out of nested loops
 
-`break #level(N);` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break #level(1);` is equivalent to `break;`. `break #level(ALL);` exits every enclosing loop in the current function and resumes after the outermost loop. ALL is case-insensitive here: `all`, `All` and other case variants are equivalent. This recognition is limited to the directive argument, so `all` remains available as an ordinary variable name.
+`break level N;` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break level 1;` is equivalent to `break;`. `break all;` exits every enclosing loop in the current function and resumes after the outermost loop; `break level all;` is equivalent. `level` and `all` are recognized only in this position, so `all` remains available as an ordinary variable name.
 
-Only `loop`, `while`, `do-while`, `for` and `foreach` count. Ordinary blocks, value blocks, `if` and `match` do not count. N must be a positive decimal integer literal, not a variable or expression. Zero, negative numbers, excessive depths and use outside a loop are rejected. Exits cannot cross function or `fn` boundaries. These forms carry no result; targeting a loop expression that requires a value is rejected. Use `break value;` to supply a result.
+Only `loop`, `while`, `do-while`, `for` and `for-in` count. Ordinary blocks, value blocks, `if` and `match` do not count. N must be a positive decimal integer literal, not a variable or expression. Zero, negative numbers, excessive depths and use outside a loop are rejected. Exits cannot cross function or `fn` boundaries. These forms carry no result; targeting a loop expression that requires a value is rejected. Use `yield value;` to supply a result.
 
 ```magel
 loop {
     while (true) {
         for (int64 i = 0; i < 10; i++) {
-            if (i == 3) { break #level(2); }
+            if (i == 3) { break level 2; }
         }
     }
     // The for and while loops have ended; execution is still inside loop.
-    break #level(ALL);
+    break all;
 };
 ```
 
@@ -794,35 +794,35 @@ Scope cleanup runs from inner to outer scopes, including `defer`, `scope(exit)` 
 
 ## Block expressions and interpolated output
 
-A nonempty statement block can produce a value in an initializer, assignment, argument or return. Every normally completing path must exit using `break value;`. Ordinary statement blocks retain their behavior; empty `{}` remains a collection literal.
+A nonempty statement block can produce a value in an initializer, assignment, argument or return. Every normally completing path must exit using `yield value;`. Ordinary statement blocks retain their behavior; empty `{}` remains a collection literal.
 
 ```magel
 int64 main() {
-    int32 a = { int32 b = 3; break b; };
-    a = { int32 b = 4; break b; };
+    int32 a = { int32 b = 3; yield b; };
+    a = { int32 b = 4; yield b; };
     print(f"a={a};");
     println(f"next={a + 1}");
     return 0;
 }
 ```
 
-A value break selects the nearest result-receiving expression, crossing intervening while, do-while, for, foreach and statement-position loop constructs. Nested loop, block, if and match expressions used in initializers, assignments, arguments or returns still receive their own exit values. Plain `break;` exits only the nearest loop and does not produce a result for an enclosing expression. `break a, b;` is equivalent to `break (a, b);`: each element is evaluated once from left to right to form one tuple, with element types constrained by the receiving tuple type. A block expression does not create a loop, so `continue;` searches for an enclosing loop. Results are saved before local resources are cleaned up. Strings and lists retain value semantics, and references to expired locals cannot escape.
+A value exit (`yield`) selects the nearest result-receiving expression, crossing intervening while, do-while, for, for-in and statement-position loop constructs. Nested loop, block, if and match expressions used in initializers, assignments, arguments or returns still receive their own exit values. Plain `break;` exits only the nearest loop and does not produce a result for an enclosing expression. `yield (a, b);` forms one tuple: each element is evaluated once from left to right, with element types constrained by the receiving tuple type. A block expression does not create a loop, so `continue;` searches for an enclosing loop. Results are saved before local resources are cleaned up. Strings and lists retain value semantics, and references to expired locals cannot escape.
 
 For example, a loop can directly complete an enclosing block assignment, while nested assignment blocks receive their own results:
 
 ```magel
 (int64, String) found = {
     for (int64 i = 0; i < 10; i++) {
-        if (i == 3) { break i, "found"; }
+        if (i == 3) { yield (i, "found"); }
     }
-    break -1, "missing";
+    yield (-1, "missing");
 };
-int64 a = { int64 b = { break 1; }; break b + 1; }; // a == 2
+int64 a = { int64 b = { yield 1; }; yield b + 1; }; // a == 2
 ```
 
 See the [value break sample](../../example/samples/break_values.mgl) for nested loops and cleanup checks.
 
-A standalone brace statement remains an ordinary scope even with a trailing semicolon; it does not create a disposable value receiver. A value break without an enclosing receiving expression is an error. In nested initializers, `break 5;` completes the inner loop for z and `break z + 1;` completes the outer loop for y. A final `break y + 1;` inside a standalone outer block still has no receiver.
+A standalone brace statement remains an ordinary scope even with a trailing semicolon; it does not create a disposable value receiver. A `yield value;` without an enclosing receiving expression is an error. In nested initializers, `yield 5;` completes the inner loop for z and `yield z + 1;` completes the outer loop for y. A final `yield y + 1;` inside a standalone outer block still has no receiver.
 
 `print` and `println` accept a single interpolated string or `String` expression. Braces and percent signs in the resulting text are printed literally. Traditional `println("{}", value)` formatting remains supported; interpolated output does not accept additional format arguments.
 
@@ -835,7 +835,7 @@ $macro vec(type, ...values)
 $for item in values
     { type $1 = item; $0.push($1); }
 $end_for
-    break $0;
+    yield $0;
 }
 $end_macro
 ```
@@ -850,11 +850,11 @@ types. See [`fn_inline_arguments.mgl`](../../example/samples/fn_inline_arguments
 function result combined with tuple values.
 
 
-## Moving and cleaning up value breaks
+## Moving and cleaning up value exits
 
-Explicit `break i;` prefers moving a writable local variable declared inside the receiving value expression, equivalent to `break std::lang::move(&i);` for that source. Variables outside that expression remain usable and are copied. Crossing loops does not change this boundary. Direct variables in tuples, including nested tuples, follow the same rule. Const values, read-only sources, reference bindings, fields and indexing retain existing value semantics; use explicit `move(&value)` when a transfer is required. If scope exit callbacks are present, an independent result is conservatively saved so callbacks can still read or modify the source.
+Explicit `yield i;` prefers moving a writable local variable declared inside the receiving value expression, equivalent to `yield std::lang::move(&i);` for that source. Variables outside that expression remain usable and are copied. Crossing loops does not change this boundary. Direct variables in tuples, including nested tuples, follow the same rule. Const values, read-only sources, reference bindings, fields and indexing retain existing value semantics; use explicit `move(&value)` when a transfer is required. If scope exit callbacks are present, an independent result is conservatively saved so callbacks can still read or modify the source.
 
-Expressions such as `break i + 1;` and `break makeText();` are evaluated once and their result temporaries are copied or adopted; the expression itself is not treated as an addressable variable. Compound expressions such as tuples retain existing construction and value-parameter rules before the exit adopts their final result. Ordinary branch tail expressions `{ value }` retain their existing value semantics. Explicitly construct a copy using string concatenation, container copy or a type-provided copying method when needed. To force a move of an external variable, write `break move(&external);`; subsequent access follows the existing moved-binding restrictions.
+Expressions such as `yield i + 1;` and `yield makeText();` are evaluated once and their result temporaries are copied or adopted; the expression itself is not treated as an addressable variable. Compound expressions such as tuples retain existing construction and value-parameter rules before the exit adopts their final result. Ordinary branch tail expressions `{ value }` retain their existing value semantics. Explicitly construct a copy using string concatenation, container copy or a type-provided copying method when needed. To force a move of an external variable, write `yield move(&external);`; subsequent access follows the existing moved-binding restrictions.
 
 The result is saved before exit callbacks and automatic cleanup. Moving clears the source storage and ends its binding lifetime without invoking close/drop on the source; the final receiver owns cleanup. Types implementing both Closeable and Drop close before dropping. Copies own independent resources, so source and result are cleaned up at their respective lifetime ends. Exits across loops clean up every scope that is left without releasing resources already transferred to the result.
 
@@ -871,7 +871,7 @@ Struct `{}` formatting reuses the no-argument method; styled overloads retain th
 
 ## Returning control expressions
 
-`return { ... break value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on break; outer variables copy. Nested return, break #level, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value breaks. See [declarations and return expressions](28-declaration-sugars.md).
+`return { ... yield value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on yield; outer variables copy. Nested return, break level / break all, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value exits. See [declarations and return expressions](28-declaration-sugars.md).
 
 ## Named function declarations
 

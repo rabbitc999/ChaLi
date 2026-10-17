@@ -167,7 +167,7 @@ T get();
 obj.get();
 ```
 
-**源码**：[source/std/concurrency.mgl:13](../../source/std/concurrency.mgl#L13)。
+**源码**：[source/std/concurrency.mgl:11](../../source/std/concurrency.mgl#L11)。
 
 **完整示例**：[example/samples/typed_messages_shared.mgl](../../example/samples/typed_messages_shared.mgl)。
 
@@ -205,7 +205,7 @@ void set(T value);
 obj.set(value);
 ```
 
-**源码**：[source/std/concurrency.mgl:14](../../source/std/concurrency.mgl#L14)。
+**源码**：[source/std/concurrency.mgl:12](../../source/std/concurrency.mgl#L12)。
 
 **完整示例**：[example/samples/typed_messages_shared.mgl](../../example/samples/typed_messages_shared.mgl)。
 
@@ -243,6 +243,6 @@ T swap(T value);
 obj.swap(value);
 ```
 
-**源码**：[source/std/concurrency.mgl:15](../../source/std/concurrency.mgl#L15)。
+**源码**：[source/std/concurrency.mgl:13](../../source/std/concurrency.mgl#L13)。
 
 **完整示例**：[example/samples/typed_messages_shared.mgl](../../example/samples/typed_messages_shared.mgl)。

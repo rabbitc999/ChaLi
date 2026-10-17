@@ -285,8 +285,6 @@ member_decl := type name_token SEMI            { $$ = M_Field($1, $2); }
             { $$ = M_Method($1, M_KeywordName(1), -1, $4, $6); }
         | STATIC type name_token LPAREN param_list RPAREN block
             { $$ = M_StaticMethod($2, $3, $5, $7); }
-        | STATIC type NEW LPAREN param_list RPAREN block
-            { $$ = M_StaticMethod($2, M_KeywordName(2), $5, $7); }
         | STATIC ptr_type name_token LPAREN param_list RPAREN block
             { $$ = M_StaticMethod($2, $3, $5, $7); }
         | STATIC array_type name_token LPAREN param_list RPAREN block
@@ -468,27 +466,19 @@ stmt := block                  { $$ = $1; }
       | while_stmt             { $$ = $1; }
       | do_while_stmt          { $$ = $1; }
       | for_stmt               { $$ = $1; }
-      | foreach_stmt           { $$ = $1; }
+      | for_in_stmt           { $$ = $1; }
       | match_stmt %prec SEMI  { $$ = $1; }
       | match_stmt SEMI        { $$ = $1; }
       | RETURN expr SEMI       { $$ = M_ReturnValue($2); }
       | RETURN tuple_items SEMI { $$ = M_Return(M_Tuple($2)); }
       | RETURN SEMI            { $$ = M_Return(-1); }
       | DELETE unary SEMI      { $$ = M_Delete($2); }
-      /* 无值 break / continue 控制最近循环；带值 break 穿透无值循环，交给最近值出口。 */
+      /* 无值 break / continue 控制最近循环；带值退出由 yield 承担（与旧 break 值; 等价
+       * 降级，现已要求显式写 yield）；多层退出用 break level N; / break level all; /
+       * break all;，旧写法 break #level(N) 已删除。level / all 仍是普通标识符，不占用关键字。 */
       | BREAK SEMI             { $$ = M_Break(-1); }
-      | BREAK BREAK_LEVEL LPAREN NUMBER RPAREN SEMI { $$ = M_BreakLevel($4); }
-      | BREAK BREAK_LEVEL LPAREN ALL RPAREN SEMI { $$ = M_BreakLevel(-1); }
-      | BREAK BREAK_LEVEL LPAREN VARIABLE RPAREN SEMI { $$ = M_BreakLevelNamed($4); }
-      | BREAK expr SEMI        { $$ = M_BreakAllSugar($2); }
-      | BREAK tuple_items SEMI { $$ = M_Break(M_Tuple($2)); }
-      /* —— break 语法糖（等价降级，不引入新语义；level / all 仍是普通标识符，
-       *    不占用关键字，沿用 M_BreakLevelNamed 的拼写约定）——
-       * 糖1：yield 值;  ≡ break 值;（仅值表达式内合法，语义检查同 break 值;）
-       * 糖2：break level N;  ≡ break #level(N);（N 为正整数字面量，仅循环层跳转）
-       * 糖3：break all;  ≡ break #level(ALL);（退出最外层循环）
-       * 糖4：break level all;  ≡ break all; */
       | YIELD expr SEMI        { $$ = M_Break($2); }
+      | BREAK name_token SEMI  { $$ = M_NameIsAll($2) ? M_BreakLevel(-1) : M_ParseBadBreakAllSugar(); }
       | BREAK name_token NUMBER SEMI { $$ = M_NameIsLevel($2) ? M_BreakLevel($3) : M_ParseBadLevelSugar(); }
       | BREAK name_token name_token SEMI { $$ = (M_NameIsLevel($2) && M_NameIsAll($3)) ? M_BreakLevel(-1) : M_ParseBadLevelAllSugar(); }
       | CONTINUE SEMI          { $$ = M_Continue(); }
@@ -597,18 +587,25 @@ loop_expr := LOOP block { $$ = M_Loop($2); } ;
 for_stmt := FOR LPAREN for_init expr SEMI for_inc RPAREN block
     { $$ = M_For($3, $4, $6, $8); } ;
 
-foreach_stmt := FOREACH LPAREN name_token IN foreach_source RPAREN block
+/* for (x in src) / for (auto x in src) / for (T x in src) / for (T* x in src)：
+ * 与经典 for 共用 FOR 关键字，靠 IN 区分；foreach 关键字已删除，非终结符同步改名。 */
+for_in_stmt := FOR LPAREN name_token IN for_in_source RPAREN block
                   { $$ = M_Foreach(-1, $3, -1, $5, $7); }
-  | FOREACH LPAREN AUTO name_token IN foreach_source RPAREN block
+  | FOR LPAREN AUTO name_token IN for_in_source RPAREN block
                   { $$ = M_Foreach(-1, $4, -1, $6, $8); }
-  | FOREACH LPAREN type name_token IN foreach_source RPAREN block
+  | FOR LPAREN type name_token IN for_in_source RPAREN block
                   { $$ = M_Foreach($3, $4, -1, $6, $8); }
-  | FOREACH LPAREN ptr_type name_token IN foreach_source RPAREN block
+  | FOR LPAREN ptr_type name_token IN for_in_source RPAREN block
                   { $$ = M_Foreach($3, $4, -1, $6, $8); } ;
 
-/* 区间作为内部 Iterator<T>，和普通迭代源共用 foreach。 */
-foreach_source := expr { $$ = $1; }
+/* 区间作为内部 Iterator<T>，和普通迭代源共用 for-in。 */
+for_in_source := expr { $$ = $1; }
                  | range_pattern { $$ = $1; } ;
+
+/* new/heap 糖的类型位：只作文法识别（真实类型由左值推导），接受结构体名与内置类型，
+ * 不用完整 type，避免与 fn 签名里的 ptr_type（type . AMP）产生归约冲突。 */
+heap_type := name_token { $$ = $1; }
+           | builtin_type { $$ = $1; } ;
 
 for_init := SEMI                    { $$ = -1; }
           | decl_stmt               { $$ = $1; }
@@ -686,38 +683,31 @@ unary := INCREMENT unary { $$ = M_Update(1, 1, $2); }
        | TILDE unary      { $$ = M_UnOp(3, $2); }   /* 按位取反 `~x` */
        | STAR unary       { $$ = M_UnOp(2, $2); }   /* 解引用 `*p` */
        | AMP unary        { $$ = M_UnOp(4, $2); }   /* 取地址 `&x`（得到只读引用） */
-       | NEW new_dims { $$ = M_NewPtr($2); }
-       | NEW LPAREN call_args RPAREN { $$ = M_Construct(-1, $3, -1); }
-       /* 语法糖（等价降级，不引入新语义）：
-        *   new T(args)  ≡ new(args);            明确写出构造类型 T
-        *   heap T       ≡ new;                  明确写出堆分配类型 T
-        *   heap new T(args) ≡ new(args);         堆上构造（左值为 T mut& 时即堆构造） */
-       | NEW name_token LPAREN call_args RPAREN { $$ = M_Construct(-1, $4, -1); }
-       | HEAP name_token { $$ = M_HeapSugar($2); }
-       | HEAP NEW name_token LPAREN call_args RPAREN { $$ = M_HeapNewSugar($3, $5); }
+       /* 1.0.0 语法清理：删除裸 new; 与裸 new(args)，改为显式写出类型：
+        *   heap T           ≡ 原 new;（堆上分配 T，类型由左值推导）
+        *   new T(args)      ≡ 原 new(args);（按目标类型构造，类型显式写出）
+        *   heap new T(args) ≡ 原 new(args);（堆上构造）
+        * 数组仍以 new [n] 形式保留（元素类型由左值推导）。 */
+       | NEW LBRACKET expr RBRACKET { $$ = M_NewPtr($3); }
+       | NEW heap_type LPAREN call_args RPAREN { $$ = M_Construct(-1, $4, -1); }
+       | HEAP heap_type { $$ = M_HeapSugar($2); }
+       | HEAP NEW heap_type LPAREN call_args RPAREN { $$ = M_HeapNewSugar($3, $5); }
        | cast_expr        { $$ = $1; } ;
 
 /* `new` 一个对象 / `new [n]` 一片：**类型不写在 new 后面**（声明里已经有了）。
  *
- *   T mut& p = new;          单个对象（元素类型 = p 的类型指向的 T）
+ *   T mut& p = heap T;       单个对象（元素类型 = p 的类型指向的 T，不调构造函数）
+ *   T v = new T(实参);       按目标类型的构造函数展开（类型显式写出）
  *   T a[] = new [n];         运行时长度数组（n 可以是变量）
  *
- * 元素类型从"被赋值的那个变量 / 字段的类型"来，所以 `new` 只能出现在声明或赋值里。
- * 放在 `unary` 这一层（而不是 `primary`）：`new` 后面紧跟的 `[` 只可能是"数组长度"，
- * 要是同时还能被当成"对 new 出来的东西取下标"，文法上就是归约 / 移进的二义性。
+ * 元素类型从"被赋值的那个变量 / 字段的类型"来，所以 `new` / `heap` 只能出现在声明或
+ * 赋值里。放在 `unary` 这一层（而不是 `primary`）：`new` 后面紧跟的 `[` 只可能是
+ * "数组长度"，要是同时还能被当成"对 new 出来的东西取下标"，文法上就是归约 / 移进的
+ * 二义性。
  *
- * 1.0.0 起 `new(实参)` 改成**按目标类型**的构造写法：
- *
- *   T v = new(实参);         v 的构造函数体（T 里写的 `T(形参){…}`）按实参展开
- *   T v = new();             同上，只是把默认参数交给构造函数自己
- *   T mut& p = new;          单个堆对象（元素类型 = p 的类型指向的 T），不调构造函数
- *   T a[] = new [n];         运行时长度数组（n 可以是变量）
- *
- * 括号里**不写类型**：类型从被赋值的目标来，和 `new` / `new [n]` 同一条路子，
- * 也顺着 C++ 的 `T v(实参)` 直觉。要返回「构造函数造好的值」的工厂仍写
- * `static T new(形参)`，它内部就是 `T v = new(形参);` 这么展开。 */
-new_dims := %empty                    { $$ = -1; }
-          | LBRACKET expr RBRACKET    { $$ = $2; } ;
+ * 1.0.0 语法清理：删除了裸 `new;` 与裸 `new(实参)`（类型隐式从目标推导），改为显式写出
+ * 类型——`heap T` 等价于原 `new;`，`new T(实参)` 等价于原 `new(实参)`。要返回「构造函数
+ * 造好的值」的工厂仍写 `static T create(形参)`，它内部就是 `T v = new T(实参);` 这么展开。 */
 
 /* 强转：(T)e —— 数值互转和引用转换；整数不能转换为引用。
  * `(Point &)` 与 `(Point const&)` 等价；具名类型前缀与位与共享后依据右括号消歧。 */

@@ -254,7 +254,7 @@ void pushBack(T value);
 obj.pushBack(value);
 ```
 
-**源码**：[source/std/collections.mgl:15](../../source/std/collections.mgl#L15)。
+**源码**：[source/std/collections.mgl:13](../../source/std/collections.mgl#L13)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -292,7 +292,7 @@ void pushFront(T value);
 obj.pushFront(value);
 ```
 
-**源码**：[source/std/collections.mgl:16](../../source/std/collections.mgl#L16)。
+**源码**：[source/std/collections.mgl:14](../../source/std/collections.mgl#L14)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -328,7 +328,7 @@ Option<T> popBack();
 obj.popBack();
 ```
 
-**源码**：[source/std/collections.mgl:17](../../source/std/collections.mgl#L17)。
+**源码**：[source/std/collections.mgl:15](../../source/std/collections.mgl#L15)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -364,7 +364,7 @@ Option<T> popFront();
 obj.popFront();
 ```
 
-**源码**：[source/std/collections.mgl:21](../../source/std/collections.mgl#L21)。
+**源码**：[source/std/collections.mgl:19](../../source/std/collections.mgl#L19)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -402,7 +402,7 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/collections.mgl:27](../../source/std/collections.mgl#L27)。
+**源码**：[source/std/collections.mgl:25](../../source/std/collections.mgl#L25)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -440,7 +440,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.mgl:28](../../source/std/collections.mgl#L28)。
+**源码**：[source/std/collections.mgl:26](../../source/std/collections.mgl#L26)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -476,7 +476,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.mgl:32](../../source/std/collections.mgl#L32)。
+**源码**：[source/std/collections.mgl:30](../../source/std/collections.mgl#L30)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -512,7 +512,7 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/collections.mgl:33](../../source/std/collections.mgl#L33)。
+**源码**：[source/std/collections.mgl:31](../../source/std/collections.mgl#L31)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -548,7 +548,7 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/collections.mgl:34](../../source/std/collections.mgl#L34)。
+**源码**：[source/std/collections.mgl:32](../../source/std/collections.mgl#L32)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -584,7 +584,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.mgl:35](../../source/std/collections.mgl#L35)。
+**源码**：[source/std/collections.mgl:33](../../source/std/collections.mgl#L33)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -620,7 +620,7 @@ static Queue<T> create();
 std::collections::Queue<T>::create();
 ```
 
-**源码**：[source/std/collections.mgl:41](../../source/std/collections.mgl#L41)。
+**源码**：[source/std/collections.mgl:39](../../source/std/collections.mgl#L39)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -658,7 +658,7 @@ void push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.mgl:48](../../source/std/collections.mgl#L48)。
+**源码**：[source/std/collections.mgl:44](../../source/std/collections.mgl#L44)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -694,7 +694,7 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.mgl:49](../../source/std/collections.mgl#L49)。
+**源码**：[source/std/collections.mgl:45](../../source/std/collections.mgl#L45)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -730,7 +730,7 @@ Option<T> peek();
 obj.peek();
 ```
 
-**源码**：[source/std/collections.mgl:55](../../source/std/collections.mgl#L55)。
+**源码**：[source/std/collections.mgl:51](../../source/std/collections.mgl#L51)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -768,7 +768,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.mgl:59](../../source/std/collections.mgl#L59)。
+**源码**：[source/std/collections.mgl:55](../../source/std/collections.mgl#L55)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -804,7 +804,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.mgl:63](../../source/std/collections.mgl#L63)。
+**源码**：[source/std/collections.mgl:59](../../source/std/collections.mgl#L59)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -840,7 +840,7 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/collections.mgl:64](../../source/std/collections.mgl#L64)。
+**源码**：[source/std/collections.mgl:60](../../source/std/collections.mgl#L60)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -876,7 +876,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.mgl:65](../../source/std/collections.mgl#L65)。
+**源码**：[source/std/collections.mgl:61](../../source/std/collections.mgl#L61)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -915,7 +915,7 @@ static RingBuffer<T> withCapacity(int64 capacity);
 std::collections::RingBuffer<T>::withCapacity(capacity);
 ```
 
-**源码**：[source/std/collections.mgl:72](../../source/std/collections.mgl#L72)。
+**源码**：[source/std/collections.mgl:68](../../source/std/collections.mgl#L68)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -953,7 +953,7 @@ bool push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.mgl:81](../../source/std/collections.mgl#L81)。
+**源码**：[source/std/collections.mgl:77](../../source/std/collections.mgl#L77)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -989,7 +989,7 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.mgl:86](../../source/std/collections.mgl#L86)。
+**源码**：[source/std/collections.mgl:82](../../source/std/collections.mgl#L82)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1027,7 +1027,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.mgl:92](../../source/std/collections.mgl#L92)。
+**源码**：[source/std/collections.mgl:88](../../source/std/collections.mgl#L88)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1063,7 +1063,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.mgl:96](../../source/std/collections.mgl#L96)。
+**源码**：[source/std/collections.mgl:92](../../source/std/collections.mgl#L92)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1099,7 +1099,7 @@ int64 available();
 obj.available();
 ```
 
-**源码**：[source/std/collections.mgl:97](../../source/std/collections.mgl#L97)。
+**源码**：[source/std/collections.mgl:93](../../source/std/collections.mgl#L93)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1135,7 +1135,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.mgl:98](../../source/std/collections.mgl#L98)。
+**源码**：[source/std/collections.mgl:94](../../source/std/collections.mgl#L94)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1174,7 +1174,7 @@ static FixedVector<T> withCapacity(int64 capacity);
 std::collections::FixedVector<T>::withCapacity(capacity);
 ```
 
-**源码**：[source/std/collections.mgl:105](../../source/std/collections.mgl#L105)。
+**源码**：[source/std/collections.mgl:101](../../source/std/collections.mgl#L101)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1212,7 +1212,7 @@ bool push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.mgl:114](../../source/std/collections.mgl#L114)。
+**源码**：[source/std/collections.mgl:110](../../source/std/collections.mgl#L110)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1248,7 +1248,7 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.mgl:119](../../source/std/collections.mgl#L119)。
+**源码**：[source/std/collections.mgl:115](../../source/std/collections.mgl#L115)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1286,7 +1286,7 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/collections.mgl:123](../../source/std/collections.mgl#L123)。
+**源码**：[source/std/collections.mgl:119](../../source/std/collections.mgl#L119)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1324,7 +1324,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.mgl:124](../../source/std/collections.mgl#L124)。
+**源码**：[source/std/collections.mgl:120](../../source/std/collections.mgl#L120)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1360,7 +1360,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.mgl:128](../../source/std/collections.mgl#L128)。
+**源码**：[source/std/collections.mgl:124](../../source/std/collections.mgl#L124)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1396,7 +1396,7 @@ int64 capacityValue();
 obj.capacityValue();
 ```
 
-**源码**：[source/std/collections.mgl:129](../../source/std/collections.mgl#L129)。
+**源码**：[source/std/collections.mgl:125](../../source/std/collections.mgl#L125)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1432,7 +1432,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.mgl:130](../../source/std/collections.mgl#L130)。
+**源码**：[source/std/collections.mgl:126](../../source/std/collections.mgl#L126)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1468,7 +1468,7 @@ static Channel<T> create();
 std::collections::Channel<T>::create();
 ```
 
-**源码**：[source/std/collections.mgl:136](../../source/std/collections.mgl#L136)。
+**源码**：[source/std/collections.mgl:132](../../source/std/collections.mgl#L132)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1506,7 +1506,7 @@ void send(T value);
 obj.send(value);
 ```
 
-**源码**：[source/std/collections.mgl:143](../../source/std/collections.mgl#L143)。
+**源码**：[source/std/collections.mgl:137](../../source/std/collections.mgl#L137)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1542,7 +1542,7 @@ Option<T> receive();
 obj.receive();
 ```
 
-**源码**：[source/std/collections.mgl:144](../../source/std/collections.mgl#L144)。
+**源码**：[source/std/collections.mgl:138](../../source/std/collections.mgl#L138)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1580,7 +1580,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.mgl:150](../../source/std/collections.mgl#L150)。
+**源码**：[source/std/collections.mgl:144](../../source/std/collections.mgl#L144)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1616,7 +1616,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.mgl:154](../../source/std/collections.mgl#L154)。
+**源码**：[source/std/collections.mgl:148](../../source/std/collections.mgl#L148)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。
 
@@ -1652,6 +1652,6 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.mgl:155](../../source/std/collections.mgl#L155)。
+**源码**：[source/std/collections.mgl:149](../../source/std/collections.mgl#L149)。
 
 **完整示例**：[example/samples/std_collections_algorithms.mgl](../../example/samples/std_collections_algorithms.mgl)。

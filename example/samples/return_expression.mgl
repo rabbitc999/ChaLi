@@ -11,60 +11,60 @@ String internalValue() {
     return {
         String local = "inside";
         memcpy(&insideHandle, &local, 8);
-        break local;
+        yield (local);
     };
 }
-String externalValue() { return { break outside; }; }
-String constValue() { return { const String local = "constant"; break local; }; }
+String externalValue() { return { yield (outside); }; }
+String constValue() { return { const String local = "constant"; yield (local); }; }
 ReturnOwner ownedValue() {
     return {
         ReturnOwner local; local.text = "owner";
-        break local;
+        yield (local);
     };
 }
 int32 conditional(bool yes) { return if (yes) { 11 } else { 12 }; }
 int64 matched(int64 number) {
-    return match (number) { 1 => { break 21; } _ => { break 22; } };
+    return match (number) { 1 => { yield (21); } _ => { yield (22); } };
 }
-int64 looped() { return loop { break 31; }; }
-int64 callback() { return { auto work = int64 fn() { return 41; }; break work(); }; }
-String cleanup() { return { String local = "cleanup"; defer { closes++; } break local; }; }
+int64 looped() { return loop { yield (31); }; }
+int64 callback() { return { auto work = int64 fn() { return 41; }; yield (work()); }; }
+String cleanup() { return { String local = "cleanup"; defer { closes++; } yield (local); }; }
 struct ReturnPayload { String text; }
-T genericBlock<T>(T value) { return { T local = value; break local; }; }
-T genericLoop<T>(T value) { return loop { T local = value; break local; }; }
+T genericBlock<T>(T value) { return { T local = value; yield (local); }; }
+T genericLoop<T>(T value) { return loop { T local = value; yield (local); }; }
 T genericIf<T>(bool yes, T left, T right) {
-    return if (yes) { T local = left; break local; } else { break right; };
+    return if (yes) { T local = left; yield (local); } else { yield (right); };
 }
 T genericMatch<T>(int64 index, T value) {
-    return match (index) { 0 => { T local = value; break local; } _ => { break value; } };
+    return match (index) { 0 => { T local = value; yield (local); } _ => { yield (value); } };
 }
 String[] internalArray() {
-    return { String values[] = new[2]; values[0] = "first"; values[1] = "second"; break values; };
+    return { String values[] = new[2]; values[0] = "first"; values[1] = "second"; yield (values); };
 }
 String[] returnedExternalArray() {
     String original[] = new[1]; original[0] = "copied";
-    return { break original; };
+    return { yield (original); };
 }
 int64[] conditionalArray(bool yes) {
-    return if (yes) { int64 values[] = new[1]; values[0] = 3; break values; }
-    else { int64 values[] = new[1]; values[0] = 4; break values; };
+    return if (yes) { int64 values[] = new[1]; values[0] = 3; yield (values); }
+    else { int64 values[] = new[1]; values[0] = 4; yield (values); };
 }
 String[] matchedArray() {
-    return match (0) { 0 => { String values[] = new[1]; values[0] = "matched"; break values; }
-        _ => { String values[] = new[0]; break values; } };
+    return match (0) { 0 => { String values[] = new[1]; values[0] = "matched"; yield (values); }
+        _ => { String values[] = new[0]; yield (values); } };
 }
-T[] genericArray<T>(T value) { return { T values[] = new[1]; values[0] = value; break values; }; }
+T[] genericArray<T>(T value) { return { T values[] = new[1]; values[0] = value; yield (values); }; }
 String[] externalArray() {
     String original[] = new[2]; original[0] = "left"; original[1] = "right";
-    auto copied = { break original; };
+    auto copied = { yield (original); };
     copied[0] = "changed";
     assert(original[0] == "left" && original[1] == "right");
     return copied;
 }
 ReturnOwner[] ownedArray() {
-    return { ReturnOwner values[] = new[1]; values[0].text = "owner"; break values; };
+    return { ReturnOwner values[] = new[1]; values[0].text = "owner"; yield (values); };
 }
-int64[] emptyArray() { return loop { int64 values[] = new[0]; break values; }; }
+int64[] emptyArray() { return loop { int64 values[] = new[0]; yield (values); }; }
 void main() {
     String value = internalValue(); int64 received = 0;
     memcpy(&received, &value, 8); assert(received == insideHandle);

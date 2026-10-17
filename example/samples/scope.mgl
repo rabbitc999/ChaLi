@@ -19,7 +19,7 @@ struct Node { int64 value; Option<Node mut&> next; };
 Option<Node mut&> chain(int64 n) {
     Option<Node mut&> head = Option<Node mut&>::None;
     for (int64 i = 0; i < n; i = i + 1) {
-        Node mut& node = new;
+        Node mut& node = heap Node;
         node.value = i; node.next = head;
         head = Option<Node mut&>::Value(node);
     }

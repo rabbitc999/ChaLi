@@ -72,8 +72,8 @@ sum=15 classify(7)=1
 
 `if / elif / else`、`while`、`for(init; cond; step)` 都在。另外两种循环形态：
 
-- `loop { … break value; }` —— 带值跳出，`break` 后面可以跟表达式；
-- `foreach (T item in collection) { … }` —— 遍历容器。
+- `loop { … yield value; }` —— 带值跳出，`yield` 后面可以跟表达式；
+- `for (T item in collection) { … }` —— 遍历容器。
 
 `match` 见下一节。
 
@@ -222,7 +222,7 @@ int64 main() {
 
 需要**运行期**多态时，把对象装进 `std::lang::Any` 再按接口取出引用（`Shape mut& view = boxed.getReference();`），具体类型在运行时决定。完整例子见 [`example/samples/interface.mgl`](../example/samples/interface.mgl)。
 
-结构体还能写构造器（`T v = new(...)` 调用）、`Drop` 析构逻辑、运算符重载——见[语言参考](04-language-reference.md)。
+结构体还能写构造器（`T v = new T(...)` 调用）、`Drop` 析构逻辑、运算符重载——见[语言参考](04-language-reference.md)。
 
 ---
 
@@ -244,7 +244,7 @@ int64 main() {
     players.push(a);
     players.push(b);
     int64 best = 0;
-    foreach (Player p in players) {
+    for (Player p in players) {
         if (p.score > best) { best = p.score; }
     }
     println("best={} count={}", best, players.len());
@@ -256,7 +256,7 @@ int64 main() {
 best=55 count=2
 ```
 
-`List<T>`、`Map<K, V>`、`Set<T>` 是内建容器，`push` / `len` / `[]` / `has` / `remove` 等为常用操作。`foreach` 遍历的是值。
+`List<T>`、`Map<K, V>`、`Set<T>` 是内建容器，`push` / `len` / `[]` / `has` / `remove` 等为常用操作。`for-in` 遍历的是值。
 
 链式迭代需要 `import std::iter;`：
 

@@ -12,9 +12,9 @@ struct Box {
  int64 plus(int64 x=2){return self.value+x;}
  static int64 scale(int64 x=4){return x*2;}
 };
-int64 sum(int64 x=5, int64... values){foreach(int64 v in values){x=x+v;}return x;}
+int64 sum(int64 x=5, int64... values){for(int64 v in values){x=x+v;}return x;}
 struct Packed {int64 value;Packed(int64 x=4,int64... rest){self.value=x+rest.len();}};
-struct Made {int64 value;static Made new(int64 n=11){self.value=n;}};
+struct Made {int64 value;static Made create(int64 n=11){self.value=n;}};
 float64 widen(float64 n=2){return n;}
 int64 overloaded(int64 x,int64 y=3){return x+y;}
 int64 overloaded(String x){return 9;}
@@ -31,8 +31,8 @@ int64 main(){
  for(int64 i=0;i<10;i=i+1){assert(text()=="ok");}
  assert(widen()==2.0 && overloaded(1)==4 && overloaded("x")==9);
  assert(explicitDefault<int64>()==7);
- Packed empty=new();Packed packed=new(3,1,2);assert(empty.value==4 && packed.value==5);
- Made made=Made::new();assert(made.value==11);
+ Packed empty=new Packed();Packed packed=new Packed(3,1,2);assert(empty.value==4 && packed.value==5);
+ Made made=Made::create();assert(made.value==11);
  assert(identity(6)==6);
  Box box;assert(box.value==8 && box.plus()==10 && Box::scale()==8);
  assert(sum()==5 && sum(1,2,3)==6);

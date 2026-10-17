@@ -4,7 +4,7 @@
  *
  * 与 `std_collections_algorithms.mgl` / `std_algorithms_extra.mgl` 的 `xxxValue` 组对照：
  *   * `std::memory::Span<T>` 是"引用 + 长度"的视图，它的迭代器返回 `Option<T mut&>`；
- *     `foreach (T mut& p in span)` 拿到的是**元素地址**，`*p = …` / `p->字段 = …` 直接
+ *     `for (T mut& p in span)` 拿到的是**元素地址**，`*p = …` / `p->字段 = …` 直接
  *     写回原缓冲区，不复制元素。返回列表副本的 `xxxValue` 组不做这种事。
  *   * `std::algorithms` 的 `xxxReference` 组统一收 `T mut&` / `T const&` + 个数，
  *     在调用者缓冲区上原地操作：排序 / 反转 / 查找 / 二分 / 计数 / 求和 / 最小 / 最大 /
@@ -28,9 +28,9 @@ int64 main() {
     int64 raw[] = new[6];
     raw[0] = 4; raw[1] = 1; raw[2] = 3; raw[3] = 1; raw[4] = 5; raw[5] = 2;
 
-    /* foreach 拿到元素引用：每个元素乘 10，直接改回 raw。 */
+    /* for 拿到元素引用：每个元素乘 10，直接改回 raw。 */
     std::memory::Span<int64> span = std::memory::Span<int64>::from(raw, len(raw));
-    foreach (int64 mut& p in span) { *p = *p * 10; }
+    for (int64 mut& p in span) { *p = *p * 10; }
     println("scale  {} {} {} {} {} {}",
     raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
 
@@ -75,7 +75,7 @@ int64 main() {
     items[1].weight = 5; items[1].tag = "a";
     items[2].weight = 3; items[2].tag = "c";
     std::memory::Span<Item> view = std::memory::Span<Item>::from(items, len(items));
-    foreach (Item mut& node in view) { node->weight = node->weight + 100; }
+    for (Item mut& node in view) { node->weight = node->weight + 100; }
     std::algorithms::sortReference<Item>(items, len(items));
     println("items  {} {} {}", items[0].tag, items[1].tag, items[2].tag);
     println("first  {}", items[0].weight);

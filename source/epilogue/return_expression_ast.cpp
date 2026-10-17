@@ -9,9 +9,9 @@ Memory::String M_ReturnControlProblem(int id, Memory::Set<int> &visited)
     if (id < 0 || !visited.insert(id).second) return {};
     const auto node = g_nodes[id];
     if (node.kind == MNode::Lambda || node.kind == MNode::FuncDef) return {};
-    if (node.kind == MNode::Return) return "return 表达式内部禁止嵌套 return；请使用 break 值;";
+    if (node.kind == MNode::Return) return "return 表达式内部禁止嵌套 return；请使用 yield 值;";
     if (node.kind == MNode::Break && node.i != 0) return "return 表达式内部禁止 break #level 跳转";
-    if (node.kind == MNode::Try) return "return 表达式内部禁止使用会提前返回的 ?；请显式匹配并使用 break 值;";
+    if (node.kind == MNode::Try) return "return 表达式内部禁止使用会提前返回的 ?；请显式匹配并使用 yield 值;";
     if (node.kind == MNode::Block)
     {
         const auto problem = M_ReturnControlProblem(static_cast<int>(node.i), visited);

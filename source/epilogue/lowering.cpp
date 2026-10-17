@@ -2640,7 +2640,7 @@ simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::
  *   * 用户语法 `T v = new(实参);` —— `node.s` 为空，按**实参类型**在
  *     `g_structs[T].methods` 里挑那条 `isConstructor && !isNamedConstructor`
  *     的重载，标签是 `T.<name>`（`name` 是修饰过的 `__ctor` 序列）；
- *   * `static T new(...)` 工厂内部展开 —— `node.s` 是那条工厂自己的修饰名，
+ *   * `static T create(...)` 工厂内部展开 —— `node.s` 是那条工厂自己的修饰名，
  *     它对应的 `$body` 就是 `T.<名>$body`（返回 void、带隐式 self）。
  *     直接调它本身，**不再去别的构造函数里挑**：同一个 struct 里完全可以有
  *     `static T new()` 与 `static T new(A, B)` 两条工厂，按"参数个数匹配"会挑错人。
@@ -2687,18 +2687,33 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
     }
     else
     {
-        /* 用户写的 `T v = new(实参);`：按实参类型挑一条实构造函数。
-         * 实构造函数的体就是 `<T>.<修饰名>`（`addMethod` 就是这么登记的），不带 `$body`。 */
+        /* 用户写的 `T v = new(实参);`：按实参个数挑一条构造函数。
+         * 优先级：① 实构造函数（无名的 `T(args)`，体标签 `<T>.<修饰名>`，不带 `$body`）；
+         *          ② 实在没有时，落到同名工厂 `create`（体标签 `<T>.<修饰名>$body`）。
+         * 以前工厂叫 `new`，现在改名 `create`，`new T(args)` 这类糖要能找到它。 */
         const auto definition = g_structs.find(type->name);
         const MMethod *chosen = nullptr;
+        bool named = false;
+        /* 同档候选的体标签：多于一条且省略了默认实参时，不能静默挑第一条。 */
+        Memory::Vector<Memory::String> matched;
         if (definition != g_structs.end())
         {
             for (const MMethod &candidate : definition->second.methods)
             {
                 if (candidate.superseded || !candidate.isConstructor || candidate.isNamedConstructor) continue;
                 if (!AcceptsArgumentCount(candidate.params, args.size())) continue;
-                chosen = &candidate;
-                break;
+                if (chosen == nullptr) chosen = &candidate;
+                matched.push_back(type->name + "." + candidate.name);
+            }
+            if (matched.empty())
+            {
+                for (const MMethod &candidate : definition->second.methods)
+                {
+                    if (candidate.superseded || !candidate.isNamedConstructor) continue;
+                    if (!AcceptsArgumentCount(candidate.params, args.size())) continue;
+                    if (chosen == nullptr) { chosen = &candidate; named = true; }
+                    matched.push_back(type->name + "." + candidate.name + "$body");
+                }
             }
         }
         if (chosen == nullptr)
@@ -2709,7 +2724,18 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
             Fail("struct " + type->name + " 没有匹配的构造函数：(" + shown + ")");
             return true;
         }
-        label = type->name + "." + chosen->name;
+        /* 多条候选都接受同一实参个数时，省略默认实参造成的歧义必须报错，
+         * 文案与普通函数重载共用 `DefaultArgumentAmbiguity`。 */
+        if (matched.size() > 1u)
+        {
+            const Memory::String ambiguity = DefaultArgumentAmbiguity(matched, args.size());
+            if (!ambiguity.empty())
+            {
+                Fail("构造调用有多个重载同样匹配：" + JoinLabels(matched) + ambiguity);
+                return true;
+            }
+        }
+        label = type->name + "." + chosen->name + (named ? "$body" : "");
         const auto found = g_funcs.find(label);
         if (found == g_funcs.end())
         {
@@ -4000,15 +4026,15 @@ simple_ast::NodePtr LowerInterval(int id)
     const auto node = N(id);
     const auto element = IntervalElementType(id);
     if (!element || element->kind != MType::Int)
-        return Fail("foreach 区间变量必须是整数值类型"), Bad();
+        return Fail("for-in 区间变量必须是整数值类型"), Bad();
     const auto signedType = Type::i64();
     const auto unsignedType = Type::make(Type::Kind::Uint, 64);
     const auto maximum = element->isUnsigned ? (element->bits == 64 ? UINT64_MAX : (std::uint64_t(1) << element->bits) - 1) :
                                                (element->bits == 64 ? std::uint64_t(LLONG_MAX) : (std::uint64_t(1) << (element->bits - 1)) - 1);
     const long long minimum = element->isUnsigned ? 0 : element->bits == 64 ? LLONG_MIN :
                                                                               -(1ll << (element->bits - 1));
-    const auto message = "foreach 区间端点超出 " + Describe(element) + " 的取值范围（" + IntegerRangeText(element) + "）";
-    const auto reverseMessage = Memory::String("foreach 区间下界不能大于上界");
+    const auto message = "for-in 区间端点超出 " + Describe(element) + " 的取值范围（" + IntegerRangeText(element) + "）";
+    const auto reverseMessage = Memory::String("for-in 区间下界不能大于上界");
     Memory::Vector<simple_ast::NodePtr> prefix;
     Memory::Vector<Memory::String> bounds;
     Memory::Vector<MConstant> constants(2);
@@ -4018,7 +4044,7 @@ simple_ast::NodePtr LowerInterval(int id)
         const int endpoint = node.kids[index];
         auto sourceType = ExprType(endpoint);
         if (!sourceType || sourceType->kind != MType::Int)
-            return Fail("foreach 区间端点必须是整数类型"), Bad();
+            return Fail("for-in 区间端点必须是整数类型"), Bad();
         const bool sourceUnsigned = sourceType->isUnsigned || (element->isUnsigned && element->bits == 64 && N(endpoint).kind == MNode::Int && N(endpoint).i < 0);
         Memory::Set<int> active;
         constantBounds[index] = IntervalConstantTree(endpoint, active);
@@ -4082,7 +4108,7 @@ simple_ast::NodePtr LowerForeach(int id)
     {
         const std::shared_ptr<MType> element = node.type >= 0 ? T(node.type) : sourceType->elem;
         if (!SameType(element, sourceType->elem))
-            return Fail("foreach 变量类型与 Vector<T> 元素不一致：写的是 " + Describe(element) + "，容器元素是 " + Describe(sourceType->elem)), Bad();
+            return Fail("for-in 变量类型与 Vector<T> 元素不一致：写的是 " + Describe(element) + "，容器元素是 " + Describe(sourceType->elem)), Bad();
         const Memory::String source = AllocateName("__magel_foreach_vector");
         const Memory::String index = AllocateName("__magel_foreach_index");
         const Memory::String loopLabel = NewBlockLabel("foreach_vector");
@@ -4159,13 +4185,13 @@ simple_ast::NodePtr LowerForeach(int id)
     }
     const MIteratorDecl *iterator = FindIterator(sourceType);
     if (iterator == nullptr)
-        return Fail("foreach 的源表达式没有实现 Iterator<R>：" + Describe(sourceType)), Bad();
+        return Fail("for-in 的源表达式没有实现 Iterator<R>：" + Describe(sourceType)), Bad();
     const bool pointerIterator = iterator->element->kind == MType::Ptr;
     const auto iteratedType = pointerIterator ? iterator->element->elem : iterator->element;
     const std::shared_ptr<MType> element = node.type >= 0 ? T(node.type) : iteratedType;
     const bool reference = pointerIterator && SameType(element, iteratedType);
     if (!reference && !SameType(element, iterator->element))
-        return Fail("foreach 变量类型与 Iterator<R> 不一致：写的是 " + Describe(element) + "，迭代器给出 " + Describe(iterator->element)), Bad();
+        return Fail("for-in 变量类型与 Iterator<R> 不一致：写的是 " + Describe(element) + "，迭代器给出 " + Describe(iterator->element)), Bad();
     const MEnumVariantDef *value = nullptr;
     if (!OptionVariants(iterator->result, &value, nullptr))
         return Fail("Iterator<R> 的返回类型不是 Option<R>"), Bad();

@@ -100,7 +100,7 @@ void log(String message) { println("{}", message); }
 
 - 参数默认是**按值**传入（副本）。要避免复制或被修改，写 `T mut&` / `T const&`。
 - 支持重载：按实参类型选。
-- 变长尾参写 `T... items`，配合 `foreach` 或 `std::iter`。
+- 变长尾参写 `T... items`，配合 `for-in` 或 `std::iter`。
 - `static` 方法是类型级函数，用 `Type::method()` 调。
 - 入口名为 `main`，返回类型为 `int64` 或 `void`，参数为空或 `std::lang::List<std::lang::String> arguments`。`void main` 正常完成或执行 `return;` 时，进程退出码为 0；panic 仍以失败退出。
 
@@ -192,7 +192,7 @@ struct Counter {
     static int64 count() { return Counter::alive; }
 };
 int64 main() {
-    Counter c = new(7);
+    Counter c = new Counter(7);
     println("value={} alive={}", c.value, Counter::count());
     return 0;
 }
@@ -202,15 +202,15 @@ int64 main() {
 value=7 alive=1
 ```
 
-堆上对象写 `T mut& p = new;`（**不写括号**：元素类型由 `p` 的类型定），用 `delete p;` 释放。
+堆上对象写 `T mut& p = heap T;`（**不写构造实参**：元素类型由 `p` 的类型定），用 `delete p;` 释放。
 
-`new(实参)` 不带类型信息——**用哪个构造器由左边的声明类型决定**：
+**用哪个构造器由声明的类型决定**：
 
 | 写法 | 走哪条路 |
 | --- | --- |
-| `T v = new(实参);` | 栈上值，调 `T` 的**真构造器**（与 `T` 同名） |
-| `T mut& p = new(实参);` | 堆对象，同样调真构造器，记得 `delete p;` |
-| `T v = T::new(实参);` | **具名构造入口** `static T new(...)` |
+| `T v = new T(实参);` | 栈上值，调 `T` 的**真构造器**（与 `T` 同名）；没有匹配的真构造器时落到具名构造入口 |
+| `T mut& p = heap new T(实参);` | 堆对象，同样调真构造器，记得 `delete p;` |
+| `T v = T::create(实参);` | **具名构造入口** `static T create(...)` |
 | `T v = T::其他工厂();` | 普通静态工厂（名字任取） |
 
 ```magel
@@ -218,12 +218,12 @@ struct Point {
     int64 x;
     int64 y;
     Point(int64 x, int64 y) { self.x = x; self.y = y; }             // 真构造器
-    static Point new(int64 x, int64 y) { self.x = x * 10; self.y = y * 10; }  // 具名构造入口
+    static Point create(int64 x, int64 y) { self.x = x * 10; self.y = y * 10; }  // 具名构造入口
 };
 int64 main() {
-    Point o = new(3, 4);          // 真构造器 → 3,4
-    Point mut& p = new(1, 2);     // 真构造器 + 堆 → 1,2
-    Point q = Point::new(3, 4);   // 具名构造入口 → 30,40
+    Point o = new Point(3, 4);          // 真构造器 → 3,4
+    Point mut& p = heap new Point(1, 2);  // 真构造器 + 堆 → 1,2
+    Point q = Point::create(3, 4);        // 具名构造入口 → 30,40
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     delete p;
     return 0;
@@ -234,36 +234,38 @@ int64 main() {
 3,4 1 2 30 40
 ```
 
-`static T new(...)` 是**具名构造入口**，隐式带 `self`：体里往 `self`（或 `self.字段`）写值即可，
+`static T create(...)` 是**具名构造入口**（名字任取，习惯用 `create`），隐式带 `self`：体里往 `self`（或 `self.字段`）写值即可，
 **不写 `return`**，返回值由调用点接住。丢弃它的返回值会报错。
 
-`new` / 构造相关的写法还有几处等价的语法糖（语义完全一致，纯写法降级，不引入新语义）：
+`new` / 构造相关的写法汇总：
 
-| 语法糖 | 等价写法 | 含义 |
-| --- | --- | --- |
-| `heap T;` | `new;` | 在堆上分配 `T`，类型由左值推导（必须赋给 `T mut&`） |
-| `new T(实参);` | `new(实参);` | 显式写出构造类型 `T` 的构造调用 |
-| `heap new T(实参);` | `new(实参);` | 堆上构造（左值为 `T mut&` 时即堆构造） |
+| 写法 | 含义 |
+| --- | --- |
+| `heap T;` | 在堆上分配 `T`，类型由左值推导（必须赋给 `T mut&`） |
+| `new T(实参);` | 显式写出构造类型 `T` 的构造调用 |
+| `heap new T(实参);` | 堆上构造（左值为 `T mut&` 时即堆构造） |
+
+旧的裸写法 `T v = new;` / `T v = new(实参);` 已删除，一律按语法错误处理。
 
 ```magel
 struct Point {
     int64 x;
     int64 y;
     Point(int64 x, int64 y) { self.x = x; self.y = y; }
-    static Point new(int64 x, int64 y) { self.x = x; self.y = y; }
+    static Point create(int64 x, int64 y) { self.x = x; self.y = y; }
 };
 int64 main() {
-    Point mut& a = heap Point;            // 糖：heap T  ≡ new;
-    Point mut& b = new Point(3, 4);       // 糖：new T(args)  ≡ new(3, 4)
-    Point mut& c = heap new Point(5, 6);  // 糖：heap new T(args)  ≡ new(5, 6)
+    Point mut& a = heap Point;            // heap T
+    Point mut& b = new Point(3, 4);       // new T(args)
+    Point mut& c = heap new Point(5, 6);  // heap new T(args)
     println("{} {} {} {}", a.x, b.x, b.y, c.y);
     delete a; delete b; delete c;
     return 0;
 }
 ```
 
-`heap` 是软关键字：只在 `heap T` / `heap new T(...)` 引导的分配位置被识别为 `HEAP` token，
-普通变量名仍可使用 `heap`。`heap T` 的 `T` 只作文法识别，真正的分配 / 构造类型仍由左值推导，
+`heap` 是保留关键字（`HEAP` token），不能用作变量名；它只在 `heap T` / `heap new T(...)` 引导的
+分配位置有意义。`heap T` 的 `T` 只作文法识别，真正的分配 / 构造类型仍由左值推导，
 因此 `Point p = heap Point;`（左值是值而非引用）依旧报错，与旧规则一致。
 
 ---
@@ -536,7 +538,7 @@ int64 main() {
     int64 n = 0;
     loop {
         n = n + 1;
-        if (n >= 3) { break n; }
+        if (n >= 3) { yield n; }
     };
     println("loop={}", n);
     int64 total = 0;
@@ -560,8 +562,8 @@ for=9
 | `if / elif / else` | 条件分支 |
 | `while (cond) { }` | 先判断后执行 |
 | `for (init; cond; step) { }` | 三段式 |
-| `loop { … break v; }` | 无限循环，`break` 可带值 |
-| `foreach (T x in c) { }` | 遍历容器/迭代器 |
+| `loop { … yield v; }` | 无限循环，`yield` 交出结果 |
+| `for (T x in c) { }` | 遍历容器/迭代器 |
 | `break` / `continue` / `return` | 跳出 / 继续 / 返回 |
 
 > `loop { … }` 是**表达式**，语句位置要写 `loop { … };`。
@@ -626,8 +628,8 @@ alias = 9;                    // 写引用 = 写 value
 ```
 
 ```magel
-T mut& heap = new;            // 堆对象（元素类型由 heap 的类型定）
-delete heap;                  // 释放
+T mut& owned = heap T;         // 堆对象（元素类型由 owned 的类型定）
+delete owned;                  // 释放
 ```
 
 规则与限制（逃逸检查、`MGL1204`）见[核心概念](03-core-concepts.md#2-引用非空且不能活得比目标久)。
@@ -761,33 +763,31 @@ assert(transferred() == 2);
 
 列表中重复的名称、不存在的变量、与形参重名的变量，以及对只读来源的 `mut` / `move` 捕获会被拒绝。显式列表中的变量即使未在函数体使用也会捕获。捕获的是整个变量；copy/move 一个引用值不会取得其所指对象的所有权，也不会延长所指对象的寿命。全局变量的未限定直接访问仍使用全局存储；需要快照时在列表中显式列出。数组值需先转换为容器或显式引用。文件和进程句柄可 move 捕获，无法复制；复制包含这些句柄的闭包会被拒绝。
 
-## foreach 整数区间
+## for-in 整数区间
 
-`foreach(auto item in source)` 与 `foreach(item in source)` 共用元素类型推断；List 等迭代源保留其元素的完整类型，整数区间按端点推断。显式写类型时继续进行静态兼容性检查。
+`for(auto item in source)` 与 `for(item in source)` 共用元素类型推断；List 等迭代源保留其元素的完整类型，整数区间按端点推断。显式写类型时继续进行静态兼容性检查。
 
-`foreach (uint8 x in [0,255]) { ... }` 依次产生 0 到 255，共 256 项；`[0,255)` 不包含 255。支持 int8/uint8/int16/uint16/int32/uint32/int64/uint64。省略变量类型时按端点整型推导，普通整数字面量默认 int64。
+`for (uint8 x in [0,255]) { ... }` 依次产生 0 到 255，共 256 项；`[0,255)` 不包含 255。支持 int8/uint8/int16/uint16/int32/uint32/int64/uint64。省略变量类型时按端点整型推导，普通整数字面量默认 int64。
 
-区间在内部表示为惰性 `Iterator<T>`，直接复用 foreach 的迭代协议，不创建列表。两个端点从左到右各求值一次，并且两个端点都必须在 T 的取值范围内，包括半开区间的上端点。常量错误在编译期拒绝，动态端点在循环前检查。int8 的范围是 -128..127，所以 `foreach(int8 x in [0,255])` 会报错。反向区间 a>b 报错；[a,a) 是空区间，[a,a] 恰好产生一项。
+区间在内部表示为惰性 `Iterator<T>`，直接复用 for-in 的迭代协议，不创建列表。两个端点从左到右各求值一次，并且两个端点都必须在 T 的取值范围内，包括半开区间的上端点。常量错误在编译期拒绝，动态端点在循环前检查。int8 的范围是 -128..127，所以 `for(int8 x in [0,255])` 会报错。反向区间 a>b 报错；[a,a) 是空区间，[a,a] 恰好产生一项。
 
 闭区间到达上界后直接结束，不计算“最大整数 + 1”，因此 uint8 255 和 uint64 18446744073709551615 均可作为合法闭上界。循环变量是每轮取得的值，修改它不改变内部迭代进度；break、continue、返回与 lambda 捕获沿用现有规则。
 
 ## 指定层数退出循环
 
-`break #level(N);` 从当前循环算起，退出第 N 层包围当前位置的循环，并从目标循环之后继续；`break #level(1);` 等价于 `break;`。`break #level(ALL);` 退出当前函数内所有包围当前位置的循环，从最外层循环之后继续。ALL 参数不区分大小写，`all`、`All` 等写法等效；仅在该指令参数位置识别，不占用普通变量名 `all`。
+`break level N;` 从当前循环算起，退出第 N 层包围当前位置的循环，并从目标循环之后继续；`break level 1;` 等价于 `break;`。`break all;` 退出当前函数内所有包围当前位置的循环，从最外层循环之后继续；`break level all;` 与 `break all;` 等价。`level` / `all` 只在该语法位置识别，仍可作普通变量名。`break level` 之后必须跟正整数字面量层数或 `all`；`break level foo;`、`break level 0;`、`break level -1;` 均报错。
 
-等价的语法糖（语义完全一致，纯写法降级）：`break level N;` ≡ `break #level(N);`，`break all;` ≡ `break #level(ALL);`，`break level all;` ≡ `break all;`。`break level` 之后必须跟正整数字面量层数或 `all`；`break level foo;`、`break level 0;`、`break level -1;` 均报错。
-
-只计算 `loop`、`while`、`do-while`、`for`、`foreach`，普通块、赋值块、`if`、`match` 均不计层数。N 必须是正十进制整数字面量，不能使用变量或表达式；零、负数、超出当前嵌套层数以及在循环外使用均报错。退出不能跨越函数或 `fn` 边界。层级退出不携带值，目标若为需要结果的循环表达式则报错，仍应使用 `break value;` 提供结果。
+只计算 `loop`、`while`、`do-while`、`for`、`for-in`，普通块、赋值块、`if`、`match` 均不计层数。N 必须是正十进制整数字面量，不能使用变量或表达式；零、负数、超出当前嵌套层数以及在循环外使用均报错。退出不能跨越函数或 `fn` 边界。层级退出不携带值，目标若为需要结果的循环表达式则报错，仍应使用 `yield 值;` 提供结果。
 
 ```magel
 loop {
     while (true) {
         for (int64 i = 0; i < 10; i++) {
-            if (i == 3) { break #level(2); }
+            if (i == 3) { break level 2; }
         }
     }
     // 已退出 for 和 while，仍在 loop 内。
-    break #level(ALL);
+    break all;
 };
 ```
 
@@ -795,33 +795,33 @@ loop {
 
 ## 块表达式与插值输出
 
-非空语句块可以产生一个值，用于初始化、已有变量赋值、实参或返回值。每条正常完成的路径必须通过 `break 值;` 退出；普通语句块仍按原有规则执行，空 `{}` 保留集合字面量含义。等价的写法糖：`yield 值;` ≡ `break 值;`，同样只能写在值表达式里。`yield` 只在该糖里作关键字，作为普通标识符仍可用（如 `std::coroutine::yield()`），但不能写成 `yield(参数)` 调用形式。
+非空语句块可以产生一个值，用于初始化、已有变量赋值、实参或返回值。每条正常完成的路径必须通过 `yield 值;` 退出；普通语句块仍按原有规则执行，空 `{}` 保留集合字面量含义。`yield` 只在该糖里作关键字，作为普通标识符仍可用（如 `std::coroutine::yield()`），但不能写成 `yield(参数)` 调用形式。
 
 ```magel
 int64 main() {
-    int32 a = { int32 b = 3; break b; };
-    a = { int32 b = 4; break b; };
+    int32 a = { int32 b = 3; yield b; };
+    a = { int32 b = 4; yield b; };
     print(f"a={a};");
     println(f"next={a + 1}");
     return 0;
 }
 ```
 
-`break 值;` 选择最近接收结果的值出口，穿透中间的 while、do-while、for、foreach 及语句位置的 loop。内层用于初始化、赋值、实参或返回值的 loop、块、if、match 表达式仍接收自己的退出值。`break;` 只结束最近循环，不向外层表达式提供结果。`break a, b;` 等价于 `break (a, b);`，多个值从左到右各求值一次并构成一个元组；接收位置的元组类型逐项约束退出值。块表达式不建立循环，`continue;` 继续寻找外层循环。结果在清理块内局部资源之前保存，字符串与列表遵循值语义，不能返回借用已结束局部变量的引用。
+`yield 值;` 选择最近接收结果的值出口，穿透中间的 while、do-while、for、for-in 及语句位置的 loop。内层用于初始化、赋值、实参或返回值的 loop、块、if、match 表达式仍接收自己的退出值。`break;` 只结束最近循环，不向外层表达式提供结果。`yield (a, b);` 以元组交出结果，多个值从左到右各求值一次；接收位置的元组类型逐项约束退出值。块表达式不建立循环，`continue;` 继续寻找外层循环。结果在清理块内局部资源之前保存，字符串与列表遵循值语义，不能返回借用已结束局部变量的引用。
 
 例如，循环内可以直接完成外层块的赋值，嵌套赋值块仍各自接收结果：
 
 ```magel
 (int64, String) found = {
     for (int64 i = 0; i < 10; i++) {
-        if (i == 3) { break i, "found"; }
+        if (i == 3) { yield (i, "found"); }
     }
-    break -1, "missing";
+    yield (-1, "missing");
 };
-int64 a = { int64 b = { break 1; }; break b + 1; }; // a == 2
+int64 a = { int64 b = { yield 1; }; yield b + 1; }; // a == 2
 ```
 
-独立花括号语句即使带尾分号也只是普通作用域，不自动建立可丢弃的值接收方；没有外层值表达式接收时，其中的 `break value;` 报错。嵌套初始化 `int64 y = loop { int64 z = loop { break 5; }; break z + 1; };` 中，内层退出给 z，外层退出给 y；最外层若仅为独立语句块，最后的 `break y + 1;` 仍没有接收方。
+独立花括号语句即使带尾分号也只是普通作用域，不自动建立可丢弃的值接收方；没有外层值表达式接收时，其中的 `yield 值;` 报错。嵌套初始化 `int64 y = loop { int64 z = loop { yield 5; }; yield z + 1; };` 中，内层退出给 z，外层退出给 y；最外层若仅为独立语句块，最后的 `yield y + 1;` 仍没有接收方。
 
 完整的嵌套循环与清理检查见[带值退出示例](../example/samples/break_values.mgl)。
 
@@ -836,7 +836,7 @@ $macro vec(type, ...values)
 $for item in values
     { type $1 = item; $0.push($1); }
 $end_for
-    break $0;
+    yield $0;
 }
 $end_macro
 ```
@@ -860,9 +860,9 @@ $end_macro
 
 ## 带值退出的移动与清理
 
-显式 `break i;` 优先移动当前值表达式内部的可写局部变量，等价于对该变量使用 `break std::lang::move(&i);`；外部仍存活的变量按值复制。判断以接收结果的值表达式为边界，跨越循环不会改变边界。元组中的直接变量逐项应用同一规则，嵌套元组同样处理。const、只读来源、引用绑定、字段和下标保留已有值语义；需要显式转移来源时使用 `move(&value)`。存在作用域退出回调时保守保存独立结果，保证回调仍可读取或修改来源。
+显式 `yield i;` 优先移动当前值表达式内部的可写局部变量，等价于对该变量使用 `yield std::lang::move(&i);`；外部仍存活的变量按值复制。判断以接收结果的值表达式为边界，跨越循环不会改变边界。元组中的直接变量逐项应用同一规则，嵌套元组同样处理。const、只读来源、引用绑定、字段和下标保留已有值语义；需要显式转移来源时使用 `move(&value)`。存在作用域退出回调时保守保存独立结果，保证回调仍可读取或修改来源。
 
-`break i + 1;`、`break makeText();` 等表达式只求值一次，再复制或接管结果临时值，不把表达式本身当作可寻址变量。元组等复合表达式先沿用现有构造与按值传参规则，再由退出接管最终结果。普通分支末尾的 `{ value }` 保留原有值语义。需要强制复制可使用字符串拼接、容器 copy 或类型提供的复制方法；需要强制移动外部变量可显式写 `break move(&external);`，之后原绑定遵守移动后访问限制。
+`yield i + 1;`、`yield makeText();` 等表达式只求值一次，再复制或接管结果临时值，不把表达式本身当作可寻址变量。元组等复合表达式先沿用现有构造与按值传参规则，再由退出接管最终结果。普通分支末尾的 `{ value }` 保留原有值语义。需要强制复制可使用字符串拼接、容器 copy 或类型提供的复制方法；需要强制移动外部变量可显式写 `yield move(&external);`，之后原绑定遵守移动后访问限制。
 
 结果先保存，再执行退出路径上的延迟回调和自动清理。移动清空源存储并结束源绑定的生命周期，不调用源值的 close/drop；最终接收方负责资源回收。同时实现 Closeable 与 Drop 时先 close、后 drop。复制产生独立拥有值，来源与结果分别按各自生命周期清理。跨循环退出清理所有离开的作用域，不能释放已交给结果的资源。
 
@@ -871,7 +871,7 @@ $end_macro
 
 ## 返回控制表达式
 
-`return { ... break value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break #level，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](28-declaration-sugars.md)。
+`return { ... yield value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break level / break all，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](28-declaration-sugars.md)。
 
 ## 具名函数声明
 

@@ -227,7 +227,7 @@ struct Counter
 
 int64 main()
 {
-    Counter c = new(7);
+    Counter c = new Counter(7);
     println("value={} alive={}", c.value, Counter::count());
     return 0;
 }
@@ -279,7 +279,7 @@ struct Counter
 
 int64 main()
 {
-    Counter c = new(7);
+    Counter c = new Counter(7);
     println("{}", c.value);
     return 0;
 }
@@ -295,22 +295,22 @@ int64 main()
 \par
 \medskip
 
-构造器没有返回类型，名字和结构体同名。调用它用 \texttt{new(\allowbreak{}实参)\allowbreak{}}。
+构造器没有返回类型，名字和结构体同名。调用它用 \texttt{new T(\allowbreak{}实参)\allowbreak{}}。
 
 两种情形要说清楚（片段，\texttt{Counter} 假定已定义）：
 
 \par
 \medskip
 \begin{lstlisting}[style=magel]
-Counter c = new(7);
+Counter c = new Counter(7);
 // 栈上：跟着作用域走
-Counter mut& p = new(7);
+Counter mut& p = heap new Counter(7);
 // 堆上：要自己 delete
 \end{lstlisting}
 \par
 \medskip
 
-左边写什么类型，就调那个类型的构造器——\texttt{new(\allowbreak{}7)\allowbreak{}} 本身不带类型信息。
+左边写什么类型，就调那个类型的构造器——堆构造在 \texttt{new} 前加 \texttt{heap}。
 
 区别只在左边有没有 \texttt{\&}：
 
@@ -322,18 +322,18 @@ Counter mut& p = new(7);
 
 \end{itemize}
 
-想「就地」建堆对象、不写实参时，括号可以省掉：
+想「就地」建堆对象、不写实参时，可以省掉实参：
 
 \par
 \medskip
 \begin{lstlisting}[style=magel]
-Counter mut& p = new;
-// 等价于 new(0)，元素类型由 p 的类型定
+Counter mut& p = heap Counter;
+// 等价于 heap new Counter(0)，元素类型由 p 的类型定
 \end{lstlisting}
 \par
 \medskip
 
-\texttt{new} 给的是「按目标类型构造」——目标类型没写，或者那个类型没有匹配实参的构造器，编译器就报错：
+\texttt{new T(\allowbreak{}实参)\allowbreak{}} 给的是「按目标类型构造」——那个类型没有匹配实参的构造器时，编译器就报错：
 
 \par
 \medskip
@@ -343,8 +343,8 @@ magel：struct Counter 没有匹配的构造函数：(int64)
 \par
 \medskip
 
-\begin{tip}{关于 \texttt{static T new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
-这是「具名构造入口」写法，允许的。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 只认真构造器；要用具名入口得写 \texttt{Point:\allowbreak{}:\allowbreak{}new(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
+\begin{tip}{关于 \texttt{static T create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
+这是「具名构造入口」写法，名字自取（习惯用 \texttt{create}）。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new Point(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 优先认真构造器，没有匹配时才落到具名入口；指明入口就写 \texttt{Point:\allowbreak{}:\allowbreak{}create(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
 \end{tip}
 
 \par
@@ -361,7 +361,7 @@ struct Point
         self.y = y;
     }
     // 真构造器
-    static Point new(int64 x, int64 y)
+    static Point create(int64 x, int64 y)
     {
         self.x = x * 10;
         self.y = y * 10;
@@ -371,11 +371,11 @@ struct Point
 
 int64 main()
 {
-    Point o = new(3, 4);
+    Point o = new Point(3, 4);
     // 真构造器
-    Point mut& p = new(1, 2);
+    Point mut& p = heap new Point(1, 2);
     // 真构造器 + 堆
-    Point q = Point::new(3, 4);
+    Point q = Point::create(3, 4);
     // 具名入口
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     delete p;
@@ -393,7 +393,7 @@ int64 main()
 \par
 \medskip
 
-\texttt{static X new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 返回所属类型；丢弃它的返回值会报错（拥有值的构造结果必须有归属）。
+\texttt{static X create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 返回所属类型；丢弃它的返回值会报错（拥有值的构造结果必须有归属）。
 
 工厂方法的价值在于：它把「怎么造出一个合法的对象」这件事固定下来，调用方不用记住「先 x 后 y」这种细节。
 
@@ -603,23 +603,24 @@ left changed
 
 \section{小结}
 
-\begin{center}
-\begin{tabular}{ll}
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.085\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.895\linewidth-2\tabcolsep\relax}}
 \toprule
 你会了 & 关键点 \\
 \midrule
+\endhead
 定义 & \texttt{struct X \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} —— 结尾分号可选 \\
 字段 & 声明后自动清零；不支持声明处默认值 \\
 方法 & 写在结构体里，用 \texttt{self.\allowbreak{}x} 访问字段 \\
 \texttt{static} & 属于类型，用 \texttt{X:\allowbreak{}:\allowbreak{}name} 访问，里面没有 \texttt{self} \\
-构造器 & 与类型同名、无返回类型，用 \texttt{new(\allowbreak{}实参)\allowbreak{}} 调用（目标类型由左边声明决定） \\
-栈 vs 堆 & \texttt{X v =\allowbreak{} new(\allowbreak{}实参)\allowbreak{};} 栈上；\texttt{X mut\& p =\allowbreak{} new;} / \texttt{new(\allowbreak{}实参)\allowbreak{}} 堆上要 \texttt{delete} \\
-具名入口 & \texttt{X:\allowbreak{}:\allowbreak{}new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 用 \texttt{static X new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；\texttt{new(\allowbreak{}实参)\allowbreak{}} 不认它，它只认真构造器 \\
+构造器 & 与类型同名、无返回类型，用 \texttt{new T(\allowbreak{}实参)\allowbreak{}} 调用（目标类型由左边声明决定） \\
+栈 vs 堆 & \texttt{X v =\allowbreak{} new X(\allowbreak{}实参)\allowbreak{};} 栈上；\texttt{X mut\& p =\allowbreak{} heap X;} / \texttt{heap new X(\allowbreak{}实参)\allowbreak{}} 堆上要 \texttt{delete} \\
+具名入口 & \texttt{X:\allowbreak{}:\allowbreak{}create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 用 \texttt{static X create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；\texttt{new X(\allowbreak{}实参)\allowbreak{}} 优先认真构造器 \\
 运算符 & 实现 \texttt{Add} / \texttt{Equal} / \texttt{Negate} 等内建接口 \\
 传参 & 是复制；大结构体用 \texttt{const\&} / \texttt{mut\&} \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+}
 
 \section{下一步}
 

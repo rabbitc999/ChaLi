@@ -120,7 +120,7 @@ int64 addOne(int64 value) { return value + 1; }
 ## Magel 调用桥接
 
 
-自由函数使用 `std::reflect::call(name, args)`；结构体实例使用 `callMethod<T>` / `callMethodConst<T>`，静态方法使用 `callStatic<T>`。枚举对应 `callEnumMethod<T>` / `callEnumMethodConst<T>` / `callEnumStatic<T>`。`static T new(...)` 登记为构造入口，包含静态标志及具体类型返回身份；构造使用 `construct<T>(args)`；接口使用 `callInterface<I>` / `callInterfaceConst<I>`。除构造返回 `Result<T, ReflectError>` 外，调用均返回 `Result<ReflectValue, ReflectError>`，void 结果包装为 `ReflectValue::Empty`。
+自由函数使用 `std::reflect::call(name, args)`；结构体实例使用 `callMethod<T>` / `callMethodConst<T>`，静态方法使用 `callStatic<T>`。枚举对应 `callEnumMethod<T>` / `callEnumMethodConst<T>` / `callEnumStatic<T>`。`static T create(...)` 这类具名构造入口登记为构造入口，包含静态标志及具体类型返回身份；构造使用 `construct<T>(args)`；接口使用 `callInterface<I>` / `callInterfaceConst<I>`。除构造返回 `Result<T, ReflectError>` 外，调用均返回 `Result<ReflectValue, ReflectError>`，void 结果包装为 `ReflectValue::Empty`。
 
 `args` 是 `List<std::reflect::ReflectValue>`，用 `I64(value)`、`I32(value)`、`Text(value)` 等显式选择精确类型。名称、个数及每个参数的稳定身份全部检查后才执行目标。不同位宽、符号、浮点类型及字符串不能隐式转换。精确签名选择重载；多候选匹配返回 `Ambiguous`。只读入口拒绝会修改接收者的实际实现，可写入口可调用只读方法。未暴露类型返回 `NotExposed`；不存在、个数和类型分别返回 `NotFound`、`ArgumentCount`、`TypeMismatch`。
 

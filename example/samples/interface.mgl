@@ -62,9 +62,9 @@ int64 main() {
     /* ---- 接口引用：先装进 Any，再按接口取出来 ---- */
     Any obj1;
     Any obj2;
-    Circle mut& pc = new;
+    Circle mut& pc = heap Circle;
     pc->r = 4;
-    Square mut& ps = new;
+    Square mut& ps = heap Square;
     ps->side = 5;
     obj1.set(&pc);
     obj2.set(&ps);

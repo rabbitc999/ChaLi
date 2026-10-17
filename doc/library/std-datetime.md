@@ -38,7 +38,7 @@ int64 main(){
     assert(toUnixSeconds(parseUtc("0001-01-01T00:00:00Z").unwrap()).unwrap()== -62135596800);
     assert(toUnixSeconds(parseUtc("9999-12-31T23:59:59Z").unwrap()).unwrap()==253402300799);
     assert(!fromUnixSeconds(253402300800).isOk());
-    List<int64> inputs1;inputs1.push(-62135596800);inputs1.push(-2208988800);inputs1.push(-86401);inputs1.push(-1);inputs1.push(0);inputs1.push(86400);inputs1.push(1709210096);inputs1.push(253402300799);foreach(int64 seconds in inputs1){
+    List<int64> inputs1;inputs1.push(-62135596800);inputs1.push(-2208988800);inputs1.push(-86401);inputs1.push(-1);inputs1.push(0);inputs1.push(86400);inputs1.push(1709210096);inputs1.push(253402300799);for(int64 seconds in inputs1){
         assert(toUnixSeconds(fromUnixSeconds(seconds).unwrap()).unwrap()==seconds);
     }
     println("UTC dates, epochs and arithmetic OK");return 0;

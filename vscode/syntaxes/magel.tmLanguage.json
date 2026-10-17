@@ -117,7 +117,7 @@
         },
         {
           "name": "keyword.control.magel",
-          "match": "\\b(?:_|abi|auto|break|cast|const|continue|copy|defer|delete|do|drop|elif|else|enum|export|fn|for|foreach|if|impl|import|in|inline|interface|loop|match|module|move|mut|new|return|scope|static|struct|type|while)\\b"
+          "match": "\\b(?:_|abi|auto|break|cast|const|continue|copy|defer|delete|do|drop|elif|else|enum|export|fn|for|heap|if|impl|import|in|inline|interface|loop|match|module|move|mut|new|return|scope|static|struct|type|while|yield)\\b"
         },
         {
           "name": "keyword.declaration.annotation.magel",
@@ -137,7 +137,7 @@
         },
         {
           "name": "constant.language.magel",
-          "match": "\\b(?:true|false|ALL)\\b"
+          "match": "\\b(?:true|false)\\b"
         },
         {
           "name": "constant.numeric.magel",

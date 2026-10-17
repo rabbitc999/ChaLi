@@ -91,7 +91,7 @@ No `import` needed.
 | `std::sql` | MySQL / SQLite / PostgreSQL / SQL Server; SQL is executed by the engine, Magel sends and fetches |
 | `std::process` | processes and system calls; command pipes are held by a host handle pool |
 | `std::clock` | monotonic clock `steady_clock`; take differences only, never treat it as wall time |
-| `std::memory` | `Span<T>` (pointer + length view); its iterator returns **element pointers**, so `foreach (T mut& p in span)` writes directly |
+| `std::memory` | `Span<T>` (pointer + length view); its iterator returns **element pointers**, so `for (T mut& p in span)` writes directly |
 | `std::watchdog` | soft-restart watchdog (both the watermark and the timeout dimension are off by default), one implementation shared by desktop and board |
 
 ### Iteration

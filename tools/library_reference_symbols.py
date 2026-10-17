@@ -62,7 +62,7 @@ TYPE_DESCRIPTIONS = {
     'Hash': '为值提供哈希计算的接口。',
     'ExplicitConvert': '显式类型转换的接口。', 'ImplicitConvert': '隐式类型转换的接口。',
     'Index': '自定义下标访问接口；与小写 index 连续存储函数区分。',
-    'Iterator': '供 foreach 获取和推进迭代状态的接口。',
+    'Iterator': '供 for-in 获取和推进迭代状态的接口。',
 }
 OPERATORS = dict(Add='加法', Subtract='减法', Multiply='乘法', Divide='除法', Modulo='取模',
                  Equal='相等比较', NotEqual='不等比较', Less='小于比较', LessOrEqual='小于等于比较',

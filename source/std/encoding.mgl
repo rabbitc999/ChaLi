@@ -8,7 +8,7 @@ String encodeHex(List<uint8> bytes, bool uppercase=false) {
     String alphabet="0123456789abcdef";
     if (uppercase) { alphabet="0123456789ABCDEF"; }
     String result="";
-    foreach (uint8 byte in bytes) {
+    for (uint8 byte in bytes) {
         result=result+format("{}{}",alphabet[(int64)(byte>>4)],alphabet[(int64)(byte&15)]);
     }
     return result;

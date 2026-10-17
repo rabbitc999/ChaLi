@@ -405,13 +405,13 @@ std::shared_ptr<MType> LoopValueType(int id)
     if (node.s == "block")
     {
         if (StatementReturnFlow(node.kids[0], true) & 1)
-            Fail("块表达式的每条正常路径必须使用 break 值; 产生结果");
+            Fail("块表达式的每条正常路径必须使用 yield 值; 产生结果");
     }
     if (node.s == "if")
     {
         const auto conditional = N(N(node.kids[0]).i).kids[0];
         if (N(conditional).kids[3] < 0) Fail("if 表达式必须包含 else 分支");
-        if (StatementReturnFlow(conditional, true) & 1) Fail("if 表达式的每条正常路径必须产生结果；简单分支不写分号，复杂分支使用 break 值;");
+        if (StatementReturnFlow(conditional, true) & 1) Fail("if 表达式的每条正常路径必须产生结果；简单分支不写分号，复杂分支使用 yield 值;");
     }
     if (node.s == "match")
     {
@@ -424,14 +424,14 @@ std::shared_ptr<MType> LoopValueType(int id)
             if (item.i < 0 && item.guard < 0) fallback = true;
             const int block = M_Block(item.kids[0]);
             if (StatementReturnFlow(block, true) & 1)
-                Fail("match 表达式的每条正常分支必须产生结果；简单分支不写分号，复杂分支使用 break 值;");
+                Fail("match 表达式的每条正常分支必须产生结果；简单分支不写分号，复杂分支使用 yield 值;");
         }
         if (!fallback && (subject->kind != MType::Struct || !g_enums.count(subject->name)))
             Fail("非枚举 match 表达式必须包含 `_` 兜底分支");
     }
     CollectLoopBreakValues(node.kids[0], &values, &hasPlain, expected);
     if (node.s == "block" && hasPlain)
-        Fail("块表达式必须使用 break 值;，不能使用无值 break;");
+        Fail("块表达式必须使用 yield 值;，不能使用无值 break;");
     if (values.empty()) return expected ? expected : T(M_TypeVoid());
     if (hasPlain && node.s.empty())
     {
@@ -444,7 +444,7 @@ std::shared_ptr<MType> LoopValueType(int id)
         const std::shared_ptr<MType> other = values[index];
         if (expected && !node.returnExpression ? !Acceptable(type, other, true) : TypeKey(type) != TypeKey(other))
         {
-            Fail((!node.s.empty() ? node.s + " 表达式的分支结果类型必须一致：" : Memory::String("同一个 loop 的 break 值类型必须一致：")) + Describe(type) + " 与 " + Describe(other));
+            Fail((!node.s.empty() ? node.s + " 表达式的分支结果类型必须一致：" : Memory::String("同一个 loop 的 yield 值类型必须一致：")) + Describe(type) + " 与 " + Describe(other));
             return T(M_TypeVoid());
         }
     }
@@ -738,7 +738,7 @@ std::shared_ptr<MType> RawExprType(int id)
         const auto element = IntervalElementType(id);
         if (!element || element->kind != MType::Int)
         {
-            Fail("foreach 区间变量必须是整数值类型");
+            Fail("for-in 区间变量必须是整数值类型");
             return T(M_TypeVoid());
         }
         return NamedType("std::lang::__Interval_" + Describe(element));

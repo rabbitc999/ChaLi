@@ -1,4 +1,4 @@
-"""static T new 的构造语义、非强制使用、资源所有权与反射在解释执行与 AOT 中的回归。"""
+"""static T create 的构造语义、非强制使用、资源所有权与反射在解释执行与 AOT 中的回归。"""
 from pathlib import Path
 import argparse
 import json
@@ -45,7 +45,7 @@ class ConstructorTests(unittest.TestCase):
         self.program('''
 struct Value {
     int64 number;
-    static Value new(bool early) {
+    static Value create(bool early) {
         self.number=1;
         if(early) { return; }
         self.number=2;
@@ -53,15 +53,15 @@ struct Value {
 };
 struct Partial {
     int64 number;
-    static Partial new(bool set) { if(set) { self.number=7; } }
+    static Partial create(bool set) { if(set) { self.number=7; } }
 };
 int64 main(){
     Value unused;assert(unused.number==0);
-    Value a=Value::new(true);Value b=Value::new(false);
+    Value a=Value::create(true);Value b=Value::create(false);
     assert(a.number==1 && b.number==2);
     for(int64 i=0;i<10;i=i+1) {
-        Partial first=Partial::new(true);assert(first.number==7);
-        Partial second=Partial::new(false);assert(second.number==0);
+        Partial first=Partial::create(true);assert(first.number==7);
+        Partial second=Partial::create(false);assert(second.number==0);
     }
     return 0;
 }''')
@@ -73,11 +73,11 @@ int64 main(){
 import std::reflect;
 @Reflect struct Value {
     String text;
-    static Value new(String text) { self.text=text; }
+    static Value create(String text) { self.text=text; }
 };
 @Reflect enum State {
     Empty, Text(String text);
-    static State new(String text) { self=State::Text(text); }
+    static State create(String text) { self=State::Text(text); }
 };
 int64 main(){
     List<std::reflect::ReflectValue> args;
@@ -105,25 +105,25 @@ struct Owned : Drop {
     static int64 drops;
     String text;
     List<String> items;
-    static Owned new(String text) {
+    static Owned create(String text) {
         self.text=text;
         self.items.push(text);
     }
     void drop(){Owned::drops=Owned::drops+1;}
 };
-Owned make(String text){return Owned::new(text);}
+Owned make(String text){return Owned::create(text);}
 int64 read(Owned value){return value.items.len();}
 int64 main(){
     String source="resource";
     for(int64 i=0;i<256;i=i+1){
         {
-            Owned value=Owned::new(source);
+            Owned value=Owned::create(source);
             value=make(source);
             assert(read(value)==1 && source=="resource");
         }
         assert(Owned::drops==(i+1)*3);
     }
-    assert(read(Owned::new(source))==1);
+    assert(read(Owned::create(source))==1);
     assert(Owned::drops==770);
     return 0;
 }''')
@@ -135,36 +135,36 @@ struct Value : Drop, Add<Value,int64> {
     static int64 drops;
     String text;
     int64 number;
-    static Value new(int64 number) {
+    static Value create(int64 number) {
         self.text="live";self.number=number;Value::builds=Value::builds+1;
     }
     int64 readValue(){assert(self.text=="live");return self.number;}
     void touch(){self.number=self.number+1;}
     String const& borrow(){return &self.text;}
-    Value leftAdd(int64 amount){return Value::new(self.number+amount);}
+    Value leftAdd(int64 amount){return Value::create(self.number+amount);}
     void drop(){Value::drops=Value::drops+1;}
 };
 int64 main(){
     for(int64 i=0;i<64;i=i+1){
         int64 before=Value::drops;
-        int64 number=Value::new(i).readValue();
+        int64 number=Value::create(i).readValue();
         assert(number==i && Value::drops==before+1);
-        Value::new(i).touch();
+        Value::create(i).touch();
         assert(Value::drops==before+2);
         int64 a=3;
-        Value sum=Value::new(i)+a;
+        Value sum=Value::create(i)+a;
         assert(sum.number==i+3 && sum.text=="live");
         assert(Value::drops==before+3);
-        int64 result=(Value::new(i)+4).readValue();
+        int64 result=(Value::create(i)+4).readValue();
         assert(result==i+4 && Value::drops==before+5);
     }
     assert(Value::builds==384 && Value::drops==384);
     {
-        String const& borrowed=Value::new(9).borrow();
+        String const& borrowed=Value::create(9).borrow();
         assert(borrowed=="live" && Value::drops==384);
     }
     assert(Value::drops==385);
-    bool skipped=false && Value::new(0).readValue()>0;
+    bool skipped=false && Value::create(0).readValue()>0;
     assert(!skipped && Value::builds==385 && Value::drops==385);
     return 0;
 }''')
@@ -269,16 +269,16 @@ int64 main(){
 
     def test_rejections(self):
         cases = {
-            'wrong_return_type': 'struct V{static int64 new(){}};int64 main(){return 0;}',
-            'void_return_type': 'struct V{static void new(){}};int64 main(){return 0;}',
-            'return_value': 'struct V{static V new(){V v;return v;}};int64 main(){return 0;}',
-            'wrong_argument': 'struct V{static V new(int64 n){}};int64 main(){V v=V::new("x");return 0;}',
-            'variadic': 'struct V{static V new(int64... n){}};int64 main(){return 0;}',
+            'wrong_return_type': 'struct V{static int64 create(){}};int64 main(){return 0;}',
+            'void_return_type': 'struct V{static void create(){}};int64 main(){return 0;}',
+            'return_value': 'struct V{static V create(){V v;return v;}};int64 main(){return 0;}',
+            'wrong_argument': 'struct V{static V create(int64 n){}};int64 main(){V v=V::create("x");return 0;}',
+            'variadic': 'struct V{static V create(int64... n){}};int64 main(){return 0;}',
             'ordinary_static_self': 'struct V{int64 n;static void reset(){self.n=1;}};int64 main(){return 0;}',
-            'discarded': 'struct V{static V new(){}};int64 main(){V::new();return 0;}',
-            'discarded_parentheses': 'struct V{static V new(){}};int64 main(){(V::new());return 0;}',
-            'discarded_generic': 'struct V<T>{static V<T> new(){}};int64 main(){V<int64>::new();return 0;}',
-            'discarded_enum': 'enum V{Empty;static V new(){}};int64 main(){V::new();return 0;}',
+            'discarded': 'struct V{static V create(){}};int64 main(){V::create();return 0;}',
+            'discarded_parentheses': 'struct V{static V create(){}};int64 main(){(V::create());return 0;}',
+            'discarded_generic': 'struct V<T>{static V<T> create(){}};int64 main(){V<int64>::create();return 0;}',
+            'discarded_enum': 'enum V{Empty;static V create(){}};int64 main(){V::create();return 0;}',
         }
         for name, code in cases.items():
             with self.subTest(case=name):

@@ -63,7 +63,7 @@ def main():
         'generic': ('''struct Box<T> { T value; };
 T identity<T>(T value) { return value; }
 Any returned() { return "returned"; }
-Any resultBlock() { return { break 9; }; }
+Any resultBlock() { return { yield (9); }; }
 int64 calls = 0;
 String fresh() { calls = calls + 1; return "fresh" + " text"; }
 int64 main()

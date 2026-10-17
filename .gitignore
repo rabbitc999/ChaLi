@@ -16,6 +16,8 @@ RESULT.md
 libparser.a
 magel
 magel.exe
+magel-reflection
+magel-reflection.exe
 # 统一入口的旧名字：留着忽略，免得工作区里残留的旧二进制被误提交。
 parser_demo
 parser_demo.exe

@@ -6,9 +6,7 @@ struct Shared<T> {
     int64 handle;
 
     static Shared<T> create(T value) {
-        Shared<T> result;
-        result.handle = std::lang::__sharedCreate<T>(value);
-        return result;
+        self.handle = std::lang::__sharedCreate<T>(value);
     }
     T get() { return std::lang::__sharedGet<T>(self.handle); }
     void set(T value) { std::lang::__sharedSet<T>(self.handle, value); }

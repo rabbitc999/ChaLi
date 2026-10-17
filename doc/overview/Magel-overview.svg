@@ -21,7 +21,7 @@
   <text x="69" y="471" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">match · Result&lt;T,E&gt; · ?</text>
   <rect x="58" y="492" width="324" height="52" rx="8" fill="#f7f9fc" stroke="#e2e9f3" stroke-width="1"/>
   <text x="69" y="513" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#14507e">循环与函数</text>
-  <text x="69" y="533" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">loop · foreach · lambda</text>
+  <text x="69" y="533" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">loop · for-in · fn</text>
   <text x="58" y="568" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#10233f">复用与扩展</text>
   <rect x="58" y="582" width="324" height="52" rx="8" fill="#f7f9fc" stroke="#e2e9f3" stroke-width="1"/>
   <text x="69" y="603" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#14507e">模块</text>

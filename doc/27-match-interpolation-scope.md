@@ -4,14 +4,14 @@
 
 ## match 表达式
 
-匹配可用于初始化、赋值、实参、返回值和嵌套表达式。简单分支写 `{ value }`，其中的值不加分号；多条语句的分支用 `break value;` 给出结果。外层声明、赋值和 return 仍以分号结束。
+匹配可用于初始化、赋值、实参、返回值和嵌套表达式。简单分支写 `{ value }`，其中的值不加分号；多条语句的分支用 `yield value;` 给出结果。外层声明、赋值和 return 仍以分号结束。
 
 ```magel
 enum State { Ready(int64 value), Missing };
 State state = State::Ready(3);
 int64 result = match (state) {
     State::Ready(value) => { value + 1 }
-    State::Missing => { int64 fallback = 0; break fallback; }
+    State::Missing => { int64 fallback = 0; yield fallback; }
 };
 match (state) {
     State::Ready(value) => { println("{}", value); }
@@ -111,4 +111,4 @@ $end_macro
 
 宏条件支持整数算术、比较、逻辑运算及字符串相等比较，逻辑运算保持短路。宏形参和局部绑定参与常量求值，运行时变量不能用作展开条件。递归展开允许条件终止，最多 64 层；一次处理最多展开 100000 次。实参数量不匹配仍在展开期报错。不会恢复 `$match`、`##` 或 `#形参`。
 
-解释执行、AOT 与错误诊断的完整回归见 [功能回归测试](../tests/magel_v251.py)。
+解释执行、AOT 与错误诊断的完整回归由 `sh check.sh` 的样例与 `tests/` 下对应套件覆盖。

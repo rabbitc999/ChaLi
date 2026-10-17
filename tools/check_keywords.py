@@ -37,16 +37,21 @@ def highlight_keywords():
     grammar = json.loads((ROOT / "vscode" / "syntaxes" / "magel.tmLanguage.json")
                          .read_text(encoding="utf-8"))
     words = set()
-    for pattern in grammar["patterns"]:
-        name = pattern.get("name", "")
-        if not any(part in name for part in ("keyword", "storage", "support.type", "constant.language")):
-            continue
-        # `%` 前处理与 `$` 宏指令不是语言关键字（补全里也不该有），这里不算。
-        pattern_text = pattern.get("match", "")
-        if "preprocessor" in name or "macro" in name or "\\$" in pattern_text or "%" in pattern_text:
-            continue
-        for group in re.findall(r"\((?:\?:)?([^()]*)\)", pattern.get("match", "")):
-            words.update(part for part in group.split("|") if WORD.match(part))
+
+    def walk(patterns):
+        for pattern in patterns or []:
+            name = pattern.get("name", "")
+            if any(part in name for part in ("keyword", "storage", "support.type", "constant.language")):
+                # `%` 前处理与 `$` 宏指令不是语言关键字（补全里也不该有），这里不算。
+                pattern_text = pattern.get("match", "")
+                if not ("preprocessor" in name or "macro" in name or "\\$" in pattern_text or "%" in pattern_text):
+                    for group in re.findall(r"\((?:\?:)?([^()]*)\)", pattern_text):
+                        words.update(part for part in group.split("|") if WORD.match(part))
+            walk(pattern.get("patterns"))
+
+    walk(grammar.get("patterns"))
+    for entry in (grammar.get("repository") or {}).values():
+        walk([entry])
     return words
 
 

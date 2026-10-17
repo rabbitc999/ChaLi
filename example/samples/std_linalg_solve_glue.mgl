@@ -36,20 +36,20 @@ float64[] makeArray() {
     return values;
 }
 struct ArrayFactory {
-    static float64[] create() {
+    static float64[] make() {
         float64 values[] = new[1];
         values[0] = 5.0;
         return values;
     }
 };
 std::linalg::Vector<float64> firstColumn() {
-    foreach (col in std::linalg::Matrix<float64>::identity(2)) { return col; }
+    for (col in std::linalg::Matrix<float64>::identity(2)) { return col; }
     return std::linalg::Vector<float64>::zeros(0);
 }
 struct ArrayItem { int64 x; int64 y; };
 void checkArrays() {
     float64 first[] = makeArray();
-    float64 second[] = ArrayFactory::create();
+    float64 second[] = ArrayFactory::make();
     assert(first[0] == 4.0 && second[0] == 5.0);
     float64 raw[6];
     raw[0] = 1.0; raw[1] = 2.0; raw[2] = 3.0;
@@ -65,15 +65,15 @@ void checkArrays() {
     std::linalg::Vector<float64> column = matrix[1];
     assert(column.len() == 2 && column[0] == 2.0 && column[1] == 5.0);
     float64 sum = 0.0;
-    foreach (col in matrix) {
-        foreach (number in col) { sum = sum + number; }
+    for (col in matrix) {
+        for (number in col) { sum = sum + number; }
     }
     assert(sum == 21.0);
     float64 arraySum = 0.0;
-    foreach (number in raw) { arraySum = arraySum + number; }
+    for (number in raw) { arraySum = arraySum + number; }
     assert(arraySum == sum);
     int64 visited = 0;
-    foreach (col in matrix) {
+    for (col in matrix) {
         visited = visited + 1;
         if (visited == 1) { continue; }
         break;
@@ -82,18 +82,18 @@ void checkArrays() {
     std::linalg::Vector<float64> returned = firstColumn();
     assert(returned[0] == 1.0 && returned[1] == 0.0);
     float64 temporarySum = 0.0;
-    foreach (number in makeArray()) { temporarySum = temporarySum + number; }
+    for (number in makeArray()) { temporarySum = temporarySum + number; }
     assert(temporarySum == 4.0);
     ArrayItem records[2];
     records[0].x = 1; records[0].y = 2;
     records[1].x = 3; records[1].y = 4;
     int64 recordSum = 0;
-    foreach (entry in records) { recordSum = recordSum + entry.x + entry.y; }
+    for (entry in records) { recordSum = recordSum + entry.x + entry.y; }
     assert(recordSum == 10);
     int64 grid[2][2];
     grid[0][0] = 1; grid[0][1] = 2; grid[1][0] = 3; grid[1][1] = 4;
     int64 gridSum = 0;
-    foreach (number in grid) { gridSum = gridSum + number; }
+    for (number in grid) { gridSum = gridSum + number; }
     assert(gridSum == 10);
     column.set(0, 88.0);
     assert(matrix.at(0, 1) == 2.0);

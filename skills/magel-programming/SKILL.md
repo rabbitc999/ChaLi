@@ -32,8 +32,8 @@ description: 编写、修改与调试 Magel (.mgl) 程序，依据实际文法�
 - 核心 `std::lang` 自动加载，可直接使用 `String`、`List<T>`、`println`、`assert`。其他模块按实际文档导入，查到真实 API 再调用。
 - `int32`、`int64`、`uint64`、`float32` 等是具体类型。未标记整数字面量可按上下文定型；浮点无后缀默认 `float64`，`1.25f` 为 `float32`，`1u` 为无符号整数。`-1u` 和 `-(1u)` 是编译错误，不用它们表示回绕；按需求选择有符号值、显式转换或无符号减法。
 - 普通赋值和按值传参复制值；字符串、列表和聚合也遵守值语义。避免不必要的大对象复制时查引用参数规则，明确需要转移资源时才使用 `move`。移动后原绑定禁止读取、写入或重新绑定；需要继续使用同名变量时，必须二次声明建立新绑定，普通赋值不能恢复。引用的可变性与生命周期受检查，不能返回局部变量的引用。
-- 用 `if (condition) { value } else { value }` 取条件值，简单分支的值不带分号。多语句分支用 `break value;`。不要生成 `?:`、`choose` 或 `chooseLazy`。
-- 非空独立块可作为表达式：`int32 a = { int32 b = 3; break b; };`，以及 `a = { int32 b = 4; break b; };`。每条正常路径必须给出值；空 `{}` 是集合字面量。`break value;` 穿透无值循环，交给最近有接收者的表达式；内部可写变量优先移动，外部变量复制。无接收者时报错。`break #level(N);` 退出第 N 层循环，`break #level(ALL);` 退出当前函数所有包围循环。块本身不计循环层数。
+- 用 `if (condition) { value } else { value }` 取条件值，简单分支的值不带分号。多语句分支用 `yield value;`。不要生成 `?:`、`choose` 或 `chooseLazy`。
+- 非空独立块可作为表达式：`int32 a = { int32 b = 3; yield b; };`，以及 `a = { int32 b = 4; yield b; };`。每条正常路径必须给出值；空 `{}` 是集合字面量。`yield value;` 穿透无值循环，交给最近有接收者的表达式；内部可写变量优先移动，外部变量复制。无接收者时报错。`break level N;` 退出第 N 层循环，`break all;` 退出当前函数所有包围循环。块本身不计循环层数。
 - 用 `println("value={}", value)` 做格式输出，或直接 `println(f"value={value}")`。后者可包含表达式、嵌套插值，使用 `\{`、`\}` 表示字面花括号。不要给插值输出附加传统格式参数。
 - `List<int32> values;` 已经是空列表，`values.push(element)` 追加，`len(values)` 取长度。窄类型元素需要合适的类型上下文，可先声明 `int32 element = 1;` 再 push，不假设所有容器方法都会替字面量推导类型。
 - 函数类型及匿名函数返回类型前置，例如 `int64 fn(int64) callback`、`int64 fn(int64 x) { return x; }`；匿名函数只用 `fn`，旧 `lambda` 语法已移除，捕获修饰和列表不变。不要生成 `->` 返回类型写法。
@@ -50,7 +50,7 @@ $macro vec(type, ...values)
 $for item in values
     { type $1 = item; $0.push($1); }
 $end_for
-    break $0;
+    yield $0;
 }
 $end_macro
 

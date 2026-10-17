@@ -24,7 +24,7 @@ int64 main() {
     Option<std::json::JsonValue> itemsField = root.find("items");
     std::json::JsonValue items = itemsField.unwrap();
     int64 sum = 0;
-    foreach (std::json::JsonValue item in items) {
+    for (std::json::JsonValue item in items) {
         Option<int64> itemNumber = item.asInt();
         sum = sum + itemNumber.unwrap();
     }
@@ -120,7 +120,7 @@ int64 main() {
     Option<String> secondNameText = secondNameValue.asString();
     assert(secondNameText.unwrap() == "two");
     int64 members = 0;
-    foreach (std::toml::TomlValue item in server) { members = members + 1; }
+    for (std::toml::TomlValue item in server) { members = members + 1; }
     assert(members == 3);
     Option<String> missingMember = server.keyAt(3);
     assert(missingMember.isNone());

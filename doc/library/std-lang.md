@@ -194,7 +194,7 @@ int64 main() {
 | 模块 | <a id="symbol-234"></a>`interface ExplicitConvert<T>` | 显式类型转换的接口。 |
 | 模块 | <a id="symbol-235"></a>`interface ImplicitConvert<T>` | 隐式类型转换的接口。 |
 | 模块 | <a id="symbol-236"></a>`interface Index<R,T>` | 自定义下标访问接口；与小写 index 连续存储函数区分。 |
-| 模块 | <a id="symbol-237"></a>`interface Iterator<R>` | 供 foreach 获取和推进迭代状态的接口。 |
+| 模块 | <a id="symbol-237"></a>`interface Iterator<R>` | 供 for-in 获取和推进迭代状态的接口。 |
 
 ## 函数索引
 

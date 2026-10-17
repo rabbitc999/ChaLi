@@ -1,1 +1,1 @@
-foreach intervals OK
+for intervals OK

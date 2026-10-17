@@ -52,7 +52,7 @@ Result<String,CsvError> writeCsv(List<List<String>> rows, char delimiter=',') {
         return Result<String,CsvError>::Err(csvError(1,1,"invalid delimiter"));
     }
     String result="";
-    foreach (List<String> row in rows) {
+    for (List<String> row in rows) {
         if (row.len()==0) { return Result<String,CsvError>::Err(csvError(1,1,"record must contain a field")); }
         for (int64 i=0;i<row.len();i=i+1) {
             if (i>0) { result=result+format("{}",delimiter); }

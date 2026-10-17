@@ -477,7 +477,7 @@ int64 main()
         Packet::Data(text) =>
         {
             text = "copy";
-            break text;
+            yield text;
         }
         Packet::Empty =>
         {
@@ -510,7 +510,7 @@ copy original
 \par
 \medskip
 
-表达式匹配的载荷绑定是值副本，修改副本不修改被匹配对象。单个结果写 \texttt{\{ value \}}，多语句块写 \texttt{break value;}。外层声明或赋值仍需要分号。语句位置也支持 \texttt{match (\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \};}；语句也允许省略末尾分号。
+表达式匹配的载荷绑定是值副本，修改副本不修改被匹配对象。单个结果写 \texttt{\{ value \}}，多语句块写 \texttt{yield value;}。外层声明或赋值仍需要分号。语句位置也支持 \texttt{match (\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \};}；语句也允许省略末尾分号。
 
 \section{小结}
 

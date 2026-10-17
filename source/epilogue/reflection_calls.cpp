@@ -177,7 +177,7 @@ struct MReflectionCalls
                 Memory::Set<Memory::String> visiting;
                 bool allowed = !isConst || !MethodMutatesReceiver(owner, method, &visiting);
                 candidates.push_back({ constructor ? "new" : method.source,
-                                       constructor ? "new" : isStatic ? owner + "::" + method.source :
+                                       constructor ? "new " + owner : isStatic ? owner + "::" + method.source :
                                                                         "obj." + method.source,
                                        method.result, method.params, allowed });
                 if (!constructor && !isStatic)
@@ -197,7 +197,7 @@ struct MReflectionCalls
                     }
             }
             if (constructor && candidates.empty() && !g_enums.count(owner))
-                candidates.push_back({ "new", "new", NamedType(owner), {}, true });
+                candidates.push_back({ "new", "new " + owner, NamedType(owner), {}, true });
         }
         body += "bool found=false;bool countMatches=false;bool unsupported=false;int64 selected=-1;";
         unsigned index = 0;

@@ -197,7 +197,7 @@
         "magel.inlayHints.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "显示 auto、foreach 元素与上下文匿名函数参数的推断类型；仍受编辑器内联提示设置控制。"
+          "description": "显示 auto、for-in 元素与上下文匿名函数参数的推断类型；仍受编辑器内联提示设置控制。"
         }
       }
     },

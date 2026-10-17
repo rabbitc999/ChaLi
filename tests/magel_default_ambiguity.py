@@ -26,9 +26,9 @@ def main():
         "exact_arity": 'int64 f(int64 x){return 1;}int64 f(int64 x,int64 number=1){return 2;}int64 main(){return f(1);}',
         "instance": 'struct S{int64 f(int64 number=1){return 1;}int64 f(String text="x"){return 2;}};int64 main(){S s;return s.f();}',
         "static": 'struct S{static int64 f(int64 number=1){return 1;}static int64 f(String text="x"){return 2;}};int64 main(){return S::f();}',
-        "constructor": 'struct S{S(int64 number=1){}S(String text="x"){}};int64 main(){S s=new();return 0;}',
+        "constructor": 'struct S{S(int64 number=1){}S(String text="x"){}};int64 main(){S s=new S();return 0;}',
         "variadic": 'int64 f(int64 number=1,int64... rest){return 1;}int64 f(String text="x"){return 2;}int64 main(){return f();}',
-        "named_constructor": 'struct S{static S new(int64 number=1){}static S new(String text="x"){}};int64 main(){S s=S::new();return 0;}',
+        "named_constructor": 'struct S{static S create(int64 number=1){}static S create(String text="x"){}};int64 main(){S s=S::create();return 0;}',
     }
     with tempfile.TemporaryDirectory(prefix="magel-default-ambiguity-") as directory:
         work = Path(directory)
@@ -43,7 +43,7 @@ def main():
                 assert expected in message, (name, expected, message)
             signatures = message.split("候选签名：", 1)[1].split("；请", 1)[0]
             assert "$" not in signatures and "number = 默认值" in signatures, (name, signatures)
-            expected_name = {"constructor": "S(", "named_constructor": "S::new(",
+            expected_name = {"constructor": "S(", "named_constructor": "S::create(",
                              "static": "S::f(", "instance": "S.f("}.get(name, "f(")
             assert expected_name in signatures, (name, signatures)
             if name == "exact_arity":

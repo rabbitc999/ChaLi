@@ -39,7 +39,7 @@ def main():
                 assert '#define NO_MAGEL_PANIC_TRACE 1' not in code
             print('[通过] 数组、标量、容器、副作用及模块调用：'+label,flush=True)
         source=work/'invalid.mgl'
-        source.write_text('void dispose(int64 mut& p){delete p;}int64 leaf(int64 & p){return p;}int64 main(){int64 index=inputInt();if(index==999){int64 mut& owner=new;int64 & stale=owner;dispose(owner);return leaf(stale);}int64 values[]=new[4];int64 mut& pointer=&values[0];println("{}",pointer[index]);return 0;}',encoding='utf-8')
+        source.write_text('void dispose(int64 mut& p){delete p;}int64 leaf(int64 & p){return p;}int64 main(){int64 index=inputInt();if(index==999){int64 mut& owner = heap int64;int64 & stale=owner;dispose(owner);return leaf(stale);}int64 values[]=new[4];int64 mut& pointer=&values[0];println("{}",pointer[index]);return 0;}',encoding='utf-8')
         output=work/'invalid-aot.exe';built=invoke(compiler,'aot',source,'checked','--out',output);assert built.returncode==0,built
         for index in [-1,4,1152921504606846976]:
             for backend,command in [('VM',[compiler,'run',source]),('AOT',[output])]:

@@ -60,7 +60,7 @@ int64 main() {
         const int64 immutable = 5;
         int64 writable;
         writable, b = (6, 7);
-        break immutable;
+        yield (immutable);
     };
     assert(loopValue == 5 && b == 7);
     auto capturedAssignment = int64 fn () {

@@ -30,7 +30,7 @@ enum State {
 };
 @Route(path: "/main")
 int64 main() {
-    Service service = new(42);
+    Service service = new Service(42);
     State state = State::Ready;
     println("annotations {} {}", service.read(), state.code());
     return 0;

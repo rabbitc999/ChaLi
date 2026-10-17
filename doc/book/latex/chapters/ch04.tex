@@ -151,7 +151,7 @@ int64 fromBlock()
     return
     {
         int64 local = 3;
-        break local;
+        yield local;
     };
 }
 
@@ -159,11 +159,11 @@ int64 choose(bool first)
 {
     return if (first)
     {
-        break 5;
+        yield 5;
     }
     else
     {
-        break 6;
+        yield 6;
     };
 }
 
@@ -171,8 +171,8 @@ int64 fromMatch(int64 item)
 {
     return match (item)
     {
-        0 => { break 7; }
-        _ => { break 8; }
+        0 => { yield 7; }
+        _ => { yield 8; }
     };
 }
 
@@ -180,7 +180,7 @@ int64 fromLoop()
 {
     return loop
     {
-        break 9;
+        yield 9;
     };
 }
 
@@ -201,9 +201,9 @@ int64 main()
 \par
 \medskip
 
-这里的 \texttt{break value;} 给出当前值表达式的结果，不是返回函数。只有表达式完成后，外层 \texttt{return} 才返回函数。所有可能给出结果的分支必须具有完全相同的类型；不能让一支是 \texttt{int32}、另一支是 \texttt{int64}，再指望编译器自动凑成同一种类型。
+这里的 \texttt{yield value;} 给出当前值表达式的结果，不是返回函数。只有表达式完成后，外层 \texttt{return} 才返回函数。所有可能给出结果的分支必须具有完全相同的类型；不能让一支是 \texttt{int32}、另一支是 \texttt{int64}，再指望编译器自动凑成同一种类型。
 
-在这个返回表达式内部，不能再嵌套当前函数的 \texttt{return}，也不能使用 \texttt{break \#level(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 跨层跳转；会提前返回的 \texttt{?} 同样需要改成显式匹配。表达式里新定义的独立函数有自己的返回边界。只含一个结果的 \texttt{\{ value \}} 分支仍可沿用前面的简写。
+在这个返回表达式内部，不能再嵌套当前函数的 \texttt{return}，也不能使用 \texttt{break level N} / \texttt{break all} 跨层跳转；会提前返回的 \texttt{?} 同样需要改成显式匹配。表达式里新定义的独立函数有自己的返回边界。只含一个结果的 \texttt{\{ value \}} 分支仍可沿用前面的简写。
 
 内部拥有值变量通过 \texttt{break} 交出结果时会隐式移动，外部变量仍按值复制。移动先保存结果，再执行离开作用域的清理；不会把已经交出去的值再析构一次。引用不能因此逃出来源的生命周期。第 8 章的清理规则和第 14 章的泛型返回会继续解释这些边界。
 
@@ -349,7 +349,7 @@ magel：调用 函数 add 找不到匹配的重载：()；没有参数类型能�
 int64 total(int64... items)
 {
     int64 sum = 0;
-    foreach (int64 item in items)
+    for (int64 item in items)
     {
         sum = sum + item;
     }
@@ -373,7 +373,7 @@ int64 main()
 \par
 \medskip
 
-\texttt{items} 在函数体里就是一个能遍历的容器。\texttt{foreach (\allowbreak{}int64 item in items)\allowbreak{}} 是「把 \texttt{items} 里的东西一个个拿出来，每轮叫它 \texttt{item}」——第 5 章细讲 \texttt{foreach}。
+\texttt{items} 在函数体里就是一个能遍历的容器。\texttt{for (\allowbreak{}int64 item in items)\allowbreak{}} 是「把 \texttt{items} 里的东西一个个拿出来，每轮叫它 \texttt{item}」——第 5 章细讲 \texttt{for-in}。
 
 变长参数只能放在最后一项，而且一个函数只能有一处。
 
@@ -478,7 +478,7 @@ int64 main()
 int64 main(List<String> arguments)
 {
     println("收到 {} 个参数", arguments.len());
-    foreach (String item in arguments)
+    for (String item in arguments)
     {
         println("  {}", item);
     }
@@ -535,7 +535,7 @@ magel run app.mgl -- Alice "two words"
 参数语义 & 按值传入，形参是副本，改形参不影响调用方 \\
 重载 & 同名不同参，编译期按实参类型选，报错会列出候选 \\
 默认参数 & \texttt{int64 b =\allowbreak{} 10}，只能从尾部连续省略 \\
-变长参数 & \texttt{int64.\allowbreak{}.\allowbreak{}.\allowbreak{} items}，放最后一项，用 \texttt{foreach} 遍历 \\
+变长参数 & \texttt{int64.\allowbreak{}.\allowbreak{}.\allowbreak{} items}，放最后一项，用 \texttt{for-in} 遍历 \\
 多值返回 & 返回类型写元组 \texttt{(\allowbreak{}A,\allowbreak{} B)\allowbreak{}}，用 \texttt{.\allowbreak{}0} / \texttt{.\allowbreak{}1} 取或拆开接 \\
 入口 & \texttt{int64 main(\allowbreak{})\allowbreak{}} 或 \texttt{int64 main(\allowbreak{}std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}List<\allowbreak{}std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}String>\allowbreak{} arguments)\allowbreak{}} \\
 \bottomrule

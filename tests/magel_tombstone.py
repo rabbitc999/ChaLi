@@ -22,8 +22,8 @@ def main():
     compiler = args.magel.resolve()
     WORK.mkdir(parents=True, exist_ok=True)
     cases = {
-        "scalar": ("void dispose(int64 mut& value) { delete value; }", "int64 mut& value = new;"),
-        "struct": ("struct Item { int64 number; }; void dispose(Item mut& value) { delete value; }", "Item mut& value = new;"),
+        "scalar": ("void dispose(int64 mut& value) { delete value; }", "int64 mut& value = heap int64;"),
+        "struct": ("struct Item { int64 number; }; void dispose(Item mut& value) { delete value; }", "Item mut& value = heap Item;"),
         "array": ("void dispose(int64 value[]) { delete value; }", "int64 value[] = new[4];"),
     }
     for kind, (helper, allocation) in cases.items():
@@ -48,7 +48,7 @@ def main():
             print(f"[通过] {kind} 清扫={swept}：VM/AOT", flush=True)
     source = WORK / "live.mgl"
     source.write_text('void dispose(int64 mut& value) { delete value; }\n'
-                      'int64 main() { int64 mut& live = new; std::lang::sweep(); '
+                      'int64 main() { int64 mut& live = heap int64; std::lang::sweep(); '
                       '*live = 42; dispose(live); dispose(live); '
                       'if (std::lang::sweep() < 1) { panic("missing live tombstone"); } '
                       'if (std::lang::sweep() != 0) { panic("nonempty sweep"); } '

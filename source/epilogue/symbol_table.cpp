@@ -86,7 +86,7 @@ struct MMethod
     Memory::Vector<MParam> params;
     bool isStatic = false;
     bool isConstructor = false;
-    bool isNamedConstructor = false;  ///< static T new 的公开工厂入口与隐式 self 构造体。
+    bool isNamedConstructor = false;  ///< static T create 的公开工厂入口与隐式 self 构造体。
     int bodyId = -1;
     Memory::String module;
 };

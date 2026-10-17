@@ -19,7 +19,7 @@ class SceneTests(unittest.TestCase):
         self.work = Path(self.temp.name)
         self.source = self.work / 'hello world.mgl'
         self.source.write_text('int64 main(List<String> args) {\n'
-                               '    foreach (String arg in args) { std::lang::println("[{}]", arg); }\n'
+                               '    for (String arg in args) { std::lang::println("[{}]", arg); }\n'
                                '    return 0;\n}\n', encoding='utf-8')
 
     def cli(self, *arguments, code=0):

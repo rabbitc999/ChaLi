@@ -25,7 +25,7 @@ int64 main() {
 }
 ```
 
-复杂分支可包含声明和其他语句，通过 `break 值;` 给出结果。更多规则见[自定义错误传播与 if 表达式](26-error-propagation-if.md)。
+复杂分支可包含声明和其他语句，通过 `yield 值;` 给出结果。更多规则见[自定义错误传播与 if 表达式](26-error-propagation-if.md)。
 
 ## 部署边界
 

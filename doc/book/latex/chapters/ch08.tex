@@ -282,7 +282,7 @@ struct Point
 
 int64 main()
 {
-    Point mut& p = new;
+    Point mut& p = heap Point;
     p.x = 3;
     p.y = 4;
     println("{},{}", p.x, p.y);
@@ -305,7 +305,7 @@ deleted
 
 \begin{itemize}
 
-\item \texttt{Point mut\& p =\allowbreak{} new;} —— 在堆上建一个 \texttt{Point}，\texttt{p} 是指向它的引用；
+\item \texttt{Point mut\& p =\allowbreak{} heap Point;} —— 在堆上建一个 \texttt{Point}，\texttt{p} 是指向它的引用；
 
 \item \texttt{delete p;} —— 释放它。
 
@@ -313,7 +313,19 @@ deleted
 
 \texttt{p} 的类型是引用（\texttt{Point mut\&}），因为堆上的东西没有名字，你只能拿着一个地址。
 
-\texttt{new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 也可以带实参调构造器——左边的类型决定用谁构造，那是第 9 章的内容。
+\texttt{new T(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 也可以带实参调构造器——左边的类型决定用谁构造，那是第 9 章的内容。
+
+\texttt{new} 还有几处等价的写法糖（语义完全一致，纯写法降级）：\texttt{heap T;} 与 \texttt{new;} 等价，\texttt{new T(\allowbreak{}实参)\allowbreak{};} 与 \texttt{new(\allowbreak{}实参)\allowbreak{};} 等价，\texttt{heap new T(\allowbreak{}实参)\allowbreak{};} 也与 \texttt{new(\allowbreak{}实参)\allowbreak{};} 等价。\texttt{heap} 是保留关键字，只在该分配位置有意义，不能用作变量名：
+
+\par
+\medskip
+\begin{lstlisting}[style=magel]
+Point mut& a = heap Point;             // 糖：heap T  ≡ new;
+Point mut& b = new Point(3, 4);        // new T(args) 栈/堆由左侧声明决定
+Point mut& c = heap new Point(5, 6);   // 糖：heap new T(args)  ≡ new(5, 6)
+\end{lstlisting}
+\par
+\medskip
 
 忘记 \texttt{delete} 会怎样？ 手动分配的对象不会因为引用变量离开作用域而自动释放。运行结束时会报告仍未释放的堆块；应显式 delete，或将分配封装进有明确 Drop/Closeable 契约的拥有类型。遗留分配会占用预算，长期运行可能耗尽内存。堆对象的最佳实践还是让它的生命周期和某层花括号对齐，别让 \texttt{new} 和 \texttt{delete} 离得太远。
 
@@ -333,7 +345,7 @@ struct Box: Drop
 
 int64 main()
 {
-    Box mut& b = new;
+    Box mut& b = heap Box;
     b.id = 7;
     delete b;
     delete b;
@@ -368,7 +380,7 @@ struct Point
 
 int64 main()
 {
-    Point mut& p = new;
+    Point mut& p = heap Point;
     p.x = 1;
     delete p;
     p.x = 2;
@@ -476,7 +488,7 @@ first
 禁忌 & 不要在 \texttt{drop(\allowbreak{})\allowbreak{}} 里手动析构字段，会双重析构 \\
 \texttt{Closeable} & 离开作用域或提前 \texttt{close(\allowbreak{})\allowbreak{}}；关过就不会再关 \\
 两者都有 & 顺序固定：先 \texttt{close(\allowbreak{})\allowbreak{}} 再 \texttt{drop(\allowbreak{})\allowbreak{}} \\
-堆对象 & \texttt{T mut\& p =\allowbreak{} new;} 建，\texttt{delete p;} 释放 \\
+堆对象 & \texttt{T mut\& p =\allowbreak{} heap T;} 建，\texttt{delete p;} 释放 \\
 幂等 & \texttt{delete} / \texttt{drop(\allowbreak{})\allowbreak{}} 重复调用只执行一次 \\
 释放后访问 & \texttt{MGL1205} \\
 被消除的三类错误 & 空指针、悬垂引用、忘记释放 \\

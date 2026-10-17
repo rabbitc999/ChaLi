@@ -625,10 +625,10 @@ bool RegisterTop()
             method.source = member.s;
             method.result = T(member.type);
             method.isStatic = member.type2 == 1;
-            method.isNamedConstructor = method.isStatic && member.s == "new";
+            method.isNamedConstructor = method.isStatic && member.s == "create";
             method.isConstructor = method.isNamedConstructor;
             if (method.isNamedConstructor && !SameType(method.result, NamedType(top.s)))
-                return Fail("static new 的返回类型必须是所属类型：" + top.s);
+                return Fail("static create 的返回类型必须是所属类型：" + top.s);
             method.bodyId = member.kids.size() > 1u ? member.kids[1] : -1;
             method.module = top.module;
             for (const int paramId : N(member.kids[0]).kids)
@@ -708,7 +708,7 @@ bool RegisterTop()
                     MMethod method;
                     method.isStatic = member.type2 == 1;
                     method.isConstructor = member.type2 == 2;
-                    method.isNamedConstructor = method.isStatic && member.s == "new";
+                    method.isNamedConstructor = method.isStatic && member.s == "create";
                     method.isConstructor = method.isConstructor || method.isNamedConstructor;
                     method.bodyId = member.kids.size() > 1u ? member.kids[1] : -1;
                     method.module = top.module;
@@ -717,7 +717,7 @@ bool RegisterTop()
                     method.source = method.isConstructor && !method.isNamedConstructor ? "__ctor" : member.s;
                     method.result = T(member.type);
                     if (method.isNamedConstructor && !SameType(method.result, NamedType(top.s)))
-                        return Fail("static new 的返回类型必须是所属类型：" + top.s);
+                        return Fail("static create 的返回类型必须是所属类型：" + top.s);
                     for (const int paramId : N(member.kids[0]).kids)
                         method.params.push_back(
                             MParam{ N(paramId).s, Memory::String(), T(N(paramId).type),

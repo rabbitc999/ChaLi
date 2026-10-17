@@ -25,23 +25,23 @@ int64 main() {
     Fibonacci sequence;
     sequence.count = 10;
     int64 sum = 0;
-    foreach (int64 value in sequence) {
+    for (int64 value in sequence) {
         println("{}", value);
         sum = sum + value;
     }
     assert(sum == 88);
     int32 values[3];
     values[0] = 1; values[1] = 2; values[2] = 3;
-    foreach (int32 a in values) { a = (int32)(a + 10); }
+    for (int32 a in values) { a = (int32)(a + 10); }
     assert(values[0] == 11 && values[2] == 13);
     int64 data[] = new[3];
     data[0] = 1; data[1] = 2; data[2] = 3;
     std::memory::Span<int64> span = std::memory::Span<int64>::from(data, 3);
-    foreach (int64 a in span) { a = a * 2; }
+    for (int64 a in span) { a = a * 2; }
     assert(data[0] == 2 && data[2] == 6);
     List<int64> list;
     list.push(4); list.push(5);
-    foreach (int64 a in list) { a = a + 1; assert(list[0] == 5); }
+    for (int64 a in list) { a = a + 1; assert(list[0] == 5); }
     assert(list[1] == 6);
     int64 mut& writable = data;
     int64 const& readonly = &writable;
@@ -50,6 +50,6 @@ int64 main() {
     int64 mut& explicitWrite = (int64 mut&)readonly;
     explicitWrite = 9;
     assert(data[0] == 9);
-    foreach (int64 value in sequence) { value = 100; assert(sequence.current == 100); break; }
+    for (int64 value in sequence) { value = 100; assert(sequence.current == 100); break; }
     return 0;
 }

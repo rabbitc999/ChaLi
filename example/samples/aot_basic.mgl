@@ -139,10 +139,10 @@ int64 main() {
 
     Any o1;
     Any o2;
-    Rect mut& pr = new;
+    Rect mut& pr = heap Rect;
     pr->w = 3;
     pr->h = 5;
-    Square mut& pq = new;
+    Square mut& pq = heap Square;
     pq->side = 4;
     o1.set(&pr);
     o2.set(&pq);

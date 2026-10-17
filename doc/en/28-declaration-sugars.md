@@ -10,11 +10,11 @@ The authoritative productions are in [`source/magel.gram`](../../source/magel.gr
 String make() {
     return {
         String local = "owned";
-        break local;
+        yield local;
     };
 }
 int32 choose(bool yes) { return if (yes) { 1 } else { 2 }; }
-int64 count() { return loop { break 3; }; }
+int64 count() { return loop { yield 3; }; }
 ```
 
 Blocks, loops, if expressions and match expressions reuse value exits. Every normally completing path must produce a value, and branch result types must match exactly. Branches do not unify through numeric widening or user conversions. Integer literals still receive the enclosing function's return type as context.
@@ -28,10 +28,10 @@ Return(ControlExpr E)
 
 The AST owns a dedicated hidden result declaration, marked together with its control expression by `returnExpression`. `LowerLocalDecl` supplies the function's return type; `LoopValueType` checks precise branch types. `LowerLoop` creates the expression's join slot. Evaluation happens once, before scope cleanup and ordinary function return.
 
-Nested return, `break #level(N)`, `break #level(ALL)`, and early-returning `?` propagation are rejected within the returned control expression. Use explicit matching and value breaks. Validation stops at a nested `fn` or named function boundary, so independent callbacks retain their own return statements.
+Nested return, `break level N`, `break all`, and early-returning `?` propagation are rejected within the returned control expression. Use explicit matching and value breaks. Validation stops at a nested `fn` or named function boundary, so independent callbacks retain their own return statements.
 
 
-Generic functions follow the same path: `T take<T>(T value) { return { T local = value; break local; }; }`. Loop, if and match can also return T. Monomorphization substitutes the concrete type before result-slot creation, branch checking and move/copy lowering. Generics do not bypass identical branch types, borrowing or cleanup checks. The regression covers integers, String and a struct owning String.
+Generic functions follow the same path: `T take<T>(T value) { return { T local = value; yield local; }; }`. Loop, if and match can also return T. Monomorphization substitutes the concrete type before result-slot creation, branch checking and move/copy lowering. Generics do not bypass identical branch types, borrowing or cleanup checks. The regression covers integers, String and a struct owning String.
 
 ## Ownership and compile-time state
 
@@ -71,7 +71,7 @@ Transfer/copy are compiler pseudocode, not new VM opcodes. Existing `LowerLangua
 
 See [`M_ReturnValue`](../../source/epilogue/return_expression_ast.cpp), [`PrepareBreakValue` and `LowerLanguageMove`](../../source/epilogue/boxing.cpp), [`LowerLoop`](../../source/epilogue/lowering.cpp), and [borrow dataflow](../../source/magel_borrow_flow.hpp).
 
-Runtime arrays follow the same rule. An internal array in `return { String values[] = new[2]; ... break values; };` transfers its length-bearing allocation; the source handle is cleared and source element cleanup is skipped. An external runtime array receives a new allocation and per-element deep copies of strings, objects and aggregates. Hidden result bindings accept length-bearing block, if, match and loop expressions as well as allocations and calls. This compiler-only consumption does not enable source-level `move(&array)`; fixed arrays retain their existing storage/return constraints, and opaque host types are not assumed to own resources.
+Runtime arrays follow the same rule. An internal array in `return { String values[] = new[2]; ... yield values; };` transfers its length-bearing allocation; the source handle is cleared and source element cleanup is skipped. An external runtime array receives a new allocation and per-element deep copies of strings, objects and aggregates. Hidden result bindings accept length-bearing block, if, match and loop expressions as well as allocations and calls. This compiler-only consumption does not enable source-level `move(&array)`; fixed arrays retain their existing storage/return constraints, and opaque host types are not assumed to own resources.
 
 ## Statement-level named functions
 
@@ -120,7 +120,7 @@ top_decl := derive_directive struct_decl type_decl_end
 DerivedDecl(traits, declaration) => declaration.derives = traits
 ```
 
-`#derive` is an individually registered compiler directive token, like `#level`. It attaches only to structs and enums. Only Equal, Hash and Clone are accepted. Drop, Closeable, unknown traits, duplicate requests and overwriting existing methods are rejected.
+`#derive` is an individually registered compiler directive token. It attaches only to structs and enums. Only Equal, Hash and Clone are accepted. Drop, Closeable, unknown traits, duplicate requests and overwriting existing methods are rejected.
 
 The semantic pass reads parsed field or variant-payload metadata and passes raw names or generated field fragments through existing `$macro`, `$for` and `$concat` templates. The macro engine receives text, performs no type checking and calls no Parser. After expansion finishes, the derive semantic pass uses the same generated parser to read ordinary generated methods, attach them to the original AST, and instantiate ordinary `Equal<bool,T>`, `Hash<T>` and `Clone<T>` interfaces. Normal type, interface, borrow and quadruple lowering then applies.
 

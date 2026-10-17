@@ -44,7 +44,7 @@ def main():
             text = '''struct Box<T> { T item; };
     int64 main() {
         List<int32> values;
-        foreach(auto item in values) { println("{}", item); }
+        for(auto item in values) { println("{}", item); }
         Box<int32> box;
         auto number = box.item;
         auto combine = (int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) {
@@ -92,7 +92,7 @@ def main():
             assert 'List<List<int32>>' in detail and '泛型实参 1' in detail, detail
             detail = query('hover', detailed, detailed.index('unknown='))['contents']['value']
             assert '尚不能唯一确定类型' in detail, detail
-            incomplete = 'struct Entry{int64 value;}; int64 main(){List<Entry> values;foreach(auto item in values){item.'
+            incomplete = 'struct Entry{int64 value;}; int64 main(){List<Entry> values;for(auto item in values){item.'
             open_text(incomplete)
             completions = query('completion', incomplete, len(incomplete))
             assert any(item['label'] == 'value' for item in completions), completions
@@ -133,7 +133,7 @@ def main():
         int64 $0 = 1;
         int64 $10 = $0;
         int64 $123456789012345678901234567890 = $10;
-        break $123456789012345678901234567890;
+        yield ($123456789012345678901234567890);
     }
     $end_macro
     int64 main(){int64 value=$slots; return 0;}
@@ -240,7 +240,7 @@ def main():
         return {
             String value = "owned";
             defer { println("{}", value); }
-            break value;
+            yield (value);
         };
     }
     int64 main(){return 0;}

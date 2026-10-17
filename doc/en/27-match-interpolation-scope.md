@@ -4,7 +4,7 @@ This guide describes matching expressions, string interpolation, generic inferen
 
 ## Match expressions
 
-Match works in initializers, assignments, arguments, return values and nested expressions. A simple arm uses `{ value }` without a semicolon inside the block; a block with several statements produces its value through `break value;`. The enclosing declaration or assignment still ends with a semicolon.
+Match works in initializers, assignments, arguments, return values and nested expressions. A simple arm uses `{ value }` without a semicolon inside the block; a block with several statements produces its value through `yield value;`. The enclosing declaration or assignment still ends with a semicolon.
 
 All normal arms must produce compatible values of the same type. Without `_`, an enum match must cover every variant; guarded arms do not prove exhaustive coverage. Non-enum value matches require a fallback. Only the selected arm runs.
 
@@ -74,4 +74,4 @@ Registration does not run the body. Normal scope exit, return, panic, break, con
 
 Conditions support integer arithmetic, comparisons, logical operations and string equality. Logical evaluation short-circuits. Parameters and local bindings may supply constants; runtime variables cannot. Recursive expansion may terminate through a condition, with a maximum depth of 64 and 100000 expansions per preprocessing run. Arity errors remain compile-time errors. The removed match DSL, `##` and `#parameter` aliases are not restored.
 
-See the [VM, AOT and diagnostic regression](../../tests/magel_v251.py).
+The VM, AOT and diagnostic regressions live in the samples run by `sh check.sh` and the matching suites under `tests/`.

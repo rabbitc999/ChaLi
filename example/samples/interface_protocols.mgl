@@ -39,23 +39,23 @@ int64 main() {
     println("index={} total={} average={:3F}", values[1], total, average);
 
     int64 automatic = 0;
-    foreach (value in make_series()) {
+    for (value in make_series()) {
         if (value == 5) { continue; }
         automatic = automatic + value;
     }
 
     int64 typed = 0;
-    foreach (int64 value in values) {
+    for (int64 value in values) {
         typed = typed + value;
     }
     int64 ascending = 0;
-    foreach (int64 number in range(1, 6)) { ascending = ascending + number; }
+    for (int64 number in range(1, 6)) { ascending = ascending + number; }
     int64 descending = 0;
-    foreach (number in range(5, 0, -2)) { descending = descending + number; }
+    for (number in range(5, 0, -2)) { descending = descending + number; }
     int64 mismatched = 0;
-    foreach (number in range(1, 5, -1)) { mismatched = mismatched + 1; }
-    foreach (number in range(5, 1, 1)) { mismatched = mismatched + 1; }
-    println("foreach={} typed={} builds={} range={}/{}/{}",
+    for (number in range(1, 5, -1)) { mismatched = mismatched + 1; }
+    for (number in range(5, 1, 1)) { mismatched = mismatched + 1; }
+    println("for={} typed={} builds={} range={}/{}/{}",
     automatic, typed, builds, ascending, descending, mismatched);
     return 0;
 }

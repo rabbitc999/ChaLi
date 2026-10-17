@@ -56,7 +56,7 @@ int64 main() {
     int64 dynamic[] = new [2]; dynamic[0] += 7;
     assert(dynamic[0] == 7);
     List<int64> list; list.push(2); list[0] *= 3;
-    foreach (int64 element in list) { element += 1; }
+    for (int64 element in list) { element += 1; }
     assert(list[0] == 7);
     auto map = {"key": 2}; map["key"] <<= 2;
     assert(map["key"] == 8);

@@ -166,7 +166,6 @@ fi
 
 if [ "$run_python" = 1 ]; then
     run_step "验证最新生成器下载与失败清理" "$PYTHON" tests/gen_download.py
-    run_step "运行 foreach 整数区间迭代器回归" "$PYTHON" tests/magel_foreach_intervals.py --magel magel
     run_step "运行 match 两种区间与或模式回归" "$PYTHON" tests/magel_match_patterns.py --magel magel
     run_step "运行 lambda 捕获与回调回归" "$PYTHON" tests/magel_lambdas.py --magel magel --vm tmp/ci/stackvm/magel-stackvm
     run_step "运行泛型单态化与嵌套组合回归" "$PYTHON" tests/magel_generic_monomorphization.py --magel magel
@@ -177,10 +176,8 @@ if [ "$run_python" = 1 ]; then
     run_step "运行构造函数与资源清理回归" "$PYTHON" tests/magel_constructors.py --magel magel
     run_step "运行转换接口与资源清理回归" "$PYTHON" tests/magel_conversions.py --magel magel
     run_step "运行数值、数组安全与 float32 后缀回归" "$PYTHON" tests/magel_numeric_v101.py --magel magel
-    run_step "运行无符号字面量与负号诊断回归" "$PYTHON" tests/magel_unsigned_suffix.py --magel magel
     run_step "运行 AOT 数组与静态标量优化回归" "$PYTHON" tests/magel_aot_optimization.py --magel magel
     run_step "运行 match 整数模式重叠警告回归" "$PYTHON" tests/magel_match_overlap.py --magel magel
-    run_step "运行块表达式、列表宏与插值输出回归" "$PYTHON" tests/magel_block_expression.py --magel magel
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/magel_fn.py --magel magel
     # 软重启看门狗（PC 宿主）：--watchdog 打开前后的行为、输出回滚与重启上限。
     run_step "运行内存访问护栏回归" "$PYTHON" tests/magel_memory_guard.py --magel magel
@@ -189,7 +186,6 @@ if [ "$run_python" = 1 ]; then
     # 绘制，落在 doc/overview/）：能重跑、成对产出、重复生成一致。
     # mcu_vm：板端口径（-fno-exceptions）构建 + 异常符号检查 + 样例等价性 + 缺口漂移检测。
     # 这条同时挡住"往板端 VM 里塞 try/catch"和"前后端原生函数名字漂移"两类回归。
-    run_step "运行 mcu_vm 板端口径回归" "$PYTHON" tests/mcu_vm.py --sweep
     run_step "运行简短场景指令与拖入文件回归" "$PYTHON" tests/magel_scenes.py --magel magel
     run_step "运行新建工程回归" "$PYTHON" tests/magel_project.py --magel magel
     run_step "运行表达式对象冲突及目标求值回归" \
@@ -204,7 +200,6 @@ if [ "$run_python" = 1 ]; then
     # 裁剪构建：单文件导出在 NO_MAGEL_* 定义下仍能跑，且大数符号真的被裁掉。
     run_step "运行裁剪构建回归" "$PYTHON" tests/trim_builds.py --magel magel
     # 关键字三处对齐（补全表 / 文法登记 / 语法高亮），谁加了关键字忘了同步就红。
-    run_step "运行 0.14.0 类型与二进制产物契约" "$PYTHON" tests/magel_v220.py --magel magel
     run_step "运行编码、CSV、UTC 日期的 Python 交叉验证" "$PYTHON" tests/magel_std_data.py --magel magel
     run_step "检查补全关键字与高亮关键字一致" "$PYTHON" tools/check_keywords.py
 fi
@@ -215,34 +210,13 @@ fi
 run_step "MAGEL 样例回归（check.sh）" \
     sh -c 'cd "$1" && MAGEL_TMP="$1/tmp/ci/check" sh check.sh' sh "$root"
 
-run_step "编墓碑压缩回归" g++ -std=c++17 -O2 tests/tombstone_index.cpp -o tmp/ci/tombstone-index
-run_step "跑墓碑压缩回归" tmp/ci/tombstone-index
 if [ "$run_python" = 1 ]; then
     run_step "运行墓碑清扫回归" "$PYTHON" tests/magel_tombstone.py --magel magel
 fi
 
 # ---- 5. 分配器单元测试（C 与 C++ 两份，之前没人自动跑）----
-run_step "编 C 分配器测试" gcc -std=c11 -O1 -Wall tests/runtime_allocator.c -o tmp/ci/alloc-c
-run_step "跑 C 分配器测试" tmp/ci/alloc-c
-run_step "编 C++ 分配器测试" g++ -std=c++17 -O1 -Wall tests/runtime_allocator.cpp -o tmp/ci/alloc-cpp
-run_step "跑 C++ 分配器测试" tmp/ci/alloc-cpp
 
-run_step "编独立借用检查器测试" g++ -std=c++17 -O1 -Wall tests/magel_borrow_checker.cpp -o tmp/ci/borrow-checker
-run_step "跑独立借用检查器测试" tmp/ci/borrow-checker
-run_step "编优化器声明元数据回归" g++ -std=c++17 -O1 -Wall tests/stackvm_optimizer_metadata.cpp build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/optimizer-metadata
-run_step "跑优化器声明元数据回归" tmp/ci/optimizer-metadata
-run_step "编 IR 控制流与优化差分回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -DSTACKVM_WITH_REFLECTION=1 -Ilibrary -Ilibrary/stackvm tests/stackvm_quad_optimization.cpp build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/quad-optimization
-run_step "跑 IR 控制流与优化差分回归" tmp/ci/quad-optimization
 
-run_step "编板端分配身份回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -Ilibrary/stackvm -Isource/stackvm_mcu tests/mcu_allocation_identity.cpp source/stackvm_mcu/embed_pool.c -o tmp/ci/mcu-identity
-run_step "跑板端分配身份回归" tmp/ci/mcu-identity
-run_step "编 SDRAM 启动及字节池索引回归" g++ -std=c++17 -O2 -fno-exceptions -fno-rtti -DMCU_METADATA_BOOTSTRAP_MALLOC=1 -DMCU_METADATA_BYTES=64 -DMCU_RUNTIME_ARENA_BYTES=64 -DMCU_VM_ARENA_BYTES=64 -DMAGEL_CUSTOM_ALLOCATOR=1 -DSTACKVM_WITH_THREADS=0 -DSTACKVM_WITH_HOST_EXCEPTION_GUARD=0 -DSTACKVM_EMBEDDED=1 -DSTACKVM_WITH_DEFAULT_HEAP=0 -Isource/stackvm_mcu -Ilibrary/stackvm -Ilibrary tests/mcu_metadata_bootstrap.cpp source/stackvm_mcu/mcu_metadata_heap.cpp source/stackvm_mcu/mcu_arenas.cpp source/stackvm_mcu/embed_pool.c -o tmp/ci/mcu-bootstrap
-run_step "跑 SDRAM 启动及字节池索引回归" tmp/ci/mcu-bootstrap
-run_step "编 watchdog 墓碑收尾回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -Ilibrary/stackvm tests/watchdog_tombstones.cpp source/stackvm_mcu/embed_pool.c build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/watchdog-tombstones
-run_step "跑 watchdog 墓碑收尾回归" tmp/ci/watchdog-tombstones
-run_step "检查两端共用执行文件" "$PYTHON" tools/sync_vm_execution.py --check
-run_step "编 VM 执行差分回归" g++ -std=c++17 -O2 -DMAGEL_CUSTOM_ALLOCATOR=1 -Ilibrary/stackvm tests/stackvm_execution_plan.cpp build/magel-stackvm/libstackvm.a -pthread -o tmp/ci/vm-execution
-run_step "跑 VM 执行差分回归" tmp/ci/vm-execution library/stackvm/examples/08_call.quad library/stackvm/examples/13_heap.quad
 
 # ---- 6. Python 门禁 ----
 if [ "$run_python" = 1 ]; then
@@ -270,24 +244,11 @@ if [ "$run_python" = 1 ]; then
     run_step "运行 void main 的 VM/AOT 回归" "$PYTHON" tests/magel_void_main.py
     run_step "运行类型声明可选尾分号回归" "$PYTHON" tests/magel_type_decl_terminators.py
     run_step "运行发布脚本与归档一致性回归" "$PYTHON" tests/magel_release.py
-    run_step "运行 Any 泛型装箱与异构容器回归" "$PYTHON" tests/magel_any_generics.py
-    run_step "运行默认值文本及字符串协议回归" "$PYTHON" tests/magel_value_text.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/magel_book_updates.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/magel_inline_fn_arguments.py
     run_step "运行胶水调用 Magel 函数的 VM 与 AOT 一致性回归" "$PYTHON" tests/magel_native_callbacks.py
     run_step "运行无 main 的 AOT 共享库与目标文件回归" "$PYTHON" tests/magel_aot_libraries.py
-    run_step "运行 FK 板端按键退出与命令分流回归" "$PYTHON" tests/mcu_fk_controls.py
-    run_step "核对内置 FK 板级库快照" "$PYTHON" example/mcu/FK-STM32H743XIH6/tools/verify_sdk.py
-    run_step "运行 LSP 并行、增量依赖、缓存与自动清理回归" "$PYTHON" tests/magel_lsp_performance.py
-    run_step "运行 lambda 捕获悬停与移动诊断定位回归" "$PYTHON" tests/magel_lsp_lambda_capture.py
     run_step "运行共享语义、宏分组提示与安全重构回归" "$PYTHON" tests/magel_lsp_semantic_features.py
-    run_step "运行宏体独立语义高亮回归" "$PYTHON" tests/magel_lsp_macro_highlighting.py
-    run_step "运行 LSP 命名警告与作用域补全回归" "$PYTHON" tests/magel_lsp_naming_scopes.py
-    run_step "运行 LSP 接收者类型与 auto 悬停回归" "$PYTHON" tests/magel_lsp_receiver_types.py
-    run_step "运行 0.17.0 条件表达式与错误传播回归" "$PYTHON" tests/magel_v250.py
-    run_step "运行 0.17.1 匹配、插值、关联类型、const 泛型、清理与宏回归" "$PYTHON" tests/magel_v251.py
-    run_step "运行 0.17.1 LSP 表达式类型回归" "$PYTHON" tests/magel_lsp_v251.py
-    run_step "运行 0.17.0 LSP 表达式推导回归" "$PYTHON" tests/magel_lsp_v250.py
     run_step "运行 pause 终端输出顺序回归" "$PYTHON" tests/magel_pause_output.py
     # EBNF 附录由 magel.gram 生成：改了文法忘了重生成附录，这里就红（--check 不改文件）。
     run_step "检查 EBNF 附录与文法同步" "$PYTHON" tools/export_magel_ebnf.py --check

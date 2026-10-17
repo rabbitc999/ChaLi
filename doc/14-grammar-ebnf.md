@@ -89,7 +89,7 @@ Box<int64 fn(int64)> box;
 附录准确列出解析器的语法接受集合，部分分支为共享类型与表达式前缀，或为报告语义错误而存在；解析成功后还必须通过以下检查：
 
 - 接口只包含方法；文法中能读取的接口字段会被语义层拒绝。接口实现及默认方法分派须满足编译期契约。
-- `static T new(...)` 是拥有值构造入口，提供 self，返回所属类型；丢弃构造结果会报错。普通默认声明不强制调用构造函数。
+- `static T create(...)` 这类返回所属类型的具名静态方法是拥有值构造入口，提供 self；丢弃构造结果会报错。普通默认声明不强制调用构造函数。
 - `auto`、fn 参数、枚举简写与空集合须有足够上下文。元组的共享类型项不能在值上下文冒充普通表达式。
 - `=` 可以形成纯普通赋值链；复合赋值不能组成或混入赋值链。完整表达式按实际目标检查自增减的读写冲突，独立目标可组合；赋值目标只求值一次。
 - 运算符重载通过接口实现。附录保留的 `operator_def` 名称是内部产生式名，其具体分支以 `.gram` 为准；它不代表允许动态声明运算协议。
@@ -127,7 +127,7 @@ Box<int64 fn(int64)> box;
 | `CONST` | `const` |
 | `MUT` | `mut` |
 | `NEW` | `new` |
-| `HEAP` | `heap`（软关键字，仅分配位置识别） |
+| `HEAP` | `heap` |
 | `DELETE` | `delete` |
 | `DROP` | `drop` |
 | `STATIC` | `static` |
@@ -156,16 +156,14 @@ Box<int64 fn(int64)> box;
 | `ELSE` | `else` |
 | `WHILE` | `while` |
 | `FOR` | `for` |
-| `FOREACH` | `foreach` |
 | `IN` | `in` |
 | `LOOP` | `loop` |
 | `RETURN` | `return` |
 | `MATCH` | `match` |
 | `DO` | `do` |
 | `BREAK` | `break` |
-| `BREAK_LEVEL` | `#level` |
 | `DERIVE` | `#derive` |
-| `ALL` | `ALL` |
+| `YIELD` | `yield` |
 | `CONTINUE` | `continue` |
 | `DEFER` | `defer` |
 | `SCOPE_EXIT` | `scope` |
@@ -404,7 +402,6 @@ member_decl = type, name_token, ";"
     | array_type, name_token, "(", param_list, ")", block
     | type, "drop", "(", param_list, ")", block
     | "static", type, name_token, "(", param_list, ")", block
-    | "static", type, "new", "(", param_list, ")", block
     | "static", ptr_type, name_token, "(", param_list, ")", block
     | "static", array_type, name_token, "(", param_list, ")", block
     | name_token, "(", param_list, ")", block ;
@@ -437,7 +434,9 @@ host_type_decl = "type", name_token, "=", type, ";"
     | "type", name_token, "=", ptr_type, ";" ;
 
 host_func_decl = type, name_token, "(", param_list, ")", ";"
-    | ptr_type, name_token, "(", param_list, ")", ";" ;
+    | ptr_type, name_token, "(", param_list, ")", ";"
+    | type, "yield", "(", param_list, ")", ";"
+    | ptr_type, "yield", "(", param_list, ")", ";" ;
 
 abi_block = "abi", STRING, "{", abi_func_list, "}" ;
 
@@ -529,7 +528,7 @@ stmt = block
     | while_stmt
     | do_while_stmt
     | for_stmt
-    | foreach_stmt
+    | for_in_stmt
     | match_stmt
     | match_stmt, ";"
     | "return", expr, ";"
@@ -537,15 +536,10 @@ stmt = block
     | "return", ";"
     | "delete", unary, ";"
     | "break", ";"
-    | "break", "#level", "(", NUMBER, ")", ";"
-    | "break", "#level", "(", "ALL", ")", ";"
-    | "break", "#level", "(", VARIABLE, ")", ";"
-    | "break", "level", NUMBER, ";"                  /* 糖：break level N;  ≡ break #level(N) */
-    | "break", "all", ";"                            /* 糖：break all;  ≡ break #level(ALL) */
-    | "break", "level", "all", ";"                   /* 糖：break level all;  ≡ break all; */
-    | "yield", expr, ";"                             /* 糖：yield 值;  ≡ break 值; */
-    | "break", expr, ";"
-    | "break", tuple_items, ";"
+    | "yield", expr, ";"
+    | "break", name_token, ";"
+    | "break", name_token, NUMBER, ";"
+    | "break", name_token, name_token, ";"
     | "continue", ";"
     | expression_items, ";" ;
 
@@ -610,13 +604,16 @@ loop_expr = "loop", block ;
 
 for_stmt = "for", "(", for_init, expr, ";", for_inc, ")", block ;
 
-foreach_stmt = "foreach", "(", name_token, "in", foreach_source, ")", block
-    | "foreach", "(", "auto", name_token, "in", foreach_source, ")", block
-    | "foreach", "(", type, name_token, "in", foreach_source, ")", block
-    | "foreach", "(", ptr_type, name_token, "in", foreach_source, ")", block ;
+for_in_stmt = "for", "(", name_token, "in", for_in_source, ")", block
+    | "for", "(", "auto", name_token, "in", for_in_source, ")", block
+    | "for", "(", type, name_token, "in", for_in_source, ")", block
+    | "for", "(", ptr_type, name_token, "in", for_in_source, ")", block ;
 
-foreach_source = expr
+for_in_source = expr
     | range_pattern ;
+
+heap_type = name_token
+    | builtin_type ;
 
 for_init = ";"
     | decl_stmt
@@ -690,15 +687,11 @@ unary = "++", unary
     | "~", unary
     | "*", unary
     | "&", unary
-    | "new", new_dims
-    | "new", "(", call_args, ")"
-    | "new", name_token, "(", call_args, ")"            /* 糖：new T(args)  ≡ new(args) */
-    | "HEAP", name_token                              /* 糖：heap T  ≡ new; */
-    | "HEAP", "new", name_token, "(", call_args, ")"  /* 糖：heap new T(args)  ≡ new(args) */
+    | "new", "[", expr, "]"
+    | "new", heap_type, "(", call_args, ")"
+    | "heap", heap_type
+    | "heap", "new", heap_type, "(", call_args, ")"
     | cast_expr ;
-
-new_dims = ""
-    | "[", expr, "]" ;
 
 cast_expr = "(", builtin_type, ")", unary
     | "(", band_expr, "&", ")", unary
@@ -819,9 +812,13 @@ map_literal_items = expr, ":", expr
     | map_literal_items, ",", expr, ":", expr ;
 
 qualified_ref = name_token, "::", name_token
+    | name_token, "::", "yield"
+    | "yield", "::", name_token
+    | "yield", "::", "yield"
     | name_token, "::", "new"
+    | "yield", "::", "new"
     | qualified_ref, "::", name_token
-    | qualified_ref, "::", "new" ;
+    | qualified_ref, "::", "yield" ;
 ```
 
 <!-- END GENERATED MAGEL EBNF -->

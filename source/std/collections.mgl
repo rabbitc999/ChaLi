@@ -6,10 +6,8 @@ struct Deque<T>: Iterator<T>, Index<T, int64>, Drop {
     std::lang::List<T> values;
 
     static Deque<T> create() {
-        Deque<T> result;
         std::lang::List<T> values;
-        result.values = values.copy();
-        return result;
+        self.values = values.copy();
     }
 
     void pushBack(T value) { self.values.push(value); }
@@ -39,10 +37,8 @@ struct Queue<T>: Iterator<T>, Drop {
     std::lang::List<T> values;
 
     static Queue<T> create() {
-        Queue<T> result;
         std::lang::List<T> values;
-        result.values = values.copy();
-        return result;
+        self.values = values.copy();
     }
 
     void push(T value) { self.values.push(value); }
@@ -134,10 +130,8 @@ struct Channel<T>: Iterator<T>, Drop {
     std::lang::List<T> pending;
 
     static Channel<T> create() {
-        Channel<T> result;
         std::lang::List<T> pending;
-        result.pending = pending.copy();
-        return result;
+        self.pending = pending.copy();
     }
 
     void send(T value) { self.pending.push(value); }

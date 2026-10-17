@@ -5,7 +5,7 @@ struct Box {
 };
 
 int64 main() {
-    Box mut& pointer = new;
+    Box mut& pointer = heap Box;
     pointer->value = 7;
     Option<Box mut&> optional = toOptional<Box>(pointer);
     Box mut& restored = toReference<Box>(optional);

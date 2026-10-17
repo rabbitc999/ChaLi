@@ -4,7 +4,7 @@
 
 ## Types, macros and safe refactoring
 
-Completion, hover, definitions and refactoring share binding scans and type queries. Original document URIs and declaration offsets distinguish shadowed names. Queries cover `foreach(auto item in values)` element types, generic fields and method results, inference of direct function type parameters, explicit generic arguments, nested `fn` results and contextual anonymous function parameters. Uncertain types do not produce inlay hints; compiler diagnostics remain authoritative.
+Completion, hover, definitions and refactoring share binding scans and type queries. Original document URIs and declaration offsets distinguish shadowed names. Queries cover `for(auto item in values)` element types, generic fields and method results, inference of direct function type parameters, explicit generic arguments, nested `fn` results and contextual anonymous function parameters. Uncertain types do not produce inlay hints; compiler diagnostics remain authoritative.
 
 `auto` hover shows the complete inferred type on either the variable or the `auto` keyword, including generic arguments and nested function signatures. Function types additionally describe parameters and return types. Unknown inference is reported explicitly. `textDocument/inlayHint` displays inferred types for `auto` bindings and contextual parameters; VS Code users can disable `magel.inlayHints.enabled` or use the editor's inlay hint settings.
 

@@ -1,4 +1,4 @@
-// P1：字符引用、值形参、借用返回值与 foreach 元素生命周期。
+// P1：字符引用、值形参、借用返回值与 for 元素生命周期。
 struct Value {
     int64 number;
     String text;
@@ -41,7 +41,7 @@ Value recurseValue(Value input, int64 depth) {
 void writeChar(char mut& value) { value = 'Z'; }
 void increment(int64 mut& value) { value = value + 1; }
 String first(List<String> mut& source) {
-    foreach (String item in source) { item[0] = 'R'; return item; }
+    for (String item in source) { item[0] = 'R'; return item; }
     return "";
 }
 
@@ -107,7 +107,7 @@ int64 main() {
 
         List<String> words;
         words.push("abc"); words.push("def");
-        foreach (String item in words) {
+        for (String item in words) {
             item[0] = 'X';
             assert(words[0] == "Xbc" || words[1] == "Xef");
             if (item == "Xbc") { continue; }
@@ -117,7 +117,7 @@ int64 main() {
         assert(words[0] == "Xbc" && words[1] == "last");
         String returned = first(&words);
         assert(returned == "Rbc" && words[0] == "Rbc");
-        foreach (String item in words) {
+        for (String item in words) {
             words[0] = "replacement";
             assert(item == "replacement");
             String snapshot = words[0];
@@ -127,27 +127,27 @@ int64 main() {
             break;
         }
         List<Set<int64> > sets; sets.push(values);
-        foreach (Set<int64> item in sets) { item.add(7); auto copy = sets[0]; assert((copy.has(7) != 0)); }
+        for (Set<int64> item in sets) { item.add(7); auto copy = sets[0]; assert((copy.has(7) != 0)); }
         assert((values.has(7) == 0));
         List<Value> records; records.push(original);
-        foreach (Value item in records) { item.number = 42; item.text[0] = 'R'; item.values.add(7); }
+        for (Value item in records) { item.number = 42; item.text[0] = 'R'; item.values.add(7); }
         Value record = records[0];
         assert(record.number == 42 && record.text == "Rbc" && (record.values.has(7) != 0));
         assert(original.number == 2 && original.text == "abc" && (original.values.has(7) == 0));
-        foreach (Value item in records) { item = original; item = item; }
+        for (Value item in records) { item = original; item = item; }
         Value replacedRecord = records[0];
         assert(replacedRecord.number == 2 && replacedRecord.text == "abc");
         List<int64> numbers; numbers.push(1);
-        foreach (int64 item in numbers) {
+        for (int64 item in numbers) {
             increment(&item);
-            foreach (int64 alias in numbers) { alias = alias + 1; }
+            for (int64 alias in numbers) { alias = alias + 1; }
             assert(item == 3 && numbers[0] == 3);
         }
         List<float64> reals; reals.push(1.5);
-        foreach (float64 item in reals) { item = item + 0.5; }
+        for (float64 item in reals) { item = item + 0.5; }
         assert(reals[0] == 2.0);
         List<String> const& readWords = &words;
-        foreach (String item in readWords) { assert(len(item) > 0); }
+        for (String item in readWords) { assert(len(item) > 0); }
     }
     globalValues.add(1);
     globalValue.number = 1; globalValue.text = "abc"; globalValue.values = globalValues;

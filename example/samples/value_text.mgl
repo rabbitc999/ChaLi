@@ -72,7 +72,7 @@ Tracked freshTracked()
     return {
         Tracked value;
         value.value = "tracked";
-        break value;
+        yield (value);
     };
 }
 int64[] freshArray()
