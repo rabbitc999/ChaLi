@@ -2,7 +2,7 @@
 
 已实现功能、默认配置和平台边界统一见[当前能力与实现边界](17-capabilities.md)。
 
-> **中文（默认）** · [English](en/README.md)
+> **中文（默认）** 
 >
 > 英文版与中文版内容对应，代码片段两边完全一致、都经过实测运行。中文版优先维护；
 > 两处说法有出入时以中文版为准。
@@ -82,40 +82,6 @@ Magel 让业务逻辑成为一份可以独立交付的资产：写一次，从�
 - [项目 README](../README.md) —— 构建、快速使用、调试、配置。
 - [入门书《玩转 Magel 语言》](book/README.md) —— 从零开始的 25 章教程与附录，含前后端分离学生系统（配截图）和 H743 解释器实战；完整示例、生成内容与硬件配置按对应回归核验。
 - [完整语法参考（EBNF）](14-grammar-ebnf.md) —— 文法的权威形式，由 [`source/magel.gram`](../source/magel.gram) 生成。
-
-## 英文文档
-
-[`doc/en/`](en/README.md) 是英文版，与上面各篇一一对应（含项目 README 的英文版，共 15 篇）：
-
-| 英文版 | 对应这篇中文 |
-| --- | --- |
-| [../README.en.md](../README.en.md) | [项目 README](../README.md)（构建、快速使用、调试、配置） |
-| [en/README.md](en/README.md) | [文档入口](README.md) |
-| [en/00-vision.md](en/00-vision.md) | [00 使命宣言](00-vision.md) |
-| [en/01-quickstart.md](en/01-quickstart.md) | [01 快速开始](01-quickstart.md) |
-| [en/02-language-tour.md](en/02-language-tour.md) | [02 语言速览](02-language-tour.md) |
-| [en/03-core-concepts.md](en/03-core-concepts.md) | [03 核心概念](03-core-concepts.md) |
-| [en/04-language-reference.md](en/04-language-reference.md) | [04 语言参考](04-language-reference.md) |
-| [en/05-delivery-security.md](en/05-delivery-security.md) | [05 交付安全](05-delivery-security.md) |
-| [en/06-deployment.md](en/06-deployment.md) | [06 跨平台部署](06-deployment.md) |
-| [en/07-stdlib-overview.md](en/07-stdlib-overview.md) | [07 标准库概览](07-stdlib-overview.md) |
-| [en/08-host-integration.md](en/08-host-integration.md) | [08 宿主集成与 C ABI](08-host-integration.md) |
-| [en/09-toolchain.md](en/09-toolchain.md) | [09 工具链使用](09-toolchain.md) |
-| [en/10-roadmap.md](en/10-roadmap.md) | [10 路线图与生态愿景](10-roadmap.md) |
-| [en/13-projects.md](en/13-projects.md) | [13 示例项目](13-projects.md) |
-| [en/99-magel-story.md](en/99-magel-story.md) | [99 Magel 的故事](99-magel-story.md) |
-
-几点说明：
-
-- **只翻译说明文字，代码片段原样保留**（含片段里的中文注释）。文档承诺"每段代码都实测运行过"，
-  校验脚本 `tmp/{tour,core,ref}_check.sh` 是从脚本内的 heredoc 生成片段的；翻了注释两边就对不上，
-  这个承诺就弱了。
-- **中文版优先维护**。两版说法有出入时以中文版为准。
-- **没翻的部分**：底层规格 7 篇（[14](14-grammar-ebnf.md)–[20](20-memory-allocator.md)）、`doc/examples/`（配套工程）、
-  `doc/book/`（入门书《玩转 Magel 语言》）。
-  英文版里指向这几处的链接仍链到中文原文。
-- 根目录 README 保持中文，另有一份逐节对应的英文版 [`README.en.md`](../README.en.md)。
-- 英文版内的相对路径多一层（指向 `example/` 写 `../../example/`）。
 
 ## 其余入口
 
