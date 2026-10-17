@@ -2,14 +2,7 @@
 
 Magel 程序不是孤岛。这篇讲两件事：**Magel 怎么调宿主（C/C++）代码**，以及**宿主怎么把 Magel 程序跑起来**。
 
-`export` 声明的 C 接口只支持 AOT。`magel run` 和 `magel svmb` 遇到它会报
-“C 函数导出仅支持 AOT，VM 执行不支持 export 声明”；`--check` 仍可用于检查源码。
-库源码至少包含一个 `export`，可省略 `main`。`magel aot app.mgl --out app.dll`
-按后缀选择共享库（Linux 使用 `.so`），`--out app.o` 生成可重定位文件供宿主链接。
-`.o` 不直接交给动态加载器；不支持 `.lib` / `.a` 静态库。选项及平台限制见[库输出](09-toolchain.md#aot-库输出)。
-共享库同时生成 C 头文件，宿主通过 `magel_create` 创建独立上下文，调用
-`magel_<函数名>`，最后调用 `magel_destroy`。完整例子见
-[`C 导出及 ABI 合约示例`](examples/abi_contracts/)。
+`export` 声明的 C 导出已不再可用（它只服务过已移除的后端）；`--check` 仍可用来检查源码。
 `abi "库路径" { ... }` 是从 Magel 调用 C 动态库，仍支持 VM 执行。
 
 ---
@@ -20,7 +13,7 @@ Magel 程序不是孤岛。这篇讲两件事：**Magel 怎么调宿主（C/C++�
 | --- | --- | --- |
 | `abi` 块 | 直接调用动态库里按 C ABI 导出的函数 | 需要一份 `.dll` / `.so` |
 | 宿主胶水绑定 | 把 C++ 函数注册进编译器，Magel 侧像普通函数一样调 | 要写一点 C++ |
-| `runMagel` 嵌入 | 宿主程序（含固件）调用编译好的 Magel 逻辑 | 需要 AOT 产物 |
+| `runMagel` 嵌入 | 宿主程序（含固件）调用编译好的 Magel 逻辑 | 需要独立 VM 与字节码 |
 
 ---
 
@@ -168,7 +161,7 @@ impl uint64 : ExplicitConvert<HostHandle<int32>> = demo_counter_from_uint;
 
 ### 从胶水同步调用 Magel 函数
 
-VM 与 AOT 共用 `magel_glue::Function<Result(Args...)>`：Magel 把具名函数、内联 `fn` 或捕获闭包
+VM 使用 `magel_glue::Function<Result(Args...)>`：Magel 把具名函数、内联 `fn` 或捕获闭包
 作为参数传给 C++，胶水直接调用包装。函数返回后继续当前程序，共享全局变量、堆和对象状态。
 
 ```magel
@@ -186,14 +179,13 @@ C++ 注册时的参数类型写成 `magel_glue::Function<std::int64_t(std::int64
 成功时 `rawResult` 是原始返回槽，可用 `Codec<Result>::decode(context, rawResult)` 解码。
 底层入口为 `Context::invoke(functionAddress, encodedArguments, rawResult)`，板端无需依赖类型包装。
 
-| 调用能力 | VM | AOT |
-| --- | --- | --- |
-| 具名函数、内联 `fn`、copy/move 捕获闭包 | 支持 | 支持 |
-| 整数、浮点、布尔、void、引用及高阶函数参数 | 同一 Codec 接口 | 同一 Codec 接口 |
-| Magel → 胶水 → Magel 多层同步重入 | 支持 | 支持 |
-| panic、空函数和参数数量错误 | 终止当前执行并保留原始诊断 | 终止当前执行并保留原始诊断 |
-| 自定义胶水的安装 | 宿主将 Registry 安装到 Machine | `--glue` 编入产物 |
-| `export` C 接口 | 不支持 | 支持 |
+| 调用能力 | VM |
+| --- | --- |
+| 具名函数、内联 `fn`、copy/move 捕获闭包 | 支持 |
+| 整数、浮点、布尔、void、引用及高阶函数参数 | 同一 Codec 接口 |
+| Magel → 胶水 → Magel 多层同步重入 | 支持 |
+| panic、空函数和参数数量错误 | 终止当前执行并保留原始诊断 |
+| 自定义胶水的安装 | 宿主将 Registry 安装到 Machine（`--glue` 可编入构建） |
 
 地址是当前运行时的函数值或闭包句柄，不能强制转换成 C/C++ 机器函数指针。
 包装与上下文只在所属宿主回调期间有效，只能同线程同步调用，不保存后异步使用；
@@ -206,7 +198,7 @@ C++ 注册时的参数类型写成 `magel_glue::Function<std::int64_t(std::int64
 
 ## 4. 把 Magel 嵌进宿主程序
 
-AOT 生成的 C++ 里带着入口：
+独立 VM 的嵌入入口：
 
 ```cpp
 static int runMagel(int argumentCount, const char *const *arguments,
@@ -260,4 +252,4 @@ static int runMagel(int argumentCount, const char *const *arguments,
 | 看能跑起来的完整例子 | [`doc/examples/abi_dynamic/`](../doc/examples/abi_dynamic/)、[`abi_buffers/`](../doc/examples/abi_buffers/)、[`library/sqlite/`](../doc/examples/sqlite/) |
 | 看标准库是怎么接宿主的 | [`source/glue/std_*.hpp`](../source/glue) |
 | 把产物部署到板端 | [跨平台部署](06-deployment.md) |
-| 查 AOT 与命令行选项 | [工具链使用](09-toolchain.md) |
+| 查命令行选项 | [工具链使用](09-toolchain.md) |

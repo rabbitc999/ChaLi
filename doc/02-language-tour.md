@@ -420,7 +420,6 @@ detail square5=25
 | 注解与反射 | 编译期元数据，运行期可查询、可按名调用 | [语言参考](04-language-reference.md) |
 | 协程与并发 | `std::coroutine`、`std::thread` | [标准库概览](07-stdlib-overview.md) |
 | 字节码交付 | `.svmb`、符号压缩 | [交付安全](05-delivery-security.md) |
-| 嵌入式与 AOT | 本地代码生成、内存池、看门狗 | [跨平台部署](06-deployment.md) |
 
 ---
 
