@@ -25,7 +25,6 @@
 #include "magel_package.hpp"
 #include "magel_project.hpp"
 #include "magel_cli.hpp"
-#include "magel-emit/emit_cli.hpp"
 #include "magel-generator/generator_cli.hpp"
 
 #include <chrono>
@@ -467,8 +466,11 @@ int runFrontEnd(const std::vector<std::string> &arguments)
  */
 int runEmitter(const std::vector<std::string> &arguments)
 {
-    std::vector<char *> argv = toArgv("magel-emit", arguments);
-    return magel_emit::runCli(static_cast<int>(argv.size() - 1), argv.data());
+    /* AOT 导出器已从仓库移除；这里只留一个明确的失败出口，防止遗留调用点静默通过。 */
+    (void)arguments;
+    std::fprintf(stderr, MAGEL_TEXT("magel：AOT 导出已移除，没有可用的代码导出器
+"));
+    return 2;
 }
 
 /**
