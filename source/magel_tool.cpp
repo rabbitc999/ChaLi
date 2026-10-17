@@ -55,7 +55,7 @@ namespace
 
 namespace fs = std::filesystem;
 
-const char *const kModeNames[] = { "interpret", "svmb", "aot" };
+const char *const kModeNames[] = { "interpret", "svmb" };
 
 /**
  * @brief 判断命令行文本是否为支持的运行模式。
@@ -691,7 +691,6 @@ int main(int argc, char **argv)
     const bool checking = std::find(arguments.begin(), optionsEnd, "--check") != optionsEnd || std::find(arguments.begin(), optionsEnd, "--diagnostics=json") != optionsEnd;
     if (checking)
     {
-        if (!arguments.empty() && arguments.front() == "aot") arguments.erase(arguments.begin());
         std::vector<char *> checkArgs{ argv[0] };
         for (auto &a : arguments) checkArgs.push_back(a.data());
         return magel_main_entry(static_cast<int>(checkArgs.size()), checkArgs.data());
@@ -702,7 +701,7 @@ int main(int argc, char **argv)
     if (!arguments.empty())
     {
         const std::string &first = arguments.front();
-        if (first == "run" || first == "interpret" || first == "emit" || first == "svmb" || first == "smvb" || first == "aot" || first == "gen" || first == "clear")
+        if (first == "run" || first == "interpret" || first == "emit" || first == "svmb" || first == "smvb" || first == "gen" || first == "clear")
         {
             subcommand = first;
             arguments.erase(arguments.begin());
@@ -738,8 +737,6 @@ int main(int argc, char **argv)
         mode = "emit";
     else if (subcommand == "svmb" || subcommand == "smvb")
         mode = "svmb";
-    else if (subcommand == "aot")
-        mode = "aot";
     else if (subcommand == "gen")
         mode = "gen";
     else if (subcommand == "clear")
@@ -750,7 +747,7 @@ int main(int argc, char **argv)
         const std::string normalized = magel_package::normalizeRunMode(Memory::String(scan.cliMode));
         if (normalized.empty())
         {
-            std::fprintf(stderr, MAGEL_TEXT("magel：不认识的运行方式：%s（用 interpret|svmb|aot）\n"),
+            std::fprintf(stderr, MAGEL_TEXT("magel：不认识的运行方式：%s（用 interpret|emit|svmb）\n"),
                          scan.cliMode.c_str());
             return 2;
         }
@@ -798,21 +795,6 @@ int main(int argc, char **argv)
     if (cleanFlag && subcommand.empty() && scan.cliMode.empty() && scan.source.empty())
         mode = "clear";
 
-    if (mode != "aot" && (std::find(scan.emit.begin(), scan.emit.end(), "--separate-modules") != scan.emit.end() || std::find(scan.emit.begin(), scan.emit.end(), "--module-cache") != scan.emit.end()))
-    {
-        std::fprintf(stderr, "magel：模块独立编译只支持 aot 模式\n");
-        return 2;
-    }
-    if (mode != "aot" && (std::find(scan.emit.begin(), scan.emit.end(), "--unchecked") != scan.emit.end() || std::find(scan.emit.begin(), scan.emit.end(), "--checked") != scan.emit.end()))
-    {
-        std::fprintf(stderr, MAGEL_TEXT("magel：checked / unchecked 只支持 aot 模式\n"));
-        return 2;
-    }
-    if (mode != "aot" && (std::find(scan.emit.begin(), scan.emit.end(), "--shared") != scan.emit.end() || std::find(scan.emit.begin(), scan.emit.end(), "--object") != scan.emit.end()))
-    {
-        std::fprintf(stderr, "magel：库输出只支持 aot 模式\n");
-        return 2;
-    }
     if (mode == "interpret" || mode == "emit" || mode == "svmb")
     {
         if (mode == "emit") AppendCompilerOptions(scan.frontEnd, { "--emit" });
