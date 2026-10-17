@@ -1,4 +1,4 @@
-"""同机比较两版 Magel VM/AOT、JVM、CPython、官方 Lua 和原生 C++，保留全部样本。"""
+"""同机比较 Magel VM/AOT、JVM、CPython、官方 Lua 和原生 C++，保留全部样本；可选追加旧版 Magel 两行。"""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -123,14 +123,20 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--magel',type=Path,default=ROOT/'magel.exe')
     parser.add_argument('--runner',type=Path,required=True)
-    parser.add_argument('--baseline-magel',type=Path,required=True)
-    parser.add_argument('--baseline-runner',type=Path,required=True)
+    parser.add_argument('--magel-label',default='Magel '+(ROOT/'VERSION').read_text().strip())
+    parser.add_argument('--baseline-magel',type=Path,help='旧版编译器；给出后追加旧版 VM 与 AOT 两行')
+    parser.add_argument('--baseline-runner',type=Path)
+    parser.add_argument('--baseline-label',default='Magel baseline')
     parser.add_argument('--repeats',type=int,default=7)
     parser.add_argument('--rounds',type=int,default=2)
     parser.add_argument('--reuse-builds',action='store_true',help='源码和构建指纹一致时复用本机已有产物')
     parser.add_argument('--output',type=Path,default=ROOT/'doc/benchmarks/vm-baselines-0.18.3.json')
     args=parser.parse_args()
     assert args.repeats>0 and args.rounds>0
+    assert bool(args.baseline_magel)==bool(args.baseline_runner),'旧版编译器与运行器必须同时给出'
+    targets=[('103',args.magel.resolve(),args.magel_label,args.runner.resolve())]
+    if args.baseline_magel:
+        targets.append(('102',args.baseline_magel.resolve(),args.baseline_label,args.baseline_runner.resolve()))
     WORK.mkdir(parents=True,exist_ok=True)
     archive=LUA_WORK/'lua-5.5.1.tar.gz'
     assert hashlib.sha256(archive.read_bytes()).hexdigest()==SHA256,'先运行 benchmark_vm_lua.py 下载并构建官方 Lua'
@@ -141,9 +147,9 @@ def main():
         prepare(name)
         run(['g++','-std=c++17','-O2','-DNDEBUG',WORK/(name+'.cpp'),'-o',WORK/(name+suffix)])
         run(['javac','-encoding','UTF-8',WORK/('Case_'+name+'.java')])
-        for label,compiler in [('103',args.magel),('102',args.baseline_magel)]:
-            run([compiler.resolve(),'svmb',WORK/(name+'.mgl'),'out',WORK/(name+'-'+label)])
-            aot_jobs.append((name,label,compiler.resolve()))
+        for label,compiler,_,_ in targets:
+            run([compiler,'svmb',WORK/(name+'.mgl'),'out',WORK/(name+'-'+label)])
+            aot_jobs.append((name,label,compiler))
     def build_aot(job):
         """为单个版本生成 AOT 程序；缓存同时核对源码、编译器和产物哈希。"""
         name,label,compiler=job
@@ -166,7 +172,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='magel-aot-versioned-') as directory:
         isolated_root=Path(directory)
         assert ROOT not in isolated_root.resolve().parents, 'AOT 隔离目录必须位于仓库外'
-        for label,compiler in [('103',args.magel),('102',args.baseline_magel)]:
+        for label,compiler,_,_ in targets:
             (isolated_root/label).mkdir()
             shutil.copy2(compiler,isolated_root/label/'magel.exe')
         with ThreadPoolExecutor(max_workers=2) as pool:
@@ -178,29 +184,28 @@ def main():
             'lua_url':URL,'lua_source_sha256':SHA256,'repeats':args.repeats,'rounds':args.rounds,
             'warmups':{'JVM JIT':20,'others':1},'flags':{'C++':'-std=c++17 -O2 -DNDEBUG; noinline calculation; volatile result sink; fresh stdin input after warmup',
             'JVM JIT':'-Xbatch; 20 full warmups; volatile result sink; fresh stdin input per invocation',
-            'JVM interpreter':'-Xint; 1 full warmup','Magel':'both compilers reflection enabled; both VMs all default optimizations; runner -O2',
-            'Magel AOT':'both versions --opt-level=2 --unchecked --keep-intermediate; GCC -O2; isolated executable and cwd outside repository force version-specific embedded runtime; std::clock::nowNanos around calculate; fresh stdin input after warmup; compare warmup result after timing to retain it',
+            'JVM interpreter':'-Xint; 1 full warmup',            'Magel':'each listed Magel version keeps reflection enabled and all default VM optimizations; runner built -O2 against that version static library',
+            'Magel AOT':'each listed version --opt-level=2 --unchecked --keep-intermediate; GCC -O2; isolated executable and cwd outside repository force version-specific embedded runtime; std::clock::nowNanos around calculate; fresh stdin input after warmup; compare warmup result after timing to retain it',
             'Lua':'official mingw Makefile -O2; no JIT'},
             'timing':'all exclude startup, source compilation and loading; VM includes execution preparation and checksum output; other runtimes measure calculation only; one measured sample per process; rotate order each repeat; serial; all builds finish before measurements',
-            'binaries':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in (args.magel,args.runner,args.baseline_magel,args.baseline_runner,lua)},
+            'binaries':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [*(compiler for _,compiler,_,_ in targets),*(runner for _,_,_,runner in targets),lua]},
             'results':{}}
     report['generated_sources']={p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                                  for p in WORK.iterdir() if p.suffix in ('.mgl','.lua','.py','.java') or (p.suffix=='.cpp' and '.aot.' not in p.name)}
-    report['aot_binaries']={label:{name:hashlib.sha256((WORK/(name+'-aot-'+label+suffix)).read_bytes()).hexdigest() for name,_,_ in CASES} for label in ('103','102')}
+    report['aot_binaries']={label:{name:hashlib.sha256((WORK/(name+'-aot-'+label+suffix)).read_bytes()).hexdigest() for name,_,_ in CASES} for label,_,_,_ in targets}
     if os.name=='nt':
         report['cpu']=json.loads(run(['powershell','-NoProfile','-Command','Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json -Compress']))
     for round_index in range(args.rounds):
         results={}
         for name,count,expected in CASES:
-            modes=[('Magel 0.18.3',[args.runner.resolve(),WORK/(name+'-103'),1,1,count],None),
-                   ('Magel 0.18.2',[args.baseline_runner.resolve(),WORK/(name+'-102'),1,1,count],None),
-                   ('Magel 0.18.3 AOT',[WORK/(name+'-aot-103'+suffix)],(str(count)+'\n')*2),
-                   ('Magel 0.18.2 AOT',[WORK/(name+'-aot-102'+suffix)],(str(count)+'\n')*2),
-                   ('JVM JIT',['java','-Xbatch','-cp',WORK,'Case_'+name,20],(str(count)+'\n')*21),
+            modes=[(label,[runner,WORK/(name+'-'+tag),1,1,count],None) for tag,_,label,runner in targets]
+            modes+=[(label+' AOT',[WORK/(name+'-aot-'+tag+suffix)],(str(count)+'\n')*2) for tag,_,label,_ in targets]
+            modes+=[('JVM JIT',['java','-Xbatch','-cp',WORK,'Case_'+name,20],(str(count)+'\n')*21),
                    ('JVM interpreter',['java','-Xint','-cp',WORK,'Case_'+name,1],(str(count)+'\n')*2),
                    ('Python',[sys.executable,WORK/(name+'.py'),count],None),
                    ('Lua',[lua,WORK/(name+'.lua'),count],None),
                    ('C++',[WORK/(name+suffix)],(str(count)+'\n')*2)]
+            vm_labels={label for _,_,label,_ in targets}
             samples={label:{'samples_ms':[],'checksum':str(expected)} for label,_,_ in modes}
             for repeat in range(args.repeats):
                 shift=(repeat+round_index)%len(modes)
@@ -208,7 +213,7 @@ def main():
                     fields=run(command,input=data).strip().split()
                     assert float(fields[-1])==expected,(name,label,fields,expected)
                     samples[label]['samples_ms'].append(float(fields[0]))
-                    if label in ('Magel 0.18.3','Magel 0.18.2'):
+                    if label in vm_labels:
                         steps=int(fields[1]);assert samples[label].get('logical_steps',steps)==steps
                         samples[label]['logical_steps']=steps
             for value in samples.values(): value['median_ms']=statistics.median(value['samples_ms'])
