@@ -18,6 +18,7 @@
   - 实现链路：VM 原生 `__vm_bint_*` / `__vm_bfloat_*`（`library/stackvm/parts/machine_natives.cpp`，含无 BigInt 编译开关的桩）、方法降级（`source/epilogue/boxing.cpp`）与成员调用类型规则（`source/epilogue/builtins.cpp`）同步；实参按 int/bool/double 自动装箱为大数。
   - 新样例 `example/samples/bigint_methods.mgl`（含期望输出），解释执行与 `magel aot` 导出产物输出一致。
 - 语言转换规则：`int64` 可**隐式**转为 `BigInteger` / `BigDecimal`，`double` 同样隐式转 `BigDecimal`；反向（大数 → `int64` / `double`）必须显式转换，编译期检查。
+- 发布门禁 `ci.sh` 提速：按依赖相位并行（stackvm 两套 cmake 构建、gen.sh、lztext、五个 C++ 单测编译、magel-emit 互相独立并行跑，make 与已就绪的单测运行并行；Python 回归套件因共享 `build/magel_out` 产物保持串行），并行度取 `nproc`；新增全绿缓存——全绿后把「HEAD 提交 + 工作树 porcelain 指纹 + 生成器指纹」存入 `tmp/ci/cache/green`，下次指纹一致且关键产物在就直接跳过，`--force` 强制重跑，任何失败都会清掉缓存。
 - 标准库参考文档、符号索引、`magel_stdlib_api.json` 与内嵌手册同步再生成；`tools/library_reference_data.py` 新增 `BIG_BEHAVIOR`（按 `Owner::name` 精确匹配，避免与 `std::numerics` 同名顶层函数说明冲突）。
 
 ### 2026-10-17

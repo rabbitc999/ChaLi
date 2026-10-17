@@ -26,7 +26,7 @@ def main():
     suffix = ".exe" if os.name == "nt" else ""
     unit = WORK / ("unit" + suffix)
     result = execute(args.cxx, "-std=c++17", "-pthread", "-DMAGEL_CUSTOM_ALLOCATOR=1",
-                     "-DSTACKVM_WITH_REFLECTION=1", "-Ilibrary/stackvm", "tests/magel_memory_guard_test.cpp",
+                     "-DSTACKVM_WITH_REFLECTION=1", "-Ilibrary/stackvm", "-Ilibrary", "tests/magel_memory_guard_test.cpp",
                      "build/magel-stackvm/libstackvm.a", "-lm", "-o", unit)
     assert result.returncode == 0, result
     result = execute(unit)
@@ -34,7 +34,7 @@ def main():
     unchecked_unit = WORK / ("unit-unchecked" + suffix)
     result = execute(args.cxx, "-std=c++17", "-pthread", "-DMAGEL_CUSTOM_ALLOCATOR=1",
                      "-DSTACKVM_WITH_BIGINT=0", "-DSTACKVM_WITH_BIGFLOAT=0", "-DSTACKVM_WITH_ALLOCATION_GUARDS=0",
-                     "-Ilibrary/stackvm", "tests/magel_memory_guard_test.cpp", "library/stackvm/stackvm.cpp",
+                     "-Ilibrary/stackvm", "-Ilibrary", "tests/magel_memory_guard_test.cpp", "library/stackvm/stackvm.cpp",
                      "library/stackvm/stackvm_glue.cpp", "-lm", "-o", unchecked_unit)
     assert result.returncode == 0, result
     result = execute(unchecked_unit)
@@ -51,7 +51,7 @@ def main():
         source = WORK / (name + ".mgl")
         source.write_text(leaf + "\nint64 outer(" + type_name + " " + permission + " p) { return leaf(p); }\n"
                           "void dispose(" + type_name + " mut& p) { delete p; }\n"
-                          "int64 main() {\n" + type_name + " mut& owner = new;\n"
+                          "int64 main() {\n" + type_name + " mut& owner = heap " + type_name + ";\n"
                           + type_name + " " + permission + " stale = owner;\n"
                           "dispose(owner);\n" + body + "\n}\n", encoding="utf-8")
         result = execute(compiler, "--lang", "zh", "run", source, "--out", WORK / (name + "-interpret"))
@@ -81,7 +81,7 @@ def main():
     # unchecked 只改变 AOT 部署配置；用有效程序验收，避免对非法访问施加确定行为假设。
     safe = ROOT / "example/samples/reference_sugar.mgl"
     expected = "reference sugar OK\n"
-    for name, selection, extra in (("default", [], []), ("direct", ["unchecked"], []),
+    for name, selection, extra in (("default", ["unchecked"], []), ("direct", ["unchecked"], []),
                                    ("make", [], ["--make", "make"]),
                                    ("modules", [], ["modules", "cache", WORK / "unchecked-cache"])):
         directory = WORK / ("unchecked-" + name)

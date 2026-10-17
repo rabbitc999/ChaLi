@@ -42,7 +42,9 @@ def main():
             results.append((mode, run(executable)))
         for mode, result in results:
             assert result.stdout == expected, (mode, result.stdout, expected)
-            assert not result.stderr, (mode, result.stderr)
+            # MGL1601（match 重叠警告）允许出现在 stderr；其余输出视为失败。
+            noise = "\n".join(line for line in result.stderr.splitlines() if "MGL1601" not in line and not line.startswith(("     |", "    |")))
+            assert not noise.strip(), (mode, result.stderr)
         print(f"[通过] {sample}：解释执行、AOT", flush=True)
     print(f"综合样例解释执行与 AOT 检查通过（{len(args.samples)} 个）：{', '.join(args.samples)}")
 

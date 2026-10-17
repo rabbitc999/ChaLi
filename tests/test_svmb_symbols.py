@@ -134,9 +134,12 @@ def verify(build, magel=None):
         run(magel, "--out", prefix, source, "--no-compress-symbols", "--incremental")
         assert output.read_bytes().startswith(b"PESVMB")
         # CLI 开启压缩，并用自己的示例生成真实对比。
-        run(magel, "svmb", ROOT / "example/samples/control.mgl", "--out", folder / "current.raw")
+        # --no-reflection：read_raw 只接受 flags==0 的普通 v5，而缺省反射编译会给
+        # control.mgl 打上 kFeatureReflection 位（0x2），这里关掉以保证可读回。
+        run(magel, "svmb", ROOT / "example/samples/control.mgl", "--out", folder / "current.raw",
+            "--no-reflection")
         run(magel, "svmb", ROOT / "example/samples/control.mgl", "--out", folder / "current",
-            "--compress-symbols")
+            "--compress-symbols", "--no-reflection")
         raw = folder / "current.raw.svmb"; compact = folder / "current.svmb"
         assert compress(read_raw(raw.read_bytes()))[0] == compact.read_bytes()
         baseline = run(vm, "run", raw, "--data", folder / "current.raw.data.bin",

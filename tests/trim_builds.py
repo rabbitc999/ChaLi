@@ -24,13 +24,23 @@ def main():
     args = parser.parse_args()
     work = ROOT / "build/trim-tests"
     work.mkdir(parents=True, exist_ok=True)
+    # 三个综合样例迁移到当前语法后应直接跑通；bigint/bigfloat 需要一行 stdin 输入，
+    # 直接喂 example/expected 里 check.sh 用的同一份 .in，避免 --input 传参歧义。
+    stdin_by_sample = {"bigint": "example/expected/bigint.in",
+                       "bigfloat": "example/expected/bigfloat.in"}
     for sample in ["std_math_clock_random", "bigint", "bigfloat"]:
-        result = run([args.magel, ROOT / "example/samples" / (sample + ".mgl"),
-                      "--out", work / sample], succeeds=False)
-        assert result.stderr.strip(), sample
+        command = [args.magel, ROOT / "example/samples" / (sample + ".mgl"),
+                   "--out", work / sample]
+        stdin_text = (ROOT / stdin_by_sample[sample]).read_text(encoding="utf-8") if sample in stdin_by_sample else None
+        result = subprocess.run(list(map(str, command)), cwd=ROOT, capture_output=True,
+                                text=True, encoding="utf-8", errors="replace",
+                                input=stdin_text)
+        if result.returncode != 0:
+            raise AssertionError(f"{command}\n{result.stdout}\n{result.stderr}")
     control = ROOT / "example/samples/control.mgl"
     run([args.magel, control, "--out", work / "control-run"])
-    run([args.magel, control, "--emit", "--out", work / "control"])
+    # `--emit` 只在子命令形式下生效；直接文件调用会把文件后的内容当程序实参。
+    run([args.magel, "emit", control, "--out", work / "control"])
     target = work / ("control" + EXE)
     run([ROOT / "build/magel-emit" / ("magel-emit" + EXE), "--quad", work / "control.quad",
          "--data", work / "control.data.bin", "--layout", work / "control.layout", "--out", target, "--cpp-output"])
@@ -38,8 +48,8 @@ def main():
     host.write_text('#define MAGEL_NO_MAIN\n#include "control' + EXE + '.aot.cpp"\n'
                     '#include <cassert>\n'
                     'int main() { alignas(256) static unsigned char pool[2*1024*1024]; '
-                    'std::size_t peak=0; int result=runMagel(0,nullptr,false,100000,pool,sizeof(pool),&peak); '
-                    'assert(result==0 && peak>0); '
+                    'int result=runMagel(0,nullptr,pool,sizeof(pool)); '
+                    'assert(result==0); '
                     'assert(!Memory::defaultRuntimeAllocatorIfCreated()); }\n', encoding="utf-8")
     binary = work / ("host" + EXE)
     flags = ["-DNO_MAGEL_STD", "-DNO_MAGEL_BIG_INT",

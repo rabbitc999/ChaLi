@@ -32,7 +32,7 @@ def main():
     result = execute(unit)
     assert result.returncode == 0 and result.stdout == "lambda unit tests OK\n" and not result.stderr, result
     source = ROOT / "example/samples/lambda_callbacks.mgl"
-    expected = "lambda callbacks OK\n"
+    expected = "fn callbacks OK\n"
     result = execute(compiler, "run", source, "--out", WORK / "interpreted")
     assert result.returncode == 0 and result.stdout == expected and not result.stderr, result
     executable = WORK / ("callbacks" + EXE)

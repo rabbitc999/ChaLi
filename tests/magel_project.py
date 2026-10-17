@@ -35,7 +35,8 @@ class ProjectTests(unittest.TestCase):
         self.run_cli('new', 'hello-magel', env=env)
         project = self.directory / 'hello-magel'
         self.assertEqual(
-            {p.relative_to(project).as_posix() for p in project.rglob('*') if p.is_file()},
+            {p.relative_to(project).as_posix() for p in project.rglob('*') if p.is_file()
+             and '.git' not in p.relative_to(project).parts},
             {'magel.toml', 'src/main.mgl', 'tests/test_main.mgl', 'README.md', '.gitignore'})
         config = tomllib.loads((project / 'magel.toml').read_text(encoding='utf-8'))
         self.assertEqual(config['package'], {'name': 'hello-magel', 'version': '0.1.0'})
