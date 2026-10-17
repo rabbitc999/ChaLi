@@ -1,7 +1,7 @@
 # 注解与反射
 
 反射针对编译期已存在、显式暴露的具体声明，提供元数据、类型化查询和受限动态调用。
-编译器生成普通 Magel 桥接函数，VM 与 AOT 复用精确类型检查、资源清理和实际接口分派。
+编译器生成普通 Magel 桥接函数，VM 复用精确类型检查、资源清理和实际接口分派。
 它不创建新类型、函数或变体，不提供一般字段写入、引用签名调用或任意聚合装箱。
 值语义、非空引用、确定性 Drop 和借用检查继续适用；分配使用现有 Arena，不承诺零分配或硬实时。
 
@@ -70,7 +70,7 @@ magel/magel run source.mgl --reflection --svmb --emit --out tmp/program
 
 运行时按能力包含关系校验：开启反射支持的 VM 可以运行普通程序；关闭支持的 VM 不能加载、组装或直接运行要求反射的程序。加载失败保留调用者原 `Program`，写出拒绝发生在打开目标文件之前。能力位是兼容契约，不是防篡改签名。
 
-VM/AOT 导出根据输入程序固化内嵌运行时的默认宏，反射产物若被外部宏关闭则编译报错。VM 导出保留 `Program.requiredFeatures`；AOT 源码和模块公共声明包含静态能力检查，模块缓存签名因源码变化自然区分配置。当前写出的反射产物在调试节后追加 schema=1 元数据段；普通和紧凑容器共用编码。无反射能力位时不写段，禁止未标记的非空表。只有能力位而没有段的旧格式产物仍按空表加载；已有段必须完整，不接受未知版本或尾部数据。
+VM 导出根据输入程序固化内嵌运行时的默认宏，反射产物若被外部宏关闭则编译报错。VM 导出保留 `Program.requiredFeatures`。
 
 ## 元数据模型与传输
 
@@ -81,7 +81,7 @@ C++ 宿主值模型与 Magel 类型化查询使用同一元数据来源。`Struc
 
 独立段以 `MCRF` 魔数和小端 32 位 schema=1 开始，随后按模型字段顺序编码。编号及数字位模式使用小端 64 位，长度与偏移为小端 32 位，布尔/可选标志仅接受 0/1；字符串保存原始字节，支持内嵌零。段最多 16 MiB，每个列表最多 4096 项，每个字符串最多 1 MiB，读取分配前检查剩余长度。解码后检查身份、类型引用、注解参数精确类型、字段重名和枚举标签重复。编解码失败保留原输出，加载失败保留 Program，保存拒绝保留已有文件。
 
-四元式注释 `# magel-reflection: <十六进制段>` 可携带表，须同时声明 `# magel-features: reflection`，重复段或非法编码报错。优化保留表。VM 与 AOT 导出把编码数据固化为 C++ 静态字节数组，并提供宿主拥有型表工厂 `magel_reflection_metadata()`；每次通过同一 codec 在调用方 Memory 分配域解码，表由 Program 或宿主局部变量持有并按作用域释放，静态只保存编码字节，运行时不读元数据文件。元数据解码不构造被描述的 Magel 对象。紧凑容器里的反射名称仍明确保留，符号压缩不等于隐藏显式暴露的名称。
+四元式注释 `# magel-reflection: <十六进制段>` 可携带表，须同时声明 `# magel-features: reflection`，重复段或非法编码报错。优化保留表。VM 导出把编码数据固化为 C++ 静态字节数组，并提供宿主拥有型表工厂 `magel_reflection_metadata()`；每次通过同一 codec 在调用方 Memory 分配域解码，表由 Program 或宿主局部变量持有并按作用域释放，静态只保存编码字节，运行时不读元数据文件。元数据解码不构造被描述的 Magel 对象。紧凑容器里的反射名称仍明确保留，符号压缩不等于隐藏显式暴露的名称。
 
 ## 显式暴露声明
 
@@ -159,7 +159,7 @@ python tests/magel_reflection_e2e.py
 调整文档或发布 tag 不会把这些数据变成当前编译器的重新测量。
 
 
-命令：`python tests/magel_reflection_benchmark.py --magel magel/magel-reflection-release.exe --iterations 1000 --repeats 5`。脚本使用 AOT O2，同一可执行程序分别执行静态调用、反射调用及空基线；每种模式预热后交替运行五次，检查相同递推结果。反射路径包括参数更新、精确检查、Result 与 ReflectValue 解包。原始样本见 [性能测量 JSON](reflection-benchmark-2026-10-10.json)。
+命令：`python tests/magel_reflection_benchmark.py --magel magel/magel-reflection-release.exe --iterations 1000 --repeats 5`。脚本使用同一可执行程序分别执行静态调用、反射调用及空基线；每种模式预热后交替运行五次，检查相同递推结果。反射路径包括参数更新、精确检查、Result 与 ReflectValue 解包。原始样本见 [性能测量 JSON](reflection-benchmark-2026-10-10.json)。
 
 | 调用形式 | 空基线中位数 | 静态总时长中位数 | 反射总时长中位数 | 扣除基线后的反射估计/次 |
 | --- | ---: | ---: | ---: | ---: |

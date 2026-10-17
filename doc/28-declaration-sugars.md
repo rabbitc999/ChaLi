@@ -1,6 +1,6 @@
 # 返回表达式、具名闭包与字段派生
 
-[文档索引](README.md) · [English](en/28-declaration-sugars.md)
+[文档索引](README.md)
 
 权威产生式在 [`source/magel.gram`](../source/magel.gram)。ParseEngine 只负责由文法生成解析器；语义动作调用 Magel 自己的 AST 构造与降级函数。以下 IR 均指四元式。
 

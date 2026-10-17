@@ -2,11 +2,6 @@
 
 解释执行可以显式选择 GCC 工具链：
 
-```sh
-magel aot app.mgl --gcc-toolchain g++ --out app.exe
-magel aot app.mgl --gcc-toolchain "D:/GCC/bin/g++.exe" --out app.exe
-magel aot app.mgl --gcc-toolchain "D:/GCC" --out app.exe
-```
 
 目录可以是含有 `bin/g++` 与 `bin/gcc` 的安装根目录，或直接指定 `bin` 目录。
 `gcc` 命令会推导同目录的 `g++`；也可通过 `--cxx`、`--cc` 分别覆盖。
@@ -322,7 +317,7 @@ LSP 对类型名检查大驼峰（PascalCase），对函数和方法名检查小
 
 `magel lsp` 的 stdio JSON-RPC 服务由 `tools/native_development.cpp` 实现，标准库声明从内嵌 JSON 读取；不释放或调用 Python 脚本。普通语言服务也索引 `$macro`、`$replace` 和 `%define`，支持包含文件中的宏文档、定义及参数提示。VSCode 命令 **Magel: 预览宏展开** 调用 `magel/expandMacro`，返回真实预处理和宏展开后的完整源码，包含导入模块，尚未进行 lambda/泛型降低。预览使用只读文档，修改后可重新执行命令。
 
-验证入口：`python tests/magel_native_development.py --aot`（测试驱动使用 Python，受测程序 PATH 不含 Python）、`python tests/magel_native_lsp_parity.py`、`python tests/magel_online_dependencies.py`。旧 Python 实现保留供文档与回归对照，不参与用户运行流程。
+验证入口：`python tests/magel_native_development.py `（测试驱动使用 Python，受测程序 PATH 不含 Python）、`python tests/magel_native_lsp_parity.py`、`python tests/magel_online_dependencies.py`。旧 Python 实现保留供文档与回归对照，不参与用户运行流程。
 
 
 ## 工具链发布脚本

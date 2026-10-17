@@ -1,6 +1,5 @@
 # 墓碑机制调研报告
 
-调研对象：工具链 `library/stackvm/`、内存分配器、核心库内建 lowering 与 watchdog 宿主清理路径。本文记录调研时的实现及最终改动位置；按用户后续要求，板端与桌面最终统一使用 `library/stackvm/`，板端通过宏裁剪线程、AOT、宿主文件 I/O 与异常保护。
 
 ## 原实现
 
@@ -37,7 +36,6 @@
 
 - `source/std/watchdog.mgl` 提供请求重启的语言接口，运行时记录可恢复终止信号。
 - `Machine::run()` 的收尾位于 `library/stackvm/parts/execution.cpp`；所有执行上下文停止后，为可恢复终止清扫当前堆。
-- AOT 的对应收尾为 `library/stackvm/parts/aot_bridge.cpp` 的 `RuntimeBridge::end()`，在线程与协程收尾后处理重启信号并清扫。
 - 宿主随后销毁旧执行状态、重置 arena，并重新运行逻辑。完整 watchdog 重启在墓碑清理效果上等价于完整 sweep()。
 - 板端 `source/stackvm_mcu/mcu_host.cpp` 的重启收尾显式清扫并重置字节池和身份槽，再重置 arena；正常结束后的水位重启也经过该路径。
 - 板端与桌面共用压缩身份索引，按宿主指针位宽选择编码；板端只保留 arena、输入输出和固定字节池适配。

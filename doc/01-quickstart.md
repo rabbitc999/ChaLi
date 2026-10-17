@@ -121,7 +121,6 @@ magel check hello.mgl
 | 只检查不运行 | `magel check src/main.mgl` |
 | 输出 JSON 诊断（给编辑器用） | `magel check src/main.mgl json` |
 | 导出 `.svmb` 字节码 | `magel svmb src/main.mgl out build/app` |
-| 导出本地可执行程序 | `magel aot src/main.mgl out build/app.exe opt 2` |
 | 新建工程 | `magel new hello` |
 | 跑测试 | `magel test tests` |
 | 格式检查 / 写回 | `magel fmt check src` / `magel fmt write src` |

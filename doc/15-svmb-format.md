@@ -337,7 +337,7 @@ exports 是全部 1263 个标签，所以两份都比 Magel 前端产出的略�
 
 ## 10. 只有独立 exe 的时候
 
-本节内嵌 VM 导出的测量属于历史记录。当前已删除该导出模式，现行原生产物使用 AOT；`.svmb` 格式及前文的二进制分析不受影响。
+本节内嵌 VM 导出的测量属于历史记录。当前已删除该导出模式，现行原生产物使用字节码；`.svmb` 格式及前文的二进制分析不受影响。
 
 `magel-emit --target cpp` 会把 VM 源码与程序一起内嵌。实测导出 `control.mgl`：
 生成源码 11 127 109 字节（内嵌 VM 408 669 + 大整数后端 52 542 + 大浮点 21 744 字节），
@@ -471,7 +471,6 @@ nm -C tmp/vm-9700x-pool/gcc64/magel-stackvm.exe | wc -l      # 3631
 build/magel-emit/magel-emit --quad magel/doc/examples/svmb/control.quad \
     --data magel/doc/examples/svmb/control.data.bin \
     --layout magel/doc/examples/svmb/control.layout \
-    --out-dir tmp/svmb-study/export --target cpp-aot \
     --glue magel/source/glue/cpp_glue.cpp --stack-slots 128
 g++ -std=c++17 -O0 -I magel -I magel/library/stackvm \
     tmp/svmb-study/export/control.target.cpp -o tmp/svmb-study/export/program.exe

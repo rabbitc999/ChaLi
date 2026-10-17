@@ -1,6 +1,6 @@
 # 17 当前能力与实现边界
 
-[文档索引](README.md) · [English](en/17-capabilities.md)
+[文档索引](README.md)
 
 本页统一描述当前检出的实现。程序版本读取根目录 [`VERSION`](../VERSION)，变更历史见
 [`CHANGELOG.md`](../CHANGELOG.md)。功能以权威文法、标准库、构建配置与回归测试为依据；
