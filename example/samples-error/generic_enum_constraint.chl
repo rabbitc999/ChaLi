@@ -1,0 +1,15 @@
+interface Valued {
+    int64 value();
+};
+
+struct Plain {
+    int64 number;
+};
+
+enum Box<T: Valued> {
+    Value(T item)
+};
+
+void main() {
+    Box<Plain> value;
+}

@@ -1,0 +1,14 @@
+/* 右向被编译器指令 `#NoRightAdd` 禁止：左向 `a + 5` 能用，右向 `5 + a` 报错。 */
+
+#NoRightAdd
+struct Vec : Add<int64,int64> {
+    int64 v;
+
+    int64 leftAdd(int64 other) { return self.v + other; }
+};
+
+void main() {
+    Vec a;
+    a.v = 10;
+    println("5 + a = {}", 5 + a);
+}

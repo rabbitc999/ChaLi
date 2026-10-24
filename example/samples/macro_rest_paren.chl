@@ -1,0 +1,36 @@
+/* 变长实参按 AST 列表展开，表达式本身保留优先级。 */
+$macro SUM_SQUARES(...values)
+int64 totalA = 0;
+$for v in values
+totalA = totalA + v * v;
+$end_for
+println("平方和 = {}", totalA);
+$end_macro
+
+$macro SUM_SQUARES_PLAIN(...values)
+int64 totalB = 0;
+$for v in values
+totalB = totalB + v * v;
+$end_for
+println("平方和 = {}", totalB);
+$end_macro
+
+$macro SUM3(...values)
+sum3(values)
+$end_macro
+
+
+$macro PAIR(a, b)
+(a, b)
+$end_macro
+
+int64 sum3(int64 a, int64 b, int64 c) { return a + b + c; }
+int64 pairCode((int64, int64) pair) { return (pair.0) * 10 + (pair.1); }
+
+void main() {
+    $SUM_SQUARES(1 + 1, 2 + 1);
+    $SUM_SQUARES_PLAIN(1 + 1, 2 + 1);
+    println("{}", $SUM3(1, 2, 3) * 10);
+
+    println("{}", pairCode($PAIR(1 + 1, 2 + 2)));
+}

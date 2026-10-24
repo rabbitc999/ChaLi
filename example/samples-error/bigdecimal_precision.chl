@@ -1,0 +1,4 @@
+void main() {
+    std::lang::BigDecimal value = std::lang::BigDecimal("1.25");
+    value.setPrecision(0);
+}

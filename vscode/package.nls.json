@@ -1,0 +1,19 @@
+{
+  "chali.restartServer.title": "ChaLi: Restart Language Server",
+  "chali.showServerLog.title": "ChaLi: Show Language Server Log",
+  "chali.openDoc.title": "ChaLi: Open Language Documentation",
+  "chali.run.title": "ChaLi: Run Current File",
+  "chali.installDependencies.title": "ChaLi: Download and Lock Module Dependencies",
+  "chali.checkDependencies.title": "ChaLi: Check Module Dependencies Offline",
+  "chali.openLibraries.title": "ChaLi: Open Dependency Cache",
+  "chali.previewMacroExpansion.title": "ChaLi: Preview Macro Expansion",
+  "chali.build.title": "ChaLi: Build Current File",
+  "chali.buildExe.title": "ChaLi: Build Executable (LLVM AOT)",
+  "chali.buildSvmb.title": "ChaLi: Build VM Bytecode (.svmb)",
+  "chali.path.description": "ChaLi compiler path. Empty selects the bundled compiler, then the workspace and PATH.",
+  "chali.traceServer.description": "Write language server protocol messages to the output channel for troubleshooting.",
+  "chali.inlayHints.enabled.description": "Show inferred types for let, for-in elements and contextually typed fn parameters.",
+  "chali.build.outputDirectory.description": "Build output directory, relative to the nearest ChaLi project or the source directory when no project manifest exists.",
+  "chali.build.llvmPath.description": "External LLVM clang path for native builds. Empty uses the built-in backend or default toolchain.",
+  "chali.build.checked.description": "Generate explicit bounds and null-pointer checks for LLVM AOT builds."
+}

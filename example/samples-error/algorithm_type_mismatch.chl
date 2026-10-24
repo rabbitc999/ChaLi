@@ -1,0 +1,6 @@
+import std::algorithms;
+
+void main() {
+    std::lang::List<int64> values;
+    let __ignored1 = std::algorithms::findValue<int64>(values, "text");
+}

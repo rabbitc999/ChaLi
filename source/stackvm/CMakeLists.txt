@@ -1,0 +1,80 @@
+cmake_minimum_required(VERSION 3.15)
+project(ChaLiStackVM LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
+option(STACKVM_WITH_REFLECTION "启用注解与反射运行时支持" ON)
+option(STACKVM_WITH_PANIC_TRACE "Retain panic call stacks" ON)
+option(STACKVM_WITH_THREADS "编入宿主线程和共享值" ON)
+option(STACKVM_WITH_DEFAULT_HEAP "编入默认动态字节堆" ON)
+option(STACKVM_WITH_HOST_EXCEPTION_GUARD "保护宿主回调异常" ON)
+option(STACKVM_WITH_HOST_IO "编入按路径加载与保存" ON)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/core_sources.txt")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/core_sources.txt" STACKVM_CORE_SOURCES)
+add_library(chali_stackvm STATIC ${STACKVM_CORE_SOURCES})
+target_include_directories(chali_stackvm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
+foreach(feature THREADS DEFAULT_HEAP HOST_EXCEPTION_GUARD HOST_IO)
+    target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_${feature}=$<BOOL:${STACKVM_WITH_${feature}}>)
+endforeach()
+target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
+target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_PANIC_TRACE=$<BOOL:${STACKVM_WITH_PANIC_TRACE}>)
+add_subdirectory(../../source/glue ${CMAKE_CURRENT_BINARY_DIR}/standard-records)
+add_executable(chali-stackvm main.cpp)
+target_link_libraries(chali-stackvm PRIVATE chali_stackvm chali_standard_records)
+
+add_executable(chali-stackvm-benchmark benchmark_stackvm.cpp)
+target_link_libraries(chali-stackvm-benchmark PRIVATE chali_stackvm)
+
+add_executable(chali-stackvm-chali-benchmark benchmark_chali.cpp)
+target_link_libraries(chali-stackvm-chali-benchmark PRIVATE chali_stackvm)
+
+add_executable(chali-stackvm-tests test_stackvm.cpp)
+target_link_libraries(chali-stackvm-tests PRIVATE chali_stackvm chali_standard_records)
+
+target_compile_definitions(chali_stackvm PUBLIC CHALI_CUSTOM_ALLOCATOR=1)
+
+add_executable(svmb_symtool svmb_symtool.cpp ../json/json.cpp)
+target_link_libraries(svmb_symtool PRIVATE chali_stackvm)
+
+add_executable(chali-symbol-tests test_symbols.cpp)
+target_link_libraries(chali-symbol-tests PRIVATE chali_stackvm)
+enable_testing()
+add_executable(chali-artifact-tests test_artifacts.cpp)
+target_link_libraries(chali-artifact-tests PRIVATE chali_stackvm)
+add_test(NAME binary-artifacts COMMAND chali-artifact-tests)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/chali_runtime_events_test.cpp")
+    add_executable(chali-runtime-event-tests ../../tests/chali_runtime_events_test.cpp)
+    target_link_libraries(chali-runtime-event-tests PRIVATE chali_stackvm)
+    add_test(NAME runtime-host-events COMMAND chali-runtime-event-tests)
+    set_tests_properties(runtime-host-events PROPERTIES TIMEOUT 20)
+endif()
+add_test(NAME symbols COMMAND chali-symbol-tests ${CMAKE_CURRENT_BINARY_DIR}/symbol-fixtures)
+add_executable(chali-panic-tests test_panic.cpp)
+target_link_libraries(chali-panic-tests PRIVATE chali_stackvm)
+add_test(NAME panic-trace COMMAND chali-panic-tests ${CMAKE_CURRENT_BINARY_DIR}/panic-compact.svmb)
+
+set_tests_properties(panic-trace PROPERTIES TIMEOUT 20)
+
+add_executable(chali-feature-tests test_features.cpp)
+target_link_libraries(chali-feature-tests PRIVATE chali_stackvm)
+add_test(NAME feature-contract COMMAND chali-feature-tests ${CMAKE_CURRENT_BINARY_DIR}/feature-fixtures)
+
+add_executable(chali-reflection-tests test_reflection.cpp)
+target_link_libraries(chali-reflection-tests PRIVATE chali_stackvm)
+add_test(NAME reflection-metadata COMMAND chali-reflection-tests ${CMAKE_CURRENT_BINARY_DIR}/reflection-fixtures)
+
+# 回归中的原始诊断断言采用中文；语言切换另由专项测试验证。
+set_tests_properties(symbols panic-trace feature-contract reflection-metadata PROPERTIES ENVIRONMENT "CHALI_LANG=zh")
+
+# IR 与执行器的差分门禁同时用于桌面和裁剪构建。
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/build")
+foreach(case quad_optimization optimizer_metadata execution_plan)
+    add_executable(chali-${case}-tests ../../tests/stackvm_${case}.cpp)
+    target_link_libraries(chali-${case}-tests PRIVATE chali_stackvm)
+    add_test(NAME ${case} COMMAND chali-${case}-tests)
+    set_tests_properties(${case} PROPERTIES ENVIRONMENT "CHALI_LANG=zh")
+endforeach()

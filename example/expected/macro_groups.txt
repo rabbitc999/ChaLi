@@ -1,0 +1,5 @@
+readonly
+x
+ y
+5
+repeated empty groups

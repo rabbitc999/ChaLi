@@ -1,0 +1,1904 @@
+/**
+ * @file chali_aot.cpp
+ * @brief 将优化后的 ChaLi 四元式直接降低为 LLVM 中间表示并生成原生产物。
+ */
+#include "chali_aot.hpp"
+#include "chali_aot_llvm.hpp"
+#include "chali_aot_runtime_assets.hpp"
+#include "chali_stdlib.hpp"
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+namespace chali_aot
+{
+namespace
+{
+/**
+ * @brief 将四元式符号中的标点编码为 LLVM 标识符可用的字符。
+ * @param name 原始符号名。
+ * @return 不含标点的标识符片段。
+ */
+Memory::String sanitize(const Memory::String &name)
+{
+    Memory::String out;
+    for (const char c : name)
+    {
+        const bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+        out += ok ? c : '_';
+    }
+    return out;
+}
+
+/**
+ * @brief 将整数偏移或计数转换为十进制文本。
+ * @param value 待表示的有符号整数。
+ * @return 可写入 LLVM 模块的十进制文本。
+ */
+Memory::String decimal(long long value)
+{
+    char buffer[32];
+    std::snprintf(buffer, sizeof(buffer), "%lld", value);
+    return Memory::String(buffer);
+}
+
+/**
+ * @brief 识别包含小数点或指数部分的浮点立即数。
+ * @param token 四元式操作数文本。
+ * @return 具有浮点词法形态时返回 true。
+ */
+bool literalIsFloat(const Memory::String &token)
+{
+    if (token.empty()) return false;
+    bool digit = false;
+    for (std::size_t index = 0; index < token.size(); ++index)
+    {
+        const char c = token[index];
+        if (c == '.') return true;
+        if ((c == 'e' || c == 'E') && digit && index + 1u < token.size()) return true;
+        if (c >= '0' && c <= '9') digit = true;
+    }
+    return false;
+}
+
+/**
+ * @brief 判断操作数字段是否表示类型或存储类别。
+ * @param token 待检查的四元式字段。
+ * @return 属于已知类型或存储类别时返回 true。
+ */
+bool isTypeName(const Memory::String &token)
+{
+    static const std::set<std::string> names = {
+        "i8",
+        "i16",
+        "i32",
+        "i64",
+        "u8",
+        "u16",
+        "u32",
+        "u64",
+        "f32",
+        "f64",
+        "bool",
+        "char",
+        "string",
+        "void",
+        "local",
+        "global",
+        "param",
+        "field",
+        "const",
+    };
+    return names.count(std::string(token.c_str())) != 0u;
+}
+
+/**
+ * @brief 区分四元式符号与数字立即数。
+ * @param token 待检查的操作数。
+ * @return 非空且不以数字或正负号开头时返回 true。
+ */
+bool literalIsName(const Memory::String &token)
+{
+    if (token.empty()) return false;
+    const char first = token.front();
+    return !(first == '-' || first == '+' || (first >= '0' && first <= '9'));
+}
+
+/* ------------------------------------------------------------ 类型与形态 */
+
+/**
+ * @brief 一个值的种类（决定 LLVM 类型与输出方法）。
+ */
+enum class Kind
+{
+    Int,     ///< 整数与地址（统一使用 i64）。
+    Float,   ///< `double`。
+    String,  ///< 字符串：值仍是地址，但打印与释放按串处理。
+};
+
+/** @brief 类型后缀 → 位宽与有无符号、是否浮点。 */
+struct Width
+{
+    int bits = 64;
+    bool unsigned_ = false;
+    bool float_ = false;
+};
+
+/**
+ * @brief 拆分四元式操作符及其类型后缀，保留赋值操作符。
+ * @param op 完整操作符。
+ * @param base 接收不含类型后缀的操作符。
+ * @param suffix 接收类型后缀；没有后缀时清空。
+ */
+void splitOperation(const Memory::String &op, Memory::String &base, Memory::String &suffix)
+{
+    /* `:=` 不是"带类型后缀的运算"——按 find(':') 切会切出 base="" / suffix="="，
+     * 于是赋值目标被当成整数重新标一遍，`float64 fromInt = 2` 这类就丢了浮点种类。 */
+    const std::size_t colon = op.find(':');
+    if (colon == Memory::String::npos || colon == 0u)
+    {
+        base = op;
+        suffix.clear();
+        return;
+    }
+    base = op.substr(0, colon);
+    suffix = op.substr(colon + 1u);
+}
+
+/**
+ * @brief 识别结果为布尔整数的比较和逻辑操作。
+ * @param base 不含类型后缀的操作符。
+ * @return 属于比较或逻辑操作时返回 true。
+ */
+bool isLogicalOperator(const Memory::String &base)
+{
+    return base == "eq" || base == "ne" || base == "lt" || base == "le" || base == "gt" || base == "ge" || base == "==" || base == "!=" || base == "<" || base == "<=" || base == ">" || base == ">=" || base == "and" || base == "or" || base == "not";
+}
+
+/**
+ * @brief 解析四元式类型后缀的位宽、符号和浮点类别。
+ * @param suffix i8、u32、f64 等后缀；空值按 i64。
+ * @return 解析后的标量位宽信息。
+ */
+Width widthOf(const Memory::String &suffix)
+{
+    Width width;
+    if (suffix.empty()) return width;
+    if (suffix == "f32")
+    {
+        width.bits = 32;
+        width.float_ = true;
+        return width;
+    }
+    if (suffix == "f64")
+    {
+        width.bits = 64;
+        width.float_ = true;
+        return width;
+    }
+    if (!suffix.empty() && suffix.front() == 'u') width.unsigned_ = true;
+    Memory::String digits = suffix;
+    if (!digits.empty() && (digits.front() == 'u' || digits.front() == 'i')) digits = digits.substr(1u);
+    int value = 64;
+    if (!digits.empty())
+    {
+        value = 0;
+        for (const char c : digits)
+            if (c >= '0' && c <= '9') value = value * 10 + (c - '0');
+    }
+    width.bits = value == 0 ? 64 : value;
+    return width;
+}
+
+/**
+ * @brief 从声明的四元式类型推断统一存储类别。
+ * @param name 声明使用的四元式类型名。
+ * @return f32 和 f64 返回浮点类别，其余返回整数或句柄类别。
+ */
+Kind declarationKind(const Memory::String &name)
+{
+    return name == "f32" || name == "f64" ? Kind::Float : Kind::Int;
+}
+
+/* ------------------------------------------------------------ 生成器主体 */
+
+/**
+ * @brief 一个 ChaLi 函数（或一段清理块）在 LLVM 模块中的函数范围。
+ */
+struct Function
+{
+    Memory::String label;                       ///< 四元式标签。
+    Memory::String llvmName;                    ///< 生成的 LLVM 函数名。
+    std::size_t begin = 0;                      ///< 起始四元式下标（含标签之前的形参 decl）。
+    std::size_t labelIndex = 0;                 ///< 入口 `label` 这条四元式的下标。
+    std::size_t end = 0;                        ///< 结束下标（不含）。
+    Memory::Vector<Memory::String> parameters;  ///< 形参名（按序）。
+    bool exported = false;                      ///< 是否导出给 C。
+    bool returnsFloat = false;                  ///< `ret` 出来的是不是浮点。
+    bool returnsString = false;                 ///< `ret` 出来的是不是字符串。
+};
+
+/**
+ * @brief 一次 AOT 翻译的全部中间状态。
+ */
+struct Translator
+{
+    const Request &request;
+    Memory::Vector<Memory::String> *diagnostics;
+
+    std::vector<Function> functions;
+    std::unordered_map<std::string, std::size_t> functionByLabel;  ///< 标签 → functions 下标。
+    std::unordered_map<std::string, std::string> variableName;     ///< 四元式名字 → LLVM 符号名。
+    std::unordered_map<std::string, Kind> kinds;                   ///< 名字 → 种类。
+    std::unordered_map<std::string, std::string> globals;          ///< 全局量 → LLVM 符号名（`g_x`）。
+    std::unordered_map<std::string, std::size_t> dataOffsets;      ///< 数据区符号 → 偏移。
+    std::unordered_map<std::string, const ExternFunction *> externsByLabel;
+    std::set<std::string> usedExternLabels;  ///< 仅为可达调用生成外部声明。
+    /* 从 `main`（与 `--export` 点名的函数）出发沿 `call` 边能走到的标签。
+     * 标准库里绝大多数段落这份程序根本不会跑，走不到的就不翻译——
+     * 仅翻译实际可达函数，链接完整、语义不变，翻译量却降一个数量级。 */
+    std::set<std::string> reachable;
+    std::map<std::string, std::size_t> nativeNames;               ///< 本模块实际调用的原生服务名称。
+    std::map<std::string, std::size_t> sourceFiles;               ///< 可达指令的源码文件，用于原生错误定位。
+    std::set<std::string> addressedFunctions;                     ///< 数据映像中实际保存了地址的函数。
+    std::set<std::string> callbackReachable;                      ///< 可从函数值回调到达的语言函数。
+    bool watchdogUsed = false;                                    ///< 可达程序使用看门狗时生成逻辑指令安全点。
+    std::map<std::string, std::set<std::string>> temporaryUsers;  ///< 临时符号的实际使用函数，用于识别跨函数共享值。
+
+    /**
+     * @brief 保存本次四元式分析请求和诊断输出。
+     * @param in 本次 AOT 请求。
+     * @param out 可选的诊断容器。
+     */
+    explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out) {}
+
+    /**
+     * @brief 登记翻译错误并限制级联诊断数量。
+     * @param message 实际失败原因。
+     */
+    void fail(const Memory::String &message)
+    {
+        if (diagnostics != nullptr && diagnostics->size() < 32u) diagnostics->push_back(message);
+    }
+
+    /**
+     * @brief 为四元式符号分配可重复查询的唯一模块名称。
+     * @param name 原始符号。
+     * @param prefix 区分名称用途的前缀。
+     * @return 已登记或新分配的符号名称。
+     */
+    Memory::String identifier(const Memory::String &name, const Memory::String &prefix)
+    {
+        auto found = variableName.find(std::string(name.c_str()));
+        if (found != variableName.end()) return Memory::String(found->second.c_str());
+        const Memory::String made = prefix + decimal(static_cast<long long>(variableName.size())) + "_" + sanitize(name);
+        variableName.emplace(std::string(name.c_str()), std::string(made.c_str()));
+        return made;
+    }
+
+    /**
+     * @brief 解析声明的全局符号或分配普通符号名称。
+     * @param name 四元式变量名。
+     * @return 生成 LLVM 全局槽和局部槽所用的名称。
+     */
+    Memory::String use(const Memory::String &name)
+    {
+        /* 全局量（decl 的第二个格子写 `global`）是全程序一份，不能当局部形参见谁谁传。 */
+        const auto found = globals.find(std::string(name.c_str()));
+        if (found != globals.end()) return Memory::String(found->second.c_str());
+        return identifier(name, "v");
+    }
+
+    /**
+     * @brief 读取符号的值类别。
+     * @param name 待查询符号。
+     * @return 已推断类别；未知符号按整数处理。
+     */
+    Kind kindOf(const Memory::String &name)
+    {
+        const auto found = kinds.find(std::string(name.c_str()));
+        return found == kinds.end() ? Kind::Int : found->second;
+    }
+
+    /**
+     * @brief 更新非立即数符号的类别并保留字符串标记。
+     * @param name 目标符号。
+     * @param kind 拟登记的值类别。
+     * @return 实际类别发生变化时返回 true。
+     */
+    bool markKind(const Memory::String &name, Kind kind)
+    {
+        if (name.empty() || !literalIsName(name)) return false;
+        const auto found = kinds.find(std::string(name.c_str()));
+        if (found != kinds.end() && (found->second == Kind::String || found->second == kind)) return false; /* 一旦是串就不再改 */
+        kinds[std::string(name.c_str())] = kind;
+        return true;
+    }
+
+    /**
+     * @brief 标记一个有效符号为字符串句柄。
+     * @param name 承载字符串句柄的四元式符号。
+     */
+    void markString(const Memory::String &name)
+    {
+        if (name.empty() || !literalIsName(name)) return;
+        kinds[std::string(name.c_str())] = Kind::String;
+    }
+
+    /**
+     * @brief 查找数据符号在初始化映像中的字节偏移。
+     * @param symbol 数据区符号名。
+     * @return 找到时返回非负偏移，否则返回 -1。
+     */
+    std::int64_t offsetOf(const Memory::String &symbol) const
+    {
+        const auto found = dataOffsets.find(std::string(symbol.c_str()));
+        return found == dataOffsets.end() ? -1 : static_cast<std::int64_t>(found->second);
+    }
+};
+
+/**
+ * @brief 解码数据布局并建立数据符号偏移表。
+ * @param state 接收布局映射及解析诊断的分析状态。
+ */
+void loadLayout(Translator &state)
+{
+    Memory::Vector<stackvm::LayoutRow> rows;
+    if (!stackvm::decodeDataLayout(state.request.dataLayout, rows))
+    {
+        state.fail("AOT：读不懂数据区布局");
+        return;
+    }
+    for (const auto &row : rows) state.dataOffsets.emplace(std::string(row.name.c_str()), row.offset);
+}
+
+/**
+ * @brief 从函数入口、声明和调用关系推断签名、类型及可达函数。
+ * @param state 持有输入四元式并接收分析结果的状态。
+ */
+void analyze(Translator &state)
+{
+    const stackvm::QuadFile *file = state.request.quads;
+    if (file == nullptr)
+    {
+        state.fail("AOT：没有四元式输入");
+        return;
+    }
+    const Memory::Vector<stackvm::Quad> &quads = file->quads;
+    for (const auto &function : state.request.externs)
+    {
+        state.externsByLabel.emplace(std::string(function.label.c_str()), &function);
+    }
+
+    /* 1) 哪些标签是函数入口：被 `call` 点名的，加上 `main`。
+     * 同时把所有 `label` 的名字收下来——跳转标签不是变量，别混进形参表。 */
+    std::set<std::string> entryLabels{ "main", "__chali_library_init", "__chali_library_finish" };
+    std::set<std::string> labelNames;
+    for (const auto &quad : quads)
+    {
+        if (quad.op == "call" && !quad.args.empty()) entryLabels.insert(std::string(quad.arg(0).c_str()));
+        if (quad.op == "label" && quad.args.size() >= 3u) labelNames.insert(std::string(quad.arg(2).c_str()));
+        if (quad.op == "label" && !quad.arg(2).empty())
+        {
+            const auto label = quad.arg(2);
+            const auto address = state.request.dataBytes.find(label + Memory::String(1, '\0'));
+            if (address != Memory::String::npos && (address == 0 || state.request.dataBytes[address - 1] == '\0'))
+            {
+                entryLabels.insert(std::string(label.c_str()));
+                state.addressedFunctions.insert(std::string(label.c_str()));
+            }
+        }
+    }
+    // 组装器的形参候选表可能把局部声明后的内部标签当成入口。
+    // 无回边的块表达式也有循环标签，不能只靠跳转目标过滤；内部辅助函数以真实调用或函数值为准。
+    std::set<std::string> branchTargets;
+    for (const auto &quad : quads)
+        if (quad.op == "j" || quad.op == "jz" || quad.op == "jnz") branchTargets.insert(std::string(quad.arg(2).c_str()));
+    if (state.request.program != nullptr)
+        for (const auto &entry : state.request.program->parameters)
+            if (branchTargets.count(std::string(entry.first.c_str())) == 0u && entry.first.rfind("__chali_", 0u) != 0u)
+                entryLabels.insert(std::string(entry.first.c_str()));
+    for (const auto &entry : state.request.options.exports) entryLabels.insert(std::string(entry.c_str()));
+
+    /* 2) 切段：每个函数入口到下一个入口之间是一段。
+     * ChaLi 把形参的 `decl` 排在函数标签**之前**（紧跟着上一段的 `ret`），所以新段的起点
+     * 要往前吞掉这一串 `decl`；上一段的终点同步回退，别把别人的形参声明抢走。 */
+    std::size_t index = 0;
+    while (index < quads.size())
+    {
+        const auto &quad = quads[index];
+        if (quad.op != "label" || quad.args.size() < 3u || entryLabels.count(std::string(quad.arg(2).c_str())) == 0u)
+        {
+            ++index;
+            continue;
+        }
+        std::size_t begin = index;
+        while (begin > 0u && quads[begin - 1u].op == "decl") --begin;
+        Function function;
+        function.label = quad.arg(2);
+        function.llvmName = "f_" + sanitize(function.label);
+        if (sanitize(function.label) != function.label)
+            function.llvmName = "f_" + decimal(static_cast<long long>(state.functions.size())) + "_" + sanitize(function.label);
+        function.begin = begin;
+        function.labelIndex = index;
+        if (!state.functions.empty()) state.functions.back().end = begin; /* 交出尾巴上的形参 decl */
+        std::size_t end = index + 1u;
+        while (end < quads.size())
+        {
+            const auto &next = quads[end];
+            if (next.op == "label" && next.args.size() >= 3u && entryLabels.count(std::string(next.arg(2).c_str())) != 0u) break;
+            if (next.op == "halt") break;
+            ++end;
+        }
+        function.end = end;
+        if (state.request.program != nullptr)
+        {
+            const auto found = state.request.program->parameters.find(function.label);
+            if (found != state.request.program->parameters.end()) function.parameters = found->second;
+        }
+        state.functionByLabel.emplace(std::string(function.label.c_str()), state.functions.size());
+        state.functions.push_back(function);
+        index = end;
+    }
+    /* 2.1 全局量：`decl(<类型>, global, 名字)`。它们全程序一份，
+     * 既不进形参表也不在函数里声明局部——`const int64 N = 4000000` 就是这一类。 */
+    for (const auto &quad : quads)
+    {
+        if (quad.op != "decl" || quad.args.size() < 3u) continue;
+        if (quad.arg(1) != "global") continue;
+        const Memory::String &name = quad.arg(2);
+        if (name.empty() || name == "_") continue;
+        state.globals.emplace(std::string(name.c_str()), "g_" + decimal(static_cast<long long>(state.globals.size())) + "_" + sanitize(name));
+    }
+    /* 2.2 形参表：入口标签之前那串 `decl` 就是形参声明，按出现顺序。
+     * 这比"只读不写"的推断准得多——`String.length` 的 `self`、`half` 的 `x$193` 都靠它认出来。 */
+    for (auto &function : state.functions)
+        for (std::size_t at = function.begin; at < function.labelIndex; ++at)
+        {
+            const auto &quad = quads[at];
+            if (quad.op != "decl" || quad.args.size() < 3u) continue;
+            const Memory::String &name = quad.arg(2);
+            if (name.empty() || name == "_") continue;
+            if (std::find(function.parameters.begin(), function.parameters.end(), name) != function.parameters.end()) continue;
+            function.parameters.push_back(name);
+        }
+    /* 2.5 形参推断：段内只被读、从没被写过的名字就是形参。
+     * `program` 给不出参数表时（AOT 直接读 `.quad` 就是这种情况）靠这一遍补齐——
+     * 少了它，`__chali_len` 这类形参在产物里就是没声明的标识符。 */
+    for (auto &function : state.functions)
+    {
+        std::set<std::string> written;
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = quads[at];
+            if (quad.args.size() < 3u) continue;
+            const Memory::String &target = quad.arg(2);
+            if (!literalIsName(target)) continue;
+            if (quad.op == "decl" || quad.op == ":=" || quad.op == "call" || quad.op == "addr" || quad.op == "alloc" || quad.op.rfind("load", 0) == 0u || quad.op.find(':') != Memory::String::npos)
+                written.insert(std::string(target.c_str()));
+        }
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = quads[at];
+            /* `decl(i64, local, v)` 的前两格是类型与存储类，`call(f, ...)` 的第一格是被调者，
+             * 跳转指令的第一格之外还有标签——它们都不是变量，别混进形参表里。 */
+            if (quad.op == "decl" || quad.op == "label") continue;
+            for (std::size_t slot = 0u; slot + 1u < quad.args.size() && slot < 2u; ++slot)
+            {
+                if (slot == 0u && quad.op == "call") continue;
+                const Memory::String &name = quad.args[slot];
+                if (name.empty() || name == "_" || !literalIsName(name)) continue;
+                if (isTypeName(name)) continue;                                         /* 类型名不是变量 */
+                if (name.rfind("__temp_", 0) == 0u) continue;                           /* 临时量必然会被写 */
+                if (state.dataOffsets.count(std::string(name.c_str())) != 0u) continue; /* 数据区符号不是变量 */
+                if (state.globals.count(std::string(name.c_str())) != 0u) continue;     /* 全局量不是形参 */
+                if (entryLabels.count(std::string(name.c_str())) != 0u) continue;       /* 函数标签 */
+                if (labelNames.count(std::string(name.c_str())) != 0u) continue;        /* 跳转标签 */
+                if (written.count(std::string(name.c_str())) != 0u) continue;
+                if (std::find(function.parameters.begin(), function.parameters.end(), name) != function.parameters.end()) continue;
+                function.parameters.push_back(name);
+            }
+        }
+    }
+    /* 函数入口可能重复出现（同名标签只留第一段）。 */
+    for (const auto &name : state.request.options.exports)
+    {
+        const auto found = state.functionByLabel.find(std::string(name.c_str()));
+        if (found != state.functionByLabel.end())
+        {
+            auto &function = state.functions[found->second];
+            function.exported = true;
+            if (function.label.rfind("program::", 0) == 0)
+                function.llvmName = "f_" + sanitize(function.label.substr(9));
+        }
+    }
+    if (state.functions.empty()) state.fail("AOT：四元式里没有可翻译的函数");
+
+    /* 4) 种类推断：先按 decl 与运算目标打底，再沿 `:=` 传播浮点 / 字符串。 */
+    for (std::size_t at = 0; at < quads.size(); ++at)
+    {
+        const auto &quad = quads[at];
+        if (quad.op == "decl" && quad.args.size() >= 3u)
+        {
+            state.markKind(quad.arg(2), declarationKind(quad.arg(0)));
+        }
+        Memory::String base, suffix;
+        splitOperation(quad.op, base, suffix);
+        if (base == "cvt")
+        {
+            const Width width = widthOf(suffix);
+            if (quad.args.size() >= 3u) state.markKind(quad.arg(2), width.float_ ? Kind::Float : Kind::Int);
+            continue;
+        }
+        if (!suffix.empty() && quad.args.size() >= 3u)
+        {
+            const Width width = widthOf(suffix);
+            state.markKind(quad.arg(2), (width.float_ && !isLogicalOperator(base)) ? Kind::Float : Kind::Int);
+        }
+        /* 比较 / 逻辑运算即使不带后缀，结果也得是整数（`ne`、`and` 这种）。 */
+        if (isLogicalOperator(base) && quad.args.size() >= 3u && state.kindOf(quad.arg(2)) != Kind::String)
+            state.markKind(quad.arg(2), Kind::Int);
+    }
+    /* 4.5 字符串来源：只认**确实返回字符串**的那几个内建。
+     * 不能按名字里含 `String` 来猜——`std::lang::String.length` 返回的是整数，
+     * `__std_str_len` 也是，猜错就会把长度当字符串打印。 */
+    for (std::size_t at = 0; at < quads.size(); ++at)
+    {
+        const auto &quad = quads[at];
+        if (quad.op != "call" || quad.args.size() < 3u) continue;
+        const Memory::String &callee = quad.arg(0);
+        const Memory::String &target = quad.arg(2);
+        if (target.empty() || target == "_" || !literalIsName(target)) continue;
+        const auto external = state.externsByLabel.find(std::string(callee.c_str()));
+        if (callee == "__std_read_float" || callee == "__std_input_float" || (external != state.externsByLabel.end() && (external->second->resultType == "double" || external->second->resultType == "float")))
+            state.markKind(target, Kind::Float);
+        if (callee == "__std_str_lit" || callee == "__std_str_join" || callee == "__std_str_of_int" || callee == "__std_str_of_flt" || callee == "__std_str_sub" || callee == "__std_str_cut" || callee == "std::lang::__stringCopy" || callee == "std::lang::__stringNew" || callee == "__std_read_line" || callee == "__std_input_line")
+            state.markString(target);
+    }
+    // 原生服务和函数值返回原始位模式，由显式浮点消费者反推结果形态。
+    std::set<std::string> floatingUses;
+    for (const auto &function : state.functions)
+    {
+        std::vector<std::pair<Memory::String, Memory::String>> parameters;
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = quads[at];
+            if (quad.op == "param") parameters.push_back({ quad.arg(0), quad.arg(2) });
+            if (quad.op != "call" && quad.op != "callptr") continue;
+            const auto found = state.functionByLabel.find(std::string(quad.arg(0).c_str()));
+            if (found != state.functionByLabel.end())
+            {
+                const auto &formals = state.functions[found->second].parameters;
+                for (std::size_t index = 0; index < formals.size() && index < parameters.size(); ++index)
+                {
+                    if (state.kindOf(formals[index]) != Kind::Float) continue;
+                    auto actual = parameters[index].first;
+                    for (const auto &parameter : parameters)
+                        if (parameter.second == formals[index]) actual = parameter.first;
+                    floatingUses.insert(std::string(actual.c_str()));
+                }
+            }
+            parameters.clear();
+        }
+    }
+    for (const auto &quad : quads)
+    {
+        Memory::String base, suffix;
+        splitOperation(quad.op, base, suffix);
+        if (suffix != "f32" && suffix != "f64") continue;
+        if (base == "store")
+            floatingUses.insert(std::string(quad.arg(1).c_str()));
+        else if (base == "cvt")
+        {
+            if (quad.arg(1) == "f32" || quad.arg(1) == "f64") floatingUses.insert(std::string(quad.arg(0).c_str()));
+        }
+        else if (base != "load")
+        {
+            floatingUses.insert(std::string(quad.arg(0).c_str()));
+            floatingUses.insert(std::string(quad.arg(1).c_str()));
+        }
+    }
+    bool propagating = true;
+    while (propagating)
+    {
+        propagating = false;
+        for (const auto &quad : quads)
+            if (quad.op == ":=" && (state.kindOf(quad.arg(2)) == Kind::Float || floatingUses.count(std::string(quad.arg(2).c_str()))))
+                propagating |= floatingUses.insert(std::string(quad.arg(0).c_str())).second;
+    }
+    for (const auto &quad : quads)
+        if ((quad.op == "call" || quad.op == "callptr") && floatingUses.count(std::string(quad.arg(2).c_str())))
+            state.markKind(quad.arg(2), Kind::Float);
+
+    /* 浮点与字符串沿着 `:=`、`load`、函数返回值扩散；顺带重算每个函数的返回种类。
+     * 多跑几轮直到稳定——返回种类和调用点的种类是互相喂出来的。 */
+    for (;;)
+    {
+        bool changed = false;
+        for (auto &function : state.functions)
+        {
+            bool floating = false, string = false;
+            for (std::size_t at = function.begin; at < function.end; ++at)
+            {
+                const auto &quad = quads[at];
+                if (quad.op != "ret") continue;
+                const auto kind = !literalIsName(quad.arg(0)) && literalIsFloat(quad.arg(0)) ? Kind::Float : state.kindOf(quad.arg(0));
+                floating |= kind == Kind::Float;
+                string |= kind == Kind::String;
+            }
+            changed |= function.returnsFloat != floating || function.returnsString != string;
+            function.returnsFloat = floating;
+            function.returnsString = string;
+        }
+        for (std::size_t at = 0; at < quads.size(); ++at)
+        {
+            const auto &quad = quads[at];
+            const Memory::String op = quad.op;
+            if (quad.args.size() < 3u) continue;
+            const Memory::String &target = quad.arg(2);
+            if (target.empty() || target == "_" || !literalIsName(target)) continue;
+            /* 调用返回值：被调函数返回什么，接收方就是什么。 */
+            if (op == "call")
+            {
+                const auto found = state.functionByLabel.find(std::string(quad.arg(0).c_str()));
+                if (found == state.functionByLabel.end()) continue;
+                const Function &callee = state.functions[found->second];
+                const Kind kind = callee.returnsString ? Kind::String : (callee.returnsFloat ? Kind::Float : Kind::Int);
+                if (kind != Kind::Int && state.kindOf(target) != kind)
+                {
+                    changed |= state.markKind(target, kind);
+                }
+                continue;
+            }
+            if (op != ":=" && op.rfind("load", 0) != 0u) continue;
+            const Memory::String &source = quad.arg(0);
+            if (op == ":=" && !literalIsName(source) && literalIsFloat(source))
+            {
+                if (state.kindOf(target) != Kind::Float)
+                {
+                    changed |= state.markKind(target, Kind::Float);
+                }
+                continue;
+            }
+            if (!literalIsName(source)) continue;
+            const Kind kind = state.kindOf(source);
+            if (kind == Kind::Int) continue;
+            if (state.kindOf(target) != kind)
+            {
+                changed |= state.markKind(target, kind);
+            }
+        }
+        if (!changed) break;
+    }
+
+    /* 6) 可达性：从可执行入口或库生命周期函数及导出函数出发沿 `call` 边走一遍。
+     * 走不到的段（标准库里绝大多数）不翻译，保留分析签名。 */
+    Memory::Vector<Memory::String> pending;
+    if (!state.request.options.shared) pending.push_back("main");
+    if (state.request.options.shared)
+    {
+        pending.push_back("__chali_library_init");
+        pending.push_back("__chali_library_finish");
+    }
+    for (const auto &function : state.functions)
+        if (function.exported) pending.push_back(function.label);
+    for (const auto &label : state.addressedFunctions) pending.push_back(Memory::String(label.c_str()));
+    while (!pending.empty())
+    {
+        const Memory::String label = pending.back();
+        pending.pop_back();
+        if (!state.reachable.emplace(std::string(label.c_str())).second) continue;
+        const auto found = state.functionByLabel.find(std::string(label.c_str()));
+        if (found == state.functionByLabel.end()) continue;
+        const Function &function = state.functions[found->second];
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = quads[at];
+            if (quad.op != "call" || quad.args.empty()) continue;
+            const Memory::String target = quad.arg(0);
+            if (state.functionByLabel.count(std::string(target.c_str())) == 0u) continue;
+            if (state.reachable.count(std::string(target.c_str())) != 0u) continue;
+            pending.push_back(target);
+        }
+    }
+    for (const auto &label : state.reachable)
+        if (label.rfind("std::watchdog::", 0u) == 0u) state.watchdogUsed = true;
+    for (const auto &label : state.addressedFunctions) pending.push_back(Memory::String(label.c_str()));
+    while (!pending.empty())
+    {
+        const auto label = pending.back();
+        pending.pop_back();
+        if (!state.callbackReachable.insert(std::string(label.c_str())).second) continue;
+        const auto found = state.functionByLabel.find(std::string(label.c_str()));
+        if (found == state.functionByLabel.end()) continue;
+        const auto &function = state.functions[found->second];
+        for (std::size_t at = function.begin; at < function.end; ++at)
+            if (quads[at].op == "call") pending.push_back(quads[at].arg(0));
+    }
+}
+
+/**
+ * @brief 判断函数能否从主入口或显式导出入口到达。
+ * @param state 已完成调用图分析的状态。
+ * @param function 待判断的函数。
+ * @return 函数被导出或可达时返回 true。
+ */
+bool isLive(const Translator &state, const Function &function)
+{
+    return function.exported || state.reachable.count(std::string(function.label.c_str())) != 0u;
+}
+
+using Text = std::string;
+
+/**
+ * @brief 将项目字符串复制为生成器内部的标准字符串。
+ * @param value 项目分配器持有的字符串。
+ * @return 保持全部字节的副本。
+ */
+Text textOf(const Memory::String &value)
+{
+    return Text(value.data(), value.size());
+}
+
+/**
+ * @brief 将外部符号编码为 LLVM 引用标识符。
+ * @param symbol 外部链接器实际使用的符号字节。
+ * @return 双引号包围并转义控制字节、反斜杠和引号的 LLVM 标识符。
+ */
+Text llvmSymbol(const Memory::String &symbol)
+{
+    Text result = "\"";
+    for (const unsigned char byte : symbol)
+    {
+        if (byte >= 32 && byte < 127 && byte != '"' && byte != '\\')
+            result += static_cast<char>(byte);
+        else
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            result += escaped;
+        }
+    }
+    return result + "\"";
+}
+
+/**
+ * @brief LLVM 指令操作数及其精确类型。
+ */
+struct Value
+{
+    Text type;
+    Text text;
+    Text floating = {};  ///< 不透明整数槽所携带的运行时浮点标记。
+};
+
+/**
+ * @brief 将 ABI 声明的 C 类型映射到 LLVM 类型。
+ * @param name 前端提供的 C 类型拼写。
+ * @return LLVM 标量或指针类型；不支持的类型返回空串。
+ */
+Text abiType(const Memory::String &name)
+{
+    if (name.find('*') != Memory::String::npos) return "ptr";
+    if (name == "void") return "void";
+    if (name == "double") return "double";
+    if (name == "float") return "float";
+    if (name.find("char") != Memory::String::npos || name == "bool") return "i8";
+    if (name.find("short") != Memory::String::npos) return "i16";
+    if (name.find("long long") != Memory::String::npos || name.find("int64") != Memory::String::npos) return "i64";
+    if (name == "int" || name == "unsigned int") return "i32";
+    return Text();
+}
+
+/**
+ * @brief 将函数内的可变符号降低为内存槽，将四元式运算降低为 LLVM 指令。
+ * @note 只有形参与本函数声明的局部使用 alloca，跨函数暂存量保持模块级共享。
+ */
+struct Builder
+{
+    Translator &state;
+    const Function &function;
+    Text body;
+    std::set<Text> locals;
+    std::map<Text, std::size_t> labels;
+    std::map<std::size_t, std::size_t> logicalCosts;
+    std::map<std::size_t, std::size_t> lineOccurrences;
+    std::size_t serial = 0;
+    std::vector<std::pair<Memory::String, Value>> arguments;
+
+    /**
+     * @brief 建立函数的帧槽集合及本函数内的跳转标签表。
+     * @param translation 当前编译请求的分析结果。
+     * @param current 当前函数的范围与签名。
+     */
+    Builder(Translator &translation, const Function &current) : state(translation), function(current)
+    {
+        for (const auto &parameter : function.parameters) locals.insert(textOf(parameter));
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = state.request.quads->quads[at];
+            if (quad.op == "decl" && quad.arg(1) != "global" && quad.arg(2).rfind("__temp_", 0) != 0u && quad.arg(2).rfind("__chali_ret_v$", 0) != 0u) locals.insert(textOf(quad.arg(2)));
+            if (quad.op == "label")
+                labels[textOf(quad.arg(2))] = at;
+            else if (state.watchdogUsed)
+                ++lineOccurrences[quad.line];
+        }
+        if (state.watchdogUsed && state.request.program)
+        {
+            const auto &program = *state.request.program;
+            const auto entry = program.labels.find(program.symbolKey(function.label));
+            std::size_t end = program.code.size();
+            const auto index = state.functionByLabel.at(textOf(function.label));
+            if (index + 1 < state.functions.size())
+            {
+                const auto next = program.labels.find(program.symbolKey(state.functions[index + 1].label));
+                if (next != program.labels.end()) end = next->second;
+            }
+            if (entry != program.labels.end())
+                for (auto pc = entry->second; pc < end; ++pc)
+                    if (const auto *location = program.debug.lookup(pc)) ++logicalCosts[location->quadLine];
+        }
+    }
+
+    /**
+     * @brief 分配当前函数内唯一的 SSA 名称。
+     * @return 不与形参或基本块冲突的 LLVM 局部名称。
+     */
+    Text fresh()
+    {
+        return "%r" + std::to_string(serial++);
+    }
+
+    /**
+     * @brief 根据推断结果取得符号的统一存储类型。
+     * @param token 四元式符号或立即数。
+     * @return 浮点返回 double，其余值返回 i64。
+     */
+    Text type(const Memory::String &token)
+    {
+        return state.kindOf(token) == Kind::Float || (!literalIsName(token) && literalIsFloat(token)) ? "double" : "i64";
+    }
+
+    /**
+     * @brief 取得符号对应的局部槽或模块级共享槽。
+     * @param token 四元式符号名称。
+     * @return 可用于 load/store 的 LLVM 指针操作数。
+     */
+    Text pointer(const Memory::String &token)
+    {
+        return (locals.count(textOf(token)) != 0u ? "%s_" : "@s_") + textOf(state.use(token));
+    }
+
+    /**
+     * @brief 取得整数槽的动态类型标记地址，作用域与值槽保持一致。
+     * @param token 四元式符号。
+     * @return 本帧或模块共享的单字节标记地址。
+     */
+    Text tagPointer(const Memory::String &token)
+    {
+        return (locals.count(textOf(token)) != 0u ? "%t_" : "@t_") + textOf(state.use(token));
+    }
+
+    /**
+     * @brief 写入一条有结果的 LLVM 指令。
+     * @param resultType 指令结果的 LLVM 类型。
+     * @param instruction 不含赋值部分的 LLVM 指令。
+     * @return 对应的 SSA 值。
+     */
+    Value instruction(const Text &resultType, const Text &instruction)
+    {
+        const Text name = fresh();
+        body += "  " + name + " = " + instruction + "\n";
+        return { resultType, name };
+    }
+
+    /**
+     * @brief 在 LLVM 标量与宿主指针类型之间显式转换。
+     * @param value 源值。
+     * @param target 目标 LLVM 类型。
+     * @param unsignedValue 整数转换是否按无符号解释。
+     * @return 转换后的 SSA 值或无需转换的源值。
+     */
+    Value convert(Value value, const Text &target, bool unsignedValue = false)
+    {
+        if (value.type == target) return value;
+        if (value.type == "i64" && !value.floating.empty() && target == "float")
+            return convert(convert(value, "double", unsignedValue), "float", unsignedValue);
+        if (value.type == "i64" && !value.floating.empty() && target == "double")
+        {
+            const auto real = instruction("double", "bitcast i64 " + value.text + " to double");
+            const auto integer = instruction("double", Text(unsignedValue ? "uitofp" : "sitofp") + " i64 " + value.text + " to double");
+            const auto flag = instruction("i1", "icmp ne i8 " + value.floating + ", 0");
+            return instruction("double", "select i1 " + flag.text + ", double " + real.text + ", double " + integer.text);
+        }
+        const bool sourceFloat = value.type == "double" || value.type == "float";
+        const bool targetFloat = target == "double" || target == "float";
+        Text operation;
+        if (value.type == "ptr")
+            operation = "ptrtoint";
+        else if (target == "ptr")
+            operation = "inttoptr";
+        else if (sourceFloat && targetFloat)
+            operation = target == "double" ? "fpext" : "fptrunc";
+        else if (sourceFloat)
+            operation = unsignedValue ? "fptoui" : "fptosi";
+        else if (targetFloat)
+            operation = unsignedValue ? "uitofp" : "sitofp";
+        else
+        {
+            const int from = std::atoi(value.type.c_str() + 1), to = std::atoi(target.c_str() + 1);
+            operation = from > to ? "trunc" : (unsignedValue || from == 1 ? "zext" : "sext");
+        }
+        return instruction(target, operation + " " + value.type + " " + value.text + " to " + target);
+    }
+
+    /**
+     * @brief 捕获立即数或符号在当前位置的值。
+     * @param token 四元式操作数；空值和占位符按零处理。
+     * @return 带类型的立即数或 load 结果。
+     */
+    Value read(const Memory::String &token)
+    {
+        if (token.empty() || token == "_") return { "i64", "0" };
+        if (!literalIsName(token))
+        {
+            if (literalIsFloat(token))
+            {
+                const double value = std::strtod(token.c_str(), nullptr);
+                std::uint64_t bits = 0;
+                std::memcpy(&bits, &value, sizeof(bits));
+                char buffer[32];
+                std::snprintf(buffer, sizeof(buffer), "0x%016llX", static_cast<unsigned long long>(bits));
+                return { "double", buffer };
+            }
+            return { "i64", textOf(token) };
+        }
+        const Text storageType = type(token);
+        auto value = instruction(storageType, "load " + storageType + ", ptr " + pointer(token));
+        if (storageType == "i64") value.floating = instruction("i8", "load i8, ptr " + tagPointer(token)).text;
+        return value;
+    }
+
+    /**
+     * @brief 将结果存入四元式指定的符号。
+     * @param token 目标符号；空值或占位符不写入。
+     * @param value 待保存的值。
+     */
+    void write(const Memory::String &token, Value value)
+    {
+        if (token.empty() || token == "_" || value.type == "void") return;
+        value = convert(value, type(token));
+        body += "  store " + value.type + " " + value.text + ", ptr " + pointer(token) + "\n";
+        if (value.type == "i64") body += "  store i8 " + (value.floating.empty() ? Text("0") : value.floating) + ", ptr " + tagPointer(token) + "\n";
+    }
+
+    /**
+     * @brief 生成显式类型的函数调用。
+     * @param name LLVM 函数符号，不含 @。
+     * @param resultType 返回类型。
+     * @param values 已完成类型转换的实际参数。
+     * @return 调用返回的 SSA 值；void 调用返回无结果标记。
+     */
+    Value call(const Text &name, const Text &resultType, const std::vector<Value> &values)
+    {
+        Text operation = "call " + resultType + " @" + name + "(";
+        for (std::size_t index = 0; index < values.size(); ++index)
+        {
+            if (index != 0u) operation += ", ";
+            operation += values[index].type + " " + values[index].text;
+        }
+        operation += ")";
+        if (resultType != "void") return instruction(resultType, operation);
+        body += "  " + operation + "\n";
+        return { "void", "" };
+    }
+
+    /**
+     * @brief 获取已经在 param 处捕获的实参。
+     * @param index 缺少名称匹配时使用的参数位置。
+     * @param formal 优先匹配的形参名。
+     * @return 找到的实参，缺失时为整数零。
+     */
+    Value argument(std::size_t index, const Memory::String &formal = Memory::String())
+    {
+        if (!formal.empty())
+            for (const auto &item : arguments)
+                if (item.first == formal) return item.second;
+        return index < arguments.size() ? arguments[index].second : Value{ "i64", "0" };
+    }
+
+    /**
+     * @brief 根据形参协议降低内建、用户函数和外部 C ABI 调用。
+     * @param callee 被调用的四元式标签。
+     * @param destination 接收返回值的四元式符号。
+     * @return 支持并成功生成时返回 true；否则记录具体诊断。
+     */
+    bool emitCall(const Memory::String &callee, const Memory::String &destination)
+    {
+        const auto external = state.externsByLabel.find(textOf(callee));
+        if (external != state.externsByLabel.end() && state.request.abiGlue.empty())
+        {
+            state.usedExternLabels.insert(textOf(callee));
+            const auto &signature = *external->second;
+            if (arguments.size() != signature.parameterTypes.size())
+            {
+                state.fail("AOT：外部函数实参数量不匹配：" + callee);
+                return false;
+            }
+            std::vector<Value> values;
+            for (std::size_t at = 0; at < signature.parameterTypes.size(); ++at)
+            {
+                const Text target = abiType(signature.parameterTypes[at]);
+                if (target.empty())
+                {
+                    state.fail("AOT：不支持的 ABI 参数类型 " + signature.parameterTypes[at]);
+                    return false;
+                }
+                values.push_back(convert(argument(at), target, signature.parameterTypes[at].find("unsigned") != Memory::String::npos));
+            }
+            const Text resultType = abiType(signature.resultType);
+            if (resultType.empty())
+            {
+                state.fail("AOT：不支持的 ABI 返回类型 " + signature.resultType);
+                return false;
+            }
+            Value result = call(llvmSymbol(signature.symbol), resultType, values);
+            if (!resultType.empty() && resultType.front() == 'i')
+                result = convert(result, "i64", signature.resultType.find("unsigned") != Memory::String::npos);
+            write(destination, result);
+            return true;
+        }
+        const auto found = state.functionByLabel.find(textOf(callee));
+        if (found == state.functionByLabel.end())
+        {
+            static const std::map<Text, Text> memoryHelpers = {
+                { "__chali_new_array", "chali_new_array" },
+                { "__chali_memcpy", "chali_copy_bytes" },
+                { "__chali_memset", "chali_set_bytes" }
+            };
+            const auto helper = memoryHelpers.find(textOf(callee));
+            if (helper != memoryHelpers.end())
+            {
+                std::vector<Value> values;
+                for (const auto &item : arguments) values.push_back(convert(item.second, "i64"));
+                write(destination, call(helper->second, "i64", values));
+                return true;
+            }
+            const auto native = state.nativeNames.emplace(textOf(callee), state.nativeNames.size()).first->second;
+            for (std::size_t index = 0; index < arguments.size(); ++index)
+            {
+                Value value = arguments[index].second;
+                const bool floating = value.type == "double";
+                if (floating) value = instruction("i64", "bitcast double " + value.text + " to i64");
+                const auto slot = instruction("ptr", "getelementptr i64, ptr %indirect_arguments, i64 " + std::to_string(index));
+                body += "  store i64 " + convert(value, "i64").text + ", ptr " + slot.text + "\n";
+                const auto flag = instruction("ptr", "getelementptr i8, ptr %native_argument_types, i64 " + std::to_string(index));
+                body += "  store i8 " + (floating ? Text("1") : (value.floating.empty() ? Text("0") : value.floating)) + ", ptr " + flag.text + "\n";
+            }
+            std::vector<std::pair<Memory::String, Value>> saved;
+            for (const auto &entry : state.temporaryUsers)
+            {
+                if (!state.callbackReachable.count(textOf(function.label))) break;
+                if (entry.second.size() != 1u || entry.second.count(textOf(function.label)) == 0u || locals.count(entry.first)) continue;
+                const Memory::String token(entry.first.c_str());
+                saved.push_back({ token, read(token) });
+            }
+            Value result = call("chali_host_call", "i64", { { "ptr", "@native_name" + std::to_string(native) }, { "i64", std::to_string(arguments.size()) }, { "ptr", "%indirect_arguments" }, { "ptr", "%native_argument_types" } });
+            result.floating = call("chali_host_result_float", "i8", {}).text;
+            for (const auto &entry : saved) write(entry.first, entry.second);
+            if (type(destination) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
+            write(destination, result);
+            return true;
+        }
+        const Function &target = state.functions[found->second];
+        if (arguments.size() != target.parameters.size())
+        {
+            state.fail("AOT：函数实参数量不匹配：" + callee);
+            return false;
+        }
+        std::vector<Value> values;
+        for (std::size_t at = 0; at < target.parameters.size(); ++at) values.push_back(convert(argument(at, target.parameters[at]), type(target.parameters[at])));
+        // 私有计算暂存通过 SSA 跨调用保存，不分配帧槽。跨函数共用的暂存始终读写模块共享表。
+        std::vector<std::pair<Memory::String, Value>> saved;
+        std::vector<Text> pending{ textOf(target.label) };
+        std::set<Text> visited;
+        bool reenters = false;
+        while (!pending.empty() && !reenters)
+        {
+            const Text label = pending.back();
+            pending.pop_back();
+            if (label == textOf(function.label))
+            {
+                reenters = true;
+                break;
+            }
+            if (!visited.insert(label).second) continue;
+            const auto next = state.functionByLabel.find(label);
+            if (next == state.functionByLabel.end())
+            {
+                reenters = state.callbackReachable.count(textOf(function.label)) != 0;
+                continue;
+            }
+            const Function &reachable = state.functions[next->second];
+            for (std::size_t at = reachable.begin; at < reachable.end; ++at)
+            {
+                const auto &quad = state.request.quads->quads[at];
+                if (quad.op == "call") pending.push_back(textOf(quad.arg(0)));
+                if (quad.op == "callptr") reenters |= state.callbackReachable.count(textOf(function.label)) != 0;
+            }
+        }
+        for (const auto &entry : state.temporaryUsers)
+        {
+            if (!reenters) break;
+            if (entry.second.size() != 1u || entry.second.count(textOf(function.label)) == 0u) continue;
+            const Memory::String token(entry.first.c_str());
+            if (locals.count(entry.first) == 0u) saved.push_back({ token, read(token) });
+        }
+        Value result = call(textOf(target.llvmName), target.returnsFloat ? "double" : "i64", values);
+        if (!target.returnsFloat) result.floating = instruction("i8", "load i8, ptr @chali_return_float").text;
+        for (const auto &entry : saved) write(entry.first, entry.second);
+        write(destination, result);
+        return true;
+    }
+
+    /**
+     * @brief 生成算术、比较与逻辑运算并按四元式位宽收口。
+     * @param base 去掉类型后缀后的操作符。
+     * @param suffix 四元式类型后缀。
+     * @param leftToken 左操作数。
+     * @param rightToken 右操作数。
+     * @param destination 结果符号。
+     * @return 已识别该运算时返回 true，否则由上层报告不支持。
+     */
+    bool arithmetic(const Memory::String &base, const Memory::String &suffix, const Memory::String &leftToken, const Memory::String &rightToken, const Memory::String &destination)
+    {
+        static const std::map<Text, Text> operations = { { "+", "add" }, { "add", "add" }, { "-", "sub" }, { "sub", "sub" }, { "*", "mul" }, { "mul", "mul" }, { "/", "div" }, { "div", "div" }, { "%", "rem" }, { "mod", "rem" }, { "band", "and" }, { "&", "and" }, { "bor", "or" }, { "|", "or" }, { "bxor", "xor" }, { "^", "xor" }, { "shl", "shl" }, { "<<", "shl" }, { "shr", "ashr" }, { ">>", "ashr" }, { "shru", "lshr" }, { ">>>", "lshr" } };
+        static const std::map<Text, Text> comparisons = { { "eq", "eq" }, { "==", "eq" }, { "ne", "ne" }, { "!=", "ne" }, { "lt", "lt" }, { "<", "lt" }, { "le", "le" }, { "<=", "le" }, { "gt", "gt" }, { ">", "gt" }, { "ge", "ge" }, { ">=", "ge" } };
+        const Text name = textOf(base);
+        const auto op = operations.find(name), comparison = comparisons.find(name);
+        if (op == operations.end() && comparison == comparisons.end() && base != "neg" && base != "not" && base != "and" && base != "or") return false;
+        const Width width = widthOf(suffix);
+        Value left = read(leftToken), right = read(rightToken);
+        const bool floating = width.float_ || left.type == "double" || right.type == "double";
+        const Text target = floating ? (width.float_ && width.bits == 32 ? "float" : "double") : "i64";
+        left = convert(left, target, width.unsigned_);
+        right = convert(right, target, width.unsigned_);
+        Value result;
+        if (comparison != comparisons.end())
+        {
+            Text predicate = comparison->second;
+            if (floating)
+                predicate = predicate == "ne" ? "une" : "o" + predicate;
+            else if (predicate != "eq" && predicate != "ne")
+                predicate = (width.unsigned_ ? "u" : "s") + predicate;
+            result = instruction("i1", Text(floating ? "fcmp " : "icmp ") + predicate + " " + target + " " + left.text + ", " + right.text);
+        }
+        else if (base == "and" || base == "or")
+        {
+            const Text zero = floating ? "0.0" : "0";
+            const Text test = floating ? "fcmp une " : "icmp ne ";
+            left = instruction("i1", test + target + " " + left.text + ", " + zero);
+            right = instruction("i1", test + target + " " + right.text + ", " + zero);
+            result = instruction("i1", name + " i1 " + left.text + ", " + right.text);
+        }
+        else if (base == "neg")
+            result = instruction(target, floating ? "fneg " + target + " " + left.text : "sub " + target + " 0, " + left.text);
+        else if (base == "not")
+            result = instruction(target, "xor " + target + " " + left.text + ", -1");
+        else
+        {
+            Text operation = op->second;
+            if (floating)
+                operation = "f" + operation;
+            else if (operation == "div" || operation == "rem")
+                operation = (width.unsigned_ ? "u" : "s") + operation;
+            else if (operation == "ashr" && width.unsigned_)
+                operation = "lshr";
+            if (operation == "shl" || operation == "ashr" || operation == "lshr")
+                call("chali_check_shift", "void", { right });
+            if (operation == "sdiv" || operation == "udiv" || operation == "srem" || operation == "urem")
+            {
+                result = call("chali_integer_divide", "i64", { left, right, { "i32", width.unsigned_ ? "1" : "0" }, { "i32", operation.find("rem") != Text::npos ? "1" : "0" } });
+            }
+            else
+            {
+                if (operation == "fdiv" || operation == "frem") call("chali_check_real_divisor", "void", { convert(right, "double") });
+                result = instruction(target, operation + " " + target + " " + left.text + ", " + right.text);
+            }
+        }
+        if (!floating && result.type != "i1" && width.bits < 64)
+            result = convert(convert(result, "i" + std::to_string(width.bits)), "i64", width.unsigned_);
+        if (result.type != "i1") result = convert(result, floating ? "double" : "i64", width.unsigned_);
+        write(destination, result);
+        return true;
+    }
+
+    /**
+     * @brief 生成当前函数的 LLVM 定义，逐个四元式构造显式基本块。
+     * @return LLVM 函数文本；不支持的构造返回空串并登记诊断。
+     */
+    Text generate()
+    {
+        const Text resultType = function.returnsFloat ? "double" : "i64";
+        Text signature = "define ";
+#ifdef _WIN32
+        if (function.exported) signature += "dllexport ";
+#endif
+        if (!function.exported) signature += "internal ";
+        signature += resultType + " @" + textOf(function.llvmName) + "(";
+        for (std::size_t at = 0; at < function.parameters.size(); ++at)
+        {
+            if (at != 0u) signature += ", ";
+            signature += type(function.parameters[at]) + " %p" + std::to_string(at);
+        }
+        signature += ") uwtable section \"chali_code\" {\nentry:\n";
+        std::size_t argumentCapacity = 1;
+        for (std::size_t at = function.begin; at < function.end; ++at)
+            if (state.request.quads->quads[at].op == "param") ++argumentCapacity;
+        signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n";
+        signature += "  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
+        for (const auto &name : locals)
+        {
+            const Memory::String token(name.c_str());
+            signature += "  " + pointer(token) + " = alloca " + type(token) + "\n";
+            signature += "  store " + type(token) + " " + (type(token) == "double" ? "0.0" : "0") + ", ptr " + pointer(token) + "\n";
+            if (type(token) == "i64") signature += "  " + tagPointer(token) + " = alloca i8\n  store i8 0, ptr " + tagPointer(token) + "\n";
+        }
+        for (std::size_t at = 0; at < function.parameters.size(); ++at) signature += "  store " + type(function.parameters[at]) + " %p" + std::to_string(at) + ", ptr " + pointer(function.parameters[at]) + "\n";
+        signature += "  br label %q" + std::to_string(function.labelIndex) + "\n";
+        for (std::size_t at = function.labelIndex; at < function.end; ++at)
+        {
+            body += "q" + std::to_string(at) + ":\n";
+            const auto &quad = state.request.quads->quads[at];
+            const auto a = quad.arg(0), b = quad.arg(1), c = quad.arg(2);
+            const auto &op = quad.op;
+            if (op == "call" || op == "callptr" || op == "alloc" || op == "checkptr" || op == "check" || op.rfind("load", 0) == 0u || op.rfind("store", 0) == 0u || op.rfind("/", 0) == 0u || op.rfind("%", 0) == 0u || op.rfind("<<", 0) == 0u || op.rfind(">>", 0) == 0u)
+            {
+                const auto file = state.sourceFiles.emplace(textOf(quad.sourceFile), state.sourceFiles.size()).first;
+                body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
+                body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
+                body += "  store i64 " + std::to_string(quad.sourceLine) + ", ptr @chali_source_line\n";
+            }
+            if (state.watchdogUsed && op != "label")
+            {
+                const auto cost = logicalCosts.find(quad.line);
+                const auto steps = cost == logicalCosts.end() ? 1u : std::max<std::size_t>(1u, cost->second / lineOccurrences[quad.line]);
+                call("chali_host_tick", "void", { { "i64", std::to_string(steps) } });
+            }
+            Memory::String base, suffix;
+            splitOperation(op, base, suffix);
+            bool terminated = false;
+            if (op == "decl" || op == "label") {}
+            else if (op == "drop" || op == "free")
+                call("chali_owned_drop", "void", { convert(read(a), "i64") });
+            else if (op == ":=")
+                write(c, read(a));
+            else if (op == "addr")
+            {
+                const auto offset = state.offsetOf(a);
+                if (offset < 0)
+                {
+                    state.fail("AOT：数据区里没有符号 " + a);
+                    return Text();
+                }
+                write(c, { "i64", std::to_string(offset) });
+            }
+            else if (op == "param")
+            {
+                Memory::String formal = c;
+                if (state.kindOf(a) == Kind::String && c.rfind("__chali_fa", 0) == 0u) formal = "#string:" + c;
+                arguments.push_back({ formal, read(a) });
+            }
+            else if (op == "call")
+            {
+                if (!emitCall(a, c)) return Text();
+                arguments.clear();
+            }
+            else if (op == "callptr")
+            {
+                std::vector<std::pair<Memory::String, Value>> saved;
+                for (const auto &entry : state.temporaryUsers)
+                    if (entry.second.size() == 1 && entry.second.count(textOf(function.label)) && !locals.count(entry.first))
+                    {
+                        const Memory::String token(entry.first.c_str());
+                        saved.push_back({ token, read(token) });
+                    }
+                for (std::size_t index = 0; index < arguments.size(); ++index)
+                {
+                    Value value = arguments[index].second;
+                    if (value.type == "double") value = instruction("i64", "bitcast double " + value.text + " to i64");
+                    const auto address = instruction("ptr", "getelementptr i64, ptr %indirect_arguments, i64 " + std::to_string(index));
+                    body += "  store i64 " + convert(value, "i64").text + ", ptr " + address.text + "\n";
+                }
+                Value result = call("chali_invoke", "i64", { convert(read(a), "i64"), { "i64", std::to_string(arguments.size()) }, { "ptr", "%indirect_arguments" } });
+                result.floating = instruction("i8", "load i8, ptr @chali_return_float").text;
+                for (const auto &entry : saved) write(entry.first, entry.second);
+                if (type(c) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
+                write(c, result);
+                arguments.clear();
+            }
+            else if (op == "ret" || op == "halt")
+            {
+                const Value value = convert(read(op == "halt" ? Memory::String() : a), resultType);
+                body += "  store i8 " + (resultType == "double" ? Text("1") : (value.floating.empty() ? Text("0") : value.floating)) + ", ptr @chali_return_float\n";
+                body += "  ret " + resultType + " " + value.text + "\n";
+                terminated = true;
+            }
+            else if (op == "j" || op == "jz" || op == "jnz")
+            {
+                const auto target = labels.find(textOf(c));
+                if (target == labels.end())
+                {
+                    state.fail("AOT：跳转目标不在本函数内 " + c);
+                    return Text();
+                }
+                const Text destination = "%q" + std::to_string(target->second);
+                if (state.request.options.threadsEnabled && target->second <= at) call("chali_host_poll", "void", {});
+                if (op == "j")
+                    body += "  br label " + destination + "\n";
+                else
+                {
+                    Value condition = read(a);
+                    const bool floating = condition.type == "double";
+                    condition = instruction("i1", Text(floating ? "fcmp " : "icmp ") + (op == "jz" ? (floating ? "oeq " : "eq ") : (floating ? "une " : "ne ")) + condition.type + " " + condition.text + ", " + (floating ? "0.0" : "0"));
+                    body += "  br i1 " + condition.text + ", label " + destination + ", label %q" + std::to_string(at + 1) + "\n";
+                }
+                terminated = true;
+            }
+            else if (op == "check" || op == "checkptr")
+            {
+                if (state.request.options.checked)
+                {
+                    std::vector<Value> values{ convert(read(a), "i64") };
+                    values.push_back(convert(read(b), "i64"));
+                    if (op == "checkptr") values.push_back(convert(read(c), "i64"));
+                    call(op == "check" ? "chali_check" : "chali_host_check_pointer", "void", values);
+                }
+            }
+            else if (op == "alloc")
+                write(c, call("chali_alloc", "i64", { convert(read(a), "i64") }));
+            else if (base == "load" || base == "store")
+            {
+                const Width width = widthOf(suffix);
+                const Text storageType = width.float_ ? (width.bits == 32 ? "float" : "double") : "i" + std::to_string(width.bits);
+                const Value address = convert(read(a), "i64");
+                const Value pointerValue = call("chali_host_address", "ptr", { address, { "i64", std::to_string(std::max(1, width.bits / 8)) } });
+                if (base == "load")
+                {
+                    Value result = instruction(storageType, "load " + storageType + ", ptr " + pointerValue.text + ", align 1");
+                    result = convert(result, width.float_ ? "double" : "i64", width.unsigned_);
+                    write(c, result);
+                }
+                else
+                {
+                    const Value value = convert(read(b), storageType, width.unsigned_);
+                    body += "  store " + storageType + " " + value.text + ", ptr " + pointerValue.text + ", align 1\n";
+                }
+            }
+            else if (base == "cvt")
+            {
+                const Width width = widthOf(suffix);
+                Value source = read(a);
+                if (source.type == "i64" && (b == "f32" || b == "f64")) source = instruction("double", "bitcast i64 " + source.text + " to double");
+                Value result = convert(source, width.float_ ? (width.bits == 32 ? "float" : "double") : "i" + std::to_string(width.bits), width.unsigned_);
+                write(c, convert(result, width.float_ ? "double" : "i64", width.unsigned_));
+            }
+            else if (!arithmetic(base, suffix, a, b, c))
+            {
+                state.fail("AOT：暂不支持的四元式操作符 " + op);
+                return Text();
+            }
+            if (!terminated) body += "  br label %q" + std::to_string(at + 1) + "\n";
+        }
+        body += "q" + std::to_string(function.end) + ":\n  store i8 0, ptr @chali_return_float\n  ret " + resultType + " " + (resultType == "double" ? "0.0" : "0") + "\n}\n";
+        return signature + body;
+    }
+};
+
+/**
+ * @brief 前端提供的 ABI 声明读取回调。
+ */
+Memory::Vector<ExternFunction> (*g_abiExternProvider)() = nullptr;
+Memory::String (*g_abiGlueProvider)() = nullptr;
+}  // namespace
+
+/**
+ * @brief 设置当前前端的 ABI 声明读取回调。
+ * @param provider 返回 ABI 清单的回调；空指针清除回调。
+ */
+void setAbiExternProvider(Memory::Vector<ExternFunction> (*provider)())
+{
+    g_abiExternProvider = provider;
+}
+
+/**
+ * @brief 读取当前编译单元的外部函数声明。
+ * @return 前端登记的 ABI 清单；未登记时为空。
+ */
+Memory::Vector<ExternFunction> collectAbiExterns()
+{
+    return g_abiExternProvider != nullptr ? g_abiExternProvider() : Memory::Vector<ExternFunction>();
+}
+
+/**
+ * @brief 登记前端生成复杂 C ABI 宿主绑定源码的入口。
+ * @param provider 返回绑定源码的回调；空指针清除登记。
+ */
+void setAbiGlueProvider(Memory::String (*provider)())
+{
+    g_abiGlueProvider = provider;
+}
+
+/**
+ * @brief 取得复杂 C ABI 宿主绑定源码。
+ * @return 未登记或不需要封送时返回空串。
+ */
+Memory::String collectAbiGlue()
+{
+    return g_abiGlueProvider ? g_abiGlueProvider() : Memory::String();
+}
+
+/**
+ * @brief 生成函数值到真实 LLVM 函数的分派，环境作为隐藏形参传入。
+ * @param state 已分析的可达函数和标量类别。
+ * @return 完整的 LLVM 常量及调用入口定义。
+ */
+Text indirectDispatcher(Translator &state)
+{
+    Text constants;
+    Text resultTypes = "define i64 @chali_function_returns_real(i64 %function) {\nentry:\n  %target = call i64 @chali_function_target(i64 %function)\n  br label %candidate0\n";
+    Text body = "define i64 @chali_invoke(i64 %function, i64 %count, ptr %arguments) {\nentry:\n  %target = call i64 @chali_function_target(i64 %function)\n  %environment = call i64 @chali_function_environment(i64 %function)\n  br label %candidate0\n";
+    std::size_t candidate = 0;
+    for (const auto &function : state.functions)
+    {
+        if (!isLive(state, function) || !state.addressedFunctions.count(textOf(function.label))) continue;
+        const Text suffix = std::to_string(candidate);
+        const Text label = textOf(function.label);
+        Text bytes;
+        for (const unsigned char byte : label)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        constants += "@indirect_name" + suffix + " = private constant [" + std::to_string(label.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+        resultTypes += "candidate" + suffix + ":\n  %matched" + suffix + " = call i64 @chali_function_match(i64 %target, ptr @indirect_name" + suffix + ")\n  %accepted" + suffix + " = icmp ne i64 %matched" + suffix + ", 0\n  br i1 %accepted" + suffix + ", label %result" + suffix + ", label %candidate" + std::to_string(candidate + 1) + "\nresult" + suffix + ":\n  ret i64 " + Text(function.returnsFloat ? "1" : "0") + "\n";
+        const bool environment = !function.parameters.empty() && function.parameters.back() == "__chali_environment";
+        const auto arity = function.parameters.size() - (environment ? 1u : 0u);
+        body += "candidate" + suffix + ":\n  %matched" + suffix + " = call i64 @chali_function_match(i64 %target, ptr @indirect_name" + suffix + ")\n";
+        body += "  %name_ok" + suffix + " = icmp ne i64 %matched" + suffix + ", 0\n  %arity_ok" + suffix + " = icmp eq i64 %count, " + std::to_string(arity) + "\n  %accepted" + suffix + " = and i1 %name_ok" + suffix + ", %arity_ok" + suffix + "\n";
+        body += "  br i1 %accepted" + suffix + ", label %invoke" + suffix + ", label %candidate" + std::to_string(candidate + 1) + "\ninvoke" + suffix + ":\n";
+        Text arguments;
+        for (std::size_t index = 0; index < function.parameters.size(); ++index)
+        {
+            if (index) arguments += ", ";
+            const Text value = "%argument" + suffix + "_" + std::to_string(index);
+            const bool floating = state.kindOf(function.parameters[index]) == Kind::Float;
+            if (environment && index == arity)
+                arguments += "i64 %environment";
+            else
+            {
+                body += "  " + value + "_address = getelementptr i64, ptr %arguments, i64 " + std::to_string(index) + "\n  " + value + " = load i64, ptr " + value + "_address\n";
+                if (floating) body += "  " + value + "_real = bitcast i64 " + value + " to double\n";
+                arguments += (floating ? "double " + value + "_real" : "i64 " + value);
+            }
+        }
+        body += "  %result" + suffix + " = call " + (function.returnsFloat ? "double" : "i64") + " @" + textOf(function.llvmName) + "(" + arguments + ")\n";
+        if (function.returnsFloat) body += "  %bits" + suffix + " = bitcast double %result" + suffix + " to i64\n";
+        body += "  ret i64 %" + Text(function.returnsFloat ? "bits" : "result") + suffix + "\n";
+        ++candidate;
+    }
+    body += "candidate" + std::to_string(candidate) + ":\n  call void @chali_abort(i64 0)\n  unreachable\n}\n";
+    resultTypes += "candidate" + std::to_string(candidate) + ":\n  call void @chali_abort(i64 0)\n  unreachable\n}\n";
+    return constants + body + resultTypes;
+}
+
+/**
+ * @brief 从四元式直接生成包含运行时的 LLVM 模块。
+ * @param request 已优化的四元式、数据和输出选项。
+ * @param diagnostics 接收类型、操作和运行时资产错误。
+ * @param header 可选的 C ABI 头文件输出。
+ * @return LLVM 文本；生成失败时为空。
+ */
+Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
+{
+    Translator state(request, diagnostics);
+#if !defined(__x86_64__) && !defined(_M_X64)
+    state.fail("AOT：当前内嵌 LLVM 运行时仅提供 x64 宿主布局");
+    return {};
+#endif
+    if (header != nullptr) header->clear();
+    if (request.quads == nullptr)
+    {
+        state.fail("AOT：没有四元式输入");
+        return {};
+    }
+    loadLayout(state);
+    analyze(state);
+    for (const auto &name : request.options.exports)
+        if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
+    if (diagnostics != nullptr && !diagnostics->empty()) return {};
+    for (const auto &function : state.functions)
+        for (std::size_t at = function.begin; at < function.end; ++at)
+            for (const auto &token : request.quads->quads[at].args)
+                if (token.rfind("__temp_", 0) == 0u || token.rfind("__chali_ret_v$", 0) == 0u)
+                    state.temporaryUsers[textOf(token)].insert(textOf(function.label));
+    for (const auto &quad : request.quads->quads)
+    {
+        if (quad.op != "call") continue;
+        const auto found = state.externsByLabel.find(textOf(quad.arg(0)));
+        if (found != state.externsByLabel.end() && (abiType(found->second->resultType) == "double" || abiType(found->second->resultType) == "float")) state.markKind(quad.arg(2), Kind::Float);
+    }
+    Memory::String runtime;
+#ifdef _WIN32
+    const Memory::String asset = "aot/runtime_windows.ll";
+#else
+    const Memory::String asset = "aot/runtime_linux.ll";
+#endif
+    if (!chali_module::embedded::findGeneratorAssetByPath(asset, &runtime))
+    {
+        state.fail("AOT：缺少内嵌 LLVM 运行时 " + asset);
+        return {};
+    }
+    const bool libraryLifecycle = request.options.shared && state.functionByLabel.count("__chali_library_init") != 0u;
+    std::istringstream input(textOf(runtime));
+    Text out = "; ChaLi LLVM AOT\n; checks: " + Text(request.options.checked ? "on" : "off") + "\nsource_filename = \"chali-aot\"\n", line;
+    while (std::getline(input, line))
+    {
+        if (line.rfind("declare ", 0) == 0 && line.find("@chali_invoke(") != Text::npos) continue;
+        if (line.rfind("; ModuleID =", 0) == 0u || line.rfind("source_filename =", 0) == 0u) continue;
+        if (line.rfind("@chali_data_image =", 0) == 0u || line.rfind("@chali_data_size =", 0) == 0u || line.rfind("@chali_heap_size =", 0) == 0u) continue;
+#ifdef _WIN32
+        if (request.options.shared && (line.find(" @chali_init(") != Text::npos || line.find(" @chali_finish(") != Text::npos) && line.rfind("define ", 0) == 0u) line.insert(line.find("void "), "dllexport ");
+#endif
+        if (libraryLifecycle)
+        {
+            const auto init = line.find("@chali_init(");
+            if (init != Text::npos) line.replace(init, 12u, "@chali_runtime_init(");
+            const auto finish = line.find("@chali_finish(");
+            if (finish != Text::npos) line.replace(finish, 14u, "@chali_runtime_finish(");
+            const auto exported = line.find("dllexport ");
+            if (exported != Text::npos) line.erase(exported, 10u);
+        }
+        out += line + "\n";
+    }
+    out += "declare i64 @chali_host_call(ptr, i64, ptr, ptr)\n";
+    out += "declare i8 @chali_host_result_float()\n";
+    out += "@chali_return_float = internal thread_local global i8 0\n";
+    out += "@chali_source_function = internal thread_local global ptr null\n@chali_source_file = internal thread_local global ptr null\n@chali_source_line = internal thread_local global i64 0\n";
+    out += "define void @chali_location(ptr %file, ptr %line, ptr %function) {\nentry:\n  %f = load ptr, ptr @chali_source_file\n  %l = load i64, ptr @chali_source_line\n  %n = load ptr, ptr @chali_source_function\n  store ptr %n, ptr %function\n  store ptr %f, ptr %file\n  store i64 %l, ptr %line\n  ret void\n}\n";
+    out += "define i8 @chali_result_float() {\nentry:\n  %flag = load i8, ptr @chali_return_float\n  ret i8 %flag\n}\n";
+    out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
+    out += "declare void @chali_host_poll()\n";
+    out += "declare void @chali_host_tick(i64)\n";
+    out += "@chali_threads_enabled = constant i32 " + Text(request.options.threadsEnabled ? "1" : "0") + "\n";
+    out += "@chali_function_count = constant i64 " + std::to_string(state.addressedFunctions.size()) + "\n";
+    out += "@chali_function_addresses = constant [" + std::to_string(state.addressedFunctions.size()) + " x i64] [";
+    bool firstAddress = true;
+    for (const auto &label : state.addressedFunctions)
+    {
+        if (!firstAddress) out += ", ";
+        firstAddress = false;
+        out += "i64 " + std::to_string(request.dataBytes.find(Memory::String(label.c_str()) + Memory::String(1, '\0')));
+    }
+    out += "]\n";
+    out += "@chali_data_layout = constant [" + std::to_string(request.dataLayout.size() + 1) + " x i8] c\"";
+    for (const unsigned char byte : request.dataLayout)
+    {
+        char escaped[4];
+        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+        out += escaped;
+    }
+    out += "\\00\"\n";
+    out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
+    out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
+    out += "@chali_data_image = constant [" + std::to_string(request.dataBytes.size()) + " x i8] c\"";
+    for (const unsigned char byte : request.dataBytes)
+    {
+        char escaped[4];
+        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+        out += escaped;
+    }
+    out += "\"\n";
+    std::set<Text> shared;
+    Text definitions;
+    for (const auto &function : state.functions)
+    {
+        if (!isLive(state, function)) continue;
+        Builder builder(state, function);
+        const Text definition = builder.generate();
+        if (definition.empty()) return {};
+        definitions += definition;
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = request.quads->quads[at];
+            for (std::size_t slot = 0; slot < quad.args.size() && slot < 3; ++slot)
+            {
+                const auto &token = quad.args[slot];
+                if (token.empty() || token == "_" || !literalIsName(token) || isTypeName(token)) continue;
+                if (quad.op == "label" || quad.op == "decl" || quad.op == "j" || ((quad.op == "jz" || quad.op == "jnz") && slot > 0) || (quad.op == "call" && slot < 2) || (quad.op == "param" && slot > 0) || (quad.op == "addr" && slot < 2) || (quad.op.rfind("cvt:", 0) == 0u && slot == 1)) continue;
+                if (builder.locals.count(textOf(token)) == 0u) shared.insert(textOf(token));
+            }
+        }
+    }
+    for (const auto &entry : state.globals) shared.insert(entry.first);
+    for (const auto &file : state.sourceFiles)
+    {
+        Text bytes;
+        for (const unsigned char byte : file.first)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@source_file" + std::to_string(file.second) + " = private constant [" + std::to_string(file.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
+    std::vector<const Function *> traced;
+    for (const auto &function : state.functions)
+        if (isLive(state, function)) traced.push_back(&function);
+    out += "define void @chali_code_anchor() uwtable section \"chali_code\" {\nentry:\n  ret void\n}\n";
+    out += "@trace_anchor_name = private constant [1 x i8] zeroinitializer\n";
+    for (std::size_t at = 0; at < traced.size(); ++at)
+    {
+        Text bytes;
+        for (const unsigned char byte : traced[at]->label)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@trace_name" + std::to_string(at) + " = private constant [" + std::to_string(traced[at]->label.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
+    const auto traceCount = std::to_string(traced.size() + 1);
+    out += "@chali_trace_count = constant i64 " + traceCount + "\n";
+    out += "@chali_trace_functions = constant [" + traceCount + " x ptr] [ptr @chali_code_anchor";
+    for (const auto *function : traced) out += ", ptr @" + textOf(function->llvmName);
+    out += "]\n@chali_trace_names = constant [" + traceCount + " x ptr] [ptr @trace_anchor_name";
+    for (std::size_t at = 0; at < traced.size(); ++at) out += ", ptr @trace_name" + std::to_string(at);
+    out += "]\n";
+    for (const auto &native : state.nativeNames)
+    {
+        Text bytes;
+        for (const unsigned char byte : native.first)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@native_name" + std::to_string(native.second) + " = private constant [" + std::to_string(native.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
+    Text resetSlots = "define void @chali_reset_slots() {\nentry:\n  store i8 0, ptr @chali_return_float\n  store ptr null, ptr @chali_source_function\n  store ptr null, ptr @chali_source_file\n  store i64 0, ptr @chali_source_line\n";
+    for (const auto &name : shared)
+    {
+        const Memory::String token(name.c_str());
+        const bool floating = state.kindOf(token) == Kind::Float;
+        out += "@s_" + textOf(state.use(token)) + " = internal " + Text(request.options.threadsEnabled ? "thread_local " : "") + "global " + (floating ? "double 0.0" : "i64 0") + "\n";
+        if (!floating) out += "@t_" + textOf(state.use(token)) + " = internal " + Text(request.options.threadsEnabled ? "thread_local " : "") + "global i8 0\n";
+        resetSlots += "  store " + Text(floating ? "double 0.0" : "i64 0") + ", ptr @s_" + textOf(state.use(token)) + "\n";
+        if (!floating) resetSlots += "  store i8 0, ptr @t_" + textOf(state.use(token)) + "\n";
+    }
+    out += resetSlots + "  ret void\n}\n";
+    std::map<Text, Text> externalDeclarations;
+    for (const auto &external : request.externs)
+    {
+        if (state.usedExternLabels.count(textOf(external.label)) == 0u) continue;
+        const Text resultType = abiType(external.resultType);
+        if (resultType.empty()) continue;
+        Text declaration = "declare " + resultType + " @" + llvmSymbol(external.symbol) + "(";
+        for (std::size_t at = 0; at < external.parameterTypes.size(); ++at)
+        {
+            if (at != 0u) declaration += ", ";
+            declaration += abiType(external.parameterTypes[at]);
+        }
+        declaration += ")\n";
+        const auto existing = externalDeclarations.emplace(textOf(external.symbol), declaration);
+        if (!existing.second && existing.first->second != declaration)
+        {
+            state.fail("AOT：同一外部符号的 ABI 声明不一致 " + external.symbol);
+            return {};
+        }
+        if (existing.second) out += declaration;
+    }
+    if (request.abiGlue.empty()) out += "define i1 @chali_program_abi_bind(ptr %registry, ptr %error) {\nentry:\n  ret i1 true\n}\n";
+    out += definitions;
+    out += indirectDispatcher(state);
+    if (libraryLifecycle)
+    {
+#ifdef _WIN32
+        const Text visibility = "dllexport ";
+#else
+        const Text visibility;
+#endif
+        out += "define " + visibility + "void @chali_init() {\nentry:\n  call void @chali_runtime_init()\n  %initialized = call i64 @f___chali_library_init()\n  ret void\n}\n";
+        out += "define " + visibility + "void @chali_finish() {\nentry:\n  %finished = call i64 @f___chali_library_finish()\n  call void @chali_runtime_finish()\n  ret void\n}\n";
+    }
+    if (!request.options.shared) out += "define i32 @main(i32 %argc, ptr %argv) {\nentry:\n  call void @chali_init()\n  call void @chali_host_process_arguments(i32 %argc, ptr %argv)\n  %result = call i64 @f_main()\n  call void @chali_finish()\n  %code = trunc i64 %result to i32\n  ret i32 %code\n}\n";
+    if (header != nullptr)
+    {
+        Text declarations = "/* ChaLi LLVM AOT C ABI */\n#ifndef CHALI_AOT_H\n#define CHALI_AOT_H\n#include <stdint.h>\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n";
+        declarations += "/**\n * @brief 分配本模块的运行时内存、装入数据并执行全局初始化。\n * @note 必须先于导出函数调用，使用结束后调用 chali_finish。\n */\nvoid chali_init(void);\n";
+        declarations += "/**\n * @brief 执行全局资源清理、刷新输出并释放本模块的运行时内存。\n * @note 收尾之后不能继续使用原有句柄。\n */\nvoid chali_finish(void);\n";
+        for (const auto &function : state.functions)
+        {
+            if (!function.exported) continue;
+            declarations += "/**\n * @brief 通过 C ABI 调用 ChaLi 函数 " + textOf(function.label) + "。\n";
+            for (std::size_t at = 0; at < function.parameters.size(); ++at)
+                declarations += " * @param p" + std::to_string(at) + " 按值传入 ChaLi 形参 " + textOf(function.parameters[at]) + "，句柄使用模块内字节偏移。\n";
+            declarations += Text(" * @return ") + (function.returnsFloat ? "ChaLi 函数的双精度浮点返回值。" : "ChaLi 函数的六十四位返回值；无语言返回值时为零。") + "\n */\n";
+            declarations += Text(function.returnsFloat ? "double " : "int64_t ") + textOf(function.llvmName) + "(";
+            for (std::size_t at = 0; at < function.parameters.size(); ++at)
+            {
+                if (at != 0u) declarations += ", ";
+                declarations += Text(state.kindOf(function.parameters[at]) == Kind::Float ? "double " : "int64_t ") + "p" + std::to_string(at);
+            }
+            if (function.parameters.empty()) declarations += "void";
+            declarations += ");\n";
+        }
+        declarations += "#ifdef __cplusplus\n}\n#endif\n#endif\n";
+        *header = Memory::String(declarations.c_str());
+    }
+    return Memory::String(out.data(), out.size());
+}
+
+namespace
+{
+/**
+ * @brief 为宿主命令行引用单个文件路径参数。
+ * @param value 文件名或工具路径。
+ * @return 不参与命令替换的引用文本。
+ */
+Text quote(const Text &value)
+{
+#ifdef _WIN32
+    if (value.find_first_of("\"\r\n%") != Text::npos) return Text();
+    return "\"" + value + "\"";
+#else
+    Text result = "'";
+    for (const char byte : value) result += byte == '\'' ? "'\\''" : Text(1, byte);
+    return result + "'";
+#endif
+}
+
+/**
+ * @brief 找到当前宿主可用的 LLVM clang 驱动。
+ * @param wanted 用户显式指定的 LLVM 驱动路径。
+ * @return 显式路径、仓库自带工具或环境中的 clang。
+ */
+Text compilerPath(const Memory::String &wanted)
+{
+    if (!wanted.empty()) return textOf(wanted);
+    if (const char *environment = std::getenv("CHALI_LLVM_CLANG"))
+        if (*environment != '\0') return environment;
+    std::vector<std::filesystem::path> roots{ std::filesystem::current_path() };
+#ifdef _WIN32
+    wchar_t buffer[32768];
+    const DWORD size = GetModuleFileNameW(nullptr, buffer, 32768);
+    if (size != 0u && size < 32768) roots.push_back(std::filesystem::path(buffer).parent_path());
+    const char *name = "clang.exe";
+#else
+    std::error_code error;
+    const auto executable = std::filesystem::read_symlink("/proc/self/exe", error);
+    if (!error) roots.push_back(executable.parent_path());
+    const char *name = "clang";
+#endif
+    for (const auto &root : roots)
+        for (const auto &relative : { "library/llvm/toolchain/bin", "llvm/bin" })
+        {
+            const auto path = root / relative / name;
+            if (std::filesystem::is_regular_file(path)) return path.u8string();
+        }
+    return "clang";
+}
+
+/**
+ * @brief 按二进制模式写入生成资产并检查完整写入。
+ * @param path 目标路径。
+ * @param contents 待写入字节。
+ * @return 打开、写入和关闭全部成功时返回 true。
+ */
+bool writeFile(const Text &path, const Memory::String &contents)
+{
+    std::ofstream output(std::filesystem::u8path(path), std::ios::binary);
+    output.write(contents.data(), static_cast<std::streamsize>(contents.size()));
+    output.close();
+    return !output.fail();
+}
+}  // namespace
+
+/**
+ * @brief 将 LLVM 模块写盘，由 LLVM 优化与生成目标代码，再链接原生产物。
+ * @param request 四元式、运行时数据、外部函数及输出配置。
+ * @param diagnostics 接收生成、写入或 LLVM 工具失败的诊断。
+ * @return 全部成功返回零；失败返回非零。
+ */
+int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
+{
+    Memory::String header;
+    const Memory::String source = generateLLVM(request, diagnostics, &header);
+    if (source.empty()) return 1;
+    const Text prefix = request.options.outputPrefix.empty() ? "chali_aot" : textOf(request.options.outputPrefix);
+    const Text llvmPath = prefix + ".ll";
+    if (!writeFile(llvmPath, source) || (!header.empty() && !writeFile(prefix + ".h", header)))
+    {
+        if (diagnostics != nullptr) diagnostics->push_back("AOT：无法写入 LLVM 模块或 ABI 头文件");
+        return 1;
+    }
+    if (request.options.emitLLVMOnly) return 0;
+    RuntimeAssets abiAssets;
+    Request linked = request;
+    if (!request.abiGlue.empty())
+    {
+        Memory::String object;
+        if (!abiAssets.prepareAbi(request.abiGlue, &object, diagnostics)) return 1;
+        linked.options.linkObjects.push_back(object);
+    }
+#ifdef _WIN32
+    const Text product = prefix + (request.options.shared ? ".dll" : ".exe");
+#else
+    const Text product = prefix + (request.options.shared ? ".so" : "");
+#endif
+    if (builtin::available() && request.options.compiler.empty())
+        return builtin::compile(linked, Memory::String(llvmPath.c_str()), Memory::String(product.c_str()), diagnostics);
+    const Text compiler = compilerPath(request.options.compiler);
+    if (quote(compiler).empty() || quote(llvmPath).empty() || quote(product).empty())
+    {
+        if (diagnostics != nullptr) diagnostics->push_back("AOT：工具或输出路径含不支持的命令行字符");
+        return 1;
+    }
+    RuntimeAssets runtimeAssets;
+    if (!runtimeAssets.restore(diagnostics)) return 1;
+    Text command = quote(compiler) + " -O2 -Wno-override-module ";
+    if (request.options.shared) command += "-shared -fPIC ";
+    command += quote(llvmPath) + " -o " + quote(product);
+    for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
+    command += " -L" + quote(runtimeAssets.root.generic_u8string()) + " -Wl,--start-group -lchali_aot_host " + quote((runtimeAssets.root / "libstdc++.a").generic_u8string()) + " -lgcc_eh -lgcc";
+#ifdef _WIN32
+    command += " -static -lwinpthread -lwinhttp -lws2_32 -lcrypt32 -lbcrypt ";
+    for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeAssets.root / name).generic_u8string()) + " ";
+#endif
+    command += " -Wl,--end-group";
+    for (const auto &library : request.options.linkLibraries)
+    {
+        const Text argument = quote(textOf(library));
+        if (argument.empty())
+        {
+            if (diagnostics != nullptr) diagnostics->push_back("AOT：链接库路径含不支持的字符");
+            return 1;
+        }
+        command += " " + argument;
+    }
+    const Text log = prefix + ".llvm.log";
+    command += " > " + quote(log) + " 2>&1";
+#ifdef _WIN32
+    command = "\"" + command + "\"";
+#endif
+#ifdef _WIN32
+    const int status = _wsystem(std::filesystem::u8path(command).wstring().c_str());
+#else
+    const int status = std::system(command.c_str());
+#endif
+    if (status != 0)
+    {
+        if (diagnostics != nullptr)
+        {
+            diagnostics->push_back("AOT：LLVM 编译或链接失败；请检查 library/llvm/ 工具链或使用 --llvm 指定 clang");
+            std::ifstream input(std::filesystem::u8path(log), std::ios::binary);
+            Text output((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+            if (output.size() > 8000) output.resize(8000);
+            diagnostics->push_back(Memory::String(output.c_str()));
+        }
+        return 1;
+    }
+    return 0;
+}
+}  // namespace chali_aot

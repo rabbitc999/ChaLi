@@ -1,0 +1,7 @@
+void wrong() {
+    return 7;
+}
+
+void main() {
+    wrong();
+}

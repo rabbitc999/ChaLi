@@ -1,0 +1,1 @@
+void main() { String value = "one"; String const& ref = &value; ref = "two"; }

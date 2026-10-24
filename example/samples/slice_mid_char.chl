@@ -1,0 +1,12 @@
+/* 任意字节端点切片，并用 ASCII 数值验证不完整 UTF-8 字节。 */
+void main()
+{
+    String text = "1！x";
+    String prefix = text[0:2];
+    String middle = text[2:3];
+    String suffix = text[3:5];
+    println("{} {}", prefix.length(), (int64)prefix[1]);
+    println("{} {}", middle.length(), middle.byteAt(0).unwrap());
+    println("{} {} {}", suffix.length(), suffix.byteAt(0).unwrap(), suffix.byteAt(1).unwrap());
+    println("{} {}", text[2:2].length(), text[99:100].length());
+}

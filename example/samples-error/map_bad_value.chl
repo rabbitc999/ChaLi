@@ -1,0 +1,4 @@
+void main() {
+    std::lang::Map<String, int64> values;
+    values.put("key", "wrong");
+}

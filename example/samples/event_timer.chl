@@ -1,0 +1,13 @@
+import std::event;
+void main() {
+    assert(std::event::post(7, 19) == 0);
+    let posted = std::event::tryReceive();
+    assert(posted.isReady() && posted.value.tag == 7 && posted.value.source == 19);
+    Timer timer = Timer::afterMillis(2);
+    assert(timer.isValid());
+    let tick = std::event::receiveFor(1000);
+    assert(tick.isReady() && tick.value.timer == timer.id());
+    timer.stop();
+    assert(std::event::tryReceive().status == 1);
+    println("events ok");
+}

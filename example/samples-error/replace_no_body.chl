@@ -1,0 +1,2 @@
+$replace EMPTY
+void main() { }

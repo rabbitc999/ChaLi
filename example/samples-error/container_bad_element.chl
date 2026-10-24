@@ -1,0 +1,4 @@
+void main() {
+    std::lang::List<int64> values;
+    values.push("wrong");
+}

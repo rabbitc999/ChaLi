@@ -1,0 +1,235 @@
+{
+  "generated": "20261024-200355",
+  "host": "DESKTOP-5Q9FB8C",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "python": "3.12.3",
+  "runs": 3,
+  "reps_per_run": 5,
+  "cases": [
+    "array_rw"
+  ],
+  "sinks": {
+    "array_rw": {
+      "chali": "3398979922",
+      "chali-aot": "3398979922",
+      "c": "3398979922",
+      "lua": "3398979922"
+    }
+  },
+  "configs": {
+    "chali": {
+      "label": "ChaLi 0.31.0（StackVM，默认后端）",
+      "note": "字节码解释执行，无即时编译",
+      "median_ms": {
+        "array_rw": 625.92
+      },
+      "min_ms": {
+        "array_rw": 591.579
+      },
+      "max_ms": {
+        "array_rw": 670.106
+      },
+      "samples_ns": {
+        "array_rw": [
+          592815600,
+          641865800,
+          604370100,
+          644854900,
+          591579100,
+          625939700,
+          656493700,
+          604011600,
+          601592100,
+          645976700,
+          595979400,
+          625920400,
+          599457700,
+          643354900,
+          670106500
+        ]
+      },
+      "unavailable": {}
+    },
+    "chali-aot": {
+      "label": "ChaLi 0.31.0（LLVM AOT，默认检查）",
+      "note": "同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM -O2 与默认检查；C 壳计时，初始化不计时；共享原生标准库",
+      "median_ms": {
+        "array_rw": 156.419
+      },
+      "min_ms": {
+        "array_rw": 150.473
+      },
+      "max_ms": {
+        "array_rw": 192.953
+      },
+      "samples_ns": {
+        "array_rw": [
+          192953400,
+          170653900,
+          182856300,
+          155475100,
+          159834500,
+          154808700,
+          150472900,
+          166176700,
+          151925200,
+          156419400,
+          153234600,
+          153991100,
+          154098100,
+          174539600,
+          162140200
+        ]
+      },
+      "unavailable": {}
+    },
+    "c": {
+      "label": "C（gcc -O2）",
+      "note": "原生机器码基线；volatile 函数入口保留计时边界",
+      "median_ms": {
+        "array_rw": 8.656
+      },
+      "min_ms": {
+        "array_rw": 8.637
+      },
+      "max_ms": {
+        "array_rw": 8.875
+      },
+      "samples_ns": {
+        "array_rw": [
+          8688600,
+          8676800,
+          8645300,
+          8641400,
+          8639300,
+          8652700,
+          8659300,
+          8682700,
+          8652100,
+          8875300,
+          8655900,
+          8687000,
+          8649700,
+          8676400,
+          8637500
+        ]
+      },
+      "unavailable": {}
+    },
+    "lua": {
+      "label": "Lua 5.5.1（官方 VM，默认 GC）",
+      "note": "官方 Lua VM，GCC -O2；64 位整数/双精度，默认 GC；C 宿主仅提供单调时钟，table 使用一基索引",
+      "median_ms": {
+        "array_rw": 71.044
+      },
+      "min_ms": {
+        "array_rw": 66.652
+      },
+      "max_ms": {
+        "array_rw": 97.54
+      },
+      "samples_ns": {
+        "array_rw": [
+          67612800,
+          66786000,
+          69231500,
+          80117900,
+          71044500,
+          67775400,
+          78433900,
+          79731700,
+          97539700,
+          84874200,
+          68303100,
+          69466500,
+          73727700,
+          66652300,
+          78924700
+        ]
+      },
+      "unavailable": {}
+    }
+  },
+  "chali_compiler": {
+    "reported_version": "0.31.0",
+    "sha256": "f7b7067bb5d130a3324a267d450e5acc2afee3717bdb7afc61f81ab48832e8a9"
+  },
+  "tool_versions": {
+    "llvm-clang": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/library/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/library/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg",
+    "lua": "Lua 5.5.1 (official VM, monotonic clock host)",
+    "gcc": "gcc.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "g++": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "go": "go version go1.27.1 windows/amd64",
+    "java": "java version \"22.0.1\" 2024-04-16\nJava(TM) SE Runtime Environment (build 22.0.1+8-16)\nJava HotSpot(TM) 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)",
+    "node": "v26.5.0",
+    "python": "Python 3.12.3"
+  },
+  "llvm_dependency": {
+    "version": "23.1.4",
+    "distribution": "llvm-mingw 20261020 ucrt x86_64",
+    "upstream": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+    "upstream_sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+    "archive_sha256": "5a988a6f875bdda342239ce033c47b94c33c5c2e520245209fe9a493d9cfcc67",
+    "archive_bytes": 76120409,
+    "archive_parts": [
+      {
+        "file": "packages/windows-x86_64.zip.001",
+        "bytes": 8388608,
+        "sha256": "cf218c3956b34512902b5e3c2874cb220565bfbb93a71d4ebff2fe74cc318121"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.002",
+        "bytes": 8388608,
+        "sha256": "5f852870250fbdbc1adc02ad8daef496ef088c543caa4ee0bfc71bbe0ce82dc4"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.003",
+        "bytes": 8388608,
+        "sha256": "e43598245771583d364e4d7cc3aa41e127e37ebb349262274147344d7fe67a8a"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.004",
+        "bytes": 8388608,
+        "sha256": "03e8e94dc36255c161d10f831770e378ec4d04d523f63debfd7eccf98e5cafad"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.005",
+        "bytes": 8388608,
+        "sha256": "8f3453c0b45d37eed282c2c3aba03f7e13272b147a935da72dc9077294b7319b"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.006",
+        "bytes": 8388608,
+        "sha256": "c9dd7f8bd784532730935b9a791ca89b634cd79ba0bc912e698ee6a7acfaaeb5"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.007",
+        "bytes": 8388608,
+        "sha256": "8904185bb83c63de90f353c70903e1ac5eae03106b4d8f33040af2aa53908bab"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.008",
+        "bytes": 8388608,
+        "sha256": "2632dffb88e445596b969a1f4a56d54f453a1de2241dc28721e57f0f8f9a40c6"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.009",
+        "bytes": 8388608,
+        "sha256": "fd20e6995bfcb1c36159cd67de6829ce9e4158a6a96e1a9cda600d7bd146bacc"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.010",
+        "bytes": 622937,
+        "sha256": "8c7e46edb887c99296967607cff518c625c7c7bb5dc0d6260f81624a4e440d26"
+      }
+    ]
+  },
+  "lua_dependency": {
+    "version": "5.5.1",
+    "url": "https://www.lua.org/ftp/lua-5.5.1.tar.gz",
+    "sha256": "1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
+  },
+  "lua_host_sha256": "1c049eeecdf647e7b4ac45edf4aed9d7d032715ad359d92003a8a1a9ffe7f0dd"
+}

@@ -1,0 +1,5 @@
+/* std::lang::println 的格式说明必须合法，未知格式在编译期报错。 */
+
+void main() {
+    std::lang::println("value = {1:Q}", 1);
+}

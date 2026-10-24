@@ -1,0 +1,1 @@
+void main() { int64 a = 1; int64 mut& view = &a; int64 mut& next = &view + 1; }

@@ -1,0 +1,12 @@
+((int64 fn(int64), int64 fn(int64), int64, int64) fn(int64, int64)) simple(int64 fn(int64) a, int64 fn(int64) b) {
+    return (int64 fn(int64), int64 fn(int64), int64, int64) fn copy(int64 x, int64 y) { (a, b, a(x), b(y)) };
+}
+
+void main() {
+    ((int64 fn(int64), int64 fn(int64), int64, int64) fn(int64, int64)) fn(int64 fn(int64), int64 fn(int64)) ff = simple;
+    let tt = ff(int64 fn(int64 x) { x + 1 }, int64 fn(int64 x) { x + 2 });
+    let tuple = tt(1, 3);
+    int64 x = tuple.2;
+    int64 y = tuple.3;
+    println("{} {}", x, y);
+}

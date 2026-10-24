@@ -1,0 +1,3 @@
+void main() {
+    bfloat_precision(0);
+}

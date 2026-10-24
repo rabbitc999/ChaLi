@@ -1,0 +1,4 @@
+abi "./unused.dll" {
+    int32[] numbers(int32 count) = "numbers" [missing];
+}
+void main() { }

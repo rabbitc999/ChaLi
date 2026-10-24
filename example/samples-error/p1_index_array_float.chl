@@ -1,0 +1,1 @@
+void main(){int64 value[2]; int64 result=value[1.5];}

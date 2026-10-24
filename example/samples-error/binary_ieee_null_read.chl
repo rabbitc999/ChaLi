@@ -1,0 +1,4 @@
+void main() {
+    uint8 const& bytes = (uint8 const&)0;
+    Option<float64> result = std::lang::bytesToFloat64(bytes, 8);
+}

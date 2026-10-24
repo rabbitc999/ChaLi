@@ -1,0 +1,8 @@
+struct Values : Index<int64, int64> {
+    int64 index(int64 key) { return key; }
+};
+
+void main() {
+    Values values;
+    values[0] = 1;
+}

@@ -1,0 +1,2 @@
+int64 sum(int64... values) { return len(values); }
+void main() { let __ignored1 = sum(1, "bad"); }

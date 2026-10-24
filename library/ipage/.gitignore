@@ -1,0 +1,7 @@
+/build/
+/tmp/
+source/build/
+*.o
+*.obj
+*.a
+*.lib

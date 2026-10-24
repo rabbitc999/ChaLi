@@ -1,0 +1,32 @@
+/* 宏模板与表达式参数按 AST 结构替换。 */
+$macro ADD(a, b)
+a + b
+$end_macro
+$macro EXPLICIT(a, b)
+a + b
+$end_macro
+$replace MIXED(a, b) a + b
+$macro PRODUCT(a, b)
+a * b
+$end_macro
+$macro PRINT(...args)
+$for item in args
+std::lang::println("{}", item * item);
+$end_for
+$end_macro
+$macro FIRST(a, b)
+if (true) { a } else { b }
+$end_macro
+
+void main() {
+    std::lang::String label = "expr";
+    std::lang::List<int64> values;
+    values.push(3);
+    std::lang::println("{} {} {} {} {} {}", label,
+    3 * $ADD(1 + 2, 4 * 2),
+    3 * $EXPLICIT(1 + 2, 4 * 2),
+    3 * $MIXED(1 + 2, 4 * 2),
+        $PRODUCT(1 + 2, 4 + 1),
+        $FIRST(values[0] + 1, 5 * 2));
+    $PRINT(1 + 2, $ADD(2, 3));
+}

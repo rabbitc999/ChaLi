@@ -1,0 +1,6 @@
+type HostId = uint64;
+
+void main()
+{
+    HostId id = cast<HostId>((uint64)1);
+}

@@ -1,0 +1,1 @@
+void main() { match(1) { 1 if 3 => { let __ignored1 = 1; } _ => { return; } } }

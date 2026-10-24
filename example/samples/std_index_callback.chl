@@ -1,0 +1,8 @@
+int64 combine(int64 a, int64 b) { return a + b + 5; }
+void main() {
+    { int64 fn(int64, int64) index = combine; assert(index(2, 3) == 10); }
+    int64 data[1];
+    index(data, 0) = 7;
+    assert(index(data, 0) == 7);
+    println("index callback OK");
+}

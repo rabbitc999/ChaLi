@@ -1,0 +1,1 @@
+chali: example/samples-error/legacy_delete_stmt.chl 第 4 行第 5 列：没有声明的类型：delete（block）

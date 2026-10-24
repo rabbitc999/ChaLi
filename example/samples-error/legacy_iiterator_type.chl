@@ -1,0 +1,6 @@
+struct Series : IIterator<int64> {
+    Option<int64> iterator(int64 index) { return Option<int64>::None; }
+};
+
+void main() {
+}

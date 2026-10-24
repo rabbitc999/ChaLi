@@ -1,0 +1,2 @@
+import std::iter;
+void main() { let cursor = std::iter::range(0,5).take(-1); }

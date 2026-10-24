@@ -1,0 +1,4 @@
+void main() {
+    String text = "x";
+    text[0] = true;
+}

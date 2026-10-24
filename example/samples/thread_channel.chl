@@ -1,0 +1,16 @@
+import std::thread;
+import std::concurrency;
+void worker(std::concurrency::Channel<int64> values) {
+    values.send(42);
+    values.close();
+}
+void main() {
+    let values = std::concurrency::Channel<int64>::create(2);
+    Thread task = std::thread::createWith<std::concurrency::Channel<int64>>(worker, values);
+    let next = values.receive();
+    assert(next.isReady() && next.value == 42);
+    assert(values.receive().status == std::concurrency::CLOSED);
+    let completed = std::thread::waitResult(task);
+    assert(completed.isReady());
+    println("channel {}", next.value);
+}

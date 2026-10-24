@@ -1,0 +1,12 @@
+
+import std::thread;
+
+void worker() {
+    String message = std::thread::receive();
+    std::lang::println("{}", message);
+}
+
+void main() {
+    Thread task = std::thread::create(worker);
+    std::thread::wait(task);
+}

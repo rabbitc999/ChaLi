@@ -1,0 +1,7 @@
+
+import std::thread;
+
+void main() {
+    String message = std::thread::receive();
+    std::lang::println("{}", message);
+}

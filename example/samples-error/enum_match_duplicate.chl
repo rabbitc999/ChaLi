@@ -1,0 +1,9 @@
+enum Option { None, Some(int64 value) };
+void main() {
+    Option value = Option::None;
+    match (value) {
+        Option::None => { return; }
+        Option::None => { let __ignored1 = 1; }
+        _ => { let __ignored2 = 2; }
+    }
+}

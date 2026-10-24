@@ -1,0 +1,7 @@
+void main() {
+    float32 b = 1;
+    let fb = float32 fn move() { b };
+    float32 b = 2;
+    assert(fb() == 1 && b == 2);
+    println("{} {}", fb(), b);
+}

@@ -1,0 +1,1 @@
+chali: 泛型：identity 至多接受 1 个类型实参

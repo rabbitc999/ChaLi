@@ -1,0 +1,4 @@
+$macro BAD(`...items)
+items
+$end_macro
+void main() { }

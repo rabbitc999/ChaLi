@@ -1,0 +1,55 @@
+# 05 交付安全
+
+<!-- LANGUAGE NAVIGATION -->
+[English](en/05-delivery-security.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
+字节码不提供加密：`--encrypt` 与 `[chali] encrypt` 不受支持，产物须从源码导出。
+
+## 1. 交付形态
+
+| 形态 | 接收方需要什么 | 适用场景 |
+| --- | --- | --- |
+| `.chl` 源码 | ChaLi 编译器 | 开放源码、联合开发 |
+| 普通 `.svmb` | 匹配能力的 StackVM 宿主 | 目标宿主加载、跨平台部署 |
+| 无名变长符号 `.svmb` | 支持紧凑格式的 StackVM 宿主 | 减小文件、去除可读符号名 |
+
+## 2. 导出与分发
+
+普通字节码：
+
+```sh
+chali svmb src/main.chl out build/app
+```
+
+无名变长符号字节码：
+
+```sh
+chali svmb src/main.chl out build/app --compress-symbols
+```
+
+第二条命令生成 `build/app.svmb` 与 `build/app.symbol_map.json`。映射表由开发方保存；可用 `--symbol-map FILE` 指定路径。不要将其作为用户运行所必需的文件。
+
+## 3. 能力边界
+
+容器校验和用于发现意外损坏，不提供身份认证。需要控制发布来源或设备访问权限时，应由部署系统和宿主实现对应策略。
+
+默认不写源码位置；需要调试记录时显式使用 `--debug`。符号映射可用于离线诊断，保存与部署版本对应的映射表。
+
+## 4. 产物管理
+
+| 文件 | 保存方 | 用途 |
+| --- | --- | --- |
+| `.chl` | 开发方或协作方 | 源码与重新构建 |
+| `.svmb` | 运行方 | VM 加载 |
+| `.symbol_map.json` | 开发方 | 离线诊断映射 |
+| 调试构建与构建记录 | 开发方 | 复现和定位问题 |
+
+升级时从源码重新构建，并验证目标 VM 支持程序需要的能力。移除加密后，加载器拒绝历史加密标志，项目配置中的旧键也会报错。
+
+## 5. 下一步
+
+- [工具链](09-toolchain.md)：命令与构建方式。
+- [二进制容器格式](15-svmb-format.md)：加载校验和格式边界。
+- [无名变长符号表](16-compact-symbols.md)：符号压缩、映射及空间对比。
+- [panic 调用栈](18-panic-trace.md)：错误诊断与定位。

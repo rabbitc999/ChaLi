@@ -1,0 +1,117 @@
+# ChaLi Documentation
+
+<!-- LANGUAGE NAVIGATION -->
+**English** · [简体中文](../README.md)
+<!-- END LANGUAGE NAVIGATION -->
+
+See [current capabilities and limits](17-capabilities.md) for the shared implementation contract and build defaults.
+
+**Write once, run anywhere.** One logic, from embedded Linux to cloud; value semantics, non-null references, no GC.
+
+ChaLi lets you write business logic once: the same source compiles to bytecode that the shared VM
+runs on desktop, server and embedded Linux hosts, with platform differences handled by host glue.
+There is no garbage collector, and resources are released deterministically when they leave scope.
+
+Read the current language/toolchain version from [`VERSION`](../../VERSION).
+
+For AI-assisted ChaLi programming, use the repository's [ChaLi programming skill](../../skills/chali-programming/SKILL.md), covering syntax choices, API lookup, macros and execution checks.
+Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
+
+> This is the English edition. The Chinese edition is the default and is the one maintained first —
+> see [中文文档](README.md). Code snippets are identical in both editions and are executed before
+> they are published.
+
+---
+
+## What do you want to do?
+
+| Who you are | Start here |
+| --- | --- |
+| New to ChaLi | [Vision](00-vision.md) → [5-minute quickstart](01-quickstart.md) |
+| Evaluating it for a project | [Vision](00-vision.md) (includes "who should not use it") → [Cross-platform deployment](06-deployment.md) |
+| Ready to write code | [Language tour](02-language-tour.md) → [Language reference](04-language-reference.md) |
+| Want to understand value semantics and references | [Core concepts](03-core-concepts.md) |
+| Deploying the program to a target host | [Delivery security](05-delivery-security.md) → [Cross-platform deployment](06-deployment.md) |
+| Want to know what the standard library has | [Standard library overview](07-stdlib-overview.md) |
+| Looking for something to run right away | [Example projects](13-projects.md) (student records, graphics, host VM…) |
+| Need to talk to a C/C++ host | [Host integration and C ABI](08-host-integration.md) |
+| Looking up commands, config, tests | [Toolchain](09-toolchain.md) |
+| Querying APIs in a terminal or checking editor caches | [Command line manual](../man/en/README.md) → [LSP incremental hints and caching](../man/en/lsp.md) |
+| Looking for the authoritative grammar | [EBNF grammar reference](../14-grammar-ebnf.md) |
+| Comparing VM execution performance | [Current cross-language VM measurements](12-vm-performance.md) |
+| Installing MSI/DEB/RPM packages or building another CPU architecture | [Installation packages and architecture builds](42-installation-packages.md) |
+| Want to contribute / see the roadmap | [Roadmap and ecosystem](10-roadmap.md) |
+
+---
+
+## Document structure
+
+| No. | Document | Audience | What it covers |
+| --- | --- | --- | --- |
+| [00](00-vision.md) | Vision | Decision makers, prospective users | The three dilemmas of software delivery, ChaLi's answers, who it fits / who it does not |
+| [01](01-quickstart.md) | 5-minute quickstart | First-time users | Install, first program, command cheat-sheet |
+| [02](02-language-tour.md) | Language tour | Experienced developers | Walk through what ChaLi looks like with runnable snippets |
+| [03](03-core-concepts.md) | Core concepts | Users going deeper | Value semantics, non-null references, resource management without a GC |
+| [04](04-language-reference.md) | Language reference | Day-to-day writers | Syntax, semantics, examples and common errors by topic, including generic nesting, default types and monomorphisation limits |
+| [05](05-delivery-security.md) | Delivery security | Teams shipping outward | Delivery forms, the four steps, reverse-engineering cost, boundary statement |
+| [06](06-deployment.md) | Cross-platform deployment | People doing deployment | Source execution and bytecode deployment, desktop / embedded Linux, resources and limits |
+| [07](07-stdlib-overview.md) | Standard library overview | Anyone asking "what can it do" | Existing modules and core APIs by capability |
+| [08](08-host-integration.md) | Host integration and C ABI | Integrators | Glue bindings, `abi` blocks, type mapping, nullable references |
+| [09](09-toolchain.md) | Toolchain | Daily `chali` users | Commands, `chali.toml`, compile options, tests, LSP, display language |
+| [10](10-roadmap.md) | Roadmap and ecosystem | Contributors, long-term users | Short/mid/long-term goals and verifiable milestones |
+| [13](13-projects.md) | Example projects | Anyone who wants to run something | Application and capability examples in the repository: location, commands, verification and prerequisites |
+| [14](../14-grammar-ebnf.md) | EBNF grammar reference | Anyone checking grammar details | Every production and token declaration generated from `source/chali.gram`; the readable form of the authoritative grammar |
+| [15](../15-svmb-format.md) | `.svmb` binary format | Format analysts and RE assessors | Container and section layout, byte-level decoding, reverse-engineering cost |
+| [16](../16-compact-symbols.md) | Nameless compact symbols | Anyone tracking size and diagnostic privacy | `--compress-symbols` format, tooling and space comparison |
+| [17](17-capabilities.md) | Current capabilities | Evaluation and integration | Language, VM, borrowing, reflection, libraries, embedded Linux and tooling contracts |
+| [18](../18-panic-trace.md) | Panic and source lines | Anyone debugging crashes | Failure output, call stack, source location, compact symbol-hiding policy |
+| [19](../19-reflection.md) | Annotations and reflection | Anyone using annotations / dynamic calls | Declaration metadata, typed queries, closed-value dynamic invocation |
+| [20](../20-memory-allocator.md) | Memory allocator | Anyone wiring host memory | Pool and capacity stats, allocation range checks, external buffers |
+| [22](22-resource-lifetime.md) | Resource lifetimes and borrow control flow | Runtime contributors | Allocation identities, resource cleanup and coalescing, temporary ownership, closure borrowing |
+
+## More entry points
+
+## Companion resources
+
+- [`example/samples/`](../../example/samples/) — runnable formal samples; expected stdout in [`example/expected/`](../../example/expected/).
+- [`example/samples-error/`](../../example/samples-error/) — samples expected to fail; diagnostics in [`example/expected-error/`](../../example/expected-error/).
+- [`doc/examples/`](../examples/) — examples that need a companion project layout (ABI, SQLite, svmb, GUI).
+- The companion projects under [`doc/examples/`](../examples/) are catalogued in [13 Example projects](13-projects.md).
+- [Project README](../../README.en.md) — build, quick usage, debugging, configuration (English;
+  [中文版](../../README.md)).
+- [Full grammar reference (EBNF)](../14-grammar-ebnf.md) — the authoritative form of the grammar, generated from [`source/chali.gram`](../../source/chali.gram).
+
+- [11 Borrow control flow and algorithm validation](11-algorithm-validation.md): independent dataflow checks, heap structures, DFS/BFS and NOIP2015 brute-force comparisons.
+
+- [Any, explicit generics and data utilities](22-any-generics-data.md)
+
+- [Ownership transfer](23-ownership-move.md)
+
+- [Context-typed literals, operator inference and macros](24-literals-operators-macros.md)
+
+- [Execution and deployment](25-execution-delivery.md)
+
+- [Custom error propagation and if expressions](26-error-propagation-if.md)
+
+- [Matching, interpolation, generics and scope cleanup](27-match-interpolation-scope.md)
+
+- [Return expressions, named closures and field derivation](28-declaration-sugars.md)
+- Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.chl), [VM regressions](../../tests/chali_block_expression.py).
+
+- Implicit moves in value breaks: [semantics and cleanup order](04-language-reference.md#moving-and-cleaning-up-value-breaks), [resource identity and destructor sample](../../example/samples/break_move.chl).
+
+- [Threads, channels and explicit events](29-thread-concurrency.md)
+
+- [Exact symbolic computation and high precision mathematics](34-symbolic-computation.md)
+- [Standard library ownership and string methods](35-opcode-values-strings.md)
+- [Reflection serialization and dynamic SQL](36-reflection-serialization-sql.md)
+
+The [24-chapter beginner book](../book/en/README.md) includes exercises with reference answers, literary adaptations and compilation / VM execution diagrams. The Chinese book is the maintained source for this material.
+
+- [Compiler safety boundaries and focused regression tests](37-compiler-safety.md)
+
+- [Opcode and standard-library host records](../38-opcode-storage.md)
+
+- [Name freeze: the five letters of ChaLi](40-name-freeze.md)
+
+- [AOT compilation](41-aot.md)

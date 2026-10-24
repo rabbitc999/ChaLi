@@ -1,0 +1,19 @@
+{
+  "chali.restartServer.title": "ChaLi: 重启语言服务器",
+  "chali.showServerLog.title": "ChaLi: 显示语言服务器日志",
+  "chali.openDoc.title": "ChaLi: 打开语言文档",
+  "chali.run.title": "ChaLi: 运行当前文件",
+  "chali.installDependencies.title": "ChaLi: 下载并锁定模块依赖",
+  "chali.checkDependencies.title": "ChaLi: 离线校验模块依赖",
+  "chali.openLibraries.title": "ChaLi: 打开在线依赖缓存",
+  "chali.previewMacroExpansion.title": "ChaLi: 预览宏展开",
+  "chali.build.title": "ChaLi: 构建当前文件",
+  "chali.buildExe.title": "ChaLi: 构建可执行文件（LLVM AOT）",
+  "chali.buildSvmb.title": "ChaLi: 构建 VM 字节码（.svmb）",
+  "chali.path.description": "chali 编译器路径（语言服务器内嵌在它里面：`chali lsp`）；留空时先用插件自带的 `bin/chali`（打包时内嵌），再在工作区与 PATH 里自动探测。",
+  "chali.traceServer.description": "把与 chali lsp 的协议消息写进输出面板，排查问题时打开。",
+  "chali.inlayHints.enabled.description": "显示 let、for-in 元素与上下文匿名函数参数的推断类型；仍受编辑器内联提示设置控制。",
+  "chali.build.outputDirectory.description": "构建输出目录；相对路径以最近的 ChaLi 工程目录为基准，没有工程清单时以源文件目录为基准。",
+  "chali.build.llvmPath.description": "可执行文件构建所用的外置 LLVM clang 路径；留空时使用编译器的内置后端或默认工具链。",
+  "chali.build.checked.description": "为 LLVM AOT 构建生成显式越界和空指针检查。"
+}

@@ -1,0 +1,168 @@
+/* httpd.chl —— 极简 HTTP 服务端：读请求、发响应。
+ *
+ * 建立在 std::net 的 TCP 套接字上。浏览器会开「预连接」空套接字，
+ * 所以读请求用非阻塞的 receiveAsync 轮询 + 空闲时限，避免被一个不发数据的
+ * 连接卡住整个服务。
+ */
+
+module httpd;
+
+import std::net;
+import std::text;
+
+/** 解析后的一个 HTTP 请求。 */
+struct Request
+{
+    String method;
+    String path;
+    String query;
+    String body;
+};
+
+/**
+ * @brief 从头部文本里取 Content-Length；没有按 0。
+ * @param head 完整请求头（不含空行）。
+ */
+int64 contentLength(String head)
+{
+    int64 position = 0;
+    while (position < len(head))
+    {
+        int64 end = std::text::Text::find(head[position:], "\r\n");
+        String line = head[position:];
+        if (end >= 0) { line = head[position:(position + end)]; }
+        String lowered = std::text::Text::toLower(line);
+        if (std::text::Text::startsWith(lowered, "content-length:"))
+        {
+            String number = std::text::Text::trim(line[15:]);
+            int64 value = 0;
+            int64 index = 0;
+            bool digits = len(number) > 0;
+            while (index < len(number))
+            {
+                char item = number[index];
+                if (item < '0' || item > '9') { digits = false; }
+                else { value = value * 10 + ((int64)item - '0'); }
+                index = index + 1;
+            }
+            if (digits) { return value; }
+            return 0;
+        }
+        if (end < 0) { break; }
+        position = position + end + 2;
+    }
+    return 0;
+}
+
+/**
+ * @brief 读取并解析一个完整 HTTP 请求。
+ * @param socket 已接受的连接。
+ * @param idleMs 首行等待上限（毫秒）；空闲连接（浏览器预连接）到点即断。
+ * @retval 解析好的请求；空连接 / 中断 / 超时返回 Err，调用方按「跳过」处理。
+ * @note 请求体上限 1 MiB。头部用阻塞的 receiveLine 等待（自带超时，不依赖
+ *       线程运行期）；请求体通常已在套接字缓冲里，用非阻塞接收有界自旋收完。
+ */
+Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
+{
+    String head = "";
+    while (true)
+    {
+        String line = socket.receiveLine((int32)idleMs);
+        if (socket.status() == std::net::NET_TIMEOUT)
+        {
+            if (head.isEmpty()) { return Result<Request, MessageError>::Err(MessageError::from("空连接")); }
+            return Result<Request, MessageError>::Err(MessageError::from("等待请求超时"));
+        }
+        if (socket.status() == std::net::NET_CLOSED)
+        {
+            if (head.isEmpty()) { return Result<Request, MessageError>::Err(MessageError::from("空连接")); }
+            return Result<Request, MessageError>::Err(MessageError::from("连接中断"));
+        }
+        if (socket.status() == std::net::NET_ERROR)
+        {
+            return Result<Request, MessageError>::Err(MessageError::from("接收失败：" + socket.lastError()));
+        }
+        if (line.isEmpty())
+        {
+            /* 头部以空行结束。 */
+            break;
+        }
+        head = head + line + "\r\n";
+    }
+    if (len(head) > 1048576)
+    {
+        return Result<Request, MessageError>::Err(MessageError::from("请求超过 1 MiB 上限"));
+    }
+    int64 lineEnd = std::text::Text::find(head, "\r\n");
+    String requestLine = head;
+    if (lineEnd >= 0) { requestLine = head[0:lineEnd]; }
+    int64 firstSpace = std::text::Text::find(requestLine, " ");
+    int64 secondSpace = std::text::Text::find(requestLine[(firstSpace + 1):], " ");
+    if (firstSpace < 0 || secondSpace < 0)
+    {
+        return Result<Request, MessageError>::Err(MessageError::from("请求行不完整"));
+    }
+    Request request;
+    request.method = requestLine[0:firstSpace];
+    String target = requestLine[(firstSpace + 1):(firstSpace + 1 + secondSpace)];
+    int64 queryStart = std::text::Text::find(target, "?");
+    if (queryStart >= 0)
+    {
+        request.path = target[0:queryStart];
+        request.query = target[(queryStart + 1):];
+    }
+    else
+    {
+        request.path = target;
+        request.query = "";
+    }
+    int64 needed = contentLength(head);
+    String body = "";
+    int64 spins = 0;
+    while (len(body) < needed)
+    {
+        String chunk = socket.receiveAsync((int32)65536);
+        if (!chunk.isEmpty())
+        {
+            body = body + chunk;
+            spins = 0;
+            continue;
+        }
+        if (socket.status() == std::net::NET_CLOSED)
+        {
+            return Result<Request, MessageError>::Err(MessageError::from("连接中断"));
+        }
+        if (socket.status() == std::net::NET_ERROR)
+        {
+            return Result<Request, MessageError>::Err(MessageError::from("接收失败：" + socket.lastError()));
+        }
+        spins = spins + 1;
+        if (spins > 5000)
+        {
+            return Result<Request, MessageError>::Err(MessageError::from("等待请求体超时"));
+        }
+    }
+    request.body = body;
+    return Result<Request, MessageError>::Ok(move request);
+}
+
+/**
+ * @brief 发送一个完整的 HTTP 响应并结束（Connection: close）。
+ * @param status HTTP 状态码。
+ * @param reason 状态短语（如 "OK"）。
+ * @param contentType 响应类型（含字符集）。
+ * @param body 响应体。
+ */
+Result<bool, MessageError> sendResponse(TcpSocket mut& socket, int64 status, String reason, String contentType, String body)
+{
+    String head = "HTTP/1.1 " + status.toString() + " " + reason
+        + "\r\nContent-Type: " + contentType
+        + "\r\nContent-Length: " + std::lang::len(body).toString()
+        + "\r\nConnection: close\r\n\r\n";
+    int64 sent = socket.send(head + body);
+    if (sent < 0)
+    {
+        return Result<bool, MessageError>::Err(MessageError::from(socket.lastError()));
+    }
+    return Result<bool, MessageError>::Ok(true);
+}
