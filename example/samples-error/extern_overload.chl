@@ -1,0 +1,6 @@
+int32 cpp_pick(int32 value);
+float64 cpp_pick(float64 value);
+
+void main()
+{
+}

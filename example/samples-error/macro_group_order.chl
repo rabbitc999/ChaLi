@@ -1,0 +1,4 @@
+$macro APPLY<T>[..Attrs](..Args){Body}
+Body;
+$end_macro
+void main() { $APPLY<int64>(x)[readonly]{{ println("wrong order"); }}; }

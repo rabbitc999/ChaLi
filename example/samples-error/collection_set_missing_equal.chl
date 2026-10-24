@@ -1,0 +1,2 @@
+struct MissingSetEqual { int64 value; };
+void main() { Set<MissingSetEqual> values; }

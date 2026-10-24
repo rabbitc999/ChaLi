@@ -1,0 +1,30 @@
+/* 条件编译保留源文件行号；模块复用使用 import。
+ * %if / %elif / %else / %endif 选择分支，%define / %undefine 管理符号。
+ * --deps 列出模块依赖，-I 指定模块搜索目录。
+ */
+import include::shapes;
+
+%define DETAIL 1                    /* 等价命令行 `-D DETAIL`；下面用它挑分支 */
+
+void main() {
+    include::shapes::Rect rect;
+    rect.width = 3;
+    rect.height = 4;
+    println("矩形 {} x {}，面积 = {}", rect.width, rect.height, rect.area());
+    println("边长 5 的正方形面积 = {}", include::shapes::square_area(5));
+
+%if DETAIL && !QUIET
+%warning "详细模式：会多打两行"
+    println("详细模式（源文件里定义了 DETAIL 符号）");
+    println("形状个数 = {}", 2);
+%else
+    println("简洁模式");
+%endif
+
+%ifndef QUIET
+    println("想安静点就加 -D QUIET");
+%endif
+
+    /* 打百分号要写 %%；指令只在**行首**才算，字符串里的 % 不是指令 */
+    println("源文件里写 %define 不会当成指令（行首才算）");
+}

@@ -1,0 +1,1 @@
+chali: example/samples-error/macro_argument_compound_chain.chl 第 7 行第 5 列：复合赋值不能参与链式赋值

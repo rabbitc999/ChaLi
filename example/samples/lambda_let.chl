@@ -1,0 +1,37 @@
+/* let 声明，以及显式、let、缺省返回类型和上下文参数推导 fn。
+ * 注释里的 fn (x, y) { x + y } 不能被提升器误认。 */
+
+let global_value = 9;
+
+let make_adder() {
+    return fn (int32 n) { n + 10 };
+}
+
+void main() {
+    let add32 = int32 fn(int32 x, int32 y) { x + y };
+    let mul32 = fn(int32 x, int32 y) { x * y };
+    let sub32 = fn (int32 x, int32 y) { x - y };
+    let inferred = fn (x, y) { x + y };
+    let literal_add = fn (x, y) { x + y };
+    let multi = fn(int32 x, int32 y) {
+        int32 sum = x + y;
+        let doubled = sum * 2;
+        return doubled;
+    };
+    int32 fn(int32, int32) divided =
+    int32 fn(int32 x, int32 y) { x / y };
+
+    int32 a = 8;
+    int32 b = 3;
+    int32 four = 4;
+    int32 bias = 5;
+    int32 saved_bias = bias;
+    let explicit_bias = fn (int32 value, int32 bias) { value + bias };
+    let add_ten = make_adder();
+    bias = 20;
+    let answer = inferred(a, b);
+    String untouched = "fn (not code)";
+    println("{} {} {} {} {} {} {} {} {} {} {}", add32(a, b), mul32(a, b), sub32(a, b),
+    answer, literal_add(4, 5), multi(a, b), explicit_bias(2, saved_bias), add_ten(four), divided(a, b),
+    global_value, untouched);
+}

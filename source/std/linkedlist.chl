@@ -1,0 +1,71 @@
+module std::linkedlist;
+int64 __listNew();
+__ListStorage __listMake();
+int64 __listCopy(int64 handle);
+void __listDrop(int64 handle);
+int64 __listOp(int64 handle, int64 operation, int64 cursor, int64 value);
+List<int64> __listSnapshot(int64 handle);
+/** 独立拥有双向节点和游标索引，普通复制深复制。 */
+opcode __ListStorage {
+    new = std::linkedlist::__listNew;
+    copy = std::linkedlist::__listCopy;
+    drop = std::linkedlist::__listDrop;
+};
+/** 双向链表，删除或 clear 后旧游标永久失效，副本内保留对应游标。 */
+struct LinkedList : Iterator<int64> {
+    __ListStorage __storage;
+    /** 创建空链表。 */
+    static LinkedList create() { self.__storage = __listMake(); }
+    /** 头插并返回新节点游标。 */
+    int64 pushFront(int64 value) { return __listOp(self.__storage.opcode, 1, 0, value); }
+    /** 尾插并返回新节点游标。 */
+    int64 pushBack(int64 value) { return __listOp(self.__storage.opcode, 2, 0, value); }
+    /** 在游标前插入，无效时返回 -1。 */
+    int64 insertBefore(int64 cursor, int64 value) { return __listOp(self.__storage.opcode, 3, cursor, value); }
+    /** 在游标后插入，无效时返回 -1。 */
+    int64 insertAfter(int64 cursor, int64 value) { return __listOp(self.__storage.opcode, 4, cursor, value); }
+    /** 摘除游标节点并返回其值，无效时返回 None。 */
+    Option<int64> removeAt(int64 cursor) {
+        if (__listOp(self.__storage.opcode, 5, cursor, 0) == 0) { return Option<int64>::None; }
+        return Option<int64>::Value(__listOp(self.__storage.opcode, 7, cursor, 0));
+    }
+    /** 弹出首节点，空表返回 None。 */
+    Option<int64> popFront() { return self.removeAt(__listOp(self.__storage.opcode, 8, 0, 0)); }
+    /** 弹出尾节点，空表返回 None。 */
+    Option<int64> popBack() { return self.removeAt(__listOp(self.__storage.opcode, 9, 0, 0)); }
+    /** 原地反转，不使游标失效。 */
+    void reverse() { __listOp(self.__storage.opcode, 10, 0, 0); }
+    /** 显式导出独立顺序快照。 */
+    List<int64> toArray() { return __listSnapshot(self.__storage.opcode); }
+    /** 从顺序值列表建立独立链表。 */
+    static LinkedList fromArray(List<int64> items) {
+        LinkedList list = LinkedList::create();
+        int64 index = 0;
+        while (index < items.len()) { list.pushBack(items[index]); index = index + 1; }
+        return move list;
+    }
+    /** 首个匹配节点游标，不存在时为 -1。 */
+    int64 find(int64 value) { return __listOp(self.__storage.opcode, 11, 0, value); }
+    /** 是否包含值。 */
+    bool contains(int64 value) { return self.find(value) >= 0; }
+    /** 首节点值，空表返回 None。 */
+    Option<int64> front() { return self.iterator(0); }
+    /** 尾节点值，空表返回 None。 */
+    Option<int64> back() {
+        int64 cursor = __listOp(self.__storage.opcode, 9, 0, 0);
+        if (cursor < 0) { return Option<int64>::None; }
+        return Option<int64>::Value(__listOp(self.__storage.opcode, 6, cursor, 0));
+    }
+    /** 有效节点数。 */
+    int64 len() { return __listOp(self.__storage.opcode, 0, 0, 0); }
+    /** 是否为空。 */
+    bool isEmpty() { return self.len() == 0; }
+    /** 第 index 个值，越界返回 None。 */
+    Option<int64> iterator(int64 index) {
+        int64 cursor = __listOp(self.__storage.opcode, 12, index, 0);
+        if (cursor < 0) { return Option<int64>::None; }
+        return Option<int64>::Value(__listOp(self.__storage.opcode, 6, cursor, 0));
+    }
+    /** 清空节点并使旧游标永久失效。 */
+    void clear() { __listOp(self.__storage.opcode, 13, 0, 0); }
+};

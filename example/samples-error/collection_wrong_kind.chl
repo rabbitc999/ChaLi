@@ -1,0 +1,1 @@
+void main() { std::lang::Map<int64, int64> value = {1, 2}; }

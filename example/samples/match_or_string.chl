@@ -1,0 +1,57 @@
+/* 或模式、字符串比较守卫和匹配主体仅求值一次。 */
+int64 calls = 0;
+String subject() { calls = calls + 1; return "a" + "bc"; }
+int64 classify(String text) {
+    match (text) {
+        "none" | "other" => { return 2; }
+        _ if (text >= "a" && text < "z") || (text >= "A" && text <= "Z") => { int64 result = 1; return result; }
+        _ => { return 0; }
+    }
+}
+int64 closed(String text) {
+    match (text) { _ if text >= "a" && text <= "z" => { return 1; } _ => { return 0; } }
+}
+int64 halfOpen(String text) {
+    match (text) { _ if text >= "a" && text < "z" => { return 1; } _ => { return 0; } }
+}
+
+enum Event { A(int64 value), B(int64 value), C, D };
+int64 eventValue(Event event) {
+    match (event) {
+        Event::A(value) | Event::B(value) => { return value; }
+        Event::C | Event::D => { return 0; }
+    }
+    return -1;
+}
+void main() {
+    assert(classify("a") == 1 && classify("y") == 1 && classify("z") == 0);
+    assert(classify("A") == 1 && classify("Z") == 1 && classify("zz") == 0);
+    assert(classify("") == 0 && classify("none") == 2 && classify("other") == 2);
+    assert(closed("a") == 1 && closed("z") == 1 && closed("za") == 0);
+    assert(halfOpen("a") == 1 && halfOpen("z") == 0 && halfOpen("abc") == 1);
+    match (subject()) {
+        "missing" | "abc" => { assert(calls == 1); }
+        _ => { assert(false); }
+    }
+    match ("中") { "中" | "文" => { } _ => { assert(false); } }
+    match ("\n") { '\n' | "tab" => { } _ => { assert(false); } }
+    int64 hits = 0;
+    match ("m") { _ if "m" >= "a" && "m" <= "z" => { hits = hits + 1; } }
+    assert(hits == 1);
+    match ("") { "" => { } _ => { assert(false); } }
+    match ("") { _ if "" < "" => { assert(false); } _ => { } }
+    int64 mask = 1 | 2;
+    assert(mask == 3);
+    match (mask) {
+        1 | 2 => { assert(false); }
+        std::lang::rangeEq(3,4) | 8 => { int64 result = 3; assert(result == mask); }
+        _ => { assert(false); }
+    }
+    match (2.5) { 1.5 | 2.5 => { } _ => { assert(false); } }
+    match (true) { false | true => { } }
+    Event first = Event::A(7);
+    Event second = Event::B(9);
+    assert(eventValue(first) == 7 && eventValue(second) == 9);
+    assert(eventValue(Event::C) == 0 && eventValue(Event::D) == 0);
+    println("match alternatives and string guards OK");
+}

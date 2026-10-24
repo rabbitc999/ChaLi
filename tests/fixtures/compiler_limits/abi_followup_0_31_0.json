@@ -1,0 +1,51 @@
+{
+  "phase": "discovery-before-abi-repair",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+    "aot",
+    "G:\\Desktop\\ChaLi\\build\\chali-abi-values\\values.chl",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\limits031-abi-discovery",
+    "--llvm",
+    "G:\\Desktop\\ChaLi\\library\\llvm\\toolchain\\bin\\clang.exe"
+  ],
+  "compiler_sha256": "4283f0e0b0e7bc4f652fe27b6b33628b8515370be04d1847172525d1f97c95e0",
+  "elapsed": 3.2807711999994353,
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "run": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\limits031-abi-discovery.exe"
+    ],
+    "elapsed": 0.6372750999944401,
+    "exit": 3221225781,
+    "stdout": "",
+    "stderr": ""
+  },
+  "expected_stdout": "abi-values-ok\n",
+  "source": "struct Inner { int8 tag; float32 weight; };\nstruct Packet { Inner inner; int32 count; float64 total; };\nstruct Packed packed { int8 tag; float64 value; int32 count; };\nstruct PackedOuter packed { int8 lead; Packet normal; Packed packed; };\nstruct NormalOuter { int8 lead; Packed packed; float64 tail; };\nabi \"G:/Desktop/ChaLi/build/chali-abi-values/native.dll\" {\n    int32 packed_layout() = \"packed_layout\";\n    Packed packed_transform(Packed value) = \"packed_transform\";\n    void packed_update(Packed mut& value) = \"packed_update\";\n    Option<Packed const&> packed_snapshot() = \"packed_snapshot\";\n    Packed[] packed_numbers(int32 count) = \"packed_numbers\" [count];\n    void packed_fill(Packed[] values, int32 count) = \"packed_fill\";\n    PackedOuter packed_outer(PackedOuter value) = \"packed_outer\";\n    NormalOuter normal_outer(NormalOuter value) = \"normal_outer\";\n    Packet transform(Packet value) = \"transform\";\n    void update(Packet mut& value) = \"update\";\n    int32 inspect(Packet const& value) = \"inspect\";\n    void updateOptional(Option<Packet mut&> value) = \"update\";\n    int32 inspectOptional(Option<Packet const&> value) = \"inspect\";\n    void bump(int32 mut& value) = \"bump\";\n    int32 alias(Packet mut& a, Packet const& b) = \"alias\";\n    Option<Packet const&> snapshot() = \"snapshot\";\n    Option<Packet mut&> nothing() = \"nothing\";\n    int32[] numbers(int32 count) = \"numbers\" [count];\n    void fill(int32[] values, int32 count) = \"fill\";\n    void wipe() = \"wipe\";\n    Option<int32 mut&> echo(int32 mut& value) = \"echo\";\n    int64 wide(int64 a, int64 b, int64 c, int64 d, int64 e) = \"wide\";\n    int32 arrays_alias(int32[] a, int32[] b) = \"arrays_alias\";\n    Packet[] get_packets(int32 count) = \"get_packets\" [count];\n    void fill_packets(Packet[] values, int32 count) = \"fill_packets\";\n}\nvoid main() {\n    Packet p;\n    p.inner.tag = (int8)2;\n    p.inner.weight = (float32)1.5;\n    p.count = (int32)4;\n    p.total = 5.0;\n    Packet q = transform(p);\n    assert(p.count == 4);\n    assert(q.inner.tag == 3);\n    assert(q.inner.weight == 2.0);\n    assert(q.count == 6 && q.total == 8.0);\n    update(&q);\n    assert(q.count == 16 && q.total == 28.0);\n    assert(inspect(&q) == 16);\n    bump(&q.count);\n    assert(q.count == 17);\n    assert(alias(&q, &q) == 1);\n    assert(q.count == 18);\n    updateOptional(Option<Packet mut&>::None);\n    assert(inspectOptional(Option<Packet const&>::None) == -1);\n    Option<Packet mut&> optionalPacket = Option<Packet mut&>::Value(&q);\n    updateOptional(optionalPacket);\n    assert(q.count == 28);\n    assert(inspectOptional(Option<Packet const&>::Value((Packet const&)&q)) == 28);\n    Option<Packet mut&> missing = nothing();\n    assert(missing.isNone());\n    Option<Packet const&> snapshotValue = snapshot();\n    assert(snapshotValue.isValue());\n    Packet const& saved = snapshotValue.unwrap();\n    assert(saved.count == 9 && saved.inner.tag == -5);\n    int32 values[] = numbers((int32)4);\n    assert(len(values) == 4);\n    assert(values[0] == 10 && values[3] == 40);\n    fill(values, (int32)4);\n    assert(values[0] == 12 && values[3] == 42);\n    int32 mut& copied = echo(&values[0]).unwrap();\n    values[0] = (int32)99;\n    assert(copied == 12);\n    int32 emptyValues[] = numbers((int32)0);\n    assert(len(emptyValues) == 0);\n    fill(emptyValues, (int32)0);\n    wipe();\n    assert(saved.count == 9 && values[3] == 42);\n    assert(wide(1, 2, 3, 4, 5) == 15);\n    assert(arrays_alias(values, values) == 1);\n    Packet records[] = get_packets((int32)2);\n    assert(len(records) == 2 && records[1].inner.weight == 4.5);\n    fill_packets(records, (int32)2);\n    assert(records[0].count == 12 && records[1].count == 15);\n    {\n        int64 i = 0;\n        while (i < 500) {\n\n        Packet next = transform(p);\n        update(&next);\n        assert(next.count == 16);\n    \n            i = i + 1;\n        }\n    }\n    assert(packed_layout() == 1);\n    Packed compact;\n    compact.tag = (int8)-2;\n    compact.value = 1.25;\n    compact.count = (int32)4;\n    Packed changed = packed_transform(compact);\n    assert(changed.tag == -1 && changed.value == 1.75 && changed.count == 6);\n    packed_update(&changed);\n    assert(changed.value == 11.75 && changed.count == 9);\n    Packed const& savedCompact = packed_snapshot().unwrap();\n    assert(savedCompact.tag == -3 && savedCompact.value == 1.25);\n    Packed compactArray[] = packed_numbers((int32)2);\n    packed_fill(compactArray, (int32)2);\n    assert(compactArray[0].value == 2.25 && compactArray[1].value == 3.5);\n    assert(compactArray[0].count == 5 && compactArray[1].count == 10);\n    PackedOuter outer;\n    outer.lead = (int8)2;\n    outer.normal = p;\n    outer.packed = compact;\n    PackedOuter outerCopy = packed_outer(outer);\n    assert(outerCopy.lead == 2 && outerCopy.normal.count == p.count + 5 && outerCopy.packed.value == 3.25);\n    NormalOuter normal;\n    normal.lead = (int8)3;\n    normal.packed = compact;\n    normal.tail = 2.0;\n    NormalOuter normalCopy = normal_outer(normal);\n    assert(normalCopy.lead == 3 && normalCopy.packed.count == 10 && normalCopy.tail == 5.0);\n    println(\"abi-values-ok\");\n\n}\n",
+  "run_with_dependency_path": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\limits031-abi-discovery.exe"
+    ],
+    "PATH_prefix": "G:\\Desktop\\ChaLi\\build\\chali-abi-values",
+    "elapsed": 1.7887163999985205,
+    "exit": 3221225477,
+    "stdout": "",
+    "stderr": ""
+  },
+  "vm": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\build\\chali-abi-values\\values.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\limits031-abi-vm-discovery"
+    ],
+    "exit": 0,
+    "stdout": "abi-values-ok\r\n",
+    "stderr": ""
+  },
+  "native_source": "#include <stdint.h>\n#ifdef _WIN32\n#define API __declspec(dllexport)\n#else\n#define API\n#endif\ntypedef struct\n{\n    int8_t tag;\n    float weight;\n} Inner;\ntypedef struct\n{\n    Inner inner;\n    int32_t count;\n    double total;\n} Packet;\nAPI Packet transform(Packet p)\n{\n    p.inner.tag += 1;\n    p.inner.weight += 0.5f;\n    p.count += 2;\n    p.total += 3;\n    return p;\n}\nAPI void update(Packet *p)\n{\n    if (p)\n    {\n        p->count += 10;\n        p->total += 20;\n    }\n}\nAPI int32_t inspect(const Packet *p) { return p ? p->count : -1; }\nAPI void bump(int32_t *p)\n{\n    if (p) ++*p;\n}\nAPI int32_t alias(Packet *a, const Packet *b)\n{\n    a->count += 1;\n    return a == b && b->count == a->count;\n}\nstatic Packet saved = { { -5, 2.5f }, 9, 12.0 };\nstatic int32_t buffer[4] = { 10, 20, 30, 40 };\nAPI const Packet *snapshot(void) { return &saved; }\nAPI Packet *nothing(void) { return 0; }\nAPI int32_t *numbers(int32_t count) { return count == 4 ? buffer : 0; }\nAPI void fill(int32_t *values, int32_t count)\n{\n    for (int32_t i = 0; i < count; ++i) values[i] += 2;\n}\nAPI void wipe(void)\n{\n    for (int i = 0; i < 4; ++i) buffer[i] = 0;\n    saved.count = 0;\n}\nAPI int32_t *echo(int32_t *value) { return value; }\nAPI int64_t wide(int64_t a, int64_t b, int64_t c, int64_t d, int64_t e) { return a + b + c + d + e; }\nAPI int32_t arrays_alias(int32_t *a, int32_t *b)\n{\n    a[0] += 1;\n    return a == b && a[0] == b[0];\n}\nstatic Packet packets[2] = { { { 1, 1.5f }, 2, 3.0 }, { { 4, 4.5f }, 5, 6.0 } };\nAPI Packet *get_packets(int32_t count) { return count == 2 ? packets : 0; }\nAPI void fill_packets(Packet *p, int32_t count)\n{\n    for (int32_t i = 0; i < count; ++i) p[i].count += 10;\n}\nAPI int32_t identity(int32_t value) { return value; }\n\n#include <stddef.h>\n#pragma pack(push, 1)\ntypedef struct\n{\n    int8_t tag;\n    double value;\n    int32_t count;\n} Packed;\ntypedef struct\n{\n    int8_t lead;\n    Packet normal;\n    Packed packed;\n} PackedOuter;\n#pragma pack(pop)\ntypedef struct\n{\n    int8_t lead;\n    Packed packed;\n    double tail;\n} NormalOuter;\nAPI int32_t packed_layout(void) { return sizeof(Packed) == 13 && offsetof(Packed, value) == 1 && offsetof(Packed, count) == 9 && offsetof(PackedOuter, normal) == 1 && offsetof(NormalOuter, tail) % 8 == 0; }\nAPI Packed packed_transform(Packed p)\n{\n    p.tag += 1;\n    p.value += 0.5;\n    p.count += 2;\n    return p;\n}\nAPI void packed_update(Packed *p)\n{\n    p->value += 10;\n    p->count += 3;\n}\nstatic Packed packed_buffer[2] = { { -3, 1.25, 4 }, { 7, 2.5, 8 } };\nAPI Packed *packed_snapshot(void) { return packed_buffer; }\nAPI Packed *packed_numbers(int32_t count) { return count == 2 ? packed_buffer : 0; }\nAPI void packed_fill(Packed *p, int32_t count)\n{\n    for (int32_t i = 0; i < count; ++i)\n    {\n        p[i].value += 1;\n        p[i].count += i + 1;\n    }\n}\nAPI PackedOuter packed_outer(PackedOuter p)\n{\n    p.normal.count += 5;\n    p.packed.value += 2;\n    return p;\n}\nAPI NormalOuter normal_outer(NormalOuter p)\n{\n    p.packed.count += 6;\n    p.tail += 3;\n    return p;\n}\n"
+}

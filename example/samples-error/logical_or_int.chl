@@ -1,0 +1,3 @@
+void main() {
+    bool value = 0 || false;
+}

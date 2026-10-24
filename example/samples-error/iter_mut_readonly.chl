@@ -1,0 +1,2 @@
+import std::iter;
+void main() { std::lang::List<int64> values; std::lang::List<int64> const& view = &values; let cursor = view.iterMut(); }

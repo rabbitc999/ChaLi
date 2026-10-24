@@ -1,0 +1,5 @@
+void main() {
+    std::lang::println("before panic");
+    panic("不可恢复的状态");
+    std::lang::println("unreachable");
+}

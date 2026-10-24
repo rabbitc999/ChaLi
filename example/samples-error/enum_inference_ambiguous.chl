@@ -1,0 +1,3 @@
+enum First { Empty };
+enum Second { Empty };
+void main() { let value = Empty; }

@@ -1,0 +1,1 @@
+void main() { String value = "abc"; String mut& ref = &value; ref[1] = 42; }

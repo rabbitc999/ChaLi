@@ -1,0 +1,8 @@
+int64 identity(int64 value) {
+    return value;
+}
+
+void main() {
+    int64 fn(int64) callback = identity;
+    let __ignored1 = callback("text");
+}

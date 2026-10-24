@@ -1,0 +1,1 @@
+void main() { int64 a[2]; int64 const& view = a; int64 mut& writable = &view[0]; }

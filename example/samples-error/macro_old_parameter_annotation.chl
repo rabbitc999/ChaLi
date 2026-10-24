@@ -1,0 +1,4 @@
+$macro ADD(`a, b)
+a + b
+$end_macro
+void main() { }

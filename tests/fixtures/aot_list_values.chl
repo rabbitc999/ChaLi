@@ -1,0 +1,58 @@
+struct Item { int64 number; String name; };
+float64 readFloat(List<float64> const& values)
+{
+    return values[0];
+}
+void main()
+{
+    List<int64> values;
+    values.push(3);
+    values.push(9);
+    values.insert(1, 7);
+    assert(values.len() == 3, "list line 8");
+    values[0] = 4;
+    assert(values.contains(7) != 0, "list line 10");
+    assert(values.indexOf(9) == 2, "list line 11");
+    List<int64> copied = values;
+    copied[0] = 22;
+    assert(values[0] == 4, "list line 14");
+    assert(copied.pop() == 9, "list line 15");
+    copied.remove(0);
+    assert(copied[0] == 7, "list line 17");
+    for (int64 value in values) { value += 2; }
+    assert(values[0] == 6, "list line 19");
+    List<float64> real;
+    real.push(1.25);
+    real.push(-3.75);
+    real[0] = 2.5;
+    assert(real[0] == 2.5, "list line 24");
+    assert(readFloat(&real) == 2.5, "float list return");
+    assert(real.pop() == -3.75, "list line 25");
+    List<String> words;
+    words.push("hello");
+    List<String> other = words;
+    String word = other[0];
+    word[0] = 'H';
+    other[0] = word;
+    assert(words[0] == "hello", "list line 32");
+    assert(other[0] == "Hello", "list line 33");
+    List<List<int64>> nested;
+    nested.push(values);
+    List<List<int64>> duplicate = nested;
+    List<int64> child = duplicate[0];
+    child[0] = 99;
+    duplicate[0] = child;
+    assert(nested[0][0] == 6, "list line 40");
+    List<Item> records;
+    Item item;
+    item.number = 13;
+    item.name = "record";
+    records.push(item);
+    List<Item> recordCopy = records;
+    Item result = recordCopy[0];
+    assert(result.number == 13, "list line 48");
+    assert(result.name == "record", "list line 49");
+    copied.clear();
+    assert(copied.len() == 0, "list line 51");
+    println("AOT list values ok");
+}

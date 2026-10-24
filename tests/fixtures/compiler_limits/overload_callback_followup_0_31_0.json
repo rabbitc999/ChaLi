@@ -1,0 +1,1128 @@
+{
+  "phase": "discovery-frozen-followup",
+  "base_commit": "ea682ca",
+  "cases": [
+    {
+      "group": "generic_return",
+      "name": "implicit",
+      "outcome": "success",
+      "source_sha256": "97021bacbe74c45956146a590e7005e78b72115f10c287ae5ee2cad7649bc557",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\implicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\vm",
+            "elapsed": 2.3141127999988385,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\implicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\vm",
+            "elapsed": 2.8683460999964154,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\implicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\aot",
+            "elapsed": 4.105069400000502,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\implicit\\aot",
+            "elapsed": 0.6556421000059345,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "explicit",
+      "outcome": "success",
+      "source_sha256": "448ded9ead37f948c7325cc8a8d04a5e90cd0acce04f9bcec5dd852c91c2a045",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\explicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\vm",
+            "elapsed": 2.3391674000013154,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\explicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\vm",
+            "elapsed": 2.7132617000024766,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\explicit.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\aot",
+            "elapsed": 4.041586699997424,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\explicit\\aot",
+            "elapsed": 1.7344713999991654,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "numeric",
+      "outcome": "success",
+      "source_sha256": "0ba0760386ef21cf64ff427aa0135ebe51e8ee0a1bbb0f84e5614f96b766f315",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\numeric.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\vm",
+            "elapsed": 2.2339006999973208,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\numeric.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\vm",
+            "elapsed": 2.5608924999978626,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\numeric.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\aot",
+            "elapsed": 3.621337799995672,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\numeric\\aot",
+            "elapsed": 1.5284287999966182,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "floating",
+      "outcome": "success",
+      "source_sha256": "f5d2480c443e0ecbc4b20708dfb1345f1170d927c804112d1ed6c65f727c2568",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\floating.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\vm",
+            "elapsed": 2.4145438999985345,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\floating.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\vm",
+            "elapsed": 2.563187799998559,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\floating.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\aot",
+            "elapsed": 3.489404599997215,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\floating\\aot",
+            "elapsed": 1.5463055000000168,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "local_typed",
+      "outcome": "success",
+      "source_sha256": "9ca85eb079a6fe0a97308d0d5dbc785653510dbe1e65b54a71eab31e06b6e5a2",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\local_typed.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\vm",
+            "elapsed": 2.059284099996148,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\local_typed.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\vm",
+            "elapsed": 2.3249087000003783,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\local_typed.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\aot",
+            "elapsed": 3.5252649999965797,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\local_typed\\aot",
+            "elapsed": 1.4087964000063948,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "immediate",
+      "outcome": "success",
+      "source_sha256": "860b073990fde6fecd8297659180f6a12e714767bddb3f9c21feb2c987a65e5b",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\immediate.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\vm",
+            "elapsed": 1.9606721999953152,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\immediate.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\vm",
+            "elapsed": 2.280938800002332,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\immediate.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\aot",
+            "elapsed": 3.6319409999996424,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\immediate\\aot",
+            "elapsed": 1.275733599999512,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "list_storage",
+      "outcome": "success",
+      "source_sha256": "ca9db7be6978ede8408159d1859f9a4126fdaf678f7668c0195a5ff484bc4849",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\list_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\vm",
+            "elapsed": 1.868408400005137,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\list_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\vm",
+            "elapsed": 2.0263948000065284,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\list_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\aot",
+            "elapsed": 2.7957840000017313,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\list_storage\\aot",
+            "elapsed": 1.0092210000002524,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "map_storage",
+      "outcome": "success",
+      "source_sha256": "fed44b419a4119d4a2bfc1ba28af54eca9ba80a106c72bbf45d3d7237fd2f85e",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\map_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\vm",
+            "elapsed": 1.9864098000034573,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\map_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\vm",
+            "elapsed": 1.9008119999998598,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\map_storage.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\aot",
+            "elapsed": 2.8319468000045163,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\map_storage\\aot",
+            "elapsed": 0.8367340000040713,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "closure_copy",
+      "outcome": "success",
+      "source_sha256": "45b2f80538c9ce841d0f7d32607ac256610da6605a78f05a6ef032becf93a472",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\closure_copy.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\vm",
+            "elapsed": 1.3480092999961926,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\closure_copy.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\vm",
+            "elapsed": 1.4793187999966904,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\closure_copy.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\aot",
+            "elapsed": 2.5158892999970703,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\closure_copy\\aot",
+            "elapsed": 1.0321340000009513,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "nested_composition",
+      "outcome": "success",
+      "source_sha256": "a17fa82d5bfa16c15ff1b5d2ab90a6105635a36256845618ca33303336a575ba",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\nested_composition.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\vm",
+            "elapsed": 1.3973464000009699,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\nested_composition.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\vm",
+            "elapsed": 1.5404734999974607,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\nested_composition.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\aot",
+            "elapsed": 2.5968699000004563,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_composition\\aot",
+            "elapsed": 0.965011800006323,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "string_result",
+      "outcome": "success",
+      "source_sha256": "c95b35ca27166931dddec01f53cd3da52ca3b3262cf2baa91967b4658a3bce59",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\string_result.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\vm",
+            "elapsed": 1.8845056999998633,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\string_result.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\vm",
+            "elapsed": 1.9996793000027537,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\string_result.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\aot",
+            "elapsed": 2.9652841000061017,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\string_result\\aot",
+            "elapsed": 1.2167101000013645,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "overloaded_callback",
+      "outcome": "success",
+      "source_sha256": "e6f0a8c8e380d77cf4e115856e2d7d66b51a683310212cb3fa2ae973b325c7d3",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\overloaded_callback.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\vm",
+            "elapsed": 1.4362323000023025,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d64717272797461772f67656e657269635f72657475726e2f6f7665726c6f616465645f63616c6c6261636b2f6f7665726c6f616465645f63616c6c6261636b2e63686c20e7acac20313320e8a18ce7acac203520e58897efbc9ae6b39be59e8be587bde695b020636f6d706f736520e79a84e7b1bbe59e8be5ae9ee58f82e68ea8e5afbce586b2e7aa81efbc8ce8afb7e698bee5bc8fe68c87e5ae9ae7b1bbe59e8be5ae9ee58f820d0a6e6f74653a20e7acac203120e4b8aae5ae9ee58f82e5ae9ee99985e4b8ba20696e74363428696e7436342c20696e74363429efbc8ce5bda2e58f82e6a8a1e5bc8fe4b8ba204d63496e666572656e6365506172616d6574657230284d63496e666572656e6365506172616d6574657230290d0a203133207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d64717272797461772f67656e657269635f72657475726e2f6f7665726c6f616465645f63616c6c6261636b2f6f7665726c6f616465645f63616c6c6261636b2e63686c20e7acac20313320e8a18ce7acac203520e58897efbc9ae8b083e794a8e4ba86e6b2a1e5ae9ae4b989e79a84e587bde695b0efbc9a660d0a203133207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: G:/Desktop/ChaLi/tmp/generic-function-returns-dqrrytaw/generic_return/overloaded_callback/overloaded_callback.chl 第 13 行第 5 列：泛型函数 compose 的类型实参推导冲突，请显式指定类型实参\r\nnote: 第 1 个实参实际为 int64(int64, int64)，形参模式为 McInferenceParameter0(McInferenceParameter0)\r\n 13 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\nchali: G:/Desktop/ChaLi/tmp/generic-function-returns-dqrrytaw/generic_return/overloaded_callback/overloaded_callback.chl 第 13 行第 5 列：调用了没定义的函数：f\r\n 13 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\n"
+          },
+          "status": "compile_error"
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\overloaded_callback.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\overloaded_callback\\aot",
+            "elapsed": 1.2942328000062844,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d64717272797461772f67656e657269635f72657475726e2f6f7665726c6f616465645f63616c6c6261636b2f6f7665726c6f616465645f63616c6c6261636b2e63686c20e7acac20313320e8a18ce7acac203520e58897efbc9ae6b39be59e8be587bde695b020636f6d706f736520e79a84e7b1bbe59e8be5ae9ee58f82e68ea8e5afbce586b2e7aa81efbc8ce8afb7e698bee5bc8fe68c87e5ae9ae7b1bbe59e8be5ae9ee58f820d0a6e6f74653a20e7acac203120e4b8aae5ae9ee58f82e5ae9ee99985e4b8ba20696e74363428696e7436342c20696e74363429efbc8ce5bda2e58f82e6a8a1e5bc8fe4b8ba204d63496e666572656e6365506172616d6574657230284d63496e666572656e6365506172616d6574657230290d0a203133207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d64717272797461772f67656e657269635f72657475726e2f6f7665726c6f616465645f63616c6c6261636b2f6f7665726c6f616465645f63616c6c6261636b2e63686c20e7acac20313320e8a18ce7acac203520e58897efbc9ae8b083e794a8e4ba86e6b2a1e5ae9ae4b989e79a84e587bde695b0efbc9a660d0a203133207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: G:/Desktop/ChaLi/tmp/generic-function-returns-dqrrytaw/generic_return/overloaded_callback/overloaded_callback.chl 第 13 行第 5 列：泛型函数 compose 的类型实参推导冲突，请显式指定类型实参\r\nnote: 第 1 个实参实际为 int64(int64, int64)，形参模式为 McInferenceParameter0(McInferenceParameter0)\r\n 13 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\nchali: G:/Desktop/ChaLi/tmp/generic-function-returns-dqrrytaw/generic_return/overloaded_callback/overloaded_callback.chl 第 13 行第 5 列：调用了没定义的函数：f\r\n 13 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\n"
+          },
+          "status": "compile_error"
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "nested_factory_type",
+      "outcome": "success",
+      "source_sha256": "23a7ebfac5806f3c4c256ed923e36fe3ef43c19a451d308f5aaf5bf8ca7c80e5",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\vm",
+            "elapsed": 1.974382100001094,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de5b8a6e8b083e8af95e88a82efbc88e7bcbae79c81efbc9b2d2d646562756720e68896206368616c69206465627567203d207472756520e58fafe4bf9de79599efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\r\n"
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\vm\\program-run",
+              "--"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\vm",
+            "elapsed": 2.119196199993894,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\aot",
+            "elapsed": 3.263122399999702,
+            "code": 0,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_text": "",
+            "stderr_text": ""
+          },
+          "status": "pass",
+          "run": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\aot\\program.exe"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\nested_factory_type\\aot",
+            "elapsed": 1.1327091000057408,
+            "code": 0,
+            "timeout": false,
+            "stdout": "6c696d6974732d6f6b0d0a",
+            "stderr": "",
+            "stdout_text": "limits-ok\r\n",
+            "stderr_text": ""
+          }
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "wrong_value",
+      "outcome": "reject",
+      "source_sha256": "ca4e05b6180b7513a9fb385705f9085cd3eb7a954068e381ad8970cf19ab02d0",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\wrong_value.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\vm",
+            "elapsed": 1.5465543999962392,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+          },
+          "status": "rejected"
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\wrong_value.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\wrong_value\\aot",
+            "elapsed": 1.3946846000035293,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+          },
+          "status": "rejected"
+        }
+      }
+    },
+    {
+      "group": "generic_return",
+      "name": "borrowed_local",
+      "outcome": "reject",
+      "source_sha256": "d188743215fd327a10dacaea483df1fb850cfb272bc933e617d9d8ac4e60e19a",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\borrowed_local.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\vm",
+            "elapsed": 1.405527399998391,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a205b43484c313230345d20e8bf94e59b9ee580bce4b8ade79a84e5bc95e794a8e4b88de883bde8b685e8bf87e5b180e983a8e69da5e6ba90e79a84e7949fe591bde591a8e69c9fefbc88696e74363428696e74363429efbc8ce68980e5b19ee7b1bbe59e8b20efbc8ce69da5e6ba90205f5f6368616c695f6c616d6264615f6173745f636f6e73745f383531305f6d6163726f5f305f38353131efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: [CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64(int64)，所属类型 ，来源 __chali_lambda_ast_const_8510_macro_0_8511）\r\n"
+          },
+          "status": "rejected"
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\borrowed_local.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-dqrrytaw\\generic_return\\borrowed_local\\aot",
+            "elapsed": 1.35816010000417,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a205b43484c313230345d20e8bf94e59b9ee580bce4b8ade79a84e5bc95e794a8e4b88de883bde8b685e8bf87e5b180e983a8e69da5e6ba90e79a84e7949fe591bde591a8e69c9fefbc88696e74363428696e74363429efbc8ce68980e5b19ee7b1bbe59e8b20efbc8ce69da5e6ba90205f5f6368616c695f6c616d6264615f6173745f636f6e73745f383531305f6d6163726f5f305f38353131efbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: [CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64(int64)，所属类型 ，来源 __chali_lambda_ast_const_8510_macro_0_8511）\r\n"
+          },
+          "status": "rejected"
+        }
+      }
+    }
+  ]
+}

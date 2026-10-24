@@ -1,0 +1,32 @@
+/* 拼名只生成标识符；字符串化保留原文而不执行参数。 */
+import include::macros;
+
+$macro DECLARE(name, value)
+int64 name = value;
+$end_macro
+
+$macro SOURCE(expr)
+$stringify(expr)
+$end_macro
+
+$macro CALL(prefix, value)
+($concat(prefix, _of))(value)
+$end_macro
+
+/* `$concat` 拼出的是普通标识符，能和真正的函数同名（宏调用必须带 `$`）。 */
+int64 double_of(int64 x) { return x * 2; }
+
+int64 triple_of(int64 x) { return x * 3; }
+
+void main() {
+    $DECLARE(localCount, 11);
+    $DECLARE(partTwo, 7);
+    $DECLARE(tripleTwo, 6);
+    println("concat={}", localCount + partTwo + tripleTwo);
+    println("literal-arg={}", $SOURCE($DOUBLE(3 + 1)));
+    println("stringify-expr={}", $stringify(1 + 2));
+    println("stringify-text={}", $stringify(plain text));
+    println("call={}", $CALL(double, 21));
+    println("call2={}", $CALL(triple, 5));
+    println("macro-call={}", $DOUBLE(4));
+}

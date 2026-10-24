@@ -1,0 +1,7 @@
+struct Holder : IDrop {
+    void drop() { }
+};
+
+void main() {
+    Holder holder;
+}

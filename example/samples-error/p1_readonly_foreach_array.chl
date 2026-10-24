@@ -1,0 +1,1 @@
+void main(){const int64 values[] = new[2]; for(int64 item in values){item=9;}}

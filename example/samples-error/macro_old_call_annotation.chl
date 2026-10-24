@@ -1,0 +1,2 @@
+$replace ADD(a, b) a + b
+void main() { return $!ADD(1, 2); }

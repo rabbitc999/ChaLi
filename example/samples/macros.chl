@@ -1,0 +1,66 @@
+/* 卫生 AST 宏：显式分组、嵌套调用、原文字符串化和变长实参。 */
+import include::macros;
+
+$macro SQUARE(x)
+((x) * (x))
+$end_macro
+
+$macro ANSWER
+42
+$end_macro
+
+$macro BUILD_NAME
+"enhanced"
+$end_macro
+
+$macro REVISION
+2
+$end_macro
+
+$macro PRINT(label, value)
+println(label, value);
+$end_macro
+
+$macro REPORT(a, b)
+int64 total = (a) + (b);
+$PRINT("total={}", total);
+$end_macro
+
+$macro PRINT_MANY(label, ...values)
+println(label, values);
+$end_macro
+
+$macro DECLARE(name, value)
+int64 name = value;
+$end_macro
+
+$macro STRINGIFY(value)
+$stringify(value)
+$end_macro
+
+$macro APPLY_JOIN(left, right, value)
+($concat(left, right))(value)
+$end_macro
+
+/* `$concat` 拼出来的是**普通标识符**：这里拼出一个真实函数名去调用（宏调用必须带 `$`）。
+ * 所以函数 `SQUARE` 与宏 `$SQUARE` 可以同名共存，各走各的。 */
+int64 SQUARE(int64 x) { return x * x; }
+
+void main() {
+    int64 n = 4;
+    $DECLARE(localCount, 11);
+    $PRINT("square={}", $SQUARE(n + 1));
+    $PRINT("float64={}", $DOUBLE(n));
+    $PRINT("nested={}", $SQUARE($SQUARE(2)));
+    $PRINT("answer={}", $ANSWER);
+    $PRINT("build={}", $BUILD_NAME);
+    $PRINT("revision={}", $REVISION);
+    $PRINT_MANY("many={}+{}", $SQUARE(2), $DOUBLE(3));
+    $PRINT("pasted={}", localCount);
+    $PRINT("expanded-paste={}", $APPLY_JOIN(SQU, ARE, 3));
+    $PRINT("source={}", $STRINGIFY($SQUARE(3 + 1)));
+    println("joined=" "{}", "x" "y");
+    $REPORT($SQUARE(2), 3);
+    println("SQUARE(9) is text");
+    // SQUARE(8) is a comment.
+}

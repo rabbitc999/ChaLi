@@ -1,0 +1,4 @@
+enum Option { None, Some(int64 value) };
+void main() {
+    Option value = Option::Some;
+}

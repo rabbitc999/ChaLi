@@ -1,0 +1,1 @@
+chali: 泛型：Box 的类型实参 program::Plain 未实现接口 Valued

@@ -1,0 +1,4 @@
+void main(List<String> arguments) {
+    char first = arguments[0][0];
+    println("{} {} {}", arguments.len(), first, arguments[1]);
+}

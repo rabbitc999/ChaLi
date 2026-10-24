@@ -1,0 +1,147 @@
+{
+  "compiler_sha256": "94934b2e2968e006b58b9fcb1e5b39db3329dc5cc7a7edac9b797da1dae9d081",
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "body": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>学生信息管理系统</title>\n<style>\n  :root {\n    --bg: #f4f6fb;\n    --card: #ffffff;\n    --ink: #1f2937;\n    --muted: #6b7280;\n    --line: #e5e7eb;\n    --brand: #2563eb;\n    --brand-dark: #1d4ed8;\n    --danger: #dc2626;\n    --ok: #059669;\n  }\n  * { box-sizing: border-box; margin: 0; padding: 0; }\n  body {\n    font-family: \"Segoe UI\", \"Microsoft YaHei\", system-ui, sans-serif;\n    background: var(--bg); color: var(--ink); min-height: 100vh;\n  }\n  header {\n    background: linear-gradient(135deg, #1e3a8a, #2563eb);\n    color: #fff; padding: 28px 32px;\n  }\n  header h1 { font-size: 22px; font-weight: 600; }\n  header p { margin-top: 6px; font-size: 13px; opacity: .85; }\n  main { max-width: 1080px; margin: 0 auto; padding: 24px 32px 64px; }\n  .cards { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }\n  .card {\n    flex: 1; min-width: 160px; background: var(--card); border: 1px solid var(--line);\n    border-radius: 12px; padding: 16px 20px;\n  }\n  .card .num { font-size: 26px; font-weight: 700; color: var(--brand-dark); }\n  .card .label { font-size: 13px; color: var(--muted); margin-top: 4px; }\n  .toolbar {\n    display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;\n  }\n  input, select {\n    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;\n    font-size: 14px; background: #fff; color: var(--ink); outline: none;\n  }\n  input:focus, select:focus { border-color: var(--brand); }\n  #search { width: 220px; }\n  button {\n    border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px;\n    cursor: pointer; background: var(--brand); color: #fff;\n  }\n  button:hover { background: var(--brand-dark); }\n  button.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }\n  button.ghost:hover { border-color: var(--brand); color: var(--brand); }\n  button.danger { background: #fff; color: var(--danger); border: 1px solid #fecaca; }\n  button.danger:hover { background: #fef2f2; }\n  table {\n    width: 100%; border-collapse: collapse; background: var(--card);\n    border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.04);\n  }\n  th, td { padding: 12px 16px; text-align: left; font-size: 14px; }\n  th { background: #f9fafb; color: var(--muted); font-weight: 600; cursor: pointer; white-space: nowrap; }\n  th .arrow { font-size: 11px; margin-left: 4px; color: var(--brand); }\n  tbody tr { border-top: 1px solid var(--line); }\n  tbody tr:hover { background: #f8faff; }\n  td.actions { white-space: nowrap; }\n  td.actions button { padding: 5px 12px; font-size: 13px; margin-right: 6px; }\n  .empty { text-align: center; color: var(--muted); padding: 40px 0 !important; }\n  .mask {\n    display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45);\n    align-items: center; justify-content: center;\n  }\n  .mask.show { display: flex; }\n  .dialog {\n    background: #fff; border-radius: 14px; padding: 24px 28px; width: 400px;\n    box-shadow: 0 20px 50px rgba(0,0,0,.2);\n  }\n  .dialog h2 { font-size: 17px; margin-bottom: 16px; }\n  .dialog label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }\n  .dialog input { width: 100%; }\n  .dialog .row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 22px; }\n  #toast {\n    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);\n    background: #111827; color: #fff; padding: 10px 20px; border-radius: 10px;\n    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s;\n    max-width: 70vw;\n  }\n  #toast.show { opacity: .95; }\n  #toast.err { background: var(--danger); }\n</style>\n</head>\n<body>\n<header>\n  <h1>学生信息管理系统</h1>\n  <p>ChaLi 反射 + MySQL —— 模型一份声明，接口、建表、校验全部派生</p>\n</header>\n<main>\n  <div class=\"cards\">\n    <div class=\"card\"><div class=\"num\" id=\"stat-count\">0</div><div class=\"label\">学生总数</div></div>\n    <div class=\"card\"><div class=\"num\" id=\"stat-avg\">-</div><div class=\"label\">平均成绩</div></div>\n    <div class=\"card\"><div class=\"num\" id=\"stat-max\">-</div><div class=\"label\">最高成绩</div></div>\n    <div class=\"card\"><div class=\"num\" id=\"stat-schema\">-</div><div class=\"label\">模型字段数（反射）</div></div>\n  </div>\n\n  <div class=\"toolbar\">\n    <input id=\"search\" placeholder=\"按姓名搜索…\">\n    <button class=\"ghost\" onclick=\"load()\">搜索</button>\n    <button class=\"ghost\" onclick=\"clearSearch()\">清空</button>\n    <span style=\"flex:1\"></span>\n    <button onclick=\"openAdd()\">＋ 新增学生</button>\n  </div>\n\n  <table>\n    <thead>\n      <tr id=\"head-row\"></tr>\n    </thead>\n    <tbody id=\"rows\"><tr><td class=\"empty\" colspan=\"9\">加载中…</td></tr></tbody>\n  </table>\n</main>\n\n<div class=\"mask\" id=\"mask\">\n  <div class=\"dialog\">\n    <h2 id=\"dialog-title\">新增学生</h2>\n    <label>学号（留空自动分配）</label><input id=\"f-id\" type=\"number\" min=\"1\">\n    <label>姓名</label><input id=\"f-name\" maxlength=\"40\">\n    <label>年龄</label><input id=\"f-age\" type=\"number\" min=\"1\" max=\"150\">\n    <label>班级</label><input id=\"f-class\" maxlength=\"40\">\n    <label>成绩</label><input id=\"f-score\" type=\"number\" min=\"0\" max=\"100\">\n    <div class=\"row\">\n      <button class=\"ghost\" onclick=\"closeDialog()\">取消</button>\n      <button id=\"dialog-save\" onclick=\"save()\">保存</button>\n    </div>\n  </div>\n</div>\n\n<div id=\"toast\"></div>\n\n<script>\n\"use strict\";\nconst FIELDS = [\n  { key: \"id\", title: \"学号\" },\n  { key: \"name\", title: \"姓名\" },\n  { key: \"age\", title: \"年龄\" },\n  { key: \"className\", title: \"班级\" },\n  { key: \"score\", title: \"成绩\" },\n];\nlet students = [];\nlet order = \"id\", desc = false, editingId = null;\n\nfunction toast(message, isError) {\n  const node = document.getElementById(\"toast\");\n  node.textContent = message;\n  node.className = isError ? \"show err\" : \"show\";\n  setTimeout(() => { node.className = \"\"; }, 2600);\n}\n\nasync function request(method, url, body) {\n  const options = { method, headers: { \"Content-Type\": \"application/json\" } };\n  if (body !== undefined) options.body = JSON.stringify(body);\n  const response = await fetch(url, options);\n  const data = await response.json().catch(() => ({}));\n  if (!response.ok) throw new Error(data.error || (\"HTTP \" + response.status));\n  return data;\n}\n\nfunction renderHead() {\n  const row = document.getElementById(\"head-row\");\n  row.innerHTML = \"\";\n  for (const field of FIELDS) {\n    const th = document.createElement(\"th\");\n    th.textContent = field.title;\n    if (order === field.key) {\n      const arrow = document.createElement(\"span\");\n      arrow.className = \"arrow\";\n      arrow.textContent = desc ? \"▼\" : \"▲\";\n      th.appendChild(arrow);\n    }\n    th.onclick = () => { order = field.key; desc = (order === field.key && !desc) || field.key !== order ? field.key === order ? desc : false : false; sortBy(field.key); };\n    row.appendChild(th);\n  }\n  const extra = document.createElement(\"th\");\n  extra.textContent = \"操作\";\n  row.appendChild(extra);\n}\n\nfunction sortBy(field) {\n  if (order === field) { desc = !desc; } else { order = field; desc = false; }\n  renderHead();\n  load();\n}\n\nfunction renderRows() {\n  const body = document.getElementById(\"rows\");\n  body.innerHTML = \"\";\n  if (!students.length) {\n    body.innerHTML = '<tr><td class=\"empty\" colspan=\"9\">暂无数据，点右上角「新增学生」试试</td></tr>';\n    return;\n  }\n  for (const student of students) {\n    const tr = document.createElement(\"tr\");\n    for (const field of FIELDS) {\n      const td = document.createElement(\"td\");\n      td.textContent = student[field.key];\n      tr.appendChild(td);\n    }\n    const actions = document.createElement(\"td\");\n    actions.className = \"actions\";\n    const edit = document.createElement(\"button\");\n    edit.className = \"ghost\"; edit.textContent = \"编辑\";\n    edit.onclick = () => openEdit(student);\n    const remove = document.createElement(\"button\");\n    remove.className = \"danger\"; remove.textContent = \"删除\";\n    remove.onclick = () => removeStudent(student);\n    actions.appendChild(edit); actions.appendChild(remove);\n    tr.appendChild(actions);\n    body.appendChild(tr);\n  }\n  const scores = students.map(s => s.score);\n  document.getElementById(\"stat-count\").textContent = students.length;\n  document.getElementById(\"stat-avg\").textContent = scores.length\n    ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : \"-\";\n  document.getElementById(\"stat-max\").textContent = scores.length ? Math.max(...scores) : \"-\";\n}\n\nasync function load() {\n  try {\n    const keyword = document.getElementById(\"search\").value.trim();\n    const query = new URLSearchParams();\n    if (keyword) query.set(\"search\", keyword);\n    query.set(\"order\", order);\n    if (desc) query.set(\"desc\", \"1\");\n    students = await request(\"GET\", \"/api/students?\" + query.toString());\n    renderRows();\n  } catch (error) { toast(error.message, true); }\n}\n\nfunction clearSearch() { document.getElementById(\"search\").value = \"\"; load(); }\n\nfunction openDialog(title, student) {\n  editingId = student ? student.id : null;\n  document.getElementById(\"dialog-title\").textContent = title;\n  document.getElementById(\"f-id\").value = student ? student.id : \"\";\n  document.getElementById(\"f-id\").disabled = !!student;\n  document.getElementById(\"f-name\").value = student ? student.name : \"\";\n  document.getElementById(\"f-age\").value = student ? student.age : \"\";\n  document.getElementById(\"f-class\").value = student ? student.className : \"\";\n  document.getElementById(\"f-score\").value = student ? student.score : \"\";\n  document.getElementById(\"mask\").classList.add(\"show\");\n}\n\nfunction openAdd() { openDialog(\"新增学生\", null); }\nfunction openEdit(student) { openDialog(\"编辑学生（学号 \" + student.id + \"）\", student); }\nfunction closeDialog() { document.getElementById(\"mask\").classList.remove(\"show\"); }\n\nasync function save() {\n  const payload = {\n    id: Number(document.getElementById(\"f-id\").value) || 0,\n    name: document.getElementById(\"f-name\").value.trim(),\n    age: Number(document.getElementById(\"f-age\").value) || 0,\n    className: document.getElementById(\"f-class\").value.trim(),\n    score: Number(document.getElementById(\"f-score\").value) || 0,\n  };\n  try {\n    if (editingId === null) {\n      const saved = await request(\"POST\", \"/api/students\", payload);\n      toast(\"已保存，学号 \" + saved.id);\n    } else {\n      await request(\"PUT\", \"/api/students/\" + editingId, payload);\n      toast(\"已更新学号 \" + editingId);\n    }\n    closeDialog(); load();\n  } catch (error) { toast(error.message, true); }\n}\n\nasync function removeStudent(student) {\n  if (!confirm(\"确定删除学号 \" + student.id + \"（\" + student.name + \"）？\")) return;\n  try { await request(\"DELETE\", \"/api/students/\" + student.id); toast(\"已删除\"); load(); }\n  catch (error) { toast(error.message, true); }\n}\n\nasync function loadSchema() {\n  try {\n    const schema = await request(\"GET\", \"/api/schema\");\n    document.getElementById(\"stat-schema\").textContent = schema.fields.length;\n  } catch (error) { /* 静默：统计卡而已 */ }\n}\n\ndocument.getElementById(\"search\").addEventListener(\"keydown\", event => {\n  if (event.key === \"Enter\") load();\n});\n\nrenderHead();\nload();\nloadSchema();\n</script>\n</body>\n</html>\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/schema",
+      "status": 200,
+      "body": "{\"model\":\"Student\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"name\",\"type\":\"text\"},{\"name\":\"age\",\"type\":\"int\"},{\"name\":\"className\",\"type\":\"text\"},{\"name\":\"score\",\"type\":\"int\"}]}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students",
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "method": "POST",
+      "path": "/api/students",
+      "status": 200,
+      "body": "{\"id\":1,\"name\":\"张伟🙂\",\"age\":20,\"className\":\"计算机一班\",\"score\":91}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students/1",
+      "status": 200,
+      "body": "{\"id\":1,\"name\":\"张伟🙂\",\"age\":20,\"className\":\"计算机一班\",\"score\":91}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students?search=%E5%BC%A0&order=score&desc=1",
+      "status": 200,
+      "body": "[{\"id\":1,\"name\":\"张伟🙂\",\"age\":20,\"className\":\"计算机一班\",\"score\":91}]"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/students/1",
+      "status": 200,
+      "body": "{\"id\":1,\"name\":\"张伟🙂\",\"age\":20,\"className\":\"计算机一班\",\"score\":97}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/students",
+      "status": 400,
+      "body": "{\"error\":\"年龄必须在 1 到 150 之间\"}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/students",
+      "status": 400,
+      "body": "{\"error\":\"学号已存在：1\"}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/students",
+      "status": 200,
+      "body": "{\"id\":2,\"name\":\"小李'); DROP TABLE students; --\",\"age\":20,\"className\":\"计算机一班\",\"score\":97}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students?order=id",
+      "status": 200,
+      "body": "[{\"id\":1,\"name\":\"张伟🙂\",\"age\":20,\"className\":\"计算机一班\",\"score\":97},{\"id\":2,\"name\":\"小李'); DROP TABLE students; --\",\"age\":20,\"className\":\"计算机一班\",\"score\":97}]"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students?order=invalid",
+      "status": 400,
+      "body": "{\"error\":\"模型 Student 没有字段 invalid\"}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/students",
+      "status": 405,
+      "body": "{\"error\":\"方法不支持\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/missing",
+      "status": 404,
+      "body": "{\"error\":\"未知接口：/missing\"}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/students/1",
+      "status": 200,
+      "body": "{\"ok\":true}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students/1",
+      "status": 404,
+      "body": "{\"error\":\"学生不存在\"}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/students/2",
+      "status": 200,
+      "body": "{\"ok\":true}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/students",
+      "status": 200,
+      "body": "[]"
+    }
+  ],
+  "original_build": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\example\\students-server\\src\\main.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\students-web-aot-c48d58fc6304\\original"
+    ],
+    "code": 0,
+    "seconds": 54.42199999999866
+  },
+  "test_database": "chali_aot_acceptance_533ee688aad8",
+  "source_change": "仅 store::defaultConfig 的 database 从 students_db 改为隔离测试库",
+  "isolated_build": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\students-web-aot-c48d58fc6304\\src\\main.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\students-web-aot-c48d58fc6304\\isolated"
+    ],
+    "code": 0,
+    "seconds": 54.01600000000326
+  },
+  "port": 64763,
+  "server_command": [
+    "G:\\Desktop\\ChaLi\\tmp\\students-web-aot-c48d58fc6304\\isolated.exe",
+    "64763",
+    "G:\\Desktop\\ChaLi\\example\\students-server\\web"
+  ],
+  "passed": true,
+  "isolated_database_removed": true,
+  "compiler_reported_version": "0.31.0",
+  "scope": "原始工程构建；仅替换数据库名的副本启动与 HTTP 业务验收；未运行 CI 门禁"
+}

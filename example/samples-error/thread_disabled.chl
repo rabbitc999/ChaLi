@@ -1,0 +1,8 @@
+
+import std::thread;
+
+void work() {}
+void main() {
+    Thread task = std::thread::create(work);
+    std::thread::wait(task);
+}

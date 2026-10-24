@@ -1,0 +1,42 @@
+// 未使用结果、窄类型、复制快照和循环控制流的综合回归。
+void main(){
+    int64 total=0;
+    {
+        int64 i=0;
+        while (i<100) {
+
+        if(i==80){break;}
+        if((i%3)==0){{ i++; continue; }}
+        total+=i;
+    
+            i++;
+        }
+    }
+    assert(total==2107);
+    int8 small=(int8)127; small++; assert(small==(int8)-128);
+    --small; assert(small==(int8)127);
+    int64 original=7, snapshot=original; original=99;
+    assert(snapshot==7 && original==99);
+    int64 value=1; value<<=1; assert(value==2);
+    float64 real=1.5; real++; --real; real+=0.5;
+    assert(real==2.0);
+    int64 outer=0,inner=0;
+    {
+        int64 i=0;
+        while (i<4) {
+
+        {
+            int64 j=0;
+            while (j<5) {
+if(j==2){{ ++j; continue; }} inner+=1;
+                ++j;
+            }
+        }
+        outer+=1;
+    
+            ++i;
+        }
+    }
+    assert(outer==4 && inner==16);
+    println("quad optimization OK");
+}

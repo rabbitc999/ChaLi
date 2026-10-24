@@ -1,0 +1,14 @@
+module include::shapes;
+/* 共享的结构体与函数通过 import 引入。 */
+struct Rect {
+    int64 width;
+    int64 height;
+
+    int64 area() {
+        return width * height;
+    }
+};
+
+int64 square_area(int64 side) {
+    return side * side;
+}

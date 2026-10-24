@@ -1,0 +1,1 @@
+void main(){std::lang::Set<int64> source; const std::lang::Set<int64> frozen=source; frozen.add(7);}

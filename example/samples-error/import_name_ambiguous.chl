@@ -1,0 +1,3 @@
+import names::left;
+import names::right;
+void main() { let __ignored1 = duplicate(1); }

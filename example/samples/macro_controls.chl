@@ -1,0 +1,32 @@
+/* 编译期只检查五类完整语法和 ECMAScript 正则，未选分支不做语义检查。 */
+$macro CLASSIFY(value)
+$match value is ident
+1
+$else is expr
+2
+$else
+0
+$end_match
+$end_macro
+$macro NUMBER(value)
+$regex value is "[0-9]+"
+value
+$else
+0
+$end_regex
+$end_macro
+$macro POSITIVE(out, ...rest)
+$for item in rest
+if (item > 0) { out += item; }
+$end_for
+$end_macro
+void main() {
+    assert($CLASSIFY(name) == 1);
+    assert($CLASSIFY(1 + 2) == 2);
+    assert($NUMBER(42) == 42);
+    assert($NUMBER(noSuchFunction()) == 0);
+    int64 total = 0;
+    $POSITIVE(total, 1, -2, 3);
+    assert(total == 4);
+    println("macros ok");
+}

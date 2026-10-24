@@ -1,0 +1,4 @@
+$macro BAD(x)
+`x
+$end_macro
+void main() { return $BAD(1); }

@@ -1,0 +1,9 @@
+# 基准的构建产物与本机中间文件，不入库。
+build/
+build-aot/
+build-lua/
+*.exe
+*-kernel.dll
+*-kernel.so
+*.class
+*.pdb

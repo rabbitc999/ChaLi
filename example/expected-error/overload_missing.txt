@@ -1,0 +1,1 @@
+chali: example/samples-error/overload_missing.chl 第 14 行第 5 列：调用 函数 program::size 找不到匹配的重载：(Point)；没有参数类型能对上的重载（候选：program::size）

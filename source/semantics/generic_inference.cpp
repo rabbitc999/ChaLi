@@ -1,0 +1,1794 @@
+/* 名称后置泛型：签名仍由生成解析器读取，推导只处理类型树。 */
+
+/**
+ * @brief 递归解析结构化类型应用，缺少具体声明时请求普通泛型实例化。
+ * @param type 当前类型树。
+ * @param depth 当前递归深度。
+ * @return 类型应用全部解析时返回真。
+ */
+bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth)
+{
+    if (!type) return true;
+    if (depth >= 256) return Fail("类型应用超过递归深度预算");
+    if (!ResolveAstGenericType(type->elem, depth + 1) || !ResolveAstGenericType(type->elem2, depth + 1)) return false;
+    for (const auto &parameter : type->paramTypes)
+        if (!ResolveAstGenericType(parameter, depth + 1)) return false;
+    for (const auto &argument : type->genericArguments)
+        if (!ResolveAstGenericType(argument, depth + 1)) return false;
+    if (type->genericBase.empty())
+    {
+        if (!type->genericMember.empty())
+        {
+            type->name += "::" + type->genericMember;
+            type->genericMember.clear();
+            type->kind = MType::Struct;
+        }
+        return true;
+    }
+    const auto &generics = chali_generic::session.generics;
+    auto found = generics.find(type->lookupModule.empty() ? type->genericBase : type->lookupModule + "::" + type->genericBase);
+    if (found == generics.end()) found = generics.find(type->genericBase);
+    if (found == generics.end()) found = generics.find("std::lang::" + type->genericBase);
+    if (found == generics.end())
+    {
+        const auto imports = g_moduleImports.find(type->lookupModule);
+        if (imports != g_moduleImports.end())
+            for (const auto &module : imports->second)
+            {
+                const auto candidate = generics.find(module + "::" + type->genericBase);
+                if (candidate == generics.end()) continue;
+                if (found != generics.end()) return Fail("泛型类型名称有多个可见定义：" + type->genericBase);
+                found = candidate;
+            }
+    }
+    if (found == generics.end()) return Fail("没有声明的泛型类型：" + type->genericBase);
+    Memory::Vector<Memory::String> arguments;
+    for (const auto &argument : type->genericArguments) arguments.push_back(Describe(argument));
+    const auto name = chali_generic::mangle(found->second.name, arguments);
+    if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ found->second.name, arguments };
+    type->name = found->second.module.empty() ? name : found->second.module + "::" + name;
+    if (!type->genericMember.empty()) type->name += "::" + type->genericMember;
+    type->unresolvedName = false;
+    type->genericBase.clear();
+    type->genericArguments.clear();
+    type->genericMember.clear();
+    return true;
+}
+
+/**
+ * @brief 泛型结构体命名构造入口的符号参数及实参数量约束。
+ */
+struct MGenericConstructor
+{
+    Memory::Vector<std::shared_ptr<MType>> params;
+    bool variadic = false;
+    std::size_t required = 0;
+};
+
+/**
+ * @brief 泛型签名的类型树及枚举载荷，符号类型参数不参与最终降级。
+ */
+struct MGenericSignature
+{
+    std::shared_ptr<MType> result;
+    Memory::Vector<std::shared_ptr<MType>> params;
+    Memory::Map<Memory::String, Memory::Vector<std::shared_ptr<MType>>> variants;
+    bool variadic = false;
+    std::size_t required = 0;
+    Memory::Vector<MGenericConstructor> constructors;
+};
+Memory::Map<Memory::String, MGenericSignature> g_genericSignatures;
+Memory::Map<Memory::String, chali_generic::Expansion> g_genericPatterns;
+Memory::Set<int> g_inferringExpressions;
+Memory::Vector<std::shared_ptr<MType>> g_genericPatternTypes;
+
+/**
+ * @brief 将类型树还原为实例化器接受的类型拼写。
+ */
+Memory::String InferenceTypeText(const std::shared_ptr<MType> &type)
+{
+    if (!type) return "void";
+    if (IsTupleType(type))
+    {
+        Memory::String text = "(";
+        for (std::size_t i = 0; i < type->paramTypes.size(); ++i)
+        {
+            if (i) text += ",";
+            text += InferenceTypeText(type->paramTypes[i]);
+        }
+        return text + ")";
+    }
+    if (type->kind == MType::Func)
+    {
+        if (!type->name.empty()) return type->name;
+        auto result = InferenceTypeText(type->elem);
+        if (type->elem && type->elem->kind == MType::Array) result = "(" + result + ")";
+        Memory::String text = result + " fn(";
+        for (std::size_t index = 0; index < type->paramTypes.size(); ++index)
+        {
+            if (index) text += ",";
+            const bool variadic = type->variadic && index + 1u == type->paramTypes.size();
+            text += InferenceTypeText(variadic ? type->paramTypes[index]->elem : type->paramTypes[index]);
+            if (variadic) text += "...";
+        }
+        return text + ")";
+    }
+    if (type->kind == MType::Struct || type->kind == MType::Host) return type->name;
+    if (type->kind == MType::Ptr)
+    {
+        auto text = InferenceTypeText(type->elem);
+        if (type->elem && type->elem->kind == MType::Func) text = "(" + text + ")";
+        return text + (type->readOnly ? " const&" : " mut&");
+    }
+    if (type->kind == MType::Array) return InferenceTypeText(type->elem) + "[]";
+    if (IsContainer(type))
+    {
+        auto text = Memory::String("std::lang::") + (type->name == "vec" ? "List" : type->name == "set" ? "Set" :
+                                                                                                          "Map")
+                    + "<" + InferenceTypeText(type->elem);
+        if (type->elem2) text += "," + InferenceTypeText(type->elem2);
+        return text + ">";
+    }
+    return TypeKey(type);
+}
+
+/**
+ * @brief 将具体类型转换为实例化器使用的规范拼写，保留根模块同名类型的身份。
+ */
+Memory::String GenericArgumentText(const std::shared_ptr<MType> &type)
+{
+    return chali_generic::canonicalType(InferenceTypeText(type));
+}
+
+Memory::Map<Memory::String, Memory::String> g_inferenceCanonicalNames;
+Memory::Map<Memory::String, std::shared_ptr<MType>> g_inferenceConcreteTypes, g_inferenceSymbolicTypes;
+std::size_t g_inferenceConcreteCount = 0, g_inferenceSymbolicCount = 0;
+
+/**
+ * @brief 缓存本次编译中稳定的类型规范名，避免嵌套推导反复扫描模块类型表。
+ * @param text 已解析类型的拼写。
+ * @return 对应的规范类型名。
+ */
+const Memory::String &CanonicalInferenceName(const Memory::String &text)
+{
+    auto found = g_inferenceCanonicalNames.find(text);
+    if (found == g_inferenceCanonicalNames.end())
+        found = g_inferenceCanonicalNames.emplace(text, chali_generic::canonicalType(text)).first;
+    return found->second;
+}
+
+/**
+ * @brief 增量索引类型池；语义重放时具体类型索引单独清空。
+ * @param pool 实际或符号类型池。
+ * @param count 已索引的元素数。
+ * @param index 规范类型名到类型树的映射。
+ */
+void IndexInferenceTypes(const Memory::Vector<std::shared_ptr<MType>> &pool, std::size_t &count,
+                         Memory::Map<Memory::String, std::shared_ptr<MType>> &index)
+{
+    for (; count < pool.size(); ++count)
+        index[CanonicalInferenceName(InferenceTypeText(pool[count]))] = pool[count];
+}
+
+/**
+ * @brief 泛型闭包各实现中不受局部声明遮蔽的名称，供环境构造时解析实际来源。
+ */
+Memory::Map<Memory::String, Memory::Set<Memory::String>> g_genericClosureCaptureNames;
+
+/**
+ * @brief 从生成解析器的语法树提取自由变量，不对符号类型执行值运算。
+ * @param id 待遍历的语法节点。
+ * @param locals 当前词法作用域中已声明的名称。
+ * @param names 接收自由变量名称。
+ */
+void CollectGenericClosureNames(int id, Memory::Set<Memory::String> &locals, Memory::Set<Memory::String> &names)
+{
+    if (id < 0) return;
+    const auto node = N(id);
+    if (node.kind == MNode::Var)
+    {
+        if (!locals.count(node.s)) names.insert(node.s);
+        if (node.s.rfind("__chali_lambda_", 0) == 0)
+            for (const auto top : g_top)
+            {
+                const auto nested = N(top);
+                if (nested.kind != MNode::FuncDef || nested.s != node.s) continue;
+                auto inner = locals;
+                for (const auto param : N(nested.kids[0]).kids) inner.insert(N(param).s);
+                const auto specification = chali_lambda::captureSpecifications.find(nested.s);
+                if (specification != chali_lambda::captureSpecifications.end())
+                    for (const auto &capture : specification->second)
+                        if (!inner.count(capture.first)) names.insert(capture.first);
+                CollectGenericClosureNames(nested.kids[1], inner, names);
+                break;
+            }
+        return;
+    }
+    if (node.kind == MNode::Block)
+    {
+        auto nested = locals;
+        CollectGenericClosureNames(static_cast<int>(node.i), nested, names);
+        return;
+    }
+    if (node.kind == MNode::Declare)
+    {
+        for (const auto child : N(node.kids[0]).kids)
+        {
+            const auto declaration = N(child);
+            for (const auto init : declaration.kids) CollectGenericClosureNames(init, locals, names);
+            locals.insert(declaration.s);
+        }
+        return;
+    }
+    if (node.kind == MNode::Destructure && !node.i)
+    {
+        CollectGenericClosureNames(node.kids[1], locals, names);
+        std::function<void(int)> bind = [&](int pattern) {
+            const auto &value = N(pattern);
+            if (value.kind == MNode::Var && value.s != "_")
+                locals.insert(value.s);
+            else
+                for (const auto child : value.kids) bind(child);
+        };
+        bind(node.kids[0]);
+        return;
+    }
+    if (node.kind == MNode::For)
+    {
+        auto nested = locals;
+        for (const auto child : node.kids) CollectGenericClosureNames(child, nested, names);
+        return;
+    }
+    if (node.kind == MNode::Foreach)
+    {
+        CollectGenericClosureNames(node.kids[0], locals, names);
+        auto nested = locals;
+        nested.insert(node.s);
+        CollectGenericClosureNames(node.kids[1], nested, names);
+        return;
+    }
+    for (const auto child : node.kids) CollectGenericClosureNames(child, locals, names);
+    if (node.guard >= 0) CollectGenericClosureNames(node.guard, locals, names);
+}
+
+/**
+ * @brief 读取符号签名；函数正文不参与推导，枚举保留其全部载荷定义。
+ */
+bool PrepareGenericSignatures()
+{
+    g_inferenceCanonicalNames.clear();
+    g_inferenceSymbolicTypes.clear();
+    g_inferenceSymbolicCount = 0;
+    g_genericSignatures.clear();
+    g_genericClosureCaptureNames.clear();
+    g_genericPatterns.clear();
+    g_genericPatternTypes.clear();
+    const auto savedTop = g_top;
+    const auto savedModule = g_parseModule;
+    const auto nodeCount = g_nodes.size(), typeCount = g_types.size(), nameCount = g_names.size();
+    for (const auto &entry : chali_generic::session.generics)
+    {
+        const auto &generic = entry.second;
+        const auto head = chali_generic::trim(generic.declaration);
+        const bool enumeration = chali_generic::wordAt(head, 0, "enum");
+        const bool structure = chali_generic::wordAt(head, 0, "struct");
+        if (chali_generic::wordAt(head, 0, "interface") || chali_generic::wordAt(head, 0, "type")) continue;
+        if (structure && head.find("create") == Memory::String::npos) continue;
+        chali_generic::Generic probe = generic;
+        const auto closureBody = chali_lambda::genericClosureBodies.find(generic.name);
+        if (!enumeration && !structure && closureBody == chali_lambda::genericClosureBodies.end())
+        {
+            const auto body = probe.declaration.find('{');
+            if (body != Memory::String::npos)
+                probe.declaration.erase(body);
+            else
+            {
+                const auto semi = probe.declaration.find(';');
+                if (semi != Memory::String::npos) probe.declaration.erase(semi);
+            }
+            probe.declaration += " {}";
+        }
+        Memory::Vector<Memory::String> arguments;
+        for (std::size_t i = 0; i < generic.params.size(); ++i)
+            arguments.push_back("McInferenceParameter" + Memory::toString(i));
+        chali_generic::Expansion expansion{ &probe, arguments, "McInferenceProbe" };
+        auto source = chali_generic::substitute(expansion);
+        Memory::Map<Memory::String, chali_generic::Expansion> patterns;
+        Memory::Vector<Memory::String> pending;
+        Memory::Map<Memory::String, Memory::Set<Memory::String>> unchecked;
+        // 符号签名不执行约束检查，具体实例在展开全部嵌套声明后统一检查约束。
+        auto templates = chali_generic::session.generics;
+        for (auto &item : templates)
+            for (auto &param : item.second.params)
+            {
+                param.constraint.clear();
+                param.constant = false;
+            }
+        Memory::String error;
+        if (!chali_generic::rewrite(source, templates, unchecked, patterns, pending, error))
+            return Fail(error);
+        for (const auto &item : patterns)
+        {
+            auto pattern = item.second;
+            pattern.generic = &chali_generic::session.generics.at(pattern.generic->name);
+            g_genericPatterns[item.first] = std::move(pattern);
+        }
+        const auto savedCaptureSpecifications = chali_lambda::captureSpecifications;
+        chali::Engine parser;
+        int value = 0;
+        g_parseModule.clear();
+        chali_generic::markContainerTypeArguments(source);
+        if (parser.runText(source, &value) != chali::Status::Ok)
+            return Fail("泛型声明的签名无法解析：" + generic.name);
+        MGenericSignature signature;
+        for (int top : g_top)
+        {
+            const auto &node = N(top);
+            if (node.s != "McInferenceProbe") continue;
+            if (node.kind == MNode::FuncDef)
+            {
+                if (closureBody != chali_lambda::genericClosureBodies.end())
+                {
+                    Memory::Set<Memory::String> locals;
+                    for (const auto param : N(node.kids[0]).kids) locals.insert(N(param).s);
+                    CollectGenericClosureNames(node.kids[1], locals, g_genericClosureCaptureNames[closureBody->second]);
+                }
+                signature.result = node.type >= 0 ? T(node.type) : nullptr;
+                for (int param : N(node.kids[0]).kids)
+                {
+                    signature.params.push_back(T(N(param).type));
+                    if (N(param).kids.empty() && N(param).i == 0) ++signature.required;
+                    signature.variadic = N(param).i != 0;
+                }
+            }
+            else if (node.kind == MNode::StructDecl)
+            {
+                for (const int memberId : N(node.kids[0]).kids)
+                {
+                    const auto &member = N(memberId);
+                    if (member.kind != MNode::MethodDef || member.type2 != 1 || member.s != "create") continue;
+                    MGenericConstructor constructor;
+                    for (const int paramId : N(member.kids[0]).kids)
+                    {
+                        const auto &param = N(paramId);
+                        constructor.params.push_back(T(param.type));
+                        if (param.kids.empty() && param.i == 0) ++constructor.required;
+                        constructor.variadic = param.i != 0;
+                    }
+                    signature.constructors.push_back(std::move(constructor));
+                }
+            }
+            else if (node.kind == MNode::EnumDecl)
+            {
+                for (int variant : N(node.kids[0]).kids)
+                {
+                    auto &payload = signature.variants[N(variant).s];
+                    if (!N(variant).kids.empty())
+                        for (int param : N(N(variant).kids[0]).kids) payload.push_back(T(N(param).type));
+                }
+            }
+        }
+        g_genericSignatures[generic.name] = std::move(signature);
+        g_genericPatternTypes.insert(g_genericPatternTypes.end(), g_types.begin() + typeCount, g_types.end());
+        g_nodes.resize(nodeCount);
+        g_types.resize(typeCount);
+        g_names.resize(nameCount);
+        chali_lambda::captureSpecifications = savedCaptureSpecifications;
+    }
+    g_top = savedTop;
+    g_parseModule = savedModule;
+    return true;
+}
+
+/**
+ * @brief 将模式类型中的类型参数与实参统一；同一参数不得推导出冲突类型。
+ */
+bool UnifyGenericType(const std::shared_ptr<MType> &pattern, const std::shared_ptr<MType> &actual,
+                      Memory::Map<Memory::String, std::shared_ptr<MType>> &bindings)
+{
+    if (!pattern || !actual) return false;
+    if (pattern->kind == MType::Struct && pattern->name.rfind("McInferenceParameter", 0) == 0)
+    {
+        const auto old = bindings.find(pattern->name);
+        if (old != bindings.end()) return TypeKey(old->second) == TypeKey(actual);
+        bindings[pattern->name] = actual;
+        return true;
+    }
+    if (pattern->kind != actual->kind) return false;
+    if (pattern->kind == MType::Func && pattern->name != actual->name) return false;
+    if (pattern->kind == MType::Ptr || pattern->kind == MType::Array || IsContainer(pattern) || pattern->kind == MType::Func)
+    {
+        if (IsContainer(pattern) && pattern->name != actual->name) return false;
+        if (pattern->kind == MType::Ptr && !pattern->readOnly && actual->readOnly) return false;
+        if (!UnifyGenericType(pattern->elem, actual->elem, bindings)) return false;
+        if (pattern->elem2 && !UnifyGenericType(pattern->elem2, actual->elem2, bindings)) return false;
+        if (pattern->paramTypes.size() != actual->paramTypes.size()) return false;
+        for (std::size_t i = 0; i < pattern->paramTypes.size(); ++i)
+            if (!UnifyGenericType(pattern->paramTypes[i], actual->paramTypes[i], bindings)) return false;
+        return true;
+    }
+    if (IsTupleType(pattern) && IsTupleType(actual))
+    {
+        if (pattern->paramTypes.size() != actual->paramTypes.size()) return false;
+        for (std::size_t i = 0; i < pattern->paramTypes.size(); ++i)
+            if (!UnifyGenericType(pattern->paramTypes[i], actual->paramTypes[i], bindings)) return false;
+        return true;
+    }
+    if (pattern->kind == MType::Struct)
+    {
+        const auto symbolic = g_genericPatterns.find(CanonicalInferenceName(pattern->name));
+        const auto concrete = chali_generic::session.made.find(CanonicalInferenceName(actual->name));
+        if (symbolic != g_genericPatterns.end() && concrete != chali_generic::session.made.end())
+        {
+            if (symbolic->second.generic->name != concrete->second.generic->name) return false;
+            for (std::size_t i = 0; i < symbolic->second.args.size(); ++i)
+            {
+                // 实际类型参数由已解析类型池提供，不从 mangled 名字猜测。
+                std::shared_ptr<MType> a, p;
+                IndexInferenceTypes(g_types, g_inferenceConcreteCount, g_inferenceConcreteTypes);
+                IndexInferenceTypes(g_genericPatternTypes, g_inferenceSymbolicCount, g_inferenceSymbolicTypes);
+                const auto actualType = g_inferenceConcreteTypes.find(concrete->second.args[i]);
+                const auto patternType = g_inferenceSymbolicTypes.find(symbolic->second.args[i]);
+                if (actualType != g_inferenceConcreteTypes.end()) a = actualType->second;
+                if (patternType != g_inferenceSymbolicTypes.end()) p = patternType->second;
+                if (!p)
+                {
+                    p = Memory::makeShared<MType>();
+                    p->kind = MType::Struct;
+                    p->name = symbolic->second.args[i];
+                }
+                if (i < concrete->second.generic->params.size() && concrete->second.generic->params[i].constant)
+                {
+                    a = Memory::makeShared<MType>();
+                    a->kind = MType::Struct;
+                    a->name = concrete->second.args[i];
+                }
+                if (!a || !UnifyGenericType(p, a, bindings)) return false;
+            }
+            return true;
+        }
+    }
+    return SameType(pattern, actual);
+}
+
+/**
+ * @brief 判断函数实参是否需要从多个模块级重载中选择。
+ * @param id 函数值表达式节点。
+ * @return 未被局部变量遮蔽且存在多个重载时返回 true。
+ */
+bool IsOverloadedCallbackArgument(int id)
+{
+    const auto &node = N(id);
+    if (node.kind != MNode::Var || FindNodeVar(node)) return false;
+    const auto *overloads = FindFunctionOverloads(node.module, node.s);
+    return overloads && overloads->size() > 1u;
+}
+
+/**
+ * @brief 按已知绑定和函数形状选择回调重载，并给表达式保留准确的目标类型。
+ * @param id 待选择的函数值实参。
+ * @param pattern 泛型形参的完整函数类型模式。
+ * @param bindings 其他实参已确定的类型绑定，只用于筛选候选。
+ * @return 唯一匹配的函数类型；没有匹配或仍有歧义时登记诊断并返回空指针。
+ */
+std::shared_ptr<MType> InferOverloadedCallbackArgument(int id, const std::shared_ptr<MType> &pattern,
+                                                       const Memory::Map<Memory::String, std::shared_ptr<MType>> &bindings)
+{
+    const auto node = N(id);
+    const auto *overloads = FindFunctionOverloads(node.module, node.s);
+    if (!overloads || overloads->empty())
+        return Fail("没有可供泛型推导选择的回调重载：" + node.s), nullptr;
+    std::shared_ptr<MType> selected;
+    for (const auto &label : *overloads)
+    {
+        const auto found = g_funcs.find(label);
+        if (found == g_funcs.end()) continue;
+        const auto type = FuncTypeOf(found->second);
+        auto trial = bindings;
+        if (!UnifyGenericType(pattern, type, trial)) continue;
+        if (selected)
+            return Fail("回调 " + node.s + " 有多个匹配重载；请先赋给带签名的函数变量或显式指定类型实参"), nullptr;
+        selected = type;
+    }
+    if (!selected)
+        return Fail("函数 " + node.s + " 与目标函数类型不匹配"), nullptr;
+    // 将目标类型留在局部上下文节点中，避免后续查询再次取重载表最后一项。
+    const int source = static_cast<int>(g_nodes.size());
+    g_nodes.push_back(node);
+    auto contextual = node;
+    contextual.kind = MNode::Cast;
+    contextual.type = M_AddType(selected);
+    contextual.type2 = 3;
+    contextual.kids = { source };
+    contextual.s.clear();
+    contextual.s2.clear();
+    g_nodes[id] = std::move(contextual);
+    return selected;
+}
+
+/**
+ * @brief 从绑定生成完整实参表；没有信息的类型参数绝不隐式退化成 Any。
+ */
+bool CompleteGenericArguments(const chali_generic::Generic &generic,
+                              const Memory::Map<Memory::String, std::shared_ptr<MType>> &bindings, Memory::Vector<Memory::String> &args)
+{
+    Memory::Map<Memory::String, Memory::String> resolved;
+    for (std::size_t i = 0; i < generic.params.size(); ++i)
+    {
+        const auto found = bindings.find("McInferenceParameter" + Memory::toString(i));
+        Memory::String argument;
+        if (found == bindings.end())
+        {
+            if (!generic.params[i].hasDefault) return false;
+            argument = chali_generic::substituteIdentifiers(generic.params[i].fallback, resolved);
+            auto made = chali_generic::session.made;
+            Memory::Vector<Memory::String> pending;
+            Memory::String error;
+            if (!chali_generic::checkTypeNesting(argument, error)) return Fail(error);
+            if (!chali_generic::rewrite(argument, chali_generic::session.generics,
+                                        chali_generic::session.implemented, made, pending, error)) return Fail(error);
+            // 先请求默认类型中的内层实例，重放后再实例化外层函数或枚举。
+            if (!pending.empty())
+            {
+                const auto &inner = made.at(pending.front());
+                throw MInstantiationRequest{ inner.generic->name, inner.args };
+            }
+            argument = chali_generic::canonicalType(argument);
+        }
+        else
+            argument = GenericArgumentText(found->second);
+        resolved[generic.params[i].name] = argument;
+        args.push_back(std::move(argument));
+    }
+    return true;
+}
+
+/**
+ * @brief 优先保留局部变量、字段及普通函数的名称含义。
+ */
+bool HasOrdinaryName(const MNode &node)
+{
+    return FindNodeVar(node) != nullptr || (!NodeUsesDefinitionLookup(node) && !g_owner.empty() && (node.s == "self" || FieldType(g_owner, node.s))) || FindFunctionOverloads(node.module, node.s) != nullptr;
+}
+
+/**
+ * @brief 用已绑定的外层类型参数构造回调上下文，返回类型可暂时保持未绑定。
+ * @param pattern 泛型形参类型树。
+ * @param bindings 已由其他实参确定的类型参数。
+ * @return 替换后的类型树；不修改共享签名。
+ */
+std::shared_ptr<MType> BoundCallbackType(const std::shared_ptr<MType> &pattern,
+                                         const Memory::Map<Memory::String, std::shared_ptr<MType>> &bindings)
+{
+    if (!pattern) return nullptr;
+    const auto found = bindings.find(pattern->name);
+    if (pattern->kind == MType::Struct && found != bindings.end()) return found->second;
+    auto type = Memory::makeShared<MType>(*pattern);
+    type->elem = BoundCallbackType(pattern->elem, bindings);
+    type->elem2 = BoundCallbackType(pattern->elem2, bindings);
+    type->paramTypes.clear();
+    for (const auto &param : pattern->paramTypes)
+        type->paramTypes.push_back(BoundCallbackType(param, bindings));
+    return type;
+}
+
+/**
+ * @brief 回调参数必须完全具体，不能把外层未绑定参数当作用户类型实例化。
+ */
+bool ConcreteCallbackParameter(const std::shared_ptr<MType> &type)
+{
+    if (!type) return false;
+    if (type->kind == MType::Struct && type->name.rfind("McInferenceParameter", 0) == 0)
+        return false;
+    if (type->elem && !ConcreteCallbackParameter(type->elem)) return false;
+    if (type->elem2 && !ConcreteCallbackParameter(type->elem2)) return false;
+    for (const auto &param : type->paramTypes)
+        if (!ConcreteCallbackParameter(param)) return false;
+    return true;
+}
+
+/**
+ * @brief 在真实符号作用域中检查 lambda 自由变量，覆盖解构和 match 等非类型声明绑定。
+ * @param name 提升后的函数名。
+ * @param module 原声明模块。
+ * @return 捕获方式符合只读和所有权要求并已登记时返回 true。
+ */
+bool CheckLambdaCaptures(const Memory::String &name, const Memory::String &module)
+{
+    const auto key = ModuleSymbol(module, name);
+    if (g_lambdaPrepared.count(key)) return true;
+    for (auto &declaration : g_functionDecls)
+    {
+        if (declaration.source != name || declaration.module != module || declaration.bodyId < 0) continue;
+        FindGenericClosureDefinition(name);
+        const auto genericClosure = chali_lambda::genericClosures.find(name);
+        const int captureMode = genericClosure != chali_lambda::genericClosures.end() ? genericClosure->second.captureMode : name.find("_mut_") != Memory::String::npos ? 1 :
+                                                                                                                         name.find("_copy_") != Memory::String::npos    ? 2 :
+                                                                                                                         name.find("_move_") != Memory::String::npos    ? 3 :
+                                                                                                                                                                          0;
+        Memory::Vector<MParam> captures;
+        Memory::Set<Memory::String> captured;
+        Memory::Set<Memory::String> locals;
+        for (const auto &param : declaration.signature.params)
+        {
+            locals.insert(param.bindingIdentity ? Memory::String("binding:") + Memory::toString(param.bindingIdentity) : param.source);
+            if (param.bindingKey.empty() || param.bindingKey == param.source) locals.insert(param.source);
+        }
+        const Memory::Map<Memory::String, int> *specifications = nullptr;
+        std::size_t specificationLength = 0;
+        for (const auto &entry : chali_lambda::captureSpecifications)
+            if ((name == entry.first || name.rfind(entry.first + "__", 0) == 0) && entry.first.size() > specificationLength)
+            {
+                specifications = &entry.second;
+                specificationLength = entry.first.size();
+            }
+        const auto addCapture = [&](const Memory::String &source, const MVar *variable, int mode) -> bool {
+            if (!variable) return Fail("lambda 捕获列表引用了不存在的变量：" + source);
+            if (name.find("_defer") != Memory::String::npos && (variable->isConst || (variable->type->kind == MType::Ptr && variable->type->readOnly))) mode = 0;
+            if ((mode == 1 || mode == 3) && (variable->isConst || (variable->type->kind == MType::Ptr && variable->type->readOnly)))
+                return Fail("lambda 的 mut/move 捕获不能借用或移动只读变量：" + source);
+            if (captured.insert(variable->emitted).second)
+            {
+                MParam capture{ source, {}, variable->type, false };
+                capture.captureMode = mode;
+                capture.bindingIdentity = variable->bindingIdentity;
+                capture.bindingKey = variable->bindingIdentity && !(variable->bindingIdentity & 0x80000000u) ? Memory::String("\x1f"
+                                                                                                                              "capture:")
+                                                                                                                   + Memory::toString(variable->bindingIdentity) :
+                                                                                                               source;
+                if (mode == 0 && capture.type->kind == MType::Ptr)
+                    capture.type = PointerType(capture.type->elem, true);
+                captures.push_back(capture);
+            }
+            return true;
+        };
+        if (declaration.captureSyntax >= 0)
+        {
+            specifications = nullptr;
+            for (const int capture : N(declaration.captureSyntax).kids)
+            {
+                const auto &item = N(capture);
+                if (item.kids.size() != 1 || N(item.kids[0]).kind != MNode::Var)
+                    return Fail("lambda 捕获形参必须替换为单个标识符");
+                const auto &reference = N(item.kids[0]);
+                for (const auto &parameter : declaration.signature.params)
+                    if (parameter.source == reference.s && !reference.syntaxContext && parameter.bindingKey == parameter.source)
+                        return Fail("lambda 捕获变量与形参重名：" + reference.s);
+                if (!addCapture(reference.s, FindNodeVar(reference), static_cast<int>(item.i))) return false;
+            }
+        }
+        const auto astClosure = g_astGenericClosures.find(name);
+        if (astClosure != g_astGenericClosures.end())
+            for (const int reference : astClosure->second.references)
+            {
+                const auto &syntax = N(reference);
+                const auto variable = FindNodeVar(syntax);
+                if (!variable) continue;
+                bool local = false;
+                for (std::size_t scope = 1; scope < g_scope.size(); ++scope)
+                    for (const auto &entry : g_scope[scope])
+                        if (&entry.second == variable) local = true;
+                if (local && !addCapture(syntax.s, variable, captureMode)) return false;
+            }
+        if (genericClosure != chali_lambda::genericClosures.end())
+        {
+            specifications = &genericClosure->second.captures;
+            for (const auto &source : g_genericClosureCaptureNames[genericClosure->second.sourceSeed])
+            {
+                const auto variable = FindIn(module, source);
+                if (!variable) continue;
+                bool local = false;
+                for (std::size_t scope = 1; scope < g_scope.size(); ++scope)
+                {
+                    const auto found = g_scope[scope].find(source);
+                    if (found != g_scope[scope].end() && &found->second == variable) local = true;
+                }
+                if (!local || genericClosure->second.member) continue;
+                const auto mode = specifications->find(source);
+                if (!addCapture(source, variable, mode == specifications->end() ? captureMode : mode->second)) return false;
+            }
+        }
+        if (specifications)
+            for (const auto &entry : *specifications)
+            {
+                if (locals.count(entry.first)) return Fail("lambda 捕获变量与形参重名：" + entry.first);
+                if (!addCapture(entry.first, FindIn(module, entry.first), entry.second)) return false;
+            }
+        std::function<void(int, Memory::Set<Memory::String> &)> bind;
+        bind = [&](int id, Memory::Set<Memory::String> &names) {
+            if (id < 0) return;
+            const auto &node = N(id);
+            if (node.kind == MNode::Var && node.s != "_")
+            {
+                names.insert(node.bindingIdentity ? Memory::String("binding:") + Memory::toString(node.bindingIdentity) : node.s);
+                if (!node.syntaxContext) names.insert(node.s);
+            }
+            else
+                for (const int child : node.kids) bind(child, names);
+        };
+        std::function<bool(int, Memory::Set<Memory::String> &)> visit;
+        visit = [&](int id, Memory::Set<Memory::String> &names) -> bool {
+            if (id < 0) return true;
+            const auto &node = N(id);
+            if (node.kind == MNode::Var && !names.count(node.bindingIdentity ? Memory::String("binding:") + Memory::toString(node.bindingIdentity) : node.s))
+            {
+                const auto resolved = FindNodeVar(node);
+                for (std::size_t scope = g_scope.size(); scope-- > 1u;)
+                {
+                    const auto found = g_scope[scope].find(NodeBindingKey(node));
+                    if (found == g_scope[scope].end() || resolved != &found->second) continue;
+                    const auto explicitMode = specifications ? specifications->find(node.s) : Memory::Map<Memory::String, int>::const_iterator{};
+                    int mode = specifications && explicitMode != specifications->end() ? explicitMode->second : captureMode;
+                    if (declaration.captureSyntax >= 0)
+                        for (const int capture : N(declaration.captureSyntax).kids)
+                        {
+                            const auto &item = N(capture);
+                            const auto &reference = N(item.kids[0]);
+                            if ((reference.bindingIdentity && reference.bindingIdentity == node.bindingIdentity) || (!reference.bindingIdentity && reference.s == node.s && reference.syntaxContext == node.syntaxContext)) mode = static_cast<int>(item.i);
+                        }
+                    if (!addCapture(node.s, &found->second, mode)) return false;
+                    break;
+                }
+                if (!NodeUsesDefinitionLookup(node) && (node.s == "self" || (!resolved && !g_owner.empty() && FieldType(g_owner, node.s))))
+                    return Fail("lambda 不能隐式捕获 self 或接收者字段：" + node.s);
+                if (node.s.rfind("__chali_lambda_", 0) == 0)
+                {
+                    for (const auto &nested : g_functionDecls)
+                    {
+                        if (nested.source != node.s || nested.module != node.module || nested.bodyId < 0) continue;
+                        auto inner = names;
+                        for (const auto &param : nested.signature.params)
+                        {
+                            inner.insert(param.bindingIdentity ? Memory::String("binding:") + Memory::toString(param.bindingIdentity) : param.source);
+                            if (param.bindingKey.empty() || param.bindingKey == param.source) inner.insert(param.source);
+                        }
+                        for (const auto &specification : chali_lambda::captureSpecifications)
+                        {
+                            if (nested.source != specification.first && nested.source.rfind(specification.first + "__", 0) != 0) continue;
+                            for (const auto &entry : specification.second)
+                            {
+                                if (inner.count(entry.first)) continue;
+                                const auto variable = FindIn(module, entry.first);
+                                if (!variable) continue;
+                                const auto explicitMode = specifications ? specifications->find(entry.first) : Memory::Map<Memory::String, int>::const_iterator{};
+                                const int mode = specifications && explicitMode != specifications->end() ? explicitMode->second : captureMode;
+                                if (!addCapture(entry.first, variable, mode)) return false;
+                            }
+                        }
+                        const auto astNested = g_astGenericClosures.find(nested.source);
+                        if (astNested != g_astGenericClosures.end())
+                            for (const int reference : astNested->second.references)
+                                if (!visit(reference, inner)) return false;
+                        if (nested.captureSyntax >= 0 && !visit(nested.captureSyntax, inner)) return false;
+                        if (!visit(nested.bodyId, inner)) return false;
+                        break;
+                    }
+                }
+            }
+            if (node.kind == MNode::Block || node.kind == MNode::For || node.kind == MNode::Case)
+            {
+                auto nested = names;
+                if (node.kind == MNode::Block) return visit(static_cast<int>(node.i), nested);
+                if (node.kind == MNode::Case && node.i >= 0)
+                {
+                    const auto &pattern = N(static_cast<int>(node.i));
+                    if (pattern.kind == MNode::EnumCtor)
+                        for (const int child : pattern.kids) bind(child, nested);
+                    else if (pattern.kind == MNode::Call && pattern.kids.size() == 2u)
+                        bind(pattern.kids[1], nested);
+                    else if (!visit(static_cast<int>(node.i), nested))
+                        return false;
+                    if (!visit(node.guard, nested)) return false;
+                }
+                for (const int child : node.kids)
+                    if (!visit(child, nested)) return false;
+                return true;
+            }
+            if (node.kind == MNode::Declare)
+            {
+                for (const int child : N(node.kids[0]).kids)
+                {
+                    const auto &decl = N(child);
+                    for (const int init : decl.kids)
+                        if (!visit(init, names)) return false;
+                    names.insert(decl.bindingIdentity ? Memory::String("binding:") + Memory::toString(decl.bindingIdentity) : decl.s);
+                    if (!decl.syntaxContext) names.insert(decl.s);
+                }
+                return true;
+            }
+            if (node.kind == MNode::Destructure)
+            {
+                if (!visit(node.kids[1], names)) return false;
+                if (node.i) return visit(node.kids[0], names);
+                bind(node.kids[0], names);
+                return true;
+            }
+            if (node.kind == MNode::Foreach)
+            {
+                if (!visit(node.kids[0], names)) return false;
+                auto nested = names;
+                nested.insert(node.bindingIdentity ? Memory::String("binding:") + Memory::toString(node.bindingIdentity) : node.s);
+                if (!node.syntaxContext) nested.insert(node.s);
+                return visit(node.kids[1], nested);
+            }
+            for (const int child : node.kids)
+                if (!visit(child, names)) return false;
+            return true;
+        };
+        bool genericImplementation = false;
+        const auto astImplementation = g_astGenericImplementations.find(name);
+        if (astImplementation != g_astGenericImplementations.end())
+        {
+            const auto environment = g_lambdaCaptures.find(ModuleSymbol(module, astImplementation->second));
+            if (environment == g_lambdaCaptures.end()) return Fail("AST 泛型闭包的捕获环境尚未构造");
+            captures = environment->second;
+            genericImplementation = true;
+        }
+        const auto expansion = chali_generic::session.made.find(name);
+        if (expansion != chali_generic::session.made.end())
+        {
+            const auto genericBody = chali_lambda::genericClosureBodies.find(expansion->second.generic->name);
+            if (genericBody != chali_lambda::genericClosureBodies.end())
+            {
+                const auto &source = chali_lambda::genericClosures.at(genericBody->second);
+                auto environmentName = source.seed;
+                if (!source.outerNames.empty())
+                {
+                    if (expansion->second.args.size() < source.outerNames.size()) return Fail("泛型闭包缺少外层类型参数");
+                    Memory::Vector<Memory::String> outer(expansion->second.args.begin(), expansion->second.args.begin() + source.outerNames.size());
+                    environmentName = chali_generic::mangle(source.seed, outer);
+                }
+                const auto environment = g_lambdaCaptures.find(ModuleSymbol(module, environmentName));
+                if (environment == g_lambdaCaptures.end()) return Fail("泛型闭包的捕获环境尚未构造");
+                captures = environment->second;
+                genericImplementation = true;
+            }
+        }
+        if (!genericImplementation && !visit(declaration.bodyId, locals)) return false;
+        g_lambdaCaptures[key] = captures;
+        g_lambdaPrepared.insert(key);
+        if (g_lambdaAutoReturns.count(key))
+        {
+            const auto savedModule = g_currentModule;
+            const auto savedOwner = g_owner;
+            g_currentModule = declaration.module;
+            g_owner.clear();
+            PushScope();
+            for (const auto &capture : captures)
+            {
+                MVar binding{ capture.type, capture.source, capture.captureMode == 0 };
+                binding.bindingIdentity = capture.bindingIdentity;
+                g_scope.back()[CaptureBindingKey(capture, declaration.signature.params)] = binding;
+            }
+            for (const auto &param : declaration.signature.params)
+            {
+                MVar binding{ param.type, param.source, false };
+                binding.bindingIdentity = param.bindingIdentity;
+                g_scope.back()[param.bindingKey.empty() ? param.source : param.bindingKey] = binding;
+            }
+            std::shared_ptr<MType> result;
+            const bool ok = InferAutoFunctionResult(declaration.bodyId, &result);
+            PopScope();
+            g_currentModule = savedModule;
+            g_owner = savedOwner;
+            if (!ok || !result) return ok ? Fail("let 闭包必须返回值") : false;
+            declaration.signature.result = result;
+            g_inferenceFunctions[key] = declaration.signature;
+            if (!declaration.label.empty()) g_funcs[declaration.label] = declaration.signature;
+        }
+        return true;
+    }
+    return true;
+}
+
+/**
+ * @brief 从函数指针的形参类型实例化省略类型的 lambda，返回类型由函数体推导。
+ * @param id lambda 提升后的内部函数名节点。
+ * @param expected 函数指针上下文，不要求其返回类型已绑定。
+ * @return 是待实例化 lambda 时返回 true。
+ */
+bool InferLambdaCallback(int id, const std::shared_ptr<MType> &expected)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Var || node.s.rfind("__chali_lambda_", 0) != 0) return false;
+    const auto generic = chali_generic::session.generics.find(node.s);
+    const auto signature = g_genericSignatures.find(node.s);
+    if (generic == chali_generic::session.generics.end() || signature == g_genericSignatures.end())
+        return false;
+    if (!expected || expected->kind != MType::Func) return true;
+    if (signature->second.params.size() != expected->paramTypes.size())
+    {
+        Fail("lambda 的形参数量与函数指针上下文不匹配");
+        return true;
+    }
+    Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+    for (std::size_t i = 0; i < expected->paramTypes.size(); ++i)
+    {
+        if (!ConcreteCallbackParameter(expected->paramTypes[i]))
+        {
+            Fail("无法从未确定的函数指针参数类型推导 lambda，请显式写出形参类型");
+            return true;
+        }
+        if (!UnifyGenericType(signature->second.params[i], expected->paramTypes[i], bindings))
+        {
+            Fail("lambda 的形参类型与函数指针上下文不匹配");
+            return true;
+        }
+    }
+    Memory::Vector<Memory::String> args;
+    if (!CompleteGenericArguments(generic->second, bindings, args))
+    {
+        Fail("无法从函数指针上下文推导 lambda 的全部形参类型");
+        return true;
+    }
+    const auto specialized = chali_generic::mangle(node.s, args);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ node.s, args };
+    g_nodes[id].s = specialized;
+    CheckLambdaCaptures(specialized, node.module);
+    return true;
+}
+
+/**
+ * @brief 无载荷泛型变体没有可供推导的信息，须等待其他实参提供上下文。
+ */
+bool IsUnboundEmptyVariant(int id)
+{
+    const auto &node = N(id);
+    if (node.kind != MNode::Var || HasOrdinaryName(node)) return false;
+    for (const auto &entry : g_genericSignatures)
+    {
+        const auto found = entry.second.variants.find(node.s);
+        if (found != entry.second.variants.end() && found->second.empty()) return true;
+    }
+    return false;
+}
+
+/**
+ * @brief 回调和方法调用在查询载荷类型前，先向实参传递已知形参类型。
+ */
+void InferKnownCallArguments(const MNode &callee, const Memory::Vector<int> &arguments)
+{
+    Memory::Vector<Memory::Vector<std::shared_ptr<MType>>> candidates;
+    if (callee.kind == MNode::Var)
+    {
+        const auto *variable = FindNodeVar(callee);
+        if (variable && variable->type && variable->type->kind == MType::Func)
+            candidates.push_back(variable->type->paramTypes);
+    }
+    else if (callee.kind == MNode::Member || callee.kind == MNode::Arrow)
+    {
+        const auto base = ExprType(callee.kids[0]);
+        if (IsContainer(base))
+        {
+            const auto *method = FindContainerMethod(base, callee.s);
+            if (method && arguments.size() == static_cast<std::size_t>(method->arity))
+            {
+                const Memory::String shape(method->shape);
+                if (!arguments.empty() && (shape.find('v') != Memory::String::npos || shape.find('k') != Memory::String::npos))
+                    InferExpression(arguments[0], base->elem);
+                if (arguments.size() > 1u && shape.find('w') != Memory::String::npos)
+                    InferExpression(arguments[1], base->elem2 ? base->elem2 : base->elem);
+            }
+            return;
+        }
+        const auto owner = StructNameOf(base);
+        const auto found = g_structs.find(owner);
+        if (found != g_structs.end())
+            for (const auto &method : found->second.methods)
+            {
+                if (method.source != callee.s || method.superseded || !AcceptsArgumentCount(method.params, arguments.size())) continue;
+                Memory::Vector<std::shared_ptr<MType>> params;
+                for (const auto &param : method.params) params.push_back(param.type);
+                candidates.push_back(std::move(params));
+            }
+    }
+    if (callee.kind == MNode::Var)
+    {
+        const auto *overloads = FindFunctionOverloads(callee.module, callee.s);
+        if (overloads)
+            for (const auto &label : *overloads)
+            {
+                const auto found = g_funcs.find(label);
+                if (found == g_funcs.end() || !AcceptsArgumentCount(found->second.params, arguments.size())) continue;
+                Memory::Vector<std::shared_ptr<MType>> params;
+                for (const auto &param : found->second.params) params.push_back(param.type);
+                candidates.push_back(std::move(params));
+            }
+    }
+    if (candidates.empty()) return;
+    for (std::size_t i = 0; i < arguments.size(); ++i)
+    {
+        if (i >= candidates[0].size()) continue;
+        const auto type = candidates[0][i];
+        bool same = true;
+        for (const auto &candidate : candidates)
+            if (i >= candidate.size() || !SameType(type, candidate[i])) same = false;
+        if (same) InferExpression(arguments[i], type);
+    }
+}
+
+/**
+ * @brief 将标准迭代器适配器点调用归一为 std::iter 的泛型函数。
+ * @param id 调用节点。
+ * @return 已重写返回 true；普通用户方法保持原状。
+ */
+bool RewriteIteratorCall(int id)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
+    const auto callee = N(node.kids[0]);
+    if (callee.kind != MNode::Member || callee.kids.empty()) return false;
+    const int receiver = callee.kids[0];
+    const auto type = ExprType(receiver);
+    Memory::String function;
+    bool address = false;
+    const auto made = chali_generic::session.made.find(type->name);
+    if (made != chali_generic::session.made.end() && made->second.generic->module == "std::iter" && made->second.generic->name == "Iter")
+    {
+        static const Memory::Set<Memory::String> adapters{
+            "map", "filter", "filterMap", "mapWhile", "takeWhile", "skipWhile", "findMap",
+            "fold", "tryFold", "scan", "take", "skip", "zip", "cycle", "chain", "rev",
+            "enumerate", "peekingTakeWhile", "stepBy", "fuse", "inspect", "sameItems", "collect"
+        };
+        if (adapters.count(callee.s)) function = callee.s;
+    }
+    else if (IsContainer(type) && type->name == "vec" && (callee.s == "iter" || callee.s == "iterMut" || callee.s == "intoIter"))
+    {
+        function = callee.s == "iter" ? "listIter" : callee.s == "iterMut" ? "listIterMut" :
+                                                                             "listIntoIter";
+        address = true;
+    }
+    else if (IsContainer(type) && (type->name == "set" || type->name == "map") && (callee.s == "iter" || callee.s == "intoIter"))
+    {
+        /* `iter` 是借用快照（来源容器保持不变），`intoIter` 是搬空容器。 */
+        if (type->name == "set")
+            function = callee.s == "iter" ? "setIter" : "setIntoIter";
+        else
+            function = callee.s == "iter" ? "mapIter" : "mapIntoIter";
+        address = true;
+    }
+    else if (IsStandardOpcode(type, "String") && callee.s == "chars")
+        function = "chars";
+    else if (type->kind == MType::Struct && StructNameOf(type).find("__Range") != Memory::String::npos && callee.s == "intoIter")
+        function = "fromRange";
+    else if (callee.s == "intoIter" && FindIterator(type) != nullptr)
+    {
+        const auto iterator = FindIterator(type);
+        const Memory::Vector<Memory::String> arguments{ GenericArgumentText(iterator->element), GenericArgumentText(type) };
+        const auto specialized = chali_generic::mangle("fromIterator", arguments);
+        if (!chali_generic::session.generics.count("fromIterator"))
+            return Fail("迭代器方法需要先 import std::iter：" + callee.s);
+        if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ "fromIterator", arguments };
+        function = specialized;
+    }
+    if (function.empty()) return false;
+    const auto generic = chali_generic::session.generics.find(function);
+    if (!chali_generic::session.made.count(function) && (generic == chali_generic::session.generics.end() || generic->second.module != "std::iter") && FindFunctionOverloads("std::iter", function) == nullptr)
+    {
+        Fail("迭代器方法需要先 import std::iter：" + callee.s);
+        return false;
+    }
+    int source = receiver;
+    if (address)
+    {
+        source = M_New(MNode::Un, "&");
+        g_nodes[source].kids = { receiver };
+    }
+    const int args = M_New(MNode::List);
+    g_nodes[args].kids = N(node.kids[1]).kids;
+    g_nodes[args].kids.insert(g_nodes[args].kids.begin(), source);
+    const int target = M_New(MNode::EnumCtor, "std::iter");
+    g_nodes[target].s2 = function;
+    g_nodes[target].type2 = 0;
+    g_nodes[id].kids = { target, args };
+    return true;
+}
+
+/**
+ * @brief 将标准错误适配方法转换为同语义的泛型函数调用。
+ * @param id 调用节点。
+ * @return 是否已处理。
+ */
+bool RewriteErrorAdapter(int id)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
+    const auto callee = N(node.kids[0]);
+    if (callee.kind != MNode::Member || callee.kids.empty()) return false;
+    const auto type = ExprType(callee.kids[0]);
+    const auto source = chali_generic::session.made.find(type->name);
+    if (source == chali_generic::session.made.end() || source->second.generic->module != "std::lang") return false;
+    Memory::String method = callee.s, explicitType;
+    auto marker = chali_generic::session.made.find(method);
+    if (marker != chali_generic::session.made.end() && marker->second.generic->module == "std::lang")
+    {
+        auto name = marker->second.generic->name;
+        if (name == "__chaliMapErr")
+            method = "mapErr";
+        else if (name == "__chaliOkOr")
+            method = "okOr";
+        else if (name == "__chaliOkOrElse")
+            method = "okOrElse";
+        else
+            return false;
+        explicitType = marker->second.args[0];
+    }
+    Memory::String function;
+    if (method == "mapErr" && source->second.generic->name == "Result") function = "__mapErrImpl";
+    if (method == "okOr" && source->second.generic->name == "Option") function = "__okOrImpl";
+    if (method == "okOrElse" && source->second.generic->name == "Option") function = "__okOrElseImpl";
+    if (function.empty()) return false;
+    if (!explicitType.empty())
+    {
+        auto arguments = source->second.args;
+        arguments.push_back(explicitType);
+        const auto specialized = chali_generic::mangle(function, arguments);
+        if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ function, arguments };
+        function = specialized;
+    }
+    const int arguments = M_New(MNode::List);
+    g_nodes[arguments].kids = N(node.kids[1]).kids;
+    g_nodes[arguments].kids.insert(g_nodes[arguments].kids.begin(), callee.kids[0]);
+    const int target = M_New(MNode::EnumCtor, "std::lang");
+    g_nodes[target].s2 = function;
+    g_nodes[id].kids = { target, arguments };
+    return true;
+}
+
+/**
+ * @brief 把 `map.getOption(键)` 归一为 std::lang 的泛型函数，结果就是 `Option<V>`。
+ *
+ * 下标 `m[k]` 读不存在的键会报错（0.27.1 起），所以"键可能不在、想自己处理"的
+ * 场合要有另一条路：这里改写成 `__mapGetOptionImpl(&m, k)`，实现写在
+ * `source/std/lang.chl` 里（先 `has` 再取值），Option 的构造因此全部走 ChaLi 源码，
+ * 不用在 opcode 侧碰泛型枚举的运行时布局。
+ *
+ * @param id 待归一的调用表达式。
+ * @return 已重写返回 true；不是 map 上的 getOption 返回 false。
+ */
+bool RewriteMapGetOption(int id)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
+    const auto callee = N(node.kids[0]);
+    if (callee.kind != MNode::Member || callee.kids.empty() || callee.s != "getOption") return false;
+    const auto type = ExprType(callee.kids[0]);
+    if (!IsContainer(type) || type->name != "map") return false;
+    if (N(node.kids[1]).kids.size() != 1u) return false; /* getOption 只收一个键 */
+    if (chali_generic::session.generics.find("__mapGetOptionImpl") == chali_generic::session.generics.end())
+        return false;
+    const int source = M_New(MNode::Un, "&");
+    g_nodes[source].kids = { callee.kids[0] };
+    const int arguments = M_New(MNode::List);
+    g_nodes[arguments].kids = N(node.kids[1]).kids;
+    g_nodes[arguments].kids.insert(g_nodes[arguments].kids.begin(), source);
+    const int target = M_New(MNode::EnumCtor, "std::lang");
+    g_nodes[target].s2 = "__mapGetOptionImpl";
+    g_nodes[target].type2 = 0;
+    g_nodes[id].kids = { target, arguments };
+    return true;
+}
+
+/**
+ * @brief 将标准区间调用归一为整数区间节点或自定义前进协议工厂。
+ * @param id 待归一的调用表达式。
+ * @param pattern 是否处于 match 模式位置；该位置只允许整数和 char 区间。
+ * @return 是标准区间调用时返回 true，其他表达式返回 false。
+ */
+bool RewriteRangeCall(int id, bool pattern = false)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
+    const auto callee = N(node.kids[0]);
+    Memory::String name;
+    if (callee.kind == MNode::EnumCtor && callee.s == "std::lang")
+        name = callee.s2;
+    else if (callee.kind == MNode::Var && CanUseImplicitLang(callee.module, callee.s))
+        name = callee.s;
+    else
+        return false;
+    const auto explicitArguments = chali_generic::session.intrinsicArguments.find(name);
+    const bool typed = explicitArguments != chali_generic::session.intrinsicArguments.end();
+    if (typed)
+    {
+        if (name.compare(0u, 7u, "range__") == 0)
+            name = "range";
+        else if (name.compare(0u, 9u, "rangeEq__") == 0)
+            name = "rangeEq";
+        else
+            return false;
+    }
+    if (name != "range" && name != "rangeEq") return false;
+    const auto arguments = N(node.kids[1]).kids;
+    if (arguments.size() != 2u) return false;
+    std::shared_ptr<MType> element;
+    if (typed)
+    {
+        const auto &text = explicitArguments->second.front();
+        const auto builtin = BuiltinTypeByName(text);
+        if (text == "char")
+            element = T(M_TypeChar());
+        else if (text == "int8" || text == "int16" || text == "int32" || text == "int64"
+                 || text == "uint8" || text == "uint16" || text == "uint32" || text == "uint64")
+        {
+            const bool unsignedType = text[0] == 'u';
+            const auto digits = text.substr(unsignedType ? 4u : 3u);
+            const int bits = digits == "8" ? 8 : digits == "16" ? 16 :
+                                             digits == "32"     ? 32 :
+                                                                  64;
+            element = T(M_TypeIntBits(bits, unsignedType));
+        }
+        else if (builtin >= 0)
+            element = T(builtin);
+        else
+        {
+            Memory::String resolved;
+            const auto *definition = FindStruct(text, &resolved);
+            if (definition)
+                element = NamedType(resolved);
+            else
+                return Fail("range 的类型实参不是可用的值类型：" + text), true;
+        }
+        for (const auto argument : arguments) InferExpression(argument, element);
+    }
+    else
+    {
+        const auto left = ExprType(arguments[0]);
+        const auto right = ExprType(arguments[1]);
+        if (SameType(left, right))
+            element = left;
+        else if (left->kind == MType::Int && right->kind == MType::Int)
+            element = NumericResult(left, right);
+        else
+            return Fail("range 两个端点的类型必须一致"), true;
+    }
+    if (element->kind == MType::Int || element->kind == MType::Char)
+    {
+        auto &target = g_nodes[id];
+        target.kind = MNode::Range;
+        target.s = typed ? "typed" : "";
+        target.kids = arguments;
+        target.type = M_AddType(element);
+        target.i = name == "rangeEq" ? 3 : 2;
+        return true;
+    }
+    if (pattern) return Fail("match 的 range 和 rangeEq 模式只支持整数或 char"), true;
+    auto &target = g_nodes[node.kids[0]];
+    target.kind = MNode::EnumCtor;
+    target.s = "std::lang";
+    target.s2 = name == "rangeEq" ? "__customRangeEq" : "__customRange";
+    return true;
+}
+
+/**
+ * @brief 从命名构造入口的实参推导所属泛型结构体，复用标准单态化流程。
+ * @param id 构造表达式节点编号。
+ * @return 已识别并完成改写或报告歧义时返回 true，其他表达式返回 false。
+ */
+bool InferGenericConstructor(int id)
+{
+    const auto node = N(id);
+    int ownerId = id;
+    Memory::Vector<int> arguments;
+    if (node.kind == MNode::Call && node.kids.size() == 2u)
+    {
+        ownerId = node.kids[0];
+        arguments = N(node.kids[1]).kids;
+    }
+    else if (node.kind == MNode::EnumCtor)
+        arguments = node.kids;
+    else
+        return false;
+    const auto owner = N(ownerId);
+    if (owner.kind != MNode::EnumCtor || owner.s2 != "create" || FindStruct(owner.s)) return false;
+    const auto name = BareTypeName(owner.s);
+    const auto generic = chali_generic::session.generics.find(name);
+    const auto signature = g_genericSignatures.find(name);
+    if (generic == chali_generic::session.generics.end() || signature == g_genericSignatures.end()
+        || signature->second.constructors.empty()) return false;
+    if (owner.s != name && owner.s != ModuleSymbol(generic->second.module, name)) return false;
+    Memory::Vector<Memory::String> selected;
+    bool found = false;
+    for (const auto &constructor : signature->second.constructors)
+    {
+        if (arguments.size() < constructor.required
+            || (!constructor.variadic && arguments.size() > constructor.params.size())) continue;
+        Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+        bool matches = true;
+        for (std::size_t index = 0; index < arguments.size(); ++index)
+        {
+            auto pattern = constructor.params[std::min(index, constructor.params.size() - 1u)];
+            if (constructor.variadic && index + 1u >= constructor.params.size()) pattern = pattern->elem;
+            const auto actual = pattern->kind == MType::Ptr ? RawExprType(arguments[index]) : ExprType(arguments[index]);
+            if (!UnifyGenericType(pattern, actual, bindings)) matches = false;
+        }
+        Memory::Vector<Memory::String> inferred;
+        if (!matches || !CompleteGenericArguments(generic->second, bindings, inferred)) continue;
+        if (found && selected != inferred)
+            return Fail("泛型构造入口 " + owner.s + "::create 的类型推导存在歧义，请显式指定类型实参"), true;
+        selected = std::move(inferred);
+        found = true;
+    }
+    if (!found) return false;
+    const auto specialized = chali_generic::mangle(name, selected);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ name, selected };
+    g_nodes[ownerId].s = ModuleSymbol(generic->second.module, specialized);
+    return true;
+}
+
+/**
+ * @brief 根据泛型闭包的实参类型选择主实现、完整特化或唯一最具体的偏特化。
+ * @param id 调用表达式节点；成功后缓存具体函数名称与返回类型。
+ * @return 被调用者为泛型闭包时返回 true，普通调用返回 false。
+ */
+bool ResolveGenericClosureCall(int id)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2) return false;
+    int value = node.kids[0];
+    const auto selection = N(value);
+    const bool explicitArguments = selection.kind == MNode::GenericClosureSelect;
+    if (explicitArguments) value = selection.kids[0];
+    const auto type = ExprType(value);
+    if (!type || type->kind != MType::Func || type->name.empty()) return false;
+    if (g_astGenericClosures.count(type->name)) return ResolveAstGenericClosureCall(id, type->name);
+    const auto definition = FindGenericClosureDefinition(type->name);
+    if (!definition) return false;
+    if (node.type >= 0 && !node.s.empty()) return true;
+    const auto &closure = *definition;
+    const auto primary = chali_generic::session.generics.find(closure.primary);
+    const auto signature = g_genericSignatures.find(closure.primary);
+    if (primary == chali_generic::session.generics.end() || signature == g_genericSignatures.end())
+        return Fail("泛型闭包缺少主实现签名"), true;
+    Memory::Vector<Memory::String> arguments;
+    Memory::Vector<std::shared_ptr<MType>> types;
+    const auto actuals = N(node.kids[1]).kids;
+    Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+    const auto outerCount = closure.outerArguments.size();
+    for (std::size_t index = 0; index < outerCount; ++index)
+    {
+        std::shared_ptr<MType> concrete;
+        for (const auto &candidate : g_types)
+            if (GenericArgumentText(candidate) == closure.outerArguments[index])
+            {
+                concrete = candidate;
+                break;
+            }
+        bindings["McInferenceParameter" + Memory::toString(index)] = concrete ? concrete : NamedType(closure.outerArguments[index]);
+    }
+    const auto outerBindings = bindings;
+    if (explicitArguments)
+    {
+        const auto supplied = N(selection.kids[1]).kids;
+        if (supplied.size() != closure.names.size()) return Fail("泛型闭包的显式类型实参数量不匹配"), true;
+        arguments = closure.outerArguments;
+        for (const auto argument : supplied)
+        {
+            const auto concrete = T(N(argument).type);
+            types.push_back(concrete);
+            arguments.push_back(GenericArgumentText(concrete));
+        }
+    }
+    else
+    {
+        const auto &sig = signature->second;
+        if (actuals.size() != sig.params.size()) return Fail("泛型闭包的实参数量不匹配"), true;
+        for (std::size_t index = 0; index < actuals.size(); ++index)
+        {
+            const auto pattern = sig.params[index];
+            const auto bound = BoundCallbackType(pattern, bindings);
+            if (ConcreteCallbackParameter(bound)) InferExpression(actuals[index], bound);
+            const auto actual = pattern->kind == MType::Ptr ? RawExprType(actuals[index]) : ExprType(actuals[index]);
+            if (!UnifyGenericType(pattern, actual, bindings))
+                return Fail("泛型闭包的类型推导冲突，请显式指定类型实参"), true;
+        }
+        if (!CompleteGenericArguments(primary->second, bindings, arguments))
+            return Fail("无法推导泛型闭包的全部类型参数"), true;
+        for (std::size_t index = outerCount; index < arguments.size(); ++index)
+        {
+            const auto bound = bindings.find("McInferenceParameter" + Memory::toString(index));
+            if (bound != bindings.end())
+                types.push_back(bound->second);
+            else
+            {
+                std::shared_ptr<MType> concrete;
+                for (const auto &candidate : g_types)
+                    if (GenericArgumentText(candidate) == arguments[index])
+                    {
+                        concrete = candidate;
+                        break;
+                    }
+                types.push_back(concrete ? concrete : NamedType(arguments[index]));
+            }
+        }
+    }
+    const chali_lambda::GenericClosureBranch *chosen = nullptr;
+    Memory::Map<Memory::String, std::shared_ptr<MType>> chosenBindings;
+    Memory::Vector<std::pair<const chali_lambda::GenericClosureBranch *, Memory::Map<Memory::String, std::shared_ptr<MType>>>> candidates;
+    for (const auto &branch : closure.branches)
+    {
+        const auto matcher = g_genericSignatures.find(branch.matcher);
+        if (matcher == g_genericSignatures.end() || matcher->second.params.size() != types.size())
+            return Fail("泛型闭包的特化模式缺少签名"), true;
+        auto matched = outerBindings;
+        bool accepts = true;
+        for (std::size_t index = 0; index < types.size(); ++index)
+            if (!UnifyGenericType(matcher->second.params[index], types[index], matched)) accepts = false;
+        if (accepts) candidates.push_back({ &branch, std::move(matched) });
+    }
+    for (const auto &candidate : candidates)
+    {
+        bool dominated = false;
+        const auto &pattern = g_genericSignatures.at(candidate.first->matcher).params;
+        for (const auto &other : candidates)
+        {
+            if (candidate.first == other.first) continue;
+            const auto &alternative = g_genericSignatures.at(other.first->matcher).params;
+            Memory::Map<Memory::String, std::shared_ptr<MType>> left, right;
+            bool acceptsOther = true, otherAccepts = true;
+            for (std::size_t index = 0; index < types.size(); ++index)
+            {
+                if (!UnifyGenericType(pattern[index], alternative[index], left)) acceptsOther = false;
+                if (!UnifyGenericType(alternative[index], pattern[index], right)) otherAccepts = false;
+            }
+            if (acceptsOther && !otherAccepts) dominated = true;
+        }
+        if (dominated) continue;
+        if (chosen) return Fail("泛型闭包的偏特化匹配存在歧义"), true;
+        chosen = candidate.first;
+        chosenBindings = candidate.second;
+    }
+    const auto function = chosen ? chosen->function : closure.primary;
+    auto specializationArguments = arguments;
+    if (chosen)
+        for (std::size_t index = 0; index < arguments.size(); ++index)
+        {
+            const auto matched = chosenBindings.find("McInferenceParameter" + Memory::toString(index));
+            if (matched != chosenBindings.end()) specializationArguments[index] = GenericArgumentText(matched->second);
+        }
+    const auto specialized = chali_generic::mangle(function, specializationArguments);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ function, specializationArguments };
+    if (!CheckLambdaCaptures(specialized, closure.module)) return true;
+    const auto resolved = FindInferenceFunction(closure.module, specialized);
+    if (!resolved) return Fail("泛型闭包实例没有可调用的实现"), true;
+    if (actuals.size() != resolved->params.size()) return Fail("泛型闭包特化的实参数量不匹配"), true;
+    for (std::size_t index = 0; index < actuals.size(); ++index)
+    {
+        InferExpression(actuals[index], resolved->params[index].type);
+        const auto actual = resolved->params[index].type->kind == MType::Ptr ? RawExprType(actuals[index]) : ExprType(actuals[index]);
+        if (!Acceptable(resolved->params[index].type, actual, true))
+            return Fail("泛型闭包特化的实参类型不匹配"), true;
+    }
+    g_nodes[id].s = specialized;
+    g_nodes[id].s2 = closure.seed;
+    g_nodes[id].type = M_AddType(resolved->result);
+    return true;
+}
+
+/**
+ * @brief 将片段语法保留的类型限定引用交回普通构造器与静态成员路径。
+ * @param id 表达式节点编号。
+ * @return 类型限定已解析或节点不属于该形式时返回真。
+ */
+bool NormalizeAstTypeQualifier(int id)
+{
+    if (id < 0 || N(id).kind != MNode::TypeQualifiedRef) return true;
+    auto &node = g_nodes[id];
+    auto type = T(node.type);
+    if (!ResolveAstGenericType(type)) return false;
+    node.s = type->name.empty() ? Describe(type) : type->name;
+    const auto split = node.s2.rfind("::");
+    if (split != Memory::String::npos)
+    {
+        node.s += "::" + node.s2.substr(0, split);
+        node.s2.erase(0, split + 2);
+    }
+    node.type = -1;
+    node.kind = MNode::EnumCtor;
+    return true;
+}
+
+/**
+ * @brief 将片段中的显式普通函数类型实参接入既有单态化，不把调用表达式重写成源码。
+ * @param id 调用表达式。
+ * @return 显式函数选择已处理时返回真，普通调用和闭包调用返回假。
+ */
+bool ResolveExplicitAstGenericCall(int id)
+{
+    const auto call = N(id);
+    if (call.kind != MNode::Call || call.kids.size() != 2) return false;
+    const auto selection = N(call.kids[0]);
+    if (selection.kind != MNode::GenericClosureSelect || selection.kids.size() != 2) return false;
+    const auto base = N(selection.kids[0]);
+    if ((base.kind != MNode::Var && base.kind != MNode::EnumCtor) || (base.kind == MNode::Var && FindNodeVar(base))) return false;
+    const auto spelling = base.kind == MNode::Var ? base.s : base.s2;
+    auto generic = chali_generic::session.generics.find(spelling);
+    if (generic == chali_generic::session.generics.end()) return false;
+    if (base.kind == MNode::EnumCtor && base.s != generic->second.module) return false;
+    const auto &items = N(selection.kids[1]).kids;
+    if (items.size() != generic->second.params.size())
+        return Fail("泛型函数的显式类型实参数量不匹配：" + spelling), true;
+    Memory::Vector<Memory::String> arguments;
+    for (const int item : items)
+    {
+        if (N(item).type < 0) return Fail("显式泛型实参必须是完整类型"), true;
+        auto type = T(N(item).type);
+        if (!ResolveAstGenericType(type)) return true;
+        arguments.push_back(GenericArgumentText(type));
+    }
+    const auto specialized = chali_generic::mangle(generic->second.name, arguments);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ generic->second.name, arguments };
+    auto &callee = g_nodes[call.kids[0]];
+    callee = base;
+    callee.kind = MNode::Var;
+    callee.s = specialized;
+    callee.s2.clear();
+    callee.kids.clear();
+    callee.module = generic->second.module;
+    return true;
+}
+
+/**
+ * @brief 解析枚举简写与普通泛型函数调用，递归期间避免重复推导同一节点。
+ * @param id 要补齐类型信息的表达式节点。
+ * @param expected 外层提供的目标类型；为空时从表达式及实参推导。
+ */
+void InferExpression(int id, const std::shared_ptr<MType> &expected)
+{
+    if (id < 0 || !g_inferringExpressions.insert(id).second) return;
+    struct Guard
+    {
+        int id;
+        /**
+         * @brief 移除当前表达式的类型推导递归标记。
+         */
+        ~Guard() { g_inferringExpressions.erase(id); }
+    } guard{ id };
+    if (N(id).kind == MNode::MacroCall)
+    {
+        if (!ExpandDeferredAstMacro(id, expected)) return;
+    }
+    if (!NormalizeAstTypeQualifier(id)) return;
+    if (N(id).kind == MNode::Call && !N(id).kids.empty() && !NormalizeAstTypeQualifier(N(id).kids[0])) return;
+    if (ResolveExplicitAstGenericCall(id) && !g_error.empty()) return;
+    if (N(id).kind == MNode::Loop && !N(id).s.empty() && expected)
+    {
+        g_nodes[id].type = M_AddType(expected);
+        return;
+    }
+    RewriteRangeCall(id);
+    RewriteErrorAdapter(id);
+    RewriteIteratorCall(id);
+    RewriteMapGetOption(id);
+    if (InferGenericConstructor(id)) return;
+    const auto node = N(id);
+    if (expected && expected->kind == MType::Func && ConcreteCallbackParameter(expected) && IsOverloadedCallbackArgument(id))
+    {
+        InferOverloadedCallbackArgument(id, expected, {});
+        return;
+    }
+    if (node.kind == MNode::Int && node.unsignedLiteral && expected && expected->kind == MType::Int)
+    {
+        PinIntegerLiteral(id, expected);
+        return;
+    }
+    /* 目标类型下传：`int32 c = ff() + 1;` 里的字面量按 int32 定，而不是默认的 int64。
+     * 浮点槽位走「整数字面量落浮点槽位」那条老路，这里只管整型上下文。 */
+    const bool literalContext = expected && expected->kind == MType::Int && (node.kind == MNode::Bin ? LiteralAdaptingOperator(node.s) : (node.kind == MNode::Un && !node.kids.empty() && (node.s == "-" || node.s == "+" || node.s == "~")));
+    if (literalContext) PinLiteralInExpression(id, expected);
+    /* 运算符接口允许「同一对操作数、不同返回类型」（`Add<int64,int64>` 与
+     * `Add<Vec,int64>` 共存），光看操作数挑不出来，只能靠上下文。把目标类型带进匹配，
+     * 定下来就把结果类型钉在这个节点上（`RawExprType` 会优先用它）；上下文定不下来的
+     * 留给降级阶段报「请指明目标类型」，不在这里悄悄挑一个。 */
+    if (node.kind == MNode::Bin && expected && expected->kind != MType::Void)
+    {
+        const MOperatorDecl *chosen = nullptr;
+        MOperatorMatch chosenMatch;
+        if (FindOperator(node.s, ExprType(node.kids[0]), ExprType(node.kids[1]),
+                         &chosen, &chosenMatch, &expected, false))
+            g_nodes[id].type = M_AddType(chosen->result);
+    }
+    if (literalContext) return;
+    // 装箱提取的目标类型也供生命周期检查使用，不能在降低前退回默认整数类型。
+    if (expected && IsObjGetCall(id))
+    {
+        g_nodes[id].type = M_AddType(expected);
+        return;
+    }
+    if (InferLambdaCallback(id, expected)) return;
+    if (node.kind == MNode::Var && node.s.rfind("__chali_lambda_", 0) == 0 && !CheckLambdaCaptures(node.s, node.module)) return;
+    if (node.kind == MNode::CollectionLiteral)
+    {
+        InferCollectionLiteral(id, expected);
+        return;
+    }
+    if (node.kind == MNode::Tuple && IsTupleType(expected) && node.kids.size() == expected->paramTypes.size())
+    {
+        bool referenceElements = false;
+        for (std::size_t i = 0; i < node.kids.size(); ++i)
+        {
+            InferExpression(node.kids[i], expected->paramTypes[i]);
+            referenceElements = referenceElements || expected->paramTypes[i]->kind == MType::Ptr;
+        }
+        /* 值表达式默认解引用；只有明确的元组引用元素上下文才保留地址。 */
+        if (referenceElements) g_nodes[id].type = M_AddType(expected);
+        return;
+    }
+    Memory::String name;
+    Memory::String enumOwner;
+    Memory::Vector<int> arguments;
+    int calleeId = -1;
+    if (node.kind == MNode::Var)
+    {
+        if (HasOrdinaryName(node)) return;
+        name = node.s;
+    }
+    else if (node.kind == MNode::Call && node.kids.size() == 2)
+    {
+        calleeId = node.kids[0];
+        const auto &callee = N(calleeId);
+        arguments = N(node.kids[1]).kids;
+        InferKnownCallArguments(callee, arguments);
+        if (callee.kind != MNode::Var && callee.kind != MNode::EnumCtor) return;
+        name = callee.kind == MNode::Var ? callee.s : callee.s2;
+        const auto generic = chali_generic::session.generics.find(name);
+        const auto signature = g_genericSignatures.find(name);
+        if (generic != chali_generic::session.generics.end() && signature != g_genericSignatures.end() && signature->second.variants.empty() && (callee.kind != MNode::Var || !HasOrdinaryName(callee)) && (callee.kind != MNode::EnumCtor || callee.s == generic->second.module))
+        {
+            auto &sig = signature->second;
+            if ((!sig.variadic && arguments.size() > sig.params.size()) || arguments.size() < sig.required)
+            {
+                Fail("泛型函数 " + name + " 的实参数量不匹配");
+                return;
+            }
+            Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+            Memory::Vector<std::size_t> order;
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+                if (!InferLambdaCallback(arguments[i], nullptr) && !IsOverloadedCallbackArgument(arguments[i])) order.push_back(i);
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+                if (!InferLambdaCallback(arguments[i], nullptr) && IsOverloadedCallbackArgument(arguments[i])) order.push_back(i);
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+                if (InferLambdaCallback(arguments[i], nullptr)) order.push_back(i);
+            // 先从普通实参绑定类型，再处理回调；不要求回调在形参表中排在最后。
+            for (const std::size_t i : order)
+            {
+                if (IsUnboundEmptyVariant(arguments[i])) continue;
+                auto pattern = sig.params[std::min(i, sig.params.size() - 1)];
+                if (sig.variadic && i + 1 >= sig.params.size()) pattern = pattern->elem;
+                if (pattern->kind == MType::Func)
+                    InferExpression(arguments[i], BoundCallbackType(pattern, bindings));
+                const auto actual = pattern->kind == MType::Func && IsOverloadedCallbackArgument(arguments[i]) ?
+                                        InferOverloadedCallbackArgument(arguments[i], pattern, bindings) :
+                                    pattern->kind == MType::Ptr ? RawExprType(arguments[i]) :
+                                                                  ExprType(arguments[i]);
+                if (!actual) return;
+                if (!UnifyGenericType(pattern, actual, bindings))
+                {
+                    Fail("泛型函数 " + name + " 的类型实参推导冲突，请显式指定类型实参\nnote: 第 " + Memory::toString(i + 1) + " 个实参实际为 " + Describe(actual) + "，形参模式为 " + Describe(pattern));
+                    return;
+                }
+            }
+            Memory::Vector<Memory::String> args;
+            if (expected && bindings.size() < generic->second.params.size() && sig.result)
+                UnifyGenericType(sig.result, expected, bindings);
+            if (!CompleteGenericArguments(generic->second, bindings, args))
+            {
+                Memory::String missing;
+                for (const auto &p : generic->second.params)
+                    if (!bindings.count(p.name))
+                    {
+                        if (!missing.empty()) missing += ", ";
+                        missing += p.name;
+                    }
+                Fail("无法推导泛型函数 " + name + " 的全部类型实参，请显式指定\nnote: 未绑定类型参数：" + missing);
+                return;
+            }
+            const auto specialized = chali_generic::mangle(name, args);
+            if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ name, args };
+            auto &target = g_nodes[static_cast<std::size_t>(calleeId)];
+            if (target.kind == MNode::Var)
+                target.s = specialized;
+            else
+                target.s2 = specialized;
+            return;
+        }
+        if (callee.kind != MNode::Var || HasOrdinaryName(callee)) return;
+    }
+    else if (node.kind == MNode::EnumCtor)
+    {
+        if (const auto *owner = FindStruct(node.s))
+        {
+            for (const auto &method : owner->methods)
+            {
+                if (!method.isStatic || method.source != node.s2 || !AcceptsArgumentCount(method.params, node.kids.size())) continue;
+                for (std::size_t i = 0; i < node.kids.size(); ++i)
+                {
+                    const auto &param = method.params[std::min(i, method.params.size() - 1u)];
+                    InferExpression(node.kids[i], param.variadic ? param.type->elem : param.type);
+                }
+            }
+        }
+        const auto *variant = FindEnumVariant(node.s, node.s2);
+        if (variant)
+        {
+            for (std::size_t i = 0; i < node.kids.size() && i < variant->payloads.size(); ++i)
+                InferExpression(node.kids[i], variant->payloads[i].type);
+            return;
+        }
+        const auto generic = g_genericSignatures.find(node.s);
+        if (generic == g_genericSignatures.end() || generic->second.variants.empty()) return;
+        enumOwner = node.s;
+        name = node.s2;
+        arguments = node.kids;
+    }
+    else
+        return;
+
+    Memory::Vector<Memory::String> candidates;
+    if (expected && IsEnumType(expected) && FindEnumVariant(expected->name, name) && (enumOwner.empty() || expected->name.rfind(enumOwner + "__", 0) == 0))
+        candidates.push_back(expected->name);
+    else
+    {
+        for (const auto &entry : g_enums)
+        {
+            if (!enumOwner.empty()) continue;
+            if (chali_generic::session.made.count(entry.first)) continue;
+            const auto *variant = FindEnumVariant(entry.first, name);
+            if (variant && variant->payloads.size() == arguments.size())
+            {
+                bool matches = true;
+                for (std::size_t i = 0; i < arguments.size(); ++i)
+                    if (!Acceptable(variant->payloads[i].type, RawExprType(arguments[i]), true)) matches = false;
+                if (matches) candidates.push_back(entry.first);
+            }
+        }
+        for (const auto &entry : g_genericSignatures)
+        {
+            if (!enumOwner.empty() && entry.first != enumOwner) continue;
+            const auto found = entry.second.variants.find(name);
+            if (found == entry.second.variants.end() || found->second.size() != arguments.size()) continue;
+            Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+            bool match = true;
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+                if (!UnifyGenericType(found->second[i], found->second[i]->kind == MType::Ptr ? RawExprType(arguments[i]) : ExprType(arguments[i]), bindings)) match = false;
+            Memory::Vector<Memory::String> args;
+            if (!match || !CompleteGenericArguments(chali_generic::session.generics.at(entry.first), bindings, args)) continue;
+            const auto specialized = chali_generic::mangle(entry.first, args);
+            candidates.push_back(specialized);
+        }
+    }
+    if (candidates.size() > 1)
+    {
+        Fail("枚举变体 " + name + " 存在歧义，请指定枚举类型");
+        return;
+    }
+    if (candidates.empty())
+    {
+        if (IsUnboundEmptyVariant(id)) Fail("无法推导无载荷枚举变体 " + name + " 的类型参数，请提供目标类型");
+        return;
+    }
+    if (!g_enums.count(candidates[0]))
+    {
+        for (const auto &entry : g_genericSignatures)
+        {
+            const auto found = entry.second.variants.find(name);
+            if (found == entry.second.variants.end() || found->second.size() != arguments.size()) continue;
+            Memory::Map<Memory::String, std::shared_ptr<MType>> bindings;
+            bool matches = true;
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+                if (!UnifyGenericType(found->second[i], found->second[i]->kind == MType::Ptr ? RawExprType(arguments[i]) : ExprType(arguments[i]), bindings)) matches = false;
+            Memory::Vector<Memory::String> args;
+            if (matches && CompleteGenericArguments(chali_generic::session.generics.at(entry.first), bindings, args) && chali_generic::mangle(entry.first, args) == candidates[0]) throw MInstantiationRequest{ entry.first, args };
+        }
+    }
+    auto &target = g_nodes[static_cast<std::size_t>(id)];
+    target.kind = MNode::EnumCtor;
+    target.s = candidates[0];
+    target.s2 = name;
+    target.kids = arguments;
+    target.type2 = arguments.empty() ? 0 : 1;
+    const auto *variant = FindEnumVariant(target.s, name);
+    if (variant)
+        for (std::size_t i = 0; i < arguments.size() && i < variant->payloads.size(); ++i)
+            InferExpression(arguments[i], variant->payloads[i].type);
+}

@@ -1,0 +1,5 @@
+interface Invalid {
+    int64 value;
+};
+
+void main() { }

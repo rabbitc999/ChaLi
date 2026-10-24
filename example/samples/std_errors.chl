@@ -1,0 +1,28 @@
+import std::parse;
+import std::io;
+
+String describe<E: Error>(E error)
+{
+    return error.toString();
+}
+
+String describeInterface(Error const& error)
+{
+    return error.toString();
+}
+
+void main()
+{
+    MessageError message = MessageError::from("原始诊断");
+    MessageError copy = message;
+    copy.message = "独立副本";
+    assert(describe(message) == "原始诊断");
+    assert(describeInterface(&message) == "原始诊断");
+    assert(copy.toString() == "独立副本");
+    assert((std::parse::ParseError::Overflow).toString() != "");
+    assert((std::io::IoError::Closed).toString() != "");
+    Result<File, IoError> file = fileOpen("missing-error-protocol-file.chl", "r");
+    assert(file.isErr());
+    assert(file.error().toString().contains("fileOpen failed"));
+    println("standard Error protocol OK");
+}

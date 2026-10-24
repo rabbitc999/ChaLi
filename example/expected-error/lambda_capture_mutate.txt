@@ -1,0 +1,1 @@
+chali: example/samples-error/lambda_capture_mutate.chl 第 3 行第 42 列：不可变变量（const）不能再赋值：value

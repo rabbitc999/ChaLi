@@ -1,0 +1,172 @@
+{
+  "phase": "discovery-frozen-followup",
+  "target_version": "0.31.0",
+  "compiler": "G:\\Desktop\\ChaLi\\tmp\\chali-0.31.0-before-container-optimization.exe",
+  "compiler_sha256": "a7138cfa20ba4558c14622b4cfda206cb4cbe68489661b7aaf04e5bc6f945897",
+  "source_commit": "2b35c7e3e943bcd142226b7210e5e8a0d31e8edb",
+  "version": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\chali-0.31.0-before-container-optimization.exe",
+      "lsp"
+    ],
+    "cwd": "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221",
+    "elapsed": 0.8693244000023697,
+    "code": 0,
+    "timeout": false,
+    "stdout": "436f6e74656e742d4c656e6774683a203832370d0a0d0a7b226a736f6e727063223a22322e30222c226964223a312c22726573756c74223a7b226361706162696c6974696573223a7b22706f736974696f6e456e636f64696e67223a227574662d3136222c2274657874446f63756d656e7453796e63223a322c22686f76657250726f7669646572223a747275652c22636f6d706c6574696f6e50726f7669646572223a7b227472696767657243686172616374657273223a5b223a222c222e222c2224222c2225225d7d2c22646566696e6974696f6e50726f7669646572223a747275652c227265666572656e63657350726f7669646572223a747275652c2272656e616d6550726f7669646572223a7b227072657061726550726f7669646572223a747275657d2c22696e6c617948696e7450726f7669646572223a747275652c22646f63756d656e7453796d626f6c50726f7669646572223a747275652c22776f726b737061636553796d626f6c50726f7669646572223a747275652c22646f63756d656e74466f726d617474696e6750726f7669646572223a747275652c227369676e617475726548656c7050726f7669646572223a7b227472696767657243686172616374657273223a5b2228222c222c222c225b222c223c222c227b225d2c2272657472696767657243686172616374657273223a5b222c225d7d2c2273656d616e746963546f6b656e7350726f7669646572223a7b226c6567656e64223a7b22746f6b656e5479706573223a5b226e616d657370616365222c2274797065222c2274797065506172616d65746572222c22706172616d65746572222c227661726961626c65222c2270726f7065727479222c2266756e6374696f6e222c226b6579776f7264222c22636f6d6d656e74222c22737472696e67222c226e756d626572222c226f70657261746f72225d2c22746f6b656e4d6f64696669657273223a5b226465636c61726174696f6e222c22726561646f6e6c79225d7d2c2266756c6c223a747275657d2c226578706572696d656e74616c223a7b226d6163726f457870616e73696f6e50726f7669646572223a747275657d7d2c22736572766572496e666f223a7b226e616d65223a224368614c69222c2276657273696f6e223a22302e33312e30227d7d7d436f6e74656e742d4c656e6774683a2033380d0a0d0a7b226a736f6e727063223a22322e30222c226964223a322c22726573756c74223a6e756c6c7d",
+    "stderr": "",
+    "stdout_text": "Content-Length: 827\r\n\r\n{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"positionEncoding\":\"utf-16\",\"textDocumentSync\":2,\"hoverProvider\":true,\"completionProvider\":{\"triggerCharacters\":[\":\",\".\",\"$\",\"%\"]},\"definitionProvider\":true,\"referencesProvider\":true,\"renameProvider\":{\"prepareProvider\":true},\"inlayHintProvider\":true,\"documentSymbolProvider\":true,\"workspaceSymbolProvider\":true,\"documentFormattingProvider\":true,\"signatureHelpProvider\":{\"triggerCharacters\":[\"(\",\",\",\"[\",\"<\",\"{\"],\"retriggerCharacters\":[\",\"]},\"semanticTokensProvider\":{\"legend\":{\"tokenTypes\":[\"namespace\",\"type\",\"typeParameter\",\"parameter\",\"variable\",\"property\",\"function\",\"keyword\",\"comment\",\"string\",\"number\",\"operator\"],\"tokenModifiers\":[\"declaration\",\"readonly\"]},\"full\":true},\"experimental\":{\"macroExpansionProvider\":true}},\"serverInfo\":{\"name\":\"ChaLi\",\"version\":\"0.31.0\"}}}Content-Length: 38\r\n\r\n{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":null}",
+    "stderr_text": ""
+  },
+  "llvm": {
+    "command": [
+      "G:\\Desktop\\ChaLi\\library\\llvm\\toolchain\\bin\\clang.exe",
+      "--version"
+    ],
+    "cwd": "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221",
+    "elapsed": 0.021352800002205186,
+    "code": 0,
+    "timeout": false,
+    "stdout": "636c616e672076657273696f6e2032332e312e34202868747470733a2f2f6769746875622e636f6d2f6c6c766d2f6c6c766d2d70726f6a6563742e6769742037613934316466623238373761306238636633303332336665666138356164303139653062306635290a5461726765743a207838365f36342d7736342d77696e646f77732d676e750a546872656164206d6f64656c3a20706f7369780a496e7374616c6c65644469723a20473a2f4465736b746f702f4368614c692f6c6962726172792f6c6c766d2f746f6f6c636861696e2f62696e0a436f6e66696775726174696f6e2066696c653a20473a2f4465736b746f702f4368614c692f6c6962726172792f6c6c766d2f746f6f6c636861696e2f62696e2f7838365f36342d7736342d77696e646f77732d676e752e6366670a",
+    "stderr": "",
+    "stdout_text": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/library/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/library/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n",
+    "stderr_text": ""
+  },
+  "host": "Windows-10-10.0.19045-SP0",
+  "jobs": 2,
+  "harness_sha256": "13e29315c94dea97482e02fd1db5e3e3c865f152dcf99512f9d22db63721be7e",
+  "catalog_sha256": "903c366a4ca9afa5fe39dabce9d8a5664873ba15e00dbce9b955da42b1c6cd5a",
+  "optimization": "默认四元式优化 4 轮与 VM 最高优化；反射编入",
+  "cases": [
+    {
+      "group": "advanced",
+      "name": "generic_function_return_composed",
+      "outcome": "success",
+      "source_sha256": "28ba6db82acc572fd179eecf64b0c98c032fec10f85aedd775339fa112260332",
+      "results": {
+        "vm": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\chali-0.31.0-before-container-optimization.exe",
+              "run",
+              "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\generic_function_return_composed.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\vm\\program",
+              "--emit",
+              "--svmb"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\vm",
+            "elapsed": 0.9287981000015861,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+          },
+          "status": "compile_error"
+        },
+        "aot": {
+          "build": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\chali-0.31.0-before-container-optimization.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\generic_function_return_composed.chl",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\aot\\program"
+            ],
+            "cwd": "G:\\Desktop\\ChaLi\\tmp\\compiler-limits-9sjdb221\\advanced\\generic_function_return_composed\\aot",
+            "elapsed": 0.9626777000012225,
+            "code": 1,
+            "timeout": false,
+            "stdout": "",
+            "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+            "stdout_text": "",
+            "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+          },
+          "status": "compile_error"
+        }
+      }
+    }
+  ],
+  "diagnosis": [
+    {
+      "name": "explicit_lambda",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return T fn(T x) { a(b(x)) }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "local_typed",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { T fn(T) f = fn(T x) { a(b(x)) }; return f; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "single_callback",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return fn(T x) { a(x) }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "plain_lambda",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return fn(T x) { x + 1 }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "non_generic",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nint64 fn(int64) compose(int64 fn(int64) a, int64 fn(int64) b) { return fn(int64 x) { a(b(x)) }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/limits031-return-diagnosis/non_generic.chl 第 3 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64(int64)，所属类型 ，来源 __chali_lambda_ast_const_1781_macro_0_1782）\n 3 | int64 fn(int64) compose(int64 fn(int64) a, int64 fn(int64) b) { return fn(int64 x) { a(b(x)) }; }\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+    },
+    {
+      "name": "explicit_return",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return fn(T x) { return a(b(x)); }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "copy_capture",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return fn copy(T x) { a(b(x)) }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "non_generic_copy",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nint64 fn(int64) compose(int64 fn(int64) a, int64 fn(int64) b) { return fn copy(int64 x) { a(b(x)) }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 0,
+      "stdout": "13\n",
+      "stderr": ""
+    },
+    {
+      "name": "non_generic_plain",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nint64 fn(int64) compose(int64 fn(int64) a, int64 fn(int64) b) { return fn(int64 x) { x + 1 }; }\nvoid main(){let f=compose(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 0,
+      "stdout": "7\n",
+      "stderr": ""
+    },
+    {
+      "name": "generic_numeric",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T bias) { return fn copy(T x) { x + bias }; }\nvoid main(){let f=compose(6);println(\"{}\",f(6));}\n",
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\n"
+    },
+    {
+      "name": "generic_explicit_call",
+      "source": "int64 inc(int64 x) { return x + 1; }\nint64 twice(int64 x) { return x * 2; }\nT fn(T) compose<T>(T fn(T) a, T fn(T) b) { return fn copy(T x) { a(b(x)) }; }\nvoid main(){let f=compose<int64>(inc,twice);println(\"{}\",f(6));}\n",
+      "code": 0,
+      "stdout": "13\n",
+      "stderr": ""
+    }
+  ],
+  "note": "初始默认借用捕获还涉及返回局部借用的生命周期限制；合法的 fn copy 仍在自动推导时失败，显式指定 int64 则通过。此报告来自修复前编译器。"
+}

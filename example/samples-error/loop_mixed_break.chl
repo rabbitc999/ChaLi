@@ -1,0 +1,9 @@
+void main() {
+    int64 value = loop {
+        if (true) {
+            yield (1);
+        }
+        break;
+    };
+    let __ignored1 = value;
+}

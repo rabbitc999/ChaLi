@@ -1,0 +1,5 @@
+/* 释放统一使用对象的 drop()；不提供 drop 语句。 */
+void main() {
+    int64 mut& block = heap int64;
+    drop block;
+}

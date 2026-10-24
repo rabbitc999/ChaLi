@@ -1,0 +1,321 @@
+{
+  "name": "chali-editor",
+  "displayName": "ChaLi",
+  "description": "ChaLi（.chl）语言支持：用编译器自带的 `chali lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。 支持 LLVM AOT 可执行文件与 VM 字节码构建。",
+  "version": "1.0.0",
+  "publisher": "rabbitc999",
+  "devDependencies": {
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  },
+  "author": {
+    "name": "小兔糖糖_OvO",
+    "email": "rabbitc999@outlook.com"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "chali",
+    "chl",
+    "parseengine",
+    "stackvm"
+  ],
+  "main": "./extension.js",
+  "scripts": {
+    "embed": "node tools/embed-compiler.js",
+    "check": "node tools/check-manifest.js",
+    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/macroHighlighting.js && node test/build.js",
+    "vscode:prepublish": "node tools/embed-compiler.js",
+    "package": "node tools/package.js"
+  },
+  "icon": "icon.png",
+  "activationEvents": [
+    "onLanguage:chali",
+    "onDebugResolve:chali",
+    "onCommand:chali.installDependencies",
+    "onCommand:chali.checkDependencies",
+    "onCommand:chali.openLibraries",
+    "onCommand:chali.previewMacroExpansion",
+    "onCommand:chali.build",
+    "onCommand:chali.buildExe",
+    "onCommand:chali.buildSvmb"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "chali",
+        "aliases": [
+          "ChaLi",
+          "chali"
+        ],
+        "extensions": [
+          ".chl"
+        ],
+        "configuration": "./chali-language-configuration.json"
+      },
+      {
+        "id": "chali-svmb",
+        "aliases": [
+          "ChaLi 字节码",
+          "ChaLi Bytecode"
+        ],
+        "extensions": [
+          ".svmb"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "chali",
+        "scopeName": "source.chali",
+        "path": "./syntaxes/chali.tmLanguage.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "chali",
+        "label": "ChaLi",
+        "languages": [
+          "chali"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "要调试的 .chl 文件（缺省是当前打开的文件）。",
+                "default": "${file}"
+              },
+              "args": {
+                "type": "array",
+                "description": "传给被调试程序的命令行参数。",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "cwd": {
+                "type": "string",
+                "description": "工作目录；缺省用源文件所在目录。",
+                "default": "${fileDirname}"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "chali",
+            "request": "launch",
+            "name": "ChaLi：调试当前文件",
+            "program": "${file}",
+            "cwd": "${fileDirname}"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "ChaLi：调试当前文件",
+            "description": "用编译器自带的调试器跑当前 .chl。",
+            "body": {
+              "type": "chali",
+              "request": "launch",
+              "name": "ChaLi：调试当前文件",
+              "program": "^\"\\${file}\"",
+              "cwd": "^\"\\${fileDirname}\""
+            }
+          }
+        ]
+      }
+    ],
+    "configurationDefaults": {
+      "[chali]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.suggest.showWords": false,
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
+    "commands": [
+      {
+        "command": "chali.restartServer",
+        "title": "%chali.restartServer.title%"
+      },
+      {
+        "command": "chali.showServerLog",
+        "title": "%chali.showServerLog.title%"
+      },
+      {
+        "command": "chali.openDoc",
+        "title": "%chali.openDoc.title%"
+      },
+      {
+        "command": "chali.run",
+        "title": "%chali.run.title%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "chali.installDependencies",
+        "title": "%chali.installDependencies.title%"
+      },
+      {
+        "command": "chali.checkDependencies",
+        "title": "%chali.checkDependencies.title%"
+      },
+      {
+        "command": "chali.openLibraries",
+        "title": "%chali.openLibraries.title%"
+      },
+      {
+        "command": "chali.previewMacroExpansion",
+        "title": "%chali.previewMacroExpansion.title%"
+      },
+      {
+        "command": "chali.build",
+        "title": "%chali.build.title%",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "chali.buildExe",
+        "title": "%chali.buildExe.title%"
+      },
+      {
+        "command": "chali.buildSvmb",
+        "title": "%chali.buildSvmb.title%"
+      }
+    ],
+    "configuration": {
+      "title": "ChaLi",
+      "properties": {
+        "chali.path": {
+          "type": "string",
+          "default": "",
+          "description": "%chali.path.description%"
+        },
+        "chali.traceServer": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "messages"
+          ],
+          "description": "%chali.traceServer.description%"
+        },
+        "chali.inlayHints.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%chali.inlayHints.enabled.description%"
+        },
+        "chali.build.outputDirectory": {
+          "type": "string",
+          "default": "build",
+          "description": "%chali.build.outputDirectory.description%"
+        },
+        "chali.build.llvmPath": {
+          "type": "string",
+          "default": "",
+          "description": "%chali.build.llvmPath.description%"
+        },
+        "chali.build.checked": {
+          "type": "boolean",
+          "default": true,
+          "description": "%chali.build.checked.description%"
+        }
+      }
+    },
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "chali.run",
+          "when": "resourceLangId == chali",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "chali.run",
+          "when": "resourceLangId == chali",
+          "group": "navigation@1"
+        },
+        {
+          "command": "chali.installDependencies",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.checkDependencies",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.openLibraries",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.previewMacroExpansion",
+          "when": "editorLangId == chali && resourceScheme == file",
+          "group": "chali@2"
+        },
+        {
+          "command": "chali.buildExe",
+          "when": "resourceExtname == .chl && resourceScheme == file",
+          "group": "chaliBuild@1"
+        },
+        {
+          "command": "chali.buildSvmb",
+          "when": "resourceExtname == .chl && resourceScheme == file",
+          "group": "chaliBuild@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "chali.installDependencies",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.checkDependencies",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.openLibraries",
+          "when": "resourceFilename == chali.toml",
+          "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.buildExe",
+          "when": "resourceExtname == .chl && resourceScheme == file",
+          "group": "chaliBuild@1"
+        },
+        {
+          "command": "chali.buildSvmb",
+          "when": "resourceExtname == .chl && resourceScheme == file",
+          "group": "chaliBuild@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "chali.build",
+          "when": "resourceLangId == chali && resourceScheme == file",
+          "group": "navigation@2"
+        }
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rabbitc999/ChaLi.git"
+  },
+  "chaliCompilerVersion": "1.0.0"
+}

@@ -1,0 +1,33 @@
+{
+  "phase": "discovery-before-budget-repair",
+  "source": "import std::cli;\nimport std::csv;\nimport std::datetime;\nimport std::encoding;\nimport std::utf8;\nimport std::watchdog;\nimport std::regex;\nimport std::reflect;\nimport std::json;\nimport std::toml;\nimport std::image;\nimport std::sql;\nResult<int64, MessageError> readNumber(String text) { let value = std::json::parse(text)?; return Result<int64, MessageError>::Ok(value.asInt().unwrap()); }\nvoid main() {\n    { let error = std::cli::cliError(\"--count\", \"参数缺失\"); assert(error.toString().contains(\"--count\")); }\n    { let error = std::csv::csvError(3, 7, \"字段错误\"); assert(error.line == 3 && error.column == 7); assert(error.toString().contains(\"字段错误\")); }\n    { assert((std::datetime::DateTimeError::InvalidDate).toString() != \"\"); }\n    { assert((std::encoding::EncodingError::InvalidCharacter(9)).toString().contains(\"9\")); }\n    { assert((std::utf8::Utf8Error::InvalidSequence(12)).toString().contains(\"12\")); }\n    { assert((std::watchdog::WatchdogError::InvalidTimeout).toString() != \"\"); }\n    { assert((std::regex::RegexError::Invalid).toString() != \"\"); }\n    { assert((std::reflect::ReflectError::NotFound).toString() != \"\"); }\n    { Result<std::json::JsonValue, MessageError> result = std::json::parse(\"{bad\"); assert(result.isErr()); assert(result.error().toString() != \"\"); assert(readNumber(\"42\").unwrap() == 42); assert(readNumber(\"{bad\").isErr()); }\n    { Result<std::toml::TomlValue, MessageError> result = std::toml::parse(\"x = [\"); assert(result.isErr()); assert(result.error().toString() != \"\"); }\n    { Result<Image, MessageError> result = Image::make(0, 1); assert(result.isErr()); assert(result.error().toString().contains(\"宽高\")); }\n    { Query query; query.page(-1); Result<SqlStatement, MessageError> result = query.build(); assert(result.isErr()); assert(result.error().toString().contains(\"分页\")); }\n    println(\"all Error modules OK\");\n}\n",
+  "results": {
+    "run": {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\chali-0310-pre-budget-review.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tmp\\all-error-modules.chl",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-budget-run"
+      ],
+      "exit": 3,
+      "elapsed": 97.60572749999847,
+      "stdout": "",
+      "stderr": "运行时分配器：arena 用尽（要 27262976 字节）\r\nterminate called after throwing an instance of 'std::bad_alloc'\r\n  what():  std::bad_alloc\r\n"
+    },
+    "aot": {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\chali-0310-pre-budget-review.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tmp\\all-error-modules.chl",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-budget-aot"
+      ],
+      "exit": 3,
+      "elapsed": 86.94386690000101,
+      "stdout": "",
+      "stderr": "运行时分配器：arena 用尽（要 83886080 字节）\r\nterminate called after throwing an instance of 'std::bad_alloc'\r\n  what():  std::bad_alloc\r\n"
+    }
+  },
+  "compiler_sha256": "5fc81d6ab2854eb0a97458d62418953bceccc4e4b5827e8612ed01a738384930"
+}

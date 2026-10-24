@@ -1,0 +1,67 @@
+module std::event;
+import std::concurrency;
+/* 事件只在显式 receive 时返回，绝不自动调用用户代码。默认邮箱容量 256。 */
+int64 __receive(int64 millis);
+__TimerSource __timer(int64 nanos, bool repeat);
+__TimerSource __emptySource();
+void __destroy(int64 handle);
+int64 __source();
+int64 __tag();
+int64 __missed();
+int64 __id();
+int64 __post(int64 tag, int64 source);
+void __close();
+struct Event {
+    int64 timer;
+    int64 tag;
+    int64 source;
+    int64 missed;
+};
+std::concurrency::Receive<Event> receiveFor(int64 millis) {
+    std::concurrency::Receive<Event> result;
+    result.status = __receive(millis);
+    if (result.isReady()) {
+        result.value.timer = __id();
+        result.value.tag = __tag();
+        result.value.source = __source();
+        result.value.missed = __missed();
+    }
+    return result;
+}
+std::concurrency::Receive<Event> receive() { return receiveFor(-1); }
+std::concurrency::Receive<Event> tryReceive() { return receiveFor(0); }
+int64 post(int64 tag, int64 source) { return __post(tag, source); }
+void close() { __close(); }
+/** 定时源由当前值独占；事件中的 timer 字段只作来源标识。 */
+#NonCopyable
+opcode __TimerSource {
+    new = std::event::__emptySource;
+    drop = std::event::__destroy;
+};
+
+/** 不可复制的定时源所有者，作用域退出或 stop 时取消定时源。 */
+struct Timer {
+    __TimerSource __source;
+    static Timer everyNanos(int64 nanos) {
+        Timer result; result.__source = __timer(nanos, true);
+        return move result;
+    }
+    static Timer afterNanos(int64 nanos) {
+        Timer result; result.__source = __timer(nanos, false);
+        return move result;
+    }
+    static Timer everyMillis(int64 millis) {
+        Timer result;
+        if (millis > 0 && millis <= 9223372036854) { result.__source = __timer(millis * 1000000, true); }
+        return move result;
+    }
+    static Timer afterMillis(int64 millis) {
+        Timer result;
+        if (millis > 0 && millis <= 9223372036854) { result.__source = __timer(millis * 1000000, false); }
+        return move result;
+    }
+    bool isValid() { return self.__source.opcode != 0; }
+    /** 只返回来源标识，不转移释放责任。 */
+    int64 id() { return self.__source.opcode; }
+    void stop() { self.__source = __emptySource(); }
+};

@@ -1,0 +1,5 @@
+import std::math;
+
+void main() {
+    std::math::PI = 3.0;
+}

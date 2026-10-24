@@ -1,0 +1,5 @@
+enum Option { None, Some(int64 value) };
+void main() {
+    Option value = Option::Some(1);
+    let __ignored1 = value.value;
+}

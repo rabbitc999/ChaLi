@@ -1,0 +1,66 @@
+{
+  "phase": "discovery-before-argument-repair",
+  "compiler_sha256": "86589b396b46c5f86b83161d981386a9a5fe35e4e262e2718b6beeed7a3a037c",
+  "source": "void main(List<String> args) { println(\"{}\", len(args)); for (String value in args) { println(\"[{}]\", value); } }\n",
+  "arguments": [
+    "张伟",
+    "学生🙂",
+    "",
+    "a b\"c",
+    "{\"name\":\"李娜\"}",
+    "C:\\测试\\file"
+  ],
+  "expected": "6\n[张伟]\n[学生🙂]\n[]\n[a b\"c]\n[{\"name\":\"李娜\"}]\n[C:\\测试\\file]\n",
+  "results": {
+    "vm": {
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-arguments.chl",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-arguments",
+        "--",
+        "张伟",
+        "学生🙂",
+        "",
+        "a b\"c",
+        "{\"name\":\"李娜\"}",
+        "C:\\测试\\file"
+      ],
+      "exit": 0,
+      "stdout_hex": "360d0a5be5bca0e4bc9f5d0d0a5be5ada6e7949ff09f99825d0d0a5b5d0d0a5b61206222635d0d0a5b7b226e616d65223a22e69d8ee5a89c227d5d0d0a5b433a5ce6b58be8af955c66696c655d0d0a",
+      "stdout": "6\r\n[张伟]\r\n[学生🙂]\r\n[]\r\n[a b\"c]\r\n[{\"name\":\"李娜\"}]\r\n[C:\\测试\\file]\r\n",
+      "stderr": ""
+    },
+    "aot": {
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-0.31.0-windows-x64-llvm-external.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-arguments.chl",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\limits031-arguments",
+        "--llvm",
+        "G:\\Desktop\\ChaLi\\library\\llvm\\toolchain\\bin\\clang.exe"
+      ],
+      "exit": 0,
+      "stdout_hex": "",
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "command": [
+          "G:\\Desktop\\ChaLi\\tmp\\limits031-arguments.exe",
+          "张伟",
+          "学生🙂",
+          "",
+          "a b\"c",
+          "{\"name\":\"李娜\"}",
+          "C:\\测试\\file"
+        ],
+        "exit": 0,
+        "stdout_hex": "360d0a5bd5c5ceb05d0d0a5bd1a7c9fa3f3f5d0d0a5b5d0d0a5b61206222635d0d0a5b7b226e616d65223a22c0eec4c8227d5d0d0a5b433a5cb2e2cad45c66696c655d0d0a",
+        "stdout": "6\r\n[��ΰ]\r\n[ѧ��??]\r\n[]\r\n[a b\"c]\r\n[{\"name\":\"����\"}]\r\n[C:\\����\\file]\r\n",
+        "stderr": ""
+      }
+    }
+  }
+}

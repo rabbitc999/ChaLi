@@ -1,0 +1,682 @@
+\chapter{结构体}
+\label{ch:09}
+
+\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/book/en/09-structures.md}{English} · 简体中文
+
+到这里我们攒了一堆零散的东西：\texttt{int64}、\texttt{String}、\texttt{List}……它们描述的都是单个值。真实程序里，数据往往是成组出现的：「一个玩家」有名字和分数，「一个点」有横纵坐标。
+
+结构体（\texttt{struct}）就是把一组字段和一组行为收进一个名字下面的东西。
+
+\section{定义与使用}
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Point
+{
+    int64 x;
+    int64 y;
+};
+
+void main()
+{
+    Point p;
+    p.x = 3;
+    p.y = 4;
+    println("{},{}", p.x, p.y);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+3,4
+\end{lstlisting}
+\par
+\medskip
+
+拆开看：
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+struct Point {        ← struct 名字 { 
+    int64 x;          ← 字段：类型 名字;
+    int64 y;
+}                     ← 类型声明到这里已经完整，后面的分号可省略
+\end{lstlisting}
+\par
+\medskip
+
+结构体声明在 \texttt{\}} 处结束，允许省略末尾的分号；原有 \texttt{\};} 写法仍有效。字段声明仍然需要分号。
+
+用法：声明一个变量，然后用 \texttt{.\allowbreak{}} 访问字段（片段，\texttt{Point} 假定已定义）。
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Point p;
+// 声明
+p.x = 3;
+// 写字段
+println("{}", p.x);
+// 读字段
+\end{lstlisting}
+\par
+\medskip
+
+没赋过值的字段是 0，不是垃圾：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Point
+{
+    int64 x;
+    int64 y;
+};
+
+void main()
+{
+    Point p;
+    println("[{}][{}]", p.x, p.y);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+[0][0]
+\end{lstlisting}
+\par
+\medskip
+
+这条和很多 C 系语言不同——那里的未初始化字段是随机值。ChaLi 帮你清零了。
+
+\begin{tip}{提示}
+字段没有「声明处的默认值」。 写 \texttt{int64 retries =\allowbreak{} 3;} 在结构体里是语法错误。想要默认值，用构造器（9.4 节）。
+\end{tip}
+
+\section{方法：把动作也收进去}
+
+字段旁边可以直接写方法：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Point
+{
+    int64 x;
+    int64 y;
+
+    int64 sum()
+    {
+        return self.x + self.y;
+    }
+
+    void shift(int64 delta)
+    {
+        self.x = self.x + delta;
+    }
+};
+
+void main()
+{
+    Point p;
+    p.x = 1;
+    p.y = 2;
+
+    p.shift(10);
+    println("{} {}", p.sum(), p.x);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+13 11
+\end{lstlisting}
+\par
+\medskip
+
+两条要点：
+
+方法体里用 \texttt{self} 指「这个对象自己」。 字段不能裸写，得写 \texttt{self.\allowbreak{}x}。这条规则比 C++ / Java 严格——那里写 \texttt{x} 就当 \texttt{this->\allowbreak{}x} 了。ChaLi 要求你写出来，因为一眼能看出哪个名字是字段、哪个是参数或者局部变量。
+
+方法定义在结构体的花括号里，和字段混在一起，不用另开一段。（有些语言要在结构体外面再写一遍 \texttt{impl} 块，ChaLi 不用。）
+
+调用的写法是 \texttt{p.\allowbreak{}shift(\allowbreak{}10)\allowbreak{}} —— 用 \texttt{.\allowbreak{}}，因为 \texttt{p} 是一个具体的对象。（\texttt{:\allowbreak{}:\allowbreak{}} 是留给「属于类型、不属于对象」的东西的，下一节。）
+
+\subsection*{\texttt{return self;}：让方法可以链着写}
+
+方法可以把 \texttt{self} 返回——返回类型写结构体自己，\texttt{return self;} 一行。惯用形状是「每个方法都返回自己」，这样就能链式调用：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Counter
+{
+    int64 total;
+
+    Counter add(int64 x)
+    {
+        self.total = self.total + x;
+        return self;
+    }
+};
+
+void main()
+{
+    Counter c;
+    c = c.add(1).add(2).add(3);
+    println("{}", c.total);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+6
+\end{lstlisting}
+\par
+\medskip
+
+注意两件事：
+
+\begin{enumerate}
+
+\item 链式调用要把结果赋回去（\texttt{c =\allowbreak{} c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}…}）。结构体是值（9.6），\texttt{c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}} 返回的是一份副本——不赋回去，后面 \texttt{.\allowbreak{}add(\allowbreak{}2)\allowbreak{}} 都改在副本上，\texttt{c} 自己只吃到第一步：\texttt{c.\allowbreak{}add(\allowbreak{}1)\allowbreak{}.\allowbreak{}add(\allowbreak{}2)\allowbreak{}.\allowbreak{}add(\allowbreak{}3)\allowbreak{};} 不回赋值的话，\texttt{c.\allowbreak{}total} 是 1，不是 6。
+
+\item \texttt{return self;} 走的是普通的值复制：方法结束时 \texttt{self} 指向的对象被复制一份交出去。想在原地改调用者，直接写 \texttt{void} 方法改 \texttt{self.\allowbreak{}} 字段就行，不用 \texttt{return self;}。
+
+\end{enumerate}
+
+\section{\texttt{static}：属于类型，不属于对象}
+
+有些东西和「某一个具体对象」无关，只跟类型有关。比如「一共造过多少个 Counter」——这个数不是某个 \texttt{Counter} 的字段，它是 \texttt{Counter} 这个类型的。
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Counter
+{
+    static int64 alive;
+    int64 value;
+
+    Counter(int64 initial)
+    {
+        self.value = initial;
+        Counter::alive = Counter::alive + 1;
+    }
+
+    static int64 count()
+    {
+        return Counter::alive;
+    }
+};
+
+void main()
+{
+    Counter c = new Counter(7);
+    println("value={} alive={}", c.value, Counter::count());
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+value=7 alive=1
+\end{lstlisting}
+\par
+\medskip
+
+对照着看两种东西：
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+ & 写法 & 访问方式 & 属于谁 \\
+\midrule
+实例字段 / 方法 & \texttt{int64 value;} & \texttt{c.\allowbreak{}value} & 某一个对象 \\
+静态字段 / 方法 & \texttt{static int64 alive;} & \texttt{Counter:\allowbreak{}:\allowbreak{}alive} & 类型本身 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{.\allowbreak{}} 和 \texttt{:\allowbreak{}:\allowbreak{}} 的区别就是「对象」和「类型」的区别。 记住这条，很多报错就看得懂了。
+
+\texttt{static} 方法里没有 \texttt{self}——因为它不属于任何对象。想用实例字段？不行。
+
+\section{构造器与 \texttt{new(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
+
+字段没赋过值是 0，但我们常常想要「造出来就是对的」。这就是构造器：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Counter
+{
+    int64 value;
+
+    Counter(int64 initial)
+    {
+        self.value = initial;
+    }
+};
+
+void main()
+{
+    Counter c = new Counter(7);
+    println("{}", c.value);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+7
+\end{lstlisting}
+\par
+\medskip
+
+构造器没有返回类型，名字和结构体同名。调用它用 \texttt{new T(\allowbreak{}实参)\allowbreak{}}。
+
+两种情形要说清楚（片段，\texttt{Counter} 假定已定义）：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Counter c = new Counter(7);
+// 栈上：跟着作用域走
+Counter mut& p = heap Counter(7);
+// 堆上：要自己 drop
+\end{lstlisting}
+\par
+\medskip
+
+左边写什么类型，就调那个类型的构造器——堆构造在 \texttt{new} 前加 \texttt{heap}。
+
+区别只在左边有没有 \texttt{\&}：
+
+\begin{itemize}
+
+\item 左边是值，对象在栈上，出作用域自动清理；
+
+\item 左边是引用（\texttt{Counter mut\&}），对象在堆上，得自己 \texttt{p.\allowbreak{}drop(\allowbreak{})\allowbreak{};}（第 8 章）。
+
+\end{itemize}
+
+想「就地」建堆对象、不写实参时，可以省掉实参：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Counter mut& p = heap Counter;
+// 等价于 heap Counter(0)，元素类型由 p 的类型定
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{new T(\allowbreak{}实参)\allowbreak{}} 给的是「按目标类型构造」——那个类型没有匹配实参的构造器时，编译器就报错：
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+chali: struct Counter 没有匹配的构造函数：(int64)
+\end{lstlisting}
+\par
+\medskip
+
+\begin{tip}{关于 \texttt{static T create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
+这是「具名构造入口」写法，名字自取（习惯用 \texttt{create}）。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new Point(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 优先认真构造器，没有匹配时才落到具名入口；指明入口就写 \texttt{Point:\allowbreak{}:\allowbreak{}create(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
+\end{tip}
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Point
+{
+    int64 x;
+    int64 y;
+
+    Point(int64 x, int64 y)
+    {
+        self.x = x;
+        self.y = y;
+    }
+    // 真构造器
+    static Point create(int64 x, int64 y)
+    {
+        self.x = x * 10;
+        self.y = y * 10;
+    }
+    // 具名入口
+};
+
+void main()
+{
+    Point o = new Point(3, 4);
+    // 真构造器
+    Point mut& p = heap Point(1, 2);
+    // 真构造器 + 堆
+    Point q = Point::create(3, 4);
+    // 具名入口
+    println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
+    p.drop();
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+3,4 1 2 30 40
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{static X create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 返回所属类型；丢弃它的返回值会报错（拥有值的构造结果必须有归属）。
+
+工厂方法的价值在于：它把「怎么造出一个合法的对象」这件事固定下来，调用方不用记住「先 x 后 y」这种细节。
+
+\section{让你的类型支持运算符}
+
+想让 \texttt{a + b} 这种写法用在自己的类型上，靠实现内建接口：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Money: Add<Money, Money>
+{
+    int64 cents;
+
+    Money leftAdd(Money other)
+    {
+        Money result;
+        result.cents = self.cents + other.cents;
+        return result;
+    }
+};
+
+void main()
+{
+    Money a;
+    a.cents = 150;
+    Money b;
+    b.cents = 75;
+
+    Money total = a + b;
+    println("{} 分", total.cents);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+225 分
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{a + b} 被翻译成 \texttt{a.\allowbreak{}left\allowbreak{}Add(\allowbreak{}b)\allowbreak{}}。ChaLi 里没有 \texttt{operator+} 这种声明——运算符是「实现哪个接口」决定的：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+运算符 & 实现接口 & 方法名 \\
+\midrule
+\texttt{+} & \texttt{Add<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} & \texttt{left\allowbreak{}Add} \\
+\texttt{=\allowbreak{}=\allowbreak{}} & \texttt{Equal<\allowbreak{}bool,\allowbreak{} T>\allowbreak{}} & \texttt{left\allowbreak{}Equal} \\
+\texttt{-x}（一元） & \texttt{Negate<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} & \texttt{negate} \\
+在容器里当键 & \texttt{Hash<\allowbreak{}T>\allowbreak{}} & \texttt{hash} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+接口是什么、\texttt{<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} 里的参数是什么意思——这是第 13 章和第 14 章的内容。现在你只要知道：运算符是可以为自己类型定制的，做法是实现接口，不是写 \texttt{operator}。
+
+\section{记住：结构体是值}
+
+第 6 章那条规则对结构体同样生效，而且这里最容易踩：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+struct Rect
+{
+    int64 width;
+    int64 height;
+};
+
+int64 area(Rect rect)
+{
+    return rect.width * rect.height;
+}
+
+void main()
+{
+    Rect r;
+    r.width = 3;
+    r.height = 4;
+    println("{}", area(r));
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+12
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{area(\allowbreak{}r)\allowbreak{}} 复制了一份 \texttt{r}。对小的 \texttt{Rect} 无所谓；对大的结构体就要写 \texttt{Rect const\&}：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+int64 area(Rect const& rect)
+{
+    ...
+}
+// 不复制
+void resize(Rect mut& rect)
+{
+    ...
+}
+// 要改
+\end{lstlisting}
+\par
+\medskip
+
+另外，结构体可以嵌套结构体，也可以装进容器——赋值时都是整套复制，而且复制是递归到底的（第 6 章）。
+
+结构体还能实现 \texttt{Drop} / \texttt{Closeable} 来管理资源，那些第 8 章讲过了。
+
+\subsection*{从字段派生 Equal、Hash 和 Clone}
+
+比较、哈希和显式克隆通常要逐个处理字段。可以在结构体前写 \texttt{\#derive(\allowbreak{}Equal,\allowbreak{} Hash,\allowbreak{} Clone)\allowbreak{}}，让编译器生成这些重复的方法。
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+#derive(Equal, Hash, Clone)
+struct BookKey
+{
+    String label;
+    int64 id;
+}
+
+#derive(Equal, Hash, Clone)
+struct BookRecord
+{
+    BookKey key;
+}
+
+void main()
+{
+    BookRecord original;
+    original.key.label = "left";
+    original.key.id = 7;
+    BookRecord copied = original.clone();
+    Map<BookKey, int64> cache;
+    cache.put(original.key, 10);
+    println("{} {} {}", original == copied,
+            original.hash(original) == copied.hash(copied),
+            cache.has(original.key) != 0);
+    copied.key.label = "changed";
+    println("{} {}", original.key.label, copied.key.label);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+1 1 1
+left changed
+\end{lstlisting}
+\par
+\medskip
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+请求 & 生成的能力 & 调用方式 \\
+\midrule
+\texttt{Equal} & 按字段比较，生成 \texttt{left\allowbreak{}Equal} 方法 & 通常使用 \texttt{left =\allowbreak{}=\allowbreak{} right} \\
+\texttt{Hash} & 按字段组合哈希，生成 \texttt{hash} 方法 & \texttt{value.\allowbreak{}hash(\allowbreak{}value)\allowbreak{}}；容器按 Hash 协议使用 \\
+\texttt{Clone} & 按字段显式克隆，生成 \texttt{clone} 方法 & \texttt{value.\allowbreak{}clone(\allowbreak{})\allowbreak{}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这里的 \texttt{Book\allowbreak{}Record} 包含 \texttt{Book\allowbreak{}Key}，所以后者也必须实现对应接口。字段嵌套了缺少接口的结构体时会直接报错，即使这个类型暂时没有被调用。泛型结构体在具体类型实例化后检查其字段。已有同名方法不会被派生代码覆盖。
+
+不能写 \texttt{\#derive(\allowbreak{}Drop)\allowbreak{}} 或 \texttt{\#derive(\allowbreak{}Closeable)\allowbreak{}}。 拥有值离开作用域时已经会按语言规则清理，并递归清理字段；再生成一套析构方法会破坏所有权。派生只支持 Equal、Hash、Clone，不能把任意接口名当作代码生成请求。引用、函数值、宿主对象及原始数组也不会被自动按地址比较或哈希；它们需要类型明确提供语义。
+
+这些方法在编译时生成，运行时不做反射字段遍历，也不引入 GC。枚举的活动变体和载荷如何处理，见第 10 章。
+
+\section{常见错误}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+现象 & 原因 & 怎么办 \\
+\midrule
+字段声明报缺少分号 & 字段末尾漏了 \texttt{;} & 字段仍写作 \texttt{int64 x;} \\
+\texttt{struct X 没有方法 f} & 方法名写错，或者定义忘了写 & 检查拼写与作用域 \\
+\texttt{不能隐式转换} & 字段类型和赋的值对不上 & 显式强转，或改字段类型 \\
+改不动调用方 & 结构体按值传了 & 形参写 \texttt{X mut\&}，调用写 \texttt{\&obj} \\
+\texttt{X} 没声明的类型 & 忘了写结构体定义，或忘了 \texttt{import} & 补上定义 / import \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+顺带一句：结构体的方法里必须写 \texttt{self.\allowbreak{}}。漏掉会报「找不到这个名字」——这不是编译器啰嗦，是在帮你区分字段和局部变量。
+
+\section{小结}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+你会了 & 关键点 \\
+\midrule
+定义 & \texttt{struct X \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} —— 结尾分号可选 \\
+字段 & 声明后自动清零；不支持声明处默认值 \\
+方法 & 写在结构体里，用 \texttt{self.\allowbreak{}x} 访问字段 \\
+\texttt{static} & 属于类型，用 \texttt{X:\allowbreak{}:\allowbreak{}name} 访问，里面没有 \texttt{self} \\
+构造器 & 与类型同名、无返回类型，用 \texttt{new T(\allowbreak{}实参)\allowbreak{}} 调用（目标类型由左边声明决定） \\
+栈 vs 堆 & \texttt{X v =\allowbreak{} new X(\allowbreak{}实参)\allowbreak{};} 栈上；\texttt{X mut\& p =\allowbreak{} heap X;} / \texttt{heap X(\allowbreak{}实参)\allowbreak{}} 堆上要 \texttt{drop} \\
+具名入口 & \texttt{X:\allowbreak{}:\allowbreak{}create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 用 \texttt{static X create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；\texttt{new X(\allowbreak{}实参)\allowbreak{}} 优先认真构造器 \\
+运算符 & 实现 \texttt{Add} / \texttt{Equal} / \texttt{Negate} 等内建接口 \\
+传参 & 是复制；大结构体用 \texttt{const\&} / \texttt{mut\&} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{下一步}
+
+结构体解决的是「一组字段永远一起出现」。但还有一类需求它解决不了：
+
+\begin{tip}{提示}
+一个值要么是这种，要么是那种。
+\end{tip}
+
+比如「一个形状」要么是圆（带半径），要么是方形（带边长）；「一次操作结果」要么成功（带数据），要么失败（带原因）。
+
+这种「多选一」的数据，是枚举的活儿——也是 ChaLi 里最漂亮的一块。
+
+翻到\hyperref[ch:10]{第 10 章 枚举与模式匹配}。
+
+\section{边界与验证}
+
+结构体组织相关字段和行为，但不会自动获得业务有效性。默认值、构造方式和方法应共同维持不变量；派生能力只覆盖对应协议。
+
+\section{习题}
+
+前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
+
+\begin{enumerate}
+
+\item 设计一个表示图书的结构体，并说明三个字段的类型。
+
+\item 为图书增加一个检查库存非负的方法。
+
+\item 复制图书后修改书名，验证原值不变。
+
+\item 挑战：比较默认构造后再赋值与集中构造的有效性边界。
+
+\end{enumerate}
+
+\subsection*{参考解答与验收要点}
+
+\begin{enumerate}
+
+\item 例如书名 String、编号 String、库存 int64；字段选择应由用途决定。
+
+\item 返回检查结果或错误；分别测试零、正数和负数，不让显示逻辑代替模型校验。
+
+\item 对两份值分别断言书名，明确调用的是副本还是原对象的方法。
+
+\item 集中构造便于在发布对象前校验；若允许逐字段赋值，必须说明何时检查和如何处理部分有效状态。
+
+\end{enumerate}
+
+\section{番外：木兰的行装}
+
+改写自北朝民歌《木兰诗》。
+
+唧唧复唧唧，木兰改类型。不闻敲键声，唯闻编译鸣。问女何所思，问女何所忆。女亦无所思，女亦无所忆：昨夜见军帖，可汗大点兵；十二份清单，份份不同名。
+
+阿爷无大结构，木兰无统一型。愿为市结构，从此不散拼。东市买 \texttt{horse}，西市买 \texttt{saddle}，南市买 \texttt{bridle}，北市买 \texttt{whip}。四个字段收一处，出发先验能不能骑。
+
+旦辞爷娘去，暮宿边界旁。不闻爷娘唤女声，但闻断言报缺项。弟弟拿绳充马鞍，类型检查不相让；可汗催问能出发否，木兰答曰：“字段全，不等于业务上已经齐。”
+
+万里赴调用，关山度若飞。朔气传日志，寒光照错误。将军百战归，项目十年催。归来见天子，天子问何需。木兰不用加接口，愿借格式化工具，把十二张清单改回一个结构体。
+
+爷娘闻女来，出郭相扶将；阿姊闻妹来，当户改文档；小弟闻姊来，磨刀霍霍向重复字段。同行十二年，不知她的副本早已独立；只因阿爷在家改备注，木兰阵前未受影响。
+
+雄兔脚扑朔，雌兔眼迷离；双兔傍地走，先查模型，安能只凭字段名辨我是公是私？
+
+\subsection*{技术对照}
+
+结构体组织相关字段和行为，但不会自动获得业务有效性。默认值、构造方式和方法应共同维持不变量；派生能力只覆盖对应协议。

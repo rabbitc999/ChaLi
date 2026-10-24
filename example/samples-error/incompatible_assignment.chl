@@ -1,0 +1,4 @@
+void main() {
+    int64 value = "text";
+    let __ignored1 = value;
+}

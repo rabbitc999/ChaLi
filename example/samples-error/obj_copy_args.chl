@@ -1,0 +1,4 @@
+void main() {
+    std::lang::Any b = 7;
+    std::lang::Any c = b.copy(1);
+}
