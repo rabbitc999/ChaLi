@@ -117,6 +117,39 @@ NamedFunction(T, name, params, body, capture)
 
 闭包捕获与函数值生命周期复用已有 `fn` 实现。返回或保存一个仍借用局部变量的具名闭包不会延长来源寿命，必须编译报错。核心入口为 [`M_NamedFunction`](../source/semantics/named_function_ast.cpp)；没有另建一套闭包运行时。
 
+## fn 前缀与返回类型后置
+
+```chali
+fn add(int64 left, int64 right) -> int64 { return left + right; }
+fn main() { println("{}", add(3, 4)); }
+```
+
+声明可以省略返回类型写成 `fn 名(形参表)`，此时返回类型为 `void`；也可以把返回类型用 `->` 写在形参表之后。泛型、返回闭包与局部具名函数同样适用，并与既有的前置写法逐一等价：
+
+| 新写法 | 等价的既有写法 |
+| --- | --- |
+| `fn main() { }` | `void main() { }` |
+| `fn calc(int64 x) -> int64 { }` | `int64 calc(int64 x) { }` |
+| `fn calc<T>(T x) -> T { }` | `T calc<T>(T x) { }` |
+| `fn make<T>(T x) -> (T fn(T v)) { }` | `(T fn(T v)) make<T>(T x) { }` |
+| `fn make<T>(T x) -> fn(T v) -> T { }` | 与上一行相同，嵌套由内向外归一 |
+| `(fn(T v) -> T) make<T>(T x) { }` | 前置位置同样接受后置写法 |
+| `fn(int64 a, int64 b) -> int64` | `int64 fn(int64, int64)` |
+
+```text
+fn 名<类型形参>(形参) -> 返回类型  =>  返回类型 名<类型形参>(形参)
+fn 名<类型形参>(形参)             =>  void 名<类型形参>(形参)
+fn(形参) -> 返回类型              =>  返回类型 fn(形参)
+```
+
+归一化在泛型单态化之前的文本层完成，不新增文法产生式，也不产生新的 AST 节点：改写结果仍由既有产生式解析，泛型单态化与闭包的整条链路原样复用。三条约束：
+
+1. 函数类型的形参只写类型。`fn(int64 a, int64 b) -> int64` 里的形参名只作文档用途，归一化时剔除，不进入类型身份。
+2. lambda 的箭头返回类型是 0.12.0 已移除的写法，`fn(int64 x) -> int64 { ... }` 仍被拒绝；推导返回类型时省略箭头，需要标注时写成 `int64 fn(int64 x) { ... }`。
+3. 局部具名函数共用同一条路径：`fn read(int64 v) -> int64 { ... }` 在函数体内等价于 `int64 read(int64 v) { ... }`。
+
+核心入口为 [`normalize`](../source/chali_fn_sugar.cpp)。
+
 ## 字段派生指令
 
 ```chali

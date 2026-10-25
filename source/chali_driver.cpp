@@ -30,6 +30,7 @@
 #include "chali_incremental.hpp"
 #include "chali_analysis.hpp"
 #include "chali_lambda.hpp"
+#include "chali_fn_sugar.hpp"
 #include "chali_generic.hpp"
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
@@ -1166,6 +1167,8 @@ try
             std::fprintf(stderr, "chali: %s\n", syntaxError.c_str());
             return 1;
         }
+        // 必须早于 lambda 与泛型两趟文本归一化：否则 `fn calc<T>` 会被旧泛型摘走、lambda 会拦下箭头。
+        chali_fn_sugar::normalize(processed.text);
         if (!chali_lambda::run(processed, macroError))
         {
             if (jsonDiagnostics)

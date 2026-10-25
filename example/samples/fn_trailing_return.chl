@@ -1,0 +1,42 @@
+/* fn_trailing_return.chl —— fn 前缀与返回类型后置写法。 */
+
+fn show() {
+    println("void entry");
+}
+
+fn add(int64 left, int64 right) -> int64 {
+    return left + right;
+}
+
+fn identity<T>(T value) -> T {
+    return value;
+}
+
+/* 返回闭包类型的三种写法：裸写法、后置嵌套、前置括号。 */
+fn makeAdder<T>(T base) -> (T fn(T value)) {
+    return T fn copy (T value) { return base + value; };
+}
+
+fn makeAdder2<T>(T base) -> fn(T value) -> T {
+    return T fn copy (T value) { return base + value; };
+}
+
+(fn(T value) -> T) makeAdder3<T>(T base) {
+    return T fn copy (T value) { return base + value; };
+}
+
+fn main() {
+    show();
+    println("add {}", add(3, 4));
+    println("identity {}", identity<int64>(9));
+
+    fn(int64) -> int64 addFive = makeAdder<int64>(5);
+    fn(int64) -> int64 addSix = makeAdder2<int64>(6);
+    fn(int64) -> int64 addSeven = makeAdder3<int64>(7);
+    println("closures {} {} {}", addFive(1), addSix(1), addSeven(1));
+
+    fn localTwice(int64 value) -> int64 {
+        return value * 2;
+    }
+    println("local {}", localTwice(21));
+}

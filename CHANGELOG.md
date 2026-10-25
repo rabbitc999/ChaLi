@@ -4,7 +4,16 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.0**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.1**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.1 — fn 前缀与返回类型后置写法
+
+- 新增 fn 前缀与返回类型后置写法：`fn main()` 等价于 `void main()`，`fn calc(int64 x) -> int64` 等价于 `int64 calc(int64 x)`，泛型写 `fn calc<T>(T x) -> T`。
+- 函数类型支持 `fn(int64 a, int64 b) -> int64`，与既有的 `int64 fn(int64, int64)` 等价；返回闭包可写成 `-> (T fn(T b))`、`-> fn(T b) -> T` 或前置的 `(fn(T b) -> T)`，三种写法可混用。
+- 该写法在泛型单态化之前的文本层等价改写，不新增文法产生式与 AST 节点，泛型与闭包链路原样复用；函数类型位置的参数名不进入类型身份。
+- lambda 的箭头返回类型保持 0.12.0 的移除决定，仍被拒绝；局部具名函数与语句级声明共用同一条路径。
+- 中英文文档、闭包章节与示例同步新增该写法；验收只执行 VM，不执行 AOT。
 
 
 ## 1.0.0 — 统一版本、Apache 许可与多架构交付

@@ -1565,6 +1565,108 @@ void main()
 \par
 \medskip
 
+\section{fn 前缀与返回类型后置}
+
+前面几节都把返回类型写在最前面。也可以把 \texttt{fn} 写到名字前面，再用 \texttt{->\allowbreak{}} 把返回类型挪到参数表后面：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+fn add(int64 left, int64 right) -> int64
+{
+    return left + right;
+}
+fn show()
+{
+    println("no result");
+}
+void main()
+{
+    println("{}", add(3, 4));
+    show();
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+7
+no result
+\end{lstlisting}
+\par
+\medskip
+
+省掉 \texttt{->\allowbreak{}} 时返回类型就是 \texttt{void}，所以 \texttt{fn show(\allowbreak{})\allowbreak{}} 等于 \texttt{void show(\allowbreak{})\allowbreak{}}。泛型也照样写：\texttt{T add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{}} 可以写成 \texttt{fn add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{} ->\allowbreak{} T}。
+
+返回函数时，读起来是「先说参数，再说交出什么」。15.14 那个工厂可以写成这样：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+fn makeAdder(int64 mut& amount) -> (int64 fn(int64))
+{
+    return fn(int64 value)
+    {
+        value + amount
+    };
+}
+void main()
+{
+    int64 one = 1;
+    int64 ten = 10;
+    let plus1 = makeAdder(&one);
+    let plus10 = makeAdder(&ten);
+    println("{} {}", plus1(5), plus10(5));
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+6 15
+\end{lstlisting}
+\par
+\medskip
+
+括号里的 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 就是 15.2 节的函数类型，只是这次排在 \texttt{->\allowbreak{}} 后面。下面三种写法是同一个函数，可以混着用：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+fn makeAdder(int64 mut& amount) -> (int64 fn(int64)) { ... }
+fn makeAdder(int64 mut& amount) -> fn(int64) -> int64 { ... }
+(fn(int64) -> int64) makeAdder(int64 mut& amount) { ... }
+\end{lstlisting}
+\par
+\medskip
+
+函数类型自己也能换成后置写法，这两行声明的是同一个类型：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+int64 fn(int64, int64) combine;
+fn(int64, int64) -> int64 combine2;
+\end{lstlisting}
+\par
+\medskip
+
+两条限制：
+
+\begin{enumerate}
+
+\item 函数类型里只写类型。参数名只是给人看的：\texttt{fn(\allowbreak{}int64 a,\allowbreak{} int64 b)\allowbreak{} ->\allowbreak{} int64} 与 \texttt{int64 fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{}} 是同一个类型，\texttt{a} / \texttt{b} 不参与类型比较。
+
+\item lambda 自己的箭头返回类型是 0.12.0 就移除的写法，\texttt{fn(\allowbreak{}int64 x)\allowbreak{} ->\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 仍会被拒绝；要标注就写 \texttt{int64 fn(\allowbreak{}int64 x)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}}。
+
+\end{enumerate}
+
+这不是新语法，只是进文法之前的一次等价改写：编译器先把这些形状换成前面几节一直在用的写法，再照常解析。
+
 \section{泛型闭包：同一份状态，多种参数类型}
 
 闭包也能声明类型参数。\texttt{fn<\allowbreak{}T>\allowbreak{}(\allowbreak{}T value)\allowbreak{}} 中的 \texttt{T} 在调用时确定，通常可以从实参推导；需要指定时写 \texttt{f<\allowbreak{}int64>\allowbreak{}(\allowbreak{}3)\allowbreak{}}。具体实现体决定返回类型。

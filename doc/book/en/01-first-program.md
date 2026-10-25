@@ -6,7 +6,7 @@
 
 ChaLi compiles source into a quadruple intermediate representation and executes it through the shared VM. LLVM AOT can instead produce a native executable. Start with source execution so that diagnostics point directly to the program you are editing.
 
-Install the MSI on Windows, DEB on Ubuntu/Debian or RPM on CentOS, then use the `chali` command on PATH. A Windows source build instead produces `chali-1.0.0-llvm-external-windows-x64.exe` (or `llvm-static`); invoke that actual path when using an uninstalled build. See [installation and architecture options](../../en/42-installation-packages.md).
+Install the MSI on Windows, DEB on Ubuntu/Debian or RPM on CentOS, then use the `chali` command on PATH. A Windows source build instead produces `chali-1.0.1-llvm-external-windows-x64.exe` (or `llvm-static`); invoke that actual path when using an uninstalled build. See [installation and architecture options](../../en/42-installation-packages.md).
 
 Save this as `hello.chl`:
 

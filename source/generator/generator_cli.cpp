@@ -624,8 +624,8 @@ int runCli(int argc, char **argv)
         ok = copy(stage / name, name) && ok;
     for (const char *name : {"chali_driver.cpp", "chali_i18n.hpp", "chali_diagnostics.hpp", "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "chali_module.hpp",
                              "chali_incremental.hpp", "chali_package.hpp", "chali_project.hpp", "chali_cli.hpp",
-                             "chali_lambda.hpp", "chali_generic.hpp", "chali_generic_name.hpp", "chali_glue.hpp",
-                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
+                             "chali_lambda.hpp", "chali_generic.hpp", "chali_fn_sugar.hpp", "chali_generic_name.hpp", "chali_glue.hpp",
+                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_fn_sugar.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
                              "chali_aot_runtime_assets.hpp", "chali_aot_runtime_assets.cpp", "chali_temp.hpp", "chali_temp.cpp", "chali_ast.hpp", "chali_semantics.cpp"})
         ok = copy(mc / "source" / name, name) && ok;
     /* 控制台 UTF-8 头来自 `source/console/`，导出工程里仍放 `console/` 的目录名：副本站 `console/utf8.hpp`，
