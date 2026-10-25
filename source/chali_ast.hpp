@@ -399,6 +399,7 @@ int M_UnOp(int kind, int operand);
  */
 int M_Move(int operand);
 int M_Name(const char *text);
+int M_NameIdOf(const Memory::String &text);
 int M_YieldName();
 /* 运算符名（OPNAME 用序号取，动作语言里不写字符串字面量） */
 int M_Op(int which);
@@ -515,6 +516,17 @@ int M_FnSignature(int result, int params);
  * @return 函数类型编号。
  */
 int M_FnSignatureType(int signature);
+/**
+ * @brief 把后置函数类型的形参名擦掉，只留类型后转换为函数类型。
+ *
+ * `-> fn(T v) -> T` 这类写法里形参名只是给读者看的注解，擦掉后不进入类型身份；
+ * 默认值不是注解，仍然报诊断。与 M_FnSignatureType（保留"只写类型"的硬要求）分工：
+ * 后置写法宽容，前置写法 `int64 fn(int64 v)` 保持严格。
+ *
+ * @param signature 签名节点编号。
+ * @return 函数类型编号。
+ */
+int M_FnSignatureTypeErased(int signature);
 /**
  * @brief 校验具名形参并将签名和函数体转换为匿名函数。
  * @param signature 签名节点编号。
@@ -671,6 +683,16 @@ int M_Derived(int traits, int declaration);
  * @retval 局部函数值声明节点。
  */
 int M_NamedFunction(int resultType, int name, int params, int body, int capture);
+/**
+ * @brief 把 `fn` 前缀具名函数节点落成同名的局部闭包绑定。
+ *
+ * 具名函数与具名闭包在文法里共用同一条产生式：顶层直接当函数，
+ * 语句位置经本函数落成闭包绑定。
+ *
+ * @param functionNode 具名函数节点（名字、返回类型、形参、函数体）。
+ * @retval 局部函数值声明节点。
+ */
+int M_NamedFunctionOf(int functionNode);
 int M_ExprStmt(int value);
 /**
  * @brief 从与位与共享的具名类型前缀构造只读引用声明。

@@ -285,7 +285,7 @@ def main():
             source = directory / (name + '.chl')
             source.write_text(code, encoding='utf-8')
             for compact in (False, True):
-                command = [str(compiler), 'run', str(source), '--threads',
+                command = [str(compiler), 'run', str(source),
                            '--compress-symbols' if compact else '--no-compress-symbols']
                 result = subprocess.run(command, cwd=directory, capture_output=True,
                                         text=True, encoding='utf-8', env=environment, timeout=60)
@@ -297,11 +297,11 @@ def main():
             for name in ('channel_parallel', 'pool_drain', 'events'):
                 source = directory / (name + '.chl')
                 prefix = directory / (name + '-binary')
-                built = subprocess.run([str(compiler), 'svmb', str(source), '--threads', '--out', str(prefix)],
+                built = subprocess.run([str(compiler), 'svmb', str(source), '--out', str(prefix)],
                                        cwd=directory, capture_output=True, text=True, encoding='utf-8',
                                        env=environment, timeout=60)
                 assert built.returncode == 0, built.stderr
-                loaded = subprocess.run([str(vm), 'run', str(prefix.with_suffix('.svmb')), '--threads',
+                loaded = subprocess.run([str(vm), 'run', str(prefix.with_suffix('.svmb')),
                                          '--data', str(prefix.with_suffix('.data.bin')),
                                          '--layout', str(prefix.with_suffix('.layout'))],
                                         cwd=directory, capture_output=True, text=True, encoding='utf-8',
@@ -322,7 +322,7 @@ def main():
             source = directory / (name + '.chl')
             code = code.replace('; ', ';\n')
             source.write_text(code, encoding='utf-8')
-            result = subprocess.run([str(compiler), 'run', str(source), '--threads'], cwd=directory,
+            result = subprocess.run([str(compiler), 'run', str(source)], cwd=directory,
                                     capture_output=True, text=True, encoding='utf-8', env=environment, timeout=30)
             assert result.returncode != 0 and result.stderr, (name, result)
             expected = {

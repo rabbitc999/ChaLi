@@ -113,14 +113,17 @@ fi
 
 echo "== 2/4 构建主程序（-j$jobs）=="
 "$make_cmd" -j"$jobs" || { echo "构建失败" >&2; exit 1; }
-[ -f "$root/ChaLi.exe" ] || [ -f "$root/ChaLi" ] || { echo "构建结束但没有找到 ChaLi 可执行文件" >&2; exit 1; }
+# 产物名带版本与 LLVM 链接方式（见 tools/compiler_path.py），与 ci.sh 取同一份口径，
+# 不要另猜一个固定文件名：Windows 的正式产物是 chali-<版本>-llvm-external-windows-x64.exe。
+built=''
+if [ -n "${py:-}" ]; then
+    built=$("$py" tools/compiler_path.py 2>/dev/null) || built=''
+fi
+[ -n "$built" ] || built="$root/chali$exe"
+[ -f "$built" ] || { echo "构建结束但没有找到 ChaLi 可执行文件（$built）" >&2; exit 1; }
 
 cli="chali-$os-$arch$exe"
-if [ -f "$root/ChaLi.exe" ]; then
-    cp "$root/ChaLi.exe" "$dist/$cli"
-else
-    cp "$root/ChaLi" "$dist/$cli"
-fi
+cp "$built" "$dist/$cli"
 chmod +x "$dist/$cli" 2>/dev/null
 echo "已产出：dist/$cli"
 

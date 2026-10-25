@@ -30,7 +30,6 @@
 #include "chali_incremental.hpp"
 #include "chali_analysis.hpp"
 #include "chali_lambda.hpp"
-#include "chali_fn_sugar.hpp"
 #include "chali_generic.hpp"
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
@@ -321,46 +320,46 @@ void PrintUsage(std::FILE *out)
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
              "  clear out DIR  清理登记过的中间产物（不重新编译）\n",
              "  lang zh|en|auto     选择显示语言；默认自动检测系统语言\n",
-             "常用配置词：out 路径、reflect、debug；new 使用 name 工程名。\n",
+             "常用配置词：debug、out 路径、reflect；new 使用 name 工程名。\n",
              "开发场景：test tests backend interpret、fmt check src、deps lock project . offline。\n",
+             "  man [目标]            查询内嵌标准库手册、参数、边界与示例\n",
+             "  test|fmt|lsp|deps      测试、格式化、语言服务与依赖锁定（原生内建）\n",
              "直接文件调用始终运行；文件后的所有内容传给程序。显式场景的高级选项：\n",
              "不给源文件时显示本帮助；要从标准输入读源码，显式给 --stdin。选项：\n",
              "  -h, --help             显示本帮助并退出\n",
-             "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
-             "  --out 前缀             生成产物的文件名前缀（缺省 build/chali_out）\n",
-             "  --check                仅检查，不执行、不生成产物\n",
-             "  --hard-realtime        禁止整个编译单元使用反射\n",
-             "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
-             "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
-             "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
-             "  test|fmt|lsp|deps      测试、格式化、语言服务与依赖锁定（原生内建）\n",
-             "  --emit                 只生成 .quad / .data.bin / .layout，不执行\n",
-             "  --svmb                 额外写出可由 stackvm 直接加载的 <前缀>.svmb\n",
-             "  --debug                写 .svmb 时带上调试节，并在解释执行时打印位置轨迹\n",
-             "  --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n",
-             "  --compress-symbols     写无名变长符号表，生成 PC 映射文件\n",
-             "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n",
-             "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n",
-             "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n",
-             "  --raw                  跳过前处理：源文件原样喂给解析器\n",
-             "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
-             "  --incremental          跨次复用模块预处理与完整编译产物\n",
-             "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
-             "  --threads              启用隔离的宿主线程执行\n",
-             "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
-             "  --stats                打印运行时、增量校验与后端三层（优化 / 指令选择 / 帧槽）统计\n",
-             "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
-             "  --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n",
-             "  --no-watchdog          关闭软重启看门狗（缺省）\n",
-             "  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n",
-             "  --watchdog-watermark N 内存水位（字节；隐含 --watchdog）\n",
-             "  --step-limit N         本次执行的指令条数上限（缺省不设上限；0 同缺省）\n",
-             "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
-             "  --include-path 目录    追加模块搜索目录\n",
-             "  --import-dir 目录      追加 import 搜索目录\n",
              "  -D, --define 符号[=值] 定义预处理符号（也可写 -D符号=值）\n",
+             "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
+             "  --check                仅检查，不执行、不生成产物\n",
+             "  --compress-symbols     写无名变长符号表，生成 PC 映射文件\n",
+             "  --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n",
+             "  --debug                写 .svmb 时带上调试节，并在解释执行时打印位置轨迹\n",
+             "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
+             "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
+             "  --emit                 只生成 .quad / .data.bin / .layout，不执行\n",
+             "  --hard-realtime        禁止整个编译单元使用反射\n",
+             "  --import-dir 目录      追加 import 搜索目录\n",
+             "  --include-path 目录    追加模块搜索目录\n",
+             "  --incremental          跨次复用模块预处理与完整编译产物\n",
+             "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n",
+             "  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n",
+             "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
+             "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n",
+             "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
+             "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
+             "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
+             "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
+             "  --no-watchdog          关闭软重启看门狗（缺省）\n",
+             "  --out 前缀             生成产物的文件名前缀（缺省 build/chali_out）\n",
+             "  --raw                  跳过前处理：源文件原样喂给解析器\n",
+             "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
+             "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
+             "  --stats                打印运行时、增量校验与后端三层（优化 / 指令选择 / 帧槽）统计\n",
+             "  --step-limit N         本次执行的指令条数上限（缺省不设上限；0 同缺省）\n",
+             "  --svmb                 额外写出可由 stackvm 直接加载的 <前缀>.svmb\n",
+             "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n",
+             "  --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n",
+             "  --watchdog-watermark N 内存水位（字节；隐含 --watchdog）\n",
              "  --                     后面全部作为程序的命令行参数\n",
-             "  man [目标]            查询内嵌标准库手册、参数、边界与示例\n",
          })
         std::fputs(CHALI_TEXT(line), out);
 }
@@ -473,7 +472,7 @@ try
     bool emitBinary = false;     /* --svmb：额外输出可由 stackvm 直接加载的程序 */
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
-    bool threadsEnabled = false; /* --threads：启用隔离的宿主线程 */
+    bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
     /* 可选软重启看门狗：默认关闭；数值选项同时隐含打开（与 `--watchdog` 同义）。 */
     bool watchdogEnabled = false;
     int watchdogMaxRestarts = 3;
@@ -786,9 +785,9 @@ try
             run = 0;
             continue;
         }
-        if (argument == "--threads")
+        if (argument == "--no-threads")
         {
-            threadsEnabled = true;
+            threadsEnabled = false;
             continue;
         }
         if (argument == "--debug") /* 带调试信息：写调试节，并解释执行时按位置打印（stderr） */
@@ -1167,8 +1166,6 @@ try
             std::fprintf(stderr, "chali: %s\n", syntaxError.c_str());
             return 1;
         }
-        // 必须早于 lambda 与泛型两趟文本归一化：否则 `fn calc<T>` 会被旧泛型摘走、lambda 会拦下箭头。
-        chali_fn_sugar::normalize(processed.text);
         if (!chali_lambda::run(processed, macroError))
         {
             if (jsonDiagnostics)

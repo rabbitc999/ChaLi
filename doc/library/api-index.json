@@ -4396,7 +4396,7 @@
       "documentation": "操作状态为 READY 时返回 true。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4430,7 +4430,7 @@
       "documentation": "创建值为 value 的原子共享槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4458,7 +4458,7 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4492,7 +4492,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4524,7 +4524,7 @@
       "documentation": "原子替换共享槽并返回旧值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4551,7 +4551,7 @@
       "documentation": "共享槽的引用标识，不拥有槽内值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4583,7 +4583,7 @@
       "documentation": "创建 int64 原子槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4611,7 +4611,7 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4645,7 +4645,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4677,7 +4677,7 @@
       "documentation": "原子累加 int64 并返回旧值，溢出按 64 位回绕。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4709,7 +4709,7 @@
       "documentation": "创建指定容量的跨线程通道。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4750,7 +4750,7 @@
       "documentation": "在截止时间内复制发送载荷，返回统一操作状态。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4782,7 +4782,7 @@
       "documentation": "按值复制并等待发送，队列满时施加背压。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4816,7 +4816,7 @@
       "documentation": "立即尝试复制发送，队列满返回 FULL。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4848,7 +4848,7 @@
       "documentation": "显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4873,7 +4873,7 @@
       "documentation": "等待并按值接收下一项，关闭排空后返回 CLOSED。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4900,7 +4900,7 @@
       "documentation": "立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -4925,7 +4925,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。需 --threads；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
       "preconditions": [],
       "panic": false
     },
@@ -25189,7 +25189,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -25216,7 +25216,7 @@
       "documentation": "等待当前线程的一条 T 类型消息。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -25262,7 +25262,7 @@
       "documentation": "在截止时间内复制发送载荷，返回统一操作状态。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -25300,7 +25300,7 @@
       "documentation": "立即尝试复制发送，队列满返回 FULL。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -25332,7 +25332,7 @@
       "documentation": "显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -25357,7 +25357,7 @@
       "documentation": "立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。"
     },
     "errors": {
-      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。",
+      "documentation": "泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。",
       "preconditions": [],
       "panic": false
     },
@@ -33047,7 +33047,7 @@
       "documentation": "创建隔离线程，返回可供后续操作的值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33088,7 +33088,7 @@
       "documentation": "创建隔离线程并在创建时复制初始参数，拒绝借用闭包和不可传递载荷。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33120,7 +33120,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33160,7 +33160,7 @@
       "documentation": "最多等待 millis 毫秒，完成并回收目标返回 true，超时返回 false；超时不取消目标，目标失败传播原始诊断。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33192,7 +33192,7 @@
       "documentation": "不阻塞地尝试等待并回收目标，尚未完成返回 false；目标失败传播原始诊断。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33224,7 +33224,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33249,7 +33249,7 @@
       "documentation": "查询当前任务是否已收到协作停止请求。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33281,7 +33281,7 @@
       "documentation": "查询任务状态：0 运行、1 成功、2 失败、3 已取消；不消费句柄。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33313,7 +33313,7 @@
       "documentation": "可取消地睡眠非负毫秒数，成功返回 READY。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33338,7 +33338,7 @@
       "documentation": "操作状态为 READY 时返回 true。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33376,7 +33376,7 @@
       "documentation": "限时收集完成结果；超时不取消目标或消费句柄，-1 表示无限。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33408,7 +33408,7 @@
       "documentation": "收集完成结果和原始 error/trace，普通失败返回 FAILED，panic 继续传播。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33446,7 +33446,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33473,7 +33473,7 @@
       "documentation": "等待并接收当前任务队列的一条字符串消息。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33500,7 +33500,7 @@
       "documentation": "返回当前线程的 Thread 句柄。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33525,7 +33525,7 @@
       "documentation": "返回创建当前任务的父线程 Thread 句柄。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33559,7 +33559,7 @@
       "documentation": "显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33584,7 +33584,7 @@
       "documentation": "立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33609,7 +33609,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33634,7 +33634,7 @@
       "documentation": "创建负责回收子任务的线程组。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33669,7 +33669,7 @@
       "documentation": "在当前线程组中创建任务并登记统一回收责任。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": true
     },
@@ -33701,7 +33701,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": true
     },
@@ -33726,7 +33726,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33751,7 +33751,7 @@
       "documentation": "监测全部任务，发现普通失败就取消兄弟任务，全部回收后返回是否均成功。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33776,7 +33776,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33814,7 +33814,7 @@
       "documentation": "创建固定数量工作线程和有界任务队列。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": true
     },
@@ -33855,7 +33855,7 @@
       "documentation": "限时提交静态任务，超时不取消已接收任务；拒绝已关闭或失败的线程池。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": true
     },
@@ -33887,7 +33887,7 @@
       "documentation": "向线程池提交静态任务；有界队列满时等待并监测工作线程失败。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33912,7 +33912,7 @@
       "documentation": "关闭任务队列，排空已提交任务并回收固定工作线程。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33939,7 +33939,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },
@@ -33964,7 +33964,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "公开线程类型为 Thread，模块 std::thread；运行时需 --threads。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
+      "documentation": "公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。",
       "preconditions": [],
       "panic": false
     },

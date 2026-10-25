@@ -20,7 +20,7 @@ def main():
 
         def run(source, success=True, threads=False):
             result = subprocess.run([str(compiler), 'run', str(source), '--out', str(work / 'output'),
-                                     *(['--threads'] if threads else [])], cwd=ROOT,
+                                     ], cwd=ROOT,
                 env=dict(os.environ, CHALI_LANG='zh'), capture_output=True, text=True, encoding='utf-8', timeout=180)
             assert (result.returncode == 0) == success, (result.stdout, result.stderr)
             return result

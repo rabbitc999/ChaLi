@@ -1,8 +1,6 @@
 \chapter{接口与运行期多态}
 \label{ch:13}
 
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/book/en/13-interfaces.md}{English} · 简体中文
-
 到第 12 章为止，你写的每个函数都只认一种具体类型：\texttt{int64} 也好，\texttt{Circle} 也好，参数的类型写死了，就只能吃那一种。
 
 可现实里常有这种事：一个函数想同时处理「圆」和「正方形」，因为它俩都需要「算面积」。你不会想给每个类型都抄一份逻辑。这一章讲 ChaLi 怎么解决它——\texttt{interface}。

@@ -642,6 +642,31 @@ int M_FnSignatureType(int signature)
     return M_FunctionType(node.kids[0], node.type);
 }
 /**
+ * @brief 把后置函数类型的形参名擦掉，只留类型后转换为函数类型。
+ *
+ * 后置写法 `-> fn(T v) -> T` 里的形参名只是注解，擦掉不进入类型身份；
+ * 默认值不是注解，仍按 M_FnSignatureType 的口径报诊断。
+ *
+ * @param signature 签名节点编号。
+ * @return 函数类型编号。
+ */
+int M_FnSignatureTypeErased(int signature)
+{
+    const int result = g_nodes[static_cast<std::size_t>(signature)].type;
+    const int parameters = g_nodes[static_cast<std::size_t>(signature)].kids[0];
+    const int list = M_List();
+    /* 逐个按下标取：M_New 会搬动 g_nodes，不能把容器引用或迭代器留在循环外。 */
+    const std::size_t count = g_nodes[static_cast<std::size_t>(parameters)].kids.size();
+    for (std::size_t index = 0; index < count; ++index) {
+        const int parameter = g_nodes[static_cast<std::size_t>(parameters)].kids[index];
+        const int type = g_nodes[static_cast<std::size_t>(parameter)].type;
+        if (!g_nodes[static_cast<std::size_t>(parameter)].kids.empty())
+            PushParseDiagnostic("函数类型的形参不写默认值");
+        M_ListAdd(list, M_FunctionParameter(type, 0));
+    }
+    return M_FunctionType(list, result);
+}
+/**
  * @brief 将共用签名和函数体组成默认只读捕获的匿名函数。
  * @param signature 签名节点编号。
  * @param body 函数体节点编号。
@@ -782,6 +807,19 @@ int M_Name(const char *text)
 {
     g_names.push_back(text != nullptr ? text : "");
     return static_cast<int>(g_names.size()) - 1;
+}
+/**
+ * @brief 名称池的反向查询：取回文本已有的编号，没有才登记。
+ * @param text 已存在于节点上的标识符文本。
+ * @retval 名称池中对应文本的编号。
+ * @note 节点只保存文本，文法动作之间要靠编号传递；倒序扫描让最近登记的名字先命中。
+ */
+int M_NameIdOf(const Memory::String &text)
+{
+    for (std::size_t i = g_names.size(); i-- > 0;)
+        if (g_names[i] == text)
+            return static_cast<int>(i);
+    return M_Name(text.c_str());
 }
 
 /**

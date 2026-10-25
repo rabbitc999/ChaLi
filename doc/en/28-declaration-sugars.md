@@ -115,7 +115,7 @@ fn add(int64 left, int64 right) -> int64 { return left + right; }
 fn main() { println("{}", add(3, 4)); }
 ```
 
-A declaration may omit the result type as `fn name(params)` — the result is then `void` — or place it after the parameter list with `->`. Generics, functions returning closures and statement-level named functions accept the same shape, and every form has an existing leading-return equivalent:
+A declaration may omit the result type as `fn name(params)` — the result is then `void` — or place it after the parameter list with `->`. Generics, functions returning closures and statement-level named functions accept the same shape:
 
 | New form | Existing equivalent |
 | --- | --- |
@@ -123,23 +123,22 @@ A declaration may omit the result type as `fn name(params)` — the result is th
 | `fn calc(int64 x) -> int64 { }` | `int64 calc(int64 x) { }` |
 | `fn calc<T>(T x) -> T { }` | `T calc<T>(T x) { }` |
 | `fn make<T>(T x) -> (T fn(T v)) { }` | `(T fn(T v)) make<T>(T x) { }` |
-| `fn make<T>(T x) -> fn(T v) -> T { }` | same as the row above; nesting normalises inside-out |
-| `(fn(T v) -> T) make<T>(T x) { }` | the leading position accepts the trailing form too |
-| `fn(int64 a, int64 b) -> int64` | `int64 fn(int64, int64)` |
+| `fn make<T>(T x) -> fn(T v) -> T { }` | same as the row above; the trailing form without parentheses |
+| `fn make<T>(T x) -> (fn(T v) -> T) { }` | same as the two rows above; the parenthesised trailing form reads as one unit |
 
 ```text
 fn name<type params>(params) -> result  =>  result name<type params>(params)
 fn name<type params>(params)            =>  void name<type params>(params)
-fn(params) -> result                    =>  result fn(params)
 ```
 
-The rewrite runs in the text layer before generic monomorphisation. It adds no grammar production and no AST node: the rewritten text is parsed by the existing productions and reuses the generic and closure pipelines unchanged. Three constraints:
+The shape lives directly in the authoritative grammar [`chali.gram`](../../source/chali.gram); there is no separate text pass. `fn_result` supplies the result type (omitting `->` yields `void`) and `fn_named` describes a named function — the top level refers to it as a function, statement position lowers it to a named closure. Four constraints:
 
-1. Parameters of a function type carry no names. Names in `fn(int64 a, int64 b) -> int64` are documentation only; they are stripped during normalisation and never enter type identity.
-2. The arrow return type of a lambda is still the form removed in 0.12.0, so `fn(int64 x) -> int64 { ... }` is rejected. Omit the arrow when the result is inferred, or write `int64 fn(int64 x) { ... }`.
-3. Statement-level named functions share the same path: `fn read(int64 v) -> int64 { ... }` inside a function body is equivalent to `int64 read(int64 v) { ... }`.
+1. A trailing function type is only written in result position, with or without parentheses: `-> fn(T v) -> T` and `-> (fn(T v) -> T)` are equivalent; `fn` immediately followed by `(` is always the lambda `fn (params) { body }`. The two share one prefix, one-token lookahead cannot tell them apart, and the grammar yields to the pre-existing lambda. Declarations and variable types keep writing `int64 fn(int64, int64)` or `(T fn(T v))`.
+2. The trailing form erases parameter names automatically, so `fn(T v) -> T` and `fn(T) -> T` share one type identity; default values are still rejected. The leading form stays strict: parameters of a function type carry no names, and `int64 fn(int64 v)` reports that function-type parameters are types only.
+3. The arrow return type of a lambda is still the form removed in 0.12.0, so `fn (int64 x) -> int64 { ... }` is rejected. Omit the arrow when the result is inferred, or write `int64 fn(int64 x) { ... }`.
+4. A named function in statement position is a named closure: `fn read(int64 v) -> int64 { ... }` inside a function body is equivalent to `int64 read(int64 v) { ... }` and borrows enclosing variables read-only by default. A keyword right after `fn` (`const` / `mut` / `copy` / `move`) is always a capture mode, so a function name accepts identifiers only.
 
-The AST entry point is [`normalize`](../../source/chali_fn_sugar.cpp).
+The entry points are [`fn_named` / `fn_result`](../../source/chali.gram) and [`M_NamedFunctionOf`](../../source/semantics/named_function_ast.cpp).
 
 ## Field derivation
 

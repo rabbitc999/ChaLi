@@ -42,14 +42,14 @@ def main():
         threaded = directory / 'threaded.chl'
         threaded.write_text('import std::thread;\nvoid spin() { while (true) {} }\nvoid blocked() { std::lang::String x = std::thread::receive(); }\nvoid leaf() { std::lang::panic("worker failure"); }\nvoid crash() { leaf(); }\nvoid main() { Thread a = std::thread::create(spin); Thread b = std::thread::create(blocked); Thread c = std::thread::create(crash); while (true) {} return; }\n', encoding='utf-8')
         for compressed in (False, True):
-            result, stderr = command([compiler, 'run', threaded, '--threads', '--compress-symbols' if compressed else '--no-compress-symbols'])
+            result, stderr = command([compiler, 'run', threaded, '--compress-symbols' if compressed else '--no-compress-symbols'])
             assert result.returncode != 0 and 'worker failure' in stderr and ('线程 3' in stderr), stderr
             assert ('调用栈' in stderr) == (not compressed), stderr
             if not compressed:
                 assert 'leaf' in stderr and '[thread 3' in stderr, stderr
         for mode, body in (('mainpanic', 'Thread a = std::thread::create(spin); std::lang::panic("main failure"); return;'), ('autojoin', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); while (std::thread::state(c) == std::thread::RUNNING) { std::thread::sleepFor(1); } return;'), ('wait', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); std::thread::wait(c); return;'), ('receive', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); std::lang::String x = std::thread::receive(); return;')):
             threaded.write_text('import std::thread;\nvoid spin() { while (true) {} }\nvoid leaf() { std::lang::panic("worker failure"); }\nvoid crash() { leaf(); }\nvoid main() { ' + body + ' }\n', encoding='utf-8')
-            result, stderr = command([compiler, 'run', threaded, '--threads', '--no-compress-symbols'])
+            result, stderr = command([compiler, 'run', threaded, '--no-compress-symbols'])
             assert result.returncode != 0 and ('main failure' if mode == 'mainpanic' else 'worker failure') in stderr, stderr
 if __name__ == '__main__':
     main()

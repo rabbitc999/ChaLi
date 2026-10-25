@@ -1,8 +1,6 @@
 \chapter{AOT 导出：把程序交付为原生产物}
 \label{ch:24}
 
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/book/en/24-aot-export.md}{English} · 简体中文
-
 写完程序以后，你可以把它导出为目标平台的可执行文件，也可以导出动态库供 C 程序调用。AOT 是提前编译：编译器在交付前完成 LLVM 优化、机器码生成和链接，使用者直接运行生成的程序。
 
 本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-aot.md}{LLVM AOT 编译}。

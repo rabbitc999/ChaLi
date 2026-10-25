@@ -11,28 +11,28 @@
 Windows 使用 MSI，默认安装到 Program Files 下的 ChaLi 目录，并注册系统 PATH。安装或升级后重新打开终端：
 
 ```powershell
-msiexec /i .\chali-1.0.1-llvm-static-windows-x64.msi
+msiexec /i .\chali-1.0.2-llvm-static-windows-x64.msi
 ```
 
 Windows x64 默认使用静态内置 LLVM，编译器 EXE 已链接 LLVM 后端，不需要另装 LLVM 工具链。两类 MSI 同时提供：
 
 | 安装包 | 用途 |
 | --- | --- |
-| `chali-1.0.1-llvm-static-windows-x64.msi` | 默认安装包，静态内置 LLVM |
-| `chali-1.0.1-llvm-external-windows-x64.msi` | 外置 LLVM 工具链版本 |
+| `chali-1.0.2-llvm-static-windows-x64.msi` | 默认安装包，静态内置 LLVM |
+| `chali-1.0.2-llvm-external-windows-x64.msi` | 外置 LLVM 工具链版本 |
 
 MSI 支持系统的应用卸载入口，也可以通过 `msiexec /x 安装包.msi` 卸载。相同架构的静态和外置 LLVM 变体使用同一升级系列，选择其中一种。
 
 Debian/Ubuntu 使用 DEB；以下名称以 Ubuntu 22.04 amd64 构建为例：
 
 ```sh
-sudo apt install ./chali-1.0.1-llvm-external-ubuntu-22.04-x64.deb
+sudo apt install ./chali-1.0.2-llvm-external-ubuntu-22.04-x64.deb
 ```
 
 CentOS Stream 使用该发行版环境生成的 RPM：
 
 ```sh
-sudo dnf install ./chali-1.0.1-llvm-external-centos-9-x64.rpm
+sudo dnf install ./chali-1.0.2-llvm-external-centos-9-x64.rpm
 ```
 
 无包管理器时可解压对应发行版的 tar.gz，再将其中的 `usr/bin/chali` 放入自己的 PATH。安装包安装的是编译器，不会替应用启动数据库、复制应用的静态页面或安装其自定义 C ABI 动态库。
@@ -43,10 +43,10 @@ sudo dnf install ./chali-1.0.1-llvm-external-centos-9-x64.rpm
 
 | 目标 | 文件名前缀示例 | 包内架构 |
 | --- | --- | --- |
-| Windows amd64 | `chali-1.0.1-llvm-external-windows-x64` | PE x64 |
-| Ubuntu amd64 | `chali-1.0.1-llvm-external-ubuntu-22.04-x64` | DEB amd64、RPM x86_64 |
-| Ubuntu ARM64 | `chali-1.0.1-llvm-external-ubuntu-22.04-arm64` | DEB arm64、RPM aarch64 |
-| CentOS Stream 9 amd64 | `chali-1.0.1-llvm-external-centos-9-x64` | RPM x86_64 |
+| Windows amd64 | `chali-1.0.2-llvm-external-windows-x64` | PE x64 |
+| Ubuntu amd64 | `chali-1.0.2-llvm-external-ubuntu-22.04-x64` | DEB amd64、RPM x86_64 |
+| Ubuntu ARM64 | `chali-1.0.2-llvm-external-ubuntu-22.04-arm64` | DEB arm64、RPM aarch64 |
+| CentOS Stream 9 amd64 | `chali-1.0.2-llvm-external-centos-9-x64` | RPM x86_64 |
 
 静态 LLVM 使用 `llvm-static`，外置工具链使用 `llvm-external`。发行版名称读取实际构建环境的 `/etc/os-release`，不是把一个发行版的二进制改名成另一个。安装包生成器读取 PE/ELF 机器类型，拒绝架构不符的输入；相邻 JSON 记录编译器和安装包的 SHA256。
 

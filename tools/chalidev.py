@@ -169,8 +169,8 @@ _MESSAGES = {
   "  --incremental          跨次复用模块预处理与完整编译产物\n": [
     "  --incremental          Reuse module preprocessing and compiled artifacts\n"
   ],
-  "  --threads              启用隔离的宿主线程执行\n": [
-    "  --threads              Enable isolated host-thread execution\n"
+  "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n": [
+    "  --no-threads           Disable isolated host-thread execution (enabled by default)\n"
   ],
   "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n": [
     "  --no-debug             Omit debug information (also the default)\n"
@@ -703,8 +703,8 @@ _MESSAGES = {
   "  emit           只出 .quad / .data.bin / .layout\n": [
     "  emit           Export .quad / .data.bin / .layout only\n"
   ],
-  "常用配置词：out 路径、reflect、debug；new 使用 name 工程名。\n": [
-    "Settings: out PATH, reflect, debug; new accepts name NAME.\n"
+  "常用配置词：debug、out 路径、reflect；new 使用 name 工程名。\n": [
+    "Settings: debug, out PATH, reflect; new accepts name NAME.\n"
   ],
   "  --emit                 只生成 .quad / .data.bin / .layout，不执行\n": [
     "  --emit                 Export .quad / .data.bin / .layout without executing\n"

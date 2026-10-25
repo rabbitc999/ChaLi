@@ -37,7 +37,7 @@ void printUsage(const Memory::String &program)
         << "选项：\n"
         << "  --input \"1 2\"   read / getc 的输入项（空格或逗号分隔）\n"
         << "  --trace         打印每条执行的指令\n"
-        << "  --threads       启用隔离线程与跨线程通道\n"
+        << "  --no-threads    关闭隔离线程与跨线程通道（缺省启用）\n"
         << "  --debug         run 时按源码位置逐行打印，compile 时带上调试节\n"
         << "  --no-debug      （兼容别名）compile 时不写调试节；现在也是缺省\n"
         << "  --limit N       指令条数上限（缺省不设上限，防死循环可传正整数）\n"
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     Memory::String layoutPath;
     Memory::String outPath;
     bool trace = false;
-    bool threads = false;
+    bool threads = true;
     bool debug = false;
     bool compressSymbols = false;
     Memory::String symbolMap;
@@ -196,9 +196,9 @@ int main(int argc, char **argv)
             outPath = argv[++index];
             continue;
         }
-        if (argument == "--threads")
+        if (argument == "--no-threads")
         {
-            threads = true;
+            threads = false;
             continue;
         }
         if (argument == "--input")

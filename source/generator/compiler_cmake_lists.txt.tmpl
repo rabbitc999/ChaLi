@@ -45,7 +45,7 @@ foreach(feature NO_CHALI_BIG_INT NO_CHALI_BIG_FLOAT NO_CHALI_DEFAULT_POOL NO_CHA
 endforeach()
 
 file(GLOB CHALI_MACRO_SOURCES CONFIGURE_DEPENDS macro/*.cpp literals/*.cpp syntax/*.cpp editor/*.cpp)
-add_library(chali_parser STATIC chali_parser.cpp chali_resource_cleanup.cpp chali_generic.cpp chali_fn_sugar.cpp chali_lambda.cpp
+add_library(chali_parser STATIC chali_parser.cpp chali_resource_cleanup.cpp chali_generic.cpp chali_lambda.cpp
     chali_generic_closure.cpp chali_package.cpp chali_report.cpp chali_aot.cpp chali_aot_llvm.cpp chali_aot_runtime_assets.cpp chali_temp.cpp chali_stdlib_embedded.cpp)
 target_sources(chali_parser PRIVATE ${CHALI_MACRO_SOURCES})
 target_include_directories(chali_parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

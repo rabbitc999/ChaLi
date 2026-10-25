@@ -32,7 +32,7 @@ Windows x64 工具链、LLVM 库、Clang、LLD、compiler-rt builtins 与链接�
 | `make` 或 `make CHALI_STATIC_LLVM=0` | 调用外置 LLVM clang；工具链位于 `library/llvm/` | `llvm-external` |
 | `make llvm-static` | 静态链接 LLVM 优化与 x64 代码生成库、LLD；内嵌 CRT 链接资产，编译时无需 clang 或 LLVM DLL | `llvm-static` |
 
-首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM 源码、核对 SHA-256，再在 `library/llvm/` 内增量构建静态开发库。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.1-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.1-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
+首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM 源码、核对 SHA-256，再在 `library/llvm/` 内增量构建静态开发库。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.2-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.2-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
 
 `python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本均为独立的 1.0.0，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 

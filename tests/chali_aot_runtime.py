@@ -47,7 +47,7 @@ def main():
             expected = ROOT / 'example/expected' / name
             arguments = expected.with_suffix('.args').read_text(encoding='utf-8').splitlines() if expected.with_suffix('.args').exists() else []
             input_text = expected.with_suffix('.in').read_text(encoding='utf-8') if expected.with_suffix('.in').exists() else ''
-            flags = ['--threads'] if name.startswith(('thread_', 'event_')) else []
+            flags = []
 
             reference = execute([compiler, 'run', sample, '--out', str(prefix) + '-vm', *flags, '--', *arguments], input_text, cwd=virtual)
             assert reference.returncode == 0, (name, 'VM', reference)
@@ -84,7 +84,7 @@ def main():
             source = work / (name + '.chl')
             source.write_text(source_text, encoding='utf-8')
             prefix = work / name
-            flags = ['--threads'] if name == 'child_exit' else []
+            flags = []
             reference = execute([compiler, 'run', source, '--out', str(prefix) + '-vm', *flags])
             assert reference.stdout == expected and diagnostic in reference.stderr, reference
             built = execute([compiler, 'aot', source, '--out', prefix, *flags])
