@@ -2809,6 +2809,9 @@ simple_ast::NodePtr LowerUncheckedExpr(int id)
     {
         const auto callee = N(node.kids[0]);
         const bool noArguments = N(node.kids[1]).kids.empty();
+        /* `#static(a)` 是给调用方的要求：a 的实参必须真是 'static 来源。 */
+        if (!IsIntrinsicDropCall(id))
+            CheckLifetimeStaticArguments(id, CallSymbol(callee), N(node.kids[1]).kids, g_reductionLine);
         if (IsIntrinsicDropCall(id))
         {
             const auto receiver = callee.kids[0];
@@ -3318,8 +3321,12 @@ simple_ast::NodePtr LowerStmtImpl(int id)
         if (!node.kids.empty()) InferExpression(node.kids[0], g_returnType);
         Memory::Set<Memory::String> borrowedTypes;
         if (!node.kids.empty() && ContainsBorrowedReferences(g_returnType, &borrowedTypes))
+        {
             g_borrowFacts.push_back({ chali_borrow_checker::Fact::Return, BorrowSourceDepth(node.kids[0]), 0u,
                                       g_reductionLine, "（" + Describe(g_returnType) + "，所属类型 " + g_owner + "，来源 " + NameOfExpr(node.kids[0]) + "）" });
+            /* `#borrow(#ret, [...])`：逐条核对返回值到底借了谁。 */
+            CheckLifetimeReturn(node.kids[0], g_reductionLine);
+        }
         /* 返回值先算出来（字符串：`return "字面量"` 也先复制成堆串），再释放本函数里
          * 所有"还开着的块"里那些所有者变量 —— **除了**被 return 出去的那个：
          * 它的所有权交给调用方（`string t = f();` 的 t 就是那块串的新主人）。 */
@@ -4085,6 +4092,8 @@ simple_ast::Function LowerFunction(const Memory::String &name, const Memory::Str
     g_returnType = result; /* `return 2;` → `return 2.0;` */
     function.result = LowerType(result, "");
     PushScope();
+    /* 生命周期契约必须在形参登记之前生效：`#static(a)` 要把 a 的借用深度压到 0。 */
+    LifetimeFunctionGuard lifetimeGuard(g_lifetimePendingFunction);
     const Memory::String savedOwner = g_owner;
     const Memory::String savedModule = g_currentModule;
     g_owner = owner;
@@ -4099,7 +4108,7 @@ simple_ast::Function LowerFunction(const Memory::String &name, const Memory::Str
         var.emitted = param.emitted;
         Memory::Set<Memory::String> borrowedTypes;
         if (ContainsBorrowedReferences(param.type, &borrowedTypes))
-            var.borrowDepth = HasOpaqueObjectBorrow(param.type) ? 0u : 1u;
+            var.borrowDepth = HasOpaqueObjectBorrow(param.type) || LifetimeIsStaticName(param.source) ? 0u : 1u;
         // 事件模块入口已在调用点检查回调环境；内部转送保持静态寿命契约。
 
         var.bindingIdentity = param.bindingIdentity;
@@ -4193,6 +4202,8 @@ simple_ast::Function LowerFunction(const Memory::String &name, const Memory::Str
     g_borrowFlowCapture = &borrowCapture;
     function.body = LowerStmt(bodyId);
     FinishBorrowFlow(bodyId, borrowCapture);
+    /* 名字核对必须赶在 PopScope 之前：局部变量只在这时候还在作用域里。 */
+    ValidateLifetimeCurrent();
     if (!owner.empty() && (name == "drop" || name == owner + ".drop") && StructHasInterface(owner, "Drop"))
     {
         using simple_ast::Node;

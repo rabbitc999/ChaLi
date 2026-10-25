@@ -1,0 +1,7 @@
+/* 契约里的 nope 既不是形参也不是局部变量 */
+#borrow(#ret, [nope])
+int64 mut& first(int64 mut& a) { return a; }
+void main() {
+    int64 x = 1;
+    std::lang::println("{}", first(&x));
+}

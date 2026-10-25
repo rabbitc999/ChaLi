@@ -1265,6 +1265,11 @@ bool RegisterTop()
                 if (!CheckDeclaredType(param.type, declaration.source + "." + param.source)) return false;
         }
         g_functionDecls.push_back(declaration);
+        /* 生命周期契约必须早于函数体分析登记：返回检查在函数体里做，
+         * 调用点传播又要在别的函数体里去查这张表。 */
+        LoadLifetimeContract(topId, ModuleSymbol(declaration.module, declaration.source),
+                             declaration.signature.params, top.sourceLine);
+        PublishLifetimeContractName(topId, declaration.source);
         /* 记录声明在表里的下标：降级时按同一个下标取标签。 */
         g_nodes[static_cast<std::size_t>(topId)].i =
             static_cast<long long>(g_functionDecls.size()) - 1;

@@ -244,6 +244,37 @@ FindOperator(op, left, right):
 
 
 
+## 生命周期契约指令
+
+函数声明前可以连写生命周期契约。`#borrow(out, in)` 表示 `out` 借用 `in`，列表写法
+`#borrow(out, [in1, in2, in3])` 表示借用其中每一个；`#ret` 指返回值，`#borrow(#ret, [a, b])`
+与 Rust 的 `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` 同形；`#static(a)` 把 a 的来源按
+`'static` 处理。文法：
+
+```text
+lifetime_directive := "#borrow" "(" lifetime_target "," lifetime_name ")"
+                    | "#borrow" "(" lifetime_target "," "[" lifetime_names "]" ")"
+                    | "#static" "(" lifetime_name ")"
+lifetime_target := 标识符 | "#ret"
+lifetime_names := 标识符 { "," 标识符 }
+top_decl := lifetime_directives func_def
+          | lifetime_directives "inline" func_def
+          | lifetime_directives "export" func_def
+```
+
+指令随函数声明一起登记，早于函数体分析——返回检查在函数体里做，调用点传播要在别的函数体里
+查这张表。语义层核对四件事：名字确实存在（是本函数的形参或局部变量）、`#ret` 的来源只能是
+形参、`#static` 标的不能是局部变量、调用点给 `#static` 形参传的实参来源深度为 0。剩下的两条
+是义务：声明了 `#borrow(#ret, [...])` 的函数，每条 `return` 的借用根必须落在声明来源内；
+声明了 `#borrow(out, [...])` 的 `out`，写入它的引用必须来自声明来源。
+
+没有契约时调用点保守取全部引用实参来源的最大值，因此 `first(&x, &local)` 的结果会被当成
+也借用了 `&local`；写了 `#borrow(#ret, [a])` 之后只按 a 传播，`outer` 就能把它返回。
+
+- [生命周期契约](../example/samples/lifetime_contract.chl)；报错例 [`lifetime_return_source.chl`](../example/samples-error/lifetime_return_source.chl)、[`lifetime_unknown_name.chl`](../example/samples-error/lifetime_unknown_name.chl)、[`lifetime_static_argument.chl`](../example/samples-error/lifetime_static_argument.chl)、[`lifetime_store_source.chl`](../example/samples-error/lifetime_store_source.chl)、[`lifetime_static_local.chl`](../example/samples-error/lifetime_static_local.chl)。
+- 详见[资源生命周期与借用控制流](22-resource-lifetime.md)。
+
+
 - [返回表达式与资源清理](../example/samples/return_expression.chl)、[具名闭包](../example/samples/named_function.chl)、[结构体和枚举派生](../example/samples/derive.chl)。
 - 运算符推导开关：[`no_replace.chl`](../example/samples/no_replace.chl) 与报错例 [`operator_no_add_replace.chl`](../example/samples-error/operator_no_add_replace.chl)；Closeable 自动不可复制：[`closeable_move.chl`](../example/samples/closeable_move.chl) 与报错例 [`closeable_copy.chl`](../example/samples-error/closeable_copy.chl)。
 - [语义及生命周期门禁](../tests/chali_declaration_sugars.py)检查分支类型、嵌套返回、层级跳转、只读捕获、引用逃逸、表达式位置声明、Drop 派生和缺失字段协议。

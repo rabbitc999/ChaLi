@@ -2992,6 +2992,7 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
 #include "expression_effects.cpp"
 #include "borrow_facts.cpp"
 #include "borrow_flow.cpp"
+#include "lifetime_contract.cpp"
 
 /**
  * @brief 局部声明组：`int i = 0, m[3][4];` → 一条 `decl` + 初始化，逐个名字来。

@@ -1,0 +1,7 @@
+/* #static(slot) 要求调用点传 'static 来源，局部变量不行 */
+#static(slot)
+int64 mut& install(int64 mut& slot) { return slot; }
+void main() {
+    int64 x = 1;
+    std::lang::println("{}", install(&x));
+}

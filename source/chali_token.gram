@@ -90,6 +90,10 @@
 %token MATCH "match"
 %token BREAK "break"
 %token DERIVE "#derive"
+/* 生命周期契约指令；`#` 一并进记号，与 `#derive` 同形。 */
+%token BORROW_KW "#borrow"
+%token LIFETIME_STATIC "#static"
+%token BORROW_RET "#ret"
 %token YIELD "yield"
 %token CONTINUE "continue"
 %token DEFER "defer"

@@ -1040,3 +1040,7 @@ $end_macro
 ## #derive 字段派生
 
 在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过语义字段元数据生成受限接口方法，再由通常的语义检查与四元式降级处理。嵌套字段必须实现对应接口，禁止派生 Drop 或 Closeable。泛型声明在实例化后生成方法，见[派生规则](28-declaration-sugars.md)。
+
+## #borrow 与 #static 生命周期契约
+
+函数声明前可连写生命周期契约，显式写出谁借用谁：`#borrow(out, in)` 表示 out 借用 in，列表写法 `#borrow(out, [in1, in2, in3])` 表示借用其中每一个；`#ret` 指函数返回值，`#borrow(#ret, [a, b])` 与 Rust 的 `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` 同形——调用点只按声明的那几个实参传播来源。`#static(a)` 声明 a 的来源为 'static，可跨函数返回与长期保存。契约名只能是本函数的形参或局部变量；返回值只能借用形参。见[声明糖规则](28-declaration-sugars.md)。

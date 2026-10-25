@@ -1,0 +1,45 @@
+int64 base = 100;
+
+#borrow(#ret, [a])
+int64 mut& first(int64 mut& a, int64 mut& b) {
+    return a;
+}
+
+#borrow(#ret, a)
+#borrow(#ret, b)
+int64 mut& larger(int64 mut& a, int64 mut& b) {
+    if (a >= b) { return a; }
+    return b;
+}
+
+/* 没有契约时，下面这句会被 CHL1204 拒绝：调用点保守认为结果也借用了 &local。
+ * 有了 #borrow(#ret, [a])，结果只按声明的 a 传播来源。 */
+int64 mut& pickFirst(int64 mut& x) {
+    int64 local = 5;
+    return first(&x, &local);
+}
+
+#static(slot)
+int64 mut& install(int64 mut& slot) {
+    return slot;
+}
+
+#borrow(refs, [a])
+int64 collect(int64 mut& a, int64 mut& b) {
+    List<int64 mut&> refs;
+    refs.push(&a);
+    return refs[0];
+}
+
+void main() {
+    int64 left = 30;
+    int64 right = 7;
+    int64 mut& kept = pickFirst(&left);
+    kept = 31;
+    int64 mut& high = larger(&left, &right);
+    int64 mut& settled = install(&base);
+    settled = 101;
+    int64 held = collect(&left, &right);
+    assert(left == 31 && high == 31 && base == 101 && held == 31);
+    println("lifetime contract OK");
+}

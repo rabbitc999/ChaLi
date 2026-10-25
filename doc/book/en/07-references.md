@@ -22,6 +22,18 @@ void main()
 
 Returning a reference to a local variable would let the reference outlive its storage, so the compiler rejects it. The same rule applies when a reference is hidden in an aggregate or captured by a closure. Adding another layer of syntax does not extend the source object's lifetime.
 
+A lifetime contract written before a function declaration states in the signature where a borrowed result comes from. `#borrow(out, in)` means `out` borrows from `in`, and the list form `#borrow(out, [in1, in2, in3])` borrows from each of them. `#ret` is a reserved name for the return value, so `#borrow(#ret, [a])` on `int64 mut& first(int64 mut& a, int64 mut& b)` says the same thing as Rust's `fn first<'a, 'b>(a: &'a mut i64, b: &'b mut i64) -> &'a mut i64`:
+
+```chali
+#borrow(#ret, [a])
+int64 mut& first(int64 mut& a, int64 mut& b)
+{
+    return a;
+}
+```
+
+Without the contract the checker has to be conservative at the call site and fold in every reference argument, so returning `first(&x, &local)` is rejected because `local` dies at the end of the block. With it, only `a` propagates and the return is accepted. `#static(a)` declares that a's origin is `'static`, which means callers must pass a global. A contract is also an obligation: returning or storing a reference from an undeclared source is an error.
+
 Use a reference to describe access, not ownership. If a result needs independent storage after the callee returns, return an owned value. If a callback must survive its defining scope, select a legal capture mode and check the lifetime of every captured member.
 
-Exercise: write a read-only helper and attempt to modify its parameter. Then design a function that returns a value instead of a reference to a local. Next: [resources and scopes](08-resources-scopes.md).
+Exercise: write a read-only helper and attempt to modify its parameter. Then design a function that returns a value instead of a reference to a local. Add `#borrow(#ret, [a])` to a two-parameter function returning a reference and see what the compiler says when you return the other parameter. Next: [resources and scopes](08-resources-scopes.md).

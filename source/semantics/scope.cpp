@@ -273,6 +273,13 @@ Memory::String AllocateName(const Memory::String &source)
 }
 
 /**
+ * @brief 记下函数体里声明过的局部变量名，供生命周期契约核对名字。
+ * @param name 源名字。
+ * @return 无。
+ */
+void LifetimeNoteLocalName(const Memory::String &name);
+
+/**
  * @brief 在当前作用域登记变量及其类型信息。
  * @param name 名称文本。
  * @param type 类型描述。
@@ -302,5 +309,6 @@ Memory::String DeclareVar(const Memory::String &name, const std::shared_ptr<MTyp
         return var.emitted;
     }
     g_scope.back()[key] = var;
+    LifetimeNoteLocalName(name);
     return var.emitted;
 }

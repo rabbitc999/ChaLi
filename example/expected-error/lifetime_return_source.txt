@@ -1,0 +1,1 @@
+chali: example/samples-error/lifetime_return_source.chl 第 3 行：[CHL1211] 返回值借用了未声明的来源 b；请声明 #borrow(#ret, [a, b])，或把该来源标为 #static（它若是局部变量则不能返回）

@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 154 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 159 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -186,6 +186,9 @@ Box<int64 fn(int64)> box;
 | `MATCH` | `match` |
 | `BREAK` | `break` |
 | `DERIVE` | `#derive` |
+| `BORROW_KW` | `#borrow` |
+| `LIFETIME_STATIC` | `#static` |
+| `BORROW_RET` | `#ret` |
 | `YIELD` | `yield` |
 | `CONTINUE` | `continue` |
 | `DEFER` | `defer` |
@@ -298,6 +301,9 @@ top_decl = struct_decl, type_decl_end
     | func_def
     | "inline", func_def
     | "export", func_def
+    | lifetime_directives, func_def
+    | lifetime_directives, "inline", func_def
+    | lifetime_directives, "export", func_def
     | host_func_decl
     | abi_block
     | host_type_decl
@@ -309,6 +315,21 @@ type_decl_end = ""
     | ";" ;
 
 derive_directive = "#derive", "(", iface_list, ")" ;
+
+lifetime_directives = lifetime_directive
+    | lifetime_directives, lifetime_directive ;
+
+lifetime_directive = "#borrow", "(", lifetime_target, ",", lifetime_name, ")"
+    | "#borrow", "(", lifetime_target, ",", "[", lifetime_names, "]", ")"
+    | "#static", "(", lifetime_name, ")" ;
+
+lifetime_names = lifetime_name
+    | lifetime_names, ",", lifetime_name ;
+
+lifetime_name = name_token ;
+
+lifetime_target = name_token
+    | "#ret" ;
 
 switch_directives = NO_REPLACE
     | NO_RIGHT

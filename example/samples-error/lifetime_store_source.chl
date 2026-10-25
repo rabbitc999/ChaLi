@@ -1,0 +1,11 @@
+/* #borrow(refs, [a]) 只允许往 refs 里放来自 a 的引用 */
+#borrow(refs, [a])
+void collect(int64 mut& a, int64 mut& b) {
+    List<int64 mut&> refs;
+    refs.push(&b);
+}
+void main() {
+    int64 x = 1;
+    int64 y = 2;
+    collect(&x, &y);
+}

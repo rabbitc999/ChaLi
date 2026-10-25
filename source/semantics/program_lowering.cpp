@@ -1211,10 +1211,12 @@ bool LowerProgram(simple_ast::Program &program)
             if (index >= g_functionDecls.size()) continue;
             const MFunctionDecl &declaration = g_functionDecls[index];
             if (declaration.superseded) continue; /* 被后面的定义覆盖掉了 */
+            g_lifetimePendingFunction = topId;
             program.functions.push_back(LowerFunction(declaration.label, Memory::String(),
                                                       declaration.signature.result,
                                                       declaration.signature.params,
                                                       declaration.bodyId, declaration.module));
+            g_lifetimePendingFunction = -1;
             continue;
         }
         if (top.kind != MNode::StructDecl && top.kind != MNode::EnumDecl && top.kind != MNode::OpcodeDecl) continue;

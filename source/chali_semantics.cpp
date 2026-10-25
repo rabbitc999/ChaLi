@@ -24,6 +24,7 @@
 #include "literals/string_escape.hpp"
 #include "editor/compiler_analysis.hpp"
 #include "dap/dap_server.hpp"
+#include "chali_lifetime_contract.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -2246,6 +2247,53 @@ int M_Func(int resultType, int nameId, int params, int body)
     g_nodes[static_cast<std::size_t>(id)].kids = { params, body };
     return id;
 }
+/** @brief 生命周期契约的跨翻译单元登记表：函数声明节点编号 → 指令列表节点编号。 */
+Memory::Map<int, int> chali_lifetime::g_directiveNodes;
+/** @brief 当前函数体里声明过的局部变量名：函数体的作用域在核对时已出栈，靠这里补。 */
+Memory::Set<Memory::String> chali_lifetime::g_localNames;
+/**
+ * @brief 取 `#ret` 在名称池里的编号。
+ * @retval `#ret` 名称编号。
+ */
+int M_LifetimeRet()
+{
+    return M_Name(chali_lifetime::RetName());
+}
+/**
+ * @brief 建立一条 `#borrow(out, [in...])` 指令。
+ * @param target out 的名称编号（可能是 `#ret`）。
+ * @param sources in 的名称编号列表。
+ * @return 指令节点编号。
+ */
+int M_BorrowDirective(int target, int sources)
+{
+    const int id = M_New(MNode::List, "#borrow");
+    g_nodes[static_cast<std::size_t>(id)].i = target;
+    g_nodes[static_cast<std::size_t>(id)].kids = g_nodes[static_cast<std::size_t>(sources)].kids;
+    return id;
+}
+/**
+ * @brief 建立一条 `#static(a...)` 指令。
+ * @param names 声明为 'static 的来源名称编号列表。
+ * @return 指令节点编号。
+ */
+int M_LifetimeStatic(int names)
+{
+    const int id = M_New(MNode::List, "#static");
+    g_nodes[static_cast<std::size_t>(id)].kids = g_nodes[static_cast<std::size_t>(names)].kids;
+    return id;
+}
+/**
+ * @brief 把生命周期指令挂到函数声明上，原样返回函数节点。
+ * @param directives 指令列表节点编号。
+ * @param function 函数声明节点编号。
+ * @return 函数声明节点编号。
+ */
+int M_LifetimeContract(int directives, int function)
+{
+    chali_lifetime::g_directiveNodes[function] = directives;
+    return function;
+}
 /**
  * @brief 建立 lambda。
  * @param resultType 返回类型。
@@ -3138,6 +3186,15 @@ Memory::Vector<Memory::String> M_AotExports()
 }
 
 /**
+ * @brief 把攒下的生命周期契约违规交给统一诊断队列。
+ * @return 无。
+ */
+void M_ReportLifetimeDiagnostics()
+{
+    ReportLifetimeDiagnostics();
+}
+
+/**
  * @brief 编译已解析程序，按选项写出产物并执行虚拟机。
  * @param moduleName 生成产物使用的模块名称。
  * @param outPrefix 输出产物的文件名前缀。
@@ -3211,6 +3268,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             for (const auto &flow : g_borrowFlows)
                 for (const auto &diagnostic : chali_borrow_checker::checkFlow(flow))
                     AddDiagnostic(diagnostic.message, diagnostic.line);
+            M_ReportLifetimeDiagnostics();
             if (!lowered || !g_diagnostics.empty())
             {
                 RestoreFirstDiagnostic();

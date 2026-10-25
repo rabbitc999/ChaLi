@@ -1,0 +1,1 @@
+chali: example/samples-error/lifetime_unknown_name.chl 第 3 行：[CHL1210] #borrow(#ret, ...) 的来源 nope 不是本函数的形参，返回值只能借用形参

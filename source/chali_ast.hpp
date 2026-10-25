@@ -808,6 +808,11 @@ int M_Constructor(int nameId, int params, int body);
  * nameId = 名字（必须叫 `operator`），opName = 运算符序号，params = 两个形参。 */
 int M_OperatorDef(int resultType, int nameId, int opName, int params, int body);
 int M_Func(int resultType, int nameId, int params, int body);
+int M_LifetimeRet();
+int M_BorrowDirective(int target, int sources);
+int M_LifetimeStatic(int names);
+int M_LifetimeContract(int directives, int function);
+void M_ReportLifetimeDiagnostics();
 /**
  * @brief 标记需要向原生调用方导出的函数声明。
  * @param declaration 函数声明节点。
