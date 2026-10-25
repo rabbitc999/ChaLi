@@ -265,4 +265,5 @@ F005 已通过编译器同源的 CRT 宽参数转换保留 Windows 进程入口 
 - [x] 产物名相关文档随 VERSION 同步为 1.0.1：`doc/41-aot.md`、`doc/42-installation-packages.md`、中英文书稿三处 Windows 构建产物注释、`doc/book/latex/preamble.tex` 封面（`ChaLi 1.0.1 · 2026年10月25日`）；`doc/12-vm-performance.md` 与英文版由 `tools/update_performance_docs.py` 按 VERSION 重新生成，数值未变。ABI 身份 `chali-abi-v1.0.0-collections-2` 是独立于程序版本的 ABI 标签，本次未改。
 - [x] `tools/changelog_data.json` 追加 1.0.1 条目并重新生成 CHANGELOG.md（`tools/changelog.py --build` 无漂移）。
 - [x] 书稿 LaTeX 由 `doc/book/latex/tools/md2tex.py` 重新导出（ch01/preface/ch15），PDF 重新生成仍为 290 页。
-- [ ] 提交并推送 origin/master（Gitee）与 GitHub 两个远端（用户已明确授权）。
+- [x] 提交并推送 Gitee 与 GitHub 两个远端（用户已明确授权）：master 提交 f747a78，标签 v1.0.1 打在该提交上；Gitee 侧此前有一个仅存在于该远端的 TASK.md 回退提交 f5fca3f（撤销历史署名推送记录两条），以合并提交 fa359c1 并入，两个远端 master 现同为 fa359c1。
+- [ ] Gitee 的 v1.0.0 标签仍指向署名重写前的旧提交 41dc628，与本端 / GitHub 的 67b3094 不一致；仓库历史重写时只覆盖了 master，Gitee 侧六个既有标签未同步。是否强制同步这些历史标签未定，本轮未动。
