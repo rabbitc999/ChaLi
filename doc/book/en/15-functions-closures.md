@@ -38,4 +38,32 @@ Inference considers the callback's complete shape. Overloads can be narrowed by 
 
 Use mutable capture only when changing captured state is intended. For synchronous C callbacks, follow the glue protocol and its lifetime; a runtime function value is not a machine function pointer.
 
+A declaration may also put `fn` before the name and move the result type behind the parameter list with `->`. Omitting the arrow makes the result `void`, so `fn show()` is `void show()`:
+
+```chali
+fn add(int64 left, int64 right) -> int64
+{
+    return left + right;
+}
+
+fn show()
+{
+    println("no result");
+}
+```
+
+The same shape works for generics: `T add<T>(T a, T b)` may be written `fn add<T>(T a, T b) -> T`. It also reads well for functions that return a function — parameters first, then what you get back:
+
+```chali
+fn makeAdder(int64 mut& amount) -> (int64 fn(int64))
+{
+    return fn(int64 value)
+    {
+        value + amount
+    };
+}
+```
+
+`(int64 fn(int64))` is the ordinary function type; its arrow form is `fn(int64) -> int64`, and the two shapes may be mixed. Parameter names inside a function type are documentation only and never enter type identity. The arrow return type of a lambda itself was removed in 0.12.0 and is still rejected. None of this is new grammar: the compiler rewrites these shapes into the leading-return forms before parsing.
+
 Exercise: reverse the composition order and predict the result before running. Then explain which captures must own their data if the composed function is stored for later use. Next: [error handling](16-errors.md).

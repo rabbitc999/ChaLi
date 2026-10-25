@@ -108,6 +108,39 @@ The explicit return type anchors checking. Default capture is const&; `mut` borr
 
 Named closures reuse `fn` ownership and lifetime analysis. Returning or storing a closure that still borrows a local does not extend that local's lifetime and must fail compilation. The AST entry point is [`M_NamedFunction`](../../source/semantics/named_function_ast.cpp); there is no separate closure runtime.
 
+## fn prefix and trailing return types
+
+```chali
+fn add(int64 left, int64 right) -> int64 { return left + right; }
+fn main() { println("{}", add(3, 4)); }
+```
+
+A declaration may omit the result type as `fn name(params)` — the result is then `void` — or place it after the parameter list with `->`. Generics, functions returning closures and statement-level named functions accept the same shape, and every form has an existing leading-return equivalent:
+
+| New form | Existing equivalent |
+| --- | --- |
+| `fn main() { }` | `void main() { }` |
+| `fn calc(int64 x) -> int64 { }` | `int64 calc(int64 x) { }` |
+| `fn calc<T>(T x) -> T { }` | `T calc<T>(T x) { }` |
+| `fn make<T>(T x) -> (T fn(T v)) { }` | `(T fn(T v)) make<T>(T x) { }` |
+| `fn make<T>(T x) -> fn(T v) -> T { }` | same as the row above; nesting normalises inside-out |
+| `(fn(T v) -> T) make<T>(T x) { }` | the leading position accepts the trailing form too |
+| `fn(int64 a, int64 b) -> int64` | `int64 fn(int64, int64)` |
+
+```text
+fn name<type params>(params) -> result  =>  result name<type params>(params)
+fn name<type params>(params)            =>  void name<type params>(params)
+fn(params) -> result                    =>  result fn(params)
+```
+
+The rewrite runs in the text layer before generic monomorphisation. It adds no grammar production and no AST node: the rewritten text is parsed by the existing productions and reuses the generic and closure pipelines unchanged. Three constraints:
+
+1. Parameters of a function type carry no names. Names in `fn(int64 a, int64 b) -> int64` are documentation only; they are stripped during normalisation and never enter type identity.
+2. The arrow return type of a lambda is still the form removed in 0.12.0, so `fn(int64 x) -> int64 { ... }` is rejected. Omit the arrow when the result is inferred, or write `int64 fn(int64 x) { ... }`.
+3. Statement-level named functions share the same path: `fn read(int64 v) -> int64 { ... }` inside a function body is equivalent to `int64 read(int64 v) { ... }`.
+
+The AST entry point is [`normalize`](../../source/chali_fn_sugar.cpp).
+
 ## Field derivation
 
 ```chali

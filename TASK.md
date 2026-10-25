@@ -207,3 +207,62 @@ F005 已通过编译器同源的 CRT 宽参数转换保留 Windows 进程入口 
 本文件继续保留尚未完成的全量冒烟、AOT/VM 全能力与平台对齐、静态 LLVM 复杂 ABI 独立导出工程验收等项目。本轮用户要求不执行测试门禁，因此不把历史部分通过或产物检查当成这些全量验收已完成；ARM64 当前交付 VM 编译器，原生 AOT 的宿主布局仍为 x64。未满足删除条件，不以结束会话删除任务清单。
 
 - [x] 署名历史已原子强制推送 origin/Gitee：master b33f538 -> 9acd1a6，六个既有标签仅沿用等价历史重写；未推送 GitHub。最终产物为两类 Windows x64 MSI、八个 Linux 安装归档、双变体 VSIX/ZIP；x86 不发布。
+
+## 本轮追加：1.0.1 的 fn 前缀与返回类型后置
+
+本轮目标版本 1.0.1，启动时仓库 VERSION 为 1.0.0。用户已授权实现下列语法糖、补齐示例与文档、最后提交双仓库（Gitee 与 GitHub）。本轮验收只跑 VM，**不跑 AOT**（用户明确要求）。1.0.0 及更早的测量与产物保留其真实版本，不因改版本号重标。
+
+技术前提（已核对，决定实现方式）：泛型声明的 `<T>` 由文本层接管，`normalizeGenericSyntax()`（`source/chali_generic.cpp:473`）在进入文法前把 `T calc<T>(T x)` 改写成 `__chali_template<T> T calc(T x)`，随后 `collect()`（`709`）抹空原文并登记，`substitute()`（`1333`）单态化后才重新进入解析器；真正的 `<T>` 从不到达文法层。因此**不在 `source/chali.gram` 加产生式**：那样要先穿越 `normalizeGenericSyntax`、`markClosureTypeArguments`、`markContainerTypeArguments` 三处文本层拦截，且 `chali.gram:25` 的 `%expect 0` 被突破会让 `gen.sh` 直接失败。改在 `chali_generic::run`（`1648`，调用点 `1699`）的最前面加一道**文本脱糖 pass**，把新写法归一化成现有写法，泛型单态化链路原样复用。
+
+### 一、语法范围
+
+- [x] 顶层函数定义省返回类型：`fn main() { }` 等价于 `void main() { }`。
+- [x] 顶层函数定义返回类型后置：`fn calc(int64 x) -> int64 { }` 等价于 `int64 calc(int64 x) { }`。
+- [x] 泛型函数返回类型后置：`fn calc<T>(T x) -> T { }` 等价于 `T calc<T>(T x) { }`。
+- [x] 返回闭包类型（裸写法）：`fn calc<T>(T x) -> (T fn(T b)) { }`。
+- [x] 返回闭包类型（后置嵌套）：`fn calc<T>(T x) -> fn(T b) -> T { }`。
+- [x] 返回闭包类型（前置括号）：`(fn(T b) -> T) calc<T>(T x) { }`。
+- [x] 函数类型位置的后置写法：`fn(int64 a, int64 b) -> int64` 等价于 `int64 fn(int64 a, int64 b)`。
+- [x] 高阶闭包的前后置混写：形参、变量声明、返回位置的函数类型可任意混用上述写法。
+- [x] 局部具名函数同样支持：`fn localTwice(int64 v) -> int64 { }` 与语句级声明共用同一条路径。
+
+### 二、脱糖 pass 的实现约束
+
+- [x] 新 pass 在 `chali_lambda::run` 与 `normalizeGenericSyntax()` 之前执行；否则 `fn calc<T>` 会被当作旧泛型声明吞掉并整段抹空，lambda 关卡也会先拦下箭头。实现落在 `source/chali_fn_sugar.cpp`，接入点 `source/chali_driver.cpp:1169`。
+- [x] 必须跳过字符串、字符字面量、行注释与块注释，不能改写其中的 `fn` 与 `->`；复用 `chali_lambda::codeMask` 的掩码。
+- [x] 不得误伤 lambda（`fn(...)` 后接函数体）、泛型闭包头（`fn<T>(...)`）与成员访问的 `->`（`a->b`）。判定依据：`fn` 后接标识符才是声明；`fn(...)` 后紧跟 `->` 才是函数类型；`fn` 后紧跟 `<` 是泛型闭包。
+- [x] 嵌套由内向外递归归一化，`fn(T b) -> T` 先变成 `T fn(T b)`，外层再补括号。
+- [x] 改写只插入/替换文本，保留换行数，不破坏 `lineMap` 与行列映射。
+- [x] 函数类型位置的形参名按既有规则剔除（`chali_semantics.cpp:641` 要求函数类型的形参只写类型），`fn(int64 a, int64 b) -> int64` 归一化为 `int64 fn(int64, int64)`。
+
+### 三、已知限制
+
+- [x] 用户给出的 `fn calc<T>(T x) -> fn(T b) -> b` 中最内层 `->` 后是形参名 `b`，不是类型。类型位置不接受形参名，本轮按 `-> T` 实现；写法可用，其中的 `b` 只作文档用途，不进入类型身份。
+- [x] lambda 的箭头返回类型保持 0.12.0 的移除决定：`fn(int64 x) -> int64 { ... }` 仍被拒绝，脱糖 pass 不改写它，交由 `chali_lambda.cpp:372` 报错。
+- [x] --raw 模式不接入脱糖：该分支不处理泛型声明，接入会让残留的 `<T>` 被闭包标点化。
+
+### 四、文档
+
+- [x] `doc/28-declaration-sugars.md` 与 `doc/en/28-declaration-sugars.md` 新增「fn 前缀与返回类型后置」章节，写明等价关系与脱糖规则。
+- [x] `doc/39-syntax-frozen.md` 登记该写法（函数与函数类型两行）。
+- [x] 中文书稿第 15 章新增 15.18「fn 前缀与返回类型后置」，后续小节顺延为 15.19 至 15.24；`doc/book/latex/chapters/ch15.tex` 同步插入该节（LaTeX 自动编号，无需改写其余节号）。
+- [x] `doc/14-grammar-ebnf.md` 无需改动：脱糖不新增产生式，EBNF 由文法导出且文法本轮未变，`tools/export_chali_ebnf.py` 无漂移。
+- [x] 中文书稿 PDF 重新生成：290 页（原 289 页 + 新增节），由 `doc/book/latex` 下 `latexmk -xelatex book.tex` 生成。
+- [x] 英文书稿 `doc/book/en/15-functions-closures.md` 同步，不翻译番外、不生成英文 LaTeX/PDF。
+- [x] 三份 README 与 `doc/README.md` 本轮无需改动：均未逐条列举函数声明写法。
+
+### 五、示例与验收
+
+- [x] `example/samples/fn_trailing_return.chl` 新增后置写法样例并配 `example/expected/fn_trailing_return.txt`；覆盖 void 入口、普通函数、泛型、返回闭包的三种写法、函数类型变量与局部具名函数。
+- [x] 只测 VM，不测 AOT（用户明确）。
+- [x] 与既有前置写法的样例逐一对照：`tmp/fn_sugar_legacy.chl` 用纯前置写法表达同一语义，确认行为一致，返回借用局部的闭包同样报 CHL1204，不是脱糖引入的问题。
+- [x] 反向核对：lambda、泛型闭包、成员访问 `->`、字符串与注释里的 `fn` 均不受影响；lambda 箭头返回类型仍按 0.12.0 的决定被拒绝。
+- [x] 全量 `sh check.sh`（VM）回归：279 个正常样例 + 312 个错误样例全部通过，既有样例未被文本层改动影响。
+
+### 六、版本与交付
+
+- [x] VERSION 由 1.0.0 改为 1.0.1；`source/chali_package.hpp` 的 `compilerVersion`、语言服务 `kServerVersion` 与 `chali-lsp` 帮助/版本输出、插件 `chaliCompilerVersion` 同步。插件自身 `version` 仍独立保持 1.0.0。`tools/release.py` 三处核对通过：VERSION 1.0.1、扩展包 1.0.0、运行中编译器 LSP 自报 1.0.1。
+- [x] 产物名相关文档随 VERSION 同步为 1.0.1：`doc/41-aot.md`、`doc/42-installation-packages.md`、中英文书稿三处 Windows 构建产物注释、`doc/book/latex/preamble.tex` 封面（`ChaLi 1.0.1 · 2026年10月25日`）；`doc/12-vm-performance.md` 与英文版由 `tools/update_performance_docs.py` 按 VERSION 重新生成，数值未变。ABI 身份 `chali-abi-v1.0.0-collections-2` 是独立于程序版本的 ABI 标签，本次未改。
+- [x] `tools/changelog_data.json` 追加 1.0.1 条目并重新生成 CHANGELOG.md（`tools/changelog.py --build` 无漂移）。
+- [x] 书稿 LaTeX 由 `doc/book/latex/tools/md2tex.py` 重新导出（ch01/preface/ch15），PDF 重新生成仍为 290 页。
+- [ ] 提交并推送 origin/master（Gitee）与 GitHub 两个远端（用户已明确授权）。
