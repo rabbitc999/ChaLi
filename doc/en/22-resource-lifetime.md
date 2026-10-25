@@ -56,3 +56,37 @@ Capture discovery and later uses are modeled separately. `FlowState::captures` r
 The design follows the explicit loan registration in Rust's [borrow_set.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/borrow_set.rs), capture-mode distinctions in [upvar.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_hir_typeck/src/upvar.rs), and projection conflicts in [places_conflict.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/places_conflict.rs). It uses ChaLi's own place and control-flow analysis without copying Rust implementation code.
 
 Checks cover invalidation and propagation visible within the current function. Opaque host code, raw memory writes and erased interprocedural side effects still depend on interface lifetime contracts. This analysis does not establish the absence of all undefined behavior.
+
+## Explicit lifetime contracts `#borrow` / `#static`
+
+The borrow checker is conservative by default: a call site folds the origins of **all** reference arguments into its result, so the result of `first(&x, &local)` is treated as also borrowing `&local`, and returning it is rejected by CHL1204. A contract written before a function declaration states which sources the result borrows, which is the same thing Rust expresses with lifetime parameters in the signature:
+
+| ChaLi | Rust |
+| --- | --- |
+| `int64 mut& first(int64 mut& a, int64 mut& b)` with `#borrow(#ret, [a])` | `fn first<'a, 'b>(a: &'a mut i64, b: &'b mut i64) -> &'a mut i64` |
+| `int64 mut& install(int64 mut& slot)` with `#static(slot)` | `fn install(slot: &'static mut i64) -> &'static mut i64` |
+
+Three forms, all written before the function declaration and freely combinable:
+
+- `#borrow(out, in)` — `out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each of them.
+- `#static(a)` — `a` is treated as `'static`, so it can be returned across functions and stored for the long term; call sites must pass a genuinely `'static` source (a global).
+- `#borrow(#ret, [a, b])` — `#ret` denotes the return value and declares that it borrows from `a` and `b`.
+
+Names must be parameters or locals of the same function, and sources of `#ret` must be parameters. A contract does two things: call-site propagation follows only the declared arguments instead of taking the maximum over all reference arguments, so `first(&x, &local)` can be returned; and the contract becomes an obligation, so a function with `#borrow(#ret, [a])` may not return a reference from anywhere else, and `out` in `#borrow(out, [a])` may not store one.
+
+| Diagnostic | Trigger |
+| --- | --- |
+| CHL1210 | The contract names something that does not exist, or a `#borrow(#ret, ...)` source is not a parameter |
+| CHL1211 | A function with `#borrow(#ret, ...)` returns an undeclared source |
+| CHL1212 | `out` of `#borrow(out, ...)` stored a reference from an undeclared source |
+| CHL1213 | `#static(...)` was applied to a local variable |
+| CHL1214 | A call site passed a non-`'static` argument to a `#static` parameter |
+
+Two Rust entry points informed this work, adapted to ChaLi's existing semantics:
+
+| Rust source | ChaLi counterpart |
+| --- | --- |
+| [wfcheck.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_hir_analysis/src/check/wfcheck.rs): well-formedness of explicit lifetime bounds in signatures (`region_known_to_outlive` / `ty_known_to_outlive`) | Every contract name is checked for its scope home; `#static` parameters are checked at call sites for an argument source depth of 0 |
+| [region_infer/mod.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/region_infer/mod.rs): solving region constraints | A call to a function with `#borrow(#ret, ...)` propagates only the declared arguments, replacing the conservative maximum |
+
+The implementation reuses ChaLi's own borrow source depths and borrow flow graph. It does not port Rust source, nor does it implement Rust's full region inference or lifetime variance analysis.

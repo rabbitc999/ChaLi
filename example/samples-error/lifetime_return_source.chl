@@ -1,0 +1,8 @@
+/* #borrow(#ret, [a]) 只声明了 a，返回的却是 b */
+#borrow(#ret, [a])
+int64 mut& first(int64 mut& a, int64 mut& b) { return b; }
+void main() {
+    int64 x = 1;
+    int64 y = 2;
+    std::lang::println("{}", first(&x, &y));
+}

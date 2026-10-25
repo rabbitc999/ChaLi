@@ -47,6 +47,7 @@
 | 内存与资源 | `new` `heap` `drop` |
 | 函数值 | `fn` |
 | 编译期指令 | `#NonCopyable` `#derive` `#No<接口>Replace` `#NoRight<接口>` |
+| 生命周期契约 | `#borrow` `#static` `#ret` | 写在函数声明前；`#ret` 指返回值 |
 | 宏语法词 | `$macro` `$replace` `$end_macro` `$match` `$else` `$end_match` `$regex` `$end_regex` `$for` `$end_for`，匹配类别 `is` `expr` `ident` `block` `stmt` |
 
 约定：
@@ -104,6 +105,7 @@
 | 值表达式 | `if` / `match` / `loop` / 块可作表达式，用 `yield` 出值 | `yield (a, b);` 产生元组 |
 | 宏定义 | `$macro 名字(组…) @!macrobody … $end_macro` | 参数组分 `()` `[]` `{}` 三种，组内可写变长片段 |
 | 编译期指令 | `#derive(Equal, Hash, Clone)`、`#NoAddReplace`、`#NoRightAdd` | 写在类型声明前 |
+| 生命周期契约 | `#borrow(out, in)`、`#borrow(out, [in1, in2, in3])`、`#static(a)`、`#borrow(#ret, [a, b])` | 写在函数声明前，可连写多条；名字指本函数的形参与局部变量 |
 
 ## 6 改语法时必须同步的地方
 

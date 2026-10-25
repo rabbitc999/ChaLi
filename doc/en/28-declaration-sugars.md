@@ -218,6 +218,40 @@ FindOperator(op, left, right):
 derivation for that interface; both are compiler directives placed before the declaration. Generic templates keep their directives during
 `collectGenericDerives` and paste them back in front of every instantiation.
 
+## Lifetime contract directives
+
+Lifetime contracts can be written in a row before a function declaration. `#borrow(out, in)` means
+`out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each
+of them. `#ret` denotes the return value, so `#borrow(#ret, [a, b])` has the same shape as Rust's
+`fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T`. `#static(a)` treats a's origin as `'static`. Grammar:
+
+```text
+lifetime_directive := "#borrow" "(" lifetime_target "," lifetime_name ")"
+                    | "#borrow" "(" lifetime_target "," "[" lifetime_names "]" ")"
+                    | "#static" "(" lifetime_name ")"
+lifetime_target := identifier | "#ret"
+lifetime_names := identifier { "," identifier }
+top_decl := lifetime_directives func_def
+          | lifetime_directives "inline" func_def
+          | lifetime_directives "export" func_def
+```
+
+Directives are registered together with the function declaration, before the body is analyzed —
+return checks happen inside the body, and call-site propagation has to consult this table from
+inside other bodies. Semantics verify four things: the name exists (it is a parameter or local of
+this function), `#ret` sources can only be parameters, `#static` cannot target a local, and a call
+site passing to a `#static` parameter must use an argument with source depth 0. Two obligations
+remain: a function that declares `#borrow(#ret, [...])` must return only borrow roots inside the
+declared sources, and `out` of `#borrow(out, [...])` may only store references from them.
+
+Without a contract, a call site conservatively takes the maximum over all reference argument
+origins, so the result of `first(&x, &local)` counts as borrowing `&local` too. With
+`#borrow(#ret, [a])`, only `a` propagates, and `outer` can return it.
+
+- Sample: [lifetime contracts](../../example/samples/lifetime_contract.chl); error samples [`lifetime_return_source.chl`](../../example/samples-error/lifetime_return_source.chl), [`lifetime_unknown_name.chl`](../../example/samples-error/lifetime_unknown_name.chl), [`lifetime_static_argument.chl`](../../example/samples-error/lifetime_static_argument.chl), [`lifetime_store_source.chl`](../../example/samples-error/lifetime_store_source.chl), [`lifetime_static_local.chl`](../../example/samples-error/lifetime_static_local.chl).
+- See [resource lifetimes and borrow control flow](22-resource-lifetime.md).
+
+
 ## Regressions
 
 See [return ownership](../../example/samples/return_expression.chl), [named closures](../../example/samples/named_function.chl), [struct and enum derivation](../../example/samples/derive.chl), and the [semantic/lifetime gate](../../tests/chali_declaration_sugars.py).

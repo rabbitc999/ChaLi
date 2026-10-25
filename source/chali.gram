@@ -54,6 +54,10 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | func_def     { $$ = $1; }
      | INLINE func_def { $$ = M_Inline($2); }
      | EXPORT func_def { $$ = M_Export($2); }
+     /* 生命周期契约只挂在函数声明上，指令在它前面连写。 */
+     | lifetime_directives func_def { $$ = M_LifetimeContract($1, $2); }
+     | lifetime_directives INLINE func_def { $$ = M_Inline(M_LifetimeContract($1, $3)); }
+     | lifetime_directives EXPORT func_def { $$ = M_Export(M_LifetimeContract($1, $3)); }
      | host_func_decl { $$ = $1; }
      | abi_block { $$ = $1; }
      | host_type_decl { $$ = $1; }
@@ -68,6 +72,25 @@ type_decl_end := %empty { $$ = -1; }
 
 /* 编译器指令仅修饰类型声明，白名单和字段接口约束由语义层检查。 */
 derive_directive := DERIVE LPAREN iface_list RPAREN { $$ = $3; } ;
+
+/* 显式生命周期契约指令：写在函数声明之前，可连写多条；名字与返回来源由语义层核对。
+ *   #borrow(out, in)         out 借用 in
+ *   #borrow(out, [in1,in2])  out 借用列表里的每一个
+ *   #borrow(#ret, [a, b])    返回值借用 a、b
+ *   #static(a)               a 的来源为 'static */
+lifetime_directives := lifetime_directive { $$ = M_List1($1); }
+    | lifetime_directives lifetime_directive { M_ListAdd($1, $2); $$ = $1; } ;
+lifetime_directive := BORROW_KW LPAREN lifetime_target COMMA lifetime_name RPAREN
+        { $$ = M_BorrowDirective($3, M_List1($5)); }
+    | BORROW_KW LPAREN lifetime_target COMMA LBRACKET lifetime_names RBRACKET RPAREN
+        { $$ = M_BorrowDirective($3, $6); }
+    | LIFETIME_STATIC LPAREN lifetime_name RPAREN
+        { $$ = M_LifetimeStatic(M_List1($3)); } ;
+lifetime_names := lifetime_name { $$ = M_List1($1); }
+    | lifetime_names COMMA lifetime_name { M_ListAdd($1, $3); $$ = $1; } ;
+lifetime_name := name_token { $$ = $1; } ;
+lifetime_target := name_token { $$ = $1; }
+    | BORROW_RET { $$ = M_LifetimeRet(); } ;
 
 /* 编译器指令，可以连写多条；接口名与组合合法性由语义层核对：
  *   `#NoAddReplace` 关掉 `Add` 的全部自动推导；

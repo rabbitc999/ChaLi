@@ -382,6 +382,93 @@ struct Wrapper<T> { T value; };
 
 \end{enumerate}
 
+\section{\texttt{\#borrow} 与 \texttt{\#static}：把生命周期写进签名}
+
+前面三条指令管的是“这个类型该有什么能力”，这一条管的是“借来的东西从哪儿来、能活多久”。它写在函数声明之前，因为生命周期属于签名，不属于函数体的实现细节：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+#borrow(#ret, [a])
+int64 mut& first(int64 mut& a, int64 mut& b)
+{
+    return a;
+}
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{\#borrow(\allowbreak{}out,\allowbreak{} in)\allowbreak{}} 读作“out 借用 in”；列表写法 \texttt{\#borrow(\allowbreak{}out,\allowbreak{} [\allowbreak{}in1,\allowbreak{} in2,\allowbreak{} in3]\allowbreak{})\allowbreak{}} 表示借用其中每一个。\texttt{\#ret} 是个保留名，指函数的返回值——上面这条和 Rust 的 \texttt{fn first<\allowbreak{}'a,\allowbreak{} 'b>\allowbreak{}(\allowbreak{}a:\allowbreak{} \&'a mut i64,\allowbreak{} b:\allowbreak{} \&'b mut i64)\allowbreak{} ->\allowbreak{} \&'a mut i64} 说的是同一件事。
+
+不写契约时，借用检查器在调用点只能保守：它不知道 \texttt{first} 会返回哪个参数的引用，就把全部引用实参都算上。于是下面这段会被 CHL1204 拒掉，因为 \texttt{local} 出块就没了：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+int64 mut& outer(int64 mut& x)
+{
+    int64 local = 5;
+    return first(&x, &local);
+}
+\end{lstlisting}
+\par
+\medskip
+
+写上 \texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a]\allowbreak{})\allowbreak{}}，调用点就只按 \texttt{a} 传播，这段就能过。契约把“保守取全部”换成了“按声明取”，这是它带来的精度：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+#borrow(#ret, [a])
+int64 mut& first(int64 mut& a, int64 mut& b)
+{
+    return a;
+}
+
+int64 mut& outer(int64 mut& x)
+{
+    int64 local = 5;
+    return first(&x, &local);
+}
+
+void main()
+{
+    int64 number = 30;
+    int64 mut& selected = outer(&number);
+    selected = 31;
+    println("{} {}", number, selected);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+31 31
+\end{lstlisting}
+\par
+\medskip
+
+反过来，契约也是义务：既然说了返回值只借用 \texttt{a}，返回 \texttt{b} 就是违约。
+
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.439\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.228\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.313\linewidth-2\tabcolsep\relax}}
+\toprule
+写法 & 意思 & 违约时 \\
+\midrule
+\endhead
+\texttt{\#borrow(\allowbreak{}out,\allowbreak{} in)\allowbreak{}} / \texttt{\#borrow(\allowbreak{}out,\allowbreak{} [\allowbreak{}in1,\allowbreak{} in2,\allowbreak{} in3]\allowbreak{})\allowbreak{}} & \texttt{out} 借用列出的来源 & 保存了别处的引用 \ensuremath{\rightarrow} CHL1212 \\
+\texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a,\allowbreak{} b]\allowbreak{})\allowbreak{}} & 返回值借用 \texttt{a}、\texttt{b} & 返回了别处的引用 \ensuremath{\rightarrow} CHL1211 \\
+\texttt{\#static(\allowbreak{}a)\allowbreak{}} & \texttt{a} 的来源按 \texttt{'static} 处理 & 调用点传了非 \texttt{'static} 实参 \ensuremath{\rightarrow} CHL1214 \\
+\bottomrule
+\end{longtable}
+}
+
+契约里只能写本函数的形参和局部变量名，\texttt{\#ret} 的来源必须是形参；名字写错（CHL1210）、把局部变量标成 \texttt{\#static}（CHL1213）都会当场报出来。
+
+\texttt{\#static(\allowbreak{}a)\allowbreak{}} 值得单独说一句：它说的不是“这个引用活得久”，而是“它指的那个东西活得久”。局部变量的存储出块就没了，所以不能被标成 \texttt{'static}；全局变量可以。
+
 \section{边界与验证}
 
 \begin{itemize}
@@ -391,6 +478,10 @@ struct Wrapper<T> { T value; };
 \item \texttt{\#No<\allowbreak{}接口>\allowbreak{}Replace} 与 \texttt{\#No\allowbreak{}Right<\allowbreak{}接口>\allowbreak{}} 可以连写多条，顺序不影响结果。
 
 \item 运算符开关只影响自动推导：直接写出的运算符、显式声明的 \texttt{Right\allowbreak{}Xxx} 都不受约束。
+
+\item 生命周期契约只能写在函数声明之前；\texttt{\#ret} 的来源必须是形参，\texttt{\#static} 不能标局部变量。
+
+\item 契约只改变借用来源的推断，不改变运行期行为：删掉契约不会让程序跑得更快或更慢。
 
 \item \texttt{Closeable} 自动等价于"不可复制"，无需再写 \texttt{\#Non\allowbreak{}Copyable}；\texttt{opcode} 的不可复制由声明体里有没有 \texttt{copy} 决定，\texttt{\#Non\allowbreak{}Copyable} 是可读性标记。
 
@@ -428,7 +519,7 @@ struct Wrapper<T> { T value; };
 
 \section{习题}
 
-前两题动手验证指令的边界，第三题读报错，最后一题为综合挑战。
+前两题动手验证指令的边界，第三题读报错，第四题验证契约带来的精度，最后一题为综合挑战。
 
 \begin{enumerate}
 
@@ -438,7 +529,9 @@ struct Wrapper<T> { T value; };
 
 \item 解释为什么 \texttt{\#derive(\allowbreak{}Drop)\allowbreak{}} 会被拒绝，而不是"生成一个空 drop"。
 
-\item 挑战：设计一个"链式文本"类型，使 \texttt{chain + "x"} 合法、\texttt{"x" + chain} 编译报错，并说明为什么这里不需要 \texttt{Right\allowbreak{}Add}。
+\item 给 \texttt{int64 mut\& pick(\allowbreak{}int64 mut\& a,\allowbreak{} int64 mut\& b)\allowbreak{}} 写上 \texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a]\allowbreak{})\allowbreak{}}，先返回 \texttt{a} 再改成返回 \texttt{b}，观察报错；然后删掉契约，在一个 \texttt{outer} 里写 \texttt{return pick(\allowbreak{}\&x,\allowbreak{} \&local)\allowbreak{};}，看默认规则怎么处理。
+
+\item 挑战：设计一个“链式文本”类型，使 \texttt{chain + "x"} 合法、\texttt{"x" + chain} 编译报错，并说明为什么这里不需要 \texttt{Right\allowbreak{}Add}。
 
 \end{enumerate}
 
@@ -451,6 +544,8 @@ struct Wrapper<T> { T value; };
 \item 嵌套结构体需要自己实现或派生 \texttt{Equal} / \texttt{Hash} / \texttt{Clone}；裸数组没有约定语义，派生阶段会明确拒绝，而不是按字节比较。
 
 \item \texttt{Drop} 是析构协议，值语义已经对字段做递归清理；再生成一个 \texttt{drop(\allowbreak{})\allowbreak{}} 会与自动清理叠加，等于析构两次。派生只处理"可以按字段机械推出"的协议。
+
+\item 返回 \texttt{b} 报 CHL1211，文案里直接给出该写的契约；删掉契约后返回 \texttt{a} 仍然合法，但调用点会把全部引用实参都算进结果，\texttt{outer} 那句就被 CHL1204 挡住了——契约换来的是这个精度。
 
 \item 用 \texttt{\#No\allowbreak{}Right\allowbreak{}Add} + 左接口 \texttt{Add}；不需要 \texttt{Right\allowbreak{}Add}，因为右向语义根本不该存在。
 

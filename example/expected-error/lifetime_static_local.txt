@@ -1,0 +1,1 @@
+chali: example/samples-error/lifetime_static_local.chl 第 2 行：[CHL1213] #static(local) 标的是局部变量；局部存储出块就没了，只有全局或形参才可能是 'static

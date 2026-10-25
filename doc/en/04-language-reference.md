@@ -1061,3 +1061,7 @@ Statements accept `int64 add(int64 x) { return x + 1; }` and a local function bi
 ## Field derivation
 
 `#derive(Equal, Hash, Clone)` before a struct or enum uses semantic field metadata to generate field-based methods, followed by normal semantic checking and quadruple lowering. Nested fields must implement each requested interface. Drop and Closeable derivation is forbidden. Generic methods are generated after instantiation. See [derivation rules](28-declaration-sugars.md).
+
+## Lifetime contracts `#borrow` / `#static`
+
+Lifetime contracts can be written in a row before a function declaration to state explicitly who borrows from whom. `#borrow(out, in)` means `out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each of them. `#ret` denotes the return value, so `#borrow(#ret, [a, b])` is the same shape as Rust's `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` — a call site propagates origins only through the declared arguments. `#static(a)` declares that `a` has a `'static` origin, letting it be returned across functions and stored for the long term. Names must be parameters or locals of the same function, and sources of `#ret` must be parameters. See [declaration sugar rules](28-declaration-sugars.md).

@@ -27,7 +27,7 @@
       "patterns": [
         {
           "name": "keyword.control.chali",
-          "match": "#level\\s*\\(\\s*[aA][lL][lL]\\s*\\)|#level\\b|#derive\\b|#NonCopyable\\b"
+          "match": "#level\\s*\\(\\s*[aA][lL][lL]\\s*\\)|#level\\b|#derive\\b|#NonCopyable\\b|#borrow\\b|#static\\b|#ret\\b"
         },
         {
           "name": "comment.block.chali",

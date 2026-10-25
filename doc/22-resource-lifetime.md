@@ -58,3 +58,37 @@
 该处理参考 Rust 的 [borrow_set.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/borrow_set.rs) 对借用的显式登记、[upvar.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_hir_typeck/src/upvar.rs) 对捕获方式的区分，以及 [places_conflict.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/places_conflict.rs) 的存储路径重叠分析。实现沿用 ChaLi 的字段路径和控制流检查器，不移植 Rust 源码。
 
 检查覆盖当前函数内可见的来源失效与传播；不透明宿主代码、原始内存写入及被擦除的跨函数副作用仍需要对应接口的生命周期契约。此分析不等于消除了所有未定义行为。
+
+## 显式生命周期契约 `#borrow` / `#static`
+
+借用检查器默认保守：调用点把**全部**引用实参的来源都算进结果，于是 `first(&x, &local)` 的结果被当成也借用了 `&local`，返回它会被 CHL1204 拒掉。函数声明前写出契约，即可声明结果只借用哪些来源——等价于 Rust 把生命周期参数写在签名上：
+
+| ChaLi | Rust |
+| --- | --- |
+| `#borrow(#ret, [a])` 的 `int64 mut& first(int64 mut& a, int64 mut& b)` | `fn first<'a, 'b>(a: &'a mut i64, b: &'b mut i64) -> &'a mut i64` |
+| `#static(slot)` 的 `int64 mut& install(int64 mut& slot)` | `fn install(slot: &'static mut i64) -> &'static mut i64` |
+
+三种写法，都写在函数声明之前，可连写多条：
+
+- `#borrow(out, in)` —— `out` 借用 `in`；列表写法 `#borrow(out, [in1, in2, in3])` 表示借用其中每一个。
+- `#static(a)` —— `a` 的来源按 `'static` 处理，可跨函数返回与长期保存；调用点必须真的传 `'static` 来源（全局变量）。
+- `#borrow(#ret, [a, b])` —— `#ret` 是函数返回值，声明返回值借用 `a`、`b`。
+
+名字只能是本函数的形参或局部变量，`#ret` 的来源只能是形参。契约带来两件事：一是调用点传播只按声明的那几个实参算来源（不再取全部引用实参的最大值），`first(&x, &local)` 的结果因此能够返回；二是契约本身成为义务——`#borrow(#ret, [a])` 的函数不能返回来自别处的引用，`#borrow(out, [a])` 的 `out` 不能保存来自别处的引用。
+
+| 诊断 | 触发条件 |
+| --- | --- |
+| CHL1210 | 契约引用了不存在的名字；或 `#borrow(#ret, ...)` 的来源不是形参 |
+| CHL1211 | `#borrow(#ret, ...)` 的函数返回了声明之外的来源 |
+| CHL1212 | `#borrow(out, ...)` 的 `out` 保存了声明之外的来源 |
+| CHL1213 | `#static(...)` 标的是局部变量 |
+| CHL1214 | 调用点给 `#static` 形参传了非 `'static` 实参 |
+
+本轮参考 Rust 的两处入口，采用适合 ChaLi 现有语义的规则：
+
+| Rust 源码 | ChaLi 中的对应处理 |
+| --- | --- |
+| [wfcheck.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_hir_analysis/src/check/wfcheck.rs)：签名上显式生命周期约束的良构性（`region_known_to_outlive` / `ty_known_to_outlive`） | 契约名字逐个核对作用域归属；`#static` 形参在调用点核对实参来源深度为 0 |
+| [region_infer/mod.rs](https://github.com/rust-lang/rust/blob/main/compiler/rustc_borrowck/src/region_infer/mod.rs)：区域约束的求解 | 带 `#borrow(#ret, ...)` 的调用只按声明的实参传播来源，取代保守的"取最大值" |
+
+实现沿用 ChaLi 自己的借用来源深度与借用流图，不移植 Rust 源码，也不实现 Rust 的完整区域推导与生命周期变体分析。

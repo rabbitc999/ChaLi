@@ -4,7 +4,18 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.2**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.4**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.4 — 显式生命周期契约 `#borrow` 与 `#static`
+
+- 新增显式生命周期契约：函数声明前可连写 `#borrow(out, in)`、`#borrow(out, [in1, in2, in3])`、`#static(a)` 与 `#borrow(#ret, [a, b])`，把借用来源写进签名。`#ret` 是保留名，指函数返回值，因此 `#borrow(#ret, [a])` 与 Rust 的 `fn first<'a, 'b>(a: &'a mut i64, b: &'b mut i64) -> &'a mut i64` 说的是同一件事。
+- 调用点传播改为按契约取来源：带 `#borrow(#ret, [a])` 的函数，其结果只按声明的那几个实参传播来源，不再保守取全部引用实参的最大值。此前 `return first(&x, &local);` 会被 CHL1204 拒掉（结果被当成也借用了 `&local`），写上契约即可返回。
+- 契约同时是义务：返回值借用未声明的来源报 CHL1211，保存的引用来源不在契约内报 CHL1212，契约引用了不存在的名字或 `#ret` 的来源不是形参报 CHL1210。三条诊断都直接给出可抄的契约写法。
+- `#static(a)` 把该来源按 'static 处理，可跨函数返回与长期保存；调用点必须真的传 'static 来源（全局变量），传局部或形参来源报 CHL1214，把局部变量标成 'static 报 CHL1213。
+- 文法侧新增 `#borrow` / `#static` / `#ret` 三个记号与 `lifetime_directives`、`lifetime_directive`、`lifetime_target`、`lifetime_names` 等产生式，挂到 `top_decl` 的函数声明分支（另含 `inline` / `export` 两条），仍由 `%expect 0` 保证零未消解冲突。
+- 中英文档、书稿与 EBNF 同步：中英 `doc/22-resource-lifetime.md` 新增契约章节并对照 Rust 的 wfcheck 与 region_infer 实现，中英 `doc/28-declaration-sugars.md` 与 `doc/04-language-reference.md`、`doc/39-syntax-frozen.md`、`doc/14-grammar-ebnf.md` 同步；中文书稿第 23 章新增 23.8，英文书稿第 7 章新增契约段落。
+- 程序、内嵌编译器与语言服务版本统一为 1.0.4；契约的正例样例与五条反例在 VM 与 AOT 两种模式下均已验证。
 
 
 ## 1.0.2 — 修复匿名 lambda 回归并统一具名函数与闭包

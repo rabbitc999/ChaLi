@@ -86,6 +86,11 @@ MVar *BorrowRootVariable(int id)
  * @param variable 引用变量。
  * @return 来源仍可见时返回变量。
  */
+/* 生命周期契约的四个入口定义在 lifetime_contract.cpp（本文件之后包含）。 */
+bool LifetimeIsStaticName(const Memory::String &name);
+const Memory::Vector<int> *LifetimeRetParams(const Memory::String &symbol, std::size_t argumentCount);
+void CheckLifetimeStore(int target, int value, std::size_t line);
+void CheckLifetimeReturn(int value, std::size_t line);
 MVar *BorrowAliasOwner(const MVar *variable)
 {
     if (!variable || variable->borrowOwner.empty()) return nullptr;
@@ -103,6 +108,8 @@ MVar *BorrowAliasOwner(const MVar *variable)
 std::size_t BorrowVariableDepth(const MVar *variable)
 {
     if (!variable) return 2u;
+    // #static(a) 与全局来源都是 'static：最外层，谁都能拿、都能返回。
+    if (LifetimeIsStaticName(variable->emitted)) return 0u;
     for (std::size_t index = 0; index < g_scope.size(); ++index)
         for (const auto &entry : g_scope[index])
             if (&entry.second == variable) return index == 0u ? 0u : std::max<std::size_t>(2u, index);
@@ -116,7 +123,8 @@ std::size_t BorrowVariableDepth(const MVar *variable)
  */
 std::size_t BorrowStorageDepth(const MVar *variable)
 {
-    if (variable && variable->type && variable->type->kind == MType::Ptr) return variable->borrowDepth;
+    if (variable && variable->type && variable->type->kind == MType::Ptr)
+        return LifetimeIsStaticName(variable->emitted) ? 0u : variable->borrowDepth;
     return BorrowVariableDepth(variable);
 }
 
@@ -247,6 +255,15 @@ std::size_t BorrowSourceDepth(int id, bool address)
                 depth = BorrowSourceDepth(callee.kids[0], !enumeration && !stateIterator);
             }
         }
+        /* 带 `#borrow(#ret, [...])` 的函数只按声明的那几个实参传播来源，
+         * 不再保守取全部引用实参的最大值（Rust 的 `-> &'a` 同形）。 */
+        if (const Memory::Vector<int> *indices = LifetimeRetParams(symbol, arguments.size()))
+        {
+            for (const int index : *indices)
+                if (index >= 0 && static_cast<std::size_t>(index) < arguments.size())
+                    depth = std::max(depth, BorrowSourceDepth(arguments[static_cast<std::size_t>(index)]));
+            return depth;
+        }
         for (const int argument : arguments)
             if (HasBorrowedValue(RawExprType(argument)))
                 depth = std::max(depth, BorrowSourceDepth(argument));
@@ -313,6 +330,8 @@ void RecordBorrowStore(int target, int value, bool container)
     if (variable && variable->allocatedReference && N(target).kind != MNode::Var)
         targetDepth = std::max<std::size_t>(1u, targetDepth);
     g_borrowFacts.push_back({ chali_borrow_checker::Fact::Store, depth, targetDepth, g_reductionLine, {} });
+    /* `#borrow(out, [in...])`：写入 out 的引用必须真来自 in，光靠作用域深度看不出来。 */
+    CheckLifetimeStore(target, value, g_reductionLine);
     // 分支按来源寿命的交集保守合并，后续赋值不能洗掉较短的借用。
     if (variable)
     {

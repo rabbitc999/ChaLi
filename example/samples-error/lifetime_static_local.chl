@@ -1,0 +1,10 @@
+/* 局部变量出块就没了，不能声明为 'static */
+#static(local)
+void keep(int64 mut& a) {
+    int64 local = 1;
+    std::lang::println("{} {}", a, local);
+}
+void main() {
+    int64 x = 1;
+    keep(&x);
+}

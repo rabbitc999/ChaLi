@@ -1,0 +1,1 @@
+chali: example/samples-error/lifetime_store_source.chl 第 5 行：[CHL1212] refs 按契约只借用 [a]，却保存了来自 b 的引用；请改契约 #borrow(refs, [a, b])，或改从已声明的来源取引用
