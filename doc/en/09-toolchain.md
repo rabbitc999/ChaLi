@@ -32,7 +32,7 @@ chali clear out build/compiler
 
 The generator creates standalone compiler projects. Hosts integrate through bytecode, `stackvm::Machine` and native registries.
 
-Reflection is a fixed, non-trimmable part of the language: the front end and VM always build it in and compilation always runs the full reflection pass; `--no-reflection` only decides whether this artifact carries reflection metadata and reduces no workload. Quadruples and VM execution use the highest supported optimizations by default. `--memory-size`, `--step-limit` and `--threads` configure VM resources and isolated threads.
+Reflection is a fixed, non-trimmable part of the language: the front end and VM always build it in and compilation always runs the full reflection pass; `--no-reflection` only decides whether this artifact carries reflection metadata and reduces no workload. Quadruples and VM execution use the highest supported optimizations by default. `--memory-size` and `--step-limit` configure VM resources; isolated threads are on by default and `--no-threads` turns them off.
 
 Back-end debugging switches change diagnostics or the execution path, never program semantics. They come in two groups:
 

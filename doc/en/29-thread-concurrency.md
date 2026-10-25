@@ -8,7 +8,7 @@
 
 ## Creation and isolation
 
-The module is `std::thread` and its public nominal handle type is `Thread`. Source execution requires `--threads`; embedded hosts enable `Machine::setThreadsEnabled(true)`. Each worker has its own VM stack, heap and global snapshot. Equal variable names do not imply sharing. Thread creation consumes operating-system resources and is not an unbounded task scheduler.
+The module is `std::thread` and its public nominal handle type is `Thread`. Threads are enabled by default and `--no-threads` turns them off; embedded hosts call `Machine::setThreadsEnabled(true)` (already the default). Each worker has its own VM stack, heap and global snapshot. Equal variable names do not imply sharing. Thread creation consumes operating-system resources and is not an unbounded task scheduler.
 
 `create(task)` accepts a static, noncapturing `void fn()`. `createWith<T>(task, value)` copies the initial argument for a static `void fn(T)`. Initial arguments, messages and channels share the same value-transfer checks: scalars, strings and recursively copyable aggregates are supported; references, noncopyable resources, borrowed aggregates and capturing closures cannot cross threads. Static function values remain VM identifiers and never become machine function pointers.
 

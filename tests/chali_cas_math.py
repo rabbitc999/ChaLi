@@ -95,7 +95,6 @@ def main():
     def run(name, source, expected=None, error=None):
         path=work/(name+'.chl'); path.write_text(source,encoding='utf-8')
         command=[str(args.chali.resolve()),'run',str(path)]
-        if name == 'thread_copy': command.append('--threads')
         result=subprocess.run(command,capture_output=True,encoding='utf-8',errors='replace',timeout=90,env=dict(os.environ,CHALI_LANG='zh'))
         (work/(name+'.log')).write_text(result.stdout+result.stderr,encoding='utf-8')
         if error:

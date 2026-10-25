@@ -1,8 +1,6 @@
 \chapter{错误处理}
 \label{ch:16}
 
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/book/en/16-errors.md}{English} · 简体中文
-
 前面十几章，代码都假定「一切顺利」：输入是合法的、列表不是空的、除法不会除以零。真实程序里这些假定经常不成立。这一章讲 ChaLi 怎么处理「事情没按预期走」。
 
 先说结论：ChaLi 没有异常。没有 \texttt{try} / \texttt{catch} / \texttt{throw}。出错有两条路——「可能空」用 \texttt{Option}、「可能失败」用 \texttt{Result}，两者都放在返回值里，由调用者显式处理。

@@ -1,5 +1,8 @@
 void entry
 add 7
 identity 9
-closures 6 7 8
+closures 6 7 8 9
 local 42
+local+base 101
+local+base after 201
+local void

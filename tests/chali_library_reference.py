@@ -93,7 +93,6 @@ def main():
                 compiler=args.reflection_compiler
                 flags=['--reflection']
             expected=ROOT/'example/expected'/name
-            if expected.with_suffix('.threads').exists(): flags+=['--threads']
             if expected.with_suffix('.in').exists(): flags+=['--input',expected.with_suffix('.in').read_text(encoding='utf-8')]
             if example==EXAMPLES['std::io']: flags+=['--',work/'io.txt']
             output=run([compiler.resolve(),'run',source,'--out',work/name,*flags],

@@ -96,6 +96,20 @@ def charmap(s):
     return s
 
 
+LANGUAGE_NAVIGATION = re.compile(
+    r'^[ \t]*<!-- LANGUAGE NAVIGATION -->.*?<!-- END LANGUAGE NAVIGATION -->[ \t]*\n?',
+    re.S | re.M)
+
+
+def drop_language_navigation(text):
+    """去掉书稿源文件里的 `English · 简体中文` 语言切换行。
+
+    这条导航只在 GitHub 上翻页时点得动；排进书稿既不能点又白占一行版面，
+    所以转换阶段整段丢弃，源文件里的导航保留给网页阅读。
+    """
+    return LANGUAGE_NAVIGATION.sub('', text)
+
+
 def chapter_label(target):
     r"""md 目标文件 -> \label 名；不是书内章节返回 None。"""
     m = re.match(r'^(\d{2})-', target)
@@ -465,7 +479,7 @@ class Converter:
         return items, i
 
     def convert(self, text):
-        blocks = self.parse_blocks(text.split('\n'))
+        blocks = self.parse_blocks(drop_language_navigation(text).split('\n'))
         numbered_children = {}
         for block in blocks:
             if block[0] == 'h' and block[1] >= 3:

@@ -60,7 +60,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
 #if STACKVM_WITH_THREADS
         if ((messageSendThread || messageReceiveThread) && (!threadsEnabled_ || threadRuntime_ == nullptr))
         {
-            fail("多线程未启用；解释运行或 C++ 导出时传 --threads");
+            fail("多线程已关闭；解释运行或 C++ 导出时去掉 --no-threads");
             pending.clear();
             return true;
         }

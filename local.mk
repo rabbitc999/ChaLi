@@ -243,7 +243,7 @@ endif
 -include build/chali-native-development.d
 
 # 泛型与闭包文本处理实现独立编译，解析器和语言服务只依赖声明。
-CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_fn_sugar chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_llvm chali_aot_runtime_assets chali_temp
+CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_llvm chali_aot_runtime_assets chali_temp
 CHALI_FRONTEND_MODULE_OBJS := $(addprefix $(FRONTEND_BUILD)/,$(addsuffix .o,$(CHALI_FRONTEND_MODULES)))
 LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)

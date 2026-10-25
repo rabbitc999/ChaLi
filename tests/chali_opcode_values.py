@@ -20,8 +20,6 @@ def execute(name, source, *, threads=False, failure=None):
     else:
         path.write_text(source, encoding='utf-8')
     command = [str(COMPILER), 'run', str(path), '--out', str(WORK / name)]
-    if threads:
-        command.append('--threads')
     result = subprocess.run(command, cwd=ROOT, capture_output=True, timeout=120,
                             env=dict(os.environ, CHALI_LANG='zh'))
     for stream in ('stdout', 'stderr'):

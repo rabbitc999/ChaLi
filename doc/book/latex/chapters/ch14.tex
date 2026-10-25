@@ -1,8 +1,6 @@
 \chapter{泛型}
 \label{ch:14}
 
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/book/en/14-generics.md}{English} · 简体中文
-
 第 13 章的接口，解决的是「一个函数吃多种类型」——但它靠的是运行期的胖引用和类型号，每调一次都有分派开销。
 
 这一章的泛型解决同一个问题，思路完全不同：在编译期为每一种用到的类型，分别生成一份专门的代码。跑起来没有分派，因为它压根就是一开头就定死的。

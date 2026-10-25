@@ -14,14 +14,14 @@ import std::message;
 
 ## 公共约定与错误边界
 
-泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。需 --threads。
+泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。
 
 ## 参考代码
 
 完整程序：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
 ```powershell
-chali run example/samples/typed_messages_shared.chl --threads
+chali run example/samples/typed_messages_shared.chl
 ```
 
 <details>

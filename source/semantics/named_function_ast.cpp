@@ -16,3 +16,18 @@ int M_NamedFunction(int resultType, int name, int params, int body, int capture)
     g_nodes[declaration].type2 = 0;
     return M_LocalDecl(signature, M_List1(declaration), 0);
 }
+/**
+ * @brief 把具名函数节点落成同名的局部闭包绑定。
+ * @param functionNode `fn` 前缀具名函数节点（名字 + 返回类型 + 形参 + 函数体）。
+ * @retval 局部函数值声明。
+ * @note 具名函数与具名闭包共用一条文法产生式：顶层直接当函数，语句位置落成闭包。
+ */
+int M_NamedFunctionOf(int functionNode)
+{
+    const MNode &definition = g_nodes[static_cast<std::size_t>(functionNode)];
+    return M_NamedFunction(definition.type,
+                           M_NameIdOf(definition.s),
+                           definition.kids[0],
+                           definition.kids[1],
+                           0);
+}

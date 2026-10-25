@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 151 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 154 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -489,7 +489,8 @@ operator_def = type, name_token, OPNAME, "(", param, ",", param, ")", block ;
 func_def = type, name_token, "(", param_list, ")", block
     | ptr_type, name_token, "(", param_list, ")", block
     | array_type, name_token, "(", param_list, ")", block
-    | "let", name_token, "(", param_list, ")", block ;
+    | "let", name_token, "(", param_list, ")", block
+    | fn_named ;
 
 host_type_decl = "type", name_token, "=", type, ";"
     | "type", name_token, "=", ptr_type, ";" ;
@@ -523,6 +524,18 @@ fn_signature = type, "fn", "(", function_params, ")"
     | ptr_type, "fn", "(", function_params, ")"
     | "(", array_type, ")", "fn", "(", function_params, ")"
     | "(", function_type, ")", "fn", "(", function_params, ")" ;
+
+fn_result_type = type
+    | ptr_type
+    | array_type
+    | function_type
+    | "fn", "(", function_params, ")", "->", fn_result_type
+    | "(", "fn", "(", function_params, ")", "->", fn_result_type, ")" ;
+
+fn_result = ""
+    | "->", fn_result_type ;
+
+fn_named = "fn", VARIABLE, "(", param_list, ")", fn_result, block ;
 
 function_params = ""
     | function_params_nonempty ;
@@ -628,6 +641,7 @@ decl_stmt = "let", "(", destructure_items, ")", "=", expr, ";"
     | type, name_token, "(", param_list, ")", ";"
     | ptr_type, name_token, "(", param_list, ")", block
     | ptr_type, name_token, "(", param_list, ")", ";"
+    | fn_named
     | band_expr, "&", name_token, "=", expr, ";"
     | band_expr, "&", name_token, "=", expr, ",", declarator_list, ";"
     | type, declarator_list, ";"

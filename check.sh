@@ -126,8 +126,9 @@ for src in "$SAMPLES"/*.chl; do
     fi
     # 有 example/expected/<name>.in 就把它当程序输入传给 --input（`input(变量);` 用）
     set -- 
-    if [ -f "$EXPECTED/$name.threads" ]; then
-        set -- --threads
+    # 线程缺省启用，只有标了 .no-threads 的样例才显式关掉它。
+    if [ -f "$EXPECTED/$name.no-threads" ]; then
+        set -- --no-threads
     fi
     if [ -f "$EXPECTED/$name.in" ]; then
         set -- --input "$(cat "$EXPECTED/$name.in")"
@@ -218,8 +219,9 @@ for src in "$ERROR_SAMPLES"/*.chl; do
         rm -f "$actual"
         continue
     fi
-    if [ -f "$EXPECTED_ERROR/$name.threads" ]; then
-        set -- --threads
+    # 线程缺省启用：标了 .no-threads 的样例显式关掉，其余按默认跑。
+    if [ -f "$EXPECTED_ERROR/$name.no-threads" ]; then
+        set -- --no-threads
     else
         set --
     fi

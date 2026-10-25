@@ -154,6 +154,9 @@
 %token regex STRING "\"([^\"\\\\]|\\\\.)*\""
 %token regex CHRLIT "'([^'\\\\]|\\\\.)+'"
 
+/* VARIABLE 单独排在最低一级：函数类型后接变量名时必须归约成类型，
+ * 后接 `{` 时必须移进函数体，二者靠这一级区分。 */
+%left VARIABLE
 %right FN TILDE SEMI CONST MUT NOT
 %left OR AND PIPE CARET AMP EQ NE LT LE GT GE SHL SHR PLUS MINUS STAR SLASH PERCENT AT ANNOTATION LPAREN LBRACKET LBRACE
 

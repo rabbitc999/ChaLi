@@ -21,7 +21,7 @@ def main():
             """写入本次程序，以真实编译器运行并返回 UTF-8 诊断。"""
             source.write_text(text, encoding='utf-8')
             return subprocess.run(
-                [str(compiler), 'run', str(source), '--threads',
+                [str(compiler), 'run', str(source),
                  '--compress-symbols' if compressed else '--no-compress-symbols'],
                 cwd=directory, capture_output=True, encoding='utf-8',
                 errors='replace', timeout=30, env=dict(os.environ, CHALI_LANG='zh'),

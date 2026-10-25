@@ -16,7 +16,7 @@ def main():
     for name in tuple(sys.argv[1:]) or SAMPLES:
         source = ROOT / f'example/samples/{name}.chl'
         expected = (ROOT / f'example/expected/{name}.txt').read_text(encoding='utf-8')
-        threads = ['--threads'] if (ROOT / f'example/expected/{name}.threads').exists() else []
+        threads = []
         prefix = work / name
         result = run(CHALI, 'run', source, *threads, '-I', ROOT, '--out', prefix)
         assert result.stdout == expected and (not result.stderr), (name, result.stdout, result.stderr)

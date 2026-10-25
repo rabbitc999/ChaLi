@@ -249,6 +249,46 @@ Memory::String inferArgument(const Memory::String &argument,
  * @param error 失败说明。
  * @return 成功返回 true。
  */
+/**
+ * @brief 跳过箭头之后的一个类型拼写，用于区分 lambda 箭头与后置函数类型。
+ * @param text 待扫描的源码。
+ * @param at 类型起点。
+ * @return 类型结束位置；遇到不属于类型的记号时停在该处。
+ */
+std::size_t skipTypeText(const Memory::String &text, std::size_t at)
+{
+    for (;;)
+    {
+        while (at < text.size() && std::isspace(static_cast<unsigned char>(text[at]))) ++at;
+        if (at >= text.size()) return at;
+        const char value = text[at];
+        if (value == '-' && at + 1u < text.size() && text[at + 1u] == '>')
+        {
+            at += 2u;
+            continue;
+        }
+        if (value == '(' || value == '<' || value == '[')
+        {
+            const char close = value == '(' ? ')' : value == '<' ? '>' : ']';
+            std::size_t end = 0;
+            if (!balanced(text, at, value, close, end)) return at;
+            at = end + 1u;
+            continue;
+        }
+        if (value == '&')
+        {
+            ++at;
+            continue;
+        }
+        if (ident(value) || (value == ':' && at + 1u < text.size() && text[at + 1u] == ':'))
+        {
+            while (at < text.size() && (ident(text[at]) || text[at] == ':')) ++at;
+            continue;
+        }
+        return at;
+    }
+}
+
 bool run(preprocess::Result &result, Memory::String &error)
 {
     captureSpecifications.clear();
@@ -369,8 +409,21 @@ bool run(preprocess::Result &result, Memory::String &error)
         Memory::String resultType = "let";
         if (result.text.compare(bodyOpen, 2u, "->") == 0)
         {
-            error = "0.12.0 已移除 lambda 箭头返回类型，请迁移为 int64 fn(int64 x) { ... }；推导返回类型时省略箭头";
-            return false;
+            // `-> fn(形参) -> 类型` 里的内层是返回类型后置的函数类型，不是 lambda。
+            std::size_t before = at;
+            while (before > 0 && std::isspace(static_cast<unsigned char>(result.text[before - 1u]))) --before;
+            const bool trailing = before > 0 && result.text[before - 1u] == '>';
+            // 只有类型后面直接是函数体时才算已移除的 lambda 箭头；变量声明与形参位置交给文法。
+            std::size_t after = skipTypeText(result.text, bodyOpen + 2u);
+            while (after < result.text.size() && std::isspace(static_cast<unsigned char>(result.text[after]))) ++after;
+            if (!trailing && after < result.text.size() && result.text[after] == '{')
+            {
+                error = "0.12.0 已移除 lambda 箭头返回类型，请迁移为 int64 fn(int64 x) { ... }；推导返回类型时省略箭头";
+                return false;
+            }
+            output += result.text.substr(cursor, at + keywordLength - cursor);
+            cursor = at + keywordLength;
+            continue;
         }
         if (keywordLength == 2u && (bodyOpen >= mask.size() || mask[bodyOpen] != '{'))
         {

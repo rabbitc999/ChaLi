@@ -29,7 +29,7 @@ def main():
     for sample in args.samples:
         source = ROOT / f'example/samples/{sample}.chl'
         expected = (ROOT / f'example/expected/{sample}.txt').read_text(encoding='utf-8')
-        flags = ['--threads'] if (ROOT / f'example/expected/{sample}.threads').is_file() else []
+        flags = []
         results = [('解释执行', run(compiler, 'run', source, '--out', WORK / (sample + '-interpret'), *flags))]
         for mode, result in results:
             assert result.stdout == expected, (mode, result.stdout, expected)

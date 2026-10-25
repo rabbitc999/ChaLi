@@ -4,7 +4,23 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.1**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.2**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.2 — 修复匿名 lambda 回归并统一具名函数与闭包
+
+- 修复 1.0.1 引入的回归：新增的裸 `fn(形参)` 函数类型产生式与既有的 `fn (形参) { 函数体 }` lambda 抢同一个 `fn (` 前缀，LALR(1) 单记号前瞻无法区分，于是 `let f = fn (int64 x) { return x + 1; };` 被解析成返回 void 的 lambda。样例 `fn_let.chl`、`lambda_let.chl` 在 1.0.0 正常、在 1.0.1 报「void 函数不能返回值」。
+- 后置函数类型收窄到返回类型位置：只有 `-> fn(T) -> T` 这类写在 `->` 之后的写法进入文法，声明与变量类型位置沿用返回类型前置的 `int64 fn(int64)` 或 `(T fn(T))`；`fn` 后面直接跟 `(` 一律是 lambda。两者共用前缀，文法上只能二选一，让给既有的 lambda。
+- fn 前缀与返回类型后置写法移入 `source/chali.gram`：新增 `fn_result`（省略 `->` 即 void）、`fn_result_type` 与 `fn_named` 三条产生式，顶层函数、局部具名函数与函数类型共用；删除独立的 `chali_fn_sugar` 文本预处理趟，每次编译少扫一遍全文，文法侧仍由 `%expect 0` 保证零未消解冲突。
+- 具名函数统一为具名闭包：`fn 名(参数) -> 类型 { ... }` 在顶层提升为全局函数，在语句位置落成同名闭包绑定并默认只读借用外层变量；顶层与局部共用同一条产生式，返回类型拼写只写一处。
+- `fn` 后面紧跟的关键字一律当闭包的捕获方式，函数名只接受标识符：`fn copy(...)` 仍是按副本捕获的 lambda，不再与「名叫 copy 的函数」二义。
+- 书稿 LaTeX 导出丢弃章首的 `English · 简体中文` 语言切换行：该导航只在 GitHub 上点得动，排进 PDF 既不能点又占版面；源文件里的导航保留给网页阅读。
+- 后置函数类型支持带括号的写法：`fn 名(形参) -> (fn(T) -> T)` 与不带括号的 `-> fn(T) -> T` 等价，读起来「返回一个函数」更像一整块；两条共用同一条 `fn_result_type` 产生式。
+- 后置写法里的形参名自动擦除：`fn(T v) -> T` 与 `fn(T) -> T` 类型身份相同，形参名只是注解；形参默认值仍被拒绝。返回类型前置的写法保持严格，`int64 fn(int64 v)` 继续报「函数类型的形参只写类型」。
+- `--threads` 改为 `--no-threads`：隔离的宿主线程执行现在默认开启，命令行用 `--no-threads` 关闭，与 `--reflection` 之外的其它 `--no-xxx` 开关同形。解释器、C++ 导出与 VM 三处帮助文本、i18n 词条、回归脚本与标准库文档同步。
+- CLI 帮助的选项与常用选项按首字母排序；`man [目标]` 与 `test|fmt|lsp|deps` 两行从选项区归入「开发场景」小节，与真正影响编译行为的开关分开。
+- build.sh 改用 `tools/compiler_path.py` 定位产物：Windows 的正式产物名带版本与 LLVM 链接方式，此前固定找 `ChaLi.exe` 会在构建成功后误报「没有找到 ChaLi 可执行文件」。
+- 程序、内嵌编译器与语言服务版本统一为 1.0.2；中英文文档、安装包命名与书稿封面同步，验收只执行 VM，不执行 AOT。
 
 
 ## 1.0.1 — fn 前缀与返回类型后置写法

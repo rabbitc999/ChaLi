@@ -201,7 +201,7 @@ def render(data):
         lines+=['## 参考代码', '']
         if example:
             expected=ROOT/'example/expected'/Path(example).stem
-            flags=' --threads' if expected.with_suffix('.threads').exists() else ' --reflection' if module=='std::reflect' else ''
+            flags=' --reflection' if module=='std::reflect' else ''
             if module=='std::io': flags+=' -- build/library-example.txt'
             lines += [f'完整程序：[{example}](../../{example})。', '', '```powershell', 'chali run '+example+flags, '```', '']
             if module=='std::net': lines += ['非阻塞与可取消线程配合的完整程序：[std_net_async.chl](../../example/samples/std_net_async.chl)。', '']
@@ -209,7 +209,7 @@ def render(data):
             if module=='std::reflect': lines+=['需先用 `make reflection` 构建支持反射的工具链；当前二进制未编入支持时，上述命令会明确报缺失宏。','']
             path=ROOT/example
             if path.exists():
-                example_flags=['--threads'] if expected.with_suffix('.threads').exists() else ['--reflection'] if module=='std::reflect' else []
+                example_flags=['--reflection'] if module=='std::reflect' else []
                 examples.setdefault(example,dict(id=example,source=example,code=path.read_text(encoding='utf-8'),
                     arguments=expected.with_suffix('.args').read_text(encoding='utf-8').splitlines() if expected.with_suffix('.args').exists() else ['example.txt'] if module=='std::io' else [],
                     flags=example_flags,input=expected.with_suffix('.in').read_text(encoding='utf-8') if expected.with_suffix('.in').exists() else '',

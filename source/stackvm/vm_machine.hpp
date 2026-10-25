@@ -344,7 +344,7 @@ private:
     const NativeServices *hostServices_ = nullptr;     ///< 宿主注入的通用不透明服务。
     Memory::Vector<Memory::String> programArguments_;  ///< 传给语言入口的命令行参数。
 #if STACKVM_WITH_THREADS
-    bool threadsEnabled_ = false;
+    bool threadsEnabled_ = true;
     std::shared_ptr<ThreadRuntime> threadRuntime_;
     std::shared_ptr<SharedRuntime> sharedRuntime_;
 #endif

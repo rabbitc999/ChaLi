@@ -267,3 +267,52 @@ F005 已通过编译器同源的 CRT 宽参数转换保留 Windows 进程入口 
 - [x] 书稿 LaTeX 由 `doc/book/latex/tools/md2tex.py` 重新导出（ch01/preface/ch15），PDF 重新生成仍为 290 页。
 - [x] 提交并推送 Gitee 与 GitHub 两个远端（用户已明确授权）：master 提交 f747a78，标签 v1.0.1 打在该提交上；Gitee 侧此前有一个仅存在于该远端的 TASK.md 回退提交 f5fca3f（撤销历史署名推送记录两条），以合并提交 fa359c1 并入，两个远端 master 现同为 fa359c1。
 - [ ] Gitee 的 v1.0.0 标签仍指向署名重写前的旧提交 41dc628，与本端 / GitHub 的 67b3094 不一致；仓库历史重写时只覆盖了 master，Gitee 侧六个既有标签未同步。是否强制同步这些历史标签未定，本轮未动。
+
+## 本轮追加：1.0.2 的具名闭包统一、带括号后置写法与 `--no-threads`
+
+### 一、后置写法移入权威文法
+
+- [x] 删除 1.0.1 的独立文本 pass（`source/chali_fn_sugar.{cpp,hpp}`，已 `git rm`）：用户明确要求糖语法放在 gram 内部，每次编译少扫一遍全文。
+- [x] `source/chali.gram` 新增 `fn_named` / `fn_result` / `fn_result_type` 三条产生式；顶层函数、局部具名函数与函数类型共用 `fn_named`，返回类型拼写只写一处。
+- [x] `fn_result_type` 的六条分支统一带 `%prec FN`：`&` / `[]` / `fn(...)` 排在 FN 之上，归约要让位给移进。`%prec` 必须与动作同行、位于产生式末尾；换行会让生成器报「规则 X 的 | 分支必须以 ; 结束」。
+- [x] `%expect 0` 仍是零冲突：函数名位置用 `VARIABLE` 而不是 `name_token`，否则 `fn copy(...)`（按副本捕获的 lambda）与「名叫 copy 的函数」在 COPY 记号上冲突。
+- [x] 后置函数类型只写在返回类型位置。`fn` 后直接跟 `(` 一律是 `fn (形参) { 体 }` 的 lambda —— 两者共用 `fn (` 前缀，LALR(1) 单记号前瞻分不开，文法上让给既有的 lambda。
+
+### 二、1.0.1 的真实回归与修复
+
+- [x] 1.0.1 的裸 `fn(形参)` 函数类型抢走了 lambda 前缀：`example/samples/fn_let.chl` 与 `lambda_let.chl` 在 1.0.0 输出 `11 24 5 11 9 22 7 14 2 9 fn (not code)`，1.0.1 变成「void 函数不能返回值」。
+- [x] 1.0.2 上逐个复测：两个样例恢复 1.0.0 的输出。
+
+### 三、带括号的后置函数类型（用户给的写法）
+
+- [x] `fn calc<T>(T x) -> (fn(T b) -> T)` 可用：`fn_result_type` 新增 `LPAREN FN LPAREN function_params RPAREN ARROW fn_result_type RPAREN` 分支，与不带括号的 `-> fn(T b) -> T` 等价。
+- [x] 后置写法的形参名自动擦除：新增 `M_FnSignatureTypeErased`，把形参名当注解擦掉只留类型，`fn(T v) -> T` 与 `fn(T) -> T` 类型身份相同；形参默认值仍被拒绝（「函数类型的形参不写默认值」）。
+- [x] 返回类型前置的写法保持严格：`(int64 fn(int64 v))` 继续报「函数类型的形参只写类型，不写名称或默认值」，本轮不放松。
+- [x] 用户先给的 `-> (fn(T b) -> b)`：最内层 `->` 后是形参名 `b`，类型位置不接受形参名，编译器把它当未声明类型 `b` 并报类型不匹配。用户随后自行改为 `-> T`，按 `-> T` 交付。
+- [x] `M_FnSignatureTypeErased` 按下标取形参，不持有容器引用或迭代器：`M_New` 会搬动 `g_nodes`，直接 `std::vector<int>` 拷贝会撞上项目自定义分配器（`Memory::Allocator<int>` 与 `std::allocator<int>` 不兼容）。
+
+### 四、具名函数统一为具名闭包
+
+- [x] 顶层 `fn 名(...)` 提升为全局函数，语句位置落成同名闭包绑定（`M_NamedFunctionOf`），默认只读借用外层变量，且能感知外层变量后续被改（`local+base 101` → `local+base after 201`）。
+- [x] 名字池反向查询 `M_NameIdOf`：节点的名字存在 `s` 字段（`MNode` 没有 `name` 成员）；倒序扫描名称池，没命中才 `M_Name`。
+
+### 五、`--threads` 改名
+
+- [x] 隔离线程默认启用，命令行用 `--no-threads` 关闭（用户拍板选「默认开启」）；`chali_driver.cpp` / `chali_main.cpp` / `source/stackvm/main.cpp` / `source/stackvm/vm_machine.hpp` 四处默认值与解析同步翻转为 `true`。
+- [x] `check.sh` 与 `tools/regen-expected-error.sh` 的标记由 `.threads` 翻转为 `.no-threads`；`thread_disabled.txt` 的期望文案与标记同步。
+- [x] 全仓库已无 `--threads` 字样：10 处文档、6 处源码、2 处 i18n、17 处测试与工具（临时脚本按精确串替换，命中数不为 1 即跳过并报错）；`tools/library_reference_data.py` 三处「需 --threads」改写为默认启用后重新生成 API 清单。
+- [x] 四个原线程样例（`thread_join_deadlock`、`thread_receive_deadlock`、`typed_message_mismatch`、`typed_message_pointer`）改为默认运行，期望输出仍匹配；`thread_disabled` 按 `.no-threads` 标记带 `--no-threads` 跑。完整门禁 49/49 通过。
+
+### 六、CLI 帮助与构建脚本
+
+- [x] 选项与常用选项按首字母排序；`man [目标]` 与 `test|fmt|lsp|deps` 两行从选项区提到「开发场景：」下方，与真正影响编译行为的开关分开。
+- [x] `build.sh` 改用 `tools/compiler_path.py` 定位产物：Windows 正式产物名带版本与 LLVM 链接方式，此前固定找 `ChaLi.exe` 会在构建成功后误报「构建结束但没有找到 ChaLi 可执行文件」并以 exit 1 结束。
+
+### 七、文档与交付
+
+- [x] 中英 `doc/28-declaration-sugars.md`、`doc/39-syntax-frozen.md`、`doc/14-grammar-ebnf.md`（由工具重新导出）、中文书稿 15.18、英文书稿第 15 章同步；书稿 15.18 新增一条 `<!-- verify-book -->` 示例覆盖带括号写法与形参名擦除。
+- [x] 书稿 LaTeX 导出丢弃章首的 `English · 简体中文` 语言切换行（`md2tex.py` 新增 `drop_language_navigation`）：该导航只在网页上点得动，排进 PDF 既不能点又占版面；源文件里的导航保留。
+- [x] `tools/changelog_data.json` 追加 5 条 1.0.2 条目并重建 CHANGELOG.md（`--check` 无漂移）。
+- [x] 完整门禁 49 项全部通过（样例回归 279 正常 + 312 错误，两个 lambda 样例恢复 1.0.0 输出）。
+- [x] 中文书稿 PDF 重新排版：293 页（原 292 页，新增 15.18 的带括号写法示例），由 `doc/book/latex` 下 `latexmk -xelatex book.tex` 生成。
+- [ ] 提交推送 Gitee 与 GitHub、打 v1.0.2 标签。
