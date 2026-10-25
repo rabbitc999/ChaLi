@@ -315,4 +315,4 @@ F005 已通过编译器同源的 CRT 宽参数转换保留 Windows 进程入口 
 - [x] `tools/changelog_data.json` 追加 5 条 1.0.2 条目并重建 CHANGELOG.md（`--check` 无漂移）。
 - [x] 完整门禁 49 项全部通过（样例回归 279 正常 + 312 错误，两个 lambda 样例恢复 1.0.0 输出）。
 - [x] 中文书稿 PDF 重新排版：293 页（原 292 页，新增 15.18 的带括号写法示例），由 `doc/book/latex` 下 `latexmk -xelatex book.tex` 生成。
-- [ ] 提交推送 Gitee 与 GitHub、打 v1.0.2 标签。
+- [x] 提交并推送 Gitee 与 GitHub 两个远端（用户已明确授权）：master 提交 b042c56，标签 v1.0.2 打在该提交上，两个远端 master 现同为 b042c56。Gitee 提示仓库体积 1018 MB 超过 819 MB 配额，本轮未处理。
