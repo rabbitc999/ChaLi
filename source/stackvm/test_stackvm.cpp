@@ -560,7 +560,7 @@ void testOptimize()
     CHECK(optimizedProgram.code.size() <= plainProgram.code.size());
 
     // 回归：形参的 `(decl …)` 排在引导 `(halt …)` 之后、函数标签之前——它是**类型元信息**，
-    // 不能被"不可达代码"整段删掉（`simple_ast` 给每个函数发的形参声明就长这样）。
+    // 不能被"不可达代码"整段删掉（`ast` 给每个函数发的形参声明就长这样）。
     stackvm::QuadFile guide = stackvm::parseQuads(
         "0: (param, 41, _, k)\n"
         "1: (call, f, _, _)\n"

@@ -8,7 +8,7 @@
  * @retval 保持字段顺序、容器元素类型和数组边界的布局。
  */
 stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
-                                          Memory::Set<Memory::String> &visiting, Memory::Vector<simple_ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0)
+                                          Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0)
 {
     using stackvm::value_text::Shape;
     Shape out;
@@ -74,7 +74,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                         out.formatter = callbacks.size() / 2 + 1;
                         callbacks.push_back(FunctionPointerValue(type->name + "." + method.name));
                         const bool hasArray = std::any_of(definition->second.leaves.begin(), definition->second.leaves.end(), [](const auto &leaf) { return leaf.second->kind == MType::Array; });
-                        callbacks.push_back(hasArray ? simple_ast::Node::i(0) : ContainerStorageFlag(type, true));
+                        callbacks.push_back(hasArray ? ast::Node::i(0) : ContainerStorageFlag(type, true));
                     }
                     break;
                 }
@@ -122,7 +122,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
 Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRoot)
 {
     Memory::Set<Memory::String> visiting;
-    Memory::Vector<simple_ast::NodePtr> callbacks;
+    Memory::Vector<ast::NodePtr> callbacks;
     return stackvm::value_text::encode(ValueTextShape(type, visiting, callbacks, customRoot));
 }
 
@@ -132,10 +132,10 @@ Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRo
  * @param customRoot 是否保留根值的用户覆盖。
  * @retval 方法值与聚合存储布局组成的成对实参。
  */
-Memory::Vector<simple_ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MType> &type, bool customRoot)
+Memory::Vector<ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MType> &type, bool customRoot)
 {
     Memory::Set<Memory::String> visiting;
-    Memory::Vector<simple_ast::NodePtr> callbacks;
+    Memory::Vector<ast::NodePtr> callbacks;
     ValueTextShape(type, visiting, callbacks, customRoot);
     return callbacks;
 }
@@ -145,7 +145,7 @@ Memory::Vector<simple_ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MTy
  * @param valueId 只求值一次的源表达式。
  * @retval 新分配且由调用者接管的字符串。
  */
-simple_ast::NodePtr LowerDefaultValueText(int valueId)
+ast::NodePtr LowerDefaultValueText(int valueId)
 {
     const auto type = ExprType(valueId);
     if (!type || type->kind == MType::Void) return Fail("void 不是可转换为字符串的值"), Bad();
@@ -156,24 +156,24 @@ simple_ast::NodePtr LowerDefaultValueText(int valueId)
     if (g_freshSink && (type->kind == MType::Array || (IsResourceLike(type) && !IsObjectLike(type))) && IsFreshValue(valueId))
     {
         const auto temporary = AllocateName("__chali_text_source");
-        g_freshSink->push_back(simple_ast::Node::declare(temporary, simple_ast::Type::i64()));
+        g_freshSink->push_back(ast::Node::declare(temporary, ast::Type::i64()));
         g_freshSink->push_back(MakeDrop(temporary, type->kind == MType::Array));
-        g_freshSink->push_back(simple_ast::Node::assign(temporary, value));
+        g_freshSink->push_back(ast::Node::assign(temporary, value));
         if (type->kind == MType::Array)
             MarkOwnedArray(temporary, type);
         else
             MarkOwned(temporary);
         NoteExpressionTemp(temporary);
-        value = simple_ast::Node::var(temporary);
+        value = ast::Node::var(temporary);
     }
     Memory::Vector<Memory::String> names{ "value", "shape" };
-    Memory::Vector<simple_ast::NodePtr> values{ value, simple_ast::Node::str(ValueTextLayout(type, false)) };
+    Memory::Vector<ast::NodePtr> values{ value, ast::Node::str(ValueTextLayout(type, false)) };
     for (const auto &callback : ValueTextCallbacks(type, false))
     {
         names.push_back("callback" + Memory::toString(names.size()));
         values.push_back(callback);
     }
-    return simple_ast::Node::call("__std_value_to_string", names, values);
+    return ast::Node::call("__std_value_to_string", names, values);
 }
 
 /**
@@ -181,7 +181,7 @@ simple_ast::NodePtr LowerDefaultValueText(int valueId)
  * @param valueId 输入表达式。
  * @retval 自定义方法结果或默认值文本，均为调用点拥有的字符串。
  */
-simple_ast::NodePtr LowerValueText(int valueId)
+ast::NodePtr LowerValueText(int valueId)
 {
     const auto type = ExprType(valueId);
     if (type && !IsContainer(type) && (type->kind == MType::Struct || type->kind == MType::Opcode))
@@ -193,7 +193,7 @@ simple_ast::NodePtr LowerValueText(int valueId)
                 {
                     const auto label = type->name + "." + method.name;
                     if (!CheckMethodReceiver(valueId, label)) return Bad();
-                    return simple_ast::Node::call(label, { "self" }, { type->kind == MType::Struct ? OwnedAggregateTempFor(valueId, type) : OwnedObjectTemp(valueId, type) });
+                    return ast::Node::call(label, { "self" }, { type->kind == MType::Struct ? OwnedAggregateTempFor(valueId, type) : OwnedObjectTemp(valueId, type) });
                 }
     }
     if (type)

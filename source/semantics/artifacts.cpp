@@ -1039,7 +1039,7 @@ static const bool kChaliAotRegistered = (::chali_aot::setAbiExternProvider(&Chal
  * @param parsed 已完成组装的程序产物。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool WriteArtifacts(const Memory::String &prefix, const simple_ast::CodegenResult &result,
+bool WriteArtifacts(const Memory::String &prefix, const ast::CodegenResult &result,
                     Memory::String *binaryPath, Memory::String *layoutPath, stackvm::QuadFile *parsed)
 {
     *binaryPath = prefix + ".data.bin";

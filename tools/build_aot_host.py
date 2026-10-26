@@ -15,14 +15,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cxx", default="g++")
     parser.add_argument("--ar", default="ar")
-    parser.add_argument("--object", type=Path, required=True)
+    parser.add_argument("--object", type=Path, action='append', required=True)
     parser.add_argument("--output", type=Path, default=ROOT / "build/chali-aot-host/assets.txt")
     args = parser.parse_args()
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     dependencies = [ROOT / 'build/chali-stackvm-core/libstackvm.a',
-                    ROOT / 'build/chali-host-records/librecords.a', args.object.resolve(),
-                    ROOT / 'build/chali-frontend/lztext.o']
+                    ROOT / 'build/chali-host-records/librecords.a',
+                    *[path.resolve() for path in args.object], ROOT / 'build/chali-frontend/lztext.o']
     names = ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
     if os.name == 'nt':
         names += ['libmingw32.a', 'libmingwex.a', 'libmoldname.a', 'libwinpthread.a', 'libwinhttp.a', 'libws2_32.a', 'libcrypt32.a', 'libbcrypt.a']
@@ -46,7 +46,7 @@ def main():
         lines = ["CREATE " + archive.as_posix(),
                  "ADDLIB " + (ROOT / "build/chali-stackvm-core/libstackvm.a").as_posix(),
                  "ADDLIB " + (ROOT / "build/chali-host-records/librecords.a").as_posix(),
-                 "ADDMOD " + args.object.resolve().as_posix(),
+                 *["ADDMOD " + path.resolve().as_posix() for path in args.object],
                  "ADDMOD " + (ROOT / "build/chali-frontend/lztext.o").as_posix(), "SAVE", "END"]
         subprocess.run([args.ar, "-M"], input="\n".join(lines) + "\n", text=True, check=True, cwd=ROOT)
         entries = [("libchali_aot_host.a", archive)] + libraries

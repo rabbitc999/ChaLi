@@ -1,0 +1,390 @@
+{
+  "generated": "20261026-122402",
+  "host": "DESKTOP-5Q9FB8C",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "python": "3.12.3",
+  "runs": 3,
+  "reps_per_run": 5,
+  "cases": [
+    "int_chain",
+    "float_chain",
+    "call",
+    "array",
+    "array_rw",
+    "list"
+  ],
+  "sinks": {
+    "int_chain": {
+      "chali-aot": "6942227210",
+      "cpp-o3": "6942227210"
+    },
+    "float_chain": {
+      "chali-aot": "6.976227074",
+      "cpp-o3": "6.976227074"
+    },
+    "call": {
+      "chali-aot": "6040804810",
+      "cpp-o3": "6040804810"
+    },
+    "array": {
+      "chali-aot": "112",
+      "cpp-o3": "112"
+    },
+    "array_rw": {
+      "chali-aot": "3398979922",
+      "cpp-o3": "3398979922"
+    },
+    "list": {
+      "chali-aot": "5673410186",
+      "cpp-o3": "5673410186"
+    }
+  },
+  "configs": {
+    "chali-aot": {
+      "label": "ChaLi 1.0.6（LLVM AOT，默认检查）",
+      "note": "同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3 与默认检查；C 壳计时，初始化不计时；共享原生标准库",
+      "median_ms": {
+        "int_chain": 105.288,
+        "float_chain": 24.454,
+        "call": 24.744,
+        "array": 194.318,
+        "array_rw": 299.623,
+        "list": 734.328
+      },
+      "min_ms": {
+        "int_chain": 92.815,
+        "float_chain": 22.704,
+        "call": 22.881,
+        "array": 174.904,
+        "array_rw": 269.738,
+        "list": 665.33
+      },
+      "max_ms": {
+        "int_chain": 123.171,
+        "float_chain": 30.204,
+        "call": 35.437,
+        "array": 247.613,
+        "array_rw": 377.156,
+        "list": 797.706
+      },
+      "samples_ns": {
+        "int_chain": [
+          112073200,
+          123171500,
+          108861500,
+          100758100,
+          109653500,
+          117293700,
+          92814600,
+          96740100,
+          101146500,
+          101755500,
+          105223300,
+          105288300,
+          103877600,
+          118168100,
+          115312500
+        ],
+        "float_chain": [
+          24454400,
+          25466700,
+          23463100,
+          24134600,
+          30203700,
+          28828600,
+          26712400,
+          24845900,
+          22703900,
+          22775900,
+          30155700,
+          23666100,
+          23057000,
+          29440100,
+          22927800
+        ],
+        "call": [
+          24573100,
+          26293200,
+          27038700,
+          27897500,
+          33642000,
+          35436500,
+          26074800,
+          23469100,
+          24743800,
+          23754100,
+          24936000,
+          22910300,
+          22880800,
+          22943300,
+          23040500
+        ],
+        "array": [
+          208721300,
+          247613300,
+          189664500,
+          191743100,
+          195292100,
+          178555000,
+          194318400,
+          195983900,
+          241974800,
+          223638100,
+          185714800,
+          174904000,
+          184712600,
+          196926700,
+          192019900
+        ],
+        "array_rw": [
+          377155600,
+          275384000,
+          299998700,
+          321529300,
+          319134800,
+          269737700,
+          299622800,
+          294743800,
+          287407500,
+          305616800,
+          278707100,
+          278424800,
+          304421700,
+          301887900,
+          279161600
+        ],
+        "list": [
+          768625900,
+          665329800,
+          772929500,
+          713985100,
+          758147200,
+          714089800,
+          797705800,
+          726213600,
+          734328200,
+          669775900,
+          724587100,
+          737117500,
+          783674600,
+          689061700,
+          752840200
+        ]
+      },
+      "unavailable": {}
+    },
+    "cpp-o3": {
+      "label": "C++17（g++ -O3）",
+      "note": "O3 原生参考；保留 O2 配置及历史数据，volatile 函数入口保留计时边界",
+      "median_ms": {
+        "int_chain": 4.337,
+        "float_chain": 1.297,
+        "call": 0.863,
+        "array": 6.906,
+        "array_rw": 8.633,
+        "list": 1.031
+      },
+      "min_ms": {
+        "int_chain": 4.314,
+        "float_chain": 1.294,
+        "call": 0.862,
+        "array": 6.903,
+        "array_rw": 8.628,
+        "list": 0.801
+      },
+      "max_ms": {
+        "int_chain": 4.731,
+        "float_chain": 1.385,
+        "call": 0.873,
+        "array": 6.911,
+        "array_rw": 8.996,
+        "list": 1.455
+      },
+      "samples_ns": {
+        "int_chain": [
+          4382600,
+          4341800,
+          4415400,
+          4337600,
+          4321100,
+          4341800,
+          4335400,
+          4347500,
+          4336700,
+          4329900,
+          4730900,
+          4316000,
+          4314400,
+          4331100,
+          4324900
+        ],
+        "float_chain": [
+          1295800,
+          1294200,
+          1295500,
+          1385100,
+          1299700,
+          1300900,
+          1297000,
+          1294000,
+          1383100,
+          1294900,
+          1296700,
+          1299800,
+          1296200,
+          1306100,
+          1299900
+        ],
+        "call": [
+          863400,
+          863200,
+          861900,
+          866100,
+          863300,
+          871600,
+          863300,
+          873300,
+          863200,
+          861900,
+          865600,
+          861800,
+          868200,
+          864900,
+          871800
+        ],
+        "array": [
+          6910800,
+          6903400,
+          6906900,
+          6902600,
+          6906700,
+          6906000,
+          6906600,
+          6904400,
+          6905200,
+          6906500,
+          6906300,
+          6906100,
+          6906300,
+          6905700,
+          6903900
+        ],
+        "array_rw": [
+          8635500,
+          8627600,
+          8634300,
+          8628300,
+          8632400,
+          8995800,
+          8790500,
+          8633000,
+          8631800,
+          8632600,
+          8771200,
+          8656500,
+          8634000,
+          8629900,
+          8632600
+        ],
+        "list": [
+          1057100,
+          1455000,
+          1312800,
+          1253800,
+          1414400,
+          828700,
+          1030700,
+          822600,
+          1092700,
+          851100,
+          874700,
+          1053600,
+          801200,
+          1029900,
+          811100
+        ]
+      },
+      "unavailable": {}
+    }
+  },
+  "chali_compiler": {
+    "reported_version": "1.0.6",
+    "sha256": "9f7592fe2b4e219a62b93b2c8f561639314fb8176bd4ef26ae1dfa1d2bfab063"
+  },
+  "tool_versions": {
+    "llvm-clang": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/library/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/library/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg",
+    "gcc": "gcc.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "g++": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "go": "go version go1.27.1 windows/amd64",
+    "java": "java version \"22.0.1\" 2024-04-16\nJava(TM) SE Runtime Environment (build 22.0.1+8-16)\nJava HotSpot(TM) 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)",
+    "node": "v26.5.0",
+    "python": "Python 3.12.3"
+  },
+  "llvm_dependency": {
+    "version": "23.1.4",
+    "distribution": "llvm-mingw 20261020 ucrt x86_64",
+    "upstream": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+    "upstream_sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+    "archive_sha256": "5a988a6f875bdda342239ce033c47b94c33c5c2e520245209fe9a493d9cfcc67",
+    "archive_bytes": 76120409,
+    "archive_parts": [
+      {
+        "file": "packages/windows-x86_64.zip.001",
+        "bytes": 8388608,
+        "sha256": "cf218c3956b34512902b5e3c2874cb220565bfbb93a71d4ebff2fe74cc318121"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.002",
+        "bytes": 8388608,
+        "sha256": "5f852870250fbdbc1adc02ad8daef496ef088c543caa4ee0bfc71bbe0ce82dc4"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.003",
+        "bytes": 8388608,
+        "sha256": "e43598245771583d364e4d7cc3aa41e127e37ebb349262274147344d7fe67a8a"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.004",
+        "bytes": 8388608,
+        "sha256": "03e8e94dc36255c161d10f831770e378ec4d04d523f63debfd7eccf98e5cafad"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.005",
+        "bytes": 8388608,
+        "sha256": "8f3453c0b45d37eed282c2c3aba03f7e13272b147a935da72dc9077294b7319b"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.006",
+        "bytes": 8388608,
+        "sha256": "c9dd7f8bd784532730935b9a791ca89b634cd79ba0bc912e698ee6a7acfaaeb5"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.007",
+        "bytes": 8388608,
+        "sha256": "8904185bb83c63de90f353c70903e1ac5eae03106b4d8f33040af2aa53908bab"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.008",
+        "bytes": 8388608,
+        "sha256": "2632dffb88e445596b969a1f4a56d54f453a1de2241dc28721e57f0f8f9a40c6"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.009",
+        "bytes": 8388608,
+        "sha256": "fd20e6995bfcb1c36159cd67de6829ce9e4158a6a96e1a9cda600d7bd146bacc"
+      },
+      {
+        "file": "packages/windows-x86_64.zip.010",
+        "bytes": 622937,
+        "sha256": "8c7e46edb887c99296967607cff518c625c7c7bb5dc0d6260f81624a4e440d26"
+      }
+    ]
+  },
+  "lua_dependency": {
+    "version": "5.5.1",
+    "url": "https://www.lua.org/ftp/lua-5.5.1.tar.gz",
+    "sha256": "1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
+  }
+}

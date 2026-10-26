@@ -20,7 +20,7 @@ struct MBorrowFlowCapture
     Memory::Map<int, MBorrowPlace> foreachBindings;
     Memory::Set<int> storageReleases;                                                ///< 明确释放堆存储的 drop() 调用。
     Memory::Set<int> terminalCalls;                                                  ///< 确认为 Drop 协议的显式调用，不包括普通同名方法。
-    Memory::Map<int, std::pair<simple_ast::NodePtr, simple_ast::NodePtr>> releases;  ///< 显式终结及其路径守卫。
+    Memory::Map<int, std::pair<ast::NodePtr, ast::NodePtr>> releases;                ///< 显式终结及其路径守卫。
     Memory::Set<int> valueLoops;                                                     ///< 实际分配了结果槽的循环，独立语句也可能接收并丢弃结果。
 };
 Memory::Vector<chali_borrow_checker::FlowGraph> g_borrowFlows;
@@ -708,11 +708,11 @@ void FinishBorrowFlow(int body, const MBorrowFlowCapture &capture)
         if (found == capture.releases.end() || !found->second.first) continue;
         const auto operation = found->second.first;
         if (merge.redundant)
-            *operation = *simple_ast::Node::block({});
+            *operation = *ast::Node::block({});
         else if (found->second.second)
         {
-            const auto original = std::make_shared<simple_ast::Node>(*operation);
-            *operation = *simple_ast::Node::ifThenElse(found->second.second, original, nullptr);
+            const auto original = std::make_shared<ast::Node>(*operation);
+            *operation = *ast::Node::ifThenElse(found->second.second, original, nullptr);
         }
     }
     g_borrowFlows.push_back(std::move(builder.graph));

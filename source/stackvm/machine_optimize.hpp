@@ -31,6 +31,7 @@ struct Stats
     std::size_t hoisted = 0;       ///< 循环不变量外提的条数。
     std::size_t inlined = 0;       ///< 展开的调用点数。
     std::size_t inlinedQuads = 0;  ///< 展开带来的净增四元式条数。
+    std::size_t redundantChecks = 0;  ///< 同一直线路径上已证明冗余的检查数量。
 };
 
 /**

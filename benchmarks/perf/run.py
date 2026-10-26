@@ -75,7 +75,7 @@ def build_configs():
         configs.append(Config("chali-aot", f"ChaLi {version}（LLVM AOT，默认检查）",
                               lambda case: [str(HERE / f"{case}-aot.exe")],
                               lambda case: [sys.executable, str(HERE / "build_aot.py"), case, chali],
-                              note="同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM -O2 与默认检查；C 壳计时，初始化不计时；共享原生标准库"))
+                              note="同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3 与默认检查；C 壳计时，初始化不计时；共享原生标准库"))
     if find("gcc"):
         configs.append(Config("c", "C（gcc -O2）",
                               lambda case: [str(HERE / f"{case}-c.exe")],
@@ -88,6 +88,11 @@ def build_configs():
                               lambda case: [find("g++"), "-O2", "-DNDEBUG", str(HERE / f"{case}.cpp"),
                                             "-o", str(HERE / f"{case}-cpp.exe")],
                               note="原生机器码；volatile 函数入口保留计时边界"))
+        configs.append(Config("cpp-o3", "C++17（g++ -O3）",
+                              lambda case: [str(HERE / f"{case}-cpp-o3.exe")],
+                              lambda case: [find("g++"), "-O3", "-DNDEBUG", str(HERE / f"{case}.cpp"),
+                                            "-o", str(HERE / f"{case}-cpp-o3.exe")],
+                              note="O3 原生参考；保留 O2 配置及历史数据，volatile 函数入口保留计时边界"))
     if find("gcc"):
         configs.append(Config("lua", f"Lua {LUA_VERSION}（官方 VM，默认 GC）",
                               lambda case: [str(LUA_HOST), str(HERE / f"{case}.lua")],

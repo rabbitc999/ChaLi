@@ -138,13 +138,13 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (!failed) failed = LLVMGetTargetFromTriple(triple, &target, &message) != 0;
     if (!failed)
     {
-        machine = LLVMCreateTargetMachine(target, triple, "x86-64", "", LLVMCodeGenLevelDefault, LLVMRelocPIC, LLVMCodeModelDefault);
+        machine = LLVMCreateTargetMachine(target, triple, "x86-64", "", LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
         failed = machine == nullptr;
     }
     if (!failed)
     {
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
-        LLVMErrorRef error = LLVMRunPasses(program, "default<O2>", machine, options);
+        LLVMErrorRef error = LLVMRunPasses(program, "default<O3>", machine, options);
         LLVMDisposePassBuilderOptions(options);
         if (error)
         {

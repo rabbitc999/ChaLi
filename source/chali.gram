@@ -3,7 +3,7 @@
  *
  * 三段分工：
  *   ① 文法在归约时建 C 语法树（节点池 + 下标当语义值，语义值是 POD int）；
- *   ② %epilogue 的 M_Lower 把 C 语法树降级成 simple_ast 的 AST；
+ *   ② %epilogue 的 M_Lower 把 C 语法树降级成 ast 的 AST；
  *   ③ %main：解析 → 降级 → generate → 落 .quad/.data/.layout →
  *      stackvm 组装执行，直接出结果。
  *

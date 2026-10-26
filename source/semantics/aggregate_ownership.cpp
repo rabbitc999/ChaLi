@@ -128,27 +128,27 @@ Memory::Map<Memory::String, std::shared_ptr<MType>> g_needsArrayRelease;
  * @return 元素释放语句；不持有资源的元素返回空节点。
  * @note 运行时数组的自动收尾先检查分配存活，避免读取已由可变借用删除的长度头。
  */
-simple_ast::NodePtr MakeArrayElementRelease(const Memory::String &name,
-                                            const std::shared_ptr<MType> &element,
-                                            int fixedCount = -1)
+ast::NodePtr MakeArrayElementRelease(const Memory::String &name,
+                                     const std::shared_ptr<MType> &element,
+                                     int fixedCount = -1)
 {
     if (!ArrayElementNeedsRelease(element)) return nullptr;
     g_needsArrayRelease[ArrayReleaseName(element)] = element;
     /* 运行时数组的长度存在对象里（句柄前 8 字节，和 `len(a)` 同一把尺）；
      * 定长数组的长度直接是编译期常量。 */
     const auto storage = g_referenceStorage.find(name);
-    const auto value = storage == g_referenceStorage.end() ? simple_ast::Node::var(name) : simple_ast::Node::loadInt(simple_ast::Node::var(storage->second));
-    const simple_ast::NodePtr count =
-        fixedCount >= 0 ? simple_ast::Node::i(fixedCount) : simple_ast::Node::loadInt(simple_ast::Node::binary("-", value, simple_ast::Node::i(8)));
-    const auto release = simple_ast::Node::exprStmt(simple_ast::Node::call(
+    const auto value = storage == g_referenceStorage.end() ? ast::Node::var(name) : ast::Node::loadInt(ast::Node::var(storage->second));
+    const ast::NodePtr count =
+        fixedCount >= 0 ? ast::Node::i(fixedCount) : ast::Node::loadInt(ast::Node::binary("-", value, ast::Node::i(8)));
+    const auto release = ast::Node::exprStmt(ast::Node::call(
         ArrayReleaseName(element), { "__chali_arr", "__chali_count" },
         { value, count }));
     if (fixedCount >= 0) return release;
     // 借用函数可能已经显式删除该数组；自动收尾不再读取失效块的长度头。
-    const auto live = simple_ast::Node::binary("&&", simple_ast::Node::binary("!=", value, simple_ast::Node::i(0)),
-                                               simple_ast::Node::call("__std_heap_live", { "address" },
-                                                                      { simple_ast::Node::binary("-", value, simple_ast::Node::i(8)) }));
-    return simple_ast::Node::ifThenElse(live, release, nullptr);
+    const auto live = ast::Node::binary("&&", ast::Node::binary("!=", value, ast::Node::i(0)),
+                                        ast::Node::call("__std_heap_live", { "address" },
+                                                        { ast::Node::binary("-", value, ast::Node::i(8)) }));
+    return ast::Node::ifThenElse(live, release, nullptr);
 }
 
 /**
@@ -371,13 +371,13 @@ bool CheckContainerElement(const std::shared_ptr<MType> &type, const Memory::Str
  * @param allowResources 是否允许容器存放需要清理的资源。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr ContainerStorageFlag(const std::shared_ptr<MType> &type, bool allowResources = false)
+ast::NodePtr ContainerStorageFlag(const std::shared_ptr<MType> &type, bool allowResources = false)
 {
     if (!allowResources && HasNonCopyableValue(type))
         return Fail("容器按值存储禁止复制不可复制的值（实现 Closeable 或 #NonCopyable），请使用借用或显式移动到拥有变量"), Bad();
-    if (type && type->kind == MType::Func) return simple_ast::Node::i(-1);
+    if (type && type->kind == MType::Func) return ast::Node::i(-1);
     if (!type || type->kind != MType::Struct)
-        return simple_ast::Node::i(IsObjectLike(type) || (allowResources && IsResourceLike(type)) ? 1 : 0);
+        return ast::Node::i(IsObjectLike(type) || (allowResources && IsResourceLike(type)) ? 1 : 0);
     EnsureTupleLayout(type);
     const MStructDef *definition = FindStruct(type->name);
     if (definition == nullptr || !definition->flattened)
@@ -395,7 +395,7 @@ simple_ast::NodePtr ContainerStorageFlag(const std::shared_ptr<MType> &type, boo
                                                         field->kind == MType::Double                                       ? 'f' :
                                                                                                                              'i';
     }
-    return simple_ast::Node::str(layout);
+    return ast::Node::str(layout);
 }
 
 /**
@@ -505,8 +505,8 @@ bool IsFloatType(const std::shared_ptr<MType> &type)
 /**
  * 求值一个表达式（实现在下面）—— 隐式转换的助手要用。
  */
-simple_ast::NodePtr LowerExpr(int id);
-simple_ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String &label);
+ast::NodePtr LowerExpr(int id);
+ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String &label);
 
 /**
  * 是不是 `某个obj.get()`（实现在下面）：接口引用的唯一来源。
@@ -616,7 +616,7 @@ bool CanBindInterfaceReference(const std::shared_ptr<MType> &target, const std::
  * @param target 目标 Any 或接口引用类型。
  * @retval 持有装箱结果的低层表达式。
  */
-simple_ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target);
+ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target);
 
 /**
  * @brief 隐式转换：**整数字面量落进浮点槽位**时，直接写成浮点字面量。
@@ -630,7 +630,7 @@ simple_ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &t
  * @param target 目标类型。
  * @return 表达式节点。
  */
-simple_ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> &target)
+ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> &target)
 {
     /* 接口引用绑定时同时保存具体实现类型号与原引用地址；沿用既有胖引用分派。
      * 已有接口引用及 Any 提取保持原有路径。 */
@@ -704,26 +704,26 @@ simple_ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> 
         if (value.kind == MNode::Int)
         {
             g_expectedObjGet = saved;
-            return simple_ast::Node::f(actual && actual->isUnsigned ? static_cast<double>(static_cast<std::uint64_t>(value.i)) : static_cast<double>(value.i));
+            return ast::Node::f(actual && actual->isUnsigned ? static_cast<double>(static_cast<std::uint64_t>(value.i)) : static_cast<double>(value.i));
         }
     }
     if (target && actual && !SameType(target, actual) && HasImplicitConversion(actual, target))
     {
-        const simple_ast::NodePtr converted = LowerDeclaredConversion(valueId, target, false);
+        const ast::NodePtr converted = LowerDeclaredConversion(valueId, target, false);
         g_expectedObjGet = saved;
         return converted;
     }
     // 函数值在形参、返回值、容器和字段中也必须按当前目标签名选择并校验。
     const auto savedFunction = g_expectedFuncType;
     if (target && target->kind == MType::Func) g_expectedFuncType = target;
-    const simple_ast::NodePtr node = target && target->kind == MType::Ptr ? LowerRawExpr(valueId) : LowerExpr(valueId);
+    const ast::NodePtr node = target && target->kind == MType::Ptr ? LowerRawExpr(valueId) : LowerExpr(valueId);
     g_expectedFuncType = savedFunction;
     g_expectedObjGet = saved;
     if (target && target->kind == MType::Double && actual && actual->kind == MType::Int)
-        return simple_ast::Node::cast(
-            node, simple_ast::Type::make(simple_ast::Type::Kind::Float, target->bits));
+        return ast::Node::cast(
+            node, ast::Type::make(ast::Type::Kind::Float, target->bits));
     if (target && (target->kind == MType::Int || target->kind == MType::Double) && actual && !SameType(target, actual))
-        return simple_ast::Node::cast(node, LowerType(target, "implicit cast"));
+        return ast::Node::cast(node, LowerType(target, "implicit cast"));
     return node;
 }
 
@@ -758,8 +758,8 @@ bool IsFreshValue(int exprId); /* 定义在本文件后面，这里先用 */
 /**
  * @brief 将最终值的内部所有权交给接收方并清空源槽。
  */
-simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
-                                            const std::shared_ptr<MType> &type);
+ast::NodePtr TakeExpressionTempValue(const ast::NodePtr &value,
+                                     const std::shared_ptr<MType> &type);
 
 /**
  * @brief 复制数组的元素并创建长度头，返回独立拥有的数组句柄。
@@ -767,7 +767,7 @@ simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
  * @param type 保留元素布局和可选编译期长度的数组类型。
  * @return 逐元素深拷贝后由调用方接管的数组表达式。
  */
-simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, const std::shared_ptr<MType> &type);
+ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared_ptr<MType> &type);
 extern bool g_usesNewArray;
 
 /**
@@ -776,23 +776,23 @@ extern bool g_usesNewArray;
  * @param target 待访问或修改的目标。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MType> &target)
+ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MType> &target)
 {
     if (OpcodeNonCopyable(target) && valueId >= 0 && !IsFreshValue(valueId))
         return Fail("不可复制的值禁止复制初始化或赋值（实现 Closeable 或声明了 #NonCopyable），请显式 move、传引用或改用临时值"), Bad();
-    const simple_ast::NodePtr value = LowerValueForType(valueId, target);
+    const ast::NodePtr value = LowerValueForType(valueId, target);
     if (target && target->kind == MType::Array && valueId >= 0 && !IsFreshValue(valueId)) return CopyRuntimeArrayValue(value, target);
     if (!target || !IsStandardOpcode(target, "String")) return value;
     if (valueId < 0) return value;
     if (N(valueId).kind == MNode::Str)
-        return simple_ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+        return ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
     if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
     /*
      * 借来的值（变量 / 别名 / 字段 / 下标 / 解引用）**复制成自己的堆串**：
      * 接收方（变量 / 字段 / 返回值）随后会登记成所有者，直接交句柄的话两边指着同一块，
      * 先释放的一边把另一边弄成悬垂别名（`string a = b;` 之后 b 一改，a 就废）。
      */
-    return simple_ast::Node::call(ObjectCopyFunction(target), { "value" }, { value });
+    return ast::Node::call(ObjectCopyFunction(target), { "value" }, { value });
 }
 
 /**
@@ -806,8 +806,8 @@ simple_ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MT
  * 其余都是借来的——形参、别名变量、字段、下标：直接交句柄的话，两边指着同一块堆串，
  * 接收方释放时把源位置弄悬垂。
  */
-simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_ptr<MType> &target,
-                                                 const Memory::Set<Memory::String> &keep)
+ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_ptr<MType> &target,
+                                          const Memory::Set<Memory::String> &keep)
 {
     if (OpcodeNonCopyable(target) && valueId >= 0 && !IsFreshValue(valueId))
     {
@@ -816,7 +816,7 @@ simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_
         if (!variable || keep.count(variable->emitted) == 0u)
             return Fail("不可复制的值禁止复制返回借用值（实现 Closeable 或声明了 #NonCopyable），请显式 move 拥有值或返回引用"), Bad();
     }
-    const simple_ast::NodePtr value = LowerValueForType(valueId, target);
+    const ast::NodePtr value = LowerValueForType(valueId, target);
     if (IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
     if (target && target->kind == MType::Array)
     {
@@ -833,7 +833,7 @@ simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_
         const MNode &source = N(sourceId);
         const MVar *variable = source.kind == MNode::Var ? FindNodeVar(source) : nullptr;
         if (variable == nullptr || keep.count(variable->emitted) == 0u)
-            return simple_ast::Node::call(ObjectCopyFunction(target), { "__chali_v" }, { value });
+            return ast::Node::call(ObjectCopyFunction(target), { "__chali_v" }, { value });
     }
     if (target && IsObjectLike(target) && IsFreshValue(valueId))
         return TakeExpressionTempValue(value, target);
@@ -843,14 +843,14 @@ simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_
     while (N(sourceId).kind == MNode::Cast) sourceId = N(sourceId).kids[0];
     const MNode &expr = N(sourceId);
     if (expr.kind == MNode::Str)
-        return simple_ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+        return ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
     if (expr.kind == MNode::Var)
     {
         const MVar *found = FindNodeVar(expr);
         if (found != nullptr && keep.count(found->emitted) != 0u) return value; /* 所有权转移 */
     }
     if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
-    return simple_ast::Node::call(ObjectCopyFunction(target), { "value" }, { value });
+    return ast::Node::call(ObjectCopyFunction(target), { "value" }, { value });
 }
 
 /**
@@ -865,15 +865,15 @@ simple_ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_
  * @param type 决定总槽数的聚合类型。
  * @return 槽复制语句节点。
  */
-simple_ast::NodePtr CopyStructValue(const simple_ast::NodePtr &dst, const simple_ast::NodePtr &src,
-                                    const std::shared_ptr<MType> &type)
+ast::NodePtr CopyStructValue(const ast::NodePtr &dst, const ast::NodePtr &src,
+                             const std::shared_ptr<MType> &type)
 {
     g_usesStructCopy = true;
     const int slots = StructStride(type) / 8;
-    return simple_ast::Node::block({ simple_ast::Node::exprStmt(simple_ast::Node::call(
-                                         "__chali_copy_struct", { "__chali_dst", "__chali_src", "__chali_slots" },
-                                         { dst, src, simple_ast::Node::i(slots) })),
-                                     BeginAggregateLifetime(dst, slots * 8) });
+    return ast::Node::block({ ast::Node::exprStmt(ast::Node::call(
+                                  "__chali_copy_struct", { "__chali_dst", "__chali_src", "__chali_slots" },
+                                  { dst, src, ast::Node::i(slots) })),
+                              BeginAggregateLifetime(dst, slots * 8) });
 }
 
 /**
@@ -892,17 +892,17 @@ bool AggregateNeedsDeepCopy(const std::shared_ptr<MType> &type)
  * 没有要占有的叶子时退回 `__chali_copy_struct`。要真正"搬走一份"（`return` 交出去、
  * 函数返回值的接收）时用 `CopyStructValue`（按位搬，等于 move），别用这条。
  */
-simple_ast::NodePtr DeepCopyStructValue(const simple_ast::NodePtr &dst,
-                                        const simple_ast::NodePtr &src,
-                                        const std::shared_ptr<MType> &type)
+ast::NodePtr DeepCopyStructValue(const ast::NodePtr &dst,
+                                 const ast::NodePtr &src,
+                                 const std::shared_ptr<MType> &type)
 {
     if (HasNonCopyableValue(type))
         return Fail("不可复制的值禁止复制：" + Describe(type) + "（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用"), Bad();
     if (!AggregateNeedsDeepCopy(type)) return CopyStructValue(dst, src, type);
     g_needsAggregateCopy.insert(type->name);
-    return simple_ast::Node::block({ simple_ast::Node::exprStmt(simple_ast::Node::call(
-                                         AggregateCopyName(type->name), { "__chali_agg_dst", "__chali_agg_src" }, { dst, src })),
-                                     BeginAggregateLifetime(dst, StructStride(type)) });
+    return ast::Node::block({ ast::Node::exprStmt(ast::Node::call(
+                                  AggregateCopyName(type->name), { "__chali_agg_dst", "__chali_agg_src" }, { dst, src })),
+                              BeginAggregateLifetime(dst, StructStride(type)) });
 }
 
 /**
@@ -912,11 +912,11 @@ simple_ast::NodePtr DeepCopyStructValue(const simple_ast::NodePtr &dst,
  * @return 保存复制循环和独立结果句柄的序列表达式。
  * @note 沿用内存读取检查、数组分配溢出检查与聚合深复制，不复制宿主机器地址。
  */
-simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, const std::shared_ptr<MType> &type)
+ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared_ptr<MType> &type)
 {
     if (HasNonCopyableValue(type))
         return Fail("不可复制的数组元素禁止复制：" + Describe(type) + "（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用"), Bad();
-    using simple_ast::Node;
+    using ast::Node;
     const auto input = AllocateName("__chali_array_copy_source");
     const auto length = AllocateName("__chali_array_copy_length");
     const auto result = AllocateName("__chali_array_copy_result");
@@ -930,15 +930,15 @@ simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, con
     const std::int64_t fixedCount = FixedArrayElementCount(type->dims);
     const auto countValue = IsRuntimeArray(type) ? Node::loadInt(Node::binary("-", Node::var(input), Node::i(8))) : Node::i(fixedCount);
     g_usesNewArray = true;
-    Memory::Vector<simple_ast::NodePtr> prefix{
-        Node::declare(input, simple_ast::Type::i64()), Node::assign(input, source),
+    Memory::Vector<ast::NodePtr> prefix{
+        Node::declare(input, ast::Type::i64()), Node::assign(input, source),
         Node::declare(result, LowerType(type, result)), Node::assign(result, Node::i(0))
     };
-    Memory::Vector<simple_ast::NodePtr> out{
-        Node::declare(length, simple_ast::Type::i64()),
+    Memory::Vector<ast::NodePtr> out{
+        Node::declare(length, ast::Type::i64()),
         Node::assign(length, countValue),
         Node::assign(result, Node::call("__chali_new_array", { "__chali_len", "__chali_stride" }, { Node::var(length), Node::i(stride) })),
-        Node::declare(index, simple_ast::Type::i64()), Node::assign(index, Node::i(0)),
+        Node::declare(index, ast::Type::i64()), Node::assign(index, Node::i(0)),
         Node::label(loop), Node::ifThenElse(Node::binary(">=", Node::var(index), Node::var(length)), Node::jump(done), nullptr)
     };
     if (element->kind == MType::Struct)
@@ -955,6 +955,26 @@ simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, con
     out.push_back(Node::assign(index, Node::binary("+", Node::var(index), Node::i(1))));
     out.push_back(Node::jump(loop));
     out.push_back(Node::label(done));
+    // 64 位平凡元素不需要逐项转换或析构；保留超大计数及其他布局的原循环。
+    const auto *noBulk = std::getenv("CHALI_NO_ARRAY_COPY_BULK");
+    bool watchdog = false;
+    for (const auto &function : g_funcs)
+        if (function.first.rfind("std::watchdog::", 0) == 0u)
+        {
+            watchdog = true;
+            break;
+        }
+    if (!watchdog && !(noBulk && *noBulk) && element && ((element->kind == MType::Int && element->bits == 64) || (element->kind == MType::Double && element->bits == 64)))
+    {
+        g_usesStructCopy = true;
+        Memory::Vector<ast::NodePtr> scalar(out.begin(), out.begin() + 3);
+        Memory::Vector<ast::NodePtr> fallback(out.begin() + 3, out.end());
+        scalar.push_back(Node::ifThenElse(Node::binary("<=", Node::var(length), Node::i(INT32_MAX)),
+                                          Node::exprStmt(Node::call("__chali_copy_struct", { "__chali_dst", "__chali_src", "__chali_slots" },
+                                                                    { Node::var(result), Node::var(input), Node::var(length) })),
+                                          Node::block(std::move(fallback))));
+        out = std::move(scalar);
+    }
     if (IsRuntimeArray(type))
     {
         // 默认初始化的数组字段为空句柄，复制空态不得读取负地址的长度头。
@@ -999,15 +1019,15 @@ Memory::String AllocateName(const Memory::String &source);
  * @param type 聚合类型。
  * @return 执行移动和清槽的语句块。
  */
-simple_ast::NodePtr MoveStructValue(const simple_ast::NodePtr &dst, const simple_ast::NodePtr &src,
-                                    const std::shared_ptr<MType> &type)
+ast::NodePtr MoveStructValue(const ast::NodePtr &dst, const ast::NodePtr &src,
+                             const std::shared_ptr<MType> &type)
 {
-    using simple_ast::Node;
+    using ast::Node;
     const auto source = AllocateName("__chali_move_source");
-    Memory::Vector<simple_ast::NodePtr> out{ Node::declare(source, simple_ast::Type::i64()),
-                                             Node::assign(source, src), CopyStructValue(dst, Node::var(source), type) };
+    Memory::Vector<ast::NodePtr> out{ Node::declare(source, ast::Type::i64()),
+                                      Node::assign(source, src), CopyStructValue(dst, Node::var(source), type) };
     const auto *definition = FindStruct(type->name);
-    Memory::Vector<simple_ast::NodePtr> clear;
+    Memory::Vector<ast::NodePtr> clear;
     if (definition)
         for (std::size_t i = 0; i < definition->leaves.size(); ++i)
         {
@@ -1025,17 +1045,72 @@ simple_ast::NodePtr MoveStructValue(const simple_ast::NodePtr &dst, const simple
 }
 
 /**
+ * @brief 保守判断聚合是否具有可观察的用户析构，避免目标合并改变失败清理。
+ * @param type 聚合、数组或标量类型，引用不递归跟随。
+ * @param visiting 防止递归值布局无限展开。
+ * @return 存在用户 Drop、Closeable 或未知值布局时返回 true。
+ */
+bool HasObservableAggregateDestructor(const std::shared_ptr<MType> &type, Memory::Set<Memory::String> &visiting)
+{
+    if (!type) return true;
+    if (type->kind == MType::Array) return HasObservableAggregateDestructor(type->elem, visiting);
+    if (type->kind != MType::Struct) return OpcodeNonCopyable(type);
+    if (StructHasInterface(type->name, "Drop") || StructHasInterface(type->name, "Closeable")) return true;
+    const auto *definition = FindStruct(type->name);
+    if (!definition || !visiting.insert(type->name).second) return true;
+    bool result = false;
+    for (const auto &field : definition->fields)
+        if (HasObservableAggregateDestructor(field.type, visiting))
+        {
+            result = true;
+            break;
+        }
+    visiting.erase(type->name);
+    return result;
+}
+
+/**
+ * @brief 判断单个拥有聚合载荷能否使用仅消费新临时值的枚举构造变体。
+ * @param variant 枚举变体，普通借用实参不由本函数判断。
+ * @return 开关、布局、析构及安全点条件均满足时返回 true。
+ */
+bool CanTakeFreshEnumPayload(const MEnumVariantDef &variant)
+{
+    const auto *disabled = std::getenv("CHALI_NO_AGGREGATE_OPT");
+    if ((disabled && *disabled) || variant.payloads.size() != 1u) return false;
+    for (const auto &function : g_funcs)
+        if (function.first.rfind("std::watchdog::", 0) == 0u) return false;
+    const auto &type = variant.payloads[0].type;
+    Memory::Set<Memory::String> visiting;
+    return type && type->kind == MType::Struct && AggregateNeedsDeepCopy(type)
+           && !HasObservableAggregateDestructor(type, visiting);
+}
+
+/**
  * @brief 结构体按**值语义**存进一个位置：当场造的按 move，借来的**深拷贝**。
+ * @param dst 目标存储地址。
+ * @param srcExprId 用于确定拥有关系的源表达式编号。
+ * @param src 已降低的源值，保持原求值顺序。
+ * @param type 具体聚合布局。
+ * @param freshDestination 目标是否为尚未暴露的新初始化存储。
+ * @return 深复制或具有适用目标合并标记的移动节点。
  *
  * 结构体和字符串一样是值类型（不可能是引用）：`Point a = b;` / `a = b;` / `arr[i] = b;` /
  * 绑定载荷，都得让接收方拿到**自己那份**字符串与对象。只有当场构造的（函数 / 工厂返回值、
  * 元组字面量、`new`）才能直接按位搬 —— 那份所有权本来就归调用点。
  */
-simple_ast::NodePtr StoreStructValue(const simple_ast::NodePtr &dst, int srcExprId,
-                                     const simple_ast::NodePtr &src,
-                                     const std::shared_ptr<MType> &type)
+ast::NodePtr StoreStructValue(const ast::NodePtr &dst, int srcExprId,
+                              const ast::NodePtr &src,
+                              const std::shared_ptr<MType> &type, bool freshDestination = false)
 {
-    if (IsOwnedAggregateTemporary(srcExprId) || IsImplicitConversionValue(srcExprId, type)) return MoveStructValue(dst, src, type);
+    if (IsOwnedAggregateTemporary(srcExprId) || IsImplicitConversionValue(srcExprId, type))
+    {
+        const auto move = MoveStructValue(dst, src, type);
+        Memory::Set<Memory::String> visiting;
+        if (freshDestination && !HasObservableAggregateDestructor(type, visiting))
+            move->typeName = "__fresh_aggregate_destination";
+        return move;
+    }
     return DeepCopyStructValue(dst, src, type);
 }
 
@@ -1200,13 +1275,13 @@ bool IsFreshValue(int exprId)
  * @param target 目标类型。
  * @return 表达式节点。
  */
-simple_ast::NodePtr MaterializeObjectValue(int valueId, const std::shared_ptr<MType> &target)
+ast::NodePtr MaterializeObjectValue(int valueId, const std::shared_ptr<MType> &target)
 {
     if (OpcodeNonCopyable(target) && valueId >= 0 && !IsFreshValue(valueId))
         return Fail("不可复制的值禁止复制初始化或赋值（实现 Closeable 或声明了 #NonCopyable），请显式 move、传引用或改用临时值"), Bad();
     if (!IsObjectLike(target)) return LowerValueForType(valueId, target);
     if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target))
         return TakeExpressionTempValue(LowerValueForType(valueId, target), target);
-    return simple_ast::Node::call(ObjectCopyFunction(target), { "__chali_v" },
-                                  { LowerValueForType(valueId, target) });
+    return ast::Node::call(ObjectCopyFunction(target), { "__chali_v" },
+                           { LowerValueForType(valueId, target) });
 }

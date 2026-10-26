@@ -161,3 +161,4 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 - [名称冻结：ChaLi 五个字母](40-name-freeze.md)
 
 - [AOT 编译入口](41-aot.md)
+- [后端所有权优化与 AOT 计数](43-backend-ownership.md)

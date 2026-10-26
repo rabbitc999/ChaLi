@@ -29,9 +29,9 @@ struct MFullExpressionTemps
      * @brief 摘除本表达式的块级登记并生成清理。
      * @return 逆序析构与清槽语句。
      */
-    Memory::Vector<simple_ast::NodePtr> finish()
+    Memory::Vector<ast::NodePtr> finish()
     {
-        Memory::Vector<simple_ast::NodePtr> out;
+        Memory::Vector<ast::NodePtr> out;
         if (extendToBlock) return out;
         for (auto name = names.rbegin(); name != names.rend(); ++name)
         {
@@ -85,23 +85,23 @@ void NoteExpressionTemp(const Memory::String &name)
  * @param type 值类型。
  * @return 只求值一次并转移内部所有权的表达式；借用值保持原样。
  */
-simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
-                                            const std::shared_ptr<MType> &type)
+ast::NodePtr TakeExpressionTempValue(const ast::NodePtr &value,
+                                     const std::shared_ptr<MType> &type)
 {
-    if (value && value->kind == simple_ast::Node::Kind::Sequence && !value->kids.empty())
+    if (value && value->kind == ast::Node::Kind::Sequence && !value->kids.empty())
     {
-        auto transferred = std::make_shared<simple_ast::Node>(*value);
+        auto transferred = std::make_shared<ast::Node>(*value);
         transferred->kids.back() = TakeExpressionTempValue(value->kids.back(), type);
         return transferred;
     }
-    if (!g_fullExpressionTemps || !value || value->kind != simple_ast::Node::Kind::Var || !type || (!IsStandardOpcode(type, "String") && !IsObjectLike(type))) return value;
+    if (!g_fullExpressionTemps || !value || value->kind != ast::Node::Kind::Var || !type || (!IsStandardOpcode(type, "String") && !IsObjectLike(type))) return value;
     const auto &names = g_fullExpressionTemps->names;
     if (std::find(names.begin(), names.end(), value->text) == names.end()) return value;
     const auto transferred = AllocateName("__chali_transferred_value");
-    return simple_ast::Node::sequence({ simple_ast::Node::declare(transferred, LowerType(type, transferred)),
-                                        simple_ast::Node::assign(transferred, value),
-                                        simple_ast::Node::assign(value->text, simple_ast::Node::i(0)) },
-                                      simple_ast::Node::var(transferred));
+    return ast::Node::sequence({ ast::Node::declare(transferred, LowerType(type, transferred)),
+                                 ast::Node::assign(transferred, value),
+                                 ast::Node::assign(value->text, ast::Node::i(0)) },
+                               ast::Node::var(transferred));
 }
 
 /**
@@ -109,12 +109,12 @@ simple_ast::NodePtr TakeExpressionTempValue(const simple_ast::NodePtr &value,
  */
 struct MExpressionFreshScope
 {
-    Memory::Vector<simple_ast::NodePtr> *saved;
+    Memory::Vector<ast::NodePtr> *saved;
     /**
      * @brief 设置前置语句入口。
      * @param sink 本表达式的前置语句列表。
      */
-    explicit MExpressionFreshScope(Memory::Vector<simple_ast::NodePtr> *sink) : saved(g_freshSink) { g_freshSink = sink; }
+    explicit MExpressionFreshScope(Memory::Vector<ast::NodePtr> *sink) : saved(g_freshSink) { g_freshSink = sink; }
     /**
      * @brief 恢复外层前置语句入口，包含错误提前返回路径。
      */
@@ -124,7 +124,7 @@ struct MExpressionFreshScope
 /**
  * @brief 保存拥有的聚合中间值；借用来源保持原地址。
  */
-simple_ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MType> &type);
+ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MType> &type);
 
 /**
  * @brief 交换律换边时把**左操作数**先钳到一个临时量里，保住源码的求值顺序。
@@ -134,10 +134,10 @@ simple_ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MTyp
  * @param held 输出：读临时量的节点。
  * @return 能安全落地返回 true；对象类类型或没有语句槽时返回 false。
  */
-bool HoldOperandBeforeReceiver(const simple_ast::NodePtr &value,
+bool HoldOperandBeforeReceiver(const ast::NodePtr &value,
                                const std::shared_ptr<MType> &type,
-                               Memory::Vector<simple_ast::NodePtr> *prologue,
-                               simple_ast::NodePtr *held);
+                               Memory::Vector<ast::NodePtr> *prologue,
+                               ast::NodePtr *held);
 
 /**
  * @brief 转换容器键或元素，并登记聚合临时值的调用后清理。
@@ -146,18 +146,18 @@ bool HoldOperandBeforeReceiver(const simple_ast::NodePtr &value,
  * @param post 接收调用后的清理语句。
  * @return 可传给运行时容器操作的值。
  */
-simple_ast::NodePtr ContainerStoreValue(int argId,
-                                        const std::shared_ptr<MType> &element,
-                                        Memory::Vector<simple_ast::NodePtr> *post);
+ast::NodePtr ContainerStoreValue(int argId,
+                                 const std::shared_ptr<MType> &element,
+                                 Memory::Vector<ast::NodePtr> *post);
 
 /**
  * @brief 构造空容器，为自定义 Map 键或 Set 元素绑定 Equal 与可选 Hash。
  * @param type 容器类型。
  * @return 创建容器句柄的表达式。
  */
-simple_ast::NodePtr NewContainerValue(const std::shared_ptr<MType> &type)
+ast::NodePtr NewContainerValue(const std::shared_ptr<MType> &type)
 {
-    using simple_ast::Node;
+    using ast::Node;
     if (!CheckDeclaredType(type, "容器构造")) return Bad();
     const bool customSet = type->name == "set" && type->elem->kind == MType::Struct && !IsTupleType(type->elem);
     if (type->name != "map" && !customSet)
@@ -204,9 +204,9 @@ simple_ast::NodePtr NewContainerValue(const std::shared_ptr<MType> &type)
  * @param listId 语句列表在节点池中的编号。
  * @retval 生成的低层语法节点。
  */
-Memory::Vector<simple_ast::NodePtr> LowerStmtList(int listId)
+Memory::Vector<ast::NodePtr> LowerStmtList(int listId)
 {
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     if (listId < 0) return out;
     std::size_t expansionDepth = 0;
     for (std::size_t index = 0; index < N(listId).kids.size();)
@@ -228,7 +228,7 @@ Memory::Vector<simple_ast::NodePtr> LowerStmtList(int listId)
             continue;
         }
         expansionDepth = 0;
-        const simple_ast::NodePtr node = LowerStmt(stmtId);
+        const ast::NodePtr node = LowerStmt(stmtId);
         if (node) out.push_back(node);
         ++index;
     }
@@ -279,7 +279,7 @@ Memory::String NameOfExpr(int id, const Memory::String &suffix = Memory::String(
 }
 
 /**
- * @brief 下标：多维按行主序折成一个线性下标，交给 simple_ast 的"基址 + 下标×8"。
+ * @brief 下标：多维按行主序折成一个线性下标，交给 ast 的"基址 + 下标×8"。
  *
  * `m[i][j]` 在语法树里是 `index(index(m, i), j)`，这里一次折平：
  * 线性下标 = i × 4 + j（每一维的长度都写在声明里），**每一维先查越界**再折。
@@ -288,7 +288,7 @@ Memory::String NameOfExpr(int id, const Memory::String &suffix = Memory::String(
  * @param bufferIndex 是否按引用缓冲区元素访问，跳过被引用字符串或容器的内建下标。
  * @return 索引读取节点或聚合元素地址；失败时登记诊断。
  */
-simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = false)
+ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = false)
 {
     /* 接口引用是"地址 + 类型号"的胖引用（值在对象表里），**不能取下标**：
      * 它前面没有元素布局可谈。要访问对象内部就走具体类型（`b.get()` 取回来）。 */
@@ -323,10 +323,10 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
         if (base->name == "vec")
         {
             if (!CheckContainerIndex(indices[0], "vec 下标")) return Bad();
-            return simple_ast::Node::call(
+            return ast::Node::call(
                 "__std_vec_at", { "__chali_v", "__chali_i", "__chali_t", "__chali_o" },
                 { OwnedObjectTemp(cursor, base), LowerExpr(indices[0]),
-                  simple_ast::Node::i(elementText ? 1 : 0),
+                  ast::Node::i(elementText ? 1 : 0),
                   ContainerStorageFlag(base->elem) });
         }
         if (base->name == "map")
@@ -335,15 +335,15 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
             const bool valueText = base->elem2 && IsStandardOpcode(base->elem2, "String");
             const auto keyType = base->elem;
             if (!CheckContainerArgument(keyType, indices[0], "map 下标键", false)) return Bad();
-            Memory::Vector<simple_ast::NodePtr> prefix, post;
+            Memory::Vector<ast::NodePtr> prefix, post;
             struct SinkGuard
             {
-                Memory::Vector<simple_ast::NodePtr> *saved;
+                Memory::Vector<ast::NodePtr> *saved;
                 /**
                  * @brief 保存并切换当前表达式清理语句的接收位置。
                  * @param sink 接收生成语句或资源清理操作的容器。
                  */
-                explicit SinkGuard(Memory::Vector<simple_ast::NodePtr> *sink) : saved(g_freshSink) { g_freshSink = sink; }
+                explicit SinkGuard(Memory::Vector<ast::NodePtr> *sink) : saved(g_freshSink) { g_freshSink = sink; }
                 /**
                  * @brief 恢复进入表达式前的清理语句接收位置。
                  */
@@ -351,15 +351,15 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
             } sink(&prefix);
             const auto receiver = OwnedObjectTemp(cursor, base);
             const auto key = ContainerStoreValue(indices[0], keyType, &post);
-            const auto call = simple_ast::Node::call("__std_map_get",
-                                                     { "__chali_v", "__chali_k", "__chali_t", "__chali_o", "__chali_t", "__chali_o" },
-                                                     { receiver, key, simple_ast::Node::i(keyText), ContainerStorageFlag(keyType),
-                                                       simple_ast::Node::i(valueText), ContainerStorageFlag(base->elem2) });
+            const auto call = ast::Node::call("__std_map_get",
+                                              { "__chali_v", "__chali_k", "__chali_t", "__chali_o", "__chali_t", "__chali_o" },
+                                              { receiver, key, ast::Node::i(keyText), ContainerStorageFlag(keyType),
+                                                ast::Node::i(valueText), ContainerStorageFlag(base->elem2) });
             const auto result = AllocateName("__chali_map_get_result");
-            prefix.push_back(simple_ast::Node::declare(result, LowerType(base->elem2, result)));
-            prefix.push_back(simple_ast::Node::assign(result, call));
+            prefix.push_back(ast::Node::declare(result, LowerType(base->elem2, result)));
+            prefix.push_back(ast::Node::assign(result, call));
             prefix.insert(prefix.end(), post.begin(), post.end());
-            return simple_ast::Node::sequence(std::move(prefix), simple_ast::Node::var(result));
+            return ast::Node::sequence(std::move(prefix), ast::Node::var(result));
         }
         Fail("set 没有下标：用 `s.has(x)` 查在不在、`s.at(i)` 按下标取（按升序）");
         return Bad();
@@ -379,7 +379,7 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
             Fail("字符串只支持一维下标（`s[i]`）");
             return Bad();
         }
-        return simple_ast::Node::call(
+        return ast::Node::call(
             "__std_str_at", { "__chali_s", "__chali_i" },
             { OwnedObjectTemp(cursor, base), LowerExpr(indices[0]) });
     }
@@ -392,15 +392,15 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
             return Bad();
         }
         const Memory::String label = NameOfExpr(cursor);
-        const simple_ast::NodePtr length = simple_ast::Node::loadInt(simple_ast::Node::binary(
-            "-", LowerExpr(cursor), simple_ast::Node::i(8)));
-        const simple_ast::NodePtr position =
-            simple_ast::Node::checkIndex(LowerExpr(indices[0]), length, label);
+        const ast::NodePtr length = ast::Node::loadInt(ast::Node::binary(
+            "-", LowerExpr(cursor), ast::Node::i(8)));
+        const ast::NodePtr position =
+            ast::Node::checkIndex(LowerExpr(indices[0]), length, label);
         const int stride = StructStride(base->elem);
-        if (stride > 0) return simple_ast::Node::offset(LowerExpr(cursor), position, stride);
+        if (stride > 0) return ast::Node::offset(LowerExpr(cursor), position, stride);
         if (IsByteStorageType(base->elem))
-            return simple_ast::Node::loadFrom(simple_ast::Node::offset(LowerExpr(cursor), position, 1), LowerType(base->elem, label));
-        const auto value = simple_ast::Node::index(LowerExpr(cursor), position);
+            return ast::Node::loadFrom(ast::Node::offset(LowerExpr(cursor), position, 1), LowerType(base->elem, label));
+        const auto value = ast::Node::index(LowerExpr(cursor), position);
         value->declared = LowerType(base->elem, "");
         return value;
     }
@@ -413,29 +413,29 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
         }
         /* 逐维查越界：`m[i][j]` 里 `m[i]` 超了就报 i 那一维，`[j]` 超了报 j 那一维。 */
         const Memory::String name = NameOfExpr(cursor);
-        Memory::Vector<simple_ast::NodePtr> checked;
+        Memory::Vector<ast::NodePtr> checked;
         for (std::size_t index = 0u; index < indices.size(); ++index)
         {
             const Memory::String label =
                 (indices.size() == 1u) ? name : (name + " 第 " + Memory::toString(index + 1u) + " 维");
-            checked.push_back(simple_ast::Node::checkIndex(
+            checked.push_back(ast::Node::checkIndex(
                 LowerExpr(indices[index]),
-                simple_ast::Node::i(base->dims[index]), label));
+                ast::Node::i(base->dims[index]), label));
         }
-        simple_ast::NodePtr linear = checked[0];
+        ast::NodePtr linear = checked[0];
         for (std::size_t index = 1u; index < checked.size(); ++index)
         {
-            linear = simple_ast::Node::binary("*", linear,
-                                              simple_ast::Node::i(base->dims[index]));
-            linear = simple_ast::Node::binary("+", linear, checked[index]);
+            linear = ast::Node::binary("*", linear,
+                                       ast::Node::i(base->dims[index]));
+            linear = ast::Node::binary("+", linear, checked[index]);
         }
         /* 元素是结构体：`arr[i]` 是那个元素的**句柄**（地址），步长是"字段数 × 8"，
          * 用 offset（不补 load）；标量元素才用 index（base + i×8 再取值）。 */
         const int stride = StructStride(base->elem);
-        if (stride > 0) return simple_ast::Node::offset(LowerRawExpr(cursor), linear, stride);
+        if (stride > 0) return ast::Node::offset(LowerRawExpr(cursor), linear, stride);
         if (IsByteStorageType(base->elem))
-            return simple_ast::Node::loadFrom(simple_ast::Node::offset(LowerRawExpr(cursor), linear, 1), LowerType(base->elem, name));
-        const auto value = simple_ast::Node::index(LowerRawExpr(cursor), linear);
+            return ast::Node::loadFrom(ast::Node::offset(LowerRawExpr(cursor), linear, 1), LowerType(base->elem, name));
+        const auto value = ast::Node::index(LowerRawExpr(cursor), linear);
         // 字段地址是 Offset 节点，不能依赖低层 AST 从它猜测句柄或数值宽度。
         value->declared = LowerType(base->elem, "");
         return value;
@@ -449,12 +449,12 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
         }
         const int stride = StructStride(base->elem);
         const int bytes = ElementBytes(base->elem);
-        const simple_ast::NodePtr position = simple_ast::Node::checkPointer(
+        const ast::NodePtr position = ast::Node::checkPointer(
             LowerExpr(indices[0]), LowerRawExpr(cursor), bytes, NameOfExpr(cursor));
-        if (stride > 0) return simple_ast::Node::offset(LowerRawExpr(cursor), position, stride);
+        if (stride > 0) return ast::Node::offset(LowerRawExpr(cursor), position, stride);
         if (IsByteStorageType(base->elem))
-            return simple_ast::Node::loadFrom(simple_ast::Node::offset(LowerRawExpr(cursor), position, 1), LowerType(base->elem, "pointer index"));
-        return simple_ast::Node::index(LowerRawExpr(cursor), position);
+            return ast::Node::loadFrom(ast::Node::offset(LowerRawExpr(cursor), position, 1), LowerType(base->elem, "pointer index"));
+        return ast::Node::index(LowerRawExpr(cursor), position);
     }
     Fail("下标只能用在数组或引用上");
     return Bad();
@@ -467,11 +467,11 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
  * @brief 取字段的**地址**（不取值）：`a.f` / `p->f` 都先算到这一步。
  *
  * 结构体字段是按**摊平后的槽号**定位的（见 FlattenStructFields）：`槽号 * 8` 就是
- * 它在对象里的偏移。用"算偏移"而不是 simple_ast 的 `member(基, 名字)`：
+ * 它在对象里的偏移。用"算偏移"而不是 ast 的 `member(基, 名字)`：
  * 后者是"拿基类型按名字查下标"，而嵌套结构体字段（`a.inner.x`）的基类型是**内层**
  * 结构体，查出来会是内层的下标（不是内层在外的偏移）—— 算出来就错位了。
  *
- * 引用接收者（`p->f`）先按目标 struct 类型转一次，simple_ast 才知道"这块是哪个结构体"。
+ * 引用接收者（`p->f`）先按目标 struct 类型转一次，ast 才知道"这块是哪个结构体"。
  *
  * @param exprId `MNode::Member` / `MNode::Arrow`。
  * @param field 输出：字段定义（拿它的槽号与类型）。
@@ -498,17 +498,17 @@ const MField *FindField(const Memory::String &owner, const Memory::String &field
 /**
  * @brief 字段的**地址**：`基址 + 槽号 × 8`（见 FlattenStructFields）。
  *
- * 为什么不用 simple_ast 的 `member(基, 名字)`（它是"按名字在基类型里查下标"）：
+ * 为什么不用 ast 的 `member(基, 名字)`（它是"按名字在基类型里查下标"）：
  * 嵌套字段 `a.inner.x` 里，外层那一步的"基类型"是**内层**结构体，查出来的下标是
  * 内层自己的下标，而不是内层在外的偏移 —— 算出来就错位了。自己按槽号算就不会。
  *
- * 引用基址（`p->f`）先按目标 struct 类型转一次，simple_ast 才知道"这块是哪个结构体"。
+ * 引用基址（`p->f`）先按目标 struct 类型转一次，ast 才知道"这块是哪个结构体"。
  */
-simple_ast::NodePtr FieldAddress(const simple_ast::NodePtr &baseNode,
-                                 const std::shared_ptr<MType> &baseType, const Memory::String &owner,
-                                 const MField &declared)
+ast::NodePtr FieldAddress(const ast::NodePtr &baseNode,
+                          const std::shared_ptr<MType> &baseType, const Memory::String &owner,
+                          const MField &declared)
 {
-    simple_ast::NodePtr node = baseNode;
+    ast::NodePtr node = baseNode;
     if (baseType && baseType->kind == MType::Ptr)
     {
         const auto ownerType = g_structType.find(owner);
@@ -517,9 +517,9 @@ simple_ast::NodePtr FieldAddress(const simple_ast::NodePtr &baseNode,
             Fail("没有登记 struct " + owner);
             return Bad();
         }
-        node = simple_ast::Node::cast(node, ownerType->second);
+        node = ast::Node::cast(node, ownerType->second);
     }
-    return simple_ast::Node::offset(node, simple_ast::Node::i(declared.slot), 8);
+    return ast::Node::offset(node, ast::Node::i(declared.slot), 8);
 }
 
 /**
@@ -532,7 +532,7 @@ simple_ast::NodePtr FieldAddress(const simple_ast::NodePtr &baseNode,
  *     `a.inner.x` 变成"地址 + 0 再取 x"，`a.inner = p` 是往这块地方深拷贝。
  *   * **叶子字段**：按字段类型从那个槽读一个值（`(load:T, 地址, _, t)`）。
  */
-simple_ast::NodePtr LowerMember(int baseId, const Memory::String &field)
+ast::NodePtr LowerMember(int baseId, const Memory::String &field)
 {
     const std::shared_ptr<MType> base = ExprType(baseId);
     if (field == "opcode")
@@ -540,7 +540,7 @@ simple_ast::NodePtr LowerMember(int baseId, const Memory::String &field)
         {
             if (g_currentModule != declaration->module) return Fail("opcode 内部句柄仅允许在声明模块中访问"), Bad();
             if (!declaration->aggregate) return OwnedObjectTemp(baseId, base);
-            return simple_ast::Node::loadInt(LowerExpr(baseId));
+            return ast::Node::loadInt(LowerExpr(baseId));
         }
     if (IsEnumType(base))
     {
@@ -573,10 +573,10 @@ simple_ast::NodePtr LowerMember(int baseId, const Memory::String &field)
         Fail("struct " + owner + " 没有字段 " + field);
         return Bad();
     }
-    const simple_ast::NodePtr address = FieldAddress(OwnedAggregateTempFor(baseId, base), base, owner, *declared);
+    const ast::NodePtr address = FieldAddress(OwnedAggregateTempFor(baseId, base), base, owner, *declared);
     if (!address) return Bad();
     if (declared->type->kind == MType::Struct || (declared->type->kind == MType::Array && !declared->type->dims.empty())) return address;
-    return simple_ast::Node::loadFrom(address, LowerType(declared->type, owner + "." + field));
+    return ast::Node::loadFrom(address, LowerType(declared->type, owner + "." + field));
 }
 
 /**
@@ -603,7 +603,7 @@ int ExplicitReceiverField(int id)
  * @param id 被取引用的表达式编号。
  * @return 表达式对应的稳定存储地址。
  */
-simple_ast::NodePtr LowerAddressOf(int id);
+ast::NodePtr LowerAddressOf(int id);
 
 /**
  * @brief 成员**节点**的地址（`&a.f` 那条路用它：传的是 `MNode::Member` / `MNode::Arrow` 的 id）。
@@ -612,7 +612,7 @@ simple_ast::NodePtr LowerAddressOf(int id);
  * @param owner 输出：所属 struct 名。
  * @return 地址表达式。
  */
-simple_ast::NodePtr LowerFieldAddress(int memberId, const MField **field, Memory::String *owner)
+ast::NodePtr LowerFieldAddress(int memberId, const MField **field, Memory::String *owner)
 {
     const MNode &node = N(memberId);
     /* 先把要用的东西抄下来：下面 `LowerExpr` 会往节点池里加东西，
@@ -663,12 +663,12 @@ simple_ast::NodePtr LowerFieldAddress(int memberId, const MField **field, Memory
  * `&p.f`）、字符串的第 i 个字节（`&s[i]`，步长 1）。被取引用的标量、字符串、大数与容器变量
  * 通过隐藏单元素存储保持变量与引用的读写一致。
  */
-simple_ast::NodePtr LowerAddressOf(int id)
+ast::NodePtr LowerAddressOf(int id)
 {
     if (const int member = ExplicitReceiverField(id); member >= 0) return LowerAddressOf(member);
     const MNode &node = N(id);
     if (RawExprType(id)->kind == MType::Ptr) return LowerRawExpr(id);
-    if (node.kind == MNode::Var && !NodeUsesDefinitionLookup(node) && node.s == "self" && !g_owner.empty()) return simple_ast::Node::var("self");
+    if (node.kind == MNode::Var && !NodeUsesDefinitionLookup(node) && node.s == "self" && !g_owner.empty()) return ast::Node::var("self");
     const auto temporaryType = ExprType(id);
     if (g_freshSink && IsContainer(temporaryType) && IsFreshValue(id))
     {
@@ -676,23 +676,23 @@ simple_ast::NodePtr LowerAddressOf(int id)
         const auto owner = AllocateName("__chali_iter_source");
         const auto storage = AllocateName("__chali_iter_source_slot");
         const auto value = LowerExpr(id);
-        g_freshSink->push_back(simple_ast::Node::declare(owner, LowerType(temporaryType, owner)));
-        g_freshSink->push_back(simple_ast::Node::assign(owner, TakeExpressionTempValue(value, temporaryType)));
-        g_freshSink->push_back(simple_ast::Node::declare(storage, simple_ast::Type::i64()));
-        g_freshSink->push_back(simple_ast::Node::assign(storage, simple_ast::Node::alloc(simple_ast::Node::i(8))));
-        g_freshSink->push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage),
-                                                         simple_ast::Node::var(owner), LowerType(temporaryType, storage)));
+        g_freshSink->push_back(ast::Node::declare(owner, LowerType(temporaryType, owner)));
+        g_freshSink->push_back(ast::Node::assign(owner, TakeExpressionTempValue(value, temporaryType)));
+        g_freshSink->push_back(ast::Node::declare(storage, ast::Type::i64()));
+        g_freshSink->push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(8))));
+        g_freshSink->push_back(ast::Node::storeAt(ast::Node::var(storage),
+                                                  ast::Node::var(owner), LowerType(temporaryType, storage)));
         g_referenceStorage[owner] = storage;
         // 先登记槽，再登记当前拥有值：逆序清理时值仍可读取自己的槽。
         MarkOwned(storage);
         NoteExpressionTemp(storage);
         MarkOwned(owner);
         NoteExpressionTemp(owner);
-        return simple_ast::Node::var(storage);
+        return ast::Node::var(storage);
     }
     if (node.kind == MNode::EnumCtor)
         if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr && global->elementReference)
-            return simple_ast::Node::var(global->emitted);
+            return ast::Node::var(global->emitted);
     if (node.kind == MNode::Var)
     {
         /* `&结构体变量`：值以聚合存储地址表示，局部按调用分配，全局使用数据区，
@@ -703,7 +703,7 @@ simple_ast::NodePtr LowerAddressOf(int id)
          * 直接使用自身的存储地址。运行时数组等其他句柄不在此处转换为变量引用。 */
         const MVar *found = FindNodeVar(node);
         if (found != nullptr && found->elementReference)
-            return simple_ast::Node::var(found->emitted);
+            return ast::Node::var(found->emitted);
         if (found != nullptr && found->type && (found->type->kind == MType::Struct || (found->type->kind == MType::Array && !IsRuntimeArray(found->type))))
         {
             return LowerExpr(id);
@@ -723,35 +723,35 @@ simple_ast::NodePtr LowerAddressOf(int id)
         {
             // 先检查并折平完整下标链，不能读取中间行来取得最终元素地址。
             const auto access = LowerIndexChain(node.kids[0], node.kids[1], node.s == "__chali_buffer_index");
-            if (access && access->kind == simple_ast::Node::Kind::Index)
-                return simple_ast::Node::offset(access->kids[0], access->kids[1], 8);
-            if (access && access->kind == simple_ast::Node::Kind::LoadInt && !access->kids.empty())
+            if (access && access->kind == ast::Node::Kind::Index)
+                return ast::Node::offset(access->kids[0], access->kids[1], 8);
+            if (access && access->kind == ast::Node::Kind::LoadInt && !access->kids.empty())
                 return access->kids[0];
             return access;
         }
         const auto target = valueReference ? LowerExpr(node.kids[0]) : LowerRawExpr(node.kids[0]);
-        const simple_ast::NodePtr position = LowerExpr(node.kids[1]);
+        const ast::NodePtr position = LowerExpr(node.kids[1]);
         const Memory::String label = NameOfExpr(node.kids[0]);
         if (IsStandardOpcode(base, "String")) /* `&s[i]`：字符串按字节 */
         {
-            return simple_ast::Node::call("__std_str_ref", { "__chali_s", "__chali_i" }, { target, position });
+            return ast::Node::call("__std_str_ref", { "__chali_s", "__chali_i" }, { target, position });
         }
         if (IsRuntimeArray(base))
         {
             /* 运行时数组：长度在对象里（句柄前 8 字节），先查越界再算地址 */
-            const simple_ast::NodePtr length = simple_ast::Node::loadInt(simple_ast::Node::binary(
-                "-", target, simple_ast::Node::i(8)));
+            const ast::NodePtr length = ast::Node::loadInt(ast::Node::binary(
+                "-", target, ast::Node::i(8)));
             const int stride = StructStride(base->elem);
-            return simple_ast::Node::offset(
-                target, simple_ast::Node::checkIndex(position, length, label),
+            return ast::Node::offset(
+                target, ast::Node::checkIndex(position, length, label),
                 ElementBytes(base->elem));
         }
         if (base->kind == MType::Ptr)
         {
             const int stride = StructStride(base->elem);
             const int bytes = ElementBytes(base->elem);
-            return simple_ast::Node::offset(
-                target, simple_ast::Node::checkPointer(position, target, bytes, label), bytes);
+            return ast::Node::offset(
+                target, ast::Node::checkPointer(position, target, bytes, label), bytes);
         }
         Fail("`&` 只能取数组 / 引用元素或结构体字段的地址");
         return Bad();
@@ -774,7 +774,7 @@ simple_ast::NodePtr LowerAddressOf(int id)
  * @param operandId 操作数在节点池中的编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
+ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
 {
     if (op == "&") return LowerAddressOf(operandId);
     if (ExprType(operandId)->kind == MType::Host)
@@ -793,13 +793,13 @@ simple_ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
         const std::shared_ptr<MType> type = ExprType(operandId);
         if (type && IsStandardOpcode(type, "BigInteger"))
         {
-            return simple_ast::Node::call("__std_bint_neg", { "__chali_v" },
-                                          { LowerExpr(operandId) });
+            return ast::Node::call("__std_bint_neg", { "__chali_v" },
+                                   { LowerExpr(operandId) });
         }
         if (type && IsStandardOpcode(type, "BigDecimal"))
         {
-            return simple_ast::Node::call("__std_bfloat_neg", { "__chali_v" },
-                                          { LowerExpr(operandId) });
+            return ast::Node::call("__std_bfloat_neg", { "__chali_v" },
+                                   { LowerExpr(operandId) });
         }
     }
     if (op == "*")
@@ -820,7 +820,7 @@ simple_ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
         const std::shared_ptr<MType> target = pointer->elem;
         if (target && (target->kind == MType::Struct || target->kind == MType::Array || IsEnumType(target)))
             return LowerRawExpr(operandId);
-        return simple_ast::Node::loadFrom(LowerRawExpr(operandId), LowerType(target, "reference value"));
+        return ast::Node::loadFrom(LowerRawExpr(operandId), LowerType(target, "reference value"));
     }
     /*
      * 用户自定义一元运算符（`-x` / `~x` / `+x`）：操作数是 struct / 枚举就查重载。
@@ -837,22 +837,22 @@ simple_ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
             if (declaration->callNames.size() > 1u && g_freshSink != nullptr)
             {
                 const auto temp = AllocateName("__chali_unary_operand");
-                g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(subject, temp)));
-                g_freshSink->push_back(simple_ast::Node::assign(temp, value));
-                value = simple_ast::Node::var(temp);
+                g_freshSink->push_back(ast::Node::declare(temp, LowerType(subject, temp)));
+                g_freshSink->push_back(ast::Node::assign(temp, value));
+                value = ast::Node::var(temp);
             }
-            Memory::Vector<simple_ast::NodePtr> values(declaration->callNames.size(), value);
-            return simple_ast::Node::call(declaration->label, declaration->callNames, values);
+            Memory::Vector<ast::NodePtr> values(declaration->callNames.size(), value);
+            return ast::Node::call(declaration->label, declaration->callNames, values);
         }
         if (!g_error.empty()) return Bad(); /* 报了"多个重载同样匹配" */
         Fail("一元运算符 " + op + " 在 " + Describe(subject) + " 上没有实现（实现 Negate / BitNot / Positive 接口）");
         return Bad();
     }
-    // ChaLi 整数字面量为 int64；simple_ast 的无类型字面量默认 int32，先保留前端位宽。
+    // ChaLi 整数字面量为 int64；ast 的无类型字面量默认 int32，先保留前端位宽。
     auto operand = LowerExpr(operandId);
     if (subject && subject->kind == MType::Int && (op == "-" || op == "+" || op == "~"))
-        operand = simple_ast::Node::cast(operand, LowerType(subject, "一元运算"));
-    return simple_ast::Node::unary(op, operand);
+        operand = ast::Node::cast(operand, LowerType(subject, "一元运算"));
+    return ast::Node::unary(op, operand);
 }
 
 /**
@@ -866,18 +866,18 @@ simple_ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
  * @param type 表达式类型（不是对象类就原样返回）。
  * @return 表达式节点（可能是那个临时变量）。
  */
-simple_ast::NodePtr OwnedObjectTempNode(const simple_ast::NodePtr &value,
-                                        const std::shared_ptr<MType> &type)
+ast::NodePtr OwnedObjectTempNode(const ast::NodePtr &value,
+                                 const std::shared_ptr<MType> &type)
 {
     if (g_freshSink == nullptr || (!IsObjectLike(type) && (!type || !IsStandardOpcode(type, "String"))))
         return value;
     const Memory::String temp = AllocateName("__chali_tmp_o");
-    g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(type, temp)));
+    g_freshSink->push_back(ast::Node::declare(temp, LowerType(type, temp)));
     g_freshSink->push_back(MakeDrop(temp));
-    g_freshSink->push_back(simple_ast::Node::assign(temp, TakeExpressionTempValue(value, type)));
+    g_freshSink->push_back(ast::Node::assign(temp, TakeExpressionTempValue(value, type)));
     MarkOwned(temp);
     NoteExpressionTemp(temp);
-    return simple_ast::Node::var(temp);
+    return ast::Node::var(temp);
 }
 
 /**
@@ -886,9 +886,9 @@ simple_ast::NodePtr OwnedObjectTempNode(const simple_ast::NodePtr &value,
  * @param type 类型描述。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr OwnedObjectTemp(int exprId, const std::shared_ptr<MType> &type)
+ast::NodePtr OwnedObjectTemp(int exprId, const std::shared_ptr<MType> &type)
 {
-    const simple_ast::NodePtr value = LowerExpr(exprId);
+    const ast::NodePtr value = LowerExpr(exprId);
     if (!IsFreshValue(exprId)) return value; /* 借来的（变量 / 字段）不落地 */
     return OwnedObjectTempNode(value, type);
 }
@@ -931,20 +931,20 @@ bool IsOwnedAggregateTemporary(int exprId)
  * 不能登记成块作用域所有：数据区临时对象在循环里每轮被覆盖，块出口只释放一次会漏。
  * 消费点（容器写入 / 下标赋值）复制完内容就把叶子还掉，能对付循环内的重复构造。
  */
-simple_ast::NodePtr AggregateTempNode(const simple_ast::NodePtr &value,
-                                      const std::shared_ptr<MType> &type,
-                                      Memory::Vector<simple_ast::NodePtr> *post)
+ast::NodePtr AggregateTempNode(const ast::NodePtr &value,
+                               const std::shared_ptr<MType> &type,
+                               Memory::Vector<ast::NodePtr> *post)
 {
     if (g_freshSink == nullptr || post == nullptr) return value;
     const Memory::String owner = StructNameOf(type);
     if (owner.empty()) return value;
     const Memory::String temp = AllocateName("__chali_tmp_agg");
-    g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(type, temp)));
-    g_freshSink->push_back(simple_ast::Node::assign(temp, value));
-    if (const simple_ast::NodePtr release =
-            MakeAggregateRelease(owner, simple_ast::Node::var(temp)))
+    g_freshSink->push_back(ast::Node::declare(temp, LowerType(type, temp)));
+    g_freshSink->push_back(ast::Node::assign(temp, value));
+    if (const ast::NodePtr release =
+            MakeAggregateRelease(owner, ast::Node::var(temp)))
         post->push_back(release);
-    return simple_ast::Node::var(temp);
+    return ast::Node::var(temp);
 }
 
 /**
@@ -960,10 +960,10 @@ simple_ast::NodePtr AggregateTempNode(const simple_ast::NodePtr &value,
  * 所以通过 `post` 回给调用方，由它拼成"先算值 → 再调用 → 再释放"的块。
  * 数组 / 资源句柄仍然不动。
  */
-simple_ast::NodePtr ContainerStoreValue(int argId, const std::shared_ptr<MType> &element,
-                                        Memory::Vector<simple_ast::NodePtr> *post = nullptr)
+ast::NodePtr ContainerStoreValue(int argId, const std::shared_ptr<MType> &element,
+                                 Memory::Vector<ast::NodePtr> *post = nullptr)
 {
-    const simple_ast::NodePtr value = LowerValueForType(argId, element);
+    const ast::NodePtr value = LowerValueForType(argId, element);
     if (!element) return value;
     if (element->kind == MType::Struct)
     {
@@ -996,15 +996,15 @@ simple_ast::NodePtr ContainerStoreValue(int argId, const std::shared_ptr<MType> 
  * @param sink 前置语句写哪儿。
  * @return 引用临时变量的表达式。
  */
-simple_ast::NodePtr DeferNewValue(const simple_ast::NodePtr &value,
-                                  const std::shared_ptr<MType> &type,
-                                  Memory::Vector<simple_ast::NodePtr> *sink)
+ast::NodePtr DeferNewValue(const ast::NodePtr &value,
+                           const std::shared_ptr<MType> &type,
+                           Memory::Vector<ast::NodePtr> *sink)
 {
     if (sink == nullptr) return value;
     const Memory::String temp = AllocateName("__chali_new_v");
-    sink->push_back(simple_ast::Node::declare(temp, LowerType(type, temp)));
-    sink->push_back(simple_ast::Node::assign(temp, value));
-    return simple_ast::Node::var(temp);
+    sink->push_back(ast::Node::declare(temp, LowerType(type, temp)));
+    sink->push_back(ast::Node::assign(temp, value));
+    return ast::Node::var(temp);
 }
 
 /**
@@ -1030,35 +1030,35 @@ bool NeedsOwnedTemp(int exprId)
  * @param sink 落地语句写哪儿（`nullptr` = 用语句级别设好的 `g_freshSink`）。
  * @return 表达式节点（可能是那个临时变量）。
  */
-simple_ast::NodePtr OwnedStringTemp(int exprId, Memory::Vector<simple_ast::NodePtr> *sink = nullptr)
+ast::NodePtr OwnedStringTemp(int exprId, Memory::Vector<ast::NodePtr> *sink = nullptr)
 {
-    const simple_ast::NodePtr value = LowerExpr(exprId);
-    Memory::Vector<simple_ast::NodePtr> *target = (sink != nullptr) ? sink : g_freshSink;
+    const ast::NodePtr value = LowerExpr(exprId);
+    Memory::Vector<ast::NodePtr> *target = (sink != nullptr) ? sink : g_freshSink;
     if (target == nullptr) return value;
     const Memory::String temp = AllocateName("__chali_tmp_s");
     const std::shared_ptr<MType> stringType = T(M_TypeString());
-    target->push_back(simple_ast::Node::declare(temp, LowerType(stringType, temp)));
+    target->push_back(ast::Node::declare(temp, LowerType(stringType, temp)));
     target->push_back(MakeDrop(temp));
-    target->push_back(simple_ast::Node::assign(temp, TakeExpressionTempValue(value, stringType)));
+    target->push_back(ast::Node::assign(temp, TakeExpressionTempValue(value, stringType)));
     MarkOwned(temp);
     NoteExpressionTemp(temp);
-    return simple_ast::Node::var(temp);
+    return ast::Node::var(temp);
 }
 
 /**
  * @brief 登记完整表达式拥有的新字符串，用于字符串格式化与大数文本转换。
  */
-simple_ast::NodePtr OwnedGeneratedString(const simple_ast::NodePtr &value)
+ast::NodePtr OwnedGeneratedString(const ast::NodePtr &value)
 {
     if (g_freshSink == nullptr) return value;
     const Memory::String temp = AllocateName("__chali_tmp_s");
     const std::shared_ptr<MType> stringType = T(M_TypeString());
-    g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(stringType, temp)));
+    g_freshSink->push_back(ast::Node::declare(temp, LowerType(stringType, temp)));
     g_freshSink->push_back(MakeDrop(temp));
-    g_freshSink->push_back(simple_ast::Node::assign(temp, TakeExpressionTempValue(value, stringType)));
+    g_freshSink->push_back(ast::Node::assign(temp, TakeExpressionTempValue(value, stringType)));
     MarkOwned(temp);
     NoteExpressionTemp(temp);
-    return simple_ast::Node::var(temp);
+    return ast::Node::var(temp);
 }
 
 /**
@@ -1097,8 +1097,8 @@ void CollectStringParts(int exprId, Memory::Vector<int> *out)
  *
  * 签名里左右类型都写出来了，所以 `Money + int` 与 `int + Money` 是两个重载。
  */
-simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
-                                int exprId = -1)
+ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
+                         int exprId = -1)
 {
     const std::shared_ptr<MType> leftType = ExprType(leftId);
     const std::shared_ptr<MType> rightType = ExprType(rightId);
@@ -1128,7 +1128,7 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
         if (nullCompare)
         {
             /* `s == null`：比的是地址（空串 / 空引用） */
-            return simple_ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
+            return ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
         }
         if (!IsStandardOpcode(leftType, "String") || !IsStandardOpcode(rightType, "String"))
         {
@@ -1143,7 +1143,7 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
             CollectStringParts(leftId, &parts);
             CollectStringParts(rightId, &parts);
             Memory::Vector<Memory::String> names;
-            Memory::Vector<simple_ast::NodePtr> values;
+            Memory::Vector<ast::NodePtr> values;
             for (std::size_t index = 0; index < parts.size(); ++index)
             {
                 const std::shared_ptr<MType> partType = ExprType(parts[index]);
@@ -1157,15 +1157,15 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
                  * 先落进临时变量 —— 否则它没人释放（递归里会一直涨）。 */
                 values.push_back(NeedsOwnedTemp(parts[index]) ? OwnedStringTemp(parts[index]) : LowerExpr(parts[index]));
             }
-            return simple_ast::Node::call("__std_str_join", names, values);
+            return ast::Node::call("__std_str_join", names, values);
         }
         if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=")
         {
-            const simple_ast::NodePtr left = NeedsOwnedTemp(leftId) ? OwnedStringTemp(leftId) : LowerExpr(leftId);
-            const simple_ast::NodePtr right = NeedsOwnedTemp(rightId) ? OwnedStringTemp(rightId) : LowerExpr(rightId);
-            const simple_ast::NodePtr diff =
-                simple_ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" }, { left, right });
-            return simple_ast::Node::binary(op, diff, simple_ast::Node::i(0));
+            const ast::NodePtr left = NeedsOwnedTemp(leftId) ? OwnedStringTemp(leftId) : LowerExpr(leftId);
+            const ast::NodePtr right = NeedsOwnedTemp(rightId) ? OwnedStringTemp(rightId) : LowerExpr(rightId);
+            const ast::NodePtr diff =
+                ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" }, { left, right });
+            return ast::Node::binary(op, diff, ast::Node::i(0));
         }
         Fail("字符串只支持 + 拼接与 == != < <= > >= 比较，不支持 " + op);
         return Bad();
@@ -1173,7 +1173,7 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
     /* ---- 大浮点数（`bfloat`）：十进制任意精度四则与比较。 ---- */
     if (IsStandardOpcode(leftType, "BigDecimal") || IsStandardOpcode(rightType, "BigDecimal"))
     {
-        const auto toBigFloat = [&](int exprId) -> simple_ast::NodePtr {
+        const auto toBigFloat = [&](int exprId) -> ast::NodePtr {
             const std::shared_ptr<MType> type = ExprType(exprId);
             if (type && IsStandardOpcode(type, "BigDecimal")) return OwnedObjectTemp(exprId, type);
             const char *native = nullptr;
@@ -1185,7 +1185,7 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
                 native = type->isUnsigned ? "__std_bfloat_from_uint" : "__std_bfloat_from_int";
             if (native != nullptr)
             {
-                return OwnedObjectTempNode(simple_ast::Node::call(native, { "__chali_v" }, { LowerExpr(exprId) }),
+                return OwnedObjectTempNode(ast::Node::call(native, { "__chali_v" }, { LowerExpr(exprId) }),
                                            T(M_TypeBigFloat()));
             }
             Fail("大浮点数只能和整数 / 浮点 / 大整数 / 大浮点数做 " + op);
@@ -1201,13 +1201,13 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
         else if (op == "/")
             arith = "__std_bfloat_div";
         if (arith != nullptr)
-            return simple_ast::Node::call(arith, { "__chali_l", "__chali_r" },
-                                          { toBigFloat(leftId), toBigFloat(rightId) });
+            return ast::Node::call(arith, { "__chali_l", "__chali_r" },
+                                   { toBigFloat(leftId), toBigFloat(rightId) });
         if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=")
         {
-            const simple_ast::NodePtr diff = simple_ast::Node::call(
+            const ast::NodePtr diff = ast::Node::call(
                 "__std_bfloat_cmp", { "__chali_l", "__chali_r" }, { toBigFloat(leftId), toBigFloat(rightId) });
-            return simple_ast::Node::binary(op, diff, simple_ast::Node::i(0));
+            return ast::Node::binary(op, diff, ast::Node::i(0));
         }
         Fail("大浮点数只支持 + - * / 与 == != < <= > >=，不支持 " + op);
         return Bad();
@@ -1222,12 +1222,12 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
         if (nullCompare)
         {
             /* `a == null`：比的是句柄（对象表里没有 0 号对象，所以只有真没建过才是 null） */
-            return simple_ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
+            return ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
         }
         /**
          * 把一边转成 `bint`（已经是就原样）。
          */
-        const auto toBigInt = [&](int exprId) -> simple_ast::NodePtr {
+        const auto toBigInt = [&](int exprId) -> ast::NodePtr {
             const std::shared_ptr<MType> type = ExprType(exprId);
             /* 已经是 `bint` 的：如果是"当场造出来的"（`a + b` 这种），落进临时变量，
              * 免得算完就没人管（对象表会涨）。 */
@@ -1240,15 +1240,15 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
             if (type && type->kind == MType::Double)
             {
                 return OwnedObjectTempNode(
-                    simple_ast::Node::call("__std_bint_from_flt", { "__chali_v" },
-                                           { LowerExpr(exprId) }),
+                    ast::Node::call("__std_bint_from_flt", { "__chali_v" },
+                                    { LowerExpr(exprId) }),
                     T(M_TypeBigInt()));
             }
             if (type && (type->kind == MType::Int || type->kind == MType::Bool))
             {
                 return OwnedObjectTempNode(
-                    simple_ast::Node::call(type->isUnsigned ? "__std_bint_from_uint" : "__std_bint_from_int", { "__chali_v" },
-                                           { LowerExpr(exprId) }),
+                    ast::Node::call(type->isUnsigned ? "__std_bint_from_uint" : "__std_bint_from_int", { "__chali_v" },
+                                    { LowerExpr(exprId) }),
                     T(M_TypeBigInt()));
             }
             Fail("大整数只能和整数 / 浮点 / 大整数做 " + op + "：另一边是 " + (type ? Describe(type) : Memory::String("?")));
@@ -1267,14 +1267,14 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
             arith = "__std_bint_mod";
         if (arith != nullptr)
         {
-            return simple_ast::Node::call(arith, { "__chali_l", "__chali_r" },
-                                          { toBigInt(leftId), toBigInt(rightId) });
+            return ast::Node::call(arith, { "__chali_l", "__chali_r" },
+                                   { toBigInt(leftId), toBigInt(rightId) });
         }
         if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=")
         {
-            const simple_ast::NodePtr diff = simple_ast::Node::call(
+            const ast::NodePtr diff = ast::Node::call(
                 "__std_bint_cmp", { "__chali_l", "__chali_r" }, { toBigInt(leftId), toBigInt(rightId) });
-            return simple_ast::Node::binary(op, diff, simple_ast::Node::i(0));
+            return ast::Node::binary(op, diff, ast::Node::i(0));
         }
         Fail("大整数只支持 + - * / % 与 == != < <= > >=，不支持 " + op);
         return Bad();
@@ -1292,37 +1292,37 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
     if (FindOperator(op, leftType, rightType, &declaration, &match, &expected))
     {
         /* 运算符和实例方法一样借用接收者；拥有的临时操作数须在完整表达式后清理。 */
-        const simple_ast::NodePtr left = leftType->kind == MType::Struct ? OwnedAggregateTempFor(leftId, leftType) : LowerExpr(leftId);
-        const simple_ast::NodePtr right = rightType->kind == MType::Struct ? OwnedAggregateTempFor(rightId, rightType) : LowerExpr(rightId);
+        const ast::NodePtr left = leftType->kind == MType::Struct ? OwnedAggregateTempFor(leftId, leftType) : LowerExpr(leftId);
+        const ast::NodePtr right = rightType->kind == MType::Struct ? OwnedAggregateTempFor(rightId, rightType) : LowerExpr(rightId);
         /* 命中的声明可能是"交换过"的（`a + b` 借用了 b 那侧的 `Add`）：接收者换一边。 */
         const bool receiverFirst = declaration->receiverLeft != match.swap;
-        Memory::Vector<simple_ast::NodePtr> arguments{ left, right };
+        Memory::Vector<ast::NodePtr> arguments{ left, right };
         if (!receiverFirst)
         {
             /* 换边会把实参顺序变成 {right, left}，而 VM 从左到右求值 —— 副作用顺序跟着
              * 反过来（`bump() + makeA()` 变成先求 `makeA()`）。把左操作数先钳进临时量、
              * 求值前缀挂在接收者实参上，位置就仍在右操作数之前，与源码一致。
              * 落地不了（对象类类型 / 没有语句槽）时保持原顺序。 */
-            Memory::Vector<simple_ast::NodePtr> prologue;
-            simple_ast::NodePtr held;
+            Memory::Vector<ast::NodePtr> prologue;
+            ast::NodePtr held;
             if (HoldOperandBeforeReceiver(left, leftType, &prologue, &held))
             {
-                arguments[0] = simple_ast::Node::sequence(prologue, right);
+                arguments[0] = ast::Node::sequence(prologue, right);
                 arguments[1] = held;
             }
             else
-                arguments = Memory::Vector<simple_ast::NodePtr>{ right, left };
+                arguments = Memory::Vector<ast::NodePtr>{ right, left };
         }
-        simple_ast::NodePtr call =
-            simple_ast::Node::call(declaration->label, declaration->callNames, arguments);
+        ast::NodePtr call =
+            ast::Node::call(declaration->label, declaration->callNames, arguments);
         /* 对偶推导来的（`a >= b` 用 `!(a < b)`）：结果取反再交出去。 */
-        if (match.negate) call = simple_ast::Node::unary("!", call);
+        if (match.negate) call = ast::Node::unary("!", call);
         return call;
     }
     if (leftType->kind == MType::Host || rightType->kind == MType::Host)
     {
         if ((op == "==" || op == "!=") && SameType(leftType, rightType))
-            return simple_ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
+            return ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
         FailNoOverload(op, leftType, rightType);
         return Bad();
     }
@@ -1334,18 +1334,18 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
     }
     if (op == "&&" || op == "||")
     {
-        const simple_ast::NodePtr left = LowerExpr(leftId);
-        Memory::Vector<simple_ast::NodePtr> rightFresh;
-        Memory::Vector<simple_ast::NodePtr> *const savedSink = g_freshSink;
+        const ast::NodePtr left = LowerExpr(leftId);
+        Memory::Vector<ast::NodePtr> rightFresh;
+        Memory::Vector<ast::NodePtr> *const savedSink = g_freshSink;
         if (savedSink != nullptr) g_freshSink = &rightFresh;
-        simple_ast::NodePtr right = LowerExpr(rightId);
+        ast::NodePtr right = LowerExpr(rightId);
         g_freshSink = savedSink;
         if (savedSink != nullptr)
         {
-            Memory::Vector<simple_ast::NodePtr> conditional;
-            for (simple_ast::NodePtr &statement : rightFresh)
+            Memory::Vector<ast::NodePtr> conditional;
+            for (ast::NodePtr &statement : rightFresh)
             {
-                if (statement->kind == simple_ast::Node::Kind::Declare)
+                if (statement->kind == ast::Node::Kind::Declare)
                     savedSink->push_back(std::move(statement));
                 else
                     conditional.push_back(std::move(statement));
@@ -1353,10 +1353,10 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
             rightFresh = std::move(conditional);
         }
         if (!rightFresh.empty())
-            right = simple_ast::Node::sequence(std::move(rightFresh), right);
-        return simple_ast::Node::binary(op, left, right);
+            right = ast::Node::sequence(std::move(rightFresh), right);
+        return ast::Node::binary(op, left, right);
     }
-    return simple_ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
+    return ast::Node::binary(op, LowerExpr(leftId), LowerExpr(rightId));
 }
 
 /**
@@ -1365,13 +1365,13 @@ simple_ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightI
  * @param valueId 表示输入值的节点或类型编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerCast(int typeId, int valueId)
+ast::NodePtr LowerCast(int typeId, int valueId)
 {
     const std::shared_ptr<MType> target = T(typeId);
     const std::shared_ptr<MType> source = target && target->kind == MType::Ptr ? RawExprType(valueId) : ExprType(valueId);
     if ((target->kind == MType::Ptr && source->kind == MType::Int) || (target->kind == MType::Int && (source->kind == MType::Ptr || source->kind == MType::Array)))
         return Fail("引用不能与整数地址互转；查看地址请使用 std::lang::address"), Bad();
-    if (const simple_ast::NodePtr converted = LowerDeclaredConversion(valueId, target, true))
+    if (const ast::NodePtr converted = LowerDeclaredConversion(valueId, target, true))
         return converted;
     const auto basicNumeric = [](const std::shared_ptr<MType> &type) {
         return type && (type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
@@ -1388,33 +1388,33 @@ simple_ast::NodePtr LowerCast(int typeId, int valueId)
     {
         if (target->kind == MType::Int || target->kind == MType::Bool)
         {
-            const simple_ast::NodePtr value = simple_ast::Node::call(
+            const ast::NodePtr value = ast::Node::call(
                 "__std_bint_to_int", { "__chali_v" }, { OwnedObjectTemp(valueId, source) });
             if (target->kind == MType::Bool)
-                return simple_ast::Node::binary("!=", value, simple_ast::Node::i(0));
+                return ast::Node::binary("!=", value, ast::Node::i(0));
             if (target->bits == 64 && !target->isUnsigned) return value;
-            return simple_ast::Node::cast(value, LowerType(target, "cast"));
+            return ast::Node::cast(value, LowerType(target, "cast"));
         }
         if (target->kind == MType::Double)
         {
-            return simple_ast::Node::call("__std_bint_to_flt", { "__chali_v" },
-                                          { OwnedObjectTemp(valueId, source) });
+            return ast::Node::call("__std_bint_to_flt", { "__chali_v" },
+                                   { OwnedObjectTemp(valueId, source) });
         }
     }
     if (source && IsStandardOpcode(source, "BigDecimal") && target)
     {
         if (target->kind == MType::Int || target->kind == MType::Bool)
         {
-            const simple_ast::NodePtr value = simple_ast::Node::call(
+            const ast::NodePtr value = ast::Node::call(
                 "__std_bfloat_to_int", { "__chali_v" }, { OwnedObjectTemp(valueId, source) });
             if (target->kind == MType::Bool)
-                return simple_ast::Node::binary("!=", value, simple_ast::Node::i(0));
+                return ast::Node::binary("!=", value, ast::Node::i(0));
             if (target->bits == 64 && !target->isUnsigned) return value;
-            return simple_ast::Node::cast(value, LowerType(target, "cast"));
+            return ast::Node::cast(value, LowerType(target, "cast"));
         }
         if (target->kind == MType::Double)
-            return simple_ast::Node::call("__std_bfloat_to_flt", { "__chali_v" },
-                                          { OwnedObjectTemp(valueId, source) });
+            return ast::Node::call("__std_bfloat_to_flt", { "__chali_v" },
+                                   { OwnedObjectTemp(valueId, source) });
     }
     /* 显式引用转换以目标类型的 mut/const 限定为准，不修改共享类型定义。 */
     /* **接口引用不能硬转**（两个方向都不行）：它是「地址 + 类型号」的胖引用，
@@ -1437,13 +1437,13 @@ simple_ast::NodePtr LowerCast(int typeId, int valueId)
     }
     if (!IsObjGetCall(valueId) && basicNumeric(target) && basicNumeric(source))
     {
-        const simple_ast::NodePtr value = LowerExpr(valueId);
+        const ast::NodePtr value = LowerExpr(valueId);
         if (target->kind == MType::Bool)
         {
-            const simple_ast::NodePtr zero = source->kind == MType::Double ? simple_ast::Node::f(0.0) : simple_ast::Node::i(0);
-            return simple_ast::Node::binary("!=", value, zero);
+            const ast::NodePtr zero = source->kind == MType::Double ? ast::Node::f(0.0) : ast::Node::i(0);
+            return ast::Node::binary("!=", value, zero);
         }
-        return simple_ast::Node::cast(value, LowerType(target, "cast"));
+        return ast::Node::cast(value, LowerType(target, "cast"));
     }
     const bool arrayPointer = target && source && target->kind == MType::Ptr && source->kind == MType::Array && SameType(target->elem, source->elem);
     const bool structPointer = target && source && target->kind == MType::Ptr && source->kind == MType::Struct && SameType(target->elem, source);
@@ -1456,9 +1456,9 @@ simple_ast::NodePtr LowerCast(int typeId, int valueId)
     /* `(int)o.get()`：强转这里也要当"上下文" —— 否则 `o.get()` 不知道自己该取成什么。 */
     const std::shared_ptr<MType> saved = g_expectedObjGet;
     g_expectedObjGet = target;
-    const simple_ast::NodePtr node = target && target->kind == MType::Ptr ? LowerRawExpr(valueId) : LowerExpr(valueId);
+    const ast::NodePtr node = target && target->kind == MType::Ptr ? LowerRawExpr(valueId) : LowerExpr(valueId);
     g_expectedObjGet = saved;
-    return simple_ast::Node::cast(node, LowerType(target, "cast"));
+    return ast::Node::cast(node, LowerType(target, "cast"));
 }
 
 /**
@@ -1833,8 +1833,8 @@ bool CheckMethodReceiver(int receiverId, const Memory::String &label)
     return true;
 }
 
-simple_ast::NodePtr LowerObjSet(const simple_ast::NodePtr &receiver, int valueId,
-                                const Memory::String &where);
+ast::NodePtr LowerObjSet(const ast::NodePtr &receiver, int valueId,
+                         const Memory::String &where);
 
 /**
  * @brief 将定长数组的独立副本搬入现有存储，保留目标数组及内联字段的地址。
@@ -1845,10 +1845,10 @@ simple_ast::NodePtr LowerObjSet(const simple_ast::NodePtr &receiver, int valueId
  * @return 先物化新值、清理旧元素，再搬入新元素并归还临时长度头的语句块。
  * @note 自赋值先复制后覆盖；原生对象由复制入口克隆一次，搬入阶段不重复克隆。
  */
-simple_ast::NodePtr ReplaceFixedArrayValue(const simple_ast::NodePtr &address, int valueId,
-                                           const simple_ast::NodePtr &value, const std::shared_ptr<MType> &type)
+ast::NodePtr ReplaceFixedArrayValue(const ast::NodePtr &address, int valueId,
+                                    const ast::NodePtr &value, const std::shared_ptr<MType> &type)
 {
-    using simple_ast::Node;
+    using ast::Node;
     const int count = static_cast<int>(FixedArrayElementCount(type->dims));
     const auto destination = AllocateName("__chali_fixed_destination");
     const auto replacement = AllocateName("__chali_fixed_replacement");
@@ -1856,14 +1856,14 @@ simple_ast::NodePtr ReplaceFixedArrayValue(const simple_ast::NodePtr &address, i
     const auto loop = NewBlockLabel("fixed_array_move");
     const auto done = NewBlockLabel("fixed_array_move_done");
     const auto stored = IsFreshValue(valueId) ? TakeExpressionTempValue(value, type) : CopyRuntimeArrayValue(value, type);
-    Memory::Vector<simple_ast::NodePtr> out{
-        Node::declare(destination, simple_ast::Type::i64()), Node::assign(destination, address),
+    Memory::Vector<ast::NodePtr> out{
+        Node::declare(destination, ast::Type::i64()), Node::assign(destination, address),
         Node::declare(replacement, LowerType(type, replacement)), Node::assign(replacement, stored),
         Node::ifThenElse(Node::binary("!=", Node::loadInt(Node::binary("-", Node::var(replacement), Node::i(8))), Node::i(count)),
                          Node::exprStmt(Node::call("__std_panic", { "message" }, { Node::str("定长数组赋值的元素个数不匹配") })), nullptr)
     };
     if (const auto release = MakeArrayElementRelease(destination, type->elem, count)) out.push_back(release);
-    out.push_back(Node::declare(index, simple_ast::Type::i64()));
+    out.push_back(Node::declare(index, ast::Type::i64()));
     out.push_back(Node::assign(index, Node::i(0)));
     out.push_back(Node::label(loop));
     out.push_back(Node::ifThenElse(Node::binary(">=", Node::var(index), Node::i(count)), Node::jump(done), nullptr));
@@ -1893,21 +1893,21 @@ simple_ast::NodePtr ReplaceFixedArrayValue(const simple_ast::NodePtr &address, i
  * @return 先物化新值、释放旧值，再写入目标的语句块。
  * @note 数组引用的整体赋值逐元素复制或移交，并清理旧数组的元素和长度头。
  */
-simple_ast::NodePtr StoreOwnedValueAt(const simple_ast::NodePtr &address, int valueId,
-                                      const simple_ast::NodePtr &value,
-                                      const std::shared_ptr<MType> &type)
+ast::NodePtr StoreOwnedValueAt(const ast::NodePtr &address, int valueId,
+                               const ast::NodePtr &value,
+                               const std::shared_ptr<MType> &type)
 {
     if (TypeNonCopyable(type) && valueId >= 0 && !IsFreshValue(valueId))
         return Fail("不可复制的值禁止复制到字段或数组元素（实现 Closeable 或声明了 #NonCopyable），请显式 move"), Bad();
     if (IsRuntimeArray(type))
     {
-        using simple_ast::Node;
+        using ast::Node;
         const auto destination = AllocateName("__chali_array_destination");
         const auto replacement = AllocateName("__chali_array_replacement");
         const auto previous = AllocateName("__chali_array_previous");
         const auto stored = IsFreshValue(valueId) ? TakeExpressionTempValue(value, type) : CopyRuntimeArrayValue(value, type);
-        Memory::Vector<simple_ast::NodePtr> out{
-            Node::declare(destination, simple_ast::Type::i64()),
+        Memory::Vector<ast::NodePtr> out{
+            Node::declare(destination, ast::Type::i64()),
             Node::assign(destination, address),
             Node::declare(replacement, LowerType(type, replacement)),
             Node::assign(replacement, stored),
@@ -1915,52 +1915,52 @@ simple_ast::NodePtr StoreOwnedValueAt(const simple_ast::NodePtr &address, int va
             Node::assign(previous, Node::loadInt(Node::var(destination)))
         };
         AppendOwnedDrop(previous, type, &out);
-        out.push_back(Node::storeAt(Node::var(destination), Node::var(replacement), simple_ast::Type::i64()));
+        out.push_back(Node::storeAt(Node::var(destination), Node::var(replacement), ast::Type::i64()));
         return Node::block(out);
     }
     if (!type || (!IsStandardOpcode(type, "String") && !IsObjectLike(type) && !OpcodeNonCopyable(type)))
-        return simple_ast::Node::storeAt(address, value, LowerType(type, "assignment"));
-    simple_ast::NodePtr stored = (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)) ? TakeExpressionTempValue(value, type) : value;
+        return ast::Node::storeAt(address, value, LowerType(type, "assignment"));
+    ast::NodePtr stored = (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)) ? TakeExpressionTempValue(value, type) : value;
     if (IsStandardOpcode(type, "String"))
     {
         if (valueId >= 0 && N(valueId).kind == MNode::Str)
-            stored = simple_ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+            stored = ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
         else if (!(IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)))
-            stored = simple_ast::Node::call(ObjectCopyFunction(type), { "value" }, { value });
+            stored = ast::Node::call(ObjectCopyFunction(type), { "value" }, { value });
     }
     else if (!(IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)))
     {
-        stored = simple_ast::Node::call(ObjectCopyFunction(type), { "__chali_v" }, { value });
+        stored = ast::Node::call(ObjectCopyFunction(type), { "__chali_v" }, { value });
     }
     /* 地址先落临时槽：`a[i]` / `p.next` 这类左值只许求值一次。 */
     const Memory::String slotValue = AllocateName("__chali_elem_value");
     const Memory::String slotAddress = AllocateName("__chali_elem");
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     /*
      * `Node::index(base, i)` 是**右值**形式（算地址之后还补一次 load）；要当 store 的
      * 目标就得换成纯地址 `offset(base, i, 8)`（非结构体元素的槽位一律 8 字节）。
      * 结构体元素本来就返回 `offset`，不用动。
      */
-    simple_ast::NodePtr target = address;
-    if (target != nullptr && target->kind == simple_ast::Node::Kind::Index && target->kids.size() >= 2u)
-        target = simple_ast::Node::offset(target->kids[0], target->kids[1], 8);
-    out.push_back(simple_ast::Node::declare(slotValue, simple_ast::Type::i64()));
-    out.push_back(simple_ast::Node::assign(slotValue, stored));
-    out.push_back(simple_ast::Node::declare(slotAddress, simple_ast::Type::i64()));
-    out.push_back(simple_ast::Node::assign(slotAddress, target));
-    const auto previous = simple_ast::Node::loadInt(simple_ast::Node::var(slotAddress));
+    ast::NodePtr target = address;
+    if (target != nullptr && target->kind == ast::Node::Kind::Index && target->kids.size() >= 2u)
+        target = ast::Node::offset(target->kids[0], target->kids[1], 8);
+    out.push_back(ast::Node::declare(slotValue, ast::Type::i64()));
+    out.push_back(ast::Node::assign(slotValue, stored));
+    out.push_back(ast::Node::declare(slotAddress, ast::Type::i64()));
+    out.push_back(ast::Node::assign(slotAddress, target));
+    const auto previous = ast::Node::loadInt(ast::Node::var(slotAddress));
     const auto *opcode = FindOpcodeDefinition(type);
-    out.push_back(simple_ast::Node::ifThenElse(simple_ast::Node::binary("!=", previous, simple_ast::Node::i(0)),
-                                               opcode ? simple_ast::Node::exprStmt(simple_ast::Node::call(opcode->destroy, { "value" }, { previous })) : simple_ast::Node::release(previous), nullptr));
-    out.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(slotAddress),
-                                            simple_ast::Node::var(slotValue),
-                                            LowerType(type, "assignment")));
-    return simple_ast::Node::block(out);
+    out.push_back(ast::Node::ifThenElse(ast::Node::binary("!=", previous, ast::Node::i(0)),
+                                        opcode ? ast::Node::exprStmt(ast::Node::call(opcode->destroy, { "value" }, { previous })) : ast::Node::release(previous), nullptr));
+    out.push_back(ast::Node::storeAt(ast::Node::var(slotAddress),
+                                     ast::Node::var(slotValue),
+                                     LowerType(type, "assignment")));
+    return ast::Node::block(out);
 }
 
-simple_ast::NodePtr DefaultInit(const Memory::String &emitted,
-                                const std::shared_ptr<MType> &type,
-                                bool initContainers = false, bool localStorage = true);
+ast::NodePtr DefaultInit(const Memory::String &emitted,
+                         const std::shared_ptr<MType> &type,
+                         bool initContainers = false, bool localStorage = true);
 
 /**
  * @brief 把"**调用点拥有**的当场构造聚合"（元组字面量 / 函数返回的枚举或结构体）落进一个
@@ -1971,29 +1971,31 @@ simple_ast::NodePtr DefaultInit(const Memory::String &emitted,
  * 不落地就漏。落地时给临时**自己的存储**（`DefaultInit`）再按位搬进来，免得多个同类型
  * 临时共用数据区槽位互相盖掉。
  */
-simple_ast::NodePtr OwnedAggregateTemp(const simple_ast::NodePtr &value,
-                                       const std::shared_ptr<MType> &type)
+ast::NodePtr OwnedAggregateTemp(const ast::NodePtr &value,
+                                const std::shared_ptr<MType> &type)
 {
     if (g_freshSink == nullptr || !type || type->kind != MType::Struct) return value;
     const Memory::String owner = StructNameOf(type);
     if (owner.empty()) return value;
     const Memory::String temp = AllocateName("__chali_tmp_agg");
-    g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(type, temp)));
-    if (const simple_ast::NodePtr init = DefaultInit(temp, type))
+    g_freshSink->push_back(ast::Node::declare(temp, LowerType(type, temp)));
+    if (const ast::NodePtr init = DefaultInit(temp, type))
         g_freshSink->push_back(init);
     MarkDestructor(temp, type);
     NoteExpressionTemp(temp);
     /* 表达式到达此处时才求值，保持实参从左到右的副作用顺序。 */
-    return simple_ast::Node::sequence(
-        { MoveStructValue(simple_ast::Node::var(temp), value, type) }, simple_ast::Node::var(temp));
+    const auto move = MoveStructValue(ast::Node::var(temp), value, type);
+    Memory::Set<Memory::String> visiting;
+    if (!HasObservableAggregateDestructor(type, visiting)) move->typeName = "__fresh_aggregate_destination";
+    return ast::Node::sequence({ move }, ast::Node::var(temp));
 }
 
 /**
  * @brief 临时聚合（当场造的）才落地，借来的不动。
  */
-simple_ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MType> &type)
+ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MType> &type)
 {
-    const simple_ast::NodePtr value = LowerExpr(exprId);
+    const ast::NodePtr value = LowerExpr(exprId);
     if (!IsOwnedAggregateTemporary(exprId)) return value;
     return OwnedAggregateTemp(value, type);
 }
@@ -2022,24 +2024,24 @@ bool CanHoldOperand(const std::shared_ptr<MType> &type)
  * @param held 接收保存后的临时操作数。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool HoldOperandBeforeReceiver(const simple_ast::NodePtr &value,
+bool HoldOperandBeforeReceiver(const ast::NodePtr &value,
                                const std::shared_ptr<MType> &type,
-                               Memory::Vector<simple_ast::NodePtr> *prologue,
-                               simple_ast::NodePtr *held)
+                               Memory::Vector<ast::NodePtr> *prologue,
+                               ast::NodePtr *held)
 {
     if (g_freshSink == nullptr || !CanHoldOperand(type)) return false;
     const Memory::String temp = AllocateName("__chali_operand_hold");
-    g_freshSink->push_back(simple_ast::Node::declare(temp, LowerType(type, temp)));
+    g_freshSink->push_back(ast::Node::declare(temp, LowerType(type, temp)));
     if (type->kind == MType::Struct)
     {
-        if (const simple_ast::NodePtr init = DefaultInit(temp, type)) g_freshSink->push_back(init);
+        if (const ast::NodePtr init = DefaultInit(temp, type)) g_freshSink->push_back(init);
         MarkDestructor(temp, type);
         NoteExpressionTemp(temp);
-        prologue->push_back(MoveStructValue(simple_ast::Node::var(temp), value, type));
+        prologue->push_back(MoveStructValue(ast::Node::var(temp), value, type));
     }
     else
-        prologue->push_back(simple_ast::Node::assign(temp, value));
-    *held = simple_ast::Node::var(temp);
+        prologue->push_back(ast::Node::assign(temp, value));
+    *held = ast::Node::var(temp);
     return true;
 }
 
@@ -2050,9 +2052,9 @@ bool HoldOperandBeforeReceiver(const simple_ast::NodePtr &value,
  * @param allowExplicit 是否允许显式接口，显式实现优先于隐式实现。
  * @return 无转换返回空节点；存在转换时返回方法调用或诊断节点。
  */
-simple_ast::NodePtr LowerDeclaredConversion(int valueId,
-                                            const std::shared_ptr<MType> &target,
-                                            bool allowExplicit)
+ast::NodePtr LowerDeclaredConversion(int valueId,
+                                     const std::shared_ptr<MType> &target,
+                                     bool allowExplicit)
 {
     const auto source = ExprType(valueId);
     const auto conversion = FindConversion(source, target, allowExplicit);
@@ -2062,27 +2064,27 @@ simple_ast::NodePtr LowerDeclaredConversion(int valueId,
     const auto receiver = source->kind == MType::Struct ? OwnedAggregateTempFor(valueId, source) : (IsStandardOpcode(source, "String") && N(valueId).kind == MNode::Str) ? OwnedObjectTempNode(MaterializeStringValue(valueId, source), source) :
                                                                                                (IsObjectLike(source) || IsStandardOpcode(source, "String"))              ? OwnedObjectTemp(valueId, source) :
                                                                                                                                                                            LowerExpr(valueId);
-    return simple_ast::Node::call(conversion->label, conversion->callNames, { receiver });
+    return ast::Node::call(conversion->label, conversion->callNames, { receiver });
 }
 
 /**
  * @brief 替换借用聚合中的值，先复制右侧再释放旧叶子，保证自赋值与引用别名安全。
  */
-simple_ast::NodePtr ReplaceBorrowedStruct(const simple_ast::NodePtr &address, int valueId,
-                                          const std::shared_ptr<MType> &type)
+ast::NodePtr ReplaceBorrowedStruct(const ast::NodePtr &address, int valueId,
+                                   const std::shared_ptr<MType> &type)
 {
     const auto temp = AllocateName("__chali_borrowed_value");
     const auto destination = AllocateName("__chali_borrowed_target");
-    Memory::Vector<simple_ast::NodePtr> out{
-        simple_ast::Node::declare(temp, LowerType(type, temp)), DefaultInit(temp, type),
-        StoreStructValue(simple_ast::Node::var(temp), valueId, LowerValueForType(valueId, type), type),
-        simple_ast::Node::declare(destination, simple_ast::Type::i64()),
-        simple_ast::Node::assign(destination, address)
+    Memory::Vector<ast::NodePtr> out{
+        ast::Node::declare(temp, LowerType(type, temp)), DefaultInit(temp, type),
+        StoreStructValue(ast::Node::var(temp), valueId, LowerValueForType(valueId, type), type),
+        ast::Node::declare(destination, ast::Type::i64()),
+        ast::Node::assign(destination, address)
     };
-    if (const auto release = MakeAggregateRelease(type->name, simple_ast::Node::var(destination)))
+    if (const auto release = MakeAggregateRelease(type->name, ast::Node::var(destination)))
         out.push_back(release);
-    out.push_back(MoveStructValue(simple_ast::Node::var(destination), simple_ast::Node::var(temp), type));
-    return simple_ast::Node::block(out);
+    out.push_back(MoveStructValue(ast::Node::var(destination), ast::Node::var(temp), type));
+    return ast::Node::block(out);
 }
 
 /**
@@ -2092,8 +2094,8 @@ simple_ast::NodePtr ReplaceBorrowedStruct(const simple_ast::NodePtr &address, in
  * @param checkObjectBorrow 是否要求隐藏 Any 借用满足普通调用边界；标准游标转送另行传播来源。
  * @return 已检查并登记临时资源的实参值。
  */
-simple_ast::NodePtr LowerArgumentValue(int id, const std::shared_ptr<MType> &type,
-                                       bool checkObjectBorrow = true)
+ast::NodePtr LowerArgumentValue(int id, const std::shared_ptr<MType> &type,
+                                bool checkObjectBorrow = true)
 {
     if (checkObjectBorrow) RecordObjectArgumentBorrow(id, type);
     if (OpcodeNonCopyable(type) && !IsFreshValue(id))
@@ -2121,7 +2123,7 @@ simple_ast::NodePtr LowerArgumentValue(int id, const std::shared_ptr<MType> &typ
 }
 
 /**
- * 赋值：目标是变量就直接 `:=`；是下标 / 成员 / `*p` 就走 simple_ast 的 `(store, 地址, 值, _)`。
+ * 赋值：目标是变量就直接 `:=`；是下标 / 成员 / `*p` 就走 ast 的 `(store, 地址, 值, _)`。
  */
 /**
  * @brief 按赋值目标的引用、聚合和资源类型生成写入操作。
@@ -2137,11 +2139,11 @@ bool g_namedConstructorBody = false;  ///< 仅构造体允许用完整值替换�
  * @param valueId 表示输入值的节点或类型编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
+ast::NodePtr LowerAssignImpl(int targetId, int valueId)
 {
     if (const int member = ExplicitReceiverField(targetId); member >= 0) return LowerAssignImpl(member, valueId);
     if (g_namedConstructorBody && !g_owner.empty() && N(targetId).kind == MNode::Var && N(targetId).s == "self")
-        return ReplaceBorrowedStruct(simple_ast::Node::var("self"), valueId, NamedType(g_owner));
+        return ReplaceBorrowedStruct(ast::Node::var("self"), valueId, NamedType(g_owner));
     InferExpression(valueId, ExprType(targetId));
     const MNode &target = N(targetId);
     const auto referenceType = RawExprType(targetId);
@@ -2161,18 +2163,18 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 // 新值先物化为独立聚合，确保自赋值与借用源不会被旧值释放影响。
                 const auto temp = AllocateName("__chali_reference_value");
                 const auto address = AllocateName("__chali_reference_target");
-                Memory::Vector<simple_ast::NodePtr> out{
-                    simple_ast::Node::declare(temp, LowerType(referenceType->elem, temp)),
+                Memory::Vector<ast::NodePtr> out{
+                    ast::Node::declare(temp, LowerType(referenceType->elem, temp)),
                     DefaultInit(temp, referenceType->elem),
-                    StoreStructValue(simple_ast::Node::var(temp), valueId, value, referenceType->elem),
-                    simple_ast::Node::declare(address, simple_ast::Type::i64()),
-                    simple_ast::Node::assign(address, LowerRawExpr(targetId))
+                    StoreStructValue(ast::Node::var(temp), valueId, value, referenceType->elem),
+                    ast::Node::declare(address, ast::Type::i64()),
+                    ast::Node::assign(address, LowerRawExpr(targetId))
                 };
                 if (const auto release = MakeAggregateRelease(referenceType->elem->name,
-                                                              simple_ast::Node::var(address))) out.push_back(release);
-                out.push_back(CopyStructValue(simple_ast::Node::var(address),
-                                              simple_ast::Node::var(temp), referenceType->elem));
-                return simple_ast::Node::block(out);
+                                                              ast::Node::var(address))) out.push_back(release);
+                out.push_back(CopyStructValue(ast::Node::var(address),
+                                              ast::Node::var(temp), referenceType->elem));
+                return ast::Node::block(out);
             }
             return StoreOwnedValueAt(LowerRawExpr(targetId), valueId, value, referenceType->elem);
         }
@@ -2182,7 +2184,7 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             Memory::String owner;
             const auto address = LowerFieldAddress(targetId, &field, &owner);
             if (!CheckWritable(targetId)) return Bad();
-            return simple_ast::Node::storeAt(address, LowerValueForType(valueId, referenceType), LowerType(referenceType, "reference binding"));
+            return ast::Node::storeAt(address, LowerValueForType(valueId, referenceType), LowerType(referenceType, "reference binding"));
         }
     }
     const auto targetType = ExprType(targetId);
@@ -2198,17 +2200,17 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             if (global->isConst)
                 return Fail("不可变变量（const）不能再赋值：" + target.s + "::" + target.s2), Bad();
             if (global->elementReference)
-                return StoreOwnedValueAt(simple_ast::Node::var(global->emitted), valueId,
+                return StoreOwnedValueAt(ast::Node::var(global->emitted), valueId,
                                          LowerValueForType(valueId, global->type), global->type);
-            return simple_ast::Node::assign(global->emitted,
-                                            LowerValueForType(valueId, global->type));
+            return ast::Node::assign(global->emitted,
+                                     LowerValueForType(valueId, global->type));
         }
         const MStaticField *field = FindStaticField(target.s, target.s2);
         if (field == nullptr)
             return Fail("struct " + target.s + " 没有 static 字段 " + target.s2), Bad();
         if (field->isConst)
             return Fail(CHALI_TEXT("只读常数不能赋值：") + target.s + "::" + target.s2), Bad();
-        return simple_ast::Node::assign(
+        return ast::Node::assign(
             field->emitted, LowerValueForType(valueId, field->type));
     }
     if (target.kind == MNode::Var)
@@ -2223,45 +2225,45 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             }
             if (!found->elementList.empty())
             {
-                Memory::Vector<simple_ast::NodePtr> post;
+                Memory::Vector<ast::NodePtr> post;
                 const auto stored = ContainerStoreValue(valueId, found->type, &post);
-                const auto call = simple_ast::Node::call("__std_vec_set",
-                                                         { "__chali_v", "__chali_i", "__chali_x", "__chali_t", "__chali_o" },
-                                                         { simple_ast::Node::var(found->elementList), simple_ast::Node::var(found->elementIndex),
-                                                           stored, simple_ast::Node::i(IsStandardOpcode(found->type, "String") ? 1 : 0), ContainerStorageFlag(found->type) });
-                post.insert(post.begin(), simple_ast::Node::exprStmt(call));
-                return simple_ast::Node::block(post);
+                const auto call = ast::Node::call("__std_vec_set",
+                                                  { "__chali_v", "__chali_i", "__chali_x", "__chali_t", "__chali_o" },
+                                                  { ast::Node::var(found->elementList), ast::Node::var(found->elementIndex),
+                                                    stored, ast::Node::i(IsStandardOpcode(found->type, "String") ? 1 : 0), ContainerStorageFlag(found->type) });
+                post.insert(post.begin(), ast::Node::exprStmt(call));
+                return ast::Node::block(post);
             }
             if (found->elementReference)
             {
                 if (found->type->kind == MType::Obj && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
                 {
                     const auto temp = AllocateName("__chali_boxed_assignment");
-                    return simple_ast::Node::block({ simple_ast::Node::declare(temp, LowerType(found->type, temp)),
-                                                     simple_ast::Node::assign(temp, simple_ast::Node::call("__std_obj_new", {}, {})),
-                                                     simple_ast::Node::exprStmt(LowerObjSet(simple_ast::Node::var(temp), valueId, "Any 赋值")),
-                                                     simple_ast::Node::release(simple_ast::Node::loadInt(simple_ast::Node::var(found->emitted))),
-                                                     simple_ast::Node::storeAt(simple_ast::Node::var(found->emitted), simple_ast::Node::var(temp), LowerType(found->type, temp)) });
+                    return ast::Node::block({ ast::Node::declare(temp, LowerType(found->type, temp)),
+                                              ast::Node::assign(temp, ast::Node::call("__std_obj_new", {}, {})),
+                                              ast::Node::exprStmt(LowerObjSet(ast::Node::var(temp), valueId, "Any 赋值")),
+                                              ast::Node::release(ast::Node::loadInt(ast::Node::var(found->emitted))),
+                                              ast::Node::storeAt(ast::Node::var(found->emitted), ast::Node::var(temp), LowerType(found->type, temp)) });
                 }
                 const auto value = LowerValueForType(valueId, found->type);
                 if (found->type->kind == MType::Struct)
-                    return ReplaceBorrowedStruct(simple_ast::Node::var(found->emitted), valueId, found->type);
-                return StoreOwnedValueAt(simple_ast::Node::var(found->emitted), valueId, value,
+                    return ReplaceBorrowedStruct(ast::Node::var(found->emitted), valueId, found->type);
+                return StoreOwnedValueAt(ast::Node::var(found->emitted), valueId, value,
                                          found->type);
             }
             if (found->type && found->type->kind == MType::Obj && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
             {
                 const Memory::String temp = AllocateName("__chali_box");
-                Memory::Vector<simple_ast::NodePtr> out;
-                out.push_back(simple_ast::Node::declare(temp, LowerType(found->type, temp)));
+                Memory::Vector<ast::NodePtr> out;
+                out.push_back(ast::Node::declare(temp, LowerType(found->type, temp)));
                 out.push_back(DefaultInit(temp, found->type));
-                out.push_back(simple_ast::Node::exprStmt(
-                    LowerObjSet(simple_ast::Node::var(temp), valueId, "obj 赋值")));
+                out.push_back(ast::Node::exprStmt(
+                    LowerObjSet(ast::Node::var(temp), valueId, "obj 赋值")));
                 if (IsOwnedNow(found->emitted)) out.push_back(MakeDrop(found->emitted, false));
-                out.push_back(simple_ast::Node::assign(found->emitted,
-                                                       simple_ast::Node::var(temp)));
+                out.push_back(ast::Node::assign(found->emitted,
+                                                ast::Node::var(temp)));
                 MarkOwned(found->emitted, false);
-                return simple_ast::Node::block(out);
+                return ast::Node::block(out);
             }
             /* 结构体是**值语义**：`a = b;` 深拷贝（改 a 不会动到 b）。 */
             if (found->type && found->type->kind == MType::Struct && (IsObjGetCall(valueId) || SameStruct(found->type, ExprType(valueId)) || IsImplicitConversionValue(valueId, found->type)))
@@ -2271,11 +2273,11 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 {
                     const MVar *source = FindNodeVar(N(valueId));
                     if (source != nullptr && source->emitted == found->emitted)
-                        return simple_ast::Node::block({});
+                        return ast::Node::block({});
                 }
                 const bool global = IsGlobalName(found->emitted);
                 if (!global && !HasDestructorNow(found->emitted))
-                    return StoreStructValue(simple_ast::Node::var(found->emitted), valueId,
+                    return StoreStructValue(ast::Node::var(found->emitted), valueId,
                                             LowerValueForType(valueId, found->type), found->type);
                 MOwnedScope::Destructor previous{ found->emitted, found->type->name,
                                                   StructHasInterface(found->type->name, "Drop"),
@@ -2298,19 +2300,19 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                  * 再跑旧值的析构，最后把新值搬进 h —— 否则"多余的副本"（旧的 h）就漏了。
                  * 临时结构体不登记析构：它只是搬运工，新值的所有权已经交给 h。
                  */
-                Memory::Vector<simple_ast::NodePtr> out;
+                Memory::Vector<ast::NodePtr> out;
                 const Memory::String temp = AllocateName("__chali_new_st");
-                out.push_back(simple_ast::Node::declare(temp, LowerType(found->type, temp)));
+                out.push_back(ast::Node::declare(temp, LowerType(found->type, temp)));
                 /* 临时结构体也要有自己的存储：`__chali_copy_struct` 会往它的槽里写，
                  * 少了这一步 `temp` 就是个没初始化的野引用，直接踩坏堆。 */
-                if (const simple_ast::NodePtr init = DefaultInit(temp, found->type))
+                if (const ast::NodePtr init = DefaultInit(temp, found->type))
                     out.push_back(init);
-                out.push_back(StoreStructValue(simple_ast::Node::var(temp), valueId,
+                out.push_back(StoreStructValue(ast::Node::var(temp), valueId,
                                                LowerValueForType(valueId, found->type), found->type));
                 if (previous.drop || previous.close || previous.aggregate)
                     out.push_back(MakeDestructorCall(previous));
-                out.push_back(CopyStructValue(simple_ast::Node::var(found->emitted),
-                                              simple_ast::Node::var(temp), found->type));
+                out.push_back(CopyStructValue(ast::Node::var(found->emitted),
+                                              ast::Node::var(temp), found->type));
                 // 搬运工只在本次赋值内存在，分支未执行时不留下块级清理义务。
                 out.push_back(MakeDrop(temp, false));
                 UnmarkOwned(temp);
@@ -2322,7 +2324,7 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                             item.close = StructHasInterface(found->type->name, "Closeable");
                             item.aggregate = StructHasOwnedLeaves(found->type->name);
                         }
-                return simple_ast::Node::block(out);
+                return ast::Node::block(out);
             }
             /* 函数指针赋初值：`fp = add;` —— 有重载时按 fp 的类型挑；
              * `p = new;` —— 元素类型也从 p 的类型来。 */
@@ -2330,29 +2332,29 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             const std::shared_ptr<MType> savedNewType = g_expectedNewType;
             g_expectedFuncType = (found->type && found->type->kind == MType::Func) ? found->type : nullptr;
             g_expectedNewType = found->type;
-            Memory::Vector<simple_ast::NodePtr> fresh;
+            Memory::Vector<ast::NodePtr> fresh;
             g_freshSink = &fresh;
             /* 对象类类型（`bint` / 容器）：值语义 —— 借来的值先复制一份。 */
-            const simple_ast::NodePtr value = IsObjectLike(found->type) ? MaterializeObjectValue(valueId, found->type) : MaterializeStringValue(valueId, found->type);
+            const ast::NodePtr value = IsObjectLike(found->type) ? MaterializeObjectValue(valueId, found->type) : MaterializeStringValue(valueId, found->type);
             g_freshSink = nullptr;
             g_expectedFuncType = savedFuncType;
             g_expectedNewType = savedNewType;
             /* 顺序：**先算新值 → 再还旧值 → 再写**。
              * `s = s + "x"` 里右边要读旧值，先还就把读的东西 free 了；
              * `s = <递归调用的结果>` 里右边那些临时串也得先算完再还。 */
-            Memory::Vector<simple_ast::NodePtr> out(fresh.begin(), fresh.end());
+            Memory::Vector<ast::NodePtr> out(fresh.begin(), fresh.end());
             /* 全局的**旧值**也要在覆盖前还掉（`s = s + "x"` 每轮都产生新串，不还就漏），
              * 但它不参加函数 / 出块的自动释放（`MarkOwned` 会挡掉，见 `IsGlobalName`）。 */
             const bool global = IsGlobalName(found->emitted);
             const bool owned =
                 IsOwnedKind(found->type) && (global || IsOwnedNow(found->emitted));
-            const simple_ast::NodePtr pending =
+            const ast::NodePtr pending =
                 owned ? DeferNewValue(value, found->type, &out) : value;
             if (owned)
             {
                 AppendOwnedDrop(found->emitted, found->type, &out);
             }
-            out.push_back(simple_ast::Node::assign(found->emitted, pending));
+            out.push_back(ast::Node::assign(found->emitted, pending));
             /* 字符串走 `MaterializeStringValue`：借来的值已经复制过，赋值后归变量所有。 */
             if (IsOwnedKind(found->type) && (IsFreshValue(valueId) || IsStandardOpcode(found->type, "String")) && !global)
             {
@@ -2361,7 +2363,7 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 else
                     MarkOwned(found->emitted);
             }
-            return simple_ast::Node::block(out);
+            return ast::Node::block(out);
         }
         Fail("给没声明的变量赋值：" + target.s);
         return Bad();
@@ -2386,7 +2388,7 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             const int receiverId = target.kids[0];
             const int positionId = target.kids[1];
             const std::shared_ptr<MType> container = ExprType(receiverId);
-            const simple_ast::NodePtr receiver = LowerExpr(receiverId);
+            const ast::NodePtr receiver = LowerExpr(receiverId);
             if (container->name == "set")
             {
                 Fail("set 不能按下标写：用 `s.add(x)` / `s.remove(x)`");
@@ -2397,42 +2399,42 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 if (!CheckContainerIndex(positionId, "vec 下标") || !CheckContainerArgument(container->elem, valueId, "vec 元素", true))
                     return Bad();
                 const bool elementText = IsStandardOpcode(container->elem, "String");
-                Memory::Vector<simple_ast::NodePtr> post;
-                const simple_ast::NodePtr stored =
+                Memory::Vector<ast::NodePtr> post;
+                const ast::NodePtr stored =
                     ContainerStoreValue(valueId, container->elem, &post);
-                const simple_ast::NodePtr call = simple_ast::Node::call(
+                const ast::NodePtr call = ast::Node::call(
                     "__std_vec_set", { "__chali_v", "__chali_i", "__chali_x", "__chali_t", "__chali_o" },
                     { receiver, LowerExpr(positionId),
                       stored,
-                      simple_ast::Node::i(elementText ? 1 : 0),
+                      ast::Node::i(elementText ? 1 : 0),
                       ContainerStorageFlag(container->elem) });
-                if (post.empty()) return simple_ast::Node::exprStmt(call);
-                Memory::Vector<simple_ast::NodePtr> block{ simple_ast::Node::exprStmt(call) };
-                for (const simple_ast::NodePtr &statement : post) block.push_back(statement);
-                return simple_ast::Node::block(block);
+                if (post.empty()) return ast::Node::exprStmt(call);
+                Memory::Vector<ast::NodePtr> block{ ast::Node::exprStmt(call) };
+                for (const ast::NodePtr &statement : post) block.push_back(statement);
+                return ast::Node::block(block);
             }
             if (!CheckContainerArgument(container->elem, positionId, "map 键", true) || !CheckContainerArgument(container->elem2, valueId, "map 值", true))
                 return Bad();
             const bool keyText = IsStandardOpcode(container->elem, "String");
             const bool valueText = IsStandardOpcode(container->elem2, "String");
-            Memory::Vector<simple_ast::NodePtr> post;
-            const simple_ast::NodePtr key =
+            Memory::Vector<ast::NodePtr> post;
+            const ast::NodePtr key =
                 ContainerStoreValue(positionId, container->elem, &post);
-            const simple_ast::NodePtr stored =
+            const ast::NodePtr stored =
                 ContainerStoreValue(valueId, container->elem2, &post);
-            const simple_ast::NodePtr call = simple_ast::Node::call(
+            const ast::NodePtr call = ast::Node::call(
                 "__std_map_put",
                 { "__chali_v", "__chali_k", "__chali_t", "__chali_o", "__chali_x", "__chali_t", "__chali_o" },
                 { receiver, key,
-                  simple_ast::Node::i(keyText ? 1 : 0),
+                  ast::Node::i(keyText ? 1 : 0),
                   ContainerStorageFlag(container->elem),
                   stored,
-                  simple_ast::Node::i(valueText ? 1 : 0),
+                  ast::Node::i(valueText ? 1 : 0),
                   ContainerStorageFlag(container->elem2) });
-            if (post.empty()) return simple_ast::Node::exprStmt(call);
-            Memory::Vector<simple_ast::NodePtr> block{ simple_ast::Node::exprStmt(call) };
-            for (const simple_ast::NodePtr &statement : post) block.push_back(statement);
-            return simple_ast::Node::block(block);
+            if (post.empty()) return ast::Node::exprStmt(call);
+            Memory::Vector<ast::NodePtr> block{ ast::Node::exprStmt(call) };
+            for (const ast::NodePtr &statement : post) block.push_back(statement);
+            return ast::Node::block(block);
         }
         /* `s[i] = 字符;`：字符串按字节写 —— 交给运行时（越界会报错，和数组下标同一个
          * 脾气）。`s[i]` 当右值时是"取第 i 个字节（& 255）"，当不了赋值目标，
@@ -2448,7 +2450,7 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 Fail("std::lang::String 下标只能写 char（整数请显式强转）：现在写的是 " + Describe(codeType));
                 return Bad();
             }
-            return simple_ast::Node::exprStmt(simple_ast::Node::call(
+            return ast::Node::exprStmt(ast::Node::call(
                 "__std_str_set", { "__chali_s", "__chali_i", "__chali_c" },
                 { LowerExpr(baseId), LowerExpr(positionId), LowerExpr(valueId) }));
         }
@@ -2465,12 +2467,12 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
          * 它们要先落进**归本块所有**的临时变量，否则没人释放（`NeedsOwnedTemp` 只认得
          * 有 sink 的位置）。这一步以前漏了：`s.f = a + b[0:2];` 里那个切片就会漏。
          */
-        Memory::Vector<simple_ast::NodePtr> pending;
-        Memory::Vector<simple_ast::NodePtr> *const savedSink = g_freshSink;
+        Memory::Vector<ast::NodePtr> pending;
+        Memory::Vector<ast::NodePtr> *const savedSink = g_freshSink;
         g_freshSink = &pending;
         const std::shared_ptr<MType> savedNewType = g_expectedNewType;
         g_expectedNewType = targetType;
-        const simple_ast::NodePtr value = LowerValueForType(valueId, targetType);
+        const ast::NodePtr value = LowerValueForType(valueId, targetType);
         g_expectedNewType = savedNewType;
         g_freshSink = savedSink;
         /* 成员字段：地址自己按槽位算（`LowerExpr(Member)` 取的是**值**，当不了左值），
@@ -2479,40 +2481,40 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
         {
             const MField *declared = nullptr;
             Memory::String owner;
-            const simple_ast::NodePtr address = LowerFieldAddress(targetId, &declared, &owner);
+            const ast::NodePtr address = LowerFieldAddress(targetId, &declared, &owner);
             if (!address || !declared) return Bad();
-            const simple_ast::TypePtr fieldType =
+            const ast::TypePtr fieldType =
                 LowerType(declared->type, owner + "." + declared->name);
             if (!LeafOwnedByAggregate(declared->type))
             {
-                pending.push_back(simple_ast::Node::storeAt(address, value, fieldType));
-                return simple_ast::Node::block(pending);
+                pending.push_back(ast::Node::storeAt(address, value, fieldType));
+                return ast::Node::block(pending);
             }
-            Memory::Vector<simple_ast::NodePtr> out(pending.begin(), pending.end());
+            Memory::Vector<ast::NodePtr> out(pending.begin(), pending.end());
             out.push_back(StoreOwnedValueAt(address, valueId, value, declared->type));
-            return simple_ast::Node::block(out);
+            return ast::Node::block(out);
         }
-        /* 下标 / 解引用：simple_ast 对 Assign 的左值只算地址、不补那次 load。
+        /* 下标 / 解引用：ast 对 Assign 的左值只算地址、不补那次 load。
          * 字符串 / 对象元素同样按值语义写（借来的复制一份、覆盖前还旧值）。 */
         if (LeafOwnedByAggregate(targetType))
         {
-            Memory::Vector<simple_ast::NodePtr> out(pending.begin(), pending.end());
+            Memory::Vector<ast::NodePtr> out(pending.begin(), pending.end());
             /* 这里的左值要的是**地址**：`LowerExpr(a[i])` 会把元素读出来（load），
              * 拿去当 store 的目标就写到 0 地址去了。 */
             out.push_back(StoreOwnedValueAt(LowerRawExpr(targetId), valueId, value, targetType));
-            return simple_ast::Node::block(out);
+            return ast::Node::block(out);
         }
         if (targetType && targetType->kind != MType::Array && target.kind == MNode::Un && target.s == "*")
         {
             pending.push_back(StoreOwnedValueAt(LowerRawExpr(target.kids[0]), valueId, value, targetType));
-            return simple_ast::Node::block(std::move(pending));
+            return ast::Node::block(std::move(pending));
         }
         if (IsByteStorageType(targetType) && target.kind == MNode::Index)
         {
             pending.push_back(StoreOwnedValueAt(LowerAddressOf(targetId), valueId, value, targetType));
-            return simple_ast::Node::block(std::move(pending));
+            return ast::Node::block(std::move(pending));
         }
-        return simple_ast::Node::assign(LowerExpr(targetId), value);
+        return ast::Node::assign(LowerExpr(targetId), value);
     }
     Fail("赋值目标只能是变量、下标、成员或 `*p`");
     return Bad();
@@ -2524,20 +2526,20 @@ simple_ast::NodePtr LowerAssignImpl(int targetId, int valueId)
  * @param valueId 右侧表达式节点。
  * @return 含临时值前置操作的赋值语句。
  */
-simple_ast::NodePtr LowerAssign(int targetId, int valueId)
+ast::NodePtr LowerAssign(int targetId, int valueId)
 {
     InferExpression(valueId, ExprType(targetId));
     CaptureBorrowExpression(targetId, RawExprType(targetId));
     CaptureBorrowExpression(valueId, nullptr);
     RecordBorrowStore(targetId, valueId);
-    Memory::Vector<simple_ast::NodePtr> fresh;
+    Memory::Vector<ast::NodePtr> fresh;
     auto *const saved = g_freshSink;
     g_freshSink = &fresh;
     const auto assignment = LowerAssignImpl(targetId, valueId);
     g_freshSink = saved;
     if (fresh.empty()) return assignment;
     fresh.push_back(assignment);
-    return simple_ast::Node::block(fresh);
+    return ast::Node::block(fresh);
 }
 
 /**
@@ -2545,7 +2547,7 @@ simple_ast::NodePtr LowerAssign(int targetId, int valueId)
  * @param initializer 默认闭包表达式。
  * @return 拥有独立环境的闭包值。
  */
-simple_ast::NodePtr LowerMemberClosureInitializer(int initializer)
+ast::NodePtr LowerMemberClosureInitializer(int initializer)
 {
     struct Scope
     {
@@ -2577,8 +2579,8 @@ simple_ast::NodePtr LowerMemberClosureInitializer(int initializer)
  * @param owner 聚合类型名称。
  * @param out 接收初始化语句。
  */
-void InitializeDefaultContainers(const simple_ast::NodePtr &address, const Memory::String &owner,
-                                 Memory::Vector<simple_ast::NodePtr> *out)
+void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::String &owner,
+                                 Memory::Vector<ast::NodePtr> *out)
 {
     const auto definition = FindStruct(owner);
     if (!definition) return;
@@ -2594,25 +2596,25 @@ void InitializeDefaultContainers(const simple_ast::NodePtr &address, const Memor
                         if (payload.storageName == field.name) active = true;
             if (!active) continue;
         }
-        const auto target = simple_ast::Node::offset(address, simple_ast::Node::i(field.slot), 8);
+        const auto target = ast::Node::offset(address, ast::Node::i(field.slot), 8);
         if (field.initializer >= 0)
-            out->push_back(simple_ast::Node::storeAt(target, LowerMemberClosureInitializer(field.initializer), simple_ast::Type::i64()));
+            out->push_back(ast::Node::storeAt(target, LowerMemberClosureInitializer(field.initializer), ast::Type::i64()));
         else if (IsContainer(field.type))
-            out->push_back(simple_ast::Node::storeAt(
+            out->push_back(ast::Node::storeAt(
                 target, NewContainerValue(field.type), LowerType(field.type, owner + "." + field.name)));
         else if (field.type->kind == MType::Struct)
             InitializeDefaultContainers(target, field.type->name, out);
         else if (field.type->kind == MType::Array && !IsRuntimeArray(field.type))
         {
             const int count = static_cast<int>(FixedArrayElementCount(field.type->dims));
-            out->push_back(simple_ast::Node::storeAt(
-                simple_ast::Node::offset(target, simple_ast::Node::i(-1), 8), simple_ast::Node::i(count), simple_ast::Type::i64()));
+            out->push_back(ast::Node::storeAt(
+                ast::Node::offset(target, ast::Node::i(-1), 8), ast::Node::i(count), ast::Type::i64()));
             const auto element = field.type->elem;
             for (int index = 0; index < count; ++index)
             {
-                const auto item = simple_ast::Node::offset(target, simple_ast::Node::i(index), ElementBytes(element));
+                const auto item = ast::Node::offset(target, ast::Node::i(index), ElementBytes(element));
                 if (IsContainer(element))
-                    out->push_back(simple_ast::Node::storeAt(item, NewContainerValue(element), LowerType(element, field.name)));
+                    out->push_back(ast::Node::storeAt(item, NewContainerValue(element), LowerType(element, field.name)));
                 else if (element->kind == MType::Struct)
                     InitializeDefaultContainers(item, element->name, out);
             }
@@ -2627,15 +2629,15 @@ void InitializeDefaultContainers(const simple_ast::NodePtr &address, const Memor
  * @param length 已求值的元素个数。
  * @param out 接收初始化循环的语句序列。
  */
-void InitializeArrayValues(const simple_ast::NodePtr &address, const std::shared_ptr<MType> &element,
-                           const simple_ast::NodePtr &length, Memory::Vector<simple_ast::NodePtr> *out)
+void InitializeArrayValues(const ast::NodePtr &address, const std::shared_ptr<MType> &element,
+                           const ast::NodePtr &length, Memory::Vector<ast::NodePtr> *out)
 {
     if (element->kind != MType::Struct && !IsContainer(element)) return;
-    using simple_ast::Node;
+    using ast::Node;
     const auto index = AllocateName("__chali_array_init_index");
     const auto loop = NewBlockLabel("array_init");
     const auto done = NewBlockLabel("array_init_done");
-    out->push_back(Node::declare(index, simple_ast::Type::i64()));
+    out->push_back(Node::declare(index, ast::Type::i64()));
     out->push_back(Node::assign(index, Node::i(0)));
     out->push_back(Node::label(loop));
     out->push_back(Node::ifThenElse(Node::binary(">=", Node::var(index), length), Node::jump(done), nullptr));
@@ -2660,14 +2662,14 @@ void InitializeArrayValues(const simple_ast::NodePtr &address, const std::shared
  * @param localStorage 是否为局部值分配独立存储；返回暂存为 false。
  * @return 默认初始化语句。
  */
-simple_ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MType> &type,
-                                bool initContainers, bool localStorage)
+ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MType> &type,
+                         bool initContainers, bool localStorage)
 {
-    using simple_ast::Node;
+    using ast::Node;
     /* 槽里填的"零"要按槽位类型给：浮点槽给 `0.0`（带小数点），整型给 `0` ——
      * 数据区正文里 `0` 和 `0.0` 写进 .data.bin 的解释方式不同（整数 / IEEE-754）。 */
     const auto zeroOf = [](const std::shared_ptr<MType> &slot) {
-        return IsFloatType(slot) ? simple_ast::Node::f(0.0) : simple_ast::Node::i(0);
+        return IsFloatType(slot) ? ast::Node::f(0.0) : ast::Node::i(0);
     };
     if (type->kind == MType::Array)
     {
@@ -2675,23 +2677,23 @@ simple_ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared
         const int stride = StructStride(type->elem);
         const int slots = (stride > 0) ? count * (stride / 8) : count;
         const int unit = IsByteStorageType(type->elem) ? 1 : 8;
-        Memory::Vector<simple_ast::NodePtr> items;
+        Memory::Vector<ast::NodePtr> items;
         for (int index = 0; index < slots; ++index) items.push_back(zeroOf(type->elem));
         if (localStorage && !g_ownedScopes.empty() && !IsGlobalName(emitted))
         {
             g_usesNewArray = true;
-            Memory::Vector<simple_ast::NodePtr> out{
+            Memory::Vector<ast::NodePtr> out{
                 Node::assign(emitted, Node::call("__chali_new_array", { "__chali_len", "__chali_stride" },
                                                  { Node::i(count), Node::i(ElementBytes(type->elem)) }))
             };
             for (int index = 0; index < slots; ++index)
                 out.push_back(Node::storeAt(Node::offset(Node::var(emitted), Node::i(index), unit),
-                                            items[index], unit == 1 ? LowerType(type->elem, emitted) : simple_ast::Type::i64()));
+                                            items[index], unit == 1 ? LowerType(type->elem, emitted) : ast::Type::i64()));
             if (initContainers) InitializeArrayValues(Node::var(emitted), type->elem, Node::i(count), &out);
             MarkOwnedArray(emitted, type);
             return Node::block(std::move(out));
         }
-        Memory::Vector<simple_ast::NodePtr> out{ Node::assign(emitted, Node::arrayNew(LowerType(type, emitted), items)) };
+        Memory::Vector<ast::NodePtr> out{ Node::assign(emitted, Node::arrayNew(LowerType(type, emitted), items)) };
         if (initContainers) InitializeArrayValues(Node::var(emitted), type->elem, Node::i(count), &out);
         return Node::block(std::move(out));
     }
@@ -2700,9 +2702,9 @@ simple_ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared
         const MStructDef *found = FindStruct(type->name);
         if (found == nullptr) return nullptr;
         /* 一个槽一个零：值字段摊开之后槽位比"声明里写的字段"多。 */
-        Memory::Vector<simple_ast::NodePtr> values;
+        Memory::Vector<ast::NodePtr> values;
         for (const auto &leaf : found->leaves) values.push_back(zeroOf(leaf.second));
-        Memory::Vector<simple_ast::NodePtr> out;
+        Memory::Vector<ast::NodePtr> out;
         // 局部聚合不能复用声明点的数据区模板：递归和重入调用必须各有存储。
         // 返回暂存仍使用数据区，调用点立即复制其值，不将局部块地址带出作用域。
         const bool independent = localStorage && !g_ownedScopes.empty() && !IsGlobalName(emitted);
@@ -2738,12 +2740,12 @@ simple_ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared
     {
         /* 声明出来就是一个 0（新对象）：后面直接 `a + b` 也不用先判断是不是空的。 */
         return Node::assign(emitted, Node::call(FindOpcodeDefinition(type) ? FindOpcodeDefinition(type)->create : Memory::String("__std_bint_from_int"), { "__chali_v" },
-                                                { simple_ast::Node::i(0) }));
+                                                { ast::Node::i(0) }));
     }
     if (IsStandardOpcode(type, "BigDecimal"))
     {
         return Node::assign(emitted, Node::call(FindOpcodeDefinition(type) ? FindOpcodeDefinition(type)->create : Memory::String("__std_bfloat_from_int"), { "__chali_v" },
-                                                { simple_ast::Node::i(0) }));
+                                                { ast::Node::i(0) }));
     }
     if (IsContainer(type))
     {
@@ -2768,13 +2770,13 @@ simple_ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared
  * @param type 对象类型。
  * @return 独立对象地址；对象的释放仍由引用所有者负责。
  */
-simple_ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
+ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
 {
-    using simple_ast::Node;
+    using ast::Node;
     const auto address = AllocateName("__chali_new_object");
     const int bytes = ElementBytes(type);
-    Memory::Vector<simple_ast::NodePtr> out{
-        Node::declare(address, simple_ast::Type::i64()),
+    Memory::Vector<ast::NodePtr> out{
+        Node::declare(address, ast::Type::i64()),
         Node::assign(address, Node::alloc(Node::i(bytes))),
         Node::exprStmt(Node::call("__std_memset", { "__chali_addr", "__chali_val", "__chali_n" },
                                   { Node::var(address), Node::i(0), Node::i(bytes) }))
@@ -2821,7 +2823,7 @@ struct MDefaultScope
  * @param param 形参及默认表达式。
  * @return 实参值。
  */
-simple_ast::NodePtr LowerDefaultArgument(const MParam &param)
+ast::NodePtr LowerDefaultArgument(const MParam &param)
 {
     static unsigned depth = 0;
     if (depth >= 64)
@@ -2851,8 +2853,8 @@ simple_ast::NodePtr LowerDefaultArgument(const MParam &param)
  * @param parameter 变长形参。
  * @return 列表值。
  */
-simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t begin,
-                                          const MParam &parameter);
+ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t begin,
+                                   const MParam &parameter);
 
 /**
  * @brief `Construct` 节点的声明初始化：`T __x = new(实参);`。
@@ -2875,7 +2877,7 @@ simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::
  * @return 是不是本函数处理掉的（false = 交给别的初始化分支）。
  */
 bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MType> &declared,
-                        int initId, Memory::Vector<simple_ast::NodePtr> *out)
+                        int initId, Memory::Vector<ast::NodePtr> *out)
 {
     const MNode &node = N(initId);
     if (node.kind != MNode::Construct) return false;
@@ -2970,10 +2972,10 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
         body = &found->second;
     }
 
-    if (const simple_ast::NodePtr init = DefaultInit(emitted, type, true)) out->push_back(init);
+    if (const ast::NodePtr init = DefaultInit(emitted, type, true)) out->push_back(init);
     const Memory::Vector<MParam> &params = body->params;
     Memory::Vector<Memory::String> names{ "self" };
-    Memory::Vector<simple_ast::NodePtr> values{ simple_ast::Node::var(emitted) };
+    Memory::Vector<ast::NodePtr> values{ ast::Node::var(emitted) };
     const bool variadic = !params.empty() && params.back().variadic;
     const std::size_t fixed = params.size() - (variadic ? 1u : 0u);
     for (std::size_t index = 0; index < fixed; ++index)
@@ -2986,7 +2988,7 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
         names.push_back(params.back().emitted);
         values.push_back(PackVariadicArguments(args, fixed, params.back()));
     }
-    out->push_back(simple_ast::Node::exprStmt(simple_ast::Node::call(label, names, values)));
+    out->push_back(ast::Node::exprStmt(ast::Node::call(label, names, values)));
     return true;
 }
 
@@ -3000,14 +3002,14 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerLocalDecl(int id)
+ast::NodePtr LowerLocalDecl(int id)
 {
     const MNode &group = N(id);
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     for (const int declId : N(group.kids[0]).kids)
     {
         MFullExpressionTemps initializerTemps;
-        Memory::Vector<simple_ast::NodePtr> initializerFresh;
+        Memory::Vector<ast::NodePtr> initializerFresh;
         MExpressionFreshScope initializerSink(&initializerFresh);
         const auto initializerStart = out.size();
         if (group.returnExpression && g_returnType)
@@ -3096,7 +3098,7 @@ simple_ast::NodePtr LowerLocalDecl(int id)
         /* 先落类型（元组会在这里补出 `__chali_tuple_*` 的布局），再登记析构 ——
          * 反过来登记时布局还没建，`StructHasOwnedLeaves` 查不到元组里的字符串叶子，
          * `auto t = (1, "x");` 的 t 就不会被回收。 */
-        out.push_back(simple_ast::Node::declare(emitted, LowerType(type, emitted)));
+        out.push_back(ast::Node::declare(emitted, LowerType(type, emitted)));
         MarkDestructor(emitted, type);
         Memory::Set<Memory::String> referenceTypes;
         if (ContainsBorrowedReferences(type, &referenceTypes))
@@ -3114,32 +3116,34 @@ simple_ast::NodePtr LowerLocalDecl(int id)
         else if (decl.kids[0] >= 0 && type->kind == MType::Obj && ExprType(decl.kids[0])->kind != MType::Obj && !IsImplicitConversionValue(decl.kids[0], type))
         {
             out.push_back(DefaultInit(emitted, type));
-            out.push_back(simple_ast::Node::exprStmt(
-                LowerObjSet(simple_ast::Node::var(emitted), decl.kids[0], "obj 初始化")));
+            out.push_back(ast::Node::exprStmt(
+                LowerObjSet(ast::Node::var(emitted), decl.kids[0], "obj 初始化")));
             MarkOwned(emitted, false);
         }
         else if (decl.kids[0] >= 0 && type->kind == MType::Struct && (IsObjGetCall(decl.kids[0]) || SameStruct(type, ExprType(decl.kids[0])) || IsImplicitConversionValue(decl.kids[0], type)))
         {
             /* `Point a = b;`：a 有自己的块（值语义），把 b 的槽逐个搬过来。 */
-            const simple_ast::NodePtr block = DefaultInit(emitted, type);
+            const ast::NodePtr block = DefaultInit(emitted, type);
             if (block) out.push_back(block);
-            Memory::Vector<simple_ast::NodePtr> fresh;
-            Memory::Vector<simple_ast::NodePtr> *const previousSink = g_freshSink;
+            Memory::Vector<ast::NodePtr> fresh;
+            Memory::Vector<ast::NodePtr> *const previousSink = g_freshSink;
             g_freshSink = &fresh;
-            const simple_ast::NodePtr source = LowerValueForType(decl.kids[0], type);
+            const ast::NodePtr source = LowerValueForType(decl.kids[0], type);
             g_freshSink = previousSink;
             out.insert(out.end(), fresh.begin(), fresh.end());
-            out.push_back(StoreStructValue(simple_ast::Node::var(emitted), decl.kids[0],
-                                           source, type));
+            Memory::Set<Memory::String> locals, referenced;
+            CollectGenericClosureNames(decl.kids[0], locals, referenced);
+            out.push_back(StoreStructValue(ast::Node::var(emitted), decl.kids[0],
+                                           source, type, referenced.count(decl.s) == 0u));
         }
         else
         {
             /* 初始化式里"当场造出来的临时串"（`name + "！" + format(…)` 里那个
              * `format` 结果）先落进归本块所有的临时变量，免得没人释放。 */
-            Memory::Vector<simple_ast::NodePtr> fresh;
+            Memory::Vector<ast::NodePtr> fresh;
             g_freshSink = &fresh;
-            const simple_ast::NodePtr init =
-                (decl.kids[0] >= 0) ? simple_ast::Node::assign(
+            const ast::NodePtr init =
+                (decl.kids[0] >= 0) ? ast::Node::assign(
                                           emitted, IsObjectLike(type) ? MaterializeObjectValue(decl.kids[0], type) : MaterializeStringValue(decl.kids[0], type)) :
                                       DefaultInit(emitted, type, true);
             g_freshSink = nullptr;
@@ -3165,9 +3169,9 @@ simple_ast::NodePtr LowerLocalDecl(int id)
         if (g_addressTakenNames.count(decl.s) && NeedsReferenceStorage(type))
         {
             const auto storage = AllocateName("__chali_reference_storage");
-            out.push_back(simple_ast::Node::declare(storage, simple_ast::Type::i64()));
-            out.push_back(simple_ast::Node::assign(storage, simple_ast::Node::alloc(simple_ast::Node::i(ElementBytes(type)))));
-            out.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage), simple_ast::Node::var(emitted), LowerType(type, storage)));
+            out.push_back(ast::Node::declare(storage, ast::Type::i64()));
+            out.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(type)))));
+            out.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(type, storage)));
             MarkOwned(storage);
             // 引用槽必须晚于其当前拥有值释放：清理原变量时还需从槽中读取最新值。
             for (auto &scope : g_ownedScopes)
@@ -3191,7 +3195,7 @@ simple_ast::NodePtr LowerLocalDecl(int id)
         out.insert(out.end(), cleanup.begin(), cleanup.end());
         out.insert(out.begin() + initializerStart, initializerFresh.begin(), initializerFresh.end());
     }
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -3200,7 +3204,7 @@ simple_ast::NodePtr LowerLocalDecl(int id)
  * @param prefix 保存目标所需的前置语句。
  * @return 保存位置后的目标；错误时返回负值。
  */
-int FreezeCompoundTarget(int target, Memory::Vector<simple_ast::NodePtr> &prefix)
+int FreezeCompoundTarget(int target, Memory::Vector<ast::NodePtr> &prefix)
 {
     const auto placeKind = N(target).kind;
     // 具名槽位无需捕获，沿用普通赋值对 const 和只读引用的诊断。
@@ -3237,19 +3241,19 @@ int FreezeCompoundTarget(int target, Memory::Vector<simple_ast::NodePtr> &prefix
         {
             if (g_freshSink && (IsOwnedKind(valueType) || valueType->kind == MType::Struct))
             {
-                g_freshSink->push_back(simple_ast::Node::declare(variable->emitted, LowerType(valueType, variable->emitted)));
-                g_freshSink->push_back(simple_ast::Node::assign(variable->emitted, simple_ast::Node::i(0)));
+                g_freshSink->push_back(ast::Node::declare(variable->emitted, LowerType(valueType, variable->emitted)));
+                g_freshSink->push_back(ast::Node::assign(variable->emitted, ast::Node::i(0)));
             }
             NoteExpressionTemp(variable->emitted);
         }
         return value;
     };
     // 地址和容器句柄仅借用，不能复制容器后修改副本。
-    const auto bind = [&](const std::shared_ptr<MType> &valueType, const simple_ast::NodePtr &value) {
+    const auto bind = [&](const std::shared_ptr<MType> &valueType, const ast::NodePtr &value) {
         const auto name = AllocateName("__chali_update_target");
         const auto emitted = DeclareVar(name, valueType);
-        prefix.push_back(simple_ast::Node::declare(emitted, LowerType(valueType, emitted)));
-        prefix.push_back(simple_ast::Node::assign(emitted, value));
+        prefix.push_back(ast::Node::declare(emitted, LowerType(valueType, emitted)));
+        prefix.push_back(ast::Node::assign(emitted, value));
         return M_Var(M_Name(name.c_str()));
     };
     const auto &place = N(target);
@@ -3267,14 +3271,14 @@ int FreezeCompoundTarget(int target, Memory::Vector<simple_ast::NodePtr> &prefix
         auto reference = Memory::makeShared<MType>();
         reference->kind = MType::Ptr;
         reference->elem = type;
-        simple_ast::NodePtr address;
+        ast::NodePtr address;
         if (place.kind == MNode::Index && type->kind != MType::Char)
         {
             // 完整下标链先折平，不能单独读取多维数组的中间行。
             address = LowerIndexChain(place.kids[0], place.kids[1], place.s == "__chali_buffer_index");
-            if (address && address->kind == simple_ast::Node::Kind::Index)
-                address = simple_ast::Node::offset(address->kids[0], address->kids[1], 8);
-            else if (address && address->kind == simple_ast::Node::Kind::LoadInt && !address->kids.empty())
+            if (address && address->kind == ast::Node::Kind::Index)
+                address = ast::Node::offset(address->kids[0], address->kids[1], 8);
+            else if (address && address->kind == ast::Node::Kind::LoadInt && !address->kids.empty())
                 address = address->kids[0];
         }
         else
@@ -3292,7 +3296,7 @@ int FreezeCompoundTarget(int target, Memory::Vector<simple_ast::NodePtr> &prefix
  * @param discard 是否丢弃表达式结果。
  * @return 前置取新值、后置取旧值的序列表达式。
  */
-simple_ast::NodePtr LowerUpdate(int id, bool discard = false)
+ast::NodePtr LowerUpdate(int id, bool discard = false)
 {
     const auto update = N(id);
     int target = update.kids[0];
@@ -3315,7 +3319,7 @@ simple_ast::NodePtr LowerUpdate(int id, bool discard = false)
             return LowerAssign(target, M_Cast(M_AddType(type), arithmetic));
         }
     }
-    Memory::Vector<simple_ast::NodePtr> prefix;
+    Memory::Vector<ast::NodePtr> prefix;
     // 保存值时沿用声明的复制/清理路径，大数和 Map 键也有完整表达式所有者。
     const auto capture = [&](int source, const std::shared_ptr<MType> &valueType) {
         const auto name = AllocateName("__chali_update_value");
@@ -3329,8 +3333,8 @@ simple_ast::NodePtr LowerUpdate(int id, bool discard = false)
         {
             if (g_freshSink && (IsOwnedKind(valueType) || valueType->kind == MType::Struct))
             {
-                g_freshSink->push_back(simple_ast::Node::declare(variable->emitted, LowerType(valueType, variable->emitted)));
-                g_freshSink->push_back(simple_ast::Node::assign(variable->emitted, simple_ast::Node::i(0)));
+                g_freshSink->push_back(ast::Node::declare(variable->emitted, LowerType(valueType, variable->emitted)));
+                g_freshSink->push_back(ast::Node::assign(variable->emitted, ast::Node::i(0)));
             }
             NoteExpressionTemp(variable->emitted);
         }
@@ -3348,7 +3352,7 @@ simple_ast::NodePtr LowerUpdate(int id, bool discard = false)
         arithmetic = M_Cast(M_AddType(type), arithmetic);
     const int newValue = capture(arithmetic, type);
     prefix.push_back(LowerAssign(target, newValue));
-    return simple_ast::Node::sequence(std::move(prefix), LowerExpr(update.type2 ? newValue : oldValue));
+    return ast::Node::sequence(std::move(prefix), LowerExpr(update.type2 ? newValue : oldValue));
 }
 
 /**
@@ -3356,7 +3360,7 @@ simple_ast::NodePtr LowerUpdate(int id, bool discard = false)
  * @param id 解构声明或赋值节点。
  * @return 按目标顺序写入的语句块；来源仅求值一次。
  */
-simple_ast::NodePtr LowerDestructure(int id)
+ast::NodePtr LowerDestructure(int id)
 {
     const auto node = N(id);
     if (node.i)
@@ -3378,7 +3382,7 @@ simple_ast::NodePtr LowerDestructure(int id)
     int decl = M_Decl(M_Name(name.c_str()), -1, node.kids[1]);
     const int typeId = M_AddType(type);
     g_nodes[decl].type = typeId;
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     out.push_back(LowerLocalDecl(M_LocalDecl(typeId, M_List1(decl), 0)));
     auto owner = Find(name);
     if (owner) NoteExpressionTemp(owner->emitted);
@@ -3417,7 +3421,7 @@ simple_ast::NodePtr LowerDestructure(int id)
         return g_error.empty();
     };
     if (!bind(node.kids[0], M_Var(M_Name(name.c_str())), type)) return Bad();
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -3426,20 +3430,20 @@ simple_ast::NodePtr LowerDestructure(int id)
  * @param fresh 接收本次条件求值创建的临时状态。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerConditionWithFresh(int expressionId,
-                                            Memory::Vector<simple_ast::NodePtr> *fresh)
+ast::NodePtr LowerConditionWithFresh(int expressionId,
+                                     Memory::Vector<ast::NodePtr> *fresh)
 {
-    Memory::Vector<simple_ast::NodePtr> *const savedSink = g_freshSink;
+    Memory::Vector<ast::NodePtr> *const savedSink = g_freshSink;
     g_freshSink = fresh;
     MFullExpressionTemps temporaries;
-    const simple_ast::NodePtr value = LowerExpr(expressionId);
+    const ast::NodePtr value = LowerExpr(expressionId);
     g_freshSink = savedSink;
     auto cleanup = temporaries.finish();
     if (cleanup.empty()) return value;
     const auto result = AllocateName("__chali_condition_result");
-    fresh->push_back(simple_ast::Node::declare(result, simple_ast::Type::boolean()));
-    cleanup.insert(cleanup.begin(), simple_ast::Node::assign(result, value));
-    return simple_ast::Node::sequence(std::move(cleanup), simple_ast::Node::var(result));
+    fresh->push_back(ast::Node::declare(result, ast::Type::boolean()));
+    cleanup.insert(cleanup.begin(), ast::Node::assign(result, value));
+    return ast::Node::sequence(std::move(cleanup), ast::Node::var(result));
 }
 
 /**
@@ -3447,26 +3451,26 @@ simple_ast::NodePtr LowerConditionWithFresh(int expressionId,
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerIf(int id)
+ast::NodePtr LowerIf(int id)
 {
     const MNode node = N(id);
     if (!CheckBoolCondition(node.kids[0], "if 条件")) return Bad();
     Memory::Vector<MNode> elifs;
     for (const int elifId : N(node.kids[2]).kids) elifs.push_back(N(elifId));
-    simple_ast::NodePtr tail;
+    ast::NodePtr tail;
     if (node.kids[3] >= 0) tail = LowerStmt(node.kids[3]);
     for (auto it = elifs.rbegin(); it != elifs.rend(); ++it)
     {
         if (!CheckBoolCondition(it->kids[0], "elif 条件")) return Bad();
-        Memory::Vector<simple_ast::NodePtr> fresh;
-        const simple_ast::NodePtr condition = LowerConditionWithFresh(it->kids[0], &fresh);
-        fresh.push_back(simple_ast::Node::ifThenElse(condition, LowerStmt(it->kids[1]), tail));
-        tail = simple_ast::Node::block(fresh);
+        Memory::Vector<ast::NodePtr> fresh;
+        const ast::NodePtr condition = LowerConditionWithFresh(it->kids[0], &fresh);
+        fresh.push_back(ast::Node::ifThenElse(condition, LowerStmt(it->kids[1]), tail));
+        tail = ast::Node::block(fresh);
     }
-    Memory::Vector<simple_ast::NodePtr> fresh;
-    const simple_ast::NodePtr condition = LowerConditionWithFresh(node.kids[0], &fresh);
-    fresh.push_back(simple_ast::Node::ifThenElse(condition, LowerStmt(node.kids[1]), tail));
-    return simple_ast::Node::block(fresh);
+    Memory::Vector<ast::NodePtr> fresh;
+    const ast::NodePtr condition = LowerConditionWithFresh(node.kids[0], &fresh);
+    fresh.push_back(ast::Node::ifThenElse(condition, LowerStmt(node.kids[1]), tail));
+    return ast::Node::block(fresh);
 }
 
 /**
@@ -3537,14 +3541,14 @@ bool SwitchConstantFits(const std::shared_ptr<MType> &type, long long value)
 /**
  * @brief 分支守卫沿用完整表达式清理，失败跳转到下一模式。
  */
-simple_ast::NodePtr LowerConditionWithFresh(int expressionId, Memory::Vector<simple_ast::NodePtr> *fresh);
+ast::NodePtr LowerConditionWithFresh(int expressionId, Memory::Vector<ast::NodePtr> *fresh);
 /**
  * @brief 为模式匹配分支追加守卫条件。
  * @param item 待追加或处理的节点编号。
  * @param next 下一个匹配分支的标签。
  * @param body 待处理的函数体或循环体。
  */
-void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vector<simple_ast::NodePtr> *body)
+void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vector<ast::NodePtr> *body)
 {
     if (item.guard < 0) return;
     if (ExprType(item.guard)->kind != MType::Bool)
@@ -3552,10 +3556,10 @@ void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vec
         Fail("match 守卫必须是 bool");
         return;
     }
-    Memory::Vector<simple_ast::NodePtr> fresh;
+    Memory::Vector<ast::NodePtr> fresh;
     auto condition = LowerConditionWithFresh(item.guard, &fresh);
     body->insert(body->end(), fresh.begin(), fresh.end());
-    body->push_back(simple_ast::Node::ifThenElse(simple_ast::Node::unary("!", condition), simple_ast::Node::jump(next), nullptr));
+    body->push_back(ast::Node::ifThenElse(ast::Node::unary("!", condition), ast::Node::jump(next), nullptr));
 }
 
 /**
@@ -3565,8 +3569,8 @@ void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vec
  * @param cases 匹配分支的节点列表编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
-                                    const Memory::Vector<int> &cases)
+ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
+                             const Memory::Vector<int> &cases)
 {
     const auto enumIt = g_enums.find(subjectType->name);
     if (enumIt == g_enums.end()) return Fail("没有声明的 enum：" + subjectType->name), Bad();
@@ -3672,8 +3676,8 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
     const MNode &switchNode = N(id);
     const Memory::String subject = AllocateName("__chali_switch_enum");
     const Memory::String breakLabel = NewBlockLabel("brk");
-    Memory::Vector<simple_ast::NodePtr> setup;
-    setup.push_back(simple_ast::Node::declare(subject, LowerType(subjectType, subject)));
+    Memory::Vector<ast::NodePtr> setup;
+    setup.push_back(ast::Node::declare(subject, LowerType(subjectType, subject)));
     /*
      * `match (<当场造出来的枚举>)`：这份聚合没有别的所有者，subject 就是它的主人，
      * 出块时递归释放它槽里的字符串 / 对象；主体是变量时变量自己管，别重复释放。
@@ -3684,15 +3688,15 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
      */
     if (IsFreshAggregate(switchNode.kids[0]) && subjectType && subjectType->kind == MType::Struct)
     {
-        if (const simple_ast::NodePtr init = DefaultInit(subject, subjectType))
+        if (const ast::NodePtr init = DefaultInit(subject, subjectType))
             setup.push_back(init);
-        setup.push_back(MoveStructValue(simple_ast::Node::var(subject),
+        setup.push_back(MoveStructValue(ast::Node::var(subject),
                                         LowerExpr(switchNode.kids[0]), subjectType));
         MarkDestructor(subject, subjectType);
     }
     else
     {
-        setup.push_back(simple_ast::Node::assign(subject, LowerExpr(switchNode.kids[0])));
+        setup.push_back(ast::Node::assign(subject, LowerExpr(switchNode.kids[0])));
     }
     const MField *tagField = FindField(subjectType->name, "__tag");
     if (tagField == nullptr) return Fail("enum " + subjectType->name + " 缺少标签槽"), Bad();
@@ -3700,7 +3704,7 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
     const auto lowerBody = [&](const MNode &item, const MEnumVariantDef *variant, const Memory::String &next) {
         PushScope();
         PushOwnedScope();
-        Memory::Vector<simple_ast::NodePtr> body;
+        Memory::Vector<ast::NodePtr> body;
         if (variant != nullptr)
         {
             const MNode &pattern = normalizedPatterns.at(static_cast<int>(item.i));
@@ -3722,22 +3726,22 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
                 // 被闭包借用的载荷直接使用主体的稳定槽，避免建立指向临时标量的引用。
                 const bool captureStorage = !valueMatch && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type);
                 FindNodeVar(bindingSyntax)->elementReference = captureStorage;
-                body.push_back(simple_ast::Node::declare(emitted,
-                                                         captureStorage ? simple_ast::Type::i64() : LowerType(payload.type, emitted)));
+                body.push_back(ast::Node::declare(emitted,
+                                                  captureStorage ? ast::Type::i64() : LowerType(payload.type, emitted)));
                 const MField *field = FindField(subjectType->name, payload.storageName);
                 if (field == nullptr)
                 {
                     Fail("enum " + subjectType->name + " 缺少载荷槽 " + payload.storageName);
                     continue;
                 }
-                const simple_ast::NodePtr address = simple_ast::Node::offset(
-                    simple_ast::Node::var(subject), simple_ast::Node::i(field->slot), 8);
+                const ast::NodePtr address = ast::Node::offset(
+                    ast::Node::var(subject), ast::Node::i(field->slot), 8);
                 /*
                  * 载荷绑定是**主体槽的别名**（字符串 / 对象都不复制）：分支里读它是安全的
                  * —— 主体的递归释放发生在分支结束之后。复制一份会改变"绑定可以带出分支"
                  * 的既有语义（`result = error;` 里 result 会随绑定一起被释放），所以不复制。
                  */
-                auto value = payload.type->kind == MType::Struct || captureStorage ? address : simple_ast::Node::loadFrom(address, LowerType(payload.type, emitted));
+                auto value = payload.type->kind == MType::Struct || captureStorage ? address : ast::Node::loadFrom(address, LowerType(payload.type, emitted));
                 const bool transferPayload = HasNonCopyableValue(payload.type) && IsFreshAggregate(switchNode.kids[0]);
                 if (valueMatch && HasNonCopyableValue(payload.type) && !transferPayload)
                     return Fail("不可复制枚举的值匹配需要显式移动主体"), Bad();
@@ -3747,21 +3751,21 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
                     if (payload.type->kind == MType::Struct)
                     {
                         body.push_back(DefaultInit(emitted, payload.type, false, true));
-                        body.push_back(MoveStructValue(simple_ast::Node::var(emitted), address, payload.type));
+                        body.push_back(MoveStructValue(ast::Node::var(emitted), address, payload.type));
                         MarkDestructor(emitted, payload.type);
                     }
                     else
                     {
-                        body.push_back(simple_ast::Node::assign(emitted, simple_ast::Node::loadInt(address)));
-                        body.push_back(simple_ast::Node::storeAt(address, simple_ast::Node::i(0), simple_ast::Type::i64()));
+                        body.push_back(ast::Node::assign(emitted, ast::Node::loadInt(address)));
+                        body.push_back(ast::Node::storeAt(address, ast::Node::i(0), ast::Type::i64()));
                         MarkOwned(emitted);
                         if (g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type))
                         {
                             // 表达式分支的载荷副本与普通局部值一样，需要稳定槽供 break 隐式移动。
                             const auto storage = AllocateName("__chali_match_value_storage");
-                            body.push_back(simple_ast::Node::declare(storage, simple_ast::Type::i64()));
-                            body.push_back(simple_ast::Node::assign(storage, simple_ast::Node::alloc(simple_ast::Node::i(ElementBytes(payload.type)))));
-                            body.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage), simple_ast::Node::var(emitted), LowerType(payload.type, storage)));
+                            body.push_back(ast::Node::declare(storage, ast::Type::i64()));
+                            body.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(payload.type)))));
+                            body.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(payload.type, storage)));
                             MarkOwned(storage);
                             auto &names = g_ownedScopes.back().names;
                             const auto slot = names.back();
@@ -3777,31 +3781,31 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
                 if (valueMatch && payload.type->kind == MType::Struct)
                 {
                     body.push_back(DefaultInit(emitted, payload.type, false, true));
-                    body.push_back(DeepCopyStructValue(simple_ast::Node::var(emitted), value, payload.type));
+                    body.push_back(DeepCopyStructValue(ast::Node::var(emitted), value, payload.type));
                     MarkDestructor(emitted, payload.type);
                 }
                 else
                 {
                     if (valueMatch && IsStandardOpcode(payload.type, "String"))
                     {
-                        value = simple_ast::Node::call("__std_str_sub", { "__chali_s", "__chali_a", "__chali_b" },
-                                                       { value, simple_ast::Node::i(0), simple_ast::Node::i(-1) });
+                        value = ast::Node::call("__std_str_sub", { "__chali_s", "__chali_a", "__chali_b" },
+                                                { value, ast::Node::i(0), ast::Node::i(-1) });
                         MarkOwned(emitted);
                     }
                     else if (valueMatch && IsObjectLike(payload.type))
                     {
-                        value = simple_ast::Node::call(ObjectCopyFunction(payload.type), { "__chali_v" }, { value });
+                        value = ast::Node::call(ObjectCopyFunction(payload.type), { "__chali_v" }, { value });
                         MarkOwned(emitted);
                     }
-                    body.push_back(simple_ast::Node::assign(emitted, value));
+                    body.push_back(ast::Node::assign(emitted, value));
                 }
                 if (valueMatch && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type))
                 {
                     // 表达式分支的载荷副本与普通局部值一样，需要稳定槽供 break 隐式移动。
                     const auto storage = AllocateName("__chali_match_value_storage");
-                    body.push_back(simple_ast::Node::declare(storage, simple_ast::Type::i64()));
-                    body.push_back(simple_ast::Node::assign(storage, simple_ast::Node::alloc(simple_ast::Node::i(ElementBytes(payload.type)))));
-                    body.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage), simple_ast::Node::var(emitted), LowerType(payload.type, storage)));
+                    body.push_back(ast::Node::declare(storage, ast::Type::i64()));
+                    body.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(payload.type)))));
+                    body.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(payload.type, storage)));
                     MarkOwned(storage);
                     auto &names = g_ownedScopes.back().names;
                     const auto slot = names.back();
@@ -3814,14 +3818,14 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
             }
         }
         AppendMatchGuard(item, next, &body);
-        const Memory::Vector<simple_ast::NodePtr> statements = LowerStmtList(item.kids[0]);
+        const Memory::Vector<ast::NodePtr> statements = LowerStmtList(item.kids[0]);
         body.insert(body.end(), statements.begin(), statements.end());
         const MOwnedScope owned = g_ownedScopes.back();
         g_ownedScopes.pop_back();
         PopScope();
         AppendScopeDrops(owned, Memory::String(), &body);
-        body.push_back(simple_ast::Node::jump(breakLabel));
-        return simple_ast::Node::block(body);
+        body.push_back(ast::Node::jump(breakLabel));
+        return ast::Node::block(body);
     };
 
     int fallback = -1;
@@ -3839,15 +3843,15 @@ simple_ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjec
         else
         {
             const auto *variant = patterns.at(caseId);
-            auto tag = simple_ast::Node::loadFrom(simple_ast::Node::offset(simple_ast::Node::var(subject), simple_ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
-            auto condition = simple_ast::Node::binary("==", tag, simple_ast::Node::i(variant->tag));
-            setup.push_back(simple_ast::Node::ifThenElse(condition, lowerBody(item, variant, next), nullptr));
+            auto tag = ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject), ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
+            auto condition = ast::Node::binary("==", tag, ast::Node::i(variant->tag));
+            setup.push_back(ast::Node::ifThenElse(condition, lowerBody(item, variant, next), nullptr));
         }
-        setup.push_back(simple_ast::Node::label(next));
+        setup.push_back(ast::Node::label(next));
     }
     if (fallback >= 0) setup.push_back(lowerBody(N(fallback), nullptr, breakLabel));
-    setup.push_back(simple_ast::Node::label(breakLabel));
-    return simple_ast::Node::block(setup);
+    setup.push_back(ast::Node::label(breakLabel));
+    return ast::Node::block(setup);
 }
 
 /**
@@ -3865,14 +3869,14 @@ bool IntervalConstantTree(int id, Memory::Set<int> &active, bool negativeLiteral
  * `loClosed` / `hiClosed` 决定两端用 `<=` 还是 `<`。模式里的 `lo` / `hi` 直接求值
  * （区间两端通常写常量；写成表达式时按普通表达式语义求值）。
  */
-simple_ast::NodePtr MakeRangeCondition(const Memory::String &subject, int loId, int hiId,
-                                       bool loClosed, bool hiClosed)
+ast::NodePtr MakeRangeCondition(const Memory::String &subject, int loId, int hiId,
+                                bool loClosed, bool hiClosed)
 {
-    const simple_ast::NodePtr lower = simple_ast::Node::binary(
-        loClosed ? "<=" : "<", LowerExpr(loId), simple_ast::Node::var(subject));
-    const simple_ast::NodePtr upper = simple_ast::Node::binary(
-        hiClosed ? "<=" : "<", simple_ast::Node::var(subject), LowerExpr(hiId));
-    return simple_ast::Node::binary("&&", lower, upper);
+    const ast::NodePtr lower = ast::Node::binary(
+        loClosed ? "<=" : "<", LowerExpr(loId), ast::Node::var(subject));
+    const ast::NodePtr upper = ast::Node::binary(
+        hiClosed ? "<=" : "<", ast::Node::var(subject), LowerExpr(hiId));
+    return ast::Node::binary("&&", lower, upper);
 }
 
 /**
@@ -3921,12 +3925,12 @@ bool ReadStringPattern(int id, Memory::String *text)
  * @param pattern 已校验的字符串常量或区间。
  * @return 精确匹配或开闭区间的比较条件。
  */
-simple_ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, const MNode &pattern)
+ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, const MNode &pattern)
 {
     const auto compare = [&](const Memory::String &text, const char *op) {
-        const auto order = simple_ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" },
-                                                  { simple_ast::Node::var(subject), simple_ast::Node::str(text) });
-        return simple_ast::Node::binary(op, order, simple_ast::Node::i(0));
+        const auto order = ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" },
+                                           { ast::Node::var(subject), ast::Node::str(text) });
+        return ast::Node::binary(op, order, ast::Node::i(0));
     };
     bool loClosed = false, hiClosed = false;
     if (IsRangePattern(pattern, &loClosed, &hiClosed))
@@ -3934,8 +3938,8 @@ simple_ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, co
         Memory::String lo, hi;
         ReadStringPattern(pattern.kids[0], &lo);
         ReadStringPattern(pattern.kids[1], &hi);
-        return simple_ast::Node::binary("&&", compare(lo, loClosed ? ">=" : ">"),
-                                        compare(hi, hiClosed ? "<=" : "<"));
+        return ast::Node::binary("&&", compare(lo, loClosed ? ">=" : ">"),
+                                 compare(hi, hiClosed ? "<=" : "<"));
     }
     const auto text = pattern.kind == MNode::Char ? UnescapeText(pattern.s.substr(1u, pattern.s.size() - 2u)) : UnescapeText(pattern.s);
     return compare(text, "==");
@@ -4052,7 +4056,7 @@ void CheckMatchIntegerOverlap(int patternId, const std::shared_ptr<MType> &subje
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerSwitch(int id)
+ast::NodePtr LowerSwitch(int id)
 {
     const MNode node = N(id);
     const std::shared_ptr<MType> subjectType = ExprType(node.kids[0]);
@@ -4189,13 +4193,13 @@ simple_ast::NodePtr LowerSwitch(int id)
     }
     const Memory::String subject = AllocateName("__chali_switch");
     const Memory::String breakLabel = NewBlockLabel("brk");
-    Memory::Vector<simple_ast::NodePtr> setup;
-    setup.push_back(simple_ast::Node::declare(subject, LowerType(subjectType, subject)));
-    setup.push_back(simple_ast::Node::assign(subject,
-                                             strings                                        ? MaterializeStringValue(node.kids[0], subjectType) :
-                                             equality && subjectType->kind == MType::Struct ? OwnedAggregateTempFor(node.kids[0], subjectType) :
-                                             equality && IsObjectLike(subjectType)          ? OwnedObjectTemp(node.kids[0], subjectType) :
-                                                                                              LowerExpr(node.kids[0])));
+    Memory::Vector<ast::NodePtr> setup;
+    setup.push_back(ast::Node::declare(subject, LowerType(subjectType, subject)));
+    setup.push_back(ast::Node::assign(subject,
+                                      strings                                        ? MaterializeStringValue(node.kids[0], subjectType) :
+                                      equality && subjectType->kind == MType::Struct ? OwnedAggregateTempFor(node.kids[0], subjectType) :
+                                      equality && IsObjectLike(subjectType)          ? OwnedObjectTemp(node.kids[0], subjectType) :
+                                                                                       LowerExpr(node.kids[0])));
     /* 字符串主题一定会落到 subject 自己那块串上（借来的已复制），归这个临时所有。 */
     if (strings) MarkOwned(subject);
     int subjectExpression = -1;
@@ -4209,7 +4213,7 @@ simple_ast::NodePtr LowerSwitch(int id)
     const auto lowerBody = [&](const MNode &item, const Memory::String &next) {
         PushScope();
         PushOwnedScope();
-        Memory::Vector<simple_ast::NodePtr> body;
+        Memory::Vector<ast::NodePtr> body;
         AppendMatchGuard(item, next, &body);
         auto statements = LowerStmtList(item.kids[0]);
         body.insert(body.end(), statements.begin(), statements.end());
@@ -4217,8 +4221,8 @@ simple_ast::NodePtr LowerSwitch(int id)
         g_ownedScopes.pop_back();
         PopScope();
         AppendScopeDrops(owned, Memory::String(), &body);
-        body.push_back(simple_ast::Node::jump(breakLabel));
-        return simple_ast::Node::block(body);
+        body.push_back(ast::Node::jump(breakLabel));
+        return ast::Node::block(body);
     };
 
     int fallback = -1;
@@ -4234,7 +4238,7 @@ simple_ast::NodePtr LowerSwitch(int id)
         if (item.i < 0)
         {
             setup.push_back(lowerBody(item, next));
-            setup.push_back(simple_ast::Node::label(next));
+            setup.push_back(ast::Node::label(next));
             continue;
         }
         const MNode pattern = N(static_cast<int>(item.i));
@@ -4242,7 +4246,7 @@ simple_ast::NodePtr LowerSwitch(int id)
             return Fail("match 区间使用 std::lang::range<T>(a,b) 或 std::lang::rangeEq<T>(a,b)"), Bad();
         bool loClosed = false;
         bool hiClosed = false;
-        simple_ast::NodePtr condition;
+        ast::NodePtr condition;
         if (equality)
             condition = LowerBinary("==", subjectExpression, static_cast<int>(item.i));
         else if (strings)
@@ -4254,19 +4258,19 @@ simple_ast::NodePtr LowerSwitch(int id)
         }
         else
         {
-            condition = simple_ast::Node::binary(
-                "==", simple_ast::Node::var(subject), LowerExpr(static_cast<int>(item.i)));
+            condition = ast::Node::binary(
+                "==", ast::Node::var(subject), LowerExpr(static_cast<int>(item.i)));
         }
-        setup.push_back(simple_ast::Node::ifThenElse(condition, lowerBody(item, next), nullptr));
-        setup.push_back(simple_ast::Node::label(next));
+        setup.push_back(ast::Node::ifThenElse(condition, lowerBody(item, next), nullptr));
+        setup.push_back(ast::Node::label(next));
     }
     if (fallback >= 0) setup.push_back(lowerBody(N(fallback), breakLabel));
-    setup.push_back(simple_ast::Node::label(breakLabel)); /* 分支表的出口 */
-    return simple_ast::Node::block(setup);
+    setup.push_back(ast::Node::label(breakLabel)); /* 分支表的出口 */
+    return ast::Node::block(setup);
 }
 
 /**
- * @brief 循环的标签自己发（不用 simple_ast 的 `whileLoop` / `doWhileLoop`）。
+ * @brief 循环的标签自己发（不用 ast 的 `whileLoop` / `doWhileLoop`）。
  *
  * 那两句话的标签是它内部现生成的，外面拿不到；而 `break` / `continue` 要的正是
  * "**具体跳到哪一行**"。所以这里三个循环（while / do-while / for）都手写标签：
@@ -4283,7 +4287,7 @@ simple_ast::NodePtr LowerSwitch(int id)
  * @param valueName 保存循环结果值的临时变量名称。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerLoop(int id, Memory::String *valueName)
+ast::NodePtr LowerLoop(int id, Memory::String *valueName)
 {
     const MNode node = N(id);
     // 语句位置的 loop 在外层已有值出口时不再截获带值 break。
@@ -4293,27 +4297,27 @@ simple_ast::NodePtr LowerLoop(int id, Memory::String *valueName)
     if (!g_error.empty()) return Bad();
     const Memory::String loopLabel = NewBlockLabel("loop");
     const Memory::String breakLabel = NewBlockLabel("brk");
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     Memory::String slot;
     if (type && type->kind != MType::Void)
     {
         slot = AllocateName("__chali_loop_value");
-        out.push_back(simple_ast::Node::declare(slot, LowerType(type, slot)));
+        out.push_back(ast::Node::declare(slot, LowerType(type, slot)));
         if (type->kind == MType::Struct) out.push_back(DefaultInit(slot, type));
     }
     if (g_borrowFlowCapture && !slot.empty()) g_borrowFlowCapture->valueLoops.insert(id);
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, !node.s.empty() ? Memory::String() : loopLabel, g_ownedScopes.size(), slot, type, !node.s.empty(), g_scope.size() - 1u, node.returnExpression });
-    const simple_ast::NodePtr body = LowerStmt(node.kids[0]);
+    const ast::NodePtr body = LowerStmt(node.kids[0]);
     g_blockStack.pop_back();
 
-    out.push_back(simple_ast::Node::label(loopLabel));
+    out.push_back(ast::Node::label(loopLabel));
     out.push_back(body);
-    if (node.s.empty()) out.push_back(simple_ast::Node::jump(loopLabel));
-    out.push_back(simple_ast::Node::label(breakLabel));
+    if (node.s.empty()) out.push_back(ast::Node::jump(loopLabel));
+    out.push_back(ast::Node::label(breakLabel));
     if (valueName != nullptr) *valueName = slot;
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -4365,10 +4369,10 @@ bool IntervalConstantTree(int id, Memory::Set<int> &active, bool negativeLiteral
  * @param id 区间节点。
  * @return 检查后调用类型专用工厂，端点从左到右各求值一次。
  */
-simple_ast::NodePtr LowerInterval(int id)
+ast::NodePtr LowerInterval(int id)
 {
-    using simple_ast::Node;
-    using simple_ast::Type;
+    using ast::Node;
+    using ast::Type;
     const auto node = N(id);
     const auto element = IntervalElementType(id);
     if (!element || (element->kind != MType::Int && element->kind != MType::Char))
@@ -4383,7 +4387,7 @@ simple_ast::NodePtr LowerInterval(int id)
                                                                           -(1ll << (element->bits - 1));
     const auto message = "for-in 区间端点超出 " + Describe(element) + " 的取值范围（" + (element->kind == MType::Char ? Memory::String("0..255") : IntegerRangeText(element)) + "）";
     const auto reverseMessage = Memory::String("for-in 区间下界不能大于上界");
-    Memory::Vector<simple_ast::NodePtr> prefix;
+    Memory::Vector<ast::NodePtr> prefix;
     Memory::Vector<Memory::String> bounds;
     Memory::Vector<MConstant> constants(2);
     bool constantBounds[2] = { false, false };
@@ -4410,7 +4414,7 @@ simple_ast::NodePtr LowerInterval(int id)
         const auto comparisonType = sourceUnsigned ? unsignedType : signedType;
         prefix.push_back(Node::declare(raw, comparisonType));
         prefix.push_back(Node::assign(raw, Node::cast(LowerExpr(endpoint), comparisonType)));
-        simple_ast::NodePtr valid;
+        ast::NodePtr valid;
         if (sourceUnsigned)
             valid = Node::binary("<=", Node::var(raw), Node::cast(Node::i(ConstantBits(maximum)), unsignedType));
         else
@@ -4447,7 +4451,7 @@ simple_ast::NodePtr LowerInterval(int id)
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerForeach(int id)
+ast::NodePtr LowerForeach(int id)
 {
     const MNode node = N(id);
     RewriteRangeCall(node.kids[0]);
@@ -4464,11 +4468,11 @@ simple_ast::NodePtr LowerForeach(int id)
         const Memory::String loopLabel = NewBlockLabel("foreach_vector");
         const Memory::String continueLabel = NewBlockLabel("foreach_next");
         const Memory::String breakLabel = NewBlockLabel("foreach_end");
-        Memory::Vector<simple_ast::NodePtr> out{
-            simple_ast::Node::declare(source, sourceType->kind == MType::Array ? simple_ast::Type::i64() : LowerType(sourceType, source)),
-            simple_ast::Node::assign(source, LowerExpr(node.kids[0])),
-            simple_ast::Node::declare(index, simple_ast::Type::i64()),
-            simple_ast::Node::assign(index, simple_ast::Node::i(0)),
+        Memory::Vector<ast::NodePtr> out{
+            ast::Node::declare(source, sourceType->kind == MType::Array ? ast::Type::i64() : LowerType(sourceType, source)),
+            ast::Node::assign(source, LowerExpr(node.kids[0])),
+            ast::Node::declare(index, ast::Type::i64()),
+            ast::Node::assign(index, ast::Node::i(0)),
         };
         PushScope();
         PushOwnedScope();
@@ -4483,55 +4487,55 @@ simple_ast::NodePtr LowerForeach(int id)
         MVar *binding = FindNodeVar(node);
         binding->elementReference = true;
         binding->isConst = IsReadOnlyAccess(node.kids[0]);
-        out.push_back(simple_ast::Node::declare(item, simple_ast::Type::i64()));
+        out.push_back(ast::Node::declare(item, ast::Type::i64()));
         const std::size_t loopDepth = g_ownedScopes.size();
         PushOwnedScope();
         if (sourceType->kind != MType::Array)
-            g_ownedScopes.back().finalizers.push_back(simple_ast::Node::exprStmt(simple_ast::Node::call(
+            g_ownedScopes.back().finalizers.push_back(ast::Node::exprStmt(ast::Node::call(
                 "__std_vec_unref", { "__chali_v", "__chali_address" },
-                { simple_ast::Node::var(source), simple_ast::Node::var(item) })));
+                { ast::Node::var(source), ast::Node::var(item) })));
         g_blockStack.push_back(MBlockContext{ breakLabel, continueLabel, loopDepth, {}, nullptr });
-        const simple_ast::NodePtr body = LowerStmt(node.kids[1]);
+        const ast::NodePtr body = LowerStmt(node.kids[1]);
         g_blockStack.pop_back();
         const MOwnedScope iteration = g_ownedScopes.back();
         g_ownedScopes.pop_back();
         const MOwnedScope owned = g_ownedScopes.back();
         g_ownedScopes.pop_back();
         PopScope();
-        simple_ast::NodePtr length;
-        simple_ast::NodePtr value;
+        ast::NodePtr length;
+        ast::NodePtr value;
         if (sourceType->kind == MType::Array)
         {
             std::int64_t count = 1;
             for (const int dim : sourceType->dims) count *= dim;
-            length = IsRuntimeArray(sourceType) ? simple_ast::Node::loadInt(simple_ast::Node::binary("-", simple_ast::Node::var(source), simple_ast::Node::i(8))) : simple_ast::Node::i(count);
-            const auto address = simple_ast::Node::offset(simple_ast::Node::var(source),
-                                                          simple_ast::Node::var(index), ElementBytes(element));
+            length = IsRuntimeArray(sourceType) ? ast::Node::loadInt(ast::Node::binary("-", ast::Node::var(source), ast::Node::i(8))) : ast::Node::i(count);
+            const auto address = ast::Node::offset(ast::Node::var(source),
+                                                   ast::Node::var(index), ElementBytes(element));
             value = address;
         }
         else
         {
-            length = simple_ast::Node::call("__std_vec_len", { "__chali_v" }, { simple_ast::Node::var(source) });
-            value = simple_ast::Node::call("__std_vec_ref", { "__chali_v", "__chali_i", "__chali_t", "__chali_o", "__chali_f" },
-                                           { simple_ast::Node::var(source), simple_ast::Node::var(index),
-                                             simple_ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0), ContainerStorageFlag(element),
-                                             simple_ast::Node::i(element->kind == MType::Double ? 1 : 0) });
+            length = ast::Node::call("__std_vec_len", { "__chali_v" }, { ast::Node::var(source) });
+            value = ast::Node::call("__std_vec_ref", { "__chali_v", "__chali_i", "__chali_t", "__chali_o", "__chali_f" },
+                                    { ast::Node::var(source), ast::Node::var(index),
+                                      ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0), ContainerStorageFlag(element),
+                                      ast::Node::i(element->kind == MType::Double ? 1 : 0) });
         }
-        out.push_back(simple_ast::Node::label(loopLabel));
-        out.push_back(simple_ast::Node::ifThenElse(
-            simple_ast::Node::binary("<", simple_ast::Node::var(index), length),
-            simple_ast::Node::block({}), simple_ast::Node::jump(breakLabel)));
-        out.push_back(simple_ast::Node::assign(item, value));
+        out.push_back(ast::Node::label(loopLabel));
+        out.push_back(ast::Node::ifThenElse(
+            ast::Node::binary("<", ast::Node::var(index), length),
+            ast::Node::block({}), ast::Node::jump(breakLabel)));
+        out.push_back(ast::Node::assign(item, value));
         out.push_back(body);
         AppendScopeDrops(iteration, Memory::String(), &out);
-        out.push_back(simple_ast::Node::label(continueLabel));
-        out.push_back(simple_ast::Node::assign(
-            index, simple_ast::Node::binary("+", simple_ast::Node::var(index),
-                                            simple_ast::Node::i(1))));
-        out.push_back(simple_ast::Node::jump(loopLabel));
-        out.push_back(simple_ast::Node::label(breakLabel));
+        out.push_back(ast::Node::label(continueLabel));
+        out.push_back(ast::Node::assign(
+            index, ast::Node::binary("+", ast::Node::var(index),
+                                     ast::Node::i(1))));
+        out.push_back(ast::Node::jump(loopLabel));
+        out.push_back(ast::Node::label(breakLabel));
         AppendScopeDrops(owned, Memory::String(), &out);
-        return simple_ast::Node::block(out);
+        return ast::Node::block(out);
     }
     const MIteratorDecl *iterator = FindIterator(sourceType);
     if (iterator == nullptr)
@@ -4559,29 +4563,29 @@ simple_ast::NodePtr LowerForeach(int id)
     const Memory::String breakCleanup = NewBlockLabel("foreach_break_cleanup");
     PushScope();
     PushOwnedScope();
-    Memory::Vector<simple_ast::NodePtr> out{
-        simple_ast::Node::declare(source, LowerType(sourceType, source))
+    Memory::Vector<ast::NodePtr> out{
+        ast::Node::declare(source, LowerType(sourceType, source))
     };
     if (sourceType->kind == MType::Struct && IsFreshValue(node.kids[0]))
     {
         // 返回暂存属于被调函数，嵌套迭代可能再次调用同一工厂；立即接管到独立存储。
         out.push_back(DefaultInit(source, sourceType, false));
-        out.push_back(MoveStructValue(simple_ast::Node::var(source), LowerExpr(node.kids[0]), sourceType));
+        out.push_back(MoveStructValue(ast::Node::var(source), LowerExpr(node.kids[0]), sourceType));
     }
     else
-        out.push_back(simple_ast::Node::assign(source, LowerExpr(node.kids[0])));
-    out.push_back(simple_ast::Node::declare(index, simple_ast::Type::i64()));
-    out.push_back(simple_ast::Node::assign(index, simple_ast::Node::i(0)));
-    out.push_back(simple_ast::Node::declare(result, LowerType(iterator->result, result)));
+        out.push_back(ast::Node::assign(source, LowerExpr(node.kids[0])));
+    out.push_back(ast::Node::declare(index, ast::Type::i64()));
+    out.push_back(ast::Node::assign(index, ast::Node::i(0)));
+    out.push_back(ast::Node::declare(result, LowerType(iterator->result, result)));
     if (IsFreshValue(node.kids[0])) MarkDestructor(source, sourceType);
     const Memory::String item = DeclareVar(node.s, element, Memory::String(), false, NodeBindingKey(node), node.bindingIdentity);
     const bool captureStorage = !reference && element->kind == MType::Int && g_addressTakenNames.count(node.s);
     FindNodeVar(node)->elementReference = reference || captureStorage;
     FindNodeVar(node)->isConst = reference && iterator->element->readOnly;
-    out.push_back(simple_ast::Node::declare(item, reference || captureStorage ? simple_ast::Type::i64() : LowerType(element, item)));
+    out.push_back(ast::Node::declare(item, reference || captureStorage ? ast::Type::i64() : LowerType(element, item)));
     if (captureStorage)
     {
-        out.push_back(simple_ast::Node::assign(item, simple_ast::Node::alloc(simple_ast::Node::i(ElementBytes(element)))));
+        out.push_back(ast::Node::assign(item, ast::Node::alloc(ast::Node::i(ElementBytes(element)))));
         MarkOwned(item);
     }
     if (intervalSource && g_borrowFlowCapture) g_borrowFlowCapture->foreachBindings[id] = { item, {} };
@@ -4602,7 +4606,7 @@ simple_ast::NodePtr LowerForeach(int id)
     }
     g_blockStack.push_back(
         MBlockContext{ breakCleanup, continueLabel, g_ownedScopes.size(), {}, nullptr });
-    const simple_ast::NodePtr body = LowerStmt(node.kids[1]);
+    const ast::NodePtr body = LowerStmt(node.kids[1]);
     g_blockStack.pop_back();
     const MOwnedScope iterationOwned = g_ownedScopes.back();
     g_ownedScopes.pop_back();
@@ -4610,52 +4614,52 @@ simple_ast::NodePtr LowerForeach(int id)
     g_ownedScopes.pop_back();
     PopScope();
 
-    out.push_back(simple_ast::Node::label(loopLabel));
-    out.push_back(simple_ast::Node::assign(
-        result, simple_ast::Node::call(iterator->label, iterator->callNames,
-                                       { simple_ast::Node::var(source),
-                                         simple_ast::Node::var(index) })));
-    const simple_ast::NodePtr tag = simple_ast::Node::loadFrom(
-        simple_ast::Node::offset(simple_ast::Node::var(result),
-                                 simple_ast::Node::i(tagField->slot), 8),
+    out.push_back(ast::Node::label(loopLabel));
+    out.push_back(ast::Node::assign(
+        result, ast::Node::call(iterator->label, iterator->callNames,
+                                { ast::Node::var(source),
+                                  ast::Node::var(index) })));
+    const ast::NodePtr tag = ast::Node::loadFrom(
+        ast::Node::offset(ast::Node::var(result),
+                          ast::Node::i(tagField->slot), 8),
         LowerType(T(M_TypeIntBits(32, 0)), "foreach tag"));
-    out.push_back(simple_ast::Node::ifThenElse(
-        simple_ast::Node::binary("==", tag, simple_ast::Node::i(value->tag)),
-        simple_ast::Node::block({}), simple_ast::Node::jump(breakLabel)));
-    const simple_ast::NodePtr payloadAddress = simple_ast::Node::offset(
-        simple_ast::Node::var(result), simple_ast::Node::i(valueField->slot), 8);
+    out.push_back(ast::Node::ifThenElse(
+        ast::Node::binary("==", tag, ast::Node::i(value->tag)),
+        ast::Node::block({}), ast::Node::jump(breakLabel)));
+    const ast::NodePtr payloadAddress = ast::Node::offset(
+        ast::Node::var(result), ast::Node::i(valueField->slot), 8);
     if (reference)
-        out.push_back(simple_ast::Node::assign(item, simple_ast::Node::loadInt(payloadAddress)));
+        out.push_back(ast::Node::assign(item, ast::Node::loadInt(payloadAddress)));
     else if (element->kind == MType::Struct)
         /* 载荷是借来的（下一轮迭代就换 / 释放），绑进循环变量时深拷贝一份。 */
-        out.push_back(DeepCopyStructValue(simple_ast::Node::var(item), payloadAddress, element));
+        out.push_back(DeepCopyStructValue(ast::Node::var(item), payloadAddress, element));
     else if (captureStorage)
-        out.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(item),
-                                                simple_ast::Node::loadFrom(payloadAddress, LowerType(element, item)), LowerType(element, item)));
+        out.push_back(ast::Node::storeAt(ast::Node::var(item),
+                                         ast::Node::loadFrom(payloadAddress, LowerType(element, item)), LowerType(element, item)));
     else
-        out.push_back(simple_ast::Node::assign(item,
-                                               simple_ast::Node::loadFrom(payloadAddress, LowerType(element, item))));
+        out.push_back(ast::Node::assign(item,
+                                        ast::Node::loadFrom(payloadAddress, LowerType(element, item))));
     /*
      * 载荷已经**按值**拷进循环变量，迭代器返回的那个 Option 里那份是该由我们收尾的
      * （不然每轮漏一个字符串 / 对象 / 结构体叶子）。引用迭代器例外：`item` 拿的是
      * 载荷的**地址**，释放它就等于把目标还掉了。
      */
     if (!reference && StructHasOwnedLeaves(iterator->result->name))
-        if (const simple_ast::NodePtr release =
-                MakeAggregateRelease(iterator->result->name, simple_ast::Node::var(result)))
+        if (const ast::NodePtr release =
+                MakeAggregateRelease(iterator->result->name, ast::Node::var(result)))
             out.push_back(release);
     out.push_back(body);
-    out.push_back(simple_ast::Node::label(continueLabel));
+    out.push_back(ast::Node::label(continueLabel));
     AppendScopeDrops(iterationOwned, Memory::String(), &out);
-    out.push_back(simple_ast::Node::assign(
-        index, simple_ast::Node::binary("+", simple_ast::Node::var(index),
-                                        simple_ast::Node::i(1))));
-    out.push_back(simple_ast::Node::jump(loopLabel));
-    out.push_back(simple_ast::Node::label(breakCleanup));
+    out.push_back(ast::Node::assign(
+        index, ast::Node::binary("+", ast::Node::var(index),
+                                 ast::Node::i(1))));
+    out.push_back(ast::Node::jump(loopLabel));
+    out.push_back(ast::Node::label(breakCleanup));
     AppendScopeDrops(iterationOwned, Memory::String(), &out);
-    out.push_back(simple_ast::Node::label(breakLabel));
+    out.push_back(ast::Node::label(breakLabel));
     AppendScopeDrops(owned, Memory::String(), &out);
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -4663,7 +4667,7 @@ simple_ast::NodePtr LowerForeach(int id)
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerWhile(int id)
+ast::NodePtr LowerWhile(int id)
 {
     const MNode &node = N(id);
     if (!CheckBoolCondition(node.kids[0], "while 条件")) return Bad();
@@ -4672,21 +4676,21 @@ simple_ast::NodePtr LowerWhile(int id)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, loopLabel, g_ownedScopes.size(), {}, nullptr });
-    const simple_ast::NodePtr body = LowerStmt(node.kids[1]);
+    const ast::NodePtr body = LowerStmt(node.kids[1]);
     g_blockStack.pop_back();
 
-    Memory::Vector<simple_ast::NodePtr> conditionFresh;
-    const simple_ast::NodePtr condition = LowerConditionWithFresh(node.kids[0], &conditionFresh);
-    Memory::Vector<simple_ast::NodePtr> out = { simple_ast::Node::label(loopLabel) };
+    Memory::Vector<ast::NodePtr> conditionFresh;
+    const ast::NodePtr condition = LowerConditionWithFresh(node.kids[0], &conditionFresh);
+    Memory::Vector<ast::NodePtr> out = { ast::Node::label(loopLabel) };
     out.insert(out.end(), conditionFresh.begin(), conditionFresh.end());
     out.insert(out.end(), {
                               /* 条件为假 → 出口；为真 → then 分支（循环体），完了自然落到 `j loop`。 */
-                              simple_ast::Node::ifThenElse(condition, body,
-                                                           simple_ast::Node::jump(breakLabel)),
-                              simple_ast::Node::jump(loopLabel),
-                              simple_ast::Node::label(breakLabel),
+                              ast::Node::ifThenElse(condition, body,
+                                                    ast::Node::jump(breakLabel)),
+                              ast::Node::jump(loopLabel),
+                              ast::Node::label(breakLabel),
                           });
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -4694,7 +4698,7 @@ simple_ast::NodePtr LowerWhile(int id)
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerDoWhile(int id)
+ast::NodePtr LowerDoWhile(int id)
 {
     const MNode &node = N(id);
     if (!CheckBoolCondition(node.kids[1], "do-while 条件")) return Bad();
@@ -4704,24 +4708,24 @@ simple_ast::NodePtr LowerDoWhile(int id)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, contLabel, g_ownedScopes.size(), {}, nullptr });
-    const simple_ast::NodePtr body = LowerStmt(node.kids[0]);
+    const ast::NodePtr body = LowerStmt(node.kids[0]);
     g_blockStack.pop_back();
 
-    Memory::Vector<simple_ast::NodePtr> conditionFresh;
-    const simple_ast::NodePtr condition = LowerConditionWithFresh(node.kids[1], &conditionFresh);
-    Memory::Vector<simple_ast::NodePtr> out = {
-        simple_ast::Node::label(loopLabel),
+    Memory::Vector<ast::NodePtr> conditionFresh;
+    const ast::NodePtr condition = LowerConditionWithFresh(node.kids[1], &conditionFresh);
+    Memory::Vector<ast::NodePtr> out = {
+        ast::Node::label(loopLabel),
         body,
-        simple_ast::Node::label(contLabel), /* continue 落这儿：紧接着就是判条件 */
+        ast::Node::label(contLabel), /* continue 落这儿：紧接着就是判条件 */
     };
     out.insert(out.end(), conditionFresh.begin(), conditionFresh.end());
     out.insert(out.end(), {
                               /* 条件为真回开头（then = 回跳），为假就落到出口。 */
-                              simple_ast::Node::ifThenElse(condition,
-                                                           simple_ast::Node::jump(loopLabel), nullptr),
-                              simple_ast::Node::label(breakLabel),
+                              ast::Node::ifThenElse(condition,
+                                                    ast::Node::jump(loopLabel), nullptr),
+                              ast::Node::label(breakLabel),
                           });
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -4733,7 +4737,7 @@ simple_ast::NodePtr LowerDoWhile(int id)
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr LowerFor(int id)
+ast::NodePtr LowerFor(int id)
 {
     const MNode &node = N(id);
     const int initId = node.kids[0];
@@ -4744,11 +4748,11 @@ simple_ast::NodePtr LowerFor(int id)
     const Memory::String contLabel = NewBlockLabel("cont");
     const Memory::String breakLabel = NewBlockLabel("brk");
 
-    Memory::Vector<simple_ast::NodePtr> out;
+    Memory::Vector<ast::NodePtr> out;
     /* `for (int i = 0; …)` 里的 `i` 归**这一层循环**（外面看不见，同名可以遮蔽）。 */
     PushScope();
     if (initId >= 0) out.push_back(LowerStmt(initId)); /* 初始化：只走一遍 */
-    out.push_back(simple_ast::Node::label(loopLabel));
+    out.push_back(ast::Node::label(loopLabel));
     if (condId >= 0)
     {
         if (!CheckBoolCondition(condId, "for 条件"))
@@ -4757,25 +4761,25 @@ simple_ast::NodePtr LowerFor(int id)
             return Bad();
         }
         /* "条件不成立就跳出口"：then 空着，else 才是跳转。 */
-        Memory::Vector<simple_ast::NodePtr> conditionFresh;
-        const simple_ast::NodePtr condition = LowerConditionWithFresh(condId, &conditionFresh);
+        Memory::Vector<ast::NodePtr> conditionFresh;
+        const ast::NodePtr condition = LowerConditionWithFresh(condId, &conditionFresh);
         out.insert(out.end(), conditionFresh.begin(), conditionFresh.end());
-        out.push_back(simple_ast::Node::ifThenElse(condition, nullptr,
-                                                   simple_ast::Node::jump(breakLabel)));
+        out.push_back(ast::Node::ifThenElse(condition, nullptr,
+                                            ast::Node::jump(breakLabel)));
     }
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, contLabel, g_ownedScopes.size(), {}, nullptr });
-    const simple_ast::NodePtr body = LowerStmt(bodyId);
+    const ast::NodePtr body = LowerStmt(bodyId);
     g_blockStack.pop_back();
     out.push_back(body);
 
-    out.push_back(simple_ast::Node::label(contLabel));
+    out.push_back(ast::Node::label(contLabel));
     if (incId >= 0) out.push_back(LowerStmt(incId)); /* 自增：continue 也走这儿 */
-    out.push_back(simple_ast::Node::jump(loopLabel));
-    out.push_back(simple_ast::Node::label(breakLabel));
+    out.push_back(ast::Node::jump(loopLabel));
+    out.push_back(ast::Node::label(breakLabel));
     PopScope();
-    return simple_ast::Node::block(out);
+    return ast::Node::block(out);
 }
 
 /**
@@ -4853,19 +4857,19 @@ Memory::String UnescapeText(const Memory::String &raw)
  * @param values 输入值列表或接收读取值的输出列表。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr BuildFormatCall(const char *native, const Memory::String &format,
-                                    const Memory::Vector<simple_ast::NodePtr> &values)
+ast::NodePtr BuildFormatCall(const char *native, const Memory::String &format,
+                             const Memory::Vector<ast::NodePtr> &values)
 {
     Memory::Vector<Memory::String> names;
-    Memory::Vector<simple_ast::NodePtr> arguments;
+    Memory::Vector<ast::NodePtr> arguments;
     names.emplace_back("__chali_fmt");
-    arguments.push_back(simple_ast::Node::str(format)); /* 第一个实参永远是格式串 */
+    arguments.push_back(ast::Node::str(format)); /* 第一个实参永远是格式串 */
     for (std::size_t index = 0; index < values.size(); ++index)
     {
         names.emplace_back("__chali_fa" + Memory::toString(index + 1u));
         arguments.push_back(values[index]);
     }
-    return simple_ast::Node::call(native, names, arguments);
+    return ast::Node::call(native, names, arguments);
 }
 
 /**
@@ -4874,17 +4878,17 @@ simple_ast::NodePtr BuildFormatCall(const char *native, const Memory::String &fo
  * @param format 格式字符串或格式描述节点。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
+ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
 {
     const std::shared_ptr<MType> type = ExprType(argId);
     if (IsStandardOpcode(type, "String"))
         return NeedsOwnedTemp(argId) ? OwnedStringTemp(argId) : LowerExpr(argId);
     if (IsStandardOpcode(type, "BigInteger"))
         return OwnedGeneratedString(
-            simple_ast::Node::call("__std_bint_str", { "__chali_v" }, { OwnedObjectTemp(argId, type) }));
+            ast::Node::call("__std_bint_str", { "__chali_v" }, { OwnedObjectTemp(argId, type) }));
     if (IsStandardOpcode(type, "BigDecimal"))
         return OwnedGeneratedString(
-            simple_ast::Node::call("__std_bfloat_str", { "__chali_v" }, { OwnedObjectTemp(argId, type) }));
+            ast::Node::call("__std_bfloat_str", { "__chali_v" }, { OwnedObjectTemp(argId, type) }));
     if (type->kind != MType::Struct)
     {
         return OwnedGeneratedString(LowerValueText(argId));
@@ -4912,14 +4916,14 @@ simple_ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
     }
     if (!CheckMethodReceiver(argId, type->name + "." + chosen->name)) return Bad();
     Memory::Vector<Memory::String> names{ "self" };
-    Memory::Vector<simple_ast::NodePtr> values{ OwnedAggregateTempFor(argId, type) };
+    Memory::Vector<ast::NodePtr> values{ OwnedAggregateTempFor(argId, type) };
     if (!chosen->params.empty())
     {
         names.push_back(chosen->params[0].emitted);
-        values.push_back(simple_ast::Node::str(format));
+        values.push_back(ast::Node::str(format));
     }
     return OwnedGeneratedString(
-        simple_ast::Node::call(type->name + "." + chosen->name, names, values));
+        ast::Node::call(type->name + "." + chosen->name, names, values));
 }
 
 /**
@@ -4937,7 +4941,7 @@ simple_ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
  * @return 没问题返回 true。
  */
 bool BuildFormatTarget(const Memory::Vector<int> &args, const char *who,
-                       Memory::String &target, Memory::Vector<simple_ast::NodePtr> &values)
+                       Memory::String &target, Memory::Vector<ast::NodePtr> &values)
 {
     if (args.empty() || N(args[0]).kind != MNode::Str)
     {
@@ -5077,15 +5081,15 @@ bool BuildFormatTarget(const Memory::Vector<int> &args, const char *who,
  * @param newline 是否在输出末尾追加换行。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr BuildBracePrint(const Memory::Vector<int> &args, bool newline)
+ast::NodePtr BuildBracePrint(const Memory::Vector<int> &args, bool newline)
 {
     if (args.size() == 1u && N(args[0]).kind != MNode::Str && IsStandardOpcode(ExprType(args[0]), "String"))
     {
-        Memory::Vector<simple_ast::NodePtr> values{ BraceStringValue(args[0], "") };
+        Memory::Vector<ast::NodePtr> values{ BraceStringValue(args[0], "") };
         return BuildFormatCall("__std_print", newline ? "%s\n" : "%s", values);
     }
     Memory::String target;
-    Memory::Vector<simple_ast::NodePtr> values;
+    Memory::Vector<ast::NodePtr> values;
     if (!BuildFormatTarget(args, "std::lang::print/std::lang::println", target, values)) return Bad();
     if (newline) target += '\n';
     return BuildFormatCall("__std_print", target, values);
@@ -5098,10 +5102,10 @@ simple_ast::NodePtr BuildBracePrint(const Memory::Vector<int> &args, bool newlin
  * 机制（`NeedsOwnedTemp` / `OwnedStringTemp` / `MarkOwned`）——**不要**在这儿自己开临时
  * 变量：那样会在拼接链（`text = text + std::lang::format(…)`）里把临时串提前还掉。
  */
-simple_ast::NodePtr BuildBraceFormat(const Memory::Vector<int> &args)
+ast::NodePtr BuildBraceFormat(const Memory::Vector<int> &args)
 {
     Memory::String target;
-    Memory::Vector<simple_ast::NodePtr> values;
+    Memory::Vector<ast::NodePtr> values;
     if (!BuildFormatTarget(args, "std::lang::format", target, values)) return Bad();
     return BuildFormatCall("__std_str_fmt", target, values);
 }
@@ -5113,8 +5117,8 @@ simple_ast::NodePtr BuildBraceFormat(const Memory::Vector<int> &args)
  * @param parameter 可变形参的类型描述。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t begin,
-                                          const MParam &parameter)
+ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t begin,
+                                   const MParam &parameter)
 {
     if (!parameter.type || !IsContainer(parameter.type) || parameter.type->name != "vec" || !parameter.type->elem)
     {
@@ -5128,8 +5132,8 @@ simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::
     }
     const std::shared_ptr<MType> element = parameter.type->elem;
     Memory::Vector<Memory::String> names{ "__chali_text", "__chali_object" };
-    Memory::Vector<simple_ast::NodePtr> values{
-        simple_ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
+    Memory::Vector<ast::NodePtr> values{
+        ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
         ContainerStorageFlag(element)
     };
     for (std::size_t index = begin; index < args.size(); ++index)
@@ -5142,7 +5146,7 @@ simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::
          */
         values.push_back(LowerArgumentValue(args[index], element));
     }
-    return OwnedObjectTempNode(simple_ast::Node::call("__std_vec_pack", names, values),
+    return OwnedObjectTempNode(ast::Node::call("__std_vec_pack", names, values),
                                parameter.type);
 }
 
@@ -5151,7 +5155,7 @@ simple_ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::
  *
  * 切出来的也是**新串**（堆上），所以 `s[0:3] + s[3:]` 这种拼法很自然。
  */
-simple_ast::NodePtr LowerSlice(int id)
+ast::NodePtr LowerSlice(int id)
 {
     const MNode &node = N(id);
     const std::shared_ptr<MType> base = ExprType(node.kids[0]);
@@ -5161,10 +5165,10 @@ simple_ast::NodePtr LowerSlice(int id)
         return Bad();
     }
     if (!CheckContainerIndex(node.kids[1], "切片起点") || (node.kids[2] >= 0 && !CheckContainerIndex(node.kids[2], "切片终点"))) return Bad();
-    Memory::Vector<simple_ast::NodePtr> values{ LowerExpr(node.kids[0]), LowerExpr(node.kids[1]) };
+    Memory::Vector<ast::NodePtr> values{ LowerExpr(node.kids[0]), LowerExpr(node.kids[1]) };
     /* `止` 省了就是"到末尾"：给 -1，运行时按串长收尾。 */
-    values.push_back(node.kids[2] >= 0 ? LowerExpr(node.kids[2]) : simple_ast::Node::i(-1));
-    return simple_ast::Node::call("__std_str_sub", { "__chali_s", "__chali_b", "__chali_e" }, values);
+    values.push_back(node.kids[2] >= 0 ? LowerExpr(node.kids[2]) : ast::Node::i(-1));
+    return ast::Node::call("__std_str_sub", { "__chali_s", "__chali_b", "__chali_e" }, values);
 }
 
 /**

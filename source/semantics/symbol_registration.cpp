@@ -580,7 +580,7 @@ bool RegisterTop()
         }
     }
 
-    /* ---- 0.25 enum：登记变体，并合成供 simple_ast 布局使用的值结构 ---- */
+    /* ---- 0.25 enum：登记变体，并合成供 ast 布局使用的值结构 ---- */
     for (const int topId : g_top)
     {
         const MNode top = N(topId);

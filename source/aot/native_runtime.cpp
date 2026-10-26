@@ -7,6 +7,8 @@
 #include "glue/std_registry.hpp"
 #include "console/utf8.hpp"
 #include <memory>
+#include <cstring>
+#include <limits>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -515,6 +517,52 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
             if (auto *bytes = heap->borrowBytes(at, count)) return bytes;
     chali_panic("访问未分配或已释放的内存");
     return nullptr;
+}
+
+/**
+ * @brief 按原聚合助手的前向八字节槽语义复制，完整活跃且不重叠时批量搬运。
+ * @param destination 目标逻辑地址。
+ * @param source 源逻辑地址。
+ * @param slots 八字节槽数；非正值不访问存储。
+ * @return 与原内部助手一致，返回零。
+ * @note 范围证明失败或存在重叠时逐槽先读后写，保留原陷阱位置及部分写入顺序。
+ */
+std::int64_t chali_host_copy_words(std::int64_t destination, std::int64_t source, std::int64_t slots)
+{
+    if (slots <= 0) return 0;
+    auto &context = currentContext();
+    const auto borrow = [&](std::int64_t address, std::size_t bytes) -> unsigned char * {
+        if (address < 0) return nullptr;
+        const auto at = static_cast<std::size_t>(address);
+        if (context.data && at < context.data->binary.size() && bytes <= context.data->binary.size() - at)
+            return const_cast<unsigned char *>(context.data->binary.data()) + at;
+        if (auto *heap = dynamic_cast<Heap *>(context.heap)) return heap->borrowBytes(at, bytes);
+        return nullptr;
+    };
+    if (static_cast<std::uint64_t>(slots) <= std::numeric_limits<std::size_t>::max() / 8u)
+    {
+        const auto bytes = static_cast<std::size_t>(slots) * 8u;
+        const auto from = static_cast<std::uint64_t>(source), to = static_cast<std::uint64_t>(destination);
+        const bool disjoint = from <= to ? to - from >= bytes : from - to >= bytes;
+        if (disjoint || source == destination)
+        {
+            auto *input = borrow(source, bytes);
+            auto *output = borrow(destination, bytes);
+            if (input && output)
+            {
+                if (input != output) std::memcpy(output, input, bytes);
+                return 0;
+            }
+        }
+    }
+    for (std::int64_t index = 0; index < slots; ++index)
+    {
+        std::uint64_t value = 0;
+        const auto offset = static_cast<std::uint64_t>(index) * 8u;
+        std::memcpy(&value, chali_host_address(static_cast<std::int64_t>(static_cast<std::uint64_t>(source) + offset), 8), 8);
+        std::memcpy(chali_host_address(static_cast<std::int64_t>(static_cast<std::uint64_t>(destination) + offset), 8), &value, 8);
+    }
+    return 0;
 }
 
 /**

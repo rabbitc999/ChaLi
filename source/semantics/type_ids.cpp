@@ -244,7 +244,7 @@ Memory::String g_symbolMap;
  */
 Memory::String g_symbolModule, g_symbolVersion;
 /* 运算符重载表（`g_operators`）在 MOperatorDecl 之后定义。 */
-Memory::Map<Memory::String, std::shared_ptr<simple_ast::Type>> g_structType; /* struct 名 → simple_ast 类型 */
+Memory::Map<Memory::String, std::shared_ptr<ast::Type>> g_structType; /* struct 名 → ast 类型 */
 /**
  * @brief 字面量构造函数的容器类型与扁平实参数量。
  */
@@ -254,9 +254,9 @@ struct MCollectionConstructor
     std::size_t count;
 };
 Memory::Map<Memory::String, MCollectionConstructor> g_collectionConstructors;
-simple_ast::Program *g_loweringProgram = nullptr;          /* 降级期懒登记新推导出的元组形状 */
+ast::Program *g_loweringProgram = nullptr;                 /* 降级期懒登记新推导出的元组形状 */
 Memory::Vector<Memory::Map<Memory::String, MVar>> g_scope; /* 0 号是全局作用域 */
-Memory::Vector<simple_ast::NodePtr> g_globalInit;          /* 全局初始化：塞到 main 最前面 */
+Memory::Vector<ast::NodePtr> g_globalInit;                 /* 全局初始化：塞到 main 最前面 */
 Memory::Set<Memory::String> g_usedNames;                   /* 已经占用的降级名（局部变量去重） */
 Memory::Map<int, Memory::String> g_globalNames;            /* 全局声明节点 → 降级名 */
 Memory::String g_owner;                                    /* 正在降级的方法属于哪个 struct */
@@ -381,7 +381,7 @@ std::shared_ptr<MType> T(int id) { return M_TypeAt(id); }
  * @brief 构造表示语义处理失败的空表达式。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr Bad() { return simple_ast::Node::i(0); }
+ast::NodePtr Bad() { return ast::Node::i(0); }
 
 /**
  * @brief 判断类型描述是否为元组类型。

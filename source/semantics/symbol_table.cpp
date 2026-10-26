@@ -128,7 +128,7 @@ struct MStructDef
     Memory::Vector<MField> fields; /* 声明里写的字段（按名字查） */
     /**
      * **摊平后的槽位表**：一个槽一项（`字段名` 或 `外层字段.内层字段`），
-     * 类型是那个槽自己的类型。simple_ast 的数据区布局、`Node::member` 取字段
+     * 类型是那个槽自己的类型。ast 的数据区布局、`Node::member` 取字段
      * 都按这张表来 —— 长度就是 `slotCount`。
      */
     Memory::Vector<std::pair<Memory::String, std::shared_ptr<MType>>> leaves;

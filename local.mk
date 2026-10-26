@@ -5,22 +5,22 @@ endif
 # local.mk —— 生成工程自己的挂载点（生成的 Makefile 末尾有 `-include local.mk`）。
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：
-#   * source/simple_ast：C 子集语法树 → 四元式 + .data（降级目标）
+#   * source/ast：C 子集语法树 → 四元式 + .data（降级目标）
 #   * source/stackvm ：四元式 → 栈指令 → 执行（跑出结果；大整数用 source/bignum）
 #   * source/preprocess：`%include` / `%if` / `%define` 那一步（源码进解析器之前）
 # 三份副本各跑 `make -C source/<名字>`（产物仍落在仓库根的 `build/<名字>/`），
 # 所有依赖都使用 CHALI 内部副本。
 #
-# 注意：`source/{simple_ast,stackvm,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
+# 注意：`source/{ast,stackvm,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
 # 改了这边不会自动同步到 ParseEngine 那份（反之亦然）——动其中一个时想清楚要不要一起改。
 #
 # 生成源码与报告位于 source/，对象文件与静态库位于 build/chali-frontend/。
 # 根目录只保留工具链入口与手写构建文件，重跑 gen.sh 不覆盖 local.mk。
 
-AST_DIR := source/simple_ast
+AST_DIR := source/ast
 VM_DIR  := source/stackvm
 PP_DIR  := source/preprocess
-AST_LIB := build/chali-runtime/libsimple_ast.a
+AST_LIB := build/chali-runtime/libast.a
 VM_BUILD := build/chali-stackvm-core
 HOST_BUILD := build/chali-host-records
 HOST_LIB := $(HOST_BUILD)/librecords.a
@@ -74,7 +74,7 @@ $(FRONTEND_BUILD)/generator_cli.o: source/generator/generator_cli.cpp source/gen
         source/template/engine.hpp source/chali_runtime_allocator.hpp
 	$(CXX) $(CXXFLAGS) -MMD -MP -DCHALI_GENERATOR_NO_MAIN=1 -I. -c $< -o $@
 
-# 注意顺序：libparser.a 引用了 simple_ast / stackvm 的符号，必须排在它们前面。
+# 注意顺序：libparser.a 引用了 ast / stackvm 的符号，必须排在它们前面。
 LDLIBS   += $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
 ifeq ($(shell uname -s),Linux)
 LDLIBS   += -ldl
@@ -172,7 +172,7 @@ samples: $(TARGET)
 # Keep allocator-specialized dependencies separate from the generic libraries.
 build/chali-runtime: | tmp
 	$(CHALI_RUNTIME_MKDIR)
-AST_OBJS := build/chali-runtime/simple_ast.o build/chali-runtime/ast_type.o build/chali-runtime/ast_node.o build/chali-runtime/ast_data.o
+AST_OBJS := build/chali-runtime/ast.o build/chali-runtime/ast_type.o build/chali-runtime/ast_node.o build/chali-runtime/ast_data.o build/chali-runtime/aggregate_optimize.o
 $(AST_OBJS): build/chali-runtime/%.o: $(AST_DIR)/%.cpp build/chali-runtime/buildConfig.json | build/chali-runtime
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(AST_OBJS:.o=.d)
@@ -187,7 +187,7 @@ $(FRONTEND_BUILD)/chali_main.o $(FRONTEND_BUILD)/chali_parser.o $(VM_OBJS) $(HOS
 .PHONY: config-force
 build/chali-runtime/buildConfig.json: config-force
 	$(PYTHON) tools/write_build_config.py $@ "$(CXX)" "$(CXXFLAGS)" "$(LDLIBS)" "$(LDFLAGS)"
-$(LIB_OBJS) $(DEMO_OBJS) $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o build/chali-runtime/simple_ast.o build/chali-runtime/preprocess.o: build/chali-runtime/buildConfig.json
+$(LIB_OBJS) $(DEMO_OBJS) $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o build/chali-runtime/ast.o build/chali-runtime/preprocess.o: build/chali-runtime/buildConfig.json
 
 # JSON 与 TOML 实现由宿主库单独编译，包含依赖由 .d 文件维护。
 
@@ -319,12 +319,17 @@ $(CHALI_STDLIB_OBJ): build/chali-runtime/buildConfig.json
 # AOT 复用共享原生服务；先构建静态库资产，再嵌入编译器，首次克隆同样自动完成。
 CHALI_AOT_HOST_BUILD := build/chali-aot-host
 CHALI_AOT_HOST_OBJECT := $(CHALI_AOT_HOST_BUILD)/native_runtime.o
+CHALI_AOT_PROFILE_OBJECT := $(CHALI_AOT_HOST_BUILD)/backend_profile.o
+$(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp build/chali-runtime/buildConfig.json
+	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 $(CHALI_AOT_HOST_OBJECT): source/aot/native_runtime.cpp build/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(CHALI_AOT_HOST_BUILD)/native_runtime.d
-$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
-	$(PYTHON) tools/build_aot_host.py --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --output $@
+-include $(CHALI_AOT_HOST_BUILD)/backend_profile.d
+$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
+	$(PYTHON) tools/build_aot_host.py --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --output $@
 
 # 更新标准库或胶水实现时只刷新单个内嵌资产对象，不重编宿主入口。
 CHALI_EMBED_INPUTS := $(shell $(PYTHON) tools/embed_stdlib.py --dependencies)

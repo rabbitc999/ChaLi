@@ -3,7 +3,7 @@
  * @brief 验证编译器数据导出、大数边界和结构化文档模板的安全回归。
  */
 #include "../source/bignum/bigfloat.hpp"
-#include "../source/simple_ast/simple_ast.hpp"
+#include "../source/ast/ast.hpp"
 #include "../source/json/json.hpp"
 #include "../source/toml/toml.hpp"
 #include <cassert>
@@ -20,8 +20,8 @@
  */
 std::uint64_t exportedInteger(const char *literal)
 {
-    simple_ast::CodegenResult result;
-    result.entries.push_back({ "number", simple_ast::Type::u64(), literal });
+    ast::CodegenResult result;
+    result.entries.push_back({ "number", ast::Type::u64(), literal });
     const auto bytes = result.exportDataBinary();
     assert(bytes.size() == 24);
     std::uint64_t value = 0;
@@ -59,8 +59,8 @@ int main()
     assert(exportedInteger("-9223372036854775808") == 0x8000000000000000ull);
     assert(exportedInteger("18446744073709551615") == std::numeric_limits<std::uint64_t>::max());
     assert(exportedInteger("-1") == std::numeric_limits<std::uint64_t>::max());
-    simple_ast::CodegenResult data;
-    data.entries.push_back({ "large", simple_ast::Type::f64(), "1e300" });
+    ast::CodegenResult data;
+    data.entries.push_back({ "large", ast::Type::f64(), "1e300" });
     const auto bytes = data.exportDataBinary();
     double value = 0;
     std::memcpy(&value, bytes.data() + 8, sizeof(value));

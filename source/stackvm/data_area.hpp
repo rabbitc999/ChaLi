@@ -8,7 +8,7 @@
 namespace stackvm
 {
 /**
- * @brief 数据区：加载 `.data.bin` 与布局表（`simple_ast` 的 `exportDataLayout()` 输出）。
+ * @brief 数据区：加载 `.data.bin` 与布局表（`ast` 的 `exportDataLayout()` 输出）。
  *
  * 有了它，四元式里的 `(addr, 符号, _, t)` / `(load, 指针, _, 目标)` / `(store, 指针, 值, _)`
  * 就能真正读写数组 / 结构体所在的那片内存。

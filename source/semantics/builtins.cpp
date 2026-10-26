@@ -32,12 +32,12 @@ int BuiltinOpIndex(const Memory::String &name)
 }
 
 bool IsReadOnlyAccess(int id);
-simple_ast::NodePtr LowerExpr(int id);
-simple_ast::NodePtr LowerStmt(int id);
-simple_ast::NodePtr LowerStaticQualified(int id);
+ast::NodePtr LowerExpr(int id);
+ast::NodePtr LowerStmt(int id);
+ast::NodePtr LowerStaticQualified(int id);
 Memory::String TupleConstructorName(const Memory::String &tupleName);
 std::shared_ptr<MType> ExprType(int id);
-simple_ast::NodePtr OwnedObjectTemp(int exprId, const std::shared_ptr<MType> &type);
+ast::NodePtr OwnedObjectTemp(int exprId, const std::shared_ptr<MType> &type);
 
 /* 解析一次调用（实现在下面）：标签 / 形参名 / 返回类型。 */
 bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *params,

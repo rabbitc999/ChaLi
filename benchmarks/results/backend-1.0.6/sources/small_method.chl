@@ -1,0 +1,113 @@
+import std::clock;
+struct Parcel { String title; int64[] data; int64 serial; };
+enum Envelope { Empty, Filled(Parcel parcel); };
+int64 drops = 0;
+struct Tracked: Drop {
+    int64 serial;
+    void drop() { drops = drops + self.serial; }
+};
+
+Parcel makeParcel(int64 serial) {
+    Parcel result;
+    result.title = format("parcel {}", serial);
+    result.data = new[3];
+    result.data[0] = serial;
+    result.data[1] = serial + 1;
+    result.data[2] = serial + 2;
+    result.serial = serial;
+    return result;
+}
+Parcel forwardParcel(int64 serial) { return makeParcel(serial); }
+Parcel duplicateParcel(Parcel const& source) { return source; }
+Parcel recursiveParcel(int64 depth) {
+    if (depth == 0) { return makeParcel(0); }
+    Parcel result = recursiveParcel(depth - 1);
+    result.data[0] = result.data[0] + 1;
+    result.serial = depth;
+    return result;
+}
+Envelope wrapParcel(int64 serial) { return Envelope::Filled(makeParcel(serial)); }
+Tracked makeTracked(int64 serial) { Tracked result; result.serial = serial; return result; }
+int64 readParcel(Parcel const& value) { return value.data[0] + value.serial; }
+int64 increment(int64 value) { return value + 1; }
+Parcel observeInitialization(Parcel const& previous) {
+    defer assert(previous.serial == 0);
+    return makeParcel(55);
+}
+
+
+/** 独立堆块；实验采用每块 64 个元素，索引只需两级定位。 */
+struct BootstrapListBlock<T> { T values[64]; };
+/** 块表只保存引用，扩展块表不复制块内元素；由 List.close 统一释放。 */
+struct BootstrapListBlockRef<T> { BootstrapListBlock<T> mut& pointer; };
+
+/** 借鉴分块 deque 布局的 List 实验；支持尾部操作和随机访问，独占各数据块。 */
+struct BootstrapList<T>: Index<T, int64>, Closeable {
+    BootstrapListBlockRef<T>[] blocks;
+    int64 blockCount;
+    int64 tableCapacity;
+    int64 count;
+    bool closed;
+
+    void push(T value) {
+        assert(!self.closed, "分块 List 已关闭");
+        assert(self.count < 9223372036854775807, "分块 List 长度溢出");
+        int64 block = self.count / 64;
+        if (block == self.blockCount) {
+            if (self.blockCount == self.tableCapacity) {
+                int64 capacity = 4;
+                if (self.tableCapacity > 0) {
+                    assert(self.tableCapacity <= 4611686018427387903, "分块 List 容量溢出");
+                    capacity = self.tableCapacity * 2;
+                }
+                BootstrapListBlockRef<T> next[] = new[capacity];
+                int64 i = 0;
+                while (i < self.blockCount) { next[i] = self.blocks[i]; i = i + 1; }
+                self.blocks = next;
+                self.tableCapacity = capacity;
+            }
+            BootstrapListBlock<T> mut& allocated = new BootstrapListBlock<T>;
+            self.blocks[block].pointer = &allocated;
+            self.blockCount = self.blockCount + 1;
+        }
+        self.blocks[block].pointer.values[self.count % 64] = value;
+        self.count = self.count + 1;
+    }
+    T index(int64 key) {
+        assert(key >= 0 && key < self.count, "分块 List 下标越界");
+        return self.blocks[key / 64].pointer.values[key % 64];
+    }
+    void set(int64 key, T value) {
+        assert(key >= 0 && key < self.count, "分块 List 下标越界");
+        self.blocks[key / 64].pointer.values[key % 64] = value;
+    }
+    /** 只缩短有效长度，保留块及槽值，供后续 push 复用。 */
+    T pop() {
+        assert(self.count > 0, "分块 List 为空");
+        self.count = self.count - 1;
+        return self.blocks[self.count / 64].pointer.values[self.count % 64];
+    }
+    int64 len() { return self.count; }
+    /** 显式创建独立副本；Closeable 不实现 Copy 接口，不允许普通按值复制。 */
+    BootstrapList<T> copy() {
+        BootstrapList<T> result;
+        int64 i = 0;
+        while (i < self.count) { result.push(self.index(i)); i = i + 1; }
+        return move result;
+    }
+    /** 释放全部独立块；重复 close 安全，关闭后不再接受追加。 */
+    void close() {
+        int64 i = 0;
+        while (i < self.blockCount) {
+            self.blocks[i].pointer.drop();
+            i = i + 1;
+        }
+        self.blockCount = 0;
+        self.count = 0;
+        self.closed = true;
+    }
+};
+
+struct PerfPoint{int64 x;int64 y;int64 sum(){return self.x+self.y;}};
+int64 work(int64 seed){PerfPoint value;value.x=seed;value.y=7;int64 total=0;int64 i=0;while(i<1000){total=total+value.sum();i=i+1;}return total;}
+void main(){int64 sink=work(0);int64 times[5];int64 r=0;while(r<5){int64 start=std::clock::nowNanos();sink=sink+work(r);times[r]=std::clock::nowNanos()-start;r=r+1;}r=0;while(r<5){println("rep {}",times[r]);r=r+1;}println("sink {}",sink);}

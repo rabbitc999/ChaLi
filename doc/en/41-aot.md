@@ -8,6 +8,8 @@
 
 The Windows x64 toolchain, LLVM libraries, Clang, LLD, compiler-rt builtins and CRT link dependencies are stored in [library/llvm](../../library/llvm/README.md). Run `python library/llvm/setup.py` from the repository root to verify and extract the pinned offline dependency. VM execution and LLVM module export do not require the toolchain.
 
+All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics, bounds checks and liveness checks remain enabled. See [backend ownership optimization](43-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
+
 | Option | Behavior |
 | --- | --- |
 | `--out prefix` | Prefix for the `.ll` module, C ABI header and native output; Windows uses .exe/.dll, Linux uses no executable suffix or .so |

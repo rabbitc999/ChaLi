@@ -115,3 +115,4 @@ The [24-chapter beginner book](../book/en/README.md) includes exercises with ref
 - [Name freeze: the five letters of ChaLi](40-name-freeze.md)
 
 - [AOT compilation](41-aot.md)
+- [Backend ownership optimization and AOT counters](43-backend-ownership.md)

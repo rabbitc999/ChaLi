@@ -13,14 +13,14 @@ bool IsByteStorageType(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 前端类型 → simple_ast 类型：复合 / 数组是指向数据区的 i64 句柄，引用是数据区地址。
+ * @brief 前端类型 → ast 类型：复合 / 数组是指向数据区的 i64 句柄，引用是数据区地址。
  * @param type 类型描述。
  * @param label 变量存储标签；空字符串表示仅转换类型，不登记 opcode 所有权。
  * @retval 对应的类型描述对象。
  */
-simple_ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String &label)
+ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String &label)
 {
-    using simple_ast::Type;
+    using ast::Type;
     if (!type) return Type::i32();
     if (!label.empty())
     {
@@ -32,7 +32,7 @@ simple_ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::
     if (IsStandardOpcode(type, "String")) return Type::stringType();
     switch (type->kind)
     {
-    case MType::Void: return Type::i32();     /* simple_ast 没有 void，用 i32 占位 */
+    case MType::Void: return Type::i32();     /* ast 没有 void，用 i32 占位 */
     case MType::Bool: return Type::boolean(); /* i8：0 / 1 */
     case MType::Char: return Type::make(Type::Kind::Uint, 8);
     case MType::Int:
@@ -54,7 +54,7 @@ simple_ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::
         return (found == g_structType.end()) ? Type::i64() : found->second;
     }
     case MType::Ptr:
-        /* 引用就是"数据区里的地址"，用 simple_ast 的可空引用承载：quadType = i64。
+        /* 引用就是"数据区里的地址"，用 ast 的可空引用承载：quadType = i64。
          * **接口引用**的值是胖引用（对象表里的句柄），同样是 i64。 */
         {
             auto reference = Type::ref(LowerType(type->elem, ""));

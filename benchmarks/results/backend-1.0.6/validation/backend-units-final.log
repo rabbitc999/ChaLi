@@ -1,0 +1,5 @@
+source/ast/test_ast.cpp: 0
+source/stackvm/test_stackvm.cpp: 0
+tests/stackvm_quad_optimization.cpp: 0
+tests/stackvm_optimizer_metadata.cpp: 0
+tests/stackvm_execution_plan.cpp: 0

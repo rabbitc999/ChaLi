@@ -23,7 +23,7 @@ def main():
     WORK.mkdir(parents=True, exist_ok=True)
     unit = WORK / ('unit' + EXE)
     libraries = [ROOT / path for path in ('build/chali-frontend/libparser.a',
-                 'build/chali-runtime/libsimple_ast.a', 'build/chali-stackvm-core/libstackvm.a',
+                 'build/chali-runtime/libast.a', 'build/chali-stackvm-core/libstackvm.a',
                  'build/chali-host-records/librecords.a', 'build/chali-runtime/libpreprocess.a')]
     system = ['-lwinhttp'] if os.name == 'nt' else []
     result = execute('g++', '-std=c++17', '-O3', '-pthread', '-ffunction-sections', '-fdata-sections',

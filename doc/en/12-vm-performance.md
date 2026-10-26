@@ -4,7 +4,23 @@
 **English** · [简体中文](../12-vm-performance.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The current program version is **ChaLi 1.0.5**. The separate [1.0.5 bootstrap container report](../../benchmarks/results/bootstrap-containers-1.0.5/README.md) compares List, Map and Set written in ChaLi against the default containers using the same compiler, with VM, LLVM AOT and raw samples.
+The current program version is **ChaLi 1.0.6**.
+
+## Final 1.0.6 release measurements
+
+This campaign updates AOT, default containers, bootstrap containers and VM benchmarks. AOT defaults to LLVM O3 with the full quad budget, reflection, bounds and liveness checks. Windows x64 with external LLVM was actually validated. Timings use uninstrumented programs; ownership counters are collected separately.
+
+- [Same-version P0–P2 switches](../../benchmarks/results/backend-1.0.6/README.md): eight workloads, raw counters, LLVM IR evidence and longer follow-up measurements of return chains and segmented List.
+- [General AOT versus C++ O3](../../benchmarks/results/aot-1.0.6/README.md): integer and floating-point chains, calls, array reads, array reads/writes and List.
+- [Default-container comparison](../../benchmarks/results/containers-1.0.6/README.md): twelve workloads, interleaving actual 1.0.5/1.0.6 VM and AOT binaries alongside C++, Python and Lua.
+- [ChaLi bootstrap-container AOT comparison](../../benchmarks/results/slot-segmented-1.0.6/README.md): default containers, the original bootstrap arrays, and tuple-slot Map, independent slot Set and segmented List.
+- [VM benchmarks](../../benchmarks/results/vm-1.0.6/README.md): unchanged standard sizes, interleaving actual 1.0.5 and 1.0.6 binaries.
+
+Reports retain gains, regressions and variation for each workload; fewer copies do not by themselves prove an end-to-end speedup. Cross-version AOT comparisons include the old O2 to new O3 default and cannot isolate one optimization. Both sides of the same-version comparison use O3. Historical versions, settings and samples below remain unchanged.
+
+## Historical reports
+
+The separate [1.0.5 bootstrap container report](../../benchmarks/results/bootstrap-containers-1.0.5/README.md) compares List, Map and Set written in ChaLi against the default containers using the same compiler, with VM, LLVM AOT and raw samples.
 
 The [slot Map/Set and segmented List AOT comparison](../../benchmarks/results/slot-segmented-1.0.5/README.md) tests a `{ Value, HasValue, HashKey }` Map, an independent Set slot array, and a List using a segmented deque layout. This campaign samples AOT separately and preserves the actual compiler version and raw measurements.
 

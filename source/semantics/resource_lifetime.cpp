@@ -17,7 +17,7 @@ bool IsDestructibleValue(const std::shared_ptr<MType> &type)
 struct MResourceCloseState
 {
     Memory::String flag;
-    Memory::Vector<simple_ast::NodePtr> begins, calls;
+    Memory::Vector<ast::NodePtr> begins, calls;
 };
 Memory::Map<Memory::String, MResourceCloseState> g_resourceCloseStates;
 Memory::Map<Memory::String, Memory::String> g_resourceCloseAliases;
@@ -33,9 +33,9 @@ Memory::String AllocateName(const Memory::String &base);
  * @param call 原关闭操作。
  * @return 关闭后更新标志的条件语句。
  */
-simple_ast::NodePtr GuardResourceClose(const Memory::String &flag, const simple_ast::NodePtr &call)
+ast::NodePtr GuardResourceClose(const Memory::String &flag, const ast::NodePtr &call)
 {
-    using simple_ast::Node;
+    using ast::Node;
     return Node::ifThenElse(Node::binary("==", Node::var(flag), Node::i(0)),
                             Node::block({ call, Node::assign(flag, Node::i(1)) }), nullptr);
 }
@@ -48,11 +48,11 @@ Memory::String EnsureResourceCloseFlag(const Memory::String &emitted)
 {
     auto &state = g_resourceCloseStates[emitted];
     if (!state.flag.empty() || state.begins.empty()) return state.flag;
-    using simple_ast::Node;
+    using ast::Node;
     state.flag = AllocateName("__chali_closed");
     for (const auto &begin : state.begins)
     {
-        begin->kids.push_back(Node::declare(state.flag, simple_ast::Type::i64()));
+        begin->kids.push_back(Node::declare(state.flag, ast::Type::i64()));
         begin->kids.push_back(Node::assign(state.flag, Node::i(0)));
     }
     for (const auto &call : state.calls)
@@ -68,11 +68,11 @@ Memory::String EnsureResourceCloseFlag(const Memory::String &emitted)
  * @param call 用户显式关闭调用。
  * @return 更新关闭标志的表达式；借用参数沿用原调用。
  */
-simple_ast::NodePtr FinishExplicitClose(const Memory::String &emitted, const simple_ast::NodePtr &call)
+ast::NodePtr FinishExplicitClose(const Memory::String &emitted, const ast::NodePtr &call)
 {
     const auto flag = EnsureResourceCloseFlag(emitted);
     if (flag.empty()) return call;
-    using simple_ast::Node;
+    using ast::Node;
     return Node::sequence({ Node::exprStmt(call), Node::assign(flag, Node::i(1)) }, Node::i(0));
 }
 
@@ -115,11 +115,11 @@ bool g_usesLanguageMove = false;  ///< 当前编译单元是否需要引用可�
  * @param action 待执行操作。
  * @return 受运行时存活状态保护的语句。
  */
-simple_ast::NodePtr GuardLiveAggregate(const Memory::String &owner,
-                                       const simple_ast::NodePtr &value, const simple_ast::NodePtr &action)
+ast::NodePtr GuardLiveAggregate(const Memory::String &owner,
+                                const ast::NodePtr &value, const ast::NodePtr &action)
 {
     if (!g_usesLanguageMove) return action;
-    using simple_ast::Node;
+    using ast::Node;
     const auto found = g_structs.find(owner);
     const int bytes = found == g_structs.end() ? 8 : std::max(8, found->second.slotCount * 8);
     return Node::ifThenElse(Node::call("__std_move_live", { "address", "bytes", "type" },
@@ -133,10 +133,10 @@ simple_ast::NodePtr GuardLiveAggregate(const Memory::String &owner,
  * @param bytes 存储字节数。
  * @return 初始化标记语句。
  */
-simple_ast::NodePtr BeginAggregateLifetime(const simple_ast::NodePtr &value, int bytes)
+ast::NodePtr BeginAggregateLifetime(const ast::NodePtr &value, int bytes)
 {
-    if (!g_usesLanguageMove) return simple_ast::Node::block({});
-    using simple_ast::Node;
+    if (!g_usesLanguageMove) return ast::Node::block({});
+    using ast::Node;
     const auto begin = Node::block({ Node::exprStmt(Node::call("__std_move_begin", { "address", "bytes" },
                                                                { value, Node::i(std::max(8, bytes)) })) });
     if (value && value->kind == Node::Kind::Var)
@@ -145,7 +145,7 @@ simple_ast::NodePtr BeginAggregateLifetime(const simple_ast::NodePtr &value, int
         state.begins.push_back(begin);
         if (!state.flag.empty())
         {
-            begin->kids.push_back(Node::declare(state.flag, simple_ast::Type::i64()));
+            begin->kids.push_back(Node::declare(state.flag, ast::Type::i64()));
             begin->kids.push_back(Node::assign(state.flag, Node::i(0)));
         }
     }
@@ -158,10 +158,10 @@ simple_ast::NodePtr BeginAggregateLifetime(const simple_ast::NodePtr &value, int
  * @param value 存储地址。
  * @param out 接收标记语句。
  */
-void AppendMovedAggregate(const Memory::String &owner, const simple_ast::NodePtr &value,
-                          Memory::Vector<simple_ast::NodePtr> *out)
+void AppendMovedAggregate(const Memory::String &owner, const ast::NodePtr &value,
+                          Memory::Vector<ast::NodePtr> *out)
 {
-    using simple_ast::Node;
+    using ast::Node;
     const auto found = g_structs.find(owner);
     if (found == g_structs.end()) return;
     out->push_back(Node::exprStmt(Node::call("__std_move_end", { "address", "bytes", "type" },
@@ -179,16 +179,16 @@ void AppendMovedAggregate(const Memory::String &owner, const simple_ast::NodePtr
  * @return 找到实现时返回调用语句，没有实现时返回空节点。
  * @note 优先使用语言方法；宿主实现沿用接口登记的原生符号。
  */
-simple_ast::NodePtr MakeInterfaceMethodCallAt(const Memory::String &structName,
-                                              const Memory::String &methodName,
-                                              const simple_ast::NodePtr &value)
+ast::NodePtr MakeInterfaceMethodCallAt(const Memory::String &structName,
+                                       const Memory::String &methodName,
+                                       const ast::NodePtr &value)
 {
     const auto definition = g_structs.find(structName);
     if (definition != g_structs.end())
     {
         for (const MMethod &method : definition->second.methods)
             if (!method.isStatic && !method.isConstructor && method.source == methodName && method.params.empty())
-                return simple_ast::Node::exprStmt(simple_ast::Node::call(
+                return ast::Node::exprStmt(ast::Node::call(
                     structName + "." + method.name, { "self" }, { value }));
     }
     for (const MHostInterfaceImpl &implementation : g_hostInterfaceImpls)
@@ -205,7 +205,7 @@ simple_ast::NodePtr MakeInterfaceMethodCallAt(const Memory::String &structName,
             }
         if (!declares) continue;
         const Memory::String symbol = implementation.methodQualified ? implementation.function + "." + methodName : implementation.function;
-        return simple_ast::Node::exprStmt(simple_ast::Node::call(
+        return ast::Node::exprStmt(ast::Node::call(
             symbol, { "__chali_self" }, { value }));
     }
     return nullptr;
@@ -217,12 +217,12 @@ simple_ast::NodePtr MakeInterfaceMethodCallAt(const Memory::String &structName,
  * @param value 作为 self 传入、且求值无副作用的聚合存储地址。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr MakeDropCallAt(const Memory::String &structName,
-                                   const simple_ast::NodePtr &value)
+ast::NodePtr MakeDropCallAt(const Memory::String &structName,
+                            const ast::NodePtr &value)
 {
     const auto call = MakeInterfaceMethodCallAt(structName, "drop", value);
     if (!call) return nullptr;
-    using simple_ast::Node;
+    using ast::Node;
     const auto found = g_structs.find(structName);
     const int bytes = found == g_structs.end() ? 8 : std::max(8, found->second.slotCount * 8);
     const auto mark = Node::exprStmt(Node::call("__std_move_end", { "address", "bytes", "type" },
@@ -236,13 +236,13 @@ simple_ast::NodePtr MakeDropCallAt(const Memory::String &structName,
  * @param value 作为 self 传入、且求值无副作用的聚合存储地址。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr MakeCloseCallAt(const Memory::String &structName,
-                                    const simple_ast::NodePtr &value)
+ast::NodePtr MakeCloseCallAt(const Memory::String &structName,
+                             const ast::NodePtr &value)
 {
     const auto call = MakeInterfaceMethodCallAt(structName, "close", value);
     if (!call) return nullptr;
     const auto guarded = GuardLiveAggregate(structName, value, call);
-    if (!value || value->kind != simple_ast::Node::Kind::Var) return guarded;
+    if (!value || value->kind != ast::Node::Kind::Var) return guarded;
     const auto alias = g_resourceCloseAliases.find(value->text);
     const auto name = alias == g_resourceCloseAliases.end() ? value->text : alias->second;
     auto &state = g_resourceCloseStates[name];
@@ -257,7 +257,7 @@ simple_ast::NodePtr MakeCloseCallAt(const Memory::String &structName,
  * @param runtimeArray 是否采用运行时数组块首布局。
  * @return 释放当前值并清槽的语句。
  */
-simple_ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray);
+ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray);
 
 /**
  * @brief 生成聚合拥有叶子的递归回收调用，定义见下文。
@@ -265,26 +265,26 @@ simple_ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray);
  * @param value 待回收叶子所属聚合的存储地址。
  * @return 递归回收调用；聚合没有拥有叶子时返回空节点。
  */
-simple_ast::NodePtr MakeAggregateRelease(const Memory::String &owner, const simple_ast::NodePtr &value);
+ast::NodePtr MakeAggregateRelease(const Memory::String &owner, const ast::NodePtr &value);
 /**
  * @brief 为主函数正常返回生成全局资源的收尾语句。
  * @return 按登记逆序生成的全局关闭、聚合回收及拥有槽释放语句。
  * @note 应在全部函数降级后生成，以使用完整的全局所有权和关闭路径登记；异常中止不执行此收尾。
  */
-Memory::Vector<simple_ast::NodePtr> EmitGlobalCleanupStatements()
+Memory::Vector<ast::NodePtr> EmitGlobalCleanupStatements()
 {
-    Memory::Vector<simple_ast::NodePtr> statements;
+    Memory::Vector<ast::NodePtr> statements;
     for (auto it = g_globalCleanupItems.rbegin(); it != g_globalCleanupItems.rend(); ++it)
     {
         /* 只有最外那层（全局那层）登记的值才敢收尾；里层块的变量可能没定义过。 */
         if (!it->outermost) continue;
         if (it->close)
-            if (const simple_ast::NodePtr call = MakeCloseCallAt(
-                    it->owner, simple_ast::Node::var(it->name)))
+            if (const ast::NodePtr call = MakeCloseCallAt(
+                    it->owner, ast::Node::var(it->name)))
                 statements.push_back(call);
         if (it->aggregate)
         {
-            if (const auto release = MakeAggregateRelease(it->owner, simple_ast::Node::var(it->name)))
+            if (const auto release = MakeAggregateRelease(it->owner, ast::Node::var(it->name)))
                 statements.push_back(release);
         }
         else if (it->owner.empty())
@@ -302,16 +302,16 @@ Memory::Vector<simple_ast::NodePtr> EmitGlobalCleanupStatements()
  * @param close 是否调用当前聚合自己的 Closeable 实现。
  * @note 字段按各自接口递归终结；用户析构不应再次手动析构同一字段。
  */
-void AppendDestruction(Memory::Vector<simple_ast::NodePtr> *out, const simple_ast::NodePtr &value,
+void AppendDestruction(Memory::Vector<ast::NodePtr> *out, const ast::NodePtr &value,
                        const Memory::String &structName, bool drop, bool close)
 {
     const auto definition = g_structs.find(structName);
     if (definition == g_structs.end()) return;
     if (close)
-        if (const simple_ast::NodePtr selfClose = MakeCloseCallAt(structName, value))
+        if (const ast::NodePtr selfClose = MakeCloseCallAt(structName, value))
             out->push_back(selfClose);
     if (drop)
-        if (const simple_ast::NodePtr selfDrop = MakeDropCallAt(structName, value))
+        if (const ast::NodePtr selfDrop = MakeDropCallAt(structName, value))
             out->push_back(selfDrop);
     // 枚举只有当前标签的载荷已构造；不能对 Err 中未激活的 Ok 资源调用 Drop。
     const auto enumeration = g_enums.find(structName);
@@ -319,21 +319,21 @@ void AppendDestruction(Memory::Vector<simple_ast::NodePtr> *out, const simple_as
     {
         for (const auto &variant : enumeration->second.variants)
         {
-            Memory::Vector<simple_ast::NodePtr> payload;
+            Memory::Vector<ast::NodePtr> payload;
             for (auto it = variant.payloads.rbegin(); it != variant.payloads.rend(); ++it)
             {
                 if (!it->type || it->type->kind != MType::Struct) continue;
                 for (const auto &field : definition->second.fields)
                     if (field.name == it->storageName)
                     {
-                        AppendDestruction(&payload, simple_ast::Node::offset(value, simple_ast::Node::i(field.slot), 8),
+                        AppendDestruction(&payload, ast::Node::offset(value, ast::Node::i(field.slot), 8),
                                           it->type->name, StructHasInterface(it->type->name, "Drop"), StructHasInterface(it->type->name, "Closeable"));
                         break;
                     }
             }
-            if (!payload.empty()) out->push_back(simple_ast::Node::ifThenElse(
-                simple_ast::Node::binary("==", simple_ast::Node::loadInt(value), simple_ast::Node::i(variant.tag)),
-                simple_ast::Node::block(payload), nullptr));
+            if (!payload.empty()) out->push_back(ast::Node::ifThenElse(
+                ast::Node::binary("==", ast::Node::loadInt(value), ast::Node::i(variant.tag)),
+                ast::Node::block(payload), nullptr));
         }
         return;
     }
@@ -344,14 +344,14 @@ void AppendDestruction(Memory::Vector<simple_ast::NodePtr> *out, const simple_as
             const int count = static_cast<int>(FixedArrayElementCount(it->type->dims));
             const auto element = it->type->elem;
             for (int index = count; index-- > 0;) AppendDestruction(out,
-                                                                    simple_ast::Node::offset(value, simple_ast::Node::i(it->slot + index * (StructStride(element) / 8)), 8),
+                                                                    ast::Node::offset(value, ast::Node::i(it->slot + index * (StructStride(element) / 8)), 8),
                                                                     element->name, StructHasInterface(element->name, "Drop"), StructHasInterface(element->name, "Closeable"));
             continue;
         }
         if (!it->type || it->type->kind != MType::Struct) continue;
         /* 取字段**地址**（`基址 + 槽号×8`，见 FieldAddress），不是 `member` 取出的值：
          * `drop` 的 `self` 要的是结构体地址，`member` 会 load 成标量值（拿值当地址就错了）。 */
-        AppendDestruction(out, simple_ast::Node::offset(value, simple_ast::Node::i(it->slot), 8),
+        AppendDestruction(out, ast::Node::offset(value, ast::Node::i(it->slot), 8),
                           it->type->name, StructHasInterface(it->type->name, "Drop"),
                           StructHasInterface(it->type->name, "Closeable"));
     }
@@ -364,12 +364,12 @@ void AppendDestruction(Memory::Vector<simple_ast::NodePtr> *out, const simple_as
  * @return 拥有叶子存在时返回辅助函数调用，否则返回空节点。
  * @note 调用安排在用户 close/drop 之后；拥有槽由编译器清零，后续回收跳过空槽。
  */
-simple_ast::NodePtr MakeAggregateRelease(const Memory::String &ownerName,
-                                         const simple_ast::NodePtr &value)
+ast::NodePtr MakeAggregateRelease(const Memory::String &ownerName,
+                                  const ast::NodePtr &value)
 {
     if (ownerName.empty() || !StructHasOwnedLeaves(ownerName)) return nullptr;
     MarkStructNeedsCleanup(ownerName);
-    return simple_ast::Node::exprStmt(simple_ast::Node::call(
+    return ast::Node::exprStmt(ast::Node::call(
         AggregateReleaseName(ownerName), { "__chali_agg" }, { value }));
 }
 
@@ -379,15 +379,15 @@ simple_ast::NodePtr MakeAggregateRelease(const Memory::String &ownerName,
  * @param value 作为 self 传入、且求值无副作用的聚合存储地址。
  * @retval 生成的低层语法节点。
  */
-Memory::Vector<simple_ast::NodePtr> MakeAggregateCleanup(
-    const std::shared_ptr<MType> &type, const simple_ast::NodePtr &value)
+Memory::Vector<ast::NodePtr> MakeAggregateCleanup(
+    const std::shared_ptr<MType> &type, const ast::NodePtr &value)
 {
-    Memory::Vector<simple_ast::NodePtr> stmts;
+    Memory::Vector<ast::NodePtr> stmts;
     const Memory::String owner = StructNameOf(type);
     if (owner.empty()) return stmts;
     AppendDestruction(&stmts, value, owner, StructHasInterface(owner, "Drop"),
                       StructHasInterface(owner, "Closeable"));
-    if (const simple_ast::NodePtr release = MakeAggregateRelease(owner, value))
+    if (const ast::NodePtr release = MakeAggregateRelease(owner, value))
         stmts.push_back(release);
     AppendMovedAggregate(owner, value, &stmts);
     return stmts;
@@ -398,29 +398,29 @@ Memory::Vector<simple_ast::NodePtr> MakeAggregateCleanup(
  * @param item 待追加或处理的节点编号。
  * @retval 生成的低层语法节点。
  */
-simple_ast::NodePtr MakeDestructorCall(const MOwnedScope::Destructor &item)
+ast::NodePtr MakeDestructorCall(const MOwnedScope::Destructor &item)
 {
-    Memory::Vector<simple_ast::NodePtr> stmts;
-    AppendDestruction(&stmts, simple_ast::Node::var(item.name), item.owner, item.drop, item.close);
+    Memory::Vector<ast::NodePtr> stmts;
+    AppendDestruction(&stmts, ast::Node::var(item.name), item.owner, item.drop, item.close);
     if (item.aggregate)
-        if (const simple_ast::NodePtr release =
-                MakeAggregateRelease(item.owner, simple_ast::Node::var(item.name)))
+        if (const ast::NodePtr release =
+                MakeAggregateRelease(item.owner, ast::Node::var(item.name)))
             stmts.push_back(release);
-    if (stmts.empty()) return simple_ast::Node::block({});
-    const auto cleanup = GuardLiveAggregate(item.owner, simple_ast::Node::var(item.name), simple_ast::Node::block(stmts));
+    if (stmts.empty()) return ast::Node::block({});
+    const auto cleanup = GuardLiveAggregate(item.owner, ast::Node::var(item.name), ast::Node::block(stmts));
     stmts = { cleanup };
     if (item.temporary)
     {
         // 独立存储随后由所有者清理释放并清槽，不能在释放块之前丢失地址。
         if (!g_parameterValueStorage.count(item.name))
-            stmts.push_back(simple_ast::Node::assign(item.name, simple_ast::Node::i(0)));
-        return simple_ast::Node::ifThenElse(
-            simple_ast::Node::binary("!=", simple_ast::Node::var(item.name), simple_ast::Node::i(0)),
-            simple_ast::Node::block(stmts), nullptr);
+            stmts.push_back(ast::Node::assign(item.name, ast::Node::i(0)));
+        return ast::Node::ifThenElse(
+            ast::Node::binary("!=", ast::Node::var(item.name), ast::Node::i(0)),
+            ast::Node::block(stmts), nullptr);
     }
-    if (stmts.empty()) return simple_ast::Node::block({});
+    if (stmts.empty()) return ast::Node::block({});
     if (stmts.size() == 1u) return stmts.front();
-    return simple_ast::Node::block(stmts);
+    return ast::Node::block(stmts);
 }
 
 /**
@@ -469,12 +469,12 @@ Memory::String AllocateName(const Memory::String &base);
  * @param dropCall 原调用节点。
  * @return 带生命周期守卫的清理语句块。
  */
-simple_ast::NodePtr FinishExplicitDrop(const Memory::String &ownerName,
-                                       const Memory::String &emitted,
-                                       const simple_ast::NodePtr &receiver,
-                                       const simple_ast::NodePtr &dropCall)
+ast::NodePtr FinishExplicitDrop(const Memory::String &ownerName,
+                                const Memory::String &emitted,
+                                const ast::NodePtr &receiver,
+                                const ast::NodePtr &dropCall)
 {
-    using simple_ast::Node;
+    using ast::Node;
     (void)dropCall;
     const auto address = AllocateName("__chali_explicit_drop");
     if (!emitted.empty())
@@ -486,7 +486,7 @@ simple_ast::NodePtr FinishExplicitDrop(const Memory::String &ownerName,
     (void)emitted;
     const auto type = NamedType(ownerName);
     const int bytes = std::max(8, StructStride(type));
-    return Node::block({ Node::declare(address, simple_ast::Type::i64()), Node::assign(address, receiver),
+    return Node::block({ Node::declare(address, ast::Type::i64()), Node::assign(address, receiver),
                          Node::exprStmt(Node::call("__std_move_require", { "address", "bytes", "type" },
                                                    { Node::var(address), Node::i(bytes), Node::i(TypeIdOf(type)) })),
                          Node::block(stmts) });
@@ -499,29 +499,29 @@ simple_ast::NodePtr FinishExplicitDrop(const Memory::String &ownerName,
  *        所以还的是 `句柄 - 8`（和显式 `drop` 一个规矩）。
  * @return 语句节点。
  */
-simple_ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray = false)
+ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray = false)
 {
     const auto storage = g_referenceStorage.find(emitted);
     const bool indirect = storage != g_referenceStorage.end();
-    simple_ast::NodePtr value = indirect ? simple_ast::Node::loadInt(simple_ast::Node::var(storage->second)) : simple_ast::Node::var(emitted);
+    ast::NodePtr value = indirect ? ast::Node::loadInt(ast::Node::var(storage->second)) : ast::Node::var(emitted);
     const auto handle = value;
     if (runtimeArray || g_arrayElementTypes.count(emitted) != 0u)
     {
-        value = simple_ast::Node::binary("-", value, simple_ast::Node::i(8));
+        value = ast::Node::binary("-", value, ast::Node::i(8));
     }
     const auto ownedType = g_opcodeValueTypes.find(emitted);
     const bool referenceAllocation = std::any_of(g_referenceStorage.begin(), g_referenceStorage.end(), [&](const auto &entry) { return entry.second == emitted; });
     const auto *opcode = referenceAllocation || ownedType == g_opcodeValueTypes.end() ? nullptr : FindOpcodeDefinition(ownedType->second);
-    const auto opcodeRelease = opcode ? simple_ast::Node::exprStmt(simple_ast::Node::call(opcode->destroy, { "__chali_v" }, { value })) : simple_ast::Node::release(value);
-    const auto release = simple_ast::Node::ifThenElse(
-        simple_ast::Node::binary("!=", handle, simple_ast::Node::i(0)), opcodeRelease, nullptr);
+    const auto opcodeRelease = opcode ? ast::Node::exprStmt(ast::Node::call(opcode->destroy, { "__chali_v" }, { value })) : ast::Node::release(value);
+    const auto release = ast::Node::ifThenElse(
+        ast::Node::binary("!=", handle, ast::Node::i(0)), opcodeRelease, nullptr);
     /* 释放资源后清空拥有槽；引用单元本身保留到其所属作用域退出。
      * 新值已由 DeferNewValue 保存，因此自赋值拼接不会提前销毁源资源。 */
-    return simple_ast::Node::block({
+    return ast::Node::block({
         release,
-        indirect ? simple_ast::Node::storeAt(simple_ast::Node::var(storage->second),
-                                             simple_ast::Node::i(0), simple_ast::Type::i64()) :
-                   simple_ast::Node::assign(emitted, simple_ast::Node::i(0)),
+        indirect ? ast::Node::storeAt(ast::Node::var(storage->second),
+                                      ast::Node::i(0), ast::Type::i64()) :
+                   ast::Node::assign(emitted, ast::Node::i(0)),
     });
 }
 
@@ -532,14 +532,14 @@ simple_ast::NodePtr MakeDrop(const Memory::String &emitted, bool runtimeArray = 
  * @param out 接收元素清理与资源释放语句的列表。
  */
 void AppendOwnedDropByName(const Memory::String &name, bool runtimeArray,
-                           Memory::Vector<simple_ast::NodePtr> *out)
+                           Memory::Vector<ast::NodePtr> *out)
 {
     const auto element = g_arrayElementTypes.find(name);
     if (element != g_arrayElementTypes.end() && ArrayElementNeedsRelease(element->second))
     {
         const auto fixed = g_arrayFixedCounts.find(name);
         const int fixedCount = fixed == g_arrayFixedCounts.end() ? -1 : fixed->second;
-        if (const simple_ast::NodePtr release =
+        if (const ast::NodePtr release =
                 MakeArrayElementRelease(name, element->second, fixedCount))
             out->push_back(release);
     }
@@ -554,7 +554,7 @@ void AppendOwnedDropByName(const Memory::String &name, bool runtimeArray,
  * @note 数组类型补齐元素登记；其他类型复用命名拥有槽的回收入口。
  */
 void AppendOwnedDrop(const Memory::String &name, const std::shared_ptr<MType> &type,
-                     Memory::Vector<simple_ast::NodePtr> *out)
+                     Memory::Vector<ast::NodePtr> *out)
 {
     if (!type || type->kind != MType::Array)
     {
@@ -577,7 +577,7 @@ void AppendOwnedDrop(const Memory::String &name, const std::shared_ptr<MType> &t
  * @param out 接收生成的资源回收语句。
  */
 void AppendDrops(const Memory::Vector<MOwnedScope::Item> &names, const Memory::String &keep,
-                 Memory::Vector<simple_ast::NodePtr> *out)
+                 Memory::Vector<ast::NodePtr> *out)
 {
     for (auto it = names.rbegin(); it != names.rend(); ++it)
     {
@@ -594,7 +594,7 @@ void AppendDrops(const Memory::Vector<MOwnedScope::Item> &names, const Memory::S
  * @param out 接收处理结果的输出对象。
  */
 void AppendScopeDrops(const MOwnedScope &scope, const Memory::String &keep,
-                      Memory::Vector<simple_ast::NodePtr> *out)
+                      Memory::Vector<ast::NodePtr> *out)
 {
     out->insert(out->end(), scope.finalizers.rbegin(), scope.finalizers.rend());
     for (auto it = scope.destructors.rbegin(); it != scope.destructors.rend(); ++it)
@@ -609,7 +609,7 @@ void AppendScopeDrops(const MOwnedScope &scope, const Memory::String &keep,
  * @param out 接收从内向外排列的作用域清理语句。
  */
 void AppendDropsAbove(std::size_t depth, const Memory::String &keep,
-                      Memory::Vector<simple_ast::NodePtr> *out)
+                      Memory::Vector<ast::NodePtr> *out)
 {
     for (std::size_t index = g_ownedScopes.size(); index > depth; --index)
     {
@@ -622,7 +622,7 @@ void AppendDropsAbove(std::size_t depth, const Memory::String &keep,
  * @param keep 清理时需要保留的对象集合。
  * @param out 接收处理结果的输出对象。
  */
-void AppendDropsAll(const Memory::String &keep, Memory::Vector<simple_ast::NodePtr> *out)
+void AppendDropsAll(const Memory::String &keep, Memory::Vector<ast::NodePtr> *out)
 {
     AppendDropsAbove(0u, keep, out);
 }
@@ -633,7 +633,7 @@ void AppendDropsAll(const Memory::String &keep, Memory::Vector<simple_ast::NodeP
  * @param out 接收处理结果的输出对象。
  */
 void AppendDropsAllExcept(const Memory::Set<Memory::String> &keep,
-                          Memory::Vector<simple_ast::NodePtr> *out)
+                          Memory::Vector<ast::NodePtr> *out)
 {
     for (std::size_t index = g_ownedScopes.size(); index > 0u; --index)
     {

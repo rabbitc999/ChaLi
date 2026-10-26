@@ -4,7 +4,23 @@
 [English](en/12-vm-performance.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-当前程序版本为 **ChaLi 1.0.5**。[1.0.5 自举容器对照报告](../benchmarks/results/bootstrap-containers-1.0.5/README.md)单独比较同版本编译器下 ChaLi 实现的 List、Map、Set 与默认容器，提供 VM、LLVM AOT 和原始样本。
+当前程序版本为 **ChaLi 1.0.6**。
+
+## 1.0.6 最终发行版实测
+
+本轮更新了 AOT、默认容器、自举容器及 VM 基准。AOT 默认 LLVM O3，完整四元式预算、反射、边界和存活检查保留；Windows x64、外置 LLVM 变体完成实际验证。正式计时使用未插桩产物，所有权计数另行采集。
+
+- [P0～P2 同版本优化开关对照](../benchmarks/results/backend-1.0.6/README.md)：8 项负载，包含原始计数、LLVM IR 证据和返回链／分块 List 的追加复测。
+- [通用 AOT 与 C++ O3](../benchmarks/results/aot-1.0.6/README.md)：整数链、浮点链、调用、数组读、数组读写及 List。
+- [默认容器性能对比](../benchmarks/results/containers-1.0.6/README.md)：12 项负载，交错测量真实 1.0.5／1.0.6 VM、AOT，并加入 C++、Python、Lua。
+- [ChaLi 自举容器 AOT 对比](../benchmarks/results/slot-segmented-1.0.6/README.md)：默认容器、原自举数组实现，以及三元组 Map、独立槽位 Set、分块 List。
+- [VM 基准](../benchmarks/results/vm-1.0.6/README.md)：沿用标准规模，真实 1.0.5／1.0.6 交错测量。
+
+各报告逐项保留提升、回退和波动，不将减少复制次数直接等同于端到端加速。跨版本 AOT 对照同时包含旧版 O2→新版 O3，不能单独归因某个优化；同版本对照两侧均用 O3。下方历史数据保留原版本、配置和样本。
+
+## 历史报告
+
+[1.0.5 自举容器对照报告](../benchmarks/results/bootstrap-containers-1.0.5/README.md)单独比较同版本编译器下 ChaLi 实现的 List、Map、Set 与默认容器，提供 VM、LLVM AOT 和原始样本。
 
 [槽位 Map/Set 与分块 List 的 AOT 对照](../benchmarks/results/slot-segmented-1.0.5/README.md)进一步测试 `{ Value, HasValue, HashKey }` Map、独立 Set 槽位数组，以及参考分块 deque 布局的 List。该轮单独采集 AOT 数据，保留实际编译器版本与原始样本。
 

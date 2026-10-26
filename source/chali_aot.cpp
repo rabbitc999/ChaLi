@@ -253,6 +253,13 @@ struct Translator
     std::set<std::string> addressedFunctions;                     ///< 数据映像中实际保存了地址的函数。
     std::set<std::string> callbackReachable;                      ///< 可从函数值回调到达的语言函数。
     bool watchdogUsed = false;                                    ///< 可达程序使用看门狗时生成逻辑指令安全点。
+    bool profileOwnership = false;                                ///< 显式启用时插入所有权操作计数，不用于正式计时。
+    bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
+    bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
+    bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
+    bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
+    std::map<std::size_t, Memory::String> functionAddresses;      ///< 不可变函数标签数据地址到原入口。
+    std::map<std::string, std::size_t> profileSites;              ///< 操作种类、函数和四元式位置对应的常量字符串。
     std::map<std::string, std::set<std::string>> temporaryUsers;  ///< 临时符号的实际使用函数，用于识别跨函数共享值。
 
     /**
@@ -260,7 +267,19 @@ struct Translator
      * @param in 本次 AOT 请求。
      * @param out 可选的诊断容器。
      */
-    explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out) {}
+    explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out)
+    {
+        const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
+        profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
+        const auto *cache = std::getenv("CHALI_NO_AOT_ADDRESS_CACHE");
+        cacheAddresses = !(cache && *cache);
+        const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
+        bulkCopies = !(bulk && *bulk);
+        const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
+        inlineHints = !(hint && *hint);
+        const auto *direct = std::getenv("CHALI_NO_AOT_DIRECT_CALLS");
+        directFunctionValues = !(direct && *direct);
+    }
 
     /**
      * @brief 登记翻译错误并限制级联诊断数量。
@@ -396,6 +415,7 @@ void analyze(Translator &state)
             {
                 entryLabels.insert(std::string(label.c_str()));
                 state.addressedFunctions.insert(std::string(label.c_str()));
+                state.functionAddresses[address] = label;
             }
         }
     }
@@ -815,6 +835,8 @@ struct Builder
     std::map<std::size_t, std::size_t> lineOccurrences;
     std::size_t serial = 0;
     std::vector<std::pair<Memory::String, Value>> arguments;
+    std::map<std::pair<Text, int>, Value> checkedAddresses;  ///< 地址符号及精确访问宽度对应的验证结果。
+    std::map<Text, Memory::String> knownFunctions;           ///< 当前直线路径内尚未失效的函数值。
 
     /**
      * @brief 建立函数的帧槽集合及本函数内的跳转标签表。
@@ -976,6 +998,12 @@ struct Builder
      */
     void write(const Memory::String &token, Value value)
     {
+        knownFunctions.erase(textOf(token));
+        for (auto it = checkedAddresses.begin(); it != checkedAddresses.end();)
+            if (it->first.first == textOf(token))
+                it = checkedAddresses.erase(it);
+            else
+                ++it;
         if (token.empty() || token == "_" || value.type == "void") return;
         value = convert(value, type(token));
         body += "  store " + value.type + " " + value.text + ", ptr " + pointer(token) + "\n";
@@ -1056,6 +1084,11 @@ struct Builder
             if (!resultType.empty() && resultType.front() == 'i')
                 result = convert(result, "i64", signature.resultType.find("unsigned") != Memory::String::npos);
             write(destination, result);
+            return true;
+        }
+        if (callee == "__chali_copy_struct" && state.bulkCopies && !state.watchdogUsed && arguments.size() == 3u)
+        {
+            write(destination, call("chali_host_copy_words", "i64", { convert(argument(0), "i64"), convert(argument(1), "i64"), convert(argument(2), "i64") }));
             return true;
         }
         const auto found = state.functionByLabel.find(textOf(callee));
@@ -1241,7 +1274,11 @@ struct Builder
             if (at != 0u) signature += ", ";
             signature += type(function.parameters[at]) + " %p" + std::to_string(at);
         }
-        signature += ") uwtable section \"chali_code\" {\nentry:\n";
+        signature += ") ";
+        if (state.inlineHints && !state.watchdogUsed && !function.exported
+            && !state.addressedFunctions.count(textOf(function.label)) && function.end - function.labelIndex <= 12u)
+            signature += "inlinehint ";
+        signature += "uwtable section \"chali_code\" {\nentry:\n";
         std::size_t argumentCapacity = 1;
         for (std::size_t at = function.begin; at < function.end; ++at)
             if (state.request.quads->quads[at].op == "param") ++argumentCapacity;
@@ -1262,6 +1299,10 @@ struct Builder
             const auto &quad = state.request.quads->quads[at];
             const auto a = quad.arg(0), b = quad.arg(1), c = quad.arg(2);
             const auto &op = quad.op;
+            if (op == "label" || op == "j" || op == "jz" || op == "jnz" || op == "ret" || op == "halt"
+                || op == "call" || op == "callptr" || op == "alloc" || op == "drop" || op == "free") checkedAddresses.clear();
+            if (op == "label" || op == "j" || op == "jz" || op == "jnz" || op == "ret" || op == "halt"
+                || op == "call" || op == "alloc" || op == "drop" || op == "free" || op.rfind("store", 0) == 0u) knownFunctions.clear();
             if (op == "call" || op == "callptr" || op == "alloc" || op == "checkptr" || op == "check" || op.rfind("load", 0) == 0u || op.rfind("store", 0) == 0u || op.rfind("/", 0) == 0u || op.rfind("%", 0) == 0u || op.rfind("<<", 0) == 0u || op.rfind(">>", 0) == 0u)
             {
                 const auto file = state.sourceFiles.emplace(textOf(quad.sourceFile), state.sourceFiles.size()).first;
@@ -1275,6 +1316,32 @@ struct Builder
                 const auto steps = cost == logicalCosts.end() ? 1u : std::max<std::size_t>(1u, cost->second / lineOccurrences[quad.line]);
                 call("chali_host_tick", "void", { { "i64", std::to_string(steps) } });
             }
+            if (state.profileOwnership)
+            {
+                Text event;
+                Value bytes{ "i64", "0" };
+                if (op == "alloc")
+                {
+                    event = "allocation_request";
+                    bytes = convert(read(a), "i64");
+                }
+                else if (op == "drop" || op == "free")
+                    event = "cleanup";
+                else if (op == "call")
+                    event = "call:" + textOf(a);
+                else if (op == "callptr")
+                    event = "indirect_call";
+                else if (op == ":=" && c.rfind("__chali_move_source", 0) == 0u)
+                    event = "aggregate_move";
+                else if (op == ":=" && c.rfind("__chali_array_copy_source", 0) == 0u)
+                    event = "array_copy";
+                if (!event.empty())
+                {
+                    const Text site = event + "\t" + textOf(function.label) + "\t" + textOf(quad.sourceFile) + ":" + std::to_string(quad.sourceLine) + "\tquad=" + std::to_string(at);
+                    const auto index = state.profileSites.emplace(site, state.profileSites.size()).first->second;
+                    call("chali_backend_profile_event", "void", { { "ptr", "@backend_profile_site" + std::to_string(index) }, bytes });
+                }
+            }
             Memory::String base, suffix;
             splitOperation(op, base, suffix);
             bool terminated = false;
@@ -1282,7 +1349,12 @@ struct Builder
             else if (op == "drop" || op == "free")
                 call("chali_owned_drop", "void", { convert(read(a), "i64") });
             else if (op == ":=")
+            {
+                const auto known = knownFunctions.find(textOf(a));
+                const auto target = known == knownFunctions.end() ? Memory::String() : known->second;
                 write(c, read(a));
+                if (!target.empty()) knownFunctions[textOf(c)] = target;
+            }
             else if (op == "addr")
             {
                 const auto offset = state.offsetOf(a);
@@ -1292,6 +1364,8 @@ struct Builder
                     return Text();
                 }
                 write(c, { "i64", std::to_string(offset) });
+                const auto target = state.functionAddresses.find(static_cast<std::size_t>(offset));
+                if (offset > 0 && target != state.functionAddresses.end()) knownFunctions[textOf(c)] = target->second;
             }
             else if (op == "param")
             {
@@ -1306,26 +1380,39 @@ struct Builder
             }
             else if (op == "callptr")
             {
-                std::vector<std::pair<Memory::String, Value>> saved;
-                for (const auto &entry : state.temporaryUsers)
-                    if (entry.second.size() == 1 && entry.second.count(textOf(function.label)) && !locals.count(entry.first))
-                    {
-                        const Memory::String token(entry.first.c_str());
-                        saved.push_back({ token, read(token) });
-                    }
-                for (std::size_t index = 0; index < arguments.size(); ++index)
+                const auto known = knownFunctions.find(textOf(a));
+                const auto target = known == knownFunctions.end() ? Memory::String() : known->second;
+                knownFunctions.clear();
+                const auto direct = state.functionByLabel.find(textOf(target));
+                if (state.directFunctionValues && !state.watchdogUsed && direct != state.functionByLabel.end()
+                    && state.functions[direct->second].parameters.size() == arguments.size())
                 {
-                    Value value = arguments[index].second;
-                    if (value.type == "double") value = instruction("i64", "bitcast double " + value.text + " to i64");
-                    const auto address = instruction("ptr", "getelementptr i64, ptr %indirect_arguments, i64 " + std::to_string(index));
-                    body += "  store i64 " + convert(value, "i64").text + ", ptr " + address.text + "\n";
+                    if (!emitCall(target, c)) return Text();
+                    arguments.clear();
                 }
-                Value result = call("chali_invoke", "i64", { convert(read(a), "i64"), { "i64", std::to_string(arguments.size()) }, { "ptr", "%indirect_arguments" } });
-                result.floating = instruction("i8", "load i8, ptr @chali_return_float").text;
-                for (const auto &entry : saved) write(entry.first, entry.second);
-                if (type(c) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
-                write(c, result);
-                arguments.clear();
+                else
+                {
+                    std::vector<std::pair<Memory::String, Value>> saved;
+                    for (const auto &entry : state.temporaryUsers)
+                        if (entry.second.size() == 1 && entry.second.count(textOf(function.label)) && !locals.count(entry.first))
+                        {
+                            const Memory::String token(entry.first.c_str());
+                            saved.push_back({ token, read(token) });
+                        }
+                    for (std::size_t index = 0; index < arguments.size(); ++index)
+                    {
+                        Value value = arguments[index].second;
+                        if (value.type == "double") value = instruction("i64", "bitcast double " + value.text + " to i64");
+                        const auto address = instruction("ptr", "getelementptr i64, ptr %indirect_arguments, i64 " + std::to_string(index));
+                        body += "  store i64 " + convert(value, "i64").text + ", ptr " + address.text + "\n";
+                    }
+                    Value result = call("chali_invoke", "i64", { convert(read(a), "i64"), { "i64", std::to_string(arguments.size()) }, { "ptr", "%indirect_arguments" } });
+                    result.floating = instruction("i8", "load i8, ptr @chali_return_float").text;
+                    for (const auto &entry : saved) write(entry.first, entry.second);
+                    if (type(c) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
+                    write(c, result);
+                    arguments.clear();
+                }
             }
             else if (op == "ret" || op == "halt")
             {
@@ -1372,7 +1459,13 @@ struct Builder
                 const Width width = widthOf(suffix);
                 const Text storageType = width.float_ ? (width.bits == 32 ? "float" : "double") : "i" + std::to_string(width.bits);
                 const Value address = convert(read(a), "i64");
-                const Value pointerValue = call("chali_host_address", "ptr", { address, { "i64", std::to_string(std::max(1, width.bits / 8)) } });
+                const int bytes = std::max(1, width.bits / 8);
+                const auto key = std::make_pair(textOf(a), bytes);
+                const auto cached = checkedAddresses.find(key);
+                const bool cacheable = state.cacheAddresses && !state.watchdogUsed;
+                const bool reuse = cacheable && cached != checkedAddresses.end();
+                const Value pointerValue = reuse ? cached->second : call("chali_host_address", "ptr", { address, { "i64", std::to_string(bytes) } });
+                if (cacheable && !reuse) checkedAddresses.emplace(key, pointerValue);
                 if (base == "load")
                 {
                     Value result = instruction(storageType, "load " + storageType + ", ptr " + pointerValue.text + ", align 1");
@@ -1383,6 +1476,7 @@ struct Builder
                 {
                     const Value value = convert(read(b), storageType, width.unsigned_);
                     body += "  store " + storageType + " " + value.text + ", ptr " + pointerValue.text + ", align 1\n";
+                    checkedAddresses.clear();
                 }
             }
             else if (base == "cvt")
@@ -1581,6 +1675,8 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
     out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
     out += "declare void @chali_host_poll()\n";
     out += "declare void @chali_host_tick(i64)\n";
+    out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
+    if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_threads_enabled = constant i32 " + Text(request.options.threadsEnabled ? "1" : "0") + "\n";
     out += "@chali_function_count = constant i64 " + std::to_string(state.addressedFunctions.size()) + "\n";
     out += "@chali_function_addresses = constant [" + std::to_string(state.addressedFunctions.size()) + " x i64] [";
@@ -1632,6 +1728,17 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
         }
     }
     for (const auto &entry : state.globals) shared.insert(entry.first);
+    for (const auto &site : state.profileSites)
+    {
+        Text bytes;
+        for (const unsigned char byte : site.first)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@backend_profile_site" + std::to_string(site.second) + " = private constant [" + std::to_string(site.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
     for (const auto &file : state.sourceFiles)
     {
         Text bytes;
@@ -1857,7 +1964,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     RuntimeAssets runtimeAssets;
     if (!runtimeAssets.restore(diagnostics)) return 1;
-    Text command = quote(compiler) + " -O2 -Wno-override-module ";
+    Text command = quote(compiler) + " -O3 -Wno-override-module ";
     if (request.options.shared) command += "-shared -fPIC ";
     command += quote(llvmPath) + " -o " + quote(product);
     for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));

@@ -7,9 +7,9 @@
 #endif
 #include "chali_incremental.hpp"
 /* ============================================================
- * 实现：节点池 / 类型池 / 降级（C 语法树 → simple_ast） / 生成与执行
+ * 实现：节点池 / 类型池 / 降级（C 语法树 → ast） / 生成与执行
  * ============================================================ */
-#include "simple_ast.hpp"
+#include "ast.hpp"
 #include "stackvm.hpp"
 #include "../source/stackvm/value_text.hpp"
 #include "quad_ir.hpp"
@@ -3134,13 +3134,13 @@ int M_TokenValue(int tokenType, double number, const char *pName, Memory::String
 #include "semantics/macro_ast.cpp"
 
 /* ============================================================
- * 降级：C 语法树 → simple_ast::Program → 四元式 / .data → stackvm 执行
+ * 降级：C 语法树 → ast::Program → 四元式 / .data → stackvm 执行
  *
  * 分两遍：
  *   ① 登记：struct 的字段 / 方法 / 运算符重载、函数签名、全局变量；
- *   ② 降级：函数体、方法体、全局初始化 → simple_ast 的表达式树。
+ *   ② 降级：函数体、方法体、全局初始化 → ast 的表达式树。
  *
- * 前端不另造 IR：自己的 C 语法树直接映射到 simple_ast，四元式与 `.data` 由它落盘。
+ * 前端不另造 IR：自己的 C 语法树直接映射到 ast，四元式与 `.data` 由它落盘。
  * ============================================================ */
 namespace
 {
@@ -3233,8 +3233,8 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         Fail("没有解析到任何顶层声明");
         return 1;
     }
-    /* 1. 降级成 simple_ast 的程序。 */
-    simple_ast::Program program;
+    /* 1. 降级成 ast 的程序。 */
+    ast::Program program;
     if (!ExpandAstMacros())
     {
         RestoreFirstDiagnostic();
@@ -3256,7 +3256,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             ResetState();
             g_inferringExpressions.clear();
             g_freshSink = nullptr;
-            program = simple_ast::Program{};
+            program = ast::Program{};
             // 第一轮只发现具体签名，不执行生成前的占位宿主；最终重放恢复全部绑定检查。
             g_executeNow = run != 0 && !(!reflectionQueriesReady && HasReflectionQueries());
             if (!RegisterTop())
@@ -3401,7 +3401,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     AddRuntimeHelpers(program);
 
     /* 2. 落四元式 + `.data`（`.data.bin` / `.layout` 给 stackvm 读）。 */
-    simple_ast::CodegenResult result = simple_ast::generate(program, moduleName);
+    ast::CodegenResult result = ast::generate(program, moduleName);
     if (g_reflectionEnabled) result.quads = "# chali-features: reflection\n# chali-reflection: " + *mr::toHex(reflection.table) + "\n" + result.quads;
     if (!result.ok())
     {

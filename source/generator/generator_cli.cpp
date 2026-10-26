@@ -616,7 +616,7 @@ int runCli(int argc, char **argv)
     };
     bool ok = true;
     ok = copy(mc / "VERSION", "VERSION") && ok;
-    for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime.c", "native_runtime.cpp"})
+    for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime.c", "native_runtime.cpp", "backend_profile.cpp"})
         ok = copy(mc / "source/aot" / name, Memory::String("aot/") + name) && ok;
     ok = copy(mc / "build/chali-aot-host/assets.txt", "aot/host_assets.txt") && ok;
     for (const char *name : {"chali_parser.cpp", "chali_parser.hpp",
@@ -644,8 +644,8 @@ int runCli(int argc, char **argv)
         {"chali_allocator.hpp", mc / "source/allocator/chali_allocator.hpp"},
         {"chali_pool.h", mc / "source/allocator/chali_pool.h"},
         {"chali_pool.c", mc / "source/allocator/chali_pool.c"},
-        {"simple_ast.cpp", mc / "source/simple_ast/simple_ast.cpp"},
-        {"simple_ast.hpp", mc / "source/simple_ast/simple_ast.hpp"},
+        {"ast.cpp", mc / "source/ast/ast.cpp"},
+        {"ast.hpp", mc / "source/ast/ast.hpp"},
         {"preprocess.cpp", mc / "source/preprocess/preprocess.cpp"},
         {"preprocess.hpp", mc / "source/preprocess/preprocess.hpp"},
         {"bigint.cpp", mc / "source/bignum/bigint.cpp"},
@@ -657,8 +657,8 @@ int runCli(int argc, char **argv)
         {"bigfloat_transcendental.cpp", mc / "source/bignum/bigfloat_transcendental.cpp"},
         {"bigfloat_trigonometry.cpp", mc / "source/bignum/bigfloat_trigonometry.cpp"},
     };
-    for (const char *name : {"ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp"})
-        ok = copy(mc / "source/simple_ast" / name, Memory::String("runtime/") + name) && ok;
+    for (const char *name : {"ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "aggregate_optimize.cpp", "aggregate_optimize.hpp"})
+        ok = copy(mc / "source/ast" / name, Memory::String("runtime/") + name) && ok;
     for (const char *name : {"bigint_multiplication.cpp", "bigfloat_roots.cpp", "bigint_division.cpp", "bigint_number_theory.cpp", "bigint_bits.cpp", "bigint_modular.cpp", "bigint_conversion.cpp"})
         ok = copy(mc / "source/bignum" / name, Memory::String("runtime/") + name) && ok;
     for (const auto &[name, source] : runtime) ok = copy(source, "runtime/" + name) && ok;

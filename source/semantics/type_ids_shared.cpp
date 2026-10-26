@@ -467,9 +467,9 @@ bool HasDeclaredConversion(const std::shared_ptr<MType> &source,
                            const std::shared_ptr<MType> &target, bool allowExplicit);
 bool HasImplicitConversion(const std::shared_ptr<MType> &source,
                            const std::shared_ptr<MType> &target);
-simple_ast::NodePtr LowerDeclaredConversion(int valueId,
-                                            const std::shared_ptr<MType> &target,
-                                            bool allowExplicit);
+ast::NodePtr LowerDeclaredConversion(int valueId,
+                                     const std::shared_ptr<MType> &target,
+                                     bool allowExplicit);
 std::shared_ptr<MType> ExprType(int id);
 bool InferAutoFunctionResult(int statementId, std::shared_ptr<MType> *result);
 /**
@@ -573,7 +573,7 @@ bool HasOpaqueObjectBorrow(const std::shared_ptr<MType> &type);
  */
 void RecordObjectArgumentBorrow(int id, const std::shared_ptr<MType> &type);
 bool AutoDereferences(int id);
-simple_ast::NodePtr LowerRawExpr(int id);
+ast::NodePtr LowerRawExpr(int id);
 Memory::String UnescapeText(const Memory::String &raw);
 bool CheckUserName(const Memory::String &name);
 /**
@@ -781,12 +781,12 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
  * @param label 函数标签（降级后的名字）。
  * @return 表达式节点（值是地址）。
  */
-simple_ast::NodePtr FunctionPointerValue(const Memory::String &label)
+ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
-    static Memory::Map<Memory::String, simple_ast::NodePtr> cache;
+    static Memory::Map<Memory::String, ast::NodePtr> cache;
     const auto found = cache.find(label);
     if (found != cache.end()) return found->second;
-    simple_ast::NodePtr value = simple_ast::Node::namedStr("fn_" + label, label);
+    ast::NodePtr value = ast::Node::namedStr("fn_" + label, label);
     cache[label] = value;
     return value;
 }
@@ -819,7 +819,7 @@ std::shared_ptr<MType> InferCollectionLiteral(int id, const std::shared_ptr<MTyp
  * 有地方插语句，就把这些临时串先算出来、登记成当前块所有；表达式级别（比如
  * `format("…", s[0:2])` 里那个切片）没法插，就只能是"留着"。
  */
-Memory::Vector<simple_ast::NodePtr> *g_freshSink = nullptr;
+Memory::Vector<ast::NodePtr> *g_freshSink = nullptr;
 
 /**
  * 当前函数的返回类型：`return 2;` 在返回 float64 的函数里要写成 `return 2.0;`
@@ -875,16 +875,16 @@ Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRo
  * @param customRoot 是否包含根值的覆盖方法。
  * @retval 函数值与存储布局组成的成对实参。
  */
-Memory::Vector<simple_ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MType> &type, bool customRoot = true);
+Memory::Vector<ast::NodePtr> ValueTextCallbacks(const std::shared_ptr<MType> &type, bool customRoot = true);
 /**
  * @brief 生成不调用用户覆盖方法的默认文本转换。
  * @param valueId 源表达式。
  * @retval 拥有结果字符串的表达式。
  */
-simple_ast::NodePtr LowerDefaultValueText(int valueId);
+ast::NodePtr LowerDefaultValueText(int valueId);
 /**
  * @brief 生成优先使用用户方法的统一字符串转换。
  * @param valueId 源表达式。
  * @retval 拥有结果字符串的表达式。
  */
-simple_ast::NodePtr LowerValueText(int valueId);
+ast::NodePtr LowerValueText(int valueId);

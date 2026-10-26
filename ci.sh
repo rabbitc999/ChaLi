@@ -210,7 +210,7 @@ run_step "运行闭包自动类型与嵌套返回语言服务回归" "$PYTHON" t
 run_required_step "编译无墓碑分配身份回归" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=1 -Isource -Ilibrary -Isource/allocator tests/allocation_identity.cpp -o tmp/ci/allocation-identity
 run_step "运行百万次分配身份回归" tmp/ci/allocation-identity
 run_step "运行数组按值传参与引用回归" "$PYTHON" tests/chali_array_parameters.py --chali "$CHALI_BIN"
-run_required_step "编译字面量数据合并单元测试" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=0 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 source/simple_ast/test_simple_ast.cpp source/simple_ast/simple_ast.cpp source/simple_ast/ast_type.cpp source/simple_ast/ast_node.cpp source/simple_ast/ast_data.cpp -o tmp/ci/simple-ast-literals
+run_required_step "编译字面量数据合并单元测试" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=0 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 source/ast/test_ast.cpp source/ast/ast.cpp source/ast/ast_type.cpp source/ast/ast_node.cpp source/ast/ast_data.cpp -o tmp/ci/simple-ast-literals
 run_step "运行字面量数据合并单元测试" tmp/ci/simple-ast-literals
 run_step "检查诊断摘录与 TOML 注释往返" "$PYTHON" tests/chali_diagnostic_layout.py --chali "$CHALI_BIN"
 run_step "运行字面量合并与字符串副本回归" "$PYTHON" tests/chali_string_literals.py --chali "$CHALI_BIN"

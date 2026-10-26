@@ -21,7 +21,7 @@ def build_matrix(work, vm_off, vm_on, cxx):
     flags = ['-std=c++17', '-O1', '-pthread', '-DCHALI_CUSTOM_ALLOCATOR=1']
     if os.name == 'nt':
         flags += ['-Wa,-mbig-obj']
-    run([cxx, *flags, '-DCHALI_WITH_REFLECTION=0', '-DSTACKVM_WITH_REFLECTION=0', '-I' + str(mc), '-I' + str(mc / 'source'), '-I' + str(mc / 'library'), '-I' + str(mc / 'source/simple_ast'), '-I' + str(mc / 'source/stackvm'), '-I' + str(mc / 'source/preprocess'), '-c', mc / 'source/chali_parser.cpp', '-o', disabled_parser])
+    run([cxx, *flags, '-DCHALI_WITH_REFLECTION=0', '-DSTACKVM_WITH_REFLECTION=0', '-I' + str(mc), '-I' + str(mc / 'source'), '-I' + str(mc / 'library'), '-I' + str(mc / 'source/ast'), '-I' + str(mc / 'source/stackvm'), '-I' + str(mc / 'source/preprocess'), '-c', mc / 'source/chali_parser.cpp', '-o', disabled_parser])
     entry = work / 'entry.cpp'
     entry.write_text('int chali_main_entry(int, char **);\nint main(int n, char **v) { return chali_main_entry(n, v); }\n', encoding='utf-8')
     binaries = {}
@@ -29,7 +29,7 @@ def build_matrix(work, vm_off, vm_on, cxx):
         for vm, directory in ((0, vm_off), (1, vm_on)):
             binary = work / (f'compiler-{frontend}{vm}' + EXE)
             parser = disabled_parser if not frontend else mc / 'build/chali-frontend/libparser.a'
-            run([cxx, *flags, entry, mc / 'build/chali-frontend/chali_main.o', parser, ROOT / 'build/chali-runtime/libsimple_ast.a', directory / 'libchali_stackvm.a', ROOT / 'build/chali-runtime/libpreprocess.a', '-lm', '-o', binary])
+            run([cxx, *flags, entry, mc / 'build/chali-frontend/chali_main.o', parser, ROOT / 'build/chali-runtime/libast.a', directory / 'libchali_stackvm.a', ROOT / 'build/chali-runtime/libpreprocess.a', '-lm', '-o', binary])
             binaries[frontend, vm] = binary
     return binaries
 

@@ -117,7 +117,7 @@ def read(path):
 ASSET_ROOT = {
     "ipage/": "library/ipage/source/",
     "stackvm/": "source/",
-    "simple_ast/": "source/",
+    "ast/": "source/",
     "preprocess/": "source/",
     "bignum/": "source/",
     "caspp/": "library/",
@@ -158,6 +158,7 @@ GENERATOR_ASSETS = [
     "chali_aot_runtime_assets.hpp",
     "chali_aot_runtime_assets.cpp",
     "aot/native_runtime.cpp",
+    "aot/backend_profile.cpp",
     "aot/linker_assets.txt",
     "aot/runtime_windows.ll",
     "aot/runtime_linux.ll",
@@ -227,7 +228,7 @@ GENERATOR_ASSETS = [
 if Path(CHALI, "build/chali-aot-host/assets.txt").exists():
     GENERATOR_ASSETS.append("aot/host_assets.txt")
 
-GENERATOR_ASSETS += ['simple_ast/ast_type.cpp', 'simple_ast/ast_node.cpp', 'simple_ast/ast_data.cpp', 'simple_ast/ast_storage_detail.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
+GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'ast/aggregate_optimize.cpp', 'ast/aggregate_optimize.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
 
 GENERATOR_ASSETS += ["stackvm/" + name for name in asset_names()]
 from cas_sources import asset_names as cas_asset_names

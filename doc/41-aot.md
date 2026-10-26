@@ -8,6 +8,8 @@
 
 Windows x64 工具链、LLVM 库、Clang、LLD、compiler-rt builtins 与链接所需 CRT 依赖保存在 [library/llvm](../library/llvm/README.md)。首次使用原生编译时，在仓库根执行 `python library/llvm/setup.py`，离线校验并解包固定版本依赖。VM 与只导出 LLVM 模块不需要工具链。
 
+AOT 默认开启全部适用优化，外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，并保留正常浮点语义、边界和存活检查。聚合目标地址、临时值搬运、批量复制、直接调用和可选计数的适用条件与对照开关见[后端所有权优化](43-backend-ownership.md)。
+
 | 参数 | 行为 |
 | --- | --- |
 | `--out 前缀` | 输出 `.ll` 模块、C ABI 头文件及原生产物；Windows 使用 .exe/.dll，Linux 使用无后缀可执行文件或 .so |

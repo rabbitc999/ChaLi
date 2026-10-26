@@ -108,10 +108,10 @@ bool EnsureTupleLayout(const std::shared_ptr<MType> &type)
     if (!FlattenStructFields(type->name, &stack)) return false;
     const MStructDef *definition = FindStruct(type->name);
     if (definition == nullptr) return Fail("找不到结构体 " + type->name), false;
-    Memory::Vector<std::pair<Memory::String, simple_ast::TypePtr>> fields;
+    Memory::Vector<std::pair<Memory::String, ast::TypePtr>> fields;
     for (const auto &leaf : definition->leaves)
         fields.emplace_back(leaf.first, LowerType(leaf.second, type->name + "." + leaf.first));
-    const simple_ast::TypePtr lowered = simple_ast::Type::structOf(type->name, fields);
+    const ast::TypePtr lowered = ast::Type::structOf(type->name, fields);
     g_structType[type->name] = lowered;
     if (g_loweringProgram != nullptr) g_loweringProgram->types.push_back(lowered);
     return true;
@@ -122,7 +122,7 @@ bool EnsureTupleLayout(const std::shared_ptr<MType> &type)
  * @param program 待生成或执行的程序。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool BuildStructTypes(simple_ast::Program &program)
+bool BuildStructTypes(ast::Program &program)
 {
     for (auto &item : g_structs)
     {
@@ -135,15 +135,15 @@ bool BuildStructTypes(simple_ast::Program &program)
     }
     for (const auto &item : g_structs)
     {
-        /* 登记给 simple_ast 的字段表就是**摊平后的槽位表**：数据区大小、字段偏移
+        /* 登记给 ast 的字段表就是**摊平后的槽位表**：数据区大小、字段偏移
          * （`Node::member` 的 `index * 8`）全都自动对齐。 */
-        Memory::Vector<std::pair<Memory::String, simple_ast::TypePtr>> fields;
+        Memory::Vector<std::pair<Memory::String, ast::TypePtr>> fields;
         for (const auto &leaf : item.second.leaves)
         {
             fields.emplace_back(leaf.first,
                                 LowerType(leaf.second, item.first + "." + leaf.first));
         }
-        g_structType[item.first] = simple_ast::Type::structOf(item.first, fields);
+        g_structType[item.first] = ast::Type::structOf(item.first, fields);
     }
     for (const auto &item : g_structType) program.types.push_back(item.second);
     for (const auto &item : g_staticFields)
@@ -151,12 +151,12 @@ bool BuildStructTypes(simple_ast::Program &program)
         if (!CheckDeclaredType(item.second.type, item.first)) return false;
         program.addVariable(item.second.emitted,
                             LowerType(item.second.type, item.second.emitted));
-        const simple_ast::NodePtr init = item.second.hasFloatInitializer ? simple_ast::Node::assign(item.second.emitted,
-                                                                                                    simple_ast::Node::f(item.second.floatInitializer)) :
-                                                                           DefaultInit(item.second.emitted, item.second.type);
+        const ast::NodePtr init = item.second.hasFloatInitializer ? ast::Node::assign(item.second.emitted,
+                                                                                      ast::Node::f(item.second.floatInitializer)) :
+                                                                    DefaultInit(item.second.emitted, item.second.type);
         if (init) g_globalInit.push_back(init);
     }
-    /* 运算符重载不用 simple_ast 的 `a.方法(b)` 脱糖：那是"左操作数当 self"的成员形式，
+    /* 运算符重载不用 ast 的 `a.方法(b)` 脱糖：那是"左操作数当 self"的成员形式，
      * 表达不了 `5 + a` 这种右操作数是 struct 的方向。chali 自己在 LowerBinary 里
      * 按左 / 右找出重载方法再发一次普通调用（四元式里同样看不到 `+`）。 */
     return true;
@@ -167,7 +167,7 @@ bool BuildStructTypes(simple_ast::Program &program)
  * @param program 待生成或执行的程序。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool LowerGlobals(simple_ast::Program &program)
+bool LowerGlobals(ast::Program &program)
 {
     for (const int topId : g_top)
     {
@@ -243,20 +243,20 @@ bool LowerGlobals(simple_ast::Program &program)
             if (decl.kids[0] >= 0 && type->kind == MType::Obj && ExprType(decl.kids[0])->kind != MType::Obj && !IsImplicitConversionValue(decl.kids[0], type))
             {
                 g_globalInit.push_back(DefaultInit(emitted, type));
-                g_globalInit.push_back(simple_ast::Node::exprStmt(
-                    LowerObjSet(simple_ast::Node::var(emitted), decl.kids[0], "obj 全局初始化")));
+                g_globalInit.push_back(ast::Node::exprStmt(
+                    LowerObjSet(ast::Node::var(emitted), decl.kids[0], "obj 全局初始化")));
             }
             else if (decl.kids[0] >= 0 && type->kind == MType::Struct && (SameStruct(type, ExprType(decl.kids[0])) || IsImplicitConversionValue(decl.kids[0], type)))
             {
-                const simple_ast::NodePtr block = DefaultInit(emitted, type);
+                const ast::NodePtr block = DefaultInit(emitted, type);
                 if (block) g_globalInit.push_back(block);
-                g_globalInit.push_back(StoreStructValue(simple_ast::Node::var(emitted),
+                g_globalInit.push_back(StoreStructValue(ast::Node::var(emitted),
                                                         decl.kids[0], LowerValueForType(decl.kids[0], type), type));
             }
             else
             {
-                const simple_ast::NodePtr init =
-                    (decl.kids[0] >= 0) ? simple_ast::Node::assign(
+                const ast::NodePtr init =
+                    (decl.kids[0] >= 0) ? ast::Node::assign(
                                               emitted, IsObjectLike(type) ? MaterializeObjectValue(decl.kids[0], type) : MaterializeStringValue(decl.kids[0], type)) :
                                           DefaultInit(emitted, type, true);
                 if (init) g_globalInit.push_back(init);
@@ -264,10 +264,10 @@ bool LowerGlobals(simple_ast::Program &program)
             if (g_addressTakenNames.count(decl.s) && NeedsReferenceStorage(type))
             {
                 const auto storage = AllocateName("__chali_global_reference");
-                program.addVariable(storage, simple_ast::Type::i64());
-                g_globalInit.push_back(simple_ast::Node::assign(storage, simple_ast::Node::arrayNew(
-                                                                             LowerType(ArrayType(type, { 1 }), storage), { simple_ast::Node::i(0) })));
-                g_globalInit.push_back(simple_ast::Node::storeAt(simple_ast::Node::var(storage), simple_ast::Node::var(emitted), LowerType(type, storage)));
+                program.addVariable(storage, ast::Type::i64());
+                g_globalInit.push_back(ast::Node::assign(storage, ast::Node::arrayNew(
+                                                                      LowerType(ArrayType(type, { 1 }), storage), { ast::Node::i(0) })));
+                g_globalInit.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(type, storage)));
                 auto &reference = g_scope[0][ModuleSymbol(decl.module, decl.s)];
                 g_referenceStorage[emitted] = storage;
                 reference.emitted = storage;
@@ -302,10 +302,10 @@ bool LowerGlobals(simple_ast::Program &program)
  * @param implicitOperand 反射一元调用隐式以接收者提供唯一操作数。
  * @return 分派函数。
  */
-simple_ast::Function MakeInterfaceDispatcher(const Memory::String &iface,
-                                             const Memory::String &methodName, bool implicitOperand = false)
+ast::Function MakeInterfaceDispatcher(const Memory::String &iface,
+                                      const Memory::String &methodName, bool implicitOperand = false)
 {
-    using namespace simple_ast;
+    using namespace ast;
     std::shared_ptr<MType> declaredResult;
     Memory::Vector<std::shared_ptr<MType>> declaredParams;
     FindInterfaceMethod(iface, methodName, &declaredResult, &declaredParams);
@@ -404,7 +404,7 @@ simple_ast::Function MakeInterfaceDispatcher(const Memory::String &iface,
  * @brief 收尾：给每个被调用过的接口方法补上分派函数（没被调用的不生成，产物才干净）。
  * @param program 待生成或执行的程序。
  */
-void AppendInterfaceDispatchers(simple_ast::Program &program)
+void AppendInterfaceDispatchers(ast::Program &program)
 {
     for (const Memory::String &key : g_usedInterfaceMethods)
     {
@@ -425,12 +425,12 @@ void AppendInterfaceDispatchers(simple_ast::Program &program)
  * 字符串 / 对象的空值（0）原样写 0：空值没有资源可复制，也不能让
  * `__std_object_copy(0)` / `__std_str_sub(0, …)` 报错或白分配。
  */
-void AppendLeafStore(Memory::Vector<simple_ast::NodePtr> *body,
-                     const simple_ast::NodePtr &dst, const simple_ast::NodePtr &value,
+void AppendLeafStore(Memory::Vector<ast::NodePtr> *body,
+                     const ast::NodePtr &dst, const ast::NodePtr &value,
                      const std::shared_ptr<MType> &leaf)
 {
-    using simple_ast::Node;
-    using simple_ast::Type;
+    using ast::Node;
+    using ast::Type;
     if (IsRuntimeArray(leaf))
     {
         body->push_back(Node::storeAt(dst, CopyRuntimeArrayValue(value, leaf), Type::i64()));
@@ -441,14 +441,14 @@ void AppendLeafStore(Memory::Vector<simple_ast::NodePtr> *body,
         const Memory::String temp = AllocateName("__chali_agg_leaf");
         body->push_back(Node::declare(temp, Type::i64()));
         body->push_back(Node::assign(temp, value));
-        const simple_ast::NodePtr copied = Node::call(ObjectCopyFunction(leaf), { "__chali_v" }, { Node::var(temp) });
+        const ast::NodePtr copied = Node::call(ObjectCopyFunction(leaf), { "__chali_v" }, { Node::var(temp) });
         body->push_back(Node::ifThenElse(
             Node::binary("!=", Node::var(temp), Node::i(0)),
             Node::block({ Node::storeAt(dst, copied, Type::i64()) }),
             Node::block({ Node::storeAt(dst, Node::i(0), Type::i64()) })));
         return;
     }
-    const simple_ast::TypePtr slot = IsFloatType(leaf) ? Type::f64() : Type::i64();
+    const ast::TypePtr slot = IsFloatType(leaf) ? Type::f64() : Type::i64();
     body->push_back(Node::storeAt(dst, value, slot));
 }
 
@@ -459,18 +459,18 @@ void AppendLeafStore(Memory::Vector<simple_ast::NodePtr> *body,
  * @param src 压缩数据的起始地址。
  * @param leaf 待复制叶子字段的布局描述。
  */
-void AppendLeafCopy(Memory::Vector<simple_ast::NodePtr> *body,
-                    const simple_ast::NodePtr &dst, const simple_ast::NodePtr &src,
+void AppendLeafCopy(Memory::Vector<ast::NodePtr> *body,
+                    const ast::NodePtr &dst, const ast::NodePtr &src,
                     const std::shared_ptr<MType> &leaf)
 {
-    using simple_ast::Node;
+    using ast::Node;
     if (leaf && (IsStandardOpcode(leaf, "String") || IsObjectLike(leaf) || IsRuntimeArray(leaf)))
     {
         AppendLeafStore(body, dst, Node::loadInt(src), leaf);
         return;
     }
-    const simple_ast::TypePtr slot =
-        IsFloatType(leaf) ? simple_ast::Type::f64() : simple_ast::Type::i64();
+    const ast::TypePtr slot =
+        IsFloatType(leaf) ? ast::Type::f64() : ast::Type::i64();
     body->push_back(Node::storeAt(dst, Node::loadFrom(src, slot), slot));
 }
 
@@ -479,15 +479,15 @@ void AppendLeafCopy(Memory::Vector<simple_ast::NodePtr> *body,
  * @param owner 所属对象或类型信息。
  * @retval 保存`__chali_agg_rel_<T>(addr)`：按叶子递归软释放聚合槽里归它所有的字符串 / 对象结果的对象。
  */
-simple_ast::Function MakeAggregateReleaseFunction(const Memory::String &owner)
+ast::Function MakeAggregateReleaseFunction(const Memory::String &owner)
 {
-    using simple_ast::Node;
-    using simple_ast::Type;
-    simple_ast::Function function;
+    using ast::Node;
+    using ast::Type;
+    ast::Function function;
     function.name = AggregateReleaseName(owner);
     function.result = Type::i32();
     function.parameters = { { "__chali_agg", Type::i64() } };
-    Memory::Vector<simple_ast::NodePtr> body;
+    Memory::Vector<ast::NodePtr> body;
     const MStructDef *definition = FindStruct(owner);
     if (definition != nullptr)
     {
@@ -495,7 +495,7 @@ simple_ast::Function MakeAggregateReleaseFunction(const Memory::String &owner)
         for (std::size_t index = definition->leaves.size(); index > 0u; --index)
         {
             if (!LeafOwnedByAggregate(definition->leaves[index - 1u].second)) continue;
-            const simple_ast::NodePtr address = Node::offset(
+            const ast::NodePtr address = Node::offset(
                 Node::var("__chali_agg"), Node::i(static_cast<std::int64_t>(index - 1u)), 8);
             /* 释放后把槽清 0：同一个静态聚合对象被两次释放（或两个别名指向它）时，
              * 第二次 `drop 0` 是软释放空操作，不会二次释放同一块。 */
@@ -525,23 +525,23 @@ simple_ast::Function MakeAggregateReleaseFunction(const Memory::String &owner)
  * @param owner 所属对象或类型信息。
  * @retval 保存`__chali_agg_cpy_<T>(dst, src)`：聚合值的深拷贝（字符串 / 对象各复制一份）结果的对象。
  */
-simple_ast::Function MakeAggregateCopyFunction(const Memory::String &owner)
+ast::Function MakeAggregateCopyFunction(const Memory::String &owner)
 {
-    using simple_ast::Node;
-    using simple_ast::Type;
-    simple_ast::Function function;
+    using ast::Node;
+    using ast::Type;
+    ast::Function function;
     function.name = AggregateCopyName(owner);
     function.result = Type::i32();
     function.parameters = { { "__chali_agg_dst", Type::i64() }, { "__chali_agg_src", Type::i64() } };
-    Memory::Vector<simple_ast::NodePtr> body;
+    Memory::Vector<ast::NodePtr> body;
     const MStructDef *definition = FindStruct(owner);
     if (definition != nullptr)
     {
         for (std::size_t index = 0; index < definition->leaves.size(); ++index)
         {
-            const simple_ast::NodePtr dst = Node::offset(
+            const ast::NodePtr dst = Node::offset(
                 Node::var("__chali_agg_dst"), Node::i(static_cast<std::int64_t>(index)), 8);
-            const simple_ast::NodePtr src = Node::offset(
+            const ast::NodePtr src = Node::offset(
                 Node::var("__chali_agg_src"), Node::i(static_cast<std::int64_t>(index)), 8);
             AppendLeafCopy(&body, dst, src, definition->leaves[index].second);
         }
@@ -562,15 +562,15 @@ simple_ast::Function MakeAggregateCopyFunction(const Memory::String &owner)
  * 数组元素和字段 / 容器元素一样是**值**：字符串、对象句柄逐个还回去，结构体走
  * `__chali_agg_rel_<T>` 递归释放它槽里的叶子。释放后把槽清 0（软释放重入是空操作）结果的对象。
  */
-simple_ast::Function MakeArrayReleaseFunction(const std::shared_ptr<MType> &element)
+ast::Function MakeArrayReleaseFunction(const std::shared_ptr<MType> &element)
 {
-    using simple_ast::Node;
-    using simple_ast::Type;
-    simple_ast::Function function;
+    using ast::Node;
+    using ast::Type;
+    ast::Function function;
     function.name = ArrayReleaseName(element);
     function.result = Type::i32();
     function.parameters = { { "__chali_arr", Type::i64() }, { "__chali_count", Type::i64() } };
-    Memory::Vector<simple_ast::NodePtr> body;
+    Memory::Vector<ast::NodePtr> body;
     /* label / 局部变量按类型取名：四元式里的 label 是**全局**名字，两个助手共用
      * `__chali_arr_loop` 会互相串跳（同一次编译里生成多个数组释放函数时踩过）。 */
     const Memory::String stem = ArrayReleaseName(element);
@@ -584,7 +584,7 @@ simple_ast::Function MakeArrayReleaseFunction(const std::shared_ptr<MType> &elem
     body.push_back(Node::ifThenElse(
         Node::binary(">=", Node::var(index), Node::var("__chali_count")),
         Node::block({ Node::jump(doneLabel) }), Node::block({})));
-    const simple_ast::NodePtr address =
+    const ast::NodePtr address =
         Node::offset(Node::var("__chali_arr"), Node::var(index), stride);
     if (element->kind == MType::Struct)
     {
@@ -610,7 +610,7 @@ simple_ast::Function MakeArrayReleaseFunction(const std::shared_ptr<MType> &elem
  * @brief 按依赖闭包生成数组及聚合的释放和深复制助手，每个助手只生成一次。
  * @param program 待生成或执行的程序。
  */
-void AppendOwnershipHelpers(simple_ast::Program &program)
+void AppendOwnershipHelpers(ast::Program &program)
 {
     Memory::Set<Memory::String> arrays, releases, copies;
     bool changed = true;
@@ -642,14 +642,15 @@ void AppendOwnershipHelpers(simple_ast::Program &program)
  * @brief 生成枚举变体的构造函数。
  * @param enumName 枚举类型的名称。
  * @param variant 枚举变体名称或定义。
+ * @param takeFreshPayload 仅供已证明独占的新聚合载荷调用，转移并清空源槽。
  * @retval 保存生成枚举变体的构造函数结果的对象。
  */
-simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
-                                         const MEnumVariantDef &variant)
+ast::Function MakeEnumConstructor(const Memory::String &enumName,
+                                  const MEnumVariantDef &variant, bool takeFreshPayload = false)
 {
-    using simple_ast::Node;
-    simple_ast::Function function;
-    function.name = "__chali_enum_" + enumName + "_" + variant.name;
+    using ast::Node;
+    ast::Function function;
+    function.name = "__chali_enum_" + enumName + "_" + variant.name + (takeFreshPayload ? "$take" : "");
     function.result = LowerType(NamedType(enumName), function.name);
     Memory::Vector<Memory::String> parameterNames;
     for (std::size_t index = 0; index < variant.payloads.size(); ++index)
@@ -660,8 +661,8 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
     }
     const MStructDef *storage = FindStruct(enumName);
     if (storage == nullptr)
-        return Fail("找不到枚举的存储结构体 " + enumName), simple_ast::Function{};
-    Memory::Vector<simple_ast::NodePtr> values;
+        return Fail("找不到枚举的存储结构体 " + enumName), ast::Function{};
+    Memory::Vector<ast::NodePtr> values;
     values.reserve(storage->leaves.size());
     for (const auto &leaf : storage->leaves)
         values.push_back(IsFloatType(leaf.second) ? Node::f(0.0) : Node::i(0));
@@ -669,7 +670,7 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
     if (tagField != nullptr)
         values[static_cast<std::size_t>(tagField->slot)] = Node::i(variant.tag);
     const Memory::String resultName = "__chali_enum_value";
-    Memory::Vector<simple_ast::NodePtr> body;
+    Memory::Vector<ast::NodePtr> body;
     body.push_back(Node::declare(resultName, LowerType(NamedType(enumName), resultName)));
     body.push_back(Node::assign(resultName, Node::structNew(enumName, values)));
     for (std::size_t index = 0; index < variant.payloads.size(); ++index)
@@ -677,6 +678,12 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
         const MEnumPayload &payload = variant.payloads[index];
         const MField *field = FindField(enumName, payload.storageName);
         if (field == nullptr) continue;
+        if (takeFreshPayload && payload.type->kind == MType::Struct)
+        {
+            body.push_back(MoveStructValue(Node::offset(Node::var(resultName), Node::i(field->slot), 8),
+                                           Node::var(parameterNames[index]), payload.type));
+            continue;
+        }
         if (HasNonCopyableValue(payload.type))
         {
             const auto target = Node::offset(Node::var(resultName), Node::i(field->slot), 8);
@@ -684,7 +691,7 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
             if (payload.type->kind == MType::Struct)
                 body.push_back(MoveStructValue(target, source, payload.type));
             else
-                body.push_back(Node::storeAt(target, source, simple_ast::Type::i64()));
+                body.push_back(Node::storeAt(target, source, ast::Type::i64()));
             continue;
         }
         if (payload.type->kind == MType::Struct)
@@ -695,16 +702,16 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
             {
                 const std::shared_ptr<MType> leaf =
                     inner->second.leaves[static_cast<std::size_t>(slot)].second;
-                const simple_ast::NodePtr source = Node::offset(
+                const ast::NodePtr source = Node::offset(
                     Node::var(parameterNames[index]), Node::i(slot), 8);
-                const simple_ast::NodePtr target = Node::offset(
+                const ast::NodePtr target = Node::offset(
                     Node::var(resultName), Node::i(field->slot + slot), 8);
                 AppendLeafCopy(&body, target, source, leaf);
             }
         }
         else
         {
-            const simple_ast::NodePtr address = Node::offset(
+            const ast::NodePtr address = Node::offset(
                 Node::var(resultName), Node::i(field->slot), 8);
             AppendLeafStore(&body, address, Node::var(parameterNames[index]), payload.type);
         }
@@ -718,11 +725,14 @@ simple_ast::Function MakeEnumConstructor(const Memory::String &enumName,
  * @brief 将枚举变体构造函数追加到程序中。
  * @param program 待生成或执行的程序。
  */
-void AppendEnumConstructors(simple_ast::Program &program)
+void AppendEnumConstructors(ast::Program &program)
 {
     for (const auto &item : g_enums)
         for (const MEnumVariantDef &variant : item.second.variants)
+        {
             program.functions.push_back(MakeEnumConstructor(item.first, variant));
+            if (CanTakeFreshEnumPayload(variant)) program.functions.push_back(MakeEnumConstructor(item.first, variant, true));
+        }
 }
 
 /**
@@ -741,12 +751,12 @@ Memory::String TupleConstructorName(const Memory::String &tupleName)
  * @param elements 元素类型或元素值列表。
  * @retval 保存为元组字段生成构造函数结果的对象。
  */
-simple_ast::Function MakeTupleConstructor(
+ast::Function MakeTupleConstructor(
     const Memory::String &tupleName,
     const Memory::Vector<std::shared_ptr<MType>> &elements)
 {
-    using simple_ast::Node;
-    simple_ast::Function function;
+    using ast::Node;
+    ast::Function function;
     const std::shared_ptr<MType> tuple = NamedType(tupleName);
     function.name = TupleConstructorName(tupleName);
     function.result = LowerType(tuple, function.name);
@@ -759,12 +769,12 @@ simple_ast::Function MakeTupleConstructor(
     }
     const MStructDef *storage = FindStruct(tupleName);
     if (storage == nullptr)
-        return Fail("找不到元组的存储结构体 " + tupleName), simple_ast::Function{};
-    Memory::Vector<simple_ast::NodePtr> zeros;
+        return Fail("找不到元组的存储结构体 " + tupleName), ast::Function{};
+    Memory::Vector<ast::NodePtr> zeros;
     for (const auto &leaf : storage->leaves)
         zeros.push_back(IsFloatType(leaf.second) ? Node::f(0.0) : Node::i(0));
     const Memory::String result = "__chali_tuple_value";
-    Memory::Vector<simple_ast::NodePtr> body{
+    Memory::Vector<ast::NodePtr> body{
         Node::declare(result, function.result),
         Node::assign(result, Node::structNew(tupleName, zeros)),
     };
@@ -779,7 +789,7 @@ simple_ast::Function MakeTupleConstructor(
             if (elements[index]->kind == MType::Struct)
                 body.push_back(MoveStructValue(target, source, elements[index]));
             else
-                body.push_back(Node::storeAt(target, source, simple_ast::Type::i64()));
+                body.push_back(Node::storeAt(target, source, ast::Type::i64()));
             continue;
         }
         if (elements[index]->kind == MType::Struct)
@@ -812,9 +822,9 @@ simple_ast::Function MakeTupleConstructor(
  * @brief 生成字面量构造函数；元素按源码顺序插入并复制进独立容器。
  * @param program 接收构造函数的程序。
  */
-void AppendCollectionConstructors(simple_ast::Program &program)
+void AppendCollectionConstructors(ast::Program &program)
 {
-    using simple_ast::Node;
+    using ast::Node;
     for (const auto &item : g_collectionConstructors)
     {
         const auto type = item.second.type;
@@ -822,11 +832,11 @@ void AppendCollectionConstructors(simple_ast::Program &program)
         /* `List<T>` 的 `{a, b, c}` 走 `__std_vec_push`（顺序追加）；`Set<T>` 走
          * `__std_set_add`（去重）、`Map<K,V>` 走 `__std_map_put`（覆盖同键）。 */
         const bool list = type->name == "vec";
-        simple_ast::Function function;
+        ast::Function function;
         function.name = item.first;
         function.result = LowerType(type, item.first);
         const auto result = item.first + "_result";
-        Memory::Vector<simple_ast::NodePtr> body{
+        Memory::Vector<ast::NodePtr> body{
             Node::declare(result, function.result), Node::assign(result, NewContainerValue(type))
         };
         for (std::size_t i = 0; i < item.second.count; ++i)
@@ -842,16 +852,16 @@ void AppendCollectionConstructors(simple_ast::Program &program)
             {
                 Memory::Vector<Memory::String> names{ item.first + "_native_container", item.first + "_native_value",
                                                       item.first + "_native_text", item.first + "_native_object" };
-                Memory::Vector<simple_ast::NodePtr> values{ Node::var(result),
-                                                            Node::var(item.first + "_arg_" + Memory::toString(i)), Node::i(IsStandardOpcode(type->elem, "String")),
-                                                            ContainerStorageFlag(type->elem) };
+                Memory::Vector<ast::NodePtr> values{ Node::var(result),
+                                                     Node::var(item.first + "_arg_" + Memory::toString(i)), Node::i(IsStandardOpcode(type->elem, "String")),
+                                                     ContainerStorageFlag(type->elem) };
                 body.push_back(Node::exprStmt(Node::call("__std_vec_push", names, values)));
                 continue;
             }
             Memory::Vector<Memory::String> names{ item.first + "_native_container", item.first + "_native_key", item.first + "_native_text", item.first + "_native_object" };
-            Memory::Vector<simple_ast::NodePtr> values{ Node::var(result),
-                                                        Node::var(item.first + "_arg_" + Memory::toString(i)), Node::i(IsStandardOpcode(type->elem, "String")),
-                                                        ContainerStorageFlag(type->elem) };
+            Memory::Vector<ast::NodePtr> values{ Node::var(result),
+                                                 Node::var(item.first + "_arg_" + Memory::toString(i)), Node::i(IsStandardOpcode(type->elem, "String")),
+                                                 ContainerStorageFlag(type->elem) };
             if (map)
             {
                 names.insert(names.end(), { item.first + "_native_value", item.first + "_native_value_text", item.first + "_native_value_object" });
@@ -871,27 +881,27 @@ void AppendCollectionConstructors(simple_ast::Program &program)
  * @brief 生成运行时调用的 Map 键 Equal / Hash 包装函数。
  * @param program 接收包装函数的程序。
  */
-void AppendMapKeyPolicies(simple_ast::Program &program)
+void AppendMapKeyPolicies(ast::Program &program)
 {
-    using simple_ast::Node;
+    using ast::Node;
     for (const auto &item : g_mapKeyPolicies)
     {
         const auto &policy = item.second;
-        simple_ast::Function equal;
+        ast::Function equal;
         equal.name = policy.equalLabel;
         const auto left = equal.name + "_left", right = equal.name + "_right";
-        equal.parameters = { { left, simple_ast::Type::i64() }, { right, simple_ast::Type::i64() } };
+        equal.parameters = { { left, ast::Type::i64() }, { right, ast::Type::i64() } };
         equal.result = LowerType(policy.equal.result, equal.name);
         const auto first = Node::var(policy.equal.receiverLeft ? left : right);
         const auto second = Node::var(policy.equal.receiverLeft ? right : left);
         equal.body = Node::block({ Node::ret(Node::call(policy.equal.label, policy.equal.callNames, { first, second })) });
         program.functions.push_back(std::move(equal));
         if (policy.hashLabel.empty()) continue;
-        simple_ast::Function hash;
+        ast::Function hash;
         hash.name = policy.hashLabel;
         const auto value = hash.name + "_value";
-        hash.parameters = { { value, simple_ast::Type::i64() } };
-        hash.result = simple_ast::Type::i64();
+        hash.parameters = { { value, ast::Type::i64() } };
+        hash.result = ast::Type::i64();
         hash.body = Node::block({ Node::ret(Node::call(policy.hash.label, policy.hash.callNames,
                                                        { Node::var(value), Node::var(value) })) });
         program.functions.push_back(std::move(hash));
@@ -902,7 +912,7 @@ void AppendMapKeyPolicies(simple_ast::Program &program)
  * @brief 将元组构造函数追加到程序中。
  * @param program 待生成或执行的程序。
  */
-void AppendTupleConstructors(simple_ast::Program &program)
+void AppendTupleConstructors(ast::Program &program)
 {
     for (const auto &item : g_tupleElements)
     {
@@ -915,20 +925,20 @@ void AppendTupleConstructors(simple_ast::Program &program)
  * @brief 为带参数入口保留无参 `main` 引导，并在返回前释放参数 List。
  * @param program 待生成或执行的程序。
  */
-void AppendArgumentsMain(simple_ast::Program &program)
+void AppendArgumentsMain(ast::Program &program)
 {
-    using simple_ast::Node;
+    using ast::Node;
     for (const MFunctionDecl &declaration : g_functionDecls)
     {
         if (declaration.superseded || declaration.source != "main" || declaration.signature.params.empty())
             continue;
-        simple_ast::Function wrapper;
+        ast::Function wrapper;
         wrapper.name = "main";
         const bool voidMain = declaration.signature.result->kind == MType::Void;
-        wrapper.result = voidMain ? simple_ast::Type::i64() : LowerType(declaration.signature.result, "main");
+        wrapper.result = voidMain ? ast::Type::i64() : LowerType(declaration.signature.result, "main");
         const Memory::String arguments = "__chali_program_arguments";
         const Memory::String result = "__chali_program_result";
-        Memory::Vector<simple_ast::NodePtr> body{
+        Memory::Vector<ast::NodePtr> body{
             Node::declare(arguments, LowerType(declaration.signature.params[0].type, arguments)),
             Node::assign(arguments, Node::call("__std_program_arguments", {}, {})),
         };
@@ -957,20 +967,20 @@ void AppendArgumentsMain(simple_ast::Program &program)
  * 关闭路径标记 反映到 `g_globalCleanupItems` 上，不会漏也不会重。
  * `return` 可能嵌在 `if` / 循环的块里，所以这里递归整棵语句树。
  */
-simple_ast::NodePtr InsertGlobalCleanupBeforeReturns(
-    const simple_ast::NodePtr &node,
-    const Memory::Vector<simple_ast::NodePtr> &cleanup)
+ast::NodePtr InsertGlobalCleanupBeforeReturns(
+    const ast::NodePtr &node,
+    const Memory::Vector<ast::NodePtr> &cleanup)
 {
     if (node == nullptr || cleanup.empty()) return node;
-    if (node->kind == simple_ast::Node::Kind::Return)
+    if (node->kind == ast::Node::Kind::Return)
     {
-        Memory::Vector<simple_ast::NodePtr> block(cleanup.begin(), cleanup.end());
+        Memory::Vector<ast::NodePtr> block(cleanup.begin(), cleanup.end());
         block.push_back(node);
-        return simple_ast::Node::block(block);
+        return ast::Node::block(block);
     }
-    for (simple_ast::NodePtr &kid : node->kids)
+    for (ast::NodePtr &kid : node->kids)
     {
-        const simple_ast::NodePtr replaced = InsertGlobalCleanupBeforeReturns(kid, cleanup);
+        const ast::NodePtr replaced = InsertGlobalCleanupBeforeReturns(kid, cleanup);
         if (replaced != kid) kid = replaced;
     }
     return node;
@@ -986,11 +996,11 @@ simple_ast::NodePtr InsertGlobalCleanupBeforeReturns(
  * @param node 语句或语句块。
  * @return 该段一定以 `return` 结束时为 true。
  */
-bool EndsWithReturn(const simple_ast::NodePtr &node)
+bool EndsWithReturn(const ast::NodePtr &node)
 {
     if (node == nullptr) return false;
-    if (node->kind == simple_ast::Node::Kind::Return) return true;
-    if (node->kind == simple_ast::Node::Kind::Block && !node->kids.empty())
+    if (node->kind == ast::Node::Kind::Return) return true;
+    if (node->kind == ast::Node::Kind::Block && !node->kids.empty())
         return EndsWithReturn(node->kids.back());
     return false;
 }
@@ -999,22 +1009,22 @@ bool EndsWithReturn(const simple_ast::NodePtr &node)
  * @brief 给程序里每个入口 `main` 的每条出口补上全局停机清理（只对无主的 `main`）。
  * @param program 待生成或执行的程序。
  */
-void AppendGlobalCleanupToEntryMain(simple_ast::Program &program)
+void AppendGlobalCleanupToEntryMain(ast::Program &program)
 {
-    using simple_ast::Node;
-    const Memory::Vector<simple_ast::NodePtr> cleanup = EmitGlobalCleanupStatements();
+    using ast::Node;
+    const Memory::Vector<ast::NodePtr> cleanup = EmitGlobalCleanupStatements();
     if (cleanup.empty()) return;
-    for (simple_ast::Function &function : program.functions)
+    for (ast::Function &function : program.functions)
     {
         if (function.name != "main" || !function.owner.empty()) continue;
         function.body = InsertGlobalCleanupBeforeReturns(function.body, cleanup);
         /* 落到末尾那条出口也要清理：`void main()` 现在不给写返回值，末尾不写
          * `return;` 是常态（以前 `int64 main` 的 `return 0;` 正好挡住了这个洞）。 */
         if (EndsWithReturn(function.body)) continue;
-        Memory::Vector<simple_ast::NodePtr> tail(cleanup.begin(), cleanup.end());
+        Memory::Vector<ast::NodePtr> tail(cleanup.begin(), cleanup.end());
         tail.push_back(Node::ret(Node::i(0)));
         if (function.body != nullptr && function.body->kind == Node::Kind::Block)
-            for (const simple_ast::NodePtr &statement : tail) function.body->kids.push_back(statement);
+            for (const ast::NodePtr &statement : tail) function.body->kids.push_back(statement);
         else
             function.body = Node::block({ function.body, Node::block(tail) });
     }
@@ -1106,7 +1116,7 @@ bool ValidateDefaultArguments(const Memory::Vector<MParam> &params)
  * @param topId 所属具体结构体或枚举声明。
  * @param signature 已登记的方法签名及正文。
  */
-void LowerConcreteMethod(simple_ast::Program &program, int topId, const MMethod &signature)
+void LowerConcreteMethod(ast::Program &program, int topId, const MMethod &signature)
 {
     const MNode top = N(topId);
     ReductionSourceScope source(topId);
@@ -1137,21 +1147,21 @@ void LowerConcreteMethod(simple_ast::Program &program, int topId, const MMethod 
  * @brief 为带语言字段的 opcode 建立接管原生句柄的内部构造入口。
  * @param program 接收构造函数的低层程序。
  */
-void AppendOpcodeConstructors(simple_ast::Program &program)
+void AppendOpcodeConstructors(ast::Program &program)
 {
-    using simple_ast::Node;
+    using ast::Node;
     for (const auto &entry : g_opcodeTypes)
     {
         if (!entry.second.aggregate || entry.second.internal) continue;
         const auto type = NamedType(entry.first);
         const auto value = AllocateName("__chali_opcode_value");
-        simple_ast::Function function;
+        ast::Function function;
         function.name = "__chali_opcode_new_" + entry.first;
-        function.parameters = { { "handle", simple_ast::Type::i64() } };
+        function.parameters = { { "handle", ast::Type::i64() } };
         function.result = LowerType(type, value);
         function.body = Node::block({ Node::declare(value, LowerType(type, value)),
                                       DefaultInit(value, type, true, false),
-                                      Node::storeAt(Node::var(value), Node::var("handle"), simple_ast::Type::i64()),
+                                      Node::storeAt(Node::var(value), Node::var("handle"), ast::Type::i64()),
                                       Node::ret(Node::var(value)) });
         program.functions.push_back(std::move(function));
     }
@@ -1162,7 +1172,7 @@ void AppendOpcodeConstructors(simple_ast::Program &program)
  * @param node 当前低层语法节点。
  * @param labels 接收可能被引用的函数标签，保守包含字符串函数值。
  */
-void CollectLoweredReferences(const simple_ast::NodePtr &node, Memory::Set<Memory::String> &labels)
+void CollectLoweredReferences(const ast::NodePtr &node, Memory::Set<Memory::String> &labels)
 {
     if (!node) return;
     labels.insert(node->text);
@@ -1187,11 +1197,11 @@ bool DeferredNonCopyableGeneric(const Memory::String &owner)
 }
 
 /**
- * @brief 将已登记的完整程序降级为 simple_ast 表示。
+ * @brief 将已登记的完整程序降级为 ast 表示。
  * @param program 待生成或执行的程序。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool LowerProgram(simple_ast::Program &program)
+bool LowerProgram(ast::Program &program)
 {
     /* 解析期攒下的错（`typedef` 写错 / 别名重名）：挂成了 FptrDefBad 节点，这里报出来。 */
     for (const int topId : g_top)
@@ -1220,7 +1230,7 @@ bool LowerProgram(simple_ast::Program &program)
     g_globalCleanupItems = g_cleanupItems;
     Memory::Vector<int> pendingLambdas;
     Memory::Vector<std::pair<int, MMethod>> pendingMethods;
-    /* 函数与方法：方法体里的 `self` 由 simple_ast 自动声明（`(decl, i64, local, self)`） */
+    /* 函数与方法：方法体里的 `self` 由 ast 自动声明（`(decl, i64, local, self)`） */
     for (const int topId : g_top)
     {
         const MNode &top = N(topId);
@@ -1316,34 +1326,34 @@ bool LowerProgram(simple_ast::Program &program)
     AppendTupleConstructors(program);
     for (const auto &owner : g_needsCaptureDestructor)
     {
-        simple_ast::Function function;
+        ast::Function function;
         function.name = "__chali_capture_drop_" + owner;
-        function.result = simple_ast::Type::i64();
-        function.parameters = { { "__chali_capture_address", simple_ast::Type::i64() } };
-        Memory::Vector<simple_ast::NodePtr> body;
-        AppendDestruction(&body, simple_ast::Node::var("__chali_capture_address"), owner,
+        function.result = ast::Type::i64();
+        function.parameters = { { "__chali_capture_address", ast::Type::i64() } };
+        Memory::Vector<ast::NodePtr> body;
+        AppendDestruction(&body, ast::Node::var("__chali_capture_address"), owner,
                           StructHasInterface(owner, "Drop"), StructHasInterface(owner, "Closeable"));
-        body.push_back(simple_ast::Node::ret(simple_ast::Node::i(0)));
-        function.body = simple_ast::Node::block(body);
+        body.push_back(ast::Node::ret(ast::Node::i(0)));
+        function.body = ast::Node::block(body);
         program.functions.push_back(std::move(function));
     }
     AppendArgumentsMain(program);
     /* 函数体全降级完了，这时才展开全局停机清理（`g.close()` 之类的注销都已经反映到快照上）。 */
     if (g_sharedLibrary)
     {
-        simple_ast::Function initialize;
+        ast::Function initialize;
         initialize.name = "__chali_library_init";
-        initialize.result = simple_ast::Type::i64();
-        Memory::Vector<simple_ast::NodePtr> body(g_globalInit.begin(), g_globalInit.end());
-        body.push_back(simple_ast::Node::ret(simple_ast::Node::i(0)));
-        initialize.body = simple_ast::Node::block(body);
+        initialize.result = ast::Type::i64();
+        Memory::Vector<ast::NodePtr> body(g_globalInit.begin(), g_globalInit.end());
+        body.push_back(ast::Node::ret(ast::Node::i(0)));
+        initialize.body = ast::Node::block(body);
         program.functions.push_back(std::move(initialize));
-        simple_ast::Function finish;
+        ast::Function finish;
         finish.name = "__chali_library_finish";
-        finish.result = simple_ast::Type::i64();
+        finish.result = ast::Type::i64();
         body = EmitGlobalCleanupStatements();
-        body.push_back(simple_ast::Node::ret(simple_ast::Node::i(0)));
-        finish.body = simple_ast::Node::block(body);
+        body.push_back(ast::Node::ret(ast::Node::i(0)));
+        finish.body = ast::Node::block(body);
         program.functions.push_back(std::move(finish));
     }
     else
@@ -1355,16 +1365,16 @@ bool LowerProgram(simple_ast::Program &program)
     /* 全局初始化塞进 main 的最前面：stackvm 从第一条四元式开始执行，引导的 `call main` 在最前 */
     if (!g_sharedLibrary && !g_globalInit.empty())
     {
-        for (simple_ast::Function &function : program.functions)
+        for (ast::Function &function : program.functions)
         {
             if (function.name != "main" || !function.owner.empty()) continue;
-            Memory::Vector<simple_ast::NodePtr> body(g_globalInit.begin(), g_globalInit.end());
-            if (function.body && function.body->kind == simple_ast::Node::Kind::Block)
+            Memory::Vector<ast::NodePtr> body(g_globalInit.begin(), g_globalInit.end());
+            if (function.body && function.body->kind == ast::Node::Kind::Block)
             {
-                for (const simple_ast::NodePtr &statement : function.body->kids)
+                for (const ast::NodePtr &statement : function.body->kids)
                     body.push_back(statement);
             }
-            function.body = simple_ast::Node::block(body);
+            function.body = ast::Node::block(body);
             break;
         }
     }

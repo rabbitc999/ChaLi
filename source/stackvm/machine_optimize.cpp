@@ -688,7 +688,6 @@ void inlineSmallFunctions(Memory::Vector<Quad> &quads, Stats &stats)
         if (found != labelAt.end() && found->second < index) loops.push_back({ found->second, index });
     }
     if (loops.empty()) return;
-
     // 入口标签按下标排好，用来切"一个函数的区域到下一个入口标签为止"。
     Memory::Vector<std::pair<std::size_t, Memory::String>> ordered;
     for (const Memory::String &name : entries)
@@ -966,6 +965,50 @@ void inlineSmallFunctions(Memory::Vector<Quad> &quads, Stats &stats)
     while (cursor < quads.size()) rebuilt.push_back(quads[cursor++]);
     quads = std::move(rebuilt);
 }
+
+/**
+ * @brief 删除同一基本块内操作数未改变且无失效屏障的重复检查。
+ * @param quads 待优化四元式，首次检查保留原位置。
+ * @param stats 累计已删除检查数。
+ */
+void eliminateRepeatedChecks(Memory::Vector<Quad> &quads, Stats &stats)
+{
+    for (const auto &quad : quads)
+        if (quad.op == "call" && quad.arg(0).find("watchdog") != Memory::String::npos) return;
+    Memory::Vector<Quad> proven;
+    Memory::Vector<Quad> output;
+    output.reserve(quads.size());
+    for (const auto &quad : quads)
+    {
+        Memory::String suffix;
+        const auto base = splitType(quad.op, suffix);
+        if (base == "label" || base == "j" || base == "jz" || base == "jnz" || base == "ret"
+            || base == "halt" || base == "call" || base == "callptr" || base == "alloc"
+            || base == "drop" || base == "free" || base == "store") proven.clear();
+        if (writesResult(base))
+        {
+            const auto destination = quad.arg(2);
+            proven.erase(std::remove_if(proven.begin(), proven.end(), [&](const Quad &check) {
+                             return std::find(check.args.begin(), check.args.end(), destination) != check.args.end();
+                         }),
+                         proven.end());
+        }
+        if (base == "check" || base == "checkptr")
+        {
+            const auto found = std::find_if(proven.begin(), proven.end(), [&](const Quad &check) {
+                return check.op == quad.op && check.args == quad.args;
+            });
+            if (found != proven.end())
+            {
+                ++stats.redundantChecks;
+                continue;
+            }
+            proven.push_back(quad);
+        }
+        output.push_back(quad);
+    }
+    quads = std::move(output);
+}
 }  // namespace
 
 QuadFile optimize(const QuadFile &file, Stats *stats)
@@ -988,6 +1031,7 @@ QuadFile optimize(const QuadFile &file, Stats *stats)
         if (passOn("CHALI_NO_OPT_GVN")) commonSubexpressions(result.quads, local);
         if (passOn("CHALI_NO_OPT_DCE")) deadCode(result.quads, local);
         if (passOn("CHALI_NO_OPT_LICM")) hoistInvariants(result.quads, local);
+        if (passOn("CHALI_NO_OPT_CHECKS")) eliminateRepeatedChecks(result.quads, local);
     }
     local.after = result.quads.size();
     if (std::getenv("CHALI_DUMP_MACHINE") != nullptr)
@@ -1011,6 +1055,7 @@ QuadFile optimize(const QuadFile &file, Stats *stats)
     total.hoisted += local.hoisted;
     total.inlined += local.inlined;
     total.inlinedQuads += local.inlinedQuads;
+    total.redundantChecks += local.redundantChecks;
     if (stats != nullptr) *stats = local;
     return result;
 }
@@ -1028,6 +1073,7 @@ void resetStats() { accumulated() = Stats{}; }
 Memory::String describe(const Stats &stats)
 {
     Memory::String text = "机器级优化：四元式 " + Memory::toString(stats.before) + " → " + Memory::toString(stats.after) + "（折叠 " + Memory::toString(stats.folded) + "，传播 " + Memory::toString(stats.propagated) + "，合并 " + Memory::toString(stats.merged) + "，削减 " + Memory::toString(stats.reduced) + "，外提 " + Memory::toString(stats.hoisted) + "，内联 " + Memory::toString(stats.inlined) + " 处（+" + Memory::toString(stats.inlinedQuads) + " 条），删除 " + Memory::toString(stats.removed) + "）";
+    text += "，消除冗余检查 " + Memory::toString(stats.redundantChecks) + " 条";
     return text;
 }
 }  // namespace machine

@@ -365,7 +365,7 @@ StackVM 不再内建 `__std_sin` / `__std_pow` 等数学指令。语言前端应
 
 两条容易踩的细节（都有回归断言）：
 
-- **`decl` 不参与"不可达代码"清扫**：它登记的是类型元信息。`simple_ast` 生成的形参
+- **`decl` 不参与"不可达代码"清扫**：它登记的是类型元信息。`ast` 生成的形参
   声明就排在引导用的 `(halt)` 之后、函数标签之前，删掉它 `program.types` 就少了形参
   类型，传参归一化与 `print` 的格式都会跟着错；（`local` 作用域那条额外发出来的
   `DECLARE` 指令同样保留，但它排在函数标签之前，本来也执行不到，形参仍由 `call` 绑定。）
@@ -602,7 +602,7 @@ source/stackvm/
 
 ## 数据区：`--data` / `--layout`
 
-`simple_ast` 把数组 / 结构体 / 字符串降级成"基址 + 偏移"后，真正的值放在 `.data.bin` 里。
+`ast` 把数组 / 结构体 / 字符串降级成"基址 + 偏移"后，真正的值放在 `.data.bin` 里。
 `stackvm` 通过 `DataArea` 把它加载进来，四元式里的三条指令就能真读写那片内存：
 `DataArea::binary` 使用 `std::vector<std::uint8_t>` 保存原始字节，不再借用
 `std::string` 表示二进制数据；`char*` 只保留在与 C 风格读写缓冲区交接的 API 边界。
@@ -620,7 +620,7 @@ stackvm run demo.quad --data demo.data.bin --layout demo.layout
 stackvm run demo.quad --data demo.data.bin --trace     # 不给 --layout 时自动找 <bin>.layout
 ```
 
-`--layout` 的文件格式就是 `simple_ast` 的 `exportDataLayout()` 输出，一行一个符号：
+`--layout` 的文件格式就是 `ast` 的 `exportDataLayout()` 输出，一行一个符号：
 
 ```text
 arr_1 offset=0 size=32 stride=8 type=array<i32>{count=4;align=2;label=numbers}
@@ -628,18 +628,18 @@ obj_4 offset=32 size=4 stride=8 type=struct Box {}{value}
 ```
 
 - `offset` 是符号在数据区里的**基址**，`ADDR` 取的就是它；
-- `stride` 是槽位步长（`simple_ast` 固定写 8），和四元式里 `(*:i64, index, 8, t)` 的步长一致；
+- `stride` 是槽位步长（`ast` 固定写 8），和四元式里 `(*:i64, index, 8, t)` 的步长一致；
   `DataArea` 会把它读进 `strides` 表备查，**寻址用的是四元式里的步长**；
 - 读写都是 8 字节小端；**浮点靠四元式上的类型后缀区分**（`(load:f64 …)` / `(store:f32 …)`），
-  没有后缀就按整数读写 —— `simple_ast` 生成的下标 / 成员访问都带后缀，整数与浮点
+  没有后缀就按整数读写 —— `ast` 生成的下标 / 成员访问都带后缀，整数与浮点
   共用同一片 8 字节槽位；
 - 越界会报 `数据区越界读/写：地址 N`；没挂数据区时三条指令分别报
   `没有加载数据区，无法取符号地址 / 按地址取值 / 按地址写值`。
 
-完整的端到端例子（`simple_ast` 生成 → `stackvm` 取值）：
+完整的端到端例子（`ast` 生成 → `stackvm` 取值）：
 
 ```text
-$ simple_ast out/demo                       # 产出 .quad / .data / .data.bin / .data.h / .layout
+$ ast out/demo                       # 产出 .quad / .data / .data.bin / .data.h / .layout
 $ stackvm run out/demo.quad --data out/demo.data.bin --layout out/demo.layout
 30 30
 ; 执行 60 条指令，栈最深 2

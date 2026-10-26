@@ -71,14 +71,14 @@ def build_runner(cxx, target):
     必须带 `-static -ffunction-sections -Wl,--gc-sections`：
     少了这些时宿主会在退出阶段段错误（实测退出码 139）。
     """
-    libraries = [ROOT / 'build/chali-runtime/libsimple_ast.a', ROOT / 'build/chali-stackvm-core/libstackvm.a',
+    libraries = [ROOT / 'build/chali-runtime/libast.a', ROOT / 'build/chali-stackvm-core/libstackvm.a',
                  ROOT / 'build/chali-host-records/librecords.a', ROOT / 'build/chali-runtime/libpreprocess.a']
     objects = [ROOT / 'build/chali-frontend/lztext.o', ROOT / 'build/chali-miniz-tinfl.o']
     missing = [str(path) for path in libraries + objects if not path.exists()]
     if missing:
         raise AssertionError('缺少构建产物，先跑 mingw32-make -j4：' + ', '.join(missing))
     includes = ['source', 'library', 'source/allocator', 'source/bignum', 'source/json', 'source/toml',
-                'library/sqlite', 'source/console', 'source/lztext', 'source/simple_ast',
+                'library/sqlite', 'source/console', 'source/lztext', 'source/ast',
                 'source/stackvm', 'source/preprocess']
     command = [cxx, '-std=c++17', '-O2', '-DNDEBUG', '-ffunction-sections', '-fdata-sections',
                '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_FRONT_END_NO_MAIN=1', '-DCHALI_WITH_REFLECTION=1',

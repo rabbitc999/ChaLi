@@ -1,0 +1,68 @@
+struct Parcel { String title; int64[] data; int64 serial; };
+enum Envelope { Empty, Filled(Parcel parcel); };
+int64 drops = 0;
+struct Tracked: Drop {
+    int64 serial;
+    void drop() { drops = drops + self.serial; }
+};
+
+Parcel makeParcel(int64 serial) {
+    Parcel result;
+    result.title = format("parcel {}", serial);
+    result.data = new[3];
+    result.data[0] = serial;
+    result.data[1] = serial + 1;
+    result.data[2] = serial + 2;
+    result.serial = serial;
+    return result;
+}
+Parcel forwardParcel(int64 serial) { return makeParcel(serial); }
+Parcel duplicateParcel(Parcel const& source) { return source; }
+Parcel recursiveParcel(int64 depth) {
+    if (depth == 0) { return makeParcel(0); }
+    Parcel result = recursiveParcel(depth - 1);
+    result.data[0] = result.data[0] + 1;
+    result.serial = depth;
+    return result;
+}
+Envelope wrapParcel(int64 serial) { return Envelope::Filled(makeParcel(serial)); }
+Tracked makeTracked(int64 serial) { Tracked result; result.serial = serial; return result; }
+int64 readParcel(Parcel const& value) { return value.data[0] + value.serial; }
+int64 increment(int64 value) { return value + 1; }
+Parcel observeInitialization(Parcel const& previous) {
+    defer assert(previous.serial == 0);
+    return makeParcel(55);
+}
+
+void main() {
+    int64 i = 0;
+    while (i < 24) {
+        Parcel original = forwardParcel(i);
+        Parcel copied = duplicateParcel(&original);
+        copied.title = "changed";
+        copied.data[0] = 999;
+        assert(original.title == format("parcel {}",i) && original.data[0] == i);
+        assert(readParcel(&original) == i * 2);
+        Envelope wrapped = wrapParcel(i);
+        match (wrapped) {
+            Envelope::Empty => { assert(false); }
+            Envelope::Filled(value) => { assert(value.data[0] == i && value.serial == i); }
+        }
+        i = i + 1;
+    }
+    Parcel recursive = recursiveParcel(8);
+    assert(recursive.serial == 8 && recursive.data[0] == 8);
+    Parcel fn(int64) factory = makeParcel;
+    Parcel indirect = factory(17);
+    assert(indirect.title == "parcel 17" && indirect.data[2] == 19);
+    int64 fn(int64) arithmetic = increment;
+    assert(arithmetic(41) == 42);
+    Parcel selfReference = observeInitialization(&selfReference);
+    assert(selfReference.serial == 55);
+    {
+        Tracked resource = makeTracked(7);
+        assert(resource.serial == 7);
+    }
+    assert(drops == 7);
+    println("backend ownership OK");
+}

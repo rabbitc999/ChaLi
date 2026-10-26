@@ -523,7 +523,7 @@ OptimizationReport optimize(QuadFile &file, std::size_t maxRounds, bool collectT
                     if (splitType(passOne[index + 1u].op, nextType) == "label") break;
                     ++index;
                     // `decl` 是**类型元信息**，不是可执行指令：它常常排在函数标签之前
-                    // （`simple_ast` 生成的形参声明就是 `(decl …)` 在 `(label …)` 前面，
+                    // （`ast` 生成的形参声明就是 `(decl …)` 在 `(label …)` 前面，
                     // 前面还隔着引导用的 `(halt …)`）。删了它，`program.types` 就少了
                     // 形参的类型，调用时的实参归一化与 `write` 的格式都会跟着错。
                     if (splitType(passOne[index].op, nextType) == "decl")

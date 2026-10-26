@@ -1,0 +1,2173 @@
+{
+  "version": "1.0.6",
+  "compiler_sha256": "9f7592fe2b4e219a62b93b2c8f561639314fb8176bd4ef26ae1dfa1d2bfab063",
+  "generated_utc": "2026-10-26T04:20:37.508661+00:00",
+  "host": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "operations": 1000,
+  "runs": 3,
+  "repetitions": 5,
+  "warmups": 1,
+  "optimization": "LLVM O3; full quad budget; checked; reflection enabled",
+  "baseline_flags": {
+    "CHALI_NO_AGGREGATE_OPT": "1",
+    "CHALI_NO_ARRAY_COPY_BULK": "1",
+    "CHALI_NO_AOT_BULK_COPY": "1",
+    "CHALI_NO_AOT_ADDRESS_CACHE": "1",
+    "CHALI_NO_AOT_INLINE_HINT": "1",
+    "CHALI_NO_AOT_DIRECT_CALLS": "1",
+    "CHALI_NO_OPT_CHECKS": "1"
+  },
+  "cases": {
+    "return_chain": {
+      "expected_sink": 3007000,
+      "source_sha256": "95984dbbce51ac8c1b3c029b1163f4e0419f4970b029b5a0e316ac650f30bc68",
+      "source": "sources/return_chain.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2412337200
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2322697300
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2244963700
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2329875300
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline.exe"
+            ],
+            "stdout": "rep 14844800\nrep 9023700\nrep 8122400\nrep 8118700\nrep 13520200\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 844797500,
+            "times_ns": [
+              14844800,
+              9023700,
+              8122400,
+              8118700,
+              13520200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline.exe"
+            ],
+            "stdout": "rep 8602000\nrep 8290000\nrep 8299500\nrep 8284500\nrep 8542000\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 314014500,
+            "times_ns": [
+              8602000,
+              8290000,
+              8299500,
+              8284500,
+              8542000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline.exe"
+            ],
+            "stdout": "rep 8326900\nrep 8307800\nrep 8223300\nrep 8224900\nrep 8213200\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 286092200,
+            "times_ns": [
+              8326900,
+              8307800,
+              8223300,
+              8224900,
+              8213200
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized.exe"
+            ],
+            "stdout": "rep 11627600\nrep 8831600\nrep 7959600\nrep 7344400\nrep 10781600\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 999620300,
+            "times_ns": [
+              11627600,
+              8831600,
+              7959600,
+              7344400,
+              10781600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized.exe"
+            ],
+            "stdout": "rep 11512200\nrep 10425200\nrep 11936400\nrep 11254500\nrep 9673900\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 416097800,
+            "times_ns": [
+              11512200,
+              10425200,
+              11936400,
+              11254500,
+              9673900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized.exe"
+            ],
+            "stdout": "rep 7317000\nrep 9268300\nrep 7274000\nrep 7309700\nrep 7285900\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 297905400,
+            "times_ns": [
+              7317000,
+              9268300,
+              7274000,
+              7309700,
+              7285900
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "return_chain-baseline-profile.json",
+          "counts": {
+            "aggregate_move": 12000,
+            "allocation_request": 18001,
+            "call:__chali_agg_rel_Parcel": 6000,
+            "call:__chali_copy_struct": 18000,
+            "call:__chali_new_array": 6001,
+            "call:__std_memset": 18001,
+            "call:__std_move_begin": 42000,
+            "call:__std_move_end": 12000,
+            "call:__std_move_live": 6000,
+            "call:__std_print": 6,
+            "call:__std_str_fmt": 6000,
+            "call:program::forwardParcel": 6000,
+            "call:program::makeParcel": 6000,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringDrop": 6000,
+            "cleanup": 18001
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-baseline-profile.exe"
+            ],
+            "stdout": "rep 11371800\nrep 11286800\nrep 11348800\nrep 11335700\nrep 11720700\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 1070199300
+          }
+        },
+        "optimized": {
+          "file": "return_chain-optimized-profile.json",
+          "counts": {
+            "aggregate_move": 6000,
+            "allocation_request": 18001,
+            "call:__chali_agg_rel_Parcel": 6000,
+            "call:__chali_copy_struct": 12000,
+            "call:__chali_into$146$program::forwardParcel": 6000,
+            "call:__chali_new_array": 6001,
+            "call:__std_memset": 18001,
+            "call:__std_move_begin": 42000,
+            "call:__std_move_end": 6000,
+            "call:__std_move_live": 6000,
+            "call:__std_print": 6,
+            "call:__std_str_fmt": 6000,
+            "call:program::makeParcel": 6000,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringDrop": 6000,
+            "cleanup": 18001
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\return_chain-optimized-profile.exe"
+            ],
+            "stdout": "rep 10186700\nrep 10575200\nrep 10077200\nrep 10488000\nrep 10037400\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 877361100
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 108,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 10,
+          "bulk_calls": 3,
+          "address_resolves": 116,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 8299500,
+        "optimized": 9268300
+      },
+      "speedup": 0.895471661469741
+    },
+    "aggregate_copy": {
+      "expected_sink": 10000,
+      "source_sha256": "7248650b0755efbc7bc992c750971d3f5bc34c7db97720776bd7e3c68a802912",
+      "source": "sources/aggregate_copy.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2291772500
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2285518800
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2441800000
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2342999300
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline.exe"
+            ],
+            "stdout": "rep 7328100\nrep 6885600\nrep 6958100\nrep 6944100\nrep 6955500\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 1076663600,
+            "times_ns": [
+              7328100,
+              6885600,
+              6958100,
+              6944100,
+              6955500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline.exe"
+            ],
+            "stdout": "rep 8516500\nrep 11718800\nrep 7760200\nrep 6902400\nrep 7129100\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 469158000,
+            "times_ns": [
+              8516500,
+              11718800,
+              7760200,
+              6902400,
+              7129100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline.exe"
+            ],
+            "stdout": "rep 7217700\nrep 7193900\nrep 7122800\nrep 8130700\nrep 12084500\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 522414600,
+            "times_ns": [
+              7217700,
+              7193900,
+              7122800,
+              8130700,
+              12084500
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized.exe"
+            ],
+            "stdout": "rep 6036600\nrep 6043300\nrep 6063300\nrep 6095500\nrep 6006600\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 855361500,
+            "times_ns": [
+              6036600,
+              6043300,
+              6063300,
+              6095500,
+              6006600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized.exe"
+            ],
+            "stdout": "rep 6041900\nrep 6003900\nrep 10812000\nrep 6186800\nrep 6070800\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 276965700,
+            "times_ns": [
+              6041900,
+              6003900,
+              10812000,
+              6186800,
+              6070800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized.exe"
+            ],
+            "stdout": "rep 11510900\nrep 6917900\nrep 7866300\nrep 6375000\nrep 6548000\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 334444000,
+            "times_ns": [
+              11510900,
+              6917900,
+              7866300,
+              6375000,
+              6548000
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "aggregate_copy-baseline-profile.json",
+          "counts": {
+            "aggregate_move": 6006,
+            "allocation_request": 12019,
+            "array_copy": 6000,
+            "call:__chali_agg_cpy_Parcel": 6000,
+            "call:__chali_agg_rel_Parcel": 6006,
+            "call:__chali_copy_struct": 6012,
+            "call:__chali_new_array": 6007,
+            "call:__std_memset": 12019,
+            "call:__std_move_begin": 24030,
+            "call:__std_move_end": 6006,
+            "call:__std_move_live": 6006,
+            "call:__std_print": 6,
+            "call:__std_reference": 12000,
+            "call:__std_str_fmt": 6,
+            "call:program::duplicateParcel": 6000,
+            "call:program::makeParcel": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringCopy": 6000,
+            "call:std::lang::__stringDrop": 6006,
+            "cleanup": 12019
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-baseline-profile.exe"
+            ],
+            "stdout": "rep 12347600\nrep 14647500\nrep 14837800\nrep 10107200\nrep 10657800\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 1093256200
+          }
+        },
+        "optimized": {
+          "file": "aggregate_copy-optimized-profile.json",
+          "counts": {
+            "allocation_request": 12019,
+            "array_copy": 6000,
+            "call:__chali_agg_cpy_Parcel": 6000,
+            "call:__chali_agg_rel_Parcel": 6006,
+            "call:__chali_copy_struct": 6006,
+            "call:__chali_into$145$program::makeParcel": 6,
+            "call:__chali_into$147$program::duplicateParcel": 6000,
+            "call:__chali_new_array": 6007,
+            "call:__std_memset": 12019,
+            "call:__std_move_begin": 24030,
+            "call:__std_move_live": 6006,
+            "call:__std_print": 6,
+            "call:__std_reference": 12000,
+            "call:__std_str_fmt": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringCopy": 6000,
+            "call:std::lang::__stringDrop": 6006,
+            "cleanup": 12019
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\aggregate_copy-optimized-profile.exe"
+            ],
+            "stdout": "rep 8532300\nrep 8803700\nrep 8480000\nrep 8473700\nrep 9258000\nsink 10000\n",
+            "stderr": "",
+            "wall_ns": 834008900
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 118,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 41,
+          "bulk_calls": 3,
+          "address_resolves": 124,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 7193900,
+        "optimized": 6095500
+      },
+      "speedup": 1.1801985070953982
+    },
+    "enum_payload": {
+      "expected_sink": 3007000,
+      "source_sha256": "4544f831cf20df14d780957101a20e2783190b9db37b8d95385aaaa4733d5233",
+      "source": "sources/enum_payload.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2323417900
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2351881000
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2303415100
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2372059800
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline.exe"
+            ],
+            "stdout": "rep 12435800\nrep 12734200\nrep 12399800\nrep 12347700\nrep 12315300\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 846722100,
+            "times_ns": [
+              12435800,
+              12734200,
+              12399800,
+              12347700,
+              12315300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline.exe"
+            ],
+            "stdout": "rep 12469900\nrep 12379300\nrep 12387600\nrep 12727800\nrep 12368100\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 337582500,
+            "times_ns": [
+              12469900,
+              12379300,
+              12387600,
+              12727800,
+              12368100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline.exe"
+            ],
+            "stdout": "rep 12260000\nrep 16634500\nrep 13165800\nrep 19711100\nrep 12455300\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 355197100,
+            "times_ns": [
+              12260000,
+              16634500,
+              13165800,
+              19711100,
+              12455300
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized.exe"
+            ],
+            "stdout": "rep 9386300\nrep 9269000\nrep 13813900\nrep 14914400\nrep 10133100\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 924274000,
+            "times_ns": [
+              9386300,
+              9269000,
+              13813900,
+              14914400,
+              10133100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized.exe"
+            ],
+            "stdout": "rep 16644300\nrep 11759400\nrep 10845500\nrep 12011700\nrep 14364200\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 393005100,
+            "times_ns": [
+              16644300,
+              11759400,
+              10845500,
+              12011700,
+              14364200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized.exe"
+            ],
+            "stdout": "rep 13899700\nrep 10811800\nrep 9520300\nrep 9044200\nrep 9063300\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 329077300,
+            "times_ns": [
+              13899700,
+              10811800,
+              9520300,
+              9044200,
+              9063300
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "enum_payload-baseline-profile.json",
+          "counts": {
+            "aggregate_move": 12000,
+            "allocation_request": 24001,
+            "array_copy": 6000,
+            "call:__chali_agg_rel_Envelope": 6000,
+            "call:__chali_agg_rel_Parcel": 6000,
+            "call:__chali_copy_struct": 18000,
+            "call:__chali_enum_Envelope_Filled": 6000,
+            "call:__chali_new_array": 12001,
+            "call:__std_memset": 24001,
+            "call:__std_move_begin": 42000,
+            "call:__std_move_end": 30000,
+            "call:__std_move_live": 6000,
+            "call:__std_print": 6,
+            "call:__std_str_fmt": 6000,
+            "call:program::makeParcel": 6000,
+            "call:program::work": 6,
+            "call:program::wrapParcel": 6000,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringCopy": 6000,
+            "call:std::lang::__stringDrop": 12000,
+            "cleanup": 24001
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-baseline-profile.exe"
+            ],
+            "stdout": "rep 18734900\nrep 18419900\nrep 26242800\nrep 20672600\nrep 18357000\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 942716500
+          }
+        },
+        "optimized": {
+          "file": "enum_payload-optimized-profile.json",
+          "counts": {
+            "aggregate_move": 12000,
+            "allocation_request": 18001,
+            "call:__chali_agg_rel_Envelope": 6000,
+            "call:__chali_agg_rel_Parcel": 6000,
+            "call:__chali_copy_struct": 18000,
+            "call:__chali_enum_Envelope_Filled$take": 6000,
+            "call:__chali_into$149$program::wrapParcel": 6000,
+            "call:__chali_new_array": 6001,
+            "call:__std_memset": 18001,
+            "call:__std_move_begin": 48000,
+            "call:__std_move_end": 24000,
+            "call:__std_move_live": 6000,
+            "call:__std_print": 6,
+            "call:__std_str_fmt": 6000,
+            "call:program::makeParcel": 6000,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringDrop": 6000,
+            "cleanup": 18001
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\enum_payload-optimized-profile.exe"
+            ],
+            "stdout": "rep 16440500\nrep 12609400\nrep 12662400\nrep 12670700\nrep 13296000\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 895056300
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 125,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 14,
+          "bulk_calls": 4,
+          "address_resolves": 125,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 12435800,
+        "optimized": 10845500
+      },
+      "speedup": 1.146632243787746
+    },
+    "scalar_array_copy": {
+      "expected_sink": 1507864,
+      "source_sha256": "54f205e6348add81be3ca9a430554889b786be469be6f7f376e3f24bf14c4d09",
+      "source": "sources/scalar_array_copy.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2317082700
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2321195500
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2494649600
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2384596600
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline.exe"
+            ],
+            "stdout": "rep 50935200\nrep 43905000\nrep 52263900\nrep 38670900\nrep 36539600\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 1082014600,
+            "times_ns": [
+              50935200,
+              43905000,
+              52263900,
+              38670900,
+              36539600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline.exe"
+            ],
+            "stdout": "rep 43581400\nrep 36976800\nrep 36903100\nrep 37928100\nrep 43268900\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 501193600,
+            "times_ns": [
+              43581400,
+              36976800,
+              36903100,
+              37928100,
+              43268900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline.exe"
+            ],
+            "stdout": "rep 38512800\nrep 57623400\nrep 50268500\nrep 39872300\nrep 49575500\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 562261400,
+            "times_ns": [
+              38512800,
+              57623400,
+              50268500,
+              39872300,
+              49575500
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized.exe"
+            ],
+            "stdout": "rep 1844200\nrep 1840600\nrep 1762400\nrep 1760800\nrep 1768700\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 777600200,
+            "times_ns": [
+              1844200,
+              1840600,
+              1762400,
+              1760800,
+              1768700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized.exe"
+            ],
+            "stdout": "rep 1770700\nrep 1972000\nrep 3186500\nrep 3188000\nrep 3215200\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 306901700,
+            "times_ns": [
+              1770700,
+              1972000,
+              3186500,
+              3188000,
+              3215200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized.exe"
+            ],
+            "stdout": "rep 1777900\nrep 1870800\nrep 1803900\nrep 1798300\nrep 1781500\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 266865300,
+            "times_ns": [
+              1777900,
+              1870800,
+              1803900,
+              1798300,
+              1781500
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "scalar_array_copy-baseline-profile.json",
+          "counts": {
+            "allocation_request": 6007,
+            "array_copy": 6000,
+            "call:__chali_new_array": 6007,
+            "call:__std_memset": 6007,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 6007
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-baseline-profile.exe"
+            ],
+            "stdout": "rep 37021900\nrep 35856800\nrep 46036900\nrep 43653200\nrep 42549700\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 1072159500
+          }
+        },
+        "optimized": {
+          "file": "scalar_array_copy-optimized-profile.json",
+          "counts": {
+            "allocation_request": 6007,
+            "array_copy": 6000,
+            "call:__chali_copy_struct": 6000,
+            "call:__chali_new_array": 6007,
+            "call:__std_memset": 6007,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 6007
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\scalar_array_copy-optimized-profile.exe"
+            ],
+            "stdout": "rep 2476600\nrep 2272500\nrep 2286200\nrep 2287700\nrep 2274200\nsink 1507864\n",
+            "stderr": "",
+            "wall_ns": 892926400
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 82,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 0,
+          "bulk_calls": 2,
+          "address_resolves": 94,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 43268900,
+        "optimized": 1803900
+      },
+      "speedup": 23.98630744498032
+    },
+    "field_read": {
+      "expected_sink": 20000,
+      "source_sha256": "8987c2197c7ed34ab32ba83e2eeaea1c6e822a971afb012f0193716108f0894f",
+      "source": "sources/field_read.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2376778200
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2479160200
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2261307800
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2289196900
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline.exe"
+            ],
+            "stdout": "rep 3703800\nrep 4397500\nrep 4393500\nrep 3459700\nrep 4387000\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 880799800,
+            "times_ns": [
+              3703800,
+              4397500,
+              4393500,
+              3459700,
+              4387000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline.exe"
+            ],
+            "stdout": "rep 2476500\nrep 2191500\nrep 2180900\nrep 2188700\nrep 2201100\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 269706200,
+            "times_ns": [
+              2476500,
+              2191500,
+              2180900,
+              2188700,
+              2201100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline.exe"
+            ],
+            "stdout": "rep 2511900\nrep 2554200\nrep 2218800\nrep 2246600\nrep 2222500\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 302580700,
+            "times_ns": [
+              2511900,
+              2554200,
+              2218800,
+              2246600,
+              2222500
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized.exe"
+            ],
+            "stdout": "rep 2206100\nrep 2304700\nrep 2195500\nrep 2168300\nrep 2467100\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 831039800,
+            "times_ns": [
+              2206100,
+              2304700,
+              2195500,
+              2168300,
+              2467100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized.exe"
+            ],
+            "stdout": "rep 2366700\nrep 2200900\nrep 2202900\nrep 2181100\nrep 2224700\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 259253900,
+            "times_ns": [
+              2366700,
+              2200900,
+              2202900,
+              2181100,
+              2224700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized.exe"
+            ],
+            "stdout": "rep 2394500\nrep 2209400\nrep 2200300\nrep 2230600\nrep 2183600\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 306471200,
+            "times_ns": [
+              2394500,
+              2209400,
+              2200300,
+              2230600,
+              2183600
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "field_read-baseline-profile.json",
+          "counts": {
+            "aggregate_move": 6,
+            "allocation_request": 19,
+            "call:__chali_agg_rel_Parcel": 6,
+            "call:__chali_copy_struct": 12,
+            "call:__chali_new_array": 7,
+            "call:__std_memset": 19,
+            "call:__std_move_begin": 30,
+            "call:__std_move_end": 6,
+            "call:__std_move_live": 6,
+            "call:__std_print": 6,
+            "call:__std_reference": 24000,
+            "call:__std_str_fmt": 6,
+            "call:program::makeParcel": 6,
+            "call:program::readParcel": 6000,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringDrop": 6,
+            "cleanup": 19
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-baseline-profile.exe"
+            ],
+            "stdout": "rep 4216600\nrep 2830400\nrep 2934400\nrep 3014400\nrep 2756200\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 954888900
+          }
+        },
+        "optimized": {
+          "file": "field_read-optimized-profile.json",
+          "counts": {
+            "allocation_request": 19,
+            "call:__chali_agg_rel_Parcel": 6,
+            "call:__chali_copy_struct": 6,
+            "call:__chali_into$145$program::makeParcel": 6,
+            "call:__chali_new_array": 7,
+            "call:__std_memset": 19,
+            "call:__std_move_begin": 30,
+            "call:__std_move_live": 6,
+            "call:__std_print": 6,
+            "call:__std_reference": 24000,
+            "call:__std_str_fmt": 6,
+            "call:program::readParcel": 6000,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringDrop": 6,
+            "cleanup": 19
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\field_read-optimized-profile.exe"
+            ],
+            "stdout": "rep 2720600\nrep 2731000\nrep 2702700\nrep 5209800\nrep 5239500\nsink 20000\n",
+            "stderr": "",
+            "wall_ns": 814953600
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 107,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 34,
+          "bulk_calls": 2,
+          "address_resolves": 115,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 2476500,
+        "optimized": 2206100
+      },
+      "speedup": 1.122569239835003
+    },
+    "function_value": {
+      "expected_sink": 3013000,
+      "source_sha256": "0d60bc007a8f825e9434401112c9c42f8f5a6fd585df17b12ece7c35f1142a15",
+      "source": "sources/function_value.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2364749700
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2318636900
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2308874500
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2334151700
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline.exe"
+            ],
+            "stdout": "rep 225500\nrep 206700\nrep 207000\nrep 207000\nrep 238000\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 844299200,
+            "times_ns": [
+              225500,
+              206700,
+              207000,
+              207000,
+              238000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline.exe"
+            ],
+            "stdout": "rep 211000\nrep 215900\nrep 204200\nrep 204100\nrep 200000\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 270979200,
+            "times_ns": [
+              211000,
+              215900,
+              204200,
+              204100,
+              200000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline.exe"
+            ],
+            "stdout": "rep 213900\nrep 197000\nrep 196900\nrep 202700\nrep 210700\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 270097500,
+            "times_ns": [
+              213900,
+              197000,
+              196900,
+              202700,
+              210700
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized.exe"
+            ],
+            "stdout": "rep 266900\nrep 274500\nrep 293000\nrep 277600\nrep 290100\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 873171000,
+            "times_ns": [
+              266900,
+              274500,
+              293000,
+              277600,
+              290100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized.exe"
+            ],
+            "stdout": "rep 171500\nrep 166500\nrep 166500\nrep 166500\nrep 166500\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 315718300,
+            "times_ns": [
+              171500,
+              166500,
+              166500,
+              166500,
+              166500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized.exe"
+            ],
+            "stdout": "rep 168900\nrep 165900\nrep 163500\nrep 167600\nrep 162900\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 262738500,
+            "times_ns": [
+              168900,
+              165900,
+              163500,
+              167600,
+              162900
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "function_value-baseline-profile.json",
+          "counts": {
+            "allocation_request": 6001,
+            "call:__chali_new_array": 1,
+            "call:__std_memset": 1,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 12001,
+            "indirect_call": 6000
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-baseline-profile.exe"
+            ],
+            "stdout": "rep 480200\nrep 468300\nrep 472200\nrep 491500\nrep 473100\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 830429700
+          }
+        },
+        "optimized": {
+          "file": "function_value-optimized-profile.json",
+          "counts": {
+            "allocation_request": 6001,
+            "call:__chali_new_array": 1,
+            "call:__std_memset": 1,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 12001,
+            "indirect_call": 6000
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\function_value-optimized-profile.exe"
+            ],
+            "stdout": "rep 458600\nrep 466600\nrep 458300\nrep 478100\nrep 559000\nsink 3013000\n",
+            "stderr": "",
+            "wall_ns": 782813300
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 76,
+          "indirect_calls": 2,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 0,
+          "bulk_calls": 1,
+          "address_resolves": 88,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 207000,
+        "optimized": 167600
+      },
+      "speedup": 1.2350835322195703
+    },
+    "small_method": {
+      "expected_sink": 52000,
+      "source_sha256": "4f89e3f72e540e5310649eb70c0ca0472e51857b78d6af7333c5ed26bfc71438",
+      "source": "sources/small_method.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2413381800
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2507052800
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2283468100
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2265762200
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline.exe"
+            ],
+            "stdout": "rep 71600\nrep 64400\nrep 64300\nrep 64200\nrep 64200\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 1019726800,
+            "times_ns": [
+              71600,
+              64400,
+              64300,
+              64200,
+              64200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline.exe"
+            ],
+            "stdout": "rep 67400\nrep 64400\nrep 64200\nrep 63900\nrep 63900\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 399251400,
+            "times_ns": [
+              67400,
+              64400,
+              64200,
+              63900,
+              63900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline.exe"
+            ],
+            "stdout": "rep 68400\nrep 64700\nrep 64700\nrep 64700\nrep 64600\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 415146200,
+            "times_ns": [
+              68400,
+              64700,
+              64700,
+              64700,
+              64600
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized.exe"
+            ],
+            "stdout": "rep 71100\nrep 63900\nrep 63700\nrep 63700\nrep 63700\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 823676100,
+            "times_ns": [
+              71100,
+              63900,
+              63700,
+              63700,
+              63700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized.exe"
+            ],
+            "stdout": "rep 67200\nrep 64200\nrep 70200\nrep 78200\nrep 75000\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 251409600,
+            "times_ns": [
+              67200,
+              64200,
+              70200,
+              78200,
+              75000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized.exe"
+            ],
+            "stdout": "rep 67100\nrep 63600\nrep 63200\nrep 63200\nrep 63200\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 304507900,
+            "times_ns": [
+              67100,
+              63600,
+              63200,
+              63200,
+              63200
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "small_method-baseline-profile.json",
+          "counts": {
+            "allocation_request": 7,
+            "call:PerfPoint.sum": 6000,
+            "call:__chali_new_array": 1,
+            "call:__std_memset": 7,
+            "call:__std_move_begin": 6,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 7
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-baseline-profile.exe"
+            ],
+            "stdout": "rep 174500\nrep 135400\nrep 130500\nrep 138700\nrep 132500\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 985674700
+          }
+        },
+        "optimized": {
+          "file": "small_method-optimized-profile.json",
+          "counts": {
+            "allocation_request": 7,
+            "call:PerfPoint.sum": 6000,
+            "call:__chali_new_array": 1,
+            "call:__std_memset": 7,
+            "call:__std_move_begin": 6,
+            "call:__std_print": 6,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "cleanup": 7
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\small_method-optimized-profile.exe"
+            ],
+            "stdout": "rep 137400\nrep 132600\nrep 135100\nrep 132600\nrep 132000\nsink 52000\n",
+            "stderr": "",
+            "wall_ns": 772773600
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 79,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 0,
+          "bulk_calls": 1,
+          "address_resolves": 91,
+          "indirect_calls": 1,
+          "inline_hints": 2
+        }
+      },
+      "median_ns": {
+        "baseline": 64400,
+        "optimized": 63900
+      },
+      "speedup": 1.0078247261345852
+    },
+    "segmented_list": {
+      "expected_sink": 3007000,
+      "source_sha256": "f46af73c664175c4128fbadceb6f867e9be146d77cd1794d39391337e985feb1",
+      "source": "sources/segmented_list.chl",
+      "builds": {
+        "baseline": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2540613900
+        },
+        "baseline-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2514425200
+        },
+        "optimized": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2627163800
+        },
+        "optimized-profile": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized-profile"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2549506600
+        }
+      },
+      "commands": {
+        "baseline": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline.exe"
+        ],
+        "baseline-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline-profile.exe"
+        ],
+        "optimized": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized.exe"
+        ],
+        "optimized-profile": [
+          "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized-profile.exe"
+        ]
+      },
+      "measurements": {
+        "baseline": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline.exe"
+            ],
+            "stdout": "rep 8125000\nrep 8293600\nrep 8492800\nrep 8678300\nrep 9087200\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 855489900,
+            "times_ns": [
+              8125000,
+              8293600,
+              8492800,
+              8678300,
+              9087200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline.exe"
+            ],
+            "stdout": "rep 8060500\nrep 8297600\nrep 8929400\nrep 8655200\nrep 8907400\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 318333400,
+            "times_ns": [
+              8060500,
+              8297600,
+              8929400,
+              8655200,
+              8907400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline.exe"
+            ],
+            "stdout": "rep 7989800\nrep 10477500\nrep 8350700\nrep 8769200\nrep 8855300\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 360602300,
+            "times_ns": [
+              7989800,
+              10477500,
+              8350700,
+              8769200,
+              8855300
+            ]
+          }
+        ],
+        "optimized": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized.exe"
+            ],
+            "stdout": "rep 13423900\nrep 14163400\nrep 13139500\nrep 13229900\nrep 15374400\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 966865000,
+            "times_ns": [
+              13423900,
+              14163400,
+              13139500,
+              13229900,
+              15374400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized.exe"
+            ],
+            "stdout": "rep 8849400\nrep 8193800\nrep 10143300\nrep 8577400\nrep 12320500\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 338634200,
+            "times_ns": [
+              8849400,
+              8193800,
+              10143300,
+              8577400,
+              12320500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized.exe"
+            ],
+            "stdout": "rep 8930700\nrep 9208300\nrep 12398300\nrep 12061500\nrep 8816500\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 325455400,
+            "times_ns": [
+              8930700,
+              9208300,
+              12398300,
+              12061500,
+              8816500
+            ]
+          }
+        ]
+      },
+      "profiles": {
+        "baseline": {
+          "file": "segmented_list-baseline-profile.json",
+          "counts": {
+            "aggregate_move": 72,
+            "allocation_request": 6211,
+            "array_copy": 18,
+            "call:BootstrapList__int64.close": 6,
+            "call:BootstrapList__int64.pop": 6000,
+            "call:BootstrapList__int64.push": 6000,
+            "call:__chali_agg_rel_BootstrapList__int64": 6,
+            "call:__chali_copy_struct": 312,
+            "call:__chali_new_array": 37,
+            "call:__std_heap_drop_live": 96,
+            "call:__std_memset": 211,
+            "call:__std_move_begin": 654,
+            "call:__std_move_end": 72,
+            "call:__std_move_live": 12,
+            "call:__std_print": 6,
+            "call:__std_reference": 12384,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringCopy": 18012,
+            "call:std::lang::__stringDrop": 18012,
+            "call:std::lang::assert$bool$std::lang::String": 18012,
+            "cleanup": 6211
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-baseline-profile.exe"
+            ],
+            "stdout": "rep 14932100\nrep 10554200\nrep 10794600\nrep 11108800\nrep 13475900\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 1018502900
+          }
+        },
+        "optimized": {
+          "file": "segmented_list-optimized-profile.json",
+          "counts": {
+            "aggregate_move": 72,
+            "allocation_request": 6211,
+            "array_copy": 18,
+            "call:BootstrapList__int64.close": 6,
+            "call:BootstrapList__int64.pop": 6000,
+            "call:BootstrapList__int64.push": 6000,
+            "call:__chali_agg_rel_BootstrapList__int64": 6,
+            "call:__chali_copy_struct": 312,
+            "call:__chali_new_array": 37,
+            "call:__std_heap_drop_live": 96,
+            "call:__std_memset": 211,
+            "call:__std_move_begin": 654,
+            "call:__std_move_end": 72,
+            "call:__std_move_live": 12,
+            "call:__std_print": 6,
+            "call:__std_reference": 12384,
+            "call:program::work": 6,
+            "call:std::clock::nowNanos": 10,
+            "call:std::lang::__stringCopy": 18012,
+            "call:std::lang::__stringDrop": 18012,
+            "call:std::lang::assert$bool$std::lang::String": 18012,
+            "cleanup": 6211
+          },
+          "execution": {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf\\segmented_list-optimized-profile.exe"
+            ],
+            "stdout": "rep 9812200\nrep 10071600\nrep 10260500\nrep 10498300\nrep 10745200\nsink 3007000\n",
+            "stderr": "",
+            "wall_ns": 954538200
+          }
+        }
+      },
+      "llvm_evidence": {
+        "baseline": {
+          "destination_mentions": 0,
+          "bulk_calls": 0,
+          "address_resolves": 131,
+          "indirect_calls": 1,
+          "inline_hints": 0
+        },
+        "optimized": {
+          "destination_mentions": 0,
+          "bulk_calls": 4,
+          "address_resolves": 136,
+          "indirect_calls": 1,
+          "inline_hints": 1
+        }
+      },
+      "median_ns": {
+        "baseline": 8655200,
+        "optimized": 12061500
+      },
+      "speedup": 0.7175890229241803
+    }
+  },
+  "execution_order": [
+    {
+      "case": "return_chain",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "return_chain",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "return_chain",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "aggregate_copy",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "aggregate_copy",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "aggregate_copy",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "enum_payload",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "enum_payload",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "enum_payload",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "scalar_array_copy",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "scalar_array_copy",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "scalar_array_copy",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "field_read",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "field_read",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "field_read",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "function_value",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "function_value",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "function_value",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "small_method",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "small_method",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "small_method",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "segmented_list",
+      "run": 0,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    },
+    {
+      "case": "segmented_list",
+      "run": 1,
+      "order": [
+        "optimized",
+        "baseline"
+      ]
+    },
+    {
+      "case": "segmented_list",
+      "run": 2,
+      "order": [
+        "baseline",
+        "optimized"
+      ]
+    }
+  ],
+  "work": "G:\\Desktop\\ChaLi\\tmp\\backend-ownership-perf-karb3epf"
+}
