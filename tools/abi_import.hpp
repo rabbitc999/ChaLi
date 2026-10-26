@@ -323,12 +323,11 @@ inline int run(int argc, char **argv)
             if (!parameters.empty()) parameters += ", ";
             parameters += mapped + " " + name;
         }
-        functions += "    " + result + " c_" + function[2].str() + "(" + parameters + ") = " + quoted(function[2]) + ";\n";
+        functions += "#abi(\"C\", " + chali_abi_import::quoted(library) + ", " + chali_abi_import::quoted(function[2]) + ")\n" + result + " c_" + function[2].str() + "(" + parameters + ");\n";
     }
     std::ofstream file(std::filesystem::u8path(output), std::ios::binary);
     file << "/* 由 C 头文件生成；指针、宏、位域、联合体和可变参数须手写包装。 */\n"
-         << recordsText << "abi " << quoted(library) << " {\n"
-         << functions << "}\n";
+         << recordsText << functions;
     if (!file)
     {
         std::cerr << "无法写入 ABI 声明\n";

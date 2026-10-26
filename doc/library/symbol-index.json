@@ -468,12 +468,12 @@
     "owner": "",
     "kind": "struct",
     "type": "",
-    "signature": "struct Deque<T>: Iterator<T>, Index<T, int64>, Drop",
-    "documentation": "标准集合模块：import std::collections; 后使用 std::collections::Deque 等类型。",
+    "signature": "struct Deque<T>: Iterator<T>, Index<T,int64>, Drop",
+    "documentation": "两个相反方向的栈组成的双端队列，避免首部删除时整体平移。",
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 5,
+    "line": 15,
     "page": "std-collections.md",
     "anchor": "symbol-25",
     "examples": [
@@ -486,13 +486,13 @@
     "name": "Deque::values",
     "owner": "Deque",
     "kind": "member",
-    "type": "std::lang::List<T>",
-    "signature": "std::lang::List<T> values",
+    "type": "List<T>",
+    "signature": "List<T> values",
     "documentation": "按声明顺序保存的元素存储。",
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 6,
+    "line": 16,
     "page": "std-collections.md",
     "anchor": "symbol-26",
     "examples": [
@@ -511,7 +511,7 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 36,
+    "line": 42,
     "page": "std-collections.md",
     "anchor": "symbol-27",
     "examples": [
@@ -524,15 +524,51 @@
     "name": "Queue::values",
     "owner": "Queue",
     "kind": "member",
-    "type": "std::lang::List<T>",
-    "signature": "std::lang::List<T> values",
+    "type": "List<T>",
+    "signature": "List<T> values",
     "documentation": "按声明顺序保存的元素存储。",
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 37,
+    "line": 43,
     "page": "std-collections.md",
     "anchor": "symbol-28",
+    "examples": [
+      "example/samples/std_collections_algorithms.chl"
+    ],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::collections",
+    "name": "Stack",
+    "owner": "",
+    "kind": "struct",
+    "type": "",
+    "signature": "struct Stack<T>: Iterator<T>, Drop",
+    "documentation": "ChaLi 后进先出栈，迭代顺序为栈顶到栈底。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/collections.chl",
+    "line": 67,
+    "page": "std-collections.md",
+    "anchor": "symbol-29",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::collections",
+    "name": "Stack::values",
+    "owner": "Stack",
+    "kind": "member",
+    "type": "List<T>",
+    "signature": "List<T> values",
+    "documentation": "按声明顺序保存的元素存储。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/collections.chl",
+    "line": 68,
+    "page": "std-collections.md",
+    "anchor": "symbol-30",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -549,9 +585,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 64,
+    "line": 90,
     "page": "std-collections.md",
-    "anchor": "symbol-29",
+    "anchor": "symbol-31",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -562,15 +598,15 @@
     "name": "RingBuffer::values",
     "owner": "RingBuffer",
     "kind": "member",
-    "type": "std::lang::List<T>",
-    "signature": "std::lang::List<T> values",
+    "type": "Deque<T>",
+    "signature": "Deque<T> values",
     "documentation": "按声明顺序保存的元素存储。",
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 65,
+    "line": 91,
     "page": "std-collections.md",
-    "anchor": "symbol-30",
+    "anchor": "symbol-32",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -587,9 +623,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 66,
+    "line": 91,
     "page": "std-collections.md",
-    "anchor": "symbol-31",
+    "anchor": "symbol-33",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -604,9 +640,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 97,
+    "line": 108,
     "page": "std-collections.md",
-    "anchor": "symbol-32",
+    "anchor": "symbol-34",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -623,9 +659,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 98,
+    "line": 109,
     "page": "std-collections.md",
-    "anchor": "symbol-33",
+    "anchor": "symbol-35",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -642,9 +678,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 99,
+    "line": 110,
     "page": "std-collections.md",
-    "anchor": "symbol-34",
+    "anchor": "symbol-36",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -659,9 +695,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 129,
+    "line": 141,
     "page": "std-collections.md",
-    "anchor": "symbol-35",
+    "anchor": "symbol-37",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -672,15 +708,15 @@
     "name": "Channel::pending",
     "owner": "Channel",
     "kind": "member",
-    "type": "std::lang::List<T>",
-    "signature": "std::lang::List<T> pending",
+    "type": "Queue<T>",
+    "signature": "Queue<T> pending",
     "documentation": "等待消费的元素或队列。",
     "comment": "",
     "parameters": [],
     "source": "source/std/collections.chl",
-    "line": 130,
+    "line": 142,
     "page": "std-collections.md",
-    "anchor": "symbol-36",
+    "anchor": "symbol-38",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -697,7 +733,7 @@
     "source": "source/std/complex.chl",
     "line": 5,
     "page": "std-complex.md",
-    "anchor": "symbol-37",
+    "anchor": "symbol-39",
     "examples": [
       "example/samples/std_complex_fft.chl"
     ],
@@ -716,7 +752,7 @@
     "source": "source/std/complex.chl",
     "line": 9,
     "page": "std-complex.md",
-    "anchor": "symbol-38",
+    "anchor": "symbol-40",
     "examples": [
       "example/samples/std_complex_fft.chl"
     ],
@@ -735,7 +771,7 @@
     "source": "source/std/complex.chl",
     "line": 10,
     "page": "std-complex.md",
-    "anchor": "symbol-39",
+    "anchor": "symbol-41",
     "examples": [
       "example/samples/std_complex_fft.chl"
     ],
@@ -754,7 +790,7 @@
     "source": "source/std/concurrency.chl",
     "line": 12,
     "page": "std-concurrency.md",
-    "anchor": "symbol-40",
+    "anchor": "symbol-42",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -771,7 +807,7 @@
     "source": "source/std/concurrency.chl",
     "line": 13,
     "page": "std-concurrency.md",
-    "anchor": "symbol-41",
+    "anchor": "symbol-43",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -788,7 +824,7 @@
     "source": "source/std/concurrency.chl",
     "line": 14,
     "page": "std-concurrency.md",
-    "anchor": "symbol-42",
+    "anchor": "symbol-44",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -805,7 +841,7 @@
     "source": "source/std/concurrency.chl",
     "line": 39,
     "page": "std-concurrency.md",
-    "anchor": "symbol-43",
+    "anchor": "symbol-45",
     "examples": [
       "example/samples/typed_messages_shared.chl"
     ],
@@ -824,7 +860,7 @@
     "source": "source/std/concurrency.chl",
     "line": 50,
     "page": "std-concurrency.md",
-    "anchor": "symbol-44",
+    "anchor": "symbol-46",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -841,7 +877,7 @@
     "source": "source/std/concurrency.chl",
     "line": 51,
     "page": "std-concurrency.md",
-    "anchor": "symbol-45",
+    "anchor": "symbol-47",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -858,7 +894,7 @@
     "source": "source/std/concurrency.chl",
     "line": 59,
     "page": "std-concurrency.md",
-    "anchor": "symbol-46",
+    "anchor": "symbol-48",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -875,7 +911,7 @@
     "source": "source/std/concurrency.chl",
     "line": 60,
     "page": "std-concurrency.md",
-    "anchor": "symbol-47",
+    "anchor": "symbol-49",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -892,7 +928,7 @@
     "source": "source/std/csv.chl",
     "line": 4,
     "page": "std-csv.md",
-    "anchor": "symbol-48",
+    "anchor": "symbol-50",
     "examples": [
       "example/samples/std_csv.chl"
     ],
@@ -911,7 +947,7 @@
     "source": "source/std/csv.chl",
     "line": 5,
     "page": "std-csv.md",
-    "anchor": "symbol-49",
+    "anchor": "symbol-51",
     "examples": [
       "example/samples/std_csv.chl"
     ],
@@ -930,7 +966,7 @@
     "source": "source/std/csv.chl",
     "line": 5,
     "page": "std-csv.md",
-    "anchor": "symbol-50",
+    "anchor": "symbol-52",
     "examples": [
       "example/samples/std_csv.chl"
     ],
@@ -949,7 +985,7 @@
     "source": "source/std/csv.chl",
     "line": 5,
     "page": "std-csv.md",
-    "anchor": "symbol-51",
+    "anchor": "symbol-53",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -966,7 +1002,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-52",
+    "anchor": "symbol-54",
     "examples": [
       "example/samples/std_datetime.chl"
     ],
@@ -985,7 +1021,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-53",
+    "anchor": "symbol-55",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1002,7 +1038,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-54",
+    "anchor": "symbol-56",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1019,7 +1055,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-55",
+    "anchor": "symbol-57",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1036,7 +1072,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-56",
+    "anchor": "symbol-58",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1053,7 +1089,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-57",
+    "anchor": "symbol-59",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1070,7 +1106,7 @@
     "source": "source/std/datetime.chl",
     "line": 4,
     "page": "std-datetime.md",
-    "anchor": "symbol-58",
+    "anchor": "symbol-60",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1087,7 +1123,7 @@
     "source": "source/std/datetime.chl",
     "line": 5,
     "page": "std-datetime.md",
-    "anchor": "symbol-59",
+    "anchor": "symbol-61",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1104,7 +1140,7 @@
     "source": "source/std/encoding.chl",
     "line": 4,
     "page": "std-encoding.md",
-    "anchor": "symbol-60",
+    "anchor": "symbol-62",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1121,7 +1157,7 @@
     "source": "source/std/event.chl",
     "line": 14,
     "page": "std-event.md",
-    "anchor": "symbol-61",
+    "anchor": "symbol-63",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1138,7 +1174,7 @@
     "source": "source/std/event.chl",
     "line": 15,
     "page": "std-event.md",
-    "anchor": "symbol-62",
+    "anchor": "symbol-64",
     "examples": [
       "example/samples/event_timer.chl"
     ],
@@ -1157,7 +1193,7 @@
     "source": "source/std/event.chl",
     "line": 16,
     "page": "std-event.md",
-    "anchor": "symbol-63",
+    "anchor": "symbol-65",
     "examples": [
       "example/samples/event_timer.chl"
     ],
@@ -1176,7 +1212,7 @@
     "source": "source/std/event.chl",
     "line": 17,
     "page": "std-event.md",
-    "anchor": "symbol-64",
+    "anchor": "symbol-66",
     "examples": [
       "example/samples/event_timer.chl"
     ],
@@ -1195,7 +1231,7 @@
     "source": "source/std/event.chl",
     "line": 18,
     "page": "std-event.md",
-    "anchor": "symbol-65",
+    "anchor": "symbol-67",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1212,7 +1248,7 @@
     "source": "source/std/event.chl",
     "line": 43,
     "page": "std-event.md",
-    "anchor": "symbol-66",
+    "anchor": "symbol-68",
     "examples": [
       "example/samples/event_timer.chl"
     ],
@@ -1225,13 +1261,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct GraphReply",
-    "documentation": "图算法胶水回执；槽布局必须与 glue/std_graph.hpp 的 GraphReply 一致。",
+    "documentation": "图算法的兼容回执类型；算法直接返回语言值，不再依赖宿主填写槽。",
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 15,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-67",
+    "anchor": "symbol-69",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1246,9 +1282,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 16,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-68",
+    "anchor": "symbol-70",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1263,9 +1299,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 17,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-69",
+    "anchor": "symbol-71",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1280,9 +1316,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 18,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-70",
+    "anchor": "symbol-72",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1297,9 +1333,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 19,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-71",
+    "anchor": "symbol-73",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1314,9 +1350,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 20,
+    "line": 4,
     "page": "std-graph.md",
-    "anchor": "symbol-72",
+    "anchor": "symbol-74",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1327,13 +1363,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct GraphSnapshot",
-    "documentation": "带权图：有向 / 无向由构造时的 directed 决定；重边与自环都允许。",
+    "documentation": "完整、独立的链式前向星邻接快照。",
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 24,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-73",
+    "anchor": "symbol-75",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1348,9 +1384,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 25,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-74",
+    "anchor": "symbol-76",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1365,9 +1401,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 26,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-75",
+    "anchor": "symbol-77",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1382,9 +1418,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 27,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-76",
+    "anchor": "symbol-78",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1399,9 +1435,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 28,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-77",
+    "anchor": "symbol-79",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1416,9 +1452,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 29,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-78",
+    "anchor": "symbol-80",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1433,9 +1469,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 30,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-79",
+    "anchor": "symbol-81",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1450,26 +1486,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 31,
+    "line": 6,
     "page": "std-graph.md",
-    "anchor": "symbol-80",
-    "examples": [],
-    "sourceLanguage": "zh"
-  },
-  {
-    "module": "std::graph",
-    "name": "Graph",
-    "owner": "",
-    "kind": "opcode",
-    "type": "",
-    "signature": "opcode Graph",
-    "documentation": "持久邻接图，算法原地读取，普通复制深复制，snapshot 显式导出。",
-    "comment": "",
-    "parameters": [],
-    "source": "source/std/graph.chl",
-    "line": 44,
-    "page": "std-graph.md",
-    "anchor": "symbol-81",
+    "anchor": "symbol-82",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1477,16 +1496,33 @@
     "module": "std::graph",
     "name": "UnionFind",
     "owner": "",
-    "kind": "opcode",
+    "kind": "struct",
     "type": "",
-    "signature": "opcode UnionFind",
+    "signature": "struct UnionFind: Copy<UnionFind>",
     "documentation": "持久父指针并查集，压缩和合并原地执行，普通复制深复制。",
     "comment": "",
     "parameters": [],
     "source": "source/std/graph.chl",
-    "line": 90,
+    "line": 9,
     "page": "std-graph.md",
-    "anchor": "symbol-82",
+    "anchor": "symbol-83",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::graph",
+    "name": "Graph",
+    "owner": "",
+    "kind": "struct",
+    "type": "",
+    "signature": "struct Graph: Copy<Graph>",
+    "documentation": "持久邻接图，算法原地读取，普通复制深复制，snapshot 显式导出。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/graph.chl",
+    "line": 56,
+    "page": "std-graph.md",
+    "anchor": "symbol-84",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1503,7 +1539,7 @@
     "source": "source/std/image.chl",
     "line": 47,
     "page": "std-image.md",
-    "anchor": "symbol-83",
+    "anchor": "symbol-85",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1520,7 +1556,7 @@
     "source": "source/std/image.chl",
     "line": 48,
     "page": "std-image.md",
-    "anchor": "symbol-84",
+    "anchor": "symbol-86",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1537,7 +1573,7 @@
     "source": "source/std/image.chl",
     "line": 49,
     "page": "std-image.md",
-    "anchor": "symbol-85",
+    "anchor": "symbol-87",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1554,7 +1590,7 @@
     "source": "source/std/image.chl",
     "line": 50,
     "page": "std-image.md",
-    "anchor": "symbol-86",
+    "anchor": "symbol-88",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1571,7 +1607,7 @@
     "source": "source/std/image.chl",
     "line": 51,
     "page": "std-image.md",
-    "anchor": "symbol-87",
+    "anchor": "symbol-89",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1588,7 +1624,7 @@
     "source": "source/std/image.chl",
     "line": 55,
     "page": "std-image.md",
-    "anchor": "symbol-88",
+    "anchor": "symbol-90",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1605,7 +1641,7 @@
     "source": "source/std/image.chl",
     "line": 56,
     "page": "std-image.md",
-    "anchor": "symbol-89",
+    "anchor": "symbol-91",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1622,7 +1658,7 @@
     "source": "source/std/image.chl",
     "line": 57,
     "page": "std-image.md",
-    "anchor": "symbol-90",
+    "anchor": "symbol-92",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1639,7 +1675,7 @@
     "source": "source/std/image.chl",
     "line": 58,
     "page": "std-image.md",
-    "anchor": "symbol-91",
+    "anchor": "symbol-93",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1656,7 +1692,7 @@
     "source": "source/std/image.chl",
     "line": 59,
     "page": "std-image.md",
-    "anchor": "symbol-92",
+    "anchor": "symbol-94",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1673,7 +1709,7 @@
     "source": "source/std/image.chl",
     "line": 60,
     "page": "std-image.md",
-    "anchor": "symbol-93",
+    "anchor": "symbol-95",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1690,7 +1726,7 @@
     "source": "source/std/image.chl",
     "line": 61,
     "page": "std-image.md",
-    "anchor": "symbol-94",
+    "anchor": "symbol-96",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1707,7 +1743,7 @@
     "source": "source/std/image.chl",
     "line": 62,
     "page": "std-image.md",
-    "anchor": "symbol-95",
+    "anchor": "symbol-97",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1724,7 +1760,7 @@
     "source": "source/std/image.chl",
     "line": 63,
     "page": "std-image.md",
-    "anchor": "symbol-96",
+    "anchor": "symbol-98",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1741,7 +1777,7 @@
     "source": "source/std/image.chl",
     "line": 64,
     "page": "std-image.md",
-    "anchor": "symbol-97",
+    "anchor": "symbol-99",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1758,7 +1794,7 @@
     "source": "source/std/image.chl",
     "line": 65,
     "page": "std-image.md",
-    "anchor": "symbol-98",
+    "anchor": "symbol-100",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1775,7 +1811,7 @@
     "source": "source/std/image.chl",
     "line": 66,
     "page": "std-image.md",
-    "anchor": "symbol-99",
+    "anchor": "symbol-101",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1792,7 +1828,7 @@
     "source": "source/std/image.chl",
     "line": 67,
     "page": "std-image.md",
-    "anchor": "symbol-100",
+    "anchor": "symbol-102",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1809,7 +1845,7 @@
     "source": "source/std/image.chl",
     "line": 68,
     "page": "std-image.md",
-    "anchor": "symbol-101",
+    "anchor": "symbol-103",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1826,7 +1862,7 @@
     "source": "source/std/image.chl",
     "line": 72,
     "page": "std-image.md",
-    "anchor": "symbol-102",
+    "anchor": "symbol-104",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1843,7 +1879,7 @@
     "source": "source/std/io.chl",
     "line": 4,
     "page": "std-io.md",
-    "anchor": "symbol-103",
+    "anchor": "symbol-105",
     "examples": [
       "doc/examples/library/io.chl"
     ],
@@ -1862,7 +1898,7 @@
     "source": "source/std/io.chl",
     "line": 20,
     "page": "std-io.md",
-    "anchor": "symbol-104",
+    "anchor": "symbol-106",
     "examples": [
       "doc/examples/library/io.chl"
     ],
@@ -1881,7 +1917,7 @@
     "source": "source/std/io.chl",
     "line": 22,
     "page": "std-io.md",
-    "anchor": "symbol-105",
+    "anchor": "symbol-107",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1898,7 +1934,7 @@
     "source": "source/std/io.chl",
     "line": 23,
     "page": "std-io.md",
-    "anchor": "symbol-106",
+    "anchor": "symbol-108",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1915,7 +1951,7 @@
     "source": "source/std/io.chl",
     "line": 27,
     "page": "std-io.md",
-    "anchor": "symbol-107",
+    "anchor": "symbol-109",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1932,7 +1968,7 @@
     "source": "source/std/io.chl",
     "line": 28,
     "page": "std-io.md",
-    "anchor": "symbol-108",
+    "anchor": "symbol-110",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1949,7 +1985,7 @@
     "source": "source/std/io.chl",
     "line": 29,
     "page": "std-io.md",
-    "anchor": "symbol-109",
+    "anchor": "symbol-111",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -1966,7 +2002,7 @@
     "source": "source/std/io.chl",
     "line": 42,
     "page": "std-io.md",
-    "anchor": "symbol-110",
+    "anchor": "symbol-112",
     "examples": [
       "doc/examples/library/io.chl"
     ],
@@ -1985,7 +2021,7 @@
     "source": "source/std/io.chl",
     "line": 43,
     "page": "std-io.md",
-    "anchor": "symbol-111",
+    "anchor": "symbol-113",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2002,7 +2038,7 @@
     "source": "source/std/io.chl",
     "line": 230,
     "page": "std-io.md",
-    "anchor": "symbol-112",
+    "anchor": "symbol-114",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2019,7 +2055,7 @@
     "source": "source/std/io.chl",
     "line": 230,
     "page": "std-io.md",
-    "anchor": "symbol-113",
+    "anchor": "symbol-115",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2036,7 +2072,7 @@
     "source": "source/std/io.chl",
     "line": 230,
     "page": "std-io.md",
-    "anchor": "symbol-114",
+    "anchor": "symbol-116",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2053,7 +2089,7 @@
     "source": "source/std/io.chl",
     "line": 230,
     "page": "std-io.md",
-    "anchor": "symbol-115",
+    "anchor": "symbol-117",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2070,7 +2106,7 @@
     "source": "source/std/io.chl",
     "line": 230,
     "page": "std-io.md",
-    "anchor": "symbol-116",
+    "anchor": "symbol-118",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2087,7 +2123,7 @@
     "source": "source/std/io.chl",
     "line": 232,
     "page": "std-io.md",
-    "anchor": "symbol-117",
+    "anchor": "symbol-119",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2104,7 +2140,7 @@
     "source": "source/std/io.chl",
     "line": 233,
     "page": "std-io.md",
-    "anchor": "symbol-118",
+    "anchor": "symbol-120",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2121,7 +2157,7 @@
     "source": "source/std/io.chl",
     "line": 233,
     "page": "std-io.md",
-    "anchor": "symbol-119",
+    "anchor": "symbol-121",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2138,7 +2174,7 @@
     "source": "source/std/io.chl",
     "line": 233,
     "page": "std-io.md",
-    "anchor": "symbol-120",
+    "anchor": "symbol-122",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2155,7 +2191,7 @@
     "source": "source/std/io.chl",
     "line": 233,
     "page": "std-io.md",
-    "anchor": "symbol-121",
+    "anchor": "symbol-123",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2172,7 +2208,7 @@
     "source": "source/std/io.chl",
     "line": 234,
     "page": "std-io.md",
-    "anchor": "symbol-122",
+    "anchor": "symbol-124",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2189,7 +2225,7 @@
     "source": "source/std/io.chl",
     "line": 234,
     "page": "std-io.md",
-    "anchor": "symbol-123",
+    "anchor": "symbol-125",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2206,7 +2242,7 @@
     "source": "source/std/io.chl",
     "line": 234,
     "page": "std-io.md",
-    "anchor": "symbol-124",
+    "anchor": "symbol-126",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2223,7 +2259,7 @@
     "source": "source/std/io.chl",
     "line": 234,
     "page": "std-io.md",
-    "anchor": "symbol-125",
+    "anchor": "symbol-127",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2240,7 +2276,7 @@
     "source": "source/std/iter.chl",
     "line": 4,
     "page": "std-iter.md",
-    "anchor": "symbol-126",
+    "anchor": "symbol-128",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2259,7 +2295,7 @@
     "source": "source/std/iter.chl",
     "line": 18,
     "page": "std-iter.md",
-    "anchor": "symbol-127",
+    "anchor": "symbol-129",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2278,7 +2314,7 @@
     "source": "source/std/iter.chl",
     "line": 19,
     "page": "std-iter.md",
-    "anchor": "symbol-128",
+    "anchor": "symbol-130",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2297,7 +2333,7 @@
     "source": "source/std/iter.chl",
     "line": 20,
     "page": "std-iter.md",
-    "anchor": "symbol-129",
+    "anchor": "symbol-131",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2314,7 +2350,7 @@
     "source": "source/std/iter.chl",
     "line": 21,
     "page": "std-iter.md",
-    "anchor": "symbol-130",
+    "anchor": "symbol-132",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2331,7 +2367,7 @@
     "source": "source/std/iter.chl",
     "line": 217,
     "page": "std-iter.md",
-    "anchor": "symbol-131",
+    "anchor": "symbol-133",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2348,7 +2384,7 @@
     "source": "source/std/iter.chl",
     "line": 218,
     "page": "std-iter.md",
-    "anchor": "symbol-132",
+    "anchor": "symbol-134",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2367,7 +2403,7 @@
     "source": "source/std/iter.chl",
     "line": 219,
     "page": "std-iter.md",
-    "anchor": "symbol-133",
+    "anchor": "symbol-135",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2384,7 +2420,7 @@
     "source": "source/std/iter.chl",
     "line": 253,
     "page": "std-iter.md",
-    "anchor": "symbol-134",
+    "anchor": "symbol-136",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2401,7 +2437,7 @@
     "source": "source/std/iter.chl",
     "line": 254,
     "page": "std-iter.md",
-    "anchor": "symbol-135",
+    "anchor": "symbol-137",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2420,7 +2456,7 @@
     "source": "source/std/iter.chl",
     "line": 255,
     "page": "std-iter.md",
-    "anchor": "symbol-136",
+    "anchor": "symbol-138",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2437,7 +2473,7 @@
     "source": "source/std/iter.chl",
     "line": 291,
     "page": "std-iter.md",
-    "anchor": "symbol-137",
+    "anchor": "symbol-139",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2454,7 +2490,7 @@
     "source": "source/std/iter.chl",
     "line": 292,
     "page": "std-iter.md",
-    "anchor": "symbol-138",
+    "anchor": "symbol-140",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2471,7 +2507,7 @@
     "source": "source/std/iter.chl",
     "line": 293,
     "page": "std-iter.md",
-    "anchor": "symbol-139",
+    "anchor": "symbol-141",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2488,7 +2524,7 @@
     "source": "source/std/iter.chl",
     "line": 294,
     "page": "std-iter.md",
-    "anchor": "symbol-140",
+    "anchor": "symbol-142",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2505,7 +2541,7 @@
     "source": "source/std/iter.chl",
     "line": 295,
     "page": "std-iter.md",
-    "anchor": "symbol-141",
+    "anchor": "symbol-143",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2522,7 +2558,7 @@
     "source": "source/std/iter.chl",
     "line": 371,
     "page": "std-iter.md",
-    "anchor": "symbol-142",
+    "anchor": "symbol-144",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2539,7 +2575,7 @@
     "source": "source/std/iter.chl",
     "line": 372,
     "page": "std-iter.md",
-    "anchor": "symbol-143",
+    "anchor": "symbol-145",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2558,7 +2594,7 @@
     "source": "source/std/iter.chl",
     "line": 373,
     "page": "std-iter.md",
-    "anchor": "symbol-144",
+    "anchor": "symbol-146",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2575,7 +2611,7 @@
     "source": "source/std/iter.chl",
     "line": 409,
     "page": "std-iter.md",
-    "anchor": "symbol-145",
+    "anchor": "symbol-147",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2592,7 +2628,7 @@
     "source": "source/std/iter.chl",
     "line": 410,
     "page": "std-iter.md",
-    "anchor": "symbol-146",
+    "anchor": "symbol-148",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2611,7 +2647,7 @@
     "source": "source/std/iter.chl",
     "line": 411,
     "page": "std-iter.md",
-    "anchor": "symbol-147",
+    "anchor": "symbol-149",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2628,7 +2664,7 @@
     "source": "source/std/iter.chl",
     "line": 453,
     "page": "std-iter.md",
-    "anchor": "symbol-148",
+    "anchor": "symbol-150",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2645,7 +2681,7 @@
     "source": "source/std/iter.chl",
     "line": 454,
     "page": "std-iter.md",
-    "anchor": "symbol-149",
+    "anchor": "symbol-151",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2664,7 +2700,7 @@
     "source": "source/std/iter.chl",
     "line": 455,
     "page": "std-iter.md",
-    "anchor": "symbol-150",
+    "anchor": "symbol-152",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2681,7 +2717,7 @@
     "source": "source/std/iter.chl",
     "line": 498,
     "page": "std-iter.md",
-    "anchor": "symbol-151",
+    "anchor": "symbol-153",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2698,7 +2734,7 @@
     "source": "source/std/iter.chl",
     "line": 499,
     "page": "std-iter.md",
-    "anchor": "symbol-152",
+    "anchor": "symbol-154",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2717,7 +2753,7 @@
     "source": "source/std/iter.chl",
     "line": 500,
     "page": "std-iter.md",
-    "anchor": "symbol-153",
+    "anchor": "symbol-155",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2734,7 +2770,7 @@
     "source": "source/std/iter.chl",
     "line": 501,
     "page": "std-iter.md",
-    "anchor": "symbol-154",
+    "anchor": "symbol-156",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2751,7 +2787,7 @@
     "source": "source/std/iter.chl",
     "line": 546,
     "page": "std-iter.md",
-    "anchor": "symbol-155",
+    "anchor": "symbol-157",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2768,7 +2804,7 @@
     "source": "source/std/iter.chl",
     "line": 547,
     "page": "std-iter.md",
-    "anchor": "symbol-156",
+    "anchor": "symbol-158",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2787,7 +2823,7 @@
     "source": "source/std/iter.chl",
     "line": 548,
     "page": "std-iter.md",
-    "anchor": "symbol-157",
+    "anchor": "symbol-159",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2804,7 +2840,7 @@
     "source": "source/std/iter.chl",
     "line": 549,
     "page": "std-iter.md",
-    "anchor": "symbol-158",
+    "anchor": "symbol-160",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2821,7 +2857,7 @@
     "source": "source/std/iter.chl",
     "line": 594,
     "page": "std-iter.md",
-    "anchor": "symbol-159",
+    "anchor": "symbol-161",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2838,7 +2874,7 @@
     "source": "source/std/iter.chl",
     "line": 595,
     "page": "std-iter.md",
-    "anchor": "symbol-160",
+    "anchor": "symbol-162",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2857,7 +2893,7 @@
     "source": "source/std/iter.chl",
     "line": 596,
     "page": "std-iter.md",
-    "anchor": "symbol-161",
+    "anchor": "symbol-163",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2874,7 +2910,7 @@
     "source": "source/std/iter.chl",
     "line": 597,
     "page": "std-iter.md",
-    "anchor": "symbol-162",
+    "anchor": "symbol-164",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2891,7 +2927,7 @@
     "source": "source/std/iter.chl",
     "line": 641,
     "page": "std-iter.md",
-    "anchor": "symbol-163",
+    "anchor": "symbol-165",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2908,7 +2944,7 @@
     "source": "source/std/iter.chl",
     "line": 642,
     "page": "std-iter.md",
-    "anchor": "symbol-164",
+    "anchor": "symbol-166",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2927,7 +2963,7 @@
     "source": "source/std/iter.chl",
     "line": 643,
     "page": "std-iter.md",
-    "anchor": "symbol-165",
+    "anchor": "symbol-167",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2944,7 +2980,7 @@
     "source": "source/std/iter.chl",
     "line": 689,
     "page": "std-iter.md",
-    "anchor": "symbol-166",
+    "anchor": "symbol-168",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2961,7 +2997,7 @@
     "source": "source/std/iter.chl",
     "line": 690,
     "page": "std-iter.md",
-    "anchor": "symbol-167",
+    "anchor": "symbol-169",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -2980,7 +3016,7 @@
     "source": "source/std/iter.chl",
     "line": 691,
     "page": "std-iter.md",
-    "anchor": "symbol-168",
+    "anchor": "symbol-170",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -2997,7 +3033,7 @@
     "source": "source/std/iter.chl",
     "line": 745,
     "page": "std-iter.md",
-    "anchor": "symbol-169",
+    "anchor": "symbol-171",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3014,7 +3050,7 @@
     "source": "source/std/iter.chl",
     "line": 746,
     "page": "std-iter.md",
-    "anchor": "symbol-170",
+    "anchor": "symbol-172",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3031,7 +3067,7 @@
     "source": "source/std/iter.chl",
     "line": 747,
     "page": "std-iter.md",
-    "anchor": "symbol-171",
+    "anchor": "symbol-173",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3048,7 +3084,7 @@
     "source": "source/std/iter.chl",
     "line": 748,
     "page": "std-iter.md",
-    "anchor": "symbol-172",
+    "anchor": "symbol-174",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3065,7 +3101,7 @@
     "source": "source/std/iter.chl",
     "line": 787,
     "page": "std-iter.md",
-    "anchor": "symbol-173",
+    "anchor": "symbol-175",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3082,7 +3118,7 @@
     "source": "source/std/iter.chl",
     "line": 788,
     "page": "std-iter.md",
-    "anchor": "symbol-174",
+    "anchor": "symbol-176",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3099,7 +3135,7 @@
     "source": "source/std/iter.chl",
     "line": 789,
     "page": "std-iter.md",
-    "anchor": "symbol-175",
+    "anchor": "symbol-177",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3116,7 +3152,7 @@
     "source": "source/std/iter.chl",
     "line": 829,
     "page": "std-iter.md",
-    "anchor": "symbol-176",
+    "anchor": "symbol-178",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3133,7 +3169,7 @@
     "source": "source/std/iter.chl",
     "line": 830,
     "page": "std-iter.md",
-    "anchor": "symbol-177",
+    "anchor": "symbol-179",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3152,7 +3188,7 @@
     "source": "source/std/iter.chl",
     "line": 831,
     "page": "std-iter.md",
-    "anchor": "symbol-178",
+    "anchor": "symbol-180",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3169,7 +3205,7 @@
     "source": "source/std/iter.chl",
     "line": 867,
     "page": "std-iter.md",
-    "anchor": "symbol-179",
+    "anchor": "symbol-181",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3186,7 +3222,7 @@
     "source": "source/std/iter.chl",
     "line": 868,
     "page": "std-iter.md",
-    "anchor": "symbol-180",
+    "anchor": "symbol-182",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3205,7 +3241,7 @@
     "source": "source/std/iter.chl",
     "line": 869,
     "page": "std-iter.md",
-    "anchor": "symbol-181",
+    "anchor": "symbol-183",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3222,7 +3258,7 @@
     "source": "source/std/iter.chl",
     "line": 870,
     "page": "std-iter.md",
-    "anchor": "symbol-182",
+    "anchor": "symbol-184",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3239,7 +3275,7 @@
     "source": "source/std/iter.chl",
     "line": 907,
     "page": "std-iter.md",
-    "anchor": "symbol-183",
+    "anchor": "symbol-185",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3256,7 +3292,7 @@
     "source": "source/std/iter.chl",
     "line": 908,
     "page": "std-iter.md",
-    "anchor": "symbol-184",
+    "anchor": "symbol-186",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3275,7 +3311,7 @@
     "source": "source/std/iter.chl",
     "line": 909,
     "page": "std-iter.md",
-    "anchor": "symbol-185",
+    "anchor": "symbol-187",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3292,7 +3328,7 @@
     "source": "source/std/iter.chl",
     "line": 949,
     "page": "std-iter.md",
-    "anchor": "symbol-186",
+    "anchor": "symbol-188",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3309,7 +3345,7 @@
     "source": "source/std/iter.chl",
     "line": 950,
     "page": "std-iter.md",
-    "anchor": "symbol-187",
+    "anchor": "symbol-189",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3328,7 +3364,7 @@
     "source": "source/std/iter.chl",
     "line": 951,
     "page": "std-iter.md",
-    "anchor": "symbol-188",
+    "anchor": "symbol-190",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3345,7 +3381,7 @@
     "source": "source/std/iter.chl",
     "line": 987,
     "page": "std-iter.md",
-    "anchor": "symbol-189",
+    "anchor": "symbol-191",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3362,7 +3398,7 @@
     "source": "source/std/iter.chl",
     "line": 988,
     "page": "std-iter.md",
-    "anchor": "symbol-190",
+    "anchor": "symbol-192",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3379,7 +3415,7 @@
     "source": "source/std/iter.chl",
     "line": 989,
     "page": "std-iter.md",
-    "anchor": "symbol-191",
+    "anchor": "symbol-193",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3396,7 +3432,7 @@
     "source": "source/std/iter.chl",
     "line": 990,
     "page": "std-iter.md",
-    "anchor": "symbol-192",
+    "anchor": "symbol-194",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3415,7 +3451,7 @@
     "source": "source/std/iter.chl",
     "line": 1033,
     "page": "std-iter.md",
-    "anchor": "symbol-193",
+    "anchor": "symbol-195",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3432,7 +3468,7 @@
     "source": "source/std/iter.chl",
     "line": 1034,
     "page": "std-iter.md",
-    "anchor": "symbol-194",
+    "anchor": "symbol-196",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3451,7 +3487,7 @@
     "source": "source/std/iter.chl",
     "line": 1035,
     "page": "std-iter.md",
-    "anchor": "symbol-195",
+    "anchor": "symbol-197",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3468,7 +3504,7 @@
     "source": "source/std/iter.chl",
     "line": 1036,
     "page": "std-iter.md",
-    "anchor": "symbol-196",
+    "anchor": "symbol-198",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3485,7 +3521,7 @@
     "source": "source/std/iter.chl",
     "line": 1180,
     "page": "std-iter.md",
-    "anchor": "symbol-197",
+    "anchor": "symbol-199",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3502,7 +3538,7 @@
     "source": "source/std/iter.chl",
     "line": 1181,
     "page": "std-iter.md",
-    "anchor": "symbol-198",
+    "anchor": "symbol-200",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3521,7 +3557,7 @@
     "source": "source/std/iter.chl",
     "line": 1182,
     "page": "std-iter.md",
-    "anchor": "symbol-199",
+    "anchor": "symbol-201",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3538,7 +3574,7 @@
     "source": "source/std/iter.chl",
     "line": 1183,
     "page": "std-iter.md",
-    "anchor": "symbol-200",
+    "anchor": "symbol-202",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3555,7 +3591,7 @@
     "source": "source/std/iter.chl",
     "line": 1365,
     "page": "std-iter.md",
-    "anchor": "symbol-201",
+    "anchor": "symbol-203",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3572,7 +3608,7 @@
     "source": "source/std/iter.chl",
     "line": 1366,
     "page": "std-iter.md",
-    "anchor": "symbol-202",
+    "anchor": "symbol-204",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3589,7 +3625,7 @@
     "source": "source/std/iter.chl",
     "line": 1367,
     "page": "std-iter.md",
-    "anchor": "symbol-203",
+    "anchor": "symbol-205",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3606,7 +3642,7 @@
     "source": "source/std/iter.chl",
     "line": 1389,
     "page": "std-iter.md",
-    "anchor": "symbol-204",
+    "anchor": "symbol-206",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3623,7 +3659,7 @@
     "source": "source/std/iter.chl",
     "line": 1390,
     "page": "std-iter.md",
-    "anchor": "symbol-205",
+    "anchor": "symbol-207",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3640,7 +3676,7 @@
     "source": "source/std/iter.chl",
     "line": 1391,
     "page": "std-iter.md",
-    "anchor": "symbol-206",
+    "anchor": "symbol-208",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3657,7 +3693,7 @@
     "source": "source/std/iter.chl",
     "line": 1539,
     "page": "std-iter.md",
-    "anchor": "symbol-207",
+    "anchor": "symbol-209",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3674,7 +3710,7 @@
     "source": "source/std/iter.chl",
     "line": 1540,
     "page": "std-iter.md",
-    "anchor": "symbol-208",
+    "anchor": "symbol-210",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3693,7 +3729,7 @@
     "source": "source/std/iter.chl",
     "line": 1541,
     "page": "std-iter.md",
-    "anchor": "symbol-209",
+    "anchor": "symbol-211",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3710,7 +3746,7 @@
     "source": "source/std/iter.chl",
     "line": 1542,
     "page": "std-iter.md",
-    "anchor": "symbol-210",
+    "anchor": "symbol-212",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3727,7 +3763,7 @@
     "source": "source/std/iter.chl",
     "line": 1580,
     "page": "std-iter.md",
-    "anchor": "symbol-211",
+    "anchor": "symbol-213",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3744,7 +3780,7 @@
     "source": "source/std/iter.chl",
     "line": 1581,
     "page": "std-iter.md",
-    "anchor": "symbol-212",
+    "anchor": "symbol-214",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3763,7 +3799,7 @@
     "source": "source/std/iter.chl",
     "line": 1582,
     "page": "std-iter.md",
-    "anchor": "symbol-213",
+    "anchor": "symbol-215",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3780,7 +3816,7 @@
     "source": "source/std/iter.chl",
     "line": 1617,
     "page": "std-iter.md",
-    "anchor": "symbol-214",
+    "anchor": "symbol-216",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3797,7 +3833,7 @@
     "source": "source/std/iter.chl",
     "line": 1618,
     "page": "std-iter.md",
-    "anchor": "symbol-215",
+    "anchor": "symbol-217",
     "examples": [
       "example/samples/iter_pipeline.chl"
     ],
@@ -3816,7 +3852,7 @@
     "source": "source/std/json.chl",
     "line": 52,
     "page": "std-json.md",
-    "anchor": "symbol-216",
+    "anchor": "symbol-218",
     "examples": [
       "example/samples/std_structured_data.chl"
     ],
@@ -3833,9 +3869,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 9,
+    "line": 402,
     "page": "std-lang.md",
-    "anchor": "symbol-217",
+    "anchor": "symbol-219",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -3852,9 +3888,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 160,
+    "line": 552,
     "page": "std-lang.md",
-    "anchor": "symbol-218",
+    "anchor": "symbol-220",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3869,9 +3905,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 166,
+    "line": 558,
     "page": "std-lang.md",
-    "anchor": "symbol-219",
+    "anchor": "symbol-221",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3886,9 +3922,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 168,
+    "line": 560,
     "page": "std-lang.md",
-    "anchor": "symbol-220",
+    "anchor": "symbol-222",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3903,9 +3939,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 179,
+    "line": 571,
     "page": "std-lang.md",
-    "anchor": "symbol-221",
+    "anchor": "symbol-223",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3920,9 +3956,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 184,
+    "line": 576,
     "page": "std-lang.md",
-    "anchor": "symbol-222",
+    "anchor": "symbol-224",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3937,9 +3973,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 189,
+    "line": 581,
     "page": "std-lang.md",
-    "anchor": "symbol-223",
+    "anchor": "symbol-225",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3954,9 +3990,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 208,
+    "line": 600,
     "page": "std-lang.md",
-    "anchor": "symbol-224",
+    "anchor": "symbol-226",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3971,9 +4007,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 373,
+    "line": 755,
     "page": "std-lang.md",
-    "anchor": "symbol-225",
+    "anchor": "symbol-227",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -3988,9 +4024,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 375,
+    "line": 757,
     "page": "std-lang.md",
-    "anchor": "symbol-226",
+    "anchor": "symbol-228",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4005,9 +4041,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 375,
+    "line": 757,
     "page": "std-lang.md",
-    "anchor": "symbol-227",
+    "anchor": "symbol-229",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4022,9 +4058,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 377,
+    "line": 759,
     "page": "std-lang.md",
-    "anchor": "symbol-228",
+    "anchor": "symbol-230",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4039,9 +4075,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 379,
+    "line": 761,
     "page": "std-lang.md",
-    "anchor": "symbol-229",
+    "anchor": "symbol-231",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4056,9 +4092,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 381,
+    "line": 763,
     "page": "std-lang.md",
-    "anchor": "symbol-230",
+    "anchor": "symbol-232",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4073,9 +4109,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 383,
+    "line": 765,
     "page": "std-lang.md",
-    "anchor": "symbol-231",
+    "anchor": "symbol-233",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4090,9 +4126,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 385,
+    "line": 767,
     "page": "std-lang.md",
-    "anchor": "symbol-232",
+    "anchor": "symbol-234",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4107,9 +4143,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 475,
+    "line": 857,
     "page": "std-lang.md",
-    "anchor": "symbol-233",
+    "anchor": "symbol-235",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4124,9 +4160,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 593,
+    "line": 975,
     "page": "std-lang.md",
-    "anchor": "symbol-234",
+    "anchor": "symbol-236",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4141,9 +4177,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 646,
+    "line": 1028,
     "page": "std-lang.md",
-    "anchor": "symbol-235",
+    "anchor": "symbol-237",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -4160,9 +4196,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 647,
+    "line": 1029,
     "page": "std-lang.md",
-    "anchor": "symbol-236",
+    "anchor": "symbol-238",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -4179,12 +4215,131 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/lang.chl",
-    "line": 648,
+    "line": 1030,
     "page": "std-lang.md",
-    "anchor": "symbol-237",
+    "anchor": "symbol-239",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "RawPtr",
+    "owner": "",
+    "kind": "struct",
+    "type": "",
+    "signature": "struct RawPtr<T>",
+    "documentation": "有元素类型及分配身份的原始指针；复制指针不复制元素，也不延长存储寿命。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1145,
+    "page": "std-lang.md",
+    "anchor": "symbol-240",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "RawPtr::storage",
+    "owner": "RawPtr",
+    "kind": "member",
+    "type": "uint64",
+    "signature": "uint64 storage",
+    "documentation": "对应原始存储的分配身份，不延长存储寿命。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1147,
+    "page": "std-lang.md",
+    "anchor": "symbol-241",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "RawPtr::index",
+    "owner": "RawPtr",
+    "kind": "member",
+    "type": "int64",
+    "signature": "int64 index",
+    "documentation": "当前元素序号，从 0 开始。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1149,
+    "page": "std-lang.md",
+    "anchor": "symbol-242",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "BarePtr",
+    "owner": "",
+    "kind": "struct",
+    "type": "",
+    "signature": "struct BarePtr<T>: Add<BarePtr<T>, int64>, RightAdd<BarePtr<T>, int64>, Subtract<BarePtr<T>, int64>, Subtract<int64, BarePtr<T>>",
+    "documentation": "只保存地址的裸指针；不记录运行时元素类型或初始化状态，也不拥有分配。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1153,
+    "page": "std-lang.md",
+    "anchor": "symbol-243",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "BarePtr::address",
+    "owner": "BarePtr",
+    "kind": "member",
+    "type": "int64",
+    "signature": "int64 address",
+    "documentation": "运行时逻辑字节地址；不是可传给宿主 C 函数的机器地址。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1155,
+    "page": "std-lang.md",
+    "anchor": "symbol-244",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "RawStorage",
+    "owner": "",
+    "kind": "struct",
+    "type": "",
+    "signature": "struct RawStorage<T>: Closeable",
+    "documentation": "独占原始容量；备用槽位不默认构造 T，关闭时仅清理已初始化元素。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1287,
+    "page": "std-lang.md",
+    "anchor": "symbol-245",
+    "examples": [],
+    "sourceLanguage": "zh"
+  },
+  {
+    "module": "std::lang",
+    "name": "RawStorage::handle",
+    "owner": "RawStorage",
+    "kind": "member",
+    "type": "uint64",
+    "signature": "uint64 handle",
+    "documentation": "宿主资源句柄；应通过所属类型的方法操作。",
+    "comment": "",
+    "parameters": [],
+    "source": "source/std/lang.chl",
+    "line": 1289,
+    "page": "std-lang.md",
+    "anchor": "symbol-246",
+    "examples": [],
     "sourceLanguage": "zh"
   },
   {
@@ -4200,7 +4355,7 @@
     "source": "source/chali_generic.cpp",
     "line": 2074,
     "page": "std-lang.md",
-    "anchor": "symbol-238",
+    "anchor": "symbol-247",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4217,7 +4372,7 @@
     "source": "source/chali_generic.cpp",
     "line": 2082,
     "page": "std-lang.md",
-    "anchor": "symbol-239",
+    "anchor": "symbol-248",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4234,7 +4389,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-240",
+    "anchor": "symbol-249",
     "examples": [
       "example/samples/std_collections_algorithms.chl"
     ],
@@ -4253,7 +4408,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-241",
+    "anchor": "symbol-250",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4270,7 +4425,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-242",
+    "anchor": "symbol-251",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4287,7 +4442,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-243",
+    "anchor": "symbol-252",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4304,7 +4459,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-244",
+    "anchor": "symbol-253",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4321,7 +4476,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-245",
+    "anchor": "symbol-254",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4338,7 +4493,7 @@
     "source": "source/semantics/boxing.cpp",
     "line": 1,
     "page": "std-lang.md",
-    "anchor": "symbol-246",
+    "anchor": "symbol-255",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4355,7 +4510,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-247",
+    "anchor": "symbol-256",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4372,7 +4527,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-248",
+    "anchor": "symbol-257",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4389,7 +4544,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-249",
+    "anchor": "symbol-258",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4406,7 +4561,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-250",
+    "anchor": "symbol-259",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4423,7 +4578,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-251",
+    "anchor": "symbol-260",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4440,7 +4595,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-252",
+    "anchor": "symbol-261",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4457,7 +4612,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-253",
+    "anchor": "symbol-262",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4474,7 +4629,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-254",
+    "anchor": "symbol-263",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4491,7 +4646,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-255",
+    "anchor": "symbol-264",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4508,7 +4663,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-256",
+    "anchor": "symbol-265",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4525,7 +4680,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-257",
+    "anchor": "symbol-266",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4542,7 +4697,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-258",
+    "anchor": "symbol-267",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4559,7 +4714,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-259",
+    "anchor": "symbol-268",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4576,7 +4731,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-260",
+    "anchor": "symbol-269",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4593,7 +4748,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-261",
+    "anchor": "symbol-270",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4610,7 +4765,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-262",
+    "anchor": "symbol-271",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4627,7 +4782,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-263",
+    "anchor": "symbol-272",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4644,7 +4799,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-264",
+    "anchor": "symbol-273",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4661,7 +4816,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-265",
+    "anchor": "symbol-274",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4678,7 +4833,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-266",
+    "anchor": "symbol-275",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4695,7 +4850,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-267",
+    "anchor": "symbol-276",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4712,7 +4867,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-268",
+    "anchor": "symbol-277",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4729,7 +4884,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-269",
+    "anchor": "symbol-278",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4746,7 +4901,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-270",
+    "anchor": "symbol-279",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4763,7 +4918,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-271",
+    "anchor": "symbol-280",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4780,7 +4935,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-272",
+    "anchor": "symbol-281",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4797,7 +4952,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-273",
+    "anchor": "symbol-282",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4814,7 +4969,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-274",
+    "anchor": "symbol-283",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4831,7 +4986,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-275",
+    "anchor": "symbol-284",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4848,7 +5003,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-276",
+    "anchor": "symbol-285",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4865,7 +5020,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-277",
+    "anchor": "symbol-286",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4882,7 +5037,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-278",
+    "anchor": "symbol-287",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4899,7 +5054,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-279",
+    "anchor": "symbol-288",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4916,7 +5071,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-280",
+    "anchor": "symbol-289",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4933,7 +5088,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-281",
+    "anchor": "symbol-290",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4950,7 +5105,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-282",
+    "anchor": "symbol-291",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4967,7 +5122,7 @@
     "source": "source/chali_generic.cpp",
     "line": 1764,
     "page": "std-lang.md",
-    "anchor": "symbol-283",
+    "anchor": "symbol-292",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -4984,7 +5139,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-284",
+    "anchor": "symbol-293",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5001,7 +5156,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-285",
+    "anchor": "symbol-294",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5018,7 +5173,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-286",
+    "anchor": "symbol-295",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5035,7 +5190,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "symbol-287",
+    "anchor": "symbol-296",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5052,7 +5207,7 @@
     "source": "source/std/linalg.chl",
     "line": 11,
     "page": "std-linalg.md",
-    "anchor": "symbol-288",
+    "anchor": "symbol-297",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5069,7 +5224,7 @@
     "source": "source/std/linalg.chl",
     "line": 23,
     "page": "std-linalg.md",
-    "anchor": "symbol-289",
+    "anchor": "symbol-298",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5086,7 +5241,7 @@
     "source": "source/std/linalg.chl",
     "line": 25,
     "page": "std-linalg.md",
-    "anchor": "symbol-290",
+    "anchor": "symbol-299",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5103,7 +5258,7 @@
     "source": "source/std/linalg.chl",
     "line": 42,
     "page": "std-linalg.md",
-    "anchor": "symbol-291",
+    "anchor": "symbol-300",
     "examples": [
       "example/samples/std_linalg_solve_glue.chl"
     ],
@@ -5122,7 +5277,7 @@
     "source": "source/std/linalg.chl",
     "line": 45,
     "page": "std-linalg.md",
-    "anchor": "symbol-292",
+    "anchor": "symbol-301",
     "examples": [
       "example/samples/std_linalg_solve_glue.chl"
     ],
@@ -5141,7 +5296,7 @@
     "source": "source/std/linalg.chl",
     "line": 121,
     "page": "std-linalg.md",
-    "anchor": "symbol-293",
+    "anchor": "symbol-302",
     "examples": [
       "example/samples/std_linalg_solve_glue.chl"
     ],
@@ -5160,7 +5315,7 @@
     "source": "source/std/linalg.chl",
     "line": 126,
     "page": "std-linalg.md",
-    "anchor": "symbol-294",
+    "anchor": "symbol-303",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5177,7 +5332,7 @@
     "source": "source/std/linalg.chl",
     "line": 127,
     "page": "std-linalg.md",
-    "anchor": "symbol-295",
+    "anchor": "symbol-304",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5194,7 +5349,7 @@
     "source": "source/std/linalg.chl",
     "line": 128,
     "page": "std-linalg.md",
-    "anchor": "symbol-296",
+    "anchor": "symbol-305",
     "examples": [
       "example/samples/std_linalg_solve_glue.chl"
     ],
@@ -5213,7 +5368,7 @@
     "source": "source/std/linalg.chl",
     "line": 270,
     "page": "std-linalg.md",
-    "anchor": "symbol-297",
+    "anchor": "symbol-306",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5230,7 +5385,7 @@
     "source": "source/std/linalg.chl",
     "line": 271,
     "page": "std-linalg.md",
-    "anchor": "symbol-298",
+    "anchor": "symbol-307",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5247,7 +5402,7 @@
     "source": "source/std/linalg.chl",
     "line": 272,
     "page": "std-linalg.md",
-    "anchor": "symbol-299",
+    "anchor": "symbol-308",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5264,7 +5419,7 @@
     "source": "source/std/linalg.chl",
     "line": 273,
     "page": "std-linalg.md",
-    "anchor": "symbol-300",
+    "anchor": "symbol-309",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5281,7 +5436,7 @@
     "source": "source/std/linalg.chl",
     "line": 282,
     "page": "std-linalg.md",
-    "anchor": "symbol-301",
+    "anchor": "symbol-310",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5298,7 +5453,7 @@
     "source": "source/std/linalg.chl",
     "line": 283,
     "page": "std-linalg.md",
-    "anchor": "symbol-302",
+    "anchor": "symbol-311",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5315,7 +5470,7 @@
     "source": "source/std/linalg.chl",
     "line": 284,
     "page": "std-linalg.md",
-    "anchor": "symbol-303",
+    "anchor": "symbol-312",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5332,7 +5487,7 @@
     "source": "source/std/linalg.chl",
     "line": 290,
     "page": "std-linalg.md",
-    "anchor": "symbol-304",
+    "anchor": "symbol-313",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5349,7 +5504,7 @@
     "source": "source/std/linalg.chl",
     "line": 291,
     "page": "std-linalg.md",
-    "anchor": "symbol-305",
+    "anchor": "symbol-314",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5366,7 +5521,7 @@
     "source": "source/std/linalg.chl",
     "line": 292,
     "page": "std-linalg.md",
-    "anchor": "symbol-306",
+    "anchor": "symbol-315",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5383,7 +5538,7 @@
     "source": "source/std/linalg.chl",
     "line": 293,
     "page": "std-linalg.md",
-    "anchor": "symbol-307",
+    "anchor": "symbol-316",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5400,7 +5555,7 @@
     "source": "source/std/linalg.chl",
     "line": 299,
     "page": "std-linalg.md",
-    "anchor": "symbol-308",
+    "anchor": "symbol-317",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5417,7 +5572,7 @@
     "source": "source/std/linalg.chl",
     "line": 300,
     "page": "std-linalg.md",
-    "anchor": "symbol-309",
+    "anchor": "symbol-318",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5434,7 +5589,7 @@
     "source": "source/std/linalg.chl",
     "line": 301,
     "page": "std-linalg.md",
-    "anchor": "symbol-310",
+    "anchor": "symbol-319",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5444,14 +5599,14 @@
     "owner": "",
     "kind": "struct",
     "type": "",
-    "signature": "struct LinkedList : Iterator<int64>",
+    "signature": "struct LinkedList: Iterator<int64>, Copy<LinkedList>",
     "documentation": "持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。",
     "comment": "",
     "parameters": [],
     "source": "source/std/linkedlist.chl",
-    "line": 15,
+    "line": 4,
     "page": "std-linkedlist.md",
-    "anchor": "symbol-311",
+    "anchor": "symbol-320",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5468,7 +5623,7 @@
     "source": "source/std/memory.chl",
     "line": 7,
     "page": "std-memory.md",
-    "anchor": "symbol-312",
+    "anchor": "symbol-321",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -5487,7 +5642,7 @@
     "source": "source/std/memory.chl",
     "line": 8,
     "page": "std-memory.md",
-    "anchor": "symbol-313",
+    "anchor": "symbol-322",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5504,7 +5659,7 @@
     "source": "source/std/memory.chl",
     "line": 9,
     "page": "std-memory.md",
-    "anchor": "symbol-314",
+    "anchor": "symbol-323",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5521,7 +5676,7 @@
     "source": "source/std/memory.chl",
     "line": 30,
     "page": "std-memory.md",
-    "anchor": "symbol-315",
+    "anchor": "symbol-324",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5538,7 +5693,7 @@
     "source": "source/std/memory.chl",
     "line": 31,
     "page": "std-memory.md",
-    "anchor": "symbol-316",
+    "anchor": "symbol-325",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -5557,7 +5712,7 @@
     "source": "source/std/memory.chl",
     "line": 32,
     "page": "std-memory.md",
-    "anchor": "symbol-317",
+    "anchor": "symbol-326",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5574,7 +5729,7 @@
     "source": "source/std/memory.chl",
     "line": 33,
     "page": "std-memory.md",
-    "anchor": "symbol-318",
+    "anchor": "symbol-327",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5591,7 +5746,7 @@
     "source": "source/std/memory.chl",
     "line": 44,
     "page": "std-memory.md",
-    "anchor": "symbol-319",
+    "anchor": "symbol-328",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -5610,7 +5765,7 @@
     "source": "source/std/memory.chl",
     "line": 55,
     "page": "std-memory.md",
-    "anchor": "symbol-320",
+    "anchor": "symbol-329",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -5629,7 +5784,7 @@
     "source": "source/std/net.chl",
     "line": 63,
     "page": "std-net.md",
-    "anchor": "symbol-321",
+    "anchor": "symbol-330",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5648,7 +5803,7 @@
     "source": "source/std/net.chl",
     "line": 101,
     "page": "std-net.md",
-    "anchor": "symbol-322",
+    "anchor": "symbol-331",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5667,7 +5822,7 @@
     "source": "source/std/net.chl",
     "line": 122,
     "page": "std-net.md",
-    "anchor": "symbol-323",
+    "anchor": "symbol-332",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5686,7 +5841,7 @@
     "source": "source/std/net.chl",
     "line": 123,
     "page": "std-net.md",
-    "anchor": "symbol-324",
+    "anchor": "symbol-333",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5705,7 +5860,7 @@
     "source": "source/std/net.chl",
     "line": 124,
     "page": "std-net.md",
-    "anchor": "symbol-325",
+    "anchor": "symbol-334",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5724,7 +5879,7 @@
     "source": "source/std/net.chl",
     "line": 125,
     "page": "std-net.md",
-    "anchor": "symbol-326",
+    "anchor": "symbol-335",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5743,7 +5898,7 @@
     "source": "source/std/net.chl",
     "line": 126,
     "page": "std-net.md",
-    "anchor": "symbol-327",
+    "anchor": "symbol-336",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5762,7 +5917,7 @@
     "source": "source/std/net.chl",
     "line": 127,
     "page": "std-net.md",
-    "anchor": "symbol-328",
+    "anchor": "symbol-337",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5781,7 +5936,7 @@
     "source": "source/std/net.chl",
     "line": 131,
     "page": "std-net.md",
-    "anchor": "symbol-329",
+    "anchor": "symbol-338",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5800,7 +5955,7 @@
     "source": "source/std/net.chl",
     "line": 132,
     "page": "std-net.md",
-    "anchor": "symbol-330",
+    "anchor": "symbol-339",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5819,7 +5974,7 @@
     "source": "source/std/net.chl",
     "line": 133,
     "page": "std-net.md",
-    "anchor": "symbol-331",
+    "anchor": "symbol-340",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5838,7 +5993,7 @@
     "source": "source/std/net.chl",
     "line": 134,
     "page": "std-net.md",
-    "anchor": "symbol-332",
+    "anchor": "symbol-341",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5857,7 +6012,7 @@
     "source": "source/std/net.chl",
     "line": 135,
     "page": "std-net.md",
-    "anchor": "symbol-333",
+    "anchor": "symbol-342",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5874,7 +6029,7 @@
     "source": "source/std/net.chl",
     "line": 136,
     "page": "std-net.md",
-    "anchor": "symbol-334",
+    "anchor": "symbol-343",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5893,7 +6048,7 @@
     "source": "source/std/net.chl",
     "line": 137,
     "page": "std-net.md",
-    "anchor": "symbol-335",
+    "anchor": "symbol-344",
     "examples": [
       "example/samples/std_net.chl"
     ],
@@ -5912,7 +6067,7 @@
     "source": "source/std/net.chl",
     "line": 281,
     "page": "std-net.md",
-    "anchor": "symbol-336",
+    "anchor": "symbol-345",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5929,7 +6084,7 @@
     "source": "source/std/net.chl",
     "line": 282,
     "page": "std-net.md",
-    "anchor": "symbol-337",
+    "anchor": "symbol-346",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5946,7 +6101,7 @@
     "source": "source/std/net.chl",
     "line": 283,
     "page": "std-net.md",
-    "anchor": "symbol-338",
+    "anchor": "symbol-347",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -5963,7 +6118,7 @@
     "source": "source/std/numerics.chl",
     "line": 132,
     "page": "std-numerics.md",
-    "anchor": "symbol-339",
+    "anchor": "symbol-348",
     "examples": [
       "example/samples/std_numerics_number_theory.chl"
     ],
@@ -5982,7 +6137,7 @@
     "source": "source/std/parse.chl",
     "line": 4,
     "page": "std-parse.md",
-    "anchor": "symbol-340",
+    "anchor": "symbol-349",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -6001,7 +6156,7 @@
     "source": "source/std/parse.chl",
     "line": 26,
     "page": "std-parse.md",
-    "anchor": "symbol-341",
+    "anchor": "symbol-350",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -6020,7 +6175,7 @@
     "source": "source/std/path.chl",
     "line": 134,
     "page": "std-path.md",
-    "anchor": "symbol-342",
+    "anchor": "symbol-351",
     "examples": [
       "example/samples/std_parse_random_path_memory.chl"
     ],
@@ -6039,7 +6194,7 @@
     "source": "source/std/probe.chl",
     "line": 3,
     "page": "std-probe.md",
-    "anchor": "symbol-343",
+    "anchor": "symbol-352",
     "examples": [
       "example/samples/std_process_probe.chl"
     ],
@@ -6058,7 +6213,7 @@
     "source": "source/std/probe.chl",
     "line": 3,
     "page": "std-probe.md",
-    "anchor": "symbol-344",
+    "anchor": "symbol-353",
     "examples": [
       "example/samples/std_process_probe.chl"
     ],
@@ -6077,7 +6232,7 @@
     "source": "source/std/random.chl",
     "line": 14,
     "page": "std-random.md",
-    "anchor": "symbol-345",
+    "anchor": "symbol-354",
     "examples": [
       "example/samples/std_math_clock_random.chl"
     ],
@@ -6096,7 +6251,7 @@
     "source": "source/std/reflect.chl",
     "line": 10,
     "page": "std-reflect.md",
-    "anchor": "symbol-346",
+    "anchor": "symbol-355",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6113,7 +6268,7 @@
     "source": "source/std/reflect.chl",
     "line": 29,
     "page": "std-reflect.md",
-    "anchor": "symbol-347",
+    "anchor": "symbol-356",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6130,7 +6285,7 @@
     "source": "source/std/reflect.chl",
     "line": 131,
     "page": "std-reflect.md",
-    "anchor": "symbol-348",
+    "anchor": "symbol-357",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6147,7 +6302,7 @@
     "source": "source/std/reflect.chl",
     "line": 131,
     "page": "std-reflect.md",
-    "anchor": "symbol-349",
+    "anchor": "symbol-358",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6166,7 +6321,7 @@
     "source": "source/std/reflect.chl",
     "line": 131,
     "page": "std-reflect.md",
-    "anchor": "symbol-350",
+    "anchor": "symbol-359",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6185,7 +6340,7 @@
     "source": "source/std/reflect.chl",
     "line": 132,
     "page": "std-reflect.md",
-    "anchor": "symbol-351",
+    "anchor": "symbol-360",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6202,7 +6357,7 @@
     "source": "source/std/reflect.chl",
     "line": 132,
     "page": "std-reflect.md",
-    "anchor": "symbol-352",
+    "anchor": "symbol-361",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6221,7 +6376,7 @@
     "source": "source/std/reflect.chl",
     "line": 132,
     "page": "std-reflect.md",
-    "anchor": "symbol-353",
+    "anchor": "symbol-362",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6240,7 +6395,7 @@
     "source": "source/std/reflect.chl",
     "line": 132,
     "page": "std-reflect.md",
-    "anchor": "symbol-354",
+    "anchor": "symbol-363",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6257,7 +6412,7 @@
     "source": "source/std/reflect.chl",
     "line": 133,
     "page": "std-reflect.md",
-    "anchor": "symbol-355",
+    "anchor": "symbol-364",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6274,7 +6429,7 @@
     "source": "source/std/reflect.chl",
     "line": 133,
     "page": "std-reflect.md",
-    "anchor": "symbol-356",
+    "anchor": "symbol-365",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6293,7 +6448,7 @@
     "source": "source/std/reflect.chl",
     "line": 133,
     "page": "std-reflect.md",
-    "anchor": "symbol-357",
+    "anchor": "symbol-366",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6312,7 +6467,7 @@
     "source": "source/std/reflect.chl",
     "line": 133,
     "page": "std-reflect.md",
-    "anchor": "symbol-358",
+    "anchor": "symbol-367",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6329,7 +6484,7 @@
     "source": "source/std/reflect.chl",
     "line": 134,
     "page": "std-reflect.md",
-    "anchor": "symbol-359",
+    "anchor": "symbol-368",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6346,7 +6501,7 @@
     "source": "source/std/reflect.chl",
     "line": 134,
     "page": "std-reflect.md",
-    "anchor": "symbol-360",
+    "anchor": "symbol-369",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6363,7 +6518,7 @@
     "source": "source/std/reflect.chl",
     "line": 134,
     "page": "std-reflect.md",
-    "anchor": "symbol-361",
+    "anchor": "symbol-370",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6380,7 +6535,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-362",
+    "anchor": "symbol-371",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6397,7 +6552,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-363",
+    "anchor": "symbol-372",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6416,7 +6571,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-364",
+    "anchor": "symbol-373",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6435,7 +6590,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-365",
+    "anchor": "symbol-374",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6452,7 +6607,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-366",
+    "anchor": "symbol-375",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6469,7 +6624,7 @@
     "source": "source/std/reflect.chl",
     "line": 135,
     "page": "std-reflect.md",
-    "anchor": "symbol-367",
+    "anchor": "symbol-376",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6486,7 +6641,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-368",
+    "anchor": "symbol-377",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6503,7 +6658,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-369",
+    "anchor": "symbol-378",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6520,7 +6675,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-370",
+    "anchor": "symbol-379",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6537,7 +6692,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-371",
+    "anchor": "symbol-380",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6554,7 +6709,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-372",
+    "anchor": "symbol-381",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6571,7 +6726,7 @@
     "source": "source/std/reflect.chl",
     "line": 136,
     "page": "std-reflect.md",
-    "anchor": "symbol-373",
+    "anchor": "symbol-382",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6588,7 +6743,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-374",
+    "anchor": "symbol-383",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6605,7 +6760,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-375",
+    "anchor": "symbol-384",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6624,7 +6779,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-376",
+    "anchor": "symbol-385",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6641,7 +6796,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-377",
+    "anchor": "symbol-386",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6660,7 +6815,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-378",
+    "anchor": "symbol-387",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6677,7 +6832,7 @@
     "source": "source/std/reflect.chl",
     "line": 137,
     "page": "std-reflect.md",
-    "anchor": "symbol-379",
+    "anchor": "symbol-388",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6694,7 +6849,7 @@
     "source": "source/std/reflect.chl",
     "line": 138,
     "page": "std-reflect.md",
-    "anchor": "symbol-380",
+    "anchor": "symbol-389",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6711,7 +6866,7 @@
     "source": "source/std/reflect.chl",
     "line": 138,
     "page": "std-reflect.md",
-    "anchor": "symbol-381",
+    "anchor": "symbol-390",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6730,7 +6885,7 @@
     "source": "source/std/reflect.chl",
     "line": 138,
     "page": "std-reflect.md",
-    "anchor": "symbol-382",
+    "anchor": "symbol-391",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6749,7 +6904,7 @@
     "source": "source/std/reflect.chl",
     "line": 138,
     "page": "std-reflect.md",
-    "anchor": "symbol-383",
+    "anchor": "symbol-392",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6766,7 +6921,7 @@
     "source": "source/std/reflect.chl",
     "line": 138,
     "page": "std-reflect.md",
-    "anchor": "symbol-384",
+    "anchor": "symbol-393",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6783,7 +6938,7 @@
     "source": "source/std/reflect.chl",
     "line": 139,
     "page": "std-reflect.md",
-    "anchor": "symbol-385",
+    "anchor": "symbol-394",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6800,7 +6955,7 @@
     "source": "source/std/reflect.chl",
     "line": 139,
     "page": "std-reflect.md",
-    "anchor": "symbol-386",
+    "anchor": "symbol-395",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6819,7 +6974,7 @@
     "source": "source/std/reflect.chl",
     "line": 139,
     "page": "std-reflect.md",
-    "anchor": "symbol-387",
+    "anchor": "symbol-396",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6836,7 +6991,7 @@
     "source": "source/std/reflect.chl",
     "line": 139,
     "page": "std-reflect.md",
-    "anchor": "symbol-388",
+    "anchor": "symbol-397",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6853,7 +7008,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-389",
+    "anchor": "symbol-398",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6872,7 +7027,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-390",
+    "anchor": "symbol-399",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6891,7 +7046,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-391",
+    "anchor": "symbol-400",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6910,7 +7065,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-392",
+    "anchor": "symbol-401",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -6929,7 +7084,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-393",
+    "anchor": "symbol-402",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6946,7 +7101,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-394",
+    "anchor": "symbol-403",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6963,7 +7118,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-395",
+    "anchor": "symbol-404",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6980,7 +7135,7 @@
     "source": "source/std/reflect.chl",
     "line": 140,
     "page": "std-reflect.md",
-    "anchor": "symbol-396",
+    "anchor": "symbol-405",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -6997,7 +7152,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-397",
+    "anchor": "symbol-406",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7014,7 +7169,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-398",
+    "anchor": "symbol-407",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -7033,7 +7188,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-399",
+    "anchor": "symbol-408",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -7052,7 +7207,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-400",
+    "anchor": "symbol-409",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7069,7 +7224,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-401",
+    "anchor": "symbol-410",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7086,7 +7241,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-402",
+    "anchor": "symbol-411",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7103,7 +7258,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-403",
+    "anchor": "symbol-412",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7120,7 +7275,7 @@
     "source": "source/std/reflect.chl",
     "line": 141,
     "page": "std-reflect.md",
-    "anchor": "symbol-404",
+    "anchor": "symbol-413",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7137,7 +7292,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-405",
+    "anchor": "symbol-414",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7154,7 +7309,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-406",
+    "anchor": "symbol-415",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -7173,7 +7328,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-407",
+    "anchor": "symbol-416",
     "examples": [
       "doc/examples/library/reflect.chl"
     ],
@@ -7192,7 +7347,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-408",
+    "anchor": "symbol-417",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7209,7 +7364,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-409",
+    "anchor": "symbol-418",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7226,7 +7381,7 @@
     "source": "source/std/reflect.chl",
     "line": 142,
     "page": "std-reflect.md",
-    "anchor": "symbol-410",
+    "anchor": "symbol-419",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7243,7 +7398,7 @@
     "source": "source/std/regex.chl",
     "line": 5,
     "page": "std-regex.md",
-    "anchor": "symbol-411",
+    "anchor": "symbol-420",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7260,7 +7415,7 @@
     "source": "source/std/regex.chl",
     "line": 29,
     "page": "std-regex.md",
-    "anchor": "symbol-412",
+    "anchor": "symbol-421",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7277,7 +7432,7 @@
     "source": "source/std/sql.chl",
     "line": 15,
     "page": "std-sql.md",
-    "anchor": "symbol-413",
+    "anchor": "symbol-422",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7294,7 +7449,7 @@
     "source": "source/std/sql.chl",
     "line": 17,
     "page": "std-sql.md",
-    "anchor": "symbol-414",
+    "anchor": "symbol-423",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7313,7 +7468,7 @@
     "source": "source/std/sql.chl",
     "line": 19,
     "page": "std-sql.md",
-    "anchor": "symbol-415",
+    "anchor": "symbol-424",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7330,7 +7485,7 @@
     "source": "source/std/sql.chl",
     "line": 65,
     "page": "std-sql.md",
-    "anchor": "symbol-416",
+    "anchor": "symbol-425",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7347,7 +7502,7 @@
     "source": "source/std/sql.chl",
     "line": 67,
     "page": "std-sql.md",
-    "anchor": "symbol-417",
+    "anchor": "symbol-426",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7364,7 +7519,7 @@
     "source": "source/std/sql.chl",
     "line": 69,
     "page": "std-sql.md",
-    "anchor": "symbol-418",
+    "anchor": "symbol-427",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7381,7 +7536,7 @@
     "source": "source/std/sql.chl",
     "line": 71,
     "page": "std-sql.md",
-    "anchor": "symbol-419",
+    "anchor": "symbol-428",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7398,7 +7553,7 @@
     "source": "source/std/sql.chl",
     "line": 73,
     "page": "std-sql.md",
-    "anchor": "symbol-420",
+    "anchor": "symbol-429",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7415,7 +7570,7 @@
     "source": "source/std/sql.chl",
     "line": 75,
     "page": "std-sql.md",
-    "anchor": "symbol-421",
+    "anchor": "symbol-430",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7432,7 +7587,7 @@
     "source": "source/std/sql.chl",
     "line": 77,
     "page": "std-sql.md",
-    "anchor": "symbol-422",
+    "anchor": "symbol-431",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7449,7 +7604,7 @@
     "source": "source/std/sql.chl",
     "line": 157,
     "page": "std-sql.md",
-    "anchor": "symbol-423",
+    "anchor": "symbol-432",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7466,7 +7621,7 @@
     "source": "source/std/sql.chl",
     "line": 158,
     "page": "std-sql.md",
-    "anchor": "symbol-424",
+    "anchor": "symbol-433",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7483,7 +7638,7 @@
     "source": "source/std/sql.chl",
     "line": 159,
     "page": "std-sql.md",
-    "anchor": "symbol-425",
+    "anchor": "symbol-434",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7500,7 +7655,7 @@
     "source": "source/std/sql.chl",
     "line": 160,
     "page": "std-sql.md",
-    "anchor": "symbol-426",
+    "anchor": "symbol-435",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7517,7 +7672,7 @@
     "source": "source/std/sql.chl",
     "line": 161,
     "page": "std-sql.md",
-    "anchor": "symbol-427",
+    "anchor": "symbol-436",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7534,7 +7689,7 @@
     "source": "source/std/sql.chl",
     "line": 186,
     "page": "std-sql.md",
-    "anchor": "symbol-428",
+    "anchor": "symbol-437",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7551,7 +7706,7 @@
     "source": "source/std/sql.chl",
     "line": 187,
     "page": "std-sql.md",
-    "anchor": "symbol-429",
+    "anchor": "symbol-438",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7568,7 +7723,7 @@
     "source": "source/std/sql.chl",
     "line": 194,
     "page": "std-sql.md",
-    "anchor": "symbol-430",
+    "anchor": "symbol-439",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7587,7 +7742,7 @@
     "source": "source/std/sql.chl",
     "line": 195,
     "page": "std-sql.md",
-    "anchor": "symbol-431",
+    "anchor": "symbol-440",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7606,7 +7761,7 @@
     "source": "source/std/sql.chl",
     "line": 196,
     "page": "std-sql.md",
-    "anchor": "symbol-432",
+    "anchor": "symbol-441",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7625,7 +7780,7 @@
     "source": "source/std/sql.chl",
     "line": 197,
     "page": "std-sql.md",
-    "anchor": "symbol-433",
+    "anchor": "symbol-442",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7642,7 +7797,7 @@
     "source": "source/std/sql.chl",
     "line": 198,
     "page": "std-sql.md",
-    "anchor": "symbol-434",
+    "anchor": "symbol-443",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7659,7 +7814,7 @@
     "source": "source/std/sql.chl",
     "line": 199,
     "page": "std-sql.md",
-    "anchor": "symbol-435",
+    "anchor": "symbol-444",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7678,7 +7833,7 @@
     "source": "source/std/sql.chl",
     "line": 343,
     "page": "std-sql.md",
-    "anchor": "symbol-436",
+    "anchor": "symbol-445",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7695,7 +7850,7 @@
     "source": "source/std/sql.chl",
     "line": 353,
     "page": "std-sql.md",
-    "anchor": "symbol-437",
+    "anchor": "symbol-446",
     "examples": [
       "doc/examples/library/sqlite.chl"
     ],
@@ -7708,13 +7863,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct KmpReply",
-    "documentation": "KMP 胶水回执；槽布局必须与 glue/std_kmp.hpp 的 Reply 一致。",
+    "documentation": "KMP 操作回执，所有字段由语言实现直接更新。",
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 242,
+    "line": 270,
     "page": "std-text.md",
-    "anchor": "symbol-438",
+    "anchor": "symbol-447",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7729,9 +7884,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 243,
+    "line": 271,
     "page": "std-text.md",
-    "anchor": "symbol-439",
+    "anchor": "symbol-448",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7746,9 +7901,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 244,
+    "line": 272,
     "page": "std-text.md",
-    "anchor": "symbol-440",
+    "anchor": "symbol-449",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7763,9 +7918,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 245,
+    "line": 273,
     "page": "std-text.md",
-    "anchor": "symbol-441",
+    "anchor": "symbol-450",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7780,9 +7935,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 246,
+    "line": 274,
     "page": "std-text.md",
-    "anchor": "symbol-442",
+    "anchor": "symbol-451",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7797,9 +7952,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 247,
+    "line": 275,
     "page": "std-text.md",
-    "anchor": "symbol-443",
+    "anchor": "symbol-452",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7814,9 +7969,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 250,
+    "line": 278,
     "page": "std-text.md",
-    "anchor": "symbol-444",
+    "anchor": "symbol-453",
     "examples": [
       "example/samples/std_glue_edges.chl"
     ],
@@ -7829,13 +7984,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct StringBuilder : Drop",
-    "documentation": "字符串构建器：把片段收进列表，最后一次性用平衡两两合并摊平（与 `Text::join` 同口径）。\n`s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，\n`toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。",
+    "documentation": "字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。\n`s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，\n`toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。",
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 359,
+    "line": 387,
     "page": "std-text.md",
-    "anchor": "symbol-445",
+    "anchor": "symbol-454",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7850,9 +8005,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 360,
+    "line": 388,
     "page": "std-text.md",
-    "anchor": "symbol-446",
+    "anchor": "symbol-455",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7867,9 +8022,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/text.chl",
-    "line": 361,
+    "line": 389,
     "page": "std-text.md",
-    "anchor": "symbol-447",
+    "anchor": "symbol-456",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7886,7 +8041,7 @@
     "source": "source/std/thread.chl",
     "line": 26,
     "page": "std-thread.md",
-    "anchor": "symbol-448",
+    "anchor": "symbol-457",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7903,7 +8058,7 @@
     "source": "source/std/thread.chl",
     "line": 27,
     "page": "std-thread.md",
-    "anchor": "symbol-449",
+    "anchor": "symbol-458",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7920,7 +8075,7 @@
     "source": "source/std/thread.chl",
     "line": 28,
     "page": "std-thread.md",
-    "anchor": "symbol-450",
+    "anchor": "symbol-459",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7937,7 +8092,7 @@
     "source": "source/std/thread.chl",
     "line": 29,
     "page": "std-thread.md",
-    "anchor": "symbol-451",
+    "anchor": "symbol-460",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7954,7 +8109,7 @@
     "source": "source/std/thread.chl",
     "line": 56,
     "page": "std-thread.md",
-    "anchor": "symbol-452",
+    "anchor": "symbol-461",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7971,7 +8126,7 @@
     "source": "source/std/thread.chl",
     "line": 57,
     "page": "std-thread.md",
-    "anchor": "symbol-453",
+    "anchor": "symbol-462",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -7988,7 +8143,7 @@
     "source": "source/std/thread.chl",
     "line": 58,
     "page": "std-thread.md",
-    "anchor": "symbol-454",
+    "anchor": "symbol-463",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8005,7 +8160,7 @@
     "source": "source/std/thread.chl",
     "line": 59,
     "page": "std-thread.md",
-    "anchor": "symbol-455",
+    "anchor": "symbol-464",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8022,7 +8177,7 @@
     "source": "source/std/thread.chl",
     "line": 60,
     "page": "std-thread.md",
-    "anchor": "symbol-456",
+    "anchor": "symbol-465",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8039,7 +8194,7 @@
     "source": "source/std/thread.chl",
     "line": 117,
     "page": "std-thread.md",
-    "anchor": "symbol-457",
+    "anchor": "symbol-466",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8056,7 +8211,7 @@
     "source": "source/std/thread.chl",
     "line": 118,
     "page": "std-thread.md",
-    "anchor": "symbol-458",
+    "anchor": "symbol-467",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8073,7 +8228,7 @@
     "source": "source/std/thread.chl",
     "line": 119,
     "page": "std-thread.md",
-    "anchor": "symbol-459",
+    "anchor": "symbol-468",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8090,7 +8245,7 @@
     "source": "source/std/thread.chl",
     "line": 120,
     "page": "std-thread.md",
-    "anchor": "symbol-460",
+    "anchor": "symbol-469",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8107,7 +8262,7 @@
     "source": "source/std/toml.chl",
     "line": 51,
     "page": "std-toml.md",
-    "anchor": "symbol-461",
+    "anchor": "symbol-470",
     "examples": [
       "example/samples/std_structured_data.chl"
     ],
@@ -8120,13 +8275,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct TreeSnapshot",
-    "documentation": "独立节点快照，live 标识有效槽；空孩子及空根使用 -1。",
+    "documentation": "独立节点快照；空孩子和空根使用 -1，节点槽号保持稳定。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 13,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-462",
+    "anchor": "symbol-471",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8141,9 +8296,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 14,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-463",
+    "anchor": "symbol-472",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8158,9 +8313,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 15,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-464",
+    "anchor": "symbol-473",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8175,9 +8330,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 16,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-465",
+    "anchor": "symbol-474",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8192,9 +8347,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 17,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-466",
+    "anchor": "symbol-475",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8209,9 +8364,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 18,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-467",
+    "anchor": "symbol-476",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8226,9 +8381,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 19,
+    "line": 4,
     "page": "std-tree.md",
-    "anchor": "symbol-468",
+    "anchor": "symbol-477",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8239,13 +8394,13 @@
     "kind": "struct",
     "type": "",
     "signature": "struct GeneralTreeSnapshot",
-    "documentation": "独立通用树快照，首孩子与次兄弟保留原节点号。",
+    "documentation": "首孩子、次兄弟表示的独立通用树快照。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 22,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-469",
+    "anchor": "symbol-478",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8260,9 +8415,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 23,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-470",
+    "anchor": "symbol-479",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8277,9 +8432,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 24,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-471",
+    "anchor": "symbol-480",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8294,9 +8449,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 25,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-472",
+    "anchor": "symbol-481",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8311,9 +8466,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 26,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-473",
+    "anchor": "symbol-482",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8328,9 +8483,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 27,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-474",
+    "anchor": "symbol-483",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8345,9 +8500,9 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 28,
+    "line": 6,
     "page": "std-tree.md",
-    "anchor": "symbol-475",
+    "anchor": "symbol-484",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8355,16 +8510,16 @@
     "module": "std::tree",
     "name": "BinarySearchTree",
     "owner": "",
-    "kind": "opcode",
+    "kind": "struct",
     "type": "",
-    "signature": "opcode BinarySearchTree",
+    "signature": "struct BinarySearchTree: Copy<BinarySearchTree>",
     "documentation": "宿主持久二叉搜索集合，普通复制深复制，snapshot 显式导出节点。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 31,
+    "line": 93,
     "page": "std-tree.md",
-    "anchor": "symbol-476",
+    "anchor": "symbol-485",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8372,16 +8527,16 @@
     "module": "std::tree",
     "name": "RedBlackTree",
     "owner": "",
-    "kind": "opcode",
+    "kind": "struct",
     "type": "",
-    "signature": "opcode RedBlackTree",
+    "signature": "struct RedBlackTree: Copy<RedBlackTree>",
     "documentation": "宿主持久红黑集合，插入与删除原地修复，普通复制深复制。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 75,
+    "line": 136,
     "page": "std-tree.md",
-    "anchor": "symbol-477",
+    "anchor": "symbol-486",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8389,16 +8544,16 @@
     "module": "std::tree",
     "name": "MinHeap",
     "owner": "",
-    "kind": "opcode",
+    "kind": "struct",
     "type": "",
-    "signature": "opcode MinHeap",
+    "signature": "struct MinHeap: Copy<MinHeap>",
     "documentation": "宿主持久最小堆，普通复制深复制，snapshot 显式导出堆数组。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 111,
+    "line": 238,
     "page": "std-tree.md",
-    "anchor": "symbol-478",
+    "anchor": "symbol-487",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8406,16 +8561,16 @@
     "module": "std::tree",
     "name": "GeneralTree",
     "owner": "",
-    "kind": "opcode",
+    "kind": "struct",
     "type": "",
-    "signature": "opcode GeneralTree",
+    "signature": "struct GeneralTree: Copy<GeneralTree>",
     "documentation": "宿主持久首孩子、次兄弟树，支持独立二叉表示转换。",
     "comment": "",
     "parameters": [],
     "source": "source/std/tree.chl",
-    "line": 134,
+    "line": 261,
     "page": "std-tree.md",
-    "anchor": "symbol-479",
+    "anchor": "symbol-488",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8432,7 +8587,7 @@
     "source": "source/std/utf8.chl",
     "line": 4,
     "page": "std-utf8.md",
-    "anchor": "symbol-480",
+    "anchor": "symbol-489",
     "examples": [],
     "sourceLanguage": "zh"
   },
@@ -8449,7 +8604,7 @@
     "source": "source/std/watchdog.chl",
     "line": 3,
     "page": "std-watchdog.md",
-    "anchor": "symbol-481",
+    "anchor": "symbol-490",
     "examples": [
       "doc/examples/library/watchdog.chl"
     ],

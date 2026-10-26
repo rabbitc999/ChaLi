@@ -36,30 +36,6 @@ Value copy(State &state, const Memory::Vector<Value> &arguments);
 Value drop(State &state, const Memory::Vector<Value> &arguments);
 
 /**
- * @brief 为 String 的 new 绑定创建独立空值。
- * @param state 当前运行时调用状态。
- * @param arguments 无参数创建调用的参数列表。
- * @return 新分配的空字符串地址。
- */
-Value stringNew(State &state, const Memory::Vector<Value> &arguments);
-
-/**
- * @brief 为 String 的 copy 绑定按长度复制文本。
- * @param state 当前运行时调用状态。
- * @param arguments 包含被复制的 String 值。
- * @return 与源值独立的字符串地址。
- */
-Value stringCopy(State &state, const Memory::Vector<Value> &arguments);
-
-/**
- * @brief 为 String 的 drop 绑定释放自己拥有的原始字节块。
- * @param state 当前运行时调用状态。
- * @param arguments 包含待释放的 String 值。
- * @return 零占位值。
- */
-Value stringDrop(State &state, const Memory::Vector<Value> &arguments);
-
-/**
  * @brief 读取原生参数的整数位模式。
  * @param value 原生参数。
  * @return 整数值或浮点向零截断结果。
@@ -126,13 +102,6 @@ bool bind(stackvm::NativeRegistry &registry, const char *name, std::size_t arity
           Value (*operation)(State &, const Memory::Vector<Value> &), Memory::String *error, bool referenceFirst = false);
 
 /**
- * @brief 整数 → 十进制文本（`int` 是 64 位，所以按 `long long` 打）。
- * @param value 值。
- * @return 文本。
- */
-Memory::String nativeIntText(std::int64_t value);
-
-/**
  * @brief 浮点 → 文本：默认保留 3 位小数（语言的默认），去掉尾随的 0。
  *
  * 与 `%f` 的默认精度保持一致：`3.5` 打成 `3.5`（不是 `3.500`），`2.0` 打成 `2.0`。
@@ -143,46 +112,6 @@ Memory::String nativeIntText(std::int64_t value);
 Memory::String nativeFloatText(double value, int precision);
 
 /**
- * @brief `__std_str_lit(地址) -> 堆上的新串地址`：把只读的字面量字节复制成一份**可写**的堆串。
- *
- * 字符串的"值"永远是堆地址（`\0` 结尾的字节串），数据区里只留只读的字面量字节当
- * 复制源 —— 于是每个 `string` 变量手里那块是自己能写的，`s[i] = 字符` 不会改到
- * 共享的字面量；所有权也就统一了：**变量即那块堆串的主人**。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strLit(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief `__std_str_join(串…) -> 新串地址`：把**一串**字符串接成一个（变参）。
- *
- * 之所以一次接一整条链（而不是两个两个接）：`a + b + c` 那样两两接会留下一个中间串，
- * 而中间串没有哪个变量"拥有"它 —— 没人释放（漏）。摊平成一次调用就只分配一个结果，
- * 它正好归被赋值的那个变量所有。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strJoin(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief 按字节区间截取字符串，并检查 UTF-8 端点边界。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strSub(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief `__std_str_of_int(值) -> 新串地址`。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strOfInt(State &ctx, const Memory::Vector<Value> &args);
-
-/**
  * @brief `__std_str_of_flt(值) -> 新串地址`（默认 3 位小数，`精度` 可覆盖）。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
  * @param args 按接口约定顺序传入的实参列表。
@@ -191,26 +120,10 @@ Value strOfInt(State &ctx, const Memory::Vector<Value> &args);
 Value strOfFlt(State &ctx, const Memory::Vector<Value> &args);
 
 /**
- * @brief `__std_str_cmp(左, 右) -> -1 / 0 / 1`（字典序；空指针当空串）。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strCmp(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief `__std_str_pos(串, 子串) -> 位置 / -1`：子串第一次出现的位置。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 子串首次出现的字节位置，未找到时为 -1。
- */
-Value strPos(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief 注册 String opcode 的创建、复制和销毁协议。
+ * @brief 注册浮点数的宿主文本格式边界。
  * @param registry 目标原生函数表。
  * @param error 注册失败的原因。
- * @return 三个生命周期函数均绑定成功时返回 true。
+ * @return 浮点格式入口绑定成功时返回 true。
  */
 bool bindString(stackvm::NativeRegistry &registry, Memory::String *error = nullptr);
 }  // namespace native_record_glue

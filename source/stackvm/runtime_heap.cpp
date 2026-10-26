@@ -335,6 +335,18 @@ unsigned char *Heap::borrowBytes(std::size_t address, std::size_t count)
 }
 
 /**
+ * @brief 收窄对齐分配的公开字节范围，保留完整分配的释放和统计信息。
+ * @param address 精确分配首。
+ * @param offset 公开区域相对分配首的偏移。
+ * @param count 公开字节数。
+ * @return 收窄成功时为真。
+ */
+bool Heap::restrictAllocation(std::size_t address, std::size_t offset, std::size_t count)
+{
+    return index_.restrictRange(address, offset, count);
+}
+
+/**
  * @brief 将有效逻辑地址转换为物理偏移。
  * @param address 已验证的逻辑地址。
  * @return 字节区偏移。

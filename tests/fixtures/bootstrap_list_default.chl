@@ -1,0 +1,10 @@
+struct Item {int64 key;String text;};
+void main(){
+ List<int64> a=[1,2,3];a.insert(1,9);assert(a[1]==9);a.remove(2);assert(a[2]==3);List<int64> b=a.copy();b[0]=7;assert(a[0]==1);assert(a.indexOf(9)==1 && a.contains(3)!=0);
+ List<float64> f;f.push(1.25);f.push(1.0e100);f.insert(1,3.5);assert(f[1]==3.5 && f.indexOf(1.25)==0);assert(f.pop()==1.0e100);f[0]=4.5;assert(f[0]==4.5);
+ List<float32> g;g.push((float32)1.25);g.insert(0,(float32)2.5);assert(g.pop()==(float32)1.25);
+ List<uint64> wide;wide.push(18446744073709551615u);assert(wide.pop()==18446744073709551615u);
+ List<String> words;words.push("one");words.insert(0,"two");List<String> copied=words;words.remove(0);assert(copied[0]=="two" && words.pop()=="one");
+ List<Item> items;Item item;item.key=7;item.text="kept";items.push(item);item.text="changed";assert(items[0].text=="kept");Item out=items.pop();assert(out.key==7 && out.text=="kept");
+ a.clear();assert(a.len()==0);a.push(5);assert(a.pop()==5);println("bootstrap List values OK");
+}

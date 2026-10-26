@@ -10,7 +10,7 @@ An iterator separates how values are produced from how they are consumed. `for-i
 void main()
 {
     int64 total = 0;
-    for (int64 value in std::lang::range(0, 5))
+    for (int64 value in range(0, 5))
     {
         total = total + value;
     }

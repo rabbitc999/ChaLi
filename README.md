@@ -281,7 +281,7 @@ chali/
 │   └── generator/            entry point that generates standalone compiler projects
 ├── library/                        reusable C++ libraries and the board host
 │   ├── stackvm/                    VM core (shared by desktop and board)
-│   ├── bignum/ json/ toml/ sqlite/ console/ lztext/ …
+│   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
 ├── doc/                            user-facing documentation (00–20, 99)
 │   ├── en/                         English edition (index + 00–11, 13, 99; 15 files)
@@ -300,3 +300,5 @@ section above.
 Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/chali-frontend/`, keeping the repository root clear.
+
+SQLite and miniz are downloaded as pinned build dependencies instead of being vendored; see [build dependencies](doc/en/45-build-dependencies.md).

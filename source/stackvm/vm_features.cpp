@@ -14,9 +14,9 @@ using namespace runtimeDetail;
 std::uint32_t supportedProgramFeatures()
 {
 #if STACKVM_WITH_REFLECTION
-    return kFeatureReflection | kFeatureByteMemory;
+    return kFeatureReflection | kFeatureByteMemory | kFeatureBulkMemory;
 #else
-    return kFeatureByteMemory;
+    return kFeatureByteMemory | kFeatureBulkMemory;
 #endif
 }
 
@@ -49,6 +49,11 @@ bool validateProgramMetadata(const Program &program, Memory::Vector<Memory::Stri
     if (!validateProgramFeatures(program.requiredFeatures, diagnostics)) return false;
     for (const auto &instruction : program.code)
     {
+        if ((instruction.op == Op::MemoryCopy || instruction.op == Op::MemorySet) && !(program.requiredFeatures & kFeatureBulkMemory))
+        {
+            if (diagnostics) diagnostics->push_back("字节复制／填充指令缺少 bulk-memory 特征位");
+            return false;
+        }
         if (instruction.op != Op::LoadAt && instruction.op != Op::StoreAt) continue;
         if ((instruction.intValue != 0 && instruction.intValue != 1) || (instruction.intValue == 1 && (instruction.isFloat || !(program.requiredFeatures & kFeatureByteMemory))))
         {

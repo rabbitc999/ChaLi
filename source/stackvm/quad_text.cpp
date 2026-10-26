@@ -298,6 +298,8 @@ Memory::String Instruction::toString() const
     case Op::AddrOf: return "ADDR " + name;
     case Op::LoadAt: return intValue == 1 ? "LOADAT:u8" : "LOADAT";
     case Op::StoreAt: return intValue == 1 ? "STOREAT:u8" : "STOREAT";
+    case Op::MemoryCopy: return "MEMCPY";
+    case Op::MemorySet: return "MEMSET";
     }
     return "?";
 }

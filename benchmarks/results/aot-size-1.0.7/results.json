@@ -1,0 +1,220 @@
+{
+  "generated_utc": "2026-10-26T10:42:32.203057+00:00",
+  "host": "Windows-10-10.0.19045-SP0",
+  "work": "G:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd",
+  "configurations": {
+    "demand": {
+      "path": "G:\\Desktop\\ChaLi\\chali-1.0.7-llvm-external-windows-x64.exe",
+      "version": "1.0.7",
+      "sha256": "754930f5cc4d6d9a08b57d4af72c620f5cee59e916758c395e10ede206180bd7",
+      "full_stdlib": false
+    },
+    "full": {
+      "path": "G:\\Desktop\\ChaLi\\chali-1.0.7-llvm-external-windows-x64.exe",
+      "version": "1.0.7",
+      "sha256": "754930f5cc4d6d9a08b57d4af72c620f5cee59e916758c395e10ede206180bd7",
+      "full_stdlib": true
+    },
+    "baseline": {
+      "path": "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+      "version": "1.0.6",
+      "sha256": "9f7592fe2b4e219a62b93b2c8f561639314fb8176bd4ef26ae1dfa1d2bfab063",
+      "full_stdlib": false
+    }
+  },
+  "cases": {
+    "empty": {
+      "source": "void main() {}\n",
+      "source_sha256": "ddd24249fa5e9bd840e6e1b3489aaf02f5300c0561f946cfac8916960b335772",
+      "expected_stdout": "",
+      "results": {
+        "demand": {
+          "bytes": 1751040,
+          "executable_sha256": "172ff41152c21b61f3a04f11daba74ee113e331be881c8316c71a6d808cfddbf",
+          "stdout": "",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\empty-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         00141be6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000583bc  0000000140143000  0000000140143000  00142000  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         00005800  000000014019c000  000000014019c000  0019a400  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        000099b4  00000001401a3000  00000001401a3000  0019fc00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 chali_co      00000013  00000001401ad000  00000001401ad000  001a9600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  5 .reloc        00001eec  00000001401ae000  00000001401ae000  001a9800  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5156864,
+          "executable_sha256": "07f85f350b507fb6cade005b25f91d269ea068c38c3564b18183e6d836ff6082",
+          "stdout": "",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\empty-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e0ee6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dc978  00000001403e2000  00000001403e2000  003e1400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404bf000  00000001404bf000  004bde00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001ccd4  00000001444cb000  00000001444cb000  004c8600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 chali_co      00000013  00000001444e8000  00000001444e8000  004e5400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  5 .reloc        00005968  00000001444e9000  00000001444e9000  004e5600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75158528,
+          "executable_sha256": "5e8c0c361de25dd9529bb7d296a820550e75bf934c5a06a4adf57dca936024f2",
+          "stdout": "",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\empty-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042ba46  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000e86a4  000000014042d000  000000014042d000  0042c200  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  0000000140516000  0000000140516000  00514a00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  0000000140517000  0000000140517000  00514c00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        00023598  0000000144523000  0000000144523000  0451f600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 chali_co      00000013  0000000144547000  0000000144547000  04542c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00006060  0000000144548000  0000000144548000  04542e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  7 .debug_abbrev 000019e9  000000014454f000  000000014454f000  04549000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  8 .debug_aranges 00000170  0000000144551000  0000000144551000  0454aa00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_frame  00000570  0000000144552000  0000000144552000  0454ac00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_info   00007b3d  0000000144553000  0000000144553000  0454b200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_line   0000283f  000000014455b000  000000014455b000  04552e00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_loc    00000b1e  000000014455e000  000000014455e000  04555800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loclists 00000d10  000000014455f000  000000014455f000  04556400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_ranges 00000060  0000000144560000  0000000144560000  04557200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_rnglists 000000b4  0000000144561000  0000000144561000  04557400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_str    00002656  0000000144562000  0000000144562000  04557600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    },
+    "print": {
+      "source": "void main() { println(\"AOT size OK\"); }\n",
+      "source_sha256": "34c43bce2afdf108d3120101ac1c60162e2cbe3cdbab0c927f2972fc39aeb9fd",
+      "expected_stdout": "AOT size OK\n",
+      "results": {
+        "demand": {
+          "bytes": 1753600,
+          "executable_sha256": "f907d3658314818769bbd6b5ad144fbfaba3855206a837ba8834e3afa3ec3ff3",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\print-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         00141fd6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        0005851c  0000000140143000  0000000140143000  00142400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         00005800  000000014019c000  000000014019c000  0019aa00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        00009a14  00000001401a3000  00000001401a3000  001a0200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000028  00000001401ad000  00000001401ad000  001a9e00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      0000007f  00000001401ae000  00000001401ae000  001aa000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00001efc  00000001401af000  00000001401af000  001aa200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5158912,
+          "executable_sha256": "cdaeba220b44cc7c42570c92eaff283c0a7bf408fe2a2a66026c8b5e82baf724",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\print-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e12d6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dcad8  00000001403e3000  00000001403e3000  003e1800  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c0000  00000001404c0000  004be400  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd34  00000001444cc000  00000001444cc000  004c8c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000028  00000001444e9000  00000001444e9000  004e5a00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      0000007f  00000001444ea000  00000001444ea000  004e5c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        0000599c  00000001444eb000  00000001444eb000  004e5e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75161088,
+          "executable_sha256": "093f71ea67d37dd320708f778c5e164c53c24bbe83da0f87dbcd74070feeb8c3",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\print-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042be36  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000e8804  000000014042d000  000000014042d000  0042c600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  0000000140516000  0000000140516000  00515000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  0000000140517000  0000000140517000  00515200  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        000235f8  0000000144524000  0000000144524000  0451fc00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 .tls          00000028  0000000144548000  0000000144548000  04543200  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  6 chali_co      0000007f  0000000144549000  0000000144549000  04543400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  7 .reloc        00006064  000000014454a000  000000014454a000  04543600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  8 .debug_abbrev 000019e9  0000000144551000  0000000144551000  04549800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_aranges 00000170  0000000144553000  0000000144553000  0454b200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_frame  00000570  0000000144554000  0000000144554000  0454b400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_info   00007b3d  0000000144555000  0000000144555000  0454ba00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_line   0000283f  000000014455d000  000000014455d000  04553600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loc    00000b1e  0000000144560000  0000000144560000  04556000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_loclists 00000d10  0000000144561000  0000000144561000  04556c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_ranges 00000060  0000000144562000  0000000144562000  04557a00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_rnglists 000000b4  0000000144563000  0000000144563000  04557c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 17 .debug_str    00002656  0000000144564000  0000000144564000  04557e00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    },
+    "string": {
+      "source": "void main() { String text=\"hello\"; assert(text.repeat(2)==\"hellohello\"); println(\"String OK\"); }\n",
+      "source_sha256": "5f330e57daae09406a591f8ca7e9a5048c32bee05061a3774ea8305d1f916268",
+      "expected_stdout": "String OK\n",
+      "results": {
+        "demand": {
+          "bytes": 5159936,
+          "executable_sha256": "cfa1e63a4ac81a41a4c68209a240ae91ac913116317bdcc3d6e80bf627b75e5d",
+          "stdout": "String OK\n",
+          "standard_modules": [
+            "string_methods string"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\string-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e10b6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dcc3c  00000001403e3000  00000001403e3000  003e1600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c0000  00000001404c0000  004be400  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd4c  00000001444cc000  00000001444cc000  004c8c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000030  00000001444e9000  00000001444e9000  004e5a00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000004c2  00000001444ea000  00000001444ea000  004e5c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        000059a8  00000001444eb000  00000001444eb000  004e6200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5160448,
+          "executable_sha256": "2abb38c6bda1aae24f56897e08a0e730504ae04ada6c2d296f6e45472186c946",
+          "stdout": "String OK\n",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\string-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1286  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dcc3c  00000001403e3000  00000001403e3000  003e1800  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c0000  00000001404c0000  004be600  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd4c  00000001444cc000  00000001444cc000  004c8e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000030  00000001444e9000  00000001444e9000  004e5c00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000004c2  00000001444ea000  00000001444ea000  004e5e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        000059a8  00000001444eb000  00000001444eb000  004e6400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75162624,
+          "executable_sha256": "e4fb41fd0c3e9f427a77b3c844d21dba3bce6dc405da9b76bb7e89270353a855",
+          "stdout": "String OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\string-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042bde6  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000e8948  000000014042d000  000000014042d000  0042c400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  0000000140516000  0000000140516000  00514e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  0000000140517000  0000000140517000  00515000  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        00023610  0000000144524000  0000000144524000  0451fa00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 .tls          00000030  0000000144548000  0000000144548000  04543200  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  6 chali_co      000004c2  0000000144549000  0000000144549000  04543400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  7 .reloc        0000605c  000000014454a000  000000014454a000  04543a00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  8 .debug_abbrev 000019e9  0000000144551000  0000000144551000  04549c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_aranges 00000170  0000000144553000  0000000144553000  0454b600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_frame  00000570  0000000144554000  0000000144554000  0454b800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_info   00007b3d  0000000144555000  0000000144555000  0454be00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_line   0000283f  000000014455d000  000000014455d000  04553a00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loc    00000b1e  0000000144560000  0000000144560000  04556400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_loclists 00000d10  0000000144561000  0000000144561000  04557000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_ranges 00000060  0000000144562000  0000000144562000  04557e00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_rnglists 000000b4  0000000144563000  0000000144563000  04558000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 17 .debug_str    00002656  0000000144564000  0000000144564000  04558200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    },
+    "list": {
+      "source": "void main() { List<int64> values; values.push(7); values.push(9); assert(values.pop()==9); assert(values[0]==7); println(\"List OK\"); }\n",
+      "source_sha256": "e01f6dc6bb6da1a037e005bfcf5aa652be5193eabd432f92d76c8b3fdce492a4",
+      "expected_stdout": "List OK\n",
+      "results": {
+        "demand": {
+          "bytes": 5158912,
+          "executable_sha256": "bfa9311abbc76e597be38136ccce803e1f4b11fe4feca4952f46cbc52fb8b23c",
+          "stdout": "List OK\n",
+          "standard_modules": [
+            "collection"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\list-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1086  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dcb90  00000001403e3000  00000001403e3000  003e1600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c0000  00000001404c0000  004be200  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd40  00000001444cc000  00000001444cc000  004c8a00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000028  00000001444e9000  00000001444e9000  004e5800  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000003df  00000001444ea000  00000001444ea000  004e5a00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        000059a4  00000001444eb000  00000001444eb000  004e5e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5159424,
+          "executable_sha256": "7f261874ef31a15788a58fe5b565dbf975df33d618aefb45770e28e4d9d4a0b5",
+          "stdout": "List OK\n",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\list-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1276  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dcb94  00000001403e3000  00000001403e3000  003e1800  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c0000  00000001404c0000  004be400  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd40  00000001444cc000  00000001444cc000  004c8c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000028  00000001444e9000  00000001444e9000  004e5a00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000003df  00000001444ea000  00000001444ea000  004e5c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        000059a4  00000001444eb000  00000001444eb000  004e6000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75161600,
+          "executable_sha256": "7ac15789ca0870095bfe1a2b91b4fc02a50732f03166e6728f0822ae01b80ed8",
+          "stdout": "List OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\list-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042bdd6  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000e88c0  000000014042d000  000000014042d000  0042c400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  0000000140516000  0000000140516000  00514e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  0000000140517000  0000000140517000  00515000  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        00023604  0000000144524000  0000000144524000  0451fa00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 .tls          00000028  0000000144548000  0000000144548000  04543200  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  6 chali_co      000003df  0000000144549000  0000000144549000  04543400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  7 .reloc        0000605c  000000014454a000  000000014454a000  04543800  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  8 .debug_abbrev 000019e9  0000000144551000  0000000144551000  04549a00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_aranges 00000170  0000000144553000  0000000144553000  0454b400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_frame  00000570  0000000144554000  0000000144554000  0454b600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_info   00007b3d  0000000144555000  0000000144555000  0454bc00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_line   0000283f  000000014455d000  000000014455d000  04553800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loc    00000b1e  0000000144560000  0000000144560000  04556200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_loclists 00000d10  0000000144561000  0000000144561000  04556e00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_ranges 00000060  0000000144562000  0000000144562000  04557c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_rnglists 000000b4  0000000144563000  0000000144563000  04557e00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 17 .debug_str    00002656  0000000144564000  0000000144564000  04558000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    },
+    "unused_import": {
+      "source": "import std::cas;\nimport std::sql;\nvoid main() { println(\"AOT size OK\"); }\n",
+      "source_sha256": "2d4a92b856e29820fbc30a54ac7cd1688d1f8815b10872fde4ada62969ead8df",
+      "expected_stdout": "AOT size OK\n",
+      "results": {
+        "demand": {
+          "bytes": 5270528,
+          "executable_sha256": "a539a17e8c98a022f745af5f59834f106e43d0a71dd115342c6b5e4683ef69ce",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [
+            "string"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\unused_import-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1656  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000f3880  00000001403e3000  00000001403e3000  003e1c00  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404d7000  00000001404d7000  004d5600  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd64  00000001444e3000  00000001444e3000  004dfe00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000260  0000000144500000  0000000144500000  004fcc00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000041ec  0000000144501000  0000000144501000  004fd000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00005984  0000000144506000  0000000144506000  00501200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5271040,
+          "executable_sha256": "97dbcc9d29f2f9f37f8822d6a2f435c9c2bc3428c27727f1ba49e0eb2e5670ac",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\unused_import-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1846  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000f3884  00000001403e3000  00000001403e3000  003e1e00  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404d7000  00000001404d7000  004d5800  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd64  00000001444e3000  00000001444e3000  004e0000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000260  0000000144500000  0000000144500000  004fce00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      000041ec  0000000144501000  0000000144501000  004fd200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00005984  0000000144506000  0000000144506000  00501400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75277312,
+          "executable_sha256": "ad75c735be2f393cdf6af53b3f25fc2a5082ddf85dbd7383d52aa1bf7f17ae71",
+          "stdout": "AOT size OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\unused_import-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042c486  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000ff650  000000014042e000  000000014042e000  0042cc00  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  000000014052e000  000000014052e000  0052c400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  000000014052f000  000000014052f000  0052c600  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        00023628  000000014453c000  000000014453c000  04537000  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 .tls          000002a0  0000000144560000  0000000144560000  0455a800  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  6 chali_co      000041e4  0000000144561000  0000000144561000  0455ac00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  7 .reloc        00006088  0000000144566000  0000000144566000  0455ee00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  8 .debug_abbrev 000019e9  000000014456d000  000000014456d000  04565000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_aranges 00000170  000000014456f000  000000014456f000  04566a00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_frame  00000570  0000000144570000  0000000144570000  04566c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_info   00007b3d  0000000144571000  0000000144571000  04567200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_line   0000283f  0000000144579000  0000000144579000  0456ee00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loc    00000b1e  000000014457c000  000000014457c000  04571800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_loclists 00000d10  000000014457d000  000000014457d000  04572400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_ranges 00000060  000000014457e000  000000014457e000  04573200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_rnglists 000000b4  000000014457f000  000000014457f000  04573400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 17 .debug_str    00002656  0000000144580000  0000000144580000  04573600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    },
+    "cas": {
+      "source": "import std::cas;\nvoid main() { std::cas::Expr e=std::cas::Expr::parse(\"x+1\"); assert(e.str().length()>0); println(\"CAS OK\"); }\n",
+      "source_sha256": "0c4fae8a4696ae6186eddf7cec37acbfbaa62d22d7320dde4b644955cd780d18",
+      "expected_stdout": "CAS OK\n",
+      "results": {
+        "demand": {
+          "bytes": 5164032,
+          "executable_sha256": "18c8bc648f339362f486645612b621e66e4bb446f97f98e025877b609c2fd06d",
+          "stdout": "CAS OK\n",
+          "standard_modules": [
+            "string cas"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\cas-demand.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e10c6  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dd564  00000001403e3000  00000001403e3000  003e1600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c1000  00000001404c1000  004bec00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd7c  00000001444cd000  00000001444cd000  004c9400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000038  00000001444ea000  00000001444ea000  004e6200  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      00000c95  00000001444eb000  00000001444eb000  004e6400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00005994  00000001444ec000  00000001444ec000  004e7200  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "full": {
+          "bytes": 5164544,
+          "executable_sha256": "bc2f199e28b69566379ec21d212ae385a996b6596263f457faa93eaf0b2c98d8",
+          "stdout": "CAS OK\n",
+          "standard_modules": [
+            "numeric string_methods reference print collection string big_number cas file filesystem json toml binary compress math random regex signal linalg parse process sql image tree graph linkedlist kmp net"
+          ],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\cas-full.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         003e1296  0000000140001000  0000000140001000  00000400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000dd564  00000001403e3000  00000001403e3000  003e1800  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .data         0000a800  00000001404c1000  00000001404c1000  004bee00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  3 .pdata        0001cd7c  00000001444cd000  00000001444cd000  004c9600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  4 .tls          00000038  00000001444ea000  00000001444ea000  004e6400  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  5 chali_co      00000c95  00000001444eb000  00000001444eb000  004e6600  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  6 .reloc        00005994  00000001444ec000  00000001444ec000  004e7400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n"
+        },
+        "baseline": {
+          "bytes": 75167232,
+          "executable_sha256": "5f569148e753a78c96f5d23bac983c2526f13ee1714f18f5769049dd456443d5",
+          "stdout": "CAS OK\n",
+          "standard_modules": [],
+          "sections": "\nG:\\Desktop\\ChaLi\\tmp\\aot-size-v_g0rbbd\\cas-baseline.exe:     file format pei-x86-64\n\nSections:\nIdx Name          Size      VMA               LMA               File off  Algn\n  0 .text         0042bdf6  0000000140001000  0000000140001000  00000600  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  1 .rdata        000e9290  000000014042d000  000000014042d000  0042c400  2**4\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  2 .buildid      00000035  0000000140517000  0000000140517000  00515800  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  3 .data         0400aa00  0000000140518000  0000000140518000  00515a00  2**4\n                  CONTENTS, ALLOC, LOAD, DATA\n  4 .pdata        00023640  0000000144525000  0000000144525000  04520400  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  5 .tls          00000038  0000000144549000  0000000144549000  04543c00  2**2\n                  CONTENTS, ALLOC, LOAD, DATA\n  6 chali_co      00000c99  000000014454a000  000000014454a000  04543e00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, CODE\n  7 .reloc        00006064  000000014454b000  000000014454b000  04544c00  2**2\n                  CONTENTS, ALLOC, LOAD, READONLY, DATA\n  8 .debug_abbrev 000019e9  0000000144552000  0000000144552000  0454ae00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n  9 .debug_aranges 00000170  0000000144554000  0000000144554000  0454c800  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 10 .debug_frame  00000570  0000000144555000  0000000144555000  0454ca00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 11 .debug_info   00007b3d  0000000144556000  0000000144556000  0454d000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 12 .debug_line   0000283f  000000014455e000  000000014455e000  04554c00  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 13 .debug_loc    00000b1e  0000000144561000  0000000144561000  04557600  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 14 .debug_loclists 00000d10  0000000144562000  0000000144562000  04558200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 15 .debug_ranges 00000060  0000000144563000  0000000144563000  04559000  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 16 .debug_rnglists 000000b4  0000000144564000  0000000144564000  04559200  2**0\n                  CONTENTS, READONLY, DEBUGGING\n 17 .debug_str    00002656  0000000144565000  0000000144565000  04559400  2**0\n                  CONTENTS, READONLY, DEBUGGING\n"
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Windows PE file sizes; runtime memory is not measured",
+    "default O3, full quad budget, reflection and safety checks",
+    "baseline uses its original compiler settings; same-version full/demand isolates module selection"
+  ]
+}

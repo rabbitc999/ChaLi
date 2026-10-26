@@ -75,7 +75,7 @@ def inventory():
     documented={r['name'] for r in data['std::algorithms'] if r['kind']=='function'}
     if intrinsic_names-documented: raise ValueError('算法内建缺失：'+str(intrinsic_names-documented))
     # 泛型方法由语义层适配到顶层实现，公开签名独立登记为所属容器的方法。
-    adapters = declarations(ROOT/'source/std/lang.chl', 'module std::lang;\nstruct Result<T,E> { Result<T,F> mapErr<F>(F fn(E) mapper); };\nstruct Option<T> { Result<T,E> okOr<E>(E error); Result<T,E> okOrElse<E>(E fn() factory); };')
+    adapters = declarations(ROOT/'source/std/lang.chl', 'module std::lang;\nstruct Result<T,E> { Result<T,F> mapErr<F>(F fn(E) mapper); };\nstruct Option<T> { Result<T,E> okOr<E>(E error); Result<T,E> okOrElse<E>(E fn() factory); };\nstruct BarePtr<T> { unsafe BarePtr<U> castTo<U>(); };')
     for row in adapters:
         if row['kind']=='function':
             row['intrinsic']=True
@@ -96,6 +96,9 @@ def comment_text(comment):
 def behavior(entry):
     """合并人工语义说明、同族宿主入口与声明注释。"""
     module, owner, name = entry['module'], entry['owner'], entry['name']
+    if module == 'std::lang' and (owner in ('RawStorage', 'BarePtr') or name in ('initAt','readAt','borrowAt','takeAt','dropAt','relocateNonOverlapping','barePointer','pointerFromAddress','dereference','memcpy','memset')):
+        return comment_text(entry['comment'])
+
     if module == 'std::sql' and not owner and name == 'insert':
         return '按反射模型值生成参数化 INSERT，返回 SQL 与有序参数列表。'
     if module == 'std::sql' and owner == 'Database' and name == 'exec' and 'SqlStatement' in entry['signature']:
@@ -357,7 +360,7 @@ if __name__ == '__main__':
     directory.mkdir(exist_ok=True)
     stale=[]
     for name,text in output.items():
-        path=directory/name
+        path=(directory/name).resolve()
         if args.check:
             if not path.exists() or path.read_text(encoding='utf-8')!=text: stale.append(name)
         else: path.write_text(text,encoding='utf-8',newline='\n')

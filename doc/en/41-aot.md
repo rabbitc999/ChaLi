@@ -47,7 +47,8 @@ AOT does not reuse compiled outputs with `--incremental`, so ABI declarations co
 Place `export` before a function definition to expose it to native AOT callers:
 
 ```chali
-export int64 add(int64 left, int64 right)
+#export("f_add")
+int64 add(int64 left, int64 right)
 {
     return left + right;
 }

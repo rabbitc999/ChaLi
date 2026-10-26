@@ -1,0 +1,56 @@
+void checkText(String native) {
+    BootstrapString text;
+    text.appendNative(native);
+    List<uint8> bytes = native.bytes();
+    assert(text.byteLength() == native.byteLength());
+    int64 i = 0;
+    while (i < bytes.len()) {
+        assert(text.getByte(i) == bytes[i]);
+        assert(text.byteAt(i).unwrap() == native.byteAt(i).unwrap());
+        i = i + 1;
+    }
+    assert(text.byteAt(0 - 1).isNone() && text.byteAt(text.byteLength()).isNone());
+    String nativeCopy = native;
+    nativeCopy = nativeCopy + "!";
+    assert(nativeCopy.byteLength() == native.byteLength() + 1);
+    assert(native.bytes().len() == bytes.len());
+    BootstrapString independent = text.cloneBytes();
+    if (text.byteLength() > 0) {
+        uint8 first = text.getByte(0);
+        independent.setByte(0, (uint8)33);
+        assert(text.getByte(0) == first && independent.getByte(0) == (uint8)33);
+    }
+    BootstrapString needle;
+    needle.appendNative("world");
+    assert(text.indexOf(&needle) == native.indexOf("world"));
+    assert(text.indexOf(&needle, 5) == native.indexOf("world", 5));
+    BootstrapString empty;
+    assert(text.indexOf(&empty) == native.indexOf(""));
+    int64 oldLength = text.byteLength();
+    text.append(&needle);
+    assert(text.byteLength() == oldLength + 5);
+    assert(text.indexOf(&needle, oldLength) == oldLength);
+    int64 capacity = text.capacity();
+    text.clear();
+    assert(text.byteLength() == 0 && text.capacity() == capacity);
+    text.pushByte((uint8)0);
+    text.pushByte((uint8)255);
+    assert(text.getByte(0) == (uint8)0 && text.getByte(1) == (uint8)255);
+    text.close();
+    text.close();
+    assert(text.capacity() == 0);
+    BootstrapString repeated;
+    repeated.appendNative("abc");
+    repeated.append(&repeated);
+    assert(repeated.byteLength() == 6);
+    assert(repeated.getByte(0) == repeated.getByte(3));
+    assert(repeated.getByte(2) == repeated.getByte(5));
+}
+
+void main() {
+    checkText("");
+    checkText("hello world world");
+    checkText("中文🙂worldé");
+    checkText("abcdefgh".repeat(300));
+    println("bootstrap String OK");
+}

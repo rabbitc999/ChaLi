@@ -225,6 +225,14 @@ void classify(const Quad &quad, const Memory::String &base, Shape &shape)
         shape.barrier = true;
         return;
     }
+    if (base == "memcpy" || base == "memset")
+    {
+        shape.useValue(quad.arg(0));
+        shape.useValue(quad.arg(1));
+        shape.useValue(quad.arg(2));
+        shape.barrier = true;
+        return;
+    }
     if (base == "store")
     {
         shape.useValue(quad.arg(0));

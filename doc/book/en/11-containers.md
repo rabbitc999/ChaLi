@@ -6,6 +6,8 @@
 
 Choose a container from the operations the program needs. `List<T>` stores an ordered growable sequence. `Map<K, V>` associates keys with values. `Set<T>` stores distinct keys. Their default implementations have different lookup, insertion and allocation behavior.
 
+Default container growth, lookup, insertion, deletion and copying are implemented in ChaLi. The host supplies single-slot storage, ownership marshalling and safety checks. Map uses occupied slots and cached HashKey values; Set owns independent slots. Ordinary assignment retains independent value semantics.
+
 ```chali
 void main()
 {

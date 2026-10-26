@@ -119,7 +119,8 @@ def declarations(path, source=None, line_offset=0, root=None):
                 if '=' not in result and ((result.strip() and not re.match(r'^\w+\s*,', result.strip())) or name == owner.split('::')[-1]):
                     if not name.startswith('__'):
                         entry.update(kind='function', name=name,
-                                     result=result.removeprefix('static ').strip(),
+                                     result=result.removeprefix('static ').removeprefix('unsafe ').strip(),
+                                     unsafe=result.startswith('unsafe '),
                                      body=source[tokens[i][2]:tokens[body_end-1][1]].strip()
                                      if tokens[i][0] == '{' else '')
                         records.append(entry)

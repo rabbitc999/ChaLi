@@ -58,7 +58,7 @@ def main():
     double = Converter().convert('| 指令 | 作用 |\n| --- | --- |\n| `` $macro N((a)) `` | 说明 |')
     assert '`' not in double and r'\texttt{ \$macro N(' in double, double
     preface=(ROOT/'doc/book/latex/chapters/preface.tex').read_text(encoding='utf-8')
-    for chapter in range(1, 23):
+    for chapter in range(1, chapterCount + 1):
         assert preface.count(r'\hyperref[ch:%02d]{%02d} &' % (chapter, chapter)) == 1, chapter
     count=0
     programs=[]

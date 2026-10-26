@@ -25,7 +25,7 @@
 | [`std::cas`](std-cas.md) | 精确符号计算 | 50 |
 | [`std::cli`](std-cli.md) | 命令行参数 | 8 |
 | [`std::clock`](std-clock.md) | 单调时钟 | 2 |
-| [`std::collections`](std-collections.md) | 集合扩展 | 40 |
+| [`std::collections`](std-collections.md) | 集合扩展 | 51 |
 | [`std::complex`](std-complex.md) | 泛型复数 | 8 |
 | [`std::compress`](std-compress.md) | 无损压缩 | 2 |
 | [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 18 |
@@ -33,14 +33,14 @@
 | [`std::datetime`](std-datetime.md) | UTC 日期时间 | 11 |
 | [`std::encoding`](std-encoding.md) | 文本编码 | 8 |
 | [`std::event`](std-event.md) | 显式事件与定时源 | 12 |
-| [`std::graph`](std-graph.md) | 图论与并查集 | 22 |
+| [`std::graph`](std-graph.md) | 图论与并查集 | 24 |
 | [`std::image`](std-image.md) | 图片处理 | 25 |
 | [`std::io`](std-io.md) | 文件与流接口 | 38 |
 | [`std::iter`](std-iter.md) | 惰性迭代器 | 109 |
 | [`std::json`](std-json.md) | JSON 文档与反射编解码 | 29 |
-| [`std::lang`](std-lang.md) | 核心库 | 268 |
+| [`std::lang`](std-lang.md) | 核心库 | 289 |
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 56 |
-| [`std::linkedlist`](std-linkedlist.md) | 双向链表 | 19 |
+| [`std::linkedlist`](std-linkedlist.md) | 双向链表 | 20 |
 | [`std::math`](std-math.md) | 泛型数学 | 24 |
 | [`std::memory`](std-memory.md) | 内存视图与 arena | 8 |
 | [`std::message`](std-message.md) | 线程邮箱 | 6 |
@@ -60,7 +60,7 @@
 | [`std::text`](std-text.md) | UTF-8 文本工具 | 33 |
 | [`std::thread`](std-thread.md) | 隔离线程 | 31 |
 | [`std::toml`](std-toml.md) | TOML 文档与反射编解码 | 29 |
-| [`std::tree`](std-tree.md) | 树与堆 | 46 |
+| [`std::tree`](std-tree.md) | 树与堆 | 50 |
 | [`std::utf8`](std-utf8.md) | UTF-8 与码点 | 8 |
 | [`std::watchdog`](std-watchdog.md) | 软重启看门狗 | 7 |
 | [`std::algorithms`](std-algorithms.md) | 通用算法 | 28 |

@@ -470,7 +470,7 @@ Minecraft 有 Java 版和基岩版，但存档是同一份。ChaLi 也一样：�
 | 别名语义（`a = b` 共享存储） | 值语义（复制就是复制） | 嘴上说值语义，实际最常用类型不遵守 |
 | `switch` / `goto` / `int` / `uint` / `float` / `double` | `match` / 定宽名 | 公共类型只留一个名字 |
 | `using` | `lang` 自动可见 | 少一块牌子 |
-| `extern` / `extern cast` | `abi "..."` 块 | 边界显式化 |
+| `extern` / `extern cast` | `#abi("C", "库", "符号")` 声明 | 边界显式化 |
 | `printf` / 往变量里写输入 | `println` / `inputLine()` | 类型写在签名上 |
 | `generic<T>` 前缀 | 后置 `Type name<T>` | 与调用写法一致 |
 | 宏里的 `##` / `#形参` | `$concat` / `$stringify` | 同一件事的第二种写法 |

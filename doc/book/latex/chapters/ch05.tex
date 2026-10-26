@@ -181,7 +181,7 @@ void main()
 
 \section{\texttt{for-in}：遍历区间}
 
-计数循环使用 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}，依次取得左闭右开区间中的值：
+计数循环使用 \texttt{range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}，依次取得左闭右开区间中的值：
 
 \par
 \medskip
@@ -189,7 +189,7 @@ void main()
 void main()
 {
     int64 total = 0;
-    for (int64 k in std::lang::range(0, 5))
+    for (int64 k in range(0, 5))
     {
         total = total + k;
     }
@@ -207,7 +207,7 @@ void main()
 \par
 \medskip
 
-输出为 \texttt{10}。需要包含上端点时使用 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}range\allowbreak{}Eq(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}。循环变量只在循环中存在。整数和 \texttt{char} 直接支持区间遍历；其他值类型实现\texttt{Next\allowbreak{}Value<\allowbreak{}T>\allowbreak{}}，以 \texttt{Option<\allowbreak{}T>\allowbreak{} next\allowbreak{}Value(\allowbreak{}T end,\allowbreak{} bool inclusive)\allowbreak{}} 管理前进和终止。
+输出为 \texttt{10}。需要包含上端点时使用 \texttt{range\allowbreak{}Eq(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}。循环变量只在循环中存在。整数和 \texttt{char} 直接支持区间遍历；其他值类型实现\texttt{Next\allowbreak{}Value<\allowbreak{}T>\allowbreak{}}，以 \texttt{Option<\allowbreak{}T>\allowbreak{} next\allowbreak{}Value(\allowbreak{}T end,\allowbreak{} bool inclusive)\allowbreak{}} 管理前进和终止。
 
 \section{循环也能产生值}
 
@@ -218,7 +218,7 @@ void main()
 \begin{lstlisting}[style=chali]
 void main()
 {
-    int64 found = for (int64 value in std::lang::range(0, 10))
+    int64 found = for (int64 value in range(0, 10))
     {
         if (value > 5)
         {

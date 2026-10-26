@@ -19,33 +19,33 @@ void main() {
     int64 textHandle = 0;
     String moved = loop {
         String local = "string";
-        memcpy(&textHandle, &local, 8);
+        unsafe { memcpy(&textHandle, &local, 8); }
         yield (local);
     };
-    int64 received = 0; memcpy(&received, &moved, 8);
+    int64 received = 0; unsafe { memcpy(&received, &moved, 8); }
     assert(received == textHandle && moved == "string");
     int64 listHandle = 0;
     List<int64> list = {
         loop {
             List<int64> local; local.push(7);
-            memcpy(&listHandle, &local, 8);
+            unsafe { memcpy(&listHandle, &local, 8); }
             yield (local);
         };
     };
-    memcpy(&received, &list, 8);
+    unsafe { memcpy(&received, &list, 8); }
     assert(received == listHandle && list[0] == 7);
     {
         Packet result = {
             loop {
                 Packet local; local.text = "packet"; local.values.push(7);
-                memcpy(&textHandle, &local.text, 8);
-                memcpy(&listHandle, &local.values, 8);
+                unsafe { memcpy(&textHandle, &local.text, 8); }
+                unsafe { memcpy(&listHandle, &local.values, 8); }
                 yield (local);
             };
         };
         assert(drops == 0 && closes == 0);
-        memcpy(&received, &result.text, 8); assert(received == textHandle);
-        memcpy(&received, &result.values, 8); assert(received == listHandle);
+        unsafe { memcpy(&received, &result.text, 8); } assert(received == textHandle);
+        unsafe { memcpy(&received, &result.values, 8); } assert(received == listHandle);
         assert(result.text == "packet" && result.values[0] == 7);
     }
     assert(drops == 1 && closes == 1 && trace == 12);
@@ -53,9 +53,9 @@ void main() {
         Packet original; original.text = "copy"; original.values.push(7);
         Packet result = loop { yield (original.copy()); };
         assert(original.text == "copy" && result.text == "copy");
-        memcpy(&textHandle, &original.text, 8); memcpy(&received, &result.text, 8);
+        unsafe { memcpy(&textHandle, &original.text, 8); } unsafe { memcpy(&received, &result.text, 8); }
         assert(received != textHandle);
-        memcpy(&listHandle, &original.values, 8); memcpy(&received, &result.values, 8);
+        unsafe { memcpy(&listHandle, &original.values, 8); } unsafe { memcpy(&received, &result.values, 8); }
         assert(received != listHandle);
     }
     assert(drops == 3 && closes == 3);
@@ -88,7 +88,7 @@ void main() {
     assert(scalar == 9 && outer == 9);
     String external = "external";
     String copied = loop { yield (external); };
-    memcpy(&textHandle, &external, 8); memcpy(&received, &copied, 8);
+    unsafe { memcpy(&textHandle, &external, 8); } unsafe { memcpy(&received, &copied, 8); }
     assert(external == "external" && copied == "external" && textHandle != received);
     List<int64> externalList; externalList.push(5);
     List<int64> copiedList = loop { yield (externalList); };

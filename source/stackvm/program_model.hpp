@@ -68,6 +68,8 @@ enum class Op
     AddrOf,     ///< 把数据区符号的基址压栈（`name` 是符号名）。
     LoadAt,     ///< 弹地址，按 intValue 指定的 u8 或旧八字节宽度读内存。
     StoreAt,    ///< 弹值和地址，按 intValue 指定的 u8 或旧八字节宽度写内存。
+    MemoryCopy, ///< 弹出字节数、源地址、目标地址，完整检查后执行非重叠复制。
+    MemorySet,  ///< 弹出字节数、填充字节、目标地址，完整检查后填充。
 };
 
 /**

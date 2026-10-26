@@ -351,7 +351,7 @@ ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = fals
             } sink(&prefix);
             const auto receiver = OwnedObjectTemp(cursor, base);
             const auto key = ContainerStoreValue(indices[0], keyType, &post);
-            const auto call = ast::Node::call("__std_map_get",
+            const auto call = ast::Node::call(BootstrapCollectionLabel("__std_map_get", base),
                                               { "__chali_v", "__chali_k", "__chali_t", "__chali_o", "__chali_t", "__chali_o" },
                                               { receiver, key, ast::Node::i(keyText), ContainerStorageFlag(keyType),
                                                 ast::Node::i(valueText), ContainerStorageFlag(base->elem2) });
@@ -370,7 +370,7 @@ ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = fals
     {
         /* 字符串变量与引用统一按字节下标访问。
          * 字符串按**字节**下标：`s[i]` 得到第 i 个字节（0..255）。
-         * 交给运行时的 `__std_str_at`：**一次读一个字节**（越界会报错，下标写到结尾的
+         * 交给运行时的 `std::lang::__bootStringAt`：**一次读一个字节**（越界会报错，下标写到结尾的
          * `\0` 是允许的 —— `while (s[i] != 0)` 这种数长度写法要用它）。
          * 早先是"offset 算地址 + 读 8 字节 + & 255"，字符串搬到堆上之后那样读会
          * 越过块尾（堆块是紧的）。 */
@@ -380,7 +380,7 @@ ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = fals
             return Bad();
         }
         return ast::Node::call(
-            "__std_str_at", { "__chali_s", "__chali_i" },
+            "std::lang::__bootStringAt", { "__chali_s", "__chali_i" },
             { OwnedObjectTemp(cursor, base), LowerExpr(indices[0]) });
     }
     if (IsRuntimeArray(base))
@@ -734,7 +734,7 @@ ast::NodePtr LowerAddressOf(int id)
         const Memory::String label = NameOfExpr(node.kids[0]);
         if (IsStandardOpcode(base, "String")) /* `&s[i]`：字符串按字节 */
         {
-            return ast::Node::call("__std_str_ref", { "__chali_s", "__chali_i" }, { target, position });
+            return ast::Node::call("std::lang::__bootStringReference", { "__chali_s", "__chali_i" }, { target, position });
         }
         if (IsRuntimeArray(base))
         {
@@ -1065,7 +1065,7 @@ ast::NodePtr OwnedGeneratedString(const ast::NodePtr &value)
  * @brief 把 `a + b + c` 这样的字符串拼接链摊平成一串操作数（按源码从左到右）。
  *
  * 只往下钻"两边都是字符串的 `+`"：`("x" + y) + "z"` 摊成 `x y z`。这样整条链只需要
- * **一次** `__std_str_join` 调用与**一次**堆分配。
+ * **一次** `__chali_bootstrap_string_join` 调用与**一次**堆分配。
  */
 void CollectStringParts(int exprId, Memory::Vector<int> *out)
 {
@@ -1119,7 +1119,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
     }
     /* ---- 字符串内建：拼接（`+`）与比较（字典序）。
      *
-     * 两件事都交给**虚拟机里那份 C++ 运行时**（`__std_str_cat` / `__std_str_cmp`）：
+     * 两件事都由 std::lang 的字符串自举内核实现：
      * 语言侧不写逐字节的循环，拼接的结果是堆上的新串（"块作用域所有"，见 MarkOwned）。
      * ---- */
     if (IsStandardOpcode(leftType, "String") || IsStandardOpcode(rightType, "String"))
@@ -1137,7 +1137,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
         }
         if (op == "+")
         {
-            /* 整条 `a + b + c` 链摊平成**一次** `__std_str_join`：只分配一个结果串。
+            /* 整条 `a + b + c` 链摊平成**一次** `__chali_bootstrap_string_join`：只分配一个结果串。
              * 两两接的话中间串没人拥有（`("a"+"b") + "c"` 里前者是临时值），会漏。 */
             Memory::Vector<int> parts;
             CollectStringParts(leftId, &parts);
@@ -1157,14 +1157,14 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
                  * 先落进临时变量 —— 否则它没人释放（递归里会一直涨）。 */
                 values.push_back(NeedsOwnedTemp(parts[index]) ? OwnedStringTemp(parts[index]) : LowerExpr(parts[index]));
             }
-            return ast::Node::call("__std_str_join", names, values);
+            return ast::Node::call("__chali_bootstrap_string_join", names, values);
         }
         if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=")
         {
             const ast::NodePtr left = NeedsOwnedTemp(leftId) ? OwnedStringTemp(leftId) : LowerExpr(leftId);
             const ast::NodePtr right = NeedsOwnedTemp(rightId) ? OwnedStringTemp(rightId) : LowerExpr(rightId);
             const ast::NodePtr diff =
-                ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" }, { left, right });
+                ast::Node::call("std::lang::__bootStringCompare", { "__chali_sl", "__chali_sr" }, { left, right });
             return ast::Node::binary(op, diff, ast::Node::i(0));
         }
         Fail("字符串只支持 + 拼接与 == != < <= > >= 比较，不支持 " + op);
@@ -1369,7 +1369,7 @@ ast::NodePtr LowerCast(int typeId, int valueId)
 {
     const std::shared_ptr<MType> target = T(typeId);
     const std::shared_ptr<MType> source = target && target->kind == MType::Ptr ? RawExprType(valueId) : ExprType(valueId);
-    if ((target->kind == MType::Ptr && source->kind == MType::Int) || (target->kind == MType::Int && (source->kind == MType::Ptr || source->kind == MType::Array)))
+    if (g_unsafeDepth == 0 && ((target->kind == MType::Ptr && source->kind == MType::Int) || (target->kind == MType::Int && (source->kind == MType::Ptr || source->kind == MType::Array))))
         return Fail("引用不能与整数地址互转；查看地址请使用 std::lang::address"), Bad();
     if (const ast::NodePtr converted = LowerDeclaredConversion(valueId, target, true))
         return converted;
@@ -1924,7 +1924,7 @@ ast::NodePtr StoreOwnedValueAt(const ast::NodePtr &address, int valueId,
     if (IsStandardOpcode(type, "String"))
     {
         if (valueId >= 0 && N(valueId).kind == MNode::Str)
-            stored = ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+            stored = ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
         else if (!(IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)))
             stored = ast::Node::call(ObjectCopyFunction(type), { "value" }, { value });
     }
@@ -2218,6 +2218,9 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
         MVar *found = FindNodeVar(target);
         if (found != nullptr)
         {
+            // 右值方法的首次实例化会扩充作用域变量表；赋值目标不能跨越该过程持有表内指针。
+            MVar targetSnapshot = *found;
+            found = &targetSnapshot;
             if (found->isConst)
             {
                 Fail("不可变变量（const）不能再赋值：" + target.s);
@@ -2423,7 +2426,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             const ast::NodePtr stored =
                 ContainerStoreValue(valueId, container->elem2, &post);
             const ast::NodePtr call = ast::Node::call(
-                "__std_map_put",
+                BootstrapCollectionLabel("__std_map_put", container),
                 { "__chali_v", "__chali_k", "__chali_t", "__chali_o", "__chali_x", "__chali_t", "__chali_o" },
                 { receiver, key,
                   ast::Node::i(keyText ? 1 : 0),
@@ -2438,7 +2441,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
         }
         /* `s[i] = 字符;`：字符串按字节写 —— 交给运行时（越界会报错，和数组下标同一个
          * 脾气）。`s[i]` 当右值时是"取第 i 个字节（& 255）"，当不了赋值目标，
-         * 所以这里单独走一条：`__std_str_set(串, 下标, 字符码)`。 */
+         * 所以这里单独走一条：`std::lang::__bootStringSet(串, 下标, 字符码)`。 */
         if (target.kind == MNode::Index && target.s != "__chali_buffer_index" && IsStandardOpcode(ExprType(target.kids[0]), "String"))
         {
             const int baseId = target.kids[0];
@@ -2451,7 +2454,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 return Bad();
             }
             return ast::Node::exprStmt(ast::Node::call(
-                "__std_str_set", { "__chali_s", "__chali_i", "__chali_c" },
+                "std::lang::__bootStringSet", { "__chali_s", "__chali_i", "__chali_c" },
                 { LowerExpr(baseId), LowerExpr(positionId), LowerExpr(valueId) }));
         }
         /* 结构体元素 / 字段同样是值语义：`arr[i] = b;` / `s.inner = b;` 深拷贝。 */
@@ -2501,7 +2504,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             Memory::Vector<ast::NodePtr> out(pending.begin(), pending.end());
             /* 这里的左值要的是**地址**：`LowerExpr(a[i])` 会把元素读出来（load），
              * 拿去当 store 的目标就写到 0 地址去了。 */
-            out.push_back(StoreOwnedValueAt(LowerRawExpr(targetId), valueId, value, targetType));
+            out.push_back(StoreOwnedValueAt(target.kind == MNode::Un && target.s == "*" ? LowerRawExpr(target.kids[0]) : LowerRawExpr(targetId), valueId, value, targetType));
             return ast::Node::block(out);
         }
         if (targetType && targetType->kind != MType::Array && target.kind == MNode::Un && target.s == "*")
@@ -2712,8 +2715,7 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
         {
             out.push_back(Node::assign(emitted, Node::alloc(Node::i(std::max(8, StructStride(type))))));
             // 窄数值仍占八字节槽，按完整块清零，不能留下上半槽的旧字节。
-            out.push_back(Node::exprStmt(Node::call("__std_memset", { "__chali_addr", "__chali_val", "__chali_n" },
-                                                    { Node::var(emitted), Node::i(0), Node::i(std::max(8, StructStride(type))) })));
+            out.push_back(Node::exprStmt(Node::memorySet(Node::var(emitted), Node::i(0), Node::i(std::max(8, StructStride(type))))));
             MarkOwned(emitted);
             g_parameterValueStorage.insert(emitted);
         }
@@ -2778,8 +2780,7 @@ ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
     Memory::Vector<ast::NodePtr> out{
         Node::declare(address, ast::Type::i64()),
         Node::assign(address, Node::alloc(Node::i(bytes))),
-        Node::exprStmt(Node::call("__std_memset", { "__chali_addr", "__chali_val", "__chali_n" },
-                                  { Node::var(address), Node::i(0), Node::i(bytes) }))
+        Node::exprStmt(Node::memorySet(Node::var(address), Node::i(0), Node::i(bytes)))
     };
     if (type->kind == MType::Struct)
     {
@@ -3788,7 +3789,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 {
                     if (valueMatch && IsStandardOpcode(payload.type, "String"))
                     {
-                        value = ast::Node::call("__std_str_sub", { "__chali_s", "__chali_a", "__chali_b" },
+                        value = ast::Node::call("std::lang::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
                                                 { value, ast::Node::i(0), ast::Node::i(-1) });
                         MarkOwned(emitted);
                     }
@@ -3928,7 +3929,7 @@ bool ReadStringPattern(int id, Memory::String *text)
 ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, const MNode &pattern)
 {
     const auto compare = [&](const Memory::String &text, const char *op) {
-        const auto order = ast::Node::call("__std_str_cmp", { "__chali_sl", "__chali_sr" },
+        const auto order = ast::Node::call("std::lang::__bootStringCompare", { "__chali_sl", "__chali_sr" },
                                            { ast::Node::var(subject), ast::Node::str(text) });
         return ast::Node::binary(op, order, ast::Node::i(0));
     };
@@ -5168,7 +5169,7 @@ ast::NodePtr LowerSlice(int id)
     Memory::Vector<ast::NodePtr> values{ LowerExpr(node.kids[0]), LowerExpr(node.kids[1]) };
     /* `止` 省了就是"到末尾"：给 -1，运行时按串长收尾。 */
     values.push_back(node.kids[2] >= 0 ? LowerExpr(node.kids[2]) : ast::Node::i(-1));
-    return ast::Node::call("__std_str_sub", { "__chali_s", "__chali_b", "__chali_e" }, values);
+    return ast::Node::call("std::lang::__bootStringSlice", { "__chali_s", "__chali_b", "__chali_e" }, values);
 }
 
 /**

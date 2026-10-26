@@ -1,0 +1,2975 @@
+{
+  "version": "1.0.7",
+  "compiler_sha256": "aedbf7d90d805ecedc2e0c6f60e49d11b05af766ddd7c17d0d713b61265f5ea8",
+  "prototype_sha256": "9066148f7ec888d7babc985a29f5f906b7be60a251191080526aa7bb24c10ab5",
+  "generated_utc": "2026-10-26T18:00:04.021882+00:00",
+  "host": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "cpu_count": 12,
+  "operations": 1024,
+  "width": 1024,
+  "process_runs": 3,
+  "repetitions": 5,
+  "warmups": 1,
+  "unit": "nanoseconds",
+  "list_retain_slots": false,
+  "map_triples": false,
+  "segmented_list": false,
+  "raw_storage": true,
+  "triple_prototype_sha256": null,
+  "work": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud",
+  "cases": {
+    "list_build": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native.chl",
+          "sha256": "50b888baa8ce57de5710a8ebed745b7500d558f6444d6776484303cb19ab33c3"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap.chl",
+          "sha256": "0c50679240b75a605c672099836d36e9196fa389b618d5cbf3687de874b2acca"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline.chl",
+          "sha256": "50b888baa8ce57de5710a8ebed745b7500d558f6444d6776484303cb19ab33c3"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 5967475100
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4115653100
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2247780100
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1120800\nrep 1067900\nrep 1217500\nrep 1118800\nrep 1062700\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1067529500,
+            "times_ns": [
+              1120800,
+              1067900,
+              1217500,
+              1118800,
+              1062700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1125300\nrep 1131100\nrep 1238700\nrep 1150800\nrep 1073400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 371588800,
+            "times_ns": [
+              1125300,
+              1131100,
+              1238700,
+              1150800,
+              1073400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1121000\nrep 1079300\nrep 1262600\nrep 1128100\nrep 1078300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 418725300,
+            "times_ns": [
+              1121000,
+              1079300,
+              1262600,
+              1128100,
+              1078300
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 32706400\nrep 32698700\nrep 32880200\nrep 36893000\nrep 35629600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1278934400,
+            "times_ns": [
+              32706400,
+              32698700,
+              32880200,
+              36893000,
+              35629600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 32338300\nrep 32299500\nrep 32350100\nrep 35699600\nrep 36342500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 546621900,
+            "times_ns": [
+              32338300,
+              32299500,
+              32350100,
+              35699600,
+              36342500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 34950700\nrep 32354700\nrep 32505300\nrep 35719600\nrep 33897700\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 547138800,
+            "times_ns": [
+              34950700,
+              32354700,
+              32505300,
+              35719600,
+              33897700
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1772300\nrep 1663900\nrep 1715600\nrep 1992400\nrep 1727500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 883644500,
+            "times_ns": [
+              1772300,
+              1663900,
+              1715600,
+              1992400,
+              1727500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1724100\nrep 1853200\nrep 1736200\nrep 1715800\nrep 1684500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 293360400,
+            "times_ns": [
+              1724100,
+              1853200,
+              1736200,
+              1715800,
+              1684500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1694100\nrep 1741400\nrep 1656600\nrep 1656200\nrep 1663300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 279916000,
+            "times_ns": [
+              1694100,
+              1741400,
+              1656600,
+              1656200,
+              1663300
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 1121000,
+        "bootstrap_aot": 32880200,
+        "baseline_aot": 1715800
+      },
+      "bootstrap_over_native": {
+        "aot": 29.33113291703836
+      }
+    },
+    "list_read": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native.chl",
+          "sha256": "eb6317b7d9485aca2caa82a6038289f2ae4ee3d5508cd75689c0aa4c38a83189"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap.chl",
+          "sha256": "5521c33f6e4b9c26785efdf2520f658962df546f56e6240543aa9def6950a167"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline.chl",
+          "sha256": "eb6317b7d9485aca2caa82a6038289f2ae4ee3d5508cd75689c0aa4c38a83189"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4345259800
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4250366900
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2226566000
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1092400\nrep 1293200\nrep 1059100\nrep 1047400\nrep 1046000\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 901388000,
+            "times_ns": [
+              1092400,
+              1293200,
+              1059100,
+              1047400,
+              1046000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 2032100\nrep 1974000\nrep 1304400\nrep 1073100\nrep 1276300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 395249500,
+            "times_ns": [
+              2032100,
+              1974000,
+              1304400,
+              1073100,
+              1276300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1082400\nrep 1078400\nrep 1238200\nrep 1105500\nrep 1239300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 371966400,
+            "times_ns": [
+              1082400,
+              1078400,
+              1238200,
+              1105500,
+              1239300
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 33827400\nrep 32874900\nrep 32648600\nrep 32775900\nrep 32983300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1167601800,
+            "times_ns": [
+              33827400,
+              32874900,
+              32648600,
+              32775900,
+              32983300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 35435800\nrep 33192800\nrep 39768100\nrep 32498700\nrep 34764000\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 617186400,
+            "times_ns": [
+              35435800,
+              33192800,
+              39768100,
+              32498700,
+              34764000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 32579000\nrep 33988800\nrep 36167300\nrep 46787500\nrep 32732300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 588828000,
+            "times_ns": [
+              32579000,
+              33988800,
+              36167300,
+              46787500,
+              32732300
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1706200\nrep 1790800\nrep 1790200\nrep 1651500\nrep 1662600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 782098100,
+            "times_ns": [
+              1706200,
+              1790800,
+              1790200,
+              1651500,
+              1662600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1743300\nrep 2144200\nrep 1676300\nrep 1694400\nrep 1680100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 324261100,
+            "times_ns": [
+              1743300,
+              2144200,
+              1676300,
+              1694400,
+              1680100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1752800\nrep 1657900\nrep 1643800\nrep 1647000\nrep 1679600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 294500500,
+            "times_ns": [
+              1752800,
+              1657900,
+              1643800,
+              1647000,
+              1679600
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 1105500,
+        "bootstrap_aot": 33192800,
+        "baseline_aot": 1680100
+      },
+      "bootstrap_over_native": {
+        "aot": 30.02514699231117
+      }
+    },
+    "list_write": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native.chl",
+          "sha256": "986acc8d6c2e2fee528d6d080258fd8d9b3c443568bb67f023cb757a615145e0"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap.chl",
+          "sha256": "3d29975422d853b463d6e085baf14536ff213526100ed5a60ad7075999b0d79c"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline.chl",
+          "sha256": "986acc8d6c2e2fee528d6d080258fd8d9b3c443568bb67f023cb757a615145e0"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4397748800
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4185428400
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2194703800
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1307100\nrep 1256600\nrep 1265800\nrep 1250700\nrep 1245900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 991244300,
+            "times_ns": [
+              1307100,
+              1256600,
+              1265800,
+              1250700,
+              1245900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1331600\nrep 1346400\nrep 1324300\nrep 1287600\nrep 1305300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 429726700,
+            "times_ns": [
+              1331600,
+              1346400,
+              1324300,
+              1287600,
+              1305300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1332100\nrep 1321400\nrep 1400800\nrep 1413200\nrep 1268400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 355861000,
+            "times_ns": [
+              1332100,
+              1321400,
+              1400800,
+              1413200,
+              1268400
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 48276500\nrep 48258000\nrep 56516700\nrep 48672400\nrep 47998300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1247025900,
+            "times_ns": [
+              48276500,
+              48258000,
+              56516700,
+              48672400,
+              47998300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 48298800\nrep 53215800\nrep 48122100\nrep 47851800\nrep 47872700\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 676370800,
+            "times_ns": [
+              48298800,
+              53215800,
+              48122100,
+              47851800,
+              47872700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 58146000\nrep 62002700\nrep 47826800\nrep 48012300\nrep 57926700\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 689378500,
+            "times_ns": [
+              58146000,
+              62002700,
+              47826800,
+              48012300,
+              57926700
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2691300\nrep 2614100\nrep 2605500\nrep 2978300\nrep 2553800\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 833462100,
+            "times_ns": [
+              2691300,
+              2614100,
+              2605500,
+              2978300,
+              2553800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2814900\nrep 2528400\nrep 2516200\nrep 2503100\nrep 2526600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 270416200,
+            "times_ns": [
+              2814900,
+              2528400,
+              2516200,
+              2503100,
+              2526600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2668200\nrep 3808200\nrep 2555500\nrep 2600500\nrep 2545400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 281189500,
+            "times_ns": [
+              2668200,
+              3808200,
+              2555500,
+              2600500,
+              2545400
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 1307100,
+        "bootstrap_aot": 48276500,
+        "baseline_aot": 2600500
+      },
+      "bootstrap_over_native": {
+        "aot": 36.93405248259506
+      }
+    },
+    "list_remove": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native.chl",
+          "sha256": "6232f66ed06347b383d1bebdbaa8eb0caff6fb1f94c91bfbf3a0146cd034f785"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap.chl",
+          "sha256": "012e48213c758f6412c211e3fc8e44fb6252669fdf9f978b576dd01b4c4dbe73"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline.chl",
+          "sha256": "6232f66ed06347b383d1bebdbaa8eb0caff6fb1f94c91bfbf3a0146cd034f785"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4332594400
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4316150300
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2273465900
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1359700\nrep 1317700\nrep 1236400\nrep 1216100\nrep 1217600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 916561000,
+            "times_ns": [
+              1359700,
+              1317700,
+              1236400,
+              1216100,
+              1217600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1354700\nrep 1339700\nrep 1418600\nrep 1250900\nrep 1237600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 365919300,
+            "times_ns": [
+              1354700,
+              1339700,
+              1418600,
+              1250900,
+              1237600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 1390800\nrep 1279100\nrep 1442200\nrep 1229400\nrep 1224500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 354654500,
+            "times_ns": [
+              1390800,
+              1279100,
+              1442200,
+              1229400,
+              1224500
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 25366000\nrep 31941700\nrep 25436800\nrep 28127700\nrep 25200200\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1125883600,
+            "times_ns": [
+              25366000,
+              31941700,
+              25436800,
+              28127700,
+              25200200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 25259800\nrep 25309800\nrep 28272600\nrep 25229200\nrep 25162200\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 539944800,
+            "times_ns": [
+              25259800,
+              25309800,
+              28272600,
+              25229200,
+              25162200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 36909200\nrep 33216300\nrep 32651000\nrep 34806000\nrep 25497500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 567877900,
+            "times_ns": [
+              36909200,
+              33216300,
+              32651000,
+              34806000,
+              25497500
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1979100\nrep 2184800\nrep 3315000\nrep 2055100\nrep 1678100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 362558900,
+            "times_ns": [
+              1979100,
+              2184800,
+              3315000,
+              2055100,
+              1678100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1775400\nrep 1705000\nrep 1675700\nrep 1663400\nrep 1961600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 300634400,
+            "times_ns": [
+              1775400,
+              1705000,
+              1675700,
+              1663400,
+              1961600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\list_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1729700\nrep 1969400\nrep 1661500\nrep 1653700\nrep 1659900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 270995100,
+            "times_ns": [
+              1729700,
+              1969400,
+              1661500,
+              1653700,
+              1659900
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 1279100,
+        "bootstrap_aot": 25497500,
+        "baseline_aot": 1729700
+      },
+      "bootstrap_over_native": {
+        "aot": 19.93393792510359
+      }
+    },
+    "map_build": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native.chl",
+          "sha256": "0e1b0d2e587d4d4b752bd3a110957f366d57f1ef1076833087e84446342a8a7c"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap.chl",
+          "sha256": "5b4471a781b409d3d10f665850b5931471d574bffa2f3e172c88d9c34b664144"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline.chl",
+          "sha256": "0e1b0d2e587d4d4b752bd3a110957f366d57f1ef1076833087e84446342a8a7c"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4494968900
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 5103391300
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2337010800
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6836100\nrep 7847400\nrep 7401000\nrep 6955800\nrep 6927900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1053650300,
+            "times_ns": [
+              6836100,
+              7847400,
+              7401000,
+              6955800,
+              6927900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6812000\nrep 6774100\nrep 8683900\nrep 6878800\nrep 6884200\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 384932800,
+            "times_ns": [
+              6812000,
+              6774100,
+              8683900,
+              6878800,
+              6884200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6852300\nrep 6843000\nrep 6864100\nrep 7095100\nrep 6848900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 388739100,
+            "times_ns": [
+              6852300,
+              6843000,
+              6864100,
+              7095100,
+              6848900
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 106516100\nrep 105318700\nrep 119266500\nrep 138538800\nrep 124809000\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1706985200,
+            "times_ns": [
+              106516100,
+              105318700,
+              119266500,
+              138538800,
+              124809000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 109853000\nrep 125362000\nrep 123166900\nrep 112285500\nrep 115250900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1064803200,
+            "times_ns": [
+              109853000,
+              125362000,
+              123166900,
+              112285500,
+              115250900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 106742600\nrep 123608100\nrep 155322000\nrep 134851100\nrep 121786700\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1108581500,
+            "times_ns": [
+              106742600,
+              123608100,
+              155322000,
+              134851100,
+              121786700
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2087700\nrep 2037600\nrep 2021600\nrep 2036100\nrep 2040100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 321451400,
+            "times_ns": [
+              2087700,
+              2037600,
+              2021600,
+              2036100,
+              2040100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2212200\nrep 3430600\nrep 3582000\nrep 3553300\nrep 2463400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 277367600,
+            "times_ns": [
+              2212200,
+              3430600,
+              3582000,
+              3553300,
+              2463400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2319400\nrep 3098900\nrep 3813500\nrep 2961500\nrep 2215800\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 310576900,
+            "times_ns": [
+              2319400,
+              3098900,
+              3813500,
+              2961500,
+              2215800
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 6878800,
+        "bootstrap_aot": 121786700,
+        "baseline_aot": 2319400
+      },
+      "bootstrap_over_native": {
+        "aot": 17.70464325172995
+      }
+    },
+    "map_read": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native.chl",
+          "sha256": "2594dbfedb0e570a6c8c4fa257bdef8222cf31f740e5fadf9a23aacc6837254f"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap.chl",
+          "sha256": "e3ca692737c41b63e7c9e8382ace9b06869339eb1935f88a419c1573b475a5bc"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline.chl",
+          "sha256": "2594dbfedb0e570a6c8c4fa257bdef8222cf31f740e5fadf9a23aacc6837254f"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4416596600
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 5052449500
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2234056700
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6801600\nrep 7019400\nrep 9075600\nrep 6856800\nrep 6783000\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1020050700,
+            "times_ns": [
+              6801600,
+              7019400,
+              9075600,
+              6856800,
+              6783000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6832600\nrep 6791800\nrep 6862300\nrep 6799900\nrep 6904000\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 424023600,
+            "times_ns": [
+              6832600,
+              6791800,
+              6862300,
+              6799900,
+              6904000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6838100\nrep 6783100\nrep 6797800\nrep 6773400\nrep 6771500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 387792900,
+            "times_ns": [
+              6838100,
+              6783100,
+              6797800,
+              6773400,
+              6771500
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 100158400\nrep 104491100\nrep 116356700\nrep 152627500\nrep 122085900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1730123000,
+            "times_ns": [
+              100158400,
+              104491100,
+              116356700,
+              152627500,
+              122085900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 135812900\nrep 106768000\nrep 126309800\nrep 113603800\nrep 132072800\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1103871700,
+            "times_ns": [
+              135812900,
+              106768000,
+              126309800,
+              113603800,
+              132072800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 111227300\nrep 107696700\nrep 123353600\nrep 118170200\nrep 116533900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1086628200,
+            "times_ns": [
+              111227300,
+              107696700,
+              123353600,
+              118170200,
+              116533900
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2293400\nrep 2080500\nrep 2034800\nrep 2061700\nrep 2024600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 777625700,
+            "times_ns": [
+              2293400,
+              2080500,
+              2034800,
+              2061700,
+              2024600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2329100\nrep 2102400\nrep 2038900\nrep 2024200\nrep 2026500\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 334841400,
+            "times_ns": [
+              2329100,
+              2102400,
+              2038900,
+              2024200,
+              2026500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2128700\nrep 2282700\nrep 2031900\nrep 2063400\nrep 2070900\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 254714100,
+            "times_ns": [
+              2128700,
+              2282700,
+              2031900,
+              2063400,
+              2070900
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 6801600,
+        "bootstrap_aot": 116533900,
+        "baseline_aot": 2063400
+      },
+      "bootstrap_over_native": {
+        "aot": 17.133306868972006
+      }
+    },
+    "map_write": {
+      "expected_sink": 3152896,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native.chl",
+          "sha256": "c6e07f93e6a06d9b27d17270962d7fe222364eea8ef681457c9181dd13379b54"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap.chl",
+          "sha256": "427e8eca78d05416f7e34c0a1692160fb7c148ba87f605d416d39dd347cb7512"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline.chl",
+          "sha256": "c6e07f93e6a06d9b27d17270962d7fe222364eea8ef681457c9181dd13379b54"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4503606400
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 5122098400
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2229230100
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9648800\nrep 9459000\nrep 9719600\nrep 9507100\nrep 9486400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 949424200,
+            "times_ns": [
+              9648800,
+              9459000,
+              9719600,
+              9507100,
+              9486400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9330100\nrep 9340800\nrep 9340200\nrep 9472400\nrep 9413600\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 441432200,
+            "times_ns": [
+              9330100,
+              9340800,
+              9340200,
+              9472400,
+              9413600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9442800\nrep 9605200\nrep 9383400\nrep 9393600\nrep 9396200\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 402505700,
+            "times_ns": [
+              9442800,
+              9605200,
+              9383400,
+              9393600,
+              9396200
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 156918000\nrep 166589000\nrep 182498200\nrep 201264700\nrep 185307200\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 2021726500,
+            "times_ns": [
+              156918000,
+              166589000,
+              182498200,
+              201264700,
+              185307200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 155921200\nrep 159502500\nrep 190739500\nrep 188757300\nrep 193715100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1390254000,
+            "times_ns": [
+              155921200,
+              159502500,
+              190739500,
+              188757300,
+              193715100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 155281300\nrep 173869800\nrep 186418000\nrep 199322600\nrep 186743300\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 1395770600,
+            "times_ns": [
+              155281300,
+              173869800,
+              186418000,
+              199322600,
+              186743300
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3049800\nrep 3524600\nrep 5023700\nrep 3402400\nrep 3018100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 741309900,
+            "times_ns": [
+              3049800,
+              3524600,
+              5023700,
+              3402400,
+              3018100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3183000\nrep 3039600\nrep 3124200\nrep 3080800\nrep 3054400\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 267095600,
+            "times_ns": [
+              3183000,
+              3039600,
+              3124200,
+              3080800,
+              3054400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3103800\nrep 3043600\nrep 4968400\nrep 4713200\nrep 3109100\nsink 3152896\n",
+            "stderr": "",
+            "wall_ns": 278880900,
+            "times_ns": [
+              3103800,
+              3043600,
+              4968400,
+              4713200,
+              3109100
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 9442800,
+        "bootstrap_aot": 185307200,
+        "baseline_aot": 3109100
+      },
+      "bootstrap_over_native": {
+        "aot": 19.62417926886093
+      }
+    },
+    "map_remove": {
+      "expected_sink": 6154,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native.chl",
+          "sha256": "7d681946019e33850b928a07eccbf885ebc001b6bf710f80cafd854ed2dc1d0e"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap.chl",
+          "sha256": "2cebe57c4209d8cedea7bbab214512230417ad59f97c0b23586ae3512f07f2f1"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline.chl",
+          "sha256": "7d681946019e33850b928a07eccbf885ebc001b6bf710f80cafd854ed2dc1d0e"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4508328200
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 5151759200
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2189633000
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 10786500\nrep 10841300\nrep 10862600\nrep 12129100\nrep 10840700\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 1044927800,
+            "times_ns": [
+              10786500,
+              10841300,
+              10862600,
+              12129100,
+              10840700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 10875800\nrep 10677800\nrep 10650600\nrep 15944900\nrep 19428000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 433776400,
+            "times_ns": [
+              10875800,
+              10677800,
+              10650600,
+              15944900,
+              19428000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 20122800\nrep 19702400\nrep 11815500\nrep 15851800\nrep 11068900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 521301000,
+            "times_ns": [
+              20122800,
+              19702400,
+              11815500,
+              15851800,
+              11068900
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 4323975200\nrep 4328911100\nrep 4593462800\nrep 4797856400\nrep 4838967900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 27872734100,
+            "times_ns": [
+              4323975200,
+              4328911100,
+              4593462800,
+              4797856400,
+              4838967900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 4198596100\nrep 4371803400\nrep 4933601300\nrep 4677576300\nrep 4916446200\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 27477207700,
+            "times_ns": [
+              4198596100,
+              4371803400,
+              4933601300,
+              4677576300,
+              4916446200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 4247763500\nrep 4398049100\nrep 4854236200\nrep 4708302600\nrep 4783669800\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 27385802200,
+            "times_ns": [
+              4247763500,
+              4398049100,
+              4854236200,
+              4708302600,
+              4783669800
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 5700500\nrep 5487500\nrep 5527100\nrep 5525400\nrep 3922600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 783165700,
+            "times_ns": [
+              5700500,
+              5487500,
+              5527100,
+              5525400,
+              3922600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3043800\nrep 2896800\nrep 2931600\nrep 2906000\nrep 2899800\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 283584900,
+            "times_ns": [
+              3043800,
+              2896800,
+              2931600,
+              2906000,
+              2899800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\map_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3121800\nrep 2921500\nrep 2944500\nrep 2957000\nrep 2964400\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 270197900,
+            "times_ns": [
+              3121800,
+              2921500,
+              2944500,
+              2957000,
+              2964400
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 11068900,
+        "bootstrap_aot": 4677576300,
+        "baseline_aot": 2964400
+      },
+      "bootstrap_over_native": {
+        "aot": 422.58727606175864
+      }
+    },
+    "set_build": {
+      "expected_sink": 6154,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native.chl",
+          "sha256": "f1b0a71c325c08c31c46be98c3d1a746052f5ffd1ade66e4e310ea2c10d13e61"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap.chl",
+          "sha256": "8bd30253176f5c47436235419eeddd02013cd94646326176d94b0653b21ed238"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline.chl",
+          "sha256": "f1b0a71c325c08c31c46be98c3d1a746052f5ffd1ade66e4e310ea2c10d13e61"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4416931700
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4293748000
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2197242800
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6047400\nrep 6081600\nrep 6083200\nrep 6018800\nrep 6032400\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 939504500,
+            "times_ns": [
+              6047400,
+              6081600,
+              6083200,
+              6018800,
+              6032400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6077700\nrep 6147700\nrep 6137600\nrep 7933200\nrep 6563200\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 369883200,
+            "times_ns": [
+              6077700,
+              6147700,
+              6137600,
+              7933200,
+              6563200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6009700\nrep 6035700\nrep 6052700\nrep 6123300\nrep 6094000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 397741400,
+            "times_ns": [
+              6009700,
+              6035700,
+              6052700,
+              6123300,
+              6094000
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 72259500\nrep 46160300\nrep 62855700\nrep 45703400\nrep 47047000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 1273571300,
+            "times_ns": [
+              72259500,
+              46160300,
+              62855700,
+              45703400,
+              47047000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 45595600\nrep 47129000\nrep 48029900\nrep 46101600\nrep 46715900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 644706800,
+            "times_ns": [
+              45595600,
+              47129000,
+              48029900,
+              46101600,
+              46715900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 48800200\nrep 50252200\nrep 49024300\nrep 49300000\nrep 49228000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 637003800,
+            "times_ns": [
+              48800200,
+              50252200,
+              49024300,
+              49300000,
+              49228000
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2027700\nrep 1950900\nrep 1936300\nrep 1950400\nrep 1959700\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 324402000,
+            "times_ns": [
+              2027700,
+              1950900,
+              1936300,
+              1950400,
+              1959700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2001800\nrep 1981800\nrep 2025100\nrep 2111100\nrep 1956400\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 278650300,
+            "times_ns": [
+              2001800,
+              1981800,
+              2025100,
+              2111100,
+              1956400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_build-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1993100\nrep 2258700\nrep 1947200\nrep 1936300\nrep 1935100\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 258490600,
+            "times_ns": [
+              1993100,
+              2258700,
+              1947200,
+              1936300,
+              1935100
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 6081600,
+        "bootstrap_aot": 48029900,
+        "baseline_aot": 1959700
+      },
+      "bootstrap_over_native": {
+        "aot": 7.897576295711655
+      }
+    },
+    "set_read": {
+      "expected_sink": 6154,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native.chl",
+          "sha256": "0052363bf0d001f21c11d92a965a8cf35fd965f640d0f579915c8e81c720c4a0"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap.chl",
+          "sha256": "306838b5da3a9acc3eab8a47783204f0f559fbc7eac2b1a972e4449371cc0027"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline.chl",
+          "sha256": "0052363bf0d001f21c11d92a965a8cf35fd965f640d0f579915c8e81c720c4a0"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4348652900
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4372732900
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2212041600
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6190200\nrep 5978500\nrep 5993500\nrep 6005300\nrep 6014600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 1045530000,
+            "times_ns": [
+              6190200,
+              5978500,
+              5993500,
+              6005300,
+              6014600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6285800\nrep 6141200\nrep 6060400\nrep 6050500\nrep 5992900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 369186700,
+            "times_ns": [
+              6285800,
+              6141200,
+              6060400,
+              6050500,
+              5992900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-native_aot.exe.exe"
+            ],
+            "stdout": "rep 6116200\nrep 5969500\nrep 6266400\nrep 6039400\nrep 5986200\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 417866100,
+            "times_ns": [
+              6116200,
+              5969500,
+              6266400,
+              6039400,
+              5986200
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 44846600\nrep 45247000\nrep 45359100\nrep 45500800\nrep 45424800\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 1270944100,
+            "times_ns": [
+              44846600,
+              45247000,
+              45359100,
+              45500800,
+              45424800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 47868700\nrep 51246000\nrep 56647200\nrep 48515100\nrep 45237500\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 666604000,
+            "times_ns": [
+              47868700,
+              51246000,
+              56647200,
+              48515100,
+              45237500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 44957400\nrep 44992900\nrep 45299800\nrep 44938400\nrep 45571600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 617018200,
+            "times_ns": [
+              44957400,
+              44992900,
+              45299800,
+              44938400,
+              45571600
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2199100\nrep 1961400\nrep 1954100\nrep 1949500\nrep 1958400\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 345836000,
+            "times_ns": [
+              2199100,
+              1961400,
+              1954100,
+              1949500,
+              1958400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2259300\nrep 1944200\nrep 1926500\nrep 1933100\nrep 1942900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 264811600,
+            "times_ns": [
+              2259300,
+              1944200,
+              1926500,
+              1933100,
+              1942900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_read-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2011000\nrep 2020400\nrep 1943400\nrep 1941200\nrep 1937700\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 265114900,
+            "times_ns": [
+              2011000,
+              2020400,
+              1943400,
+              1941200,
+              1937700
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 6039400,
+        "bootstrap_aot": 45359100,
+        "baseline_aot": 1949500
+      },
+      "bootstrap_over_native": {
+        "aot": 7.5105308474351755
+      }
+    },
+    "set_write": {
+      "expected_sink": 6154,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native.chl",
+          "sha256": "fe6e6ca539a31407872df6fafa15e6a39ce3f837a7de88d7756414fb967a9cfb"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap.chl",
+          "sha256": "1f17406d128d5196e24f5da487fe2315f7b2d10cea27841bd7633c43d564063a"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline.chl",
+          "sha256": "fe6e6ca539a31407872df6fafa15e6a39ce3f837a7de88d7756414fb967a9cfb"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4528394100
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4297622900
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2201485600
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 4600700\nrep 4592100\nrep 4572200\nrep 4808100\nrep 4593700\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 993364800,
+            "times_ns": [
+              4600700,
+              4592100,
+              4572200,
+              4808100,
+              4593700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 4593300\nrep 4875600\nrep 4597800\nrep 4601900\nrep 4682000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 384822800,
+            "times_ns": [
+              4593300,
+              4875600,
+              4597800,
+              4601900,
+              4682000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-native_aot.exe.exe"
+            ],
+            "stdout": "rep 4841300\nrep 5212700\nrep 7438700\nrep 4633500\nrep 4677100\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 391309300,
+            "times_ns": [
+              4841300,
+              5212700,
+              7438700,
+              4633500,
+              4677100
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 44260500\nrep 51988000\nrep 39539700\nrep 39658800\nrep 46041100\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 1295018900,
+            "times_ns": [
+              44260500,
+              51988000,
+              39539700,
+              39658800,
+              46041100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 38593300\nrep 39625000\nrep 45652100\nrep 42393300\nrep 43860400\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 649269300,
+            "times_ns": [
+              38593300,
+              39625000,
+              45652100,
+              42393300,
+              43860400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 47785500\nrep 40778400\nrep 42213500\nrep 39827300\nrep 42140000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 660634300,
+            "times_ns": [
+              47785500,
+              40778400,
+              42213500,
+              39827300,
+              42140000
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1105200\nrep 1058000\nrep 1046900\nrep 1044400\nrep 1046000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 789582400,
+            "times_ns": [
+              1105200,
+              1058000,
+              1046900,
+              1044400,
+              1046000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1082000\nrep 1061400\nrep 1347000\nrep 1056400\nrep 1046900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 292352900,
+            "times_ns": [
+              1082000,
+              1061400,
+              1347000,
+              1056400,
+              1046900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_write-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 1602400\nrep 1163700\nrep 1100800\nrep 1051600\nrep 1045000\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 253342900,
+            "times_ns": [
+              1602400,
+              1163700,
+              1100800,
+              1051600,
+              1045000
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 4633500,
+        "bootstrap_aot": 42213500,
+        "baseline_aot": 1058000
+      },
+      "bootstrap_over_native": {
+        "aot": 9.110499622315745
+      }
+    },
+    "set_remove": {
+      "expected_sink": 6154,
+      "sources": {
+        "native": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native.chl",
+          "sha256": "61cce249e1aaa23844afeb31092fd051ccc26ae882da4419a4396417702f0b66"
+        },
+        "bootstrap": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap.chl",
+          "sha256": "b57ce70ad33326df0df04a8c5a0ab094fc0ce028a4e07bca2bc3cb48d06b45c9"
+        },
+        "baseline": {
+          "path": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline.chl",
+          "sha256": "61cce249e1aaa23844afeb31092fd051ccc26ae882da4419a4396417702f0b66"
+        }
+      },
+      "builds": {
+        "native_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4502029700
+        },
+        "bootstrap_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\core-build19.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 4360474300
+        },
+        "baseline_aot": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline_aot.exe"
+          ],
+          "stdout": "",
+          "stderr": "",
+          "wall_ns": 2262203800
+        }
+      },
+      "commands": {
+        "native_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native_aot.exe.exe"
+        ],
+        "bootstrap_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap_aot.exe.exe"
+        ],
+        "baseline_aot": [
+          "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline_aot.exe.exe"
+        ]
+      },
+      "measurements": {
+        "native_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9769200\nrep 9834500\nrep 9832600\nrep 9801800\nrep 9926500\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 951797600,
+            "times_ns": [
+              9769200,
+              9834500,
+              9832600,
+              9801800,
+              9926500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9820900\nrep 10166900\nrep 10006100\nrep 9913500\nrep 9853800\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 410744900,
+            "times_ns": [
+              9820900,
+              10166900,
+              10006100,
+              9913500,
+              9853800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-native_aot.exe.exe"
+            ],
+            "stdout": "rep 9888200\nrep 9897900\nrep 10215300\nrep 10203900\nrep 10096700\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 408429300,
+            "times_ns": [
+              9888200,
+              9897900,
+              10215300,
+              10203900,
+              10096700
+            ]
+          }
+        ],
+        "bootstrap_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 3209696400\nrep 3190023900\nrep 3239926000\nrep 3309390700\nrep 3301844600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 20452736700,
+            "times_ns": [
+              3209696400,
+              3190023900,
+              3239926000,
+              3309390700,
+              3301844600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 3207894500\nrep 3239186600\nrep 3235966800\nrep 3318577300\nrep 3272231600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 19849080800,
+            "times_ns": [
+              3207894500,
+              3239186600,
+              3235966800,
+              3318577300,
+              3272231600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-bootstrap_aot.exe.exe"
+            ],
+            "stdout": "rep 3184536300\nrep 3239502800\nrep 3213301500\nrep 3212439900\nrep 3260058900\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 19747315000,
+            "times_ns": [
+              3184536300,
+              3239502800,
+              3213301500,
+              3212439900,
+              3260058900
+            ]
+          }
+        ],
+        "baseline_aot": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 2940700\nrep 2888300\nrep 2873900\nrep 2879700\nrep 2911600\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 354081000,
+            "times_ns": [
+              2940700,
+              2888300,
+              2873900,
+              2879700,
+              2911600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 5121600\nrep 5244700\nrep 4995000\nrep 3036400\nrep 4406100\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 293490900,
+            "times_ns": [
+              5121600,
+              5244700,
+              4995000,
+              3036400,
+              4406100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\bootstrap-containers-7ms76yud\\set_remove-baseline_aot.exe.exe"
+            ],
+            "stdout": "rep 3233800\nrep 3044600\nrep 3085200\nrep 3236300\nrep 3039300\nsink 6154\n",
+            "stderr": "",
+            "wall_ns": 264566000,
+            "times_ns": [
+              3233800,
+              3044600,
+              3085200,
+              3236300,
+              3039300
+            ]
+          }
+        ]
+      },
+      "median_ns": {
+        "native_aot": 9897900,
+        "bootstrap_aot": 3239186600,
+        "baseline_aot": 3044600
+      },
+      "bootstrap_over_native": {
+        "aot": 327.25998444114407
+      }
+    }
+  },
+  "execution_order": [
+    {
+      "case": "list_build",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "list_build",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_build",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_read",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "list_read",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_read",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_write",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "list_write",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_write",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_remove",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "list_remove",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "list_remove",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_build",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "map_build",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_build",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_read",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "map_read",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_read",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_write",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "map_write",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_write",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_remove",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "map_remove",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "map_remove",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_build",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "set_build",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_build",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_read",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "set_read",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_read",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_write",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "set_write",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_write",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_remove",
+      "run": 0,
+      "order": [
+        "native_aot",
+        "bootstrap_aot",
+        "baseline_aot"
+      ]
+    },
+    {
+      "case": "set_remove",
+      "run": 1,
+      "order": [
+        "native_aot",
+        "baseline_aot",
+        "bootstrap_aot"
+      ]
+    },
+    {
+      "case": "set_remove",
+      "run": 2,
+      "order": [
+        "baseline_aot",
+        "native_aot",
+        "bootstrap_aot"
+      ]
+    }
+  ],
+  "implementation_names": {
+    "native": "current default self-hosted container algorithms with opaque storage",
+    "bootstrap": "experimental ChaLi container",
+    "baseline": "original default containers in baseline compiler"
+  },
+  "limitations": [
+    "int64 elements and keys; generic Map values also checked separately",
+    "raw storage with initialization bitmap; modulo hash, linear probing and backward-shift deletion; Set owns an independent slot array",
+    "build, allocation and cleanup inside work are timed; compilation is excluded",
+    "default highest optimization, reflection and runtime safety checks retained",
+    "spare capacity does not construct elements; List deletion releases live elements while retaining capacity"
+  ],
+  "baseline_compiler": {
+    "path": "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+    "version": "1.0.6",
+    "sha256": "9f7592fe2b4e219a62b93b2c8f561639314fb8176bd4ef26ae1dfa1d2bfab063"
+  },
+  "preserved_prototype": {
+    "path": "benchmarks/perf/raw_containers_modulo.chl",
+    "sha256": "2e2f171338691a0246e23cc34d4ba0cebb20c22391d54098117444a0a20ab02d",
+    "description": "Original modulo-only bucket selection; preserved before mixed-hash revision"
+  }
+}

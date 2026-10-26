@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 161 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 159 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -164,7 +164,9 @@ Box<int64 fn(int64)> box;
 | `INLINE` | `inline` |
 | `IMPL` | `impl` |
 | `TYPE_KW` | `type` |
-| `ABI_KW` | `abi` |
+| `ABI_DIRECTIVE` | `#abi` |
+| `EXPORT_DIRECTIVE` | `#export` |
+| `UNSAFE` | `unsafe` |
 | `MODULE` | `module` |
 | `IMPORT` | `import` |
 | `CAST_KW` | `cast` |
@@ -195,6 +197,8 @@ Box<int64 fn(int64)> box;
 | `WILDCARD` | `_` |
 | `INTERFACE` | `interface` |
 | `TYPE_TAG` | `__typeTag` |
+| `RAW_SIZE` | `__rawSize` |
+| `RAW_ALIGN` | `__rawAlign` |
 | `INCREMENT` | `++` |
 | `DECREMENT` | `--` |
 | `PLUS` | `+` |
@@ -298,13 +302,16 @@ top_decl = struct_decl, type_decl_end
     | enum_decl, type_decl_end
     | interface_decl, type_decl_end
     | func_def
+    | "unsafe", func_def
+    | "unsafe", host_func_decl
+    | "#export", "(", STRING, ")", func_def
     | "inline", func_def
     | "export", func_def
     | lifetime_directives, func_def
     | lifetime_directives, "inline", func_def
     | lifetime_directives, "export", func_def
     | host_func_decl
-    | abi_block
+    | "#abi", "(", STRING, ",", STRING, ",", STRING, ")", abi_func
     | host_type_decl
     | host_impl_decl
     | operator_def
@@ -520,20 +527,12 @@ host_func_decl = type, name_token, "(", param_list, ")", ";"
     | type, "yield", "(", param_list, ")", ";"
     | ptr_type, "yield", "(", param_list, ")", ";" ;
 
-abi_block = "abi", STRING, "{", abi_func_list, "}" ;
-
-abi_func_list = ""
-    | abi_func_list, abi_func ;
-
-abi_func = type, name_token, "(", param_list, ")", "=", STRING, "[", STRING, "]", ";"
-    | ptr_type, name_token, "(", param_list, ")", "=", STRING, "[", STRING, "]", ";"
-    | array_type, name_token, "(", param_list, ")", "=", STRING, "[", name_token, ",", STRING, "]", ";"
-    | array_type, name_token, "(", param_list, ")", "=", STRING, "[", name_token, "]", ";"
+abi_func = type, name_token, "(", param_list, ")", ";"
+    | ptr_type, name_token, "(", param_list, ")", ";"
+    | type, name_token, "(", param_list, ")", "[", STRING, "]", ";"
+    | ptr_type, name_token, "(", param_list, ")", "[", STRING, "]", ";"
     | array_type, name_token, "(", param_list, ")", "[", name_token, "]", ";"
-    | type, name_token, "(", param_list, ")", "=", STRING, ";"
-    | ptr_type, name_token, "(", param_list, ")", "=", STRING, ";"
-    | type, name_token, "(", param_list, ")", ";"
-    | ptr_type, name_token, "(", param_list, ")", ";" ;
+    | array_type, name_token, "(", param_list, ")", "[", name_token, ",", STRING, "]", ";" ;
 
 host_impl_decl = "impl", type, ":", name_token, "=", name_token, ";"
     | "impl", ptr_type, ":", name_token, "=", name_token, ";" ;
@@ -622,6 +621,7 @@ stmt_list = ""
     | stmt_list, macro_control ;
 
 stmt = block
+    | "unsafe", block
     | decl_stmt
     | "defer", stmt
     | "scope", "(", name_token, ")", block
@@ -834,6 +834,8 @@ primary = name_token
     | z_if_value
     | z_match_value
     | "__typeTag", "(", element_type, ")"
+    | "__rawSize", "(", element_type, ")"
+    | "__rawAlign", "(", element_type, ")"
     | collection_literal
     | "(", tuple_items, ")"
     | "(", expr, ")" ;

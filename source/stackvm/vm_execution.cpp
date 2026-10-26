@@ -2227,6 +2227,26 @@ RunResult Machine::run(const Program &program, const Memory::Vector<Memory::Stri
             push(value);
             break;
         }
+        case Op::MemoryCopy:
+        case Op::MemorySet:
+        {
+            Slot bytes, source, destination;
+            if (!pop(bytes) || !pop(source) || !pop(destination)) break;
+            NativeContext context;
+            context.heap = &heap;
+            context.data = data_;
+            unsigned char *output = nullptr, *inputBytes = nullptr;
+            const auto count = nativeInt(bytes);
+            if (!rawMemoryView(context, instruction.op == Op::MemoryCopy ? 7 : 8,
+                               nativeInt(destination), nativeInt(source), count, output, inputBytes))
+                fail(context.error);
+            else if (count > 0)
+            {
+                if (instruction.op == Op::MemoryCopy) std::memcpy(output, inputBytes, static_cast<std::size_t>(count));
+                else std::memset(output, static_cast<unsigned char>(nativeInt(source)), static_cast<std::size_t>(count));
+            }
+            break;
+        }
         case Op::StoreAt:
         {
             Slot value;

@@ -30,7 +30,7 @@ def main():
         paths = [library.as_posix(), str(library).replace('/', '\\'), str(library).replace('/', '\\').replace('\\', '\\\\'), library.relative_to(work).as_posix().replace('/', '\\')]
         for index, path in enumerate(paths):
             source = work / f'path-{index}.chl'
-            source.write_text('abi "' + path + '" { int32 identity(int32 n) = "identity"; }\nvoid main() { std::lang::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
+            source.write_text('#abi("C", "' + path + '", "identity") int32 identity(int32 n);\nvoid main() { std::lang::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
             prefix = work / f'path-{index}'
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '7\n' and (not result.stderr), result.stdout + result.stderr
@@ -39,7 +39,7 @@ def main():
             assert library.as_posix() in glue, glue
         nested = work / 'nested'
         nested.mkdir()
-        signature = 'abi "../native paths/' + library.name + '" { int32 identity(int32 n) = "identity"; }\n'
+        signature = '#abi("C", "../native paths/' + library.name + '", "identity") int32 identity(int32 n);\n'
         (nested / 'api.chl').write_text('module nested::api;\n' + signature, encoding='utf-8')
         (nested / 'second.chl').write_text('module nested::second;\n' + signature, encoding='utf-8')
         imported = work / 'imported.chl'
@@ -66,7 +66,7 @@ def main():
         relocated_result = run([compiler, 'run', relocated_source, '--out', relocated / 'output'])
         assert relocated_result.stdout == '108\n', relocated_result.stdout + relocated_result.stderr
         raw = work / 'raw.chl'
-        raw.write_text('abi "./native paths/' + library.name + '" { int32 identity(int32 n) = "identity"; }\nvoid main() { std::lang::println("{}", identity((int32)8)); return; }\n', encoding='utf-8')
+        raw.write_text('#abi("C", "./native paths/' + library.name + '", "identity") int32 identity(int32 n);\nvoid main() { std::lang::println("{}", identity((int32)8)); return; }\n', encoding='utf-8')
         assert run([compiler, 'run', raw, '--raw', '--out', work / 'raw']).stdout == '8\n'
         module = work / 'probe.chl'
         module.write_text('module probe;\n%if CHALI_OS == other && CHALI_BITS == 32 && CUSTOM == 9\nint64 value() { return 9; }\n%else\nint64 value() { return 1; }\n%endif\n', encoding='utf-8')

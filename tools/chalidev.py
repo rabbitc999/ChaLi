@@ -820,7 +820,7 @@ def _text(original):
 VERSION = "1.0.0"
 IGNORED = {".git", ".chali", "build", "tmp", "node_modules", "__pycache__"}
 EXTENSIONS = {".chl", ".inc", ".h", ".hpp", ".c", ".cpp", ".toml", ".json"}
-KEYWORDS = "_ abi let bool break cast char const continue copy defer drop elif else enum false float32 float64 fn for if impl import in inline int16 int32 int64 int8 interface loop match module move mut new opcode return scope static struct true type uint16 uint32 uint64 uint8 void while yield".split()
+KEYWORDS = "_ unsafe __rawSize __rawAlign let bool break cast char const continue copy defer drop elif else enum false float32 float64 fn for if impl import in inline int16 int32 int64 int8 interface loop match module move mut new opcode return scope static struct true type uint16 uint32 uint64 uint8 void while yield".split()
 
 
 def invoke(args, **kwargs):

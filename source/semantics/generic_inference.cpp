@@ -1136,6 +1136,36 @@ bool RewriteErrorAdapter(int id)
 }
 
 /**
+ * @brief 将核心裸指针的显式类型转换方法接到无宿主绑定的语言包装。
+ * @param id 待归一化的调用表达式。
+ * @return 已识别并改写 castTo 调用时为 true。
+ */
+bool RewriteBarePointerCast(int id)
+{
+    const auto node = N(id);
+    if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
+    const auto callee = N(node.kids[0]);
+    if (callee.kind != MNode::Member || callee.kids.empty()) return false;
+    const auto marker = chali_generic::session.made.find(callee.s);
+    if (marker == chali_generic::session.made.end() || marker->second.generic->module != "std::lang"
+        || marker->second.generic->name != "__chaliCastTo") return false;
+    const auto type = ExprType(callee.kids[0]);
+    if (!IsBarePointerType(type)) return false;
+    if (!N(node.kids[1]).kids.empty()) return Fail("BarePtr.castTo<T>() 不接受值参数"), false;
+    const auto source = chali_generic::session.made.find(type->name);
+    if (source == chali_generic::session.made.end()) return Fail("裸指针缺少元素类型信息"), false;
+    Memory::Vector<Memory::String> types{ source->second.args[0], marker->second.args[0] };
+    const auto specialized = chali_generic::mangle("__pointerCast", types);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ "__pointerCast", types };
+    const int arguments = M_New(MNode::List);
+    g_nodes[arguments].kids = { callee.kids[0] };
+    const int target = M_New(MNode::EnumCtor, "std::lang");
+    g_nodes[target].s2 = specialized;
+    g_nodes[id].kids = { target, arguments };
+    return true;
+}
+
+/**
  * @brief 把 `map.getOption(键)` 归一为 std::lang 的泛型函数，结果就是 `Option<V>`。
  *
  * 下标 `m[k]` 读不存在的键会报错（0.27.1 起），所以"键可能不在、想自己处理"的
@@ -1557,6 +1587,7 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
         return;
     }
     RewriteRangeCall(id);
+    RewriteBarePointerCast(id);
     RewriteErrorAdapter(id);
     RewriteIteratorCall(id);
     RewriteMapGetOption(id);
@@ -1628,6 +1659,10 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
         calleeId = node.kids[0];
         const auto &callee = N(calleeId);
         arguments = N(node.kids[1]).kids;
+        // 核心字节 intrinsic 的引用／数值地址形式沿用内建选择，不与 BarePtr 泛型重载竞争。
+        const auto memoryName = StandardCallName(callee);
+        if ((memoryName == "memcpy" || memoryName == "memset") && !arguments.empty()
+            && !IsBarePointerType(ExprType(arguments[0]))) return;
         InferKnownCallArguments(callee, arguments);
         if (callee.kind != MNode::Var && callee.kind != MNode::EnumCtor) return;
         name = callee.kind == MNode::Var ? callee.s : callee.s2;
@@ -1655,6 +1690,13 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
                 if (IsUnboundEmptyVariant(arguments[i])) continue;
                 auto pattern = sig.params[std::min(i, sig.params.size() - 1)];
                 if (sig.variadic && i + 1 >= sig.params.size()) pattern = pattern->elem;
+                // memset 的固定字节参数沿用普通调用的字面量适配，不把 0／字符字面量当作泛型冲突。
+                if (i == 1u && generic->second.module == "std::lang" && generic->second.sourceName == "memset"
+                    && pattern->kind == MType::Int && pattern->isUnsigned && pattern->bits == 8)
+                {
+                    const auto &literal = N(arguments[i]);
+                    if ((literal.kind == MNode::Int || literal.kind == MNode::Char) && literal.i >= 0 && literal.i <= 255) continue;
+                }
                 if (pattern->kind == MType::Func)
                     InferExpression(arguments[i], BoundCallbackType(pattern, bindings));
                 const auto actual = pattern->kind == MType::Func && IsOverloadedCallbackArgument(arguments[i]) ?

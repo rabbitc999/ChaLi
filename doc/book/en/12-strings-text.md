@@ -6,6 +6,8 @@
 
 `String` owns a sequence of bytes. `len` counts bytes, and indexing or slicing uses byte positions. Ordinary indexing requires a valid UTF-8 character boundary. Slices do not require those boundaries; a slice can therefore contain only part of an encoded character. This is useful for byte-oriented protocols but must be handled deliberately in human text.
 
+String search, comparison, slicing, transformations, splitting, joining, UTF-8 decoding and value copying are implemented in ChaLi. Heap strings retain their existing length-header and byte layout, and ordinary assignment still creates an independent copy. Host boundaries provide allocation, storage-layout access, I/O and numeric display formatting.
+
 ```chali
 void main()
 {

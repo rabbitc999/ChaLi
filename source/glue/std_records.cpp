@@ -1,7 +1,6 @@
 #include "std_native_record.hpp"
 #include "std_records.hpp"
 #include "std_reference.hpp"
-#include "std_string_methods.hpp"
 #include "std_collection.hpp"
 #include "../chali_glue.hpp"
 #include "std_big_number.hpp"
@@ -20,6 +19,6 @@ namespace chali_standard_records
  */
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
-    return std_string_methods_glue::bind(registry, error) && std_reference_glue::bind(registry, error) && collection_glue::bind(registry.native(), error) && native_record_glue::bindString(registry.native(), error) && big_number_glue::bind(registry.native(), error) && std_cas_glue::bind(registry.native(), error) && file_native_glue::bind(registry.native(), error) && std_process_glue::bind(registry, error) && std_print_glue::bind(registry, error);
+    return std_reference_glue::bind(registry, error) && collection_glue::bind(registry.native(), error) && native_record_glue::bindString(registry.native(), error) && big_number_glue::bind(registry.native(), error) && std_cas_glue::bind(registry.native(), error) && file_native_glue::bind(registry.native(), error) && std_process_glue::bind(registry, error) && std_print_glue::bind(registry, error);
 }
 }  // namespace chali_standard_records

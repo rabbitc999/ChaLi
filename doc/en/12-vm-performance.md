@@ -4,7 +4,23 @@
 **English** · [简体中文](../12-vm-performance.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The current program version is **ChaLi 1.0.6**.
+The current program version is **ChaLi 1.0.7**.
+
+## 1.0.7 raw storage and demand-driven linking
+
+[Validation and delivery scope](../../benchmarks/results/release-1.0.7.md) records staged checks, measurement and delivery hashes, and unvalidated variants.
+
+This campaign compares the actual 1.0.6 native implementation, the current default self-hosted implementation and experimental raw-storage implementations. Highest optimization, reflection, bounds and liveness checks remain enabled. Builds are separated from timing, and measurement stages run serially. Raw reports retain versions, SHA256 hashes, sources, settings and output checks. The measured compiler is a code-final snapshot; the release compiler is checked again against final documentation and embedded assets, with its delivery hash recorded separately. Historical 1.0.6 reports below remain unchanged.
+
+- [AOT size and demand-driven standard-library linking](../../benchmarks/results/aot-size-1.0.7/README.md)
+- [Three-way List/Map/Set AOT comparison](../../benchmarks/results/raw-containers-1.0.7/README.md)
+- [Three-way String VM/AOT comparison](../../benchmarks/results/string-1.0.7/README.md)
+- [General AOT versus C++ O3](../../benchmarks/results/aot-1.0.7/README.md)
+- [Actual 1.0.6/1.0.7 VM comparison](../../benchmarks/results/vm-1.0.7/README.md)
+
+The empty executable shrinks from 75,158,528 to 1,883,648 bytes (97.49%); String is 2,101,760 bytes and List 1,904,128 bytes. Default container and String algorithms are now self-hosted, but several workloads regress against the old native implementation; raw-storage experiments also have regressions. Reports retain these results. Mixed hashing mitigates long backward-shift scans for consecutive keys, with the initial modulo-hash measurements preserved.
+
+The String experiment implements byte storage, append, access, search and independent copying. UTF-8 contents are checked separately, and conversion into the byte string is its own workload. Interpret results alongside algorithms, workload sizes and retained checks; self-hosting or an unsafe kernel does not itself guarantee speed. See [Raw storage and C ABI directives](44-unsafe-abi.md) for interfaces and reproduction commands. Actual validation covers Windows x64 with external LLVM; no static LLVM SDK was available, so synchronized build settings do not establish validation of that variant.
 
 ## Final 1.0.6 release measurements
 

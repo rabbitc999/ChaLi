@@ -327,6 +327,36 @@ NodePtr Node::alloc(NodePtr bytes)
 }
 
 /**
+ * @brief 创建字节复制节点，三个输入按源程序顺序求值。
+ * @param destination 目标地址。
+ * @param source 源地址。
+ * @param bytes 字节数。
+ * @return 直接产生 memcpy 四元式的节点。
+ */
+NodePtr Node::memoryCopy(NodePtr destination, NodePtr source, NodePtr bytes)
+{
+    auto node = Memory::makeShared<Node>();
+    node->kind = Kind::MemoryCopy;
+    node->kids = { std::move(destination), std::move(source), std::move(bytes) };
+    return node;
+}
+
+/**
+ * @brief 创建字节填充节点，不建立原生函数绑定。
+ * @param destination 目标地址。
+ * @param value 填充字节。
+ * @param bytes 字节数。
+ * @return 直接产生 memset 四元式的节点。
+ */
+NodePtr Node::memorySet(NodePtr destination, NodePtr value, NodePtr bytes)
+{
+    auto node = Memory::makeShared<Node>();
+    node->kind = Kind::MemorySet;
+    node->kids = { std::move(destination), std::move(value), std::move(bytes) };
+    return node;
+}
+
+/**
  * @brief 按地址读一个**指定类型**的值：`(load:T, 地址, _, t)`。
  *
  * 与 `loadInt` 的区别是"这 8 个字节怎么解释"由 `type` 决定（`f64` 按 IEEE-754

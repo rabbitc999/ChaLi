@@ -78,7 +78,7 @@ def build_runner(cxx, target):
     if missing:
         raise AssertionError('缺少构建产物，先跑 mingw32-make -j4：' + ', '.join(missing))
     includes = ['source', 'library', 'source/allocator', 'source/bignum', 'source/json', 'source/toml',
-                'library/sqlite', 'source/console', 'source/lztext', 'source/ast',
+                'build/dependencies/sqlite', 'build/dependencies/miniz', 'source/console', 'source/lztext', 'source/ast',
                 'source/stackvm', 'source/preprocess']
     command = [cxx, '-std=c++17', '-O2', '-DNDEBUG', '-ffunction-sections', '-fdata-sections',
                '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_FRONT_END_NO_MAIN=1', '-DCHALI_WITH_REFLECTION=1',

@@ -1,0 +1,66 @@
+import std::algorithms;
+
+struct Item { String text; int64 number; };
+String append(String left,String right) { return left+right; }
+bool nonempty(String value) { return len(value)>0; }
+Item increment(Item value) { value.number=value.number+1; return value; }
+bool selected(Item value) { return value.number%2==0; }
+String foldParameter(List<String> source,String initial) {
+    int64 i=0;
+    while (i<source.len()) { initial=append(initial,source[i]); i=i+1; }
+    return initial;
+}
+
+void main() {
+    List<String> words=["a","","bc"];
+    List<String> kept=std::algorithms::filterValue<String>(words,nonempty);
+    assert(kept.len()==2 && kept[1]=="bc");
+    kept[0]="changed"; assert(words[0]=="a");
+    assert(std::algorithms::reduceValue<String>(words,append)=="abc");
+    assert(std::algorithms::foldValue<String>(words,"!",append)=="!abc");
+    assert(foldParameter(words,"!")=="!abc");
+    assert(std::algorithms::countValue<String>(words,nonempty)==2);
+    assert(!std::algorithms::allValue<String>(words,nonempty));
+    assert(std::algorithms::anyValue<String>(words,nonempty));
+    List<String> empty;
+    assert(std::algorithms::allValue<String>(empty,nonempty));
+    assert(!std::algorithms::anyValue<String>(empty,nonempty));
+    assert(std::algorithms::foldValue<String>(empty,"seed",append)=="seed");
+    List<String> one=["single"];
+    assert(std::algorithms::reduceValue<String>(one,append)=="single");
+    List<Item> items;
+    Item first; first.text="first"; first.number=1; items.push(first);
+    Item second; second.text="second"; second.number=2; items.push(second);
+    List<Item> mapped=std::algorithms::mapValue<Item>(items,increment);
+    assert(mapped[0].number==2 && items[0].number==1);
+    List<Item> filtered=std::algorithms::filterValue<Item>(items,selected);
+    assert(filtered.len()==1 && filtered[0].text=="second");
+    List<int64> numbers=[1,2,3];
+    int64 calls=0;
+    List<int64> counted=std::algorithms::mapValue<int64>(numbers,int64 fn mut(int64 value) { calls=calls+1; return value+calls; });
+    assert(counted[0]==2 && counted[2]==6);
+    assert(numbers[0]==1);
+    assert(calls==3);
+    List<int64> mixed; int64 histogram[11]; int64 i=0;
+    while (i<11) { histogram[i]=0; i=i+1; }
+    i=0;
+    while (i<97) { int64 value=(i*37+19)%11; mixed.push(value); histogram[value]=histogram[value]+1; i=i+1; }
+    List<int64> sorted=std::algorithms::sortValue<int64>(mixed);
+    int64 index=0; int64 key=0;
+    while (key<11) {
+        int64 j=0;
+        assert(std::algorithms::binarySearchValue<int64>(sorted,key)==index);
+        assert(std::algorithms::countValue<int64>(mixed,key)==histogram[key]);
+        while (j<histogram[key]) { assert(sorted[index]==key); index=index+1; j=j+1; }
+        key=key+1;
+    }
+    assert(sorted.len()==97 && mixed[0]==8);
+    assert(std::algorithms::binarySearchValue<int64>(sorted,99)== -1);
+    assert(std::algorithms::minValue<String>("pear","apple","plum")=="apple");
+    assert(std::algorithms::maxValue<String>("pear","apple","plum")=="plum");
+    assert(std::algorithms::clampValue<String>("a","b","d")=="b");
+    assert(std::algorithms::clampValue<String>("c","b","d")=="c");
+    assert(std::algorithms::clampValue<String>("e","b","d")=="d");
+    assert(std::algorithms::sumValue<int64>(numbers)==6);
+    print("bootstrap-algorithms-default-ok\n");
+}

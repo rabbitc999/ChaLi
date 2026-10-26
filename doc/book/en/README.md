@@ -43,7 +43,8 @@ The complete export uses `book/` for Chinese Markdown, `book/en/` for English Ma
 | [22](22-bytecode.md) | Bytecode deployment |
 | [23](23-compiler-commands.md) | Compiler commands |
 | [24](24-aot-export.md) | LLVM AOT export |
-| [25](25-student-system.md) | A student information system |
+| [25](25-unsafe-code.md) | Unsafe code, raw storage, bare pointer arithmetic and byte operations |
+| [26](26-student-system.md) | A student information system |
 | [A](A-common-errors.md) | Common errors |
 | [B](B-standard-library.md) | Standard-library reference |
 

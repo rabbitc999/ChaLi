@@ -25,6 +25,7 @@ namespace runtimeDetail
     case ObjectKind::NativeRecord: return "native record";
     case ObjectKind::Closure: return "lambda";
     case ObjectKind::Obj: return "obj";
+    case ObjectKind::RawStorage: return "raw storage";
     case ObjectKind::Arena: return "arena";
     }
     return "?";
@@ -43,9 +44,14 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
 void ObjectStore::beginStorage(std::size_t address, std::size_t bytes, bool fresh)
 
 {
-    for (auto it = movedStorage.begin(); it != movedStorage.end();)
+    if ((!bytes && !fresh) || movedStorage.empty()) return;
+    // 含于新生命周期的标记从本地址开始；重叠查询只需额外考虑最大跨度以内的前驱。
+    const auto first = fresh && largestMovedStorage < address ? address - largestMovedStorage : fresh ? 0u : address;
+    auto it = movedStorage.lower_bound({ first, std::numeric_limits<std::int64_t>::min() });
+    for (; it != movedStorage.end();)
     {
         const auto start = it->first.first;
+        if (start >= address && start - address >= bytes) break;
         const bool overlap = start >= address ? start - address < bytes : address - start < it->second;
         const bool contained = start >= address && start - address < bytes && it->second <= bytes - (start - address);
         if (fresh ? overlap : contained)
@@ -201,7 +207,7 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
         copy->identity = identity;
         return copy;
     }
-    if (object.kind == ObjectKind::Arena)
+    if (object.kind == ObjectKind::Arena || object.kind == ObjectKind::RawStorage)
     {
         if (error != nullptr)
         {

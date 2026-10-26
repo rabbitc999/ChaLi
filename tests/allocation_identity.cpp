@@ -14,6 +14,16 @@ int main()
 {
     stackvm::execution_detail::AllocationIndex index;
     index.reset(8);
+    const auto padded = index.add(0, 31);
+    assert(padded && index.find(padded + 30));
+    assert(index.restrictRange(padded, 7, 16));
+    assert(!index.find(padded) && !index.find(padded + 6));
+    const auto *view = index.find(padded + 7);
+    assert(view && view->address == padded + 7 && view->offset == 7 && view->size == 16);
+    assert(index.find(padded + 22) && !index.find(padded + 23));
+    assert(!index.restrictRange(padded, 6, 16) && !index.restrictRange(padded, 7, 17));
+    assert(index.liveBytes() == 31 && index.root(padded)->size == 31);
+    assert(index.release(padded) && !index.find(padded + 7) && index.liveBytes() == 0);
     const auto first = index.add(0, 32);
     assert(first && index.release(first));
     for (int i = 0; i < 1000000; ++i)

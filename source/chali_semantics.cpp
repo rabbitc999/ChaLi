@@ -2386,6 +2386,72 @@ int M_Inline(int declarationId)
     return declarationId;
 }
 /**
+ * @brief 标记显式 unsafe 块或具有不安全调用契约的函数。
+ * @param id 块或函数节点。
+ * @return 标记后的原节点。
+ */
+int M_Unsafe(int id)
+{
+    auto &node = g_nodes[id];
+    if (node.kind == MNode::Block) node.unsafeScope = true;
+    else {
+        node.unsafeRequired = true;
+        if (node.kind == MNode::FuncDef && node.kids.size() > 1u)
+            g_nodes[node.kids[1]].unsafeScope = true;
+    }
+    return id;
+}
+/**
+ * @brief 将 C ABI 编译器指令附着于库声明或导出函数。
+ * @param convention ABI 字符串编号。
+ * @param declaration 声明节点。
+ * @return 声明或明确的诊断节点。
+ */
+int M_AbiDeclaration(int convention, int declaration)
+{
+    const auto mode = g_names[convention];
+    if (mode != "C") return M_ParseBad("#abi 当前仅支持 C 调用约定");
+    auto &node = g_nodes[declaration];
+    node.abiConvention = "C";
+    if (node.kind == MNode::AbiBlock)
+        for (const auto child : node.kids) g_nodes[child].abiConvention = "C";
+    return declaration;
+}
+/**
+ * @brief 将逐函数 ABI 指令绑定到一个外部声明，保留库路径的源码基准。
+ * @param convention ABI 调用约定字符串编号。
+ * @param library 动态库路径字符串编号。
+ * @param symbol 动态库原生符号字符串编号。
+ * @param declaration 仅包含签名的外部函数声明。
+ * @return 已标记的声明或调用约定诊断节点。
+ */
+int M_AbiImport(int convention, int library, int symbol, int declaration)
+{
+    const int result = M_AbiDeclaration(convention, declaration);
+    if (g_nodes[result].kind == MNode::ParseBad) return result;
+    auto &node = g_nodes[result];
+    node.abiLibrary = g_names[library];
+    node.s2 = g_names[symbol];
+    const auto source = g_stringSources.find(library);
+    if (source != g_stringSources.end()) node.abiSourceFile = source->second;
+    return result;
+}
+/**
+ * @brief 标记 C ABI 导出实现并记录由指令指定的原生符号。
+ * @param symbol 符号字符串编号。
+ * @param declaration 函数实现节点。
+ * @return 已标记节点。
+ */
+int M_ExportSymbol(int symbol, int declaration)
+{
+    auto &node = g_nodes[declaration];
+    if (g_names[symbol].empty()) return M_ParseBad("#export 原生符号名不能为空");
+    node.exported = true;
+    node.exportSymbol = g_names[symbol];
+    node.abiConvention = "C";
+    return declaration;
+}
+/**
  * @brief 构造并登记外部函数声明。
  * @param resultType 函数或表达式的结果类型。
  * @param nameId 名称池中的名称编号。
@@ -2741,6 +2807,20 @@ int M_TypeTagType(int typeId)
     g_nodes[static_cast<std::size_t>(id)].reflectionBridge = true;
     return id;
 }
+/**
+ * @brief 构造 unsafe 原始布局查询，不公开 C ABI 的布局作为语言存储布局。
+ * @param typeId 语言类型编号。
+ * @param alignment 非零查询对齐。
+ * @return 查询节点。
+ */
+int M_RawLayout(int typeId, int alignment)
+{
+    const int id = M_New(MNode::RawLayout);
+    g_nodes[id].type = typeId;
+    g_nodes[id].i = alignment;
+    return id;
+}
+
 /**
  * @brief 构造并登记形参声明。
  * @param typeId 类型池中的类型编号。
@@ -3399,6 +3479,11 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     if (g_checkOnly) return 0;
 
     AddRuntimeHelpers(program);
+    if (!FinalizeBootstrapCalls(program))
+    {
+        RestoreFirstDiagnostic();
+        return 1;
+    }
 
     /* 2. 落四元式 + `.data`（`.data.bin` / `.layout` 给 stackvm 读）。 */
     ast::CodegenResult result = ast::generate(program, moduleName);
@@ -3821,7 +3906,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 1;
+constexpr std::uint64_t kStandardUnitVersion = 2;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3937,6 +4022,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node)
     chali_incremental::writeString(out, node.abiSourceFile);
     chali_incremental::writeString(out, node.abiLength);
     chali_incremental::writeString(out, node.abiRelease);
+    chali_incremental::writeString(out, node.abiConvention);
+    chali_incremental::writeString(out, node.exportSymbol);
     chali_incremental::writeNumber(out, node.abiPacked ? 1u : 0u);
     chali_incremental::writeString(out, node.module);
     std::uint64_t flags = 0;
@@ -3950,6 +4037,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node)
     if (node.returnExpression) flags |= 1u << 7;
     if (node.implicitExitMove) flags |= 1u << 8;
     if (node.exported) flags |= 1u << 9;
+    if (node.unsafeRequired) flags |= 1u << 10;
+    if (node.unsafeScope) flags |= 1u << 11;
     chali_incremental::writeNumber(out, flags);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.i));
     WriteUnitDouble(out, node.d);
@@ -4012,6 +4101,8 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     if (!chali_incremental::readString(in, node.abiSourceFile)) return false;
     if (!chali_incremental::readString(in, node.abiLength)) return false;
     if (!chali_incremental::readString(in, node.abiRelease)) return false;
+    if (!chali_incremental::readString(in, node.abiConvention)) return false;
+    if (!chali_incremental::readString(in, node.exportSymbol)) return false;
     std::uint64_t packed = 0;
     if (!chali_incremental::readNumber(in, packed)) return false;
     node.abiPacked = packed != 0;
@@ -4027,6 +4118,8 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     node.returnExpression = (flags & (1u << 7)) != 0;
     node.implicitExitMove = (flags & (1u << 8)) != 0;
     node.exported = (flags & (1u << 9)) != 0;
+    node.unsafeRequired = (flags & (1u << 10)) != 0;
+    node.unsafeScope = (flags & (1u << 11)) != 0;
     std::uint64_t integerValue = 0, guard = 0, type = 0, type2 = 0;
     if (!chali_incremental::readNumber(in, integerValue)) return false;
     node.i = static_cast<long long>(integerValue);

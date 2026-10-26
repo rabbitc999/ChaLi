@@ -14,8 +14,8 @@ void main() {
     int64 forward(int64 number);
     forward = int64 fn(int64 number) { return number * 2; };
     assert(forward(9) == 18);
-    String text = "owned"; int64 identity = 0; memcpy(&identity, &text, 8);
-    int64 take() move { int64 actual = 0; memcpy(&actual, &text, 8); return actual; }
+    String text = "owned"; int64 identity = 0; unsafe { memcpy(&identity, &text, 8); }
+    int64 take() move { int64 actual = 0; unsafe { memcpy(&actual, &text, 8); } return actual; }
     String text = "reset"; assert(take() == identity && text == "reset");
     let counter = makeCounter(); assert(counter() == 8 && counter() == 9);
     println("named functions OK");

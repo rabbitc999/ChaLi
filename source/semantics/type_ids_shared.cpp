@@ -532,6 +532,8 @@ bool TypeNonCopyable(const std::shared_ptr<MType> &type)
  */
 const char *ObjectCopyFunction(const std::shared_ptr<MType> &type)
 {
+    if (IsContainer(type) && type->name == "vec") return "std::lang::__bootListCopy";
+    if (IsContainer(type) && (type->name == "map" || type->name == "set")) return "std::lang::__bootMapCopy";
     if (const auto *definition = FindOpcodeDefinition(type); definition && !definition->copy.empty())
         return definition->copy.c_str();
     return type && type->kind == MType::Func ? "__std_function_copy" : "__std_object_copy";
@@ -783,11 +785,19 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
  */
 ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
+    for (const auto &declaration : g_functionDecls)
+        if (declaration.label == label && declaration.unsafeRequired) {
+            Fail("unsafe 函数不能转换为安全函数值：" + label);
+            return ast::Node::i(0);
+        }
+    Memory::String target = label;
+    for (const auto &declaration : g_functionDecls)
+        if (declaration.label == label && !declaration.abiLibrary.empty()) target = "__chali_abi_value$" + label;
     static Memory::Map<Memory::String, ast::NodePtr> cache;
-    const auto found = cache.find(label);
+    const auto found = cache.find(target);
     if (found != cache.end()) return found->second;
-    ast::NodePtr value = ast::Node::namedStr("fn_" + label, label);
-    cache[label] = value;
+    ast::NodePtr value = ast::Node::namedStr("fn_" + target, target);
+    cache[target] = value;
     return value;
 }
 

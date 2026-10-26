@@ -10,7 +10,7 @@ struct ReturnOwner : Drop, Closeable {
 String internalValue() {
     return {
         String local = "inside";
-        memcpy(&insideHandle, &local, 8);
+        unsafe { memcpy(&insideHandle, &local, 8); }
         yield (local);
     };
 }
@@ -67,9 +67,9 @@ ReturnOwner[] ownedArray() {
 int64[] emptyArray() { return loop { int64 values[] = new[0]; yield (values); }; }
 void main() {
     String value = internalValue(); int64 received = 0;
-    memcpy(&received, &value, 8); assert(received == insideHandle);
+    unsafe { memcpy(&received, &value, 8); } assert(received == insideHandle);
     String copied = externalValue(); int64 original = 0;
-    memcpy(&original, &outside, 8); memcpy(&received, &copied, 8);
+    unsafe { memcpy(&original, &outside, 8); } unsafe { memcpy(&received, &copied, 8); }
     assert(received != original && copied == outside && outside == "outside");
     assert(constValue() == "constant");
     { ReturnOwner owner = ownedValue(); assert(owner.text == "owner" && drops == 0 && closes == 0); }

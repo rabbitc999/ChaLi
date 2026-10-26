@@ -13,7 +13,11 @@ namespace execution_detail
  * @brief 活跃分配的逻辑区间与物理偏移。
  */
 struct Allocation
-{ std::size_t address = 0, offset = 0, size = 0; };
+{
+    std::size_t address = 0, offset = 0, size = 0;
+    std::size_t viewOffset = 0;  ///< 公开可访问区域相对分配首的偏移。
+    std::size_t viewLength = 0;  ///< 非零时限定公开区域长度；释放和统计仍使用完整分配。
+};
 /**
  * @brief 每个曾使用的物理块首一个槽，逻辑地址编码稳定槽号、分配代次与块内偏移。
  * 槽号采用自描述位宽，偏移位宽也包含在引用中；合并后的块可正常复用。
@@ -218,9 +222,36 @@ public:
         if (!decode(address, id, generation, bits)) return nullptr;
         const auto rootAddress = address & ~((std::size_t(1) << bits) - 1);
         auto found = active_.find(rootAddress);
-        if (found == active_.end() || address - rootAddress >= found->second.size) return nullptr;
+        if (found == active_.end()) return nullptr;
+        const auto &block = found->second;
+        const auto length = block.viewLength ? block.viewLength : block.size;
+        const auto displacement = address - rootAddress;
+        if (displacement < block.viewOffset || displacement - block.viewOffset >= length) return nullptr;
         cached_ = found->second;
+        cached_.address += block.viewOffset;
+        cached_.offset += block.viewOffset;
+        cached_.size = length;
         return &cached_;
+    }
+    /**
+     * @brief 收窄分配的公开访问区间，使对齐填充不可被读写；完整身份仍可释放。
+     * @param address 精确分配首。
+     * @param offset 相对分配首的公开区域起点。
+     * @param bytes 非零公开字节数。
+     * @return 新范围完全落在原公开区域内时为真，失败不修改状态。
+     */
+    bool restrictRange(std::size_t address, std::size_t offset, std::size_t bytes)
+    {
+        auto found = active_.find(address);
+        if (found == active_.end() || bytes == 0) return false;
+        auto &block = found->second;
+        const auto length = block.viewLength ? block.viewLength : block.size;
+        if (offset < block.viewOffset || offset - block.viewOffset > length
+            || bytes > length - (offset - block.viewOffset)) return false;
+        block.viewOffset = offset;
+        block.viewLength = bytes;
+        cached_ = {};
+        return true;
     }
     /**
      * @brief 查询精确块首。

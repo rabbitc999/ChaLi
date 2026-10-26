@@ -1,0 +1,29 @@
+void main() {
+    RawList<String> values;
+    int64 i = 0;
+    while (i < 140) { values.push(format("value {}", i)); i = i + 1; }
+    int64 capacity = values.capacity();
+    assert(values.get(64) == "value 64");
+    values.set(64, "changed");
+    assert(values.get(64) == "changed");
+    i = 139;
+    while (i >= 0) { String value = values.pop(); if (i != 64) { assert(value == format("value {}", i)); } i = i - 1; }
+    assert(values.len() == 0 && values.capacity() == capacity);
+    values.push("reused"); assert(values.pop() == "reused"); values.close();
+    RawMap<String> map;
+    i = 0;
+    while (i < 140) { map.put(i * 16, format("map {}", i)); i = i + 1; }
+    assert(map.get(16 * 64) == "map 64");
+    assert(map.remove(16 * 32) && !map.remove(16 * 32));
+    assert(map.get(16 * 64) == "map 64");
+    map.put(16 * 64, "changed"); assert(map.get(16 * 64) == "changed");
+    map.put(0 - 1, "negative"); assert(map.get(0 - 1) == "negative");
+    map.close();
+    RawSet set;
+    i = 0;
+    while (i < 140) { set.add(i * 16); i = i + 1; }
+    assert(set.contains(16 * 64) && set.remove(16 * 32) && !set.contains(16 * 32));
+    assert(set.contains(16 * 64) && !set.remove(16 * 32));
+    set.close();
+    println("raw containers OK");
+}

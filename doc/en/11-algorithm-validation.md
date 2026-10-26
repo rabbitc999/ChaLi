@@ -20,8 +20,8 @@ Constant Boolean conditions prune unreachable edges.
 Reference slots are separate from their referents. Field paths and constant indices can be
 distinguished; dynamic indices may overlap. Deletion invalidates heap storage, while move and
 explicit drop invalidate resource values. Numeric move keeps its existing zeroing semantics.
-Whole value assignment can restore moved values. Writing through a dangling reference cannot
-restore freed storage. Allocation sites distinguish their latest instance from older instances,
+The moved binding cannot be read, written or rebound; a new declaration can establish a usable
+binding. Writing through a dangling reference cannot restore freed storage. Allocation sites distinguish their latest instance from older instances,
 so reallocation never revives old aliases. Independent violations produce `CHL1205` diagnostics.
 
 This does not implement all Rust borrowing rules. ChaLi retains multiple mutable aliases and
@@ -30,6 +30,12 @@ functions conservatively propagate reference argument origins, and visible metho
 Callbacks and external functions do not receive inferred destruction summaries. A reference field with no known binding is not treated as its parent object; runtime checks cover unknown origins, preventing a linked-list successor from being mistaken for its freed predecessor. References held inside
 containers and complex dynamic or recursive aliases have precision limits. Recursive paths
 are widened after 16 segments to guarantee convergence. Runtime checks remain enabled.
+
+## A lifetime metaphor
+
+ChaLi's borrow checker can be pictured as a “dead-object detector”: it follows reference origins through control flow and asks whether an origin has been moved, destroyed, freed, or left its valid scope at a particular use. The Chinese nickname “死人遥测程序” describes compile-time origin and state analysis, not background telemetry. Existing runtime checks cover cases that static analysis cannot establish; unsafe callers remain responsible for raw-pointer initialization and ownership requirements.
+
+Calling Rust a “life-history checker” can suggest its additional inference of borrow regions and access permissions, but should not imply that it tracks every instant from an object's creation to destruction. Rust's non-lexical lifetimes also use control flow and actual uses. ChaLi currently permits multiple mutable aliases and checks origins, escapes and accesses after invalidation; it does not enforce Rust's exclusive mutable-borrow rule. The metaphor describes an emphasis, not equivalent safety guarantees. See the [official Rust borrow-checker description](https://rustc-dev-guide.rust-lang.org/borrow-check.html).
 
 ## Data structures
 

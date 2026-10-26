@@ -17,12 +17,12 @@ void main() {
     target[1] = 0;
 
     /* 一个字节一个字节地搬（count = 1） */
-    memcpy(&target[0], &source[0], 1);
-    memcpy(&target[1], &source[1], 1);
+    unsafe { memcpy(&target[0], &source[0], 1); }
+    unsafe { memcpy(&target[1], &source[1], 1); }
     println("memcpy: target[0]={} target[1]={}", target[0], target[1]);
 
     /* memset 写一个字节：把 target[2] 写成 'C' */
-    memset(&target[2], 67, 1);
+    unsafe { memset(&target[2], 67, 1); }
     println("memset: target[2]={}", target[2]);
 
     /* 大批量拷贝用元素循环（memcpy 的 count 大了还不对） */

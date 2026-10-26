@@ -1553,6 +1553,8 @@ try
         request.dataLayout = stackvm::encodeDataLayout(rows);
         request.externs = chali_aot::collectAbiExterns();
         request.abiGlue = chali_aot::collectAbiGlue();
+        request.abiExports = chali_aot::collectAbiExports();
+        request.abiExportHeader = chali_aot::collectAbiExportHeader();
         for (auto &name : aotOptions.exports)
         {
             bool exact = false, implicit = false;

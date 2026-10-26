@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "packages": {
+    "sqlite": {
+      "version": "3.54.0",
+      "url": "https://www.sqlite.org/2026/sqlite-amalgamation-3540000.zip",
+      "sha256": "68e913b0fe8ec6b4e5f391c594a28872884e80d6cd042a1e50c957be46b5aa4d",
+      "prefix": "sqlite-amalgamation-3540000/",
+      "files": {
+        "sqlite3.c": {
+          "sha256": "2da161e310ef0aba3465f22a4d12b8a43723236f0942fa76e8aac523c3317243"
+        },
+        "sqlite3.h": {
+          "sha256": "cd20a2877bc82b94e36c1093b727dd87cfa3c1d581aac6e240925535cbd90166"
+        }
+      }
+    },
+    "miniz": {
+      "version": "3.1.2",
+      "url": "https://codeload.github.com/richgel999/miniz/zip/refs/tags/3.1.2",
+      "sha256": "e7a0334927a069dc5aeb69616d371542a4376e1569290d7102b88c6f3992d6cb",
+      "prefix": "miniz-3.1.2/",
+      "files": {
+        "miniz.h": {
+          "sha256": "f0b67217bdd8e45b74eb9b7c2c7ae20ed6760a1d76f3276b93617039ebd082df"
+        },
+        "miniz_common.h": {
+          "sha256": "f1ba29821c8caef83585b328196aa346c5da7c82890a70a3d10d77c6cec0ed39"
+        },
+        "miniz_tdef.h": {
+          "sha256": "d62da02953c3834dfcbde4db026c6d9345013ef9b0e53185131016a3a4e48c33"
+        },
+        "miniz_tinfl.h": {
+          "sha256": "da4850920fdf09f8877d9affabe1ebba1852ce4b1ebbd121f2ba7a7ea8e57e5d"
+        },
+        "miniz_tinfl.c": {
+          "sha256": "2296ebd21ef9af5ebbefd5b454d4bb67d8fb4af2d24945e7fb32114374f75a76"
+        },
+        "miniz_zip.h": {
+          "sha256": "b062a5def545445c73fd1d664e35a89165dfb0d996ab848f507244e819cfcf04"
+        },
+        "LICENSE": {
+          "sha256": "0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3"
+        },
+        "miniz_export.h": {
+          "sha256": "195259dc89fb3f83a96426a90ee03dc45acef113150cd3475ea9cfbf1f7784f3",
+          "generated": "#pragma once\n#define MINIZ_EXPORT\n"
+        }
+      }
+    }
+  }
+}

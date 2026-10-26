@@ -5,6 +5,7 @@ file(GLOB CHALI_BIGNUM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/..
 list(APPEND CHALI_STANDARD_SOURCES ${CHALI_BIGNUM_SOURCES}
     ../../source/json/json.cpp ../../source/toml/toml.cpp ../../source/toml/toml_source.cpp)
 enable_language(C)
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../tools/cmake_dependencies.cmake")
 find_package(Threads REQUIRED)
 set(CHALI_CAS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../library/caspp")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CHALI_CAS_ROOT}/core_sources.txt")
@@ -15,13 +16,15 @@ if(NO_CHALI_STD OR NO_CHALI_STD_CAS OR NO_CHALI_BIG_INT)
 endif()
 list(APPEND CHALI_STANDARD_SOURCES ${CHALI_CAS_SOURCES}
     ../../library/ipage/source/ipage/sql.cpp ../../library/ipage/source/ipage/dialect.cpp
-    ../../library/sqlite/sqlite3.c ../../source/lztext/lztext.cpp)
-set_source_files_properties(../../library/sqlite/sqlite3.c PROPERTIES
+    "${CHALI_SQLITE_DIR}/sqlite3.c" ../../source/lztext/lztext.cpp)
+set_source_files_properties("${CHALI_SQLITE_DIR}/sqlite3.c" PROPERTIES
     COMPILE_DEFINITIONS "SQLITE_THREADSAFE=1;SQLITE_OMIT_LOAD_EXTENSION=1")
 add_library(chali_standard_records STATIC ${CHALI_STANDARD_SOURCES})
+add_dependencies(chali_standard_records chali_dependencies_check)
 target_link_libraries(chali_standard_records PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 target_include_directories(chali_standard_records PUBLIC
-    .. ../../library ../../source/stackvm ../../source/bignum ../../library/caspp/include)
+    .. ../../library ../../source/stackvm ../../source/bignum ../../library/caspp/include
+    "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}")
 target_compile_definitions(chali_standard_records PUBLIC CHALI_CUSTOM_ALLOCATOR=1
     STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
 

@@ -16,6 +16,10 @@ namespace
 {
 
 /** @brief 内置后备池，与参考工程 defaultStorage 同为 64 MiB 静态区。 */
+// MinGW GCC 的 -fdata-sections 会把零初值局部数组写入 .data$，显式 BSS 避免磁盘膨胀。
+#if defined(_WIN32) && defined(__GNUC__)
+__attribute__((section(".bss")))
+#endif
 alignas(std::max_align_t) unsigned char defaultStorage[Detail::kDefaultPoolSize];
 
 Detail::MemoryPool pool;

@@ -2,6 +2,8 @@
 from compiler_path import compiler_path
 
 import os
+import hashlib
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -10,7 +12,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-EXPORTED_COMPILER = f"chali-{VERSION}-windows-x64-llvm-external.exe" if os.name == "nt" else "chali"
+EXPORTED_COMPILER = f"chali-{VERSION}-llvm-external-windows-x64.exe" if os.name == "nt" else "chali"
 GENERATOR = compiler_path()
 WORK = ROOT / "tmp" / "chali-generator-tests"
 
@@ -58,8 +60,10 @@ def main():
             "runtime/ast.cpp", "runtime/ast.hpp", "runtime/aggregate_optimize.cpp",
             "runtime/aggregate_optimize.hpp", "aot/backend_profile.cpp", "CMakeLists.txt", "std/lang.chl",
             "glue/std_records.hpp", "glue/std_native_record.hpp", "glue/std_file_api.hpp",
-            "glue/std_big_number.hpp", "sqlite/sqlite3.c", "lztext/lztext.cpp",
-            "miniz/miniz_tinfl.c", "template/engine.hpp", "dap/dap_server.cpp",
+            "glue/std_big_number.hpp", "lztext/lztext.cpp",
+            "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
+            "LICENSE", "NOTICE", "licenses/miniz/LICENSE",
+            "template/engine.hpp", "dap/dap_server.cpp",
             "runtime/artifact_binary.cpp", "semantics/associated_types.cpp",
             ".chali-generator-manifest",
         ]
@@ -70,6 +74,7 @@ def main():
         required += ["caspp/" + name for name in (ROOT / "library/caspp/core_sources.txt").read_text().splitlines()]
         required += ["runtime/" + name for name in ["ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "bigint_multiplication.cpp", "bigint_division.cpp", "bigint_bits.cpp", "bigint_number_theory.cpp", "bigint_modular.cpp", "bigint_conversion.cpp", "bigfloat_roots.cpp"]]
         missing = [name for name in required if not (compiler / name).is_file()]
+        assert not (compiler / "sqlite").exists() and not (compiler / "miniz").exists(), "在线依赖源码不能进入导出工程"
         if missing:
             raise AssertionError(f"compiler export is incomplete: {missing}")
         cmake = (compiler / "CMakeLists.txt").read_text(encoding="utf-8")
@@ -113,8 +118,22 @@ def main():
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 
         for sample in ("cas", "math_generic", "string_methods", "opcode_value_semantics", "std_red_black_delete"):
-            result = subprocess.run([str(build / EXPORTED_COMPILER), "run", str(ROOT / "example/samples" / (sample + ".chl"))],
-                                    cwd=WORK, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
+            # 全量红黑树混合负载以 AOT 验证导出编译器；VM 全量另由运行时回归执行。
+            native = sample == "std_red_black_delete"
+            target = WORK / (sample + "-aot")
+            arguments = [str(build / EXPORTED_COMPILER), "aot" if native else "run",
+                         str(ROOT / "example/samples" / (sample + ".chl"))]
+            if native:
+                arguments += ["--out", str(target)]
+            environment = dict(os.environ)
+            if os.name == "nt":
+                environment.setdefault("CHALI_LLVM_CLANG", str(ROOT / "library/llvm/toolchain/bin/clang.exe"))
+            result = subprocess.run(arguments, cwd=WORK, env=environment, capture_output=True, text=True,
+                                    encoding="utf-8", errors="replace", timeout=180)
+            if native:
+                assert result.returncode == 0 and not result.stderr, (sample, result)
+                result = subprocess.run([str(target) + (".exe" if os.name == "nt" else "")], cwd=WORK,
+                                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
             expected = (ROOT / "example/expected" / (sample + ".txt")).read_text(encoding="utf-8")
             assert result.returncode == 0 and result.stdout == expected and not result.stderr, (sample, result)
         shutil.rmtree(build)
@@ -124,7 +143,14 @@ def main():
             path.relative_to(compiler).as_posix()
             for path in compiler.rglob("*") if path.is_file()
         )
-        if remaining != ["keep.txt"]:
+        # clear 只删除生成清单内文件；构建产生的下载缓存和用户文件均保留。
+        dependencies = json.loads((ROOT / "tools/dependencies.lock.json").read_text(encoding="utf-8"))['packages']
+        expected_remaining = ["keep.txt", "tmp/dependency_downloads/.lock"]
+        for name, dependency in dependencies.items():
+            relative = "tmp/dependency_downloads/" + name + "-" + dependency['version'] + ".zip"
+            expected_remaining.append(relative)
+            assert hashlib.sha256((compiler / relative).read_bytes()).hexdigest() == dependency['sha256']
+        if remaining != sorted(expected_remaining):
             raise AssertionError(f"compiler clear left unexpected files: {remaining}")
 
         unsafe = WORK / "unsafe"

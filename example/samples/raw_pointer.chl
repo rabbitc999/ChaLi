@@ -1,0 +1,42 @@
+
+void main() {
+    std::lang::RawStorage<int64> source = std::lang::RawStorage<int64>::allocate(3);
+    std::lang::RawStorage<uint8> destination = std::lang::RawStorage<uint8>::allocate(24);
+    unsafe {
+        std::lang::BarePtr<int64> p = std::lang::barePointer<int64>(source.pointer(0));
+        std::lang::BarePtr<int64> next = p + 2;
+        assert(next - p == 2 && p - next == 0 - 2);
+        next = next - 1;
+        assert(next.address == p.address + 8);
+        next = 2 + p;
+        assert(next.address == p.address + 16);
+        std::lang::BarePtr<uint8> bytes = std::lang::barePointer<uint8>(destination.pointer(0));
+        std::lang::memset<int64>(p, (uint8)42, 24);
+        std::lang::memcpy<uint8,int64>(bytes, p, 24);
+        int64 i = 0;
+        while (i < 24) {
+            uint8 mut& value = std::lang::dereference<uint8>(bytes + i);
+            assert(*value == (uint8)42);
+            i = i + 1;
+        }
+        std::lang::RawPtr<int64> erased;
+        erased.storage = destination.handle;
+        erased.index = 0;
+        std::lang::BarePtr<int64> reinterpreted = std::lang::barePointer<int64>(erased);
+        assert(reinterpreted.address == bytes.address);
+        std::lang::memset<int64>(reinterpreted, (uint8)0, 8);
+        int64 mut& zero = std::lang::dereference<int64>(reinterpreted);
+        assert(*zero == 0);
+        *zero = 123;
+        int64 mut& again = std::lang::dereference<int64>(reinterpreted);
+        assert(*again == 123);
+        std::lang::BarePtr<uint8> nullPointer;
+        std::lang::memcpy<uint8,uint8>(nullPointer, nullPointer, 0);
+        std::lang::memset<uint8>(nullPointer, (uint8)0, 0);
+        // 字节操作不改写有类型槽位的初始化位图。
+        assert(!source.isInitialized(0) && !destination.isInitialized(0));
+    }
+    source.close();
+    destination.close();
+    println("raw pointer OK");
+}

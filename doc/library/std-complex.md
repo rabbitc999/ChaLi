@@ -108,9 +108,9 @@ dft 10
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-37"></a>`struct Complex<T>: Add<Complex<T>, Complex<T>>, Subtract<Complex<T>, Complex<T>>, Multiply<Complex<T>, Complex<T>>, Divide<Complex<T>, Complex<T>>` | 复数的 T 必须支持普通数值加减乘除；FFT 使用 Complex<float64>。 |
-| Complex | <a id="symbol-38"></a>`T re` | 复数的实部。 |
-| Complex | <a id="symbol-39"></a>`T im` | 复数的虚部。 |
+| 模块 | <a id="symbol-39"></a>`struct Complex<T>: Add<Complex<T>, Complex<T>>, Subtract<Complex<T>, Complex<T>>, Multiply<Complex<T>, Complex<T>>, Divide<Complex<T>, Complex<T>>` | 复数的 T 必须支持普通数值加减乘除；FFT 使用 Complex<float64>。 |
+| Complex | <a id="symbol-40"></a>`T re` | 复数的实部。 |
+| Complex | <a id="symbol-41"></a>`T im` | 复数的虚部。 |
 
 ## 函数索引
 

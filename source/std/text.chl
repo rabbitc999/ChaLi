@@ -17,8 +17,8 @@ module std::text;
  * 2) `String` 是值类型，`s = s + t` 每次都复制整串，逐块累加是 O(n²)（实测 20 万次单字节
  *    追加约 1.4 秒）。所以：
  *      - `repeat` 用二进制倍增，把 count 次拼接压到 O(log count) 次；
- *      - `join` / `replace` 先把片段收进列表，再用平衡两两合并摊平（O(n log k)）。
- *    原 C++ 靠 `std::string` 的摊还追加是 O(n)，这里做不到完全对齐，但也不会退化成二次。
+ *      - `join` / `replace` 先把片段收进列表，再预计算长度并一次写入结果区（O(n + k)）。
+ *    最终拼接由 String 自举内核处理，不产生逐层合并的中间字符串。
  */
 
 /* ---------------------------------------------------------------- 私有辅助 */
@@ -81,22 +81,10 @@ inline int64 __textRFind(std::lang::List<uint8> hay, std::lang::List<uint8> need
     return 0 - 1;
 }
 
-/** 把若干片段合并成一串。用平衡两两合并，避免逐块累加的二次开销。 */
+/** 预计算结果长度后一次分配，由 String 自举内核直接写入结果区。 */
 inline std::lang::String __textConcatAll(std::lang::List<std::lang::String> pieces)
 {
-    if (pieces.len() == 0) { return ""; }
-    std::lang::List<std::lang::String> level = pieces;
-    while (level.len() > 1) {
-        std::lang::List<std::lang::String> next;
-        int64 index = 0;
-        while (index + 1 < level.len()) {
-            next.push(level[index] + level[index + 1]);
-            index = index + 2;
-        }
-        if (index < level.len()) { next.push(level[index]); }
-        level = next;
-    }
-    return level[0];
+    return "".join(pieces);
 }
 
 /** 重复 `count` 次；`count <= 0` 给空串。二进制倍增，拼接次数是对数级。 */
@@ -233,12 +221,52 @@ inline std::lang::String __textPad(std::lang::String text, int64 width, char fil
 
 /* ---------------------------------------------------------------- 公开面 */
 
-/* KMP 胶水声明：实现见 glue/std_kmp.hpp；槽布局与 KmpReply 一致。 */
-void __kmpTable(List<uint8> pattern, KmpReply mut& reply);
-void __kmpFind(List<uint8> hay, List<uint8> needle, int64 from, KmpReply mut& reply);
-void __kmpFindAll(List<uint8> hay, List<uint8> needle, KmpReply mut& reply);
+/** 在线性时间内构造最长相等真前后缀表。 */
+List<int64> __kmpPrefix(List<uint8> const& pattern) {
+    List<int64> table; int64 size=pattern.len();
+    if (size==0) { return table; }
+    table.push(0); int64 prefix=0; int64 i=1;
+    while (i<size) {
+        while (prefix>0 && pattern[i]!=pattern[prefix]) { prefix=table[prefix-1]; }
+        if (pattern[i]==pattern[prefix]) { prefix=prefix+1; }
+        table.push(prefix); i=i+1;
+    }
+    return table;
+}
+/** 回执接口保持兼容；失配表由语言 List 保存。 */
+void __kmpTable(List<uint8> pattern,KmpReply mut& reply) {
+    reply.table=__kmpPrefix(&pattern); reply.value=pattern.len(); reply.flag=1;
+}
+/** 从指定字节位置起线性搜索，空针返回有效起点。 */
+void __kmpFind(List<uint8> hay,List<uint8> needle,int64 from,KmpReply mut& reply) {
+    reply.value=0-1; reply.flag=0;
+    if (from<0 || from>hay.len()) { return; }
+    if (needle.len()==0) { reply.value=from; reply.flag=1; return; }
+    if (needle.len()>hay.len()-from) { return; }
+    List<int64> table=__kmpPrefix(&needle); int64 matched=0; int64 i=from;
+    while (i<hay.len()) {
+        while (matched>0 && hay[i]!=needle[matched]) { matched=table[matched-1]; }
+        if (hay[i]==needle[matched]) { matched=matched+1; }
+        if (matched==needle.len()) { reply.value=i-matched+1; reply.flag=1; return; }
+        i=i+1;
+    }
+}
+/** 返回全部可重叠匹配；空针保持空列表约定。 */
+void __kmpFindAll(List<uint8> hay,List<uint8> needle,KmpReply mut& reply) {
+    List<int64> positions;
+    if (needle.len()>0 && needle.len()<=hay.len()) {
+        List<int64> table=__kmpPrefix(&needle); int64 matched=0; int64 i=0;
+        while (i<hay.len()) {
+            while (matched>0 && hay[i]!=needle[matched]) { matched=table[matched-1]; }
+            if (hay[i]==needle[matched]) { matched=matched+1; }
+            if (matched==needle.len()) { positions.push(i-matched+1); matched=table[matched-1]; }
+            i=i+1;
+        }
+    }
+    reply.value=positions.len(); reply.flag=1; reply.positions=positions;
+}
 
-/** KMP 胶水回执；槽布局必须与 glue/std_kmp.hpp 的 Reply 一致。 */
+/** KMP 操作回执，所有字段由语言实现直接更新。 */
 struct KmpReply {
     String error; ///< 错误说明；成功时为空串。
     int64 value; ///< find 的命中下标（未命中 -1）或命中个数。
@@ -352,7 +380,7 @@ struct Text {
 
 /* ---------------------------------------------------------------- 字符串构建器 */
 
-/** 字符串构建器：把片段收进列表，最后一次性用平衡两两合并摊平（与 `Text::join` 同口径）。
+/** 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
  *
  * `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
  * `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 */

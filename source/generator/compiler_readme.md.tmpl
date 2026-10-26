@@ -4,6 +4,10 @@ This project was generated from `chali.gram`. It includes the matching StackVM,
 preprocessor, big-number runtime, the referenced `lang.chl` template, and core host glue.
 Standard modules, including `std::collections` and `std::reflect`, are embedded in the compiler.
 
+SQLite and miniz sources are downloaded into the build directory from fixed releases in
+`tools/dependencies.lock.json`. Python 3 and network access are required for the first build;
+verified caches can be reused offline. The exported source tree contains no copies of these libraries.
+
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release

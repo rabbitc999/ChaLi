@@ -1211,6 +1211,9 @@ bool RegisterTop()
         // 标准库小驼峰内建和其他 prelude 函数一样，允许用户函数遮蔽。
         MFunctionDecl declaration;
         declaration.exported = top.exported;
+        declaration.unsafeRequired = top.unsafeRequired;
+        declaration.abiConvention = top.abiConvention;
+        declaration.exportSymbol = top.exportSymbol.empty() ? Memory::String() : UnescapeText(top.exportSymbol);
         declaration.source = top.s;
         declaration.module = top.module;
         declaration.captureSyntax = top.guard;
@@ -1268,6 +1271,29 @@ bool RegisterTop()
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
         }
         declaration.moduleLocal = top.moduleLocal;
+        if (!declaration.exportSymbol.empty()) {
+            const auto &symbol = declaration.exportSymbol;
+            if (!(std::isalpha(static_cast<unsigned char>(symbol[0])) || symbol[0] == '_')
+                || !std::all_of(symbol.begin(), symbol.end(), [](unsigned char c) { return std::isalnum(c) || c == '_'; })
+                || symbol.rfind("chali_", 0) == 0 || symbol.rfind("__chali", 0) == 0)
+                return Fail("#export 需要非保留的 C 符号名");
+            for (const auto &previous : g_functionDecls)
+                if (!previous.exportSymbol.empty() && previous.exportSymbol == symbol)
+                    return Fail("#export 原生符号重复：" + symbol);
+            const auto allowed = [&](const std::shared_ptr<MType> &type, bool result) {
+                if (!type) return false;
+                const auto base = CAbiUnderlying(type);
+                if (!base || CAbiType(type).empty()) return false;
+                if (base->kind == MType::Void) return result;
+                if (base->kind == MType::Struct) { Memory::Set<Memory::String> visiting; return !HasObservableAggregateDestructor(base, visiting); }
+                return base->kind == MType::Int || base->kind == MType::Double || base->kind == MType::Bool || base->kind == MType::Char;
+            };
+            if (declaration.external || !allowed(declaration.signature.result, true))
+                return Fail("#export 实现的返回值必须为 C 标量或无资源纯值结构体");
+            for (const auto &parameter : declaration.signature.params)
+                if (parameter.variadic || !allowed(parameter.type, false))
+                    return Fail("#export 参数必须为固定 C 标量或无资源纯值结构体");
+        }
         declaration.bodyId = declaration.external ? -1 : static_cast<int>(top.kids[1]);
         if (declaration.external)
         {

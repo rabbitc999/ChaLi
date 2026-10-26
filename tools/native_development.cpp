@@ -14,7 +14,7 @@
 #include "../source/chali_package.hpp"
 #include "../source/chali_module.hpp"
 #include "../source/chali_diagnostics.hpp"
-#include "../library/miniz/miniz_tinfl.h"
+#include <miniz_tinfl.h>
 #include "../source/toml/toml.hpp"
 #include <algorithm>
 #include <array>
@@ -565,7 +565,7 @@ J range(const std::string &s, size_t a, size_t b)
 }
 const std::set<std::string> keywords = {
     "defer", "scope", "export",
-    "_", "abi", "bool", "break", "cast", "char",
+    "_", "unsafe", "__rawSize", "__rawAlign", "bool", "break", "cast", "char",
     "const", "continue", "copy", "drop", "elif", "else",
     "enum", "false", "float32", "float64", "fn", "for",
     "if", "impl", "import", "in", "inline", "int16", "int32",

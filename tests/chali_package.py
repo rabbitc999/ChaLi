@@ -29,7 +29,7 @@ def main():
         native.write_text('#include <stdint.h>\n#ifdef _WIN32\n#define API __declspec(dllexport)\n#else\n#define API\n#endif\nAPI int32_t identity(int32_t n) { return n; }\n', encoding='utf-8')
         library = project / 'include' / ('native.dll' if os.name == 'nt' else 'native.so')
         run(['gcc', '-shared', *(['-fPIC'] if os.name != 'nt' else []), native, '-o', library])
-        (project / 'include/nativeapi.chl').write_text('module nativeapi;\nabi "./' + library.name + '" { int32 nativeIdentity(int32 n) = "identity"; }\n', encoding='utf-8')
+        (project / 'include/nativeapi.chl').write_text('module nativeapi;\n#abi("C", "./' + library.name + '", "identity") int32 nativeIdentity(int32 n);\n', encoding='utf-8')
         original = manifest.read_text(encoding='utf-8').replace('commands = [', 'commands = [\n    \'import nativeapi;\',')
         manifest.write_text(original, encoding='utf-8')
         source = project / 'src/main.chl'

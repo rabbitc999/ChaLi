@@ -4,7 +4,7 @@
 #include "../../source/json/json.hpp"
 
 #include "../chali_glue.hpp"
-#include "../../library/sqlite/sqlite3.h"
+#include <sqlite3.h>
 
 #include <cerrno>
 #include <cmath>

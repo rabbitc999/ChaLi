@@ -14,6 +14,7 @@
 #if CHALI_STATIC_LLVM
 #include <llvm-c/Analysis.h>
 #include <llvm-c/Core.h>
+#include <llvm-c/BitWriter.h>
 #include <llvm-c/IRReader.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
@@ -21,7 +22,7 @@
 #include <lld/Common/Driver.h>
 #include <llvm/Support/raw_ostream.h>
 #include "chali_stdlib.hpp"
-#include "miniz/miniz_tinfl.h"
+#include <miniz_tinfl.h>
 LLD_HAS_DRIVER(mingw)
 #endif
 
@@ -144,7 +145,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (!failed)
     {
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
-        LLVMErrorRef error = LLVMRunPasses(program, "default<O3>", machine, options);
+        LLVMErrorRef error = LLVMRunPasses(program, "default<O3>,globaldce", machine, options);
         LLVMDisposePassBuilderOptions(options);
         if (error)
         {
@@ -154,8 +155,13 @@ int compile(const Request &request, const Memory::String &module, const Memory::
             failed = true;
         }
     }
-    const std::string object = std::string(module.c_str()) + ".o";
-    if (!failed) failed = LLVMTargetMachineEmitToFile(machine, program, const_cast<char *>(object.c_str()), LLVMObjectFile, &message) != 0;
+    const std::string object = std::string(module.c_str()) + ".lto.bc";
+    // 保留 LLVM bitcode 到链接阶段，由 LLD 根据真实外部引用和导出确定内部化边界。
+    if (!failed) {
+        LLVMSetTarget(program, triple);
+        failed = LLVMWriteBitcodeToFile(program, object.c_str()) != 0;
+        if (failed && diagnostics) diagnostics->push_back("AOT：无法写入链接时优化的 LLVM bitcode");
+    }
     if (message)
     {
         if (diagnostics) diagnostics->push_back(message);
@@ -179,6 +185,10 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     const std::string builtins = (assets.root / "libclang_rt.builtins-x86_64.a").generic_u8string();
     std::vector<std::string> storage{ "ld.lld", "-m", "i386pep", "-Bdynamic", "-o", product.c_str(),
                                       library + (request.options.shared ? "/dllcrt2.o" : "/crt2.o"), library + "/crtbegin.o", "-L" + library, object };
+    storage.push_back("--lto-O3");
+    storage.push_back("--lto-CGO3");
+    storage.push_back("--gc-sections");
+    storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");
     for (const auto &object : request.options.linkObjects) storage.emplace_back(object.c_str());
     storage.push_back("-L" + runtimeLibrary);

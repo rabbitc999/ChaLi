@@ -571,12 +571,9 @@ int runCli(int argc, char **argv)
             {"../source/stackvm/value_text.hpp", "runtime/value_text.hpp"},
             {"../../source/stackvm/stackvm.hpp", "runtime/stackvm.hpp"},
             {"../source/stackvm/stackvm.hpp", "runtime/stackvm.hpp"},
-            {"../../library/sqlite/sqlite3.h", "sqlite/sqlite3.h"},
             {"../../source/lztext/lztext.hpp", "lztext/lztext.hpp"},
             {"../../source/template/engine.hpp", "template/engine.hpp"},
             {"../source/template/engine.hpp", "template/engine.hpp"},
-            {"../../library/miniz/miniz.h", "miniz/miniz.h"},
-            {"../library/miniz/miniz.h", "miniz/miniz.h"},
             {"../../source/json/json.hpp", "json/json.hpp"},
             {"../json/json.hpp", "json/json.hpp"},
             {"../../source/json/json.cpp", "json/json.cpp"},
@@ -680,7 +677,7 @@ int runCli(int argc, char **argv)
     for (const char *name : {"std_math.hpp", "std_random.hpp", "std_regex.hpp",
                              "std_native_record.hpp", "std_big_number.hpp", "std_file.hpp", "std_file_api.hpp", "std_desktop_file.hpp",
                              "std_signal.hpp",
-                             "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_numeric.hpp", "std_binary.hpp", "std_linalg.hpp", "std_parse.hpp",
+                             "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_binary.hpp", "std_linalg.hpp", "std_parse.hpp",
                              "std_process.hpp", "std_sql.hpp", "std_net.hpp", "std_filesystem.hpp", "std_registry.hpp"})
         ok = copy(mc / "source/glue" / name, Memory::String("glue/") + name) && ok;
     // 前端头和标准胶水随实现扩展；按受控目录收集，避免固定清单遗漏新依赖。
@@ -695,7 +692,7 @@ int runCli(int argc, char **argv)
     for (const auto &entry : fs::directory_iterator(mc / "source/glue"))
     {
         const auto extension = entry.path().extension().string();
-        if (entry.is_regular_file() && (extension == ".hpp" || extension == ".h" || extension == ".cpp"))
+        if (entry.is_regular_file() && (extension == ".hpp" || extension == ".h" || extension == ".cpp" || extension == ".inc"))
             ok = copy(entry.path(), "glue/" + entry.path().filename().u8string()) && ok;
     }
     for (const auto &entry : fs::directory_iterator(mc / "source/std"))
@@ -717,16 +714,19 @@ int runCli(int argc, char **argv)
         }
     for (const char *name : {"dap_server.hpp", "dap_server.cpp"})
         ok = copy(mc / "source/dap" / name, Memory::String("dap/") + name) && ok;
-    for (const char *directory : {"lztext", "miniz", "sqlite", "template"})
+    for (const char *directory : {"lztext", "template"})
     {
-        const bool internal = std::strcmp(directory, "lztext") == 0 || std::strcmp(directory, "template") == 0;
-        for (const auto &entry : fs::directory_iterator(mc / (internal ? "source" : "library") / directory))
+        for (const auto &entry : fs::directory_iterator(mc / "source" / directory))
         {
             const auto extension = entry.path().extension().string();
             if (entry.is_regular_file() && (extension == ".hpp" || extension == ".h" || extension == ".c" || extension == ".cpp"))
                 ok = copy(entry.path(), Memory::String(directory) + "/" + entry.path().filename().u8string()) && ok;
         }
     }
+    for (const char *name : {"fetch_dependencies.py", "dependencies.lock.json", "cmake_dependencies.cmake"})
+        ok = copy(mc / "tools" / name, Memory::String("tools/") + name) && ok;
+    for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE"})
+        ok = copy(mc / name, name) && ok;
     Memory::String langSource;
     Memory::String langTemplate;
     Memory::String cmakeTemplate;

@@ -194,6 +194,7 @@ struct MNode
         /* `__typeTag(类型)` / `__typeTag(表达式)`：编译期折成一个整数（类型号）。
          * type = 类型（类型那条规则），kids = {表达式}（另一条）。 */
         TypeTag,
+        RawLayout, ///< 仅在 unsafe 内查询当前语言存储的字节数或对齐。
         /* `enum E { A, B(int x) };` / `E::B(1)`：带标签联合体声明、变体与构造器。 */
         EnumDecl,
         EnumVariant,
@@ -258,6 +259,10 @@ struct MNode
     Memory::String abiLength;
     Memory::String abiRelease;
     bool abiPacked = false;
+    Memory::String exportSymbol;   ///< 显式原生导出符号，内部语言标签保持独立。
+    Memory::String abiConvention;  ///< 编译器校验的 ABI 指令，空表示默认语言约定。
+    bool unsafeRequired = false;   ///< 函数调用必须位于显式 unsafe 上下文。
+    bool unsafeScope = false;      ///< 本块显式承担原始存储操作的前置条件。
     Memory::String module;
     /**
      * `inline` 顶层函数仅在声明它的模块内部可见，不进入模块导出表。
@@ -821,6 +826,35 @@ void M_ReportLifetimeDiagnostics();
  */
 int M_Export(int declaration);
 /**
+ * @brief 指定导出实现的原生 C 符号名。
+ * @param symbol 字符串名称池编号。
+ * @param declaration 函数实现节点。
+ * @return 已标记实现或诊断节点。
+ */
+int M_ExportSymbol(int symbol, int declaration);
+/**
+ * @brief 标记不安全块或具有调用前置条件的函数。
+ * @param node 语句块或函数声明节点。
+ * @return 标记后的原节点。
+ */
+int M_Unsafe(int node);
+/**
+ * @brief 校验 ABI 编译器指令并附着于声明。
+ * @param convention 字符串名称池编号。
+ * @param declaration ABI 块或导出函数。
+ * @return 校验后的原声明或诊断节点。
+ */
+int M_AbiDeclaration(int convention, int declaration);
+/**
+ * @brief 为外部签名应用逐函数 ABI 编译器指令。
+ * @param convention 调用约定。
+ * @param library 库路径。
+ * @param symbol 原生符号名。
+ * @param declaration 外部声明。
+ * @return 已验证节点。
+ */
+int M_AbiImport(int convention, int library, int symbol, int declaration);
+/**
  * @brief 配置当前编译是否生成允许无 main 的 AOT 动态库。
  * @param enabled 为 true 时生成独立初始化和清理入口。
  */
@@ -1024,6 +1058,13 @@ int M_InterfaceFieldRejected(int nameId);
  * @return NameOf 节点。
  */
 int M_TypeTagType(int typeId);
+/**
+ * @brief 查询原始存储所需的已解析类型布局。
+ * @param typeId 类型编号。
+ * @param alignment 非零时查询对齐，否则查询大小。
+ * @return 原始布局查询节点。
+ */
+int M_RawLayout(int typeId, int alignment);
 
 int M_Param(int typeId, int nameId);
 /**

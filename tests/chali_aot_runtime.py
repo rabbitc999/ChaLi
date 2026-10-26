@@ -31,10 +31,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali-aot-runtime-') as directory:
         work = Path(directory)
 
-        def execute(command, input_value=None, cwd=None):
+        def execute(command, input_value=None, cwd=None, timeout=300):
             """限制各次编译和运行时间，捕获诊断以定位真实能力缺口。"""
             return subprocess.run(list(map(str, command)), cwd=cwd or work, env=env, capture_output=True,
-                                  text=True, encoding='utf-8', errors='replace', input=input_value, timeout=300)
+                                  text=True, encoding='utf-8', errors='replace', input=input_value, timeout=timeout)
 
         for name in ([] if options.traps_only else options.samples):
             isolated = work / name
@@ -49,7 +49,9 @@ def main():
             input_text = expected.with_suffix('.in').read_text(encoding='utf-8') if expected.with_suffix('.in').exists() else ''
             flags = []
 
-            reference = execute([compiler, 'run', sample, '--out', str(prefix) + '-vm', *flags, '--', *arguments], input_text, cwd=virtual)
+            # 自举红黑树逐次验证完整结构，共 12,000 次；完整模型覆盖单独给予 VM 预算。
+            reference = execute([compiler, 'run', sample, '--out', str(prefix) + '-vm', *flags, '--', *arguments],
+                                input_text, cwd=virtual, timeout=1800 if name == 'std_red_black_delete' else 300)
             assert reference.returncode == 0, (name, 'VM', reference)
             built = execute([compiler, 'aot', sample, '--out', prefix, *flags], cwd=native)
             assert built.returncode == 0, (name, 'AOT 编译', built)

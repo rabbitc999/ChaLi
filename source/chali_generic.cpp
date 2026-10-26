@@ -1688,7 +1688,7 @@ bool run(preprocess::Result &result, Memory::String &error)
         if (result.text[at] != '.') continue;
         std::size_t begin = at + 1;
         skipSpace(result.text, begin);
-        for (const auto &pair : { std::make_pair("mapErr", "__chaliMapErr"), std::make_pair("okOr", "__chaliOkOr"), std::make_pair("okOrElse", "__chaliOkOrElse") })
+        for (const auto &pair : { std::make_pair("mapErr", "__chaliMapErr"), std::make_pair("okOr", "__chaliOkOr"), std::make_pair("okOrElse", "__chaliOkOrElse"), std::make_pair("castTo", "__chaliCastTo") })
         {
             if (!wordAt(result.text, begin, pair.first)) continue;
             auto end = begin + Memory::String(pair.first).size();
@@ -1964,7 +1964,7 @@ std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<
 
 /** 原地排序，O(1) 额外空间：`data` 里 `count` 个元素直接排好。
  * 默认是插入排序（稳定）；构建编译器时定义 `SIMPLE_SORT` 改用希尔排序（把间距逐步
- * 缩到 1，同样就地、不额外分配，但**不稳定**）。VM 里的列表排序 `sortValue` 也吃同一个开关。 */
+ * 缩到 1，同样就地、不额外分配，但**不稳定**）。列表排序 `sortValue` 使用独立的语言稳定归并实现，不受此开关影响。 */
 void sortReference<T>(T mut& data, int64 count) {
 @@SORT_POINTER_IMPL@@
 }

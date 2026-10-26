@@ -94,7 +94,7 @@ struct Instruction
     std::uint8_t operationType = 0, destinationType = 0, copyType = 0;
 };
 static_assert(sizeof(Instruction) <= 32, "寄存器热指令不得超过 32 字节");
-static_assert(static_cast<unsigned>(Op::StoreAt) < 256, "基础操作码必须能装入一个字节");
+static_assert(static_cast<unsigned>(Op::MemorySet) < 256, "基础操作码必须能装入一个字节");
 /**
  * @brief 冷映射：原始 PC、连续跨度及折叠跳转的边成本。
  */

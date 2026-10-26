@@ -114,7 +114,8 @@ let inferred = LIMIT;      // inferred type
 Place `export` before a function definition to expose it to native AOT callers:
 
 ```chali
-export int64 add(int64 left, int64 right)
+#export("f_add")
+int64 add(int64 left, int64 right)
 {
     return left + right;
 }
@@ -688,6 +689,8 @@ import std::text;
 
 ## 13. Reference cheat-sheet
 
+ChaLi's borrow checker can be pictured as a “dead-object detector”: it checks for invalidated origins at uses and constrains reference escapes. It still analyzes scopes and origin propagation; it does not rely solely on runtime dangling-reference detection or enforce Rust's exclusive mutable-borrow rule. See the [lifetime metaphor and its limits](11-algorithm-validation.md#a-lifetime-metaphor).
+
 ```chali
 int64 value = 7;
 int64 mut& alias = &value;    // writable reference
@@ -758,7 +761,7 @@ Full examples: [`example/reflection/`](../../example/reflection/) (`annotations.
 
 ---
 
-## 16. The C boundary: `abi` blocks
+## 16. The C boundary: compiler directives and raw storage
 
 `opcode` declares an opaque object owned by ABI or C++ glue:
 
@@ -803,14 +806,21 @@ declarations in `std::lang`; the frontend has no separate `Kind` enumerators for
 them. Lowercase `string` is not a type alias for `String`.
 
 ```chali
-abi "./native.dll" {
-    int64 c_function(int64 x) = "c_function";
-}
+#abi("C", "./native.dll", "c_function")
+int64 c_function(int64 x);
 ```
 
-An `abi` block imports C ABI functions from a library. Hosts load and run programs through the shared VM.
+An `#abi` directive imports C ABI functions from a library. Hosts load and run programs through the shared VM.
 Type mapping, nullable references and glue bindings: see
 [Host integration and C ABI](08-host-integration.md).
+
+`#abi("C", "library", "native_symbol")` applies to one imported function declaration. The old `abi "library" { ... }` block syntax has been removed. `#export("native_symbol")` applies to a function implementation; `aot --shared --out` selects the output library. Exports marshal scalars and resource-free value structures using the target C ABI and emit accurate C declarations.
+
+`unsafe { ... }` grants raw-operation permission to the current block. An `unsafe T f(...)` declaration requires an unsafe caller and cannot become a safe function value. Closure bodies do not inherit permission from their creation site. Ordinary array, reference and arithmetic checks remain active.
+
+`std::lang::RawStorage<T>` owns capacity without constructing spare elements. `RawPtr<T>` carries a typed allocation identity and index without extending lifetime. `initAt`, `takeAt`, `dropAt`, `readAt`, `borrowAt` and `relocateNonOverlapping` require unsafe permission. `__rawSize(T)` and `__rawAlign(T)` query language storage layout within unsafe code, independently of C ABI layout. Borrowed references must not outlive their allocation or initialized element.
+
+`BarePtr<T>` stores only a logical byte address, without runtime element-type or initialization checks. `p + n`, `n + p` and `p - n` use the static element stride; `p - q` returns an integral element distance. `barePointer`, `pointerFromAddress`, `dereference`, `memcpy` and `memset` require unsafe scope. Byte copy/fill lengths count bytes; complete-range and allocation-lifetime checks remain, with no initialization-bit changes or resource hooks. Nonempty copies must not overlap. These names belong to the implicit `std::lang` core and may be used without qualification. See [Raw storage and C ABI directives](44-unsafe-abi.md) and [book chapter 25](../book/en/25-unsafe-code.md).
 
 ---
 

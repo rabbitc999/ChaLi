@@ -57,12 +57,12 @@ sum=10
 | 字符串 | `std::lang::String` |
 | 容器 | `List<T>`、`Map<K, V>`、`Set<T>`、`Pair<K, V>` |
 | 可选值与错误 | `Option<T>`、`Result<T, E>`；标准库错误实现 `Error.toString()`，文本错误使用 `MessageError`，配合模式匹配、查询和取值方法 |
-| 类型擦除盒子 | `std::lang::Any`（第 13 章的运行期多态） |
-| 数学常数 | `std::lang::Math::PI`、`std::lang::Math::E` |
+| 类型擦除盒子 | `Any`（第 13 章的运行期多态） |
+| 数学常数 | `Math::PI`、`Math::E` |
 | 大数 | `BigInteger`、`BigDecimal` |
 | 输入 | `inputInt()`、`inputUInt()`、`inputFloat()`、`inputBool()`、`inputChar()`、`inputBigInteger()`、`inputBigDecimal()` |
-| 整行输入 | `std::lang::readLine()`，保留空格，不含 LF/CRLF |
-| 多行输入 | `std::lang::readLines(int32 N)`，LF 连接，EOF 提前结束 |
+| 整行输入 | `readLine()`，保留空格，不含 LF/CRLF |
+| 多行输入 | `readLines(int32 N)`，LF 连接，EOF 提前结束 |
 
 完整类型、接口与内建入口见[核心库参考](../library/std-lang.md)。其余模块按需显式 `import`。
 
@@ -165,7 +165,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 转移所有权写 `move value`。复制是否深复制、借用何时失效，查对应类型的参考页。
 
 **二、压缩结果是二进制，不是文本。** `std::compress` 的输出含 `\0` 字节，类型是
-`std::lang::List<uint8>`；**别拿它当字符串打印**，解压出来的才是 `std::lang::String`。
+`List<uint8>`；**别拿它当字符串打印**，解压出来的才是 `std::lang::String`。
 
 **三、字节与码点分清。** `String` 的长度和切片端点按字节计算，切片可以截取多字节编码的一部分；
 普通字符串下标仍要求 UTF-8 字符边界。按 Unicode 码点处理时使用显式码点接口或 `std::utf8`。

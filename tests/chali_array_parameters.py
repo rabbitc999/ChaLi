@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()
     rejected = {'readonly': 'void f(int64[] & s) { s[0] = 1; }', 'const_reference': "void f(char[] const& s) { s[0] = 'x'; }", 'readonly_delete': 'void f(int64[] & s) { s.drop(); }', 'const_reference_delete': 'void f(char[] const& s) { s.drop(); }', 'readonly_increment': 'void f(int64[] & s) { s[0]++; }', 'readonly_forward': 'void change(int64[] mut& s) { s[0] = 1; } void f(int64[] & s) { change(s); }', 'readonly_element': 'void f(int64[] & s) { int64 mut& p = &s[0]; }', 'readonly_member': 'struct Cell { int64 value; }; void f(Cell[] const& s) { s[0].value = 1; }', 'readonly_member_reference': 'struct Cell { int64 value; }; void f(Cell[] const& s) { int64 mut& p = &s[0].value; }', 'readonly_foreach': 'void f(int64[] const& s) { for (let item in s) { item = 1; } }', 'escaped_array': 'int64[] & f() { int64 s[] = new[1]; return &s; }'}
-    with tempfile.TemporaryDirectory(prefix='array-parameters-', dir=ROOT / 'build') as temporary:
+    with tempfile.TemporaryDirectory(prefix='array-parameters-', dir=ROOT / 'tmp') as temporary:
         work = Path(temporary)
         for sample_name in ('array_parameter_values', 'fixed_array_values'):
             sample = ROOT / 'example/samples' / (sample_name + '.chl')

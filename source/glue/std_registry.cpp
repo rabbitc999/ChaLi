@@ -1,15 +1,11 @@
 #include "std_native_record.hpp"
 #include "std_registry.hpp"
 #include "std_reference.hpp"
-#include "std_string_methods.hpp"
 #include "std_collection.hpp"
 #include "std_file.hpp"
 #include "std_print.hpp"
 #include "std_big_number.hpp"
 #include "std_cas.hpp"
-#ifndef PARSE_ENGINE_LANG_NUMERIC_HPP
-#include "std_numeric.hpp"
-#endif
 
 /* 统一的"标准胶水"注册入口：编译器 VM（InstallDemoGlue）与独立 VM 宿主（bindChaLiStandardGlue）
  * 共用这一份。每个模块的注册都用 `#ifndef GLUE_NO_XXX` 包住，定义宏即整段不编进来：
@@ -66,18 +62,6 @@
 #ifndef GLUE_NO_STD_IMAGE
 #include "std_image.hpp"
 #endif
-#ifndef GLUE_NO_STD_TREE
-#include "std_tree.hpp"
-#endif
-#ifndef GLUE_NO_STD_GRAPH
-#include "std_graph.hpp"
-#endif
-#ifndef GLUE_NO_STD_LINKEDLIST
-#include "std_linkedlist.hpp"
-#endif
-#ifndef GLUE_NO_STD_KMP
-#include "std_kmp.hpp"
-#endif
 #ifndef GLUE_NO_STD_NET
 #include "std_net.hpp"
 #endif
@@ -93,8 +77,7 @@ namespace std_registry
  */
 bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 {
-    bool ok = lang_numeric_glue::bind(registry, error);
-    ok = std_string_methods_glue::bind(registry, error) && ok;
+    bool ok = true;
     ok = std_reference_glue::bind(registry, error) && ok;
     ok = std_print_glue::bind(registry, error) && ok;
     ok = collection_glue::bind(registry.native(), error) && ok;
@@ -186,38 +169,6 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
     if (!std_image_glue::bind(registry, &imageError))
     {
         if (error) *error = imageError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_TREE
-    Memory::String treeError;
-    if (!std_tree_glue::bind(registry, &treeError))
-    {
-        if (error) *error = treeError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_GRAPH
-    Memory::String graphError;
-    if (!std_graph_glue::bind(registry, &graphError))
-    {
-        if (error) *error = graphError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_LINKEDLIST
-    Memory::String linkedListError;
-    if (!std_linkedlist_glue::bind(registry, &linkedListError))
-    {
-        if (error) *error = linkedListError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_KMP
-    Memory::String kmpError;
-    if (!std_kmp_glue::bind(registry, &kmpError))
-    {
-        if (error) *error = kmpError;
         ok = false;
     }
 #endif

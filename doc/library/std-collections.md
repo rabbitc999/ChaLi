@@ -129,18 +129,20 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-25"></a>`struct Deque<T>: Iterator<T>, Index<T, int64>, Drop` | 标准集合模块：import std::collections; 后使用 std::collections::Deque 等类型。 |
-| Deque | <a id="symbol-26"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
+| 模块 | <a id="symbol-25"></a>`struct Deque<T>: Iterator<T>, Index<T,int64>, Drop` | 两个相反方向的栈组成的双端队列，避免首部删除时整体平移。 |
+| Deque | <a id="symbol-26"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
 | 模块 | <a id="symbol-27"></a>`struct Queue<T>: Iterator<T>, Drop` | 先进先出的值队列；出队返回 Option，空队列返回 None。 |
-| Queue | <a id="symbol-28"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
-| 模块 | <a id="symbol-29"></a>`struct RingBuffer<T>: Iterator<T>, Drop` | 容量固定的环形值缓冲区；满时写入返回 false。 |
-| RingBuffer | <a id="symbol-30"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
-| RingBuffer | <a id="symbol-31"></a>`int64 capacity` | 最多可保存的元素数量。 |
-| 模块 | <a id="symbol-32"></a>`struct FixedVector<T>: Iterator<T>, Index<T, int64>, Drop` | 容量固定的顺序容器；保存的元素数量不得超过 capacity。 |
-| FixedVector | <a id="symbol-33"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
-| FixedVector | <a id="symbol-34"></a>`int64 capacity` | 最多可保存的元素数量。 |
-| 模块 | <a id="symbol-35"></a>`struct Channel<T>: Iterator<T>, Drop` | 当前执行上下文中的值消息队列，不提供跨线程同步。 |
-| Channel | <a id="symbol-36"></a>`std::lang::List<T> pending` | 等待消费的元素或队列。 |
+| Queue | <a id="symbol-28"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
+| 模块 | <a id="symbol-29"></a>`struct Stack<T>: Iterator<T>, Drop` | ChaLi 后进先出栈，迭代顺序为栈顶到栈底。 |
+| Stack | <a id="symbol-30"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
+| 模块 | <a id="symbol-31"></a>`struct RingBuffer<T>: Iterator<T>, Drop` | 容量固定的环形值缓冲区；满时写入返回 false。 |
+| RingBuffer | <a id="symbol-32"></a>`Deque<T> values` | 按声明顺序保存的元素存储。 |
+| RingBuffer | <a id="symbol-33"></a>`int64 capacity` | 最多可保存的元素数量。 |
+| 模块 | <a id="symbol-34"></a>`struct FixedVector<T>: Iterator<T>, Index<T, int64>, Drop` | 容量固定的顺序容器；保存的元素数量不得超过 capacity。 |
+| FixedVector | <a id="symbol-35"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
+| FixedVector | <a id="symbol-36"></a>`int64 capacity` | 最多可保存的元素数量。 |
+| 模块 | <a id="symbol-37"></a>`struct Channel<T>: Iterator<T>, Drop` | 当前执行上下文中的值消息队列，不提供跨线程同步。 |
+| Channel | <a id="symbol-38"></a>`Queue<T> pending` | 等待消费的元素或队列。 |
 
 ## 函数索引
 
@@ -164,28 +166,39 @@ void main() {
 | [Queue::iterator](#api-15) | `Option<T> iterator(int64 index)` |
 | [Queue::len](#api-16) | `int64 len()` |
 | [Queue::isEmpty](#api-17) | `bool isEmpty()` |
-| [Queue::drop](#api-18) | `void drop()` |
-| [RingBuffer::withCapacity](#api-19) | `static RingBuffer<T> withCapacity(int64 capacity)` |
-| [RingBuffer::push](#api-20) | `bool push(T value)` |
-| [RingBuffer::pop](#api-21) | `Option<T> pop()` |
-| [RingBuffer::iterator](#api-22) | `Option<T> iterator(int64 index)` |
-| [RingBuffer::len](#api-23) | `int64 len()` |
-| [RingBuffer::available](#api-24) | `int64 available()` |
-| [RingBuffer::drop](#api-25) | `void drop()` |
-| [FixedVector::withCapacity](#api-26) | `static FixedVector<T> withCapacity(int64 capacity)` |
-| [FixedVector::push](#api-27) | `bool push(T value)` |
-| [FixedVector::pop](#api-28) | `Option<T> pop()` |
-| [FixedVector::index](#api-29) | `T index(int64 key)` |
-| [FixedVector::iterator](#api-30) | `Option<T> iterator(int64 index)` |
-| [FixedVector::len](#api-31) | `int64 len()` |
-| [FixedVector::capacityValue](#api-32) | `int64 capacityValue()` |
-| [FixedVector::drop](#api-33) | `void drop()` |
-| [Channel::create](#api-34) | `static Channel<T> create()` |
-| [Channel::send](#api-35) | `void send(T value)` |
-| [Channel::receive](#api-36) | `Option<T> receive()` |
-| [Channel::iterator](#api-37) | `Option<T> iterator(int64 index)` |
-| [Channel::len](#api-38) | `int64 len()` |
-| [Channel::drop](#api-39) | `void drop()` |
+| [Queue::clear](#api-18) | `void clear()` |
+| [Queue::drop](#api-19) | `void drop()` |
+| [Stack::create](#api-20) | `static Stack<T> create()` |
+| [Stack::push](#api-21) | `void push(T value)` |
+| [Stack::pop](#api-22) | `Option<T> pop()` |
+| [Stack::peek](#api-23) | `Option<T> peek()` |
+| [Stack::iterator](#api-24) | `Option<T> iterator(int64 index)` |
+| [Stack::len](#api-25) | `int64 len()` |
+| [Stack::isEmpty](#api-26) | `bool isEmpty()` |
+| [Stack::clear](#api-27) | `void clear()` |
+| [Stack::drop](#api-28) | `void drop()` |
+| [RingBuffer::withCapacity](#api-29) | `static RingBuffer<T> withCapacity(int64 capacity)` |
+| [RingBuffer::push](#api-30) | `bool push(T value)` |
+| [RingBuffer::pop](#api-31) | `Option<T> pop()` |
+| [RingBuffer::iterator](#api-32) | `Option<T> iterator(int64 index)` |
+| [RingBuffer::len](#api-33) | `int64 len()` |
+| [RingBuffer::available](#api-34) | `int64 available()` |
+| [RingBuffer::drop](#api-35) | `void drop()` |
+| [FixedVector::withCapacity](#api-36) | `static FixedVector<T> withCapacity(int64 capacity)` |
+| [FixedVector::push](#api-37) | `bool push(T value)` |
+| [FixedVector::pop](#api-38) | `Option<T> pop()` |
+| [FixedVector::index](#api-39) | `T index(int64 key)` |
+| [FixedVector::iterator](#api-40) | `Option<T> iterator(int64 index)` |
+| [FixedVector::len](#api-41) | `int64 len()` |
+| [FixedVector::capacityValue](#api-42) | `int64 capacityValue()` |
+| [FixedVector::drop](#api-43) | `void drop()` |
+| [Channel::create](#api-44) | `static Channel<T> create()` |
+| [Channel::send](#api-45) | `void send(T value)` |
+| [Channel::receive](#api-46) | `Option<T> receive()` |
+| [Channel::iterator](#api-47) | `Option<T> iterator(int64 index)` |
+| [Channel::len](#api-48) | `int64 len()` |
+| [Channel::isEmpty](#api-49) | `bool isEmpty()` |
+| [Channel::drop](#api-50) | `void drop()` |
 
 <a id="api-0"></a>
 
@@ -200,6 +213,8 @@ static Deque<T> create();
 **行为**
 
 创建Deque，返回可供后续操作的值。
+
+创建空双端队列。
 
 **参数**
 
@@ -219,7 +234,7 @@ static Deque<T> create();
 std::collections::Deque<T>::create();
 ```
 
-**源码**：[source/std/collections.chl:8](../../source/std/collections.chl#L8)。
+**源码**：[source/std/collections.chl:18](../../source/std/collections.chl#L18)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -236,6 +251,8 @@ void pushBack(T value);
 **行为**
 
 将 value 追加到尾部。
+
+在队尾接管一个参数值。
 
 **参数**
 
@@ -257,7 +274,7 @@ void pushBack(T value);
 obj.pushBack(value);
 ```
 
-**源码**：[source/std/collections.chl:13](../../source/std/collections.chl#L13)。
+**源码**：[source/std/collections.chl:20](../../source/std/collections.chl#L20)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -274,6 +291,8 @@ void pushFront(T value);
 **行为**
 
 将 value 插入首部。
+
+在队首接管一个参数值。
 
 **参数**
 
@@ -295,7 +314,7 @@ void pushFront(T value);
 obj.pushFront(value);
 ```
 
-**源码**：[source/std/collections.chl:14](../../source/std/collections.chl#L14)。
+**源码**：[source/std/collections.chl:22](../../source/std/collections.chl#L22)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -312,6 +331,8 @@ Option<T> popBack();
 **行为**
 
 移除尾部并返回 Option；空时 None。
+
+弹出队尾，必要时分摊搬移另一端的一半元素。
 
 **参数**
 
@@ -331,7 +352,7 @@ Option<T> popBack();
 obj.popBack();
 ```
 
-**源码**：[source/std/collections.chl:15](../../source/std/collections.chl#L15)。
+**源码**：[source/std/collections.chl:24](../../source/std/collections.chl#L24)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -348,6 +369,8 @@ Option<T> popFront();
 **行为**
 
 移除首部并返回 Option；空时 None。
+
+弹出队首，必要时分摊搬移另一端的一半元素。
 
 **参数**
 
@@ -367,7 +390,7 @@ Option<T> popFront();
 obj.popFront();
 ```
 
-**源码**：[source/std/collections.chl:19](../../source/std/collections.chl#L19)。
+**源码**：[source/std/collections.chl:26](../../source/std/collections.chl#L26)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -384,6 +407,8 @@ T index(int64 key);
 **行为**
 
 读取 key 对应的元素，供下标语法调用。
+
+按队首为零的逻辑下标读取独立值。
 
 **参数**
 
@@ -405,7 +430,7 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/collections.chl:25](../../source/std/collections.chl#L25)。
+**源码**：[source/std/collections.chl:28](../../source/std/collections.chl#L28)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -422,6 +447,8 @@ Option<T> iterator(int64 index);
 **行为**
 
 读取指定迭代位置；无元素时返回 None。
+
+按队首到队尾迭代。
 
 **参数**
 
@@ -443,7 +470,7 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.chl:26](../../source/std/collections.chl#L26)。
+**源码**：[source/std/collections.chl:30](../../source/std/collections.chl#L30)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -460,6 +487,8 @@ int64 len();
 **行为**
 
 返回当前元素数量。
+
+返回元素数。
 
 **参数**
 
@@ -479,7 +508,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.chl:30](../../source/std/collections.chl#L30)。
+**源码**：[source/std/collections.chl:32](../../source/std/collections.chl#L32)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -496,6 +525,8 @@ bool isEmpty();
 **行为**
 
 判断 Any 是否为空盒子，不公开内部执行期标签。
+
+判断是否为空。
 
 **参数**
 
@@ -515,7 +546,7 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/collections.chl:31](../../source/std/collections.chl#L31)。
+**源码**：[source/std/collections.chl:34](../../source/std/collections.chl#L34)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -532,6 +563,8 @@ void clear();
 **行为**
 
 移除全部元素。
+
+清除两端的有效元素。
 
 **参数**
 
@@ -551,7 +584,7 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/collections.chl:32](../../source/std/collections.chl#L32)。
+**源码**：[source/std/collections.chl:36](../../source/std/collections.chl#L36)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -568,6 +601,8 @@ void drop();
 **行为**
 
 释放对象拥有的资源，调用后遵守本模块失效规则。
+
+释放两个拥有数组。
 
 **参数**
 
@@ -587,7 +622,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.chl:33](../../source/std/collections.chl#L33)。
+**源码**：[source/std/collections.chl:38](../../source/std/collections.chl#L38)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -604,6 +639,8 @@ static Queue<T> create();
 **行为**
 
 创建Queue，返回可供后续操作的值。
+
+创建空队列。
 
 **参数**
 
@@ -623,7 +660,7 @@ static Queue<T> create();
 std::collections::Queue<T>::create();
 ```
 
-**源码**：[source/std/collections.chl:39](../../source/std/collections.chl#L39)。
+**源码**：[source/std/collections.chl:45](../../source/std/collections.chl#L45)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -640,6 +677,8 @@ void push(T value);
 **行为**
 
 追加元素。
+
+在队尾追加一个值。
 
 **参数**
 
@@ -661,7 +700,7 @@ void push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.chl:44](../../source/std/collections.chl#L44)。
+**源码**：[source/std/collections.chl:47](../../source/std/collections.chl#L47)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -678,6 +717,8 @@ Option<T> pop();
 **行为**
 
 移除并返回下一元素；空容器返回 None。
+
+弹出队首，空队列返回 None。
 
 **参数**
 
@@ -697,7 +738,7 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.chl:45](../../source/std/collections.chl#L45)。
+**源码**：[source/std/collections.chl:51](../../source/std/collections.chl#L51)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -714,6 +755,8 @@ Option<T> peek();
 **行为**
 
 查看下一项并保留该项供后续消费。
+
+读取队首的独立值。
 
 **参数**
 
@@ -733,7 +776,7 @@ Option<T> peek();
 obj.peek();
 ```
 
-**源码**：[source/std/collections.chl:51](../../source/std/collections.chl#L51)。
+**源码**：[source/std/collections.chl:53](../../source/std/collections.chl#L53)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -750,6 +793,8 @@ Option<T> iterator(int64 index);
 **行为**
 
 读取指定迭代位置；无元素时返回 None。
+
+按先进先出顺序迭代。
 
 **参数**
 
@@ -789,6 +834,8 @@ int64 len();
 
 返回当前元素数量。
 
+返回有效元素数。
+
 **参数**
 
 无显式参数。实例方法使用当前接收者。
@@ -807,7 +854,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.chl:59](../../source/std/collections.chl#L59)。
+**源码**：[source/std/collections.chl:57](../../source/std/collections.chl#L57)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -824,6 +871,8 @@ bool isEmpty();
 **行为**
 
 判断 Any 是否为空盒子，不公开内部执行期标签。
+
+判断是否为空。
 
 **参数**
 
@@ -843,13 +892,51 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/collections.chl:60](../../source/std/collections.chl#L60)。
+**源码**：[source/std/collections.chl:59](../../source/std/collections.chl#L59)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
 <a id="api-18"></a>
 
-### Queue::drop（19）
+### Queue::clear（19）
+
+**声明**
+
+```chali
+void clear();
+```
+
+**行为**
+
+移除全部元素。
+
+清空队列。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+无返回值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.clear();
+```
+
+**源码**：[source/std/collections.chl:61](../../source/std/collections.chl#L61)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-19"></a>
+
+### Queue::drop（20）
 
 **声明**
 
@@ -860,6 +947,8 @@ void drop();
 **行为**
 
 释放对象拥有的资源，调用后遵守本模块失效规则。
+
+释放两个拥有数组。
 
 **参数**
 
@@ -879,62 +968,63 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.chl:61](../../source/std/collections.chl#L61)。
-
-**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
-
-<a id="api-19"></a>
-
-### RingBuffer::withCapacity（20）
-
-**声明**
-
-```chali
-static RingBuffer<T> withCapacity(int64 capacity);
-```
-
-**行为**
-
-用指定 capacity 创建有界容器。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `capacity` | `int64 capacity` | 容器的最大元素数量 | 无 |
-
-**返回值**
-
-`RingBuffer<T>`。用指定 capacity 创建有界容器。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-显式前置检查：`capacity > 0`。
-
-**调用形式**
-
-```chali
-std::collections::RingBuffer<T>::withCapacity(capacity);
-```
-
-**源码**：[source/std/collections.chl:68](../../source/std/collections.chl#L68)。
+**源码**：[source/std/collections.chl:63](../../source/std/collections.chl#L63)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
 <a id="api-20"></a>
 
-### RingBuffer::push（21）
+### Stack::create（21）
 
 **声明**
 
 ```chali
-bool push(T value);
+static Stack<T> create();
 ```
 
 **行为**
 
-追加 value；容量已满时返回 false，成功为 true。
+创建Stack，返回可供后续操作的值。
+
+创建空栈。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Stack<T>`。创建Stack，返回可供后续操作的值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::collections::Stack<T>::create();
+```
+
+**源码**：[source/std/collections.chl:70](../../source/std/collections.chl#L70)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-21"></a>
+
+### Stack::push（22）
+
+**声明**
+
+```chali
+void push(T value);
+```
+
+**行为**
+
+将 value 追加到列表尾部。
+
+接管参数值并追加到栈顶。
 
 **参数**
 
@@ -944,7 +1034,7 @@ bool push(T value);
 
 **返回值**
 
-`bool`。追加 value；容量已满时返回 false，成功为 true。
+无返回值。
 
 **错误与边界**
 
@@ -956,13 +1046,13 @@ bool push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.chl:77](../../source/std/collections.chl#L77)。
+**源码**：[source/std/collections.chl:72](../../source/std/collections.chl#L72)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-21"></a>
+<a id="api-22"></a>
 
-### RingBuffer::pop（22）
+### Stack::pop（23）
 
 **声明**
 
@@ -972,7 +1062,9 @@ Option<T> pop();
 
 **行为**
 
-移除并返回下一元素；空容器返回 None。
+移除列表尾元素并返回值，空列表时报错。
+
+弹出栈顶，空栈返回 None。
 
 **参数**
 
@@ -980,7 +1072,7 @@ Option<T> pop();
 
 **返回值**
 
-`Option<T>`。移除并返回下一元素；空容器返回 None。
+`Option<T>`。移除列表尾元素并返回值，空列表时报错。
 
 **错误与边界**
 
@@ -992,13 +1084,51 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.chl:82](../../source/std/collections.chl#L82)。
+**源码**：[source/std/collections.chl:74](../../source/std/collections.chl#L74)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-22"></a>
+<a id="api-23"></a>
 
-### RingBuffer::iterator（23）
+### Stack::peek（24）
+
+**声明**
+
+```chali
+Option<T> peek();
+```
+
+**行为**
+
+查看下一项并保留该项供后续消费。
+
+读取栈顶的独立副本。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Option<T>`。查看下一项并保留该项供后续消费。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.peek();
+```
+
+**源码**：[source/std/collections.chl:76](../../source/std/collections.chl#L76)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-24"></a>
+
+### Stack::iterator（25）
 
 **声明**
 
@@ -1009,6 +1139,8 @@ Option<T> iterator(int64 index);
 **行为**
 
 读取指定迭代位置；无元素时返回 None。
+
+从栈顶开始迭代。
 
 **参数**
 
@@ -1030,13 +1162,13 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.chl:88](../../source/std/collections.chl#L88)。
+**源码**：[source/std/collections.chl:78](../../source/std/collections.chl#L78)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-23"></a>
+<a id="api-25"></a>
 
-### RingBuffer::len（24）
+### Stack::len（26）
 
 **声明**
 
@@ -1047,6 +1179,8 @@ int64 len();
 **行为**
 
 返回当前元素数量。
+
+返回元素数。
 
 **参数**
 
@@ -1066,23 +1200,25 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.chl:92](../../source/std/collections.chl#L92)。
+**源码**：[source/std/collections.chl:80](../../source/std/collections.chl#L80)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-24"></a>
+<a id="api-26"></a>
 
-### RingBuffer::available（25）
+### Stack::isEmpty（27）
 
 **声明**
 
 ```chali
-int64 available();
+bool isEmpty();
 ```
 
 **行为**
 
-返回剩余可写容量。
+判断 Any 是否为空盒子，不公开内部执行期标签。
+
+判断是否为空。
 
 **参数**
 
@@ -1090,7 +1226,7 @@ int64 available();
 
 **返回值**
 
-`int64`。返回剩余可写容量。
+`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
 
 **错误与边界**
 
@@ -1099,16 +1235,54 @@ int64 available();
 **调用形式**
 
 ```chali
-obj.available();
+obj.isEmpty();
 ```
 
-**源码**：[source/std/collections.chl:93](../../source/std/collections.chl#L93)。
+**源码**：[source/std/collections.chl:82](../../source/std/collections.chl#L82)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-25"></a>
+<a id="api-27"></a>
 
-### RingBuffer::drop（26）
+### Stack::clear（28）
+
+**声明**
+
+```chali
+void clear();
+```
+
+**行为**
+
+移除全部元素。
+
+清空所有有效元素。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+无返回值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.clear();
+```
+
+**源码**：[source/std/collections.chl:84](../../source/std/collections.chl#L84)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-28"></a>
+
+### Stack::drop（29）
 
 **声明**
 
@@ -1119,6 +1293,8 @@ void drop();
 **行为**
 
 释放对象拥有的资源，调用后遵守本模块失效规则。
+
+释放拥有的数组。
 
 **参数**
 
@@ -1138,13 +1314,285 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.chl:94](../../source/std/collections.chl#L94)。
+**源码**：[source/std/collections.chl:86](../../source/std/collections.chl#L86)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-26"></a>
+<a id="api-29"></a>
 
-### FixedVector::withCapacity（27）
+### RingBuffer::withCapacity（30）
+
+**声明**
+
+```chali
+static RingBuffer<T> withCapacity(int64 capacity);
+```
+
+**行为**
+
+用指定 capacity 创建有界容器。
+
+创建非零容量缓冲。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `capacity` | `int64 capacity` | 原始存储的元素容量，必须非负。 | 无 |
+
+**返回值**
+
+`RingBuffer<T>`。用指定 capacity 创建有界容器。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::collections::RingBuffer<T>::withCapacity(capacity);
+```
+
+**源码**：[source/std/collections.chl:93](../../source/std/collections.chl#L93)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-30"></a>
+
+### RingBuffer::push（31）
+
+**声明**
+
+```chali
+bool push(T value);
+```
+
+**行为**
+
+追加 value；容量已满时返回 false，成功为 true。
+
+未满时在队尾插入，满时返回 false。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `value` | `T value` | 输入值或写入的新值 | 无 |
+
+**返回值**
+
+`bool`。追加 value；容量已满时返回 false，成功为 true。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.push(value);
+```
+
+**源码**：[source/std/collections.chl:95](../../source/std/collections.chl#L95)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-31"></a>
+
+### RingBuffer::pop（32）
+
+**声明**
+
+```chali
+Option<T> pop();
+```
+
+**行为**
+
+移除并返回下一元素；空容器返回 None。
+
+从队首弹出值。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Option<T>`。移除并返回下一元素；空容器返回 None。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.pop();
+```
+
+**源码**：[source/std/collections.chl:97](../../source/std/collections.chl#L97)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-32"></a>
+
+### RingBuffer::iterator（33）
+
+**声明**
+
+```chali
+Option<T> iterator(int64 index);
+```
+
+**行为**
+
+读取指定迭代位置；无元素时返回 None。
+
+按先进先出顺序迭代。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `index` | `int64 index` | 从 0 开始的位置 | 无 |
+
+**返回值**
+
+`Option<T>`。读取指定迭代位置；无元素时返回 None。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.iterator(index);
+```
+
+**源码**：[source/std/collections.chl:99](../../source/std/collections.chl#L99)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-33"></a>
+
+### RingBuffer::len（34）
+
+**声明**
+
+```chali
+int64 len();
+```
+
+**行为**
+
+返回当前元素数量。
+
+返回有效元素数。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`int64`。返回当前元素数量。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.len();
+```
+
+**源码**：[source/std/collections.chl:101](../../source/std/collections.chl#L101)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-34"></a>
+
+### RingBuffer::available（35）
+
+**声明**
+
+```chali
+int64 available();
+```
+
+**行为**
+
+返回剩余可写容量。
+
+返回剩余可写数量。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`int64`。返回剩余可写容量。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.available();
+```
+
+**源码**：[source/std/collections.chl:103](../../source/std/collections.chl#L103)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-35"></a>
+
+### RingBuffer::drop（36）
+
+**声明**
+
+```chali
+void drop();
+```
+
+**行为**
+
+释放对象拥有的资源，调用后遵守本模块失效规则。
+
+释放队列存储。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+无返回值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.drop();
+```
+
+**源码**：[source/std/collections.chl:105](../../source/std/collections.chl#L105)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-36"></a>
+
+### FixedVector::withCapacity（37）
 
 **声明**
 
@@ -1160,7 +1608,7 @@ static FixedVector<T> withCapacity(int64 capacity);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `capacity` | `int64 capacity` | 容器的最大元素数量 | 无 |
+| `capacity` | `int64 capacity` | 原始存储的元素容量，必须非负。 | 无 |
 
 **返回值**
 
@@ -1177,13 +1625,13 @@ static FixedVector<T> withCapacity(int64 capacity);
 std::collections::FixedVector<T>::withCapacity(capacity);
 ```
 
-**源码**：[source/std/collections.chl:101](../../source/std/collections.chl#L101)。
+**源码**：[source/std/collections.chl:112](../../source/std/collections.chl#L112)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-27"></a>
+<a id="api-37"></a>
 
-### FixedVector::push（28）
+### FixedVector::push（38）
 
 **声明**
 
@@ -1215,13 +1663,13 @@ bool push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/collections.chl:110](../../source/std/collections.chl#L110)。
+**源码**：[source/std/collections.chl:121](../../source/std/collections.chl#L121)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-28"></a>
+<a id="api-38"></a>
 
-### FixedVector::pop（29）
+### FixedVector::pop（39）
 
 **声明**
 
@@ -1251,13 +1699,13 @@ Option<T> pop();
 obj.pop();
 ```
 
-**源码**：[source/std/collections.chl:115](../../source/std/collections.chl#L115)。
+**源码**：[source/std/collections.chl:126](../../source/std/collections.chl#L126)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-29"></a>
+<a id="api-39"></a>
 
-### FixedVector::index（30）
+### FixedVector::index（40）
 
 **声明**
 
@@ -1289,13 +1737,13 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/collections.chl:119](../../source/std/collections.chl#L119)。
+**源码**：[source/std/collections.chl:130](../../source/std/collections.chl#L130)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-30"></a>
+<a id="api-40"></a>
 
-### FixedVector::iterator（31）
+### FixedVector::iterator（41）
 
 **声明**
 
@@ -1327,13 +1775,13 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.chl:120](../../source/std/collections.chl#L120)。
+**源码**：[source/std/collections.chl:131](../../source/std/collections.chl#L131)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-31"></a>
+<a id="api-41"></a>
 
-### FixedVector::len（32）
+### FixedVector::len（42）
 
 **声明**
 
@@ -1363,13 +1811,13 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.chl:124](../../source/std/collections.chl#L124)。
+**源码**：[source/std/collections.chl:135](../../source/std/collections.chl#L135)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-32"></a>
+<a id="api-42"></a>
 
-### FixedVector::capacityValue（33）
+### FixedVector::capacityValue（43）
 
 **声明**
 
@@ -1399,13 +1847,13 @@ int64 capacityValue();
 obj.capacityValue();
 ```
 
-**源码**：[source/std/collections.chl:125](../../source/std/collections.chl#L125)。
+**源码**：[source/std/collections.chl:136](../../source/std/collections.chl#L136)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-33"></a>
+<a id="api-43"></a>
 
-### FixedVector::drop（34）
+### FixedVector::drop（44）
 
 **声明**
 
@@ -1435,13 +1883,13 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.chl:126](../../source/std/collections.chl#L126)。
+**源码**：[source/std/collections.chl:137](../../source/std/collections.chl#L137)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-34"></a>
+<a id="api-44"></a>
 
-### Channel::create（35）
+### Channel::create（45）
 
 **声明**
 
@@ -1452,6 +1900,8 @@ static Channel<T> create();
 **行为**
 
 创建当前线程内的本地值队列。
+
+创建空消息队列。
 
 **参数**
 
@@ -1471,13 +1921,13 @@ static Channel<T> create();
 std::collections::Channel<T>::create();
 ```
 
-**源码**：[source/std/collections.chl:132](../../source/std/collections.chl#L132)。
+**源码**：[source/std/collections.chl:144](../../source/std/collections.chl#L144)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-35"></a>
+<a id="api-45"></a>
 
-### Channel::send（36）
+### Channel::send（46）
 
 **声明**
 
@@ -1488,6 +1938,8 @@ void send(T value);
 **行为**
 
 将 value 加入本地值队列。
+
+向队尾发送一个值。
 
 **参数**
 
@@ -1509,13 +1961,13 @@ void send(T value);
 obj.send(value);
 ```
 
-**源码**：[source/std/collections.chl:137](../../source/std/collections.chl#L137)。
+**源码**：[source/std/collections.chl:146](../../source/std/collections.chl#L146)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-36"></a>
+<a id="api-46"></a>
 
-### Channel::receive（37）
+### Channel::receive（47）
 
 **声明**
 
@@ -1526,6 +1978,8 @@ Option<T> receive();
 **行为**
 
 取出队首值；空队列返回 None。
+
+取得队首消息，空时返回 None。
 
 **参数**
 
@@ -1545,13 +1999,13 @@ Option<T> receive();
 obj.receive();
 ```
 
-**源码**：[source/std/collections.chl:138](../../source/std/collections.chl#L138)。
+**源码**：[source/std/collections.chl:148](../../source/std/collections.chl#L148)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-37"></a>
+<a id="api-47"></a>
 
-### Channel::iterator（38）
+### Channel::iterator（48）
 
 **声明**
 
@@ -1562,6 +2016,8 @@ Option<T> iterator(int64 index);
 **行为**
 
 读取指定迭代位置；无元素时返回 None。
+
+按消息顺序迭代。
 
 **参数**
 
@@ -1583,13 +2039,13 @@ Option<T> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/collections.chl:144](../../source/std/collections.chl#L144)。
+**源码**：[source/std/collections.chl:150](../../source/std/collections.chl#L150)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-38"></a>
+<a id="api-48"></a>
 
-### Channel::len（39）
+### Channel::len（49）
 
 **声明**
 
@@ -1600,6 +2056,8 @@ int64 len();
 **行为**
 
 返回当前元素数量。
+
+返回消息数。
 
 **参数**
 
@@ -1619,13 +2077,51 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/collections.chl:148](../../source/std/collections.chl#L148)。
+**源码**：[source/std/collections.chl:152](../../source/std/collections.chl#L152)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-39"></a>
+<a id="api-49"></a>
 
-### Channel::drop（40）
+### Channel::isEmpty（50）
+
+**声明**
+
+```chali
+bool isEmpty();
+```
+
+**行为**
+
+判断 Any 是否为空盒子，不公开内部执行期标签。
+
+判断队列是否为空。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.isEmpty();
+```
+
+**源码**：[source/std/collections.chl:154](../../source/std/collections.chl#L154)。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-50"></a>
+
+### Channel::drop（51）
 
 **声明**
 
@@ -1636,6 +2132,8 @@ void drop();
 **行为**
 
 释放对象拥有的资源，调用后遵守本模块失效规则。
+
+释放消息队列。
 
 **参数**
 
@@ -1655,6 +2153,6 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/collections.chl:149](../../source/std/collections.chl#L149)。
+**源码**：[source/std/collections.chl:156](../../source/std/collections.chl#L156)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。

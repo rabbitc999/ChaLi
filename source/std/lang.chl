@@ -1,15 +1,408 @@
 module std::lang;
 
-int64 __stringQuery(String text, String needle, int64 operation, int64 from);
-String __stringTransform(String text, String first, String second, int64 operation, int64 offset, int64 count);
-List<String> __stringSplit(String text, String separator, int64 operation, bool keepEmpty);
-String __stringJoinParts(String separator, List<String> items);
+/** 读取字符串存储中的一个字节；调用者已证明地址位于有效范围。 */
+unsafe int64 __bootStringByte(int64 address, int64 index) {
+    uint8 mut& value = dereference<uint8>(pointerFromAddress<uint8>(address) + index);
+    return (int64)*value;
+}
+/** 按 ASCII 固定规则识别空白，不依赖宿主区域设置。 */
+bool __bootStringSpace(int64 value) { return value == 32 || (value >= 9 && value <= 13); }
+/** 将字节位置限制到闭区间 [0,length]。 */
+int64 __bootStringClamp(int64 index, int64 length) {
+    if (index < 0) { return 0; }
+    if (index > length) { return length; }
+    return index;
+}
+/** 比较两个已验证字节范围，不创建中间字符串。 */
+unsafe bool __bootStringEqualRange(int64 left, int64 start, int64 right, int64 width) {
+    int64 i = 0;
+    while (i < width) {
+        if (__bootStringByte(left,start+i) != __bootStringByte(right,i)) { return false; }
+        i = i + 1;
+    }
+    return true;
+}
+/** KMP 搜索；原始存储只保存前缀表，最长线性扫描输入及模式。 */
+unsafe int64 __bootStringFind(int64 text,int64 length,int64 needle,int64 width,int64 start) {
+    if (width == 0) { return start; }
+    if (width > length-start) { return 0-1; }
+    RawStorage<int64> table = RawStorage<int64>::allocate(width);
+    BarePtr<int64> prefix = barePointer<int64>(table.pointer(0));
+    int64 mut& zero = dereference<int64>(prefix); *zero = 0;
+    int64 i=1; int64 matched=0;
+    while (i<width) {
+        int64 next=__bootStringByte(needle,i);
+        while (matched>0 && next!=__bootStringByte(needle,matched)) {
+            int64 mut& previous=dereference<int64>(prefix+matched-1); matched=*previous;
+        }
+        if (next==__bootStringByte(needle,matched)) { matched=matched+1; }
+        int64 mut& entry=dereference<int64>(prefix+i); *entry=matched; i=i+1;
+    }
+    i=start; matched=0;
+    while (i<length) {
+        int64 next=__bootStringByte(text,i);
+        while (matched>0 && next!=__bootStringByte(needle,matched)) {
+            int64 mut& previous=dereference<int64>(prefix+matched-1); matched=*previous;
+        }
+        if (next==__bootStringByte(needle,matched)) { matched=matched+1; }
+        if (matched==width) { return i-width+1; }
+        i=i+1;
+    }
+    return 0-1;
+}
+/** 严格解码一个 UTF-8 码点，返回下一字节位置。 */
+unsafe int64 __bootStringNext(int64 text,int64 length,int64 at) {
+    int64 first=__bootStringByte(text,at); at=at+1;
+    if (first<128) { return at; }
+    int64 remaining=0; int64 code=0; int64 minimum=0;
+    if (first>=194 && first<=223) { remaining=1; code=first&31; minimum=128; }
+    else { if (first>=224 && first<=239) { remaining=2; code=first&15; minimum=2048; }
+    else { if (first>=240 && first<=244) { remaining=3; code=first&7; minimum=65536; }
+    else { if (!(false)) { panic("String：非法 UTF-8 起始字节"); } } } }
+    if (!(remaining<=length-at)) { panic("String：不完整的 UTF-8 字符"); }
+    while (remaining>0) {
+        int64 next=__bootStringByte(text,at); at=at+1;
+        if (!((next&192)==128)) { panic("String：非法 UTF-8 延续字节"); }
+        code=code*64+(next&63); remaining=remaining-1;
+    }
+    if (!(code>=minimum && code<=1114111 && (code<55296 || code>57343))) { panic("String：非法 Unicode 码点"); }
+    return at;
+}
+/** 字符串查询在语言内执行；仅裸地址读取使用不安全内存原语。 */
+unsafe int64 __stringQuery(int64 text,int64 needle,int64 operation,int64 from) {
+    int64 length=__bootStringLength(text); int64 width=__bootStringLength(needle);
+    int64 address=0; int64 pattern=0;
+    unsafe { address=__stringStorageData(text); pattern=__stringStorageData(needle); }
+    int64 start=__bootStringClamp(from,length);
+    unsafe {
+        if (operation==0 || operation==2) {
+            if (operation==2) { start=0; }
+            int64 found=__bootStringFind(address,length,pattern,width,start);
+            if (operation==2) { if (found>=0) { return 1; } return 0; }
+            return found;
+        }
+        if (operation==1) {
+            if (from<0) { start=length; }
+            if (width>length) { return 0-1; }
+            if (start>length-width) { start=length-width; }
+            while (start>=0) {
+                if (__bootStringEqualRange(address,start,pattern,width)) { return start; }
+                start=start-1;
+            }
+            return 0-1;
+        }
+        if (operation==3 || operation==4) {
+            if (width>length) { return 0; }
+            start=0; if (operation==4) { start=length-width; }
+            if (__bootStringEqualRange(address,start,pattern,width)) { return 1; } return 0;
+        }
+        if (operation==5) {
+            if (width==0) { return length+1; }
+            int64 count=0;
+            while (start<=length-width) {
+                int64 found=__bootStringFind(address,length,pattern,width,start);
+                if (found<0) { break; } count=count+1; start=found+width;
+            }
+            return count;
+        }
+        if (operation==6) {
+            int64 i=0;
+            while (i<length && i<width) {
+                int64 left=__bootStringByte(address,i); int64 right=__bootStringByte(pattern,i);
+                if (left<right) { return 0-1; } if (left>right) { return 1; } i=i+1;
+            }
+            if (length<width) { return 0-1; } if (length>width) { return 1; } return 0;
+        }
+        if (operation>=7 && operation<=11) {
+            if (length==0 && operation>=8 && operation<=10) { return 0; }
+            int64 i=0;
+            while (i<length) {
+                int64 value=__bootStringByte(address,i);
+                bool digit=value>=48 && value<=57;
+                bool alpha=(value>=65 && value<=90) || (value>=97 && value<=122);
+                if (operation==7 && !__bootStringSpace(value)) { return 0; }
+                if (operation==8 && !digit) { return 0; }
+                if (operation==9 && !alpha) { return 0; }
+                if (operation==10 && !digit && !alpha) { return 0; }
+                if (operation==11 && value>=128) { return 0; } i=i+1;
+            }
+            return 1;
+        }
+        if (operation==12) {
+            if (!(from>=0 && from<length)) { panic("String：字节下标越界"); }
+            return __bootStringByte(address,from);
+        }
+        if (operation==13) {
+            int64 at=0; int64 count=0;
+            while (at<length) { at=__bootStringNext(address,length,at); count=count+1; }
+            return count;
+        }
+    }
+    if (!(false)) { panic("String：查询操作编号无效"); } return 0;
+}
+
+/** 编译器私有存储原语，分别直接降低为分配、清理及地址接管。 */
+unsafe int64 __stringAllocate(int64 bytes);
+unsafe int64 __stringStorageLength(int64 address);
+unsafe int64 __stringStorageData(int64 address);
+unsafe int64 __stringRelease(int64 address);
+unsafe String __stringAdopt(int64 address);
+/** 读取字符串存储的长度元数据，字面量由存储边界识别。 */
+unsafe int64 __bootStringLength(int64 address) {
+    return __stringStorageLength(address);
+}
+/** 分配带八字节长度头的结果区，内容由后续操作初始化。 */
+unsafe int64 __bootStringBuffer(int64 length) {
+    if (!(length>=0 && length<=9223372036854775799)) { panic("String：结果过长"); }
+    int64 result=__stringAllocate(length+8);
+    int64 mut& header=dereference<int64>(pointerFromAddress<int64>(result)); *header=length;
+    return result;
+}
+/** 复制已验证的字节范围，直接使用 memcpy 四元式。 */
+unsafe void __bootStringCopyBytes(int64 destination,int64 source,int64 length) {
+    if (length>0) { memcpy<uint8,uint8>(pointerFromAddress<uint8>(destination),pointerFromAddress<uint8>(source),length); }
+}
+/** 构造独立空字符串。 */
+unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
+/** 一次分配取得独立副本。 */
+unsafe int64 __bootStringCopy(int64 source) {
+    int64 length=__bootStringLength(source); int64 result=__bootStringBuffer(length);
+    __bootStringCopyBytes(result+8,__stringStorageData(source),length); return result;
+}
+/** 归还拥有的字符串存储。 */
+unsafe int64 __bootStringDrop(int64 address) { return __stringRelease(address); }
+/** 切片操作的负一终点表示余下全部，其余负下标拒绝。 */
+unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
+    int64 length=__bootStringLength(source);
+    if (end==0-1) { end=length; }
+    if (!(begin>=0 && end>=0)) { panic("切片端点不能为负数（String 的切片按字节算）"); }
+    begin=__bootStringClamp(begin,length); end=__bootStringClamp(end,length);
+    if (end<begin) { end=begin; }
+    return __bootStringSliceBytes(__stringStorageData(source),begin,end);
+}
+/** 复制已限制范围内的内容字节，返回带长度头的字符串值。 */
+unsafe int64 __bootStringSliceBytes(int64 source,int64 begin,int64 end) {
+    int64 result=__bootStringBuffer(end-begin); __bootStringCopyBytes(result+8,source+begin,end-begin); return result;
+}
+/** 无临时文本的字节字典序比较。 */
+unsafe int64 __bootStringCompare(int64 left,int64 right) {
+    int64 a=__bootStringLength(left); int64 b=__bootStringLength(right); int64 i=0;
+    left=__stringStorageData(left); right=__stringStorageData(right);
+    while (i<a && i<b) {
+        int64 x=__bootStringByte(left,i); int64 y=__bootStringByte(right,i);
+        if (x<y) { return 0-1; } if (x>y) { return 1; } i=i+1;
+    }
+    if (a<b) { return 0-1; } if (a>b) { return 1; } return 0;
+}
+/** 为字符串运算符提供首个匹配的字节位置。 */
+unsafe int64 __bootStringPosition(int64 text,int64 needle) {
+    return __bootStringFind(__stringStorageData(text),__bootStringLength(text),__stringStorageData(needle),__bootStringLength(needle),0);
+}
+/** 普通下标保留严格范围与 UTF-8 起点检查。 */
+unsafe int64 __bootStringAt(int64 source,int64 index) {
+    int64 length=__bootStringLength(source);
+    if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
+    int64 value=__bootStringByte(__stringStorageData(source),index);
+    if ((value&192)==128) { panic("字符串下标落在多字节字符中间（String 按字节算）"); }
+    return value;
+}
+/** 写入一个原始字节，保持现有可变字符串的字节语义。 */
+unsafe int64 __bootStringSet(int64 source,int64 index,int64 value) {
+    int64 length=__bootStringLength(source);
+    if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
+    uint8 mut& target=dereference<uint8>(pointerFromAddress<uint8>(__stringStorageData(source))+index);
+    *target=(uint8)(value&255); return 0;
+}
+/** 字节引用保留现有下标范围；不额外限制为 UTF-8 码点起点。 */
+unsafe int64 __bootStringReference(int64 source,int64 index) {
+    int64 length=__bootStringLength(source);
+    if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
+    return __stringStorageData(source)+index;
+}
+/** 按十进制生成有符号整数，避免最小负数取负溢出。 */
+unsafe int64 __bootStringFromInt(int64 value) {
+    bool negative=value<0; uint64 magnitude=(uint64)value;
+    if (negative) { magnitude=(uint64)(0-(value+1))+1u; }
+    uint64 rest=magnitude; int64 length=1;
+    while (rest>=10u) { length=length+1; rest=rest/10u; }
+    if (negative) { length=length+1; }
+    int64 result=__bootStringBuffer(length); int64 at=length;
+    while (at>0) {
+        at=at-1;
+        uint8 mut& digit=dereference<uint8>(pointerFromAddress<uint8>(result)+8+at);
+        *digit=(uint8)(48u+magnitude%10u); magnitude=magnitude/10u;
+        if (magnitude==0u) { break; }
+    }
+    if (negative) { uint8 mut& sign=dereference<uint8>(pointerFromAddress<uint8>(result)+8); *sign=45u; }
+    return result;
+}
+
+/** 检查拼接长度后相加，避免溢出先于分配。 */
+int64 __bootStringAddLength(int64 left,int64 right) { if (!(left>=0 && right>=0 && right<=9223372036854775806-left)) { panic("String：连接结果过长"); } return left+right; }
+/** 在一个结果缓冲区中组合三个字节片段。 */
+unsafe int64 __bootStringCompose(int64 a,int64 an,int64 b,int64 bn,int64 c,int64 cn) {
+    if (!(an>=0 && bn>=0 && cn>=0 && an<=9223372036854775806-bn)) { panic("String：结果过长"); }
+    int64 total=an+bn; if (!(cn<=9223372036854775806-total)) { panic("String：结果过长"); }
+    int64 result=__bootStringBuffer(total+cn);
+    __bootStringCopyBytes(result+8,a,an); __bootStringCopyBytes(result+8+an,b,bn); __bootStringCopyBytes(result+8+total,c,cn);
+    return result;
+}
+/** 变换直接写入独立结果区，不经宿主字符串算法。 */
+unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operation,int64 offset,int64 count) {
+    int64 n=__bootStringLength(text); int64 firstLength=__bootStringLength(first); int64 sn=__bootStringLength(second);
+    int64 a=0; int64 b=0; int64 c=0;
+    unsafe { a=__stringStorageData(text); b=__stringStorageData(first); c=__stringStorageData(second); }
+    unsafe {
+        if (operation==0 || operation==15 || operation==16) {
+            int64 begin=__bootStringClamp(offset,n); int64 width=n-begin;
+            if (count>=0) { width=__bootStringClamp(count,width); }
+            if (operation==16) { width=__bootStringClamp(count,n); begin=n-width; }
+            if (operation==15) { return __stringAdopt(__bootStringCompose(a,begin,0,0,a+begin+width,n-begin-width)); }
+            return __stringAdopt(__bootStringSliceBytes(a,begin,begin+width));
+        }
+        if (operation>=1 && operation<=3) {
+            int64 begin=0; int64 end=n;
+            if (operation!=3) { while (begin<end && __bootStringSpace(__bootStringByte(a,begin))) { begin=begin+1; } }
+            if (operation!=2) { while (end>begin && __bootStringSpace(__bootStringByte(a,end-1))) { end=end-1; } }
+            return __stringAdopt(__bootStringSliceBytes(a,begin,end));
+        }
+        if (operation==4 || operation==5) {
+            int64 result=__bootStringSliceBytes(a,0,n); int64 i=0;
+            while (i<n) {
+                int64 value=__bootStringByte(a,i);
+                if (operation==4 && value>=65 && value<=90) { value=value+32; }
+                if (operation==5 && value>=97 && value<=122) { value=value-32; }
+                uint8 mut& target=dereference<uint8>(pointerFromAddress<uint8>(result)+8+i); *target=(uint8)value; i=i+1;
+            }
+            return __stringAdopt(result);
+        }
+        if (operation==6 || operation==7) {
+            if (firstLength==0) { return __stringAdopt(__bootStringCopy(text)); }
+            List<int64> positions; int64 start=0;
+            while (start<=n-firstLength) {
+                int64 found=__bootStringFind(a,n,b,firstLength,start); if (found<0) { break; }
+                positions.push(found); start=found+firstLength; if (operation==6) { break; }
+            }
+            int64 total=n; int64 extra=sn-firstLength;
+            if (extra>0) { if (!(positions.len()<=(9223372036854775806-n)/extra)) { panic("String：替换结果过长"); } }
+            total=total+positions.len()*extra;
+            int64 result=__bootStringBuffer(total); int64 written=0; int64 at=0; int64 i=0;
+            while (i<positions.len()) {
+                int64 found=positions[i]; __bootStringCopyBytes(result+8+written,a+at,found-at); written=written+found-at;
+                __bootStringCopyBytes(result+8+written,c,sn); written=written+sn; at=found+firstLength; i=i+1;
+            }
+            __bootStringCopyBytes(result+8+written,a+at,n-at); return __stringAdopt(result);
+        }
+        if (operation==8) {
+            if (!(count>=0)) { panic("String：重复次数不能为负"); }
+            if (n==0 || count==0) { return ""; }
+            if (!(count<=9223372036854775806/n)) { panic("String：重复结果过长"); }
+            int64 total=n*count; int64 result=__bootStringBuffer(total); __bootStringCopyBytes(result+8,a,n);
+            int64 written=n;
+            while (written<total) {
+                int64 width=written; if (width>total-written) { width=total-written; }
+                __bootStringCopyBytes(result+8+written,result+8,width); written=written+width;
+            }
+            return __stringAdopt(result);
+        }
+        if (operation==9 || operation==17) {
+            List<int64> points; points.push(0); int64 at=0;
+            while (at<n) { at=__bootStringNext(a,n,at); points.push(at); }
+            if (operation==17) {
+                int64 begin=__bootStringClamp(offset,points.len()-1); int64 width=points.len()-1-begin;
+                if (count>=0) { width=__bootStringClamp(count,width); }
+                return __stringAdopt(__bootStringSliceBytes(a,points[begin],points[begin+width]));
+            }
+            int64 result=__bootStringBuffer(n); int64 written=0; int64 i=points.len()-1;
+            while (i>0) {
+                int64 width=points[i]-points[i-1]; __bootStringCopyBytes(result+8+written,a+points[i-1],width);
+                written=written+width; i=i-1;
+            }
+            return __stringAdopt(result);
+        }
+        if (operation==10 || operation==11) {
+            if (!(offset>=0)) { panic("String：填充长度不能为负"); }
+            if (offset<=n || firstLength==0) { return __stringAdopt(__bootStringCopy(text)); }
+            int64 result=__bootStringBuffer(offset); int64 needed=offset-n; int64 base=0;
+            if (operation==10) { __bootStringCopyBytes(result+8+needed,a,n); }
+            else { __bootStringCopyBytes(result+8,a,n); base=n; }
+            int64 written=0;
+            while (written<needed) {
+                int64 width=firstLength; if (width>needed-written) { width=needed-written; }
+                __bootStringCopyBytes(result+8+base+written,b,width); written=written+width;
+            }
+            return __stringAdopt(result);
+        }
+        if (operation==12 || operation==13) {
+            int64 start=0; if (operation==13) { start=n-firstLength; }
+            if (firstLength>n || !__bootStringEqualRange(a,start,b,firstLength)) { return __stringAdopt(__bootStringCopy(text)); }
+            if (operation==12) { return __stringAdopt(__bootStringSliceBytes(a,firstLength,n)); }
+            return __stringAdopt(__bootStringSliceBytes(a,0,n-firstLength));
+        }
+        if (operation==14) {
+            int64 start=__bootStringClamp(offset,n);
+            return __stringAdopt(__bootStringCompose(a,start,b,firstLength,a+start,n-start));
+        }
+    }
+    if (!(false)) { panic("String：转换操作编号无效"); } return "";
+}
+/** 在语言内执行精确分隔、ASCII 空白、行及严格 UTF-8 字符分割。 */
+unsafe List<String> __stringSplit(int64 text,int64 separator,int64 operation,bool keepEmpty) {
+    List<String> result; int64 n=__bootStringLength(text); int64 width=__bootStringLength(separator);
+    int64 a=0; int64 b=0; int64 at=0; int64 begin=0;
+    unsafe { a=__stringStorageData(text); b=__stringStorageData(separator); }
+    unsafe {
+        if (operation==3 || (operation==0 && width==0)) {
+            while (at<n) {
+                int64 next=__bootStringNext(a,n,at); result.push(__stringAdopt(__bootStringSliceBytes(a,at,next))); at=next;
+            }
+            return result;
+        }
+        while (at<n) {
+            int64 step=0;
+            if (operation==0 && width<=n-at && __bootStringEqualRange(a,at,b,width)) { step=width; }
+            if (operation==1 && __bootStringSpace(__bootStringByte(a,at))) { step=1; }
+            if (operation==2) {
+                int64 value=__bootStringByte(a,at);
+                if (value==13 || value==10) {
+                    step=1; if (value==13 && at+1<n && __bootStringByte(a,at+1)==10) { step=2; }
+                }
+            }
+            if (step==0) { at=at+1; continue; }
+            if (at>begin || (operation!=1 && keepEmpty)) { result.push(__stringAdopt(__bootStringSliceBytes(a,begin,at))); }
+            at=at+step; begin=at;
+        }
+        if (begin<n || (operation!=1 && keepEmpty)) { result.push(__stringAdopt(__bootStringSliceBytes(a,begin,n))); }
+    }
+    return result;
+}
+/** 预计算所有片段长度，一次分配并直接写入最终存储。 */
+unsafe String __stringJoinParts(int64 separator,List<String> const& items) {
+    int64 count=items.len(); int64 width=__bootStringLength(separator); int64 total=0; int64 i=0;
+    List<int64> lengths;
+    while (i<count) {
+        String item=items[i]; int64 length=item.length();
+        if (!(length<=9223372036854775806-total)) { panic("String：连接结果过长"); } total=total+length;
+        if (i>0) { if (!(width<=9223372036854775806-total)) { panic("String：连接结果过长"); } total=total+width; }
+        lengths.push(length); i=i+1;
+    }
+    unsafe {
+        int64 result=__bootStringBuffer(total); int64 at=0; i=0;
+        while (i<count) {
+            if (i>0) { __bootStringCopyBytes(result+8+at,__stringStorageData(separator),width); at=at+width; }
+            String item=items[i];
+            __bootStringCopyBytes(result+8+at,__stringStorageData(item.opcode),lengths[i]); at=at+lengths[i]; i=i+1;
+        }
+        return __stringAdopt(result);
+    }
+}
+
 
 
 opcode String {
-    new = std::lang::__stringNew;
-    drop = std::lang::__stringDrop;
-    copy = std::lang::__stringCopy;
+    new = std::lang::__bootStringNew;
+    drop = std::lang::__bootStringDrop;
+    copy = std::lang::__bootStringCopy;
     /** @brief 返回 UTF-8 文本的字节长度。
      * @return 不包括终止零字节的长度。 */
     int64 length() { return std::lang::len(self); }
@@ -23,130 +416,130 @@ opcode String {
     bool isEmpty() { return self.length() == 0; }
 
     /** 是否仅含 ASCII 空白；空字符串也返回 true。 */
-    bool isBlank() { return __stringQuery(self, "", 7, 0) != 0; }
+    bool isBlank() { unsafe { return __stringQuery(self.opcode,0, 7, 0) != 0;  } }
 
     /** 是否为非空 ASCII 十进制数字串。 */
-    bool isDigit() { return __stringQuery(self, "", 8, 0) != 0; }
+    bool isDigit() { unsafe { return __stringQuery(self.opcode,0, 8, 0) != 0;  } }
 
     /** 是否为非空 ASCII 字母串。 */
-    bool isAlpha() { return __stringQuery(self, "", 9, 0) != 0; }
+    bool isAlpha() { unsafe { return __stringQuery(self.opcode,0, 9, 0) != 0;  } }
 
     /** 是否为非空 ASCII 字母数字串。 */
-    bool isAlnum() { return __stringQuery(self, "", 10, 0) != 0; }
+    bool isAlnum() { unsafe { return __stringQuery(self.opcode,0, 10, 0) != 0;  } }
 
     /** 所有字节是否均小于 128；空串返回 true。 */
-    bool isAscii() { return __stringQuery(self, "", 11, 0) != 0; }
+    bool isAscii() { unsafe { return __stringQuery(self.opcode,0, 11, 0) != 0;  } }
 
     /** 严格解码 UTF-8 后的 Unicode 码点数，非字素簇数。 */
-    int64 charLength() { return __stringQuery(self, "", 13, 0); }
+    int64 charLength() { unsafe { return __stringQuery(self.opcode,0, 13, 0);  } }
 
     /** 从 start 字节起搜索，未找到返回 -1；负起点按零处理。 */
-    int64 indexOf(String text, int64 start = 0) { return __stringQuery(self, text, 0, start); }
+    int64 indexOf(String text, int64 start = 0) { unsafe { return __stringQuery(self.opcode,text.opcode, 0, start);  } }
 
     /** 从 start 字节向前搜索，负起点表示从末尾开始。 */
-    int64 lastIndexOf(String text, int64 start = 0 - 1) { return __stringQuery(self, text, 1, start); }
+    int64 lastIndexOf(String text, int64 start = 0 - 1) { unsafe { return __stringQuery(self.opcode,text.opcode, 1, start);  } }
 
     /** 是否包含指定字节序列；空搜索串总是匹配。 */
-    bool contains(String text) { return __stringQuery(self, text, 2, 0) != 0; }
+    bool contains(String text) { unsafe { return __stringQuery(self.opcode,text.opcode, 2, 0) != 0;  } }
 
     /** 是否以指定文本开头；空前缀总是匹配。 */
-    bool startsWith(String text) { return __stringQuery(self, text, 3, 0) != 0; }
+    bool startsWith(String text) { unsafe { return __stringQuery(self.opcode,text.opcode, 3, 0) != 0;  } }
 
     /** 是否以指定文本结尾；空后缀总是匹配。 */
-    bool endsWith(String text) { return __stringQuery(self, text, 4, 0) != 0; }
+    bool endsWith(String text) { unsafe { return __stringQuery(self.opcode,text.opcode, 4, 0) != 0;  } }
 
     /** 统计不重叠匹配数；空搜索串返回字节数加一。 */
-    int64 count(String text) { return __stringQuery(self, text, 5, 0); }
+    int64 count(String text) { unsafe { return __stringQuery(self.opcode,text.opcode, 5, 0);  } }
 
     /** 按字节字典序比较，返回 -1、0 或 1。 */
-    int64 compare(String text) { return __stringQuery(self, text, 6, 0); }
+    int64 compare(String text) { unsafe { return __stringQuery(self.opcode,text.opcode, 6, 0);  } }
 
     /** 读取字节，越界返回 None。 */
-    Option<uint8> byteAt(int64 index) { if (index < 0 || index >= self.length()) { return Option<uint8>::None; } return Option<uint8>::Value((uint8)__stringQuery(self, "", 12, index)); }
+    Option<uint8> byteAt(int64 index) { unsafe { if (index < 0 || index >= self.length()) { return Option<uint8>::None; } return Option<uint8>::Value((uint8)__stringQuery(self.opcode,0, 12, index));  } }
 
     /** 按字节起点及长度截取，越界截断，负起点按零，负长度表示至末尾。 */
-    String substring(int64 start, int64 count = 0 - 1) { return __stringTransform(self, "", "", 0, start, count); }
+    String substring(int64 start, int64 count = 0 - 1) { unsafe { return __stringTransform(self.opcode,0,0, 0, start, count);  } }
 
     /** 按半开字节范围截取；结束不大于起点时返回空串。 */
     String slice(int64 start, int64 end) { if (start < 0) { start = 0; } if (end > self.length()) { end = self.length(); } if (end <= start) { return ""; } return self.substring(start, end - start); }
 
     /** 取前 count 字节，负数按零。 */
-    String left(int64 count) { if (count < 0) { return ""; } return __stringTransform(self, "", "", 0, 0, count); }
+    String left(int64 count) { unsafe { if (count < 0) { return ""; } return __stringTransform(self.opcode,0,0, 0, 0, count);  } }
 
     /** 取后 count 字节，负数按零，超出长度取全部。 */
-    String right(int64 count) { return __stringTransform(self, "", "", 16, 0, count); }
+    String right(int64 count) { unsafe { return __stringTransform(self.opcode,0,0, 16, 0, count);  } }
 
     /** 去除两端 ASCII 空白，保留内部文本。 */
-    String trim() { return __stringTransform(self, "", "", 1, 0, 0); }
+    String trim() { unsafe { return __stringTransform(self.opcode,0,0, 1, 0, 0);  } }
 
     /** 去除起始 ASCII 空白。 */
-    String trimStart() { return __stringTransform(self, "", "", 2, 0, 0); }
+    String trimStart() { unsafe { return __stringTransform(self.opcode,0,0, 2, 0, 0);  } }
 
     /** 去除末尾 ASCII 空白。 */
-    String trimEnd() { return __stringTransform(self, "", "", 3, 0, 0); }
+    String trimEnd() { unsafe { return __stringTransform(self.opcode,0,0, 3, 0, 0);  } }
 
     /** 将 ASCII 大写字母转小写，其他字节保持原样。 */
-    String toLower() { return __stringTransform(self, "", "", 4, 0, 0); }
+    String toLower() { unsafe { return __stringTransform(self.opcode,0,0, 4, 0, 0);  } }
 
     /** 将 ASCII 小写字母转大写，其他字节保持原样。 */
-    String toUpper() { return __stringTransform(self, "", "", 5, 0, 0); }
+    String toUpper() { unsafe { return __stringTransform(self.opcode,0,0, 5, 0, 0);  } }
 
     /** 替换第一个精确匹配；空搜索串保持原值。 */
-    String replaceFirst(String before, String after) { return __stringTransform(self, before, after, 6, 0, 0); }
+    String replaceFirst(String before, String after) { unsafe { return __stringTransform(self.opcode,before.opcode,after.opcode, 6, 0, 0);  } }
 
     /** 替换全部不重叠精确匹配；空搜索串保持原值。 */
-    String replaceAll(String before, String after) { return __stringTransform(self, before, after, 7, 0, 0); }
+    String replaceAll(String before, String after) { unsafe { return __stringTransform(self.opcode,before.opcode,after.opcode, 7, 0, 0);  } }
 
     /** 替换全部不重叠匹配，与 replaceAll 一致。 */
     String replace(String before, String after) { return self.replaceAll(before, after); }
 
     /** 重复 count 次，零次返回空串，负数报错。 */
-    String repeat(int64 count) { return __stringTransform(self, "", "", 8, 0, count); }
+    String repeat(int64 count) { unsafe { return __stringTransform(self.opcode,0,0, 8, 0, count);  } }
 
     /** 按 Unicode 码点反转，保持每个 UTF-8 编码完整。 */
-    String reverse() { return __stringTransform(self, "", "", 9, 0, 0); }
+    String reverse() { unsafe { return __stringTransform(self.opcode,0,0, 9, 0, 0);  } }
 
     /** 按字节目标长度向左循环填充；空填充串保持原值。 */
-    String padStart(int64 length, String fill = " ") { return __stringTransform(self, fill, "", 10, length, 0); }
+    String padStart(int64 length, String fill = " ") { unsafe { return __stringTransform(self.opcode,fill.opcode,0, 10, length, 0);  } }
 
     /** 按字节目标长度向右循环填充；空填充串保持原值。 */
-    String padEnd(int64 length, String fill = " ") { return __stringTransform(self, fill, "", 11, length, 0); }
+    String padEnd(int64 length, String fill = " ") { unsafe { return __stringTransform(self.opcode,fill.opcode,0, 11, length, 0);  } }
 
     /** 仅去除匹配的起始前缀一次。 */
-    String removePrefix(String prefix) { return __stringTransform(self, prefix, "", 12, 0, 0); }
+    String removePrefix(String prefix) { unsafe { return __stringTransform(self.opcode,prefix.opcode,0, 12, 0, 0);  } }
 
     /** 仅去除匹配的末尾后缀一次。 */
-    String removeSuffix(String suffix) { return __stringTransform(self, suffix, "", 13, 0, 0); }
+    String removeSuffix(String suffix) { unsafe { return __stringTransform(self.opcode,suffix.opcode,0, 13, 0, 0);  } }
 
     /** 在截断到有效范围的字节位置插入文本，返回新值。 */
-    String insert(int64 index, String text) { return __stringTransform(self, text, "", 14, index, 0); }
+    String insert(int64 index, String text) { unsafe { return __stringTransform(self.opcode,text.opcode,0, 14, index, 0);  } }
 
     /** 移除指定字节段；负长度表示删除余下全部。 */
-    String remove(int64 start, int64 count = 0 - 1) { return __stringTransform(self, "", "", 15, start, count); }
+    String remove(int64 start, int64 count = 0 - 1) { unsafe { return __stringTransform(self.opcode,0,0, 15, start, count);  } }
 
     /** 按 Unicode 码点截取，严格验证 UTF-8，不按字素簇处理。 */
-    String utf8Substring(int64 start, int64 count = 0 - 1) { return __stringTransform(self, "", "", 17, start, count); }
+    String utf8Substring(int64 start, int64 count = 0 - 1) { unsafe { return __stringTransform(self.opcode,0,0, 17, start, count);  } }
 
     /** 读取一个完整 Unicode 码点，越界返回 None。 */
     Option<String> charAt(int64 index) { if (index < 0 || index >= self.charLength()) { return Option<String>::None; } return Option<String>::Value(self.utf8Substring(index, 1)); }
 
     /** 按精确分隔文本分割，默认保留空项；空分隔符按 UTF-8 码点分割。 */
-    List<String> split(String separator, bool keepEmpty = true) { return __stringSplit(self, separator, 0, keepEmpty); }
+    List<String> split(String separator, bool keepEmpty = true) { unsafe { return __stringSplit(self.opcode,separator.opcode, 0, keepEmpty);  } }
 
     /** 按连续 ASCII 空白分词并忽略空项。 */
-    List<String> splitWhitespace() { return __stringSplit(self, "", 1, false); }
+    List<String> splitWhitespace() { unsafe { return __stringSplit(self.opcode,0, 1, false);  } }
 
     /** 按 LF、CRLF 或 CR 分行，默认保留空行和末尾空项。 */
-    List<String> lines(bool keepEmpty = true) { return __stringSplit(self, "", 2, keepEmpty); }
+    List<String> lines(bool keepEmpty = true) { unsafe { return __stringSplit(self.opcode,0, 2, keepEmpty);  } }
 
     /** 严格按 UTF-8 Unicode 码点拆分，空串产生空列表。 */
-    List<String> unicodeChars() { return __stringSplit(self, "", 3, false); }
+    List<String> unicodeChars() { unsafe { return __stringSplit(self.opcode,0, 3, false);  } }
 
     /** 导出独立字节列表，修改列表不影响原字符串。 */
-    List<uint8> bytes() { return __stringBytes(self); }
+    List<uint8> bytes() { unsafe { return __stringBytes(self.opcode);  } }
 
     /** 以当前字符串为分隔符连接值列表，空列表返回空串。 */
-    String join(List<String> items) { return __stringJoinParts(self, items); }
+    String join(List<String> items) { unsafe { return __stringJoinParts(self.opcode, &items);  } }
 
     /** 返回两段文本的连接，不修改当前值。 */
     String concat(String text) { return self + text; }
@@ -155,7 +548,6 @@ opcode String {
     String prepend(String text) { return text + self; }
 
 };
-
 /** 标准库错误的统一接口；诊断文本保留具体失败原因。 */
 interface Error {
     /** 返回可直接显示给用户的错误说明。 */
@@ -244,9 +636,7 @@ String readLines(int32 N) { assert(N>=0,"readLines requires a nonnegative line c
  * @return 最多 N 行，以 LF 连接，EOF 提前结束。 */
 String readLines(int64 N) { assert(N>=0 && N<=2147483647,"readLines requires a nonnegative int32 line count"); return __readLines((int32)N); }
 
-/* 核心转换由胶水完成范围检查，float32 先精确提升至 float64。 */
-int64 __tryToInt32(float64 value);
-int64 __toInt64(float64 value);
+/* 核心数值转换与 IEEE 754 编解码由语言内核实现。 */
 /** 向零截断为 int32；非有限数或截断后越界返回 None。 */
 Option<int32> toInt32(float64 value) {
     int64 converted = __tryToInt32(value);
@@ -260,10 +650,6 @@ int64 toInt64(float64 value) { return __toInt64(value); }
 /** 向零截断为 int64，非有限数或截断后越界时报错。 */
 int64 toInt64(float32 value) { return __toInt64((float64)value); }
 
-std::lang::List<uint8> __float32ToBytes(float32 value, bool bigEndian);
-float32 __bytesToFloat32(std::lang::List<uint8> bytes, bool bigEndian);
-float32 __arrayToFloat32(uint8 const& bytes, bool bigEndian);
-bool __float32ToArray(float32 value, uint8 mut& bytes, bool bigEndian);
 /** 按 IEEE 754 binary32 输出 4 个字节。 */
 std::lang::List<uint8> float32ToBytes(float32 value, bool bigEndian) { return __float32ToBytes(value, bigEndian); }
 /** 默认小端编码。 */
@@ -301,10 +687,6 @@ bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian) {
 /** 默认小端运行时数组编码；调用时传入 &array。 */
 bool float32ToBytes(float32 value, uint8[] mut& bytes) { return float32ToBytes(value, bytes, false); }
 
-std::lang::List<uint8> __float64ToBytes(float64 value, bool bigEndian);
-float64 __bytesToFloat64(std::lang::List<uint8> bytes, bool bigEndian);
-float64 __arrayToFloat64(uint8 const& bytes, bool bigEndian);
-bool __float64ToArray(float64 value, uint8 mut& bytes, bool bigEndian);
 /** 按 IEEE 754 binary64 输出 8 个字节。 */
 std::lang::List<uint8> float64ToBytes(float64 value, bool bigEndian) { return __float64ToBytes(value, bigEndian); }
 /** 默认小端编码。 */
@@ -712,9 +1094,17 @@ Option<T mut&> tryGetMut<T>(Any mut& value) {
     return result;
 }
 
-List<uint8> __stringBytes(String text);
+/** 按原始字节生成列表，不把字节位置解释为字符边界。 */
+unsafe List<uint8> __stringBytes(int64 text) {
+    List<uint8> result; int64 size=__bootStringLength(text);
+    unsafe {
+        int64 address=__stringStorageData(text); int64 i=0;
+        while (i<size) { result.push((uint8)__bootStringByte(address,i)); i=i+1; }
+    }
+    return result;
+}
 /** 返回字符串的完整 UTF-8 字节副本，不执行字符边界索引。 */
-List<uint8> stringBytes(String text) { return __stringBytes(text); }
+List<uint8> stringBytes(String text) { unsafe { return __stringBytes(text.opcode); } }
 
 
 
@@ -724,6 +1114,8 @@ List<uint8> stringBytes(String text) { return __stringBytes(text); }
 interface __chaliMapErr<F> {};
 interface __chaliOkOr<E> {};
 interface __chaliOkOrElse<E> {};
+/** 裸指针 castTo<U>() 调用点的显式类型标记。 */
+interface __chaliCastTo<U> {};
 /** 显式映射失败载荷；成功分支不调用 mapper。 */
 Result<T,F> __mapErrImpl<T,E,F>(Result<T,E> value, F fn(E) mapper) {
     match(value) {
@@ -744,4 +1136,852 @@ Result<T,E> __okOrElseImpl<T,E>(Option<T> value, E fn() factory) {
         Option<T>::Value(item) => { return Result<T,E>::Ok(item); }
         Option<T>::None => { return Result<T,E>::Err(factory()); }
     }
+}
+
+/** 原始存储操作入口；仅 unsafe 函数／块可调用。 */
+unsafe int64 __rawStorage(int64 operation, uint64 handle, int64 index, int64 value, int64 alignment, int64 typeTag);
+
+/** 有元素类型及分配身份的原始指针；复制指针不复制元素，也不延长存储寿命。 */
+struct RawPtr<T> {
+    /** 对应原始存储的分配身份，不延长存储寿命。 */
+    uint64 storage;
+    /** 从零开始的槽位下标；解引用时检查有效范围与初始化状态。 */
+    int64 index;
+};
+
+/** 只保存地址的裸指针；不记录运行时元素类型或初始化状态，也不拥有分配。 */
+struct BarePtr<T>: Add<BarePtr<T>, int64>, RightAdd<BarePtr<T>, int64>, Subtract<BarePtr<T>, int64>, Subtract<int64, BarePtr<T>> {
+    /** 运行时逻辑字节地址；不是可传给宿主 C 函数的机器地址。 */
+    int64 address;
+
+    /** 实现 p + elements；按静态元素大小偏移，不访问内存或检测运行时类型。 */
+    BarePtr<T> leftAdd(int64 elements) {
+        BarePtr<T> result;
+        unsafe { result.address = self.address + elements * __rawSize(T); }
+        return result;
+    }
+    /** 实现 elements + p，与 p + elements 相同。 */
+    BarePtr<T> rightAdd(int64 elements) { return self.leftAdd(elements); }
+    /** 实现 p - elements；按静态元素大小反向偏移。 */
+    BarePtr<T> leftSub(int64 elements) {
+        BarePtr<T> result;
+        unsafe { result.address = self.address - elements * __rawSize(T); }
+        return result;
+    }
+    /** 实现 p - other，返回完整元素距离；调用者保证属于同一分配。 */
+    int64 leftSub(BarePtr<T> other) {
+        int64 bytes = self.address - other.address;
+        unsafe {
+            std::lang::assert(bytes % __rawSize(T) == 0);
+            return bytes / __rawSize(T);
+        }
+    }
+};
+
+/** 取得原始分配中的裸地址，允许未初始化及尾后位置，不检测元素类型。 */
+unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer) {
+    BarePtr<T> result;
+    result.address = __rawStorage(6, pointer.storage, pointer.index, 0, 0, 0);
+    return result;
+}
+
+/** 将数值字节地址解释为裸指针，不验证类型、初始化状态或可解引用性。 */
+unsafe BarePtr<T> pointerFromAddress<T>(int64 address) {
+    BarePtr<T> result;
+    result.address = address;
+    return result;
+}
+
+/** BarePtr.castTo<U>() 的语言实现：地址、分配身份和有效期保持不变。
+ * 转换不检查元素类型、大小或初始化状态；解引用由调用者保证对齐及完整范围。 */
+unsafe BarePtr<U> __pointerCast<T,U>(BarePtr<T> pointer) {
+    BarePtr<U> result;
+    result.address=pointer.address;
+    return result;
+}
+
+/** 将裸地址解释为可变引用；调用者负责布局、对齐、初始化和所有权正确性。 */
+unsafe T mut& dereference<T>(BarePtr<T> pointer) { return (T mut&)pointer.address; }
+
+/** 按字节复制完整范围；不检测类型或处理资源所有权，非零范围必须有效且不重叠。
+ * @param destination 目标逻辑地址。
+ * @param source 源逻辑地址；可与目标使用不同静态元素类型。
+ * @param bytes 复制的字节数，必须非负；零长度允许空指针。
+ */
+unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes) {
+    __rawStorage(7, (uint64)destination.address, source.address, bytes, 0, 0);
+}
+
+/** 按字节填充完整范围；不检测类型或清理旧值，调用者负责资源与初始化状态。
+ * @param destination 目标逻辑地址。
+ * @param value 重复写入的单个字节。
+ * @param bytes 填充的字节数，必须非负；零长度允许空指针。
+ */
+unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes) {
+    __rawStorage(8, (uint64)destination.address, (int64)value, bytes, 0, 0);
+}
+
+/** 在原始槽位就地接管一个完整值，目标必须未初始化。 */
+unsafe void initAt<T>(RawPtr<T> pointer, T value) {
+    int64 address = __rawStorage(1, pointer.storage, pointer.index, 0, 0, __typeTag(T));
+    T mut& target = (T mut&)address;
+    *target = move(value);
+    __rawStorage(2, pointer.storage, pointer.index, 1, 0, __typeTag(T));
+}
+
+/** 从已初始化槽位取得独立副本；需要调用方保证指针与存储寿命有效。 */
+unsafe T readAt<T>(RawPtr<T> pointer) {
+    int64 address = __rawStorage(1, pointer.storage, pointer.index, 1, 0, __typeTag(T));
+    T mut& source = (T mut&)address;
+    return *source;
+}
+
+/** 借出已初始化元素；调用方必须保证引用不超过原始存储的有效寿命。 */
+unsafe T mut& borrowAt<T>(RawPtr<T> pointer) {
+    return (T mut&)__rawStorage(1, pointer.storage, pointer.index, 1, 0, __typeTag(T));
+}
+
+/** 移出已初始化槽位；成功后原槽位不再持有元素。 */
+unsafe T takeAt<T>(RawPtr<T> pointer) {
+    int64 address = __rawStorage(1, pointer.storage, pointer.index, 1, 0, __typeTag(T));
+    T mut& source = (T mut&)address;
+    T result = move(source);
+    __rawStorage(2, pointer.storage, pointer.index, 0, 0, __typeTag(T));
+    return move(result);
+}
+
+/** 清理恰好一个已初始化元素，保留原始容量。 */
+unsafe void dropAt<T>(RawPtr<T> pointer) {
+    T discarded = takeAt(pointer);
+}
+
+/** 验证移动范围后逐元素转移所有权，目标范围必须全部未初始化且不重叠。 */
+unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, int64 count) {
+    std::lang::assert(count >= 0);
+    if (count == 0) { return; }
+    int64 sourceCapacity = __rawStorage(4, source.storage, 0, 0, 0, __typeTag(T));
+    int64 destinationCapacity = __rawStorage(4, destination.storage, 0, 0, 0, __typeTag(T));
+    std::lang::assert(source.index >= 0 && source.index <= sourceCapacity && count <= sourceCapacity - source.index);
+    std::lang::assert(destination.index >= 0 && destination.index <= destinationCapacity && count <= destinationCapacity - destination.index);
+    std::lang::assert(source.storage != destination.storage || destination.index >= source.index + count || source.index >= destination.index + count);
+    int64 i = 0;
+    while (i < count) {
+        __rawStorage(1, source.storage, source.index + i, 1, 0, __typeTag(T));
+        __rawStorage(1, destination.storage, destination.index + i, 0, 0, __typeTag(T));
+        i = i + 1;
+    }
+    i = 0;
+    while (i < count) {
+        RawPtr<T> from;
+        from.storage = source.storage;
+        from.index = source.index + i;
+        RawPtr<T> to;
+        to.storage = destination.storage;
+        to.index = destination.index + i;
+        initAt(to, takeAt(from));
+        i = i + 1;
+    }
+}
+
+/** 独占原始容量；备用槽位不默认构造 T，关闭时仅清理已初始化元素。 */
+struct RawStorage<T>: Closeable {
+    /** 当前独占的原始存储句柄，零表示尚未分配或已经关闭。 */
+    uint64 handle;
+
+    static RawStorage<T> allocate(int64 capacity) {
+        unsafe {
+            RawStorage<T> result;
+            result.handle = (uint64)__rawStorage(0, 0u, capacity, __rawSize(T), __rawAlign(T), __typeTag(T));
+            return move(result);
+        }
+    }
+
+    int64 capacity() {
+        if (self.handle == 0u) { return 0; }
+        unsafe { return __rawStorage(4, self.handle, 0, 0, 0, __typeTag(T)); }
+    }
+
+    RawPtr<T> pointer(int64 index) {
+        std::lang::assert(self.handle != 0u && index >= 0 && index <= self.capacity());
+        RawPtr<T> result;
+        result.storage = self.handle;
+        result.index = index;
+        return result;
+    }
+
+    bool isInitialized(int64 index) {
+        unsafe { return __rawStorage(3, self.handle, index, 0, 0, __typeTag(T)) != 0; }
+    }
+
+    void close() {
+        if (self.handle == 0u) { return; }
+        unsafe {
+            int64 capacity = __rawStorage(4, self.handle, 0, 0, 0, __typeTag(T));
+            if (__rawStorage(9, self.handle, 0, 0, 0, __typeTag(T)) != 0) {
+                int64 i = 0;
+                while (i < capacity) {
+                    if (__rawStorage(3, self.handle, i, 0, 0, __typeTag(T)) != 0) { dropAt(self.pointer(i)); }
+                    i = i + 1;
+                }
+            }
+            __rawStorage(5, self.handle, 0, 0, 0, __typeTag(T));
+            self.handle = 0u;
+        }
+    }
+};
+
+/** 自举集合的原始槽访问边界；算法在下方 ChaLi 函数中执行。 */
+unsafe int64 __listStorageGuard(int64 handle,int64 operation,int64 index);
+unsafe int64 __listStorageCapacity(int64 handle);
+unsafe int64 __listStorageReserve(int64 handle,int64 capacity);
+unsafe int64 __listStorageSwap(int64 handle,int64 left,int64 right);
+unsafe int64 __listStorageDiscard(int64 handle);
+unsafe int64 __listStorageCloneAppend(int64 destination,int64 source,int64 index);
+unsafe int64 __listStorageNew();
+unsafe int64 __listStorageLength(int64 handle);
+
+/** 以倍增策略预留槽，不初始化尚未加入的用户元素。 */
+unsafe void __bootListReserve(int64 handle,int64 requested){
+    int64 capacity=__listStorageCapacity(handle);
+    if(requested<=capacity){return;}
+    if(capacity==0){capacity=8;}
+    while(capacity<requested){assert(capacity<=4611686018427387903,"List 容量溢出");capacity=capacity*2;}
+    __listStorageReserve(handle,capacity);
+}
+/** 按逻辑下标向左移动元素，清理末尾并保留容量。 */
+unsafe int64 __bootListRemove(int64 handle,int64 index){
+    int64 size=__listStorageGuard(handle,2,index);int64 i=index;
+    while(i+1<size){__listStorageSwap(handle,i,i+1);i=i+1;}
+    __listStorageDiscard(handle);return 0;
+}
+/** 清理有效槽位，保留已分配容量。 */
+unsafe int64 __bootListClear(int64 handle){
+    int64 size=__listStorageGuard(handle,4,0);
+    while(size>0){__listStorageDiscard(handle);size=size-1;}return 0;
+}
+/** 按槽复制独立拥有值，存储内核负责单个值的所有权封送。 */
+unsafe int64 __bootListCopy(int64 source){
+    int64 result=__listStorageNew();int64 size=__listStorageLength(source);__bootListReserve(result,size);
+    int64 i=0;while(i<size){__listStorageCloneAppend(result,source,i);i=i+1;}return result;
+}
+
+unsafe int64 __listStorageAppendI(int64 handle,int64 value,int64 text,int64 layout);
+unsafe int64 __listStorageTakeI(int64 handle,int64 text,int64 layout);
+unsafe int64 __listStorageEqualI(int64 handle,int64 index,int64 value,int64 text,int64 layout);
+/** 在语言中选择增长策略并追加一个值。 */
+unsafe int64 __bootListPushI(int64 handle,int64 value,int64 text,int64 layout){
+    int64 size=__listStorageGuard(handle,0,0);__bootListReserve(handle,size+1);
+    return __listStorageAppendI(handle,value,text,layout);
+}
+/** 先构造新槽，再以相邻槽交换将其移入目标位置。 */
+unsafe int64 __bootListInsertI(int64 handle,int64 index,int64 value,int64 text,int64 layout){
+    int64 size=__listStorageGuard(handle,1,index);__bootListReserve(handle,size+1);
+    __listStorageAppendI(handle,value,text,layout);
+    int64 i=size;while(i>index){__listStorageSwap(handle,i,i-1);i=i-1;}return 0;
+}
+/** 移出末尾槽；空表在结构验证处报告错误。 */
+unsafe int64 __bootListPopI(int64 handle,int64 text,int64 layout){
+    __listStorageGuard(handle,3,0);return __listStorageTakeI(handle,text,layout);
+}
+/** 遍历有效槽，返回首个相同值的下标。 */
+unsafe int64 __bootListFindI(int64 handle,int64 value,int64 text,int64 layout){
+    int64 size=__listStorageLength(handle);int64 i=0;
+    while(i<size){if(__listStorageEqualI(handle,i,value,text,layout)!=0){return i;}i=i+1;}return 0-1;
+}
+
+unsafe int64 __listStorageAppendF(int64 handle,float64 value,int64 text,int64 layout);
+unsafe float64 __listStorageTakeF(int64 handle,int64 text,int64 layout);
+unsafe int64 __listStorageEqualF(int64 handle,int64 index,float64 value,int64 text,int64 layout);
+/** 在语言中选择增长策略并追加一个值。 */
+unsafe int64 __bootListPushF(int64 handle,float64 value,int64 text,int64 layout){
+    int64 size=__listStorageGuard(handle,0,0);__bootListReserve(handle,size+1);
+    return __listStorageAppendF(handle,value,text,layout);
+}
+/** 先构造新槽，再以相邻槽交换将其移入目标位置。 */
+unsafe int64 __bootListInsertF(int64 handle,int64 index,float64 value,int64 text,int64 layout){
+    int64 size=__listStorageGuard(handle,1,index);__bootListReserve(handle,size+1);
+    __listStorageAppendF(handle,value,text,layout);
+    int64 i=size;while(i>index){__listStorageSwap(handle,i,i-1);i=i-1;}return 0;
+}
+/** 移出末尾槽；空表在结构验证处报告错误。 */
+unsafe float64 __bootListPopF(int64 handle,int64 text,int64 layout){
+    __listStorageGuard(handle,3,0);return __listStorageTakeF(handle,text,layout);
+}
+/** 遍历有效槽，返回首个相同值的下标。 */
+unsafe int64 __bootListFindF(int64 handle,float64 value,int64 text,int64 layout){
+    int64 size=__listStorageLength(handle);int64 i=0;
+    while(i<size){if(__listStorageEqualF(handle,i,value,text,layout)!=0){return i;}i=i+1;}return 0-1;
+}
+
+/** 哈希容器仅暴露槽位和单值封送；所有探测与增长策略在语言内实现。 */
+unsafe int64 __mapStorageState(int64 handle,int64 operation,int64 index,int64 value);
+unsafe int64 __mapStorageCommit(int64 handle,int64 index,int64 hash);
+unsafe int64 __mapStorageErase(int64 handle,int64 index);
+unsafe int64 __mapStorageEmptyLike(int64 handle);
+unsafe int64 __mapStorageCloneAppend(int64 destination,int64 source,int64 index);
+
+/** 将哈希位模式映射到槽数组，负哈希仍按无符号位模式取模。 */
+int64 __bootMapHome(int64 hash,int64 capacity) { return (int64)((uint64)hash%(uint64)capacity); }
+/** 读取一个有效标志与密集位置编码，零代表无值。 */
+unsafe int64 __bootMapSlot(int64 handle,int64 index) { return __mapStorageState(handle,3,index,0); }
+/** 按缓存 HashKey 放置一个已初始化项，不执行键比较或用户回调。 */
+unsafe void __bootMapPlace(int64 handle,int64 entry,int64 hash) {
+    int64 capacity=__mapStorageState(handle,1,0,0); int64 slot=__bootMapHome(hash,capacity);
+    while (__bootMapSlot(handle,slot)!=0) { slot=(slot+1)%capacity; }
+    __mapStorageState(handle,4,slot,entry+1);
+}
+/** 重建槽位数组，值与键保持原存储，不产生用户元素副本。 */
+unsafe void __bootMapRehash(int64 handle,int64 capacity) {
+    __mapStorageState(handle,5,0,capacity); int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
+    while (i<size) { __bootMapPlace(handle,i,__mapStorageState(handle,7,i,0)); i=i+1; }
+    __mapStorageState(handle,6,0,0);
+}
+/** 宿主修改后按需恢复语言索引，无 Hash 的 Equal 契约仍使用线性查询。 */
+unsafe void __bootMapEnsure(int64 handle) {
+    if (__mapStorageState(handle,2,0,0)!=0) { return; }
+    if (__mapStorageState(handle,8,0,0)==0) { __mapStorageState(handle,5,0,0); __mapStorageState(handle,6,0,0); return; }
+    int64 size=__mapStorageState(handle,0,0,0); int64 capacity=16;
+    while (size>capacity/2) { assert(capacity<=4611686018427387903,"Map/Set 容量溢出"); capacity=capacity*2; }
+    __bootMapRehash(handle,capacity);
+}
+/** 保持装载因子不超过一半，插入前只调整索引数组。 */
+unsafe void __bootMapGrow(int64 handle) {
+    if (__mapStorageState(handle,8,0,0)==0) { return; }
+    int64 size=__mapStorageState(handle,0,0,0); int64 capacity=__mapStorageState(handle,1,0,0);
+    if (capacity==0) { __bootMapRehash(handle,16); return; }
+    if (size+1>capacity/2) { assert(capacity<=4611686018427387903,"Map/Set 容量溢出"); __bootMapRehash(handle,capacity*2); }
+}
+/** 已知槽号时定位其索引位置，不重复调用用户 Equal。 */
+unsafe int64 __bootMapLocate(int64 handle,int64 entry,int64 hash) {
+    int64 capacity=__mapStorageState(handle,1,0,0); int64 at=__bootMapHome(hash,capacity);
+    while (__bootMapSlot(handle,at)!=entry+1) { at=(at+1)%capacity; }
+    return at;
+}
+/** 删除保留容量，密集槽以末项补洞，开放寻址索引使用后移修复。 */
+unsafe void __bootMapErase(int64 handle,int64 entry,int64 hash) {
+    int64 size=__mapStorageState(handle,0,0,0);
+    int64 capacity=__mapStorageState(handle,1,0,0);
+    if (capacity==0) { __mapStorageErase(handle,entry); __mapStorageState(handle,6,0,0); return; }
+    int64 hole=__bootMapLocate(handle,entry,hash);
+    if (entry!=size-1) {
+        int64 last=__bootMapLocate(handle,size-1,__mapStorageState(handle,7,size-1,0));
+        __mapStorageState(handle,4,last,entry+1);
+    }
+    __mapStorageState(handle,4,hole,0); __mapStorageErase(handle,entry);
+    int64 at=(hole+1)%capacity;
+    while (__bootMapSlot(handle,at)!=0) {
+        int64 value=__bootMapSlot(handle,at);
+        int64 home=__bootMapHome(__mapStorageState(handle,7,value-1,0),capacity);
+        if ((at-home+capacity)%capacity>=(hole-home+capacity)%capacity) {
+            __mapStorageState(handle,4,hole,value); __mapStorageState(handle,4,at,0); hole=at;
+        }
+        at=(at+1)%capacity;
+    }
+    __mapStorageState(handle,6,0,0);
+}
+/** 清理拥有值并保留槽数组供后续插入复用。 */
+unsafe int64 __bootMapClear(int64 handle) {
+    int64 size=__mapStorageState(handle,0,0,0);
+    while (size>0) { __mapStorageErase(handle,size-1); size=size-1; }
+    int64 capacity=__mapStorageState(handle,1,0,0);
+    __mapStorageState(handle,5,0,capacity); __mapStorageState(handle,6,0,0); return 0;
+}
+/** 按槽复制独立值及键协议，随后重建索引，不执行 Hash/Equal 用户回调。 */
+unsafe int64 __bootMapCopy(int64 source) {
+    int64 result=__mapStorageEmptyLike(source); int64 size=__mapStorageState(source,0,0,0); int64 i=0;
+    while (i<size) { __mapStorageCloneAppend(result,source,i); i=i+1; }
+    __bootMapEnsure(result); return result;
+}
+
+unsafe int64 __mapStorageHashI(int64 handle,int64 key,int64 text,int64 layout);
+unsafe int64 __mapStorageMatchI(int64 handle,int64 entry,int64 key,int64 text,int64 layout);
+unsafe int64 __setStorageAppendI(int64 handle,int64 key,int64 text,int64 layout,int64 hash);
+/** 先比较缓存 HashKey，再调用精确键比较；空槽终止探测。 */
+unsafe int64 __bootMapFindI(int64 handle,int64 key,int64 text,int64 layout,int64 hash) {
+    __bootMapEnsure(handle); int64 capacity=__mapStorageState(handle,1,0,0);
+    if (capacity==0) {
+        int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
+        while (i<size) { if (__mapStorageMatchI(handle,i,key,text,layout)!=0) { return i; } i=i+1; }
+        return 0-1;
+    }
+    int64 slot=__bootMapHome(hash,capacity); int64 visited=0;
+    while (visited<capacity) {
+        int64 entry=__bootMapSlot(handle,slot); if (entry==0) { return 0-1; } entry=entry-1;
+        if (__mapStorageState(handle,7,entry,0)==hash && __mapStorageMatchI(handle,entry,key,text,layout)!=0) { return entry; }
+        slot=(slot+1)%capacity; visited=visited+1;
+    }
+    return 0-1;
+}
+/** 查询只产生一个 Hash 值，不构造 Option 或中间键值容器。 */
+unsafe int64 __bootMapHasI(int64 handle,int64 key,int64 text,int64 layout) {
+    int64 hash=__mapStorageHashI(handle,key,text,layout);
+    if (__bootMapFindI(handle,key,text,layout,hash)>=0) { return 1; } return 0;
+}
+/** 查找后移除一个项，命中时返回一。 */
+unsafe int64 __bootMapRemoveI(int64 handle,int64 key,int64 text,int64 layout) {
+    int64 hash=__mapStorageHashI(handle,key,text,layout);
+    int64 entry=__bootMapFindI(handle,key,text,layout,hash);
+    if (entry<0) { return 0; } __bootMapErase(handle,entry,hash); return 1;
+}
+/** Set 使用自己的槽数组，重复插入不复制用户元素。 */
+unsafe int64 __setStoragePrepareI(int64 handle,int64 key,int64 text,int64 layout);
+unsafe int64 __bootSetAddI(int64 handle,int64 key,int64 text,int64 layout) {
+    __setStoragePrepareI(handle,key,text,layout);
+    int64 hash=__mapStorageHashI(handle,key,text,layout);
+    if (__bootMapFindI(handle,key,text,layout,hash)>=0) { __setStorageCancel(handle); return 0; }
+    __bootMapGrow(handle); int64 entry=__setStorageAppendI(handle,key,text,layout,hash);
+    if (__mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+
+unsafe int64 __mapStorageHashF(int64 handle,float64 key,int64 text,int64 layout);
+unsafe int64 __mapStorageMatchF(int64 handle,int64 entry,float64 key,int64 text,int64 layout);
+unsafe int64 __setStorageAppendF(int64 handle,float64 key,int64 text,int64 layout,int64 hash);
+/** 先比较缓存 HashKey，再调用精确键比较；空槽终止探测。 */
+unsafe int64 __bootMapFindF(int64 handle,float64 key,int64 text,int64 layout,int64 hash) {
+    __bootMapEnsure(handle); int64 capacity=__mapStorageState(handle,1,0,0);
+    if (capacity==0) {
+        int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
+        while (i<size) { if (__mapStorageMatchF(handle,i,key,text,layout)!=0) { return i; } i=i+1; }
+        return 0-1;
+    }
+    int64 slot=__bootMapHome(hash,capacity); int64 visited=0;
+    while (visited<capacity) {
+        int64 entry=__bootMapSlot(handle,slot); if (entry==0) { return 0-1; } entry=entry-1;
+        if (__mapStorageState(handle,7,entry,0)==hash && __mapStorageMatchF(handle,entry,key,text,layout)!=0) { return entry; }
+        slot=(slot+1)%capacity; visited=visited+1;
+    }
+    return 0-1;
+}
+/** 查询只产生一个 Hash 值，不构造 Option 或中间键值容器。 */
+unsafe int64 __bootMapHasF(int64 handle,float64 key,int64 text,int64 layout) {
+    int64 hash=__mapStorageHashF(handle,key,text,layout);
+    if (__bootMapFindF(handle,key,text,layout,hash)>=0) { return 1; } return 0;
+}
+/** 查找后移除一个项，命中时返回一。 */
+unsafe int64 __bootMapRemoveF(int64 handle,float64 key,int64 text,int64 layout) {
+    int64 hash=__mapStorageHashF(handle,key,text,layout);
+    int64 entry=__bootMapFindF(handle,key,text,layout,hash);
+    if (entry<0) { return 0; } __bootMapErase(handle,entry,hash); return 1;
+}
+/** Set 使用自己的槽数组，重复插入不复制用户元素。 */
+unsafe int64 __setStoragePrepareF(int64 handle,float64 key,int64 text,int64 layout);
+unsafe int64 __bootSetAddF(int64 handle,float64 key,int64 text,int64 layout) {
+    __setStoragePrepareF(handle,key,text,layout);
+    int64 hash=__mapStorageHashF(handle,key,text,layout);
+    if (__bootMapFindF(handle,key,text,layout,hash)>=0) { __setStorageCancel(handle); return 0; }
+    __bootMapGrow(handle); int64 entry=__setStorageAppendF(handle,key,text,layout,hash);
+    if (__mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+
+unsafe int64 __mapStorageReadI(int64 handle,int64 entry,int64 text,int64 layout);
+unsafe int64 __mapStoragePrepareII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout);
+/** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
+unsafe int64 __bootMapPutII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
+    __mapStoragePrepareII(handle,key,keyText,keyLayout,value,valueText,valueLayout);
+    int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
+    if (fresh) { __bootMapGrow(handle); }
+    entry=__mapStorageCommit(handle,entry,hash);
+    if (fresh && __mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+/** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
+unsafe int64 __bootMapGetII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+    int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash);
+    return __mapStorageReadI(handle,entry,valueText,valueLayout);
+}
+unsafe int64 __mapStoragePrepareFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout);
+/** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
+unsafe int64 __bootMapPutFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
+    __mapStoragePrepareFI(handle,key,keyText,keyLayout,value,valueText,valueLayout);
+    int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
+    if (fresh) { __bootMapGrow(handle); }
+    entry=__mapStorageCommit(handle,entry,hash);
+    if (fresh && __mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+/** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
+unsafe int64 __bootMapGetFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+    int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash);
+    return __mapStorageReadI(handle,entry,valueText,valueLayout);
+}
+
+unsafe float64 __mapStorageReadF(int64 handle,int64 entry,int64 text,int64 layout);
+unsafe int64 __mapStoragePrepareIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout);
+/** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
+unsafe int64 __bootMapPutIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
+    __mapStoragePrepareIF(handle,key,keyText,keyLayout,value,valueText,valueLayout);
+    int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
+    if (fresh) { __bootMapGrow(handle); }
+    entry=__mapStorageCommit(handle,entry,hash);
+    if (fresh && __mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+/** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
+unsafe float64 __bootMapGetIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+    int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash);
+    return __mapStorageReadF(handle,entry,valueText,valueLayout);
+}
+unsafe int64 __mapStoragePrepareFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout);
+/** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
+unsafe int64 __bootMapPutFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
+    __mapStoragePrepareFF(handle,key,keyText,keyLayout,value,valueText,valueLayout);
+    int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
+    if (fresh) { __bootMapGrow(handle); }
+    entry=__mapStorageCommit(handle,entry,hash);
+    if (fresh && __mapStorageState(handle,1,0,0)>0) { __bootMapPlace(handle,entry,hash); }
+    __mapStorageState(handle,6,0,0); return 0;
+}
+/** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
+unsafe float64 __bootMapGetFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+    int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
+    int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash);
+    return __mapStorageReadF(handle,entry,valueText,valueLayout);
+}
+
+unsafe int64 __setStorageCancel(int64 handle);
+
+/** 保留向零截断及独立失败哨兵，不在失败路径执行浮点到整数转换。 */
+int64 __tryToInt32(float64 value) {
+    if (value> -2147483649.0 && value<2147483648.0) { return (int64)value; }
+    return 2147483648;
+}
+/** 有限且可表示时才执行整数转换，诊断保留原接口含义。 */
+int64 __toInt64(float64 value) {
+    if (!(value>= -9223372036854775808.0 && value<9223372036854775808.0)) {
+        panic("std::lang::toInt64：浮点值不是有限数或超出 int64 范围");
+    }
+    return (int64)value;
+}
+/** 语言浮点槽使用 binary64；通过不安全引用取得同一槽的原始位。 */
+uint64 __bootFloat64Bits(float64 value) {
+    unsafe { BarePtr<float64> source=pointerFromAddress<float64>((int64)&value); BarePtr<uint64> raw=source.castTo<uint64>(); uint64 mut& bits=dereference<uint64>(raw); return *bits; }
+}
+/** 取得 binary64 原始位代表的浮点值，不进行整数数值转换。 */
+float64 __bootFloat64FromBits(uint64 bits) {
+    unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<float64> raw=source.castTo<float64>(); float64 mut& value=dereference<float64>(raw); return *value; }
+}
+/** binary32 值已精确归一化到语言浮点槽，恢复其指数与尾数。 */
+uint64 __bootFloat32Bits(float32 value) {
+    uint64 raw=__bootFloat64Bits((float64)value);
+    uint64 sign=(raw>>63)<<31; uint64 exponent=(raw>>52)&2047u;
+    uint64 fraction=raw&4503599627370495u;
+    if (exponent==2047u) {
+        uint64 payload=fraction>>29;
+        if (fraction!=0u && payload==0u) { payload=4194304u; }
+        return sign|2139095040u|payload;
+    }
+    if (exponent==0u) { return sign; }
+    if (exponent>896u) { return sign|((exponent-896u)<<23)|(fraction>>29); }
+    return sign|((fraction|4503599627370496u)>>(926u-exponent));
+}
+/** 精确构造可由 binary32 表示的 binary64 槽，再恢复 binary32 类型。 */
+float32 __bootFloat32FromBits(uint64 bits) {
+    uint64 sign=((bits>>31)&1u)<<63;
+    uint64 exponent=(bits>>23)&255u; uint64 fraction=bits&8388607u; uint64 raw=sign;
+    if (exponent==255u) { raw=raw|9218868437227405312u|(fraction<<29); }
+    elif (exponent>0u) { raw=raw|((exponent+896u)<<52)|(fraction<<29); }
+    elif (fraction>0u) {
+        uint64 leading=0u; uint64 top=fraction;
+        while (top>1u) { top=top>>1; leading=leading+1u; }
+        raw=raw|((leading+874u)<<52)|((fraction-(1u<<leading))<<(52u-leading));
+    }
+    return (float32)__bootFloat64FromBits(raw);
+}
+/** 按指定字节宽度翻转有效位，用于显式大端格式。 */
+uint64 __bootSwapBytes(uint64 bits,int64 count) {
+    uint64 result=0u; int64 i=0;
+    while (i<count) { result=(result<<8)|(bits&255u); bits=bits>>8; i=i+1; }
+    return result;
+}
+
+/** 按指定字节序编码 IEEE 754，不依赖宿主胶水。 */
+List<uint8> __float32ToBytes(float32 value,bool bigEndian) {
+    List<uint8> result; uint64 bits=__bootFloat32Bits(value);
+    if (bigEndian) { bits=__bootSwapBytes(bits,4); }
+    int64 i=0; while (i<4) { result.push((uint8)(bits&255u)); bits=bits>>8; i=i+1; }
+    return result;
+}
+/** 列表入口在读取前校验完整输入长度。 */
+float32 __bytesToFloat32(List<uint8> bytes,bool bigEndian) {
+    if (bytes.len()<4) { panic("IEEE 754 转换：字节不足"); }
+    uint64 bits=0u; int64 i=0;
+    while (i<4) { bits=bits|((uint64)bytes[i]<<(i*8)); i=i+1; }
+    if (bigEndian) { bits=__bootSwapBytes(bits,4); }
+    return __bootFloat32FromBits(bits);
+}
+/** 整段检查后复制输入字节，避免越界时部分读取。 */
+float32 __arrayToFloat32(uint8 const& bytes,bool bigEndian) {
+    uint64 bits=0u; unsafe { BarePtr<uint64> target=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> source=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target.castTo<uint8>(),source,4); }
+    if (bigEndian) { bits=__bootSwapBytes(bits,4); }
+    return __bootFloat32FromBits(bits);
+}
+/** 整段检查后一次写入，失败时不留下部分编码结果。 */
+bool __float32ToArray(float32 value,uint8 mut& bytes,bool bigEndian) {
+    uint64 bits=__bootFloat32Bits(value);
+    if (bigEndian) { bits=__bootSwapBytes(bits,4); }
+    unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> target=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target,source.castTo<uint8>(),4); } return true;
+}
+
+/** 按指定字节序编码 IEEE 754，不依赖宿主胶水。 */
+List<uint8> __float64ToBytes(float64 value,bool bigEndian) {
+    List<uint8> result; uint64 bits=__bootFloat64Bits(value);
+    if (bigEndian) { bits=__bootSwapBytes(bits,8); }
+    int64 i=0; while (i<8) { result.push((uint8)(bits&255u)); bits=bits>>8; i=i+1; }
+    return result;
+}
+/** 列表入口在读取前校验完整输入长度。 */
+float64 __bytesToFloat64(List<uint8> bytes,bool bigEndian) {
+    if (bytes.len()<8) { panic("IEEE 754 转换：字节不足"); }
+    uint64 bits=0u; int64 i=0;
+    while (i<8) { bits=bits|((uint64)bytes[i]<<(i*8)); i=i+1; }
+    if (bigEndian) { bits=__bootSwapBytes(bits,8); }
+    return __bootFloat64FromBits(bits);
+}
+/** 整段检查后复制输入字节，避免越界时部分读取。 */
+float64 __arrayToFloat64(uint8 const& bytes,bool bigEndian) {
+    uint64 bits=0u; unsafe { BarePtr<uint64> target=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> source=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target.castTo<uint8>(),source,8); }
+    if (bigEndian) { bits=__bootSwapBytes(bits,8); }
+    return __bootFloat64FromBits(bits);
+}
+/** 整段检查后一次写入，失败时不留下部分编码结果。 */
+bool __float64ToArray(float64 value,uint8 mut& bytes,bool bigEndian) {
+    uint64 bits=__bootFloat64Bits(value);
+    if (bigEndian) { bits=__bootSwapBytes(bits,8); }
+    unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> target=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target,source.castTo<uint8>(),8); } return true;
+}
+
+/** 标准算法调用期间固定源容器寿命，正常和失败退出均清理。 */
+Any __algorithmLease<T>(List<T> source);
+
+/** 逐项调用语言函数值，结果与输入各自拥有值；租约保护整个回调序列。 */
+List<R> __bootAlgorithmMap<T,R>(List<T> source,R fn(T) callback) {
+    Any lease=__algorithmLease<T>(source);
+    List<R> result; int64 i=0; int64 size=source.len();
+    while (i<size) { result.push(callback(source[i])); i=i+1; }
+    return result;
+}
+/** 保留谓词命中的独立值，不改变输入表。 */
+List<T> __bootAlgorithmFilter<T>(List<T> source,bool fn(T) callback) {
+    Any lease=__algorithmLease<T>(source);
+    List<T> result; int64 i=0; int64 size=source.len();
+    while (i<size) { if (callback(source[i])) { result.push(source[i]); } i=i+1; }
+    return result;
+}
+/** 短路判断所有元素；空表返回 true。 */
+bool __bootAlgorithmAll<T>(List<T> source,bool fn(T) callback) {
+    Any lease=__algorithmLease<T>(source); int64 i=0; int64 size=source.len();
+    while (i<size) { if (!callback(source[i])) { return false; } i=i+1; }
+    return true;
+}
+/** 短路判断至少一个元素；空表返回 false。 */
+bool __bootAlgorithmAny<T>(List<T> source,bool fn(T) callback) {
+    Any lease=__algorithmLease<T>(source); int64 i=0; int64 size=source.len();
+    while (i<size) { if (callback(source[i])) { return true; } i=i+1; }
+    return false;
+}
+/** 从独立初值顺序归约，正常与提前退出均清理租约和中间拥有值。 */
+T __bootAlgorithmFold<T>(List<T> source,T initial,T fn(T,T) callback) {
+    Any lease=__algorithmLease<T>(source); int64 i=0; int64 size=source.len();
+    while (i<size) { initial=callback(initial,source[i]); i=i+1; }
+    return initial;
+}
+/** 以首个元素为初值；空表拒绝，单元素也返回独立拥有值。 */
+T __bootAlgorithmReduce<T>(List<T> source,T fn(T,T) callback) {
+    Any lease=__algorithmLease<T>(source); int64 size=source.len();
+    if (size==0) { panic("std::lang::algorithms::reduce 不能作用在空表上（要给初值就用 fold）"); }
+    T result=source[0]; int64 i=1;
+    while (i<size) { result=callback(result,source[i]); i=i+1; }
+    return result;
+}
+/** 谓词计数使用相同的全程租约与调用顺序。 */
+int64 __bootAlgorithmCountIf<T>(List<T> source,bool fn(T) callback) {
+    Any lease=__algorithmLease<T>(source); int64 i=0; int64 count=0; int64 size=source.len();
+    while (i<size) { if (callback(source[i])) { count=count+1; } i=i+1; }
+    return count;
+}
+
+/** 单槽比较保留宿主值键的排序规则，遍历与选择由语言实现。 */
+unsafe int64 __listStorageCompareIndex(int64 source,int64 left,int64 right);
+
+unsafe int64 __listStorageCompareI(int64 source,int64 index,int64 value,int64 text,int64 layout);
+unsafe int64 __listStorageReadI(int64 source,int64 index,int64 text,int64 layout);
+unsafe int64 __listStorageCloneI(int64 value,int64 text,int64 layout);
+/** 使用同一值键判等，计数不构造元素副本。 */
+unsafe int64 __bootListCountI(int64 source,int64 value,int64 text,int64 layout) {
+    int64 size=__listStorageLength(source); int64 i=0; int64 count=0;
+    while (i<size) { if (__listStorageEqualI(source,i,value,text,layout)!=0) { count=count+1; } i=i+1; }
+    return count;
+}
+/** lower_bound 保留相等元素的首个位置。 */
+unsafe int64 __bootListBinarySearchI(int64 source,int64 value,int64 text,int64 layout) {
+    int64 low=0; int64 high=__listStorageLength(source); int64 size=high;
+    while (low<high) { int64 middle=low+(high-low)/2;
+        if (__listStorageCompareI(source,middle,value,text,layout)<0) { low=middle+1; } else { high=middle; }
+    }
+    if (low==size) { return -1; }
+    if (__listStorageEqualI(source,low,value,text,layout)!=0) { return low; }
+    return -1;
+}
+/** 按原始顺序累加，保留浮点舍入次序。 */
+unsafe int64 __bootListSumI(int64 source,int64 floating) {
+    int64 total=0; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { total=total+__listStorageReadI(source,i,0,0); i=i+1; }
+    return total;
+}
+
+/** 只复制最终选中的值，等值时保留首个参数。 */
+unsafe int64 __bootListMinI(int64 source,int64 first,int64 text,int64 layout) {
+    int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { int64 relation=0;
+        if (best<0) { relation=__listStorageCompareI(source,i,first,text,layout); }
+        else { relation=__listStorageCompareIndex(source,i,best); }
+        if (relation<0) { best=i; } i=i+1;
+    }
+    if (best<0) { return __listStorageCloneI(first,text,layout); }
+    return __listStorageReadI(source,best,text,layout);
+}
+
+/** 只复制最终选中的值，等值时保留首个参数。 */
+unsafe int64 __bootListMaxI(int64 source,int64 first,int64 text,int64 layout) {
+    int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { int64 relation=0;
+        if (best<0) { relation=__listStorageCompareI(source,i,first,text,layout); }
+        else { relation=__listStorageCompareIndex(source,i,best); }
+        if (relation>0) { best=i; } i=i+1;
+    }
+    if (best<0) { return __listStorageCloneI(first,text,layout); }
+    return __listStorageReadI(source,best,text,layout);
+}
+
+/** 验证边界顺序后返回独立拥有值。 */
+unsafe int64 __bootListClampI(int64 source,int64 value,int64 text,int64 layout) {
+    if (__listStorageLength(source)!=2) { panic("std::lang::algorithms::clamp 的边界胶水需要 low/high 两项"); }
+    if (__listStorageCompareIndex(source,1,0)<0) { panic("std::lang::algorithms::clamp 要求 low <= high"); }
+    if (__listStorageCompareI(source,0,value,text,layout)>0) { return __listStorageReadI(source,0,text,layout); }
+    if (__listStorageCompareI(source,1,value,text,layout)<0) { return __listStorageReadI(source,1,text,layout); }
+    return __listStorageCloneI(value,text,layout);
+}
+
+unsafe int64 __listStorageCompareF(int64 source,int64 index,float64 value,int64 text,int64 layout);
+unsafe float64 __listStorageReadF(int64 source,int64 index,int64 text,int64 layout);
+unsafe float64 __listStorageCloneF(float64 value,int64 text,int64 layout);
+/** 使用同一值键判等，计数不构造元素副本。 */
+unsafe int64 __bootListCountF(int64 source,float64 value,int64 text,int64 layout) {
+    int64 size=__listStorageLength(source); int64 i=0; int64 count=0;
+    while (i<size) { if (__listStorageEqualF(source,i,value,text,layout)!=0) { count=count+1; } i=i+1; }
+    return count;
+}
+/** lower_bound 保留相等元素的首个位置。 */
+unsafe int64 __bootListBinarySearchF(int64 source,float64 value,int64 text,int64 layout) {
+    int64 low=0; int64 high=__listStorageLength(source); int64 size=high;
+    while (low<high) { int64 middle=low+(high-low)/2;
+        if (__listStorageCompareF(source,middle,value,text,layout)<0) { low=middle+1; } else { high=middle; }
+    }
+    if (low==size) { return -1; }
+    if (__listStorageEqualF(source,low,value,text,layout)!=0) { return low; }
+    return -1;
+}
+/** 按原始顺序累加，保留浮点舍入次序。 */
+unsafe float64 __bootListSumF(int64 source,int64 floating) {
+    float64 total=0; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { total=total+__listStorageReadF(source,i,0,0); i=i+1; }
+    return total;
+}
+
+/** 只复制最终选中的值，等值时保留首个参数。 */
+unsafe float64 __bootListMinF(int64 source,float64 first,int64 text,int64 layout) {
+    int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { int64 relation=0;
+        if (best<0) { relation=__listStorageCompareF(source,i,first,text,layout); }
+        else { relation=__listStorageCompareIndex(source,i,best); }
+        if (relation<0) { best=i; } i=i+1;
+    }
+    if (best<0) { return __listStorageCloneF(first,text,layout); }
+    return __listStorageReadF(source,best,text,layout);
+}
+
+/** 只复制最终选中的值，等值时保留首个参数。 */
+unsafe float64 __bootListMaxF(int64 source,float64 first,int64 text,int64 layout) {
+    int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
+    while (i<size) { int64 relation=0;
+        if (best<0) { relation=__listStorageCompareF(source,i,first,text,layout); }
+        else { relation=__listStorageCompareIndex(source,i,best); }
+        if (relation>0) { best=i; } i=i+1;
+    }
+    if (best<0) { return __listStorageCloneF(first,text,layout); }
+    return __listStorageReadF(source,best,text,layout);
+}
+
+/** 验证边界顺序后返回独立拥有值。 */
+unsafe float64 __bootListClampF(int64 source,float64 value,int64 text,int64 layout) {
+    if (__listStorageLength(source)!=2) { panic("std::lang::algorithms::clamp 的边界胶水需要 low/high 两项"); }
+    if (__listStorageCompareIndex(source,1,0)<0) { panic("std::lang::algorithms::clamp 要求 low <= high"); }
+    if (__listStorageCompareF(source,0,value,text,layout)>0) { return __listStorageReadF(source,0,text,layout); }
+    if (__listStorageCompareF(source,1,value,text,layout)<0) { return __listStorageReadF(source,1,text,layout); }
+    return __listStorageCloneF(value,text,layout);
+}
+
+/** 编译器按元素类型实例化后降低为单槽比较和交换。 */
+int64 __algorithmCompareIndices<T>(List<T> source,int64 left,int64 right);
+void __algorithmSwap<T>(List<T> mut& values,int64 left,int64 right);
+
+/** 合并两段索引；比较只读取原值，相等时先取左段以保持稳定。 */
+void __bootAlgorithmMerge<T>(List<T> source,int64 const& input,int64 mut& output,int64 count,int64 width) {
+    int64 left=0;
+    while (left<count) {
+        int64 middle=count; if (width<count-left) { middle=left+width; }
+        int64 end=count; if (width<count-middle) { end=middle+width; }
+        int64 first=left; int64 second=middle; int64 at=left;
+        while (first<middle && second<end) {
+            if (__algorithmCompareIndices<T>(source,input[second],input[first])<0) { output[at]=input[second]; second=second+1; }
+            else { output[at]=input[first]; first=first+1; }
+            at=at+1;
+        }
+        while (first<middle) { output[at]=input[first]; first=first+1; at=at+1; }
+        while (second<end) { output[at]=input[second]; second=second+1; at=at+1; }
+        left=end;
+    }
+}
+/** 按原位置到目标位置的置换交换槽位，不复制用户元素。 */
+void __bootAlgorithmPermute<T>(List<T> mut& values,int64 mut& positions,int64 count) {
+    int64 i=0;
+    while (i<count) {
+        while (positions[i]!=i) {
+            int64 target=positions[i]; __algorithmSwap<T>(values,i,target);
+            int64 previous=positions[target]; positions[target]=positions[i]; positions[i]=previous;
+        }
+        i=i+1;
+    }
+}
+/** 稳定排序只复制一次输入值，辅助区仅存两组整数索引。 */
+List<T> __bootAlgorithmSort<T>(List<T> source) {
+    List<T> result=source; int64 size=result.len();
+    if (size<2) { return result; }
+    int64 order[]=new[size]; int64 scratch[]=new[size]; int64 i=0;
+    while (i<size) { order[i]=i; i=i+1; }
+    bool inScratch=false; int64 width=1;
+    while (width<size) {
+        if (inScratch) { __bootAlgorithmMerge<T>(result,&scratch[0],&order[0],size,width); }
+        else { __bootAlgorithmMerge<T>(result,&order[0],&scratch[0],size,width); }
+        inScratch=!inScratch; if (width>size/2) { break; } width=width*2;
+    }
+    i=0;
+    if (inScratch) {
+        while (i<size) { order[scratch[i]]=i; i=i+1; }
+        __bootAlgorithmPermute<T>(&result,&order[0],size);
+    }
+    else {
+        while (i<size) { scratch[order[i]]=i; i=i+1; }
+        __bootAlgorithmPermute<T>(&result,&scratch[0],size);
+    }
+    return result;
 }

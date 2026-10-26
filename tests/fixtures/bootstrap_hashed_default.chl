@@ -1,0 +1,48 @@
+/** 用独立定长数组模型核对碰撞、回绕、密集末项补洞和索引修复。 */
+struct CollisionKey: Equal<bool,CollisionKey>, Hash<CollisionKey> {
+    int64 id;
+    bool leftEqual(CollisionKey other) { return self.id==other.id; }
+    uint64 hash(CollisionKey other) { return (uint64)(self.id%7); }
+};
+CollisionKey collision(int64 id) { CollisionKey key; key.id=id; return key; }
+void main() {
+    Map<CollisionKey,int64> values; Set<CollisionKey> keys;
+    values.clear(); keys.clear();
+    bool present[128]; int64 expected[128]; int64 count=0; int64 seed=12345; int64 step=0;
+    while (step<2000) {
+        seed=(seed*48271)%2147483647; int64 index=seed%128;
+        CollisionKey key=collision(index);
+        if (seed%3==0) {
+            int64 removed=values.remove(key); int64 setRemoved=keys.remove(key);
+            if (present[index]) { assert(removed==1 && setRemoved==1); present[index]=false; count=count-1; }
+            else { assert(removed==0 && setRemoved==0); }
+        }
+        else {
+            values[key]=step; keys.add(key); keys.add(key);
+            if (!present[index]) { present[index]=true; count=count+1; }
+            expected[index]=step;
+        }
+        assert(values.len()==count && keys.len()==count);
+        int64 i=0;
+        if (step%31==0) {
+            while (i<128) {
+                CollisionKey query=collision(i);
+                if (present[i]) { assert(values.has(query)!=0 && keys.has(query)!=0 && values[query]==expected[i]); }
+                else { assert(values.has(query)==0 && keys.has(query)==0); }
+                i=i+1;
+            }
+        }
+        if (step%97==0) {
+            Map<CollisionKey,int64> copy=values; Set<CollisionKey> setCopy=keys;
+            copy.clear(); setCopy.clear(); copy[collision(999)]=1; setCopy.add(collision(999));
+            assert(copy.len()==1 && setCopy.len()==1 && values.len()==count && keys.len()==count);
+        }
+        step=step+1;
+    }
+    Map<float64,float64> real; real[1.25]=2.5; assert(real[1.25]==2.5);
+    Map<int64,float64> mixed; mixed[3]=4.5; assert(mixed[3]==4.5);
+    Map<float64,String> names; names[1.5]="one"; assert(names[1.5]=="one");
+    Set<float64> realKeys={1.25,1.25,2.5}; assert(realKeys.len()==2 && realKeys.has(2.5)!=0);
+    values.clear(); keys.clear(); assert(values.len()==0 && keys.len()==0);
+    print("bootstrap-hashed-default-ok\n");
+}

@@ -113,7 +113,8 @@ let inferred = LIMIT;      // 类型推导
 `export` 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
 
 ```chali
-export int64 add(int64 left, int64 right)
+#export("f_add")
+int64 add(int64 left, int64 right)
 {
     return left + right;
 }
@@ -688,6 +689,8 @@ import std::text;
 
 ## 13. 引用速查
 
+ChaLi 的借用检查器也可形象地称为“死人遥测程序”：在使用位置检查借用来源是否已经失效，并约束引用逃逸。它仍会分析作用域和来源传播，不是只靠运行时发现悬空引用，也未实行 Rust 的独占可变借用规则。比喻的含义与边界见[借用控制流说明](11-algorithm-validation.md#生命周期的形象说法)。
+
 ```chali
 int64 value = 7;
 int64 mut& alias = &value;    // 可变引用
@@ -754,7 +757,7 @@ int64 health() { return 200; }
 
 ---
 
-## 16. 与 C 的边界：`abi` 块
+## 16. 与 C 的边界：编译器指令与原始存储
 
 `opcode` 声明胶水拥有的不透明对象类型，记录布局由 ABI 或 C++ 胶水管理：
 
@@ -790,12 +793,19 @@ opcode FileHandle {
 `opcode` 声明定义，前端不为它们保留独立的 `Kind` 枚举项。`string` 不是 `String` 的类型别名。
 
 ```chali
-abi "./native.dll" {
-    int64 c_function(int64 x) = "c_function";
-}
+#abi("C", "./native.dll", "c_function")
+int64 c_function(int64 x);
 ```
 
-`abi` 块声明按 C ABI 调用外部库函数。宿主通过共享 VM 加载与运行程序。类型映射、可空引用、胶水绑定详见[宿主集成与 C ABI](08-host-integration.md)。
+`#abi("C", "库路径", "原生符号")` 指令附着于单个函数声明，按 C ABI 调用外部库函数。旧 `abi "库" { ... }` 块语法已删除。宿主通过共享 VM 加载与运行程序。类型映射、可空引用、胶水绑定详见[宿主集成与 C ABI](08-host-integration.md)。
+
+`#export("原生符号")` 附着于有函数体的实现，生成按目标平台 C ABI 传递的标量或无资源纯值结构体接口。输出库由 `aot --shared --out` 指定。内部函数标签与原生符号分离，生成的 C 头文件提供准确类型。
+
+`unsafe { ... }` 为当前块授予原始操作权限；`unsafe T f(...)` 声明调用前置条件，安全上下文不能直接调用，也不能把它转换成安全函数值。闭包的函数体不继承创建位置的权限。普通数组、引用和算术检查继续生效。
+
+`std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。`__rawSize(T)` 与 `__rawAlign(T)` 查询语言内部存储布局，仅供 unsafe 内核使用，不等于 C ABI 布局。借出的引用不得超过存储寿命或相应元素生命周期。
+
+`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](44-unsafe-abi.md)和[书稿第 25 章](book/25-不安全代码.md)。
 
 ---
 

@@ -3,33 +3,56 @@ struct Packet { Inner inner; int32 count; float64 total; };
 struct Packed packed { int8 tag; float64 value; int32 count; };
 struct PackedOuter packed { int8 lead; Packet normal; Packed packed; };
 struct NormalOuter { int8 lead; Packed packed; float64 tail; };
-abi "./native.dll" {
-    int32 packed_layout() = "packed_layout";
-    Packed packed_transform(Packed value) = "packed_transform";
-    void packed_update(Packed mut& value) = "packed_update";
-    Option<Packed const&> packed_snapshot() = "packed_snapshot";
-    Packed[] packed_numbers(int32 count) = "packed_numbers" [count];
-    void packed_fill(Packed[] values, int32 count) = "packed_fill";
-    PackedOuter packed_outer(PackedOuter value) = "packed_outer";
-    NormalOuter normal_outer(NormalOuter value) = "normal_outer";
-    Packet transform(Packet value) = "transform";
-    void update(Packet mut& value) = "update";
-    int32 inspect(Packet const& value) = "inspect";
-    void updateOptional(Option<Packet mut&> value) = "update";
-    int32 inspectOptional(Option<Packet const&> value) = "inspect";
-    void bump(int32 mut& value) = "bump";
-    int32 alias(Packet mut& a, Packet const& b) = "alias";
-    Option<Packet const&> snapshot() = "snapshot";
-    Option<Packet mut&> nothing() = "nothing";
-    int32[] numbers(int32 count) = "numbers" [count];
-    void fill(int32[] values, int32 count) = "fill";
-    void wipe() = "wipe";
-    Option<int32 mut&> echo(int32 mut& value) = "echo";
-    int64 wide(int64 a, int64 b, int64 c, int64 d, int64 e) = "wide";
-    int32 arrays_alias(int32[] a, int32[] b) = "arrays_alias";
-    Packet[] get_packets(int32 count) = "get_packets" [count];
-    void fill_packets(Packet[] values, int32 count) = "fill_packets";
-}
+#abi("C", "./native.dll", "packed_layout")
+int32 packed_layout();
+#abi("C", "./native.dll", "packed_transform")
+Packed packed_transform(Packed value);
+#abi("C", "./native.dll", "packed_update")
+void packed_update(Packed mut& value);
+#abi("C", "./native.dll", "packed_snapshot")
+Option<Packed const&> packed_snapshot();
+#abi("C", "./native.dll", "packed_numbers")
+Packed[] packed_numbers(int32 count) [count];
+#abi("C", "./native.dll", "packed_fill")
+void packed_fill(Packed[] values, int32 count);
+#abi("C", "./native.dll", "packed_outer")
+PackedOuter packed_outer(PackedOuter value);
+#abi("C", "./native.dll", "normal_outer")
+NormalOuter normal_outer(NormalOuter value);
+#abi("C", "./native.dll", "transform")
+Packet transform(Packet value);
+#abi("C", "./native.dll", "update")
+void update(Packet mut& value);
+#abi("C", "./native.dll", "inspect")
+int32 inspect(Packet const& value);
+#abi("C", "./native.dll", "update")
+void updateOptional(Option<Packet mut&> value);
+#abi("C", "./native.dll", "inspect")
+int32 inspectOptional(Option<Packet const&> value);
+#abi("C", "./native.dll", "bump")
+void bump(int32 mut& value);
+#abi("C", "./native.dll", "alias")
+int32 alias(Packet mut& a, Packet const& b);
+#abi("C", "./native.dll", "snapshot")
+Option<Packet const&> snapshot();
+#abi("C", "./native.dll", "nothing")
+Option<Packet mut&> nothing();
+#abi("C", "./native.dll", "numbers")
+int32[] numbers(int32 count) [count];
+#abi("C", "./native.dll", "fill")
+void fill(int32[] values, int32 count);
+#abi("C", "./native.dll", "wipe")
+void wipe();
+#abi("C", "./native.dll", "echo")
+Option<int32 mut&> echo(int32 mut& value);
+#abi("C", "./native.dll", "wide")
+int64 wide(int64 a, int64 b, int64 c, int64 d, int64 e);
+#abi("C", "./native.dll", "arrays_alias")
+int32 arrays_alias(int32[] a, int32[] b);
+#abi("C", "./native.dll", "get_packets")
+Packet[] get_packets(int32 count) [count];
+#abi("C", "./native.dll", "fill_packets")
+void fill_packets(Packet[] values, int32 count);
 void main() {
     Packet p;
     p.inner.tag = (int8)2;

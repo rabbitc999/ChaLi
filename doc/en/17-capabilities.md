@@ -69,7 +69,7 @@ Symbol compression is not encryption or a sandbox. Program updates do not automa
 
 ## Host integration and reflection
 
-ChaLi calls C libraries through `abi` and C++ through a Registry. References, structs, arrays, optional
+ChaLi calls C libraries through per-function `#abi("C", "library", "symbol")` directives and C++ through a Registry. `#export("symbol")` exports scalars and resource-free value structs through the C ABI. References, structs, arrays, optional
 references, returned-memory release and limited header bindings follow explicit ABI contracts; declarations
 must match the actual C signatures. Glue calls named functions, inline fn values and closures through
 `NativeCallContext::invoke` or `chali_glue::Function`. VM share the interface, argument-count checks
@@ -154,4 +154,4 @@ Connections, arenas and timer sources have exclusive owners; containers and rand
 
 Reflection provides exact typed field access and generates codecs for JSON, TOML, byte serialization, and annotated std::sql models. Dynamic SQL generation and direct binding currently support SQLite; bound execution on other backends reports an explicit error. See [reflection serialization and dynamic SQL](36-reflection-serialization-sql.md).
 
-The companion book contains 25 chapters, exercises with reference answers, literary adaptations and compilation / VM execution diagrams. General host callbacks and event APIs retain their documented protocols.
+The companion book contains 26 chapters, exercises with reference answers, literary adaptations and compilation / VM execution diagrams. General host callbacks and event APIs retain their documented protocols.

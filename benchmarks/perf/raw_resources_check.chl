@@ -1,0 +1,54 @@
+int64 closed = 0;
+int64 ended[100];
+struct OwnedElement: Closeable {
+    int64 id;
+    String text;
+    void close() {
+        if (self.id > 0) {
+            assert(ended[self.id] == 0);
+            ended[self.id] = 1;
+            closed = closed + 1;
+            self.id = 0;
+        }
+    }
+};
+void main() {
+    RawList<OwnedElement> list;
+    list.reserve(80);
+    assert(closed == 0);
+    int64 i = 1;
+    while (i <= 40) {
+        OwnedElement value; value.id = i; value.text = "owned";
+        list.push(move(value)); i = i + 1;
+    }
+    list.reserve(160);
+    assert(closed == 0);
+    OwnedElement last = list.pop();
+    assert(last.id == 40 && last.text == "owned" && closed == 0);
+    last.close();
+    list.clear();
+    assert(closed == 40 && list.capacity() == 160 && list.len() == 0);
+    list.close(); list.close();
+    RawMap<OwnedElement> map;
+    i = 41;
+    while (i <= 80) {
+        OwnedElement value; value.id = i; value.text = "map";
+        map.put((i - 41) * 16, move(value)); i = i + 1;
+    }
+    map.reserve(256);
+    assert(closed == 40 && map.len() == 40);
+    OwnedElement replacement; replacement.id = 81; replacement.text = "new";
+    map.put(16, move(replacement));
+    assert(closed == 41);
+    i = 0;
+    while (i < 40) {
+        if (i % 2 == 0) { assert(map.remove(i * 16)); }
+        i = i + 1;
+    }
+    assert(closed == 61 && map.len() == 20);
+    map.close(); map.close();
+    assert(closed == 81);
+    i = 1;
+    while (i <= 81) { assert(ended[i] == 1); i = i + 1; }
+    println("raw resource containers OK");
+}

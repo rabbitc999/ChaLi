@@ -6,7 +6,8 @@ MAX_ITEMS = 10_000_000
 MAX_TEXT = 64 * 1024 * 1024
 FEATURE_REFLECTION = 0x0002
 FEATURE_BYTE_MEMORY = 0x0004
-KNOWN_FEATURES = FEATURE_REFLECTION | FEATURE_BYTE_MEMORY
+FEATURE_BULK_MEMORY = 0x0008
+KNOWN_FEATURES = FEATURE_REFLECTION | FEATURE_BYTE_MEMORY | FEATURE_BULK_MEMORY
 
 
 def validate_reflection(data):
@@ -176,13 +177,15 @@ def read_raw(data):
             if mask & 32: i["name"] = r.text(True)
             if mask & 64: i["name2"] = r.text(True)
             if mask & 128: i["text"] = r.text(True)
-        if i["op"] > 53 or i["format"] > 3 or i["flags"] & ~3 or i["quad"] > MAX_ITEMS:
+        if i["op"] > 55 or i["format"] > 3 or i["flags"] & ~3 or i["quad"] > MAX_ITEMS:
             raise ValueError("非法指令字段")
         # v5 固定线码：LOADAT=52、STOREAT=53；零宽度标记保留旧八字节访问。
         if i["op"] in (52, 53):
             if i["integer"] not in (0, 1) or (i["integer"] == 1 and
                     (i["flags"] & 2 or not features & FEATURE_BYTE_MEMORY)):
                 raise ValueError("内存指令宽度无效或缺少 byte-memory 特征位")
+        if i["op"] in (54, 55) and not features & FEATURE_BULK_MEMORY:
+            raise ValueError("字节复制／填充指令缺少 bulk-memory 特征位")
         result["code"].append(i)
     def insert(table, key, value):
         if key in table:
@@ -218,7 +221,7 @@ def read_raw(data):
         entry = (r.varuint(), r.number(1), r.number(1), r.varuint(),
                  r.varint(), r.varint(), r.number(1), r.varuint(), r.varuint())
         origin, op, kind, span, immediate, bits, flags, target, destination2 = entry
-        if (origin + span > len(result["code"]) or op > 53 or kind not in range(1, 8)
+        if (origin + span > len(result["code"]) or op > 55 or kind not in range(1, 8)
                 or not 1 <= span <= 6 or flags & ~31 or target > len(result["code"]) + 1
                 or destination2 > len(result["code"]) + 1
                 or not -(1 << 31) <= bits < (1 << 31)):

@@ -13,11 +13,11 @@ void consume(Unique value) {}
 void main() {
     Unique original = Unique::new(7);
     int64 before;
-    memcpy(&before, &original, 8);
+    unsafe { memcpy(&before, &original, 8); }
     Unique target = move original;
     Unique returned = relay(move target);
     int64 after;
-    memcpy(&after, &returned, 8);
+    unsafe { memcpy(&after, &returned, 8); }
     assert(before == after);
     consume(move returned);
     Unique captured = Unique::new(9);

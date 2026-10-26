@@ -81,7 +81,7 @@ function main() {
   const runtimeNotices = path.join(EXT_ROOT, 'third-party', 'runtime');
   fs.mkdirSync(runtimeNotices, { recursive: true });
   for (const name of ['miniz', 'ipage', 'caspp']) {
-    fs.copyFileSync(path.join(EXT_ROOT, '..', 'library', name, 'LICENSE'),
+    fs.copyFileSync(path.join(EXT_ROOT, '..', name === 'miniz' ? 'licenses' : 'library', name, 'LICENSE'),
       path.join(runtimeNotices, `${name}-LICENSE.txt`));
   }
   const source = findSource();

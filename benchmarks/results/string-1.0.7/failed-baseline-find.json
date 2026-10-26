@@ -1,0 +1,7 @@
+{
+  "compiler": "dist/llvm-external/chali-1.0.6-llvm-external-windows-x64.exe",
+  "returncode": 3221225477,
+  "source": "failed-baseline-find.chl",
+  "source_sha256": "63e05cb4b8b48aec8ff94123fb8afefb56d78ffe75e268541976414f4485bfd1",
+  "phase": "AOT build before any timing samples"
+}

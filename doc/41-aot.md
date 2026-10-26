@@ -47,7 +47,8 @@ AOT 默认开启全部适用优化，外置 LLVM 使用 `-O3`，静态 LLVM 使�
 `export` 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
 
 ```chali
-export int64 add(int64 left, int64 right)
+#export("f_add")
+int64 add(int64 left, int64 right)
 {
     return left + right;
 }

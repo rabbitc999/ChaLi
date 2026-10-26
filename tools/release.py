@@ -107,7 +107,7 @@ def package_assets(root, output, binary, vsix, version, target, revision, dirty,
     output.mkdir(parents=True, exist_ok=True)
     files = [(binary, binary.name), (vsix, vsix.name),
              (root / 'doc/book/latex/book.pdf', 'ChaLi-book.pdf')]
-    files.extend((root / 'library' / name / 'LICENSE', 'licenses/' + name + '/LICENSE')
+    files.extend((root / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', 'licenses/' + name + '/LICENSE')
                  for name in ('miniz', 'ipage', 'caspp'))
     if llvm_variant is not None:
         llvm = root / 'library/llvm'

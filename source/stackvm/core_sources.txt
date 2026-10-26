@@ -44,3 +44,4 @@ value_literals.cpp
 value_transfer.cpp
 vm_execution.cpp
 vm_features.cpp
+native_raw_storage.cpp

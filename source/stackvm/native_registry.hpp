@@ -49,6 +49,6 @@ struct SlotNativeTable
      */
     const SlotNativeEntry *end() const { return nullptr; }
 };
-extern const SlotNativeEntry kSlotNativeEntries[66];
+extern const SlotNativeEntry kSlotNativeEntries[63];
 extern const SlotNativeTable kSlotNatives;
 }  // namespace stackvm::runtimeDetail

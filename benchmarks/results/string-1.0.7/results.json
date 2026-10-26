@@ -1,0 +1,1605 @@
+{
+  "version": "1.0.7",
+  "compiler_sha256": "aedbf7d90d805ecedc2e0c6f60e49d11b05af766ddd7c17d0d713b61265f5ea8",
+  "prototype_sha256": "f613cf786efdc4854923e8fb8153a6b00a9e02222b45142729b59faa74b1cff9",
+  "check_sha256": "b28e8a409100cb12af742866a86b5b04e38ce7925f95ef670df112480a646367",
+  "generated_utc": "2026-10-26T18:18:23.577551+00:00",
+  "host": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "cpu_count": 12,
+  "size": 512,
+  "process_runs": 3,
+  "warmups": 1,
+  "repetitions": 5,
+  "unit": "nanoseconds",
+  "work": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu",
+  "correctness": {
+    "vm": "passed",
+    "aot": "passed"
+  },
+  "cases": {
+    "construct": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-native.chl",
+        "source_sha256": "72964a81de11b4b5d5a70de18cbfa1abb714919bc76cb7d1733dec0f43c5da6e",
+        "samples_ns": [
+          2194600,
+          1758100,
+          1750500,
+          1753800,
+          1867200,
+          2468600,
+          1792800,
+          1764200,
+          1755100,
+          1759000,
+          2279800,
+          1790800,
+          1764500,
+          1816100,
+          2246900
+        ],
+        "outputs": [
+          "rep 2194600\nrep 1758100\nrep 1750500\nrep 1753800\nrep 1867200\nsink 3082\n",
+          "rep 2468600\nrep 1792800\nrep 1764200\nrep 1755100\nrep 1759000\nsink 3082\n",
+          "rep 2279800\nrep 1790800\nrep 1764500\nrep 1816100\nrep 2246900\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 1790800
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-native.chl",
+        "source_sha256": "72964a81de11b4b5d5a70de18cbfa1abb714919bc76cb7d1733dec0f43c5da6e",
+        "samples_ns": [
+          62600,
+          54600,
+          52800,
+          52600,
+          52700,
+          58900,
+          54600,
+          53100,
+          52500,
+          56200,
+          59500,
+          54900,
+          53300,
+          52900,
+          52800
+        ],
+        "outputs": [
+          "rep 62600\nrep 54600\nrep 52800\nrep 52600\nrep 52700\nsink 3082\n",
+          "rep 58900\nrep 54600\nrep 53100\nrep 52500\nrep 56200\nsink 3082\n",
+          "rep 59500\nrep 54900\nrep 53300\nrep 52900\nrep 52800\nsink 3082\n"
+        ],
+        "executable_bytes": 5198848,
+        "median_ns": 53300
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-bootstrap.chl",
+        "source_sha256": "2886ba980b7866217a88053b87ce7eed42517b674cd4f33920ea7d861b467a1e",
+        "samples_ns": [
+          1582500,
+          833100,
+          791100,
+          778400,
+          767000,
+          1585600,
+          815900,
+          783100,
+          786300,
+          776300,
+          2181100,
+          1562700,
+          1521300,
+          1529600,
+          1510600
+        ],
+        "outputs": [
+          "rep 1582500\nrep 833100\nrep 791100\nrep 778400\nrep 767000\nsink 3082\n",
+          "rep 1585600\nrep 815900\nrep 783100\nrep 786300\nrep 776300\nsink 3082\n",
+          "rep 2181100\nrep 1562700\nrep 1521300\nrep 1529600\nrep 1510600\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 833100
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-bootstrap.chl",
+        "source_sha256": "2886ba980b7866217a88053b87ce7eed42517b674cd4f33920ea7d861b467a1e",
+        "samples_ns": [
+          30800,
+          22600,
+          20900,
+          20500,
+          20600,
+          27000,
+          22600,
+          21000,
+          21000,
+          21000,
+          26700,
+          22500,
+          20900,
+          20900,
+          20800
+        ],
+        "outputs": [
+          "rep 30800\nrep 22600\nrep 20900\nrep 20500\nrep 20600\nsink 3082\n",
+          "rep 27000\nrep 22600\nrep 21000\nrep 21000\nrep 21000\nsink 3082\n",
+          "rep 26700\nrep 22500\nrep 20900\nrep 20900\nrep 20800\nsink 3082\n"
+        ],
+        "executable_bytes": 5016064,
+        "median_ns": 21000
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-baseline.chl",
+        "source_sha256": "72964a81de11b4b5d5a70de18cbfa1abb714919bc76cb7d1733dec0f43c5da6e",
+        "samples_ns": [
+          255700,
+          51400,
+          47600,
+          46800,
+          46500,
+          288400,
+          106200,
+          85800,
+          81400,
+          64400,
+          251400,
+          52900,
+          53000,
+          53200,
+          47300
+        ],
+        "outputs": [
+          "rep 255700\nrep 51400\nrep 47600\nrep 46800\nrep 46500\nsink 3082\n",
+          "rep 288400\nrep 106200\nrep 85800\nrep 81400\nrep 64400\nsink 3082\n",
+          "rep 251400\nrep 52900\nrep 53000\nrep 53200\nrep 47300\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 53200
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\construct-baseline.chl",
+        "source_sha256": "72964a81de11b4b5d5a70de18cbfa1abb714919bc76cb7d1733dec0f43c5da6e",
+        "samples_ns": [
+          7000,
+          5500,
+          5100,
+          4900,
+          4900,
+          6600,
+          5500,
+          5100,
+          4800,
+          4900,
+          9700,
+          8300,
+          8000,
+          7800,
+          7700
+        ],
+        "outputs": [
+          "rep 7000\nrep 5500\nrep 5100\nrep 4900\nrep 4900\nsink 3082\n",
+          "rep 6600\nrep 5500\nrep 5100\nrep 4800\nrep 4900\nsink 3082\n",
+          "rep 9700\nrep 8300\nrep 8000\nrep 7800\nrep 7700\nsink 3082\n"
+        ],
+        "executable_bytes": 75166208,
+        "median_ns": 5500
+      }
+    },
+    "append": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-native.chl",
+        "source_sha256": "a585ef8de1623626c2ba5bb8b99334b0a5e4db932703550176970dadb7471b44",
+        "samples_ns": [
+          195052100,
+          222167200,
+          213714100,
+          219184000,
+          193647100,
+          219135800,
+          210188100,
+          189047100,
+          188092600,
+          188521600,
+          228197900,
+          201693700,
+          206111600,
+          220995200,
+          244603100
+        ],
+        "outputs": [
+          "rep 195052100\nrep 222167200\nrep 213714100\nrep 219184000\nrep 193647100\nsink 3082\n",
+          "rep 219135800\nrep 210188100\nrep 189047100\nrep 188092600\nrep 188521600\nsink 3082\n",
+          "rep 228197900\nrep 201693700\nrep 206111600\nrep 220995200\nrep 244603100\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 210188100
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-native.chl",
+        "source_sha256": "a585ef8de1623626c2ba5bb8b99334b0a5e4db932703550176970dadb7471b44",
+        "samples_ns": [
+          7978300,
+          7988800,
+          7961000,
+          7999400,
+          7962300,
+          8055100,
+          7971800,
+          7939100,
+          8218100,
+          14511600,
+          8050400,
+          8402700,
+          8060400,
+          8088800,
+          8035200
+        ],
+        "outputs": [
+          "rep 7978300\nrep 7988800\nrep 7961000\nrep 7999400\nrep 7962300\nsink 3082\n",
+          "rep 8055100\nrep 7971800\nrep 7939100\nrep 8218100\nrep 14511600\nsink 3082\n",
+          "rep 8050400\nrep 8402700\nrep 8060400\nrep 8088800\nrep 8035200\nsink 3082\n"
+        ],
+        "executable_bytes": 5020160,
+        "median_ns": 8035200
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-bootstrap.chl",
+        "source_sha256": "91151befcd2bddc48ad163e5baad369efc9106bc826b1937956c3c5a2a9a50da",
+        "samples_ns": [
+          89950600,
+          70272000,
+          68863400,
+          68853200,
+          68872900,
+          74413900,
+          70409700,
+          70204200,
+          84834500,
+          70733900,
+          80488100,
+          72554800,
+          73154100,
+          76155100,
+          76301200
+        ],
+        "outputs": [
+          "rep 89950600\nrep 70272000\nrep 68863400\nrep 68853200\nrep 68872900\nsink 3082\n",
+          "rep 74413900\nrep 70409700\nrep 70204200\nrep 84834500\nrep 70733900\nsink 3082\n",
+          "rep 80488100\nrep 72554800\nrep 73154100\nrep 76155100\nrep 76301200\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 72554800
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-bootstrap.chl",
+        "source_sha256": "91151befcd2bddc48ad163e5baad369efc9106bc826b1937956c3c5a2a9a50da",
+        "samples_ns": [
+          2787600,
+          2822800,
+          2784000,
+          2788100,
+          2789800,
+          4512100,
+          4789900,
+          4020900,
+          4053100,
+          3689300,
+          3039500,
+          2813000,
+          2777100,
+          2769300,
+          2770500
+        ],
+        "outputs": [
+          "rep 2787600\nrep 2822800\nrep 2784000\nrep 2788100\nrep 2789800\nsink 3082\n",
+          "rep 4512100\nrep 4789900\nrep 4020900\nrep 4053100\nrep 3689300\nsink 3082\n",
+          "rep 3039500\nrep 2813000\nrep 2777100\nrep 2769300\nrep 2770500\nsink 3082\n"
+        ],
+        "executable_bytes": 5018112,
+        "median_ns": 2813000
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-baseline.chl",
+        "source_sha256": "a585ef8de1623626c2ba5bb8b99334b0a5e4db932703550176970dadb7471b44",
+        "samples_ns": [
+          1350700,
+          1459900,
+          1827200,
+          1181700,
+          1141600,
+          1338400,
+          1132800,
+          1121200,
+          1115900,
+          1111200,
+          1286700,
+          1126700,
+          1161700,
+          1366500,
+          1464300
+        ],
+        "outputs": [
+          "rep 1350700\nrep 1459900\nrep 1827200\nrep 1181700\nrep 1141600\nsink 3082\n",
+          "rep 1338400\nrep 1132800\nrep 1121200\nrep 1115900\nrep 1111200\nsink 3082\n",
+          "rep 1286700\nrep 1126700\nrep 1161700\nrep 1366500\nrep 1464300\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 1181700
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\append-baseline.chl",
+        "source_sha256": "a585ef8de1623626c2ba5bb8b99334b0a5e4db932703550176970dadb7471b44",
+        "samples_ns": [
+          1069700,
+          1112500,
+          1215800,
+          1048000,
+          1056400,
+          1095600,
+          1148600,
+          1060900,
+          1054700,
+          1041100,
+          1094400,
+          1090200,
+          1079500,
+          1224100,
+          1105900
+        ],
+        "outputs": [
+          "rep 1069700\nrep 1112500\nrep 1215800\nrep 1048000\nrep 1056400\nsink 3082\n",
+          "rep 1095600\nrep 1148600\nrep 1060900\nrep 1054700\nrep 1041100\nsink 3082\n",
+          "rep 1094400\nrep 1090200\nrep 1079500\nrep 1224100\nrep 1105900\nsink 3082\n"
+        ],
+        "executable_bytes": 75165696,
+        "median_ns": 1090200
+      }
+    },
+    "read": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-native.chl",
+        "source_sha256": "87072c6b621e91131332b7bd9a29c86525742a87f0f028506994747a6f6a01d5",
+        "samples_ns": [
+          1096712600,
+          1088322800,
+          1104529200,
+          1106663000,
+          1095527300,
+          1133649500,
+          1098497800,
+          1104067100,
+          1111837800,
+          1093073600,
+          1094686800,
+          1154486600,
+          1091680500,
+          1144053800,
+          1079291400
+        ],
+        "outputs": [
+          "rep 1096712600\nrep 1088322800\nrep 1104529200\nrep 1106663000\nrep 1095527300\nsink 1191946\n",
+          "rep 1133649500\nrep 1098497800\nrep 1104067100\nrep 1111837800\nrep 1093073600\nsink 1191946\n",
+          "rep 1094686800\nrep 1154486600\nrep 1091680500\nrep 1144053800\nrep 1079291400\nsink 1191946\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 1098497800
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-native.chl",
+        "source_sha256": "87072c6b621e91131332b7bd9a29c86525742a87f0f028506994747a6f6a01d5",
+        "samples_ns": [
+          21031800,
+          19235900,
+          19263900,
+          19257100,
+          19323300,
+          19293800,
+          19273000,
+          19258400,
+          19395400,
+          19306200,
+          19457600,
+          19426100,
+          19619200,
+          19402900,
+          19355600
+        ],
+        "outputs": [
+          "rep 21031800\nrep 19235900\nrep 19263900\nrep 19257100\nrep 19323300\nsink 1191946\n",
+          "rep 19293800\nrep 19273000\nrep 19258400\nrep 19395400\nrep 19306200\nsink 1191946\n",
+          "rep 19457600\nrep 19426100\nrep 19619200\nrep 19402900\nrep 19355600\nsink 1191946\n"
+        ],
+        "executable_bytes": 5268992,
+        "median_ns": 19323300
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-bootstrap.chl",
+        "source_sha256": "be136a4a171b4ff736c38a29f065fd50cfb928c61fb8577e5873920ef30b8e87",
+        "samples_ns": [
+          452546800,
+          428751800,
+          432992600,
+          441853800,
+          428593900,
+          438021200,
+          446022600,
+          419458500,
+          465036200,
+          439029500,
+          428685500,
+          430367000,
+          438032000,
+          430317400,
+          479374400
+        ],
+        "outputs": [
+          "rep 452546800\nrep 428751800\nrep 432992600\nrep 441853800\nrep 428593900\nsink 1191946\n",
+          "rep 438021200\nrep 446022600\nrep 419458500\nrep 465036200\nrep 439029500\nsink 1191946\n",
+          "rep 428685500\nrep 430367000\nrep 438032000\nrep 430317400\nrep 479374400\nsink 1191946\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 438021200
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-bootstrap.chl",
+        "source_sha256": "be136a4a171b4ff736c38a29f065fd50cfb928c61fb8577e5873920ef30b8e87",
+        "samples_ns": [
+          17252800,
+          17318500,
+          17340300,
+          17362700,
+          17338000,
+          22687200,
+          17406900,
+          17299100,
+          17359900,
+          18095800,
+          17266400,
+          17308900,
+          17333300,
+          17319000,
+          17347400
+        ],
+        "outputs": [
+          "rep 17252800\nrep 17318500\nrep 17340300\nrep 17362700\nrep 17338000\nsink 1191946\n",
+          "rep 22687200\nrep 17406900\nrep 17299100\nrep 17359900\nrep 18095800\nsink 1191946\n",
+          "rep 17266400\nrep 17308900\nrep 17333300\nrep 17319000\nrep 17347400\nsink 1191946\n"
+        ],
+        "executable_bytes": 5022208,
+        "median_ns": 17338000
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-baseline.chl",
+        "source_sha256": "87072c6b621e91131332b7bd9a29c86525742a87f0f028506994747a6f6a01d5",
+        "samples_ns": [
+          209093100,
+          196773100,
+          180296000,
+          186857100,
+          175653300,
+          205147200,
+          190059100,
+          182135300,
+          179671300,
+          176257800,
+          219556700,
+          198638100,
+          182268800,
+          212648200,
+          209802500
+        ],
+        "outputs": [
+          "rep 209093100\nrep 196773100\nrep 180296000\nrep 186857100\nrep 175653300\nsink 1191946\n",
+          "rep 205147200\nrep 190059100\nrep 182135300\nrep 179671300\nrep 176257800\nsink 1191946\n",
+          "rep 219556700\nrep 198638100\nrep 182268800\nrep 212648200\nrep 209802500\nsink 1191946\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 190059100
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\read-baseline.chl",
+        "source_sha256": "87072c6b621e91131332b7bd9a29c86525742a87f0f028506994747a6f6a01d5",
+        "samples_ns": [
+          7734300,
+          8186700,
+          7721900,
+          9366200,
+          7779100,
+          7588400,
+          7557500,
+          7597600,
+          7618100,
+          7530100,
+          7899900,
+          7942000,
+          8177700,
+          7692900,
+          11282000
+        ],
+        "outputs": [
+          "rep 7734300\nrep 8186700\nrep 7721900\nrep 9366200\nrep 7779100\nsink 1191946\n",
+          "rep 7588400\nrep 7557500\nrep 7597600\nrep 7618100\nrep 7530100\nsink 1191946\n",
+          "rep 7899900\nrep 7942000\nrep 8177700\nrep 7692900\nrep 11282000\nsink 1191946\n"
+        ],
+        "executable_bytes": 75168768,
+        "median_ns": 7734300
+      }
+    },
+    "find": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-native.chl",
+        "source_sha256": "99c837c58ab5e6c66488d959228c2a312ba1e4e88f0c3ff753a8f7dae8340f47",
+        "samples_ns": [
+          3775550400,
+          3687085800,
+          3706300200,
+          3614164900,
+          3742232900,
+          3706297000,
+          3724836400,
+          3693068600,
+          3681871300,
+          3619808400,
+          3717327400,
+          3678914800,
+          3805361900,
+          3754546400,
+          4057480800
+        ],
+        "outputs": [
+          "rep 3775550400\nrep 3687085800\nrep 3706300200\nrep 3614164900\nrep 3742232900\nsink -182\n",
+          "rep 3706297000\nrep 3724836400\nrep 3693068600\nrep 3681871300\nrep 3619808400\nsink -182\n",
+          "rep 3717327400\nrep 3678914800\nrep 3805361900\nrep 3754546400\nrep 4057480800\nsink -182\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 3706300200
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-native.chl",
+        "source_sha256": "99c837c58ab5e6c66488d959228c2a312ba1e4e88f0c3ff753a8f7dae8340f47",
+        "samples_ns": [
+          230250000,
+          244209900,
+          243760300,
+          251801800,
+          233088600,
+          227830800,
+          237422700,
+          234535600,
+          235382400,
+          248729000,
+          230471700,
+          265040800,
+          294958000,
+          276659300,
+          245701700
+        ],
+        "outputs": [
+          "rep 230250000\nrep 244209900\nrep 243760300\nrep 251801800\nrep 233088600\nsink -182\n",
+          "rep 227830800\nrep 237422700\nrep 234535600\nrep 235382400\nrep 248729000\nsink -182\n",
+          "rep 230471700\nrep 265040800\nrep 294958000\nrep 276659300\nrep 245701700\nsink -182\n"
+        ],
+        "executable_bytes": 5274624,
+        "median_ns": 243760300
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-bootstrap.chl",
+        "source_sha256": "a6d32e9532aad8b00490b181e500c4135ff3f5ca1ccf4fac3da1709ba22272bd",
+        "samples_ns": [
+          2998195200,
+          2939814000,
+          2904534200,
+          2944679200,
+          2901765600,
+          2899656500,
+          3005770900,
+          2997249600,
+          2944687700,
+          2898498000,
+          3011275400,
+          2980170800,
+          3025357800,
+          3022437900,
+          2916186900
+        ],
+        "outputs": [
+          "rep 2998195200\nrep 2939814000\nrep 2904534200\nrep 2944679200\nrep 2901765600\nsink -182\n",
+          "rep 2899656500\nrep 3005770900\nrep 2997249600\nrep 2944687700\nrep 2898498000\nsink -182\n",
+          "rep 3011275400\nrep 2980170800\nrep 3025357800\nrep 3022437900\nrep 2916186900\nsink -182\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 2944687700
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-bootstrap.chl",
+        "source_sha256": "a6d32e9532aad8b00490b181e500c4135ff3f5ca1ccf4fac3da1709ba22272bd",
+        "samples_ns": [
+          174340200,
+          183248700,
+          185023100,
+          175845800,
+          177492500,
+          183895900,
+          173270100,
+          194734900,
+          182562400,
+          175548000,
+          178968900,
+          174429400,
+          199515100,
+          191633200,
+          217541000
+        ],
+        "outputs": [
+          "rep 174340200\nrep 183248700\nrep 185023100\nrep 175845800\nrep 177492500\nsink -182\n",
+          "rep 183895900\nrep 173270100\nrep 194734900\nrep 182562400\nrep 175548000\nsink -182\n",
+          "rep 178968900\nrep 174429400\nrep 199515100\nrep 191633200\nrep 217541000\nsink -182\n"
+        ],
+        "executable_bytes": 5021696,
+        "median_ns": 182562400
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-baseline.chl",
+        "source_sha256": "99c837c58ab5e6c66488d959228c2a312ba1e4e88f0c3ff753a8f7dae8340f47",
+        "samples_ns": [
+          745600,
+          505900,
+          510200,
+          531800,
+          527100,
+          671800,
+          549100,
+          522200,
+          499300,
+          809700,
+          1335800,
+          1003500,
+          1021000,
+          1075400,
+          1074900
+        ],
+        "outputs": [
+          "rep 745600\nrep 505900\nrep 510200\nrep 531800\nrep 527100\nsink -182\n",
+          "rep 671800\nrep 549100\nrep 522200\nrep 499300\nrep 809700\nsink -182\n",
+          "rep 1335800\nrep 1003500\nrep 1021000\nrep 1075400\nrep 1074900\nsink -182\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 671800
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\find-baseline.chl",
+        "source_sha256": "99c837c58ab5e6c66488d959228c2a312ba1e4e88f0c3ff753a8f7dae8340f47",
+        "samples_ns": [
+          100300,
+          98100,
+          97300,
+          96800,
+          96600,
+          100100,
+          108500,
+          104400,
+          99300,
+          98100,
+          171400,
+          180100,
+          173300,
+          170800,
+          115400
+        ],
+        "outputs": [
+          "rep 100300\nrep 98100\nrep 97300\nrep 96800\nrep 96600\nsink -182\n",
+          "rep 100100\nrep 108500\nrep 104400\nrep 99300\nrep 98100\nsink -182\n",
+          "rep 171400\nrep 180100\nrep 173300\nrep 170800\nrep 115400\nsink -182\n"
+        ],
+        "executable_bytes": 75166720,
+        "median_ns": 100300
+      }
+    },
+    "copy": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-native.chl",
+        "source_sha256": "0031df96755e655369777f085a3a8af8545f385a2730cd222b5a8e9ed4ff5faa",
+        "samples_ns": [
+          26445700,
+          33996500,
+          25589900,
+          36259300,
+          30156000,
+          27422200,
+          32582800,
+          29150800,
+          31079000,
+          36427300,
+          27166000,
+          25839500,
+          26607800,
+          30199000,
+          25779000
+        ],
+        "outputs": [
+          "rep 26445700\nrep 33996500\nrep 25589900\nrep 36259300\nrep 30156000\nsink 116938\n",
+          "rep 27422200\nrep 32582800\nrep 29150800\nrep 31079000\nrep 36427300\nsink 116938\n",
+          "rep 27166000\nrep 25839500\nrep 26607800\nrep 30199000\nrep 25779000\nsink 116938\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 29150800
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-native.chl",
+        "source_sha256": "0031df96755e655369777f085a3a8af8545f385a2730cd222b5a8e9ed4ff5faa",
+        "samples_ns": [
+          701000,
+          681700,
+          681900,
+          682100,
+          680500,
+          701500,
+          686900,
+          685600,
+          688800,
+          769800,
+          692100,
+          683200,
+          682400,
+          680300,
+          769600
+        ],
+        "outputs": [
+          "rep 701000\nrep 681700\nrep 681900\nrep 682100\nrep 680500\nsink 116938\n",
+          "rep 701500\nrep 686900\nrep 685600\nrep 688800\nrep 769800\nsink 116938\n",
+          "rep 692100\nrep 683200\nrep 682400\nrep 680300\nrep 769600\nsink 116938\n"
+        ],
+        "executable_bytes": 5273088,
+        "median_ns": 685600
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-bootstrap.chl",
+        "source_sha256": "4abf57f0a37550522e4eb3d5dd8e6116c1f022c2c521bffa92ce9df9e6528467",
+        "samples_ns": [
+          99499000,
+          100119100,
+          101075500,
+          106247600,
+          109639300,
+          98977900,
+          98353900,
+          99356100,
+          98104700,
+          105100700,
+          102678500,
+          99594800,
+          111404400,
+          113482400,
+          107901600
+        ],
+        "outputs": [
+          "rep 99499000\nrep 100119100\nrep 101075500\nrep 106247600\nrep 109639300\nsink 116938\n",
+          "rep 98977900\nrep 98353900\nrep 99356100\nrep 98104700\nrep 105100700\nsink 116938\n",
+          "rep 102678500\nrep 99594800\nrep 111404400\nrep 113482400\nrep 107901600\nsink 116938\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 101075500
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-bootstrap.chl",
+        "source_sha256": "4abf57f0a37550522e4eb3d5dd8e6116c1f022c2c521bffa92ce9df9e6528467",
+        "samples_ns": [
+          3892900,
+          3854500,
+          4397900,
+          7069000,
+          6045800,
+          4622800,
+          3879000,
+          3894200,
+          3935400,
+          5005700,
+          3942700,
+          3831900,
+          3826500,
+          3824500,
+          3908800
+        ],
+        "outputs": [
+          "rep 3892900\nrep 3854500\nrep 4397900\nrep 7069000\nrep 6045800\nsink 116938\n",
+          "rep 4622800\nrep 3879000\nrep 3894200\nrep 3935400\nrep 5005700\nsink 116938\n",
+          "rep 3942700\nrep 3831900\nrep 3826500\nrep 3824500\nrep 3908800\nsink 116938\n"
+        ],
+        "executable_bytes": 5026304,
+        "median_ns": 3908800
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-baseline.chl",
+        "source_sha256": "0031df96755e655369777f085a3a8af8545f385a2730cd222b5a8e9ed4ff5faa",
+        "samples_ns": [
+          3272300,
+          3053500,
+          3064700,
+          3044000,
+          3187400,
+          3268800,
+          3062100,
+          3116000,
+          4861200,
+          3112600,
+          6285000,
+          6055700,
+          5171900,
+          3487800,
+          3162900
+        ],
+        "outputs": [
+          "rep 3272300\nrep 3053500\nrep 3064700\nrep 3044000\nrep 3187400\nsink 116938\n",
+          "rep 3268800\nrep 3062100\nrep 3116000\nrep 4861200\nrep 3112600\nsink 116938\n",
+          "rep 6285000\nrep 6055700\nrep 5171900\nrep 3487800\nrep 3162900\nsink 116938\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 3187400
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\copy-baseline.chl",
+        "source_sha256": "0031df96755e655369777f085a3a8af8545f385a2730cd222b5a8e9ed4ff5faa",
+        "samples_ns": [
+          213000,
+          187700,
+          192500,
+          189400,
+          187600,
+          189100,
+          186500,
+          198800,
+          202400,
+          186200,
+          190500,
+          185100,
+          184500,
+          184700,
+          198700
+        ],
+        "outputs": [
+          "rep 213000\nrep 187700\nrep 192500\nrep 189400\nrep 187600\nsink 116938\n",
+          "rep 189100\nrep 186500\nrep 198800\nrep 202400\nrep 186200\nsink 116938\n",
+          "rep 190500\nrep 185100\nrep 184500\nrep 184700\nrep 198700\nsink 116938\n"
+        ],
+        "executable_bytes": 75169792,
+        "median_ns": 189100
+      }
+    },
+    "from_native": {
+      "native-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-native.chl",
+        "source_sha256": "7359610f953127c8103e46b8ea0222f3a0d19002925fa1f7302212ca8ccac2cb",
+        "samples_ns": [
+          5200900,
+          2232000,
+          1984900,
+          1976000,
+          1972700,
+          3121400,
+          2792400,
+          2072100,
+          1998800,
+          2006400,
+          2722600,
+          2004000,
+          2023500,
+          1983400,
+          1989000
+        ],
+        "outputs": [
+          "rep 5200900\nrep 2232000\nrep 1984900\nrep 1976000\nrep 1972700\nsink 3082\n",
+          "rep 3121400\nrep 2792400\nrep 2072100\nrep 1998800\nrep 2006400\nsink 3082\n",
+          "rep 2722600\nrep 2004000\nrep 2023500\nrep 1983400\nrep 1989000\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 2006400
+      },
+      "native-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-native.chl",
+        "source_sha256": "7359610f953127c8103e46b8ea0222f3a0d19002925fa1f7302212ca8ccac2cb",
+        "samples_ns": [
+          93200,
+          81700,
+          80900,
+          79200,
+          78700,
+          87500,
+          81400,
+          80800,
+          79100,
+          83200,
+          70300,
+          65300,
+          64900,
+          63900,
+          63600
+        ],
+        "outputs": [
+          "rep 93200\nrep 81700\nrep 80900\nrep 79200\nrep 78700\nsink 3082\n",
+          "rep 87500\nrep 81400\nrep 80800\nrep 79100\nrep 83200\nsink 3082\n",
+          "rep 70300\nrep 65300\nrep 64900\nrep 63900\nrep 63600\nsink 3082\n"
+        ],
+        "executable_bytes": 5201408,
+        "median_ns": 79200
+      },
+      "bootstrap-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-bootstrap.chl",
+        "source_sha256": "14a8373d9629611bad23b029b67e34350cc38a60145617706a8efdb997e9ed0c",
+        "samples_ns": [
+          162424700,
+          169411200,
+          161101400,
+          153309700,
+          159397700,
+          163162100,
+          161566700,
+          162291500,
+          182713300,
+          163326900,
+          168855500,
+          168128500,
+          154695400,
+          153976300,
+          153324000
+        ],
+        "outputs": [
+          "rep 162424700\nrep 169411200\nrep 161101400\nrep 153309700\nrep 159397700\nsink 3082\n",
+          "rep 163162100\nrep 161566700\nrep 162291500\nrep 182713300\nrep 163326900\nsink 3082\n",
+          "rep 168855500\nrep 168128500\nrep 154695400\nrep 153976300\nrep 153324000\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 162291500
+      },
+      "bootstrap-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-bootstrap.chl",
+        "source_sha256": "14a8373d9629611bad23b029b67e34350cc38a60145617706a8efdb997e9ed0c",
+        "samples_ns": [
+          7090900,
+          7227400,
+          7121000,
+          7221300,
+          7168900,
+          13626100,
+          11769800,
+          11573800,
+          8339800,
+          7421800,
+          7145000,
+          7127100,
+          7139100,
+          7150300,
+          7148500
+        ],
+        "outputs": [
+          "rep 7090900\nrep 7227400\nrep 7121000\nrep 7221300\nrep 7168900\nsink 3082\n",
+          "rep 13626100\nrep 11769800\nrep 11573800\nrep 8339800\nrep 7421800\nsink 3082\n",
+          "rep 7145000\nrep 7127100\nrep 7139100\nrep 7150300\nrep 7148500\nsink 3082\n"
+        ],
+        "executable_bytes": 5232640,
+        "median_ns": 7168900
+      },
+      "baseline-vm": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-baseline.chl",
+        "source_sha256": "7359610f953127c8103e46b8ea0222f3a0d19002925fa1f7302212ca8ccac2cb",
+        "samples_ns": [
+          390700,
+          125400,
+          107000,
+          106500,
+          106400,
+          275500,
+          78400,
+          56800,
+          55400,
+          54800,
+          313700,
+          66800,
+          56900,
+          55100,
+          56000
+        ],
+        "outputs": [
+          "rep 390700\nrep 125400\nrep 107000\nrep 106500\nrep 106400\nsink 3082\n",
+          "rep 275500\nrep 78400\nrep 56800\nrep 55400\nrep 54800\nsink 3082\n",
+          "rep 313700\nrep 66800\nrep 56900\nrep 55100\nrep 56000\nsink 3082\n"
+        ],
+        "executable_bytes": null,
+        "median_ns": 78400
+      },
+      "baseline-aot": {
+        "source": "G:\\Desktop\\ChaLi\\tmp\\bootstrap-string-wk033zhu\\from_native-baseline.chl",
+        "source_sha256": "7359610f953127c8103e46b8ea0222f3a0d19002925fa1f7302212ca8ccac2cb",
+        "samples_ns": [
+          9000,
+          25700,
+          7600,
+          6900,
+          6600,
+          8400,
+          7400,
+          6900,
+          6800,
+          6600,
+          8800,
+          7500,
+          7000,
+          6700,
+          6700
+        ],
+        "outputs": [
+          "rep 9000\nrep 25700\nrep 7600\nrep 6900\nrep 6600\nsink 3082\n",
+          "rep 8400\nrep 7400\nrep 6900\nrep 6800\nrep 6600\nsink 3082\n",
+          "rep 8800\nrep 7500\nrep 7000\nrep 6700\nrep 6700\nsink 3082\n"
+        ],
+        "executable_bytes": 75166720,
+        "median_ns": 7000
+      }
+    }
+  },
+  "execution_order": [
+    [
+      0,
+      "construct",
+      "native-vm"
+    ],
+    [
+      0,
+      "construct",
+      "native-aot"
+    ],
+    [
+      0,
+      "construct",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "construct",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "construct",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "construct",
+      "baseline-aot"
+    ],
+    [
+      0,
+      "append",
+      "native-vm"
+    ],
+    [
+      0,
+      "append",
+      "native-aot"
+    ],
+    [
+      0,
+      "append",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "append",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "append",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "append",
+      "baseline-aot"
+    ],
+    [
+      0,
+      "read",
+      "native-vm"
+    ],
+    [
+      0,
+      "read",
+      "native-aot"
+    ],
+    [
+      0,
+      "read",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "read",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "read",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "read",
+      "baseline-aot"
+    ],
+    [
+      0,
+      "find",
+      "native-vm"
+    ],
+    [
+      0,
+      "find",
+      "native-aot"
+    ],
+    [
+      0,
+      "find",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "find",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "find",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "find",
+      "baseline-aot"
+    ],
+    [
+      0,
+      "copy",
+      "native-vm"
+    ],
+    [
+      0,
+      "copy",
+      "native-aot"
+    ],
+    [
+      0,
+      "copy",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "copy",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "copy",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "copy",
+      "baseline-aot"
+    ],
+    [
+      0,
+      "from_native",
+      "native-vm"
+    ],
+    [
+      0,
+      "from_native",
+      "native-aot"
+    ],
+    [
+      0,
+      "from_native",
+      "bootstrap-vm"
+    ],
+    [
+      0,
+      "from_native",
+      "bootstrap-aot"
+    ],
+    [
+      0,
+      "from_native",
+      "baseline-vm"
+    ],
+    [
+      0,
+      "from_native",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "construct",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "construct",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "construct",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "construct",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "construct",
+      "native-aot"
+    ],
+    [
+      1,
+      "construct",
+      "native-vm"
+    ],
+    [
+      1,
+      "append",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "append",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "append",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "append",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "append",
+      "native-aot"
+    ],
+    [
+      1,
+      "append",
+      "native-vm"
+    ],
+    [
+      1,
+      "read",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "read",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "read",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "read",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "read",
+      "native-aot"
+    ],
+    [
+      1,
+      "read",
+      "native-vm"
+    ],
+    [
+      1,
+      "find",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "find",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "find",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "find",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "find",
+      "native-aot"
+    ],
+    [
+      1,
+      "find",
+      "native-vm"
+    ],
+    [
+      1,
+      "copy",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "copy",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "copy",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "copy",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "copy",
+      "native-aot"
+    ],
+    [
+      1,
+      "copy",
+      "native-vm"
+    ],
+    [
+      1,
+      "from_native",
+      "baseline-aot"
+    ],
+    [
+      1,
+      "from_native",
+      "baseline-vm"
+    ],
+    [
+      1,
+      "from_native",
+      "bootstrap-aot"
+    ],
+    [
+      1,
+      "from_native",
+      "bootstrap-vm"
+    ],
+    [
+      1,
+      "from_native",
+      "native-aot"
+    ],
+    [
+      1,
+      "from_native",
+      "native-vm"
+    ],
+    [
+      2,
+      "construct",
+      "native-vm"
+    ],
+    [
+      2,
+      "construct",
+      "native-aot"
+    ],
+    [
+      2,
+      "construct",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "construct",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "construct",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "construct",
+      "baseline-aot"
+    ],
+    [
+      2,
+      "append",
+      "native-vm"
+    ],
+    [
+      2,
+      "append",
+      "native-aot"
+    ],
+    [
+      2,
+      "append",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "append",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "append",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "append",
+      "baseline-aot"
+    ],
+    [
+      2,
+      "read",
+      "native-vm"
+    ],
+    [
+      2,
+      "read",
+      "native-aot"
+    ],
+    [
+      2,
+      "read",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "read",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "read",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "read",
+      "baseline-aot"
+    ],
+    [
+      2,
+      "find",
+      "native-vm"
+    ],
+    [
+      2,
+      "find",
+      "native-aot"
+    ],
+    [
+      2,
+      "find",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "find",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "find",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "find",
+      "baseline-aot"
+    ],
+    [
+      2,
+      "copy",
+      "native-vm"
+    ],
+    [
+      2,
+      "copy",
+      "native-aot"
+    ],
+    [
+      2,
+      "copy",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "copy",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "copy",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "copy",
+      "baseline-aot"
+    ],
+    [
+      2,
+      "from_native",
+      "native-vm"
+    ],
+    [
+      2,
+      "from_native",
+      "native-aot"
+    ],
+    [
+      2,
+      "from_native",
+      "bootstrap-vm"
+    ],
+    [
+      2,
+      "from_native",
+      "bootstrap-aot"
+    ],
+    [
+      2,
+      "from_native",
+      "baseline-vm"
+    ],
+    [
+      2,
+      "from_native",
+      "baseline-aot"
+    ]
+  ],
+  "implementation_names": {
+    "native": "current default self-hosted String",
+    "bootstrap": "experimental raw-byte string",
+    "baseline": "original default String in baseline compiler"
+  },
+  "limitations": [
+    "experimental byte string does not implement the complete default Unicode String API",
+    "ASCII performance inputs; UTF-8 and raw zero/0xFF bytes checked separately",
+    "setup, allocations, copying and cleanup inside work are timed; compilation excluded",
+    "construct: native repeat versus bulk memset; append: native concatenation versus doubling buffer",
+    "find: native search versus ChaLi naive byte search; missing one-byte needle, 32 searches",
+    "copy: 32 independent copies, length and last byte consumed",
+    "from_native includes source creation and bytes-list conversion; native baseline is independent assignment",
+    "no conversion back to native String is measured",
+    "all default optimizations, reflection and runtime safety checks retained"
+  ],
+  "baseline_compiler": {
+    "path": "G:\\Desktop\\ChaLi\\dist\\llvm-external\\chali-1.0.6-llvm-external-windows-x64.exe",
+    "version": "1.0.6",
+    "sha256": "9f7592fe2b4e219a62b93b2c8f561639314fb8176bd4ef26ae1dfa1d2bfab063"
+  }
+}

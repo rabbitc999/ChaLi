@@ -31,13 +31,14 @@ CHALI_ABI_EXPORT double aot_scale(double value) { return value * 1.5; }
 CHALI_ABI_EXPORT unsigned int aot_high(void) { return 0xffffffffu; }
 """
 
-ABI_SOURCE = """abi "{}"
-{{
-    int32 aot_add(int32 left, int32 right) = "aot_add";
-    int32 aot_sum(int32 left, int32 right) = "aot_add";
-    float64 aot_scale(float64 value) = "aot_scale";
-    uint32 aot_high() = "aot_high";
-}}
+ABI_SOURCE = """#abi("C", "{library}", "aot_add")
+int32 aot_add(int32 left, int32 right);
+#abi("C", "{library}", "aot_add")
+int32 aot_sum(int32 left, int32 right);
+#abi("C", "{library}", "aot_scale")
+float64 aot_scale(float64 value);
+#abi("C", "{library}", "aot_high")
+uint32 aot_high();
 
 void main()
 {{
@@ -171,7 +172,7 @@ def main():
                                capture_output=True, text=True)
         assert build.returncode == 0, build.stderr
         abi = work / 'abi_use.chl'
-        abi.write_text(ABI_SOURCE.format(str(library).replace('\\', '/')), encoding='utf-8')
+        abi.write_text(ABI_SOURCE.format(library=str(library).replace('\\', '/')), encoding='utf-8')
         result = invoke([compiler, 'run', abi])
         expected_abi = result.stdout
         assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75 4294967295\nalias: 42\n', result

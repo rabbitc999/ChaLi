@@ -88,14 +88,14 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-40"></a>`struct Receive<T>` | 操作状态与载荷；仅在 READY 时读取 value。 |
-| Receive | <a id="symbol-41"></a>`int64 status` | 统一操作状态码；载荷仅在 READY 时有效。 |
-| Receive | <a id="symbol-42"></a>`T value` | 保存的单个值。 |
-| 模块 | <a id="symbol-43"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
-| 模块 | <a id="symbol-44"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
-| AtomicInt64 | <a id="symbol-45"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
-| 模块 | <a id="symbol-46"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
-| Channel | <a id="symbol-47"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-42"></a>`struct Receive<T>` | 操作状态与载荷；仅在 READY 时读取 value。 |
+| Receive | <a id="symbol-43"></a>`int64 status` | 统一操作状态码；载荷仅在 READY 时有效。 |
+| Receive | <a id="symbol-44"></a>`T value` | 保存的单个值。 |
+| 模块 | <a id="symbol-45"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
+| 模块 | <a id="symbol-46"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
+| AtomicInt64 | <a id="symbol-47"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
+| 模块 | <a id="symbol-48"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
+| Channel | <a id="symbol-49"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
 
 ## 函数索引
 
@@ -510,7 +510,7 @@ static Channel<T> create(int64 capacity);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `capacity` | `int64 capacity` | 容器的最大元素数量 | 无 |
+| `capacity` | `int64 capacity` | 原始存储的元素容量，必须非负。 | 无 |
 
 **返回值**
 

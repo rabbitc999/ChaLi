@@ -244,6 +244,9 @@ TypePtr infer(const NodePtr &node, const TypeEnv &env)
     case Node::Kind::CheckIndex:
     case Node::Kind::CheckPointer:
         return infer(node->kids.empty() ? nullptr : node->kids[0], env);  // 值就是下标
+    case Node::Kind::MemoryCopy:
+    case Node::Kind::MemorySet:
+        return Type::i32();
     case Node::Kind::LoadInt:
         return node->declared ? node->declared : Type::i64();
     case Node::Kind::Offset:
@@ -617,6 +620,16 @@ Memory::String emitExpr(const NodePtr &node, Emitter &emitter)
         return address;
     }
 
+    case Node::Kind::MemoryCopy:
+    case Node::Kind::MemorySet:
+    {
+        const auto destination = emitExpr(node->kids[0], emitter);
+        const auto source = emitExpr(node->kids[1], emitter);
+        const auto bytes = emitExpr(node->kids[2], emitter);
+        emitter.emit("(" + Memory::String(node->kind == Node::Kind::MemoryCopy ? "memcpy" : "memset")
+                     + ", " + destination + ", " + source + ", " + bytes + ")");
+        return "0";
+    }
     case Node::Kind::LoadInt:
     {
         // 按地址读 8 字节：默认按整数读（运行时数组的长度就是这么读的）；带了

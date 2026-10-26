@@ -1,13 +1,18 @@
 struct Packet { int32 value; float64 real; };
-abi "./native.dll" {
-    String text() = "owned_text" ["free_owned"];
-    int32[] numbers(int32 count) = "owned_numbers" [count, "free_owned"];
-    Packet const& packet() = "owned_packet" ["free_owned"];
-    int32 released() = "released_count";
-    int32 apply(int32 fn(int32) callback, int32 value) = "apply";
-    int32 applyTwo(int32 fn(int32) left, int32 fn(int32) right, int32 value) = "apply_two";
-    float64 applyDouble(float64 fn(float64) callback, float64 value) = "apply_double";
-}
+#abi("C", "./native.dll", "owned_text")
+String text() ["free_owned"];
+#abi("C", "./native.dll", "owned_numbers")
+int32[] numbers(int32 count) [count, "free_owned"];
+#abi("C", "./native.dll", "owned_packet")
+Packet const& packet() ["free_owned"];
+#abi("C", "./native.dll", "released_count")
+int32 released();
+#abi("C", "./native.dll", "apply")
+int32 apply(int32 fn(int32) callback, int32 value);
+#abi("C", "./native.dll", "apply_two")
+int32 applyTwo(int32 fn(int32) left, int32 fn(int32) right, int32 value);
+#abi("C", "./native.dll", "apply_double")
+float64 applyDouble(float64 fn(float64) callback, float64 value);
 
 void main() {
     String value = text();

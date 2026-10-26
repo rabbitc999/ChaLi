@@ -14,7 +14,7 @@ import std::text;
 
 ## 公共约定与错误边界
 
-长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 实现在宿主胶水 glue/std_kmp.hpp，裁剪宏 NO_CHALI_STD_KMP。
+长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。
 
 ## 参考代码
 
@@ -69,18 +69,18 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-438"></a>`struct KmpReply` | KMP 胶水回执；槽布局必须与 glue/std_kmp.hpp 的 Reply 一致。 |
-| KmpReply | <a id="symbol-439"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
-| KmpReply | <a id="symbol-440"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
-| KmpReply | <a id="symbol-441"></a>`int64 flag` | 布尔结果：1 = 命中。 |
-| KmpReply | <a id="symbol-442"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
-| KmpReply | <a id="symbol-443"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
-| 模块 | <a id="symbol-444"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
-| 模块 | <a id="symbol-445"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次性用平衡两两合并摊平（与 `Text::join` 同口径）。
+| 模块 | <a id="symbol-447"></a>`struct KmpReply` | KMP 操作回执，所有字段由语言实现直接更新。 |
+| KmpReply | <a id="symbol-448"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
+| KmpReply | <a id="symbol-449"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
+| KmpReply | <a id="symbol-450"></a>`int64 flag` | 布尔结果：1 = 命中。 |
+| KmpReply | <a id="symbol-451"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
+| KmpReply | <a id="symbol-452"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
+| 模块 | <a id="symbol-453"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
+| 模块 | <a id="symbol-454"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
 `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
 `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 |
-| StringBuilder | <a id="symbol-446"></a>`std::lang::List<std::lang::String> chunks` | 已累计的字符串片段。 |
-| StringBuilder | <a id="symbol-447"></a>`int64 length` | 已累计的总字节数。 |
+| StringBuilder | <a id="symbol-455"></a>`std::lang::List<std::lang::String> chunks` | 已累计的字符串片段。 |
+| StringBuilder | <a id="symbol-456"></a>`int64 length` | 已累计的总字节数。 |
 
 ## 函数索引
 
@@ -157,7 +157,7 @@ static int64 find(std::lang::String text, std::lang::String needle);
 std::text::Text::find(text, needle);
 ```
 
-**源码**：[source/std/text.chl:252](../../source/std/text.chl#L252)。
+**源码**：[source/std/text.chl:280](../../source/std/text.chl#L280)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -198,7 +198,7 @@ static int64 rfind(std::lang::String text, std::lang::String needle);
 std::text::Text::rfind(text, needle);
 ```
 
-**源码**：[source/std/text.chl:256](../../source/std/text.chl#L256)。
+**源码**：[source/std/text.chl:284](../../source/std/text.chl#L284)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -239,7 +239,7 @@ static bool contains(std::lang::String text, std::lang::String needle);
 std::text::Text::contains(text, needle);
 ```
 
-**源码**：[source/std/text.chl:260](../../source/std/text.chl#L260)。
+**源码**：[source/std/text.chl:288](../../source/std/text.chl#L288)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -278,7 +278,7 @@ static bool startsWith(std::lang::String text, std::lang::String prefix);
 std::text::Text::startsWith(text, prefix);
 ```
 
-**源码**：[source/std/text.chl:263](../../source/std/text.chl#L263)。
+**源码**：[source/std/text.chl:291](../../source/std/text.chl#L291)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -317,7 +317,7 @@ static bool endsWith(std::lang::String text, std::lang::String suffix);
 std::text::Text::endsWith(text, suffix);
 ```
 
-**源码**：[source/std/text.chl:269](../../source/std/text.chl#L269)。
+**源码**：[source/std/text.chl:297](../../source/std/text.chl#L297)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -358,7 +358,7 @@ static int64 compare(std::lang::String left, std::lang::String right);
 std::text::Text::compare(left, right);
 ```
 
-**源码**：[source/std/text.chl:276](../../source/std/text.chl#L276)。
+**源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -398,7 +398,7 @@ ASCII 大小写（VM 里不认区域设置，结果可复现）。
 std::text::Text::toUpper(text);
 ```
 
-**源码**：[source/std/text.chl:282](../../source/std/text.chl#L282)。
+**源码**：[source/std/text.chl:310](../../source/std/text.chl#L310)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -436,7 +436,7 @@ static std::lang::String toLower(std::lang::String text);
 std::text::Text::toLower(text);
 ```
 
-**源码**：[source/std/text.chl:283](../../source/std/text.chl#L283)。
+**源码**：[source/std/text.chl:311](../../source/std/text.chl#L311)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -476,7 +476,7 @@ static std::lang::String trim(std::lang::String text);
 std::text::Text::trim(text);
 ```
 
-**源码**：[source/std/text.chl:285](../../source/std/text.chl#L285)。
+**源码**：[source/std/text.chl:313](../../source/std/text.chl#L313)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -514,7 +514,7 @@ static std::lang::String ltrim(std::lang::String text);
 std::text::Text::ltrim(text);
 ```
 
-**源码**：[source/std/text.chl:286](../../source/std/text.chl#L286)。
+**源码**：[source/std/text.chl:314](../../source/std/text.chl#L314)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -552,7 +552,7 @@ static std::lang::String rtrim(std::lang::String text);
 std::text::Text::rtrim(text);
 ```
 
-**源码**：[source/std/text.chl:287](../../source/std/text.chl#L287)。
+**源码**：[source/std/text.chl:315](../../source/std/text.chl#L315)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -594,7 +594,7 @@ static std::lang::String replace(std::lang::String text, std::lang::String from,
 std::text::Text::replace(text, from, to);
 ```
 
-**源码**：[source/std/text.chl:289](../../source/std/text.chl#L289)。
+**源码**：[source/std/text.chl:317](../../source/std/text.chl#L317)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -635,7 +635,7 @@ static std::lang::String repeat(std::lang::String text, int64 count);
 std::text::Text::repeat(text, count);
 ```
 
-**源码**：[source/std/text.chl:293](../../source/std/text.chl#L293)。
+**源码**：[source/std/text.chl:321](../../source/std/text.chl#L321)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -677,7 +677,7 @@ static std::lang::String padStart(std::lang::String text, int64 width, char fill
 std::text::Text::padStart(text, width, fill);
 ```
 
-**源码**：[source/std/text.chl:297](../../source/std/text.chl#L297)。
+**源码**：[source/std/text.chl:325](../../source/std/text.chl#L325)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -717,7 +717,7 @@ static std::lang::String padEnd(std::lang::String text, int64 width, char fill);
 std::text::Text::padEnd(text, width, fill);
 ```
 
-**源码**：[source/std/text.chl:300](../../source/std/text.chl#L300)。
+**源码**：[source/std/text.chl:328](../../source/std/text.chl#L328)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -758,7 +758,7 @@ static char charAt(std::lang::String text, int64 index);
 std::text::Text::charAt(text, index);
 ```
 
-**源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
+**源码**：[source/std/text.chl:332](../../source/std/text.chl#L332)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -799,7 +799,7 @@ static std::lang::List<std::lang::String> split(std::lang::String text, std::lan
 std::text::Text::split(text, separator);
 ```
 
-**源码**：[source/std/text.chl:307](../../source/std/text.chl#L307)。
+**源码**：[source/std/text.chl:335](../../source/std/text.chl#L335)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -840,7 +840,7 @@ static std::lang::String join(std::lang::List<std::lang::String> parts, std::lan
 std::text::Text::join(parts, separator);
 ```
 
-**源码**：[source/std/text.chl:312](../../source/std/text.chl#L312)。
+**源码**：[source/std/text.chl:340](../../source/std/text.chl#L340)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -879,7 +879,7 @@ KMP 查找：针在串中首次出现的字节下标，O(n + m)。
 std::text::Text::kmpFind(text, needle);
 ```
 
-**源码**：[source/std/text.chl:323](../../source/std/text.chl#L323)。
+**源码**：[source/std/text.chl:351](../../source/std/text.chl#L351)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -918,7 +918,7 @@ KMP 查找全部（可重叠）匹配位置。
 std::text::Text::kmpFindAll(text, needle);
 ```
 
-**源码**：[source/std/text.chl:335](../../source/std/text.chl#L335)。
+**源码**：[source/std/text.chl:363](../../source/std/text.chl#L363)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -956,7 +956,7 @@ static std::lang::List<int64> kmpFailureTable(std::lang::String needle);
 std::text::Text::kmpFailureTable(needle);
 ```
 
-**源码**：[source/std/text.chl:346](../../source/std/text.chl#L346)。
+**源码**：[source/std/text.chl:374](../../source/std/text.chl#L374)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -994,7 +994,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/text.chl:363](../../source/std/text.chl#L363)。
+**源码**：[source/std/text.chl:391](../../source/std/text.chl#L391)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1032,7 +1032,7 @@ static StringBuilder create();
 std::text::StringBuilder::create();
 ```
 
-**源码**：[source/std/text.chl:366](../../source/std/text.chl#L366)。
+**源码**：[source/std/text.chl:394](../../source/std/text.chl#L394)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1070,7 +1070,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/text.chl:371](../../source/std/text.chl#L371)。
+**源码**：[source/std/text.chl:399](../../source/std/text.chl#L399)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1108,7 +1108,7 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/text.chl:373](../../source/std/text.chl#L373)。
+**源码**：[source/std/text.chl:401](../../source/std/text.chl#L401)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1146,7 +1146,7 @@ void append(std::lang::String text);
 obj.append(text);
 ```
 
-**源码**：[source/std/text.chl:378](../../source/std/text.chl#L378)。
+**源码**：[source/std/text.chl:406](../../source/std/text.chl#L406)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1184,7 +1184,7 @@ void appendLine(std::lang::String text);
 obj.appendLine(text);
 ```
 
-**源码**：[source/std/text.chl:383](../../source/std/text.chl#L383)。
+**源码**：[source/std/text.chl:411](../../source/std/text.chl#L411)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1222,7 +1222,7 @@ void appendChar(char value);
 obj.appendChar(value);
 ```
 
-**源码**：[source/std/text.chl:385](../../source/std/text.chl#L385)。
+**源码**：[source/std/text.chl:413](../../source/std/text.chl#L413)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1260,7 +1260,7 @@ void appendInt(int64 value);
 obj.appendInt(value);
 ```
 
-**源码**：[source/std/text.chl:387](../../source/std/text.chl#L387)。
+**源码**：[source/std/text.chl:415](../../source/std/text.chl#L415)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1298,7 +1298,7 @@ void appendFloat(float64 value);
 obj.appendFloat(value);
 ```
 
-**源码**：[source/std/text.chl:389](../../source/std/text.chl#L389)。
+**源码**：[source/std/text.chl:417](../../source/std/text.chl#L417)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1336,7 +1336,7 @@ void appendBool(bool value);
 obj.appendBool(value);
 ```
 
-**源码**：[source/std/text.chl:391](../../source/std/text.chl#L391)。
+**源码**：[source/std/text.chl:419](../../source/std/text.chl#L419)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1374,7 +1374,7 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/text.chl:397](../../source/std/text.chl#L397)。
+**源码**：[source/std/text.chl:425](../../source/std/text.chl#L425)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
@@ -1412,6 +1412,6 @@ std::lang::String toString();
 obj.toString();
 ```
 
-**源码**：[source/std/text.chl:404](../../source/std/text.chl#L404)。
+**源码**：[source/std/text.chl:432](../../source/std/text.chl#L432)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。

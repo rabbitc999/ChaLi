@@ -55,8 +55,8 @@ def main():
                          'assert(c_apply(cb,(int32)3)==7);return;}\n')
         invoke([compiler, 'run', imported])
         failure = work / 'callback-failure.chl'
-        failure.write_text('abi "' + library.as_posix() + '" { '
-                           'String owned(int32 fn(int32) cb) = "callback_owned" ["free_owned"]; } '
+        failure.write_text('#abi("C", "' + library.as_posix() + '", "callback_owned") '
+                           'String owned(int32 fn(int32) cb) ["free_owned"]; '
                            'void main(){let cb=int32 fn(int32 x){panic("callback failure");return x;};'
                            'String text=owned(cb);}', encoding='utf-8')
         marker = work / 'released.txt'

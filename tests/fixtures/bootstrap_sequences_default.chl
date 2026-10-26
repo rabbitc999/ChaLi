@@ -1,0 +1,64 @@
+import std::collections;
+import std::linkedlist;
+
+void main() {
+    std::collections::Deque<int64> values;
+    int64 model[128]; int64 size=0; int64 seed=713; int64 step=0;
+    while (step<1200) {
+        seed=(seed*48271)%2147483647;
+        int64 operation=seed%4;
+        if (size==128) { operation=2; }
+        if (operation==0) {
+            int64 i=size;
+            while (i>0) { model[i]=model[i-1]; i=i-1; }
+            model[0]=step; size=size+1; values.pushFront(step);
+        }
+        elif (operation==1) { model[size]=step; size=size+1; values.pushBack(step); }
+        elif (operation==2) {
+            Option<int64> result=values.popFront();
+            if (size==0) { assert(result.isNone()); }
+            else {
+                assert(result.unwrap()==model[0]); size=size-1; int64 i=0;
+                while (i<size) { model[i]=model[i+1]; i=i+1; }
+            }
+        }
+        else {
+            Option<int64> result=values.popBack();
+            if (size==0) { assert(result.isNone()); }
+            else { size=size-1; assert(result.unwrap()==model[size]); }
+        }
+        assert(values.len()==size);
+        if (size>0) { assert(values[0]==model[0] && values[size-1]==model[size-1] && values[size/2]==model[size/2]); }
+        step=step+1;
+    }
+    std::collections::Stack<String> stack;
+    assert(stack.pop().isNone()); stack.push("first"); stack.push("second");
+    std::collections::Stack<String> copied=stack;
+    assert(copied.pop().unwrap()=="second" && stack.len()==2);
+    assert(stack.peek().unwrap()=="second" && copied.peek().unwrap()=="first");
+    stack.clear(); assert(stack.isEmpty()); stack.push("reuse"); assert(stack.pop().unwrap()=="reuse");
+    std::collections::Queue<int64> queue;
+    int64 written=0; int64 read=0; step=0;
+    while (step<500) {
+        queue.push(written); written=written+1;
+        if (step%3!=0) { assert(queue.peek().unwrap()==read && queue.pop().unwrap()==read); read=read+1; }
+        step=step+1;
+    }
+    while (read<written) { assert(queue.pop().unwrap()==read); read=read+1; }
+    assert(queue.pop().isNone());
+    std::collections::RingBuffer<int64> ring=std::collections::RingBuffer<int64>::withCapacity(9);
+    step=0;
+    while (step<20) {
+        int64 i=0;
+        while (i<9) { assert(ring.push(step*9+i)); i=i+1; }
+        assert(!ring.push(-1) && ring.available()==0); i=0;
+        while (i<9) { assert(ring.pop().unwrap()==step*9+i); i=i+1; }
+        assert(ring.available()==9 && ring.pop().isNone()); step=step+1;
+    }
+    std::linkedlist::LinkedList list;
+    int64 old=list.pushBack(1); assert(list.removeAt(old).unwrap()==1);
+    int64 reused=list.pushBack(2); assert(reused!=old && list.removeAt(old).isNone());
+    list.clear(); int64 newer=list.pushBack(3);
+    assert(newer!=old && newer!=reused && list.removeAt(reused).isNone() && list.front().unwrap()==3);
+    print("bootstrap-sequences-default-ok\n");
+}

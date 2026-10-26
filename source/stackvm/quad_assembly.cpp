@@ -544,6 +544,15 @@ bool assemble(const QuadFile &source, Program &out)
             assembler.store(quad.arg(2), index);
             continue;
         }
+        if (base == "memcpy" || base == "memset")
+        {
+            assembler.operand(quad.arg(0), index);
+            assembler.operand(quad.arg(1), index);
+            assembler.operand(quad.arg(2), index);
+            assembler.emitOp(base == "memcpy" ? Op::MemoryCopy : Op::MemorySet);
+            out.requiredFeatures |= kFeatureBulkMemory;
+            continue;
+        }
         if (base == "store")
         {
             assembler.operand(quad.arg(0), index);  // 指针

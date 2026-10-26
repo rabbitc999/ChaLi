@@ -328,11 +328,11 @@ int64 grade(int64 score)
         {
             return 3;
         }
-        std::lang::rangeEq(90, 99) =>
+        rangeEq(90, 99) =>
         {
             return 2;
         }
-        std::lang::rangeEq(60, 89) =>
+        rangeEq(60, 89) =>
         {
             return 1;
         }
@@ -367,8 +367,8 @@ void main()
 \toprule
 模式 & 命中条件 \\
 \midrule
-\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}range<\allowbreak{}T>\allowbreak{}(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & \texttt{a <\allowbreak{}=\allowbreak{} x <\allowbreak{} b} \\
-\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}range\allowbreak{}Eq<\allowbreak{}T>\allowbreak{}(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & \texttt{a <\allowbreak{}=\allowbreak{} x <\allowbreak{}=\allowbreak{} b} \\
+\texttt{range<\allowbreak{}T>\allowbreak{}(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & \texttt{a <\allowbreak{}=\allowbreak{} x <\allowbreak{} b} \\
+\texttt{range\allowbreak{}Eq<\allowbreak{}T>\allowbreak{}(\allowbreak{}a,\allowbreak{} b)\allowbreak{}} & \texttt{a <\allowbreak{}=\allowbreak{} x <\allowbreak{}=\allowbreak{} b} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -513,7 +513,7 @@ copy original
 \texttt{match} & 可作语句或表达式；表达式分支给出同类型值，外层声明仍加分号 \\
 自动绑定 & \texttt{X:\allowbreak{}:\allowbreak{}B(\allowbreak{}v)\allowbreak{} =\allowbreak{}>\allowbreak{} .\allowbreak{}.\allowbreak{}.\allowbreak{}} 里的 \texttt{v} 是当场取出来的 \\
 穷尽性 & 漏变体是编译错误；\texttt{\_} 兜底但会放弃检查 \\
-标量匹配 & 普通值与整数 / char 区间：\texttt{100}、\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}range\allowbreak{}Eq(\allowbreak{}90,\allowbreak{} 99)\allowbreak{}} \\
+标量匹配 & 普通值与整数 / char 区间：\texttt{100}、\texttt{range\allowbreak{}Eq(\allowbreak{}90,\allowbreak{} 99)\allowbreak{}} \\
 守卫 & \texttt{模式 if 条件 =\allowbreak{}>\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} \\
 方法 & 枚举也能有方法，里面用 \texttt{match (\allowbreak{}self)\allowbreak{}} \\
 \bottomrule

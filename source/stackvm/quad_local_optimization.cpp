@@ -174,6 +174,7 @@ Memory::Vector<Memory::String> readOperands(const Quad &quad)
         take(quad.arg(1));
         return names;
     }
+    if (base == "memcpy" || base == "memset") take(quad.arg(2));
     // 二元运算与比较：前两个操作数。
     take(quad.arg(0));
     take(quad.arg(1));
@@ -203,13 +204,15 @@ int writesTo(const Memory::String &base)
  * @param base 基础操作码。
  * @return 读操作数下标。
  */
-std::array<std::size_t, 2> optimizationReads(const Memory::String &base)
+std::array<std::size_t, 3> optimizationReads(const Memory::String &base)
 {
-    if (base == "decl" || base == "label" || base == "call" || base == "j" || base == "halt" || base == "addr" || base == "print") return { static_cast<std::size_t>(-1), static_cast<std::size_t>(-1) };
-    if (base == ":=" || base == "cvt" || base == "neg" || base == "~" || base == "write" || base == "putc" || base == "param" || base == "ret" || base == "jz" || base == "jnz" || base == "free" || base == "drop" || base == "alloc" || base == "load" || base == "callptr") return { 0, static_cast<std::size_t>(-1) };
-    if (writesTo(base) >= 0 && base != "read" && base != "getc") return { 0, 1 };
-    if (base == "store" || base == "check" || base == "checkptr") return { 0, 1 };
-    return { static_cast<std::size_t>(-1), static_cast<std::size_t>(-1) };
+    const auto unused = static_cast<std::size_t>(-1);
+    if (base == "memcpy" || base == "memset") return { 0, 1, 2 };
+    if (base == "decl" || base == "label" || base == "call" || base == "j" || base == "halt" || base == "addr" || base == "print") return { unused, unused, unused };
+    if (base == ":=" || base == "cvt" || base == "neg" || base == "~" || base == "write" || base == "putc" || base == "param" || base == "ret" || base == "jz" || base == "jnz" || base == "free" || base == "drop" || base == "alloc" || base == "load" || base == "callptr") return { 0, unused, unused };
+    if (writesTo(base) >= 0 && base != "read" && base != "getc") return { 0, 1, unused };
+    if (base == "store" || base == "check" || base == "checkptr") return { 0, 1, unused };
+    return { unused, unused, unused };
 }
 /**
  * @brief 识别可消除复制的无声明编译器临时量。

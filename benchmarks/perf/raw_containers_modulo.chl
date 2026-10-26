@@ -1,0 +1,225 @@
+
+/** 原始存储实验 List：备用容量不构造元素，删除只清理元素并保留容量。 */
+struct RawList<T>: Closeable {
+    std::lang::RawStorage<T> storage;
+    int64 length;
+
+    int64 len() { return self.length; }
+    int64 capacity() { return self.storage.capacity(); }
+    void reserve(int64 requested) {
+        std::lang::assert(requested >= 0);
+        if (requested <= self.storage.capacity()) { return; }
+        std::lang::RawStorage<T> fresh = std::lang::RawStorage<T>::allocate(requested);
+        unsafe {
+            if (self.length > 0) {
+                std::lang::relocateNonOverlapping<T>(fresh.pointer(0), self.storage.pointer(0), self.length);
+            }
+        }
+        self.storage.close();
+        self.storage = move(fresh);
+    }
+    void push(T value) {
+        if (self.length == self.storage.capacity()) {
+            int64 next = 16;
+            if (self.length > 0) {
+                std::lang::assert(self.length <= 4611686018427387903);
+                next = self.length * 2;
+            }
+            self.reserve(next);
+        }
+        unsafe { std::lang::initAt<T>(self.storage.pointer(self.length), move(value)); }
+        self.length = self.length + 1;
+    }
+    T const& get(int64 index) {
+        std::lang::assert(index >= 0 && index < self.length);
+        unsafe { return std::lang::borrowAt<T>(self.storage.pointer(index)); }
+    }
+    void set(int64 index, T value) {
+        std::lang::assert(index >= 0 && index < self.length);
+        unsafe {
+            std::lang::dropAt<T>(self.storage.pointer(index));
+            std::lang::initAt<T>(self.storage.pointer(index), move(value));
+        }
+    }
+    T pop() {
+        std::lang::assert(self.length > 0);
+        self.length = self.length - 1;
+        unsafe { return std::lang::takeAt<T>(self.storage.pointer(self.length)); }
+    }
+    void clear() {
+        while (self.length > 0) {
+            self.length = self.length - 1;
+            unsafe { std::lang::dropAt<T>(self.storage.pointer(self.length)); }
+        }
+    }
+    void close() { self.clear(); self.storage.close(); }
+};
+
+/** Map 仅在占用槽构造键和值；初始化位图承担槽位是否存活的状态。 */
+struct RawMapEntry<V>: Closeable {
+    int64 HashKey;
+    V Value;
+    bool HasValue;
+    void close() { }
+};
+
+struct RawMap<V>: Closeable {
+    std::lang::RawStorage<RawMapEntry<V>> slots;
+    int64 length;
+
+    int64 len() { return self.length; }
+    int64 bucket(int64 key, int64 capacity) { return (int64)((uint64)key % (uint64)capacity); }
+    int64 keyAt(int64 index) {
+        unsafe {
+            RawMapEntry<V> mut& entry = std::lang::borrowAt<RawMapEntry<V>>(self.slots.pointer(index));
+            return entry.HashKey;
+        }
+    }
+    int64 find(int64 key) {
+        int64 capacity = self.slots.capacity();
+        if (capacity == 0) { return 0 - 1; }
+        int64 index = self.bucket(key, capacity);
+        int64 visited = 0;
+        while (visited < capacity) {
+            if (!self.slots.isInitialized(index)) { return 0 - 1; }
+            if (self.keyAt(index) == key) { return index; }
+            index = (index + 1) % capacity;
+            visited = visited + 1;
+        }
+        return 0 - 1;
+    }
+    bool contains(int64 key) { return self.find(key) >= 0; }
+    V const& get(int64 key) {
+        int64 index = self.find(key);
+        std::lang::assert(index >= 0);
+        unsafe {
+            RawMapEntry<V> mut& entry = std::lang::borrowAt<RawMapEntry<V>>(self.slots.pointer(index));
+            return &entry.Value;
+        }
+    }
+    void reserve(int64 capacity) {
+        std::lang::assert(capacity >= self.length * 2);
+        if (capacity <= self.slots.capacity()) { return; }
+        std::lang::RawStorage<RawMapEntry<V>> fresh = std::lang::RawStorage<RawMapEntry<V>>::allocate(capacity);
+        int64 oldCapacity = self.slots.capacity();
+        int64 i = 0;
+        while (i < oldCapacity) {
+            if (self.slots.isInitialized(i)) {
+                int64 target = self.bucket(self.keyAt(i), capacity);
+                while (fresh.isInitialized(target)) { target = (target + 1) % capacity; }
+                unsafe { std::lang::relocateNonOverlapping<RawMapEntry<V>>(fresh.pointer(target), self.slots.pointer(i), 1); }
+            }
+            i = i + 1;
+        }
+        self.slots.close();
+        self.slots = move(fresh);
+    }
+    void put(int64 key, V value) {
+        int64 index = self.find(key);
+        if (index < 0) {
+            int64 capacity = self.slots.capacity();
+            if (capacity == 0) { self.reserve(16); }
+            elif (self.length + 1 > capacity / 2) {
+                std::lang::assert(capacity <= 4611686018427387903);
+                self.reserve(capacity * 2);
+            }
+            capacity = self.slots.capacity();
+            index = self.bucket(key, capacity);
+            while (self.slots.isInitialized(index)) { index = (index + 1) % capacity; }
+            self.length = self.length + 1;
+        } else {
+            unsafe { std::lang::dropAt<RawMapEntry<V>>(self.slots.pointer(index)); }
+        }
+        RawMapEntry<V> entry;
+        entry.HashKey = key;
+        entry.HasValue = true;
+        entry.Value = move(value);
+        unsafe { std::lang::initAt<RawMapEntry<V>>(self.slots.pointer(index), move(entry)); }
+    }
+    bool remove(int64 key) {
+        int64 hole = self.find(key);
+        if (hole < 0) { return false; }
+        unsafe { std::lang::dropAt<RawMapEntry<V>>(self.slots.pointer(hole)); }
+        self.length = self.length - 1;
+        int64 capacity = self.slots.capacity();
+        int64 index = (hole + 1) % capacity;
+        while (self.slots.isInitialized(index)) {
+            int64 home = self.bucket(self.keyAt(index), capacity);
+            if ((hole - home + capacity) % capacity < (index - home + capacity) % capacity) {
+                unsafe { std::lang::relocateNonOverlapping<RawMapEntry<V>>(self.slots.pointer(hole), self.slots.pointer(index), 1); }
+                hole = index;
+            }
+            index = (index + 1) % capacity;
+        }
+        return true;
+    }
+    void close() { self.slots.close(); self.length = 0; }
+};
+
+/** Set 独立保存原始键槽，不包装 Map，不构造额外 Value。 */
+struct RawSet: Closeable {
+    std::lang::RawStorage<int64> slots;
+    int64 length;
+    int64 len() { return self.length; }
+    int64 bucket(int64 key, int64 capacity) { return (int64)((uint64)key % (uint64)capacity); }
+    int64 keyAt(int64 index) { unsafe { return std::lang::readAt<int64>(self.slots.pointer(index)); } }
+    int64 find(int64 key) {
+        int64 capacity = self.slots.capacity();
+        if (capacity == 0) { return 0 - 1; }
+        int64 index = self.bucket(key, capacity);
+        int64 visited = 0;
+        while (visited < capacity) {
+            if (!self.slots.isInitialized(index)) { return 0 - 1; }
+            if (self.keyAt(index) == key) { return index; }
+            index = (index + 1) % capacity;
+            visited = visited + 1;
+        }
+        return 0 - 1;
+    }
+    bool contains(int64 key) { return self.find(key) >= 0; }
+    void reserve(int64 capacity) {
+        std::lang::assert(capacity >= self.length * 2);
+        if (capacity <= self.slots.capacity()) { return; }
+        std::lang::RawStorage<int64> fresh = std::lang::RawStorage<int64>::allocate(capacity);
+        int64 oldCapacity = self.slots.capacity();
+        int64 i = 0;
+        while (i < oldCapacity) {
+            if (self.slots.isInitialized(i)) {
+                int64 target = self.bucket(self.keyAt(i), capacity);
+                while (fresh.isInitialized(target)) { target = (target + 1) % capacity; }
+                unsafe { std::lang::relocateNonOverlapping<int64>(fresh.pointer(target), self.slots.pointer(i), 1); }
+            }
+            i = i + 1;
+        }
+        self.slots.close(); self.slots = move(fresh);
+    }
+    void add(int64 key) {
+        if (self.contains(key)) { return; }
+        int64 capacity = self.slots.capacity();
+        if (capacity == 0) { self.reserve(16); }
+        elif (self.length + 1 > capacity / 2) { self.reserve(capacity * 2); }
+        capacity = self.slots.capacity();
+        int64 index = self.bucket(key, capacity);
+        while (self.slots.isInitialized(index)) { index = (index + 1) % capacity; }
+        unsafe { std::lang::initAt<int64>(self.slots.pointer(index), key); }
+        self.length = self.length + 1;
+    }
+    bool remove(int64 key) {
+        int64 hole = self.find(key);
+        if (hole < 0) { return false; }
+        unsafe { std::lang::dropAt<int64>(self.slots.pointer(hole)); }
+        self.length = self.length - 1;
+        int64 capacity = self.slots.capacity();
+        int64 index = (hole + 1) % capacity;
+        while (self.slots.isInitialized(index)) {
+            int64 home = self.bucket(self.keyAt(index), capacity);
+            if ((hole - home + capacity) % capacity < (index - home + capacity) % capacity) {
+                unsafe { std::lang::relocateNonOverlapping<int64>(self.slots.pointer(hole), self.slots.pointer(index), 1); }
+                hole = index;
+            }
+            index = (index + 1) % capacity;
+        }
+        return true;
+    }
+    void close() { self.slots.close(); self.length = 0; }
+};

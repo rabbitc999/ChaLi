@@ -28,7 +28,8 @@ def main():
                    '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
                    '-I'+str(ROOT), '-I'+str(ROOT/'source'), '-I'+str(ROOT/'library'), '-I'+str(ROOT/'source/preprocess'),
                    '-I'+str(ROOT/'source/stackvm'), '-I'+str(ROOT/'source/ast'),
-                   str(ROOT/'tests/backend_ownership_test.cpp'), '-Wl,--gc-sections', *map(str,libraries),
+                   str(ROOT/'tests/backend_ownership_test.cpp'), '-Wl,--gc-sections',
+                   '-Wl,--start-group', *map(str,libraries), '-Wl,--end-group',
                    *(['-lwinhttp'] if os.name == 'nt' else []), '-o', str(unit)]
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=240)
         assert result.returncode == 0, result.stdout + result.stderr
@@ -81,7 +82,7 @@ def main():
                 counts[name][event['site'].split('\t')[0]] += event['count']
             assert counts[name]['allocation_request'] > 0 and counts[name]['cleanup'] > 0
         assert (counts['optimized']['aggregate_move'] < counts['baseline']['aggregate_move'] or
-                counts['optimized']['call:std::lang::__stringCopy'] < counts['baseline']['call:std::lang::__stringCopy']), counts
+                counts['optimized']['call:std::lang::__bootStringCopy'] < counts['baseline']['call:std::lang::__bootStringCopy']), counts
         print('聚合移动减少且插桩不改变输出：'+str({name: dict(move=value['aggregate_move'], slot_copy=value['call:__chali_copy_struct']) for name,value in counts.items()}), flush=True)
 
 

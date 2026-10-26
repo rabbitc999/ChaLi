@@ -84,6 +84,7 @@ namespace collection_glue
  */
 const Memory::Vector<std::size_t> &Entries::bucket(std::int64_t hash) const
 {
+    ensureNativeIndex();
     const auto found = buckets_.find(hash);
     static const Memory::Vector<std::size_t> empty;
     return found == buckets_.end() ? empty : found->second;
@@ -113,6 +114,8 @@ Entries::iterator Entries::find(const Key &key)
  */
 std::pair<Entries::iterator, bool> Entries::emplace(Key key, Value value)
 {
+    ensureNativeIndex();
+    languageIndexed_ = false;
     const auto index = values_.size();
     if (key.hashed) buckets_[key.hash].push_back(index);
     values_.emplace_back(std::move(key), std::move(value));
@@ -139,6 +142,8 @@ Entries::Value &Entries::operator[](Key key)
  */
 void Entries::erase(iterator position)
 {
+    ensureNativeIndex();
+    languageIndexed_ = false;
     const auto index = static_cast<std::size_t>(position - begin());
     const auto last = values_.size() - 1;
     const bool hashed = position->first.hashed;
@@ -159,5 +164,41 @@ void Entries::erase(iterator position)
         }
     }
     values_.pop_back();
+}
+
+/**
+ * @brief 直接追加语言层已去重和封送的键值。
+ * @param key 独立键快照。
+ * @param value 独立值快照。
+ */
+void Entries::appendUnindexed(Key key, Value value)
+{
+    values_.emplace_back(std::move(key), std::move(value));
+    nativeIndexDirty_ = true;
+    languageIndexed_ = false;
+}
+
+/**
+ * @brief 以末槽填充已清理槽，不执行宿主键算法。
+ * @param index 已验证的有效槽号。
+ */
+void Entries::eraseUnindexed(std::size_t index)
+{
+    if (index + 1u != values_.size()) values_[index] = std::move(values_.back());
+    values_.pop_back();
+    nativeIndexDirty_ = true;
+    languageIndexed_ = false;
+}
+
+/**
+ * @brief 为宿主边界适配器延迟建立哈希候选表。
+ */
+void Entries::ensureNativeIndex() const
+{
+    if (!nativeIndexDirty_) return;
+    buckets_.clear();
+    for (std::size_t i = 0; i < values_.size(); ++i)
+        if (values_[i].first.hashed) buckets_[values_[i].first.hash].push_back(i);
+    nativeIndexDirty_ = false;
 }
 }  // namespace collection_glue

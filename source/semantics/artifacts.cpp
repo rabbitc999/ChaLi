@@ -94,6 +94,8 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
     return CAbiType(type);
 }
 
+#include "abi_export.cpp"
+
 /**
  * @brief 生成外部 ABI 声明对应的宿主胶水源码。
  * @retval 生成或读取的结果文本。
@@ -104,7 +106,7 @@ Memory::String AbiGlueSource()
     for (const MFunctionDecl &function : g_functionDecls)
         if (!function.abiLibrary.empty() && !function.superseded)
             libraries[function.abiLibrary].push_back(&function);
-    if (libraries.empty()) return {};
+    if (libraries.empty() && CAbiExportFunctions().empty()) return {};
     Memory::String definitions;
     Memory::Set<Memory::String> emitted;
     Memory::Function<void(const std::shared_ptr<MType> &)> emitType;
@@ -160,6 +162,10 @@ Memory::String AbiGlueSource()
             emitType(function->signature.result);
             for (const auto &param : function->signature.params) emitType(param.type);
         }
+    for (const auto *function : CAbiExportFunctions()) {
+        emitType(function->signature.result);
+        for (const auto &parameter : function->signature.params) emitType(parameter.type);
+    }
     Memory::String source = "bool bindChaLiAbi(chali_glue::Registry &registry, Memory::String *error) {\n";
     std::size_t index = 0;
     for (const auto &library : libraries)
@@ -180,7 +186,7 @@ Memory::String AbiGlueSource()
         }
     }
     source += "    return true;\n}\n";
-    return definitions + source;
+    return definitions + source + CAbiExportWrappers();
 }
 
 // Keep the existing small scalar interpreter path usable without a C++ compiler.
@@ -995,6 +1001,7 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
         ::chali_aot::ExternFunction entry;
+        entry.abiConvention = function.abiConvention.empty() ? "C" : function.abiConvention;
         entry.label = function.label;
         entry.symbol = function.abiSymbol.empty() ? function.label : function.abiSymbol;
         entry.library = function.abiLibrary;
@@ -1014,6 +1021,7 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
  */
 Memory::String ChaliAotAbiGlue()
 {
+    if (!CAbiExportFunctions().empty()) return AbiGlueSource();
     for (const auto &function : g_functionDecls)
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
@@ -1028,7 +1036,9 @@ Memory::String ChaliAotAbiGlue()
 }
 
 static const bool kChaliAotRegistered = (::chali_aot::setAbiExternProvider(&ChaliAotAbiExterns),
-                                         ::chali_aot::setAbiGlueProvider(&ChaliAotAbiGlue), true);
+                                         ::chali_aot::setAbiGlueProvider(&ChaliAotAbiGlue),
+                                         ::chali_aot::setAbiExportProvider(&ChaliAotAbiExports),
+                                         ::chali_aot::setAbiExportHeaderProvider(&ChaliAotAbiExportHeader), true);
 
 /**
  * @brief 写出编译产生的四元式、数据与二进制产物。
@@ -1216,6 +1226,9 @@ void ResetState()
     g_blockSerial = 0;
     g_ownedScopes.clear();
     g_ownedHome.clear();
+    // 泛型重放会复用内部名字，不能让上一轮的数组清理布局污染新一轮聚合。
+    g_arrayElementTypes.clear();
+    g_arrayFixedCounts.clear();
     g_resourceCloseStates.clear();
     g_resourceCloseAliases.clear();
     g_scope.push_back(Memory::Map<Memory::String, MVar>()); /* 0 号 = 全局作用域 */

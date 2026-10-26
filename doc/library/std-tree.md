@@ -14,7 +14,7 @@ import std::tree;
 
 ## 公共约定与错误边界
 
-BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，中序即升序；删除双孩子节点取中序后继替换，被删节点槽回收复用。RedBlackTree 使用宿主持久红黑节点，insert/remove 原地旋转及变色修复；重复插入或删除不存在的键返回 false，validate 校验排序、父指针、根颜色、红节点约束及黑高，删除节点槽回收复用。MinHeap 是最小二叉堆，可当优先队列用，相等键的出堆顺序不保证插入序。GeneralTree 用"第一个孩子 / 下一个兄弟"存储，toBinary 与 fromBinary 按"左孩子 = 第一个孩子、右孩子 = 下一个兄弟"互转，转换本身不排序、不保证 BST 有序性。树高按节点数计（单节点 1，空树 0）；树与堆由 opcode 独立拥有持久状态，普通复制深复制；snapshot 显式导出独立节点或堆数组，遍历只导出结果。裁剪宏 NO_CHALI_STD_TREE。
+BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，中序即升序；删除双孩子节点取中序后继替换，被删节点槽回收复用。RedBlackTree 使用 ChaLi 持久红黑节点，insert/remove 原地旋转及变色修复；重复插入或删除不存在的键返回 false，validate 校验排序、父指针、根颜色、红节点约束及黑高，删除节点槽回收复用。MinHeap 是最小二叉堆，可当优先队列用，相等键的出堆顺序不保证插入序。GeneralTree 用"第一个孩子 / 下一个兄弟"存储，toBinary 与 fromBinary 按"左孩子 = 第一个孩子、右孩子 = 下一个兄弟"互转，转换本身不排序、不保证 BST 有序性。树高按节点数计（单节点 1，空树 0）；树与堆由 ChaLi 结构体独立拥有节点数组，普通复制深复制；snapshot 显式导出独立节点或堆数组，遍历只导出结果。树与堆算法均实现在 std::tree 语言源码中，不注册宿主树算法。
 
 ## 参考代码
 
@@ -26,75 +26,79 @@ BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-462"></a>`struct TreeSnapshot` | 独立节点快照，live 标识有效槽；空孩子及空根使用 -1。 |
-| TreeSnapshot | <a id="symbol-463"></a>`List<int64> keys` | 节点槽键值。 |
-| TreeSnapshot | <a id="symbol-464"></a>`List<int64> lefts` | 左孩子下标，空孩子为 -1。 |
-| TreeSnapshot | <a id="symbol-465"></a>`List<int64> rights` | 右孩子下标，空孩子为 -1。 |
-| TreeSnapshot | <a id="symbol-466"></a>`List<int64> live` | 有效槽标记，1 为有效。 |
-| TreeSnapshot | <a id="symbol-467"></a>`int64 root` | 根节点下标，空树为 -1。 |
-| TreeSnapshot | <a id="symbol-468"></a>`int64 count` | 有效节点数。 |
-| 模块 | <a id="symbol-469"></a>`struct GeneralTreeSnapshot` | 独立通用树快照，首孩子与次兄弟保留原节点号。 |
-| GeneralTreeSnapshot | <a id="symbol-470"></a>`List<int64> values` | 节点槽值。 |
-| GeneralTreeSnapshot | <a id="symbol-471"></a>`List<int64> firstChild` | 首孩子下标，空孩子为 -1。 |
-| GeneralTreeSnapshot | <a id="symbol-472"></a>`List<int64> nextSibling` | 次兄弟下标，空兄弟为 -1。 |
-| GeneralTreeSnapshot | <a id="symbol-473"></a>`List<int64> live` | 有效槽标记，1 为有效。 |
-| GeneralTreeSnapshot | <a id="symbol-474"></a>`int64 root` | 根节点号，空树为 -1。 |
-| GeneralTreeSnapshot | <a id="symbol-475"></a>`int64 count` | 有效节点数。 |
-| 模块 | <a id="symbol-476"></a>`opcode BinarySearchTree` | 宿主持久二叉搜索集合，普通复制深复制，snapshot 显式导出节点。 |
-| 模块 | <a id="symbol-477"></a>`opcode RedBlackTree` | 宿主持久红黑集合，插入与删除原地修复，普通复制深复制。 |
-| 模块 | <a id="symbol-478"></a>`opcode MinHeap` | 宿主持久最小堆，普通复制深复制，snapshot 显式导出堆数组。 |
-| 模块 | <a id="symbol-479"></a>`opcode GeneralTree` | 宿主持久首孩子、次兄弟树，支持独立二叉表示转换。 |
+| 模块 | <a id="symbol-471"></a>`struct TreeSnapshot` | 独立节点快照；空孩子和空根使用 -1，节点槽号保持稳定。 |
+| TreeSnapshot | <a id="symbol-472"></a>`List<int64> keys` | 节点槽键值。 |
+| TreeSnapshot | <a id="symbol-473"></a>`List<int64> lefts` | 左孩子下标，空孩子为 -1。 |
+| TreeSnapshot | <a id="symbol-474"></a>`List<int64> rights` | 右孩子下标，空孩子为 -1。 |
+| TreeSnapshot | <a id="symbol-475"></a>`List<int64> live` | 有效槽标记，1 为有效。 |
+| TreeSnapshot | <a id="symbol-476"></a>`int64 root` | 根节点下标，空树为 -1。 |
+| TreeSnapshot | <a id="symbol-477"></a>`int64 count` | 有效节点数。 |
+| 模块 | <a id="symbol-478"></a>`struct GeneralTreeSnapshot` | 首孩子、次兄弟表示的独立通用树快照。 |
+| GeneralTreeSnapshot | <a id="symbol-479"></a>`List<int64> values` | 节点槽值。 |
+| GeneralTreeSnapshot | <a id="symbol-480"></a>`List<int64> firstChild` | 首孩子下标，空孩子为 -1。 |
+| GeneralTreeSnapshot | <a id="symbol-481"></a>`List<int64> nextSibling` | 次兄弟下标，空兄弟为 -1。 |
+| GeneralTreeSnapshot | <a id="symbol-482"></a>`List<int64> live` | 有效槽标记，1 为有效。 |
+| GeneralTreeSnapshot | <a id="symbol-483"></a>`int64 root` | 根节点号，空树为 -1。 |
+| GeneralTreeSnapshot | <a id="symbol-484"></a>`int64 count` | 有效节点数。 |
+| 模块 | <a id="symbol-485"></a>`struct BinarySearchTree: Copy<BinarySearchTree>` | 宿主持久二叉搜索集合，普通复制深复制，snapshot 显式导出节点。 |
+| 模块 | <a id="symbol-486"></a>`struct RedBlackTree: Copy<RedBlackTree>` | 宿主持久红黑集合，插入与删除原地修复，普通复制深复制。 |
+| 模块 | <a id="symbol-487"></a>`struct MinHeap: Copy<MinHeap>` | 宿主持久最小堆，普通复制深复制，snapshot 显式导出堆数组。 |
+| 模块 | <a id="symbol-488"></a>`struct GeneralTree: Copy<GeneralTree>` | 宿主持久首孩子、次兄弟树，支持独立二叉表示转换。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [BinarySearchTree::create](#api-0) | `static BinarySearchTree create()` |
-| [BinarySearchTree::len](#api-1) | `int64 len()` |
-| [BinarySearchTree::clear](#api-2) | `void clear()` |
-| [BinarySearchTree::insert](#api-3) | `bool insert(int64 value)` |
-| [BinarySearchTree::remove](#api-4) | `bool remove(int64 value)` |
-| [BinarySearchTree::contains](#api-5) | `bool contains(int64 value)` |
-| [BinarySearchTree::min](#api-6) | `Option<int64> min()` |
-| [BinarySearchTree::max](#api-7) | `Option<int64> max()` |
-| [BinarySearchTree::height](#api-8) | `int64 height()` |
-| [BinarySearchTree::inorder](#api-9) | `List<int64> inorder()` |
-| [BinarySearchTree::preorder](#api-10) | `List<int64> preorder()` |
-| [BinarySearchTree::postorder](#api-11) | `List<int64> postorder()` |
-| [BinarySearchTree::snapshot](#api-12) | `TreeSnapshot snapshot()` |
-| [RedBlackTree::create](#api-13) | `static RedBlackTree create()` |
-| [RedBlackTree::insert](#api-14) | `bool insert(int64 value)` |
-| [RedBlackTree::remove](#api-15) | `bool remove(int64 value)` |
-| [RedBlackTree::contains](#api-16) | `bool contains(int64 value)` |
-| [RedBlackTree::len](#api-17) | `int64 len()` |
-| [RedBlackTree::height](#api-18) | `int64 height()` |
-| [RedBlackTree::clear](#api-19) | `void clear()` |
-| [RedBlackTree::min](#api-20) | `Option<int64> min()` |
-| [RedBlackTree::max](#api-21) | `Option<int64> max()` |
-| [RedBlackTree::validate](#api-22) | `bool validate()` |
-| [RedBlackTree::inorder](#api-23) | `List<int64> inorder()` |
-| [MinHeap::create](#api-24) | `static MinHeap create()` |
-| [MinHeap::len](#api-25) | `int64 len()` |
-| [MinHeap::clear](#api-26) | `void clear()` |
-| [MinHeap::push](#api-27) | `void push(int64 value)` |
-| [MinHeap::pop](#api-28) | `Option<int64> pop()` |
-| [MinHeap::peek](#api-29) | `Option<int64> peek()` |
-| [MinHeap::isEmpty](#api-30) | `bool isEmpty()` |
-| [MinHeap::snapshot](#api-31) | `List<int64> snapshot()` |
-| [GeneralTree::create](#api-32) | `static GeneralTree create()` |
-| [GeneralTree::len](#api-33) | `int64 len()` |
-| [GeneralTree::clear](#api-34) | `void clear()` |
-| [GeneralTree::addRoot](#api-35) | `int64 addRoot(int64 value)` |
-| [GeneralTree::addChild](#api-36) | `int64 addChild(int64 cursor, int64 value)` |
-| [GeneralTree::valueAt](#api-37) | `int64 valueAt(int64 cursor)` |
-| [GeneralTree::rootNode](#api-38) | `int64 rootNode()` |
-| [GeneralTree::children](#api-39) | `List<int64> children(int64 cursor)` |
-| [GeneralTree::preorder](#api-40) | `List<int64> preorder()` |
-| [GeneralTree::levelOrder](#api-41) | `List<int64> levelOrder()` |
-| [GeneralTree::height](#api-42) | `int64 height()` |
-| [GeneralTree::toBinary](#api-43) | `BinarySearchTree toBinary()` |
-| [GeneralTree::fromBinary](#api-44) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
-| [GeneralTree::snapshot](#api-45) | `GeneralTreeSnapshot snapshot()` |
+| [BinarySearchTree::copy](#api-1) | `BinarySearchTree copy()` |
+| [BinarySearchTree::len](#api-2) | `int64 len()` |
+| [BinarySearchTree::clear](#api-3) | `void clear()` |
+| [BinarySearchTree::insert](#api-4) | `bool insert(int64 key)` |
+| [BinarySearchTree::remove](#api-5) | `bool remove(int64 key)` |
+| [BinarySearchTree::contains](#api-6) | `bool contains(int64 key)` |
+| [BinarySearchTree::min](#api-7) | `Option<int64> min()` |
+| [BinarySearchTree::max](#api-8) | `Option<int64> max()` |
+| [BinarySearchTree::height](#api-9) | `int64 height()` |
+| [BinarySearchTree::inorder](#api-10) | `List<int64> inorder()` |
+| [BinarySearchTree::preorder](#api-11) | `List<int64> preorder()` |
+| [BinarySearchTree::postorder](#api-12) | `List<int64> postorder()` |
+| [BinarySearchTree::snapshot](#api-13) | `TreeSnapshot snapshot()` |
+| [RedBlackTree::create](#api-14) | `static RedBlackTree create()` |
+| [RedBlackTree::copy](#api-15) | `RedBlackTree copy()` |
+| [RedBlackTree::len](#api-16) | `int64 len()` |
+| [RedBlackTree::contains](#api-17) | `bool contains(int64 key)` |
+| [RedBlackTree::clear](#api-18) | `void clear()` |
+| [RedBlackTree::height](#api-19) | `int64 height()` |
+| [RedBlackTree::inorder](#api-20) | `List<int64> inorder()` |
+| [RedBlackTree::min](#api-21) | `Option<int64> min()` |
+| [RedBlackTree::max](#api-22) | `Option<int64> max()` |
+| [RedBlackTree::insert](#api-23) | `bool insert(int64 key)` |
+| [RedBlackTree::remove](#api-24) | `bool remove(int64 key)` |
+| [RedBlackTree::validate](#api-25) | `bool validate()` |
+| [MinHeap::create](#api-26) | `static MinHeap create()` |
+| [MinHeap::copy](#api-27) | `MinHeap copy()` |
+| [MinHeap::len](#api-28) | `int64 len()` |
+| [MinHeap::isEmpty](#api-29) | `bool isEmpty()` |
+| [MinHeap::clear](#api-30) | `void clear()` |
+| [MinHeap::push](#api-31) | `void push(int64 value)` |
+| [MinHeap::peek](#api-32) | `Option<int64> peek()` |
+| [MinHeap::pop](#api-33) | `Option<int64> pop()` |
+| [MinHeap::snapshot](#api-34) | `List<int64> snapshot()` |
+| [GeneralTree::create](#api-35) | `static GeneralTree create()` |
+| [GeneralTree::copy](#api-36) | `GeneralTree copy()` |
+| [GeneralTree::len](#api-37) | `int64 len()` |
+| [GeneralTree::clear](#api-38) | `void clear()` |
+| [GeneralTree::addRoot](#api-39) | `int64 addRoot(int64 value)` |
+| [GeneralTree::addChild](#api-40) | `int64 addChild(int64 cursor,int64 value)` |
+| [GeneralTree::valueAt](#api-41) | `int64 valueAt(int64 cursor)` |
+| [GeneralTree::rootNode](#api-42) | `int64 rootNode()` |
+| [GeneralTree::children](#api-43) | `List<int64> children(int64 cursor)` |
+| [GeneralTree::preorder](#api-44) | `List<int64> preorder()` |
+| [GeneralTree::levelOrder](#api-45) | `List<int64> levelOrder()` |
+| [GeneralTree::height](#api-46) | `int64 height()` |
+| [GeneralTree::toBinary](#api-47) | `BinarySearchTree toBinary()` |
+| [GeneralTree::fromBinary](#api-48) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
+| [GeneralTree::snapshot](#api-49) | `GeneralTreeSnapshot snapshot()` |
 
 <a id="api-0"></a>
 
@@ -110,7 +114,7 @@ static BinarySearchTree create();
 
 创建BinarySearchTree，返回可供后续操作的值。
 
-创建空容器。
+创建空树。
 
 **参数**
 
@@ -130,11 +134,47 @@ static BinarySearchTree create();
 std::tree::BinarySearchTree::create();
 ```
 
-**源码**：[source/std/tree.chl:36](../../source/std/tree.chl#L36)。
+**源码**：[source/std/tree.chl:96](../../source/std/tree.chl#L96)。
 
 <a id="api-1"></a>
 
-### BinarySearchTree::len（2）
+### BinarySearchTree::copy（2）
+
+**声明**
+
+```chali
+BinarySearchTree copy();
+```
+
+**行为**
+
+返回独立的值副本。
+
+取得独立副本。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`BinarySearchTree`。返回独立的值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.copy();
+```
+
+**源码**：[source/std/tree.chl:98](../../source/std/tree.chl#L98)。
+
+<a id="api-2"></a>
+
+### BinarySearchTree::len（3）
 
 **声明**
 
@@ -146,7 +186,7 @@ int64 len();
 
 返回当前元素数量。
 
-有效元素数。
+返回有效节点数。
 
 **参数**
 
@@ -166,11 +206,11 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/tree.chl:38](../../source/std/tree.chl#L38)。
+**源码**：[source/std/tree.chl:100](../../source/std/tree.chl#L100)。
 
-<a id="api-2"></a>
+<a id="api-3"></a>
 
-### BinarySearchTree::clear（3）
+### BinarySearchTree::clear（4）
 
 **声明**
 
@@ -182,7 +222,7 @@ void clear();
 
 移除全部元素。
 
-清空所有节点和回收槽。
+清空节点。
 
 **参数**
 
@@ -202,29 +242,29 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/tree.chl:40](../../source/std/tree.chl#L40)。
+**源码**：[source/std/tree.chl:102](../../source/std/tree.chl#L102)。
 
-<a id="api-3"></a>
+<a id="api-4"></a>
 
-### BinarySearchTree::insert（4）
+### BinarySearchTree::insert（5）
 
 **声明**
 
 ```chali
-bool insert(int64 value);
+bool insert(int64 key);
 ```
 
 **行为**
 
 在 index 之前插入 value。
 
-插入键，重复键返回 false。
+插入唯一键，重复时返回 false。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
+| `key` | `int64 key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -237,32 +277,32 @@ bool insert(int64 value);
 **调用形式**
 
 ```chali
-obj.insert(value);
+obj.insert(key);
 ```
 
-**源码**：[source/std/tree.chl:42](../../source/std/tree.chl#L42)。
+**源码**：[source/std/tree.chl:104](../../source/std/tree.chl#L104)。
 
-<a id="api-4"></a>
+<a id="api-5"></a>
 
-### BinarySearchTree::remove（5）
+### BinarySearchTree::remove（6）
 
 **声明**
 
 ```chali
-bool remove(int64 value);
+bool remove(int64 key);
 ```
 
 **行为**
 
 删除指定位置或键的元素。
 
-删除键，不存在返回 false。
+摘除键；两个孩子时用中序后继替换。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
+| `key` | `int64 key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -275,32 +315,32 @@ bool remove(int64 value);
 **调用形式**
 
 ```chali
-obj.remove(value);
+obj.remove(key);
 ```
 
-**源码**：[source/std/tree.chl:44](../../source/std/tree.chl#L44)。
+**源码**：[source/std/tree.chl:111](../../source/std/tree.chl#L111)。
 
-<a id="api-5"></a>
+<a id="api-6"></a>
 
-### BinarySearchTree::contains（6）
+### BinarySearchTree::contains（7）
 
 **声明**
 
 ```chali
-bool contains(int64 value);
+bool contains(int64 key);
 ```
 
 **行为**
 
 判断是否包含目标值或匹配文本。
 
-查询键是否存在。
+判断是否存在键。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
+| `key` | `int64 key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -313,14 +353,14 @@ bool contains(int64 value);
 **调用形式**
 
 ```chali
-obj.contains(value);
+obj.contains(key);
 ```
 
-**源码**：[source/std/tree.chl:46](../../source/std/tree.chl#L46)。
+**源码**：[source/std/tree.chl:118](../../source/std/tree.chl#L118)。
 
-<a id="api-6"></a>
+<a id="api-7"></a>
 
-### BinarySearchTree::min（7）
+### BinarySearchTree::min（8）
 
 **声明**
 
@@ -332,7 +372,7 @@ Option<int64> min();
 
 返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。
 
-最小键，空树返回 None。
+返回最小键，空树返回 None。
 
 **参数**
 
@@ -352,11 +392,11 @@ Option<int64> min();
 obj.min();
 ```
 
-**源码**：[source/std/tree.chl:48](../../source/std/tree.chl#L48)。
+**源码**：[source/std/tree.chl:120](../../source/std/tree.chl#L120)。
 
-<a id="api-7"></a>
+<a id="api-8"></a>
 
-### BinarySearchTree::max（8）
+### BinarySearchTree::max（9）
 
 **声明**
 
@@ -368,7 +408,7 @@ Option<int64> max();
 
 返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。
 
-最大键，空树返回 None。
+返回最大键，空树返回 None。
 
 **参数**
 
@@ -388,11 +428,11 @@ Option<int64> max();
 obj.max();
 ```
 
-**源码**：[source/std/tree.chl:50](../../source/std/tree.chl#L50)。
+**源码**：[source/std/tree.chl:122](../../source/std/tree.chl#L122)。
 
-<a id="api-8"></a>
+<a id="api-9"></a>
 
-### BinarySearchTree::height（9）
+### BinarySearchTree::height（10）
 
 **声明**
 
@@ -402,7 +442,7 @@ int64 height();
 
 **行为**
 
-最大路径节点数，空树为零。
+返回最大路径节点数。
 
 **参数**
 
@@ -410,7 +450,7 @@ int64 height();
 
 **返回值**
 
-`int64`。最大路径节点数，空树为零。
+`int64`。返回最大路径节点数。
 
 **错误与边界**
 
@@ -422,11 +462,11 @@ int64 height();
 obj.height();
 ```
 
-**源码**：[source/std/tree.chl:52](../../source/std/tree.chl#L52)。
+**源码**：[source/std/tree.chl:124](../../source/std/tree.chl#L124)。
 
-<a id="api-9"></a>
+<a id="api-10"></a>
 
-### BinarySearchTree::inorder（10）
+### BinarySearchTree::inorder（11）
 
 **声明**
 
@@ -436,7 +476,7 @@ List<int64> inorder();
 
 **行为**
 
-独立中序键快照。
+返回独立中序键列表。
 
 **参数**
 
@@ -444,7 +484,7 @@ List<int64> inorder();
 
 **返回值**
 
-`List<int64>`。独立中序键快照。
+`List<int64>`。返回独立中序键列表。
 
 **错误与边界**
 
@@ -456,11 +496,11 @@ List<int64> inorder();
 obj.inorder();
 ```
 
-**源码**：[source/std/tree.chl:54](../../source/std/tree.chl#L54)。
+**源码**：[source/std/tree.chl:126](../../source/std/tree.chl#L126)。
 
-<a id="api-10"></a>
+<a id="api-11"></a>
 
-### BinarySearchTree::preorder（11）
+### BinarySearchTree::preorder（12）
 
 **声明**
 
@@ -470,7 +510,7 @@ List<int64> preorder();
 
 **行为**
 
-独立先序键快照。
+返回独立先序键列表。
 
 **参数**
 
@@ -478,7 +518,7 @@ List<int64> preorder();
 
 **返回值**
 
-`List<int64>`。独立先序键快照。
+`List<int64>`。返回独立先序键列表。
 
 **错误与边界**
 
@@ -490,11 +530,11 @@ List<int64> preorder();
 obj.preorder();
 ```
 
-**源码**：[source/std/tree.chl:56](../../source/std/tree.chl#L56)。
+**源码**：[source/std/tree.chl:128](../../source/std/tree.chl#L128)。
 
-<a id="api-11"></a>
+<a id="api-12"></a>
 
-### BinarySearchTree::postorder（12）
+### BinarySearchTree::postorder（13）
 
 **声明**
 
@@ -504,7 +544,7 @@ List<int64> postorder();
 
 **行为**
 
-独立后序键快照。
+返回独立后序键列表。
 
 **参数**
 
@@ -512,7 +552,7 @@ List<int64> postorder();
 
 **返回值**
 
-`List<int64>`。独立后序键快照。
+`List<int64>`。返回独立后序键列表。
 
 **错误与边界**
 
@@ -524,11 +564,11 @@ List<int64> postorder();
 obj.postorder();
 ```
 
-**源码**：[source/std/tree.chl:58](../../source/std/tree.chl#L58)。
+**源码**：[source/std/tree.chl:130](../../source/std/tree.chl#L130)。
 
-<a id="api-12"></a>
+<a id="api-13"></a>
 
-### BinarySearchTree::snapshot（13）
+### BinarySearchTree::snapshot（14）
 
 **声明**
 
@@ -538,7 +578,7 @@ TreeSnapshot snapshot();
 
 **行为**
 
-显式导出独立节点结构。
+返回独立节点快照。
 
 **参数**
 
@@ -546,7 +586,7 @@ TreeSnapshot snapshot();
 
 **返回值**
 
-`TreeSnapshot`。显式导出独立节点结构。
+`TreeSnapshot`。返回独立节点快照。
 
 **错误与边界**
 
@@ -558,11 +598,11 @@ TreeSnapshot snapshot();
 obj.snapshot();
 ```
 
-**源码**：[source/std/tree.chl:60](../../source/std/tree.chl#L60)。
+**源码**：[source/std/tree.chl:132](../../source/std/tree.chl#L132)。
 
-<a id="api-13"></a>
+<a id="api-14"></a>
 
-### RedBlackTree::create（14）
+### RedBlackTree::create（15）
 
 **声明**
 
@@ -594,71 +634,31 @@ static RedBlackTree create();
 std::tree::RedBlackTree::create();
 ```
 
-**源码**：[source/std/tree.chl:81](../../source/std/tree.chl#L81)。
-
-<a id="api-14"></a>
-
-### RedBlackTree::insert（15）
-
-**声明**
-
-```chali
-bool insert(int64 value);
-```
-
-**行为**
-
-在 index 之前插入 value。
-
-插入不存在的键；重复键返回 false。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
-
-**返回值**
-
-`bool`。在 index 之前插入 value。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-obj.insert(value);
-```
-
-**源码**：[source/std/tree.chl:83](../../source/std/tree.chl#L83)。
+**源码**：[source/std/tree.chl:139](../../source/std/tree.chl#L139)。
 
 <a id="api-15"></a>
 
-### RedBlackTree::remove（16）
+### RedBlackTree::copy（16）
 
 **声明**
 
 ```chali
-bool remove(int64 value);
+RedBlackTree copy();
 ```
 
 **行为**
 
-删除指定位置或键的元素。
+返回独立的值副本。
 
-删除键并修复黑高与颜色；不存在时返回 false。
+取得独立副本。
 
 **参数**
 
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
+无显式参数。实例方法使用当前接收者。
 
 **返回值**
 
-`bool`。删除指定位置或键的元素。
+`RedBlackTree`。返回独立的值副本。
 
 **错误与边界**
 
@@ -667,52 +667,14 @@ bool remove(int64 value);
 **调用形式**
 
 ```chali
-obj.remove(value);
+obj.copy();
 ```
 
-**源码**：[source/std/tree.chl:85](../../source/std/tree.chl#L85)。
+**源码**：[source/std/tree.chl:141](../../source/std/tree.chl#L141)。
 
 <a id="api-16"></a>
 
-### RedBlackTree::contains（17）
-
-**声明**
-
-```chali
-bool contains(int64 value);
-```
-
-**行为**
-
-判断是否包含目标值或匹配文本。
-
-查询键是否存在。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `value` | `int64 value` | 输入值或写入的新值 | 无 |
-
-**返回值**
-
-`bool`。判断是否包含目标值或匹配文本。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-obj.contains(value);
-```
-
-**源码**：[source/std/tree.chl:87](../../source/std/tree.chl#L87)。
-
-<a id="api-17"></a>
-
-### RedBlackTree::len（18）
+### RedBlackTree::len（17）
 
 **声明**
 
@@ -724,7 +686,7 @@ int64 len();
 
 返回当前元素数量。
 
-当前有效键数。
+返回键数量。
 
 **参数**
 
@@ -744,29 +706,33 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/tree.chl:89](../../source/std/tree.chl#L89)。
+**源码**：[source/std/tree.chl:143](../../source/std/tree.chl#L143)。
 
-<a id="api-18"></a>
+<a id="api-17"></a>
 
-### RedBlackTree::height（19）
+### RedBlackTree::contains（18）
 
 **声明**
 
 ```chali
-int64 height();
+bool contains(int64 key);
 ```
 
 **行为**
 
-树高，空树为零。
+判断是否包含目标值或匹配文本。
+
+判断键是否存在。
 
 **参数**
 
-无显式参数。实例方法使用当前接收者。
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `key` | `int64 key` | 查找键或下标 | 无 |
 
 **返回值**
 
-`int64`。树高，空树为零。
+`bool`。判断是否包含目标值或匹配文本。
 
 **错误与边界**
 
@@ -775,14 +741,14 @@ int64 height();
 **调用形式**
 
 ```chali
-obj.height();
+obj.contains(key);
 ```
 
-**源码**：[source/std/tree.chl:91](../../source/std/tree.chl#L91)。
+**源码**：[source/std/tree.chl:145](../../source/std/tree.chl#L145)。
 
-<a id="api-19"></a>
+<a id="api-18"></a>
 
-### RedBlackTree::clear（20）
+### RedBlackTree::clear（19）
 
 **声明**
 
@@ -794,7 +760,7 @@ void clear();
 
 移除全部元素。
 
-清空节点及回收槽。
+清空所有节点。
 
 **参数**
 
@@ -814,11 +780,79 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/tree.chl:93](../../source/std/tree.chl#L93)。
+**源码**：[source/std/tree.chl:147](../../source/std/tree.chl#L147)。
+
+<a id="api-19"></a>
+
+### RedBlackTree::height（20）
+
+**声明**
+
+```chali
+int64 height();
+```
+
+**行为**
+
+返回树高。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`int64`。返回树高。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.height();
+```
+
+**源码**：[source/std/tree.chl:149](../../source/std/tree.chl#L149)。
 
 <a id="api-20"></a>
 
-### RedBlackTree::min（21）
+### RedBlackTree::inorder（21）
+
+**声明**
+
+```chali
+List<int64> inorder();
+```
+
+**行为**
+
+返回独立升序键列表。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`List<int64>`。返回独立升序键列表。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.inorder();
+```
+
+**源码**：[source/std/tree.chl:151](../../source/std/tree.chl#L151)。
+
+<a id="api-21"></a>
+
+### RedBlackTree::min（22）
 
 **声明**
 
@@ -830,7 +864,7 @@ Option<int64> min();
 
 返回实参中的较小值；泛型入口，接受任意数量实参，相等时取后者。
 
-最小键；空树返回 None。
+返回最小键，空树返回 None。
 
 **参数**
 
@@ -850,11 +884,11 @@ Option<int64> min();
 obj.min();
 ```
 
-**源码**：[source/std/tree.chl:95](../../source/std/tree.chl#L95)。
+**源码**：[source/std/tree.chl:153](../../source/std/tree.chl#L153)。
 
-<a id="api-21"></a>
+<a id="api-22"></a>
 
-### RedBlackTree::max（22）
+### RedBlackTree::max（23）
 
 **声明**
 
@@ -866,7 +900,7 @@ Option<int64> max();
 
 返回实参中的较大值；泛型入口，接受任意数量实参，相等时取后者。
 
-最大键；空树返回 None。
+返回最大键，空树返回 None。
 
 **参数**
 
@@ -886,11 +920,87 @@ Option<int64> max();
 obj.max();
 ```
 
-**源码**：[source/std/tree.chl:100](../../source/std/tree.chl#L100)。
+**源码**：[source/std/tree.chl:155](../../source/std/tree.chl#L155)。
 
-<a id="api-22"></a>
+<a id="api-23"></a>
 
-### RedBlackTree::validate（23）
+### RedBlackTree::insert（24）
+
+**声明**
+
+```chali
+bool insert(int64 key);
+```
+
+**行为**
+
+在 index 之前插入 value。
+
+插入键并修复连续红节点。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `key` | `int64 key` | 查找键或下标 | 无 |
+
+**返回值**
+
+`bool`。在 index 之前插入 value。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.insert(key);
+```
+
+**源码**：[source/std/tree.chl:157](../../source/std/tree.chl#L157)。
+
+<a id="api-24"></a>
+
+### RedBlackTree::remove（25）
+
+**声明**
+
+```chali
+bool remove(int64 key);
+```
+
+**行为**
+
+删除指定位置或键的元素。
+
+删除键，保留中序后继的颜色并修复黑高。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `key` | `int64 key` | 查找键或下标 | 无 |
+
+**返回值**
+
+`bool`。删除指定位置或键的元素。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.remove(key);
+```
+
+**源码**：[source/std/tree.chl:202](../../source/std/tree.chl#L202)。
+
+<a id="api-25"></a>
+
+### RedBlackTree::validate（26）
 
 **声明**
 
@@ -900,7 +1010,7 @@ bool validate();
 
 **行为**
 
-检查排序、父指针、根颜色、连续红节点和黑高约束。
+验证连通节点、父指针、严格顺序、根颜色、红孩子及所有 nil 路径黑高。
 
 **参数**
 
@@ -908,7 +1018,7 @@ bool validate();
 
 **返回值**
 
-`bool`。检查排序、父指针、根颜色、连续红节点和黑高约束。
+`bool`。验证连通节点、父指针、严格顺序、根颜色、红孩子及所有 nil 路径黑高。
 
 **错误与边界**
 
@@ -920,45 +1030,11 @@ bool validate();
 obj.validate();
 ```
 
-**源码**：[source/std/tree.chl:105](../../source/std/tree.chl#L105)。
+**源码**：[source/std/tree.chl:216](../../source/std/tree.chl#L216)。
 
-<a id="api-23"></a>
+<a id="api-26"></a>
 
-### RedBlackTree::inorder（24）
-
-**声明**
-
-```chali
-List<int64> inorder();
-```
-
-**行为**
-
-显式导出独立升序键快照。
-
-**参数**
-
-无显式参数。实例方法使用当前接收者。
-
-**返回值**
-
-`List<int64>`。显式导出独立升序键快照。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-obj.inorder();
-```
-
-**源码**：[source/std/tree.chl:107](../../source/std/tree.chl#L107)。
-
-<a id="api-24"></a>
-
-### MinHeap::create（25）
+### MinHeap::create（27）
 
 **声明**
 
@@ -970,7 +1046,7 @@ static MinHeap create();
 
 创建MinHeap，返回可供后续操作的值。
 
-创建空容器。
+创建空堆。
 
 **参数**
 
@@ -990,11 +1066,47 @@ static MinHeap create();
 std::tree::MinHeap::create();
 ```
 
-**源码**：[source/std/tree.chl:116](../../source/std/tree.chl#L116)。
+**源码**：[source/std/tree.chl:241](../../source/std/tree.chl#L241)。
 
-<a id="api-25"></a>
+<a id="api-27"></a>
 
-### MinHeap::len（26）
+### MinHeap::copy（28）
+
+**声明**
+
+```chali
+MinHeap copy();
+```
+
+**行为**
+
+返回独立的值副本。
+
+取得独立副本。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`MinHeap`。返回独立的值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.copy();
+```
+
+**源码**：[source/std/tree.chl:243](../../source/std/tree.chl#L243)。
+
+<a id="api-28"></a>
+
+### MinHeap::len（29）
 
 **声明**
 
@@ -1006,7 +1118,7 @@ int64 len();
 
 返回当前元素数量。
 
-有效元素数。
+返回元素数量。
 
 **参数**
 
@@ -1026,11 +1138,47 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/tree.chl:118](../../source/std/tree.chl#L118)。
+**源码**：[source/std/tree.chl:245](../../source/std/tree.chl#L245)。
 
-<a id="api-26"></a>
+<a id="api-29"></a>
 
-### MinHeap::clear（27）
+### MinHeap::isEmpty（30）
+
+**声明**
+
+```chali
+bool isEmpty();
+```
+
+**行为**
+
+判断 Any 是否为空盒子，不公开内部执行期标签。
+
+判断是否为空。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.isEmpty();
+```
+
+**源码**：[source/std/tree.chl:247](../../source/std/tree.chl#L247)。
+
+<a id="api-30"></a>
+
+### MinHeap::clear（31）
 
 **声明**
 
@@ -1042,7 +1190,7 @@ void clear();
 
 移除全部元素。
 
-清空所有节点和回收槽。
+清空元素。
 
 **参数**
 
@@ -1062,11 +1210,11 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/tree.chl:120](../../source/std/tree.chl#L120)。
+**源码**：[source/std/tree.chl:249](../../source/std/tree.chl#L249)。
 
-<a id="api-27"></a>
+<a id="api-31"></a>
 
-### MinHeap::push（28）
+### MinHeap::push（32）
 
 **声明**
 
@@ -1078,7 +1226,7 @@ void push(int64 value);
 
 将 value 追加到列表尾部。
 
-原地插入一个值。
+插入后向上调整。
 
 **参数**
 
@@ -1100,47 +1248,11 @@ void push(int64 value);
 obj.push(value);
 ```
 
-**源码**：[source/std/tree.chl:122](../../source/std/tree.chl#L122)。
+**源码**：[source/std/tree.chl:251](../../source/std/tree.chl#L251)。
 
-<a id="api-28"></a>
+<a id="api-32"></a>
 
-### MinHeap::pop（29）
-
-**声明**
-
-```chali
-Option<int64> pop();
-```
-
-**行为**
-
-移除列表尾元素并返回值，空列表时报错。
-
-弹出最小值，空堆返回 None。
-
-**参数**
-
-无显式参数。实例方法使用当前接收者。
-
-**返回值**
-
-`Option<int64>`。移除列表尾元素并返回值，空列表时报错。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-obj.pop();
-```
-
-**源码**：[source/std/tree.chl:124](../../source/std/tree.chl#L124)。
-
-<a id="api-29"></a>
-
-### MinHeap::peek（30）
+### MinHeap::peek（33）
 
 **声明**
 
@@ -1152,7 +1264,7 @@ Option<int64> peek();
 
 查看下一项并保留该项供后续消费。
 
-读取最小值，空堆返回 None。
+返回最小值，空堆返回 None。
 
 **参数**
 
@@ -1172,23 +1284,23 @@ Option<int64> peek();
 obj.peek();
 ```
 
-**源码**：[source/std/tree.chl:126](../../source/std/tree.chl#L126)。
+**源码**：[source/std/tree.chl:253](../../source/std/tree.chl#L253)。
 
-<a id="api-30"></a>
+<a id="api-33"></a>
 
-### MinHeap::isEmpty（31）
+### MinHeap::pop（34）
 
 **声明**
 
 ```chali
-bool isEmpty();
+Option<int64> pop();
 ```
 
 **行为**
 
-判断 Any 是否为空盒子，不公开内部执行期标签。
+移除列表尾元素并返回值，空列表时报错。
 
-是否为空。
+弹出最小值并向下调整。
 
 **参数**
 
@@ -1196,7 +1308,7 @@ bool isEmpty();
 
 **返回值**
 
-`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
+`Option<int64>`。移除列表尾元素并返回值，空列表时报错。
 
 **错误与边界**
 
@@ -1205,14 +1317,14 @@ bool isEmpty();
 **调用形式**
 
 ```chali
-obj.isEmpty();
+obj.pop();
 ```
 
-**源码**：[source/std/tree.chl:128](../../source/std/tree.chl#L128)。
+**源码**：[source/std/tree.chl:255](../../source/std/tree.chl#L255)。
 
-<a id="api-31"></a>
+<a id="api-34"></a>
 
-### MinHeap::snapshot（32）
+### MinHeap::snapshot（35）
 
 **声明**
 
@@ -1222,7 +1334,7 @@ List<int64> snapshot();
 
 **行为**
 
-显式导出独立堆数组。
+导出独立堆数组。
 
 **参数**
 
@@ -1230,7 +1342,7 @@ List<int64> snapshot();
 
 **返回值**
 
-`List<int64>`。显式导出独立堆数组。
+`List<int64>`。导出独立堆数组。
 
 **错误与边界**
 
@@ -1242,11 +1354,11 @@ List<int64> snapshot();
 obj.snapshot();
 ```
 
-**源码**：[source/std/tree.chl:130](../../source/std/tree.chl#L130)。
+**源码**：[source/std/tree.chl:257](../../source/std/tree.chl#L257)。
 
-<a id="api-32"></a>
+<a id="api-35"></a>
 
-### GeneralTree::create（33）
+### GeneralTree::create（36）
 
 **声明**
 
@@ -1258,7 +1370,7 @@ static GeneralTree create();
 
 创建GeneralTree，返回可供后续操作的值。
 
-创建空容器。
+创建空树。
 
 **参数**
 
@@ -1278,11 +1390,47 @@ static GeneralTree create();
 std::tree::GeneralTree::create();
 ```
 
-**源码**：[source/std/tree.chl:139](../../source/std/tree.chl#L139)。
+**源码**：[source/std/tree.chl:264](../../source/std/tree.chl#L264)。
 
-<a id="api-33"></a>
+<a id="api-36"></a>
 
-### GeneralTree::len（34）
+### GeneralTree::copy（37）
+
+**声明**
+
+```chali
+GeneralTree copy();
+```
+
+**行为**
+
+返回独立的值副本。
+
+返回独立副本。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`GeneralTree`。返回独立的值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.copy();
+```
+
+**源码**：[source/std/tree.chl:266](../../source/std/tree.chl#L266)。
+
+<a id="api-37"></a>
+
+### GeneralTree::len（38）
 
 **声明**
 
@@ -1294,7 +1442,7 @@ int64 len();
 
 返回当前元素数量。
 
-有效元素数。
+返回有效节点数。
 
 **参数**
 
@@ -1314,11 +1462,11 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/tree.chl:141](../../source/std/tree.chl#L141)。
+**源码**：[source/std/tree.chl:268](../../source/std/tree.chl#L268)。
 
-<a id="api-34"></a>
+<a id="api-38"></a>
 
-### GeneralTree::clear（35）
+### GeneralTree::clear（39）
 
 **声明**
 
@@ -1330,7 +1478,7 @@ void clear();
 
 移除全部元素。
 
-清空所有节点和回收槽。
+清空节点。
 
 **参数**
 
@@ -1350,11 +1498,11 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/tree.chl:143](../../source/std/tree.chl#L143)。
+**源码**：[source/std/tree.chl:270](../../source/std/tree.chl#L270)。
 
-<a id="api-35"></a>
+<a id="api-39"></a>
 
-### GeneralTree::addRoot（36）
+### GeneralTree::addRoot（40）
 
 **声明**
 
@@ -1364,7 +1512,7 @@ int64 addRoot(int64 value);
 
 **行为**
 
-仅空树可建立根，否则返回 -1。
+仅空树能建立根；返回零基节点号，否则返回 -1。
 
 **参数**
 
@@ -1374,7 +1522,7 @@ int64 addRoot(int64 value);
 
 **返回值**
 
-`int64`。仅空树可建立根，否则返回 -1。
+`int64`。仅空树能建立根；返回零基节点号，否则返回 -1。
 
 **错误与边界**
 
@@ -1386,21 +1534,21 @@ int64 addRoot(int64 value);
 obj.addRoot(value);
 ```
 
-**源码**：[source/std/tree.chl:145](../../source/std/tree.chl#L145)。
+**源码**：[source/std/tree.chl:272](../../source/std/tree.chl#L272)。
 
-<a id="api-36"></a>
+<a id="api-40"></a>
 
-### GeneralTree::addChild（37）
+### GeneralTree::addChild（41）
 
 **声明**
 
 ```chali
-int64 addChild(int64 cursor, int64 value);
+int64 addChild(int64 cursor,int64 value);
 ```
 
 **行为**
 
-在父节点末尾追加孩子，无效父节点返回 -1。
+向有效父节点的末尾追加孩子。
 
 **参数**
 
@@ -1411,7 +1559,7 @@ int64 addChild(int64 cursor, int64 value);
 
 **返回值**
 
-`int64`。在父节点末尾追加孩子，无效父节点返回 -1。
+`int64`。向有效父节点的末尾追加孩子。
 
 **错误与边界**
 
@@ -1423,11 +1571,11 @@ int64 addChild(int64 cursor, int64 value);
 obj.addChild(cursor, value);
 ```
 
-**源码**：[source/std/tree.chl:147](../../source/std/tree.chl#L147)。
+**源码**：[source/std/tree.chl:274](../../source/std/tree.chl#L274)。
 
-<a id="api-37"></a>
+<a id="api-41"></a>
 
-### GeneralTree::valueAt（38）
+### GeneralTree::valueAt（42）
 
 **声明**
 
@@ -1437,7 +1585,7 @@ int64 valueAt(int64 cursor);
 
 **行为**
 
-读取有效节点值，越界报错。
+返回有效节点值，无效下标报错。
 
 **参数**
 
@@ -1447,7 +1595,7 @@ int64 valueAt(int64 cursor);
 
 **返回值**
 
-`int64`。读取有效节点值，越界报错。
+`int64`。返回有效节点值，无效下标报错。
 
 **错误与边界**
 
@@ -1459,11 +1607,11 @@ int64 valueAt(int64 cursor);
 obj.valueAt(cursor);
 ```
 
-**源码**：[source/std/tree.chl:149](../../source/std/tree.chl#L149)。
+**源码**：[source/std/tree.chl:283](../../source/std/tree.chl#L283)。
 
-<a id="api-38"></a>
+<a id="api-42"></a>
 
-### GeneralTree::rootNode（39）
+### GeneralTree::rootNode（43）
 
 **声明**
 
@@ -1473,7 +1621,7 @@ int64 rootNode();
 
 **行为**
 
-当前根节点号，空树为 -1。
+返回零基根节点号，空树为 -1。
 
 **参数**
 
@@ -1481,7 +1629,7 @@ int64 rootNode();
 
 **返回值**
 
-`int64`。当前根节点号，空树为 -1。
+`int64`。返回零基根节点号，空树为 -1。
 
 **错误与边界**
 
@@ -1493,11 +1641,11 @@ int64 rootNode();
 obj.rootNode();
 ```
 
-**源码**：[source/std/tree.chl:151](../../source/std/tree.chl#L151)。
+**源码**：[source/std/tree.chl:285](../../source/std/tree.chl#L285)。
 
-<a id="api-39"></a>
+<a id="api-43"></a>
 
-### GeneralTree::children（40）
+### GeneralTree::children（44）
 
 **声明**
 
@@ -1507,7 +1655,7 @@ List<int64> children(int64 cursor);
 
 **行为**
 
-独立孩子节点号列表，无效节点返回空列表。
+返回有效节点的独立孩子列表。
 
 **参数**
 
@@ -1517,7 +1665,7 @@ List<int64> children(int64 cursor);
 
 **返回值**
 
-`List<int64>`。独立孩子节点号列表，无效节点返回空列表。
+`List<int64>`。返回有效节点的独立孩子列表。
 
 **错误与边界**
 
@@ -1529,11 +1677,11 @@ List<int64> children(int64 cursor);
 obj.children(cursor);
 ```
 
-**源码**：[source/std/tree.chl:153](../../source/std/tree.chl#L153)。
+**源码**：[source/std/tree.chl:287](../../source/std/tree.chl#L287)。
 
-<a id="api-40"></a>
+<a id="api-44"></a>
 
-### GeneralTree::preorder（41）
+### GeneralTree::preorder（45）
 
 **声明**
 
@@ -1543,7 +1691,7 @@ List<int64> preorder();
 
 **行为**
 
-独立先序节点号列表。
+按先序返回独立节点号列表。
 
 **参数**
 
@@ -1551,7 +1699,7 @@ List<int64> preorder();
 
 **返回值**
 
-`List<int64>`。独立先序节点号列表。
+`List<int64>`。按先序返回独立节点号列表。
 
 **错误与边界**
 
@@ -1563,11 +1711,11 @@ List<int64> preorder();
 obj.preorder();
 ```
 
-**源码**：[source/std/tree.chl:155](../../source/std/tree.chl#L155)。
+**源码**：[source/std/tree.chl:292](../../source/std/tree.chl#L292)。
 
-<a id="api-41"></a>
+<a id="api-45"></a>
 
-### GeneralTree::levelOrder（42）
+### GeneralTree::levelOrder（46）
 
 **声明**
 
@@ -1577,7 +1725,7 @@ List<int64> levelOrder();
 
 **行为**
 
-独立层序节点号列表。
+按层序返回独立节点号列表。
 
 **参数**
 
@@ -1585,7 +1733,7 @@ List<int64> levelOrder();
 
 **返回值**
 
-`List<int64>`。独立层序节点号列表。
+`List<int64>`。按层序返回独立节点号列表。
 
 **错误与边界**
 
@@ -1597,11 +1745,11 @@ List<int64> levelOrder();
 obj.levelOrder();
 ```
 
-**源码**：[source/std/tree.chl:157](../../source/std/tree.chl#L157)。
+**源码**：[source/std/tree.chl:299](../../source/std/tree.chl#L299)。
 
-<a id="api-42"></a>
+<a id="api-46"></a>
 
-### GeneralTree::height（43）
+### GeneralTree::height（47）
 
 **声明**
 
@@ -1611,7 +1759,7 @@ int64 height();
 
 **行为**
 
-根到叶的最大节点数，空树为零。
+返回最大根叶路径节点数。
 
 **参数**
 
@@ -1619,7 +1767,7 @@ int64 height();
 
 **返回值**
 
-`int64`。根到叶的最大节点数，空树为零。
+`int64`。返回最大根叶路径节点数。
 
 **错误与边界**
 
@@ -1631,11 +1779,11 @@ int64 height();
 obj.height();
 ```
 
-**源码**：[source/std/tree.chl:159](../../source/std/tree.chl#L159)。
+**源码**：[source/std/tree.chl:304](../../source/std/tree.chl#L304)。
 
-<a id="api-43"></a>
+<a id="api-47"></a>
 
-### GeneralTree::toBinary（44）
+### GeneralTree::toBinary（48）
 
 **声明**
 
@@ -1645,7 +1793,7 @@ BinarySearchTree toBinary();
 
 **行为**
 
-独立转换首孩子为左孩子、次兄弟为右孩子；不保证键有序。
+独立转换为首孩子作左孩子、次兄弟作右孩子的二叉表示。
 
 **参数**
 
@@ -1653,7 +1801,7 @@ BinarySearchTree toBinary();
 
 **返回值**
 
-`BinarySearchTree`。独立转换首孩子为左孩子、次兄弟为右孩子；不保证键有序。
+`BinarySearchTree`。独立转换为首孩子作左孩子、次兄弟作右孩子的二叉表示。
 
 **错误与边界**
 
@@ -1665,11 +1813,11 @@ BinarySearchTree toBinary();
 obj.toBinary();
 ```
 
-**源码**：[source/std/tree.chl:161](../../source/std/tree.chl#L161)。
+**源码**：[source/std/tree.chl:309](../../source/std/tree.chl#L309)。
 
-<a id="api-44"></a>
+<a id="api-48"></a>
 
-### GeneralTree::fromBinary（45）
+### GeneralTree::fromBinary（49）
 
 **声明**
 
@@ -1679,7 +1827,7 @@ static GeneralTree fromBinary(BinarySearchTree tree);
 
 **行为**
 
-独立复制二叉表示，保持源根节点号及有效槽。
+独立复制二叉表示，保持节点槽号及根。
 
 **参数**
 
@@ -1689,7 +1837,7 @@ static GeneralTree fromBinary(BinarySearchTree tree);
 
 **返回值**
 
-`GeneralTree`。独立复制二叉表示，保持源根节点号及有效槽。
+`GeneralTree`。独立复制二叉表示，保持节点槽号及根。
 
 **错误与边界**
 
@@ -1701,11 +1849,11 @@ static GeneralTree fromBinary(BinarySearchTree tree);
 std::tree::GeneralTree::fromBinary(tree);
 ```
 
-**源码**：[source/std/tree.chl:163](../../source/std/tree.chl#L163)。
+**源码**：[source/std/tree.chl:311](../../source/std/tree.chl#L311)。
 
-<a id="api-45"></a>
+<a id="api-49"></a>
 
-### GeneralTree::snapshot（46）
+### GeneralTree::snapshot（50）
 
 **声明**
 
@@ -1715,7 +1863,7 @@ GeneralTreeSnapshot snapshot();
 
 **行为**
 
-显式导出独立首孩子、次兄弟结构。
+返回独立首孩子、次兄弟快照。
 
 **参数**
 
@@ -1723,7 +1871,7 @@ GeneralTreeSnapshot snapshot();
 
 **返回值**
 
-`GeneralTreeSnapshot`。显式导出独立首孩子、次兄弟结构。
+`GeneralTreeSnapshot`。返回独立首孩子、次兄弟快照。
 
 **错误与边界**
 
@@ -1735,4 +1883,4 @@ GeneralTreeSnapshot snapshot();
 obj.snapshot();
 ```
 
-**源码**：[source/std/tree.chl:165](../../source/std/tree.chl#L165)。
+**源码**：[source/std/tree.chl:313](../../source/std/tree.chl#L313)。

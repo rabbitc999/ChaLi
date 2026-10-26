@@ -13,6 +13,7 @@
 #include "native_memory.hpp"
 #include "native_closure.hpp"
 #include "native_arena.hpp"
+#include "native_raw_storage.hpp"
 #include "native_objects.hpp"
 #include "native_control.hpp"
 #include "native_value_text.hpp"

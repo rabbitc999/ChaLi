@@ -17,12 +17,12 @@ namespace stackvm::runtimeDetail
 Slot strLen(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
 /**
- * @brief 判断字节位置是否为 UTF-8 字符边界，供普通 String 下标读取检查使用。
- * @param text 字符串。
- * @param index 字节位置（等于长度也算合法边界）。
- * @return 是字符边界（或正好在末尾）返回 true。
+ * @brief 将字符串值转换为首个内容字节地址，区分长度头与字面量。
+ * @param ctx 当前内存及分配身份上下文。
+ * @param args 唯一参数为字符串值的逻辑地址。
+ * @return 首个内容字节地址；空值为零。
  */
-bool utf8Boundary(const Memory::String &text, std::size_t index);
+Slot strData(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
 /**
  * @brief `__std_str_fmt(格式串, 实参…) -> 新串地址`。
@@ -56,51 +56,4 @@ Slot strPrint(NativeContext &ctx, const Memory::Vector<Slot> &args);
  */
 Slot putChar(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
-/**
- * @brief `__std_str_set(串, 下标, 字符码) -> 0`：往字符串的第 `下标` 个字节写一个字符。
- *
- * 字符串在堆上是**可写**的（字面量当值用时已经复制成自己的那块），越界就报错 ——
- * 和数组下标一个脾气。写进去的是低 8 位。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Slot strSet(NativeContext &ctx, const Memory::Vector<Slot> &args);
-
-/**
- * @brief `__std_str_at(串, 下标) -> 字符码 / -1`：按下标取一个字符。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Slot strAt(NativeContext &ctx, const Memory::Vector<Slot> &args);
-
-/**
- * @brief 验证下标后取得字符串字符地址，范围与普通字符串下标一致。
- * @param ctx 提供堆块和数据区地址范围的运行环境。
- * @param args 字符串地址和按 UTF-8 字节计数的下标。
- * @return 对应字节地址；读取失败或越界时返回零并登记运行时错误。
- * @note 堆串跳过长度头；数据区字面量直接从字节起始地址取值。
- */
-Slot strRef(NativeContext &ctx, const Memory::Vector<Slot> &args);
-
-/**
- * @brief `__std_memcpy(目标, 源, 字节数) -> 0`：逐字节搬一段（C++ 里就是 `memcpy`）。
- *
- * 源与目标整段必须**各自落在一块已分配内存里**（堆块 / 数据区符号），否则报错 ——
- * 以前语言侧是"在目标地址上读 8 字节 → 只改最低那个字节 → 写回"，那么读堆串最后一
- * 个字节时那 8 字节会越过块尾（现在字符串在堆上，块是紧的）。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Slot memCopy(NativeContext &ctx, const Memory::Vector<Slot> &args);
-
-/**
- * @brief `__std_memset(地址, 字节值, 字节数) -> 0`：把一段内存填成同一个字节。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Slot memSet(NativeContext &ctx, const Memory::Vector<Slot> &args);
 }  // namespace stackvm::runtimeDetail

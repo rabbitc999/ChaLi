@@ -7,7 +7,7 @@
 
 \begin{itemize}
 
-\item ChaLi 调 C——用 \texttt{abi} 块调动态库里导出的函数；
+\item ChaLi 调 C——用 \texttt{\#abi} 指令调动态库里导出的函数；
 
 \item C 调 ChaLi——把你的函数交给 C 的运行时。
 
@@ -22,16 +22,16 @@
 \toprule
 方式 & 用在哪 & 你要准备什么 \\
 \midrule
-\texttt{abi} 块 & 调动态库里按 C ABI 导出的函数 & 一份 \texttt{.\allowbreak{}dll} / \texttt{.\allowbreak{}so} \\
+\texttt{\#abi} 指令 & 调动态库里按 C ABI 导出的函数 & 一份 \texttt{.\allowbreak{}dll} / \texttt{.\allowbreak{}so} \\
 宿主胶水绑定 & 把 C++ 函数注册进工具链，ChaLi 侧当普通函数调 & 写一点 C++ \\
 VM 嵌入 & 宿主加载字节码并运行 ChaLi 逻辑 & 共享 VM 和配套数据 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\texttt{abi} 块是最轻的一条——不用改工具链，不用重新编译，运行时直接加载库。
+\texttt{\#abi} 指令是最轻的一条——不用改工具链，不用重新编译，运行时直接加载库。
 
-\section{\texttt{abi} 块：调动态库里的 C 函数}
+\section{\texttt{\#abi} 指令：调动态库里的 C 函数}
 
 假设你有一个 C 文件 \texttt{native.\allowbreak{}c}：
 
@@ -72,11 +72,10 @@ gcc -shared -o native.dll native.c
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-abi "./native.dll"
-{
-    int32 native_add(int32 left, int32 right) = "abi_add";
-    String native_name() = "abi_name";
-}
+#abi("C", "./native.dll", "abi_add")
+int32 native_add(int32 left, int32 right);
+#abi("C", "./native.dll", "abi_name")
+String native_name();
 
 void main()
 {
@@ -94,19 +93,18 @@ void main()
 \par
 \medskip
 
-\texttt{abi} 块的语法是：
+导入使用逐函数编译器指令：
 
 \par
 \medskip
 \begin{lstlisting}[style=out]
-abi "<动态库路径>" {
-    <返回类型> <ChaLi侧名字>(<形参表>) = "<库里的符号名>";
-}
+#abi("C", "<动态库路径>", "<库里的符号名>")
+<返回类型> <ChaLi侧名字>(<形参表>);
 \end{lstlisting}
 \par
 \medskip
 
-关键就是那个 \texttt{=\allowbreak{}}：等号右边是库里真实导出的符号名，左边是你想用的名字。两者可以不一样——给一批 C 函数起统一风格的 ChaLi 名，就靠它。
+第三个参数是库里真实导出的符号名，函数声明使用的是 ChaLi 中的本地名称。两者可以不一样——给一批 C 函数起统一风格的 ChaLi 名，就靠它。
 
 \begin{tip}{提示}
 路径是运行时按当前工作目录找的。所以 \texttt{.\allowbreak{}/\allowbreak{}native.\allowbreak{}dll} 得跟你的程序在同一个目录下跑。
@@ -140,12 +138,12 @@ struct Point
     int32 y;
 };
 
-abi "./abi_demo.dll"
-{
-    Point move_point(Point p, int32 dx, int32 dy) = "move_point";
-    void bump(int32 mut& value) = "bump";
-    String greet() = "greet";
-}
+#abi("C", "./abi_demo.dll", "move_point")
+Point move_point(Point p, int32 dx, int32 dy);
+#abi("C", "./abi_demo.dll", "bump")
+void bump(int32 mut& value);
+#abi("C", "./abi_demo.dll", "greet")
+String greet();
 
 void main()
 {
@@ -213,11 +211,10 @@ ChaLi 写法 & 含义 \\
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-abi "./native.dll"
-{
-    Packed[] packed_numbers(int32 count) = "packed_numbers" [count];
-    void packed_fill(Packed[] values, int32 count) = "packed_fill";
-}
+#abi("C", "./native.dll", "packed_numbers")
+Packed[] packed_numbers(int32 count) [count];
+#abi("C", "./native.dll", "packed_fill")
+void packed_fill(Packed[] values, int32 count);
 \end{lstlisting}
 \par
 \medskip
@@ -227,10 +224,8 @@ abi "./native.dll"
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-abi "./native.dll"
-{
-    Option<Packed const&> packed_snapshot() = "packed_snapshot";
-}
+#abi("C", "./native.dll", "packed_snapshot")
+Option<Packed const&> packed_snapshot();
 \end{lstlisting}
 \par
 \medskip
@@ -353,9 +348,9 @@ ChaLi 通过 VM 宿主加载胶水。完整接口和代码见\href{https://githu
 \toprule
 你会了 & 关键点 \\
 \midrule
-三种集成 & \texttt{abi} 块（轻）／宿主胶水（要编 C++）／VM 嵌入（宿主运行 ChaLi） \\
-\texttt{abi} 语法 & \texttt{abi ".\allowbreak{}/\allowbreak{}x.\allowbreak{}dll" \{ 返回类型 名字(\allowbreak{}形参)\allowbreak{} =\allowbreak{} "C符号名"; \}} \\
-名字映射 & 等号右边是 C 侧真实符号名，左边随你起 \\
+三种集成 & \texttt{\#abi} 指令（轻）／宿主胶水（要编 C++）／VM 嵌入（宿主运行 ChaLi） \\
+\texttt{\#abi} 指令 & \texttt{\#abi(\allowbreak{}"C",\allowbreak{} ".\allowbreak{}/\allowbreak{}x.\allowbreak{}dll",\allowbreak{} "C符号名")\allowbreak{} 返回类型 名字(\allowbreak{}形参)\allowbreak{};} \\
+名字映射 & 第三个指令参数是 C 侧真实符号名，声明使用 ChaLi 本地名称 \\
 结构体 & 按值传；ChaLi 侧声明字段一致的 \texttt{struct} \\
 引用 & C 的 \texttt{T *} \ensuremath{\leftrightarrow} ChaLi 的 \texttt{T mut\&}，调用处写 \texttt{\&x} \\
 字符串 & C 的 \texttt{const char *} \ensuremath{\leftrightarrow} ChaLi 的 \texttt{String} \\

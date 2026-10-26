@@ -129,7 +129,7 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-345"></a>`opcode Random` | 拥有独立随机序列位置的 opcode，普通复制后独立推进。 |
+| 模块 | <a id="symbol-354"></a>`opcode Random` | 拥有独立随机序列位置的 opcode，普通复制后独立推进。 |
 
 ## 函数索引
 

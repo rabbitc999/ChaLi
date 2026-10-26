@@ -32,7 +32,7 @@ def main():
     source = source.split('void main()', 1)[0]
     source = source.replace('import std::clock;', '')
     source = re.sub(r'const int64 REPS = 5;', '', source)
-    source = re.sub(r'(?m)^(int64|float64) work\(', r'export \1 work(', source)
+    source = re.sub(r'(?m)^(int64|float64) work\(', r'#export("f_work") \1 work(', source)
     path = work / 'work.chl'
     path.write_text(source, encoding='utf-8')
     prefix = work / (case + '-kernel')

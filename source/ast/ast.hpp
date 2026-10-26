@@ -164,6 +164,8 @@ struct Node
         CheckIndex,
         CheckPointer,
         CallPointer,
+        MemoryCopy,  ///< 按字节非重叠复制，完整范围先验证。
+        MemorySet,   ///< 按字节填充，不处理资源所有权。
     };
 
     Memory::String sourceFile;             ///< 原始 CHALI 文件或宏定义来源。
@@ -285,6 +287,22 @@ struct Node
      * 由程序自己 `freeMemory`（栈机那边是 `(free, 地址, _, _)`）。返回 0 表示没分配到。
      */
     static NodePtr alloc(NodePtr bytes);
+    /**
+     * @brief 构造直接降低为 memcpy 四元式的字节复制。
+     * @param destination 目标地址。
+     * @param source 源地址，非空范围必须与目标不重叠。
+     * @param bytes 字节数。
+     * @return 整段检查后复制的表达式，结果为零。
+     */
+    static NodePtr memoryCopy(NodePtr destination, NodePtr source, NodePtr bytes);
+    /**
+     * @brief 构造直接降低为 memset 四元式的字节填充。
+     * @param destination 目标地址。
+     * @param value 填充字节的数值。
+     * @param bytes 字节数。
+     * @return 整段检查后填充的表达式，结果为零。
+     */
+    static NodePtr memorySet(NodePtr destination, NodePtr value, NodePtr bytes);
     /**
      * 堆释放：`(free, 地址, _, _)`，当语句用（没有返回值）。地址不对就**报错**。
      */

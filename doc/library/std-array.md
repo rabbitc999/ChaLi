@@ -193,7 +193,7 @@ static DynamicArray<T> withCapacity(int64 capacity);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `capacity` | `int64 capacity` | 容器的最大元素数量 | 无 |
+| `capacity` | `int64 capacity` | 原始存储的元素容量，必须非负。 | 无 |
 
 **返回值**
 

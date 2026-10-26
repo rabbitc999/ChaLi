@@ -44,12 +44,19 @@ endif
 
 CHALI_SOURCE_DIR  := source
 CHALI_LIBRARY_DIR := library
+CHALI_DEPENDENCY_DIR := build/dependencies
+CHALI_DEPENDENCY_STAMP := $(CHALI_DEPENDENCY_DIR)/.verified
+$(CHALI_DEPENDENCY_STAMP): tools/fetch_dependencies.py tools/dependencies.lock.json
+	$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
+	$(PYTHON) -c "from pathlib import Path; Path(r'$@').touch()"
+$(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h: $(CHALI_DEPENDENCY_STAMP)
+	@$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
 # 代码里的裸文件名 include 靠这组搜索路径解析：搬进 source/ 的九个库走 CHALI_SOURCE_DIR，
-# 仍留在 library/ 的外部依赖（sqlite / caspp / ipage / miniz）走 CHALI_LIBRARY_DIR。
+# caspp / ipage 走 CHALI_LIBRARY_DIR；SQLite / miniz 从构建缓存读取。
 CHALI_INCLUDES := -I$(CHALI_SOURCE_DIR) -I$(CHALI_LIBRARY_DIR) \
     -I$(CHALI_SOURCE_DIR)/allocator -I$(CHALI_SOURCE_DIR)/lsp \
     -I$(CHALI_SOURCE_DIR)/bignum -I$(CHALI_SOURCE_DIR)/json -I$(CHALI_SOURCE_DIR)/toml \
-    -I$(CHALI_LIBRARY_DIR)/sqlite -I$(CHALI_SOURCE_DIR)/console -I$(CHALI_SOURCE_DIR)/lztext
+    -I$(CHALI_DEPENDENCY_DIR)/sqlite -I$(CHALI_DEPENDENCY_DIR)/miniz -I$(CHALI_SOURCE_DIR)/console -I$(CHALI_SOURCE_DIR)/lztext
 override CXXFLAGS += -DCHALI_CUSTOM_ALLOCATOR=1 -pthread $(CHALI_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
 
 # ---- 统一工具链：chali 同时是前端 / VM / 工程生成器 ----
@@ -84,8 +91,8 @@ endif
 # 避免只改泛型 / 宏展开头或降级实现时 make 误判为无需重编。
 $(FRONTEND_BUILD)/chali_tool.o $(FRONTEND_BUILD)/chali_main.o: source/chali_project.hpp source/chali_cli.hpp
 
-$(FRONTEND_BUILD)/chali_main.o: source/chali_analysis.hpp source/chali_diagnostics.hpp source/chali_stdlib.hpp source/chali_package.hpp source/chali_driver.cpp source/chali_incremental.hpp source/chali_module.hpp source/macro/signature.hpp source/syntax/source_text.hpp source/chali_lambda.hpp source/chali_generic_closure.hpp source/chali_generic.hpp source/chali_glue.hpp library/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
-$(FRONTEND_BUILD)/chali_parser.o: source/chali_ast.hpp source/chali_semantics.cpp source/chali_generic.hpp $(wildcard source/semantics/*.cpp) library/sqlite/sqlite3.h source/chali_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/chali_main.o: source/chali_analysis.hpp source/chali_diagnostics.hpp source/chali_stdlib.hpp source/chali_package.hpp source/chali_driver.cpp source/chali_incremental.hpp source/chali_module.hpp source/macro/signature.hpp source/syntax/source_text.hpp source/chali_lambda.hpp source/chali_generic_closure.hpp source/chali_generic.hpp source/chali_glue.hpp $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/chali_parser.o: source/chali_ast.hpp source/chali_semantics.cpp source/chali_generic.hpp $(wildcard source/semantics/*.cpp) $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h source/chali_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
 
 # 外部静态库更新后必须重链；只把它们写进 LDLIBS 不会让 make 追踪时间戳。
 $(TARGET): $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
@@ -114,7 +121,7 @@ BIGFLOAT_MATH_OBJS := $(HOST_BUILD)/bigfloat_roots.o $(HOST_BUILD)/bigfloat_tran
 $(BIGFLOAT_MATH_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp build/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 
-$(HOST_BUILD)/sqlite3.o: library/sqlite/sqlite3.c library/sqlite/sqlite3.h | $(HOST_BUILD)
+$(HOST_BUILD)/sqlite3.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h | $(HOST_BUILD)
 	$(CC) -std=c11 -O2 -DSQLITE_THREADSAFE=1 -DSQLITE_OMIT_LOAD_EXTENSION=1 -c $< -o $@
 
 $(VM_LIB): $(VM_OBJS)
@@ -234,7 +241,7 @@ $(FRONTEND_BUILD)/chali_tool.o: tools/native_development.hpp
 CHALI_MINIZ := build/chali-miniz-tinfl.o
 LIB_OBJS += $(CHALI_MINIZ)
 $(LIB): $(CHALI_MINIZ)
-$(CHALI_MINIZ): library/miniz/miniz_tinfl.c $(wildcard library/miniz/*.h) | build/chali-native
+$(CHALI_MINIZ): $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h | build/chali-native
 	$(CC) -O2 -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_DEFLATE_APIS -c $< -o $@
 ifeq ($(OS),Windows_NT)
 LDLIBS += -lwinhttp
@@ -339,3 +346,9 @@ $(CHALI_EMBED_STAMP): $(CHALI_EMBED_INPUTS) | $(FRONTEND_BUILD)
 source/chali_stdlib_embedded.cpp: $(CHALI_EMBED_STAMP)
 	$(PYTHON) tools/embed_stdlib.py
 $(CHALI_STDLIB_OBJ): | $(CHALI_EMBED_STAMP)
+
+# 依赖只落入构建缓存；并行编译须等待校验结束。
+.PHONY: chali-dependencies
+chali-dependencies:
+	$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
+$(LIB_OBJS) $(DEMO_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/ipage_sql.o $(CHALI_MINIZ): | chali-dependencies

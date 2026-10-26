@@ -9,18 +9,25 @@ from project_temp import tempfile
 from chali_glue_edges import ROOT, CHALI, EXE, run
 
 def main():
-    work = ROOT / 'build/chali-sqlite'
+    work = ROOT / 'tmp/chali-sqlite'
     work.mkdir(parents=True, exist_ok=True)
     os.environ['SQLITE_LIBRARY'] = str(work / 'missing-sqlite3.dll')
     source = ROOT / 'doc/examples/sqlite/demo.chl'
     expected = 'sqlite database checks passed\n'
-    prefix = work / 'sqlite'
     with tempfile.TemporaryDirectory(prefix='database-', dir=work) as temporary:
         directory = Path(temporary)
-        result = run(CHALI, 'run', source, '--out', prefix, '--', directory / 'interpreter.db')
-        assert result.stdout == expected and (not result.stderr), (result.stdout, result.stderr)
+        for backend in ('run', 'aot'):
+            prefix = work / ('sqlite-' + backend)
+            database = directory / (backend + '.db')
+            if backend == 'run':
+                result = run(CHALI, 'run', source, '--out', prefix, '--', database)
+            else:
+                run(CHALI, 'aot', source, '--out', prefix)
+                result = run(str(prefix) + EXE, database)
+            assert result.stdout == expected and (not result.stderr), (backend, result.stdout, result.stderr)
         for path in directory.glob('*.db'):
             with closing(sqlite3.connect(path)) as connection:
                 assert connection.execute('SELECT value FROM persisted').fetchone() == ('持久化',)
+    print('SQLite VM/AOT static database checks passed')
 if __name__ == '__main__':
     main()

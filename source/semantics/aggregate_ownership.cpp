@@ -295,6 +295,41 @@ const MContainerMethod kMapMethods[] = {
 };
 
 /**
+ * @brief 将集合算法分派到标准库自举函数；单槽读取和封送继续使用运行时存储边界。
+ * @param native 原有内部操作名称。
+ * @param container 已确定元素种类的容器类型。
+ * @return 自举函数标签，未迁移的存储操作返回原标签。
+ */
+Memory::String BootstrapCollectionLabel(const Memory::String &native, const std::shared_ptr<MType> &container)
+{
+    if (!IsContainer(container)) return native;
+    if (container->name == "map" || container->name == "set")
+    {
+        if (native == "__std_object_copy") return "std::lang::__bootMapCopy";
+        if (native == "__std_map_clear" || native == "__std_set_clear") return "std::lang::__bootMapClear";
+        const Memory::String key = container->elem->kind == MType::Double ? "F" : "I";
+        if (native == "__std_map_has" || native == "__std_set_has") return "std::lang::__bootMapHas" + key;
+        if (native == "__std_map_remove" || native == "__std_set_remove") return "std::lang::__bootMapRemove" + key;
+        if (native == "__std_set_add") return "std::lang::__bootSetAdd" + key;
+        if (native == "__std_map_put" || native == "__std_map_get")
+            return Memory::String(native == "__std_map_put" ? "std::lang::__bootMapPut" : "std::lang::__bootMapGet")
+                   + key + (container->elem2->kind == MType::Double ? "F" : "I");
+        return native;
+    }
+    if (container->name != "vec") return native;
+    if (native == "__std_object_copy") return "std::lang::__bootListCopy";
+    if (native == "__std_vec_remove") return "std::lang::__bootListRemove";
+    if (native == "__std_vec_clear") return "std::lang::__bootListClear";
+    const char *operation = native == "__std_vec_push" ? "Push" : native == "__std_vec_insert" ? "Insert" :
+                              native == "__std_vec_pop" ? "Pop" : native == "__std_vec_find" ? "Find" :
+                              native == "__std_vec_count_value" ? "Count" : native == "__std_vec_binary_search" ? "BinarySearch" :
+                              native == "__std_vec_sum" ? "Sum" : native == "__std_vec_min" ? "Min" :
+                              native == "__std_vec_max" ? "Max" : native == "__std_vec_clamp" ? "Clamp" : nullptr;
+    if (!operation) return native;
+    return Memory::String("std::lang::__bootList") + operation + (container->elem->kind == MType::Double ? "F" : "I");
+}
+
+/**
  * @brief 找一个容器方法。
  * @param container 容器类型。
  * @param name 方法名。
@@ -742,7 +777,7 @@ bool SameStruct(const std::shared_ptr<MType> &left, const std::shared_ptr<MType>
  * @brief 字符串字面量当"**变量的值**"时，先复制成一份堆串。
  *
  * 字符串的值一律是**堆地址**（8 字节长度 + UTF-8 字节数据，由虚拟机运行时管理）：
- * 数据区里只留只读的字面量字节当复制源（`__std_str_lit` 把它们拷到堆上）。于是：
+ * 数据区里只留只读的字面量字节当复制源（`std::lang::__bootStringCopy` 把它们拷到堆上）。于是：
  *
  * - 变量手里那块是**自己能写**的（`s[i] = 'x'` 不会改到别人共享的字面量）；
  * - 所有权也统一了：**变量 = 那块堆串的主人**，离开语句块时自动释放（见 MarkOwned）。
@@ -785,7 +820,7 @@ ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MType> &t
     if (!target || !IsStandardOpcode(target, "String")) return value;
     if (valueId < 0) return value;
     if (N(valueId).kind == MNode::Str)
-        return ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+        return ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
     if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
     /*
      * 借来的值（变量 / 别名 / 字段 / 下标 / 解引用）**复制成自己的堆串**：
@@ -843,7 +878,7 @@ ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_ptr<MTy
     while (N(sourceId).kind == MNode::Cast) sourceId = N(sourceId).kids[0];
     const MNode &expr = N(sourceId);
     if (expr.kind == MNode::Str)
-        return ast::Node::call("__std_str_lit", { "__chali_addr" }, { value });
+        return ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
     if (expr.kind == MNode::Var)
     {
         const MVar *found = FindNodeVar(expr);
@@ -947,7 +982,7 @@ ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared
     {
         auto value = Node::loadFrom(from, LowerType(element, input));
         if (IsStandardOpcode(element, "String"))
-            value = Node::call("__std_str_sub", { "source", "start", "end" }, { value, Node::i(0), Node::i(-1) });
+            value = Node::call("std::lang::__bootStringSlice", { "source", "start", "end" }, { value, Node::i(0), Node::i(-1) });
         else if (IsObjectLike(element))
             value = Node::call(ObjectCopyFunction(element), { "value" }, { value });
         out.push_back(Node::storeAt(into, value, LowerType(element, result)));

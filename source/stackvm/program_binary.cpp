@@ -68,7 +68,7 @@ bool saveProgramBinary(const Program &program, const Memory::String &path,
     for (std::size_t instructionIndex = 0u; instructionIndex < program.code.size(); ++instructionIndex)
     {
         const Instruction &instruction = program.code[instructionIndex];
-        if (static_cast<std::uint16_t>(instruction.op) > static_cast<std::uint16_t>(Op::StoreAt) || static_cast<std::uint8_t>(instruction.format) > static_cast<std::uint8_t>(PrintFormat::Text))
+        if (static_cast<std::uint16_t>(instruction.op) > static_cast<std::uint16_t>(Op::MemorySet) || static_cast<std::uint8_t>(instruction.format) > static_cast<std::uint8_t>(PrintFormat::Text))
         {
             binaryDiagnostic(diagnostics, "程序含无法序列化的指令枚举值");
             return false;
@@ -392,7 +392,7 @@ static bool decodeProgramBinary(const Memory::Vector<std::uint8_t> &fileBytes,
             }
             quadIndex = varQuadIndex;
         }
-        if (op > static_cast<std::uint16_t>(Op::StoreAt) || format > static_cast<std::uint8_t>(PrintFormat::Text) || (instructionFlags & ~3u) != 0u || quadIndex > kMaximumItemCount)
+        if (op > static_cast<std::uint16_t>(Op::MemorySet) || format > static_cast<std::uint8_t>(PrintFormat::Text) || (instructionFlags & ~3u) != 0u || quadIndex > kMaximumItemCount)
         {
             binaryDiagnostic(diagnostics, "二进制程序含非法指令字段");
             return false;

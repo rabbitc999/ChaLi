@@ -52,6 +52,9 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | enum_decl type_decl_end { $$ = $1; }
      | interface_decl type_decl_end { $$ = $1; }
      | func_def     { $$ = $1; }
+     | UNSAFE func_def { $$ = M_Unsafe($2); }
+     | UNSAFE host_func_decl { $$ = M_Unsafe($2); }
+     | EXPORT_DIRECTIVE LPAREN STRING RPAREN func_def { $$ = M_ExportSymbol($3, $5); }
      | INLINE func_def { $$ = M_Inline($2); }
      | EXPORT func_def { $$ = M_Export($2); }
      /* 生命周期契约只挂在函数声明上，指令在它前面连写。 */
@@ -59,7 +62,8 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | lifetime_directives INLINE func_def { $$ = M_Inline(M_LifetimeContract($1, $3)); }
      | lifetime_directives EXPORT func_def { $$ = M_Export(M_LifetimeContract($1, $3)); }
      | host_func_decl { $$ = $1; }
-     | abi_block { $$ = $1; }
+     | ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING RPAREN abi_func
+       { $$ = M_AbiImport($3, $5, $7, $9); }
      | host_type_decl { $$ = $1; }
      | host_impl_decl { $$ = $1; }
      | operator_def { $$ = $1; }
@@ -332,29 +336,19 @@ host_func_decl := type name_token LPAREN param_list RPAREN SEMI
   | ptr_type YIELD LPAREN param_list RPAREN SEMI
     { $$ = M_ExternFunc($1, M_YieldName(), $4); } ;
 
-/* 同一 C ABI 动态库的签名集中声明；右侧是实际导出符号。 */
-abi_block := ABI_KW STRING LBRACE abi_func_list RBRACE
-    { $$ = M_AbiBlock($2, $4); } ;
-abi_func_list := %empty { $$ = M_List(); }
-               | abi_func_list abi_func { M_ListAdd($1, $2); $$ = $1; } ;
-abi_func := type name_token LPAREN param_list RPAREN ASSIGN STRING LBRACKET STRING RBRACKET SEMI
-    { $$ = M_AbiOwned(M_AbiFunc($1, $2, $4, $7), $9); }
-          | ptr_type name_token LPAREN param_list RPAREN ASSIGN STRING LBRACKET STRING RBRACKET SEMI
-    { $$ = M_AbiOwned(M_AbiFunc($1, $2, $4, $7), $9); }
-          | array_type name_token LPAREN param_list RPAREN ASSIGN STRING LBRACKET name_token COMMA STRING RBRACKET SEMI
-    { $$ = M_AbiOwned(M_AbiBufferFunc($1, $2, $4, $7, $9), $11); }
-          | array_type name_token LPAREN param_list RPAREN ASSIGN STRING LBRACKET name_token RBRACKET SEMI
-    { $$ = M_AbiBufferFunc($1, $2, $4, $7, $9); }
-          | array_type name_token LPAREN param_list RPAREN LBRACKET name_token RBRACKET SEMI
-    { $$ = M_AbiBufferFunc($1, $2, $4, -1, $7); }
-          | type name_token LPAREN param_list RPAREN ASSIGN STRING SEMI
-    { $$ = M_AbiFunc($1, $2, $4, $7); }
-          | ptr_type name_token LPAREN param_list RPAREN ASSIGN STRING SEMI
-    { $$ = M_AbiFunc($1, $2, $4, $7); }
-          | type name_token LPAREN param_list RPAREN SEMI
+/* 单个 #abi 声明的签名；库路径、调用约定与符号名来自编译器指令。 */
+abi_func := type name_token LPAREN param_list RPAREN SEMI
     { $$ = M_AbiFunc($1, $2, $4, -1); }
-          | ptr_type name_token LPAREN param_list RPAREN SEMI
-    { $$ = M_AbiFunc($1, $2, $4, -1); } ;
+  | ptr_type name_token LPAREN param_list RPAREN SEMI
+    { $$ = M_AbiFunc($1, $2, $4, -1); }
+  | type name_token LPAREN param_list RPAREN LBRACKET STRING RBRACKET SEMI
+    { $$ = M_AbiOwned(M_AbiFunc($1, $2, $4, -1), $7); }
+  | ptr_type name_token LPAREN param_list RPAREN LBRACKET STRING RBRACKET SEMI
+    { $$ = M_AbiOwned(M_AbiFunc($1, $2, $4, -1), $7); }
+  | array_type name_token LPAREN param_list RPAREN LBRACKET name_token RBRACKET SEMI
+    { $$ = M_AbiBufferFunc($1, $2, $4, -1, $7); }
+  | array_type name_token LPAREN param_list RPAREN LBRACKET name_token COMMA STRING RBRACKET SEMI
+    { $$ = M_AbiOwned(M_AbiBufferFunc($1, $2, $4, -1, $7), $9); } ;
 
 /* 宿主类型实现一个单方法接口。泛型接口在进入文法前已单态化成普通标识符。 */
 host_impl_decl := IMPL type COLON name_token ASSIGN name_token SEMI
@@ -465,6 +459,7 @@ stmt_list := %empty { $$ = M_List(); }
            | stmt_list macro_control { M_ListAdd($1, $2); $$ = $1; } ;
 
 stmt := block                  { $$ = $1; }
+      | UNSAFE block           { $$ = M_Unsafe($2); }
       | decl_stmt              { $$ = $1; }
       | DEFER stmt             { $$ = M_Defer($2); }
       | SCOPE_EXIT LPAREN name_token RPAREN block { $$ = M_ScopeExit($3, $5); }
@@ -726,6 +721,8 @@ primary := name_token                         { $$ = M_Var($1); }
          | z_if_value                    { $$ = $1; }
          | z_match_value                 { $$ = $1; }
          | TYPE_TAG LPAREN element_type RPAREN { $$ = M_TypeTagType($3); }
+         | RAW_SIZE LPAREN element_type RPAREN { $$ = M_RawLayout($3, 0); }
+         | RAW_ALIGN LPAREN element_type RPAREN { $$ = M_RawLayout($3, 1); }
          | collection_literal           { $$ = $1; }
          | LPAREN tuple_items RPAREN { $$ = M_Tuple($2); }
          | LPAREN expr RPAREN            { $$ = $2; } ;

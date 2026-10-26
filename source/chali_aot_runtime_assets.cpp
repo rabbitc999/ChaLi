@@ -5,7 +5,7 @@
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_temp.hpp"
-#include "miniz/miniz_tinfl.h"
+#include <miniz_tinfl.h>
 #include <chrono>
 #include <cstdlib>
 #include <cstring>

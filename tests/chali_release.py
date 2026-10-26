@@ -42,8 +42,12 @@ class ReleaseTests(unittest.TestCase):
             (root / 'doc/book/latex').mkdir(parents=True)
             (root / 'example/samples').mkdir(parents=True)
             (root / 'doc/book/latex/book.pdf').write_bytes(b'%PDF-1.7\n')
-            for name in ('VERSION', 'LICENSE', 'CHANGELOG.md'):
+            for name in ('VERSION', 'LICENSE', 'NOTICE', 'CHANGELOG.md'):
                 (root / name).write_text('0.21.0', encoding='utf-8')
+            for name in ('miniz', 'ipage', 'caspp'):
+                directory = root / ('licenses' if name == 'miniz' else 'library') / name
+                directory.mkdir(parents=True)
+                (directory / 'LICENSE').write_text('fixture license: ' + name, encoding='utf-8')
             for name in release.SAMPLES:
                 (root / f'example/samples/{name}.chl').write_text('void main(){}', encoding='utf-8')
             binary, vsix = root / 'ChaLi.exe', root / 'chali-editor-1.0.0.vsix'
@@ -60,6 +64,9 @@ class ReleaseTests(unittest.TestCase):
                 self.assertTrue(metadata['workingTreeDirty'])
                 self.assertEqual(packed.read('ChaLi.exe'), b'compiler')
                 self.assertIn('examples/any_generics.chl', packed.namelist())
+                self.assertIn('NOTICE', packed.namelist())
+                for name in ('miniz', 'ipage', 'caspp'):
+                    self.assertEqual(packed.read('licenses/' + name + '/LICENSE'), ('fixture license: ' + name).encode())
             for line in (output / 'SHA256SUMS.txt').read_text().splitlines():
                 digest, name = line.split('  ', 1)
                 self.assertEqual(digest, hashlib.sha256((output / name).read_bytes()).hexdigest())

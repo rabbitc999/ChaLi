@@ -166,6 +166,15 @@ public:
      */
     unsigned char *borrowBytes(std::size_t address, std::size_t count);
 
+    /**
+     * @brief 收窄完整分配的可访问区域，隐藏前后对齐填充。
+     * @param address 精确分配首，仍用于释放。
+     * @param offset 公开区域相对分配首的偏移。
+     * @param count 公开字节数，必须非零。
+     * @return 范围有效且成功收窄时为真。
+     */
+    bool restrictAllocation(std::size_t address, std::size_t offset, std::size_t count);
+
 private:
     /**
      * @brief 将有效逻辑地址转换为物理偏移。

@@ -162,3 +162,6 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 
 - [AOT 编译入口](41-aot.md)
 - [后端所有权优化与 AOT 计数](43-backend-ownership.md)
+- [原始存储与 C ABI 指令](44-unsafe-abi.md)
+
+- [在线构建依赖](45-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。

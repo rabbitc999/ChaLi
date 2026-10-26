@@ -36,7 +36,8 @@ chali aot hello.chl --out build/hello --emit-llvm
 Mark public functions with `export`. A dynamic library can omit `main`:
 
 ```chali
-export int64 add(int64 left, int64 right)
+#export("f_add")
+int64 add(int64 left, int64 right)
 {
     return left + right;
 }
@@ -48,4 +49,4 @@ chali aot library.chl --shared --out build/library
 
 Use the generated C header for actual exported names and signatures. Call `chali_init()` before exported operations and `chali_finish()` when finished. Complex imported C ABI shapes require the compatible host adapter compiler described in [chapter 21](21-c-interop.md).
 
-Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-vm-performance.md). Next: [the student system](25-student-system.md).
+Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-vm-performance.md). Next: [unsafe code](25-unsafe-code.md), followed by [the student system](26-student-system.md).

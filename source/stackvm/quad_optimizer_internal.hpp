@@ -43,7 +43,7 @@ int writesTo(const Memory::String &base);
  * @param base 基础操作码。
  * @return 读操作数下标。
  */
-std::array<std::size_t, 2> optimizationReads(const Memory::String &base);
+std::array<std::size_t, 3> optimizationReads(const Memory::String &base);
 
 /**
  * @brief 识别可消除复制的无声明编译器临时量。

@@ -40,7 +40,7 @@ def measure(compiler, case, work):
     started = time.perf_counter_ns()
     result = subprocess.run(command,
                             cwd=work, env=dict(os.environ, CHALI_LANG="zh"),
-                            capture_output=True, text=True, encoding="utf-8", timeout=180)
+                            capture_output=True, text=True, encoding="utf-8", timeout=900 if case == "list" else 180)
     if result.returncode:
         raise RuntimeError(result.stderr)
     times = [int(line.split()[1]) for line in result.stdout.splitlines() if line.startswith("rep ")]

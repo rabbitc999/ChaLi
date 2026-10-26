@@ -113,7 +113,7 @@ def read(path):
 
 
 # 资产键（生成工程用的逻辑路径）保持原样，只把「真仓库里的磁盘位置」映射过去：
-# 九个库已搬进 source/，仍留在 library/ 的只有外部依赖（ipage / caspp / sqlite）。
+# 九个库已搬进 source/，仍留在 library/ 的只有外部依赖（ipage / caspp）。
 ASSET_ROOT = {
     "ipage/": "library/ipage/source/",
     "stackvm/": "source/",
@@ -124,7 +124,6 @@ ASSET_ROOT = {
     "json/": "source/",
     "toml/": "source/",
     "lztext/": "source/",
-    "sqlite/": "library/",
     "console/": "source/",
     "glue/": "source/",
     "allocator/": "source/",
@@ -133,6 +132,8 @@ ASSET_ROOT = {
 
 def asset_disk_path(relative):
     """把资产键翻成本仓库里的实际路径。"""
+    if relative in ("LICENSE", "NOTICE") or relative.startswith("licenses/"):
+        return relative
     if relative == "aot/host_assets.txt":
         return "build/chali-aot-host/assets.txt"
     if relative == "ipage/LICENSE":
@@ -173,7 +174,6 @@ GENERATOR_ASSETS = [
     "glue/std_random.hpp",
     "glue/std_regex.hpp",
     "glue/std_signal.hpp",
-    "glue/std_numeric.hpp",
     "glue/std_native_record.hpp",
     "glue/std_collection.hpp",
     "glue/std_scalar_buffer.hpp",
@@ -199,14 +199,8 @@ GENERATOR_ASSETS = [
     "glue/std_parse.hpp",
     "glue/std_process.hpp",
     "glue/std_sql.hpp",
-    "sqlite/sqlite3.c",
-    "sqlite/sqlite3.h",
     "glue/std_net.hpp",
     "glue/std_image.hpp",
-    "glue/std_tree.hpp",
-    "glue/std_graph.hpp",
-    "glue/std_linkedlist.hpp",
-    "glue/std_kmp.hpp",
     "glue/std_registry.hpp",
     "glue/std_filesystem.hpp",
     "allocator/chali_pool.h",
@@ -227,6 +221,10 @@ GENERATOR_ASSETS = [
 
 if Path(CHALI, "build/chali-aot-host/assets.txt").exists():
     GENERATOR_ASSETS.append("aot/host_assets.txt")
+
+GENERATOR_ASSETS += ["semantics/abi_export.cpp", "glue/aot_modules.inc",
+                     "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
+                     "LICENSE", "NOTICE", "licenses/miniz/LICENSE"]
 
 GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'ast/aggregate_optimize.cpp', 'ast/aggregate_optimize.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
 

@@ -169,7 +169,9 @@ bool BuildStructTypes(ast::Program &program)
  */
 bool LowerGlobals(ast::Program &program)
 {
-    for (const int topId : g_top)
+    // 宏类型推导会临时追加遍历根；保存编号，避免其扩容使当前迭代器失效。
+    const auto declarations = g_top;
+    for (const int topId : declarations)
     {
         const MNode &top = N(topId);
         ReductionSourceScope source(topId);
@@ -423,7 +425,7 @@ void AppendInterfaceDispatchers(ast::Program &program)
  * @brief 把"一个值"按叶子类型存进聚合槽：字符串 / 对象复制一份，标量原样写。
  *
  * 字符串 / 对象的空值（0）原样写 0：空值没有资源可复制，也不能让
- * `__std_object_copy(0)` / `__std_str_sub(0, …)` 报错或白分配。
+ * `__std_object_copy(0)` / `std::lang::__bootStringSlice(0, …)` 报错或白分配。
  */
 void AppendLeafStore(Memory::Vector<ast::NodePtr> *body,
                      const ast::NodePtr &dst, const ast::NodePtr &value,
@@ -855,7 +857,7 @@ void AppendCollectionConstructors(ast::Program &program)
                 Memory::Vector<ast::NodePtr> values{ Node::var(result),
                                                      Node::var(item.first + "_arg_" + Memory::toString(i)), Node::i(IsStandardOpcode(type->elem, "String")),
                                                      ContainerStorageFlag(type->elem) };
-                body.push_back(Node::exprStmt(Node::call("__std_vec_push", names, values)));
+                body.push_back(Node::exprStmt(Node::call(BootstrapCollectionLabel("__std_vec_push", type), names, values)));
                 continue;
             }
             Memory::Vector<Memory::String> names{ item.first + "_native_container", item.first + "_native_key", item.first + "_native_text", item.first + "_native_object" };
@@ -869,7 +871,7 @@ void AppendCollectionConstructors(ast::Program &program)
                 values.push_back(Node::i(IsStandardOpcode(type->elem2, "String")));
                 values.push_back(ContainerStorageFlag(type->elem2));
             }
-            body.push_back(Node::exprStmt(Node::call(map ? "__std_map_put" : "__std_set_add", names, values)));
+            body.push_back(Node::exprStmt(Node::call(BootstrapCollectionLabel(map ? "__std_map_put" : "__std_set_add", type), names, values)));
         }
         body.push_back(Node::ret(Node::var(result)));
         function.body = Node::block(std::move(body));
@@ -1230,8 +1232,9 @@ bool LowerProgram(ast::Program &program)
     g_globalCleanupItems = g_cleanupItems;
     Memory::Vector<int> pendingLambdas;
     Memory::Vector<std::pair<int, MMethod>> pendingMethods;
+    const auto declarations = g_top;
     /* 函数与方法：方法体里的 `self` 由 ast 自动声明（`(decl, i64, local, self)`） */
-    for (const int topId : g_top)
+    for (const int topId : declarations)
     {
         const MNode &top = N(topId);
         ReductionSourceScope source(topId);
@@ -1321,6 +1324,27 @@ bool LowerProgram(ast::Program &program)
             break;
         }
     }
+    // 导入函数值使用语言调用约定的适配入口；真实 C 调用仍由普通 ABI 降低处理。
+    for (const auto &declaration : g_functionDecls)
+    {
+        if (declaration.superseded || declaration.abiLibrary.empty()) continue;
+        ast::Function wrapper;
+        wrapper.name = "__chali_abi_value$" + declaration.label;
+        wrapper.result = LowerType(declaration.signature.result, "ABI 函数值返回");
+        Memory::Vector<Memory::String> names;
+        Memory::Vector<ast::NodePtr> arguments;
+        for (std::size_t i = 0; i < declaration.signature.params.size(); ++i)
+        {
+            const auto &parameter = declaration.signature.params[i];
+            const auto name = AllocateName("__chali_abi_parameter");
+            wrapper.parameters.emplace_back(name, LowerType(parameter.type, name));
+            names.push_back(parameter.emitted.empty() ? parameter.source : parameter.emitted);
+            arguments.push_back(ast::Node::var(name));
+        }
+        auto call = ast::Node::call(declaration.label, names, arguments);
+        wrapper.body = declaration.signature.result->kind == MType::Void ? ast::Node::block({ ast::Node::exprStmt(call), ast::Node::ret(ast::Node::i(0)) }) : ast::Node::block({ ast::Node::ret(call) });
+        program.functions.push_back(std::move(wrapper));
+    }
     AppendCollectionConstructors(program);
     AppendMapKeyPolicies(program);
     AppendTupleConstructors(program);
@@ -1378,5 +1402,92 @@ bool LowerProgram(ast::Program &program)
             break;
         }
     }
-    return true;
+    return g_error.empty();
+}
+
+/**
+ * @brief 在全部运行时辅助函数追加后统一接入自举内核并绑定真实帧形参。
+ * @param program 包含用户函数、所有权及运行时辅助函数的最终程序。
+ * @return 所有自举入口及其参数布局一致时为 true。
+ */
+bool FinalizeBootstrapCalls(ast::Program &program)
+{
+    // 字符串运算直接接入语言内核；拼接为每种元数生成一次只含地址参数的包装。
+    Memory::Vector<ast::Function> stringJoins;
+    Memory::Map<std::size_t, Memory::String> stringJoinLabels;
+    Memory::Set<const ast::Node *> visitedStringCalls;
+    std::function<void(const ast::NodePtr &)> lowerStringCalls = [&](const ast::NodePtr &node) {
+        if (!node || !visitedStringCalls.insert(node.get()).second) return;
+        if (node->kind == ast::Node::Kind::Call)
+        {
+            if (node->text == "__chali_bootstrap_string_join")
+            {
+                const auto count = node->kids.size();
+                auto found = stringJoinLabels.find(count);
+                if (found == stringJoinLabels.end())
+                {
+                    ast::Function function;
+                    function.name = "std::lang::__bootStringJoin" + Memory::toString(count);
+                    function.result = ast::Type::i64();
+                    Memory::Vector<ast::NodePtr> body;
+                    const auto total = function.name + "_total";
+                    const auto result = function.name + "_result";
+                    const auto offset = function.name + "_offset";
+                    body.push_back(ast::Node::declare(total, ast::Type::i64()));
+                    body.push_back(ast::Node::assign(total, ast::Node::i(0)));
+                    for (std::size_t index = 0; index < count; ++index)
+                    {
+                        const auto argument = function.name + "_arg" + Memory::toString(index);
+                        const auto length = function.name + "_length" + Memory::toString(index);
+                        function.parameters.push_back({ argument, ast::Type::i64() });
+                        body.push_back(ast::Node::declare(length, ast::Type::i64()));
+                        body.push_back(ast::Node::assign(length, ast::Node::call("std::lang::__bootStringLength", { "address" }, { ast::Node::var(argument) })));
+                        body.push_back(ast::Node::assign(total, ast::Node::call("std::lang::__bootStringAddLength", { "left", "right" }, { ast::Node::var(total), ast::Node::var(length) })));
+                    }
+                    body.push_back(ast::Node::declare(result, ast::Type::i64()));
+                    body.push_back(ast::Node::assign(result, ast::Node::call("std::lang::__bootStringBuffer", { "length" }, { ast::Node::var(total) })));
+                    body.push_back(ast::Node::declare(offset, ast::Type::i64()));
+                    body.push_back(ast::Node::assign(offset, ast::Node::i(8)));
+                    for (std::size_t index = 0; index < count; ++index)
+                    {
+                        const auto argument = function.name + "_arg" + Memory::toString(index);
+                        const auto length = function.name + "_length" + Memory::toString(index);
+                        body.push_back(ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringCopyBytes", { "destination", "source", "length" },
+                            { ast::Node::binary("+", ast::Node::var(result), ast::Node::var(offset)), ast::Node::call("std::lang::__stringStorageData", { "address" }, { ast::Node::var(argument) }), ast::Node::var(length) })));
+                        body.push_back(ast::Node::assign(offset, ast::Node::binary("+", ast::Node::var(offset), ast::Node::var(length))));
+                    }
+                    body.push_back(ast::Node::ret(ast::Node::var(result)));
+                    function.body = ast::Node::block(body);
+                    found = stringJoinLabels.emplace(count, function.name).first;
+                    stringJoins.push_back(std::move(function));
+                }
+                node->text = found->second;
+            }
+        }
+        for (const auto &child : node->kids) lowerStringCalls(child);
+    };
+    for (const auto &function : program.functions) lowerStringCalls(function.body);
+    for (auto &function : stringJoins) program.functions.push_back(std::move(function));
+    // 原生集合调用原先不依赖参数名字；改接语言自举函数后必须绑定实际帧形参。
+    Memory::Map<Memory::String, Memory::Vector<Memory::String>> bootstrapParameters;
+    for (const auto &function : program.functions)
+        if (function.name.rfind("std::lang::__boot", 0u) == 0u)
+        {
+            auto &parameters = bootstrapParameters[function.name];
+            for (const auto &parameter : function.parameters) parameters.push_back(parameter.first);
+        }
+    Memory::Set<const ast::Node *> visitedBootstrapCalls;
+    std::function<void(const ast::NodePtr &)> bindBootstrap = [&](const ast::NodePtr &node) {
+        if (!node || !visitedBootstrapCalls.insert(node.get()).second) return;
+        if (node->kind == ast::Node::Kind::Call && node->text.rfind("std::lang::__boot", 0u) == 0u)
+        {
+            const auto found = bootstrapParameters.find(node->text);
+            if (found == bootstrapParameters.end() || found->second.size() != node->kids.size())
+                Fail("标准库自举入口或参数布局不一致：" + node->text);
+            else node->names = found->second;
+        }
+        for (const auto &child : node->kids) bindBootstrap(child);
+    };
+    for (const auto &function : program.functions) bindBootstrap(function.body);
+    return g_error.empty();
 }

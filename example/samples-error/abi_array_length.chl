@@ -1,4 +1,3 @@
-abi "./unused.dll" {
-    int32[] numbers(int32 count) = "numbers" [missing];
-}
+#abi("C", "./unused.dll", "numbers")
+int32[] numbers(int32 count) [missing];
 void main() { }

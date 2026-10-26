@@ -15,10 +15,13 @@ constexpr std::int64_t kObjectHandleBase = 4611686018427387904LL;
 /**
  * @brief 对象种类。
  */
+struct RawStorageState;
+
 enum class ObjectKind
 {
     NativeRecord,  ///< 不透明宿主记录，语义由胶水及描述符回调维护。
     Obj,           ///< 装箱格子（obj）：一个值 + 它的类型号
+    RawStorage,    ///< 显式初始化状态与类型身份的原始存储。
     Arena,         ///< 批量持有字节堆分配的标准库 Arena
     Closure,       ///< 类型化函数入口和可写借用的捕获环境
 };
@@ -79,6 +82,7 @@ struct RuntimeObject
     NativeContext iteratorContext;    ///< 迭代状态或 copy 捕获单元的堆与对象表，供复制和清理使用。
     /// Arena：由该 arena 持有、reset/drop 时成批释放的字节堆地址。
     Memory::Vector<std::size_t> arenaBlocks;
+    std::shared_ptr<RawStorageState> rawStorage; ///< 仅 RawStorage 使用的存储及初始化状态。
 };
 
 bool nativeRefreshViews(NativeContext &ctx, RuntimeObject &object);
@@ -93,6 +97,7 @@ struct ObjectStore
 {
     NativeContext recordContext;                                                  ///< 不透明记录清理所需的运行时存储上下文。
     Memory::Map<std::pair<std::size_t, std::int64_t>, std::size_t> movedStorage;  ///< 已销毁子对象的（地址、类型号）及存储大小。
+    std::size_t largestMovedStorage = 0; ///< 标记的最大跨度上界，用于限制重叠查询范围。
     Memory::Map<std::int64_t, std::shared_ptr<RuntimeObject>> objects;            ///< 还活着的对象
     /**
      * @brief 新分配或重新赋值的存储开始生命周期。

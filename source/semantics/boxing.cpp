@@ -202,8 +202,8 @@ bool ObjGetAllowedTags(const std::shared_ptr<MType> &target, Memory::Vector<std:
 /**
  * @brief `map` 的结果元素在容器里的存放种类；-1 = 这个类型放不进容器。
  *
- * 与 `LowerAlgorithmCall` 传给 `__std_vec_map` 的第 3 个实参一一对应
- * （回调只能回传整数与浮点，字符串是地址、对象是句柄）。
+ * @param type 回调结果类型。
+ * @return 可存入标准列表时返回存储类别，不支持时返回负一。
  */
 int AlgoElementKind(const std::shared_ptr<MType> &type)
 {
@@ -268,10 +268,36 @@ bool CheckAlgorithmCallback(int callbackId, const std::shared_ptr<MType> &elemen
 }
 
 /**
- * @brief 将列表算法调用降级为运行时操作。
+ * @brief 请求标准库算法的具体实例并按既有实参所有权规则生成调用。
+ * @param name 标准库私有算法名称。
+ * @param types 按声明顺序排列的泛型实参。
+ * @param args 调用方表达式编号。
+ * @return 指向具体语言实现的调用节点。
+ */
+ast::NodePtr BootstrapAlgorithmCall(const Memory::String &name,
+                                  const Memory::Vector<std::shared_ptr<MType>> &types,
+                                  const Memory::Vector<int> &args)
+{
+    Memory::Vector<Memory::String> spellings;
+    for (const auto &type : types) spellings.push_back(GenericArgumentText(type));
+    const auto specialized = chali_generic::mangle(name, spellings);
+    if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ name, spellings };
+    Memory::Vector<Memory::String> names;
+    Memory::Vector<ast::NodePtr> values;
+    for (std::size_t index = 0; index < args.size(); ++index)
+    {
+        names.push_back("argument" + Memory::toString(index));
+        const auto expected = name == "__bootAlgorithmFold" && index == 1u ? types.front() : ExprType(args[index]);
+        values.push_back(LowerArgumentValue(args[index], expected));
+    }
+    return ast::Node::call("std::lang::" + specialized, names, values);
+}
+
+/**
+ * @brief 检查列表算法签名并降低为自举实现或必要存储入口。
  * @param name 名称文本。
  * @param args 按接口约定顺序传入的实参列表。
- * @retval 生成的低层语法节点。
+ * @return 生成的低层语法节点。
  */
 ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector<int> &args)
 {
@@ -293,7 +319,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         list->elem = element;
         const MParam pack{ "rest", "__chali_rest", list, true };
         return ast::Node::call(
-            name == "minValue" ? "__std_vec_min" : "__std_vec_max",
+            BootstrapCollectionLabel(name == "minValue" ? "__std_vec_min" : "__std_vec_max", list),
             { "__chali_v", "__chali_first", "__chali_text", "__chali_object" },
             { PackVariadicArguments(args, 1u, pack), LowerValueForType(args[0], element),
               ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
@@ -311,7 +337,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         if (element->kind != MType::Int && element->kind != MType::Char && element->kind != MType::Bool && element->kind != MType::Double)
             return Fail("std::algorithms::sum 只能求 int / float64 列表的和，现在是 " + Describe(list)), Bad();
         return ast::Node::call(
-            "__std_vec_sum", { "__chali_v", "__chali_float" },
+            BootstrapCollectionLabel("__std_vec_sum", list), { "__chali_v", "__chali_float" },
             { LowerExpr(args[0]),
               ast::Node::i(element->kind == MType::Double ? 1 : 0) });
     }
@@ -332,9 +358,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         if (kind < 0)
             return Fail("std::algorithms::map 的回调返回值放不进 std::lang::List：" + Describe(mapped)), Bad();
         return OwnedObjectTempNode(
-            ast::Node::call("__std_vec_map", { "__chali_v", "__chali_callback", "__chali_kind", "__chali_layout" },
-                            { LowerExpr(args[0]), LowerExpr(args[1]),
-                              ast::Node::i(kind), ContainerStorageFlag(mapped) }),
+            BootstrapAlgorithmCall("__bootAlgorithmMap", { element, mapped }, args),
             MakeListType(mapped));
     }
     if (name == "filterValue")
@@ -345,11 +369,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         const std::shared_ptr<MType> element = list->elem;
         if (!CheckAlgorithmCallback(args[1], element, 1u, true, name)) return Bad();
         return OwnedObjectTempNode(
-            ast::Node::call("__std_vec_filter",
-                            { "__chali_v", "__chali_callback", "__chali_text", "__chali_object" },
-                            { LowerExpr(args[0]), LowerExpr(args[1]),
-                              ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
-                              ContainerStorageFlag(element) }),
+            BootstrapAlgorithmCall("__bootAlgorithmFilter", { element }, args),
             MakeListType(element));
     }
     if (name == "countValue")
@@ -364,13 +384,12 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         if (second && second->kind == MType::Func)
         {
             if (!CheckAlgorithmCallback(args[1], element, 1u, true, name)) return Bad();
-            return ast::Node::call("__std_vec_count_if", { "__chali_v", "__chali_callback" },
-                                   { LowerExpr(args[0]), LowerExpr(args[1]) });
+            return BootstrapAlgorithmCall("__bootAlgorithmCountIf", { element }, args);
         }
         if (!Acceptable(element, second, true))
             return Fail("std::algorithms::count 的目标值必须兼容 " + Describe(element)), Bad();
         return ast::Node::call(
-            "__std_vec_count_value", { "__chali_v", "__chali_value", "__chali_text", "__chali_object" },
+            BootstrapCollectionLabel("__std_vec_count_value", list), { "__chali_v", "__chali_value", "__chali_text", "__chali_object" },
             { LowerExpr(args[0]), LowerValueForType(args[1], element),
               ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
               ContainerStorageFlag(element) });
@@ -389,13 +408,10 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
             if (!Acceptable(element, ExprType(args[1]), true))
                 return Fail("std::algorithms::reduce 的初始值必须兼容 " + Describe(element)), Bad();
             if (!CheckAlgorithmCallback(args[2], element, 2u, false, name)) return Bad();
-            return ast::Node::call(
-                "__std_vec_fold", { "__chali_v", "__chali_initial", "__chali_callback" },
-                { LowerExpr(args[0]), LowerValueForType(args[1], element), LowerExpr(args[2]) });
+            return BootstrapAlgorithmCall("__bootAlgorithmFold", { element }, args);
         }
         if (!CheckAlgorithmCallback(args[1], element, 2u, false, name)) return Bad();
-        return ast::Node::call("__std_vec_reduce", { "__chali_v", "__chali_callback" },
-                               { LowerExpr(args[0]), LowerExpr(args[1]) });
+        return BootstrapAlgorithmCall("__bootAlgorithmReduce", { element }, args);
     }
 
     const std::size_t wanted = (name == "sortValue") ? 1u : (name == "foldValue" || name == "clampValue" ? 3u : 2u);
@@ -411,7 +427,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         list->elem = element;
         const MParam bounds{ "bounds", "__chali_bounds", list, true };
         return ast::Node::call(
-            "__std_vec_clamp", { "__chali_v", "__chali_value", "__chali_text", "__chali_object" },
+            BootstrapCollectionLabel("__std_vec_clamp", list), { "__chali_v", "__chali_value", "__chali_text", "__chali_object" },
             { PackVariadicArguments(args, 1u, bounds), LowerValueForType(args[0], element),
               ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
               ContainerStorageFlag(element) });
@@ -423,7 +439,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
     if (name == "sortValue")
     {
         return OwnedObjectTempNode(
-            ast::Node::call("__std_vec_sorted_copy", { "__chali_v" }, { LowerExpr(args[0]) }),
+            BootstrapAlgorithmCall("__bootAlgorithmSort", { element }, args),
             list);
     }
     if (name == "findValue" || name == "binarySearchValue")
@@ -431,7 +447,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         if (!Acceptable(element, ExprType(args[1]), true))
             return Fail("std::algorithms::" + name + " 的目标值必须兼容 " + Describe(element)), Bad();
         return ast::Node::call(
-            name == "findValue" ? "__std_vec_find" : "__std_vec_binary_search",
+            BootstrapCollectionLabel(name == "findValue" ? "__std_vec_find" : "__std_vec_binary_search", list),
             { "__chali_v", "__chali_value", "__chali_text", "__chali_object" },
             { LowerExpr(args[0]), LowerValueForType(args[1], element),
               ast::Node::i(IsStandardOpcode(element, "String") ? 1 : 0),
@@ -440,16 +456,12 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
     if (name == "allValue" || name == "anyValue")
     {
         if (!CheckAlgorithmCallback(args[1], element, 1u, true, name)) return Bad();
-        return ast::Node::call(name == "allValue" ? "__std_vec_all" : "__std_vec_any",
-                               { "__chali_v", "__chali_callback" },
-                               { LowerExpr(args[0]), LowerExpr(args[1]) });
+        return BootstrapAlgorithmCall(name == "allValue" ? "__bootAlgorithmAll" : "__bootAlgorithmAny", { element }, args);
     }
     if (!Acceptable(element, ExprType(args[1]), true))
         return Fail("std::algorithms::fold 的初始值必须兼容 " + Describe(element)), Bad();
     if (!CheckAlgorithmCallback(args[2], element, 2u, false, name)) return Bad();
-    return ast::Node::call(
-        "__std_vec_fold", { "__chali_v", "__chali_initial", "__chali_callback" },
-        { LowerExpr(args[0]), LowerValueForType(args[1], element), LowerExpr(args[2]) });
+    return BootstrapAlgorithmCall("__bootAlgorithmFold", { element }, args);
 }
 
 /**
@@ -481,7 +493,7 @@ bool IsStandardLibraryModule(const Memory::String &module)
 /**
  * @brief 这个调用标签是不是"纯宿主函数"（`T name(...);`，实现从 NativeRegistry 取）。
  *
- * `abi "…" { … }` 里的签名也走 `ExternFuncDecl`，但实现由链接进来的 C ABI 提供、
+ * `#abi("C", "库", "符号")` 里的签名也走 `ExternFuncDecl`，但实现由链接进来的 C ABI 提供、
  * 不在注册表里，所以用 `abiLibrary` 排除掉。
  */
 bool IsRegistryHostFunctionLabel(const Memory::String &label)
@@ -536,7 +548,7 @@ ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExi
     g_usesLanguageMove = true;
     const auto address = AllocateName("__chali_move_address");
     const auto result = AllocateName("__chali_move_result");
-    const int bytes = type->kind == MType::Struct ? std::max(8, StructStride(type)) : 8;
+    const int bytes = type->kind == MType::Struct ? std::max(8, StructStride(type)) : IsByteStorageType(type) ? 1 : 8;
     Memory::Vector<ast::NodePtr> out{
         Node::declare(address, ast::Type::i64()), Node::assign(address, source),
         Node::exprStmt(Node::call("__std_move_require", { "address", "bytes", "type" },
@@ -555,8 +567,7 @@ ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExi
         auto value = Node::loadFrom(Node::var(address), LowerType(type, result));
         out.push_back(Node::assign(result, value));
     }
-    out.push_back(Node::exprStmt(Node::call("__std_memset", { "address", "value", "bytes" },
-                                            { Node::var(address), Node::i(0), Node::i(bytes) })));
+    out.push_back(Node::exprStmt(Node::memorySet(Node::var(address), Node::i(0), Node::i(bytes))));
     if (type->kind == MType::Struct)
         AppendMovedAggregate(type->name, Node::var(address), &out);
     return Node::sequence(std::move(out), Node::var(result));
@@ -1249,7 +1260,7 @@ ast::NodePtr LowerCall(int id)
                 default: break;
                 }
             }
-            const ast::NodePtr call = ast::Node::call(method->native, names, values);
+            const ast::NodePtr call = ast::Node::call(BootstrapCollectionLabel(method->native, baseType), names, values);
             if (!post.empty())
             {
                 const auto result = AllocateName("__chali_container_result");
@@ -1397,8 +1408,9 @@ ast::NodePtr LowerCall(int id)
                                    { "__chali_value" }, { LowerExpr(args[0]) });
         }
         /* ---- 内存内建：new / drop / memcpy / memset（数据区上的单调堆 + 逐字节操作）---- */
-        if (callee.s == "memcpy" || callee.s == "memset")
+        if ((callee.s == "memcpy" || callee.s == "memset") && (args.empty() || !IsBarePointerType(ExprType(args[0]))))
         {
+            if (g_unsafeDepth == 0) return Fail("字节内存操作需要显式 unsafe 上下文：" + callee.s), Bad();
             const Memory::String &name = callee.s;
             const std::size_t wanted = 3u;
             if (args.size() != wanted)
@@ -1406,17 +1418,17 @@ ast::NodePtr LowerCall(int id)
                 Fail(name + " 需要 " + Memory::toString(wanted) + " 个参数");
                 return Bad();
             }
-            Memory::Vector<ast::NodePtr> values;
-            for (const int argId : args) values.push_back(LowerExpr(argId));
-            /* 逐字节搬 / 填：交给虚拟机里那份 C++ 运行时（整段必须落在一块内存里，
-             * 越界会报错）。语言侧不写"读 8 字节 → 拼最低字节 → 写回"那种循环了。 */
-            if (name == "memcpy")
+            auto operation = Memory::makeShared<ast::Node>();
+            operation->kind = name == "memcpy" ? ast::Node::Kind::MemoryCopy : ast::Node::Kind::MemorySet;
+            for (std::size_t index = 0; index < args.size(); ++index)
             {
-                return ast::Node::call("__std_memcpy", { "__chali_tgt", "__chali_src", "__chali_n" },
-                                       values);
+                const auto type = RawExprType(args[index]);
+                const bool address = index == 0u || (name == "memcpy" && index == 1u);
+                if (!type || (type->kind != MType::Int && (!address || type->kind != MType::Ptr)))
+                    return Fail("字节内存操作需要整数数量及裸地址、引用或 BarePtr 地址参数"), Bad();
+                operation->kids.push_back(address && type->kind == MType::Ptr ? LowerRawExpr(args[index]) : LowerExpr(args[index]));
             }
-            return ast::Node::call("__std_memset", { "__chali_addr", "__chali_val", "__chali_n" },
-                                   values);
+            return operation;
         }
         /* ---- `str(x)`：转成字符串（大整数 / 数值 / 字符串本身） ---- */
         if (callee.s == "str")
@@ -1445,7 +1457,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (type->kind == MType::Int || type->kind == MType::Bool)
             {
-                return ast::Node::call("__std_str_of_int", { "__chali_v" },
+                return ast::Node::call("std::lang::__bootStringFromInt", { "__chali_v" },
                                        { LowerExpr(args[0]) });
             }
             Fail("str 只能用在 BigInteger / BigDecimal / 整数 / 浮点 / 字符串上，现在给的是 " + Describe(type));
@@ -1592,7 +1604,7 @@ ast::NodePtr LowerCall(int id)
                 {
                     /* 字符串：直接读取堆上的显式长度头。实参是"造出来的串"时先落地，
                      * 否则 `len(x.str())` 里那个临时串没人释放。 */
-                    return ast::Node::call("__std_str_len", { "__chali_s" },
+                    return ast::Node::call("std::lang::__bootStringLength", { "__chali_s" },
                                            { NeedsOwnedTemp(args[0]) ? OwnedStringTemp(args[0]) : LowerExpr(args[0]) });
                 }
                 if (IsContainer(type))
@@ -1628,10 +1640,24 @@ ast::NodePtr LowerCall(int id)
     Memory::Vector<Memory::String> params;
     std::shared_ptr<MType> result;
     if (!ResolveCall(id, &label, &params, &result)) return Bad();
+    for (const auto &declaration : g_functionDecls)
+        if (declaration.label == label && declaration.unsafeRequired && g_unsafeDepth == 0)
+            return Fail("调用 unsafe 函数需要显式 unsafe 上下文：" + label), Bad();
     if (g_borrowFlowCapture) g_borrowFlowCapture->calls[id] = label;
     if ((callee.kind == MNode::Member || callee.kind == MNode::Arrow) && !CheckMethodReceiver(callee.kids[0], label)) return Bad();
     const auto signature = g_funcs.find(label);
     if (signature == g_funcs.end()) return Fail("内部错误：调用签名不存在 " + label), Bad();
+    // 字符串自举仅需要分配、归还和接管地址；直接产生四元式，不进入宿主胶水。
+    if (label == "std::lang::__stringAllocate" || label == "std::lang::__stringRelease"
+        || label == "std::lang::__stringAdopt")
+    {
+        if (args.size() != 1u) return Fail("字符串存储原语需要一个参数"), Bad();
+        const auto value = LowerExpr(args[0]);
+        if (label == "std::lang::__stringAllocate") return ast::Node::alloc(value);
+        if (label == "std::lang::__stringRelease")
+            return ast::Node::sequence({ ast::Node::release(value) }, ast::Node::i(0));
+        return value;
+    }
     const auto transferCall = [&](const Memory::String &name) {
         return label.rfind(name + "__", 0u) == 0u;
     };
@@ -1732,6 +1758,14 @@ ast::NodePtr LowerCall(int id)
     }
     // 引用迭代租约携带元素布局，绑定到统一 VM 原生操作。
     const auto &sourceName = label;
+    if (sourceName.rfind("std::lang::__algorithmLease__", 0) == 0)
+        return ast::Node::call("__std_iter_lease", { "source" }, { LowerExpr(args[0]) });
+    if (sourceName.rfind("std::lang::__algorithmCompareIndices__", 0) == 0)
+        return ast::Node::call("std::lang::__listStorageCompareIndex", { "source", "left", "right" },
+                              { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
+    if (sourceName.rfind("std::lang::__algorithmSwap__", 0) == 0)
+        return ast::Node::call("std::lang::__listStorageSwap", { "source", "left", "right" },
+                              { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
     if (sourceName.rfind("std::iter::__iter", 0) == 0)
     {
         if (sourceName.rfind("std::iter::__iterBox__", 0) == 0)
@@ -1796,6 +1830,32 @@ ast::NodePtr LowerCall(int id)
         names.push_back(params.back());
         values.push_back(PackVariadicArguments(args, fixed, signature->second.params.back()));
     }
+    // 字节操作成为专门的四元式；先按调用顺序求值全部实参，再读取指针字段。
+    const bool rawCopy = label.rfind("std::lang::memcpy__", 0u) == 0u;
+    const bool rawSet = label.rfind("std::lang::memset__", 0u) == 0u;
+    if ((rawCopy || rawSet) && values.size() == 3u && result && result->kind == MType::Void)
+    {
+        Memory::Vector<ast::NodePtr> prefix;
+        Memory::Vector<ast::NodePtr> held;
+        for (const auto &value : values)
+        {
+            const auto name = AllocateName("__chali_memory_argument");
+            prefix.push_back(ast::Node::declare(name, ast::Type::i64()));
+            prefix.push_back(ast::Node::assign(name, value));
+            held.push_back(ast::Node::var(name));
+        }
+        auto operation = Memory::makeShared<ast::Node>();
+        operation->kind = rawCopy ? ast::Node::Kind::MemoryCopy : ast::Node::Kind::MemorySet;
+        operation->kids = { ast::Node::loadInt(held[0]), rawCopy ? ast::Node::loadInt(held[1]) : held[1], held[2] };
+        return ast::Node::sequence(std::move(prefix), operation);
+    }
+
+    // 裸指针解引用仅提取地址字段；类型、unsafe 和借用检查已在上方完成，不生成语言包装调用。
+    if (label.rfind("std::lang::dereference__", 0u) == 0u && values.size() == 1u
+        && result && result->kind == MType::Ptr && signature->second.params.size() == 1u
+        && IsBarePointerType(signature->second.params[0].type))
+        return ast::Node::loadInt(values[0]);
+
     /* 纯宿主函数（`T name(...);` / `Declarations::hostFunction`）与接口成员用同一条规矩：
      * 解释 / 内嵌路径这次编译完就要跑，注册表里没有的宿主符号现在就该报错，而不是等到
      * 运行期"函数入口不存在"。放在所有语义检查（如消息类型、参数匹配）之后，免得把更
@@ -2357,7 +2417,7 @@ ast::NodePtr LowerTry(int id)
     /* 载荷若是源聚合占有的字符串 / 对象，复制一份给调用方 —— 源聚合随后就要释放。 */
     if (IsStandardOpcode(okPayload.type, "String"))
         okValue = ast::Node::call(
-            "__std_str_sub", { "__chali_s", "__chali_a", "__chali_b" },
+            "std::lang::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
             { okValue, ast::Node::i(0), ast::Node::i(-1) });
     else if (IsObjectLike(okPayload.type))
         okValue = ast::Node::call(ObjectCopyFunction(okPayload.type), { "__chali_v" }, { okValue });
@@ -2807,6 +2867,13 @@ ast::NodePtr LowerUncheckedExpr(int id)
     }
     case MNode::NewPtr:
         return LowerNewPtr(id);
+    case MNode::RawLayout: {
+        if (g_unsafeDepth == 0) return Fail("原始布局查询需要 unsafe 上下文"), Bad();
+        const auto type = T(node.type);
+        if (!type || type->kind == MType::Void || !CheckDeclaredType(type, "原始存储")) return Bad();
+        if (type->kind == MType::Host || type->kind == MType::Array) return Fail("原始存储暂不支持宿主别名或直接数组元素，请使用具名结构体包装"), Bad();
+        return ast::Node::i(node.i ? (IsByteStorageType(type) ? 1 : 8) : ElementBytes(type));
+    }
     case MNode::TypeTag:
         return LowerTypeTag(id);
     case MNode::Call:
@@ -3203,6 +3270,7 @@ ast::NodePtr LowerStmtImpl(int id)
     }
     case MNode::Block:
     {
+        UnsafeScopeGuard unsafeGuard(node.unsafeScope);
         /* 语句块同时是两件事：
          *   1. **一层名字作用域** —— 块里声明的同名变量遮蔽外层的（`{ int x = 2; }`）；
          *   2. **一层生命周期** —— 块里声明出来的所有者变量（运行时数组 / 堆上的 string）
@@ -3213,6 +3281,8 @@ ast::NodePtr LowerStmtImpl(int id)
         g_pendingParameterStorage.clear();
         for (const auto &owner : g_parameterReferenceOwners)
         {
+            // 形参通过专门路径登记，不经过局部 Declare；赋值仍归函数体所有。
+            g_ownedHome[owner.first] = g_ownedScopes.size() - 1u;
             if (owner.second->kind == MType::Array)
                 MarkOwnedArray(owner.first, owner.second);
             else if (owner.second->kind == MType::Struct)
@@ -3605,7 +3675,17 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
                 break;
             }
         }
-        if (same && expected) InferExpression(args[index], expected);
+        if (same && expected)
+        {
+            // 核心 memset 的字节参数允许范围内的整数字面量，与显式 uint8 转换一致。
+            const bool coreMemorySet = !candidates.empty() && std::all_of(candidates.begin(), candidates.end(),
+                [](const Memory::String &candidate) { return candidate.rfind("std::lang::memset__", 0u) == 0u; });
+            if (index == 1u && coreMemorySet && !args.empty()
+                && IsBarePointerType(ExprType(args[0])) && expected->kind == MType::Int
+                && expected->isUnsigned && expected->bits == 8)
+                PinIntegerLiteral(args[index], expected);
+            InferExpression(args[index], expected);
+        }
         argTypes.push_back(RawExprType(args[index]));
     }
     if (!PickOverload(candidates, argTypes, &chosen, &reason))
@@ -4080,6 +4160,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
                             const Memory::Vector<MParam> &params,
                             int bodyId, const Memory::String &module)
 {
+    UnsafeScopeGuard unsafeGuard(false, true);
     ClearActiveError();
     ast::Function function;
     function.name = name;
@@ -4110,6 +4191,14 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         MVar var;
         var.type = param.type;
         var.emitted = param.emitted;
+        // 编译器算法适配器延续原 intrinsic 的借用约定；公开值参数仍按值复制。
+        const bool algorithmBorrow = module == "std::lang"
+            && (name.rfind("__bootAlgorithm", 0u) == 0u || name.rfind("std::lang::__bootAlgorithm", 0u) == 0u)
+            && (((param.source == "source" || param.source.rfind("source$", 0u) == 0u)
+                 && IsContainer(param.type) && param.type->name == "vec")
+                || ((param.source == "callback" || param.source.rfind("callback$", 0u) == 0u)
+                    && param.type->kind == MType::Func));
+        if (algorithmBorrow) var.isConst = true;
         Memory::Set<Memory::String> borrowedTypes;
         if (ContainsBorrowedReferences(param.type, &borrowedTypes))
             var.borrowDepth = HasOpaqueObjectBorrow(param.type) || LifetimeIsStaticName(param.source) ? 0u : 1u;
@@ -4118,7 +4207,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         var.bindingIdentity = param.bindingIdentity;
         g_scope.back()[parameterKey] = var;
         function.parameters.emplace_back(param.emitted, LowerType(param.type, param.emitted));
-        const bool ownedValue = IsStandardOpcode(param.type, "String") || IsObjectLike(param.type) || param.type->kind == MType::Array || OpcodeNonCopyable(param.type);
+        const bool ownedValue = !algorithmBorrow && (IsStandardOpcode(param.type, "String") || IsObjectLike(param.type) || param.type->kind == MType::Array || OpcodeNonCopyable(param.type));
         if (g_addressTakenNames.count(param.source) && NeedsReferenceStorage(param.type))
         {
             const auto storage = AllocateName("__chali_parameter_reference");
@@ -4126,9 +4215,9 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
             parameterReferences.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(param.type)))));
             g_pendingParameterStorage.push_back(storage);
             ast::NodePtr value = ast::Node::var(param.emitted);
-            if (IsStandardOpcode(param.type, "String"))
+            if (!algorithmBorrow && IsStandardOpcode(param.type, "String"))
                 value = ast::Node::call(ObjectCopyFunction(param.type), { "value" }, { value });
-            else if (IsObjectLike(param.type) && !OpcodeNonCopyable(param.type))
+            else if (!algorithmBorrow && IsObjectLike(param.type) && !OpcodeNonCopyable(param.type))
                 value = ast::Node::call(ObjectCopyFunction(param.type), { "__chali_v" }, { value });
             else if (param.type->kind == MType::Array)
                 value = CopyRuntimeArrayValue(value, param.type);
@@ -4301,7 +4390,7 @@ void AddRuntimeHelpers(ast::Program &program)
         panic.name = "__chali_defer_panic";
         panic.result = LowerType(T(M_TypeVoid()), "panic");
         panic.parameters = { { "__chali_value", Type::i64() } };
-        panic.body = Node::block({ Node::assign("__chali_value", Node::call("__std_str_sub", { "string", "start", "end" },
+        panic.body = Node::block({ Node::assign("__chali_value", Node::call("std::lang::__bootStringSlice", { "string", "start", "end" },
                                                                             { Node::var("__chali_value"), Node::i(0), Node::i(-1) })),
                                    Node::whileLoop(Node::binary("!=", Node::var("__chali_defer_top"), Node::i(0)),
                                                    Node::exprStmt(Node::call("__chali_defer_pop", { "frame" }, { Node::var("__chali_defer_top") }))),
@@ -4372,8 +4461,7 @@ void AddRuntimeHelpers(ast::Program &program)
                          Node::alloc(Node::binary("+", Node::i(8),
                                                   Node::binary("*", Node::var("__chali_len"),
                                                                Node::var("__chali_stride"))))),
-            Node::exprStmt(Node::call("__std_memset", { "__chali_addr", "__chali_val", "__chali_n" },
-                                      { Node::var("__chali_blk"), Node::i(0), Node::binary("+", Node::i(8), Node::binary("*", Node::var("__chali_len"), Node::var("__chali_stride"))) })),
+            Node::exprStmt(Node::memorySet(Node::var("__chali_blk"), Node::i(0), Node::binary("+", Node::i(8), Node::binary("*", Node::var("__chali_len"), Node::var("__chali_stride"))))),
             /* 块头写下元素个数（下标越界检查读的就是它） */
             Node::assign(Node::offset(Node::var("__chali_blk"), Node::i(0), 8),
                          Node::var("__chali_len")),

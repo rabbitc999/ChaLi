@@ -28,8 +28,8 @@ void main(){
     let copyList=int64 fn copy(){values[0]+=1;return values[0];};
     assert(copyList()==5 && copyList()==6 && values[0]==4);
     let copyList2=copyList;assert(copyList2()==7 && copyList2()==8 && copyList()==7);
-    String moved="payload";int64 identity=0;memcpy(&identity,&moved,8);
-    let takeText=int64 fn move(){int64 actual=0;memcpy(&actual,&moved,8);return actual;};
+    String moved="payload";int64 identity=0;unsafe { memcpy(&identity,&moved,8); }
+    let takeText=int64 fn move(){int64 actual=0;unsafe { memcpy(&actual,&moved,8); }return actual;};
     assert(takeText()==identity);
     String moved="reset";assert(moved=="reset");
     List<int64> transferred;transferred.push(40);

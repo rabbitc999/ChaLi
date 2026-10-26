@@ -1,0 +1,19 @@
+import std::clock;
+
+int64 work(int64 seed) {
+String text = "a".repeat(512);String needle = "b"; int64 sum = seed; int64 i = 0; while (i < 32) { sum = sum + text.indexOf(needle); i = i + 1; } return sum;
+}
+void main() {
+    int64 sink = work(0);
+    int64 times[5];
+    int64 r = 0;
+    while (r < 5) {
+        int64 start = std::clock::nowNanos();
+        sink = sink + work(r);
+        times[r] = std::clock::nowNanos() - start;
+        r = r + 1;
+    }
+    r = 0;
+    while (r < 5) { println("rep {}", times[r]); r = r + 1; }
+    println("sink {}", sink);
+}

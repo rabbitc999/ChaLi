@@ -123,17 +123,45 @@ public:
      */
     void erase(iterator position);
     /**
+     * @brief 直接初始化一个已由语言层去重的键值槽，宿主索引延迟重建。
+     * @param key 独立拥有的键快照。
+     * @param value 独立拥有的值快照。
+     */
+    void appendUnindexed(Key key, Value value);
+    /**
+     * @brief 清除一个已释放资源的槽并以末槽补洞，不执行键查找。
+     * @param index 已验证的槽号。
+     */
+    void eraseUnindexed(std::size_t index);
+    /**
+     * @brief 查询语言层槽索引是否仍对应当前的键与槽顺序。
+     * @return 当前语言索引有效时为 true。
+     */
+    bool languageIndexed() const { return languageIndexed_; }
+    /**
+     * @brief 标记语言层已完成全部槽索引更新。
+     */
+    void markLanguageIndexed() { languageIndexed_ = true; }
+    /**
      * @brief 清空已由调用者释放资源的存储与哈希索引。
      */
     void clear()
     {
         values_.clear();
         buckets_.clear();
+        nativeIndexDirty_ = false;
+        languageIndexed_ = false;
     }
 
 private:
     Memory::Vector<Pair> values_;
-    Memory::UnorderedMap<std::int64_t, Memory::Vector<std::size_t>> buckets_;
+    mutable Memory::UnorderedMap<std::int64_t, Memory::Vector<std::size_t>> buckets_;
+    mutable bool nativeIndexDirty_ = false;
+    bool languageIndexed_ = false;
+    /**
+     * @brief 仅在宿主互操作查找时重建宿主哈希索引，不参与语言层探测。
+     */
+    void ensureNativeIndex() const;
 };
 }  // namespace collection_glue
 #endif

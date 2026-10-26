@@ -116,3 +116,6 @@ The [24-chapter beginner book](../book/en/README.md) includes exercises with ref
 
 - [AOT compilation](41-aot.md)
 - [Backend ownership optimization and AOT counters](43-backend-ownership.md)
+- [Raw storage and C ABI directives](44-unsafe-abi.md)
+
+- [Downloaded build dependencies](45-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.

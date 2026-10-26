@@ -77,7 +77,7 @@ def msi(binary, version, arch, variant, output, work):
     feature = ET.SubElement(package, 'Feature', Id='Main', Title='ChaLi compiler', Level='1')
     ET.SubElement(feature, 'ComponentRef', Id='Compiler')
     license_files = [(ROOT / 'LICENSE', 'LICENSE'), (ROOT / 'NOTICE', 'NOTICE')]
-    license_files += [(ROOT / 'library' / name / 'LICENSE', name + '-LICENSE.txt')
+    license_files += [(ROOT / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', name + '-LICENSE.txt')
                       for name in ('miniz', 'ipage', 'caspp')]
     if variant == 'static':
         license_files += [(ROOT / 'library/llvm/LICENSE.TXT', 'LLVM-LICENSE.txt')]
@@ -150,7 +150,7 @@ def main():
         notices = docs / 'licenses'
         notices.mkdir()
         for name in ('miniz', 'ipage', 'caspp'):
-            shutil.copy2(ROOT / 'library' / name / 'LICENSE', notices / (name + '-LICENSE.txt'))
+            shutil.copy2(ROOT / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', notices / (name + '-LICENSE.txt'))
         for kind in dict.fromkeys(args.formats):
             destination = output / (stem + ('.tar.gz' if kind == 'tar' else '.' + kind))
             if kind == 'msi':

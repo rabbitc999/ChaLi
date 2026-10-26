@@ -555,7 +555,7 @@ OptimizationReport optimize(QuadFile &file, std::size_t maxRounds, bool collectT
             double real = 0;
             Memory::String text;
             const bool safeSource = readLiteral(quad.arg(0), numeric, floating, integer, real, text) || initialized.count(quad.arg(0));
-            if (base == "label" || base == "call" || base == "callptr" || base == "j" || base == "jz" || base == "jnz" || base == "ret" || base == "halt") initialized.clear();
+            if (base == "label" || base == "call" || base == "callptr" || base == "memcpy" || base == "memset" || base == "j" || base == "jz" || base == "jnz" || base == "ret" || base == "halt") initialized.clear();
             if (base == "decl") initialized.insert(quad.arg(2));
             const auto written = writesTo(base);
             if (written >= 0) initialized.insert(quad.arg(static_cast<std::size_t>(written)));

@@ -4,7 +4,23 @@
 [English](en/12-vm-performance.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-当前程序版本为 **ChaLi 1.0.6**。
+当前程序版本为 **ChaLi 1.0.7**。
+
+## 1.0.7 原始存储与按需链接
+
+[本轮验证与交付范围](../benchmarks/results/release-1.0.7.md)记录分阶段检查、测量与交付摘要，以及未验证的变体。
+
+本轮保留真实 1.0.6 原生实现、本版默认自举实现及实验原始存储实现的对照，默认最高优化、反射、边界和存活检查保留。构建与计时隔离，各性能阶段串行执行；原始报告记录版本、SHA256、源码、配置与输出校验。测量使用代码定稿快照，发行前再次核对文档与内嵌资产，交付编译器摘要单独记录；下面的 1.0.6 报告保持历史原样。
+
+- [AOT 体积与标准库按需链接](../benchmarks/results/aot-size-1.0.7/README.md)
+- [List／Map／Set 三方 AOT 对照](../benchmarks/results/raw-containers-1.0.7/README.md)
+- [String 三方 VM／AOT 对照](../benchmarks/results/string-1.0.7/README.md)
+- [通用 AOT 与 C++ O3](../benchmarks/results/aot-1.0.7/README.md)
+- [真实 1.0.6／1.0.7 VM 对照](../benchmarks/results/vm-1.0.7/README.md)
+
+空程序由 75,158,528 降至 1,883,648 字节（缩小 97.49%）；String 为 2,101,760，List 为 1,904,128 字节。容器和 String 的默认算法已自举，但多项负载比旧版原生实现更慢，实验原始存储也有回退，报告逐项保留结果。原型混合哈希缓解了连续键回移删除的长扫描，首轮取模哈希数据仍可查阅。
+
+String 实验仅实现字节存储、追加、读取、查找和独立复制；UTF-8 内容另做正确性验证，转入字节串的转换成本单列。应结合算法、负载规模和保留的检查解释结果，不把“自举”或“不安全内核”本身当作加速保证。接口与复现命令见[原始存储与 C ABI 指令](44-unsafe-abi.md)。本轮实际验证 Windows x64 外置 LLVM；没有静态 LLVM SDK，不将配置同步视为静态变体已验收。
 
 ## 1.0.6 最终发行版实测
 

@@ -1,0 +1,49 @@
+/** 默认 String 自举实现：值语义、字节语义、UTF-8 与标准库入口。 */
+void main() {
+    String empty;
+    assert(empty.length()==0);
+    String source="abcabc";
+    String copy=source;
+    copy[0]='x';
+    assert(source=="abcabc" && copy=="xbcabc");
+    assert(source.indexOf("abc")==0 && source.indexOf("abc",1)==3);
+    assert(source.lastIndexOf("abc")==3 && source.lastIndexOf("abc",2)==0);
+    assert(source.indexOf("",99)==6 && source.indexOf("abcdefg")==-1);
+    assert(source.count("abc")==2 && source.count("")==7);
+    assert(source.contains("bca") && source.startsWith("ab") && source.endsWith("bc"));
+    assert(source.compare("abcabd")==-1 && source.compare(source)==0);
+    assert("ababababac".indexOf("ababac")==4);
+    assert(" \t\r\n".isBlank() && "".isBlank());
+    assert("1234".isDigit() && !"".isDigit());
+    assert("aAZz".isAlpha() && "a9Z".isAlnum() && !"é".isAscii());
+    assert(source.substring(-4,2)=="ab" && source.substring(2)=="cabc");
+    assert(source.substring(99)=="" && source.left(2)=="ab" && source.right(2)=="bc");
+    assert(source.right(-1)=="" && source[1:4]=="bca");
+    assert(" \tabc\r\n".trim()=="abc");
+    assert(" a ".trimStart()=="a " && " a ".trimEnd()==" a");
+    assert("aZé".toLower()=="azé" && "aZé".toUpper()=="AZé");
+    assert(source.replaceFirst("abc","X")=="Xabc");
+    assert(source.replaceAll("abc","X")=="XX");
+    assert(source.replaceAll("","X")==source && source.replaceAll("z","X")==source);
+    assert("ab".repeat(5)=="ababababab" && "ab".repeat(0)=="");
+    assert("你好😀".charLength()==3 && "你好😀".reverse()=="😀好你");
+    assert("你好😀".utf8Substring(1,1)=="好" && "你好😀".utf8Substring(1)=="好😀");
+    assert("x".padStart(6,"ab")=="ababax" && "x".padEnd(6,"ab")=="xababa");
+    assert(source.removePrefix("abc")=="abc" && source.removeSuffix("bc")=="abca");
+    assert(source.insert(3,"X")=="abcXabc" && source.remove(2,2)=="abbc");
+    List<String> parts="a,,b,".split(",");
+    assert(parts.len()==4 && parts[1]=="" && parts[3]=="");
+    assert("a,,b,".split(",",false).len()==2);
+    assert(" \ta  b\r\n".splitWhitespace().len()==2);
+    List<String> lines="a\r\nb\rc\n".lines();
+    assert(lines.len()==4 && lines[1]=="b" && lines[3]=="");
+    List<String> chars="你好😀".unicodeChars();
+    assert(chars.len()==3 && chars[2]=="😀");
+    assert("/".join(chars)=="你/好/😀" && ",".join(parts)=="a,,b,");
+    assert((source+"/"+copy)=="abcabc/xbcabc");
+    unsafe {
+        String minimum=__stringAdopt(__bootStringFromInt(-9223372036854775807-1));
+        assert(minimum=="-9223372036854775808");
+    }
+    print("bootstrap-string-default-ok\n");
+}

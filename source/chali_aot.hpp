@@ -9,7 +9,7 @@ namespace chali_aot
 {
 
 /**
- * @brief 一个由 `abi "库" { ... }` 声明、要链接到外部 C 的函数。
+ * @brief 一个由 `#abi("C", "库", "符号")` 声明、要链接到外部 C 的函数。
  */
 struct ExternFunction
 {
@@ -18,6 +18,7 @@ struct ExternFunction
     Memory::String library;                         ///< 库路径（生成注释与链接参数用，可空）。
     Memory::String resultType = "long long";        ///< C 返回类型名。
     Memory::Vector<Memory::String> parameterTypes;  ///< C 形参类型名，按序。
+    Memory::String abiConvention = "C";             ///< 已验证的外部调用约定。
 };
 
 /**
@@ -48,17 +49,40 @@ struct Request
     Memory::String dataLayout;                  ///< 布局文本（每行 `名 offset=… size=…`）。
     Memory::Vector<ExternFunction> externs;     ///< `abi` 声明的外部 C 函数。
     Memory::String abiGlue;                     ///< 复杂 C ABI 使用的类型化宿主绑定源码。
+    Memory::Vector<ExternFunction> abiExports; ///< 经类型校验的 C ABI 导出，与语言入口独立。
+    Memory::String abiExportHeader; ///< 编译器生成的 C 类型声明及原生导出原型。
     Options options;
 };
 
 /**
- * @brief 取当前编译单元里 `abi "库" { ... }` 声明的外部 C 函数。
+ * @brief 取当前编译单元里 `#abi("C", "库", "符号")` 声明的外部 C 函数。
  *
  * 由前端（`source/semantics/artifacts.cpp`）注入，提供函数声明表与 C ABI 类型映射；
  * AOT 这边只消费结果，不反过来依赖前端，这样 `chali_aot` 始终是个干净的独立模块。
  * @return 外部函数清单；未登记提供方时返回空表。
  */
 [[nodiscard]] Memory::Vector<ExternFunction> collectAbiExterns();
+
+/**
+ * @brief 读取当前编译单元的类型化 C ABI 导出描述。
+ * @return 对外符号、语言标签与 C 类型。
+ */
+Memory::Vector<ExternFunction> collectAbiExports();
+/**
+ * @brief 注册前端 C ABI 导出描述入口。
+ * @param provider 返回导出描述的提供方。
+ */
+void setAbiExportProvider(Memory::Vector<ExternFunction> (*provider)());
+/**
+ * @brief 读取生成的纯 C 导出声明。
+ * @return 不含语言内部存储地址的 C 声明。
+ */
+Memory::String collectAbiExportHeader();
+/**
+ * @brief 登记纯 C 导出声明生成入口。
+ * @param provider 前端提供方。
+ */
+void setAbiExportHeaderProvider(Memory::String (*provider)());
 
 /**
  * @brief 前端注册"怎么取 abi 声明"的办法（进程启动时注入一次即可）。

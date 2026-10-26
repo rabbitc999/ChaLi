@@ -50,15 +50,18 @@ API int64_t resource_get(int64_t h) { if (!values[h]) abort(); return values[h];
 API int64_t resource_live(void) { return live; }
 '''
 
-SOURCE = '''abi "@LIB@"
-{
-    int64 resource_new() = "resource_new";
-    int64 resource_copy(int64 handle) = "resource_copy";
-    void resource_drop(int64 handle) = "resource_drop";
-    void resource_set(int64 handle, int64 value) = "resource_set";
-    int64 resource_get(int64 handle) = "resource_get";
-    int64 resource_live() = "resource_live";
-}
+SOURCE = '''#abi("C", "@LIB@", "resource_new")
+int64 resource_new();
+#abi("C", "@LIB@", "resource_copy")
+int64 resource_copy(int64 handle);
+#abi("C", "@LIB@", "resource_drop")
+void resource_drop(int64 handle);
+#abi("C", "@LIB@", "resource_set")
+void resource_set(int64 handle, int64 value);
+#abi("C", "@LIB@", "resource_get")
+int64 resource_get(int64 handle);
+#abi("C", "@LIB@", "resource_live")
+int64 resource_live();
 opcode Resource
 {
     new = resource_new;

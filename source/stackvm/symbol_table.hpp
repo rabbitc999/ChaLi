@@ -16,9 +16,13 @@ inline constexpr std::uint32_t kFeatureReflection = 0x0002u;
  */
 inline constexpr std::uint32_t kFeatureByteMemory = 0x0004u;
 /**
+ * @brief 程序使用直接字节复制／填充指令，旧运行时必须拒绝该能力位。
+ */
+inline constexpr std::uint32_t kFeatureBulkMemory = 0x0008u;
+/**
  * @brief 已定义的程序能力位，未知位必须拒绝。
  */
-inline constexpr std::uint32_t kKnownProgramFeatures = kFeatureReflection | kFeatureByteMemory;
+inline constexpr std::uint32_t kKnownProgramFeatures = kFeatureReflection | kFeatureByteMemory | kFeatureBulkMemory;
 /**
  * @brief 查询实际链接的运行时能力，避免只检查调用者的头文件配置。
  * @return 当前运行时支持的能力位。

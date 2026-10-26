@@ -1,0 +1,72 @@
+/** 核对自举 IEEE 754 位模式、大小端、数组边界和裸指针视图转换。 */
+List<uint8> encoded(uint64 bits,int64 count,bool bigEndian) {
+    List<uint8> result; int64 i=0;
+    while (i<count) {
+        int64 shift=i*8; if (bigEndian) { shift=(count-i-1)*8; }
+        result.push((uint8)((bits>>shift)&255u)); i=i+1;
+    }
+    return result;
+}
+void round32(uint64 bits) {
+    int64 endian=0;
+    while (endian<2) {
+        bool big=endian==1;
+        List<uint8> source=encoded(bits,4,big);
+        float32 value=bytesToFloat32(source,big).unwrap();
+        List<uint8> result=float32ToBytes(value,big);
+        int64 i=0; while (i<4) { assert(result[i]==source[i]); i=i+1; }
+        uint8 buffer[8];
+        assert(float32ToBytes(value,&buffer[0],8,big));
+        float32 restored=bytesToFloat32(&buffer[0],8,big).unwrap();
+        assert(__bootFloat32Bits(restored)==bits);
+        endian=endian+1;
+    }
+}
+void round64(uint64 bits) {
+    int64 endian=0;
+    while (endian<2) {
+        bool big=endian==1;
+        List<uint8> source=encoded(bits,8,big);
+        float64 value=bytesToFloat64(source,big).unwrap();
+        List<uint8> result=float64ToBytes(value,big);
+        int64 i=0; while (i<8) { assert(result[i]==source[i]); i=i+1; }
+        uint8 buffer[8]; assert(float64ToBytes(value,&buffer[0],8,big));
+        float64 restored=bytesToFloat64(&buffer[0],8,big).unwrap();
+        assert(__bootFloat64Bits(restored)==bits);
+        endian=endian+1;
+    }
+}
+void main() {
+    List<uint64> f32=[0u,2147483648u,1u,8388607u,8388608u,1065353216u,2139095039u,2139095040u,4286578688u,2143289344u];
+    int64 i=0; while (i<f32.len()) { round32(f32[i]); i=i+1; }
+    List<uint64> f64=[0u,9223372036854775808u,1u,4503599627370495u,4503599627370496u,4607182418800017408u,9218868437227405311u,9218868437227405312u,18442240474082181120u,9221120237041090560u];
+    i=0; while (i<f64.len()) { round64(f64[i]); i=i+1; }
+    int64 seed=12345; i=0;
+    while (i<100) {
+        seed=(seed*48271)%2147483647; uint64 bits=(uint64)seed*2u;
+        if (((bits>>23)&255u)!=255u) { round32(bits); }
+        i=i+1;
+    }
+    assert(toInt32(-2147483648.5).unwrap()==-2147483648);
+    assert(toInt32(2147483647.9).unwrap()==2147483647);
+    assert(toInt32(2147483648.0).isNone());
+    assert(__bootFloat32Bits(Option<float32>::Value(-0.0f).unwrap())==2147483648u);
+    assert(__bootFloat64Bits(Option<float64>::Value(-0.0).unwrap())==9223372036854775808u);
+    uint8 shortBuffer[3]; shortBuffer[0]=(uint8)17; shortBuffer[1]=(uint8)18; shortBuffer[2]=(uint8)19;
+    assert(!float32ToBytes(1.0f,&shortBuffer[0],3,false));
+    assert(shortBuffer[0]==(uint8)17 && shortBuffer[2]==(uint8)19);
+    unsafe {
+        int64 value=42; BarePtr<int64> original=pointerFromAddress<int64>((int64)&value);
+        BarePtr<uint8> bytes=original.castTo<uint8>();
+        assert(bytes.address==original.address && (bytes+1).address==original.address+1);
+        uint8 mut& first=dereference<uint8>(bytes); assert(*first==(uint8)42);
+        *first=(uint8)99; assert(value==99);
+        BarePtr<int64> restored=bytes.castTo<int64>(); assert(restored.address==original.address);
+        BarePtr<int64> empty; assert(empty.castTo<uint8>().address==0);
+        int32 negative=-1;
+        BarePtr<int32> narrow=pointerFromAddress<int32>((int64)&negative);
+        uint64 mut& full=dereference<uint64>(narrow.castTo<uint64>());
+        assert(*full==18446744073709551615u);
+    }
+    print("bootstrap-numeric-default-ok\n");
+}

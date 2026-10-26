@@ -5,6 +5,7 @@
 #include "stackvm/runtime_internal.hpp"
 #include "chali_glue.hpp"
 #include "glue/std_registry.hpp"
+#include "glue/std_collection.hpp"
 #include "console/utf8.hpp"
 #include <memory>
 #include <cstring>
@@ -19,6 +20,14 @@
 #endif
 
 extern "C" {
+/**
+ * @brief 登记当前程序实际可达的标准库模块。
+ * @param registry 注册表。
+ * @param error 诊断。
+ * @return 绑定是否成功。
+ */
+bool chali_program_std_bind(chali_glue::Registry *registry, Memory::String *error);
+
 extern const unsigned char chali_data_image[];
 extern const char chali_data_layout[];
 extern const std::size_t chali_data_size, chali_heap_size;
@@ -152,7 +161,7 @@ struct Runtime
         };
         objects.recordContext = context;
         Memory::String error;
-        if (!std_registry::bindStandardGlue(registry, &error)) chali_panic(error.c_str());
+        if (!chali_program_std_bind(&registry, &error)) chali_panic(error.c_str());
         if (!chali_program_abi_bind(&registry, &error)) chali_panic(error.c_str());
     }
 
@@ -520,6 +529,36 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
 }
 
 /**
+ * @brief 在现有原生上下文中执行类型化导出封送，保留重入和原始错误传播。
+ * @param marshal 由 C++ 编译器生成的同步封送入口，不是语言函数值。
+ * @param frame 本次原生调用独立的参数和返回值帧。
+ */
+void chali_host_export_apply(void (*marshal)(stackvm::NativeCallContext *, void *), void *frame)
+{
+    auto &context = currentContext();
+    if (!marshal || !context.objects || !context.heap) chali_panic("导出调用上下文无效");
+    auto &temporaries = context.objects->materializedHeap;
+    const auto begin = temporaries.size();
+    try
+    {
+        NativeCallContextImpl call(context, context.invoker ? *context.invoker : current().invoker);
+        marshal(&call, frame);
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("C ABI 导出失败：") + error.what();
+    }
+    // 参数封送已释放的临时块从登记表移除；内部导入产生的仍活跃借用保留既有生命周期。
+    if (begin <= temporaries.size())
+        temporaries.erase(std::remove_if(temporaries.begin() + static_cast<std::ptrdiff_t>(begin), temporaries.end(), [&](std::size_t address) {
+                              std::size_t capacity = 0;
+                              return !context.heap->capacityAt(address, capacity);
+                          }),
+                          temporaries.end());
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+}
+
+/**
  * @brief 按原聚合助手的前向八字节槽语义复制，完整活跃且不重叠时批量搬运。
  * @param destination 目标逻辑地址。
  * @param source 源逻辑地址。
@@ -690,11 +729,188 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
 }
 
 /**
+ * @brief 为 LLVM 字节 intrinsic 验证范围并返回物理地址，不复制或填充字节。
+ * @param operation 7 为复制，8 为填充。
+ * @param destination 目标逻辑地址。
+ * @param sourceOrByte 源逻辑地址或填充值。
+ * @param bytes 字节数。
+ * @param output 接收目标物理地址。
+ * @param input 接收源物理地址。
+ */
+void chali_host_memory_prepare(std::int64_t operation, std::int64_t destination, std::int64_t sourceOrByte,
+                               std::int64_t bytes, unsigned char **output, unsigned char **input)
+{
+    NativeContext context = currentContext();
+    if (!rawMemoryView(context, operation, destination, sourceOrByte, bytes, *output, *input))
+        chali_panic(context.error.c_str());
+}
+
+/**
+ * @brief 直接执行原始存储标量内核，保留诊断与安全点，省去通用原生调用分派。
+ * @param operation 操作编号。
+ * @param handle 分配句柄或目标地址。
+ * @param index 槽位下标、源地址或填充值。
+ * @param value 操作值或字节数。
+ * @param alignment 分配对齐。
+ * @param tag 受检槽位类型身份。
+ * @return 整数结果。
+ */
+std::int64_t chali_host_raw_storage(std::int64_t operation, std::int64_t handle, std::int64_t index,
+                                    std::int64_t value, std::int64_t alignment, std::int64_t tag)
+{
+    NativeContext context = currentContext();
+    Slot result;
+    try
+    {
+        result = rawStorageOperation(context, operation, handle, index, value, alignment, tag);
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("宿主函数 std::lang::__rawStorage 抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeResultFloat = 0;
+    return result.integer;
+}
+
+/**
  * @brief 返回最近一次同线程宿主调用的原始槽类型，避免将浮点位模式当成整数。
  * @return 浮点返回一，其余原生结果返回零。
  */
 unsigned char chali_host_result_float()
 {
     return nativeResultFloat;
+}
+
+/**
+ * @brief 以标量 ABI 查询字符串长度或内容地址，不经过函数表及动态实参数组。
+ * @param operation 零读取长度，一取得首个内容字节地址。
+ * @param address 字符串值的逻辑地址，零表示空值。
+ * @return 对应长度或内容地址；访问失败时保留当前源码位置并终止。
+ */
+std::int64_t chali_host_string_storage(std::int64_t operation, std::int64_t address)
+{
+    NativeContext context = currentContext();
+    const auto source = static_cast<std::size_t>(address);
+    const bool heap = context.heap != nullptr && context.heap->contains(source);
+    if (operation == 1) return address + (heap ? 8 : 0);
+    std::int64_t length = 0;
+    if (heap && context.heap->readInt(source, length) && length >= 0) return length;
+    try
+    {
+        Memory::String text;
+        if (nativeReadCString(context, source, &text)) return static_cast<std::int64_t>(text.size());
+        context.error = "取字符串长度时读不到它";
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("String 存储查询抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    chali_panic(context.error.c_str());
+    return 0;
+}
+
+/**
+ * @brief 以标量 ABI 连接 List 单槽内核，保留异常、存活检查和同步回调协议。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param floating 浮点实参位图。
+ * @return 返回槽的原始位模式。
+ */
+std::int64_t chali_host_list_storage(std::int64_t operation, std::int64_t first, std::int64_t second,
+                                     std::int64_t third, std::int64_t fourth, std::int64_t fifth,
+                                     std::int64_t floating)
+{
+    auto &state = current();
+    NativeContext context = currentContext();
+    NativeValue result;
+    try
+    {
+        NativeCallContextImpl bridge(context, state.invoker);
+        result = collection_glue::listStorageOperation(bridge, operation, first, second, third, fourth, fifth,
+                                                       static_cast<std::uint64_t>(floating));
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("List 存储原语抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeResultFloat = result.isFloat();
+    std::int64_t bits = 0;
+    if (nativeResultFloat)
+    {
+        const double real = result.asFloat();
+        std::memcpy(&bits, &real, sizeof(bits));
+    }
+    else
+        bits = result.asInt();
+    return bits;
+}
+/**
+ * @brief 以标量 ABI 连接 Map/Set 单槽内核，保留异常、存活检查和同步回调协议。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param sixth 第六个实参位模式。
+ * @param seventh 第七个实参位模式。
+ * @param floating 浮点实参位图。
+ * @return 返回槽的原始位模式。
+ */
+std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, std::int64_t second,
+                                    std::int64_t third, std::int64_t fourth, std::int64_t fifth,
+                                    std::int64_t sixth, std::int64_t seventh, std::int64_t floating)
+{
+    auto &state = current();
+    NativeContext context = currentContext();
+    NativeValue result;
+    try
+    {
+        NativeCallContextImpl bridge(context, state.invoker);
+        result = collection_glue::mapStorageOperation(bridge, operation, first, second, third, fourth, fifth, sixth, seventh,
+                                                      static_cast<std::uint64_t>(floating));
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeResultFloat = result.isFloat();
+    std::int64_t bits = 0;
+    if (nativeResultFloat)
+    {
+        const double real = result.asFloat();
+        std::memcpy(&bits, &real, sizeof(bits));
+    }
+    else
+        bits = result.asInt();
+    return bits;
 }
 }  // extern "C"

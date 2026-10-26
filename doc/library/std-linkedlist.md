@@ -14,7 +14,7 @@ import std::linkedlist;
 
 ## 公共约定与错误边界
 
-LinkedList 以私有拥有型 opcode 保存持久双向节点及游标索引，保留 Iterator<int64>。普通复制深复制节点并在副本内保留对应游标。首尾及按游标插删为平均 O(1)；按值查询和按序迭代 O(n)。游标不重复使用，删除或 clear 后永久失效；toArray 显式导出独立顺序快照。裁剪宏 NO_CHALI_STD_LINKEDLIST。
+LinkedList 以 ChaLi 结构体保存双向节点数组、复用槽与单调游标索引，保留 Iterator<int64>。普通复制深复制节点并在副本内保留对应游标。首尾及按游标插删为平均 O(1)；按值查询和按序迭代 O(n)。游标不重复使用，删除或 clear 后永久失效；toArray 显式导出独立顺序快照。链表连接、插删、反转与游标管理均由 ChaLi 实现，不注册宿主链表算法。
 
 ## 参考代码
 
@@ -26,31 +26,32 @@ LinkedList 以私有拥有型 opcode 保存持久双向节点及游标索引，�
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-311"></a>`struct LinkedList : Iterator<int64>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
+| 模块 | <a id="symbol-320"></a>`struct LinkedList: Iterator<int64>, Copy<LinkedList>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [LinkedList::create](#api-0) | `static LinkedList create()` |
-| [LinkedList::pushFront](#api-1) | `int64 pushFront(int64 value)` |
-| [LinkedList::pushBack](#api-2) | `int64 pushBack(int64 value)` |
-| [LinkedList::insertBefore](#api-3) | `int64 insertBefore(int64 cursor, int64 value)` |
-| [LinkedList::insertAfter](#api-4) | `int64 insertAfter(int64 cursor, int64 value)` |
-| [LinkedList::removeAt](#api-5) | `Option<int64> removeAt(int64 cursor)` |
-| [LinkedList::popFront](#api-6) | `Option<int64> popFront()` |
-| [LinkedList::popBack](#api-7) | `Option<int64> popBack()` |
-| [LinkedList::reverse](#api-8) | `void reverse()` |
-| [LinkedList::toArray](#api-9) | `List<int64> toArray()` |
-| [LinkedList::fromArray](#api-10) | `static LinkedList fromArray(List<int64> items)` |
-| [LinkedList::find](#api-11) | `int64 find(int64 value)` |
-| [LinkedList::contains](#api-12) | `bool contains(int64 value)` |
-| [LinkedList::front](#api-13) | `Option<int64> front()` |
-| [LinkedList::back](#api-14) | `Option<int64> back()` |
-| [LinkedList::len](#api-15) | `int64 len()` |
-| [LinkedList::isEmpty](#api-16) | `bool isEmpty()` |
-| [LinkedList::iterator](#api-17) | `Option<int64> iterator(int64 index)` |
-| [LinkedList::clear](#api-18) | `void clear()` |
+| [LinkedList::copy](#api-1) | `LinkedList copy()` |
+| [LinkedList::pushFront](#api-2) | `int64 pushFront(int64 value)` |
+| [LinkedList::pushBack](#api-3) | `int64 pushBack(int64 value)` |
+| [LinkedList::insertBefore](#api-4) | `int64 insertBefore(int64 cursor, int64 value)` |
+| [LinkedList::insertAfter](#api-5) | `int64 insertAfter(int64 cursor, int64 value)` |
+| [LinkedList::removeAt](#api-6) | `Option<int64> removeAt(int64 cursor)` |
+| [LinkedList::popFront](#api-7) | `Option<int64> popFront()` |
+| [LinkedList::popBack](#api-8) | `Option<int64> popBack()` |
+| [LinkedList::reverse](#api-9) | `void reverse()` |
+| [LinkedList::toArray](#api-10) | `List<int64> toArray()` |
+| [LinkedList::fromArray](#api-11) | `static LinkedList fromArray(List<int64> items)` |
+| [LinkedList::find](#api-12) | `int64 find(int64 value)` |
+| [LinkedList::contains](#api-13) | `bool contains(int64 value)` |
+| [LinkedList::front](#api-14) | `Option<int64> front()` |
+| [LinkedList::back](#api-15) | `Option<int64> back()` |
+| [LinkedList::len](#api-16) | `int64 len()` |
+| [LinkedList::isEmpty](#api-17) | `bool isEmpty()` |
+| [LinkedList::iterator](#api-18) | `Option<int64> iterator(int64 index)` |
+| [LinkedList::clear](#api-19) | `void clear()` |
 
 <a id="api-0"></a>
 
@@ -86,11 +87,47 @@ static LinkedList create();
 std::linkedlist::LinkedList::create();
 ```
 
-**源码**：[source/std/linkedlist.chl:18](../../source/std/linkedlist.chl#L18)。
+**源码**：[source/std/linkedlist.chl:17](../../source/std/linkedlist.chl#L17)。
 
 <a id="api-1"></a>
 
-### LinkedList::pushFront（2）
+### LinkedList::copy（2）
+
+**声明**
+
+```chali
+LinkedList copy();
+```
+
+**行为**
+
+返回独立的值副本。
+
+取得独立副本，保留有效游标在副本中的对应关系。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`LinkedList`。返回独立的值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.copy();
+```
+
+**源码**：[source/std/linkedlist.chl:19](../../source/std/linkedlist.chl#L19)。
+
+<a id="api-2"></a>
+
+### LinkedList::pushFront（3）
 
 **声明**
 
@@ -102,7 +139,7 @@ int64 pushFront(int64 value);
 
 将 value 插入首部。
 
-头插并返回新节点游标。
+头插并返回单调游标。
 
 **参数**
 
@@ -124,11 +161,11 @@ int64 pushFront(int64 value);
 obj.pushFront(value);
 ```
 
-**源码**：[source/std/linkedlist.chl:20](../../source/std/linkedlist.chl#L20)。
+**源码**：[source/std/linkedlist.chl:43](../../source/std/linkedlist.chl#L43)。
 
-<a id="api-2"></a>
+<a id="api-3"></a>
 
-### LinkedList::pushBack（3）
+### LinkedList::pushBack（4）
 
 **声明**
 
@@ -140,7 +177,7 @@ int64 pushBack(int64 value);
 
 将 value 追加到尾部。
 
-尾插并返回新节点游标。
+尾插并返回单调游标。
 
 **参数**
 
@@ -162,11 +199,11 @@ int64 pushBack(int64 value);
 obj.pushBack(value);
 ```
 
-**源码**：[source/std/linkedlist.chl:22](../../source/std/linkedlist.chl#L22)。
+**源码**：[source/std/linkedlist.chl:45](../../source/std/linkedlist.chl#L45)。
 
-<a id="api-3"></a>
+<a id="api-4"></a>
 
-### LinkedList::insertBefore（4）
+### LinkedList::insertBefore（5）
 
 **声明**
 
@@ -176,7 +213,7 @@ int64 insertBefore(int64 cursor, int64 value);
 
 **行为**
 
-在游标前插入，无效时返回 -1。
+在有效游标之前插入；无效游标返回 -1。
 
 **参数**
 
@@ -187,7 +224,7 @@ int64 insertBefore(int64 cursor, int64 value);
 
 **返回值**
 
-`int64`。在游标前插入，无效时返回 -1。
+`int64`。在有效游标之前插入；无效游标返回 -1。
 
 **错误与边界**
 
@@ -199,11 +236,11 @@ int64 insertBefore(int64 cursor, int64 value);
 obj.insertBefore(cursor, value);
 ```
 
-**源码**：[source/std/linkedlist.chl:24](../../source/std/linkedlist.chl#L24)。
+**源码**：[source/std/linkedlist.chl:47](../../source/std/linkedlist.chl#L47)。
 
-<a id="api-4"></a>
+<a id="api-5"></a>
 
-### LinkedList::insertAfter（5）
+### LinkedList::insertAfter（6）
 
 **声明**
 
@@ -213,7 +250,7 @@ int64 insertAfter(int64 cursor, int64 value);
 
 **行为**
 
-在游标后插入，无效时返回 -1。
+在有效游标之后插入；无效游标返回 -1。
 
 **参数**
 
@@ -224,7 +261,7 @@ int64 insertAfter(int64 cursor, int64 value);
 
 **返回值**
 
-`int64`。在游标后插入，无效时返回 -1。
+`int64`。在有效游标之后插入；无效游标返回 -1。
 
 **错误与边界**
 
@@ -236,11 +273,11 @@ int64 insertAfter(int64 cursor, int64 value);
 obj.insertAfter(cursor, value);
 ```
 
-**源码**：[source/std/linkedlist.chl:26](../../source/std/linkedlist.chl#L26)。
+**源码**：[source/std/linkedlist.chl:53](../../source/std/linkedlist.chl#L53)。
 
-<a id="api-5"></a>
+<a id="api-6"></a>
 
-### LinkedList::removeAt（6）
+### LinkedList::removeAt（7）
 
 **声明**
 
@@ -250,7 +287,7 @@ Option<int64> removeAt(int64 cursor);
 
 **行为**
 
-摘除游标节点并返回其值，无效时返回 None。
+摘除并回收节点槽，旧游标永久失效。
 
 **参数**
 
@@ -260,7 +297,7 @@ Option<int64> removeAt(int64 cursor);
 
 **返回值**
 
-`Option<int64>`。摘除游标节点并返回其值，无效时返回 None。
+`Option<int64>`。摘除并回收节点槽，旧游标永久失效。
 
 **错误与边界**
 
@@ -272,11 +309,11 @@ Option<int64> removeAt(int64 cursor);
 obj.removeAt(cursor);
 ```
 
-**源码**：[source/std/linkedlist.chl:28](../../source/std/linkedlist.chl#L28)。
+**源码**：[source/std/linkedlist.chl:59](../../source/std/linkedlist.chl#L59)。
 
-<a id="api-6"></a>
+<a id="api-7"></a>
 
-### LinkedList::popFront（7）
+### LinkedList::popFront（8）
 
 **声明**
 
@@ -288,7 +325,7 @@ Option<int64> popFront();
 
 移除首部并返回 Option；空时 None。
 
-弹出首节点，空表返回 None。
+弹出首节点，空链表返回 None。
 
 **参数**
 
@@ -308,11 +345,11 @@ Option<int64> popFront();
 obj.popFront();
 ```
 
-**源码**：[source/std/linkedlist.chl:33](../../source/std/linkedlist.chl#L33)。
+**源码**：[source/std/linkedlist.chl:73](../../source/std/linkedlist.chl#L73)。
 
-<a id="api-7"></a>
+<a id="api-8"></a>
 
-### LinkedList::popBack（8）
+### LinkedList::popBack（9）
 
 **声明**
 
@@ -324,7 +361,7 @@ Option<int64> popBack();
 
 移除尾部并返回 Option；空时 None。
 
-弹出尾节点，空表返回 None。
+弹出尾节点，空链表返回 None。
 
 **参数**
 
@@ -344,11 +381,11 @@ Option<int64> popBack();
 obj.popBack();
 ```
 
-**源码**：[source/std/linkedlist.chl:35](../../source/std/linkedlist.chl#L35)。
+**源码**：[source/std/linkedlist.chl:78](../../source/std/linkedlist.chl#L78)。
 
-<a id="api-8"></a>
+<a id="api-9"></a>
 
-### LinkedList::reverse（9）
+### LinkedList::reverse（10）
 
 **声明**
 
@@ -358,7 +395,7 @@ void reverse();
 
 **行为**
 
-原地反转，不使游标失效。
+原地反转全部连接，不改变有效游标。
 
 **参数**
 
@@ -378,11 +415,11 @@ void reverse();
 obj.reverse();
 ```
 
-**源码**：[source/std/linkedlist.chl:37](../../source/std/linkedlist.chl#L37)。
+**源码**：[source/std/linkedlist.chl:83](../../source/std/linkedlist.chl#L83)。
 
-<a id="api-9"></a>
+<a id="api-10"></a>
 
-### LinkedList::toArray（10）
+### LinkedList::toArray（11）
 
 **声明**
 
@@ -394,7 +431,7 @@ List<int64> toArray();
 
 复制成由调用者作用域管理的独立运行时数组。
 
-显式导出独立顺序快照。
+按链表顺序导出独立值列表。
 
 **参数**
 
@@ -414,11 +451,11 @@ List<int64> toArray();
 obj.toArray();
 ```
 
-**源码**：[source/std/linkedlist.chl:39](../../source/std/linkedlist.chl#L39)。
+**源码**：[source/std/linkedlist.chl:93](../../source/std/linkedlist.chl#L93)。
 
-<a id="api-10"></a>
+<a id="api-11"></a>
 
-### LinkedList::fromArray（11）
+### LinkedList::fromArray（12）
 
 **声明**
 
@@ -430,7 +467,7 @@ static LinkedList fromArray(List<int64> items);
 
 从连续数组复制元素；带 count 的重载由调用者保证有效范围。
 
-从顺序值列表建立独立链表。
+从值列表建立独立链表。
 
 **参数**
 
@@ -452,11 +489,11 @@ static LinkedList fromArray(List<int64> items);
 std::linkedlist::LinkedList::fromArray(items);
 ```
 
-**源码**：[source/std/linkedlist.chl:41](../../source/std/linkedlist.chl#L41)。
+**源码**：[source/std/linkedlist.chl:99](../../source/std/linkedlist.chl#L99)。
 
-<a id="api-11"></a>
+<a id="api-12"></a>
 
-### LinkedList::find（12）
+### LinkedList::find（13）
 
 **声明**
 
@@ -468,7 +505,7 @@ int64 find(int64 value);
 
 查找首个匹配项，返回下标或可选载荷；具体未找到表示见返回类型及模块约定。
 
-首个匹配节点游标，不存在时为 -1。
+查找首个相同值的游标，不存在时返回 -1。
 
 **参数**
 
@@ -490,11 +527,11 @@ int64 find(int64 value);
 obj.find(value);
 ```
 
-**源码**：[source/std/linkedlist.chl:48](../../source/std/linkedlist.chl#L48)。
+**源码**：[source/std/linkedlist.chl:105](../../source/std/linkedlist.chl#L105)。
 
-<a id="api-12"></a>
+<a id="api-13"></a>
 
-### LinkedList::contains（13）
+### LinkedList::contains（14）
 
 **声明**
 
@@ -506,7 +543,7 @@ bool contains(int64 value);
 
 判断是否包含目标值或匹配文本。
 
-是否包含值。
+判断是否含有给定值。
 
 **参数**
 
@@ -528,11 +565,11 @@ bool contains(int64 value);
 obj.contains(value);
 ```
 
-**源码**：[source/std/linkedlist.chl:50](../../source/std/linkedlist.chl#L50)。
+**源码**：[source/std/linkedlist.chl:115](../../source/std/linkedlist.chl#L115)。
 
-<a id="api-13"></a>
+<a id="api-14"></a>
 
-### LinkedList::front（14）
+### LinkedList::front（15）
 
 **声明**
 
@@ -542,7 +579,7 @@ Option<int64> front();
 
 **行为**
 
-首节点值，空表返回 None。
+取得首节点值，空链表返回 None。
 
 **参数**
 
@@ -550,7 +587,7 @@ Option<int64> front();
 
 **返回值**
 
-`Option<int64>`。首节点值，空表返回 None。
+`Option<int64>`。取得首节点值，空链表返回 None。
 
 **错误与边界**
 
@@ -562,11 +599,11 @@ Option<int64> front();
 obj.front();
 ```
 
-**源码**：[source/std/linkedlist.chl:52](../../source/std/linkedlist.chl#L52)。
+**源码**：[source/std/linkedlist.chl:117](../../source/std/linkedlist.chl#L117)。
 
-<a id="api-14"></a>
+<a id="api-15"></a>
 
-### LinkedList::back（15）
+### LinkedList::back（16）
 
 **声明**
 
@@ -576,7 +613,7 @@ Option<int64> back();
 
 **行为**
 
-尾节点值，空表返回 None。
+取得尾节点值，空链表返回 None。
 
 **参数**
 
@@ -584,7 +621,7 @@ Option<int64> back();
 
 **返回值**
 
-`Option<int64>`。尾节点值，空表返回 None。
+`Option<int64>`。取得尾节点值，空链表返回 None。
 
 **错误与边界**
 
@@ -596,11 +633,11 @@ Option<int64> back();
 obj.back();
 ```
 
-**源码**：[source/std/linkedlist.chl:54](../../source/std/linkedlist.chl#L54)。
+**源码**：[source/std/linkedlist.chl:122](../../source/std/linkedlist.chl#L122)。
 
-<a id="api-15"></a>
+<a id="api-16"></a>
 
-### LinkedList::len（16）
+### LinkedList::len（17）
 
 **声明**
 
@@ -612,7 +649,7 @@ int64 len();
 
 返回当前元素数量。
 
-有效节点数。
+返回有效节点数。
 
 **参数**
 
@@ -632,11 +669,11 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/linkedlist.chl:60](../../source/std/linkedlist.chl#L60)。
+**源码**：[source/std/linkedlist.chl:127](../../source/std/linkedlist.chl#L127)。
 
-<a id="api-16"></a>
+<a id="api-17"></a>
 
-### LinkedList::isEmpty（17）
+### LinkedList::isEmpty（18）
 
 **声明**
 
@@ -648,7 +685,7 @@ bool isEmpty();
 
 判断 Any 是否为空盒子，不公开内部执行期标签。
 
-是否为空。
+判断链表是否为空。
 
 **参数**
 
@@ -668,11 +705,11 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/linkedlist.chl:62](../../source/std/linkedlist.chl#L62)。
+**源码**：[source/std/linkedlist.chl:129](../../source/std/linkedlist.chl#L129)。
 
-<a id="api-17"></a>
+<a id="api-18"></a>
 
-### LinkedList::iterator（18）
+### LinkedList::iterator（19）
 
 **声明**
 
@@ -684,7 +721,7 @@ Option<int64> iterator(int64 index);
 
 读取指定迭代位置；无元素时返回 None。
 
-第 index 个值，越界返回 None。
+按顺序读取第 index 个值，越界返回 None。
 
 **参数**
 
@@ -706,11 +743,11 @@ Option<int64> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/linkedlist.chl:64](../../source/std/linkedlist.chl#L64)。
+**源码**：[source/std/linkedlist.chl:131](../../source/std/linkedlist.chl#L131)。
 
-<a id="api-18"></a>
+<a id="api-19"></a>
 
-### LinkedList::clear（19）
+### LinkedList::clear（20）
 
 **声明**
 
@@ -722,7 +759,7 @@ void clear();
 
 移除全部元素。
 
-清空节点并使旧游标永久失效。
+清空节点并回收存储，单调游标序号继续保留。
 
 **参数**
 
@@ -742,4 +779,4 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/linkedlist.chl:70](../../source/std/linkedlist.chl#L70)。
+**源码**：[source/std/linkedlist.chl:138](../../source/std/linkedlist.chl#L138)。

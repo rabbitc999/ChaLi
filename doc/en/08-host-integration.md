@@ -23,7 +23,7 @@ List uses ArrayList. Standard glue selects hash or array storage for Map and Set
 
 ## Calling C dynamic libraries
 
-An `abi "library" { ... }` declaration imports native C symbols into the VM. Scalars, references, structures, arrays, optional references, callbacks and returned-memory release follow the ABI contract and must match the actual C signatures and layouts.
+A per-function `#abi("C", "library", "native_symbol") ReturnType localName(parameters);` compiler directive imports a C symbol for VM/AOT. The old block syntax has been removed. Scalars, references, structures, arrays, optional references, callbacks and returned-memory release follow the ABI contract and must match the actual C signatures and layouts.
 Relative library paths are resolved from the source file containing the declaration, including imported modules. Separators are normalized; standard-library precompiled units do not change the declaration's origin.
 Complex calls may require a C++ toolchain to prepare a foreign-call bridge; the ChaLi program continues to execute in the VM.
 

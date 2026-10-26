@@ -237,7 +237,7 @@ chali/
 │   └── generator/            生成独立编译器工程的入口
 ├── library/                        可复用 C++ 库与目标宿主
 │   ├── stackvm/                    VM 核心（桌面与目标宿主共用）
-│   ├── bignum/ json/ toml/ sqlite/ console/ lztext/ …
+│   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
 ├── doc/                            面向使用者的文档（00–20、99）
 │   ├── en/                         英文版（入口 + 00–11、13、99，共 15 篇）
@@ -255,3 +255,5 @@ chali/
 Apache License 2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
 
 解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/chali-frontend/`，不会散落到仓库根目录。
+
+SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，详见[在线构建依赖](doc/45-build-dependencies.md)。

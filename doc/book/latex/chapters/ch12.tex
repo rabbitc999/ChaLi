@@ -9,6 +9,8 @@
 
 先讲基本操作，再讲这个坑，最后是 \texttt{std:\allowbreak{}:\allowbreak{}text} 里那堆好用的工具。
 
+String 的查找、比较、切片、变换、分割、连接、UTF-8 解码与值复制由 ChaLi 标准库实现。堆串保持现有长度头与字节布局，普通赋值仍取得独立副本；宿主提供分配、存储布局访问、I/O 和数值显示格式化等边界。
+
 \section{\texttt{String} 是什么}
 
 \par
@@ -554,15 +556,15 @@ count=4, inner=3, {literal}
 
 \subsection*{整行输入和文件文本}
 
-\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}read\allowbreak{}Line(\allowbreak{})\allowbreak{}} 读取一行，保留空格和空行，去掉 LF/CRLF；EOF 返回空串。\texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}read\allowbreak{}Lines(\allowbreak{}int32 N)\allowbreak{}} 最多读 N 行，用 LF 连接，EOF 提前结束，不额外追加行末换行。另有 int64 重载接受普通整数实参，检查后转为 int32。N 为零时不读输入，负数或超出 int32 正范围触发错误。\texttt{String} 不能包含内嵌零字节。
+\texttt{read\allowbreak{}Line(\allowbreak{})\allowbreak{}} 读取一行，保留空格和空行，去掉 LF/CRLF；EOF 返回空串。\texttt{read\allowbreak{}Lines(\allowbreak{}int32 N)\allowbreak{}} 最多读 N 行，用 LF 连接，EOF 提前结束，不额外追加行末换行。另有 int64 重载接受普通整数实参，检查后转为 int32。N 为零时不读输入，负数或超出 int32 正范围触发错误。\texttt{String} 不能包含内嵌零字节。
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
 void main()
 {
-    String name = std::lang::readLine();
-    String notes = std::lang::readLines(2);
+    String name = readLine();
+    String notes = readLines(2);
     println("name=[{}], notes=[{}]", name, notes);
 }
 \end{lstlisting}

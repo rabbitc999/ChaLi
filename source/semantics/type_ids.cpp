@@ -18,6 +18,19 @@ bool IsStandardOpcode(const std::shared_ptr<MType> &type, const char *name)
 {
     return type && type->kind == MType::Opcode && type->name == Memory::String("std::lang::") + name;
 }
+/**
+ * @brief 识别核心裸指针表示，只用于编译期选择内存 intrinsic 的地址形式。
+ * @param type 静态类型。
+ * @return 类型是 std::lang::BarePtr 的具体实例时为真。
+ */
+bool IsBarePointerType(const std::shared_ptr<MType> &type)
+{
+    if (!type || type->kind != MType::Struct) return false;
+    if (type->name.rfind("std::lang::BarePtr__", 0u) == 0u) return true;
+    const auto instance = chali_generic::session.made.find(type->name);
+    return instance != chali_generic::session.made.end() && instance->second.generic
+        && instance->second.generic->module == "std::lang" && instance->second.generic->sourceName == "BarePtr";
+}
 /* ---------- 内部执行期类型标签 ---------- */
 
 /**
@@ -61,6 +74,9 @@ struct MFunctionDecl
     MFuncSig signature;
     int bodyId = -1;          /* 函数体（Block 节点） */
     int captureSyntax = -1;   ///< AST 闭包的显式捕获项，保存片段替换后的绑定身份。
+    bool unsafeRequired = false; ///< 调用方必须显式承担不安全前置条件。
+    Memory::String exportSymbol; ///< 对外原生符号，与内部语言标签分离。
+    Memory::String abiConvention; ///< 外部边界采用的已验证调用约定。
     bool exported = false;    ///< 是否由源码 export 公开给原生调用方。
     bool external = false;    /* 只有签名；实现从 stackvm::NativeRegistry 取得 */
     bool moduleLocal = false; /* `inline`：只允许声明模块内部调用，不导出。 */
@@ -445,3 +461,23 @@ bool NeedsReferenceStorage(const std::shared_ptr<MType> &type)
 {
     return type && (type->kind == MType::Int || type->kind == MType::Double || type->kind == MType::Bool || type->kind == MType::Char || IsStandardOpcode(type, "String") || type->kind == MType::Opcode || IsStandardOpcode(type, "BigInteger") || IsStandardOpcode(type, "BigDecimal") || IsContainer(type) || type->kind == MType::Func || type->kind == MType::Obj || IsStandardOpcode(type, "File") || IsStandardOpcode(type, "Process") || IsRuntimeArray(type));
 }
+
+/** @brief 当前降低作用域显式授予的不安全操作层数。 */
+std::size_t g_unsafeDepth = 0;
+/**
+ * @brief 保存并恢复不安全权限，函数边界独立重置，禁止闭包继承创建处权限。
+ */
+struct UnsafeScopeGuard {
+    std::size_t saved;
+    /**
+     * @brief 进入普通块、显式不安全块或全新的函数边界。
+     * @param enabled 是否增加当前权限。
+     * @param reset 是否先清除外层函数权限。
+     */
+    UnsafeScopeGuard(bool enabled, bool reset = false) : saved(g_unsafeDepth) {
+        if (reset) g_unsafeDepth = 0;
+        if (enabled) ++g_unsafeDepth;
+    }
+    /** @brief 恢复进入作用域之前的权限。 */
+    ~UnsafeScopeGuard() { g_unsafeDepth = saved; }
+};

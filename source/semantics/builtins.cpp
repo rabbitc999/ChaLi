@@ -928,6 +928,7 @@ std::shared_ptr<MType> RawExprType(int id)
         return fallback;
     }
     case MNode::Construct: return T(node.type); /* `T::new(...)` 工厂体内的构造 → 目标类型本身 */
+    case MNode::RawLayout: return T(M_TypeInt());
     case MNode::TypeTag: return T(M_TypeInt()); /* __typeTag → int（类型号，编译期折好） */
     case MNode::Un:
     {
@@ -1171,7 +1172,9 @@ std::shared_ptr<MType> RawExprType(int id)
             if (name == "bint" || name == "BigInteger") return T(M_TypeBigInt());
             if (name == "bfloat" || name == "BigDecimal") return T(M_TypeBigFloat());
             /* 内存内建：memcpy / memset 是过程（`new` / `drop` 是关键字，不走这里） */
-            if (name == "memcpy" || name == "memset") return T(M_TypeInt());
+            if ((name == "memcpy" || name == "memset")
+                && (N(node.kids[1]).kids.empty() || !IsBarePointerType(ExprType(N(node.kids[1]).kids[0]))))
+                return T(M_TypeInt());
             if (name == "print" || name == "println" || name == "putChar")
                 return T(M_TypeInt());
             /* `std::lang::pause()`：调试暂停，降成 VM 内建 `__std_pause`，返回 0。 */

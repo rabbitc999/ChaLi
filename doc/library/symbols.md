@@ -147,12 +147,13 @@
 | [std::cli::cliTail](std-cli.md#api-4) | `String cliTail(String text,int64 start)` |
 | [std::clock::nowMs](std-clock.md#api-0) | `int64 nowMs()` |
 | [std::clock::nowNanos](std-clock.md#api-1) | `int64 nowNanos()` |
-| [std::collections::Channel::create](std-collections.md#api-34) | `static Channel<T> create()` |
-| [std::collections::Channel::drop](std-collections.md#api-39) | `void drop()` |
-| [std::collections::Channel::iterator](std-collections.md#api-37) | `Option<T> iterator(int64 index)` |
-| [std::collections::Channel::len](std-collections.md#api-38) | `int64 len()` |
-| [std::collections::Channel::receive](std-collections.md#api-36) | `Option<T> receive()` |
-| [std::collections::Channel::send](std-collections.md#api-35) | `void send(T value)` |
+| [std::collections::Channel::create](std-collections.md#api-44) | `static Channel<T> create()` |
+| [std::collections::Channel::drop](std-collections.md#api-50) | `void drop()` |
+| [std::collections::Channel::isEmpty](std-collections.md#api-49) | `bool isEmpty()` |
+| [std::collections::Channel::iterator](std-collections.md#api-47) | `Option<T> iterator(int64 index)` |
+| [std::collections::Channel::len](std-collections.md#api-48) | `int64 len()` |
+| [std::collections::Channel::receive](std-collections.md#api-46) | `Option<T> receive()` |
+| [std::collections::Channel::send](std-collections.md#api-45) | `void send(T value)` |
 | [std::collections::Deque::clear](std-collections.md#api-9) | `void clear()` |
 | [std::collections::Deque::create](std-collections.md#api-0) | `static Deque<T> create()` |
 | [std::collections::Deque::drop](std-collections.md#api-10) | `void drop()` |
@@ -164,29 +165,39 @@
 | [std::collections::Deque::popFront](std-collections.md#api-4) | `Option<T> popFront()` |
 | [std::collections::Deque::pushBack](std-collections.md#api-1) | `void pushBack(T value)` |
 | [std::collections::Deque::pushFront](std-collections.md#api-2) | `void pushFront(T value)` |
-| [std::collections::FixedVector::capacityValue](std-collections.md#api-32) | `int64 capacityValue()` |
-| [std::collections::FixedVector::drop](std-collections.md#api-33) | `void drop()` |
-| [std::collections::FixedVector::index](std-collections.md#api-29) | `T index(int64 key)` |
-| [std::collections::FixedVector::iterator](std-collections.md#api-30) | `Option<T> iterator(int64 index)` |
-| [std::collections::FixedVector::len](std-collections.md#api-31) | `int64 len()` |
-| [std::collections::FixedVector::pop](std-collections.md#api-28) | `Option<T> pop()` |
-| [std::collections::FixedVector::push](std-collections.md#api-27) | `bool push(T value)` |
-| [std::collections::FixedVector::withCapacity](std-collections.md#api-26) | `static FixedVector<T> withCapacity(int64 capacity)` |
+| [std::collections::FixedVector::capacityValue](std-collections.md#api-42) | `int64 capacityValue()` |
+| [std::collections::FixedVector::drop](std-collections.md#api-43) | `void drop()` |
+| [std::collections::FixedVector::index](std-collections.md#api-39) | `T index(int64 key)` |
+| [std::collections::FixedVector::iterator](std-collections.md#api-40) | `Option<T> iterator(int64 index)` |
+| [std::collections::FixedVector::len](std-collections.md#api-41) | `int64 len()` |
+| [std::collections::FixedVector::pop](std-collections.md#api-38) | `Option<T> pop()` |
+| [std::collections::FixedVector::push](std-collections.md#api-37) | `bool push(T value)` |
+| [std::collections::FixedVector::withCapacity](std-collections.md#api-36) | `static FixedVector<T> withCapacity(int64 capacity)` |
+| [std::collections::Queue::clear](std-collections.md#api-18) | `void clear()` |
 | [std::collections::Queue::create](std-collections.md#api-11) | `static Queue<T> create()` |
-| [std::collections::Queue::drop](std-collections.md#api-18) | `void drop()` |
+| [std::collections::Queue::drop](std-collections.md#api-19) | `void drop()` |
 | [std::collections::Queue::isEmpty](std-collections.md#api-17) | `bool isEmpty()` |
 | [std::collections::Queue::iterator](std-collections.md#api-15) | `Option<T> iterator(int64 index)` |
 | [std::collections::Queue::len](std-collections.md#api-16) | `int64 len()` |
 | [std::collections::Queue::peek](std-collections.md#api-14) | `Option<T> peek()` |
 | [std::collections::Queue::pop](std-collections.md#api-13) | `Option<T> pop()` |
 | [std::collections::Queue::push](std-collections.md#api-12) | `void push(T value)` |
-| [std::collections::RingBuffer::available](std-collections.md#api-24) | `int64 available()` |
-| [std::collections::RingBuffer::drop](std-collections.md#api-25) | `void drop()` |
-| [std::collections::RingBuffer::iterator](std-collections.md#api-22) | `Option<T> iterator(int64 index)` |
-| [std::collections::RingBuffer::len](std-collections.md#api-23) | `int64 len()` |
-| [std::collections::RingBuffer::pop](std-collections.md#api-21) | `Option<T> pop()` |
-| [std::collections::RingBuffer::push](std-collections.md#api-20) | `bool push(T value)` |
-| [std::collections::RingBuffer::withCapacity](std-collections.md#api-19) | `static RingBuffer<T> withCapacity(int64 capacity)` |
+| [std::collections::RingBuffer::available](std-collections.md#api-34) | `int64 available()` |
+| [std::collections::RingBuffer::drop](std-collections.md#api-35) | `void drop()` |
+| [std::collections::RingBuffer::iterator](std-collections.md#api-32) | `Option<T> iterator(int64 index)` |
+| [std::collections::RingBuffer::len](std-collections.md#api-33) | `int64 len()` |
+| [std::collections::RingBuffer::pop](std-collections.md#api-31) | `Option<T> pop()` |
+| [std::collections::RingBuffer::push](std-collections.md#api-30) | `bool push(T value)` |
+| [std::collections::RingBuffer::withCapacity](std-collections.md#api-29) | `static RingBuffer<T> withCapacity(int64 capacity)` |
+| [std::collections::Stack::clear](std-collections.md#api-27) | `void clear()` |
+| [std::collections::Stack::create](std-collections.md#api-20) | `static Stack<T> create()` |
+| [std::collections::Stack::drop](std-collections.md#api-28) | `void drop()` |
+| [std::collections::Stack::isEmpty](std-collections.md#api-26) | `bool isEmpty()` |
+| [std::collections::Stack::iterator](std-collections.md#api-24) | `Option<T> iterator(int64 index)` |
+| [std::collections::Stack::len](std-collections.md#api-25) | `int64 len()` |
+| [std::collections::Stack::peek](std-collections.md#api-23) | `Option<T> peek()` |
+| [std::collections::Stack::pop](std-collections.md#api-22) | `Option<T> pop()` |
+| [std::collections::Stack::push](std-collections.md#api-21) | `void push(T value)` |
 | [std::complex::Complex::conjugate](std-complex.md#api-1) | `Complex<T> conjugate()` |
 | [std::complex::Complex::leftAdd](std-complex.md#api-4) | `Complex<T> leftAdd(Complex<T> right)` |
 | [std::complex::Complex::leftDiv](std-complex.md#api-7) | `Complex<T> leftDiv(Complex<T> right)` |
@@ -250,28 +261,30 @@
 | [std::event::receive](std-event.md#api-1) | `std::concurrency::Receive<Event> receive()` |
 | [std::event::receiveFor](std-event.md#api-0) | `std::concurrency::Receive<Event> receiveFor(int64 millis)` |
 | [std::event::tryReceive](std-event.md#api-2) | `std::concurrency::Receive<Event> tryReceive()` |
-| [std::graph::Graph::addEdge](std-graph.md#api-1) | `void addEdge(int64 from, int64 to, int64 weight)` |
-| [std::graph::Graph::bfs](std-graph.md#api-5) | `List<int64> bfs(int64 start)` |
-| [std::graph::Graph::connectedComponents](std-graph.md#api-7) | `int64 connectedComponents()` |
-| [std::graph::Graph::create](std-graph.md#api-0) | `static Graph create(int64 vertexCount, bool directed)` |
-| [std::graph::Graph::dfs](std-graph.md#api-6) | `List<int64> dfs(int64 start)` |
-| [std::graph::Graph::dijkstra](std-graph.md#api-9) | `List<int64> dijkstra(int64 start)` |
-| [std::graph::Graph::hasCycle](std-graph.md#api-10) | `bool hasCycle()` |
-| [std::graph::Graph::isDirected](std-graph.md#api-3) | `bool isDirected()` |
-| [std::graph::Graph::len](std-graph.md#api-4) | `int64 len()` |
-| [std::graph::Graph::minimumSpanningTreeWeight](std-graph.md#api-11) | `int64 minimumSpanningTreeWeight()` |
-| [std::graph::Graph::snapshot](std-graph.md#api-12) | `GraphSnapshot snapshot()` |
-| [std::graph::Graph::topologicalSort](std-graph.md#api-8) | `List<int64> topologicalSort()` |
-| [std::graph::Graph::vertexCount](std-graph.md#api-2) | `int64 vertexCount()` |
-| [std::graph::UnionFind::connected](std-graph.md#api-16) | `bool connected(int64 a, int64 b)` |
-| [std::graph::UnionFind::count](std-graph.md#api-18) | `int64 count()` |
-| [std::graph::UnionFind::create](std-graph.md#api-13) | `static UnionFind create(int64 n)` |
-| [std::graph::UnionFind::find](std-graph.md#api-14) | `int64 find(int64 x)` |
-| [std::graph::UnionFind::len](std-graph.md#api-19) | `int64 len()` |
-| [std::graph::UnionFind::parents](std-graph.md#api-20) | `List<int64> parents()` |
-| [std::graph::UnionFind::sizeOf](std-graph.md#api-17) | `int64 sizeOf(int64 x)` |
-| [std::graph::UnionFind::sizes](std-graph.md#api-21) | `List<int64> sizes()` |
-| [std::graph::UnionFind::unionSets](std-graph.md#api-15) | `bool unionSets(int64 a, int64 b)` |
+| [std::graph::Graph::addEdge](std-graph.md#api-15) | `void addEdge(int64 from,int64 to,int64 weight)` |
+| [std::graph::Graph::bfs](std-graph.md#api-16) | `List<int64> bfs(int64 start)` |
+| [std::graph::Graph::connectedComponents](std-graph.md#api-18) | `int64 connectedComponents()` |
+| [std::graph::Graph::copy](std-graph.md#api-11) | `Graph copy()` |
+| [std::graph::Graph::create](std-graph.md#api-10) | `static Graph create(int64 vertexCount,bool directed)` |
+| [std::graph::Graph::dfs](std-graph.md#api-17) | `List<int64> dfs(int64 start)` |
+| [std::graph::Graph::dijkstra](std-graph.md#api-20) | `List<int64> dijkstra(int64 start)` |
+| [std::graph::Graph::hasCycle](std-graph.md#api-21) | `bool hasCycle()` |
+| [std::graph::Graph::isDirected](std-graph.md#api-13) | `bool isDirected()` |
+| [std::graph::Graph::len](std-graph.md#api-14) | `int64 len()` |
+| [std::graph::Graph::minimumSpanningTreeWeight](std-graph.md#api-22) | `int64 minimumSpanningTreeWeight()` |
+| [std::graph::Graph::snapshot](std-graph.md#api-23) | `GraphSnapshot snapshot()` |
+| [std::graph::Graph::topologicalSort](std-graph.md#api-19) | `List<int64> topologicalSort()` |
+| [std::graph::Graph::vertexCount](std-graph.md#api-12) | `int64 vertexCount()` |
+| [std::graph::UnionFind::connected](std-graph.md#api-4) | `bool connected(int64 a,int64 b)` |
+| [std::graph::UnionFind::copy](std-graph.md#api-1) | `UnionFind copy()` |
+| [std::graph::UnionFind::count](std-graph.md#api-6) | `int64 count()` |
+| [std::graph::UnionFind::create](std-graph.md#api-0) | `static UnionFind create(int64 n)` |
+| [std::graph::UnionFind::find](std-graph.md#api-2) | `int64 find(int64 x)` |
+| [std::graph::UnionFind::len](std-graph.md#api-7) | `int64 len()` |
+| [std::graph::UnionFind::parents](std-graph.md#api-8) | `List<int64> parents()` |
+| [std::graph::UnionFind::sizeOf](std-graph.md#api-5) | `int64 sizeOf(int64 x)` |
+| [std::graph::UnionFind::sizes](std-graph.md#api-9) | `List<int64> sizes()` |
+| [std::graph::UnionFind::unionSets](std-graph.md#api-3) | `bool unionSets(int64 a,int64 b)` |
 | [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, std::lang::MessageError> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
 | [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, std::lang::MessageError> convolve(List<float64> kernel, int64 kw, int64 kh)` |
 | [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, std::lang::MessageError> decode(List<uint8> bytes)` |
@@ -473,88 +486,93 @@
 | [std::json::deserialize](std-json.md#api-1) | `Result<T,MessageError> deserialize<T>(String text)` |
 | [std::json::parse](std-json.md#api-28) | `Result<JsonValue, std::lang::MessageError> parse(std::lang::String text)` |
 | [std::json::serialize](std-json.md#api-0) | `Result<String,MessageError> serialize<T>(T const& value)` |
-| [std::lang::Add::leftAdd](std-lang.md#api-224) | `R leftAdd(T value)` |
-| [std::lang::And::leftBitAnd](std-lang.md#api-246) | `R leftBitAnd(T value)` |
-| [std::lang::Any::clear](std-lang.md#api-207) | `void clear()` |
-| [std::lang::Any::copy](std-lang.md#api-205) | `Any copy()` |
-| [std::lang::Any::getOptional](std-lang.md#api-211) | `Option<T mut&> getOptional()` |
-| [std::lang::Any::getReference](std-lang.md#api-210) | `T mut& getReference()` |
-| [std::lang::Any::getValue](std-lang.md#api-209) | `T getValue()` |
-| [std::lang::Any::isEmpty](std-lang.md#api-206) | `bool isEmpty()` |
-| [std::lang::Any::set](std-lang.md#api-208) | `int64 set(T value)` |
-| [std::lang::BigDecimal::abs](std-lang.md#api-198) | `BigDecimal abs()` |
-| [std::lang::BigDecimal::ceil](std-lang.md#api-201) | `BigInteger ceil()` |
-| [std::lang::BigDecimal::copy](std-lang.md#api-195) | `BigDecimal copy()` |
-| [std::lang::BigDecimal::floor](std-lang.md#api-200) | `BigInteger floor()` |
-| [std::lang::BigDecimal::isInteger](std-lang.md#api-199) | `bool isInteger()` |
-| [std::lang::BigDecimal::pow](std-lang.md#api-197) | `BigDecimal pow(int64 exponent)` |
-| [std::lang::BigDecimal::root](std-lang.md#api-204) | `BigDecimal root(int64 k, int64 digits)` |
-| [std::lang::BigDecimal::setPrecision](std-lang.md#api-196) | `int64 setPrecision(int64 digits)` |
-| [std::lang::BigDecimal::sqrt](std-lang.md#api-203) | `BigDecimal sqrt(int64 digits)` |
-| [std::lang::BigDecimal::str](std-lang.md#api-194) | `String str()` |
-| [std::lang::BigDecimal::trunc](std-lang.md#api-202) | `BigInteger trunc()` |
-| [std::lang::BigInteger::bitAnd](std-lang.md#api-189) | `BigInteger bitAnd(BigInteger other)` |
-| [std::lang::BigInteger::bitLength](std-lang.md#api-188) | `int64 bitLength()` |
-| [std::lang::BigInteger::bitOr](std-lang.md#api-190) | `BigInteger bitOr(BigInteger other)` |
-| [std::lang::BigInteger::bitXor](std-lang.md#api-191) | `BigInteger bitXor(BigInteger other)` |
-| [std::lang::BigInteger::copy](std-lang.md#api-179) | `BigInteger copy()` |
-| [std::lang::BigInteger::gcd](std-lang.md#api-182) | `BigInteger gcd(BigInteger other)` |
-| [std::lang::BigInteger::iroot](std-lang.md#api-193) | `BigInteger iroot(int64 k)` |
-| [std::lang::BigInteger::isProbablePrime](std-lang.md#api-186) | `bool isProbablePrime(int64 rounds)` |
-| [std::lang::BigInteger::lcm](std-lang.md#api-183) | `BigInteger lcm(BigInteger other)` |
-| [std::lang::BigInteger::mod](std-lang.md#api-184) | `BigInteger mod(BigInteger modulus)` |
-| [std::lang::BigInteger::modInverse](std-lang.md#api-185) | `BigInteger modInverse(BigInteger modulus)` |
-| [std::lang::BigInteger::nextProbablePrime](std-lang.md#api-187) | `BigInteger nextProbablePrime()` |
-| [std::lang::BigInteger::pow](std-lang.md#api-180) | `BigInteger pow(int64 exponent)` |
-| [std::lang::BigInteger::powmod](std-lang.md#api-181) | `BigInteger powmod(BigInteger exponent, BigInteger modulus)` |
-| [std::lang::BigInteger::str](std-lang.md#api-178) | `String str()` |
-| [std::lang::BigInteger::strRadix](std-lang.md#api-192) | `String strRadix(int64 base)` |
-| [std::lang::BitNot::bitNot](std-lang.md#api-257) | `R bitNot(T value)` |
-| [std::lang::Closeable::close](std-lang.md#api-128) | `void close()` |
-| [std::lang::Copy::copy](std-lang.md#api-260) | `T copy()` |
-| [std::lang::Divide::leftDiv](std-lang.md#api-230) | `R leftDiv(T value)` |
-| [std::lang::Drop::drop](std-lang.md#api-127) | `void drop()` |
-| [std::lang::Equal::leftEqual](std-lang.md#api-234) | `R leftEqual(T value)` |
+| [std::lang::Add::leftAdd](std-lang.md#api-244) | `R leftAdd(T value)` |
+| [std::lang::And::leftBitAnd](std-lang.md#api-266) | `R leftBitAnd(T value)` |
+| [std::lang::Any::clear](std-lang.md#api-227) | `void clear()` |
+| [std::lang::Any::copy](std-lang.md#api-225) | `Any copy()` |
+| [std::lang::Any::getOptional](std-lang.md#api-231) | `Option<T mut&> getOptional()` |
+| [std::lang::Any::getReference](std-lang.md#api-230) | `T mut& getReference()` |
+| [std::lang::Any::getValue](std-lang.md#api-229) | `T getValue()` |
+| [std::lang::Any::isEmpty](std-lang.md#api-226) | `bool isEmpty()` |
+| [std::lang::Any::set](std-lang.md#api-228) | `int64 set(T value)` |
+| [std::lang::BarePtr::castTo](std-lang.md#api-288) | `unsafe BarePtr<U> castTo<U>()` |
+| [std::lang::BarePtr::leftAdd](std-lang.md#api-124) | `BarePtr<T> leftAdd(int64 elements)` |
+| [std::lang::BarePtr::leftSub](std-lang.md#api-126) | `BarePtr<T> leftSub(int64 elements)` |
+| [std::lang::BarePtr::leftSub](std-lang.md#api-127) | `int64 leftSub(BarePtr<T> other)` |
+| [std::lang::BarePtr::rightAdd](std-lang.md#api-125) | `BarePtr<T> rightAdd(int64 elements)` |
+| [std::lang::BigDecimal::abs](std-lang.md#api-218) | `BigDecimal abs()` |
+| [std::lang::BigDecimal::ceil](std-lang.md#api-221) | `BigInteger ceil()` |
+| [std::lang::BigDecimal::copy](std-lang.md#api-215) | `BigDecimal copy()` |
+| [std::lang::BigDecimal::floor](std-lang.md#api-220) | `BigInteger floor()` |
+| [std::lang::BigDecimal::isInteger](std-lang.md#api-219) | `bool isInteger()` |
+| [std::lang::BigDecimal::pow](std-lang.md#api-217) | `BigDecimal pow(int64 exponent)` |
+| [std::lang::BigDecimal::root](std-lang.md#api-224) | `BigDecimal root(int64 k, int64 digits)` |
+| [std::lang::BigDecimal::setPrecision](std-lang.md#api-216) | `int64 setPrecision(int64 digits)` |
+| [std::lang::BigDecimal::sqrt](std-lang.md#api-223) | `BigDecimal sqrt(int64 digits)` |
+| [std::lang::BigDecimal::str](std-lang.md#api-214) | `String str()` |
+| [std::lang::BigDecimal::trunc](std-lang.md#api-222) | `BigInteger trunc()` |
+| [std::lang::BigInteger::bitAnd](std-lang.md#api-209) | `BigInteger bitAnd(BigInteger other)` |
+| [std::lang::BigInteger::bitLength](std-lang.md#api-208) | `int64 bitLength()` |
+| [std::lang::BigInteger::bitOr](std-lang.md#api-210) | `BigInteger bitOr(BigInteger other)` |
+| [std::lang::BigInteger::bitXor](std-lang.md#api-211) | `BigInteger bitXor(BigInteger other)` |
+| [std::lang::BigInteger::copy](std-lang.md#api-199) | `BigInteger copy()` |
+| [std::lang::BigInteger::gcd](std-lang.md#api-202) | `BigInteger gcd(BigInteger other)` |
+| [std::lang::BigInteger::iroot](std-lang.md#api-213) | `BigInteger iroot(int64 k)` |
+| [std::lang::BigInteger::isProbablePrime](std-lang.md#api-206) | `bool isProbablePrime(int64 rounds)` |
+| [std::lang::BigInteger::lcm](std-lang.md#api-203) | `BigInteger lcm(BigInteger other)` |
+| [std::lang::BigInteger::mod](std-lang.md#api-204) | `BigInteger mod(BigInteger modulus)` |
+| [std::lang::BigInteger::modInverse](std-lang.md#api-205) | `BigInteger modInverse(BigInteger modulus)` |
+| [std::lang::BigInteger::nextProbablePrime](std-lang.md#api-207) | `BigInteger nextProbablePrime()` |
+| [std::lang::BigInteger::pow](std-lang.md#api-200) | `BigInteger pow(int64 exponent)` |
+| [std::lang::BigInteger::powmod](std-lang.md#api-201) | `BigInteger powmod(BigInteger exponent, BigInteger modulus)` |
+| [std::lang::BigInteger::str](std-lang.md#api-198) | `String str()` |
+| [std::lang::BigInteger::strRadix](std-lang.md#api-212) | `String strRadix(int64 base)` |
+| [std::lang::BitNot::bitNot](std-lang.md#api-277) | `R bitNot(T value)` |
+| [std::lang::Closeable::close](std-lang.md#api-148) | `void close()` |
+| [std::lang::Copy::copy](std-lang.md#api-280) | `T copy()` |
+| [std::lang::Divide::leftDiv](std-lang.md#api-250) | `R leftDiv(T value)` |
+| [std::lang::Drop::drop](std-lang.md#api-147) | `void drop()` |
+| [std::lang::Equal::leftEqual](std-lang.md#api-254) | `R leftEqual(T value)` |
 | [std::lang::Error::toString](std-lang.md#api-48) | `String toString()` |
-| [std::lang::ExplicitConvert::explicitConvert](std-lang.md#api-261) | `T explicitConvert()` |
+| [std::lang::ExplicitConvert::explicitConvert](std-lang.md#api-281) | `T explicitConvert()` |
 | [std::lang::File::print](std-lang.md#api-51) | `int64 print(String text)` |
 | [std::lang::File::println](std-lang.md#api-52) | `int64 println(String text = "")` |
 | [std::lang::FromResidual::fromResidual](std-lang.md#api-90) | `static F fromResidual(R residual)` |
-| [std::lang::Greater::leftGreater](std-lang.md#api-242) | `R leftGreater(T value)` |
-| [std::lang::GreaterOrEqual::leftGreaterEqual](std-lang.md#api-244) | `R leftGreaterEqual(T value)` |
-| [std::lang::Hash::hash](std-lang.md#api-259) | `uint64 hash(T value)` |
-| [std::lang::ImplicitConvert::implicitConvert](std-lang.md#api-262) | `T implicitConvert()` |
-| [std::lang::Index::index](std-lang.md#api-263) | `R index(T key)` |
-| [std::lang::Iterator::iterator](std-lang.md#api-264) | `Option<R> iterator(int64 index)` |
-| [std::lang::Less::leftLess](std-lang.md#api-238) | `R leftLess(T value)` |
-| [std::lang::LessOrEqual::leftLessEqual](std-lang.md#api-240) | `R leftLessEqual(T value)` |
-| [std::lang::List::at](std-lang.md#api-153) | `T at(int64 index)` |
-| [std::lang::List::clear](std-lang.md#api-159) | `int64 clear()` |
-| [std::lang::List::contains](std-lang.md#api-157) | `bool contains(T value)` |
-| [std::lang::List::copy](std-lang.md#api-150) | `List<T> copy()` |
-| [std::lang::List::has](std-lang.md#api-158) | `bool has(T value)` |
-| [std::lang::List::indexOf](std-lang.md#api-156) | `int64 indexOf(T value)` |
-| [std::lang::List::insert](std-lang.md#api-152) | `int64 insert(int64 index, T value)` |
-| [std::lang::List::len](std-lang.md#api-160) | `int64 len()` |
-| [std::lang::List::pop](std-lang.md#api-154) | `T pop()` |
-| [std::lang::List::push](std-lang.md#api-151) | `int64 push(T value)` |
-| [std::lang::List::remove](std-lang.md#api-155) | `int64 remove(int64 index)` |
-| [std::lang::Map::clear](std-lang.md#api-176) | `int64 clear()` |
-| [std::lang::Map::contains](std-lang.md#api-172) | `int64 contains(K key)` |
-| [std::lang::Map::copy](std-lang.md#api-169) | `Map<K,V> copy()` |
-| [std::lang::Map::has](std-lang.md#api-171) | `int64 has(K key)` |
-| [std::lang::Map::keyAt](std-lang.md#api-174) | `K keyAt(int64 index)` |
-| [std::lang::Map::len](std-lang.md#api-177) | `int64 len()` |
-| [std::lang::Map::put](std-lang.md#api-170) | `int64 put(K key,V value)` |
-| [std::lang::Map::remove](std-lang.md#api-173) | `int64 remove(K key)` |
-| [std::lang::Map::valAt](std-lang.md#api-175) | `V valAt(int64 index)` |
+| [std::lang::Greater::leftGreater](std-lang.md#api-262) | `R leftGreater(T value)` |
+| [std::lang::GreaterOrEqual::leftGreaterEqual](std-lang.md#api-264) | `R leftGreaterEqual(T value)` |
+| [std::lang::Hash::hash](std-lang.md#api-279) | `uint64 hash(T value)` |
+| [std::lang::ImplicitConvert::implicitConvert](std-lang.md#api-282) | `T implicitConvert()` |
+| [std::lang::Index::index](std-lang.md#api-283) | `R index(T key)` |
+| [std::lang::Iterator::iterator](std-lang.md#api-284) | `Option<R> iterator(int64 index)` |
+| [std::lang::Less::leftLess](std-lang.md#api-258) | `R leftLess(T value)` |
+| [std::lang::LessOrEqual::leftLessEqual](std-lang.md#api-260) | `R leftLessEqual(T value)` |
+| [std::lang::List::at](std-lang.md#api-173) | `T at(int64 index)` |
+| [std::lang::List::clear](std-lang.md#api-179) | `int64 clear()` |
+| [std::lang::List::contains](std-lang.md#api-177) | `bool contains(T value)` |
+| [std::lang::List::copy](std-lang.md#api-170) | `List<T> copy()` |
+| [std::lang::List::has](std-lang.md#api-178) | `bool has(T value)` |
+| [std::lang::List::indexOf](std-lang.md#api-176) | `int64 indexOf(T value)` |
+| [std::lang::List::insert](std-lang.md#api-172) | `int64 insert(int64 index, T value)` |
+| [std::lang::List::len](std-lang.md#api-180) | `int64 len()` |
+| [std::lang::List::pop](std-lang.md#api-174) | `T pop()` |
+| [std::lang::List::push](std-lang.md#api-171) | `int64 push(T value)` |
+| [std::lang::List::remove](std-lang.md#api-175) | `int64 remove(int64 index)` |
+| [std::lang::Map::clear](std-lang.md#api-196) | `int64 clear()` |
+| [std::lang::Map::contains](std-lang.md#api-192) | `int64 contains(K key)` |
+| [std::lang::Map::copy](std-lang.md#api-189) | `Map<K,V> copy()` |
+| [std::lang::Map::has](std-lang.md#api-191) | `int64 has(K key)` |
+| [std::lang::Map::keyAt](std-lang.md#api-194) | `K keyAt(int64 index)` |
+| [std::lang::Map::len](std-lang.md#api-197) | `int64 len()` |
+| [std::lang::Map::put](std-lang.md#api-190) | `int64 put(K key,V value)` |
+| [std::lang::Map::remove](std-lang.md#api-193) | `int64 remove(K key)` |
+| [std::lang::Map::valAt](std-lang.md#api-195) | `V valAt(int64 index)` |
 | [std::lang::MessageError::from](std-lang.md#api-50) | `static MessageError from(String text)` |
 | [std::lang::MessageError::toString](std-lang.md#api-49) | `String toString()` |
-| [std::lang::Modulo::leftMod](std-lang.md#api-232) | `R leftMod(T value)` |
-| [std::lang::Multiply::leftMul](std-lang.md#api-228) | `R leftMul(T value)` |
-| [std::lang::Negate::negate](std-lang.md#api-256) | `R negate(T value)` |
+| [std::lang::Modulo::leftMod](std-lang.md#api-252) | `R leftMod(T value)` |
+| [std::lang::Multiply::leftMul](std-lang.md#api-248) | `R leftMul(T value)` |
+| [std::lang::Negate::negate](std-lang.md#api-276) | `R negate(T value)` |
 | [std::lang::NextValue::nextValue](std-lang.md#api-116) | `Option<T> nextValue(T end, bool inclusive)` |
-| [std::lang::NotEqual::leftNotEqual](std-lang.md#api-236) | `R leftNotEqual(T value)` |
+| [std::lang::NotEqual::leftNotEqual](std-lang.md#api-256) | `R leftNotEqual(T value)` |
 | [std::lang::Option::andThen](std-lang.md#api-101) | `Option<T> andThen(Option<T> fn(T) mapper)` |
 | [std::lang::Option::branch](std-lang.md#api-91) | `TryBranch<T, NoneResidual> branch()` |
 | [std::lang::Option::expect](std-lang.md#api-99) | `T expect(std::lang::String message)` |
@@ -562,17 +580,22 @@
 | [std::lang::Option::intoBranch](std-lang.md#api-92) | `TryBranch<T, NoneResidual> intoBranch()` |
 | [std::lang::Option::isNone](std-lang.md#api-95) | `bool isNone()` |
 | [std::lang::Option::isValue](std-lang.md#api-94) | `bool isValue()` |
-| [std::lang::Option::okOr](std-lang.md#api-266) | `Result<T,E> okOr<E>(E error)` |
-| [std::lang::Option::okOrElse](std-lang.md#api-267) | `Result<T,E> okOrElse<E>(E fn() factory)` |
+| [std::lang::Option::okOr](std-lang.md#api-286) | `Result<T,E> okOr<E>(E error)` |
+| [std::lang::Option::okOrElse](std-lang.md#api-287) | `Result<T,E> okOrElse<E>(E fn() factory)` |
 | [std::lang::Option::take](std-lang.md#api-96) | `T take()` |
 | [std::lang::Option::transform](std-lang.md#api-100) | `Option<T> transform(T fn(T) mapper)` |
 | [std::lang::Option::unwrap](std-lang.md#api-97) | `T unwrap()` |
 | [std::lang::Option::unwrapOr](std-lang.md#api-98) | `T unwrapOr(T fallback)` |
-| [std::lang::Or::leftBitOr](std-lang.md#api-248) | `R leftBitOr(T value)` |
+| [std::lang::Or::leftBitOr](std-lang.md#api-268) | `R leftBitOr(T value)` |
 | [std::lang::Pair::create](std-lang.md#api-118) | `static Pair<K, V> create((K, V) value)` |
 | [std::lang::Pair::create](std-lang.md#api-117) | `static Pair<K, V> create(K first, V second)` |
 | [std::lang::Pair::toTuple](std-lang.md#api-119) | `(K, V) toTuple()` |
-| [std::lang::Positive::positive](std-lang.md#api-258) | `R positive(T value)` |
+| [std::lang::Positive::positive](std-lang.md#api-278) | `R positive(T value)` |
+| [std::lang::RawStorage::allocate](std-lang.md#api-139) | `static RawStorage<T> allocate(int64 capacity)` |
+| [std::lang::RawStorage::capacity](std-lang.md#api-140) | `int64 capacity()` |
+| [std::lang::RawStorage::close](std-lang.md#api-143) | `void close()` |
+| [std::lang::RawStorage::isInitialized](std-lang.md#api-142) | `bool isInitialized(int64 index)` |
+| [std::lang::RawStorage::pointer](std-lang.md#api-141) | `RawPtr<T> pointer(int64 index)` |
 | [std::lang::Result::andThen](std-lang.md#api-115) | `Result<T, E> andThen(Result<T, E> fn(T) mapper)` |
 | [std::lang::Result::branch](std-lang.md#api-102) | `TryBranch<T, ErrorResidual<E>> branch()` |
 | [std::lang::Result::error](std-lang.md#api-113) | `E error()` |
@@ -581,39 +604,39 @@
 | [std::lang::Result::intoBranch](std-lang.md#api-103) | `TryBranch<T, ErrorResidual<E>> intoBranch()` |
 | [std::lang::Result::isErr](std-lang.md#api-107) | `bool isErr()` |
 | [std::lang::Result::isOk](std-lang.md#api-106) | `bool isOk()` |
-| [std::lang::Result::mapErr](std-lang.md#api-265) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
+| [std::lang::Result::mapErr](std-lang.md#api-285) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
 | [std::lang::Result::ok](std-lang.md#api-105) | `Option<T> ok()` |
 | [std::lang::Result::take](std-lang.md#api-108) | `T take()` |
 | [std::lang::Result::takeError](std-lang.md#api-112) | `E takeError()` |
 | [std::lang::Result::transform](std-lang.md#api-114) | `Result<T, E> transform(T fn(T) mapper)` |
 | [std::lang::Result::unwrap](std-lang.md#api-109) | `T unwrap()` |
 | [std::lang::Result::unwrapOr](std-lang.md#api-110) | `T unwrapOr(T fallback)` |
-| [std::lang::RightAdd::rightAdd](std-lang.md#api-225) | `R rightAdd(T value)` |
-| [std::lang::RightAnd::rightBitAnd](std-lang.md#api-247) | `R rightBitAnd(T value)` |
-| [std::lang::RightDivide::rightDiv](std-lang.md#api-231) | `R rightDiv(T value)` |
-| [std::lang::RightEqual::rightEqual](std-lang.md#api-235) | `R rightEqual(T value)` |
-| [std::lang::RightGreater::rightGreater](std-lang.md#api-243) | `R rightGreater(T value)` |
-| [std::lang::RightGreaterOrEqual::rightGreaterEqual](std-lang.md#api-245) | `R rightGreaterEqual(T value)` |
-| [std::lang::RightLess::rightLess](std-lang.md#api-239) | `R rightLess(T value)` |
-| [std::lang::RightLessOrEqual::rightLessEqual](std-lang.md#api-241) | `R rightLessEqual(T value)` |
-| [std::lang::RightModulo::rightMod](std-lang.md#api-233) | `R rightMod(T value)` |
-| [std::lang::RightMultiply::rightMul](std-lang.md#api-229) | `R rightMul(T value)` |
-| [std::lang::RightNotEqual::rightNotEqual](std-lang.md#api-237) | `R rightNotEqual(T value)` |
-| [std::lang::RightOr::rightBitOr](std-lang.md#api-249) | `R rightBitOr(T value)` |
-| [std::lang::RightShiftLeft::rightShiftLeft](std-lang.md#api-253) | `R rightShiftLeft(T value)` |
-| [std::lang::RightShiftRight::rightShiftRight](std-lang.md#api-255) | `R rightShiftRight(T value)` |
-| [std::lang::RightSubtract::rightSub](std-lang.md#api-227) | `R rightSub(T value)` |
-| [std::lang::RightXor::rightBitXor](std-lang.md#api-251) | `R rightBitXor(T value)` |
-| [std::lang::Set::add](std-lang.md#api-162) | `int64 add(T value)` |
-| [std::lang::Set::at](std-lang.md#api-166) | `T at(int64 index)` |
-| [std::lang::Set::clear](std-lang.md#api-167) | `int64 clear()` |
-| [std::lang::Set::contains](std-lang.md#api-164) | `int64 contains(T value)` |
-| [std::lang::Set::copy](std-lang.md#api-161) | `Set<T> copy()` |
-| [std::lang::Set::has](std-lang.md#api-163) | `int64 has(T value)` |
-| [std::lang::Set::len](std-lang.md#api-168) | `int64 len()` |
-| [std::lang::Set::remove](std-lang.md#api-165) | `int64 remove(T value)` |
-| [std::lang::ShiftLeft::leftShiftLeft](std-lang.md#api-252) | `R leftShiftLeft(T value)` |
-| [std::lang::ShiftRight::leftShiftRight](std-lang.md#api-254) | `R leftShiftRight(T value)` |
+| [std::lang::RightAdd::rightAdd](std-lang.md#api-245) | `R rightAdd(T value)` |
+| [std::lang::RightAnd::rightBitAnd](std-lang.md#api-267) | `R rightBitAnd(T value)` |
+| [std::lang::RightDivide::rightDiv](std-lang.md#api-251) | `R rightDiv(T value)` |
+| [std::lang::RightEqual::rightEqual](std-lang.md#api-255) | `R rightEqual(T value)` |
+| [std::lang::RightGreater::rightGreater](std-lang.md#api-263) | `R rightGreater(T value)` |
+| [std::lang::RightGreaterOrEqual::rightGreaterEqual](std-lang.md#api-265) | `R rightGreaterEqual(T value)` |
+| [std::lang::RightLess::rightLess](std-lang.md#api-259) | `R rightLess(T value)` |
+| [std::lang::RightLessOrEqual::rightLessEqual](std-lang.md#api-261) | `R rightLessEqual(T value)` |
+| [std::lang::RightModulo::rightMod](std-lang.md#api-253) | `R rightMod(T value)` |
+| [std::lang::RightMultiply::rightMul](std-lang.md#api-249) | `R rightMul(T value)` |
+| [std::lang::RightNotEqual::rightNotEqual](std-lang.md#api-257) | `R rightNotEqual(T value)` |
+| [std::lang::RightOr::rightBitOr](std-lang.md#api-269) | `R rightBitOr(T value)` |
+| [std::lang::RightShiftLeft::rightShiftLeft](std-lang.md#api-273) | `R rightShiftLeft(T value)` |
+| [std::lang::RightShiftRight::rightShiftRight](std-lang.md#api-275) | `R rightShiftRight(T value)` |
+| [std::lang::RightSubtract::rightSub](std-lang.md#api-247) | `R rightSub(T value)` |
+| [std::lang::RightXor::rightBitXor](std-lang.md#api-271) | `R rightBitXor(T value)` |
+| [std::lang::Set::add](std-lang.md#api-182) | `int64 add(T value)` |
+| [std::lang::Set::at](std-lang.md#api-186) | `T at(int64 index)` |
+| [std::lang::Set::clear](std-lang.md#api-187) | `int64 clear()` |
+| [std::lang::Set::contains](std-lang.md#api-184) | `int64 contains(T value)` |
+| [std::lang::Set::copy](std-lang.md#api-181) | `Set<T> copy()` |
+| [std::lang::Set::has](std-lang.md#api-183) | `int64 has(T value)` |
+| [std::lang::Set::len](std-lang.md#api-188) | `int64 len()` |
+| [std::lang::Set::remove](std-lang.md#api-185) | `int64 remove(T value)` |
+| [std::lang::ShiftLeft::leftShiftLeft](std-lang.md#api-272) | `R leftShiftLeft(T value)` |
+| [std::lang::ShiftRight::leftShiftRight](std-lang.md#api-274) | `R leftShiftRight(T value)` |
 | [std::lang::String::byteAt](std-lang.md#api-17) | `Option<uint8> byteAt(int64 index)` |
 | [std::lang::String::byteLength](std-lang.md#api-2) | `int64 byteLength()` |
 | [std::lang::String::bytes](std-lang.md#api-44) | `List<uint8> bytes()` |
@@ -662,15 +685,17 @@
 | [std::lang::String::trimStart](std-lang.md#api-23) | `String trimStart()` |
 | [std::lang::String::unicodeChars](std-lang.md#api-43) | `List<String> unicodeChars()` |
 | [std::lang::String::utf8Substring](std-lang.md#api-38) | `String utf8Substring(int64 start, int64 count = 0 - 1)` |
-| [std::lang::Subtract::leftSub](std-lang.md#api-226) | `R leftSub(T value)` |
+| [std::lang::Subtract::leftSub](std-lang.md#api-246) | `R leftSub(T value)` |
 | [std::lang::Try::branch](std-lang.md#api-88) | `TryBranch<T, R> branch()` |
 | [std::lang::TryMove::intoBranch](std-lang.md#api-89) | `TryBranch<T, R> intoBranch()` |
-| [std::lang::Xor::leftBitXor](std-lang.md#api-250) | `R leftBitXor(T value)` |
-| [std::lang::add](std-lang.md#api-218) | `R add(T left,U right)` |
+| [std::lang::Xor::leftBitXor](std-lang.md#api-270) | `R leftBitXor(T value)` |
+| [std::lang::add](std-lang.md#api-238) | `R add(T left,U right)` |
 | [std::lang::assert](std-lang.md#api-84) | `void assert(bool condition)` |
 | [std::lang::assert](std-lang.md#api-86) | `void assert(bool condition, int64 line)` |
 | [std::lang::assert](std-lang.md#api-85) | `void assert(bool condition, std::lang::String message)` |
 | [std::lang::assert](std-lang.md#api-87) | `void assert(bool condition, std::lang::String message, int64 line)` |
+| [std::lang::barePointer](std-lang.md#api-128) | `unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer)` |
+| [std::lang::borrowAt](std-lang.md#api-135) | `unsafe T mut& borrowAt<T>(RawPtr<T> pointer)` |
 | [std::lang::bytesToFloat32](std-lang.md#api-63) | `Option<float32> bytesToFloat32(std::lang::List<uint8> bytes)` |
 | [std::lang::bytesToFloat32](std-lang.md#api-62) | `Option<float32> bytesToFloat32(std::lang::List<uint8> bytes, bool bigEndian)` |
 | [std::lang::bytesToFloat32](std-lang.md#api-67) | `Option<float32> bytesToFloat32(uint8 bytes[])` |
@@ -683,10 +708,12 @@
 | [std::lang::bytesToFloat64](std-lang.md#api-78) | `Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian)` |
 | [std::lang::bytesToFloat64](std-lang.md#api-77) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count)` |
 | [std::lang::bytesToFloat64](std-lang.md#api-76) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count, bool bigEndian)` |
-| [std::lang::div](std-lang.md#api-221) | `R div(T left,U right)` |
-| [std::lang::eprint](std-lang.md#api-131) | `int64 eprint(String format, Any args...)` |
-| [std::lang::eprintln](std-lang.md#api-132) | `int64 eprintln(String format, Any args...)` |
-| [std::lang::eq](std-lang.md#api-212) | `bool eq(T left,T right)` |
+| [std::lang::dereference](std-lang.md#api-130) | `unsafe T mut& dereference<T>(BarePtr<T> pointer)` |
+| [std::lang::div](std-lang.md#api-241) | `R div(T left,U right)` |
+| [std::lang::dropAt](std-lang.md#api-137) | `unsafe void dropAt<T>(RawPtr<T> pointer)` |
+| [std::lang::eprint](std-lang.md#api-151) | `int64 eprint(String format, Any args...)` |
+| [std::lang::eprintln](std-lang.md#api-152) | `int64 eprintln(String format, Any args...)` |
+| [std::lang::eq](std-lang.md#api-232) | `bool eq(T left,T right)` |
 | [std::lang::float32ToBytes](std-lang.md#api-69) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count)` |
 | [std::lang::float32ToBytes](std-lang.md#api-68) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
 | [std::lang::float32ToBytes](std-lang.md#api-71) | `bool float32ToBytes(float32 value, uint8[] mut& bytes)` |
@@ -699,45 +726,52 @@
 | [std::lang::float64ToBytes](std-lang.md#api-82) | `bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian)` |
 | [std::lang::float64ToBytes](std-lang.md#api-73) | `std::lang::List<uint8> float64ToBytes(float64 value)` |
 | [std::lang::float64ToBytes](std-lang.md#api-72) | `std::lang::List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
-| [std::lang::format](std-lang.md#api-133) | `String format(String format, Any args...)` |
-| [std::lang::ge](std-lang.md#api-217) | `bool ge(T left,T right)` |
-| [std::lang::gt](std-lang.md#api-216) | `bool gt(T left,T right)` |
-| [std::lang::index](std-lang.md#api-223) | `T index(T const& data,int64 index)` |
-| [std::lang::inputBigDecimal](std-lang.md#api-143) | `BigDecimal inputBigDecimal()` |
-| [std::lang::inputBigInteger](std-lang.md#api-142) | `BigInteger inputBigInteger()` |
-| [std::lang::inputBool](std-lang.md#api-140) | `bool inputBool()` |
-| [std::lang::inputChar](std-lang.md#api-141) | `char inputChar()` |
-| [std::lang::inputFloat](std-lang.md#api-139) | `float64 inputFloat()` |
-| [std::lang::inputInt](std-lang.md#api-137) | `int64 inputInt()` |
-| [std::lang::inputLine](std-lang.md#api-136) | `String inputLine()` |
-| [std::lang::inputUInt](std-lang.md#api-138) | `uint64 inputUInt()` |
-| [std::lang::le](std-lang.md#api-215) | `bool le(T left,T right)` |
-| [std::lang::len](std-lang.md#api-145) | `int64 len(Any value)` |
-| [std::lang::lt](std-lang.md#api-214) | `bool lt(T left,T right)` |
-| [std::lang::memcpy](std-lang.md#api-148) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
-| [std::lang::memset](std-lang.md#api-149) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
-| [std::lang::mod](std-lang.md#api-222) | `R mod(T left,U right)` |
-| [std::lang::mul](std-lang.md#api-220) | `R mul(T left,U right)` |
-| [std::lang::ne](std-lang.md#api-213) | `bool ne(T left,T right)` |
-| [std::lang::panic](std-lang.md#api-144) | `int64 panic(String message)` |
-| [std::lang::pause](std-lang.md#api-135) | `int64 pause()` |
-| [std::lang::print](std-lang.md#api-129) | `int64 print(String format, Any args...)` |
-| [std::lang::println](std-lang.md#api-130) | `int64 println(String format, Any args...)` |
-| [std::lang::putChar](std-lang.md#api-134) | `int64 putChar(char value)` |
-| [std::lang::range](std-lang.md#api-124) | `__Range range(int64 start, int64 stop)` |
-| [std::lang::range](std-lang.md#api-125) | `__Range range(int64 start, int64 stop, int64 step)` |
-| [std::lang::rangeEq](std-lang.md#api-126) | `__Interval_int64 rangeEq(int64 start, int64 stop)` |
+| [std::lang::format](std-lang.md#api-153) | `String format(String format, Any args...)` |
+| [std::lang::ge](std-lang.md#api-237) | `bool ge(T left,T right)` |
+| [std::lang::gt](std-lang.md#api-236) | `bool gt(T left,T right)` |
+| [std::lang::index](std-lang.md#api-243) | `T index(T const& data,int64 index)` |
+| [std::lang::initAt](std-lang.md#api-133) | `unsafe void initAt<T>(RawPtr<T> pointer, T value)` |
+| [std::lang::inputBigDecimal](std-lang.md#api-163) | `BigDecimal inputBigDecimal()` |
+| [std::lang::inputBigInteger](std-lang.md#api-162) | `BigInteger inputBigInteger()` |
+| [std::lang::inputBool](std-lang.md#api-160) | `bool inputBool()` |
+| [std::lang::inputChar](std-lang.md#api-161) | `char inputChar()` |
+| [std::lang::inputFloat](std-lang.md#api-159) | `float64 inputFloat()` |
+| [std::lang::inputInt](std-lang.md#api-157) | `int64 inputInt()` |
+| [std::lang::inputLine](std-lang.md#api-156) | `String inputLine()` |
+| [std::lang::inputUInt](std-lang.md#api-158) | `uint64 inputUInt()` |
+| [std::lang::le](std-lang.md#api-235) | `bool le(T left,T right)` |
+| [std::lang::len](std-lang.md#api-165) | `int64 len(Any value)` |
+| [std::lang::lt](std-lang.md#api-234) | `bool lt(T left,T right)` |
+| [std::lang::memcpy](std-lang.md#api-168) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
+| [std::lang::memcpy](std-lang.md#api-131) | `unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes)` |
+| [std::lang::memset](std-lang.md#api-169) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
+| [std::lang::memset](std-lang.md#api-132) | `unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes)` |
+| [std::lang::mod](std-lang.md#api-242) | `R mod(T left,U right)` |
+| [std::lang::mul](std-lang.md#api-240) | `R mul(T left,U right)` |
+| [std::lang::ne](std-lang.md#api-233) | `bool ne(T left,T right)` |
+| [std::lang::panic](std-lang.md#api-164) | `int64 panic(String message)` |
+| [std::lang::pause](std-lang.md#api-155) | `int64 pause()` |
+| [std::lang::pointerFromAddress](std-lang.md#api-129) | `unsafe BarePtr<T> pointerFromAddress<T>(int64 address)` |
+| [std::lang::print](std-lang.md#api-149) | `int64 print(String format, Any args...)` |
+| [std::lang::println](std-lang.md#api-150) | `int64 println(String format, Any args...)` |
+| [std::lang::putChar](std-lang.md#api-154) | `int64 putChar(char value)` |
+| [std::lang::range](std-lang.md#api-144) | `__Range range(int64 start, int64 stop)` |
+| [std::lang::range](std-lang.md#api-145) | `__Range range(int64 start, int64 stop, int64 step)` |
+| [std::lang::rangeEq](std-lang.md#api-146) | `__Interval_int64 rangeEq(int64 start, int64 stop)` |
+| [std::lang::readAt](std-lang.md#api-134) | `unsafe T readAt<T>(RawPtr<T> pointer)` |
 | [std::lang::readLine](std-lang.md#api-53) | `String readLine()` |
 | [std::lang::readLines](std-lang.md#api-54) | `String readLines(int32 N)` |
 | [std::lang::readLines](std-lang.md#api-55) | `String readLines(int64 N)` |
+| [std::lang::relocateNonOverlapping](std-lang.md#api-138) | `unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, int64 count)` |
 | [std::lang::stringBytes](std-lang.md#api-123) | `List<uint8> stringBytes(String text)` |
-| [std::lang::sub](std-lang.md#api-219) | `R sub(T left,U right)` |
+| [std::lang::sub](std-lang.md#api-239) | `R sub(T left,U right)` |
+| [std::lang::takeAt](std-lang.md#api-136) | `unsafe T takeAt<T>(RawPtr<T> pointer)` |
 | [std::lang::toInt32](std-lang.md#api-57) | `Option<int32> toInt32(float32 value)` |
 | [std::lang::toInt32](std-lang.md#api-56) | `Option<int32> toInt32(float64 value)` |
 | [std::lang::toInt64](std-lang.md#api-59) | `int64 toInt64(float32 value)` |
 | [std::lang::toInt64](std-lang.md#api-58) | `int64 toInt64(float64 value)` |
-| [std::lang::toOptional](std-lang.md#api-147) | `Option<T mut&> toOptional<T>(T mut& value)` |
-| [std::lang::toReference](std-lang.md#api-146) | `T mut& toReference<T>(Option<T mut&> value)` |
+| [std::lang::toOptional](std-lang.md#api-167) | `Option<T mut&> toOptional<T>(T mut& value)` |
+| [std::lang::toReference](std-lang.md#api-166) | `T mut& toReference<T>(Option<T mut&> value)` |
 | [std::lang::tryGet](std-lang.md#api-120) | `Option<T> tryGet<T>(Any const& value)` |
 | [std::lang::tryGetMut](std-lang.md#api-122) | `Option<T mut&> tryGetMut<T>(Any mut& value)` |
 | [std::lang::tryGetReference](std-lang.md#api-121) | `Option<T const&> tryGetReference<T>(Any const& value)` |
@@ -797,25 +831,26 @@
 | [std::linalg::lurDecompose](std-linalg.md#api-51) | `LuFactorization lurDecompose(Matrix<float64> input)` |
 | [std::linalg::svd](std-linalg.md#api-53) | `SingularValueDecomposition svd(Matrix<float64> input)` |
 | [std::linalg::symmetricEigen](std-linalg.md#api-52) | `EigenDecomposition symmetricEigen(Matrix<float64> input)` |
-| [std::linkedlist::LinkedList::back](std-linkedlist.md#api-14) | `Option<int64> back()` |
-| [std::linkedlist::LinkedList::clear](std-linkedlist.md#api-18) | `void clear()` |
-| [std::linkedlist::LinkedList::contains](std-linkedlist.md#api-12) | `bool contains(int64 value)` |
+| [std::linkedlist::LinkedList::back](std-linkedlist.md#api-15) | `Option<int64> back()` |
+| [std::linkedlist::LinkedList::clear](std-linkedlist.md#api-19) | `void clear()` |
+| [std::linkedlist::LinkedList::contains](std-linkedlist.md#api-13) | `bool contains(int64 value)` |
+| [std::linkedlist::LinkedList::copy](std-linkedlist.md#api-1) | `LinkedList copy()` |
 | [std::linkedlist::LinkedList::create](std-linkedlist.md#api-0) | `static LinkedList create()` |
-| [std::linkedlist::LinkedList::find](std-linkedlist.md#api-11) | `int64 find(int64 value)` |
-| [std::linkedlist::LinkedList::fromArray](std-linkedlist.md#api-10) | `static LinkedList fromArray(List<int64> items)` |
-| [std::linkedlist::LinkedList::front](std-linkedlist.md#api-13) | `Option<int64> front()` |
-| [std::linkedlist::LinkedList::insertAfter](std-linkedlist.md#api-4) | `int64 insertAfter(int64 cursor, int64 value)` |
-| [std::linkedlist::LinkedList::insertBefore](std-linkedlist.md#api-3) | `int64 insertBefore(int64 cursor, int64 value)` |
-| [std::linkedlist::LinkedList::isEmpty](std-linkedlist.md#api-16) | `bool isEmpty()` |
-| [std::linkedlist::LinkedList::iterator](std-linkedlist.md#api-17) | `Option<int64> iterator(int64 index)` |
-| [std::linkedlist::LinkedList::len](std-linkedlist.md#api-15) | `int64 len()` |
-| [std::linkedlist::LinkedList::popBack](std-linkedlist.md#api-7) | `Option<int64> popBack()` |
-| [std::linkedlist::LinkedList::popFront](std-linkedlist.md#api-6) | `Option<int64> popFront()` |
-| [std::linkedlist::LinkedList::pushBack](std-linkedlist.md#api-2) | `int64 pushBack(int64 value)` |
-| [std::linkedlist::LinkedList::pushFront](std-linkedlist.md#api-1) | `int64 pushFront(int64 value)` |
-| [std::linkedlist::LinkedList::removeAt](std-linkedlist.md#api-5) | `Option<int64> removeAt(int64 cursor)` |
-| [std::linkedlist::LinkedList::reverse](std-linkedlist.md#api-8) | `void reverse()` |
-| [std::linkedlist::LinkedList::toArray](std-linkedlist.md#api-9) | `List<int64> toArray()` |
+| [std::linkedlist::LinkedList::find](std-linkedlist.md#api-12) | `int64 find(int64 value)` |
+| [std::linkedlist::LinkedList::fromArray](std-linkedlist.md#api-11) | `static LinkedList fromArray(List<int64> items)` |
+| [std::linkedlist::LinkedList::front](std-linkedlist.md#api-14) | `Option<int64> front()` |
+| [std::linkedlist::LinkedList::insertAfter](std-linkedlist.md#api-5) | `int64 insertAfter(int64 cursor, int64 value)` |
+| [std::linkedlist::LinkedList::insertBefore](std-linkedlist.md#api-4) | `int64 insertBefore(int64 cursor, int64 value)` |
+| [std::linkedlist::LinkedList::isEmpty](std-linkedlist.md#api-17) | `bool isEmpty()` |
+| [std::linkedlist::LinkedList::iterator](std-linkedlist.md#api-18) | `Option<int64> iterator(int64 index)` |
+| [std::linkedlist::LinkedList::len](std-linkedlist.md#api-16) | `int64 len()` |
+| [std::linkedlist::LinkedList::popBack](std-linkedlist.md#api-8) | `Option<int64> popBack()` |
+| [std::linkedlist::LinkedList::popFront](std-linkedlist.md#api-7) | `Option<int64> popFront()` |
+| [std::linkedlist::LinkedList::pushBack](std-linkedlist.md#api-3) | `int64 pushBack(int64 value)` |
+| [std::linkedlist::LinkedList::pushFront](std-linkedlist.md#api-2) | `int64 pushFront(int64 value)` |
+| [std::linkedlist::LinkedList::removeAt](std-linkedlist.md#api-6) | `Option<int64> removeAt(int64 cursor)` |
+| [std::linkedlist::LinkedList::reverse](std-linkedlist.md#api-9) | `void reverse()` |
+| [std::linkedlist::LinkedList::toArray](std-linkedlist.md#api-10) | `List<int64> toArray()` |
 | [std::math::abs](std-math.md#api-19) | `T abs<T>(T value)` |
 | [std::math::acos](std-math.md#api-5) | `let acos<T>(T value)` |
 | [std::math::asin](std-math.md#api-4) | `let asin<T>(T value)` |
@@ -1141,52 +1176,56 @@
 | [std::toml::deserialize](std-toml.md#api-1) | `Result<T,MessageError> deserialize<T>(String text)` |
 | [std::toml::parse](std-toml.md#api-28) | `Result<TomlValue, std::lang::MessageError> parse(std::lang::String text)` |
 | [std::toml::serialize](std-toml.md#api-0) | `Result<String,MessageError> serialize<T>(T const& value)` |
-| [std::tree::BinarySearchTree::clear](std-tree.md#api-2) | `void clear()` |
-| [std::tree::BinarySearchTree::contains](std-tree.md#api-5) | `bool contains(int64 value)` |
+| [std::tree::BinarySearchTree::clear](std-tree.md#api-3) | `void clear()` |
+| [std::tree::BinarySearchTree::contains](std-tree.md#api-6) | `bool contains(int64 key)` |
+| [std::tree::BinarySearchTree::copy](std-tree.md#api-1) | `BinarySearchTree copy()` |
 | [std::tree::BinarySearchTree::create](std-tree.md#api-0) | `static BinarySearchTree create()` |
-| [std::tree::BinarySearchTree::height](std-tree.md#api-8) | `int64 height()` |
-| [std::tree::BinarySearchTree::inorder](std-tree.md#api-9) | `List<int64> inorder()` |
-| [std::tree::BinarySearchTree::insert](std-tree.md#api-3) | `bool insert(int64 value)` |
-| [std::tree::BinarySearchTree::len](std-tree.md#api-1) | `int64 len()` |
-| [std::tree::BinarySearchTree::max](std-tree.md#api-7) | `Option<int64> max()` |
-| [std::tree::BinarySearchTree::min](std-tree.md#api-6) | `Option<int64> min()` |
-| [std::tree::BinarySearchTree::postorder](std-tree.md#api-11) | `List<int64> postorder()` |
-| [std::tree::BinarySearchTree::preorder](std-tree.md#api-10) | `List<int64> preorder()` |
-| [std::tree::BinarySearchTree::remove](std-tree.md#api-4) | `bool remove(int64 value)` |
-| [std::tree::BinarySearchTree::snapshot](std-tree.md#api-12) | `TreeSnapshot snapshot()` |
-| [std::tree::GeneralTree::addChild](std-tree.md#api-36) | `int64 addChild(int64 cursor, int64 value)` |
-| [std::tree::GeneralTree::addRoot](std-tree.md#api-35) | `int64 addRoot(int64 value)` |
-| [std::tree::GeneralTree::children](std-tree.md#api-39) | `List<int64> children(int64 cursor)` |
-| [std::tree::GeneralTree::clear](std-tree.md#api-34) | `void clear()` |
-| [std::tree::GeneralTree::create](std-tree.md#api-32) | `static GeneralTree create()` |
-| [std::tree::GeneralTree::fromBinary](std-tree.md#api-44) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
-| [std::tree::GeneralTree::height](std-tree.md#api-42) | `int64 height()` |
-| [std::tree::GeneralTree::len](std-tree.md#api-33) | `int64 len()` |
-| [std::tree::GeneralTree::levelOrder](std-tree.md#api-41) | `List<int64> levelOrder()` |
-| [std::tree::GeneralTree::preorder](std-tree.md#api-40) | `List<int64> preorder()` |
-| [std::tree::GeneralTree::rootNode](std-tree.md#api-38) | `int64 rootNode()` |
-| [std::tree::GeneralTree::snapshot](std-tree.md#api-45) | `GeneralTreeSnapshot snapshot()` |
-| [std::tree::GeneralTree::toBinary](std-tree.md#api-43) | `BinarySearchTree toBinary()` |
-| [std::tree::GeneralTree::valueAt](std-tree.md#api-37) | `int64 valueAt(int64 cursor)` |
-| [std::tree::MinHeap::clear](std-tree.md#api-26) | `void clear()` |
-| [std::tree::MinHeap::create](std-tree.md#api-24) | `static MinHeap create()` |
-| [std::tree::MinHeap::isEmpty](std-tree.md#api-30) | `bool isEmpty()` |
-| [std::tree::MinHeap::len](std-tree.md#api-25) | `int64 len()` |
-| [std::tree::MinHeap::peek](std-tree.md#api-29) | `Option<int64> peek()` |
-| [std::tree::MinHeap::pop](std-tree.md#api-28) | `Option<int64> pop()` |
-| [std::tree::MinHeap::push](std-tree.md#api-27) | `void push(int64 value)` |
-| [std::tree::MinHeap::snapshot](std-tree.md#api-31) | `List<int64> snapshot()` |
-| [std::tree::RedBlackTree::clear](std-tree.md#api-19) | `void clear()` |
-| [std::tree::RedBlackTree::contains](std-tree.md#api-16) | `bool contains(int64 value)` |
-| [std::tree::RedBlackTree::create](std-tree.md#api-13) | `static RedBlackTree create()` |
-| [std::tree::RedBlackTree::height](std-tree.md#api-18) | `int64 height()` |
-| [std::tree::RedBlackTree::inorder](std-tree.md#api-23) | `List<int64> inorder()` |
-| [std::tree::RedBlackTree::insert](std-tree.md#api-14) | `bool insert(int64 value)` |
-| [std::tree::RedBlackTree::len](std-tree.md#api-17) | `int64 len()` |
-| [std::tree::RedBlackTree::max](std-tree.md#api-21) | `Option<int64> max()` |
-| [std::tree::RedBlackTree::min](std-tree.md#api-20) | `Option<int64> min()` |
-| [std::tree::RedBlackTree::remove](std-tree.md#api-15) | `bool remove(int64 value)` |
-| [std::tree::RedBlackTree::validate](std-tree.md#api-22) | `bool validate()` |
+| [std::tree::BinarySearchTree::height](std-tree.md#api-9) | `int64 height()` |
+| [std::tree::BinarySearchTree::inorder](std-tree.md#api-10) | `List<int64> inorder()` |
+| [std::tree::BinarySearchTree::insert](std-tree.md#api-4) | `bool insert(int64 key)` |
+| [std::tree::BinarySearchTree::len](std-tree.md#api-2) | `int64 len()` |
+| [std::tree::BinarySearchTree::max](std-tree.md#api-8) | `Option<int64> max()` |
+| [std::tree::BinarySearchTree::min](std-tree.md#api-7) | `Option<int64> min()` |
+| [std::tree::BinarySearchTree::postorder](std-tree.md#api-12) | `List<int64> postorder()` |
+| [std::tree::BinarySearchTree::preorder](std-tree.md#api-11) | `List<int64> preorder()` |
+| [std::tree::BinarySearchTree::remove](std-tree.md#api-5) | `bool remove(int64 key)` |
+| [std::tree::BinarySearchTree::snapshot](std-tree.md#api-13) | `TreeSnapshot snapshot()` |
+| [std::tree::GeneralTree::addChild](std-tree.md#api-40) | `int64 addChild(int64 cursor,int64 value)` |
+| [std::tree::GeneralTree::addRoot](std-tree.md#api-39) | `int64 addRoot(int64 value)` |
+| [std::tree::GeneralTree::children](std-tree.md#api-43) | `List<int64> children(int64 cursor)` |
+| [std::tree::GeneralTree::clear](std-tree.md#api-38) | `void clear()` |
+| [std::tree::GeneralTree::copy](std-tree.md#api-36) | `GeneralTree copy()` |
+| [std::tree::GeneralTree::create](std-tree.md#api-35) | `static GeneralTree create()` |
+| [std::tree::GeneralTree::fromBinary](std-tree.md#api-48) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
+| [std::tree::GeneralTree::height](std-tree.md#api-46) | `int64 height()` |
+| [std::tree::GeneralTree::len](std-tree.md#api-37) | `int64 len()` |
+| [std::tree::GeneralTree::levelOrder](std-tree.md#api-45) | `List<int64> levelOrder()` |
+| [std::tree::GeneralTree::preorder](std-tree.md#api-44) | `List<int64> preorder()` |
+| [std::tree::GeneralTree::rootNode](std-tree.md#api-42) | `int64 rootNode()` |
+| [std::tree::GeneralTree::snapshot](std-tree.md#api-49) | `GeneralTreeSnapshot snapshot()` |
+| [std::tree::GeneralTree::toBinary](std-tree.md#api-47) | `BinarySearchTree toBinary()` |
+| [std::tree::GeneralTree::valueAt](std-tree.md#api-41) | `int64 valueAt(int64 cursor)` |
+| [std::tree::MinHeap::clear](std-tree.md#api-30) | `void clear()` |
+| [std::tree::MinHeap::copy](std-tree.md#api-27) | `MinHeap copy()` |
+| [std::tree::MinHeap::create](std-tree.md#api-26) | `static MinHeap create()` |
+| [std::tree::MinHeap::isEmpty](std-tree.md#api-29) | `bool isEmpty()` |
+| [std::tree::MinHeap::len](std-tree.md#api-28) | `int64 len()` |
+| [std::tree::MinHeap::peek](std-tree.md#api-32) | `Option<int64> peek()` |
+| [std::tree::MinHeap::pop](std-tree.md#api-33) | `Option<int64> pop()` |
+| [std::tree::MinHeap::push](std-tree.md#api-31) | `void push(int64 value)` |
+| [std::tree::MinHeap::snapshot](std-tree.md#api-34) | `List<int64> snapshot()` |
+| [std::tree::RedBlackTree::clear](std-tree.md#api-18) | `void clear()` |
+| [std::tree::RedBlackTree::contains](std-tree.md#api-17) | `bool contains(int64 key)` |
+| [std::tree::RedBlackTree::copy](std-tree.md#api-15) | `RedBlackTree copy()` |
+| [std::tree::RedBlackTree::create](std-tree.md#api-14) | `static RedBlackTree create()` |
+| [std::tree::RedBlackTree::height](std-tree.md#api-19) | `int64 height()` |
+| [std::tree::RedBlackTree::inorder](std-tree.md#api-20) | `List<int64> inorder()` |
+| [std::tree::RedBlackTree::insert](std-tree.md#api-23) | `bool insert(int64 key)` |
+| [std::tree::RedBlackTree::len](std-tree.md#api-16) | `int64 len()` |
+| [std::tree::RedBlackTree::max](std-tree.md#api-22) | `Option<int64> max()` |
+| [std::tree::RedBlackTree::min](std-tree.md#api-21) | `Option<int64> min()` |
+| [std::tree::RedBlackTree::remove](std-tree.md#api-24) | `bool remove(int64 key)` |
+| [std::tree::RedBlackTree::validate](std-tree.md#api-25) | `bool validate()` |
 | [std::utf8::Utf8Error::toString](std-utf8.md#api-0) | `String toString()` |
 | [std::utf8::codePointCount](std-utf8.md#api-6) | `Result<int64,Utf8Error> codePointCount(String text)` |
 | [std::utf8::decodeUtf8](std-utf8.md#api-2) | `Result<List<uint32>,Utf8Error> decodeUtf8(String text)` |
