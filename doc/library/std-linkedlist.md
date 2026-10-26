@@ -26,7 +26,7 @@ LinkedList 以私有拥有型 opcode 保存持久双向节点及游标索引，�
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-309"></a>`struct LinkedList : Iterator<int64>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
+| 模块 | <a id="symbol-311"></a>`struct LinkedList : Iterator<int64>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
 
 ## 函数索引
 

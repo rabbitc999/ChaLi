@@ -8,7 +8,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "build/borrow-flow-tests"
-PREFIX = "struct S:Drop{int64 value;void drop(){}};struct B{S left;S right;};S mut& identity(S mut& p){return p;}struct View{S left;S right;S mut& leftRef(){return &self.left;}S mut& rightRef(){S mut& r=&self.right;return r;}S mut& from(S mut& p){return p;}S mut& deadLeft(){if(false){return &self.left;}return &self.right;}S mut& earlyRight(bool flag){if(flag){return &self.right;}S mut& p=&self.left;p=&self.right;return p;}S mut& shadowRight(){S mut& p=&self.right;{S mut& p=&self.left;}return p;}S mut& assignedRight(){S mut& p=&self.left;{p=&self.right;}return p;}S mut& fresh(){S mut& p = heap S;return p;}};int64 fn() forwardFn(int64 fn() callback){return callback;}struct FnHolder{int64 fn() callback;};struct RefHolder{S mut& ptr;};"
+PREFIX = "struct S:Drop{int64 value;void drop(){}};struct B{S left;S right;};S mut& identity(S mut& p){return p;}struct View{S left;S right;S mut& leftRef(){return &self.left;}S mut& rightRef(){S mut& r=&self.right;return r;}S mut& from(S mut& p){return p;}S mut& deadLeft(){if(false){return &self.left;}return &self.right;}S mut& earlyRight(bool flag){if(flag){return &self.right;}S mut& p=&self.left;p=&self.right;return p;}S mut& shadowRight(){S mut& p=&self.right;{S mut& p=&self.left;}return p;}S mut& assignedRight(){S mut& p=&self.left;{p=&self.right;}return p;}S mut& fresh(){S mut& p = new S;return p;}};int64 fn() forwardFn(int64 fn() callback){return callback;}struct FnHolder{int64 fn() callback;};struct RefHolder{S mut& ptr;};"
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     WORK.mkdir(parents=True, exist_ok=True)
     rejected = {
         "closure_field": "S s;FnHolder h;h.callback=int64 fn(){s.value};let copied=h;s.drop();int64 x=copied.callback();",
-        "closure_owned_field_reference": "S mut& p=heap S;RefHolder h;h.ptr=&*p;let f=int64 fn copy[h](){h.ptr.value};p.drop();int64 x=f();",
+        "closure_owned_field_reference": "S mut& p=new S;RefHolder h;h.ptr=&*p;let f=int64 fn copy[h](){h.ptr.value};p.drop();int64 x=f();",
         "closure_builtin_move": "S s;let f=int64 fn(){s.value};let g=move f;s.drop();int64 x=g();",
         "closure_destructure": "S s;let f=int64 fn(){s.value};let(g,n)=(f,1);s.drop();int64 x=g();",
         "closure_returned_argument": "S s;let f=int64 fn(){s.value};let g=forwardFn(f);s.drop();int64 x=g();",
@@ -28,12 +28,12 @@ def main():
         "closure_callee_deleted_by_argument": "S s;let f=int64 fn(int64 ignored){s.value};int64 x=f(loop{f.drop();yield 1;});",
         "closure_drop": "S s;let f=int64 fn(){s.value};s.drop();int64 x=f();",
         "closure_move": "S s;let f=int64 fn(){s.value};S taken=move s;int64 x=f();",
-        "closure_free": "S mut& p=heap S;let f=int64 fn(){p.value};p.drop();int64 x=f();",
+        "closure_free": "S mut& p=new S;let f=int64 fn(){p.value};p.drop();int64 x=f();",
         "closure_copy": "S s;let f=int64 fn(){s.value};let g=f;s.drop();int64 x=g();",
         "closure_assignment": "S s;let f=int64 fn(){s.value};let g=int64 fn(){1};g=f;s.drop();int64 x=g();",
         "closure_tuple": "S s;let f=int64 fn(){s.value};let pair=(f,1);s.drop();int64 x=pair.0();",
         "closure_tuple_copy": "S s;let f=int64 fn(){s.value};let pair=(f,1);let copied=pair;s.drop();int64 x=copied.0();",
-        "closure_owned_reference": "S mut& p=heap S;let f=int64 fn copy[p](){p.value};p.drop();int64 x=f();",
+        "closure_owned_reference": "S mut& p=new S;let f=int64 fn copy[p](){p.value};p.drop();int64 x=f();",
         "closure_owned_nested": "S s;let f=int64 fn(){s.value};let g=int64 fn copy[f](){f()};s.drop();int64 x=g();",
         "closure_branch": "S s;let f=int64 fn(){s.value};if(flag){s.drop();}int64 x=f();",
         "closure_loop": "S s;let f=int64 fn(){s.value};while(flag){int64 x=f();s.drop();}",
@@ -46,23 +46,23 @@ def main():
         "numeric_move": "int64 a=42;int64 b=move a;a=0;std::lang::assert(a==0 && b==42);",
         "reinitialize": "S a;S taken=move a;a=taken;int64 x=a.value;",
         "method_field": "View v;S mut& p=v.leftRef();S taken=move v.left;int64 x=p.value;",
-        "method_parameter": "View v;S mut& p = heap S;S mut& q=v.from(p);p.drop();int64 x=q.value;",
-        "method_heap": "View mut& v = heap View;S mut& p=v.leftRef();v.drop();int64 x=p.value;",
-        "option_payload": "S mut& p = heap S;Option<S mut&> opt=Option<S mut&>::Value(p);S mut& q=opt.unwrap();p.drop();int64 x=q.value;",
+        "method_parameter": "View v;S mut& p = new S;S mut& q=v.from(p);p.drop();int64 x=q.value;",
+        "method_heap": "View mut& v = new View;S mut& p=v.leftRef();v.drop();int64 x=p.value;",
+        "option_payload": "S mut& p = new S;Option<S mut&> opt=Option<S mut&>::Value(p);S mut& q=opt.unwrap();p.drop();int64 x=q.value;",
         "array_alias": "int64 data[]=new[2];int64 mut& p=&data[0];data.drop();int64 x=*p;",
-        "old_alias": "S mut& p = heap S;S mut& q=p;p.drop();p = heap nS;int64 x=q.value;p.drop();",
-        "returned_alias": "S mut& p = heap S;S mut& q=identity(p);p.drop();int64 x=q.value;",
-        "direct_free": "S mut& p = heap S;p.drop();int64 x=p.value;",
-        "alias_free": "S mut& p = heap S;S mut& q=p;p.drop();int64 x=q.value;",
-        "branch_free": "S mut& p = heap S;if(flag){p.drop();}int64 x=p.value;",
-        "loop_free": "S mut& p = heap S;while(flag){int64 x=p.value;p.drop();}",
-        "do_free": 'S mut& p = heap S;{ bool chaliLoopFirst1 = true; while (chaliLoopFirst1 || (flag)) { chaliLoopFirst1 = false;int64 x=p.value;p.drop(); } }',
-        "break_free": "S mut& p = heap S;while(flag){p.drop();break;}int64 x=p.value;",
-        "continue_free": "S mut& p = heap S;while(flag){p.drop();continue;}int64 x=p.value;",
+        "old_alias": "S mut& p = new S;S mut& q=p;p.drop();p = new nS;int64 x=q.value;p.drop();",
+        "returned_alias": "S mut& p = new S;S mut& q=identity(p);p.drop();int64 x=q.value;",
+        "direct_free": "S mut& p = new S;p.drop();int64 x=p.value;",
+        "alias_free": "S mut& p = new S;S mut& q=p;p.drop();int64 x=q.value;",
+        "branch_free": "S mut& p = new S;if(flag){p.drop();}int64 x=p.value;",
+        "loop_free": "S mut& p = new S;while(flag){int64 x=p.value;p.drop();}",
+        "do_free": 'S mut& p = new S;{ bool chaliLoopFirst1 = true; while (chaliLoopFirst1 || (flag)) { chaliLoopFirst1 = false;int64 x=p.value;p.drop(); } }',
+        "break_free": "S mut& p = new S;while(flag){p.drop();break;}int64 x=p.value;",
+        "continue_free": "S mut& p = new S;while(flag){p.drop();continue;}int64 x=p.value;",
         "move_alias": "S s;S mut& q=&s;S taken=move s;int64 x=q.value;",
         "move_branch": "S s;if(flag){S taken=move s;}int64 x=s.value;",
         "drop_read": "S s;s.drop();int64 x=s.value;",
-        "write_freed": "S mut& p = heap S;p.drop();p.value=1;",
+        "write_freed": "S mut& p = new S;p.drop();p.value=1;",
     }
     accepted = {
         "closure_other_deleted_by_argument": "S s;let other=int64 fn(){1};let f=int64 fn(int64 ignored){s.value};int64 x=f(loop{other.drop();yield 1;});",
@@ -85,16 +85,16 @@ def main():
         "method_early_return": "View v;S mut& p=v.earlyRight(flag);S taken=move v.left;int64 x=p.value;",
         "method_disjoint": "View v;S mut& p=v.rightRef();S taken=move v.left;int64 x=p.value;",
         "method_fresh_loop": "View v;while(flag){S mut& p=v.fresh();p.value=1;p.drop();}",
-        "double_delete": "S mut& p = heap S;p.drop();p.drop();",
+        "double_delete": "S mut& p = new S;p.drop();p.drop();",
         "double_drop": "S s;s.drop();s.drop();",
-        "last_use": "S mut& p = heap S;S mut& q=p;q.value=1;int64 x=q.value;p.drop();",
-        "independent": "S mut& p = heap S;S mut& q = heap S;p.drop();q.value=1;q.drop();",
-        "branch_return": "S mut& p = heap S;if(flag){p.drop();return;}int64 x=p.value;p.drop();",
+        "last_use": "S mut& p = new S;S mut& q=p;q.value=1;int64 x=q.value;p.drop();",
+        "independent": "S mut& p = new S;S mut& q = new S;p.drop();q.value=1;q.drop();",
+        "branch_return": "S mut& p = new S;if(flag){p.drop();return;}int64 x=p.value;p.drop();",
         "branch_rebind": "S a;S b;S mut& q=&a;if(flag){q=&b;}else{q=&b;}S taken=move a;int64 x=q.value;",
-        "dead_loop": "S mut& p = heap S;while(false){p.drop();}int64 x=p.value;p.drop();",
-        "dead_if": "S mut& p = heap S;if(false){p.drop();}int64 x=p.value;p.drop();",
+        "dead_loop": "S mut& p = new S;while(false){p.drop();}int64 x=p.value;p.drop();",
+        "dead_if": "S mut& p = new S;if(false){p.drop();}int64 x=p.value;p.drop();",
         "short_circuit": "S s;S taken=move s;bool value=false && s.value==0;",
-        "moved_heap_delete": "S mut& p = heap S;S taken=move p;p.drop();",
+        "moved_heap_delete": "S mut& p = new S;S taken=move p;p.drop();",
         "redeclare": "S a;S taken=move a;S a;int64 x=a.value;",
         "redeclare_both_branches": "S a;if(flag){S taken=move a;}else{S taken=move a;}S a;int64 x=a.value;",
         "redeclare_return": "S a;if(flag){return;}else{S taken=move a;}S a;int64 x=a.value;",
@@ -102,8 +102,8 @@ def main():
         "redeclare_scalar": "int64 a=42;int64 b=move a;int64 a=7;",
         "shadow": "S a;S taken=move a;{S a;int64 x=a.value;}",
         "array_loop": "while(flag){int64 data[]=new[2];data[0]=1;data.drop();}",
-        "heap_loop": "while(flag){S mut& p = heap S;p.value=1;p.drop();}",
-        "heap_reallocate": "S mut& p = heap S;p.drop();p = heap nS;p.value=1;p.drop();",
+        "heap_loop": "while(flag){S mut& p = new S;p.value=1;p.drop();}",
+        "heap_reallocate": "S mut& p = new S;p.drop();p = new nS;p.value=1;p.drop();",
         "fresh_loop": "while(flag){S s;S taken=move s;}",
         "disjoint_field": "B b;S taken=move b.left;int64 x=b.right.value;",
     }
@@ -121,7 +121,7 @@ def main():
             else:
                 assert not payload["diagnostics"], (name, payload)
     path = WORK / "multiple.chl"
-    path.write_text(PREFIX + "void test(){\nS mut& p = heap nS;p.drop();\nint64 a=p.value;\nint64 b=p.value;\n}void main(){}\n", encoding="utf-8")
+    path.write_text(PREFIX + "void test(){\nS mut& p = new nS;p.drop();\nint64 a=p.value;\nint64 b=p.value;\n}void main(){}\n", encoding="utf-8")
     result = subprocess.run([str(compiler), "--diagnostics=json", str(path)], cwd=ROOT, env=env,
                             capture_output=True, encoding="utf-8", timeout=120)
     diagnostics = json.loads(result.stdout)["diagnostics"]

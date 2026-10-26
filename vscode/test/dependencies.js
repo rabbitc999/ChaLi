@@ -21,7 +21,9 @@ function zipPackage() {
 /** @brief 执行命令、共享缓存、失败处理、工程定位和语言服务刷新回归。 */
 async function main() {
   const root = path.resolve(__dirname, '../..');
-  const sourceCompiler = path.join(root, process.platform === 'win32' ? 'ChaLi.exe' : 'chali');
+  const selectedCompiler = process.env.CHALI_BIN || require('../src/locator').resolveChaLi(root).chali;
+  assert.ok(selectedCompiler, '没有找到当前版本的 ChaLi 编译器');
+  const sourceCompiler = path.resolve(selectedCompiler);
   const directory = fs.mkdtempSync(path.join(require('./projectTemp').root, 'chali vscode deps '));
   const compilerDir = path.join(directory, 'tool chain'); fs.mkdirSync(compilerDir);
   const compiler = path.join(compilerDir, path.basename(sourceCompiler)); fs.copyFileSync(sourceCompiler, compiler);

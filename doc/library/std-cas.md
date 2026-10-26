@@ -89,9 +89,9 @@ ast = sin(x)
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-4"></a>`#derive(Equal, Hash, Clone) enum NodeKind` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 |
+| 模块 | <a id="symbol-5"></a>`#derive(Equal, Hash, Clone) enum NodeKind` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 |
 | NodeKind | `Integer, Rational, Symbol, Add, Multiply, Power, Function, Constant` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-5"></a>`struct Expr : Add<Expr, Expr>, Subtract<Expr, Expr>, Multiply<Expr, Expr>, Divide<Expr, Expr>, Negate<Expr, Expr>, Equal<bool, Expr>` | 精确符号表达式，同时也是可遍历的 AST 根节点。 |
+| 模块 | <a id="symbol-6"></a>`struct Expr : Add<Expr, Expr>, Subtract<Expr, Expr>, Multiply<Expr, Expr>, Divide<Expr, Expr>, Negate<Expr, Expr>, Equal<bool, Expr>` | 精确符号表达式，同时也是可遍历的 AST 根节点。 |
 
 ## 函数索引
 

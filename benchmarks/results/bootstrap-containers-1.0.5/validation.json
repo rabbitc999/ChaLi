@@ -1,0 +1,111 @@
+{
+  "regressions": [
+    {
+      "name": "chali_array_parameters",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_array_parameters.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 19.114155099999607,
+      "log": "regression-chali_array_parameters.log"
+    },
+    {
+      "name": "chali_new_sugars",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_new_sugars.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 10.5287115000001,
+      "log": "regression-chali_new_sugars.log"
+    },
+    {
+      "name": "chali_opcode_declarations",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_opcode_declarations.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 35.31825609999987,
+      "log": "regression-chali_opcode_declarations.log"
+    },
+    {
+      "name": "chali_resource_lifetime",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_resource_lifetime.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 35.60757939999985,
+      "log": "regression-chali_resource_lifetime.log"
+    },
+    {
+      "name": "chali_borrow_flow",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_borrow_flow.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 88.24182229999951,
+      "log": "regression-chali_borrow_flow.log"
+    },
+    {
+      "name": "quad_ir",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\quad_ir.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 7.730033999999705,
+      "log": "regression-quad_ir.log"
+    },
+    {
+      "name": "stackvm_module_layout",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\stackvm_module_layout.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 1.4409803000003194,
+      "log": "regression-stackvm_module_layout.log"
+    },
+    {
+      "name": "vm_differential",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\vm_differential.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 181.59906330000013,
+      "log": "regression-vm_differential.log"
+    },
+    {
+      "name": "chali_book_updates",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_book_updates.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 32.64826989999983,
+      "log": "regression-chali_book_updates.log"
+    },
+    {
+      "name": "chali_man",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_man.py"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 29.685985000000073,
+      "log": "regression-chali_man.log",
+      "note": "最终 API 索引重新生成后单独复跑通过；见 regression-chali_man.log。"
+    }
+  ],
+  "platform": "Windows x64",
+  "llvm_variant": "external",
+  "notes": [
+    "语义专项在相同最终源码构建上通过；随后仅更新因源码行号变化而过期的内嵌 API 资产。",
+    "资产更新后重新执行 Copy 反例和 man 检查；VSIX 测试套件此前完整通过，最终重新打包并核对内嵌字节。"
+  ]
+}

@@ -147,17 +147,17 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-310"></a>`struct Span<T>: Iterator<T mut&>, Index<T, int64>` | `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
+| 模块 | <a id="symbol-312"></a>`struct Span<T>: Iterator<T mut&>, Index<T, int64>` | `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
 `for (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
 只要值就读 `span[i]` 或先 `T v = *p;`。 |
-| Span | <a id="symbol-311"></a>`T mut& data` | 视图引用的连续存储；视图不延长来源的生命周期。 |
-| Span | <a id="symbol-312"></a>`int64 length` | 连续存储中可访问的元素数量。 |
-| 模块 | <a id="symbol-313"></a>`struct MemoryStats` | 当前活跃分配的字节数、块数及历史字节峰值快照。 |
-| MemoryStats | <a id="symbol-314"></a>`int64 liveBytes` | 当前活跃分配的字节数。 |
-| MemoryStats | <a id="symbol-315"></a>`int64 liveBlocks` | 当前活跃分配的块数。 |
-| MemoryStats | <a id="symbol-316"></a>`int64 peakBytes` | 历史活跃分配字节数的峰值。 |
-| 模块 | <a id="symbol-317"></a>`struct Memory` | 内存统计与宿主内存管理操作的静态入口。 |
-| 模块 | <a id="symbol-318"></a>`#NonCopyable opcode Arena` | 不可复制的内存分配区 opcode，reset 或释放后视图失效。 |
+| Span | <a id="symbol-313"></a>`T mut& data` | 视图引用的连续存储；视图不延长来源的生命周期。 |
+| Span | <a id="symbol-314"></a>`int64 length` | 连续存储中可访问的元素数量。 |
+| 模块 | <a id="symbol-315"></a>`struct MemoryStats` | 当前活跃分配的字节数、块数及历史字节峰值快照。 |
+| MemoryStats | <a id="symbol-316"></a>`int64 liveBytes` | 当前活跃分配的字节数。 |
+| MemoryStats | <a id="symbol-317"></a>`int64 liveBlocks` | 当前活跃分配的块数。 |
+| MemoryStats | <a id="symbol-318"></a>`int64 peakBytes` | 历史活跃分配字节数的峰值。 |
+| 模块 | <a id="symbol-319"></a>`struct Memory` | 内存统计与宿主内存管理操作的静态入口。 |
+| 模块 | <a id="symbol-320"></a>`#NonCopyable opcode Arena` | 不可复制的内存分配区 opcode，reset 或释放后视图失效。 |
 
 ## 函数索引
 
@@ -191,7 +191,7 @@ static Span<T> from(T mut& data, int64 length);
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `data` | `T mut& data` | 连续存储的首元素引用，调用者保证范围有效 | 无 |
-| `length` | `int64 length` | 有效长度 | 无 |
+| `length` | `int64 length` | 目标有效元素数，必须非负。 | 无 |
 
 **返回值**
 

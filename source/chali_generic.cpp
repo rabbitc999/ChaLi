@@ -1761,6 +1761,8 @@ bool run(preprocess::Result &result, Memory::String &error)
                "interface Hash { uint64 hash(T value); };", 10u);
     addBuiltin("Clone", { Parameter{ "T", "", "std::lang::Any" } },
                "interface Clone { T clone(); };", 10u);
+    addBuiltin("Copy", { Parameter{ "T", "", "std::lang::Any" } },
+               "interface Copy { T copy(); };", 10u);
     addBuiltin("ExplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },
                "interface ExplicitConvert { T explicitConvert(); };", 10u);
     addBuiltin("ImplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },

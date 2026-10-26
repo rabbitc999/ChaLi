@@ -97,7 +97,7 @@ drop conn
 after block
 ```
 
-`T mut& p = heap T;` 创建手动分配的存储，须按规则 `p.drop();`，不能把离开引用作用域当作自动释放
+`T mut& p = new T;` 创建手动分配的存储，须按规则 `p.drop();`，不能把离开引用作用域当作自动释放
 目标存储的承诺。文件、进程、数据库与其他宿主句柄按各自 Drop/Closeable 契约管理。
 非幂等 drop、分配身份与自动清理的边界见[验证说明](11-algorithm-validation.md)。
 

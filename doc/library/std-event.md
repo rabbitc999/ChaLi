@@ -62,12 +62,12 @@ events ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-60"></a>`struct Event` | 显式接收的定时或宿主事件值。 |
-| Event | <a id="symbol-61"></a>`int64 timer` | 定时事件的宿主资源。 |
-| Event | <a id="symbol-62"></a>`int64 tag` | 宿主投递的事件标签。 |
-| Event | <a id="symbol-63"></a>`int64 source` | 被适配的源游标或连续存储。 |
-| Event | <a id="symbol-64"></a>`int64 missed` | 周期通知合并时错过的周期数量。 |
-| 模块 | <a id="symbol-65"></a>`struct Timer` | 不可复制的定时源所有者，事件中的 timer 仅为来源标识。 |
+| 模块 | <a id="symbol-61"></a>`struct Event` | 显式接收的定时或宿主事件值。 |
+| Event | <a id="symbol-62"></a>`int64 timer` | 定时事件的宿主资源。 |
+| Event | <a id="symbol-63"></a>`int64 tag` | 宿主投递的事件标签。 |
+| Event | <a id="symbol-64"></a>`int64 source` | 被适配的源游标或连续存储。 |
+| Event | <a id="symbol-65"></a>`int64 missed` | 周期通知合并时错过的周期数量。 |
+| 模块 | <a id="symbol-66"></a>`struct Timer` | 不可复制的定时源所有者，事件中的 timer 仅为来源标识。 |
 
 ## 函数索引
 

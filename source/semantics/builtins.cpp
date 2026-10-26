@@ -873,6 +873,12 @@ std::shared_ptr<MType> RawExprType(int id)
         if (const MIndexDecl *index = FindIndex(base, ExprType(node.kids[1])))
             return index->result;
         if (IsInterfacePointer(base)) return T(M_TypeInt()); /* 会报错，给个占位 */
+        if (base->kind == MType::Array && base->dims.size() > 1u)
+        {
+            // 部分下标保留剩余维度，避免把字符串或容器元素提前当成下一维索引。
+            Memory::Vector<int> remaining(base->dims.begin() + 1, base->dims.end());
+            return ArrayType(base->elem, remaining);
+        }
         if (base->kind == MType::Array || base->kind == MType::Ptr) return base->elem;
         if (IsStandardOpcode(base, "String")) return T(M_TypeChar());
         if (IsContainer(base))

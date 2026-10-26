@@ -1,0 +1,105 @@
+/* 自举实验实现；不是默认标准库替换。Map/Set 的键限定为 int64。 */
+import std::array;
+
+struct BootstrapList<T>: Index<T, int64>, Copy<BootstrapList<T>> {
+    std::array::DynamicArray<T> data;
+    void push(T value) { self.data.push(value); }
+    T index(int64 key) { return self.data.at(key); }
+    void set(int64 key, T value) { self.data.set(key, value); }
+    T pop() { return self.data.pop().unwrap(); }
+    int64 len() { return self.data.len(); }
+    BootstrapList<T> copy() { return self; }
+};
+
+/** int64 键的开放寻址哈希表，线性探测、墓碑删除，装载率不超过一半。 */
+struct BootstrapMap<T>: Index<T, int64>, Copy<BootstrapMap<T>> {
+    int64[] keys;
+    T[] values;
+    uint8[] states;
+    int64 slots;
+    int64 count;
+    int64 used;
+
+    int64 bucket(int64 key) {
+        int64 result = key % self.slots;
+        if (result < 0) { result = result + self.slots; }
+        return result;
+    }
+    int64 find(int64 key) {
+        if (self.slots == 0) { return -1; }
+        int64 slot = self.bucket(key);
+        int64 scanned = 0;
+        while (scanned < self.slots) {
+            if (self.states[slot] == 0) { return -1; }
+            if (self.states[slot] == 1 && self.keys[slot] == key) { return slot; }
+            slot = (slot + 1) % self.slots;
+            scanned = scanned + 1;
+        }
+        return -1;
+    }
+    int64 has(int64 key) {
+        if (self.find(key) >= 0) { return 1; }
+        return 0;
+    }
+    T index(int64 key) {
+        int64 slot = self.find(key);
+        assert(slot >= 0, "BootstrapMap 键不存在");
+        return self.values[slot];
+    }
+    /** 已保证容量和键不存在时插入，供正常写入和扩容重建共用。 */
+    void insertFresh(int64 key, T value) {
+        int64 slot = self.bucket(key);
+        while (self.states[slot] == 1) { slot = (slot + 1) % self.slots; }
+        if (self.states[slot] == 0) { self.used = self.used + 1; }
+        self.keys[slot] = key;
+        self.values[slot] = value;
+        self.states[slot] = 1;
+        self.count = self.count + 1;
+    }
+    void grow() {
+        assert(self.slots <= 4611686018427387903, "BootstrapMap 容量溢出");
+        int64 previous = self.slots;
+        int64 oldKeys[] = self.keys;
+        T oldValues[] = self.values;
+        uint8 oldStates[] = self.states;
+        int64 capacity = 8;
+        if (previous > 0) { capacity = previous * 2; }
+        self.keys = new[capacity];
+        self.values = new[capacity];
+        self.states = new[capacity];
+        self.slots = capacity;
+        self.count = 0;
+        self.used = 0;
+        int64 i = 0;
+        while (i < previous) {
+            if (oldStates[i] == 1) { self.insertFresh(oldKeys[i], oldValues[i]); }
+            i = i + 1;
+        }
+    }
+    void put(int64 key, T value) {
+        int64 slot = self.find(key);
+        if (slot >= 0) { self.values[slot] = value; return; }
+        if (self.slots == 0 || self.used >= self.slots / 2) { self.grow(); }
+        self.insertFresh(key, value);
+    }
+    void remove(int64 key) {
+        int64 slot = self.find(key);
+        if (slot < 0) { return; }
+        T empty;
+        self.values[slot] = empty;
+        self.states[slot] = 2;
+        self.count = self.count - 1;
+    }
+    int64 len() { return self.count; }
+    BootstrapMap<T> copy() { return self; }
+};
+
+/** Set 复用自举哈希表，额外值槽保存零。 */
+struct BootstrapSet: Copy<BootstrapSet> {
+    BootstrapMap<int64> data;
+    void add(int64 key) { self.data.put(key, 0); }
+    int64 has(int64 key) { return self.data.has(key); }
+    void remove(int64 key) { self.data.remove(key); }
+    int64 len() { return self.data.len(); }
+    BootstrapSet copy() { return self; }
+};

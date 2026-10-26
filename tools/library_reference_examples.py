@@ -1,5 +1,6 @@
 """库参考页对应的完整参考程序；复用正式样例，防止文档代码与测试代码分叉。"""
 EXAMPLES = {
+    'std::array':'example/samples/dynamic_array.chl',
     'std::cas':'example/samples/cas.chl',
     'std::encoding':'example/samples/std_encoding.chl',
     'std::utf8':'example/samples/std_utf8.chl',

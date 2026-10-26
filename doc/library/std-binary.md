@@ -224,10 +224,10 @@ binary reader OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-0"></a>`struct BinaryReader : Drop` | 二进制流读取器：拥有输入字节的副本，默认小端。 |
-| BinaryReader | <a id="symbol-1"></a>`std::lang::List<uint8> bytes` | 字节数据，保留零字节。 |
-| BinaryReader | <a id="symbol-2"></a>`int64 offset` | 下一次读取在 bytes 中的字节位置。 |
-| BinaryReader | <a id="symbol-3"></a>`bool bigEndian` | 是否按大端序解析多字节数值。 |
+| 模块 | <a id="symbol-1"></a>`struct BinaryReader : Drop` | 二进制流读取器：拥有输入字节的副本，默认小端。 |
+| BinaryReader | <a id="symbol-2"></a>`std::lang::List<uint8> bytes` | 字节数据，保留零字节。 |
+| BinaryReader | <a id="symbol-3"></a>`int64 offset` | 下一次读取在 bytes 中的字节位置。 |
+| BinaryReader | <a id="symbol-4"></a>`bool bigEndian` | 是否按大端序解析多字节数值。 |
 
 ## 函数索引
 
@@ -1520,7 +1520,7 @@ std::lang::String readString(int64 length);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `length` | `int64 length` | 有效长度 | 无 |
+| `length` | `int64 length` | 目标有效元素数，必须非负。 | 无 |
 
 **返回值**
 

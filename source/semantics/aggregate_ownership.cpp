@@ -5,8 +5,7 @@
  * 被 drop）时按叶子逐个递归软释放。这样"把新拼的串塞进 Result 载荷再返回"不再漏，
  * 也不会出现"聚合还指着已释放的串"。
  *
- * 只有字符串与对象句柄（`bint` / 容器 / `obj` / 接口引用）进这套规则；运行时数组
- * 与宿主资源句柄仍是**借用**（谁 `new` 谁 `drop`），裸引用也一样。
+ * 字符串、对象句柄及运行时数组字段独占资源；裸引用仍按借用处理。
  */
 
 /**
@@ -16,7 +15,7 @@
  */
 bool LeafOwnedByAggregate(const std::shared_ptr<MType> &type)
 {
-    return type && (IsStandardOpcode(type, "String") || IsObjectLike(type) || OpcodeNonCopyable(type));
+    return type && (IsStandardOpcode(type, "String") || IsObjectLike(type) || OpcodeNonCopyable(type) || IsRuntimeArray(type));
 }
 
 /**
@@ -931,11 +930,13 @@ simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, con
     const std::int64_t fixedCount = FixedArrayElementCount(type->dims);
     const auto countValue = IsRuntimeArray(type) ? Node::loadInt(Node::binary("-", Node::var(input), Node::i(8))) : Node::i(fixedCount);
     g_usesNewArray = true;
-    Memory::Vector<simple_ast::NodePtr> out{
+    Memory::Vector<simple_ast::NodePtr> prefix{
         Node::declare(input, simple_ast::Type::i64()), Node::assign(input, source),
+        Node::declare(result, LowerType(type, result)), Node::assign(result, Node::i(0))
+    };
+    Memory::Vector<simple_ast::NodePtr> out{
         Node::declare(length, simple_ast::Type::i64()),
         Node::assign(length, countValue),
-        Node::declare(result, LowerType(type, result)),
         Node::assign(result, Node::call("__chali_new_array", { "__chali_len", "__chali_stride" }, { Node::var(length), Node::i(stride) })),
         Node::declare(index, simple_ast::Type::i64()), Node::assign(index, Node::i(0)),
         Node::label(loop), Node::ifThenElse(Node::binary(">=", Node::var(index), Node::var(length)), Node::jump(done), nullptr)
@@ -954,7 +955,15 @@ simple_ast::NodePtr CopyRuntimeArrayValue(const simple_ast::NodePtr &source, con
     out.push_back(Node::assign(index, Node::binary("+", Node::var(index), Node::i(1))));
     out.push_back(Node::jump(loop));
     out.push_back(Node::label(done));
-    return Node::sequence(std::move(out), Node::var(result));
+    if (IsRuntimeArray(type))
+    {
+        // 默认初始化的数组字段为空句柄，复制空态不得读取负地址的长度头。
+        prefix.push_back(Node::ifThenElse(Node::binary("!=", Node::var(input), Node::i(0)),
+                                          Node::block(std::move(out)), nullptr));
+    }
+    else
+        prefix.insert(prefix.end(), out.begin(), out.end());
+    return Node::sequence(std::move(prefix), Node::var(result));
 }
 
 /**

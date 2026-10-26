@@ -129,81 +129,82 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-216"></a>`opcode String` | 拥有 UTF-8 文本的 opcode 值，复制产生独立可写缓冲。 |
-| 模块 | <a id="symbol-217"></a>`interface Error` | 标准库错误的统一接口；诊断文本保留具体失败原因。 |
-| 模块 | <a id="symbol-218"></a>`struct MessageError : Error` | 只有文本诊断时使用的标准错误对象，消息按值独立拥有。 |
-| MessageError | <a id="symbol-219"></a>`String message` | 供用户阅读的错误原因。 |
-| 模块 | <a id="symbol-220"></a>`opcode BigInteger` | 任意精度有符号整数，算术由大数运行时实现。 |
-| 模块 | <a id="symbol-221"></a>`opcode BigDecimal` | 可配置精度的十进制大数。 |
-| 模块 | <a id="symbol-222"></a>`#NonCopyable opcode File` | 不可复制的文件 opcode，作用域退出释放文件资源。 |
-| 模块 | <a id="symbol-223"></a>`#NonCopyable opcode Process` | 不可复制的进程 opcode，操作由宿主胶水提供。 |
-| 模块 | <a id="symbol-224"></a>`enum TryBranch<T, R>` | 传播分支：Continue 产生成功值，Break 携带失败载荷退出当前函数。 |
+| 模块 | <a id="symbol-217"></a>`opcode String` | 拥有 UTF-8 文本的 opcode 值，复制产生独立可写缓冲。 |
+| 模块 | <a id="symbol-218"></a>`interface Error` | 标准库错误的统一接口；诊断文本保留具体失败原因。 |
+| 模块 | <a id="symbol-219"></a>`struct MessageError : Error` | 只有文本诊断时使用的标准错误对象，消息按值独立拥有。 |
+| MessageError | <a id="symbol-220"></a>`String message` | 供用户阅读的错误原因。 |
+| 模块 | <a id="symbol-221"></a>`opcode BigInteger` | 任意精度有符号整数，算术由大数运行时实现。 |
+| 模块 | <a id="symbol-222"></a>`opcode BigDecimal` | 可配置精度的十进制大数。 |
+| 模块 | <a id="symbol-223"></a>`#NonCopyable opcode File` | 不可复制的文件 opcode，作用域退出释放文件资源。 |
+| 模块 | <a id="symbol-224"></a>`#NonCopyable opcode Process` | 不可复制的进程 opcode，操作由宿主胶水提供。 |
+| 模块 | <a id="symbol-225"></a>`enum TryBranch<T, R>` | 传播分支：Continue 产生成功值，Break 携带失败载荷退出当前函数。 |
 | TryBranch | `Continue(T value), Break(R residual)` | 传播分支：Continue 产生成功值，Break 携带失败载荷退出当前函数。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-225"></a>`struct ErrorResidual<E>` | Result 的错误传播载荷，保留错误类型身份。 |
-| ErrorResidual | <a id="symbol-226"></a>`E error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-227"></a>`enum NoneResidual` | Option 无值分支的传播载荷。 |
+| 模块 | <a id="symbol-226"></a>`struct ErrorResidual<E>` | Result 的错误传播载荷，保留错误类型身份。 |
+| ErrorResidual | <a id="symbol-227"></a>`E error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-228"></a>`enum NoneResidual` | Option 无值分支的传播载荷。 |
 | NoneResidual | `None` | Option 无值分支的传播载荷。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-228"></a>`interface Try<T, R>` | 只读拆分传播值的显式编译期协议。 |
-| 模块 | <a id="symbol-229"></a>`interface TryMove<T, R>` | 移动拥有值后拆分传播值的显式编译期协议。 |
-| 模块 | <a id="symbol-230"></a>`interface FromResidual<F, R>` | 以静态方法从传播载荷构造函数返回值的编译期协议。 |
-| 模块 | <a id="symbol-231"></a>`enum Option<T> : Try<T, NoneResidual>, TryMove<T, NoneResidual>, FromResidual<Option<T>, NoneResidual>` | 可选值：Value(T) 表示存在，None 表示缺失。 |
+| 模块 | <a id="symbol-229"></a>`interface Try<T, R>` | 只读拆分传播值的显式编译期协议。 |
+| 模块 | <a id="symbol-230"></a>`interface TryMove<T, R>` | 移动拥有值后拆分传播值的显式编译期协议。 |
+| 模块 | <a id="symbol-231"></a>`interface FromResidual<F, R>` | 以静态方法从传播载荷构造函数返回值的编译期协议。 |
+| 模块 | <a id="symbol-232"></a>`enum Option<T> : Try<T, NoneResidual>, TryMove<T, NoneResidual>, FromResidual<Option<T>, NoneResidual>` | 可选值：Value(T) 表示存在，None 表示缺失。 |
 | Option | `Value(T value), None` | 可选值：Value(T) 表示存在，None 表示缺失。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-232"></a>`enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, FromResidual<Result<T, E>, ErrorResidual<E>>` | 操作结果：Ok(T) 表示成功，Err(E) 保存错误。 |
+| 模块 | <a id="symbol-233"></a>`enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, FromResidual<Result<T, E>, ErrorResidual<E>>` | 操作结果：Ok(T) 表示成功，Err(E) 保存错误。 |
 | Result | `Ok(T value), Err(E error)` | 操作结果：Ok(T) 表示成功，Err(E) 保存错误。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-233"></a>`interface NextValue<T>` | 自定义区间的有状态前进协议。
+| 模块 | <a id="symbol-234"></a>`interface NextValue<T>` | 自定义区间的有状态前进协议。
 @note nextValue 从接收者的游标状态产生下一项并推进状态；到达终点后返回 None。 |
-| 模块 | <a id="symbol-234"></a>`struct Pair<K, V>` | 包含 first 和 second 的两个值，分别使用 K 与 V 类型。 |
-| Pair | <a id="symbol-235"></a>`K first` | 第一项，类型为 K。 |
-| Pair | <a id="symbol-236"></a>`V second` | 第二项，类型为 V。 |
-| 模块 | <a id="symbol-237"></a>`interface Drop` | 显式释放拥有资源的析构协议。 |
-| 模块 | <a id="symbol-238"></a>`interface Closeable` | 关闭外部资源的协议。 |
-| 模块 | <a id="symbol-239"></a>`struct List<T>` | 可变长度的顺序值容器，支持按下标访问、追加、删除与复制。 |
-| 模块 | <a id="symbol-240"></a>`struct Set<T>` | 保存唯一元素的值集合，支持存在检查和集合运算。 |
-| 模块 | <a id="symbol-241"></a>`struct Map<K,V>` | 从唯一键到值的映射，支持键查询和按遍历位置读取。 |
-| 模块 | <a id="symbol-242"></a>`struct Any` | 拥有一个装箱值的类型擦除容器；通过类型检查安全读取。 |
-| 模块 | <a id="symbol-243"></a>`struct Math` | 核心数学常量和数值操作的静态入口。 |
-| Math | <a id="symbol-244"></a>`static const float64 PI` | 圆周率常量。 |
-| Math | <a id="symbol-245"></a>`static const float64 E` | 自然对数底数常量。 |
-| 模块 | <a id="symbol-246"></a>`interface Add<R,T>` | 左操作数的加法重载接口。 |
-| 模块 | <a id="symbol-247"></a>`interface RightAdd<R,T>` | 右操作数的加法重载接口。 |
-| 模块 | <a id="symbol-248"></a>`interface Subtract<R,T>` | 左操作数的减法重载接口。 |
-| 模块 | <a id="symbol-249"></a>`interface RightSubtract<R,T>` | 右操作数的减法重载接口。 |
-| 模块 | <a id="symbol-250"></a>`interface Multiply<R,T>` | 左操作数的乘法重载接口。 |
-| 模块 | <a id="symbol-251"></a>`interface RightMultiply<R,T>` | 右操作数的乘法重载接口。 |
-| 模块 | <a id="symbol-252"></a>`interface Divide<R,T>` | 左操作数的除法重载接口。 |
-| 模块 | <a id="symbol-253"></a>`interface RightDivide<R,T>` | 右操作数的除法重载接口。 |
-| 模块 | <a id="symbol-254"></a>`interface Modulo<R,T>` | 左操作数的取模重载接口。 |
-| 模块 | <a id="symbol-255"></a>`interface RightModulo<R,T>` | 右操作数的取模重载接口。 |
-| 模块 | <a id="symbol-256"></a>`interface Equal<R,T>` | 左操作数的相等比较重载接口。 |
-| 模块 | <a id="symbol-257"></a>`interface RightEqual<R,T>` | 右操作数的相等比较重载接口。 |
-| 模块 | <a id="symbol-258"></a>`interface NotEqual<R,T>` | 左操作数的不等比较重载接口。 |
-| 模块 | <a id="symbol-259"></a>`interface RightNotEqual<R,T>` | 右操作数的不等比较重载接口。 |
-| 模块 | <a id="symbol-260"></a>`interface Less<R,T>` | 左操作数的小于比较重载接口。 |
-| 模块 | <a id="symbol-261"></a>`interface RightLess<R,T>` | 右操作数的小于比较重载接口。 |
-| 模块 | <a id="symbol-262"></a>`interface LessOrEqual<R,T>` | 左操作数的小于等于比较重载接口。 |
-| 模块 | <a id="symbol-263"></a>`interface RightLessOrEqual<R,T>` | 右操作数的小于等于比较重载接口。 |
-| 模块 | <a id="symbol-264"></a>`interface Greater<R,T>` | 左操作数的大于比较重载接口。 |
-| 模块 | <a id="symbol-265"></a>`interface RightGreater<R,T>` | 右操作数的大于比较重载接口。 |
-| 模块 | <a id="symbol-266"></a>`interface GreaterOrEqual<R,T>` | 左操作数的大于等于比较重载接口。 |
-| 模块 | <a id="symbol-267"></a>`interface RightGreaterOrEqual<R,T>` | 右操作数的大于等于比较重载接口。 |
-| 模块 | <a id="symbol-268"></a>`interface And<R,T>` | 左操作数的按位与重载接口。 |
-| 模块 | <a id="symbol-269"></a>`interface RightAnd<R,T>` | 右操作数的按位与重载接口。 |
-| 模块 | <a id="symbol-270"></a>`interface Or<R,T>` | 左操作数的按位或重载接口。 |
-| 模块 | <a id="symbol-271"></a>`interface RightOr<R,T>` | 右操作数的按位或重载接口。 |
-| 模块 | <a id="symbol-272"></a>`interface Xor<R,T>` | 左操作数的按位异或重载接口。 |
-| 模块 | <a id="symbol-273"></a>`interface RightXor<R,T>` | 右操作数的按位异或重载接口。 |
-| 模块 | <a id="symbol-274"></a>`interface ShiftLeft<R,T>` | 左操作数的左移重载接口。 |
-| 模块 | <a id="symbol-275"></a>`interface RightShiftLeft<R,T>` | 右操作数的左移重载接口。 |
-| 模块 | <a id="symbol-276"></a>`interface ShiftRight<R,T>` | 左操作数的右移重载接口。 |
-| 模块 | <a id="symbol-277"></a>`interface RightShiftRight<R,T>` | 右操作数的右移重载接口。 |
-| 模块 | <a id="symbol-278"></a>`interface Negate<R,T>` | 左操作数的取负重载接口。 |
-| 模块 | <a id="symbol-279"></a>`interface BitNot<R,T>` | 左操作数的按位取反重载接口。 |
-| 模块 | <a id="symbol-280"></a>`interface Positive<R,T>` | 左操作数的取正重载接口。 |
-| 模块 | <a id="symbol-281"></a>`interface Hash<T>` | 为值提供哈希计算的接口。 |
-| 模块 | <a id="symbol-282"></a>`interface ExplicitConvert<T>` | 显式类型转换的接口。 |
-| 模块 | <a id="symbol-283"></a>`interface ImplicitConvert<T>` | 隐式类型转换的接口。 |
-| 模块 | <a id="symbol-284"></a>`interface Index<R,T>` | 自定义下标访问接口；与小写 index 连续存储函数区分。 |
-| 模块 | <a id="symbol-285"></a>`interface Iterator<R>` | 供 for-in 获取和推进迭代状态的接口。 |
+| 模块 | <a id="symbol-235"></a>`struct Pair<K, V>` | 包含 first 和 second 的两个值，分别使用 K 与 V 类型。 |
+| Pair | <a id="symbol-236"></a>`K first` | 第一项，类型为 K。 |
+| Pair | <a id="symbol-237"></a>`V second` | 第二项，类型为 V。 |
+| 模块 | <a id="symbol-238"></a>`interface Drop` | 显式释放拥有资源的析构协议。 |
+| 模块 | <a id="symbol-239"></a>`interface Closeable` | 关闭外部资源的协议。 |
+| 模块 | <a id="symbol-240"></a>`struct List<T>` | 可变长度的顺序值容器，支持按下标访问、追加、删除与复制。 |
+| 模块 | <a id="symbol-241"></a>`struct Set<T>` | 保存唯一元素的值集合，支持存在检查和集合运算。 |
+| 模块 | <a id="symbol-242"></a>`struct Map<K,V>` | 从唯一键到值的映射，支持键查询和按遍历位置读取。 |
+| 模块 | <a id="symbol-243"></a>`struct Any` | 拥有一个装箱值的类型擦除容器；通过类型检查安全读取。 |
+| 模块 | <a id="symbol-244"></a>`struct Math` | 核心数学常量和数值操作的静态入口。 |
+| Math | <a id="symbol-245"></a>`static const float64 PI` | 圆周率常量。 |
+| Math | <a id="symbol-246"></a>`static const float64 E` | 自然对数底数常量。 |
+| 模块 | <a id="symbol-247"></a>`interface Add<R,T>` | 左操作数的加法重载接口。 |
+| 模块 | <a id="symbol-248"></a>`interface RightAdd<R,T>` | 右操作数的加法重载接口。 |
+| 模块 | <a id="symbol-249"></a>`interface Subtract<R,T>` | 左操作数的减法重载接口。 |
+| 模块 | <a id="symbol-250"></a>`interface RightSubtract<R,T>` | 右操作数的减法重载接口。 |
+| 模块 | <a id="symbol-251"></a>`interface Multiply<R,T>` | 左操作数的乘法重载接口。 |
+| 模块 | <a id="symbol-252"></a>`interface RightMultiply<R,T>` | 右操作数的乘法重载接口。 |
+| 模块 | <a id="symbol-253"></a>`interface Divide<R,T>` | 左操作数的除法重载接口。 |
+| 模块 | <a id="symbol-254"></a>`interface RightDivide<R,T>` | 右操作数的除法重载接口。 |
+| 模块 | <a id="symbol-255"></a>`interface Modulo<R,T>` | 左操作数的取模重载接口。 |
+| 模块 | <a id="symbol-256"></a>`interface RightModulo<R,T>` | 右操作数的取模重载接口。 |
+| 模块 | <a id="symbol-257"></a>`interface Equal<R,T>` | 左操作数的相等比较重载接口。 |
+| 模块 | <a id="symbol-258"></a>`interface RightEqual<R,T>` | 右操作数的相等比较重载接口。 |
+| 模块 | <a id="symbol-259"></a>`interface NotEqual<R,T>` | 左操作数的不等比较重载接口。 |
+| 模块 | <a id="symbol-260"></a>`interface RightNotEqual<R,T>` | 右操作数的不等比较重载接口。 |
+| 模块 | <a id="symbol-261"></a>`interface Less<R,T>` | 左操作数的小于比较重载接口。 |
+| 模块 | <a id="symbol-262"></a>`interface RightLess<R,T>` | 右操作数的小于比较重载接口。 |
+| 模块 | <a id="symbol-263"></a>`interface LessOrEqual<R,T>` | 左操作数的小于等于比较重载接口。 |
+| 模块 | <a id="symbol-264"></a>`interface RightLessOrEqual<R,T>` | 右操作数的小于等于比较重载接口。 |
+| 模块 | <a id="symbol-265"></a>`interface Greater<R,T>` | 左操作数的大于比较重载接口。 |
+| 模块 | <a id="symbol-266"></a>`interface RightGreater<R,T>` | 右操作数的大于比较重载接口。 |
+| 模块 | <a id="symbol-267"></a>`interface GreaterOrEqual<R,T>` | 左操作数的大于等于比较重载接口。 |
+| 模块 | <a id="symbol-268"></a>`interface RightGreaterOrEqual<R,T>` | 右操作数的大于等于比较重载接口。 |
+| 模块 | <a id="symbol-269"></a>`interface And<R,T>` | 左操作数的按位与重载接口。 |
+| 模块 | <a id="symbol-270"></a>`interface RightAnd<R,T>` | 右操作数的按位与重载接口。 |
+| 模块 | <a id="symbol-271"></a>`interface Or<R,T>` | 左操作数的按位或重载接口。 |
+| 模块 | <a id="symbol-272"></a>`interface RightOr<R,T>` | 右操作数的按位或重载接口。 |
+| 模块 | <a id="symbol-273"></a>`interface Xor<R,T>` | 左操作数的按位异或重载接口。 |
+| 模块 | <a id="symbol-274"></a>`interface RightXor<R,T>` | 右操作数的按位异或重载接口。 |
+| 模块 | <a id="symbol-275"></a>`interface ShiftLeft<R,T>` | 左操作数的左移重载接口。 |
+| 模块 | <a id="symbol-276"></a>`interface RightShiftLeft<R,T>` | 右操作数的左移重载接口。 |
+| 模块 | <a id="symbol-277"></a>`interface ShiftRight<R,T>` | 左操作数的右移重载接口。 |
+| 模块 | <a id="symbol-278"></a>`interface RightShiftRight<R,T>` | 右操作数的右移重载接口。 |
+| 模块 | <a id="symbol-279"></a>`interface Negate<R,T>` | 左操作数的取负重载接口。 |
+| 模块 | <a id="symbol-280"></a>`interface BitNot<R,T>` | 左操作数的按位取反重载接口。 |
+| 模块 | <a id="symbol-281"></a>`interface Positive<R,T>` | 左操作数的取正重载接口。 |
+| 模块 | <a id="symbol-282"></a>`interface Hash<T>` | 为值提供哈希计算的接口。 |
+| 模块 | <a id="symbol-283"></a>`interface Copy<T>` | 显式独立值复制协议，不改变赋值规则。 |
+| 模块 | <a id="symbol-284"></a>`interface ExplicitConvert<T>` | 显式类型转换的接口。 |
+| 模块 | <a id="symbol-285"></a>`interface ImplicitConvert<T>` | 隐式类型转换的接口。 |
+| 模块 | <a id="symbol-286"></a>`interface Index<R,T>` | 自定义下标访问接口；与小写 index 连续存储函数区分。 |
+| 模块 | <a id="symbol-287"></a>`interface Iterator<R>` | 供 for-in 获取和推进迭代状态的接口。 |
 
 ## 函数索引
 
@@ -469,13 +470,14 @@ void main() {
 | [BitNot::bitNot](#api-257) | `R bitNot(T value)` |
 | [Positive::positive](#api-258) | `R positive(T value)` |
 | [Hash::hash](#api-259) | `uint64 hash(T value)` |
-| [ExplicitConvert::explicitConvert](#api-260) | `T explicitConvert()` |
-| [ImplicitConvert::implicitConvert](#api-261) | `T implicitConvert()` |
-| [Index::index](#api-262) | `R index(T key)` |
-| [Iterator::iterator](#api-263) | `Option<R> iterator(int64 index)` |
-| [Result::mapErr](#api-264) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
-| [Option::okOr](#api-265) | `Result<T,E> okOr<E>(E error)` |
-| [Option::okOrElse](#api-266) | `Result<T,E> okOrElse<E>(E fn() factory)` |
+| [Copy::copy](#api-260) | `T copy()` |
+| [ExplicitConvert::explicitConvert](#api-261) | `T explicitConvert()` |
+| [ImplicitConvert::implicitConvert](#api-262) | `T implicitConvert()` |
+| [Index::index](#api-263) | `R index(T key)` |
+| [Iterator::iterator](#api-264) | `Option<R> iterator(int64 index)` |
+| [Result::mapErr](#api-265) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
+| [Option::okOr](#api-266) | `Result<T,E> okOr<E>(E error)` |
+| [Option::okOrElse](#api-267) | `Result<T,E> okOrElse<E>(E fn() factory)` |
 
 <a id="api-0"></a>
 
@@ -1718,7 +1720,7 @@ String padStart(int64 length, String fill = " ");
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `length` | `int64 length` | 有效长度 | 无 |
+| `length` | `int64 length` | 目标有效元素数，必须非负。 | 无 |
 | `fill` | `String fill` | 填充字节 | `" "` |
 
 **返回值**
@@ -1759,7 +1761,7 @@ String padEnd(int64 length, String fill = " ");
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `length` | `int64 length` | 有效长度 | 无 |
+| `length` | `int64 length` | 目标有效元素数，必须非负。 | 无 |
 | `fill` | `String fill` | 填充字节 | `" "` |
 
 **返回值**
@@ -5261,7 +5263,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1842](../../source/chali_generic.cpp#L1842)。
+**源码**：[source/chali_generic.cpp:1844](../../source/chali_generic.cpp#L1844)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5302,7 +5304,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/chali_generic.cpp:1850](../../source/chali_generic.cpp#L1850)。
+**源码**：[source/chali_generic.cpp:1852](../../source/chali_generic.cpp#L1852)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5343,7 +5345,7 @@ __Interval_int64 rangeEq(int64 start, int64 stop);
 rangeEq(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1865](../../source/chali_generic.cpp#L1865)。
+**源码**：[source/chali_generic.cpp:1867](../../source/chali_generic.cpp#L1867)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5379,7 +5381,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/chali_generic.cpp:2072](../../source/chali_generic.cpp#L2072)。
+**源码**：[source/chali_generic.cpp:2074](../../source/chali_generic.cpp#L2074)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5415,7 +5417,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/chali_generic.cpp:2080](../../source/chali_generic.cpp#L2080)。
+**源码**：[source/chali_generic.cpp:2082](../../source/chali_generic.cpp#L2082)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6088,7 +6090,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1779](../../source/chali_generic.cpp#L1779)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1781](../../source/chali_generic.cpp#L1781)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6126,7 +6128,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1785](../../source/chali_generic.cpp#L1785)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1787](../../source/chali_generic.cpp#L1787)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6242,7 +6244,7 @@ List<T> copy();
 obj.copy();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:256](../../source/semantics/aggregate_ownership.cpp#L256)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:255](../../source/semantics/aggregate_ownership.cpp#L255)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6280,7 +6282,7 @@ int64 push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:257](../../source/semantics/aggregate_ownership.cpp#L257)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:256](../../source/semantics/aggregate_ownership.cpp#L256)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6319,7 +6321,7 @@ int64 insert(int64 index, T value);
 obj.insert(index, value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:258](../../source/semantics/aggregate_ownership.cpp#L258)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:257](../../source/semantics/aggregate_ownership.cpp#L257)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6357,7 +6359,7 @@ T at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:259](../../source/semantics/aggregate_ownership.cpp#L259)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:258](../../source/semantics/aggregate_ownership.cpp#L258)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6393,7 +6395,7 @@ T pop();
 obj.pop();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:260](../../source/semantics/aggregate_ownership.cpp#L260)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:259](../../source/semantics/aggregate_ownership.cpp#L259)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6431,7 +6433,7 @@ int64 remove(int64 index);
 obj.remove(index);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:261](../../source/semantics/aggregate_ownership.cpp#L261)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:260](../../source/semantics/aggregate_ownership.cpp#L260)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6469,7 +6471,7 @@ int64 indexOf(T value);
 obj.indexOf(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:262](../../source/semantics/aggregate_ownership.cpp#L262)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:261](../../source/semantics/aggregate_ownership.cpp#L261)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6507,7 +6509,7 @@ bool contains(T value);
 obj.contains(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:262](../../source/semantics/aggregate_ownership.cpp#L262)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6545,7 +6547,7 @@ bool has(T value);
 obj.has(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6581,7 +6583,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6617,7 +6619,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:266](../../source/semantics/aggregate_ownership.cpp#L266)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6653,7 +6655,7 @@ Set<T> copy();
 obj.copy();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:256](../../source/semantics/aggregate_ownership.cpp#L256)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:255](../../source/semantics/aggregate_ownership.cpp#L255)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6691,7 +6693,7 @@ int64 add(T value);
 obj.add(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:274](../../source/semantics/aggregate_ownership.cpp#L274)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:273](../../source/semantics/aggregate_ownership.cpp#L273)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6729,7 +6731,7 @@ int64 has(T value);
 obj.has(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6767,7 +6769,7 @@ int64 contains(T value);
 obj.contains(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:262](../../source/semantics/aggregate_ownership.cpp#L262)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6805,7 +6807,7 @@ int64 remove(T value);
 obj.remove(value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:261](../../source/semantics/aggregate_ownership.cpp#L261)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:260](../../source/semantics/aggregate_ownership.cpp#L260)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6843,7 +6845,7 @@ T at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:259](../../source/semantics/aggregate_ownership.cpp#L259)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:258](../../source/semantics/aggregate_ownership.cpp#L258)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6879,7 +6881,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6915,7 +6917,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:266](../../source/semantics/aggregate_ownership.cpp#L266)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6951,7 +6953,7 @@ Map<K,V> copy();
 obj.copy();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:256](../../source/semantics/aggregate_ownership.cpp#L256)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:255](../../source/semantics/aggregate_ownership.cpp#L255)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6990,7 +6992,7 @@ int64 put(K key,V value);
 obj.put(key, value);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:288](../../source/semantics/aggregate_ownership.cpp#L288)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:287](../../source/semantics/aggregate_ownership.cpp#L287)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7028,7 +7030,7 @@ int64 has(K key);
 obj.has(key);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7066,7 +7068,7 @@ int64 contains(K key);
 obj.contains(key);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:263](../../source/semantics/aggregate_ownership.cpp#L263)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:262](../../source/semantics/aggregate_ownership.cpp#L262)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7104,7 +7106,7 @@ int64 remove(K key);
 obj.remove(key);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:261](../../source/semantics/aggregate_ownership.cpp#L261)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:260](../../source/semantics/aggregate_ownership.cpp#L260)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7142,7 +7144,7 @@ K keyAt(int64 index);
 obj.keyAt(index);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:292](../../source/semantics/aggregate_ownership.cpp#L292)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:291](../../source/semantics/aggregate_ownership.cpp#L291)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7180,7 +7182,7 @@ V valAt(int64 index);
 obj.valAt(index);
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:293](../../source/semantics/aggregate_ownership.cpp#L293)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:292](../../source/semantics/aggregate_ownership.cpp#L292)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7216,7 +7218,7 @@ int64 clear();
 obj.clear();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:264](../../source/semantics/aggregate_ownership.cpp#L264)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7252,7 +7254,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/semantics/aggregate_ownership.cpp:266](../../source/semantics/aggregate_ownership.cpp#L266)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/aggregate_ownership.cpp:265](../../source/semantics/aggregate_ownership.cpp#L265)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -9018,7 +9020,7 @@ T index(T const& data,int64 index);
 index(data, index);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1755](../../source/semantics/boxing.cpp#L1755)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1759](../../source/semantics/boxing.cpp#L1759)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -10392,7 +10394,43 @@ obj.hash(value);
 
 <a id="api-260"></a>
 
-### ExplicitConvert::explicitConvert（261）
+### Copy::copy（261）
+
+**声明**
+
+```chali
+T copy();
+```
+
+**行为**
+
+返回独立的值副本。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`T`。返回独立的值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.copy();
+```
+
+**源码**：[source/chali_generic.cpp:1764](../../source/chali_generic.cpp#L1764)（编译器内建，签名为等价调用形式）。
+
+**完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
+
+<a id="api-261"></a>
+
+### ExplicitConvert::explicitConvert（262）
 
 **声明**
 
@@ -10426,9 +10464,9 @@ obj.explicitConvert();
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-261"></a>
+<a id="api-262"></a>
 
-### ImplicitConvert::implicitConvert（262）
+### ImplicitConvert::implicitConvert（263）
 
 **声明**
 
@@ -10462,9 +10500,9 @@ obj.implicitConvert();
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-262"></a>
+<a id="api-263"></a>
 
-### Index::index（263）
+### Index::index（264）
 
 **声明**
 
@@ -10500,9 +10538,9 @@ obj.index(key);
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-263"></a>
+<a id="api-264"></a>
 
-### Iterator::iterator（264）
+### Iterator::iterator（265）
 
 **声明**
 
@@ -10538,9 +10576,9 @@ obj.iterator(index);
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-264"></a>
+<a id="api-265"></a>
 
-### Result::mapErr（265）
+### Result::mapErr（266）
 
 **声明**
 
@@ -10576,9 +10614,9 @@ obj.mapErr<F>(mapper);
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-265"></a>
+<a id="api-266"></a>
 
-### Option::okOr（266）
+### Option::okOr（267）
 
 **声明**
 
@@ -10614,9 +10652,9 @@ obj.okOr<E>(error);
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
-<a id="api-266"></a>
+<a id="api-267"></a>
 
-### Option::okOrElse（267）
+### Option::okOrElse（268）
 
 **声明**
 

@@ -140,10 +140,10 @@ void main() {
 
     Any o1;
     Any o2;
-    Rect mut& pr = heap Rect;
+    Rect mut& pr = new Rect;
     pr->w = 3;
     pr->h = 5;
-    Square mut& pq = heap Square;
+    Square mut& pq = new Square;
     pq->side = 4;
     o1.set(&pr);
     o2.set(&pq);

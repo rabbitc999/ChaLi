@@ -1,0 +1,5 @@
+heap_sugar: VM 通过
+new_ctor_sugar: VM 通过
+heap_ctor: VM 通过
+array_sugar: VM 通过
+heap_identifier: VM 通过

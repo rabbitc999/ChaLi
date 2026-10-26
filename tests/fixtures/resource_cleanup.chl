@@ -27,13 +27,13 @@ void main() {
         pair.right.drop();
     }
     assert(drops == 3);
-    Item mut& first = heap Item;
+    Item mut& first = new Item;
     first.text = "heap";
     Item mut& stale = first;
     first.drop();
     first.drop();
     stale.drop();
-    Item mut& second = heap Item;
+    Item mut& second = new Item;
     second.value = 22;
     stale.drop();
     assert(second.value == 22 && drops == 4);

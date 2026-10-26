@@ -1,5 +1,489 @@
 [
   {
+    "module": "std::array",
+    "name": "DynamicArray::create",
+    "owner": "DynamicArray",
+    "signature": "static DynamicArray<T> create()",
+    "documentation": "创建DynamicArray，返回可供后续操作的值。\n\n**返回值**：DynamicArray<T>。",
+    "comment": "/** 创建空数组，不预先分配元素。 */",
+    "parameters": [],
+    "returns": {
+      "type": "DynamicArray<T>",
+      "documentation": "创建DynamicArray，返回可供后续操作的值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "std::array::DynamicArray<T>::create();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 27,
+    "page": "std-array.md",
+    "anchor": "api-0"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::withCapacity",
+    "owner": "DynamicArray",
+    "signature": "static DynamicArray<T> withCapacity(int64 capacity)",
+    "documentation": "用指定 capacity 创建有界容器。\n\n**返回值**：DynamicArray<T>。",
+    "comment": "/** 创建空数组并预留容量；负容量报错。 */",
+    "parameters": [
+      {
+        "name": "capacity",
+        "label": "int64 capacity",
+        "documentation": "容器的最大元素数量",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "DynamicArray<T>",
+      "documentation": "用指定 capacity 创建有界容器。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "std::array::DynamicArray<T>::withCapacity(capacity);",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 32,
+    "page": "std-array.md",
+    "anchor": "api-1"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::len",
+    "owner": "DynamicArray",
+    "signature": "int64 len()",
+    "documentation": "返回当前元素数量。\n\n**返回值**：int64。",
+    "comment": "/** 返回有效元素数量。 */",
+    "parameters": [],
+    "returns": {
+      "type": "int64",
+      "documentation": "返回当前元素数量。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.len();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 38,
+    "page": "std-array.md",
+    "anchor": "api-2"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::capacity",
+    "owner": "DynamicArray",
+    "signature": "int64 capacity()",
+    "documentation": "返回已分配的元素槽数。\n\n**返回值**：int64。",
+    "comment": "/** 返回已分配的元素槽数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "int64",
+      "documentation": "返回已分配的元素槽数。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.capacity();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 40,
+    "page": "std-array.md",
+    "anchor": "api-3"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::isEmpty",
+    "owner": "DynamicArray",
+    "signature": "bool isEmpty()",
+    "documentation": "判断 Any 是否为空盒子，不公开内部执行期标签。\n\n**返回值**：bool。",
+    "comment": "/** 判断是否没有有效元素。 */",
+    "parameters": [],
+    "returns": {
+      "type": "bool",
+      "documentation": "判断 Any 是否为空盒子，不公开内部执行期标签。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.isEmpty();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 42,
+    "page": "std-array.md",
+    "anchor": "api-4"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::copy",
+    "owner": "DynamicArray",
+    "signature": "DynamicArray<T> copy()",
+    "documentation": "返回独立的值副本。\n\n**返回值**：DynamicArray<T>。",
+    "comment": "/** 返回独立的值副本，保留长度与容量。 */",
+    "parameters": [],
+    "returns": {
+      "type": "DynamicArray<T>",
+      "documentation": "返回独立的值副本。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.copy();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 44,
+    "page": "std-array.md",
+    "anchor": "api-5"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::reserve",
+    "owner": "DynamicArray",
+    "signature": "void reserve(int64 minimumCapacity)",
+    "documentation": "至少预留 minimumCapacity 个槽；不改变有效长度，不缩容。\n\n**返回值**：void。",
+    "comment": "/** 至少预留 minimumCapacity 个槽；不改变有效长度，不缩容。 */",
+    "parameters": [
+      {
+        "name": "minimumCapacity",
+        "label": "int64 minimumCapacity",
+        "documentation": "至少需要的元素槽数，必须非负。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.reserve(minimumCapacity);",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 46,
+    "page": "std-array.md",
+    "anchor": "api-6"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::push",
+    "owner": "DynamicArray",
+    "signature": "void push(T value)",
+    "documentation": "将 value 追加到列表尾部。\n\n**返回值**：void。",
+    "comment": "/** 追加一个值；容量不足时按两倍增长，容量算术显式检查溢出。 */",
+    "parameters": [
+      {
+        "name": "value",
+        "label": "T value",
+        "documentation": "输入值或写入的新值",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.push(value);",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 56,
+    "page": "std-array.md",
+    "anchor": "api-7"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::resize",
+    "owner": "DynamicArray",
+    "signature": "void resize(int64 length)",
+    "documentation": "调整有效长度；新增元素默认初始化，缩短时释放移除值，保留容量。\n\n**返回值**：void。",
+    "comment": "/** 调整有效长度；新增元素默认初始化，缩短时释放移除值，保留容量。 */",
+    "parameters": [
+      {
+        "name": "length",
+        "label": "int64 length",
+        "documentation": "目标有效元素数，必须非负。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.resize(length);",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 67,
+    "page": "std-array.md",
+    "anchor": "api-8"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::clear",
+    "owner": "DynamicArray",
+    "signature": "void clear()",
+    "documentation": "移除全部元素。\n\n**返回值**：void。",
+    "comment": "/** 清除有效元素并保留容量。 */",
+    "parameters": [],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.clear();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 81,
+    "page": "std-array.md",
+    "anchor": "api-9"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::at",
+    "owner": "DynamicArray",
+    "signature": "T at(int64 position)",
+    "documentation": "读取从 0 开始的指定位置。\n\n**返回值**：T。",
+    "comment": "/** 读取有效元素；越界报错。 */",
+    "parameters": [
+      {
+        "name": "position",
+        "label": "int64 position",
+        "documentation": "目标绝对位置",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "T",
+      "documentation": "读取从 0 开始的指定位置。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.at(position);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 83,
+    "page": "std-array.md",
+    "anchor": "api-10"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::index",
+    "owner": "DynamicArray",
+    "signature": "T index(int64 position)",
+    "documentation": "读取 key 对应的元素，供下标语法调用。\n\n**返回值**：T。",
+    "comment": "/** 下标读取与 at 相同。 */",
+    "parameters": [
+      {
+        "name": "position",
+        "label": "int64 position",
+        "documentation": "目标绝对位置",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "T",
+      "documentation": "读取 key 对应的元素，供下标语法调用。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.index(position);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 88,
+    "page": "std-array.md",
+    "anchor": "api-11"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::set",
+    "owner": "DynamicArray",
+    "signature": "void set(int64 position, T value)",
+    "documentation": "将指定位置或共享槽替换为 value。\n\n**返回值**：void。",
+    "comment": "/** 替换有效元素；越界报错。 */",
+    "parameters": [
+      {
+        "name": "position",
+        "label": "int64 position",
+        "documentation": "目标绝对位置",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "label": "T value",
+        "documentation": "输入值或写入的新值",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "documentation": "无返回值。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.set(position, value);",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 90,
+    "page": "std-array.md",
+    "anchor": "api-12"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::pop",
+    "owner": "DynamicArray",
+    "signature": "Option<T> pop()",
+    "documentation": "移除列表尾元素并返回值，空列表时报错。\n\n**返回值**：Option<T>。",
+    "comment": "/** 弹出末尾元素；空数组返回 None，保留容量。 */",
+    "parameters": [],
+    "returns": {
+      "type": "Option<T>",
+      "documentation": "移除列表尾元素并返回值，空列表时报错。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.pop();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 95,
+    "page": "std-array.md",
+    "anchor": "api-13"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::iterator",
+    "owner": "DynamicArray",
+    "signature": "Option<T> iterator(int64 position)",
+    "documentation": "读取指定迭代位置；无元素时返回 None。\n\n**返回值**：Option<T>。",
+    "comment": "/** 按位置遍历有效元素，结束返回 None。 */",
+    "parameters": [
+      {
+        "name": "position",
+        "label": "int64 position",
+        "documentation": "目标绝对位置",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Option<T>",
+      "documentation": "读取指定迭代位置；无元素时返回 None。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.iterator(position);",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 102,
+    "page": "std-array.md",
+    "anchor": "api-14"
+  },
+  {
+    "module": "std::array",
+    "name": "DynamicArray::toArray",
+    "owner": "DynamicArray",
+    "signature": "T[] toArray()",
+    "documentation": "复制成由调用者作用域管理的独立运行时数组。\n\n**返回值**：T[]。",
+    "comment": "/** 导出只含有效元素的独立运行时数组。 */",
+    "parameters": [],
+    "returns": {
+      "type": "T[]",
+      "documentation": "复制成由调用者作用域管理的独立运行时数组。"
+    },
+    "errors": {
+      "documentation": "DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.toArray();",
+    "examples": [
+      "example/samples/dynamic_array.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/array.chl",
+    "line": 107,
+    "page": "std-array.md",
+    "anchor": "api-15"
+  },
+  {
     "module": "std::binary",
     "name": "BinaryReader::drop",
     "owner": "BinaryReader",
@@ -1031,7 +1515,7 @@
       {
         "name": "length",
         "label": "int64 length",
-        "documentation": "有效长度",
+        "documentation": "目标有效元素数，必须非负。",
         "default": ""
       }
     ],
@@ -14159,7 +14643,7 @@
       {
         "name": "length",
         "label": "int64 length",
-        "documentation": "有效长度",
+        "documentation": "目标有效元素数，必须非负。",
         "default": ""
       },
       {
@@ -14197,7 +14681,7 @@
       {
         "name": "length",
         "label": "int64 length",
-        "documentation": "有效长度",
+        "documentation": "目标有效元素数，必须非负。",
         "default": ""
       },
       {
@@ -17225,7 +17709,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1842,
+    "line": 1844,
     "page": "std-lang.md",
     "anchor": "api-124"
   },
@@ -17271,7 +17755,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1850,
+    "line": 1852,
     "page": "std-lang.md",
     "anchor": "api-125"
   },
@@ -17309,7 +17793,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1865,
+    "line": 1867,
     "page": "std-lang.md",
     "anchor": "api-126"
   },
@@ -17336,7 +17820,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2072,
+    "line": 2074,
     "page": "std-lang.md",
     "anchor": "api-127"
   },
@@ -17361,7 +17845,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2080,
+    "line": 2082,
     "page": "std-lang.md",
     "anchor": "api-128"
   },
@@ -17909,7 +18393,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1779,
+    "line": 1781,
     "page": "std-lang.md",
     "anchor": "api-146"
   },
@@ -17941,7 +18425,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1785,
+    "line": 1787,
     "page": "std-lang.md",
     "anchor": "api-147"
   },
@@ -18054,7 +18538,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 256,
+    "line": 255,
     "page": "std-lang.md",
     "anchor": "api-150"
   },
@@ -18088,7 +18572,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 257,
+    "line": 256,
     "page": "std-lang.md",
     "anchor": "api-151"
   },
@@ -18126,7 +18610,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 258,
+    "line": 257,
     "page": "std-lang.md",
     "anchor": "api-152"
   },
@@ -18158,7 +18642,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 259,
+    "line": 258,
     "page": "std-lang.md",
     "anchor": "api-153"
   },
@@ -18185,7 +18669,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 260,
+    "line": 259,
     "page": "std-lang.md",
     "anchor": "api-154"
   },
@@ -18217,7 +18701,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 261,
+    "line": 260,
     "page": "std-lang.md",
     "anchor": "api-155"
   },
@@ -18249,7 +18733,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 262,
+    "line": 261,
     "page": "std-lang.md",
     "anchor": "api-156"
   },
@@ -18281,7 +18765,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 263,
+    "line": 262,
     "page": "std-lang.md",
     "anchor": "api-157"
   },
@@ -18313,7 +18797,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 264,
+    "line": 263,
     "page": "std-lang.md",
     "anchor": "api-158"
   },
@@ -18338,7 +18822,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 265,
+    "line": 264,
     "page": "std-lang.md",
     "anchor": "api-159"
   },
@@ -18365,7 +18849,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 266,
+    "line": 265,
     "page": "std-lang.md",
     "anchor": "api-160"
   },
@@ -18390,7 +18874,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 256,
+    "line": 255,
     "page": "std-lang.md",
     "anchor": "api-161"
   },
@@ -18422,7 +18906,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 274,
+    "line": 273,
     "page": "std-lang.md",
     "anchor": "api-162"
   },
@@ -18454,7 +18938,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 264,
+    "line": 263,
     "page": "std-lang.md",
     "anchor": "api-163"
   },
@@ -18486,7 +18970,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 263,
+    "line": 262,
     "page": "std-lang.md",
     "anchor": "api-164"
   },
@@ -18518,7 +19002,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 261,
+    "line": 260,
     "page": "std-lang.md",
     "anchor": "api-165"
   },
@@ -18550,7 +19034,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 259,
+    "line": 258,
     "page": "std-lang.md",
     "anchor": "api-166"
   },
@@ -18575,7 +19059,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 265,
+    "line": 264,
     "page": "std-lang.md",
     "anchor": "api-167"
   },
@@ -18602,7 +19086,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 266,
+    "line": 265,
     "page": "std-lang.md",
     "anchor": "api-168"
   },
@@ -18627,7 +19111,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 256,
+    "line": 255,
     "page": "std-lang.md",
     "anchor": "api-169"
   },
@@ -18665,7 +19149,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 288,
+    "line": 287,
     "page": "std-lang.md",
     "anchor": "api-170"
   },
@@ -18697,7 +19181,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 264,
+    "line": 263,
     "page": "std-lang.md",
     "anchor": "api-171"
   },
@@ -18729,7 +19213,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 263,
+    "line": 262,
     "page": "std-lang.md",
     "anchor": "api-172"
   },
@@ -18761,7 +19245,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 261,
+    "line": 260,
     "page": "std-lang.md",
     "anchor": "api-173"
   },
@@ -18793,7 +19277,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 292,
+    "line": 291,
     "page": "std-lang.md",
     "anchor": "api-174"
   },
@@ -18825,7 +19309,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 293,
+    "line": 292,
     "page": "std-lang.md",
     "anchor": "api-175"
   },
@@ -18850,7 +19334,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 265,
+    "line": 264,
     "page": "std-lang.md",
     "anchor": "api-176"
   },
@@ -18877,7 +19361,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/aggregate_ownership.cpp",
-    "line": 266,
+    "line": 265,
     "page": "std-lang.md",
     "anchor": "api-177"
   },
@@ -20314,7 +20798,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1755,
+    "line": 1759,
     "page": "std-lang.md",
     "anchor": "api-223"
   },
@@ -21474,6 +21958,31 @@
   },
   {
     "module": "std::lang",
+    "name": "Copy::copy",
+    "owner": "Copy",
+    "signature": "T copy()",
+    "documentation": "返回独立的值副本。\n\n**返回值**：T。",
+    "comment": "/** 返回独立的值副本。 */",
+    "parameters": [],
+    "returns": {
+      "type": "T",
+      "documentation": "返回独立的值副本。"
+    },
+    "errors": {
+      "documentation": "自动加载，无需 import。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.copy();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/chali_generic.cpp",
+    "line": 1764,
+    "page": "std-lang.md",
+    "anchor": "api-260"
+  },
+  {
+    "module": "std::lang",
     "name": "ExplicitConvert::explicitConvert",
     "owner": "ExplicitConvert",
     "signature": "T explicitConvert()",
@@ -21495,7 +22004,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-260"
+    "anchor": "api-261"
   },
   {
     "module": "std::lang",
@@ -21520,7 +22029,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-261"
+    "anchor": "api-262"
   },
   {
     "module": "std::lang",
@@ -21552,7 +22061,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-262"
+    "anchor": "api-263"
   },
   {
     "module": "std::lang",
@@ -21584,7 +22093,7 @@
     "source": "source/chali_generic.cpp",
     "line": 827,
     "page": "std-lang.md",
-    "anchor": "api-263"
+    "anchor": "api-264"
   },
   {
     "module": "std::lang",
@@ -21616,7 +22125,7 @@
     "source": "source/std/lang.chl",
     "line": 2,
     "page": "std-lang.md",
-    "anchor": "api-264"
+    "anchor": "api-265"
   },
   {
     "module": "std::lang",
@@ -21648,7 +22157,7 @@
     "source": "source/std/lang.chl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-265"
+    "anchor": "api-266"
   },
   {
     "module": "std::lang",
@@ -21680,7 +22189,7 @@
     "source": "source/std/lang.chl",
     "line": 3,
     "page": "std-lang.md",
-    "anchor": "api-266"
+    "anchor": "api-267"
   },
   {
     "module": "std::linalg",
@@ -24930,7 +25439,7 @@
       {
         "name": "length",
         "label": "int64 length",
-        "documentation": "有效长度",
+        "documentation": "目标有效元素数，必须非负。",
         "default": ""
       }
     ],
@@ -36555,7 +37064,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1893,
+    "line": 1895,
     "page": "std-algorithms.md",
     "anchor": "api-0"
   },
@@ -36593,7 +37102,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1902,
+    "line": 1904,
     "page": "std-algorithms.md",
     "anchor": "api-1"
   },
@@ -36637,7 +37146,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1922,
+    "line": 1924,
     "page": "std-algorithms.md",
     "anchor": "api-2"
   },
@@ -36675,7 +37184,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1936,
+    "line": 1938,
     "page": "std-algorithms.md",
     "anchor": "api-3"
   },
@@ -36713,7 +37222,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1966,
+    "line": 1968,
     "page": "std-algorithms.md",
     "anchor": "api-4"
   },
@@ -36751,7 +37260,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1971,
+    "line": 1973,
     "page": "std-algorithms.md",
     "anchor": "api-5"
   },
@@ -36795,7 +37304,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1984,
+    "line": 1986,
     "page": "std-algorithms.md",
     "anchor": "api-6"
   },
@@ -36839,7 +37348,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1994,
+    "line": 1996,
     "page": "std-algorithms.md",
     "anchor": "api-7"
   },
@@ -36877,7 +37386,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2006,
+    "line": 2008,
     "page": "std-algorithms.md",
     "anchor": "api-8"
   },
@@ -36915,7 +37424,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2018,
+    "line": 2020,
     "page": "std-algorithms.md",
     "anchor": "api-9"
   },
@@ -36959,7 +37468,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2030,
+    "line": 2032,
     "page": "std-algorithms.md",
     "anchor": "api-10"
   },
@@ -36999,7 +37508,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2041,
+    "line": 2043,
     "page": "std-algorithms.md",
     "anchor": "api-11"
   },

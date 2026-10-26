@@ -65,7 +65,7 @@ void main()
     println("two {} {} {} {}", two.area(), two.l(), two.r(), two.tag());
 
     /* 接口引用也认继承关系：Box 实现了 Combo，而 Combo 继承 Shape */
-    Box mut& boxRef = heap Box;
+    Box mut& boxRef = new Box;
     boxRef->w = 6;
     boxRef->h = 7;
     Any boxed;

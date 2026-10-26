@@ -431,6 +431,11 @@ void AppendLeafStore(Memory::Vector<simple_ast::NodePtr> *body,
 {
     using simple_ast::Node;
     using simple_ast::Type;
+    if (IsRuntimeArray(leaf))
+    {
+        body->push_back(Node::storeAt(dst, CopyRuntimeArrayValue(value, leaf), Type::i64()));
+        return;
+    }
     if (leaf && (IsStandardOpcode(leaf, "String") || IsObjectLike(leaf)))
     {
         const Memory::String temp = AllocateName("__chali_agg_leaf");
@@ -459,7 +464,7 @@ void AppendLeafCopy(Memory::Vector<simple_ast::NodePtr> *body,
                     const std::shared_ptr<MType> &leaf)
 {
     using simple_ast::Node;
-    if (leaf && (IsStandardOpcode(leaf, "String") || IsObjectLike(leaf)))
+    if (leaf && (IsStandardOpcode(leaf, "String") || IsObjectLike(leaf) || IsRuntimeArray(leaf)))
     {
         AppendLeafStore(body, dst, Node::loadInt(src), leaf);
         return;
@@ -495,6 +500,16 @@ simple_ast::Function MakeAggregateReleaseFunction(const Memory::String &owner)
             /* 释放后把槽清 0：同一个静态聚合对象被两次释放（或两个别名指向它）时，
              * 第二次 `drop 0` 是软释放空操作，不会二次释放同一块。 */
             const auto *opcode = FindOpcodeDefinition(definition->leaves[index - 1u].second);
+            const auto leaf = definition->leaves[index - 1u].second;
+            if (IsRuntimeArray(leaf))
+            {
+                const auto value = AllocateName("__chali_aggregate_array");
+                body.push_back(Node::declare(value, Type::i64()));
+                body.push_back(Node::assign(value, Node::loadInt(address)));
+                AppendOwnedDrop(value, leaf, &body);
+                body.push_back(Node::storeAt(address, Node::i(0), Type::i64()));
+                continue;
+            }
             body.push_back(Node::ifThenElse(Node::binary("!=", Node::loadInt(address), Node::i(0)),
                                             opcode ? Node::exprStmt(Node::call(opcode->destroy, { "value" }, { Node::loadInt(address) })) : Node::release(Node::loadInt(address)), nullptr));
             body.push_back(Node::storeAt(address, Node::i(0), Type::i64()));
@@ -534,18 +549,6 @@ simple_ast::Function MakeAggregateCopyFunction(const Memory::String &owner)
     body.push_back(Node::ret(Node::i(0)));
     function.body = Node::block(body);
     return function;
-}
-
-/**
- * @brief 收尾：把用到过的聚合递归释放 / 深拷贝函数补进产物。
- * @param program 待生成或执行的程序。
- */
-void AppendAggregateHelpers(simple_ast::Program &program)
-{
-    for (const Memory::String &owner : g_needsAggregateRelease)
-        program.functions.push_back(MakeAggregateReleaseFunction(owner));
-    for (const Memory::String &owner : g_needsAggregateCopy)
-        program.functions.push_back(MakeAggregateCopyFunction(owner));
 }
 
 /**
@@ -604,13 +607,35 @@ simple_ast::Function MakeArrayReleaseFunction(const std::shared_ptr<MType> &elem
 }
 
 /**
- * @brief 收尾：补运行时数组的按元素释放助手（要在聚合助手之前，它会登记用到的聚合类型）。
+ * @brief 按依赖闭包生成数组及聚合的释放和深复制助手，每个助手只生成一次。
  * @param program 待生成或执行的程序。
  */
-void AppendArrayReleaseHelpers(simple_ast::Program &program)
+void AppendOwnershipHelpers(simple_ast::Program &program)
 {
-    for (const auto &item : g_needsArrayRelease)
-        program.functions.push_back(MakeArrayReleaseFunction(item.second));
+    Memory::Set<Memory::String> arrays, releases, copies;
+    bool changed = true;
+    while (changed)
+    {
+        changed = false;
+        for (const auto &item : g_needsArrayRelease)
+            if (arrays.insert(item.first).second)
+            {
+                program.functions.push_back(MakeArrayReleaseFunction(item.second));
+                changed = true;
+            }
+        for (const auto &owner : g_needsAggregateRelease)
+            if (releases.insert(owner).second)
+            {
+                program.functions.push_back(MakeAggregateReleaseFunction(owner));
+                changed = true;
+            }
+        for (const auto &owner : g_needsAggregateCopy)
+            if (copies.insert(owner).second)
+            {
+                program.functions.push_back(MakeAggregateCopyFunction(owner));
+                changed = true;
+            }
+    }
 }
 
 /**
@@ -1289,7 +1314,6 @@ bool LowerProgram(simple_ast::Program &program)
     AppendCollectionConstructors(program);
     AppendMapKeyPolicies(program);
     AppendTupleConstructors(program);
-    AppendArrayReleaseHelpers(program);
     for (const auto &owner : g_needsCaptureDestructor)
     {
         simple_ast::Function function;
@@ -1303,7 +1327,6 @@ bool LowerProgram(simple_ast::Program &program)
         function.body = simple_ast::Node::block(body);
         program.functions.push_back(std::move(function));
     }
-    AppendAggregateHelpers(program);
     AppendArgumentsMain(program);
     /* 函数体全降级完了，这时才展开全局停机清理（`g.close()` 之类的注销都已经反映到快照上）。 */
     if (g_sharedLibrary)
@@ -1328,6 +1351,7 @@ bool LowerProgram(simple_ast::Program &program)
     /* 接口引用的方法调用：给每个用过的 `(接口, 方法)` 补一个分派函数。
      * 放在这里是因为"用过哪些"要等函数体全降级完才知道。 */
     AppendInterfaceDispatchers(program);
+    AppendOwnershipHelpers(program);
     /* 全局初始化塞进 main 的最前面：stackvm 从第一条四元式开始执行，引导的 `call main` 在最前 */
     if (!g_sharedLibrary && !g_globalInit.empty())
     {

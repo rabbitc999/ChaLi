@@ -1,6 +1,18 @@
 {
  "versions": [
   {
+   "version": "1.0.5",
+   "title": "任意维数组、可扩容数组与统一 new 堆分配",
+   "entries": [
+    "固定数组声明和字段支持任意维 `[M,N,...]`、连续方括号及混合形式，逗号下标复用行主序布局、逐维边界检查和值复制。",
+    "新增以 ChaLi 实现的 std::array::DynamicArray<T>，支持自动扩容、reserve、resize、capacity、set、pop、遍历及独立数组快照。",
+    "new[n] 保留运行时堆分配，单对象分配统一使用 new T / new T(args)，删除 heap 分配关键字和入口，同步样例、编辑器与文档。",
+    "新增 Copy<T>::copy() 显式复制接口；DynamicArray 与自举实验容器实现该协议。Copy<T> 与 #NonCopyable 互斥，覆盖接口继承、Closeable 自动标记与宿主 impl；普通赋值继续沿用原有值语义。",
+    "新增 ChaLi 自举 List、int64 键 Map 与 Set 的实验实现及 VM/AOT 正确性和性能对照脚本，保留默认容器实现。",
+    "程序、语言服务与插件 chaliCompilerVersion 统一升级至 1.0.5。"
+   ]
+  },
+  {
    "version": "1.0.4",
    "title": "显式生命周期契约 `#borrow` 与 `#static`",
    "entries": [

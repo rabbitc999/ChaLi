@@ -1,0 +1,56 @@
+struct Grid {
+    int64 cells[2, 3, 4];
+};
+struct Entry { String text; List<int64> items; };
+struct TypedGrid { String texts[2, 2]; float64 numbers[2, 2]; List<int64> lists[2, 2]; };
+int64 calls = 0;
+int64 position(int64 value) { calls = calls + 1; return value; }
+void main() {
+    int64 matrix[2, 3];
+    matrix[1, 2] = 17;
+    assert(matrix[1][2] == 17);
+    int64 cube[2][3][4];
+    cube[1, 2, 3] = 23;
+    assert(cube[1][2][3] == 23);
+    int64 tensor[2, 3][4, 5];
+    tensor[position(1), position(2), position(3), position(4)] = 31;
+    assert(calls == 4 && tensor[1][2][3][4] == 31);
+    int64 copied[2][3][4][5] = tensor;
+    copied[1, 2, 3, 4] = 37;
+    assert(tensor[1, 2, 3, 4] == 31 && copied[1, 2, 3, 4] == 37);
+    Grid grid;
+    grid.cells[1, 2, 3] = 1099511627817;
+    Grid other = grid;
+    other.cells[1][2][3] = 43;
+    assert(grid.cells[1, 2, 3] == 1099511627817);
+    String texts[2, 2, 2];
+    texts[1, 0, 1] = "value";
+    String textCopy[2][2][2] = texts;
+    textCopy[1, 0, 1][0] = 'V';
+    assert(texts[1, 0, 1] == "value" && textCopy[1, 0, 1] == "Value");
+    uint8 bytes[2, 3, 4];
+    bytes[1, 2, 3] = 255;
+    assert(bytes[1][2][3] == 255);
+    uint8 mut& lastByte = &bytes[1, 2, 3];
+    *lastByte = 7;
+    bytes[1, 2, 3]++;
+    assert(bytes[1, 2, 3] == 8);
+    assert(std::lang::address(&bytes[1, 0, 0]) - std::lang::address(&bytes[0, 0, 0]) == 12);
+    Entry entries[2, 2, 2];
+    entries[1, 0, 1].text = "entry";
+    entries[1, 0, 1].items.push(7);
+    Entry entryCopy[2][2][2] = entries;
+    entryCopy[1, 0, 1].items.push(11);
+    assert(entries[1, 0, 1].text == "entry" && entries[1, 0, 1].items.len() == 1);
+    assert(entryCopy[1, 0, 1].items.len() == 2);
+    TypedGrid typed;
+    typed.texts[1, 1] = "field";
+    typed.numbers[1, 1] = 7.25;
+    typed.lists[1, 1].push(19);
+    TypedGrid typedCopy = typed;
+    typedCopy.texts[1, 1][0] = 'F';
+    typedCopy.lists[1, 1].push(23);
+    assert(typed.texts[1, 1] == "field" && typedCopy.texts[1, 1] == "Field");
+    assert(typed.numbers[1, 1] == 7.25 && typed.lists[1, 1].len() == 1 && typedCopy.lists[1, 1].len() == 2);
+    println("multidimensional arrays OK");
+}

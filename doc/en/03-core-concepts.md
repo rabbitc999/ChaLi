@@ -102,7 +102,7 @@ drop conn
 after block
 ```
 
-`T mut& p = heap T;` creates manually allocated storage that must be deleted as specified; ending the
+`T mut& p = new T;` creates manually allocated storage that must be deleted as specified; ending the
 reference's scope is not a promise to release its target. Files, processes, databases and other host
 handles follow their Drop/Closeable contracts. See [validation](11-algorithm-validation.md) for
 non-idempotent destruction, allocation identities and automatic cleanup.

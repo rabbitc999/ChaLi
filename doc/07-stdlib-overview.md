@@ -80,6 +80,7 @@ isObject=1 len=1
 
 | 模块 | 内容 |
 | --- | --- |
+| `std::array` | ChaLi 实现的 `DynamicArray<T>`：连续存储、自动扩容、`reserve`、`resize`、`capacity`、安全读取与 `set` |
 | `std::tree` | `BinarySearchTree`（增删查、三种遍历、min/max/height）、`RedBlackTree`（插入 + 双红修复）、`MinHeap`（可当优先队列）、`GeneralTree`（首个孩子 / 下一兄弟，可与二叉表示互转） |
 | `std::graph` | `Graph` 链式前向星：`bfs` `dfs` `connectedComponents` `topologicalSort` `dijkstra` `hasCycle` `minimumSpanningTreeWeight`；`UnionFind` 路径压缩 + 按大小合并 |
 | `std::linkedlist` | `LinkedList` 双向链表：首尾与游标处 O(1) 插删、`reverse` `toArray` `fromArray` `find`，实现 `Iterator<int64>` 与 `Drop` |

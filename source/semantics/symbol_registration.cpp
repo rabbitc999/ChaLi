@@ -913,6 +913,14 @@ bool RegisterTop()
         if (!item.second.nonCopyable && StructHasInterface(item.first, "Closeable"))
             item.second.nonCopyable = true;
 
+    // Copy 是显式复制承诺；不可复制类型不能通过直接或继承接口重新声明该能力。
+    for (const auto &item : g_structs)
+        if (TypeNonCopyable(NamedType(item.first)))
+            for (const auto &interfaceName : item.second.interfaces)
+                if (!InheritedInterfaceWithPrefix(interfaceName, "Copy__").empty()
+                    || !InheritedInterfaceWithPrefix(interfaceName, "std::lang::Copy__").empty())
+                    return Fail("Copy<T> 与 #NonCopyable 不能同时使用：" + item.first);
+
     /* 旧 operator+ 自由函数已由左右方向的运算符接口取代。 */
     for (const int topId : g_top)
     {
@@ -1153,6 +1161,10 @@ bool RegisterTop()
         const auto interfaceIt = g_interfaces.find(top.s2);
         if (interfaceIt == g_interfaces.end())
             return Fail("宿主 impl 的接口没有声明：" + top.s2);
+        if (TypeNonCopyable(owner)
+            && (!InheritedInterfaceWithPrefix(top.s2, "Copy__").empty()
+                || !InheritedInterfaceWithPrefix(top.s2, "std::lang::Copy__").empty()))
+            return Fail("Copy<T> 与 #NonCopyable 不能同时使用：" + Describe(owner));
         if (interfaceIt->second.empty())
             return Fail("宿主 impl 的接口没有方法：" + top.s2);
         for (const MHostInterfaceImpl &old : g_hostInterfaceImpls)

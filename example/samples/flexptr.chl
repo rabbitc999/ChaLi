@@ -31,7 +31,7 @@ void main() {
     println("a = {} {} {} {}（len={}）", a[0], a[1], a[2], a[3], len(a));
 
     /* ---- new 一个结构体：字段读写 ---- */
-    Box mut& rect = heap Box;
+    Box mut& rect = new Box;
     rect->width = 3;
     rect->height = 4;
     println("box = {} x {}, area = {}", rect->width, rect->height, area(rect));

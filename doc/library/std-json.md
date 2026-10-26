@@ -205,7 +205,7 @@ JSON and TOML parsing OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-215"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
+| 模块 | <a id="symbol-216"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
 
 ## 函数索引
 

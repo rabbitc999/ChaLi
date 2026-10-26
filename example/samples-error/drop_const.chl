@@ -1,5 +1,5 @@
 /* 作用域检测：`const` 变量不能 drop。 */
 void main() {
-    const int64 mut& block = heap int64;
+    const int64 mut& block = new int64;
     block.drop();
 }

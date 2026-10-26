@@ -298,13 +298,13 @@ void main()
 \begin{lstlisting}[style=chali]
 Counter c = new Counter(7);
 // 栈上：跟着作用域走
-Counter mut& p = heap Counter(7);
+Counter mut& p = new Counter(7);
 // 堆上：要自己 drop
 \end{lstlisting}
 \par
 \medskip
 
-左边写什么类型，就调那个类型的构造器——堆构造在 \texttt{new} 前加 \texttt{heap}。
+左边写什么类型，就调那个类型的构造器。\texttt{new} 使用运行时分配的存储；拥有值按作用域清理，分配给引用的对象使用 \texttt{.\allowbreak{}drop(\allowbreak{})\allowbreak{}} 释放。
 
 区别只在左边有没有 \texttt{\&}：
 
@@ -321,8 +321,8 @@ Counter mut& p = heap Counter(7);
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-Counter mut& p = heap Counter;
-// 等价于 heap Counter(0)，元素类型由 p 的类型定
+Counter mut& p = new Counter;
+// 等价于 new Counter(0)，元素类型由 p 的类型定
 \end{lstlisting}
 \par
 \medskip
@@ -367,7 +367,7 @@ void main()
 {
     Point o = new Point(3, 4);
     // 真构造器
-    Point mut& p = heap Point(1, 2);
+    Point mut& p = new Point(1, 2);
     // 真构造器 + 堆
     Point q = Point::create(3, 4);
     // 具名入口
@@ -593,23 +593,24 @@ left changed
 
 \section{小结}
 
-\begin{center}
-\begin{tabular}{ll}
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.136\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.844\linewidth-2\tabcolsep\relax}}
 \toprule
 你会了 & 关键点 \\
 \midrule
+\endhead
 定义 & \texttt{struct X \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} —— 结尾分号可选 \\
 字段 & 声明后自动清零；不支持声明处默认值 \\
 方法 & 写在结构体里，用 \texttt{self.\allowbreak{}x} 访问字段 \\
 \texttt{static} & 属于类型，用 \texttt{X:\allowbreak{}:\allowbreak{}name} 访问，里面没有 \texttt{self} \\
 构造器 & 与类型同名、无返回类型，用 \texttt{new T(\allowbreak{}实参)\allowbreak{}} 调用（目标类型由左边声明决定） \\
-栈 vs 堆 & \texttt{X v =\allowbreak{} new X(\allowbreak{}实参)\allowbreak{};} 栈上；\texttt{X mut\& p =\allowbreak{} heap X;} / \texttt{heap X(\allowbreak{}实参)\allowbreak{}} 堆上要 \texttt{drop} \\
+拥有值与分配引用 & \texttt{X v =\allowbreak{} new X(\allowbreak{}实参)\allowbreak{};} 使用运行时存储并自动清理；\texttt{X mut\& p =\allowbreak{} new X;} / \texttt{new X(\allowbreak{}实参)\allowbreak{}} 通过 \texttt{drop} 释放 \\
 具名入口 & \texttt{X:\allowbreak{}:\allowbreak{}create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} 用 \texttt{static X create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；\texttt{new X(\allowbreak{}实参)\allowbreak{}} 优先认真构造器 \\
 运算符 & 实现 \texttt{Add} / \texttt{Equal} / \texttt{Negate} 等内建接口 \\
 传参 & 是复制；大结构体用 \texttt{const\&} / \texttt{mut\&} \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+}
 
 \section{下一步}
 

@@ -236,6 +236,7 @@ TypePtr infer(const NodePtr &node, const TypeEnv &env)
     }
     case Node::Kind::Index:
     {
+        if (node->declared) return node->declared;
         const TypePtr target = infer(node->kids.empty() ? nullptr : node->kids[0], env);
         return target->element ? target->element : Type::i32();
     }
@@ -532,7 +533,7 @@ Memory::String emitExpr(const NodePtr &node, Emitter &emitter)
         const Memory::String position = emitExpr(node->kids.size() > 1u ? node->kids[1] : nullptr,
                                                  emitter);
         const TypePtr container = infer(baseNode, emitter.env);
-        const TypePtr element = container->element ? container->element : Type::i32();
+        const TypePtr element = node->declared ? node->declared : (container->element ? container->element : Type::i32());
         // u8 连续存储，其他标量或句柄保留八字节槽。
         const Memory::String scaled = emitter.temp();
         emitter.emit("(*:i64, " + position + ", " + Memory::toString(scalarStorageBytes(element)) + ", " + scaled + ")");
@@ -765,7 +766,7 @@ Memory::String emitAddress(const NodePtr &node, Emitter &emitter)
         const Memory::String position = emitExpr(node->kids.size() > 1u ? node->kids[1] : nullptr,
                                                  emitter);
         const TypePtr container = infer(node->kids.empty() ? nullptr : node->kids[0], emitter.env);
-        const TypePtr element = container->element ? container->element : Type::i32();
+        const TypePtr element = node->declared ? node->declared : (container->element ? container->element : Type::i32());
         const Memory::String scaled = emitter.temp();
         emitter.emit("(*:i64, " + position + ", " + Memory::toString(scalarStorageBytes(element)) + ", " + scaled + ")");
         const Memory::String address = emitter.temp();

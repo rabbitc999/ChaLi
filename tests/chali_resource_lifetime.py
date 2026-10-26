@@ -61,14 +61,14 @@ def main():
         }''')
         assert result.stdout == ('text\n\ntext!:text!\n' * 50), result.stdout
         for allocation, disposal in [
-                ('int64 mut& value = heap int64;', 'value.drop();'),
+                ('int64 mut& value = new int64;', 'value.drop();'),
                 ('int64 value[] = new[4];', 'value.drop();'),
                 ('List<int64> value = [];', 'value.drop();'),
                 ('String value = \"owned\";', 'value.drop();')]:
             run('void main() { ' + allocation + disposal + disposal + ' }')
         for helper, allocation, argument in [
-                ('void dispose(int64 mut& value) { value.drop(); }', 'int64 mut& value = heap int64;', 'value'),
-                ('struct Item { int64 number; }; void dispose(Item mut& value) { value.drop(); }', 'Item mut& value = heap Item;', 'value'),
+                ('void dispose(int64 mut& value) { value.drop(); }', 'int64 mut& value = new int64;', 'value'),
+                ('struct Item { int64 number; }; void dispose(Item mut& value) { value.drop(); }', 'Item mut& value = new Item;', 'value'),
                 ('void dispose(String[] mut& value) { value.drop(); }', 'String value[] = new[2]; value[0] = "owned";', '&value')]:
             run(helper + '\nvoid main() { ' + allocation + f'dispose({argument}); dispose({argument});' + ' }', False, 'CHL1205')
         for condition in ('true', 'false'):
@@ -83,11 +83,11 @@ def main():
         run('int64 calls = 0; int64 index() { calls++; return 0; } struct Holder { List<int64> values; }; void main() { Holder owner; owner.values.push(1); owner.values.drop(); owner.values = [2]; assert(owner.values[0] == 2); List<int64> values[1]; values[index()].drop(); assert(calls == 1); values[0] = [3]; }')
         run('void main() { int64 values[] = new[2]; values.drop(); println("{}", values[0]); }', False, 'CHL1205')
         run('int64 closes = 0; int64 drops = 0; struct CloseOnly : Closeable { void close() { closes++; } }; struct Resource : Closeable, Drop { void close() { closes++; } void drop() { drops++; } }; struct Parent : Drop { CloseOnly child; void drop() { drops++; } }; void closeValue(bool condition) { CloseOnly value; if (condition) { value.close(); } value.drop(); } void dropValue(bool condition) { Resource value; if (condition) { value.close(); } value.drop(); value.drop(); } void main() { closeValue(true); closeValue(false); dropValue(true); dropValue(false); { Parent value; value.drop(); } assert(closes == 5 && drops == 3); }')
-        run('void main() { int64 mut& p = heap int64; delete p; }', False)
-        run('void main() { int64 mut& p = heap int64; drop p; }', False)
+        run('void main() { int64 mut& p = new int64; delete p; }', False)
+        run('void main() { int64 mut& p = new int64; drop p; }', False)
         run('struct Resource : Closeable { void close() {} }; struct Owner { Resource child; }; void dispose(Owner const& owner) { owner.child.drop(); } void main() {}', False)
-        run('struct Item : Drop { int64 value; void drop() {} }; void main() { Item mut& source = heap Item; source.value = 7; Item result = move(source); source.drop(); assert(result.value == 7); }')
-        run('void main() { int64 mut& source = heap int64; let take = fn move[source]() { source }; source.drop(); }', False, 'CHL1205')
+        run('struct Item : Drop { int64 value; void drop() {} }; void main() { Item mut& source = new Item; source.value = 7; Item result = move(source); source.drop(); assert(result.value == 7); }')
+        run('void main() { int64 mut& source = new int64; let take = fn move[source]() { source }; source.drop(); }', False, 'CHL1205')
         run('void main() { std::lang::sweep(); }', False)
         print(f'[通过] {sequence} 项临时字符串、重复释放、跨调用检查和分支清理回归', flush=True)
 

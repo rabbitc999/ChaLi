@@ -564,7 +564,7 @@ J range(const std::string &s, size_t a, size_t b)
     return object({ { "start", position(s, a) }, { "end", position(s, b) } });
 }
 const std::set<std::string> keywords = {
-    "defer", "scope", "heap", "export",
+    "defer", "scope", "export",
     "_", "abi", "bool", "break", "cast", "char",
     "const", "continue", "copy", "drop", "elif", "else",
     "enum", "false", "float32", "float64", "fn", "for",

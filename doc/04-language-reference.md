@@ -237,14 +237,14 @@ void main() {
 value=7 alive=1
 ```
 
-堆上对象写 `T mut& p = heap T;`（**不写构造实参**：元素类型由 `p` 的类型定），用 `p.drop();` 释放。
+堆上对象写 `T mut& p = new T;`（**不写构造实参**：元素类型由 `p` 的类型定），用 `p.drop();` 释放。
 
 **用哪个构造器由声明的类型决定**：
 
 | 写法 | 走哪条路 |
 | --- | --- |
-| `T v = new T(实参);` | 栈上值，调 `T` 的**真构造器**（与 `T` 同名）；没有匹配的真构造器时落到具名构造入口 |
-| `T mut& p = heap T(实参);` | 堆对象，同样调真构造器，记得 `p.drop();` |
+| `T v = new T(实参);` | 拥有值，底层存储由运行时分配，调 `T` 的**真构造器**（与 `T` 同名）；没有匹配的真构造器时落到具名构造入口 |
+| `T mut& p = new T(实参);` | 堆对象，同样调真构造器，记得 `p.drop();` |
 | `T v = T::create(实参);` | **具名构造入口** `static T create(...)` |
 | `T v = T::其他工厂();` | 普通静态工厂（名字任取） |
 
@@ -257,7 +257,7 @@ struct Point {
 };
 void main() {
     Point o = new Point(3, 4);          // 真构造器 → 3,4
-    Point mut& p = heap Point(1, 2);  // 真构造器 + 堆 → 1,2
+    Point mut& p = new Point(1, 2);  // 真构造器 + 堆 → 1,2
     Point q = Point::create(3, 4);        // 具名构造入口 → 30,40
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     p.drop();
@@ -277,9 +277,9 @@ void main() {
 
 | 写法 | 含义 |
 | --- | --- |
-| `heap T;` | 在堆上分配 `T`，类型由左值推导（必须赋给 `T mut&`） |
+| `new T;` | 在堆上分配 `T`，类型由左值推导（必须赋给 `T mut&`） |
 | `new T(实参);` | 显式写出构造类型 `T` 的构造调用 |
-| `heap T(实参);` | 堆上构造（左值为 `T mut&` 时即堆构造） |
+| `new[n]` | 在运行时堆上分配 n 个元素，类型由目标数组推导 |
 
 
 ```chali
@@ -290,17 +290,15 @@ struct Point {
     static Point create(int64 x, int64 y) { self.x = x; self.y = y; }
 };
 void main() {
-    Point mut& a = heap Point;            // heap T
+    Point mut& a = new Point;            // new T
     Point mut& b = new Point(3, 4);       // new T(args)
-    Point mut& c = heap Point(5, 6);  // heap T(args)
+    Point mut& c = new Point(5, 6);  // new T(args)
     println("{} {} {} {}", a.x, b.x, b.y, c.y);
     a.drop(); b.drop(); c.drop();
 }
 ```
 
-`heap` 是保留关键字（`HEAP` token），不能用作变量名；它只在 `heap T` / `heap T(...)` 引导的
-分配位置有意义。`heap T` 的 `T` 只作文法识别，真正的分配 / 构造类型仍由左值推导，
-因此 `Point p = heap Point;`（左值是值而非引用）依旧报错，与旧规则一致。
+`new[n]` 在运行时堆上申请连续数组存储，数组值按作用域自动清理，也可显式调用 `.drop()` 提前释放。`new T` 申请单对象堆存储，赋给 `T mut&` 后通过 `.drop()` 释放。`new T(args)` 调用目标类型的构造器；拥有值自动清理，引用形式须显式释放。`heap` 不再是关键字，旧的 `heap T` / `heap T(args)` 分配形式已删除。
 
 ---
 
@@ -644,6 +642,35 @@ m=1
 
 ---
 
+
+### 固定多维数组与可扩容数组
+
+固定数组可写 `int64 matrix[2, 3];`、`int64 cube[2, 3, 4];`，也可连续写方括号 `int64 cube[2][3][4];`，两种形式允许混合。数组字段使用相同维度语法。长度是编译期正整数，采用行主序连续布局；`cube[i,j,k]` 与 `cube[i][j][k]` 等价，下标必须写齐，每个下标求值一次并逐维检查边界。普通赋值与按值传递保留独立副本语义。
+
+`T a[] = new[n];` 是在堆上分配的运行时定长数组，分配后长度不变。需要扩容时导入 `std::array`，使用以 ChaLi 实现的 `std::array::DynamicArray<T>`：
+
+```chali
+import std::array;
+void main() {
+    std::array::DynamicArray<int64> values;
+    values.reserve(8);
+    values.push(7);
+    values.resize(3);
+    values.set(1, 9);
+    assert(values[0] == 7 && values[1] == 9 && values[2] == 0);
+    assert(values.len() == 3 && values.capacity() >= 8);
+}
+```
+
+`reserve(n)` 只增容量；`push(value)` 在容量不足时倍增；`resize(n)` 新增默认值或释放被移除值，`clear()` 保留容量。`[]` / `at` 只读，写入使用 `set`；越界和负长度／容量报错。`pop()` 返回 `Option<T>`，`toArray()` 返回独立的运行时数组。复制数组独立复制元素与缓冲区，作用域结束自动清理。扩容会更换存储，不应保存内部存储的元素引用。当前扩容沿用运行时数组的值复制规则，不保证比内建 List 更快。
+
+
+### 显式复制接口 `Copy<T>`
+
+`Copy<T>` 的签名为 `T copy();`，用于显式返回独立副本。例如 `struct Packet: Copy<Packet> { String text; Packet copy() { return self; } };`。方法中的 `return self` 沿用现有值语义，字符串、拥有字段和数组独立复制；裸引用字段仍然是借用，不延长来源寿命。`DynamicArray<T>` 实现 `Copy<DynamicArray<T>>`，保留副本的长度和容量。
+
+泛型函数可写 `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`，接口引用也可调用 `copy()`。类型需显式声明实现接口；仅仅有同名方法不会自动满足泛型约束。该接口不改变普通赋值和按值传参，不作为隐式复制资格标记，也不覆盖 `#NonCopyable` 或 `Closeable` 的复制禁令。`Copy<T>` 与 `#NonCopyable` 互斥：直接实现、经接口继承和宿主 `impl` 均检查；实现 `Closeable` 自动获得不可复制标记，也不能同时实现 `Copy<T>`，即使 `copy()` 返回新建对象也会被拒绝。现有 `Clone<T>::clone()` 保持原有行为，`#derive` 的支持项保持原样。
+
 ## 12. 模块与导入
 
 ```chali
@@ -669,7 +696,7 @@ alias = 9;                    // 写引用 = 写 value
 ```
 
 ```chali
-T mut& owned = heap T;         // 堆对象（元素类型由 owned 的类型定）
+T mut& owned = new T;         // 堆对象（元素类型由 owned 的类型定）
 owned.drop();                  // 释放
 ```
 

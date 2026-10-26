@@ -22,7 +22,7 @@ Option<Node mut&> chain(int64 n) {
         int64 i = 0;
         while (i < n) {
 
-        Node mut& node = heap Node;
+        Node mut& node = new Node;
         node.value = i; node.next = head;
         head = Option<Node mut&>::Value(node);
     

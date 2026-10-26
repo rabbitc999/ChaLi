@@ -1583,7 +1583,11 @@ simple_ast::NodePtr LowerCall(int id)
                         "-", LowerExpr(args[0]), simple_ast::Node::i(8)));
                 }
                 if (type->kind == MType::Array)
+                {
+                    if (N(args[0]).kind == MNode::Index)
+                        return Fail("多维数组必须把每一维都写下（不支持把一行当句柄用）"), Bad();
                     return simple_ast::Node::i(type->dims.empty() ? 0 : type->dims[0]);
+                }
                 if (IsStandardOpcode(type, "String"))
                 {
                     /* 字符串：直接读取堆上的显式长度头。实参是"造出来的串"时先落地，

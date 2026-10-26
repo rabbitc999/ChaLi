@@ -35,7 +35,7 @@ void main() {
             }
         }
     }
-    int64 mut& retired = heap int64;
+    int64 mut& retired = new int64;
     retired.drop();
     std::watchdog::requestRestart();
     std::lang::println("tail");

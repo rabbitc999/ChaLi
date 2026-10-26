@@ -29,7 +29,7 @@ def generate():
     sections = re.split(r'(?=^## )', reference, flags=re.M)
     groups = {
         '2.': 'int8 int16 int32 int64 uint8 uint16 uint32 uint64 float32 float64 bool char void true false',
-        '3.': 'let const static type', '4.': 'return new move heap export', '5.': 'cast',
+        '3.': 'let const static type', '4.': 'return new move export', '5.': 'cast',
         '6.': 'struct', '7.': 'enum match _', '8.': 'interface',
         '10.': 'if elif else while do for loop continue in',
         '12.': 'module import inline', '13.': 'mut',

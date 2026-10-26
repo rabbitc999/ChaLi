@@ -44,7 +44,7 @@
 | 类型定义 | `struct` `enum` `interface` `opcode` `impl` `type` `abi` |
 | 模块 | `module` `import` |
 | 控制流 | `if` `elif` `else` `while` `for` `in` `loop` `match` `break` `continue` `return` `yield` `defer` `scope` |
-| 内存与资源 | `new` `heap` `drop` |
+| 内存与资源 | `new` `drop` |
 | 函数值 | `fn` |
 | 编译期指令 | `#NonCopyable` `#derive` `#No<接口>Replace` `#NoRight<接口>` |
 | 生命周期契约 | `#borrow` `#static` `#ret` | 写在函数声明前；`#ret` 指返回值 |
@@ -53,7 +53,7 @@
 约定：
 
 - `let` 是**唯一**的类型推导声明关键字；`auto` 不是关键字，按普通标识符处理。
-- `heap` 只在分配位置有意义，不能当变量名；`_` 只作匹配兜底与占位，不参与命名。
+- 分配统一使用 `new`，`heap` 不再是关键字；`_` 只作匹配兜底与占位，不参与命名。
 - 宏调用名保留 `$` 前缀且**只认小写**：`$Macro` 不是宏调用，按语法错误处理。
 - `is` / `expr` / `ident` / `block` / `stmt` 只在 `$macro … $match … is` 结构里是关键字。
 
@@ -99,7 +99,7 @@
 | 函数类型 | `返回类型 fn(参数类型)` | 可包含文法允许的形参声明；调用签名按参数类型匹配 |
 | 语句 | 块、`if/elif/else`、`while`、`loop`、`for (x in 源)`、`match`、`return`、`break`、`continue`、`yield`、`defer`、`scope(exit)`、表达式语句 | 表达式语句必须以 `;` 结束 |
 | 层级退出 | `break level N;` / `break all;` / `break level all;` / `yield 值;` | 层级退出只能这样写 |
-| 堆分配 | `heap T;` / `new T(实参);` / `heap T(实参);` | 分配一律写出类型 |
+| 堆分配 | `new T;` / `new T(实参);` / `new T(实参);` | 分配一律写出类型 |
 | 集合字面量 | `[a, b]`（List）、`{a, b}`（Set）、`{k: v}`（Map） | 空 `[]` / `{}` 需要上下文 |
 | match 分支 | `模式 => { … }`，`_` 兜底，`|` 连接备选模式 | 不穿透、不写 `break` |
 | 值表达式 | `if` / `match` / `loop` / 块可作表达式，用 `yield` 出值 | `yield (a, b);` 产生元组 |

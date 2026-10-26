@@ -243,7 +243,7 @@ void main() {
 value=7 alive=1
 ```
 
-Heap objects are written `T mut& p = heap T;` (no constructor arguments — the element type comes from
+Heap objects are written `T mut& p = new T;` (no constructor arguments — the element type comes from
 `p`'s type) and freed with `p.drop();`.
 
 `new(args)` carries no type information — **the declaration on the left decides which constructor
@@ -251,8 +251,8 @@ runs**:
 
 | Form | Which path |
 | --- | --- |
-| `T v = new T(args);` | stack value, calls `T`'s **real constructor** (same name as `T`) |
-| `T mut& p = heap T(args);` | heap object, same real constructor, remember `p.drop();` |
+| `T v = new T(args);` | owning value with runtime-allocated storage, calls `T`'s **real constructor** (same name as `T`) |
+| `T mut& p = new T(args);` | heap object, same real constructor, remember `p.drop();` |
 | `T v = T::create(args);` | **named constructor entry point** `static T create(...)` |
 | `T v = T::otherFactory();` | an ordinary static factory (any name) |
 
@@ -265,7 +265,7 @@ struct Point {
 };
 void main() {
     Point o = new Point(3, 4);    // real constructor → 3,4
-    Point mut& p = heap Point(1, 2);  // real constructor + heap → 1,2
+    Point mut& p = new Point(1, 2);  // real constructor + heap → 1,2
     Point q = Point::create(3, 4);  // named constructor entry point → 30,40
     println("{},{} {} {} {} {}", o.x, o.y, p.x, p.y, q.x, q.y);
     p.drop();
@@ -640,6 +640,35 @@ Iterator chains (`map` / `filter` / `collect`) need `import std::iter;` — see
 
 ---
 
+
+### Fixed multidimensional and growable arrays
+
+Write `int64 matrix[2, 3];` or `int64 cube[2, 3, 4];`. Chained brackets such as `int64 cube[2][3][4];` and mixed forms are equivalent, including array fields. Extents are positive compile-time integers. Storage is contiguous and row-major. `cube[i,j,k]` and `cube[i][j][k]` evaluate each index once and check every dimension; all indices are required. Assignment and value parameters preserve independent copies.
+
+`T a[] = new[n];` allocates a fixed-length runtime array on the heap. For growable storage, import `std::array` and use `std::array::DynamicArray<T>`, implemented in ChaLi:
+
+```chali
+import std::array;
+void main() {
+    std::array::DynamicArray<int64> values;
+    values.reserve(8);
+    values.push(7);
+    values.resize(3);
+    values.set(1, 9);
+    assert(values[0] == 7 && values[1] == 9 && values[2] == 0);
+    assert(values.len() == 3 && values.capacity() >= 8);
+}
+```
+
+`reserve(n)` only increases capacity; `push(value)` doubles capacity when full. `resize(n)` appends default values or releases removed values; `clear()` retains capacity. Read with `[]` / `at`, write with `set`. Invalid indices and negative lengths or capacities fail. `pop()` returns `Option<T>`; `toArray()` returns an independent runtime array. Copies own independent elements and buffers, cleaned up at scope exit. Growth replaces storage; do not retain references into the backing buffer. Growth currently follows runtime-array value copying; no speed advantage over builtin List is promised.
+
+
+### Explicit copying with `Copy<T>`
+
+`Copy<T>` declares `T copy();`, returning an independent value. For example: `struct Packet: Copy<Packet> { String text; Packet copy() { return self; } };`. Returning `self` follows existing value semantics: strings, owning fields and arrays are copied independently; reference fields remain borrowed and retain their lifetime limits. `DynamicArray<T>` implements `Copy<DynamicArray<T>>` and preserves length and capacity in the copy.
+
+Generic code may use `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`; interface references can dispatch `copy()` too. An explicit interface declaration is required; a same-named method alone does not satisfy the constraint. This interface does not change assignment or value parameters, is not an implicit-copy eligibility marker, and does not override `#NonCopyable` or `Closeable` restrictions. `Copy<T>` and `#NonCopyable` are mutually exclusive, including inherited interfaces and host `impl` declarations. `Closeable` types receive the noncopyable flag automatically and cannot implement `Copy<T>`, even if the method would return a fresh object. Existing `Clone<T>::clone()` behavior and the supported `#derive` traits remain unchanged.
+
 ## 12. Modules and imports
 
 ```chali
@@ -667,7 +696,7 @@ alias = 9;                    // writing through it writes value
 ```
 
 ```chali
-T mut& owned = heap T;         // heap object (element type from owned's type)
+T mut& owned = new T;         // heap object (element type from owned's type)
 owned.drop();                  // free
 ```
 
@@ -1065,3 +1094,5 @@ Statements accept `int64 add(int64 x) { return x + 1; }` and a local function bi
 ## Lifetime contracts `#borrow` / `#static`
 
 Lifetime contracts can be written in a row before a function declaration to state explicitly who borrows from whom. `#borrow(out, in)` means `out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each of them. `#ret` denotes the return value, so `#borrow(#ret, [a, b])` is the same shape as Rust's `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` — a call site propagates origins only through the declared arguments. `#static(a)` declares that `a` has a `'static` origin, letting it be returned across functions and stored for the long term. Names must be parameters or locals of the same function, and sources of `#ret` must be parameters. See [declaration sugar rules](28-declaration-sugars.md).
+
+`new[n]` uses runtime heap allocation. `new T` allocates an object; `new T(args)` constructs it. Owning values are cleaned up at scope exit; allocated references use `.drop()`. The former `heap T` and `heap T(args)` allocation forms are removed; `heap` is an ordinary identifier.

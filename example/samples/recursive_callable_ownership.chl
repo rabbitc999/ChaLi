@@ -23,7 +23,7 @@ int64 recurse(int64 depth) {
     CallableValue listValue = CallableValue::Functions(functions);
     Map<String, CallableFrame> frames;
     frames.put("frame", local);
-    CallableFrame mut& allocated = heap CallableFrame;
+    CallableFrame mut& allocated = new CallableFrame;
     allocated.label = label;
     allocated.callback = captured(&allocated.label);
     Any boxed;

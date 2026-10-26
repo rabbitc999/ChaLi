@@ -1,0 +1,113 @@
+module std::array;
+
+/** 内部容量槽；零标签为空态，不构造或析构尚未加入的元素。 */
+enum __ArraySlot<T> {
+    Empty, Full(T value);
+
+    /** 从已激活的槽复制元素，不先构造一个会被覆盖的默认 T。 */
+    T read() {
+        match (self) {
+            __ArraySlot<T>::Full(value) => { return value; }
+            __ArraySlot<T>::Empty => { std::lang::panic("DynamicArray 容量槽未激活"); }
+        }
+        loop { std::lang::panic("DynamicArray 容量槽未激活"); };
+    }
+};
+
+/** 连续存储的可扩容值数组；复制时独立复制缓冲区，读取下标、写入使用 set。 */
+struct DynamicArray<T>: Index<T, int64>, Iterator<T>, Copy<DynamicArray<T>> {
+    /** 内部连续缓冲区；请通过数组方法访问，勿修改此字段。 */
+    __ArraySlot<T>[] __storage;
+    /** 内部有效元素数，始终不超过 __capacity。 */
+    int64 __count;
+    /** 内部已分配槽数；请使用 capacity 查询。 */
+    int64 __capacity;
+
+    /** 创建空数组，不预先分配元素。 */
+    static DynamicArray<T> create() {
+        self.__count = 0;
+        self.__capacity = 0;
+    }
+    /** 创建空数组并预留容量；负容量报错。 */
+    static DynamicArray<T> withCapacity(int64 capacity) {
+        DynamicArray<T> result;
+        result.reserve(capacity);
+        return result;
+    }
+    /** 返回有效元素数量。 */
+    int64 len() { return self.__count; }
+    /** 返回已分配的元素槽数。 */
+    int64 capacity() { return self.__capacity; }
+    /** 判断是否没有有效元素。 */
+    bool isEmpty() { return self.__count == 0; }
+    /** 返回独立的值副本，保留长度与容量。 */
+    DynamicArray<T> copy() { return self; }
+    /** 至少预留 minimumCapacity 个槽；不改变有效长度，不缩容。 */
+    void reserve(int64 minimumCapacity) {
+        assert(minimumCapacity >= 0, "DynamicArray 容量必须非负");
+        if (minimumCapacity <= self.__capacity) { return; }
+        __ArraySlot<T> next[] = new[minimumCapacity];
+        int64 i = 0;
+        while (i < self.__count) { next[i] = self.__storage[i]; i = i + 1; }
+        self.__storage = next;
+        self.__capacity = minimumCapacity;
+    }
+    /** 追加一个值；容量不足时按两倍增长，容量算术显式检查溢出。 */
+    void push(T value) {
+        if (self.__count == self.__capacity) {
+            assert(self.__capacity <= 4611686018427387903, "DynamicArray 容量溢出");
+            int64 target = 4;
+            if (self.__capacity > 0) { target = self.__capacity * 2; }
+            self.reserve(target);
+        }
+        self.__storage[self.__count] = __ArraySlot<T>::Full(value);
+        self.__count = self.__count + 1;
+    }
+    /** 调整有效长度；新增元素默认初始化，缩短时释放移除值，保留容量。 */
+    void resize(int64 length) {
+        assert(length >= 0, "DynamicArray 长度必须非负");
+        self.reserve(length);
+        int64 i = length;
+        while (i < self.__count) { self.__storage[i] = __ArraySlot<T>::Empty; i = i + 1; }
+        i = self.__count;
+        while (i < length) {
+            T empty;
+            self.__storage[i] = __ArraySlot<T>::Full(empty);
+            i = i + 1;
+        }
+        self.__count = length;
+    }
+    /** 清除有效元素并保留容量。 */
+    void clear() { self.resize(0); }
+    /** 读取有效元素；越界报错。 */
+    T at(int64 position) {
+        assert(position >= 0 && position < self.__count, "DynamicArray 下标越界");
+        return self.__storage[position].read();
+    }
+    /** 下标读取与 at 相同。 */
+    T index(int64 position) { return self.at(position); }
+    /** 替换有效元素；越界报错。 */
+    void set(int64 position, T value) {
+        assert(position >= 0 && position < self.__count, "DynamicArray 下标越界");
+        self.__storage[position] = __ArraySlot<T>::Full(value);
+    }
+    /** 弹出末尾元素；空数组返回 None，保留容量。 */
+    Option<T> pop() {
+        if (self.__count == 0) { return Option<T>::None; }
+        T value = self.__storage[self.__count - 1].read();
+        self.resize(self.__count - 1);
+        return Option<T>::Value(value);
+    }
+    /** 按位置遍历有效元素，结束返回 None。 */
+    Option<T> iterator(int64 position) {
+        if (position >= 0 && position < self.__count) { return Option<T>::Value(self.at(position)); }
+        return Option<T>::None;
+    }
+    /** 导出只含有效元素的独立运行时数组。 */
+    T[] toArray() {
+        T result[] = new[self.__count];
+        int64 i = 0;
+        while (i < self.__count) { result[i] = self.__storage[i].read(); i = i + 1; }
+        return result;
+    }
+};

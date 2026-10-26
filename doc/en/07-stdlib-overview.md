@@ -74,6 +74,12 @@ No `import` needed.
 | `std::path` | path joining, file name, extension, normalisation |
 | `std::compress` | text compress / decompress; the result is **binary** `List<uint8>`, never print it as a string |
 
+### Growable arrays
+
+| Module | Contents |
+| --- | --- |
+| `std::array` | ChaLi DynamicArray<T>: growable contiguous storage, reserve, resize, capacity and checked access |
+
 ### Concurrency
 
 | Module | Contents |

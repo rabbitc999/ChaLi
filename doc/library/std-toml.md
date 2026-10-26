@@ -205,7 +205,7 @@ JSON and TOML parsing OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-459"></a>`struct TomlValue : Iterator<TomlValue>` | 独立拥有 TOML 子树的值，关闭不影响副本，根序列化保留原文注释。 |
+| 模块 | <a id="symbol-461"></a>`struct TomlValue : Iterator<TomlValue>` | 独立拥有 TOML 子树的值，关闭不影响副本，根序列化保留原文注释。 |
 
 ## 函数索引
 

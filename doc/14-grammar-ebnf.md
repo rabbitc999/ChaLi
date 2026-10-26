@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 159 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 161 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -155,7 +155,6 @@ Box<int64 fn(int64)> box;
 | `MUT` | `mut` |
 | `NEW` | `new` |
 | `EXPORT` | `export` |
-| `HEAP` | `heap` |
 | `DROP` | `drop` |
 | `STATIC` | `static` |
 | `FN` | `fn` |
@@ -473,8 +472,8 @@ member = annotation_list, member_decl
 
 member_decl = "let", name_token, "=", expr, ";"
     | type, name_token, ";"
-    | type, name_token, "[", expr, "]", ";"
-    | type, name_token, "[", expr, "]", "[", expr, "]", ";"
+    | array_type, name_token, ";"
+    | type, name_token, array_dimensions, ";"
     | "type", name_token, "=", element_type, ";"
     | ptr_type, name_token, ";"
     | "static", type, name_token, ";"
@@ -597,12 +596,16 @@ global_decl = type, declarator_list, ";"
 declarator_list = declarator
     | declarator_list, ",", declarator ;
 
+array_extent_list = expr
+    | array_extent_list, ",", expr ;
+
+array_dimensions = "[", array_extent_list, "]"
+    | array_dimensions, "[", array_extent_list, "]" ;
+
 declarator = name_token
-    | name_token, "[", expr, "]"
-    | name_token, "[", expr, "]", "[", expr, "]"
+    | name_token, array_dimensions
     | name_token, "=", expr
-    | name_token, "[", expr, "]", "=", expr
-    | name_token, "[", expr, "]", "[", expr, "]", "=", expr
+    | name_token, array_dimensions, "=", expr
     | name_token, "[", "]"
     | name_token, "[", "]", "=", expr ;
 
@@ -707,7 +710,7 @@ for_in_stmt = "for", "(", name_token, "in", for_in_source, ")", block
 
 for_in_source = expr ;
 
-heap_type = name_token
+allocation_type = name_token
     | builtin_type ;
 
 expr = assign_expr ;
@@ -775,9 +778,8 @@ unary = "++", unary
     | "*", unary
     | "&", unary
     | "new", "[", expr, "]"
-    | "new", heap_type, "(", call_args, ")"
-    | "heap", heap_type
-    | "heap", heap_type, "(", call_args, ")"
+    | "new", allocation_type, "(", call_args, ")"
+    | "new", allocation_type
     | cast_expr ;
 
 cast_expr = "(", builtin_type, ")", unary
@@ -792,7 +794,7 @@ closure_type_arguments = element_type
 postfix = postfix, "@!<", closure_type_arguments, "@!>"
     | postfix, "++"
     | postfix, "--"
-    | postfix, "[", expr, "]"
+    | postfix, "[", array_extent_list, "]"
     | postfix, "?"
     | postfix, "[", expr, ":", expr, "]"
     | postfix, "[", expr, ":", "]"

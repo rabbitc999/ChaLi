@@ -55,13 +55,14 @@ def inventory():
                 method_name=side+method if side else method
                 traits.append(f'interface {trait}<R,T> {{ R {method_name}(T value); }};')
     traits += ['interface Hash<T> { uint64 hash(T value); };',
+               '/** 显式独立值复制协议，不改变赋值规则。 */ interface Copy<T> { /** 返回独立的值副本。 */ T copy(); };',
                'interface ExplicitConvert<T> { T explicitConvert(); };',
                'interface ImplicitConvert<T> { T implicitConvert(); };',
                'interface Index<R,T> { R index(T key); };',
                'interface Iterator<R> { Option<R> iterator(int64 index); };']
     for entry in declarations(path,'module std::lang;\n'+'\n'.join(traits)):
         entry['intrinsic']=True
-        entry['line']=827
+        entry['line'] = source.count('\n', 0, source.index('addBuiltin("Copy",')) + 1 if entry['name'] == 'Copy' or entry['owner'] == 'Copy' else 827
         data['std::lang'].append(entry)
     # 核对手工等价签名与编译器方法/算法登记表，新增内建 API 不得静默遗漏。
     container_source=(ROOT/'source/semantics/aggregate_ownership.cpp').read_text(encoding='utf-8')
@@ -176,7 +177,7 @@ def render(data):
     module_info={}
     capability={name:group for group,names in {
         'core': ['std','std::lang','std::reflect'],
-        'collections': ['std::collections','std::iter','std::algorithms'],
+        'collections': ['std::array','std::collections','std::iter','std::algorithms'],
         'text': ['std::text','std::utf8','std::encoding','std::parse','std::regex','std::json','std::toml','std::csv','std::binary','std::compress'],
         'math': ['std::math','std::cas','std::complex','std::linalg','std::numerics','std::numtheory','std::signal','std::random'],
         'io': ['std::io','std::path','std::cli','std::net','std::sql','std::process'],

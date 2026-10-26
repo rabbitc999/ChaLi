@@ -30,7 +30,7 @@ Option<Link mut&> reverse(Option<Link mut&> head){
     return previous;
 }
 Tree mut& makeTree(int64 value){
-    Tree mut& node = heap Tree; node.left=Option<Tree mut&>::None; node.right=Option<Tree mut&>::None; node.value=value; node.copies=1; treeAllocations+=1; return node;
+    Tree mut& node = new Tree; node.left=Option<Tree mut&>::None; node.right=Option<Tree mut&>::None; node.value=value; node.copies=1; treeAllocations+=1; return node;
 }
 void insert(Tree mut& root,int64 value){
     if(value==root.value){root.copies+=1;return;}
@@ -113,7 +113,7 @@ void main(){
         while (i<n) {
 
         int64 value=random(&seed)%1000;values.push(value);
-        Link mut& node = heap Link;node.value=value;node.next=head;head=Option<Link mut&>::Value(node);
+        Link mut& node = new Link;node.value=value;node.next=head;head=Option<Link mut&>::Value(node);
         if(tree.isNone()){Tree mut& root=makeTree(value);tree=Option<Tree mut&>::Value(root);}
         else {insert(tree.unwrap(),value);}
     

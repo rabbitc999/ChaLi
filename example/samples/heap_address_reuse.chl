@@ -6,11 +6,11 @@
  * 此处从新分配的引用读取 22；旧别名的拒绝场景见 samples-error/heap_stale_alias.chl。
  */
 void main() {
-    int64 mut& first = heap int64;
+    int64 mut& first = new int64;
     *first = 11;
     first.drop();
 
-    int64 mut& second = heap int64;
+    int64 mut& second = new int64;
     *second = 22;
     println("{}", *second);
     second.drop();

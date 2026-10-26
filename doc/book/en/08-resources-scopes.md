@@ -6,7 +6,7 @@
 
 Owned resources are cleaned up when their lifetime ends. Scope is therefore part of program behavior: leaving a block through normal completion, `return` or an error path must preserve the resource protocol.
 
-Use `heap T` or `heap T(arguments)` for the language's heap construction form. An owning handle is different from a borrowed reference. Moving a handle transfers responsibility; copying is only available when the type defines legal copy behavior.
+Use `new T` or `new T(arguments)` for the language's heap construction form. An owning handle is different from a borrowed reference. Moving a handle transfers responsibility; copying is only available when the type defines legal copy behavior.
 
 `defer` expresses an action to perform on scope exit. `scope` and `drop` provide the documented lifetime controls. Use them deliberately and avoid manually destroying something that another owning value will also destroy. The compiler's lifetime analysis and runtime live-memory checks cover different parts of this contract.
 

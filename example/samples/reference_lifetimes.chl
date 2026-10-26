@@ -12,7 +12,7 @@ List<int64 mut&> globalList() {
     return values;
 }
 int64 mut& allocated() {
-    int64 mut& value = heap int64;
+    int64 mut& value = new int64;
     value = 42;
     return value;
 }

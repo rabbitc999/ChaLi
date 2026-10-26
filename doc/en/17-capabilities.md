@@ -17,7 +17,7 @@ tested version, configuration and date; they do not automatically describe curre
 
 Concrete standard-library errors implement the core `Error` interface and provide diagnostics through `toString()`. `IoError`, `ParseError`, `CsvError` and the other structured errors retain their variants, positions and original messages. Text-only failures use `MessageError`, constructed with `MessageError::from(text)`. Shared handlers accept `Error const&` or use an `<E: Error>` constraint. `Result<T, E>` retains its concrete error type, including during `?` propagation.
 
-Heap object allocation uses `heap T`, or `heap T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
+Heap object allocation uses `new T`, or `new T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
 
 Support includes [return control expressions, statement-level named closures and field derivation](28-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures; `#derive` generates only Equal/Hash/Clone, validates field protocols and never generates Drop.
 

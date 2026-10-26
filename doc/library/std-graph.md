@@ -26,22 +26,22 @@ Graph 使用链式前向星存储：head 是每顶点首条边，edgeTo/edgeNext
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-66"></a>`struct GraphReply` | 图算法胶水回执；槽布局必须与 glue/std_graph.hpp 的 GraphReply 一致。 |
-| GraphReply | <a id="symbol-67"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
-| GraphReply | <a id="symbol-68"></a>`int64 value` | 标量结果：连通分量个数或生成树总权值。 |
-| GraphReply | <a id="symbol-69"></a>`int64 flag` | 布尔结果：按入口语义表示无环 / 有环。 |
-| GraphReply | <a id="symbol-70"></a>`List<int64> order` | 访问序或拓扑序。 |
-| GraphReply | <a id="symbol-71"></a>`List<int64> dist` | 单源最短路距离表，不可达顶点为 -1。 |
-| 模块 | <a id="symbol-72"></a>`struct GraphSnapshot` | 带权图：有向 / 无向由构造时的 directed 决定；重边与自环都允许。 |
-| GraphSnapshot | <a id="symbol-73"></a>`int64 vertexCount` | 顶点数量。 |
-| GraphSnapshot | <a id="symbol-74"></a>`bool directed` | 是否为有向图。 |
-| GraphSnapshot | <a id="symbol-75"></a>`int64 edgeCount` | 逻辑边数，不计无向镜像。 |
-| GraphSnapshot | <a id="symbol-76"></a>`List<int64> head` | 各顶点第一条邻接记录。 |
-| GraphSnapshot | <a id="symbol-77"></a>`List<int64> edgeTo` | 邻接终点数组。 |
-| GraphSnapshot | <a id="symbol-78"></a>`List<int64> edgeNext` | 同起点下一条邻接记录。 |
-| GraphSnapshot | <a id="symbol-79"></a>`List<int64> edgeWeight` | 邻接记录权重。 |
-| 模块 | <a id="symbol-80"></a>`opcode Graph` | 持久邻接图，算法原地读取，普通复制深复制，snapshot 显式导出。 |
-| 模块 | <a id="symbol-81"></a>`opcode UnionFind` | 持久父指针并查集，压缩和合并原地执行，普通复制深复制。 |
+| 模块 | <a id="symbol-67"></a>`struct GraphReply` | 图算法胶水回执；槽布局必须与 glue/std_graph.hpp 的 GraphReply 一致。 |
+| GraphReply | <a id="symbol-68"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
+| GraphReply | <a id="symbol-69"></a>`int64 value` | 标量结果：连通分量个数或生成树总权值。 |
+| GraphReply | <a id="symbol-70"></a>`int64 flag` | 布尔结果：按入口语义表示无环 / 有环。 |
+| GraphReply | <a id="symbol-71"></a>`List<int64> order` | 访问序或拓扑序。 |
+| GraphReply | <a id="symbol-72"></a>`List<int64> dist` | 单源最短路距离表，不可达顶点为 -1。 |
+| 模块 | <a id="symbol-73"></a>`struct GraphSnapshot` | 带权图：有向 / 无向由构造时的 directed 决定；重边与自环都允许。 |
+| GraphSnapshot | <a id="symbol-74"></a>`int64 vertexCount` | 顶点数量。 |
+| GraphSnapshot | <a id="symbol-75"></a>`bool directed` | 是否为有向图。 |
+| GraphSnapshot | <a id="symbol-76"></a>`int64 edgeCount` | 逻辑边数，不计无向镜像。 |
+| GraphSnapshot | <a id="symbol-77"></a>`List<int64> head` | 各顶点第一条邻接记录。 |
+| GraphSnapshot | <a id="symbol-78"></a>`List<int64> edgeTo` | 邻接终点数组。 |
+| GraphSnapshot | <a id="symbol-79"></a>`List<int64> edgeNext` | 同起点下一条邻接记录。 |
+| GraphSnapshot | <a id="symbol-80"></a>`List<int64> edgeWeight` | 邻接记录权重。 |
+| 模块 | <a id="symbol-81"></a>`opcode Graph` | 持久邻接图，算法原地读取，普通复制深复制，snapshot 显式导出。 |
+| 模块 | <a id="symbol-82"></a>`opcode UnionFind` | 持久父指针并查集，压缩和合并原地执行，普通复制深复制。 |
 
 ## 函数索引
 

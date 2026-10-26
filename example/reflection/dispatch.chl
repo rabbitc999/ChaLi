@@ -22,10 +22,10 @@ void main(){
     match(std::reflect::callInterfaceConst<View>(view,"bump",args).error()){std::reflect::ReflectError::ReceiverMismatch=>{} _=>{assert(false);}}
     assert(actual.value==20);
     assert(std::reflect::callInterface<View>(view,"bump",args).unwrap().asI64().unwrap()==22 && actual.value==22);
-    DefaultView mut& fallback = heap DefaultView;Any defaultBox;defaultBox.set(&fallback);View const& readonly=defaultBox.getReference();
+    DefaultView mut& fallback = new DefaultView;Any defaultBox;defaultBox.set(&fallback);View const& readonly=defaultBox.getReference();
     assert(std::reflect::callInterfaceConst<View>(readonly,"name",empty).unwrap().asText().unwrap()=="default");
     assert(std::reflect::callInterfaceConst<View>(readonly,"bump",args).unwrap().asI64().unwrap()==102);
-    Hidden mut& hidden = heap Hidden;Any hiddenBox;hiddenBox.set(&hidden);View mut& hiddenView=hiddenBox.getReference();
+    Hidden mut& hidden = new Hidden;Any hiddenBox;hiddenBox.set(&hidden);View mut& hiddenView=hiddenBox.getReference();
     match(std::reflect::callInterface<View>(hiddenView,"name",empty).error()){std::reflect::ReflectError::NotExposed=>{} _=>{assert(false);}}
     State state=State::Ready;
     assert(std::reflect::callEnumMethodConst<State>(&state,"name",empty).unwrap().asText().unwrap()=="ready");

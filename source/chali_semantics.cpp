@@ -716,6 +716,30 @@ int M_Dims2(int a, int b)
     return id;
 }
 /**
+ * @brief 按声明顺序合并两个数组维度列表。
+ * @param dims 已有维度列表编号。
+ * @param next 待追加维度列表编号。
+ * @return 合并后的列表编号。
+ */
+int M_DimsAppend(int dims, int next)
+{
+    const auto values = g_nodes[static_cast<std::size_t>(next)].kids;
+    for (const int value : values) M_ListAdd(dims, value);
+    return dims;
+}
+/**
+ * @brief 将多维下标展开为现有连续索引节点，保留逐维检查。
+ * @param base 被索引的表达式编号。
+ * @param dims 下标表达式列表编号。
+ * @return 最后一个索引节点编号。
+ */
+int M_IndexDims(int base, int dims)
+{
+    const auto values = g_nodes[static_cast<std::size_t>(dims)].kids;
+    for (const int value : values) base = M_Index(base, value);
+    return base;
+}
+/**
  * @brief 创建空的语法节点列表。
  * @retval 生成的语法节点在节点池中的编号。
  */
@@ -1147,9 +1171,11 @@ int M_CallOn(int callee, int args)
     /* 已声明模块按模块调用处理，模块限定调用不应被误判为类型构造。 */
     const std::size_t qualifier = target.s.rfind("::");
     const std::size_t typeStart = qualifier == Memory::String::npos ? 0u : qualifier + 2u;
+    std::size_t typeLetter = typeStart;
+    while (typeLetter < target.s.size() && target.s[typeLetter] == '_') ++typeLetter;
     const bool standardModule = target.s.compare(0u, 11u, "std::lang::") == 0 && IsStandardModule(target.s.substr(11u));
     const bool moduleQualifier = standardModule || target.s == "program";
-    if (target.kind == MNode::EnumCtor && !moduleQualifier && typeStart < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeStart])))
+    if (target.kind == MNode::EnumCtor && !moduleQualifier && typeLetter < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeLetter])))
     {
         if (target.s.compare(0u, 11u, "std::lang::") == 0) target.s.erase(0u, 11u);
         target.kids = g_nodes[static_cast<std::size_t>(args)].kids;
@@ -1960,28 +1986,6 @@ int M_Construct(int typeId, int args, int skipName)
         g_nodes[static_cast<std::size_t>(id)].s = g_names[static_cast<std::size_t>(skipName)];
     g_nodes[static_cast<std::size_t>(id)].kids = { args };
     return id;
-}
-/**
- * @brief 为 `heap T` 创建单对象堆分配节点。
- * @param typeName 类型名 T（仅作文法识别，实际分配类型仍按左值推导）。
- * @retval heap 分配节点（M_NewPtr(-1)）。
- * @note heap 是文法登记的保留关键字。
- */
-int M_HeapSugar(int typeName)
-{
-    (void)typeName;
-    return M_NewPtr(-1);
-}
-/**
- * @brief 为 `heap T(args)` 创建堆对象构造节点。
- * @param typeName 类型名 T。
- * @param args 构造实参列表节点。
- * @retval 构造节点（M_Construct(-1, args, -1)）。
- */
-int M_HeapConstruct(int typeName, int args)
-{
-    (void)typeName;
-    return M_Construct(-1, args, -1);
 }
 /**
  * @brief 将退出值中的直接变量转换为标准库移动调用，元组逐项应用相同规则。

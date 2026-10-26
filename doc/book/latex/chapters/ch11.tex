@@ -614,6 +614,37 @@ void main()
 
 装箱不会延长引用寿命。局部结构体、数组等多槽值的地址不能被保存在更长寿命的盒子里；需要接口视图时可直接绑定实现类型的引用，无须经过 \texttt{Any}。
 
+\subsection*{固定多维数组与可扩容数组}
+
+固定数组可写 \texttt{int64 matrix[\allowbreak{}2,\allowbreak{} 3]\allowbreak{};}、\texttt{int64 cube[\allowbreak{}2,\allowbreak{} 3,\allowbreak{} 4]\allowbreak{};}，也可连续写方括号 \texttt{int64 cube[\allowbreak{}2]\allowbreak{}[\allowbreak{}3]\allowbreak{}[\allowbreak{}4]\allowbreak{};}，两种形式允许混合。数组字段使用相同维度语法。长度是编译期正整数，采用行主序连续布局；\texttt{cube[\allowbreak{}i,\allowbreak{}j,\allowbreak{}k]\allowbreak{}} 与 \texttt{cube[\allowbreak{}i]\allowbreak{}[\allowbreak{}j]\allowbreak{}[\allowbreak{}k]\allowbreak{}} 等价，下标必须写齐，每个下标求值一次并逐维检查边界。普通赋值与按值传递保留独立副本语义。
+
+\texttt{T a[\allowbreak{}]\allowbreak{} =\allowbreak{} new[\allowbreak{}n]\allowbreak{};} 是在堆上分配的运行时定长数组，分配后长度不变。需要扩容时导入 \texttt{std:\allowbreak{}:\allowbreak{}array}，使用以 ChaLi 实现的 \texttt{std:\allowbreak{}:\allowbreak{}array:\allowbreak{}:\allowbreak{}Dynamic\allowbreak{}Array<\allowbreak{}T>\allowbreak{}}：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+import std::array;
+void main() {
+    std::array::DynamicArray<int64> values;
+    values.reserve(8);
+    values.push(7);
+    values.resize(3);
+    values.set(1, 9);
+    assert(values[0] == 7 && values[1] == 9 && values[2] == 0);
+    assert(values.len() == 3 && values.capacity() >= 8);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{reserve(\allowbreak{}n)\allowbreak{}} 只增容量；\texttt{push(\allowbreak{}value)\allowbreak{}} 在容量不足时倍增；\texttt{resize(\allowbreak{}n)\allowbreak{}} 新增默认值或释放被移除值，\texttt{clear(\allowbreak{})\allowbreak{}} 保留容量。\texttt{[\allowbreak{}]\allowbreak{}} / \texttt{at} 只读，写入使用 \texttt{set}；越界和负长度／容量报错。\texttt{pop(\allowbreak{})\allowbreak{}} 返回 \texttt{Option<\allowbreak{}T>\allowbreak{}}，\texttt{to\allowbreak{}Array(\allowbreak{})\allowbreak{}} 返回独立的运行时数组。复制数组独立复制元素与缓冲区，作用域结束自动清理。扩容会更换存储，不应保存内部存储的元素引用。当前扩容沿用运行时数组的值复制规则，不保证比内建 List 更快。
+
+\subsection*{显式复制接口 \texttt{Copy<\allowbreak{}T>\allowbreak{}}}
+
+\texttt{Copy<\allowbreak{}T>\allowbreak{}} 的签名为 \texttt{T copy(\allowbreak{})\allowbreak{};}，用于显式返回独立副本。例如 \texttt{struct Packet:\allowbreak{} Copy<\allowbreak{}Packet>\allowbreak{} \{ String text; Packet copy(\allowbreak{})\allowbreak{} \{ return self; \} \};}。方法中的 \texttt{return self} 沿用现有值语义，字符串、拥有字段和数组独立复制；裸引用字段仍然是借用，不延长来源寿命。\texttt{Dynamic\allowbreak{}Array<\allowbreak{}T>\allowbreak{}} 实现 \texttt{Copy<\allowbreak{}Dynamic\allowbreak{}Array<\allowbreak{}T>\allowbreak{}>\allowbreak{}}，保留副本的长度和容量。
+
+泛型函数可写 \texttt{T duplicate<\allowbreak{}T:\allowbreak{} Copy<\allowbreak{}T>\allowbreak{}>\allowbreak{}(\allowbreak{}T const\& value)\allowbreak{} \{ return value.\allowbreak{}copy(\allowbreak{})\allowbreak{}; \}}，接口引用也可调用 \texttt{copy(\allowbreak{})\allowbreak{}}。类型需显式声明实现接口；仅仅有同名方法不会自动满足泛型约束。该接口不改变普通赋值和按值传参，不作为隐式复制资格标记，也不覆盖 \texttt{\#Non\allowbreak{}Copyable} 或 \texttt{Closeable} 的复制禁令。\texttt{Copy<\allowbreak{}T>\allowbreak{}} 与 \texttt{\#Non\allowbreak{}Copyable} 互斥：直接实现、经接口继承和宿主 \texttt{impl} 均检查；实现 \texttt{Closeable} 自动获得不可复制标记，也不能同时实现 \texttt{Copy<\allowbreak{}T>\allowbreak{}}，即使 \texttt{copy(\allowbreak{})\allowbreak{}} 返回新建对象也会被拒绝。现有 \texttt{Clone<\allowbreak{}T>\allowbreak{}:\allowbreak{}:\allowbreak{}clone(\allowbreak{})\allowbreak{}} 保持原有行为，\texttt{\#derive} 的支持项保持原样。
+
 \section{小结}
 
 \begin{center}

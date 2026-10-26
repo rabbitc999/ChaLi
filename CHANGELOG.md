@@ -4,7 +4,17 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.4**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.5**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.5 — 任意维数组、可扩容数组与统一 new 堆分配
+
+- 固定数组声明和字段支持任意维 `[M,N,...]`、连续方括号及混合形式，逗号下标复用行主序布局、逐维边界检查和值复制。
+- 新增以 ChaLi 实现的 std::array::DynamicArray<T>，支持自动扩容、reserve、resize、capacity、set、pop、遍历及独立数组快照。
+- new[n] 保留运行时堆分配，单对象分配统一使用 new T / new T(args)，删除 heap 分配关键字和入口，同步样例、编辑器与文档。
+- 新增 Copy<T>::copy() 显式复制接口；DynamicArray 与自举实验容器实现该协议。Copy<T> 与 #NonCopyable 互斥，覆盖接口继承、Closeable 自动标记与宿主 impl；普通赋值继续沿用原有值语义。
+- 新增 ChaLi 自举 List、int64 键 Map 与 Set 的实验实现及 VM/AOT 正确性和性能对照脚本，保留默认容器实现。
+- 程序、语言服务与插件 chaliCompilerVersion 统一升级至 1.0.5。
 
 
 ## 1.0.4 — 显式生命周期契约 `#borrow` 与 `#static`

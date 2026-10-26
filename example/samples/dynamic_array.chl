@@ -1,0 +1,63 @@
+import std::array;
+struct Cell { String text; List<int64> values; };
+int64 probeDrops = 0;
+struct Probe: Drop {
+    int64 marker;
+    void drop() { assert(self.marker == 7, "未使用的容量槽不应析构 T"); probeDrops = probeDrops + 1; }
+};
+void main() {
+    {
+        std::array::DynamicArray<Probe> reserved;
+        reserved.reserve(16);
+    }
+    assert(probeDrops == 0);
+    {
+        std::array::DynamicArray<Probe> probes;
+        Probe probe; probe.marker = 7;
+        probes.push(probe);
+        probes.reserve(8);
+        Probe retrievedProbe = probes[0];
+        assert(retrievedProbe.marker == 7);
+        probes.clear();
+    }
+    assert(probeDrops > 0);
+    std::array::DynamicArray<int64> values;
+    assert(values.len() == 0 && values.capacity() == 0 && values.isEmpty());
+    values.reserve(3);
+    assert(values.capacity() == 3 && values.len() == 0);
+    int64 i = 0;
+    while (i < 20) { values.push(i * 2); i = i + 1; }
+    assert(values.len() == 20 && values.capacity() >= 20 && values[19] == 38);
+    values.set(0, 7);
+    std::array::DynamicArray<int64> copied = values;
+    copied.set(0, 9);
+    assert(values[0] == 7 && copied[0] == 9);
+    int64 capacity = values.capacity();
+    values.resize(2);
+    values.resize(6);
+    assert(values.len() == 6 && values[0] == 7 && values[2] == 0 && values.capacity() == capacity);
+    assert(values.pop().unwrap() == 0 && values.len() == 5);
+    int64 snapshot[] = values.toArray();
+    snapshot[0] = 13;
+    assert(values[0] == 7 && len(snapshot) == 5);
+    int64 sum = 0;
+    for (int64 item in values) { sum = sum + item; }
+    assert(sum == 9);
+    values.clear();
+    assert(values.isEmpty() && values.capacity() == capacity && values.pop().isNone());
+    std::array::DynamicArray<String> texts = std::array::DynamicArray<String>::withCapacity(1);
+    texts.push("first"); texts.push("second");
+    std::array::DynamicArray<String> textCopy = texts;
+    textCopy.set(0, "changed");
+    assert(texts[0] == "first" && textCopy[0] == "changed");
+    texts.resize(1); texts.resize(2);
+    assert(texts[1] == "");
+    std::array::DynamicArray<Cell> cells;
+    Cell cell; cell.text = "cell"; cell.values.push(3);
+    cells.push(cell); cells.reserve(8);
+    Cell retrieved = cells[0]; retrieved.values.push(5);
+    assert(cells[0].text == "cell" && cells[0].values.len() == 1);
+    cells.clear(); cells.resize(1);
+    assert(cells[0].text == "" && cells[0].values.len() == 0);
+    println("dynamic array OK");
+}

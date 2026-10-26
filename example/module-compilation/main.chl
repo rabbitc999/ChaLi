@@ -3,7 +3,7 @@ import calc::right;
 void main() {
     println("result:{}", twice(add(20)));
     {
-        Box mut& box = heap Box; box.value = 7;
+        Box mut& box = new Box; box.value = 7;
         Any object; object.set(&box);
         Value mut& view = object.getReference();
         assert(viaInterface(view) == 7);

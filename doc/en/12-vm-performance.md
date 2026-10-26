@@ -4,7 +4,9 @@
 **English** · [简体中文](../12-vm-performance.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The current program version is **ChaLi 1.0.2**; the latest measured baseline below is **ChaLi 0.31.0**. Measurements retain the actual binary versions and are not relabeled as 1.0.2. Default List, Map and Set workloads were measured before and after the call-path changes on the same host. C++17, CPython and the official Lua VM were measured in the same campaign.
+The current program version is **ChaLi 1.0.5**. The separate [1.0.5 bootstrap container report](../../benchmarks/results/bootstrap-containers-1.0.5/README.md) compares List, Map and Set written in ChaLi against the default containers using the same compiler, with VM, LLVM AOT and raw samples.
+
+The historical default-container call-path baseline below is **ChaLi 0.31.0**. Measurements retain the actual binary versions and are not relabeled as 1.0.5. Default List, Map and Set workloads were measured before and after the call-path changes on the same host. C++17, CPython and the official Lua VM were measured in the same campaign.
 
 [Container raw samples](../../benchmarks/results/containers-0310/results.json)
 

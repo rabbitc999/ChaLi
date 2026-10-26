@@ -1,0 +1,31 @@
+{
+  "files": [
+    {
+      "path": "chali-1.0.5-llvm-external-windows-x64.exe",
+      "bytes": 101213184,
+      "sha256": "5ba76f1ace72b64fbb6823d551c0fd30912d3656b09a5f67bed45d031992a6d8"
+    },
+    {
+      "path": "vscode/dist/chali-editor-1.0.0-llvm-external.vsix",
+      "bytes": 25034598,
+      "sha256": "05e51bfe1f3276dd533c038c3fa83e85130c109651e818e61c6c8c7c74c3691e"
+    },
+    {
+      "path": "dist/llvm-external/chali-1.0.5-llvm-external-windows-x64.msi",
+      "bytes": 23461888,
+      "sha256": "86c4a0b564044bdb437521acb8674821aac4f6beb43288701431c655f9e9f2d9"
+    },
+    {
+      "path": "doc/book/latex/book.pdf",
+      "bytes": 2954289,
+      "sha256": "9f997b9d55b1655d33be6ac9eecc5b7d512f0d7632dcd78124a8f05db2401280"
+    }
+  ],
+  "msi_version": "1.0.5",
+  "vsix_and_msi_compiler_bytes_equal": true,
+  "compiler_actual_version": "1.0.5",
+  "frontend_reflection": true,
+  "runtime_reflection": true,
+  "windows_unbundled_gnu_llvm_dll_imports": false,
+  "editor_tests": "完整测试在资产最终更新前通过；最终 VSIX 重新打包并逐字节核对编译器。"
+}

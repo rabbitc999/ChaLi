@@ -19,7 +19,7 @@ void main() {
         local.text = "parent";
         local.values.push("owned");
         local.callback = retained(&parentCallback);
-        DefaultOwned mut& owned = heap DefaultOwned;
+        DefaultOwned mut& owned = new DefaultOwned;
         assert(owned.kind == 0 && !owned.ready && owned.scale == 0.0);
         assert(owned.values.len() == 0);
         owned.text = "child";

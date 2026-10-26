@@ -1,6 +1,7 @@
 """标准库参考手册的人工维护说明；声明与重载由 library_reference.py 从源码读取。"""
 
 MODULES = {
+    'std::array': ('可扩容数组', 'DynamicArray<T> 使用运行时堆数组保存连续元素，支持 reserve、倍增 push、resize、capacity、set、pop、遍历和独立快照。负容量、负长度及越界触发错误；复制为独立值，清空保留容量。'),
     'std::cas': ('精确符号计算', 'Expr 从字符串解析为不可变 AST，使用共享大整数后端保存精确整数和有理数。支持四则运算、节点遍历、化简、求导、积分、替换、极限与 Taylor 展开；不支持的积分保留符号节点。调用串行保护 CAS 内部资源，AST 可以独立复制。'),
     'std::encoding': ('文本编码', 'RFC 4648 的 Base64、Base64URL 与十六进制编解码。输入字节使用 List<uint8>，解码返回 Result；拒绝非法字符、填充与非零尾部位，不忽略空白。'),
     'std::csv': ('CSV 读写', '支持自定义单字节分隔符、引号转义和字段内换行，保留空字段与空行。错误位置从一开始，列按字节计。输出记录以 LF 结束，空记录必须含至少一个空字段。'),
@@ -209,3 +210,5 @@ PARAMETERS.update(lower='定积分下界表达式', upper='定积分上界表达
 PARAMETERS.update(before='待替换的精确匹配文本', after='替换文本', cursor='仍有效的节点游标', directed='是否创建有向图', keepEmpty='是否保留分割产生的空项', tree='独立转换的源二叉树', vertexCount='非负顶点数量', weight='边权值')
 
 PARAMETERS.update(field="模型中声明的字段名或列名。", descending="为 true 时按降序排列。", limit="最大返回行数，零表示不限制。", operation="动态 SQL 操作名称或 ipage 操作符编号，按入口声明区分。", query="需要配置或生成语句的查询对象引用。", statement="包含 SQL 和绑定参数的语句值。")
+
+PARAMETERS.update(minimumCapacity='至少需要的元素槽数，必须非负。', length='目标有效元素数，必须非负。')

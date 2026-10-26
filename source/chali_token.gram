@@ -59,7 +59,6 @@
 %token MUT "mut"
 %token NEW "new"
 %token EXPORT "export"
-%token HEAP "heap"
 %token DROP "drop"
 %token STATIC "static"
 %token FN "fn"

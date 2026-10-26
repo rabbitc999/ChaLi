@@ -119,7 +119,7 @@ void main() {
     }
     bool skipped = false && OwnedNumber::create("skipped", 0).read() > 0;
     assert(!skipped && OwnedNumber::drops == 7);
-    OwnedNumber mut& allocated = heap OwnedNumber;
+    OwnedNumber mut& allocated = new OwnedNumber;
     allocated.number = 40;
     Any erased;
     erased.set(&allocated);

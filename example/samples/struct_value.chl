@@ -1,7 +1,7 @@
 /* 结构体是**值语义**：声明 / 赋值 / 当实参之外的地方都是"独立的对象" ——
  * `Point a = b;`、`a = b;`、`arr[i] = b;` 都是**逐槽深拷贝**，改一个不会动到另一个。
  *
- * 要"两个名字指同一份对象"，就存**引用**（`Point mut& p = heap Point;`，或拿数组元素的地址
+ * 要"两个名字指同一份对象"，就存**引用**（`Point mut& p = new Point;`，或拿数组元素的地址
  * `&items[0]`）：从引用写进去，两边都能看见。
  *
  * 普通按值形参也复制；需要函数修改调用方对象时，显式声明 `Point mut&` 参数。
@@ -42,7 +42,7 @@ void main() {
     println("items[0].x={} a.x={}", items[0].x, a.x);
 
     /* 引用：两个名字指同一份（堆上那块），写进去互相可见 */
-    Point mut& shared = heap Point;
+    Point mut& shared = new Point;
     shared->x = 1;
     Point mut& alias = shared;
     alias->x = 42;

@@ -400,7 +400,9 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
         if (stride > 0) return simple_ast::Node::offset(LowerExpr(cursor), position, stride);
         if (IsByteStorageType(base->elem))
             return simple_ast::Node::loadFrom(simple_ast::Node::offset(LowerExpr(cursor), position, 1), LowerType(base->elem, label));
-        return simple_ast::Node::index(LowerExpr(cursor), position);
+        const auto value = simple_ast::Node::index(LowerExpr(cursor), position);
+        value->declared = LowerType(base->elem, "");
+        return value;
     }
     if (base->kind == MType::Array)
     {
@@ -433,7 +435,10 @@ simple_ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex
         if (stride > 0) return simple_ast::Node::offset(LowerRawExpr(cursor), linear, stride);
         if (IsByteStorageType(base->elem))
             return simple_ast::Node::loadFrom(simple_ast::Node::offset(LowerRawExpr(cursor), linear, 1), LowerType(base->elem, name));
-        return simple_ast::Node::index(LowerRawExpr(cursor), linear);
+        const auto value = simple_ast::Node::index(LowerRawExpr(cursor), linear);
+        // 字段地址是 Offset 节点，不能依赖低层 AST 从它猜测句柄或数值宽度。
+        value->declared = LowerType(base->elem, "");
+        return value;
     }
     if (base->kind == MType::Ptr)
     {
@@ -714,6 +719,16 @@ simple_ast::NodePtr LowerAddressOf(int id)
         const bool valueReference = node.s != "__chali_buffer_index" && base->kind == MType::Ptr && base->elem && (IsStandardOpcode(base->elem, "String") || base->elem->kind == MType::Array);
         if (valueReference) base = base->elem;
         if (!CheckContainerIndex(node.kids[1], "下标")) return Bad();
+        if (base->kind == MType::Array && !IsRuntimeArray(base))
+        {
+            // 先检查并折平完整下标链，不能读取中间行来取得最终元素地址。
+            const auto access = LowerIndexChain(node.kids[0], node.kids[1], node.s == "__chali_buffer_index");
+            if (access && access->kind == simple_ast::Node::Kind::Index)
+                return simple_ast::Node::offset(access->kids[0], access->kids[1], 8);
+            if (access && access->kind == simple_ast::Node::Kind::LoadInt && !access->kids.empty())
+                return access->kids[0];
+            return access;
+        }
         const auto target = valueReference ? LowerExpr(node.kids[0]) : LowerRawExpr(node.kids[0]);
         const simple_ast::NodePtr position = LowerExpr(node.kids[1]);
         const Memory::String label = NameOfExpr(node.kids[0]);
@@ -737,20 +752,6 @@ simple_ast::NodePtr LowerAddressOf(int id)
             const int bytes = ElementBytes(base->elem);
             return simple_ast::Node::offset(
                 target, simple_ast::Node::checkPointer(position, target, bytes, label), bytes);
-        }
-        if (base->kind == MType::Array)
-        {
-            /* 一次下标：把后面的维度先折进系数（与 `a[i]` 的线性化同一套算法） */
-            int factor = 1;
-            for (std::size_t index = 1u; index < base->dims.size(); ++index)
-                factor *= base->dims[index];
-            const simple_ast::NodePtr checked = simple_ast::Node::checkIndex(
-                position, simple_ast::Node::i(base->dims[0]),
-                (base->dims.size() == 1u) ? label : (label + " 第 1 维"));
-            const simple_ast::NodePtr linear =
-                (factor == 1) ? checked : simple_ast::Node::binary("*", checked, simple_ast::Node::i(factor));
-            const int stride = StructStride(base->elem);
-            return simple_ast::Node::offset(target, linear, ElementBytes(base->elem));
         }
         Fail("`&` 只能取数组 / 引用元素或结构体字段的地址");
         return Bad();
@@ -3273,6 +3274,8 @@ int FreezeCompoundTarget(int target, Memory::Vector<simple_ast::NodePtr> &prefix
             address = LowerIndexChain(place.kids[0], place.kids[1], place.s == "__chali_buffer_index");
             if (address && address->kind == simple_ast::Node::Kind::Index)
                 address = simple_ast::Node::offset(address->kids[0], address->kids[1], 8);
+            else if (address && address->kind == simple_ast::Node::Kind::LoadInt && !address->kids.empty())
+                address = address->kids[0];
         }
         else
         {

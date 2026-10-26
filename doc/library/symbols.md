@@ -36,6 +36,22 @@
 | [std::algorithms::sumReference](std-algorithms.md#api-11) | `T sumReference<T>(T mut& data, int64 count)` |
 | [std::algorithms::sumValue](std-algorithms.md#api-25) | `T sumValue<T>(List<T> items)` |
 | [std::algorithms::zipValue](std-algorithms.md#api-3) | `std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<U> right)` |
+| [std::array::DynamicArray::at](std-array.md#api-10) | `T at(int64 position)` |
+| [std::array::DynamicArray::capacity](std-array.md#api-3) | `int64 capacity()` |
+| [std::array::DynamicArray::clear](std-array.md#api-9) | `void clear()` |
+| [std::array::DynamicArray::copy](std-array.md#api-5) | `DynamicArray<T> copy()` |
+| [std::array::DynamicArray::create](std-array.md#api-0) | `static DynamicArray<T> create()` |
+| [std::array::DynamicArray::index](std-array.md#api-11) | `T index(int64 position)` |
+| [std::array::DynamicArray::isEmpty](std-array.md#api-4) | `bool isEmpty()` |
+| [std::array::DynamicArray::iterator](std-array.md#api-14) | `Option<T> iterator(int64 position)` |
+| [std::array::DynamicArray::len](std-array.md#api-2) | `int64 len()` |
+| [std::array::DynamicArray::pop](std-array.md#api-13) | `Option<T> pop()` |
+| [std::array::DynamicArray::push](std-array.md#api-7) | `void push(T value)` |
+| [std::array::DynamicArray::reserve](std-array.md#api-6) | `void reserve(int64 minimumCapacity)` |
+| [std::array::DynamicArray::resize](std-array.md#api-8) | `void resize(int64 length)` |
+| [std::array::DynamicArray::set](std-array.md#api-12) | `void set(int64 position, T value)` |
+| [std::array::DynamicArray::toArray](std-array.md#api-15) | `T[] toArray()` |
+| [std::array::DynamicArray::withCapacity](std-array.md#api-1) | `static DynamicArray<T> withCapacity(int64 capacity)` |
 | [std::binary::BinaryReader::drop](std-binary.md#api-0) | `void drop()` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-3) | `static BinaryReader fromArray(uint8 bytes[])` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-2) | `static BinaryReader fromArray(uint8 const& bytes, int64 count)` |
@@ -495,20 +511,21 @@
 | [std::lang::BigInteger::strRadix](std-lang.md#api-192) | `String strRadix(int64 base)` |
 | [std::lang::BitNot::bitNot](std-lang.md#api-257) | `R bitNot(T value)` |
 | [std::lang::Closeable::close](std-lang.md#api-128) | `void close()` |
+| [std::lang::Copy::copy](std-lang.md#api-260) | `T copy()` |
 | [std::lang::Divide::leftDiv](std-lang.md#api-230) | `R leftDiv(T value)` |
 | [std::lang::Drop::drop](std-lang.md#api-127) | `void drop()` |
 | [std::lang::Equal::leftEqual](std-lang.md#api-234) | `R leftEqual(T value)` |
 | [std::lang::Error::toString](std-lang.md#api-48) | `String toString()` |
-| [std::lang::ExplicitConvert::explicitConvert](std-lang.md#api-260) | `T explicitConvert()` |
+| [std::lang::ExplicitConvert::explicitConvert](std-lang.md#api-261) | `T explicitConvert()` |
 | [std::lang::File::print](std-lang.md#api-51) | `int64 print(String text)` |
 | [std::lang::File::println](std-lang.md#api-52) | `int64 println(String text = "")` |
 | [std::lang::FromResidual::fromResidual](std-lang.md#api-90) | `static F fromResidual(R residual)` |
 | [std::lang::Greater::leftGreater](std-lang.md#api-242) | `R leftGreater(T value)` |
 | [std::lang::GreaterOrEqual::leftGreaterEqual](std-lang.md#api-244) | `R leftGreaterEqual(T value)` |
 | [std::lang::Hash::hash](std-lang.md#api-259) | `uint64 hash(T value)` |
-| [std::lang::ImplicitConvert::implicitConvert](std-lang.md#api-261) | `T implicitConvert()` |
-| [std::lang::Index::index](std-lang.md#api-262) | `R index(T key)` |
-| [std::lang::Iterator::iterator](std-lang.md#api-263) | `Option<R> iterator(int64 index)` |
+| [std::lang::ImplicitConvert::implicitConvert](std-lang.md#api-262) | `T implicitConvert()` |
+| [std::lang::Index::index](std-lang.md#api-263) | `R index(T key)` |
+| [std::lang::Iterator::iterator](std-lang.md#api-264) | `Option<R> iterator(int64 index)` |
 | [std::lang::Less::leftLess](std-lang.md#api-238) | `R leftLess(T value)` |
 | [std::lang::LessOrEqual::leftLessEqual](std-lang.md#api-240) | `R leftLessEqual(T value)` |
 | [std::lang::List::at](std-lang.md#api-153) | `T at(int64 index)` |
@@ -545,8 +562,8 @@
 | [std::lang::Option::intoBranch](std-lang.md#api-92) | `TryBranch<T, NoneResidual> intoBranch()` |
 | [std::lang::Option::isNone](std-lang.md#api-95) | `bool isNone()` |
 | [std::lang::Option::isValue](std-lang.md#api-94) | `bool isValue()` |
-| [std::lang::Option::okOr](std-lang.md#api-265) | `Result<T,E> okOr<E>(E error)` |
-| [std::lang::Option::okOrElse](std-lang.md#api-266) | `Result<T,E> okOrElse<E>(E fn() factory)` |
+| [std::lang::Option::okOr](std-lang.md#api-266) | `Result<T,E> okOr<E>(E error)` |
+| [std::lang::Option::okOrElse](std-lang.md#api-267) | `Result<T,E> okOrElse<E>(E fn() factory)` |
 | [std::lang::Option::take](std-lang.md#api-96) | `T take()` |
 | [std::lang::Option::transform](std-lang.md#api-100) | `Option<T> transform(T fn(T) mapper)` |
 | [std::lang::Option::unwrap](std-lang.md#api-97) | `T unwrap()` |
@@ -564,7 +581,7 @@
 | [std::lang::Result::intoBranch](std-lang.md#api-103) | `TryBranch<T, ErrorResidual<E>> intoBranch()` |
 | [std::lang::Result::isErr](std-lang.md#api-107) | `bool isErr()` |
 | [std::lang::Result::isOk](std-lang.md#api-106) | `bool isOk()` |
-| [std::lang::Result::mapErr](std-lang.md#api-264) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
+| [std::lang::Result::mapErr](std-lang.md#api-265) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
 | [std::lang::Result::ok](std-lang.md#api-105) | `Option<T> ok()` |
 | [std::lang::Result::take](std-lang.md#api-108) | `T take()` |
 | [std::lang::Result::takeError](std-lang.md#api-112) | `E takeError()` |

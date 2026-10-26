@@ -69,9 +69,9 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-409"></a>`enum RegexError : Error` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 |
+| 模块 | <a id="symbol-411"></a>`enum RegexError : Error` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 |
 | RegexError | `Invalid` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-410"></a>`opcode Regex` | 共享不可变编译模式的 opcode，匹配状态按每次调用独立。 |
+| 模块 | <a id="symbol-412"></a>`opcode Regex` | 共享不可变编译模式的 opcode，匹配状态按每次调用独立。 |
 
 ## 函数索引
 

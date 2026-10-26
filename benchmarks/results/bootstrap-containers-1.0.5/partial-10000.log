@@ -1,0 +1,15 @@
+准备完成：list_build
+准备完成：list_read
+准备完成：list_write
+准备完成：list_remove
+准备完成：map_build
+准备完成：map_read
+准备完成：map_write
+准备完成：map_remove
+准备完成：set_build
+准备完成：set_read
+准备完成：set_write
+准备完成：set_remove
+list_build native_vm 1: 19.833 ms
+list_build native_aot 1: 16.275 ms
+list_build bootstrap_vm 1: 2270.977 ms

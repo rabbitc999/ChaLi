@@ -381,6 +381,20 @@ int M_TypeSet(int elementId);
 int M_TypeMap(int keyId, int valueId);
 int M_Dims1(int a);
 int M_Dims2(int a, int b);
+/**
+ * @brief 将后续方括号中的维度追加到已有维度列表。
+ * @param dims 已有维度列表编号。
+ * @param next 待追加的维度列表编号。
+ * @return 合并后的列表编号。
+ */
+int M_DimsAppend(int dims, int next);
+/**
+ * @brief 将逗号分隔的多维下标构造为连续索引节点。
+ * @param base 被索引的表达式编号。
+ * @param dims 下标表达式列表编号。
+ * @return 最后一个索引节点编号。
+ */
+int M_IndexDims(int base, int dims);
 int M_List();
 /* 单元素也包成列表：`declarator_list` / `param_list` / `call_args` 的单项分支用它，
  * 否则 `$$ = $1` 会把"一个声明节点"当成列表，遍历 kids 时什么也拿不到。 */
@@ -733,19 +747,6 @@ int M_NewPtr(int count);
  * @return Construct 节点。
  */
 int M_Construct(int typeId, int args, int skipName);
-/**
- * @brief 创建单对象堆分配节点。
- * @param typeName 类型名 T（仅作文法识别，分配 / 构造类型仍按左值推导）。
- * @return 堆分配节点编号。
- */
-int M_HeapSugar(int typeName);
-/**
- * @brief 创建带实参的堆对象构造节点。
- * @param typeName 显式类型名称。
- * @param args 构造实参列表节点。
- * @return 构造节点编号。
- */
-int M_HeapConstruct(int typeName, int args);
 /**
  * @brief 构造循环或块退出，显式退出优先移动内部可写局部变量并复制外部变量。
  * @param value 退出表达式编号；负值表示退出最近循环而不产生结果。

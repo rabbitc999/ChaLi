@@ -1,0 +1,31 @@
+import std::array;
+
+struct Packet: Copy<Packet> {
+    String label;
+    std::array::DynamicArray<int64> values;
+    Packet copy() { return self; }
+};
+
+T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }
+
+void main() {
+    Packet original;
+    original.label = "original";
+    original.values.push(7);
+    Packet copied = original.copy();
+    copied.label[0] = 'O';
+    copied.values.set(0, 11);
+    assert(original.label == "original" && original.values[0] == 7);
+    assert(copied.label == "Original" && copied.values[0] == 11);
+    Packet genericCopy = duplicate(&original);
+    genericCopy.values.push(13);
+    assert(original.values.len() == 1 && genericCopy.values.len() == 2);
+    Copy<Packet> const& view = &original;
+    Packet interfaceCopy = view.copy();
+    interfaceCopy.values.set(0, 17);
+    assert(original.values[0] == 7 && interfaceCopy.values[0] == 17);
+    std::array::DynamicArray<int64> arrayCopy = original.values.copy();
+    arrayCopy.set(0, 19);
+    assert(original.values[0] == 7 && arrayCopy[0] == 19);
+    println("Copy interface OK");
+}

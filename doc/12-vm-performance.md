@@ -4,7 +4,9 @@
 [English](en/12-vm-performance.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-当前程序版本为 **ChaLi 1.0.2**；下述最近实测基线为 **ChaLi 0.31.0**，保留真实二进制版本，不将测量改标为 1.0.2。默认 List、Map、Set 在同一台机器上使用优化前后两份编译器交错测量，并在同轮加入 C++17、CPython 和官方 Lua VM 对照。
+当前程序版本为 **ChaLi 1.0.5**。[1.0.5 自举容器对照报告](../benchmarks/results/bootstrap-containers-1.0.5/README.md)单独比较同版本编译器下 ChaLi 实现的 List、Map、Set 与默认容器，提供 VM、LLVM AOT 和原始样本。
+
+下述默认容器调用路径优化的历史基线为 **ChaLi 0.31.0**，保留真实二进制版本，不将测量改标为 1.0.5。默认 List、Map、Set 在同一台机器上使用优化前后两份编译器交错测量，并在同轮加入 C++17、CPython 和官方 Lua VM 对照。
 
 [容器原始样本](../benchmarks/results/containers-0310/results.json)
 
