@@ -6,6 +6,8 @@
 
 当前程序版本为 **ChaLi 1.0.5**。[1.0.5 自举容器对照报告](../benchmarks/results/bootstrap-containers-1.0.5/README.md)单独比较同版本编译器下 ChaLi 实现的 List、Map、Set 与默认容器，提供 VM、LLVM AOT 和原始样本。
 
+[槽位 Map/Set 与分块 List 的 AOT 对照](../benchmarks/results/slot-segmented-1.0.5/README.md)进一步测试 `{ Value, HasValue, HashKey }` Map、独立 Set 槽位数组，以及参考分块 deque 布局的 List。该轮单独采集 AOT 数据，保留实际编译器版本与原始样本。
+
 下述默认容器调用路径优化的历史基线为 **ChaLi 0.31.0**，保留真实二进制版本，不将测量改标为 1.0.5。默认 List、Map、Set 在同一台机器上使用优化前后两份编译器交错测量，并在同轮加入 C++17、CPython 和官方 Lua VM 对照。
 
 [容器原始样本](../benchmarks/results/containers-0310/results.json)

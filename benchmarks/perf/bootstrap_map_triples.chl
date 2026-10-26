@@ -1,0 +1,176 @@
+/** 三元组槽位；HashKey 保存原始 int64 键（使用恒等散列），HasValue 标记有效性。 */
+struct BootstrapMapSlot<T> {
+    T Value;
+    bool HasValue;
+    int64 HashKey;
+};
+
+/** 无 Option 和墓碑的开放寻址实验表，删除时后移修复探测链。 */
+struct BootstrapMap<T>: Index<T, int64>, Copy<BootstrapMap<T>> {
+    BootstrapMapSlot<T>[] entries;
+    int64 slots;
+    int64 count;
+
+    int64 bucket(int64 key) {
+        int64 result = key % self.slots;
+        if (result < 0) { result = result + self.slots; }
+        return result;
+    }
+    int64 find(int64 key) {
+        if (self.slots == 0) { return -1; }
+        int64 slot = self.bucket(key);
+        int64 scanned = 0;
+        while (scanned < self.slots) {
+            if (!self.entries[slot].HasValue) { return -1; }
+            if (self.entries[slot].HashKey == key) { return slot; }
+            slot = (slot + 1) % self.slots;
+            scanned = scanned + 1;
+        }
+        return -1;
+    }
+    int64 has(int64 key) {
+        if (self.find(key) >= 0) { return 1; }
+        return 0;
+    }
+    T index(int64 key) {
+        int64 slot = self.find(key);
+        assert(slot >= 0, "BootstrapMap 键不存在");
+        return self.entries[slot].Value;
+    }
+    void insertFresh(int64 key, T value) {
+        int64 slot = self.bucket(key);
+        while (self.entries[slot].HasValue) { slot = (slot + 1) % self.slots; }
+        self.entries[slot].Value = value;
+        self.entries[slot].HashKey = key;
+        self.entries[slot].HasValue = true;
+        self.count = self.count + 1;
+    }
+    void grow() {
+        assert(self.slots <= 4611686018427387903, "BootstrapMap 容量溢出");
+        int64 previous = self.slots;
+        BootstrapMapSlot<T> oldEntries[] = self.entries;
+        int64 capacity = 8;
+        if (previous > 0) { capacity = previous * 2; }
+        self.entries = new[capacity];
+        self.slots = capacity;
+        self.count = 0;
+        int64 i = 0;
+        while (i < previous) {
+            if (oldEntries[i].HasValue) { self.insertFresh(oldEntries[i].HashKey, oldEntries[i].Value); }
+            i = i + 1;
+        }
+    }
+    void put(int64 key, T value) {
+        int64 slot = self.find(key);
+        if (slot >= 0) { self.entries[slot].Value = value; return; }
+        if (self.slots == 0 || self.count >= self.slots / 2) { self.grow(); }
+        self.insertFresh(key, value);
+    }
+    /** 清理删除值，后移跨过空洞的探测项；按环形距离判断，不对键做减法。 */
+    void remove(int64 key) {
+        int64 hole = self.find(key);
+        if (hole < 0) { return; }
+        BootstrapMapSlot<T> empty;
+        self.entries[hole] = empty;
+        self.count = self.count - 1;
+        int64 scan = (hole + 1) % self.slots;
+        while (self.entries[scan].HasValue) {
+            int64 home = self.bucket(self.entries[scan].HashKey);
+            int64 scanDistance = (scan + self.slots - home) % self.slots;
+            int64 holeDistance = (hole + self.slots - home) % self.slots;
+            if (holeDistance < scanDistance) {
+                self.entries[hole] = self.entries[scan];
+                self.entries[scan] = empty;
+                hole = scan;
+            }
+            scan = (scan + 1) % self.slots;
+        }
+    }
+    int64 len() { return self.count; }
+    BootstrapMap<T> copy() { return self; }
+};
+
+/** Set 只保存键和有效标记，不保存 Map 的 Value。 */
+struct BootstrapSetSlot {
+    int64 HashKey;
+    bool HasValue;
+};
+
+/** 独立的 Set 槽位数组，无额外值槽和墓碑；删除后移修复探测链。 */
+struct BootstrapSet: Copy<BootstrapSet> {
+    BootstrapSetSlot[] entries;
+    int64 slots;
+    int64 count;
+
+    int64 bucket(int64 key) {
+        int64 result = key % self.slots;
+        if (result < 0) { result = result + self.slots; }
+        return result;
+    }
+    int64 find(int64 key) {
+        if (self.slots == 0) { return -1; }
+        int64 slot = self.bucket(key);
+        int64 scanned = 0;
+        while (scanned < self.slots) {
+            if (!self.entries[slot].HasValue) { return -1; }
+            if (self.entries[slot].HashKey == key) { return slot; }
+            slot = (slot + 1) % self.slots;
+            scanned = scanned + 1;
+        }
+        return -1;
+    }
+    int64 has(int64 key) {
+        if (self.find(key) >= 0) { return 1; }
+        return 0;
+    }
+    void insertFresh(int64 key) {
+        int64 slot = self.bucket(key);
+        while (self.entries[slot].HasValue) { slot = (slot + 1) % self.slots; }
+        self.entries[slot].HashKey = key;
+        self.entries[slot].HasValue = true;
+        self.count = self.count + 1;
+    }
+    void grow() {
+        assert(self.slots <= 4611686018427387903, "BootstrapSet 容量溢出");
+        int64 previous = self.slots;
+        BootstrapSetSlot oldEntries[] = self.entries;
+        int64 capacity = 8;
+        if (previous > 0) { capacity = previous * 2; }
+        self.entries = new[capacity];
+        self.slots = capacity;
+        self.count = 0;
+        int64 i = 0;
+        while (i < previous) {
+            if (oldEntries[i].HasValue) { self.insertFresh(oldEntries[i].HashKey); }
+            i = i + 1;
+        }
+    }
+    void add(int64 key) {
+        int64 slot = self.find(key);
+        if (slot >= 0) { return; }
+        if (self.slots == 0 || self.count >= self.slots / 2) { self.grow(); }
+        self.insertFresh(key);
+    }
+    /** 清理删除值，后移跨过空洞的探测项；按环形距离判断，不对键做减法。 */
+    void remove(int64 key) {
+        int64 hole = self.find(key);
+        if (hole < 0) { return; }
+        BootstrapSetSlot empty;
+        self.entries[hole] = empty;
+        self.count = self.count - 1;
+        int64 scan = (hole + 1) % self.slots;
+        while (self.entries[scan].HasValue) {
+            int64 home = self.bucket(self.entries[scan].HashKey);
+            int64 scanDistance = (scan + self.slots - home) % self.slots;
+            int64 holeDistance = (hole + self.slots - home) % self.slots;
+            if (holeDistance < scanDistance) {
+                self.entries[hole] = self.entries[scan];
+                self.entries[scan] = empty;
+                hole = scan;
+            }
+            scan = (scan + 1) % self.slots;
+        }
+    }
+    int64 len() { return self.count; }
+    BootstrapSet copy() { return self; }
+};
