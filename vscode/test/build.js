@@ -20,7 +20,7 @@ async function main() {
   const uri = (fsPath) => ({ scheme: 'file', fsPath });
   const document = { uri: uri(source), isDirty: true, async save() { ++saved; this.isDirty = false; return true; } };
   const settings = { 'build.outputDirectory': 'output & space', 'build.llvmPath': process.platform === 'win32'
-    ? path.join(root, 'library/llvm/toolchain/bin/clang.exe') : '', 'build.checked': true };
+    ? path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe') : '', 'build.checked': true };
   const disposable = { dispose() {} };
   const context = { extensionPath: path.join(root, 'vscode'), subscriptions: [] };
   const vscode = {
