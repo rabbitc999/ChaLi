@@ -1,0 +1,17 @@
+[
+  "source/magel_stdlib_embedded.cpp",
+  "source/chali_stdlib_embedded.cpp",
+  "tools/chali_manual.json",
+  "library/llvm/packages/",
+  "library/llvm/toolchain/",
+  "library/llvm/static-sdk/",
+  "library/llvm/static-build/",
+  "library/llvm/static-source/",
+  "library/llvm/cache/",
+  "library/lua/lua-5.5.1.tar.gz",
+  "library/lua/source/",
+  "library/sqlite/sqlite3.c",
+  "library/sqlite/sqlite3.h",
+  "library/sqlite/sqlite3ext.h",
+  "library/ipage/source/sqlite/"
+]
