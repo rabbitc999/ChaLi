@@ -4,7 +4,7 @@
 [English（中文原文）](20-memory-allocator.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本篇从 heap_address_reuse.chl 的地址复用反例和 std_parse_random_path_memory.chl 的 Arena 使用出发，区分 ChaLi 值的清理、VM 堆与宿主资源。随后说明容量统计和外部缓冲区接入。
+本篇从 heap_address_reuse.chl 的地址复用反例和 std_parse_random_path_memory.chl 的 Arena 使用出发，区分 ChaLi 值的清理、运行期堆与宿主资源。随后说明容量统计和外部缓冲区接入。
 
 ## 地址复用样例揭示什么
 

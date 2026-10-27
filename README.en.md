@@ -14,7 +14,7 @@ ChaLi itself, targeting the case where *one* program runs from the desktop all t
 embedded board.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It lowers `.chl` source into StackVM
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It lowers `.chl` source into
 quadruples and then generates native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export. .svmb has been removed.
 
 > This is the English edition. The Chinese edition is the default and is the one maintained first —
@@ -79,7 +79,7 @@ Companion resources:
 
 - [`example/samples/`](example/samples/) — runnable formal samples; expected stdout in [`example/expected/`](example/expected/).
 - [`example/samples-error/`](example/samples-error/) — samples expected to fail; diagnostics in [`example/expected-error/`](example/expected-error/).
-- [`doc/examples/`](doc/examples/) — examples that need a companion project layout (ABI, SQLite, svmb).
+- [`doc/examples/`](doc/examples/) — examples that need a companion project layout (ABI, SQLite).
 - [Full grammar reference (EBNF)](doc/14-grammar-ebnf.md) — the authoritative form of the grammar.
 
 The 36 old developer-facing chapters have been removed; the 7 that are standalone specs

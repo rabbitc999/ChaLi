@@ -88,9 +88,6 @@ _MESSAGES = {
   "  emit           只出 .quad / .data / .layout\n": [
     "  emit           Export .quad / .data / .layout only\n"
   ],
-  "  svmb           只导出 <前缀>.svmb，不执行\n": [
-    "  svmb           Export <prefix>.svmb without executing\n"
-  ],
   "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n": [
     "  new DIR [name NAME]  Create a ChaLi project (destination must not exist)\n"
   ],
@@ -144,21 +141,6 @@ _MESSAGES = {
   ],
   "  --emit                 只生成 .quad / .data，不执行\n": [
     "  --emit                 Export .quad / .data without executing\n"
-  ],
-  "  --svmb                 额外写出可由 stackvm 直接加载的 <前缀>.svmb\n": [
-    "  --svmb                 Also write <prefix>.svmb for stackvm\n"
-  ],
-  "  --debug                写 .svmb 时带上调试节，并在解释执行时打印位置轨迹\n": [
-    "  --debug                Include .svmb debug data and interpreter location traces\n"
-  ],
-  "  --compress-symbols     写无名变长符号表，生成 PC 映射文件\n": [
-    "  --compress-symbols     Write compact symbols and a PC mapping file\n"
-  ],
-  "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n": [
-    "  --no-compress-symbols  Override configuration and disable symbol compression\n"
-  ],
-  "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n": [
-    "  --symbol-map FILE      Mapping path (default: <prefix>.symbol_map.json)\n"
   ],
   "  --raw                  跳过前处理：源文件原样喂给解析器\n": [
     "  --raw                  Skip preprocessing and parse the source directly\n"
@@ -261,9 +243,6 @@ _MESSAGES = {
   ],
   "映射路径不能覆盖输入或字节码输出\n": [
     "The mapping path must not overwrite input or bytecode output\n"
-  ],
-  "--symbol-map 需要启用 --compress-symbols\n": [
-    "--symbol-map requires --compress-symbols\n"
   ],
   "chali: --incremental 需要源文件，且不能与 --raw 合用\n": [
     "chali: --incremental requires a source file and cannot be combined with --raw\n"
@@ -693,9 +672,6 @@ _MESSAGES = {
   ],
   "按可写借用捕获外部变量；闭包读写当前值，借用来源必须保持有效。": [
     "Capture external values by mutable borrow; the closure accesses current values and sources must remain valid."
-  ],
-  "统一工具链：VM 执行、导出四元式和 .svmb 字节码。\n": [
-    "One toolchain: execute VM programs and export quadruples or .svmb bytecode.\n"
   ],
   "不认识的文件：%s\n": [
     "Unknown file: %s\n"

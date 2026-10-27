@@ -1,40 +1,43 @@
-# 胶水同步调用 ChaLi 函数
+# AOT 同步回调：C 调用 ChaLi 函数
 
 <!-- LANGUAGE NAVIGATION -->
 [English（中文原文）](README.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-同一份 [`glue.cpp`](glue.cpp) 用于 VM。ChaLi 侧把具名函数或 `fn` 值作为参数传给宿主，
-C++ 侧接收 `chali_glue::Function<Result(Args...)>` 并直接调用。支持捕获闭包，不需要 `export`。
-[`demo.chl`](demo.chl) 包含具名函数、内联函数、copy/move 捕获、float32、bool、void、
-可变引用、高阶函数及 ChaLi → C++ → ChaLi 多层重入，并通过断言检查结果。
-
-VM 宿主显式安装相同注册表；编译器的 `run` 命令没有加载任意 C++ 源文件的入口。
-下面用仓库共享核心构建最小宿主，再加载编译器输出的程序：
+ChaLi 侧把具名函数、内联 `fn` 或带捕获的闭包作为参数传给 C，C 侧按普通函数指针直接调用。
+[`demo.chl`](demo.chl) 通过 `#abi` 指令声明 [`host.c`](host.c) 里的入口，覆盖具名函数、
+内联闭包、copy/move 捕获、`float32`、`bool`、`void`、`int64 mut&`、ChaLi 侧高阶函数以及
+ChaLi → C → ChaLi 多层重入，并用断言检查结果。
 
 ```sh
-g++ -std=c++17 -O2 -pthread -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 -DSTACKVM_WITH_BIGINT=0 -DSTACKVM_WITH_BIGFLOAT=0 -Isource -Ilibrary -Isource/ircode example/native-callbacks/vm_host.cpp source/ircode/stackvm.cpp source/glue/std_collection.cpp source/glue/std_collection_storage.cpp source/glue/std_native_record.cpp -o build/native-callbacks-vm
-./chali emit example/native-callbacks/demo.chl --svmb --out build/native-callbacks-program
-./build/native-callbacks-vm build/native-callbacks-program.svmb build/native-callbacks-program.data.bin build/native-callbacks-program.layout
+gcc -shared -O2 -o example/native-callbacks/host.dll example/native-callbacks/host.c
+./chali aot example/native-callbacks/demo.chl --out example/native-callbacks/demo
+./example/native-callbacks/demo.exe
 ```
 
-这里仅裁剪该演示不使用的大数模块；VM 执行优化与反射保持开启。
-[`vm_host.cpp`](vm_host.cpp) 在执行结束时还检查活动堆块和对象数，防止回调造成资源泄漏。
-VM 宿主输出为：
+输出：
 
 ```text
 callbacks: named inline copy move float32 bool void reference higher-order reentry OK
 ```
 
-`function(value)` 返回按签名解码的值。需要检查失败时使用
-`function.tryInvoke(rawResult, value)`；成功后可按返回类型使用 `Codec<Result>::decode(context, rawResult)`。
-原始 `Context::invoke(address, encodedArguments, rawResult)` 也适用于无需类型包装的目标宿主胶水。
-`void` 函数忽略返回槽。调用失败仍使所属运行时失败，不能以缺省返回值掩盖 `panic` 或参数错误。
+`#abi("C", "./host.dll", "hostApply")` 的路径按**源文件所在目录**解析，产物也要和动态库放在同一
+目录：Windows 加载器在进程启动时按 exe 目录和 `PATH` 找库。Linux 上把库名换成 `host.so`、
+去掉 exe 后缀即可：
 
-函数地址和闭包句柄属于当前运行时，不能转换成宿主机器函数指针；包装和上下文只能在当前宿主
-回调期间、同一执行线程同步使用，不能缓存后异步调用。`Function` 不复制或保活捕获环境。
-数值、布尔、引用与函数值由相应 `Codec` 传递；字符串、列表、聚合等拥有资源的值还须遵守
-其 Codec 和语言所有权约定，本例不提供任意资源类型的自动所有权转移。
+```sh
+gcc -shared -fPIC -O2 -o example/native-callbacks/host.so example/native-callbacks/host.c
+```
 
-回归命令 `python tests/chali_native_callbacks.py` 在默认最高优化 VM 中执行成功程序，
-并检查空函数、参数数量错误、ChaLi panic 和宿主错误传播。
+## 边界规则
+
+- **参数只传标量、引用和函数指针**。C 侧写 `int64_t (*)(int64_t)`，ChaLi 侧写
+  `int64 fn(int64)`；引用用 `T mut&` 对应 C 的 `T *`，调用处写 `&value`。
+- **闭包可以带捕获**，但捕获环境由 ChaLi 运行时随函数值携带，C 侧看不到也不需要解释它。
+  只能在这次同步调用期间使用，不能存下来异步回调。
+- **函数值不是通用机器指针**：只有 `#abi` 声明里按上述签名出现时才可跨边界；调用失败、
+  参数不符或 ChaLi 侧 `panic` 都按运行期错误传播，`panic` 会穿过 C 帧回到顶层。
+- 字符串、列表、聚合等拥有资源的值不在此机制内自动转移所有权，需要显式设计接口。
+
+回归命令 `python tests/chali_native_callbacks.py` 构建同一个 C 宿主，逐项验证这些组合，
+并额外检查回调内 `panic` 的退出码与诊断文本。

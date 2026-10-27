@@ -130,7 +130,7 @@ Address arithmetic itself accesses no memory. A computable address, including a 
 
 `memcpy<T,U>(destination, source, bytes)` allows different static source and destination element types. The implementation does not check their types. `memset<T>(destination, value, bytes)` repeats one byte across the destination range.
 
-Their function-like syntax lowers directly to dedicated quads. VM executes byte instructions, while LLVM AOT emits `memcpy`/`memset` intrinsics. Necessary address and complete-range checks still run before any write.
+Their function-like syntax lowers directly to dedicated quads, which AOT turns into `memcpy`/`memset` intrinsics. Necessary address and complete-range checks still run before any write.
 
 Lengths count bytes. Filling eight bytes through `BarePtr<int64>` covers one element. Repeating `0x01` across all eight bytes does not store the integer value 1.
 
@@ -185,7 +185,7 @@ Test empty capacity, boundaries, double initialization, reads after move-out, gr
 
 Separate compilation from execution. Compare identical inputs with independently checked outputs. Record construction, incremental append, reading, search, copying and conversion from native String separately. Bulk operations can remove per-byte calls without guaranteeing that every workload becomes faster.
 
-The [String comparison report](../../../benchmarks/results/string-1.0.7/README.md) retains actual source and compiler hashes. The earlier checked-slot implementation is preserved as `bootstrap_string_checked.chl`; its measurements must not be relabeled as the bare-pointer implementation. Record VM and AOT results separately.
+The [String comparison report](../../../benchmarks/results/string-1.0.7/README.md) retains actual source and compiler hashes. The earlier checked-slot implementation is preserved as `bootstrap_string_checked.chl`; its measurements must not be relabeled as the bare-pointer implementation. Record results per compiler version and target separately.
 
 ## 24.10 Summary
 

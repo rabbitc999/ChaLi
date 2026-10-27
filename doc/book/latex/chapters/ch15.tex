@@ -712,7 +712,7 @@ chali: [CHL1205] 借用来源已移动或销毁，不能继续访问（源对象
 
 \subsection{同一个变量既借又 \texttt{move}：看最后一次使用}
 
-创建借用闭包之后，可以把来源移进另一个闭包；关键是旧借用闭包不能在来源作废后继续使用。下面的 \texttt{f(\allowbreak{}1)\allowbreak{}} 会被编译器以 \texttt{CHL1205} 拒绝，不会进入 VM 执行：
+创建借用闭包之后，可以把来源移进另一个闭包；关键是旧借用闭包不能在来源作废后继续使用。下面的 \texttt{f(\allowbreak{}1)\allowbreak{}} 会被编译器以 \texttt{CHL1205} 拒绝，根本走不到代码生成：
 
 \par
 \medskip

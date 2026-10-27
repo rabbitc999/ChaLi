@@ -162,7 +162,7 @@ void main() {
 
 \texttt{memcpy<\allowbreak{}T,\allowbreak{}U>\allowbreak{}(\allowbreak{}destination,\allowbreak{} source,\allowbreak{} bytes)\allowbreak{}} 复制字节。源与目标可以使用不同的静态元素类型，底层不检查它们是否一致。\texttt{memset<\allowbreak{}T>\allowbreak{}(\allowbreak{}destination,\allowbreak{} value,\allowbreak{} bytes)\allowbreak{}} 把指定字节重复写入目标范围。
 
-虽然调用形式像函数，编译器将它们直接降低为专门的四元式；VM 执行字节指令，LLVM AOT 使用 \texttt{memcpy}／\texttt{memset} intrinsic。必要的地址和完整范围检查仍在写入前执行。
+虽然调用形式像函数，编译器把它们直接降低为专门的四元式，AOT 再落到 \texttt{memcpy}／\texttt{memset} intrinsic。必要的地址和完整范围检查仍在写入前执行。
 
 长度都是字节数。对 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}int64>\allowbreak{}} 填充 8 字节，只覆盖一个元素，而不是 8 个元素。\texttt{memset(\allowbreak{}p,\allowbreak{} 1,\allowbreak{} 8)\allowbreak{}} 写入的是 8 个 \texttt{0x01} 字节，并不等于向一个 \texttt{int64} 写入整数 1。
 

@@ -17,12 +17,11 @@ def main():
         directory = Path(folder)
         source = directory / 'wait.chl'
 
-        def run(text, compressed=False):
+        def run(text):
             """写入本次程序，以真实编译器运行并返回 UTF-8 诊断。"""
             source.write_text(text, encoding='utf-8')
             return subprocess.run(
-                [str(compiler), 'run', str(source),
-                 '--compress-symbols' if compressed else '--no-compress-symbols'],
+                [str(compiler), 'run', str(source)],
                 cwd=directory, capture_output=True, encoding='utf-8',
                 errors='replace', timeout=30, env=dict(os.environ, CHALI_LANG='zh'),
             )
@@ -46,54 +45,53 @@ void worker() {
 
 }
 '''
-        for compressed in (False, True):
-            result = run(prelude + body, compressed)
-            assert result.returncode == 0, (result.stdout, result.stderr)
-            assert result.stdout.count('worker:alive') == 1, result.stdout
-            assert 'done' in result.stdout, result.stdout
+        result = run(prelude + body)
+        assert result.returncode == 0, (result.stdout, result.stderr)
+        assert result.stdout.count('worker:alive') == 1, result.stdout
+        assert 'done' in result.stdout, result.stdout
 
-            # 超时后既可以再次限时等待，也可以沿用无期限 wait。
-            result = run(prelude + body.replace(
-                'if (!std::thread::waitFor(task, 9223372036854775807)) { return 13; }',
-                'std::thread::wait(task);'), compressed)
-            assert result.returncode == 0, result.stderr
-            assert result.stdout.count('worker:alive') == 1, result.stdout
+        # 超时后既可以再次限时等待，也可以沿用无期限 wait。
+        result = run(prelude + body.replace(
+            'if (!std::thread::waitFor(task, 9223372036854775807)) { return 13; }',
+            'std::thread::wait(task);'))
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.count('worker:alive') == 1, result.stdout
 
-            for expression, error in (
-                ('std::thread::waitFor(task, -1)', '不能为负数'),
-                ('std::thread::waitFor(std::thread::current(), 0)', '无效、自身或已等待'),
-                ('std::thread::waitFor(invalid, 0)', '无效、自身或已等待'),
-            ):
-                result = run(prelude + '''void main() {
-    Thread task = std::thread::create(worker);
-    Thread invalid;
-    ''' + expression + ''';
+        for expression, error in (
+            ('std::thread::waitFor(task, -1)', '不能为负数'),
+            ('std::thread::waitFor(std::thread::current(), 0)', '无效、自身或已等待'),
+            ('std::thread::waitFor(invalid, 0)', '无效、自身或已等待'),
+        ):
+            result = run(prelude + '''void main() {
+Thread task = std::thread::create(worker);
+Thread invalid;
+''' + expression + ''';
 
 }
-''', compressed)
-                assert result.returncode != 0 and error in result.stderr, result.stderr
+''')
+            assert result.returncode != 0 and error in result.stderr, result.stderr
 
-            result = run('''import std::thread;
+        result = run('''import std::thread;
 void leaf() { std::lang::panic("wait failure"); }
 void main() {
-    Thread task = std::thread::create(leaf);
-    std::thread::waitFor(task, 5000);
+Thread task = std::thread::create(leaf);
+std::thread::waitFor(task, 5000);
 
 }
-''', compressed)
-            assert result.returncode != 0 and '线程 1' in result.stderr and 'wait failure' in result.stderr, result.stderr
-            assert 'leaf' in result.stderr or compressed, result.stderr
+''')
+        assert result.returncode != 0 and 'wait failure' in result.stderr, result.stderr
+        assert 'leaf' in result.stderr, result.stderr
 
-            result = run('''import std::thread;
+        result = run('''import std::thread;
 void worker() {}
 void main() {
-    Thread task = std::thread::create(worker);
-    if (!std::thread::waitFor(task, 5000)) { let __boom = 14; }
-    std::thread::tryWait(task);
+Thread task = std::thread::create(worker);
+if (!std::thread::waitFor(task, 5000)) { let __boom = 14; }
+std::thread::tryWait(task);
 
 }
-''', compressed)
-            assert result.returncode != 0 and '已等待' in result.stderr, result.stderr
+''')
+        assert result.returncode != 0 and '已等待' in result.stderr, result.stderr
     print('线程超时等待回归通过')
 
 

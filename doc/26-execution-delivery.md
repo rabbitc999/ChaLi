@@ -4,7 +4,7 @@
 [English](en/26-execution-delivery.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-四元式只走一条路：交给 LLVM AOT 生成原生机器码。编译器里没有解释执行核，`.svmb` 字节码导出已删除。
+四元式只走一条路：交给 LLVM AOT 生成原生机器码。编译器里没有解释器核，`.svmb` 字节码导出已删除。
 
 | 场景 | 入口 | 结果 |
 | --- | --- | --- |

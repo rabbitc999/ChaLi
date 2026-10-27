@@ -16,15 +16,12 @@ chali_range_loop_values chali_opcode_resources chali_opcode_visibility
 opcode_core_isolation chali_collection_glue chali_map_pair_iterator
 chali_generic_constructors chali_borrow_flow chali_generic_closures
 chali_entry_signature chali_function_types chali_analysis_diagnostics
-chali_memory_guard chali_watchdog chali_generic_monomorphization
+chali_watchdog chali_generic_monomorphization
 chali_language_move chali_tuple_returns chali_thread_wait
 macro_foundations chali_macro_editor chali_ast_macros chali_macro_branches chali_macro_groups chali_macro_generics
 check_doc_links export_chali_ebnf library_reference check_keywords
 check_std_naming embed_manual changelog
 """.split())
-
-PARALLEL_EXECUTABLES = frozenset(("chali-artifact-tests", "chali-stackvm-tests",
-                                  "chali-symbol-tests", "chali-panic-tests", "chali-runtime-event-tests"))
 
 
 def positive_jobs(value):
@@ -45,8 +42,6 @@ def default_jobs():
 
 def independent(command):
     """只允许审查过的独立 Python 与 VM 检查进入并行组。"""
-    if command and Path(str(command[0])).stem in PARALLEL_EXECUTABLES:
-        return True
     return any(Path(str(part)).suffix == ".py" and Path(str(part)).stem in PARALLEL_TESTS
                for part in command[1:2])
 

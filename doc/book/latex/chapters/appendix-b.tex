@@ -214,7 +214,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 
 三、字节与码点分清。 \texttt{String} 的长度和切片端点按字节计算，切片可以截取多字节编码的一部分；普通字符串下标仍要求 UTF-8 字符边界。按 Unicode 码点处理时使用显式码点接口或 \texttt{std:\allowbreak{}:\allowbreak{}utf8}。
 
-实际文件、网络、数据库和线程能力以注册胶水、系统库及构建配置为准。完整标准库以共享 VM 为执行环境；\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/38-aot.md}{AOT 入口}支持范围以其参考页为准，不由本表推断。
+实际文件、网络、数据库和线程能力以运行期胶水、系统库及构建配置为准。本表列出的是标准库的完整面貌；\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/38-aot.md}{AOT 入口}已覆盖全部条目，但个别能力仍受目标平台限制，编译时以实际诊断为准确认。
 
 \section{细节去哪儿查}
 

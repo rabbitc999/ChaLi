@@ -1096,7 +1096,7 @@ void M_SetProgram(int topList);
  * @param moduleName 模块名（写进 .quad 头）。
  * @param outPrefix  产物前缀：生成 `<前缀>.quad` / `.data` / `.data.bin` / `.data.h` / `.layout`。
  * @param run        非 0 时再用 source/ircode 组装执行一遍，把输出写到 stdout。
- * @param emitBinary 非 0 时把组装结果写成 `<前缀>.svmb`。
+ * @param emitBinary 非 0 时把四元式三件套写到 `<前缀>`。
  * @param inputText  已废弃：输入一律来自标准输入；传空指针即可。
  * @return 0 成功；失败时 M_LastError() 给出原因。
  */
@@ -1171,19 +1171,6 @@ void M_SetDebugEnabled(int enabled);
  * 设置下一次 M_Compile 执行的指令条数上限；0 表示不设上限（缺省）。
  */
 void M_SetStepLimit(std::size_t limit);
-/**
- * 开关 `--no-debug`（兼容别名）：写 `.svmb` 时把调试节写成 0 条；这也是缺省。
- */
-void M_SetStripDebug(int enabled);
-/**
- * @brief 配置符号压缩。
- * @param enabled 开关。
- * @param mapPath PC 映射路径，可空。
- * @param moduleName 模块名，可空。
- * @param version 版本，可空。
- */
-void M_SetSymbolCompression(int enabled, const char *mapPath,
-                            const char *moduleName = nullptr, const char *version = nullptr);
 void M_SetRuntimeMemory(std::size_t bytes);
 std::size_t M_RuntimePeakBytes();
 /**

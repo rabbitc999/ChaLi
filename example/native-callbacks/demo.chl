@@ -1,17 +1,22 @@
+#abi("C", "./host.dll", "hostApply")
 int64 hostApply(int64 fn(int64) function, int64 value);
+#abi("C", "./host.dll", "hostFloat")
 float32 hostFloat(float32 fn(float32) function, float32 value);
+#abi("C", "./host.dll", "hostBool")
 bool hostBool(bool fn(bool) function, bool value);
+#abi("C", "./host.dll", "hostNotify")
 void hostNotify(void fn(int64) function, int64 value);
-void hostUpdate(void fn(int64 mut&) function, int64 mut& value);
-int64 hostCompose(int64 fn(int64 fn(int64), int64) outer,
-int64 fn(int64) inner, int64 value);
+#abi("C", "./host.dll", "hostUpdate")
+void hostUpdate(int64 fn(int64) function, int64 mut& value);
 
 int64 notifications = 0;
 
 int64 triple(int64 value) { return value * 3; }
 void notify(int64 value) { notifications += value; }
-void increment(int64 mut& value) { value += 1; }
-int64 compose(int64 fn(int64) inner, int64 value) { return inner(value) + 1; }
+int64 increment(int64 value) { return value + 1; }
+int64 applyTwice(int64 fn(int64) inner, int64 value) {
+    return hostApply(inner, hostApply(inner, value));
+}
 int64 reenter(int64 depth) {
     if (depth == 0) { return 1; }
     return hostApply(reenter, depth - 1) + 1;
@@ -34,7 +39,8 @@ void main() {
     int64 counter = 6;
     hostUpdate(increment, &counter);
     assert(counter == 7);
-    assert(hostCompose(compose, triple, 7) == 22);
+    assert(applyTwice(triple, 7) == 63);
+    assert(applyTwice(int64 fn(int64 x) { x + 1 }, 7) == 9);
     assert(hostApply(reenter, 12) == 13);
     println("callbacks: named inline copy move float32 bool void reference higher-order reentry OK");
 }

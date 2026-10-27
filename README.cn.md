@@ -12,7 +12,7 @@
 
 ChaLi 是一门静态类型、值语义优先、不带 GC 的通用编程语言，提供借用来源与控制流检查。它借用 C 的表达式与块语法，但类型、所有权与运行时行为由 ChaLi 自行定义，面向"同一份程序从桌面一直到嵌入式 Linux"的场景。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.chl` 源码降级为 StackVM 四元式，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.chl` 源码降级为四元式，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -79,7 +79,7 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 - [`example/samples/`](example/samples/) —— 可运行的正式样例，标准输出在 [`example/expected/`](example/expected/)。
 - [`example/samples-error/`](example/samples-error/) —— 预期报错的样例，诊断文本在 [`example/expected-error/`](example/expected-error/)。
-- [`doc/examples/`](doc/examples/) —— 需要配套工程布局的示例（ABI、SQLite、svmb）。
+- [`doc/examples/`](doc/examples/) —— 需要配套工程布局的示例（ABI、SQLite）。
 - [完整语法参考（EBNF）](doc/14-grammar-ebnf.md) —— 文法的权威形式。
 
 旧的开发者向 36 章已删除，其中属独立规格的 7 篇（[14 EBNF](doc/14-grammar-ebnf.md)–[20 内存分配器](doc/20-memory-allocator.md)）

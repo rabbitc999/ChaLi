@@ -84,7 +84,7 @@ if name == "after":
         self.assertTrue(independent([sys.executable, "tests/chali_borrow_flow.py"]))
         self.assertFalse(independent([sys.executable, "tests/chali_generator.py"]))
         self.assertFalse(independent(["make", "-j4"]))
-        self.assertTrue(independent(["build/chali-symbol-tests.exe", "fixtures"]))
+        self.assertFalse(independent(["build/unknown-tool.exe", "fixtures"]))
 
 
 if __name__ == "__main__":

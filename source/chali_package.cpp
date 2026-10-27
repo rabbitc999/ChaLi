@@ -30,7 +30,7 @@ Memory::String trim(const Memory::String &s)
 }
 
 /**
- * @brief 归一化运行方式：把 `smvb` 拼写折到 `svmb`。
+ * @brief 归一化运行方式：`interpret` / `run` / `aot` 一律折到 `run`。
  * @param mode 配置里写的运行方式。
  * @return 归一化后的名字；不认识时返回空串（调用方据此报错）。
  */
@@ -322,14 +322,6 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 else if (key == "debug")
                 {
                     project.debug = tomlBool(entry.value, where);
-                }
-                else if (key == "compress_symbols")
-                {
-                    project.compressSymbols = tomlBool(entry.value, where);
-                }
-                else if (key == "symbol_map")
-                {
-                    project.symbolMap = path(tomlText(entry.value, where), base);
                 }
                 else if (key == "main")
                 {

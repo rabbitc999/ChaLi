@@ -60,7 +60,7 @@ AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownersh
 ```
 
 项目配置使用 `run`，旧 interpret 仅作为 AOT 运行的别名；svmb 配置已删除。
-配置见[工程与包管理](13-projects.md)，旧格式迁移见[迁移说明](15-svmb-format.md)。
+配置见[工程与包管理](13-projects.md)，旧格式迁移见[迁移说明](16-compact-symbols.md)，产物位置见[构建产物](15-artifacts.md)。
 
 ## 源码模块与增量构建
 

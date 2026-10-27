@@ -1,4 +1,4 @@
-"""分离缺陷发现与修复：记录三类 75 项 VM/AOT 代表测试，不在运行中修改实现。"""
+"""分离缺陷发现与修复：记录三类 75 项 checked/unchecked AOT 代表测试，不在运行中修改实现。"""
 from compiler_path import compiler_path
 from compiler_limits_cases import catalog, ROOT
 from project_temp import tempfile
@@ -75,16 +75,17 @@ def run_case(case, compiler, root, timeout):
     arguments = expected_path.with_suffix('.args').read_text(encoding='utf-8').splitlines() if expected_path.with_suffix('.args').exists() else []
     flags = ['--memory-size', '67108864'] if case['group'] == 'pressure' else []
     results = {}
-    for backend in ['vm', 'aot']:
+    for backend in ['checked', 'aot']:
         cwd = folder / backend
         cwd.mkdir()
         (cwd / 'build').mkdir()
         (cwd / 'tmp').mkdir()
         prefix = cwd / 'program'
-        # 先做只编译检查，再从同一源码执行 VM，分清编译拒绝与运行期失败。
+        # 先做只编译检查，再从同一源码执行，分清编译拒绝与运行期失败。
+        # `run` 后端走 checked AOT：`--emit` 只出四元式不执行，之后另一条命令真正运行。
         command = [compiler, 'aot' if backend == 'aot' else 'run', original, '--out', prefix, *flags]
-        if backend == 'vm':
-            command += ['--emit', '--svmb']
+        if backend == 'checked':
+            command += ['--emit']
         built = execute(command, cwd, timeout)
         status = classification(built, case['expected'], case['outcome'], compiling=True)
         result = dict(build=built, status=status)
@@ -137,7 +138,7 @@ def main():
                   version=version, llvm=llvm_version, host=platform.platform(), jobs=options.jobs,
                   harness_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   catalog_sha256=hashlib.sha256(json.dumps(cases, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
-                  optimization='默认四元式优化 4 轮与 VM 最高优化；反射编入', cases=[])
+                  optimization='LLVM AOT：checked 为 default<O3>+运行期检查，unchecked 为 default<O3>；反射编入', cases=[])
     print('发现报告目录：' + str(root), flush=True)
     with ThreadPoolExecutor(max_workers=options.jobs) as pool:
         pending = {pool.submit(run_case, case, compiler, root, options.timeout): case for case in cases}

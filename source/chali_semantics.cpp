@@ -3522,22 +3522,7 @@ void M_SetStepLimit(std::size_t limit) { g_stepLimit = limit; }
  * @brief 设置是否从编译产物中裁剪调试信息。
  * @param enabled 是否启用对应功能。
  */
-void M_SetStripDebug(int enabled) { g_stripDebug = enabled != 0; }
 
-/**
- * @brief 配置紧凑符号产物。
- * @param enabled 开关。
- * @param mapPath PC 映射路径，可空。
- * @param moduleName 模块名，可空。
- * @param version 版本，可空。
- */
-void M_SetSymbolCompression(int enabled, const char *mapPath, const char *moduleName, const char *version)
-{
-    g_compressSymbols = enabled != 0;
-    g_symbolMap = mapPath ? mapPath : "";
-    g_symbolModule = moduleName ? moduleName : "";
-    g_symbolVersion = version ? version : "";
-}
 
 /**
  * @brief 设置传递给 ChaLi 程序的命令行参数。

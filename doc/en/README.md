@@ -8,9 +8,10 @@ See [current capabilities and limits](17-capabilities.md) for the shared impleme
 
 **Write once, run anywhere.** One logic, from embedded Linux to cloud; value semantics, non-null references, no GC.
 
-ChaLi lets you write business logic once: the same source compiles to bytecode that the shared VM
-runs on desktop, server and embedded Linux hosts, with platform differences handled by host glue.
-There is no garbage collector, and resources are released deterministically when they leave scope.
+ChaLi lets you write business logic once: the same source is AOT-compiled by LLVM into native
+machine code with identical semantics on desktop, server and embedded Linux targets, with platform
+differences handled by `#abi` declarations or an exported C ABI. There is no garbage collector, and
+resources are released deterministically when they leave scope.
 
 Read the current language/toolchain version from [`VERSION`](../../VERSION).
 
@@ -61,7 +62,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | [10](10-roadmap.md) | Roadmap and ecosystem | Contributors, long-term users | Short/mid/long-term goals and verifiable milestones |
 | [13](13-projects.md) | Example projects | Anyone who wants to run something | Application and capability examples in the repository: location, commands, verification and prerequisites |
 | [14](../14-grammar-ebnf.md) | EBNF grammar reference | Anyone checking grammar details | Every production and token declaration generated from `source/chali.gram`; the readable form of the authoritative grammar |
-| [15](../15-svmb-format.md) | `.svmb` binary format | Format analysts and RE assessors | Container and section layout, byte-level decoding, reverse-engineering cost |
+| [15](../15-artifacts.md) | Build artifacts and intermediates | Anyone wondering where files land | `.chali/` layout, cleanup rules, what to ship |
 | [16](../16-compact-symbols.md) | Nameless compact symbols | Anyone tracking size and diagnostic privacy | `--compress-symbols` format, tooling and space comparison |
 | [17](17-capabilities.md) | Current capabilities | Evaluation and integration | Language, VM, borrowing, reflection, libraries, embedded Linux and tooling contracts |
 | [18](../18-panic-trace.md) | Panic and source lines | Anyone debugging crashes | Failure output, call stack, source location, compact symbol-hiding policy |
@@ -75,7 +76,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 - [`example/samples/`](../../example/samples/) — runnable formal samples; expected stdout in [`example/expected/`](../../example/expected/).
 - [`example/samples-error/`](../../example/samples-error/) — samples expected to fail; diagnostics in [`example/expected-error/`](../../example/expected-error/).
-- [`doc/examples/`](../examples/) — examples that need a companion project layout (ABI, SQLite, svmb, GUI).
+- [`doc/examples/`](../examples/) — examples that need a companion project layout (ABI, SQLite, GUI).
 - The companion projects under [`doc/examples/`](../examples/) are catalogued in [13 Example projects](13-projects.md).
 - [Project README](../../README.en.md) — build, quick usage, debugging, configuration (English;
   [中文版](../../README.md)).

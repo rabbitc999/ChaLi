@@ -20,19 +20,11 @@ struct Project
     Memory::Map<Memory::String, Memory::String> dependencies;
     Memory::Vector<Memory::String> authors, imports, searchPaths, includePaths, importPaths;
     /**
-     * `[chali] debug`：写 `.svmb` 时是否带调试节，缺省 `false`（不带）。
+     * `[chali] debug`：是否按 `--debug` 构建（O0、保留符号与源码行），缺省 `false`。
      *  为 `true` 时等价于命令行加 `--debug`：保留"指令 → 文件/行"位置表，
      *  名字与类型表本来就在。
      */
     bool debug = false;
-    /**
-     * @brief [chali] compress_symbols：无名变长符号产物，默认关闭。
-     */
-    bool compressSymbols = false;
-    /**
-     * @brief [chali] symbol_map：PC 映射文件，空值使用 <前缀>.symbol_map.json。
-     */
-    Memory::String symbolMap;
     /**
      * `[chali] run`：项目默认运行方式，缺省 `"run"`，使用 checked AOT。
      * 命令行子命令或 `--mode` 覆盖它；svmb 导出已删除。
@@ -106,7 +98,7 @@ Memory::String quote(const Memory::String &s);
  *   * 这里只回答"**这个格式允许哪些表和键、每个值怎么解释**"：未知表、未知键、
  *     类型不对、该非空却空了一律明确报错，不静默忽略。
  *
- * 报错位置统一写成 `表.键`（例如 `chali.symbol_map`），好让用户直接找到那行配置。
+ * 报错位置统一写成 `表.键`（例如 `chali.debug`），好让用户直接找到那行配置。
  */
 
 /**

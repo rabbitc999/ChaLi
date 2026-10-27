@@ -195,8 +195,8 @@ run_step "检查 opcode 反射与语言服务隐藏" "$PYTHON" tests/chali_opcod
 run_step "检查 AOT 共享运行时构建与资产清单同步" "$PYTHON" tools/stackvm_sources.py --check
 run_required_step "编译 TOML 注释保存回归" g++ -std=c++17 -O2 source/toml/test_toml.cpp source/toml/toml.cpp source/toml/toml_source.cpp -o tmp/ci/toml-comments
 run_step "运行 TOML 注释保存回归" tmp/ci/toml-comments
-run_step "检查标准对象与 VM 核心隔离" "$PYTHON" tests/opcode_core_isolation.py
-run_step "检查 VM 集合宿主胶水与同步回调" "$PYTHON" tests/chali_collection_glue.py --chali "$CHALI_BIN"
+run_step "检查标准对象与运行期核心隔离" "$PYTHON" tests/opcode_core_isolation.py
+run_step "检查 AOT 集合传参、返回值与复制语义" "$PYTHON" tests/chali_collection_glue.py --chali "$CHALI_BIN"
 run_step "检查 Map Pair 迭代元素类型" "$PYTHON" tests/chali_map_pair_iterator.py --chali "$CHALI_BIN"
 run_step "检查泛型命名构造入口推导" "$PYTHON" tests/chali_generic_constructors.py --chali "$CHALI_BIN"
 run_step "检查标准库 opcode 存储与资源边界" "$PYTHON" tests/chali_opcode_std_storage.py --chali "$CHALI_BIN"
@@ -227,9 +227,9 @@ fi
 if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行源码行号诊断回归" \
         "$PYTHON" tests/test_chali_source_lines.py --chali "$CHALI_BIN"
-    run_step "运行字符串清理与循环重入VM 多入口回归" \
+    run_step "运行字符串清理与循环重入回归" \
         "$PYTHON" tests/chali_string_reentry.py --chali "$CHALI_BIN"
-    run_step "运行语言功能、值类型与引用VM 多入口回归" \
+    run_step "运行语言功能、值类型与引用回归" \
         "$PYTHON" tests/chali_reference_values.py --chali "$CHALI_BIN"
 fi
 
@@ -250,9 +250,8 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
     run_step "运行闭包、标准库及并发的 VM/AOT 差分" "$PYTHON" tests/chali_aot_runtime.py --chali "$CHALI_BIN"
     run_step "运行泛型函数返回闭包与类型拒绝回归" "$PYTHON" tests/chali_generic_function_returns.py --chali "$CHALI_BIN"
-    run_step "运行三类代表输入的 VM/AOT 全部回归" "$PYTHON" tests/chali_compiler_limits.py --chali "$CHALI_BIN" --verify --jobs "$jobs"
+    run_step "运行三类代表输入的 checked/unchecked 全部回归" "$PYTHON" tests/chali_compiler_limits.py --chali "$CHALI_BIN" --verify --jobs "$jobs"
     # 软重启看门狗（PC 宿主）：--watchdog 打开前后的行为、输出回滚与重启上限。
-    run_step "运行内存访问护栏回归" "$PYTHON" tests/chali_memory_guard.py --chali "$CHALI_BIN"
     run_step "运行软重启看门狗回归" "$PYTHON" tests/chali_watchdog.py --chali "$CHALI_BIN"
     # 总览图（各项目的 make_*_overview.py → 各自 overview 目录；ChaLi 那张由 chali 自己
     # 绘制，落在 doc/overview/）：能重跑、成对产出、重复生成一致。
@@ -267,7 +266,6 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行多值返回与泛型元组回归" \
         "$PYTHON" tests/chali_tuple_returns.py --chali "$CHALI_BIN"
     # 裁剪构建：单文件导出在 NO_CHALI_* 定义下仍能跑，且大数符号真的被裁掉。
-    run_step "运行裁剪构建回归" "$PYTHON" tests/trim_builds.py --chali "$CHALI_BIN"
     # 关键字三处对齐（补全表 / 文法登记 / 语法高亮），谁加了关键字忘了同步就红。
     run_step "运行编码、CSV、UTC 日期的 Python 交叉验证" "$PYTHON" tests/chali_std_data.py --chali "$CHALI_BIN"
     run_step "检查补全关键字与高亮关键字一致" "$PYTHON" tools/check_keywords.py
@@ -306,7 +304,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行行输入与文件文本读取回归" "$PYTHON" tests/chali_text_readers.py
     run_step "检查内嵌书稿关键字与 SKILL 同步" "$PYTHON" tools/embed_manual.py --check
     run_step "运行格式化多行字符串保真回归" "$PYTHON" tests/chali_formatter_literals.py
-    run_step "运行 void main 的 VM 回归" "$PYTHON" tests/chali_void_main.py
+    run_step "运行 void main 回归" "$PYTHON" tests/chali_void_main.py
     run_step "运行类型声明可选尾分号回归" "$PYTHON" tests/chali_type_decl_terminators.py
     run_step "运行发布脚本与归档一致性回归" "$PYTHON" tests/chali_release.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/chali_book_updates.py

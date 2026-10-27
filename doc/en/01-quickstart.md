@@ -96,9 +96,9 @@ void main(List<String> arguments) {
 1. **Preprocess** — handles `%define`, `%if` and friends;
 2. **Parse and type-check** — syntax, types and reference lifetimes are checked here; nothing runs if
    this fails;
-3. **Lower to quadruples** — the front end turns the program into StackVM's intermediate
+3. **Lower to quadruples** — the front end turns the program into ChaLi's intermediate
    representation;
-4. **Interpret** — run it directly in the current process.
+4. **Compile and run** — LLVM AOTs the quadruples into native code and executes it in the same process.
 
 To stop after the first two steps (no execution, no output files):
 
@@ -123,10 +123,11 @@ chali check hello.chl
 
 | Task | Command |
 | --- | --- |
-| Interpret | `chali run src/main.chl` |
+| Compile and run | `chali run src/main.chl` |
 | Check only, do not run | `chali check src/main.chl` |
 | JSON diagnostics (for editors) | `chali check src/main.chl json` |
-| Export `.svmb` bytecode | `chali svmb src/main.chl out build/app` |
+| Export an executable | `chali aot src/main.chl --out build/app` |
+| Export quadruples only | `chali emit src/main.chl --out build/app` |
 | Create a project | `chali new hello` |
 | Run tests | `chali test tests` |
 | Format check / write | `chali fmt check src` / `chali fmt write src` |

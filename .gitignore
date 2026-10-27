@@ -87,6 +87,16 @@ __pycache__/
 
 # 示例工程的构建缓存不进版本库
 example/*/build/
+example/native-callbacks/host.dll
+example/native-callbacks/host.so
+example/native-callbacks/demo.exe
+example/native-callbacks/demo.quad
+example/native-callbacks/demo.data.bin
+example/native-callbacks/demo.layout
+example/native-callbacks/demo.ll
+example/native-callbacks/demo.llvm.log
+example/native-callbacks/demo.abi.cpp
+example/native-callbacks/demo.h
 
-# ChaLi 编译中间产物目录（Windows 隐藏）
-/.chali/
+# ChaLi 编译中间产物目录（Windows 隐藏）；任意层级都算，示例目录里跑一次也会生成。
+.chali/

@@ -22,9 +22,8 @@ is written `chali`).
 | [Annotations and reflection](#53-annotations-and-reflection) | [`example/reflection/`](../../example/reflection/) | Compile-time annotations, runtime metadata queries | reflection build macros |
 | [Standard library companions](#54-standard-library-companions) | [`doc/examples/library/`](../examples/library/) | Four runnable programs: io / sqlite / watchdog / reflect | some need reflection |
 | [C ABI companions](#55-c-abi-companions) | [`doc/examples/abi_buffers/`](../examples/abi_buffers/), [`abi_dynamic/`](../examples/abi_dynamic/) | Static buffers vs. dynamic library bindings | a C compiler |
-| [`.svmb` evidence pack](#6-artifacts-and-reverse-engineering-the-svmb-evidence-pack) | [`doc/examples/svmb/`](../examples/svmb/) | A bytecode specimen, section-by-section anatomy, reproducible reversing-cost data | none |
-| [Glue callbacks](../../example/native-callbacks/README.md) | [`example/native-callbacks/`](../../example/native-callbacks/) | Shared VM glue calling named functions, closures, references and higher-order callbacks | a C++ compiler |
-| [Editor language servers](#72-editor-language-servers-and-the-vs-code-extension) | [`source/lsp/`](../../source/lsp), [`vscode/`](../../vscode/) | Macro pairing checks, semantic highlighting, real diagnostics | none / VS Code |
+| [Synchronous callbacks](../../example/native-callbacks/README.md) | [`example/native-callbacks/`](../../example/native-callbacks/) | C calling ChaLi function values under AOT: named functions, closures, references, reentry | a C compiler |
+| [Editor language servers](#62-editor-language-servers-and-the-vs-code-extension) | [`source/lsp/`](../../source/lsp), [`vscode/`](../../vscode/) | Macro pairing checks, semantic highlighting, real diagnostics | none / VS Code |
 
 ---
 
@@ -160,43 +159,15 @@ Type mapping and `abi` block syntax are in [Host integration and C ABI](08-host-
 
 ---
 
-## 6. Artifacts and reverse engineering: the `.svmb` evidence pack
+## 6. Toolchain companions
 
-**What it demonstrates**: [`doc/examples/svmb/`](../examples/svmb/) is the evidence behind
-[`.svmb` binary format anatomy and reverse-engineering difficulty](../15-svmb-format.md).
-The specimen `control.svmb` is 662,750 bytes with SHA-256 `CF30A3C8…A757ABE`; the same source built
-with `--no-debug` yields 249,681 bytes with SHA-256 `08554811…A6007476D`, containing **no path
-strings at all**, so it is byte-identical no matter which directory produced it.
+### 6.1 Embedded Linux hosting
 
-Every number in there is produced by [`collect.py`](../examples/svmb/collect.py), **never written by
-hand**; when a tool is missing the corresponding section says "skipped" instead of inventing content.
+Run `chali aot` on the target machine: the output is a statically linked native executable, so the
+binary itself is the deliverable (add the shared library when the program uses `#abi`). Cross
+compilation, resource budgets and execution boundaries are in the [deployment guide](06-deployment.md).
 
-**How to run it**:
-
-```sh
-chali run example/samples/control.chl --emit --svmb --out tmp/svmb-study/control
-python doc/examples/svmb/collect.py --parser ./ChaLi.exe
-```
-
-(`collect.py` also accepts `--vm` / `--vm-opcode` / `--exported` to add the VM and exported-program
-evidence.)
-
-**Boundaries**: rebuilding is **not byte-identical to the specimen** — the debug section stores a
-compile-time `.quad` path string for every instruction (measured: 33 bytes × 8204 = `+270732`
-bytes), so building from a different directory changes the artifact size; the program body itself is
-byte-identical. `svmb_dump.py` is a minimal parser using only the standard library.
-
----
-
-## 7. Toolchain companions
-
-### 7.1 Embedded Linux hosting
-
-Build `source/ircode/` and the native glue with the target Linux C++17 toolchain. Deploy the
-`.svmb`, data and layout files together, and provide the system libraries used by the host.
-The [deployment guide](06-deployment.md) describes the execution and resource boundaries.
-
-### 7.2 Editor language servers and the VS Code extension
+### 6.2 Editor language servers and the VS Code extension
 
 **What it demonstrates**: two complementary routes. The toolchain's built-in `chali lsp` (embedded
 in the compiler, running the real front end, giving real error codes and precise positions) covers
@@ -219,7 +190,7 @@ and breakpoint debugging are described in its [README](../../vscode/README.md).
 
 ---
 
-## 8. Regression entry points
+## 7. Regression entry points
 
 | Command | Covers |
 | --- | --- |
@@ -234,7 +205,7 @@ Checks requiring a graphical environment or database are dedicated regressions: 
 
 ---
 
-## 9. Next
+## 8. Next
 
 | You want to | Go to |
 | --- | --- |

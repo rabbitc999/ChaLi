@@ -243,22 +243,6 @@ bool g_debugEnabled = false;
  * `--step-limit N`：本次执行的指令条数上限；0 表示不设上限（缺省）。
  */
 std::size_t g_stepLimit = 0u;
-/**
- * `--no-debug`：写 `.svmb` 时丢掉调试节（节仍在、写成 0 条）。名字/类型表不受影响。
- */
-bool g_stripDebug = false;
-/**
- * @brief 是否写无名紧凑符号格式。
- */
-bool g_compressSymbols = false;
-/**
- * @brief PC 映射文件路径，空值使用输出前缀默认路径。
- */
-Memory::String g_symbolMap;
-/**
- * @brief PC 映射的模块及版本元数据。
- */
-Memory::String g_symbolModule, g_symbolVersion;
 /* 运算符重载表（`g_operators`）在 MOperatorDecl 之后定义。 */
 Memory::Map<Memory::String, std::shared_ptr<ast::Type>> g_structType; /* struct 名 → ast 类型 */
 /**

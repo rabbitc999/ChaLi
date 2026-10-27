@@ -810,7 +810,7 @@ them. Lowercase `string` is not a type alias for `String`.
 int64 c_function(int64 x);
 ```
 
-An `#abi` directive imports C ABI functions from a library. Hosts load and run programs through the shared VM.
+An `#abi` directive imports C ABI functions from a library. The path resolves relative to the declaring source file, and the library must sit next to the artifact.
 Type mapping, nullable references and glue bindings: see
 [Host integration and C ABI](08-host-integration.md).
 

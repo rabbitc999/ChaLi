@@ -6,7 +6,6 @@ import subprocess
 from project_temp import tempfile
 import os
 import re
-import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +36,7 @@ def main() -> None:
         body.write_text("module math::ops;\nint64 twice(int64 x) { return x + x; }\n", encoding="utf-8")
         output = work / "build" / "app"
         output.parent.mkdir()
-        args = ("run", source, "--emit", "--svmb", "--incremental", "-I", work, "-I", ROOT,
+        args = ("run", source, "--emit", "--incremental", "-I", work, "-I", ROOT,
                 "--out", output)
 
         first = run(*args)
@@ -72,22 +71,14 @@ def main() -> None:
         run(*args)
         assert "增量缓存命中" in run(*args).stderr
 
-        # Output switches invalidate outputs, but keep module preprocessing reusable.
-        plain_binary = output.with_suffix(".svmb").read_bytes()
+        # Compile switches stay in the cache signature: first switch misses, repeat hits.
+        plain_quad = output.with_suffix(".quad").read_bytes()
         debug = run(*args, "--debug")
         assert "2 个模块复用，0 个模块重新预处理" in debug.stderr, debug.stderr
-        assert output.with_suffix(".svmb").read_bytes() != plain_binary
         assert "增量缓存命中" not in debug.stderr
+        assert output.with_suffix(".quad").read_bytes() == plain_quad
         assert "增量缓存命中" in run(*args, "--debug").stderr
-        compact = run(*args, "--compress-symbols")
-        assert "2 个模块复用，0 个模块重新预处理" in compact.stderr, compact.stderr
-        mapping = Path(str(output) + ".symbol_map.json")
-        assert mapping.exists()
-        mapping.write_bytes(b"damaged map")
-        repair_map = run(*args, "--compress-symbols")
-        assert "2 个模块复用，0 个模块重新预处理" in repair_map.stderr, repair_map.stderr
-        assert json.loads(mapping.read_text(encoding="utf-8"))
-        assert "增量缓存命中" in run(*args, "--compress-symbols").stderr
+        assert not Path(str(output) + ".symbol_map.json").exists()
 
         # A common include is content-hashed once per compiler invocation.
         shared = work / "shared.chl"

@@ -233,16 +233,14 @@ public:
      * @param prefix 输出前缀。
      * @param input 输入哈希。
      * @param binary 是否检查字节码。
-     * @param symbolMap PC 映射路径，空值不检查。
      * @return 所有产物匹配返回 true。
      */
-    bool outputsCurrent(const Memory::String &prefix, std::uint64_t input, bool binary,
-                        const Memory::String &symbolMap = {}) const
+    bool outputsCurrent(const Memory::String &prefix, std::uint64_t input, bool binary) const
     {
         std::ifstream in(fs::path(directory_) / "output.cache", std::ios::binary);
         std::uint64_t magic = 0, storedSignature = 0, storedInput = 0, count = 0;
         if (!readNumber(in, magic) || magic != 0x4d434f5554505554ull || !readNumber(in, storedSignature) || storedSignature != outputSignature_ || !readNumber(in, storedInput) || storedInput != input || !readNumber(in, count)) return false;
-        const auto expectedPaths = outputPaths(prefix, binary, symbolMap);
+        const auto expectedPaths = outputPaths(prefix, binary);
         if (count != expectedPaths.size()) return false;
         for (std::uint64_t i = 0; i < count; ++i)
         {
@@ -258,12 +256,10 @@ public:
      * @param prefix 输出前缀。
      * @param input 输入哈希。
      * @param binary 是否包含字节码。
-     * @param symbolMap PC 映射路径，空值不保存。
      */
-    void saveOutputs(const Memory::String &prefix, std::uint64_t input, bool binary,
-                     const Memory::String &symbolMap = {}) const
+    void saveOutputs(const Memory::String &prefix, std::uint64_t input, bool binary) const
     {
-        Memory::Vector<Memory::String> paths = outputPaths(prefix, binary, symbolMap);
+        Memory::Vector<Memory::String> paths = outputPaths(prefix, binary);
         Memory::Vector<std::uint64_t> hashes;
         for (const auto &path : paths)
         {
@@ -319,8 +315,7 @@ private:
         return true;
     }
 
-    static Memory::Vector<Memory::String> outputPaths(const Memory::String &prefix, bool binary,
-                                                      const Memory::String &symbolMap)
+    static Memory::Vector<Memory::String> outputPaths(const Memory::String &prefix, bool binary)
     {
         Memory::Vector<Memory::String> paths;
         for (const char *suffix : { ".quad", ".data.bin", ".layout" })
@@ -328,7 +323,6 @@ private:
         std::error_code error;
         if (fs::exists(fs::path(prefix + ".abi.cpp"), error))
             paths.push_back(canonical(prefix + ".abi.cpp"));
-        if (binary && !symbolMap.empty()) paths.push_back(canonical(symbolMap));
         return paths;
     }
 

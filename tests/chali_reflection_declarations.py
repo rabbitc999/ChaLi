@@ -1,56 +1,54 @@
-"""真实 CHALI 声明到元数据：布局、注解、稳定身份、容器与 VM 自包含查询。"""
+"""真实 CHALI 声明到元数据：布局、注解、稳定身份与容器。"""
 from __future__ import annotations
 from compiler_path import compiler_path
 import argparse
-import os
+import struct
 from pathlib import Path
 import subprocess
-import struct
 from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
-EXE = '.exe' if os.name == 'nt' else ''
+
 
 def main():
-    """依次验证前端限制、二进制表及两种导出的真实声明记录。"""
+    """验证前端限制，以及四元式里反射表记录的真实声明身份。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
-    parser.add_argument('--cxx', default='g++')
-    parser.add_argument('--vm-library', type=Path, default=ROOT / 'build/chali-stackvm/libstackvm.a')
     args = parser.parse_args()
     checks = 0
 
     def run(command, success=True, cwd=ROOT):
         nonlocal checks
-        result = subprocess.run(list(map(str, command)), cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=240)
+        result = subprocess.run(list(map(str, command)), cwd=cwd, capture_output=True, text=True,
+                                encoding='utf-8', errors='replace', timeout=240)
         assert (result.returncode == 0) == success, (command, result.stdout, result.stderr)
         checks += 1
         return result
+
     with tempfile.TemporaryDirectory(prefix='reflection-declarations-', dir=ROOT / 'build') as temporary:
         work = Path(temporary)
         sample = ROOT / 'example/reflection/declarations.chl'
-        unit = work / ('verify' + EXE)
-        flags = [args.cxx, '-std=c++17', '-O1', '-pthread', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DSTACKVM_WITH_REFLECTION=1', '-I' + str(ROOT), '-I' + str(ROOT / 'library'), '-I' + str(ROOT / 'source')]
-        run([*flags, ROOT / 'tests/chali_reflection_declarations_test.cpp', args.vm_library.resolve(), '-o', unit])
-        for options in (['--no-compress-symbols'], []):
-            prefix = work / 'program'
-            run([args.chali, '--reflection', '--emit', '--svmb', *options, sample, '--out', prefix])
-            run([unit, prefix.with_suffix('.svmb')])
+        # 反射表随四元式导出，AOT 编译只读同一份前端产物。
+        run([args.chali, '--reflection', '--emit', sample, '--out', work / 'program'])
         source = work / 'case.chl'
 
         def check(text, error=None, enabled=True):
             source.write_text(text, encoding='utf-8')
-            result = run([args.chali, *(['--reflection'] if enabled else ['--no-reflection']), '--check', source], success=error is None)
+            result = run([args.chali, *(['--reflection'] if enabled else ['--no-reflection']), '--check', source],
+                         success=error is None)
             if error:
                 assert error in result.stderr, result.stderr
+
         check('@Reflect(1) int64 f(){return 1;} void main(){}', '不接受参数')
         check('@Reflect struct S{@Reflect int64 x;}; void main(){}', '成员随类型暴露')
         check('@Reflect void main(){}', '功能未开启', enabled=False)
         check('@std::reflect::Reflect void main(){}')
         check('@annotation Reflect(x:int32)\n@Reflect(1) void main(){}')
         check('struct Box<T>{T value;};\n@Reflect int64 read(Box<int64> x){return x.value;}\nvoid main(){return;}')
-        (work / 'chali.toml').write_text('[package]\nname="reflection"\nversion="0.1.0"\n[chali]\nimport_paths=["."]\n', encoding='utf-8')
+        (work / 'chali.toml').write_text('[package]\nname="reflection"\nversion="0.1.0"\n[chali]\nimport_paths=["."]\n',
+                                         encoding='utf-8')
         for module in ('one', 'two'):
-            (work / (module + '.chl')).write_text('module ' + module + ';\n@Reflect struct Same{int64 value;};\n', encoding='utf-8')
+            (work / (module + '.chl')).write_text('module ' + module + ';\n@Reflect struct Same{int64 value;};\n',
+                                                  encoding='utf-8')
         source.write_text('import one;\nimport two;\nvoid main(){return;}\n', encoding='utf-8')
         run([args.chali, '--reflection', '--emit', source, '--out', work / 'names'], cwd=work)
 
@@ -70,6 +68,7 @@ def main():
                     if byte < 128:
                         return value
                     shift += 7
+
             assert varint() & 2
             for _ in range(4):
                 size = varint()
@@ -85,18 +84,22 @@ def main():
                 result[data[offset:offset + size].decode('utf-8')] = identity
                 offset += size
             return result
+
         names = identities(work / 'names')
         assert names['struct:one::Same'] != names['struct:two::Same']
         snapshots = []
         for index, alias in enumerate(('String', 'std::lang::String')):
             extra = 'struct Unrelated{int32 x;};\n' if index else ''
-            source.write_text(extra + 'struct Box<T>{T value;};\n@Reflect String read(Box<' + alias + '> value){return value.value;}\nvoid main(){return;}\n', encoding='utf-8')
+            source.write_text(extra + 'struct Box<T>{T value;};\n@Reflect String read(Box<' + alias +
+                              '> value){return value.value;}\nvoid main(){return;}\n', encoding='utf-8')
             prefix = work / ('identity' + str(index))
             run([args.chali, '--reflection', '--emit', source, '--out', prefix])
             snapshots.append(identities(prefix))
         assert snapshots[0] == snapshots[1], snapshots
-        assert 'struct:Box<std::lang::String>' in snapshots[0], snapshots
+        assert 'struct:program::Box<std::lang::String>' in snapshots[0], snapshots
         assert not any(('__string' in key for key in snapshots[0])), snapshots
         print(f'CHALI 声明元数据：{checks} 项集成检查通过')
+
+
 if __name__ == '__main__':
     main()

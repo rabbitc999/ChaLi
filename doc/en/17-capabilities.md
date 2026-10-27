@@ -138,9 +138,9 @@ Isolated threads support `waitFor(thread, millis)` with a nonnegative millisecon
 
 Threads use `std::thread::Thread` with copied initial arguments, cancellation, completion results, groups and fixed pools. Bounded channels and explicit event queues replace coroutine scheduling and implicit interrupt callbacks. See [concurrency contracts](30-thread-concurrency.md) for timeouts, cleanup and blocking host I/O limits.
 
-## VM modules and TOML saving
+## Backend layout and TOML saving
 
-The shared VM uses separate compilation units for quadruples, binary containers, execution, native services and concurrent communication. Builds and exports share source/ircode/core_sources.txt. The stackvm.hpp header aggregates public interfaces; non-template implementations are linked separately.
+There is a single backend: the front end emits quadruples, and the AOT path lowers them to LLVM IR and native code. Front-end and backend code live in separate compilation units, and the internal, external and static LLVM build variants share the same sources.
 
 Saving a parsed std::toml document root retains its original comments and layout. In the underlying C++ value model, edits with the same container shape preserve layout. Structural edits retain all comment content, but may move comments to the beginning of the document. Parsing and saving repeatedly neither loses nor duplicates comments. See the [TOML API](../library/std-toml.md).
 

@@ -47,9 +47,9 @@ GC don't run on embedded" and "without a GC you will get it wrong" look like a b
 
 ### Answer 1: write once, run anywhere
 
-ChaLi source compiles to `.svmb` bytecode, executed by the shared StackVM. The same bytecode loads
-and runs unchanged on any host that provides a compatible VM and the system services the program
-uses; platform-specific parts live in host glue, so business logic is not rewritten per platform.
+ChaLi source compiles through LLVM AOT into native machine code. The same source rebuilds for each
+target triple, and platform-specific parts go through `#abi` declarations or an exported C ABI, so
+business logic is not rewritten per platform.
 
 ### Answer 2: from desktop to embedded Linux
 

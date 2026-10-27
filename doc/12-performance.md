@@ -4,7 +4,7 @@
 [English](en/12-performance.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-当前程序版本为 **ChaLi 1.0.8**。本文只回答一个问题：ChaLi 的四元式交给 LLVM AOT（`-O3` + LTO）之后，同样的算法在 C、C++、Rust、Go、Java、Node、Lua、Python 面前处在什么位置。1.0.8 的编译器不再内嵌 VM 解释执行核，所以没有「VM 对比 AOT」这一节。
+当前程序版本为 **ChaLi 1.0.8**。本文只回答一个问题：ChaLi 的四元式交给 LLVM AOT（`-O3` + LTO）之后，同样的算法在 C、C++、Rust、Go、Java、Node、Lua、Python 面前处在什么位置。1.0.8 的编译器已不再内嵌解释器，所以没有「解释器对比 AOT」这一节。
 
 ## 测什么
 

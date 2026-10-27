@@ -32,6 +32,13 @@
 - tests/chali_tool.py 改测当前统一入口：run/interpret 别名、emit 产物、隐藏 .chali 清理、已删除的 .svmb 提示与 aot --emit-llvm。
 - tests/chali_native_callbacks.py 改为 AOT 同步回调回归：用 #abi 声明的 C 动态库调用具名函数、内联与捕获闭包、float32/bool/void、mut& 引用、高阶与重入，并验证 panic 穿过 C 帧传播。
 - 跨语言基准的 C 计时壳改为 -O3（内核仍为 -O3 -flto=full），重跑 1.0.8 全套数据：标量四项 18～28 倍于 C，checked 与 unchecked 相差 0～8%。
+- 彻底移除符号压缩：删除 --compress-symbols、--no-compress-symbols、--symbol-map 三个选项及缓存签名、M_SetSymbolCompression / M_SetStripDebug 接口与 chali.compress_symbols / chali.symbol_map 配置键；构建帮助、诊断消息与内嵌 i18n 表同步缩减为 245 条，默认构建仍用 --strip-all，--debug 保留符号与源码行。
+- 删除 VM 残留回归：chali_memory_guard（C++ 护栏）、trim_builds / vm_trim 裁剪构建、chali_program_runner、benchmark_vm_program 与四个 VM 基准脚本、benchmarks/compare-vm.ps1；ci.sh 与 tools/parallel_gates.py 同步去掉对应步骤与并行清单。
+- 集合胶水、反射声明、反射元数据与反射特性四项回归改为单一路径：不再编译 C++ 夹具或传 --vm-library，直接解析 .quad 的 MGQI 头（varint 特征位、MCRF 反射段）与身份键，并核对 --no-reflection 下 CHL1200 诊断与增量缓存位。
+- tests/chali_package.py、chali_incremental.py、chali_thread_wait.py、test_chali_panic.py、test_chali_source_lines.py 与 chali_compiler_limits.py 去掉 --svmb 与符号压缩分支：调试段改测 AOT 产物体积，运行方式期望统一为 run，panic 首行改为 chali aot: panic：。
+- example/native-callbacks 改为纯 C 宿主：#abi 声明五个入口，host.c 导出高阶、浮点、布尔、通知与可变引用回调，删除 glue.cpp 与 vm_host.cpp；README 改为 gcc -shared + chali aot 的两步流程，.gitignore 覆盖示例产物。
+- 文档按移除 VM 后的实际行为重写：15-svmb-format.md 改为 15-artifacts.md（产物布局与 .chali/ 清理规则），08 宿主集成改写为 #abi 与 --shared 两个方向，05 交付安全与 06 原生部署重写交付形态，18 panic 文档改写消息 / 位置 / 调用栈三件事与内联导致的短栈，书稿第 21 章 §21.5–21.6 改为函数值同步回调与 --shared --export。
+- 清理其余页面的虚拟机时代表述与链接：00/01/02/04/17/19/20/21/30/34/38/99、中英文 README 与索引、书稿 15／24／附录 B 与英文 11／24 章；删除 doc/examples/svmb 与 doc/examples/abi_dynamic/glue.cpp，同步重生成 LaTeX 章节与文档语言导航。
 
 
 ## 1.0.7 — 标准库自举、原始存储、ABI 指令与 AOT 瘦身

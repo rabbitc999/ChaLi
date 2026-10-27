@@ -1,26 +1,53 @@
-# 06 VM deployment
+# 06 Native deployment
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../06-deployment.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi programs always execute in the shared VM, **write once, run anywhere**: the same source compiles to bytecode that desktop, server and supported embedded Linux hosts can load. Deploy source for compilation on the host, or export `.svmb` in advance.
+Since 1.0.8 there is a single execution path: the front end lowers source to quadruples, LLVM performs AOT, and the result is native machine code for the target platform. There is no shared VM and no `.svmb`, so "deployment" means shipping the build output and supplying the system libraries it needs.
+
+## Run from source
 
 ```sh
 chali run app.chl
-chali svmb app.chl out build/app
 ```
 
-Native deployment includes `.svmb`, `.data.bin`, `.layout` and application resources. The host validates format and feature bits, installs native bindings, and runs the program. `emit` provides quadruples for inspection or assembly; quadruples are not machine code.
+`run` uses checked AOT: compile with `default<O3>` and execute in-process, with runtime checks (bounds, null, type) still enabled. It is for development and acceptance, not a delivery form.
 
-A host application may itself be compiled into a native executable and embed bytecode. ChaLi code executes through `stackvm::Machine`.
+## Ship an executable
 
-The compiler embeds its standard library and runtime assets. Operating-system services, external libraries, databases and peripherals remain deployment dependencies when used.
+```sh
+chali aot app.chl --out build/app
+```
 
-The host owns the program, data, registry and borrowed resources. Configure memory and instruction budgets and check execution errors and resource statistics. Embedded Linux hosts use the same VM core with explicit feature and memory budgets. That is a
-runtime capability, not a cross-platform delivery promise: rebuild the VM and glue for each target
-architecture and recheck toolchain and system services.
+`aot` is unchecked AOT: same `default<O3>`, runtime checks removed, and the output is a self-contained executable (`.exe` on Windows). Copy it to the target machine together with any dynamic libraries and data files the program uses. `--debug` switches to `default<O0>,globaldce` and keeps debug information for troubleshooting.
 
-Symbol compression is not encryption or a sandbox. Updating bytecode does not automatically migrate running stacks, closures or globals.
+Startup no longer needs a host to register glue, reserve the data area or set an instruction budget — those were VM-era interfaces. To call an external C function, declare it with `#abi("C", "library path", "symbol")`; the path resolves relative to the declaring source file, and the library must sit next to the artifact.
 
-See [host integration](08-host-integration.md), [toolchain](09-toolchain.md) and [SVMB format](../15-svmb-format.md).
+## Embed in an existing host
+
+To be called from C/C++, export a library plus header:
+
+```sh
+chali aot lib.chl --shared --export add --out build/lib
+```
+
+The host calls `chali_init()`, then `f_add(...)`, then `chali_finish()`; exceptions surface as `panic` crossing the C frame. See [host integration and the C ABI](08-host-integration.md).
+
+## Intermediates only
+
+```sh
+chali emit app.chl --out build/app
+```
+
+Writes `.quad`, `.data.bin` and `.layout` without linking or executing — useful for inspecting quadruples or assembling them yourself. `.quad` is not machine code.
+
+## Resources and boundaries
+
+The compiler embeds its standard library; operating-system interfaces, dynamic libraries, networks, databases and peripherals remain provided by the target environment. Default builds clean the intermediates under `.chali/`; see [build artifacts and intermediates](../15-artifacts.md) for the four exceptions.
+
+Embedded Linux uses the same back end, but artifacts must be rebuilt for the target architecture: LLVM triple, C++17 runtime and system services all need checking. "Runs on embedded Linux" is not "build once, deliver anywhere".
+
+Upgrades replace the executable as a whole; there is no bytecode version compatibility layer, and running stacks, closures and globals do not migrate across versions.
+
+See [host integration](08-host-integration.md), [toolchain](09-toolchain.md) and [artifact layout](../15-artifacts.md).

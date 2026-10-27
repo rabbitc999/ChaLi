@@ -1,5 +1,5 @@
 /* ============================================================
- * 入口：chali <源文件.chl> [--out 前缀] [--emit] [--svmb] [--debug]
+ * 入口：chali <源文件.chl> [--out 前缀] [--emit] [--debug]
  *                           [-I 目录] [-D 符号[=值]] [--raw] [--deps]
  *
  *   ① 读源文件（不给文件也不给 `--stdin` 时显示帮助）；
@@ -331,7 +331,6 @@ void PrintUsage(std::FILE *out)
              "  -D, --define 符号[=值] 定义预处理符号（也可写 -D符号=值）\n",
              "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
              "  --check                仅检查，不执行、不生成产物\n",
-             "  --compress-symbols     写无名变长符号表，生成 PC 映射文件\n",
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
@@ -341,7 +340,6 @@ void PrintUsage(std::FILE *out)
              "  --include-path 目录    追加模块搜索目录\n",
              "  --incremental          跨次复用模块预处理与完整编译产物\n",
              "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
-             "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n",
              "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
              "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
              "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
@@ -354,7 +352,6 @@ void PrintUsage(std::FILE *out)
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
              "  --stats                打印运行时、增量校验与后端两层（指令选择 / 帧槽）统计\n",
              "  --step-limit N         本次执行的指令条数上限（缺省不设上限；0 同缺省）\n",
-             "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n",
              "  --                     后面全部作为程序的命令行参数\n",
          })
         std::fputs(CHALI_TEXT(line), out);
@@ -426,7 +423,7 @@ static void SaveStandardUnit(const Memory::String &path, std::size_t nodeLimit)
  */
 static void RemoveIntermediateArtifacts(const Memory::String &prefix, bool withExecutable, bool withHeader)
 {
-    for (const char *suffix : { ".quad", ".data.bin", ".layout", ".ll", ".llvm.log", ".abi.cpp", ".symbol_map.json" })
+    for (const char *suffix : { ".quad", ".data.bin", ".layout", ".ll", ".llvm.log", ".abi.cpp" })
     {
         std::error_code error;
         std::filesystem::remove(Memory::u8path(prefix + suffix), error);
@@ -499,12 +496,9 @@ try
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
-    bool debugEnabled = false; /* --debug：执行时打印源码位置轨迹（stderr） */
+    bool debugEnabled = false; /* --debug：保留原生符号、源码行与变量信息，O0 构建 */
     bool dapEnabled = false;   /* --dap：作为 VS Code 的调试适配器跑（stdio 上收发 DAP） */
-    bool stripDebug = true;    /* 缺省不带调试信息；--debug 才写调试节 */
-    int compressSymbolsOption = -1;
-    Memory::String symbolMap;
-    bool symbolMapGiven = false;
+    bool stripDebug = true;    /* 缺省 --strip-all；--debug 才保留调试信息 */
     std::size_t memoryBytes = Memory::defaultRuntimeCapacity;
     std::size_t stepLimit = 0u; /* --step-limit：0 表示不设上限（缺省） */
     bool runtimeStats = false;
@@ -585,7 +579,7 @@ try
             if (argument == "--link") aotOptions.linkLibraries.push_back(value);
             continue;
         }
-        /* `--mode`：与统一入口一致的运行方式；支持 interpret / emit / svmb / aot。 */
+        /* `--mode`：与统一入口一致的运行方式；interpret / run / aot 折到 run，svmb 已删除。 */
         if (argument == "--mode" || argument == "--run-mode" || argument.rfind("--mode=", 0) == 0 || argument.rfind("--run-mode=", 0) == 0)
         {
             const auto separator = argument.find('=');
@@ -781,7 +775,7 @@ try
             threadsEnabled = false;
             continue;
         }
-        if (argument == "--debug") /* 带调试信息：写调试节，并解释执行时按位置打印（stderr） */
+        if (argument == "--debug") /* 带调试信息：O0 构建并保留符号、源码行与变量 */
         {
             debugEnabled = true;
             stripDebug = false;
@@ -801,23 +795,6 @@ try
         {
             stripDebug = true;
             debugEnabled = false;
-            continue;
-        }
-        if (argument == "--compress-symbols")
-        {
-            compressSymbolsOption = 1;
-            continue;
-        }
-        if (argument == "--no-compress-symbols")
-        {
-            compressSymbolsOption = 0;
-            continue;
-        }
-        if (argument == "--symbol-map")
-        {
-            if (!NeedValue(index, argc, "--symbol-map")) return 2;
-            symbolMap = argv[++index];
-            symbolMapGiven = true;
             continue;
         }
         if (argument == "--raw") /* 跳过前处理：把源文件原样喂给解析器 */
@@ -970,8 +947,6 @@ try
     /* `[chali] debug = true` 是项目级的“带调试节”，等价于命令行写 `--debug`。
      * 缺省 false（不带调试信息）；配置内容进缓存签名，改它会让缓存失效。 */
     if (project.debug) { stripDebug = false; debugEnabled = true; aotOptions.debug = true; }
-    const bool compressSymbols = compressSymbolsOption < 0 ? project.compressSymbols : compressSymbolsOption != 0;
-    if (!symbolMapGiven) symbolMap = project.symbolMap;
     /* 构建**项目**时入口是 `[chali] main` 指定的主文件（命令行没给源文件才用它）；
      * 单文件编译就是命令行显式给的那个文件，不看主文件。
      * `projectMainPath` 只是为了让 `const char *path` 在整个编译期都有效。 */
@@ -980,15 +955,6 @@ try
     {
         projectMainPath = project.main;
         path = projectMainPath.c_str();
-    }
-    if (!compressSymbols && !symbolMap.empty())
-    {
-        if (symbolMapGiven)
-        {
-            std::fputs(CHALI_TEXT("--symbol-map 需要启用 --compress-symbols\n"), stderr);
-            return 2;
-        }
-        symbolMap.clear();
     }
     Memory::UniquePtr<chali_incremental::Cache> cache;
     if (incremental)
@@ -1002,7 +968,7 @@ try
         cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? prefix + ".chali-cache" : cacheDirectory, argv[0],
                                                              searchDirs, defineItems,
                                                              pathSignature,
-                                                             Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n") + (compressSymbols ? "compress symbols\n" : "plain symbols\n") + symbolMap + "\n");
+                                                             Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n") + "\n");
         cache->setOverlays(sourceOverlays);
     }
 
@@ -1119,8 +1085,7 @@ try
         if (cache && !aot && run == 0 && !depsOnly && !checkOnly)
         {
             incrementalInput = chali_incremental::inputHash(processed, cache->signature());
-            if (cache->outputsCurrent(prefix, incrementalInput, false,
-                                      compressSymbols ? (symbolMap.empty() ? prefix + ".symbol_map.json" : symbolMap) : Memory::String()))
+            if (cache->outputsCurrent(prefix, incrementalInput, false))
             {
                 std::fprintf(stderr, "chali: 增量缓存命中：%zu 个模块复用，编译产物未变\n",
                              cache->reused());
@@ -1343,8 +1308,6 @@ try
     M_SetThreadsEnabled(threadsEnabled ? 1 : 0);
     M_SetDebugEnabled(debugEnabled ? 1 : 0);
     M_SetStepLimit(stepLimit);
-    M_SetStripDebug(stripDebug ? 1 : 0);
-    M_SetSymbolCompression(compressSymbols ? 1 : 0, symbolMap.c_str(), project.name.c_str(), project.version.c_str());
     M_SetRuntimeMemory(memoryBytes);
     M_SetCheckOnly(checkOnly);
     M_SetSharedLibrary(aot && aotOptions.shared);
@@ -1564,8 +1527,7 @@ try
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);
     if (cache && run == 0 && !checkOnly)
     {
-        cache->saveOutputs(prefix, incrementalInput, false,
-                           compressSymbols ? (symbolMap.empty() ? prefix + ".symbol_map.json" : symbolMap) : Memory::String());
+        cache->saveOutputs(prefix, incrementalInput, false);
         std::fprintf(stderr, "chali: 增量编译：%zu 个模块复用，%zu 个模块重新预处理\n",
                      cache->reused(), cache->rebuilt());
         if (runtimeStats) std::fprintf(stderr, "chali: 增量文件校验：%zu 次读取，%zu 次复用\n", cache->hashReads(), cache->hashReuses());

@@ -52,7 +52,7 @@ Instruction-selection coverage and frame slots before/after reuse are both visib
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```
 
-Project execution uses run; interpret remains only as an AOT alias, and svmb has been removed. See [projects](13-projects.md), [deployment](06-deployment.md) and the [SVMB specification](../15-svmb-format.md).
+Project execution uses run; interpret remains only as an AOT alias, and svmb has been removed. See [projects](13-projects.md), [deployment](06-deployment.md) and the [migration note](../16-compact-symbols.md) and [build artifacts](../15-artifacts.md).
 
 ## Source modules and incremental builds
 
