@@ -76,6 +76,17 @@ AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownersh
 算法实现在对应 `.cpp` 独立编译。`std_binding.hpp` 只提供注册表前置声明；模板需要的
 结构化数据与类型转换定义保留在头文件中。VM 核心继续使用通用宿主协议。
 
+已经搬到 C 层的胶水位于 `source/abi/`：一个模块一个文件（`abi_math.c`、`abi_clock.c`、
+`abi_random.c`、`abi_print.c`、`abi_string.c`），各自导出按名称升序的 `ChaliAbiRecord` 入口表；
+`chali_abi.c` 把各表聚合成一张全局表，首次使用时排序一次，之后二分查找。
+`chali_abi.h` 是 C 侧唯一需要包含的头文件（不引任何 C++ 头），
+`chali_abi_bridge.cpp` 用 `extern "C"` 把堆、数据区、对象表、错误通道和同步调用暴露给 C 胶水。
+直通入口在**绑定期**就由 `Registry::bind` 解析出来（`chali_abi_resolve`），
+`chali_host_call` 命中后直接调用 `void (*)(ChaliAbiFrame *)`：实参就是生成代码写好的槽数组，
+不构造 `NativeValue` 向量、不拷贝 `NativeContext`、不经过 `std::function` 类型擦除。
+新增直通函数只需在对应 `abi_*.c` 里实现入口并加入该模块的表；新增模块才需要动 `chali_abi.c` 的
+`kModules` 与 `tools/embed_stdlib.py` 的资产清单。`GLUE_NO_STD_XXX` 对 C 模块同样生效。
+
 泛型、闭包、工程清单和诊断分别由 `chali_generic.cpp`、`chali_lambda.cpp`、
 `chali_generic_closure.cpp`、`chali_package.cpp` 和 `chali_report.cpp` 编译。
 `macro/` 独立编译卫生绑定、结构化替换、宏注册、正则匹配、原始片段和编辑器宏头模型；
@@ -97,6 +108,8 @@ AST 声明位于 `chali_ast.hpp`；`semantics/` 中的符号登记、卫生展�
 
 宿主接入胶水时同时包含 `chali_glue.hpp` 与所需 `std_xxx.hpp`，并链接对应 `.cpp` 或宿主记录库。
 只有绑定接口的头文件不会隐式带入全部实现；完整构建命令见[同步回调示例](../example/native-callbacks/README.md)。
+已迁到 `source/abi/` 的模块没有 `std_xxx.hpp`，宿主只需把该目录的 `.c` 与 `chali_abi_bridge.cpp`
+一起编译；`std_registry.cpp` 末尾的 `bindDirectEntries()` 会把它们补进注册表。
 
 ## 标准库预编译单元
 

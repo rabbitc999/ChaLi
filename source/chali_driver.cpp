@@ -39,8 +39,6 @@
 #include "chali_aot_llvm.hpp"
 #include "chali_glue.hpp"
 #include "chali_report.hpp"
-#include "glue/std_math.hpp"
-#include "glue/std_random.hpp"
 #include "glue/std_regex.hpp"
 #include "glue/std_registry.hpp"
 

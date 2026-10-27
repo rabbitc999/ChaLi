@@ -4,6 +4,7 @@
  */
 #include "ircode/runtime_internal.hpp"
 #include "chali_glue.hpp"
+#include "abi/chali_abi_runtime.hpp"
 #include "glue/std_registry.hpp"
 #include "glue/std_collection.hpp"
 #include "console/utf8.hpp"
@@ -679,8 +680,19 @@ std::int64_t chali_host_function(std::int64_t function, int environment)
 std::int64_t chali_host_call(const char *name, std::int64_t count, const std::int64_t *bits, const unsigned char *floating)
 {
     auto &state = current();
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     NativeValue result;
+    const auto makeArguments = [&] {
+        Memory::Vector<NativeValue> arguments;
+        if (count > 0) arguments.reserve(static_cast<std::size_t>(count));
+        for (std::int64_t at = 0; at < count; ++at)
+        {
+            double real = 0;
+            std::memcpy(&real, bits + at, sizeof(real));
+            arguments.push_back(floating[at] ? NativeValue::fromFloat(real) : NativeValue::fromInt(bits[at]));
+        }
+        return arguments;
+    };
     try
     {
         const auto *internal = kSlotNatives.find(name);
@@ -703,22 +715,32 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
         {
             const auto *entry = state.registry.native().find(name);
             if (entry && entry->arity != static_cast<std::size_t>(-1) && static_cast<std::size_t>(count) != entry->arity) chali_panic("宿主函数实参数量不匹配");
-            Memory::Vector<NativeValue> arguments;
-            if (count > 0) arguments.reserve(static_cast<std::size_t>(count));
-            for (std::int64_t at = 0; at < count; ++at)
+            if (entry != nullptr && entry->direct != nullptr)
             {
-                double real = 0;
-                std::memcpy(&real, bits + at, sizeof(real));
-                arguments.push_back(floating[at] ? NativeValue::fromFloat(real) : NativeValue::fromInt(bits[at]));
+                /* 直通：实参直接是生成代码写好的槽数组，不构造 NativeValue 向量。 */
+                ChaliAbiRuntime runtime{ &context };
+                ChaliAbiFrame frame{ &runtime, bits, floating, count, 0, 0 };
+                entry->direct(&frame);
+                if (frame.resultIsFloat != 0)
+                {
+                    double value = 0.0;
+                    std::memcpy(&value, &frame.result, sizeof(value));
+                    result = NativeValue::fromFloat(value);
+                }
+                else
+                {
+                    result = NativeValue::fromInt(frame.result);
+                }
             }
-            if (entry)
+            else if (entry != nullptr)
             {
+                Memory::Vector<NativeValue> arguments = makeArguments();
                 NativeCallContextImpl call(context, state.invoker);
                 result = entry->callback(call, arguments);
             }
             else
             {
-                const auto handled = context.machine->invokeNativeService(state.program, context, name, arguments, callbackDepth);
+                const auto handled = context.machine->invokeNativeService(state.program, context, name, makeArguments(), callbackDepth);
                 if (!handled) chali_panic((Memory::String("找不到原生服务：") + name).c_str());
                 result = *handled;
             }

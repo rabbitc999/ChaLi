@@ -6,6 +6,7 @@
 #include "chali_aot.hpp"
 #include "glue/std_collection.hpp"
 #include "chali_generic_name.hpp"
+#include "abi/chali_abi.h"
 
 #include <cstddef>
 #include <array>
@@ -1150,10 +1151,46 @@ public:
     bool bind(const Memory::String &name, std::size_t arity, Callback callback,
               Memory::String *error = nullptr)
     {
-        return native_.add(name, arity, std::move(callback), error);
+        /* 绑定期就把名字解析成直通入口，之后每次调用都是一次函数指针调用。 */
+        int directArity = 0;
+        const auto direct = chali_abi_resolve(name.c_str(), &directArity);
+        return native_.addDirect(name, arity, std::move(callback), direct, directArity, error);
     }
 
     bool unbind(const Memory::String &name) { return native_.remove(name); }
+
+    /**
+     * 把 C 直通表里尚未绑定的入口补进来。宿主在注册完 C++ 胶水之后调用，
+     * 已迁移到 C 的模块即使没有对应的 C++ 胶水文件也仍然可达。
+     */
+    std::size_t bindDirectEntries() { return native_.bindDirectEntries(); }
+
+    /**
+     * @brief 只登记某一个 C 模块的直通入口。
+     * @param module 模块入口表的取表函数，例如 `abi_math_records`。
+     * @param error 绑定失败时接收原始诊断，可为空。
+     * @return 全部入口登记成功时返回 true。
+     * @note 供 AOT 的「按模块裁剪」判定使用：那里为每个模块建一张临时注册表，
+     *       看程序用到的名字是否出现在这张表里。全量登记的 `bindDirectEntries()`
+     *       做不到按模块区分，所以这里单独开一个入口。
+     */
+    bool bindModule(ChaliAbiModule module, Memory::String *error = nullptr)
+    {
+        if (module == nullptr)
+        {
+            if (error != nullptr) *error = "直通模块登记表为空";
+            return false;
+        }
+        std::size_t count = 0;
+        const ChaliAbiRecord *records = module(&count);
+        for (std::size_t at = 0; at < count; ++at)
+        {
+            const ChaliAbiRecord &record = records[at];
+            const auto arity = record.arity < 0 ? std::size_t(-1) : static_cast<std::size_t>(record.arity);
+            if (!native_.addDirect(record.name, arity, Callback{}, record.entry, record.arity, error)) return false;
+        }
+        return true;
+    }
 
     /**
      * 用 Codec 自动桥接 C++ 内置类型，模板参数依次为返回类型、形参类型。

@@ -1,8 +1,11 @@
-/* AOT 模块登记的统一清单；由不同宏展开为独立入口及编译器选择表。 */
+/* AOT 模块登记的统一清单；由不同宏展开为独立入口及编译器选择表。
+ *
+ * 已全部迁移到 C 直通表的模块没有 C++ 胶水文件，这里改成直接登记该模块的入口表；
+ * `std::clock` 原先与数学函数同在一个胶水文件、共用 `GLUE_NO_STD_MATH`，一并归到 math。 */
 CHALI_AOT_MODULE(reference, std_reference_glue::bind(registry, error))
-CHALI_AOT_MODULE(print, std_print_glue::bind(registry, error))
+CHALI_AOT_MODULE(print, registry.bindModule(abi_print_records, error))
 CHALI_AOT_MODULE(collection, collection_glue::bind(registry.native(), error))
-CHALI_AOT_MODULE(string, native_record_glue::bindString(registry.native(), error))
+CHALI_AOT_MODULE(string, registry.bindModule(abi_string_records, error))
 CHALI_AOT_MODULE(big_number, big_number_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(cas, std_cas_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(file, file_native_glue::bind(registry.native(), error))
@@ -22,10 +25,11 @@ CHALI_AOT_MODULE(binary, std_binary_glue::bind(registry, error))
 CHALI_AOT_MODULE(compress, std_compress_glue::bind(registry, error))
 #endif
 #ifndef GLUE_NO_STD_MATH
-CHALI_AOT_MODULE(math, std_math::bind(registry, error))
+CHALI_AOT_MODULE(math,
+                 registry.bindModule(abi_math_records, error) && registry.bindModule(abi_clock_records, error))
 #endif
 #ifndef GLUE_NO_STD_RANDOM
-CHALI_AOT_MODULE(random, std_random::bind(registry, error))
+CHALI_AOT_MODULE(random, registry.bindModule(abi_random_records, error))
 #endif
 #ifndef GLUE_NO_STD_REGEX
 CHALI_AOT_MODULE(regex, std_regex::bind(registry, error))

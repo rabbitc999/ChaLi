@@ -5,6 +5,7 @@
 #pragma once
 #include "heap_allocator.hpp"
 #include "debug_protocol.hpp"
+#include "abi/chali_abi.h"
 
 namespace stackvm
 {
@@ -311,6 +312,8 @@ public:
     {
         std::size_t arity = 0;  ///< 固定实参数量；size_t(-1) 表示由胶水检查的变长参数。
         NativeCallback callback;
+        ChaliAbiEntry direct = nullptr;  ///< 直通入口；非空时优先于 callback，不构造中间容器。
+        int directArity = 0;             ///< 直通入口声明的实参数量；-1 表示由入口自行检查。
     };
 
     /**
@@ -323,6 +326,25 @@ public:
      */
     bool add(const Memory::String &name, std::size_t arity, NativeCallback callback,
              Memory::String *error = nullptr);
+    /**
+     * @brief 注册一个同步宿主原生函数，并附带可选的直通入口。
+     * @param name 原生函数完整名称。
+     * @param arity 固定参数数量；最大 size_t 表示变参。
+     * @param callback 检查值和执行调用的同步函数。
+     * @param direct 直通入口；非空时分派不再构造 `NativeValue` 向量。
+     * @param directArity 直通入口声明的实参数量；-1 表示变参。
+     * @param error 可选注册失败诊断接收器。
+     * @return 名称和回调有效且未重复时为真。
+     */
+    bool addDirect(const Memory::String &name, std::size_t arity, NativeCallback callback,
+                   ChaliAbiEntry direct, int directArity, Memory::String *error = nullptr);
+    /**
+     * @brief 把直通表里尚未登记的入口补进本注册表。
+     * @return 补登记的数量。
+     * @note 供宿主在注册完 C++ 胶水之后调用：已由 C++ 绑定的名字保持原样，
+     *       其余入口以纯直通方式登记，使删除对应 C++ 胶水文件后调用仍然可达。
+     */
+    std::size_t bindDirectEntries();
     /**
      * @brief 移除原生函数并使预绑定缓存失效。
      * @param name 已注册函数名称。

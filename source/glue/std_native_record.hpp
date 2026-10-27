@@ -101,31 +101,6 @@ std::int64_t referenceHandle(stackvm::NativeCallContext &context, std::int64_t r
 bool bind(stackvm::NativeRegistry &registry, const char *name, std::size_t arity,
           Value (*operation)(State &, const Memory::Vector<Value> &), Memory::String *error, bool referenceFirst = false);
 
-/**
- * @brief 浮点 → 文本：默认保留 3 位小数（语言的默认），去掉尾随的 0。
- *
- * 与 `%f` 的默认精度保持一致：`3.5` 打成 `3.5`（不是 `3.500`），`2.0` 打成 `2.0`。
- * @param value 值。
- * @param precision 小数位数。
- * @return 文本。
- */
-Memory::String nativeFloatText(double value, int precision);
-
-/**
- * @brief `__std_str_of_flt(值) -> 新串地址`（默认 3 位小数，`精度` 可覆盖）。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
- */
-Value strOfFlt(State &ctx, const Memory::Vector<Value> &args);
-
-/**
- * @brief 注册浮点数的宿主文本格式边界。
- * @param registry 目标原生函数表。
- * @param error 注册失败的原因。
- * @return 浮点格式入口绑定成功时返回 true。
- */
-bool bindString(stackvm::NativeRegistry &registry, Memory::String *error = nullptr);
 }  // namespace native_record_glue
 
 #endif

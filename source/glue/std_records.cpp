@@ -7,7 +7,6 @@
 #include "std_cas.hpp"
 #include "std_file.hpp"
 #include "std_process.hpp"
-#include "std_print.hpp"
 
 namespace chali_standard_records
 {
@@ -19,6 +18,9 @@ namespace chali_standard_records
  */
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
-    return std_reference_glue::bind(registry, error) && collection_glue::bind(registry.native(), error) && native_record_glue::bindString(registry.native(), error) && big_number_glue::bind(registry.native(), error) && std_cas_glue::bind(registry.native(), error) && file_native_glue::bind(registry.native(), error) && std_process_glue::bind(registry, error) && std_print_glue::bind(registry, error);
+    const bool ok = std_reference_glue::bind(registry, error) && collection_glue::bind(registry.native(), error) && big_number_glue::bind(registry.native(), error) && std_cas_glue::bind(registry.native(), error) && file_native_glue::bind(registry.native(), error) && std_process_glue::bind(registry, error);
+    /* `std::lang` 的标准错误流输出已全部是 C 直通入口，没有 C++ 胶水可调。 */
+    registry.bindDirectEntries();
+    return ok;
 }
 }  // namespace chali_standard_records

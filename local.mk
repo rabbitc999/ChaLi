@@ -2,6 +2,12 @@ ifeq ($(origin CC),default)
 CC := gcc
 endif
 
+# C 侧直通胶水使用 C11；与 C++ 胶水一起并入宿主记录库。
+ifeq ($(origin CFLAGS),default)
+CFLAGS := -std=c11
+endif
+CFLAGS += -Isource -O2 -DNDEBUG
+
 # local.mk —— 生成工程自己的挂载点（生成的 Makefile 末尾有 `-include local.mk`）。
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：
@@ -82,7 +88,9 @@ $(FRONTEND_BUILD)/generator_cli.o: source/generator/generator_cli.cpp source/gen
 	$(CXX) $(CXXFLAGS) -MMD -MP -DCHALI_GENERATOR_NO_MAIN=1 -I. -c $< -o $@
 
 # 注意顺序：libparser.a 引用了 ast / stackvm 的符号，必须排在它们前面。
-LDLIBS   += $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
+# 直通 ABI 桥接在宿主胶水库里引用 VM 核心的上下文与堆接口，两者互相引用，
+# 用 start-group 保证静态库单遍扫描也能解全部符号。
+LDLIBS   += $(AST_LIB) -Wl,--start-group $(VM_LIB) $(HOST_LIB) -Wl,--end-group $(PP_LIB)
 ifeq ($(shell uname -s),Linux)
 LDLIBS   += -ldl
 endif
@@ -153,7 +161,18 @@ $(HOST_BUILD)/ipage_%.o: library/ipage/source/ipage/%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(IPAGE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
-$(HOST_LIB): $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS)
+# 直通 ABI：C 胶水按模块分文件编译，命名沿用 abi_*.c。
+CHALI_ABI_C_SRCS := $(wildcard source/abi/*.c)
+CHALI_ABI_CXX_SRCS := $(wildcard source/abi/*.cpp)
+CHALI_ABI_OBJS := $(patsubst source/abi/%.c,$(HOST_BUILD)/abi_%.o,$(CHALI_ABI_C_SRCS)) \
+                     $(patsubst source/abi/%.cpp,$(HOST_BUILD)/abi_%.o,$(CHALI_ABI_CXX_SRCS))
+$(HOST_BUILD)/abi_%.o: source/abi/%.c | $(HOST_BUILD)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+$(HOST_BUILD)/abi_%.o: source/abi/%.cpp | $(HOST_BUILD)
+	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+$(CHALI_ABI_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+
+$(HOST_LIB): $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
 	$(AR) $(ARFLAGS) $@ $^
 

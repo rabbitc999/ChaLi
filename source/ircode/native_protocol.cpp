@@ -158,15 +158,16 @@ double NativeValue::asFloat() const
  * @param error 接收失败原因的错误信息。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
-bool NativeRegistry::add(const Memory::String &name, std::size_t arity, NativeCallback callback,
-                         Memory::String *error)
+bool NativeRegistry::addDirect(const Memory::String &name, std::size_t arity, NativeCallback callback,
+                                ChaliAbiEntry direct, int directArity, Memory::String *error)
 {
     if (name.empty())
     {
         if (error != nullptr) *error = "原生函数名不能为空";
         return false;
     }
-    if (!callback)
+    /* 直通入口允许单独登记：此时没有 C++ 回调，分派完全走 C 侧。 */
+    if (!callback && direct == nullptr)
     {
         if (error != nullptr) *error = "原生函数 " + name + " 没有 C++ 回调";
         return false;
@@ -183,9 +184,56 @@ bool NativeRegistry::add(const Memory::String &name, std::size_t arity, NativeCa
         return false;
     }
     compactNames_.emplace(key, name);
-    entries_.emplace(name, Entry{ arity, std::move(callback) });
+    Entry entry;
+    entry.arity = arity;
+    entry.callback = std::move(callback);
+    entry.direct = direct;
+    entry.directArity = directArity;
+    entries_.emplace(name, std::move(entry));
     ++revision_;
     return true;
+}
+
+/**
+ * @brief 注册一个同步宿主原生函数，不附加直通入口。
+ * @param name 原生函数完整名称。
+ * @param arity 固定参数数量；最大 size_t 表示变参。
+ * @param callback 检查值和执行调用的同步函数。
+ * @param error 可选注册失败诊断接收器。
+ * @return 名称和回调有效且未重复时为真。
+ */
+bool NativeRegistry::add(const Memory::String &name, std::size_t arity, NativeCallback callback,
+                         Memory::String *error)
+{
+    return addDirect(name, arity, std::move(callback), nullptr, 0, error);
+}
+
+/**
+ * @brief 把直通表里尚未登记的入口补进本注册表。
+ * @return 补登记的数量。
+ */
+std::size_t NativeRegistry::bindDirectEntries()
+{
+    std::size_t total = 0;
+    std::size_t registered = 0;
+    const auto *records = chali_abi_records(&total);
+    for (std::size_t at = 0; at < total; ++at)
+    {
+        const Memory::String name(records[at].name);
+        if (entries_.count(name) != 0u) continue;
+        const auto key = symbols::key(symbols::logicalId(name));
+        if (compactNames_.count(key) != 0u) continue;
+        Entry entry;
+        entry.arity = records[at].arity < 0 ? static_cast<std::size_t>(-1)
+                                            : static_cast<std::size_t>(records[at].arity);
+        entry.direct = records[at].entry;
+        entry.directArity = records[at].arity;
+        compactNames_.emplace(key, name);
+        entries_.emplace(name, std::move(entry));
+        ++registered;
+        ++revision_;
+    }
+    return registered;
 }
 
 /**

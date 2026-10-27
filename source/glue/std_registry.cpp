@@ -3,7 +3,6 @@
 #include "std_reference.hpp"
 #include "std_collection.hpp"
 #include "std_file.hpp"
-#include "std_print.hpp"
 #include "std_big_number.hpp"
 #include "std_cas.hpp"
 
@@ -19,12 +18,6 @@
 #include "std_filesystem.hpp"
 #endif
 
-#ifndef GLUE_NO_STD_MATH
-#include "std_math.hpp"
-#endif
-#ifndef GLUE_NO_STD_RANDOM
-#include "std_random.hpp"
-#endif
 #ifndef GLUE_NO_STD_REGEX
 #include "std_regex.hpp"
 #endif
@@ -79,9 +72,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 {
     bool ok = true;
     ok = std_reference_glue::bind(registry, error) && ok;
-    ok = std_print_glue::bind(registry, error) && ok;
     ok = collection_glue::bind(registry.native(), error) && ok;
-    ok = native_record_glue::bindString(registry.native(), error) && ok;
     ok = big_number_glue::bind(registry.native(), error) && ok;
     ok = std_cas_glue::bind(registry.native(), error) && ok;
     ok = file_native_glue::bind(registry.native(), error) && ok;
@@ -99,22 +90,6 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
     if (!std_compress_glue::bind(registry, error)) ok = false;
-#endif
-#ifndef GLUE_NO_STD_MATH
-    Memory::String mathError;
-    if (!std_math::bind(registry, &mathError))
-    {
-        if (error) *error = mathError;
-        ok = false;
-    }
-#endif
-#ifndef GLUE_NO_STD_RANDOM
-    Memory::String randomError;
-    if (!std_random::bind(registry, &randomError))
-    {
-        if (error) *error = randomError;
-        ok = false;
-    }
 #endif
 #ifndef GLUE_NO_STD_REGEX
     Memory::String regexError;
@@ -180,6 +155,9 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
         ok = false;
     }
 #endif
+    /* 已经迁移到 C 直通表的模块（print / math / clock / random）在这里补齐：
+     * 它们没有对应的 C++ 胶水文件，只能靠直通表自注册；已由 C++ 绑定的名字保持不变。 */
+    registry.bindDirectEntries();
     return ok;
 }
 

@@ -1,6 +1,21 @@
 {
  "versions": [
   {
+   "version": "1.0.9",
+   "title": "直通 C 胶水：原生调用去掉中间层",
+   "entries": [
+    "新增 source/abi 直通 ABI：ChaliAbiFrame 帧携带槽数组、类别数组与返回位模式，ChaliAbiEntry 是统一的 void(*)(ChaliAbiFrame*) 入口，ChaliAbiRecord 组成编译期常量入口表。一次宿主调用从原来的六层中间结构（按值拷贝上下文、kSlotNatives 六十三项线性查找、NativeRegistry 两次映射查找、NativeValue 向量堆分配、Memory::Function 类型擦除、Codec 字符串整串往返）压缩为一次函数指针调用。",
+    "原生函数在绑定期即解析成直通入口（Registry::bind 调 chali_abi_resolve），运行期不再做字符串查找；入口表在首次使用时排序一次，之后二分查找。直通表支持无人登记的自注册（bindDirectEntries），已迁移模块不依赖 C++ 胶水也仍然可达。",
+    "std::math（36 项，含 __xxx64 双精度变体）、std::clock（nowNanos/nowMs）、std::random（9 项）、std::lang 的标准错误流输出（__std_stderr_write/__std_eprint/__std_eprintln）与浮点文本格式化（__std_str_of_flt，即 `{}` 打印浮点走的唯一宿主入口）全部改写为 C，分别落在 source/abi/abi_math.c、abi_clock.c、abi_random.c、abi_print.c、abi_string.c；对应 C++ 胶水文件 std_math.cpp、std_random.cpp、std_print.cpp 及其头文件删除，std_native_record.cpp 里的浮点格式化实现一并移除。",
+    "随机数改用 splitmix64，状态空间 2^64，接口语义（创建／取值／复制／释放）与区间约定保持等价，但不保证与旧实现的取值序列一致；example/expected/std_math_clock_random.txt 与 std_parse_random_path_memory.txt 的固定种子序列按新实现更新。",
+    "字符串实参走零拷贝视图：堆字符串经 Heap::borrowBytes 直接取物理指针，数据区字面量直接取 binary 起始地址并扫描到零，不再为每次调用复制整串；chali_host_call 不再按值拷贝 NativeContext，NativeValue 向量改为仅在确实需要时构造。",
+    "宿主记录托管交由 C 侧回调：新增 chali_abi_record_make/_borrow/_clone/_release，按类型名缓存地址稳定的 NativeRecordType 描述符。描述符名称改用宿主堆字符串，修正静态登记表析构晚于运行时 arena 收尾所导致的「仍有活动块」中止。",
+    "构建与产物：local.mk 增加 C11 编译单元与 abi/ 目标，静态库改为 --start-group 环形解析；内核、chali gen 导出工程与内嵌资产清单同步包含 source/abi，生成工程可直接使用直通胶水。",
+    "新增 tests/chali_abi_table.cpp 自检，覆盖入口表严格升序、按名称解析与表项一致、未知名称／空名／空指针查询。",
+    "基准对照（同一份 5000 万次 std::math::sqrt 调用的循环，两侧都用 checked AOT 编译出的原生程序，各 12 轮取中位数）：44.13 秒 → 39.36 秒，缩短 10.8%，折算单次宿主调用的固定开销约减少 95 纳秒。其余耗时来自内建表 kSlotNatives 的线性扫描与循环本身，不在本次范围内。"
+   ]
+  },
+  {
    "version": "1.0.8",
    "title": "AOT 原生运行、常量池裁剪与原生调试",
    "entries": [

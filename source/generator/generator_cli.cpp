@@ -675,7 +675,7 @@ int runCli(int argc, char **argv)
             ok = copy(mc / "source" / relative, relative) && ok;
         }
     }
-    for (const char *name : {"std_math.hpp", "std_random.hpp", "std_regex.hpp",
+    for (const char *name : {"std_regex.hpp",
                              "std_native_record.hpp", "std_big_number.hpp", "std_file.hpp", "std_file_api.hpp", "std_desktop_file.hpp",
                              "std_signal.hpp",
                              "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_binary.hpp", "std_linalg.hpp", "std_parse.hpp",
@@ -695,6 +695,12 @@ int runCli(int argc, char **argv)
         const auto extension = entry.path().extension().string();
         if (entry.is_regular_file() && (extension == ".hpp" || extension == ".h" || extension == ".cpp" || extension == ".inc"))
             ok = copy(entry.path(), "glue/" + entry.path().filename().u8string()) && ok;
+    }
+    for (const auto &entry : fs::directory_iterator(mc / "source/abi"))
+    {
+        const auto extension = entry.path().extension().string();
+        if (entry.is_regular_file() && (extension == ".h" || extension == ".hpp" || extension == ".c" || extension == ".cpp"))
+            ok = copy(entry.path(), "abi/" + entry.path().filename().u8string()) && ok;
     }
     for (const auto &entry : fs::directory_iterator(mc / "source/std"))
         if (entry.is_regular_file() && entry.path().extension() == ".chl")
