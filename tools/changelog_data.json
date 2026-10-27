@@ -22,7 +22,11 @@
         "缺省中间产物改到隐藏的 .chali/ 下，运行与导出完成后只保留标准库预编译缓存；--keep-artifacts 保留全部产物，显式 --out 时按用户路径全部保留。",
         "aot 导出与 emit 的产物改为与源文件同级（Windows 可执行文件带 .exe，其他平台无后缀），不再落在中间产物目录。",
         "修复 --shared 复杂 ABI 宿主封送编译找不到 stackvm.hpp：运行时资产根补充 ircode 头文件搜索路径。",
-        "性能文档重写为 AOT 跨语言对照：C、C++、Rust、Go、Java、Node、Lua、Python 同一份算法与同一 C 计时壳，记录 checked 与 unchecked 差距与原始样本。"
+        "性能文档重写为 AOT 跨语言对照：C、C++、Rust、Go、Java、Node、Lua、Python 同一份算法与同一 C 计时壳，记录 checked 与 unchecked 差距与原始样本。",
+        "删除规范化中间表示（quad_ir）的构建与转储死代码及对应回归：自原生迁移后无调用者，CHALI_DUMP_IR 也不再存在，文档与流程图同步去掉该开关。",
+        "tests/chali_tool.py 改测当前统一入口：run/interpret 别名、emit 产物、隐藏 .chali 清理、已删除的 .svmb 提示与 aot --emit-llvm。",
+        "tests/chali_native_callbacks.py 改为 AOT 同步回调回归：用 #abi 声明的 C 动态库调用具名函数、内联与捕获闭包、float32/bool/void、mut& 引用、高阶与重入，并验证 panic 穿过 C 帧传播。",
+        "跨语言基准的 C 计时壳改为 -O3（内核仍为 -O3 -flto=full），重跑 1.0.8 全套数据：标量四项 18～28 倍于 C，checked 与 unchecked 相差 0～8%。"
       ]
     },
     {

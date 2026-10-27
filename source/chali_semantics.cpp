@@ -12,7 +12,6 @@
 #include "ast.hpp"
 #include "stackvm.hpp"
 #include "../source/ircode/value_text.hpp"
-#include "quad_ir.hpp"
 #include "chali_glue.hpp"
 #include "chali_generic.hpp"
 #include "chali_resource_cleanup.hpp"

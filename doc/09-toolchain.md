@@ -46,7 +46,6 @@ chali clear out build/compiler
 
 | 开关 | 作用 |
 | --- | --- |
-| `CHALI_DUMP_IR=1` | 打出规范化中间表示（基本块、前驱后继、定义-使用与回边） |
 | `CHALI_DUMP_FRAME=1` | 打出每个函数的帧布局（符号 → 槽号）与分配自检结论 |
 | `CHALI_NO_SLOT_REUSE=1` | 退回「形参在前 + 声明顺序一人一槽」，不看活跃性 |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | 一人一槽但仍走分配器，用来分辨「别名」与「编号」两类问题 |

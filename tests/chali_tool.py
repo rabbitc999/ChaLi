@@ -1,4 +1,4 @@
-"""验证 VM 命令、四元式与字节码产物、未知文件和项目运行方式。"""
+"""验证统一入口的命令选择、四元式与原生导出产物、未知文件诊断，以及 .svmb 的删除提示。"""
 from compiler_path import compiler_path
 from pathlib import Path
 import os
@@ -20,21 +20,34 @@ def run(*arguments, cwd=ROOT, success=True, language='zh'):
 
 
 def main():
-    """检查 VM 与 AOT 命令选择、交付产物及项目配置优先级。"""
+    """检查运行方式别名、导出产物、已删除入口的诊断与未知文件提示。"""
     with tempfile.TemporaryDirectory(prefix='chali-vm-tool-') as directory:
         work = Path(directory)
         source = work / 'main.chl'
         source.write_text(SOURCE, encoding='utf-8')
+        # 运行方式的四种写法都要落到同一个原生执行路径，显式 --out 保留中间产物。
         for options in [('run', source), ('interpret', source), ('--mode', 'interpret', source),
                         ('--run-mode=interpret', source)]:
-            result = run(*options, '--out', work / 'run')
+            prefix = work / 'run'
+            result = run(*options, '--out', prefix)
             assert result.stdout == 'VM command OK\n' and not result.stderr, result
-        for command in ['emit', 'svmb']:
-            prefix = work / command
-            result = run(command, source, 'out', prefix, '--debug')
-            assert not result.stdout and not result.stderr, result
-            assert all(prefix.with_suffix(suffix).is_file() for suffix in ['.quad', '.data.bin', '.layout'])
-            assert prefix.with_suffix('.svmb').is_file() == (command == 'svmb')
+            assert prefix.with_suffix('.quad').is_file(), '显式 --out 应保留中间产物'
+        # 未给 --out 时中间产物落在隐藏的 .chali/ 下，且运行后只剩标准库缓存。
+        result = run('run', source, cwd=work)
+        assert result.stdout == 'VM command OK\n', result
+        leftovers = sorted(entry.name for entry in (work / '.chali').iterdir())
+        assert leftovers == ['chali-stdlib-cache'], leftovers
+        assert not list(work.glob('chali_out*')), '缺省前缀不应落在工作目录'
+        # emit 只出四元式、数据区与布局；--debug 不改变退出状态。
+        prefix = work / 'emit'
+        result = run('emit', source, 'out', prefix, '--debug')
+        assert not result.stdout and not result.stderr, result
+        assert all(prefix.with_suffix(suffix).is_file() for suffix in ['.quad', '.data.bin', '.layout'])
+        # .svmb 已在 1.0.8 删除：命令与 --svmb 选项都要给出明确提示而不是静默忽略。
+        for arguments in [('svmb', source, '--out', work / 'svmb'), ('emit', source, '--svmb', '--out', work / 'svmb')]:
+            result = run(*arguments, success=False)
+            assert '已删除' in result.stderr, result.stderr
+            assert not (work / 'svmb.svmb').exists(), '不应该再写出 .svmb'
         for unknown in ['unknown-command', 'missing.chl']:
             result = run(unknown, cwd=work, success=False)
             assert '不认识的文件' in result.stderr, result.stderr
@@ -48,15 +61,7 @@ def main():
             assert not result.stdout and not result.stderr, result
             assert prefix.with_suffix('.ll').is_file()
             assert not prefix.with_suffix('.exe').exists()
-        project = work / 'project'
-        project.mkdir()
-        (project / 'main.chl').write_text(SOURCE, encoding='utf-8')
-        (project / 'chali.toml').write_text('[package]\nname="vm"\nversion="0.1.0"\n[chali]\nrun="svmb"\n', encoding='utf-8')
-        result = run('--out', 'default', 'main.chl', cwd=project)
-        assert not result.stdout and (project / 'default.svmb').is_file(), result
-        result = run('run', 'main.chl', cwd=project)
-        assert result.stdout == 'VM command OK\n', result
-    print('VM commands: run, check, quadruples, bytecode, unknown files and project configuration passed')
+    print('Unified commands: run aliases, emit artifacts, .chali cleanup, removed .svmb, unknown files and aot all passed')
 
 
 if __name__ == '__main__':

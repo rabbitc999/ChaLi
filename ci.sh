@@ -193,7 +193,6 @@ run_step "检查区间与循环值表达式" "$PYTHON" tests/chali_range_loop_va
 run_step "检查 opcode 资源所有权与借用" "$PYTHON" tests/chali_opcode_resources.py --chali "$CHALI_BIN"
 run_step "检查 opcode 反射与语言服务隐藏" "$PYTHON" tests/chali_opcode_visibility.py --chali "$CHALI_BIN"
 run_step "检查 AOT 共享运行时构建与资产清单同步" "$PYTHON" tools/stackvm_sources.py --check
-run_step "检查规范化中间表示结构" "$PYTHON" tests/quad_ir.py --chali "$CHALI_BIN"
 run_required_step "编译 TOML 注释保存回归" g++ -std=c++17 -O2 source/toml/test_toml.cpp source/toml/toml.cpp source/toml/toml_source.cpp -o tmp/ci/toml-comments
 run_step "运行 TOML 注释保存回归" tmp/ci/toml-comments
 run_step "检查标准对象与 VM 核心隔离" "$PYTHON" tests/opcode_core_isolation.py
@@ -204,7 +203,7 @@ run_step "检查标准库 opcode 存储与资源边界" "$PYTHON" tests/chali_op
 run_step "运行闭包来源与借用控制流回归" "$PYTHON" tests/chali_borrow_flow.py --chali "$CHALI_BIN"
 run_step "运行泛型闭包与特化回归" "$PYTHON" tests/chali_generic_closures.py --chali "$CHALI_BIN"
 run_step "检查模块路径与文本包含指令删除" "$PYTHON" tests/chali_package_paths.py
-run_step "检查 VM 命令与未知文件" "$PYTHON" tests/chali_tool.py
+run_step "检查统一入口、产物布局与未知文件" "$PYTHON" tests/chali_tool.py
 run_step "检查手册与标准库共享索引同步" "$PYTHON" tools/library_reference.py --check
 
 # ---- 以下均为发布门禁（--full）扩展步骤 ----
@@ -312,7 +311,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行发布脚本与归档一致性回归" "$PYTHON" tests/chali_release.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/chali_book_updates.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
-    run_step "运行胶水调用 ChaLi 函数的 VM回归" "$PYTHON" tests/chali_native_callbacks.py
+    run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"
     run_step "运行默认 program 模块回归" "$PYTHON" tests/chali_default_module.py --chali "$CHALI_BIN"
     run_step "运行默认模块与外部宏补全回归" "$PYTHON" tests/chali_lsp_macro_completion.py --chali "$CHALI_BIN"

@@ -47,7 +47,7 @@ def main():
     if result.returncode:
         print(result.stdout + result.stderr)
         return result.returncode
-    # C 与 AOT 复用完全相同的计时和 sink 归并，仅替换被测函数。
+    # C 与 AOT 复用完全相同的计时和 sink 归并，仅替换被测函数；计时壳与内核同为 LLVM O3。
     harness = (HERE / (case + '.c')).read_text(encoding='utf-8')
     harness = '#include <stdint.h>\n#include <stdio.h>\n#include <time.h>\n#include "' + prefix.name + '.h"\n#define REPS 5\nstatic long long now_ns' + harness.split('static long long now_ns', 1)[1]
     harness = re.sub(r'\bwork\b', 'f_work', harness)
@@ -72,7 +72,7 @@ def main():
         parser.error('找不到 LLVM clang，请先恢复 library/llvm 工具链')
     library = prefix.with_suffix('.dll' if os.name == 'nt' else '.so')
     shutil.copy2(library, HERE / library.name)
-    return subprocess.run([clang, '-O2', '-DNDEBUG', str(driver),
+    return subprocess.run([clang, '-O3', '-DNDEBUG', str(driver),
                            str(library), '-lm', '-o', str(HERE / (case + '-aot.exe'))]).returncode
 
 

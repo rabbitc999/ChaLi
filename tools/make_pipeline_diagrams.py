@@ -85,7 +85,7 @@ def compilation(english=False):
         ["LLVM O3 runs the full optimization pipeline" if english else "LLVM O3 完成全部优化",
          "No internal quad optimization passes" if english else "四元式不再做内部优化"], green=True)
     outputs = [
-        (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Inspect with CHALI_DUMP_IR"] if english else ["生成的四元式、数据区与布局", "检查：CHALI_DUMP_IR"]),
+        (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Diff with --out kept files"] if english else ["生成的四元式、数据区与布局", "用 --out 保留后逐行对比"]),
         (560, "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
         (1080, "AOT · native export" if english else "AOT · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]

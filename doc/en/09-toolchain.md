@@ -39,7 +39,6 @@ Back-end debugging switches change diagnostics or the execution path, never prog
 
 | Switch | Effect |
 | --- | --- |
-| `CHALI_DUMP_IR=1` | Print the normalized IR (basic blocks, predecessors and successors, def-use, back edges) |
 | `CHALI_DUMP_FRAME=1` | Print each function's frame layout (symbol → slot) plus the allocator self-check result |
 | `CHALI_NO_SLOT_REUSE=1` | Fall back to "parameters first, then one slot per declaration in order" |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | One slot per symbol but still through the allocator — separates aliasing bugs from numbering bugs |

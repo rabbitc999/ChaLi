@@ -23,7 +23,6 @@ native_value_text.cpp
 object_store.cpp
 object_values.cpp
 quad_assembly.cpp
-quad_ir.cpp
 quad_text.cpp
 reflection.cpp
 register_allocate.cpp
