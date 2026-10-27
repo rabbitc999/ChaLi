@@ -93,8 +93,6 @@ inline constexpr Message messages[] = {
     {"  --include-path 目录    追加 include 搜索目录\n", "  --include-path DIR     Add an include search directory\n"},
     {"  --include-path 目录    追加模块搜索目录\n", "  --include-path DIR    Add a module search directory\n"},
     {"  --incremental          跨次复用模块预处理与完整编译产物\n", "  --incremental          Reuse module preprocessing and compiled artifacts\n"},
-    {"  --input \"文本\"        `input(变量);` 的输入项（空白分隔）\n", "  --input \"TEXT\"        Whitespace-separated input for input(variable);\n"},
-    {"  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n", "  --input \"TEXT\"        Whitespace-separated input values; otherwise read standard input\n"},
     {"  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n", "  --max-restarts N       Maximum soft restarts (default 3; enables --watchdog)\n"},
     {"  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n", "  --memory-size BYTES    Runtime memory capacity (default: 512MiB; minimum: 64)\n"},
     {"  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n", "  --no-compress-symbols  Override configuration and disable symbol compression\n"},

@@ -1097,7 +1097,7 @@ void M_SetProgram(int topList);
  * @param outPrefix  产物前缀：生成 `<前缀>.quad` / `.data` / `.data.bin` / `.data.h` / `.layout`。
  * @param run        非 0 时再用 source/ircode 组装执行一遍，把输出写到 stdout。
  * @param emitBinary 非 0 时把组装结果写成 `<前缀>.svmb`。
- * @param inputText  `input(变量);` 要读的输入项（空白分隔，按顺序取；空 = 没有输入）。
+ * @param inputText  已废弃：输入一律来自标准输入；传空指针即可。
  * @return 0 成功；失败时 M_LastError() 给出原因。
  */
 int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBinary,

@@ -2447,13 +2447,12 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
 }
 
 /**
- * @brief 直接创建原生子进程并继承输出，按需提供隔离的标准输入。
+ * @brief 直接创建原生子进程并继承标准输入、输出与错误流。
  * @param options 编译输出路径。
  * @param arguments 用户程序参数。
- * @param input 指定输入内容，空指针时继承输入。
  * @return 子进程退出码，启动或等待失败返回一。
  */
-int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments, const Memory::String *input)
+int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments)
 {
     namespace fs = std::filesystem;
     const auto product = fs::absolute(fs::u8path(std::string(options.outputPrefix.c_str())
@@ -2461,32 +2460,13 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
         + ".exe"
 #endif
     ));
-    fs::path directory, inputPath;
-    std::error_code error;
-    if (input)
-    {
-        const auto root = chali_temp::root();
-        for (std::size_t attempt = 0; attempt < 100u; ++attempt)
-        {
-            directory = root / ("native-input-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(attempt));
-            if (fs::create_directory(directory, error)) break;
-            directory.clear();
-        }
-        if (directory.empty()) return 1;
-        inputPath = directory / "stdin";
-        std::ofstream stream(inputPath, std::ios::binary);
-        stream.write(input->data(), static_cast<std::streamsize>(input->size()));
-        stream.put('\n');
-        if (!stream) { fs::remove_all(directory, error); return 1; }
-    }
     int result = 1;
 #ifdef _WIN32
     std::wstring command = tool_console::quoteArgument(product.wstring());
     for (const auto &argument : arguments) command += L" " + tool_console::quoteArgument(fs::u8path(std::string(argument.c_str())).wstring());
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
-    SECURITY_ATTRIBUTES security{ sizeof(security), nullptr, TRUE };
-    HANDLE source = input ? CreateFileW(inputPath.c_str(), GENERIC_READ, FILE_SHARE_READ, &security, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr) : GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE source = GetStdHandle(STD_INPUT_HANDLE);
     startup.dwFlags = STARTF_USESTDHANDLES;
     startup.hStdInput = source;
     startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -2509,7 +2489,6 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
         CloseHandle(process.hProcess);
     }
     if (job) CloseHandle(job);
-    if (input && source != INVALID_HANDLE_VALUE) CloseHandle(source);
 #else
     std::vector<std::string> storage{ product.string() };
     for (const auto &argument : arguments) storage.emplace_back(argument.c_str());
@@ -2519,12 +2498,6 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
     const pid_t child = fork();
     if (child == 0)
     {
-        if (input)
-        {
-            const int source = open(inputPath.c_str(), O_RDONLY);
-            if (source < 0 || dup2(source, STDIN_FILENO) < 0) _exit(127);
-            close(source);
-        }
         execv(product.c_str(), values.data());
         _exit(127);
     }
@@ -2536,7 +2509,6 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
         if (waited == child) result = WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
     }
 #endif
-    if (!directory.empty()) fs::remove_all(directory, error);
     return result;
 }
 }  // namespace chali_aot

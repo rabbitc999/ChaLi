@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""绘制中英文编译、运行流程图；沿用总览图主题，三倍绘制后降采样。"""
+"""绘制中英文编译与 AOT 导出流程图；沿用总览图主题，三倍绘制后降采样。"""
 from pathlib import Path
 import math
 import os
@@ -97,25 +97,6 @@ def compilation(english=False):
     return c
 
 
-def execution(english=False):
-    """绘制 checked 原生运行、发布导出及 GDB 调试路径。"""
-    c = Canvas()
-    title(c, "ChaLi · Native execution" if english else "ChaLi · 原生运行", "AOT machine code; no embedded VM or bytecode" if english else "执行 AOT 机器码，不内置 VM，不导出字节码")
-    for x, head, lines in [
-        (40, "run · checked", ["Compile and execute", "Array and pointer checks"] if english else ["编译并执行原生程序", "开启数组与指针检查"]),
-        (560, "aot · unchecked", ["Native export", "Explicit --checked is available"] if english else ["导出可执行文件或动态库", "可显式开启 --checked"]),
-        (1080, "--debug · GDB", ["DWARF lines and variables", "O0 with symbols"] if english else ["DWARF 源码行与变量", "保留符号并使用 O0"]),
-    ]:
-        box(c, x, 145, 440, head, lines)
-        arrow(c, ((x + 220, 265), (x + 220, 320)))
-    box(c, 40, 320, 1480, "LLVM and native linking" if english else "LLVM 与原生链接", ["Release: O3, GlobalDCE, full LTO and section GC" if english else "发布：O3、全局死代码消除、完整 LTO 与节区回收", "Only reachable data; zero fill at startup" if english else "仅保留可达数据；零初值在启动时恢复"], green=True)
-    arrow(c, ((780, 440), (780, 510)))
-    box(c, 40, 510, 1480, "Native machine code" if english else "原生机器码", ["CPU executes compiled functions" if english else "CPU 直接执行编译后的函数", "No interpreter dispatch loop" if english else "没有解释器指令分派循环"], green=True)
-    arrow(c, ((780, 630), (780, 700)))
-    box(c, 40, 700, 1480, "Runtime services" if english else "原生运行时服务", ["Memory, ownership, host callbacks, threads, I/O and cleanup" if english else "内存、所有权、宿主回调、线程、输入输出与清理"], height=110)
-    return c
-
-
 def aot(english=False):
     """绘制四元式经 LLVM 生成原生产物的两种编译器配置。"""
     c = Canvas()
@@ -165,7 +146,7 @@ def main():
     """生成四套 PNG/SVG 资产，所有文案与几何布局均来自本脚本。"""
     OUT.mkdir(parents=True, exist_ok=True)
     for english in (False, True):
-        for name, draw in (("compilation", compilation), ("execution", execution), ("aot", aot)):
+        for name, draw in (("compilation", compilation), ("aot", aot)):
             path = OUT / f"chali-{name}{'-en' if english else ''}"
             draw(english).save(str(path.with_suffix('.png')), str(path.with_suffix('.svg')))
             if not english:

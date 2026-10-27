@@ -14,10 +14,10 @@ import library_reference as reference
 from library_reference_examples import EXAMPLES
 
 
-def run(command, allowed_stderr=""):
+def run(command, allowed_stderr="", stdin=None):
     """执行命令，失败保留标准输出、错误与实际退出码。"""
     result=subprocess.run(list(map(str,command)),cwd=ROOT,capture_output=True,
-                          text=True,encoding='utf-8',errors='replace',timeout=180)
+                          text=True,encoding='utf-8',errors='replace',timeout=180,input=stdin)
     assert result.returncode==0 and result.stderr==allowed_stderr,(command,result.returncode,result.stdout,result.stderr)
     return result.stdout
 
@@ -93,10 +93,10 @@ def main():
                 compiler=args.reflection_compiler
                 flags=['--reflection']
             expected=ROOT/'example/expected'/name
-            if expected.with_suffix('.in').exists(): flags+=['--input',expected.with_suffix('.in').read_text(encoding='utf-8')]
+            stdinText=expected.with_suffix('.in').read_text(encoding='utf-8') if expected.with_suffix('.in').exists() else None
             if example==EXAMPLES['std::io']: flags+=['--',work/'io.txt']
             output=run([compiler.resolve(),'run',source,'--out',work/name,*flags],
-                       allowed_stderr='stackvm：按回车继续…' if name=='std_pause' else '')
+                       allowed_stderr='stackvm：按回车继续…' if name=='std_pause' else '',stdin=stdinText)
             expected_text=expected.with_suffix('.txt')
             if expected_text.exists(): assert output==expected_text.read_text(encoding='utf-8'),(name,output)
             elif name in ('io','sqlite','watchdog','reflect'): assert output==name+' API ok\n',(name,output)

@@ -86,7 +86,7 @@ It prints `104`. A named closure written this way takes no capture keyword — `
 
 ## Recursive closures and assignment context
 
-Declaring a function variable before assigning a closure that refers to the same binding is a supported feature, not a bug. In this factorial example, the assignment target supplies the complete function signature, so every occurrence of the omitted parameter `x` has type `int64`. The closure refers to the existing `fac` binding and is called after assignment.
+Declaring a function variable before assigning a closure that refers to the same binding is the supported way to write recursive closures: the declaration supplies the complete function signature, the closure body resolves `fac` to that declared binding, and the call happens after assignment. In this factorial example, the assignment target supplies the complete function signature, so every occurrence of the omitted parameter `x` has type `int64`.
 
 ```chali
 void main()
@@ -144,7 +144,7 @@ fib(3)=2
 
 ## Observe deferred execution with a counter
 
-A closure stores its body and environment when created; its body executes when invoked. A counter makes this deferred execution, the sense of lazy evaluation used here, observable. `fn mut[counter](x)` explicitly borrows only `counter` mutably, while `fib` retains its default read-only capture. It computes a local result, increments the counter and returns that result, counting completed calls. The parameter `x` still receives `int64` from the target signature.
+A closure stores its body and environment when created; its body executes when invoked. A counter makes this deferred execution observable — this is not the iterator laziness of chapter 17, only a matter of call timing: the body runs each time the closure is called. `fn mut[counter](x)` explicitly borrows only `counter` mutably, while `fib` retains its default read-only capture. It computes a local result, increments the counter and returns that result, counting completed calls. The parameter `x` still receives `int64` from the target signature.
 
 ```chali
 void main()

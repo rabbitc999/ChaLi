@@ -46,7 +46,7 @@
 | 命令行 | 以 `chali` 开头，直接敲 |
 
 > 命令示例默认使用安装包加入 PATH 的 `chali`。Windows 源码构建产物按版本、LLVM 配置和
-> 平台命名，例如 `chali-1.0.2-llvm-external-windows-x64.exe`；直接运行时应使用实际路径。
+> 平台命名，例如 `chali-1.0.8-llvm-external-windows-x64.exe`；直接运行时应使用实际路径。
 > Linux 当前目录里的编译器使用 `./chali`。安装方法见[安装与多架构构建](../42-installation-packages.md)。
 
 ---

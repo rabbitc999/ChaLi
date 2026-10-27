@@ -1,6 +1,6 @@
 /* gcd.chl —— 欧几里得算法（辗转相除）与最小公倍数。
  *
- *   ./chali samples/gcd.chl --input "1071 462"
+ *   echo "1071 462" | ./chali samples/gcd.chl
  *   → gcd(1071, 462) = 21
  *     lcm(1071, 462) = 23562
  *

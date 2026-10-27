@@ -63,7 +63,7 @@ struct Request
  * @param input 可选的标准输入内容；空指针表示继承当前输入。
  * @return 子进程退出码，启动失败返回一。
  */
-int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments, const Memory::String *input);
+int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments);
 
 /**
  * @brief 取当前编译单元里 `#abi("C", "库", "符号")` 声明的外部 C 函数。

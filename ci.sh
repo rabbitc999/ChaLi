@@ -300,6 +300,7 @@ fi
 if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     # doc/ 各页面的相对链接与图片；`doc/book/` 是独立入门书、不在门禁内，脚本会打印跳过页数。
     run_step "检查文档相对链接" "$PYTHON" tools/check_doc_links.py
+    run_step "检测更改记录外的历史表述残留" "$PYTHON" tests/chali_doc_history.py
     run_step "检查标准库公开符号命名" "$PYTHON" tools/check_std_naming.py
     run_step "检查手册与标准库共享索引同步" "$PYTHON" tools/library_reference.py --check
     run_step "运行原生命令行手册回归" "$PYTHON" tests/chali_man.py

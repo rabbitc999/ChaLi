@@ -18,10 +18,16 @@ namespace stackvm::runtimeDetail
 bool stdinInputDisabled();
 
 /**
- * @brief 取下一项输入：先用 `--input "a b c"` 给的项，用完了就**从标准输入读一项**。
+ * @brief 本进程已经从标准输入消费的输入项数。
+ * @return 已消费项数的引用；用于"第 N 项缺失"类诊断与计数。
+ */
+std::size_t &consumedInputItems();
+
+/**
+ * @brief 取下一项输入：**从标准输入读一项**。
  *
  * 于是调试时可以直接敲，也可以 `echo "abc 3" | chali run x.chl` 喂进去；两项之间按空白
- * 切分，跟 `--input` 一个口径。读到 EOF 返回 false，调用方照旧报"输入不够"。
+ * 切分。读到 EOF 返回 false，调用方照旧报"输入不够"。
  *
  * @param ctx 原生调用上下文。
  * @param out 输出：读到的这一项。
@@ -49,7 +55,7 @@ bool nextInputText(NativeContext &ctx, Memory::String *out);
 Slot readText(NativeContext &ctx, const Memory::Vector<Slot> &);
 
 /**
- * @brief 从宿主输入读取完整行，保留空格；显式输入项各视作一行。
+ * @brief 从标准输入读取完整行，保留空格。
  * @param ctx 调用上下文。
  * @param line 输出行，不含 LF/CRLF。
  * @return 是否读到一行，EOF 返回 false。

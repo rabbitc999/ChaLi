@@ -33,7 +33,7 @@ def main():
         assert '孤立编号子节' in str(error)
     else:
         raise AssertionError('转换器不能重新引入孤立编号子节')
-    for image in ('chali-compilation.png', 'chali-execution.png', 'chali-aot.png'):
+    for image in ('chali-compilation.png', 'chali-aot.png'):
         assert (ROOT/'doc/book/images'/image).read_bytes()==(ROOT/'doc/images'/image).read_bytes(),image
     fixture = "1. 先声明：\n\n   ```chali\n   int64 value = 1;\n   ```\n\n2. 再读取：\n\n   ```chali\n   println(\"{}\", value);\n   ```\n\n- 无序说明：\n\n  ```text\n  output\n  ```"
     rendered = Converter().convert(fixture)
@@ -101,8 +101,26 @@ def main():
         assert result.returncode!=0 and 'temp' in result.stderr and '分支结果类型必须一致' not in result.stderr,result
         kong=(ROOT/'doc/book/15-函数值与闭包.md').read_text(encoding='utf-8')
         assert '鲁镇的码栈' in kong and '违约金零头' in kong and not re.search(r'^\[\d+\]',kong,re.M)
+    # 附录 A 的 <!-- fail --> 示例逐个重跑：必须失败，且文档记载的首条消息真实出现。
+    with tempfile.TemporaryDirectory(prefix='chali-book-fail-') as failFolder:
+        failWork=Path(failFolder)
+        appendix=(ROOT/'doc/book/A-常见错误速查.md').read_text(encoding='utf-8')
+        failBlock=re.compile(r'<!-- fail[^>]*-->\s*```chali\n(.*?)```\s*```text\n(.*?)```',re.S)
+        position=re.compile(r'\S+ 第 \d+ 行(第 \d+ 列)?：')
+        fails=failBlock.findall(appendix)
+        assert fails,'附录 A 缺少 fail 示例'
+        for index,(code,expected) in enumerate(fails):
+            file=failWork/f'appendix-fail{index}.chl';file.write_text(code,encoding='utf-8')
+            result=subprocess.run([str(COMPILER),'run',str(file),'--out',failWork/f'appendix-fail{index}'],cwd=failWork,
+                env=dict(os.environ,CHALI_LANG='zh',CHALI_NO_STDIN_INPUT='1'),capture_output=True,encoding='utf-8',timeout=180)
+            actual=result.stderr.replace('\r\n','\n')
+            lines=actual.splitlines()
+            first=expected.strip().splitlines()[0] if expected.strip() else ''
+            documented=position.sub('',first).strip()
+            assert result.returncode!=0,(index,actual)
+            assert lines and (position.sub('',lines[0]).strip()==documented or documented in actual),(index,first,lines[0] if lines else '')
     assert count>=22,count
-    print(f'新增 {count} 个书本完整程序输出与全部 LaTeX 生成章节一致。')
+    print(f'新增 {count} 个书本完整程序输出、{len(fails)} 个附录失败示例与全部 LaTeX 生成章节一致。')
 
 
 if __name__=='__main__':main()

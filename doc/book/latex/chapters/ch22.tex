@@ -53,6 +53,8 @@ chali aot app.chl --checked --debug --out build/app-debug
 
 \section*{习题}
 
+前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
+
 \begin{enumerate}
 
 \item \texttt{run} 与 \texttt{aot} 的默认检查配置分别是什么？
@@ -61,9 +63,11 @@ chali aot app.chl --checked --debug --out build/app-debug
 
 \item 为什么不能把跨架构编译器构建视为相应 AOT 目标已经验证？
 
+\item 挑战：为 \texttt{app.\allowbreak{}chl} 分别产出 checked 调试产物与 unchecked 发布产物，并在另一台没有安装 ChaLi 的机器（或干净目录）上验证运行。
+
 \end{enumerate}
 
-\section*{参考解答}
+\section*{参考解答与验收要点}
 
 \begin{enumerate}
 
@@ -73,4 +77,24 @@ chali aot app.chl --checked --debug --out build/app-debug
 
 \item 编译器能运行在某架构，不代表 LLVM 后端、运行时和链接资产已经支持或验证该目标。
 
+\item 两条命令分别加 \texttt{--checked --debug} 与默认参数，各产出独立文件；验收时记录编译器版本、目标平台与产物摘要，确认目标机器无需编译器、VM 或 LLVM 动态库即可运行。
+
 \end{enumerate}
+
+\section*{番外：两份行李}
+
+改编自《晏子使楚》。
+
+晏子要出使邻国，楚王吩咐门吏：“晏子带着的行李，一定又多又乱。你们把他拦下，看看里面有没有违禁品。”
+
+晏子只拎了两只箱子过境。第一只箱子贴着“checked”的封条：路上每一步都有人核对——数组不越界，指针不乱指，资源用完就归还。第二只箱子贴着“unchecked”：为了跑得快，封条只盖了启程那一站，路上的安全全凭先前查过的规矩。
+
+楚王开箱验看，问：“为何不把所有箱子都贴上 checked？”晏子答：“开发时我步步核查，是怕自己写错；交付给别人的产物，默认轻装上阵，是因为规矩在出发前已经查过。真要严格，加一道封条就是了，不必把整个驿站搬进行李。”
+
+楚王又问：“那你的行李里怎么还带一个随行的译官？”晏子说：“不需要。我的程序出发前就已编译成当地的原生机器码，落地即走，用不着把每句话现场再翻译一遍。”
+
+门吏在关文上盖了章：两份行李，一封检查，一个落地即走的原生程序。
+
+\subsection*{技术对照}
+
+\texttt{run} 的 checked 与 \texttt{aot} 的 unchecked 是同一套语言规则下的两种交付形态，不是两套安全模型；unchecked 不允许绕过所有权或静态借用规则，只是运行期数组与指针检查的默认开关不同。原生产物在目标机器直接执行，不需要编译器、解释器或 LLVM 动态库随行。跨架构构建编译器不等于相应 AOT 目标已支持，部署前仍按实际目标验证。

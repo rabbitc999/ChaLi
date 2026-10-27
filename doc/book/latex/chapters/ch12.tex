@@ -334,10 +334,10 @@ len(s) = 6
 \par
 \medskip
 \begin{lstlisting}[style=out]
-chali: 运行期错误：字符串下标落在多字节字符中间（String 按字节算）
-出错位置：hello.chl:2（main）
-调用栈（外 → 内）：
-  main  hello.chl:2 [thread 0 ip 41]
+chali aot: panic：字符串下标落在多字节字符中间（String 按字节算）
+出错位置：<内建 std::lang>（字符串下标检查）
+调用栈（内 → 外）：
+  main
 \end{lstlisting}
 \par
 \medskip
@@ -571,7 +571,7 @@ void main()
 \par
 \medskip
 
-\texttt{input\allowbreak{}Line(\allowbreak{})\allowbreak{}} 和 \texttt{input(\allowbreak{}variable)\allowbreak{}} 按空白取项。\texttt{--input} 已按空白切分，每项供新接口视为一行；要保留真实空格和空行，使用终端或标准输入管道。
+\texttt{input\allowbreak{}Line(\allowbreak{})\allowbreak{}} 和 \texttt{read\allowbreak{}Line(\allowbreak{})\allowbreak{}} 一样读取一整行，保留空格与空行。\texttt{input\allowbreak{}Int}、\texttt{input\allowbreak{}Float} 等按空白取项，从标准输入逐项读入；要保留真实空格和空行，用行接口或直接从标准输入管道喂整行文本。
 
 导入 \texttt{std:\allowbreak{}:\allowbreak{}io} 后，\texttt{File\allowbreak{}Stream.\allowbreak{}read\allowbreak{}String(\allowbreak{}count)\allowbreak{}} 从当前游标读至多 count 个字节，\texttt{read\allowbreak{}Line(\allowbreak{})\allowbreak{}} 读一行，\texttt{read\allowbreak{}All\allowbreak{}String(\allowbreak{}max\allowbreak{}Bytes)\allowbreak{}} 读到 EOF。三者返回 \texttt{Result<\allowbreak{}String,\allowbreak{}Io\allowbreak{}Error>\allowbreak{}}；全读默认预算 16 MiB，保留文件换行字节，零字节文本报错。已有按路径的 \texttt{read\allowbreak{}All\allowbreak{}Text(\allowbreak{}path)\allowbreak{}} 继续可用。直接持有 File 句柄时有 \texttt{file\allowbreak{}Read\allowbreak{}String}、\texttt{file\allowbreak{}Read\allowbreak{}Line}、\texttt{file\allowbreak{}Read\allowbreak{}All\allowbreak{}String} 包装，错误会 panic。
 

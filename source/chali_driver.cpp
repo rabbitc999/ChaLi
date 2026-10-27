@@ -1,5 +1,5 @@
 /* ============================================================
- * 入口：chali <源文件.chl> [--out 前缀] [--emit] [--svmb] [--debug] [--input "1 2 3"]
+ * 入口：chali <源文件.chl> [--out 前缀] [--emit] [--svmb] [--debug]
  *                           [-I 目录] [-D 符号[=值]] [--raw] [--deps]
  *
  *   ① 读源文件（不给文件也不给 `--stdin` 时显示帮助）；
@@ -338,7 +338,6 @@ void PrintUsage(std::FILE *out)
              "  --import-dir 目录      追加 import 搜索目录\n",
              "  --include-path 目录    追加模块搜索目录\n",
              "  --incremental          跨次复用模块预处理与完整编译产物\n",
-             "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n",
              "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
              "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n",
              "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
@@ -456,7 +455,6 @@ try
     bool readStdin = false;
     /* 默认产物落在 build/ 下，不和源码混在一起（`--out` 显式给路径时按用户给的来）。 */
     Memory::String prefix = "build/chali_out";
-    Memory::String inputText;
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
     bool abiPrepareOnly = false, abiNoCache = false;
@@ -616,11 +614,6 @@ try
         {
             hardRealtime = true;
             continue;
-        }
-        if (argument == "--watchdog" || argument == "--no-watchdog" || argument == "--max-restarts" || argument == "--watchdog-watermark")
-        {
-            std::fputs("chali: VM 进程内软重启选项已移除；AOT 可使用 std::watchdog 或 --step-limit。\n", stderr);
-            return 2;
         }
         if (argument == "--dap")
         {
@@ -790,12 +783,6 @@ try
             if (!NeedValue(index, argc, "--symbol-map")) return 2;
             symbolMap = argv[++index];
             symbolMapGiven = true;
-            continue;
-        }
-        if (argument == "--input") /* `input(变量);` 的输入项（空白分隔） */
-        {
-            if (!NeedValue(index, argc, "--input")) return 2;
-            inputText = argv[++index];
             continue;
         }
         if (argument == "--raw") /* 跳过前处理：把源文件原样喂给解析器 */
@@ -1309,14 +1296,8 @@ try
     M_SetSharedLibrary(aot && aotOptions.shared);
     M_SetAbiPrepareOnly(abiPrepareOnly);
     M_SetAbiOptions(abiCache, abiBridge, abiWrite, abiNoCache);
-    if (dapEnabled)
-    {
-        std::fputs("chali: VM 调试适配器已移除，请使用 VS Code 原生 AOT 调试配置。\n", stderr);
-        return 2;
-    }
     chali_editor::compilerAnalysis.begin(!analysisTypes.empty());
-    const int code = M_Compile("chali", prefix.c_str(), 0, 0,
-                               inputText.c_str());
+    const int code = M_Compile("chali", prefix.c_str(), 0, 0, nullptr);
     if (!analysisTypes.empty())
     {
         std::string error;
@@ -1503,7 +1484,7 @@ try
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
-        if (run) return chali_aot::executeNative(request.options, programArguments, inputText.empty() ? nullptr : &inputText);
+        if (run) return chali_aot::executeNative(request.options, programArguments);
     }
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);
     if (cache && run == 0 && !checkOnly)

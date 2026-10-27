@@ -242,7 +242,7 @@ Option<Packed const&> packed_snapshot();
 
 \section{宿主胶水：把 C++ 函数注册进来}
 
-不想走动态库、想让 C++ 函数像普通函数一样调？写一个 \texttt{bind\allowbreak{}Cha\allowbreak{}Li\allowbreak{}Glue} 把它注册进工具链：
+不想走动态库、想让 C++ 函数像普通函数一样调？写一个 \texttt{bind\allowbreak{}Cha\allowbreak{}Li\allowbreak{}Glue} 把它注册进你的宿主程序：
 
 \par
 \medskip
@@ -296,7 +296,7 @@ void main()
 
 结构体用继承列表声明普通接口实现；\texttt{impl 类型 :\allowbreak{} 接口 =\allowbreak{} 宿主绑定名;} 则把宿主函数接到单方法接口或转换协议。它不是一套任意 \texttt{impl Type \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 语法。
 
-下面使用工具链自带的演示胶水。实际项目需要先在 C++ 注册同名绑定，不能只写声明就假设运行时存在它。
+下面以一组宿主绑定为例。这些绑定全部由你的宿主程序提供：使用胶水前必须先在 C++ 里注册同名函数，独立 AOT 产物不内置任何演示服务——只写声明并不能让它们存在，示例要在注册了这些绑定的宿主里运行才有意义。
 
 \par
 \medskip
@@ -319,14 +319,6 @@ void main()
     HostHandle<int32> total = demo_cpp_add(left, right);
     println("{} {}", cast<uint64>(total), total.hostValue());
 }
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-42 42
 \end{lstlisting}
 \par
 \medskip

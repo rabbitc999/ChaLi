@@ -1,6 +1,6 @@
 /* powmod.chl —— 快速幂（二进制幂）：算 base^exp mod m。
  *
- *   ./chali samples/powmod.chl --input "3 100 7"
+ *   echo "3 100 7" | ./chali samples/powmod.chl
  *   → 3^100 mod 7 = 4
  *
  * 每一步都取模、指数每次折半：最多约 log2(exp) 次乘法。

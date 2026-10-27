@@ -413,14 +413,8 @@ bool run(preprocess::Result &result, Memory::String &error)
             std::size_t before = at;
             while (before > 0 && std::isspace(static_cast<unsigned char>(result.text[before - 1u]))) --before;
             const bool trailing = before > 0 && result.text[before - 1u] == '>';
-            // 只有类型后面直接是函数体时才算已移除的 lambda 箭头；变量声明与形参位置交给文法。
             std::size_t after = skipTypeText(result.text, bodyOpen + 2u);
             while (after < result.text.size() && std::isspace(static_cast<unsigned char>(result.text[after]))) ++after;
-            if (!trailing && after < result.text.size() && result.text[after] == '{')
-            {
-                error = "0.12.0 已移除 lambda 箭头返回类型，请迁移为 int64 fn(int64 x) { ... }；推导返回类型时省略箭头";
-                return false;
-            }
             output += result.text.substr(cursor, at + keywordLength - cursor);
             cursor = at + keywordLength;
             continue;

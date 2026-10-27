@@ -43,7 +43,7 @@ void *NativeCallContextImpl::hostService(const Memory::String &name) const
  * @return 已消费项数。
  */
 std::size_t NativeCallContextImpl::inputPosition() const
-{ return context_.inputIndex ? *context_.inputIndex : 0u; }
+{ return consumedInputItems(); }
 
 /**
  * @brief 按字节读一段（字符串是"以 `\0` 结尾的字节串"，跨 8 字节槽）。

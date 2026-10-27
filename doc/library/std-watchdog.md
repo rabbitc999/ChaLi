@@ -32,7 +32,7 @@ import std::watchdog;
 
 /** @brief 验证看门狗默认关闭、启用结果，以及时间维度（超时未喂狗）同样默认关闭；不请求实际重启。 */
 void main() {
-    Result<bool,WatchdogError> disabled = std::watchdog::requestRestart();
+    Result<int64,WatchdogError> disabled = std::watchdog::requestRestart();
     assert(disabled.isErr());
     Result<int64,WatchdogError> invalid = std::watchdog::enable(-1);
     assert(invalid.isErr());

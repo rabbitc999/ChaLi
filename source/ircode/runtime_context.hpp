@@ -83,8 +83,6 @@ struct NativeContext
     OutputSink textSink = nullptr;                                     ///< 文本输出下沉（`Machine::setOutputSink`）；空 = 只进桶。
     void *textSinkUser = nullptr;                                      ///< 下沉上下文。
     const bool *textKeep = nullptr;                                    ///< 有下沉时是否仍累积进文本桶；空 = 累积。
-    const Memory::Vector<Memory::String> *input = nullptr;             ///< 输入项（按顺序取）。
-    std::size_t *inputIndex = nullptr;                                 ///< 已经取到第几项。
     const Memory::Vector<Memory::String> *programArguments = nullptr;  ///< 程序入口参数。
     NativeInvoker *invoker = nullptr;                                  ///< 同步调用 CHALI 函数指针。
     struct ObjectStore *objects = nullptr;                             ///< 运行期通用对象表。

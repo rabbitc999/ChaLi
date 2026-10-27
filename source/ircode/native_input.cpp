@@ -23,12 +23,21 @@ bool stdinInputDisabled()
 }
 
 /**
- * 取下一项输入：先用 `--input "a b c"` 给的项，用完了就**从标准输入读一项**。
+ * @brief 本进程已经从标准输入消费的输入项数。
+ * @return 已消费项数的引用；用于"第 N 项缺失"类诊断与计数。
+ */
+std::size_t &consumedInputItems()
+{
+    static std::size_t count = 0;
+    return count;
+}
+
+/**
+ * 取下一项输入：**直接从标准输入读一项**，两项之间按空白切分。
  *
- * 于是调试时可以直接敲，也可以 `echo "abc 3" | chali run x.chl` 喂进去；两项之间按空白
- * 切分，跟 `--input` 一个口径。读到 EOF 返回 false，调用方照旧报"输入不够"。
+ * 于是调试时可以直接敲，也可以 `echo "abc 3" | chali run x.chl` 喂进去。读到 EOF 返回
+ * false，调用方照旧报"输入不够"。
  *
- * @param ctx 原生调用上下文。
  * @param out 输出：读到的这一项。
  * @return 取到返回 true。
  */
@@ -49,15 +58,7 @@ int nativeInputByte()
  */
 bool nextInputText(NativeContext &ctx, Memory::String *out)
 {
-    if (ctx.input == nullptr || ctx.inputIndex == nullptr)
-    {
-        return false;
-    }
-    if (*ctx.inputIndex < ctx.input->size())
-    {
-        *out = (*ctx.input)[(*ctx.inputIndex)++];
-        return true;
-    }
+    (void)ctx;
     if (stdinInputDisabled())
     {
         return false;
@@ -81,7 +82,7 @@ bool nextInputText(NativeContext &ctx, Memory::String *out)
         return false;
     }
     *out = item;
-    ++*ctx.inputIndex; /* 与 --input 共用同一个序号 */
+    ++consumedInputItems();
     return true;
 }
 
@@ -92,34 +93,25 @@ bool nextInputText(NativeContext &ctx, Memory::String *out)
  */
 Slot readText(NativeContext &ctx, const Memory::Vector<Slot> &)
 {
-    if (ctx.input == nullptr || ctx.inputIndex == nullptr)
-    {
-        ctx.error = "这个程序没有接输入，取不到字符串";
-        return Slot::fromInt(0);
-    }
     Memory::String text;
     if (!nextInputText(ctx, &text))
     {
-        ctx.error = "输入不够（第 " + Memory::toString(*ctx.inputIndex + 1u) + " 项缺失）";
+        ctx.error = "输入不够（第 " + Memory::toString(consumedInputItems() + 1u) + " 项缺失）";
         return Slot::fromInt(0);
     }
     return Slot::fromInt(static_cast<std::int64_t>(nativeAllocString(ctx, text)));
 }
 
 /**
- * @brief 从宿主输入读取完整行，保留空格；显式输入项各视作一行。
+ * @brief 从标准输入读取完整行，保留空格。
  * @param ctx 调用上下文。
  * @param line 输出行，不含 LF/CRLF。
  * @return 是否读到一行，EOF 返回 false。
  */
 bool nextInputLine(NativeContext &ctx, Memory::String &line)
 {
+    (void)ctx;
     line.clear();
-    if (ctx.input && ctx.inputIndex && *ctx.inputIndex < ctx.input->size())
-    {
-        line = (*ctx.input)[(*ctx.inputIndex)++];
-        return true;
-    }
     if (stdinInputDisabled()) return false;
     bool any = false, terminated = false;
     for (int byte = nativeInputByte(); byte != EOF; byte = nativeInputByte())
@@ -138,7 +130,6 @@ bool nextInputLine(NativeContext &ctx, Memory::String &line)
         line += static_cast<char>(byte);
     }
     if (terminated && !line.empty() && line.back() == '\r') line.pop_back();
-    if (any && ctx.inputIndex) ++*ctx.inputIndex;
     return any;
 }
 /**
@@ -219,14 +210,10 @@ Slot pauseForDebug(NativeContext &, const Memory::Vector<Slot> &)
  */
 bool takeInput(NativeContext &ctx, const char *name, Memory::String *value)
 {
-    if (ctx.input == nullptr || ctx.inputIndex == nullptr)
-    {
-        ctx.error = Memory::String("这个程序没有接输入，无法调用 std::lang::") + name;
-        return false;
-    }
+    (void)name;
     if (!nextInputText(ctx, value))
     {
-        ctx.error = "输入不够（第 " + Memory::toString(*ctx.inputIndex + 1u) + " 项缺失）";
+        ctx.error = "输入不够（第 " + Memory::toString(consumedInputItems() + 1u) + " 项缺失）";
         return false;
     }
     return true;

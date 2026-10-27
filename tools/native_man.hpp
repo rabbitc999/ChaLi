@@ -534,17 +534,12 @@ int man(int argc, char **argv, const fs::path &compiler)
             write(source, str(*program, "code"));
             std::vector<std::string> command{ compiler.u8string(), "run", source.u8string(), "--out", (temporary.path / "example").u8string(), "--lang", manLanguage() };
             for (const auto &flag : array(get(*program, "flags"))) command.push_back(str(flag));
-            if (!str(*program, "input").empty())
-            {
-                command.push_back("--input");
-                command.push_back(str(*program, "input"));
-            }
             if (!array(get(*program, "arguments")).empty())
             {
                 command.push_back("--");
                 for (const auto &arg : array(get(*program, "arguments"))) command.push_back(str(arg));
             }
-            const auto execution = execute(command, temporary.path, "", 60);
+            const auto execution = execute(command, temporary.path, str(*program, "input"), 60);
             status = execution.code ? 1 : 0;
             result["execution"] = object({ { "example", str(*program, "id") }, { "exitCode", execution.code }, { "stdout", execution.output }, { "stderr", execution.error } });
             if (status) result["diagnostics"] = A{ parse(chali_diagnostics::toolDiagnostic("CHL1703", CHALI_TEXT("手册示例执行失败")).c_str()) };

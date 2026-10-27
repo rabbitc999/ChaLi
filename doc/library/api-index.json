@@ -15691,8 +15691,8 @@
     "name": "readLines",
     "owner": "",
     "signature": "String readLines(int32 N)",
-    "documentation": "最多读取 N 行，以 LF 连接，结果不额外追加换行；EOF 提前结束。\n\n**返回值**：String。拼接后的文本，空行保留；显式 --input 的每个输入项视为一行。",
-    "comment": "/** @brief 最多读取 N 行，以 LF 连接，结果不额外追加换行；EOF 提前结束。\n * @param N 非负行数；零返回空串且不读取输入，负数触发 panic。\n * @return 拼接后的文本，空行保留；显式 --input 的每个输入项视为一行。 */",
+    "documentation": "最多读取 N 行，以 LF 连接，结果不额外追加换行；EOF 提前结束。\n\n**返回值**：String。拼接后的文本，空行保留。",
+    "comment": "/** @brief 最多读取 N 行，以 LF 连接，结果不额外追加换行；EOF 提前结束。\n * @param N 非负行数；零返回空串且不读取输入，负数触发 panic。\n * @return 拼接后的文本，空行保留。 */",
     "parameters": [
       {
         "name": "N",
@@ -15703,7 +15703,7 @@
     ],
     "returns": {
       "type": "String",
-      "documentation": "拼接后的文本，空行保留；显式 --input 的每个输入项视为一行。"
+      "documentation": "拼接后的文本，空行保留。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -16824,7 +16824,7 @@
     "owner": "",
     "signature": "void assert(bool condition)",
     "documentation": "condition 为真时继续，为假时以指定诊断文本和可选行号触发 panic。\n\n**返回值**：void。",
-    "comment": "/*\n * 中止统一使用 std::lang::panic，编译器与虚拟机通过 `__std_panic` 执行停机。\n * 断言使用下面的标准库函数，它们在条件失败时调用 `std::lang::panic`。\n * 带消息的重载让标准库自己的前置检查\n * 也能给出人话（例如 range 的步长）。\n *\n * 带 `int64 line` 的重载给文件末尾的系统宏 `$assert(...)` 用：宏把调用点的 `$line`\n * 传进来，失败时就地报出**源码行号**，不必每处自己写文案。\n */",
+    "comment": "/*\n * 中止统一使用 std::lang::panic，编译器与运行时通过 `__std_panic` 执行停机。\n * 断言使用下面的标准库函数，它们在条件失败时调用 `std::lang::panic`。\n * 带消息的重载让标准库自己的前置检查\n * 也能给出人话（例如 range 的步长）。\n *\n * 带 `int64 line` 的重载给文件末尾的系统宏 `$assert(...)` 用：宏把调用点的 `$line`\n * 传进来，失败时就地报出**源码行号**，不必每处自己写文案。\n */",
     "parameters": [
       {
         "name": "condition",

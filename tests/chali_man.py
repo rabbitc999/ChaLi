@@ -16,7 +16,11 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali-man-') as directory:
         work=Path(directory)
         compiler=work/COMPILER.name;shutil.copy2(COMPILER,compiler)
-        env=dict(os.environ,CHALI_PYTHON='__missing_python__',CHALI_LANG='zh',NO_COLOR='1')
+        # 复制出的独立编译器找不到 build/dependencies/llvm 工具链：示例执行需要 AOT 链接，
+        # 显式把 clang 交给它；查询本身仍然不读取仓库。
+        clang=ROOT/'build/dependencies/llvm/toolchain/bin'/('clang.exe' if os.name=='nt' else 'clang')
+        env=dict(os.environ,CHALI_PYTHON='__missing_python__',CHALI_LANG='zh',NO_COLOR='1',
+                 **({'CHALI_LLVM_CLANG':str(clang)} if clang.exists() else {}))
         def run(*arguments,code=0):
             result=subprocess.run([str(compiler),'man',*arguments],cwd=work,env=env,
                 capture_output=True,text=True,encoding='utf-8',timeout=90)
@@ -49,9 +53,9 @@ def main():
         assert sentinel.read_text(encoding='utf-8')=='keep'
         chapter=query('book','1')['chapter']
         assert chapter['content']==(ROOT/'doc/book/01-第一个程序.md').read_text(encoding='utf-8')
-        assert 'chali-compilation.png' in chapter['content'] and 'chali-execution.png' in chapter['content']
+        assert 'chali-compilation.png' in chapter['content'] and 'chali-execution.png' not in chapter['content']
         rendered=run('book','1').stdout
-        assert '[图片](images/chali-compilation.png)' in rendered and '[图片](images/chali-execution.png)' in rendered,rendered
+        assert '[图片](images/chali-compilation.png)' in rendered and '[图片](images/chali-execution.png)' not in rendered,rendered
         assert query('book','6')['chapter']['id']=='06'
         assert query('book','A')['chapter']['id']=='A'
         assert query('book','不存在',code=1)['diagnostics'][0]['code']=='CHL1701'

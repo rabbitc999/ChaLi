@@ -114,7 +114,7 @@ inline std::vector<std::string> normalize(int argc, char **argv)
             }
         }
         // 已有长选项的值同样跳过翻译，避免 out/name/help 等字面值被当作场景词。
-        for (const char *option : { "--lang", "--out", "--out-dir", "--name", "--input", "--memory-size", "--step-limit",
+        for (const char *option : { "--lang", "--out", "--out-dir", "--name", "--memory-size", "--step-limit",
                                     "--include-dir", "--include-path", "--import-dir", "--define", "--symbol-map", "-I", "-D",
                                     "--run-mode", "--mode", "--backend", "--filter", "--timeout", "--project",
                                     "--search", "--cache-dir", "--source-overlays", "--analysis-deps" })

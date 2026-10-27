@@ -17,7 +17,7 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "std::lang::__stringStorageLength", { 1, strLen } },
     { "std::lang::__stringStorageData", { 1, strData } },
     { "__std_read_text", { 0, readText } },
-    { "__std_input_line", { 0, readText } },
+    { "__std_input_line", { 0, inputReadLine } },
     { "__std_pause", { 0, pauseForDebug } },
     { "__std_input_int", { 0, inputInt } },
     { "__std_input_uint", { 0, inputUInt } },

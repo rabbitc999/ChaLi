@@ -24,7 +24,7 @@ I & Interface（接口 / 运行期多态） & 定义一组共同的“契约”�
 
 \section{把工具装好}
 
-ChaLi 只有一个命令行程序，叫 \texttt{chali}，解释、编译、建工程、跑测试全在它里面。装它有两条路。
+ChaLi 只有一个命令行程序，叫 \texttt{chali}，编译、建工程、跑测试全在它里面。装它有两条路。
 
 这条路最短：用安装包。 Windows 使用 MSI，Ubuntu/Debian 使用 DEB，CentOS 使用 RPM；安装后通过 PATH 中的 \texttt{chali} 命令启动。包名、架构及手动安装方法见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/42-installation-packages.md}{安装与多架构构建}。
 
@@ -54,7 +54,7 @@ chali help
 屏幕上滚出一大串用法，就说明装好了。先别急着读完那串帮助——那是给有经验的人查的，跟着这本书走，你会一个个认识里面的选项。
 
 \begin{tip}{Windows 用户注意}
-MSI 安装后的命令是 \texttt{chali}；源码默认构建的外置 LLVM 文件名为\texttt{chali-1.\allowbreak{}0.\allowbreak{}2-llvm-external-windows-x64.\allowbreak{}exe}，可在 PowerShell 中用\texttt{.\allowbreak{}/\allowbreak{}chali-1.\allowbreak{}0.\allowbreak{}2-llvm-external-windows-x64.\allowbreak{}exe help} 启动。静态变体使用 \texttt{llvm-static}。本书的 \texttt{chali} 命令默认指已安装到 PATH 的编译器；直接运行构建产物时，请换成实际文件路径。
+MSI 安装后的命令是 \texttt{chali}；源码默认构建的外置 LLVM 文件名为\texttt{chali-1.\allowbreak{}0.\allowbreak{}8-llvm-external-windows-x64.\allowbreak{}exe}，可在 PowerShell 中用\texttt{.\allowbreak{}/\allowbreak{}chali-1.\allowbreak{}0.\allowbreak{}8-llvm-external-windows-x64.\allowbreak{}exe help} 启动。静态变体使用 \texttt{llvm-static}。本书的 \texttt{chali} 命令默认指已安装到 PATH 的编译器；直接运行构建产物时，请换成实际文件路径。
 \end{tip}
 
 \section{Hello, ChaLi}
@@ -188,13 +188,13 @@ chali check hello.chl
 
 \item 解析与类型检查 —— 语法、类型、引用的生命周期都在这里查，不通过就不执行；
 
-\item 降级为四元式 —— 把程序翻译成虚拟机认识的中间表示；
+\item 生成并优化四元式 —— 把程序翻译成四元式 IR，按完整优化预算化简；
 
-\item 解释执行 —— 在当前进程里跑起来。
+\item AOT 编译执行 —— 经 LLVM 生成原生机器码，在当前进程里跑起来。
 
 \end{enumerate}
 
-前三步就是「编译」，第四步才是「执行」。把 \texttt{run} 换成别的场景词，前三步是一样的，只是最后一步换了形态：
+前三步是「编译」，第四步生成机器码后执行。把 \texttt{run} 换成别的场景词，前三步是一样的，只是最后一步换了形态：
 
 \begin{center}
 \begin{tabular}{ll}
@@ -207,29 +207,22 @@ chali check hello.chl
 \end{tabular}
 \end{center}
 
-这三条路的区别在第 22 章讲；现在你只要知道：同一份源码，可以有好几种走法。
+这两条路的区别在第 22 章讲；现在你只要知道：同一份源码，可以有好几种走法。
 
-\section{从源码到虚拟机：两张流程图}
+\section{从源码到原生程序：编译流程图}
 
-先看编译流程。条件预处理决定哪些代码参与编译；文法生成的词法与语法前端建立 AST，宏模板也在其中。卫生宏在语义分析时展开，并与类型推导配合，之后完成名称、类型、泛型和借用检查。
+编译流程如下。条件预处理决定哪些代码参与编译；文法生成的词法与语法前端建立 AST，宏模板也在其中。卫生宏在语义分析时展开，并与类型推导配合，之后完成名称、类型、泛型和借用检查。
 
 \begin{center}
 \includegraphics[width=\linewidth]{../images/chali-compilation.png}\par
-ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、四元式及 VM 装配
+ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、四元式优化与 LLVM AOT
 \end{center}
 
-四元式是本书所说的 IR。编译器先生成四元式、数据区和布局，供检查或后续装配；执行路径对四元式进行完整优化，再组装 VM 指令。图中的四元式产物出口位于生成阶段，优化结果可通过调试输出检查，二者不要混淆。
+四元式是本书所说的 IR。编译器生成四元式、数据区和布局，执行路径对四元式完成完整优化后送入 LLVM 后端，生成原生机器码；优化结果可通过调试输出检查，与生成阶段的四元式产物出口不要混淆。
 
-再看运行流程。源码运行通过 AOT 编译并执行原生机器码，保留 checked 检查、宿主服务及资源清理；编译器不再执行 VM 或字节码。
+\texttt{run} 与 \texttt{aot} 都产出原生程序：\texttt{run} 走 checked AOT 编译并当场执行，\texttt{aot} 默认 unchecked 导出可执行文件或动态库；部署边界见第 22 章，AOT 导出见第 25 章。
 
-\begin{center}
-\includegraphics[width=\linewidth]{../images/chali-execution.png}\par
-ChaLi 虚拟机流程：程序加载、执行准备、寄存器快速路径、精确路径与运行时服务
-\end{center}
-
-寄存器核心、融合与其他优化属于 VM 内部实现；调试和精确边界按需要使用相应路径。使用者先关注输入、输出和错误，不必在第一章记住所有实现名词。资源与作用域见第 8 章，实际部署边界见第 22 章。
-
-两张图与仓库 README 使用相同绘图脚本生成。内嵌手册导出时携带图片，PDF 也直接收录图片，所以离线阅读不依赖网络。
+图与仓库 README 使用相同绘图脚本生成。内嵌手册导出时携带图片，PDF 也直接收录图片，所以离线阅读不依赖网络。
 
 \section{小结}
 

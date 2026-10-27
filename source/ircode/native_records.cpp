@@ -105,7 +105,7 @@ void NativeCallContextImpl::trackTemporary(std::int64_t handle, bool object)
         context_.objects->materializedHeap.push_back(static_cast<std::size_t>(handle));
 }
 /**
- * @brief 从 VM 共用的输入源读取一项文本。
+ * @brief 从标准输入读取一项文本（空白分隔）。
  * @param text 接收读取结果。
  * @return 成功读取时为 true。
  */

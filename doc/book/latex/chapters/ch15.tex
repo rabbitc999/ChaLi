@@ -270,7 +270,7 @@ void main()
 
 \subsection{先声明，再赋入递归闭包}
 
-上下文也可以来自赋值目标。先声明函数变量，再赋入引用同一绑定的闭包，是受支持的递归闭包特性，不是 BUG。下面的阶乘例子中，\texttt{fac} 的类型已经确定为 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}}，所以 \texttt{fn(\allowbreak{}x)\allowbreak{}} 的 \texttt{x} 自动取得 \texttt{int64} 类型：
+上下文也可以来自赋值目标。递归闭包的写法是先声明函数变量、再赋入引用同一绑定的闭包：声明给出完整签名，闭包体内的 \texttt{fac} 解析到这个已声明的绑定，而调用发生在赋值之后。下面的阶乘例子中，\texttt{fac} 的类型已经确定为 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}}，所以 \texttt{fn(\allowbreak{}x)\allowbreak{}} 的 \texttt{x} 自动取得 \texttt{int64} 类型：
 
 \par
 \medskip
@@ -344,7 +344,7 @@ fib(3)=2
 
 \subsection{用计数器观察延迟执行}
 
-创建闭包只保存函数体及其需要的环境，函数体等到调用时才执行。可以用计数器观察这种延迟执行，也就是这里所说的“惰性求值”。下面用 \texttt{fn mut[\allowbreak{}counter]\allowbreak{}(\allowbreak{}x)\allowbreak{}} 只对 \texttt{counter} 显式采用可变借用，递归引用的 \texttt{fib} 仍按默认方式只读借用。每次算出结果后再递增计数器，记录已完成的调用；捕获规则将在 15.7 与 15.8 节展开。
+创建闭包只保存函数体及其需要的环境，函数体等到调用时才执行。可以用计数器观察这种延迟执行；它不是第 17 章迭代器讲的惰性，只是调用时机——闭包体在每次调用时才运行。下面用 \texttt{fn mut[\allowbreak{}counter]\allowbreak{}(\allowbreak{}x)\allowbreak{}} 只对 \texttt{counter} 显式采用可变借用，递归引用的 \texttt{fib} 仍按默认方式只读借用。每次算出结果后再递增计数器，记录已完成的调用；捕获规则将在 15.7 与 15.8 节展开。
 
 \par
 \medskip

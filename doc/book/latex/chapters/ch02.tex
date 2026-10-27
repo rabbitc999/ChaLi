@@ -55,12 +55,12 @@ void main()
 \par
 \medskip
 
-运行（\texttt{--input} 后面的内容就是喂给程序的标准输入）：
+运行（程序从标准输入读数，管道、重定向或直接敲都行）：
 
 \par
 \medskip
 \begin{lstlisting}[style=sh]
-chali run guess.chl --input "42"
+echo "42" | chali run guess.chl
 \end{lstlisting}
 \par
 \medskip
@@ -297,7 +297,7 @@ void main()
 \par
 \medskip
 \begin{lstlisting}[style=sh]
-chali run guess.chl --input "50 75 62"
+echo "50 75 62" | chali run guess.chl
 \end{lstlisting}
 \par
 \medskip
@@ -341,10 +341,10 @@ void main()
 \par
 \medskip
 \begin{lstlisting}[style=out]
-chali: 运行期错误：输入不够（第 2 项缺失）
+chali aot: 输入不够（第 2 项缺失）
 出错位置：guess.chl:3（main）
-调用栈（外 → 内）：
-  main  guess.chl:3 [thread 0 ip 3]
+调用栈（内 → 外）：
+  main
 \end{lstlisting}
 \par
 \medskip
@@ -366,10 +366,10 @@ void main()
 \par
 \medskip
 \begin{lstlisting}[style=out]
-chali: 运行期错误：std::lang::inputInt 读到的不是合法 int："abc"
-出错位置：guess.chl:2（main）
-调用栈（外 → 内）：
-  main  guess.chl:2 [thread 0 ip 3]
+chali aot: std::lang::inputInt 读到的不是合法 int："abc"
+出错位置：guess.chl:3（main）
+调用栈（内 → 外）：
+  main
 \end{lstlisting}
 \par
 \medskip
@@ -382,7 +382,7 @@ chali: 运行期错误：std::lang::inputInt 读到的不是合法 int："abc"
  & 什么时候报 & 谁的问题 \\
 \midrule
 \texttt{语法错误：…} & 编译期，程序一个字符都没跑 & 代码写错了 \\
-\texttt{chali:\allowbreak{} 运行期错误：…} & 运行期，跑到那一句才炸 & 数据不合法 \\
+\texttt{chali aot:\allowbreak{} …} & 运行期，跑到那一句才炸 & 数据不合法 \\
 \bottomrule
 \end{tabular}
 \end{center}

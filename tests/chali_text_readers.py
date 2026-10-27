@@ -30,7 +30,7 @@ def main():
             assert result.returncode == 0, result.stderr
             result = run((ROOT / 'example/samples/std_file_strings.chl').read_text(encoding='utf-8'), arguments=[work / 'file.txt'])
             assert result.returncode == 0 and result.stdout.strip() == 'file strings ok', result.stderr
-        result = run('void main(){assert(readLine()=="one");assert(readLines(2)=="two\\nthree");}', options=['--input', 'one two three'])
+        result = run('void main(){assert(readLine()=="one");assert(readLines(2)=="two\\nthree");}', 'one\ntwo\nthree')
         assert result.returncode == 0, result.stderr
         result = run('void main(){readLines(-1);}')
         assert result.returncode != 0 and 'nonnegative' in result.stderr, result.stderr

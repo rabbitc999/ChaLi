@@ -12,7 +12,7 @@ Closures without an explicit result type infer it from their tail expression and
 
 Explicit higher-order closures retain their outer signature. For example, `let f = int64 fn(int64) fn(int64 fn(int64) a, int64 fn(int64) b) { a };` displays as `(int64 fn(int64)) fn(int64 fn(int64), int64 fn(int64))`. Calling `f(a, b)` retains the returned function signature; another call yields `int64`. Undefined type spellings remain as written and are reported by compiler diagnostics rather than silently corrected.
 
-Declaring a function variable before assigning a closure that refers to that same binding is a supported recursive closure feature, not a bug. The assignment target supplies the omitted parameter types. In the following example, `x` is `int64` both in the parameter list and the body; LSP provides hover, completion details and an inlay type hint. Calls occur after assignment:
+Recursive closures declare the function variable first and assign a closure referring to that binding afterwards: the declaration supplies the complete signature, the closure body resolves the name to the declared binding, and calls happen after assignment. The assignment target supplies the omitted parameter types. In the following example, `x` is `int64` both in the parameter list and the body; LSP provides hover, completion details and an inlay type hint. Calls occur after assignment:
 
 ```chali
 void main() {

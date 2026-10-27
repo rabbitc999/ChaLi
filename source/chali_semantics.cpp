@@ -3243,7 +3243,7 @@ void M_ReportLifetimeDiagnostics()
  * @param outPrefix 输出产物的文件名前缀。
  * @param run 是否在编译完成后执行程序。
  * @param emitBinary 是否写出二进制中间产物。
- * @param inputText 传递给程序标准输入的文本。
+ * @param inputText 已废弃：输入一律来自标准输入，实现不再读取。
  * @retval 编译与执行成功时为 0，发生错误时为非零状态码。
  */
 int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBinary,

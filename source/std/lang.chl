@@ -629,7 +629,7 @@ String __readLines(int32 N);
 String readLine() { return __readLine(); }
 /** @brief 最多读取 N 行，以 LF 连接，结果不额外追加换行；EOF 提前结束。
  * @param N 非负行数；零返回空串且不读取输入，负数触发 panic。
- * @return 拼接后的文本，空行保留；显式 --input 的每个输入项视为一行。 */
+ * @return 拼接后的文本，空行保留。 */
 String readLines(int32 N) { assert(N>=0,"readLines requires a nonnegative line count"); return __readLines(N); }
 /** @brief 接受默认整数实参的多行输入重载，检查后转为 int32 行数。
  * @param N 0 至 2147483647 的行数；超界触发 panic。
@@ -727,7 +727,7 @@ bool float64ToBytes(float64 value, uint8[] mut& bytes) { return float64ToBytes(v
 /* ChaLi 标准库前导模块。这里放可由 ChaLi 自身表达的类型；算法由编译器签名接入 VM 胶水。 */
 
 /*
- * 中止统一使用 std::lang::panic，编译器与虚拟机通过 `__std_panic` 执行停机。
+ * 中止统一使用 std::lang::panic，编译器与运行时通过 `__std_panic` 执行停机。
  * 断言使用下面的标准库函数，它们在条件失败时调用 `std::lang::panic`。
  * 带消息的重载让标准库自己的前置检查
  * 也能给出人话（例如 range 的步长）。

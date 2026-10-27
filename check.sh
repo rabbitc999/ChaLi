@@ -124,14 +124,15 @@ for src in "$SAMPLES"/*.chl; do
         rm -f "$actual"
         continue
     fi
-    # 有 example/expected/<name>.in 就把它当程序输入传给 --input（`input(变量);` 用）
-    set -- 
+    # 有 example/expected/<name>.in 就把它当标准输入喂给程序（input(变量); 等输入函数用）
+    set --
+    stdinFile=
     # 线程缺省启用，只有标了 .no-threads 的样例才显式关掉它。
     if [ -f "$EXPECTED/$name.no-threads" ]; then
         set -- --no-threads
     fi
     if [ -f "$EXPECTED/$name.in" ]; then
-        set -- --input "$(cat "$EXPECTED/$name.in")"
+        stdinFile="$EXPECTED/$name.in"
     fi
     # 有 example/expected/<name>.args 时，每行作为一个独立的 main 参数；空行也是合法参数。
     if [ -f "$EXPECTED/$name.args" ]; then
@@ -142,7 +143,11 @@ for src in "$SAMPLES"/*.chl; do
         done < "$EXPECTED/$name.args"
     fi
     raw="$actual.raw"
-    "$DEMO" run "$src" --out "$actual.compile" "$@" >"$raw" 2>"$actual.err"
+    if [ -n "$stdinFile" ]; then
+        "$DEMO" run "$src" --out "$actual.compile" "$@" <"$stdinFile" >"$raw" 2>"$actual.err"
+    else
+        "$DEMO" run "$src" --out "$actual.compile" "$@" >"$raw" 2>"$actual.err"
+    fi
     actual_status=$?
     sed 's/\r$//' "$raw" >"$actual"
     expected_status=0

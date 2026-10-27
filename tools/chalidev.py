@@ -157,9 +157,6 @@ _MESSAGES = {
   "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n": [
     "  --symbol-map FILE      Mapping path (default: <prefix>.symbol_map.json)\n"
   ],
-  "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）\n": [
-    "  --input \"TEXT\"        Whitespace-separated input for input(variable);\n"
-  ],
   "  --raw                  跳过前处理：源文件原样喂给解析器\n": [
     "  --raw                  Skip preprocessing and parse the source directly\n"
   ],
@@ -711,9 +708,6 @@ _MESSAGES = {
   ],
   "  --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n": [
     "  --dap                  Run the debug adapter over standard input/output\n"
-  ],
-  "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n": [
-    "  --input \"TEXT\"        Whitespace-separated input values; otherwise read standard input\n"
   ],
   "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n": [
     "  --deps                 List imported modules and project dependencies for build scripts\n"

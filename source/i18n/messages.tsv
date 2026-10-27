@@ -37,7 +37,6 @@ I -- Interface（接口 / 运行期多态）：定义一组共同的“契约”
   --compress-symbols     写无名变长符号表，生成 PC 映射文件\n|  --compress-symbols     Write compact symbols and a PC mapping file\n
   --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n|  --no-compress-symbols  Override configuration and disable symbol compression\n
   --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n|  --symbol-map FILE      Mapping path (default: <prefix>.symbol_map.json)\n
-  --input "文本"        `input(变量);` 的输入项（空白分隔）\n|  --input "TEXT"        Whitespace-separated input for input(variable);\n
   --raw                  跳过前处理：源文件原样喂给解析器\n|  --raw                  Skip preprocessing and parse the source directly\n
   --deps                 只列出 `%include` 拉进来的文件（构建脚本用）\n|  --deps                 List files loaded by %include (for build scripts)\n
   --incremental          跨次复用模块预处理与完整编译产物\n|  --incremental          Reuse module preprocessing and compiled artifacts\n
@@ -223,7 +222,6 @@ ChaLi 标准库手册|ChaLi standard library manual
 常用配置词：debug、out 路径、reflect；new 使用 name 工程名。\n|Settings: debug, out PATH, reflect; new accepts name NAME.\n
   --emit                 只生成 .quad / .data.bin / .layout，不执行\n|  --emit                 Export .quad / .data.bin / .layout without executing\n
   --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n|  --dap                  Run the debug adapter over standard input/output\n
-  --input "文本"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n|  --input "TEXT"        Whitespace-separated input values; otherwise read standard input\n
   --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n|  --deps                 List imported modules and project dependencies for build scripts\n
   --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n|  --watchdog             Enable optional soft restarts on allocation failure, requests or watermarks\n
   --no-watchdog          关闭软重启看门狗（缺省）\n|  --no-watchdog          Disable soft restarts (default)\n

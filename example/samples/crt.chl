@@ -3,7 +3,7 @@
  *   x ≡ r[0] (mod m[0])，x ≡ r[1] (mod m[1])，……
  *   → 输出最小的非负解，以及所有模数的乘积
  *
- *   ./chali samples/crt.chl --input "3 2 3 3 5 2 7"
+ *   echo "3 2 3 3 5 2 7" | ./chali samples/crt.chl
  *   → x = 23 (mod 105)
  *
  * 做法是"两个两个合"：已知 x ≡ r1 (mod m1)，再加一条 x ≡ r2 (mod m2)，
