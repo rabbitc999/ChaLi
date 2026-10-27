@@ -1,5 +1,9 @@
 # ChaLi 1.0.5 自举 List、Map、Set 对照
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 同一份 1.0.5 编译器分别执行默认原生容器与 ChaLi 编写的实验容器。所有计时进程均校验独立闭式公式计算的结果；本报告只代表下面列出的负载和配置。
 
 ## 配置与方法

@@ -1,5 +1,9 @@
 # LLVM 在线依赖与静态 SDK
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 源码仓库仅保留下载脚本、固定版本清单和许可证；不保存 LLVM SDK、工具链二进制或离线归档分片。所有下载归档位于 `build/downloads/llvm/`，安装结果位于 `build/dependencies/llvm/`，均不入库。
 
 ## 静态 LLVM 与匹配编译器

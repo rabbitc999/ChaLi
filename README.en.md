@@ -34,7 +34,7 @@ The name is not a decorative acronym — each letter locks one non-reversible gu
 | **L** | Lifetime (borrow checker) | A reference never outlives its source; otherwise it fails to compile (`CHL1204`). |
 | **I** | Interface (runtime polymorphism) | A shared contract dispatched on the object's real type at run time. |
 
-Runnable evidence and what counts as a violation: [Name freeze: the five letters of ChaLi](doc/en/40-name-freeze.md).
+Runnable evidence and what counts as a violation: [Name freeze: the five letters of ChaLi](doc/en/37-name-freeze.md).
 
 ## Compilation
 
@@ -48,7 +48,7 @@ Run `./ChaLi.exe aot input.chl --out build/program --checked` to lower checked, 
 
 ![ChaLi AOT export: quadruples, LLVM module, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
 
-The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/41-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/25-aot-export.md) for the supported scope and steps.
+The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/25-aot-export.md) for the supported scope and steps.
 
 ## Execution
 
@@ -161,7 +161,7 @@ subcommands and `--mode`.
 
 ### Debugging
 
-VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Debug builds retain symbols at O0; normal release builds retain highest optimization. See [Native AOT debugging](doc/en/46-native-debugging.md).
+VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Debug builds retain symbols at O0; normal release builds retain highest optimization. See [Native AOT debugging](doc/en/43-native-debugging.md).
 
 ### Diagnostics
 
@@ -272,4 +272,4 @@ Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/chali-frontend/`, keeping the repository root clear.
 
-SQLite and miniz are downloaded as pinned build dependencies instead of being vendored; see [build dependencies](doc/en/45-build-dependencies.md).
+SQLite and miniz are downloaded as pinned build dependencies instead of being vendored; see [build dependencies](doc/en/42-build-dependencies.md).

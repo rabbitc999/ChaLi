@@ -1,20 +1,20 @@
 \chapter{AOT 导出：把程序交付为原生产物}
 \label{ch:25}
 
-从 1.0.8 起，run 使用 checked AOT，aot 默认 unchecked 导出。--debug 保留原生源码行和变量信息；VS Code 断点、单步和变量查看通过 GDB 实现，见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/46-native-debugging.md}{原生调试}。.svmb 导出已删除。
+从 1.0.8 起，run 使用 checked AOT，aot 默认 unchecked 导出。--debug 保留原生源码行和变量信息；VS Code 断点、单步和变量查看通过 GDB 实现，见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/43-native-debugging.md}{原生调试}。.svmb 导出已删除。
 
 写完程序以后，你可以把它导出为目标平台的可执行文件，也可以导出动态库供 C 程序调用。AOT 是提前编译：编译器在交付前完成 LLVM 优化、机器码生成和链接，使用者直接运行生成的程序。
 
-本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-aot.md}{LLVM AOT 编译}。
+本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/38-aot.md}{LLVM AOT 编译}。
 
 \section{从源码到原生产物}
 
 \begin{center}
 \includegraphics[width=\linewidth]{../images/chali-aot.png}\par
-ChaLi AOT 导出流程：前端检查、四元式优化、LLVM 中间表示、内置或外置 LLVM、链接与交付
+ChaLi AOT 导出流程：前端检查、四元式生成、LLVM 中间表示、内置或外置 LLVM、链接与交付
 \end{center}
 
-前端完成类型、借用和生命周期检查后，生成并优化四元式。AOT 后端将这些四元式直接转换为 LLVM 中间表示，再由 LLVM 生成目标代码，由链接器将目标代码、AOT 运行时和所需库组合成原生产物。
+前端完成类型、借用和生命周期检查后，生成四元式（内部优化缺省关闭，交给 LLVM）。AOT 后端将这些四元式直接转换为 LLVM 中间表示，再由 LLVM 生成目标代码，由链接器将目标代码、AOT 运行时和所需库组合成原生产物。
 
 这里的“四元式”是 ChaLi 的中间表示；图中的“LLVM 中间表示”是后端使用的另一种表示。输出的 \texttt{.\allowbreak{}ll} 文件可以保留，用于检查 LLVM 指令或接入其他 LLVM 工具。
 

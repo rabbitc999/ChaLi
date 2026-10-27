@@ -28,14 +28,14 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 | **L** | Lifetime（生命周期 / 借用检查器） | 引用永远不能活得比它的数据源更久，否则编译直接报错（`CHL1204`）。 |
 | **I** | Interface（接口 / 运行期多态） | 定义一组共同的“契约”，运行期根据对象的实际类型进行分派。 |
 
-每条契约的可跑判据与「什么算违反」见[名称冻结：ChaLi 五个字母](doc/40-name-freeze.md)。
+每条契约的可跑判据与「什么算违反」见[名称冻结：ChaLi 五个字母](doc/37-name-freeze.md)。
 
 ## 编译过程
 
 条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，生成并优化四元式，再降低为 LLVM 原生代码。
 `.svmb` 格式已删除；四元式仍可单独导出用于后端分析。
 
-![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、四元式优化与 VM 装配](doc/images/chali-compilation.png)
+![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、四元式生成与 LLVM 装配](doc/images/chali-compilation.png)
 
 ## AOT 导出
 
@@ -43,7 +43,7 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ![ChaLi AOT 导出流程：四元式、LLVM 中间表示、内置或外置 LLVM、链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/41-aot.md)，逐步操作见书稿[第 25 章 AOT 导出](doc/book/25-AOT导出.md)。
+生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 25 章 AOT 导出](doc/book/25-AOT导出.md)。
 
 ## 运行过程
 
@@ -144,7 +144,7 @@ make reflection     # 保留的显式启用入口
 
 ### 调试
 
-VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。调试构建保留符号并使用 O0；普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/46-native-debugging.md)。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。调试构建保留符号并使用 O0；普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/43-native-debugging.md)。
 
 ### 报错
 
@@ -239,4 +239,4 @@ Apache License 2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
 
 解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/chali-frontend/`，不会散落到仓库根目录。
 
-SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，详见[在线构建依赖](doc/45-build-dependencies.md)。
+SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，详见[在线构建依赖](doc/42-build-dependencies.md)。

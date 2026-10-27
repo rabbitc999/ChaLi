@@ -1,5 +1,9 @@
 # ChaLi 1.0.6 通用 LLVM AOT 基准
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 本机 Windows x64、外置 LLVM，ChaLi 默认 LLVM O3、完整四元式优化、默认安全检查与反射；C++ 参考使用 MinGW g++ -O3 -DNDEBUG。编译器宿主与共享原生运行时仍按其正常发行配置构建。计算内核由 LLVM AOT 生成，C 壳负责单调时钟；初始化与启动不计入内部计时。
 
 每配置三次进程、每进程五个内部样本。先完成所有构建，再执行负载；本驱动按配置顺序测量，未交错。校验值跨语言一致。工具版本、编译器 SHA256、原始纳秒样本及校验值见 [results.json](results.json)。

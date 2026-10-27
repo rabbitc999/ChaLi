@@ -16,7 +16,7 @@ chali aot app.chl --checked --out build/app-checked
 
 Development execution requires a compiler and its LLVM toolchain. Native applications need neither ChaLi, a VM nor an LLVM DLL at runtime. Ship the executable for its actual platform and architecture, together with application resources and declared C ABI dynamic libraries. Windows uses `.exe`; Linux executables have no suffix. Both checked and unchecked exports retain ownership, actual-memory and liveness protections.
 
-A compiler built for an architecture does not establish AOT support for that target. Check the actually supported and tested configurations in [LLVM AOT compilation](../../en/41-aot.md).
+A compiler built for an architecture does not establish AOT support for that target. Check the actually supported and tested configurations in [LLVM AOT compilation](../../en/38-aot.md).
 
 ## Debugging and release
 
@@ -24,7 +24,7 @@ A compiler built for an architecture does not establish AOT support for that tar
 chali aot app.chl --checked --debug --out build/app-debug
 ```
 
-Debug builds retain DWARF source locations, parameters and locals at O0. VS Code uses GDB for breakpoints, stepping and variable inspection. Release builds keep highest optimization, LTO and dead-code elimination. See [Native AOT debugging](../../en/46-native-debugging.md).
+Debug builds retain DWARF source locations, parameters and locals at O0. VS Code uses GDB for breakpoints, stepping and variable inspection. Release builds keep highest optimization, LTO and dead-code elimination. See [Native AOT debugging](../../en/43-native-debugging.md).
 
 Before delivery, verify arguments, input/output, C ABI dependencies, resources and error paths. Record the compiler version, actual target and artifact hashes. LLVM modules and quadruple dumps are analysis artifacts rather than runtime dependencies.
 

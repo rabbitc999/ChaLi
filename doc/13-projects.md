@@ -87,7 +87,7 @@ chali main.chl students.db schema
 
 ### 4.2 其他数据库示例
 
-数据库基础用法见[SQL 示例](../example/sql-chali/README.md)，反射与参数化查询见[动态 SQL 说明](36-reflection-serialization-sql.md)。
+数据库基础用法见[SQL 示例](../example/sql-chali/README.md)，反射与参数化查询见[动态 SQL 说明](33-reflection-serialization-sql.md)。
 
 ## 5. 语言与库能力示例
 

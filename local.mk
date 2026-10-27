@@ -179,7 +179,7 @@ samples: $(TARGET)
 # Keep allocator-specialized dependencies separate from the generic libraries.
 $(CHALI_BUILD_ROOT)/chali-runtime: | tmp
 	$(CHALI_RUNTIME_MKDIR)
-AST_OBJS := $(CHALI_BUILD_ROOT)/chali-runtime/ast.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_type.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_node.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_data.o $(CHALI_BUILD_ROOT)/chali-runtime/aggregate_optimize.o
+AST_OBJS := $(CHALI_BUILD_ROOT)/chali-runtime/ast.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_type.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_node.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_data.o
 $(AST_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/%.o: $(AST_DIR)/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(CHALI_BUILD_ROOT)/chali-runtime
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(AST_OBJS:.o=.d)

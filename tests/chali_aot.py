@@ -92,9 +92,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali-aot-') as directory:
         work = Path(directory)
 
-        def invoke(command, **kwargs):
+        def invoke(command, cwd=None, **kwargs):
             """执行编译或测试程序，捕获可比较的输出。"""
-            return subprocess.run(list(map(str, command)), cwd=ROOT, env=env, capture_output=True,
+            return subprocess.run(list(map(str, command)), cwd=cwd or ROOT, env=env, capture_output=True,
                                   text=True, encoding='utf-8', errors='replace', timeout=300, **kwargs)
 
         # 1) 产物与解释执行一致
@@ -173,7 +173,9 @@ def main():
         assert build.returncode == 0, build.stderr
         abi = work / 'abi_use.chl'
         abi.write_text(ABI_SOURCE.format(library=str(library).replace('\\', '/')), encoding='utf-8')
-        result = invoke([compiler, 'run', abi])
+        # Windows 加载器按「模块目录 → 系统目录 → 当前目录 → PATH」找导入的 DLL；这一步在
+        # 源码所在目录里跑，才和用户 `chali run` 时 DLL 与源码同级的实际顺序一致。
+        result = invoke([compiler, 'run', abi], cwd=work)
         expected_abi = result.stdout
         assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75 4294967295\nalias: 42\n', result
         abi_exe = work / 'abi_use'

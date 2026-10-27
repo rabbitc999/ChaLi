@@ -193,7 +193,7 @@ void main() {
 
 源聚合及其嵌套字段的生命周期标记确保退出作用域时不会重复析构。`new` 分配的手动引用被移动后保留原存储，仍须 `drop` 该引用以释放存储块。普通赋值和普通按值参数继续采用复制规则；需要传递而不复制时使用引用形参，在需要接管结果的位置显式 `move`。移动结果直接用于初始化、赋值、返回及临时值接收时，转移拥有字段。
 
-参见 [资源所有权移动](23-ownership-move.md)。
+参见 [资源所有权移动](24-ownership-move.md)。
 
 ### 默认参数
 
@@ -514,7 +514,7 @@ Shape const& view = &circle;
 
 只读来源不能绑定可写视图；复制接口视图不延长具体对象的寿命，局部对象的视图不能逃出作用域。已经装箱的 Any 仍可通过 `getReference`／`tryGetReference` 提取接口视图。
 
-完整例子见 [`example/samples/interface.chl`](../example/samples/interface.chl)。Any 的安全提取使用 `isType<T>(&box)`、`tryGet<T>(&box)`、`tryGetReference<T>(&box)` 和 `tryGetMut<T>(&box)`；`nameof` 与盒子的 `.name()` 不属于应用 API，见 [Any、显式泛型与通用数据工具](22-any-generics-data.md)。
+完整例子见 [`example/samples/interface.chl`](../example/samples/interface.chl)。Any 的安全提取使用 `isType<T>(&box)`、`tryGet<T>(&box)`、`tryGetReference<T>(&box)` 和 `tryGetMut<T>(&box)`；`nameof` 与盒子的 `.name()` 不属于应用 API，见 [Any、显式泛型与通用数据工具](23-any-generics-data.md)。
 
 ---
 
@@ -727,7 +727,7 @@ void main() {
 
 `<T:a>` 从实参静态类型推导；`<T>` 从外层期望结果类型推导，显式类型优先。`[]`、`()`、`{}` 是严格有序参数组，`...rest` / `..rest` 是末尾变长形参，`$for` 遍历片段列表。`$match x is expr` 支持 `expr`、`ident`、`type`、`block`、`stmt`，`$else is` 顺序选分支，`$end_match` 结束。`$regex x is "模式"` 使用完整 ECMAScript 正则匹配原文，`$end_regex` 结束。未选分支不进入最终语义检查。
 
-`$stringify(x)` 读取原文，`$concat(a, b)` 仅产生标识符，`$line` / `$file` / `$module` 保留来源。`$replace A(x) x + 1` 为单行宏。完整规则与可运行示例见 [卫生宏](24-literals-operators-macros.md#编译期卫生-ast-宏)。
+`$stringify(x)` 读取原文，`$concat(a, b)` 仅产生标识符，`$line` / `$file` / `$module` 保留来源。`$replace A(x) x + 1` 为单行宏。完整规则与可运行示例见 [卫生宏](25-literals-operators-macros.md#编译期卫生-ast-宏)。
 
 ## 15. 注解与反射
 
@@ -782,7 +782,7 @@ opcode FileHandle {
 赋值及按值传参、返回时的复制；它仍可通过 `T target = move source;` 转移所有权，
 按值传参与返回也可显式使用 `move value`。此规则适用于所有 opcode 类型。
 实现 `Closeable` 的 struct 走同一条检查：复制一份就是两份所有权，`close()` 会跑两遍，
-因此它自动按不可复制处理，无须再写指令（见[声明糖](28-declaration-sugars.md#closeable-与运算符推导开关)）。
+因此它自动按不可复制处理，无须再写指令（见[声明糖](29-declaration-sugars.md#closeable-与运算符推导开关)）。
 移动不调用 copy，源绑定随后失效，最终接收所有权的一方负责调用 drop。
 `Type::new(...)` 调用创建方法。opcode 是内部保存不透明胶水句柄的特殊结构体，声明体还可包含
 普通成员变量、实例方法及静态方法。普通字段由语言保存、复制和销毁；它们不描述宿主对象的内存布局。
@@ -805,7 +805,7 @@ int64 c_function(int64 x);
 
 `std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。`__rawSize(T)` 与 `__rawAlign(T)` 查询语言内部存储布局，仅供 unsafe 内核使用，不等于 C ABI 布局。借出的引用不得超过存储寿命或相应元素生命周期。
 
-`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](44-unsafe-abi.md)和[书稿第 25 章](book/24-不安全代码.md)。
+`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](41-unsafe-abi.md)和[书稿第 25 章](book/24-不安全代码.md)。
 
 ---
 
@@ -1064,20 +1064,20 @@ $end_macro
 
 结果先保存，再执行退出路径上的延迟回调和自动清理。移动清空源存储并结束源绑定的生命周期，不调用源值的 close/drop；最终接收方负责资源回收。同时实现 Closeable 与 Drop 时先 close、后 drop。复制产生独立拥有值，来源与结果分别按各自生命周期清理。跨循环退出清理所有离开的作用域，不能释放已交给结果的资源。
 
-移动不延长借用寿命，直接引用及聚合内的引用都不能指向已经退出的局部对象。[移动与清理样例](../example/samples/break_move.chl)验证求值次数、原始资源句柄身份、外部变量复制、析构次数、清理顺序及 VM 行为；[所有权移动](23-ownership-move.md)给出通用规则。
+移动不延长借用寿命，直接引用及聚合内的引用都不能指向已经退出的局部对象。[移动与清理样例](../example/samples/break_move.chl)验证求值次数、原始资源句柄身份、外部变量复制、析构次数、清理顺序及 VM 行为；[所有权移动](24-ownership-move.md)给出通用规则。
 
 ## 返回控制表达式
 
-`return { ... yield value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break level / break all，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](28-declaration-sugars.md)。
+`return { ... yield value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break level / break all，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](29-declaration-sugars.md)。
 
 ## 具名函数声明
 
-语句位置可声明 `int64 add(int64 x) { return x + 1; }`，或先声明 `int64 callback(int64 x);` 再赋函数值。返回类型提供检查锚点，默认捕获 const&；块前可显式写 mut、copy 或 move。捕获状态移入声明绑定，借用不能逃逸来源。该语法不进入表达式产生式，见[具名函数规则](28-declaration-sugars.md)。
+语句位置可声明 `int64 add(int64 x) { return x + 1; }`，或先声明 `int64 callback(int64 x);` 再赋函数值。返回类型提供检查锚点，默认捕获 const&；块前可显式写 mut、copy 或 move。捕获状态移入声明绑定，借用不能逃逸来源。该语法不进入表达式产生式，见[具名函数规则](29-declaration-sugars.md)。
 
 ## #derive 字段派生
 
-在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过语义字段元数据生成受限接口方法，再由通常的语义检查与四元式降级处理。嵌套字段必须实现对应接口，禁止派生 Drop 或 Closeable。泛型声明在实例化后生成方法，见[派生规则](28-declaration-sugars.md)。
+在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过语义字段元数据生成受限接口方法，再由通常的语义检查与四元式降级处理。嵌套字段必须实现对应接口，禁止派生 Drop 或 Closeable。泛型声明在实例化后生成方法，见[派生规则](29-declaration-sugars.md)。
 
 ## #borrow 与 #static 生命周期契约
 
-函数声明前可连写生命周期契约，显式写出谁借用谁：`#borrow(out, in)` 表示 out 借用 in，列表写法 `#borrow(out, [in1, in2, in3])` 表示借用其中每一个；`#ret` 指函数返回值，`#borrow(#ret, [a, b])` 与 Rust 的 `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` 同形——调用点只按声明的那几个实参传播来源。`#static(a)` 声明 a 的来源为 'static，可跨函数返回与长期保存。契约名只能是本函数的形参或局部变量；返回值只能借用形参。见[声明糖规则](28-declaration-sugars.md)。
+函数声明前可连写生命周期契约，显式写出谁借用谁：`#borrow(out, in)` 表示 out 借用 in，列表写法 `#borrow(out, [in1, in2, in3])` 表示借用其中每一个；`#ret` 指函数返回值，`#borrow(#ret, [a, b])` 与 Rust 的 `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` 同形——调用点只按声明的那几个实参传播来源。`#static(a)` 声明 a 的来源为 'static，可跨函数返回与长期保存。契约名只能是本函数的形参或局部变量；返回值只能借用形参。见[声明糖规则](29-declaration-sugars.md)。

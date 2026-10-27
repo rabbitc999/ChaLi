@@ -5,7 +5,6 @@
 #pragma once
 #include "native_protocol.hpp"
 #include "data_area.hpp"
-#include "quad_optimizer.hpp"
 #include <optional>
 
 namespace stackvm

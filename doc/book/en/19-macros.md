@@ -8,7 +8,7 @@ Macros transform program structure during compilation. They are useful when repe
 
 ChaLi's hygienic macros preserve binding relationships so that an internal temporary does not accidentally capture a caller's variable. Macro arguments have documented fragment categories; expression, type, identifier, statement and token-group arguments should not be treated as one unstructured string.
 
-Macro declarations and invocations use the lowercase `$macro` system. Parameter groups and repetition describe how source fragments are matched. Regex branches use the documented ECMAScript behavior. Consult the [macro reference](../../en/24-literals-operators-macros.md) for the exact declaration forms rather than copying another language's macro syntax.
+Macro declarations and invocations use the lowercase `$macro` system. Parameter groups and repetition describe how source fragments are matched. Regex branches use the documented ECMAScript behavior. Consult the [macro reference](../../en/25-literals-operators-macros.md) for the exact declaration forms rather than copying another language's macro syntax.
 
 Generated code still undergoes semantic checking. Expansion does not bypass types, references, resource ownership or the compiler's bounded fragment budgets. When debugging, inspect the expansion and its source mapping. The VS Code expansion view groups related results into tabs, with searchable macro names and a tree of expansion levels.
 

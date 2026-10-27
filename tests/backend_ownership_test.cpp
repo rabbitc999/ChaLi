@@ -1,9 +1,7 @@
 /**
  * @file backend_ownership_test.cpp
- * @brief 目标存储合并、重复检查与微型内联的生成证据及回退测试。
+ * @brief AOT 地址验证缓存等生成证据及回退测试。
  */
-#include "ast/aggregate_optimize.hpp"
-#include "ircode/machine_optimize.hpp"
 #include "chali_aot.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -36,50 +34,6 @@ void environment(const char *name, const char *value)
 void require(bool condition, const char *text)
 {
     if (!condition) throw std::runtime_error(text);
-}
-
-/**
- * @brief 独立验证重复检查的屏障，避免其他优化改变测试输入。
- * @param middle 两个相同检查之间的指令。
- * @param expected 应删除的检查数量。
- */
-void checks(const Memory::String &middle, std::size_t expected)
-{
-    const auto source = stackvm::parseQuads("(check, i, n, items)\n" + middle + "(check, i, n, items)\n", "checks");
-    stackvm::machine::Stats stats;
-    stackvm::machine::optimize(source, &stats);
-    require(stats.redundantChecks == expected, "检查事实未在正确的屏障失效");
-}
-
-/**
- * @brief 构造降低器新目标标记，验证普通初始化与自引用初始化分流。
- * @param alias 是否把新目标作为参数传给工厂。
- * @return 用于检查内部目标变体的程序。
- */
-ast::Program program(bool alias)
-{
-    using namespace ast;
-    auto point = Type::structOf("Point", { { "x", Type::i64() } });
-    Function make;
-    make.name = "make";
-    make.result = point;
-    if (alias) make.parameters.emplace_back("source", Type::i64());
-    make.body = Node::block({ Node::declare("__chali_ret_v$0", point),
-                              Node::assign("__chali_ret_v$0", Node::structNew("Point", { Node::i(0) })),
-                              Node::storeAt(Node::var("__chali_ret_v$0"), Node::i(42), Type::i64()),
-                              Node::ret(Node::var("__chali_ret_v$0")) });
-    const auto call = alias ? Node::call("make", { "source" }, { Node::var("target") }) : Node::call("make", {}, {});
-    const auto move = Node::block({ Node::declare("move_source", Type::i64()), Node::assign("move_source", call),
-                                    Node::block({ Node::exprStmt(Node::call("__chali_copy_struct", { "to", "from", "slots" },
-                                                                            { Node::var("target"), Node::var("move_source"), Node::i(1) })) }) });
-    move->typeName = "__fresh_aggregate_destination";
-    Function main;
-    main.name = "main";
-    main.body = Node::block({ Node::declare("target", point), Node::assign("target", Node::alloc(Node::i(8))), move, Node::ret(Node::i(0)) });
-    Program out;
-    out.types = { point };
-    out.functions = { make, main };
-    return out;
 }
 
 /**
@@ -172,29 +126,6 @@ int main(int argc, char **argv)
             buildCopyFixture(argv[2], argv[3]);
             return 0;
         }
-        for (const auto *name : { "CHALI_NO_OPT_INLINE", "CHALI_NO_OPT_STRENGTH", "CHALI_NO_OPT_FOLD", "CHALI_NO_OPT_GVN", "CHALI_NO_OPT_DCE", "CHALI_NO_OPT_LICM" }) environment(name, "1");
-        environment("CHALI_NO_MACHINE_OPT", "");
-        environment("CHALI_NO_OPT_CHECKS", "");
-        checks("", 1);
-        checks("(:=, 7, _, i)\n", 0);
-        checks("(call, unknown, _, result)\n", 0);
-        checks("(label, _, _, join)\n", 0);
-        checks("(store:i64, p, 1, _)\n", 0);
-        checks("(drop, p, _, _)\n", 0);
-        checks("(alloc, 8, _, p)\n", 0);
-        environment("CHALI_NO_OPT_INLINE", "");
-        stackvm::machine::Stats inlineStats;
-        const auto tiny = stackvm::parseQuads("(param, 41, _, x)\n(call, tiny, _, answer)\n(write, answer, _, _)\n(halt, _, _, _)\n"
-                                              "(decl, i64, local, x)\n(label, _, _, tiny)\n(+:i64, x, 1, result)\n(ret, result, _, _)\n",
-                                              "tiny");
-        stackvm::machine::optimize(tiny, &inlineStats);
-        require(inlineStats.inlined == 0, "VM 非循环函数被展开，破坏断点和调用栈身份");
-        environment("CHALI_NO_AGGREGATE_OPT", "");
-        require(ast::optimizeAggregateDestinations(program(false)).functions.size() == 3, "新存储未生成目标地址变体");
-        require(ast::optimizeAggregateDestinations(program(true)).functions.size() == 2, "自引用初始化错误合并目标地址");
-        environment("CHALI_NO_AGGREGATE_OPT", "1");
-        require(ast::optimizeAggregateDestinations(program(false)).functions.size() == 2, "目标地址回退开关无效");
-        environment("CHALI_NO_AGGREGATE_OPT", "");
         const auto quads = stackvm::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
                                                "(alloc, 8, _, p)\n(store:i64, p, 7, _)\n(load:i64, p, _, first)\n(load:i64, p, _, second)\n(drop, p, _, _)\n(ret, second, _, _)\n",
                                                "address-cache");

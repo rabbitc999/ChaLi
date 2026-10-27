@@ -1105,23 +1105,6 @@ bool HasObservableAggregateDestructor(const std::shared_ptr<MType> &type, Memory
 }
 
 /**
- * @brief 判断单个拥有聚合载荷能否使用仅消费新临时值的枚举构造变体。
- * @param variant 枚举变体，普通借用实参不由本函数判断。
- * @return 开关、布局、析构及安全点条件均满足时返回 true。
- */
-bool CanTakeFreshEnumPayload(const MEnumVariantDef &variant)
-{
-    const auto *disabled = std::getenv("CHALI_NO_AGGREGATE_OPT");
-    if ((disabled && *disabled) || variant.payloads.size() != 1u) return false;
-    for (const auto &function : g_funcs)
-        if (function.first.rfind("std::watchdog::", 0) == 0u) return false;
-    const auto &type = variant.payloads[0].type;
-    Memory::Set<Memory::String> visiting;
-    return type && type->kind == MType::Struct && AggregateNeedsDeepCopy(type)
-           && !HasObservableAggregateDestructor(type, visiting);
-}
-
-/**
  * @brief 结构体按**值语义**存进一个位置：当场造的按 move，借来的**深拷贝**。
  * @param dst 目标存储地址。
  * @param srcExprId 用于确定拥有关系的源表达式编号。

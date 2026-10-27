@@ -209,7 +209,6 @@ def main(argv=None):
         print('远端操作：' + ('推送 master 与标签' if args.push_tag else '无'))
         return 0
     env = dict(os.environ, CHALI_LANG='zh', PARSEENGINE_LANG='zh', CHALI_BIN=str(binary))
-    env.pop('CHALI_NO_OPT', None)
     if args.toolchain_dir:
         env['PATH'] = str(args.toolchain_dir.resolve(strict=True)) + os.pathsep + env.get('PATH', '')
     if not args.package_only:

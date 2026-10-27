@@ -8,7 +8,6 @@
 #include "value_text.hpp"
 #include "allocation_index.hpp"
 #include "execution_plan.hpp"
-#include "machine_optimize.hpp"
 #include "data_capacity_index.hpp"
 #include <algorithm>
 #include <array>
@@ -51,4 +50,3 @@
 #include "native_context_impl.hpp"
 #include "native_registry.hpp"
 #include "binary_stream.hpp"
-#include "quad_optimizer_internal.hpp"

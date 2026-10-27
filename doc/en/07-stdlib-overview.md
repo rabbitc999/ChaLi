@@ -149,4 +149,4 @@ capabilities:
 | Capabilities beyond the standard library | [Language reference](04-language-reference.md) |
 | Runnable samples for a feature | [`example/samples/`](../../example/samples/) |
 
-0.14.0 adds `std::encoding`, `std::csv`, `std::datetime`, `std::cli`, `std::utf8` and extended file operations. See the [Any, explicit generics and data utilities](22-any-generics-data.md).
+0.14.0 adds `std::encoding`, `std::csv`, `std::datetime`, `std::cli`, `std::utf8` and extended file operations. See the [Any, explicit generics and data utilities](23-any-generics-data.md).

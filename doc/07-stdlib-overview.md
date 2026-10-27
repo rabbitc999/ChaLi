@@ -151,4 +151,4 @@ isObject=1 len=1
 | 查标准库之外的能力边界 | [语言参考](04-language-reference.md) |
 | 看某个特性的可运行样例 | [`example/samples/`](../example/samples/) |
 
-`std::encoding`、`std::csv`、`std::datetime`、`std::cli`、`std::utf8` 与文件系统扩展，见 [Any、显式泛型与通用数据工具](22-any-generics-data.md)。
+`std::encoding`、`std::csv`、`std::datetime`、`std::cli`、`std::utf8` 与文件系统扩展，见 [Any、显式泛型与通用数据工具](23-any-generics-data.md)。

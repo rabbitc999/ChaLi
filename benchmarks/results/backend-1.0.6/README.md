@@ -1,5 +1,9 @@
 # ChaLi 1.0.6 后端 P0～P2 实测
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 同一最终发行编译器分别关闭／默认开启本轮新增优化，LLVM 两侧均为 O3。默认保留边界、存活检查与反射。关闭开关见原始报告 `baseline_flags`，这不是把全部既有优化关闭。
 
 - 平台：Windows x64，外置 LLVM；静态 LLVM 变体仅修改构建路径，未在本机验证。

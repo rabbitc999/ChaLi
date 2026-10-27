@@ -2,7 +2,7 @@
 
 本脚本只负责**收集事实**：对每个用例记录编译与运行的退出码、标准输出与诊断，
 归类为 UB / CRASH / TIMEOUT / FAIL / OUTPUT，供人工判定。
-判定结论与修复另行登记到 doc/37-compiler-safety.md 与对应回归。
+判定结论与修复另行登记到 doc/34-compiler-safety.md 与对应回归。
 """
 from compiler_path import compiler_path
 import argparse

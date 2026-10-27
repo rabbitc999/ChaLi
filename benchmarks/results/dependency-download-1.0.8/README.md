@@ -1,5 +1,9 @@
 # 1.0.8 在线依赖与书稿调整的简单验证
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 实际下载并校验 Windows x64 的 LLVM/LLD 23.1.4 预编译静态 SDK、匹配的 GCC 16.2 和外置 llvm-mingw；静态 SDK 同时通过 LLVM C API／LLD 静态链接探测。
 
 两种编译器均构建并简单运行。静态编译器在 PATH 不含 SDK／clang 的环境中完成 checked run 和默认 unchecked aot；两种 1.0.8 VSIX 的版本、实际变体和内嵌 EXE 字节核对一致。生成两种 MSI。

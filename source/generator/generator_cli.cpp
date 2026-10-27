@@ -655,7 +655,7 @@ int runCli(int argc, char **argv)
         {"bigfloat_transcendental.cpp", mc / "source/bignum/bigfloat_transcendental.cpp"},
         {"bigfloat_trigonometry.cpp", mc / "source/bignum/bigfloat_trigonometry.cpp"},
     };
-    for (const char *name : {"ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "aggregate_optimize.cpp", "aggregate_optimize.hpp"})
+    for (const char *name : {"ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp"})
         ok = copy(mc / "source/ast" / name, Memory::String("runtime/") + name) && ok;
     for (const char *name : {"bigint_multiplication.cpp", "bigfloat_roots.cpp", "bigint_division.cpp", "bigint_number_theory.cpp", "bigint_bits.cpp", "bigint_modular.cpp", "bigint_conversion.cpp"})
         ok = copy(mc / "source/bignum" / name, Memory::String("runtime/") + name) && ok;

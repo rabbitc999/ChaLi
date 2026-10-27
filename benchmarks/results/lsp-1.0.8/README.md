@@ -1,5 +1,9 @@
 # LSP 1.0.8 增强验证证据
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 日期：2026-10-27。平台：Windows x64，AMD Ryzen 5 5600X，LLVM 外置变体。版本未变更。构建配置及 SHA256 见 [metadata.json](metadata.json)。
 
 本轮只执行 LSP 门禁。闭包门禁使用 --lsp-only，未运行 run、VM、AOT 或书稿程序回归。编译诊断由真实 LSP 触发。中文 PDF 另做生成与页面检查。

@@ -1,5 +1,9 @@
 # ChaLi 1.0.7 默认自举实现 AOT 体积
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 Windows x64、外置 LLVM，代码定稿测量编译器 SHA256 `aedbf7d90d805ecedc2e0c6f60e49d11b05af766ddd7c17d0d713b61265f5ea8`；同源程序三配置均实际运行并核对输出。最高优化、反射与安全检查保留；单位为磁盘字节。完整源码、摘要、PE 节区及依赖模块见 [default-selfhosted.json](default-selfhosted.json)。
 
 | 程序 | 1.0.6 | 1.0.7 全标准库 | 1.0.7 按需 | 缩小 |

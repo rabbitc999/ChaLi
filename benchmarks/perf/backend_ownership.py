@@ -18,8 +18,8 @@ from compiler_path import compiler_path
 from project_temp import tempfile
 from release import compiler_version
 
-DISABLE = {name:'1' for name in ['CHALI_NO_AGGREGATE_OPT','CHALI_NO_ARRAY_COPY_BULK','CHALI_NO_AOT_BULK_COPY',
-           'CHALI_NO_AOT_ADDRESS_CACHE','CHALI_NO_AOT_INLINE_HINT','CHALI_NO_AOT_DIRECT_CALLS','CHALI_NO_OPT_CHECKS']}
+DISABLE = {name:'1' for name in ['CHALI_NO_ARRAY_COPY_BULK','CHALI_NO_AOT_BULK_COPY',
+           'CHALI_NO_AOT_ADDRESS_CACHE','CHALI_NO_AOT_INLINE_HINT','CHALI_NO_AOT_DIRECT_CALLS']}
 
 
 def main():

@@ -48,4 +48,4 @@ The complete export uses `book/` for Chinese Markdown, `book/en/` for English Ma
 | [A](A-common-errors.md) | Common errors |
 | [B](B-standard-library.md) | Standard-library reference |
 
-For precise API signatures, use `chali man api` and the [API index](../../library/README.md). For measured VM and AOT performance, see the [performance report](../../en/12-vm-performance.md).
+For precise API signatures, use `chali man api` and the [API index](../../library/README.md). For measured VM and AOT performance, see the [performance report](../../en/12-performance.md).

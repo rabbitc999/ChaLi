@@ -38,8 +38,8 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | Looking up commands, config, tests | [Toolchain](09-toolchain.md) |
 | Querying APIs in a terminal or checking editor caches | [Command line manual](../man/en/README.md) → [LSP incremental hints and caching](../man/en/lsp.md) |
 | Looking for the authoritative grammar | [EBNF grammar reference](../14-grammar-ebnf.md) |
-| Comparing VM execution performance | [Current cross-language VM measurements](12-vm-performance.md) |
-| Installing MSI/DEB/RPM packages or building another CPU architecture | [Installation packages and architecture builds](42-installation-packages.md) |
+| Comparing AOT performance with C, Rust, Go, Java, Node, Lua and Python | [Current cross-language AOT measurements](12-performance.md) |
+| Installing MSI/DEB/RPM packages or building another CPU architecture | [Installation packages and architecture builds](39-installation-packages.md) |
 | Want to contribute / see the roadmap | [Roadmap and ecosystem](10-roadmap.md) |
 
 ---
@@ -83,41 +83,41 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 - [11 Borrow control flow and algorithm validation](11-algorithm-validation.md): independent dataflow checks, heap structures, DFS/BFS and NOIP2015 brute-force comparisons.
 
-- [Any, explicit generics and data utilities](22-any-generics-data.md)
+- [Any, explicit generics and data utilities](23-any-generics-data.md)
 
-- [Ownership transfer](23-ownership-move.md)
+- [Ownership transfer](24-ownership-move.md)
 
-- [Context-typed literals, operator inference and macros](24-literals-operators-macros.md)
+- [Context-typed literals, operator inference and macros](25-literals-operators-macros.md)
 
-- [Execution and deployment](25-execution-delivery.md)
+- [Execution and deployment](26-execution-delivery.md)
 
-- [Custom error propagation and if expressions](26-error-propagation-if.md)
+- [Custom error propagation and if expressions](27-error-propagation-if.md)
 
-- [Matching, interpolation, generics and scope cleanup](27-match-interpolation-scope.md)
+- [Matching, interpolation, generics and scope cleanup](28-match-interpolation-scope.md)
 
-- [Return expressions, named closures and field derivation](28-declaration-sugars.md)
+- [Return expressions, named closures and field derivation](29-declaration-sugars.md)
 - Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.chl), [VM regressions](../../tests/chali_block_expression.py).
 
 - Implicit moves in value breaks: [semantics and cleanup order](04-language-reference.md#moving-and-cleaning-up-value-breaks), [resource identity and destructor sample](../../example/samples/break_move.chl).
 
-- [Threads, channels and explicit events](29-thread-concurrency.md)
+- [Threads, channels and explicit events](30-thread-concurrency.md)
 
-- [Exact symbolic computation and high precision mathematics](34-symbolic-computation.md)
-- [Standard library ownership and string methods](35-opcode-values-strings.md)
-- [Reflection serialization and dynamic SQL](36-reflection-serialization-sql.md)
+- [Exact symbolic computation and high precision mathematics](31-symbolic-computation.md)
+- [Standard library ownership and string methods](32-opcode-values-strings.md)
+- [Reflection serialization and dynamic SQL](33-reflection-serialization-sql.md)
 
 The [24-chapter beginner book](../book/en/README.md) includes exercises with reference answers, literary adaptations and compilation / VM execution diagrams. The Chinese book is the maintained source for this material.
 
-- [Compiler safety boundaries and focused regression tests](37-compiler-safety.md)
+- [Compiler safety boundaries and focused regression tests](34-compiler-safety.md)
 
-- [Opcode and standard-library host records](../38-opcode-storage.md)
+- [Opcode and standard-library host records](../35-opcode-storage.md)
 
-- [Name freeze: the five letters of ChaLi](40-name-freeze.md)
+- [Name freeze: the five letters of ChaLi](37-name-freeze.md)
 
-- [AOT compilation](41-aot.md)
-- [Backend ownership optimization and AOT counters](43-backend-ownership.md)
-- [Raw storage and C ABI directives](44-unsafe-abi.md)
+- [AOT compilation](38-aot.md)
+- [AOT lowering switches and counters](40-backend-ownership.md)
+- [Raw storage and C ABI directives](41-unsafe-abi.md)
 
-- [Downloaded build dependencies](45-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
+- [Downloaded build dependencies](42-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
 
-- [Native AOT debugging](46-native-debugging.md): GDB breakpoints, stepping and variables.
+- [Native AOT debugging](43-native-debugging.md): GDB breakpoints, stepping and variables.

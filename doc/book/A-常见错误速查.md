@@ -307,5 +307,5 @@ chali aot: vec 下标越界：5（长度 1）    <- List
 ## A.7 下一步
 
 错误看得懂，剩下就是写。翻到[附录 B](B-标准库速查.md)，
-按能力域认识一遍标准库；或者回到[反射编解码与动态 SQL](../36-reflection-serialization-sql.md)，
+按能力域认识一遍标准库；或者回到[反射编解码与动态 SQL](../33-reflection-serialization-sql.md)，
 通过可运行的模型示例练习类型、错误处理与标准库协作。

@@ -1,5 +1,9 @@
 # ChaLi 1.0.7 通用 LLVM AOT 基准
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 Windows x64、外置 LLVM，默认最高优化、完整四元式优化预算、反射与安全检查。构建与正式计时隔离，性能阶段串行运行；每配置 3 次进程，每进程 5 个样本，取 15 个样本中位数。规模、源码、校验值与原始样本见 [results.json](results.json)。
 
 测量使用代码定稿快照 1.0.7，编译器 SHA256 `aedbf7d90d805ecedc2e0c6f60e49d11b05af766ddd7c17d0d713b61265f5ea8`。发行前再次核对定稿文档与内嵌资产，交付二进制摘要单独记录；不重标测量摘要。旧版为真实 1.0.6 发行编译器。

@@ -137,7 +137,8 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     }
     std::string command = quoted(compiler) + " -std=c++17 -O2 -fPIC -DCHALI_CUSTOM_ALLOCATOR=1 -DCHALI_WITH_REFLECTION=" + std::to_string(CHALI_WITH_REFLECTION)
                           + " -DSTACKVM_WITH_REFLECTION=" + std::to_string(STACKVM_WITH_REFLECTION) + " -I" + quoted(root.u8string())
-                          + " -I" + quoted((root / "allocator").u8string()) + " -I" + quoted((root / "stackvm").u8string())
+                          + " -I" + quoted((root / "allocator").u8string()) + " -I" + quoted((root / "ircode").u8string())
+                          + " -I" + quoted((root / "stackvm").u8string())
                           + " -c " + quoted(cpp.u8string()) + " -o " + quoted(target.u8string()) + " > " + quoted(log.u8string()) + " 2>&1";
 #ifdef _WIN32
     command = "\"" + command + "\"";

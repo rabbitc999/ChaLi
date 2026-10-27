@@ -6,7 +6,7 @@
 
 Ordinary values, references and standard containers let the compiler check types, borrowing and cleanup relationships. Implementing an allocator, container or host adapter can also require working with addresses and capacity that does not yet contain constructed elements. This chapter introduces those operations and the obligations that accompany them, before the student-system project.
 
-The complete API reference is [Raw storage and C ABI directives](../../en/44-unsafe-abi.md).
+The complete API reference is [Raw storage and C ABI directives](../../en/41-unsafe-abi.md).
 
 `RawStorage`, `RawPtr`, `BarePtr`, `memcpy` and `memset` belong to the implicitly available `std::lang` core. Examples omit `std::lang::` and require no extra import for these names.
 

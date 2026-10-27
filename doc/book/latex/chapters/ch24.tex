@@ -3,7 +3,7 @@
 
 前面的章节主要使用普通值、引用和标准容器。编译器替我们检查类型、借用与清理关系，运行时继续检查数组范围和分配寿命。实现分配器、容器或宿主适配时，有时还需要直接处理地址和尚未构造元素的空间。本章讲这些操作如何使用，以及程序员需要补上哪些证明。
 
-本章之后介绍 AOT 导出，随后进入学生信息管理系统。业务代码通常继续使用安全接口；这里的知识主要用于实现接口背后的存储内核。完整 API 见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/44-unsafe-abi.md}{原始存储与 C ABI 指令}。
+本章之后介绍 AOT 导出，随后进入学生信息管理系统。业务代码通常继续使用安全接口；这里的知识主要用于实现接口背后的存储内核。完整 API 见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-unsafe-abi.md}{原始存储与 C ABI 指令}。
 
 本章的 \texttt{Raw\allowbreak{}Storage}、\texttt{Raw\allowbreak{}Ptr}、\texttt{Bare\allowbreak{}Ptr}、\texttt{memcpy} 和 \texttt{memset} 都来自默认可用的 \texttt{std:\allowbreak{}:\allowbreak{}lang}。示例省略 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}} 前缀，也不需要为这些名字额外写 \texttt{import}。
 

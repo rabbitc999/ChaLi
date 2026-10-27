@@ -6,7 +6,7 @@
 
 ChaLi compiles source into a quadruple intermediate representation, applies the full optimization budget, and lowers it through LLVM to native machine code: `run` uses checked AOT and executes the program in the same process. Diagnostics point directly at the program you are editing.
 
-Install the MSI on Windows, DEB on Ubuntu/Debian or RPM on CentOS, then use the `chali` command on PATH. A Windows source build instead produces `chali-1.0.8-llvm-external-windows-x64.exe` (or `llvm-static`); invoke that actual path when using an uninstalled build. See [installation and architecture options](../../en/42-installation-packages.md).
+Install the MSI on Windows, DEB on Ubuntu/Debian or RPM on CentOS, then use the `chali` command on PATH. A Windows source build instead produces `chali-1.0.8-llvm-external-windows-x64.exe` (or `llvm-static`); invoke that actual path when using an uninstalled build. See [installation and architecture options](../../en/39-installation-packages.md).
 
 Save this as `hello.chl`:
 

@@ -236,7 +236,7 @@ GENERATOR_ASSETS += ["semantics/abi_export.cpp", "glue/aot_modules.inc",
                      "tools/llvm_static_imports.cpp",
                      "LICENSE", "NOTICE", "licenses/miniz/LICENSE"]
 
-GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'ast/aggregate_optimize.cpp', 'ast/aggregate_optimize.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
+GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
 
 GENERATOR_ASSETS += ["ircode/" + name for name in asset_names()]
 from cas_sources import asset_names as cas_asset_names
@@ -284,7 +284,7 @@ def dependencies():
         paths.update(path.relative_to(root) for path in root.glob(pattern) if path.is_file())
     paths.update(map(Path, ("tools/embed_stdlib.py", "tools/project_temp.py", "tools/embedded_asset_cache.py", "tools/stackvm_sources.py", "tools/embed_manual.py", "source/chali.gram",
                            "source/chali_token.gram", "doc/04-language-reference.md",
-                           "doc/24-literals-operators-macros.md", "skills/chali-programming/SKILL.md")))
+                           "doc/25-literals-operators-macros.md", "skills/chali-programming/SKILL.md")))
     names = sorted(path.as_posix() for path in paths)
     # Windows GNU make 无法可靠打开非 ASCII 前置文件名，改用固定 ASCII 路径
     # 记录这些文件的精确时间与大小，保持增量依赖可追踪。

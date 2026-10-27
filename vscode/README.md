@@ -68,7 +68,7 @@ ChaLi（`.chl`）的编辑器支持：**语言服务器就是编译器本体**�
 
 打开已保存的 `.chl` 文件，点击标题栏的构建按钮并选择格式，也可直接使用右键菜单中的对应命令。构建使用 `chali.path` 或当前插件内嵌的编译器，执行前保存目标文档；成功后在“ChaLi 构建”输出中显示完整产物路径，并提供在资源管理器中定位的入口。失败时保留编译器诊断和退出码，不报告成功。构建期间不自动运行产物。
 
-例如 `src/main.chl` 在工程默认配置下生成 `build/main.exe`；exe 使用本机 Windows x64 的 LLVM AOT 后端，.svmb 已删除，不再交付 VM 字节码。AOT 支持范围、静态依赖准备和检查模式见 [AOT 文档](../doc/en/41-aot.md)。源路径和输出路径作为独立参数传递，支持空格与中文。未受信任的工作区不启动编译器。
+例如 `src/main.chl` 在工程默认配置下生成 `build/main.exe`；exe 使用本机 Windows x64 的 LLVM AOT 后端，.svmb 已删除，不再交付 VM 字节码。AOT 支持范围、静态依赖准备和检查模式见 [AOT 文档](../doc/en/38-aot.md)。源路径和输出路径作为独立参数传递，支持空格与中文。未受信任的工作区不启动编译器。
 
 ## 打包
 
@@ -126,4 +126,4 @@ AST 使用从根到叶的节点卡片和连接线展示层级；宏定义节点�
 
 页面为自包含 HTML：样式内联，颜色有兜底值，适配浅色与深色主题，脱离编辑器仍可在浏览器中使用 Tab、搜索和树形操作；单图静态导出也保留。预览使用未保存的当前源码及已打开的模块文件，调用真实编译器；遇到错误保留诊断。修改后再次运行命令即可更新同一个预览页面。
 
-扩展与编译器统一使用 1.0.8 版本，分别打包为 chali-editor-1.0.8-llvm-static.vsix 和 chali-editor-1.0.8-llvm-external.vsix；打包检查真实 --build-info。原生调试使用 GDB/MI，详见[原生调试](../doc/46-native-debugging.md)。
+扩展与编译器统一使用 1.0.8 版本，分别打包为 chali-editor-1.0.8-llvm-static.vsix 和 chali-editor-1.0.8-llvm-external.vsix；打包检查真实 --build-info。原生调试使用 GDB/MI，详见[原生调试](../doc/en/43-native-debugging.md)。

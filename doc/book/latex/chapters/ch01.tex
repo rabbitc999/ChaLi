@@ -26,7 +26,7 @@ I & Interface（接口 / 运行期多态） & 定义一组共同的“契约”�
 
 ChaLi 只有一个命令行程序，叫 \texttt{chali}，编译、建工程、跑测试全在它里面。装它有两条路。
 
-这条路最短：用安装包。 Windows 使用 MSI，Ubuntu/Debian 使用 DEB，CentOS 使用 RPM；安装后通过 PATH 中的 \texttt{chali} 命令启动。包名、架构及手动安装方法见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/42-installation-packages.md}{安装与多架构构建}。
+这条路最短：用安装包。 Windows 使用 MSI，Ubuntu/Debian 使用 DEB，CentOS 使用 RPM；安装后通过 PATH 中的 \texttt{chali} 命令启动。包名、架构及手动安装方法见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/39-installation-packages.md}{安装与多架构构建}。
 
 这条路最全：从源码构建。 适合想改编译器的人，也适合想看清内部的人：
 
@@ -188,7 +188,7 @@ chali check hello.chl
 
 \item 解析与类型检查 —— 语法、类型、引用的生命周期都在这里查，不通过就不执行；
 
-\item 生成并优化四元式 —— 把程序翻译成四元式 IR，按完整优化预算化简；
+\item 生成四元式 —— 把程序翻译成四元式 IR；不做内部化简，优化交给 LLVM；
 
 \item AOT 编译执行 —— 经 LLVM 生成原生机器码，在当前进程里跑起来。
 
@@ -215,10 +215,10 @@ chali check hello.chl
 
 \begin{center}
 \includegraphics[width=\linewidth]{../images/chali-compilation.png}\par
-ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、四元式优化与 LLVM AOT
+ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、四元式生成与 LLVM AOT
 \end{center}
 
-四元式是本书所说的 IR。编译器生成四元式、数据区和布局，执行路径对四元式完成完整优化后送入 LLVM 后端，生成原生机器码；优化结果可通过调试输出检查，与生成阶段的四元式产物出口不要混淆。
+四元式是本书所说的 IR。编译器生成四元式、数据区和布局，四元式不做内部化简，直接送入 LLVM 后端完成优化并生成原生机器码；与生成阶段的四元式产物出口不要混淆。
 
 \texttt{run} 与 \texttt{aot} 都产出原生程序：\texttt{run} 走 checked AOT 编译并当场执行，\texttt{aot} 默认 unchecked 导出可执行文件或动态库；部署边界见第 22 章，AOT 导出见第 25 章。
 

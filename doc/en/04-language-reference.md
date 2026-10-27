@@ -195,7 +195,7 @@ Only writable places are accepted; literals, temporaries, read-only references a
 
 Statically tracked reads and repeated moves after a move are rejected, including scalar reads and aliases. Assignment does not restore usability; a new declaration is required. Redeclaration requires the whole variable to have been moved on every incoming path. Moving one field leaves disjoint fields usable but prevents reading the complete aggregate.
 
-Aggregate lifetime markers prevent duplicate destruction. Moving from manually allocated storage does not free its storage block; drop the original reference when appropriate. Ordinary assignment and ordinary value parameters still copy. Use references for calls that must avoid copying, and move explicitly where the result should take ownership. Initialization, assignment, returns and temporary reception transfer owned fields from the move result. See the [Ownership transfer](23-ownership-move.md).
+Aggregate lifetime markers prevent duplicate destruction. Moving from manually allocated storage does not free its storage block; drop the original reference when appropriate. Ordinary assignment and ordinary value parameters still copy. Use references for calls that must avoid copying, and move explicitly where the result should take ownership. Initialization, assignment, returns and temporary reception transfer owned fields from the move result. See the [Ownership transfer](24-ownership-move.md).
 
 Desktop and embedded Linux hosts share the single `source/ircode/` core and configure resources through their host integration.
 
@@ -728,7 +728,7 @@ void main() {
 
 `<T:a>` infers from the argument's static type; `<T>` infers from the expected result type. Explicit types take priority. Square, round and curly groups match strictly in order. `...rest` / `..rest` capture a variadic tail, traversed by `$for`. `$match x is expr` supports exactly `expr`, `ident`, `type`, `block` and `stmt`, with ordered `$else is` branches and `$end_match`. `$regex x is "pattern"` uses complete ECMAScript matching of original text and ends with `$end_regex`. Unselected output is excluded from final semantic checks.
 
-`$stringify(x)` reads original spelling; `$concat(a, b)` produces identifiers only. `$line`, `$file` and `$module` preserve origins. `$replace A(x) x + 1` is a single-line definition. See [hygienic macros](24-literals-operators-macros.md#compile-time-hygienic-ast-macros).
+`$stringify(x)` reads original spelling; `$concat(a, b)` produces identifiers only. `$line`, `$file` and `$module` preserve origins. `$replace A(x) x + 1` is a single-line definition. See [hygienic macros](25-literals-operators-macros.md#compile-time-hygienic-ast-macros).
 
 ## 15. Annotations and reflection
 
@@ -788,7 +788,7 @@ returns. It still supports ownership transfer with `T target = move source;`,
 including explicit `move value` in value arguments and returns. This applies to
 all opcode types. A struct that implements `Closeable` follows the same rule
 automatically: a copy would mean two owners and two `close()` calls, so copying is
-refused without an extra directive (see [declaration sugars](28-declaration-sugars.md)).
+refused without an extra directive (see [declaration sugars](29-declaration-sugars.md)).
 Moving does not call copy; the source binding becomes invalid
 and the final owner is responsible for drop. `Type::new(...)`
 invokes the creation binding. An opcode is a special struct containing an opaque
@@ -820,7 +820,7 @@ Type mapping, nullable references and glue bindings: see
 
 `std::lang::RawStorage<T>` owns capacity without constructing spare elements. `RawPtr<T>` carries a typed allocation identity and index without extending lifetime. `initAt`, `takeAt`, `dropAt`, `readAt`, `borrowAt` and `relocateNonOverlapping` require unsafe permission. `__rawSize(T)` and `__rawAlign(T)` query language storage layout within unsafe code, independently of C ABI layout. Borrowed references must not outlive their allocation or initialized element.
 
-`BarePtr<T>` stores only a logical byte address, without runtime element-type or initialization checks. `p + n`, `n + p` and `p - n` use the static element stride; `p - q` returns an integral element distance. `barePointer`, `pointerFromAddress`, `dereference`, `memcpy` and `memset` require unsafe scope. Byte copy/fill lengths count bytes; complete-range and allocation-lifetime checks remain, with no initialization-bit changes or resource hooks. Nonempty copies must not overlap. These names belong to the implicit `std::lang` core and may be used without qualification. See [Raw storage and C ABI directives](44-unsafe-abi.md) and [book chapter 25](../book/en/24-unsafe-code.md).
+`BarePtr<T>` stores only a logical byte address, without runtime element-type or initialization checks. `p + n`, `n + p` and `p - n` use the static element stride; `p - q` returns an integral element distance. `barePointer`, `pointerFromAddress`, `dereference`, `memcpy` and `memset` require unsafe scope. Byte copy/fill lengths count bytes; complete-range and allocation-lifetime checks remain, with no initialization-bit changes or resource hooks. Nonempty copies must not overlap. These names belong to the implicit `std::lang` core and may be used without qualification. See [Raw storage and C ABI directives](41-unsafe-abi.md) and [book chapter 25](../book/en/24-unsafe-code.md).
 
 ---
 
@@ -858,7 +858,7 @@ Prefer return-first syntax: `int64 fn(int64, int64) callback` and `int64 fn(int6
 
 Within the same block, a variable can be redeclared after its entire value has been moved, including with a different type: `String a="1"; String b=move a; String a="2";`. The declaration allocates independent storage; old references still identify the old object. Every path reaching the declaration must have moved the entire previous value. Moving a field, moving on only some branches, or assigning to the old variable after moving does not permit redeclaration.
 
-For Any type checks and safe extraction, use `isType<T>`, `tryGet<T>`, `tryGetReference<T>` and `tryGetMut<T>`. `nameof` and the box’s `.name()` are not application API; see the [Any, explicit generics and data utilities](22-any-generics-data.md).
+For Any type checks and safe extraction, use `isType<T>`, `tryGet<T>`, `tryGetReference<T>` and `tryGetMut<T>`. `nameof` and the box’s `.name()` are not application API; see the [Any, explicit generics and data utilities](23-any-generics-data.md).
 
 An anonymous function returning another function may group its return type: `(int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) { int64 fn copy(int64 x) { a(b(x)) } }`. Neither trailing expression has a semicolon: the outer expression returns a closure and the inner expression returns an integer. The returned closure must own `a` and `b` rather than borrow parameters from an invocation that has ended. See the [function and closure examples](../book/en/15-functions-closures.md).
 
@@ -1079,7 +1079,7 @@ Expressions such as `yield i + 1;` and `yield makeText();` are evaluated once an
 
 The result is saved before exit callbacks and automatic cleanup. Moving clears the source storage and ends its binding lifetime without invoking close/drop on the source; the final receiver owns cleanup. Types implementing both Closeable and Drop close before dropping. Copies own independent resources, so source and result are cleaned up at their respective lifetime ends. Exits across loops clean up every scope that is left without releasing resources already transferred to the result.
 
-Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.chl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM behavior. See [ownership transfer](23-ownership-move.md) for general rules.
+Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.chl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM behavior. See [ownership transfer](24-ownership-move.md) for general rules.
 
 ## Default value text and string conversion
 
@@ -1091,18 +1091,18 @@ Struct `{}` formatting reuses the no-argument method; styled overloads retain th
 
 ## Returning control expressions
 
-`return { ... yield value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on yield; outer variables copy. Nested return, break level / break all, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value exits. See [declarations and return expressions](28-declaration-sugars.md).
+`return { ... yield value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on yield; outer variables copy. Nested return, break level / break all, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value exits. See [declarations and return expressions](29-declaration-sugars.md).
 
 ## Named function declarations
 
-Statements accept `int64 add(int64 x) { return x + 1; }` and a local function binding prototype `int64 callback(int64 x);`. The declared result anchors checking. Captures default to const&, with explicit mut, copy or move before the body. Capture state moves into the binding; borrowed captures cannot outlive their sources. This syntax is absent from expression productions. See [named function rules](28-declaration-sugars.md).
+Statements accept `int64 add(int64 x) { return x + 1; }` and a local function binding prototype `int64 callback(int64 x);`. The declared result anchors checking. Captures default to const&, with explicit mut, copy or move before the body. Capture state moves into the binding; borrowed captures cannot outlive their sources. This syntax is absent from expression productions. See [named function rules](29-declaration-sugars.md).
 
 ## Field derivation
 
-`#derive(Equal, Hash, Clone)` before a struct or enum uses semantic field metadata to generate field-based methods, followed by normal semantic checking and quadruple lowering. Nested fields must implement each requested interface. Drop and Closeable derivation is forbidden. Generic methods are generated after instantiation. See [derivation rules](28-declaration-sugars.md).
+`#derive(Equal, Hash, Clone)` before a struct or enum uses semantic field metadata to generate field-based methods, followed by normal semantic checking and quadruple lowering. Nested fields must implement each requested interface. Drop and Closeable derivation is forbidden. Generic methods are generated after instantiation. See [derivation rules](29-declaration-sugars.md).
 
 ## Lifetime contracts `#borrow` / `#static`
 
-Lifetime contracts can be written in a row before a function declaration to state explicitly who borrows from whom. `#borrow(out, in)` means `out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each of them. `#ret` denotes the return value, so `#borrow(#ret, [a, b])` is the same shape as Rust's `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` — a call site propagates origins only through the declared arguments. `#static(a)` declares that `a` has a `'static` origin, letting it be returned across functions and stored for the long term. Names must be parameters or locals of the same function, and sources of `#ret` must be parameters. See [declaration sugar rules](28-declaration-sugars.md).
+Lifetime contracts can be written in a row before a function declaration to state explicitly who borrows from whom. `#borrow(out, in)` means `out` borrows from `in`; the list form `#borrow(out, [in1, in2, in3])` means it borrows from each of them. `#ret` denotes the return value, so `#borrow(#ret, [a, b])` is the same shape as Rust's `fn f<'a, 'b>(a: &'a T, b: &'b T) -> &'a T` — a call site propagates origins only through the declared arguments. `#static(a)` declares that `a` has a `'static` origin, letting it be returned across functions and stored for the long term. Names must be parameters or locals of the same function, and sources of `#ret` must be parameters. See [declaration sugar rules](29-declaration-sugars.md).
 
 `new[n]` uses runtime heap allocation. `new T` allocates an object; `new T(args)` constructs it. Owning values are cleaned up at scope exit; allocated references use `.drop()`. The former `heap T` and `heap T(args)` allocation forms are removed; `heap` is an ordinary identifier.

@@ -32,7 +32,7 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 | 开始写代码 | [语言速览](02-language-tour.md) → [语言参考](04-language-reference.md) |
 | 想弄明白值语义和引用 | [核心概念](03-core-concepts.md)，显式转移所有权见语言参考的 `move` |
 | 要把程序部署到目标宿主 | [交付安全](05-delivery-security.md) → [跨平台部署](06-deployment.md) |
-| 安装编译器、生成 MSI/DEB/RPM 或构建其他 CPU 架构 | [安装包与多架构构建](42-installation-packages.md) |
+| 安装编译器、生成 MSI/DEB/RPM 或构建其他 CPU 架构 | [安装包与多架构构建](39-installation-packages.md) |
 | 想知道标准库有什么 | [标准库概览](07-stdlib-overview.md) → [库函数 API 参考](library/README.md) |
 | 想看仓库里有什么能直接跑的 | [示例项目](13-projects.md)（GUI、Web、成绩管理、目标宿主 VM……） |
 | 要和 C/C++ 宿主打通 | [宿主集成与 C ABI](08-host-integration.md) |
@@ -44,8 +44,8 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 | 查语法的权威写法 | [EBNF 语法参考](14-grammar-ebnf.md) |
 | 想看用"方块世界"讲明白的 ChaLi | [99 方块里的 ChaLi 语言](99-chali-in-blocks.md) |
 | 要升级版本，怕代码突然不编了 | [21 语义冻结清单](21-semantics-frozen.md)（核心契约、兼容性与实现边界） |
-| 想确认哪些写法已经冻住 | [39 语法冻结清单](39-syntax-frozen.md)（词法、关键字、结构形状与改语法同步项） |
-| 想知道 ChaLi 这五个字母各承诺了什么 | [40 名称冻结：ChaLi 五个字母](40-name-freeze.md)（C/H/A/L/I 各一条契约与可跑判据） |
+| 想确认哪些写法已经冻住 | [39 语法冻结清单](36-syntax-frozen.md)（词法、关键字、结构形状与改语法同步项） |
+| 想知道 ChaLi 这五个字母各承诺了什么 | [40 名称冻结：ChaLi 五个字母](37-name-freeze.md)（C/H/A/L/I 各一条契约与可跑判据） |
 | 想参与贡献 / 看路线 | [路线图与生态愿景](10-roadmap.md) |
 
 ---
@@ -126,44 +126,44 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 
 - [11 借用控制流与算法验证](11-algorithm-validation.md)：独立数据流检查、链表 / BST / DFS / BFS、NOIP2015 运输计划与暴力对照。
 
-- [12 VM 与 LLVM AOT 性能](12-vm-performance.md)：默认容器、小函数与固定数组的执行耗时，VM 对照 C/C++、Python、Lua，并明确列出 AOT 相对 VM 的提速比例、原始样本及计时口径。
+- [12 LLVM AOT 跨语言性能](12-performance.md)：五个微负载下 AOT 与 C、C++、Rust、Go、Java、Node、Lua、Python 的中位数对照，checked 与 unchecked 的差距，删除内部四元式优化对编译期与运行期的影响，以及原始样本与计时口径。
 
 - 静态 SQLite 与 MySQL/MariaDB 连接入口：[SQL 接口](../example/sql-chali/doc/01-sql-library.md)、[SQLite 实库回归](../tests/chali_sqlite.py)、[连接 ABI 夹具回归](../tests/chali_sql_connections.py)、[MySQL/PostgreSQL 实库回归](../tests/chali_sql_live.py)。
 
-- [Any、显式泛型与通用数据工具](22-any-generics-data.md)
+- [Any、显式泛型与通用数据工具](23-any-generics-data.md)
 
-- [资源所有权移动](23-ownership-move.md)
+- [资源所有权移动](24-ownership-move.md)
 
-- [字面量定型、运算符推导与宏](24-literals-operators-macros.md)
+- [字面量定型、运算符推导与宏](25-literals-operators-macros.md)
 
-- [执行与交付](25-execution-delivery.md)
+- [执行与交付](26-execution-delivery.md)
 
-- [自定义错误传播与 if 表达式](26-error-propagation-if.md)
+- [自定义错误传播与 if 表达式](27-error-propagation-if.md)
 
-- [匹配、插值、泛型与作用域清理](27-match-interpolation-scope.md)
+- [匹配、插值、泛型与作用域清理](28-match-interpolation-scope.md)
 
-- [返回表达式、具名闭包与字段派生](28-declaration-sugars.md)
+- [返回表达式、具名闭包与字段派生](29-declaration-sugars.md)
 
 - 带值退出的默认移动：[语义与清理顺序](04-language-reference.md#带值退出的移动与清理)、[资源身份和析构回归样例](../example/samples/break_move.chl)。
 
-- [线程、通道与显式事件](29-thread-concurrency.md)
+- [线程、通道与显式事件](30-thread-concurrency.md)
 
-- [精确符号计算与高精度数学](34-symbolic-computation.md)
-- [标准库存储、复制与字符串方法](35-opcode-values-strings.md)
-- [反射序列化与动态 SQL](36-reflection-serialization-sql.md)
+- [精确符号计算与高精度数学](31-symbolic-computation.md)
+- [标准库存储、复制与字符串方法](32-opcode-values-strings.md)
+- [反射序列化与动态 SQL](33-reflection-serialization-sql.md)
 
-- [编译器安全边界与定向回归](37-compiler-safety.md)
+- [编译器安全边界与定向回归](34-compiler-safety.md)
 
-- [Opcode 与标准库宿主记录](38-opcode-storage.md)
+- [Opcode 与标准库宿主记录](35-opcode-storage.md)
 
-- [语法冻结清单](39-syntax-frozen.md)
+- [语法冻结清单](36-syntax-frozen.md)
 
-- [名称冻结：ChaLi 五个字母](40-name-freeze.md)
+- [名称冻结：ChaLi 五个字母](37-name-freeze.md)
 
-- [AOT 编译入口](41-aot.md)
-- [后端所有权优化与 AOT 计数](43-backend-ownership.md)
-- [原始存储与 C ABI 指令](44-unsafe-abi.md)
+- [AOT 编译入口](38-aot.md)
+- [AOT 降低开关与计数](40-backend-ownership.md)
+- [原始存储与 C ABI 指令](41-unsafe-abi.md)
 
-- [在线构建依赖](45-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
+- [在线构建依赖](42-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
 
-- [原生 AOT 调试](46-native-debugging.md)：GDB 断点、单步、变量及 .svmb 停止维护说明。
+- [原生 AOT 调试](43-native-debugging.md)：GDB 断点、单步、变量及 .svmb 停止维护说明。

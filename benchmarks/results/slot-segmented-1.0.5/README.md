@@ -1,5 +1,9 @@
 # AOT 容器实验：Map 三元组、Set 槽位数组和分块 List
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 本轮按用户要求主要评估 LLVM AOT。正式结果只包含 AOT 程序；先前穿插 VM 的未完成试跑保存在 [mixed-partial.json](mixed-partial.json) 和 [日志](mixed-partial.log)，不混入正式中位数。编译器和默认标准库保持原状，本次改动是 ChaLi 实验源码及对照工具。
 
 ## 设计

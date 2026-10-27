@@ -5,7 +5,6 @@
 
 #include "ast_storage_detail.hpp"
 #include "ast.hpp"
-#include "aggregate_optimize.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -1039,8 +1038,7 @@ void Program::addOperator(const Memory::String &typeName, const Memory::String &
  */
 CodegenResult generate(const Program &input, const Memory::String &moduleName)
 {
-    const auto optimized = optimizeAggregateDestinations(input);
-    const auto &program = optimized;
+    const Program &program = input;
     Emitter emitter;
 
     /* 先把用户会占用到的名字收齐，内部临时名（`__temp_t<n>`）据此避让。 */

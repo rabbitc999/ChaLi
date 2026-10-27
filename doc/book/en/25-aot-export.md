@@ -4,7 +4,7 @@
 **English** · [简体中文](../25-AOT导出.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Since 1.0.8, run uses checked AOT, and aot defaults to unchecked export. --debug retains native source and variable information. VS Code breakpoints, stepping and variable inspection use GDB; see [Native debugging](../../en/46-native-debugging.md). The .svmb export has been removed.
+Since 1.0.8, run uses checked AOT, and aot defaults to unchecked export. --debug retains native source and variable information. VS Code breakpoints, stepping and variable inspection use GDB; see [Native debugging](../../en/43-native-debugging.md). The .svmb export has been removed.
 
 AOT exports native machine code from a ChaLi program. The frontend checks the program and optimizes the quadruple representation, then lowers reachable language functions to LLVM. LLVM performs optimization and target code generation before the linker combines the application with its runtime.
 
@@ -53,4 +53,4 @@ chali aot library.chl --shared --out build/library
 
 Use the generated C header for actual exported names and signatures. Call `chali_init()` before exported operations and `chali_finish()` when finished. Complex imported C ABI shapes require the compatible host adapter compiler described in [chapter 21](21-c-interop.md).
 
-Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-vm-performance.md). Next: [the student system](26-student-system.md).
+Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-performance.md). Next: [the student system](26-student-system.md).

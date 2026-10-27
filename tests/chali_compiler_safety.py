@@ -16,7 +16,7 @@ def run_native(cxx, work, sanitize):
     sources = [ROOT / 'tests/chali_native_safety.cpp']
     for pattern in ['source/bignum/bigint*.cpp', 'source/bignum/bigfloat*.cpp', 'source/ast/ast*.cpp']:
         sources.extend(sorted(ROOT.glob(pattern)))
-    sources += [ROOT / name for name in ['source/ast/ast.cpp', 'source/ast/aggregate_optimize.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
+    sources += [ROOT / name for name in ['source/ast/ast.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
     flags = ['-std=c++17', '-O1' if sanitize else '-O2', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1']
     if sanitize:
         flags += ['-g', '-fsanitize=address,undefined,float-cast-overflow', '-fno-omit-frame-pointer', '-no-pie']
@@ -37,7 +37,7 @@ def run_snapshot(compiler, work, env):
     count = 2000
     source.write_text('void main()\n{\n' + '    println("snapshot-safe");\n' * count + '    return;\n}\n', encoding='utf-8')
     prefix = work / 'snapshot'
-    process = subprocess.Popen([str(compiler), 'run', str(source), '--out', str(prefix)], cwd=work, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(env, CHALI_DUMP_OPT='1'))
+    process = subprocess.Popen([str(compiler), 'run', str(source), '--out', str(prefix)], cwd=work, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         deadline = time.monotonic() + 120
         while not prefix.with_suffix('.layout').exists():

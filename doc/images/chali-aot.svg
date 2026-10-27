@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1560" height="900" viewBox="0 0 1560 900">
   <rect width="1560" height="900" fill="#f4f7fb"/>
   <text x="40" y="58" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="33" font-weight="700" fill="#10233f">ChaLi · AOT 导出流程</text>
-  <text x="40" y="95" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="19" fill="#4a5b73">源码检查 → 四元式优化 → LLVM 优化与机器码生成 → 原生产物</text>
+  <text x="40" y="95" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="19" fill="#4a5b73">源码检查 → 四元式生成 → LLVM 优化与机器码生成 → 原生产物</text>
   <rect x="40" y="150" width="440" height="120" rx="15" fill="#ffffff" stroke="#d8e1ee" stroke-width="1"/>
   <text x="260" y="180" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">1  源码与前端检查</text>
   <text x="260" y="210" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">.chl、模块与 AST 宏</text>
   <text x="260" y="240" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">类型、拥有关系及生命周期</text>
   <rect x="560" y="150" width="440" height="120" rx="15" fill="#ffffff" stroke="#d8e1ee" stroke-width="1"/>
-  <text x="780" y="180" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">2  优化后的四元式</text>
-  <text x="780" y="210" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">复用前端与四元式优化器</text>
+  <text x="780" y="180" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">2  四元式</text>
+  <text x="780" y="210" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">复用前端，四元式不做内部优化</text>
   <text x="780" y="240" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">直接降低为 LLVM 指令</text>
   <rect x="1080" y="150" width="440" height="120" rx="15" fill="#ffffff" stroke="#d8e1ee" stroke-width="1"/>
   <text x="1300" y="180" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">3  LLVM 中间表示</text>

@@ -53,7 +53,7 @@ class Config:
         self.run = run          # (case) -> [cmd...]
         self.build = build      # (case) -> [cmd...] or None
         self.note = note
-        self.cwd = cwd          # 单独的工作目录（ChaLi 会把中间产物写到 ./build）
+        self.cwd = cwd          # 单独的工作目录（ChaLi 会把中间产物写到 ./.chali）
 
 
 def java_cmd(java, mode):
@@ -68,14 +68,14 @@ def build_configs():
     version = compiler_version(Path(chali).resolve())
     scratch = ROOT / "tmp" / "perf-run"
     scratch.mkdir(parents=True, exist_ok=True)
-    configs.append(Config("chali", f"ChaLi {version}（StackVM，默认后端）",
+    configs.append(Config("chali-run", f"ChaLi {version}（LLVM AOT，checked run）",
                           lambda case: [chali, "run", str(HERE / f"{case}.chl")],
-                          note="字节码解释执行，无即时编译", cwd=str(scratch)))
+                          note="缺省 checked AOT：边界与存活检查保留，进程内静态 LLD", cwd=str(scratch)))
     if llvm_compiler():
-        configs.append(Config("chali-aot", f"ChaLi {version}（LLVM AOT，默认检查）",
+        configs.append(Config("chali-aot", f"ChaLi {version}（LLVM AOT，unchecked 导出）",
                               lambda case: [str(HERE / f"{case}-aot.exe")],
                               lambda case: [sys.executable, str(HERE / "build_aot.py"), case, chali],
-                              note="同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3 与默认检查；C 壳计时，初始化不计时；共享原生标准库"))
+                              note="同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3、unchecked；C 壳计时，初始化不计时；共享原生标准库"))
     if find("gcc"):
         configs.append(Config("c", "C（gcc -O2）",
                               lambda case: [str(HERE / f"{case}-c.exe")],

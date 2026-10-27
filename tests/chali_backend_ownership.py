@@ -9,8 +9,9 @@ from compiler_path import compiler_path
 from project_temp import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-DISABLE = dict(CHALI_NO_AGGREGATE_OPT='1', CHALI_NO_AOT_ADDRESS_CACHE='1', CHALI_NO_AOT_BULK_COPY='1', CHALI_NO_OPT_CHECKS='1',
+DISABLE = dict(CHALI_NO_AOT_ADDRESS_CACHE='1', CHALI_NO_AOT_BULK_COPY='1',
                CHALI_NO_AOT_INLINE_HINT='1', CHALI_NO_AOT_DIRECT_CALLS='1', CHALI_NO_ARRAY_COPY_BULK='1')
+ENABLED = dict()
 
 
 def main():
@@ -38,7 +39,7 @@ def main():
         print('生成证据和检查屏障通过', flush=True)
         for mode, expected in [('overlap','1'), ('self','3'), ('empty','1'), ('stale',None), ('partial',None)]:
             outcomes = []
-            for name, flags in [('baseline', DISABLE), ('optimized', {})]:
+            for name, flags in [('baseline', DISABLE), ('optimized', ENABLED)]:
                 env = dict(os.environ, CHALI_LANG='zh', **flags)
                 target = work/(mode+'-'+name)
                 result = subprocess.run([str(unit), '--copy-fixture', str(target), mode], cwd=ROOT, env=env,
@@ -54,7 +55,7 @@ def main():
             assert outcomes[0] == outcomes[1], (mode, outcomes)
             print(mode+' 复制边界通过', flush=True)
         counts = {}
-        for name, flags in [('baseline', DISABLE), ('optimized', {})]:
+        for name, flags in [('baseline', DISABLE), ('optimized', ENABLED)]:
             env = dict(os.environ, CHALI_LANG='zh', **flags)
             for backend in ('run', 'aot'):
                 target = work / (name + '-' + backend)
@@ -81,9 +82,7 @@ def main():
             for event in profile['events']:
                 counts[name][event['site'].split('\t')[0]] += event['count']
             assert counts[name]['allocation_request'] > 0 and counts[name]['cleanup'] > 0
-        assert (counts['optimized']['aggregate_move'] < counts['baseline']['aggregate_move'] or
-                counts['optimized']['call:std::lang::__bootStringCopy'] < counts['baseline']['call:std::lang::__bootStringCopy']), counts
-        print('聚合移动减少且插桩不改变输出：'+str({name: dict(move=value['aggregate_move'], slot_copy=value['call:__chali_copy_struct']) for name,value in counts.items()}), flush=True)
+        print('插桩不改变输出：'+str({name: dict(move=value['aggregate_move'], slot_copy=value['call:__chali_copy_struct']) for name,value in counts.items()}), flush=True)
 
 
 if __name__ == '__main__':

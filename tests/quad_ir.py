@@ -1,6 +1,6 @@
 """规范化中间表示（`quad_ir`）的结构回归：基本块覆盖、控制流对称、回边与函数划分。
 
-`CHALI_DUMP_IR=1` 会让编译器在优化后、组装前把 IR 打到 stderr。这里不比对全文（后端一改就会变），
+`CHALI_DUMP_IR=1` 会让编译器在组装前把 IR 打到 stderr。这里不比对全文（后端一改就会变），
 只校验结构性不变量：块区间必须无缝覆盖全部四元式、前驱后继必须互相对得上、
 标了回边的块必须真有一条跳回前面块的后继、标了循环头的块必须真的被回边指向。
 """
@@ -143,7 +143,6 @@ def compile_and_dump(chali, source):
     environment = dict(os.environ)
     environment["CHALI_LANG"] = "zh"
     environment["CHALI_DUMP_IR"] = "1"
-    environment["CHALI_DUMP_OPT"] = "1"
     result = subprocess.run([str(chali), str(source)], capture_output=True, text=True,
                             encoding="utf-8", errors="replace", env=environment, timeout=120)
     return result.returncode, result.stdout, result.stderr

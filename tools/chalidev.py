@@ -118,8 +118,11 @@ _MESSAGES = {
   "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n": [
     "  --stdin                Read source from standard input (without a file, help is shown instead)\n"
   ],
-  "  --out 前缀             生成产物的文件名前缀（缺省 build/chali_out）\n": [
-    "  --out PREFIX           Output file prefix (default: build/chali_out)\n"
+  "  --out 前缀             生成产物的文件名前缀（缺省 .chali/chali_out）\n": [
+    "  --out PREFIX           Output file prefix (default: .chali/chali_out)\n"
+  ],
+  "  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n": [
+    "  --keep-artifacts       Keep intermediates under .chali (cleared after run/export by default)\n"
   ],
   "  --check                仅检查，不执行、不生成产物\n": [
     "  --check                Check only; do not execute or write artifacts\n"
@@ -172,8 +175,8 @@ _MESSAGES = {
   "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n": [
     "  --no-debug             Omit debug information (also the default)\n"
   ],
-  "  --stats                打印运行时及增量文件校验统计\n": [
-    "  --stats                Show runtime and incremental validation statistics\n"
+  "  --stats                打印运行时、增量校验与后端两层（指令选择 / 帧槽）统计\n": [
+    "  --stats                Show runtime, incremental validation and two-tier backend (instruction selection / frame slots) statistics\n"
   ],
   "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n": [
     "  --memory-size BYTES    Runtime memory capacity (default: 512MiB; minimum: 64)\n"

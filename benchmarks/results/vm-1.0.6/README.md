@@ -1,5 +1,9 @@
 # ChaLi 1.0.5／1.0.6 VM 基准
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 沿用四个标准负载与原循环规模，不降低规模。Windows x64、默认最高优化、完整四元式预算及反射。两份编译器实际版本由各自 LSP 初始化取得；SHA256、平台、源文件 SHA256、每次 stdout/stderr 和进程总耗时见 [results.json](results.json)。
 
 每版本三次独立进程，每进程预热一次、计时五次，按轮次交错版本顺序。表中为全部 15 个内部纳秒样本中位数；启动与编译不计入内部时间。新旧版本的校验值一致。

@@ -153,7 +153,8 @@ void main()
     assert result.returncode == 0, result
     source = work / 'opcode_values.chl'
     source.write_text(SOURCE.replace('@LIB@', library.as_posix()), encoding='utf-8')
-    expected = invoke([compiler, 'run', source])
+    # 动态库在 work 目录里：按 Windows 的加载顺序，进程目录／当前目录要能找到它。
+    expected = invoke([compiler, 'run', source], cwd=work)
     assert expected.returncode == 0, expected
     prefix = work / 'opcode_values'
     result = invoke([compiler, 'aot', source, '--out', prefix])

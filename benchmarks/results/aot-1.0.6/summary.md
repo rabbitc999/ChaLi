@@ -1,5 +1,9 @@
 # 跨语言微基准（20261026-122402）
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](summary.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 中位数（ms，越小越快），每格来自 3 次进程 × 5 轮。
 
 | 配置 | 整数依赖链（Lehmer 乘加） | 浮点依赖链（乘加） | 小函数调用 | 固定数组循环读取 | 固定数组读写 | 动态数组 push + 遍历 |

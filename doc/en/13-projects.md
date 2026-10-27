@@ -92,7 +92,7 @@ diagnostic).
 
 ### 4.2 Other database examples
 
-See the [SQL examples](../../example/sql-chali/README.md) and [reflection / dynamic SQL guide](36-reflection-serialization-sql.md).
+See the [SQL examples](../../example/sql-chali/README.md) and [reflection / dynamic SQL guide](33-reflection-serialization-sql.md).
 
 ## 5. Language and library capability examples
 

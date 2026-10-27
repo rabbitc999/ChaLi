@@ -35,7 +35,7 @@ not clone their targets. Host resources retain their own copyability contracts.
 
 `move x` transfers existing handles and owned fields without calling source close/drop.
 The old binding cannot be read, written or rebound. A complete move on every incoming path permits
-a new declaration using the same name, with a new storage identity. See [ownership transfer](23-ownership-move.md).
+a new declaration using the same name, with a new storage identity. See [ownership transfer](24-ownership-move.md).
 
 ## 2. Non-null and optional references
 
@@ -130,5 +130,5 @@ non-idempotent destruction, allocation identities and automatic cleanup.
 
 ## 8. Next
 
-[Language reference](04-language-reference.md) · [Move](23-ownership-move.md) ·
+[Language reference](04-language-reference.md) · [Move](24-ownership-move.md) ·
 [Samples](../../example/samples/) · [Deployment](06-deployment.md)

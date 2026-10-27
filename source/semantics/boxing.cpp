@@ -2187,7 +2187,7 @@ ast::NodePtr LowerEnumCtor(int id)
         arguments.push_back(argument);
     }
     const ast::NodePtr call = ast::Node::call(
-        "__chali_enum_" + node.s + "_" + node.s2 + (CanTakeFreshEnumPayload(*variant) && IsFreshAggregate(node.kids[0]) ? "$take" : ""), parameterNames, arguments);
+        "__chali_enum_" + node.s + "_" + node.s2, parameterNames, arguments);
     if (post.empty()) return call;
     const Memory::String result = AllocateName("__chali_agg_val");
     pre.push_back(ast::Node::declare(result, LowerType(NamedType(node.s), result)));

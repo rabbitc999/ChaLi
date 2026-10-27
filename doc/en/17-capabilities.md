@@ -19,11 +19,11 @@ Concrete standard-library errors implement the core `Error` interface and provid
 
 Heap object allocation uses `new T`, or `new T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
 
-Support includes [return control expressions, statement-level named closures and field derivation](28-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures; `#derive` generates only Equal/Hash/Clone, validates field protocols and never generates Drop.
+Support includes [return control expressions, statement-level named closures and field derivation](29-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures; `#derive` generates only Equal/Hash/Clone, validates field protocols and never generates Drop.
 
 Generic closures support `fn<T>`, inference from argument types, full specialization and uniquely most specific partial specialization. They can be direct struct members and can be passed or stored as values of a generic type parameter `F`. Calls with different types share one closure environment, preserving ordinary capture, copy and borrow rules. See the [language reference](04-language-reference.md).
 
-Sources and macros are shared through `module` / `import`; a macro definition is registered in the module that defines it and calls resolve by module visibility, with `std::lang` always visible and qualified names (`$std::lang::assert(...)`) naming a module directly. The generated parser builds macro ASTs; semantic analysis performs hygienic substitution and static type inference before quadruple generation. Ordered round, square and curly groups, type parameters, variadic fragments, five complete syntax categories and ECMAScript regex matching are supported. See [hygienic AST macros](24-literals-operators-macros.md#compile-time-hygienic-ast-macros).
+Sources and macros are shared through `module` / `import`; a macro definition is registered in the module that defines it and calls resolve by module visibility, with `std::lang` always visible and qualified names (`$std::lang::assert(...)`) naming a module directly. The generated parser builds macro ASTs; semantic analysis performs hygienic substitution and static type inference before quadruple generation. Ordered round, square and curly groups, type parameters, variadic fragments, five complete syntax categories and ECMAScript regex matching are supported. See [hygienic AST macros](25-literals-operators-macros.md#compile-time-hygienic-ast-macros).
 
 Executable entry points support only `void main`, with no parameters or `List<String>` arguments. It exits with code 0 on normal completion; panic still fails. Trailing semicolons on `struct`, `enum`, and `interface` declarations are optional.
 
@@ -49,9 +49,9 @@ Runtime array parameters `T[]` copy the length and elements. `T[] &` / `T[] cons
 borrow read-only arrays; `T[] mut&` borrows a mutable array. Array references retain
 element layout, runtime length and the source lifetime.
 See the [language reference](04-language-reference.md), [core concepts](03-core-concepts.md) and
-[move rules](23-ownership-move.md).
+[move rules](24-ownership-move.md).
 
-Explicit Any targets support contextual boxing in generics and heterogeneous List/Set/Map, exact extraction, clearing, and borrow checks. Interface references bind directly to implementing concrete references without an Any intermediary; views still borrow their source. See [Any and interface binding](22-any-generics-data.md).
+Explicit Any targets support contextual boxing in generics and heterogeneous List/Set/Map, exact extraction, clearing, and borrow checks. Interface references bind directly to implementing concrete references without an Any intermediary; views still borrow their source. See [Any and interface binding](23-any-generics-data.md).
 
 Every non-void value has default `toString()` and String conversion: structs `{...}`, List/arrays `[...]`, Set/Map `{...}`, and tuples `(...)`, with quoted and escaped nested strings. User toString and ImplicitConvert<String> supply missing counterparts; dedicated explicit conversions retain priority. Reflection is not required. See [value-text rules](04-language-reference.md#default-value-text-and-string-conversion).
 
@@ -59,9 +59,9 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 run compiles and executes checked AOT code; aot defaults to unchecked export with explicit --checked available. The compiler and embedded source assets exclude the VM interpreter. The .svmb format and editor commands have been removed; quadruple export remains for analysis.
 
-Release builds use the full quad budget, LLVM O3, global DCE, full LTO and section GC. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
+Release builds run LLVM O3, global DCE, full LTO and section GC; quadruples are not optimized internally — LLVM does all optimization. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 
-DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [AOT](41-aot.md) and [native debugging](46-native-debugging.md).
+DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [AOT](38-aot.md) and [native debugging](43-native-debugging.md).
 
 ## Host integration and reflection
 
@@ -99,7 +99,7 @@ for the target architecture. Linux devices use ordinary hosts, with no separate 
 mode or front-end module blacklist. Memory and instruction budgets use the general runtime options. See
 [deployment](06-deployment.md). Microcontroller, bare-metal firmware and board SDKs are outside the support scope.
 
-Installation packages target Windows x64, Ubuntu x64/ARM64 and CentOS x64. The x86 runtime fails startup validation, so x86 installers are not provided. Native AOT host layouts currently target x64. See [installation and architecture builds](42-installation-packages.md) for LLVM variants and package formats.
+Installation packages target Windows x64, Ubuntu x64/ARM64 and CentOS x64. The x86 runtime fails startup validation, so x86 installers are not provided. Native AOT host layouts currently target x64. See [installation and architecture builds](39-installation-packages.md) for LLVM variants and package formats.
 
 The CLI provides projects, checks, formatting, tests and dependency locks/caches. LSP provides diagnostics,
 completion, hover, signatures and cross-file navigation, plus complete inferred `let` type hover, optional type inlays,
@@ -136,7 +136,7 @@ Network async methods use nonblocking polling and NET_PENDING, with cancellable 
 
 Isolated threads support `waitFor(thread, millis)` with a nonnegative millisecond timeout and `tryWait(thread)` for a zero-timeout wait. Both return `true` after completion and collection, or `false` on timeout without cancelling the target. Target failures retain their original diagnostics; a collected handle cannot be waited on again.
 
-Threads use `std::thread::Thread` with copied initial arguments, cancellation, completion results, groups and fixed pools. Bounded channels and explicit event queues replace coroutine scheduling and implicit interrupt callbacks. See [concurrency contracts](29-thread-concurrency.md) for timeouts, cleanup and blocking host I/O limits.
+Threads use `std::thread::Thread` with copied initial arguments, cancellation, completion results, groups and fixed pools. Bounded channels and explicit event queues replace coroutine scheduling and implicit interrupt callbacks. See [concurrency contracts](30-thread-concurrency.md) for timeouts, cleanup and blocking host I/O limits.
 
 ## VM modules and TOML saving
 
@@ -144,10 +144,10 @@ The shared VM uses separate compilation units for quadruples, binary containers,
 
 Saving a parsed std::toml document root retains its original comments and layout. In the underlying C++ value model, edits with the same container shape preserve layout. Structural edits retain all comment content, but may move comments to the beginning of the document. Parsing and saving repeatedly neither loses nor duplicates comments. See the [TOML API](../library/std-toml.md).
 
-`std::cas::Expr` provides string parsing, immutable AST traversal, exact rational arithmetic and calculus. Generic `std::math` functions support ordinary numbers, high precision decimals and symbolic expressions. See [symbolic computation and high precision mathematics](34-symbolic-computation.md) for algorithm, trimming and concurrency boundaries.
+`std::cas::Expr` provides string parsing, immutable AST traversal, exact rational arithmetic and calculus. Generic `std::math` functions support ordinary numbers, high precision decimals and symbolic expressions. See [symbolic computation and high precision mathematics](31-symbolic-computation.md) for algorithm, trimming and concurrency boundaries.
 
-Connections, arenas and timer sources have exclusive owners; containers and random generators copy their state, and JSON/TOML values own independent subtrees. String includes common text methods and explicit UTF-8 code point operations. See [ownership, snapshots and string boundaries](35-opcode-values-strings.md).
+Connections, arenas and timer sources have exclusive owners; containers and random generators copy their state, and JSON/TOML values own independent subtrees. String includes common text methods and explicit UTF-8 code point operations. See [ownership, snapshots and string boundaries](32-opcode-values-strings.md).
 
-Reflection provides exact typed field access and generates codecs for JSON, TOML, byte serialization, and annotated std::sql models. Dynamic SQL generation and direct binding currently support SQLite; bound execution on other backends reports an explicit error. See [reflection serialization and dynamic SQL](36-reflection-serialization-sql.md).
+Reflection provides exact typed field access and generates codecs for JSON, TOML, byte serialization, and annotated std::sql models. Dynamic SQL generation and direct binding currently support SQLite; bound execution on other backends reports an explicit error. See [reflection serialization and dynamic SQL](33-reflection-serialization-sql.md).
 
 The companion book contains 26 chapters, exercises with reference answers, literary adaptations and compilation / VM execution diagrams. General host callbacks and event APIs retain their documented protocols.

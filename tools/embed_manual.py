@@ -49,7 +49,7 @@ def generate():
                     for section in sections if section.startswith('## ' + prefix)]
         source = 'doc/04-language-reference.md'
         if token.startswith('MACRO_'):
-            source = 'doc/24-literals-operators-macros.md'
+            source = 'doc/25-literals-operators-macros.md'
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         if word in ('defer', 'scope', 'drop'):
             source = 'doc/book/08-资源与作用域.md'
@@ -59,14 +59,14 @@ def generate():
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         assert selected, f'关键字缺少明确的文档映射：{word}'
         if word in ('return', 'fn', 'copy', 'move', 'mut', '#derive'):
-            selected.append((ROOT / 'doc/28-declaration-sugars.md').read_text(encoding='utf-8'))
+            selected.append((ROOT / 'doc/29-declaration-sugars.md').read_text(encoding='utf-8'))
         if word in ('uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64'):
             chapter = (ROOT / 'doc/book/03-变量与类型.md').read_text(encoding='utf-8')
             selected.extend(part for part in re.split(r'(?=^## )', chapter, flags=re.M) if '1.0f' in part and '1u' in part)
         syntax = '\n\n'.join(part.strip() for part in productions if re.search(r'\b' + re.escape(token) + r'\b', part))
         keywords[word] = dict(name=word, token=token, syntax=syntax,
                               documentation='\n\n'.join(selected), source=source)
-    macro_source = 'doc/24-literals-operators-macros.md'
+    macro_source = 'doc/25-literals-operators-macros.md'
     macro_sections = re.split(r'(?=^## )', (ROOT / macro_source).read_text(encoding='utf-8'), flags=re.M)
     keywords['macro'] = dict(name='macro', token='$macro', syntax='$macro NAME<T:arg>[..Attrs](arg, ..Args){Body}\n...\n$end_macro',
                              documentation='\n\n'.join(section for section in macro_sections if section.startswith(('## 编译期卫生', '## 参数组', '## 宏泛型', '## 五类', '## 正则'))), source=macro_source)
@@ -83,8 +83,8 @@ def ensure_generated(check=False):
     """先核对文档、图片和生成脚本摘要，缓存命中时直接使用已有手册。"""
     inputs = {path.relative_to(ROOT).as_posix(): path for pattern in (
         'doc/book/*.md', 'doc/book/en/*.md', 'doc/book/images/*', 'doc/library/*.md',
-        'doc/04-language-reference.md', 'doc/24-literals-operators-macros.md',
-        'doc/28-declaration-sugars.md', 'skills/chali-programming/SKILL.md',
+        'doc/04-language-reference.md', 'doc/25-literals-operators-macros.md',
+        'doc/29-declaration-sugars.md', 'skills/chali-programming/SKILL.md',
         'source/chali.gram', 'source/chali_token.gram', 'tools/embed_manual.py',
     ) for path in ROOT.glob(pattern) if path.is_file()}
     cache = AssetCache('manual', inputs)

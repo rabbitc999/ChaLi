@@ -33,7 +33,7 @@ a=(1, 2) b=(99, 2)
 
 `move x` 转移现有句柄和拥有字段，不执行来源的 close/drop。来源绑定随后禁止读写和重绑。
 只有所有到达路径都完整移动后，才能重新声明同名变量；新变量具有新的存储身份。
-详见[所有权移动](23-ownership-move.md)。
+详见[所有权移动](24-ownership-move.md)。
 
 ## 2. 非空引用与可选引用
 
@@ -124,5 +124,5 @@ after block
 
 ## 8. 下一步
 
-[语言参考](04-language-reference.md) · [所有权移动](23-ownership-move.md) ·
+[语言参考](04-language-reference.md) · [所有权移动](24-ownership-move.md) ·
 [完整样例](../example/samples/) · [部署](06-deployment.md)

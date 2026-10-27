@@ -58,11 +58,11 @@ def title(canvas, heading, detail):
 
 
 def compilation(english=False):
-    """区分条件预处理、语义期宏展开、四元式优化及 VM 装配出口。"""
+    """区分条件预处理、语义期宏展开、四元式生成及装配出口。"""
     c = Canvas()
     title(c, "ChaLi · Compilation" if english else "ChaLi · 编译过程",
-          "Generated front end → optimized quadruples → LLVM AOT" if english else
-          "文法生成前端 → 语义与借用检查 → 四元式优化 → LLVM AOT")
+          "Generated front end → quadruples → LLVM AOT" if english else
+          "文法生成前端 → 语义与借用检查 → 四元式生成 → LLVM AOT")
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
         (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
@@ -77,17 +77,17 @@ def compilation(english=False):
                    ((1300, 265), (1300, 315)), ((1080, 375), (1000, 375)),
                    ((560, 375), (480, 375)), ((260, 435), (260, 485))]:
         arrow(c, points)
-    box(c, 40, 485, 720, "7  Optimize quadruples" if english else "7  四元式优化",
-        ["Full stackvm::optimize pipeline" if english else "完整 stackvm::optimize 优化流程",
-         "Full optimization budget before LLVM lowering" if english else "完整优化预算；结果送入 LLVM 后端"], green=True)
-    arrow(c, ((760, 545), (800, 545)))
-    box(c, 800, 485, 720, "8  Lower to LLVM" if english else "8  降低为 LLVM",
+    box(c, 40, 485, 720, "7  Lower to LLVM" if english else "7  降低为 LLVM",
         ["Types, labels, integer and comparison lowering" if english else "类型与标签、整数及比较跳转降低",
-         "Reachable functions, sparse initial data" if english else "可达函数、稀疏初值与原生链接"], green=True)
+         "Reachable functions, sparse initial data" if english else "可达函数、稀疏初值"], green=True)
+    arrow(c, ((760, 545), (800, 545)))
+    box(c, 800, 485, 720, "8  Optimize in LLVM" if english else "8  LLVM 优化",
+        ["LLVM O3 runs the full optimization pipeline" if english else "LLVM O3 完成全部优化",
+         "No internal quad optimization passes" if english else "四元式不再做内部优化"], green=True)
     outputs = [
-        (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Optimized view: CHALI_DUMP_OPT"] if english else ["生成的四元式、数据区与布局", "优化检查：CHALI_DUMP_OPT"]),
-        (560, "run · checked AOT" if english else "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
-        (1080, "aot · native export" if english else "aot · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
+        (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Inspect with CHALI_DUMP_IR"] if english else ["生成的四元式、数据区与布局", "检查：CHALI_DUMP_IR"]),
+        (560, "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
+        (1080, "AOT · native export" if english else "AOT · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
     arrow(c, ((40, 375), (20, 375), (20, 675), (260, 675), (260, 720)))
     arrow(c, ((1100, 605), (1100, 665), (780, 665), (780, 720)))
@@ -101,15 +101,15 @@ def aot(english=False):
     """绘制四元式经 LLVM 生成原生产物的两种编译器配置。"""
     c = Canvas()
     title(c, "ChaLi · AOT export" if english else "ChaLi · AOT 导出流程",
-          "Checked source → optimized quadruples → LLVM → native artifact" if english else
-          "源码检查 → 四元式优化 → LLVM 优化与机器码生成 → 原生产物")
+          "Checked source → quadruples → LLVM → native artifact" if english else
+          "源码检查 → 四元式生成 → LLVM 优化与机器码生成 → 原生产物")
     rows = [
         (40, "1  Source and checks" if english else "1  源码与前端检查",
          [".chl / imports / AST macros", "Types, ownership and lifetimes"] if english else
          [".chl、模块与 AST 宏", "类型、拥有关系及生命周期"]),
-        (560, "2  Optimized quadruples" if english else "2  优化后的四元式",
-         ["Shared front end and optimizer", "Direct LLVM instruction lowering"] if english else
-         ["复用前端与四元式优化器", "直接降低为 LLVM 指令"]),
+        (560, "2  Quadruples" if english else "2  四元式",
+         ["Shared front end, direct to LLVM", "No internal optimization passes"] if english else
+         ["复用前端，四元式不做内部优化", "直接降低为 LLVM 指令"]),
         (1080, "3  LLVM module" if english else "3  LLVM 中间表示",
          [".ll + embedded AOT runtime", "--emit-llvm stops here"] if english else
          [".ll 与内嵌 AOT 运行时", "--emit-llvm 在此停止"]),

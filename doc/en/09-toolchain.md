@@ -4,9 +4,9 @@
 **English** · [简体中文](../09-toolchain.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](46-native-debugging.md).
+Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
 
-ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then lowers it to quadruples and native LLVM code. The explicit [AOT entry](41-aot.md) can generate LLVM modules and native products.
+ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then lowers it to quadruples and native LLVM code. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
 
 ```sh
 chali run app.chl
@@ -31,31 +31,24 @@ chali gen compiler out build/compiler
 chali clear out build/compiler
 ```
 
-The generator creates standalone compiler projects. Hosts integrate through bytecode, `stackvm::Machine` and native registries.
+The generator creates standalone compiler projects. Hosts integrate through the shared runtime, host registries and the native AOT entry points.
 
-Reflection is a fixed, non-trimmable part of the language: the front end and VM always build it in and compilation always runs the full reflection pass; `--no-reflection` only decides whether this artifact carries reflection metadata and reduces no workload. Quadruples and VM execution use the highest supported optimizations by default. `--memory-size` and `--step-limit` configure VM resources; isolated threads are on by default and `--no-threads` turns them off.
+Reflection is a fixed, non-trimmable part of the language: the front end and the runtime always build it in and compilation always runs the full reflection pass; `--no-reflection` only decides whether this artifact carries reflection metadata and reduces no workload. Quadruples are not optimized internally at all — every optimization is left to LLVM, and native release builds default to O3, LTO and dead-code elimination. `--memory-size` and `--step-limit` configure runtime resource budgets; isolated threads are on by default and `--no-threads` turns them off.
 
-Back-end debugging switches change diagnostics or the execution path, never program semantics. They come in two groups:
+Back-end debugging switches change diagnostics or the execution path, never program semantics:
 
 | Switch | Effect |
 | --- | --- |
-| `CHALI_NO_OPT=1` | Skip semantic-level quadruple simplification (`quad_optimizer`) |
-| `CHALI_DUMP_OPT=1` | Print the simplified quadruples to stderr |
-| `CHALI_NO_MACHINE_OPT=1` | Disable the whole machine-level layer (inlining, fold/propagate, GVN, DCE, strength reduction, LICM) |
-| `CHALI_NO_OPT_INLINE` / `_STRENGTH` / `_FOLD` / `_GVN` / `_DCE` / `_LICM` | Disable one pass only — bisect when a pass changes semantics |
-| `CHALI_DUMP_MACHINE=1` | Print the quadruples after machine-level optimization to stderr |
 | `CHALI_DUMP_IR=1` | Print the normalized IR (basic blocks, predecessors and successors, def-use, back edges) |
 | `CHALI_DUMP_FRAME=1` | Print each function's frame layout (symbol → slot) plus the allocator self-check result |
 | `CHALI_NO_SLOT_REUSE=1` | Fall back to "parameters first, then one slot per declaration in order" |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | One slot per symbol but still through the allocator — separates aliasing bugs from numbering bugs |
-| `CHALI_NO_REGISTER_CORE=1` | Disable the register execution core in favour of the generic stack interpreter |
 
-All three comparisons (two cores, before/after slot reuse, before/after optimization) must agree byte for byte (text may differ only in CRLF/LF and ignorable whitespace). `tests/vm_differential.py` guards this: it runs the same source under five switch combinations (default, stack interpreter core, no slot reuse, no machine-level optimization, inlining only off) and compares exit code, stdout, diagnostics and call stack. The only relaxation is `ip` inside the call stack, which necessarily shifts when an optimization changes bytecode length.
+AOT fast-path comparison switches are listed in [AOT lowering switches and counters](40-backend-ownership.md); the internal quad optimizer and the register execution core were removed in 1.0.8, so their switches no longer exist.
 
-Quadruple counts, instruction-selection coverage and frame slots before/after reuse are all visible in `--stats`:
+Instruction-selection coverage and frame slots before/after reuse are both visible in `--stats`:
 
 ```text
-机器级优化：四元式 16810 → 16628（折叠 2，传播 4，合并 1，削减 16，外提 0，内联 6 处（+114 条），删除 296）
 指令选择：目标指令 3062 条，覆盖栈指令 10492/26865（39.1%，通用回退 16373 条）
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```

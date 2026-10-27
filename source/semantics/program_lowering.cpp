@@ -644,15 +644,14 @@ void AppendOwnershipHelpers(ast::Program &program)
  * @brief 生成枚举变体的构造函数。
  * @param enumName 枚举类型的名称。
  * @param variant 枚举变体名称或定义。
- * @param takeFreshPayload 仅供已证明独占的新聚合载荷调用，转移并清空源槽。
  * @retval 保存生成枚举变体的构造函数结果的对象。
  */
 ast::Function MakeEnumConstructor(const Memory::String &enumName,
-                                  const MEnumVariantDef &variant, bool takeFreshPayload = false)
+                                  const MEnumVariantDef &variant)
 {
     using ast::Node;
     ast::Function function;
-    function.name = "__chali_enum_" + enumName + "_" + variant.name + (takeFreshPayload ? "$take" : "");
+    function.name = "__chali_enum_" + enumName + "_" + variant.name;
     function.result = LowerType(NamedType(enumName), function.name);
     Memory::Vector<Memory::String> parameterNames;
     for (std::size_t index = 0; index < variant.payloads.size(); ++index)
@@ -680,12 +679,6 @@ ast::Function MakeEnumConstructor(const Memory::String &enumName,
         const MEnumPayload &payload = variant.payloads[index];
         const MField *field = FindField(enumName, payload.storageName);
         if (field == nullptr) continue;
-        if (takeFreshPayload && payload.type->kind == MType::Struct)
-        {
-            body.push_back(MoveStructValue(Node::offset(Node::var(resultName), Node::i(field->slot), 8),
-                                           Node::var(parameterNames[index]), payload.type));
-            continue;
-        }
         if (HasNonCopyableValue(payload.type))
         {
             const auto target = Node::offset(Node::var(resultName), Node::i(field->slot), 8);
@@ -733,7 +726,6 @@ void AppendEnumConstructors(ast::Program &program)
         for (const MEnumVariantDef &variant : item.second.variants)
         {
             program.functions.push_back(MakeEnumConstructor(item.first, variant));
-            if (CanTakeFreshEnumPayload(variant)) program.functions.push_back(MakeEnumConstructor(item.first, variant, true));
         }
 }
 

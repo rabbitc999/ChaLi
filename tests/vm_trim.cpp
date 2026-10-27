@@ -16,7 +16,6 @@ static bool runCase(const char *source, bool expectedSuccess, const char *expect
 {
     Memory::restartSignal().clear();
     auto quads = stackvm::parseQuads(source, "trim.quad");
-    stackvm::optimize(quads);
     stackvm::Program program;
     if (!stackvm::assemble(quads, program)) return false;
     stackvm::DataArea data;

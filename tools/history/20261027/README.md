@@ -1,5 +1,9 @@
 # Git 历史清理映射
 
+<!-- LANGUAGE NAVIGATION -->
+[English（中文原文）](README.md) · **简体中文**
+<!-- END LANGUAGE NAVIGATION -->
+
 2026-10-27，按用户明确授权，清理当前分支及现有标签历史中的生成版内嵌源码、SDK／归档缓存和已在线获取的依赖副本；不删除文档 API 索引。固定移除范围见 removed-cache-paths.json。
 
 提交标题去除 conventional 或版本号冒号前缀，合并与撤销标题中文化。121 个原始提交均保留；作者、提交者及原始时间逐项核对一致。历史测量文件的版本、配置及摘要未重标，源码树清理前后核对一致。

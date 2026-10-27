@@ -80,7 +80,7 @@ generic_interface_head = "interface", VARIABLE, generic_parameters ;
 generic_host_type_head = "type", VARIABLE, generic_parameters ;
 ```
 
-以上 `*_head` 只描述声明头，后续继承列表、函数体或成员块分别沿用完整文法。实例化支持显式实参和可确定的函数参数推导。类型参数与整数值共同决定实例，整数表达式先求值；`N: int64` 可用于结构体数组字段的尺寸。受接口约束的类型参数可用 `C.Item` 表示关联类型，模板展开时将其绑定到具体实现。完整示例见 [匹配、插值、泛型与作用域清理](27-match-interpolation-scope.md)。未决定的泛型类型不具备运行时反射身份。例如 `Box<int64 fn(int64)>` 中只有末尾 `>` 结束 Box 的实参。
+以上 `*_head` 只描述声明头，后续继承列表、函数体或成员块分别沿用完整文法。实例化支持显式实参和可确定的函数参数推导。类型参数与整数值共同决定实例，整数表达式先求值；`N: int64` 可用于结构体数组字段的尺寸。受接口约束的类型参数可用 `C.Item` 表示关联类型，模板展开时将其绑定到具体实现。完整示例见 [匹配、插值、泛型与作用域清理](28-match-interpolation-scope.md)。未决定的泛型类型不具备运行时反射身份。例如 `Box<int64 fn(int64)>` 中只有末尾 `>` 结束 Box 的实参。
 
 ```c
 T apply<T>(T fn(T) callback, T value) { return callback(value); }

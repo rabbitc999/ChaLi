@@ -19,7 +19,7 @@
 
 ### 静态 SQLite 的构建与交付
 
-官方 amalgamation 源码固定为 SQLite 3.54.0，构建时在线下载到构建缓存，来源与校验值见 [依赖说明](../../../doc/45-build-dependencies.md)。以 C 编译，启用 `SQLITE_THREADSAFE=1`、禁用动态扩展加载；MySQL/MariaDB、PostgreSQL、ODBC 仍使用动态客户端。
+官方 amalgamation 源码固定为 SQLite 3.54.0，构建时在线下载到构建缓存，来源与校验值见 [依赖说明](../../../doc/42-build-dependencies.md)。以 C 编译，启用 `SQLITE_THREADSAFE=1`、禁用动态扩展加载；MySQL/MariaDB、PostgreSQL、ODBC 仍使用动态客户端。
 
 默认清理 SQLite 中间源码和目标文件。`--cpp-output-dir` 保留 C++ 源码及配套 `<exe>.sqlite3.c`，手动重建时须用 C 编译器编译该 C 文件（采用上述宏），然后与 C++ 目标文件一起链接；交付最终可执行文件时无需这些源码。`--keep-intermediate` 可保留目标文件。
 

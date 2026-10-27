@@ -87,3 +87,6 @@ __pycache__/
 
 # 示例工程的构建缓存不进版本库
 example/*/build/
+
+# ChaLi 编译中间产物目录（Windows 隐藏）
+/.chali/

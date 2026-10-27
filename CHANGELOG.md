@@ -23,6 +23,11 @@
 - 新增历史表述门禁，扫描更改记录以外的 Markdown，拦截虚拟机时代措辞回流，并清理安装包与 AOT 文档中的旧版本号。
 - 删除 --input 命令行选项与运行时输入项列表，inputInt、input 等输入函数直接从标准输入按空白取项；文档与样例改为管道喂入，手册示例执行改为标准输入。
 - inputLine 语义与 readLine 对齐：读取一整行并保留空格与空行，不再按空白切分；样例与库参考文档同步。
+- 删除内部四元式优化器与聚合优化器及 CHALI_NO_OPT 一类开关：同版本对照中编译时间减少约 0.2 秒，运行时间波动在 ±3.5% 内，运行时成本由降低形状与 LLVM O3 决定。
+- 缺省中间产物改到隐藏的 .chali/ 下，运行与导出完成后只保留标准库预编译缓存；--keep-artifacts 保留全部产物，显式 --out 时按用户路径全部保留。
+- aot 导出与 emit 的产物改为与源文件同级（Windows 可执行文件带 .exe，其他平台无后缀），不再落在中间产物目录。
+- 修复 --shared 复杂 ABI 宿主封送编译找不到 stackvm.hpp：运行时资产根补充 ircode 头文件搜索路径。
+- 性能文档重写为 AOT 跨语言对照：C、C++、Rust、Go、Java、Node、Lua、Python 同一份算法与同一 C 计时壳，记录 checked 与 unchecked 差距与原始样本。
 
 
 ## 1.0.7 — 标准库自举、原始存储、ABI 指令与 AOT 瘦身
@@ -79,7 +84,7 @@
 - 契约同时是义务：返回值借用未声明的来源报 CHL1211，保存的引用来源不在契约内报 CHL1212，契约引用了不存在的名字或 `#ret` 的来源不是形参报 CHL1210。三条诊断都直接给出可抄的契约写法。
 - `#static(a)` 把该来源按 'static 处理，可跨函数返回与长期保存；调用点必须真的传 'static 来源（全局变量），传局部或形参来源报 CHL1214，把局部变量标成 'static 报 CHL1213。
 - 文法侧新增 `#borrow` / `#static` / `#ret` 三个记号与 `lifetime_directives`、`lifetime_directive`、`lifetime_target`、`lifetime_names` 等产生式，挂到 `top_decl` 的函数声明分支（另含 `inline` / `export` 两条），仍由 `%expect 0` 保证零未消解冲突。
-- 中英文档、书稿与 EBNF 同步：中英 `doc/22-resource-lifetime.md` 新增契约章节并对照 Rust 的 wfcheck 与 region_infer 实现，中英 `doc/28-declaration-sugars.md` 与 `doc/04-language-reference.md`、`doc/39-syntax-frozen.md`、`doc/14-grammar-ebnf.md` 同步；中文书稿第 23 章新增 23.8，英文书稿第 7 章新增契约段落。
+- 中英文档、书稿与 EBNF 同步：中英 `doc/22-resource-lifetime.md` 新增契约章节并对照 Rust 的 wfcheck 与 region_infer 实现，中英 `doc/29-declaration-sugars.md` 与 `doc/04-language-reference.md`、`doc/36-syntax-frozen.md`、`doc/14-grammar-ebnf.md` 同步；中文书稿第 23 章新增 23.8，英文书稿第 7 章新增契约段落。
 - 程序、内嵌编译器与语言服务版本统一为 1.0.4；契约的正例样例与五条反例在 VM 与 AOT 两种模式下均已验证。
 
 

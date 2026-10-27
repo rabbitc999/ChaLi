@@ -31,7 +31,7 @@ chali aot app.chl --checked --out build/app-checked
 
 将生成的原生可执行文件交给同平台、同架构的用户。Windows 使用 \texttt{.\allowbreak{}exe}，Linux 使用无后缀可执行文件；应用声明的 C ABI 动态库及必要资源文件一并交付。目标机器运行产物不需要 ChaLi 编译器、VM 或 LLVM 动态库。
 
-跨架构构建编译器不等于相应 AOT 目标已支持。实际目标和验证范围见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-aot.md}{LLVM AOT 编译}，不能只改文件后缀就把 Windows 程序当成 Linux 程序。
+跨架构构建编译器不等于相应 AOT 目标已支持。实际目标和验证范围见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/38-aot.md}{LLVM AOT 编译}，不能只改文件后缀就把 Windows 程序当成 Linux 程序。
 
 \section{调试与发布}
 
@@ -43,7 +43,7 @@ chali aot app.chl --checked --debug --out build/app-debug
 \par
 \medskip
 
-调试构建保留 DWARF 源码行、参数和局部变量信息，使用 O0；通过 VS Code 的 ChaLi 调试入口或 GDB 进行源码断点、单步和变量查看。发布构建继续使用最高优化、LTO 和死代码消除。详细设置见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/46-native-debugging.md}{原生 AOT 调试}。
+调试构建保留 DWARF 源码行、参数和局部变量信息，使用 O0；通过 VS Code 的 ChaLi 调试入口或 GDB 进行源码断点、单步和变量查看。发布构建继续使用最高优化、LTO 和死代码消除。详细设置见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/43-native-debugging.md}{原生 AOT 调试}。
 
 发布前检查参数、输入输出、C ABI 库、资源清理及错误路径，并记录实际编译器版本、目标与产物摘要。原始 \texttt{.\allowbreak{}ll} 和四元式可用于分析，不必作为应用运行依赖交付。
 

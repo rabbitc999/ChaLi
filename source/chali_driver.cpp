@@ -13,10 +13,12 @@
  * ============================================================ */
 #include <fstream>
 #include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 /* 前处理器（仓库里的通用库，只依赖 C++17 标准库）。 */
-/* 后端统计：`--stats` 里要报指令选择覆盖率、帧槽复用与机器级优化前后的数字。 */
-#include "machine_optimize.hpp"
+/* 后端统计：`--stats` 里要报指令选择覆盖率与帧槽复用前后的数字。 */
 #include "register_allocate.hpp"
 #include "instruction_select.hpp"
 #include <algorithm>
@@ -345,11 +347,12 @@ void PrintUsage(std::FILE *out)
              "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
              "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
              "  --no-watchdog          关闭软重启看门狗（缺省）\n",
-             "  --out 前缀             生成产物的文件名前缀（缺省 build/chali_out）\n",
+             "  --out 前缀             生成产物的文件名前缀（缺省 .chali/chali_out）\n",
+             "  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n",
              "  --raw                  跳过前处理：源文件原样喂给解析器\n",
              "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
-             "  --stats                打印运行时、增量校验与后端三层（优化 / 指令选择 / 帧槽）统计\n",
+             "  --stats                打印运行时、增量校验与后端两层（指令选择 / 帧槽）统计\n",
              "  --step-limit N         本次执行的指令条数上限（缺省不设上限；0 同缺省）\n",
              "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n",
              "  --                     后面全部作为程序的命令行参数\n",
@@ -415,6 +418,30 @@ static void SaveStandardUnit(const Memory::String &path, std::size_t nodeLimit)
 }
 
 /**
+ * @brief 删除 .chali 下的中间产物，保留标准库预编译缓存与显式导出物。
+ * @param prefix 中间产物前缀（缺省 .chali/chali_out）。
+ * @param withExecutable 是否连运行用的临时可执行文件一起删除。
+ * @param withHeader 是否连 ABI 导出头一起删除；带 `--export` 时头文件是交付物，必须留下。
+ * @return 无。
+ */
+static void RemoveIntermediateArtifacts(const Memory::String &prefix, bool withExecutable, bool withHeader)
+{
+    for (const char *suffix : { ".quad", ".data.bin", ".layout", ".ll", ".llvm.log", ".abi.cpp", ".symbol_map.json" })
+    {
+        std::error_code error;
+        std::filesystem::remove(Memory::u8path(prefix + suffix), error);
+    }
+    if (withHeader)
+    {
+        std::error_code error;
+        std::filesystem::remove(Memory::u8path(prefix + ".h"), error);
+    }
+    if (!withExecutable) return;
+    std::error_code error;
+    std::filesystem::remove(Memory::u8path(prefix + ".exe"), error);
+}
+
+/**
  * @brief 编译或执行源码，并将前端分配失败转换为有界的非零退出诊断。
  * @param argc 命令行实参数量。
  * @param argv 命令行实参；包含程序路径。
@@ -453,8 +480,10 @@ try
     const char *path = nullptr;
     /* 不给源文件时不再默默挂到标准输入上：默认把帮助打出来就退出，真要从管道喂源码得显式写 `--stdin`。 */
     bool readStdin = false;
-    /* 默认产物落在 build/ 下，不和源码混在一起（`--out` 显式给路径时按用户给的来）。 */
-    Memory::String prefix = "build/chali_out";
+    /* 默认中间产物落在隐藏的 .chali/ 下，不和源码混在一起（`--out` 显式给路径时按用户给的来）。 */
+    Memory::String prefix = ".chali/chali_out";
+    bool outGiven = false;      /* 用户是否显式给了 --out。 */
+    bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
     bool abiPrepareOnly = false, abiNoCache = false;
@@ -592,6 +621,12 @@ try
         {
             if (!NeedValue(index, argc, "--out")) return 2;
             prefix = argv[++index];
+            outGiven = true;
+            continue;
+        }
+        if (argument == "--keep-artifacts")
+        {
+            keepArtifacts = true;
             continue;
         }
         if (argument == "--memory-size")
@@ -846,6 +881,25 @@ try
     {
         PrintUsage(stdout);
         return 0;
+    }
+
+    /* `emit` 的产物就是用户要的东西（.quad / .data.bin / .layout），缺省放到源文件同级，
+     * 不塞进隐藏目录；运行与 AOT 导出的中间产物仍留在 .chali/ 下。 */
+    if (!outGiven && path != nullptr && run == 0 && !aot && !checkOnly)
+    {
+        const std::filesystem::path sourcePath = std::filesystem::u8path(path);
+        const std::filesystem::path directory = sourcePath.parent_path();
+        const std::filesystem::path stem = Memory::u8path(sourcePath.stem().u8string());
+        prefix = (directory.empty() ? stem : directory / stem).u8string();
+    }
+    /* 缺省中间产物目录：Windows 上设为隐藏，避免污染工程目录；--out 显式指定时不动用户的目录。 */
+    if (!outGiven && prefix.rfind(".chali", 0) == 0)
+    {
+        std::error_code artifactDirectoryError;
+        std::filesystem::create_directories(".chali", artifactDirectoryError);
+#ifdef _WIN32
+        SetFileAttributesA(".chali", FILE_ATTRIBUTE_HIDDEN);
+#endif
     }
 
     /* 硬实时禁止反射：默认开启的那份自动让位，只有用户显式点名要反射才算冲突。 */
@@ -1183,7 +1237,7 @@ try
             if (standardCacheDirectory.empty())
             {
                 const char *configured = std::getenv("CHALI_STDLIB_CACHE_DIR");
-                standardCacheDirectory = (configured != nullptr && *configured != '\0') ? Memory::String(configured) : Memory::String("build/chali-stdlib-cache");
+                standardCacheDirectory = (configured != nullptr && *configured != '\0') ? Memory::String(configured) : Memory::String(".chali/chali-stdlib-cache");
             }
             for (std::size_t i = 0; i < boundary; ++i)
                 if (text[i] == '\n') ++standardLines;
@@ -1319,13 +1373,10 @@ try
             if (!snippet.empty()) std::fputs(snippet.c_str(), stderr);
         }
     }
-    /* 后端三层的统计：指令选择覆盖率、帧槽复用前后、机器级优化前后。
+    /* 后端两层的统计：指令选择覆盖率与帧槽复用前后。
      * 它们都只在编译期累加，和运行期内存统计一起挂在 `--stats` 下。 */
     if (runtimeStats)
     {
-        const stackvm::machine::Stats machineStats = stackvm::machine::lastStats();
-        if (machineStats.before != 0u)
-            std::fprintf(stderr, "%s\n", stackvm::machine::describe(machineStats).c_str());
         const stackvm::execution_detail::SelectionStats selectionStats = stackvm::selection::lastStats();
         if (selectionStats.total != 0u)
             std::fprintf(stderr, "%s\n", stackvm::selection::describe(selectionStats).c_str());
@@ -1415,7 +1466,6 @@ try
     if (aot && !checkOnly)
     {
         auto quads = stackvm::loadQuadFile(prefix + ".quad");
-        if (quads.ok() && std::getenv("CHALI_NO_OPT") == nullptr) stackvm::optimize(quads);
         stackvm::Program program;
         Memory::Vector<Memory::String> diagnostics;
         if (!quads.ok() || !stackvm::assemble(quads, program))
@@ -1473,7 +1523,16 @@ try
         for (const auto &label : M_AotExports())
             if (std::find(aotOptions.exports.begin(), aotOptions.exports.end(), label) == aotOptions.exports.end())
                 aotOptions.exports.push_back(label);
-        aotOptions.outputPrefix = prefix;
+        /* 缺省导出物放在源文件同级（Windows 带 .exe，其他平台无后缀）；中间产物仍在 .chali/ 下。 */
+        Memory::String exportPrefix = prefix;
+        if (!run && !outGiven && path != nullptr)
+        {
+            const std::filesystem::path sourcePath = std::filesystem::u8path(path);
+            const std::filesystem::path directory = sourcePath.parent_path();
+            const std::filesystem::path stem = std::filesystem::u8path(sourcePath.stem().u8string());
+            exportPrefix = (directory.empty() ? stem : directory / stem).u8string();
+        }
+        aotOptions.outputPrefix = exportPrefix;
         aotOptions.memoryBytes = memoryBytes;
         aotOptions.stepLimit = stepLimit;
         aotOptions.threadsEnabled = threadsEnabled;
@@ -1484,7 +1543,23 @@ try
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
-        if (run) return chali_aot::executeNative(request.options, programArguments);
+        /* 缺省运行或导出完成后清理中间产物；--out 显式给路径时按用户要求全部保留，
+         * --keep-artifacts、--incremental 与 --emit-llvm 同样保留。 */
+        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly;
+        /* 带 `--export` 时 ABI 头是交给宿主代码的交付物，不能当中间产物删掉。 */
+        const bool withHeader = aotOptions.exports.empty();
+        if (run)
+        {
+            const int exitStatus = chali_aot::executeNative(request.options, programArguments);
+            if (cleanArtifacts) RemoveIntermediateArtifacts(prefix, true, withHeader);
+            return exitStatus;
+        }
+        if (cleanArtifacts)
+        {
+            /* 四元式产物留在 prefix（.chali/）下，LLVM 侧产物跟着导出前缀走，两边都要清。 */
+            RemoveIntermediateArtifacts(prefix, false, withHeader);
+            if (exportPrefix != prefix) RemoveIntermediateArtifacts(exportPrefix, false, withHeader);
+        }
     }
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);
     if (cache && run == 0 && !checkOnly)
