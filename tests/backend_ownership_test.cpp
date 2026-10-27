@@ -3,7 +3,7 @@
  * @brief 目标存储合并、重复检查与微型内联的生成证据及回退测试。
  */
 #include "ast/aggregate_optimize.hpp"
-#include "stackvm/machine_optimize.hpp"
+#include "ircode/machine_optimize.hpp"
 #include "chali_aot.hpp"
 #include <cstdlib>
 #include <iostream>

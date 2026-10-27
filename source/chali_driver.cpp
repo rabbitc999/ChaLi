@@ -34,9 +34,9 @@
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
 #include "chali_aot.hpp"
+#include "chali_aot_llvm.hpp"
 #include "chali_glue.hpp"
 #include "chali_report.hpp"
-#include "dap/dap_server.hpp"
 #include "glue/std_math.hpp"
 #include "glue/std_random.hpp"
 #include "glue/std_regex.hpp"
@@ -308,14 +308,13 @@ void PrintUsage(std::FILE *out)
              "用法：chali 文件.chl [程序参数...]\n",
              "      chali 场景 [文件.chl] [配置词...] [-- 程序参数...]\n",
              "\n",
-             "统一工具链：VM 执行、导出四元式和 .svmb 字节码。\n",
+             "统一工具链：AOT 原生执行与四元式导出；.svmb 已删除。\n",
              "场景指令（运行方式也可用 --mode 指定）：\n",
-             "  run|interpret  内部解释运行（缺省）；直接传入文件时，其后全为程序参数\n",
+             "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
              "  emit           只出 .quad / .data.bin / .layout\n",
-             "  aot            LLVM 原生产物（--llvm、--checked、--emit-llvm、--shared、--export）\n",
-             "  svmb           只导出 <前缀>.svmb，不执行\n",
+             "  aot            unchecked LLVM 原生产物（--llvm、--checked、--emit-llvm、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
              "  clear out DIR  清理登记过的中间产物（不重新编译）\n",
@@ -331,8 +330,7 @@ void PrintUsage(std::FILE *out)
              "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
              "  --check                仅检查，不执行、不生成产物\n",
              "  --compress-symbols     写无名变长符号表，生成 PC 映射文件\n",
-             "  --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n",
-             "  --debug                写 .svmb 时带上调试节，并在解释执行时打印位置轨迹\n",
+             "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
              "  --emit                 只生成 .quad / .data.bin / .layout，不执行\n",
@@ -341,7 +339,6 @@ void PrintUsage(std::FILE *out)
              "  --include-path 目录    追加模块搜索目录\n",
              "  --incremental          跨次复用模块预处理与完整编译产物\n",
              "  --input \"文本\"        `input(变量);` 的输入项（空白分隔）；不给就从标准读，调试时可直接敲\n",
-             "  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n",
              "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
              "  --no-compress-symbols  覆盖 chali 配置，关闭符号压缩\n",
              "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
@@ -355,10 +352,7 @@ void PrintUsage(std::FILE *out)
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
              "  --stats                打印运行时、增量校验与后端三层（优化 / 指令选择 / 帧槽）统计\n",
              "  --step-limit N         本次执行的指令条数上限（缺省不设上限；0 同缺省）\n",
-             "  --svmb                 额外写出可由 stackvm 直接加载的 <前缀>.svmb\n",
              "  --symbol-map FILE      映射路径（默认 <前缀>.symbol_map.json）\n",
-             "  --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n",
-             "  --watchdog-watermark N 内存水位（字节；隐含 --watchdog）\n",
              "  --                     后面全部作为程序的命令行参数\n",
          })
         std::fputs(CHALI_TEXT(line), out);
@@ -447,6 +441,12 @@ try
     argc = static_cast<int>(normalized.size());
     argv = normalizedArgv.data();
 #endif
+    if (argc == 2 && std::strcmp(argv[1], "--build-info") == 0)
+    {
+        std::printf("{\"version\":\"%s\",\"llvm\":\"%s\",\"execution\":\"aot\",\"vm\":false,\"svmb\":false}\n",
+                    chali_package::compilerVersion, chali_aot::builtin::available() ? "static" : "external");
+        return 0;
+    }
     if (argc > 1 && std::strcmp(argv[1], "new") == 0) return chali_project::runCli(argc, argv);
     chali_glue::Registry glue;
     InstallDemoGlue(glue);
@@ -466,17 +466,12 @@ try
      * 只有显式写了 `--reflection` 才按"要求必须有支持"处理（不支持就报错）。 */
     bool reflectionEnabled = true;
     bool reflectionExplicit = false; /* 用户是否显式给了 --reflection / --no-reflection。 */
-    bool runModeGiven = false;
+
     bool aot = false;
     chali_aot::Options aotOptions;
-    bool emitBinary = false;     /* --svmb：额外输出可由 stackvm 直接加载的程序 */
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
-    /* 可选软重启看门狗：默认关闭；数值选项同时隐含打开（与 `--watchdog` 同义）。 */
-    bool watchdogEnabled = false;
-    int watchdogMaxRestarts = 3;
-    std::size_t watchdogWatermarkBytes = 0u;
     bool debugEnabled = false; /* --debug：执行时打印源码位置轨迹（stderr） */
     bool dapEnabled = false;   /* --dap：作为 VS Code 的调试适配器跑（stdio 上收发 DAP） */
     bool stripDebug = true;    /* 缺省不带调试信息；--debug 才写调试节 */
@@ -512,27 +507,26 @@ try
         if (first == "run" || first == "interpret")
         {
             firstArgument = 2;
-            runModeGiven = true;
+
         }
         else if (first == "aot")
         {
             aot = true;
-            runModeGiven = true;
+            aotOptions.checked = false;
+
             run = 0;
             firstArgument = 2;
         }
         else if (first == "emit")
         {
-            runModeGiven = true;
+
             run = 0;
             firstArgument = 2;
         }
         else if (first == "svmb" || first == "smvb")
         {
-            runModeGiven = true;
-            run = 0;
-            emitBinary = true;
-            firstArgument = 2;
+            std::fputs("chali: .svmb 导出已删除，请使用 aot 导出原生产物。\n", stderr);
+            return 2;
         }
     }
     for (int index = firstArgument; index < argc; ++index)
@@ -543,7 +537,7 @@ try
             PrintUsage(stdout);
             return 0;
         }
-        if (aot && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm"))
+        if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm"))
         {
             if (argument == "--checked") aotOptions.checked = true;
             if (argument == "--unchecked") aotOptions.checked = false;
@@ -551,7 +545,7 @@ try
             if (argument == "--emit-llvm") aotOptions.emitLLVMOnly = true;
             continue;
         }
-        if (aot && (argument == "--llvm" || argument == "--export" || argument == "--link"))
+        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link"))
         {
             if (index + 1 >= argc)
             {
@@ -574,20 +568,16 @@ try
                 return 2;
             }
             const Memory::String mode = separator == Memory::String::npos ? Memory::String(argv[++index]) : argument.substr(separator + 1);
-            runModeGiven = true;
+
             if (mode == "interpret") { /* 缺省 */ }
             else if (mode == "aot")
             {
                 aot = true;
+                aotOptions.checked = false;
                 run = 0;
             }
             else if (mode == "emit")
                 run = 0;
-            else if (mode == "svmb" || mode == "smvb")
-            {
-                run = 0;
-                emitBinary = true;
-            }
             else
             {
                 std::fprintf(stderr, CHALI_TEXT("chali: 不认识的运行方式：%s\n"), mode.c_str());
@@ -627,37 +617,10 @@ try
             hardRealtime = true;
             continue;
         }
-        /* 可选软重启看门狗（默认关闭）：`--watchdog` 打开，数值选项同时隐含打开。 */
-        if (argument == "--watchdog")
+        if (argument == "--watchdog" || argument == "--no-watchdog" || argument == "--max-restarts" || argument == "--watchdog-watermark")
         {
-            watchdogEnabled = true;
-            continue;
-        }
-        if (argument == "--no-watchdog")
-        {
-            watchdogEnabled = false;
-            continue;
-        }
-        if (argument == "--max-restarts" || argument == "--watchdog-watermark")
-        {
-            if (!NeedValue(index, argc, argument.c_str())) return 2;
-            const Memory::String value = argv[++index];
-            if (value.empty() || value.find_first_not_of("0123456789") != Memory::String::npos)
-                return 2;
-            try
-            {
-                const unsigned long long parsed = std::stoull(value);
-                if (argument == "--max-restarts")
-                {
-                    watchdogMaxRestarts = parsed > 1000ull ? 1000 : static_cast<int>(parsed);
-                }
-                else
-                {
-                    watchdogWatermarkBytes = parsed > 0xffffffffull ? static_cast<std::size_t>(0xffffffffu) : static_cast<std::size_t>(parsed);
-                }
-            } catch (...) { return 2; }
-            watchdogEnabled = true;
-            continue;
+            std::fputs("chali: VM 进程内软重启选项已移除；AOT 可使用 std::watchdog 或 --step-limit。\n", stderr);
+            return 2;
         }
         if (argument == "--dap")
         {
@@ -781,7 +744,7 @@ try
         }
         if (argument == "--emit") /* 只生成 .quad / .data.bin / .layout，不执行 */
         {
-            runModeGiven = true;
+
             run = 0;
             continue;
         }
@@ -801,10 +764,10 @@ try
             incremental = true;
             continue;
         }
-        if (argument == "--svmb") /* 生成 <前缀>.svmb；是否执行仍由 --emit 决定 */
+        if (argument == "--svmb")
         {
-            emitBinary = true;
-            continue;
+            std::fputs("chali: --svmb 已删除，请使用 aot。\n", stderr);
+            return 2;
         }
         if (argument == "--no-debug") /* 兼容别名：显式不带调试节（现在也是缺省） */
         {
@@ -928,6 +891,8 @@ try
         std::fprintf(stderr, CHALI_TEXT("chali: --incremental 需要源文件，且不能与 --raw 合用\n"));
         return 2;
     }
+    if (run) { aot = true; aotOptions.checked = true; }
+    aotOptions.debug = debugEnabled;
     if (sourceStdin && (!path || !checkOnly))
     {
         std::fputs("chali: --source-stdin 需要 --check 和源文件路径\n", stderr);
@@ -955,11 +920,6 @@ try
             std::fprintf(stderr, "chali: %s\n", packageError.c_str());
         return 1;
     }
-    if (!runModeGiven && project.run == "svmb")
-    {
-        run = 0;
-        emitBinary = true;
-    }
     includeDirs.insert(includeDirs.end(), project.includePaths.begin(), project.includePaths.end());
     importDirs.insert(importDirs.end(), project.includePaths.begin(), project.includePaths.end());
     importDirs.insert(importDirs.end(), project.importPaths.begin(), project.importPaths.end());
@@ -968,7 +928,7 @@ try
     importDirs.insert(importDirs.end(), moduleRuntimeDirs.begin(), moduleRuntimeDirs.end());
     /* `[chali] debug = true` 是项目级的“带调试节”，等价于命令行写 `--debug`。
      * 缺省 false（不带调试信息）；配置内容进缓存签名，改它会让缓存失效。 */
-    if (project.debug) stripDebug = false;
+    if (project.debug) { stripDebug = false; debugEnabled = true; aotOptions.debug = true; }
     const bool compressSymbols = compressSymbolsOption < 0 ? project.compressSymbols : compressSymbolsOption != 0;
     if (!symbolMapGiven) symbolMap = project.symbolMap;
     /* 构建**项目**时入口是 `[chali] main` 指定的主文件（命令行没给源文件才用它）；
@@ -989,18 +949,8 @@ try
         }
         symbolMap.clear();
     }
-    if (compressSymbols && emitBinary)
-    {
-        namespace fs = std::filesystem;
-        const auto mapPath = fs::absolute(Memory::u8path(symbolMap.empty() ? prefix + ".symbol_map.json" : symbolMap)).lexically_normal();
-        if (mapPath == fs::absolute(Memory::u8path(prefix + ".svmb")).lexically_normal() || (path && mapPath == fs::absolute(Memory::u8path(path)).lexically_normal()))
-        {
-            std::fputs(CHALI_TEXT("映射路径不能覆盖输入或字节码输出\n"), stderr);
-            return 2;
-        }
-    }
     Memory::UniquePtr<chali_incremental::Cache> cache;
-    if (!aot && incremental)
+    if (incremental)
     {
         Memory::Vector<Memory::String> searchDirs = includeDirs;
         searchDirs.insert(searchDirs.end(), importDirs.begin(), importDirs.end());
@@ -1125,10 +1075,10 @@ try
                 processed.lineMap.push_back(preprocess::LineOrigin{ "<胶水声明>", line });
         }
 
-        if (cache && run == 0 && !depsOnly && !checkOnly)
+        if (cache && !aot && run == 0 && !depsOnly && !checkOnly)
         {
             incrementalInput = chali_incremental::inputHash(processed, cache->signature());
-            if (cache->outputsCurrent(prefix, incrementalInput, emitBinary,
+            if (cache->outputsCurrent(prefix, incrementalInput, false,
                                       compressSymbols ? (symbolMap.empty() ? prefix + ".symbol_map.json" : symbolMap) : Memory::String()))
             {
                 std::fprintf(stderr, "chali: 增量缓存命中：%zu 个模块复用，编译产物未变\n",
@@ -1355,42 +1305,17 @@ try
     M_SetStripDebug(stripDebug ? 1 : 0);
     M_SetSymbolCompression(compressSymbols ? 1 : 0, symbolMap.c_str(), project.name.c_str(), project.version.c_str());
     M_SetRuntimeMemory(memoryBytes);
-    M_SetWatchdog(watchdogEnabled ? 1 : 0, watchdogMaxRestarts,
-                  static_cast<int>(watchdogWatermarkBytes));
     M_SetCheckOnly(checkOnly);
     M_SetSharedLibrary(aot && aotOptions.shared);
     M_SetAbiPrepareOnly(abiPrepareOnly);
     M_SetAbiOptions(abiCache, abiBridge, abiWrite, abiNoCache);
     if (dapEnabled)
     {
-        /* DAP 模式：不在这里直接跑，把「编译 + 执行」交给调试适配器——它要先等 VS Code
-         * 下断点、发完 configurationDone，再在 `launch` 里回调执行，程序才有机会停在
-         * 用户下的断点上。编译错误也走 `output` 事件，否则用户只能看到"什么都没发生"。 */
-        M_SetDapEnabled(true);
-        return dap::serve([&]() {
-            const int inner = M_Compile("chali", prefix.c_str(), 1, emitBinary ? 1 : 0,
-                                        inputText.c_str());
-            if (inner == 0) return 0;
-            Memory::String text = "chali: ";
-            const char *message = M_LastError();
-            if (message != nullptr && message[0] != '\0')
-            {
-                const auto line = M_LastErrorLine();
-                const auto original = line && line <= processed.lineMap.size() ? processed.lineMap[line - 1] : preprocess::LineOrigin{ sourceLabel, line };
-                text += original.file + " 第 " + std::to_string(original.line) + " 行";
-                if (M_LastErrorColumn())
-                    text += "第 " + std::to_string(M_LastErrorColumn()) + " 列";
-                text += "：";
-                text += message;
-            }
-            else
-                text += "编译失败";
-            dap::emitOutput(std::string(text.data(), text.size()) + "\n", "stderr");
-            return inner;
-        });
+        std::fputs("chali: VM 调试适配器已移除，请使用 VS Code 原生 AOT 调试配置。\n", stderr);
+        return 2;
     }
     chali_editor::compilerAnalysis.begin(!analysisTypes.empty());
-    const int code = M_Compile("chali", prefix.c_str(), run, emitBinary ? 1 : 0,
+    const int code = M_Compile("chali", prefix.c_str(), 0, 0,
                                inputText.c_str());
     if (!analysisTypes.empty())
     {
@@ -1413,8 +1338,6 @@ try
             if (!snippet.empty()) std::fputs(snippet.c_str(), stderr);
         }
     }
-    if (runtimeStats && run && !Memory::runtimeMemoryStatsAvailable) std::fputs("运行时分配器：malloc/free，峰值内存不可用\n", stderr);
-    if (runtimeStats && run && Memory::runtimeMemoryStatsAvailable) std::fprintf(stderr, "运行时分配器：峰值 %zu 字节（容量 %zu 字节；运行后已清零）\n", M_RuntimePeakBytes(), memoryBytes);
     /* 后端三层的统计：指令选择覆盖率、帧槽复用前后、机器级优化前后。
      * 它们都只在编译期累加，和运行期内存统计一起挂在 `--stats` 下。 */
     if (runtimeStats)
@@ -1508,7 +1431,7 @@ try
         if (jsonDiagnostics) chali_diagnostics::reportMany(diagnostics);
         return code;
     }
-    if (aot)
+    if (aot && !checkOnly)
     {
         auto quads = stackvm::loadQuadFile(prefix + ".quad");
         if (quads.ok() && std::getenv("CHALI_NO_OPT") == nullptr) stackvm::optimize(quads);
@@ -1571,19 +1494,21 @@ try
                 aotOptions.exports.push_back(label);
         aotOptions.outputPrefix = prefix;
         aotOptions.memoryBytes = memoryBytes;
+        aotOptions.stepLimit = stepLimit;
         aotOptions.threadsEnabled = threadsEnabled;
         for (const auto &external : request.externs)
             if (request.abiGlue.empty() && !external.library.empty() && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
                 aotOptions.linkLibraries.push_back(external.library);
-        request.options = std::move(aotOptions);
+        request.options = aotOptions;
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
+        if (run) return chali_aot::executeNative(request.options, programArguments, inputText.empty() ? nullptr : &inputText);
     }
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);
     if (cache && run == 0 && !checkOnly)
     {
-        cache->saveOutputs(prefix, incrementalInput, emitBinary,
+        cache->saveOutputs(prefix, incrementalInput, false,
                            compressSymbols ? (symbolMap.empty() ? prefix + ".symbol_map.json" : symbolMap) : Memory::String());
         std::fprintf(stderr, "chali: 增量编译：%zu 个模块复用，%zu 个模块重新预处理\n",
                      cache->reused(), cache->rebuilt());

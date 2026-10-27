@@ -14,7 +14,7 @@
  *   8. 宏块折叠由 `src/folding.js` 提供（`planFoldingRanges` 是函数）；
  *   9. 图标 `icon.png` 存在、是 PNG、且不小于 128×128（市场要求）；
  *  10. **只注册 `.chl`**：`.gram` / `.metro` 归根目录的 GramEditor 插件，不该在这里重复声明。
- *  11. 插件独立编号，chaliCompilerVersion 与仓库根目录 VERSION 一致。
+ *  11. 插件与编译器版本一致，按 LLVM static / external 分包。
  *
  * 用法（在仓库任意目录执行都可以）：
  *   node chali/vscode/tools/check-manifest.js
@@ -91,7 +91,7 @@ function main() {
   }
 
   const version = fs.readFileSync(path.join(EXTENSION_DIR, '..', 'VERSION'), 'utf8').trim();
-  check('内嵌编译器版本声明与 ChaLi 程序版本一致', pkg.chaliCompilerVersion === version,
+  check('插件、内嵌声明与 ChaLi 程序版本一致', pkg.version === version && pkg.chaliCompilerVersion === version,
     `插件 ${pkg.version}，ChaLi ${version}`);
 
   const contributes = pkg.contributes || {};
@@ -145,7 +145,7 @@ function main() {
   }
   check('声明了 chali.path', !!properties['chali.path']);
   check('声明了 chali.traceServer', !!properties['chali.traceServer']);
-  for (const command of ['chali.build', 'chali.buildExe', 'chali.buildSvmb']) {
+  for (const command of ['chali.build', 'chali.buildExe']) {
     check(`注册了构建命令 ${command}`, commands.some((item) => item.command === command));
     check(`声明了构建激活事件 ${command}`, activationEvents.includes(`onCommand:${command}`));
   }
@@ -156,7 +156,7 @@ function main() {
   // 5. 折叠与图标。
   const menus = contributes.menus || {};
   for (const slot of ['editor/context', 'explorer/context']) {
-    check(`${slot} 提供两种构建格式`, ['chali.buildExe', 'chali.buildSvmb'].every(
+    check(`${slot} 提供原生 AOT 构建`, ['chali.buildExe'].every(
       (command) => (menus[slot] || []).some((item) => item.command === command)));
   }
   check('构建按钮位于编辑器标题栏', (menus['editor/title'] || []).some((item) => item.command === 'chali.build'));

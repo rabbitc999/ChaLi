@@ -11,7 +11,6 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-from svmb_format import read_raw, FEATURE_BULK_MEMORY
 SOURCE = '''int64 sizeOfCopy(int64 n) { return n; }
 void main() {
     @P@RawStorage<int64> values = @P@RawStorage<int64>::allocate(4);
@@ -99,26 +98,11 @@ def main():
             invoke([clang, '-O3', '-S', '-emit-llvm', target.with_suffix('.ll'), '-o', optimized, '-Wno-override-module'], name + '-optimize')
             optimized_text = optimized.read_text(encoding='utf-8')
             pointer_calls = re.findall(r'\bcall[^\n]*@f_[^\s(]*(?:BarePtr__[^\s(]*[_.](?:leftAdd|leftSub|rightAdd)|barePointer__|readAt__|takeAt__|initAt__)', optimized_text)
-            results.append(dict(case=name, vm='passed', aot='passed', llvm_byte_intrinsics='passed',
+            results.append(dict(case=name, checked_run='passed', aot='passed', llvm_byte_intrinsics='passed',
                                 remaining_optimized_pointer_calls=pointer_calls))
-            if not qualified and not explicit:
-                bytecode = work / 'memory-bytecode'
-                invoke([compiler, 'svmb', source, '--out', bytecode], 'bytecode-build', allow_stderr=True)
-                product = Path(str(bytecode) + '.svmb')
-                metadata = read_raw(product.read_bytes())
-                assert metadata['features'] & FEATURE_BULK_MEMORY
-                assert {54, 55} <= {instruction['op'] for instruction in metadata['code']}
-                vm = work / ('chali-stackvm.exe' if os.name == 'nt' else 'chali-stackvm')
-                invoke(['g++', '-std=c++17', '-O2', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1',
-                        '-DSTACKVM_WITH_REFLECTION=1', '-pthread', '-Isource', '-Ilibrary', '-Isource/stackvm', '-Isource/bignum',
-                        '-Isource/allocator', ROOT / 'source/stackvm/main.cpp', ROOT / 'build/chali-stackvm-core/libstackvm.a',
-                        ROOT / 'build/chali-host-records/librecords.a', *(['-lwinhttp'] if os.name == 'nt' else []), '-o', vm], 'vm-host-build')
-                output = invoke([vm, 'run', product, '--data', bytecode.with_suffix('.data.bin'),
-                                 '--layout', bytecode.with_suffix('.layout')], 'bytecode-run')
-                assert [line for line in output.splitlines() if line and not line.startswith('; ')] == ['memory intrinsics OK']
-            print(name, 'VM/AOT and LLVM intrinsic passed', flush=True)
+            print(name, 'checked run/AOT and LLVM intrinsic passed', flush=True)
     (work / 'results.json').write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('namespace, memory intrinsic and bytecode checks passed; logs:', work)
+    print('namespace and native memory intrinsic checks passed; logs:', work)
 
 
 if __name__ == '__main__':

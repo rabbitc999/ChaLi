@@ -119,3 +119,5 @@ The [24-chapter beginner book](../book/en/README.md) includes exercises with ref
 - [Raw storage and C ABI directives](44-unsafe-abi.md)
 
 - [Downloaded build dependencies](45-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
+
+- [Native AOT debugging](46-native-debugging.md): GDB breakpoints, stepping and variables.

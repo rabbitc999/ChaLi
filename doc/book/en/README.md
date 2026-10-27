@@ -40,7 +40,7 @@ The complete export uses `book/` for Chinese Markdown, `book/en/` for English Ma
 | [19](19-macros.md) | Preprocessing and hygienic macros |
 | [20](20-reflection.md) | Annotations and reflection |
 | [21](21-c-interop.md) | C interoperability |
-| [22](22-bytecode.md) | Bytecode deployment |
+| [22](22-native-deployment.md) | Native deployment |
 | [23](23-compiler-commands.md) | Compiler commands |
 | [24](24-aot-export.md) | LLVM AOT export |
 | [25](25-unsafe-code.md) | Unsafe code, raw storage, bare pointer arithmetic and byte operations |

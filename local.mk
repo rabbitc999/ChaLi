@@ -6,22 +6,22 @@ endif
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：
 #   * source/ast：C 子集语法树 → 四元式 + .data（降级目标）
-#   * source/stackvm ：四元式 → 栈指令 → 执行（跑出结果；大整数用 source/bignum）
+#   * source/ircode ：四元式 → 栈指令 → 执行（跑出结果；大整数用 source/bignum）
 #   * source/preprocess：`%include` / `%if` / `%define` 那一步（源码进解析器之前）
 # 三份副本各跑 `make -C source/<名字>`（产物仍落在仓库根的 `build/<名字>/`），
 # 所有依赖都使用 CHALI 内部副本。
 #
-# 注意：`source/{ast,stackvm,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
+# 注意：`source/{ast,ircode,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
 # 改了这边不会自动同步到 ParseEngine 那份（反之亦然）——动其中一个时想清楚要不要一起改。
 #
 # 生成源码与报告位于 source/，对象文件与静态库位于 build/chali-frontend/。
 # 根目录只保留工具链入口与手写构建文件，重跑 gen.sh 不覆盖 local.mk。
 
 AST_DIR := source/ast
-VM_DIR  := source/stackvm
+VM_DIR  := source/ircode
 PP_DIR  := source/preprocess
 AST_LIB := build/chali-runtime/libast.a
-VM_BUILD := build/chali-stackvm-core
+VM_BUILD := build/chali-ircode-aot-core
 HOST_BUILD := build/chali-host-records
 HOST_LIB := $(HOST_BUILD)/librecords.a
 CAS_BUILD := build/chali-cas
@@ -32,7 +32,7 @@ ifneq ($(filter 1,$(NO_CHALI_STD) $(NO_CHALI_STD_CAS) $(NO_CHALI_BIG_INT)),)
 CAS_OBJS :=
 endif
 VM_LIB  := $(VM_BUILD)/libstackvm.a
-VM_SOURCE_NAMES := $(shell $(PYTHON) tools/stackvm_sources.py)
+VM_SOURCE_NAMES := $(shell $(PYTHON) tools/stackvm_sources.py --aot-only)
 VM_OBJS := $(addprefix $(VM_BUILD)/,$(VM_SOURCE_NAMES:.cpp=.o))
 PP_LIB  := build/chali-runtime/libpreprocess.a
 
@@ -57,7 +57,7 @@ CHALI_INCLUDES := -I$(CHALI_SOURCE_DIR) -I$(CHALI_LIBRARY_DIR) \
     -I$(CHALI_SOURCE_DIR)/allocator -I$(CHALI_SOURCE_DIR)/lsp \
     -I$(CHALI_SOURCE_DIR)/bignum -I$(CHALI_SOURCE_DIR)/json -I$(CHALI_SOURCE_DIR)/toml \
     -I$(CHALI_DEPENDENCY_DIR)/sqlite -I$(CHALI_DEPENDENCY_DIR)/miniz -I$(CHALI_SOURCE_DIR)/console -I$(CHALI_SOURCE_DIR)/lztext
-override CXXFLAGS += -DCHALI_CUSTOM_ALLOCATOR=1 -pthread $(CHALI_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
+override CXXFLAGS += -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread $(CHALI_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
 
 # ---- 统一工具链：chali 同时是前端 / VM / 工程生成器 ----
 # `$(FRONTEND_BUILD)/chali_main.o` 只提供 `chali_main_entry`，真正的 main 在 chali_tool.cpp；
@@ -98,7 +98,7 @@ $(FRONTEND_BUILD)/chali_parser.o: source/chali_ast.hpp source/chali_semantics.cp
 $(TARGET): $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
 
 # ChaLi's VM copy includes the std bindings that are intentionally absent from
-# the general-purpose source/stackvm build. Keep its archive separate.
+# the general-purpose source/ircode build. Keep its archive separate.
 $(VM_BUILD) $(HOST_BUILD): | tmp
 	$(CHALI_RUNTIME_MKDIR)
 
@@ -250,7 +250,7 @@ endif
 -include build/chali-native-development.d
 
 # 泛型与闭包文本处理实现独立编译，解析器和语言服务只依赖声明。
-CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_llvm chali_aot_runtime_assets chali_temp
+CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_debug chali_aot_llvm chali_aot_runtime_assets chali_temp
 CHALI_FRONTEND_MODULE_OBJS := $(addprefix $(FRONTEND_BUILD)/,$(addsuffix .o,$(CHALI_FRONTEND_MODULES)))
 LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)

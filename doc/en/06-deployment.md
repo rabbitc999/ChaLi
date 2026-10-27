@@ -11,7 +11,7 @@ chali run app.chl
 chali svmb app.chl out build/app
 ```
 
-Bytecode deployment includes `.svmb`, `.data.bin`, `.layout` and application resources. The host validates format and feature bits, installs native bindings, and runs the program. `emit` provides quadruples for inspection or assembly; quadruples are not machine code.
+Native deployment includes `.svmb`, `.data.bin`, `.layout` and application resources. The host validates format and feature bits, installs native bindings, and runs the program. `emit` provides quadruples for inspection or assembly; quadruples are not machine code.
 
 A host application may itself be compiled into a native executable and embed bytecode. ChaLi code executes through `stackvm::Machine`.
 

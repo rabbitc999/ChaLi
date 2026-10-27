@@ -35,13 +35,14 @@ function option(name, fallback) {
 const DRY_RUN = process.argv.includes('--dry-run');
 const SKIP_TESTS = process.argv.includes('--skip-tests');
 const outDir = path.resolve(EXT_ROOT, option('--out', 'dist'));
-const variant = option('--llvm-variant', 'default');
-if (!['default', 'static', 'external'].includes(variant)) {
+const variant = option('--llvm-variant', 'external');
+if (!['static', 'external'].includes(variant)) {
   throw new Error('--llvm-variant 必须为 static 或 external');
 }
 const compiler = option('--compiler', '');
 if (compiler) process.env.CHALI_BIN = path.resolve(EXT_ROOT, compiler);
-const suffix = variant === 'default' ? '' : `-llvm-${variant}`;
+process.env.CHALI_LLVM_VARIANT = variant;
+const suffix = `-llvm-${variant}`;
 const vsix = path.join(outDir, `${manifest.name}-${manifest.version}${suffix}.vsix`);
 
 /**
@@ -104,8 +105,17 @@ function main() {
   }
   const [command, prefix] = vsce();
   fs.mkdirSync(outDir, { recursive: true });
-  run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository'],
-      process.platform === 'win32');
+  const manifestPath = path.join(EXT_ROOT, 'package.json');
+  const original = fs.readFileSync(manifestPath);
+  try {
+    const releaseManifest = JSON.parse(original);
+    releaseManifest.chaliLLVMVariant = variant;
+    fs.writeFileSync(manifestPath, JSON.stringify(releaseManifest, null, 2) + '\n');
+    run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository'],
+        process.platform === 'win32');
+  } finally {
+    fs.writeFileSync(manifestPath, original);
+  }
   if (DRY_RUN) {
     console.log(`\n（dry-run：没有真的产出 ${path.relative(EXT_ROOT, vsix)}）`);
     return;

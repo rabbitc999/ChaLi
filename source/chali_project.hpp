@@ -98,7 +98,7 @@ inline int runCli(int argc, char **argv)
             output.close();
             if (!output) throw std::runtime_error(CHALI_TEXT("无法写入工程文件：") + file.u8string());
         };
-        write("chali.toml", "[package]\nname = \"" + name + "\"\nversion = \"0.1.0\"\n\n[chali]\nrun = \"interpret\"\nmain = \"src/main.chl\"\n");
+        write("chali.toml", "[package]\nname = \"" + name + "\"\nversion = \"0.1.0\"\n\n[chali]\nrun = \"run\"\nmain = \"src/main.chl\"\n");
         write("src/main.chl", "void main() {\n    std::lang::println(\"Hello, ChaLi!\");\n    return;\n}\n");
         write("tests/test_main.chl", "void main() {\n    std::lang::assert(1 + 1 == 2);\n    return;\n}\n");
         write(".gitignore", "/build/\n/.chali/\n/chali_out*\n*.exe\n");

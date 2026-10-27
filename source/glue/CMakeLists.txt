@@ -23,7 +23,7 @@ add_library(chali_standard_records STATIC ${CHALI_STANDARD_SOURCES})
 add_dependencies(chali_standard_records chali_dependencies_check)
 target_link_libraries(chali_standard_records PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 target_include_directories(chali_standard_records PUBLIC
-    .. ../../library ../../source/stackvm ../../source/bignum ../../library/caspp/include
+    .. ../../library ../../source/ircode ../../source/bignum ../../library/caspp/include
     "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}")
 target_compile_definitions(chali_standard_records PUBLIC CHALI_CUSTOM_ALLOCATOR=1
     STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)

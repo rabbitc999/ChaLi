@@ -165,3 +165,5 @@ ChaLi 让业务逻辑只写一次：同一份源码编译出的字节码，由�
 - [原始存储与 C ABI 指令](44-unsafe-abi.md)
 
 - [在线构建依赖](45-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
+
+- [原生 AOT 调试](46-native-debugging.md)：GDB 断点、单步、变量及 .svmb 停止维护说明。

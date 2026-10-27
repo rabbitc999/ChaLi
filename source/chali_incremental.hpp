@@ -328,7 +328,6 @@ private:
         std::error_code error;
         if (fs::exists(fs::path(prefix + ".abi.cpp"), error))
             paths.push_back(canonical(prefix + ".abi.cpp"));
-        if (binary) paths.push_back(canonical(prefix + ".svmb"));
         if (binary && !symbolMap.empty()) paths.push_back(canonical(symbolMap));
         return paths;
     }

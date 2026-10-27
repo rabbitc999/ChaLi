@@ -116,7 +116,7 @@ def read(path):
 # 九个库已搬进 source/，仍留在 library/ 的只有外部依赖（ipage / caspp）。
 ASSET_ROOT = {
     "ipage/": "library/ipage/source/",
-    "stackvm/": "source/",
+    "ircode/": "source/",
     "ast/": "source/",
     "preprocess/": "source/",
     "bignum/": "source/",
@@ -152,6 +152,8 @@ GENERATOR_ASSETS = [
     "tools/chali_manual.json",
     "tools/chali_stdlib_api.json",
     "chali_glue.hpp",
+    "chali_aot_debug.hpp",
+    "chali_aot_debug.cpp",
     "chali_aot.hpp",
     "chali_aot.cpp",
     "chali_aot_llvm.hpp",
@@ -228,7 +230,7 @@ GENERATOR_ASSETS += ["semantics/abi_export.cpp", "glue/aot_modules.inc",
 
 GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'ast/aggregate_optimize.cpp', 'ast/aggregate_optimize.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
 
-GENERATOR_ASSETS += ["stackvm/" + name for name in asset_names()]
+GENERATOR_ASSETS += ["ircode/" + name for name in asset_names()]
 from cas_sources import asset_names as cas_asset_names
 GENERATOR_ASSETS += ["caspp/" + name for name in cas_asset_names()]
 GENERATOR_ASSETS += ["ipage/" + path.name for path in sorted(Path(CHALI, "library/ipage/source/ipage").iterdir()) if path.suffix in (".hpp", ".cpp")]

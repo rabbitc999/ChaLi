@@ -29,8 +29,10 @@ class ReleaseTests(unittest.TestCase):
                 release.version_of(root)
             (root / 'VERSION').write_text('0.21.0', encoding='utf-8')
             (root / 'vscode/package.json').write_text('{"version":"1.0.0","chaliCompilerVersion":"0.21.0"}', encoding='utf-8')
-            self.assertEqual(release.version_of(root), '0.21.0')
-            self.assertEqual(release.editor_version_of(root), '1.0.0')
+            with self.assertRaisesRegex(ValueError, 'VERSION'):
+                release.version_of(root)
+            with self.assertRaisesRegex(ValueError, 'VERSION'):
+                release.editor_version_of(root)
             (root / 'VERSION').write_text('../bad', encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'VERSION'):
                 release.version_of(root)

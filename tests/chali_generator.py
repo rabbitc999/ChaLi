@@ -48,7 +48,7 @@ def main():
         command([GENERATOR, "compiler", "--out-dir", compiler])
         required = [
             "chali_parser.cpp", "chali_main.cpp", "chali_incremental.hpp", "chali_aot.hpp", "chali_aot.cpp",
-            "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt",
+            "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt",
             "aot/runtime.c", "aot/runtime_windows.ll", "aot/runtime_linux.ll",
             "chali_interpolation.hpp", "chali_analysis.hpp", "chali_report.hpp",
             "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "semantics/resource_lifetime.cpp", "semantics/borrow_flow.cpp", "semantics/borrow_return_sources.cpp", "semantics/borrow_facts.cpp", "semantics/expression_effects.cpp",
@@ -67,8 +67,8 @@ def main():
             "runtime/artifact_binary.cpp", "semantics/associated_types.cpp",
             ".chali-generator-manifest",
         ]
-        required += ["runtime/" + name for name in (ROOT / "source/stackvm/core_sources.txt").read_text().splitlines()]
-        required += ["runtime/" + path.name for path in (ROOT / "source/stackvm").glob("*.hpp")]
+        required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
+        required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
         required += ["runtime/core_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
         required += ["runtime/bigfloat_math.hpp", "runtime/bigfloat_math_detail.hpp", "runtime/bigfloat_transcendental.cpp", "runtime/bigfloat_trigonometry.cpp", "std/cas.chl", "glue/std_cas.cpp", "caspp/core_sources.txt"]
         required += ["caspp/" + name for name in (ROOT / "library/caspp/core_sources.txt").read_text().splitlines()]

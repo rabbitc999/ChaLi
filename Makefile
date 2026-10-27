@@ -44,10 +44,10 @@ ARFLAGS  = rcs
 # lztext：内嵌标准库 / 运行时资产的压缩存储与运行时解压（见 source/lztext/README.md）。
 # dap：VS Code 断点调试用的 DAP 服务端（见 dap/dap_server.hpp）。
 FRONTEND_BUILD := build/chali-frontend
-LIB_SRCS  := source/chali_parser.cpp source/lztext/lztext.cpp source/dap/dap_server.cpp
+LIB_SRCS  := source/chali_parser.cpp source/lztext/lztext.cpp
 DEMO_SRCS := source/chali_main.cpp
 HDRS      := source/chali_parser.hpp source/chali_parser_user.h
-LIB_OBJS  := $(FRONTEND_BUILD)/chali_parser.o $(FRONTEND_BUILD)/lztext.o $(FRONTEND_BUILD)/dap_server.o
+LIB_OBJS  := $(FRONTEND_BUILD)/chali_parser.o $(FRONTEND_BUILD)/lztext.o
 DEMO_OBJS := $(FRONTEND_BUILD)/chali_main.o
 
 LIB    := $(FRONTEND_BUILD)/libparser.a
@@ -102,8 +102,6 @@ $(FRONTEND_BUILD)/%.o: source/%.cpp $(HDRS) | $(FRONTEND_BUILD)
 $(FRONTEND_BUILD)/lztext.o: source/lztext/lztext.cpp $(HDRS) | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 
-$(FRONTEND_BUILD)/dap_server.o: source/dap/dap_server.cpp $(HDRS) | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 
 # 反射是语言的固定组成、不可裁剪：前端（CHALI_WITH_REFLECTION）与运行时
 # （STACKVM_WITH_REFLECTION）由 features.mk 钉死为 1，本目标只是同义的显式入口。

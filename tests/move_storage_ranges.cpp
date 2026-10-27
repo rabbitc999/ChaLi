@@ -2,7 +2,7 @@
  * @file move_storage_ranges.cpp
  * @brief 核对生命周期范围索引与完整扫描具有相同的重叠及包含语义。
  */
-#include "source/stackvm/runtime_internal.hpp"
+#include "source/ircode/runtime_internal.hpp"
 #include <cassert>
 #include <limits>
 #include <random>

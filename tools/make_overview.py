@@ -79,7 +79,7 @@ def draw() -> Canvas:
             ),
         ),
         (
-            "③ 运行时与标准库", "chali/source/stackvm · source/glue/",
+            "③ 运行时与标准库", "chali/source/ircode · source/glue/",
             (
                 ("StackVM", (
                     ("虚拟机执行", "四元式 → 栈指令；调用帧隔离"),
@@ -98,7 +98,7 @@ def draw() -> Canvas:
             ),
         ),
         (
-            "④ VM 交付与宿主", "source/stackvm · source/chali_glue.hpp",
+            "④ 原生产物与宿主", "source/ircode · source/chali_glue.hpp",
             (
                 ("部署形态", (
                     ("VM 宿主集成", "字节码 · 原生注册表 · 同步回调"),
@@ -132,7 +132,7 @@ def draw() -> Canvas:
                 canvas.text(x + 29, y + 41, detail, item_detail, NOTE)
 
     canvas.text(40, 859,
-                "构建关系：ParseEngine 从 chali.gram 生成 CHALI 编译器；编译器将 .chl 降级为四元式，交给共享 StackVM 执行。",
+                "构建关系：ParseEngine 从 chali.gram 生成 CHALI 编译器；编译器将 .chl 降级为四元式，由 LLVM AOT 生成原生程序。",
                 footer, NOTE)
     canvas.text(40, 885,
                 "语言细节与当前支持范围见 README.md；解析器生成器（ParseEngine）总览见它自己的仓库。",

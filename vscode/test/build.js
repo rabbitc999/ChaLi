@@ -1,6 +1,6 @@
 'use strict';
 
-/** 构建命令集成回归：模拟编辑器 API，使用真实编译器验收 exe、svmb、保存、右键与失败诊断。 */
+/** 构建命令集成回归：模拟编辑器 API，使用真实编译器验收 exe、保存、右键与失败诊断。 */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -8,7 +8,7 @@ const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { buildArguments, registerBuild } = require('../src/build');
 
-/** 执行真实构建并核对两种产物及各失败分支。 */
+/** 执行真实构建并核对原生产物及各失败分支。 */
 async function main() {
   const root = path.resolve(__dirname, '../..');
   const compiler = path.resolve(process.env.CHALI_BIN || path.join(root, process.platform === 'win32' ? 'ChaLi.exe' : 'chali'));
@@ -39,16 +39,15 @@ async function main() {
   };
   try {
     registerBuild(vscode, context, { readConfig: () => ({ chaliPath: compiler }) });
-    assert.equal(commands.size, 3);
-    assert.deepEqual(buildArguments('svmb', source, 'prefix', { llvmPath: 'unused', checked: true }), ['svmb', source, '--out', 'prefix']);
+    assert.equal(commands.size, 2);
+    assert.equal(commands.has('chali.buildSvmb'), false);
+    assert.throws(() => buildArguments('svmb', source, 'prefix'), /未知构建格式/);
     assert.deepEqual(buildArguments('exe', source, 'prefix', { llvmPath: 'clang space', checked: true }), ['aot', source, '--out', 'prefix', '--llvm', 'clang space', '--checked']);
     assert.deepEqual(buildArguments('exe', source, 'prefix', { checked: false }), ['aot', source, '--out', 'prefix', '--unchecked']);
     await commands.get('chali.build')();
     assert.deepEqual(errors, []); assert.equal(saved, 1);
     const prefix = path.join(directory, settings['build.outputDirectory'], 'hello & 中文');
-    assert.ok(fs.statSync(prefix + '.svmb').size > 0);
-    const magic = fs.readFileSync(prefix + '.svmb').subarray(0, 8).toString('ascii');
-    assert.ok(['MCVM0005', 'PESVMB\r\n'].includes(magic), magic);
+    assert.ok(fs.statSync(prefix + '.exe').size > 0);
     let result;
     if (process.platform === 'win32') {
       // 显式右键目标应优先于当前不相关的编辑器。
@@ -61,28 +60,25 @@ async function main() {
     }
     const successes = messages.filter((s) => s.includes('构建完成')).length;
     fs.writeFileSync(source, 'void main() { missing_symbol(); }\n');
-    await commands.get('chali.buildSvmb')(uri(source));
+    await commands.get('chali.buildExe')(uri(source));
     assert.equal(errors.length, 1);
     assert.equal(messages.filter((s) => s.includes('构建完成')).length, successes);
     assert.ok(logs.join('\n').includes('missing_symbol'));
     const count = logs.length;
     vscode.workspace.isTrusted = false;
-    await commands.get('chali.buildSvmb')(uri(source));
+    await commands.get('chali.buildExe')(uri(source));
     assert.equal(logs.length, count);
     vscode.workspace.isTrusted = true;
-    cancel = true;
-    await commands.get('chali.build')(uri(source));
-    assert.equal(logs.length, count);
-    await commands.get('chali.buildSvmb')({ scheme: 'untitled', fsPath: source });
+    await commands.get('chali.buildExe')({ scheme: 'untitled', fsPath: source });
     assert.equal(errors.length, 2);
     // 英语编辑器使用英文界面与编译器语言，不翻译源码中的文件名和值。
     vscode.env = { language: 'en' }; cancel = false;
     fs.writeFileSync(source, 'void main() { println("build {}", 42); }\n');
     registerBuild(vscode, context, { readConfig: () => ({ chaliPath: compiler }) });
-    await commands.get('chali.buildSvmb')(uri(source));
+    await commands.get('chali.buildExe')(uri(source));
     assert.equal(errors.length, 2);
     assert.ok(messages.some((s) => s.includes('Build completed')));
-    console.log('VS Code 构建：exe/svmb 实际产物、格式选择、保存、右键目标、空格与中文路径、取消、信任和诊断全部通过');
+    console.log('VS Code 构建：原生产物、已删除字节码入口、保存、右键目标、空格与中文路径、取消、信任和诊断全部通过');
   } finally {
     for (const item of context.subscriptions) item.dispose();
     fs.rmSync(directory, { recursive: true, force: true });

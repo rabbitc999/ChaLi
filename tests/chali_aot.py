@@ -131,15 +131,15 @@ def main():
         result = invoke([cc, '--target=x86_64-unknown-linux-gnu', '-O2', '-c', linux_module, '-o', linux_object])
         assert result.returncode == 0 and linux_object.read_bytes()[:4] == b'\x7fELF', result
         print('[通过] Linux x64 LLVM 模块生成 ELF 目标文件', flush=True)
-        assert 'checks: on' in opened
-        unchecked_prefix = work / 'aot_unchecked'
-        result = invoke([compiler, 'aot', sample, '--out', unchecked_prefix, '--llvm', cc, '--unchecked'])
+        assert 'checks: off' in opened
+        unchecked_prefix = work / 'aot_checked'
+        result = invoke([compiler, 'aot', sample, '--out', unchecked_prefix, '--llvm', cc, '--checked'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         unchecked = unchecked_prefix.with_suffix('.ll').read_text(encoding='utf-8')
-        assert 'checks: off' in unchecked
+        assert 'checks: on' in unchecked
         # 运行时里本来就定义着 `chali_bounds`，所以比的是**调用点**的条数
-        assert opened.count('@chali_check(') > unchecked.count('@chali_check('), '--checked 应该多出检查调用'
-        print('[通过] AOT 默认保留检查，仅显式 --unchecked 关闭', flush=True)
+        assert opened.count('@chali_check(') < unchecked.count('@chali_check('), '--checked 应该多出检查调用'
+        print('[通过] AOT 默认 unchecked，显式 --checked 增加检查', flush=True)
 
         # 3) `--emit-llvm` 只出 LLVM 模块
         emit_only = work / 'aot_emit'

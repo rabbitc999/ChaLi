@@ -1,4 +1,4 @@
-"""比较共享标准库、闭包和隔离线程在 VM 与 LLVM 原生程序中的结果。"""
+"""比较共享标准库、闭包和隔离线程在 checked run 与 LLVM 原生程序中的结果。"""
 from compiler_path import compiler_path
 import argparse
 import os
@@ -59,7 +59,7 @@ def main():
             result = execute([product, *arguments], input_text, cwd=native)
             assert (result.returncode, result.stdout) == (reference.returncode, reference.stdout), (name, result, reference)
             assert not result.stderr, (name, result.stderr)
-            print('VM/AOT 运行时差分通过：' + name, flush=True)
+            print('checked run／AOT 运行时差分通过：' + name, flush=True)
         for name, expression, diagnostic in [
             ('integer_zero', 'integer(1) / integer(0)', '除零'),
             ('integer_overflow', 'integer(-9223372036854775807 - 1) / integer(-1)', '溢出'),
@@ -78,7 +78,7 @@ def main():
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode != 0 and result.stdout == reference.stdout and diagnostic in result.stderr, result
-            print('VM/AOT 陷阱与输出时机通过：' + name, flush=True)
+            print('checked run／AOT 陷阱与输出时机通过：' + name, flush=True)
         for name, source_text, expected, diagnostic in [
             ('watchdog_expired', 'import std::watchdog;\nvoid main() { println("before stop"); std::watchdog::enableTimeout(10000); while (true) {} }', 'before stop\n', '软重启'),
             ('watchdog_requested', 'import std::watchdog;\nvoid main() { std::watchdog::enable(0); println("before stop"); std::watchdog::requestRestart(); println("after stop"); }', 'before stop\n', '软重启'),
@@ -93,7 +93,7 @@ def main():
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode == reference.returncode and result.stdout == reference.stdout and diagnostic in result.stderr, (result, reference)
-            print('VM/AOT 执行控制通过：' + name, flush=True)
+            print('checked run／AOT 执行控制通过：' + name, flush=True)
 
 
 if __name__ == '__main__':

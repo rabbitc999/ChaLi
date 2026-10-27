@@ -26,7 +26,8 @@ struct ExternFunction
  */
 struct Options
 {
-    bool checked = true;                             ///< 默认生成与 VM 一致的数组边界和指针检查。
+    bool checked = false;                            ///< 原生导出默认 unchecked，run 驱动显式开启检查。
+    bool debug = false;                               ///< 保留原生源码与局部变量调试信息。
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     bool emitLLVMOnly = false;                       ///< `--emit-llvm`：只写 LLVM 模块，不调用目标代码工具。
@@ -36,6 +37,7 @@ struct Options
     Memory::Vector<Memory::String> linkLibraries;    ///< 额外的链接库（`abi` 里的库路径）。
     Memory::Vector<Memory::String> linkObjects;      ///< 本次编译生成的宿主封送目标文件。
     std::size_t memoryBytes = 512u * 1024u * 1024u;  ///< 数据区之外的堆预算。
+    std::size_t stepLimit = 0;                       ///< 运行安全点的逻辑步数上限，零表示不限。
 };
 
 /**
@@ -53,6 +55,15 @@ struct Request
     Memory::String abiExportHeader; ///< 编译器生成的 C 类型声明及原生导出原型。
     Options options;
 };
+
+/**
+ * @brief 直接启动已生成的原生程序，不经过命令行解释器。
+ * @param options 决定产物路径的输出配置。
+ * @param arguments 按原样传递的程序参数。
+ * @param input 可选的标准输入内容；空指针表示继承当前输入。
+ * @return 子进程退出码，启动失败返回一。
+ */
+int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments, const Memory::String *input);
 
 /**
  * @brief 取当前编译单元里 `#abi("C", "库", "符号")` 声明的外部 C 函数。

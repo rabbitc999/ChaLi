@@ -14,4 +14,4 @@ Use `#export("native_symbol")` on a function implementation to expose scalars or
 
 For AOT, scalar C calls can be emitted directly. Complex ABI shapes use a typed host adapter compiled with a compatible GNU C++17 compiler when exporting the application. The language function bodies still lower directly to LLVM. Application DLL/SO dependencies remain application dependencies after export.
 
-Use the maintained [ABI buffer example](../../examples/abi_buffers/demo.chl) and [host integration guide](../../en/08-host-integration.md) to inspect exact declarations. Exercise: document who allocates and releases each buffer in an interface before writing its glue. Next: [bytecode deployment](22-bytecode.md).
+Use the maintained [ABI buffer example](../../examples/abi_buffers/demo.chl) and [host integration guide](../../en/08-host-integration.md) to inspect exact declarations. Exercise: document who allocates and releases each buffer in an interface before writing its glue. Next: [bytecode deployment](22-native-deployment.md).

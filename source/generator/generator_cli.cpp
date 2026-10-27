@@ -568,9 +568,9 @@ int runCli(int argc, char **argv)
             {"allocator/chali_allocator.hpp", "runtime/chali_allocator.hpp"},
             {"../../source/chali_i18n.hpp", "chali_i18n.hpp"},
             {"../chali_i18n.hpp", "chali_i18n.hpp"},
-            {"../source/stackvm/value_text.hpp", "runtime/value_text.hpp"},
-            {"../../source/stackvm/stackvm.hpp", "runtime/stackvm.hpp"},
-            {"../source/stackvm/stackvm.hpp", "runtime/stackvm.hpp"},
+            {"../source/ircode/value_text.hpp", "runtime/value_text.hpp"},
+            {"../../source/ircode/stackvm.hpp", "runtime/stackvm.hpp"},
+            {"../source/ircode/stackvm.hpp", "runtime/stackvm.hpp"},
             {"../../source/lztext/lztext.hpp", "lztext/lztext.hpp"},
             {"../../source/template/engine.hpp", "template/engine.hpp"},
             {"../source/template/engine.hpp", "template/engine.hpp"},
@@ -622,7 +622,7 @@ int runCli(int argc, char **argv)
     for (const char *name : {"chali_driver.cpp", "chali_i18n.hpp", "chali_diagnostics.hpp", "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "chali_module.hpp",
                              "chali_incremental.hpp", "chali_package.hpp", "chali_project.hpp", "chali_cli.hpp",
                              "chali_lambda.hpp", "chali_generic.hpp", "chali_generic_name.hpp", "chali_glue.hpp",
-                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
+                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
                              "chali_aot_runtime_assets.hpp", "chali_aot_runtime_assets.cpp", "chali_temp.hpp", "chali_temp.cpp", "chali_ast.hpp", "chali_semantics.cpp"})
         ok = copy(mc / "source" / name, name) && ok;
     /* 控制台 UTF-8 头来自 `source/console/`，导出工程里仍放 `console/` 的目录名：副本站 `console/utf8.hpp`，
@@ -660,7 +660,7 @@ int runCli(int argc, char **argv)
         ok = copy(mc / "source/bignum" / name, Memory::String("runtime/") + name) && ok;
     for (const auto &[name, source] : runtime) ok = copy(source, "runtime/" + name) && ok;
     for (const char *name : stackvm::assets::kCoreAssets)
-        ok = copy(mc / "source/stackvm" / name, Memory::String("runtime/") + name) && ok;
+        ok = copy(mc / "source/ircode" / name, Memory::String("runtime/") + name) && ok;
     for (const char *name : Cas::Assets::kCoreAssets)
         ok = copy(mc / "library/caspp" / name, Memory::String("caspp/") + name) && ok;
     for (const char *name : {"sql.hpp", "sql.cpp", "dialect.hpp", "dialect.cpp", "model.hpp", "field.hpp"})
@@ -712,8 +712,6 @@ int runCli(int argc, char **argv)
             if (entry.is_regular_file() && (extension == ".hpp" || extension == ".cpp"))
                 ok = copy(entry.path(), Memory::String(directory) + "/" + entry.path().filename().u8string()) && ok;
         }
-    for (const char *name : {"dap_server.hpp", "dap_server.cpp"})
-        ok = copy(mc / "source/dap" / name, Memory::String("dap/") + name) && ok;
     for (const char *directory : {"lztext", "template"})
     {
         for (const auto &entry : fs::directory_iterator(mc / "source" / directory))

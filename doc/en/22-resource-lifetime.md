@@ -6,7 +6,7 @@
 
 ## Allocation identities without tombstones
 
-`source/stackvm/allocation_index.hpp` stores active logical intervals and each physical root's latest generation and displacement width. Release removes the active interval immediately. No retired identities or sweeping boundaries are stored. Repeated release fails; physical reuse never revives an old logical reference. Generation exhaustion refuses reuse instead of wrapping, and repeated reuse of one physical root needs only one identity slot.
+`source/ircode/allocation_index.hpp` stores active logical intervals and each physical root's latest generation and displacement width. Release removes the active interval immediately. No retired identities or sweeping boundaries are stored. Repeated release fails; physical reuse never revives an old logical reference. Generation exhaustion refuses reuse instead of wrapping, and repeated reuse of one physical root needs only one identity slot.
 
 ## Resource construction and cleanup modules
 
@@ -26,7 +26,7 @@ Fresh string arguments borrowed by printing, formatting and file writes are firs
 
 ## VM and restart
 
-The VM heap in `source/stackvm/runtime_heap.cpp` splits free intervals and merges adjacent released intervals. A watchdog restart ends every old execution context before resetting arenas and allocation identities. There is no sweeping API or implicit garbage collection.
+The VM heap in `source/ircode/runtime_heap.cpp` splits free intervals and merges adjacent released intervals. A watchdog restart ends every old execution context before resetting arenas and allocation identities. There is no sweeping API or implicit garbage collection.
 
 ## fn borrowing research
 

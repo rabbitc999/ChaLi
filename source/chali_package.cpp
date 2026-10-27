@@ -36,8 +36,7 @@ Memory::String trim(const Memory::String &s)
  */
 Memory::String normalizeRunMode(const Memory::String &mode)
 {
-    if (mode == "smvb") return "svmb";
-    if (mode == "interpret" || mode == "svmb") return mode;
+    if (mode == "interpret" || mode == "run" || mode == "aot") return "run";
     return Memory::String();
 }
 
@@ -317,7 +316,7 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 if (key == "run")
                 {
                     const auto mode = normalizeRunMode(tomlText(entry.value, where));
-                    if (mode.empty()) throw std::runtime_error("invalid run mode (expect interpret|svmb)");
+                    if (mode.empty()) throw std::runtime_error("invalid run mode (expect run; .svmb was removed)");
                     project.run = mode;
                 }
                 else if (key == "debug")

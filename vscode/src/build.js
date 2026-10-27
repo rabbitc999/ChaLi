@@ -8,15 +8,15 @@ const { findProject } = require('./dependencies');
 
 /**
  * 构造构建参数，保持文件名和工具路径为独立 argv，不进入 shell。
- * @param {string} format exe 或 svmb。
+ * @param {string} format 仅支持 exe。
  * @param {string} source 源文件绝对路径。
  * @param {string} prefix 输出前缀。
  * @param {object} options LLVM 路径及检查开关。
  * @returns {string[]} 编译器实参。
  */
 function buildArguments(format, source, prefix, options = {}) {
-  if (!['exe', 'svmb'].includes(format)) throw new Error('未知构建格式');
-  const args = [format === 'exe' ? 'aot' : 'svmb', source, '--out', prefix];
+  if (format !== 'exe') throw new Error('未知构建格式');
+  const args = ['aot', source, '--out', prefix];
   if (format === 'exe' && options.llvmPath) args.push('--llvm', options.llvmPath);
   if (format === 'exe' && options.checked) args.push('--checked');
   if (format === 'exe' && options.checked === false) args.push('--unchecked');
@@ -47,7 +47,7 @@ function runBuild(compiler, args, cwd, append, language = 'zh') {
 }
 
 /**
- * 注册格式选择、LLVM AOT 与 VM 字节码构建命令。
+ * 注册格式选择、LLVM AOT 构建命令。
  * @param {object} vscode 编辑器 API。
  * @param {object} context 扩展上下文。
  * @param {object} deps 编译器配置提供方。
@@ -76,14 +76,7 @@ function registerBuild(vscode, context, deps) {
       if (!selected || selected.scheme !== 'file' || path.extname(selected.fsPath).toLowerCase() !== '.chl') {
         throw new Error(text('请选择已保存到磁盘的 .chl 源文件', 'Select a .chl source file saved on disk'));
       }
-      if (!format) {
-        const picked = await vscode.window.showQuickPick([
-          { label: text('可执行文件（LLVM AOT）', 'Executable (LLVM AOT)'), description: text('构建原生 exe', 'Build a native exe'), format: 'exe' },
-          { label: text('VM 字节码（.svmb）', 'VM bytecode (.svmb)'), description: text('通过 ChaLi VM 运行', 'Run through the ChaLi VM'), format: 'svmb' },
-        ], { placeHolder: text('选择构建格式', 'Select a build format') });
-        if (!picked) return;
-        format = picked.format;
-      }
+      if (!format) format = 'exe';
       if (format === 'exe' && process.platform !== 'win32') throw new Error(text('exe 构建入口当前面向 Windows x64', 'The exe build command currently targets Windows x64'));
       const document = vscode.workspace.textDocuments.find((item) => item.uri.scheme === 'file'
         && path.resolve(item.uri.fsPath) === path.resolve(selected.fsPath));
@@ -96,13 +89,13 @@ function registerBuild(vscode, context, deps) {
       fs.mkdirSync(directory, { recursive: true });
       const prefix = path.join(directory, path.basename(selected.fsPath, path.extname(selected.fsPath)));
       const args = buildArguments(format, selected.fsPath, prefix, {
-        llvmPath: config.get('build.llvmPath', '').trim(), checked: config.get('build.checked', true),
+        llvmPath: config.get('build.llvmPath', '').trim(), checked: config.get('build.checked', false),
       });
-      const product = prefix + (format === 'exe' ? '.exe' : '.svmb');
+      const product = prefix + '.exe';
       output.show(true);
       output.appendLine(text(`编译器：${compiler}\n源文件：${selected.fsPath}\n产物：${product}`, `Compiler: ${compiler}\nSource: ${selected.fsPath}\nOutput: ${product}`));
       await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification,
-        title: format === 'exe' ? text('ChaLi：构建 LLVM AOT 可执行文件', 'ChaLi: Build LLVM AOT executable') : text('ChaLi：构建 VM 字节码', 'ChaLi: Build VM bytecode'), cancellable: false },
+        title: text('ChaLi：构建 LLVM AOT 可执行文件', 'ChaLi: Build LLVM AOT executable'), cancellable: false },
       () => runBuild(compiler, args, cwd, (chunk) => output.append(chunk), language));
       if (!fs.existsSync(product) || !fs.statSync(product).size) throw new Error(text('编译器未生成目标产物', 'The compiler did not produce the requested output'));
       output.appendLine(text(`构建完成：${product}`, `Build completed: ${product}`));
@@ -117,7 +110,7 @@ function registerBuild(vscode, context, deps) {
     }
   }
 
-  for (const [command, format] of [['chali.build', null], ['chali.buildExe', 'exe'], ['chali.buildSvmb', 'svmb']]) {
+  for (const [command, format] of [['chali.build', null], ['chali.buildExe', 'exe']]) {
     context.subscriptions.push(vscode.commands.registerCommand(command, (uri) => execute(format, uri)));
   }
 }

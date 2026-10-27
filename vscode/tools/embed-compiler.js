@@ -90,7 +90,16 @@ function main() {
     console.error('或用 `--from <路径>` / 环境变量 CHALI_BIN 指定。');
     process.exit(2);
   }
+  const report = require('node:child_process').spawnSync(source.file, ['--build-info'], { encoding: 'utf8', windowsHide: true });
+  if (report.status !== 0) throw new Error('内嵌编译器缺少可验证的 --build-info：' + report.stderr);
+  const buildInfo = JSON.parse(report.stdout);
+  const manifest = require(path.join(EXT_ROOT, 'package.json'));
+  if (buildInfo.version !== manifest.version || buildInfo.version !== manifest.chaliCompilerVersion)
+    throw new Error('VS Code 扩展版本必须与实际编译器版本一致');
+  if (process.env.CHALI_LLVM_VARIANT && buildInfo.llvm !== process.env.CHALI_LLVM_VARIANT)
+    throw new Error('内嵌编译器的 LLVM 链接方式与 VSIX 变体不一致');
   fs.mkdirSync(TARGET_DIR, { recursive: true });
+  fs.writeFileSync(path.join(TARGET_DIR, 'chali-build-info.json'), JSON.stringify(buildInfo, null, 2) + '\n');
   const content = fs.readFileSync(source.file);
   const before = fs.existsSync(TARGET) ? fs.readFileSync(TARGET) : null;
   if (before && before.equals(content)) {

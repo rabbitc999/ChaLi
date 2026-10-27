@@ -150,31 +150,6 @@ run_required_step() {
     "$PYTHON" tools/parallel_gates.py append --required "$manifest" "$@" || exit 2
 }
 
-if [ "$full" = 1 ]; then
-    run_required_step "配置 stackvm 单测（cmake）" \
-        cmake -S source/stackvm -B tmp/ci/stackvm -DCMAKE_BUILD_TYPE=Release \
-              -DSTACKVM_WITH_REFLECTION=ON \
-              -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="$root/tmp/ci/stackvm" \
-              -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE="$root/tmp/ci/stackvm"
-    run_required_step "构建 stackvm（CLI + 单测）" \
-        cmake --build tmp/ci/stackvm --config Release --target chali-stackvm chali-stackvm-tests chali-artifact-tests chali-symbol-tests chali-panic-tests chali-runtime-event-tests svmb_symtool -j4
-    run_step "运行二进制中间产物等价性与损坏输入回归" tmp/ci/stackvm/chali-artifact-tests
-    run_step "运行宿主事件、定时合并与取消回归" tmp/ci/stackvm/chali-runtime-event-tests
-    run_step "运行 stackvm 单测" \
-        tmp/ci/stackvm/chali-stackvm-tests source/stackvm/examples
-    run_step "运行变长符号与十万符号回归" \
-        tmp/ci/stackvm/chali-symbol-tests tmp/ci/stackvm/symbol-fixtures
-    run_step "运行 panic 调用栈与压缩隐私回归" \
-        tmp/ci/stackvm/chali-panic-tests tmp/ci/stackvm/panic-compact.svmb
-    run_required_step "配置无 panic 栈构建" \
-        cmake -S source/stackvm -B tmp/ci/panic-off -DCMAKE_BUILD_TYPE=Release \
-              -DSTACKVM_WITH_REFLECTION=ON \
-              -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="$root/tmp/ci/panic-off" \
-              -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE="$root/tmp/ci/panic-off" \
-              -DSTACKVM_WITH_PANIC_TRACE=OFF -DSTACKVM_WITH_BIGINT=OFF -DSTACKVM_WITH_BIGFLOAT=OFF
-    run_required_step "构建无 panic 栈测试" cmake --build tmp/ci/panic-off --config Release --target chali-panic-tests -j4
-    run_step "运行无 panic 栈测试" tmp/ci/panic-off/chali-panic-tests tmp/ci/panic-off/panic-compact.svmb
-fi
 
 # ---- 3. ChaLi：由文法生成解析器，再编驱动 ----
 if [ "$full" = 1 ] && [ "${OS:-}" = Windows_NT ]; then
@@ -204,7 +179,6 @@ run_step "CHALI 样例回归（check.sh）" \
 run_step "运行 std::image 与 StringBuilder 回归" "$PYTHON" tests/chali_image.py --chali "$CHALI_BIN"
 run_step "运行标准错误流与文件打印回归" "$PYTHON" tests/chali_print_streams.py --chali "$CHALI_BIN"
 run_step "运行线程超时与非阻塞等待回归" "$PYTHON" tests/chali_thread_wait.py --chali "$CHALI_BIN"
-run_step "运行隔离线程与有界并发模型回归" "$PYTHON" tests/chali_thread_model.py --chali "$CHALI_BIN"
 run_step "运行临时值与资源释放合并回归" "$PYTHON" tests/chali_resource_lifetime.py --chali "$CHALI_BIN"
 run_step "运行闭包自动类型与嵌套返回语言服务回归" "$PYTHON" tests/chali_lsp_closure_types.py --chali "$CHALI_BIN"
 run_required_step "编译无墓碑分配身份回归" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=1 -Isource -Ilibrary -Isource/allocator tests/allocation_identity.cpp -o tmp/ci/allocation-identity
@@ -218,9 +192,7 @@ run_step "检查 opcode 声明与不可复制限制" "$PYTHON" tests/chali_opcod
 run_step "检查区间与循环值表达式" "$PYTHON" tests/chali_range_loop_values.py --chali "$CHALI_BIN"
 run_step "检查 opcode 资源所有权与借用" "$PYTHON" tests/chali_opcode_resources.py --chali "$CHALI_BIN"
 run_step "检查 opcode 反射与语言服务隐藏" "$PYTHON" tests/chali_opcode_visibility.py --chali "$CHALI_BIN"
-run_step "检查 VM 构建与导出清单同步" "$PYTHON" tools/stackvm_sources.py --check
-run_required_step "检查 VM 模块组织与实现增量重编" "$PYTHON" tests/stackvm_module_layout.py
-run_step "运行 VM 双核差分回归" "$PYTHON" tests/vm_differential.py --chali "$CHALI_BIN"
+run_step "检查 AOT 共享运行时构建与资产清单同步" "$PYTHON" tools/stackvm_sources.py --check
 run_step "检查规范化中间表示结构" "$PYTHON" tests/quad_ir.py --chali "$CHALI_BIN"
 run_required_step "编译 TOML 注释保存回归" g++ -std=c++17 -O2 source/toml/test_toml.cpp source/toml/toml.cpp source/toml/toml_source.cpp -o tmp/ci/toml-comments
 run_step "运行 TOML 注释保存回归" tmp/ci/toml-comments
@@ -254,11 +226,6 @@ run_step "运行 lztext 单元测试" tmp/ci/lztext
 fi
 
 if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
-    run_step "验证线程字节码往返" "$PYTHON" tests/chali_thread_model.py --chali "$CHALI_BIN" --vm tmp/ci/stackvm/chali-stackvm
-    run_step "运行符号转换与 CLI 集成回归" \
-        "$PYTHON" tests/test_svmb_symbols.py --build tmp/ci/stackvm --chali "$CHALI_BIN"
-    run_step "运行 CHALI 与 VM panic 诊断回归" \
-        "$PYTHON" tests/test_chali_panic.py --chali "$CHALI_BIN"
     run_step "运行源码行号诊断回归" \
         "$PYTHON" tests/test_chali_source_lines.py --chali "$CHALI_BIN"
     run_step "运行字符串清理与循环重入VM 多入口回归" \
@@ -270,7 +237,7 @@ fi
 if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "验证最新生成器下载与失败清理" "$PYTHON" tests/gen_download.py
     run_step "运行 match 两种区间与或模式回归" "$PYTHON" tests/chali_match_patterns.py --chali "$CHALI_BIN"
-    run_step "运行 lambda 捕获与回调回归" "$PYTHON" tests/chali_lambdas.py --chali "$CHALI_BIN" --vm tmp/ci/stackvm/chali-stackvm
+    run_step "运行 lambda 捕获与回调回归" "$PYTHON" tests/chali_lambdas.py --chali "$CHALI_BIN"
     run_step "运行泛型单态化与嵌套组合回归" "$PYTHON" tests/chali_generic_monomorphization.py --chali "$CHALI_BIN"
     run_step "运行函数默认参数回归" "$PYTHON" tests/chali_default_arguments.py --chali "$CHALI_BIN"
     run_step "验证旧库删除与标准模块迁移" "$PYTHON" tests/chali_removed_libraries.py --chali "$CHALI_BIN"

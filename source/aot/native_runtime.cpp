@@ -2,7 +2,7 @@
  * @file native_runtime.cpp
  * @brief LLVM 原生程序复用共享堆、对象表和标准库胶水，不解释语言指令。
  */
-#include "stackvm/runtime_internal.hpp"
+#include "ircode/runtime_internal.hpp"
 #include "chali_glue.hpp"
 #include "glue/std_registry.hpp"
 #include "glue/std_collection.hpp"
@@ -29,8 +29,19 @@ extern "C" {
 bool chali_program_std_bind(chali_glue::Registry *registry, Memory::String *error);
 
 extern const unsigned char chali_data_image[];
+/**
+ * @brief 稀疏初始化片段，三个字段与生成的 LLVM i64 记录保持一致。
+ */
+struct ChaliDataSegment
+{
+    std::size_t destination, source, size;
+};
+extern const ChaliDataSegment chali_data_segments[];
+extern const std::size_t chali_data_segment_count;
 extern const char chali_data_layout[];
+extern const std::size_t chali_data_layout_size;
 extern const std::size_t chali_data_size, chali_heap_size;
+extern const std::size_t chali_step_limit;
 extern const std::size_t chali_function_count;
 extern const std::int64_t chali_function_addresses[];
 extern const int chali_threads_enabled;
@@ -109,7 +120,14 @@ struct Runtime
      */
     Runtime() : arena(chali_heap_size), session(arena)
     {
-        if (!data.loadFromBytes(chali_data_image, chali_data_size, chali_data_layout)) chali_panic("静态数据布局无效");
+        const unsigned char zero = 0;
+        if (!data.loadFromBytes(&zero, 1u, Memory::String(chali_data_layout, chali_data_layout_size))) chali_panic("静态数据布局无效");
+        data.binary.assign(chali_data_size, 0u);
+        for (std::size_t index = 0; index < chali_data_segment_count; ++index)
+        {
+            const auto &segment = chali_data_segments[index];
+            std::memcpy(data.binary.data() + segment.destination, chali_data_image + segment.source, segment.size);
+        }
         dataCapacity = Memory::makeUnique<execution_detail::DataCapacityIndex>(&data);
         heap.reset(chali_data_size);
         context.heap = &heap;
@@ -444,6 +462,7 @@ void chali_host_poll()
 void chali_host_tick(std::uint64_t steps)
 {
     if (nativeCleanup) return;
+    if (chali_step_limit && logicalSteps >= chali_step_limit) chali_panic("执行步数超过上限");
     auto &context = currentContext();
     auto *watchdog = context.watchdog;
     if (watchdog && watchdog->period)

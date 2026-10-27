@@ -3,10 +3,14 @@
  * @brief 将优化后的 ChaLi 四元式直接降低为 LLVM 中间表示并生成原生产物。
  */
 #include "chali_aot.hpp"
+#include "chali_aot_debug.hpp"
 #include "chali_aot_llvm.hpp"
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
 #include "glue/std_aot_modules.hpp"
+#include "chali_temp.hpp"
+#include "console/utf8.hpp"
+#include <chrono>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -20,6 +24,10 @@
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 namespace chali_aot
 {
@@ -263,6 +271,7 @@ struct Translator
     std::map<std::size_t, Memory::String> functionAddresses;      ///< 不可变函数标签数据地址到原入口。
     std::map<std::string, std::size_t> profileSites;              ///< 操作种类、函数和四元式位置对应的常量字符串。
     std::map<std::string, std::set<std::string>> temporaryUsers;  ///< 临时符号的实际使用函数，用于识别跨函数共享值。
+    NativeDebugInfo debugInfo; ///< 原生源码位置与变量元数据。
 
     /**
      * @brief 保存本次四元式分析请求和诊断输出。
@@ -271,6 +280,7 @@ struct Translator
      */
     explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out)
     {
+        watchdogUsed = request.options.stepLimit != 0u;
         const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
         const auto *cache = std::getenv("CHALI_NO_AOT_ADDRESS_CACHE");
@@ -279,6 +289,7 @@ struct Translator
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
         inlineHints = !(hint && *hint);
+        if (request.options.debug) inlineHints = false;
         const auto *direct = std::getenv("CHALI_NO_AOT_DIRECT_CALLS");
         directFunctionValues = !(direct && *direct);
         const auto *raw = std::getenv("CHALI_NO_AOT_RAW_INTRINSICS");
@@ -718,7 +729,7 @@ void analyze(Translator &state)
     }
     for (const auto &function : state.functions)
         if (function.exported) pending.push_back(function.label);
-    for (const auto &label : state.addressedFunctions) pending.push_back(Memory::String(label.c_str()));
+    std::set<std::string> liveFunctionValues;
     while (!pending.empty())
     {
         const Memory::String label = pending.back();
@@ -730,13 +741,26 @@ void analyze(Translator &state)
         for (std::size_t at = function.begin; at < function.end; ++at)
         {
             const auto &quad = quads[at];
-            if (quad.op != "call" || quad.args.empty()) continue;
-            const Memory::String target = quad.arg(0);
+            Memory::String target;
+            if (quad.op == "call") target = quad.arg(0);
+            else if (quad.op == "addr")
+            {
+                const auto offset = state.offsetOf(quad.arg(0));
+                const auto value = state.functionAddresses.find(static_cast<std::size_t>(offset));
+                if (offset < 0 || value == state.functionAddresses.end()) continue;
+                target = value->second;
+                liveFunctionValues.insert(std::string(target.c_str()));
+            }
+            else continue;
             if (state.functionByLabel.count(std::string(target.c_str())) == 0u) continue;
             if (state.reachable.count(std::string(target.c_str())) != 0u) continue;
             pending.push_back(target);
         }
     }
+    state.addressedFunctions = std::move(liveFunctionValues);
+    for (auto at = state.functionAddresses.begin(); at != state.functionAddresses.end();)
+        if (state.addressedFunctions.count(std::string(at->second.c_str())) == 0u) at = state.functionAddresses.erase(at);
+        else ++at;
     for (const auto &label : state.reachable)
         if (label.rfind("std::watchdog::", 0u) == 0u) state.watchdogUsed = true;
     for (const auto &label : state.addressedFunctions) pending.push_back(Memory::String(label.c_str()));
@@ -762,6 +786,110 @@ void analyze(Translator &state)
 bool isLive(const Translator &state, const Function &function)
 {
     return function.exported || state.reachable.count(std::string(function.label.c_str())) != 0u;
+}
+
+/**
+ * @brief 仅保存可达数据的非零片段，保持运行时逻辑地址与对象身份不变。
+ * @param state 已完成函数可达性分析的翻译状态。
+ * @param out 接收稀疏映像、布局及片段表的 LLVM 模块。
+ */
+void emitDataImage(const Translator &state, std::string &out)
+{
+    Memory::Vector<stackvm::LayoutRow> rows;
+    if (!stackvm::decodeDataLayout(state.request.dataLayout, rows)) return;
+    const auto *flag = std::getenv("CHALI_AOT_KEEP_DATA");
+    const bool keepAll = flag && *flag && std::strcmp(flag, "0") != 0;
+    std::set<Memory::String> used;
+    for (const auto &function : state.functions)
+        if (isLive(state, function))
+            for (std::size_t at = function.begin; at < function.end; ++at)
+            {
+                const auto &quad = state.request.quads->quads[at];
+                if (quad.op == "addr") used.insert(quad.arg(0));
+            }
+    const auto &original = state.request.dataBytes;
+    Memory::String selected(original.size(), '\0');
+    Memory::Vector<stackvm::LayoutRow> retained;
+    for (const auto &row : rows)
+    {
+        // 缺少长度或范围不合法的外部布局无法证明可裁剪，整体保留原始请求。
+        if (!row.hasSize || row.offset > original.size() || row.size > original.size() - row.offset)
+        {
+            selected = original;
+            retained = rows;
+            break;
+        }
+        bool functionAddress = false;
+        for (const auto &entry : state.functionAddresses)
+            if (entry.first >= row.offset && entry.first - row.offset < row.size) functionAddress = true;
+        if (!keepAll && used.count(row.name) == 0u && !functionAddress) continue;
+        retained.push_back(row);
+        // 布局的地址指向数组首元素，前八字节可能是长度头；不重排或合并逻辑对象。
+        const std::size_t begin = row.offset >= 8u ? row.offset - 8u : 0u;
+        const std::size_t end = row.offset + row.size;
+        selected.replace(begin, end - begin, original, begin, end - begin);
+    }
+    if (keepAll) selected = original;
+    struct Segment
+    {
+        std::size_t destination, source, size;
+    };
+    std::vector<Segment> segments;
+    Memory::String packed;
+    std::map<Memory::String, std::size_t> payloads;
+    for (std::size_t at = 0; at < selected.size();)
+    {
+        while (at < selected.size() && selected[at] == '\0') ++at;
+        if (at == selected.size()) break;
+        const std::size_t begin = at;
+        std::size_t end = at;
+        while (at < selected.size())
+        {
+            if (selected[at++] != '\0')
+                end = at;
+            else if (at - end >= 32u)
+                break;
+        }
+        const auto payload = selected.substr(begin, end - begin);
+        const auto inserted = payloads.emplace(payload, packed.size());
+        if (inserted.second) packed += payload;
+        segments.push_back({ begin, inserted.first->second, end - begin });
+    }
+    // 对照模式保留旧版完整映像，避免把稀疏编码的收益混入可达数据裁剪。
+    if (keepAll)
+    {
+        packed = original;
+        segments.clear();
+        if (!original.empty()) segments.push_back({ 0u, 0u, original.size() });
+    }
+    const auto layout = stackvm::encodeDataLayout(retained);
+    out += "@chali_data_layout_size = constant i64 " + std::to_string(layout.size()) + "\n";
+    out += "; AOT data image: original=" + std::to_string(original.size()) + " stored=" + std::to_string(packed.size())
+           + " rows=" + std::to_string(retained.size()) + "/" + std::to_string(rows.size()) + " segments=" + std::to_string(segments.size()) + "\n";
+    out += "@chali_data_layout = constant [" + std::to_string(layout.size() + 1u) + " x i8] c\"";
+    for (const unsigned char byte : layout)
+    {
+        char escaped[4];
+        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+        out += escaped;
+    }
+    out += "\\00\"\n@chali_data_image = constant [" + std::to_string(packed.size()) + " x i8] c\"";
+    for (const unsigned char byte : packed)
+    {
+        char escaped[4];
+        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+        out += escaped;
+    }
+    out += "\"\n@chali_data_segment_count = constant i64 " + std::to_string(segments.size()) + "\n";
+    out += "@chali_data_segments = constant [" + std::to_string(segments.size()) + " x { i64, i64, i64 }] [";
+    for (std::size_t at = 0; at < segments.size(); ++at)
+    {
+        if (at) out += ", ";
+        const auto &segment = segments[at];
+        out += "{ i64, i64, i64 } { i64 " + std::to_string(segment.destination) + ", i64 " + std::to_string(segment.source)
+               + ", i64 " + std::to_string(segment.size) + " }";
+    }
+    out += "]\n";
 }
 
 using Text = std::string;
@@ -1063,7 +1191,7 @@ struct Builder
             && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"))
         {
             write(destination, call("chali_host_string_storage", "i64",
-                { { "i64", callee == "std::lang::__stringStorageLength" ? "0" : "1" }, convert(argument(0), "i64") }));
+                                    { { "i64", callee == "std::lang::__stringStorageLength" ? "0" : "1" }, convert(argument(0), "i64") }));
             return true;
         }
         // 核心 IEEE 编解码的局部重解释无需真正建立引用存储；其存活及范围静态可证。
@@ -1079,14 +1207,14 @@ struct Builder
             {
                 const auto real = convert(argument(0), float32Bits ? "float" : "double");
                 result = instruction(float32Bits ? "i32" : "i64", "bitcast " + real.type + " " + real.text
-                                     + " to " + (float32Bits ? "i32" : "i64"));
+                                                                      + " to " + (float32Bits ? "i32" : "i64"));
                 result = convert(result, "i64", true);
             }
             else
             {
                 const auto bits = convert(argument(0), float32Value ? "i32" : "i64", true);
                 result = instruction(float32Value ? "float" : "double", "bitcast " + bits.type + " " + bits.text
-                                     + " to " + (float32Value ? "float" : "double"));
+                                                                            + " to " + (float32Value ? "float" : "double"));
                 result = convert(result, "double");
             }
             write(destination, result);
@@ -1123,26 +1251,39 @@ struct Builder
         const auto listStorage = listStorageCalls.find(textOf(callee));
         static const std::map<Text, std::pair<int, std::size_t>> mapStorageCalls = {
             { "std::lang::__mapStorageState", { 0, 4 } },
-            { "std::lang::__mapStorageHashI", { 1, 4 } }, { "std::lang::__mapStorageHashF", { 1, 4 } },
-            { "std::lang::__mapStorageMatchI", { 2, 5 } }, { "std::lang::__mapStorageMatchF", { 2, 5 } },
-            { "std::lang::__mapStoragePrepareII", { 3, 7 } }, { "std::lang::__mapStoragePrepareIF", { 3, 7 } },
-            { "std::lang::__mapStoragePrepareFI", { 3, 7 } }, { "std::lang::__mapStoragePrepareFF", { 3, 7 } },
+            { "std::lang::__mapStorageHashI", { 1, 4 } },
+            { "std::lang::__mapStorageHashF", { 1, 4 } },
+            { "std::lang::__mapStorageMatchI", { 2, 5 } },
+            { "std::lang::__mapStorageMatchF", { 2, 5 } },
+            { "std::lang::__mapStoragePrepareII", { 3, 7 } },
+            { "std::lang::__mapStoragePrepareIF", { 3, 7 } },
+            { "std::lang::__mapStoragePrepareFI", { 3, 7 } },
+            { "std::lang::__mapStoragePrepareFF", { 3, 7 } },
             { "std::lang::__mapStorageCommit", { 4, 3 } },
-            { "std::lang::__setStorageAppendI", { 5, 5 } }, { "std::lang::__setStorageAppendF", { 5, 5 } },
+            { "std::lang::__setStorageAppendI", { 5, 5 } },
+            { "std::lang::__setStorageAppendF", { 5, 5 } },
             { "std::lang::__mapStorageErase", { 6, 2 } },
-            { "std::lang::__mapStorageReadI", { 7, 4 } }, { "std::lang::__mapStorageReadF", { 7, 4 } },
+            { "std::lang::__mapStorageReadI", { 7, 4 } },
+            { "std::lang::__mapStorageReadF", { 7, 4 } },
             { "std::lang::__mapStorageEmptyLike", { 8, 1 } },
             { "std::lang::__mapStorageCloneAppend", { 9, 3 } },
-            { "std::lang::__setStoragePrepareI", { 10, 4 } }, { "std::lang::__setStoragePrepareF", { 10, 4 } },
+            { "std::lang::__setStoragePrepareI", { 10, 4 } },
+            { "std::lang::__setStoragePrepareF", { 10, 4 } },
             { "std::lang::__setStorageCancel", { 11, 1 } },
-            { "__std_map_new", { 12, 0 } }, { "__std_set_new", { 13, 0 } },
-            { "__std_map_new_policy", { 14, 2 } }, { "__std_set_new_policy", { 15, 2 } },
-            { "__std_map_len", { 16, 1 } }, { "__std_set_len", { 17, 1 } },
-            { "__std_map_key_at", { 18, 4 } }, { "__std_map_val_at", { 19, 4 } }, { "__std_set_at", { 20, 4 } }
+            { "__std_map_new", { 12, 0 } },
+            { "__std_set_new", { 13, 0 } },
+            { "__std_map_new_policy", { 14, 2 } },
+            { "__std_set_new_policy", { 15, 2 } },
+            { "__std_map_len", { 16, 1 } },
+            { "__std_set_len", { 17, 1 } },
+            { "__std_map_key_at", { 18, 4 } },
+            { "__std_map_val_at", { 19, 4 } },
+            { "__std_set_at", { 20, 4 } }
         };
         const auto mapStorage = mapStorageCalls.find(textOf(callee));
         const auto *storage = listStorage != listStorageCalls.end() ? &listStorage->second :
-                              mapStorage != mapStorageCalls.end() ? &mapStorage->second : nullptr;
+                              mapStorage != mapStorageCalls.end()   ? &mapStorage->second :
+                                                                      nullptr;
         const bool hashed = listStorage == listStorageCalls.end();
         if (state.rawIntrinsics && !state.watchdogUsed && storage && arguments.size() == storage->second)
         {
@@ -1420,29 +1561,29 @@ struct Builder
             if (separator != Text::npos) pointerLabel = pointerLabel.substr(separator + 1u);
         }
         const bool rawPointerWrapper = pointerLabel.rfind("std::lang::dereference__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::barePointer__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::pointerFromAddress__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__pointerCast__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::readAt__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::borrowAt__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::initAt__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::takeAt__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::memcpy__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::memset__", 0u) == 0u
-            || pointerLabel.rfind("BarePtr__", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__bootList", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__bootMap", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__bootSet", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__bootString", 0u) == 0u
-            || pointerLabel.rfind("std::lang::__bootAlgorithm", 0u) == 0u
-            || (pointerLabel.rfind("RawStorage__", 0u) == 0u
-                && (pointerLabel.find(".pointer") != Text::npos || pointerLabel.find(".capacity") != Text::npos
-                    || pointerLabel.find(".isInitialized") != Text::npos));
+                                       || pointerLabel.rfind("std::lang::barePointer__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::pointerFromAddress__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__pointerCast__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::readAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::borrowAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::initAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::takeAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::memcpy__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::memset__", 0u) == 0u
+                                       || pointerLabel.rfind("BarePtr__", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__bootList", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__bootMap", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__bootSet", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__bootString", 0u) == 0u
+                                       || pointerLabel.rfind("std::lang::__bootAlgorithm", 0u) == 0u
+                                       || (pointerLabel.rfind("RawStorage__", 0u) == 0u
+                                           && (pointerLabel.find(".pointer") != Text::npos || pointerLabel.find(".capacity") != Text::npos
+                                               || pointerLabel.find(".isInitialized") != Text::npos));
         if (state.rawIntrinsics && state.inlineHints && !state.watchdogUsed && !function.exported
             && !state.addressedFunctions.count(rawLabel) && rawPointerWrapper)
             signature += "alwaysinline ";
         else if (state.inlineHints && !state.watchdogUsed && !function.exported
-            && !state.addressedFunctions.count(textOf(function.label)) && function.end - function.labelIndex <= 12u)
+                 && !state.addressedFunctions.count(textOf(function.label)) && function.end - function.labelIndex <= 12u)
             signature += "inlinehint ";
         signature += "uwtable section \"chali_code\" {\nentry:\n";
         std::size_t argumentCapacity = 1;
@@ -1629,8 +1770,7 @@ struct Builder
                 const auto destination = convert(read(a), "i64");
                 const auto source = convert(read(b), "i64");
                 const auto bytes = convert(read(c), "i64");
-                call("chali_host_memory_prepare", "void", { { "i64", op == "memcpy" ? "7" : "8" }, destination,
-                     source, bytes, { "ptr", "%raw_memory_output" }, { "ptr", "%raw_memory_input" } });
+                call("chali_host_memory_prepare", "void", { { "i64", op == "memcpy" ? "7" : "8" }, destination, source, bytes, { "ptr", "%raw_memory_output" }, { "ptr", "%raw_memory_input" } });
                 const auto output = instruction("ptr", "load ptr, ptr %raw_memory_output");
                 if (op == "memcpy")
                 {
@@ -1648,7 +1788,8 @@ struct Builder
                 // 与四元式 VM 及聚合封送共用物理槽：只有 u8 连续按字节保存，
                 // 其他整数使用 i64、所有浮点使用 double；位宽归一属于值运算。
                 const bool byteStorage = suffix == "u8";
-                const Text storageType = width.float_ ? "double" : byteStorage ? "i8" : "i64";
+                const Text storageType = width.float_ ? "double" : byteStorage ? "i8" :
+                                                                                 "i64";
                 const Value address = convert(read(a), "i64");
                 const int bytes = byteStorage ? 1 : 8;
                 const auto key = std::make_pair(textOf(a), bytes);
@@ -1686,7 +1827,21 @@ struct Builder
             if (!terminated) body += "  br label %q" + std::to_string(at + 1) + "\n";
         }
         body += "q" + std::to_string(function.end) + ":\n  store i8 0, ptr @chali_return_float\n  ret " + resultType + " " + (resultType == "double" ? "0.0" : "0") + "\n}\n";
-        return signature + body;
+        if (!state.request.options.debug) return signature + body;
+        std::map<std::size_t, DebugLine> sourceLines;
+        for (std::size_t at = function.begin; at < function.end; ++at)
+        {
+            const auto &quad = state.request.quads->quads[at];
+            sourceLines.emplace(at, DebugLine{ textOf(quad.sourceFile), static_cast<std::size_t>(std::max<std::int32_t>(0, quad.sourceLine)) });
+        }
+        std::vector<DebugVariable> variables;
+        for (const auto &name : locals)
+        {
+            const Memory::String token(name.c_str());
+            const auto argument = std::find(function.parameters.begin(), function.parameters.end(), token);
+            variables.push_back({ name, pointer(token), type(token) == "double", argument == function.parameters.end() ? 0u : static_cast<std::size_t>(argument - function.parameters.begin()) + 1u });
+        }
+        return state.debugInfo.annotate(signature + body, textOf(function.label), textOf(function.llvmName), sourceLines, variables);
     }
 };
 
@@ -1697,12 +1852,13 @@ Memory::Vector<ExternFunction> (*g_abiExternProvider)() = nullptr;
 Memory::String (*g_abiGlueProvider)() = nullptr;
 }  // namespace
 
-namespace {
+namespace
+{
 /** @brief 前端类型化导出元数据提供方。 */
 Memory::Vector<ExternFunction> (*g_exportProvider)() = nullptr;
 /** @brief 前端纯 C 头文件提供方。 */
 Memory::String (*g_exportHeaderProvider)() = nullptr;
-}
+}  // namespace
 /**
  * @brief 注册类型化导出元数据。
  * @param provider 前端入口。
@@ -1827,7 +1983,8 @@ Text exportDispatcher(Translator &state)
     for (std::size_t i = 0; i < state.request.abiExports.size(); ++i)
         out += " i64 " + std::to_string(i) + ", label %case" + std::to_string(i);
     out += " ]\n";
-    for (std::size_t i = 0; i < state.request.abiExports.size(); ++i) {
+    for (std::size_t i = 0; i < state.request.abiExports.size(); ++i)
+    {
         const auto &entry = state.request.abiExports[i];
         const auto found = state.functionByLabel.find(textOf(entry.label));
         if (found == state.functionByLabel.end()) continue;
@@ -1835,7 +1992,8 @@ Text exportDispatcher(Translator &state)
         const auto suffix = std::to_string(i);
         out += "case" + suffix + ":\n";
         Text arguments;
-        for (std::size_t j = 0; j < function.parameters.size(); ++j) {
+        for (std::size_t j = 0; j < function.parameters.size(); ++j)
+        {
             const auto name = "%v" + suffix + "_" + std::to_string(j);
             out += "  " + name + "_p = getelementptr i64, ptr %arguments, i64 " + std::to_string(j) + "\n  " + name + " = load i64, ptr " + name + "_p\n";
             const bool real = state.kindOf(function.parameters[j]) == Kind::Float;
@@ -1938,6 +2096,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
     out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
     if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_threads_enabled = constant i32 " + Text(request.options.threadsEnabled ? "1" : "0") + "\n";
+    out += "@chali_step_limit = constant i64 " + std::to_string(request.options.stepLimit) + "\n";
     out += "@chali_function_count = constant i64 " + std::to_string(state.addressedFunctions.size()) + "\n";
     out += "@chali_function_addresses = constant [" + std::to_string(state.addressedFunctions.size()) + " x i64] [";
     bool firstAddress = true;
@@ -1948,24 +2107,9 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
         out += "i64 " + std::to_string(request.dataBytes.find(Memory::String(label.c_str()) + Memory::String(1, '\0')));
     }
     out += "]\n";
-    out += "@chali_data_layout = constant [" + std::to_string(request.dataLayout.size() + 1) + " x i8] c\"";
-    for (const unsigned char byte : request.dataLayout)
-    {
-        char escaped[4];
-        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
-        out += escaped;
-    }
-    out += "\\00\"\n";
+    emitDataImage(state, out);
     out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
     out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
-    out += "@chali_data_image = constant [" + std::to_string(request.dataBytes.size()) + " x i8] c\"";
-    for (const unsigned char byte : request.dataBytes)
-    {
-        char escaped[4];
-        std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
-        out += escaped;
-    }
-    out += "\"\n";
     std::set<Text> shared;
     Text definitions;
     for (const auto &function : state.functions)
@@ -2085,7 +2229,8 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
     out += "\n";
     for (const auto &module : modules) out += "declare i32 @chali_std_bind_" + textOf(module) + "(ptr, ptr)\n";
     out += "define i1 @chali_program_std_bind(ptr %registry, ptr %error) {\nentry:\n";
-    for (std::size_t i = 0; i < modules.size(); ++i) {
+    for (std::size_t i = 0; i < modules.size(); ++i)
+    {
         const auto n = std::to_string(i);
         out += "  %m" + n + " = call i32 @chali_std_bind_" + textOf(modules[i]) + "(ptr %registry, ptr %error)\n  %ok" + n + " = icmp ne i32 %m" + n + ", 0\n  br i1 %ok" + n + ", label %next" + n + ", label %failed\nnext" + n + ":\n";
     }
@@ -2131,6 +2276,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
         declarations += "#ifdef __cplusplus\n}\n#endif\n#endif\n";
         *header = Memory::String(declarations.c_str());
     }
+    if (request.options.debug) state.debugInfo.finish(out);
     return Memory::String(out.data(), out.size());
 }
 
@@ -2241,7 +2387,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     RuntimeAssets runtimeAssets;
     if (!runtimeAssets.restore(diagnostics)) return 1;
-    Text command = quote(compiler) + " -O3 -flto=full -Wno-override-module -Wl,--lto-O3,--gc-sections -s ";
+    Text command = quote(compiler) + (request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module -Wl,--gc-sections " : " -O3 -flto=full -Wno-override-module -Wl,--lto-O3,--gc-sections -s ");
     if (request.options.shared) command += "-shared -fPIC ";
     command += quote(llvmPath) + " -o " + quote(product);
     for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
@@ -2284,5 +2430,99 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         return 1;
     }
     return 0;
+}
+
+/**
+ * @brief 直接创建原生子进程并继承输出，按需提供隔离的标准输入。
+ * @param options 编译输出路径。
+ * @param arguments 用户程序参数。
+ * @param input 指定输入内容，空指针时继承输入。
+ * @return 子进程退出码，启动或等待失败返回一。
+ */
+int executeNative(const Options &options, const Memory::Vector<Memory::String> &arguments, const Memory::String *input)
+{
+    namespace fs = std::filesystem;
+    const auto product = fs::absolute(fs::u8path(std::string(options.outputPrefix.c_str())
+#ifdef _WIN32
+        + ".exe"
+#endif
+    ));
+    fs::path directory, inputPath;
+    std::error_code error;
+    if (input)
+    {
+        const auto root = chali_temp::root();
+        for (std::size_t attempt = 0; attempt < 100u; ++attempt)
+        {
+            directory = root / ("native-input-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(attempt));
+            if (fs::create_directory(directory, error)) break;
+            directory.clear();
+        }
+        if (directory.empty()) return 1;
+        inputPath = directory / "stdin";
+        std::ofstream stream(inputPath, std::ios::binary);
+        stream.write(input->data(), static_cast<std::streamsize>(input->size()));
+        stream.put('\n');
+        if (!stream) { fs::remove_all(directory, error); return 1; }
+    }
+    int result = 1;
+#ifdef _WIN32
+    std::wstring command = tool_console::quoteArgument(product.wstring());
+    for (const auto &argument : arguments) command += L" " + tool_console::quoteArgument(fs::u8path(std::string(argument.c_str())).wstring());
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+    SECURITY_ATTRIBUTES security{ sizeof(security), nullptr, TRUE };
+    HANDLE source = input ? CreateFileW(inputPath.c_str(), GENERIC_READ, FILE_SHARE_READ, &security, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr) : GetStdHandle(STD_INPUT_HANDLE);
+    startup.dwFlags = STARTF_USESTDHANDLES;
+    startup.hStdInput = source;
+    startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    PROCESS_INFORMATION process{};
+    HANDLE job = CreateJobObjectW(nullptr, nullptr);
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+    limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (job) SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits));
+    if (CreateProcessW(product.c_str(), command.data(), nullptr, nullptr, TRUE, CREATE_SUSPENDED, nullptr, nullptr, &startup, &process))
+    {
+        if (job && !AssignProcessToJobObject(job, process.hProcess)) { CloseHandle(job); job = nullptr; }
+        ResumeThread(process.hThread);
+        if (WaitForSingleObject(process.hProcess, INFINITE) == WAIT_OBJECT_0)
+        {
+            DWORD status = 1;
+            if (GetExitCodeProcess(process.hProcess, &status)) result = static_cast<int>(status);
+        }
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    }
+    if (job) CloseHandle(job);
+    if (input && source != INVALID_HANDLE_VALUE) CloseHandle(source);
+#else
+    std::vector<std::string> storage{ product.string() };
+    for (const auto &argument : arguments) storage.emplace_back(argument.c_str());
+    std::vector<char *> values;
+    for (auto &argument : storage) values.push_back(argument.data());
+    values.push_back(nullptr);
+    const pid_t child = fork();
+    if (child == 0)
+    {
+        if (input)
+        {
+            const int source = open(inputPath.c_str(), O_RDONLY);
+            if (source < 0 || dup2(source, STDIN_FILENO) < 0) _exit(127);
+            close(source);
+        }
+        execv(product.c_str(), values.data());
+        _exit(127);
+    }
+    if (child > 0)
+    {
+        int status = 0;
+        pid_t waited;
+        do { waited = waitpid(child, &status, 0); } while (waited < 0 && errno == EINTR);
+        if (waited == child) result = WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
+    }
+#endif
+    if (!directory.empty()) fs::remove_all(directory, error);
+    return result;
 }
 }  // namespace chali_aot

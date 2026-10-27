@@ -61,8 +61,8 @@ def compilation(english=False):
     """区分条件预处理、语义期宏展开、四元式优化及 VM 装配出口。"""
     c = Canvas()
     title(c, "ChaLi · Compilation" if english else "ChaLi · 编译过程",
-          "Generated front end → checked and optimized quadruples → shared VM" if english else
-          "文法生成前端 → 语义与借用检查 → 四元式生成及优化 → 共享 VM")
+          "Generated front end → optimized quadruples → LLVM AOT" if english else
+          "文法生成前端 → 语义与借用检查 → 四元式优化 → LLVM AOT")
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
         (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
@@ -79,15 +79,15 @@ def compilation(english=False):
         arrow(c, points)
     box(c, 40, 485, 720, "7  Optimize quadruples" if english else "7  四元式优化",
         ["Full stackvm::optimize pipeline" if english else "完整 stackvm::optimize 优化流程",
-         "Standard iteration budget before VM assembly" if english else "标准迭代预算；优化结果送入 VM 装配"], green=True)
+         "Full optimization budget before LLVM lowering" if english else "完整优化预算；结果送入 LLVM 后端"], green=True)
     arrow(c, ((760, 545), (800, 545)))
-    box(c, 800, 485, 720, "8  Assemble VM instructions" if english else "8  组装 VM 指令",
+    box(c, 800, 485, 720, "8  Lower to LLVM" if english else "8  降低为 LLVM",
         ["Types, labels, integer and comparison lowering" if english else "类型与标签、整数及比较跳转降低",
-         "Keep source / PC mapping; prepare execution" if english else "保留源码 / PC 映射，准备执行"], green=True)
+         "Reachable functions, sparse initial data" if english else "可达函数、稀疏初值与原生链接"], green=True)
     outputs = [
         (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Optimized view: CHALI_DUMP_OPT"] if english else ["生成的四元式、数据区与布局", "优化检查：CHALI_DUMP_OPT"]),
-        (560, "In-memory execution" if english else "内存执行", ["Program → shared VM", "No bytecode file required"] if english else ["Program → 共享 VM", "无需先写字节码文件"]),
-        (1080, ".svmb bytecode" if english else ".svmb 字节码", ["VM code + execution metadata", "Loaded by a compatible VM"] if english else ["VM 指令与执行元数据", "由兼容版本的共享 VM 加载"]),
+        (560, "run · checked AOT" if english else "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
+        (1080, "aot · native export" if english else "aot · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
     arrow(c, ((40, 375), (20, 375), (20, 675), (260, 675), (260, 720)))
     arrow(c, ((1100, 605), (1100, 665), (780, 665), (780, 720)))
@@ -98,42 +98,21 @@ def compilation(english=False):
 
 
 def execution(english=False):
-    """绘制共享 VM 的执行准备、快速路径和精确回退。"""
+    """绘制 checked 原生运行、发布导出及 GDB 调试路径。"""
     c = Canvas()
-    title(c, "ChaLi · Execution" if english else "ChaLi · 运行过程",
-          "Desktop and embedded Linux hosts share the same VM core" if english else
-          "桌面与嵌入式 Linux 宿主使用同一份 VM 执行核心")
-    box(c, 40, 145, 440, ".chl / in-memory Program" if english else ".chl / 内存 Program",
-        ["Compile source, then enter the VM", "Lower internal instructions in memory"] if english else ["源码先编译，再进入 VM", "在内存中降低内部指令"])
-    box(c, 560, 145, 440, ".svmb · format 5" if english else ".svmb · 格式 5",
-        ["Read and validate code + metadata", "Use the stored internal sequence"] if english else ["读取并校验指令与元数据", "使用产物携带的内部序列"])
-    box(c, 1080, 145, 440, "VM host configuration" if english else "VM 宿主配置",
-        ["Native registry and memory budget", "Input / output and peripherals"] if english else ["原生注册表与内存预算", "输入输出与外设适配"])
-    arrow(c, ((260, 265), (260, 320)))
-    arrow(c, ((780, 265), (780, 320)))
-    arrow(c, ((1300, 265), (1300, 320)))
-    box(c, 40, 320, 1480, "VM execution preparation" if english else "VM 执行准备",
-        ["Bind symbols / jumps / natives; allocate per-function continuous slots" if english else
-         "绑定符号、跳转和原生入口；按函数分配连续槽位",
-         "16-bit local register IDs; wide-slot fallback for oversized functions" if english else
-         "16 位局部寄存器编号；超大函数保留宽槽回退"], green=True)
-    arrow(c, ((400, 440), (400, 510)))
-    arrow(c, ((1160, 440), (1160, 510)))
-    box(c, 40, 510, 720, "Internal instruction path" if english else "内部指令快速路径",
-        ["Integer register control-flow regions", "Independent loop; periodic safe points"] if english else
-        ["整数寄存器控制流区域", "独立分派循环；定期返回安全点"], green=True)
-    box(c, 800, 510, 720, "Precise fallback path" if english else "基础指令精确路径",
-        ["Dynamic values / debug / hooks", "Step, stack and async boundaries"] if english else
-        ["动态值、调试与指令钩子", "步数、栈容量与异步边界"])
-    arrow(c, ((400, 630), (400, 665)))
-    arrow(c, ((1160, 630), (1160, 665)))
-    box(c, 40, 665, 1480, "Update PC → dispatch next instruction / return / stop" if english else
-        "更新 PC → 继续分派下一条指令 / 返回 / 终止", [], height=60)
-    arrow(c, ((780, 725), (780, 770)))
-    box(c, 40, 770, 1480, "Runtime services during execution; output and cleanup at exit" if english else
-        "执行期间使用运行时服务；退出时输出结果并清理资源",
-        ["Data / heap · host natives · I/O · drop · error reporting" if english else
-         "数据区与堆 · 宿主原生函数 · 输入输出 · drop · 错误报告"], height=90)
+    title(c, "ChaLi · Native execution" if english else "ChaLi · 原生运行", "AOT machine code; no embedded VM or bytecode" if english else "执行 AOT 机器码，不内置 VM，不导出字节码")
+    for x, head, lines in [
+        (40, "run · checked", ["Compile and execute", "Array and pointer checks"] if english else ["编译并执行原生程序", "开启数组与指针检查"]),
+        (560, "aot · unchecked", ["Native export", "Explicit --checked is available"] if english else ["导出可执行文件或动态库", "可显式开启 --checked"]),
+        (1080, "--debug · GDB", ["DWARF lines and variables", "O0 with symbols"] if english else ["DWARF 源码行与变量", "保留符号并使用 O0"]),
+    ]:
+        box(c, x, 145, 440, head, lines)
+        arrow(c, ((x + 220, 265), (x + 220, 320)))
+    box(c, 40, 320, 1480, "LLVM and native linking" if english else "LLVM 与原生链接", ["Release: O3, GlobalDCE, full LTO and section GC" if english else "发布：O3、全局死代码消除、完整 LTO 与节区回收", "Only reachable data; zero fill at startup" if english else "仅保留可达数据；零初值在启动时恢复"], green=True)
+    arrow(c, ((780, 440), (780, 510)))
+    box(c, 40, 510, 1480, "Native machine code" if english else "原生机器码", ["CPU executes compiled functions" if english else "CPU 直接执行编译后的函数", "No interpreter dispatch loop" if english else "没有解释器指令分派循环"], green=True)
+    arrow(c, ((780, 630), (780, 700)))
+    box(c, 40, 700, 1480, "Runtime services" if english else "原生运行时服务", ["Memory, ownership, host callbacks, threads, I/O and cleanup" if english else "内存、所有权、宿主回调、线程、输入输出与清理"], height=110)
     return c
 
 

@@ -4,18 +4,20 @@
 [English](en/41-aot.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-`chali aot input.chl --out build/program` 将前端生成并优化的四元式直接降低为 LLVM 中间表示，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行仍使用共享 VM。
+从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](46-native-debugging.md)。
 
-Windows x64 工具链、LLVM 库、Clang、LLD、compiler-rt builtins 与链接所需 CRT 依赖保存在 [library/llvm](../library/llvm/README.md)。首次使用原生编译时，在仓库根执行 `python library/llvm/setup.py`，离线校验并解包固定版本依赖。VM 与只导出 LLVM 模块不需要工具链。
+`chali aot input.chl --out build/program` 将前端生成并优化的四元式直接降低为 LLVM 中间表示，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
 
-AOT 默认开启全部适用优化，外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，并保留正常浮点语义、边界和存活检查。聚合目标地址、临时值搬运、批量复制、直接调用和可选计数的适用条件与对照开关见[后端所有权优化](43-backend-ownership.md)。
+Windows x64 工具链、LLVM 库、Clang、LLD、compiler-rt builtins 与链接所需 CRT 依赖保存在 [library/llvm](../library/llvm/README.md)。首次使用原生编译时，在仓库根执行 `python library/llvm/setup.py`，离线校验并解包固定版本依赖。只导出 LLVM 模块和历史字节码不需要代码生成工具链。
+
+AOT 默认开启全部适用优化，外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，aot 导出缺省关闭这些检查。聚合目标地址、临时值搬运、批量复制、直接调用和可选计数的适用条件与对照开关见[后端所有权优化](43-backend-ownership.md)。
 
 | 参数 | 行为 |
 | --- | --- |
 | `--out 前缀` | 输出 `.ll` 模块、C ABI 头文件及原生产物；Windows 使用 .exe/.dll，Linux 使用无后缀可执行文件或 .so |
 | `--llvm 路径` | 指定外置 LLVM clang 驱动；静态变体缺省使用内置后端，外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
 | `--emit-llvm` | 只生成 LLVM 模块与 C ABI 头文件，不执行目标代码生成或链接 |
-| `--checked` | 生成四元式的数组边界与指针检查，默认启用 |
+| `--checked` | 生成四元式的数组边界与指针检查；run 默认启用，aot 导出默认关闭 |
 | `--unchecked` | 显式关闭这些检查，仅用于调试或性能对照；仍检查对象存活与实际内存访问 |
 | `--shared` | 生成动态库 |
 | `--export 名称` | 指定对外导出的函数，可重复使用 |

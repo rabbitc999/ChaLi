@@ -1,15 +1,6 @@
 'use strict';
 
-/**
- * ChaLi 的调试适配器（Debug Adapter Protocol）。
- *
- * 编译器本体就是适配器：`chali --dap <文件>` 走 stdio 收发 DAP，所以这里不需要
- * 另外写一个 node 版的 debug adapter——只负责**找到编译器并把参数拼出来**，
- * 交给 VS Code 去拉起进程。
- *
- * 断点 / 单步 / 调用栈由编译器那边的 VM 提供；变量面板暂时是空的
- * （VM 还没有读栈帧槽的接口）。
- */
+/** ChaLi 原生调试工厂：启动 Node DAP 适配器，通过 GDB 调试带 DWARF 的 AOT 程序。 */
 
 const vscode = require('vscode');
 const path = require('node:path');
@@ -59,14 +50,13 @@ function registerDebugger(context, deps) {
         return null;
       }
 
-      const args = ['--dap', program];
-      const extra = Array.isArray(session.configuration.args) ? session.configuration.args : [];
-      for (const item of extra) args.push(String(item));
+      session.configuration.program = program;
+      const adapter = path.join(__dirname, 'nativeDebugAdapter.js');
 
       // 工作目录取源文件所在目录：调试表里记的是相对路径，两边一致才对得上断点。
       const cwd = session.configuration.cwd || path.dirname(program);
-      deps.logLine(`调试：${resolved.chali} ${args.join(' ')}（工作目录 ${cwd}）`);
-      return new vscode.DebugAdapterExecutable(resolved.chali, args, { cwd });
+      deps.logLine(`调试：${resolved.chali} AOT / GDB（工作目录 ${cwd}）`);
+      return new vscode.DebugAdapterExecutable(process.execPath, [adapter, resolved.chali], { cwd, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } });
     },
   };
 

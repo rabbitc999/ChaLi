@@ -203,7 +203,6 @@ chali check hello.chl
 \midrule
 直接跑起来 & \texttt{chali run src/\allowbreak{}main.\allowbreak{}chl} \\
 只检查、不跑 & \texttt{chali check src/\allowbreak{}main.\allowbreak{}chl} \\
-导出字节码 \texttt{.\allowbreak{}svmb} & \texttt{chali svmb src/\allowbreak{}main.\allowbreak{}chl out build/\allowbreak{}app} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -221,7 +220,7 @@ ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、�
 
 四元式是本书所说的 IR。编译器先生成四元式、数据区和布局，供检查或后续装配；执行路径对四元式进行完整优化，再组装 VM 指令。图中的四元式产物出口位于生成阶段，优化结果可通过调试输出检查，二者不要混淆。
 
-再看运行流程。源码运行和字节码运行最终都进入同一套共享 VM。执行准备绑定入口和宿主服务，运行时按指令操作数据、调用原生服务，并处理预算、错误与资源清理。
+再看运行流程。源码运行通过 AOT 编译并执行原生机器码，保留 checked 检查、宿主服务及资源清理；编译器不再执行 VM 或字节码。
 
 \begin{center}
 \includegraphics[width=\linewidth]{../images/chali-execution.png}\par

@@ -4,10 +4,10 @@
 [English（中文原文）](README.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-> **谁在用**：`source/stackvm` 的 `bint` 类型（虚拟机的任意精度整数）后端就是这个库的
+> **谁在用**：`source/ircode` 的 `bint` 类型（虚拟机的任意精度整数）后端就是这个库的
 > `bigint::BigInt` —— 宿主语言（如 `chali` 的 ChaLi 语言）里的
 > `bint a = bint("…"); a + b;` 走到虚拟机内部就是这边的运算符重载。
-> 那一步是**可选的**：`make -C source/stackvm STACKVM_WITH_BIGINT=0` 能编出不带大整数的
+> 那一步是**可选的**：`make -C source/ircode STACKVM_WITH_BIGINT=0` 能编出不带大整数的
 > 轻量虚拟机。ChaLi 语言层的 `BigInteger` / `BigDecimal` 方法（`.pow()`、`.strRadix()`、
 > `.sqrt()` 等）也直接落在这些 C++ 成员上。
 

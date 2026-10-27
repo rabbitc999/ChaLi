@@ -197,7 +197,7 @@ Statically tracked reads and repeated moves after a move are rejected, including
 
 Aggregate lifetime markers prevent duplicate destruction. Moving from manually allocated storage does not free its storage block; drop the original reference when appropriate. Ordinary assignment and ordinary value parameters still copy. Use references for calls that must avoid copying, and move explicitly where the result should take ownership. Initialization, assignment, returns and temporary reception transfer owned fields from the move result. See the [Ownership transfer](23-ownership-move.md).
 
-Desktop and embedded Linux hosts share the single `source/stackvm/` core and configure resources through their host integration.
+Desktop and embedded Linux hosts share the single `source/ircode/` core and configure resources through their host integration.
 
 ### Default arguments
 

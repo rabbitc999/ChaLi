@@ -57,15 +57,11 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 ## Execution, optimization and deployment
 
-| Route | Implementation | Host requirements |
-| --- | --- | --- |
-| Source | Front-end checks and quadruple lowering followed by VM execution | Compiler and required host services |
-| Bytecode | Shared VM validates and loads `.svmb` | Compatible VM features, glue and companion data |
-| Embedding | Host executes bytecode with `stackvm::Machine` | VM host and target resource adapters |
+run compiles and executes checked AOT code; aot defaults to unchecked export with explicit --checked available. The compiler and embedded source assets exclude the VM interpreter. The .svmb format and editor commands have been removed; quadruple export remains for analysis.
 
-IR means quadruples. Full quadruple optimization and the highest supported VM optimizations are enabled by default. Source and bytecode share the VM; explicit AOT compilation lowers supported quadruples directly to LLVM modules and compiles native products, including function values, capturing closures, shared standard library services, lists and user opcode lifecycle bindings. Compiler builds support statically linked and external LLVM variants. See [AOT compilation](41-aot.md). There is no JIT.
+Release builds use the full quad budget, LLVM O3, global DCE, full LTO and section GC. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 
-Symbol compression is not encryption or a sandbox. Program updates do not automatically migrate running stacks, closures or globals.
+DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [AOT](41-aot.md) and [native debugging](46-native-debugging.md).
 
 ## Host integration and reflection
 
@@ -97,7 +93,7 @@ values, events and watchdogs. The [API index](../library/README.md) defines the 
 pages do not maintain a separate module count. HTTP excludes TLS; external databases need their
 clients and services. Events use weak host posting and explicit bounded receive; application event handlers run only when called by the receiver.
 
-Desktop and embedded Linux use the same `source/stackvm/` core. The target needs a C++17 toolchain,
+Desktop and embedded Linux use the same `source/ircode/` core. The target needs a C++17 toolchain,
 sufficient memory and the system services required by its program. Build native glue and dependencies
 for the target architecture. Linux devices use ordinary hosts, with no separate embedded deployment
 mode or front-end module blacklist. Memory and instruction budgets use the general runtime options. See
@@ -114,7 +110,7 @@ variable inspection and expression evaluation are not implemented. Dependencies 
 fixed Git commits and hashed HTTP/HTTPS archives. Feature implementation, regression evidence and
 long-term production validation are separate claims.
 
-Tool interfaces support Chinese and English; unsupported system locales fall back to English and explicit Japanese selection is rejected. `man book`, `man keyword`, and `man skill` query embedded book, keyword and AI SKILL data. The VS Code package includes the same SKILL.
+Tool interfaces support Chinese and English; unsupported system locales fall back to English and unsupported explicit language selections are rejected. `man book`, `man keyword`, and `man skill` query embedded book, keyword and AI SKILL data. The VS Code package includes the same SKILL.
 
 API manuals require `chali man api`; omitting `api` produces a usage error. `chali man macro` displays embedded macro help.
 
@@ -144,7 +140,7 @@ Threads use `std::thread::Thread` with copied initial arguments, cancellation, c
 
 ## VM modules and TOML saving
 
-The shared VM uses separate compilation units for quadruples, binary containers, execution, native services and concurrent communication. Builds and exports share source/stackvm/core_sources.txt. The stackvm.hpp header aggregates public interfaces; non-template implementations are linked separately.
+The shared VM uses separate compilation units for quadruples, binary containers, execution, native services and concurrent communication. Builds and exports share source/ircode/core_sources.txt. The stackvm.hpp header aggregates public interfaces; non-template implementations are linked separately.
 
 Saving a parsed std::toml document root retains its original comments and layout. In the underlying C++ value model, edits with the same container shape preserve layout. Structural edits retain all comment content, but may move comments to the beginning of the document. Parsing and saving repeatedly neither loses nor duplicates comments. See the [TOML API](../library/std-toml.md).
 

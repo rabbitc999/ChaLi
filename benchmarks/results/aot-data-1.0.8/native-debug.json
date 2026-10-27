@@ -1,0 +1,518 @@
+{
+  "passed": true,
+  "compiler": "G:/Desktop/ChaLi/tmp/aot-1.0.8-final.exe",
+  "source": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+  "messages": [
+    {
+      "seq": 1,
+      "type": "response",
+      "request_seq": 1,
+      "command": "initialize",
+      "success": true,
+      "body": {
+        "supportsConfigurationDoneRequest": true,
+        "supportsEvaluateForHovers": true,
+        "supportsTerminateRequest": true
+      }
+    },
+    {
+      "seq": 2,
+      "type": "event",
+      "event": "initialized",
+      "body": {}
+    },
+    {
+      "seq": 3,
+      "type": "response",
+      "request_seq": 2,
+      "command": "launch",
+      "success": true,
+      "body": {}
+    },
+    {
+      "seq": 4,
+      "type": "response",
+      "request_seq": 3,
+      "command": "setBreakpoints",
+      "success": true,
+      "body": {
+        "breakpoints": [
+          {
+            "id": 1,
+            "verified": true,
+            "line": 7,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "seq": 5,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "[New Thread 12384.0x52fc]\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 6,
+      "type": "response",
+      "request_seq": 4,
+      "command": "configurationDone",
+      "success": true,
+      "body": {}
+    },
+    {
+      "seq": 7,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 8,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "Thread 1 hit Breakpoint 1, f_main () at example.chl:7\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 9,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "7\t    value = increment(value);\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 10,
+      "type": "event",
+      "event": "stopped",
+      "body": {
+        "reason": "breakpoint",
+        "threadId": 1,
+        "allThreadsStopped": true
+      }
+    },
+    {
+      "seq": 11,
+      "type": "response",
+      "request_seq": 5,
+      "command": "stackTrace",
+      "success": true,
+      "body": {
+        "stackFrames": [
+          {
+            "id": 1,
+            "name": "f_main",
+            "line": 7,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b5144"
+          },
+          {
+            "id": 2,
+            "name": "main",
+            "line": 1,
+            "column": 1,
+            "instructionPointerReference": "0x00007ff61d42360c"
+          }
+        ],
+        "totalFrames": 2
+      }
+    },
+    {
+      "seq": 12,
+      "type": "response",
+      "request_seq": 6,
+      "command": "scopes",
+      "success": true,
+      "body": {
+        "scopes": [
+          {
+            "name": "局部变量与参数",
+            "presentationHint": "locals",
+            "expensive": false,
+            "variablesReference": 3
+          }
+        ]
+      }
+    },
+    {
+      "seq": 13,
+      "type": "response",
+      "request_seq": 7,
+      "command": "variables",
+      "success": true,
+      "body": {
+        "variables": [
+          {
+            "name": "value",
+            "value": "7",
+            "type": "int64",
+            "evaluateName": "value",
+            "variablesReference": 0
+          }
+        ]
+      }
+    },
+    {
+      "seq": 14,
+      "type": "response",
+      "request_seq": 8,
+      "command": "evaluate",
+      "success": true,
+      "body": {
+        "result": "10",
+        "variablesReference": 0
+      }
+    },
+    {
+      "seq": 15,
+      "type": "response",
+      "request_seq": 9,
+      "command": "stepIn",
+      "success": true,
+      "body": {}
+    },
+    {
+      "seq": 16,
+      "type": "event",
+      "event": "stopped",
+      "body": {
+        "reason": "step",
+        "threadId": 1,
+        "allThreadsStopped": true
+      }
+    },
+    {
+      "seq": 17,
+      "type": "response",
+      "request_seq": 10,
+      "command": "stackTrace",
+      "success": true,
+      "body": {
+        "stackFrames": [
+          {
+            "id": 4,
+            "name": "f_229_program__increment",
+            "line": 2,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b5493"
+          },
+          {
+            "id": 5,
+            "name": "f_main",
+            "line": 7,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b519d"
+          },
+          {
+            "id": 6,
+            "name": "main",
+            "line": 1,
+            "column": 1,
+            "instructionPointerReference": "0x00007ff61d42360c"
+          }
+        ],
+        "totalFrames": 3
+      }
+    },
+    {
+      "seq": 18,
+      "type": "response",
+      "request_seq": 11,
+      "command": "scopes",
+      "success": true,
+      "body": {
+        "scopes": [
+          {
+            "name": "局部变量与参数",
+            "presentationHint": "locals",
+            "expensive": false,
+            "variablesReference": 7
+          }
+        ]
+      }
+    },
+    {
+      "seq": 19,
+      "type": "response",
+      "request_seq": 12,
+      "command": "variables",
+      "success": true,
+      "body": {
+        "variables": [
+          {
+            "name": "x",
+            "value": "7",
+            "type": "int64",
+            "evaluateName": "x",
+            "variablesReference": 0
+          },
+          {
+            "name": "result",
+            "value": "0",
+            "type": "int64",
+            "evaluateName": "result",
+            "variablesReference": 0
+          }
+        ]
+      }
+    },
+    {
+      "seq": 20,
+      "type": "response",
+      "request_seq": 13,
+      "command": "next",
+      "success": true,
+      "body": {}
+    },
+    {
+      "seq": 21,
+      "type": "event",
+      "event": "stopped",
+      "body": {
+        "reason": "step",
+        "threadId": 1,
+        "allThreadsStopped": true
+      }
+    },
+    {
+      "seq": 22,
+      "type": "response",
+      "request_seq": 14,
+      "command": "stackTrace",
+      "success": true,
+      "body": {
+        "stackFrames": [
+          {
+            "id": 8,
+            "name": "f_229_program__increment",
+            "line": 3,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b55ce"
+          },
+          {
+            "id": 9,
+            "name": "f_main",
+            "line": 7,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b519d"
+          },
+          {
+            "id": 10,
+            "name": "main",
+            "line": 1,
+            "column": 1,
+            "instructionPointerReference": "0x00007ff61d42360c"
+          }
+        ],
+        "totalFrames": 3
+      }
+    },
+    {
+      "seq": 23,
+      "type": "response",
+      "request_seq": 15,
+      "command": "scopes",
+      "success": true,
+      "body": {
+        "scopes": [
+          {
+            "name": "局部变量与参数",
+            "presentationHint": "locals",
+            "expensive": false,
+            "variablesReference": 11
+          }
+        ]
+      }
+    },
+    {
+      "seq": 24,
+      "type": "response",
+      "request_seq": 16,
+      "command": "variables",
+      "success": true,
+      "body": {
+        "variables": [
+          {
+            "name": "x",
+            "value": "7",
+            "type": "int64",
+            "evaluateName": "x",
+            "variablesReference": 0
+          },
+          {
+            "name": "result",
+            "value": "8",
+            "type": "int64",
+            "evaluateName": "result",
+            "variablesReference": 0
+          }
+        ]
+      }
+    },
+    {
+      "seq": 25,
+      "type": "response",
+      "request_seq": 17,
+      "command": "stepOut",
+      "success": true,
+      "body": {}
+    },
+    {
+      "seq": 26,
+      "type": "event",
+      "event": "stopped",
+      "body": {
+        "reason": "step",
+        "threadId": 1,
+        "allThreadsStopped": true
+      }
+    },
+    {
+      "seq": 27,
+      "type": "response",
+      "request_seq": 18,
+      "command": "stackTrace",
+      "success": true,
+      "body": {
+        "stackFrames": [
+          {
+            "id": 12,
+            "name": "f_main",
+            "line": 7,
+            "column": 1,
+            "source": {
+              "path": "G:\\Desktop\\ChaLi\\tmp\\native-debug-test-znWofB\\example.chl",
+              "name": "example.chl"
+            },
+            "instructionPointerReference": "0x00007ff61d5b519d"
+          },
+          {
+            "id": 13,
+            "name": "main",
+            "line": 1,
+            "column": 1,
+            "instructionPointerReference": "0x00007ff61d42360c"
+          }
+        ],
+        "totalFrames": 2
+      }
+    },
+    {
+      "seq": 28,
+      "type": "response",
+      "request_seq": 19,
+      "command": "scopes",
+      "success": true,
+      "body": {
+        "scopes": [
+          {
+            "name": "局部变量与参数",
+            "presentationHint": "locals",
+            "expensive": false,
+            "variablesReference": 14
+          }
+        ]
+      }
+    },
+    {
+      "seq": 29,
+      "type": "response",
+      "request_seq": 20,
+      "command": "variables",
+      "success": true,
+      "body": {
+        "variables": [
+          {
+            "name": "value",
+            "value": "7",
+            "type": "int64",
+            "evaluateName": "value",
+            "variablesReference": 0
+          }
+        ]
+      }
+    },
+    {
+      "seq": 30,
+      "type": "response",
+      "request_seq": 21,
+      "command": "continue",
+      "success": true,
+      "body": {
+        "allThreadsContinued": true
+      }
+    },
+    {
+      "seq": 31,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "value 8\n",
+        "category": "stdout"
+      }
+    },
+    {
+      "seq": 32,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "[Thread 12384.0x52fc exited with code 0]\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 33,
+      "type": "event",
+      "event": "output",
+      "body": {
+        "output": "[Inferior 1 (process 12384) exited normally]\n",
+        "category": "console"
+      }
+    },
+    {
+      "seq": 34,
+      "type": "event",
+      "event": "exited",
+      "body": {
+        "exitCode": 0
+      }
+    },
+    {
+      "seq": 35,
+      "type": "event",
+      "event": "terminated",
+      "body": {}
+    }
+  ]
+}

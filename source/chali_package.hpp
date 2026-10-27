@@ -34,11 +34,11 @@ struct Project
      */
     Memory::String symbolMap;
     /**
-     * `[chali] run`：项目默认运行方式，缺省 `"interpret"`。取值
-     *  `interpret` / `svmb`（也接受 `smvb` 拼写）；命令行的子命令或
-     *  `--mode` 覆盖它。统一入口 `chali` 据此决定解释 / 导出。
+     * `[chali] run`：项目默认运行方式，缺省 `"run"`，使用 checked AOT。
+     * 命令行子命令或 `--mode` 覆盖它；svmb 导出已删除。
+     * 旧 interpret 与 aot 配置归一化为原生运行，不再解释执行。
      */
-    Memory::String run = "interpret";
+    Memory::String run = "run";
     /**
      * `[chali] main`：工程主文件（入口）。指定后命令在不给源文件时默认用它，
      *  程序从该文件的 `main` 开始执行。
@@ -140,7 +140,7 @@ Memory::Vector<Memory::String> tomlArray(const toml::Value &value,
 /**
  * @brief 当前工具链版本，参与项目最低版本验证。
  */
-inline constexpr const char *compilerVersion = "1.0.7";
+inline constexpr const char *compilerVersion = "1.0.8";
 
 /**
  * @brief 解析 `1.2.3` 形式的三段版本号。

@@ -26,7 +26,7 @@ def snapshot(work):
     """复制受版本管理的源码与当前生成资产，保留目标独立的增量对象。"""
     files = subprocess.check_output(['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], cwd=ROOT).decode().split('\0')
     generated = ['source/chali_parser.cpp', 'source/chali_parser.hpp', 'source/chali_parser_user.h', 'source/chali_main.cpp',
-                 'source/chali_stdlib_embedded.cpp', 'source/stackvm/core_assets.hpp', 'library/caspp/core_assets.hpp', 'tools/chali_manual.json']
+                 'source/chali_stdlib_embedded.cpp', 'source/ircode/core_assets.hpp', 'library/caspp/core_assets.hpp', 'tools/chali_manual.json']
     for name in generated:
         if not (ROOT / name).is_file():
             raise ValueError('先在宿主运行 sh gen.sh，缺少生成资产：' + name)

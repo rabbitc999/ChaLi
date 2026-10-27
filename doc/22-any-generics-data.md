@@ -168,7 +168,7 @@ VM 导出器自动识别新格式，并继续接受旧文本四元式和布局�
 
 原总量包括 `.quad`、`.layout`、`.data`、`.data.bin`，新总量包括 `.quad`、`.layout`、`.data.bin`；`.data.bin` 分别为 5,464 / 3,960 字节，未改变。未计入旧 `.data.h`，因此没有夸大删除重复数组带来的收益。
 
-`source/stackvm/test_artifacts.cpp` 在内存中反复解码至少 250 ms，包含结构分配和释放，排除磁盘、源码编译与 C++ 编译。首轮均次结果：
+`source/ircode/test_artifacts.cpp` 在内存中反复解码至少 250 ms，包含结构分配和释放，排除磁盘、源码编译与 C++ 编译。首轮均次结果：
 
 | 示例 | quad 文本 / 二进制（µs） | layout 文本 / 二进制（µs） |
 | --- | ---: | ---: |

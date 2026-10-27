@@ -4,7 +4,9 @@
 [English](en/09-toolchain.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 默认通过共享 VM 执行程序。源码经过前处理、语法与语义检查，再降级为四元式和 VM 指令；支持导出四元式与 `.svmb` 字节码，也可显式使用 [AOT 编译入口](41-aot.md)生成 LLVM 模块与原生产物。
+从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](46-native-debugging.md)。
+
+ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与语义检查，再降级为四元式；支持单独导出四元式，也可显式使用 [AOT 编译入口](41-aot.md)生成 LLVM 模块与原生产物。
 
 ## 执行与检查
 
@@ -13,12 +15,11 @@ chali run app.chl
 chali check app.chl
 chali check app.chl json
 chali emit app.chl out build/app
-chali svmb app.chl out build/app
 chali aot app.chl --out build/app
 ```
 
 直接传入 `.chl` 文件也会运行，文件后的参数传给程序；显式 `run` 可配置产物前缀。
-`emit` 输出 `.quad`、`.data.bin` 和 `.layout`；`svmb` 还输出 VM 字节码。运行时资产与标准库内嵌在编译器中。
+`emit` 输出 `.quad`、`.data.bin` 和 `.layout`；字节码导出已删除。运行时资产与标准库内嵌在编译器中。
 
 ## 开发工具
 
@@ -38,7 +39,7 @@ chali clear out build/compiler
 
 ## 默认构建与优化
 
-反射是语言的固定组成、不可裁剪：前端及运行时始终编入，编译流程始终执行完整的反射处理；`--no-reflection` 只决定这次产物写不写反射元数据，不减少工作量。四元式默认执行完整优化流程；VM 默认启用最高可用执行优化。
+反射是语言的固定组成、不可裁剪：前端及运行时始终编入，编译流程始终执行完整的反射处理；`--no-reflection` 只决定这次产物写不写反射元数据，不减少工作量。四元式默认执行完整优化流程；原生发布构建默认 O3、LTO 与死代码消除。
 `--memory-size` 与 `--step-limit` 设置 VM 资源预算；宿主线程默认启用，`--no-threads` 关闭隔离线程。编译器帮助列出当前支持的选项。
 
 后端调试开关只影响诊断输出与执行路径，不改变程序语义，分两组：
@@ -66,8 +67,8 @@ chali clear out build/compiler
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```
 
-项目配置的运行方式为 `interpret` 与 `svmb`。
-配置见[工程与包管理](13-projects.md)，字节码约定见[SVMB 格式](15-svmb-format.md)。
+项目配置使用 `run`，旧 interpret 仅作为 AOT 运行的别名；svmb 配置已删除。
+配置见[工程与包管理](13-projects.md)，旧格式迁移见[迁移说明](15-svmb-format.md)。
 
 ## 源码模块与增量构建
 

@@ -4,18 +4,20 @@
 **English** · [简体中文](../41-aot.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-`chali aot input.chl --out build/program` lowers optimized ChaLi quadruples directly to LLVM intermediate representation. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses the shared VM.
+Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](46-native-debugging.md).
 
-The Windows x64 toolchain, LLVM libraries, Clang, LLD, compiler-rt builtins and CRT link dependencies are stored in [library/llvm](../../library/llvm/README.md). Run `python library/llvm/setup.py` from the repository root to verify and extract the pinned offline dependency. VM execution and LLVM module export do not require the toolchain.
+`chali aot input.chl --out build/program` lowers optimized ChaLi quadruples directly to LLVM intermediate representation. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
 
-All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics, bounds checks and liveness checks remain enabled. See [backend ownership optimization](43-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
+The Windows x64 toolchain, LLVM libraries, Clang, LLD, compiler-rt builtins and CRT link dependencies are stored in [library/llvm](../../library/llvm/README.md). Run `python library/llvm/setup.py` from the repository root to verify and extract the pinned offline dependency. LLVM module and legacy bytecode exports do not require the code-generation toolchain.
+
+All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while aot exports default to omitting them. See [backend ownership optimization](43-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
 
 | Option | Behavior |
 | --- | --- |
 | `--out prefix` | Prefix for the `.ll` module, C ABI header and native output; Windows uses .exe/.dll, Linux uses no executable suffix or .so |
 | `--llvm path` | Explicit external LLVM clang driver; the static variant defaults to its built-in backend; the external variant also accepts `CHALI_LLVM_CLANG` |
 | `--emit-llvm` | Write the LLVM module and C ABI header without code generation or linking |
-| `--checked` | Emit array bounds and pointer checks; enabled by default |
+| `--checked` | Emit array bounds and pointer checks; on for run and off by default for aot exports |
 | `--unchecked` | Explicitly omit these checks for debugging or performance comparisons; object lifetime and actual memory accesses remain checked |
 | `--shared` | Build a shared library |
 | `--export name` | Export a function; repeatable |

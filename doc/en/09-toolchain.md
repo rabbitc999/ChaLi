@@ -4,18 +4,19 @@
 **English** · [简体中文](../09-toolchain.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi executes programs through the shared VM by default. The front end preprocesses, parses and checks source, then lowers it to quadruples and VM instructions. The explicit [AOT entry](41-aot.md) can generate LLVM modules and native products.
+Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](46-native-debugging.md).
+
+ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then lowers it to quadruples and native LLVM code. The explicit [AOT entry](41-aot.md) can generate LLVM modules and native products.
 
 ```sh
 chali run app.chl
 chali check app.chl
 chali check app.chl json
 chali emit app.chl out build/app
-chali svmb app.chl out build/app
 chali aot app.chl --out build/app
 ```
 
-A direct source file also runs; following arguments are passed to the program. `emit` writes `.quad`, `.data.bin` and `.layout`; `svmb` additionally writes VM bytecode. The compiler embeds the standard library and its required assets.
+A direct source file also runs; following arguments are passed to the program. `emit` writes `.quad`, `.data.bin` and `.layout`; Bytecode export has been removed. The compiler embeds the standard library and its required assets.
 
 ## Development tools
 
@@ -59,7 +60,7 @@ Quadruple counts, instruction-selection coverage and frame slots before/after re
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```
 
-Project execution modes are `interpret` and `svmb`. Native output and native compiler settings are unsupported. See [projects](13-projects.md), [deployment](06-deployment.md) and the [SVMB specification](../15-svmb-format.md).
+Project execution uses run; interpret remains only as an AOT alias, and svmb has been removed. See [projects](13-projects.md), [deployment](06-deployment.md) and the [SVMB specification](../15-svmb-format.md).
 
 ## Source modules and incremental builds
 

@@ -37,16 +37,18 @@ def version_of(root):
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('VERSION 格式无效：' + version)
     manifest = json.loads((root / 'vscode/package.json').read_text(encoding='utf-8'))
-    if manifest.get('chaliCompilerVersion', manifest['version']) != version:
+    if manifest['version'] != version or manifest.get('chaliCompilerVersion', manifest['version']) != version:
         raise ValueError('vscode/package.json 的 chaliCompilerVersion 必须与 VERSION 一致')
     return version
 
 
 def editor_version_of(root):
-    """读取独立编号的扩展包版本，拒绝非法包名版本。"""
+    """读取与编译器同步的扩展包版本，拒绝版本漂移。"""
     version = json.loads((root / 'vscode/package.json').read_text(encoding='utf-8'))['version']
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('扩展包 version 格式无效：' + version)
+    if version != (root / 'VERSION').read_text(encoding='utf-8').strip():
+        raise ValueError('扩展包 version 必须与 VERSION 一致')
     return version
 
 
@@ -199,7 +201,7 @@ def main(argv=None):
     target = {'win32': 'windows', 'darwin': 'macos'}.get(sys.platform, sys.platform) + '-' + {
         'amd64': 'x64', 'x86_64': 'x64', 'aarch64': 'arm64'}.get(platform.machine().lower(), platform.machine().lower())
     binary = ROOT / (f'chali-{version}-llvm-external-windows-x64.exe' if windows else 'chali')
-    vsix = ROOT / f'vscode/dist/chali-editor-{editor_version_of(ROOT)}.vsix'
+    vsix = ROOT / f'vscode/dist/chali-editor-{editor_version_of(ROOT)}-llvm-external.vsix'
     if args.dry_run:
         print(f'版本 {version}，目标 {target}，输出 {args.out_dir.resolve()}')
         print('复用产物 → 版本/字节/反射/依赖验证 → ZIP/SHA256' if args.package_only else

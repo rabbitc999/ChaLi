@@ -9,7 +9,6 @@ The compiler provides source execution, validation, artifact export and developm
 ```sh
 chali hello.chl
 chali --check hello.chl
-chali svmb hello.chl out build/hello
 chali aot hello.chl --out build/hello
 chali man api std::text
 chali man book 15 --lang en

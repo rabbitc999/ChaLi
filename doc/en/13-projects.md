@@ -192,7 +192,7 @@ byte-identical. `svmb_dump.py` is a minimal parser using only the standard libra
 
 ### 7.1 Embedded Linux hosting
 
-Build `source/stackvm/` and the native glue with the target Linux C++17 toolchain. Deploy the
+Build `source/ircode/` and the native glue with the target Linux C++17 toolchain. Deploy the
 `.svmb`, data and layout files together, and provide the system libraries used by the host.
 The [deployment guide](06-deployment.md) describes the execution and resource boundaries.
 

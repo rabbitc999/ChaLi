@@ -11,7 +11,7 @@
  * ============================================================ */
 #include "ast.hpp"
 #include "stackvm.hpp"
-#include "../source/stackvm/value_text.hpp"
+#include "../source/ircode/value_text.hpp"
 #include "quad_ir.hpp"
 #include "chali_glue.hpp"
 #include "chali_generic.hpp"
@@ -23,7 +23,6 @@
 #include "chali_interpolation.hpp"
 #include "literals/string_escape.hpp"
 #include "editor/compiler_analysis.hpp"
-#include "dap/dap_server.hpp"
 #include "chali_lifetime_contract.hpp"
 
 #include <cstdio>
@@ -80,9 +79,6 @@ bool g_sharedLibrary = false;
 bool g_abiPrepareOnly = false;
 Memory::String g_abiCacheOption, g_abiBridgeOption, g_abiWriteOption;
 bool g_abiNoCache = false;
-/* DAP 调试（`--dap`）：挂上断点 / 单步回调，并把程序输出转成 `output` 事件
- * （DAP 走 stdout，程序不能自己再往 stdout 写，否则协议流被冲垮）。 */
-bool g_dapEnabled = false;
 bool g_reflectionEnabled = false;  ///< 本次编译显式启用的注解与反射开关。
 std::size_t g_runtimeMemory = Memory::defaultRuntimeCapacity;
 std::size_t g_runtimePeak = 0;
@@ -92,23 +88,6 @@ int g_watchdogEnabled = 0;
 int g_watchdogMaxRestarts = 3;
 std::size_t g_watchdogWatermarkBytes = 0u;
 
-/**
- * @brief 软重启原因的可读名（重启日志用）。
- * @param reason 原因。
- * @return 名字。
- */
-const char *WatchdogReasonName(Memory::WatchdogReason reason)
-{
-    switch (reason)
-    {
-    case Memory::WatchdogReason::PoolExhausted: return "运行内存池用尽";
-    case Memory::WatchdogReason::HostHeapExhausted: return "宿主堆用尽";
-    case Memory::WatchdogReason::MemoryWatermark: return "内存水位超限";
-    case Memory::WatchdogReason::ExplicitRequest: return "程序显式请求";
-    case Memory::WatchdogReason::None: break;
-    }
-    return "未知原因";
-}
 
 /**
  * @brief 将类型描述加入类型池并返回其编号。
@@ -179,21 +158,6 @@ bool IsRuntimeArray(const std::shared_ptr<MType> &type);
  */
 bool IsObjectLike(const std::shared_ptr<MType> &type);
 
-/**
- * @brief 位置是不是编译器内部产物（四元式），而不是用户源码。
- *
- * `.quad` 是降级后的中间表示，只对调试编译器本身有意义：平常给用户的调用栈里
- * 出现它会让人以为是自己的文件出了问题，所以只在 `--debug`（会打印四元式指令轨迹，
- * 此时用户本来就在对着 quad 看）时保留。
- *
- * @param location 调用栈某一帧的位置。
- * @return 文件名以 `.quad` 结尾，或只剩四元式行号（显示为"四元式:N"）时返回 true。
- */
-bool IsInternalQuadLocation(const stackvm::SourceLocation &location)
-{
-    if (location.file.size() >= 5u && location.file.compare(location.file.size() - 5u, 5u, ".quad") == 0) return true;
-    return location.file.empty() && location.line <= 0 && location.quadLine > 0u;
-}
 }  // namespace
 
 /**
@@ -2972,11 +2936,6 @@ void M_SetAbiOptions(const Memory::String &cache, const Memory::String &bridge, 
 }
 
 /**
- * @brief 开关 DAP 调试模式。
- * @param enabled 是否开启（由 `--dap` 触发）。
- */
-void M_SetDapEnabled(bool enabled) { g_dapEnabled = enabled; }
-/**
  * @brief 设置单次编译开关，检查实际链接的 VM 能力。
  * @param enabled 是否开启。
  * @return 配置有效时返回 true。
@@ -3497,313 +3456,15 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     Memory::String layoutPath;
     stackvm::QuadFile file;
     if (!WriteArtifacts(outPrefix, result, &binaryPath, &layoutPath, &file)) return 1;
-    if (run == 0 && emitBinary == 0) return 0;
-
-    /* 3. 组装 + 执行（同源路径：四元式 → 栈指令 → 跑）。 */
-    if (!file.ok())
+    (void)run;
+    (void)emitBinary;
+    (void)inputText;
+    if (g_abiPrepareOnly)
     {
-        Fail("四元式解析失败：" + JoinMessages(file.diagnostics));
-        return 1;
+        chali_glue::Registry registry;
+        return BindRuntimeAbi(&registry) ? 0 : 1;
     }
-    if (file.name.empty()) file.name = moduleName;
-    /* 调试用：`CHALI_NO_OPT=1` 跳过化简，`CHALI_DUMP_OPT=1` 把化简后的四元式打到
-     * stderr —— 排查"化简改了语义"时这两个开关最省事。 */
-    if (std::getenv("CHALI_NO_OPT") == nullptr)
-    {
-        const stackvm::OptimizationReport optimization = stackvm::optimize(file);
-        (void)optimization;
-    }
-    if (std::getenv("CHALI_DUMP_OPT") != nullptr)
-    {
-        std::fputs("=== 化简后的四元式 ===\n", stderr);
-        for (const stackvm::Quad &quad : file.quads)
-        {
-            std::fprintf(stderr, "%s(", quad.op.c_str());
-            for (std::size_t index = 0; index < quad.args.size(); ++index)
-                std::fprintf(stderr, "%s%s", index == 0u ? "" : ", ", quad.args[index].c_str());
-            std::fputs(")\n", stderr);
-        }
-    }
-    /* 调试用：`CHALI_DUMP_IR=1` 把规范化中间表示（基本块、前驱后继、定义-使用）打到 stderr。
-     * 后端各阶段的输入就是这份结构，排查"某条指令落在哪个块、某个值被谁定义"时先看它。 */
-    if (std::getenv("CHALI_DUMP_IR") != nullptr)
-    {
-        const stackvm::ir::Module module = stackvm::ir::build(file);
-        std::fputs("=== 规范化中间表示 ===\n", stderr);
-        const Memory::String text = stackvm::ir::dump(module);
-        std::fwrite(text.data(), 1u, text.size(), stderr);
-    }
-    stackvm::Program assembled;
-    const bool assembledOk = stackvm::assemble(file, assembled);
-    if (!assembledOk || !assembled.ok())
-    {
-        Fail("组装失败：" + JoinMessages(assembled.diagnostics));
-        return 1;
-    }
-    assembled.exports.clear();
-    for (const MFunctionDecl &declaration : g_functionDecls)
-    {
-        if (declaration.external || declaration.moduleLocal || declaration.superseded) continue;
-        if (assembled.labels.find(declaration.label) != assembled.labels.end())
-            assembled.exports.insert(declaration.label);
-    }
-    if (emitBinary != 0)
-    {
-        Memory::Vector<Memory::String> diagnostics;
-        const Memory::String programPath = Memory::String(outPrefix) + ".svmb";
-        if (g_compressSymbols && !stackvm::saveSymbolMap(assembled, g_symbolMap.empty() ? Memory::String(outPrefix) + ".symbol_map.json" : g_symbolMap, g_symbolModule.empty() ? assembled.name : g_symbolModule, g_symbolVersion, &diagnostics))
-        {
-            Fail("符号映射写出失败：" + JoinMessages(diagnostics));
-            return 1;
-        }
-        /* 缺省（或 `--no-debug`）：调试节写成 0 条（v4 里这仍然合法），指令与名字表
-         * 一动不动，只是丢掉"指令下标 → 函数 / 文件 / 行 / 四元式行"这张表。
-         * `--debug` / `[chali] debug = true` 才保留；丢了之后执行就没位置可打了。 */
-        if (g_stripDebug)
-        {
-            assembled.debug.entries.clear();
-            std::fputs("chali: 不带调试节（缺省；--debug 或 chali debug = true 可保留）\n", stderr);
-        }
-        if (!stackvm::saveProgramBinary(assembled, programPath, &diagnostics, g_compressSymbols))
-        {
-            Fail("二进制程序写出失败：" + JoinMessages(diagnostics));
-            return 1;
-        }
-    }
-    if (run == 0) return 0;
-    // 本次生成的数据映像直接交给 VM；其他进程覆盖同前缀产物不影响正在执行的程序。
-    const auto dataBytes = result.exportDataBinary();
-    Memory::String dataLayout;
-    for (const auto &row : result.exportDataLayout()) dataLayout += row + "\n";
-    g_runtimePeak = 0;
-    try
-    {
-        Memory::DynamicRuntimeArena runtimeArena(g_runtimeMemory);
-        struct RuntimePeakCapture
-        {
-            Memory::BufferRuntimeArena &arena;
-            /**
-             * @brief 在执行结束时保存运行时内存峰值。
-             */
-            ~RuntimePeakCapture() { g_runtimePeak = arena.peakBytes(); }
-        } peakCapture{ runtimeArena };
-        int runtimeStatus = 0;
-        /* ---- 可选软重启（PC 宿主）------------------------------------------------
-         * 两个触发：① 分配失败 / 超过内存水位；② 程序 `std::watchdog::requestRestart()`。
-         * 每一轮都用一个新的 `RuntimeSession`：结束时整块缓冲区清零，下一轮重新 `begin()`
-         * —— 这就是"完成清理后**复用缓冲区**重新 `run()`"。重启次数由宿主跨轮持有。
-         * `g_watchdogEnabled == 0`（缺省）时下面这段只是"跑一轮就退出"，与从前逐字节一致。 */
-        for (int attempt = 0;; ++attempt)
-        {
-            bool retry = false;
-            Memory::WatchdogReason stopReason = Memory::WatchdogReason::None;
-            try
-            {
-                Memory::RuntimeSession session(runtimeArena);
-                runtimeStatus = [&]() {
-                    stackvm::DataArea data;
-                    Memory::Vector<Memory::String> problems;
-                    if (!data.loadFromBytes(dataBytes.data(), dataBytes.size(), dataLayout, &problems))
-                    {
-                        Fail("数据区加载失败：" + JoinMessages(problems));
-                        return 1;
-                    }
-                    stackvm::Machine machine;
-                    machine.setPanicDetailsEnabled(!g_compressSymbols);
-                    /* 差分回归开关：`CHALI_NO_REGISTER_CORE=1` 关掉寄存器执行核，改走通用栈解释。
-                     * 同一份程序在两条路径下的 stdout、诊断与退出码必须一致——这是后端改造的护栏，
-                     * 新增指令选择或分配策略时先让它两边都跑通。 */
-                    if (std::getenv("CHALI_NO_REGISTER_CORE") != nullptr)
-                        machine.setRegisterExecution(false);
-                    machine.setData(&data);
-                    chali_glue::Registry abiRegistry;
-                    if (!BindRuntimeAbi(&abiRegistry)) return 1;
-                    if (g_abiPrepareOnly) return 0;
-                    stackvm::NativeRegistry nativeRegistry;
-                    if (g_nativeRegistry != nullptr) nativeRegistry = *g_nativeRegistry;
-                    for (const MFunctionDecl &function : g_functionDecls)
-                    {
-                        if (function.abiLibrary.empty() || function.superseded) continue;
-                        const stackvm::NativeRegistry::Entry *entry = abiRegistry.native().find(function.label);
-                        if (entry == nullptr) return Fail("内部错误：缺少 abi 绑定 " + function.label), 1;
-                        nativeRegistry.remove(function.label);
-                        Memory::String error;
-                        if (!nativeRegistry.add(function.label, entry->arity, entry->callback, &error))
-                            return Fail(error), 1;
-                    }
-                    machine.setNativeRegistry(&nativeRegistry);
-                    machine.setProgramArguments(g_programArguments);
-                    // 交互终端即时输出，pause 提示前即可看到已有内容；管道与看门狗批处理仍保留输出桶。
-#ifdef _WIN32
-                    const bool interactiveOutput = _isatty(_fileno(stdin)) != 0;
-#else
-                    const bool interactiveOutput = isatty(STDIN_FILENO) != 0;
-#endif
-                    if (!g_dapEnabled && interactiveOutput)
-                        machine.setOutputSink([](void *, const char *bytes, std::size_t count) {
-                            std::fwrite(bytes, 1u, count, stdout);
-                        },
-                                              nullptr, false);
-
-                    machine.setThreadsEnabled(g_threadsEnabled);
-                    /*
-                     * `--debug`：按源码位置逐行打印执行轨迹。输出走 **stderr**：样例的期望文件比的是
-                     * stdout，插一句调试输出就会把样例全打挂。位置来自组装期登记的调试信息（函数名 +
-                     * CHALI 原始行；旧四元式回退为 `.quad` 行）。压缩符号时禁止轨迹泄露来源。
-                     */
-                    Memory::String debugLastLocation;
-                    if (g_dapEnabled)
-                    {
-                        /* DAP：先挂在入口停下（等前端下断点 / configurationDone），之后每次停都由
-                         * 前端命令决定继续、单步还是中止。断点由 dap 模块反查成指令下标写进 VM。 */
-                        if (assembled.debug.empty())
-                            std::fprintf(stderr, "调试：这个程序没有带调试信息，只能显示指令下标\n");
-                        dap::attach(&machine, &assembled.debug);
-                        machine.setDebugHook([](const stackvm::DebugEvent &event) { return dap::onStop(event); });
-                    }
-                    else if (g_debugEnabled && !g_compressSymbols)
-                    {
-                        if (assembled.debug.empty())
-                            std::fprintf(stderr, "调试：这个程序没有带调试信息，只能显示指令下标\n");
-                        machine.setSingleStep(true);
-                        machine.setDebugHook([&debugLastLocation](const stackvm::DebugEvent &event) {
-                            const Memory::String text = event.location.toString();
-                            if (text != debugLastLocation)
-                            {
-                                debugLastLocation = text;
-                                std::fprintf(stderr, "调试[%zu] %s\n", event.steps, text.c_str());
-                            }
-                            return stackvm::DebugAction::StepInto;
-                        });
-                    }
-                    const stackvm::RunResult executed =
-                        machine.run(assembled, SplitInput(inputText), g_stepLimit);
-                    /* 可恢复终止（分配失败 / 程序显式请求）：**丢弃这一轮被中止的输出**（输出回滚），
-                     * 让重启后的观测结果与"一次干净运行"可比；原因交给外层重启循环。 */
-                    if (executed.recoverable && g_watchdogEnabled != 0)
-                    {
-                        stopReason = static_cast<Memory::WatchdogReason>(executed.recoverableReason);
-                        runtimeStatus = 0;
-                        retry = true;
-                        return 0;
-                    }
-                    /* 标准输出全在文本流上，照原样吐给终端；DAP 模式下 stdout 是协议通道，
-                     * 所以改走 `output` 事件（前端显示在调试控制台）。 */
-                    if (g_dapEnabled)
-                    {
-                        if (!executed.text.empty()) dap::emitOutput(std::string(executed.text.data(), executed.text.size()));
-                        if (!executed.output.empty()) dap::emitOutput(executed.output + "\n");
-                    }
-                    else
-                    {
-                        if (!executed.text.empty())
-                            std::fwrite(executed.text.data(), 1u, executed.text.size(), stdout);
-                        if (!executed.output.empty()) std::printf("%s\n", executed.output.c_str());
-                        std::fflush(stdout);
-                    }
-                    if (!executed.ok)
-                    {
-                        /* 保持错误首行协议，再附可选的位置与调用栈。 */
-                        Fail(CHALI_TEXT("运行期错误：") + executed.error);
-                        /* 运行期出错的**位置是跑出来的**：语法 MOVE 到哪一行才知道，此刻的
-                         * `g_reductionLine` 还停在最后一条降级语句上，拿它当"出错行"是纯误导。
-                         * 位置与调用栈本来就要追加在下面几行（`出错位置：` / `调用栈`），
-                         * 所以这里把这条诊断的行列抹成 0 —— 驱动见到 0 就不补"第 N 行"。
-                         * 必须同时清 `g_errorLine`：`M_Diagnostics()` 在只有一条诊断时会拿它覆盖行列。 */
-                        if (!g_diagnostics.empty())
-                        {
-                            g_diagnostics.back().line = 0u;
-                            g_diagnostics.back().column = 0u;
-                        }
-                        g_errorLine = 0u;
-                        g_errorColumn = 0u;
-                        if (g_debugEnabled || STACKVM_WITH_PANIC_TRACE)
-                        {
-                            if (executed.failureLocation.known())
-                            {
-                                g_error += "\n出错位置：" + executed.failureLocation.toString();
-                                if (!executed.failureLocation.function.empty()) g_error += "（" + executed.failureLocation.function + "）";
-                            }
-                            if (!executed.sourceTrace.empty())
-                            {
-                                /* 先攒文本再决定要不要带标题：入口那一帧落在 `.quad` 上，
-                                 * 非 `--debug` 时会整帧过滤掉，栈可能因此变空。 */
-                                Memory::String traceText;
-                                for (const stackvm::DebugFrame &frame : executed.sourceTrace)
-                                {
-                                    if (!g_debugEnabled && IsInternalQuadLocation(frame.location)) continue;
-                                    traceText += "\n  " + (frame.function.empty() ? Memory::String("(根)") : frame.function) + "  " + frame.location.toString() + " [thread " + Memory::toString(frame.threadId) + " ip " + Memory::toString(frame.instruction) + "]";
-                                }
-                                if (!traceText.empty()) g_error += CHALI_TEXT("\n调用栈（外 → 内）：") + traceText;
-                            }
-                        }
-                        return 1;
-                    }
-                    /* 堆卫生：`new` 出来的可写引用要自己 `drop`，漏了就在这里提醒一句（不影响退出码）。 */
-                    if (executed.heapLiveBytes != 0u)
-                    {
-                        std::fprintf(stderr, "提示：程序结束时堆上还有 %zu 字节 / %zu 块没有 drop（峰值 %zu 字节）\n",
-                                     executed.heapLiveBytes, executed.heapLiveBlocks, executed.heapPeakBytes);
-                    }
-                    /* 对象卫生：`bint` / 容器走运行期对象表，不占堆字节，漏了单独提示一句。 */
-                    if (executed.liveObjects != 0u)
-                    {
-                        std::fprintf(stderr,
-                                     "提示：程序结束时还有 %zu 个 BigInteger / BigDecimal / 容器对象没释放"
-                                     "（`drop 变量;`，或者让它们随声明它的块一起走）\n",
-                                     executed.liveObjects);
-                    }
-                    /* `exit(n)` 已删除：正常停机只有 `main` 返回一条路，宿主退出码固定 0。 */
-                    return 0;
-                }();
-            } catch (const std::bad_alloc &)
-            {
-                /* 池耗尽可能让"写错误信息"本身也失败（错误串也是池里的字符串）；触发点已经把
-                 * "分配失败"记进信号位（`Memory::restartSignal()`），所以这里按可恢复处理。
-                 * 宿主没开看门狗时保持原样：报"运行内存池容量不足"。 */
-                if (g_watchdogEnabled == 0 || !Memory::restartSignal().pending())
-                    return Fail("运行内存池容量不足"), 1;
-                runtimeStatus = 0;
-                stopReason = Memory::restartSignal().reason();
-                retry = true;
-            }
-            /* 水位触发：跑完一轮后**宿主**量一次（峰值 / 活跃），水位取宿主开关与程序
-             * `std::watchdog::enable(N)` 的较大者（0 = 不按水位判）。 */
-            if (!retry && g_watchdogEnabled != 0)
-            {
-                const std::size_t programWater = Memory::restartSignal().enabled() ? Memory::restartSignal().watermarkBytes() : 0u;
-                const std::size_t water = g_watchdogWatermarkBytes > programWater ? g_watchdogWatermarkBytes : programWater;
-                if (water != 0u)
-                {
-                    /* 注意：这一轮的 `RuntimeSession` 已经析构（缓冲区清零），所以要读
-                     * `finish()` 保存下来的**上一轮统计**，不能读当前池状态。 */
-                    const Memory::RuntimeAllocator::Stats stats = runtimeArena.lastRunStats();
-                    if (stats.peakBytes >= water || stats.liveBytes >= water)
-                    {
-                        stopReason = Memory::WatchdogReason::MemoryWatermark;
-                        retry = true;
-                    }
-                }
-            }
-            if (!retry) break;
-            Memory::restartSignal().clear(); /* 下一轮从干净状态开始（序号跨轮保留） */
-            if (attempt >= g_watchdogMaxRestarts)
-            {
-                std::fprintf(stderr,
-                             CHALI_TEXT("chali: 软重启次数用尽（最多 %d 次），本轮仍是可恢复终止\n"),
-                             g_watchdogMaxRestarts);
-                runtimeStatus = 1;
-                break;
-            }
-            std::fprintf(stderr, CHALI_TEXT("chali: 软重启 %d/%d（%s）\n"), attempt + 1,
-                         g_watchdogMaxRestarts, WatchdogReasonName(stopReason));
-        }
-        g_runtimePeak = runtimeArena.peakBytes();
-        return runtimeStatus;
-    } catch (const std::bad_alloc &)
-    {
-        return Fail("运行内存池容量不足"), 1;
-    }
+    return 0;
 }
 
 /**

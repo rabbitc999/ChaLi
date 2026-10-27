@@ -2,7 +2,7 @@
   "name": "chali-editor",
   "displayName": "ChaLi",
   "description": "ChaLi（.chl）语言支持：用编译器自带的 `chali lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。 支持 LLVM AOT 可执行文件与 VM 字节码构建。",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "publisher": "rabbitc999",
   "devDependencies": {
     "vscode-oniguruma": "^2.0.1",
@@ -44,8 +44,7 @@
     "onCommand:chali.openLibraries",
     "onCommand:chali.previewMacroExpansion",
     "onCommand:chali.build",
-    "onCommand:chali.buildExe",
-    "onCommand:chali.buildSvmb"
+    "onCommand:chali.buildExe"
   ],
   "contributes": {
     "languages": [
@@ -104,6 +103,15 @@
                 },
                 "default": []
               },
+              "debuggerPath": {
+                "type": "string",
+                "description": "GDB 原生调试器路径，缺省从 CHALI_GDB 或 PATH 查找。"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "进入 ChaLi main 时停止。",
+                "default": false
+              },
               "cwd": {
                 "type": "string",
                 "description": "工作目录；缺省用源文件所在目录。",
@@ -124,7 +132,7 @@
         "configurationSnippets": [
           {
             "label": "ChaLi：调试当前文件",
-            "description": "用编译器自带的调试器跑当前 .chl。",
+            "description": "使用带源码行和变量信息的 AOT 程序进行原生 GDB 调试。",
             "body": {
               "type": "chali",
               "request": "launch",
@@ -187,10 +195,6 @@
       {
         "command": "chali.buildExe",
         "title": "%chali.buildExe.title%"
-      },
-      {
-        "command": "chali.buildSvmb",
-        "title": "%chali.buildSvmb.title%"
       }
     ],
     "configuration": {
@@ -227,7 +231,7 @@
         },
         "chali.build.checked": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%chali.build.checked.description%"
         }
       }
@@ -270,11 +274,6 @@
           "command": "chali.buildExe",
           "when": "resourceExtname == .chl && resourceScheme == file",
           "group": "chaliBuild@1"
-        },
-        {
-          "command": "chali.buildSvmb",
-          "when": "resourceExtname == .chl && resourceScheme == file",
-          "group": "chaliBuild@2"
         }
       ],
       "explorer/context": [
@@ -297,11 +296,6 @@
           "command": "chali.buildExe",
           "when": "resourceExtname == .chl && resourceScheme == file",
           "group": "chaliBuild@1"
-        },
-        {
-          "command": "chali.buildSvmb",
-          "when": "resourceExtname == .chl && resourceScheme == file",
-          "group": "chaliBuild@2"
         }
       ],
       "editor/title": [
@@ -317,5 +311,6 @@
     "type": "git",
     "url": "https://github.com/rabbitc999/ChaLi.git"
   },
-  "chaliCompilerVersion": "1.0.7"
+  "chaliCompilerVersion": "1.0.8",
+  "chaliLLVMVariant": "external"
 }

@@ -4,7 +4,19 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.7**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.8**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.8 — AOT 原生运行、常量池裁剪与原生调试
+
+- AOT 按可达数据引用裁剪常量初值与布局，零初值改为启动清零，相同非零片段共用文件存储；保留逻辑地址、对象身份、数组长度头和堆边界。二进制布局按显式长度读取，修复空表被 NUL 截断的启动失败。
+- 局部固定数组复用分配辅助函数的整块清零，移除逐元素重复零写入；函数值从可达代码追踪，避免不可达取地址保留 LLVM 函数和数据。
+- run 改为 checked AOT 编译执行，aot 默认 unchecked 导出，保留四元式导出并删除字节码路径；编译器与内嵌资产移除 VM 执行器，保留共享内存、对象、宿主及线程服务。
+- 增加 LLVM 源码行和变量 DWARF 描述，VS Code 通过 GDB/MI 调试原生程序，支持断点、单步、调用栈、变量和表达式。
+- 程序、语言服务与插件 chaliCompilerVersion 同步升级至 1.0.8；历史测量保留真实版本与编译器摘要。
+- 删除 .svmb 字节码导出、相关命令及编辑器构建入口，部署书稿改为原生产物；历史测量保留真实版本。
+- VS Code 扩展版本与编译器统一为 1.0.8，按 LLVM 静态／外置链接分包；内嵌编译器通过 --build-info 报告版本及真实链接方式，打包拒绝错误变体。
+- 共享四元式与 AOT 运行时目录由 source/stackvm 迁移为 source/ircode，更新构建、导出工程和内嵌资产路径，保留现有 C++ 命名空间与宿主 ABI。
 
 
 ## 1.0.7 — 标准库自举、原始存储、ABI 指令与 AOT 瘦身

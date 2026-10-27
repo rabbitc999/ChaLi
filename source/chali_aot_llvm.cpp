@@ -139,13 +139,13 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (!failed) failed = LLVMGetTargetFromTriple(triple, &target, &message) != 0;
     if (!failed)
     {
-        machine = LLVMCreateTargetMachine(target, triple, "x86-64", "", LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
+        machine = LLVMCreateTargetMachine(target, triple, "x86-64", "", request.options.debug ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
         failed = machine == nullptr;
     }
     if (!failed)
     {
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
-        LLVMErrorRef error = LLVMRunPasses(program, "default<O3>,globaldce", machine, options);
+        LLVMErrorRef error = LLVMRunPasses(program, request.options.debug ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
         LLVMDisposePassBuilderOptions(options);
         if (error)
         {
@@ -185,10 +185,10 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     const std::string builtins = (assets.root / "libclang_rt.builtins-x86_64.a").generic_u8string();
     std::vector<std::string> storage{ "ld.lld", "-m", "i386pep", "-Bdynamic", "-o", product.c_str(),
                                       library + (request.options.shared ? "/dllcrt2.o" : "/crt2.o"), library + "/crtbegin.o", "-L" + library, object };
-    storage.push_back("--lto-O3");
-    storage.push_back("--lto-CGO3");
+    storage.push_back(request.options.debug ? "--lto-O0" : "--lto-O3");
+    storage.push_back(request.options.debug ? "--lto-CGO0" : "--lto-CGO3");
     storage.push_back("--gc-sections");
-    storage.push_back("--strip-all");
+    if (!request.options.debug) storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");
     for (const auto &object : request.options.linkObjects) storage.emplace_back(object.c_str());
     storage.push_back("-L" + runtimeLibrary);

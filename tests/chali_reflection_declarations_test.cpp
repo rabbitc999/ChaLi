@@ -2,7 +2,7 @@
  * @file chali_reflection_declarations_test.cpp
  * @brief 真实 CHALI 声明生成表的结构和往返单元测试。
  */
-#include "stackvm/stackvm.hpp"
+#include "ircode/stackvm.hpp"
 #include <cassert>
 namespace r = stackvm::reflection;
 /**

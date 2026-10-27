@@ -7,7 +7,7 @@
 > **这份是 chali 自带的副本**：源在 `source/ast`，chali 用这里的一份。
 > 两份是**独立维护**的 —— 改了一边不会自动同步。
 
-用 C++ 代码搭一棵 AST，再落成 **四元式**（喂给 `library/transfer` 或 `source/stackvm`）
+用 C++ 代码搭一棵 AST，再落成 **四元式**（喂给 `library/transfer` 或 `source/ircode`）
 与 **`.data`**（文本 + 二进制 + C 头）。只依赖 C++17 标准库。
 
 ## 覆盖的语法特性

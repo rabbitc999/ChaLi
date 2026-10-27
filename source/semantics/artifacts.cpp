@@ -1238,30 +1238,3 @@ void ResetState()
                               "__chali_val", "__chali_l", "__chali_r" })
         g_usedNames.insert(name);
 }
-
-/**
- * @brief 把 `--input` 的文本按空白切成一项一项（`input(变量)` 按顺序取）。
- * @param text 输入文本；空引用 / 空串表示没有输入。
- * @return 输入项列表。
- */
-Memory::Vector<Memory::String> SplitInput(const char *text)
-{
-    Memory::Vector<Memory::String> items;
-    if (text == nullptr) return items;
-    const Memory::String source(text);
-    std::size_t index = 0u;
-    while (index < source.size())
-    {
-        while ((index < source.size()) && ((source[index] == ' ') || (source[index] == '\t') || (source[index] == '\r') || (source[index] == '\n')))
-        {
-            ++index;
-        }
-        const std::size_t start = index;
-        while ((index < source.size()) && (source[index] != ' ') && (source[index] != '\t') && (source[index] != '\r') && (source[index] != '\n'))
-        {
-            ++index;
-        }
-        if (index > start) items.push_back(source.substr(start, index - start));
-    }
-    return items;
-}

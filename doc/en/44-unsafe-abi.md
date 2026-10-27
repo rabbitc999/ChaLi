@@ -103,6 +103,8 @@ The external LLVM path defaults to O3 and full LTO, eliminating unreachable LLVM
 
 On MinGW, the CAS 64 MiB zero-initialized backing pool occupies BSS instead of embedding the entire zero buffer in the file. Runtime pool capacity remains unchanged. File size and runtime memory use are separate measurements.
 
+The AOT data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_AOT_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
+
 ## Reproducing experiments
 
 ```text

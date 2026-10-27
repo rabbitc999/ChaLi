@@ -1095,7 +1095,7 @@ void M_SetProgram(int topList);
  * 降级 + 生成 + 执行（%main 调）。
  * @param moduleName 模块名（写进 .quad 头）。
  * @param outPrefix  产物前缀：生成 `<前缀>.quad` / `.data` / `.data.bin` / `.data.h` / `.layout`。
- * @param run        非 0 时再用 source/stackvm 组装执行一遍，把输出写到 stdout。
+ * @param run        非 0 时再用 source/ircode 组装执行一遍，把输出写到 stdout。
  * @param emitBinary 非 0 时把组装结果写成 `<前缀>.svmb`。
  * @param inputText  `input(变量);` 要读的输入项（空白分隔，按顺序取；空 = 没有输入）。
  * @return 0 成功；失败时 M_LastError() 给出原因。
@@ -1241,15 +1241,7 @@ void M_SetAbiPrepareOnly(bool enabled);
  * @param noCache 是否禁用缓存。
  */
 void M_SetAbiOptions(const Memory::String &cache, const Memory::String &bridge, const Memory::String &output, bool noCache);
-/**
- * @brief 打开 DAP 调试模式（`--dap`）。
- *
- * 打开后编译器在解释执行前把 VM 挂给 DAP 服务端：断点由 VS Code 下发，
- * 停下一次就等一条命令再继续；程序的标准输出改走 `output` 事件，
- * 以免冲垮 stdio 上的协议流。
- * @param enabled 是否启用 DAP 模式。
- */
-void M_SetDapEnabled(bool enabled);
+
 /**
  * @brief 设置本次编译的注解与反射开关；失败时重置为关闭。
  * @param enabled 是否请求开启。

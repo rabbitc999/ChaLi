@@ -12,7 +12,7 @@
 
 ChaLi 是一门静态类型、值语义优先、不带 GC 的通用编程语言，提供借用来源与控制流检查。它借用 C 的表达式与块语法，但类型、所有权与运行时行为由 ChaLi 自行定义，面向"同一份程序从桌面一直到嵌入式 Linux"的场景。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.chl` 源码降级为 StackVM 四元式，再组装为 VM 指令。程序可在内存中执行，也可以保存为 `.svmb` 字节码，交给共享 VM 在目标宿主上运行。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.chl` 源码降级为 StackVM 四元式，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -32,8 +32,8 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ## 编译过程
 
-条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，生成并优化四元式，再组装 VM 指令。
-`.svmb` 保存 VM 指令、预先降低的内部执行序列及必要元数据；四元式文本不进入字节码文件。
+条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，生成并优化四元式，再降低为 LLVM 原生代码。
+`.svmb` 格式已删除；四元式仍可单独导出用于后端分析。
 
 ![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、四元式优化与 VM 装配](doc/images/chali-compilation.png)
 
@@ -47,15 +47,7 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ## 运行过程
 
-源码执行和字节码执行最终进入同一套 VM：绑定符号与入口、按函数分配连续槽位后，
-进入独立整数寄存器核心，连续执行区域内的运算、复制、跳转、整数内存访问、下标检查与参数传递；
-内存访问复用现有校验服务，函数调用复用已返回的小帧，其他复杂操作继续使用运行时服务。
-调试、动态值或精确边界要求逐条执行时使用基础指令路径。
-
-![ChaLi 运行流程：VM 内部指令、精确执行回退](doc/images/chali-execution.png)
-
-配图由 [`tools/make_pipeline_diagrams.py`](tools/make_pipeline_diagrams.py) 生成，运行
-`python tools/make_pipeline_diagrams.py` 可重建中英文 PNG 和 SVG。
+`run` 编译并执行 checked AOT 机器码；`aot` 默认导出 unchecked 原生产物。编译器及内嵌生成资产移除 VM 执行器，保留共享内存、所有权、宿主回调与线程服务。`.svmb` 导出已删除，新项目使用 AOT 原生产物。
 
 ## 文档
 
@@ -145,7 +137,6 @@ make reflection     # 保留的显式启用入口
 
 ```sh
 ./chali run  example/samples/hello.chl        # 解释运行（默认）
-./chali svmb example/samples/hello.chl --out ../tmp/hello   # 生成 .svmb
 ./chali new  hello-chali                       # 新建应用工程
 ```
 
@@ -153,15 +144,7 @@ make reflection     # 保留的显式启用入口
 
 ### 调试
 
-编译器本体就是调试适配器：
-
-```sh
-./chali --dap example/samples/hello.chl     # 按 DAP 在 stdio 上收发，供编辑器接入
-```
-
-VS Code 装了 `vscode/` 下的插件后，在「运行与调试」里选 **ChaLi** 即可直接在 `.chl` 上打断点
-（插件拉起 `chali --dap <文件>`）。支持断点、继续、步进 / 步过 / 步出与调用栈；程序输出走
-`output` 事件显示在调试控制台。变量面板暂为空（VM 还没有读栈帧槽的接口）。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。调试构建保留符号并使用 O0；普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/46-native-debugging.md)。
 
 ### 报错
 
@@ -209,7 +192,7 @@ void main() {
 
 ```toml
 [chali]
-run = "interpret"
+run = "run"
 opt_level = 2
 main = "src/main.chl"
 ```
@@ -236,7 +219,7 @@ chali/
 │   ├── lsp/ dap/                   编辑器集成
 │   └── generator/            生成独立编译器工程的入口
 ├── library/                        可复用 C++ 库与目标宿主
-│   ├── stackvm/                    VM 核心（桌面与目标宿主共用）
+│   ├── ircode/                     四元式与 AOT 共享运行时
 │   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
 ├── doc/                            面向使用者的文档（00–20、99）

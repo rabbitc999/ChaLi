@@ -2679,9 +2679,6 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
         const int count = static_cast<int>(FixedArrayElementCount(type->dims));
         const int stride = StructStride(type->elem);
         const int slots = (stride > 0) ? count * (stride / 8) : count;
-        const int unit = IsByteStorageType(type->elem) ? 1 : 8;
-        Memory::Vector<ast::NodePtr> items;
-        for (int index = 0; index < slots; ++index) items.push_back(zeroOf(type->elem));
         if (localStorage && !g_ownedScopes.empty() && !IsGlobalName(emitted))
         {
             g_usesNewArray = true;
@@ -2689,13 +2686,13 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
                 Node::assign(emitted, Node::call("__chali_new_array", { "__chali_len", "__chali_stride" },
                                                  { Node::i(count), Node::i(ElementBytes(type->elem)) }))
             };
-            for (int index = 0; index < slots; ++index)
-                out.push_back(Node::storeAt(Node::offset(Node::var(emitted), Node::i(index), unit),
-                                            items[index], unit == 1 ? LowerType(type->elem, emitted) : ast::Type::i64()));
+            // __chali_new_array 已清零完整载荷；保留元素构造，避免再次展开逐槽零写入。
             if (initContainers) InitializeArrayValues(Node::var(emitted), type->elem, Node::i(count), &out);
             MarkOwnedArray(emitted, type);
             return Node::block(std::move(out));
         }
+        Memory::Vector<ast::NodePtr> items;
+        for (int index = 0; index < slots; ++index) items.push_back(zeroOf(type->elem));
         Memory::Vector<ast::NodePtr> out{ Node::assign(emitted, Node::arrayNew(LowerType(type, emitted), items)) };
         if (initContainers) InitializeArrayValues(Node::var(emitted), type->elem, Node::i(count), &out);
         return Node::block(std::move(out));

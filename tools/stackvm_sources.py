@@ -2,18 +2,18 @@
 from pathlib import Path
 import argparse
 from embedded_asset_cache import AssetCache
-DIRECTORY = Path(__file__).resolve().parents[1] / "source/stackvm"
+DIRECTORY = Path(__file__).resolve().parents[1] / "source/ircode"
 
-def source_names():
+def source_names(aot_only=False):
     """读取并验证核心源文件清单。"""
-    names = (DIRECTORY / "core_sources.txt").read_text(encoding="utf-8").splitlines()
+    names = (DIRECTORY / ("aot_sources.txt" if aot_only else "core_sources.txt")).read_text(encoding="utf-8").splitlines()
     if len(names) != len(set(names)) or any(Path(n).name != n or not n.endswith(".cpp") or not (DIRECTORY / n).is_file() for n in names):
         raise ValueError("StackVM 源文件清单包含重复、无效路径或缺失文件")
     return names
 
 def asset_names():
     """返回导出工程所需的实现、接口和清单。"""
-    return sorted(set(source_names() + [p.name for p in DIRECTORY.glob("*.hpp")] + ["core_assets.hpp", "core_sources.txt"]))
+    return sorted(set(source_names(True) + [p.name for p in DIRECTORY.glob("*.hpp") if p.name != "register_core.hpp"] + ["core_assets.hpp", "aot_sources.txt"]))
 
 def render_assets():
     """从统一清单生成 C++ 资产名称表。"""
@@ -26,11 +26,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build-assets", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--aot-only", action="store_true")
     args = parser.parse_args()
     path = DIRECTORY / "core_assets.hpp"
     if args.build_assets:
         cache = AssetCache('stackvm-list', {'generator': Path(__file__),
-            'sources': DIRECTORY / 'core_sources.txt', 'names': '\n'.join(asset_names()).encode('utf-8')})
+            'sources': DIRECTORY / 'aot_sources.txt', 'names': '\n'.join(asset_names()).encode('utf-8')})
         if cache.valid([path]):
             print('StackVM 资产清单 SHA256 相同，跳过生成。')
             return
@@ -44,7 +45,7 @@ def main():
             path.write_text(expected, encoding="utf-8")
         cache.save([path])
     else:
-        print(" ".join(source_names()))
+        print(" ".join(source_names(args.aot_only)))
 
 if __name__ == "__main__":
     main()

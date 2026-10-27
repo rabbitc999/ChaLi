@@ -27,7 +27,7 @@ def main():
         command = ['g++', '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
                    '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
                    '-I'+str(ROOT), '-I'+str(ROOT/'source'), '-I'+str(ROOT/'library'), '-I'+str(ROOT/'source/preprocess'),
-                   '-I'+str(ROOT/'source/stackvm'), '-I'+str(ROOT/'source/ast'),
+                   '-I'+str(ROOT/'source/ircode'), '-I'+str(ROOT/'source/ast'),
                    str(ROOT/'tests/backend_ownership_test.cpp'), '-Wl,--gc-sections',
                    '-Wl,--start-group', *map(str,libraries), '-Wl,--end-group',
                    *(['-lwinhttp'] if os.name == 'nt' else []), '-o', str(unit)]

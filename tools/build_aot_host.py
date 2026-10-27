@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    dependencies = [ROOT / 'build/chali-stackvm-core/libstackvm.a',
+    dependencies = [ROOT / 'build/chali-ircode-aot-core/libstackvm.a',
                     ROOT / 'build/chali-host-records/librecords.a',
                     *[path.resolve() for path in args.object], ROOT / 'build/chali-frontend/lztext.o']
     names = ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
@@ -44,7 +44,7 @@ def main():
         archive = Path(directory) / "libchali_aot_host.a"
         # MRI 命令使用规范路径；隔离目录来自项目 tmp，路径不经 shell 解释。
         lines = ["CREATE " + archive.as_posix(),
-                 "ADDLIB " + (ROOT / "build/chali-stackvm-core/libstackvm.a").as_posix(),
+                 "ADDLIB " + (ROOT / "build/chali-ircode-aot-core/libstackvm.a").as_posix(),
                  "ADDLIB " + (ROOT / "build/chali-host-records/librecords.a").as_posix(),
                  *["ADDMOD " + path.resolve().as_posix() for path in args.object],
                  "ADDMOD " + (ROOT / "build/chali-frontend/lztext.o").as_posix(), "SAVE", "END"]
