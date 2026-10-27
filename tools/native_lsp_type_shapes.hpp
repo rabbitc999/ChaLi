@@ -68,6 +68,12 @@ LspFunctionShape lspFunctionShape(const std::string &text)
             if (open >= tokens.size() || tokens[open].word != "(") return {};
             const auto end = groupEnd(tokens, open, "(", ")");
             if (!end || end > tokens.size() || tokens[end - 1].word != ")") return {};
+            // 无括号的函数返回类型可以继续接外层 fn；最后一层才描述当前可调用值。
+            if (end < tokens.size() && tokens[end].word == "fn")
+            {
+                i = end - 1;
+                continue;
+            }
             LspFunctionShape shape;
             shape.valid = true;
             shape.generics = generics;

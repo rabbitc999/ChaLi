@@ -19,6 +19,11 @@ MODULES = {
     "generics": ["chali_generic_monomorphization", "chali_language_move", "chali_tuple_returns"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
+    "lsp": ["chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
+            "chali_lsp_overloads", "chali_lsp_naming_scopes", "chali_lsp_symbols",
+            "chali_lsp_lambda_capture", "chali_lsp_semantic_features",
+            "chali_lsp_macro_completion", "chali_lsp_macro_highlighting",
+            "chali_native_lsp_parity", "chali_lsp_performance", "chali_lsp_highlight_speed"],
 }
 
 
@@ -52,7 +57,13 @@ def main():
             for script in MODULES[module]:
                 commands[script] = [sys.executable, str(ROOT / "tests" / (script + ".py")),
                                     "--chali", str(args.chali.resolve())]
-    environment = dict(DEMO=args.chali.resolve().as_posix())
+                if module == "lsp" and script == "chali_lsp_closure_types":
+                    commands[script].append("--lsp-only")
+            if module == "lsp":
+                for script in ("lspCancellation", "semanticProviders", "macroHighlighting"):
+                    commands[script] = ["node", str(ROOT / "vscode" / "test" / (script + ".js"))]
+    environment = dict(DEMO=args.chali.resolve().as_posix(), CHALI_COMPILER=str(args.chali.resolve()),
+                       CHALI_TEST_COMPILER=str(args.chali.resolve()))
     tasks = [dict(title=name, name=name, command=command, recheck=False)
              for name, command in commands.items()]
     results = run_tasks(tasks, output, jobs, ROOT, environment, dict(seed=args.seed))

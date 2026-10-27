@@ -12,7 +12,9 @@ def main():
     """悬停同时查询 let 和绑定，并验证连续调用继续保留返回类型。"""
     parser = argparse.ArgumentParser()
     parser.add_argument('--chali', type=Path, default=compiler_path())
-    compiler = parser.parse_args().chali.resolve()
+    parser.add_argument('--lsp-only', action='store_true', help='仅检查 LSP 协议，跳过程序执行')
+    args = parser.parse_args()
+    compiler = args.chali.resolve()
     cases = [
         ('fn(int64 x) { x + 1 }', 'int64 fn(int64)'),
         ('fn(bool b) { if (b) { return increment; } return increment; }', '(int64 fn(int64)) fn(bool)'),
@@ -53,7 +55,7 @@ def main():
             'int32 fn(int32) value = fn(int32 x) { x + 1 }; assert(value(2) == 3);',
             'bool fn(int32) value = fn(int32 x) { x + 1 < 3 }; assert(value(1));',
         ]
-        for number, body in enumerate(programs):
+        for number, body in enumerate([] if args.lsp_only else programs):
             path = Path(folder) / f'runtime_{number}.chl'
             path.write_text('int64 increment(int64 x) { return x + 1; }\nvoid main() { ' + body + ' return; }', encoding='utf-8')
             result = subprocess.run([str(compiler), 'run', str(path), '--out', str(Path(folder) / f'out_{number}')], capture_output=True, text=True, encoding='utf-8', env=dict(os.environ, CHALI_LANG='zh'))
@@ -83,6 +85,8 @@ def main():
                 ('fn() { fn() { increment } }', 'closure()()(3)', 'int64'),
                 ('fn<T>(T x) { x }', 'closure(3)', 'int64'),
                 ('fn<T>(T x) { x }', 'closure<int32>(3)', 'int32'),
+                ('int64 fn(int64) fn(int64 fn(int64) a, int64 fn(int64) b) { a }', 'closure(increment, increment)', 'int64 fn(int64)'),
+                ('int64 fn(int64) fn(int64 fn(int64) a, int64 fn(int64) b) { a }', 'closure(increment, increment)(3)', 'int64'),
             ]
             for number, (initializer, call, expected) in enumerate(calls):
                 text = 'int64 increment(int64 x) { return x + 1; }\nvoid main() { let closure = ' + initializer + '; let result = ' + call + '; result; return; }'
@@ -110,7 +114,7 @@ def main():
             assert signature and signature['signatures'][0]['label'] == '函数 [1/1] int32 fn(int32)', signature
         finally:
             server.close()
-    print(f'LSP let 闭包、泛型闭包、多层闭包和具名函数返回：{len(cases) + len(calls) + 3} 组提示、{len(programs)} 组 VM 执行通过。')
+    print(f'LSP let 闭包、泛型闭包、多层闭包和具名函数返回：{len(cases) + len(calls) + 3} 组提示通过；程序执行：' + ('按要求跳过。' if args.lsp_only else f'{len(programs)} 组通过。'))
 
 
 if __name__ == '__main__':

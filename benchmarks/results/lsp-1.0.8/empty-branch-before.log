@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_lsp_risks.py", line 83, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_lsp_risks.py", line 47, in main
+    assert hover and '尚不能唯一确定类型' in hover['contents']['value'], (body, hover)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('let target = if (true) { 1 } else {};', {'contents': {'kind': 'markdown', 'value': '```chali\nint64 target\n```\n\n完整类型：`int64`\n\n推断来源：变量初始化表达式。'}, 'range': {'start': {'line': 0, 'character': 52}, 'end': {'line': 0, 'character': 58}}})

@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_lsp_semantic_features.py", line 267, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_lsp_semantic_features.py", line 17, in main
+    server = Transport(COMPILER, root)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Desktop\ChaLi\tests\native_lsp_transport.py", line 15, in __init__
+    self.child = subprocess.Popen([str(compiler), 'lsp'], cwd=cwd, stdin=subprocess.PIPE,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Python312\Lib\subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "G:\Python312\Lib\subprocess.py", line 1538, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。

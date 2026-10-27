@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_lsp_risks.py", line 109, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_lsp_risks.py", line 95, in main
+    assert hover and expected + ' x' in hover['contents']['value'], (text, hover)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('void main() {\n    int64 fn(int64) fib;\n    fib = fn(x) { if (x >= 1) { fib(x - 1) * x } else { 1 } };\n    println("fib(3)={}", fib(3));\n}', {'contents': {'kind': 'markdown', 'value': '```chali\nlet x\n```\n\n尚不能唯一确定类型；以完整编译检查结果为准。\n\n推断来源：外层调用的参数类型。'}, 'range': {'start': {'line': 2, 'character': 13}, 'end': {'line': 2, 'character': 14}}})

@@ -84,4 +84,104 @@ void main()
 
 It prints `104`. A named closure written this way takes no capture keyword — `const`, `mut`, `copy` and `move` right after `fn` always mean an anonymous lambda capture — so it always borrows its environment read-only. Parameter names inside a function type are documentation only and never enter type identity. The arrow return type of an anonymous lambda itself was removed in 0.12.0 and is still rejected: `fn (int64 x) -> int64 { ... }` fails, and `int64 fn(int64 x) { ... }` is the annotated form. These shapes are real grammar productions shared by top-level functions, statement-level named closures and function types — not a text rewrite.
 
+## Recursive closures and assignment context
+
+Declaring a function variable before assigning a closure that refers to the same binding is a supported feature, not a bug. In this factorial example, the assignment target supplies the complete function signature, so every occurrence of the omitted parameter `x` has type `int64`. The closure refers to the existing `fac` binding and is called after assignment.
+
+```chali
+void main()
+{
+    int64 fn(int64) fac;
+    fac = fn(x)
+    {
+        if (x >= 1)
+        {
+            fac(x - 1) * x
+        }
+        else
+        {
+            1
+        }
+    };
+    println("fac(3)={}", fac(3));
+}
+```
+
+```text
+fac(3)=6
+```
+
+## Fibonacci with the same feature
+
+The Fibonacci recurrence uses the same declaration and assignment pattern. Its base cases are `fib(0)=0` and `fib(1)=1`; consequently `fib(3)=2`. LSP provides parameter hover, completion details and inlay hints from the assignment target.
+
+```chali
+void main()
+{
+    int64 fn(int64) fib;
+    fib = fn(x)
+    {
+        if (x == 0)
+        {
+            0
+        }
+        elif (x == 1)
+        {
+            1
+        }
+        else
+        {
+            fib(x - 1) + fib(x - 2)
+        }
+    };
+    println("fib(3)={}", fib(3));
+}
+```
+
+```text
+fib(3)=2
+```
+
+## Observe deferred execution with a counter
+
+A closure stores its body and environment when created; its body executes when invoked. A counter makes this deferred execution, the sense of lazy evaluation used here, observable. `fn mut[counter](x)` explicitly borrows only `counter` mutably, while `fib` retains its default read-only capture. It computes a local result, increments the counter and returns that result, counting completed calls. The parameter `x` still receives `int64` from the target signature.
+
+```chali
+void main()
+{
+    int64 counter = 0;
+    int64 fn(int64) fib;
+    fib = fn mut[counter](x)
+    {
+        int64 result = if (x == 0)
+        {
+            0
+        }
+        elif (x == 1)
+        {
+            1
+        }
+        else
+        {
+            fib(x - 1) + fib(x - 2)
+        };
+        counter += 1;
+        return result;
+    };
+    println("counter={}", counter);
+    println("fib(3)={}", fib(3));
+    println("counter={}", counter);
+}
+```
+
+```text
+counter=0
+fib(3)=2
+counter=5
+```
+
+The counter is zero immediately after assignment. Evaluating `fib(3)` enters the body for `3`, `2`, `1`, `0` and `1`, five times in total. Further calls continue to increment it: results are not automatically memoized. Arguments still follow ordinary call evaluation rules; the deferred part is execution of the closure body.
+
+For an explicit higher-order closure, `int64 fn(int64) fn(int64 fn(int64) a, int64 fn(int64) b) { a }` has the complete type `(int64 fn(int64)) fn(int64 fn(int64), int64 fn(int64))`. LSP retains this outer signature and unwraps one result function at each call.
+
 Exercise: reverse the composition order and predict the result before running. Then explain which captures must own their data if the composed function is stored for later use. Next: [error handling](16-errors.md).

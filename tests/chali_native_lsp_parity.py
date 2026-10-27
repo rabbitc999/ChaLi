@@ -1,15 +1,13 @@
 """把既有 LSP 能力测试逐项转发给原生服务，防止迁移时损失编辑功能。"""
 from pathlib import Path
-import atexit
-import json
-import os
-import subprocess
 import sys
+from compiler_path import compiler_path
+from project_temp import tempfile
+from native_lsp_transport import Transport, position
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from chali_lsp import ApiIndex
-import chali_lsp_api as suite
 
 
 class NativeServer:
@@ -18,50 +16,54 @@ class NativeServer:
         self.documents={}
         self.api_index=ApiIndex()
         self.sent={}
-        self.serial=0
-        self.child=subprocess.Popen([str(compiler),'lsp'],stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-            env=dict(os.environ,CHALI_PYTHON='__missing_python__'))
-        atexit.register(self.close)
+        self.transport=Transport(compiler)
 
     def send(self,message):
-        data=json.dumps(dict(jsonrpc='2.0',**message),ensure_ascii=False).encode('utf-8')
-        self.child.stdin.write(f'Content-Length: {len(data)}\r\n\r\n'.encode()+data)
-        self.child.stdin.flush()
+        self.transport.send(message)
 
     def query(self,method,params):
         for uri,document in self.documents.items():
-            if self.sent.get(uri)==document['text']:continue
-            version=document.get('version',1)
+            if uri in self.sent and self.sent[uri][0]==document['text']:continue
+            version=self.sent.get(uri, ('', 0))[1] + 1 if uri in self.sent else 1
             if uri not in self.sent:
                 self.send(dict(method='textDocument/didOpen',params={'textDocument':dict(uri=uri,text=document['text'],version=version)}))
             else:
                 self.send(dict(method='textDocument/didChange',params={'textDocument':dict(uri=uri,version=version),'contentChanges':[{'text':document['text']}]}))
-            self.sent[uri]=document['text']
-        self.serial+=1
-        self.send(dict(id=self.serial,method=method,params=params))
-        while True:
-            headers={}
-            while True:
-                line=self.child.stdout.readline()
-                assert line, self.child.stderr.read().decode('utf-8',errors='replace')
-                if line in (b'\r\n',b'\n'):break
-                key,value=line.decode('ascii').split(':',1);headers[key.lower()]=value.strip()
-            size=int(headers['content-length'])
-            message=json.loads(self.child.stdout.read(size))
-            if message.get('id')==self.serial:
-                assert 'error' not in message,message
-                return message['result']
+            self.sent[uri]=(document['text'], version)
+        return self.transport.query(method, params)
 
     def close(self):
-        if self.child.poll() is None:
-            self.query('shutdown',{})
-            self.send(dict(method='exit'))
-            self.child.wait(timeout=10)
-        self.child.stdin.close();self.child.stdout.close();self.child.stderr.close()
+        self.transport.close()
+
+
+def main():
+    """比较参考声明索引与原生悬停，并检查未保存模块中的泛型字段。"""
+    with tempfile.TemporaryDirectory(prefix='chali-native-parity-') as folder:
+        root = Path(folder)
+        server = NativeServer(compiler_path())
+        try:
+            server.query('initialize', dict(rootUri=root.as_uri()))
+            uri = (root / 'main.chl').as_uri()
+            text = 'struct Box<T> { T item; }; int64 read(int64 x) { return x; } void main() { Box<int64> box; let result = box.item; result; }'
+            server.documents[uri] = dict(text=text)
+            index = ApiIndex()
+            records = index.scan(uri, text)
+            names = {item['name'] for item in [*records, *index.symbols[uri]]}
+            symbols = server.query('textDocument/documentSymbol', dict(textDocument=dict(uri=uri)))
+            assert {'Box', 'read', 'main'} <= names & {item['name'] for item in symbols}
+            hover = server.query('textDocument/hover', dict(textDocument=dict(uri=uri), position=position(text, text.rindex('result') + 2)))
+            assert hover and 'int64 result' in hover['contents']['value'], hover
+            dep = (root / 'dep.chl').as_uri()
+            server.documents[dep] = dict(text='module dep; struct Entry { bool flag; };')
+            text = 'import dep; void main() { dep::Entry entry; entry.'
+            server.documents[uri] = dict(text=text)
+            completion = server.query('textDocument/completion', dict(textDocument=dict(uri=uri), position=position(text, len(text))))
+            items = completion.get('items', []) if isinstance(completion, dict) else completion
+            assert 'flag' in {item['label'] for item in items}, items
+        finally:
+            server.close()
+    print('原生 LSP 声明索引对照、泛型字段与未保存依赖通过。')
 
 
 if __name__=='__main__':
-    suite.LanguageServer=NativeServer
-    suite.main()
-    print('既有标准库、泛型、作用域、工程和未保存模块用例已在原生 LSP 通过。')
+    main()

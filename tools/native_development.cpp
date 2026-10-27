@@ -1240,6 +1240,7 @@ std::vector<Binding> scanBindings(const std::string &s,
                 if (body < t.size() && t[body].word == "{")
                 {
                     b.scope = scopes[body];
+                    b.headerEnd = t[region.second - 1].b;
                     b.limit = lspBlockLimit(t, body);
                 }
                 else if (region.second)
@@ -1335,8 +1336,8 @@ std::vector<int> scopeAt(const std::string &s, size_t cursor)
  */
 bool visible(const Binding &b, const std::vector<int> &scope, size_t cursor)
 {
-    const bool loopHeader = b.headerEnd && b.offset <= cursor && cursor < b.headerEnd && b.scope.size() <= scope.size() + 1 && std::equal(b.scope.begin(), b.scope.end() - 1, scope.begin());
-    return cursor < b.limit && (b.offset <= cursor || b.scope.size() == 1) && (loopHeader || (b.scope.size() <= scope.size() && std::equal(b.scope.begin(), b.scope.end(), scope.begin())));
+    const bool inHeader = b.headerEnd && b.offset <= cursor && cursor < b.headerEnd && b.scope.size() <= scope.size() + 1 && std::equal(b.scope.begin(), b.scope.end() - 1, scope.begin());
+    return cursor < b.limit && (b.offset <= cursor || b.scope.size() == 1) && (inHeader || (b.scope.size() <= scope.size() && std::equal(b.scope.begin(), b.scope.end(), scope.begin())));
 }
 /**
  * @brief 读取光标前的限定名或后缀表达式。
@@ -1669,11 +1670,24 @@ public:
         }
         if (end <= 1) return "";
         const auto begin = initializer[1].a;
-        return infer(source.substr(binding.end + begin, initializer[end - 1].b - begin), binding.offset, depth + 1);
+        return infer(source.substr(binding.end + begin, initializer[end - 1].b - begin), binding.end + begin, depth + 1);
     }
 
     /**
-     * @brief 为省略类型的匿名函数查询初始化目标或外层调用的参数类型。
+     * @brief 取得绑定在悬停与补全中共用的展示类型。
+     * @param binding 已解析身份的声明。
+     * @param cursor 当前查询位置。
+     * @return 自动类型与函数使用推导结果；无法确定时保留声明类型。
+     */
+    std::string displayType(const Binding &binding, size_t cursor) const
+    {
+        if (base(binding.type) != "let" && binding.kind != "function") return binding.type;
+        const auto inferred = bindingType(binding, cursor);
+        return inferred.empty() ? binding.type : inferred;
+    }
+
+    /**
+     * @brief 为省略类型的匿名函数查询初始化、赋值目标或外层调用的参数类型。
      * @param at fn 关键字的源码偏移。
      * @param depth 递归预算。
      * @return 唯一的预期函数类型，歧义时返回空串。
@@ -1684,6 +1698,12 @@ public:
         for (const auto &binding : vars)
             if (binding.end < at && base(binding.type) != "let" && trim(source.substr(binding.end, at - binding.end)) == "=") return binding.type;
         auto tokens = valueTokens(source.substr(0, at));
+        if (!tokens.empty() && tokens.back().word == "=")
+        {
+            const auto target = expression(source, tokens.back().a);
+            const auto expected = infer(target, tokens.back().a, depth + 1);
+            if (lspFunctionShape(expected).valid) return expected;
+        }
         struct Frame
         {
             size_t open;
@@ -1893,8 +1913,8 @@ public:
         if (shape.valid)
         {
             if (!shape.result.empty() && shape.result != "let") return lspFunctionText(shape);
+            // 初始化式的精确起点由绑定传入；不能退回到其他作用域的同文表达式。
             auto at = source.find(value, cursor);
-            if (at == source.npos) at = source.find(value);
             const auto expected = at == source.npos ? "" : contextualType(at, depth + 1);
             const auto context = lspFunctionShape(expected);
             if (context.valid && !context.result.empty() && context.result != "let") return expected;
@@ -1968,12 +1988,15 @@ public:
                     auto end = groupEnd(t, i, "{", "}");
                     if (end <= i + 1) break;
                     bool complex = false;
+                    bool hasResult = false;
                     for (size_t j = i + 1; j + 1 < end; ++j)
                         if (t[j].word == ";") complex = true;
                     if (!complex && end > i + 2)
                     {
                         auto result = infer(value.substr(t[i + 1].a, t[end - 2].b - t[i + 1].a), origin + t[i + 1].a, depth + 1);
-                        if (!result.empty()) results.insert(result);
+                        if (result.empty()) return "";
+                        results.insert(result);
+                        hasResult = true;
                     }
                     else
                         for (size_t j = i + 1; j + 1 < end; ++j)
@@ -1984,9 +2007,12 @@ public:
                                 if (stop > j + 1)
                                 {
                                     auto result = infer(value.substr(t[j + 1].a, t[stop - 1].b - t[j + 1].a), origin + t[j].a, depth + 1);
-                                    if (!result.empty()) results.insert(result);
+                                    if (result.empty()) return "";
+                                    results.insert(result);
+                                    hasResult = true;
                                 }
                             }
+                    if (!hasResult) return "";
                     i = end - 1;
                 }
             return results.size() == 1 ? *results.begin() : "";
@@ -3793,18 +3819,37 @@ class Server
                 functions.insert(r.name);
         A data;
         int lastLine = 0, lastCol = 0;
+        // 原始 token 按字节位置递增；一次推进 UTF-16 游标，避免长行反复扫描行首。
+        size_t positionByte = 0;
+        int positionLine = 0, positionColumn = 0;
+        const auto advancePosition = [&](size_t target) {
+            while (positionByte < target)
+            {
+                if (s[positionByte] == '\n')
+                {
+                    ++positionLine;
+                    positionColumn = 0;
+                    ++positionByte;
+                }
+                else
+                {
+                    const auto width = charWidth(s, positionByte);
+                    if (positionByte + width > target) break;
+                    positionColumn += width == 4 ? 2 : 1;
+                    positionByte += width;
+                }
+            }
+        };
         const auto macroTokens = lspMacroTokens(s, t);
         size_t coveredUntil = 0;
+        size_t index = 0;
         for (auto &token : raw)
         {
             if (token.a < coveredUntil) continue;
             int kind = 11, mod = 0;
             size_t tokenEnd = token.b;
             auto word = token.word;
-            auto at =
-                std::lower_bound(t.begin(), t.end(), token.a,
-                                 [](const Token &v, size_t p) { return v.a < p; });
-            size_t index = size_t(at - t.begin());
+            while (index < t.size() && t[index].a < token.a) ++index;
             auto prev = index ? t[index - 1].word : "",
                  next = index + 1 < t.size() ? t[index + 1].word : "";
             const auto macro = macroTokens.find(token.a);
@@ -3863,10 +3908,10 @@ class Server
                     --stop;
                 if (stop > start)
                 {
-                    auto p = position(s, start), e = position(s, stop);
-                    int line = integer(get(p, "line")),
-                        col = integer(get(p, "character")),
-                        length = integer(get(e, "character")) - col;
+                    advancePosition(start);
+                    const int line = positionLine, col = positionColumn;
+                    advancePosition(stop);
+                    const int length = positionColumn - col;
                     data.emplace_back(line - lastLine);
                     data.emplace_back(line == lastLine ? col - lastCol : col);
                     data.emplace_back(length);
@@ -3977,6 +4022,8 @@ class Server
         LspIndexScope index(*unit);
         size_t cursor = offsetAt(s, get(params, "position"));
         auto records = collect(u, s);
+        if (method == "textDocument/semanticTokens/full")
+            return semantic(s, records);
         auto vars = bindings(s, types);
         CompilerTypeScope compilerTypes;
         if (s.find('$') != s.npos && (method == "textDocument/hover" || method == "textDocument/completion" || method == "textDocument/signatureHelp"))
@@ -4019,8 +4066,6 @@ class Server
         }
         if (method == "chali/expandMacro")
             return preview(u, s);
-        if (method == "textDocument/semanticTokens/full")
-            return semantic(s, records);
         if (method == "textDocument/formatting")
         {
             auto output = format(s);
@@ -4206,8 +4251,7 @@ class Server
                 for (auto &entry : names)
                     if (entry.second.kind != "function")
                     {
-                        auto type = resolver.infer(entry.first, cursor);
-                        if (type.empty()) type = entry.second.type;
+                        const auto type = resolver.displayType(entry.second, cursor);
                         out.push_back(object({ { "label", entry.first }, { "kind", 6 }, { "detail", type + " " + entry.first } }));
                     }
                 for (auto &word : keywords)
@@ -4470,17 +4514,12 @@ class Server
             }
             if (content.empty() && binding)
             {
-                auto type = binding->type;
-                if (starts(type, "let") || binding->kind == "function")
-                {
-                    auto inferred = ReceiverTypes(records, s, types).bindingType(*binding, std::max(cursor, binding->end));
-                    if (!inferred.empty()) type = inferred;
-                }
+                const auto type = ReceiverTypes(records, s, types).displayType(*binding, std::max(cursor, binding->end));
                 content = "```chali\n" + type + " " + binding->name + "\n```";
                 if (starts(binding->type, "let"))
                 {
                     content += "\n\n" + lspTypeDescription(type);
-                    content += binding->context ? "\n\n推断来源：外层调用的参数类型。" : !binding->iterable.empty() ? "\n\n推断来源：遍历对象的元素类型。" :
+                    content += binding->context ? "\n\n推断来源：函数初始化、赋值或调用上下文的参数类型。" : !binding->iterable.empty() ? "\n\n推断来源：遍历对象的元素类型。" :
                                                                                                                       "\n\n推断来源：变量初始化表达式。";
                 }
             }

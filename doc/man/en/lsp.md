@@ -10,6 +10,20 @@
 
 Closures without an explicit result type infer it from their tail expression and `return` expressions. Generic closures retain type parameters and instantiate them at calls. When a closure returns another closure or a named function, hints preserve the parameters and result at every `fn` level; successive calls unwrap one level at a time. Struct members initialized with `let` closures share this inference. Integer arithmetic follows the compiler's literal range adaptation, width and unsigned rules; comparisons respect operator precedence. Ambiguous results remain unknown rather than guessing a concrete type.
 
+Explicit higher-order closures retain their outer signature. For example, `let f = int64 fn(int64) fn(int64 fn(int64) a, int64 fn(int64) b) { a };` displays as `(int64 fn(int64)) fn(int64 fn(int64), int64 fn(int64))`. Calling `f(a, b)` retains the returned function signature; another call yields `int64`. Undefined type spellings remain as written and are reported by compiler diagnostics rather than silently corrected.
+
+Declaring a function variable before assigning a closure that refers to that same binding is a supported recursive closure feature, not a bug. The assignment target supplies the omitted parameter types. In the following example, `x` is `int64` both in the parameter list and the body; LSP provides hover, completion details and an inlay type hint. Calls occur after assignment:
+
+```chali
+void main() {
+    int64 fn(int64) fac;
+    fac = fn(x) { if (x >= 1) { fac(x - 1) * x } else { 1 } };
+    println("fac(3)={}", fac(3));
+}
+```
+
+This body computes factorial and prints `fac(3)=6`. Assignment targets respect lexical shadowing and also support function-typed struct fields. [Chapter 15](../../book/en/15-functions-closures.md) also includes Fibonacci and call counters showing that closure bodies execute when invoked.
+
 Completion, hover, definitions and refactoring share binding scans and type queries. Original document URIs and declaration offsets distinguish shadowed names. Queries cover `for(let item in values)` element types, generic fields and method results, inference of direct function type parameters, explicit generic arguments, nested `fn` results and contextual anonymous function parameters. Uncertain types do not produce inlay hints; compiler diagnostics remain authoritative.
 
 `let` hover shows the complete inferred type on either the variable or the `let` keyword, including generic arguments and nested function signatures. Function types additionally describe parameters and return types. Unknown inference is reported explicitly. `textDocument/inlayHint` displays inferred types for `let` bindings and contextual parameters; VS Code users can disable `chali.inlayHints.enabled` or use the editor's inlay hint settings.
@@ -47,6 +61,12 @@ Memory indices use estimated 64 MiB and 256 entry eviction thresholds; disk sour
 Binding scans have a separate limit of sixteen entries and sixteen MiB in total; individual entries above one MiB are not cached.
 
 ## Verification
+
+Run `python tools/run_module_gates.py lsp --chali <compiler-path>` for the LSP-only gates, covering native protocol requests, types and scopes, macros, caches and performance, plus client cancellation, providers and highlighting. Closure tests use `--lsp-only` to skip program execution; this module does not run VM or AOT application regressions. The selected compiler is passed to all protocol tests through environment variables.
+
+[Closure risk tests](../../../tests/chali_lsp_risks.py) compare hover on `let` and its binding with completion details, covering shadowing, identical closure text, local inference, unknown branches and signatures after consecutive edits. An unknown branch must not be discarded in favor of a concrete type from another branch. [Highlight performance tests](../../../tests/chali_lsp_highlight_speed.py) verify token encoding, UTF-16 positions, repeated requests and invalidation after edits for multiline and long-line documents, and report request timings.
+
+Semantic highlighting advances lexical positions and UTF-16 columns in source order, avoiding repeated scans from the start of a long line. Chinese text, non-BMP characters and multiline comments retain protocol positions. Highlight requests perform only the required binding scan instead of scanning twice with different type sets.
 
 [tests/chali_lsp_performance.py](../../../tests/chali_lsp_performance.py) covers concurrent hints/diagnostics, UTF-16 edits, unsaved dependencies and close rollback, report reuse, restart recovery, corrupted cache fallback, age cleanup, and quota cleanup. [Capture tests](../../../tests/chali_lsp_lambda_capture.py) verify hover and diagnostic ranges. [Client tests](../../../vscode/test/lspCancellation.js) cover out of order responses and cancellation listener disposal.
 
