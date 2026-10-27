@@ -3,58 +3,37 @@
   "distribution": "llvm-mingw 20261020 ucrt x86_64",
   "upstream": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
   "upstream_sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
-  "archive_sha256": "5a988a6f875bdda342239ce033c47b94c33c5c2e520245209fe9a493d9cfcc67",
-  "archive_bytes": 76120409,
-  "archive_parts": [
-    {
-      "file": "packages/windows-x86_64.zip.001",
-      "bytes": 8388608,
-      "sha256": "cf218c3956b34512902b5e3c2874cb220565bfbb93a71d4ebff2fe74cc318121"
+  "platforms": {
+    "windows-x64": {
+      "version": "23.1.4",
+      "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+      "sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+      "format": "zip",
+      "distribution": "llvm-mingw 20261020 ucrt x86_64"
     },
-    {
-      "file": "packages/windows-x86_64.zip.002",
-      "bytes": 8388608,
-      "sha256": "5f852870250fbdbc1adc02ad8daef496ef088c543caa4ee0bfc71bbe0ce82dc4"
+    "linux-x64": {
+      "version": "23.1.4",
+      "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-X64.tar.xz",
+      "sha256": "25d814fda50d5fb0084b42be09605d8b1595d49d5e2e03a3345d7e112ff6f9f3",
+      "bytes": 2017061664,
+      "format": "tar.xz",
+      "distribution": "official LLVM release"
     },
-    {
-      "file": "packages/windows-x86_64.zip.003",
-      "bytes": 8388608,
-      "sha256": "e43598245771583d364e4d7cc3aa41e127e37ebb349262274147344d7fe67a8a"
+    "linux-arm64": {
+      "version": "23.1.4",
+      "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-ARM64.tar.xz",
+      "sha256": "9b27cf263d711aa6ebfd4045ab241d947bd09b3cd19ffa5728f48a80c9eb3a91",
+      "bytes": 1829686400,
+      "format": "tar.xz",
+      "distribution": "official LLVM release"
     },
-    {
-      "file": "packages/windows-x86_64.zip.004",
-      "bytes": 8388608,
-      "sha256": "03e8e94dc36255c161d10f831770e378ec4d04d523f63debfd7eccf98e5cafad"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.005",
-      "bytes": 8388608,
-      "sha256": "8f3453c0b45d37eed282c2c3aba03f7e13272b147a935da72dc9077294b7319b"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.006",
-      "bytes": 8388608,
-      "sha256": "c9dd7f8bd784532730935b9a791ca89b634cd79ba0bc912e698ee6a7acfaaeb5"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.007",
-      "bytes": 8388608,
-      "sha256": "8904185bb83c63de90f353c70903e1ac5eae03106b4d8f33040af2aa53908bab"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.008",
-      "bytes": 8388608,
-      "sha256": "2632dffb88e445596b969a1f4a56d54f453a1de2241dc28721e57f0f8f9a40c6"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.009",
-      "bytes": 8388608,
-      "sha256": "fd20e6995bfcb1c36159cd67de6829ce9e4158a6a96e1a9cda600d7bd146bacc"
-    },
-    {
-      "file": "packages/windows-x86_64.zip.010",
-      "bytes": 622937,
-      "sha256": "8c7e46edb887c99296967607cff518c625c7c7bb5dc0d6260f81624a4e440d26"
+    "macos-arm64": {
+      "version": "23.1.4",
+      "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-macOS-ARM64.tar.xz",
+      "sha256": "5d3179db39adeca5b17a34d82708fe976bc60e055b05fe557878fb3fb64d39ef",
+      "bytes": 1570051292,
+      "format": "tar.xz",
+      "distribution": "official LLVM release"
     }
-  ]
+  }
 }

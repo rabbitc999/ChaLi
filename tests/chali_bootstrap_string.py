@@ -18,7 +18,7 @@ def main():
     compiler = options.chali.resolve()
     work = Path(tempfile.mkdtemp(prefix='bootstrap-string-'))
     env = dict(os.environ)
-    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
+    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
 
     def execute(command, label):
         """执行一个步骤，将原始输出与状态写入本次验证目录。"""

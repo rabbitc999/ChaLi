@@ -110,7 +110,7 @@ def main():
     options = parser.parse_args()
     if options.runs < 1:
         parser.error('--runs 必须为正数')
-    os.environ['CHALI_LLVM_CLANG'] = str(ROOT / 'library/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
+    os.environ['CHALI_LLVM_CLANG'] = str(ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
     if options.prepared:
         report = json.loads(options.prepared.read_text(encoding='utf-8'))
     else:

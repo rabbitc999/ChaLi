@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
-    toolchain = ROOT / 'library/llvm/toolchain'
+    toolchain = ROOT / 'build/dependencies/llvm/toolchain'
     entries = [(name, toolchain / 'x86_64-w64-mingw32/lib' / name) for name in NAMES]
     entries.append(('libclang_rt.builtins-x86_64.a', toolchain / 'lib/clang/23/lib/windows/libclang_rt.builtins-x86_64.a'))
     target = ROOT / 'source/aot/linker_assets.txt'

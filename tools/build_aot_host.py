@@ -17,12 +17,14 @@ def main():
     parser.add_argument("--ar", default="ar")
     parser.add_argument("--object", type=Path, action='append', required=True)
     parser.add_argument("--output", type=Path, default=ROOT / "build/chali-aot-host/assets.txt")
+    parser.add_argument("--build-root", type=Path, default=ROOT / "build")
     args = parser.parse_args()
+    build_root = args.build_root.resolve()
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    dependencies = [ROOT / 'build/chali-ircode-aot-core/libstackvm.a',
-                    ROOT / 'build/chali-host-records/librecords.a',
-                    *[path.resolve() for path in args.object], ROOT / 'build/chali-frontend/lztext.o']
+    dependencies = [build_root / 'chali-ircode-aot-core/libstackvm.a',
+                    build_root / 'chali-host-records/librecords.a',
+                    *[path.resolve() for path in args.object], build_root / 'chali-frontend/lztext.o']
     names = ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
     if os.name == 'nt':
         names += ['libmingw32.a', 'libmingwex.a', 'libmoldname.a', 'libwinpthread.a', 'libwinhttp.a', 'libws2_32.a', 'libcrypt32.a', 'libbcrypt.a']
@@ -44,10 +46,10 @@ def main():
         archive = Path(directory) / "libchali_aot_host.a"
         # MRI 命令使用规范路径；隔离目录来自项目 tmp，路径不经 shell 解释。
         lines = ["CREATE " + archive.as_posix(),
-                 "ADDLIB " + (ROOT / "build/chali-ircode-aot-core/libstackvm.a").as_posix(),
-                 "ADDLIB " + (ROOT / "build/chali-host-records/librecords.a").as_posix(),
+                 "ADDLIB " + (build_root / "chali-ircode-aot-core/libstackvm.a").as_posix(),
+                 "ADDLIB " + (build_root / "chali-host-records/librecords.a").as_posix(),
                  *["ADDMOD " + path.resolve().as_posix() for path in args.object],
-                 "ADDMOD " + (ROOT / "build/chali-frontend/lztext.o").as_posix(), "SAVE", "END"]
+                 "ADDMOD " + (build_root / "chali-frontend/lztext.o").as_posix(), "SAVE", "END"]
         subprocess.run([args.ar, "-M"], input="\n".join(lines) + "\n", text=True, check=True, cwd=ROOT)
         entries = [("libchali_aot_host.a", archive)] + libraries
         lines = []

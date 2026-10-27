@@ -29,6 +29,13 @@ import sys
 from project_temp import tempfile
 from embedded_asset_cache import AssetCache
 
+# Make 的 $(shell) 不保证继承稍后导出的变量，入口显式传递构建配置。
+for option, variable in (("--build-root", "CHALI_BUILD_ROOT"), ("--output", "CHALI_EMBED_OUTPUT")):
+    if option in sys.argv:
+        at = sys.argv.index(option)
+        os.environ[variable] = sys.argv[at + 1]
+        del sys.argv[at:at + 2]
+
 DELIM = "PGX"
 CHUNK_SIZE = 8000
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -135,7 +142,7 @@ def asset_disk_path(relative):
     if relative in ("LICENSE", "NOTICE") or relative.startswith("licenses/"):
         return relative
     if relative == "aot/host_assets.txt":
-        return "build/chali-aot-host/assets.txt"
+        return os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt"
     if relative == "ipage/LICENSE":
         return "library/ipage/LICENSE"
     if relative.startswith("tools/"):
@@ -221,11 +228,12 @@ GENERATOR_ASSETS = [
 ]
 
 
-if Path(CHALI, "build/chali-aot-host/assets.txt").exists():
+if Path(CHALI, os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt").exists():
     GENERATOR_ASSETS.append("aot/host_assets.txt")
 
 GENERATOR_ASSETS += ["semantics/abi_export.cpp", "glue/aot_modules.inc",
                      "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
+                     "tools/llvm_static_imports.cpp",
                      "LICENSE", "NOTICE", "licenses/miniz/LICENSE"]
 
 GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'ast/aggregate_optimize.cpp', 'ast/aggregate_optimize.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
@@ -271,7 +279,7 @@ def dependencies():
     from pathlib import Path
     root = Path(CHALI)
     paths = {Path(asset_disk_path(name)) for name in GENERATOR_ASSETS}
-    paths.add(Path("build/chali-aot-host/assets.txt"))
+    paths.add(Path(os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt"))
     for pattern in ("source/std/*.chl", "doc/book/*.md", "doc/book/images/*", "doc/library/*.md"):
         paths.update(path.relative_to(root) for path in root.glob(pattern) if path.is_file())
     paths.update(map(Path, ("tools/embed_stdlib.py", "tools/project_temp.py", "tools/embedded_asset_cache.py", "tools/stackvm_sources.py", "tools/embed_manual.py", "source/chali.gram",
@@ -281,7 +289,7 @@ def dependencies():
     # Windows GNU make 无法可靠打开非 ASCII 前置文件名，改用固定 ASCII 路径
     # 记录这些文件的精确时间与大小，保持增量依赖可追踪。
     indirect = [name for name in names if not name.isascii() or any(ch.isspace() for ch in name)]
-    marker = root / "build/chali-frontend/stdlib_manual_inputs.json"
+    marker = root / (os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-frontend/stdlib_manual_inputs.json")
     import json
     payload = json.dumps([(name, (root / name).stat().st_mtime_ns, (root / name).stat().st_size)
                           for name in indirect], ensure_ascii=False, separators=(",", ":")) + "\n"
@@ -300,7 +308,8 @@ def main():
     #（实测整体 0.185 vs 逐个约 0.30）。
     modules_blob, modules_slices = bundle(modules)
     assets_blob, assets_slices = bundle(assets)
-    out_path = os.path.join(CHALI, "source", "chali_stdlib_embedded.cpp")
+    out_path = os.environ.get("CHALI_EMBED_OUTPUT", os.path.join(CHALI, "source", "chali_stdlib_embedded.cpp"))
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     cache = AssetCache('stdlib', {
         'modules': modules_blob, 'generator-assets': assets_blob,
         'module-index': repr(modules_slices).encode('utf-8'),

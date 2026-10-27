@@ -1,4 +1,4 @@
-"""用仓库持有的官方 Lua 源码构建带单调时钟的性能宿主。"""
+"""按需下载官方 Lua 源码构建带单调时钟的性能宿主。"""
 import json
 import os
 from pathlib import Path
@@ -16,10 +16,10 @@ HOST = HERE / 'build-lua' / ('luabench.exe' if os.name == 'nt' else 'luabench')
 def main():
     """按依赖时间戳复用宿主，构建后核对它报告的实际 Lua 版本。"""
     dependencies = [Path(__file__), HERE / 'luabench.c', MANIFEST,
-                    ROOT / f'library/lua/lua-{VERSION}.tar.gz', ROOT / 'library/lua/setup.py']
+                    ROOT / 'tools/fetch_lua.py']
     if not HOST.is_file() or HOST.stat().st_mtime < max(path.stat().st_mtime for path in dependencies):
         subprocess.run([sys.executable, str(ROOT / 'library/lua/setup.py')], cwd=ROOT, check=True)
-        source = ROOT / f'library/lua/source/lua-{VERSION}/src'
+        source = ROOT / f'build/dependencies/lua/lua-{VERSION}/src'
         files = [path for path in sorted(source.glob('*.c')) if path.name not in ('lua.c', 'luac.c')]
         cc = shutil.which(os.environ.get('CC', 'gcc'))
         if not cc:

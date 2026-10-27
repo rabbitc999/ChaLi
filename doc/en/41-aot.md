@@ -8,7 +8,7 @@ Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults 
 
 `chali aot input.chl --out build/program` lowers optimized ChaLi quadruples directly to LLVM intermediate representation. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
 
-The Windows x64 toolchain, LLVM libraries, Clang, LLD, compiler-rt builtins and CRT link dependencies are stored in [library/llvm](../../library/llvm/README.md). Run `python library/llvm/setup.py` from the repository root to verify and extract the pinned offline dependency. LLVM module and legacy bytecode exports do not require the code-generation toolchain.
+Windows x64 dependencies use [online setup scripts](../../library/llvm/README.md). Run `python tools/fetch_llvm_toolchain.py` for external LLVM, or `python tools/fetch_llvm_sdk.py` for the prebuilt static LLVM/LLD SDK and matching GCC. Downloads and installations stay under ignored `build/` directories; SDK binaries and offline archive parts are not committed. Archives have pinned SHA-256 checksums. LLVM IR export alone does not require the code-generation toolchain.
 
 All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while aot exports default to omitting them. See [backend ownership optimization](43-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
 
@@ -67,3 +67,5 @@ header for their complete signatures.
 Complex ABI value/reference checks run with python tests/chali_abi_values.py --aot; synchronous C callbacks and return ownership are checked by python tests/chali_abi_contracts.py --aot. Both are included in the full gate.
 
 On Windows, native process arguments are converted from the CRT wide-character argument vector to UTF-8 before reaching main(List<String>). Chinese text, supplementary Unicode characters, empty strings, quotes and backslashes are preserved. Run python tests/chali_aot_arguments.py to compare against the VM and check native product paths containing Chinese text and spaces.
+
+Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `python tools/fetch_llvm_toolchain.py --list` or select `--platform` explicitly. Automatic static SDK setup currently targets Windows x64; downloading a toolchain does not establish AOT support for that platform.

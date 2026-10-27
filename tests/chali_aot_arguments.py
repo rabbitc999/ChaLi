@@ -32,7 +32,7 @@ def main():
     source = work / '参数.chl'
     source.write_text(frozen['source'], encoding='utf-8')
     output = work / '原生 参数'
-    environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
+    environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
     report = dict(compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(), commands=[])
     assert invoke([compiler, 'aot', source, '--out', output], work, environment, report) == b''
     cases = [[], ['', 'x y', 'a"b', 'C:\\trailing\\'], frozen['arguments']]

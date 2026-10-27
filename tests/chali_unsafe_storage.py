@@ -45,7 +45,7 @@ def main():
     args = parser.parse_args()
     compiler = args.chali.resolve()
     work = Path(tempfile.mkdtemp(prefix='unsafe-storage-'))
-    env = dict(os.environ, CHALI_LLVM_CLANG=str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
+    env = dict(os.environ, CHALI_LLVM_CLANG=str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
 
     def invoke(command, label):
         """保存原始诊断及状态。"""

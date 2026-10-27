@@ -5,6 +5,7 @@
 
 #include "preprocess.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <filesystem>

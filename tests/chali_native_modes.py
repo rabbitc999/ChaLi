@@ -22,7 +22,7 @@ def main():
     compiler = args.chali.resolve()
     work = Path(tempfile.mkdtemp(prefix='native-modes-'))
     env = dict(os.environ)
-    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
+    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
     report = {'scope': 'simple smoke only; no full regression or performance campaign',
               'compiler_sha256': hashlib.sha256(compiler.read_bytes()).hexdigest(), 'commands': []}
 

@@ -61,7 +61,7 @@ def main():
         entry = dict(source=source, source_sha256=digest(path), expected_stdout=expected, results={})
         report['cases'][case] = entry
         for name, binary, full in configurations:
-            env = dict(os.environ, CHALI_LLVM_CLANG=str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
+            env = dict(os.environ, CHALI_LLVM_CLANG=str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
             env.pop('CHALI_AOT_FULL_STDLIB', None)
             if full:
                 env['CHALI_AOT_FULL_STDLIB'] = '1'

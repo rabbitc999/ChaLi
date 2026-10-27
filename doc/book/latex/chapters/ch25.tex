@@ -1,267 +1,168 @@
-\chapter{不安全代码：把责任留在小范围内}
+\chapter{AOT 导出：把程序交付为原生产物}
 \label{ch:25}
 
-前面的章节主要使用普通值、引用和标准容器。编译器替我们检查类型、借用与清理关系，运行时继续检查数组范围和分配寿命。实现分配器、容器或宿主适配时，有时还需要直接处理地址和尚未构造元素的空间。本章讲这些操作如何使用，以及程序员需要补上哪些证明。
+从 1.0.8 起，run 使用 checked AOT，aot 默认 unchecked 导出。--debug 保留原生源码行和变量信息；VS Code 断点、单步和变量查看通过 GDB 实现，见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/46-native-debugging.md}{原生调试}。.svmb 导出已删除。
 
-本章之后再进入学生信息管理系统。业务代码通常继续使用安全接口；这里的知识主要用于实现接口背后的存储内核。完整 API 见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/44-unsafe-abi.md}{原始存储与 C ABI 指令}。
+写完程序以后，你可以把它导出为目标平台的可执行文件，也可以导出动态库供 C 程序调用。AOT 是提前编译：编译器在交付前完成 LLVM 优化、机器码生成和链接，使用者直接运行生成的程序。
 
-本章的 \texttt{Raw\allowbreak{}Storage}、\texttt{Raw\allowbreak{}Ptr}、\texttt{Bare\allowbreak{}Ptr}、\texttt{memcpy} 和 \texttt{memset} 都来自默认可用的 \texttt{std:\allowbreak{}:\allowbreak{}lang}。示例省略 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}} 前缀，也不需要为这些名字额外写 \texttt{import}。
+本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-aot.md}{LLVM AOT 编译}。
 
-\section{unsafe 允许什么}
-
-\texttt{unsafe \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 建立不安全作用域。\texttt{unsafe} 函数把这个要求写进签名：调用者必须在不安全作用域内调用它，函数体也获得执行不安全操作的权限。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-unsafe int64 addOffset(int64 address, int64 bytes) {
-    return address + bytes;
-}
-
-void main() {
-    unsafe {
-        println("{}", addOffset(100, 8));
-    }
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-108
-\end{lstlisting}
-\par
-\medskip
-
-把调用移到块外会在编译时被拒绝。闭包有自己的检查范围，不能因为在 \texttt{unsafe} 块里创建就自动获得权限。不安全函数值也不能悄悄变成普通函数值。
-
-\texttt{unsafe} 不会把整个程序改成无检查模式。普通数组、算术和存活检查仍按原有规则执行。变化在于：编译器允许调用某些需要程序员保证额外条件的接口。
-
-\section{容量还不是元素}
-
-考虑一个容量为 100、长度为 3 的容器。它只需要拥有 3 个已构造的元素，其余 97 个位置只是备用空间。如果元素会打开文件或登记资源，扩容时把全部备用位置都默认构造出来，行为和成本都会改变。
-
-\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}} 表示这样的独占空间。它记录容量、元素布局及逐槽初始化状态。\texttt{Raw\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 保存分配身份和下标，不拥有元素，也不延长分配寿命。
+\section{从源码到原生产物}
 
 \begin{center}
-\begin{tabular}{lll}
-\toprule
-操作 & 调用前 & 调用后 \\
-\midrule
-\texttt{init\allowbreak{}At} & 目标未初始化 & 目标拥有传入值 \\
-\texttt{read\allowbreak{}At} & 源已初始化 & 取得按值语义产生的副本，源仍有效 \\
-\texttt{borrow\allowbreak{}At} & 源已初始化 & 借出引用，所有权不变 \\
-\texttt{take\allowbreak{}At} & 源已初始化 & 返回拥有值，源变为未初始化 \\
-\texttt{drop\allowbreak{}At} & 源已初始化 & 清理元素，保留容量 \\
-\texttt{close} & 任意合法初始化状态 & 清理存活元素并释放整个分配 \\
-\bottomrule
-\end{tabular}
+\includegraphics[width=\linewidth]{../images/chali-aot.png}\par
+ChaLi AOT 导出流程：前端检查、四元式优化、LLVM 中间表示、内置或外置 LLVM、链接与交付
 \end{center}
 
+前端完成类型、借用和生命周期检查后，生成并优化四元式。AOT 后端将这些四元式直接转换为 LLVM 中间表示，再由 LLVM 生成目标代码，由链接器将目标代码、AOT 运行时和所需库组合成原生产物。
+
+这里的“四元式”是 ChaLi 的中间表示；图中的“LLVM 中间表示”是后端使用的另一种表示。输出的 \texttt{.\allowbreak{}ll} 文件可以保留，用于检查 LLVM 指令或接入其他 LLVM 工具。
+
+\section{导出第一个程序}
+
+把下面的代码保存为 \texttt{aot\_demo.\allowbreak{}chl}：
+
 \par
 \medskip
 \begin{lstlisting}[style=chali]
+int64 total(List<int64> const& values) {
+    int64 result = 0;
+    for (int64 value in values) {
+        result = result + value;
+    }
+    return result;
+}
 
 void main() {
-    RawStorage<String> slots = RawStorage<String>::allocate(4);
-    unsafe {
-        initAt<String>(slots.pointer(0), "hello");
-        String result = takeAt<String>(slots.pointer(0));
-        assert(!slots.isInitialized(0));
-        println("{} / {}", result, slots.capacity());
-    }
-    slots.close();
+    List<int64> values;
+    values.push(10);
+    values.push(20);
+    values.push(30);
+    println("total={}", total(&values));
 }
 \end{lstlisting}
 \par
 \medskip
 
+在 Windows PowerShell 中执行：
+
 \par
 \medskip
-\begin{lstlisting}[style=out]
-hello / 4
+\begin{lstlisting}[style=sh]
+chali aot aot_demo.chl --out build/aot_demo --checked
+./build/aot_demo.exe
 \end{lstlisting}
 \par
 \medskip
 
-重复初始化、读取未初始化槽位、越界访问和释放后访问会报告错误。\texttt{pointer(\allowbreak{}capacity)\allowbreak{}} 可以形成尾后位置，不能解引用。泛型调用中显式写出 \texttt{<\allowbreak{}String>\allowbreak{}}，也能清楚说明当前操作针对哪一种元素。
+输出为：
 
-\section{复制、移动与清理分别负责什么}
+\par
+\medskip
+\begin{lstlisting}[style=out]
+total=60
+\end{lstlisting}
+\par
+\medskip
 
-\texttt{read\allowbreak{}At} 继续采用 ChaLi 的普通值语义。它不会因为身处 \texttt{unsafe} 就把 String 句柄直接当成独立副本。需要转移所有权时使用 \texttt{take\allowbreak{}At}，随后把返回值传给 \texttt{init\allowbreak{}At}；需要丢弃元素时使用 \texttt{drop\allowbreak{}At}。
+\texttt{--out} 后面是输出前缀。Windows 下会得到可执行文件 \texttt{.\allowbreak{}exe}、LLVM 模块 \texttt{.\allowbreak{}ll} 和 C ABI 头文件；Linux 下可执行文件通常没有扩展名。输出针对编译时选择的目标平台，交付时需要匹配操作系统与处理器架构。
 
-\texttt{relocate\allowbreak{}Non\allowbreak{}Overlapping<\allowbreak{}T>\allowbreak{}(\allowbreak{}destination,\allowbreak{} source,\allowbreak{} count)\allowbreak{}} 先验证完整源、目标范围和槽位状态，再逐元素搬移。目标必须未初始化，范围不能重叠。成功后源槽位不再拥有元素。移动零个元素直接返回。
+只想导出 LLVM 模块时使用：
 
-实现 \texttt{Closeable} 的资源不能同时声明 \texttt{Copy<\allowbreak{}T>\allowbreak{}} 或绕过 \texttt{\#Non\allowbreak{}Copyable}。实验容器如果确实能产生独立副本，可以提供显式命名的复制方法，但仍要逐项建立新副本的所有权。
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+chali aot aot_demo.chl --out build/aot_demo --emit-llvm
+\end{lstlisting}
+\par
+\medskip
 
-\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}:\allowbreak{}:\allowbreak{}close(\allowbreak{})\allowbreak{}} 只清理已初始化元素。因此删除 List 尾部元素后可以保留容量，又不会把已经移出的元素再清理一次。借出的引用则必须在移出、清理或释放前停止使用；\texttt{borrow\allowbreak{}At} 的不安全契约要求调用者保证这一点。
+这个命令不运行机器码生成和链接工具。
 
-\section{裸指针只留下地址}
+\section{选择内置或外置 LLVM}
 
-\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 保存一个 ChaLi 逻辑字节地址。它没有运行时类型标签、初始化位图或所有者字段。\texttt{T} 决定编译时怎样解释地址，以及指针算术使用多大的步长。
+两种编译器都接受前面的 \texttt{aot} 命令，区别在于生成机器码和链接时从哪里取得 LLVM。
 
-\begin{center}
-\begin{tabular}{lll}
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.088\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.468\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.424\linewidth-2\tabcolsep\relax}}
 \toprule
-表示 & 保存的信息 & 主要用途 \\
+编译器变体 & 使用前的准备 & 适合的使用方式 \\
 \midrule
-普通引用 & 类型与语言借用关系 & 日常读取和修改值 \\
-\texttt{Raw\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 分配身份、槽位下标 & 受检初始化、读取、移出和清理 \\
-\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 字节地址 & 不检测类型的底层字节内核 \\
+\endhead
+内置 LLVM & LLVM、LLD 与 CRT 链接资产已编入编译器 & 希望编译器单个 exe 就能导出 Windows x64 原生产物 \\
+外置 LLVM & 准备 \texttt{library/\allowbreak{}llvm/\allowbreak{}} 工具链或通过 \texttt{--llvm} 指定 clang & 希望编译器体积较小，单独管理工具链 \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+}
 
-\texttt{bare\allowbreak{}Pointer<\allowbreak{}T>\allowbreak{}(\allowbreak{}raw\allowbreak{}Pointer)\allowbreak{}} 从原始分配取得裸地址，允许未初始化位置。\texttt{pointer\allowbreak{}From\allowbreak{}Address<\allowbreak{}T>\allowbreak{}(\allowbreak{}address)\allowbreak{}} 将数值地址解释为裸指针。\texttt{dereference<\allowbreak{}T>\allowbreak{}(\allowbreak{}pointer)\allowbreak{}} 把地址解释为 \texttt{T mut\&}。这三种操作都要求 \texttt{unsafe}；它们不会替调用者证明布局、初始化和所有权正确。
+在仓库根目录准备外置工具链：
 
-这里的逻辑地址由 ChaLi 运行时管理，不能直接当作机器 C 指针交给宿主。需要与 C 交互时继续使用\hyperref[ch:21]{第 21 章}的 ABI 适配。
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+python library/llvm/setup.py
+chali aot aot_demo.chl --out build/aot_demo --checked
+\end{lstlisting}
+\par
+\medskip
 
-\texttt{p.\allowbreak{}cast\allowbreak{}To<\allowbreak{}U>\allowbreak{}(\allowbreak{})\allowbreak{}} 保持地址不变，把 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 改成 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}U>\allowbreak{}} 视图，也要求 \texttt{unsafe}。例如先执行 \texttt{p.\allowbreak{}cast\allowbreak{}To<\allowbreak{}uint8>\allowbreak{}(\allowbreak{})\allowbreak{}}，就可以逐个字节解引用，并用 \texttt{+ 1} 前进一个字节。转换本身不检查目标类型、不分配也不复制；调用者必须保证目标布局、对齐、初始化状态和访问范围有效。
+准备脚本会在线下载固定版本的工具链并核对 SHA-256，缓存位于 \texttt{build/\allowbreak{}}，源码仓库不保存 SDK。静态构建通过 \texttt{python tools/\allowbreak{}fetch\_llvm\_sdk.\allowbreak{}py} 下载预编译 LLVM/LLD 与匹配 GCC，并隔离全部构建对象。使用其他工具链时，可传入 \texttt{--llvm 路径}，也可设置 \texttt{CHALI\_LLVM\_CLANG}。静态变体默认使用内置后端，显式传入 \texttt{--llvm} 时使用指定的外置工具。
 
-IEEE754 位模式转换也使用 \texttt{cast\allowbreak{}To} 及解引用。要区分物理槽和外部格式：ChaLi 的 \texttt{float32}、\texttt{float64} 都占八字节浮点槽，\texttt{float32} 的外部四字节 binary32 编码需要从槽内位模式还原，不能直接读取槽的前四字节。AOT 将对应转换降低为 LLVM 位转换和浮点宽度转换指令，指针视图包装在优化后消除；正负零、次正规数、无穷和 NaN 仍按编解码接口处理。
+自己构建静态变体时执行 \texttt{make llvm-static}。构建程序会自动下载固定版本的预编译 LLVM/LLD 静态开发库和匹配 GCC，核验 SHA-256，并安装到 \texttt{build/\allowbreak{}dependencies/\allowbreak{}llvm/\allowbreak{}static-sdk/\allowbreak{}}。首次准备需要网络和磁盘空间，不编译 LLVM 源码；具体依赖见 \href{https://github.com/rabbitc999/ChaLi/blob/master/library/llvm/README.md}{LLVM 工具链说明}。当前静态分发验收目标为 Windows x64。
 
-\section{指针算术按元素走}
+编译器的 LLVM 链接方式不会让导出的应用依赖 LLVM DLL。应用使用的外部 C ABI 动态库仍须按应用的链接约定交付。
 
-对于 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}int64>\allowbreak{}}，\texttt{p + 1} 前进一个 \texttt{int64}，即 8 字节。对于 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}uint8>\allowbreak{}}，相同表达式前进 1 字节。
+\section{检查与支持范围}
+
+AOT 默认启用四元式中的数组边界和空指针检查，与 VM 的默认检查配置一致；\texttt{--checked} 可以显式声明这一选择。仅在调试或性能对照时使用 \texttt{--unchecked} 关闭这些检查。列表的下标、对象存活与实际内存访问验证始终执行，活跃元素引用期间也不能进行会改变列表结构的操作。
+
+AOT 当前支持基本数值运算、分支、循环、直接调用、递归和固定数组，以及列表的创建、长度、追加、插入、下标读写、删除、弹出、清空、查找、复制与 \texttt{for-in} 引用。列表元素支持整数、浮点、字符串、嵌套列表和支持叶子布局的结构体；复制后各自拥有独立存储。
+
+自定义语言 \texttt{opcode} 可以将创建、复制和销毁绑定到可达的 ChaLi 函数或显式声明的 C ABI 函数，\texttt{move} 沿用前端的移动语义。标准库宿主调用复用 VM 的堆、对象表和胶水注册，语言函数体继续运行 LLVM 生成的机器码。捕获闭包、函数值与同步回调保留原有参数、返回值和清理协议；隔离线程使用同源的消息、通道、事件和任务控制服务。JSON/TOML、反射序列化、图像、网络与数据结构等组合调用由 VM/AOT 差分样例核对。
+
+学生信息管理系统使用反射、网络和数据库等服务，其 AOT 构建与原生启动步骤见第 26 章 26.1。数据库和前端页面仍按应用的实际宿主环境准备；平台能力见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/17-capabilities.md}{当前能力}。
+
+\section{导出动态库与 C ABI}
+
+\texttt{export} 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-
-void main() {
-    RawStorage<int64> slots = RawStorage<int64>::allocate(3);
-    unsafe {
-        BarePtr<int64> p = barePointer<int64>(slots.pointer(0));
-        BarePtr<int64> q = p + 2;
-        assert(q.address - p.address == 16);
-        assert((2 + p).address == q.address);
-        q = q - 1;
-        println("{} / {}", q - p, q.address - p.address);
-    }
-    slots.close();
+#export("f_add")
+int64 add(int64 left, int64 right)
+{
+    return left + right;
 }
 \end{lstlisting}
 \par
 \medskip
 
-\par
-\medskip
-\begin{lstlisting}[style=out]
-1 / 8
-\end{lstlisting}
-\par
-\medskip
+执行 \texttt{Cha\allowbreak{}Li aot library.\allowbreak{}chl --shared --out build/\allowbreak{}library} 生成动态库和 C ABI 头文件，导出函数名以生成的头文件为准（上例为 \texttt{f\_add}）。动态库源码可以没有 \texttt{main}；可执行程序仍需要 \texttt{main}。调用方先调用 \texttt{chali\_init(\allowbreak{})\allowbreak{}}，再使用导出函数，最后调用\texttt{chali\_finish(\allowbreak{})\allowbreak{}}；全局初始化与清理分别在这两个入口执行。\texttt{--export} 可以额外指定导出函数。模块限定名和重载使用各自的实际标签；应以生成头文件核对完整签名。
 
-支持 \texttt{p + n}、\texttt{n + p}、\texttt{p - n} 和同类型的 \texttt{p - q}。最后一种返回元素距离，字节距离必须恰好是完整元素的倍数。调用者应只对同一分配计算距离；这个条件不能从两个裸地址本身证明。
+程序调用外部 C 函数时，使用第 21 章介绍的 \texttt{abi} 声明；声明中的库按实际调用路径链接或由宿主加载，也可以重复使用 \texttt{--link 库路径} 添加库。标量参数与返回值按对应的 C ABI 类型传递。结构体、引用、数组、可选引用和同步回调等复杂形状通过类型化宿主适配器封送，导出时需要兼容的 GNU C++17 编译器；语言函数体仍直接降低到 LLVM。拥有资源的句柄须遵循创建和销毁协议，不可把运行时句柄当作机器函数指针。
 
-地址算术不会读取内存，可以先算出尾后地址。但一个可计算的地址不一定可解引用。负偏移、乘法、加减和除法仍遵循普通整数运算规则。
+\section{在 VS Code 中构建}
 
-\section{memcpy 与 memset 按字节工作}
+打开并保存 \texttt{.\allowbreak{}chl} 文件，使用编辑器标题栏的构建按钮，选择“可执行文件（LLVM AOT）”。也可以从命令面板或资源管理器右键菜单构建原生可执行文件。默认输出到工程的 \texttt{build} 目录；输出目录、外置 LLVM 路径和检查选项可在 ChaLi 设置中调整。
 
-\texttt{memcpy<\allowbreak{}T,\allowbreak{}U>\allowbreak{}(\allowbreak{}destination,\allowbreak{} source,\allowbreak{} bytes)\allowbreak{}} 复制字节。源与目标可以使用不同的静态元素类型，底层不检查它们是否一致。\texttt{memset<\allowbreak{}T>\allowbreak{}(\allowbreak{}destination,\allowbreak{} value,\allowbreak{} bytes)\allowbreak{}} 把指定字节重复写入目标范围。
-
-虽然调用形式像函数，编译器将它们直接降低为专门的四元式；VM 执行字节指令，LLVM AOT 使用 \texttt{memcpy}／\texttt{memset} intrinsic。必要的地址和完整范围检查仍在写入前执行。
-
-长度都是字节数。对 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}int64>\allowbreak{}} 填充 8 字节，只覆盖一个元素，而不是 8 个元素。\texttt{memset(\allowbreak{}p,\allowbreak{} 1,\allowbreak{} 8)\allowbreak{}} 写入的是 8 个 \texttt{0x01} 字节，并不等于向一个 \texttt{int64} 写入整数 1。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-
-void main() {
-    RawStorage<int64> source = RawStorage<int64>::allocate(1);
-    RawStorage<uint8> target = RawStorage<uint8>::allocate(8);
-    unsafe {
-        BarePtr<int64> from = barePointer<int64>(source.pointer(0));
-        BarePtr<uint8> to = barePointer<uint8>(target.pointer(0));
-        memset<int64>(from, (uint8)42, 8);
-        memcpy<uint8,int64>(to, from, 8);
-        uint8 mut& first = dereference<uint8>(to);
-        uint8 mut& last = dereference<uint8>(to + 7);
-        println("{} / {}", (int64)*first, (int64)*last);
-        assert(!source.isInitialized(0));
-    }
-    source.close();
-    target.close();
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-42 / 42
-\end{lstlisting}
-\par
-\medskip
-
-非零范围必须位于有效分配内。复制在完整源和目标范围都验证成功后才写入；重叠范围会被拒绝。零长度允许空指针。\texttt{memcpy} 采用非重叠复制约定，容器内部移动重叠区域时需要另行设计方向和所有权转移。
-
-\section{字节写入不等于构造资源值}
-
-上个程序写入了原始字节，但 \texttt{source.\allowbreak{}is\allowbreak{}Initialized(\allowbreak{}0)\allowbreak{}} 仍为 \texttt{false}。这是明确的接口约定：裸字节操作不读写逐槽初始化位图，也不调用复制、移动和清理钩子。
-
-对字节缓冲区，这样可以一次复制整段内容。对 String 或文件资源，只复制句柄字节不会产生第二份所有权。把两份相同句柄分别交给清理逻辑，就可能重复释放。向一个存活资源写入全零，也不会替原资源执行清理。
-
-因此，字节操作负责字节，资源操作负责所有权。需要把一个资源从容器移到另一个容器时，继续使用 \texttt{take\allowbreak{}At}、\texttt{init\allowbreak{}At} 或满足条件的搬移接口。
-
-裸指针还不携带分配代次。释放后不能继续使用旧地址，也不能因为后来某个地址再次可访问，就认定它仍然表示原对象。
-
-\section{把不安全操作封装在安全接口内}
-
-实现一个字节缓冲区时，可以让公开的 \texttt{push\allowbreak{}Byte}、\texttt{get\allowbreak{}Byte} 和 \texttt{reserve} 检查长度、容量与溢出，把裸指针操作收进方法内部的小块 \texttt{unsafe}。调用者只接触缓冲区，不直接维护地址与容量之间的关系。
-
-扩容按以下顺序执行：先申请新容量，再复制存活字节，成功后释放旧分配，最后更新指针和容量。不要先释放旧空间再读取它，也不要在复制失败前把新指针公布给调用者。资源元素还要在这个顺序中正确转移初始化状态。
-
-完整实验在 \href{https://github.com/rabbitc999/ChaLi/blob/master/benchmarks/perf/bootstrap_string.chl}{\texttt{bootstrap\_string.\allowbreak{}chl}}。它实现独占字节存储、扩容、追加、读取、查找和显式独立复制；中文与 emoji 按 UTF-8 字节保存。它没有实现标准 String 的全部 Unicode 方法，也不会因为按字节存储就自动知道一个下标是不是码点边界。
-
-实现同类接口时，先写出不变量，例如 \texttt{0 <\allowbreak{}=\allowbreak{} length <\allowbreak{}=\allowbreak{} capacity}、\texttt{data} 指向当前拥有的分配、每次解引用都位于有效字节范围。每个不安全块旁边都应能解释它为什么满足这些条件。
-
-\section{用正确性与测量判断实现}
-
-原始存储的正确性测试应覆盖空容量、边界、重复初始化、移出后读取、增长、删除保留容量、释放后访问以及资源只清理一次。裸字节操作还要验证零长度、跨类型复制、重叠拒绝、完整范围检查和填充值的字节含义。
-
-性能测试要把编译与执行分开，用相同输入和可核对的输出比较。构造、逐字节追加、读取、查找、复制及原生 String 转入自举存储应分别记录。批量复制可能减少逐字节调用，但不能据此推断全部操作都会更快；查找算法、分配方式和剩余检查同样影响结果。
-
-\href{https://github.com/rabbitc999/ChaLi/blob/master/benchmarks/results/string-1.0.7/README.md}{原生与自举 String 报告}保留实际源码和编译器摘要。较早的逐槽受检版保存在 \texttt{bootstrap\_string\_checked.\allowbreak{}chl}，不能把它的测量改标为新的裸指针版。VM 与 AOT 也要分别记录。
+插件提供内置 LLVM 与外置 LLVM 两个安装变体，二者是同一扩展的替代版本。构建结束后查看“ChaLi 构建”输出中的诊断和产物路径，再运行生成的应用。\texttt{.\allowbreak{}svmb} 已删除，不再作为构建或交付格式。
 
 \section{小结}
 
-\begin{center}
-\begin{tabular}{ll}
-\toprule
-工具 & 程序员承担的主要责任 \\
-\midrule
-\texttt{unsafe} 作用域／函数 & 解释接口额外条件为何成立 \\
-\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}} & 维护元素初始化与所有权转移 \\
-\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 维护地址、布局、对齐、寿命和有效访问范围 \\
-指针算术 & 区分元素步长与字节距离，控制有效位置 \\
-\texttt{memcpy}／\texttt{memset} & 使用正确字节数，避免重叠和错误资源所有权 \\
-安全封装 & 将长度、容量及清理约束收在接口内部 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-日常业务优先使用标准容器和普通引用。需要实现存储内核时，再把这些工具放进范围明确、能够单独验证的小接口里。接下来进入\hyperref[ch:26]{第 26 章的学生信息管理系统}。
+导出前先确认程序使用的库已适配 AOT，再选择内置或外置 LLVM 编译器。\texttt{aot} 生成原生产物，\texttt{--emit-llvm} 保留 LLVM 模块，\texttt{--checked} 控制四元式运行期检查；动态库通过生成的 C ABI 头文件与宿主对接。
 
 \section{习题}
 
 \begin{enumerate}
 
-\item 把 25.1 的调用移到 \texttt{unsafe} 块外，再尝试在块里创建一个调用该函数的普通闭包，分别观察诊断。
+\item 将列表中的 \texttt{30} 改为 \texttt{70}，导出后应得到什么结果？
 
-\item 在 25.2 中先 \texttt{take\allowbreak{}At}，再对同一槽位调用 \texttt{read\allowbreak{}At}。为什么不能把剩余字节当成有效 String？
+\item 只导出 LLVM 模块时应加哪个选项？
 
-\item 将 25.5 的元素类型改为 \texttt{uint8}，说明两处地址差和元素距离应如何改变。
+\item 静态 LLVM 编译器会自动消除应用自身的 C ABI 动态库依赖吗？
 
-\item 把 25.6 的填充值改为 1，再将源作为 \texttt{int64} 解释。为什么结果不是整数 1？
-
-\item 对同一分配的前 8 字节和后移 1 字节的位置调用 \texttt{memcpy}，确认重叠被拒绝。再尝试零长度空指针复制。
-
-\item 挑战：给实验字节缓冲区补充一次自身追加，并验证扩容后仍能正确读取原内容、复制独立性和最终清理。
+\item \texttt{--checked} 会关闭或开启列表的存活验证吗？
 
 \end{enumerate}
 
@@ -269,32 +170,36 @@ void main() {
 
 \begin{enumerate}
 
-\item 普通作用域调用不安全函数会被拒绝。闭包重新建立自己的函数权限范围，创建位置的不安全权限不会自动传入。
+\item 将例子中的 \texttt{30} 改为 \texttt{70}，重新导出并运行。参考结果为 \texttt{total=\allowbreak{}100}，需要重新编译才能改变已导出的程序。
 
-\item 移出已经转移所有权并把源标记为未初始化。旧字节不再表示源位置拥有的值；再次读取会被槽位状态检查拒绝。
+\item 只导出 LLVM 模块时应加哪个选项？参考答案：\texttt{--emit-llvm}，该路径不执行目标代码生成和链接。
 
-\item \texttt{uint8} 每次前进 1 字节，\texttt{p + 2} 的字节距离为 2。减去一个元素后，元素距离与字节距离都为 1。
+\item 使用静态 LLVM 编译器后，应用自己依赖的 C ABI 动态库是否也会自动消失？参考答案：不会；这些依赖仍按应用的链接方式交付。
 
-\item 每一个字节都被写成 \texttt{0x01}。一个 8 字节整数的完整位模式与仅最低有效字节为 1 的整数不同。
-
-\item 非零重叠范围违反接口约定。零长度不访问内存，允许两个空指针，不会复制或填充任何字节。
-
-\item 扩容前记录原长度，复制时使用更新后的有效地址，目标位于原内容之后；新旧存储的交接只能发生在复制成功之后。分别验证不扩容和需要扩容的情况。
+\item 列表下标与对象存活验证始终执行；\texttt{--checked} 控制的是四元式中的运行期检查。
 
 \end{enumerate}
 
-\section{番外：油杓与葫芦}
+\section*{下一步}
+
+下一章先介绍\hyperref[ch:24]{不安全代码}，理解原始存储与裸指针的边界，再进入\hyperref[ch:26]{第 26 章 学生信息管理系统}，将前面学过的结构体、反射和标准库组织成完整项目。
+
+\section{番外：行囊里的工具}
 
 改写自欧阳修《卖油翁》。
 
-陈尧咨见老翁酌油，问道：“既然手熟，何必还要铜钱？”翁曰：“钱孔使我看清边界，手熟使我守住边界，二者并不相妨。”
+陈康肃公善导出，当世无双，公亦以此自矜。尝于家圃编译，有卖油翁释担而立，睨之，久而不去。见其原生产物十发十中，但微颔之。
 
-有门客闻言，将铜钱收进袖里，又在葫芦上贴了“不安全”三字，自谓已尽得要领。油未入瓶，先湿了衣袖。公问其故，门客答：“既已声明不安全，自然可以不问油流向哪里。”
+康肃问曰：“汝亦知 AOT 乎？吾静态 LLVM，不亦精乎？”翁曰：“无他，但工具装得熟尔。”康肃忿然曰：“尔安敢轻吾后端！”
 
-翁取杓而止之：“你可以亲手持杓，却不能把别人的葫芦当作自己的。倒进去的是油，不是瓶子的主人；抄下来的是瓶号，也不是第二只瓶子。”
+翁曰：“以我酌油知之。”乃取一葫芦，置于地，以钱覆口，徐以杓酌油沥之，自钱孔入，而钱不湿。因曰：“工具在我担中，亦可借隔壁工坊；油入葫芦之后，买油人岂须背着我的油杓回家？”
 
-于是门客把取油、持杓、换瓶各写一条规矩，替客人留下一个稳妥的把手。客人只须接过葫芦，如何守住钱孔，仍由持杓的人负责。公笑曰：“这回写在纸上的，终于不是免罪的告示。”
+康肃悟，谓内置 LLVM 是将编译所需工具纳入编译器，外置 LLVM 是借工具链完成同样工序；导出应用不因此平白多带一个 LLVM DLL。
+
+翁将行，又折回道：“不过，若你葫芦上还接着别人家的水管，莫因油杓已收，就说水管也不必交付。”公视之，果有一条自己声明的 C ABI 动态库依赖。
+
+康肃笑而遣之，归来便将发布说明分成工具链依赖与应用依赖两栏。门客称赞文档更长了，公曰：“我宁愿多写两行，也不愿用户半夜来问，油有了，葫芦为什么打不开。”
 
 \subsection*{技术对照}
 
-\texttt{unsafe} 表明实现者承担额外证明义务。裸地址和按位复制不会产生资源所有权，范围检查与清理协议仍各有职责。把底层操作封装成接口，是让调用者使用已经维护好的不变量；性能则要通过实际负载检验，不能由一个关键字推断。
+内置 LLVM 编译器把优化器、代码生成器、链接器和链接资产装进行囊；外置变体借助独立工具链完成这些步骤。交付的原生产物包含所需的 AOT 运行时，应用额外使用的 C ABI 库则按各自的链接约定准备。工具放在哪里与应用依赖哪些库，是两个需要分别核对的问题。

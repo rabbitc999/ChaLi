@@ -39,7 +39,7 @@ def main():
         environment = dict(os.environ, CHALI_LANG=language)
         command = [compiler, backend, source, '--out', output]
         if backend == 'aot':
-            command += ['--llvm', ROOT / 'library/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang')]
+            command += ['--llvm', ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang')]
         result = invoke(command, environment, work)
         report['results'][backend] = result
         (work / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

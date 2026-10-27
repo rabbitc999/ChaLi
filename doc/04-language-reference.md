@@ -805,7 +805,7 @@ int64 c_function(int64 x);
 
 `std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。`__rawSize(T)` 与 `__rawAlign(T)` 查询语言内部存储布局，仅供 unsafe 内核使用，不等于 C ABI 布局。借出的引用不得超过存储寿命或相应元素生命周期。
 
-`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](44-unsafe-abi.md)和[书稿第 25 章](book/25-不安全代码.md)。
+`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](44-unsafe-abi.md)和[书稿第 25 章](book/24-不安全代码.md)。
 
 ---
 

@@ -1,7 +1,7 @@
-# Chapter 24 LLVM AOT export
+# Chapter 25 LLVM AOT export
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../24-AOT导出.md)
+**English** · [简体中文](../25-AOT导出.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 Since 1.0.8, run uses checked AOT, and aot defaults to unchecked export. --debug retains native source and variable information. VS Code breakpoints, stepping and variable inspection use GDB; see [Native debugging](../../en/46-native-debugging.md). The .svmb export has been removed.
@@ -33,6 +33,8 @@ chali aot hello.chl --out build/hello
 chali aot hello.chl --out build/hello --emit-llvm
 ```
 
+Dependency setup downloads pinned archives into ignored `build/` caches. `python tools/fetch_llvm_sdk.py` prepares prebuilt static LLVM/LLD and its matching GCC; static objects use an isolated build directory. SDK binaries and archive parts are not stored in source control.
+
 `--emit-llvm` stops at the LLVM module. A compiler with static LLVM embeds its compiler-side LLVM facilities; an external variant uses its configured LLVM toolchain. The exported application does not require a VM or LLVM DLL merely because the compiler used LLVM. Its own declared C libraries must still be deployed.
 
 Mark public functions with `export`. A dynamic library can omit `main`:
@@ -51,4 +53,4 @@ chali aot library.chl --shared --out build/library
 
 Use the generated C header for actual exported names and signatures. Call `chali_init()` before exported operations and `chali_finish()` when finished. Complex imported C ABI shapes require the compatible host adapter compiler described in [chapter 21](21-c-interop.md).
 
-Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-vm-performance.md). Next: [unsafe code](25-unsafe-code.md), followed by [the student system](26-student-system.md).
+Cross-building the ChaLi compiler for another CPU is separate from supporting AOT export on that CPU. Current AOT target code and toolchain assumptions must be checked; an ARM64 compiler package alone does not prove ARM64 AOT support. VM/AOT execution performance is measured separately in the [performance report](../../en/12-vm-performance.md). Next: [the student system](26-student-system.md).

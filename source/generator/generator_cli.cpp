@@ -628,6 +628,7 @@ int runCli(int argc, char **argv)
     /* 控制台 UTF-8 头来自 `source/console/`，导出工程里仍放 `console/` 的目录名：副本站 `console/utf8.hpp`，
      * `chali_i18n.hpp` 里也是 `#include "console/utf8.hpp"`，导出工程保持同一相对布局。 */
     ok = copy(mc / "source/console/utf8.hpp", "console/utf8.hpp") && ok;
+    ok = copy(mc / "tools/llvm_static_imports.cpp", "tools/llvm_static_imports.cpp") && ok;
     /* `chali_semantics.cpp` 按职责拆成 `semantics/*.cpp`，它用相对 `#include`
      * 拼回；生成工程必须把分片一起带过去（编译 `chali_parser.cpp` 时按相对路径找到）。 */
     for (const char *name : {"symbol_table.cpp", "type_ids.cpp", "type_ids_shared.cpp",

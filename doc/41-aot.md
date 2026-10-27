@@ -8,7 +8,7 @@
 
 `chali aot input.chl --out build/program` 将前端生成并优化的四元式直接降低为 LLVM 中间表示，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
 
-Windows x64 工具链、LLVM 库、Clang、LLD、compiler-rt builtins 与链接所需 CRT 依赖保存在 [library/llvm](../library/llvm/README.md)。首次使用原生编译时，在仓库根执行 `python library/llvm/setup.py`，离线校验并解包固定版本依赖。只导出 LLVM 模块和历史字节码不需要代码生成工具链。
+Windows x64 依赖通过 [在线下载脚本](../library/llvm/README.md) 准备。外置后端运行 `python tools/fetch_llvm_toolchain.py`；静态后端运行 `python tools/fetch_llvm_sdk.py`，下载预编译 LLVM/LLD 和匹配 GCC，全部缓存位于 `build/`。仓库不保存 SDK 或离线分片；归档按固定 SHA-256 校验。只导出 LLVM IR 不需要代码生成工具链。
 
 AOT 默认开启全部适用优化，外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，aot 导出缺省关闭这些检查。聚合目标地址、临时值搬运、批量复制、直接调用和可选计数的适用条件与对照开关见[后端所有权优化](43-backend-ownership.md)。
 
@@ -63,3 +63,5 @@ int64 add(int64 left, int64 right)
 模块限定名和重载使用各自的实际标签；应以生成头文件核对完整签名。
 
 Windows 原生进程入口从 CRT 宽字符参数转换到 UTF-8，再交给 main 的 List<String>；中文、非 BMP 字符、空串、引号及反斜线均保留。入口行为与 VM 对照的回归为 python tests/chali_aot_arguments.py，同时检查中文与空格产物路径。
+
+在线工具链下载也支持 Linux x64、Linux ARM64 与 macOS ARM64，可运行 `python tools/fetch_llvm_toolchain.py --list` 查看，或用 `--platform` 显式选择。静态 SDK 自动准备目前限定 Windows x64；下载能力不代表相应平台 AOT 已验收。

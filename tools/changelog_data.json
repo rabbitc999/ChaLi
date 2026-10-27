@@ -11,7 +11,9 @@
     "程序、语言服务与插件 chaliCompilerVersion 同步升级至 1.0.8；历史测量保留真实版本与编译器摘要。",
     "删除 .svmb 字节码导出、相关命令及编辑器构建入口，部署书稿改为原生产物；历史测量保留真实版本。",
     "VS Code 扩展版本与编译器统一为 1.0.8，按 LLVM 静态／外置链接分包；内嵌编译器通过 --build-info 报告版本及真实链接方式，打包拒绝错误变体。",
-    "共享四元式与 AOT 运行时目录由 source/stackvm 迁移为 source/ircode，更新构建、导出工程和内嵌资产路径，保留现有 C++ 命名空间与宿主 ABI。"
+    "共享四元式与 AOT 运行时目录由 source/stackvm 迁移为 source/ircode，更新构建、导出工程和内嵌资产路径，保留现有 C++ 命名空间与宿主 ABI。",
+    "LLVM 静态 SDK 改为下载固定 MSYS2 预编译 LLVM/LLD 和匹配 GCC，隔离全部对象；移除入库的 LLVM 与 Lua 归档，外置 LLVM 与性能对照 Lua 按需下载并校验，缓存仅位于 build。",
+    "LLVM 工具链下载增加 Linux x64／ARM64 和 macOS ARM64 固定官方分发；书稿交换第 24／25 章，中英文目录、编号、链接及中文 LaTeX/PDF 同步。"
    ]
   },
   {

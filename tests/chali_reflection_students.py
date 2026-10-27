@@ -105,7 +105,7 @@ def main():
         prefix = work / 'students'
         if options.aot:
             command = [options.compiler, 'aot', str(SOURCE), '--out', str(prefix)]
-            environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
+            environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
             compiled = subprocess.run(command, cwd=work, env=environment, capture_output=True, text=True, encoding='utf-8', timeout=600)
             if compiled.returncode != 0:
                 raise AssertionError((command, compiled.returncode, compiled.stdout, compiled.stderr))

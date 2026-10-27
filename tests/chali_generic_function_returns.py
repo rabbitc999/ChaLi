@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     options = parser.parse_args()
     compiler = options.chali.resolve()
-    os.environ['CHALI_LLVM_CLANG'] = str(ROOT / 'library/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
+    os.environ['CHALI_LLVM_CLANG'] = str(ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
     work = Path(tempfile.mkdtemp(prefix='generic-function-returns-'))
     inputs = cases()
     with ThreadPoolExecutor(max_workers=2) as pool:

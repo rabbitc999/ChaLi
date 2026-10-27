@@ -104,7 +104,7 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--jobs', type=int, default=2)
     parser.add_argument('--timeout', type=int, default=90)
-    parser.add_argument('--llvm', type=Path, default=ROOT / 'library/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
+    parser.add_argument('--llvm', type=Path, default=ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang'))
     parser.add_argument('--case', action='append', help='仅执行指定名称，可重复；完整发现必须不加此参数')
     parser.add_argument('--group', choices=['business', 'advanced', 'pressure'], help='只复验指定类别')
     parser.add_argument('--verify', action='store_true', help='发现后回归模式，未预期的失败使测试返回非零')

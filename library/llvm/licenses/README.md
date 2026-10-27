@@ -7,3 +7,5 @@
 LLVM、Clang、LLD 与 compiler-rt 使用 [Apache-2.0 WITH LLVM-exception](../LICENSE.TXT)。分发中的 MinGW-w64 头文件保留各自文件内的版权与许可证说明；UCRT 导入库仅提供系统运行库的链接符号。
 
 本目录同时保存 MinGW-w64、mingw-w64 winpthreads、libc++、libunwind 和 libffi 的上游许可证。`manifest.json` 固定完整分发来源及校验值，避免依赖系统 PATH 中不确定的工具版本。
+
+`msys2-*` 文件来自锁定预编译 SDK 各包的 `share/licenses/`，包括 GCC 运行库例外、binutils、libxml2、zstd、zlib 和其他实际依赖的许可证。仅保留许可证文本，不将 SDK 入库。

@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--clang', default=os.environ.get('CHALI_LLVM_CLANG'))
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
-    bundled = ROOT / 'library/llvm/toolchain/bin/clang.exe'
+    bundled = ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe'
     clang = args.clang or (str(bundled) if os.name == 'nt' else shutil.which('clang'))
     if not clang:
         parser.error('找不到 LLVM clang；Windows 先运行 python library/llvm/setup.py')
@@ -26,7 +26,7 @@ def main():
             output = Path(directory) / 'runtime.ll'
             command = [clang, '--target=' + triple, '-S', '-emit-llvm', '-O1', 'source/aot/runtime.c', '-o', str(output)]
             if platform == 'windows':
-                command += ['-isystem', str(ROOT / 'library/llvm/toolchain/include')]
+                command += ['-isystem', str(ROOT / 'build/dependencies/llvm/toolchain/include')]
             subprocess.run(command, cwd=ROOT, check=True)
             generated = output.read_text(encoding='utf-8').replace(str(ROOT).replace('\\', '/') + '/', '')
             target = ROOT / f'source/aot/runtime_{platform}.ll'

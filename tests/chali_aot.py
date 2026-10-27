@@ -87,7 +87,7 @@ def main():
     options = parser.parse_args()
     compiler = options.chali.resolve()
     env = dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1')
-    cc = str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else shutil.which('clang')
+    cc = str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else shutil.which('clang')
     cc = os.environ.get('CHALI_LLVM_CLANG') or cc
     with tempfile.TemporaryDirectory(prefix='chali-aot-') as directory:
         work = Path(directory)

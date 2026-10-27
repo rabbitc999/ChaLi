@@ -6,7 +6,7 @@ endif
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：
 #   * source/ast：C 子集语法树 → 四元式 + .data（降级目标）
-#   * source/ircode ：四元式 → 栈指令 → 执行（跑出结果；大整数用 source/bignum）
+#   * source/ircode：四元式分析、优化与 AOT 共享运行时（大整数用 source/bignum）
 #   * source/preprocess：`%include` / `%if` / `%define` 那一步（源码进解析器之前）
 # 三份副本各跑 `make -C source/<名字>`（产物仍落在仓库根的 `build/<名字>/`），
 # 所有依赖都使用 CHALI 内部副本。
@@ -14,17 +14,17 @@ endif
 # 注意：`source/{ast,ircode,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
 # 改了这边不会自动同步到 ParseEngine 那份（反之亦然）——动其中一个时想清楚要不要一起改。
 #
-# 生成源码与报告位于 source/，对象文件与静态库位于 build/chali-frontend/。
+# 生成源码与报告位于 source/，对象文件与静态库位于 $(CHALI_BUILD_ROOT)/chali-frontend/。
 # 根目录只保留工具链入口与手写构建文件，重跑 gen.sh 不覆盖 local.mk。
 
 AST_DIR := source/ast
 VM_DIR  := source/ircode
 PP_DIR  := source/preprocess
-AST_LIB := build/chali-runtime/libast.a
-VM_BUILD := build/chali-ircode-aot-core
-HOST_BUILD := build/chali-host-records
+AST_LIB := $(CHALI_BUILD_ROOT)/chali-runtime/libast.a
+VM_BUILD := $(CHALI_BUILD_ROOT)/chali-ircode-aot-core
+HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-host-records
 HOST_LIB := $(HOST_BUILD)/librecords.a
-CAS_BUILD := build/chali-cas
+CAS_BUILD := $(CHALI_BUILD_ROOT)/chali-cas
 CAS_SOURCE_NAMES := $(shell $(PYTHON) tools/cas_sources.py)
 CAS_OBJS := $(addprefix $(CAS_BUILD)/,$(CAS_SOURCE_NAMES:.cpp=.o))
 IPAGE_OBJS := $(HOST_BUILD)/ipage_sql.o $(HOST_BUILD)/ipage_dialect.o
@@ -34,7 +34,7 @@ endif
 VM_LIB  := $(VM_BUILD)/libstackvm.a
 VM_SOURCE_NAMES := $(shell $(PYTHON) tools/stackvm_sources.py --aot-only)
 VM_OBJS := $(addprefix $(VM_BUILD)/,$(VM_SOURCE_NAMES:.cpp=.o))
-PP_LIB  := build/chali-runtime/libpreprocess.a
+PP_LIB  := $(CHALI_BUILD_ROOT)/chali-runtime/libpreprocess.a
 
 ifeq ($(OS),Windows_NT)
 CHALI_RUNTIME_MKDIR = powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$@' | Out-Null"
@@ -113,16 +113,16 @@ $(HOST_BUILD)/bigfloat.o: source/bignum/bigfloat.cpp source/bignum/bigfloat.hpp 
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 
 BIGINT_MODULE_OBJS := $(HOST_BUILD)/bigint_multiplication.o $(HOST_BUILD)/bigint_division.o $(HOST_BUILD)/bigint_number_theory.o $(HOST_BUILD)/bigint_bits.o $(HOST_BUILD)/bigint_modular.o $(HOST_BUILD)/bigint_conversion.o
-$(BIGINT_MODULE_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp build/chali-runtime/buildConfig.json | $(HOST_BUILD)
+$(BIGINT_MODULE_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 -include $(BIGINT_MODULE_OBJS:.o=.d) $(HOST_BUILD)/bigint.d $(HOST_BUILD)/bigfloat.d
 
 BIGFLOAT_MATH_OBJS := $(HOST_BUILD)/bigfloat_roots.o $(HOST_BUILD)/bigfloat_transcendental.o $(HOST_BUILD)/bigfloat_trigonometry.o
-$(BIGFLOAT_MATH_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp build/chali-runtime/buildConfig.json | $(HOST_BUILD)
+$(BIGFLOAT_MATH_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 
 $(HOST_BUILD)/sqlite3.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h | $(HOST_BUILD)
-	$(CC) -std=c11 -O2 -DSQLITE_THREADSAFE=1 -DSQLITE_OMIT_LOAD_EXTENSION=1 -c $< -o $@
+	$(CC) $(CFLAGS) -std=c11 -O2 -DSQLITE_THREADSAFE=1 -DSQLITE_OMIT_LOAD_EXTENSION=1 -c $< -o $@
 
 $(VM_LIB): $(VM_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
@@ -140,18 +140,18 @@ $(HOST_BUILD)/toml.o: source/toml/toml.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/toml_source.o: source/toml/toml_source.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o: build/chali-runtime/buildConfig.json
+$(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o: $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 -include $(wildcard $(HOST_BUILD)/*.d)
 
 $(CAS_BUILD)/%.o: library/caspp/%.cpp
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -Ilibrary/caspp/include -MMD -MP -c $< -o $@
 -include $(shell $(PYTHON) -c "from pathlib import Path; print(' '.join(str(p).replace(chr(92), '/') for p in Path('$(CAS_BUILD)').rglob('*.d')))")
-$(CAS_OBJS): build/chali-runtime/buildConfig.json
+$(CAS_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 $(HOST_BUILD)/ipage_%.o: library/ipage/source/ipage/%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(IPAGE_OBJS): build/chali-runtime/buildConfig.json
+$(IPAGE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 $(HOST_LIB): $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
@@ -177,24 +177,24 @@ samples: $(TARGET)
 	$(SH) check.sh
 
 # Keep allocator-specialized dependencies separate from the generic libraries.
-build/chali-runtime: | tmp
+$(CHALI_BUILD_ROOT)/chali-runtime: | tmp
 	$(CHALI_RUNTIME_MKDIR)
-AST_OBJS := build/chali-runtime/ast.o build/chali-runtime/ast_type.o build/chali-runtime/ast_node.o build/chali-runtime/ast_data.o build/chali-runtime/aggregate_optimize.o
-$(AST_OBJS): build/chali-runtime/%.o: $(AST_DIR)/%.cpp build/chali-runtime/buildConfig.json | build/chali-runtime
+AST_OBJS := $(CHALI_BUILD_ROOT)/chali-runtime/ast.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_type.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_node.o $(CHALI_BUILD_ROOT)/chali-runtime/ast_data.o $(CHALI_BUILD_ROOT)/chali-runtime/aggregate_optimize.o
+$(AST_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/%.o: $(AST_DIR)/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(CHALI_BUILD_ROOT)/chali-runtime
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(AST_OBJS:.o=.d)
-build/chali-runtime/preprocess.o: $(PP_DIR)/preprocess.cpp $(PP_DIR)/preprocess.hpp source/allocator/chali_allocator.hpp source/allocator/chali_pool.c | build/chali-runtime
+$(CHALI_BUILD_ROOT)/chali-runtime/preprocess.o: $(PP_DIR)/preprocess.cpp $(PP_DIR)/preprocess.hpp source/allocator/chali_allocator.hpp source/allocator/chali_pool.c | $(CHALI_BUILD_ROOT)/chali-runtime
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(AST_LIB): $(AST_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
-$(PP_LIB): build/chali-runtime/preprocess.o
+$(PP_LIB): $(CHALI_BUILD_ROOT)/chali-runtime/preprocess.o
 	$(AR) $(ARFLAGS) $@ $^
 $(FRONTEND_BUILD)/chali_main.o $(FRONTEND_BUILD)/chali_parser.o $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o: source/chali_runtime_allocator.hpp source/allocator/chali_allocator.hpp source/allocator/chali_pool.c source/allocator/chali_pool.h
 
 .PHONY: config-force
-build/chali-runtime/buildConfig.json: config-force
+$(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json: config-force
 	$(PYTHON) tools/write_build_config.py $@ "$(CXX)" "$(CXXFLAGS)" "$(LDLIBS)" "$(LDFLAGS)"
-$(LIB_OBJS) $(DEMO_OBJS) $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o build/chali-runtime/ast.o build/chali-runtime/preprocess.o: build/chali-runtime/buildConfig.json
+$(LIB_OBJS) $(DEMO_OBJS) $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(CHALI_BUILD_ROOT)/chali-runtime/ast.o $(CHALI_BUILD_ROOT)/chali-runtime/preprocess.o: $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 # JSON 与 TOML 实现由宿主库单独编译，包含依赖由 .d 文件维护。
 
@@ -203,7 +203,7 @@ $(LIB_OBJS) $(DEMO_OBJS) $(VM_OBJS) $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloa
 # （最小 JSON 与头文件级共用类型）本仓库自带：`source/json/` 与 `source/lsp/protocol_types.hpp`，不再引用外面。
 LSP_DIR := source/lsp
 LSP_LIB_DIR := source/lsp
-EMBEDDED_LSP_BUILD := build/chali-embedded-lsp
+EMBEDDED_LSP_BUILD := $(CHALI_BUILD_ROOT)/chali-embedded-lsp
 
 $(EMBEDDED_LSP_BUILD):
 	$(CHALI_RUNTIME_MKDIR)
@@ -227,27 +227,27 @@ $(FRONTEND_BUILD)/chali_parser.o $(FRONTEND_BUILD)/chali_main.o: source/chali_bo
 $(FRONTEND_BUILD)/chali_parser.o $(FRONTEND_BUILD)/chali_main.o: source/chali_borrow_flow.hpp
 
 # 原生语言服务和开发命令。
-CHALI_NATIVE_DEVELOPMENT := build/chali-native-development.o
+CHALI_NATIVE_DEVELOPMENT := $(CHALI_BUILD_ROOT)/chali-native-development.o
 DEMO_OBJS += $(CHALI_NATIVE_DEVELOPMENT)
 $(TARGET): $(CHALI_NATIVE_DEVELOPMENT)
-build/chali-native: | tmp
+$(CHALI_BUILD_ROOT)/chali-native: | tmp
 	$(CHALI_RUNTIME_MKDIR)
-$(CHALI_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/syntax/source_text.hpp source/chali_module.hpp source/chali_stdlib.hpp | build/chali-native
-	$(CXX) $(CXXFLAGS) -MMD -MP -MF build/chali-native-development.d -I. -c $< -o $@
+$(CHALI_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/syntax/source_text.hpp source/chali_module.hpp source/chali_stdlib.hpp | $(CHALI_BUILD_ROOT)/chali-native
+	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(CHALI_BUILD_ROOT)/chali-native-development.d -I. -c $< -o $@
 $(CHALI_NATIVE_DEVELOPMENT): source/chali_i18n.hpp source/console/utf8.hpp
 $(FRONTEND_BUILD)/chali_tool.o: tools/native_development.hpp
 
 # 内置 ZIP/Gzip 的 Deflate 解压器；仅构建解压部分。
-CHALI_MINIZ := build/chali-miniz-tinfl.o
+CHALI_MINIZ := $(CHALI_BUILD_ROOT)/chali-miniz-tinfl.o
 LIB_OBJS += $(CHALI_MINIZ)
 $(LIB): $(CHALI_MINIZ)
-$(CHALI_MINIZ): $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h | build/chali-native
-	$(CC) -O2 -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_DEFLATE_APIS -c $< -o $@
+$(CHALI_MINIZ): $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h | $(CHALI_BUILD_ROOT)/chali-native
+	$(CC) $(CFLAGS) -O2 -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_DEFLATE_APIS -c $< -o $@
 ifeq ($(OS),Windows_NT)
 LDLIBS += -lwinhttp
 endif
 
--include build/chali-native-development.d
+-include $(CHALI_BUILD_ROOT)/chali-native-development.d
 
 # 泛型与闭包文本处理实现独立编译，解析器和语言服务只依赖声明。
 CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_debug chali_aot_llvm chali_aot_runtime_assets chali_temp
@@ -256,33 +256,40 @@ LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)
 $(CHALI_FRONTEND_MODULE_OBJS): $(FRONTEND_BUILD)/%.o: source/%.cpp | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(CHALI_FRONTEND_MODULE_OBJS): build/chali-runtime/buildConfig.json
+$(CHALI_FRONTEND_MODULE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 -include $(wildcard $(FRONTEND_BUILD)/*.d)
 
-# 静态 LLVM 变体只替换后端隔离单元，普通前端及 VM 对象可复用。
+# 静态 LLVM 变体只替换后端隔离单元，使用匹配 GCC 并隔离全部对象文件。
 CHALI_STATIC_LLVM ?= 0
-CHALI_LLVM_SDK ?= library/llvm/static-sdk
-build/chali-native/llvmLinkMode.json: config-force
+CHALI_LLVM_SDK ?= build/dependencies/llvm/static-sdk
+$(CHALI_BUILD_ROOT)/chali-native/llvmLinkMode.json: config-force
 	$(PYTHON) tools/write_build_config.py $@ "$(CHALI_STATIC_LLVM)" "$(CHALI_LLVM_SDK)" "$(CHALI_AOT_LDLIBS)"
-$(TARGET): build/chali-native/llvmLinkMode.json
+$(TARGET): $(CHALI_BUILD_ROOT)/chali-native/llvmLinkMode.json
 ifeq ($(CHALI_STATIC_LLVM),1)
 ifneq ($(OS),Windows_NT)
 $(error 当前静态 LLVM 分发仅验收 Windows x64)
 endif
+override CXXFLAGS += --sysroot=$(abspath $(CHALI_LLVM_SDK))
+LDFLAGS += --sysroot=$(abspath $(CHALI_LLVM_SDK)) -fuse-ld=lld
 CHALI_LLVM_CONFIG := $(CHALI_LLVM_SDK)/bin/llvm-config.exe
 ifeq ($(wildcard $(CHALI_LLVM_CONFIG)),)
 $(error 请先执行 python library/llvm/setup_static.py 恢复静态 LLVM 开发库)
 endif
-CHALI_LLVM_STATIC_OBJ := build/chali-native/chali_aot_llvm_static.o
-CHALI_LLVM_COMPONENTS := core irreader passes x86codegen x86asmparser dtlto libdriver lto option windowsdriver windowsmanifest
+CHALI_LLVM_STATIC_OBJ := $(CHALI_BUILD_ROOT)/chali-native/chali_aot_llvm_static.o
+CHALI_LLVM_COMPONENTS := core irreader passes x86codegen x86asmparser dtlto libdriver lto option windowsdriver windowsmanifest all-targets
 CHALI_LLVM_LIBS := $(shell $(CHALI_LLVM_CONFIG) --link-static --libs $(CHALI_LLVM_COMPONENTS))
-CHALI_LLVM_SYSTEM_LIBS := $(shell $(CHALI_LLVM_CONFIG) --link-static --system-libs $(CHALI_LLVM_COMPONENTS))
+CHALI_LLVM_SYSTEM_LIBS := $(subst -lzstd.dll,-lzstd,$(shell $(CHALI_LLVM_CONFIG) --link-static --system-libs $(CHALI_LLVM_COMPONENTS))) -liconv -lbcrypt
 DEMO_OBJS += $(CHALI_LLVM_STATIC_OBJ)
+CHALI_LLVM_IMPORT_OBJ := $(CHALI_BUILD_ROOT)/chali-native/llvm_static_imports.o
+DEMO_OBJS += $(CHALI_LLVM_IMPORT_OBJ)
+$(TARGET): $(CHALI_LLVM_IMPORT_OBJ)
+$(CHALI_LLVM_IMPORT_OBJ): tools/llvm_static_imports.cpp | $(CHALI_BUILD_ROOT)/chali-native
+	$(CXX) $(CXXFLAGS) -I$(CHALI_LLVM_SDK)/include/libxml2 -MMD -MP -c $< -o $@
 $(TARGET): $(CHALI_LLVM_STATIC_OBJ)
-CHALI_AOT_LDLIBS := -L$(CHALI_LLVM_SDK)/lib -Wl,--start-group -llldMinGW -llldCOFF -llldCommon $(CHALI_LLVM_LIBS) -Wl,--end-group $(CHALI_LLVM_SYSTEM_LIBS)
-$(CHALI_LLVM_STATIC_OBJ): source/chali_aot_llvm.cpp source/chali_aot_llvm.hpp source/chali_aot.hpp $(CHALI_LLVM_CONFIG) | build/chali-native
-	$(CXX) $(CXXFLAGS) -DCHALI_STATIC_LLVM=1 -I$(CHALI_LLVM_SDK)/include -Ilibrary -MMD -MP -c $< -o $@
--include build/chali-native/chali_aot_llvm_static.d
+CHALI_AOT_LDLIBS := -L$(CHALI_LLVM_SDK)/lib -Wl,--start-group -llldMinGW -llldCOFF -llldCommon $(CHALI_LLVM_LIBS) $(CHALI_LLVM_SYSTEM_LIBS) -Wl,--end-group
+$(CHALI_LLVM_STATIC_OBJ): source/chali_aot_llvm.cpp source/chali_aot_llvm.hpp source/chali_aot.hpp $(CHALI_LLVM_CONFIG) | $(CHALI_BUILD_ROOT)/chali-native
+	$(CXX) $(CXXFLAGS) -DCHALI_STATIC_LLVM=1 -DLLVM_BUILD_STATIC -I$(CHALI_LLVM_SDK)/include -Ilibrary -MMD -MP -c $< -o $@
+-include $(CHALI_BUILD_ROOT)/chali-native/chali_aot_llvm_static.d
 endif
 
 # 编译期 AST 宏的独立实现，避免 regex 等重型头传播到解析器接口。
@@ -292,7 +299,7 @@ LIB_OBJS += $(CHALI_MACRO_OBJS)
 $(LIB): $(CHALI_MACRO_OBJS)
 $(CHALI_MACRO_OBJS): $(FRONTEND_BUILD)/macro_%.o: source/macro/%.cpp | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(CHALI_MACRO_OBJS): build/chali-runtime/buildConfig.json
+$(CHALI_MACRO_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 CHALI_LITERAL_OBJ := $(FRONTEND_BUILD)/string_escape.o
 LIB_OBJS += $(CHALI_LITERAL_OBJ)
@@ -312,39 +319,40 @@ LIB_OBJS += $(CHALI_SYNTAX_OBJS)
 $(LIB): $(CHALI_SYNTAX_OBJS)
 $(CHALI_SYNTAX_OBJS): $(FRONTEND_BUILD)/syntax_%.o: source/syntax/%.cpp | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(CHALI_LITERAL_OBJ): build/chali-runtime/buildConfig.json
+$(CHALI_LITERAL_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
+CHALI_EMBED_SOURCE := $(FRONTEND_BUILD)/chali_stdlib_embedded.cpp
 CHALI_STDLIB_OBJ := $(FRONTEND_BUILD)/chali_stdlib_embedded.o
 LIB_OBJS += $(CHALI_STDLIB_OBJ)
 $(LIB): $(CHALI_STDLIB_OBJ)
-$(CHALI_STDLIB_OBJ): source/chali_stdlib_embedded.cpp source/chali_stdlib.hpp | $(FRONTEND_BUILD)
+$(CHALI_STDLIB_OBJ): $(CHALI_EMBED_SOURCE) source/chali_stdlib.hpp | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(CHALI_STDLIB_OBJ): build/chali-runtime/buildConfig.json
+$(CHALI_STDLIB_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 -include $(wildcard $(EMBEDDED_LSP_BUILD)/*.d)
 
 # AOT 复用共享原生服务；先构建静态库资产，再嵌入编译器，首次克隆同样自动完成。
-CHALI_AOT_HOST_BUILD := build/chali-aot-host
+CHALI_AOT_HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-aot-host
 CHALI_AOT_HOST_OBJECT := $(CHALI_AOT_HOST_BUILD)/native_runtime.o
 CHALI_AOT_PROFILE_OBJECT := $(CHALI_AOT_HOST_BUILD)/backend_profile.o
-$(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp build/chali-runtime/buildConfig.json
+$(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
-$(CHALI_AOT_HOST_OBJECT): source/aot/native_runtime.cpp build/chali-runtime/buildConfig.json
+$(CHALI_AOT_HOST_OBJECT): source/aot/native_runtime.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(CHALI_AOT_HOST_BUILD)/native_runtime.d
 -include $(CHALI_AOT_HOST_BUILD)/backend_profile.d
 $(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
-	$(PYTHON) tools/build_aot_host.py --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --output $@
+	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --output $@
 
 # 更新标准库或胶水实现时只刷新单个内嵌资产对象，不重编宿主入口。
-CHALI_EMBED_INPUTS := $(shell $(PYTHON) tools/embed_stdlib.py --dependencies)
+CHALI_EMBED_INPUTS := $(shell $(PYTHON) tools/embed_stdlib.py --build-root "$(CHALI_BUILD_ROOT)" --dependencies)
 CHALI_EMBED_STAMP := $(FRONTEND_BUILD)/stdlib_assets.stamp
 $(CHALI_EMBED_STAMP): $(CHALI_EMBED_INPUTS) | $(FRONTEND_BUILD)
-	$(PYTHON) tools/embed_stdlib.py --stamp $@
-source/chali_stdlib_embedded.cpp: $(CHALI_EMBED_STAMP)
-	$(PYTHON) tools/embed_stdlib.py
+	$(PYTHON) tools/embed_stdlib.py --build-root "$(CHALI_BUILD_ROOT)" --output "$(CHALI_EMBED_SOURCE)" --stamp $@
+$(CHALI_EMBED_SOURCE): $(CHALI_EMBED_STAMP)
+	$(PYTHON) tools/embed_stdlib.py --build-root "$(CHALI_BUILD_ROOT)" --output "$(CHALI_EMBED_SOURCE)"
 $(CHALI_STDLIB_OBJ): | $(CHALI_EMBED_STAMP)
 
 # 依赖只落入构建缓存；并行编译须等待校验结束。

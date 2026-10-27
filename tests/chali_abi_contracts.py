@@ -19,7 +19,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali abi contracts ') as directory:
         work = Path(directory)
         env = dict(os.environ, CHALI_ABI_CACHE_DIR=str(work / 'cache'),
-                   CHALI_LLVM_CLANG=(str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
+                   CHALI_LLVM_CLANG=(str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
 
         def invoke(command):
             """执行外部命令，失败时保留完整诊断。"""

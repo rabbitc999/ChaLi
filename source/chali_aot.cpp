@@ -2321,10 +2321,24 @@ Text compilerPath(const Memory::String &wanted)
     if (!error) roots.push_back(executable.parent_path());
     const char *name = "clang";
 #endif
+    Memory::Vector<Memory::String> toolDirectories = {"build/dependencies/llvm/toolchain/bin", "llvm/bin"};
+#ifndef _WIN32
+#if defined(__APPLE__)
+    const Memory::String hostSystem = "macos";
+#else
+    const Memory::String hostSystem = "linux";
+#endif
+#if defined(__aarch64__) || defined(__arm64__)
+    const Memory::String hostArchitecture = "arm64";
+#else
+    const Memory::String hostArchitecture = "x64";
+#endif
+    toolDirectories.insert(toolDirectories.begin(), "build/dependencies/llvm/" + hostSystem + "-" + hostArchitecture + "/toolchain/bin");
+#endif
     for (const auto &root : roots)
-        for (const auto &relative : { "library/llvm/toolchain/bin", "llvm/bin" })
+        for (const auto &relative : toolDirectories)
         {
-            const auto path = root / relative / name;
+            const auto path = root / relative.c_str() / name;
             if (std::filesystem::is_regular_file(path)) return path.u8string();
         }
     return "clang";

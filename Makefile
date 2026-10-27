@@ -26,6 +26,15 @@
 # 命令行传参（make CXX=clang++ ...）优先级最高，仍可覆盖。
 CXX      = g++
 AR       = ar
+ifeq ($(CHALI_STATIC_LLVM),1)
+CHALI_LLVM_SDK ?= build/dependencies/llvm/static-sdk
+CXX = $(CHALI_LLVM_SDK)/bin/g++.exe
+CC = $(CHALI_LLVM_SDK)/bin/gcc.exe
+CFLAGS += --sysroot=$(abspath $(CHALI_LLVM_SDK))
+AR = $(CHALI_LLVM_SDK)/bin/ar.exe
+CHALI_BUILD_ROOT ?= build/llvm-static-gcc16
+export PATH := $(abspath $(CHALI_LLVM_SDK)/bin);$(PATH)
+endif
 # Release 口径（默认）：关断言 + 按函数/数据分节，配合链接期裁剪与 strip 减小产物体积。
 # 需要调试时覆盖：make CXXFLAGS="-std=c++17 -Wall -Wextra -O0 -g" LDFLAGS=""
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -DNDEBUG -ffunction-sections -fdata-sections
@@ -42,8 +51,9 @@ export TEMP := $(CURDIR)/tmp
 ARFLAGS  = rcs
 
 # lztext：内嵌标准库 / 运行时资产的压缩存储与运行时解压（见 source/lztext/README.md）。
-# dap：VS Code 断点调试用的 DAP 服务端（见 dap/dap_server.hpp）。
-FRONTEND_BUILD := build/chali-frontend
+CHALI_BUILD_ROOT ?= build
+export CHALI_BUILD_ROOT
+FRONTEND_BUILD := $(CHALI_BUILD_ROOT)/chali-frontend
 LIB_SRCS  := source/chali_parser.cpp source/lztext/lztext.cpp
 DEMO_SRCS := source/chali_main.cpp
 HDRS      := source/chali_parser.hpp source/chali_parser_user.h
@@ -67,7 +77,7 @@ all: $(LIB) $(TARGET)
 tmp:
 	python -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
 
-# AOT 的 LLVM 工具及其链接依赖由仓库离线归档恢复，VM 构建不要求 LLVM。
+# AOT 的 LLVM 工具及静态 SDK 从锁定上游在线准备，下载缓存不入库。
 llvm:
 	python library/llvm/setup.py
 

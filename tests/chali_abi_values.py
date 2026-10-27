@@ -23,7 +23,7 @@ def execute(compiler, source, output, succeeds=True, env=None, aot=False):
         return run([compiler, 'run', source, '--out', output], succeeds=succeeds, env=env)
     environment = {**(os.environ if env is None else env)}
     environment['PATH'] = str(WORK) + os.pathsep + environment.get('PATH', '')
-    environment['CHALI_LLVM_CLANG'] = (str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
+    environment['CHALI_LLVM_CLANG'] = (str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
     command = [compiler, 'aot', source, '--out', output]
     result = subprocess.run(list(map(str, command)), cwd=ROOT, text=True, encoding='utf-8', capture_output=True, env=environment, timeout=180)
     if result.returncode != 0:

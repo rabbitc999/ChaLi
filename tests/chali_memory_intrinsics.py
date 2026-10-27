@@ -62,7 +62,7 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()
     compiler = args.chali.resolve()
-    clang = os.environ.get('CHALI_LLVM_CLANG', str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
+    clang = os.environ.get('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
     work = Path(tempfile.mkdtemp(prefix='memory-intrinsics-'))
     env = dict(os.environ, CHALI_LLVM_CLANG=clang)
     results = []

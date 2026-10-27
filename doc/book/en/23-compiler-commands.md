@@ -20,4 +20,4 @@ Set the tool display language with the documented language option or configurati
 
 Diagnostics contain a location and useful context. Preserve their original text when propagating errors through wrappers. Compilation and program execution are distinct phases, so report their times separately in performance work.
 
-Exercise: inspect the same book chapter as terminal text and JSON. Export the book in an empty directory and open its English README. Next: [AOT export](24-aot-export.md).
+Exercise: inspect the same book chapter as terminal text and JSON. Export the book in an empty directory and open its English README. Next: [unsafe code](24-unsafe-code.md).

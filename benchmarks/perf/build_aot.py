@@ -1,6 +1,7 @@
 """将同一份 ChaLi 计算函数导出为 LLVM 模块，由独立 C 计时壳测量原生产物。"""
 import argparse
 import os
+import platform
 from pathlib import Path
 import re
 import shutil
@@ -15,7 +16,10 @@ def llvm_compiler():
     explicit = os.environ.get('CHALI_LLVM_CLANG')
     if explicit:
         return explicit
-    bundled = HERE.parents[1] / 'library/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang')
+    host = {'Darwin': 'macos', 'Linux': 'linux'}.get(platform.system(), platform.system().lower())
+    arch = {'amd64': 'x64', 'x86_64': 'x64', 'aarch64': 'arm64', 'arm64': 'arm64'}.get(platform.machine().lower(), platform.machine().lower())
+    relative = 'toolchain/bin/clang.exe' if os.name == 'nt' else host + '-' + arch + '/toolchain/bin/clang'
+    bundled = HERE.parents[1] / 'build/dependencies/llvm' / relative
     return str(bundled) if bundled.is_file() else shutil.which('clang')
 
 

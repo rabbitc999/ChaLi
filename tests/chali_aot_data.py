@@ -23,7 +23,7 @@ def main():
     compiler = args.chali.resolve()
     work = Path(tempfile.mkdtemp(prefix='aot-data-'))
     env = dict(os.environ)
-    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'library/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
+    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
     env.pop('CHALI_AOT_KEEP_DATA', None)
     report = {'version': (ROOT / 'VERSION').read_text().strip(), 'platform': platform.platform(),
               'configuration': 'external LLVM; default optimization and reflection; explicit --checked for all AOT variants',

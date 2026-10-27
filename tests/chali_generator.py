@@ -127,7 +127,7 @@ def main():
                 arguments += ["--out", str(target)]
             environment = dict(os.environ)
             if os.name == "nt":
-                environment.setdefault("CHALI_LLVM_CLANG", str(ROOT / "library/llvm/toolchain/bin/clang.exe"))
+                environment.setdefault("CHALI_LLVM_CLANG", str(ROOT / "build/dependencies/llvm/toolchain/bin/clang.exe"))
             result = subprocess.run(arguments, cwd=WORK, env=environment, capture_output=True, text=True,
                                     encoding="utf-8", errors="replace", timeout=180)
             if native:
