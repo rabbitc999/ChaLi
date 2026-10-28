@@ -1,0 +1,19 @@
+build O2 list_growth
+build O2 map_growth
+build O2 set_growth
+build O2 enum_payload
+build O2 interface_mono
+build O2 interface_poly
+build O2 struct_nested
+build O2 array_2d
+build O2 array_3d
+median O2 list_growth 2.137 ms
+median O2 map_growth 1.836 ms
+median O2 set_growth 1.8816 ms
+median O2 enum_payload 1.6884 ms
+median O2 interface_mono 0.2825 ms
+median O2 interface_poly 0.5095 ms
+median O2 struct_nested 1.1711 ms
+median O2 array_2d 0.5668 ms
+median O2 array_3d 0.6806 ms
+saved; reused four old O2 items, measured only previously missing O2 configurations
