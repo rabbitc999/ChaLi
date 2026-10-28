@@ -418,7 +418,7 @@ bool EnsureTupleLayout(const std::shared_ptr<MType> &type);
  * @brief 需要可取引用存储的变量名，每次编译重新收集。
  */
 Memory::Set<Memory::String> g_addressTakenNames;
-/** @brief 无调用纯函数可精确收集的取址名字；空指针使用原全程序保守集合。 */
+/** @brief 当前函数可精确收集的取址名字；空指针使用原全程序保守集合。 */
 const Memory::Set<Memory::String> *g_functionAddressTakenNames = nullptr;
 
 /**
@@ -449,7 +449,7 @@ bool NeedsReferenceStorage(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 判断当前函数中的值是否需要可取址存储，只精化无隐式拥有协议的标量。
+ * @brief 判断当前函数中的值是否需要可取址存储，只精化无拥有协议的基础标量。
  * @param name 当前声明或形参的源码名称。
  * @param type 当前实例化后的实际类型。
  * @return 当前函数确有取址用途或仍需保守处理时返回真。

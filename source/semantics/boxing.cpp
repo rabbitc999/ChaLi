@@ -4146,7 +4146,7 @@ void AppendCleanupBlock(ast::Function &function)
 }
 
 /**
- * @brief 在没有调用或闭包的函数中按实际语法收集标量取址需求，避免其他函数同名变量干扰。
+ * @brief 按函数收集显式标量取址需求，遇到捕获、延迟执行或转换时保守回退。
  */
 class FunctionReferenceStorageScope
 {
@@ -4155,7 +4155,7 @@ class FunctionReferenceStorageScope
 
 public:
     /**
-     * @brief 收集当前函数的显式取址和带值退出；存在未知调用或闭包时整体退回原集合。
+     * @brief 收集显式取址、移动、迭代和带值退出，避免其他函数同名变量干扰。
      * @param bodyId 当前函数体的语法节点编号。
      */
     explicit FunctionReferenceStorageScope(int bodyId)
@@ -4163,6 +4163,8 @@ public:
         g_functionAddressTakenNames = nullptr;
         const auto *disabled = std::getenv("CHALI_NO_SCOPED_REFERENCE_STORAGE");
         if (bodyId < 0 || (disabled && *disabled)) return;
+        const auto *disableCalls = std::getenv("CHALI_NO_CALL_SCOPED_REFERENCE_STORAGE");
+        const bool allowCalls = !(disableCalls && *disableCalls);
         bool exact = true;
         Memory::Set<int> visited;
         std::function<void(int)> breakValue = [&](int id) {
@@ -4175,7 +4177,9 @@ public:
         std::function<void(int)> visit = [&](int id) {
             if (id < 0 || !exact || !visited.insert(id).second) return;
             const auto &node = N(id);
-            if (node.kind == MNode::Call || node.kind == MNode::Lambda || node.kind == MNode::FuncDef
+            if ((!allowCalls && node.kind == MNode::Call)
+                || node.kind == MNode::Lambda || node.kind == MNode::FuncDef
+                || node.kind == MNode::Defer || node.kind == MNode::Cast
                 || (node.kind == MNode::Var && node.s.rfind("__chali_lambda_", 0u) == 0u))
             {
                 exact = false;
@@ -4188,6 +4192,20 @@ public:
                 if (operand.kind == MNode::EnumCtor) names_.insert(operand.s2);
             }
             if (node.kind == MNode::Break && node.type2 != 1 && !node.kids.empty()) breakValue(node.kids[0]);
+            if (node.kind == MNode::Call && !node.kids.empty())
+            {
+                const auto &callee = N(node.kids[0]);
+                if (StandardCallName(callee) == "__move" && node.kids.size() > 1u)
+                    for (const auto argument : N(node.kids[1]).kids)
+                        if (N(argument).kind == MNode::Var) names_.insert(N(argument).s);
+                if (callee.kind == MNode::Member && !callee.kids.empty()
+                    && (callee.s == "iter" || callee.s == "iterMut" || callee.s == "intoIter" || callee.s == "getOption"))
+                {
+                    const auto &receiver = N(callee.kids[0]);
+                    if (receiver.kind == MNode::Var) names_.insert(receiver.s);
+                    if (receiver.kind == MNode::EnumCtor) names_.insert(receiver.s2);
+                }
+            }
             if (node.kind == MNode::Block) visit(static_cast<int>(node.i));
             for (const auto child : node.kids) visit(child);
         };

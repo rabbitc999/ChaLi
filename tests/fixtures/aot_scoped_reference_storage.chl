@@ -26,6 +26,18 @@ int64 shadowedLocal(int64 seed) {
     return value;
 }
 T identity<T>(T value) { return value; }
+void increment(int64 mut& value) { value = value + 1; }
+#export("called_value")
+int64 calledValue(int64 seed) {
+    int64 value = seed;
+    return identity<int64>(value) + 3;
+}
+int64 calledBorrow(int64 value) { increment(&value); return value; }
+int64 movedScalar(int64 seed) {
+    int64 value = seed;
+    int64 result = move value;
+    return result;
+}
 int64 expected(int64 seed) {
     int64 total = seed; int64 index = 0;
     while (index < 4096) { total = (total * 33 + index) & 2147483647; index = index + 1; }
@@ -33,6 +45,7 @@ int64 expected(int64 seed) {
 }
 void main() {
     assert(pureValue(3) == expected(3));
+    assert(calledValue(5) == 8 && calledBorrow(5) == 6 && movedScalar(9) == 9);
     assert(addressTaken(5) == 12 && borrowedLocal(5) == 16 && shadowedLocal(5) == 5);
     assert(identity<int64>(41) == 41 && identity<float64>(1.25) == 1.25);
     assert(identity<bool>(true) && identity<char>('q') == 'q');

@@ -1,0 +1,110 @@
+{
+  "compiler_sha256": "1a9fc19df0808b4f5c8d11af3f8d4d615cef0d42828a357e48b2572119e74868",
+  "reference_sha256": "ee3c2b1dbb3db5e7eb8e8a950312d818a81dd3386c631a3c2531ec3e89147e59",
+  "results": [
+    {
+      "name": "before-malloc-False",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "enabled-malloc-False",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 0
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "enabled-malloc-True",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 0
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "calls-off-malloc-False",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "calls-off-malloc-True",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "all-off-malloc-False",
+      "allocations": {
+        "pureValue": 1,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "all-off-malloc-True",
+      "allocations": {
+        "pureValue": 1,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "enabled-pool-False",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 0
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "enabled-pool-True",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 0
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "calls-off-pool-False",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "calls-off-pool-True",
+      "allocations": {
+        "pureValue": 0,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "all-off-pool-False",
+      "allocations": {
+        "pureValue": 1,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "all-off-pool-True",
+      "allocations": {
+        "pureValue": 1,
+        "calledValue": 1
+      },
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    }
+  ]
+}

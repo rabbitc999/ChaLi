@@ -54,3 +54,18 @@ python benchmarks/features/cpp_supplement.py --reference benchmarks/results/1.0.
 ```
 
 预检不计时；正式结果仍保留 5 个进程 × 5 轮，允许 C++ 正常内联及去虚拟化。后续仅复用该补充结果，不再次启动它来评测。
+
+## 当前最终门槛：C++ O2
+
+用户随后将最终上限改为 **C++ O2 耗时的 1.05 倍**，并仍要求快于 Lua。上面的 O3 测量已经完成，只保留为历史或附加参考，不改名，也不重跑。
+
+当前四项旧 O2（整数、浮点、小函数、数组）复用 `benchmarks/results/aot-1.0.8/results.json`。对应 C++ 源码自首次入库未变，宿主、工具主版本及校验一致；旧数据没有测量当时的源码摘要，因此分别记录现有源码与初始 Git 对象摘要，不声称补出了历史测量摘要。
+
+其余三个动态增长集合及六项特征没有当前负载的 O2 数据，仅首次建立这些新配置：
+
+```powershell
+python benchmarks/cpp_o2_baseline.py --build-only --out tmp/cpp-o2-build-check
+python benchmarks/cpp_o2_baseline.py --establish-baseline --runs 5 --out benchmarks/results/1.0.11-cpp-o2-reference
+```
+
+构建检查不执行参考程序。正式工具只计时缺少的九项，不重新执行那四项旧 O2，也不执行 Rust、Java、Lua 或已有 O3。该 O2 参考建立后，后续只读取并复用其原始数据；各项最终门槛分别判定，不用平均数抵消慢项。

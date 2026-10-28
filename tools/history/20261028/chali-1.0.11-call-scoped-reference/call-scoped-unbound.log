@@ -1,0 +1,5 @@
+chali aot: 引用尚未绑定有效元素；缺省值请使用 Option
+调用栈（内 → 外）：
+  main
+
+unbound reference diagnostic preserved
