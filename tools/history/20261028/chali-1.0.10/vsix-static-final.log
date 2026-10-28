@@ -123,8 +123,8 @@ Executing prepublish script 'npm run vscode:prepublish'...
 内嵌编译器已是最新：bin\chali.exe（163840000 字节，来自参数 / CHALI_BIN）
  INFO  Files included in the VSIX:
 chali-editor-1.0.10-llvm-static.vsix
-├─ [Content_Types].xml 
-├─ extension.vsixmanifest 
+├─ [Content_Types].xml
+├─ extension.vsixmanifest
 └─ extension/
    ├─ LICENSE.txt [11.29 KB]
    ├─ NOTICE [0.16 KB]
