@@ -192,7 +192,7 @@
 
 - [x] 已收集本函数显式取址、move、迭代器及 getOption 接收者需求；闭包、defer、转换与拥有值保守回退，新增单独关闭含调用精化的开关。
 - [x] 修改前及 12 组开关／分配器／检查模式、完整 AOT、泛型、回调、资源、集合、引用与借用控制流通过；证据在 `tools/history/20261028/chali-1.0.11-call-scoped-reference/`。
-- [ ] 提交推送后只测 ChaLi，读取当前 O2 参考作最终门槛比较，不重复已测语言配置。
+- [x] `a619614` 提交推送后仅测 ChaLi 十三项，原始数据与 O2 逐项比较保存在 `benchmarks/results/1.0.11-call-scoped-reference/` 和 `1.0.11-feature-call-scoped-reference/`。List 127.738 ms、枚举 2.1781 ms；目前仅三项满足最终门槛，继续优化，其他语言未重测。
 
 
 ### 用户调整最终门槛：C++ O2（取代此前 O3 目标）
