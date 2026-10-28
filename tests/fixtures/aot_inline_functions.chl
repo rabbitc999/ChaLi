@@ -1,0 +1,36 @@
+/** 短函数内联不得改变实参求值次数、局部独立性、递归和闭包调用。 */
+int64 calls=0;
+int64 nextValue() { calls=calls+1; return calls; }
+int64 shortAdd(int64 left,int64 right) { return left*100+right; }
+int64 localValue(int64 value) { int64 local=value+3; return local*2; }
+#export("inline_probe")
+int64 inlineProbe(int64 value) { return shortAdd(value,3); }
+int64 factorial(int64 value) {
+    if (value<=1) { return 1; }
+    return value*factorial(value-1);
+}
+int64 even(int64 value) {
+    if (value==0) { return 1; }
+    return odd(value-1);
+}
+int64 odd(int64 value) {
+    if (value==0) { return 0; }
+    return even(value-1);
+}
+int64 apply(int64 fn(int64) callback,int64 value) { return callback(value); }
+int64 doubleValue(int64 value) { return value*2; }
+String ownedValue(String value) { String local=value+"!"; return local; }
+void main() {
+    assert(shortAdd(nextValue(),nextValue())==102 && calls==2);
+    assert(localValue(4)==14 && localValue(9)==24);
+    assert(factorial(6)==720);
+    assert(even(14)==1 && odd(14)==0);
+    assert(apply(doubleValue,21)==42);
+    int64 offset=5;
+    let captured=int64 fn(int64 value) { return value+offset; };
+    assert(apply(captured,7)==12);
+    String source="inline";
+    String copied=ownedValue(source);
+    assert(source=="inline" && copied=="inline!");
+    println("inline functions OK");
+}

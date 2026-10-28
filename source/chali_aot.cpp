@@ -281,6 +281,7 @@ struct Translator
     std::map<std::string, std::set<std::string>> temporaryUsers;  ///< 临时符号的实际使用函数，用于识别跨函数共享值。
     NativeDebugInfo debugInfo; ///< 原生源码位置与变量元数据。
     std::map<std::string, const ast::Function *> astFunctions; ///< 直接后端的函数 AST。
+    std::set<std::string> astInlineFunctions; ///< 已证明无递归且符合展开预算的 AST 函数。
     std::map<std::string, Memory::Map<Memory::String, Memory::String>> astSymbols; ///< 函数内名字的独立存储身份。
     std::map<const ast::Node *, std::size_t> astData; ///< AST 常量节点的数据地址。
     Memory::Map<Memory::String, ast::TypePtr> astTypes; ///< AST 类型查询环境。

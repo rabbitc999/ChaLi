@@ -1,0 +1,5 @@
+inline-malloc-False-False PASS
+inline-malloc-True-False PASS
+inline-pool-False-False PASS
+inline-pool-True-False PASS
+inline-malloc-True-True PASS

@@ -43,6 +43,92 @@ Memory::String astDataLiteral(const ast::NodePtr &node, const ast::TypePtr &type
 }
 
 /**
+ * @brief 识别只承担地址或标量存储转发的标准包装函数。
+ * @param rawLabel 函数的完整标签。
+ * @return 属于标准操作包装时返回 true。
+ */
+bool astPrimitiveWrapper(const Text &rawLabel)
+{
+    Text label = rawLabel;
+    const Text destinationPrefix = "__chali_into$";
+    if (label.rfind(destinationPrefix, 0u) == 0u)
+    {
+        const auto separator = label.find('$', destinationPrefix.size());
+        if (separator != Text::npos) label = label.substr(separator + 1u);
+    }
+    static const char *const prefixes[] = {
+        "std::lang::dereference__", "std::lang::barePointer__", "std::lang::pointerFromAddress__",
+        "std::lang::__pointerCast__", "std::lang::readAt__", "std::lang::borrowAt__",
+        "std::lang::initAt__", "std::lang::takeAt__", "std::lang::memcpy__", "std::lang::memset__",
+        "BarePtr__", "std::lang::BarePtr__", "std::lang::__bootList", "std::lang::__bootMap",
+        "std::lang::__bootSet", "std::lang::__bootString", "std::lang::__bootAlgorithm"
+    };
+    for (const auto *prefix : prefixes)
+        if (label.rfind(prefix, 0u) == 0u) return true;
+    return (label.rfind("RawStorage__", 0u) == 0u || label.rfind("std::lang::RawStorage__", 0u) == 0u)
+           && (label.find(".pointer") != Text::npos || label.find(".capacity") != Text::npos
+               || label.find(".isInitialized") != Text::npos);
+}
+
+/**
+ * @brief 按调用依赖自底向上计算展开规模，排除递归环、间接调用及其调用者。
+ * @param state 已登记函数及可达集合的 LLVM 生成状态。
+ * @note 只分析 AST，不生成四元式；重复调用按实际次数累计成本，避免短函数链展开失控。
+ */
+void analyzeAstInlining(Translator &state)
+{
+    if (!state.inlineHints || state.watchdogUsed) return;
+    constexpr std::size_t shortBudget = 48, primitiveBudget = 256, overflow = primitiveBudget + 1;
+    std::map<Text, std::size_t> remaining, ownCost, expandedCost;
+    std::map<Text, std::vector<Text>> calls, callers;
+    for (const auto &entry : state.astFunctions)
+    {
+        if (!state.reachable.count(entry.first)) continue;
+        auto &dependencies = remaining[entry.first];
+        auto &cost = ownCost[entry.first];
+        std::vector<ast::NodePtr> pending{ entry.second->body };
+        while (!pending.empty())
+        {
+            const auto node = pending.back();
+            pending.pop_back();
+            if (!node) continue;
+            using N = ast::Node::Kind;
+            if (node->kind != N::Block && node->kind != N::Declare && node->kind != N::Label)
+                cost = std::min(overflow, cost + 1u);
+            if (node->kind == N::CallPointer) ++dependencies;  // 无法证明间接调用不回到当前函数。
+            if (node->kind == N::Call)
+            {
+                const auto callee = textOf(node->text);
+                if (state.astFunctions.count(callee))
+                {
+                    calls[entry.first].push_back(callee);
+                    callers[callee].push_back(entry.first);
+                    ++dependencies;
+                }
+                else
+                    cost = std::min(overflow, cost + 8u);  // 原生边界也占用展开预算。
+            }
+            for (const auto &child : node->kids) pending.push_back(child);
+        }
+    }
+    std::vector<Text> ready;
+    for (const auto &entry : remaining)
+        if (!entry.second) ready.push_back(entry.first);
+    while (!ready.empty())
+    {
+        const auto label = ready.back();
+        ready.pop_back();
+        auto cost = ownCost.at(label);
+        for (const auto &callee : calls[label]) cost = std::min(overflow, cost + expandedCost.at(callee));
+        expandedCost[label] = cost;
+        if (cost <= shortBudget || (state.rawIntrinsics && astPrimitiveWrapper(label) && cost <= primitiveBudget))
+            state.astInlineFunctions.insert(label);
+        for (const auto &caller : callers[label])
+            if (--remaining.at(caller) == 0u) ready.push_back(caller);
+    }
+}
+
+/**
  * @brief 直接从已检查 AST 建立签名、可达函数、局部身份及静态数据，不生成四元式。
  * @param request 当前可写请求，接收数据映像与布局。
  * @param state LLVM 生成状态。
@@ -138,6 +224,7 @@ void prepareAst(Request &request, Translator &state)
         };
         visit(function->second->body);
     }
+    analyzeAstInlining(state);
     ast::CodegenResult data;
     std::map<std::string, Memory::String> pool;
     std::map<const ast::Node *, Memory::String> names;
@@ -681,7 +768,10 @@ struct AstBuilder : Builder
             if (index) signature += ", ";
             signature += type(function.parameters[index]) + " %p" + std::to_string(index);
         }
-        signature += ") uwtable section \"chali_code\" {\nentry:\n";
+        signature += ") ";
+        if (!function.exported && !state.addressedFunctions.count(textOf(function.label))
+            && state.astInlineFunctions.count(textOf(function.label))) signature += "alwaysinline ";
+        signature += "uwtable section \"chali_code\" {\nentry:\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
         signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n";
         for (const auto &name : locals)

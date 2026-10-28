@@ -1,0 +1,32 @@
+[
+  {
+    "allocator": "malloc",
+    "checked": false,
+    "inline_disabled": false,
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "checked": true,
+    "inline_disabled": false,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "checked": false,
+    "inline_disabled": false,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "checked": true,
+    "inline_disabled": false,
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "checked": true,
+    "inline_disabled": true,
+    "passed": true
+  }
+]

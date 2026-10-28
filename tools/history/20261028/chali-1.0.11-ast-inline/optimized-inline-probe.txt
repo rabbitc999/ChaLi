@@ -1,0 +1,20 @@
+
+> tmp\inline-malloc-False-False.optimized.ll:2679:define range(i64 3, 0) i64 @__chali_impl_program__inlineProbe(i64 %p0) #21 section "chali_code" {
+  tmp\inline-malloc-False-False.optimized.ll:2680:entry:
+  tmp\inline-malloc-False-False.optimized.ll:2681:  %0 = tail call i64 @chali_host_allocate(i64 noundef 8) #26
+  tmp\inline-malloc-False-False.optimized.ll:2682:  %r5 = tail call ptr @chali_host_address(i64 %0, i64 8)
+  tmp\inline-malloc-False-False.optimized.ll:2683:  store i64 %p0, ptr %r5, align 1
+  tmp\inline-malloc-False-False.optimized.ll:2684:  store ptr @__chali_impl_program__inlineProbe, ptr @chali_source_function, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2685:  store ptr @source_file1, ptr @chali_source_file, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2686:  store i64 7, ptr @chali_source_line, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2687:  %r8 = tail call ptr @chali_host_address(i64 %0, i64 8)
+  tmp\inline-malloc-False-False.optimized.ll:2688:  %r9 = load i64, ptr %r8, align 1
+  tmp\inline-malloc-False-False.optimized.ll:2689:  store ptr @f_v235_program__shortAdd, ptr @chali_source_function, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2690:  store ptr @source_file1, ptr @chali_source_file, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2691:  store i64 4, ptr @chali_source_line, align 8
+  tmp\inline-malloc-False-False.optimized.ll:2692:  %r14.not = icmp eq i64 %0, 0
+  tmp\inline-malloc-False-False.optimized.ll:2693:  br i1 %r14.not, label %ast_block_2, label %ast_block_0
+  tmp\inline-malloc-False-False.optimized.ll:2694:
+  tmp\inline-malloc-False-False.optimized.ll:2695:ast_block_0:                                      ; preds = %entry
+
+
