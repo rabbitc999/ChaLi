@@ -1,0 +1,89 @@
+/** 默认 String 的字节读取、逐次拼接、完整 UTF-8 切片比较及查找。 */
+String text;
+String firstChunk;
+String secondChunk;
+int64 unitWidth;
+
+#export("feature_setup")
+void setup() {
+    String unit = "ChaLi-字符串-🙂-0123456789|";
+    String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    firstChunk = unit + "a";
+    secondChunk = unit + "B";
+    unitWidth = firstChunk.byteLength();
+    text = "";
+    int64 index = 0;
+    while (index < 256) {
+        int64 letter = index % 26;
+        text = text + unit + letters[letter:letter + 1];
+        index = index + 1;
+    }
+}
+
+#export("string_read")
+int64 readWork(int64 seed) {
+    String const& source = &text;
+    int64 length = source.byteLength();
+    int64 acc = seed; int64 index = 0;
+    while (index < 131072) {
+        int64 at = (index * 13 + ((acc >> 7) & 65535)) % length;
+        acc = (acc * 33 + (int64)source.byteAt(at).unwrap()) & 2147483647;
+        index = index + 1;
+    }
+    return acc;
+}
+
+#export("string_concat")
+int64 concatWork(int64 seed) {
+    String result = "";
+    int64 index = 0;
+    while (index < 2048) {
+        if (((index + seed) & 1) == 0) { result = result + firstChunk; }
+        else { result = result + secondChunk; }
+        index = index + 1;
+    }
+    int64 acc = seed; index = 0;
+    while (index < result.byteLength()) {
+        acc = (acc * 33 + (int64)result.byteAt(index).unwrap()) & 2147483647;
+        index = index + 1;
+    }
+    return acc;
+}
+
+#export("string_slice")
+int64 sliceWork(int64 seed) {
+    String const& source = &text;
+    int64 acc = seed; int64 index = 0;
+    while (index < 1024) {
+        int64 block = (index * 13 + (acc & 127)) & 127;
+        int64 start = block * unitWidth;
+        int64 width = (((index + seed) & 3) + 1) * unitWidth;
+        int64 other = start;
+        if ((index & 1) != 0) { other = ((block + 13) & 127) * unitWidth; }
+        String part = source[start:start + width];
+        String compared = source[other:other + width];
+        int64 equal = 0;
+        if (part == compared) { equal = 1; }
+        acc = (acc * 33 + (int64)part.byteAt(0).unwrap() + (int64)part.byteAt(part.byteLength() - 1).unwrap() + equal) & 2147483647;
+        index = index + 1;
+    }
+    return acc;
+}
+
+#export("string_find")
+int64 findWork(int64 seed) {
+    String const& source = &text;
+    int64 acc = seed; int64 index = 0;
+    while (index < 256) {
+        int64 start = (((acc >> 7) + index) & 255) * unitWidth;
+        int64 kind = (index + seed) & 3;
+        int64 found = 0 - 1;
+        if (kind == 0) { found = source.indexOf("字符串", start); }
+        elif (kind == 1) { found = source.indexOf("🙂", start); }
+        elif (kind == 2) { found = source.indexOf("不存在!", start); }
+        else { found = source.indexOf("012345", start); }
+        acc = (acc * 33 + found + 1) & 2147483647;
+        index = index + 1;
+    }
+    return acc;
+}
