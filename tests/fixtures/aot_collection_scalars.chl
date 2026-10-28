@@ -1,0 +1,67 @@
+/** 核对集合标量边界的浮点位模式、拥有值副本及嵌套集合回调。 */
+struct NestedKey: Equal<bool, NestedKey>, Hash<NestedKey> {
+    int64 id;
+    bool leftEqual(NestedKey other) {
+        List<float64> nested;
+        nested.push(-1.25);
+        assert(nested[0] == -1.25);
+        return self.id == other.id;
+    }
+    uint64 hash(NestedKey other) {
+        List<float64> nested;
+        nested.push(2.5);
+        assert(nested.pop() == 2.5);
+        return (uint64)(self.id % 3);
+    }
+};
+
+NestedKey nestedKey(int64 id) { NestedKey key; key.id = id; return key; }
+
+void main() {
+    uint64 patterns[8];
+    patterns[0] = 0u;
+    patterns[1] = 0x8000000000000000u;
+    patterns[2] = 0x7ff8000000000042u;
+    patterns[3] = 0xfff8000000000043u;
+    patterns[4] = 0x7ff0000000000000u;
+    patterns[5] = 0xfff0000000000000u;
+    patterns[6] = 1u;
+    patterns[7] = 0x8000000000000001u;
+    List<float64> values;
+    Map<int64, float64> table;
+    Set<int64> keys;
+    int64 index = 0;
+    while (index < 8) {
+        float64 value = std::lang::__bootFloat64FromBits(patterns[index]);
+        values.push(value);
+        table[index] = value;
+        keys.add(index);
+        index = index + 1;
+    }
+    List<float64> copied = values;
+    Map<int64, float64> copiedTable = table;
+    Set<int64> copiedKeys = keys;
+    values.clear(); table.clear(); keys.clear();
+    index = 0;
+    while (index < 8) {
+        assert(std::lang::__bootFloat64Bits(copied[index]) == patterns[index]);
+        assert(std::lang::__bootFloat64Bits(copiedTable[index]) == patterns[index]);
+        assert(copiedKeys.has(index) != 0);
+        index = index + 1;
+    }
+    Map<NestedKey, float64> nested;
+    Set<NestedKey> nestedKeys;
+    index = 0;
+    while (index < 24) {
+        nested[nestedKey(index)] = (float64)index + 0.25;
+        nestedKeys.add(nestedKey(index));
+        index = index + 1;
+    }
+    index = 0;
+    while (index < 24) {
+        assert(nested[nestedKey(index)] == (float64)index + 0.25);
+        assert(nestedKeys.has(nestedKey(index)) != 0);
+        index = index + 1;
+    }
+    println("collection scalar bits, copies and nested callbacks OK");
+}

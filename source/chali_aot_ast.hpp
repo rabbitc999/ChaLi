@@ -826,7 +826,7 @@ struct AstBuilder : Builder
             && state.astInlineFunctions.count(textOf(function.label))) signature += "alwaysinline ";
         signature += "uwtable section \"chali_code\" {\nentry:\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
-        signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n";
+        signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";
         for (const auto &name : locals)
         {
             const Memory::String token(name.c_str());

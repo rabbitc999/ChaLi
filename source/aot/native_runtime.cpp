@@ -986,4 +986,87 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
         bits = result.asInt();
     return bits;
 }
+/**
+ * @brief 直接返回数值与种类：以标量 ABI 连接 List 单槽内核，保留异常、存活检查和同步回调协议。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param floating 浮点实参位图。
+ * @param resultFloating 接收结果种类，调用者提供当前栈帧内的有效字节。
+ * @return 返回槽的原始位模式。
+ */
+std::int64_t chali_host_list_storage_scalar(std::int64_t operation, std::int64_t first, std::int64_t second,
+                                     std::int64_t third, std::int64_t fourth, std::int64_t fifth,
+                                     std::int64_t floating, unsigned char *resultFloating)
+{
+    auto &state = current();
+    NativeContext &context = currentContext();
+    collection_glue::ScalarResult result;
+    try
+    {
+        NativeCallContextImpl bridge(context, &state.invoker);
+        result = collection_glue::listStorageScalarOperation(bridge, operation, first, second, third, fourth, fifth,
+                                                       static_cast<std::uint64_t>(floating));
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("List 存储原语抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    *resultFloating = result.floating;
+    return result.bits;
+}
+
+/**
+ * @brief 直接返回数值与种类：以标量 ABI 连接 Map/Set 单槽内核，保留异常、存活检查和同步回调协议。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param sixth 第六个实参位模式。
+ * @param seventh 第七个实参位模式。
+ * @param floating 浮点实参位图。
+ * @param resultFloating 接收结果种类，调用者提供当前栈帧内的有效字节。
+ * @return 返回槽的原始位模式。
+ */
+std::int64_t chali_host_map_storage_scalar(std::int64_t operation, std::int64_t first, std::int64_t second,
+                                    std::int64_t third, std::int64_t fourth, std::int64_t fifth,
+                                    std::int64_t sixth, std::int64_t seventh, std::int64_t floating, unsigned char *resultFloating)
+{
+    auto &state = current();
+    NativeContext &context = currentContext();
+    collection_glue::ScalarResult result;
+    try
+    {
+        NativeCallContextImpl bridge(context, &state.invoker);
+        result = collection_glue::mapStorageScalarOperation(bridge, operation, first, second, third, fourth, fifth, sixth, seventh,
+                                                      static_cast<std::uint64_t>(floating));
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    *resultFloating = result.floating;
+    return result.bits;
+}
 }  // extern "C"

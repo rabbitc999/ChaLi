@@ -6,6 +6,15 @@ namespace collection_glue
 using NativeValue = stackvm::NativeValue;
 
 /**
+ * @brief 集合原语的数值结果，直接保留位模式与种类，不构造拥有文本的通用值。
+ */
+struct ScalarResult
+{
+    std::int64_t bits = 0;       ///< 整数值或浮点数的原始位模式。
+    unsigned char floating = 0;  ///< 浮点数为一，整数为零。
+};
+
+/**
  * @brief 直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
  * @param host 当前运行时的内存、对象与同步回调上下文。
  * @param operation 存储原语编号，零至十六；十三为租约，十四至十六为单槽比较及复制。
@@ -18,6 +27,22 @@ using NativeValue = stackvm::NativeValue;
  * @return 原语的整数或浮点结果；失败写入当前运行时诊断。
  */
 NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+                                 std::int64_t first, std::int64_t second, std::int64_t third,
+                                 std::int64_t fourth, std::int64_t fifth, std::uint64_t floating);
+
+/**
+ * @brief 以无所有权数值结果返回：直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
+ * @param host 当前运行时的内存、对象与同步回调上下文。
+ * @param operation 存储原语编号，零至十六；十三为租约，十四至十六为单槽比较及复制。
+ * @param first 句柄或第一个标量实参。
+ * @param second 第二个实参的原始位模式。
+ * @param third 第三个实参的原始位模式。
+ * @param fourth 第四个实参的原始位模式。
+ * @param fifth 第五个实参的原始位模式。
+ * @param floating 各实参是否为浮点位模式的位图。
+ * @return 原语的整数或浮点结果；失败写入当前运行时诊断。
+ */
+ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
                                  std::int64_t first, std::int64_t second, std::int64_t third,
                                  std::int64_t fourth, std::int64_t fifth, std::uint64_t floating);
 
@@ -36,6 +61,25 @@ NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t 
  * @return 原语结果；失败写入当前运行时诊断。
  */
 NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+                                std::int64_t first, std::int64_t second, std::int64_t third,
+                                std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
+                                std::int64_t seventh, std::uint64_t floating);
+
+/**
+ * @brief 以无所有权数值结果返回：以标量 ABI 执行自举 Map/Set 的槽位及所有权封送原语。
+ * @param host 当前运行时的内存、对象与同步回调上下文。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param sixth 第六个实参位模式。
+ * @param seventh 第七个实参位模式。
+ * @param floating 浮点实参位图。
+ * @return 原语结果；失败写入当前运行时诊断。
+ */
+ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
                                 std::int64_t first, std::int64_t second, std::int64_t third,
                                 std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
                                 std::int64_t seventh, std::uint64_t floating);

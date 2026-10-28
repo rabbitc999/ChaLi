@@ -33,6 +33,17 @@ struct Slot
      * @return 浮点槽。
      */
     static Slot fromDouble(double value) { return { true, 0, value }; }
+
+    /**
+     * @brief 将内部槽转换为无所有权的标量结果。
+     * @return 保留整数值或浮点原始位模式及其种类。
+     */
+    ScalarResult scalar() const
+    {
+        ScalarResult result{ integer, static_cast<unsigned char>(isFloat) };
+        if (isFloat) std::memcpy(&result.bits, &real, sizeof(real));
+        return result;
+    }
 };
 
 /**

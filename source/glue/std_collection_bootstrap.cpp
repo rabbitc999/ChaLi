@@ -331,7 +331,7 @@ static Slot hashedStorageOperation(State &state, int operation, const Arguments 
  * @param floating 浮点实参位图。
  * @return 带有正确浮点种类的原始结果。
  */
-NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
                                 std::int64_t first, std::int64_t second, std::int64_t third,
                                 std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
                                 std::int64_t seventh, std::uint64_t floating)
@@ -352,7 +352,33 @@ NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t o
     State state(host);
     const auto result = hashedStorageOperation(state, static_cast<int>(operation), Arguments(slots, 7));
     if (!state.error.empty()) host.fail(state.error);
-    return result.isFloat ? NativeValue::fromFloat(result.real) : NativeValue::fromInt(result.integer);
+    return result.scalar();
+}
+
+/**
+ * @brief 兼容通用原生值调用：使用栈上数值槽连接自举哈希容器，避免动态参数数组与函数表查找。
+ * @param host 当前运行时及同步回调上下文。
+ * @param operation 存储原语编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param sixth 第六个实参位模式。
+ * @param seventh 第七个实参位模式。
+ * @param floating 浮点实参位图。
+ * @return 带有正确浮点种类的原始结果。
+ */
+NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+                                std::int64_t first, std::int64_t second, std::int64_t third,
+                                std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
+                                std::int64_t seventh, std::uint64_t floating)
+{
+    const auto result = mapStorageScalarOperation(host, operation, first, second, third, fourth, fifth, sixth, seventh, floating);
+    if (!result.floating) return NativeValue::fromInt(result.bits);
+    double real = 0;
+    std::memcpy(&real, &result.bits, sizeof(real));
+    return NativeValue::fromFloat(real);
 }
 
 /**

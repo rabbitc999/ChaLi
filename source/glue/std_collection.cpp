@@ -1737,7 +1737,7 @@ const stackvm::NativeRecordType &descriptor(StorageKind kind)
  * @param floating 浮点实参位图。
  * @return 保持原始数值种类的结果。
  */
-NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
                                  std::int64_t first, std::int64_t second, std::int64_t third,
                                  std::int64_t fourth, std::int64_t fifth, std::uint64_t floating)
 {
@@ -1779,7 +1779,30 @@ NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t 
     default: state.error = "List 存储原语编号无效"; break;
     }
     if (!state.error.empty()) host.fail(state.error);
-    return result.isFloat ? NativeValue::fromFloat(result.real) : NativeValue::fromInt(result.integer);
+    return result.scalar();
+}
+
+/**
+ * @brief 兼容通用原生值调用：使用栈上参数槽直接连接自举 List 的存储边界。
+ * @param host 当前运行时上下文。
+ * @param operation 存储操作编号。
+ * @param first 第一个实参位模式。
+ * @param second 第二个实参位模式。
+ * @param third 第三个实参位模式。
+ * @param fourth 第四个实参位模式。
+ * @param fifth 第五个实参位模式。
+ * @param floating 浮点实参位图。
+ * @return 保持原始数值种类的结果。
+ */
+NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+                                 std::int64_t first, std::int64_t second, std::int64_t third,
+                                 std::int64_t fourth, std::int64_t fifth, std::uint64_t floating)
+{
+    const auto result = listStorageScalarOperation(host, operation, first, second, third, fourth, fifth, floating);
+    if (!result.floating) return NativeValue::fromInt(result.bits);
+    double real = 0;
+    std::memcpy(&real, &result.bits, sizeof(real));
+    return NativeValue::fromFloat(real);
 }
 
 /**

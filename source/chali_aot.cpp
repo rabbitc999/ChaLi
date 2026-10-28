@@ -273,6 +273,7 @@ struct Translator
     bool profileOwnership = false;                                ///< 显式启用时插入所有权操作计数，不用于正式计时。
     bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
+    bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
@@ -301,6 +302,8 @@ struct Translator
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
         const auto *cache = std::getenv("CHALI_NO_AOT_ADDRESS_CACHE");
         cacheAddresses = !(cache && *cache);
+        const char *scalars = std::getenv("CHALI_NO_AOT_COLLECTION_SCALARS");
+        collectionScalars = !(scalars && *scalars);
         const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
@@ -1406,8 +1409,11 @@ struct Builder
                 values.push_back(convert(value, "i64"));
             }
             values.push_back(instruction("i64", "or i64 " + dynamicFloating.text + ", " + std::to_string(floating)));
-            Value result = call(hashed ? "chali_host_map_storage" : "chali_host_list_storage", "i64", values);
-            result.floating = call("chali_host_result_float", "i8", {}).text;
+            if (state.collectionScalars) values.push_back({ "ptr", "%collection_result_kind" });
+            Value result = call(hashed ? (state.collectionScalars ? "chali_host_map_storage_scalar" : "chali_host_map_storage") :
+                                        (state.collectionScalars ? "chali_host_list_storage_scalar" : "chali_host_list_storage"), "i64", values);
+            result.floating = state.collectionScalars ? instruction("i8", "load i8, ptr %collection_result_kind").text :
+                                                       call("chali_host_result_float", "i8", {}).text;
             for (const auto &entry : saved) write(entry.first, entry.second);
             if (type(destination) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
             write(destination, result);
@@ -1796,7 +1802,7 @@ struct Builder
             if (state.request.quads->quads[at].op == "param") ++argumentCapacity;
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n";
         signature += "  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
-        signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n";
+        signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";
         for (const auto &name : locals)
         {
             const Memory::String token(name.c_str());
@@ -2306,6 +2312,8 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_map_storage(i64, i64, i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
+    out += "declare i64 @chali_host_list_storage_scalar(i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
+    out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i8 @chali_host_result_float()\n";
     out += astAddressPrimitive();
     out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";

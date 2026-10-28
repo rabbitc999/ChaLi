@@ -1,0 +1,10 @@
+[
+  {
+    "allocator": "malloc",
+    "stdout": "bootstrap-hashed-default-ok\n"
+  },
+  {
+    "allocator": "pool",
+    "stdout": "bootstrap-hashed-default-ok\n"
+  }
+]
