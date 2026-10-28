@@ -177,3 +177,5 @@
 - [x] 已查阅 Rust operand.rs、Clang CGExpr.cpp、HotSpot klassVtable.cpp 的实际后端实现，设计参考及适用限制保存在引用原语证据目录；当前标量泛型探查与具体类型均被 LLVM 化为无调用函数体，聚合与容器仍待优化。
 
 - [x] 三个缺少的 C++ 特征参考实现与无计时模型核对已完成，现有冻结驱动和负载摘要不变；正式首次补测另存，不重跑原 Rust／Java／C++ 基线。
+
+- [x] 三个新的 C++ O3 特征参考已正式测完（75 样本全部校验），保存于 `benchmarks/results/1.0.11-cpp-feature-supplement/`，后续不重复测量。当前枚举和接口仍未达到各自 1.05×C++ 门槛。
