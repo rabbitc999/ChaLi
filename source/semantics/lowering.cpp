@@ -3164,7 +3164,7 @@ ast::NodePtr LowerLocalDecl(int id)
             if (type->kind == MType::Array && !IsRuntimeArray(type) && ArrayElementNeedsRelease(type->elem))
                 MarkOwnedArray(emitted, type);
         }
-        if (g_addressTakenNames.count(decl.s) && NeedsReferenceStorage(type))
+        if (NeedsFunctionReferenceStorage(decl.s, type))
         {
             const auto storage = AllocateName("__chali_reference_storage");
             out.push_back(ast::Node::declare(storage, ast::Type::i64()));

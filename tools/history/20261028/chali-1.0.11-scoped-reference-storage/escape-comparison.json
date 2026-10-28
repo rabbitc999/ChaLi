@@ -1,0 +1,511 @@
+[
+  {
+    "name": "local",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/local.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 x）\n 1 | int64 mut& bad(){int64 x=1;return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/local.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 x）\n 1 | int64 mut& bad(){int64 x=1;return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "alias",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& bad(){int64 x=1;int64 mut& a=&x;int64 const& b=a;return (int64 mut&)b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& bad(){int64 x=1;int64 mut& a=&x;int64 const& b=a;return (int64 mut&)b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "value_parameter",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/value_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 x）\n 1 | int64 mut& bad(int64 x){return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/value_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 x）\n 1 | int64 mut& bad(int64 x){return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "string_parameter",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/string_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::String const&，所属类型 ，来源 x）\n 1 | String const& bad(String x){return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/string_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::String const&，所属类型 ，来源 x）\n 1 | String const& bad(String x){return &x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "struct_parameter",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/struct_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 s）\n 1 | struct S{int64 x;};int64 mut& bad(S s){return &s.x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/struct_parameter.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 s）\n 1 | struct S{int64 x;};int64 mut& bad(S s){return &s.x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "field",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/field.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 s）\n 1 | struct S{int64 x;};int64 mut& bad(){S s;return &s.x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/field.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 s）\n 1 | struct S{int64 x;};int64 mut& bad(){S s;return &s.x;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "identity",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/identity.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& identity(int64 mut& x){return x;}int64 mut& bad(){int64 x=1;return identity(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/identity.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& identity(int64 mut& x){return x;}int64 mut& bad(){int64 x=1;return identity(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "option",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Option____chl_781a4d470610857c_int64_mut_，所属类型 ，来源 表达式）\n 1 | Option<int64 mut&> bad(){int64 x=1;return Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Option____chl_781a4d470610857c_int64_mut_，所属类型 ，来源 表达式）\n 1 | Option<int64 mut&> bad(){int64 x=1;return Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "option_alias",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Option____chl_781a4d470610857c_int64_mut_，所属类型 ，来源 a）\n 1 | Option<int64 mut&> bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);return a;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Option____chl_781a4d470610857c_int64_mut_，所属类型 ，来源 a）\n 1 | Option<int64 mut&> bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);return a;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "option_unwrap",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option_unwrap.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);return a.unwrap();}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/option_unwrap.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | int64 mut& bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);return a.unwrap();}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "tuple",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/tuple.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（(int64 mut&, int64)，所属类型 ，来源 表达式）\n 1 | (int64 mut&,int64) bad(){int64 x=1;return (&x,2);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/tuple.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（(int64 mut&, int64)，所属类型 ，来源 表达式）\n 1 | (int64 mut&,int64) bad(){int64 x=1;return (&x,2);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "global_store",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/global_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | Option<int64 mut&> saved;void bad(){int64 x=1;saved=Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/global_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | Option<int64 mut&> saved;void bad(){int64 x=1;saved=Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "parameter_store",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/parameter_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | Option<int64 mut&> saved;void bad(int64 mut& x){saved=Option<int64 mut&>::Value(x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/parameter_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | Option<int64 mut&> saved;void bad(int64 mut& x){saved=Option<int64 mut&>::Value(x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "outer_store",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){Option<int64 mut&> saved;{int64 x=1;saved=Option<int64 mut&>::Value(&x);}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){Option<int64 mut&> saved;{int64 x=1;saved=Option<int64 mut&>::Value(&x);}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "output_store",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/output_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(Option<int64 mut&> mut& saved){int64 x=1;saved=Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/output_store.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(Option<int64 mut&> mut& saved){int64 x=1;saved=Option<int64 mut&>::Value(&x);}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "reference_field",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/reference_field.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Box，所属类型 ，来源 b）\n 1 | struct Box{int64 mut& value;};Box bad(){int64 x=1;Box b;b.value=&x;return b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/reference_field.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Box，所属类型 ，来源 b）\n 1 | struct Box{int64 mut& value;};Box bad(){int64 x=1;Box b;b.value=&x;return b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "outer_field",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_field.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | struct Box{int64 mut& value;};void bad(){Box b;{int64 x=1;b.value=&x;}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_field.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | struct Box{int64 mut& value;};void bad(){Box b;{int64 x=1;b.value=&x;}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "rebind",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/rebind.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){int64 x=1;int64 mut& p=&x;{int64 y=2;p=&y;}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/rebind.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){int64 x=1;int64 mut& p=&x;{int64 y=2;p=&y;}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "destructure",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/destructure.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 const&，所属类型 ，来源 p）\n 1 | int64 const& bad(){int64 x=1;(int64 const&,int64) pair=(&x,2);let (p,n)=pair;return p;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/destructure.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 const&，所属类型 ，来源 p）\n 1 | int64 const& bad(){int64 x=1;(int64 const&,int64) pair=(&x,2);let (p,n)=pair;return p;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "match",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/match.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 p）\n 1 | int64 mut& bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);match(a){Option<int64 mut&>::Value(p)=>{return p;}Option<int64 mut&>::None=>{return &global;}}return &global;}int64 global=0;\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/match.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 p）\n 1 | int64 mut& bad(){int64 x=1;Option<int64 mut&> a=Option<int64 mut&>::Value(&x);match(a){Option<int64 mut&>::Value(p)=>{return p;}Option<int64 mut&>::None=>{return &global;}}return &global;}int64 global=0;\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "list_push",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_push.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;values.push(&x);return values;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_push.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;values.push(&x);return values;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "outer_list",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_list.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){List<int64 mut&> values;{int64 x=1;values.push(&x);}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/outer_list.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期\n 1 | void bad(){List<int64 mut&> values;{int64 x=1;values.push(&x);}}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "list_index",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_index.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;values.push(&global);values[0]=&x;return values;}int64 global=0;\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_index.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;values.push(&global);values[0]=&x;return values;}int64 global=0;\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "allocated_payload",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "语法错误：G:/Desktop/ChaLi/tmp/scoped-escape-compare/allocated_payload.chl 第 1 行第 103 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 21 个之一，实际是 左圆括号(()\n 1 | struct Box{int64 mut& value;Box(int64 mut& x){self.value=&x;}};Box mut& bad(){int64 x=1;Box mut& b=new(&x);return b;}\n   |                                                                                                       ~\n",
+      "codes": []
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "语法错误：G:/Desktop/ChaLi/tmp/scoped-escape-compare/allocated_payload.chl 第 1 行第 103 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 21 个之一，实际是 左圆括号(()\n 1 | struct Box{int64 mut& value;Box(int64 mut& x){self.value=&x;}};Box mut& bad(){int64 x=1;Box mut& b=new(&x);return b;}\n   |                                                                                                       ~\n",
+      "codes": []
+    }
+  },
+  {
+    "name": "temporary_receiver",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/temporary_receiver.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | struct S{int64 x;int64 mut& reference(){return &self.x;}};S make(){S x;return x;}int64 mut& bad(){return make().reference();}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/temporary_receiver.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）\n 1 | struct S{int64 x;int64 mut& reference(){return &self.x;}};S make(){S x;return x;}int64 mut& bad(){return make().reference();}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "field_alias",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/field_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Box，所属类型 ，来源 b）\n 1 | struct Box{int64 mut& value;};Box bad(){int64 x=1;Box b;Box mut& p=&b;p.value=&x;return b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/field_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（Box，所属类型 ，来源 b）\n 1 | struct Box{int64 mut& value;};Box bad(){int64 x=1;Box b;Box mut& p=&b;p.value=&x;return b;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  },
+  {
+    "name": "list_alias",
+    "before": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;List<int64 mut&> mut& p=&values;p.push(&x);return values;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    },
+    "after": {
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali: G:/Desktop/ChaLi/tmp/scoped-escape-compare/list_alias.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（std::lang::List<int64 mut&>，所属类型 ，来源 values）\n 1 | List<int64 mut&> bad(){int64 x=1;List<int64 mut&> values;List<int64 mut&> mut& p=&values;p.push(&x);return values;}\n   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+      "codes": [
+        "CHL1204"
+      ]
+    }
+  }
+]

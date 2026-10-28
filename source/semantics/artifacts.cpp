@@ -1099,6 +1099,7 @@ void ResetState()
     g_errorColumn = 0;
     g_constantBindings.clear();
     g_addressTakenNames.clear();
+    g_functionAddressTakenNames = nullptr;
     g_referenceStorage.clear();
     g_parameterReferenceOwners.clear();
     g_pendingParameterStorage.clear();

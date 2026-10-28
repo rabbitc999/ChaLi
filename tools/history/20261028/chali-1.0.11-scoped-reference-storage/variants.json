@@ -1,0 +1,51 @@
+{
+  "compiler_sha256": "ee3c2b1dbb3db5e7eb8e8a950312d818a81dd3386c631a3c2531ec3e89147e59",
+  "reference_sha256": "275ff2a421920331a3ba84e60bd469c3b576df45a262ad4efbfa3201b68402db",
+  "results": [
+    {
+      "name": "before-malloc-False-False",
+      "pure_scalar_allocations": 1,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-malloc-False-False",
+      "pure_scalar_allocations": 0,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-malloc-False-True",
+      "pure_scalar_allocations": 0,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-malloc-True-False",
+      "pure_scalar_allocations": 1,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-malloc-True-True",
+      "pure_scalar_allocations": 1,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-pool-False-False",
+      "pure_scalar_allocations": 0,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-pool-False-True",
+      "pure_scalar_allocations": 0,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-pool-True-False",
+      "pure_scalar_allocations": 1,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    },
+    {
+      "name": "after-pool-True-True",
+      "pure_scalar_allocations": 1,
+      "stdout": "scoped scalar storage, real borrows and owned copies OK\n"
+    }
+  ]
+}

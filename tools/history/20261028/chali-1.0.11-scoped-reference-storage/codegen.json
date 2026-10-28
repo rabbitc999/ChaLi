@@ -1,0 +1,31 @@
+[
+  {
+    "case": "enum_payload",
+    "before": {
+      "__chali_impl_program__work": 1
+    },
+    "after": {
+      "__chali_impl_program__work": 0
+    }
+  },
+  {
+    "case": "struct_nested",
+    "before": {
+      "__chali_impl_program__work": 1
+    },
+    "after": {
+      "__chali_impl_program__work": 0
+    }
+  },
+  {
+    "case": "interface_mono",
+    "before": {
+      "f_v234_Multiply_apply": 1,
+      "__chali_impl_program__work": 0
+    },
+    "after": {
+      "f_v234_Multiply_apply": 0,
+      "__chali_impl_program__work": 0
+    }
+  }
+]

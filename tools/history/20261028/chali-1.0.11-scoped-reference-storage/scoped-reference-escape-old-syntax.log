@@ -1,0 +1,4 @@
+Syntax error: G:/Desktop/ChaLi/tmp/chali_reference_escape/allocated_payload.chl:1:103: expected one of identifier / MACRO_IS / MACRO_EXPR / MACRO_IDENT (21 candidates), found left parenthesis(()
+ 1 | struct Box{int64 mut& value;Box(int64 mut& x){self.value=&x;}};Box mut& bad(){int64 x=1;Box mut& b=new(&x);return b;}
+   |                                                                                                       ~
+

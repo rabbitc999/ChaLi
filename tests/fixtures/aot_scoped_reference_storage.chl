@@ -1,0 +1,43 @@
+/** 同名变量不能因其他函数取址而装箱；真实借用、遮蔽和拥有值副本继续有效。 */
+int64 addressTaken(int64 value) {
+    int64 mut& alias = &value;
+    *alias = *alias + 7;
+    return value;
+}
+#export("pure_value")
+int64 pureValue(int64 seed) {
+    int64 value = seed; int64 index = 0;
+    while (index < 4096) { value = (value * 33 + index) & 2147483647; index = index + 1; }
+    return value;
+}
+int64 borrowedLocal(int64 seed) {
+    int64 value = seed;
+    int64 mut& alias = &value;
+    *alias = *alias + 11;
+    return value;
+}
+int64 shadowedLocal(int64 seed) {
+    int64 value = seed;
+    {
+        int64 value = 17;
+        int64 mut& alias = &value;
+        *alias = 23;
+    }
+    return value;
+}
+T identity<T>(T value) { return value; }
+int64 expected(int64 seed) {
+    int64 total = seed; int64 index = 0;
+    while (index < 4096) { total = (total * 33 + index) & 2147483647; index = index + 1; }
+    return total;
+}
+void main() {
+    assert(pureValue(3) == expected(3));
+    assert(addressTaken(5) == 12 && borrowedLocal(5) == 16 && shadowedLocal(5) == 5);
+    assert(identity<int64>(41) == 41 && identity<float64>(1.25) == 1.25);
+    assert(identity<bool>(true) && identity<char>('q') == 'q');
+    String text = "hello";
+    String copied = identity<String>(text);
+    copied[0] = 'H'; assert(text == "hello" && copied == "Hello");
+    println("scoped scalar storage, real borrows and owned copies OK");
+}

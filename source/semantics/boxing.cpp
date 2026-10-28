@@ -4146,6 +4146,60 @@ void AppendCleanupBlock(ast::Function &function)
 }
 
 /**
+ * @brief 在没有调用或闭包的函数中按实际语法收集标量取址需求，避免其他函数同名变量干扰。
+ */
+class FunctionReferenceStorageScope
+{
+    const Memory::Set<Memory::String> *saved_ = g_functionAddressTakenNames;
+    Memory::Set<Memory::String> names_;
+
+public:
+    /**
+     * @brief 收集当前函数的显式取址和带值退出；存在未知调用或闭包时整体退回原集合。
+     * @param bodyId 当前函数体的语法节点编号。
+     */
+    explicit FunctionReferenceStorageScope(int bodyId)
+    {
+        g_functionAddressTakenNames = nullptr;
+        const auto *disabled = std::getenv("CHALI_NO_SCOPED_REFERENCE_STORAGE");
+        if (bodyId < 0 || (disabled && *disabled)) return;
+        bool exact = true;
+        Memory::Set<int> visited;
+        std::function<void(int)> breakValue = [&](int id) {
+            if (id < 0) return;
+            const auto &node = N(id);
+            if (node.kind == MNode::Var) names_.insert(node.s);
+            if (node.kind == MNode::Tuple)
+                for (const auto child : node.kids) breakValue(child);
+        };
+        std::function<void(int)> visit = [&](int id) {
+            if (id < 0 || !exact || !visited.insert(id).second) return;
+            const auto &node = N(id);
+            if (node.kind == MNode::Call || node.kind == MNode::Lambda || node.kind == MNode::FuncDef
+                || (node.kind == MNode::Var && node.s.rfind("__chali_lambda_", 0u) == 0u))
+            {
+                exact = false;
+                return;
+            }
+            if (node.kind == MNode::Un && node.s == "&" && !node.kids.empty())
+            {
+                const auto &operand = N(node.kids[0]);
+                if (operand.kind == MNode::Var) names_.insert(operand.s);
+                if (operand.kind == MNode::EnumCtor) names_.insert(operand.s2);
+            }
+            if (node.kind == MNode::Break && node.type2 != 1 && !node.kids.empty()) breakValue(node.kids[0]);
+            if (node.kind == MNode::Block) visit(static_cast<int>(node.i));
+            for (const auto child : node.kids) visit(child);
+        };
+        visit(bodyId);
+        if (exact) g_functionAddressTakenNames = &names_;
+    }
+
+    /** @brief 恢复外层函数的收集上下文，覆盖默认值等嵌套降级。 */
+    ~FunctionReferenceStorageScope() { g_functionAddressTakenNames = saved_; }
+};
+
+/**
  * @brief 创建函数形参副本和作用域，降低函数体并附加确定性清理。
  * @param name 生成函数使用的唯一标签名称。
  * @param owner 成员函数所属类型名称；顶层函数使用空字符串。
@@ -4161,6 +4215,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
                             const Memory::Vector<MParam> &params,
                             int bodyId, const Memory::String &module)
 {
+    FunctionReferenceStorageScope referenceStorage(bodyId);
     UnsafeScopeGuard unsafeGuard(false, true);
     ClearActiveError();
     ast::Function function;
@@ -4209,7 +4264,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         g_scope.back()[parameterKey] = var;
         function.parameters.emplace_back(param.emitted, LowerType(param.type, param.emitted));
         const bool ownedValue = !algorithmBorrow && (IsStandardOpcode(param.type, "String") || IsObjectLike(param.type) || param.type->kind == MType::Array || OpcodeNonCopyable(param.type));
-        if (g_addressTakenNames.count(param.source) && NeedsReferenceStorage(param.type))
+        if (NeedsFunctionReferenceStorage(param.source, param.type))
         {
             const auto storage = AllocateName("__chali_parameter_reference");
             parameterReferences.push_back(ast::Node::declare(storage, ast::Type::i64()));

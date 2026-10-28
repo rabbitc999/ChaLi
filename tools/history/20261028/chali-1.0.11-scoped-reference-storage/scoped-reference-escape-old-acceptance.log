@@ -1,0 +1,4 @@
+Old d29e098 also accepts corrected allocated_payload; pre-existing escape test limitation.
+struct Box{int64 mut& value;Box(int64 mut& x){self.value=&x;}};Box mut& bad(){int64 x=1;Box mut& b=new Box(&x);return b;}
+void main(){return;}
+
