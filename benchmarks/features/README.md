@@ -42,3 +42,15 @@ python benchmarks/features/run.py --reference benchmarks/results/1.0.11-feature-
 后续命令不会启动 Java、Rust 或 C++ 编译／评测；先核对工作负载与计时壳摘要及模型结果，再记录新 ChaLi 原始样本和旧参考来源。源负载发生语义变化时停止复用，单独说明变化及受影响项。所有构建目录位于仓库 `tmp/`，各子进程继承相同的 TMPDIR、TMP、TEMP，完成后按仓库约定保存证据并运行 `tools/clean_tmp.ps1`。
 
 Python 只调度正式工具、运行整数模型和记录样本；所有 ChaLi LLVM IR 都由 C++ 编译器直接生成。
+
+
+## C++ 最终门槛补充项
+
+用户进一步要求最终耗时不超过 C++ O3 参考的 1.05 倍。此前枚举／接口只有 Rust／Java 参考，现以 std::variant 和继承抽象接口补充这三个新的 C++ 项一次。原有 run.py、计时壳、ChaLi／Rust／Java 源码与首次基线保持相同摘要，不重测任何已有参考。
+
+```powershell
+python benchmarks/features/cpp_supplement.py --reference benchmarks/results/1.0.11-feature-baseline/results.json --preflight --out tmp/cpp-feature-preflight
+python benchmarks/features/cpp_supplement.py --reference benchmarks/results/1.0.11-feature-baseline/results.json --runs 5 --out benchmarks/results/1.0.11-cpp-feature-supplement
+```
+
+预检不计时；正式结果仍保留 5 个进程 × 5 轮，允许 C++ 正常内联及去虚拟化。后续仅复用该补充结果，不再次启动它来评测。

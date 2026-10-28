@@ -1,0 +1,103 @@
+{
+  "generated": "2026-10-28T16:41:25.983655",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "git_commit": "1aa8c43db090cbdee8a6e31852d761bdd40c5c7d",
+  "working_tree_dirty": true,
+  "reference_path": "benchmarks\\results\\1.0.11-feature-baseline\\results.json",
+  "reference_sha256": "233adb0296b614d6132eff58699353a324975b5679312b7dddadf9a1e5886dd4",
+  "source_sha256": {
+    "cpp_supplement.py": "a0af94b79fba9ad842a147695d375635e78e11b95fb684045b33c9ff0bcae424",
+    "timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "enum_payload.cpp": "104ea1b944465fbee753cd1196689c7a8db95b8c3a373235c599d8f2af86c9f2",
+    "interface_mono.cpp": "6cb34ff032fe41b5b55929ee5e6ec60f17c01a3bd660fa2c7ce7ba30c4848c7c",
+    "interface_poly.cpp": "2539b88a4da06c8f3eaf2523ef767025221c8ced6747422e1cad43e45179c406"
+  },
+  "tool_version": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "runs": 5,
+  "reps_per_run": 5,
+  "preflight": true,
+  "previous_reference_languages_rerun": false,
+  "cases": {
+    "enum_payload": {
+      "build": [
+        {
+          "command": [
+            "D:\\MINGW64_YACC\\bin\\g++.EXE",
+            "-std=c++17",
+            "-O3",
+            "-DNDEBUG",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\enum_payload.cpp",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+            "-o",
+            "G:\\Desktop\\ChaLi\\tmp\\features-cpp-supplement\\enum_payload\\cpp-o3\\benchmark.exe"
+          ],
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "binary_sha256": "d22022780c6ac5ea929a5c102e5ad38676327af6537aefd2adfa0aee2c047bfd",
+      "processes": [],
+      "verified_values": [
+        1780561652,
+        1094190832,
+        998905774,
+        1533056942,
+        1629960806
+      ]
+    },
+    "interface_mono": {
+      "build": [
+        {
+          "command": [
+            "D:\\MINGW64_YACC\\bin\\g++.EXE",
+            "-std=c++17",
+            "-O3",
+            "-DNDEBUG",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\interface_mono.cpp",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+            "-o",
+            "G:\\Desktop\\ChaLi\\tmp\\features-cpp-supplement\\interface_mono\\cpp-o3\\benchmark.exe"
+          ],
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "binary_sha256": "ffc6d6688b3b0e2b5c80fb0b8173a7406e4a6bbd59e199110b82a2d32e482548",
+      "processes": [],
+      "verified_values": [
+        1029177344,
+        1630011393,
+        83361794,
+        684195843,
+        1285029892
+      ]
+    },
+    "interface_poly": {
+      "build": [
+        {
+          "command": [
+            "D:\\MINGW64_YACC\\bin\\g++.EXE",
+            "-std=c++17",
+            "-O3",
+            "-DNDEBUG",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\interface_poly.cpp",
+            "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+            "-o",
+            "G:\\Desktop\\ChaLi\\tmp\\features-cpp-supplement\\interface_poly\\cpp-o3\\benchmark.exe"
+          ],
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "binary_sha256": "eda2f0df6be039d6cd315600e652265a7fce79c2f886c581bb63fc5db9cefbc6",
+      "processes": [],
+      "verified_values": [
+        1550319616,
+        132644865,
+        562561026,
+        1790443523,
+        104333316
+      ]
+    }
+  }
+}
