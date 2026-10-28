@@ -1,0 +1,13 @@
+build enum_payload chali-aot
+build interface_mono chali-aot
+build interface_poly chali-aot
+build struct_nested chali-aot
+build array_2d chali-aot
+build array_3d chali-aot
+median enum_payload chali-aot 134.7653 ms
+median interface_mono chali-aot 823.8805 ms
+median interface_poly chali-aot 1984.0225 ms
+median struct_nested chali-aot 113.3474 ms
+median array_2d chali-aot 0.7735 ms
+median array_3d chali-aot 0.8778 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-feature-reference-primitives
