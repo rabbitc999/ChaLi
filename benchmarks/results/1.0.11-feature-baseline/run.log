@@ -1,0 +1,31 @@
+build enum_payload chali-aot
+build enum_payload rust
+build interface_mono chali-aot
+build interface_mono java-jit
+build interface_poly chali-aot
+build interface_poly java-jit
+build struct_nested chali-aot
+build struct_nested cpp-o3
+build struct_nested rust
+build array_2d chali-aot
+build array_2d cpp-o3
+build array_2d rust
+build array_3d chali-aot
+build array_3d cpp-o3
+build array_3d rust
+median enum_payload chali-aot 454.3493 ms
+median enum_payload rust 1.214 ms
+median interface_mono chali-aot 1275.5891 ms
+median interface_mono java-jit 0.2845 ms
+median interface_poly chali-aot 2508.4032 ms
+median interface_poly java-jit 1.0682 ms
+median struct_nested chali-aot 1063.7199 ms
+median struct_nested cpp-o3 1.2048 ms
+median struct_nested rust 1.0543 ms
+median array_2d chali-aot 0.776 ms
+median array_2d cpp-o3 0.5684 ms
+median array_2d rust 0.5433 ms
+median array_3d chali-aot 0.8813 ms
+median array_3d cpp-o3 0.706 ms
+median array_3d rust 0.6277 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-feature-baseline
