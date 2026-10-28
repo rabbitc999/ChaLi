@@ -24,6 +24,8 @@ void main() {
 
 `RawStorage<T>` owns uninitialized capacity and implements `Closeable`. Spare slots do not construct elements. `RawPtr<T>` holds allocation identity and an element index, rather than a host machine pointer. Do not modify internal handles. A pointer at `capacity` is a valid one-past position, but cannot be dereferenced. `__rawSize(T)` and `__rawAlign(T)` query language storage layout inside unsafe scopes. Direct array types and host aliases are unsupported raw elements; wrap arrays in a named struct.
 
+The public `std::lang::rawSize<T>()` queries the same value layout from safe code. For example, `rawSize<uint8>() == 1` and `rawSize<int64>() == 8`. Aggregate sizes include their language storage slots. Owning values such as String report the value slot size, excluding separately allocated contents and capacity. This query does not access an object or describe the host C ABI `sizeof`. Void, direct arrays and host aliases are unsupported.
+
 | Operation | Behavior |
 | --- | --- |
 | `initAt<T>(pointer, value)` | Requires an uninitialized slot; moves the supplied value into it |

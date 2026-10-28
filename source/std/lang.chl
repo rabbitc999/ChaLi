@@ -1,8 +1,16 @@
 module std::lang;
 
+/** 查询 T 在当前 ChaLi 值存储中的字节数；不访问对象，也不返回动态分配占用。
+ * uint8 与 char 使用一个字节，其余普通值槽为八字节；聚合按语言布局计算，不等于宿主 C ABI 的 sizeof。
+ * 无需 unsafe；不支持 void、直接数组或宿主别名，数组可放入具名结构体后查询。
+ */
+int64 rawSize<T>() {
+    unsafe { return __rawSize(T); }
+}
+
 /** 读取字符串存储中的一个字节；调用者已证明地址位于有效范围。 */
 unsafe int64 __bootStringByte(int64 address, int64 index) {
-    uint8 mut& value = dereference<uint8>(pointerFromAddress<uint8>(address) + index);
+    uint8 mut& value = (uint8 mut&)(address + index);
     return (int64)*value;
 }
 /** 按 ASCII 固定规则识别空白，不依赖宿主区域设置。 */
@@ -27,22 +35,23 @@ unsafe int64 __bootStringFind(int64 text,int64 length,int64 needle,int64 width,i
     if (width == 0) { return start; }
     if (width > length-start) { return 0-1; }
     RawStorage<int64> table = RawStorage<int64>::allocate(width);
-    BarePtr<int64> prefix = barePointer<int64>(table.pointer(0));
-    int64 mut& zero = dereference<int64>(prefix); *zero = 0;
+    int64 prefix = barePointer<int64>(table.pointer(0)).address;
+    int64 stride = __rawSize(int64);
+    int64 mut& zero = (int64 mut&)prefix; *zero = 0;
     int64 i=1; int64 matched=0;
     while (i<width) {
         int64 next=__bootStringByte(needle,i);
         while (matched>0 && next!=__bootStringByte(needle,matched)) {
-            int64 mut& previous=dereference<int64>(prefix+matched-1); matched=*previous;
+            int64 mut& previous=(int64 mut&)(prefix+(matched-1)*stride); matched=*previous;
         }
         if (next==__bootStringByte(needle,matched)) { matched=matched+1; }
-        int64 mut& entry=dereference<int64>(prefix+i); *entry=matched; i=i+1;
+        int64 mut& entry=(int64 mut&)(prefix+i*stride); *entry=matched; i=i+1;
     }
     i=start; matched=0;
     while (i<length) {
         int64 next=__bootStringByte(text,i);
         while (matched>0 && next!=__bootStringByte(needle,matched)) {
-            int64 mut& previous=dereference<int64>(prefix+matched-1); matched=*previous;
+            int64 mut& previous=(int64 mut&)(prefix+(matched-1)*stride); matched=*previous;
         }
         if (next==__bootStringByte(needle,matched)) { matched=matched+1; }
         if (matched==width) { return i-width+1; }

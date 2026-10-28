@@ -1,0 +1,1 @@
+void main() { String value="abc"; value[0]=(char)237; value[1]=(char)160; value[2]=(char)128; value.reverse(); }

@@ -1,0 +1,1 @@
+u8=1 i8=8 bool=8 char=1 f32=8 f64=8 i64=8 str=8 list=8 pair=16

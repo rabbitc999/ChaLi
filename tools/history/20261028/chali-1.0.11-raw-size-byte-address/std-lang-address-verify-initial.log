@@ -1,0 +1,23 @@
+aot_byte_primitives-default-malloc-False PASS
+aot_raw_size-default-malloc-False PASS
+aot_byte_primitives-default-malloc-True PASS
+aot_raw_size-default-malloc-True PASS
+aot_byte_primitives-default-pool-False PASS
+aot_raw_size-default-pool-False PASS
+aot_byte_primitives-default-pool-True PASS
+aot_raw_size-default-pool-True PASS
+aot_byte_primitives-raw-off-malloc-False PASS
+aot_byte_primitives-raw-off-malloc-True PASS
+aot_raw_size-raw-off-malloc-True PASS
+aot_byte_primitives-raw-off-pool-False PASS
+aot_byte_primitives-raw-off-pool-True PASS
+aot_byte_primitives-inline-off-malloc-False PASS
+aot_byte_primitives-inline-off-malloc-True PASS
+aot_raw_size-inline-off-malloc-True PASS
+aot_byte_primitives-inline-off-pool-False PASS
+aot_byte_primitives-inline-off-pool-True PASS
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tmp\verify_std_lang_address.py", line 47, in <module>
+    assert result.returncode!=0 and 'chali aot: panic' in result.stderr,rows[-1]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'command': ['G:\\Python312\\python.exe', 'G:\\Desktop\\ChaLi\\tmp\\byte_address_errors.py', 'G:\\Desktop\\ChaLi\\tmp\\std-lang-address-check\\errors-before.dll', 'null'], 'flags': {}, 'code': 1, 'stdout': '', 'stderr': 'chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n出错位置：<内建 std::lang>:1187（BarePtr__uint8.leftAdd）\n调用栈（内 → 外）：\n  BarePtr__uint8.leftAdd\n  std::lang::__bootStringByte\n'}

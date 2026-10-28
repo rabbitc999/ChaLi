@@ -928,7 +928,15 @@ std::shared_ptr<MType> RawExprType(int id)
         return fallback;
     }
     case MNode::Construct: return T(node.type); /* `T::new(...)` 工厂体内的构造 → 目标类型本身 */
-    case MNode::RawLayout: return T(M_TypeInt());
+    case MNode::RawLayout:
+    {
+        const auto type = T(node.type);
+        if (!type || type->kind == MType::Void)
+            Fail("原始布局查询不支持 void");
+        else if (type->kind == MType::Host || type->kind == MType::Array)
+            Fail("原始存储暂不支持宿主别名或直接数组元素，请使用具名结构体包装");
+        return T(M_TypeInt());
+    }
     case MNode::TypeTag: return T(M_TypeInt()); /* __typeTag → int（类型号，编译期折好） */
     case MNode::Un:
     {

@@ -1,0 +1,70 @@
+{
+  "before": [
+    {
+      "function": "f_v49_std__lang____bootStringByte",
+      "lines": 366,
+      "host_allocations": 4,
+      "calls": 62
+    },
+    {
+      "function": "f_v53_std__lang____bootStringFind",
+      "lines": 1942,
+      "host_allocations": 16,
+      "calls": 275
+    },
+    {
+      "function": "__chali_impl_program__readWork",
+      "lines": 266,
+      "host_allocations": 1,
+      "calls": 25
+    },
+    {
+      "function": "__chali_impl_program__sliceWork",
+      "lines": 451,
+      "host_allocations": 2,
+      "calls": 49
+    },
+    {
+      "function": "__chali_impl_program__findWork",
+      "lines": 179,
+      "host_allocations": 0,
+      "calls": 6
+    }
+  ],
+  "after": [
+    {
+      "function": "f_v49_std__lang____bootStringByte",
+      "lines": 48,
+      "host_allocations": 0,
+      "calls": 2
+    },
+    {
+      "function": "f_v53_std__lang____bootStringFind",
+      "lines": 1374,
+      "host_allocations": 7,
+      "calls": 134
+    },
+    {
+      "function": "__chali_impl_program__readWork",
+      "lines": 266,
+      "host_allocations": 1,
+      "calls": 25
+    },
+    {
+      "function": "__chali_impl_program__sliceWork",
+      "lines": 585,
+      "host_allocations": 2,
+      "calls": 57
+    },
+    {
+      "function": "__chali_impl_program__findWork",
+      "lines": 179,
+      "host_allocations": 0,
+      "calls": 6
+    }
+  ],
+  "rawSize_export": {
+    "constant": 8,
+    "calls": 0
+  }
+}

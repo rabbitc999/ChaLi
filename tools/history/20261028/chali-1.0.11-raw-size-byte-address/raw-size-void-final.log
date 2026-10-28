@@ -1,0 +1,1 @@
+{"schemaVersion":1,"diagnostics":[{"code":"CHL1200","severity":"error","message":"原始布局查询不支持 void","span":{"file":"<内建 std::lang>","line":7,"column":36,"endLine":7,"endColumn":37},"source":"","notes":[]}]}

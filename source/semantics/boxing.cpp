@@ -2871,7 +2871,8 @@ ast::NodePtr LowerUncheckedExpr(int id)
     case MNode::RawLayout: {
         if (g_unsafeDepth == 0) return Fail("原始布局查询需要 unsafe 上下文"), Bad();
         const auto type = T(node.type);
-        if (!type || type->kind == MType::Void || !CheckDeclaredType(type, "原始存储")) return Bad();
+        if (!type || type->kind == MType::Void) return Fail("原始布局查询不支持 void"), Bad();
+        if (!CheckDeclaredType(type, "原始存储")) return Bad();
         if (type->kind == MType::Host || type->kind == MType::Array) return Fail("原始存储暂不支持宿主别名或直接数组元素，请使用具名结构体包装"), Bad();
         return ast::Node::i(node.i ? (IsByteStorageType(type) ? 1 : 8) : ElementBytes(type));
     }

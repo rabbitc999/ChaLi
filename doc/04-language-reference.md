@@ -803,7 +803,7 @@ int64 c_function(int64 x);
 
 `unsafe { ... }` 为当前块授予原始操作权限；`unsafe T f(...)` 声明调用前置条件，安全上下文不能直接调用，也不能把它转换成安全函数值。闭包的函数体不继承创建位置的权限。普通数组、引用和算术检查继续生效。
 
-`std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。`__rawSize(T)` 与 `__rawAlign(T)` 查询语言内部存储布局，仅供 unsafe 内核使用，不等于 C ABI 布局。借出的引用不得超过存储寿命或相应元素生命周期。
+`std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。公开的 `std::lang::rawSize<T>()` 无需 unsafe，返回当前 ChaLi 值布局的字节数，例如 `rawSize<uint8>()` 为 1，`rawSize<int64>()` 为 8；聚合按语言布局计算。它不表示动态对象的占用，也不等于宿主 C ABI 的 `sizeof`。直接数组、宿主别名及 void 不支持该查询，数组可放进具名结构体。内部 `__rawSize(T)` 与 `__rawAlign(T)` 仍只供 unsafe 内核使用。借出的引用不得超过存储寿命或相应元素生命周期。
 
 `BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](41-unsafe-abi.md)和[书稿第 25 章](book/23-不安全代码.md)。
 

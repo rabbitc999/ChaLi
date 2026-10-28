@@ -1,0 +1,47 @@
+/** 内部字节操作保留完整字节范围、负偏移、地址回绕及实参求值顺序。 */
+uint8 bytes[6];
+int64 evaluations;
+
+export int64 byteRead(int64 base, int64 index) {
+    unsafe { return std::lang::__bootStringByte(base, index); }
+}
+
+export int64 staleAddress() {
+    uint8 mut& value = new uint8;
+    *value = 99u;
+    int64 address = (int64)std::lang::address(&value);
+    value.drop();
+    return address;
+}
+
+int64 baseArgument() {
+    evaluations = evaluations * 10 + 1;
+    return (int64)std::lang::address(&bytes[0]);
+}
+int64 indexArgument() { evaluations = evaluations * 10 + 2; return 3; }
+
+void main() {
+    bytes[0] = 0u; bytes[1] = 1u; bytes[2] = 127u;
+    bytes[3] = 128u; bytes[4] = 239u; bytes[5] = 255u;
+    int64 base = (int64)std::lang::address(&bytes[0]);
+    uint8 heap[] = new [6];
+    int64 sum = 0; int64 index = 0;
+    while (index < 6) {
+        heap[index] = bytes[index];
+        sum = sum + byteRead(base, index);
+        index = index + 1;
+    }
+    assert(sum == 750);
+    int64 heapBase = (int64)std::lang::address(&heap[0]);
+    assert(byteRead(heapBase, 5) == 255 && byteRead(heapBase + 4, 0 - 1) == 128);
+    int64 minimum = 0 - 9223372036854775807 - 1;
+    assert(byteRead(minimum, minimum + base + 3) == 128);
+    unsafe { assert(std::lang::__bootStringByte(baseArgument(), indexArgument()) == 128); }
+    assert(evaluations == 12);
+    String text = "a中🙂";
+    assert(text.byteLength() == 8);
+    assert(text.byteAt(0).unwrap() == 97u && text.byteAt(2).unwrap() == 184u);
+    assert(text.byteAt(4).unwrap() == 240u && text.byteAt(7).unwrap() == 130u);
+    assert(!text.byteAt(0 - 1).isValue() && !text.byteAt(8).isValue());
+    println("byte primitives, wrap, order and UTF-8 OK");
+}
