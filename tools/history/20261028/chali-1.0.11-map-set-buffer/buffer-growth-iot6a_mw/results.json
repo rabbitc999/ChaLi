@@ -1,0 +1,356 @@
+[
+  {
+    "label": "malloc--checked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--checked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--checked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--checked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--checked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--unchecked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--unchecked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--unchecked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\malloc--unchecked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--checked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--checked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--checked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--checked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--unchecked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--unchecked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--unchecked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\pool--unchecked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "overflow-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\overflow.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\overflow"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "overflow",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\overflow.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量超出上限\n出错位置：<内建 std::lang>:786（std::lang::assert$bool$std::lang::String）\n调用栈（内 → 外）：\n  std::lang::assert$bool$std::lang::String\n"
+  },
+  {
+    "label": "over-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\over-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\over-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "over-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\over-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量超出上限\n出错位置：<内建 std::lang>:786（std::lang::assert$bool$std::lang::String）\n调用栈（内 → 外）：\n  std::lang::assert$bool$std::lang::String\n"
+  },
+  {
+    "label": "negative-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\negative.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\negative"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "negative",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\negative.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:786（std::lang::assert$bool$std::lang::String）\n调用栈（内 → 外）：\n  std::lang::assert$bool$std::lang::String\n"
+  },
+  {
+    "label": "bad-capacity-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-capacity.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-capacity"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "bad-capacity",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-capacity.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:786（std::lang::assert$bool$std::lang::String）\n调用栈（内 → 外）：\n  std::lang::assert$bool$std::lang::String\n"
+  },
+  {
+    "label": "bad-minimum-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-minimum.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-minimum"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "bad-minimum",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\bad-minimum.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:786（std::lang::assert$bool$std::lang::String）\n调用栈（内 → 外）：\n  std::lang::assert$bool$std::lang::String\n"
+  },
+  {
+    "label": "map-index-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-index-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-index-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "map-index-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-index-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: Map/Set 存储槽或操作编号越界\n出错位置：G:/Desktop/ChaLi/tmp/buffer-growth-iot6a_mw/map-index-max.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+  },
+  {
+    "label": "map-entry-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-entry-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-entry-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "map-entry-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-iot6a_mw\\map-entry-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: Map/Set 存储槽或操作编号越界\n出错位置：G:/Desktop/ChaLi/tmp/buffer-growth-iot6a_mw/map-entry-max.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+  }
+]

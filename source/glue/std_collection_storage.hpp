@@ -7,6 +7,20 @@
 namespace collection_glue
 {
 /**
+ * @brief 按实际槽大小和捕获的分配器预算计算单块数组容量上界。
+ * @tparam T 数组槽的宿主类型。
+ * @param storage 保有分配器身份的数组。
+ * @return 预算与容器表示均允许的槽数，不保证剩余内存足够。
+ */
+template <class T>
+std::size_t storageMaximum(const Memory::Vector<T> &storage)
+{
+    auto maximum = storage.max_size();
+    const auto *owner = storage.get_allocator().owner;
+    if (owner) maximum = std::min(maximum, owner->capacity() / sizeof(T));
+    return std::min<std::size_t>(maximum, INT64_MAX);
+}
+/**
  * @brief 集合胶水独占的键比较快照：对象按跨副本身份比较，其余按值比较。
  */
 struct ObjectKey
@@ -87,6 +101,21 @@ public:
      * @return 数组中的有效项数。
      */
     std::size_t size() const { return values_.size(); }
+    /**
+     * @brief 查询密集键值数组已分配的槽数。
+     * @return 清空后仍保留的容量。
+     */
+    std::size_t capacity() const;
+    /**
+     * @brief 查询实际键值槽大小对应的单块容量上界。
+     * @return 分配器预算和容器表示允许的最大槽数。
+     */
+    std::size_t maximumCapacity() const;
+    /**
+     * @brief 按语言层已计算的容量预留密集键值槽，不初始化用户元素。
+     * @param capacity 已验证的目标容量。
+     */
+    void reserve(std::size_t capacity);
     /**
      * @brief 查询是否没有键值项。
      * @return 空数组返回 true。

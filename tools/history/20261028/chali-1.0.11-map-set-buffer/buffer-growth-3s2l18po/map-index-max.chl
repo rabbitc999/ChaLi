@@ -1,0 +1,1 @@
+void main(){Map<int64,int64> value;unsafe{int64 mut& slot=(int64 mut&)(int64)std::lang::address(&value);int64 handle=*slot;int64 maximum=std::lang::__mapStorageState(handle,9,0,0);std::lang::__mapStorageState(handle,5,0,maximum+1);}}

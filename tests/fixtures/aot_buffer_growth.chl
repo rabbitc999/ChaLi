@@ -1,4 +1,9 @@
 /** 几何增长在字节与槽容量上使用同一规则，不实际申请整数上限大小的内存。 */
+struct BufferEqualKey: Equal<bool,BufferEqualKey> {
+    int64 id;
+    bool leftEqual(BufferEqualKey other){return self.id==other.id;}
+};
+
 int64 referenceAddress(int64 mut& value) {
     return (int64)std::lang::address(value);
 }
@@ -34,5 +39,41 @@ void main() {
     List<String> words;words.push("first");words.push("second");
     List<String> saved=words;words.clear();words.push("third");
     assert(saved[0]=="first" && saved[1]=="second" && words[0]=="third");
+    Map<int64,String> mapping;Set<int64> keys;
+    i=0;while(i<65){mapping[i]="owned";keys.add(i);i=i+1;}
+    int64 mapHandle=0;int64 setHandle=0;
+    unsafe {
+        int64 mut& mapSlot=(int64 mut&)(int64)std::lang::address(&mapping);mapHandle=*mapSlot;
+        int64 mut& setSlot=(int64 mut&)(int64)std::lang::address(&keys);setHandle=*setSlot;
+        assert(std::lang::__mapStorageState(mapHandle,10,0,0)==128);
+        assert(std::lang::__mapStorageState(setHandle,10,0,0)==128);
+        assert(std::lang::__mapStorageState(mapHandle,13,0,0)==256);
+        assert(std::lang::__mapStorageState(setHandle,13,0,0)==256);
+        assert(std::lang::__mapStorageState(mapHandle,9,0,0)>256);
+        assert(std::lang::__mapStorageState(mapHandle,11,0,0)>128);
+    }
+    Map<int64,String> mapCopy=mapping;Set<int64> setCopy=keys;
+    mapping.remove(0);keys.remove(0);mapping.clear();keys.clear();
+    mapping[100]="new";keys.add(100);
+    assert(mapCopy.len()==65 && mapCopy[0]=="owned" && mapCopy[64]=="owned");
+    assert(setCopy.len()==65 && setCopy.has(0)!=0 && setCopy.has(64)!=0);
+    assert(mapping.len()==1 && mapping[100]=="new" && keys.len()==1 && keys.has(100)!=0);
+    unsafe {
+        assert(std::lang::__mapStorageState(mapHandle,10,0,0)==128);
+        assert(std::lang::__mapStorageState(setHandle,10,0,0)==128);
+        assert(std::lang::__mapStorageState(mapHandle,13,0,0)==256);
+        assert(std::lang::__mapStorageState(setHandle,13,0,0)==256);
+    }
+    Map<BufferEqualKey,int64> linear;Set<BufferEqualKey> linearSet;
+    i=0;while(i<17){BufferEqualKey key;key.id=i;linear[key]=i;linearSet.add(key);i=i+1;}
+    BufferEqualKey first;first.id=0;
+    assert(linear[first]==0 && linearSet.has(first)!=0);
+    unsafe {
+        int64 mut& slot=(int64 mut&)(int64)std::lang::address(&linear);
+        assert(std::lang::__mapStorageState(*slot,1,0,0)==0);
+        assert(std::lang::__mapStorageState(*slot,10,0,0)==32);
+    }
+    linear.clear();linearSet.clear();linear[first]=9;linearSet.add(first);
+    assert(linear.len()==1 && linear[first]==9 && linearSet.len()==1);
     println("bounded buffer growth and retained List capacity OK");
 }

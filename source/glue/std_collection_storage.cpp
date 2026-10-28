@@ -4,6 +4,24 @@ namespace collection_glue
 {
 
 /**
+ * @brief 查询清空后仍保留的密集数组容量。
+ * @return 已分配的键值槽数。
+ */
+std::size_t Entries::capacity() const { return values_.capacity(); }
+
+/**
+ * @brief 按实际键值槽大小换算分配器预算上界。
+ * @return 最大槽数；其他存活内存仍可能使分配失败。
+ */
+std::size_t Entries::maximumCapacity() const { return storageMaximum(values_); }
+
+/**
+ * @brief 为语言层选定的容量保留未初始化键值空间。
+ * @param capacity 目标槽数。
+ */
+void Entries::reserve(std::size_t capacity) { values_.reserve(capacity); }
+
+/**
  * @brief 将通用值快照转换为胶水独占的键，不改变输入值的所有权。
  * @param value 数值、文本、聚合或对象身份的快照。
  * @param keepOwnership 是否在键中保留拥有型句柄标记。

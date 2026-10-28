@@ -88,7 +88,7 @@ static Slot hashedStorageOperation(State &state, int operation, const Arguments 
             if (command == 4) record->languageSlots[static_cast<std::size_t>(index)] = value;
             return Slot::fromInt(record->languageSlots[static_cast<std::size_t>(index)]);
         case 5:
-            if (value < 0 || static_cast<std::uint64_t>(value) > record->languageSlots.max_size()) break;
+            if (value < 0 || static_cast<std::uint64_t>(value) > storageMaximum(record->languageSlots)) break;
             record->languageSlots.assign(static_cast<std::size_t>(value), 0);
             return Slot::fromInt(0);
         case 6: record->entries.markLanguageIndexed(); return Slot::fromInt(0);
@@ -96,6 +96,14 @@ static Slot hashedStorageOperation(State &state, int operation, const Arguments 
             if (index < 0 || static_cast<std::size_t>(index) >= record->entries.size()) break;
             return Slot::fromInt((record->entries.begin() + index)->first.hash);
         case 8: return Slot::fromInt(record->mapHash != 0);
+        case 9: return Slot::fromInt(static_cast<std::int64_t>(storageMaximum(record->languageSlots)));
+        case 10: return Slot::fromInt(static_cast<std::int64_t>(record->entries.capacity()));
+        case 11: return Slot::fromInt(static_cast<std::int64_t>(record->entries.maximumCapacity()));
+        case 12:
+            if (value < 0 || static_cast<std::uint64_t>(value) > record->entries.maximumCapacity()) break;
+            record->entries.reserve(static_cast<std::size_t>(value));
+            return Slot::fromInt(0);
+        case 13: return Slot::fromInt(static_cast<std::int64_t>(record->languageSlots.capacity()));
         default: break;
         }
         state.error = "Map/Set 存储槽或操作编号越界";

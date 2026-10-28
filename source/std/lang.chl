@@ -1498,16 +1498,27 @@ unsafe void __bootMapRehash(int64 handle,int64 capacity) {
 unsafe void __bootMapEnsure(int64 handle) {
     if (__mapStorageState(handle,2,0,0)!=0) { return; }
     if (__mapStorageState(handle,8,0,0)==0) { __mapStorageState(handle,5,0,0); __mapStorageState(handle,6,0,0); return; }
-    int64 size=__mapStorageState(handle,0,0,0); int64 capacity=16;
-    while (size>capacity/2) { assert(capacity<=4611686018427387903,"Map/Set 容量溢出"); capacity=capacity*2; }
+    int64 size=__mapStorageState(handle,0,0,0); int64 capacity=__mapStorageState(handle,1,0,0);
+    int64 maximum=__mapStorageState(handle,9,0,0); int64 minimum=16;if(minimum>maximum){minimum=maximum;}
+    assert(size<=maximum/2,"Map/Set 索引容量超出上限");
+    int64 required=size*2;if(required==0){required=1;}
+    capacity=__bootBufferCapacity(0,required,capacity,minimum,maximum);
     __bootMapRehash(handle,capacity);
 }
-/** 保持装载因子不超过一半，插入前只调整索引数组。 */
+/** 插入前按相同几何策略预留密集槽及索引，索引装载因子不超过一半。 */
 unsafe void __bootMapGrow(int64 handle) {
+    int64 size=__mapStorageState(handle,0,0,0); int64 dense=__mapStorageState(handle,10,0,0);
+    if(size==dense){
+        int64 maximum=__mapStorageState(handle,11,0,0);int64 minimum=8;if(minimum>maximum){minimum=maximum;}
+        __mapStorageState(handle,12,0,__bootBufferCapacity(size,1,dense,minimum,maximum));
+    }
     if (__mapStorageState(handle,8,0,0)==0) { return; }
-    int64 size=__mapStorageState(handle,0,0,0); int64 capacity=__mapStorageState(handle,1,0,0);
-    if (capacity==0) { __bootMapRehash(handle,16); return; }
-    if (size+1>capacity/2) { assert(capacity<=4611686018427387903,"Map/Set 容量溢出"); __bootMapRehash(handle,capacity*2); }
+    int64 capacity=__mapStorageState(handle,1,0,0);
+    if(size>=capacity/2){
+        int64 maximum=__mapStorageState(handle,9,0,0);int64 minimum=16;if(minimum>maximum){minimum=maximum;}
+        assert(size<maximum/2,"Map/Set 索引容量超出上限");
+        __bootMapRehash(handle,__bootBufferCapacity(0,(size+1)*2,capacity,minimum,maximum));
+    }
 }
 /** 已知槽号时定位其索引位置，不重复调用用户 Equal。 */
 unsafe int64 __bootMapLocate(int64 handle,int64 entry,int64 hash) {
@@ -1547,6 +1558,10 @@ unsafe int64 __bootMapClear(int64 handle) {
 /** 按槽复制独立值及键协议，随后重建索引，不执行 Hash/Equal 用户回调。 */
 unsafe int64 __bootMapCopy(int64 source) {
     int64 result=__mapStorageEmptyLike(source); int64 size=__mapStorageState(source,0,0,0); int64 i=0;
+    if(size>0){
+        int64 maximum=__mapStorageState(result,11,0,0);int64 minimum=8;if(minimum>maximum){minimum=maximum;}
+        __mapStorageState(result,12,0,__bootBufferCapacity(0,size,0,minimum,maximum));
+    }
     while (i<size) { __mapStorageCloneAppend(result,source,i); i=i+1; }
     __bootMapEnsure(result); return result;
 }

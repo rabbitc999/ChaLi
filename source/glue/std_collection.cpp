@@ -776,11 +776,7 @@ inline Slot vecLen(State &ctx, const Arguments &args)
  */
 std::size_t listStorageMaximum(const Record &object)
 {
-    auto maximum = object.items.max_size();
-    // 使用容器捕获的所有者，宿主线程不依赖当前线程的分配器状态。
-    const auto *owner = object.items.get_allocator().owner;
-    if (owner) maximum = std::min(maximum, owner->capacity() / sizeof(decltype(object.items)::value_type));
-    return std::min<std::size_t>(maximum, INT64_MAX);
+    return storageMaximum(object.items);
 }
 
 /**
