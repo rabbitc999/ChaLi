@@ -1,0 +1,13 @@
+build string_read chali-aot
+build string_concat chali-aot
+build string_slice chali-aot
+build string_find chali-aot
+verify string_read chali-aot OK
+verify string_concat chali-aot OK
+verify string_slice chali-aot OK
+verify string_find chali-aot OK
+median string_read chali-aot 471.2805 ms
+median string_concat chali-aot 268.7489 ms
+median string_slice chali-aot 12.7185 ms
+median string_find chali-aot 24.9695 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-string-memory-address
