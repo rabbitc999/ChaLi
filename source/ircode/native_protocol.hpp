@@ -163,6 +163,20 @@ public:
      */
     virtual bool releaseMemory(std::int64_t address, bool soft = false);
     /**
+     * @brief 释放拥有的字符串及其独立缓冲区，兼容原长度头。
+     * @param address 字符串句柄。
+     * @param soft 沿用原始内存释放的软释放规则。
+     * @return 两部分均已释放或按规则跳过时为真。
+     * @note 非虚成员，不改变既有上下文虚表和对象布局。
+     */
+    bool releaseString(std::int64_t address, bool soft = false);
+    /**
+     * @brief 将临时字符串及其独立缓冲区登记到既有停机清理队列。
+     * @param address 当前存活的字符串句柄。
+     * @note 非虚成员；语言接管所有权时仍沿用原有队列截断协议。
+     */
+    void trackTemporaryString(std::int64_t address);
+    /**
      * @brief 通过壳内的宿主复制回调生成独立记录。
      * @param handle 待复制的存活句柄。
      * @return 新句柄；不可复制或回调失败时返回零并保存诊断。

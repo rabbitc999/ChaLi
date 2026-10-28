@@ -36,6 +36,20 @@ including uses in different functions and empty literals. Independent `String` v
 and deterministic cleanup, so changing one variable does not change another. Literals cannot be modified
 directly or borrowed through mutable references to their bytes.
 
+Owned String values provide `capacity()`, `maxCapacity()`, `reserve(bytes)`, `append(text)`, `clear()` and `truncate(bytes)`.
+`append` changes the current value. Clearing or shortening its byte length retains capacity; `reserve` never shrinks it. Growth takes the greater of the required size and twice the current capacity, with overflow and capacity checks. Growth may release the replaced buffer; drop releases the final buffer. Copies continue to own independent storage. `truncate` does not re-encode UTF-8, does nothing beyond the current length, and rejects negative lengths.
+
+```chali
+String buffer;
+buffer.reserve(128);
+buffer.append("中文🙂");
+int64 capacity = buffer.capacity();
+buffer.clear();
+assert(buffer.isEmpty() && buffer.capacity() == capacity);
+```
+
+`maxCapacity()` subtracts the buffer terminator byte from the allocator's single-block payload budget. The descriptor and other live objects also consume the total budget, so requests below this limit may still run out of memory. Mutating methods require a writable receiver and reject const values, readonly references, and overlapping direct active byte borrows; raw addresses obtained before growth must not be reused afterward. Methods returning new values, including `substring` and `remove`, retain their existing value semantics.
+
 ---
 
 ## 2. Types

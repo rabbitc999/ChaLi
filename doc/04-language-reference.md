@@ -31,6 +31,20 @@
 字面量不可直接修改，也不能取得指向其字节的可变引用。
 保存到独立 `String` 值时仍沿用值复制和确定性清理规则，修改一个变量不改变另一个变量。
 
+拥有型 String 提供 `capacity()`、`maxCapacity()`、`reserve(bytes)`、`append(text)`、`clear()` 和 `truncate(bytes)`。
+`append` 原地追加，`clear` 与按字节截短只改变有效长度并保留容量；`reserve` 不缩容，空间不足时取本次需求与两倍容量中的较大值，并检查溢出和容量上限。扩容可回收旧缓冲区，最终缓冲区在 String 被 drop 时释放，副本仍独立拥有存储。`truncate` 不重编码 UTF-8，超过当前长度时保持原值，负数报错。
+
+```chali
+String buffer;
+buffer.reserve(128);
+buffer.append("中文🙂");
+int64 capacity = buffer.capacity();
+buffer.clear();
+assert(buffer.isEmpty() && buffer.capacity() == capacity);
+```
+
+`maxCapacity()` 按当前分配器的单块载荷预算扣除缓冲区终止字节计算。描述符和其他存活对象仍占总预算，因此上限内的请求也可能因内存不足失败。这些修改方法需要可写接收者，拒绝 const、只读引用及重叠的直接活跃字节借用；不能在扩容后继续使用先前取得的裸地址。返回新值的 `substring`、`remove` 等方法仍保持原有值语义。
+
 ---
 
 ## 2. 类型

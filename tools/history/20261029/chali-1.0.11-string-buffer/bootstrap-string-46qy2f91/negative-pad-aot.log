@@ -1,0 +1,6 @@
+chali aot: panic：String：填充长度不能为负
+出错位置：<内建 std::lang>:386（std::lang::__stringTransform）
+调用栈（内 → 外）：
+  std::lang::__stringTransform
+  std::lang::String.padStart
+  main

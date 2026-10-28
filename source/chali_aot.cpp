@@ -1302,11 +1302,20 @@ struct Builder
                 return true;
             }
         }
-        if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
-            && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"))
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__bufferMaxBytes" && arguments.empty())
         {
+            write(destination, instruction("i64", "load i64, ptr @chali_heap_size"));
+            return true;
+        }
+        if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
+            && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"
+                || callee == "std::lang::__stringStorageCapacity" || callee == "std::lang::__stringStorageKind"))
+        {
+            const auto operation = callee == "std::lang::__stringStorageLength" ? "0" :
+                                   callee == "std::lang::__stringStorageData" ? "1" :
+                                   callee == "std::lang::__stringStorageCapacity" ? "2" : "3";
             write(destination, call("chali_host_string_storage", "i64",
-                                    { { "i64", callee == "std::lang::__stringStorageLength" ? "0" : "1" }, convert(argument(0), "i64") }));
+                                    { { "i64", operation }, convert(argument(0), "i64") }));
             return true;
         }
         // 核心 IEEE 编解码的局部重解释无需真正建立引用存储；其存活及范围静态可证。

@@ -275,6 +275,9 @@ bool LowerGlobals(ast::Program &program)
                 reference.emitted = storage;
                 reference.elementReference = true;
             }
+            // 保留全局直接引用的完整来源路径，供新增缓冲区修改检查使用。
+            if (type->kind == MType::Ptr && decl.kids[0] >= 0)
+                g_effectAliases[g_scope[0][ModuleSymbol(decl.module, decl.s)].emitted] = EffectPlace(decl.kids[0]);
             g_expectedFuncType = savedFuncType;
             g_expectedNewType = savedNewType;
         }
@@ -1439,13 +1442,13 @@ bool FinalizeBootstrapCalls(ast::Program &program)
                     body.push_back(ast::Node::declare(result, ast::Type::i64()));
                     body.push_back(ast::Node::assign(result, ast::Node::call("std::lang::__bootStringBuffer", { "length" }, { ast::Node::var(total) })));
                     body.push_back(ast::Node::declare(offset, ast::Type::i64()));
-                    body.push_back(ast::Node::assign(offset, ast::Node::i(8)));
+                    body.push_back(ast::Node::assign(offset, ast::Node::i(0)));
                     for (std::size_t index = 0; index < count; ++index)
                     {
                         const auto argument = function.name + "_arg" + Memory::toString(index);
                         const auto length = function.name + "_length" + Memory::toString(index);
                         body.push_back(ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringCopyBytes", { "destination", "source", "length" },
-                            { ast::Node::binary("+", ast::Node::var(result), ast::Node::var(offset)), ast::Node::call("std::lang::__stringStorageData", { "address" }, { ast::Node::var(argument) }), ast::Node::var(length) })));
+                            { ast::Node::binary("+", ast::Node::call("std::lang::__bootStringOwnedData", { "address" }, { ast::Node::var(result) }), ast::Node::var(offset)), ast::Node::call("std::lang::__stringStorageData", { "address" }, { ast::Node::var(argument) }), ast::Node::var(length) })));
                         body.push_back(ast::Node::assign(offset, ast::Node::binary("+", ast::Node::var(offset), ast::Node::var(length))));
                     }
                     body.push_back(ast::Node::ret(ast::Node::var(result)));

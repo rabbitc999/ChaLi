@@ -1778,6 +1778,9 @@ bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method,
                            Memory::Set<Memory::String> *visiting)
 {
     if (method.source == "drop") return true;  // 销毁本身需要可写接收者，即使方法体为空。
+    // String 的容量原语只接收内部句柄；补上其真实修改效果，供只读与借用分析使用。
+    if (IsStandardOpcode(NamedType(owner), "String") &&
+        (method.source == "reserve" || method.source == "append" || method.source == "clear" || method.source == "truncate")) return true;
     if (method.result && method.result->kind == MType::Ptr && !method.result->readOnly) return true;
     const auto label = owner + "." + method.name;
     if (visiting->count(label)) return false;
@@ -2577,7 +2580,7 @@ ast::NodePtr LowerMemberClosureInitializer(int initializer)
 }
 
 /**
- * @brief 初始化默认值中实际存在的容器字段，跳过枚举未激活的载荷。
+ * @brief 初始化默认值中的容器与拥有型字符串，跳过枚举未激活的载荷。
  * @param address 已清零的聚合地址。
  * @param owner 聚合类型名称。
  * @param out 接收初始化语句。
@@ -2605,6 +2608,8 @@ void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::Stri
         else if (IsContainer(field.type))
             out->push_back(ast::Node::storeAt(
                 target, NewContainerValue(field.type), LowerType(field.type, owner + "." + field.name)));
+        else if (IsStandardOpcode(field.type, "String"))
+            out->push_back(ast::Node::storeAt(target, ast::Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
         else if (field.type->kind == MType::Struct)
             InitializeDefaultContainers(target, field.type->name, out);
         else if (field.type->kind == MType::Array && !IsRuntimeArray(field.type))
@@ -2618,6 +2623,8 @@ void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::Stri
                 const auto item = ast::Node::offset(target, ast::Node::i(index), ElementBytes(element));
                 if (IsContainer(element))
                     out->push_back(ast::Node::storeAt(item, NewContainerValue(element), LowerType(element, field.name)));
+                else if (IsStandardOpcode(element, "String"))
+                    out->push_back(ast::Node::storeAt(item, ast::Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
                 else if (element->kind == MType::Struct)
                     InitializeDefaultContainers(item, element->name, out);
             }
@@ -2635,7 +2642,7 @@ void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::Stri
 void InitializeArrayValues(const ast::NodePtr &address, const std::shared_ptr<MType> &element,
                            const ast::NodePtr &length, Memory::Vector<ast::NodePtr> *out)
 {
-    if (element->kind != MType::Struct && !IsContainer(element)) return;
+    if (element->kind != MType::Struct && !IsContainer(element) && !IsStandardOpcode(element, "String")) return;
     using ast::Node;
     const auto index = AllocateName("__chali_array_init_index");
     const auto loop = NewBlockLabel("array_init");
@@ -2650,6 +2657,8 @@ void InitializeArrayValues(const ast::NodePtr &address, const std::shared_ptr<MT
         out->push_back(BeginAggregateLifetime(item, StructStride(element)));
         InitializeDefaultContainers(item, element->name, out);
     }
+    else if (IsStandardOpcode(element, "String"))
+        out->push_back(Node::storeAt(item, Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
     else
         out->push_back(Node::storeAt(item, NewContainerValue(element), LowerType(element, "array element")));
     out->push_back(Node::assign(index, Node::binary("+", Node::var(index), Node::i(1))));
@@ -2759,7 +2768,9 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
     }
     if (type->kind == MType::Double)
         return Node::assign(emitted, Node::f(0.0));
-    if (type->kind == MType::Ptr || type->kind == MType::Func || type->kind == MType::Int || IsStandardOpcode(type, "String") || type->kind == MType::Opcode || IsResourceLike(type))
+    if (IsStandardOpcode(type, "String"))
+        return Node::assign(emitted, initContainers ? Node::call("std::lang::__bootStringNew", {}, {}) : Node::i(0));
+    if (type->kind == MType::Ptr || type->kind == MType::Func || type->kind == MType::Int || type->kind == MType::Opcode || IsResourceLike(type))
         return Node::assign(emitted, Node::i(0));
     return nullptr;
 }
@@ -2784,6 +2795,8 @@ ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
         out.push_back(BeginAggregateLifetime(Node::var(address), bytes));
         InitializeDefaultContainers(Node::var(address), type->name, &out);
     }
+    else if (IsStandardOpcode(type, "String"))
+        out.push_back(Node::storeAt(Node::var(address), Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
     return Node::sequence(std::move(out), Node::var(address));
 }
 

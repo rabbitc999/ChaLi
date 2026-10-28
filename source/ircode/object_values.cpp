@@ -184,7 +184,13 @@ bool nativeSlot(NativeContext &ctx, const ObjectValue &value, Slot *out)
             Slot field;
             if (!nativeSlot(ctx, value.fields[index], &field)) return false;
             if (value.fields[index].isText)
+            {
+                NativeStringStorage storage;
+                if (nativeHeapStringStorage(ctx, static_cast<std::size_t>(field.integer), storage)
+                    && storage.buffered && storage.data != static_cast<std::size_t>(field.integer) + 32u)
+                    ctx.objects->materializedHeap.push_back(storage.data);
                 ctx.objects->materializedHeap.push_back(static_cast<std::size_t>(field.integer));
+            }
             if (value.fields[index].ownsObject || value.fields[index].objectIdentity != 0)
                 ctx.objects->materializedObjects.push_back(field.integer);
             const std::int64_t bits = field.isFloat ? [&]() {
@@ -294,7 +300,7 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
     {
         std::int64_t bits = 0;
         if (!nativeRead(ctx, view.address + (i - 1u) * 8u, reinterpret_cast<char *>(&bits), sizeof(bits))) continue;
-        if (descriptor[i] == 's' && bits != 0 && ctx.heap != nullptr) ctx.heap->release(static_cast<std::size_t>(bits));
+        if (descriptor[i] == 's' && bits != 0 && ctx.heap != nullptr) nativeReleaseString(ctx, static_cast<std::size_t>(bits));
         if ((descriptor[i] == 'o' || descriptor[i] == 'c') && isObjectHandle(bits)) ctx.objects->release(bits);
     }
 }

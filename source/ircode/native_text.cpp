@@ -10,16 +10,90 @@ using namespace runtimeDetail;
 namespace runtimeDetail
 {
 /**
+ * @brief 查询原长度头、容量描述符或字面量的字符串存储元数据。
+ * @param ctx 当前地址空间及诊断。
+ * @param operation 零长度、一内容地址、二容量、三描述符标记。
+ * @param address 字符串句柄。
+ * @return 对应整数，访问失败保存具体诊断。
+ */
+std::int64_t stringStorageQuery(NativeContext &ctx, std::int64_t operation, std::int64_t address)
+{
+    const auto source = static_cast<std::size_t>(address);
+    const bool heap = ctx.heap && ctx.heap->contains(source);
+    std::int64_t marker = 0;
+    const bool readable = heap && ctx.heap->readInt(source, marker);
+    const bool buffered = readable && marker == -1;
+    if (operation == 3) return buffered ? 1 : 0;
+    if (operation == 1 && !buffered) return address + (heap ? 8 : 0);
+    if (buffered)
+    {
+        std::int64_t value = 0;
+        const auto offset = operation == 0 ? 8u : operation == 1 ? 24u : 16u;
+        if (ctx.heap->readInt(source + offset, value) && value >= 0) return value;
+    }
+    else if (operation == 0 && readable && marker >= 0) return marker;
+    else if (operation == 2 && heap)
+    {
+        std::size_t capacity = 0;
+        if (ctx.heap->capacityAt(source, capacity) && capacity >= 8u) return static_cast<std::int64_t>(capacity - 8u);
+    }
+    else if (!heap)
+    {
+        Memory::String text;
+        if (nativeReadCString(ctx, source, &text)) return static_cast<std::int64_t>(text.size());
+    }
+    ctx.error = "取字符串存储时读不到它（地址 " + Memory::toString(address) + "）";
+    return 0;
+}
+
+/**
+ * @brief 查询字符串内容区容量。
+ * @param ctx 当前地址空间。
+ * @param args 唯一参数为字符串句柄。
+ * @return 字节容量槽。
+ */
+Slot strCapacity(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return Slot::fromInt(stringStorageQuery(ctx, 2, nativeInt(args[0])));
+}
+
+/**
+ * @brief 判断字符串是否带有可增长描述符。
+ * @param ctx 当前地址空间。
+ * @param args 唯一参数为字符串句柄。
+ * @return 描述符标记槽。
+ */
+Slot strStorageKind(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return Slot::fromInt(stringStorageQuery(ctx, 3, nativeInt(args[0])));
+}
+
+/**
+ * @brief 查询当前字节堆捕获的分配预算，不借用线程局部分配器状态。
+ * @param ctx 当前堆及诊断。
+ * @param args 无参数。
+ * @return 最大单块有效载荷预算。
+ */
+Slot bufferMaxBytes(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    (void)args;
+#if STACKVM_WITH_DEFAULT_HEAP
+    if (const auto *heap = dynamic_cast<const Heap *>(ctx.heap))
+        return Slot::fromInt(static_cast<std::int64_t>(std::min<std::size_t>(heap->maximumAllocationBytes(), INT64_MAX)));
+#endif
+    ctx.error = "当前字节堆未提供缓冲区分配上限";
+    return Slot::fromInt(0);
+}
+
+/**
  * @brief 查询字符串存储布局，不复制或扫描文本内容。
  * @param ctx 当前内存及分配身份上下文。
  * @param args 唯一参数为字符串值的逻辑地址。
- * @return 堆字符串跳过八字节长度头，字面量保持原地址。
+ * @return 堆字符串的缓冲区地址，字面量保持原地址。
  */
 Slot strData(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
-    const auto address = nativeInt(args[0]);
-    const bool heap = ctx.heap != nullptr && ctx.heap->contains(static_cast<std::size_t>(address));
-    return Slot::fromInt(address + (heap ? 8 : 0));
+    return Slot::fromInt(stringStorageQuery(ctx, 1, nativeInt(args[0])));
 }
 /**
  * @brief `__std_str_len(地址) -> 长度`。
@@ -29,17 +103,7 @@ Slot strData(NativeContext &ctx, const Memory::Vector<Slot> &args)
  */
 Slot strLen(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
-    const std::size_t address = static_cast<std::size_t>(nativeInt(args[0]));
-    std::int64_t length = 0;
-    if (ctx.heap != nullptr && ctx.heap->contains(address) && ctx.heap->readInt(address, length) && length >= 0)
-        return Slot::fromInt(length);
-    Memory::String text;
-    if (!nativeReadCString(ctx, address, &text))
-    {
-        ctx.error = "取字符串长度时读不到它（地址 " + Memory::toString(nativeInt(args[0])) + " 不在任何一块已分配内存里，或者没有结尾的 \\0）";
-        return Slot::fromInt(0);
-    }
-    return Slot::fromInt(static_cast<std::int64_t>(text.size()));
+    return Slot::fromInt(stringStorageQuery(ctx, 0, nativeInt(args[0])));
 }
 
 /**

@@ -68,10 +68,12 @@ DWARF source locations and variables support GDB/MI breakpoints, stepping and va
 ChaLi calls C libraries through per-function `#abi("C", "library", "symbol")` directives and C++ through a Registry. `#export("symbol")` exports scalars and resource-free value structs through the C ABI. References, structs, arrays, optional
 references, returned-memory release and limited header bindings follow explicit ABI contracts; declarations
 must match the actual C signatures. Glue calls named functions, inline fn values and closures through
-`NativeCallContext::invoke` or `chali_glue::Function`. VM share the interface, argument-count checks
-and error propagation. Wrappers and contexts are valid only synchronously, on the same thread, during
+`NativeCallContext::invoke` or `chali_glue::Function`. The AOT runtime checks argument counts and return values,
+and propagates errors. Wrappers and contexts are valid only synchronously, on the same thread, during
 the enclosing host callback. Resource values retain their Codec ownership requirements.
 See [host integration](08-host-integration.md) and the [callback example](../../example/native-callbacks/README.md).
+
+Handwritten C++ boundaries that create owned strings with `NativeCallContext::makeString` use `releaseString` to release the descriptor and its separate buffer; `releaseMemory` continues to release only the specified raw block. Use `trackTemporaryString` when both parts belong in the existing temporary cleanup queue. These helpers are nonvirtual members and preserve the context vtable and object layout. Ordinary typed Codecs continue to manage their value ownership.
 
 **Reflection is a fixed part of the language and is not trimmable.** The root toolchain pins
 `CHALI_WITH_REFLECTION=1` and `STACKVM_WITH_REFLECTION=1` (unlike the `NO_CHALI_*` trim options these

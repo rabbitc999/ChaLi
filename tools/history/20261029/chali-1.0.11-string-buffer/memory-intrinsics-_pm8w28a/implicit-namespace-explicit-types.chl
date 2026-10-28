@@ -1,0 +1,42 @@
+int64 sizeOfCopy(int64 n) { return n; }
+void main() {
+    RawStorage<int64> values = RawStorage<int64>::allocate(4);
+    RawStorage<uint8> bytes = RawStorage<uint8>::allocate(8);
+    unsafe {
+        BarePtr<int64> p = barePointer<int64>(values.pointer(0));
+        BarePtr<uint8> q = barePointer<uint8>(bytes.pointer(0));
+        assert((p + 2) - p == 2);
+        assert((2 + p).address == (p + 2).address);
+        int64 count = sizeOfCopy(8);
+        memset<int64>(p, (uint8)0, 32);
+        memset<uint8>(q, (uint8)42, count);
+        memcpy<int64,uint8>(p, q, count);
+        BarePtr<uint8> first = p.castTo<uint8>();
+        assert(first.address == p.address && first.castTo<int64>().address == p.address);
+        int64 i = 0;
+        while (i < count) {
+            uint8 mut& value = dereference<uint8>(first + i);
+            assert(*value == (uint8)42);
+            i = i + 1;
+        }
+        memcpy(p + 1, q, count);
+        memset(p + 2, 0, count);
+        memset(q, (uint8)'A', count);
+        uint8 mut& letter = dereference<uint8>(q);
+        assert(*letter == (uint8)65);
+        RawPtr<int64> slot = values.pointer(1);
+        initAt<int64>(slot, 99);
+        assert(readAt<int64>(slot) == 99);
+        int64 moved = takeAt<int64>(slot);
+        assert(moved == 99 && !values.isInitialized(1));
+        int64 original = 123;
+        int64 copied = 0;
+        memcpy(&copied, &original, count);
+        assert(copied == 123 && original == 123);
+        BarePtr<uint8> empty;
+        memcpy<uint8,uint8>(empty, empty, 0);
+        memset<uint8>(empty, (uint8)0, 0);
+    }
+    values.close(); bytes.close();
+    println("memory intrinsics OK");
+}

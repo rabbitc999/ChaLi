@@ -1645,7 +1645,26 @@ ast::NodePtr LowerCall(int id)
         if (declaration.label == label && declaration.unsafeRequired && g_unsafeDepth == 0)
             return Fail("调用 unsafe 函数需要显式 unsafe 上下文：" + label), Bad();
     if (g_borrowFlowCapture) g_borrowFlowCapture->calls[id] = label;
-    if ((callee.kind == MNode::Member || callee.kind == MNode::Arrow) && !CheckMethodReceiver(callee.kids[0], label)) return Bad();
+    if (callee.kind == MNode::Member || callee.kind == MNode::Arrow)
+    {
+        if (IsStandardOpcode(ExprType(callee.kids[0]), "String") &&
+            (callee.s == "reserve" || callee.s == "append" || callee.s == "clear" || callee.s == "truncate"))
+        {
+            if (!CheckMutableReceiver(callee.kids[0])) return Bad();
+            const auto receiver = EffectPlace(callee.kids[0]);
+            for (const auto &scope : g_scope)
+                for (const auto &entry : scope)
+                {
+                    const auto type = entry.second.type;
+                    if (!type || type->kind != MType::Ptr || !type->elem ||
+                        !(type->elem->kind == MType::Char || (type->elem->kind == MType::Int && type->elem->bits == 8))) continue;
+                    const auto alias = g_effectAliases.find(entry.second.emitted);
+                    if (alias != g_effectAliases.end() && OverlappingEffects(receiver, alias->second))
+                        return Fail("活跃字节借用期间不能修改 String 缓冲区：" + entry.first), Bad();
+                }
+        }
+        if (!CheckMethodReceiver(callee.kids[0], label)) return Bad();
+    }
     const auto signature = g_funcs.find(label);
     if (signature == g_funcs.end()) return Fail("内部错误：调用签名不存在 " + label), Bad();
     // 字符串自举仅需要分配、归还和接管地址；直接产生四元式，不进入宿主胶水。
@@ -2055,6 +2074,19 @@ ast::NodePtr LowerResourceDrop(int receiver)
          * 由控制流合并处理已知重复调用，底层不接受失效句柄。 */
         clearOwner = true;
         removal = ast::Node::freeMemory(ownerSlot ? ast::Node::loadInt(ownerSlot) : LowerRawExpr(receiver));
+    }
+    else if (type->kind == MType::Ptr && IsStandardOpcode(type->elem, "String"))
+    {
+        if (type->readOnly) return Fail("只读引用不能 drop String 对象"), Bad();
+        const auto slot = AllocateName("__chali_drop_string_object");
+        const auto pointer = ast::Node::var(slot);
+        const auto actions = ast::Node::block({
+            ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
+            ast::Node::freeMemory(pointer)
+        });
+        removal = ast::Node::block({ ast::Node::declare(slot, ast::Type::i64()),
+                                    ast::Node::assign(slot, LowerRawExpr(receiver)),
+                                    ast::Node::ifThenElse(ast::Node::call("__std_heap_drop_live", { "address" }, { pointer }), actions, nullptr) });
     }
     else if (type->kind == MType::Ptr && type->elem && type->elem->kind == MType::Struct)
     {

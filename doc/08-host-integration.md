@@ -4,7 +4,7 @@
 [English](en/08-host-integration.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 只有一条执行路径：前端出四元式，LLVM AOT 出原生代码。所以和 C 打交道也只有两个方向——
+ChaLi 普通执行从语义检查后的 AST 直接生成 LLVM IR，再经 LLVM O3 生成原生代码。和 C 打交道有两个方向——
 **ChaLi 调 C 动态库**，和**C 宿主调 ChaLi 编出来的原生库**。两个方向都走平台 C ABI：中间没有字节码容器，
 也没有需要宿主注册函数表的运行环境。
 

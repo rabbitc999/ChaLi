@@ -1,0 +1,5 @@
+chali aot: panic：切片端点不能为负数（String 的切片按字节算）
+出错位置：<内建 std::lang>:240（std::lang::__bootStringSlice）
+调用栈（内 → 外）：
+  std::lang::__bootStringSlice
+  main

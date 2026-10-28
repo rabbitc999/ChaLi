@@ -65,9 +65,11 @@ IR 指四元式，四元式不做内部优化，优化全部交给 LLVM；发布
 ChaLi 可通过逐函数 `#abi("C", "库", "符号")` 指令调用 C 动态库，或调用 Registry 注册的 C++ 胶水。`#export("符号")` 提供标量及无资源纯值结构体的 C ABI 导出。引用、结构体、数组、
 可选引用、返回内存释放及有限头文件绑定均按 ABI 契约处理；宿主声明必须匹配真实 C 签名。
 胶水使用 `NativeCallContext::invoke` 或 `chali_glue::Function` 同步调用 ChaLi 具名函数、
-内联 fn 和闭包，VM 共用接口并检查参数数量、返回值和错误传播。
+内联 fn 和闭包，AOT 运行时检查参数数量、返回值和错误传播。
 函数包装与上下文仅在所属宿主回调期间、同一线程同步使用；资源值仍按 Codec 管理所有权。
 详见[宿主集成](08-host-integration.md)和[回调示例](../example/native-callbacks/README.md)。
+
+手写 C++ 边界通过 `NativeCallContext::makeString` 创建拥有字符串后，用 `releaseString` 清理描述符及其独立缓冲区；`releaseMemory` 仍只处理指定的原始块。需要登记到既有临时值清理队列时，使用 `trackTemporaryString` 同时记录两部分。两项字符串助手是非虚成员，不改变上下文虚表或对象布局；普通类型化 Codec 继续管理自身的值所有权。
 
 **反射是语言的固定组成，不可裁剪**：根目录工具链固定 `CHALI_WITH_REFLECTION=1` 与
 `STACKVM_WITH_REFLECTION=1`（`features.mk` 里这两项不是裁剪项，与 `NO_CHALI_*` 那套可选能力

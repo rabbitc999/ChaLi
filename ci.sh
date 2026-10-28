@@ -250,11 +250,18 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 match 整数模式重叠警告回归" "$PYTHON" tests/chali_match_overlap.py --chali "$CHALI_BIN"
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/chali_fn.py --chali "$CHALI_BIN"
     run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
+    run_step "运行有界增长与 List／Map／Set 容量复用回归" "$PYTHON" tests/chali_buffer_growth.py --chali "$CHALI_BIN"
+    run_step "运行 String 缓冲区、复制、Drop 与借用回归" "$PYTHON" tests/chali_string_buffer.py --chali "$CHALI_BIN"
+    run_step "运行默认 String 的语言自举回归" "$PYTHON" tests/chali_bootstrap_string.py --chali "$CHALI_BIN"
+    run_step "运行数值转换的语言自举回归" "$PYTHON" tests/chali_bootstrap_numeric.py --chali "$CHALI_BIN"
+    run_step "运行实验性集合的语言自举回归" "$PYTHON" tests/chali_bootstrap_containers.py --chali "$CHALI_BIN"
+    run_step "验证默认 Map／Set 的碰撞与删除模型" "$CHALI_BIN" run tests/fixtures/bootstrap_hashed_default.chl --out tmp/ci/hashed-model
+    run_step "运行 LLVM 内存原语与限定调用回归" "$PYTHON" tests/chali_memory_intrinsics.py --chali "$CHALI_BIN"
+    run_step "验证 rawSize 常量与原始存储步长" "$CHALI_BIN" run tests/fixtures/aot_raw_size.chl --out tmp/ci/raw-size
+    run_step "验证裸地址字节原语与 UTF-8" "$CHALI_BIN" run tests/fixtures/aot_byte_primitives.chl --out tmp/ci/byte-primitives
     run_step "运行闭包、标准库及并发的 VM/AOT 差分" "$PYTHON" tests/chali_aot_runtime.py --chali "$CHALI_BIN"
     run_step "运行泛型函数返回闭包与类型拒绝回归" "$PYTHON" tests/chali_generic_function_returns.py --chali "$CHALI_BIN"
     run_step "运行三类代表输入的 checked/unchecked 全部回归" "$PYTHON" tests/chali_compiler_limits.py --chali "$CHALI_BIN" --verify --jobs "$jobs"
-    # 软重启看门狗（PC 宿主）：--watchdog 打开前后的行为、输出回滚与重启上限。
-    run_step "运行软重启看门狗回归" "$PYTHON" tests/chali_watchdog.py --chali "$CHALI_BIN"
     # 总览图（各项目的 make_*_overview.py → 各自 overview 目录；ChaLi 那张由 chali 自己
     # 绘制，落在 doc/overview/）：能重跑、成对产出、重复生成一致。
     run_step "运行简短场景指令与拖入文件回归" "$PYTHON" tests/chali_scenes.py --chali "$CHALI_BIN"

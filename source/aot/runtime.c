@@ -229,28 +229,31 @@ void chali_store_i16(chali_i64 address, chali_i64 value)
     memcpy(chali_host_address(address, 2), &v, 2);
 }
 
-/* 字符串：[8 字节长度][字节…]，值就是块起点（与 VM 的堆串布局一致） */
+/* 字符串：负一标记、长度、容量、内容地址；同时支持原八字节长度头。 */
 /**
- * @brief 将指定字节复制为长度前缀字符串，保留嵌入的零字节。
- * @param bytes 待复制的源字节或待分配的字节数。
- * @param length 字节数或数组元素数量。
- * @return 新构造的字符串句柄；空字符串仍具有有效的长度前缀。
+ * @brief 将指定字节复制到拥有型容量缓冲区，保留嵌入的零字节。
+ * @param bytes 待复制的源字节，不按终止零字节扫描。
+ * @param length 源内容的字节数。
+ * @return 新容量描述符句柄；空字符串也有独立的内联缓冲区。
  */
 chali_i64 chali_string_new(const char *bytes, size_t length)
 {
+    if ((chali_u64)length > 9223372036854775774ull) chali_panic("String：结果过长");
     char *copy = (char *)malloc(length ? length : 1);
     if (!copy) chali_panic("复制字符串时内存不足");
     if (length) memcpy(copy, bytes, length);
-    const chali_i64 at = chali_alloc(length + 9u);
-    const chali_i64 n = (chali_i64)length;
-    memcpy(chali_host_address(at, 8), &n, 8);
-    if (length != 0u) memcpy(chali_host_address(at + 8, length), copy, length);
-    *chali_host_address(at + 8 + length, 1) = 0;
+    const int small = length <= 16u;
+    const chali_i64 at = chali_alloc(small ? 49u : 32u);
+    const chali_i64 data = small ? at + 32 : chali_alloc(length + 1u);
+    const chali_i64 header[4] = { -1, (chali_i64)length, small ? 16 : (chali_i64)length, data };
+    memcpy(chali_host_address(at, 32), header, 32);
+    if (length != 0u) memcpy(chali_host_address(data, length), copy, length);
+    *chali_host_address(data + (chali_i64)length, 1) = 0;
     free(copy);
     return at;
 }
 /* 两种串共存：数据映像里的字面量是 NUL 结尾的裸字节（地址 < chali_data_size），
- * 堆上的串是「8 字节长度 + 字节」。VM 那侧靠 `heap->contains` 区分，这里靠地址分界线。 */
+ * 堆上的串可用容量描述符或原长度头，这里先按地址分界再读取布局标记。 */
 /**
  * @brief 根据初始化数据边界区分堆句柄和数据区地址。
  * @param address 运行时内存中的字节偏移。
@@ -265,7 +268,9 @@ int chali_on_heap(chali_i64 address) { return address >= (chali_i64)chali_data_s
 chali_i64 chali_string_length(chali_i64 s)
 {
     if (s == 0) return 0;
-    return chali_on_heap(s) ? chali_load_i64(s) : (chali_i64)strlen((const char *)chali_host_address(s, 1));
+    if (!chali_on_heap(s)) return (chali_i64)strlen((const char *)chali_host_address(s, 1));
+    const chali_i64 marker = chali_load_i64(s);
+    return marker == -1 ? chali_load_i64(s + 8) : marker;
 }
 /**
  * @brief 取得堆字符串或数据区字面量的字节起点。
@@ -274,7 +279,8 @@ chali_i64 chali_string_length(chali_i64 s)
  */
 const char *chali_string_bytes(chali_i64 s)
 {
-    return (const char *)chali_host_address(s + (chali_on_heap(s) ? 8 : 0), 0);
+    const chali_i64 data = chali_on_heap(s) ? (chali_load_i64(s) == -1 ? chali_load_i64(s + 24) : s + 8) : s;
+    return (const char *)chali_host_address(data, 0);
 }
 /**
  * @brief 复制数据区的零结尾字面量为拥有型字符串。
@@ -299,7 +305,15 @@ chali_i64 chali_string_copy(chali_i64 s)
  * @brief 释放字符串拥有的共享堆存储。
  * @param s 源字符串句柄；零表示空字符串。
  */
-void chali_string_drop(chali_i64 s) { chali_host_drop(s); }
+void chali_string_drop(chali_i64 s)
+{
+    if (s && chali_on_heap(s) && chali_load_i64(s) == -1)
+    {
+        const chali_i64 data = chali_load_i64(s + 24);
+        if (data != s + 32) chali_host_drop(data);
+    }
+    chali_host_drop(s);
+}
 
 /* 数组：块头 8 字节是元素个数，返回值指向元素区，块起点 = 返回值 - 8
  * （四元式里释放数组写的是 drop(a - 8)） */

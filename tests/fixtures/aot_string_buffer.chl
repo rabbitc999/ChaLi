@@ -1,0 +1,59 @@
+/** 容量保留、值复制、移动、UTF-8 和最终 Drop 的字符串缓冲区验证。 */
+import std::memory;
+struct StringBufferRecord { String text;String items[2]; };
+unsafe int64 stringBufferAddress(String const& value) {
+    int64 mut& slot=(int64 mut&)(int64)std::lang::address(value);
+    return std::lang::__bootStringOwnedData(*slot);
+}
+
+String appendCopy(String value) { value.append("!");return value; }
+
+void scopedStringBuffers() {
+    StringBufferRecord record;record.text.append("field");record.items[1].append("array field");
+    assert(record.text=="field" && record.items[0].isEmpty() && record.items[1]=="array field");
+    {char const& first=&record.text[0];record.items[1].append("!");assert(*first=='f');}
+    record.text.append("!");
+    String fixed[2];fixed[1].append("array");assert(fixed[0].isEmpty() && fixed[1]=="array");
+    String mut& heapValue=new String;heapValue.append("heap");heapValue.reserve(100);
+    assert(heapValue=="heap");heapValue.drop();
+    String value="012345678901234567890123456789";
+    value.reserve(1024);value.append(value);value.clear();value.append("重新使用🙂");
+    List<String> values;values.push(value);values.push("abcdefghijklmnopqrstuvwxyz0123456789");
+    for(String text in values){text.append("-尾部🙂");}
+    assert(values[0]=="重新使用🙂-尾部🙂");
+    Map<int64,String> mapping;mapping[1]=value;mapping.clear();
+}
+
+void main() {
+    String value;
+    assert(value.length()==0 && value.capacity()>=16 && value.maxCapacity()>value.capacity());
+    int64 initial=value.capacity();
+    value.append("abc");value.reserve(initial);assert(value=="abc" && value.capacity()==initial);
+    int64 oldAddress=0;
+    unsafe{oldAddress=stringBufferAddress(&value);}
+    value.clear();
+    assert(value.length()==0 && value.capacity()==initial);
+    unsafe{assert(stringBufferAddress(&value)==oldAddress);}
+    value.append("中文🙂");assert(value=="中文🙂" && value.charLength()==3);
+    value.append(value);assert(value=="中文🙂中文🙂" && value.capacity()>=value.length());
+    int64 capacity=value.capacity();value.truncate(6);
+    assert(value=="中文" && value.capacity()==capacity);
+    value.truncate(999);assert(value=="中文" && value.capacity()==capacity);
+    value.reserve(100);assert(value=="中文" && value.capacity()>=100);
+    capacity=value.capacity();
+    unsafe{oldAddress=stringBufferAddress(&value);}
+    value.clear();value.append("kept");
+    assert(value=="kept" && value.capacity()==capacity);
+    unsafe{assert(stringBufferAddress(&value)==oldAddress);}
+    String copy=value;copy.append(" copy");
+    assert(value=="kept" && copy=="kept copy");
+    String returned=appendCopy(value);assert(value=="kept" && returned=="kept!");
+    {char const& first=&value[0];assert(*first=='k');}
+    value.append("");assert(value=="kept");
+    String formatted=format("{}:{}",123,"abcdefghijklmnopqrstuvwxyz");
+    formatted.append("!");assert(formatted=="123:abcdefghijklmnopqrstuvwxyz!");
+    int64 before=std::memory::__memoryLiveBlocks();
+    scopedStringBuffers();
+    assert(std::memory::__memoryLiveBlocks()==before);
+    println("String capacity, copy, UTF-8 and Drop OK");
+}

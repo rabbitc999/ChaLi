@@ -257,7 +257,7 @@ bool nativeSlot(State &ctx, const ObjectValue &value, Slot *out)
             Slot field;
             if (!nativeSlot(ctx, value.fields[index], &field)) return false;
             if (value.fields[index].isText)
-                ctx.objects->materializedHeap.push_back(static_cast<std::size_t>(field.integer));
+                ctx.host.trackTemporaryString(field.integer);
             if (value.fields[index].ownsObject || value.fields[index].objectIdentity != 0)
                 ctx.objects->materializedObjects.push_back(field.integer);
             const std::int64_t bits = field.isFloat ? [&]() {
@@ -376,7 +376,7 @@ inline void nativeReleaseViewContents(State &ctx, const Record::ElementView &vie
     {
         std::int64_t bits = 0;
         if (!nativeRead(ctx, view.address + (i - 1u) * 8u, reinterpret_cast<char *>(&bits), sizeof(bits))) continue;
-        if (descriptor[i] == 's' && bits != 0 && ctx.heap != nullptr) ctx.heap->release(static_cast<std::size_t>(bits));
+        if (descriptor[i] == 's' && bits != 0 && ctx.heap != nullptr) ctx.host.releaseString(bits, true);
         if ((descriptor[i] == 'o' || descriptor[i] == 'c') && isObjectHandle(bits)) ctx.objects->release(bits);
     }
 }

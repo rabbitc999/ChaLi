@@ -37,6 +37,12 @@ void Heap::invalidateViews()
 const std::atomic<std::uint64_t> *Heap::mappingRevision() const { return &addressMappingRevision; }
 
 /**
+ * @brief 使用分配时捕获的所有者查询预算，不依赖调用线程的分配器状态。
+ * @return 最大单块载荷预算，尚未初始化时为零。
+ */
+std::size_t Heap::maximumAllocationBytes() const { return mallocOwner_ ? mallocOwner_->capacity() : 0u; }
+
+/**
  * @brief 归还系统有效载荷，不改变语言层的显式释放诊断。
  */
 void Heap::clearMallocAllocations()

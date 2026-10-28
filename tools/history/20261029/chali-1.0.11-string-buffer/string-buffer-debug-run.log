@@ -1,0 +1,7 @@
+len=0 cap=0 max=536870911
+before assertion 21
+chali aot: panic：assert(x) 的 x 为假
+出错位置：<内建 std::lang>:854（std::lang::assert$bool）
+调用栈（内 → 外）：
+  std::lang::assert$bool
+  main

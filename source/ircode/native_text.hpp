@@ -9,6 +9,35 @@
 namespace stackvm::runtimeDetail
 {
 /**
+ * @brief 按标量协议查询字符串长度、数据地址、容量或描述符标记。
+ * @param ctx 当前地址空间及诊断上下文。
+ * @param operation 零为长度，一为数据，二为容量，三为描述符标记。
+ * @param address 字符串逻辑地址。
+ * @return 对应元数据；失败保留 ctx.error。
+ */
+std::int64_t stringStorageQuery(NativeContext &ctx, std::int64_t operation, std::int64_t address);
+/**
+ * @brief 查询字符串字节容量，不包含终止字节。
+ * @param ctx 当前调用上下文。
+ * @param args 唯一参数为字符串句柄。
+ * @return 容量整数槽。
+ */
+Slot strCapacity(NativeContext &ctx, const Memory::Vector<Slot> &args);
+/**
+ * @brief 判断句柄是否使用可增长容量描述符。
+ * @param ctx 当前调用上下文。
+ * @param args 唯一参数为字符串句柄。
+ * @return 描述符为一，其他存储为零。
+ */
+Slot strStorageKind(NativeContext &ctx, const Memory::Vector<Slot> &args);
+/**
+ * @brief 查询默认字节堆捕获的分配器预算。
+ * @param ctx 当前调用上下文。
+ * @param args 无参数。
+ * @return 最大单块载荷预算，未知堆报告不支持。
+ */
+Slot bufferMaxBytes(NativeContext &ctx, const Memory::Vector<Slot> &args);
+/**
  * @brief `__std_str_len(地址) -> 长度`。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
  * @param args 按接口约定顺序传入的实参列表。

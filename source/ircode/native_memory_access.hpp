@@ -9,6 +9,33 @@
 namespace stackvm::runtimeDetail
 {
 /**
+ * @brief 已验证的堆字符串字节视图，同时兼容原长度头与新容量描述符。
+ */
+struct NativeStringStorage
+{
+    std::size_t data = 0;      ///< 内容的逻辑地址。
+    std::size_t length = 0;    ///< 有效字节数。
+    std::size_t capacity = 0;  ///< 不含终止字节的容量。
+    bool buffered = false;    ///< 是否具有可增长容量描述符。
+};
+
+/**
+ * @brief 验证活跃堆字符串的布局和完整内容范围，不复制文本。
+ * @param ctx 当前地址空间。
+ * @param address 字符串句柄。
+ * @param out 接收已验证的存储视图。
+ * @return 布局和容量均有效时为真；字面量由调用者处理。
+ */
+bool nativeHeapStringStorage(const NativeContext &ctx, std::size_t address, NativeStringStorage &out);
+
+/**
+ * @brief 清理拥有的堆字符串及其独立容量缓冲区。
+ * @param ctx 字符串所属上下文。
+ * @param address 字符串句柄。
+ * @return 原始块释放成功时为真。
+ */
+bool nativeReleaseString(NativeContext &ctx, std::size_t address);
+/**
  * @brief 验证访问完全位于同一个活跃分配中，避免宽访问跨过块尾。
  * @param heap 分配器。
  * @param address 地址。

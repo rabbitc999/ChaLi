@@ -1,0 +1,1 @@
+void main(){String value;value.truncate(-1);}

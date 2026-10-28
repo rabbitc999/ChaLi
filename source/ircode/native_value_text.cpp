@@ -212,7 +212,7 @@ struct ValueTextRenderer
         Memory::String text;
         const auto address = static_cast<std::size_t>(produced.asInt());
         const bool valid = nativeReadCString(context, address, &text);
-        if (context.heap) context.heap->release(address);
+        if (context.heap) nativeReleaseString(context, address);
         if (!valid) context.error = "toString 回调没有返回有效字符串";
         return text;
     }

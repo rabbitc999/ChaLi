@@ -10,6 +10,50 @@ using namespace runtimeDetail;
 namespace runtimeDetail
 {
 /**
+ * @brief 解析原长度头或带负一标记的容量描述符，并验证有效分配范围。
+ * @param ctx 当前地址空间。
+ * @param address 堆字符串句柄。
+ * @param out 接收字节视图。
+ * @return 元数据及内容完整位于活跃块中时为真。
+ */
+bool nativeHeapStringStorage(const NativeContext &ctx, std::size_t address, NativeStringStorage &out)
+{
+    if (!ctx.heap) return false;
+    std::size_t block = 0;
+    std::int64_t header[4] = {};
+    if (!ctx.heap->capacityAt(address, block) || block < 8u || !ctx.heap->readInt(address, header[0])) return false;
+    if (header[0] >= 0)
+    {
+        if (static_cast<std::uint64_t>(header[0]) > block - 8u) return false;
+        out = { address + 8u, static_cast<std::size_t>(header[0]), block - 8u, false };
+        return true;
+    }
+    if (header[0] != -1 || block < sizeof(header)
+        || !ctx.heap->readBytes(address, reinterpret_cast<char *>(header), sizeof(header))) return false;
+    if (header[1] < 0 || header[2] < header[1] || header[2] == INT64_MAX || header[3] <= 0) return false;
+    const auto data = static_cast<std::size_t>(header[3]);
+    const auto capacity = static_cast<std::size_t>(header[2]);
+    if (!allocatedHeapRange(*ctx.heap, data, capacity + 1u)) return false;
+    out = { data, static_cast<std::size_t>(header[1]), capacity, true };
+    return true;
+}
+
+/**
+ * @brief 释放字符串的独立缓冲区与描述符，内联内容只随描述符释放。
+ * @param ctx 字符串所属地址空间。
+ * @param address 堆字符串句柄。
+ * @return 描述符释放成功时为真。
+ */
+bool nativeReleaseString(NativeContext &ctx, std::size_t address)
+{
+    if (!ctx.heap) return false;
+    NativeStringStorage storage;
+    if (nativeHeapStringStorage(ctx, address, storage) && storage.buffered && storage.data != address + 32u)
+        if (!ctx.heap->release(storage.data)) return false;
+    return ctx.heap->release(address);
+}
+
+/**
  * @brief 验证访问完全位于同一个活跃分配中，避免宽访问跨过块尾。
  * @param heap 分配器。
  * @param address 地址。
@@ -98,12 +142,10 @@ bool nativeReadCString(const NativeContext &ctx, std::size_t address, Memory::St
     if (address == 0u) return true;  ///< 空指针当空串
     if (ctx.heap != nullptr && ctx.heap->contains(address))
     {
-        std::int64_t length = 0;
-        std::size_t capacity = 0u;
-        if (!nativeRead(ctx, address, reinterpret_cast<char *>(&length), sizeof(length)) || length < 0 || !ctx.heap->capacityAt(address, capacity) || static_cast<std::uint64_t>(length) > capacity - std::min<std::size_t>(capacity, 8u))
-            return false;
-        out->resize(static_cast<std::size_t>(length));
-        return length == 0 || nativeRead(ctx, address + 8u, out->data(), out->size());
+        NativeStringStorage storage;
+        if (!nativeHeapStringStorage(ctx, address, storage)) return false;
+        out->resize(storage.length);
+        return storage.length == 0 || nativeRead(ctx, storage.data, out->data(), out->size());
     }
     for (std::size_t index = 0; index < kStringScanLimit; ++index)
     {
@@ -124,7 +166,7 @@ bool nativeReadCString(const NativeContext &ctx, std::size_t address, Memory::St
 std::size_t nativeAllocate(NativeContext &ctx, std::size_t bytes);
 
 /**
- * @brief 造一个显式长度的堆字符串，返回长度字段的地址。
+ * @brief 创建带容量描述符的堆字符串，小文本与描述符放在同一分配中。
  * @param ctx 环境。
  * @param text UTF-8 字节内容。
  * @return 地址；0 = 失败（`ctx.error` 里是原因）。
@@ -132,15 +174,35 @@ std::size_t nativeAllocate(NativeContext &ctx, std::size_t bytes);
 std::size_t nativeAllocString(NativeContext &ctx, const Memory::String &text)
 {
     if (ctx.heap == nullptr) return 0u;
-    const std::size_t bytes = text.size() + 8u;
+    if (text.size() > static_cast<std::uint64_t>(INT64_MAX) - 33u)
+    {
+        ctx.error = "String：结果过长";
+        return 0u;
+    }
+    const bool small = text.size() <= 16u;
+    const std::size_t bytes = small ? 49u : 32u;
     const std::size_t address = nativeAllocate(ctx, bytes);
     if (address == 0u)
     {
         ctx.error = "堆内存不足：拼接 / 格式化需要 " + Memory::toString(bytes) + " 字节";
         return 0u;
     }
-    if (!ctx.heap->writeInt(address, static_cast<std::int64_t>(text.size())) || (!text.empty() && !ctx.heap->writeBytes(address + 8u, text.data(), text.size())))
+    const auto data = small ? address + 32u : nativeAllocate(ctx, text.size() + 1u);
+    if (!data)
     {
+        ctx.heap->release(address);
+        ctx.error = "堆内存不足：字符串缓冲区需要 " + Memory::toString(text.size() + 1u) + " 字节";
+        return 0u;
+    }
+    const std::int64_t header[4] = { -1, static_cast<std::int64_t>(text.size()),
+                                    static_cast<std::int64_t>(small ? 16u : text.size()), static_cast<std::int64_t>(data) };
+    const char zero = 0;
+    if (!ctx.heap->writeBytes(address, reinterpret_cast<const char *>(header), sizeof(header))
+        || (!text.empty() && !ctx.heap->writeBytes(data, text.data(), text.size()))
+        || !ctx.heap->writeBytes(data + text.size(), &zero, 1u))
+    {
+        if (!small) ctx.heap->release(data);
+        ctx.heap->release(address);
         ctx.error = "往堆上写字符串失败（地址 " + Memory::toString(address) + "）";
         return 0u;
     }

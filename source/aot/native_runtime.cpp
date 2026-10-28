@@ -913,30 +913,24 @@ unsigned char chali_host_result_float()
 
 /**
  * @brief 以标量 ABI 查询字符串长度或内容地址，不经过函数表及动态实参数组。
- * @param operation 零读取长度，一取得首个内容字节地址。
+ * @param operation 零读取长度，一读取内容地址，二查询容量，三查询描述符标记。
  * @param address 字符串值的逻辑地址，零表示空值。
  * @return 对应长度或内容地址；访问失败时保留当前源码位置并终止。
  */
 std::int64_t chali_host_string_storage(std::int64_t operation, std::int64_t address)
 {
     NativeContext &context = currentContext();
-    const auto source = static_cast<std::size_t>(address);
-    const bool heap = context.heap != nullptr && context.heap->contains(source);
-    if (operation == 1) return address + (heap ? 8 : 0);
-    std::int64_t length = 0;
-    if (heap && context.heap->readInt(source, length) && length >= 0) return length;
+    std::int64_t result = 0;
     try
     {
-        Memory::String text;
-        if (nativeReadCString(context, source, &text)) return static_cast<std::int64_t>(text.size());
-        context.error = "取字符串长度时读不到它";
+        result = stringStorageQuery(context, operation, address);
     } catch (const std::exception &error)
     {
         context.error = Memory::String("String 存储查询抛出异常：") + error.what();
     }
     if (!context.memoryFault.empty()) context.error = context.memoryFault;
-    chali_panic(context.error.c_str());
-    return 0;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    return result;
 }
 
 /**

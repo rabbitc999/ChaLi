@@ -55,6 +55,47 @@ bool NativeCallContext::releaseMemory(std::int64_t address, bool soft)
     fail("runtime memory release unsupported");
     return false;
 }
+
+/**
+ * @brief 经既有公开读写接口释放字符串的描述符及外置容量缓冲区。
+ * @param address 字符串句柄。
+ * @param soft 传给原始块释放接口的软释放选项。
+ * @return 完成释放时为真，非法描述符或释放失败为假。
+ */
+bool NativeCallContext::releaseString(std::int64_t address, bool soft)
+{
+    if (!address) return releaseMemory(address, soft);
+    std::int64_t header[4] = {};
+    if (!readBytes(address, reinterpret_cast<char *>(header), sizeof(header[0]))) return false;
+    if (header[0] == -1)
+    {
+        if (!readBytes(address, reinterpret_cast<char *>(header), sizeof(header))) return false;
+        if (header[1] < 0 || header[2] < header[1] || header[3] <= 0)
+        {
+            fail("String：容量描述符无效");
+            return false;
+        }
+        if (header[3] != address + 32 && !releaseMemory(header[3], soft)) return false;
+    }
+    return releaseMemory(address, soft);
+}
+
+/**
+ * @brief 用既有原始内存登记接口跟踪字符串的两个存储块。
+ * @param address 当前存活的字符串句柄。
+ */
+void NativeCallContext::trackTemporaryString(std::int64_t address)
+{
+    if (!address) return;
+    std::int64_t header[4] = {};
+    if (!readBytes(address, reinterpret_cast<char *>(header), sizeof(header[0]))) return;
+    if (header[0] == -1)
+    {
+        if (!readBytes(address, reinterpret_cast<char *>(header), sizeof(header))) return;
+        if (header[3] != address + 32) trackTemporary(header[3], false);
+    }
+    trackTemporary(address, false);
+}
 /**
  * @brief 在缺省宿主中拒绝记录复制。
  * @param handle 待复制句柄。

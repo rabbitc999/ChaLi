@@ -1,0 +1,42 @@
+int64 sizeOfCopy(int64 n) { return n; }
+void main() {
+    std::lang::RawStorage<int64> values = std::lang::RawStorage<int64>::allocate(4);
+    std::lang::RawStorage<uint8> bytes = std::lang::RawStorage<uint8>::allocate(8);
+    unsafe {
+        std::lang::BarePtr<int64> p = std::lang::barePointer<int64>(values.pointer(0));
+        std::lang::BarePtr<uint8> q = std::lang::barePointer<uint8>(bytes.pointer(0));
+        assert((p + 2) - p == 2);
+        assert((2 + p).address == (p + 2).address);
+        int64 count = sizeOfCopy(8);
+        std::lang::memset(p, (uint8)0, 32);
+        std::lang::memset(q, (uint8)42, count);
+        std::lang::memcpy(p, q, count);
+        std::lang::BarePtr<uint8> first = p.castTo<uint8>();
+        assert(first.address == p.address && first.castTo<int64>().address == p.address);
+        int64 i = 0;
+        while (i < count) {
+            uint8 mut& value = std::lang::dereference<uint8>(first + i);
+            assert(*value == (uint8)42);
+            i = i + 1;
+        }
+        std::lang::memcpy(p + 1, q, count);
+        std::lang::memset(p + 2, 0, count);
+        std::lang::memset(q, (uint8)'A', count);
+        uint8 mut& letter = std::lang::dereference<uint8>(q);
+        assert(*letter == (uint8)65);
+        std::lang::RawPtr<int64> slot = values.pointer(1);
+        std::lang::initAt<int64>(slot, 99);
+        assert(std::lang::readAt<int64>(slot) == 99);
+        int64 moved = std::lang::takeAt<int64>(slot);
+        assert(moved == 99 && !values.isInitialized(1));
+        int64 original = 123;
+        int64 copied = 0;
+        std::lang::memcpy(&copied, &original, count);
+        assert(copied == 123 && original == 123);
+        std::lang::BarePtr<uint8> empty;
+        std::lang::memcpy<uint8,uint8>(empty, empty, 0);
+        std::lang::memset<uint8>(empty, (uint8)0, 0);
+    }
+    values.close(); bytes.close();
+    println("memory intrinsics OK");
+}

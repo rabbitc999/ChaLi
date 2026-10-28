@@ -154,17 +154,33 @@ unsafe int64 __stringQuery(int64 text,int64 needle,int64 operation,int64 from) {
 unsafe int64 __stringAllocate(int64 bytes);
 unsafe int64 __stringStorageLength(int64 address);
 unsafe int64 __stringStorageData(int64 address);
+unsafe int64 __stringStorageCapacity(int64 address);
+unsafe int64 __stringStorageKind(int64 address);
+unsafe int64 __bufferMaxBytes();
 unsafe int64 __stringRelease(int64 address);
 unsafe String __stringAdopt(int64 address);
 /** 读取字符串存储的长度元数据，字面量由存储边界识别。 */
 unsafe int64 __bootStringLength(int64 address) {
     return __stringStorageLength(address);
 }
-/** 分配带八字节长度头的结果区，内容由后续操作初始化。 */
+/** 读取自举构造的容量描述符中的数据地址，不经过宿主分派。 */
+unsafe int64 __bootStringOwnedData(int64 address) {
+    int64 mut& data=(int64 mut&)(address+24);return *data;
+}
+/** 构造稳定容量描述符；十六字节以内的初始缓冲区与描述符共块。 */
 unsafe int64 __bootStringBuffer(int64 length) {
-    if (!(length>=0 && length<=9223372036854775799)) { panic("String：结果过长"); }
-    int64 result=__stringAllocate(length+8);
-    int64 mut& header=(int64 mut&)result; *header=length;
+    if(length<0){panic("String：结果过长");}
+    int64 maximum=__bufferMaxBytes();if(maximum<49){panic("String：分配上限不足");}maximum=maximum-1;
+    int64 requested=length;if(requested==0){requested=1;}
+    int64 capacity=__bootBufferCapacity(0,requested,0,16,maximum);
+    int64 bytes=32;if(capacity<=16){bytes=49;}
+    int64 result=__stringAllocate(bytes);int64 data=result+32;
+    if(capacity>16){data=__stringAllocate(capacity+1);}
+    int64 mut& marker=(int64 mut&)result;*marker=0-1;
+    int64 mut& size=(int64 mut&)(result+8);*size=length;
+    int64 mut& cap=(int64 mut&)(result+16);*cap=capacity;
+    int64 mut& buffer=(int64 mut&)(result+24);*buffer=data;
+    uint8 mut& zero=(uint8 mut&)(data+length);*zero=0u;
     return result;
 }
 /** 将裸地址直接交给 LLVM 字节复制原语，不构造临时指针包装。 */
@@ -176,10 +192,47 @@ unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
 /** 一次分配取得独立副本。 */
 unsafe int64 __bootStringCopy(int64 source) {
     int64 length=__bootStringLength(source); int64 result=__bootStringBuffer(length);
-    __bootStringCopyBytes(result+8,__stringStorageData(source),length); return result;
+    __bootStringCopyBytes(__bootStringOwnedData(result),__stringStorageData(source),length); return result;
 }
 /** 归还拥有的字符串存储。 */
-unsafe int64 __bootStringDrop(int64 address) { return __stringRelease(address); }
+unsafe int64 __bootStringDrop(int64 address) {
+    if(__stringStorageKind(address)!=0){
+        int64 data=__bootStringOwnedData(address);
+        if(data!=address+32){__stringRelease(data);}
+    }
+    return __stringRelease(address);
+}
+/** 为原值预留容量，只在扩容时回收旧的外置块，不复制拥有者。 */
+unsafe void __bootStringReserve(int64 address,int64 requested) {
+    if(requested<0){panic("String：容量不能为负数");}
+    if(__stringStorageKind(address)==0){panic("String：修改需要拥有型缓冲区");}
+    int64 mut& cap=(int64 mut&)(address+16);int64 capacity=*cap;
+    if(requested<=capacity){return;}
+    int64 mut& size=(int64 mut&)(address+8);int64 length=*size;
+    int64 maximum=__bufferMaxBytes()-1;
+    int64 grown=__bootBufferCapacity(length,requested-length,capacity,16,maximum);
+    int64 data=__stringAllocate(grown+1);int64 old=__bootStringOwnedData(address);
+    __bootStringCopyBytes(data,old,length);uint8 mut& zero=(uint8 mut&)(data+length);*zero=0u;
+    if(old!=address+32){__stringRelease(old);}
+    int64 mut& pointer=(int64 mut&)(address+24);*pointer=data;*cap=grown;
+}
+/** 原地追加字节，先扩容再重新取得源地址，允许向自身追加。 */
+unsafe void __bootStringAppend(int64 address,int64 source) {
+    int64 length=__bootStringLength(address);int64 need=__bootStringLength(source);
+    int64 required=__bootStringAddLength(length,need);
+    __bootStringReserve(address,required);
+    int64 data=__bootStringOwnedData(address);
+    __bootStringCopyBytes(data+length,__stringStorageData(source),need);
+    uint8 mut& zero=(uint8 mut&)(data+required);*zero=0u;
+    int64 mut& size=(int64 mut&)(address+8);*size=required;
+}
+/** 缩短逻辑字节长度并保留当前缓冲区，不进行 UTF-8 重编码。 */
+unsafe void __bootStringTruncate(int64 address,int64 length) {
+    if(length<0){panic("String：截短长度不能为负数");}
+    if(__stringStorageKind(address)==0){panic("String：修改需要拥有型缓冲区");}
+    int64 mut& size=(int64 mut&)(address+8);if(length>=*size){return;}
+    uint8 mut& zero=(uint8 mut&)(__bootStringOwnedData(address)+length);*zero=0u;*size=length;
+}
 /** 切片操作的负一终点表示余下全部，其余负下标拒绝。 */
 unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
     int64 length=__bootStringLength(source);
@@ -191,7 +244,7 @@ unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
 }
 /** 复制已限制范围内的内容字节，返回带长度头的字符串值。 */
 unsafe int64 __bootStringSliceBytes(int64 source,int64 begin,int64 end) {
-    int64 result=__bootStringBuffer(end-begin); __bootStringCopyBytes(result+8,source+begin,end-begin); return result;
+    int64 result=__bootStringBuffer(end-begin); __bootStringCopyBytes(__bootStringOwnedData(result),source+begin,end-begin); return result;
 }
 /** 无临时文本的字节字典序比较。 */
 unsafe int64 __bootStringCompare(int64 left,int64 right) {
@@ -238,11 +291,11 @@ unsafe int64 __bootStringFromInt(int64 value) {
     int64 result=__bootStringBuffer(length); int64 at=length;
     while (at>0) {
         at=at-1;
-        uint8 mut& digit=dereference<uint8>(pointerFromAddress<uint8>(result)+8+at);
+        uint8 mut& digit=(uint8 mut&)(__bootStringOwnedData(result)+at);
         *digit=(uint8)(48u+magnitude%10u); magnitude=magnitude/10u;
         if (magnitude==0u) { break; }
     }
-    if (negative) { uint8 mut& sign=dereference<uint8>(pointerFromAddress<uint8>(result)+8); *sign=45u; }
+    if (negative) { uint8 mut& sign=(uint8 mut&)__bootStringOwnedData(result); *sign=45u; }
     return result;
 }
 
@@ -253,7 +306,7 @@ unsafe int64 __bootStringCompose(int64 a,int64 an,int64 b,int64 bn,int64 c,int64
     if (!(an>=0 && bn>=0 && cn>=0 && an<=9223372036854775806-bn)) { panic("String：结果过长"); }
     int64 total=an+bn; if (!(cn<=9223372036854775806-total)) { panic("String：结果过长"); }
     int64 result=__bootStringBuffer(total+cn);
-    __bootStringCopyBytes(result+8,a,an); __bootStringCopyBytes(result+8+an,b,bn); __bootStringCopyBytes(result+8+total,c,cn);
+    __bootStringCopyBytes(__bootStringOwnedData(result),a,an); __bootStringCopyBytes(__bootStringOwnedData(result)+an,b,bn); __bootStringCopyBytes(__bootStringOwnedData(result)+total,c,cn);
     return result;
 }
 /** 变换直接写入独立结果区，不经宿主字符串算法。 */
@@ -281,7 +334,7 @@ unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operat
                 int64 value=__bootStringByte(a,i);
                 if (operation==4 && value>=65 && value<=90) { value=value+32; }
                 if (operation==5 && value>=97 && value<=122) { value=value-32; }
-                uint8 mut& target=dereference<uint8>(pointerFromAddress<uint8>(result)+8+i); *target=(uint8)value; i=i+1;
+                uint8 mut& target=(uint8 mut&)(__bootStringOwnedData(result)+i); *target=(uint8)value; i=i+1;
             }
             return __stringAdopt(result);
         }
@@ -297,20 +350,20 @@ unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operat
             total=total+positions.len()*extra;
             int64 result=__bootStringBuffer(total); int64 written=0; int64 at=0; int64 i=0;
             while (i<positions.len()) {
-                int64 found=positions[i]; __bootStringCopyBytes(result+8+written,a+at,found-at); written=written+found-at;
-                __bootStringCopyBytes(result+8+written,c,sn); written=written+sn; at=found+firstLength; i=i+1;
+                int64 found=positions[i]; __bootStringCopyBytes(__bootStringOwnedData(result)+written,a+at,found-at); written=written+found-at;
+                __bootStringCopyBytes(__bootStringOwnedData(result)+written,c,sn); written=written+sn; at=found+firstLength; i=i+1;
             }
-            __bootStringCopyBytes(result+8+written,a+at,n-at); return __stringAdopt(result);
+            __bootStringCopyBytes(__bootStringOwnedData(result)+written,a+at,n-at); return __stringAdopt(result);
         }
         if (operation==8) {
             if (!(count>=0)) { panic("String：重复次数不能为负"); }
             if (n==0 || count==0) { return ""; }
             if (!(count<=9223372036854775806/n)) { panic("String：重复结果过长"); }
-            int64 total=n*count; int64 result=__bootStringBuffer(total); __bootStringCopyBytes(result+8,a,n);
+            int64 total=n*count; int64 result=__bootStringBuffer(total); __bootStringCopyBytes(__bootStringOwnedData(result),a,n);
             int64 written=n;
             while (written<total) {
                 int64 width=written; if (width>total-written) { width=total-written; }
-                __bootStringCopyBytes(result+8+written,result+8,width); written=written+width;
+                __bootStringCopyBytes(__bootStringOwnedData(result)+written,__bootStringOwnedData(result),width); written=written+width;
             }
             return __stringAdopt(result);
         }
@@ -324,7 +377,7 @@ unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operat
             }
             int64 result=__bootStringBuffer(n); int64 written=0; int64 i=points.len()-1;
             while (i>0) {
-                int64 width=points[i]-points[i-1]; __bootStringCopyBytes(result+8+written,a+points[i-1],width);
+                int64 width=points[i]-points[i-1]; __bootStringCopyBytes(__bootStringOwnedData(result)+written,a+points[i-1],width);
                 written=written+width; i=i-1;
             }
             return __stringAdopt(result);
@@ -333,12 +386,12 @@ unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operat
             if (!(offset>=0)) { panic("String：填充长度不能为负"); }
             if (offset<=n || firstLength==0) { return __stringAdopt(__bootStringCopy(text)); }
             int64 result=__bootStringBuffer(offset); int64 needed=offset-n; int64 base=0;
-            if (operation==10) { __bootStringCopyBytes(result+8+needed,a,n); }
-            else { __bootStringCopyBytes(result+8,a,n); base=n; }
+            if (operation==10) { __bootStringCopyBytes(__bootStringOwnedData(result)+needed,a,n); }
+            else { __bootStringCopyBytes(__bootStringOwnedData(result),a,n); base=n; }
             int64 written=0;
             while (written<needed) {
                 int64 width=firstLength; if (width>needed-written) { width=needed-written; }
-                __bootStringCopyBytes(result+8+base+written,b,width); written=written+width;
+                __bootStringCopyBytes(__bootStringOwnedData(result)+base+written,b,width); written=written+width;
             }
             return __stringAdopt(result);
         }
@@ -398,9 +451,9 @@ unsafe String __stringJoinParts(int64 separator,List<String> const& items) {
     unsafe {
         int64 result=__bootStringBuffer(total); int64 at=0; i=0;
         while (i<count) {
-            if (i>0) { __bootStringCopyBytes(result+8+at,__stringStorageData(separator),width); at=at+width; }
+            if (i>0) { __bootStringCopyBytes(__bootStringOwnedData(result)+at,__stringStorageData(separator),width); at=at+width; }
             String item=items[i];
-            __bootStringCopyBytes(result+8+at,__stringStorageData(item.opcode),lengths[i]); at=at+lengths[i]; i=i+1;
+            __bootStringCopyBytes(__bootStringOwnedData(result)+at,__stringStorageData(item.opcode),lengths[i]); at=at+lengths[i]; i=i+1;
         }
         return __stringAdopt(result);
     }
@@ -420,6 +473,24 @@ opcode String {
 
     /** 返回字节数，不包含终止零字节。 */
     int64 byteLength() { return self.length(); }
+
+    /** 当前可复用的字节容量，不包含终止零字节。 */
+    int64 capacity() { unsafe { return __stringStorageCapacity(self.opcode); } }
+
+    /** 分配器允许的最大缓冲区容量，其他存活内存仍可能使申请失败。 */
+    int64 maxCapacity() { unsafe { return __bufferMaxBytes()-1; } }
+
+    /** 预留至少 bytes 字节；不足时几何增长，已有内容保持不变。 */
+    void reserve(int64 bytes) { unsafe { __bootStringReserve(self.opcode,bytes); } }
+
+    /** 原地追加文本字节，保留容量并允许向自身追加。 */
+    void append(String text) { unsafe { __bootStringAppend(self.opcode,text.opcode); } }
+
+    /** 清空有效字节，保留容量供后续追加复用。 */
+    void clear() { unsafe { __bootStringTruncate(self.opcode,0); } }
+
+    /** 按字节截短，超出现有长度时保持原值；保留容量，不进行 UTF-8 重编码。 */
+    void truncate(int64 bytes) { unsafe { __bootStringTruncate(self.opcode,bytes); } }
 
     /** 是否为空字符串。 */
     bool isEmpty() { return self.length() == 0; }
@@ -1387,8 +1458,8 @@ unsafe int64 __listStorageLength(int64 handle);
  * 空间足够时原样返回 cap，否则一次满足本次需求；不分配或清理元素。
  */
 int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
-    assert(length>=0 && need>=0 && capacity>=length && minimum>=0 && maximum>=minimum && capacity<=maximum,"缓冲区容量参数无效");
-    assert(need<=maximum-length,"缓冲区容量超出上限");
+    if(!(length>=0 && need>=0 && capacity>=length && minimum>=0 && maximum>=minimum && capacity<=maximum)){panic("缓冲区容量参数无效");}
+    if(need>maximum-length){panic("缓冲区容量超出上限");}
     int64 required=length+need;
     if(required<=capacity){return capacity;}
     int64 grown=maximum;

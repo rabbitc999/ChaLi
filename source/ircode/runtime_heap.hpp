@@ -114,6 +114,12 @@ public:
     [[nodiscard]] std::size_t peakBytes() const override;
 
     /**
+     * @brief 查询本堆捕获的运行时分配器有效载荷预算。
+     * @return 单块载荷的预算上界；其他活跃分配仍可能使申请失败。
+     */
+    [[nodiscard]] std::size_t maximumAllocationBytes() const;
+
+    /**
      * @brief 读 8 字节（只允许读**已分配**的块）。
      * @param address 地址。
      * @param out 结果。

@@ -4,7 +4,7 @@
 **English** · [简体中文](../08-host-integration.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi has a single execution path: the front end emits quads and LLVM AOT produces native code. So
+Ordinary ChaLi execution lowers the checked AST directly to LLVM IR and uses LLVM O3 to produce native code. So
 talking to C has exactly two directions — **ChaLi calling a C shared library**, and **a C host calling
 a native library built from ChaLi**. Both go through the platform C ABI: no virtual machine, no
 bytecode, no host runtime with a function registry to populate.
