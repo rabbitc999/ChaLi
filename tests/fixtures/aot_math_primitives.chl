@@ -1,0 +1,48 @@
+/** 核对数学原语的有限值、负零、无穷、NaN 和次正规数；数组读取使实参在运行时取得。 */
+import std::math;
+
+uint64 comparableBits(float64 value) {
+    if (std::math::isNaN(value)) { return 0x7ff8000000000000u; }
+    return std::lang::__bootFloat64Bits(value);
+}
+
+void main() {
+    assert(std::math::sqrt(16.0)==4.0);
+    assert(std::math::floor(-2.25)==-3.0);
+    assert(std::math::ceil(-2.25)==-2.0);
+    assert(std::math::round(2.5)==3.0 && std::math::round(-2.5)==-3.0);
+    assert(std::math::trunc(-2.75)==-2.0);
+    assert(std::math::fmod(-3.5,2.0)==-1.5);
+    assert(std::math::isNaN(std::math::sqrt(-1.0)));
+    assert(std::math::isNaN(std::math::fmod(1.0,0.0)));
+    assert(std::lang::__bootFloat64Bits(std::math::ceil(-0.25))==0x8000000000000000u);
+    assert(std::lang::__bootFloat64Bits(std::math::trunc(-0.25))==0x8000000000000000u);
+    assert(std::math::sqrt((float32)16.0)==(float32)4.0);
+    assert(std::math::round((float32)-2.5)==(float32)-3.0);
+    float64 values[14];
+    values[0]=0.0;
+    values[1]=std::lang::__bootFloat64FromBits(0x8000000000000000u);
+    values[2]=0.25;
+    values[3]=-0.25;
+    values[4]=2.5;
+    values[5]=-2.5;
+    values[6]=std::lang::__bootFloat64FromBits(0x7ff0000000000000u);
+    values[7]=std::lang::__bootFloat64FromBits(0xfff0000000000000u);
+    values[8]=std::lang::__bootFloat64FromBits(0x7ff8000000000042u);
+    values[9]=std::lang::__bootFloat64FromBits(0x7ff0000000000042u);
+    values[10]=std::lang::__bootFloat64FromBits(0x7fefffffffffffffu);
+    values[11]=std::lang::__bootFloat64FromBits(1u);
+    values[12]=std::lang::__bootFloat64FromBits(0x8000000000000001u);
+    values[13]=9007199254740991.0;
+    int64 index=0;
+    while (index<14) {
+        float64 value=values[index];
+        println("{}: {} {} {} {} {} {} {} {}",index,
+            comparableBits(std::math::sqrt(value)),comparableBits(std::math::floor(value)),
+            comparableBits(std::math::ceil(value)),comparableBits(std::math::round(value)),
+            comparableBits(std::math::trunc(value)),comparableBits(std::math::fmod(value,2.0)),
+            std::math::isNaN(value),std::math::isInf(value));
+        index=index+1;
+    }
+    println("math primitives OK");
+}

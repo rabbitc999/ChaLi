@@ -1239,6 +1239,45 @@ struct Builder
      */
     bool emitCall(const Memory::String &callee, const Memory::String &destination)
     {
+        // 普通双精度数学操作直接进入 LLVM；不使用 fast-math，保留 NaN、无穷及负零。
+        if (state.rawIntrinsics && !state.watchdogUsed)
+        {
+            static const std::map<Text, Text> unaryMath{
+                { "std::math::__sqrt64", "llvm.sqrt.f64" },
+                { "std::math::__floor64", "llvm.floor.f64" },
+                { "std::math::__ceil64", "llvm.ceil.f64" },
+                { "std::math::__round64", "llvm.round.f64" },
+                { "std::math::__trunc64", "llvm.trunc.f64" }
+            };
+            const auto unary = unaryMath.find(textOf(callee));
+            if (unary != unaryMath.end() && arguments.size() == 1u)
+            {
+                write(destination, call(unary->second, "double", { convert(argument(0), "double") }));
+                return true;
+            }
+            if (callee == "std::math::__fmod64" && arguments.size() == 2u)
+            {
+                const auto left = convert(argument(0), "double");
+                const auto right = convert(argument(1), "double");
+                write(destination, instruction("double", "frem double " + left.text + ", " + right.text));
+                return true;
+            }
+            if (arguments.size() == 1u && (callee == "std::math::__isNaN64" || callee == "std::math::__isInf64"))
+            {
+                const auto value = convert(argument(0), "double");
+                Value result;
+                if (callee == "std::math::__isNaN64")
+                    result = instruction("i1", "fcmp uno double " + value.text + ", " + value.text);
+                else
+                {
+                    const auto bits = instruction("i64", "bitcast double " + value.text + " to i64");
+                    const auto magnitude = instruction("i64", "and i64 " + bits.text + ", 9223372036854775807");
+                    result = instruction("i1", "icmp eq i64 " + magnitude.text + ", 9218868437227405312");
+                }
+                write(destination, convert(result, "i64", true));
+                return true;
+            }
+        }
         if (state.rawIntrinsics && !state.watchdogUsed && arguments.size() == 1u
             && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"))
         {
@@ -2268,6 +2307,8 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     out += "declare i8 @chali_host_result_float()\n";
+    out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";
+    out += "declare double @llvm.ceil.f64(double)\ndeclare double @llvm.round.f64(double)\ndeclare double @llvm.trunc.f64(double)\n";
     out += "@chali_return_float = internal thread_local global i8 0\n";
     out += "@chali_source_function = internal thread_local global ptr null\n@chali_source_file = internal thread_local global ptr null\n@chali_source_line = internal thread_local global i64 0\n";
     out += "define void @chali_location(ptr %file, ptr %line, ptr %function) {\nentry:\n  %f = load ptr, ptr @chali_source_file\n  %l = load i64, ptr @chali_source_line\n  %n = load ptr, ptr @chali_source_function\n  store ptr %n, ptr %function\n  store ptr %f, ptr %file\n  store i64 %l, ptr %line\n  ret void\n}\n";

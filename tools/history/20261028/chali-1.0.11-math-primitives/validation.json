@@ -1,0 +1,50 @@
+[
+  {
+    "allocator": "malloc",
+    "raw_disabled": false,
+    "checked": false,
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "raw_disabled": false,
+    "checked": true,
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "raw_disabled": true,
+    "checked": false,
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "raw_disabled": true,
+    "checked": true,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "raw_disabled": false,
+    "checked": false,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "raw_disabled": false,
+    "checked": true,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "raw_disabled": true,
+    "checked": false,
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "raw_disabled": true,
+    "checked": true,
+    "passed": true
+  }
+]
