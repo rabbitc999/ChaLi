@@ -29,3 +29,5 @@ python benchmarks/perf/run.py --runs 5 --allocator malloc `
 补测历史编译器时，CHALI 指向保留的真实二进制，`--compiler-source-commit` 指定该二进制的源码提交。JSON 中 `git_commit` 表示本轮基准与脚本所在的工作区提交，`chali_compiler.source_commit` 表示被测编译器来源，SHA256 核对实际二进制。未显式提供来源时记录 null，不根据文件名推断。历史结果不改写。
 
 `--cases` 可单独选择 Map、Set；未实现这些负载的其他语言配置不应加入本轮 `--only`。旧 `list` 的预分配参考继续保留，匹配动态增长的正式对照使用 `list_growth`。
+
+其他语言基线已经完成后，后续优化轮次按用户授权使用 `--only chali-aot`，不重复运行 Lua、C++、Rust。报告直接引用保留结果中的参考列及其来源时间、配置和原始样本；先核对负载源码、计时壳和参数保持一致。新结果 JSON 只包含实际执行的配置，不把复用列写成新测量。负载或计时协议变化时，仅重测受影响的参考项。
