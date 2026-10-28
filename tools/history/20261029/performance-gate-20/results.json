@@ -1,0 +1,291 @@
+{
+  "kind": "saved-data-reassessment",
+  "date": "2026-10-29",
+  "cpp_limit": 1.2,
+  "chali_optimization": "LLVM O3",
+  "cpp_reference_optimization": "O2",
+  "mixed_measurement_commits": true,
+  "final_release_validation": false,
+  "current_uncommitted_string_buffer_measured": false,
+  "note": "Only saved medians are re-evaluated; original reports and their 1.05 judgments remain unchanged. Missing Lua cells are not counted as Lua passes.",
+  "cpp_pass_count": 5,
+  "rows": [
+    {
+      "case": "int_chain",
+      "chali_ms": 0.873,
+      "cpp_o2_ms": 4.33,
+      "cpp_ratio": 0.20161662817551962,
+      "cpp_limit": 1.2,
+      "cpp_pass": true,
+      "lua_ms": 27.762,
+      "lua_pass": true,
+      "measurement": "benchmarks/results/1.0.11-reference-storage-children/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "float_chain",
+      "chali_ms": 1.308,
+      "cpp_o2_ms": 1.303,
+      "cpp_ratio": 1.0038372985418267,
+      "cpp_limit": 1.2,
+      "cpp_pass": true,
+      "lua_ms": 6.106,
+      "lua_pass": true,
+      "measurement": "benchmarks/results/1.0.11-reference-storage-children/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "call",
+      "chali_ms": 0.218,
+      "cpp_o2_ms": 0.903,
+      "cpp_ratio": 0.2414174972314507,
+      "cpp_limit": 1.2,
+      "cpp_pass": true,
+      "lua_ms": 16.955,
+      "lua_pass": true,
+      "measurement": "benchmarks/results/1.0.11-reference-storage-children/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "array",
+      "chali_ms": 10.437,
+      "cpp_o2_ms": 6.998,
+      "cpp_ratio": 1.491426121749071,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 41.553,
+      "lua_pass": true,
+      "measurement": "benchmarks/results/1.0.11-reference-storage-children/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "list_growth",
+      "chali_ms": 120.232,
+      "cpp_o2_ms": 2.137,
+      "cpp_ratio": 56.26204960224614,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 11.722,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-list-bounded-growth/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "map_growth",
+      "chali_ms": 159.625,
+      "cpp_o2_ms": 1.836,
+      "cpp_ratio": 86.9417211328976,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 4.676,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-map-set-bounded-growth/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "set_growth",
+      "chali_ms": 121.402,
+      "cpp_o2_ms": 1.8816,
+      "cpp_ratio": 64.52062074829932,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 4.563,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-map-set-bounded-growth/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-thread-state/results.json"
+    },
+    {
+      "case": "enum_payload",
+      "chali_ms": 0.8615,
+      "cpp_o2_ms": 1.6884,
+      "cpp_ratio": 0.5102463871120588,
+      "cpp_limit": 1.2,
+      "cpp_pass": true,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-feature-data-snapshot/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "struct_nested",
+      "chali_ms": 1.7515,
+      "cpp_o2_ms": 1.1711,
+      "cpp_ratio": 1.4956024250704465,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-feature-data-snapshot/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "array_2d",
+      "chali_ms": 0.691,
+      "cpp_o2_ms": 0.5668,
+      "cpp_ratio": 1.2191249117854621,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-feature-data-snapshot/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "array_3d",
+      "chali_ms": 0.7627,
+      "cpp_o2_ms": 0.6806,
+      "cpp_ratio": 1.1206288568909786,
+      "cpp_limit": 1.2,
+      "cpp_pass": true,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-feature-data-snapshot/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "interface_mono",
+      "chali_ms": 254.2797,
+      "cpp_o2_ms": 0.2825,
+      "cpp_ratio": 900.1051327433629,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-interface-object-scalars/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "interface_poly",
+      "chali_ms": 999.243,
+      "cpp_o2_ms": 0.5095,
+      "cpp_ratio": 1961.2227674190385,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": null,
+      "lua_pass": null,
+      "measurement": "benchmarks/results/1.0.11-interface-object-scalars/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-cpp-o2-reference/results.json",
+      "lua_reference": null
+    },
+    {
+      "case": "string_read",
+      "chali_ms": 471.2805,
+      "cpp_o2_ms": 0.5427,
+      "cpp_ratio": 868.3996683250416,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 6.0014,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-string-memory-address/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-string-baseline/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-string-baseline/results.json"
+    },
+    {
+      "case": "string_concat",
+      "chali_ms": 268.7489,
+      "cpp_o2_ms": 0.1012,
+      "cpp_ratio": 2655.621541501976,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 4.1247,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-string-memory-address/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-string-baseline/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-string-baseline/results.json"
+    },
+    {
+      "case": "string_slice",
+      "chali_ms": 12.7185,
+      "cpp_o2_ms": 0.1329,
+      "cpp_ratio": 95.6997742663657,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 0.3515,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-string-memory-address/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-string-baseline/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-string-baseline/results.json"
+    },
+    {
+      "case": "string_find",
+      "chali_ms": 24.9695,
+      "cpp_o2_ms": 0.1123,
+      "cpp_ratio": 222.34639358860196,
+      "cpp_limit": 1.2,
+      "cpp_pass": false,
+      "lua_ms": 0.1703,
+      "lua_pass": false,
+      "measurement": "benchmarks/results/1.0.11-string-memory-address/results.json",
+      "cpp_reference": "benchmarks/results/1.0.11-string-baseline/results.json",
+      "lua_reference": "benchmarks/results/1.0.11-string-baseline/results.json"
+    }
+  ],
+  "reports": {
+    "benchmarks/results/1.0.11-cpp-o2-reference/results.json": {
+      "sha256": "1eee9a1ed174778bc10e7f41ecd65209ca93c3f6aa136adbe590bd43c1b7c442",
+      "compiler_source_commit": null,
+      "compiler_sha256": "5085faff4367e99367403ee6d7329d2753d9d44afa5f55a8aabedb79da9f7a19",
+      "original_git_commit": "a619614fe22f37ba7daed3625a74db1cdc111786"
+    },
+    "benchmarks/results/1.0.11-thread-state/results.json": {
+      "sha256": "3a71c8eb908b1b8ad81b983a890162bcf91a1d5437f2d1c276027137135e01b1",
+      "compiler_source_commit": "7bc6c4069b7ee39272f09a09ed00aa28ebe9bdbe",
+      "compiler_sha256": "13b5b19d9b4318669f63944871a1ad80bc9ea0d6e2f9b14013266471870b69a0",
+      "original_git_commit": "1ecbf4d0986671a8362e4e7e7a558eb131ae6602"
+    },
+    "benchmarks/results/1.0.11-string-baseline/results.json": {
+      "sha256": "ed7cf80329c8e371e8de42d737c0c703403a489ac8209f1d037cb1b27d687625",
+      "compiler_source_commit": "2609cf03f88db203d755a8a687a70e5970222084",
+      "compiler_sha256": "4c93c6af8222b7ff382517ef589378499f5032bb8a73ee8b3d88c97bb147c4fd",
+      "original_git_commit": "a7f700b8c12ffccef1bd53cf9139cdd3538a6e00"
+    },
+    "benchmarks/results/1.0.11-reference-storage-children/results.json": {
+      "sha256": "a7c5b0397a1a508b8edbf9b5ca6b1e514d83264ebc8ca6e665d99fd3c9e96f66",
+      "compiler_source_commit": "527f8968f1f5203a02e93584a719b4f23810d724",
+      "compiler_sha256": "fac483832937856967a0619e058606f8b264a964e79ea9d7ae1aeb1793c4161f",
+      "original_git_commit": "527f8968f1f5203a02e93584a719b4f23810d724"
+    },
+    "benchmarks/results/1.0.11-list-bounded-growth/results.json": {
+      "sha256": "9b023a4dbcb82bafd4cc43a2a9176b6fcdb07cd0c09fa3bd706e819f1e02cde6",
+      "compiler_source_commit": "6e85699b40c11de0348a7107042589b4b8fdc299",
+      "compiler_sha256": "3852318f17dec919281602c9a2d60d02d2399a23daed619f569116429d16046b",
+      "original_git_commit": "6e85699b40c11de0348a7107042589b4b8fdc299"
+    },
+    "benchmarks/results/1.0.11-map-set-bounded-growth/results.json": {
+      "sha256": "e6ed6d5e3d74fe795b68f6d684e0d7aaaf30a24b2f30519352cdcecb631ff158",
+      "compiler_source_commit": "cf62694ac3d454246cae18f3d19a3c3887a0217a",
+      "compiler_sha256": "0583f2ac7b90f08715ffd3a82a06a76b1cd8d796d37547b355f5601fac284a44",
+      "original_git_commit": "26a37a8fae10af0ddccd3112be1a733cd891864e"
+    },
+    "benchmarks/results/1.0.11-feature-data-snapshot/results.json": {
+      "sha256": "2c6842cb893f52eff338873df7d287d6a6068b17f1c56c73b9404549abdfd450",
+      "compiler_source_commit": "2609cf03f88db203d755a8a687a70e5970222084",
+      "compiler_sha256": "4c93c6af8222b7ff382517ef589378499f5032bb8a73ee8b3d88c97bb147c4fd",
+      "original_git_commit": "2609cf03f88db203d755a8a687a70e5970222084"
+    },
+    "benchmarks/results/1.0.11-interface-object-scalars/results.json": {
+      "sha256": "d4f05391fee1e06504784bc9e2c1b1d1bac5aa8e1d617430cc9d7cef0f90b85a",
+      "compiler_source_commit": "fa45b73bc80603af19f61c538b5c8f5f6d09d6d8",
+      "compiler_sha256": "bdcc1398f4ec24b9ff3254e1f3d7b468679fea950d5478827185d6152a3801bc",
+      "original_git_commit": "fa45b73bc80603af19f61c538b5c8f5f6d09d6d8"
+    },
+    "benchmarks/results/1.0.11-string-memory-address/results.json": {
+      "sha256": "ee577ad7b331d685058417faa685618870918aa0de10c63e54c4ab88dcff2f71",
+      "compiler_source_commit": "7f2f2e86da59d6646ce4aeae423610d08965614a",
+      "compiler_sha256": "5dcdfca1adcf0baecfb3872f153fcba62460168d898d41c1a5cd7f4202ba590a",
+      "original_git_commit": "7f2f2e86da59d6646ce4aeae423610d08965614a"
+    }
+  }
+}
