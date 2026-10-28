@@ -164,12 +164,12 @@ unsafe int64 __bootStringLength(int64 address) {
 unsafe int64 __bootStringBuffer(int64 length) {
     if (!(length>=0 && length<=9223372036854775799)) { panic("String：结果过长"); }
     int64 result=__stringAllocate(length+8);
-    int64 mut& header=dereference<int64>(pointerFromAddress<int64>(result)); *header=length;
+    int64 mut& header=(int64 mut&)result; *header=length;
     return result;
 }
-/** 复制已验证的字节范围，直接使用 memcpy 四元式。 */
+/** 将裸地址直接交给 LLVM 字节复制原语，不构造临时指针包装。 */
 unsafe void __bootStringCopyBytes(int64 destination,int64 source,int64 length) {
-    if (length>0) { memcpy<uint8,uint8>(pointerFromAddress<uint8>(destination),pointerFromAddress<uint8>(source),length); }
+    if (length>0) { memcpy(destination,source,length); }
 }
 /** 构造独立空字符串。 */
 unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
@@ -219,7 +219,7 @@ unsafe int64 __bootStringAt(int64 source,int64 index) {
 unsafe int64 __bootStringSet(int64 source,int64 index,int64 value) {
     int64 length=__bootStringLength(source);
     if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
-    uint8 mut& target=dereference<uint8>(pointerFromAddress<uint8>(__stringStorageData(source))+index);
+    uint8 mut& target=(uint8 mut&)(__stringStorageData(source)+index);
     *target=(uint8)(value&255); return 0;
 }
 /** 字节引用保留现有下标范围；不额外限制为 UTF-8 码点起点。 */

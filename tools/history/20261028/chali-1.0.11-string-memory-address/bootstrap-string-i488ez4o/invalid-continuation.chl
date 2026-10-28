@@ -1,0 +1,1 @@
+void main() { String value="abcd"; value[0]=(char)194; value.charLength(); }

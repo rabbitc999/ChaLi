@@ -1,0 +1,5 @@
+qualified-explicit-types checked run/AOT and LLVM intrinsic passed
+qualified-inferred-types checked run/AOT and LLVM intrinsic passed
+implicit-namespace-explicit-types checked run/AOT and LLVM intrinsic passed
+implicit-namespace-inferred-types checked run/AOT and LLVM intrinsic passed
+namespace and native memory intrinsic checks passed; logs: G:\Desktop\ChaLi\tmp\memory-intrinsics-pm3q_1sh
