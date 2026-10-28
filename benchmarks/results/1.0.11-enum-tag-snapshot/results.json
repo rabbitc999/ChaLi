@@ -1,0 +1,189 @@
+{
+  "generated": "2026-10-28T18:52:45.075407",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "runs": 5,
+  "reps_per_run": 5,
+  "compiler_sha256": "54f66f4f5e96ae60cb6a49087576dc0099110ee01df6a2b265add832ec4cf268",
+  "compiler_path": "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+  "compiler_source_commit": "9e6685f4add1036570d9993acd8447f2300b4811",
+  "compiler_version": "1.0.11",
+  "allocator": "malloc",
+  "git_commit": "9e6685f4add1036570d9993acd8447f2300b4811",
+  "working_tree_dirty": false,
+  "source_sha256": {
+    "FeatureTiming.java": "0ea5752f9f659c3ca5e5b0a4d46deccec3c50affebaf1d31abb29aeacefd9ba0",
+    "enum_payload.chl": "aab5fc5c7cc2bafcd9817217ae4e5fc4bd5b8d7011fe847f006cda8ac580ff4c",
+    "enum_payload.rs": "6ee8287fc3a72c52af493b134618292f4a59b7f8bf56275f77855e9513af386e",
+    "run.py": "3d9388728113418419a28043f3d08e4b3f8ed1de456c7dc1be6fe7c878903d68",
+    "timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "timing.rs": "230af02c586bf63f104b6391e40cd165bc2b4f8db4f8b368f65abb1e3cf215f0"
+  },
+  "oracle_values": {
+    "enum_payload": [
+      1780561652,
+      1094190832,
+      998905774,
+      1533056942,
+      1629960806
+    ]
+  },
+  "enum_variant_counts": [
+    [
+      60122,
+      43782,
+      98155,
+      60085
+    ],
+    [
+      60100,
+      43743,
+      98216,
+      60085
+    ],
+    [
+      60104,
+      43768,
+      98192,
+      60080
+    ],
+    [
+      60108,
+      43771,
+      98190,
+      60075
+    ],
+    [
+      60099,
+      43768,
+      98197,
+      60080
+    ]
+  ],
+  "preflight": false,
+  "reference_languages_rerun": false,
+  "configurations": {
+    "enum_payload": {
+      "chali-aot": {
+        "build": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\enum_payload.chl",
+              "--shared",
+              "--unchecked",
+              "--allocator",
+              "malloc",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\kernel"
+            ],
+            "stdout": "",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi/build/dependencies/llvm/toolchain/bin/clang.exe",
+              "-O3",
+              "-DNDEBUG",
+              "-DCHALI_FEATURE_AOT=1",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\kernel.dll",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1626100,
+              2940900,
+              2154200,
+              5237200,
+              2557600
+            ],
+            "stdout": "rep 1626100\nrep 2940900\nrep 2154200\nrep 5237200\nrep 2557600\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1817900,
+              2030700,
+              1428400,
+              1444600,
+              1516000
+            ],
+            "stdout": "rep 1817900\nrep 2030700\nrep 1428400\nrep 1444600\nrep 1516000\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1438700,
+              1394200,
+              1464300,
+              1479800,
+              1421200
+            ],
+            "stdout": "rep 1438700\nrep 1394200\nrep 1464300\nrep 1479800\nrep 1421200\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1498200,
+              2691500,
+              3348400,
+              2303000,
+              1493500
+            ],
+            "stdout": "rep 1498200\nrep 2691500\nrep 3348400\nrep 2303000\nrep 1493500\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1408400,
+              2397900,
+              1383100,
+              1392600,
+              1395500
+            ],
+            "stdout": "rep 1408400\nrep 2397900\nrep 1383100\nrep 1392600\nrep 1395500\nsink 8817237658\n",
+            "stderr": ""
+          }
+        ],
+        "median_ms": 1.4982
+      }
+    }
+  },
+  "tools": {
+    "clang": {
+      "command": [
+        "G:\\Desktop\\ChaLi/build/dependencies/llvm/toolchain/bin/clang.exe",
+        "--version"
+      ],
+      "output": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n"
+    }
+  },
+  "reference": {
+    "path": "benchmarks\\results\\1.0.11-feature-baseline\\results.json",
+    "sha256": "233adb0296b614d6132eff58699353a324975b5679312b7dddadf9a1e5886dd4",
+    "generated": "2026-10-28T16:07:49.200144"
+  }
+}
