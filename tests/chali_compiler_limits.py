@@ -82,10 +82,10 @@ def run_case(case, compiler, root, timeout):
         (cwd / 'tmp').mkdir()
         prefix = cwd / 'program'
         # 先做只编译检查，再从同一源码执行，分清编译拒绝与运行期失败。
-        # `run` 后端走 checked AOT：`--emit` 只出四元式不执行，之后另一条命令真正运行。
-        command = [compiler, 'aot' if backend == 'aot' else 'run', original, '--out', prefix, *flags]
+        # checked 与 unchecked 均先导出原生程序，之后执行以区分编译期和运行期错误。
+        command = [compiler, 'aot', original, '--out', prefix, *flags]
         if backend == 'checked':
-            command += ['--emit']
+            command += ['--checked']
         built = execute(command, cwd, timeout)
         status = classification(built, case['expected'], case['outcome'], compiling=True)
         result = dict(build=built, status=status)

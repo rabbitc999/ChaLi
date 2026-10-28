@@ -145,7 +145,7 @@ void main()
 
 两条要点：
 
-方法体里用 \texttt{self} 指「这个对象自己」。 字段不能裸写，得写 \texttt{self.\allowbreak{}x}。这条规则比 C++ / Java 严格——那里写 \texttt{x} 就当 \texttt{this->\allowbreak{}x} 了。ChaLi 要求你写出来，因为一眼能看出哪个名字是字段、哪个是参数或者局部变量。
+方法体里用 \texttt{self} 指「这个对象自己」。 字段不能裸写，得写 \texttt{self.\allowbreak{}x}。这条规则比 C++ / Java 严格——那里写 \texttt{x} 就当 \texttt{this-\allowbreak{}>\allowbreak{}x} 了。ChaLi 要求你写出来，因为一眼能看出哪个名字是字段、哪个是参数或者局部变量。
 
 方法定义在结构体的花括号里，和字段混在一起，不用另开一段。（有些语言要在结构体外面再写一遍 \texttt{impl} 块，ChaLi 不用。）
 
@@ -440,7 +440,7 @@ void main()
 \midrule
 \texttt{+} & \texttt{Add<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} & \texttt{left\allowbreak{}Add} \\
 \texttt{=\allowbreak{}=\allowbreak{}} & \texttt{Equal<\allowbreak{}bool,\allowbreak{} T>\allowbreak{}} & \texttt{left\allowbreak{}Equal} \\
-\texttt{-x}（一元） & \texttt{Negate<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} & \texttt{negate} \\
+\texttt{-\allowbreak{}x}（一元） & \texttt{Negate<\allowbreak{}R,\allowbreak{} T>\allowbreak{}} & \texttt{negate} \\
 在容器里当键 & \texttt{Hash<\allowbreak{}T>\allowbreak{}} & \texttt{hash} \\
 \bottomrule
 \end{tabular}

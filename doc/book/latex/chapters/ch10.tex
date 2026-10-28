@@ -229,7 +229,7 @@ match (color)
 \par
 \medskip
 
-\texttt{\_} 是通配符，表示「其他所有情况」。但每次写 \texttt{\_} 都是在放弃后面的检查——加新变体时不会再有提醒。能列全就列全。
+\texttt{\_\allowbreak{}} 是通配符，表示「其他所有情况」。但每次写 \texttt{\_\allowbreak{}} 都是在放弃后面的检查——加新变体时不会再有提醒。能列全就列全。
 
 \section{枚举方法}
 
@@ -512,7 +512,7 @@ copy original
 造值 & \texttt{X:\allowbreak{}:\allowbreak{}A}、\texttt{X:\allowbreak{}:\allowbreak{}B(\allowbreak{}3)\allowbreak{}} \\
 \texttt{match} & 可作语句或表达式；表达式分支给出同类型值，外层声明仍加分号 \\
 自动绑定 & \texttt{X:\allowbreak{}:\allowbreak{}B(\allowbreak{}v)\allowbreak{} =\allowbreak{}>\allowbreak{} .\allowbreak{}.\allowbreak{}.\allowbreak{}} 里的 \texttt{v} 是当场取出来的 \\
-穷尽性 & 漏变体是编译错误；\texttt{\_} 兜底但会放弃检查 \\
+穷尽性 & 漏变体是编译错误；\texttt{\_\allowbreak{}} 兜底但会放弃检查 \\
 标量匹配 & 普通值与整数 / char 区间：\texttt{100}、\texttt{range\allowbreak{}Eq(\allowbreak{}90,\allowbreak{} 99)\allowbreak{}} \\
 守卫 & \texttt{模式 if 条件 =\allowbreak{}>\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} \\
 方法 & 枚举也能有方法，里面用 \texttt{match (\allowbreak{}self)\allowbreak{}} \\
@@ -576,7 +576,7 @@ copy original
 
 狼想从烟囱钻进去，跌进一口热锅。锅底贴着错误信息：“未知变体，拒绝执行。”
 
-三只小猪没有再争论兜底分支短不短。它们把房屋分成清楚的变体，让每种结果都有去处。大灰狼后来改行做代码审查，见到 \texttt{\_} 就先问一句：“这个以后会不会装下一口锅？”
+三只小猪没有再争论兜底分支短不短。它们把房屋分成清楚的变体，让每种结果都有去处。大灰狼后来改行做代码审查，见到 \texttt{\_\allowbreak{}} 就先问一句：“这个以后会不会装下一口锅？”
 
 \subsection*{技术对照}
 

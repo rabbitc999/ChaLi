@@ -537,6 +537,13 @@ struct CodegenResult
  * @return 生成结果。
  */
 [[nodiscard]] CodegenResult generate(const Program &program, const Memory::String &moduleName = "module");
+/**
+ * @brief 在已登记的符号类型环境中查询后端 AST 表达式类型，不生成指令。
+ * @param node 表达式节点。
+ * @param environment 变量、函数和复合类型的类型环境。
+ * @return 推导出的存储或数值类型。
+ */
+[[nodiscard]] TypePtr inferType(const NodePtr &node, const Memory::Map<Memory::String, TypePtr> &environment);
 
 }  // namespace ast
 

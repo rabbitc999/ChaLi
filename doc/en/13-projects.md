@@ -211,6 +211,6 @@ Checks requiring a graphical environment or database are dedicated regressions: 
 | --- | --- |
 | Deploy a program of your own | [Delivery security](05-delivery-security.md) → [Cross-platform deployment](06-deployment.md) |
 | Connect ChaLi to a C/C++ host | [Host integration and C ABI](08-host-integration.md) |
-| Learn the language from scratch | [《玩转 ChaLi 语言》](../book/en/README.md) (Chinese) |
+| Learn the language from scratch | [《ChaLi 程序设计语言》](../book/en/README.md) (Chinese) |
 | Look up a library function | [Library reference](../library/README.md) |
 | Look up commands and project config | [Toolchain](09-toolchain.md) |

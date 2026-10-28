@@ -74,9 +74,8 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "__std_print", { -1, strPrint } },
     { "__std_put_char", { 1, putChar } },
     { "std::lang::__readLine", { 0, inputReadLine } },
-    { "std::lang::__readLines", { 1, inputReadLines } },
+    { "std::lang::__stdinEof", { 0, inputAtEnd } },
     { "__readLine", { 0, inputReadLine } },
-    { "__readLines", { 1, inputReadLines } },
 };
 const SlotNativeTable kSlotNatives{ kSlotNativeEntries, sizeof(kSlotNativeEntries) / sizeof(kSlotNativeEntries[0]) };
 }  // namespace runtimeDetail

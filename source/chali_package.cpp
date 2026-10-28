@@ -281,12 +281,30 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         tomlText(entry.value, "dependencies." + entry.key);
                 continue;
             }
-            if (name != "package" && name != "chali")
+            if (name != "package" && name != "chali" && name != "aot")
                 throw std::runtime_error("unknown or repeated table: " + name);
             for (const toml::Member &entry : table.value.asTable()->members())
             {
                 const Memory::String key = entry.key;
                 const Memory::String where = name + "." + key;
+                if (name == "aot")
+                {
+                    const auto value = tomlText(entry.value, where);
+                    if (value.empty()) throw std::runtime_error("aot value cannot be empty: " + key);
+                    if (key == "target") project.aotTarget = value;
+                    else if (key == "cpu") project.aotCpu = value;
+                    else if (key == "sysroot") project.aotSysroot = path(value, base);
+                    else if (key == "runtime_dir") project.aotRuntimeDirectory = path(value, base);
+                    else if (key == "llvm") project.aotCompiler = path(value, base);
+                    else if (key == "output")
+                    {
+                        if (value != "llvm" && value != "object" && value != "executable")
+                            throw std::runtime_error("aot.output expects llvm, object or executable");
+                        project.aotOutput = value;
+                    }
+                    else throw std::runtime_error("unknown aot key: " + key);
+                    continue;
+                }
                 if (name == "package")
                 {
                     if (key == "authors")

@@ -3,7 +3,6 @@
 #include <chrono>
 #include <algorithm>
 #include <filesystem>
-#include <fstream>
 #include <limits>
 
 namespace std_filesystem_glue
@@ -15,7 +14,6 @@ struct ReplyTag
 {
 };
 using Reply = chali_glue::Record<ReplyTag>;
-using Bytes = Memory::Vector<std::uint8_t>;
 /**
  * @brief 写入可恢复错误。
  * @param reply 当前回调的结果视图。
@@ -34,29 +32,7 @@ inline void fail(Reply reply, const std::string &message)
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
     namespace fs = std::filesystem;
-    bool ok = registry.bindTypedWithContext<void, Memory::String, std::int64_t, Reply>("std::io::__readAllBytes", [](chali_glue::Context &ctx, Memory::String path, std::int64_t limit, Reply reply) {
-            if (limit<0) { fail(reply,"negative byte limit"); return; }
-            std::ifstream input(Memory::u8path(path),std::ios::binary);
-            if (!input) { fail(reply,"cannot open file for reading"); return; }
-            Bytes bytes; char block[4096];
-            while (input) {
-                input.read(block,sizeof(block)); const auto count=input.gcount();
-                if (count<0 || static_cast<std::uint64_t>(count)>static_cast<std::uint64_t>(limit)-bytes.size()) {
-                    fail(reply,"file exceeds byte limit"); return;
-                }
-                for (std::streamsize i=0;i<count;++i) bytes.push_back(static_cast<std::uint8_t>(block[i]));
-            }
-            if (input.bad()) { fail(reply,"file read failed"); return; }
-            const auto handle=reply.field<std::int64_t>(1);
-            for (auto byte:bytes) collection_glue::listPush(ctx, handle,chali_glue::Value::fromInt(byte)); }, error);
-    ok = registry.bindTyped<void, Memory::String, Bytes, Reply>("std::io::__writeAllBytes", [](Memory::String path, Bytes bytes, Reply reply) {
-            std::ofstream output(Memory::u8path(path),std::ios::binary|std::ios::trunc);
-            if (!output) { fail(reply,"cannot open file for writing"); return; }
-            if (!bytes.empty()) output.write(reinterpret_cast<const char *>(bytes.data()),static_cast<std::streamsize>(bytes.size()));
-            output.close();
-            if (!output) { fail(reply,"file write or close failed"); return; }
-            reply.set<std::int64_t>(3,static_cast<std::int64_t>(bytes.size())); }, error) && ok;
-    ok = registry.bindTypedWithContext<void, Memory::String, Reply>("std::io::__listDirectory", [](chali_glue::Context &ctx, Memory::String path, Reply reply) {
+    bool ok = registry.bindTypedWithContext<void, Memory::String, Reply>("std::io::__listDirectory", [](chali_glue::Context &ctx, Memory::String path, Reply reply) {
             std::error_code ec; fs::directory_iterator it(Memory::u8path(path),ec),end;
             if (ec) { fail(reply,ec.message()); return; }
             Memory::Vector<Memory::String> paths;
@@ -66,7 +42,7 @@ bool bind(chali_glue::Registry &registry, Memory::String *error)
             }
             if (ec) { fail(reply,ec.message()); return; }
             std::sort(paths.begin(),paths.end()); const auto handle=reply.field<std::int64_t>(2);
-            for (const auto &path:paths) collection_glue::listPush(ctx, handle,chali_glue::Value::fromText(path)); }, error) && ok;
+            for (const auto &path:paths) collection_glue::listPush(ctx, handle,chali_glue::Value::fromText(path)); }, error);
     ok = registry.bindTyped<void, Memory::String, Reply>("std::io::__fileInfo", [](Memory::String path, Reply reply) {
             std::error_code ec; const auto p=Memory::u8path(path); const auto status=fs::status(p,ec);
             if (ec || !fs::exists(status)) { fail(reply,ec?ec.message():"path does not exist"); return; }

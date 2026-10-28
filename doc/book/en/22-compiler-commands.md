@@ -1,7 +1,7 @@
-# Chapter 23 Compiler commands
+# Chapter 22 Compiler commands
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../23-编译器指令.md)
+**English** · [简体中文](../22-编译器指令.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 The compiler provides source execution, validation, artifact export and development tools. Begin with `chali --help`; use `chali man help` for the embedded manual's own command structure.
@@ -20,4 +20,4 @@ Set the tool display language with the documented language option or configurati
 
 Diagnostics contain a location and useful context. Preserve their original text when propagating errors through wrappers. Compilation and program execution are distinct phases, so report their times separately in performance work.
 
-Exercise: inspect the same book chapter as terminal text and JSON. Export the book in an empty directory and open its English README. Next: [unsafe code](24-unsafe-code.md).
+Exercise: inspect the same book chapter as terminal text and JSON. Export the book in an empty directory and open its English README. Next: [unsafe code](23-unsafe-code.md).

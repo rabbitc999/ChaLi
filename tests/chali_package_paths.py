@@ -38,7 +38,7 @@ commands = ['import extra;']
         manifest.write_text(config, encoding="utf-8")
         args = [COMPILER, 'run', source, "--out", work / "program"]
         assert run(args).stdout == "20 2\n"
-        emitted = [*args, "--emit", "--incremental"]
+        emitted = [args[0], "aot", *args[2:], "--emit-llvm", "--incremental"]
         run(emitted)
         assert "增量缓存命中" in run(emitted).stderr
         manifest.write_text(config.replace("['../first', '../second']", "['../second', '../first']"), encoding="utf-8")

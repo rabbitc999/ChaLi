@@ -69,7 +69,7 @@ src/
 
 ## 与书稿的关系
 
-入门讲解见书稿[第 25 章 学生信息管理系统](../../doc/book/25-学生信息管理系统.md)。
+入门讲解见书稿[第 24 章 学生信息管理系统](../../doc/book/25-学生信息管理系统.md)。
 命令行 + SQLite 的最小版本见 [`example/reflection-students`](../reflection-students)；
 SQL 模型与反射序列化的完整说明见
 [动态 SQL 说明](../../doc/33-reflection-serialization-sql.md)。

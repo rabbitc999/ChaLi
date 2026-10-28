@@ -1,0 +1,23 @@
+[
+  {
+    "sha256": "ec07950abd51ea4d34f7a5cfc9bcbf0b686477941c7b6197b897b30baa70f21c",
+    "target": "windows-x64",
+    "bytes": 18966,
+    "machine": 34404,
+    "format": "COFF"
+  },
+  {
+    "sha256": "2872bf473edae765adf1d2d71a594e1bc0d48c722d081dcce305ce60ac201aef",
+    "target": "linux-x64",
+    "bytes": 26200,
+    "machine": 62,
+    "format": "ELF"
+  },
+  {
+    "sha256": "a153dbbf3176f2ff6976bfca9b7c168998ffcc625ac6e902cdb0a1c485378bcb",
+    "target": "linux-arm64",
+    "bytes": 28208,
+    "machine": 183,
+    "format": "ELF"
+  }
+]

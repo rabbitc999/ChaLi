@@ -154,7 +154,7 @@ run_required_step() {
 # ---- 3. ChaLi：由文法生成解析器，再编驱动 ----
 if [ "$full" = 1 ] && [ "${OS:-}" = Windows_NT ]; then
     run_required_step "校验并恢复 LLVM 离线工具链" "$PYTHON" library/llvm/setup.py
-    run_step "检查 AOT 运行时 LLVM 模块同步" "$PYTHON" tools/build_aot_runtime.py --check
+    run_step "检查 AOT 运行时 LLVM 模块同步" sh tools/build_aot_runtime.sh --check
 fi
 run_required_step "生成 CHALI 解析器（gen.sh）" sh gen.sh
 run_required_step "构建 CHALI 驱动（chali）" "$MAKE" -j4

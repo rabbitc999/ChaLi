@@ -107,12 +107,12 @@ def main():
         assert error['code'] == 'CHL1101' and 'dependency changed' in error['message']
         run('deps', 'lock', '--offline', '--project', app)
         cache_prefix = directory / 'cached'
-        run('run', app_source, '--emit', '--incremental', '--out', cache_prefix)
-        cached = run('run', app_source, '--emit', '--incremental', '--out', cache_prefix)
+        run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)
+        cached = run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)
         assert '增量缓存命中' in cached.stderr, cached.stderr
         (library / 'values.chl').write_text('module values;\nint64 answer() { return 42; }\n', encoding='utf-8')
         run('deps', 'lock', '--offline', '--project', app)
-        rebuilt = run('run', app_source, '--emit', '--incremental', '--out', cache_prefix)
+        rebuilt = run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)
         assert '增量缓存命中' not in rebuilt.stderr, rebuilt.stderr
         print('[通过] 离线路径依赖、锁定确定性、内容失效与增量重建', flush=True)
         git_library = directory / 'git-library'

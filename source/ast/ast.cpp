@@ -977,6 +977,17 @@ void emitStmt(const NodePtr &node, Emitter &emitter)
 // ---- 程序与生成 -----------------------------------------------------------
 
 /**
+ * @brief 为直接 LLVM 后端复用 AST 类型查询，不执行四元式生成。
+ * @param node 后端表达式节点。
+ * @param environment 已登记的符号类型。
+ * @return 表达式的数值或存储类型。
+ */
+TypePtr inferType(const NodePtr &node, const Memory::Map<Memory::String, TypePtr> &environment)
+{
+    return infer(node, environment);
+}
+
+/**
  * @brief 声明一个常量（值必须是字面量）。
  * @param name 名字。
  * @param type 类型。

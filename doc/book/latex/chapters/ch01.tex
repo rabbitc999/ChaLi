@@ -54,7 +54,7 @@ chali help
 屏幕上滚出一大串用法，就说明装好了。先别急着读完那串帮助——那是给有经验的人查的，跟着这本书走，你会一个个认识里面的选项。
 
 \begin{tip}{Windows 用户注意}
-MSI 安装后的命令是 \texttt{chali}；源码默认构建的外置 LLVM 文件名为\texttt{chali-1.\allowbreak{}0.\allowbreak{}8-llvm-external-windows-x64.\allowbreak{}exe}，可在 PowerShell 中用\texttt{.\allowbreak{}/\allowbreak{}chali-1.\allowbreak{}0.\allowbreak{}8-llvm-external-windows-x64.\allowbreak{}exe help} 启动。静态变体使用 \texttt{llvm-static}。本书的 \texttt{chali} 命令默认指已安装到 PATH 的编译器；直接运行构建产物时，请换成实际文件路径。
+MSI 安装后的命令是 \texttt{chali}；源码默认构建的外置 LLVM 文件名为\texttt{chali-\allowbreak{}1.\allowbreak{}0.\allowbreak{}8-\allowbreak{}llvm-\allowbreak{}external-\allowbreak{}windows-\allowbreak{}x64.\allowbreak{}exe}，可在 PowerShell 中用\texttt{.\allowbreak{}/\allowbreak{}chali-\allowbreak{}1.\allowbreak{}0.\allowbreak{}8-\allowbreak{}llvm-\allowbreak{}external-\allowbreak{}windows-\allowbreak{}x64.\allowbreak{}exe help} 启动。静态变体使用 \texttt{llvm-\allowbreak{}static}。本书的 \texttt{chali} 命令默认指已安装到 PATH 的编译器；直接运行构建产物时，请换成实际文件路径。
 \end{tip}
 
 \section{Hello, ChaLi}
@@ -154,7 +154,7 @@ void main()
 
 \item 它给出文件名、行列位置和相关源码；定位可能落在后面的右花括号上。第 3 行少了个分号，解析器读完声明后仍在等待分号，遇到 \texttt{\}} 才确认无法继续。看到报错位置和你以为的不一致时，先看报错位置的前面。
 
-\item 内部记号名被翻译成了人话，例如 \texttt{条件(\allowbreak{}if)\allowbreak{}}。默认中文环境下可以直接阅读。报错语言跟着系统走，可以用 \texttt{chali lang en} 或环境变量 \texttt{CHALI\_LANG} 换掉。
+\item 内部记号名被翻译成了人话，例如 \texttt{条件(\allowbreak{}if)\allowbreak{}}。默认中文环境下可以直接阅读。报错语言跟着系统走，可以用 \texttt{chali lang en} 或环境变量 \texttt{CHALI\_\allowbreak{}LANG} 换掉。
 
 \item 候选列表说明它正在等待什么。这种话现在看不懂没关系，以后你写多了，一眼就知道是「这里少了个东西」。
 
@@ -188,7 +188,7 @@ chali check hello.chl
 
 \item 解析与类型检查 —— 语法、类型、引用的生命周期都在这里查，不通过就不执行；
 
-\item 生成四元式 —— 把程序翻译成四元式 IR；不做内部化简，优化交给 LLVM；
+\item 生成 LLVM IR —— 直接遍历已检查的 AST，生成 LLVM 指令，优化交给 LLVM；
 
 \item AOT 编译执行 —— 经 LLVM 生成原生机器码，在当前进程里跑起来。
 
@@ -207,7 +207,7 @@ chali check hello.chl
 \end{tabular}
 \end{center}
 
-这两条路的区别在第 22 章讲；现在你只要知道：同一份源码，可以有好几种走法。
+这两条路的区别在第 24 章讲；现在你只要知道：同一份源码，可以有好几种走法。
 
 \section{从源码到原生程序：编译流程图}
 
@@ -215,12 +215,12 @@ chali check hello.chl
 
 \begin{center}
 \includegraphics[width=\linewidth]{../images/chali-compilation.png}\par
-ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、四元式生成与 LLVM AOT
+ChaLi 编译流程：预处理、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM AOT
 \end{center}
 
-四元式是本书所说的 IR。编译器生成四元式、数据区和布局，执行路径对四元式完成完整优化后送入 LLVM 后端，生成原生机器码；优化结果可通过调试输出检查，与生成阶段的四元式产物出口不要混淆。
+正常的运行和 AOT 导出从已检查的 AST 直接生成 LLVM IR，不再生成、写盘、重读或组装 ChaLi 四元式。静态数据与布局直接进入 LLVM 模块，由 LLVM 完成优化和机器码生成。本文提到 ChaLi IR 时指四元式；LLVM IR 会明确写出 LLVM。
 
-\texttt{run} 与 \texttt{aot} 都产出原生程序：\texttt{run} 走 checked AOT 编译并当场执行，\texttt{aot} 默认 unchecked 导出可执行文件或动态库；部署边界见第 22 章，AOT 导出见第 25 章。
+\texttt{run} 与 \texttt{aot} 都产出原生程序：\texttt{run} 走 checked AOT 编译并当场执行，\texttt{aot} 默认 unchecked 导出可执行文件或动态库；部署边界与 AOT 导出见第 24 章。
 
 图与仓库 README 使用相同绘图脚本生成。内嵌手册导出时携带图片，PDF 也直接收录图片，所以离线阅读不依赖网络。
 

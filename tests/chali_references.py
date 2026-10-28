@@ -11,7 +11,7 @@ def main(names=('reference', 'foreach_reference', 'tree', 'lang_float_bytes', 'r
         prefix = work / name
         result = run(CHALI, 'run', source, '--out', prefix, '--step-limit', '1000000')
         assert result.stdout == expected and (not result.stderr), (name, result.stdout, result.stderr)
-        run(CHALI, 'run', source, '--emit', '--out', prefix)
+        run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
     checkUnboundField()
     print('引用：自动读写、非空语法、只读转换、成员访问、斐波那契与递归树VM验证通过')
 
@@ -22,7 +22,7 @@ def checkUnboundField():
     prefix = work / 'unbound-field'
     result = run(CHALI, 'run', source, '--out', prefix, succeeds=False)
     assert '引用尚未绑定有效元素' in result.stderr, result.stderr
-    run(CHALI, 'run', source, '--emit', '--out', prefix)
+    run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
     executable = work / ('unbound-field' + EXE)
 if __name__ == '__main__':
     main()

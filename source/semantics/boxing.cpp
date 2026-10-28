@@ -1452,7 +1452,8 @@ ast::NodePtr LowerCall(int id)
             if (IsStandardOpcode(type, "String")) return LowerExpr(args[0]);
             if (type->kind == MType::Double)
             {
-                return ast::Node::call("__std_str_of_flt", { "__chali_v", "__chali_p" },
+                /* 完整格式化规则在 std/lang.chl 的 __std_str_of_flt（ChaLi 实现），C 侧只留定长核心。 */
+                return ast::Node::call("std::lang::__std_str_of_flt", { "__chali_v", "__chali_p" },
                                        { LowerExpr(args[0]), ast::Node::i(3) });
             }
             if (type->kind == MType::Int || type->kind == MType::Bool)

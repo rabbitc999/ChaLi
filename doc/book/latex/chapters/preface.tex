@@ -51,12 +51,12 @@
 \end{center}
 
 \begin{tip}{提示}
-命令示例默认使用安装包加入 PATH 的 \texttt{chali}。Windows 源码构建产物按版本、LLVM 配置和平台命名，例如 \texttt{chali-1.\allowbreak{}0.\allowbreak{}8-llvm-external-windows-x64.\allowbreak{}exe}；直接运行时应使用实际路径。Linux 当前目录里的编译器使用 \texttt{.\allowbreak{}/\allowbreak{}chali}。安装方法见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/39-installation-packages.md}{安装与多架构构建}。
+命令示例默认使用安装包加入 PATH 的 \texttt{chali}。Windows 源码构建产物按版本、LLVM 配置和平台命名，例如 \texttt{chali-\allowbreak{}1.\allowbreak{}0.\allowbreak{}8-\allowbreak{}llvm-\allowbreak{}external-\allowbreak{}windows-\allowbreak{}x64.\allowbreak{}exe}；直接运行时应使用实际路径。Linux 当前目录里的编译器使用 \texttt{.\allowbreak{}/\allowbreak{}chali}。安装方法见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/39-installation-packages.md}{安装与多架构构建}。
 \end{tip}
 
 \section*{章节地图}
 
-全书按第 1 至第 26 章顺序展开，难度逐步提升。第 6 至第 8 章集中介绍值语义、引用和资源管理，建议连贯阅读。第 24 章介绍不安全代码和底层存储，第 26 章是综合实战，建议按顺序阅读。
+全书按第 1 至第 25 章顺序展开，难度逐步提升。第 6 至第 8 章集中介绍值语义、引用和资源管理，建议连贯阅读。第 23 章介绍不安全代码和底层存储，第 25 章是综合实战，建议按顺序阅读。
 
 {\small\setlength{\tabcolsep}{4pt}
 \begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.205\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.117\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.658\linewidth-2\tabcolsep\relax}}
@@ -68,7 +68,7 @@
 \hyperref[ch:02]{02} & 猜数字 & 用一个小游戏把「变量、输入、循环、分支」串成一个能跑的程序 \\
 \hyperref[ch:03]{03} & 变量与类型 & 变量、常量、\texttt{let}，以及 ChaLi 为什么不肯帮你偷偷转类型 \\
 \hyperref[ch:04]{04} & 函数 & 定义、参数、返回控制表达式、多值返回、重载与默认参数 \\
-\hyperref[ch:05]{05} & 控制流 & \texttt{if} / \texttt{while} / \texttt{for} / \texttt{loop} / \texttt{for-in}，以及把 \texttt{loop} 当表达式用 \\
+\hyperref[ch:05]{05} & 控制流 & \texttt{if} / \texttt{while} / \texttt{for} / \texttt{loop} / \texttt{for-\allowbreak{}in}，以及把 \texttt{loop} 当表达式用 \\
 \hyperref[ch:06]{06} & 值语义 & 赋值就是复制。为什么不移动也能保证安全 \\
 \hyperref[ch:07]{07} & 引用 & \texttt{mut\&} / \texttt{const\&}、没有 \texttt{null}、引用不能活得比目标久 \\
 \hyperref[ch:08]{08} & 资源与作用域 & \texttt{Drop} / \texttt{Closeable} / \texttt{new} / \texttt{drop} / \texttt{move}，没有 GC 怎么活 \\
@@ -85,11 +85,10 @@
 \hyperref[ch:19]{19} & 预处理与宏 & 条件编译、卫生 AST 宏、类型推导与语法匹配 \\
 \hyperref[ch:20]{20} & 注解与反射 & \texttt{@annotation}、运行期查元数据、按名调用 \\
 \hyperref[ch:21]{21} & 与 C 互操作 & \texttt{\#abi}／\texttt{\#export} 指令，调 C 的库、把自己的函数交给 C \\
-\hyperref[ch:22]{22} & 部署原生产物 & 原生程序、checked／unchecked、调试与交付 \\
-\hyperref[ch:23]{23} & 编译器指令 & \texttt{\#Non\allowbreak{}Copyable} / \texttt{\#derive} / \texttt{\#No…Replace} / \texttt{\#No\allowbreak{}Right…}：给声明贴的、只有编译器看的便条 \\
-\hyperref[ch:24]{24} & 不安全代码 & \texttt{unsafe}、原始存储、裸指针算术、字节复制与填充，以及安全封装 \\
-\hyperref[ch:25]{25} & AOT 导出 & LLVM 导出流程、工具链选择、运行期检查、动态库与 VS Code 构建 \\
-\hyperref[ch:26]{26} & 学生信息管理系统 & 把结构体、反射、JSON、SQL 与 TCP 拼成一个带前后端的系统 \\
+\hyperref[ch:22]{22} & 编译器指令 & \texttt{\#Non\allowbreak{}Copyable} / \texttt{\#derive} / \texttt{\#No…Replace} / \texttt{\#No\allowbreak{}Right…}：给声明贴的、只有编译器看的便条 \\
+\hyperref[ch:23]{23} & 不安全代码 & \texttt{unsafe}、原始存储、裸指针算术、字节复制与填充，以及安全封装 \\
+\hyperref[ch:24]{24} & AOT 导出 & LLVM 导出、交叉编译、TOML 配置、调试与原生部署 \\
+\hyperref[ch:25]{25} & 学生信息管理系统 & 把结构体、反射、JSON、SQL 与 TCP 拼成一个带前后端的系统 \\
 \bottomrule
 \end{longtable}
 }

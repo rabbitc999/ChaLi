@@ -3,6 +3,17 @@
 namespace chali_file
 {
 /**
+ * @brief 使用既有关闭接口关闭不提供错误状态的适配器。
+ * @param error 成功时清空错误文本。
+ * @return 关闭完成返回 true。
+ */
+bool FileHandle::closeChecked(Memory::String &error)
+{
+    error.clear();
+    close();
+    return true;
+}
+/**
  * @brief 读取原始字节，未实现的适配器明确报告不支持。
  * @param count 最多读取的字节数。
  * @param bytes 接收数据，EOF 允许短数据。

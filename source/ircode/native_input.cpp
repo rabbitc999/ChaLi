@@ -144,27 +144,14 @@ Slot inputReadLine(NativeContext &ctx, const Memory::Vector<Slot> &)
     return Slot::fromInt(static_cast<std::int64_t>(nativeAllocString(ctx, line)));
 }
 /**
- * @brief 最多读取指定行数，以 LF 连接，EOF 提前结束。
- * @param ctx 上下文。
- * @param args 非负行数。
- * @return 新字符串槽；负数或零字节报告运行错误。
+ * @brief 查询标准输入 EOF 状态，禁用输入兜底时视作已结束。
+ * @param ctx 原生调用上下文，本查询不修改上下文。
+ * @return 到达 EOF 或禁用输入时返回整数一，否则返回零。
  */
-Slot inputReadLines(NativeContext &ctx, const Memory::Vector<Slot> &args)
+Slot inputAtEnd(NativeContext &ctx, const Memory::Vector<Slot> &)
 {
-    const auto count = nativeInt(args[0]);
-    if (count < 0)
-    {
-        ctx.error = "readLines 的行数不能为负数";
-        return Slot::fromInt(0);
-    }
-    Memory::String text, line;
-    for (std::int64_t i = 0; i < count; ++i)
-    {
-        if (!nextInputLine(ctx, line)) break;
-        if (i) text += '\n';
-        text += line;
-    }
-    return Slot::fromInt(static_cast<std::int64_t>(nativeAllocString(ctx, text)));
+    (void)ctx;
+    return Slot::fromInt(stdinInputDisabled() || std::feof(stdin) ? 1 : 0);
 }
 
 /**

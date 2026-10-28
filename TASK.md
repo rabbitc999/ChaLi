@@ -1,0 +1,69 @@
+# TASK.md — 已授权任务
+
+## 任务：能用 ChaLi 实现的标准库部分不再用胶水；标准输入输出流在 LLVM AOT 直连 libc
+
+用户指令：
+1. 能够使用 ChaLi 的部分不要用胶水实现（先写 std::lang）。
+2. 在 LLVM AOT 添加标准输入输出流对接：直接生成 libc 调用，避免胶水（chali_host_call / ABI 表）。
+3. std::io 也尽量对接 LLVM。
+4. 移除 emit、--mode emit 与 --emit，按 1.0.9 基线递增至 1.0.10。
+
+执行说明：现有公开标准输入 API 为 readLine/readLines；旧数值输入入口未作为本轮公开 API 扩展。readLines 的拼接已迁到 ChaLi，EOF 查询及 readLine 在 LLVM AOT 直连 libc。std::io 文件句柄包含适配器、错误状态和自动关闭协议，因此不把记录句柄直接强转 FILE*；可由 ChaLi 完成的整文件循环已迁出胶水。
+
+现状与依据：
+- runtime_windows.ll / runtime_linux.ll 已有 libc 直调先例：Windows `__acrt_iob_func(0/1/2)` + `fwrite`/`fgets`/`snprintf`，Linux `@stdin`/`@stdout`/`@stderr` 外部全局；并已定义 `chali_read_line`（fgets + 去 LF/CRLF，EOF 返回空串）、`chali_read_number`、`chali_string_of_double`、`chali_fmt_*`。
+- 编译器把 eprint/eprintln 降级为 `std::lang::__std_eprint`/`__std_eprintln`（formatted_output.cpp:70），把浮点插值降级为 `__std_str_of_flt`（boxing.cpp:1455，精度恒 3）；print/println 降级为 `__std_print("%s"/"%s\n", 字符串实参…)`（lowering.cpp:5087）。
+- AOT 字符串取 data/len 用 `chali_host_string_storage(1/0, handle)`；特判降级统一门控 `state.rawIntrinsics && !state.watchdogUsed`，否则回落 `chali_host_call`（胶水表保留作回退）。
+
+## 待办（本轮目标版本 1.0.10）
+
+- [x] #1 std::lang：`__std_eprint`/`__std_eprintln` 在 lang.chl 用 ChaLi 实现（包装唯一原语 `__std_stderr_write`），abi_print.c 只留 `__std_stderr_write`。
+- [x] #2 AOT：`std::lang::__std_stderr_write` 直连 `fwrite(stderr)`。
+- [x] #3 AOT：当前公开 stdin 读行及 EOF 查询直连运行时；多行拼接用 ChaLi 实现。旧数值入口不强行改用会吞掉整行、忽略解析错误的 chali_read_number。
+- [x] #4 std::lang：`__std_str_of_flt` 去尾零逻辑移入 lang.chl；C/IR 只留 `__std_str_fixed`（snprintf `%.*f` 核心，AOT 直连生成）。
+- [x] #5 AOT：`__std_print` 纯 `%s` 形态直连 `fwrite(stdout)`；`__std_str_fixed` 直连 `snprintf`。
+- [x] #6 std::io：评估文件操作（fopen/fwrite/fclose）直连 libc 的兼容性，能直连的直连。
+- [x] #7 重新生成内嵌资产并重建两个 LLVM 变体；603 项全量对照 1.0.9 基线：599 项一致、4 项修复且符合预期输出、无退化，保留 11 项既有正常样例失败记录。ABI 入口表、AOT 专项、GDB、书稿与交付字节核对通过，证据见 `tools/history/20261028/chali-1.0.10/`。
+- [x] 结束相关进程、保存证据并运行 `tools/clean_tmp.ps1`，tmp 已清空。
+- [ ] 中文提交并推送 origin/master。
+
+## 验收标准
+
+- std::lang 的标准流路径在 AOT 下不再经过 chali_host_call（可用生成 IR 核对直接出现 `@fwrite`/`@chali_read_line` 调用）。
+- 样例输出与改动前逐字节一致（文本比较忽略行尾空白）。
+- watchdog 开启时回落胶水路径仍可用。
+
+## 追加授权：AST 直接生成 LLVM
+
+- 用户明确要求正常运行和 AOT 同时绕过 ChaLi 四元式，从语义检查后的 AST 直接生成 LLVM。
+- LLVM 代码结构可以不同，验收以程序行为、错误、资源生命周期、闭包及 ABI 等价为准。
+- [x] 移除正常路径的四元式生成、写盘、重读和 assemble。
+- [x] 完成直接 AST 访问器、SSA 表达式、控制流和共享运行时对接。
+- [x] 对照 1.0.9 验证全部样例，构建并交付两个 LLVM 变体；不宣称既有失败样例或未执行的历史四元式／VM 测试通过。
+
+## 追加授权：交叉编译与书稿
+
+- [x] LLVM 目标选择、目标文件导出与 `chali.toml` 的 `[aot]` 配置；命令行覆盖项目设置。
+- [x] Windows 宿主交叉链接 Linux x64 与 ARM64 示例，分别在 WSL 与 QEMU 运行核对输出。
+- [x] 删除独立部署章，合并到第 24 章 AOT 导出，位于第 25 章学生信息管理系统之前；前移编号并同步中英文引用。
+- [x] AOT 章说明目标 SDK、交叉编译配置与代码生成／链接／运行的验证区别。
+- [x] 只保留“行囊里的工具”番外，删除“两份行李”。书名统一为《ChaLi 程序设计语言》，同步 LaTeX、封面与 PDF 元数据。
+- [x] 定稿文档内嵌到两变体编译器；安装包与 VSIX 的版本、内嵌字节均已核对。
+
+## 后续授权：完成 1.0.10 后持续推进下一版本性能
+
+用户要求：先完成当前版本；1.0.10 提交并推送后不要结束本次对话，继续为该语言优化运行速度；第一目标超过 Lua，第二目标与 C++、Rust 等语言的运行效率平齐；每一个性能里程碑都提交并推送。
+
+执行顺序与交付：
+
+- [ ] 先完成 1.0.10 所有验收、双 LLVM 变体交付及中文提交，推送 `origin/master`（Gitee）。当前版本未完成项不能隐藏或删除。
+- [ ] 随后进入下一版本（按当前版本递增为 1.0.11）；建立可重复的 ChaLi／Lua 性能基线，记录双方真实版本、硬件、优化与检查配置、预热、重复次数及原始测量数据。区分编译耗时与程序运行耗时。
+- [ ] 第一目标：在结果一致、工作量相同的可复核基准上超过 Lua；记录逐项结果及总体统计。
+- [ ] 第二目标：加入 C++、Rust 的等价实现与优化发布配置，对齐其运行效率；用重复测量、离散程度与逐项差距评估是否持平，保留所有语言的真实版本和原始数据。
+- [ ] 用户已授权使用系统默认的 `malloc`，并要求提供分配器切换选项。下一版本性能工作以系统 `malloc` 配置作为正式跑分基准，记录实际分配器与切换参数；保留当前分配器作为可选配置，分别核对内存语义、正确性与性能，不混用不同分配器配置的测量结果。
+- [ ] 用户指定下一版本的优化方向为隐式移动：消除不必要的复制，只有确实需要创建独立副本时才复制。优先分析临时值、返回值及最后使用点，在所有权和借用分析证明安全时转移存储；对借用别名、闭包捕获、容器元素、析构、自定义 `copy/drop` 与可观测行为提供针对性验证，并测量复制次数、分配次数和真实耗时。
+- [ ] 按剖析证据优化热点，以正确程序的真实运行时间尽可能短为目标，争取超过 Lua；只比较完成相同工作、校验结果一致的程序，不删工作量、不篡改计时、不把不同配置或历史测量重标为新成绩。
+- [ ] 每次达到可复核的性能里程碑，保存源码、命令、原始数据、正确性与回归证据，更新 TASK／变更记录，使用中文提交并推送 `origin/master`，继续推进下一里程碑。
+- [ ] 持续遵守后端范围、语言及资源语义、跨架构隔离与临时目录清理约定；优先消除热点开销，LLVM 优化与合理的运行时快速路径均可评估。
+
+持续任务未全部完成时保留本文件；1.0.10 完成后仅将该版本事项标记完成，不删除后续性能工作。

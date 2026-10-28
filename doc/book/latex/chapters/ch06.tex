@@ -202,7 +202,7 @@ Rust 里 \texttt{let b =\allowbreak{} a;} 之后 \texttt{a} 就不能用了—�
 
 \item 大对象当参数：函数要读一个几 MB 的结构体，别按值传。
 
-\item 循环里赋值：\texttt{for-in} 里每轮都在复制元素（小元素无所谓，大结构体就很痛）。
+\item 循环里赋值：\texttt{for-\allowbreak{}in} 里每轮都在复制元素（小元素无所谓，大结构体就很痛）。
 
 \item 深层嵌套的结构体：复制是递归到底的，层数越多越贵。
 

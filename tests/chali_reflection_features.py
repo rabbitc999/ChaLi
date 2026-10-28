@@ -59,9 +59,9 @@ def main():
         source.write_text('import shared;\nvoid main() { println("{}", shared::seed()); }\n', encoding='utf-8')
         incremental = work / 'incremental'
         for active in (False, True, False):
-            command = [chali, 'emit', source, '--no-reflection', '--incremental', '-I', work, '--out', incremental]
+            command = [chali, 'aot', source, '--emit-llvm', '--no-reflection', '--incremental', '-I', work, '--out', incremental]
             if active:
-                command[3] = '--reflection'
+                command[4] = '--reflection'
             run(command)
             data = incremental.with_suffix('.quad').read_bytes()
             assert bool(data[5] & 2) == active, (active, data[:8])

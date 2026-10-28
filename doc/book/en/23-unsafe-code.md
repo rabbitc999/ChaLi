@@ -1,7 +1,7 @@
-# Chapter 24 Unsafe code
+# Chapter 23 Unsafe code
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../24-不安全代码.md)
+**English** · [简体中文](../23-不安全代码.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 Ordinary values, references and standard containers let the compiler check types, borrowing and cleanup relationships. Implementing an allocator, container or host adapter can also require working with addresses and capacity that does not yet contain constructed elements. This chapter introduces those operations and the obligations that accompany them, before the student-system project.
@@ -10,7 +10,7 @@ The complete API reference is [Raw storage and C ABI directives](../../en/41-uns
 
 `RawStorage`, `RawPtr`, `BarePtr`, `memcpy` and `memset` belong to the implicitly available `std::lang` core. Examples omit `std::lang::` and require no extra import for these names.
 
-## 24.1 Unsafe scopes and functions
+## 23.1 Unsafe scopes and functions
 
 `unsafe { ... }` grants permission for unsafe operations within a scope. An `unsafe` function requires an unsafe calling context, and its body has the same permission.
 
@@ -35,7 +35,7 @@ Moving this call outside the block is rejected during compilation. A closure est
 
 Ordinary array, arithmetic and allocation-lifetime checks keep their existing behavior. The keyword permits operations whose extra preconditions must be established by the programmer.
 
-## 24.2 Capacity and constructed elements
+## 23.2 Capacity and constructed elements
 
 A container with capacity 100 and length 3 needs three constructed elements. Its other 97 slots are spare space. Default-constructing all spare resource elements can change both behavior and cost.
 
@@ -71,7 +71,7 @@ hello / 4
 
 Double initialization, uninitialized reads, out-of-range accesses and accesses after release report errors. A pointer at `capacity` is a valid one-past position, but cannot be dereferenced. Explicit generic arguments also make the intended element type clear.
 
-## 24.3 Copying, moving and cleanup
+## 23.3 Copying, moving and cleanup
 
 `readAt` preserves ordinary ChaLi value semantics. An unsafe scope does not turn a String handle into an independent copy. Use `takeAt` to transfer ownership, `initAt` to establish a destination owner, and `dropAt` to discard a live element.
 
@@ -79,7 +79,7 @@ Double initialization, uninitialized reads, out-of-range accesses and accesses a
 
 A `Closeable` resource cannot also declare `Copy<T>` or bypass `#NonCopyable`. An explicitly named independent-copy method must establish each new resource owner correctly. `close()` cleans initialized slots only; deleting elements can retain capacity without destroying moved-out values again. Borrowed references must stop being used before move-out, cleanup or release.
 
-## 24.4 Bare pointers contain addresses
+## 23.4 Bare pointers contain addresses
 
 `BarePtr<T>` stores a ChaLi logical byte address without a runtime type tag, initialization bitmap or owner. Its static type determines layout and arithmetic stride.
 
@@ -93,7 +93,7 @@ A `Closeable` resource cannot also declare `Copy<T>` or bypass `#NonCopyable`. A
 
 Logical addresses are managed by ChaLi and cannot be passed directly as machine C pointers. Use the adapters from [chapter 21](21-c-interop.md) for host interoperability.
 
-## 24.5 Pointer arithmetic uses element strides
+## 23.5 Pointer arithmetic uses element strides
 
 `p.castTo<U>()` requires `unsafe` and changes a `BarePtr<T>` into a `BarePtr<U>` view at the same address. Cast to `uint8` for byte-wise dereferencing and one-byte offsets. The cast neither checks the target type nor allocates or copies storage. The caller must ensure layout, alignment, initialization, lifetime and access ranges.
 
@@ -126,11 +126,11 @@ Supported forms are `p + n`, `n + p`, `p - n` and same-type `p - q`. Pointer dif
 
 Address arithmetic itself accesses no memory. A computable address, including a one-past position, is not necessarily dereferenceable. Integer overflow and other arithmetic retain ordinary language behavior.
 
-## 24.6 memcpy and memset use byte counts
+## 23.6 memcpy and memset use byte counts
 
 `memcpy<T,U>(destination, source, bytes)` allows different static source and destination element types. The implementation does not check their types. `memset<T>(destination, value, bytes)` repeats one byte across the destination range.
 
-Their function-like syntax lowers directly to dedicated quads, which AOT turns into `memcpy`/`memset` intrinsics. Necessary address and complete-range checks still run before any write.
+Their function-like syntax lowers to dedicated AST memory operations, from which AOT directly generates LLVM `memcpy`/`memset` intrinsics. Necessary address and complete-range checks still run before any write.
 
 Lengths count bytes. Filling eight bytes through `BarePtr<int64>` covers one element. Repeating `0x01` across all eight bytes does not store the integer value 1.
 
@@ -161,7 +161,7 @@ void main() {
 
 Nonempty ranges must lie within live allocations. A copy validates both complete ranges before writing, and overlapping ranges are rejected. Zero lengths allow null pointers. Moving overlapping container regions requires a separate design for direction and ownership transfer.
 
-## 24.7 Writing bytes does not construct resource values
+## 23.7 Writing bytes does not construct resource values
 
 The example writes bytes but leaves `source.isInitialized(0)` false. Bare byte operations do not read or change slot initialization bits and invoke no copy, move or cleanup hooks.
 
@@ -169,7 +169,7 @@ This permits whole-buffer byte copies. Copying String or file-handle bits does n
 
 Bare pointers contain no allocation generation. Stop using them when their allocation is released; an address becoming accessible later does not establish that it still identifies the original object.
 
-## 24.8 Encapsulating unsafe operations
+## 23.8 Encapsulating unsafe operations
 
 A byte buffer can expose checked `pushByte`, `getByte` and `reserve` methods while keeping address operations in small internal unsafe blocks. Its callers use the buffer without managing address/capacity relationships.
 
@@ -179,7 +179,7 @@ The complete [bootstrap String experiment](../../../benchmarks/perf/bootstrap_st
 
 Write down invariants such as `0 <= length <= capacity`, a pointer into the currently owned allocation, and valid ranges for every dereference. Each unsafe block should have a clear explanation of how those conditions are satisfied.
 
-## 24.9 Correctness and measurement
+## 23.9 Correctness and measurement
 
 Test empty capacity, boundaries, double initialization, reads after move-out, growth, deletion with retained capacity, released allocations and exactly-once resource cleanup. Byte operations also need zero-length, cross-type, overlap, full-range and fill-byte tests.
 
@@ -187,7 +187,7 @@ Separate compilation from execution. Compare identical inputs with independently
 
 The [String comparison report](../../../benchmarks/results/string-1.0.7/README.md) retains actual source and compiler hashes. The earlier checked-slot implementation is preserved as `bootstrap_string_checked.chl`; its measurements must not be relabeled as the bare-pointer implementation. Record results per compiler version and target separately.
 
-## 24.10 Summary
+## 23.10 Summary
 
 | Tool | Main caller obligation |
 | --- | --- |
@@ -198,9 +198,9 @@ The [String comparison report](../../../benchmarks/results/string-1.0.7/README.m
 | `memcpy` and `memset` | Supply correct byte counts and ownership-safe, disjoint ranges |
 | Safe abstraction | Maintain length, capacity and cleanup invariants internally |
 
-Use ordinary references and standard containers in everyday application code. Storage kernels benefit from small, independently testable unsafe interfaces. Continue to [chapter 26, the student information system](26-student-system.md).
+Use ordinary references and standard containers in everyday application code. Storage kernels benefit from small, independently testable unsafe interfaces. Continue to [chapter 24, LLVM AOT export](24-aot-export.md), followed by the student information system.
 
-## 24.11 Exercises
+## 23.11 Exercises
 
 1. Move the first unsafe call outside its block, then create an ordinary closure containing that call inside the block. Inspect both diagnostics.
 2. Read a raw String slot after `takeAt`. Explain why leftover bytes do not represent an owned String.
@@ -218,4 +218,4 @@ Use ordinary references and standard containers in everyday application code. St
 5. Nonempty overlap is rejected. Zero-length operations access no bytes and allow null pointers.
 6. Retain the original length, use valid updated pointers after growth, and publish new storage only after the transfer succeeds. Check both growth paths and ownership independently.
 
-Next: [LLVM AOT export](25-aot-export.md).
+Next: [LLVM AOT export](24-aot-export.md).

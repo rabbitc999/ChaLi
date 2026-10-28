@@ -1,11 +1,11 @@
 /**
  * @file abi_string.c
- * @brief `std::lang` 字符串构造类胶水的直通 C 实现。
+ * @brief `std::lang` 字符串构造原语的直通 C 实现。
  *
- * 目前只有浮点格式化入口 `__std_str_of_flt`：编译器把 `{}` 里的浮点实参降级成
- * 对这个函数的调用，再由它分配一个新的 VM 字符串返回。数值 → 文本的规则必须与
- * 语言默认完全一致（默认 3 位小数、去掉尾随零、`2.0` 仍保留一位），否则
- * `println` 的输出会整体变化。
+ * 浮点 → 文本的完整规则（去尾随零、孤立小数点）在 std/lang.chl 的 ChaLi 函数
+ * `__std_str_of_flt` 里实现；本模块只保留不可约的格式化核心 `__std_str_fixed`：
+ * 按 `%.*f` 输出固定小数位文本。AOT 直连降级时由生成代码直接调用 libc snprintf，
+ * 不经过本表。
  */
 #include "chali_abi_internal.h"
 
@@ -18,12 +18,11 @@
 #define CHALI_ABI_TEXT_CAPACITY 256
 
 /**
- * @brief 把双精度值格式化成语言默认的文本。
- * @param frame 帧：0 = 值，1 = 小数位数（负数或缺失按 3 位）。
- * @note 先按 `%.*f` 打印，再在存在小数点时去掉尾随零，最后去掉可能剩下的孤立小数点，
- *       于是 `3.500` → `3.5`、`2.000` → `2.0`。
+ * @brief 把双精度值按 `%.*f` 格式化成固定小数位文本。
+ * @param frame 帧：0 = 值，1 = 小数位数（负数按 3 位）。
+ * @return 新 VM 字符串；不含去尾零处理。
  */
-static void abiStrOfFloat(ChaliAbiFrame *frame)
+static void abiStrFixed(ChaliAbiFrame *frame)
 {
     double value = 0.0;
     int64_t precision = 3;
@@ -39,13 +38,7 @@ static void abiStrOfFloat(ChaliAbiFrame *frame)
         chali_abi_return_integer(frame, 0);
         return;
     }
-    size_t length = (size_t)written < sizeof(buffer) ? (size_t)written : sizeof(buffer) - 1u;
-
-    if (precision > 0 && memchr(buffer, '.', length) != NULL)
-    {
-        while (length > 0u && buffer[length - 1u] == '0') --length;
-        if (length > 0u && buffer[length - 1u] == '.') --length;
-    }
+    const size_t length = (size_t)written < sizeof(buffer) ? (size_t)written : sizeof(buffer) - 1u;
     chali_abi_return_integer(frame, chali_abi_string(frame, buffer, length));
 }
 
@@ -53,7 +46,7 @@ static void abiStrOfFloat(ChaliAbiFrame *frame)
  * @brief 本模块入口表，按名称升序排列。
  */
 static const ChaliAbiRecord kRecords[] = {
-    { "__std_str_of_flt", abiStrOfFloat, 2 },
+    { "std::lang::__std_str_fixed", abiStrFixed, 2 },
 };
 
 const ChaliAbiRecord *abi_string_records(size_t *count)

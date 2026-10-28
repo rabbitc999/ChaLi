@@ -17,6 +17,8 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#include <iomanip>
 #include <map>
 #include <set>
 #include <sstream>
@@ -244,6 +246,7 @@ struct Translator
 {
     const Request &request;
     Memory::Vector<Memory::String> *diagnostics;
+    TargetInfo target; ///< 产物目标，与编译器运行宿主分开。
 
     std::vector<Function> functions;
     std::unordered_map<std::string, std::size_t> functionByLabel;  ///< 标签 → functions 下标。
@@ -261,6 +264,10 @@ struct Translator
     std::map<std::string, std::size_t> sourceFiles;               ///< 可达指令的源码文件，用于原生错误定位。
     std::set<std::string> addressedFunctions;                     ///< 数据映像中实际保存了地址的函数。
     std::set<std::string> callbackReachable;                      ///< 可从函数值回调到达的语言函数。
+    Memory::Vector<stackvm::LayoutRow> dataRows;                 ///< 解码后的数据区布局，供格式串直连取字面量字节。
+    bool dataRowsReady = false;                                   ///< dataRows 是否已解码。
+    std::string formatScratch;                                    ///< formatBytesOf 的单槽缓存。
+    std::vector<std::string> printLiterals;                       ///< `__std_print` 直连发射的字面量段常量。
     bool watchdogUsed = false;                                    ///< 可达程序使用看门狗时生成逻辑指令安全点。
     bool profileOwnership = false;                                ///< 显式启用时插入所有权操作计数，不用于正式计时。
     bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
@@ -272,6 +279,10 @@ struct Translator
     std::map<std::string, std::size_t> profileSites;              ///< 操作种类、函数和四元式位置对应的常量字符串。
     std::map<std::string, std::set<std::string>> temporaryUsers;  ///< 临时符号的实际使用函数，用于识别跨函数共享值。
     NativeDebugInfo debugInfo; ///< 原生源码位置与变量元数据。
+    std::map<std::string, const ast::Function *> astFunctions; ///< 直接后端的函数 AST。
+    std::map<std::string, Memory::Map<Memory::String, Memory::String>> astSymbols; ///< 函数内名字的独立存储身份。
+    std::map<const ast::Node *, std::size_t> astData; ///< AST 常量节点的数据地址。
+    Memory::Map<Memory::String, ast::TypePtr> astTypes; ///< AST 类型查询环境。
 
     /**
      * @brief 保存本次四元式分析请求和诊断输出。
@@ -280,6 +291,8 @@ struct Translator
      */
     explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out)
     {
+        Memory::String targetError;
+        if (!describeTarget(request.options.target, target, &targetError)) fail(targetError);
         watchdogUsed = request.options.stepLimit != 0u;
         const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
@@ -303,6 +316,31 @@ struct Translator
     void fail(const Memory::String &message)
     {
         if (diagnostics != nullptr && diagnostics->size() < 32u) diagnostics->push_back(message);
+    }
+
+    /**
+     * @brief 取数据区字面量符号的原始字节。
+     * @param token 字面量的数据区符号名。
+     * @return 字面量内容字节；布局不可用或符号不在数据区时返回空指针。单槽缓存，连续查询不同符号会覆盖。
+     */
+    const std::string *formatBytesOf(const Memory::String &token)
+    {
+        if (!dataRowsReady)
+        {
+            dataRowsReady = true;
+            decodeDataLayout(request.dataLayout, dataRows);
+        }
+        for (const auto &row : dataRows)
+        {
+            if (row.name != token || !row.hasSize) continue;
+            if (row.offset > request.dataBytes.size() || row.size > request.dataBytes.size() - row.offset) continue;
+            formatScratch.assign(request.dataBytes.data() + row.offset, row.size);
+            const auto terminator = formatScratch.find('\0');
+            if (terminator == std::string::npos) return nullptr;
+            formatScratch.resize(terminator);
+            return &formatScratch;
+        }
+        return nullptr;
     }
 
     /**
@@ -599,7 +637,7 @@ void analyze(Translator &state)
         const auto external = state.externsByLabel.find(std::string(callee.c_str()));
         if (callee == "__std_read_float" || callee == "__std_input_float" || (external != state.externsByLabel.end() && (external->second->resultType == "double" || external->second->resultType == "float")))
             state.markKind(target, Kind::Float);
-        if (callee == "__std_str_of_flt" || callee == "std::lang::__bootStringCopy" || callee == "std::lang::__bootStringNew" || callee == "std::lang::__bootStringSlice" || callee == "std::lang::__bootStringFromInt" || callee.rfind("std::lang::__bootStringJoin", 0u) == 0u || callee == "__std_read_line" || callee == "__std_input_line")
+        if (callee == "std::lang::__std_str_of_flt" || callee == "std::lang::__bootStringCopy" || callee == "std::lang::__bootStringNew" || callee == "std::lang::__bootStringSlice" || callee == "std::lang::__bootStringFromInt" || callee.rfind("std::lang::__bootStringJoin", 0u) == 0u || callee == "__std_read_line" || callee == "__std_input_line" || callee == "std::lang::__readLine" || callee == "__readLine")
             state.markString(target);
     }
     // 原生服务和函数值返回原始位模式，由显式浮点消费者反推结果形态。
@@ -798,7 +836,7 @@ void emitDataImage(const Translator &state, std::string &out)
     Memory::Vector<stackvm::LayoutRow> rows;
     if (!stackvm::decodeDataLayout(state.request.dataLayout, rows)) return;
     const auto *flag = std::getenv("CHALI_AOT_KEEP_DATA");
-    const bool keepAll = flag && *flag && std::strcmp(flag, "0") != 0;
+    const bool keepAll = state.request.syntax != nullptr || (flag && *flag && std::strcmp(flag, "0") != 0);
     std::set<Memory::String> used;
     for (const auto &function : state.functions)
         if (isLive(state, function))
@@ -969,8 +1007,12 @@ struct Builder
     std::map<std::size_t, std::size_t> lineOccurrences;
     std::size_t serial = 0;
     std::vector<std::pair<Memory::String, Value>> arguments;
+    bool pendingFormatValid = false;  ///< 紧随其后的 `__std_print` 调用是否带有可解析的编译期格式串。
+    std::string pendingFormat;        ///< 编译期已知的格式串字节（仅字面量与 %s 时直连 stdout）。
     std::map<std::pair<Text, int>, Value> checkedAddresses;  ///< 地址符号及精确访问宽度对应的验证结果。
     std::map<Text, Memory::String> knownFunctions;           ///< 当前直线路径内尚未失效的函数值。
+    std::map<Text, std::string> knownLiterals;               ///< 当前直线路径内已知的字符串字面量。
+    std::map<Text, Value> astValues;                        ///< AST 表达式的 SSA 值，不分配帧槽。
 
     /**
      * @brief 建立函数的帧槽集合及本函数内的跳转标签表。
@@ -1105,6 +1147,8 @@ struct Builder
      */
     Value read(const Memory::String &token)
     {
+        const auto expression = astValues.find(textOf(token));
+        if (expression != astValues.end()) return expression->second;
         if (token.empty() || token == "_") return { "i64", "0" };
         if (!literalIsName(token))
         {
@@ -1132,7 +1176,13 @@ struct Builder
      */
     void write(const Memory::String &token, Value value)
     {
+        if (token.rfind("__llvm_value_", 0u) == 0u)
+        {
+            astValues[textOf(token)] = convert(value, type(token));
+            return;
+        }
         knownFunctions.erase(textOf(token));
+        knownLiterals.erase(textOf(token));
         for (auto it = checkedAddresses.begin(); it != checkedAddresses.end();)
             if (it->first.first == textOf(token))
                 it = checkedAddresses.erase(it);
@@ -1329,6 +1379,121 @@ struct Builder
             write(destination, call("chali_host_raw_storage", "i64", values));
             return true;
         }
+        /* 标准错误流直连：字符串 data/len 取自运行时，再直接 fwrite 到 stderr，不经宿主胶水。 */
+        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__std_stderr_write" && arguments.size() == 1u)
+        {
+            const Value handle = convert(argument(0), "i64");
+            const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
+            const auto content = call("chali_host_string_storage", "i64", { { "i64", "1" }, handle });
+            const auto data = call("chali_host_address", "ptr", { content, length });
+            const auto stream = call("chali_standard_stream", "ptr", { { "i32", "2" } });
+            const auto written = call("fwrite", "i64", { data, { "i64", "1" }, length, stream });
+            const auto flushed = call("fflush", "i32", { stream });
+            const auto shortWrite = instruction("i1", "icmp ne i64 " + written.text + ", " + length.text);
+            const auto flushFailed = instruction("i1", "icmp ne i32 " + flushed.text + ", 0");
+            const auto failed = instruction("i1", "or i1 " + shortWrite.text + ", " + flushFailed.text);
+            const auto failure = "stderr_failed_" + std::to_string(serial++);
+            const auto done = "stderr_done_" + std::to_string(serial++);
+            const auto message = "@chali_abi_lit" + std::to_string(state.printLiterals.size());
+            state.printLiterals.push_back(std::string("标准错误流写入失败") + '\0');
+            body += "  br i1 " + failed.text + ", label %" + failure + ", label %" + done + "\n" + failure + ":\n";
+            call("chali_panic", "void", { { "ptr", message } });
+            body += "  unreachable\n" + done + ":\n";
+            write(destination, { "i64", "0" });
+            return true;
+        }
+        /* 浮点定长格式化直连：调用模块级辅助函数完成 snprintf 与新字符串分配。 */
+        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__std_str_fixed" && arguments.size() == 2u)
+        {
+            write(destination, call("chali_string_fixed", "i64", { convert(argument(0), "double"), convert(argument(1), "i64") }));
+            return true;
+        }
+        /* 标准输入直连：读取一行直接调用运行时 IR 里的 chali_read_line（fgets + 去 LF/CRLF，EOF 返回空串）。 */
+        if (state.rawIntrinsics && !state.watchdogUsed && (callee == "std::lang::__readLine" || callee == "__readLine" || callee == "__std_input_line") && arguments.empty())
+        {
+            write(destination, call("chali_read_line", "i64", {}));
+            return true;
+        }
+        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__stdinEof" && arguments.empty())
+        {
+            write(destination, call("chali_stdin_eof", "i64", {}));
+            return true;
+        }
+        /* 标准输出直连：编译期格式串只含字面量与 %s（花括号风格的字符串排版）时，
+         * 逐段直接 fwrite 到 stdout，不再经过宿主格式化胶水；其余格式回落胶水。 */
+        if (state.rawIntrinsics && !state.watchdogUsed && pendingFormatValid && callee == "__std_print")
+        {
+            std::vector<std::pair<bool, std::string>> steps;  ///< (是否取字符串实参, 字面量字节)。
+            std::string literalRun;
+            bool supported = true;
+            for (std::size_t at = 0; at < pendingFormat.size() && supported;)
+            {
+                const char character = pendingFormat[at];
+                if (character != '%')
+                {
+                    literalRun += character;
+                    ++at;
+                    continue;
+                }
+                if (at + 1u >= pendingFormat.size())
+                {
+                    supported = false;
+                    break;
+                }
+                const char specifier = pendingFormat[at + 1u];
+                if (specifier == '%')
+                {
+                    literalRun += '%';
+                    at += 2u;
+                    continue;
+                }
+                if (specifier == 's')
+                {
+                    if (!literalRun.empty())
+                    {
+                        steps.emplace_back(false, literalRun);
+                        literalRun.clear();
+                    }
+                    steps.emplace_back(true, std::string());
+                    at += 2u;
+                    continue;
+                }
+                supported = false;
+            }
+            if (!literalRun.empty()) steps.emplace_back(false, literalRun);
+            std::size_t stringCount = 0;
+            for (const auto &step : steps)
+                if (step.first) ++stringCount;
+            if (!supported || stringCount + 1u != arguments.size())
+            {
+                pendingFormatValid = false; /* 含数值规格或无法解析：交给宿主格式化胶水。 */
+            }
+            else
+            {
+                const auto stream = call("chali_standard_stream", "ptr", { { "i32", "1" } });
+                std::size_t stringIndex = 0;
+                for (const auto &step : steps)
+                {
+                    if (!step.first)
+                    {
+                        const std::string name = "@chali_abi_lit" + std::to_string(state.printLiterals.size());
+                        state.printLiterals.push_back(step.second);
+                        const auto bytes = instruction("ptr", "getelementptr [" + std::to_string(step.second.size())
+                                                                          + " x i8], ptr " + name + ", i64 0, i64 0");
+                        call("fwrite", "i64", { bytes, { "i64", "1" }, { "i64", std::to_string(step.second.size()) }, stream });
+                        continue;
+                    }
+                    const Value handle = convert(argument(1 + stringIndex++), "i64");
+                    const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
+                    const auto content = call("chali_host_string_storage", "i64", { { "i64", "1" }, handle });
+                    const auto data = call("chali_host_address", "ptr", { content, length });
+                    call("fwrite", "i64", { data, { "i64", "1" }, length, stream });
+                }
+                write(destination, { "i64", "0" });
+                pendingFormatValid = false;
+                return true;
+            }
+        }
         const auto external = state.externsByLabel.find(textOf(callee));
         if (external != state.externsByLabel.end() && state.request.abiGlue.empty())
         {
@@ -1357,6 +1522,7 @@ struct Builder
                 return false;
             }
             Value result = call(llvmSymbol(signature.symbol), resultType, values);
+            if (resultType == "void") result = { "i64", "0" };
             if (!resultType.empty() && resultType.front() == 'i')
                 result = convert(result, "i64", signature.resultType.find("unsigned") != Memory::String::npos);
             write(destination, result);
@@ -1540,10 +1706,8 @@ struct Builder
     {
         const Text resultType = function.returnsFloat ? "double" : "i64";
         Text signature = "define ";
-#ifdef _WIN32
         const bool typedExport = std::any_of(state.request.abiExports.begin(), state.request.abiExports.end(), [&](const auto &entry) { return entry.label == function.label; });
-        if (function.exported && !typedExport) signature += "dllexport ";
-#endif
+        if (state.target.windows && function.exported && !typedExport) signature += "dllexport ";
         if (!function.exported) signature += "internal ";
         signature += resultType + " @" + textOf(function.llvmName) + "(";
         for (std::size_t at = 0; at < function.parameters.size(); ++at)
@@ -1611,6 +1775,8 @@ struct Builder
                 || op == "call" || op == "callptr" || op == "alloc" || op == "drop" || op == "free" || op == "memcpy" || op == "memset") checkedAddresses.clear();
             if (op == "label" || op == "j" || op == "jz" || op == "jnz" || op == "ret" || op == "halt"
                 || op == "call" || op == "alloc" || op == "drop" || op == "free" || op == "memcpy" || op == "memset" || op.rfind("store", 0) == 0u) knownFunctions.clear();
+            if (op == "label" || op == "j" || op == "jz" || op == "jnz" || op == "ret" || op == "halt"
+                || op == "call" || op == "callptr" || op == "memcpy" || op == "memset" || op.rfind("store", 0) == 0u) knownLiterals.clear();
             if (op == "call" || op == "callptr" || op == "alloc" || op == "checkptr" || op == "check" || op == "memcpy" || op == "memset" || op.rfind("load", 0) == 0u || op.rfind("store", 0) == 0u || op.rfind("/", 0) == 0u || op.rfind("%", 0) == 0u || op.rfind("<<", 0) == 0u || op.rfind(">>", 0) == 0u)
             {
                 const auto file = state.sourceFiles.emplace(textOf(quad.sourceFile), state.sourceFiles.size()).first;
@@ -1677,6 +1843,7 @@ struct Builder
                     return Text();
                 }
                 write(c, { "i64", std::to_string(offset) });
+                if (const auto *bytes = state.formatBytesOf(a)) knownLiterals[textOf(c)] = *bytes;
                 const auto target = state.functionAddresses.find(static_cast<std::size_t>(offset));
                 if (offset > 0 && target != state.functionAddresses.end()) knownFunctions[textOf(c)] = target->second;
             }
@@ -1685,11 +1852,22 @@ struct Builder
                 Memory::String formal = c;
                 if (state.kindOf(a) == Kind::String && c.rfind("__chali_fa", 0) == 0u) formal = "#string:" + c;
                 arguments.push_back({ formal, read(a) });
+                /* `__std_print` 直连：捕获第一个实参（格式串字面量）的数据区字节。 */
+                if (arguments.size() == 1u)
+                {
+                    pendingFormatValid = false;
+                    const std::string *bytes = state.formatBytesOf(a);
+                    const auto literal = knownLiterals.find(textOf(a));
+                    if (bytes == nullptr && literal != knownLiterals.end()) bytes = &literal->second;
+                    pendingFormatValid = textOf(c) == "__chali_fmt" && bytes != nullptr;
+                    if (bytes != nullptr) pendingFormat = *bytes;
+                }
             }
             else if (op == "call")
             {
                 if (!emitCall(a, c)) return Text();
                 arguments.clear();
+                pendingFormatValid = false;
             }
             else if (op == "callptr")
             {
@@ -1702,6 +1880,7 @@ struct Builder
                 {
                     if (!emitCall(target, c)) return Text();
                     arguments.clear();
+                    pendingFormatValid = false;
                 }
                 else
                 {
@@ -1725,6 +1904,7 @@ struct Builder
                     if (type(c) == "double") result = instruction("double", "bitcast i64 " + result.text + " to double");
                     write(c, result);
                     arguments.clear();
+                    pendingFormatValid = false;
                 }
             }
             else if (op == "ret" || op == "halt")
@@ -1845,6 +2025,8 @@ struct Builder
     }
 };
 
+#include "chali_aot_ast.hpp"
+
 /**
  * @brief 前端提供的 ABI 声明读取回调。
  */
@@ -1941,7 +2123,13 @@ Text indirectDispatcher(Translator &state)
         }
         constants += "@indirect_name" + suffix + " = private constant [" + std::to_string(label.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
         resultTypes += "candidate" + suffix + ":\n  %matched" + suffix + " = call i64 @chali_function_match(i64 %target, ptr @indirect_name" + suffix + ")\n  %accepted" + suffix + " = icmp ne i64 %matched" + suffix + ", 0\n  br i1 %accepted" + suffix + ", label %result" + suffix + ", label %candidate" + std::to_string(candidate + 1) + "\nresult" + suffix + ":\n  ret i64 " + Text(function.returnsFloat ? "1" : "0") + "\n";
-        const bool environment = !function.parameters.empty() && function.parameters.back() == "__chali_environment";
+        bool environment = !function.parameters.empty() && function.parameters.back() == "__chali_environment";
+        if (state.request.syntax && !function.parameters.empty())
+        {
+            const auto &symbols = state.astSymbols.at(textOf(function.label));
+            const auto hidden = symbols.find("__chali_environment");
+            environment = hidden != symbols.end() && hidden->second == function.parameters.back();
+        }
         const auto arity = function.parameters.size() - (environment ? 1u : 0u);
         body += "candidate" + suffix + ":\n  %matched" + suffix + " = call i64 @chali_function_match(i64 %target, ptr @indirect_name" + suffix + ")\n";
         body += "  %name_ok" + suffix + " = icmp ne i64 %matched" + suffix + ", 0\n  %arity_ok" + suffix + " = icmp eq i64 %count, " + std::to_string(arity) + "\n  %accepted" + suffix + " = and i1 %name_ok" + suffix + ", %arity_ok" + suffix + "\n";
@@ -2009,29 +2197,27 @@ Text exportDispatcher(Translator &state)
 }
 
 /**
- * @brief 从四元式直接生成包含运行时的 LLVM 模块。
+ * @brief 从 AST 直接生成包含运行时的 LLVM 模块，保留独立四元式调用方的兼容入口。
  * @param request 已优化的四元式、数据和输出选项。
  * @param diagnostics 接收类型、操作和运行时资产错误。
  * @param header 可选的 C ABI 头文件输出。
  * @return LLVM 文本；生成失败时为空。
  */
-Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
+Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
 {
+    Request request = inputRequest;
     Translator state(request, diagnostics);
-#if !defined(__x86_64__) && !defined(_M_X64)
-    state.fail("AOT：当前内嵌 LLVM 运行时仅提供 x64 宿主布局");
-    return {};
-#endif
+    if (state.target.runtime.empty()) return {};
     if (header != nullptr) header->clear();
-    if (request.quads == nullptr)
+    if (request.quads == nullptr && request.syntax == nullptr)
     {
         state.fail("AOT：没有四元式输入");
         return {};
     }
     for (const auto &external : request.externs)
         if (external.abiConvention != "C") state.fail("AOT：外部调用约定不受支持");
-    loadLayout(state);
-    analyze(state);
+    if (request.syntax) prepareAst(request, state);
+    else { loadLayout(state); analyze(state); }
     for (const auto &name : request.options.exports)
         if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
@@ -2040,18 +2226,14 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
             for (const auto &token : request.quads->quads[at].args)
                 if (token.rfind("__temp_", 0) == 0u || token.rfind("__chali_ret_v$", 0) == 0u)
                     state.temporaryUsers[textOf(token)].insert(textOf(function.label));
-    for (const auto &quad : request.quads->quads)
+    if (request.quads) for (const auto &quad : request.quads->quads)
     {
         if (quad.op != "call") continue;
         const auto found = state.externsByLabel.find(textOf(quad.arg(0)));
         if (found != state.externsByLabel.end() && (abiType(found->second->resultType) == "double" || abiType(found->second->resultType) == "float")) state.markKind(quad.arg(2), Kind::Float);
     }
     Memory::String runtime;
-#ifdef _WIN32
-    const Memory::String asset = "aot/runtime_windows.ll";
-#else
-    const Memory::String asset = "aot/runtime_linux.ll";
-#endif
+    const Memory::String asset = state.target.runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(asset, &runtime))
     {
         state.fail("AOT：缺少内嵌 LLVM 运行时 " + asset);
@@ -2065,9 +2247,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
         if (line.rfind("declare ", 0) == 0 && line.find("@chali_invoke(") != Text::npos) continue;
         if (line.rfind("; ModuleID =", 0) == 0u || line.rfind("source_filename =", 0) == 0u) continue;
         if (line.rfind("@chali_data_image =", 0) == 0u || line.rfind("@chali_data_size =", 0) == 0u || line.rfind("@chali_heap_size =", 0) == 0u) continue;
-#ifdef _WIN32
-        if (request.options.shared && (line.find(" @chali_init(") != Text::npos || line.find(" @chali_finish(") != Text::npos) && line.rfind("define ", 0) == 0u) line.insert(line.find("void "), "dllexport ");
-#endif
+        if (state.target.windows && request.options.shared && (line.find(" @chali_init(") != Text::npos || line.find(" @chali_finish(") != Text::npos) && line.rfind("define ", 0) == 0u) line.insert(line.find("void "), "dllexport ");
         if (libraryLifecycle)
         {
             const auto init = line.find("@chali_init(");
@@ -2116,7 +2296,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
     {
         if (!isLive(state, function)) continue;
         Builder builder(state, function);
-        const Text definition = builder.generate();
+        const Text definition = request.syntax ? AstBuilder(state, function).generateAst() : builder.generate();
         if (definition.empty()) return {};
         definitions += definition;
         for (std::size_t at = function.begin; at < function.end; ++at)
@@ -2131,6 +2311,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
             }
         }
     }
+    if (diagnostics != nullptr && !diagnostics->empty()) return {};
     for (const auto &entry : state.globals) shared.insert(entry.first);
     for (const auto &site : state.profileSites)
     {
@@ -2188,6 +2369,18 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
         }
         out += "@native_name" + std::to_string(native.second) + " = private constant [" + std::to_string(native.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
     }
+    for (std::size_t at = 0; at < state.printLiterals.size(); ++at)
+    {
+        const std::string &literal = state.printLiterals[at];
+        Text bytes;
+        for (const unsigned char byte : literal)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@chali_abi_lit" + std::to_string(at) + " = private constant [" + std::to_string(literal.size()) + " x i8] c\"" + bytes + "\"\n";
+    }
     Text resetSlots = "define void @chali_reset_slots() {\nentry:\n  store i8 0, ptr @chali_return_float\n  store ptr null, ptr @chali_source_function\n  store ptr null, ptr @chali_source_file\n  store i64 0, ptr @chali_source_line\n";
     for (const auto &name : shared)
     {
@@ -2242,11 +2435,7 @@ Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::Strin
     out += exportDispatcher(state);
     if (libraryLifecycle)
     {
-#ifdef _WIN32
-        const Text visibility = "dllexport ";
-#else
-        const Text visibility;
-#endif
+        const Text visibility = state.target.windows ? "dllexport " : "";
         out += "define " + visibility + "void @chali_init() {\nentry:\n  call void @chali_runtime_init()\n  %initialized = call i64 @f___chali_library_init()\n  ret void\n}\n";
         out += "define " + visibility + "void @chali_finish() {\nentry:\n  %finished = call i64 @f___chali_library_finish()\n  call void @chali_runtime_finish()\n  ret void\n}\n";
     }
@@ -2352,6 +2541,13 @@ Text compilerPath(const Memory::String &wanted)
  */
 bool writeFile(const Text &path, const Memory::String &contents)
 {
+    const auto parent = std::filesystem::u8path(path).parent_path();
+    if (!parent.empty())
+    {
+        std::error_code error;
+        std::filesystem::create_directories(parent, error);
+        if (error) return false;
+    }
     std::ofstream output(std::filesystem::u8path(path), std::ios::binary);
     output.write(contents.data(), static_cast<std::streamsize>(contents.size()));
     output.close();
@@ -2367,6 +2563,29 @@ bool writeFile(const Text &path, const Memory::String &contents)
  */
 int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
 {
+    TargetInfo target;
+    Memory::String targetError;
+    if (!describeTarget(request.options.target, target, &targetError))
+    {
+        if (diagnostics) diagnostics->push_back(targetError);
+        return 1;
+    }
+    const bool objectOnly = request.options.emitObjectOnly;
+    if (objectOnly && request.options.emitLLVMOnly)
+    {
+        if (diagnostics) diagnostics->push_back("AOT：LLVM 模块与对象文件输出不能同时选择");
+        return 1;
+    }
+    if (!target.native && !objectOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
+    {
+        if (diagnostics) diagnostics->push_back("AOT：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj 或 --emit-llvm");
+        return 1;
+    }
+    if (!target.native && !objectOnly && !request.options.emitLLVMOnly && !request.abiGlue.empty())
+    {
+        if (diagnostics) diagnostics->push_back("AOT：跨目标复杂 C ABI 封送需要目标 C++ 工具链；请先使用 --emit-obj 导出对象及 .abi.cpp，再在目标 SDK 中链接");
+        return 1;
+    }
     Memory::String header;
     const Memory::String source = generateLLVM(request, diagnostics, &header);
     if (source.empty()) return 1;
@@ -2380,19 +2599,20 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     if (request.options.emitLLVMOnly) return 0;
     RuntimeAssets abiAssets;
     Request linked = request;
-    if (!request.abiGlue.empty())
+    if (!request.abiGlue.empty() && !objectOnly)
     {
         Memory::String object;
         if (!abiAssets.prepareAbi(request.abiGlue, &object, diagnostics)) return 1;
         linked.options.linkObjects.push_back(object);
     }
-#ifdef _WIN32
-    const Text product = prefix + (request.options.shared ? ".dll" : ".exe");
-#else
-    const Text product = prefix + (request.options.shared ? ".so" : "");
-#endif
-    if (builtin::available() && request.options.compiler.empty())
-        return builtin::compile(linked, Memory::String(llvmPath.c_str()), Memory::String(product.c_str()), diagnostics);
+    if (objectOnly && !request.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", request.abiGlue))
+    {
+        if (diagnostics) diagnostics->push_back("AOT：无法写入目标 ABI 封送源码");
+        return 1;
+    }
+    const Text product = prefix + (objectOnly ? ".o" : request.options.shared ? target.windows ? ".dll" : ".so" : target.windows ? ".exe" : "");
+    if (builtin::available() && request.options.compiler.empty() && (objectOnly || (target.native && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
+        return builtin::compile(linked, Memory::String(llvmPath.c_str()), source, Memory::String(product.c_str()), diagnostics);
     const Text compiler = compilerPath(request.options.compiler);
     if (quote(compiler).empty() || quote(llvmPath).empty() || quote(product).empty())
     {
@@ -2400,26 +2620,87 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         return 1;
     }
     RuntimeAssets runtimeAssets;
-    if (!runtimeAssets.restore(diagnostics)) return 1;
-    Text command = quote(compiler) + (request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module -Wl,--gc-sections " : " -O3 -flto=full -Wno-override-module -Wl,--lto-O3,--gc-sections -s ");
-    if (request.options.shared) command += "-shared -fPIC ";
-    command += quote(llvmPath) + " -o " + quote(product);
-    for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
-    command += " -L" + quote(runtimeAssets.root.generic_u8string()) + " -Wl,--start-group -lchali_aot_host " + quote((runtimeAssets.root / "libstdc++.a").generic_u8string()) + " -lgcc_eh -lgcc";
-#ifdef _WIN32
-    command += " -static -lwinpthread -lwinhttp -lws2_32 -lcrypt32 -lbcrypt ";
-    for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeAssets.root / name).generic_u8string()) + " ";
-#endif
-    command += " -Wl,--end-group";
-    for (const auto &library : request.options.linkLibraries)
+    std::filesystem::path runtimeDirectory;
+    if (!objectOnly)
     {
-        const Text argument = quote(textOf(library));
-        if (argument.empty())
+        if (request.options.runtimeDirectory.empty())
         {
-            if (diagnostics != nullptr) diagnostics->push_back("AOT：链接库路径含不支持的字符");
-            return 1;
+            if (!runtimeAssets.restore(diagnostics)) return 1;
+            runtimeDirectory = runtimeAssets.root;
         }
-        command += " " + argument;
+        else
+        {
+            runtimeDirectory = std::filesystem::u8path(textOf(request.options.runtimeDirectory));
+            if (!std::filesystem::is_regular_file(runtimeDirectory / "libchali_aot_host.a"))
+            {
+                if (diagnostics) diagnostics->push_back("AOT：目标运行时目录缺少 libchali_aot_host.a");
+                return 1;
+            }
+            const auto targetFile = runtimeDirectory / "target.txt";
+            if (std::filesystem::is_regular_file(targetFile))
+            {
+                std::ifstream input(targetFile);
+                std::string runtimeTarget;
+                std::getline(input, runtimeTarget);
+                if (!runtimeTarget.empty() && runtimeTarget.back() == '\r') runtimeTarget.pop_back();
+                if (runtimeTarget != textOf(target.triple))
+                {
+                    if (diagnostics) diagnostics->push_back("AOT：目标运行时的 target.txt 与 --target 不一致，拒绝混用目标库");
+                    return 1;
+                }
+            }
+        }
+    }
+    Text command = quote(compiler) + " --target=" + quote(textOf(target.triple));
+    if (!request.options.sysroot.empty())
+    {
+        const auto root = quote(textOf(request.options.sysroot));
+        if (root.empty()) return 1;
+        command += " --sysroot=" + root;
+    }
+    if (!request.options.cpu.empty())
+    {
+        const auto cpu = quote(textOf(request.options.cpu));
+        if (cpu.empty()) return 1;
+        command += Text(target.arm64 ? " -mcpu=" : " -march=") + cpu;
+    }
+    command += request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module " : " -O3 -Wno-override-module ";
+    if (objectOnly) command += "-c ";
+    else
+    {
+        command += "-fuse-ld=lld -Wl,--gc-sections ";
+        if (!request.options.debug) command += "-flto=full -Wl,--lto-O3 -s ";
+        if (request.options.shared) command += "-shared ";
+    }
+    if (!target.windows) command += "-fPIC ";
+    command += quote(llvmPath) + " -o " + quote(product);
+    if (!objectOnly)
+    {
+        const auto runtime = quote(runtimeDirectory.generic_u8string());
+        if (runtime.empty()) return 1;
+        for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
+        command += " -L" + runtime + " -Wl,--start-group -lchali_aot_host ";
+        if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
+        else command += "-lstdc++";
+        command += " -lgcc_eh -lgcc";
+        if (target.windows)
+        {
+            command += " -static -lwinpthread -lwinhttp -lws2_32 -lcrypt32 -lbcrypt ";
+            if (request.options.runtimeDirectory.empty())
+                for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
+        }
+        else command += " -pthread -lm -ldl ";
+        command += " -Wl,--end-group";
+        for (const auto &library : request.options.linkLibraries)
+        {
+            const Text argument = quote(textOf(library));
+            if (argument.empty())
+            {
+                if (diagnostics != nullptr) diagnostics->push_back("AOT：链接库路径含不支持的字符");
+                return 1;
+            }
+            command += " " + argument;
+        }
     }
     const Text log = prefix + ".llvm.log";
     command += " > " + quote(log) + " 2>&1";

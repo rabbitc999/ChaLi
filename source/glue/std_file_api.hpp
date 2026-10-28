@@ -67,6 +67,12 @@ public:
      * @brief 关闭宿主文件，重复关闭应保持安全。
      */
     virtual void close() = 0;
+    /**
+     * @brief 关闭文件并允许适配器报告同步或关闭失败。
+     * @param error 接收关闭失败原因。
+     * @return 成功关闭时为 true；默认实现沿用 close。
+     */
+    virtual bool closeChecked(Memory::String &error);
 };
 /**
  * @brief 文件胶水自己的适配器，操作系统宿主提供具体实现。

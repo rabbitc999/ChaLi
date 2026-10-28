@@ -125,7 +125,7 @@ void main() {
 
 \texttt{\%if} 和 \texttt{\%ifdef} 的分工记住一句话：\texttt{\%if} 看值，\texttt{\%ifdef} 看有没有。
 
-\section{从命令行传开关：\texttt{-D}}
+\section{从命令行传开关：\texttt{-\allowbreak{}D}}
 
 开关真正好用，是构建时才决定——同一份源码，编出不同版本：
 
@@ -145,13 +145,13 @@ chali run app.chl -D FEATURE
 \par
 \medskip
 
-\texttt{-D FEATURE} 等价于在文件开头写了 \texttt{\%define FEATURE}。于是同一份代码：
+\texttt{-\allowbreak{}D FEATURE} 等价于在文件开头写了 \texttt{\%define FEATURE}。于是同一份代码：
 
 \begin{itemize}
 
 \item \texttt{chali run app.\allowbreak{}chl} \ensuremath{\rightarrow} 「没有 FEATURE」；
 
-\item \texttt{chali run app.\allowbreak{}chl -D FEATURE} \ensuremath{\rightarrow} 「有 FEATURE」。
+\item \texttt{chali run app.\allowbreak{}chl -\allowbreak{}D FEATURE} \ensuremath{\rightarrow} 「有 FEATURE」。
 
 \end{itemize}
 
@@ -159,13 +159,13 @@ chali run app.chl -D FEATURE
 
 \section{条件编译的边界}
 
-\texttt{\%define} 管理当前编译单元内的预处理符号，命令行 \texttt{-D} 提供各模块编译时使用的开关。不活跃分支不参与后续语言编译，但行号仍保留。
+\texttt{\%define} 管理当前编译单元内的预处理符号，命令行 \texttt{-\allowbreak{}D} 提供各模块编译时使用的开关。不活跃分支不参与后续语言编译，但行号仍保留。
 
 模块复用通过 \texttt{module} 和 \texttt{import}，完整规则归入\hyperref[ch:18]{第 18 章}。条件编译可控制导入语句是否参与编译，却不是把被导入文件当作文本贴到当前位置。
 
 \section{卫生 AST 宏}
 
-\texttt{\$macro} 定义由生成解析器建立语法树，语义分析按依赖展开，类型推导与展开交错进行，四元式生成前完成。宏不把替换结果拼成源码重新解析。参数保留原文、位置、语法候选及调用处绑定；引入的普通局部声明自动卫生，辅助名称在定义模块查找。
+\texttt{\$macro} 定义由生成解析器建立语法树，语义分析按依赖展开，类型推导与展开交错进行，在生成 LLVM IR 前完成。宏不把替换结果拼成源码重新解析。参数保留原文、位置、语法候选及调用处绑定；引入的普通局部声明自动卫生，辅助名称在定义模块查找。
 
 \par
 \medskip

@@ -302,8 +302,8 @@ void main()
 \texttt{make} & 根目录把前端 CHALI\_WITH\_REFLECTION=1、运行时 STACKVM\_WITH\_REFLECTION=1 钉死：反射不可裁剪 \\
 \texttt{make reflection} & 同义的显式入口（两项本来就固定为 1） \\
 不写单次开关 & 默认写入反射元数据 \\
-\texttt{--reflection} & 显式要求写入反射元数据（缺省即如此） \\
-\texttt{--no-reflection} & 不写反射元数据；关闭后使用注解或反射会报错。它只影响这次产物，不减少编译期工作量 \\
+\texttt{-\allowbreak{}-\allowbreak{}reflection} & 显式要求写入反射元数据（缺省即如此） \\
+\texttt{-\allowbreak{}-\allowbreak{}no-\allowbreak{}reflection} & 不写反射元数据；关闭后使用注解或反射会报错。它只影响这次产物，不减少编译期工作量 \\
 \bottomrule
 \end{longtable}
 }
@@ -316,7 +316,7 @@ chali run app.chl
 \par
 \medskip
 
-第二条用于无需反射的源程序：产物必须匹配目标 VM 的反射构建配置。开启反射的产物携带特征位，关闭能力的 VM 会拒绝加载。若源程序依赖反射，应为目标编入能力并评估元数据和运行时预算，不能通过省略 \texttt{--reflection} 假装关闭。独立生成的编译器工程按其 CMake 配置单独启用两项宏。
+第二条用于无需反射的源程序：产物必须匹配目标 VM 的反射构建配置。开启反射的产物携带特征位，关闭能力的 VM 会拒绝加载。若源程序依赖反射，应为目标编入能力并评估元数据和运行时预算，不能通过省略 \texttt{-\allowbreak{}-\allowbreak{}reflection} 假装关闭。独立生成的编译器工程按其 CMake 配置单独启用两项宏。
 
 \section{什么时候该用注解}
 
@@ -414,7 +414,7 @@ void main()
 
 \section{边界与验证}
 
-注解提供元数据，不自动实现业务逻辑。模型未暴露、字段缺失和类型不匹配应分别诊断。当前常规编译器固定编入反射；单次源码编译的 \texttt{--no-reflection} 控制该程序是否生成元数据，不表示编译器可以任意裁掉反射运行时。
+注解提供元数据，不自动实现业务逻辑。模型未暴露、字段缺失和类型不匹配应分别诊断。当前常规编译器固定编入反射；单次源码编译的 \texttt{-\allowbreak{}-\allowbreak{}no-\allowbreak{}reflection} 控制该程序是否生成元数据，不表示编译器可以任意裁掉反射运行时。
 
 \section{习题}
 

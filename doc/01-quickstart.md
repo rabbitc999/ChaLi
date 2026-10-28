@@ -120,7 +120,7 @@ chali check hello.chl
 | 只检查不运行 | `chali check src/main.chl` |
 | 输出 JSON 诊断（给编辑器用） | `chali check src/main.chl json` |
 | 导出可执行文件 | `chali aot src/main.chl --out build/app` |
-| 只导出四元式三件套 | `chali emit src/main.chl --out build/app` |
+| 导出 LLVM IR | `chali aot src/main.chl --emit-llvm --out build/app` |
 | 新建工程 | `chali new hello` |
 | 跑测试 | `chali test tests` |
 | 格式检查 / 写回 | `chali fmt check src` / `chali fmt write src` |

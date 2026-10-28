@@ -37,7 +37,7 @@ The host calls `chali_init()`, then `f_add(...)`, then `chali_finish()`; excepti
 ## Intermediates only
 
 ```sh
-chali emit app.chl --out build/app
+chali aot app.chl --emit-llvm --out build/app
 ```
 
 Writes `.quad`, `.data.bin` and `.layout` without linking or executing — useful for inspecting quadruples or assembling them yourself. `.quad` is not machine code.

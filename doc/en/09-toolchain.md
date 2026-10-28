@@ -6,17 +6,17 @@
 
 Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
 
-ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then lowers it to quadruples and native LLVM code. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
+ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
 
 ```sh
 chali run app.chl
 chali check app.chl
 chali check app.chl json
-chali emit app.chl out build/app
+chali aot app.chl --emit-llvm out build/app
 chali aot app.chl --out build/app
 ```
 
-A direct source file also runs; following arguments are passed to the program. `emit` writes `.quad`, `.data.bin` and `.layout`; Bytecode export has been removed. The compiler embeds the standard library and its required assets.
+A direct source file also runs; following arguments are passed to the program. `aot --emit-llvm --out PREFIX` generates `.ll` directly from the AST; Bytecode export has been removed. The compiler embeds the standard library and its required assets.
 
 ## Development tools
 

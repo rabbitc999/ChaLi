@@ -1,9 +1,11 @@
 /**
  * @file chali_aot.hpp
- * @brief 从 ChaLi 四元式直接生成 LLVM 模块并编译原生产物。
+ * @brief 从语义检查后的 AST 直接生成 LLVM 代码并编译原生产物。
  */
 #pragma once
 #include "stackvm.hpp"
+#include "ast.hpp"
+#include "chali_aot_target.hpp"
 
 namespace chali_aot
 {
@@ -31,6 +33,11 @@ struct Options
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     bool emitLLVMOnly = false;                       ///< `--emit-llvm`：只写 LLVM 模块，不调用目标代码工具。
+    bool emitObjectOnly = false;                     ///< 只生成目标机器的对象文件，不执行链接。
+    Memory::String target;                           ///< 目标三元组，空值使用实际宿主。
+    Memory::String cpu;                              ///< 目标 CPU，空值使用目标的通用 CPU。
+    Memory::String sysroot;                          ///< 完整交叉链接使用的目标 sysroot。
+    Memory::String runtimeDirectory;                 ///< 目标 libchali_aot_host.a 所在目录。
     Memory::String compiler;                         ///< LLVM clang 驱动；空值优先使用 library/llvm 中的工具。
     Memory::String outputPrefix;                     ///< LLVM 模块、头文件和原生产物的公共前缀。
     Memory::Vector<Memory::String> exports;          ///< 显式导出给 C 的 ChaLi 函数名。
@@ -45,8 +52,9 @@ struct Options
  */
 struct Request
 {
-    const stackvm::QuadFile *quads = nullptr;   ///< 已优化的四元式。
-    const stackvm::Program *program = nullptr;  ///< 组装结果（取标签、形参与类型）。
+    const ast::Program *syntax = nullptr;      ///< 语义检查后的 AST；正常运行和 AOT 直接消费此树。
+    const stackvm::QuadFile *quads = nullptr;   ///< 独立库调用方的兼容四元式输入；正常编译为空。
+    const stackvm::Program *program = nullptr;  ///< 兼容组装结果；AST 路径不需要它。
     Memory::String dataBytes;                   ///< `.data.bin` 原始字节。
     Memory::String dataLayout;                  ///< 布局文本（每行 `名 offset=… size=…`）。
     Memory::Vector<ExternFunction> externs;     ///< `abi` 声明的外部 C 函数。

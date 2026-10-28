@@ -1,0 +1,152 @@
+== 打包 ChaLi 1.0.10 ==
+
+$ E:\nodejs\node.exe tools\embed-compiler.js
+已内嵌编译器：bin\chali.exe（25095168 字节，来自参数 / CHALI_BIN：G:\Desktop\ChaLi\chali-1.0.10-llvm-external-windows-x64.exe）
+
+$ E:\nodejs\node.exe tools\check-manifest.js
+== ChaLi 插件清单自检 ==
+   [OK] package.json 可解析
+   [OK] 插件、内嵌声明与 ChaLi 程序版本一致
+   [OK] 命令标题提供完整中英文翻译
+   [OK] 注册了语言 chali
+   [OK] 语言 chali 关联 .chl 扩展名
+   [OK] 语言配置文件可解析
+   [OK] 声明了注释与折叠标记
+   [OK] 语法高亮绑定到语言 chali
+   [OK] 语法 scopeName 为 source.chali
+   [OK] 语法文件可解析且 scopeName 一致
+   [OK] 语法文件包含规则
+   [OK] activationEvents 包含 onLanguage:chali
+   [OK] main 指向存在的入口文件
+   [OK] 声明了 [chali] 编辑器默认值
+   [OK] 注册了命令 chali.restartServer
+   [OK] 注册了命令 chali.showServerLog
+   [OK] 注册了命令 chali.openDoc
+   [OK] 注册了命令 chali.run
+   [OK] 注册了命令 chali.installDependencies
+   [OK] 注册了命令 chali.checkDependencies
+   [OK] 注册了命令 chali.openLibraries
+   [OK] 注册了命令 chali.previewMacroExpansion
+   [OK] 声明了 chali.path
+   [OK] 声明了 chali.traceServer
+   [OK] 注册了构建命令 chali.build
+   [OK] 声明了构建激活事件 chali.build
+   [OK] 注册了构建命令 chali.buildExe
+   [OK] 声明了构建激活事件 chali.buildExe
+   [OK] 声明了 chali.build.outputDirectory
+   [OK] 声明了 chali.build.llvmPath
+   [OK] 声明了 chali.build.checked
+   [OK] editor/context 提供原生 AOT 构建
+   [OK] explorer/context 提供原生 AOT 构建
+   [OK] 构建按钮位于编辑器标题栏
+   [OK] 运行按钮挂在标题栏运行位与右键菜单
+   [OK] 标题栏只有一个 ▶（不再往 editor/title 里重复挂）
+   [OK] 「运行」由 src/runner.js 提供
+   [OK] 有 Apache-2.0 LICENSE（vsce 打包会找它）
+   [OK] 宏块折叠由 src/folding.js 提供
+   [OK] package.json 声明了 icon
+   [OK] 图标文件存在
+   [OK] 图标是 PNG 且不小于 128×128
+   [OK] 没有重复声明 .gram（归根目录插件）
+   [OK] 没有重复声明 .metro（归根目录插件）
+
+清单检查通过：chali（.chl）注册完整
+
+$ E:\nodejs\node.exe test\smoke.js
+
+== ChaLi 折叠 ==
+   [OK] 折叠：7 行里的块数
+   [OK] 折叠：宏块最外层
+   [OK] 折叠：外层 for 块
+   [OK] 折叠：内层 for 块
+   [OK] 折叠：缺 $end_macro 也能折到末尾
+   [OK] 折叠：语法与正则分支嵌套
+   [OK] 折叠：$match_if 不是指令
+   [OK] 折叠：同一行开合不折
+   [OK] 折叠：多余收尾不报错
+
+== 运行命令 ==
+   [OK] 普通路径不加引号
+   [OK] 带空格的路径加引号
+   [OK] 命令里带 run 子命令
+
+（编译器：G:\Desktop\ChaLi\vscode\bin\chali.exe）
+
+== LSP（chali lsp）==
+   [OK] 初始化成功
+   [OK] 声明了 hover / completion / definition / documentSymbol / formatting
+   [OK] 位置编码是 utf-16
+   [OK] 干净文件没有诊断
+   [OK] 未保存内容也没有诊断
+   [OK] 悬停有说明
+   [OK] 补全含当前文档的声明
+   [OK] 语义着色返回五元组数据
+   [OK] 语义着色区分类型与变量
+   [OK] 跳转定义落在声明行
+   [OK] 大纲含 main 与 value
+   [OK] 格式化补了缩进
+   [OK] 坏文档报错诊断
+   [OK] 诊断带稳定错误码
+   [OK] 未保存内容没有写盘
+
+== 运行（chali run）==
+   [OK] chali run 退出码为 0
+   [OK] chali run 输出正确
+
+共 29 项检查，失败 0 项
+
+$ E:\nodejs\node.exe test\dependencies.js
+VS Code 依赖集成通过：真实 HTTP 下载、离线执行、含空格路径、保存清单、右键目标、多工程选择、刷新与错误处理。
+
+$ E:\nodejs\node.exe test\macros.js
+宏展开插件验证通过：单页多 Tab、搜索、树形节点、独立静态导出、双击回源、面板复用与错误展示。
+
+$ E:\nodejs\node.exe test\lspCancellation.js
+LSP 客户端乱序响应、请求替换、取消通知、监听释放和诊断版本透传通过。
+
+$ E:\nodejs\node.exe test\semanticProviders.js
+引用与重命名 provider、过期版本拒绝、内联提示开关及关联诊断转换通过。
+
+$ E:\nodejs\node.exe test\macroHighlighting.js
+真实 TextMate 宏头、独立宏体、两组循环、卫生局部变量、字符串/注释保护与结束恢复高亮通过。
+
+$ E:\nodejs\node.exe test\build.js
+VS Code 构建：原生产物、已删除字节码入口、保存、右键目标、空格与中文路径、取消、信任和诊断全部通过
+（PATH 上没有 vsce，退回 npx --yes @vscode/vsce）
+
+$ npx --yes @vscode/vsce package --out G:\Desktop\ChaLi\vscode\dist\chali-editor-1.0.10-llvm-external.vsix --allow-missing-repository
+Executing prepublish script 'npm run vscode:prepublish'...
+
+> chali-editor@1.0.10 vscode:prepublish
+> node tools/embed-compiler.js
+
+内嵌编译器已是最新：bin\chali.exe（25095168 字节，来自参数 / CHALI_BIN）
+ INFO  Files included in the VSIX:
+chali-editor-1.0.10-llvm-external.vsix
+├─ [Content_Types].xml 
+├─ extension.vsixmanifest 
+└─ extension/
+   ├─ LICENSE.txt [11.29 KB]
+   ├─ NOTICE [0.16 KB]
+   ├─ THIRD_PARTY_NOTICES.md [1.45 KB]
+   ├─ chali-language-configuration.json [0.33 KB]
+   ├─ extension.js [15.09 KB]
+   ├─ icon.png [20.97 KB]
+   ├─ package.json [8.79 KB]
+   ├─ package.nls.json [1.44 KB]
+   ├─ package.nls.zh-cn.json [1.57 KB]
+   ├─ package.nls.zh.json [1.57 KB]
+   ├─ readme.md [11.54 KB]
+   ├─ bin/ (2 files) [23.93 MB]
+   ├─ skills/ (1 file) [9.64 KB]
+   ├─ src/ (11 files) [93.36 KB]
+   ├─ syntaxes/ (1 file) [6.25 KB]
+   └─ third-party/ (47 files) [554.04 KB]
+
+The file extension/bin/chali.exe is large (23.93 MB)
+
+=> Run vsce ls --tree to see all included files.
+
+ DONE  Packaged: G:\Desktop\ChaLi\vscode\dist\chali-editor-1.0.10-llvm-external.vsix (75 files, 16.53 MB)
+
+已打包：dist\chali-editor-1.0.10-llvm-external.vsix（16.5 MB）

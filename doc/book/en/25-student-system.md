@@ -1,7 +1,7 @@
-# Chapter 26 A student information system
+# Chapter 25 A student information system
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../26-学生信息管理系统.md)
+**English** · [简体中文](../25-学生信息管理系统.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 This project combines a reflected student model, JSON, SQL, TCP and result-based error handling. The browser sends HTTP requests to a ChaLi service, which validates input and stores records in MySQL. A single model declaration drives field metadata used by serialization and database helpers.

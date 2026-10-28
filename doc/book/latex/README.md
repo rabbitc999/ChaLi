@@ -4,7 +4,7 @@
 [English（中文原文）](README.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本目录维护《玩转 ChaLi 语言》的 [PDF](book.pdf)，语言版本以根目录 [`VERSION`](../../../VERSION) 为准。章节源稿在 [doc/book](../README.md)，正文章节由 `tools/md2tex.py` 生成；`book.tex`、`preamble.tex` 和封面源文件手写维护。
+本目录维护《ChaLi 程序设计语言》的 [PDF](book.pdf)，语言版本以根目录 [`VERSION`](../../../VERSION) 为准。章节源稿在 [doc/book](../README.md)，正文章节由 `tools/md2tex.py` 生成；`book.tex`、`preamble.tex` 和封面源文件手写维护。
 
 在仓库根运行：
 

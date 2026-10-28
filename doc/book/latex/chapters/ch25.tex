@@ -1,168 +1,605 @@
-\chapter{AOT 导出：把程序交付为原生产物}
+\chapter{学生信息管理系统：让程序认识自己的结构}
 \label{ch:25}
 
-从 1.0.8 起，run 使用 checked AOT，aot 默认 unchecked 导出。--debug 保留原生源码行和变量信息；VS Code 断点、单步和变量查看通过 GDB 实现，见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/43-native-debugging.md}{原生调试}。.svmb 导出已删除。
+前面 25 章把语言讲完了。这一章反过来做一件「用」的事：把结构体、注解、反射、JSON、SQL、TCP 和 \texttt{Result} / \texttt{?} 拼成一个带前后端的系统——浏览器里点一下「新增学生」，请求走进 ChaLi 写的 HTTP 服务，落到 MySQL，再以 JSON 回到页面。
 
-写完程序以后，你可以把它导出为目标平台的可执行文件，也可以导出动态库供 C 程序调用。AOT 是提前编译：编译器在交付前完成 LLVM 优化、机器码生成和链接，使用者直接运行生成的程序。
+它覆盖了日常业务程序最核心的那几件事：
 
-本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/38-aot.md}{LLVM AOT 编译}。
+\begin{itemize}
 
-\section{从源码到原生产物}
+\item 一份模型（学生有学号、姓名、年龄、班级、成绩）；
 
-\begin{center}
-\includegraphics[width=\linewidth]{../images/chali-aot.png}\par
-ChaLi AOT 导出流程：前端检查、四元式生成、LLVM 中间表示、内置或外置 LLVM、链接与交付
-\end{center}
+\item 一张表（模型直接变成 MySQL 的表）；
 
-前端完成类型、借用和生命周期检查后，生成四元式（内部优化缺省关闭，交给 LLVM）。AOT 后端将这些四元式直接转换为 LLVM 中间表示，再由 LLVM 生成目标代码，由链接器将目标代码、AOT 运行时和所需库组合成原生产物。
+\item 一组接口（增删查改、搜索、排序，JSON 通信）；
 
-这里的“四元式”是 ChaLi 的中间表示；图中的“LLVM 中间表示”是后端使用的另一种表示。输出的 \texttt{.\allowbreak{}ll} 文件可以保留，用于检查 LLVM 指令或接入其他 LLVM 工具。
+\item 一个前端（单页 HTML，只依赖浏览器原生能力，没有任何框架）；
 
-\section{导出第一个程序}
+\item 一条校验规则（学号必须是正整数、年龄在 1 到 150、成绩在 0 到 100）；
 
-把下面的代码保存为 \texttt{aot\_demo.\allowbreak{}chl}：
+\item 一条出错的路（所有失败都变成可读的诊断，而不是崩溃）。
 
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-int64 total(List<int64> const& values) {
-    int64 result = 0;
-    for (int64 value in values) {
-        result = result + value;
-    }
-    return result;
-}
+\end{itemize}
 
-void main() {
-    List<int64> values;
-    values.push(10);
-    values.push(20);
-    values.push(30);
-    println("total={}", total(&values));
-}
-\end{lstlisting}
-\par
-\medskip
+工程还按职责拆成五个模块——模型、存取、HTTP、路由、入口各自一个文件，\texttt{import} 把它们接成一棵模块树（第 18 章）。
 
-在 Windows PowerShell 中执行：
+最关键的那一句话是：这个系统从来没有手写过「学生有哪些字段」的清单。 字段列表是它运行期从自己身上读出来的——这就是第 20 章的反射真正派上用场的地方。
+
+示例就在仓库里：\href{https://github.com/rabbitc999/ChaLi/tree/master/example/students-server}{\texttt{example/\allowbreak{}students-\allowbreak{}server/\allowbreak{}}}。命令行 + SQLite 的最小版本（同样的模型，两百行以内）见\href{https://github.com/rabbitc999/ChaLi/blob/master/example/reflection-students/README.md}{\texttt{example/\allowbreak{}reflection-\allowbreak{}students/\allowbreak{}}}，本章不再重复它的细节。
+
+\section{先看看它能做什么}
 
 \par
 \medskip
 \begin{lstlisting}[style=sh]
-chali aot aot_demo.chl --out build/aot_demo --checked
-./build/aot_demo.exe
+cd example/students-server
+chali src/main.chl            # 默认 127.0.0.1:8787
+chali src/main.chl 9000       # 指定端口
 \end{lstlisting}
 \par
 \medskip
 
-输出为：
+\subsection*{导出为原生服务}
+
+本工程也可以通过第 24 章的 LLVM AOT 路径导出。在工程目录执行：
+
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+chali aot src/main.chl --out build/students-server
+\end{lstlisting}
+\par
+\medskip
+
+Windows 下启动生成的程序，并传入端口和前端目录：
 
 \par
 \medskip
 \begin{lstlisting}[style=out]
-total=60
+.\build\students-server.exe 9000 web
 \end{lstlisting}
 \par
 \medskip
 
-\texttt{--out} 后面是输出前缀。Windows 下会得到可执行文件 \texttt{.\allowbreak{}exe}、LLVM 模块 \texttt{.\allowbreak{}ll} 和 C ABI 头文件；Linux 下可执行文件通常没有扩展名。输出针对编译时选择的目标平台，交付时需要匹配操作系统与处理器架构。
+在支持的 Linux x64 构建环境中，生成的可执行文件通常没有 \texttt{.\allowbreak{}exe} 后缀，使用 \texttt{.\allowbreak{}/\allowbreak{}build/\allowbreak{}students-\allowbreak{}server 9000 web}。程序仍需要 MySQL 服务、相应数据库客户端库以及 \texttt{web/\allowbreak{}index.\allowbreak{}html}；AOT 不会把数据库或应用页面自动打进可执行文件。端口和前端目录的参数与源码运行一致。
 
-只想导出 LLVM 模块时使用：
+Windows x64 的实际验收已覆盖原始工程构建、服务启动及 18 项 HTTP 业务检查，包括中文和非 BMP 字符、增删查改、搜索排序、业务校验、错误状态码与注入文本。验收副本只把数据库名改为独立测试库，结束后删除该库；不要直接用现有业务库做破坏性验证。
 
 \par
 \medskip
-\begin{lstlisting}[style=sh]
-chali aot aot_demo.chl --out build/aot_demo --emit-llvm
+\begin{lstlisting}[style=out]
+学生信息管理系统已启动：http://127.0.0.1:8787
+数据库 students_db@127.0.0.1:3306/root（Ctrl+C 退出）
 \end{lstlisting}
 \par
 \medskip
 
-这个命令不运行机器码生成和链接工具。
+浏览器打开这个地址：
 
-\section{选择内置或外置 LLVM}
+\begin{center}
+\includegraphics[width=\linewidth]{../images/students-server-ui.png}\par
+学生信息管理系统运行结果：统计卡、搜索栏与学生表格，数据来自 MySQL
+\end{center}
 
-两种编译器都接受前面的 \texttt{aot} 命令，区别在于生成机器码和链接时从哪里取得 LLVM。
+上面是统计卡（总数、平均分、最高分、模型字段数），中间是表格和搜索栏，右上角「新增学生」。页面只依赖 fetch 和 DOM，没有任何外部资源。
 
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.088\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.468\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.424\linewidth-2\tabcolsep\relax}}
+页面背后是同一套 REST 接口，用 \texttt{curl} 也能走通：
+
+\begin{center}
+\begin{tabular}{lll}
 \toprule
-编译器变体 & 使用前的准备 & 适合的使用方式 \\
+方法 & 路径 & 作用 \\
 \midrule
-\endhead
-内置 LLVM & LLVM、LLD 与 CRT 链接资产已编入编译器 & 希望编译器单个 exe 就能导出 Windows x64 原生产物 \\
-外置 LLVM & 准备 \texttt{library/\allowbreak{}llvm/\allowbreak{}} 工具链或通过 \texttt{--llvm} 指定 clang & 希望编译器体积较小，单独管理工具链 \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}students?search=\allowbreak{}\&order=\allowbreak{}\&desc=\allowbreak{}1} & 列表，可选姓名模糊搜索与排序 \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}students/\allowbreak{}<\allowbreak{}学号>\allowbreak{}} & 按学号查 \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}students} & 新增（JSON，学号可省，自动分配） \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}students/\allowbreak{}<\allowbreak{}学号>\allowbreak{}} & 更新 \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}students/\allowbreak{}<\allowbreak{}学号>\allowbreak{}} & 删除 \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}schema} & 模型字段清单（反射读出） \\
 \bottomrule
-\end{longtable}
-}
+\end{tabular}
+\end{center}
 
-在仓库根目录准备外置工具链：
+错误统一为 \texttt{\{"error":\allowbreak{}"…"\}}，配 400 / 404 / 405 状态码。
+
+数据库是本机 MySQL：连接参数在 \texttt{src/\allowbreak{}main.\allowbreak{}chl} 的 \texttt{default\allowbreak{}Server\allowbreak{}Config} 里改（默认 \texttt{root/\allowbreak{}123456@127.\allowbreak{}0.\allowbreak{}0.\allowbreak{}1:\allowbreak{}3306}，与 \texttt{Database:\allowbreak{}:\allowbreak{}local} 同一套默认值）。库和表不存在时启动过程自动创建。
+
+\section{五个模块：一棵目录树就是一张职责表}
 
 \par
 \medskip
-\begin{lstlisting}[style=sh]
-python library/llvm/setup.py
-chali aot aot_demo.chl --out build/aot_demo --checked
+\begin{lstlisting}[style=out]
+example/students-server/
+├── chali.toml
+├── web/
+│   └── index.html        前端单页
+└── src/
+    ├── main.chl          module studentsServer;  入口：连库建表、accept 循环
+    ├── api.chl           module api;             REST 路由
+    ├── store.chl         module store;           MySQL 存取
+    ├── httpd.chl         module httpd;           HTTP 读请求 / 发响应
+    └── model.chl         module model;           学生模型 + 校验 + 反射派生
 \end{lstlisting}
 \par
 \medskip
 
-准备脚本会在线下载固定版本的工具链并核对 SHA-256，缓存位于 \texttt{build/\allowbreak{}}，源码仓库不保存 SDK。静态构建通过 \texttt{python tools/\allowbreak{}fetch\_llvm\_sdk.\allowbreak{}py} 下载预编译 LLVM/LLD 与匹配 GCC，并隔离全部构建对象。使用其他工具链时，可传入 \texttt{--llvm 路径}，也可设置 \texttt{CHALI\_LLVM\_CLANG}。静态变体默认使用内置后端，显式传入 \texttt{--llvm} 时使用指定的外置工具。
+模块名就是文件路径（\texttt{:\allowbreak{}:\allowbreak{}} 换成目录分隔符，见 18.2 节），所以谁在哪个文件、谁依赖谁，看 \texttt{import} 就知道：\texttt{api} 依赖 \texttt{store} 和 \texttt{model}，\texttt{store} 依赖 \texttt{model}，\texttt{main} 把四样都接起来。依赖是单向的：\texttt{model} 不认识任何别的业务模块，所以它最稳、最容易测；把「字段有哪些」这件事只放在 \texttt{model} 里，上层全都从反射拿。
 
-自己构建静态变体时执行 \texttt{make llvm-static}。构建程序会自动下载固定版本的预编译 LLVM/LLD 静态开发库和匹配 GCC，核验 SHA-256，并安装到 \texttt{build/\allowbreak{}dependencies/\allowbreak{}llvm/\allowbreak{}static-sdk/\allowbreak{}}。首次准备需要网络和磁盘空间，不编译 LLVM 源码；具体依赖见 \href{https://github.com/rabbitc999/ChaLi/blob/master/library/llvm/README.md}{LLVM 工具链说明}。当前静态分发验收目标为 Windows x64。
+\begin{center}
+\includegraphics[width=\linewidth]{../images/students-arch.png}\par
+学生信息管理系统架构：请求自上而下流动，反射注解同时服务 api 与 store
+\end{center}
 
-编译器的 LLVM 链接方式不会让导出的应用依赖 LLVM DLL。应用使用的外部 C ABI 动态库仍须按应用的链接约定交付。
-
-\section{检查与支持范围}
-
-AOT 默认启用四元式中的数组边界和空指针检查，与 VM 的默认检查配置一致；\texttt{--checked} 可以显式声明这一选择。仅在调试或性能对照时使用 \texttt{--unchecked} 关闭这些检查。列表的下标、对象存活与实际内存访问验证始终执行，活跃元素引用期间也不能进行会改变列表结构的操作。
-
-AOT 当前支持基本数值运算、分支、循环、直接调用、递归和固定数组，以及列表的创建、长度、追加、插入、下标读写、删除、弹出、清空、查找、复制与 \texttt{for-in} 引用。列表元素支持整数、浮点、字符串、嵌套列表和支持叶子布局的结构体；复制后各自拥有独立存储。
-
-自定义语言 \texttt{opcode} 可以将创建、复制和销毁绑定到可达的 ChaLi 函数或显式声明的 C ABI 函数，\texttt{move} 沿用前端的移动语义。标准库宿主调用复用 VM 的堆、对象表和胶水注册，语言函数体继续运行 LLVM 生成的机器码。捕获闭包、函数值与同步回调保留原有参数、返回值和清理协议；隔离线程使用同源的消息、通道、事件和任务控制服务。JSON/TOML、反射序列化、图像、网络与数据结构等组合调用由 VM/AOT 差分样例核对。
-
-学生信息管理系统使用反射、网络和数据库等服务，其 AOT 构建与原生启动步骤见第 26 章 26.1。数据库和前端页面仍按应用的实际宿主环境准备；平台能力见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/17-capabilities.md}{当前能力}。
-
-\section{导出动态库与 C ABI}
-
-\texttt{export} 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
+\section{模型：一份声明，多处复用}
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-#export("f_add")
-int64 add(int64 left, int64 right)
+import std::sql;
+import std::reflect;
+import std::json;
+
+@Reflect
+@std::sql::ModelClass("students")
+struct Student
 {
-    return left + right;
+    @std::sql::ModelField(id: true)
+    int64 id;
+    String name;
+    int64 age;
+    String className;
+    int64 score;
+};
+\end{lstlisting}
+\par
+\medskip
+
+三个注解各管一件事：
+
+{\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.404\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.115\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.461\linewidth-2\tabcolsep\relax}}
+\toprule
+注解 & 谁在读它 & 读了做什么 \\
+\midrule
+\endhead
+\texttt{@Reflect} & 反射运行期 & 让 \texttt{get\allowbreak{}Struct\allowbreak{}Info<\allowbreak{}Student>\allowbreak{}(\allowbreak{})\allowbreak{}} 能列出字段 \\
+\texttt{@std:\allowbreak{}:\allowbreak{}sql:\allowbreak{}:\allowbreak{}Model\allowbreak{}Class(\allowbreak{}"students")\allowbreak{}} & \texttt{std:\allowbreak{}:\allowbreak{}sql} & 声明表名 \\
+\texttt{@std:\allowbreak{}:\allowbreak{}sql:\allowbreak{}:\allowbreak{}Model\allowbreak{}Field(\allowbreak{}id:\allowbreak{} true)\allowbreak{}} & \texttt{std:\allowbreak{}:\allowbreak{}sql} & 标出主键 \\
+\bottomrule
+\end{longtable}
+}
+
+这份声明与数据库表、业务约束的对应关系如下图：
+
+\begin{center}
+\includegraphics[width=\linewidth]{../images/students-er.png}\par
+students 表实体关系：反射注解派生 DDL，validate 约束入表，结构体与表双向映射
+\end{center}
+
+这就是本章最省力的地方：加一个字段只要在这一处加一行，建表列、结果集解码、JSON 的键、排序字段的合法性检查，全都跟着变。如果在四个地方各写一遍字段清单，那四处迟早会对不上。
+
+\begin{tip}{提示}
+反射是语言的固定组成、不可裁剪：工具链始终编入，编译流程也始终跑完整反射处理。要控制产物写不写反射元数据，用 \texttt{-\allowbreak{}-\allowbreak{}reflection} / \texttt{-\allowbreak{}-\allowbreak{}no-\allowbreak{}reflection}；\texttt{-\allowbreak{}-\allowbreak{}hard-\allowbreak{}realtime} 会禁止整个编译单元使用反射。
+\end{tip}
+
+\section{校验单独写一个函数}
+
+业务规则不要散落在各个分支里，收成 \texttt{model:\allowbreak{}:\allowbreak{}validate}，返回空字符串表示通过：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+String validate(Student const& student)
+{
+    if (student.id <= 0)
+    {
+        return "学号必须是正整数";
+    }
+    if (student.name.trim().isEmpty() || len(student.name) > 120)
+    {
+        return "姓名必须为 1 到 120 字节的非空文本";
+    }
+    if (student.age < 1 || student.age > 150)
+    {
+        return "年龄必须在 1 到 150 之间";
+    }
+    if (student.score < 0 || student.score > 100)
+    {
+        return "成绩必须在 0 到 100 之间";
+    }
+    return "";
 }
 \end{lstlisting}
 \par
 \medskip
 
-执行 \texttt{Cha\allowbreak{}Li aot library.\allowbreak{}chl --shared --out build/\allowbreak{}library} 生成动态库和 C ABI 头文件，导出函数名以生成的头文件为准（上例为 \texttt{f\_add}）。动态库源码可以没有 \texttt{main}；可执行程序仍需要 \texttt{main}。调用方先调用 \texttt{chali\_init(\allowbreak{})\allowbreak{}}，再使用导出函数，最后调用\texttt{chali\_finish(\allowbreak{})\allowbreak{}}；全局初始化与清理分别在这两个入口执行。\texttt{--export} 可以额外指定导出函数。模块限定名和重载使用各自的实际标签；应以生成头文件核对完整签名。
+参数是 \texttt{Student const\&}：引用，不复制（第 7 章），而且只读。注意字节长度：\texttt{len(\allowbreak{})\allowbreak{}} 数的是字节不是字符（第 12 章），「120」是 120 个字节，中文姓名大约 40 个字。
 
-程序调用外部 C 函数时，使用第 21 章介绍的 \texttt{abi} 声明；声明中的库按实际调用路径链接或由宿主加载，也可以重复使用 \texttt{--link 库路径} 添加库。标量参数与返回值按对应的 C ABI 类型传递。结构体、引用、数组、可选引用和同步回调等复杂形状通过类型化宿主适配器封送，导出时需要兼容的 GNU C++17 编译器；语言函数体仍直接降低到 LLVM。拥有资源的句柄须遵循创建和销毁协议，不可把运行时句柄当作机器函数指针。
+存入前校验一次，从数据库读出来还要再校验一次（25.6 的 \texttt{encode\allowbreak{}Rows}）——「库里存了脏东西」也要在这一关被拦住，而不是一路带进接口响应。
 
-\section{在 VS Code 中构建}
+\section{反射派生：建表列、结果集解码、字段白名单}
 
-打开并保存 \texttt{.\allowbreak{}chl} 文件，使用编辑器标题栏的构建按钮，选择“可执行文件（LLVM AOT）”。也可以从命令面板或资源管理器右键菜单构建原生可执行文件。默认输出到工程的 \texttt{build} 目录；输出目录、外置 LLVM 路径和检查选项可在 ChaLi 设置中调整。
+\texttt{model.\allowbreak{}chl} 里三个函数，全部从 \texttt{get\allowbreak{}Struct\allowbreak{}Info<\allowbreak{}Student>\allowbreak{}(\allowbreak{})\allowbreak{}} 出发。
 
-插件提供内置 LLVM 与外置 LLVM 两个安装变体，二者是同一扩展的替代版本。构建结束后查看“ChaLi 构建”输出中的诊断和产物路径，再运行生成的应用。\texttt{.\allowbreak{}svmb} 已删除，不再作为构建或交付格式。
+建表列：字段类型映射成 MySQL 类型，主键加 \texttt{PRIMARY KEY}。列名是编译期的模型字段名，不是用户输入，拼进 SQL 文本是安全的：
 
-\section{小结}
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Result<String, MessageError> mysqlColumns()
+{
+    let reflected = std::reflect::getStructInfo<Student>();
+    if (reflected.isNone())
+    {
+        return Result<String, MessageError>::Err(MessageError::from("Student 模型需要 @Reflect"));
+    }
+    let info = reflected.unwrap();
+    String output = "";
+    for (std::reflect::FieldInfo field in info.fields)
+    {
+        /* ……读 @ModelField 注解判断主键…… */
+        if (!output.isEmpty()) { output = output + ", "; }
+        output = output + "`" + field.name + "` " + columnDefinition(field.typeId, primary);
+        if (primary) { output = output + " PRIMARY KEY"; }
+    }
+    return Result<String, MessageError>::Ok(output);
+}
+\end{lstlisting}
+\par
+\medskip
 
-导出前先确认程序使用的库已适配 AOT，再选择内置或外置 LLVM 编译器。\texttt{aot} 生成原生产物，\texttt{--emit-llvm} 保留 LLVM 模块，\texttt{--checked} 控制四元式运行期检查；动态库通过生成的 C ABI 头文件与宿主对接。
+\texttt{store:\allowbreak{}:\allowbreak{}ensure\allowbreak{}Schema} 拿它拼一句\texttt{CREATE TABLE IF NOT EXISTS `students` (\allowbreak{}…)\allowbreak{} ENGINE=\allowbreak{}Inno\allowbreak{}DB DEFAULT CHARSET=\allowbreak{}utf8mb4}。
 
-\section{习题}
+结果集解码：数据库返回「行 \ensuremath{\times} 列」的文本网格，我们要 JSON。字段清单从反射里拿，不在代码里再抄一遍：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Result<String, MessageError> encodeRows(std::sql::ResultSet const& rows)
+{
+    let fields = std::reflect::getStructInfo<Student>().unwrap().fields;
+    List<String> records;
+    for (int64 row in range(0, rows.rowCount()))
+    {
+        List<String> values;
+        for (std::reflect::FieldInfo field in fields)
+        {
+            int64 column = rows.columnIndex(field.name);
+            if (column < 0)
+            {
+                return Result<String, MessageError>::Err(MessageError::from("数据库缺少字段：" + field.name));
+            }
+            String value = rows.textAt(row, column);
+            if (field.typeId == std::reflect::getTypeId<String>())
+            {
+                value = std::reflect::__serdeQuote(value);
+            }
+            values.push(std::reflect::__serdeQuote(field.name) + ":" + value);
+        }
+        /* 反序列化再序列化：解析器和模型对一遍，脏数据在这里被拦住 */
+        /* ……校验通过后 std::json::serialize<Student>(&student)? …… */
+    }
+    String separator = ",";
+    return Result<String, MessageError>::Ok("[" + separator.join(records) + "]");
+}
+\end{lstlisting}
+\par
+\medskip
+
+两个值得单独看的点：
 
 \begin{enumerate}
 
-\item 将列表中的 \texttt{30} 改为 \texttt{70}，导出后应得到什么结果？
+\item \texttt{field.\allowbreak{}type\allowbreak{}Id =\allowbreak{}=\allowbreak{} std:\allowbreak{}:\allowbreak{}reflect:\allowbreak{}:\allowbreak{}get\allowbreak{}Type\allowbreak{}Id<\allowbreak{}String>\allowbreak{}(\allowbreak{})\allowbreak{}} —— 运行期判断字段是不是字符串，是才加引号。数字字段加了引号就不是合法 JSON 数字了。
 
-\item 只导出 LLVM 模块时应加哪个选项？
+\item 反序列化再序列化 + 再校验 —— 先 \texttt{deserialize<\allowbreak{}Student>\allowbreak{}} 让解析器和模型对一遍，再 \texttt{serialize<\allowbreak{}Student>\allowbreak{}} 输出，同一段文本走 \texttt{validate} 再走一遍。
 
-\item 静态 LLVM 编译器会自动消除应用自身的 C ABI 动态库依赖吗？
+\end{enumerate}
 
-\item \texttt{--checked} 会关闭或开启列表的存活验证吗？
+字段白名单：\texttt{list} 接口允许按任意字段排序，但排序字段来自 URL 查询串——用户输入绝不能直接拼进 \texttt{ORDER BY}。\texttt{model:\allowbreak{}:\allowbreak{}is\allowbreak{}Field(\allowbreak{}name)\allowbreak{}} 拿反射字段表当白名单，不是模型字段直接拒绝：
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+{"error":"模型 Student 没有字段 badfield"}
+\end{lstlisting}
+\par
+\medskip
+
+\section{MySQL 存取：值必须过转义，列名只来自模型}
+
+\texttt{store.\allowbreak{}chl} 负责所有 SQL。这里有一条要说实话的边界：\texttt{std:\allowbreak{}:\allowbreak{}sql} 的参数化绑定（\texttt{db.\allowbreak{}exec(\allowbreak{}Sql\allowbreak{}Statement)\allowbreak{}}，值走驱动绑定）目前由 SQLite 后端实现；MySQL 后端按文档口径使用 \texttt{db.\allowbreak{}quote(\allowbreak{})\allowbreak{}}——它始终转义单引号，MySQL 方言下同时转义反斜杠。所以本工程的规矩是：
+
+\begin{itemize}
+
+\item 文本值一律过 \texttt{db.\allowbreak{}quote(\allowbreak{})\allowbreak{}}，不许手拼引号；
+
+\item 列名、表名只来自反射元数据（编译期字段名），不拼任何用户输入；
+
+\item 排序字段先过 \texttt{is\allowbreak{}Field} 白名单。
+
+\end{itemize}
+
+新增学生把这条链走全：自动分配学号 \ensuremath{\rightarrow} 校验 \ensuremath{\rightarrow} 查重 \ensuremath{\rightarrow} 拼参数化形状的\texttt{INSERT} \ensuremath{\rightarrow} 检查影响行数：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Result<String, MessageError> add(Database mut& database, Student const& student)
+{
+    Student record = student;
+    if (record.id <= 0)
+    {
+        record.id = nextId(database);
+    }
+    String problem = model::validate(&record);
+    if (problem != "")
+    {
+        return Result<String, MessageError>::Err(MessageError::from(problem));
+    }
+    ResultSet exists = database.exec("SELECT `id` FROM `students` WHERE `id` = "
+        + record.id.toString() + " LIMIT 1");
+    if (!exists.isEmpty()) { return Result<String, MessageError>::Err(MessageError::from("学号已存在：" + record.id.toString())); }
+    /* ……toLiterals 从序列化 JSON 里取每个字段的值：文本过 db.quote，整数直写…… */
+    String sql = "INSERT INTO `students` (" + separator.join(columns) + ") VALUES ("
+        + separator.join(literals) + ")";
+    ResultSet result = database.exec(sql);
+    if (result.affected != 1) { return Result<String, MessageError>::Err(MessageError::from("写入失败：影响 0 行")); }
+    return std::json::serialize<Student>(&record);
+}
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{to\allowbreak{}Literals} 是「反射取列名、JSON 取值」的合流点：先把学生序列化成 JSON，再按反射字段清单逐个 \texttt{parsed.\allowbreak{}find(\allowbreak{}field.\allowbreak{}name)\allowbreak{}}，文本字段交给 \texttt{db.\allowbreak{}quote}，整数字段 \texttt{to\allowbreak{}String(\allowbreak{})\allowbreak{}}。值永远不进列名，列名永远不来自用户。
+
+转义是不是真的有用？把注入Payload当姓名存进去试试：
+
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+curl -X POST http://127.0.0.1:8787/api/students \
+  -d '{"id":0,"name":"a\x27); DROP TABLE students; --","age":18,"className":"1班","score":66}'
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+{"id":3,"name":"a'); DROP TABLE students; --","age":18,"className":"1班","score":66}
+\end{lstlisting}
+\par
+\medskip
+
+它成了一条普通记录——单引号被翻倍、反斜杠被转义，SQL 里它就是文本。表还在，随后的查询照常工作。这就是转义和「拼接」的区别：注入死在字面量边界上，而不是靠运气。
+
+模糊搜索的 \texttt{\%} / \texttt{\_\allowbreak{}} 通配符也要先转义再交给 \texttt{quote}（\texttt{store:\allowbreak{}:\allowbreak{}list} 里的\texttt{escaped} 循环），否则用户搜 \texttt{\%\%} 会变成全表匹配。
+
+\section{HTTP 层：四个套路写一个极简服务}
+
+\texttt{httpd.\allowbreak{}chl} 建立在 \texttt{std:\allowbreak{}:\allowbreak{}net} 的 TCP 套接字上（第 21 章的宿主绑定），全部就四个函数：\texttt{read\allowbreak{}Request}、\texttt{send\allowbreak{}Response}，加两个小工具。
+
+读请求有个真实的坑：浏览器会开「预连接」空套接字——连上来但什么都不发。如果服务阻塞在 \texttt{receive} 上，一个空连接就能卡住整个服务。所以首行用带超时的阻塞读（\texttt{receive\allowbreak{}Line(\allowbreak{}idle\allowbreak{}Ms)\allowbreak{}}，空连接到点即断），请求体用非阻塞接收 + 有界自旋（\texttt{receive\allowbreak{}Async}，头通常和体在同一段到达，自旋几轮就收完）。这样既不依赖线程运行期，也不会被空连接拖死：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
+{
+    String head = "";
+    while (true)
+    {
+        String line = socket.receiveLine((int32)idleMs);
+        if (socket.status() == std::net::NET_TIMEOUT)
+        {
+            if (head.isEmpty()) { return Result<Request, MessageError>::Err(MessageError::from("空连接")); }
+            return Result<Request, MessageError>::Err(MessageError::from("等待请求超时"));
+        }
+        /* ……NET_CLOSED / NET_ERROR 各给诊断…… */
+        if (line.isEmpty()) { break; }   /* 头部以空行结束 */
+        head = head + line + "\r\n";
+    }
+    /* ……Content-Length 决定还要读多少字节进 body…… */
+}
+\end{lstlisting}
+\par
+\medskip
+
+\texttt{status(\allowbreak{})\allowbreak{}} 是 \texttt{std:\allowbreak{}:\allowbreak{}net} 的约定：\texttt{NET\_\allowbreak{}CLOSED} 对端关闭、\texttt{NET\_\allowbreak{}TIMEOUT} 超时、\texttt{NET\_\allowbreak{}ERROR} 出错——每种情况都有话说，没有「静默什么都没做」。
+
+发响应只要认真数字节：\texttt{Content-\allowbreak{}Length} 用 \texttt{len(\allowbreak{}body)\allowbreak{}} 算，\texttt{Connection:\allowbreak{} close} 让每条连接干完一件事就收工，服务端不用管保活。
+
+请求体上限 1 MiB：防异常客户端拖垮内存。超限直接给诊断。
+
+\section{REST 路由：HTTP 语义进，业务语义出}
+
+\texttt{api.\allowbreak{}chl} 只做翻译：方法 + 路径 \ensuremath{\rightarrow} 存取调用 \ensuremath{\rightarrow} \texttt{Reply}（状态码 + JSON）。每个分支三行结构——解析输入、调 \texttt{store}、包错误：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+Reply handle(std::sql::Database mut& database, String method, String path, String query, String body)
+{
+    if (path == "/api/students" && method == "GET")
+    {
+        let rows = store::list(&database, queryValue(query, "search"), queryValue(query, "order"),
+                               queryValue(query, "desc") == "1");
+        if (rows.isErr()) { return errorReply(400, rows.error().toString()); }
+        return jsonReply(200, rows.unwrap());
+    }
+    /* ……POST / PUT / DELETE / GET /api/students/<学号> / /api/schema…… */
+    return errorReply(404, "未知接口：" + path);
+}
+\end{lstlisting}
+\par
+\medskip
+
+URL 查询串的解码（\texttt{\%E6\%9D\%8E} \ensuremath{\rightarrow} 李、\texttt{+} \ensuremath{\rightarrow} 空格）也在这层做完，业务层拿到的永远是解码后的文本。\texttt{/\allowbreak{}api/\allowbreak{}schema} 直接吐 \texttt{model:\allowbreak{}:\allowbreak{}schema\allowbreak{}Json(\allowbreak{})\allowbreak{}}——前端统计卡上的「模型字段数」就是它，反射一路通到浏览器。
+
+\section{入口：连库、建表、起服务、循环}
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+void main(List<String> args)
+{
+    ServerConfig config = defaultServerConfig();
+    /* ……命令行参数覆盖端口与前端目录…… */
+    std::sql::Database database = store::connect(&config.database);
+    if (!database.isOpen())
+    {
+        println("错误：连接 MySQL 失败：{}", database.lastError());
+        return;
+    }
+    let schema = store::ensureSchema(&database);
+    /* ……建表失败也要先关库再退出…… */
+    std::net::TcpListener listener = std::net::TcpListener::listen(config.host, config.port, (int32)16);
+    println("学生信息管理系统已启动：http://{}:{}", config.host, listener.localPort());
+    while (true)
+    {
+        std::net::TcpSocket peer = listener.accept((int32)500);
+        if (!peer.isOpen()) { continue; }   /* 超时轮询，给 Ctrl+C 留反应机会 */
+        serve(&database, &peer, page);
+        peer.close();
+    }
+}
+\end{lstlisting}
+\par
+\medskip
+
+连接是不可复制的值（\texttt{\#Non\allowbreak{}Copyable}），所以它不走 \texttt{Result} 包装——\texttt{store:\allowbreak{}:\allowbreak{}connect} 直接返回连接，未打开时用 \texttt{last\allowbreak{}Error(\allowbreak{})\allowbreak{}} 看诊断，和 \texttt{Database:\allowbreak{}:\allowbreak{}mysql} 同一口径。每条失败路径都记得 \texttt{close(\allowbreak{})\allowbreak{}}：「出错的那条路最容易忘掉清理」。
+
+\texttt{accept} 给 500 毫秒超时：没有连接就回到循环顶上再等，主循环始终保持「能被打断」的状态。
+
+\section{跑一遍}
+
+启动之后，浏览器里新增「张伟」、再新增「李娜」（学号留空自动分配），表格立刻出现两行。用 \texttt{curl} 复现一遍：
+
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+curl -X POST http://127.0.0.1:8787/api/students \
+  -d '{"id":0,"name":"张伟","age":18,"className":"高一(3)班","score":92}'
+curl -X POST http://127.0.0.1:8787/api/students \
+  -d '{"id":0,"name":"李娜","age":17,"className":"高一(3)班","score":88}'
+curl "http://127.0.0.1:8787/api/students?order=score&desc=1"
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+{"id":1,"name":"张伟","age":18,"className":"高一(3)班","score":92}
+{"id":2,"name":"李娜","age":17,"className":"高一(3)班","score":88}
+[{"id":1,…92},{"id":2,…88}]
+\end{lstlisting}
+\par
+\medskip
+
+改成绩、按姓名搜、删掉、再查：
+
+\par
+\medskip
+\begin{lstlisting}[style=sh]
+curl -X PUT http://127.0.0.1:8787/api/students/1 \
+  -d '{"id":1,"name":"张伟","age":19,"className":"高一(3)班","score":95}'
+curl "http://127.0.0.1:8787/api/students?search=%E6%9D%8E"
+curl -X DELETE http://127.0.0.1:8787/api/students/2
+curl http://127.0.0.1:8787/api/students/2
+\end{lstlisting}
+\par
+\medskip
+
+\par
+\medskip
+\begin{lstlisting}[style=out]
+{"id":1,"name":"张伟","age":19,"className":"高一(3)班","score":95}
+[{"id":2,"name":"李娜","age":17,"className":"高一(3)班","score":88}]
+{"ok":true}
+{"error":"学生不存在"}
+\end{lstlisting}
+\par
+\medskip
+
+搜索串里的「李」是百分号编码（\texttt{\%E6\%9D\%8E}）——URL 里没有裸中文，解码是接口层的事，业务层拿到的已经是原文。
+
+关掉服务再启动，数据还在——它存在 MySQL 里，不在内存里。
+
+\section{出错时它说什么}
+
+这一章最值得模仿的不是「成功路径」，而是每一条失败都有话说：
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+输入 & 响应 \\
+\midrule
+\texttt{GET /\allowbreak{}api/\allowbreak{}students/\allowbreak{}999} & \texttt{\{"error":\allowbreak{}"学生不存在"\}} \\
+\texttt{DELETE /\allowbreak{}api/\allowbreak{}students/\allowbreak{}999} & \texttt{\{"error":\allowbreak{}"学生不存在"\}} \\
+\texttt{POST} 学号 0（库里已有 1） & \texttt{\{"error":\allowbreak{}"学号已存在：1"\}}（0 会自动分配） \\
+\texttt{POST} \texttt{age:\allowbreak{}200} & \texttt{\{"error":\allowbreak{}"年龄必须在 1 到 150 之间"\}} \\
+\texttt{POST} 成绩 101 & \texttt{\{"error":\allowbreak{}"成绩必须在 0 到 100 之间"\}} \\
+\texttt{POST} 空 / 非法 JSON & \texttt{\{"error":\allowbreak{}"1:\allowbreak{}1:\allowbreak{} …[\allowbreak{}unexpected-\allowbreak{}token]\allowbreak{}"\}} \\
+\texttt{order=\allowbreak{}badfield} & \texttt{\{"error":\allowbreak{}"模型 Student 没有字段 badfield"\}} \\
+\texttt{DELETE /\allowbreak{}api/\allowbreak{}other} & \texttt{\{"error":\allowbreak{}"未知接口：/\allowbreak{}api/\allowbreak{}other"\}} \\
+\texttt{PUT} 用 \texttt{GET} 以外的方法访问不存在的路由 & \texttt{\{"error":\allowbreak{}"方法不支持"\}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+五类错误分得清清楚楚：JSON 解析错误来自 \texttt{std:\allowbreak{}:\allowbreak{}json}（带行列位置）、业务校验错误来自 \texttt{validate}（人话）、模型 / SQL 错误来自 \texttt{store}（说明哪个字段不对）、路由错误在 \texttt{api} 兜底、连接层错误在 \texttt{httpd} 有诊断。没有一种是「崩了」或者「静默」。
+
+\section{小结}
+
+\begin{itemize}
+
+\item 一份模型声明，多处复用：建表列、结果集解码、JSON 键、排序白名单都由它派生；
+
+\item 五个模块一棵树：model / store / httpd / api / main 各管一段，依赖单向；
+
+\item MySQL 的值过 \texttt{db.\allowbreak{}quote}，列名只来自反射元数据，排序字段先过白名单；
+
+\item 读出库的数据也再校验一遍，脏数据进不了响应；
+
+\item HTTP 服务要防住空连接：首行阻塞读 + 超时，请求体非阻塞收 + 上限；
+
+\item 每条失败路径都要有诊断，并且都要记得关连接。
+
+\end{itemize}
+
+\section{下一步}
+
+要把它部署出去，翻回\hyperref[ch:24]{第 24 章 AOT 导出}；要看命令行 + SQLite 的最小同款，翻到\href{https://github.com/rabbitc999/ChaLi/blob/master/example/reflection-students/README.md}{\texttt{example/\allowbreak{}reflection-\allowbreak{}students}}；SQL 模型与反射序列化的完整说明在\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/33-reflection-serialization-sql.md}{动态 SQL 说明}。
+
+语言的全部细节在\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/04-language-reference.md}{语言参考}，反射的 API 全貌在\hyperref[ch:20]{第 20 章 注解与反射}。
+
+\section{边界与验证}
+
+反射元数据取决于编译期的注解与产物开关；换用 \texttt{-\allowbreak{}-\allowbreak{}no-\allowbreak{}reflection} 或 \texttt{-\allowbreak{}-\allowbreak{}hard-\allowbreak{}realtime} 构建时，\texttt{get\allowbreak{}Struct\allowbreak{}Info} 一族不可用，本示例需要写入反射元数据的产物。
+
+\texttt{std:\allowbreak{}:\allowbreak{}sql} 的参数化执行（值走驱动绑定）当前由 SQLite 后端实现；MySQL 后端按文档口径使用 \texttt{db.\allowbreak{}quote} 转义字面量。列名与表名来自编译期模型字段名，不拼接任何用户输入；排序字段经过反射白名单。
+
+HTTP 服务是单线程顺序处理：够课堂演示与课内实验，吞吐不是目标。请求体上限 1 MiB；\texttt{Connection:\allowbreak{} close}，每条连接只处理一个请求。浏览器预连接空套接字按空闲超时关闭，不占用服务逻辑。
+
+模型字段变化会影响既有数据库：新增字段后旧表缺少该列，\texttt{encode\allowbreak{}Rows} 会报「数据库缺少字段」，需要迁移或重建。文本长度按字节计，与数据库列类型要对齐。
+
+\texttt{like} 搜索与排序的稳定性由 MySQL 决定，不要把当前排列当成业务上可靠的次序。
+
+\section{习题}
+
+前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
+
+\begin{enumerate}
+
+\item 给模型新增一个 \texttt{String phone} 字段，需要改几处代码？
+
+\item 用 \texttt{POST} 连续存两名学生（学号都留空），再用 \texttt{order=\allowbreak{}score\&desc=\allowbreak{}1} 核对顺序。
+
+\item \texttt{PUT} 一个不存在的学号会发生什么？为什么必须检查 \texttt{rows.\allowbreak{}affected}？
+
+\item 挑战：给 \texttt{store:\allowbreak{}:\allowbreak{}list} 加上「按班级精确过滤」的查询参数，并保持值不进 SQL 文本。
 
 \end{enumerate}
 
@@ -170,36 +607,34 @@ int64 add(int64 left, int64 right)
 
 \begin{enumerate}
 
-\item 将例子中的 \texttt{30} 改为 \texttt{70}，重新导出并运行。参考结果为 \texttt{total=\allowbreak{}100}，需要重新编译才能改变已导出的程序。
+\item 只改 \texttt{model.\allowbreak{}chl} 的 \texttt{struct Student} 一处；建表列、结果集解码、JSON 键、\texttt{/\allowbreak{}api/\allowbreak{}schema} 都由反射派生。旧表会缺列并被「数据库缺少字段」拦下，需要迁移。
 
-\item 只导出 LLVM 模块时应加哪个选项？参考答案：\texttt{--emit-llvm}，该路径不执行目标代码生成和链接。
+\item 以列表 JSON 数组为准核对顺序，不看插入先后；两次学号应连续自动分配。
 
-\item 使用静态 LLVM 编译器后，应用自己依赖的 C ABI 动态库是否也会自动消失？参考答案：不会；这些依赖仍按应用的链接方式交付。
+\item SQL 不报错但影响 0 行；不检查 \texttt{rows.\allowbreak{}affected} 会把「没改到」误报成成功。
 
-\item 列表下标与对象存活验证始终执行；\texttt{--checked} 控制的是四元式中的运行期检查。
+\item 在 \texttt{list} 里加一个 \texttt{class\allowbreak{}Name} 精确条件：值必须走 \texttt{database.\allowbreak{}quote(\allowbreak{})\allowbreak{}} 转义（或扩展反射条件构造），同时覆盖空结果和命中两种情况。
 
 \end{enumerate}
 
-\section*{下一步}
+\section{番外：目无全牛}
 
-下一章先介绍\hyperref[ch:24]{不安全代码}，理解原始存储与裸指针的边界，再进入\hyperref[ch:26]{第 26 章 学生信息管理系统}，将前面学过的结构体、反射和标准库组织成完整项目。
+改写自《庄子·养生主》庖丁解牛。
 
-\section{番外：行囊里的工具}
+庖丁为文惠君解学生表。手之所触，肩之所倚，足之所履，膝之所踦，字段霍然向然，奏刀騞然，莫不中反射之会。
 
-改写自欧阳修《卖油翁》。
+文惠君曰：“嘻，善哉！技盖至此乎？寡人不过加了一个班级字段，何以你的建表列、JSON 键、界面清单都跟着变了？”
 
-陈康肃公善导出，当世无双，公亦以此自矜。尝于家圃编译，有卖油翁释担而立，睨之，久而不去。见其原生产物十发十中，但微颔之。
+庖丁释刀对曰：“臣之所好者，结构也，进乎手抄矣。始臣之解表之时，所见无非整段字符串者。三年之后，未尝见整表也。方今之时，臣以元数据遇而不以眼抄，依乎模型，批大隙，导大窾，因其固然。”
 
-康肃问曰：“汝亦知 AOT 乎？吾静态 LLVM，不亦精乎？”翁曰：“无他，但工具装得熟尔。”康肃忿然曰：“尔安敢轻吾后端！”
+“良程序员岁更字段表，抄也；族程序员月更正则，猜也。今臣之模型十九次变更矣，所解接口数千矣，而列名清单若新发于声明。”
 
-翁曰：“以我酌油知之。”乃取一葫芦，置于地，以钱覆口，徐以杓酌油沥之，自钱孔入，而钱不湿。因曰：“工具在我担中，亦可借隔壁工坊；油入葫芦之后，买油人岂须背着我的油杓回家？”
+文惠君大悦，要把所有用户输入原样拼进 SQL，谓顺其自然。庖丁急拦：“虽然，每至于外部输入，吾见其为难，怵然为戒，视为止，行为迟。值须转义，排序列须核准，校验不容省。”
 
-康肃悟，谓内置 LLVM 是将编译所需工具纳入编译器，外置 LLVM 是借工具链完成同样工序；导出应用不因此平白多带一个 LLVM DLL。
+忽有连接未开，庖丁不下刀；又有影响零行，庖丁留诊断。君问何不假装成功，以免扫兴。庖丁揩刀而藏，答曰：“善哉！臣只会顺着结构解牛，不会顺着报表造牛。”
 
-翁将行，又折回道：“不过，若你葫芦上还接着别人家的水管，莫因油杓已收，就说水管也不必交付。”公视之，果有一条自己声明的 C ABI 动态库依赖。
-
-康肃笑而遣之，归来便将发布说明分成工具链依赖与应用依赖两栏。门客称赞文档更长了，公曰：“我宁愿多写两行，也不愿用户半夜来问，油有了，葫芦为什么打不开。”
+文惠君曰：“善哉！吾闻庖丁之言，得维护系统焉。”随即又补了一条需求：“顺便支持导出 Excel，应该不复杂吧？”
 
 \subsection*{技术对照}
 
-内置 LLVM 编译器把优化器、代码生成器、链接器和链接资产装进行囊；外置变体借助独立工具链完成这些步骤。交付的原生产物包含所需的 AOT 运行时，应用额外使用的 C ABI 库则按各自的链接约定准备。工具放在哪里与应用依赖哪些库，是两个需要分别核对的问题。
+本章的系统就是把「眼睛」换掉的那个过程：字段清单、建表列、JSON 键不靠手抄，从反射给出的结构里长出来（25.3、25.5），模型改了，派生处自动跟上，刀刃不钝。硬拼 SQL 就像砍骨头——值不过转义、排序字段不过白名单，短期看不出事，缺口都在暗处（25.6）。而「怵然为戒」对应的是失败路径：空连接、超时、脏数据、影响 0 行，每一处都认真对待、留下诊断，程序才经得起长久使用（25.7、25.11）。

@@ -117,7 +117,8 @@ def main():
 
         # 2) 默认检查与 VM 一致；无检查只作为显式对照配置。
         opened = (exe.with_suffix('.ll')).read_text(encoding='utf-8')
-        assert re.search(r'define internal i64 @f_\d+_program__fib\(', opened)
+        assert re.search(r'define internal i64 @f_(?:v)?\d+_program__fib\(', opened)
+        assert all(not exe.with_suffix(suffix).exists() for suffix in ['.quad', '.data.bin', '.layout'])
         assert not exe.with_suffix('.c').exists() and not exe.with_suffix('.cpp').exists()
         assert not re.search(r'%s_.*__temp_.*= alloca', opened), '计算临时量不能占声明局部的帧槽'
         # 同一四元式定义配合 Linux 运行时必须能生成真正的 ELF 目标文件。

@@ -1,3 +1,4 @@
+namespace ast { struct Program; }
 /**
  * @def CHALI_WITH_REFLECTION
  * @brief 是否编入注解与反射前端支持；默认关闭，单次编译还需 --reflection。
@@ -1092,16 +1093,21 @@ void M_SetDeclType(int declaratorList, int typeId, int constFlag);
 void M_SetProgram(int topList);
 
 /**
- * 降级 + 生成 + 执行（%main 调）。
- * @param moduleName 模块名（写进 .quad 头）。
- * @param outPrefix  产物前缀：生成 `<前缀>.quad` / `.data` / `.data.bin` / `.data.h` / `.layout`。
- * @param run        非 0 时再用 source/ircode 组装执行一遍，把输出写到 stdout。
+ * @brief 语义检查与 AST 降级，供原生 LLVM 后端直接访问。
+ * @param moduleName 显式兼容导出的模块名称。
+ * @param outPrefix 显式兼容导出的产物前缀，正常 AOT 不在此处写出中间文件。
+ * @param run 兼容调用方的语义绑定开关，不在此处执行程序。
  * @param emitBinary 非 0 时把四元式三件套写到 `<前缀>`。
  * @param inputText  已废弃：输入一律来自标准输入；传空指针即可。
  * @return 0 成功；失败时 M_LastError() 给出原因。
  */
 int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBinary,
               const char *inputText);
+/**
+ * @brief 取得最近一次成功语义检查后的后端 AST。
+ * @return AST 指针；在下一次编译前有效。
+ */
+const ast::Program *M_AotSyntax();
 /**
  * @brief 当前竞技场里的语法节点数（装完预编译单元后即为标准库段的节点数）。
  * @return 节点数。

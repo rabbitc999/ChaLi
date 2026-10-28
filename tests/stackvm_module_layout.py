@@ -17,7 +17,7 @@ def main():
         namespace = re.search(r"^namespace\b", text, re.M)
         if namespace:
             assert not re.search(r"^\s*#include\b", text[namespace.start():], re.M), name
-    target = "build/chali-stackvm-core/libstackvm.a"
+    target = "build/chali-ircode-aot-core/libstackvm.a"
     probe = directory / "native_text.cpp"
     saved = probe.stat()
     make = os.environ.get("MAKE", "make")

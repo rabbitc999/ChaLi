@@ -233,23 +233,43 @@ struct IoReply {
     String error; List<uint8> bytes; List<String> paths; int64 count;
     int64 size; bool isFile; bool isDirectory; int64 modifiedUnixSeconds;
 };
-void __readAllBytes(String path, int64 limit, IoReply mut& reply);
-void __writeAllBytes(String path, List<uint8> bytes, IoReply mut& reply);
 void __listDirectory(String path, IoReply mut& reply);
 void __fileInfo(String path, IoReply mut& reply);
 void __createDirectories(String path, IoReply mut& reply);
 void __renamePath(String from, String to, IoReply mut& reply);
 /** 读完整文件，保留零字节；默认最多 16 MiB，调用者可以指定预算。 */
 Result<List<uint8>,IoError> readAllBytes(String path, int64 maxBytes=16777216) {
-    IoReply reply; __readAllBytes(path,maxBytes,&reply);
-    if (len(reply.error)>0) { return Result<List<uint8>,IoError>::Err(IoError::ReadFailed(reply.error)); }
-    return Result<List<uint8>,IoError>::Ok(reply.bytes);
+    if (maxBytes < 0) { return Result<List<uint8>,IoError>::Err(IoError::ReadFailed("negative byte limit")); }
+    Result<FileStream,IoError> opened = FileStream::open(path,"rb");
+    if (opened.isErr()) { return Result<List<uint8>,IoError>::Err(IoError::ReadFailed("cannot open file for reading")); }
+    FileStream stream = opened.take();
+    List<uint8> bytes;
+    loop {
+        int64 count = 4096;
+        int64 remaining = maxBytes - len(bytes);
+        if (remaining < count) { count = remaining + 1; }
+        Result<List<uint8>,IoError> part = stream.readBytes(count);
+        if (part.isErr()) { return Result<List<uint8>,IoError>::Err(IoError::ReadFailed("file read failed")); }
+        List<uint8> block = part.take();
+        if (len(block) > remaining) { return Result<List<uint8>,IoError>::Err(IoError::ReadFailed("file exceeds byte limit")); }
+        for (uint8 byte in block) { bytes.push(byte); }
+        if (len(block) < count) { break; }
+    };
+    return Result<List<uint8>,IoError>::Ok(bytes);
 }
 /** 覆盖写完整文件，返回字节数量；不隐式创建父目录。 */
 Result<int64,IoError> writeAllBytes(String path, List<uint8> bytes) {
-    IoReply reply; __writeAllBytes(path,bytes,&reply);
-    if (len(reply.error)>0) { return Result<int64,IoError>::Err(IoError::WriteFailed(reply.error)); }
-    return Result<int64,IoError>::Ok(reply.count);
+    Result<FileStream,IoError> opened = FileStream::open(path,"wb");
+    if (opened.isErr()) { return Result<int64,IoError>::Err(IoError::WriteFailed("cannot open file for writing")); }
+    FileStream stream = opened.take();
+    Result<int64,IoError> written = stream.writeBytes(bytes);
+    if (written.isErr()) { return Result<int64,IoError>::Err(IoError::WriteFailed("file write or close failed")); }
+    int64 count = written.take();
+    Result<int64,IoError> flushed = stream.flush();
+    if (flushed.isErr()) { return Result<int64,IoError>::Err(IoError::WriteFailed("file write or close failed")); }
+    int64 closed = stream.close();
+    if (closed != 0) { return Result<int64,IoError>::Err(IoError::WriteFailed("file write or close failed")); }
+    return Result<int64,IoError>::Ok(count);
 }
 /** 读取完整文本；String 不支持内嵌零字节，此类文件应使用 readAllBytes。 */
 Result<String,IoError> readAllText(String path, int64 maxBytes=16777216) {

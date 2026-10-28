@@ -158,9 +158,9 @@ void main() {
 
 Embedded filesystems are injected through FileApi. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `nowUtc` requires an actual UTC clock from the host.
 
-## Binary intermediate artifacts and measurements
+## Compatible quadruple formats and historical measurements
 
-`emit` now writes `.quad` (MGQI v1), `.layout` (CHLY v1), and `.data.bin`. Quads share a string table and encode counts, positions and references with unsigned LEB128. Layout records retain names, offsets, sizes and strides. Raw `.data.bin` bytes remain unchanged. Duplicate `.data` text and `.data.h` arrays are no longer emitted; rebuilding the same prefix removes old copies.
+Normal compilation generates LLVM code directly from the AST without quadruple files. The following `.quad` (MGQI v1), `.layout` (CHLY v1), and `.data.bin` formats apply to the standalone AST library compatibility export and historical measurements. Quads share a string table and encode counts, positions and references with unsigned LEB128. Layout records retain names, offsets, sizes and strides. Raw `.data.bin` bytes remain unchanged. Duplicate `.data` text and `.data.h` arrays are no longer emitted; rebuilding the same prefix removes old copies.
 
 The VM exporter detect binary formats automatically and still accept legacy text. Decoders check versions, overflow, truncation, string references and trailing data. This is serialization without encryption.
 

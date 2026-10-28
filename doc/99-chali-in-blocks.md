@@ -450,7 +450,7 @@ Minecraft 有 Java 版和基岩版，但存档是同一份。ChaLi 也一样：�
 | --- | --- | --- |
 | 源码运行 `chali run` | 什么都不用交，编译完就地跑 | 开发、试验 |
 | 可执行文件 `chali aot` | 一个自包含 exe，加声明的动态库 | 部署、离线运行 |
-| 四元式导出 `chali emit` | `.quad` 及配套 `.data.bin` / `.layout` | 检查中间表示，或自行装配 |
+| 四元式导出 `chali aot --emit-llvm` | `.quad` 及配套 `.data.bin` / `.layout` | 检查中间表示，或自行装配 |
 | 动态库 `--shared --export` | `.dll` / `.so` 加生成的 `.h` | 嵌进既有的 C/C++ 宿主 |
 
 中途还有一条路被**删掉**了：共享 VM 的字节码解释——`.svmb` 容器交给固定容量的 VM 加载。

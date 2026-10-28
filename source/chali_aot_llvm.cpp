@@ -113,34 +113,62 @@ bool available()
 /**
  * @brief 在编入的 LLVM 与 LLD 内完成原生优化、代码生成和链接。
  * @param request 包含共享库开关与外部 C 库的请求。
- * @param module LLVM 模块文件路径。
+ * @param module LLVM 模块的产物路径。
+ * @param source AST 后端直接生成的 LLVM 代码。
  * @param product 原生产物路径。
  * @param diagnostics 接收完整的原生工具诊断。
  * @return 成功为零，未编入或编译失败为一。
  */
-int compile(const Request &request, const Memory::String &module, const Memory::String &product,
+int compile(const Request &request, const Memory::String &module, const Memory::String &source, const Memory::String &product,
             Memory::Vector<Memory::String> *diagnostics)
 {
 #if CHALI_STATIC_LLVM
-    LLVMInitializeX86TargetInfo();
-    LLVMInitializeX86Target();
-    LLVMInitializeX86TargetMC();
-    LLVMInitializeX86AsmParser();
-    LLVMInitializeX86AsmPrinter();
+    TargetInfo targetInfo;
+    Memory::String targetError;
+    if (!describeTarget(request.options.target, targetInfo, &targetError))
+    {
+        if (diagnostics) diagnostics->push_back(targetError);
+        return 1;
+    }
+    if (targetInfo.arm64)
+    {
+        LLVMInitializeAArch64TargetInfo();
+        LLVMInitializeAArch64Target();
+        LLVMInitializeAArch64TargetMC();
+        LLVMInitializeAArch64AsmParser();
+        LLVMInitializeAArch64AsmPrinter();
+    }
+    else
+    {
+        LLVMInitializeX86TargetInfo();
+        LLVMInitializeX86Target();
+        LLVMInitializeX86TargetMC();
+        LLVMInitializeX86AsmParser();
+        LLVMInitializeX86AsmPrinter();
+    }
     LLVMContextRef context = LLVMContextCreate();
     LLVMMemoryBufferRef buffer = nullptr;
     LLVMModuleRef program = nullptr;
     LLVMTargetMachineRef machine = nullptr;
     char *message = nullptr;
-    bool failed = LLVMCreateMemoryBufferWithContentsOfFile(module.c_str(), &buffer, &message) != 0;
+    buffer = LLVMCreateMemoryBufferWithMemoryRangeCopy(source.data(), source.size(), module.c_str());
+    bool failed = buffer == nullptr;
     if (!failed) failed = LLVMParseIRInContext(context, buffer, &program, &message) != 0;
     LLVMTargetRef target = nullptr;
-    const char *triple = "x86_64-w64-windows-gnu";
+    const char *triple = targetInfo.triple.c_str();
     if (!failed) failed = LLVMGetTargetFromTriple(triple, &target, &message) != 0;
     if (!failed)
     {
-        machine = LLVMCreateTargetMachine(target, triple, "x86-64", "", request.options.debug ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
+        const auto cpu = request.options.cpu.empty() ? targetInfo.cpu : request.options.cpu;
+        machine = LLVMCreateTargetMachine(target, triple, cpu.c_str(), "", request.options.debug ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
         failed = machine == nullptr;
+        if (!failed)
+        {
+            LLVMSetTarget(program, triple);
+            LLVMTargetDataRef layout = LLVMCreateTargetDataLayout(machine);
+            LLVMSetModuleDataLayout(program, layout);
+            LLVMDisposeTargetData(layout);
+        }
     }
     if (!failed)
     {
@@ -157,10 +185,18 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     }
     const std::string object = std::string(module.c_str()) + ".lto.bc";
     // 保留 LLVM bitcode 到链接阶段，由 LLD 根据真实外部引用和导出确定内部化边界。
-    if (!failed) {
-        LLVMSetTarget(program, triple);
-        failed = LLVMWriteBitcodeToFile(program, object.c_str()) != 0;
-        if (failed && diagnostics) diagnostics->push_back("AOT：无法写入链接时优化的 LLVM bitcode");
+    if (!failed)
+    {
+        if (request.options.emitObjectOnly)
+        {
+            auto file = product;
+            failed = LLVMTargetMachineEmitToFile(machine, program, file.data(), LLVMObjectFile, &message) != 0;
+        }
+        else
+        {
+            failed = LLVMWriteBitcodeToFile(program, object.c_str()) != 0;
+            if (failed && diagnostics) diagnostics->push_back("AOT：无法写入链接时优化的 LLVM bitcode");
+        }
     }
     if (message)
     {
@@ -171,6 +207,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (program) LLVMDisposeModule(program);
     LLVMContextDispose(context);
     if (failed) return 1;
+    if (request.options.emitObjectOnly) return 0;
     // 链接资产在打包时内嵌并恢复到专用临时目录，LLVM/LLD 本身均为静态代码。
     LinkerAssets assets;
     if (!assets.restore())
@@ -214,6 +251,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
 #else
     (void)request;
     (void)module;
+    (void)source;
     (void)product;
     if (diagnostics) diagnostics->push_back("AOT：此构建未静态链接 LLVM");
     return 1;

@@ -3237,17 +3237,29 @@ void M_ReportLifetimeDiagnostics()
 }
 
 /**
- * @brief 编译已解析程序，按选项写出产物并执行虚拟机。
- * @param moduleName 生成产物使用的模块名称。
- * @param outPrefix 输出产物的文件名前缀。
- * @param run 是否在编译完成后执行程序。
- * @param emitBinary 是否写出二进制中间产物。
- * @param inputText 已废弃：输入一律来自标准输入，实现不再读取。
- * @retval 编译与执行成功时为 0，发生错误时为非零状态码。
+ * @brief 最近一次成功语义检查后的 AST，由编译器保留到下一次编译。
+ */
+static std::unique_ptr<ast::Program> g_aotSyntax;
+
+/**
+ * @brief 返回最近一次语义降级完成的 AST，不构造四元式。
+ * @return 下次编译前有效的 AST 指针。
+ */
+const ast::Program *M_AotSyntax() { return g_aotSyntax.get(); }
+
+/**
+ * @brief 完成语义检查和所有权展开，保留供 LLVM 直接访问的 AST。
+ * @param moduleName 仅用于显式兼容导出的模块名称。
+ * @param outPrefix 显式兼容导出的文件前缀；正常 AOT 不使用它生成四元式。
+ * @param run 兼容调用方的语义绑定开关，不在此处执行程序。
+ * @param emitBinary 非零时额外生成独立 AST 库的兼容四元式产物。
+ * @param inputText 已废弃，标准输入由原生程序读取。
+ * @return 成功返回零，失败由 M_LastError 提供诊断。
  */
 int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBinary,
               const char *inputText)
 {
+    g_aotSyntax.reset();
     ResetState();
     g_executeNow = run != 0;
     /* 解析期攒下的错（复合引用等）：ResetState 会清 g_error，所以在这里补报。 */
@@ -3443,7 +3455,10 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         return 1;
     }
 
-    /* 2. 落四元式 + `.data`（`.data.bin` / `.layout` 给 stackvm 读）。 */
+    g_aotSyntax = std::make_unique<ast::Program>(std::move(program));
+    /* 仅显式请求兼容四元式产物时生成；正常编译直接把 AST 交给 LLVM 后端。 */
+    if (!emitBinary) return 0;
+    program = *g_aotSyntax;
     ast::CodegenResult result = ast::generate(program, moduleName);
     if (g_reflectionEnabled) result.quads = "# chali-features: reflection\n# chali-reflection: " + *mr::toHex(reflection.table) + "\n" + result.quads;
     if (!result.ok())

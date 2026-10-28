@@ -127,7 +127,7 @@ chali check hello.chl
 | Check only, do not run | `chali check src/main.chl` |
 | JSON diagnostics (for editors) | `chali check src/main.chl json` |
 | Export an executable | `chali aot src/main.chl --out build/app` |
-| Export quadruples only | `chali emit src/main.chl --out build/app` |
+| Export LLVM IR | `chali aot src/main.chl --emit-llvm --out build/app` |
 | Create a project | `chali new hello` |
 | Run tests | `chali test tests` |
 | Format check / write | `chali fmt check src` / `chali fmt write src` |

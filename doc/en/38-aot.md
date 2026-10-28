@@ -6,7 +6,7 @@
 
 Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
 
-`chali aot input.chl --out build/program` lowers optimized ChaLi quadruples directly to LLVM intermediate representation. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
+`chali aot input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
 
 Windows x64 dependencies use [online setup scripts](../../library/llvm/README.md). Run `python tools/fetch_llvm_toolchain.py` for external LLVM, or `python tools/fetch_llvm_sdk.py` for the prebuilt static LLVM/LLD SDK and matching GCC. Downloads and installations stay under ignored `build/` directories; SDK binaries and offline archive parts are not committed. Archives have pinned SHA-256 checksums. LLVM IR export alone does not require the code-generation toolchain.
 
@@ -40,7 +40,7 @@ The first static build runs [setup_static.py](../../library/llvm/setup_static.py
 
 `python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Both plugins retain their independent 1.0.0 version; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 
-Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [AOT runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `python tools/build_aot_runtime.py --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
+Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [AOT runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
 
 AOT does not reuse compiled outputs with `--incremental`, so ABI declarations come from the current semantic analysis. See the [functional regression](../../tests/chali_aot.py), [list and opcode differential checks](../../tests/chali_aot_values.py) and [static LLVM isolation checks](../../tests/chali_aot_static.py).
 
@@ -69,3 +69,34 @@ Complex ABI value/reference checks run with python tests/chali_abi_values.py --a
 On Windows, native process arguments are converted from the CRT wide-character argument vector to UTF-8 before reaching main(List<String>). Chinese text, supplementary Unicode characters, empty strings, quotes and backslashes are preserved. Run python tests/chali_aot_arguments.py to check native product paths containing Chinese text and spaces.
 
 Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `python tools/fetch_llvm_toolchain.py --list` or select `--platform` explicitly. Automatic static SDK setup currently targets Windows x64; downloading a toolchain does not establish AOT support for that platform.
+
+## Cross-compilation and project configuration
+
+The compiler host and the application target may differ. Supported target selections are `windows-x64` (`x86_64-w64-windows-gnu`), `linux-x64` (`x86_64-unknown-linux-gnu`) and `linux-arm64` (`aarch64-unknown-linux-gnu`).
+
+```sh
+chali aot hello.chl --target linux-arm64 --emit-llvm --out build/arm64/hello
+chali aot hello.chl --target linux-arm64 --emit-obj --out build/arm64/hello
+```
+
+`--emit-llvm` exports target LLVM IR; `--emit-obj` generates a target `.o` without linking. These options are mutually exclusive. Windows objects use COFF, Linux objects use ELF. Static LLVM can generate objects using its embedded target backends; external LLVM requires clang with the selected backend.
+
+Full cross-linking additionally requires matching target startup objects, C/C++ libraries, a linker and `libchali_aot_host.a`. Use `--sysroot` for the target system root, `--runtime-dir` for the ChaLi runtime library directory and `--cpu` to select a CPU. On Linux or WSL, `sh tools/build_cross_runtime.sh linux-arm64 2` prepares an isolated SDK with the installed GNU target toolchain under `build/cross-sdk/linux-arm64/`, including library licenses and hashes.
+
+```toml
+[aot]
+target = "aarch64-unknown-linux-gnu"
+cpu = "generic"
+sysroot = "build/cross-sdk/linux-arm64/sysroot"
+runtime_dir = "build/cross-sdk/linux-arm64/lib"
+output = "executable"
+```
+
+Paths resolve relative to `chali.toml`. `output` accepts `llvm`, `object` or `executable`; the optional `llvm` key selects an external clang path. Explicit command-line options override project settings:
+
+```sh
+chali aot --out build/arm64/app
+chali aot --target linux-x64 --emit-obj --out build/x64/app
+```
+
+`run` rejects a foreign target instead of starting an emulator. Object generation, full linking and execution are separate validation steps. Test the resulting application on its target or an appropriate emulator. Complex imported C ABI adapters currently require target-toolchain compilation and linking after object export.

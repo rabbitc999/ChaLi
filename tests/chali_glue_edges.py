@@ -24,7 +24,7 @@ def main():
     assert result.stdout == expected, result.stdout
     assert '程序结束' not in result.stderr, result.stderr
     prefix = WORK / 'edges'
-    run(CHALI, 'run', source, '--emit', '--out', prefix)
+    run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
     common = ['--quad', prefix.with_suffix('.quad'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout')]
     for macro in ('NO_CHALI_STD_MATH',):
         executable = WORK / (macro + EXE)

@@ -394,7 +394,11 @@ inline Value fileTryClose(State &ctx, const Memory::Vector<Value> &args)
     const std::int64_t handle = nativeInt(args[0]);
     FileRecord *object = static_cast<FileRecord *>(ctx.host.nativeRecord(handle, fileType));
     if (object != nullptr && object->file && object->file->isOpen())
-        object->file->close();
+    {
+        object->fileError.clear();
+        object->fileSucceeded = object->file->closeChecked(object->fileError);
+        if (!object->fileSucceeded) return Value::fromInt(-1);
+    }
     return Value::fromInt(0);
 }
 

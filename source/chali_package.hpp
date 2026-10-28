@@ -36,6 +36,8 @@ struct Project
      *  程序从该文件的 `main` 开始执行。
      */
     Memory::String main;
+    /// [aot] 交叉编译选项；相对 SDK、运行时和 LLVM 路径以清单所在目录为基准。
+    Memory::String aotTarget, aotCpu, aotSysroot, aotRuntimeDirectory, aotCompiler, aotOutput;
     /**
      * @brief 清单内容 + 锁文件内容的签名（锁文件把依赖的签名也拼进来）。
      * @return 清单文件为空（没有项目）时是空串。
@@ -132,7 +134,7 @@ Memory::Vector<Memory::String> tomlArray(const toml::Value &value,
 /**
  * @brief 当前工具链版本，参与项目最低版本验证。
  */
-inline constexpr const char *compilerVersion = "1.0.9";
+inline constexpr const char *compilerVersion = "1.0.10";
 
 /**
  * @brief 解析 `1.2.3` 形式的三段版本号。

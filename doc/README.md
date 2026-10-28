@@ -26,7 +26,7 @@ ChaLi 让业务逻辑只写一次：同一份源码由 LLVM AOT 编译成原生�
 
 | 你是谁 | 从哪开始 |
 | --- | --- |
-| 想从头学 ChaLi，一章只讲一件事 | 入门书[《玩转 ChaLi 语言》](book/README.md)（第 1 章装工具链，一路到综合项目） |
+| 想从头学 ChaLi，一章只讲一件事 | 入门书[《ChaLi 程序设计语言》](book/README.md)（第 1 章装工具链，一路到综合项目） |
 | 第一次听说 ChaLi | [使命宣言](00-vision.md) → [5 分钟快速开始](01-quickstart.md) |
 | 评估它能不能用在我的项目上 | [使命宣言](00-vision.md)（含"不适合谁"）→ [跨平台部署](06-deployment.md) |
 | 开始写代码 | [语言速览](02-language-tour.md) → [语言参考](04-language-reference.md) |
@@ -86,7 +86,7 @@ ChaLi 让业务逻辑只写一次：同一份源码由 LLVM AOT 编译成原生�
 - [`doc/examples/`](examples/) —— 需要配套工程布局的示例（ABI、SQLite、GUI）。
 - [`doc/examples/`](examples/) 里的配套工程总览见 [13 示例项目](13-projects.md)。
 - [项目 README](../README.cn.md) —— 构建、快速使用、调试、配置。
-- [入门书《玩转 ChaLi 语言》](book/README.md) —— 从零开始的 26 章教程与附录，含分层习题、经典作品改编番外，以及前端编译与 AOT 流程图；完整示例与生成内容按对应回归核验。
+- [入门书《ChaLi 程序设计语言》](book/README.md) —— 从零开始的 25 章教程与附录，含分层习题、经典作品改编番外，以及前端编译与 AOT 流程图；完整示例与生成内容按对应回归核验。
 - [完整语法参考（EBNF）](14-grammar-ebnf.md) —— 文法的权威形式，由 [`source/chali.gram`](../source/chali.gram) 生成。
 
 ## 英文文档
@@ -117,7 +117,7 @@ ChaLi 让业务逻辑只写一次：同一份源码由 LLVM AOT 编译成原生�
   这个承诺就弱了。
 - **中文版优先维护**。两版说法有出入时以中文版为准。
 - **没翻的部分**：底层规格 7 篇（[14](14-grammar-ebnf.md)–[20](20-memory-allocator.md)）、`doc/examples/`（配套工程）、
-  `doc/book/`（入门书《玩转 ChaLi 语言》）。
+  `doc/book/`（入门书《ChaLi 程序设计语言》）。
   英文版里指向这几处的链接仍链到中文原文。
 - 根目录 README 保持中文，另有一份逐节对应的英文版 [`README.en.md`](../README.en.md)。
 - 英文版内的相对路径多一层（指向 `example/` 写 `../../example/`）。

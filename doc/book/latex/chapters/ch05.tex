@@ -3,7 +3,7 @@
 
 程序光会「从上往下做」是干不了活的。它得会拐弯（条件）和转圈（循环）。
 
-第 2 章的猜数字已经把这两种都用上了，这一章把它们补全：ChaLi 一共有三种循环：\texttt{while}、\texttt{loop} 和 \texttt{for-in}，还有一套对「同一个变量在一个表达式里被读写两次」管得很严的规则。
+第 2 章的猜数字已经把这两种都用上了，这一章把它们补全：ChaLi 一共有三种循环：\texttt{while}、\texttt{loop} 和 \texttt{for-\allowbreak{}in}，还有一套对「同一个变量在一个表达式里被读写两次」管得很严的规则。
 
 \section{条件：\texttt{if} / \texttt{elif} / \texttt{else}}
 
@@ -179,7 +179,7 @@ void main()
 
 条件写在括号里，先判后做。条件一开始就不成立，循环体一次都不执行。
 
-\section{\texttt{for-in}：遍历区间}
+\section{\texttt{for-\allowbreak{}in}：遍历区间}
 
 计数循环使用 \texttt{range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}，依次取得左闭右开区间中的值：
 
@@ -211,7 +211,7 @@ void main()
 
 \section{循环也能产生值}
 
-\texttt{for-in} 和 \texttt{while} 可以作为赋值表达式，循环体用 \texttt{yield} 给出结果，\texttt{else} 在没有产生结果而退出循环时给出后备值。\texttt{continue} 继续下一轮，普通\texttt{break} 结束循环并进入 \texttt{else}。
+\texttt{for-\allowbreak{}in} 和 \texttt{while} 可以作为赋值表达式，循环体用 \texttt{yield} 给出结果，\texttt{else} 在没有产生结果而退出循环时给出后备值。\texttt{continue} 继续下一轮，普通\texttt{break} 结束循环并进入 \texttt{else}。
 
 \par
 \medskip
@@ -350,7 +350,7 @@ void main()
 
 前一个 \texttt{loop} 是语句，\texttt{\}} 后面干净收住；后一个被 \texttt{doubled} 接走，分号写在定义语句末尾。语句位置多写一个 \texttt{;} 也能编译（那是一个结果被丢掉的表达式语句），但没必要。
 
-\section{\texttt{for-in}：遍历一串东西}
+\section{\texttt{for-\allowbreak{}in}：遍历一串东西}
 
 \par
 \medskip
@@ -404,7 +404,7 @@ for ( 元素类型 名字 in 容器 ) { ... }
 
 \item 遍历出来的 \texttt{score} 是元素的副本（还记得第 4 章吗），改它不影响容器。想改容器里的元素得用引用（第 7 章）。
 
-\item \texttt{for-in} 能遍历的不只是容器，凡是「能一个个吐出来的东西」都行，比如第 4 章的变长参数、第 17 章的迭代器。
+\item \texttt{for-\allowbreak{}in} 能遍历的不只是容器，凡是「能一个个吐出来的东西」都行，比如第 4 章的变长参数、第 17 章的迭代器。
 
 \end{itemize}
 
@@ -499,7 +499,7 @@ void main()
 \par
 \medskip
 
-层数只计算 \texttt{while}、\texttt{for-in} 和 \texttt{loop}，普通块及 \texttt{if}、\texttt{match} 不增加层数。数字参数必须是正整数字面量，不能用变量代替层数。\texttt{all} 只在 \texttt{break} 后的层级参数位置表示「全部循环」，普通变量仍可命名为 \texttt{all}。
+层数只计算 \texttt{while}、\texttt{for-\allowbreak{}in} 和 \texttt{loop}，普通块及 \texttt{if}、\texttt{match} 不增加层数。数字参数必须是正整数字面量，不能用变量代替层数。\texttt{all} 只在 \texttt{break} 后的层级参数位置表示「全部循环」，普通变量仍可命名为 \texttt{all}。
 
 层级退出不能携带结果，也不能跳出另一个函数的循环；离开路径上的清理照常执行。带值的 \texttt{yield value;} 则交给最近接收结果的值表达式，无值循环不会把这个值截走。返回表达式中禁止 \texttt{break level} / \texttt{break all}，详见第 4 章。
 
@@ -547,7 +547,7 @@ break 写法 ok
 \par
 \medskip
 
-\texttt{yield} 只在带值退出里是关键字：作为普通标识符仍可用（例如用户自定义的 \texttt{yield(\allowbreak{})\allowbreak{}} 不受影响），但不能写成 \texttt{yield(\allowbreak{}参数)\allowbreak{}} 这种调用形式。\texttt{break level} 后面必须跟正整数字面量层数或 \texttt{all}；\texttt{break level foo;}、\texttt{break level 0;}、\texttt{break level -1;} 都是错的。\texttt{all} 仍是普通变量名，只有在这里的层级参数位置才被识别为「全部循环」，所以你照样可以写 \texttt{int64 all =\allowbreak{} 0;}。
+\texttt{yield} 只在带值退出里是关键字：作为普通标识符仍可用（例如用户自定义的 \texttt{yield(\allowbreak{})\allowbreak{}} 不受影响），但不能写成 \texttt{yield(\allowbreak{}参数)\allowbreak{}} 这种调用形式。\texttt{break level} 后面必须跟正整数字面量层数或 \texttt{all}；\texttt{break level foo;}、\texttt{break level 0;}、\texttt{break level -\allowbreak{}1;} 都是错的。\texttt{all} 仍是普通变量名，只有在这里的层级参数位置才被识别为「全部循环」，所以你照样可以写 \texttt{int64 all =\allowbreak{} 0;}。
 
 \section{复合赋值与自增减}
 
@@ -577,7 +577,7 @@ void main()
 \par
 \medskip
 
-\texttt{+=\allowbreak{}} \texttt{-=\allowbreak{}} \texttt{*=\allowbreak{}} \texttt{/\allowbreak{}=\allowbreak{}} \texttt{\%=\allowbreak{}} \texttt{\&=\allowbreak{}} \texttt{|=\allowbreak{}} \texttt{\textasciicircum{}=\allowbreak{}} \texttt{<\allowbreak{}<\allowbreak{}=\allowbreak{}} \texttt{>\allowbreak{}>\allowbreak{}=\allowbreak{}} 全都有，含义就是「把右边算出来，跟左边做这个运算，写回左边」。
+\texttt{+=\allowbreak{}} \texttt{-\allowbreak{}=\allowbreak{}} \texttt{*=\allowbreak{}} \texttt{/\allowbreak{}=\allowbreak{}} \texttt{\%=\allowbreak{}} \texttt{\&=\allowbreak{}} \texttt{|=\allowbreak{}} \texttt{\textasciicircum{}=\allowbreak{}} \texttt{<\allowbreak{}<\allowbreak{}=\allowbreak{}} \texttt{>\allowbreak{}>\allowbreak{}=\allowbreak{}} 全都有，含义就是「把右边算出来，跟左边做这个运算，写回左边」。
 
 单独的自增自减也能写：
 
@@ -705,7 +705,7 @@ void main()
 
 \begin{itemize}
 
-\item \texttt{for-in} 遍历出来的元素是副本，怎么改到原来的——第 7 章；
+\item \texttt{for-\allowbreak{}in} 遍历出来的元素是副本，怎么改到原来的——第 7 章；
 
 \item 分支多了 \texttt{if /\allowbreak{} elif} 会很难看，\texttt{match} 怎么救场——第 10 章；
 

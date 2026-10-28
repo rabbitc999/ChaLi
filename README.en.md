@@ -14,8 +14,7 @@ ChaLi itself, targeting the case where *one* program runs from the desktop all t
 embedded board.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It lowers `.chl` source into
-quadruples and then generates native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export. .svmb has been removed.
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export. .svmb has been removed.
 
 > This is the English edition. The Chinese edition is the default and is the one maintained first —
 > see [中文 README](README.cn.md). Where the two disagree, the Chinese one wins.
@@ -38,17 +37,17 @@ Runnable evidence and what counts as a violation: [Name freeze: the five letters
 
 ## Compilation
 
-Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the compiler generates and optimizes quadruples, then lowers reachable code and data to LLVM for native execution. The .svmb format has been removed.
+Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly. The .svmb format has been removed.
 
-![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, quadruple optimization and VM assembly](doc/images/chali-compilation-en.png)
+![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM AOT](doc/images/chali-compilation-en.png)
 
 ## AOT export
 
-Run `./ChaLi.exe aot input.chl --out build/program --checked` to lower checked, optimized quadruples directly to LLVM intermediate representation, generate machine code and link a native artifact. The static variant embeds LLVM and LLD; the external variant uses `library/llvm/` or the clang path passed through `--llvm`. Use `--emit-llvm` to export only the LLVM module.
+Run `./ChaLi.exe aot input.chl --out build/program --checked` to lower the semantically checked AST directly to LLVM code, generate machine code and link a native artifact. The static variant embeds LLVM and LLD; the external variant uses `library/llvm/` or the clang path passed through `--llvm`. Use `--emit-llvm` to export only the LLVM module.
 
-![ChaLi AOT export: quadruples, LLVM module, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
+![ChaLi AOT export: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
 
-The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/25-aot-export.md) for the supported scope and steps.
+The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/24-aot-export.md) for the supported scope and steps.
 
 ## Execution
 

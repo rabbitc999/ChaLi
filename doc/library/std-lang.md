@@ -14,7 +14,7 @@
 
 ## 公共约定与错误边界
 
-自动加载，无需 import。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。
+自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM AOT 标准流直连运行时与 libc，看门狗保留宿主回退。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。BigDecimal 精度范围 1..100000。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。
 
 ## 参考代码
 
@@ -2574,7 +2574,7 @@ String readLine();
 readLine();
 ```
 
-**源码**：[source/std/lang.chl:629](../../source/std/lang.chl#L629)。
+**源码**：[source/std/lang.chl:663](../../source/std/lang.chl#L663)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2612,7 +2612,7 @@ String readLines(int32 N);
 readLines(N);
 ```
 
-**源码**：[source/std/lang.chl:633](../../source/std/lang.chl#L633)。
+**源码**：[source/std/lang.chl:667](../../source/std/lang.chl#L667)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2650,7 +2650,7 @@ String readLines(int64 N);
 readLines(N);
 ```
 
-**源码**：[source/std/lang.chl:637](../../source/std/lang.chl#L637)。
+**源码**：[source/std/lang.chl:671](../../source/std/lang.chl#L671)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2688,7 +2688,7 @@ Option<int32> toInt32(float64 value);
 toInt32(value);
 ```
 
-**源码**：[source/std/lang.chl:641](../../source/std/lang.chl#L641)。
+**源码**：[source/std/lang.chl:675](../../source/std/lang.chl#L675)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2726,7 +2726,7 @@ Option<int32> toInt32(float32 value);
 toInt32(value);
 ```
 
-**源码**：[source/std/lang.chl:647](../../source/std/lang.chl#L647)。
+**源码**：[source/std/lang.chl:681](../../source/std/lang.chl#L681)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2764,7 +2764,7 @@ int64 toInt64(float64 value);
 toInt64(value);
 ```
 
-**源码**：[source/std/lang.chl:649](../../source/std/lang.chl#L649)。
+**源码**：[source/std/lang.chl:683](../../source/std/lang.chl#L683)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2802,7 +2802,7 @@ int64 toInt64(float32 value);
 toInt64(value);
 ```
 
-**源码**：[source/std/lang.chl:651](../../source/std/lang.chl#L651)。
+**源码**：[source/std/lang.chl:685](../../source/std/lang.chl#L685)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2841,7 +2841,7 @@ std::lang::List<uint8> float32ToBytes(float32 value, bool bigEndian);
 float32ToBytes(value, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:654](../../source/std/lang.chl#L654)。
+**源码**：[source/std/lang.chl:688](../../source/std/lang.chl#L688)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2879,7 +2879,7 @@ std::lang::List<uint8> float32ToBytes(float32 value);
 float32ToBytes(value);
 ```
 
-**源码**：[source/std/lang.chl:656](../../source/std/lang.chl#L656)。
+**源码**：[source/std/lang.chl:690](../../source/std/lang.chl#L690)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2918,7 +2918,7 @@ Option<float32> bytesToFloat32(std::lang::List<uint8> bytes, bool bigEndian);
 bytesToFloat32(bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:658](../../source/std/lang.chl#L658)。
+**源码**：[source/std/lang.chl:692](../../source/std/lang.chl#L692)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2956,7 +2956,7 @@ Option<float32> bytesToFloat32(std::lang::List<uint8> bytes);
 bytesToFloat32(bytes);
 ```
 
-**源码**：[source/std/lang.chl:663](../../source/std/lang.chl#L663)。
+**源码**：[source/std/lang.chl:697](../../source/std/lang.chl#L697)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -2996,7 +2996,7 @@ Option<float32> bytesToFloat32(uint8 const& bytes, int64 count, bool bigEndian);
 bytesToFloat32(bytes, count, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:665](../../source/std/lang.chl#L665)。
+**源码**：[source/std/lang.chl:699](../../source/std/lang.chl#L699)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3035,7 +3035,7 @@ Option<float32> bytesToFloat32(uint8 const& bytes, int64 count);
 bytesToFloat32(bytes, count);
 ```
 
-**源码**：[source/std/lang.chl:670](../../source/std/lang.chl#L670)。
+**源码**：[source/std/lang.chl:704](../../source/std/lang.chl#L704)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3074,7 +3074,7 @@ Option<float32> bytesToFloat32(uint8 bytes[], bool bigEndian);
 bytesToFloat32(bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:672](../../source/std/lang.chl#L672)。
+**源码**：[source/std/lang.chl:706](../../source/std/lang.chl#L706)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3112,7 +3112,7 @@ Option<float32> bytesToFloat32(uint8 bytes[]);
 bytesToFloat32(bytes);
 ```
 
-**源码**：[source/std/lang.chl:674](../../source/std/lang.chl#L674)。
+**源码**：[source/std/lang.chl:708](../../source/std/lang.chl#L708)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3153,7 +3153,7 @@ bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count, bool bigEndian
 float32ToBytes(value, bytes, count, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:676](../../source/std/lang.chl#L676)。
+**源码**：[source/std/lang.chl:710](../../source/std/lang.chl#L710)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3193,7 +3193,7 @@ bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count);
 float32ToBytes(value, bytes, count);
 ```
 
-**源码**：[source/std/lang.chl:681](../../source/std/lang.chl#L681)。
+**源码**：[source/std/lang.chl:715](../../source/std/lang.chl#L715)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3233,7 +3233,7 @@ bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian);
 float32ToBytes(value, bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:683](../../source/std/lang.chl#L683)。
+**源码**：[source/std/lang.chl:717](../../source/std/lang.chl#L717)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3272,7 +3272,7 @@ bool float32ToBytes(float32 value, uint8[] mut& bytes);
 float32ToBytes(value, bytes);
 ```
 
-**源码**：[source/std/lang.chl:688](../../source/std/lang.chl#L688)。
+**源码**：[source/std/lang.chl:722](../../source/std/lang.chl#L722)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3311,7 +3311,7 @@ std::lang::List<uint8> float64ToBytes(float64 value, bool bigEndian);
 float64ToBytes(value, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:691](../../source/std/lang.chl#L691)。
+**源码**：[source/std/lang.chl:725](../../source/std/lang.chl#L725)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3349,7 +3349,7 @@ std::lang::List<uint8> float64ToBytes(float64 value);
 float64ToBytes(value);
 ```
 
-**源码**：[source/std/lang.chl:693](../../source/std/lang.chl#L693)。
+**源码**：[source/std/lang.chl:727](../../source/std/lang.chl#L727)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3388,7 +3388,7 @@ Option<float64> bytesToFloat64(std::lang::List<uint8> bytes, bool bigEndian);
 bytesToFloat64(bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:695](../../source/std/lang.chl#L695)。
+**源码**：[source/std/lang.chl:729](../../source/std/lang.chl#L729)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3426,7 +3426,7 @@ Option<float64> bytesToFloat64(std::lang::List<uint8> bytes);
 bytesToFloat64(bytes);
 ```
 
-**源码**：[source/std/lang.chl:700](../../source/std/lang.chl#L700)。
+**源码**：[source/std/lang.chl:734](../../source/std/lang.chl#L734)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3466,7 +3466,7 @@ Option<float64> bytesToFloat64(uint8 const& bytes, int64 count, bool bigEndian);
 bytesToFloat64(bytes, count, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:702](../../source/std/lang.chl#L702)。
+**源码**：[source/std/lang.chl:736](../../source/std/lang.chl#L736)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3505,7 +3505,7 @@ Option<float64> bytesToFloat64(uint8 const& bytes, int64 count);
 bytesToFloat64(bytes, count);
 ```
 
-**源码**：[source/std/lang.chl:707](../../source/std/lang.chl#L707)。
+**源码**：[source/std/lang.chl:741](../../source/std/lang.chl#L741)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3544,7 +3544,7 @@ Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian);
 bytesToFloat64(bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:709](../../source/std/lang.chl#L709)。
+**源码**：[source/std/lang.chl:743](../../source/std/lang.chl#L743)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3582,7 +3582,7 @@ Option<float64> bytesToFloat64(uint8 bytes[]);
 bytesToFloat64(bytes);
 ```
 
-**源码**：[source/std/lang.chl:711](../../source/std/lang.chl#L711)。
+**源码**：[source/std/lang.chl:745](../../source/std/lang.chl#L745)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3623,7 +3623,7 @@ bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count, bool bigEndian
 float64ToBytes(value, bytes, count, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:713](../../source/std/lang.chl#L713)。
+**源码**：[source/std/lang.chl:747](../../source/std/lang.chl#L747)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3663,7 +3663,7 @@ bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count);
 float64ToBytes(value, bytes, count);
 ```
 
-**源码**：[source/std/lang.chl:718](../../source/std/lang.chl#L718)。
+**源码**：[source/std/lang.chl:752](../../source/std/lang.chl#L752)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3703,7 +3703,7 @@ bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian);
 float64ToBytes(value, bytes, bigEndian);
 ```
 
-**源码**：[source/std/lang.chl:720](../../source/std/lang.chl#L720)。
+**源码**：[source/std/lang.chl:754](../../source/std/lang.chl#L754)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3742,7 +3742,7 @@ bool float64ToBytes(float64 value, uint8[] mut& bytes);
 float64ToBytes(value, bytes);
 ```
 
-**源码**：[source/std/lang.chl:725](../../source/std/lang.chl#L725)。
+**源码**：[source/std/lang.chl:759](../../source/std/lang.chl#L759)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3783,7 +3783,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 assert(condition);
 ```
 
-**源码**：[source/std/lang.chl:738](../../source/std/lang.chl#L738)。
+**源码**：[source/std/lang.chl:772](../../source/std/lang.chl#L772)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3823,7 +3823,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 assert(condition, message);
 ```
 
-**源码**：[source/std/lang.chl:742](../../source/std/lang.chl#L742)。
+**源码**：[source/std/lang.chl:776](../../source/std/lang.chl#L776)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3863,7 +3863,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 assert(condition, line);
 ```
 
-**源码**：[source/std/lang.chl:746](../../source/std/lang.chl#L746)。
+**源码**：[source/std/lang.chl:780](../../source/std/lang.chl#L780)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3904,7 +3904,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 assert(condition, message, line);
 ```
 
-**源码**：[source/std/lang.chl:750](../../source/std/lang.chl#L750)。
+**源码**：[source/std/lang.chl:784](../../source/std/lang.chl#L784)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3940,7 +3940,7 @@ TryBranch<T, R> branch();
 obj.branch();
 ```
 
-**源码**：[source/std/lang.chl:761](../../source/std/lang.chl#L761)。
+**源码**：[source/std/lang.chl:795](../../source/std/lang.chl#L795)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -3976,7 +3976,7 @@ TryBranch<T, R> intoBranch();
 obj.intoBranch();
 ```
 
-**源码**：[source/std/lang.chl:763](../../source/std/lang.chl#L763)。
+**源码**：[source/std/lang.chl:797](../../source/std/lang.chl#L797)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4014,7 +4014,7 @@ static F fromResidual(R residual);
 FromResidual<F, R>::fromResidual(residual);
 ```
 
-**源码**：[source/std/lang.chl:765](../../source/std/lang.chl#L765)。
+**源码**：[source/std/lang.chl:799](../../source/std/lang.chl#L799)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4050,7 +4050,7 @@ TryBranch<T, NoneResidual> branch();
 obj.branch();
 ```
 
-**源码**：[source/std/lang.chl:770](../../source/std/lang.chl#L770)。
+**源码**：[source/std/lang.chl:804](../../source/std/lang.chl#L804)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4086,7 +4086,7 @@ TryBranch<T, NoneResidual> intoBranch();
 obj.intoBranch();
 ```
 
-**源码**：[source/std/lang.chl:776](../../source/std/lang.chl#L776)。
+**源码**：[source/std/lang.chl:810](../../source/std/lang.chl#L810)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4124,7 +4124,7 @@ static Option<T> fromResidual(NoneResidual residual);
 Option<T>::fromResidual(residual);
 ```
 
-**源码**：[source/std/lang.chl:780](../../source/std/lang.chl#L780)。
+**源码**：[source/std/lang.chl:814](../../source/std/lang.chl#L814)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4160,7 +4160,7 @@ bool isValue();
 obj.isValue();
 ```
 
-**源码**：[source/std/lang.chl:781](../../source/std/lang.chl#L781)。
+**源码**：[source/std/lang.chl:815](../../source/std/lang.chl#L815)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4196,7 +4196,7 @@ bool isNone();
 obj.isNone();
 ```
 
-**源码**：[source/std/lang.chl:790](../../source/std/lang.chl#L790)。
+**源码**：[source/std/lang.chl:824](../../source/std/lang.chl#L824)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4233,7 +4233,7 @@ T take();
 obj.take();
 ```
 
-**源码**：[source/std/lang.chl:793](../../source/std/lang.chl#L793)。
+**源码**：[source/std/lang.chl:827](../../source/std/lang.chl#L827)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4270,7 +4270,7 @@ T unwrap();
 obj.unwrap();
 ```
 
-**源码**：[source/std/lang.chl:803](../../source/std/lang.chl#L803)。
+**源码**：[source/std/lang.chl:837](../../source/std/lang.chl#L837)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4308,7 +4308,7 @@ T unwrapOr(T fallback);
 obj.unwrapOr(fallback);
 ```
 
-**源码**：[source/std/lang.chl:812](../../source/std/lang.chl#L812)。
+**源码**：[source/std/lang.chl:846](../../source/std/lang.chl#L846)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4347,7 +4347,7 @@ T expect(std::lang::String message);
 obj.expect(message);
 ```
 
-**源码**：[source/std/lang.chl:821](../../source/std/lang.chl#L821)。
+**源码**：[source/std/lang.chl:855](../../source/std/lang.chl#L855)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4385,7 +4385,7 @@ Option<T> transform(T fn(T) mapper);
 obj.transform(mapper);
 ```
 
-**源码**：[source/std/lang.chl:830](../../source/std/lang.chl#L830)。
+**源码**：[source/std/lang.chl:864](../../source/std/lang.chl#L864)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4423,7 +4423,7 @@ Option<T> andThen(Option<T> fn(T) mapper);
 obj.andThen(mapper);
 ```
 
-**源码**：[source/std/lang.chl:839](../../source/std/lang.chl#L839)。
+**源码**：[source/std/lang.chl:873](../../source/std/lang.chl#L873)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4459,7 +4459,7 @@ TryBranch<T, ErrorResidual<E>> branch();
 obj.branch();
 ```
 
-**源码**：[source/std/lang.chl:860](../../source/std/lang.chl#L860)。
+**源码**：[source/std/lang.chl:894](../../source/std/lang.chl#L894)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4495,7 +4495,7 @@ TryBranch<T, ErrorResidual<E>> intoBranch();
 obj.intoBranch();
 ```
 
-**源码**：[source/std/lang.chl:870](../../source/std/lang.chl#L870)。
+**源码**：[source/std/lang.chl:904](../../source/std/lang.chl#L904)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4533,7 +4533,7 @@ static Result<T,E> fromResidual(ErrorResidual<E> residual);
 Result<T, E>::fromResidual(residual);
 ```
 
-**源码**：[source/std/lang.chl:876](../../source/std/lang.chl#L876)。
+**源码**：[source/std/lang.chl:910](../../source/std/lang.chl#L910)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4569,7 +4569,7 @@ Option<T> ok();
 obj.ok();
 ```
 
-**源码**：[source/std/lang.chl:877](../../source/std/lang.chl#L877)。
+**源码**：[source/std/lang.chl:911](../../source/std/lang.chl#L911)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4605,7 +4605,7 @@ bool isOk();
 obj.isOk();
 ```
 
-**源码**：[source/std/lang.chl:883](../../source/std/lang.chl#L883)。
+**源码**：[source/std/lang.chl:917](../../source/std/lang.chl#L917)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4641,7 +4641,7 @@ bool isErr();
 obj.isErr();
 ```
 
-**源码**：[source/std/lang.chl:892](../../source/std/lang.chl#L892)。
+**源码**：[source/std/lang.chl:926](../../source/std/lang.chl#L926)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4678,7 +4678,7 @@ T take();
 obj.take();
 ```
 
-**源码**：[source/std/lang.chl:895](../../source/std/lang.chl#L895)。
+**源码**：[source/std/lang.chl:929](../../source/std/lang.chl#L929)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4715,7 +4715,7 @@ T unwrap();
 obj.unwrap();
 ```
 
-**源码**：[source/std/lang.chl:905](../../source/std/lang.chl#L905)。
+**源码**：[source/std/lang.chl:939](../../source/std/lang.chl#L939)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4753,7 +4753,7 @@ T unwrapOr(T fallback);
 obj.unwrapOr(fallback);
 ```
 
-**源码**：[source/std/lang.chl:914](../../source/std/lang.chl#L914)。
+**源码**：[source/std/lang.chl:948](../../source/std/lang.chl#L948)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4792,7 +4792,7 @@ T expect(std::lang::String message);
 obj.expect(message);
 ```
 
-**源码**：[source/std/lang.chl:923](../../source/std/lang.chl#L923)。
+**源码**：[source/std/lang.chl:957](../../source/std/lang.chl#L957)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4829,7 +4829,7 @@ E takeError();
 obj.takeError();
 ```
 
-**源码**：[source/std/lang.chl:933](../../source/std/lang.chl#L933)。
+**源码**：[source/std/lang.chl:967](../../source/std/lang.chl#L967)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4866,7 +4866,7 @@ E error();
 obj.error();
 ```
 
-**源码**：[source/std/lang.chl:943](../../source/std/lang.chl#L943)。
+**源码**：[source/std/lang.chl:977](../../source/std/lang.chl#L977)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4904,7 +4904,7 @@ Result<T, E> transform(T fn(T) mapper);
 obj.transform(mapper);
 ```
 
-**源码**：[source/std/lang.chl:952](../../source/std/lang.chl#L952)。
+**源码**：[source/std/lang.chl:986](../../source/std/lang.chl#L986)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4942,7 +4942,7 @@ Result<T, E> andThen(Result<T, E> fn(T) mapper);
 obj.andThen(mapper);
 ```
 
-**源码**：[source/std/lang.chl:961](../../source/std/lang.chl#L961)。
+**源码**：[source/std/lang.chl:995](../../source/std/lang.chl#L995)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -4983,7 +4983,7 @@ Option<T> nextValue(T end, bool inclusive);
 obj.nextValue(end, inclusive);
 ```
 
-**源码**：[source/std/lang.chl:982](../../source/std/lang.chl#L982)。
+**源码**：[source/std/lang.chl:1016](../../source/std/lang.chl#L1016)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5024,7 +5024,7 @@ static Pair<K, V> create(K first, V second);
 Pair<K, V>::create(first, second);
 ```
 
-**源码**：[source/std/lang.chl:1038](../../source/std/lang.chl#L1038)。
+**源码**：[source/std/lang.chl:1072](../../source/std/lang.chl#L1072)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5064,7 +5064,7 @@ static Pair<K, V> create((K, V) value);
 Pair<K, V>::create(value);
 ```
 
-**源码**：[source/std/lang.chl:1048](../../source/std/lang.chl#L1048)。
+**源码**：[source/std/lang.chl:1082](../../source/std/lang.chl#L1082)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5100,7 +5100,7 @@ Pair<K, V>::create(value);
 obj.toTuple();
 ```
 
-**源码**：[source/std/lang.chl:1057](../../source/std/lang.chl#L1057)。
+**源码**：[source/std/lang.chl:1091](../../source/std/lang.chl#L1091)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5138,7 +5138,7 @@ Option<T> tryGet<T>(Any const& value);
 tryGet<T>(value);
 ```
 
-**源码**：[source/std/lang.chl:1081](../../source/std/lang.chl#L1081)。
+**源码**：[source/std/lang.chl:1115](../../source/std/lang.chl#L1115)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5176,7 +5176,7 @@ Option<T const&> tryGetReference<T>(Any const& value);
 tryGetReference<T>(value);
 ```
 
-**源码**：[source/std/lang.chl:1087](../../source/std/lang.chl#L1087)。
+**源码**：[source/std/lang.chl:1121](../../source/std/lang.chl#L1121)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5214,7 +5214,7 @@ Option<T mut&> tryGetMut<T>(Any mut& value);
 tryGetMut<T>(value);
 ```
 
-**源码**：[source/std/lang.chl:1092](../../source/std/lang.chl#L1092)。
+**源码**：[source/std/lang.chl:1126](../../source/std/lang.chl#L1126)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5252,7 +5252,7 @@ List<uint8> stringBytes(String text);
 stringBytes(text);
 ```
 
-**源码**：[source/std/lang.chl:1107](../../source/std/lang.chl#L1107)。
+**源码**：[source/std/lang.chl:1141](../../source/std/lang.chl#L1141)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5290,7 +5290,7 @@ BarePtr<T> leftAdd(int64 elements);
 obj.leftAdd(elements);
 ```
 
-**源码**：[source/std/lang.chl:1158](../../source/std/lang.chl#L1158)。
+**源码**：[source/std/lang.chl:1192](../../source/std/lang.chl#L1192)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5328,7 +5328,7 @@ BarePtr<T> rightAdd(int64 elements);
 obj.rightAdd(elements);
 ```
 
-**源码**：[source/std/lang.chl:1164](../../source/std/lang.chl#L1164)。
+**源码**：[source/std/lang.chl:1198](../../source/std/lang.chl#L1198)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5366,7 +5366,7 @@ BarePtr<T> leftSub(int64 elements);
 obj.leftSub(elements);
 ```
 
-**源码**：[source/std/lang.chl:1166](../../source/std/lang.chl#L1166)。
+**源码**：[source/std/lang.chl:1200](../../source/std/lang.chl#L1200)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5405,7 +5405,7 @@ int64 leftSub(BarePtr<T> other);
 obj.leftSub(other);
 ```
 
-**源码**：[source/std/lang.chl:1172](../../source/std/lang.chl#L1172)。
+**源码**：[source/std/lang.chl:1206](../../source/std/lang.chl#L1206)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5443,7 +5443,7 @@ unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer);
 barePointer<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1182](../../source/std/lang.chl#L1182)。
+**源码**：[source/std/lang.chl:1216](../../source/std/lang.chl#L1216)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5481,7 +5481,7 @@ unsafe BarePtr<T> pointerFromAddress<T>(int64 address);
 pointerFromAddress<T>(address);
 ```
 
-**源码**：[source/std/lang.chl:1189](../../source/std/lang.chl#L1189)。
+**源码**：[source/std/lang.chl:1223](../../source/std/lang.chl#L1223)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5519,7 +5519,7 @@ unsafe T mut& dereference<T>(BarePtr<T> pointer);
 dereference<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1204](../../source/std/lang.chl#L1204)。
+**源码**：[source/std/lang.chl:1238](../../source/std/lang.chl#L1238)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5559,7 +5559,7 @@ unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes);
 memcpy<T,U>(destination, source, bytes);
 ```
 
-**源码**：[source/std/lang.chl:1211](../../source/std/lang.chl#L1211)。
+**源码**：[source/std/lang.chl:1245](../../source/std/lang.chl#L1245)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5599,7 +5599,7 @@ unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes);
 memset<T>(destination, value, bytes);
 ```
 
-**源码**：[source/std/lang.chl:1220](../../source/std/lang.chl#L1220)。
+**源码**：[source/std/lang.chl:1254](../../source/std/lang.chl#L1254)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5638,7 +5638,7 @@ unsafe void initAt<T>(RawPtr<T> pointer, T value);
 initAt<T>(pointer, value);
 ```
 
-**源码**：[source/std/lang.chl:1225](../../source/std/lang.chl#L1225)。
+**源码**：[source/std/lang.chl:1259](../../source/std/lang.chl#L1259)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5676,7 +5676,7 @@ unsafe T readAt<T>(RawPtr<T> pointer);
 readAt<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1233](../../source/std/lang.chl#L1233)。
+**源码**：[source/std/lang.chl:1267](../../source/std/lang.chl#L1267)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5714,7 +5714,7 @@ unsafe T mut& borrowAt<T>(RawPtr<T> pointer);
 borrowAt<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1240](../../source/std/lang.chl#L1240)。
+**源码**：[source/std/lang.chl:1274](../../source/std/lang.chl#L1274)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5752,7 +5752,7 @@ unsafe T takeAt<T>(RawPtr<T> pointer);
 takeAt<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1245](../../source/std/lang.chl#L1245)。
+**源码**：[source/std/lang.chl:1279](../../source/std/lang.chl#L1279)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5790,7 +5790,7 @@ unsafe void dropAt<T>(RawPtr<T> pointer);
 dropAt<T>(pointer);
 ```
 
-**源码**：[source/std/lang.chl:1254](../../source/std/lang.chl#L1254)。
+**源码**：[source/std/lang.chl:1288](../../source/std/lang.chl#L1288)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5834,7 +5834,7 @@ unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, i
 relocateNonOverlapping<T>(destination, source, count);
 ```
 
-**源码**：[source/std/lang.chl:1259](../../source/std/lang.chl#L1259)。
+**源码**：[source/std/lang.chl:1293](../../source/std/lang.chl#L1293)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5872,7 +5872,7 @@ static RawStorage<T> allocate(int64 capacity);
 RawStorage<T>::allocate(capacity);
 ```
 
-**源码**：[source/std/lang.chl:1291](../../source/std/lang.chl#L1291)。
+**源码**：[source/std/lang.chl:1325](../../source/std/lang.chl#L1325)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5908,7 +5908,7 @@ int64 capacity();
 obj.capacity();
 ```
 
-**源码**：[source/std/lang.chl:1299](../../source/std/lang.chl#L1299)。
+**源码**：[source/std/lang.chl:1333](../../source/std/lang.chl#L1333)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5947,7 +5947,7 @@ RawPtr<T> pointer(int64 index);
 obj.pointer(index);
 ```
 
-**源码**：[source/std/lang.chl:1304](../../source/std/lang.chl#L1304)。
+**源码**：[source/std/lang.chl:1338](../../source/std/lang.chl#L1338)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -5985,7 +5985,7 @@ bool isInitialized(int64 index);
 obj.isInitialized(index);
 ```
 
-**源码**：[source/std/lang.chl:1312](../../source/std/lang.chl#L1312)。
+**源码**：[source/std/lang.chl:1346](../../source/std/lang.chl#L1346)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6021,7 +6021,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/std/lang.chl:1316](../../source/std/lang.chl#L1316)。
+**源码**：[source/std/lang.chl:1350](../../source/std/lang.chl#L1350)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -9817,7 +9817,7 @@ T index(T const& data,int64 index);
 index(data, index);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1793](../../source/semantics/boxing.cpp#L1793)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1794](../../source/semantics/boxing.cpp#L1794)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 

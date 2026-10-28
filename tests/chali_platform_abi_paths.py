@@ -34,7 +34,7 @@ def main():
             prefix = work / f'path-{index}'
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '7\n' and (not result.stderr), result.stdout + result.stderr
-            run([compiler, 'run', source, '--emit', '--out', prefix])
+            run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
             glue = prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
             assert library.as_posix() in glue, glue
         nested = work / 'nested'
@@ -50,7 +50,7 @@ def main():
             prefix = work / source.stem
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '8\n', result.stdout + result.stderr
-            run([compiler, 'run', source, '--emit', '--out', prefix])
+            run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
             assert library.as_posix() in prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
         # 同文模块移到另一目录后必须绑定新目录的库；旧库仍存在且返回不同值，避免仅靠缺失文件发现问题。
         relocated = work / 'relocated'

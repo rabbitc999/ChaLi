@@ -36,11 +36,10 @@ FILES = [
     ('19-预处理与宏.md', 'ch19.tex'),
     ('20-注解与反射.md', 'ch20.tex'),
     ('21-与C互操作.md', 'ch21.tex'),
-    ('22-部署原生产物.md', 'ch22.tex'),
-    ('23-编译器指令.md', 'ch23.tex'),
-    ('24-不安全代码.md', 'ch24.tex'),
-    ('25-AOT导出.md', 'ch25.tex'),
-    ('26-学生信息管理系统.md', 'ch26.tex'),
+    ('22-编译器指令.md', 'ch22.tex'),
+    ('23-不安全代码.md', 'ch23.tex'),
+    ('24-AOT导出.md', 'ch24.tex'),
+    ('25-学生信息管理系统.md', 'ch25.tex'),
     ('A-常见错误速查.md', 'appendix-a.tex'),
     ('B-标准库速查.md', 'appendix-b.tex'),
     ('README.md', 'preface.tex'),
@@ -168,7 +167,7 @@ class Converter:
         for at,ch in enumerate(code):
             if at and ch.isupper() and code[at-1].islower(): parts.append(r'\allowbreak{}')
             parts.append(esc(ch))
-            if ch in ':,./<>()[]=': parts.append(r'\allowbreak{}')
+            if ch in ':,./<>()[]=_-': parts.append(r'\allowbreak{}')
         return r'\texttt{%s}' % ''.join(parts)
 
     def _stash_link(self, m):

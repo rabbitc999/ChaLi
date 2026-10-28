@@ -609,21 +609,55 @@ opcode Process {
  * @return 成功返回零，失败报告宿主错误。
  */
 int64 __std_stderr_write(String text);
+/** eprint 归一后的内部入口：文本原样写标准错误流，包装逻辑在 ChaLi 侧。 */
+int64 __std_eprint(String text) { return __std_stderr_write(text); }
+/** eprintln 归一后的内部入口：补一个 LF 换行后写标准错误流。 */
+int64 __std_eprintln(String text) { return __std_stderr_write(text + "\n"); }
+
 /**
- * @brief eprint 归一后的内部字符串入口。
- * @param text 已格式化的文本。
- * @return 成功返回零。
+ * @brief 按 `%.*f` 规则输出固定小数位文本的宿主原语。
+ * @param value 待格式化的浮点值。
+ * @param precision 小数位数。
+ * @return 定长十进制文本；本入口不做去尾零处理，超长结果保留前 255 字节。
  */
-int64 __std_eprint(String text);
+String __std_str_fixed(float64 value, int64 precision);
 /**
- * @brief eprintln 归一后的内部字符串入口。
- * @param text 已格式化的文本。
- * @return 成功返回零。
+ * @brief 把浮点值格式化成语言默认文本。
+ * @param value 待格式化的浮点值。
+ * @param precision 小数位数，负数按 3 位。
+ * @return 默认 3 位小数并去掉尾随零和孤立小数点的文本，与 println 浮点排版完全一致。
  */
-int64 __std_eprintln(String text);
+String __std_str_of_flt(float64 value, int64 precision) {
+    if (precision < 0) { precision = 3; }
+    String text = __std_str_fixed(value, precision);
+    String point = ".";
+    unsafe {
+        if (precision > 0 && __bootStringPosition(text.opcode, point.opcode) >= 0) {
+            int64 end = __bootStringLength(text.opcode);
+            while (end > 0 && __bootStringAt(text.opcode, end - 1) == 48) { end = end - 1; }
+            if (end > 0 && __bootStringAt(text.opcode, end - 1) == 46) { end = end - 1; }
+            return text.substring(0, end);
+        }
+    }
+    return text;
+}
 
 String __readLine();
-String __readLines(int32 N);
+/** 查询标准输入是否已到 EOF；仅用于区分 EOF 与读到空行。 */
+bool __stdinEof();
+/** 组合读行原语，在 ChaLi 中实现多行拼接，不额外追加 LF。 */
+String __readLines(int32 N) {
+    String text = "";
+    int32 index = 0;
+    while (index < N) {
+        String line = __readLine();
+        if (len(line) == 0 && __stdinEof()) { break; }
+        if (index > 0) { text = text + "\n"; }
+        text = text + line;
+        index = index + 1;
+    }
+    return text;
+}
 /** @brief 读取一行标准输入，保留空格，去掉 LF/CRLF；EOF 返回空串，空行也返回空串。
  * @return 读取的行文本；String 不允许内嵌零字节。 */
 String readLine() { return __readLine(); }

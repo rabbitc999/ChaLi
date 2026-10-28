@@ -21,7 +21,7 @@ def main(names=('std_binary', 'lang_float_to_int', 'lang_float_bytes', 'lang_flo
         result = run(CHALI, 'run', source, '--out', work / name)
         assert result.stdout == expected and (not result.stderr), (result.stdout, result.stderr)
         prefix = work / name
-        run(CHALI, 'run', source, '--emit', '--out', prefix)
+        run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
         args = ['--quad', prefix.with_suffix('.quad'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout')]
         asset_target = work / (name + '-assets' + EXE)
         trimmed = work / (name + '-trimmed' + EXE)

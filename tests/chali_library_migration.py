@@ -26,7 +26,7 @@ def main():
                 text = text.replace('    checkInteger<' + scalar + '>();', '')
             source = work / 'linalg-export.chl'
             source.write_text(text, encoding='utf-8')
-        run(CHALI, 'run', source, '-I', ROOT, '--emit', '--out', prefix)
+        run(CHALI, 'aot', source, '-I', ROOT, '--emit-llvm', '--out', prefix)
         common = [*threads, '--quad', prefix.with_suffix('.quad'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout')]
 if __name__ == '__main__':
     main()

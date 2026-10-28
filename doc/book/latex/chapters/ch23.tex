@@ -1,122 +1,78 @@
-\chapter{编译器指令}
+\chapter{不安全代码：把责任留在小范围内}
 \label{ch:23}
 
-第 19 章的 \texttt{\%} 改的是源码文本：一段代码要不要参与编译、几个片段怎么拼。第 20 章的 \texttt{@} 贴的是运行期资料：程序自己能把标签读回来。这一章讲第三种编译期手段：编译器指令——以 \texttt{\#} 开头、写在声明前面的那几行。
+前面的章节主要使用普通值、引用和标准容器。编译器替我们检查类型、借用与清理关系，运行时继续检查数组范围和分配寿命。实现分配器、容器或宿主适配时，有时还需要直接处理地址和尚未构造元素的空间。本章讲这些操作如何使用，以及程序员需要补上哪些证明。
 
-一句话概括：编译器指令 = 给声明贴的、只有编译器看的一张便条。
+本章之后介绍 AOT 导出，随后进入学生信息管理系统。业务代码通常继续使用安全接口；这里的知识主要用于实现接口背后的存储内核。完整 API 见\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/41-unsafe-abi.md}{原始存储与 C ABI 指令}。
 
-它不改文本，也不留到运行时。它的作用只有一个：让编译器在处理这个声明时多知道一条规矩——这个类型不许复制、这些样板方法由你生成、这个运算符别再自动推导。
+本章的 \texttt{Raw\allowbreak{}Storage}、\texttt{Raw\allowbreak{}Ptr}、\texttt{Bare\allowbreak{}Ptr}、\texttt{memcpy} 和 \texttt{memset} 都来自默认可用的 \texttt{std:\allowbreak{}:\allowbreak{}lang}。示例省略 \texttt{std:\allowbreak{}:\allowbreak{}lang:\allowbreak{}:\allowbreak{}} 前缀，也不需要为这些名字额外写 \texttt{import}。
 
-\section{三种编译期手段的分工}
+\section{unsafe 允许什么}
 
-三种都以特殊符号开头，很容易记混。差别其实很清楚：谁在读它、什么时候读。
+\texttt{unsafe \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 建立不安全作用域。\texttt{unsafe} 函数把这个要求写进签名：调用者必须在不安全作用域内调用它，函数体也获得执行不安全操作的权限。
 
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.462\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.080\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.104\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.143\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.191\linewidth-2\tabcolsep\relax}}
-\toprule
-写法 & 名字 & 谁读 & 什么时候 & 典型用途 \\
-\midrule
-\endhead
-\texttt{\%define} / \texttt{\%if} & 预处理 & 预处理器 & 编译前，只认文本 & 条件编译、开关日志 \\
-\texttt{\#derive} / \texttt{\#Non\allowbreak{}Copyable} / \texttt{\#No…Replace} / \texttt{\#No\allowbreak{}Right…} & 编译器指令 & 词法 + 语义层 & 编译期，认声明结构 & 改声明语义、关闭自动推导 \\
-\texttt{@Route(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} & 注解 & 运行期反射 & 运行时 & 框架读的元数据 \\
-\bottomrule
-\end{longtable}
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+unsafe int64 addOffset(int64 address, int64 bytes) {
+    return address + bytes;
 }
 
-三者的代价也不同：
+void main() {
+    unsafe {
+        println("{}", addOffset(100, 8));
+    }
+}
+\end{lstlisting}
+\par
+\medskip
 
-\begin{itemize}
+\par
+\medskip
+\begin{lstlisting}[style=out]
+108
+\end{lstlisting}
+\par
+\medskip
 
-\item 预处理最"脏"——它看不见类型，只看见字；
+把调用移到块外会在编译时被拒绝。闭包有自己的检查范围，不能因为在 \texttt{unsafe} 块里创建就自动获得权限。不安全函数值也不能悄悄变成普通函数值。
 
-\item 编译器指令最"准"——它挂在具体声明上，接口名写错、位置写错都会在编译期报错；
+\texttt{unsafe} 不会把整个程序改成无检查模式。普通数组、算术和存活检查仍按原有规则执行。变化在于：编译器允许调用某些需要程序员保证额外条件的接口。
 
-\item 注解最"轻"——不影响语义，但需要反射能力才能读到。
+\section{容量还不是元素}
 
-\end{itemize}
+考虑一个容量为 100、长度为 3 的容器。它只需要拥有 3 个已构造的元素，其余 97 个位置只是备用空间。如果元素会打开文件或登记资源，扩容时把全部备用位置都默认构造出来，行为和成本都会改变。
 
-本章只讲中间那一行。ChaLi 目前有四个编译器指令：
+\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}} 表示这样的独占空间。它记录容量、元素布局及逐槽初始化状态。\texttt{Raw\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 保存分配身份和下标，不拥有元素，也不延长分配寿命。
 
 \begin{center}
-\begin{tabular}{ll}
+\begin{tabular}{lll}
 \toprule
-指令 & 作用 \\
+操作 & 调用前 & 调用后 \\
 \midrule
-\texttt{\#Non\allowbreak{}Copyable} & 这个 \texttt{opcode} 类型不许复制 \\
-\texttt{\#derive(\allowbreak{}Equal,\allowbreak{} Hash,\allowbreak{} Clone)\allowbreak{}} & 按字段生成接口方法 \\
-\texttt{\#No<\allowbreak{}接口>\allowbreak{}Replace} & 这个类型的该运算符不再自动推导 \\
-\texttt{\#No\allowbreak{}Right<\allowbreak{}接口>\allowbreak{}} & 只关掉"右操作数当接收者"那一条推导 \\
+\texttt{init\allowbreak{}At} & 目标未初始化 & 目标拥有传入值 \\
+\texttt{read\allowbreak{}At} & 源已初始化 & 取得按值语义产生的副本，源仍有效 \\
+\texttt{borrow\allowbreak{}At} & 源已初始化 & 借出引用，所有权不变 \\
+\texttt{take\allowbreak{}At} & 源已初始化 & 返回拥有值，源变为未初始化 \\
+\texttt{drop\allowbreak{}At} & 源已初始化 & 清理元素，保留容量 \\
+\texttt{close} & 任意合法初始化状态 & 清理存活元素并释放整个分配 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\section{\texttt{\#Non\allowbreak{}Copyable}：这个类型不许复制}
-
-有的类型天生不该有第二份。文件句柄、进程、socket、数据库连接——拷贝一个句柄，就是两份所有权、两次 \texttt{close(\allowbreak{})\allowbreak{}}，系统里立刻多出一个悬空资源。
-
-\texttt{opcode} 声明把这种宿主对象交给 C 侧管理，其中"能不能复制"由声明体里有没有绑定\texttt{copy} 决定。不绑定 \texttt{copy}，就写成 \texttt{\#Non\allowbreak{}Copyable}：
-
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-opcode Number {
-    new = createNumber;
-    drop = destroyNumber;
-    copy = copyNumber;
-};
 
-#NonCopyable
-opcode FileHandle {
-    new = openFile;
-    drop = closeFile;
-};
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{Number} 可以随便复制；\texttt{File\allowbreak{}Handle} 不行——复制初始化、赋值、按值传参、返回时复制全部报错。想转移所有权，用 \texttt{move x}：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-FileHandle handle = FileHandle::new("log.txt");
-FileHandle moved = move handle;         // 可以：转移
-// FileHandle copied = handle;         // 报错：不可复制的值禁止复制
-\end{lstlisting}
-\par
-\medskip
-
-诊断会说清两种来路："实现 Closeable 或声明了 \#NonCopyable"——因为实现 \texttt{Closeable} 的结构体自动获得这条规则，不需要再写指令。第 8 章说过，\texttt{Closeable} 意味着"出块时自动关闭"；一个值被复制成两份，\texttt{close(\allowbreak{})\allowbreak{}} 就会跑两遍，所以语言直接把复制堵死：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-struct Handle : Closeable
-{
-    int64 id;
-
-    void close()
-    {
-        println("close {}", self.id);
+void main() {
+    RawStorage<String> slots = RawStorage<String>::allocate(4);
+    unsafe {
+        initAt<String>(slots.pointer(0), "hello");
+        String result = takeAt<String>(slots.pointer(0));
+        assert(!slots.isInitialized(0));
+        println("{} / {}", result, slots.capacity());
     }
-};
-
-void consume(Handle handle)
-{
-    println("consume {}", handle.id);
-}
-
-void main()
-{
-    Handle first;
-    first.id = 1;
-    consume(move first);
-
-    Handle second;
-    second.id = 2;
-    Handle third = move second;
-    println("third={}", third.id);
+    slots.close();
 }
 \end{lstlisting}
 \par
@@ -125,318 +81,66 @@ void main()
 \par
 \medskip
 \begin{lstlisting}[style=out]
-consume 1
-close 1
-third=2
-close 2
+hello / 4
 \end{lstlisting}
 \par
 \medskip
 
-注意输出里没有 \texttt{close 1} 之后的自动关闭：\texttt{first} 已经把所有权交出去了，出块时它不再是拥有者。\texttt{third} 是移动过来的新绑定，它才负责收尾。
+重复初始化、读取未初始化槽位、越界访问和释放后访问会报告错误。\texttt{pointer(\allowbreak{}capacity)\allowbreak{}} 可以形成尾后位置，不能解引用。泛型调用中显式写出 \texttt{<\allowbreak{}String>\allowbreak{}}，也能清楚说明当前操作针对哪一种元素。
 
-要不要写 \texttt{move} 的判断很朴素：谁最后拿着这个值，谁负责关。转移写 \texttt{move x}，只是借用就传 \texttt{T mut\&} / \texttt{T const\&}，函数内部造出来的局部值直接 \texttt{return}。
+\section{复制、移动与清理分别负责什么}
 
-\section{\texttt{\#derive(\allowbreak{}Equal,\allowbreak{} Hash,\allowbreak{} Clone)\allowbreak{}}：字段级样板交给编译器}
+\texttt{read\allowbreak{}At} 继续采用 ChaLi 的普通值语义。它不会因为身处 \texttt{unsafe} 就把 String 句柄直接当成独立副本。需要转移所有权时使用 \texttt{take\allowbreak{}At}，随后把返回值传给 \texttt{init\allowbreak{}At}；需要丢弃元素时使用 \texttt{drop\allowbreak{}At}。
 
-写值语义的类型时，\texttt{=\allowbreak{}=\allowbreak{}}、\texttt{hash(\allowbreak{})\allowbreak{}}、\texttt{clone(\allowbreak{})\allowbreak{}} 三件套几乎是机械劳动：逐字段比较、逐字段混合哈希、逐字段复制。字段一多，漏一个就出 bug，而且很难测出来。
+\texttt{relocate\allowbreak{}Non\allowbreak{}Overlapping<\allowbreak{}T>\allowbreak{}(\allowbreak{}destination,\allowbreak{} source,\allowbreak{} count)\allowbreak{}} 先验证完整源、目标范围和槽位状态，再逐元素搬移。目标必须未初始化，范围不能重叠。成功后源槽位不再拥有元素。移动零个元素直接返回。
 
-\texttt{\#derive} 让编译器按字段生成：
+实现 \texttt{Closeable} 的资源不能同时声明 \texttt{Copy<\allowbreak{}T>\allowbreak{}} 或绕过 \texttt{\#Non\allowbreak{}Copyable}。实验容器如果确实能产生独立副本，可以提供显式命名的复制方法，但仍要逐项建立新副本的所有权。
 
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#derive(Equal, Hash, Clone)
-struct Point
-{
-    int64 x;
-    int64 y;
-    String label;
-};
+\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}:\allowbreak{}:\allowbreak{}close(\allowbreak{})\allowbreak{}} 只清理已初始化元素。因此删除 List 尾部元素后可以保留容量，又不会把已经移出的元素再清理一次。借出的引用则必须在移出、清理或释放前停止使用；\texttt{borrow\allowbreak{}At} 的不安全契约要求调用者保证这一点。
 
-void main()
-{
-    Point origin;
-    origin.x = 0;
-    origin.y = 0;
-    origin.label = "O";
+\section{裸指针只留下地址}
 
-    Point copy = origin.clone();
-    println("equal={}", origin == copy);
-    println("sameHash={}", origin.hash(origin) == copy.hash(copy));
-
-    copy.label = "O2";
-    println("afterChange={}", origin == copy);
-    println("original={}", origin.label);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-equal=1
-sameHash=1
-afterChange=0
-original=O
-\end{lstlisting}
-\par
-\medskip
-
-（布尔值用 \texttt{\{\}} 打印出来是 \texttt{1} / \texttt{0}，与 C 的习惯一致。）
-
-\texttt{clone(\allowbreak{})\allowbreak{}} 是深拷贝：改副本的 \texttt{label} 不影响原件。\texttt{hash(\allowbreak{})\allowbreak{}} 保证"相等的值哈希相同"，所以派生出来的类型可以直接当 \texttt{Map} / \texttt{Set} 的键。
-
-三条硬规矩：
-
-\begin{enumerate}
-
-\item 白名单只有 \texttt{Equal}、\texttt{Hash}、\texttt{Clone}。 写别的名字直接报错。
-
-\item 不能派生 \texttt{Drop} 或 \texttt{Closeable}。 这两个是析构协议，值语义已经按字段自动递归清理了，再派生一次就变成"析构两遍"。
-
-\item 嵌套字段必须自己也有协议。 字段是自定义结构体时，那个结构体得实现对应接口，或者自己也 \texttt{\#derive}。引用、函数值、裸数组这些没有相等 / 哈希语义的字段会被拒绝——编译器不会按内存字节偷偷比较。
-
-\end{enumerate}
-
-派生方法的生成分两步：语义层从字段元数据生成受限的方法源码，交给现有的宏模板与生成解析器，产出的普通方法再走一遍完整的类型、借用与降级检查。也就是说，派生不是特权通道，它生成的方法和手写的一样受检查。
-
-\section{\texttt{\#No\allowbreak{}Add\allowbreak{}Replace}：关掉运算符的自动推导}
-
-第 9 章提过运算符重载：结构体继承 \texttt{Add} 这类左接口，右操作数那侧要自己负责就继承\texttt{Right\allowbreak{}Add}。为了少写代码，编译器还替你做三类推导：
-
-\begin{itemize}
-
-\item 交换律换边：\texttt{+ * =\allowbreak{}=\allowbreak{} !=\allowbreak{} \& | \textasciicircum{}} 只写了左接口时，\texttt{5 + a} 自动换边借 \texttt{a + 5}；
-
-\item 比较对偶：\texttt{5 >\allowbreak{} a} 等价于 \texttt{a <\allowbreak{} 5}；
-
-\item 取反：\texttt{a >\allowbreak{}=\allowbreak{} 5} 就是 \texttt{!(\allowbreak{}a <\allowbreak{} 5)\allowbreak{}}。
-
-\end{itemize}
-
-绝大多数时候这很省事。但有些类型的"自动换边"是错的：比如一个表示"链式追加"的类型，\texttt{a + 5} 是"把 5 接到 a 后面"，而 \texttt{5 + a} 大概该是"把 a 接到 5 后面"——两种语义根本不同，推导出来的那一份只是"看起来能编"。
-
-这时在 \texttt{struct} 前写 \texttt{\#No\allowbreak{}Add\allowbreak{}Replace}：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#NoAddReplace
-struct Vec : Add<int64, int64>
-{
-    int64 v;
-
-    int64 leftAdd(int64 other)
-    {
-        return self.v + other;
-    }
-};
-
-void main()
-{
-    Vec a;
-    a.v = 10;
-    println("left={}", a + 5);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-left=15
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{\#No\allowbreak{}Add\allowbreak{}Replace} 里的接口名就是左接口名（\texttt{Add} / \texttt{Multiply} / \texttt{Less} / \texttt{Less\allowbreak{}Or\allowbreak{}Equal} …），指令本身不带括号。写完之后，\texttt{a + 5} 照常调用 \texttt{left\allowbreak{}Add}，但 \texttt{5 + a} 不再换边：
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-chali: samples-error/operator_no_add_replace.chl 第 16 行第 5 列：运算符 + 的自动推导被 #NoAddReplace 关闭：int64 + Vec（直接写出与实现匹配的运算符，或显式实现 RightAdd<R,T> 这类右接口）
-\end{lstlisting}
-\par
-\medskip
-
-报错文案会点出是哪一条指令挡的，并给出两条出路：自己实现 \texttt{Right\allowbreak{}Add<\allowbreak{}int64,\allowbreak{}int64>\allowbreak{}}，或者接受"这个方向不支持"。
-
-指令只关推导，不关直接写法：左向 \texttt{a + 5} 与显式实现的 \texttt{Right\allowbreak{}Add} 都不受影响。这条边界很重要——它保证"加一条指令"不会把本来能编的代码弄坏，只会把"靠猜"的那部分收回去。
-
-\section{\texttt{\#No\allowbreak{}Right\allowbreak{}Add}：只关右向}
-
-\texttt{\#No\allowbreak{}Add\allowbreak{}Replace} 是"这个接口的所有推导都别做了"。更多时候你只想关一半：左向的 \texttt{a + 5} 是对的，右向的 \texttt{5 + a} 是错的。这时候用 \texttt{\#No\allowbreak{}Right<\allowbreak{}接口>\allowbreak{}}：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#NoRightAdd
-struct Chain : Add<int64, int64>
-{
-    int64 v;
-
-    int64 leftAdd(int64 other)
-    {
-        return self.v + other;
-    }
-};
-
-void main()
-{
-    Chain chain;
-    chain.v = 7;
-    println("chain + 1 = {}", chain + 1);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-chain + 1 = 8
-\end{lstlisting}
-\par
-\medskip
-
-而 \texttt{1 + chain} 会报错：
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-chali: samples-error/operator_right_forbidden.chl 第 13 行第 5 列：右向被编译器指令关闭：Vec 声明了 #NoRightAdd，int64 + Vec 不再推导；要去掉该指令，或改为实现 RightAdd<R,T>
-\end{lstlisting}
-\par
-\medskip
-
-两个指令的分工，用一张表说清：
+\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 保存一个 ChaLi 逻辑字节地址。它没有运行时类型标签、初始化位图或所有者字段。\texttt{T} 决定编译时怎样解释地址，以及指针算术使用多大的步长。
 
 \begin{center}
-\begin{tabular}{llll}
+\begin{tabular}{lll}
 \toprule
-写法 & 左向 \texttt{a + 5} & 右向 \texttt{5 + a} & 适用场合 \\
+表示 & 保存的信息 & 主要用途 \\
 \midrule
-什么都不写 & 直接实现 & 交换律换边 & 两个方向确实等价 \\
-\texttt{Right\allowbreak{}Add} & 直接实现 & 走 \texttt{right\allowbreak{}Add} & 右向语义不同，自己实现 \\
-\texttt{\#No\allowbreak{}Right\allowbreak{}Add} & 直接实现 & 报错 & 右向没有意义，明确拒绝 \\
-\texttt{\#No\allowbreak{}Add\allowbreak{}Replace} & 直接实现 & 报错，对偶 / 取反也不推 & 这个接口的推导整体不可信 \\
+普通引用 & 类型与语言借用关系 & 日常读取和修改值 \\
+\texttt{Raw\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 分配身份、槽位下标 & 受检初始化、读取、移出和清理 \\
+\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 字节地址 & 不检测类型的底层字节内核 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-值得强调一段历史：\texttt{\#No\allowbreak{}Right\allowbreak{}Add} 这类开关早期是空标记接口，写成\texttt{struct Chain :\allowbreak{} Add<\allowbreak{}int64,\allowbreak{}int64>\allowbreak{},\allowbreak{} No\allowbreak{}Right\allowbreak{}Add}。之所以搬成指令，是因为"禁止某条推导" 根本不涉及方法契约——它不需要被实例化、不需要类型实参、也不会被调用，把它混进继承列表会让人误以为它是个能力。声明级的东西就该写在声明前面。
+\texttt{bare\allowbreak{}Pointer<\allowbreak{}T>\allowbreak{}(\allowbreak{}raw\allowbreak{}Pointer)\allowbreak{}} 从原始分配取得裸地址，允许未初始化位置。\texttt{pointer\allowbreak{}From\allowbreak{}Address<\allowbreak{}T>\allowbreak{}(\allowbreak{}address)\allowbreak{}} 将数值地址解释为裸指针。\texttt{dereference<\allowbreak{}T>\allowbreak{}(\allowbreak{}pointer)\allowbreak{}} 把地址解释为 \texttt{T mut\&}。这三种操作都要求 \texttt{unsafe}；它们不会替调用者证明布局、初始化和所有权正确。
 
-\section{指令会在哪里被检查}
+这里的逻辑地址由 ChaLi 运行时管理，不能直接当作机器 C 指针交给宿主。需要与 C 交互时继续使用\hyperref[ch:21]{第 21 章}的 ABI 适配。
 
-编译器指令看起来只是"贴张条"，但每一条都在语义层被认真核对：
+\texttt{p.\allowbreak{}cast\allowbreak{}To<\allowbreak{}U>\allowbreak{}(\allowbreak{})\allowbreak{}} 保持地址不变，把 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} 改成 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}U>\allowbreak{}} 视图，也要求 \texttt{unsafe}。例如先执行 \texttt{p.\allowbreak{}cast\allowbreak{}To<\allowbreak{}uint8>\allowbreak{}(\allowbreak{})\allowbreak{}}，就可以逐个字节解引用，并用 \texttt{+ 1} 前进一个字节。转换本身不检查目标类型、不分配也不复制；调用者必须保证目标布局、对齐、初始化状态和访问范围有效。
 
-\begin{center}
-\begin{tabular}{ll}
-\toprule
-检查 & 说明 \\
-\midrule
-只能修饰声明 & \texttt{\#derive} 只能贴 struct / enum；运算符开关只能贴 struct \\
-接口名必须存在 & \texttt{\#No\allowbreak{}Add\allowbreak{}Replac} 这种笔误直接报错，不会静默忽略 \\
-接口必须有可关的东西 & \texttt{\#No\allowbreak{}Subtract\allowbreak{}Replace} 报错——\texttt{-} 本来就没有自动推导 \\
-不能重复 & 同一接口写两遍报错 \\
-泛型模板会带走指令 & 模板声明前的指令随实例化贴回每个具体实例 \\
-\bottomrule
-\end{tabular}
-\end{center}
+IEEE754 位模式转换也使用 \texttt{cast\allowbreak{}To} 及解引用。要区分物理槽和外部格式：ChaLi 的 \texttt{float32}、\texttt{float64} 都占八字节浮点槽，\texttt{float32} 的外部四字节 binary32 编码需要从槽内位模式还原，不能直接读取槽的前四字节。AOT 将对应转换降低为 LLVM 位转换和浮点宽度转换指令，指针视图包装在优化后消除；正负零、次正规数、无穷和 NaN 仍按编解码接口处理。
 
-最后一条要展开说一句。写泛型结构体时，指令是写在模板上的：
+\section{指针算术按元素走}
+
+对于 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}int64>\allowbreak{}}，\texttt{p + 1} 前进一个 \texttt{int64}，即 8 字节。对于 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}uint8>\allowbreak{}}，相同表达式前进 1 字节。
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-#NoAddReplace
-struct Wrapper<T> { T value; };
-\end{lstlisting}
-\par
-\medskip
 
-单态化会在编译期为 \texttt{Wrapper<\allowbreak{}int64>\allowbreak{}}、\texttt{Wrapper<\allowbreak{}String>\allowbreak{}} 各生成一个实例。实例是从模板文本展开出来的——如果指令留在原地，实例就丢了这条规矩。所以收集模板时会把指令先摘走，贴在实例声明的前面，和 \texttt{\#derive} 一样处理。你在源码里写一次，所有实例都守这条规矩。
-
-\section{什么时候该用指令}
-
-指令不是"更高级的语法"，它解决的是声明层面说不清的话。判断标准可以压成两条：
-
-\begin{itemize}
-
-\item 这件事属于类型本身，不属于任何一次调用。 "这个类型不许复制"、"这个类型的方向加法语义不对"——是类型的事实，写在类型上；
-
-\item 编译器不写这一行就会猜错。 派生三件套、运算符推导都属于"编译器替你做决定"，指令的作用就是把这些决定的开关交回你手里。
-
-\end{itemize}
-
-反面例子也说两个：
-
-\begin{enumerate}
-
-\item 用 \texttt{\#derive} 掩盖设计问题。 如果一个类型的相等语义需要"看起来相等就算相等"，派生逐字段比较会给出错误答案——这种情况该手写 \texttt{Equal}，而不是派生。
-
-\item 用 \texttt{\#No\allowbreak{}Add\allowbreak{}Replace} 收拾本该拆开的类型。 如果 \texttt{a + 5} 和 \texttt{5 + a} 语义完全不同，往往说明这不该叫"加法"。先想想是不是该换成具名方法：\texttt{append(\allowbreak{}5)\allowbreak{}} 比 \texttt{operator+} 诚实。
-
-\end{enumerate}
-
-\section{\texttt{\#borrow} 与 \texttt{\#static}：把生命周期写进签名}
-
-前面三条指令管的是“这个类型该有什么能力”，这一条管的是“借来的东西从哪儿来、能活多久”。它写在函数声明之前，因为生命周期属于签名，不属于函数体的实现细节：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#borrow(#ret, [a])
-int64 mut& first(int64 mut& a, int64 mut& b)
-{
-    return a;
-}
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{\#borrow(\allowbreak{}out,\allowbreak{} in)\allowbreak{}} 读作“out 借用 in”；列表写法 \texttt{\#borrow(\allowbreak{}out,\allowbreak{} [\allowbreak{}in1,\allowbreak{} in2,\allowbreak{} in3]\allowbreak{})\allowbreak{}} 表示借用其中每一个。\texttt{\#ret} 是个保留名，指函数的返回值——上面这条和 Rust 的 \texttt{fn first<\allowbreak{}'a,\allowbreak{} 'b>\allowbreak{}(\allowbreak{}a:\allowbreak{} \&'a mut i64,\allowbreak{} b:\allowbreak{} \&'b mut i64)\allowbreak{} ->\allowbreak{} \&'a mut i64} 说的是同一件事。
-
-不写契约时，借用检查器在调用点只能保守：它不知道 \texttt{first} 会返回哪个参数的引用，就把全部引用实参都算上。于是下面这段会被 CHL1204 拒掉，因为 \texttt{local} 出块就没了：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-int64 mut& outer(int64 mut& x)
-{
-    int64 local = 5;
-    return first(&x, &local);
-}
-\end{lstlisting}
-\par
-\medskip
-
-写上 \texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a]\allowbreak{})\allowbreak{}}，调用点就只按 \texttt{a} 传播，这段就能过。契约把“保守取全部”换成了“按声明取”，这是它带来的精度：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#borrow(#ret, [a])
-int64 mut& first(int64 mut& a, int64 mut& b)
-{
-    return a;
-}
-
-int64 mut& outer(int64 mut& x)
-{
-    int64 local = 5;
-    return first(&x, &local);
-}
-
-void main()
-{
-    int64 number = 30;
-    int64 mut& selected = outer(&number);
-    selected = 31;
-    println("{} {}", number, selected);
+void main() {
+    RawStorage<int64> slots = RawStorage<int64>::allocate(3);
+    unsafe {
+        BarePtr<int64> p = barePointer<int64>(slots.pointer(0));
+        BarePtr<int64> q = p + 2;
+        assert(q.address - p.address == 16);
+        assert((2 + p).address == q.address);
+        q = q - 1;
+        println("{} / {}", q - p, q.address - p.address);
+    }
+    slots.close();
 }
 \end{lstlisting}
 \par
@@ -445,93 +149,119 @@ void main()
 \par
 \medskip
 \begin{lstlisting}[style=out]
-31 31
+1 / 8
 \end{lstlisting}
 \par
 \medskip
 
-反过来，契约也是义务：既然说了返回值只借用 \texttt{a}，返回 \texttt{b} 就是违约。
+支持 \texttt{p + n}、\texttt{n + p}、\texttt{p -\allowbreak{} n} 和同类型的 \texttt{p -\allowbreak{} q}。最后一种返回元素距离，字节距离必须恰好是完整元素的倍数。调用者应只对同一分配计算距离；这个条件不能从两个裸地址本身证明。
 
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.439\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.228\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.313\linewidth-2\tabcolsep\relax}}
-\toprule
-写法 & 意思 & 违约时 \\
-\midrule
-\endhead
-\texttt{\#borrow(\allowbreak{}out,\allowbreak{} in)\allowbreak{}} / \texttt{\#borrow(\allowbreak{}out,\allowbreak{} [\allowbreak{}in1,\allowbreak{} in2,\allowbreak{} in3]\allowbreak{})\allowbreak{}} & \texttt{out} 借用列出的来源 & 保存了别处的引用 \ensuremath{\rightarrow} CHL1212 \\
-\texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a,\allowbreak{} b]\allowbreak{})\allowbreak{}} & 返回值借用 \texttt{a}、\texttt{b} & 返回了别处的引用 \ensuremath{\rightarrow} CHL1211 \\
-\texttt{\#static(\allowbreak{}a)\allowbreak{}} & \texttt{a} 的来源按 \texttt{'static} 处理 & 调用点传了非 \texttt{'static} 实参 \ensuremath{\rightarrow} CHL1214 \\
-\bottomrule
-\end{longtable}
+地址算术不会读取内存，可以先算出尾后地址。但一个可计算的地址不一定可解引用。负偏移、乘法、加减和除法仍遵循普通整数运算规则。
+
+\section{memcpy 与 memset 按字节工作}
+
+\texttt{memcpy<\allowbreak{}T,\allowbreak{}U>\allowbreak{}(\allowbreak{}destination,\allowbreak{} source,\allowbreak{} bytes)\allowbreak{}} 复制字节。源与目标可以使用不同的静态元素类型，底层不检查它们是否一致。\texttt{memset<\allowbreak{}T>\allowbreak{}(\allowbreak{}destination,\allowbreak{} value,\allowbreak{} bytes)\allowbreak{}} 把指定字节重复写入目标范围。
+
+虽然调用形式像函数，编译器在 AST 中将它们表示为专门的内存操作，AOT 直接生成 LLVM 的 \texttt{memcpy}／\texttt{memset} intrinsic。必要的地址和完整范围检查仍在写入前执行。
+
+长度都是字节数。对 \texttt{Bare\allowbreak{}Ptr<\allowbreak{}int64>\allowbreak{}} 填充 8 字节，只覆盖一个元素，而不是 8 个元素。\texttt{memset(\allowbreak{}p,\allowbreak{} 1,\allowbreak{} 8)\allowbreak{}} 写入的是 8 个 \texttt{0x01} 字节，并不等于向一个 \texttt{int64} 写入整数 1。
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+
+void main() {
+    RawStorage<int64> source = RawStorage<int64>::allocate(1);
+    RawStorage<uint8> target = RawStorage<uint8>::allocate(8);
+    unsafe {
+        BarePtr<int64> from = barePointer<int64>(source.pointer(0));
+        BarePtr<uint8> to = barePointer<uint8>(target.pointer(0));
+        memset<int64>(from, (uint8)42, 8);
+        memcpy<uint8,int64>(to, from, 8);
+        uint8 mut& first = dereference<uint8>(to);
+        uint8 mut& last = dereference<uint8>(to + 7);
+        println("{} / {}", (int64)*first, (int64)*last);
+        assert(!source.isInitialized(0));
+    }
+    source.close();
+    target.close();
 }
+\end{lstlisting}
+\par
+\medskip
 
-契约里只能写本函数的形参和局部变量名，\texttt{\#ret} 的来源必须是形参；名字写错（CHL1210）、把局部变量标成 \texttt{\#static}（CHL1213）都会当场报出来。
+\par
+\medskip
+\begin{lstlisting}[style=out]
+42 / 42
+\end{lstlisting}
+\par
+\medskip
 
-\texttt{\#static(\allowbreak{}a)\allowbreak{}} 值得单独说一句：它说的不是“这个引用活得久”，而是“它指的那个东西活得久”。局部变量的存储出块就没了，所以不能被标成 \texttt{'static}；全局变量可以。
+非零范围必须位于有效分配内。复制在完整源和目标范围都验证成功后才写入；重叠范围会被拒绝。零长度允许空指针。\texttt{memcpy} 采用非重叠复制约定，容器内部移动重叠区域时需要另行设计方向和所有权转移。
 
-\section{边界与验证}
+\section{字节写入不等于构造资源值}
 
-\begin{itemize}
+上个程序写入了原始字节，但 \texttt{source.\allowbreak{}is\allowbreak{}Initialized(\allowbreak{}0)\allowbreak{}} 仍为 \texttt{false}。这是明确的接口约定：裸字节操作不读写逐槽初始化位图，也不调用复制、移动和清理钩子。
 
-\item 指令只修饰声明，不能出现在语句或表达式里；写在别处是语法错误。
+对字节缓冲区，这样可以一次复制整段内容。对 String 或文件资源，只复制句柄字节不会产生第二份所有权。把两份相同句柄分别交给清理逻辑，就可能重复释放。向一个存活资源写入全零，也不会替原资源执行清理。
 
-\item \texttt{\#No<\allowbreak{}接口>\allowbreak{}Replace} 与 \texttt{\#No\allowbreak{}Right<\allowbreak{}接口>\allowbreak{}} 可以连写多条，顺序不影响结果。
+因此，字节操作负责字节，资源操作负责所有权。需要把一个资源从容器移到另一个容器时，继续使用 \texttt{take\allowbreak{}At}、\texttt{init\allowbreak{}At} 或满足条件的搬移接口。
 
-\item 运算符开关只影响自动推导：直接写出的运算符、显式声明的 \texttt{Right\allowbreak{}Xxx} 都不受约束。
+裸指针还不携带分配代次。释放后不能继续使用旧地址，也不能因为后来某个地址再次可访问，就认定它仍然表示原对象。
 
-\item 生命周期契约只能写在函数声明之前；\texttt{\#ret} 的来源必须是形参，\texttt{\#static} 不能标局部变量。
+\section{把不安全操作封装在安全接口内}
 
-\item 契约只改变借用来源的推断，不改变运行期行为：删掉契约不会让程序跑得更快或更慢。
+实现一个字节缓冲区时，可以让公开的 \texttt{push\allowbreak{}Byte}、\texttt{get\allowbreak{}Byte} 和 \texttt{reserve} 检查长度、容量与溢出，把裸指针操作收进方法内部的小块 \texttt{unsafe}。调用者只接触缓冲区，不直接维护地址与容量之间的关系。
 
-\item \texttt{Closeable} 自动等价于"不可复制"，无需再写 \texttt{\#Non\allowbreak{}Copyable}；\texttt{opcode} 的不可复制由声明体里有没有 \texttt{copy} 决定，\texttt{\#Non\allowbreak{}Copyable} 是可读性标记。
+扩容按以下顺序执行：先申请新容量，再复制存活字节，成功后释放旧分配，最后更新指针和容量。不要先释放旧空间再读取它，也不要在复制失败前把新指针公布给调用者。资源元素还要在这个顺序中正确转移初始化状态。
 
-\item 可运行验证见 \texttt{example/\allowbreak{}samples/\allowbreak{}derive.\allowbreak{}chl}、\texttt{no\_replace.\allowbreak{}chl}、\texttt{closeable\_move.\allowbreak{}chl}、\texttt{operator\_right\_direction.\allowbreak{}chl}；报错例见 \texttt{example/\allowbreak{}samples-error/\allowbreak{}operator\_no\_add\_replace.\allowbreak{}chl}、\texttt{operator\_right\_forbidden.\allowbreak{}chl}、\texttt{closeable\_copy.\allowbreak{}chl}。
+完整实验在 \href{https://github.com/rabbitc999/ChaLi/blob/master/benchmarks/perf/bootstrap_string.chl}{\texttt{bootstrap\_\allowbreak{}string.\allowbreak{}chl}}。它实现独占字节存储、扩容、追加、读取、查找和显式独立复制；中文与 emoji 按 UTF-8 字节保存。它没有实现标准 String 的全部 Unicode 方法，也不会因为按字节存储就自动知道一个下标是不是码点边界。
 
-\end{itemize}
+实现同类接口时，先写出不变量，例如 \texttt{0 <\allowbreak{}=\allowbreak{} length <\allowbreak{}=\allowbreak{} capacity}、\texttt{data} 指向当前拥有的分配、每次解引用都位于有效字节范围。每个不安全块旁边都应能解释它为什么满足这些条件。
+
+\section{用正确性与测量判断实现}
+
+原始存储的正确性测试应覆盖空容量、边界、重复初始化、移出后读取、增长、删除保留容量、释放后访问以及资源只清理一次。裸字节操作还要验证零长度、跨类型复制、重叠拒绝、完整范围检查和填充值的字节含义。
+
+性能测试要把编译与执行分开，用相同输入和可核对的输出比较。构造、逐字节追加、读取、查找、复制及原生 String 转入自举存储应分别记录。批量复制可能减少逐字节调用，但不能据此推断全部操作都会更快；查找算法、分配方式和剩余检查同样影响结果。
+
+\href{https://github.com/rabbitc999/ChaLi/blob/master/benchmarks/results/string-1.0.7/README.md}{原生与自举 String 报告}保留实际源码和编译器摘要。较早的逐槽受检版保存在 \texttt{bootstrap\_\allowbreak{}string\_\allowbreak{}checked.\allowbreak{}chl}，不能把它的测量改标为新的裸指针版。VM 与 AOT 也要分别记录。
 
 \section{小结}
 
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.229\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.751\linewidth-2\tabcolsep\relax}}
+\begin{center}
+\begin{tabular}{ll}
 \toprule
-你会了 & 关键点 \\
+工具 & 程序员承担的主要责任 \\
 \midrule
-\endhead
-编译器指令是什么 & \texttt{\#} 开头、写在声明前、只给编译器看，不留到运行时 \\
-\texttt{\#Non\allowbreak{}Copyable} & \texttt{opcode} 不绑定 \texttt{copy} \ensuremath{\rightarrow} 禁止复制，只能 \texttt{move x} \\
-\texttt{Closeable} 的连带效果 & 实现即自动不可复制，\texttt{close(\allowbreak{})\allowbreak{}} 不会跑两遍 \\
-\texttt{\#derive(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}} & 白名单 Equal / Hash / Clone，嵌套字段要有协议，不能派生 Drop / Closeable \\
-\texttt{\#No<\allowbreak{}接口>\allowbreak{}Replace} & 关掉该接口的全部自动推导（换边 / 对偶 / 取反） \\
-\texttt{\#No\allowbreak{}Right<\allowbreak{}接口>\allowbreak{}} & 只关右向，左向与显式 \texttt{Right\allowbreak{}Xxx} 照旧 \\
-报错怎么读 & 文案直接点出是哪条指令挡的，并给出两条出路 \\
-泛型 & 指令随模板带走，实例化时贴回每个实例 \\
+\texttt{unsafe} 作用域／函数 & 解释接口额外条件为何成立 \\
+\texttt{Raw\allowbreak{}Storage<\allowbreak{}T>\allowbreak{}} & 维护元素初始化与所有权转移 \\
+\texttt{Bare\allowbreak{}Ptr<\allowbreak{}T>\allowbreak{}} & 维护地址、布局、对齐、寿命和有效访问范围 \\
+指针算术 & 区分元素步长与字节距离，控制有效位置 \\
+\texttt{memcpy}／\texttt{memset} & 使用正确字节数，避免重叠和错误资源所有权 \\
+安全封装 & 将长度、容量及清理约束收在接口内部 \\
 \bottomrule
-\end{longtable}
-}
+\end{tabular}
+\end{center}
 
-\section{下一步}
-
-到这儿，语言里所有"编译期能替你做的事"都讲完了：宏、注解、编译器指令。你已经知道什么时候该让编译器代劳，什么时候该自己动手。
-
-最后一章是一份完整的实战项目：把结构体、反射、JSON 和 SQL 拼成一个能存数据的小系统。这一章不再介绍新语法，而是把前面二十几章的东西用一遍——你会发现真正花时间的地方，往往不是语法，而是"哪些边界该写进类型、哪些开关该关掉"。
-
-翻到\hyperref[ch:25]{第 25 章 AOT 导出}。
+日常业务优先使用标准容器和普通引用。需要实现存储内核时，再把这些工具放进范围明确、能够单独验证的小接口里。接下来阅读\hyperref[ch:24]{第 24 章 AOT 导出}，再进入学生信息管理系统项目。
 
 \section{习题}
 
-前两题动手验证指令的边界，第三题读报错，第四题验证契约带来的精度，最后一题为综合挑战。
-
 \begin{enumerate}
 
-\item 给一个只实现 \texttt{Add<\allowbreak{}int64,\allowbreak{}int64>\allowbreak{}} 的结构体加上 \texttt{\#No\allowbreak{}Add\allowbreak{}Replace}，写 \texttt{5 + a} 并观察报错；把指令换成 \texttt{\#No\allowbreak{}Right\allowbreak{}Add}，再写一次，比较两条文案的差别。
+\item 把 25.1 的调用移到 \texttt{unsafe} 块外，再尝试在块里创建一个调用该函数的普通闭包，分别观察诊断。
 
-\item 写一个 \texttt{\#derive(\allowbreak{}Equal,\allowbreak{} Hash,\allowbreak{} Clone)\allowbreak{}} 的结构体，字段里放一个自己实现 \texttt{Equal} 的嵌套结构体，确认派生能通过检查；把嵌套类型换成一个裸数组，观察报错。
+\item 在 25.2 中先 \texttt{take\allowbreak{}At}，再对同一槽位调用 \texttt{read\allowbreak{}At}。为什么不能把剩余字节当成有效 String？
 
-\item 解释为什么 \texttt{\#derive(\allowbreak{}Drop)\allowbreak{}} 会被拒绝，而不是"生成一个空 drop"。
+\item 将 25.5 的元素类型改为 \texttt{uint8}，说明两处地址差和元素距离应如何改变。
 
-\item 给 \texttt{int64 mut\& pick(\allowbreak{}int64 mut\& a,\allowbreak{} int64 mut\& b)\allowbreak{}} 写上 \texttt{\#borrow(\allowbreak{}\#ret,\allowbreak{} [\allowbreak{}a]\allowbreak{})\allowbreak{}}，先返回 \texttt{a} 再改成返回 \texttt{b}，观察报错；然后删掉契约，在一个 \texttt{outer} 里写 \texttt{return pick(\allowbreak{}\&x,\allowbreak{} \&local)\allowbreak{};}，看默认规则怎么处理。
+\item 把 25.6 的填充值改为 1，再将源作为 \texttt{int64} 解释。为什么结果不是整数 1？
 
-\item 挑战：设计一个“链式文本”类型，使 \texttt{chain + "x"} 合法、\texttt{"x" + chain} 编译报错，并说明为什么这里不需要 \texttt{Right\allowbreak{}Add}。
+\item 对同一分配的前 8 字节和后移 1 字节的位置调用 \texttt{memcpy}，确认重叠被拒绝。再尝试零长度空指针复制。
+
+\item 挑战：给实验字节缓冲区补充一次自身追加，并验证扩容后仍能正确读取原内容、复制独立性和最终清理。
 
 \end{enumerate}
 
@@ -539,32 +269,32 @@ void main()
 
 \begin{enumerate}
 
-\item 前者文案是"运算符 + 的自动推导被 \#NoAddReplace 关闭"，后者是"右向被编译器指令关闭"；两者都保留了左向可用的行为。
+\item 普通作用域调用不安全函数会被拒绝。闭包重新建立自己的函数权限范围，创建位置的不安全权限不会自动传入。
 
-\item 嵌套结构体需要自己实现或派生 \texttt{Equal} / \texttt{Hash} / \texttt{Clone}；裸数组没有约定语义，派生阶段会明确拒绝，而不是按字节比较。
+\item 移出已经转移所有权并把源标记为未初始化。旧字节不再表示源位置拥有的值；再次读取会被槽位状态检查拒绝。
 
-\item \texttt{Drop} 是析构协议，值语义已经对字段做递归清理；再生成一个 \texttt{drop(\allowbreak{})\allowbreak{}} 会与自动清理叠加，等于析构两次。派生只处理"可以按字段机械推出"的协议。
+\item \texttt{uint8} 每次前进 1 字节，\texttt{p + 2} 的字节距离为 2。减去一个元素后，元素距离与字节距离都为 1。
 
-\item 返回 \texttt{b} 报 CHL1211，文案里直接给出该写的契约；删掉契约后返回 \texttt{a} 仍然合法，但调用点会把全部引用实参都算进结果，\texttt{outer} 那句就被 CHL1204 挡住了——契约换来的是这个精度。
+\item 每一个字节都被写成 \texttt{0x01}。一个 8 字节整数的完整位模式与仅最低有效字节为 1 的整数不同。
 
-\item 用 \texttt{\#No\allowbreak{}Right\allowbreak{}Add} + 左接口 \texttt{Add}；不需要 \texttt{Right\allowbreak{}Add}，因为右向语义根本不该存在。
+\item 非零重叠范围违反接口约定。零长度不访问内存，允许两个空指针，不会复制或填充任何字节。
+
+\item 扩容前记录原长度，复制时使用更新后的有效地址，目标位于原内容之后；新旧存储的交接只能发生在复制成功之后。分别验证不扩容和需要扩容的情况。
 
 \end{enumerate}
 
-\section{番外：一张便条的权力}
+\section{番外：油杓与葫芦}
 
-改写自刘禹锡《陋室铭》。
+改写自欧阳修《卖油翁》。
 
-指令不在多，入语义则灵；注解不在长，有元数据则明。斯是声明，惟约定清。\texttt{\#Non\allowbreak{}Copyable} 上类型，普通赋值莫偷行；谈笑皆诊断，往来无蒙混。可以查文法，验类型。无乱标记之扰眼，无假接口之劳形。
+陈尧咨见老翁酌油，问道：“既然手熟，何必还要铜钱？”翁曰：“钱孔使我看清边界，手熟使我守住边界，二者并不相妨。”
 
-编译器阅此处，反射者查彼层。一个管能不能做，一个记身上有什么名。若将禁止复制只写成一条注解，便似在库门贴“请勿搬走”，看门人却从未接到命令。
+有门客闻言，将铜钱收进袖里，又在葫芦上贴了“不安全”三字，自谓已尽得要领。油未入瓶，先湿了衣袖。公问其故，门客答：“既已声明不安全，自然可以不问油流向哪里。”
 
-主簿有言：“何陋之有？”差役答曰：“陋倒不陋，就是把便条当成了律令。”
+翁取杓而止之：“你可以亲手持杓，却不能把别人的葫芦当作自己的。倒进去的是油，不是瓶子的主人；抄下来的是瓶号，也不是第二只瓶子。”
 
-县令闻之，命贴一千张“本库绝不失窃”，以为从此安全。次日失物，差役按注解查出每一只空箱的名称，竟无一项阻止了搬运。县令大怒，要追加一个 \texttt{@Really\allowbreak{}Really\allowbreak{}Safe}。主簿将笔夺下，曰：“再加一个 Really，也不会自动生成一条检查。”
-
-于是语义约束写入指令，描述信息留给注解。库中少了九百九十九张告示，规矩却第一次真正执行起来。县令大喜，欲为主簿加注“善治”。主簿再三说明：这个倒可以，只求别指望它自动发俸禄。
+于是门客把取油、持杓、换瓶各写一条规矩，替客人留下一个稳妥的把手。客人只须接过葫芦，如何守住钱孔，仍由持杓的人负责。公笑曰：“这回写在纸上的，终于不是免罪的告示。”
 
 \subsection*{技术对照}
 
-指令与注解的关键差别在读取者：指令由词法与语义层读取，参与类型检查；注解由反射在运行期读取，不改变语义。把"禁止某条推导"这类声明级约束写成标记接口，等于把规矩写进借条里。
+\texttt{unsafe} 表明实现者承担额外证明义务。裸地址和按位复制不会产生资源所有权，范围检查与清理协议仍各有职责。把底层操作封装成接口，是让调用者使用已经维护好的不变量；性能则要通过实际负载检验，不能由一个关键字推断。

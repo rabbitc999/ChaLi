@@ -1,4 +1,4 @@
-# Learning ChaLi
+# The ChaLi Programming Language
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../README.md)
@@ -40,11 +40,10 @@ The complete export uses `book/` for Chinese Markdown, `book/en/` for English Ma
 | [19](19-macros.md) | Preprocessing and hygienic macros |
 | [20](20-reflection.md) | Annotations and reflection |
 | [21](21-c-interop.md) | C interoperability |
-| [22](22-native-deployment.md) | Native deployment |
-| [23](23-compiler-commands.md) | Compiler commands |
-| [24](24-unsafe-code.md) | Unsafe code, raw storage, bare pointer arithmetic and byte operations |
-| [25](25-aot-export.md) | LLVM AOT export |
-| [26](26-student-system.md) | A student information system |
+| [22](22-compiler-commands.md) | Compiler commands |
+| [23](23-unsafe-code.md) | Unsafe code, raw storage, bare pointer arithmetic and byte operations |
+| [24](24-aot-export.md) | LLVM AOT export |
+| [25](25-student-system.md) | A student information system |
 | [A](A-common-errors.md) | Common errors |
 | [B](B-standard-library.md) | Standard-library reference |
 

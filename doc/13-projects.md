@@ -82,7 +82,7 @@ chali main.chl students.db schema
 
 **边界**：需要反射版工具链；模型字段变化会影响既有数据库（旧库缺列会被「数据库缺少字段」拦下）。
 
-入门讲解见书稿[第 26 章 学生信息管理系统](book/26-学生信息管理系统.md)。
+入门讲解见书稿[第 25 章 学生信息管理系统](book/25-学生信息管理系统.md)。
 
 ### 4.2 其他数据库示例
 
@@ -156,7 +156,7 @@ chali run doc/examples/library/sqlite.chl
 
 在目标机器上用 `chali aot` 生成原生可执行文件，静态链接运行时，交付时只需二进制本身
 （用了 `#abi` 外部库再带上动态库）。交叉编译、资源预算与执行边界见
-[部署说明](06-deployment.md)及[书稿原生产物部署章节](book/22-部署原生产物.md)。
+[部署说明](06-deployment.md)及[书稿原生产物部署章节](book/24-AOT导出.md)。
 
 ### 6.2 编辑器语言服务器与 VS Code 插件
 
@@ -200,6 +200,6 @@ VS Code 插件在 [`vscode/`](../vscode/)，语法高亮、补全、跳转与断
 | --- | --- |
 | 自己写一个能部署的程序 | [交付安全](05-delivery-security.md) → [跨平台部署](06-deployment.md) |
 | 把 ChaLi 接到 C/C++ 宿主 | [宿主集成与 C ABI](08-host-integration.md) |
-| 跟着书从零学语言 | [《玩转 ChaLi 语言》](book/README.md) |
+| 跟着书从零学语言 | [《ChaLi 程序设计语言》](book/README.md) |
 | 查某个库函数 | [库函数参考](library/README.md) |
 | 查命令行与工程配置 | [工具链使用](09-toolchain.md) |

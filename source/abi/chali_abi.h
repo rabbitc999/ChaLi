@@ -104,7 +104,7 @@ ChaliAbiEntry chali_abi_resolve(const char *name, int *arity);
 typedef const ChaliAbiRecord *(*ChaliAbiModule)(size_t *count);
 
 /**
- * @brief `std::lang` 标准错误流输出：__std_stderr_write / __std_eprint / __std_eprintln。
+ * @brief `std::lang` 标准错误流输出原语：__std_stderr_write。
  */
 const ChaliAbiRecord *abi_print_records(size_t *count);
 

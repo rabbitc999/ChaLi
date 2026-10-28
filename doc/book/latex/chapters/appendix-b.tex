@@ -148,7 +148,7 @@ sum=10
 \end{longtable}
 }
 
-JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL 见 \texttt{std:\allowbreak{}:\allowbreak{}sql}。默认编译器同时编入前端与 VM 反射，源码编译默认启用反射；关闭本次元数据输出时显式使用 \texttt{--no-reflection}。
+JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL 见 \texttt{std:\allowbreak{}:\allowbreak{}sql}。默认编译器同时编入前端与 VM 反射，源码编译默认启用反射；关闭本次元数据输出时显式使用 \texttt{-\allowbreak{}-\allowbreak{}no-\allowbreak{}reflection}。
 
 \subsection*{并发与协作}
 
@@ -182,9 +182,9 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-net.md}{\texttt{std:\allowbreak{}:\allowbreak{}net}} & 独占的 \texttt{Tcp\allowbreak{}Socket}、\texttt{Tcp\allowbreak{}Listener}，连接、监听、收发和 HTTP 客户端；HTTP 客户端不提供 TLS \\
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-sql.md}{\texttt{std:\allowbreak{}:\allowbreak{}sql}} & \texttt{Database}、参数化查询、事务与模型操作；连接 MySQL / SQLite / PostgreSQL / SQL Server \\
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-process.md}{\texttt{std:\allowbreak{}:\allowbreak{}process}} & \texttt{Process}，宿主进程创建、命令管道、等待与结果读取 \\
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-clock.md}{\texttt{std:\allowbreak{}:\allowbreak{}clock}} & 单调时钟 \texttt{steady\_clock}，只用来做差值，别当挂钟用 \\
+\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-clock.md}{\texttt{std:\allowbreak{}:\allowbreak{}clock}} & 单调时钟 \texttt{steady\_\allowbreak{}clock}，只用来做差值，别当挂钟用 \\
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-datetime.md}{\texttt{std:\allowbreak{}:\allowbreak{}datetime}} & \texttt{Date\allowbreak{}Time}、UTC 公历日期、Unix 秒、格式化和解析；不表示闰秒 \\
-\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-cli.md}{\texttt{std:\allowbreak{}:\allowbreak{}cli}} & 长短选项、组合短选项、位置参数、\texttt{--} 分隔、参数查询和帮助生成 \\
+\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-cli.md}{\texttt{std:\allowbreak{}:\allowbreak{}cli}} & 长短选项、组合短选项、位置参数、\texttt{-\allowbreak{}-\allowbreak{}} 分隔、参数查询和帮助生成 \\
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-memory.md}{\texttt{std:\allowbreak{}:\allowbreak{}memory}} & \texttt{Span<\allowbreak{}T>\allowbreak{}} 借用视图、\texttt{Memory\allowbreak{}Stats} 和独占 \texttt{Arena}；arena 重置使已有视图失效 \\
 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/std-watchdog.md}{\texttt{std:\allowbreak{}:\allowbreak{}watchdog}} & 软重启看门狗（水位与超时两个维度都默认关闭），桌面与目标宿主共用一份实现 \\
 \bottomrule
@@ -227,7 +227,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 某个函数的确切签名、默认值、返回与错误 & \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/README.md}{库函数 API 参考} 与\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/library/symbols.md}{全部函数索引} \\
 按能力域通读一遍标准库 & \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/07-stdlib-overview.md}{07 标准库概览} \\
 标准库源码（每个模块头部都有能力说明） & \href{https://github.com/rabbitc999/ChaLi/tree/master/source/std}{\texttt{source/\allowbreak{}std/\allowbreak{}}} 下的 \texttt{source/\allowbreak{}std/\allowbreak{}<\allowbreak{}名字>\allowbreak{}.\allowbreak{}chl} \\
-宿主侧绑定（\texttt{std:\allowbreak{}:\allowbreak{}*} 的真正实现） & \href{https://github.com/rabbitc999/ChaLi/tree/master/source/glue}{\texttt{source/\allowbreak{}glue/\allowbreak{}}} 下按功能组织的 \texttt{std\_*} 模块 \\
+宿主侧绑定（\texttt{std:\allowbreak{}:\allowbreak{}*} 的真正实现） & \href{https://github.com/rabbitc999/ChaLi/tree/master/source/glue}{\texttt{source/\allowbreak{}glue/\allowbreak{}}} 下按功能组织的 \texttt{std\_\allowbreak{}*} 模块 \\
 可直接运行的标准库样例 & \href{https://github.com/rabbitc999/ChaLi/tree/master/example/samples}{\texttt{example/\allowbreak{}samples/\allowbreak{}}} \\
 \bottomrule
 \end{longtable}

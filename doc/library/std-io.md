@@ -14,7 +14,7 @@ import std::io;
 
 ## 公共约定与错误边界
 
-FileStream 返回 Result，失败载荷是 IoError；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。
+整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result，失败载荷是 IoError；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。
 
 ## 参考代码
 
@@ -1305,7 +1305,7 @@ Result<List<uint8>,IoError> readAllBytes(String path, int64 maxBytes=16777216);
 std::io::readAllBytes(path, maxBytes);
 ```
 
-**源码**：[source/std/io.chl:243](../../source/std/io.chl#L243)。
+**源码**：[source/std/io.chl:241](../../source/std/io.chl#L241)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1344,7 +1344,7 @@ Result<int64,IoError> writeAllBytes(String path, List<uint8> bytes);
 std::io::writeAllBytes(path, bytes);
 ```
 
-**源码**：[source/std/io.chl:249](../../source/std/io.chl#L249)。
+**源码**：[source/std/io.chl:261](../../source/std/io.chl#L261)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1383,7 +1383,7 @@ Result<String,IoError> readAllText(String path, int64 maxBytes=16777216);
 std::io::readAllText(path, maxBytes);
 ```
 
-**源码**：[source/std/io.chl:255](../../source/std/io.chl#L255)。
+**源码**：[source/std/io.chl:275](../../source/std/io.chl#L275)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1422,7 +1422,7 @@ Result<int64,IoError> writeAllText(String path, String text);
 std::io::writeAllText(path, text);
 ```
 
-**源码**：[source/std/io.chl:264](../../source/std/io.chl#L264)。
+**源码**：[source/std/io.chl:284](../../source/std/io.chl#L284)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1460,7 +1460,7 @@ Result<List<String>,IoError> listDirectory(String path);
 std::io::listDirectory(path);
 ```
 
-**源码**：[source/std/io.chl:269](../../source/std/io.chl#L269)。
+**源码**：[source/std/io.chl:289](../../source/std/io.chl#L289)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1498,7 +1498,7 @@ Result<FileInfo,IoError> fileInfo(String path);
 std::io::fileInfo(path);
 ```
 
-**源码**：[source/std/io.chl:275](../../source/std/io.chl#L275)。
+**源码**：[source/std/io.chl:295](../../source/std/io.chl#L295)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1536,7 +1536,7 @@ Result<int64,IoError> createDirectories(String path);
 std::io::createDirectories(path);
 ```
 
-**源码**：[source/std/io.chl:283](../../source/std/io.chl#L283)。
+**源码**：[source/std/io.chl:303](../../source/std/io.chl#L303)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1575,7 +1575,7 @@ Result<int64,IoError> renamePath(String from, String to);
 std::io::renamePath(from, to);
 ```
 
-**源码**：[source/std/io.chl:289](../../source/std/io.chl#L289)。
+**源码**：[source/std/io.chl:309](../../source/std/io.chl#L309)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 

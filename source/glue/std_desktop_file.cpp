@@ -181,6 +181,22 @@ public:
      * @brief 关闭文件并释放宿主句柄。
      */
     void close() override { stream_.close(); }
+    /**
+     * @brief 关闭桌面文件并检查缓冲写入或关闭错误。
+     * @param error 接收失败原因。
+     * @return 关闭成功时为 true。
+     */
+    bool closeChecked(Memory::String &error) override
+    {
+        stream_.clear();
+        stream_.close();
+        if (stream_.fail())
+        {
+            error = "文件关闭失败";
+            return false;
+        }
+        return true;
+    }
 
 private:
     std::fstream stream_;

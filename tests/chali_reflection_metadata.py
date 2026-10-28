@@ -64,12 +64,12 @@ def main() -> None:
                              encoding='utf-8')
 
         prefix = work / 'plain'
-        run([chali, 'emit', plain, '--no-reflection', '--out', prefix])
+        run([chali, 'aot', plain, '--emit-llvm', '--no-reflection', '--out', prefix])
         features, _, reflection = sections(prefix.with_suffix('.quad').read_bytes())
         assert not features & 2, features
         assert reflection[1] == 0, reflection
 
-        run([chali, 'emit', plain, '--reflection', '--out', prefix])
+        run([chali, 'aot', plain, '--emit-llvm', '--reflection', '--out', prefix])
         features, _, reflection = sections(prefix.with_suffix('.quad').read_bytes())
         assert features & 2, features
         assert reflection[1] > 0, reflection
@@ -83,7 +83,7 @@ def main() -> None:
         assert run([product]).stdout == 'reflection ok\n'
         bad = work / 'bad.chl'
         bad.write_text('@annotation Label(text:int32)\n@Label("wrong")\nvoid main(){}\n', encoding='utf-8')
-        run([chali, 'emit', bad, '--reflection', '--out', work / 'bad'], success=False)
+        run([chali, 'aot', bad, '--emit-llvm', '--reflection', '--out', work / 'bad'], success=False)
         print(f'反射元数据传输及导出：{checks} 项集成检查通过')
 
 

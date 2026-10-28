@@ -22,6 +22,8 @@ extern size_t fwrite(const void *, size_t, size_t, FILE *), strlen(const char *)
 extern char *fgets(char *, int, FILE *), *strchr(const char *, int), *strstr(const char *, const char *), *strncat(char *, const char *, size_t);
 extern int memcmp(const void *, const void *, size_t);
 extern int strcmp(const char *, const char *);
+extern int fgetc(FILE *);
+extern int feof(FILE *);
 #define NULL ((void *)0)
 #endif
 extern const unsigned char chali_data_image[];
@@ -29,6 +31,16 @@ extern const size_t chali_data_size, chali_heap_size;
 
 typedef int64_t chali_i64;
 typedef uint64_t chali_u64;
+
+/**
+ * @brief 取得当前目标平台的 C 标准流，供 LLVM 直接生成的流调用使用。
+ * @param index 零为标准输入，一为标准输出，二为标准错误。
+ * @return 当前平台的 FILE 指针，不经过语言宿主记录或胶水注册表。
+ */
+FILE *chali_standard_stream(int index)
+{
+    return index == 0 ? stdin : index == 1 ? stdout : stderr;
+}
 
 extern void chali_host_init(void), chali_host_finish(void), chali_host_drop(chali_i64);
 extern unsigned char *chali_host_address(chali_i64, size_t);
@@ -229,10 +241,11 @@ chali_i64 chali_string_new(const char *bytes, size_t length)
     char *copy = (char *)malloc(length ? length : 1);
     if (!copy) chali_panic("复制字符串时内存不足");
     if (length) memcpy(copy, bytes, length);
-    const chali_i64 at = chali_alloc(length + 8u);
+    const chali_i64 at = chali_alloc(length + 9u);
     const chali_i64 n = (chali_i64)length;
     memcpy(chali_host_address(at, 8), &n, 8);
     if (length != 0u) memcpy(chali_host_address(at + 8, length), copy, length);
+    *chali_host_address(at + 8 + length, 1) = 0;
     free(copy);
     return at;
 }
@@ -587,17 +600,52 @@ chali_i64 chali_string_pos(chali_i64 value, chali_i64 needle)
         if (memcmp(chali_string_bytes(value) + at, chali_string_bytes(needle), (size_t)wanted) == 0) return at;
     return -1;
 }
-/* 输入：一行 / 一个数。这一版只做最简单的版本，够样例跑起来。 */
 /**
- * @brief 读取一行文本，去掉行尾并构造字符串。
- * @return 新构造的字符串句柄；空字符串仍具有有效的长度前缀。
+ * @brief 从标准输入逐字节读取完整行，仅移除 LF 及其前面的一个 CR。
+ * @return 新字符串句柄；EOF 返回空串，零字节及内存不足终止执行。
  */
 chali_i64 chali_read_line(void)
 {
-    char buffer[4096];
-    if (fgets(buffer, (int)sizeof buffer, stdin) == NULL) return chali_string_new("", 0u);
-    size_t length = strlen(buffer);
-    while (length > 0u && (buffer[length - 1u] == '\n' || buffer[length - 1u] == '\r')) buffer[--length] = '\0';
+    size_t capacity = 256, length = 0;
+    char *buffer = (char *)malloc(capacity);
+    if (!buffer) chali_panic("读取标准输入时内存不足");
+    int byte;
+    while ((byte = fgetc(stdin)) != -1 && byte != '\n')
+    {
+        if (byte == 0)
+        {
+            free(buffer);
+            chali_panic("readLine 不接受零字节，String 不能包含内嵌零字节");
+        }
+        if (length == capacity)
+        {
+            if (capacity > (size_t)-1 / 2) chali_panic("标准输入行过长");
+            capacity *= 2;
+            char *grown = (char *)realloc(buffer, capacity);
+            if (!grown) { free(buffer); chali_panic("读取标准输入时内存不足"); }
+            buffer = grown;
+        }
+        buffer[length++] = (char)byte;
+    }
+    if (byte == '\n' && length && buffer[length - 1] == '\r') --length;
+    const chali_i64 result = chali_string_new(buffer, length);
+    free(buffer);
+    return result;
+}
+
+/**
+ * @brief 调用 libc 将浮点数格式化为固定小数位文本，不处理尾零。
+ * @param value 浮点值。
+ * @param precision 小数位数，负数使用三位。
+ * @return 新字符串句柄；保留原有 255 字节截断规则，格式化失败终止执行。
+ */
+chali_i64 chali_string_fixed(double value, chali_i64 precision)
+{
+    char buffer[256];
+    if (precision < 0) precision = 3;
+    const int written = snprintf(buffer, sizeof(buffer), "%.*f", (int)precision, value);
+    if (written < 0) chali_panic("浮点数格式化失败");
+    const size_t length = (size_t)written < sizeof(buffer) ? (size_t)written : sizeof(buffer) - 1;
     return chali_string_new(buffer, length);
 }
 /**
@@ -622,6 +670,12 @@ chali_i64 chali_read_number(int wantFloat)
     if (sscanf(buffer, "%lld", &value) != 1) value = 0;
     return (chali_i64)value;
 }
+
+/**
+ * @brief 查询标准输入在最近一次读取后是否已经到达 EOF。
+ * @return 到达 EOF 返回一，否则返回零。
+ */
+chali_i64 chali_stdin_eof(void) { return feof(stdin) != 0; }
 
 /**
  * @brief 将整数格式化为十进制字符串。

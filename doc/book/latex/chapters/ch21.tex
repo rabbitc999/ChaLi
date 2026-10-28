@@ -25,7 +25,7 @@
 \endhead
 \texttt{\#abi} 指令 & 调动态库里按 C ABI 导出的函数 & 一份 \texttt{.\allowbreak{}dll} / \texttt{.\allowbreak{}so} \\
 函数值过边界 & ChaLi 把函数交给 C，C 在本次调用里同步回调 & 一个接收函数指针的 C 入口 \\
-\texttt{--shared --export} & C 宿主调用 AOT 导出的动态库 & 生成的 \texttt{.\allowbreak{}h} 和加载代码 \\
+\texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} & C 宿主调用 AOT 导出的动态库 & 生成的 \texttt{.\allowbreak{}h} 和加载代码 \\
 \bottomrule
 \end{longtable}
 }
@@ -180,7 +180,7 @@ hello from C
 
 \item 结构体按值传——C 的 \texttt{Point p} 对应 ChaLi 的 \texttt{Point p}，布局默认按 C 规则对齐。所以 ChaLi 这边得声明一个字段顺序、类型都一致的 \texttt{struct}；
 
-\item C 的 \texttt{int32\_t *value} 对应 \texttt{int32 mut\& value}（第 7 章的可变引用），调用处写 \texttt{bump(\allowbreak{}\&n)\allowbreak{}}——取地址用 \texttt{\&}，和 ChaLi 内部引用是同一套写法；
+\item C 的 \texttt{int32\_\allowbreak{}t *value} 对应 \texttt{int32 mut\& value}（第 7 章的可变引用），调用处写 \texttt{bump(\allowbreak{}\&n)\allowbreak{}}——取地址用 \texttt{\&}，和 ChaLi 内部引用是同一套写法；
 
 \item C 的 \texttt{const char *} 对应 \texttt{String}。
 
@@ -239,7 +239,7 @@ Option<Packed const&> packed_snapshot();
 
 \texttt{packed} 结构体用于对接 C 侧 \texttt{\#pragma pack} 的紧凑布局——C 里用\texttt{\#pragma pack(\allowbreak{}push,\allowbreak{} 1)\allowbreak{}} 压过的地方，ChaLi 侧就声明成 \texttt{struct X packed \{ … \}}。
 
-完整例子见 \href{https://github.com/rabbitc999/ChaLi/tree/master/doc/examples/abi_buffers}{\texttt{doc/\allowbreak{}examples/\allowbreak{}abi\_buffers/\allowbreak{}}}——它覆盖了结构体嵌套、紧凑布局、数组读写、可空引用、返回值长度等全部边界情况。
+完整例子见 \href{https://github.com/rabbitc999/ChaLi/tree/master/doc/examples/abi_buffers}{\texttt{doc/\allowbreak{}examples/\allowbreak{}abi\_\allowbreak{}buffers/\allowbreak{}}}——它覆盖了结构体嵌套、紧凑布局、数组读写、可空引用、返回值长度等全部边界情况。
 
 \section{同步回调：把 ChaLi 函数交给 C}
 
@@ -282,7 +282,7 @@ void main()
 \par
 \medskip
 
-能传的不只是具名函数。闭包也能过边界，捕获的数据由运行时带着走——C 侧看到的仍然只是\texttt{int64\_t (\allowbreak{}*)\allowbreak{}(\allowbreak{}int64\_t)\allowbreak{}}，调用时它自然读到正确的捕获环境。传 \texttt{void}、\texttt{float32}、\texttt{bool}、\texttt{int64 mut\&} 形参的回调同理。
+能传的不只是具名函数。闭包也能过边界，捕获的数据由运行时带着走——C 侧看到的仍然只是\texttt{int64\_\allowbreak{}t (\allowbreak{}*)\allowbreak{}(\allowbreak{}int64\_\allowbreak{}t)\allowbreak{}}，调用时它自然读到正确的捕获环境。传 \texttt{void}、\texttt{float32}、\texttt{bool}、\texttt{int64 mut\&} 形参的回调同理。
 
 三条规矩：
 
@@ -300,7 +300,7 @@ void main()
 
 \section{反方向：宿主调用 ChaLi}
 
-要 C 程序主动调 ChaLi，用 \texttt{--shared --export} 把函数导成动态库：
+要 C 程序主动调 ChaLi，用 \texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} 把函数导成动态库：
 
 \par
 \medskip
@@ -322,11 +322,11 @@ int64_t f_add(int64_t p0, int64_t p1);
 \par
 \medskip
 
-宿主按三段顺序调用：\texttt{chali\_init(\allowbreak{})\allowbreak{}} 分配运行期内存、装入数据区、跑全局初始化；然后调\texttt{f\_名字(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；最后 \texttt{chali\_finish(\allowbreak{})\allowbreak{}} 做全局清理、刷新输出、释放内存。\texttt{chali\_finish(\allowbreak{})\allowbreak{}} 之后原有句柄一律失效。
+宿主按三段顺序调用：\texttt{chali\_\allowbreak{}init(\allowbreak{})\allowbreak{}} 分配运行期内存、装入数据区、跑全局初始化；然后调\texttt{f\_\allowbreak{}名字(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；最后 \texttt{chali\_\allowbreak{}finish(\allowbreak{})\allowbreak{}} 做全局清理、刷新输出、释放内存。\texttt{chali\_\allowbreak{}finish(\allowbreak{})\allowbreak{}} 之后原有句柄一律失效。
 
 导出函数只接收和返回 C 标量；要传结构体就按值传，要原地修改就用 \texttt{T *} 对应的引用形参。\texttt{panic} 会穿出 C 帧变成进程级错误，宿主看到的是非零退出而不是一个假返回值。
 
-不导出任何函数、直接 \texttt{chali aot app.\allowbreak{}chl} 时，得到的是一个自包含可执行文件——那是交给最终用户的形态，见\hyperref[ch:22]{第 22 章}。
+不导出任何函数、直接 \texttt{chali aot app.\allowbreak{}chl} 时，得到的是一个自包含可执行文件——那是交给最终用户的形态，见\hyperref[ch:24]{第 24 章}。
 
 \section{小结}
 
@@ -336,7 +336,7 @@ int64_t f_add(int64_t p0, int64_t p1);
 你会了 & 关键点 \\
 \midrule
 \endhead
-三种集成 & \texttt{\#abi} 指令（ChaLi 调 C）／函数值同步回调／\texttt{--shared --export}（C 调 ChaLi） \\
+三种集成 & \texttt{\#abi} 指令（ChaLi 调 C）／函数值同步回调／\texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export}（C 调 ChaLi） \\
 \texttt{\#abi} 指令 & \texttt{\#abi(\allowbreak{}"C",\allowbreak{} ".\allowbreak{}/\allowbreak{}x.\allowbreak{}dll",\allowbreak{} "C符号名")\allowbreak{} 返回类型 名字(\allowbreak{}形参)\allowbreak{};} \\
 名字映射 & 第三个指令参数是 C 侧真实符号名，声明使用 ChaLi 本地名称 \\
 结构体 & 按值传；ChaLi 侧声明字段一致的 \texttt{struct} \\
@@ -346,7 +346,7 @@ int64_t f_add(int64_t p0, int64_t p1);
 「空」 & 只有 \texttt{Option<\allowbreak{}T \&>\allowbreak{}} 能把空送过边界 \\
 紧凑布局 & \texttt{struct X packed \{ … \}} 对接 \texttt{\#pragma pack} \\
 函数值 & 直接当机器函数指针传，C 同步调用；只能本次调用、同线程用 \\
-反向 & \texttt{--shared --export} 出库 + 头文件，\texttt{chali\_init} \ensuremath{\rightarrow} \texttt{f\_名字} \ensuremath{\rightarrow} \texttt{chali\_finish} \\
+反向 & \texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} 出库 + 头文件，\texttt{chali\_\allowbreak{}init} \ensuremath{\rightarrow} \texttt{f\_\allowbreak{}名字} \ensuremath{\rightarrow} \texttt{chali\_\allowbreak{}finish} \\
 \bottomrule
 \end{longtable}
 }
@@ -355,9 +355,9 @@ int64_t f_add(int64_t p0, int64_t p1);
 
 你能调 C 了、能被 C 调了。最后一个技术问题是：怎么把程序交出去——变成对方机器上能跑的东西。
 
-第 22 章讲部署原生产物：AOT 运行、检查配置、调试与交付。
+第 22 章介绍编译器指令，第 24 章集中讲解 AOT 导出、交叉编译、调试与交付。
 
-翻到\hyperref[ch:22]{第 22 章 部署原生产物}。
+接下来阅读\hyperref[ch:22]{第 22 章 编译器指令}。
 
 \section{边界与验证}
 

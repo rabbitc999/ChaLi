@@ -130,7 +130,7 @@ bool=1
 empty=ok
 invalid=ok
 overflow=ok
-random=9098160460397411210,-5
+random=7191089600892374487,-6
 path=alpha/gamma.txt
 name=gamma.txt ext=.txt
 normalized=a/b/d

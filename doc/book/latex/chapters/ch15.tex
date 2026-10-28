@@ -1514,7 +1514,7 @@ report sees 20
 \par
 \medskip
 
-\texttt{fn plus(\allowbreak{}int64 value)\allowbreak{} ->\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 与 \texttt{int64 plus(\allowbreak{}int64 value)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是同一件事：名字绑到闭包上，默认只读借用外层变量，\texttt{base} 后来的变化它照看得到。省掉 \texttt{->\allowbreak{}} 就是返回 \texttt{void}，所以 \texttt{fn report(\allowbreak{})\allowbreak{}} 等于 \texttt{void report(\allowbreak{})\allowbreak{}}。
+\texttt{fn plus(\allowbreak{}int64 value)\allowbreak{} -\allowbreak{}>\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 与 \texttt{int64 plus(\allowbreak{}int64 value)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是同一件事：名字绑到闭包上，默认只读借用外层变量，\texttt{base} 后来的变化它照看得到。省掉 \texttt{-\allowbreak{}>\allowbreak{}} 就是返回 \texttt{void}，所以 \texttt{fn report(\allowbreak{})\allowbreak{}} 等于 \texttt{void report(\allowbreak{})\allowbreak{}}。
 
 唯一的区别是捕获方式：后置写法不写捕获，一律用默认的 \texttt{const\&}。要用 \texttt{mut} / \texttt{copy} / \texttt{move}，就用本节开头那种把返回类型写在最前面、捕获写在函数体前的写法。
 
@@ -1684,7 +1684,7 @@ void main()
 
 内层函数不能默认借用本次调用的局部形参 \texttt{a}、\texttt{b} 后直接返回；这些形参会随 \texttt{combine} 返回而离开作用域。\texttt{fn copy} 使返回闭包拥有这两个函数值的副本。本例的 \texttt{f1}、\texttt{f2} 都没有捕获外部变量；如果它们含有借用，复制函数值不会把被借用对象变成自有状态，其来源仍必须活得足够久。
 
-\texttt{c3} 直接把两个匿名函数作为实参传入。目标形参 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 为 \texttt{fn(\allowbreak{}x)\allowbreak{}} 提供参数类型与返回类型的上下文，因此两个 \texttt{x} 都推断为 \texttt{int64}，不必重复写类型。组合顺序仍然是先执行第二项实参，再执行第一项实参：\texttt{(\allowbreak{}5 - 1)\allowbreak{} * 5 =\allowbreak{} 20}。这些匿名函数没有捕获状态，传入后同样由组合闭包持有其副本。
+\texttt{c3} 直接把两个匿名函数作为实参传入。目标形参 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 为 \texttt{fn(\allowbreak{}x)\allowbreak{}} 提供参数类型与返回类型的上下文，因此两个 \texttt{x} 都推断为 \texttt{int64}，不必重复写类型。组合顺序仍然是先执行第二项实参，再执行第一项实参：\texttt{(\allowbreak{}5 -\allowbreak{} 1)\allowbreak{} * 5 =\allowbreak{} 20}。这些匿名函数没有捕获状态，传入后同样由组合闭包持有其副本。
 
 组合器也可以写成模块级泛型函数。\texttt{T fn(\allowbreak{}T)\allowbreak{}} 是完整的返回类型，两个形参也使用相同的函数类型；调用时可以从实参推导 \texttt{T}，也可以显式指定 \texttt{compose<\allowbreak{}int64>\allowbreak{}}。返回闭包使用复制捕获，使两个函数值随返回结果一起存活。
 
@@ -1728,7 +1728,7 @@ void main()
 
 \section{fn 前缀与返回类型后置}
 
-前面几节都把返回类型写在最前面。也可以把 \texttt{fn} 写到名字前面，再用 \texttt{->\allowbreak{}} 把返回类型挪到参数表后面：
+前面几节都把返回类型写在最前面。也可以把 \texttt{fn} 写到名字前面，再用 \texttt{-\allowbreak{}>\allowbreak{}} 把返回类型挪到参数表后面：
 
 \par
 \medskip
@@ -1759,7 +1759,7 @@ no result
 \par
 \medskip
 
-省掉 \texttt{->\allowbreak{}} 时返回类型就是 \texttt{void}，所以 \texttt{fn show(\allowbreak{})\allowbreak{}} 等于 \texttt{void show(\allowbreak{})\allowbreak{}}。泛型也照样写：\texttt{T add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{}} 可以写成 \texttt{fn add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{} ->\allowbreak{} T}。
+省掉 \texttt{-\allowbreak{}>\allowbreak{}} 时返回类型就是 \texttt{void}，所以 \texttt{fn show(\allowbreak{})\allowbreak{}} 等于 \texttt{void show(\allowbreak{})\allowbreak{}}。泛型也照样写：\texttt{T add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{}} 可以写成 \texttt{fn add<\allowbreak{}T>\allowbreak{}(\allowbreak{}T a,\allowbreak{} T b)\allowbreak{} -\allowbreak{}>\allowbreak{} T}。
 
 返回函数时，读起来是「先说参数，再说交出什么」。15.14 那个工厂可以写成这样：
 
@@ -1793,7 +1793,7 @@ void main()
 \par
 \medskip
 
-括号里的 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 就是 15.2 节的函数类型，只是这次排在 \texttt{->\allowbreak{}} 后面；第二行把函数类型自己也换成了后置写法，第三行给后置的函数类型再套一层括号——读起来「返回一个函数」更像一整块。三行是同一个函数。后置写法里的参数名会被擦掉，所以在第三行里给参数起个名字也没关系：
+括号里的 \texttt{int64 fn(\allowbreak{}int64)\allowbreak{}} 就是 15.2 节的函数类型，只是这次排在 \texttt{-\allowbreak{}>\allowbreak{}} 后面；第二行把函数类型自己也换成了后置写法，第三行给后置的函数类型再套一层括号——读起来「返回一个函数」更像一整块。三行是同一个函数。后置写法里的参数名会被擦掉，所以在第三行里给参数起个名字也没关系：
 
 \par
 \medskip
@@ -1869,13 +1869,13 @@ shift is 100
 
 \begin{enumerate}
 
-\item 后置的函数类型只写在 \texttt{->\allowbreak{}} 后面，括号可加可不加：\texttt{->\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} ->\allowbreak{} int64} 与 \texttt{->\allowbreak{} (\allowbreak{}fn(\allowbreak{}int64)\allowbreak{} ->\allowbreak{} int64)\allowbreak{}} 是同一回事。声明变量仍写返回类型前置的 \texttt{int64 fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{} combine;}，不要写 \texttt{fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{} ->\allowbreak{} int64}。\texttt{fn} 后面直接跟 \texttt{(\allowbreak{}} 是 15.4 节的 lambda 前缀（连在函数类型上也一样：\texttt{fn counter(\allowbreak{})\allowbreak{} ->\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是具名闭包，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 才是匿名 lambda）。两者共用同一个开头，一个记号的向前看分不开，文法上让给了先来的 lambda。
+\item 后置的函数类型只写在 \texttt{-\allowbreak{}>\allowbreak{}} 后面，括号可加可不加：\texttt{-\allowbreak{}>\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} -\allowbreak{}>\allowbreak{} int64} 与 \texttt{-\allowbreak{}>\allowbreak{} (\allowbreak{}fn(\allowbreak{}int64)\allowbreak{} -\allowbreak{}>\allowbreak{} int64)\allowbreak{}} 是同一回事。声明变量仍写返回类型前置的 \texttt{int64 fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{} combine;}，不要写 \texttt{fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{} -\allowbreak{}>\allowbreak{} int64}。\texttt{fn} 后面直接跟 \texttt{(\allowbreak{}} 是 15.4 节的 lambda 前缀（连在函数类型上也一样：\texttt{fn counter(\allowbreak{})\allowbreak{} -\allowbreak{}>\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 是具名闭包，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 才是匿名 lambda）。两者共用同一个开头，一个记号的向前看分不开，文法上让给了先来的 lambda。
 
 \item 具名闭包也不接受捕获关键字。\texttt{fn} 后面紧跟 \texttt{const} / \texttt{mut} / \texttt{copy} / \texttt{move} 一律当匿名 lambda 的捕获方式，所以函数名只能用标识符，不能叫 \texttt{copy}。
 
-\item 后置写法里的参数名会被擦掉：\texttt{fn(\allowbreak{}int64 a,\allowbreak{} int64 b)\allowbreak{} ->\allowbreak{} int64} 与 \texttt{int64 fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{}} 是同一个类型，\texttt{a} / \texttt{b} 不参与类型比较，只是写给人看的注解。反过来，返回类型前置的写法要求严格，\texttt{int64 fn(\allowbreak{}int64 a)\allowbreak{}} 会直接报「函数类型的形参只写类型」。两种写法都不接受参数默认值。
+\item 后置写法里的参数名会被擦掉：\texttt{fn(\allowbreak{}int64 a,\allowbreak{} int64 b)\allowbreak{} -\allowbreak{}>\allowbreak{} int64} 与 \texttt{int64 fn(\allowbreak{}int64,\allowbreak{} int64)\allowbreak{}} 是同一个类型，\texttt{a} / \texttt{b} 不参与类型比较，只是写给人看的注解。反过来，返回类型前置的写法要求严格，\texttt{int64 fn(\allowbreak{}int64 a)\allowbreak{}} 会直接报「函数类型的形参只写类型」。两种写法都不接受参数默认值。
 
-\item 匿名 lambda 自己的箭头返回类型是 0.12.0 就移除的写法，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} ->\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 仍会被拒绝；要标注就写 \texttt{int64 fn(\allowbreak{}int64 x)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}}。
+\item 匿名 lambda 自己的箭头返回类型是 0.12.0 就移除的写法，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} -\allowbreak{}>\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 仍会被拒绝；要标注就写 \texttt{int64 fn(\allowbreak{}int64 x)\allowbreak{} \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}}。
 
 \end{enumerate}
 
@@ -1993,7 +1993,7 @@ void main()
 
 \section{下一步}
 
-\texttt{filter}、\texttt{map} 这类「把函数当参数」的操作，写起来越来越顺手了。但你自己写 \texttt{filter} 还得手搓 \texttt{List}、手搓 \texttt{for-in}——一不小心就写出一堆模板代码。
+\texttt{filter}、\texttt{map} 这类「把函数当参数」的操作，写起来越来越顺手了。但你自己写 \texttt{filter} 还得手搓 \texttt{List}、手搓 \texttt{for-\allowbreak{}in}——一不小心就写出一堆模板代码。
 
 第 16 章讲错误处理，先把「出错了怎么办」这件事说清楚；之后第六部分的迭代器，会把 \texttt{map} / \texttt{filter} 这些套路做成一条能直接用的链。
 
@@ -2055,9 +2055,9 @@ void main()
 
 “什么清白？我前天亲眼见你写了个返回闭包，被编译器报 CHL1204，吊着打。”
 
-“那是借用没活够。我后来改成 \texttt{fn make\allowbreak{}Counter(\allowbreak{})\allowbreak{} ->\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} ->\allowbreak{} int64}，交出去的是闭包，借的都在里头。”
+“那是借用没活够。我后来改成 \texttt{fn make\allowbreak{}Counter(\allowbreak{})\allowbreak{} -\allowbreak{}>\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} -\allowbreak{}>\allowbreak{} int64}，交出去的是闭包，借的都在里头。”
 
-“你那箭头还写在 lambda 上呢，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} ->\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}}，0.12.0 就废了。”
+“你那箭头还写在 lambda 上呢，\texttt{fn (\allowbreak{}int64 x)\allowbreak{} -\allowbreak{}>\allowbreak{} int64 \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}}，0.12.0 就废了。”
 
 孔乙己便涨红了脸，额上的青筋条条绽出，争辩道：“那是 lambda！……具名函数后置，能算一回事么？……借用不能算逃逸……闭包！……程序员的事，能算逃逸么？”
 
@@ -2185,4 +2185,4 @@ void main()
 
 返回闭包本身合法；问题是它是否携带活得不够久的借用。默认只读借用、mut 写回借用、copy 拥有副本和 move 转移拥有关系各有规则。循环持有与借用逃逸也不是同一个问题，应按实际所有权图和宿主资源协议分析，不能从人物对白推断存在通用追踪式回收器。
 
-对白里的 \texttt{fn make\allowbreak{}Counter(\allowbreak{})\allowbreak{} ->\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} ->\allowbreak{} int64} 是 15.18 的后置写法：具名函数把 \texttt{fn} 写到名字前、返回类型挪到 \texttt{->\allowbreak{}} 后面，具名的后置与匿名 lambda 的箭头是两回事——后者仍在 0.12.0 的移除清单里。后置的函数类型只跟在 \texttt{->\allowbreak{}} 后面；\texttt{fn} 后面直接跟 \texttt{(\allowbreak{}} 是匿名 lambda，两者共用同一个开头。具名闭包用后置写法时不写捕获关键字，一律按默认的只读借用来捕获。
+对白里的 \texttt{fn make\allowbreak{}Counter(\allowbreak{})\allowbreak{} -\allowbreak{}>\allowbreak{} fn(\allowbreak{}int64)\allowbreak{} -\allowbreak{}>\allowbreak{} int64} 是 15.18 的后置写法：具名函数把 \texttt{fn} 写到名字前、返回类型挪到 \texttt{-\allowbreak{}>\allowbreak{}} 后面，具名的后置与匿名 lambda 的箭头是两回事——后者仍在 0.12.0 的移除清单里。后置的函数类型只跟在 \texttt{-\allowbreak{}>\allowbreak{}} 后面；\texttt{fn} 后面直接跟 \texttt{(\allowbreak{}} 是匿名 lambda，两者共用同一个开头。具名闭包用后置写法时不写捕获关键字，一律按默认的只读借用来捕获。

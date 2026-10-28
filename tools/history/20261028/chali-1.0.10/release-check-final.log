@@ -1,0 +1,9 @@
+test_archive_and_failed_replacement (__main__.ReleaseTests.test_archive_and_failed_replacement)
+归档包含源码身份、样例和正确摘要；输入丢失不破坏原 ZIP。 ... ok
+test_version_drift (__main__.ReleaseTests.test_version_drift)
+插件版本漂移和非法 VERSION 必须在执行构建前失败。 ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.336s
+
+OK

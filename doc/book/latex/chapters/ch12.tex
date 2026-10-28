@@ -281,7 +281,7 @@ name=ChaLi
 
 若三个入口都由用户显式定义，各自实现优先：\texttt{value.\allowbreak{}to\allowbreak{}String(\allowbreak{})\allowbreak{}} 和结构体的 \texttt{\{\}} 格式化使用 \texttt{to\allowbreak{}String}；隐式字符串转换使用 \texttt{implicit\allowbreak{}Convert}；\texttt{cast<\allowbreak{}String>\allowbreak{}} 优先使用 \texttt{explicit\allowbreak{}Convert}。编译器只补缺失的桥接方法，避免互相调用形成递归。
 
-默认转换不消耗源值，也不依赖反射。临时源值在转换完成后正常清理。容器或聚合内部的自定义 \texttt{to\allowbreak{}String} 必须只读；容器遍历通过快照隔离用户回调的重入修改，错误仍保留原始诊断。默认递归展示有深度保护，重复对象路径显示 \texttt{<\allowbreak{}cycle>\allowbreak{}}。这套表示用于阅读和调试，不作为可逆序列化格式。完整验证例见仓库的 \texttt{example/\allowbreak{}samples/\allowbreak{}value\_text.\allowbreak{}chl}。
+默认转换不消耗源值，也不依赖反射。临时源值在转换完成后正常清理。容器或聚合内部的自定义 \texttt{to\allowbreak{}String} 必须只读；容器遍历通过快照隔离用户回调的重入修改，错误仍保留原始诊断。默认递归展示有深度保护，重复对象路径显示 \texttt{<\allowbreak{}cycle>\allowbreak{}}。这套表示用于阅读和调试，不作为可逆序列化格式。完整验证例见仓库的 \texttt{example/\allowbreak{}samples/\allowbreak{}value\_\allowbreak{}text.\allowbreak{}chl}。
 
 \section{下标是按字节算的}
 
@@ -402,7 +402,7 @@ if (name != expected)
 \par
 \medskip
 
-判空就用 \texttt{=\allowbreak{}=\allowbreak{} ""}，没有 \texttt{is\_empty} 之类的专用函数。
+判空就用 \texttt{=\allowbreak{}=\allowbreak{} ""}，没有 \texttt{is\_\allowbreak{}empty} 之类的专用函数。
 
 \section{\texttt{std:\allowbreak{}:\allowbreak{}text}：文本工具箱}
 
@@ -457,7 +457,7 @@ ABC abc
 \midrule
 \texttt{trim(\allowbreak{}s)\allowbreak{}} & 去掉两端空白 & 还有 \texttt{ltrim} / \texttt{rtrim} 只去一边 \\
 \texttt{to\allowbreak{}Upper} / \texttt{to\allowbreak{}Lower} & 大小写转换 & 只对 ASCII 字母有效 \\
-\texttt{find(\allowbreak{}s,\allowbreak{} needle)\allowbreak{}} & 找子串位置 & 找不到返回 \texttt{-1}；\texttt{rfind} 从右找 \\
+\texttt{find(\allowbreak{}s,\allowbreak{} needle)\allowbreak{}} & 找子串位置 & 找不到返回 \texttt{-\allowbreak{}1}；\texttt{rfind} 从右找 \\
 \texttt{contains(\allowbreak{}s,\allowbreak{} needle)\allowbreak{}} & 子串在不在 & 返回 \texttt{bool} \\
 \texttt{starts\allowbreak{}With} / \texttt{ends\allowbreak{}With} & 前后缀判断 &  \\
 \texttt{split(\allowbreak{}s,\allowbreak{} sep)\allowbreak{}} & 按分隔符切开 & 返回 \texttt{List<\allowbreak{}String>\allowbreak{}} \\

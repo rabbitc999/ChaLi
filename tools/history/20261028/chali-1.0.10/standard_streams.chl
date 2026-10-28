@@ -1,0 +1,10 @@
+void main() {
+    print("literal % ");
+    println("{}:{}", "中文", "text");
+    assert(eprint("stderr") == 0);
+    assert(eprintln() == 0);
+    println("{} {} {}", str(2.0), str(3.5), str(-0.0));
+    println("[{}]", readLine());
+    println("[{}]", readLine());
+    println("[{}]", readLine());
+}

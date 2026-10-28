@@ -12,7 +12,7 @@
 
 ChaLi 是一门静态类型、值语义优先、不带 GC 的通用编程语言，提供借用来源与控制流检查。它借用 C 的表达式与块语法，但类型、所有权与运行时行为由 ChaLi 自行定义，面向"同一份程序从桌面一直到嵌入式 Linux"的场景。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，把 `.chl` 源码降级为四元式，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -32,18 +32,18 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ## 编译过程
 
-条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，生成并优化四元式，再降低为 LLVM 原生代码。
-`.svmb` 格式已删除；四元式仍可单独导出用于后端分析。
+条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，直接遍历 AST 生成 LLVM IR，由 LLVM 优化并生成原生代码。
+正常运行与导出跳过 ChaLi 四元式的生成、写盘、重读与组装。`emit` 模式和 `.svmb` 格式已删除。
 
-![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、四元式生成与 LLVM 装配](doc/images/chali-compilation.png)
+![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM AOT](doc/images/chali-compilation.png)
 
 ## AOT 导出
 
-使用 `./ChaLi.exe aot input.chl --out build/program --checked`，将完成前端检查和优化的四元式直接转换为 LLVM 中间表示，再生成并链接原生产物。内置 LLVM 变体在进程内完成优化、机器码生成和 LLD 链接；外置变体使用 `library/llvm/` 工具链或 `--llvm` 指定的 clang。`--emit-llvm` 可以只导出 `.ll` 模块。
+使用 `./ChaLi.exe aot input.chl --out build/program --checked`，从完成语义检查的 AST 直接生成 LLVM 代码，再生成并链接原生产物。内置 LLVM 变体在进程内完成优化、机器码生成和 LLD 链接；外置变体使用 `library/llvm/` 工具链或 `--llvm` 指定的 clang。`--emit-llvm` 可以只导出 `.ll` 模块。
 
-![ChaLi AOT 导出流程：四元式、LLVM 中间表示、内置或外置 LLVM、链接与交付](doc/images/chali-aot.png)
+![ChaLi AOT 导出流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 25 章 AOT 导出](doc/book/25-AOT导出.md)。
+生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 24 章 AOT 导出](doc/book/24-AOT导出.md)。
 
 ## 运行过程
 

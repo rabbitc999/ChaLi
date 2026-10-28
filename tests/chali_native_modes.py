@@ -85,8 +85,8 @@ void main(List<String> args) {
     for command in ([compiler, 'svmb', source], [compiler, 'run', source, '--svmb'], [compiler, '--mode', 'svmb', source]):
         execute(command, expected=2)
     raw = work / 'quad'
-    execute([compiler, 'emit', source, '--out', raw])
-    assert raw.with_suffix('.quad').exists() and not raw.with_suffix('.svmb').exists()
+    execute([compiler, 'aot', source, '--emit-llvm', '--out', raw])
+    assert raw.with_suffix('.ll').exists() and not raw.with_suffix('.quad').exists() and not raw.with_suffix('.svmb').exists()
     symbols = subprocess.check_output(['ar', 't', ROOT / 'build/chali-ircode-aot-core/libstackvm.a'], text=True)
     assert not any(name in symbols for name in ['vm_execution.o', 'register_core.o', 'program_binary.o'])
     report['interpreter_and_bytecode_objects_absent'] = True

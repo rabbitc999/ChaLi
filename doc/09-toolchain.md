@@ -6,7 +6,7 @@
 
 从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](43-native-debugging.md)。
 
-ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与语义检查，再降级为四元式；支持单独导出四元式，也可显式使用 [AOT 编译入口](38-aot.md)生成 LLVM 模块与原生产物。
+ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [AOT 编译入口](38-aot.md)生成 LLVM 模块与原生产物。
 
 ## 执行与检查
 
@@ -14,12 +14,12 @@ ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与�
 chali run app.chl
 chali check app.chl
 chali check app.chl json
-chali emit app.chl out build/app
+chali aot app.chl --emit-llvm out build/app
 chali aot app.chl --out build/app
 ```
 
 直接传入 `.chl` 文件也会运行，文件后的参数传给程序；显式 `run` 可配置产物前缀。
-`emit` 输出 `.quad`、`.data.bin` 和 `.layout`；字节码导出已删除。运行时资产与标准库内嵌在编译器中。
+`aot --emit-llvm --out 前缀` 直接生成 `.ll`，不生成四元式中间文件；字节码导出已删除。运行时资产与标准库内嵌在编译器中。
 
 ## 开发工具
 

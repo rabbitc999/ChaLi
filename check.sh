@@ -15,7 +15,7 @@
 # 每个样例使用临时目录中的独立产物前缀，避免与其他模块门禁互相覆盖。
 # 想保留并查看某个样例的四元式，可以单独执行：
 #
-#   ./chali emit example/samples/array2d.chl out tmp/array2d
+#   ./chali aot example/samples/array2d.chl --emit-llvm out tmp/array2d
 #
 # 期望文件是"已验证正确"的输出固化下来的：一旦降级 / 四元式 / 栈机改动，
 # 这里会立刻报出是哪个样例、哪一行不同。

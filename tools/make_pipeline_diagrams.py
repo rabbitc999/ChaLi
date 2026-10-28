@@ -58,18 +58,18 @@ def title(canvas, heading, detail):
 
 
 def compilation(english=False):
-    """区分条件预处理、语义期宏展开、四元式生成及装配出口。"""
+    """展示语义检查后的 AST 直接生成 LLVM IR 与原生产物。"""
     c = Canvas()
     title(c, "ChaLi · Compilation" if english else "ChaLi · 编译过程",
-          "Generated front end → quadruples → LLVM AOT" if english else
-          "文法生成前端 → 语义与借用检查 → 四元式生成 → LLVM AOT")
+          "Generated front end → checked AST → LLVM AOT" if english else
+          "文法生成前端 → 语义与借用检查 → 已检查 AST → LLVM AOT")
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
         (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
         (1080, 145, "3  Lexing and parsing" if english else "3  词法与语法解析", ["Generated from chali.gram", "Build AST, including macro templates"] if english else ["由 chali.gram 生成的前端", "构建 AST 与宏模板"]),
         (1080, 315, "4  Semantic analysis" if english else "4  语义分析与宏展开", ["Hygienic expansion + type inference", "Overloads and monomorphisation"] if english else ["卫生 AST 宏展开与类型推导", "名称、重载与泛型单态化"]),
         (560, 315, "5  Borrow checking" if english else "5  独立借用检查", ["Control flow and reference origins", "Ownership and lifetime diagnostics"] if english else ["控制流与引用来源", "拥有关系及生命周期诊断"]),
-        (40, 315, "6  Generate quadruples" if english else "6  生成四元式", ["Compiler IR + data + layout", "Source locations retained"] if english else ["四元式 IR、数据区与布局", "保留诊断来源"]),
+        (40, 315, "6  Checked AST" if english else "6  已检查 AST", ["Typed functions and static data", "Source locations retained"] if english else ["已定型函数与静态数据", "保留诊断来源"]),
     ]
     for x, y, heading, lines in nodes:
         box(c, x, y, 440, heading, lines)
@@ -83,9 +83,9 @@ def compilation(english=False):
     arrow(c, ((760, 545), (800, 545)))
     box(c, 800, 485, 720, "8  Optimize in LLVM" if english else "8  LLVM 优化",
         ["LLVM O3 runs the full optimization pipeline" if english else "LLVM O3 完成全部优化",
-         "No internal quad optimization passes" if english else "四元式不再做内部优化"], green=True)
+         "Code generation and link-time optimization" if english else "机器码生成与链接时优化"], green=True)
     outputs = [
-        (40, "Quadruple artifacts" if english else "四元式产物", ["Generated IR + data + layout", "Diff with --out kept files"] if english else ["生成的四元式、数据区与布局", "用 --out 保留后逐行对比"]),
+        (40, "LLVM IR / object" if english else "LLVM IR／目标文件", ["--emit-llvm / --emit-obj", "--target selects platform and CPU"] if english else ["--emit-llvm / --emit-obj", "--target 选择目标平台与架构"]),
         (560, "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
         (1080, "AOT · native export" if english else "AOT · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
@@ -98,18 +98,18 @@ def compilation(english=False):
 
 
 def aot(english=False):
-    """绘制四元式经 LLVM 生成原生产物的两种编译器配置。"""
+    """绘制已检查 AST 经 LLVM 生成原生产物的两种编译器配置。"""
     c = Canvas()
     title(c, "ChaLi · AOT export" if english else "ChaLi · AOT 导出流程",
-          "Checked source → quadruples → LLVM → native artifact" if english else
-          "源码检查 → 四元式生成 → LLVM 优化与机器码生成 → 原生产物")
+          "Checked AST → LLVM → target code → native artifact" if english else
+          "已检查 AST → LLVM IR → 目标机器码 → 链接原生产物")
     rows = [
         (40, "1  Source and checks" if english else "1  源码与前端检查",
          [".chl / imports / AST macros", "Types, ownership and lifetimes"] if english else
          [".chl、模块与 AST 宏", "类型、拥有关系及生命周期"]),
-        (560, "2  Quadruples" if english else "2  四元式",
-         ["Shared front end, direct to LLVM", "No internal optimization passes"] if english else
-         ["复用前端，四元式不做内部优化", "直接降低为 LLVM 指令"]),
+        (560, "2  Checked AST" if english else "2  已检查 AST",
+         ["Generate LLVM IR directly in C++", "No quadruple serialization"] if english else
+         ["C++ 后端直接生成 LLVM IR", "跳过四元式生成、写盘与重读"]),
         (1080, "3  LLVM module" if english else "3  LLVM 中间表示",
          [".ll + embedded AOT runtime", "--emit-llvm stops here"] if english else
          [".ll 与内嵌 AOT 运行时", "--emit-llvm 在此停止"]),

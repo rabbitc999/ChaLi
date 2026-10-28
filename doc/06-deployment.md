@@ -37,7 +37,7 @@ chali aot lib.chl --shared --export add --out build/lib
 ## 只出中间产物
 
 ```sh
-chali emit app.chl --out build/app
+chali aot app.chl --emit-llvm --out build/app
 ```
 
 只写 `.quad` / `.data.bin` / `.layout`，不链接也不执行，用于检查四元式或自行装配。`.quad` 不是机器码。

@@ -13,7 +13,7 @@ Native executables are never encrypted or obfuscated: `--encrypt` and `[chali] e
 | `.chl` source | ChaLi compiler | Source sharing and joint development |
 | `aot` executable | Target platform; any dynamic library the program uses must sit next to it | Closed-source delivery and offline runs |
 | `--shared --export` library + header | A C/C++ host project and linker | Embedding in an existing host |
-| Quadruple triple (`emit`) | A toolchain able to assemble it | Inspecting the intermediate form, custom assembly |
+| LLVM IR (`aot --emit-llvm`) | A toolchain able to assemble it | Inspecting the intermediate form, custom assembly |
 
 ## Export and distribute
 
@@ -31,7 +31,7 @@ chali aot src/lib.chl --shared --export add --out build/lib
 
 The second command produces `build/lib.dll` (`.so` on Linux) and `build/lib.h`; the host calls `chali_init()`, then `f_add(...)`, then `chali_finish()`. On Windows the loader searches the executable's directory and `PATH`, so libraries referenced by `#abi` must be placed next to the artifact.
 
-To inspect the intermediate form only, run `chali emit src/main.chl --out build/app`. It writes `.quad`, `.data.bin` and `.layout` without linking or executing.
+To inspect the intermediate form only, run `chali aot src/main.chl --emit-llvm --out build/app`. It generates `.ll` directly from the AST without generating quadruples, linking, or executing.
 
 ## Boundaries
 

@@ -72,7 +72,7 @@ def main():
     for declaration in ('struct Bad { String text; }; abi LIBRARY { void f(Bad p); }', 'struct Bad unknown { int32 value; }; abi LIBRARY { void f(Bad p); }', 'abi LIBRARY { int32[] f(int32 count) = "f" [missing]; }', 'abi LIBRARY { void f(int32 mut& mut& p); }'):
         bad = WORK / 'bad.chl'
         bad.write_text(declaration.replace('LIBRARY', json.dumps(library.as_posix())) + '\nvoid main() { return; }\n', encoding='utf-8')
-        result = run([compiler, 'run', bad, '--emit', '--out', WORK / 'bad'], succeeds=False)
+        result = run([compiler, 'aot', bad, '--emit-llvm', '--out', WORK / 'bad'], succeeds=False)
         assert 'abi' in result.stderr.lower() or '语法错误' in result.stderr, result.stderr
     print(('AOT' if options.aot else 'VM') + ' ABI 值、引用和非空返回检查通过')
 if __name__ == '__main__':

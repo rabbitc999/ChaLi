@@ -1,5 +1,5 @@
 /* ============================================================
- * 入口：chali <源文件.chl> [--out 前缀] [--emit] [--debug]
+ * 入口：chali <源文件.chl> [--out 前缀] [--debug]
  *                           [-I 目录] [-D 符号[=值]] [--raw] [--deps]
  *
  *   ① 读源文件（不给文件也不给 `--stdin` 时显示帮助）；
@@ -308,13 +308,12 @@ void PrintUsage(std::FILE *out)
              "用法：chali 文件.chl [程序参数...]\n",
              "      chali 场景 [文件.chl] [配置词...] [-- 程序参数...]\n",
              "\n",
-             "统一工具链：AOT 原生执行与四元式导出；.svmb 已删除。\n",
+             "统一工具链：AST 直接生成 LLVM，支持原生运行与交叉目标代码生成。\n",
              "场景指令（运行方式也可用 --mode 指定）：\n",
              "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
-             "  emit           只出 .quad / .data.bin / .layout\n",
-             "  aot            unchecked LLVM 原生产物（--llvm、--checked、--emit-llvm、--shared、--export）\n",
+             "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
              "  clear out DIR  清理登记过的中间产物（不重新编译）\n",
@@ -332,7 +331,11 @@ void PrintUsage(std::FILE *out)
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
-             "  --emit                 只生成 .quad / .data.bin / .layout，不执行\n",
+             "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
+             "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
+             "  --sysroot 目录         目标 SDK 的系统根目录\n",
+             "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n",
+             "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [aot] 表配置\n",
              "  --hard-realtime        禁止整个编译单元使用反射\n",
              "  --import-dir 目录      追加 import 搜索目录\n",
              "  --include-path 目录    追加模块搜索目录\n",
@@ -538,9 +541,8 @@ try
         }
         else if (first == "emit")
         {
-
-            run = 0;
-            firstArgument = 2;
+            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
+            return 2;
         }
         else if (first == "svmb" || first == "smvb")
         {
@@ -556,15 +558,16 @@ try
             PrintUsage(stdout);
             return 0;
         }
-        if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm"))
+        if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm" || argument == "--emit-obj"))
         {
             if (argument == "--checked") aotOptions.checked = true;
             if (argument == "--unchecked") aotOptions.checked = false;
             if (argument == "--shared") aotOptions.shared = true;
             if (argument == "--emit-llvm") aotOptions.emitLLVMOnly = true;
+            if (argument == "--emit-obj") aotOptions.emitObjectOnly = true;
             continue;
         }
-        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link"))
+        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir"))
         {
             if (index + 1 >= argc)
             {
@@ -575,6 +578,10 @@ try
             if (argument == "--llvm") aotOptions.compiler = value;
             if (argument == "--export") aotOptions.exports.push_back(value);
             if (argument == "--link") aotOptions.linkLibraries.push_back(value);
+            if (argument == "--target") aotOptions.target = value;
+            if (argument == "--cpu") aotOptions.cpu = value;
+            if (argument == "--sysroot") aotOptions.sysroot = value;
+            if (argument == "--runtime-dir") aotOptions.runtimeDirectory = value;
             continue;
         }
         /* `--mode`：与统一入口一致的运行方式；interpret / run / aot 折到 run，svmb 已删除。 */
@@ -596,7 +603,10 @@ try
                 run = 0;
             }
             else if (mode == "emit")
-                run = 0;
+            {
+                std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
+                return 2;
+            }
             else
             {
                 std::fprintf(stderr, CHALI_TEXT("chali: 不认识的运行方式：%s\n"), mode.c_str());
@@ -762,11 +772,10 @@ try
             }
             continue;
         }
-        if (argument == "--emit") /* 只生成 .quad / .data.bin / .layout，不执行 */
+        if (argument == "--emit") /* 已删除 */
         {
-
-            run = 0;
-            continue;
+            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
+            return 2;
         }
         if (argument == "--no-threads")
         {
@@ -852,21 +861,12 @@ try
 
     /* 既没给源文件也没要 `--stdin`：显示帮助并退出 0。以前这里会一直等标准输入，
      * 管道没接上时看起来像卡死；现在把「要读管道」变成显式动作。 */
-    if (path == nullptr && !readStdin)
+    if (path == nullptr && !readStdin && !aot)
     {
         PrintUsage(stdout);
         return 0;
     }
 
-    /* `emit` 的产物就是用户要的东西（.quad / .data.bin / .layout），缺省放到源文件同级，
-     * 不塞进隐藏目录；运行与 AOT 导出的中间产物仍留在 .chali/ 下。 */
-    if (!outGiven && path != nullptr && run == 0 && !aot && !checkOnly)
-    {
-        const std::filesystem::path sourcePath = std::filesystem::u8path(path);
-        const std::filesystem::path directory = sourcePath.parent_path();
-        const std::filesystem::path stem = Memory::u8path(sourcePath.stem().u8string());
-        prefix = (directory.empty() ? stem : directory / stem).u8string();
-    }
     /* 缺省中间产物目录：Windows 上设为隐藏，避免污染工程目录；--out 显式指定时不动用户的目录。 */
     if (!outGiven && prefix.rfind(".chali", 0) == 0)
     {
@@ -945,6 +945,34 @@ try
     /* `[chali] debug = true` 是项目级的“带调试节”，等价于命令行写 `--debug`。
      * 缺省 false（不带调试信息）；配置内容进缓存签名，改它会让缓存失效。 */
     if (project.debug) { stripDebug = false; debugEnabled = true; aotOptions.debug = true; }
+    if (aotOptions.target.empty()) aotOptions.target = project.aotTarget;
+    if (aotOptions.cpu.empty()) aotOptions.cpu = project.aotCpu;
+    if (aotOptions.sysroot.empty()) aotOptions.sysroot = project.aotSysroot;
+    if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
+    if (aotOptions.compiler.empty()) aotOptions.compiler = project.aotCompiler;
+    if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly)
+    {
+        aotOptions.emitLLVMOnly = project.aotOutput == "llvm";
+        aotOptions.emitObjectOnly = project.aotOutput == "object";
+    }
+    if (aotOptions.emitLLVMOnly && aotOptions.emitObjectOnly)
+    {
+        std::fputs("chali: --emit-llvm 与 --emit-obj 不能同时指定。\n", stderr);
+        return 2;
+    }
+    if (aotOptions.emitLLVMOnly || aotOptions.emitObjectOnly) { aot = true; run = 0; }
+    chali_aot::TargetInfo selectedTarget;
+    Memory::String targetError;
+    if ((aot || run) && !chali_aot::describeTarget(aotOptions.target, selectedTarget, &targetError))
+    {
+        std::fprintf(stderr, "chali: %s\n", targetError.c_str());
+        return 2;
+    }
+    if (run && !selectedTarget.native)
+    {
+        std::fputs("chali: run 只能执行宿主目标；请使用 aot 导出交叉编译产物。\n", stderr);
+        return 2;
+    }
     /* 构建**项目**时入口是 `[chali] main` 指定的主文件（命令行没给源文件才用它）；
      * 单文件编译就是命令行显式给的那个文件，不看主文件。
      * `projectMainPath` 只是为了让 `const char *path` 在整个编译期都有效。 */
@@ -953,6 +981,11 @@ try
     {
         projectMainPath = project.main;
         path = projectMainPath.c_str();
+    }
+    if (path == nullptr && !readStdin)
+    {
+        PrintUsage(stdout);
+        return 0;
     }
     Memory::UniquePtr<chali_incremental::Cache> cache;
     if (incremental)
@@ -1426,46 +1459,9 @@ try
     }
     if (aot && !checkOnly)
     {
-        auto quads = stackvm::loadQuadFile(prefix + ".quad");
-        stackvm::Program program;
         Memory::Vector<Memory::String> diagnostics;
-        if (!quads.ok() || !stackvm::assemble(quads, program))
-        {
-            for (const auto &message : quads.diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
-            for (const auto &message : program.diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
-            return 1;
-        }
-        stackvm::DataArea data;
-        if (!data.load(prefix + ".data.bin", prefix + ".layout", &diagnostics))
-        {
-            for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
-            return 1;
-        }
         chali_aot::Request request;
-        request.quads = &quads;
-        request.program = &program;
-        request.dataBytes.assign(reinterpret_cast<const char *>(data.binary.data()), data.binary.size());
-        Memory::Vector<stackvm::LayoutRow> rows;
-        for (const auto &symbol : data.symbols)
-        {
-            stackvm::LayoutRow row;
-            row.name = symbol.first;
-            row.offset = symbol.second;
-            const auto size = data.sizes.find(symbol.first);
-            if (size != data.sizes.end())
-            {
-                row.size = size->second;
-                row.hasSize = true;
-            }
-            const auto stride = data.strides.find(symbol.first);
-            if (stride != data.strides.end())
-            {
-                row.stride = stride->second;
-                row.hasStride = true;
-            }
-            rows.push_back(std::move(row));
-        }
-        request.dataLayout = stackvm::encodeDataLayout(rows);
+        request.syntax = M_AotSyntax();
         request.externs = chali_aot::collectAbiExterns();
         request.abiGlue = chali_aot::collectAbiGlue();
         request.abiExports = chali_aot::collectAbiExports();
@@ -1473,11 +1469,10 @@ try
         for (auto &name : aotOptions.exports)
         {
             bool exact = false, implicit = false;
-            for (const auto &quad : quads.quads)
+            if (request.syntax) for (const auto &function : request.syntax->functions)
             {
-                if (quad.op != "label") continue;
-                exact |= quad.arg(2) == name;
-                implicit |= quad.arg(2) == "program::" + name;
+                exact |= function.quadLabel() == name;
+                implicit |= function.quadLabel() == "program::" + name;
             }
             if (!exact && implicit) name = "program::" + name;
         }
@@ -1506,7 +1501,7 @@ try
         if (status != 0) return status;
         /* 缺省运行或导出完成后清理中间产物；--out 显式给路径时按用户要求全部保留，
          * --keep-artifacts、--incremental 与 --emit-llvm 同样保留。 */
-        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly;
+        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly;
         /* 带 `--export` 时 ABI 头是交给宿主代码的交付物，不能当中间产物删掉。 */
         const bool withHeader = aotOptions.exports.empty();
         if (run)

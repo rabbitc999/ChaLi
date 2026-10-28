@@ -43,7 +43,7 @@ def main():
             return run([*args, *extra], success=success, cwd=project, env=env)
         source.write_text('/*\nmodule hidden;\nimport absent;\n*/\n' + source.read_text(encoding='utf-8').replace('    std::lang::println("chali-ok");', '    std::lang::assert(nativeapi::nativeIdentity((int32)7) == 7);\n    std::lang::println("chali-ok");'), encoding='utf-8')
         assert execute().stdout == 'chali-ok\n'
-        emitted = [*args, '--emit', '--incremental']
+        emitted = [args[0], 'aot', *args[2:], '--emit-llvm', '--incremental']
         first = run(emitted)
         assert library.as_posix() in prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
         quad = prefix.with_suffix('.quad')

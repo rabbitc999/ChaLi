@@ -28,7 +28,7 @@ def main():
         work = Path(temporary)
         sample = ROOT / 'example/reflection/declarations.chl'
         # 反射表随四元式导出，AOT 编译只读同一份前端产物。
-        run([args.chali, '--reflection', '--emit', sample, '--out', work / 'program'])
+        run([args.chali, 'aot', '--reflection', '--emit-llvm', sample, '--out', work / 'program'])
         source = work / 'case.chl'
 
         def check(text, error=None, enabled=True):
@@ -50,7 +50,7 @@ def main():
             (work / (module + '.chl')).write_text('module ' + module + ';\n@Reflect struct Same{int64 value;};\n',
                                                   encoding='utf-8')
         source.write_text('import one;\nimport two;\nvoid main(){return;}\n', encoding='utf-8')
-        run([args.chali, '--reflection', '--emit', source, '--out', work / 'names'], cwd=work)
+        run([args.chali, 'aot', '--reflection', '--emit-llvm', source, '--out', work / 'names'], cwd=work)
 
         def identities(prefix):
             quad = prefix.with_suffix('.quad').read_bytes()
@@ -93,7 +93,7 @@ def main():
             source.write_text(extra + 'struct Box<T>{T value;};\n@Reflect String read(Box<' + alias +
                               '> value){return value.value;}\nvoid main(){return;}\n', encoding='utf-8')
             prefix = work / ('identity' + str(index))
-            run([args.chali, '--reflection', '--emit', source, '--out', prefix])
+            run([args.chali, 'aot', '--reflection', '--emit-llvm', source, '--out', prefix])
             snapshots.append(identities(prefix))
         assert snapshots[0] == snapshots[1], snapshots
         assert 'struct:program::Box<std::lang::String>' in snapshots[0], snapshots

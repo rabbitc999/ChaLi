@@ -31,20 +31,28 @@ def main():
             prefix = work / 'run'
             result = run(*options, '--out', prefix)
             assert result.stdout == 'VM command OK\n' and not result.stderr, result
-            assert prefix.with_suffix('.quad').is_file(), '显式 --out 应保留中间产物'
+            assert prefix.with_suffix('.ll').is_file(), '显式 --out 应保留 LLVM 模块'
+            assert not prefix.with_suffix('.quad').exists(), '正常运行应从 AST 直达 LLVM'
         # 未给 --out 时中间产物落在隐藏的 .chali/ 下，且运行后只剩标准库缓存。
         result = run('run', source, cwd=work)
         assert result.stdout == 'VM command OK\n', result
         leftovers = sorted(entry.name for entry in (work / '.chali').iterdir())
         assert leftovers == ['chali-stdlib-cache'], leftovers
         assert not list(work.glob('chali_out*')), '缺省前缀不应落在工作目录'
-        # emit 只出四元式、数据区与布局；--debug 不改变退出状态。
-        prefix = work / 'emit'
-        result = run('emit', source, 'out', prefix, '--debug')
+        # 已删除的三种 emit 写法都拒绝执行和生成产物。
+        for arguments in [('emit', source), ('--mode', 'emit', source), ('run', source, '--emit')]:
+            prefix = work / 'removed'
+            result = run(*arguments, '--out', prefix, success=False)
+            assert result.returncode == 2 and 'run 或 aot' in result.stderr, result
+            assert not list(work.glob('removed.*'))
+        # LLVM IR 从 AST 直接生成，不执行源程序，也不生成四元式中间文件。
+        prefix = work / 'llvm'
+        result = run('aot', source, '--emit-llvm', 'out', prefix, '--debug')
         assert not result.stdout and not result.stderr, result
-        assert all(prefix.with_suffix(suffix).is_file() for suffix in ['.quad', '.data.bin', '.layout'])
+        assert prefix.with_suffix('.ll').is_file()
+        assert all(not prefix.with_suffix(suffix).exists() for suffix in ['.quad', '.data.bin', '.layout'])
         # .svmb 已在 1.0.8 删除：命令与 --svmb 选项都要给出明确提示而不是静默忽略。
-        for arguments in [('svmb', source, '--out', work / 'svmb'), ('emit', source, '--svmb', '--out', work / 'svmb')]:
+        for arguments in [('svmb', source, '--out', work / 'svmb'), ('run', source, '--svmb', '--out', work / 'svmb')]:
             result = run(*arguments, success=False)
             assert '已删除' in result.stderr, result.stderr
             assert not (work / 'svmb.svmb').exists(), '不应该再写出 .svmb'
@@ -61,7 +69,7 @@ def main():
             assert not result.stdout and not result.stderr, result
             assert prefix.with_suffix('.ll').is_file()
             assert not prefix.with_suffix('.exe').exists()
-    print('Unified commands: run aliases, emit artifacts, .chali cleanup, removed .svmb, unknown files and aot all passed')
+    print('Unified commands: run aliases, LLVM artifacts and removed emit, .chali cleanup, removed .svmb, unknown files and aot all passed')
 
 
 if __name__ == '__main__':

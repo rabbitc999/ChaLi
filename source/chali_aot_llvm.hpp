@@ -16,11 +16,12 @@ bool available();
 /**
  * @brief 使用进程内 LLVM 优化并生成对象，再使用进程内 LLD 链接。
  * @param request AOT 编译选项及额外链接库。
- * @param module 已写入磁盘的 LLVM 模块路径。
+ * @param module LLVM 模块的产物路径，用于链接期产物命名。
+ * @param source 直接生成的 LLVM 代码，静态后端直接从内存解析。
  * @param product 目标可执行文件或共享库路径。
  * @param diagnostics 接收 LLVM 与链接诊断。
  * @return 成功为零，失败为非零。
  */
-int compile(const Request &request, const Memory::String &module, const Memory::String &product,
+int compile(const Request &request, const Memory::String &module, const Memory::String &source, const Memory::String &product,
             Memory::Vector<Memory::String> *diagnostics);
 }  // namespace chali_aot::builtin

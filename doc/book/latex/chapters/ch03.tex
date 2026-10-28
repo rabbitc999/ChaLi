@@ -370,7 +370,7 @@ void main()
 \par
 \medskip
 
-\texttt{uint8 narrow =\allowbreak{} 256u;} 会因为超范围报错。\texttt{int64 signed\allowbreak{}Value =\allowbreak{} 1u;} 不能隐式转换，\texttt{-1u} 也会被拒绝；需要有符号负数时直接写 \texttt{-1}。\texttt{0xffu}、\texttt{b\_101u} 同样支持无符号后缀。十六进制和现有二进制写法支持数字间的下划线分隔，但十进制 \texttt{1\_000} 和 \texttt{0b1010} 并不是当前文法支持的写法。
+\texttt{uint8 narrow =\allowbreak{} 256u;} 会因为超范围报错。\texttt{int64 signed\allowbreak{}Value =\allowbreak{} 1u;} 不能隐式转换，\texttt{-\allowbreak{}1u} 也会被拒绝；需要有符号负数时直接写 \texttt{-\allowbreak{}1}。\texttt{0xffu}、\texttt{b\_\allowbreak{}101u} 同样支持无符号后缀。十六进制和现有二进制写法支持数字间的下划线分隔，但十进制 \texttt{1\_\allowbreak{}000} 和 \texttt{0b1010} 并不是当前文法支持的写法。
 
 \section{隐式转换：只放行「变宽」}
 
@@ -521,7 +521,7 @@ void main()
 \end{itemize}
 
 \begin{tip}{提示}
-强转是「你签字、编译器照做」，不做范围检查。 所以 \texttt{(\allowbreak{}int8)\allowbreak{}200} 得到 \texttt{-56}、\texttt{(\allowbreak{}uint8)\allowbreak{}300} 得到 \texttt{44}，都不报错。会做范围检查的是字面量直接落进槽位那条路（3.10 节）——两条路泾渭分明：没写强转，编译器替你把关；写了强转，责任在你。
+强转是「你签字、编译器照做」，不做范围检查。 所以 \texttt{(\allowbreak{}int8)\allowbreak{}200} 得到 \texttt{-\allowbreak{}56}、\texttt{(\allowbreak{}uint8)\allowbreak{}300} 得到 \texttt{44}，都不报错。会做范围检查的是字面量直接落进槽位那条路（3.10 节）——两条路泾渭分明：没写强转，编译器替你把关；写了强转，责任在你。
 \end{tip}
 
 反过来 \texttt{(\allowbreak{}int64)\allowbreak{}3.\allowbreak{}9} 得到 \texttt{1}：浮点转整数是直接砍掉小数位，不是四舍五入。要四舍五入得自己想办法（\texttt{std:\allowbreak{}:\allowbreak{}math} 里有取整函数，第 12 章提）。
@@ -559,7 +559,7 @@ void main()
 
 规矩一：负数字面量可以直接写进窄类型。
 
-\texttt{-300} 在语法上是「一元负号 + 正数字面量 \texttt{300}」，但编译器把它当常量看值——只要值落在目标类型的范围内，就直接放行：
+\texttt{-\allowbreak{}300} 在语法上是「一元负号 + 正数字面量 \texttt{300}」，但编译器把它当常量看值——只要值落在目标类型的范围内，就直接放行：
 
 \par
 \medskip
@@ -608,7 +608,7 @@ chali: 整数字面量 200 超出 int8 的取值范围（-128..127）
 \texttt{uint8 b =\allowbreak{} 255;} 没问题（255 在 \texttt{0.\allowbreak{}.\allowbreak{}255} 里），\texttt{uint8 b =\allowbreak{} 256;} 报同样的错。这条只管「字面量落进槽位」（初始化 / 赋值）；显式强转是另一回事——\texttt{(\allowbreak{}int8)\allowbreak{}200} 是你亲口签字，编译器只管按位截断（见 3.9 节）。
 
 \begin{tip}{提示}
-十六进制 / 二进制字面量按「位模式」处理，不做范围检查。 \texttt{int8 x =\allowbreak{} 0x\allowbreak{}FF;} 得到 \texttt{-1}（低 8 位全 1，按有符号读就是 -1），和 C 一样。要写明确的位模式，就用 \texttt{0x} / \texttt{b} 前缀。
+十六进制 / 二进制字面量按「位模式」处理，不做范围检查。 \texttt{int8 x =\allowbreak{} 0x\allowbreak{}FF;} 得到 \texttt{-\allowbreak{}1}（低 8 位全 1，按有符号读就是 -1），和 C 一样。要写明确的位模式，就用 \texttt{0x} / \texttt{b} 前缀。
 \end{tip}
 
 还有几个词法上的「不认」，撞上了照右列改：
@@ -619,7 +619,7 @@ chali: 整数字面量 200 超出 int8 的取值范围（-128..127）
 你可能想写 & 实际会怎样 & 改成 \\
 \midrule
 \texttt{0b1010} & 语法错误（前缀是 \texttt{b}，不是 \texttt{0b}） & \texttt{b1010} \\
-\texttt{1\_000} & 语法错误（下划线分隔不认） & \texttt{1000} \\
+\texttt{1\_\allowbreak{}000} & 语法错误（下划线分隔不认） & \texttt{1000} \\
 \texttt{1.\allowbreak{}0F} / \texttt{1U} & 后缀必须小写 & \texttt{1.\allowbreak{}0f} / \texttt{1u} \\
 \bottomrule
 \end{tabular}

@@ -13,7 +13,7 @@
 | `.chl` 源码 | ChaLi 编译器 | 开放源码、联合开发 |
 | `aot` 可执行文件 | 目标平台；程序用到的动态库须与产物同目录 | 交付闭源程序、离线运行 |
 | `--shared --export` 动态库 + 头文件 | C/C++ 宿主工程与链接器 | 嵌入既有宿主程序 |
-| 四元式三件套（`emit`） | 具备自行装配能力的工具链 | 检查中间表示、定制装配 |
+| LLVM IR（`aot --emit-llvm`） | 具备自行装配能力的工具链 | 检查中间表示、定制装配 |
 
 ## 2. 导出与分发
 
@@ -31,7 +31,7 @@ chali aot src/lib.chl --shared --export add --out build/lib
 
 第二条命令生成 `build/lib.dll`（Linux 为 `.so`）与 `build/lib.h`，宿主按 `chali_init()` → `f_add(...)` → `chali_finish()` 调用。Windows 加载器按可执行文件所在目录和 `PATH` 查库，因此 `#abi` 引用的动态库要和产物放在一起。
 
-只想检查中间表示时用 `chali emit src/main.chl --out build/app`，它只出 `.quad` / `.data.bin` / `.layout`，不链接也不执行。
+只想检查中间表示时用 `chali aot src/main.chl --emit-llvm --out build/app`，它直接从 AST 生成 `.ll`，不生成四元式、不链接也不执行。
 
 ## 3. 能力边界
 

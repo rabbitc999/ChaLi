@@ -1,0 +1,16 @@
+[
+  {
+    "variant": "external",
+    "version": "1.0.10",
+    "binary_sha256": "35e6d2602054e757452ce570bf7fd6051a2b46d196e1e8ab2da3fa69b974ce6b",
+    "msi_embedded_bytes_equal": true,
+    "vsix_embedded_bytes_equal": true
+  },
+  {
+    "variant": "static",
+    "version": "1.0.10",
+    "binary_sha256": "8cecb596466d4f8c8a2b6acb1b739b31a7ced16e34a42e763dc861fb564a6ed7",
+    "msi_embedded_bytes_equal": true,
+    "vsix_embedded_bytes_equal": true
+  }
+]

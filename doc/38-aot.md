@@ -6,7 +6,7 @@
 
 从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](43-native-debugging.md)。
 
-`chali aot input.chl --out build/program` 将前端生成并优化的四元式直接降低为 LLVM 中间表示，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
+`chali aot input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
 
 Windows x64 依赖通过 [在线下载脚本](../library/llvm/README.md) 准备。外置后端运行 `python tools/fetch_llvm_toolchain.py`；静态后端运行 `python tools/fetch_llvm_sdk.py`，下载预编译 LLVM/LLD 和匹配 GCC，全部缓存位于 `build/`。仓库不保存 SDK 或离线分片；归档按固定 SHA-256 校验。只导出 LLVM IR 不需要代码生成工具链。
 
@@ -17,7 +17,7 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 | `--out 前缀` | 输出 `.ll` 模块、C ABI 头文件及原生产物；Windows 使用 .exe/.dll，Linux 使用无后缀可执行文件或 .so |
 | `--llvm 路径` | 指定外置 LLVM clang 驱动；静态变体缺省使用内置后端，外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
 | `--emit-llvm` | 只生成 LLVM 模块与 C ABI 头文件，不执行目标代码生成或链接 |
-| `--checked` | 生成四元式的数组边界与指针检查；run 默认启用，aot 导出默认关闭 |
+| `--checked` | 生成 AST 中已检查的数组边界与指针检查；run 默认启用，aot 导出默认关闭 |
 | `--unchecked` | 显式关闭这些检查，仅用于调试或性能对照；仍检查对象存活与实际内存访问 |
 | `--shared` | 生成动态库 |
 | `--export 名称` | 指定对外导出的函数，可重复使用 |
@@ -36,11 +36,11 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 | `make` 或 `make CHALI_STATIC_LLVM=0` | 调用外置 LLVM clang；工具链位于 `library/llvm/` | `llvm-external` |
 | `make llvm-static` | 静态链接 LLVM 优化与 x64 代码生成库、LLD；内嵌 CRT 链接资产，编译时无需 clang 或 LLVM DLL | `llvm-static` |
 
-首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM 源码、核对 SHA-256，再在 `library/llvm/` 内增量构建静态开发库。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.8-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.8-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
+首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM/LLD 预编译开发库与匹配的 GCC，核对 SHA-256 并安装到隔离 SDK 目录。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.8-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.8-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
 
-`python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本均为独立的 1.0.0，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
+`python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本与 VERSION 中的编译器版本一致，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 
-程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [AOT 运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `python tools/build_aot_runtime.py --check` 可验证生成结果同步。当前运行时提供 Windows x64 与 Linux x64 布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
+程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [AOT 运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `sh tools/build_aot_runtime.sh --check` 可验证生成结果同步。当前运行时提供 Windows x64、Linux x64 与 Linux ARM64 布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
 
 `--incremental` 在 AOT 路径不复用编译产物，ABI 声明来自本次语义分析。功能验证由 [AOT 回归](../tests/chali_aot.py)、[列表与 opcode 差分回归](../tests/chali_aot_values.py)、[复杂 ABI 值与引用回归](../tests/chali_abi_values.py)（--aot）、[C 回调及返回所有权回归](../tests/chali_abi_contracts.py)（--aot）和[静态 LLVM 隔离回归](../tests/chali_aot_static.py)覆盖。
 
@@ -65,3 +65,44 @@ int64 add(int64 left, int64 right)
 Windows 原生进程入口从 CRT 宽字符参数转换到 UTF-8，再交给 main 的 List<String>；中文、非 BMP 字符、空串、引号及反斜线均保留。入口行为的回归为 python tests/chali_aot_arguments.py，同时检查中文与空格产物路径。
 
 在线工具链下载也支持 Linux x64、Linux ARM64 与 macOS ARM64，可运行 `python tools/fetch_llvm_toolchain.py --list` 查看，或用 `--platform` 显式选择。静态 SDK 自动准备目前限定 Windows x64；下载能力不代表相应平台 AOT 已验收。
+
+## 交叉编译与项目配置
+
+交叉编译时，编译器运行的平台是宿主，生成程序运行的平台是目标。当前可选择 Windows x64、Linux x64 和 Linux ARM64，分别使用 `x86_64-w64-windows-gnu`、`x86_64-unknown-linux-gnu` 和 `aarch64-unknown-linux-gnu`；也可使用 `windows-x64`、`linux-x64`、`linux-arm64` 简写。
+
+先导出目标 LLVM IR 或目标文件，不必准备目标链接库：
+
+```sh
+chali aot aot_demo.chl --target linux-arm64 --emit-llvm --out build/arm64/demo
+chali aot aot_demo.chl --target linux-arm64 --emit-obj --out build/arm64/demo
+```
+
+`--emit-llvm` 生成目标对应的 `.ll`；`--emit-obj` 继续生成 `.o`，跳过链接。Windows 目标的 `.o` 内容为 COFF，Linux 目标为 ELF，文件格式由目标决定。两种选项不能同时使用。静态 LLVM 变体可通过内置后端生成目标文件；外置变体需要包含对应目标后端的 clang。
+
+完整链接还需要目标平台的 C/C++ 运行库、启动对象、链接器和 ChaLi 运行时。`--sysroot` 指定目标系统根目录，`--runtime-dir` 指定包含目标 `libchali_aot_host.a` 的目录；库的目标架构和 ABI 必须与 `--target` 一致。`--cpu` 可进一步选择目标 CPU。仓库提供在 Linux 或 WSL 中准备 GNU 目标运行时 SDK 的脚本，需要先安装对应的 GNU C/C++ 工具链：
+
+```sh
+sh tools/build_cross_runtime.sh linux-arm64 2
+```
+
+脚本将 ARM64 对象与宿主对象隔离构建，并在 `build/cross-sdk/linux-arm64/` 生成 `sysroot/`、`lib/`、许可证和摘要。Windows 编译器使用该目录时，应填写 Windows 能访问的实际路径。
+
+在 `chali.toml` 中集中保存配置：
+
+```toml
+[aot]
+target = "aarch64-unknown-linux-gnu"
+cpu = "generic"
+sysroot = "build/cross-sdk/linux-arm64/sysroot"
+runtime_dir = "build/cross-sdk/linux-arm64/lib"
+output = "executable"
+```
+
+路径相对于 `chali.toml` 所在目录解析。`output` 可选 `llvm`、`object` 或 `executable`；`llvm` 配置项可指定外置 clang 路径。执行 `chali aot` 会读取项目配置，显式命令行参数覆盖对应设置：
+
+```sh
+chali aot --out build/arm64/app
+chali aot --target linux-x64 --emit-obj --out build/x64/app
+```
+
+生成成功后应在目标机器或相应模拟器中验证参数、标准输入输出、文件、资源清理和错误路径。`run` 不会自动启动模拟器，目标与宿主不同时会拒绝直接运行。导出目标文件成功仅证明代码生成完成，不能据此声称目标链接或实际运行已验证。复杂 C ABI 的跨目标完整链接需要兼容的目标适配器；当前可先导出目标文件，并在目标工具链中完成适配器编译与链接。

@@ -84,7 +84,7 @@ clear 后：len=0
 \end{tabular}
 \end{center}
 
-\texttt{index\allowbreak{}Of} 找不到时返回 \texttt{-1}——这是惯例，用的时候要判断：
+\texttt{index\allowbreak{}Of} 找不到时返回 \texttt{-\allowbreak{}1}——这是惯例，用的时候要判断：
 
 \par
 \medskip
@@ -174,7 +174,7 @@ cid -> 33
 
 \item \texttt{m[\allowbreak{}k]\allowbreak{}} 读（键不在就报错）；\texttt{has(\allowbreak{}k)\allowbreak{}} 判断有没有；\texttt{get\allowbreak{}Option(\allowbreak{}k)\allowbreak{}} 一次拿到 \texttt{Option<\allowbreak{}V>\allowbreak{}}（键不在给 \texttt{None}，不报错）；\texttt{remove(\allowbreak{}k)\allowbreak{}} 删掉并返回是否删到了；
 
-\item 遍历用 \texttt{key\allowbreak{}At(\allowbreak{}i)\allowbreak{}} / \texttt{val\allowbreak{}At(\allowbreak{}i)\allowbreak{}} 按下标走，\texttt{i} 从 0 到 \texttt{len(\allowbreak{})\allowbreak{} - 1}。Map 不保证排序或插入顺序；上面的输出只是一种可能的顺序。
+\item 遍历用 \texttt{key\allowbreak{}At(\allowbreak{}i)\allowbreak{}} / \texttt{val\allowbreak{}At(\allowbreak{}i)\allowbreak{}} 按下标走，\texttt{i} 从 0 到 \texttt{len(\allowbreak{})\allowbreak{} -\allowbreak{} 1}。Map 不保证排序或插入顺序；上面的输出只是一种可能的顺序。
 
 \end{itemize}
 
@@ -507,7 +507,7 @@ done
 
 \section{遍历}
 
-遍历用 \texttt{for-in}，不要数下标：
+遍历用 \texttt{for-\allowbreak{}in}，不要数下标：
 
 \par
 \medskip
@@ -543,7 +543,7 @@ void main()
 \par
 \medskip
 
-\texttt{for-in} 遍历出来的是元素的副本，所以「边遍历边改」改不到容器。要用下标改，就用 \texttt{for}：
+\texttt{for-\allowbreak{}in} 遍历出来的是元素的副本，所以「边遍历边改」改不到容器。要用下标改，就用 \texttt{for}：
 
 \par
 \medskip
@@ -558,7 +558,7 @@ for (int64 i in range(0, scores.len()))
 \medskip
 
 \begin{tip}{提示}
-遍历时不要增删元素。 \texttt{for-in} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。
+遍历时不要增删元素。 \texttt{for-\allowbreak{}in} 途中 \texttt{push} / \texttt{remove} 会让「下一个是谁」变得不可预测。要筛要删，用第 17 章的迭代器 \texttt{filter} / \texttt{collect} 造一张新表，或者先记下要删的下标再统一删。
 \end{tip}
 
 \subsection*{用 \texttt{Any} 保存不同类型的元素}
@@ -673,7 +673,7 @@ void main() {
 
 \item 容器是值：赋值、传参、存取元素都是复制；传参默认写 \texttt{const\&} / \texttt{mut\&}；
 
-\item 遍历用 \texttt{for-in}，遍历出来是副本；遍历时不要增删；
+\item 遍历用 \texttt{for-\allowbreak{}in}，遍历出来是副本；遍历时不要增删；
 
 \item 容器在出作用域时自动释放。
 
@@ -681,7 +681,7 @@ void main() {
 
 \section{下一步}
 
-现在你会用容器了，但要写「取分数前 3 名」「把所有名字变大写」这种活儿，用 \texttt{for-in} 加手工判断会很啰嗦。
+现在你会用容器了，但要写「取分数前 3 名」「把所有名字变大写」这种活儿，用 \texttt{for-\allowbreak{}in} 加手工判断会很啰嗦。
 
 不过在那之前，先解决一个你已经在用的东西但没细讲过的：字符串。它的下标是按字节的——这跟中文直接相关，值得单独一章。
 

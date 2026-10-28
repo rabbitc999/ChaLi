@@ -70,12 +70,11 @@ bool nextInputLine(NativeContext &ctx, Memory::String &line);
 Slot inputReadLine(NativeContext &ctx, const Memory::Vector<Slot> &);
 
 /**
- * @brief 最多读取指定行数，以 LF 连接，EOF 提前结束。
- * @param ctx 上下文。
- * @param args 非负行数。
- * @return 新字符串槽；负数或零字节报告运行错误。
+ * @brief 查询标准输入 EOF 状态，禁用输入兜底时视作已结束。
+ * @param ctx 原生调用上下文。
+ * @return EOF 返回整数一，否则返回零。
  */
-Slot inputReadLines(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot inputAtEnd(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
 /**
  * @brief 标准输入是不是交互式终端——决定 `__std_pause` 要不要真的停下来等。

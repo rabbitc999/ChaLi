@@ -4,7 +4,18 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.9**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.10**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.10 — 标准库 ChaLi 实现与 LLVM 标准流直连
+
+- 正常 run 与 aot 从语义检查后的 AST 直接生成 LLVM 基本块和 SSA 表达式，不再生成、序列化、重读或组装四元式；具名局部和参数拥有独立函数存储，表达式临时值直接使用 SSA。保留共享运行时的内存存活、闭包重入和宿主 ABI 协议。
+- std::lang 的错误输出包装、浮点格式化去尾零和多行输入拼接改用 ChaLi 实现；宿主只提供流读写、EOF 查询与固定小数位格式化原语。
+- LLVM AOT 将标准错误、纯字符串格式的标准输出、readLine 和固定小数位格式化直接连接运行时与 libc；保留共享堆检查及看门狗回退。标准输入完整读取长行，仅去除 LF/CRLF 并拒绝内嵌零字节。 运行时新字符串保留结尾零字节，使空行与 EOF 的内容地址仍处于有效分配范围。
+- std::io 的完整文件字节读取和写入改由 ChaLi 组合文件流原语实现，预算检查与分块循环不再由宿主胶水负责。文件句柄仍由共享运行时托管。
+- 删除 emit、--mode emit 与 --emit 模式；aot --emit-llvm 只导出直接生成的 LLVM 模块。正常路径不再生成 .quad/.data.bin/.layout，静态数据与布局直接内嵌 LLVM 模块。版本和插件声明同步为 1.0.10。
+- 交叉编译增加 Windows x64、Linux x64、Linux ARM64 目标选择，支持 LLVM IR 与目标文件导出；chali.toml 的 [aot] 可配置 target、cpu、sysroot、runtime_dir、llvm 和 output，命令行覆盖项目设置。目标运行时与 sysroot 独立准备，跨目标 run 明确拒绝直接执行。
+- 书稿合并部署原生产物与 AOT 导出，删除独立部署章并前移后续编号：第 22 章编译器指令、第 23 章不安全代码、第 24 章 AOT 导出、第 25 章学生信息管理系统。新增交叉编译、目标 SDK 与 TOML 配置说明，同步中英文目录、交叉引用、流程图、LaTeX 与 PDF。书名统一为《ChaLi 程序设计语言》，AOT 章仅保留行囊里的工具番外。
 
 
 ## 1.0.9 — 直通 C 胶水：原生调用去掉中间层

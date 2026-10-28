@@ -4,7 +4,7 @@
 **English** · [简体中文](../01-第一个程序.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi compiles source into a quadruple intermediate representation, applies the full optimization budget, and lowers it through LLVM to native machine code: `run` uses checked AOT and executes the program in the same process. Diagnostics point directly at the program you are editing.
+After semantic checks, ChaLi generates LLVM IR directly from the checked AST. LLVM performs optimization and native code generation; normal `run` and `aot` skip ChaLi quadruple generation, serialization and assembly. `run` uses checked AOT and executes the program in the same process. Diagnostics point directly at the program you are editing.
 
 Install the MSI on Windows, DEB on Ubuntu/Debian or RPM on CentOS, then use the `chali` command on PATH. A Windows source build instead produces `chali-1.0.8-llvm-external-windows-x64.exe` (or `llvm-static`); invoke that actual path when using an uninstalled build. See [installation and architecture options](../../en/39-installation-packages.md).
 
@@ -21,7 +21,7 @@ Run `chali hello.chl`. `main` is the program entry point. Braces delimit its bod
 
 ![Compilation pipeline](../images/chali-compilation.png)
 
-`run` and `aot` both produce native programs: `run` compiles with checked AOT and executes immediately, while `aot` exports an executable or shared library unchecked by default. Deployment boundaries are covered in chapter 22 and AOT export in chapter 25.
+`run` and `aot` both produce native programs: `run` compiles with checked AOT and executes immediately, while `aot` exports an executable or shared library unchecked by default. Deployment and AOT export, including cross-compilation, are covered in chapter 24.
 
 Use `chali --check hello.chl` to check a program without running it. A successful syntax check does not prove that every possible runtime input is valid: indexing, division and resource operations still have runtime checks.
 

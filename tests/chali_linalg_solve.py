@@ -29,7 +29,7 @@ def main():
     for scalar in ('int8', 'int16', 'int32', 'uint8', 'uint16', 'uint32', 'uint64'):
         text = text.replace('    checkInteger<' + scalar + '>();', '')
     exportSource.write_text(text, encoding='utf-8')
-    run(CHALI, 'run', exportSource, '--emit', '--out', prefix)
+    run(CHALI, 'aot', exportSource, '--emit-llvm', '--out', prefix)
     common = ['--quad', prefix.with_suffix('.quad'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout')]
     executable = WORK / ('trimmed' + EXE)
     for setup, message in (('a.set(0, 0, 0.0);', '奇异或近奇异矩阵'), ('a.set(0, 0, 0.000000000001);', '奇异或近奇异矩阵'), ('a.rows = 2;', '维度不匹配'), ('a.rows = -1; a.cols = -1;', '维度不匹配'), ('a.values.clear();', '维度不匹配'), ('std::linalg::Vector<float64> col = a[-1];', '列索引越界'), ('std::linalg::Vector<float64> col = a[1];', '列索引越界'), ('float64 value = rhs[1];', '越界'), ('float64 raw[2]; std::linalg::Matrix<float64> bad = std::linalg::Matrix<float64>::fromArray(raw, 2, 2, 2);', '维度不匹配')):

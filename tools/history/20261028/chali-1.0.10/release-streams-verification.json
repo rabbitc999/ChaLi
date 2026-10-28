@@ -1,0 +1,22 @@
+[
+  {
+    "variant": "external",
+    "raw": true,
+    "passed": true
+  },
+  {
+    "variant": "external",
+    "raw": false,
+    "passed": true
+  },
+  {
+    "variant": "static",
+    "raw": true,
+    "passed": true
+  },
+  {
+    "variant": "static",
+    "raw": false,
+    "passed": true
+  }
+]

@@ -36,7 +36,7 @@ def main() -> None:
         body.write_text("module math::ops;\nint64 twice(int64 x) { return x + x; }\n", encoding="utf-8")
         output = work / "build" / "app"
         output.parent.mkdir()
-        args = ("run", source, "--emit", "--incremental", "-I", work, "-I", ROOT,
+        args = ("aot", source, "--emit-llvm", "--incremental", "-I", work, "-I", ROOT,
                 "--out", output)
 
         first = run(*args)

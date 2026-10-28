@@ -17,7 +17,7 @@ def main():
     prefix = work / 'data'
     result = run(CHALI, 'run', source, '--out', prefix)
     assert result.stdout == expected and (not result.stderr), (result.stdout, result.stderr)
-    run(CHALI, 'run', source, '--emit', '--out', prefix)
+    run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
     arguments = ['--quad', prefix.with_suffix('.quad'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout')]
     asset_target = work / ('data' + '-assets' + EXE)
     for name in ('JSON', 'TOML'):
