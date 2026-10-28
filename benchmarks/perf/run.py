@@ -39,6 +39,8 @@ CASE_TITLE = {
     "array": "固定数组循环读取",
     "list": "动态数组 push + 遍历",
     "list_growth": "各语言均从空容器动态增长，再遍历归并",
+    "map_growth": "Map 空表增长、覆盖、查询、删除与重新插入",
+    "set_growth": "Set 空表增长、重复插入、查询、删除与重新插入",
     "array_rw": "固定数组读写",
 }
 
@@ -153,10 +155,33 @@ def run_once(cmd, cwd):
     return reps, sink
 
 
+def collection_expected_sink(case):
+    """不创建哈希容器，用已知键集合的算术关系独立核对全部计时轮的输出。"""
+    count, mask = 20000, 2147483647
+    sink = 0
+    for seed in (0, 0, 1, 2, 3, 4):
+        total = seed
+        if case == "map_growth":
+            for index in range(count):
+                total = (total * 31 + index * 3 + seed) & mask
+            for index in range(count):
+                total = (total * 31 + index * 5 + seed) & mask
+        else:
+            for _ in range(count):
+                total = (total * 31 + 1) & mask
+        total += (count + 2) // 3
+        for index in range(count):
+            value = index * (7 if index % 3 == 0 else 5) + seed if case == "map_growth" else 1
+            total = (total * 31 + value) & mask
+        sink += total
+    return sink
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=3, help="每个配置跑几次进程（每次内含 5 轮）")
     parser.add_argument("--allocator", choices=["malloc", "pool"], default="malloc", help="ChaLi 实际分配器，正式基线使用 malloc")
+    parser.add_argument("--compiler-source-commit", default="", help="显式记录被测编译器的源码提交；可与新增基准源码提交不同")
     parser.add_argument("--only", default="", help="只跑这些配置，逗号分隔")
     parser.add_argument("--out", default="", help="结果目录")
     parser.add_argument("--cases", default=",".join(CASES), help="负载名称，逗号分隔；array_rw 需选择提供该负载的配置")
@@ -164,6 +189,9 @@ def main():
     cases = [item.strip() for item in args.cases.split(",") if item.strip()]
     if not cases or any(case not in CASE_TITLE for case in cases):
         parser.error("未知或空的负载名称")
+    compiler_source_commit = subprocess.check_output(
+        ["git", "rev-parse", "--verify", args.compiler_source_commit + "^{commit}"],
+        cwd=ROOT, text=True).strip() if args.compiler_source_commit else None
 
     configs = build_configs(args.allocator)
     if args.only:
@@ -213,6 +241,10 @@ def main():
         values = set(table.values())
         if len(values) != 1:
             sys.exit(f"校验值跨语言不一致：{case} → {table}")
+        if case in ("map_growth", "set_growth"):
+            expected = collection_expected_sink(case)
+            if values != {str(expected)}:
+                sys.exit(f"集合校验值与独立算术模型不一致：{case} → {table}，期望 {expected}")
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     host = platform.node() or "host"
@@ -233,7 +265,8 @@ def main():
     }
     compiler = Path(os.environ.get("CHALI") or compiler_path()).resolve()
     summary["chali_compiler"] = {"reported_version": compiler_version(compiler),
-                                 "sha256": hashlib.sha256(compiler.read_bytes()).hexdigest()}
+                                 "sha256": hashlib.sha256(compiler.read_bytes()).hexdigest(),
+                                 "source_commit": compiler_source_commit}
     summary["chali_allocator"] = args.allocator
     summary["command_line"] = sys.argv
     summary["machine"] = {"processor": platform.processor(), "logical_cpus": os.cpu_count(), "architecture": platform.machine()}
@@ -243,11 +276,13 @@ def main():
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(HERE.iterdir())
         if path.is_file() and ((path.stem in cases and path.suffix in ('.chl', '.c', '.cpp', '.rs', '.lua'))
-                               or path.name in ('run.py', 'build_aot.py', 'build_lua.py', 'luabench.c'))
+                               or path.name in ('run.py', 'build_aot.py', 'build_lua.py', 'luabench.c', 'hash_int.h'))
     }
     summary["case_notes"] = {
         "list": "ChaLi and Lua grow dynamically; C/C++ preallocate storage and Rust uses with_capacity. Compare matched-growth cases separately before claiming container parity.",
-        "list_growth": "All implementations start with an empty container, append the same 400000 values without reserve, and perform the same ordered reduction."
+        "list_growth": "All implementations start with an empty container, append the same 400000 values without reserve, and perform the same ordered reduction.",
+        "map_growth": "All maps start empty with 20000 dispersed integer keys: insert, read and overwrite, hit/miss queries, remove every third key, reinsert, ordered reduction. Default standard hash policies; Lua uses table and Rust retains RandomState. C is a separate open-addressed reference.",
+        "set_growth": "All sets start empty with 20000 dispersed integer keys: insert twice, hit/miss queries, remove every third key, reinsert, ordered membership reduction. Lua uses table booleans; no iteration-order dependency."
     }
     summary["tool_versions"] = {}
     summary["llvm_dependency"] = json.loads((ROOT / "library/llvm/manifest.json").read_text(encoding="utf-8"))

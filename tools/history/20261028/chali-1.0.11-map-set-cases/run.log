@@ -1,0 +1,40 @@
+配置 5 个：chali-aot, c, cpp-o3, lua, rust
+  构建 chali-aot/map_growth …
+  构建 chali-aot/set_growth …
+  构建 c/map_growth …
+  构建 c/set_growth …
+  构建 cpp-o3/map_growth …
+  构建 cpp-o3/set_growth …
+  构建 lua/map_growth …
+  构建 lua/set_growth …
+  构建 rust/map_growth …
+  构建 rust/set_growth …
+  chali-aot  map_growth   中位   251.019 ms
+  chali-aot  set_growth   中位   184.358 ms
+  c          map_growth   中位     1.890 ms
+  c          set_growth   中位     1.858 ms
+  cpp-o3     map_growth   中位     1.786 ms
+  cpp-o3     set_growth   中位     1.828 ms
+  lua        map_growth   中位     4.691 ms
+  lua        set_growth   中位     4.778 ms
+  rust       map_growth   中位     1.940 ms
+  rust       set_growth   中位     1.549 ms
+
+| 配置 | Map 空表增长、覆盖、查询、删除与重新插入 | Set 空表增长、重复插入、查询、删除与重新插入 |
+| --- | ---: | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 251.019 | 184.358 |
+| C（gcc -O2） | 1.890 | 1.858 |
+| C++17（g++ -O3） | 1.786 | 1.828 |
+| Lua 5.5.1（官方 VM，默认 GC） | 4.691 | 4.778 |
+| Rust（rustc -O） | 1.940 | 1.549 |
+
+相对 C 的倍数：
+| 配置 | Map 空表增长、覆盖、查询、删除与重新插入 ÷ C | Set 空表增长、重复插入、查询、删除与重新插入 ÷ C |
+| --- | ---: | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 132.8 | 99.2 |
+| C（gcc -O2） | 1.00 | 1.00 |
+| C++17（g++ -O3） | 0.9 | 1.0 |
+| Lua 5.5.1（官方 VM，默认 GC） | 2.5 | 2.6 |
+| Rust（rustc -O） | 1.0 | 0.8 |
+
+结果目录：tmp\map-set-check

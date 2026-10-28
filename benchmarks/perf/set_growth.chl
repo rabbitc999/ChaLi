@@ -1,0 +1,40 @@
+/* set_growth：从空集合开始，20000 个离散整数键，覆盖增长、重复写入、查询、删除和重新插入。 */
+import std::clock;
+const int64 N = 20000;
+const int64 REPS = 5;
+int64 key(int64 index,int64 seed) { return (index*65537+seed*17)%1000000007+1000000007; }
+int64 work(int64 seed) {
+    int64 i=0;
+    int64 total=seed;
+    Set<int64> values;
+    while (i < N) { values.add(key(i,seed)); i=i+1; }
+    i=0;
+    while (i < N) { values.add(key(i,seed)); i=i+1; }
+    i=0;
+    while (i < N) {
+        int64 k=key(i,seed);
+        total=(total*31+values.has(k)+2*values.has(0-k))&2147483647; i=i+1;
+    }
+    i=0;
+    while (i < N) { total=total+values.remove(key(i,seed)); i=i+3; }
+    i=0;
+    while (i < N) { values.add(key(i,seed)); i=i+3; }
+    i=0;
+    while (i < N) { total=(total*31+values.has(key(i,seed)))&2147483647; i=i+1; }
+    return total;
+}
+
+void main() {
+    int64 sink = work(0);
+    int64 times[REPS];
+    int64 r = 0;
+    while (r < REPS) {
+        int64 start = std::clock::nowNanos();
+        sink = sink + work(r);
+        times[r] = std::clock::nowNanos() - start;
+        r = r + 1;
+    }
+    r = 0;
+    while (r < REPS) { println("rep {}", times[r]); r = r + 1; }
+    println("sink {}", sink);
+}
