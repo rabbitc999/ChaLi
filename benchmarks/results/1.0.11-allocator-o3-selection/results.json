@@ -1,0 +1,815 @@
+{
+  "kind": "allocator-exploration",
+  "runs": 3,
+  "reps_per_process": 5,
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "logical_cpus": 12,
+  "compiler_sha256": "0583f2ac7b90f08715ffd3a82a06a76b1cd8d796d37547b355f5601fac284a44",
+  "compiler_source_commit": "cf62694ac3d454246cae18f3d19a3c3887a0217a",
+  "source_sha256": {
+    "benchmarks/perf/list_growth.chl": "8382b6a668113e9a238a21a920c37523154bc30afa7792b58e8863be82d065cf",
+    "benchmarks/perf/list_growth.c": "4eae7c22cae78464636818a7a5e0135cb847fa6f1682215db0f41e330dadf83b",
+    "benchmarks/perf/build_aot.py": "4bf53aa0c3e723ec1d99a06fd27eed870a14c5359aa9e446a6a98212513723e8",
+    "benchmarks/perf/map_growth.chl": "a8a0956f745e445e961110c2866bdb652f848e4567007fb641d2029ab568c05c",
+    "benchmarks/perf/map_growth.c": "f536cb7c8e9f2ea0fa4fcf7bcf062bc9e6deac7de221ccfcb5297bbdb579b55f",
+    "benchmarks/perf/set_growth.chl": "28e2bc1388073b083b6e02698f6ec9a7a8d06059ed6faeacdfe9d489b53ee4e5",
+    "benchmarks/perf/set_growth.c": "f77896a4041b0e4b5c68ea7b327af48ecaaeb8db4238121daf7476eb631b94be",
+    "benchmarks/strings/cases.chl": "6eb65126b06d271c8ef8e1701172dcef8cc8bb3015a8ef6e148b18b3154187e3",
+    "benchmarks/features/timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80"
+  },
+  "builds": [
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "malloc",
+        "list_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "malloc",
+        "map_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "malloc",
+        "set_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.chl",
+        "--shared",
+        "--unchecked",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\kernel"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+        "-O3",
+        "-DNDEBUG",
+        "-DCHALI_FEATURE_AOT=1",
+        "-Dfeature_work=string_concat",
+        "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\kernel.dll",
+        "-o",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\benchmark.exe",
+        "--verify"
+      ],
+      "code": 0,
+      "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "pool",
+        "list_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "pool",
+        "map_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+        "--allocator",
+        "pool",
+        "set_growth",
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.chl",
+        "--shared",
+        "--unchecked",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\kernel"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+        "-O3",
+        "-DNDEBUG",
+        "-DCHALI_FEATURE_AOT=1",
+        "-Dfeature_work=string_concat",
+        "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\kernel.dll",
+        "-o",
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\benchmark.exe",
+        "--verify"
+      ],
+      "code": 0,
+      "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+      "stderr": ""
+    }
+  ],
+  "measurements": [
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 137061300\nrep 122388400\nrep 120206100\nrep 125661000\nrep 134835200\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "malloc",
+      "process": 0,
+      "samples_ns": [
+        137061300,
+        122388400,
+        120206100,
+        125661000,
+        134835200
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 139074200\nrep 139025900\nrep 166673500\nrep 157367400\nrep 177027200\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "pool",
+      "process": 0,
+      "samples_ns": [
+        139074200,
+        139025900,
+        166673500,
+        157367400,
+        177027200
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 205374900\nrep 187366500\nrep 211439800\nrep 202426800\nrep 170069300\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "malloc",
+      "process": 0,
+      "samples_ns": [
+        205374900,
+        187366500,
+        211439800,
+        202426800,
+        170069300
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 161937800\nrep 175934900\nrep 155348000\nrep 158379200\nrep 188857400\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "pool",
+      "process": 0,
+      "samples_ns": [
+        161937800,
+        175934900,
+        155348000,
+        158379200,
+        188857400
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 155064900\nrep 135914600\nrep 145614600\nrep 124966900\nrep 120987100\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "malloc",
+      "process": 0,
+      "samples_ns": [
+        155064900,
+        135914600,
+        145614600,
+        124966900,
+        120987100
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 123683100\nrep 116294800\nrep 129539600\nrep 116894100\nrep 123971100\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "pool",
+      "process": 0,
+      "samples_ns": [
+        123683100,
+        116294800,
+        129539600,
+        116894100,
+        123971100
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 273279600\nrep 299441500\nrep 263111000\nrep 271547200\nrep 280469900\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "malloc",
+      "process": 0,
+      "samples_ns": [
+        273279600,
+        299441500,
+        263111000,
+        271547200,
+        280469900
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 445610200\nrep 479786900\nrep 462785100\nrep 439577200\nrep 509416100\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "pool",
+      "process": 0,
+      "samples_ns": [
+        445610200,
+        479786900,
+        462785100,
+        439577200,
+        509416100
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 104786300\nrep 103539200\nrep 103664900\nrep 111329100\nrep 113017400\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "pool",
+      "process": 1,
+      "samples_ns": [
+        104786300,
+        103539200,
+        103664900,
+        111329100,
+        113017400
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 127718200\nrep 136142100\nrep 128718600\nrep 123810600\nrep 116997700\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "malloc",
+      "process": 1,
+      "samples_ns": [
+        127718200,
+        136142100,
+        128718600,
+        123810600,
+        116997700
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 161769500\nrep 160017400\nrep 156424700\nrep 161600700\nrep 161779500\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "pool",
+      "process": 1,
+      "samples_ns": [
+        161769500,
+        160017400,
+        156424700,
+        161600700,
+        161779500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 157446900\nrep 164347100\nrep 156640900\nrep 159525400\nrep 174994800\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "malloc",
+      "process": 1,
+      "samples_ns": [
+        157446900,
+        164347100,
+        156640900,
+        159525400,
+        174994800
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 118380000\nrep 117827600\nrep 116459300\nrep 117009300\nrep 116750100\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "pool",
+      "process": 1,
+      "samples_ns": [
+        118380000,
+        117827600,
+        116459300,
+        117009300,
+        116750100
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 125651300\nrep 118665600\nrep 141812200\nrep 117315900\nrep 117903500\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "malloc",
+      "process": 1,
+      "samples_ns": [
+        125651300,
+        118665600,
+        141812200,
+        117315900,
+        117903500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 476435700\nrep 462781700\nrep 461642200\nrep 449418300\nrep 445311900\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "pool",
+      "process": 1,
+      "samples_ns": [
+        476435700,
+        462781700,
+        461642200,
+        449418300,
+        445311900
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 256130100\nrep 281423800\nrep 271907400\nrep 291276700\nrep 272406500\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "malloc",
+      "process": 1,
+      "samples_ns": [
+        256130100,
+        281423800,
+        271907400,
+        291276700,
+        272406500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 120956500\nrep 116470200\nrep 138101600\nrep 116328200\nrep 120562600\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "malloc",
+      "process": 2,
+      "samples_ns": [
+        120956500,
+        116470200,
+        138101600,
+        116328200,
+        120562600
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\list_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 111969100\nrep 134269300\nrep 110328200\nrep 107197000\nrep 103506500\nsink 5673410186\n",
+      "stderr": "",
+      "case": "list_growth",
+      "allocator": "pool",
+      "process": 2,
+      "samples_ns": [
+        111969100,
+        134269300,
+        110328200,
+        107197000,
+        103506500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 171181500\nrep 163215800\nrep 156079600\nrep 156831200\nrep 156128900\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "malloc",
+      "process": 2,
+      "samples_ns": [
+        171181500,
+        163215800,
+        156079600,
+        156831200,
+        156128900
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\map_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 153992600\nrep 171609200\nrep 160317300\nrep 169100800\nrep 180438500\nsink 6004096376\n",
+      "stderr": "",
+      "case": "map_growth",
+      "allocator": "pool",
+      "process": 2,
+      "samples_ns": [
+        153992600,
+        171609200,
+        160317300,
+        169100800,
+        180438500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 117779300\nrep 119087500\nrep 121585600\nrep 118257700\nrep 117128500\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "malloc",
+      "process": 2,
+      "samples_ns": [
+        117779300,
+        119087500,
+        121585600,
+        118257700,
+        117128500
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\set_growth\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 126293600\nrep 118010100\nrep 116906900\nrep 116153000\nrep 127659800\nsink 2373508172\n",
+      "stderr": "",
+      "case": "set_growth",
+      "allocator": "pool",
+      "process": 2,
+      "samples_ns": [
+        126293600,
+        118010100,
+        116906900,
+        116153000,
+        127659800
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\malloc\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 301287800\nrep 294340700\nrep 260491200\nrep 258608500\nrep 257858900\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "malloc",
+      "process": 2,
+      "samples_ns": [
+        301287800,
+        294340700,
+        260491200,
+        258608500,
+        257858900
+      ]
+    },
+    {
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\allocator-compare-w6nidw_6\\pool\\string_concat\\benchmark.exe"
+      ],
+      "code": 0,
+      "stdout": "rep 601211200\nrep 462879600\nrep 490782700\nrep 462017600\nrep 487298400\nsink 8481232906\n",
+      "stderr": "",
+      "case": "string_concat",
+      "allocator": "pool",
+      "process": 2,
+      "samples_ns": [
+        601211200,
+        462879600,
+        490782700,
+        462017600,
+        487298400
+      ]
+    }
+  ],
+  "results": {
+    "list_growth": {
+      "malloc": {
+        "binary_sha256": "9047f79795d47b8eb7c6a1c59657f4591303d9ee4af31d3913149466e7e105b9",
+        "kernel_sha256": "aa1e5450f1ead3831d9898289cb520cac446397e80c2f7c7aaffd1f666bf80ad",
+        "samples_ns": [
+          137061300,
+          122388400,
+          120206100,
+          125661000,
+          134835200,
+          127718200,
+          136142100,
+          128718600,
+          123810600,
+          116997700,
+          120956500,
+          116470200,
+          138101600,
+          116328200,
+          120562600
+        ],
+        "median_ms": 123.8106
+      },
+      "pool": {
+        "binary_sha256": "b04506a9daef299ae31d07b3aca3fd991fd44f5dac73482f97554b716fe8a222",
+        "kernel_sha256": "a7d32c56b4a8d73ef4cb27e4d81713e6a74785e63f108ac2bc43fa1d98b43a16",
+        "samples_ns": [
+          139074200,
+          139025900,
+          166673500,
+          157367400,
+          177027200,
+          104786300,
+          103539200,
+          103664900,
+          111329100,
+          113017400,
+          111969100,
+          134269300,
+          110328200,
+          107197000,
+          103506500
+        ],
+        "median_ms": 111.9691
+      }
+    },
+    "map_growth": {
+      "malloc": {
+        "binary_sha256": "c25d581be075dfd9915d651b7999aac46ca05be8470cf418136c2fee70289f03",
+        "kernel_sha256": "e30be538a4567e2abdc2cd1c3c34173e91a81a8eb17ec0122ae3f03f46708dcc",
+        "samples_ns": [
+          205374900,
+          187366500,
+          211439800,
+          202426800,
+          170069300,
+          157446900,
+          164347100,
+          156640900,
+          159525400,
+          174994800,
+          171181500,
+          163215800,
+          156079600,
+          156831200,
+          156128900
+        ],
+        "median_ms": 164.3471
+      },
+      "pool": {
+        "binary_sha256": "097427ac650f3b4ce6e1d8af99b6d6b334390a826f90f0a577d505fb7c6e1087",
+        "kernel_sha256": "9570b2f563c5833155a9e24f4c137df0cdfb99e1cffe36854f2be2ac37f34270",
+        "samples_ns": [
+          161937800,
+          175934900,
+          155348000,
+          158379200,
+          188857400,
+          161769500,
+          160017400,
+          156424700,
+          161600700,
+          161779500,
+          153992600,
+          171609200,
+          160317300,
+          169100800,
+          180438500
+        ],
+        "median_ms": 161.7695
+      }
+    },
+    "set_growth": {
+      "malloc": {
+        "binary_sha256": "7668ad3b3bddf5178a1ba10e2813b8d8143283e85e331f01329cd92c7647a7e0",
+        "kernel_sha256": "e2240d564f8ce4df867e1a9a464de3c9526f9d385553e8ffc0b345ff9223ad31",
+        "samples_ns": [
+          155064900,
+          135914600,
+          145614600,
+          124966900,
+          120987100,
+          125651300,
+          118665600,
+          141812200,
+          117315900,
+          117903500,
+          117779300,
+          119087500,
+          121585600,
+          118257700,
+          117128500
+        ],
+        "median_ms": 120.9871
+      },
+      "pool": {
+        "binary_sha256": "705a35481cfbf4cc8ff012e14025ef7fc3117d19673c3dde85fda4b7586be86f",
+        "kernel_sha256": "c1d12027109e9101eed13e6c449c0b401f73776a77db8355af23d55a0010d340",
+        "samples_ns": [
+          123683100,
+          116294800,
+          129539600,
+          116894100,
+          123971100,
+          118380000,
+          117827600,
+          116459300,
+          117009300,
+          116750100,
+          126293600,
+          118010100,
+          116906900,
+          116153000,
+          127659800
+        ],
+        "median_ms": 117.8276
+      }
+    },
+    "string_concat": {
+      "malloc": {
+        "binary_sha256": "ee14f31c42166023d48fea8cc636b1133b95c5c52449c1b0d5d4210834eb405b",
+        "kernel_sha256": "328c4b713602955cf8d0c731c7812a8fdc18f929a5df866933fbf73451dea9ee",
+        "samples_ns": [
+          273279600,
+          299441500,
+          263111000,
+          271547200,
+          280469900,
+          256130100,
+          281423800,
+          271907400,
+          291276700,
+          272406500,
+          301287800,
+          294340700,
+          260491200,
+          258608500,
+          257858900
+        ],
+        "median_ms": 272.4065
+      },
+      "pool": {
+        "binary_sha256": "399c2f9b3739121ee29058773e6e3a7cf062f939f9e27025f987877fd8c62620",
+        "kernel_sha256": "a8d2f4cc5fdd9061a6ebd1ecd1513117f264cd699c36152b8ed4a8fc8e61042c",
+        "samples_ns": [
+          445610200,
+          479786900,
+          462785100,
+          439577200,
+          509416100,
+          476435700,
+          462781700,
+          461642200,
+          449418300,
+          445311900,
+          601211200,
+          462879600,
+          490782700,
+          462017600,
+          487298400
+        ],
+        "median_ms": 462.7851
+      }
+    }
+  },
+  "selection_rule": "four allocation workloads, equally weighted geometric mean of pool/malloc medians; final gates remain per workload",
+  "git_commit": "b2f6fd737bcf7fbce38a4f71dfdffe6f66ef767c",
+  "working_tree_dirty": false,
+  "driver_sha256": "10fa7bffc6d0b42622e3543b5c87ef688c7677772327f0c9f25e92e4f7c03ce1",
+  "expected_sinks": {
+    "list_growth": "5673410186",
+    "map_growth": "6004096376",
+    "set_growth": "2373508172",
+    "string_concat": "8481232906"
+  },
+  "pool_over_malloc_geomean": 1.101631145505708,
+  "selected_allocator": "malloc"
+}
