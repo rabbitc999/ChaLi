@@ -1,0 +1,12 @@
+{
+  "enum-tag-enabled-opt.ll": {
+    "atomic_loads": 6,
+    "switches": 1,
+    "lines": 265
+  },
+  "enum-tag-disabled-opt.ll": {
+    "atomic_loads": 9,
+    "switches": 0,
+    "lines": 366
+  }
+}

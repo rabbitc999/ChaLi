@@ -1,0 +1,600 @@
+[
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-False-False.exe",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-False-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-False-True.exe",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-False-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-True-False.exe",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-True-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-True-True.exe",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-malloc-True-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-False-False.exe",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-False-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-False-True.exe",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-False-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-True-False.exe",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-True-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_enum_tag_snapshot.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-True-True.exe",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\fixture-pool-True-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "enum tag snapshot OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enums.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enums-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "quit\nmove 3 7\ntext hello\nsome 42\npoint 5 9\ndynamic 11\nnested 8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enums.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enums-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "quit\nmove 3 7\ntext hello\nsome 42\npoint 5 9\ndynamic 11\nnested 8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_payload_pointer.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_payload_pointer-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "载荷指到 11\n原对象变成 11\n数组元素写成 99\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_payload_pointer.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_payload_pointer-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "载荷指到 11\n原对象变成 11\n数组元素写成 99\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_drop_active_payload.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_drop_active_payload-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "active payload Drop OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_drop_active_payload.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_drop_active_payload-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "active payload Drop OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\nested_enum_ownership.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\nested_enum_ownership-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "nested enum ownership OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\nested_enum_ownership.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\nested_enum_ownership-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "nested enum ownership OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_methods.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_methods-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "7\n9\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\enum_methods.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\enum_methods-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "7\n9\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\match_expression.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\match_expression-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "match ok\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\match_expression.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\match_expression-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "match ok\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\result_match_loop.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\result_match_loop-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "loop=7\nmatch=seven\nok=40\npropagated=bad input\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\result_match_loop.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\enum-snapshot-check\\result_match_loop-True.exe"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "loop=7\nmatch=seven\nok=40\npropagated=bad input\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_duplicate.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"match 中存在重复的 enum 变体：Option::None\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_duplicate.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_duplicate.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"match 中存在重复的 enum 变体：Option::None\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_duplicate.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_duplicate.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"match 中存在重复的 enum 变体：Option::None\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_duplicate.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_nonexhaustive.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：Option::Some\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_nonexhaustive.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_nonexhaustive.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：Option::Some\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_nonexhaustive.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_match_nonexhaustive.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1600\",\"severity\":\"error\",\"message\":\"enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：Option::Some\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_match_nonexhaustive.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_count.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 构造器 Option::Some 需要 1 个载荷，实际给了 0 个\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_count.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":33},\"source\":\"    Option value = Option::Some;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_count.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 构造器 Option::Some 需要 1 个载荷，实际给了 0 个\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_count.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":33},\"source\":\"    Option value = Option::Some;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_count.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 构造器 Option::Some 需要 1 个载荷，实际给了 0 个\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_count.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":33},\"source\":\"    Option value = Option::Some;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_type.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"不能隐式转换：std::lang::String -> int64（请显式强转）\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_type.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":41},\"source\":\"    Option value = Option::Some(\\\"text\\\");\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_type.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"不能隐式转换：std::lang::String -> int64（请显式强转）\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_type.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":41},\"source\":\"    Option value = Option::Some(\\\"text\\\");\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_payload_type.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"不能隐式转换：std::lang::String -> int64（请显式强转）\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_payload_type.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":41},\"source\":\"    Option value = Option::Some(\\\"text\\\");\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_unknown_variant.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum Option 没有变体 Missing\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_unknown_variant.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":36},\"source\":\"    Option value = Option::Missing;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_unknown_variant.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum Option 没有变体 Missing\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_unknown_variant.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":36},\"source\":\"    Option value = Option::Missing;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_unknown_variant.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum Option 没有变体 Missing\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_unknown_variant.chl\",\"line\":3,\"column\":28,\"endLine\":3,\"endColumn\":36},\"source\":\"    Option value = Option::Missing;\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\a619614\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_pattern_expression.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 分支的载荷位置只能写绑定变量名，不能写表达式\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_pattern_expression.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_pattern_expression.chl",
+      "json"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 分支的载荷位置只能写绑定变量名，不能写表达式\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_pattern_expression.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "check",
+      "G:\\Desktop\\ChaLi\\example\\samples-error\\enum_pattern_expression.chl",
+      "json"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "{\"schemaVersion\":1,\"diagnostics\":[{\"code\":\"CHL1200\",\"severity\":\"error\",\"message\":\"enum 分支的载荷位置只能写绑定变量名，不能写表达式\",\"span\":{\"file\":\"G:/Desktop/ChaLi/example/samples-error/enum_pattern_expression.chl\",\"line\":4,\"column\":5,\"endLine\":4,\"endColumn\":20},\"source\":\"    match (value) {\",\"notes\":[]}]}\n",
+    "stderr": ""
+  }
+]

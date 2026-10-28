@@ -3699,6 +3699,25 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
     const MField *tagField = FindField(subjectType->name, "__tag");
     if (tagField == nullptr) return Fail("enum " + subjectType->name + " 缺少标签槽"), Bad();
 
+    /* 没有守卫时，失败的标签比较之间没有用户代码，标签可保持为 SSA 值。
+     * 守卫可能调用函数并改变被借用的枚举，必须沿用逐分支读取。
+     * 只有兜底的 match 不提前读取，以保留原来的访问与错误行为。 */
+    const auto *disableTagSnapshot = std::getenv("CHALI_NO_ENUM_TAG_SNAPSHOT");
+    const bool snapshotTag = (!disableTagSnapshot || !*disableTagSnapshot) &&
+        !patterns.empty() && std::all_of(cases.begin(), cases.end(), [](int caseId) {
+            return N(caseId).guard < 0;
+        });
+    Memory::String tagSnapshot;
+    if (snapshotTag)
+    {
+        tagSnapshot = AllocateName("__chali_enum_tag");
+        const auto tagType = LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag");
+        setup.push_back(ast::Node::declare(tagSnapshot, tagType));
+        setup.push_back(ast::Node::assign(tagSnapshot,
+            ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject),
+                ast::Node::i(tagField->slot), 8), tagType)));
+    }
+
     const auto lowerBody = [&](const MNode &item, const MEnumVariantDef *variant, const Memory::String &next) {
         PushScope();
         PushOwnedScope();
@@ -3841,7 +3860,8 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         else
         {
             const auto *variant = patterns.at(caseId);
-            auto tag = ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject), ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
+            auto tag = snapshotTag ? ast::Node::var(tagSnapshot) :
+                ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject), ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
             auto condition = ast::Node::binary("==", tag, ast::Node::i(variant->tag));
             setup.push_back(ast::Node::ifThenElse(condition, lowerBody(item, variant, next), nullptr));
         }

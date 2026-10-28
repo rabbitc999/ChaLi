@@ -1,0 +1,33 @@
+/** 验证无守卫标签快照、守卫求值顺序及拥有载荷的匹配。 */
+enum Choice { Empty, Number(int64 value), Text(String value) };
+int64 guardCalls = 0;
+
+bool reject() { guardCalls = guardCalls + 1; return false; }
+
+int64 read(Choice const& choice) {
+    match (choice) {
+        Choice::Empty => { return 3; }
+        Choice::Number(value) => { return value; }
+        Choice::Text(value) => { return value.length(); }
+    }
+    return -1;
+}
+
+void main() {
+    Choice empty = Choice::Empty;
+    Choice number = Choice::Number(42);
+    Choice text = Choice::Text("abcde");
+    assert(read(&empty) == 3);
+    assert(read(&number) == 42);
+    assert(read(&text) == 5);
+    int64 result = 0;
+    match (number) {
+        Choice::Number(value) if reject() => { result = -1; }
+        Choice::Number(value) => { result = value; }
+        _ => { result = -2; }
+    }
+    assert(result == 42 && guardCalls == 1);
+    match (text) { _ => { result = result + 1; } }
+    assert(result == 43);
+    println("enum tag snapshot OK");
+}
