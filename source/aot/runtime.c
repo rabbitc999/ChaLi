@@ -712,6 +712,16 @@ void chali_check(chali_i64 index, chali_i64 limit) { chali_bounds(index, limit, 
  */
 void chali_check_pointer(chali_i64 address) { chali_null(address, "访问"); }
 /**
+ * @brief 校验绑定的引用；正常路径直接保留逻辑地址或接口身份，不构造宿主实参。
+ * @param address 引用的逻辑地址或接口身份。
+ * @return 非零的原引用；零值按共享运行时的原始诊断终止。
+ */
+chali_i64 chali_require_reference(chali_i64 address)
+{
+    if (address == 0) chali_panic("引用尚未绑定有效元素；缺省值请使用 Option");
+    return address;
+}
+/**
  * @brief 输出整数低八位对应的字节。
  * @param value 待读取、写入、格式化或输出的值。
  */

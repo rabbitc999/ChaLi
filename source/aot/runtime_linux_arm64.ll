@@ -35,7 +35,8 @@ target triple = "aarch64-unknown-linux-gnu"
 @.str.25 = private unnamed_addr constant [3 x i8] c"%g\00", align 1
 @.str.26 = private unnamed_addr constant [7 x i8] c"\E4\B8\8B\E6\A0\87\00", align 1
 @.str.27 = private unnamed_addr constant [7 x i8] c"\E8\AE\BF\E9\97\AE\00", align 1
-@.str.28 = private unnamed_addr constant [6 x i8] c"panic\00", align 1
+@.str.28 = private unnamed_addr constant [59 x i8] c"\E5\BC\95\E7\94\A8\E5\B0\9A\E6\9C\AA\E7\BB\91\E5\AE\9A\E6\9C\89\E6\95\88\E5\85\83\E7\B4\A0\EF\BC\9B\E7\BC\BA\E7\9C\81\E5\80\BC\E8\AF\B7\E4\BD\BF\E7\94\A8 Option\00", align 1
+@.str.29 = private unnamed_addr constant [6 x i8] c"panic\00", align 1
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none, target_mem: none) uwtable
 define dso_local ptr @chali_standard_stream(i32 noundef %0) local_unnamed_addr #0 {
@@ -1427,6 +1428,19 @@ define dso_local void @chali_check_pointer(i64 noundef %0) local_unnamed_addr #5
   ret void
 }
 
+; Function Attrs: nounwind uwtable
+define dso_local range(i64 1, 0) i64 @chali_require_reference(i64 noundef returned %0) local_unnamed_addr #5 {
+  %2 = icmp eq i64 %0, 0
+  br i1 %2, label %3, label %4
+
+3:                                                ; preds = %1
+  tail call void @chali_panic(ptr noundef nonnull @.str.28)
+  unreachable
+
+4:                                                ; preds = %1
+  ret i64 %0
+}
+
 ; Function Attrs: nofree nounwind uwtable
 define dso_local void @chali_put_char(i64 noundef %0) local_unnamed_addr #14 {
   %2 = trunc i64 %0 to i32
@@ -1484,7 +1498,7 @@ define dso_local void @chali_abort(i64 noundef %0) local_unnamed_addr #15 {
   br label %27
 
 27:                                               ; preds = %26, %1
-  tail call void @chali_panic(ptr noundef nonnull @.str.28)
+  tail call void @chali_panic(ptr noundef nonnull @.str.29)
   unreachable
 }
 

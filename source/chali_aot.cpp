@@ -274,6 +274,7 @@ struct Translator
     bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
+    bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
@@ -304,6 +305,8 @@ struct Translator
         cacheAddresses = !(cache && *cache);
         const char *scalars = std::getenv("CHALI_NO_AOT_COLLECTION_SCALARS");
         collectionScalars = !(scalars && *scalars);
+        const char *references = std::getenv("CHALI_NO_AOT_REFERENCE_PRIMITIVES");
+        referencePrimitives = !(references && *references);
         const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
@@ -1245,6 +1248,11 @@ struct Builder
         // 普通双精度数学操作直接进入 LLVM；不使用 fast-math，保留 NaN、无穷及负零。
         if (state.rawIntrinsics && !state.stepChecks)
         {
+            if (state.referencePrimitives && callee == "__std_reference" && arguments.size() == 1u)
+            {
+                write(destination, call("chali_require_reference", "i64", { convert(argument(0), "i64") }));
+                return true;
+            }
             static const std::map<Text, Text> unaryMath{
                 { "std::math::__sqrt64", "llvm.sqrt.f64" },
                 { "std::math::__floor64", "llvm.floor.f64" },

@@ -1,0 +1,40 @@
+/** 核对泛型标量内联、嵌套拥有值副本与泛型借用读取。 */
+T addGeneric<T>(T left, T right) { return left + right; }
+int64 addConcrete(int64 left, int64 right) { return left + right; }
+struct Box<T> { T value; };
+Box<T> copyBox<T>(Box<T> value) { return value; }
+T readBox<T>(Box<T> const& value) { return value.value; }
+
+#export("generic_scalar")
+int64 genericScalar(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        acc = addGeneric<int64>(acc * 33, i & 7) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}
+#export("concrete_scalar")
+int64 concreteScalar(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        acc = addConcrete(acc * 33, i & 7) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}
+void main() {
+    assert(genericScalar(3) == concreteScalar(3));
+    assert(addGeneric<float64>(1.25, 2.5) == 3.75);
+    Box<String> text; text.value = "hello";
+    Box<String> copied = copyBox<String>(text);
+    copied.value[0] = 'H';
+    assert(text.value == "hello" && copied.value == "Hello");
+    String read = readBox<String>(&text);
+    read[0] = 'X'; assert(text.value == "hello");
+    Box<List<int64>> nested; nested.value.push(7); nested.value.push(9);
+    Box<List<int64>> nestedCopy = copyBox<List<int64>>(nested);
+    nestedCopy.value[0] = 31;
+    assert(nested.value[0] == 7 && nestedCopy.value[0] == 31);
+    println("generic scalar, nested copies and borrowed reads OK");
+}

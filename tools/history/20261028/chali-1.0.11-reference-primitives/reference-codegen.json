@@ -1,0 +1,14 @@
+{
+  "step_limit_fallback_passed": true,
+  "optimized_functions": {
+    "genericScalar": {
+      "calls": [],
+      "body_lines": 33
+    },
+    "concreteScalar": {
+      "calls": [],
+      "body_lines": 33
+    }
+  },
+  "reference_primitive_calls_remaining": 0
+}

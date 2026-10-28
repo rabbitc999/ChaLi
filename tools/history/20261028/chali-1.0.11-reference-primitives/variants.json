@@ -1,0 +1,150 @@
+{
+  "compiler_sha256": "275ff2a421920331a3ba84e60bd469c3b576df45a262ad4efbfa3201b68402db",
+  "reference_sha256": "af3bbacec00aa5d2fc9858f517b6e99f3d8c765c226fee09076bf4e9632b6d3c",
+  "results": [
+    {
+      "variant": "before-malloc-False-False",
+      "case": "generic",
+      "reference_calls": 0,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "before-malloc-False-False",
+      "case": "unbound",
+      "reference_calls": 0,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-malloc-False-False",
+      "case": "generic",
+      "reference_calls": 8,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-malloc-False-False",
+      "case": "unbound",
+      "reference_calls": 1,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-malloc-False-True",
+      "case": "generic",
+      "reference_calls": 8,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-malloc-False-True",
+      "case": "unbound",
+      "reference_calls": 1,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-malloc-True-False",
+      "case": "generic",
+      "reference_calls": 0,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-malloc-True-False",
+      "case": "unbound",
+      "reference_calls": 0,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-malloc-True-True",
+      "case": "generic",
+      "reference_calls": 0,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-malloc-True-True",
+      "case": "unbound",
+      "reference_calls": 0,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-pool-False-False",
+      "case": "generic",
+      "reference_calls": 8,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-pool-False-False",
+      "case": "unbound",
+      "reference_calls": 1,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-pool-False-True",
+      "case": "generic",
+      "reference_calls": 8,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-pool-False-True",
+      "case": "unbound",
+      "reference_calls": 1,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-pool-True-False",
+      "case": "generic",
+      "reference_calls": 0,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-pool-True-False",
+      "case": "unbound",
+      "reference_calls": 0,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "variant": "after-pool-True-True",
+      "case": "generic",
+      "reference_calls": 0,
+      "code": 0,
+      "stdout": "generic scalar, nested copies and borrowed reads OK\n",
+      "stderr": ""
+    },
+    {
+      "variant": "after-pool-True-True",
+      "case": "unbound",
+      "reference_calls": 0,
+      "code": 1,
+      "stdout": "",
+      "stderr": "chali aot: 引用尚未绑定有效元素；缺省值请使用 Option\n调用栈（内 → 外）：\n  main\n"
+    }
+  ]
+}
