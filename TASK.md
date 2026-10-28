@@ -239,7 +239,7 @@
 
 - [x] 在 `std::lang` 中用 ChaLi 地址算术与引用转换实现 `__bootStringByte` 及 KMP 前缀表访问，消除循环内 BarePtr 包装临时块；复用现有 LLVM 非空与完整范围操作，不新增 C++ 字节特例，不修改冻结负载。
 - [x] 12 组字节模式与 6 组 rawSize 模式、旧／新错误对照、负偏移／回绕／参数顺序／UTF-8、String 自举、内存 API、完整 AOT、文档索引及 49 页链接通过。资产重生成后重建，LLVM 字节函数静态分配 4→0、KMP 16→7；证据在 `tools/history/20261028/chali-1.0.11-raw-size-byte-address/`，随本里程碑提交推送。
-- [ ] 后续仅测 ChaLi 四项字符串，读取 `1.0.11-string-baseline` 中的固定参考，保存里程碑原始样本并继续优化未达标项。
+- [x] `45e69e4` 推送后仅复测 ChaLi 四项字符串，100 样本全部校验；读取 476.5047 ms、拼接 316.1922 ms、切片 40.8802 ms、查找 31.0034 ms，数据在 `benchmarks/results/1.0.11-string-byte-address/`。冻结摘要一致、参考未重测，四项仍未达标，继续优化。
 
 ### 用户新增：公开布局查询与持续容量缓冲区
 
