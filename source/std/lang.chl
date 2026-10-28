@@ -1383,13 +1383,28 @@ unsafe int64 __listStorageCloneAppend(int64 destination,int64 source,int64 index
 unsafe int64 __listStorageNew();
 unsafe int64 __listStorageLength(int64 handle);
 
-/** 以倍增策略预留槽，不初始化尚未加入的用户元素。 */
+/** 计算有界几何增长容量；先验证 len+need，接近上限时不让倍增溢出。
+ * 空间足够时原样返回 cap，否则一次满足本次需求；不分配或清理元素。
+ */
+int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
+    assert(length>=0 && need>=0 && capacity>=length && minimum>=0 && maximum>=minimum && capacity<=maximum,"缓冲区容量参数无效");
+    assert(need<=maximum-length,"缓冲区容量超出上限");
+    int64 required=length+need;
+    if(required<=capacity){return capacity;}
+    int64 grown=maximum;
+    if(capacity<=maximum/2){grown=capacity*2;}
+    if(grown<required){grown=required;}
+    if(grown<minimum){grown=minimum;}
+    return grown;
+}
+unsafe int64 __listStorageMaxCapacity(int64 handle);
+/** 按本次需求和分配器上限预留槽，不初始化尚未加入的用户元素。 */
 unsafe void __bootListReserve(int64 handle,int64 requested){
     int64 capacity=__listStorageCapacity(handle);
     if(requested<=capacity){return;}
-    if(capacity==0){capacity=8;}
-    while(capacity<requested){assert(capacity<=4611686018427387903,"List 容量溢出");capacity=capacity*2;}
-    __listStorageReserve(handle,capacity);
+    int64 maximum=__listStorageMaxCapacity(handle);
+    int64 minimum=8;if(minimum>maximum){minimum=maximum;}
+    __listStorageReserve(handle,__bootBufferCapacity(0,requested,capacity,minimum,maximum));
 }
 /** 按逻辑下标向左移动元素，清理末尾并保留容量。 */
 unsafe int64 __bootListRemove(int64 handle,int64 index){

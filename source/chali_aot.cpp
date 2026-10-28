@@ -1338,6 +1338,7 @@ struct Builder
         static const std::map<Text, std::pair<int, std::size_t>> listStorageCalls = {
             { "std::lang::__listStorageGuard", { 0, 3 } },
             { "std::lang::__listStorageCapacity", { 1, 1 } },
+            { "std::lang::__listStorageMaxCapacity", { 17, 1 } },
             { "std::lang::__listStorageReserve", { 2, 2 } },
             { "std::lang::__listStorageSwap", { 3, 3 } },
             { "std::lang::__listStorageDiscard", { 4, 1 } },

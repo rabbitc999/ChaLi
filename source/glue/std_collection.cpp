@@ -770,8 +770,22 @@ inline Slot vecLen(State &ctx, const Arguments &args)
 }
 
 /**
+ * @brief 根据列表槽大小、容器限制和捕获的分配器预算计算容量上界。
+ * @param object 已验证的列表记录。
+ * @return 可表示的最大槽数；其他存活分配仍可能导致实际申请失败。
+ */
+std::size_t listStorageMaximum(const Record &object)
+{
+    auto maximum = object.items.max_size();
+    // 使用容器捕获的所有者，宿主线程不依赖当前线程的分配器状态。
+    const auto *owner = object.items.get_allocator().owner;
+    if (owner) maximum = std::min(maximum, owner->capacity() / sizeof(decltype(object.items)::value_type));
+    return std::min<std::size_t>(maximum, INT64_MAX);
+}
+
+/**
  * @brief 为语言自举 List 提供固定槽存储原语，不执行查找、插删移动循环或容量策略。
- * @tparam Operation 0 验证结构操作、1 容量、2 预留、3 交换、4 移出后丢弃、5 比较单槽、6 复制单槽追加、7 比较外部值、8 比较两个槽。
+ * @tparam Operation 0 验证结构操作、1 容量、2 预留、3 交换、4 移出后丢弃、5 比较单槽、6 复制单槽追加、7 比较外部值、8 比较两个槽、9 分配上限。
  * @param ctx 当前宿主值封送与所有权上下文。
  * @param args 各原语声明规定的句柄、索引、数值及布局。
  * @return 标量元数据或比较结果；失败保留运行时诊断。
@@ -807,10 +821,12 @@ Slot listStoragePrimitive(State &ctx, const Arguments &args)
         return Slot::fromInt(static_cast<std::int64_t>(object->items.size()));
     }
     if constexpr (Operation == 1) return Slot::fromInt(static_cast<std::int64_t>(object->items.capacity()));
+    if constexpr (Operation == 9)
+        return Slot::fromInt(static_cast<std::int64_t>(listStorageMaximum(*object)));
     if constexpr (Operation == 2)
     {
         const auto capacity = nativeInt(args[1]);
-        if (capacity < 0 || static_cast<std::uint64_t>(capacity) > object->items.max_size())
+        if (capacity < 0 || static_cast<std::uint64_t>(capacity) > listStorageMaximum(*object))
             ctx.error = "List 容量超出存储范围";
         else if (object->iteratorLeases || !object->elementViews.empty())
             ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
@@ -1776,6 +1792,7 @@ ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::i
     case 14: result = listStoragePrimitive<7>(state, arguments); break;
     case 15: result = listStoragePrimitive<8>(state, arguments); break;
     case 16: result = listStorageCloneInput(state, arguments); break;
+    case 17: result = listStoragePrimitive<9>(state, arguments); break;
     default: state.error = "List 存储原语编号无效"; break;
     }
     if (!state.error.empty()) host.fail(state.error);
@@ -1847,6 +1864,7 @@ bool bind(stackvm::NativeRegistry &registry, Memory::String *error)
     static const Binding bindings[] = {
         { "std::lang::__listStorageGuard", 3, listStoragePrimitive<0> },
         { "std::lang::__listStorageCapacity", 1, listStoragePrimitive<1> },
+        { "std::lang::__listStorageMaxCapacity", 1, listStoragePrimitive<9> },
         { "std::lang::__listStorageReserve", 2, listStoragePrimitive<2> },
         { "std::lang::__listStorageSwap", 3, listStoragePrimitive<3> },
         { "std::lang::__listStorageDiscard", 1, listStoragePrimitive<4> },

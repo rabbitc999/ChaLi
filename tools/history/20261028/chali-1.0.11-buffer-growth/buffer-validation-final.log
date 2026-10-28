@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_buffer_growth.py", line 63, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_buffer_growth.py", line 42, in main
+    assert built.returncode == 0, (label, built.stdout, built.stderr, work)
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('malloc--checked-direct', '', 'chali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:14:9: 调用 函数 program::barePointer____chl_1f53eaf34133cdd5_std__lang__List_int64_ 找不到匹配的重载：(std::lang::List<int64> mut&)；没有参数类型能对上的重载（候选：std::lang::barePointer____chl_1f53eaf34133cdd5_std__lang__List_int64_）\n 14 |         BarePtr<List<int64>> slot=barePointer<List<int64>>(&values);\n    |         ~~~~~~~\n', WindowsPath('G:/Desktop/ChaLi/tmp/buffer-growth-a1ac1qnk'))

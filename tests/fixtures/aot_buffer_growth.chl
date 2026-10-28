@@ -1,0 +1,38 @@
+/** 几何增长在字节与槽容量上使用同一规则，不实际申请整数上限大小的内存。 */
+int64 referenceAddress(int64 mut& value) {
+    return (int64)std::lang::address(value);
+}
+
+void main() {
+    int64 local=17;
+    assert(referenceAddress(&local)==(int64)std::lang::address(&local));
+    assert(std::lang::__bootBufferCapacity(0,0,0,8,100)==0);
+    assert(std::lang::__bootBufferCapacity(0,1,0,8,100)==8);
+    assert(std::lang::__bootBufferCapacity(3,5,8,8,100)==8);
+    assert(std::lang::__bootBufferCapacity(8,1,8,8,100)==16);
+    assert(std::lang::__bootBufferCapacity(8,40,8,8,100)==48);
+    assert(std::lang::__bootBufferCapacity(60,1,60,8,100)==100);
+    assert(std::lang::__bootBufferCapacity(0,1,0,3,3)==3);
+    assert(std::lang::__bootBufferCapacity(9223372036854775806,1,9223372036854775806,0,9223372036854775807)==9223372036854775807);
+    List<int64> values;
+    int64 handle=0;
+    unsafe {
+        int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);handle=*raw;
+        int64 maximum=std::lang::__listStorageMaxCapacity(handle);
+        assert(maximum>8 && maximum<9223372036854775807);
+        std::lang::__bootListReserve(handle,33);
+        assert(std::lang::__listStorageCapacity(handle)==33);
+    }
+    int64 i=0;
+    while(i<33){values.push(i);i=i+1;}
+    List<int64> copy=values;
+    values.remove(0);values.pop();values.clear();
+    unsafe {assert(std::lang::__listStorageCapacity(handle)==33);}
+    values.push(99);
+    assert(values[0]==99 && copy.len()==33 && copy[0]==0 && copy[32]==32);
+    unsafe {assert(std::lang::__listStorageCapacity(handle)==33);}
+    List<String> words;words.push("first");words.push("second");
+    List<String> saved=words;words.clear();words.push("third");
+    assert(saved[0]=="first" && saved[1]=="second" && words[0]=="third");
+    println("bounded buffer growth and retained List capacity OK");
+}

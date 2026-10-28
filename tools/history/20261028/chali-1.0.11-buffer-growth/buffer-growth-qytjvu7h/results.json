@@ -1,0 +1,18 @@
+[
+  {
+    "label": "malloc--checked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-qytjvu7h\\malloc--checked-direct"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:13:66: `.` / `->` 只能用在 struct 上\n 13 |         int64 maximum=std::lang::__listStorageMaxCapacity(values.opcode);\n    |                                                                  ~~~~~~\nchali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:15:45: `.` / `->` 只能用在 struct 上\n 15 |         std::lang::__bootListReserve(values.opcode,33);\n    |                                             ~~~~~~\nchali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:16:56: `.` / `->` 只能用在 struct 上\n 16 |         assert(std::lang::__listStorageCapacity(values.opcode)==33);\n    |                                                        ~~~~~~\nchali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:22:60: `.` / `->` 只能用在 struct 上\n 22 |     unsafe {assert(std::lang::__listStorageCapacity(values.opcode)==33);}\n    |                                                            ~~~~~~\nchali: G:/Desktop/ChaLi/tests/fixtures/aot_buffer_growth.chl:25:60: `.` / `->` 只能用在 struct 上\n 25 |     unsafe {assert(std::lang::__listStorageCapacity(values.opcode)==33);}\n    |                                                            ~~~~~~\n"
+  }
+]
