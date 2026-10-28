@@ -22,6 +22,13 @@ public:
      * @param invocationError 运行时回调失败的原始诊断，可为空。
      */
     explicit NativeCallContextImpl(NativeContext &context, Invoker invoker = {}, const Memory::String *invocationError = nullptr);
+    /**
+     * @brief 在一次同步调用期间借用已有调用器，不复制其闭包。
+     * @param context 本次运行上下文。
+     * @param borrowedInvoker 必须比本适配器存活更久的调用器，可为空。
+     * @param invocationError 回调失败的原始诊断，可为空。
+     */
+    NativeCallContextImpl(NativeContext &context, const Invoker *borrowedInvoker, const Memory::String *invocationError = nullptr);
 
     /**
      * @brief 将胶水记录装入当前对象表的通用壳。
@@ -170,6 +177,7 @@ public:
 private:
     NativeContext &context_;
     Invoker invoker_;
+    const Invoker *borrowedInvoker_ = nullptr;
     const Memory::String *invocationError_ = nullptr;
 };
 }  // namespace stackvm::runtimeDetail

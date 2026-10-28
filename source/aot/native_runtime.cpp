@@ -547,6 +547,7 @@ void chali_host_check_pointer(std::int64_t index, std::int64_t address, std::int
  * @param address 语言逻辑地址。
  * @param count 必须可访问的字节数。
  * @return 当前操作结束前有效的物理地址。
+ * @note 根上下文和隔离线程上下文的堆均由本执行器建立为 Heap，直接调用具体实现避免逐次 RTTI。
  */
 unsigned char *chali_host_address(std::int64_t address, std::size_t count)
 {
@@ -554,9 +555,8 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
     const auto at = static_cast<std::size_t>(address);
     if (context.data && address >= 0 && at < context.data->binary.size() && count <= context.data->binary.size() - at)
         return const_cast<unsigned char *>(context.data->binary.data()) + at;
-    if (address >= 0)
-        if (auto *heap = dynamic_cast<Heap *>(context.heap))
-            if (auto *bytes = heap->borrowBytes(at, count)) return bytes;
+    if (address >= 0 && context.heap)
+        if (auto *bytes = static_cast<Heap *>(context.heap)->borrowBytes(at, count)) return bytes;
     chali_panic("访问未分配或已释放的内存");
     return nullptr;
 }
@@ -574,7 +574,7 @@ void chali_host_export_apply(void (*marshal)(stackvm::NativeCallContext *, void 
     const auto begin = temporaries.size();
     try
     {
-        NativeCallContextImpl call(context, context.invoker ? *context.invoker : current().invoker);
+        NativeCallContextImpl call(context, context.invoker ? context.invoker : &current().invoker);
         marshal(&call, frame);
     } catch (const std::exception &error)
     {
@@ -748,7 +748,7 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
             else if (entry != nullptr)
             {
                 Memory::Vector<NativeValue> arguments = makeArguments();
-                NativeCallContextImpl call(context, state.invoker);
+                NativeCallContextImpl call(context, &state.invoker);
                 result = entry->callback(call, arguments);
             }
             else
@@ -794,7 +794,7 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
 void chali_host_memory_prepare(std::int64_t operation, std::int64_t destination, std::int64_t sourceOrByte,
                                std::int64_t bytes, unsigned char **output, unsigned char **input)
 {
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     if (!rawMemoryView(context, operation, destination, sourceOrByte, bytes, *output, *input))
         chali_panic(context.error.c_str());
 }
@@ -812,7 +812,7 @@ void chali_host_memory_prepare(std::int64_t operation, std::int64_t destination,
 std::int64_t chali_host_raw_storage(std::int64_t operation, std::int64_t handle, std::int64_t index,
                                     std::int64_t value, std::int64_t alignment, std::int64_t tag)
 {
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     Slot result;
     try
     {
@@ -851,7 +851,7 @@ unsigned char chali_host_result_float()
  */
 std::int64_t chali_host_string_storage(std::int64_t operation, std::int64_t address)
 {
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     const auto source = static_cast<std::size_t>(address);
     const bool heap = context.heap != nullptr && context.heap->contains(source);
     if (operation == 1) return address + (heap ? 8 : 0);
@@ -887,11 +887,11 @@ std::int64_t chali_host_list_storage(std::int64_t operation, std::int64_t first,
                                      std::int64_t floating)
 {
     auto &state = current();
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     NativeValue result;
     try
     {
-        NativeCallContextImpl bridge(context, state.invoker);
+        NativeCallContextImpl bridge(context, &state.invoker);
         result = collection_glue::listStorageOperation(bridge, operation, first, second, third, fourth, fifth,
                                                        static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)
@@ -936,11 +936,11 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
                                     std::int64_t sixth, std::int64_t seventh, std::int64_t floating)
 {
     auto &state = current();
-    NativeContext context = currentContext();
+    NativeContext &context = currentContext();
     NativeValue result;
     try
     {
-        NativeCallContextImpl bridge(context, state.invoker);
+        NativeCallContextImpl bridge(context, &state.invoker);
         result = collection_glue::mapStorageOperation(bridge, operation, first, second, third, fourth, fifth, sixth, seventh,
                                                       static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)

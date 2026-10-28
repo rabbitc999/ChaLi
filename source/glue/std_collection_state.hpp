@@ -323,14 +323,11 @@ struct State
     Store storage{ host };
     Heap *heap = &memory;
     Store *objects = &storage;
-    using Invoker = Memory::Function<bool(std::int64_t, const Memory::Vector<NativeValue> &, NativeValue &)>;
-    Invoker invoke;
-    Invoker *invoker = &invoke;
     /**
      * @brief 将同步回调接到当前 VM 调用帧。
      * @param context 仅本次胶水调用有效的公开上下文。
      */
-    explicit State(stackvm::NativeCallContext &context) : host(context), invoke([&context](std::int64_t function, const Memory::Vector<NativeValue> &arguments, NativeValue &result) { return context.invoke(function, arguments, result); }) {}
+    explicit State(stackvm::NativeCallContext &context) : host(context) {}
 };
 
 /**

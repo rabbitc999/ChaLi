@@ -113,7 +113,7 @@ static Slot hashedStorageOperation(State &state, int operation, const Arguments 
             KeyCallbackGuard guard(*record);
             const auto query = arguments[offset];
             NativeValue result;
-            if (!(*state.invoker)(record->mapHash, { query.isFloat ? NativeValue::fromFloat(query.real) : NativeValue::fromInt(query.integer) }, result))
+            if (!state.host.invoke(record->mapHash, { query.isFloat ? NativeValue::fromFloat(query.real) : NativeValue::fromInt(query.integer) }, result))
                 return Slot::fromInt(0);
             return Slot::fromInt(result.asInt());
         }
@@ -138,7 +138,7 @@ static Slot hashedStorageOperation(State &state, int operation, const Arguments 
         {
             const auto right = arguments[offset];
             NativeValue result;
-            if ((*state.invoker)(record->mapEqual,
+            if (state.host.invoke(record->mapEqual,
                                  { left.isFloat ? NativeValue::fromFloat(left.real) : NativeValue::fromInt(left.integer),
                                    right.isFloat ? NativeValue::fromFloat(right.real) : NativeValue::fromInt(right.integer) },
                                  result)) matched = result.asInt() != 0;

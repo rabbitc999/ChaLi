@@ -20,6 +20,17 @@ NativeCallContextImpl::NativeCallContextImpl(NativeContext &context, Invoker inv
 }
 
 /**
+ * @brief 在同步原生调用中借用生命周期稳定的调用器。
+ * @param context 本次运行上下文。
+ * @param borrowedInvoker 由调用方保有的调用器，不转移所有权。
+ * @param invocationError 回调失败的原始诊断，可为空。
+ */
+NativeCallContextImpl::NativeCallContextImpl(NativeContext &context, const Invoker *borrowedInvoker, const Memory::String *invocationError)
+    : context_(context), borrowedInvoker_(borrowedInvoker), invocationError_(invocationError)
+{
+}
+
+/**
  * @brief 复制当前宿主入口参数。
  * @return 参数列表；未设置时为空。
  */
@@ -100,7 +111,8 @@ bool NativeCallContextImpl::readString(std::int64_t address, Memory::String &out
 bool NativeCallContextImpl::invoke(std::int64_t functionPointer, const Memory::Vector<NativeValue> &arguments,
                                    NativeValue &result)
 {
-    if (invoker_ && invoker_(functionPointer, arguments, result)) return true;
+    const auto &invoker = borrowedInvoker_ ? *borrowedInvoker_ : invoker_;
+    if (invoker && invoker(functionPointer, arguments, result)) return true;
     if (context_.error.empty())
         context_.error = invocationError_ && !invocationError_->empty() ? *invocationError_ : "当前运行时无法调用指定函数指针";
     return false;
