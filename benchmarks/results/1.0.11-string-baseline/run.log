@@ -1,0 +1,52 @@
+build string_read chali-aot
+build string_read cpp-o2
+build string_read rust
+build string_read lua
+build string_concat chali-aot
+build string_concat cpp-o2
+build string_concat rust
+build string_concat lua
+build string_concat lua-builder
+build string_slice chali-aot
+build string_slice cpp-o2
+build string_slice rust
+build string_slice lua
+build string_find chali-aot
+build string_find cpp-o2
+build string_find rust
+build string_find lua
+verify string_read chali-aot OK
+verify string_read cpp-o2 OK
+verify string_read rust OK
+verify string_read lua OK
+verify string_concat chali-aot OK
+verify string_concat cpp-o2 OK
+verify string_concat rust OK
+verify string_concat lua OK
+verify string_concat lua-builder OK
+verify string_slice chali-aot OK
+verify string_slice cpp-o2 OK
+verify string_slice rust OK
+verify string_slice lua OK
+verify string_find chali-aot OK
+verify string_find cpp-o2 OK
+verify string_find rust OK
+verify string_find lua OK
+median string_read chali-aot 1660.365 ms
+median string_read cpp-o2 0.5427 ms
+median string_read rust 0.5437 ms
+median string_read lua 6.0014 ms
+median string_concat chali-aot 1096.1098 ms
+median string_concat cpp-o2 0.1012 ms
+median string_concat rust 0.0699 ms
+median string_concat lua 25.6472 ms
+median string_concat lua-builder 4.1247 ms
+median string_slice chali-aot 1109.8474 ms
+median string_slice cpp-o2 0.1329 ms
+median string_slice rust 0.1323 ms
+median string_slice lua 0.3515 ms
+median string_find chali-aot 6095.4073 ms
+median string_find cpp-o2 0.1123 ms
+median string_find rust 0.0451 ms
+median string_find lua 0.1703 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-string-baseline
