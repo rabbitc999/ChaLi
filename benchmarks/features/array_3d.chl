@@ -1,0 +1,25 @@
+/** 原生三维数组的跨层依赖索引读取。 */
+int64 cube[16][16][16];
+#export("feature_setup")
+void setup() {
+    int64 x = 0;
+    while (x < 16) {
+        int64 y = 0;
+        while (y < 16) {
+            int64 z = 0;
+            while (z < 16) { cube[x][y][z] = x * 257 + y * 31 + z * 7 + 3; z = z + 1; }
+            y = y + 1;
+        }
+        x = x + 1;
+    }
+}
+#export("feature_work")
+int64 work(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        int64 x = (acc >> 4) & 15; int64 y = (acc >> 8) & 15; int64 z = (i + seed) & 15;
+        acc = (acc * 33 + cube[x][y][z]) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}

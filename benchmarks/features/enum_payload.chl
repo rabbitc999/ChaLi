@@ -1,0 +1,35 @@
+/** 四种载荷变体的借用匹配；构造不在计时范围内。 */
+struct Payload { int64 x; int64 y; };
+enum Event { Empty, One(int64 value), Pair(int64 left, int64 right), Record(Payload value) };
+Event events[256];
+
+#export("feature_setup")
+void setup() {
+    int64 i = 0;
+    while (i < 256) {
+        if (i % 4 == 0) { events[i] = Event::Empty; }
+        elif (i % 4 == 1) { events[i] = Event::One(i * 3 + 7); }
+        elif (i % 4 == 2) { events[i] = Event::Pair(i * 5, i + 11); }
+        else { Payload value; value.x = i * 7; value.y = i + 13; events[i] = Event::Record(value); }
+        i = i + 1;
+    }
+}
+
+#export("feature_work")
+int64 work(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        int64 index = (i * 13 + ((acc >> 7) & 255)) & 255;
+        Event const& event = &events[index];
+        int64 value = 0;
+        match (event) {
+            Event::Empty => { value = 17; }
+            Event::One(number) => { value = number; }
+            Event::Pair(left, right) => { value = left + right; }
+            Event::Record(payload) => { value = payload.x + payload.y; }
+        }
+        acc = (acc * 33 + value) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}

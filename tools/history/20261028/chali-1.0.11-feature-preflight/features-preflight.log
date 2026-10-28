@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\benchmarks\features\run.py", line 222, in <module>
+    main()
+  File "G:\Desktop\ChaLi\benchmarks\features\run.py", line 151, in main
+    compiler_version=execute([compiler, '--version']).stdout.strip(), allocator='malloc',
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Desktop\ChaLi\benchmarks\features\run.py", line 45, in execute
+    raise RuntimeError((list(map(str, command)), result.returncode, result.stdout, result.stderr))
+RuntimeError: (['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', '--version'], 2, '', '不认识的选项：--version\n')

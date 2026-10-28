@@ -1,0 +1,19 @@
+/** 派生接口借用视图调用继承的方法：单一实现类型。 */
+interface Operation { int64 apply(int64 value); };
+interface NamedOperation: Operation { int64 bias(); };
+struct Multiply: NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value) { return (value * factor + offset) & 2147483647; }
+    int64 bias() { return offset; }
+};
+Multiply receiver;
+#export("feature_setup")
+void setup() { receiver.factor = 3; receiver.offset = 7; }
+int64 invoke(NamedOperation const& operation, int64 value) { return operation.apply(value); }
+#export("feature_work")
+int64 work(int64 seed) {
+    NamedOperation const& derived = &receiver;
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) { acc = invoke(&derived, acc); i = i + 1; }
+    return acc;
+}

@@ -1,0 +1,149 @@
+{
+  "generated": "2026-10-28T16:04:20.527887",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "runs": 5,
+  "reps_per_run": 5,
+  "compiler_sha256": "af3bbacec00aa5d2fc9858f517b6e99f3d8c765c226fee09076bf4e9632b6d3c",
+  "compiler_path": "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+  "compiler_version": "1.0.11",
+  "allocator": "malloc",
+  "git_commit": "3971af0d460db2bbedbf6975171e1f6474cacb8d",
+  "working_tree_dirty": true,
+  "source_sha256": {
+    "FeatureTiming.java": "0ea5752f9f659c3ca5e5b0a4d46deccec3c50affebaf1d31abb29aeacefd9ba0",
+    "enum_payload.chl": "aab5fc5c7cc2bafcd9817217ae4e5fc4bd5b8d7011fe847f006cda8ac580ff4c",
+    "enum_payload.rs": "6ee8287fc3a72c52af493b134618292f4a59b7f8bf56275f77855e9513af386e",
+    "run.py": "730aec665c3edd4c3cc482779a81855c1192245d17367b2c2d25050ec8c441c6",
+    "timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "timing.rs": "230af02c586bf63f104b6391e40cd165bc2b4f8db4f8b368f65abb1e3cf215f0"
+  },
+  "oracle_values": {
+    "enum_payload": [
+      1780561652,
+      1094190832,
+      998905774,
+      1533056942,
+      1629960806
+    ]
+  },
+  "enum_variant_counts": [
+    [
+      60122,
+      43782,
+      98155,
+      60085
+    ],
+    [
+      60100,
+      43743,
+      98216,
+      60085
+    ],
+    [
+      60104,
+      43768,
+      98192,
+      60080
+    ],
+    [
+      60108,
+      43771,
+      98190,
+      60075
+    ],
+    [
+      60099,
+      43768,
+      98197,
+      60080
+    ]
+  ],
+  "preflight": true,
+  "reference_languages_rerun": false,
+  "configurations": {
+    "enum_payload": {
+      "chali-aot": {
+        "build": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+              "aot",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\enum_payload.chl",
+              "--shared",
+              "--unchecked",
+              "--allocator",
+              "malloc",
+              "--out",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\kernel"
+            ],
+            "stdout": "",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi/build/dependencies/llvm/toolchain/bin/clang.exe",
+              "-O3",
+              "-DNDEBUG",
+              "-DCHALI_FEATURE_AOT=1",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\kernel.dll",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\chali-aot\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [],
+        "verified_values": [
+          1780561652,
+          1094190832,
+          998905774,
+          1533056942,
+          1629960806
+        ]
+      },
+      "rust": {
+        "build": [
+          {
+            "command": [
+              "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+              "--edition=2021",
+              "-O",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\enum_payload.rs",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [],
+        "verified_values": [
+          1780561652,
+          1094190832,
+          998905774,
+          1533056942,
+          1629960806
+        ]
+      }
+    }
+  },
+  "tools": {
+    "clang": {
+      "command": [
+        "G:\\Desktop\\ChaLi/build/dependencies/llvm/toolchain/bin/clang.exe",
+        "--version"
+      ],
+      "output": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n"
+    },
+    "rustc": {
+      "command": [
+        "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+        "--version"
+      ],
+      "output": "rustc 1.98.1 (48a229cea 2026-09-01)\n"
+    }
+  }
+}

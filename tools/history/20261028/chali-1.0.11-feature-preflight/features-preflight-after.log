@@ -1,0 +1,31 @@
+build enum_payload chali-aot
+build enum_payload rust
+build interface_mono chali-aot
+build interface_mono java-jit
+build interface_poly chali-aot
+build interface_poly java-jit
+build struct_nested chali-aot
+build struct_nested cpp-o3
+build struct_nested rust
+build array_2d chali-aot
+build array_2d cpp-o3
+build array_2d rust
+build array_3d chali-aot
+build array_3d cpp-o3
+build array_3d rust
+verify enum_payload chali-aot OK
+verify enum_payload rust OK
+verify interface_mono chali-aot OK
+verify interface_mono java-jit OK
+verify interface_poly chali-aot OK
+verify interface_poly java-jit OK
+verify struct_nested chali-aot OK
+verify struct_nested cpp-o3 OK
+verify struct_nested rust OK
+verify array_2d chali-aot OK
+verify array_2d cpp-o3 OK
+verify array_2d rust OK
+verify array_3d chali-aot OK
+verify array_3d cpp-o3 OK
+verify array_3d rust OK
+saved G:\Desktop\ChaLi\tmp\features-preflight

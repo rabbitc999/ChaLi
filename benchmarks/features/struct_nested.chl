@@ -1,0 +1,39 @@
+/** 嵌套结构、定长字段数组与跨层访问，数据构造在计时前完成。 */
+struct Vector3 { int64 x; int64 y; int64 z; };
+struct Transform { Vector3 position; Vector3 velocity; int64 weights[4]; };
+struct Record { Transform transform; int64 payload[8]; int64 flags; };
+Record records[256];
+
+#export("feature_setup")
+void setup() {
+    int64 i = 0;
+    while (i < 256) {
+        records[i].transform.position.x = i * 3 + 1;
+        records[i].transform.position.y = i * 5 + 2;
+        records[i].transform.position.z = i * 7 + 3;
+        records[i].transform.velocity.x = i + 4;
+        records[i].transform.velocity.y = i + 5;
+        records[i].transform.velocity.z = i + 6;
+        records[i].flags = i * 11 + 9;
+        int64 k = 0;
+        while (k < 4) { records[i].transform.weights[k] = i * 13 + k; k = k + 1; }
+        k = 0;
+        while (k < 8) { records[i].payload[k] = i * 17 + k * 3; k = k + 1; }
+        i = i + 1;
+    }
+}
+
+#export("feature_work")
+int64 work(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        int64 index = (i * 13 + (acc & 255)) & 255;
+        Record const& record = &records[index];
+        int64 value = record.transform.position.x + record.transform.position.z
+                    + record.transform.velocity.y + record.transform.weights[i & 3]
+                    + record.payload[(i + seed) & 7] + record.flags;
+        acc = (acc * 33 + value) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}

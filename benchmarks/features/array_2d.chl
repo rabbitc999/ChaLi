@@ -1,0 +1,21 @@
+/** 原生二维数组的依赖索引读取，不手工展平为一维。 */
+int64 matrix[64][64];
+#export("feature_setup")
+void setup() {
+    int64 row = 0;
+    while (row < 64) {
+        int64 column = 0;
+        while (column < 64) { matrix[row][column] = row * 131 + column * 17 + 3; column = column + 1; }
+        row = row + 1;
+    }
+}
+#export("feature_work")
+int64 work(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        int64 row = (acc >> 6) & 63; int64 column = (i + acc) & 63;
+        acc = (acc * 33 + matrix[row][column]) & 2147483647;
+        i = i + 1;
+    }
+    return acc;
+}

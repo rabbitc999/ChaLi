@@ -1,0 +1,5 @@
+build enum_payload chali-aot
+build enum_payload rust
+verify enum_payload chali-aot OK
+verify enum_payload rust OK
+saved G:\Desktop\ChaLi\tmp\features-enum-final-preflight

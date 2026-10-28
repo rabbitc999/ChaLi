@@ -1,0 +1,41 @@
+/** 派生接口调用继承的方法：同一调用位置接收三种实现。 */
+interface Operation { int64 apply(int64 value); };
+interface NamedOperation: Operation { int64 bias(); };
+struct Multiply: NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value) { return (value * factor + offset) & 2147483647; }
+    int64 bias() { return offset; }
+};
+struct Subtract: NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value) { return (value * factor - offset) & 2147483647; }
+    int64 bias() { return offset; }
+};
+struct ExclusiveOr: NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value) { return ((value * factor) ^ offset) & 2147483647; }
+    int64 bias() { return offset; }
+};
+Multiply first; Subtract second; ExclusiveOr third;
+#export("feature_setup")
+void setup() {
+    first.factor = 3; first.offset = 7;
+    second.factor = 5; second.offset = 11;
+    third.factor = 7; third.offset = 13;
+}
+NamedOperation const& choose(int64 index) {
+    if (index == 1) { return &second; }
+    if (index == 2) { return &third; }
+    return &first;
+}
+int64 invoke(NamedOperation const& operation, int64 value) { return operation.apply(value); }
+#export("feature_work")
+int64 work(int64 seed) {
+    int64 acc = seed; int64 i = 0;
+    while (i < 262144) {
+        NamedOperation const& derived = choose((i + seed) & 3);
+        acc = invoke(&derived, acc);
+        i = i + 1;
+    }
+    return acc;
+}
