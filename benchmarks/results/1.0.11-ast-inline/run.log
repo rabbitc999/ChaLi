@@ -1,0 +1,26 @@
+配置 1 个：chali-aot
+  构建 chali-aot/int_chain …
+  构建 chali-aot/float_chain …
+  构建 chali-aot/call …
+  构建 chali-aot/array …
+  构建 chali-aot/list_growth …
+  构建 chali-aot/map_growth …
+  构建 chali-aot/set_growth …
+  chali-aot  int_chain    中位     0.873 ms
+  chali-aot  float_chain  中位     1.310 ms
+  chali-aot  call         中位     0.219 ms
+  chali-aot  array        中位    64.295 ms
+  chali-aot  list_growth  中位   401.326 ms
+  chali-aot  map_growth   中位   258.521 ms
+  chali-aot  set_growth   中位   222.978 ms
+
+| 配置 | 整数依赖链（Lehmer 乘加） | 浮点依赖链（乘加） | 小函数调用 | 固定数组循环读取 | 各语言均从空容器动态增长，再遍历归并 | Map 空表增长、覆盖、查询、删除与重新插入 | Set 空表增长、重复插入、查询、删除与重新插入 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 0.873 | 1.310 | 0.219 | 64.295 | 401.326 | 258.521 | 222.978 |
+
+相对 ChaLi 1.0.11（LLVM AOT，unchecked 导出） 的倍数：
+| 配置 | 整数依赖链（Lehmer 乘加） ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 浮点依赖链（乘加） ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 小函数调用 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 固定数组循环读取 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 各语言均从空容器动态增长，再遍历归并 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | Map 空表增长、覆盖、查询、删除与重新插入 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） | Set 空表增长、重复插入、查询、删除与重新插入 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+结果目录：benchmarks\results\1.0.11-ast-inline
