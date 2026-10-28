@@ -1,0 +1,77 @@
+python tools/write_build_config.py build/chali-runtime/buildConfig.json "g++" "-std=c++17 -Wall -Wextra -O2 -DNDEBUG -ffunction-sections -fdata-sections -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread -Isource -Ilibrary -Isource/allocator -Isource/lsp -Isource/bignum -Isource/json -Isource/toml -Ibuild/dependencies/sqlite -Ibuild/dependencies/miniz -Isource/console -Isource/lztext -Isource/ast -Isource/ircode -Isource/preprocess -DCHALI_FRONT_END_NO_MAIN=1 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1               " "-lm build/chali-runtime/libast.a -Wl,--start-group build/chali-ircode-aot-core/libstackvm.a build/chali-host-records/librecords.a -Wl,--end-group build/chali-runtime/libpreprocess.a -lwinhttp" "-Wl,--gc-sections -s -static"
+python tools/fetch_dependencies.py --dest build/dependencies
+python tools/write_build_config.py build/chali-native/llvmLinkMode.json "0" "build/dependencies/llvm/static-sdk" ""
+g++ -std=c++17 -Wall -Wextra -O2 -DNDEBUG -ffunction-sections -fdata-sections -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread -Isource -Ilibrary -Isource/allocator -Isource/lsp -Isource/bignum -Isource/json -Isource/toml -Ibuild/dependencies/sqlite -Ibuild/dependencies/miniz -Isource/console -Isource/lztext -Isource/ast -Isource/ircode -Isource/preprocess -DCHALI_FRONT_END_NO_MAIN=1 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1                -MMD -MP -I. -c source/chali_parser.cpp -o build/chali-frontend/chali_parser.o
+In file included from source/.chali-build.gram:4267:
+source/semantics/type_ids.cpp:129:37: warning: "/*" within comment [-Wcomment]
+  129 |      * 标准库模块（`chali/source/std/*.chl`）里也要能直接调，所以不按模块过滤，
+      |                                      
+In file included from source/chali_borrow_checker.hpp:4,
+                 from source/.chali-build.gram:1095,
+                 from source/chali_parser.hpp:82,
+                 from source/chali_parser.cpp:15:
+source/chali_borrow_flow.hpp: In lambda function:
+source/chali_borrow_flow.hpp:237:12: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  237 |         if (node.kind == FlowNode::Initialize || node.kind == FlowNode::Write || node.kind == FlowNode::Bind || node.kind == FlowNode::Move || node.kind == FlowNode::MoveScalar)
+      |            ^
+chali_parser.cpp: In function 'const char* chali::statusName(chali::Status)':
+chali_parser.cpp:11310:12: warning: enumeration value 'ErrExpected' not handled in switch [-Wswitch]
+chali_parser.cpp:11310:12: warning: enumeration value 'ErrUnexpectedEof' not handled in switch [-Wswitch]
+chali_parser.cpp:11310:12: warning: enumeration value 'ErrLexUnterminated' not handled in switch [-Wswitch]
+chali_parser.cpp:11310:12: warning: enumeration value 'ErrLexChar' not handled in switch [-Wswitch]
+In file included from source/.chali-build.gram:1094:
+source/chali_incremental.hpp: In static member function 'static Memory::Vector<Memory::String> chali_incremental::Cache::outputPaths(const Memory::String&, bool)':
+source/chali_incremental.hpp:318:90: warning: unused parameter 'binary' [-Wunused-parameter]
+  318 |     static Memory::Vector<Memory::String> outputPaths(const Memory::String &prefix, bool binary)
+      |                                                                                     ~~~~~^~~~~~
+In file included from source/.chali-build.gram:4277:
+source/semantics/generic_inference.cpp: In function 'bool {anonymous}::PrepareGenericSignatures()':
+source/semantics/generic_inference.cpp:294:83: warning: missing initializer for member 'chali_generic::Expansion::constraints' [-Wmissing-field-initializers]
+  294 |         chali_generic::Expansion expansion{ &probe, arguments, "McInferenceProbe" };
+      |                                                                                   ^
+In file included from source/.chali-build.gram:4280:
+source/semantics/lowering.cpp: In function 'ast::NodePtr {anonymous}::LowerAddressOf(int)':
+source/semantics/lowering.cpp:744:23: warning: unused variable 'stride' [-Wunused-variable]
+  744 |             const int stride = StructStride(base->elem);
+      |                       ^~~~~~
+source/semantics/lowering.cpp:751:23: warning: unused variable 'stride' [-Wunused-variable]
+  751 |             const int stride = StructStride(base->elem);
+      |                       ^~~~~~
+In file included from source/semantics/lowering.cpp:2995,
+                 from source/.chali-build.gram:4280:
+source/semantics/borrow_flow.cpp: In function 'void {anonymous}::FinishBorrowFlow(int, const {anonymous}::MBorrowFlowCapture&)':
+source/semantics/borrow_flow.cpp:697:45: warning: missing initializer for member '{anonymous}::MBorrowFlowBuilder::summaries' [-Wmissing-field-initializers]
+  697 |     MBorrowFlowBuilder builder{ capture, {} };
+      |                                             ^
+source/semantics/borrow_flow.cpp:697:45: warning: missing initializer for member '{anonymous}::MBorrowFlowBuilder::loopStops' [-Wmissing-field-initializers]
+source/semantics/borrow_flow.cpp:697:45: warning: missing initializer for member '{anonymous}::MBorrowFlowBuilder::valueStops' [-Wmissing-field-initializers]
+In file included from source/.chali-build.gram:4290:
+source/semantics/reflection_calls.cpp: In member function 'void {anonymous}::MReflectionCalls::generate(const {anonymous}::MFunctionDecl&, const Memory::String&, const Memory::String&)':
+source/semantics/reflection_calls.cpp:174:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::fixedArgs' [-Wmissing-field-initializers]
+  174 |                 candidates.push_back({ name, target, fn.signature.result, fn.signature.params, true });
+      |                 ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source/semantics/reflection_calls.cpp:174:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::receiverOperand' [-Wmissing-field-initializers]
+source/semantics/reflection_calls.cpp:206:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::fixedArgs' [-Wmissing-field-initializers]
+  206 |                 candidates.push_back({ method.name, "obj." + method.name, method.result, method.bodyParams, true });
+      |                 ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source/semantics/reflection_calls.cpp:206:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::receiverOperand' [-Wmissing-field-initializers]
+source/semantics/reflection_calls.cpp:234:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::fixedArgs' [-Wmissing-field-initializers]
+  234 |                 candidates.push_back({ constructor ? "new" : method.source,
+      |                 ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  235 |                                        constructor ? "new " + owner : isStatic ? owner + "::" + method.source :
+      |                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  236 |                                                                                  "obj." + method.source,
+      |                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~
+  237 |                                        method.result, method.params, allowed });
+      |                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source/semantics/reflection_calls.cpp:234:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::receiverOperand' [-Wmissing-field-initializers]
+source/semantics/reflection_calls.cpp:255:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::fixedArgs' [-Wmissing-field-initializers]
+  255 |                 candidates.push_back({ "new", {}, NamedType(owner), {}, true });
+      |                 ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source/semantics/reflection_calls.cpp:255:37: warning: missing initializer for member '{anonymous}::MReflectionCalls::Candidate::receiverOperand' [-Wmissing-field-initializers]
+source/.chali-build.gram: In function 'int M_Compile(const char*, const char*, int, int, const char*)':
+source/.chali-build.gram:4417:51: warning: missing initializer for member '{anonymous}::MReflectionQueries::helpers' [-Wmissing-field-initializers]
+source/.chali-build.gram:4417:51: warning: missing initializer for member '{anonymous}::MReflectionQueries::functions' [-Wmissing-field-initializers]
+source/.chali-build.gram:4417:51: warning: missing initializer for member '{anonymous}::MReflectionQueries::replaced' [-Wmissing-field-initializers]
+ar rcs build/chali-frontend/libparser.a build/chali-frontend/chali_parser.o build/chali-frontend/lztext.o build/chali-miniz-tinfl.o build/chali-frontend/chali_resource_cleanup.o build/chali-frontend/chali_generic.o build/chali-frontend/chali_lambda.o build/chali-frontend/chali_generic_closure.o build/chali-frontend/chali_package.o build/chali-frontend/chali_report.o build/chali-frontend/chali_aot.o build/chali-frontend/chali_aot_target.o build/chali-frontend/chali_aot_debug.o build/chali-frontend/chali_aot_llvm.o build/chali-frontend/chali_aot_runtime_assets.o build/chali-frontend/chali_temp.o build/chali-frontend/macro_hygiene.o build/chali-frontend/macro_regex_matcher.o build/chali-frontend/macro_source.o build/chali-frontend/macro_fragments.o build/chali-frontend/macro_ast_substitution.o build/chali-frontend/macro_template_binding.o build/chali-frontend/macro_registry.o build/chali-frontend/macro_signature.o build/chali-frontend/string_escape.o build/chali-frontend/compiler_analysis.o build/chali-frontend/syntax_source_text.o build/chali-frontend/syntax_constant_expression.o build/chali-frontend/chali_stdlib_embedded.o
+g++ -std=c++17 -Wall -Wextra -O2 -DNDEBUG -ffunction-sections -fdata-sections -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread -Isource -Ilibrary -Isource/allocator -Isource/lsp -Isource/bignum -Isource/json -Isource/toml -Ibuild/dependencies/sqlite -Ibuild/dependencies/miniz -Isource/console -Isource/lztext -Isource/ast -Isource/ircode -Isource/preprocess -DCHALI_FRONT_END_NO_MAIN=1 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1                -Wl,--gc-sections -s -static -o chali-1.0.11-llvm-external-windows-x64.exe build/chali-frontend/chali_main.o build/chali-frontend/chali_tool.o build/chali-frontend/generator_cli.o build/chali-embedded-lsp/macro_analyzer.o build/chali-embedded-lsp/language_server.o build/chali-native-development.o build/chali-frontend/libparser.a -lm build/chali-runtime/libast.a -Wl,--start-group build/chali-ircode-aot-core/libstackvm.a build/chali-host-records/librecords.a -Wl,--end-group build/chali-runtime/libpreprocess.a -lwinhttp 

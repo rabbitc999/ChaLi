@@ -1,0 +1,6 @@
+chali: tests/fixtures/aot_reference_storage_children.chl:9:40: `&` 取不了 value 的地址：该类型没有可取引用的变量存储。能取地址的是：标量、字符串、大数、容器、结构体与元组变量（`&p`）、数组 / 引用的元素（`&a[i]`）、结构体字段（`&s.f`）、字符串的字节（`&s[i]`）
+ 9 |         Token::Value(number) if touch(&value) => { return -1; }
+   |                                        ~~~~~
+chali: tests/fixtures/aot_reference_storage_children.chl:17:33: `&` 取不了 value 的地址：该类型没有可取引用的变量存储。能取地址的是：标量、字符串、大数、容器、结构体与元组变量（`&p`）、数组 / 引用的元素（`&a[i]`）、结构体字段（`&s.f`）、字符串的字节（`&s[i]`）
+ 17 |     int64 data[] = new [length(&value)];
+    |                                 ~~~~~

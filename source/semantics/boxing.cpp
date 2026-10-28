@@ -4178,7 +4178,7 @@ public:
             if (id < 0 || !exact || !visited.insert(id).second) return;
             const auto &node = N(id);
             if ((!allowCalls && node.kind == MNode::Call)
-                || node.kind == MNode::Lambda || node.kind == MNode::FuncDef
+                || node.kind == MNode::Lambda || node.kind == MNode::GenericLambda || node.kind == MNode::FuncDef
                 || node.kind == MNode::Defer || node.kind == MNode::Cast
                 || (node.kind == MNode::Var && node.s.rfind("__chali_lambda_", 0u) == 0u))
             {
@@ -4206,7 +4206,17 @@ public:
                     if (receiver.kind == MNode::EnumCtor) names_.insert(receiver.s2);
                 }
             }
-            if (node.kind == MNode::Block) visit(static_cast<int>(node.i));
+            /* 守卫、模式和分配长度不都存放在 kids；遗漏会让真实取址失去存储。
+             * 声明组的 i 是标记而非子节点，不能按节点编号遍历。 */
+            visit(node.guard);
+            const bool declarationGroup = node.kind == MNode::Declare && node.kids.size() == 1u &&
+                node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
+            const bool indexed = node.kind == MNode::Block || node.kind == MNode::Case ||
+                node.kind == MNode::NewPtr ||
+                ((node.kind == MNode::Declare || node.kind == MNode::Field) && !declarationGroup && node.i >= 0) ||
+                (node.kind == MNode::Index && node.s2 == "__chali_bare_index");
+            if (indexed) visit(static_cast<int>(node.i));
+            for (const auto annotation : node.annotations) visit(annotation);
             for (const auto child : node.kids) visit(child);
         };
         visit(bodyId);

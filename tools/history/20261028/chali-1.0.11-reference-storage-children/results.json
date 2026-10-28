@@ -1,0 +1,602 @@
+[
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-malloc-False.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-malloc-False.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-malloc-True.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-malloc-True.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-pool-False.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-pool-False.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-enabled-pool-True.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-enabled-pool-True.exe"
+    ],
+    "mode": "enabled",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-malloc-False.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-malloc-False.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-malloc-True.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-malloc-True.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-pool-False.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-pool-False.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-calls-off-pool-True.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-calls-off-pool-True.exe"
+    ],
+    "mode": "calls-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-malloc-False.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-malloc-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-malloc-False.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-malloc-True.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-malloc-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-malloc-True.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-pool-False.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-pool-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-pool-False.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_reference_storage_children.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_reference_storage_children-all-off-pool-True.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "reference storage indexed children OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_scoped_reference_storage.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-pool-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\reference-children-verify\\aot_scoped_reference_storage-all-off-pool-True.exe"
+    ],
+    "mode": "all-off",
+    "code": 0,
+    "stdout": "scoped scalar storage, real borrows and owned copies OK\n",
+    "stderr": ""
+  }
+]

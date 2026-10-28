@@ -1,0 +1,25 @@
+aot_reference_storage_children-enabled-malloc-False PASS
+aot_scoped_reference_storage-enabled-malloc-False PASS
+aot_reference_storage_children-enabled-malloc-True PASS
+aot_scoped_reference_storage-enabled-malloc-True PASS
+aot_reference_storage_children-enabled-pool-False PASS
+aot_scoped_reference_storage-enabled-pool-False PASS
+aot_reference_storage_children-enabled-pool-True PASS
+aot_scoped_reference_storage-enabled-pool-True PASS
+aot_reference_storage_children-calls-off-malloc-False PASS
+aot_scoped_reference_storage-calls-off-malloc-False PASS
+aot_reference_storage_children-calls-off-malloc-True PASS
+aot_scoped_reference_storage-calls-off-malloc-True PASS
+aot_reference_storage_children-calls-off-pool-False PASS
+aot_scoped_reference_storage-calls-off-pool-False PASS
+aot_reference_storage_children-calls-off-pool-True PASS
+aot_scoped_reference_storage-calls-off-pool-True PASS
+aot_reference_storage_children-all-off-malloc-False PASS
+aot_scoped_reference_storage-all-off-malloc-False PASS
+aot_reference_storage_children-all-off-malloc-True PASS
+aot_scoped_reference_storage-all-off-malloc-True PASS
+aot_reference_storage_children-all-off-pool-False PASS
+aot_scoped_reference_storage-all-off-pool-False PASS
+aot_reference_storage_children-all-off-pool-True PASS
+aot_scoped_reference_storage-all-off-pool-True PASS
+24 configurations PASS

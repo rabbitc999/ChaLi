@@ -1,0 +1,27 @@
+/** 守卫及分配长度中的真实标量取址必须进入后端存储分析。 */
+enum Token { Value(int64 number), Empty };
+bool touch(int64 mut& value) { value = value + 1; return false; }
+int64 length(int64 mut& value) { value = value + 1; return 2; }
+
+int64 guarded(int64 value) {
+    Token token = Token::Value(7);
+    match (token) {
+        Token::Value(number) if touch(&value) => { return -1; }
+        Token::Value(number) => { return value + number; }
+        _ => { return -2; }
+    }
+    return -3;
+}
+
+int64 allocated(int64 value) {
+    int64 data[] = new [length(&value)];
+    data[0] = value;
+    int64 result = data[0];
+    return result;
+}
+
+void main() {
+    assert(guarded(5) == 13);
+    assert(allocated(8) == 9);
+    println("reference storage indexed children OK");
+}
