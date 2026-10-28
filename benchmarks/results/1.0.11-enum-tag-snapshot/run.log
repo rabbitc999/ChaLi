@@ -1,0 +1,3 @@
+build enum_payload chali-aot
+median enum_payload chali-aot 1.4982 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-enum-tag-snapshot
