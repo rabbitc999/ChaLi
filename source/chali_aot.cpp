@@ -3,6 +3,7 @@
  * @brief 将优化后的 ChaLi 四元式直接降低为 LLVM 中间表示并生成原生产物。
  */
 #include "chali_aot.hpp"
+#include "ast/ast.hpp"
 #include "chali_aot_debug.hpp"
 #include "chali_aot_llvm.hpp"
 #include "chali_aot_runtime_assets.hpp"
@@ -293,6 +294,7 @@ struct Translator
     {
         Memory::String targetError;
         if (!describeTarget(request.options.target, target, &targetError)) fail(targetError);
+        if (!request.options.allocator.empty() && request.options.allocator != "malloc" && request.options.allocator != "pool") fail("AOT：--allocator 只接受 malloc 或 pool");
         watchdogUsed = request.options.stepLimit != 0u;
         const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
@@ -2290,6 +2292,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     emitDataImage(state, out);
     out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
     out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
+    out += "@chali_allocator_kind = constant i32 " + Text(request.options.allocator == "pool" ? "0" : "1") + "\n";
     std::set<Text> shared;
     Text definitions;
     for (const auto &function : state.functions)

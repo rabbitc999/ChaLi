@@ -1,0 +1,110 @@
+[
+  {
+    "sample": "lambda_capture_modes",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "5ec1a821a90fdf85e88861d746b78044cc76347436ca1e3e991b81db796b506d"
+  },
+  {
+    "sample": "lambda_capture_modes",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "5ec1a821a90fdf85e88861d746b78044cc76347436ca1e3e991b81db796b506d"
+  },
+  {
+    "sample": "std_structured_data",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "89e18d1c38cf72da7b0d4f378d60776ef0fc62a001144e29f63b8444f818fb66"
+  },
+  {
+    "sample": "std_structured_data",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "89e18d1c38cf72da7b0d4f378d60776ef0fc62a001144e29f63b8444f818fb66"
+  },
+  {
+    "sample": "reflect_serialization",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "b82eb21b408d62204115731144011e0ee72eb6a35383d1e45a056925d941ff7d"
+  },
+  {
+    "sample": "reflect_serialization",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "b82eb21b408d62204115731144011e0ee72eb6a35383d1e45a056925d941ff7d"
+  },
+  {
+    "sample": "std_graph",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "7e5878237cf39bdb2d7612518b6709a3da02185a4faa28c87effab8334ab581c"
+  },
+  {
+    "sample": "std_graph",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "7e5878237cf39bdb2d7612518b6709a3da02185a4faa28c87effab8334ab581c"
+  },
+  {
+    "sample": "std_tree",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "5b71f64617772698dc683da66f7b65c20233736ee6a3adc7d4b475fe20919308"
+  },
+  {
+    "sample": "std_tree",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "5b71f64617772698dc683da66f7b65c20233736ee6a3adc7d4b475fe20919308"
+  },
+  {
+    "sample": "typed_messages_shared",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "ec63e67a02adccd7def8174c32edbd0a87de54e014d99f565f197ad16f410984"
+  },
+  {
+    "sample": "typed_messages_shared",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "ec63e67a02adccd7def8174c32edbd0a87de54e014d99f565f197ad16f410984"
+  },
+  {
+    "sample": "thread_channel",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "15d25917b2abcf44b3945cf53c79f569d48a9cd709169b797d2e38146c4cf5a8"
+  },
+  {
+    "sample": "thread_channel",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "15d25917b2abcf44b3945cf53c79f569d48a9cd709169b797d2e38146c4cf5a8"
+  },
+  {
+    "sample": "watchdog_timeout",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "e0013a6a43745f13e5c39ea83bb58ee1728439cb47712ec180ab934f80dbf208"
+  },
+  {
+    "sample": "watchdog_timeout",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "e0013a6a43745f13e5c39ea83bb58ee1728439cb47712ec180ab934f80dbf208"
+  },
+  {
+    "sample": "std_file_bytes",
+    "allocator": "malloc",
+    "expected_output_equal": true,
+    "stdout_sha256": "50429042577acf8f5b634eb542b5bf111f3c82ec2edfd9fb96bc8b8d2ffdb282"
+  },
+  {
+    "sample": "std_file_bytes",
+    "allocator": "pool",
+    "expected_output_equal": true,
+    "stdout_sha256": "50429042577acf8f5b634eb542b5bf111f3c82ec2edfd9fb96bc8b8d2ffdb282"
+  }
+]

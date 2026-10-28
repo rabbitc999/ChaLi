@@ -144,6 +144,11 @@ public:
      * @brief 池的总容量（字节）；宿主堆模式没有容量概念时返回 0。诊断与软重启用。
      */
     virtual std::size_t capacity() const { return 0; }
+    /**
+     * @brief 查询宿主分配是否直接使用系统 malloc。
+     * @return 系统分配器为真，内存池为假。
+     */
+    virtual bool usesSystemMalloc() const { return false; }
 };
 inline RuntimeAllocator *&currentRuntimeAllocator()
 {

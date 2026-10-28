@@ -228,6 +228,8 @@ GENERATOR_ASSETS = [
     "allocator/chali_pool.h",
     "allocator/chali_pool.c",
     "allocator/chali_allocator.hpp",
+    "allocator/system_arena.hpp",
+    "allocator/system_arena.cpp",
     "bignum/bigint.hpp",
     "bignum/bigint.cpp",
     "bignum/bigint_multiplication.cpp",

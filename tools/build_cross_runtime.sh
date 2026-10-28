@@ -34,6 +34,7 @@ mkdir -p "$output/lib" "$output/licenses"
 make -j"$jobs" OS=Linux PYTHON="$python" CHALI_BUILD_ROOT="$build" CXX="$cxx" CC="$cc" AR="$archiver" \
     "$build/chali-ircode-aot-core/libstackvm.a" "$build/chali-host-records/librecords.a" \
     "$build/chali-aot-host/native_runtime.o" "$build/chali-aot-host/backend_profile.o" \
+    "$build/chali-aot-host/system_arena.o" \
     "$build/chali-frontend/lztext.o"
 directory=$(mktemp -d "$root/tmp/chali-cross-runtime.XXXXXX")
 trap 'rm -f "$directory/merge.mri"; rmdir "$directory"' EXIT HUP INT TERM
@@ -42,6 +43,7 @@ CREATE $output/lib/libchali_aot_host.a
 ADDLIB $root/$build/chali-ircode-aot-core/libstackvm.a
 ADDLIB $root/$build/chali-host-records/librecords.a
 ADDMOD $root/$build/chali-aot-host/native_runtime.o
+ADDMOD $root/$build/chali-aot-host/system_arena.o
 ADDMOD $root/$build/chali-aot-host/backend_profile.o
 ADDMOD $root/$build/chali-frontend/lztext.o
 SAVE

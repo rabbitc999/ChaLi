@@ -26,6 +26,7 @@ def llvm_compiler():
 def main():
     """导出同一计算函数并链接计时壳；任何负载生成失败都使本轮测量失败。"""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--allocator', choices=['malloc', 'pool'], default='malloc')
     parser.add_argument('case')
     parser.add_argument('compiler', type=Path)
     options = parser.parse_args()
@@ -41,7 +42,7 @@ def main():
     path.write_text(source, encoding='utf-8')
     prefix = work / (case + '-kernel')
     result = subprocess.run([str(options.compiler.resolve()), 'aot', str(path),
-                             '--shared', '--out', str(prefix)],
+                             '--shared', '--allocator', options.allocator, '--out', str(prefix)],
                             capture_output=True, text=True, encoding='utf-8', errors='replace',
                             env=dict(os.environ, CHALI_LANG='zh'))
     if result.returncode:

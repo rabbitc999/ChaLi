@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "runtime_slot.hpp"
+#include "allocation_index.hpp"
 
 namespace stackvm::runtimeDetail
 {
@@ -45,6 +46,10 @@ public:
      * @brief 默认构造后由 Machine 在每次 run() 前 reset。
      */
     Heap() = default;
+    /**
+     * @brief 归还系统后端仍由本字节堆持有的存储。
+     */
+    ~Heap() override;
 
     /**
      * @brief 重置整个运行的槽与活跃分配。
@@ -202,10 +207,24 @@ private:
      */
     void refreshPeak();
 
+    /**
+     * @brief 释放系统后端的全部有效载荷，供重置和析构使用。
+     */
+    void clearMallocAllocations();
+    /**
+     * @brief 将索引中的物理位置转换为当前后端的存储地址。
+     * @param offset 连续缓冲区偏移或系统分配的物理地址。
+     * @return 对应宿主地址；调用方必须先验证逻辑分配身份。
+     */
+    unsigned char *storageAt(std::size_t offset) const;
+
     execution_detail::AllocationIndex index_;  ///< 两端共用的逻辑区间索引与缓存。
     std::size_t base_ = 8u;                    ///< 堆区起始地址。
     Memory::Vector<std::uint8_t> bytes_;       ///< 字节区（从 base_ 开始）。
     Memory::Vector<Block> blocks_;             ///< 块表，按物理偏移升序。
+    Memory::Map<std::size_t, unsigned char *> mallocBlocks_;  ///< 系统后端的逻辑首地址与物理存储。
+    Memory::RuntimeAllocator *mallocOwner_ = nullptr;        ///< 分配时捕获的系统分配器，必须比本堆存活更久。
+    bool systemMalloc_ = false;                              ///< 系统模式下不再细分连续缓冲区。
     std::size_t peak_ = 0u;                    ///< 峰值。
     mutable std::mutex mutex_;                 ///< 串行化 allocate / release。
 };

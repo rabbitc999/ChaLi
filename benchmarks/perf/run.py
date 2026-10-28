@@ -38,6 +38,7 @@ CASE_TITLE = {
     "call": "小函数调用",
     "array": "固定数组循环读取",
     "list": "动态数组 push + 遍历",
+    "list_growth": "各语言均从空容器动态增长，再遍历归并",
     "array_rw": "固定数组读写",
 }
 
@@ -62,19 +63,19 @@ def java_cmd(java, mode):
     return lambda case: [java, "-Xbatch", "-cp", str(HERE), case]
 
 
-def build_configs():
+def build_configs(allocator="malloc"):
     configs = []
     chali = os.environ.get("CHALI") or str(compiler_path())
     version = compiler_version(Path(chali).resolve())
     scratch = ROOT / "tmp" / "perf-run"
     scratch.mkdir(parents=True, exist_ok=True)
     configs.append(Config("chali-run", f"ChaLi {version}（LLVM AOT，checked run）",
-                          lambda case: [chali, "run", str(HERE / f"{case}.chl")],
+                          lambda case: [chali, "run", str(HERE / f"{case}.chl"), "--allocator", allocator],
                           note="缺省 checked AOT：边界与存活检查保留，进程内静态 LLD", cwd=str(scratch)))
     if llvm_compiler():
         configs.append(Config("chali-aot", f"ChaLi {version}（LLVM AOT，unchecked 导出）",
                               lambda case: [str(HERE / f"{case}-aot.exe")],
-                              lambda case: [sys.executable, str(HERE / "build_aot.py"), case, chali],
+                              lambda case: [sys.executable, str(HERE / "build_aot.py"), case, chali, "--allocator", allocator],
                               note="同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3、unchecked；C 壳计时，初始化不计时；共享原生标准库"))
     if find("gcc"):
         configs.append(Config("c", "C（gcc -O2）",
@@ -85,12 +86,12 @@ def build_configs():
     if find("g++"):
         configs.append(Config("cpp", "C++17（g++ -O2）",
                               lambda case: [str(HERE / f"{case}-cpp.exe")],
-                              lambda case: [find("g++"), "-O2", "-DNDEBUG", str(HERE / f"{case}.cpp"),
+                              lambda case: [find("g++"), "-std=c++17", "-O2", "-DNDEBUG", str(HERE / f"{case}.cpp"),
                                             "-o", str(HERE / f"{case}-cpp.exe")],
                               note="原生机器码；volatile 函数入口保留计时边界"))
         configs.append(Config("cpp-o3", "C++17（g++ -O3）",
                               lambda case: [str(HERE / f"{case}-cpp-o3.exe")],
-                              lambda case: [find("g++"), "-O3", "-DNDEBUG", str(HERE / f"{case}.cpp"),
+                              lambda case: [find("g++"), "-std=c++17", "-O3", "-DNDEBUG", str(HERE / f"{case}.cpp"),
                                             "-o", str(HERE / f"{case}-cpp-o3.exe")],
                               note="O3 原生参考；保留 O2 配置及历史数据，volatile 函数入口保留计时边界"))
     if find("gcc"):
@@ -155,6 +156,7 @@ def run_once(cmd, cwd):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=3, help="每个配置跑几次进程（每次内含 5 轮）")
+    parser.add_argument("--allocator", choices=["malloc", "pool"], default="malloc", help="ChaLi 实际分配器，正式基线使用 malloc")
     parser.add_argument("--only", default="", help="只跑这些配置，逗号分隔")
     parser.add_argument("--out", default="", help="结果目录")
     parser.add_argument("--cases", default=",".join(CASES), help="负载名称，逗号分隔；array_rw 需选择提供该负载的配置")
@@ -163,7 +165,7 @@ def main():
     if not cases or any(case not in CASE_TITLE for case in cases):
         parser.error("未知或空的负载名称")
 
-    configs = build_configs()
+    configs = build_configs(args.allocator)
     if args.only:
         wanted = [item.strip() for item in args.only.split(",") if item.strip()]
         configs = [c for c in configs if c.key in wanted]
@@ -232,6 +234,21 @@ def main():
     compiler = Path(os.environ.get("CHALI") or compiler_path()).resolve()
     summary["chali_compiler"] = {"reported_version": compiler_version(compiler),
                                  "sha256": hashlib.sha256(compiler.read_bytes()).hexdigest()}
+    summary["chali_allocator"] = args.allocator
+    summary["command_line"] = sys.argv
+    summary["machine"] = {"processor": platform.processor(), "logical_cpus": os.cpu_count(), "architecture": platform.machine()}
+    summary["git_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    summary["working_tree_dirty"] = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip())
+    summary["source_sha256"] = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(HERE.iterdir())
+        if path.is_file() and ((path.stem in cases and path.suffix in ('.chl', '.c', '.cpp', '.rs', '.lua'))
+                               or path.name in ('run.py', 'build_aot.py', 'build_lua.py', 'luabench.c'))
+    }
+    summary["case_notes"] = {
+        "list": "ChaLi and Lua grow dynamically; C/C++ preallocate storage and Rust uses with_capacity. Compare matched-growth cases separately before claiming container parity.",
+        "list_growth": "All implementations start with an empty container, append the same 400000 values without reserve, and perform the same ordered reduction."
+    }
     summary["tool_versions"] = {}
     summary["llvm_dependency"] = json.loads((ROOT / "library/llvm/manifest.json").read_text(encoding="utf-8"))
     summary["lua_dependency"] = json.loads((ROOT / "library/lua/manifest.json").read_text(encoding="utf-8"))
@@ -253,6 +270,7 @@ def main():
         summary["configs"][cfg.key] = {
             "label": cfg.label,
             "note": cfg.note,
+            "build_commands": {case: list(map(str, cfg.build(case))) for case in available} if cfg.build else {},
             "median_ms": {case: round(statistics.median(results[cfg.key][case]) / 1e6, 3) for case in available},
             "min_ms": {case: round(min(results[cfg.key][case]) / 1e6, 3) for case in available},
             "max_ms": {case: round(max(results[cfg.key][case]) / 1e6, 3) for case in available},

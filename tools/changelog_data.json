@@ -1,6 +1,15 @@
 {
  "versions": [
   {
+   "version": "1.0.11",
+   "title": "系统 malloc 基线与运行效率优化",
+   "entries": [
+    "原生运行与 AOT 增加 --allocator malloc|pool，chali.toml 的 [aot] 同步支持 allocator；缺省选择系统 malloc，原内存池仍可显式选择。",
+    "系统分配器直接管理宿主对象和语言字节堆的独立有效载荷，保留内存预算、对齐、零初始化、活跃逻辑身份和释放后失效验证；隔离线程继承模块分配器。",
+    "性能工作以 1.0.11、系统 malloc 为正式基线，第一目标超过 Lua，第二目标对齐 C++ 与 Rust；按正确性与真实测量推进隐式移动及热点优化，各里程碑分别提交推送。"
+   ]
+  },
+  {
    "version": "1.0.10",
    "title": "标准库 ChaLi 实现与 LLVM 标准流直连",
    "entries": [

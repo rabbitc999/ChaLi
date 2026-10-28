@@ -5,6 +5,7 @@
 #include "ircode/runtime_internal.hpp"
 #include "chali_glue.hpp"
 #include "abi/chali_abi_runtime.hpp"
+#include "allocator/system_arena.hpp"
 #include "glue/std_registry.hpp"
 #include "glue/std_collection.hpp"
 #include "console/utf8.hpp"
@@ -42,6 +43,7 @@ extern const std::size_t chali_data_segment_count;
 extern const char chali_data_layout[];
 extern const std::size_t chali_data_layout_size;
 extern const std::size_t chali_data_size, chali_heap_size;
+extern const int chali_allocator_kind;
 extern const std::size_t chali_step_limit;
 extern const std::size_t chali_function_count;
 extern const std::int64_t chali_function_addresses[];
@@ -95,12 +97,22 @@ void writeOutput(void *user, const char *bytes, std::size_t count)
 }
 
 /**
+ * @brief 根据模块配置创建宿主对象和语言字节堆共用的分配后端。
+ * @return 系统 malloc 分配器或原有连续内存池，所有者由模块持有。
+ */
+std::unique_ptr<Memory::RuntimeAllocator> createRuntimeArena()
+{
+    if (chali_allocator_kind == 1) return std::make_unique<Memory::SystemRuntimeArena>(chali_heap_size);
+    return std::make_unique<Memory::DynamicRuntimeArena>(chali_heap_size);
+}
+
+/**
  * @brief 单个原生模块拥有的共享服务状态，析构顺序保证对象先于堆释放。
  */
 struct Runtime
 {
-    Memory::DynamicRuntimeArena arena;
-    Memory::RuntimeSession session;
+    std::unique_ptr<Memory::RuntimeAllocator> arena;
+    Memory::AllocationScope session;
     DataArea data;
     Memory::UniquePtr<execution_detail::DataCapacityIndex> dataCapacity;
     Heap heap;
@@ -119,7 +131,7 @@ struct Runtime
     /**
      * @brief 装入静态数据并注册 VM 同源的原生函数与同步回调。
      */
-    Runtime() : arena(chali_heap_size), session(arena)
+    Runtime() : arena(createRuntimeArena()), session(arena.get())
     {
         const unsigned char zero = 0;
         if (!data.loadFromBytes(&zero, 1u, Memory::String(chali_data_layout, chali_data_layout_size))) chali_panic("静态数据布局无效");
@@ -281,6 +293,7 @@ struct ContextScope
 RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label)
 {
     auto &root = current();
+    Memory::AllocationScope allocation(root.arena.get());
     NativeContext context = root.context;
     WatchdogRuntime watchdog;
     execution_detail::DataCapacityIndex capacityIndex(&data);

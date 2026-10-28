@@ -4,8 +4,9 @@
  */
 #pragma once
 #include "stackvm.hpp"
-#include "ast.hpp"
 #include "chali_aot_target.hpp"
+
+namespace ast { struct Program; }
 
 namespace chali_aot
 {
@@ -38,6 +39,7 @@ struct Options
     Memory::String cpu;                              ///< 目标 CPU，空值使用目标的通用 CPU。
     Memory::String sysroot;                          ///< 完整交叉链接使用的目标 sysroot。
     Memory::String runtimeDirectory;                 ///< 目标 libchali_aot_host.a 所在目录。
+    Memory::String allocator;                        ///< malloc 或 pool；空值默认系统 malloc。
     Memory::String compiler;                         ///< LLVM clang 驱动；空值优先使用 library/llvm 中的工具。
     Memory::String outputPrefix;                     ///< LLVM 模块、头文件和原生产物的公共前缀。
     Memory::Vector<Memory::String> exports;          ///< 显式导出给 C 的 ChaLi 函数名。

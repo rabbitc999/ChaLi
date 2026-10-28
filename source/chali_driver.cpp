@@ -36,6 +36,7 @@
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
 #include "chali_aot.hpp"
+#include "ast/ast.hpp"
 #include "chali_aot_llvm.hpp"
 #include "chali_glue.hpp"
 #include "chali_report.hpp"
@@ -336,6 +337,7 @@ void PrintUsage(std::FILE *out)
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
              "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n",
              "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [aot] 表配置\n",
+             "  --allocator malloc|pool  选择系统 malloc 或内存池；缺省 malloc\n",
              "  --hard-realtime        禁止整个编译单元使用反射\n",
              "  --import-dir 目录      追加 import 搜索目录\n",
              "  --include-path 目录    追加模块搜索目录\n",
@@ -567,7 +569,7 @@ try
             if (argument == "--emit-obj") aotOptions.emitObjectOnly = true;
             continue;
         }
-        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir"))
+        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--allocator"))
         {
             if (index + 1 >= argc)
             {
@@ -579,6 +581,7 @@ try
             if (argument == "--export") aotOptions.exports.push_back(value);
             if (argument == "--link") aotOptions.linkLibraries.push_back(value);
             if (argument == "--target") aotOptions.target = value;
+            if (argument == "--allocator") aotOptions.allocator = value;
             if (argument == "--cpu") aotOptions.cpu = value;
             if (argument == "--sysroot") aotOptions.sysroot = value;
             if (argument == "--runtime-dir") aotOptions.runtimeDirectory = value;
@@ -949,6 +952,7 @@ try
     if (aotOptions.cpu.empty()) aotOptions.cpu = project.aotCpu;
     if (aotOptions.sysroot.empty()) aotOptions.sysroot = project.aotSysroot;
     if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
+    if (aotOptions.allocator.empty()) aotOptions.allocator = project.aotAllocator;
     if (aotOptions.compiler.empty()) aotOptions.compiler = project.aotCompiler;
     if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly)
     {

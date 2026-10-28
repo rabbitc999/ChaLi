@@ -29,6 +29,17 @@ Language `opcode` creation, copying, moving and destruction use the calls lowere
 
 Exporting complex C ABI signatures also requires a GNU C++17 compiler compatible with the embedded host runtime; g++ is the default and CHALI_ABI_CXX selects another path. It compiles only host marshalling adapters; language functions still lower directly to LLVM instructions. Adapter headers are embedded, so no source checkout is required. This host dependency also applies to the static LLVM variant. Scalar-only ABI programs and programs without ABI declarations skip this step. Native products need no C++ compiler at runtime, but their declared dynamic libraries must be provided.
 
+## Runtime allocator
+
+Since 1.0.11, native applications default to system `malloc`. Select `--allocator pool` to retain the previous arena and byte-heap allocation strategy. The malloc backend covers both host objects and individual language allocations, rather than subdividing a continuous byte buffer. Logical reference identities, invalidation on release, range checks, zero initialization and memory budgets remain active, including unchecked exports.
+
+```sh
+chali aot app.chl --allocator malloc --out build/app-malloc
+chali aot app.chl --allocator pool --out build/app-pool
+```
+
+The `[aot]` table accepts `allocator = "malloc"` or `allocator = "pool"`; explicit CLI options override it. The option selects the generated program's allocator without changing the compiler's container ABI. Formal performance baselines use system malloc and record the actual allocator, check mode and LLVM configuration separately.
+
 ## LLVM linkage in the compiler
 
 | Build | Native code generation | Plugin and release marker |

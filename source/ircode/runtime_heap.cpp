@@ -12,11 +12,38 @@ namespace runtimeDetail
 #if STACKVM_WITH_DEFAULT_HEAP
 
 /**
+ * @brief 归还仍由字节堆管理的系统分配。
+ */
+Heap::~Heap() { clearMallocAllocations(); }
+
+/**
+ * @brief 归还系统有效载荷，不改变语言层的显式释放诊断。
+ */
+void Heap::clearMallocAllocations()
+{
+    for (const auto &entry : mallocBlocks_) Memory::release(mallocOwner_, entry.second);
+    mallocBlocks_.clear();
+}
+
+/**
+ * @brief 在逻辑身份已验证后解析物理存储。
+ * @param offset 系统地址或连续缓冲区偏移。
+ * @return 有效载荷的宿主地址。
+ */
+unsigned char *Heap::storageAt(std::size_t offset) const
+{
+    return systemMalloc_ ? reinterpret_cast<unsigned char *>(offset) : const_cast<unsigned char *>(bytes_.data()) + offset;
+}
+
+/**
  * @brief 重置整个运行的槽与活跃分配。
  * @param base 数据区之后的堆基址。
  */
 void Heap::reset(std::size_t base)
 {
+    clearMallocAllocations();
+    mallocOwner_ = Memory::runtimeAllocator();
+    systemMalloc_ = mallocOwner_->usesSystemMalloc();
     base_ = base < kRuntimeCellBytes ? kRuntimeCellBytes : base;
     bytes_.clear();
     blocks_.clear();
@@ -43,6 +70,31 @@ std::size_t Heap::allocate(std::size_t bytes)
     if (bytes == 0u) return 0u;
     std::lock_guard<std::mutex> guard(mutex_);
     if (!index_.available(bytes)) return 0u;
+    if (systemMalloc_)
+    {
+        auto *storage = static_cast<unsigned char *>(mallocOwner_->allocate(bytes));
+        if (!storage) return 0u;
+        std::memset(storage, 0, bytes);
+        std::size_t address = 0;
+        try
+        {
+            address = index_.add(reinterpret_cast<std::size_t>(storage), bytes);
+            if (address) mallocBlocks_.emplace(address, storage);
+        }
+        catch (...)
+        {
+            if (address) index_.release(address);
+            Memory::release(mallocOwner_, storage);
+            return 0u;
+        }
+        if (!address)
+        {
+            Memory::release(mallocOwner_, storage);
+            return 0u;
+        }
+        refreshPeak();
+        return address;
+    }
 
     /* 先在**已释放**的块里首次适配：够大就切下一段复用，剩下的留成新的空闲块。
      * 这就是"链表式"分配器：空闲块在块表里串着，重复申请 / 释放不会让高水位一直涨。 */
@@ -155,6 +207,19 @@ bool Heap::release(std::size_t address, Memory::String *reason)
 {
     if (address == 0u) return true;  // free(NULL) 是空操作
     std::lock_guard<std::mutex> guard(mutex_);
+    if (systemMalloc_)
+    {
+        const auto found = mallocBlocks_.find(address);
+        if (found != mallocBlocks_.end())
+        {
+            index_.release(address);
+            Memory::release(mallocOwner_, found->second);
+            mallocBlocks_.erase(found);
+            return true;
+        }
+        if (reason) *reason = "[CHL1205] 无效或已经释放的身份：地址 " + Memory::toString(address) + " 不在堆里（堆区从 " + Memory::toString(base_) + " 起）";
+        return false;
+    }
     for (std::size_t index = 0; index < blocks_.size(); ++index)
     {
         Block &block = blocks_[index];
@@ -239,7 +304,7 @@ bool Heap::readInt(std::size_t address, std::int64_t &out) const
 {
     const auto *block = index_.find(address);
     if (!block || sizeof(out) > block->size - (address - block->address)) return false;
-    std::memcpy(&out, bytes_.data() + block->offset + (address - block->address), sizeof(out));
+    std::memcpy(&out, storageAt(block->offset + (address - block->address)), sizeof(out));
     return true;
 }
 
@@ -254,7 +319,7 @@ bool Heap::writeInt(std::size_t address, std::int64_t value)
 {
     const auto *block = index_.find(address);
     if (!block || sizeof(value) > block->size - (address - block->address)) return false;
-    std::memcpy(bytes_.data() + block->offset + (address - block->address), &value, sizeof(value));
+    std::memcpy(storageAt(block->offset + (address - block->address)), &value, sizeof(value));
     return true;
 }
 
@@ -269,7 +334,7 @@ bool Heap::readDouble(std::size_t address, double &out) const
 {
     const auto *block = index_.find(address);
     if (!block || sizeof(out) > block->size - (address - block->address)) return false;
-    std::memcpy(&out, bytes_.data() + block->offset + (address - block->address), sizeof(out));
+    std::memcpy(&out, storageAt(block->offset + (address - block->address)), sizeof(out));
     return true;
 }
 
@@ -284,7 +349,7 @@ bool Heap::writeDouble(std::size_t address, double value)
 {
     const auto *block = index_.find(address);
     if (!block || sizeof(value) > block->size - (address - block->address)) return false;
-    std::memcpy(bytes_.data() + block->offset + (address - block->address), &value, sizeof(value));
+    std::memcpy(storageAt(block->offset + (address - block->address)), &value, sizeof(value));
     return true;
 }
 
@@ -300,7 +365,7 @@ bool Heap::readBytes(std::size_t address, char *out, std::size_t count) const
     if (count == 0u) return true;
     const auto *block = index_.find(address);
     if (!block || count > block->size - (address - block->address)) return false;
-    std::memcpy(out, bytes_.data() + block->offset + (address - block->address), count);
+    std::memcpy(out, storageAt(block->offset + (address - block->address)), count);
     return true;
 }
 
@@ -316,7 +381,7 @@ bool Heap::writeBytes(std::size_t address, const char *in, std::size_t count)
     if (count == 0u) return true;
     const auto *block = index_.find(address);
     if (!block || count > block->size - (address - block->address)) return false;
-    std::memcpy(bytes_.data() + block->offset + (address - block->address), in, count);
+    std::memcpy(storageAt(block->offset + (address - block->address)), in, count);
     return true;
 }
 
@@ -331,7 +396,7 @@ unsigned char *Heap::borrowBytes(std::size_t address, std::size_t count)
 {
     const auto *block = index_.find(address);
     if (!block || count > block->size - (address - block->address)) return nullptr;
-    return bytes_.data() + block->offset + (address - block->address);
+    return storageAt(block->offset + (address - block->address));
 }
 
 /**

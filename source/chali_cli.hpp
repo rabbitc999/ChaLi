@@ -117,7 +117,7 @@ inline std::vector<std::string> normalize(int argc, char **argv)
         for (const char *option : { "--lang", "--out", "--out-dir", "--name", "--memory-size", "--step-limit",
                                     "--include-dir", "--include-path", "--import-dir", "--define", "--symbol-map", "-I", "-D",
                                     "--run-mode", "--mode", "--backend", "--filter", "--timeout", "--project",
-                                    "--search", "--cache-dir", "--source-overlays", "--analysis-deps", "--llvm", "--target", "--cpu", "--sysroot", "--runtime-dir", "--export", "--link" })
+                                    "--search", "--cache-dir", "--source-overlays", "--analysis-deps", "--llvm", "--target", "--cpu", "--sysroot", "--runtime-dir", "--allocator", "--export", "--link" })
             if (value == option) takesValue = true;
         result.push_back(value);
         if (takesValue && i + 1 < argc)

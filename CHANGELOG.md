@@ -4,7 +4,14 @@
 [English（中文原文）](CHANGELOG.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.10**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+版本号写在 [`VERSION`](VERSION) 里，格式 `MAJOR.MINOR.PATCH`。当前语言版本为 **1.0.11**：版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) 后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 `AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。
+
+
+## 1.0.11 — 系统 malloc 基线与运行效率优化
+
+- 原生运行与 AOT 增加 --allocator malloc|pool，chali.toml 的 [aot] 同步支持 allocator；缺省选择系统 malloc，原内存池仍可显式选择。
+- 系统分配器直接管理宿主对象和语言字节堆的独立有效载荷，保留内存预算、对齐、零初始化、活跃逻辑身份和释放后失效验证；隔离线程继承模块分配器。
+- 性能工作以 1.0.11、系统 malloc 为正式基线，第一目标超过 Lua，第二目标对齐 C++ 与 Rust；按正确性与真实测量推进隐式移动及热点优化，各里程碑分别提交推送。
 
 
 ## 1.0.10 — 标准库 ChaLi 实现与 LLVM 标准流直连

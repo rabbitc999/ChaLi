@@ -1,0 +1,15 @@
+配置 4 个：chali-aot, cpp-o3, lua, rust
+  构建 chali-aot/int_chain …
+chali: AOT：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器
+chali: In file included from G:\Desktop\ChaLi\tmp\chali-native-link-13147144865700-0\chali_glue.hpp:6,
+                 from G:\Desktop\ChaLi\tmp\chali-native-link-13147144865700-0\abi_binding.cpp:1:
+G:\Desktop\ChaLi\tmp\chali-native-link-13147144865700-0\chali_aot.hpp:7:10: fatal error: ast.hpp: No such file or directory
+    7 | #include "ast.hpp"
+      |          ^~~~~~~~~
+compilation terminated.
+
+
+
+
+
+构建失败：chali-aot/int_chain

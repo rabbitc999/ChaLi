@@ -2,7 +2,7 @@
   "name": "chali-editor",
   "displayName": "ChaLi",
   "description": "ChaLi（.chl）语言支持：用编译器自带的 `chali lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。 支持 LLVM AOT 可执行文件构建。",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "publisher": "rabbitc999",
   "devDependencies": {
     "vscode-oniguruma": "^2.0.1",
@@ -311,6 +311,6 @@
     "type": "git",
     "url": "https://github.com/rabbitc999/ChaLi.git"
   },
-  "chaliCompilerVersion": "1.0.10",
+  "chaliCompilerVersion": "1.0.11",
   "chaliLLVMVariant": "external"
 }

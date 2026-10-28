@@ -353,6 +353,7 @@ $(CHALI_STDLIB_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 # AOT 复用共享原生服务；先构建静态库资产，再嵌入编译器，首次克隆同样自动完成。
 CHALI_AOT_HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-aot-host
 CHALI_AOT_HOST_OBJECT := $(CHALI_AOT_HOST_BUILD)/native_runtime.o
+CHALI_AOT_SYSTEM_OBJECT := $(CHALI_AOT_HOST_BUILD)/system_arena.o
 CHALI_AOT_PROFILE_OBJECT := $(CHALI_AOT_HOST_BUILD)/backend_profile.o
 $(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
@@ -360,10 +361,14 @@ $(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/
 $(CHALI_AOT_HOST_OBJECT): source/aot/native_runtime.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+$(CHALI_AOT_SYSTEM_OBJECT): source/allocator/system_arena.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 -include $(CHALI_AOT_HOST_BUILD)/native_runtime.d
 -include $(CHALI_AOT_HOST_BUILD)/backend_profile.d
-$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
-	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --output $@
+-include $(CHALI_AOT_HOST_BUILD)/system_arena.d
+$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(CHALI_AOT_SYSTEM_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
+	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --object $(CHALI_AOT_SYSTEM_OBJECT) --output $@
 
 # 更新标准库或胶水实现时只刷新单个内嵌资产对象，不重编宿主入口。
 CHALI_EMBED_INPUTS := $(shell $(PYTHON) tools/embed_stdlib.py --build-root "$(CHALI_BUILD_ROOT)" --dependencies)

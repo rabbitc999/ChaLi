@@ -295,6 +295,11 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                     else if (key == "cpu") project.aotCpu = value;
                     else if (key == "sysroot") project.aotSysroot = path(value, base);
                     else if (key == "runtime_dir") project.aotRuntimeDirectory = path(value, base);
+                    else if (key == "allocator")
+                    {
+                        if (value != "malloc" && value != "pool") throw std::runtime_error("aot.allocator expects malloc or pool");
+                        project.aotAllocator = value;
+                    }
                     else if (key == "llvm") project.aotCompiler = path(value, base);
                     else if (key == "output")
                     {

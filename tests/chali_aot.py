@@ -216,6 +216,35 @@ def main():
         assert result.stdout.strip() == 'c -> aot: 42', result
         print('[通过] 外部 C 调用 AOT 导出的函数', flush=True)
 
+        named = work / 'named.chl'
+        named.write_text('''#export("named_add")
+int64 addNumbers(int64 left, int64 right) { return left + right; }
+#export("named_scale")
+float64 scaleNumber(float64 value) { return value * 1.5; }
+''', encoding='utf-8')
+        named_prefix = work / 'named'
+        built = invoke([compiler, 'aot', named, '--shared', '--out', named_prefix])
+        assert built.returncode == 0, built
+        named_driver = work / 'named_driver.c'
+        named_driver.write_text('''#include "named.h"
+/**
+ * @brief 从 C 调用具名整数和浮点导出，并核对模块生命周期。
+ * @return 值和清理均正确时返回零。
+ */
+int main(void) {
+    chali_init();
+    int correct = named_add(20, 22) == 42 && named_scale(2.0) == 3.0;
+    chali_finish();
+    return correct ? 0 : 1;
+}
+''', encoding='utf-8')
+        named_exe = work / ('named_driver.exe' if os.name == 'nt' else 'named_driver')
+        built = invoke([cc, '-O2', '-std=c99', named_driver, named_prefix.with_suffix(suffix), '-o', named_exe])
+        assert built.returncode == 0, built
+        result = invoke([named_exe])
+        assert result.returncode == 0, result
+        print('[通过] 具名 #export 的整数和浮点 ABI 适配独立编译与执行', flush=True)
+
         numeric = work / 'numeric.chl'
         numeric.write_text('''float32 half32(float32 value)
 {
