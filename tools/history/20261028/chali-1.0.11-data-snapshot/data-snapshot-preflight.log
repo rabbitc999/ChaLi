@@ -1,0 +1,9 @@
+build enum_payload chali-aot
+build struct_nested chali-aot
+build array_2d chali-aot
+build array_3d chali-aot
+verify enum_payload chali-aot OK
+verify struct_nested chali-aot OK
+verify array_2d chali-aot OK
+verify array_3d chali-aot OK
+saved G:\Desktop\ChaLi\tmp\data-snapshot-preflight

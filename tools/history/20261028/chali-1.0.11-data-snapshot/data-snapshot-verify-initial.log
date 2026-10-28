@@ -1,0 +1,21 @@
+aot_data_snapshot-malloc-False-False PASS
+aot_data_snapshot_thread-malloc-False-False PASS
+aot_data_snapshot-malloc-False-True PASS
+aot_data_snapshot_thread-malloc-False-True PASS
+aot_data_snapshot-malloc-True-False PASS
+aot_data_snapshot_thread-malloc-True-False PASS
+aot_data_snapshot-malloc-True-True PASS
+aot_data_snapshot_thread-malloc-True-True PASS
+aot_data_snapshot-pool-False-False PASS
+aot_data_snapshot_thread-pool-False-False PASS
+aot_data_snapshot-pool-False-True PASS
+aot_data_snapshot_thread-pool-False-True PASS
+aot_data_snapshot-pool-True-False PASS
+aot_data_snapshot_thread-pool-True-False PASS
+aot_data_snapshot-pool-True-True PASS
+aot_data_snapshot_thread-pool-True-True PASS
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tmp\verify_data_snapshot.py", line 41, in <module>
+    assert result.returncode==0 and not result.stderr,rows[-1]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'command': ['G:\\Python312\\python.exe', 'G:\\Desktop\\ChaLi\\tmp\\data_snapshot_lifecycle.py', 'G:\\Desktop\\ChaLi\\tmp\\data-snapshot-verify\\lifecycle-before.dll'], 'disabled': False, 'code': 1, 'stdout': '', 'stderr': 'Traceback (most recent call last):\n  File "G:\\Desktop\\ChaLi\\tmp\\data_snapshot_lifecycle.py", line 40, in <module>\n    check(\'values\')\n  File "G:\\Desktop\\ChaLi\\tmp\\data_snapshot_lifecycle.py", line 35, in check\n    commands.put(command);error=results.get(timeout=30);assert error is None,error\n                                                               ^^^^^^^^^^^^^\nAssertionError: AssertionError()\n'}

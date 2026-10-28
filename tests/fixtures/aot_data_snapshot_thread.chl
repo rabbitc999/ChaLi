@@ -1,0 +1,27 @@
+/** 同一纯循环在父子隔离上下文中须使用各自的数据区，不能跨帧缓存根基址。 */
+import std::thread;
+int64 values[16];
+
+export int64 sum() {
+    int64 index = 0; int64 total = 0;
+    while (index < 16) { total = total + values[index]; index = index + 1; }
+    return total;
+}
+
+void worker() {
+    int64 index = 0;
+    while (index < 16) { values[index] = index + 100; index = index + 1; }
+    assert(sum() == 1720);
+    std::thread::send(std::thread::parent(), "child data OK");
+}
+
+void main() {
+    int64 index = 0;
+    while (index < 16) { values[index] = index + 1; index = index + 1; }
+    assert(sum() == 136);
+    Thread task = std::thread::create(worker);
+    assert(std::thread::receive() == "child data OK");
+    std::thread::wait(task);
+    assert(sum() == 136);
+    println("data snapshot isolated contexts OK");
+}

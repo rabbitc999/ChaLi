@@ -1,0 +1,20 @@
+aot_data_snapshot-malloc-False-False PASS
+aot_data_snapshot_thread-malloc-False-False PASS
+aot_data_snapshot-malloc-False-True PASS
+aot_data_snapshot_thread-malloc-False-True PASS
+aot_data_snapshot-malloc-True-False PASS
+aot_data_snapshot_thread-malloc-True-False PASS
+aot_data_snapshot-malloc-True-True PASS
+aot_data_snapshot_thread-malloc-True-True PASS
+aot_data_snapshot-pool-False-False PASS
+aot_data_snapshot_thread-pool-False-False PASS
+aot_data_snapshot-pool-False-True PASS
+aot_data_snapshot_thread-pool-False-True PASS
+aot_data_snapshot-pool-True-False PASS
+aot_data_snapshot_thread-pool-True-False PASS
+aot_data_snapshot-pool-True-True PASS
+aot_data_snapshot_thread-pool-True-True PASS
+before bounds and lifecycle PASS
+enabled bounds and lifecycle PASS
+disabled bounds and lifecycle PASS
+ALL PASS

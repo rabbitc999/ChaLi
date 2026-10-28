@@ -1,0 +1,64 @@
+/** 数据区循环快照不得改变堆回退、零次循环及跨初始化轮次的行为。 */
+struct SnapshotRecord { int64 x; int64 y; int64 values[2]; };
+int64 matrix[2][3];
+SnapshotRecord records[4];
+int64 heapValues[] = new [6];
+
+export void setup() {
+    int64 row = 0;
+    while (row < 2) {
+        int64 column = 0;
+        while (column < 3) { matrix[row][column] = row * 10 + column + 1; column = column + 1; }
+        row = row + 1;
+    }
+    int64 index = 0;
+    while (index < 4) {
+        records[index].x = index + 1;
+        records[index].y = index * 3;
+        records[index].values[0] = index + 7;
+        records[index].values[1] = index + 11;
+        index = index + 1;
+    }
+    index = 0;
+    while (index < 6) { heapValues[index] = index * 2; index = index + 1; }
+}
+
+export int64 dataSum(int64 count) {
+    int64 index = 0; int64 total = 0;
+    while (index < count) { total = total + matrix[index / 3][index % 3]; index = index + 1; }
+    return total;
+}
+
+export int64 recordSum(int64 count) {
+    int64 index = 0; int64 total = 0;
+    while (index < count) {
+        SnapshotRecord const& item = &records[index];
+        total = total + item.x + item.y + item.values[0] + item.values[1];
+        index = index + 1;
+    }
+    return total;
+}
+
+export int64 heapSum(int64 count) {
+    int64 index = 0; int64 total = 0;
+    while (index < count) { total = total + heapValues[index]; index = index + 1; }
+    return total;
+}
+
+export int64 pointerSum(int64 const& values, int64 count) {
+    int64 index = 0; int64 total = 0;
+    while (index < count) { total = total + values[index]; index = index + 1; }
+    return total;
+}
+
+export int64 matrixAddress() { return (int64)std::lang::address(&matrix[0][0]); }
+export int64 heapAddress() { return (int64)std::lang::address(&heapValues[0]); }
+
+void main() {
+    setup();
+    assert(dataSum(0) == 0 && dataSum(6) == 42);
+    assert(recordSum(0) == 0 && recordSum(4) == 112);
+    assert(heapSum(0) == 0 && heapSum(6) == 30);
+    assert(pointerSum(&matrix[0][0], 3) == 6 && pointerSum(&heapValues[0], 6) == 30);
+    println("data snapshot and heap fallback OK");
+}

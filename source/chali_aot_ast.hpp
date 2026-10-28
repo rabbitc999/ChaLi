@@ -84,6 +84,22 @@ slow:
   %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr @chali_address_view)
   ret ptr %resolved
 }
+define internal ptr @chali_data_address(i64 %address, i64 %count, ptr %base, i64 %size) alwaysinline {
+entry:
+  %present = icmp ne ptr %base, null
+  %inside = icmp ult i64 %address, %size
+  %remaining = sub i64 %size, %address
+  %fits = icmp ule i64 %count, %remaining
+  %range = and i1 %inside, %fits
+  %valid = and i1 %present, %range
+  br i1 %valid, label %fast, label %slow
+fast:
+  %physical = getelementptr i8, ptr %base, i64 %address
+  ret ptr %physical
+slow:
+  %resolved = call ptr @chali_primitive_address(i64 %address, i64 %count)
+  ret ptr %resolved
+}
 )LLVM";
 }
 
@@ -351,6 +367,8 @@ struct AstBuilder : Builder
     const ast::Function &syntax;
     std::size_t expressions = 0, blocks = 0, argumentCapacity = 1;
     bool terminated = false;
+    bool snapshotData = false;  ///< 无不透明调用的循环可在本函数帧内保存数据区视图。
+    Value dataBase, dataSize;   ///< 只在当前帧内有效的基址和完整字节数。
     std::map<std::size_t, DebugLine> debugLines;
     std::size_t debugBlocks = 1;
     ast::NodePtr lastLocation;  ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
@@ -365,13 +383,37 @@ struct AstBuilder : Builder
         for (const auto &entry : state.astSymbols.at(textOf(function.label))) locals.insert(textOf(entry.second));
         for (const auto &parameter : syntax.parameters) environment[parameter.first] = parameter.second;
         if (!syntax.owner.empty()) environment["self"] = environment.count(syntax.owner) ? environment[syntax.owner] : ast::Type::i64();
+        bool loop = false, memoryAccess = false, stable = true;
+        Memory::Set<Memory::String> seenLabels;
         std::function<void(const ast::NodePtr &)> visit = [&](const ast::NodePtr &node) {
             if (!node) return;
+            using N = ast::Node::Kind;
+            loop = loop || node->kind == N::While || node->kind == N::DoWhile;
+            if (node->kind == N::Label) seenLabels.insert(node->text);
+            if (node->kind == N::Jump && seenLabels.count(node->text)) loop = true;
+            memoryAccess = memoryAccess || node->kind == N::LoadInt || node->kind == N::Index ||
+                           node->kind == N::Member || node->kind == N::StoreAt;
+            switch (node->kind)
+            {
+            case N::Call:
+                // 引用检查不会改变上下文；panic 不返回，不存在快照后的继续执行。
+                if (node->text != "__std_reference" && node->text != "__std_panic") stable = false;
+                break;
+            case N::Alloc: case N::Free: case N::Drop: case N::CallPointer: case N::MethodCall:
+            case N::Lambda: case N::MemoryCopy: case N::MemorySet: case N::Read: case N::Write:
+            case N::Print: case N::Putc: stable = false; break;
+            default: break;
+            }
             if (node->kind == ast::Node::Kind::Declare) environment[node->text] = node->declared;
             if (node->kind == ast::Node::Kind::Call || node->kind == ast::Node::Kind::CallPointer) argumentCapacity = std::max(argumentCapacity, node->kids.size() + 1u);
             for (const auto &child : node->kids) visit(child);
         };
         visit(syntax.body);
+        const bool inlineBody = !function.exported && !state.addressedFunctions.count(textOf(function.label)) &&
+                                state.astInlineFunctions.count(textOf(function.label));
+        snapshotData = state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics &&
+                       state.referencePrimitives && !state.stepChecks && !state.request.options.debug &&
+                       !inlineBody && loop && memoryAccess && stable;
     }
 
     /**
@@ -467,8 +509,10 @@ struct AstBuilder : Builder
         const Text storage = real ? "double" : byte ? "i8" :
                                                       "i64";
         const bool cache = state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
-        const auto pointer = call(cache ? "chali_primitive_address" : "chali_host_address", "ptr",
-                                  { convert(address, "i64"), { "i64", byte ? "1" : "8" } });
+        const auto pointer = snapshotData ? call("chali_data_address", "ptr",
+            { convert(address, "i64"), { "i64", byte ? "1" : "8" }, dataBase, dataSize }) :
+            call(cache ? "chali_primitive_address" : "chali_host_address", "ptr",
+                 { convert(address, "i64"), { "i64", byte ? "1" : "8" } });
         if (stored)
         {
             const auto value = convert(*stored, storage, byte);
@@ -827,6 +871,7 @@ struct AstBuilder : Builder
         signature += "uwtable section \"chali_code\" {\nentry:\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
         signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";
+        if (snapshotData) signature += "  %data_snapshot_size = alloca i64\n";
         for (const auto &name : locals)
         {
             const Memory::String token(name.c_str());
@@ -834,6 +879,11 @@ struct AstBuilder : Builder
             if (type(token) == "i64") signature += "  " + tagPointer(token) + " = alloca i8\n  store i8 0, ptr " + tagPointer(token) + "\n";
         }
         for (std::size_t index = 0; index < function.parameters.size(); ++index) signature += "  store " + type(function.parameters[index]) + " %p" + std::to_string(index) + ", ptr " + pointer(function.parameters[index]) + "\n";
+        if (snapshotData)
+        {
+            dataBase = call("chali_host_data_snapshot", "ptr", { { "ptr", "%data_snapshot_size" } });
+            dataSize = instruction("i64", "load i64, ptr %data_snapshot_size");
+        }
         if (state.request.options.debug)
         {
             signature += "  br label %q0\n";

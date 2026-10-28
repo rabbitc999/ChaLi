@@ -276,6 +276,7 @@ struct Translator
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
+    bool dataSnapshots = true;                                    ///< 无不透明调用的循环在函数帧内保存数据区基址。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
@@ -310,6 +311,8 @@ struct Translator
         referencePrimitives = !(references && *references);
         const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
         objectScalars = !(objects && *objects);
+        const auto *data = std::getenv("CHALI_NO_AOT_DATA_SNAPSHOT");
+        dataSnapshots = !(data && *data);
         const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
@@ -2330,6 +2333,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_map_storage(i64, i64, i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     out += "declare i64 @chali_host_object_scalar(i64, i64)\n";
+    out += "declare ptr @chali_host_data_snapshot(ptr nocapture writeonly)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     out += "declare i64 @chali_host_list_storage_scalar(i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";

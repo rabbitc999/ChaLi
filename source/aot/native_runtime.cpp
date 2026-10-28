@@ -835,6 +835,22 @@ std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handl
 }
 
 /**
+ * @brief 取得当前上下文的数据区视图；供无不透明调用的函数在当前帧内使用。
+ * @param size 接收当前数据区的实际字节数；缺少上下文时写零。
+ * @return 当前数据区首地址；模块尚未初始化时返回空，不提前改变错误行为。
+ * @note 不分配、不调整数据区，也不将视图保存在跨调用缓存中。
+ */
+unsigned char *chali_host_data_snapshot(std::size_t *size)
+{
+    *size = 0;
+    NativeContext *context = nativeThreadState.activeContext ? nativeThreadState.activeContext :
+                             runtime ? &runtime->context : nullptr;
+    if (!context || !context->data) return nullptr;
+    *size = context->data->binary.size();
+    return const_cast<unsigned char *>(context->data->binary.data());
+}
+
+/**
  * @brief 为 LLVM 字节 intrinsic 验证范围并返回物理地址，不复制或填充字节。
  * @param operation 7 为复制，8 为填充。
  * @param destination 目标逻辑地址。
