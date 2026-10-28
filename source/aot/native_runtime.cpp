@@ -68,12 +68,20 @@ namespace
 {
 using namespace stackvm;
 using namespace stackvm::runtimeDetail;
-thread_local NativeContext *activeContext = nullptr;
-thread_local execution_detail::DataCapacityIndex *activeDataCapacity = nullptr;
-thread_local std::size_t callbackDepth = 0;
-thread_local unsigned char nativeResultFloat = 0;
-thread_local std::uint64_t logicalSteps = 0;
-thread_local bool nativeCleanup = false;
+/**
+ * @brief 同一原生线程的短期服务状态，共用一个 TLS 槽以减少重复寻址。
+ * @note 各线程仍独立保存上下文、浮点返回标记、回调深度及清理状态。
+ */
+struct NativeThreadState
+{
+    NativeContext *activeContext;
+    execution_detail::DataCapacityIndex *activeDataCapacity;
+    std::size_t callbackDepth;
+    std::uint64_t logicalSteps;
+    unsigned char nativeResultFloat;
+    bool nativeCleanup;
+};
+thread_local NativeThreadState nativeThreadState{};
 
 /**
  * @brief 在隔离宿主线程内建立上下文并调用已经生成的机器码。
@@ -173,11 +181,11 @@ struct Runtime
                 /**
                  * @brief 标记同步胶水回调，保持 VM 的线程与消息操作限制。
                  */
-                DepthGuard() { ++callbackDepth; }
+                DepthGuard() { ++nativeThreadState.callbackDepth; }
                 /**
                  * @brief 回调返回或异常时恢复嵌套深度。
                  */
-                ~DepthGuard() { --callbackDepth; }
+                ~DepthGuard() { --nativeThreadState.callbackDepth; }
             } guard;
             const auto raw = chali_invoke(function, static_cast<std::int64_t>(bits.size()), bits.data());
             if (chali_result_float())
@@ -230,7 +238,7 @@ Runtime &current()
  */
 NativeContext &currentContext()
 {
-    return activeContext ? *activeContext : current().context;
+    return nativeThreadState.activeContext ? *nativeThreadState.activeContext : current().context;
 }
 
 /**
@@ -261,8 +269,8 @@ struct NativeExit
  */
 struct ContextScope
 {
-    NativeContext *previous = activeContext;
-    execution_detail::DataCapacityIndex *previousCapacity = activeDataCapacity;
+    NativeContext *previous = nativeThreadState.activeContext;
+    execution_detail::DataCapacityIndex *previousCapacity = nativeThreadState.activeDataCapacity;
     /**
      * @brief 进入子线程上下文并借用预建的数据容量索引。
      * @param context 本线程上下文，生命周期必须覆盖本作用域。
@@ -270,16 +278,16 @@ struct ContextScope
      */
     ContextScope(NativeContext &context, execution_detail::DataCapacityIndex &capacity)
     {
-        activeContext = &context;
-        activeDataCapacity = &capacity;
+        nativeThreadState.activeContext = &context;
+        nativeThreadState.activeDataCapacity = &capacity;
     }
     /**
      * @brief 所属对象全部销毁后恢复外层上下文。
      */
     ~ContextScope()
     {
-        activeContext = previous;
-        activeDataCapacity = previousCapacity;
+        nativeThreadState.activeContext = previous;
+        nativeThreadState.activeDataCapacity = previousCapacity;
     }
 };
 
@@ -319,8 +327,8 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
     machine.invokeNativeService(root.program, context, "std::thread::current", {}, 0);
     objects.recordContext = context;
     RunResult result;
-    logicalSteps = 0;
-    nativeCleanup = false;
+    nativeThreadState.logicalSteps = 0;
+    nativeThreadState.nativeCleanup = false;
     try
     {
         const auto address = data.binary.empty() ? Memory::String::npos :
@@ -352,7 +360,7 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
     }
     result.error = std::move(context.error);
     context.error.clear();
-    nativeCleanup = true;
+    nativeThreadState.nativeCleanup = true;
     machine.finishNativeServices(context);
     for (const auto handle : objects.materializedObjects) objects.release(handle);
     for (const auto address : objects.materializedHeap)
@@ -374,9 +382,9 @@ extern "C" {
 void chali_host_init()
 {
     if (runtime) chali_panic("原生模块已经初始化");
-    logicalSteps = 0;
-    nativeCleanup = false;
-    nativeResultFloat = 0;
+    nativeThreadState.logicalSteps = 0;
+    nativeThreadState.nativeCleanup = false;
+    nativeThreadState.nativeResultFloat = 0;
     chali_reset_slots();
     runtime = new Runtime;
 }
@@ -458,7 +466,7 @@ void chali_host_finish()
  */
 void chali_host_poll()
 {
-    if (nativeCleanup) return;
+    if (nativeThreadState.nativeCleanup) return;
     auto &context = currentContext();
     context.machine->checkNativeExecution(context);
     if (!context.error.empty())
@@ -475,16 +483,16 @@ void chali_host_poll()
  */
 void chali_host_tick(std::uint64_t steps)
 {
-    if (nativeCleanup) return;
-    if (chali_step_limit && logicalSteps >= chali_step_limit) chali_panic("执行步数超过上限");
+    if (nativeThreadState.nativeCleanup) return;
+    if (chali_step_limit && nativeThreadState.logicalSteps >= chali_step_limit) chali_panic("执行步数超过上限");
     auto &context = currentContext();
     auto *watchdog = context.watchdog;
     if (watchdog && watchdog->period)
     {
-        watchdog->now = logicalSteps;
+        watchdog->now = nativeThreadState.logicalSteps;
         if (!watchdog->deadline)
-            watchdog->deadline = watchdog->period > UINT64_MAX - logicalSteps ? UINT64_MAX : logicalSteps + watchdog->period;
-        if (logicalSteps >= watchdog->deadline) Memory::restartSignal().requestRestart();
+            watchdog->deadline = watchdog->period > UINT64_MAX - nativeThreadState.logicalSteps ? UINT64_MAX : nativeThreadState.logicalSteps + watchdog->period;
+        if (nativeThreadState.logicalSteps >= watchdog->deadline) Memory::restartSignal().requestRestart();
     }
     if (Memory::restartSignal().pending())
     {
@@ -492,7 +500,7 @@ void chali_host_tick(std::uint64_t steps)
         if (context.threadId != 0) throw NativeRestart{ static_cast<int>(reason) };
         chali_panic(reason == Memory::WatchdogReason::ExplicitRequest ? "软重启：程序显式请求重启（可恢复终止）" : "软重启：ChaLi 运行内存池用尽（可恢复终止）");
     }
-    logicalSteps = steps > UINT64_MAX - logicalSteps ? UINT64_MAX : logicalSteps + steps;
+    nativeThreadState.logicalSteps = steps > UINT64_MAX - nativeThreadState.logicalSteps ? UINT64_MAX : nativeThreadState.logicalSteps + steps;
 }
 
 /**
@@ -536,7 +544,7 @@ void chali_host_check_pointer(std::int64_t index, std::int64_t address, std::int
     const auto at = static_cast<std::size_t>(address);
     bool found = address >= 0 && context.heap->capacityAt(at, capacity);
     if (!found && address >= 0)
-        found = (activeDataCapacity ? activeDataCapacity : current().dataCapacity.get())->capacityAt(at, capacity);
+        found = (nativeThreadState.activeDataCapacity ? nativeThreadState.activeDataCapacity : current().dataCapacity.get())->capacityAt(at, capacity);
     if (!found) chali_panic("数组下标检查失败：地址不在任何一块已分配内存里");
     if (capacity < static_cast<std::size_t>(stride) || static_cast<std::uint64_t>(index) >= capacity / static_cast<std::size_t>(stride))
         chali_panic("数组下标越界");
@@ -753,7 +761,7 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
             }
             else
             {
-                const auto handled = context.machine->invokeNativeService(state.program, context, name, makeArguments(), callbackDepth);
+                const auto handled = context.machine->invokeNativeService(state.program, context, name, makeArguments(), nativeThreadState.callbackDepth);
                 if (!handled) chali_panic((Memory::String("找不到原生服务：") + name).c_str());
                 result = *handled;
             }
@@ -771,7 +779,7 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeResultFloat = result.isFloat() ? 1 : 0;
+    nativeThreadState.nativeResultFloat = result.isFloat() ? 1 : 0;
     if (result.isText()) return static_cast<std::int64_t>(nativeAllocString(context, result.text));
     if (result.isFloat())
     {
@@ -830,7 +838,7 @@ std::int64_t chali_host_raw_storage(std::int64_t operation, std::int64_t handle,
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeResultFloat = 0;
+    nativeThreadState.nativeResultFloat = 0;
     return result.integer;
 }
 
@@ -840,7 +848,7 @@ std::int64_t chali_host_raw_storage(std::int64_t operation, std::int64_t handle,
  */
 unsigned char chali_host_result_float()
 {
-    return nativeResultFloat;
+    return nativeThreadState.nativeResultFloat;
 }
 
 /**
@@ -907,9 +915,9 @@ std::int64_t chali_host_list_storage(std::int64_t operation, std::int64_t first,
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeResultFloat = result.isFloat();
+    nativeThreadState.nativeResultFloat = result.isFloat();
     std::int64_t bits = 0;
-    if (nativeResultFloat)
+    if (nativeThreadState.nativeResultFloat)
     {
         const double real = result.asFloat();
         std::memcpy(&bits, &real, sizeof(bits));
@@ -956,9 +964,9 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeResultFloat = result.isFloat();
+    nativeThreadState.nativeResultFloat = result.isFloat();
     std::int64_t bits = 0;
-    if (nativeResultFloat)
+    if (nativeThreadState.nativeResultFloat)
     {
         const double real = result.asFloat();
         std::memcpy(&bits, &real, sizeof(bits));
