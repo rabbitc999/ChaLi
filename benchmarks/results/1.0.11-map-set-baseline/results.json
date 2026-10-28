@@ -1,0 +1,492 @@
+{
+  "generated": "20261028-133339",
+  "host": "DESKTOP-5Q9FB8C",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "python": "3.12.3",
+  "runs": 5,
+  "reps_per_run": 5,
+  "cases": [
+    "map_growth",
+    "set_growth"
+  ],
+  "sinks": {
+    "map_growth": {
+      "chali-aot": "6004096376",
+      "cpp-o3": "6004096376",
+      "lua": "6004096376",
+      "rust": "6004096376"
+    },
+    "set_growth": {
+      "chali-aot": "2373508172",
+      "cpp-o3": "2373508172",
+      "lua": "2373508172",
+      "rust": "2373508172"
+    }
+  },
+  "configs": {
+    "chali-aot": {
+      "label": "ChaLi 1.0.11（LLVM AOT，unchecked 导出）",
+      "note": "同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3、unchecked；C 壳计时，初始化不计时；共享原生标准库",
+      "build_commands": {
+        "map_growth": [
+          "G:\\Python312\\python.exe",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+          "map_growth",
+          "G:\\Desktop\\ChaLi\\build\\perf-baselines\\1fe80b3\\chali-1.0.11-llvm-external-windows-x64.exe",
+          "--allocator",
+          "malloc"
+        ],
+        "set_growth": [
+          "G:\\Python312\\python.exe",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+          "set_growth",
+          "G:\\Desktop\\ChaLi\\build\\perf-baselines\\1fe80b3\\chali-1.0.11-llvm-external-windows-x64.exe",
+          "--allocator",
+          "malloc"
+        ]
+      },
+      "median_ms": {
+        "map_growth": 633.169,
+        "set_growth": 508.28
+      },
+      "min_ms": {
+        "map_growth": 618.545,
+        "set_growth": 475.932
+      },
+      "max_ms": {
+        "map_growth": 704.146,
+        "set_growth": 632.399
+      },
+      "samples_ns": {
+        "map_growth": [
+          622016600,
+          636305700,
+          632124300,
+          620459600,
+          704145900,
+          632874700,
+          656859200,
+          622680900,
+          656118100,
+          643240200,
+          655362600,
+          639889100,
+          643233600,
+          630118500,
+          639361500,
+          618545400,
+          624092300,
+          635863000,
+          630972900,
+          629017000,
+          623798600,
+          633169400,
+          681284200,
+          685134700,
+          627052800
+        ],
+        "set_growth": [
+          488314800,
+          492821900,
+          499906100,
+          520834500,
+          501065300,
+          531851200,
+          512641600,
+          499497900,
+          492754800,
+          491930200,
+          475931700,
+          482049300,
+          507932500,
+          538891800,
+          540427000,
+          530332300,
+          632398800,
+          520468600,
+          534658000,
+          528797800,
+          476527900,
+          489198500,
+          525838800,
+          518382100,
+          508279600
+        ]
+      },
+      "unavailable": {}
+    },
+    "cpp-o3": {
+      "label": "C++17（g++ -O3）",
+      "note": "O3 原生参考；保留 O2 配置及历史数据，volatile 函数入口保留计时边界",
+      "build_commands": {
+        "map_growth": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O3",
+          "-DNDEBUG",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\map_growth.cpp",
+          "-o",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\map_growth-cpp-o3.exe"
+        ],
+        "set_growth": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O3",
+          "-DNDEBUG",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\set_growth.cpp",
+          "-o",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\set_growth-cpp-o3.exe"
+        ]
+      },
+      "median_ms": {
+        "map_growth": 1.816,
+        "set_growth": 1.808
+      },
+      "min_ms": {
+        "map_growth": 1.704,
+        "set_growth": 1.711
+      },
+      "max_ms": {
+        "map_growth": 2.073,
+        "set_growth": 2.636
+      },
+      "samples_ns": {
+        "map_growth": [
+          1791300,
+          1847200,
+          1872500,
+          1703500,
+          1723300,
+          1802400,
+          1861700,
+          1753300,
+          1827900,
+          1880600,
+          1835800,
+          1915100,
+          1865500,
+          1889600,
+          1756800,
+          1789700,
+          1767900,
+          2011400,
+          1743600,
+          1815600,
+          1812100,
+          2073000,
+          2024300,
+          1790100,
+          1808800
+        ],
+        "set_growth": [
+          1934800,
+          1798800,
+          1914000,
+          1740600,
+          1735600,
+          1816800,
+          2635900,
+          2531900,
+          1807900,
+          1784000,
+          1816200,
+          1802000,
+          1799000,
+          1821100,
+          1711000,
+          1782800,
+          1835500,
+          2035100,
+          1779500,
+          1736500,
+          1818300,
+          1842300,
+          1931500,
+          1782600,
+          1758100
+        ]
+      },
+      "unavailable": {}
+    },
+    "lua": {
+      "label": "Lua 5.5.1（官方 VM，默认 GC）",
+      "note": "官方 Lua VM，GCC -O2；64 位整数/双精度，默认 GC；C 宿主仅提供单调时钟，table 使用一基索引",
+      "build_commands": {
+        "map_growth": [
+          "G:\\Python312\\python.exe",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_lua.py"
+        ],
+        "set_growth": [
+          "G:\\Python312\\python.exe",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_lua.py"
+        ]
+      },
+      "median_ms": {
+        "map_growth": 4.736,
+        "set_growth": 4.643
+      },
+      "min_ms": {
+        "map_growth": 4.477,
+        "set_growth": 4.39
+      },
+      "max_ms": {
+        "map_growth": 5.064,
+        "set_growth": 5.981
+      },
+      "samples_ns": {
+        "map_growth": [
+          4626600,
+          4476600,
+          4655800,
+          4695200,
+          4697400,
+          4864100,
+          4569200,
+          4762700,
+          4865500,
+          4803800,
+          4804600,
+          4505800,
+          4669200,
+          4750200,
+          4805500,
+          4926700,
+          4539500,
+          4740600,
+          4736100,
+          4781200,
+          5013500,
+          4632300,
+          4715400,
+          5064500,
+          4719200
+        ],
+        "set_growth": [
+          4700600,
+          4464800,
+          4773000,
+          4713600,
+          4702800,
+          4576500,
+          4389600,
+          4603100,
+          4632300,
+          4724600,
+          4903900,
+          4476000,
+          4642800,
+          4687200,
+          4607300,
+          5981100,
+          4441100,
+          4567100,
+          4636500,
+          4755800,
+          4790600,
+          4500400,
+          4647900,
+          4678900,
+          4629500
+        ]
+      },
+      "unavailable": {}
+    },
+    "rust": {
+      "label": "Rust（rustc -O）",
+      "note": "原生机器码；volatile 函数入口保留计时边界",
+      "build_commands": {
+        "map_growth": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\map_growth.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\map_growth-rs.exe"
+        ],
+        "set_growth": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\set_growth.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\set_growth-rs.exe"
+        ]
+      },
+      "median_ms": {
+        "map_growth": 2.058,
+        "set_growth": 1.563
+      },
+      "min_ms": {
+        "map_growth": 1.965,
+        "set_growth": 1.503
+      },
+      "max_ms": {
+        "map_growth": 2.522,
+        "set_growth": 1.824
+      },
+      "samples_ns": {
+        "map_growth": [
+          2020300,
+          2164000,
+          2196400,
+          2058500,
+          1989300,
+          2034500,
+          2144000,
+          2194800,
+          2082400,
+          2134700,
+          2521900,
+          2066300,
+          1988200,
+          1970500,
+          2004400,
+          2035700,
+          2214700,
+          2048900,
+          1965200,
+          2053200,
+          1990100,
+          2227900,
+          2121700,
+          2137600,
+          2051700
+        ],
+        "set_growth": [
+          1571700,
+          1588000,
+          1653400,
+          1586500,
+          1528800,
+          1509300,
+          1603800,
+          1556400,
+          1604600,
+          1531900,
+          1562600,
+          1561700,
+          1824400,
+          1649100,
+          1582000,
+          1535700,
+          1577700,
+          1589100,
+          1514500,
+          1535900,
+          1502800,
+          1632600,
+          1546200,
+          1525800,
+          1524600
+        ]
+      },
+      "unavailable": {}
+    }
+  },
+  "chali_compiler": {
+    "reported_version": "1.0.11",
+    "sha256": "ec9c5fb04011ea7a9a41742bdd9fa8d9f22170edb6fa33e9c1cdf76bcd1e800a",
+    "source_commit": "1fe80b3aeeb8212b8eb63d57986338bc8870a876"
+  },
+  "chali_allocator": "malloc",
+  "command_line": [
+    "benchmarks/perf/run.py",
+    "--runs",
+    "5",
+    "--allocator",
+    "malloc",
+    "--compiler-source-commit",
+    "1fe80b3",
+    "--only",
+    "chali-aot,lua,cpp-o3,rust",
+    "--cases",
+    "map_growth,set_growth",
+    "--out",
+    "benchmarks/results/1.0.11-map-set-baseline"
+  ],
+  "machine": {
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "logical_cpus": 12,
+    "architecture": "AMD64"
+  },
+  "git_commit": "b677274bc79c509cd4ce6752ec18682b1f8304b7",
+  "working_tree_dirty": false,
+  "source_sha256": {
+    "build_aot.py": "4bf53aa0c3e723ec1d99a06fd27eed870a14c5359aa9e446a6a98212513723e8",
+    "build_lua.py": "83ee89087fb707f84cbc2e2e2f8581c6b562502300d623610b20f5fe0af0db8e",
+    "hash_int.h": "369a1ad92341245b7f366c23bee3a01490034716f2b3cee2ea851484988b267c",
+    "luabench.c": "8399446c73d99eb102b06986862861a72ef06c8a2b345288df3cde213f14b4af",
+    "map_growth.c": "f536cb7c8e9f2ea0fa4fcf7bcf062bc9e6deac7de221ccfcb5297bbdb579b55f",
+    "map_growth.chl": "a8a0956f745e445e961110c2866bdb652f848e4567007fb641d2029ab568c05c",
+    "map_growth.cpp": "53f4b28ce76dec1173f0f0761cc623f9af1c744fad4a8e53a150f75d380d95ae",
+    "map_growth.lua": "4a0ee285ae77832ad15e3913f3ffe2f48827f272f4780acfa50d1763c613a554",
+    "map_growth.rs": "ad9257410bc0b3af9be9ab187b311d5107a0272bf066b0f253510c4d18a176fb",
+    "run.py": "a2b4d0d5d5d4cadf032a91a29cf9081ce37905511192d4b36beab1aca1824a03",
+    "set_growth.c": "f77896a4041b0e4b5c68ea7b327af48ecaaeb8db4238121daf7476eb631b94be",
+    "set_growth.chl": "28e2bc1388073b083b6e02698f6ec9a7a8d06059ed6faeacdfe9d489b53ee4e5",
+    "set_growth.cpp": "0c128d97b935363361b485c15e30f23f184d65b4118cdeaaf3e48b65ae4f6408",
+    "set_growth.lua": "88ba2fec634f91e84a90ff13a37a70ecf840f6545ecc6565b5776b34195daa12",
+    "set_growth.rs": "c4b6ff0f31fa0d91172fe7248de3207ec941f3beda6ebcef4cb09aa88952e2fd"
+  },
+  "case_notes": {
+    "list": "ChaLi and Lua grow dynamically; C/C++ preallocate storage and Rust uses with_capacity. Compare matched-growth cases separately before claiming container parity.",
+    "list_growth": "All implementations start with an empty container, append the same 400000 values without reserve, and perform the same ordered reduction.",
+    "map_growth": "All maps start empty with 20000 dispersed integer keys: insert, read and overwrite, hit/miss queries, remove every third key, reinsert, ordered reduction. Default standard hash policies; Lua uses table and Rust retains RandomState. C is a separate open-addressed reference.",
+    "set_growth": "All sets start empty with 20000 dispersed integer keys: insert twice, hit/miss queries, remove every third key, reinsert, ordered membership reduction. Lua uses table booleans; no iteration-order dependency."
+  },
+  "tool_versions": {
+    "llvm-clang": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg",
+    "lua": "Lua 5.5.1 (official VM, monotonic clock host)",
+    "gcc": "gcc.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "g++": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "go": "go version go1.27.1 windows/amd64",
+    "java": "java version \"22.0.1\" 2024-04-16\nJava(TM) SE Runtime Environment (build 22.0.1+8-16)\nJava HotSpot(TM) 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)",
+    "node": "v26.5.0",
+    "python": "Python 3.12.3"
+  },
+  "llvm_dependency": {
+    "version": "23.1.4",
+    "distribution": "llvm-mingw 20261020 ucrt x86_64",
+    "upstream": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+    "upstream_sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+    "platforms": {
+      "windows-x64": {
+        "version": "23.1.4",
+        "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+        "sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+        "format": "zip",
+        "distribution": "llvm-mingw 20261020 ucrt x86_64"
+      },
+      "linux-x64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-X64.tar.xz",
+        "sha256": "25d814fda50d5fb0084b42be09605d8b1595d49d5e2e03a3345d7e112ff6f9f3",
+        "bytes": 2017061664,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      },
+      "linux-arm64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-ARM64.tar.xz",
+        "sha256": "9b27cf263d711aa6ebfd4045ab241d947bd09b3cd19ffa5728f48a80c9eb3a91",
+        "bytes": 1829686400,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      },
+      "macos-arm64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-macOS-ARM64.tar.xz",
+        "sha256": "5d3179db39adeca5b17a34d82708fe976bc60e055b05fe557878fb3fb64d39ef",
+        "bytes": 1570051292,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      }
+    }
+  },
+  "lua_dependency": {
+    "version": "5.5.1",
+    "url": "https://www.lua.org/ftp/lua-5.5.1.tar.gz",
+    "sha256": "1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
+  },
+  "lua_host_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa"
+}
