@@ -1,0 +1,358 @@
+[
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-False-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-False-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-False-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-False-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-True-False",
+      "--allocator",
+      "malloc",
+      "--unchecked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-True-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-True-True",
+      "--allocator",
+      "malloc",
+      "--checked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\malloc-True-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-False-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-False-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-False-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-False-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-True-False",
+      "--allocator",
+      "pool",
+      "--unchecked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-True-False.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_object_scalars.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-True-True",
+      "--allocator",
+      "pool",
+      "--checked"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\pool-True-True.exe"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object scalar descriptors OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\interface_inherit.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\interface_inherit-False"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "box 20 Box 5 shape\nstick 9 bold（覆盖了默认方法）\ntwo 1 2 3 both\nview 42 shape\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\interface_inherit.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\interface_inherit-True"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "box 20 Box 5 shape\nstick 9 bold（覆盖了默认方法）\ntwo 1 2 3 both\nview 42 shape\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\interface_view_ownership.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\interface_view_ownership-False"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "interface view ownership OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\interface_view_ownership.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\interface_view_ownership-True"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "interface view ownership OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\object_type_combinations.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\object_type_combinations-False"
+    ],
+    "disabled": false,
+    "code": 0,
+    "stdout": "object type combinations OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\example\\samples\\object_type_combinations.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\object_type_combinations-True"
+    ],
+    "disabled": true,
+    "code": 0,
+    "stdout": "object type combinations OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\527f896\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly-22"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：只读接收者不能调用修改方法：I.write\n出错位置：G:/Desktop/ChaLi/tmp/object-scalars-verify/readonly.chl:1（main）\n调用栈（内 → 外）：\n  main\n  __chali_iface.I.write\n"
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly-23"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：只读接收者不能调用修改方法：I.write\n出错位置：G:/Desktop/ChaLi/tmp/object-scalars-verify/readonly.chl:1（main）\n调用栈（内 → 外）：\n  main\n  __chali_iface.I.write\n"
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\readonly-24"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：只读接收者不能调用修改方法：I.write\n出错位置：G:/Desktop/ChaLi/tmp/object-scalars-verify/readonly.chl:1（main）\n调用栈（内 → 外）：\n  main\n  __chali_iface.I.write\n"
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\build\\perf-baselines\\527f896\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound-25"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：引用声明必须初始化，缺省值请使用 Option<T mut&>\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\nchali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：方法只能调在 struct 上：read\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\n"
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound-26"
+    ],
+    "disabled": false,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：引用声明必须初始化，缺省值请使用 Option<T mut&>\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\nchali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：方法只能调在 struct 上：read\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\n"
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\object-scalars-verify\\unbound-27"
+    ],
+    "disabled": true,
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：引用声明必须初始化，缺省值请使用 Option<T mut&>\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\nchali: G:/Desktop/ChaLi/tmp/object-scalars-verify/unbound.chl 第 1 行第 1 列：方法只能调在 struct 上：read\n 1 | interface I{int64 read();};void main(){I const& value;println(\"{}\",value.read());}\n   | ~~~~~~~~~\n"
+  }
+]

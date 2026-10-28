@@ -275,6 +275,7 @@ struct Translator
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
+    bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
@@ -307,6 +308,8 @@ struct Translator
         collectionScalars = !(scalars && *scalars);
         const char *references = std::getenv("CHALI_NO_AOT_REFERENCE_PRIMITIVES");
         referencePrimitives = !(references && *references);
+        const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
+        objectScalars = !(objects && *objects);
         const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
@@ -1248,6 +1251,13 @@ struct Builder
         // 普通双精度数学操作直接进入 LLVM；不使用 fast-math，保留 NaN、无穷及负零。
         if (state.rawIntrinsics && !state.stepChecks)
         {
+            if (state.objectScalars && arguments.size() == 1u &&
+                (callee == "__std_obj_name" || callee == "__std_obj_addr"))
+            {
+                write(destination, call("chali_host_object_scalar", "i64", {
+                    { "i64", callee == "__std_obj_name" ? "0" : "1" }, convert(argument(0), "i64") }));
+                return true;
+            }
             if (state.referencePrimitives && callee == "__std_reference" && arguments.size() == 1u)
             {
                 write(destination, call("chali_require_reference", "i64", { convert(argument(0), "i64") }));
@@ -2319,6 +2329,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_list_storage(i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_map_storage(i64, i64, i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
+    out += "declare i64 @chali_host_object_scalar(i64, i64)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     out += "declare i64 @chali_host_list_storage_scalar(i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";

@@ -1,0 +1,14 @@
+malloc-False-False PASS
+malloc-False-True PASS
+malloc-True-False PASS
+malloc-True-True PASS
+pool-False-False PASS
+pool-False-True PASS
+pool-True-False PASS
+pool-True-True PASS
+interface_inherit PASS
+interface_view_ownership PASS
+object_type_combinations PASS
+readonly old/on/off PASS
+unbound old/on/off PASS
+ALL PASS

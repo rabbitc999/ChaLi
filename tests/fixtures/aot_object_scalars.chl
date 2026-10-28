@@ -1,0 +1,36 @@
+/** 继承接口描述符查询须保持复制、实际地址、重绑定和拥有值访问行为。 */
+interface Reader { int64 read(); };
+interface NamedReader: Reader { int64 extra(); };
+interface Writer { void write(int64 value); };
+struct Value: NamedReader, Writer {
+    int64 value;
+    String label;
+    int64 read() { return value; }
+    int64 extra() { return label.length(); }
+    void write(int64 next) { value = next; }
+};
+Value global;
+NamedReader const& returned() { return &global; }
+int64 consume(NamedReader const& view) { return view.read() + view.extra(); }
+
+void main() {
+    Value first; first.value = 7; first.label = "first";
+    Value second; second.value = 19; second.label = "second";
+    NamedReader const& view = &first;
+    NamedReader const& saved = view;
+    assert(consume(&view) == 12 && consume(&saved) == 12);
+    assert(std::lang::address(&view) == std::lang::address(&first));
+    Writer mut& writer = &first;
+    writer.write(11);
+    assert(saved.read() == 11);
+    view = &second;
+    assert(view.read() == 19 && saved.read() == 11);
+    Any box; box.set(&first);
+    Reader const& boxed = box.getReference();
+    Reader const& copied = boxed;
+    assert(boxed.read() == 11 && copied.read() == 11);
+    global.value = 23; global.label = "global";
+    NamedReader const& result = returned();
+    assert(consume(&result) == 29);
+    println("object scalar descriptors OK");
+}

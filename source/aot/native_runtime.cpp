@@ -802,6 +802,39 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
 }
 
 /**
+ * @brief 直接查询盒装对象的类型号或地址，沿用对象查找和视图刷新协议。
+ * @param operation 零读取类型号，一读取引用地址；由生成代码传入固定值。
+ * @param handle 对象或接口描述符句柄。
+ * @return 整数类型号或地址；失败时按通用原生入口的错误优先级终止。
+ */
+std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handle)
+{
+    NativeContext &context = currentContext();
+    const char *name = operation == 0 ? "__std_obj_name" : "__std_obj_addr";
+    std::int64_t result = 0;
+    try
+    {
+        RuntimeObject *object = nativeObject(context, Slot::fromInt(handle), ObjectKind::Obj,
+                                             operation == 0 ? "obj.name" : "接口指针");
+        if (object) result = operation == 0 ? object->objTag : object->objValue.integer;
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("宿主函数 ") + name + " 抛出异常：" + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeThreadState.nativeResultFloat = 0;
+    return result;
+}
+
+/**
  * @brief 为 LLVM 字节 intrinsic 验证范围并返回物理地址，不复制或填充字节。
  * @param operation 7 为复制，8 为填充。
  * @param destination 目标逻辑地址。
