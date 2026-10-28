@@ -42,7 +42,7 @@
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 56 |
 | [`std::linkedlist`](std-linkedlist.md) | 双向链表 | 20 |
 | [`std::math`](std-math.md) | 泛型数学 | 24 |
-| [`std::memory`](std-memory.md) | 内存视图与 arena | 8 |
+| [`std::memory`](std-memory.md) | 内存视图与统计 | 5 |
 | [`std::message`](std-message.md) | 线程邮箱 | 6 |
 | [`std::net`](std-net.md) | TCP 与 HTTP | 37 |
 | [`std::numerics`](std-numerics.md) | 数值分析 | 7 |
@@ -62,7 +62,6 @@
 | [`std::toml`](std-toml.md) | TOML 文档与反射编解码 | 29 |
 | [`std::tree`](std-tree.md) | 树与堆 | 50 |
 | [`std::utf8`](std-utf8.md) | UTF-8 与码点 | 8 |
-| [`std::watchdog`](std-watchdog.md) | 软重启看门狗 | 7 |
 | [`std::algorithms`](std-algorithms.md) | 通用算法 | 28 |
 
 ## 查找与维护

@@ -105,12 +105,14 @@ void main() {
     println("normalized={}", normalized);
 
     int64 before = std::memory::Memory::stats().liveBytes;
-    std::memory::Arena arena = std::memory::Arena::create();
-    std::memory::Span<char> bytes = arena.allocate(16);
-    assert(bytes.len() == 16);
-    int64 during = std::memory::Memory::stats().liveBytes;
-    assert(during >= before + 16);
-    arena.reset();
+    int64 during = before;
+    {
+        char bytes[] = new[16];
+        std::memory::Span<char> view = std::memory::Span<char>::from(&bytes[0], 16);
+        assert(view.len() == 16);
+        during = std::memory::Memory::stats().liveBytes;
+        assert(during >= before + 16);
+    }
     int64 after = std::memory::Memory::stats().liveBytes;
     assert(after <= during - 16);
     println("memory=ok");
@@ -147,9 +149,9 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-349"></a>`enum ParseError : Error` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。 |
+| 模块 | <a id="symbol-348"></a>`enum ParseError : Error` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。 |
 | ParseError | `Empty, Invalid, Overflow` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-350"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
+| 模块 | <a id="symbol-349"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
 
 ## 函数索引
 

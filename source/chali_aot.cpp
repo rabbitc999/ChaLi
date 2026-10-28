@@ -269,7 +269,7 @@ struct Translator
     bool dataRowsReady = false;                                   ///< dataRows 是否已解码。
     std::string formatScratch;                                    ///< formatBytesOf 的单槽缓存。
     std::vector<std::string> printLiterals;                       ///< `__std_print` 直连发射的字面量段常量。
-    bool watchdogUsed = false;                                    ///< 可达程序使用看门狗时生成逻辑指令安全点。
+    bool stepChecks = false;                                    ///< 显式执行步数上限需要逻辑指令安全点。
     bool profileOwnership = false;                                ///< 显式启用时插入所有权操作计数，不用于正式计时。
     bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
@@ -296,7 +296,7 @@ struct Translator
         Memory::String targetError;
         if (!describeTarget(request.options.target, target, &targetError)) fail(targetError);
         if (!request.options.allocator.empty() && request.options.allocator != "malloc" && request.options.allocator != "pool") fail("AOT：--allocator 只接受 malloc 或 pool");
-        watchdogUsed = request.options.stepLimit != 0u;
+        stepChecks = request.options.stepLimit != 0u;
         const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
         const auto *cache = std::getenv("CHALI_NO_AOT_ADDRESS_CACHE");
@@ -803,7 +803,6 @@ void analyze(Translator &state)
         if (state.addressedFunctions.count(std::string(at->second.c_str())) == 0u) at = state.functionAddresses.erase(at);
         else ++at;
     for (const auto &label : state.reachable)
-        if (label.rfind("std::watchdog::", 0u) == 0u) state.watchdogUsed = true;
     for (const auto &label : state.addressedFunctions) pending.push_back(Memory::String(label.c_str()));
     while (!pending.empty())
     {
@@ -1031,10 +1030,10 @@ struct Builder
             if (quad.op == "decl" && quad.arg(1) != "global" && quad.arg(2).rfind("__temp_", 0) != 0u && quad.arg(2).rfind("__chali_ret_v$", 0) != 0u) locals.insert(textOf(quad.arg(2)));
             if (quad.op == "label")
                 labels[textOf(quad.arg(2))] = at;
-            else if (state.watchdogUsed)
+            else if (state.stepChecks)
                 ++lineOccurrences[quad.line];
         }
-        if (state.watchdogUsed && state.request.program)
+        if (state.stepChecks && state.request.program)
         {
             const auto &program = *state.request.program;
             const auto entry = program.labels.find(program.symbolKey(function.label));
@@ -1241,7 +1240,7 @@ struct Builder
     bool emitCall(const Memory::String &callee, const Memory::String &destination)
     {
         // 普通双精度数学操作直接进入 LLVM；不使用 fast-math，保留 NaN、无穷及负零。
-        if (state.rawIntrinsics && !state.watchdogUsed)
+        if (state.rawIntrinsics && !state.stepChecks)
         {
             static const std::map<Text, Text> unaryMath{
                 { "std::math::__sqrt64", "llvm.sqrt.f64" },
@@ -1279,7 +1278,7 @@ struct Builder
                 return true;
             }
         }
-        if (state.rawIntrinsics && !state.watchdogUsed && arguments.size() == 1u
+        if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
             && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"))
         {
             write(destination, call("chali_host_string_storage", "i64",
@@ -1291,7 +1290,7 @@ struct Builder
         const bool float32Bits = callee == "std::lang::__bootFloat32Bits";
         const bool float64Value = callee == "std::lang::__bootFloat64FromBits";
         const bool float32Value = callee == "std::lang::__bootFloat32FromBits";
-        if (state.rawIntrinsics && !state.watchdogUsed && arguments.size() == 1u
+        if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
             && (float64Bits || float32Bits || float64Value || float32Value))
         {
             Value result;
@@ -1377,7 +1376,7 @@ struct Builder
                               mapStorage != mapStorageCalls.end()   ? &mapStorage->second :
                                                                       nullptr;
         const bool hashed = listStorage == listStorageCalls.end();
-        if (state.rawIntrinsics && !state.watchdogUsed && storage && arguments.size() == storage->second)
+        if (state.rawIntrinsics && !state.stepChecks && storage && arguments.size() == storage->second)
         {
             std::vector<std::pair<Memory::String, Value>> saved;
             for (const auto &entry : state.temporaryUsers)
@@ -1414,7 +1413,7 @@ struct Builder
             write(destination, result);
             return true;
         }
-        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__rawStorage" && arguments.size() == 6u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__rawStorage" && arguments.size() == 6u)
         {
             std::vector<Value> values;
             for (const auto &item : arguments) values.push_back(convert(item.second, "i64"));
@@ -1422,7 +1421,7 @@ struct Builder
             return true;
         }
         /* 标准错误流直连：字符串 data/len 取自运行时，再直接 fwrite 到 stderr，不经宿主胶水。 */
-        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__std_stderr_write" && arguments.size() == 1u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__std_stderr_write" && arguments.size() == 1u)
         {
             const Value handle = convert(argument(0), "i64");
             const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
@@ -1445,25 +1444,25 @@ struct Builder
             return true;
         }
         /* 浮点定长格式化直连：调用模块级辅助函数完成 snprintf 与新字符串分配。 */
-        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__std_str_fixed" && arguments.size() == 2u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__std_str_fixed" && arguments.size() == 2u)
         {
             write(destination, call("chali_string_fixed", "i64", { convert(argument(0), "double"), convert(argument(1), "i64") }));
             return true;
         }
         /* 标准输入直连：读取一行直接调用运行时 IR 里的 chali_read_line（fgets + 去 LF/CRLF，EOF 返回空串）。 */
-        if (state.rawIntrinsics && !state.watchdogUsed && (callee == "std::lang::__readLine" || callee == "__readLine" || callee == "__std_input_line") && arguments.empty())
+        if (state.rawIntrinsics && !state.stepChecks && (callee == "std::lang::__readLine" || callee == "__readLine" || callee == "__std_input_line") && arguments.empty())
         {
             write(destination, call("chali_read_line", "i64", {}));
             return true;
         }
-        if (state.rawIntrinsics && !state.watchdogUsed && callee == "std::lang::__stdinEof" && arguments.empty())
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__stdinEof" && arguments.empty())
         {
             write(destination, call("chali_stdin_eof", "i64", {}));
             return true;
         }
         /* 标准输出直连：编译期格式串只含字面量与 %s（花括号风格的字符串排版）时，
          * 逐段直接 fwrite 到 stdout，不再经过宿主格式化胶水；其余格式回落胶水。 */
-        if (state.rawIntrinsics && !state.watchdogUsed && pendingFormatValid && callee == "__std_print")
+        if (state.rawIntrinsics && !state.stepChecks && pendingFormatValid && callee == "__std_print")
         {
             std::vector<std::pair<bool, std::string>> steps;  ///< (是否取字符串实参, 字面量字节)。
             std::string literalRun;
@@ -1570,7 +1569,7 @@ struct Builder
             write(destination, result);
             return true;
         }
-        if (callee == "__chali_copy_struct" && state.bulkCopies && !state.watchdogUsed && arguments.size() == 3u)
+        if (callee == "__chali_copy_struct" && state.bulkCopies && !state.stepChecks && arguments.size() == 3u)
         {
             write(destination, call("chali_host_copy_words", "i64", { convert(argument(0), "i64"), convert(argument(1), "i64"), convert(argument(2), "i64") }));
             return true;
@@ -1785,10 +1784,10 @@ struct Builder
                                        || (pointerLabel.rfind("RawStorage__", 0u) == 0u
                                            && (pointerLabel.find(".pointer") != Text::npos || pointerLabel.find(".capacity") != Text::npos
                                                || pointerLabel.find(".isInitialized") != Text::npos));
-        if (state.rawIntrinsics && state.inlineHints && !state.watchdogUsed && !function.exported
+        if (state.rawIntrinsics && state.inlineHints && !state.stepChecks && !function.exported
             && !state.addressedFunctions.count(rawLabel) && rawPointerWrapper)
             signature += "alwaysinline ";
-        else if (state.inlineHints && !state.watchdogUsed && !function.exported
+        else if (state.inlineHints && !state.stepChecks && !function.exported
                  && !state.addressedFunctions.count(textOf(function.label)) && function.end - function.labelIndex <= 12u)
             signature += "inlinehint ";
         signature += "uwtable section \"chali_code\" {\nentry:\n";
@@ -1826,7 +1825,7 @@ struct Builder
                 body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
                 body += "  store i64 " + std::to_string(quad.sourceLine) + ", ptr @chali_source_line\n";
             }
-            if (state.watchdogUsed && op != "label")
+            if (state.stepChecks && op != "label")
             {
                 const auto cost = logicalCosts.find(quad.line);
                 const auto steps = cost == logicalCosts.end() ? 1u : std::max<std::size_t>(1u, cost->second / lineOccurrences[quad.line]);
@@ -1917,7 +1916,7 @@ struct Builder
                 const auto target = known == knownFunctions.end() ? Memory::String() : known->second;
                 knownFunctions.clear();
                 const auto direct = state.functionByLabel.find(textOf(target));
-                if (state.directFunctionValues && !state.watchdogUsed && direct != state.functionByLabel.end()
+                if (state.directFunctionValues && !state.stepChecks && direct != state.functionByLabel.end()
                     && state.functions[direct->second].parameters.size() == arguments.size())
                 {
                     if (!emitCall(target, c)) return Text();
@@ -2016,7 +2015,7 @@ struct Builder
                 const int bytes = byteStorage ? 1 : 8;
                 const auto key = std::make_pair(textOf(a), bytes);
                 const auto cached = checkedAddresses.find(key);
-                const bool cacheable = state.cacheAddresses && !state.watchdogUsed;
+                const bool cacheable = state.cacheAddresses && !state.stepChecks;
                 const bool reuse = cacheable && cached != checkedAddresses.end();
                 const Value pointerValue = reuse ? cached->second : call("chali_host_address", "ptr", { address, { "i64", std::to_string(bytes) } });
                 if (cacheable && !reuse) checkedAddresses.emplace(key, pointerValue);
@@ -2308,6 +2307,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     out += "declare i8 @chali_host_result_float()\n";
+    out += astAddressPrimitive();
     out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";
     out += "declare double @llvm.ceil.f64(double)\ndeclare double @llvm.round.f64(double)\ndeclare double @llvm.trunc.f64(double)\n";
     out += "@chali_return_float = internal thread_local global i8 0\n";

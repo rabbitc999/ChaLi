@@ -63,16 +63,6 @@ using NativeInvoker = Memory::Function<bool(std::int64_t, const Memory::Vector<N
                                             NativeValue &)>;
 
 /**
- * @brief 一次 run() 里的软件定时器表（`std::event::Timer` 的后端）。
- */
-struct WatchdogRuntime
-{
-    std::uint64_t period = 0;
-    std::uint64_t deadline = 0;
-    std::uint64_t now = 0;
-};
-
-/**
  * @brief 原生函数跑起来时的环境。
  */
 struct NativeContext
@@ -86,7 +76,6 @@ struct NativeContext
     const Memory::Vector<Memory::String> *programArguments = nullptr;  ///< 程序入口参数。
     NativeInvoker *invoker = nullptr;                                  ///< 同步调用 CHALI 函数指针。
     struct ObjectStore *objects = nullptr;                             ///< 运行期通用对象表。
-    WatchdogRuntime *watchdog = nullptr;                               ///< 当前执行的内部看门狗。
     Machine *machine = nullptr;                                        ///< 正在执行 run() 的虚拟机。
     std::size_t threadId = 0u;                                         ///< 当前线程 id（定时器归属线程）。
     bool *exitRequested = nullptr;                                     ///< `exit(n)` 请求提前正常停机。

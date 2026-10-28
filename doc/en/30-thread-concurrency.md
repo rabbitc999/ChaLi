@@ -64,7 +64,6 @@ NativeCallContext.eventPoster() and Machine.eventPoster() return weak-reference 
 
 Timer.afterMillis/afterNanos create one-shot timers; everyMillis/everyNanos create periodic timers. Timers start immediately. Durations must be positive; creation failure yields an invalid timer. A context allows at most 1024 timers. Explicit receive computes deadlines using a shared monotonic-clock service without one OS thread per timer. This is not hard real time. Overdue periods merge into one notification and missed counts additional elapsed periods. stop and scope exit remove the source and its queued notices. event.close disables timers while allowing queued events to drain.
 
-std::watchdog checks deadlines and kicks directly at VM execution checks without user event handlers. Budgets use nanoseconds with a host time callback, otherwise executed instructions. Disabled watchdogs preserve the default highest optimization path.
 
 Host event callbacks are written as explicit receive loops; retry NET_PENDING with bounded waits or sleepFor instead of busy polling. Language block-expression yield and level break keep their value semantics.
 

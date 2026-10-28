@@ -79,7 +79,7 @@ def main():
     run([sys.executable,ROOT/'tools/library_reference.py','--check'])
     check_structure()
     passed=0
-    with tempfile.TemporaryDirectory(prefix='library-reference-',dir=ROOT/'build') as temporary:
+    with tempfile.TemporaryDirectory(prefix='library-reference-',dir=ROOT/'tmp') as temporary:
         work=Path(temporary)
         for example in sorted(set(EXAMPLES.values())):
             source=ROOT/example
@@ -99,7 +99,7 @@ def main():
                        allowed_stderr='stackvm：按回车继续…' if name=='std_pause' else '',stdin=stdinText)
             expected_text=expected.with_suffix('.txt')
             if expected_text.exists(): assert output==expected_text.read_text(encoding='utf-8'),(name,output)
-            elif name in ('io','sqlite','watchdog','reflect'): assert output==name+' API ok\n',(name,output)
+            elif name in ('io','sqlite','reflect'): assert output==name+' API ok\n',(name,output)
             passed+=1
             print('[通过] '+example,flush=True)
     print(f'库参考文档、重载清单、链接与 {passed} 个完整程序验证通过。')

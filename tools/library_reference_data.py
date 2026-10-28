@@ -8,7 +8,7 @@ MODULES = {
     'std::datetime': ('UTC 日期时间', 'Unix 秒与公历 UTC 日期换算，年份 1..9999，秒 0..59，不表示闰秒。ISO 8601 首版只接受 YYYY-MM-DDTHH:MM:SSZ。纯换算不依赖平台时区；nowUtc 要求宿主时钟。'),
     'std::cli': ('命令行参数', '长短选项、短选项组合、附着值、位置参数与 -- 分隔。重复选项采用最后一次值，required 必须显式出现。--help/-h 自动识别但不退出或打印，由应用处理。'),
     'std::utf8': ('UTF-8 与码点', 'RFC 3629 严格校验与码点解码，拒绝过长序列、代理项及超范围值。数量和截取按 Unicode 码点，不能代替字素簇处理。String 不适合保存内嵌零字节。'),
-    'std::lang': ('核心库', '自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM AOT 标准流直连运行时与 libc，看门狗保留宿主回退。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。'),
+    'std::lang': ('核心库', '自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM AOT 标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库错误统一实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。'),
     'std::collections': ('集合扩展', 'Deque、Queue、Channel 基于 List；Channel 是当前执行上下文的值队列，不是跨线程消息系统。FixedVector 与 RingBuffer 的容量固定，满时 push 返回 false；空时 pop/receive 返回 None。索引从 0 开始。'),
     'std::reflect': ('反射', '要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。'),
     'std::algorithms': ('通用算法', '需 import std::algorithms; 并使用完整限定名。Value 族由 ChaLi 实现列表遍历与回调；sortValue 采用稳定索引归并并返回独立副本，shuffleValue 也返回副本。Reference 族直接操作连续存储，调用者保证 count 对应有效元素数；返回的引用不能越过缓冲区生命周期。Reference 排序比较使用 >；默认稳定插入排序，构建时 SIMPLE_SORT 可切换到不稳定希尔排序。二分查找要求已升序排列。'),
@@ -26,7 +26,7 @@ MODULES = {
     'std::toml': ('TOML 文档与反射编解码', 'parse 返回 Result<TomlValue,MessageError>。与 JSON 共用拥有型 opcode 协议；普通复制深复制子树，close 只影响当前值。表对应 isTable/isObject；时间值使用 isDateTime/asDateTime。asXxx 类型不符返回 None；含零字节的文本使用字节列表接口。kind 编码与 JSON 节点一致。解析文档根节点的 dump() 保留原文注释、空白与换行；反复解析保存不丢失或重复注释。底层 C++ 等形值编辑保留布局；结构编辑保留注释内容，但可调整位置。子节点只输出值。'),
     'std::linalg': ('向量与矩阵', 'Vector<T>、Matrix<T> 保留泛型聚合外观，values 使用 ScalarArray<T>，底层 ScalarStorage opcode 拥有连续数值缓冲，不再保存通用 List。支持内建有符号/无符号整数及 float32/float64，复制得到独立缓冲。下标从 0 开始；加减、点积和乘法必须维度兼容，非法维度触发断言或宿主错误。fromArray 复制，toArray 返回独立数组；裸引用重载须提供有效 count。normalized 不接受零向量。浮点分解和 solve 使用宿主胶水，返回分解结构/解向量；奇异、非法形状或不满足算法条件时报告运行错误，不返回 Result。'),
     'std::math': ('泛型数学', '三角函数使用弧度；普通整数返回 float64，float32 保持类型，float64 转发宿主数学库。BigInteger 转为 BigDecimal，BigDecimal 使用十进制高精度算法并沿用有效位数，Expr 组合符号 AST。pi(digits) 返回 1..100000 位圆周率。大十进制无 NaN/无穷，非法定义域报告错误；普通浮点沿用宿主特殊值。round 中点远离零，trunc 向零，fmod 余数与被除数同号。abs/min/max 保留既有泛型比较语义；clamp 检查 low<=high。'),
-    'std::memory': ('内存视图与 arena', 'Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。Arena 是不可复制的拥有型 opcode，显式 move 转移所有权；allocate 返回视图，reset/drop 后全部视图失效，不能继续解引用。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。'),
+    'std::memory': ('内存视图与统计', 'Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。缓冲区可用 new 分配，并由普通作用域管理所有权；视图不能超过底层存储的有效期。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。'),
     'std::message': ('线程邮箱', '泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。'),
     'std::net': ('TCP 与 HTTP', 'TcpSocket、TcpListener 是不可复制的 opcode，宿主记录独占连接，作用域退出自动关闭；所有权通过 move 转移，先检查 isOpen/lastError。receive/receiveLine 的空串需结合 status 区分关闭、超时和错误。端口 0 可让系统分配监听端口。HTTP 仅支持 http://，不支持 TLS；HTTP 状态码与传输错误分别检查。close 可提前关闭，重复调用安全；每条连接独立保存最近读状态与错误。connectAsync/pollConnect、acceptAsync、sendAsync、receiveAsync、receiveLineAsync 采用非阻塞轮询，未就绪返回 NET_PENDING；调用方可用 std::thread::sleepFor 有界暂停后重试。connectAsync 只接受数值 IPv4，默认五秒超时，域名使用同步 connect；sendAsync 返回本次部分发送字节数，调用方推进 offset；异步行缓冲上限 1 MiB，待完成数据保留至下次轮询。'),
     'std::numerics': ('数值分析', '回调应满足算法的连续性/可微性条件。实现由 std::numerics 模块用 ChaLi 表达，前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数。数值结果是近似值，不保证任意模型收敛。'),
@@ -44,7 +44,6 @@ MODULES = {
     'std::linkedlist': ('双向链表', 'LinkedList 以 ChaLi 结构体保存双向节点数组、复用槽与单调游标索引，保留 Iterator<int64>。普通复制深复制节点并在副本内保留对应游标。首尾及按游标插删为平均 O(1)；按值查询和按序迭代 O(n)。游标不重复使用，删除或 clear 后永久失效；toArray 显式导出独立顺序快照。链表连接、插删、反转与游标管理均由 ChaLi 实现，不注册宿主链表算法。'),
     'std::text': ('UTF-8 文本工具', '长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。'),
     'std::thread': ('隔离线程', '公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。'),
-    'std::watchdog': ('软重启看门狗', '默认关闭。enable 设置内存水位字节数；requestRestart 请求 VM 安全点结束本轮，由宿主重置 arena 与分配身份后重跑。enableTimeout 的超时由 VM 内部截止时间检查，已注入时钟时单位为纳秒，否则为逻辑指令数；kick 推迟截止时间，disableTimeout 关闭超时。不依赖事件回调；不能抢占正在执行的阻塞宿主函数。'),
 }
 
 # 精确名称优先，其后由生成器读取源码注释或按同族接口补全。
@@ -70,10 +69,10 @@ BEHAVIOR = {
     'luDecompose':'计算带主元置换的 LU 分解。', 'lurDecompose':'计算 LUR 分解结果。', 'symmetricEigen':'计算实对称矩阵的特征分解。', 'svd':'计算奇异值分解。', 'jordan2':'计算 2×2 矩阵的 Jordan 分解。', 'diagonalize2':'将可对角化的实数 2×2 矩阵对角化；不满足条件时报错。',
     'derivative':'用中心差分近似 function 在 x 的导数。', 'integrateSimpson':'用复合 Simpson 法近似定积分。', 'bisect':'在括根区间内二分求根。', 'rk4Step':'执行一次四阶 Runge-Kutta 更新。', 'newton':'从 initial 开始迭代 Newton 求根。', 'solveOdeEuler':'用 Euler 法求解标量初值问题并返回采样列表。', 'solveOdeRK4':'用四阶 RK 法求解标量初值问题并返回采样列表。',
     'dft':'计算离散傅里叶正变换。', 'idft':'计算归一化离散傅里叶逆变换。', 'fft':'计算基 2 快速傅里叶正变换。', 'ifft':'计算归一化基 2 快速傅里叶逆变换。',
-    'stats':'返回当前分配器的活动字节、活动块及峰值统计。', 'allocate':'在 arena 中分配 bytes 字节，返回 Span<char>。',
+    'stats':'返回当前分配器的活动字节、活动块及峰值统计。',
     'processRun':'通过 shell 启动读取管道，返回进程句柄。', 'processRead':'读取进程管道的输出文本。', 'processClose':'关闭管道并等待进程，返回宿主状态码。', 'system':'同步执行 shell 命令并返回宿主状态码。',
     'waitFor':'最多等待 millis 毫秒，完成并回收目标返回 true，超时返回 false；超时不取消目标，目标失败传播原始诊断。', 'tryWait':'不阻塞地尝试等待并回收目标，尚未完成返回 false；目标失败传播原始诊断。', 'current':'返回当前线程的 Thread 句柄。', 'parent':'返回创建当前任务的父线程 Thread 句柄。', 'wait':'等待并回收目标线程，失败时保留原始诊断。', 'sendThread':'向指定线程投递 T 类型的值副本。', 'receiveThread':'等待当前线程的一条 T 类型消息。',
-    'everyNanos':'创建纳秒周期的停止态定时器。', 'everyMillis':'创建毫秒周期的停止态定时器。', 'start':'启动定时器。', 'stop':'停止定时器，保留句柄。', 'enable':'启用软重启看门狗并设置水位。', 'requestRestart':'请求宿主在安全点结束本轮并处理软重启。',
+    'everyNanos':'创建纳秒周期的停止态定时器。', 'everyMillis':'创建毫秒周期的停止态定时器。', 'start':'启动定时器。', 'stop':'停止定时器，保留句柄。',
     'mysql':'连接 MySQL，返回带打开状态及错误信息的 Database。', 'maria':'连接 MariaDB，驱动标识为 mariadb，客户端 ABI 与 MySQL 兼容。', 'local':'使用本机默认 MySQL 配置连接 database。', 'sqlite':'打开文件 SQLite 或 :memory: 内存库。', 'postgres':'使用 libpq 连接串/URI 打开 PostgreSQL。', 'sqlServer':'使用 ODBC 连接选项打开 SQL Server。', 'odbc':'使用 Unicode ODBC 连接选项打开数据源。', 'exec':'执行 SQL，复制最后一条语句的结果并返回 ResultSet。', 'execOk':'执行 SQL 并仅返回是否成功。', 'scalar':'读取结果首行首列的文本表示。', 'count':'读取结果首行首列的整数表示。', 'hasTable':'检查指定表是否存在。', 'affectedRows':'返回连接最近操作的影响行数。', 'backendName':'返回驱动标识字符串。', 'lastError':'返回连接/网络操作最近的错误文本。', 'isOpen':'判断连接或监听器是否已打开。', 'isNumber':'判断单元格是否为整数或实数。', 'asReal':'将单元格转换为实数。', 'text':'返回单元格的文本表示。', 'rowCount':'返回结果行数。', 'colCount':'返回结果列数。', 'columnName':'按列下标读取列名。', 'columnIndex':'按列名查找列下标。', 'intAt':'读取指定单元格的整数表示。', 'realAt':'读取指定单元格的实数表示。', 'textAt':'读取指定单元格的文本表示。', 'render':'将结果集渲染为文本表格。', 'pad':'按显示宽度补齐单元格文本。', 'displayWidth':'估算文本表格显示宽度；ASCII/双字节按 1，三/四字节编码按 2。', 'intLiteral':'生成整数 SQL 字面量。', 'realLiteral':'生成实数 SQL 字面量。', 'quote':'生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。',
     'listen':'绑定本机地址并开始监听，返回监听器。', 'accept':'接受一条 TCP 连接，可指定等待超时。', 'localPort':'返回实际绑定的本地端口。', 'status':'返回最近一次网络读取状态码。', 'receiveLine':'读取一行网络文本；空串时检查 status。', 'connect':'连接远端 TCP/HTTP 服务。', 'fetch':'发出 HTTP GET 并返回响应。', 'submit':'提交 HTTP 请求体并返回响应。', 'exchange':'发送构造后的 HTTP 请求并解析响应。', 'readAll':'持续读取 HTTP 响应原始文本。', 'header':'按名称查找响应头。', 'isSuccess':'判断 HTTP 状态码是否位于 200..299。', 'httpScheme':'返回 URL 的协议部分。', 'parseUrl':'拆分 HTTP URL 的主机、端口和请求路径。', 'buildRequest':'构造 HTTP 请求报文。', 'parseResponse':'解析原始 HTTP 响应报文。',
     'reset':'清空对象的历史状态或分配状态，具体资源规则见模块约定。', 'predict':'按运动模型执行预测更新。', 'correct':'根据观测执行校正更新。', 'pose':'读取当前二维位姿副本。', 'addPolar':'将测距/角度按 origin 位姿变换到世界坐标并追加。', 'centroid':'计算点集质心。', 'nearestDistance':'返回查询点到点集的最小距离。', 'transformed':'按 pose 刚体变换并返回新点云。', 'voxelDownsample':'按 cellSize 网格降采样并返回新点云。', 'radiusOutlierFilter':'保留 radius 内满足邻居数量要求的点，返回新点云。',
@@ -170,7 +169,7 @@ BIG_BEHAVIOR = {
 }
 PARAMETERS.update({'rounds':'Miller-Rabin 素性测试轮数','k':'方根次数'})
 
-PARAMETERS.update(workers='固定工作线程数量，1..1024', nanos='正纳秒间隔', delta='原子累加的 int64 增量', units='看门狗超时单位', jobs='跨线程静态任务通道', millis='等待毫秒数；-1 无限、0 非阻塞，waitFor 和 sleepFor 不接受负数', task='静态任务函数，参数由签名决定')
+PARAMETERS.update(workers='固定工作线程数量，1..1024', nanos='正纳秒间隔', delta='原子累加的 int64 增量', jobs='跨线程静态任务通道', millis='等待毫秒数；-1 无限、0 非阻塞，waitFor 和 sleepFor 不接受负数', task='静态任务函数，参数由签名决定')
 CONCURRENCY_BEHAVIOR = {
     'createWith':'创建隔离线程并在创建时复制初始参数，拒绝借用闭包和不可传递载荷。',
     'state':'查询任务状态：0 运行、1 成功、2 失败、3 已取消；不消费句柄。',
@@ -199,11 +198,8 @@ CONCURRENCY_BEHAVIOR = {
     'submitFor':'限时提交静态任务，超时不取消已接收任务；拒绝已关闭或失败的线程池。',
     'fetchAdd':'原子累加 int64 并返回旧值，溢出按 64 位回绕。',
     'closeInbox':'关闭当前任务邮箱并唤醒等待者；已排队消息仍可排空。',
-    'disableTimeout':'停止当前 VM 内部看门狗超时，保留内存水位和显式重启能力。',
 }
 
-CONCURRENCY_BEHAVIOR.update(enableTimeout='启用当前 VM 的内部超时检查，单位取决于宿主时钟配置；不注册事件回调。', enableTimeoutMillis='将毫秒转换为纳秒超时单位，拒绝非正值和溢出。')
-CONCURRENCY_BEHAVIOR['kick']='推迟当前 VM 看门狗截止时间，未启用超时返回 NotEnabled。'
 PARAMETERS['tag']='宿主事件的整数标签。'
 PARAMETERS.update(lower='定积分下界表达式', upper='定积分上界表达式', number='需要精确转换的数值', operand='待取负的表达式', order='导数或展开阶数，范围 0..1000', point='极限或展开中心表达式', variable='单个自变量的名称')
 

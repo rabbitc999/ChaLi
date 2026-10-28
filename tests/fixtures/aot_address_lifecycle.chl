@@ -1,0 +1,11 @@
+/** 持续存活的宿主线程跨初始化／销毁轮次调用同一导出，核对地址视图的生命周期。 */
+#export("address_probe")
+int64 addressProbe(int64 seed) {
+    int64 values[16];
+    int64 index=0;
+    while (index<16) { values[index]=seed+index; index=index+1; }
+    int64 total=0;
+    index=0;
+    while (index<16) { total=total+values[index]; index=index+1; }
+    return total;
+}

@@ -691,18 +691,6 @@ _MESSAGES = {
   "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n": [
     "  --deps                 List imported modules and project dependencies for build scripts\n"
   ],
-  "  --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n": [
-    "  --watchdog             Enable optional soft restarts on allocation failure, requests or watermarks\n"
-  ],
-  "  --no-watchdog          关闭软重启看门狗（缺省）\n": [
-    "  --no-watchdog          Disable soft restarts (default)\n"
-  ],
-  "  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n": [
-    "  --max-restarts N       Maximum soft restarts (default 3; enables --watchdog)\n"
-  ],
-  "  --watchdog-watermark N 内存水位（字节；隐含 --watchdog）\n": [
-    "  --watchdog-watermark N Memory watermark in bytes; enables --watchdog\n"
-  ],
   "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n": [
     "  -I, --include-dir DIR  Add a module search directory; -IDIR is also accepted\n"
   ],

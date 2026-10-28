@@ -53,7 +53,7 @@
 /**
  * @def STACKVM_WITH_THREADS
  * @brief 是否编入宿主线程、共享槽、有界通道和显式事件服务，默认开启。
- * @note 关闭后保留单执行上下文、同步宿主调用、执行预算、停止与看门狗检查。
+ * @note 关闭后保留单执行上下文、同步宿主调用、执行预算与停止检查。
  */
 #ifndef STACKVM_WITH_THREADS
 #define STACKVM_WITH_THREADS 1

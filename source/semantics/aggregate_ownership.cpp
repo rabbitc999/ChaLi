@@ -992,14 +992,7 @@ ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared
     out.push_back(Node::label(done));
     // 64 位平凡元素不需要逐项转换或析构；保留超大计数及其他布局的原循环。
     const auto *noBulk = std::getenv("CHALI_NO_ARRAY_COPY_BULK");
-    bool watchdog = false;
-    for (const auto &function : g_funcs)
-        if (function.first.rfind("std::watchdog::", 0) == 0u)
-        {
-            watchdog = true;
-            break;
-        }
-    if (!watchdog && !(noBulk && *noBulk) && element && ((element->kind == MType::Int && element->bits == 64) || (element->kind == MType::Double && element->bits == 64)))
+    if (!(noBulk && *noBulk) && element && ((element->kind == MType::Int && element->bits == 64) || (element->kind == MType::Double && element->bits == 64)))
     {
         g_usesStructCopy = true;
         Memory::Vector<ast::NodePtr> scalar(out.begin(), out.begin() + 3);

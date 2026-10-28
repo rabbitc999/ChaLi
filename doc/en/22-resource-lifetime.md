@@ -26,7 +26,7 @@ Fresh string arguments borrowed by printing, formatting and file writes are firs
 
 ## VM and restart
 
-The VM heap in `source/ircode/runtime_heap.cpp` splits free intervals and merges adjacent released intervals. A watchdog restart ends every old execution context before resetting arenas and allocation identities. There is no sweeping API or implicit garbage collection.
+The runtime heap in `source/ircode/runtime_heap.cpp` uses direct payload allocations with system malloc or split and merged free intervals with pool mode. Ordinary scopes manage values created with `new`, and release immediately invalidates their allocation identities. There is no implicit garbage collection.
 
 ## fn borrowing research
 

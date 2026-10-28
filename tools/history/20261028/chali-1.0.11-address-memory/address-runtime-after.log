@@ -1,0 +1,7 @@
+checked run／AOT 运行时差分通过：watchdog_timeout
+checked run／AOT 陷阱与输出时机通过：integer_zero
+checked run／AOT 陷阱与输出时机通过：integer_overflow
+checked run／AOT 陷阱与输出时机通过：shift_range
+checked run／AOT 陷阱与输出时机通过：real_zero
+checked run／AOT 执行控制通过：watchdog_expired
+checked run／AOT 执行控制通过：watchdog_requested

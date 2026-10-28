@@ -32,19 +32,4 @@ Slot programAssert(NativeContext &ctx, const Memory::Vector<Slot> &args);
  */
 Slot programPanic(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
-/**
- * @brief 配置当前执行上下文的看门狗截止时间，不登记用户回调。
- * @param ctx 本次执行的原生环境。
- * @param args 正超时单位，零表示关闭超时。
- * @return 配置成功返回零，无效参数返回一。
- */
-Slot watchdogTimeout(NativeContext &ctx, const Memory::Vector<Slot> &args);
-
-/**
- * @brief 推迟当前执行的内部看门狗截止时间。
- * @param ctx 当前看门狗状态。
- * @param args 无实参。
- * @return 已启用超时返回零，否则返回一。
- */
-Slot watchdogKick(NativeContext &ctx, const Memory::Vector<Slot> &args);
 }  // namespace stackvm::runtimeDetail

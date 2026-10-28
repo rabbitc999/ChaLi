@@ -69,19 +69,19 @@ ack:hello 5
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-457"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
-| ThreadResult | <a id="symbol-458"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
-| ThreadResult | <a id="symbol-459"></a>`String error` | 最近操作的错误说明。 |
-| ThreadResult | <a id="symbol-460"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
-| 模块 | <a id="symbol-461"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
-| ThreadGroup | <a id="symbol-462"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
-| ThreadGroup | <a id="symbol-463"></a>`bool completed` | 全部任务是否已经回收。 |
-| ThreadGroup | <a id="symbol-464"></a>`bool successful` | 已完成线程组是否全部成功。 |
-| ThreadGroup | <a id="symbol-465"></a>`String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-466"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
-| ThreadPool | <a id="symbol-467"></a>`std::concurrency::Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
-| ThreadPool | <a id="symbol-468"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
-| ThreadPool | <a id="symbol-469"></a>`bool closed` | 是否已停止接受任务或事件。 |
+| 模块 | <a id="symbol-456"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
+| ThreadResult | <a id="symbol-457"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
+| ThreadResult | <a id="symbol-458"></a>`String error` | 最近操作的错误说明。 |
+| ThreadResult | <a id="symbol-459"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
+| 模块 | <a id="symbol-460"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
+| ThreadGroup | <a id="symbol-461"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
+| ThreadGroup | <a id="symbol-462"></a>`bool completed` | 全部任务是否已经回收。 |
+| ThreadGroup | <a id="symbol-463"></a>`bool successful` | 已完成线程组是否全部成功。 |
+| ThreadGroup | <a id="symbol-464"></a>`String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-465"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
+| ThreadPool | <a id="symbol-466"></a>`std::concurrency::Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
+| ThreadPool | <a id="symbol-467"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
+| ThreadPool | <a id="symbol-468"></a>`bool closed` | 是否已停止接受任务或事件。 |
 
 ## 函数索引
 

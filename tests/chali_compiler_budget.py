@@ -30,9 +30,11 @@ def main():
     frozen = json.loads((ROOT / 'tests/fixtures/compiler_limits/budget_followup_0_31_0.json').read_text(encoding='utf-8'))
     work = Path(tempfile.mkdtemp(prefix='compiler-budget-'))
     source = work / 'all_errors.chl'
-    source.write_text(frozen['source'], encoding='utf-8')
+    # 历史输入与结果保持原样；当前负载只去掉已删除的看门狗模块。
+    current_source = '\n'.join(line for line in frozen['source'].splitlines() if 'std::watchdog' not in line) + '\n'
+    source.write_text(current_source, encoding='utf-8')
     report = dict(compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
-                  source=frozen['source'], results={})
+                  source=current_source, historical_fixture='budget_followup_0_31_0.json', results={})
     for backend, language, marker in [('run', 'zh', '编译器内存预算不足'),
                                       ('aot', 'en', 'compiler memory budget exhausted')]:
         output = work / backend

@@ -1180,16 +1180,6 @@ void M_SetStepLimit(std::size_t limit);
 void M_SetRuntimeMemory(std::size_t bytes);
 std::size_t M_RuntimePeakBytes();
 /**
- * @brief 配置可选软重启看门狗（下次 `M_Compile` 执行时生效；默认关闭）。
- *
- * 打开后宿主每轮结束量一次内存水位，并在分配失败 / 程序显式请求 / 超过水位时
- * 清干净、复用缓冲区重跑，最多 `maxRestarts` 次。
- * @param enabled 开关（0 = 关闭，行为与从前一致）。
- * @param maxRestarts 最多重启几次（负数按 0 处理）。
- * @param watermarkBytes 内存水位（字节；<= 0 = 只等分配失败 / 显式请求）。
- */
-void M_SetWatchdog(int enabled, int maxRestarts, int watermarkBytes);
-/**
  * 为后续 M_Compile 执行挂接 C++ 胶水函数；传 nullptr 取消。
  */
 void M_SetNativeRegistry(const stackvm::NativeRegistry *registry);

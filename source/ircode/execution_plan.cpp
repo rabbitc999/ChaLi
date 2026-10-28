@@ -46,7 +46,7 @@ const FrameLayout *ExecutionPlan::layout(std::size_t entry)
     ++generation_;
     while (!work.empty())
     {
-        if (Memory::restartSignal().pending()) return result;
+        if (Memory::allocationFailureSignal().pending()) return result;
         const auto index = work.back();
         work.pop_back();
         if (index >= code.size() || seen_[index] == generation_) continue;

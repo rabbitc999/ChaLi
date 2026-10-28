@@ -51,7 +51,7 @@ bool captureTransferObject(NativeContext &ctx, std::int64_t handle, TransferPack
         ctx.error = "消息包含已释放的对象句柄：" + Memory::toString(handle);
         return false;
     }
-    if (source->kind == ObjectKind::Arena || source->kind == ObjectKind::Obj || (source->kind == ObjectKind::NativeRecord && (!source->nativeType || !source->nativeType->clone)))
+    if (source->kind == ObjectKind::Obj || (source->kind == ObjectKind::NativeRecord && (!source->nativeType || !source->nativeType->clone)))
     {
         ctx.error = Memory::String("消息不能复制运行期资源或 std::lang::Any：") + objectKindName(source->kind);
         return false;

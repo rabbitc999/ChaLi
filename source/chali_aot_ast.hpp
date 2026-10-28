@@ -43,6 +43,51 @@ Memory::String astDataLiteral(const ast::NodePtr &node, const ast::TypePtr &type
 }
 
 /**
+ * @brief 生成保留映射代次及完整范围检查的 LLVM 地址操作原语。
+ * @return 地址视图、上下文失效入口及可内联的物理地址解析函数。
+ */
+Text astAddressPrimitive()
+{
+    return R"LLVM(
+@chali_address_view = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
+declare ptr @chali_host_address_view(i64, i64, ptr nocapture)
+define void @chali_reset_address_view() {
+entry:
+  store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 3)
+  ret void
+}
+define internal ptr @chali_primitive_address(i64 %address, i64 %count) alwaysinline {
+entry:
+  %revision_pointer = load ptr, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 3)
+  %has_revision = icmp ne ptr %revision_pointer, null
+  br i1 %has_revision, label %check, label %slow
+check:
+  %revision = load atomic i64, ptr %revision_pointer acquire, align 8
+  %stamp = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 4)
+  %same_revision = icmp eq i64 %revision, %stamp
+  %enabled = icmp ne i64 %revision, 0
+  %live = and i1 %same_revision, %enabled
+  %begin = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 0)
+  %size = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 1)
+  %offset = sub i64 %address, %begin
+  %inside = icmp ult i64 %offset, %size
+  %remaining = sub i64 %size, %offset
+  %fits = icmp ule i64 %count, %remaining
+  %range = and i1 %inside, %fits
+  %valid = and i1 %live, %range
+  br i1 %valid, label %fast, label %slow
+fast:
+  %base = load ptr, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 2)
+  %physical = getelementptr i8, ptr %base, i64 %offset
+  ret ptr %physical
+slow:
+  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr @chali_address_view)
+  ret ptr %resolved
+}
+)LLVM";
+}
+
+/**
  * @brief 识别只承担地址或标量存储转发的标准包装函数。
  * @param rawLabel 函数的完整标签。
  * @return 属于标准操作包装时返回 true。
@@ -77,7 +122,7 @@ bool astPrimitiveWrapper(const Text &rawLabel)
  */
 void analyzeAstInlining(Translator &state)
 {
-    if (!state.inlineHints || state.watchdogUsed) return;
+    if (!state.inlineHints || state.stepChecks) return;
     constexpr std::size_t shortBudget = 48, primitiveBudget = 256, overflow = primitiveBudget + 1;
     std::map<Text, std::size_t> remaining, ownCost, expandedCost;
     std::map<Text, std::vector<Text>> calls, callers;
@@ -209,7 +254,6 @@ void prepareAst(Request &request, Translator &state)
         const auto label = pending.back();
         pending.pop_back();
         if (!state.reachable.insert(label).second) continue;
-        if (label.rfind("std::watchdog::", 0u) == 0u) state.watchdogUsed = true;
         const auto function = state.astFunctions.find(label);
         if (function == state.astFunctions.end()) continue;
         std::function<void(const ast::NodePtr &)> visit = [&](const ast::NodePtr &node) {
@@ -309,6 +353,7 @@ struct AstBuilder : Builder
     bool terminated = false;
     std::map<std::size_t, DebugLine> debugLines;
     std::size_t debugBlocks = 1;
+    ast::NodePtr lastLocation;  ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
 
     /**
      * @brief 为当前 AST 函数登记独立局部存储和表达式类型环境。
@@ -375,21 +420,26 @@ struct AstBuilder : Builder
     /**
      * @brief 对当前 AST 节点记录原生源码位置及可选安全点。
      * @param node 当前节点。
+     * @param controlPoint 合成循环或标签没有源码行时仍须生成安全点。
      */
-    void location(const ast::NodePtr &node)
+    void location(const ast::NodePtr &node, bool controlPoint = false)
     {
-        if (!node || !node->sourceLine) return;
-        if (state.request.options.debug)
+        const auto source = node && node->sourceLine ? node : controlPoint && state.stepChecks ? lastLocation : nullptr;
+        if (source)
         {
-            const auto index = debugBlocks++;
-            enter("q" + std::to_string(index));
-            debugLines[index] = { textOf(node->sourceFile), node->sourceLine };
+            lastLocation = source;
+            if (state.request.options.debug)
+            {
+                const auto index = debugBlocks++;
+                enter("q" + std::to_string(index));
+                debugLines[index] = { textOf(source->sourceFile), source->sourceLine };
+            }
+            const auto file = state.sourceFiles.emplace(textOf(source->sourceFile), state.sourceFiles.size()).first;
+            body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
+            body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
+            body += "  store i64 " + std::to_string(source->sourceLine) + ", ptr @chali_source_line\n";
         }
-        const auto file = state.sourceFiles.emplace(textOf(node->sourceFile), state.sourceFiles.size()).first;
-        body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
-        body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
-        body += "  store i64 " + std::to_string(node->sourceLine) + ", ptr @chali_source_line\n";
-        if (state.watchdogUsed) call("chali_host_tick", "void", { { "i64", "1" } });
+        if (state.stepChecks && (source || controlPoint)) call("chali_host_tick", "void", { { "i64", "1" } });
     }
 
     /**
@@ -416,7 +466,9 @@ struct AstBuilder : Builder
         const bool byte = type && type->kind == ast::Type::Kind::Uint && type->bits == 8;
         const Text storage = real ? "double" : byte ? "i8" :
                                                       "i64";
-        const auto pointer = call("chali_host_address", "ptr", { convert(address, "i64"), { "i64", byte ? "1" : "8" } });
+        const bool cache = state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
+        const auto pointer = call(cache ? "chali_primitive_address" : "chali_host_address", "ptr",
+                                  { convert(address, "i64"), { "i64", byte ? "1" : "8" } });
         if (stored)
         {
             const auto value = convert(*stored, storage, byte);
@@ -643,6 +695,7 @@ struct AstBuilder : Builder
         if (node->kind == N::Label)
         {
             enter("ast_label_" + textOf(state.use(node->text)));
+            location(node, true);
             return;
         }
         if (terminated) enter(blockName());
@@ -705,7 +758,7 @@ struct AstBuilder : Builder
             if (node->kind == N::While)
             {
                 enter(testBlock);
-                location(node);
+                location(node, true);
                 const auto test = condition(expression(node->kids[0]));
                 body += "  br i1 " + test.text + ", label %" + loop + ", label %" + done + "\n";
                 terminated = true;
@@ -720,7 +773,7 @@ struct AstBuilder : Builder
             else
             {
                 enter(loop);
-                location(node);
+                location(node, true);
                 statement(node->kids[0]);
                 enter(testBlock);
                 const auto test = condition(expression(node->kids[1]));

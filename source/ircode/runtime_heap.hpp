@@ -5,6 +5,7 @@
 #pragma once
 #include "runtime_slot.hpp"
 #include "allocation_index.hpp"
+#include <atomic>
 
 namespace stackvm::runtimeDetail
 {
@@ -172,6 +173,30 @@ public:
     unsigned char *borrowBytes(std::size_t address, std::size_t count);
 
     /**
+     * @brief 已验证的连续物理视图及其堆映射代次，布局与 LLVM 地址原语一致。
+     */
+    struct AddressView
+    {
+        std::uint64_t begin = 0, size = 0;
+        unsigned char *bytes = nullptr;
+        const std::atomic<std::uint64_t> *revision = nullptr;
+        std::uint64_t stamp = 0;
+    };
+    /**
+     * @brief 验证完整访问范围并借出可由 LLVM 重复检查的分配视图。
+     * @param address 本轮活跃分配内的逻辑地址。
+     * @param count 本次访问字节数。
+     * @param view 接收公开范围、物理首地址及当前映射代次。
+     * @return 本次物理访问地址，范围失效时为空且不更新视图。
+     */
+    unsigned char *borrowView(std::size_t address, std::size_t count, AddressView &view);
+    /**
+     * @brief 取得模块存活期间有效的映射代次地址，不随单个堆析构而悬垂。
+     * @return 原子代次地址；值为零时禁止缓存命中，防止计数回绕复活旧视图。
+     */
+    const std::atomic<std::uint64_t> *mappingRevision() const;
+
+    /**
      * @brief 收窄完整分配的可访问区域，隐藏前后对齐填充。
      * @param address 精确分配首，仍用于释放。
      * @param offset 公开区域相对分配首的偏移。
@@ -181,6 +206,10 @@ public:
     bool restrictAllocation(std::size_t address, std::size_t offset, std::size_t count);
 
 private:
+    /**
+     * @brief 在映射可能变化前使全部借出视图失效，计数耗尽后保持永久禁用状态。
+     */
+    void invalidateViews();
     /**
      * @brief 将有效逻辑地址转换为物理偏移。
      * @param address 已验证的逻辑地址。

@@ -9,7 +9,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPILER = Path(os.environ.get('CHALI_COMPILER', compiler_path())).resolve()
-WORK = ROOT / 'build' / 'opcode-values'
+WORK = ROOT / 'tmp' / 'opcode-values'
 
 
 def execute(name, source, *, threads=False, failure=None):
@@ -71,7 +71,7 @@ def string_differential():
 def main():
     """并行运行互不共享构建资产的定向案例，最后记录容量基准。"""
     WORK.mkdir(parents=True, exist_ok=True)
-    cases = []
+    cases = [('watchdog_removed', 'import std::watchdog; void main() { std::watchdog::enable(100); }', {'failure': ('watchdog',)})]
     for name in ('std_red_black_delete', 'string_methods', 'opcode_value_semantics', 'std_tree',
                  'std_linkedlist', 'std_graph', 'std_structured_data', 'std_math_clock_random',
                  'std_parse_random_path_memory', 'regex_limits', 'event_timer'):
@@ -103,15 +103,12 @@ void main() {
         assert(moved.exec("select 42").count() == 42);
         index = index + 1;
     }
-    Arena original = Arena::create(); Arena moved = move original;
-    assert(moved.allocate(8).len() == 8); moved.reset();
     Timer timer = Timer::afterMillis(60000); Timer timerMoved = move timer;
     assert(timerMoved.isValid()); timerMoved.stop(); timerMoved.stop();
     assert(!timerMoved.isValid());
 }''', {}))
     for name, module, declaration in (
         ('database_copy', 'std::sql', 'Database original = Database::sqlite(":memory:"); Database duplicate = original;'),
-        ('arena_copy', 'std::memory', 'Arena original = Arena::create(); Arena duplicate = original;'),
         ('timer_copy', 'std::event', 'Timer original = Timer::afterMillis(10); Timer duplicate = original;'),
     ):
         cases.append((name, f'import {module};\nvoid main() {{ {declaration} return; }}',
@@ -120,12 +117,7 @@ void main() {
         cases.append((name, f'void main() {{ String value = {expression}; return; }}', {'failure': ('String',)}))
     cases.append(('structured_closed', ROOT / 'example/samples-error/structured_closed.chl', {'failure': ('JsonValue.kind',)}))
     cases.append(('invalid_utf8', 'void main() { String text = "你".substring(1); int64 count = text.charLength(); }', {'failure': ('UTF-8',)}))
-    cases.append(('arena_reset_invalidates', '''import std::memory;
-void main() {
-    Arena arena = Arena::create(); let span = arena.allocate(8);
-    char mut& first = span.iterator(0).unwrap(); first = 'x';
-    arena.reset(); println("{}", first);
-}''', {'failure': ('180143985', 'free', '越界')}))
+    cases.append(('arena_removed', 'import std::memory;\nvoid main(){ Arena value; }', {'failure': ('Arena', '类型')}))
     cases.append(('union_find_bounds', 'import std::graph;\nvoid main() { UnionFind sets = UnionFind::create(2); sets.find(2); return; }', {'failure': ('UnionFind.find',)}))
     cases.append(('graph_bounds', 'import std::graph;\nvoid main() { Graph graph = Graph::create(2, false); graph.addEdge(0, 2, 1); return; }', {'failure': ('Graph.addEdge',)}))
     cases.append(('random_range', 'import std::random;\nvoid main() { Random value = Random::withSeed((uint64)1); value.nextInt(3, 3); return; }', {'failure': ('Random.nextInt',)}))

@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_thread_wait.py", line 99, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_thread_wait.py", line 48, in main
+    result = run(prelude + body)
+             ^^^^^^^^^^^^^^^^^^^
+  File "G:\Desktop\ChaLi\tests\chali_thread_wait.py", line 23, in run
+    return subprocess.run(
+           ^^^^^^^^^^^^^^^
+  File "G:\Python312\Lib\subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Python312\Lib\subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "G:\Python312\Lib\subprocess.py", line 1538, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 系统找不到指定的文件。

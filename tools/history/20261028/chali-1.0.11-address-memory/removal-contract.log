@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+AssertionError: ('watchdog', CompletedProcess(args=['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', 'check', 'G:\\Desktop\\ChaLi\\tmp\\removal-contract\\watchdog.chl'], returncode=0, stdout='', stderr=''))

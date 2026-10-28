@@ -1,4 +1,4 @@
-# std::memory — 内存视图与 arena
+# std::memory — 内存视图与统计
 
 <!-- LANGUAGE NAVIGATION -->
 [English（中文原文）](std-memory.md) · **简体中文**
@@ -14,7 +14,7 @@ import std::memory;
 
 ## 公共约定与错误边界
 
-Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。Arena 是不可复制的拥有型 opcode，显式 move 转移所有权；allocate 返回视图，reset/drop 后全部视图失效，不能继续解引用。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。
+Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。缓冲区可用 new 分配，并由普通作用域管理所有权；视图不能超过底层存储的有效期。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。
 
 ## 参考代码
 
@@ -105,12 +105,14 @@ void main() {
     println("normalized={}", normalized);
 
     int64 before = std::memory::Memory::stats().liveBytes;
-    std::memory::Arena arena = std::memory::Arena::create();
-    std::memory::Span<char> bytes = arena.allocate(16);
-    assert(bytes.len() == 16);
-    int64 during = std::memory::Memory::stats().liveBytes;
-    assert(during >= before + 16);
-    arena.reset();
+    int64 during = before;
+    {
+        char bytes[] = new[16];
+        std::memory::Span<char> view = std::memory::Span<char>::from(&bytes[0], 16);
+        assert(view.len() == 16);
+        during = std::memory::Memory::stats().liveBytes;
+        assert(during >= before + 16);
+    }
     int64 after = std::memory::Memory::stats().liveBytes;
     assert(after <= during - 16);
     println("memory=ok");
@@ -157,7 +159,6 @@ memory=ok
 | MemoryStats | <a id="symbol-326"></a>`int64 liveBlocks` | 当前活跃分配的块数。 |
 | MemoryStats | <a id="symbol-327"></a>`int64 peakBytes` | 历史活跃分配字节数的峰值。 |
 | 模块 | <a id="symbol-328"></a>`struct Memory` | 内存统计与宿主内存管理操作的静态入口。 |
-| 模块 | <a id="symbol-329"></a>`#NonCopyable opcode Arena` | 不可复制的内存分配区 opcode，reset 或释放后视图失效。 |
 
 ## 函数索引
 
@@ -168,9 +169,6 @@ memory=ok
 | [Span::iterator](#api-2) | `Option<T mut&> iterator(int64 index)` |
 | [Span::len](#api-3) | `int64 len()` |
 | [Memory::stats](#api-4) | `static MemoryStats stats()` |
-| [Arena::create](#api-5) | `static Arena create()` |
-| [Arena::allocate](#api-6) | `Span<char> allocate(int64 bytes)` |
-| [Arena::reset](#api-7) | `void reset()` |
 
 <a id="api-0"></a>
 
@@ -357,117 +355,6 @@ static MemoryStats stats();
 std::memory::Memory::stats();
 ```
 
-**源码**：[source/std/memory.chl:45](../../source/std/memory.chl#L45)。
-
-**完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
-
-<a id="api-5"></a>
-
-### Arena::create（6）
-
-**声明**
-
-```chali
-static Arena create();
-```
-
-**行为**
-
-创建独立 arena。
-
-**参数**
-
-无显式参数。实例方法使用当前接收者。
-
-**返回值**
-
-`Arena`。创建独立 arena。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-std::memory::Arena::create();
-```
-
-**源码**：[source/std/memory.chl:60](../../source/std/memory.chl#L60)。
-
-**完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
-
-<a id="api-6"></a>
-
-### Arena::allocate（7）
-
-**声明**
-
-```chali
-Span<char> allocate(int64 bytes);
-```
-
-**行为**
-
-在 arena 中分配 bytes 字节，返回 Span<char>。
-
-**参数**
-
-| 参数 | 类型／声明 | 含义 | 默认值 |
-| --- | --- | --- | --- |
-| `bytes` | `int64 bytes` | 输入或输出字节存储 | 无 |
-
-**返回值**
-
-`Span<char>`。在 arena 中分配 bytes 字节，返回 Span<char>。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-显式前置检查：`bytes >= 0`。
-
-**调用形式**
-
-```chali
-obj.allocate(bytes);
-```
-
-**源码**：[source/std/memory.chl:62](../../source/std/memory.chl#L62)。
-
-**完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
-
-<a id="api-7"></a>
-
-### Arena::reset（8）
-
-**声明**
-
-```chali
-void reset();
-```
-
-**行为**
-
-清空对象的历史状态或分配状态，具体资源规则见模块约定。
-
-**参数**
-
-无显式参数。实例方法使用当前接收者。
-
-**返回值**
-
-无返回值。
-
-**错误与边界**
-
-遵循本页“公共约定与错误边界”。
-
-**调用形式**
-
-```chali
-obj.reset();
-```
-
-**源码**：[source/std/memory.chl:68](../../source/std/memory.chl#L68)。
+**源码**：[source/std/memory.chl:41](../../source/std/memory.chl#L41)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。

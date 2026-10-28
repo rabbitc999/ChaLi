@@ -10,11 +10,31 @@ using namespace runtimeDetail;
 namespace runtimeDetail
 {
 #if STACKVM_WITH_DEFAULT_HEAP
+namespace
+{
+std::atomic<std::uint64_t> addressMappingRevision{ 1 };  ///< 模块级代次在堆销毁后仍存活，零为永久禁用缓存。
+}
 
 /**
  * @brief 归还仍由字节堆管理的系统分配。
  */
-Heap::~Heap() { clearMallocAllocations(); }
+Heap::~Heap() { invalidateViews(); clearMallocAllocations(); }
+
+/**
+ * @brief 撤销借出视图的映射代次；无符号回绕到零后永久禁止命中。
+ */
+void Heap::invalidateViews()
+{
+    auto revision = addressMappingRevision.load(std::memory_order_relaxed);
+    while (revision != 0 && !addressMappingRevision.compare_exchange_weak(revision, revision + 1,
+                                                                 std::memory_order_release, std::memory_order_relaxed)) {}
+}
+
+/**
+ * @brief 返回模块寿命内有效的原子代次地址，覆盖跨宿主线程的先后调用。
+ * @return 可只读观察的代次，零代表缓存必须回退。
+ */
+const std::atomic<std::uint64_t> *Heap::mappingRevision() const { return &addressMappingRevision; }
 
 /**
  * @brief 归还系统有效载荷，不改变语言层的显式释放诊断。
@@ -41,6 +61,7 @@ unsigned char *Heap::storageAt(std::size_t offset) const
  */
 void Heap::reset(std::size_t base)
 {
+    invalidateViews();
     clearMallocAllocations();
     mallocOwner_ = Memory::runtimeAllocator();
     systemMalloc_ = mallocOwner_->usesSystemMalloc();
@@ -69,6 +90,7 @@ std::size_t Heap::allocate(std::size_t bytes)
 {
     if (bytes == 0u) return 0u;
     std::lock_guard<std::mutex> guard(mutex_);
+    invalidateViews();
     if (!index_.available(bytes)) return 0u;
     if (systemMalloc_)
     {
@@ -207,6 +229,7 @@ bool Heap::release(std::size_t address, Memory::String *reason)
 {
     if (address == 0u) return true;  // free(NULL) 是空操作
     std::lock_guard<std::mutex> guard(mutex_);
+    invalidateViews();
     if (systemMalloc_)
     {
         const auto found = mallocBlocks_.find(address);
@@ -400,6 +423,22 @@ unsigned char *Heap::borrowBytes(std::size_t address, std::size_t count)
 }
 
 /**
+ * @brief 验证访问并提供当前公开范围的物理映射，不跨分配或隐藏对齐填充。
+ * @param address 本次逻辑地址。
+ * @param count 完整访问长度。
+ * @param view 接收同步执行期间可按代次检查的视图。
+ * @return 验证成功后的物理地址，失败为空。
+ */
+unsigned char *Heap::borrowView(std::size_t address, std::size_t count, AddressView &view)
+{
+    const auto *block = index_.find(address);
+    if (!block || count > block->size - (address - block->address)) return nullptr;
+    auto *bytes = storageAt(block->offset);
+    view = { block->address, block->size, bytes, &addressMappingRevision, addressMappingRevision.load(std::memory_order_acquire) };
+    return bytes + (address - block->address);
+}
+
+/**
  * @brief 收窄对齐分配的公开字节范围，保留完整分配的释放和统计信息。
  * @param address 精确分配首。
  * @param offset 公开区域相对分配首的偏移。
@@ -408,6 +447,7 @@ unsigned char *Heap::borrowBytes(std::size_t address, std::size_t count)
  */
 bool Heap::restrictAllocation(std::size_t address, std::size_t offset, std::size_t count)
 {
+    invalidateViews();
     return index_.restrictRange(address, offset, count);
 }
 

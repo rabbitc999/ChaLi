@@ -17,7 +17,7 @@ def check_contract():
     for text in sources.values():
         errors.update(re.findall(r"(?:enum|struct)\s+(\w+Error)\s*:\s*Error\b", text))
     expected = {"MessageError", "IoError", "ParseError", "CliError", "CsvError",
-                "DateTimeError", "EncodingError", "Utf8Error", "WatchdogError",
+                "DateTimeError", "EncodingError", "Utf8Error",
                 "RegexError", "ReflectError"}
     assert expected <= errors, expected - errors
     for file, text in sources.items():
@@ -51,7 +51,6 @@ SCENARIOS = {
     "datetime": 'assert((std::datetime::DateTimeError::InvalidDate).toString() != "");',
     "encoding": 'assert((std::encoding::EncodingError::InvalidCharacter(9)).toString().contains("9"));',
     "utf8": 'assert((std::utf8::Utf8Error::InvalidSequence(12)).toString().contains("12"));',
-    "watchdog": 'assert((std::watchdog::WatchdogError::InvalidTimeout).toString() != "");',
     "regex": 'assert((std::regex::RegexError::Invalid).toString() != "");',
     "reflect": 'assert((std::reflect::ReflectError::NotFound).toString() != "");',
     "json": 'Result<std::json::JsonValue, MessageError> result = std::json::parse("{bad"); assert(result.isErr()); assert(result.error().toString() != ""); assert(readNumber("42").unwrap() == 42); assert(readNumber("{bad").isErr());',
@@ -64,7 +63,6 @@ ERROR_VALUES = {
     'datetime': 'std::datetime::DateTimeError::InvalidDate',
     'encoding': 'std::encoding::EncodingError::InvalidCharacter(9)',
     'utf8': 'std::utf8::Utf8Error::InvalidSequence(12)',
-    'watchdog': 'std::watchdog::WatchdogError::InvalidTimeout',
     'regex': 'std::regex::RegexError::Invalid',
     'reflect': 'std::reflect::ReflectError::NotFound',
     'json': 'result.error()', 'toml': 'result.error()',
@@ -73,7 +71,7 @@ ERROR_VALUES = {
 
 
 def main():
-    """用默认 VM 配置验证统一错误接口，并检查公开类型契约。"""
+    """用默认 checked AOT 配置验证统一错误接口，并检查公开类型契约。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chali", type=Path, default=compiler_path())
     args = parser.parse_args()
@@ -99,7 +97,7 @@ def main():
             result = subprocess.run([str(args.chali.resolve()), "run", str(source), "--out", str(Path(directory) / (module + "-out"))], cwd=ROOT, env=dict(os.environ, CHALI_LANG="zh", CHALI_NO_STDIN_INPUT="1"), capture_output=True, text=True, encoding="utf-8", timeout=300)
             assert (result.returncode, result.stdout, result.stderr) == (0, "OK\n", ""), (module, result)
             print("Error 模块通过：" + module, flush=True)
-    print("标准库 Error：11 种错误类型、接口与泛型处理、消息所有权、位置、JSON/TOML/图像/文件/SQL 及 ? 传播通过")
+    print("标准库 Error：10 种错误类型、接口与泛型处理、消息所有权、位置、JSON/TOML/图像/文件/SQL 及 ? 传播通过")
 
 
 if __name__ == "__main__":

@@ -86,7 +86,7 @@ Design the interface explicitly with scalars, references or a buffer you manage 
   reports that the feature is disabled.
 - Use `--debug` to keep native symbols and source lines and to lower the optimization level, then
   attach GDB — see [native debugging](43-native-debugging.md).
-- `--memory-size` sets the runtime heap budget; process boundaries, threads and the watchdog are in
+- `--memory-size` sets the runtime heap budget; process boundaries and threads are in
   [capabilities](17-capabilities.md).
 - There is no VM sandbox here: C code reached through `#abi` runs with the host's privileges, so the
   interface design is the security boundary.

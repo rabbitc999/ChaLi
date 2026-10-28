@@ -1,2 +1,0 @@
-timeout on 1000
-done 3000

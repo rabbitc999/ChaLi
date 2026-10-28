@@ -230,7 +230,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
                 const auto self = threadRuntime_->workers.at(threadId_);
                 self->receiving = true;
                 threadRuntime_->changed.notify_all();
-                /* 等待期间继续观察停止、panic 和看门狗。 */
+                /* 等待期间继续观察停止、panic 和执行预算。 */
                 waitForChange(guard, [&] {
                     return !self->inbox.empty() || self->inboxClosed || threadRuntime_->closing || threadRuntime_->deadlocked();
                 });

@@ -216,10 +216,6 @@ ChaLi 标准库手册|ChaLi standard library manual
   --emit                 只生成 .quad / .data.bin / .layout，不执行\n|  --emit                 Export .quad / .data.bin / .layout without executing\n
   --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n|  --dap                  Run the debug adapter over standard input/output\n
   --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n|  --deps                 List imported modules and project dependencies for build scripts\n
-  --watchdog             打开可选软重启看门狗（分配失败 / 显式请求 / 超水位重跑）\n|  --watchdog             Enable optional soft restarts on allocation failure, requests or watermarks\n
-  --no-watchdog          关闭软重启看门狗（缺省）\n|  --no-watchdog          Disable soft restarts (default)\n
-  --max-restarts N       最多软重启几次（缺省 3；隐含 --watchdog）\n|  --max-restarts N       Maximum soft restarts (default 3; enables --watchdog)\n
-  --watchdog-watermark N 内存水位（字节；隐含 --watchdog）\n|  --watchdog-watermark N Memory watermark in bytes; enables --watchdog\n
   -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n|  -I, --include-dir DIR  Add a module search directory; -IDIR is also accepted\n
   --include-path 目录    追加模块搜索目录\n|  --include-path DIR    Add a module search directory\n
 用法：chali test [路径...] [--filter 文本] [--backend interpret] [--timeout 秒] [--json\p--list]\n|Usage: chali test [paths...] [--filter TEXT] [--backend interpret] [--timeout SECONDS] [--json\p--list]\n

@@ -69,13 +69,13 @@ public:
     explicit ExecutionPlan(const Program &program, bool usePrepared = true) : program_(program), seen_(program.code.size(), 0)
     {
         code.resize(program.code.size());
-        if (Memory::restartSignal().pending()) return;
+        if (Memory::allocationFailureSignal().pending()) return;
         Memory::Vector<bool> entry(code.size(), false);
         for (const auto &label : program.labels)
             if (label.second < entry.size()) entry[label.second] = true;
         for (std::size_t i = 0; i < code.size(); ++i)
         {
-            if (Memory::restartSignal().pending()) return;
+            if (Memory::allocationFailureSignal().pending()) return;
             const auto &source = program.code[i];
             code[i].symbol = intern(source.name);
             intern(source.name2);

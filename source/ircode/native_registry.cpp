@@ -45,21 +45,9 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "__std_function_copy", { 1, functionCopy } },
     { "__std_object_free", { 1, objectFree } },
     { "std::memory::__memoryLiveBytes", { 0, memoryLiveBytes } },
-    /* std::watchdog（软重启看门狗）：模块级原生函数按「模块限定名」登记；裸名一并留着，
-     * 便于别的宿主 / 导出代码直接按裸名调用。 */
-    { "std::watchdog::__watchdogTimeout", { 1, watchdogTimeout } },
-    { "std::watchdog::__watchdogKick", { 0, watchdogKick } },
-    { "std::watchdog::__watchdogEnable", { 1, watchdogEnable } },
-    { "std::watchdog::__watchdogRequestRestart", { 0, requestRestart } },
-    { "__watchdogEnable", { 1, watchdogEnable } },
-    { "__watchdogRequestRestart", { 0, requestRestart } },
     { "std::memory::__memoryLiveBlocks", { 0, memoryLiveBlocks } },
     { "std::memory::__memoryPeakBytes", { 0, memoryPeakBytes } },
     { "std::lang::__rawStorage", { 6, rawStorage } },
-    { "std::memory::__arenaCreate", { 0, arenaCreate } },
-    { "std::memory::__arenaAllocate", { 2, arenaAllocate } },
-    { "std::memory::__arenaReset", { 1, arenaReset } },
-    { "std::memory::__arenaDrop", { 1, arenaDrop } },
     /* 装箱格子（obj）：值 + 类型号；也是接口指针（胖指针）的运行时表示 */
     { "__std_obj_new", { 0, objNew } },
     { "__std_obj_set", { -1, objSet } },

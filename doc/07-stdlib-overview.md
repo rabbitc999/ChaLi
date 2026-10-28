@@ -108,7 +108,6 @@ isObject=1 len=1
 | `std::process` | 进程与系统调用；命令管道由宿主管柄池持有 |
 | `std::clock` | 单调时钟 `steady_clock`，只做差值，不当挂钟用 |
 | `std::memory` | `Span<T>`（引用地址 + 长度视图）；它的迭代器返回**元素引用**，`for (T mut& p in span)` 可直接写 |
-| `std::watchdog` | 软重启看门狗（水位与超时两个维度都默认关闭），桌面与目标宿主共用一份实现 |
 
 ### 迭代
 

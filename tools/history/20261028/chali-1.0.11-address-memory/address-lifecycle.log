@@ -1,0 +1,2 @@
+malloc 64 cross-host-thread lifecycle rounds PASS
+pool 64 cross-host-thread lifecycle rounds PASS

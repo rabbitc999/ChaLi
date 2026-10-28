@@ -53,6 +53,7 @@ std::int64_t chali_invoke(std::int64_t function, std::int64_t count, const std::
 std::int64_t chali_function_returns_real(std::int64_t function);
 unsigned char chali_result_float();
 void chali_reset_slots();
+void chali_reset_address_view();
 void chali_host_tick(std::uint64_t steps);
 bool chali_program_abi_bind(chali_glue::Registry *registry, Memory::String *error);
 void chali_location(const char **file, std::int64_t *line, const void **function);
@@ -130,7 +131,6 @@ struct Runtime
     Program program;
     Memory::Vector<Memory::String> arguments;
     NativeContext context;
-    WatchdogRuntime watchdog;
     bool keepText = false;
     bool exiting = false;
     int exitCode = 0;
@@ -157,7 +157,6 @@ struct Runtime
         context.textSink = writeOutput;
         context.textKeep = &keepText;
         context.programArguments = &arguments;
-        context.watchdog = &watchdog;
         context.exitRequested = &exiting;
         context.exitCode = &exitCode;
         context.invoker = &invoker;
@@ -249,14 +248,6 @@ struct NativeCancelled
 };
 
 /**
- * @brief 原生子线程的可恢复终止信号。
- */
-struct NativeRestart
-{
-    int reason;
-};
-
-/**
  * @brief 原生子线程主动正常退出时保留的状态码。
  */
 struct NativeExit
@@ -278,6 +269,7 @@ struct ContextScope
      */
     ContextScope(NativeContext &context, execution_detail::DataCapacityIndex &capacity)
     {
+        chali_reset_address_view();
         nativeThreadState.activeContext = &context;
         nativeThreadState.activeDataCapacity = &capacity;
     }
@@ -286,6 +278,7 @@ struct ContextScope
      */
     ~ContextScope()
     {
+        chali_reset_address_view();
         nativeThreadState.activeContext = previous;
         nativeThreadState.activeDataCapacity = previousCapacity;
     }
@@ -303,7 +296,6 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
     auto &root = current();
     Memory::AllocationScope allocation(root.arena.get());
     NativeContext context = root.context;
-    WatchdogRuntime watchdog;
     execution_detail::DataCapacityIndex capacityIndex(&data);
     ContextScope scope(context, capacityIndex);
     Heap heap;
@@ -315,7 +307,6 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
     context.heap = &heap;
     context.data = &data;
     context.objects = &objects;
-    context.watchdog = &watchdog;
     context.machine = &machine;
     context.programArguments = &arguments;
     context.exitRequested = &exiting;
@@ -342,11 +333,6 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
             if (initial && initial->isFloat()) std::memcpy(&bits, &initial->floating, sizeof(bits));
             if (context.error.empty()) chali_invoke(static_cast<std::int64_t>(address), initial ? 1 : 0, initial ? &bits : nullptr);
         }
-    } catch (const NativeRestart &restart)
-    {
-        result.recoverable = true;
-        result.recoverableReason = restart.reason;
-        watchdog.period = 0;
     } catch (const NativeExit &exit)
     {
         result.exitCode = exit.code;
@@ -382,6 +368,7 @@ extern "C" {
 void chali_host_init()
 {
     if (runtime) chali_panic("原生模块已经初始化");
+    chali_reset_address_view();
     nativeThreadState.logicalSteps = 0;
     nativeThreadState.nativeCleanup = false;
     nativeThreadState.nativeResultFloat = 0;
@@ -457,8 +444,10 @@ void chali_host_trace()
  */
 void chali_host_finish()
 {
+    chali_reset_address_view();
     delete runtime;
     runtime = nullptr;
+    chali_reset_address_view();
 }
 
 /**
@@ -477,29 +466,21 @@ void chali_host_poll()
 }
 
 /**
- * @brief 在使用看门狗的程序中按当前函数的逻辑指令预算推进安全点。
- * @param steps 当前四元式对应的逻辑指令数；零只观察显式重启请求。
- * @note 未使用看门狗的程序不生成逐四元式调用。
+ * @brief 检查显式步数上限和分配失败，缺省路径不查询线程局部计数。
+ * @param steps 本次执行推进的逻辑操作数，零仅检查已发生的错误与显式上限。
  */
 void chali_host_tick(std::uint64_t steps)
 {
+    auto &failure = Memory::allocationFailureSignal();
+    if (steps == 0 && chali_step_limit == 0 && !failure.pending()) return;
     if (nativeThreadState.nativeCleanup) return;
-    if (chali_step_limit && nativeThreadState.logicalSteps >= chali_step_limit) chali_panic("执行步数超过上限");
-    auto &context = currentContext();
-    auto *watchdog = context.watchdog;
-    if (watchdog && watchdog->period)
+    if (failure.pending())
     {
-        watchdog->now = nativeThreadState.logicalSteps;
-        if (!watchdog->deadline)
-            watchdog->deadline = watchdog->period > UINT64_MAX - nativeThreadState.logicalSteps ? UINT64_MAX : nativeThreadState.logicalSteps + watchdog->period;
-        if (nativeThreadState.logicalSteps >= watchdog->deadline) Memory::restartSignal().requestRestart();
+        if (currentContext().threadId != 0) throw std::bad_alloc();
+        chali_panic("运行时内存分配失败或预算不足");
     }
-    if (Memory::restartSignal().pending())
-    {
-        const auto reason = Memory::restartSignal().reason();
-        if (context.threadId != 0) throw NativeRestart{ static_cast<int>(reason) };
-        chali_panic(reason == Memory::WatchdogReason::ExplicitRequest ? "软重启：程序显式请求重启（可恢复终止）" : "软重启：ChaLi 运行内存池用尽（可恢复终止）");
-    }
+    if (chali_step_limit && nativeThreadState.logicalSteps >= chali_step_limit)
+        chali_panic("执行步数超过上限");
     nativeThreadState.logicalSteps = steps > UINT64_MAX - nativeThreadState.logicalSteps ? UINT64_MAX : nativeThreadState.logicalSteps + steps;
 }
 
@@ -565,6 +546,36 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
         return const_cast<unsigned char *>(context.data->binary.data()) + at;
     if (address >= 0 && context.heap)
         if (auto *bytes = static_cast<Heap *>(context.heap)->borrowBytes(at, count)) return bytes;
+    chali_panic("访问未分配或已释放的内存");
+    return nullptr;
+}
+
+/**
+ * @brief 为 LLVM 地址原语建立已验证的连续视图，缓存失效时使用现有分配索引。
+ * @param address 本次逻辑地址。
+ * @param count 必须可访问的完整字节数。
+ * @param view 当前线程的非空 LLVM 视图存储，只在本次调用写入，不保留指针。
+ * @return 验证成功后的物理地址，失效时按原诊断终止。
+ */
+unsigned char *chali_host_address_view(std::int64_t address, std::size_t count, Heap::AddressView *view)
+{
+    static_assert(sizeof(Heap::AddressView) == 40 && offsetof(Heap::AddressView, stamp) == 32,
+                  "AOT 地址视图必须与 64 位 LLVM 布局一致");
+    static_assert(std::atomic<std::uint64_t>::is_always_lock_free && sizeof(std::atomic<std::uint64_t>) == 8,
+                  "LLVM 地址原语要求原生无锁的 64 位映射代次");
+    auto &context = currentContext();
+    auto *heap = static_cast<Heap *>(context.heap);
+    const auto at = static_cast<std::size_t>(address);
+    if (context.data && address >= 0 && at < context.data->binary.size() && count <= context.data->binary.size() - at)
+    {
+        auto *bytes = const_cast<unsigned char *>(context.data->binary.data());
+        const auto *revision = heap ? heap->mappingRevision() : nullptr;
+        *view = { 0, context.data->binary.size(), bytes, revision,
+                  revision ? revision->load(std::memory_order_acquire) : 0 };
+        return bytes + at;
+    }
+    if (address >= 0 && heap)
+        if (auto *bytes = heap->borrowView(at, count, *view)) return bytes;
     chali_panic("访问未分配或已释放的内存");
     return nullptr;
 }

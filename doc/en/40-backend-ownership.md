@@ -17,7 +17,7 @@ The lowering layer keeps only ChaLi-specific fast paths that LLVM cannot replace
 - A validated address is reused only on a straight-line path with an unchanged address symbol and exact access width. Calls, allocation, release, control-flow boundaries and stores invalidate the relevant facts.
 - Eligible tiny internal AOT functions receive inline hints. A function value proven to name an environment-free function on the current straight-line path can use a direct call. Unknown targets, captured environments and facts invalidated by reentry retain the existing protocol.
 
-Watchdog paths conservatively disable fast paths without a proof of equivalent logical safety points. Existing division, overflow and shift semantics remain enabled.
+Explicit step limits retain logical operation checks; default execution permits the normal fast paths. Existing division, overflow and shift semantics remain enabled.
 
 ## Comparison switches
 

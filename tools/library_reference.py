@@ -105,7 +105,7 @@ def behavior(entry):
         return '在 SQLite 中绑定并执行一条 SqlStatement，严格检查参数数量并返回独立结果；其他后端报告不支持参数化执行。'
     if module == 'std::cas':
         return comment_text(entry['comment'])
-    if module in ('std::thread','std::concurrency','std::event','std::message','std::watchdog'):
+    if module in ('std::thread','std::concurrency','std::event','std::message'):
         if name in CONCURRENCY_BEHAVIOR: return CONCURRENCY_BEHAVIOR[name]
         if module=='std::event' and name=='stop': return '删除定时源及其未接收通知，重复停止安全。'
         if name=='close': return '关闭队列并停止定时源；已排队的值先排空，再返回 CLOSED。'
@@ -126,7 +126,7 @@ def behavior(entry):
         return ('释放对象拥有的资源，调用后遵守本模块失效规则。' if name=='drop' else '关闭底层资源；文档节点会使同文档所有视图失效。')
     if name=='create' or name==owner:
         if owner=='Channel' and module=='std::collections': return '创建当前线程内的本地值队列。'
-        return {'Channel':'创建指定容量的跨线程通道。', 'AtomicInt64':'创建 int64 原子槽。', 'ThreadPool':'创建固定数量工作线程和有界任务队列。', 'ThreadGroup':'创建负责回收子任务的线程组。', 'Shared':'创建值为 value 的原子共享槽。', 'Arena':'创建独立 arena。', 'Timer':'以纳秒周期创建停止态定时器。'}.get(owner, '创建'+(owner or '隔离线程')+'，返回可供后续操作的值。')
+        return {'Channel':'创建指定容量的跨线程通道。', 'AtomicInt64':'创建 int64 原子槽。', 'ThreadPool':'创建固定数量工作线程和有界任务队列。', 'ThreadGroup':'创建负责回收子任务的线程组。', 'Shared':'创建值为 value 的原子共享槽。', 'Timer':'以纳秒周期创建停止态定时器。'}.get(owner, '创建'+(owner or '隔离线程')+'，返回可供后续操作的值。')
     if name=='of': return {'Pair':'按 first、second 创建二元值。', 'Complex':'按 real、imag 创建复数值。'}.get(owner,'组合给定字段创建值。')
     if name in ('send','receive','push','pop','open','read','write','flush','seek','parse'):
         if module=='std::net': return {'send':'发送 TCP 文本并返回发送结果。','receive':'读取至多 maxBytes 字节；空串结合 status 判断原因。'}[name]
@@ -185,7 +185,7 @@ def render(data):
         'math': ['std::math','std::cas','std::complex','std::linalg','std::numerics','std::numtheory','std::signal','std::random'],
         'io': ['std::io','std::path','std::cli','std::net','std::sql','std::process'],
         'concurrency': ['std::concurrency','std::thread','std::message','std::event'],
-        'system': ['std::memory','std::clock','std::datetime','std::watchdog','std::probe'],
+        'system': ['std::memory','std::clock','std::datetime','std::probe'],
     }.items() for name in names}
     index=['# 库函数 API 参考手册', '', '采用 C/C++ 参考手册常见的组织方式：模块 → 类型 → 函数/重载，逐项列出声明、参数、返回值、行为、边界及调用形式。语法仍为 ChaLi，不是 C++。', '',
            '覆盖工具链自带的 `std::lang`、`std`、`std::*` 与可选 `std::reflect`；编译器注入的算法和核心容器另有来源标记。`__` 前缀胶水是实现细节，不作为应用 API。底层 C++ 依赖库与宿主 C ABI 见[宿主集成](../08-host-integration.md)。', '',

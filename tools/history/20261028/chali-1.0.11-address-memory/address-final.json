@@ -1,0 +1,133 @@
+{
+  "compiler_sha256": "c56b7d2545e2a41bc40c2d9752edcd32cfa816d4ae87c1af63ea517d6b020b09",
+  "results": [
+    {
+      "allocator": "malloc",
+      "disabled": false,
+      "case": "raw_pointer",
+      "code": 0,
+      "stdout": "raw pointer OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "malloc",
+      "disabled": false,
+      "case": "raw_storage",
+      "code": 0,
+      "stdout": "raw storage OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "malloc",
+      "disabled": false,
+      "case": "released",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-released.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "malloc",
+      "disabled": false,
+      "case": "outside",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-outside.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "malloc",
+      "disabled": true,
+      "case": "raw_pointer",
+      "code": 0,
+      "stdout": "raw pointer OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "malloc",
+      "disabled": true,
+      "case": "raw_storage",
+      "code": 0,
+      "stdout": "raw storage OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "malloc",
+      "disabled": true,
+      "case": "released",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-released.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "malloc",
+      "disabled": true,
+      "case": "outside",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-outside.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "pool",
+      "disabled": false,
+      "case": "raw_pointer",
+      "code": 0,
+      "stdout": "raw pointer OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "pool",
+      "disabled": false,
+      "case": "raw_storage",
+      "code": 0,
+      "stdout": "raw storage OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "pool",
+      "disabled": false,
+      "case": "released",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-released.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "pool",
+      "disabled": false,
+      "case": "outside",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-outside.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "pool",
+      "disabled": true,
+      "case": "raw_pointer",
+      "code": 0,
+      "stdout": "raw pointer OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "pool",
+      "disabled": true,
+      "case": "raw_storage",
+      "code": 0,
+      "stdout": "raw storage OK\n",
+      "stderr": ""
+    },
+    {
+      "allocator": "pool",
+      "disabled": true,
+      "case": "released",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-released.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    },
+    {
+      "allocator": "pool",
+      "disabled": true,
+      "case": "outside",
+      "code": 1,
+      "stdout": "before fault\n",
+      "stderr": "chali aot: 访问未分配或已释放的内存\n出错位置：G:/Desktop/ChaLi/tmp/view-outside.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+    }
+  ]
+}

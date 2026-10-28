@@ -77,14 +77,14 @@ struct RunResult
     /**
      * @brief 是不是"可恢复终止"（分配失败等来自 VM 外部的停止原因）。
      *
-     * 目标宿主没有异常：分配失败在失败点只写标志（`Memory::restartSignal()`），VM 在
+     * 分配失败在失败点记录快照（`Memory::allocationFailureSignal()`），宿主在
      * 下一条指令边界（安全点）看到它就停在这里并把本轮标成可恢复。宿主据此清标志、
      * 重置 arena（`Memory::BufferRuntimeArena::resetForRestart()` / `mcuMetadataResetForRestart()`）
      * 后重跑——这就是软重启触发器之一；`ok == false` 的普通运行错误不带这个标记。
      */
     bool recoverable = false;
     /**
-     * @brief 可恢复终止的原因（`Memory::WatchdogReason` 的整数值）；不可恢复时为 0。
+     * @brief 可处理分配失败的原因（`Memory::AllocationFailureReason` 的整数值）；不可恢复时为 0。
      */
     int recoverableReason = 0;
     int exitCode = 0;                       ///< 正常停机状态码（`exit(n)`；普通 halt 为 0）。

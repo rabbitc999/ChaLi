@@ -875,9 +875,6 @@
 | [std::math::sqrt](std-math.md#api-10) | `let sqrt<T>(T value)` |
 | [std::math::tan](std-math.md#api-3) | `let tan<T>(T value)` |
 | [std::math::trunc](std-math.md#api-14) | `let trunc<T>(T value)` |
-| [std::memory::Arena::allocate](std-memory.md#api-6) | `Span<char> allocate(int64 bytes)` |
-| [std::memory::Arena::create](std-memory.md#api-5) | `static Arena create()` |
-| [std::memory::Arena::reset](std-memory.md#api-7) | `void reset()` |
 | [std::memory::Memory::stats](std-memory.md#api-4) | `static MemoryStats stats()` |
 | [std::memory::Span::from](std-memory.md#api-0) | `static Span<T> from(T mut& data, int64 length)` |
 | [std::memory::Span::index](std-memory.md#api-1) | `T index(int64 key)` |
@@ -1234,10 +1231,3 @@
 | [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,Utf8Error> encodeUtf8Bytes(List<uint32> points)` |
 | [std::utf8::isValidUtf8](std-utf8.md#api-3) | `bool isValidUtf8(String text)` |
 | [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,Utf8Error> sliceCodePoints(String text, int64 start, int64 count)` |
-| [std::watchdog::WatchdogError::toString](std-watchdog.md#api-0) | `String toString()` |
-| [std::watchdog::disableTimeout](std-watchdog.md#api-6) | `void disableTimeout()` |
-| [std::watchdog::enable](std-watchdog.md#api-1) | `Result<int64, WatchdogError> enable(int64 watermarkBytes)` |
-| [std::watchdog::enableTimeout](std-watchdog.md#api-3) | `Result<int64, WatchdogError> enableTimeout(int64 units)` |
-| [std::watchdog::enableTimeoutMillis](std-watchdog.md#api-4) | `Result<int64, WatchdogError> enableTimeoutMillis(int64 millis)` |
-| [std::watchdog::kick](std-watchdog.md#api-5) | `Result<bool, WatchdogError> kick()` |
-| [std::watchdog::requestRestart](std-watchdog.md#api-2) | `Result<int64, WatchdogError> requestRestart()` |

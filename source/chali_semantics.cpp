@@ -81,11 +81,6 @@ bool g_abiNoCache = false;
 bool g_reflectionEnabled = false;  ///< 本次编译显式启用的注解与反射开关。
 std::size_t g_runtimeMemory = Memory::defaultRuntimeCapacity;
 std::size_t g_runtimePeak = 0;
-/* 可选软重启看门狗（PC 宿主）：默认关闭，由宿主 / CLI 用 `M_SetWatchdog` 打开。
- * 关闭时行为与从前逐字节一致（可恢复终止按普通运行错误报）。 */
-int g_watchdogEnabled = 0;
-int g_watchdogMaxRestarts = 3;
-std::size_t g_watchdogWatermarkBytes = 0u;
 
 
 /**
@@ -3491,23 +3486,6 @@ void M_SetRuntimeMemory(std::size_t bytes) { g_runtimeMemory = bytes; }
  * @retval 以字节为单位的内存容量或占用量。
  */
 std::size_t M_RuntimePeakBytes() { return g_runtimePeak; }
-
-/**
- * @brief 配置可选软重启看门狗（下次 `M_Compile` 执行时生效）。
- *
- * 默认关闭：`enabled` 为 0 时行为与从前逐字节一致（可恢复终止按普通运行错误报）。
- * 打开后宿主每轮结束量一次内存水位，并在**分配失败 / 程序显式请求 / 超过水位**时
- * 清干净、复用缓冲区重跑，最多 `maxRestarts` 次。
- * @param enabled 开关（0 = 关闭）。
- * @param maxRestarts 最多重启几次（负数按 0 处理）。
- * @param watermarkBytes 内存水位（字节；<= 0 = 只等分配失败 / 显式请求）。
- */
-void M_SetWatchdog(int enabled, int maxRestarts, int watermarkBytes)
-{
-    g_watchdogEnabled = enabled != 0 ? 1 : 0;
-    g_watchdogMaxRestarts = maxRestarts < 0 ? 0 : maxRestarts;
-    g_watchdogWatermarkBytes = watermarkBytes <= 0 ? 0u : static_cast<std::size_t>(watermarkBytes);
-}
 
 /**
  * @brief 设置程序执行使用的宿主原生函数注册表。

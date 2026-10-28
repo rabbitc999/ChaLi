@@ -89,10 +89,9 @@ void main()
     database.exec("insert into t values(42)");
     assert(database.exec("select value from t").count() == 42);
     database.close(); database.close(); assert(!database.isOpen());
-    Arena arena = Arena::create();
-    let span = arena.allocate(16);
+    char bytes[] = new[16];
+    let span = Span<char>::from(&bytes[0], 16);
     char mut& first = span.iterator(0).unwrap();
     first = 'a'; assert(span[0] == 'a');
-    arena.reset();
     println("opcode values: copy isolation, snapshots, cursors and owners OK");
 }

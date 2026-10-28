@@ -1,0 +1,98 @@
+[
+  {
+    "allocator": "malloc",
+    "cache_disabled": false,
+    "sample": "raw_pointer",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": false,
+    "sample": "raw_storage",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": false,
+    "sample": "released",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": false,
+    "sample": "outside",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": true,
+    "sample": "raw_pointer",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": true,
+    "sample": "raw_storage",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": true,
+    "sample": "released",
+    "passed": true
+  },
+  {
+    "allocator": "malloc",
+    "cache_disabled": true,
+    "sample": "outside",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": false,
+    "sample": "raw_pointer",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": false,
+    "sample": "raw_storage",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": false,
+    "sample": "released",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": false,
+    "sample": "outside",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": true,
+    "sample": "raw_pointer",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": true,
+    "sample": "raw_storage",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": true,
+    "sample": "released",
+    "passed": true
+  },
+  {
+    "allocator": "pool",
+    "cache_disabled": true,
+    "sample": "outside",
+    "passed": true
+  }
+]

@@ -245,7 +245,7 @@ void main()
 \par
 \medskip
 
-标准库的 JSON、TOML、图像、反射序列化和动态 SQL 的文本错误都使用 \texttt{Message\allowbreak{}Error}。文件接口使用 \texttt{Io\allowbreak{}Error}；编码、日期时间、CSV、命令行、正则表达式、UTF-8、看门狗和动态反射使用各自实现 \texttt{Error} 的具体类型。语言层的泛型 \texttt{Result} 仍允许应用自己选择错误载荷；供通用错误处理复用的应用错误也应实现 \texttt{Error}。
+标准库的 JSON、TOML、图像、反射序列化和动态 SQL 的文本错误都使用 \texttt{Message\allowbreak{}Error}。文件接口使用 \texttt{Io\allowbreak{}Error}；编码、日期时间、CSV、命令行、正则表达式、UTF-8 和动态反射使用各自实现 \texttt{Error} 的具体类型。语言层的泛型 \texttt{Result} 仍允许应用自己选择错误载荷；供通用错误处理复用的应用错误也应实现 \texttt{Error}。
 
 \section{四个「取出来」的工具，别用错场合}
 

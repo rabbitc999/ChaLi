@@ -87,7 +87,7 @@ Slot iterBox(NativeContext &ctx, const Memory::Vector<Slot> &args)
 std::size_t nativeAllocate(NativeContext &ctx, std::size_t bytes)
 {
     const auto address = ctx.heap->allocate(bytes);
-    if (!address) Memory::restartSignal().recordFailure(Memory::WatchdogReason::PoolExhausted, bytes,
+    if (!address) Memory::allocationFailureSignal().recordFailure(Memory::AllocationFailureReason::AllocatorExhausted, bytes,
                                                         ctx.heap->liveBytes(), ctx.heap->liveBlocks(), 0u);
     if (address && ctx.objects) ctx.objects->beginStorage(address, bytes, true);
     return address;

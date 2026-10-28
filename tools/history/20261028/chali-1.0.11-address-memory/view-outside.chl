@@ -1,0 +1,1 @@
+void main(){ std::lang::RawStorage<int64> storage=std::lang::RawStorage<int64>::allocate(1); int64 address=0; unsafe { std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(storage.pointer(0)); address=p.address; int64 mut& value=std::lang::dereference<int64>(p); *value=55; } println("before fault");  unsafe { int64 mut& bad=(int64 mut&)(address+8); println("{}",*bad); } }

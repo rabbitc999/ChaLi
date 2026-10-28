@@ -141,7 +141,7 @@ public:
     virtual bool owns(const void *pointer) const = 0;
     virtual Stats stats() const = 0;
     /**
-     * @brief 池的总容量（字节）；宿主堆模式没有容量概念时返回 0。诊断与软重启用。
+     * @brief 池的总容量（字节）；宿主堆模式没有容量概念时返回 0。用于内存预算诊断。
      */
     virtual std::size_t capacity() const { return 0; }
     /**
@@ -172,48 +172,43 @@ inline std::atomic<RuntimeAllocator *> &defaultRuntimeAllocatorSlot()
 inline RuntimeAllocator *defaultRuntimeAllocatorIfCreated() { return defaultRuntimeAllocatorSlot().load(); }
 
 /* ---------------------------------------------------------------------------
- *  软重启信号（桌面口径）
+ *  内存分配失败记录
  *
- *  分配失败记录原因并抛出 `std::bad_alloc`，宿主在执行边界决定是否恢复。
- *  显式重启请求由 VM 在安全点检查；信号不直接跳转或替换宿主控制流。
+ *  分配失败记录原因并抛出 `std::bad_alloc`，宿主在执行边界报告预算和活动量。
  *
  *  本对象不吃 ChaLi 池（纯 POD 成员），所以池耗尽之后仍然可读。
  * ------------------------------------------------------------------------- */
 
 /**
- * @brief 一次软重启的触发原因。
+ * @brief 一次内存分配失败的原因。
  */
-enum class WatchdogReason
+enum class AllocationFailureReason
 {
     None = 0,               ///< 没有触发。
-    PoolExhausted = 1,      ///< ChaLi 运行内存池（外部缓冲区 / 动态池）用尽。
-    HostHeapExhausted = 2,  ///< 保留历史重启原因编号，内存池不再使用宿主后备分配。
-    MemoryWatermark = 3,    ///< 跑完一轮后发现内存水位超限（宿主量，VM 只带原因号）。
-    ExplicitRequest = 4,    ///< 程序显式 `std::watchdog::requestRestart()`。
+    AllocatorExhausted = 1, ///< 运行时分配器无法满足请求或预算耗尽。
+    HostHeapExhausted = 2,  ///< 宿主分配器无法满足请求。
 };
 
 /**
- * @brief 一次触发（分配失败 / 显式请求）的快照；只在触发点**记录**。
+ * @brief 一次内存分配失败的快照，只在失败点记录。
  */
 struct AllocationFailure
 {
-    WatchdogReason reason = WatchdogReason::None;  ///< 触发原因。
-    std::size_t requestedBytes = 0;                ///< 这次申请了多少字节（显式请求时为 0）。
+    AllocationFailureReason reason = AllocationFailureReason::None;  ///< 触发原因。
+    std::size_t requestedBytes = 0;                ///< 本次请求的字节数。
     std::size_t liveBytes = 0;                     ///< 失败时池内还在用多少字节。
     std::size_t liveBlocks = 0;                    ///< 失败时池内还挂着几块。
     std::size_t capacity = 0;                      ///< 池总容量；宿主堆模式为 0。
-    std::uint64_t sequence = 0;                    ///< 第几次触发（从 1 开始，跨重启不复位）。
+    std::uint64_t sequence = 0;                    ///< 第几次触发（从 1 开始，跨分配不复位）。
 };
 
 /**
- * @brief 软重启的"信号位"：分配失败快照 + 显式重启请求 + 程序侧 `enable()` 的水位。
+ * @brief 保存分配失败快照及待处理状态，不包含显式重启或水位配置。
  *
- * 桌面可能多线程，所以字段用原子；`pending` 置位后保持到 `clear()`，宿主每次重启尝试前清一次。
+ * 桌面可能多线程，所以字段用原子；`pending` 置位后保持到 `clear()`，宿主处理失败后显式清除。
  */
-class RestartSignal
+class AllocationFailureSignal
 {
-    std::atomic<unsigned> enabled_{ 0u };
-    std::atomic<std::size_t> watermarkBytes_{ 0u };
     std::atomic<unsigned> reason_{ 0u };
     std::atomic<std::size_t> requestedBytes_{ 0 };
     std::atomic<std::size_t> liveBytes_{ 0 };
@@ -222,7 +217,15 @@ class RestartSignal
     std::atomic<std::uint64_t> sequence_{ 0 };
     std::atomic<unsigned> pending_{ 0u };
 
-    void note(WatchdogReason reason, std::size_t requestedBytes, std::size_t liveBytes,
+    /**
+     * @brief 发布一次不依赖动态分配的失败快照。
+     * @param reason 失败原因。
+     * @param requestedBytes 本次请求字节数。
+     * @param liveBytes 失败时活动字节数。
+     * @param liveBlocks 失败时活动块数。
+     * @param capacity 分配器预算。
+     */
+    void note(AllocationFailureReason reason, std::size_t requestedBytes, std::size_t liveBytes,
               std::size_t liveBlocks, std::size_t capacity)
     {
         reason_.store(static_cast<unsigned>(reason), std::memory_order_relaxed);
@@ -236,42 +239,12 @@ class RestartSignal
 
 public:
     /**
-     * @brief 程序侧 `std::watchdog::enable(watermarkBytes)`：打开看门狗并记下水位。
-     */
-    void enable(std::size_t watermarkBytes)
-    {
-        watermarkBytes_.store(watermarkBytes, std::memory_order_relaxed);
-        enabled_.store(1u, std::memory_order_release);
-    }
-    /**
-     * @brief 看门狗是否已经由程序打开。
-     */
-    [[nodiscard]] bool enabled() const { return enabled_.load(std::memory_order_acquire) != 0u; }
-    /**
-     * @brief 程序要的水位（字节）；0 = 不按水位判。
-     */
-    [[nodiscard]] std::size_t watermarkBytes() const
-    {
-        return watermarkBytes_.load(std::memory_order_relaxed);
-    }
-
-    /**
      * @brief 记一次分配失败；`pending` 置位后一直保持到 `clear()`。
      */
-    void recordFailure(WatchdogReason reason, std::size_t requestedBytes, std::size_t liveBytes,
+    void recordFailure(AllocationFailureReason reason, std::size_t requestedBytes, std::size_t liveBytes,
                        std::size_t liveBlocks, std::size_t capacity)
     {
         note(reason, requestedBytes, liveBytes, liveBlocks, capacity);
-    }
-    /**
-     * @brief 记一次**显式重启请求**（`std::watchdog::requestRestart()`）。
-     * @return 记下了返回 true；没 `enable()` 过返回 false（调用方据此报 `NotEnabled`）。
-     */
-    bool requestRestart()
-    {
-        if (!enabled()) return false;
-        note(WatchdogReason::ExplicitRequest, 0u, 0u, 0u, 0u);
-        return true;
     }
     /**
      * @brief 有没有待处理的触发。
@@ -280,9 +253,9 @@ public:
     /**
      * @brief 待处理触发的原因。
      */
-    [[nodiscard]] WatchdogReason reason() const
+    [[nodiscard]] AllocationFailureReason reason() const
     {
-        return static_cast<WatchdogReason>(reason_.load(std::memory_order_relaxed));
+        return static_cast<AllocationFailureReason>(reason_.load(std::memory_order_relaxed));
     }
     /**
      * @brief 读取触发快照（分配失败时才有意义）。
@@ -299,21 +272,21 @@ public:
         return failure;
     }
     /**
-     * @brief 已累计的触发次数（跨重启不复位）。
+     * @brief 已累计的触发次数（跨分配不复位）。
      */
     [[nodiscard]] std::uint64_t sequence() const { return sequence_.load(std::memory_order_relaxed); }
     /**
-     * @brief 清掉待处理位（**不动** `sequence` / `enabled` / 水位）。
+     * @brief 清除待处理位，保留失败计数和快照。
      */
     void clear() { pending_.store(0u, std::memory_order_release); }
 };
 
 /**
- * @brief 进程级软重启信号位，由宿主在执行边界检查。
+ * @brief 进程级分配失败状态，由宿主在错误边界检查。
  */
-inline RestartSignal &restartSignal()
+inline AllocationFailureSignal &allocationFailureSignal()
 {
-    static RestartSignal signal;
+    static AllocationFailureSignal signal;
     return signal;
 }
 
@@ -684,11 +657,10 @@ inline void *allocate(Memory::RuntimeAllocator *owner, std::size_t bytes, std::s
     void *p = owner->allocateAligned(bytes, alignment);
     if (!p)
     {
-        /* 软重启信号：**只记录**标志 + 原因（本对象不吃池，池耗尽后仍可读），
-         * 失败点的行为一如既往（打印 + 抛 `std::bad_alloc`）；宿主读信号决定这是不是
-         * "可恢复终止"。见本文件顶部的 `RestartSignal`。 */
+        /* 分配失败快照不依赖池；记录预算和活动量后抛出 std::bad_alloc，
+         * 由执行边界报告失败。 */
         const RuntimeAllocator::Stats stats = owner->stats();
-        restartSignal().recordFailure(WatchdogReason::PoolExhausted,
+        allocationFailureSignal().recordFailure(AllocationFailureReason::AllocatorExhausted,
                                       bytes, stats.liveBytes, stats.liveBlocks, owner->capacity());
         if (owner) std::fprintf(stderr, "运行时分配器：arena 用尽（要 %zu 字节）\n", bytes);
         throw std::bad_alloc();

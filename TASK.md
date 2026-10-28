@@ -13,7 +13,7 @@
 现状与依据：
 - runtime_windows.ll / runtime_linux.ll 已有 libc 直调先例：Windows `__acrt_iob_func(0/1/2)` + `fwrite`/`fgets`/`snprintf`，Linux `@stdin`/`@stdout`/`@stderr` 外部全局；并已定义 `chali_read_line`（fgets + 去 LF/CRLF，EOF 返回空串）、`chali_read_number`、`chali_string_of_double`、`chali_fmt_*`。
 - 编译器把 eprint/eprintln 降级为 `std::lang::__std_eprint`/`__std_eprintln`（formatted_output.cpp:70），把浮点插值降级为 `__std_str_of_flt`（boxing.cpp:1455，精度恒 3）；print/println 降级为 `__std_print("%s"/"%s\n", 字符串实参…)`（lowering.cpp:5087）。
-- AOT 字符串取 data/len 用 `chali_host_string_storage(1/0, handle)`；特判降级统一门控 `state.rawIntrinsics && !state.watchdogUsed`，否则回落 `chali_host_call`（胶水表保留作回退）。
+- AOT 字符串取 data/len 用 `chali_host_string_storage(1/0, handle)`；特判降级统一门控 `state.rawIntrinsics && !state.stepChecks`，否则回落 `chali_host_call`（胶水表保留作回退）。
 
 ## 待办（本轮目标版本 1.0.10）
 
@@ -31,7 +31,7 @@
 
 - std::lang 的标准流路径在 AOT 下不再经过 chali_host_call（可用生成 IR 核对直接出现 `@fwrite`/`@chali_read_line` 调用）。
 - 样例输出与改动前逐字节一致（文本比较忽略行尾空白）。
-- watchdog 开启时回落胶水路径仍可用。
+- 显式 --step-limit 开启时保留步数检查与回退路径。
 
 ## 追加授权：AST 直接生成 LLVM
 
@@ -111,3 +111,20 @@
 - [x] 用户追加短函数内联要求：基于已检查 AST 的调用依赖自底向上统计展开规模，排除直接／相互递归、间接调用及其调用者；短函数预算 48，标准操作包装预算 256，由 LLVM alwaysinline 展开，不生成四元式。五组分配器／检查／内联开关验证及调试模式通过，优化后动态参数路径中的 shortAdd 调用已消失；完整 AOT、C 回调、集合复制和两分配器 Hash 碰撞模型均通过。
 - [x] 保存短函数内联版七项只测 ChaLi 的原始结果及同编译器内联开关交错对照，目录 `benchmarks/results/1.0.11-ast-inline/`。七项输出及 38 个负载／计时壳摘要与复用参考一致；交错对照未复现 Set 明显退化，List 内联约快 1.3%，不宣称稳定大幅收益，继续优化地址解析与存储边界。
 - [x] 用户授权其他语言基线测过后不再重复测试：后续默认仅运行 `--only chali-aot`，复用已保存的 Lua／C++／Rust 原始测量；对照表明确标注来源时间与配置，先核对负载及计时壳摘要，负载变化时才重测受影响的参考项。
+- [x] LLVM 地址原语：命中已验证视图时以原子代次、完整范围检查和地址计算直接取得物理地址，分配／释放／收窄／重置／销毁使旧视图失效；模块级代次避免跨宿主线程重新初始化后访问已销毁堆的计数器，耗尽后永久回退。
+- [x] 修复合成标签与空循环的控制点，显式 --step-limit 空循环、八个运行时样例及四类陷阱通过。旧看门狗超时诊断与旧模块证据保留；用户随后要求删除模块，当前执行控制按步数限制验收。
+
+### 追加授权：参考其他语言的 AST／LLVM 翻译
+
+- [x] 查阅官方 [Clang InternalsManual](https://clang.llvm.org/docs/InternalsManual.html) 的标量／聚合、值／地址路径，以及 [Rust OperandValue](https://doc.rust-lang.org/stable/nightly-rustc/rustc_codegen_ssa/mir/operand/enum.OperandValue.html) 的 Immediate／Pair／Ref 表示；参考实现思路，不恢复已删除的四元式转换或复制其他项目代码。
+- [ ] 优先把集合原语的标量结果保留为数值与种类标记，减少通用 NativeValue／文本封送及额外线程局部 getter；核对浮点位模式、同步回调重入、错误及旧边界兼容。
+- [ ] 评估不逃逸的小聚合与局部数组按需地址化及直接 LLVM 存储；证明借用、存活、实际访问范围、析构和回调语义后再启用，不能把逻辑地址无条件解释为宿主物理地址。
+
+### 追加授权：删除看门狗及标准库 Arena
+
+- [x] 用户要求删除 std::watchdog 模块及 std::memory::Arena；移除语言接口、宿主登记、专用对象状态、示例与当前文档。Arena 示例以 new 与作用域释放替代。
+- [x] 保留系统 malloc／pool 选项及其内部实现类型；分配失败快照独立于重启机制，继续报告内存预算失败。
+- [x] 重新生成解析器、标准库／文档资产和编译器；删除入口、new 示例、两种预算错误、显式 --step-limit 空循环、完整 AOT／回调／线程及值语义验证通过。
+- [x] 同步中文书稿 Markdown、LaTeX 和 301 页 PDF，59 个完整程序及 6 个失败示例通过；证据保存于 `tools/history/20261028/chali-1.0.11-address-memory/`。
+- [ ] 清理 tmp，中文提交推送本轮代码，随后只测 ChaLi 七项性能并提交原始结果。
+- 空循环旧看门狗超时的历史诊断仍保留；看门狗模块删除后，以显式 --step-limit 的控制点验证覆盖相应执行预算行为，不再维护旧模块测试。

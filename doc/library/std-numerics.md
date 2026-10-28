@@ -103,7 +103,7 @@ generic matrix numerics number theory OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-348"></a>`struct Numerics` | 数值计算算法的静态入口。 |
+| 模块 | <a id="symbol-347"></a>`struct Numerics` | 数值计算算法的静态入口。 |
 
 ## 函数索引
 

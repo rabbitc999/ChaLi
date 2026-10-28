@@ -145,8 +145,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 | [`std::clock`](../library/std-clock.md) | 单调时钟 `steady_clock`，只用来做差值，别当挂钟用 |
 | [`std::datetime`](../library/std-datetime.md) | `DateTime`、UTC 公历日期、Unix 秒、格式化和解析；不表示闰秒 |
 | [`std::cli`](../library/std-cli.md) | 长短选项、组合短选项、位置参数、`--` 分隔、参数查询和帮助生成 |
-| [`std::memory`](../library/std-memory.md) | `Span<T>` 借用视图、`MemoryStats` 和独占 `Arena`；arena 重置使已有视图失效 |
-| [`std::watchdog`](../library/std-watchdog.md) | 软重启看门狗（水位与超时两个维度都默认关闭），桌面与目标宿主共用一份实现 |
+| [`std::memory`](../library/std-memory.md) | `Span<T>` 借用视图与 `MemoryStats`；缓冲区用 `new` 分配，视图受底层存储有效期约束 |
 
 ### 迭代
 
@@ -161,7 +160,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 ## B.4 三条容易踩的约定
 
 **一、资源按类型的生命周期管理。** 拥有型对象按 `Drop` 约定自动释放，提前释放使用类型提供的接口。
-不能假定所有对象都有相同的 `close()` 或重复关闭行为。独占文件、连接、进程和 arena 不能随意复制；
+不能假定所有对象都有相同的 `close()` 或重复关闭行为。独占文件、连接和进程不能随意复制；
 转移所有权写 `move value`。复制是否深复制、借用何时失效，查对应类型的参考页。
 
 **二、压缩结果是二进制，不是文本。** `std::compress` 的输出含 `\0` 字节，类型是

@@ -347,7 +347,6 @@ void PrintUsage(std::FILE *out)
              "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
              "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
              "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
-             "  --no-watchdog          关闭软重启看门狗（缺省）\n",
              "  --out 前缀             生成产物的文件名前缀（缺省 .chali/chali_out）\n",
              "  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n",
              "  --raw                  跳过前处理：源文件原样喂给解析器\n",
@@ -1533,7 +1532,7 @@ try
 } catch (const std::bad_alloc &)
 {
     // 失败快照不使用池内存，耗尽后也能保留真实的容量、活动量与申请量。
-    const auto failure = Memory::restartSignal().peek();
+    const auto failure = Memory::allocationFailureSignal().peek();
     std::fprintf(stderr, CHALI_TEXT("chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n"),
                  failure.capacity, failure.liveBytes, failure.requestedBytes);
     return 1;

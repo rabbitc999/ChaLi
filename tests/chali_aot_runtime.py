@@ -15,7 +15,7 @@ SAMPLES = [
     'std_io_extended', 'std_lang', 'std_linalg_solve_glue', 'std_linkedlist',
     'std_math_clock_random', 'std_net', 'std_numerics_number_theory',
     'std_parse_random_path_memory', 'std_process_probe', 'std_red_black_delete',
-    'std_string_builder', 'std_text_kmp', 'watchdog_timeout',
+    'std_string_builder', 'std_text_kmp',
 ]
 
 
@@ -80,13 +80,12 @@ def main():
             assert result.returncode != 0 and result.stdout == reference.stdout and diagnostic in result.stderr, result
             print('checked run／AOT 陷阱与输出时机通过：' + name, flush=True)
         for name, source_text, expected, diagnostic in [
-            ('watchdog_expired', 'import std::watchdog;\nvoid main() { println("before stop"); std::watchdog::enableTimeout(10000); while (true) {} }', 'before stop\n', '软重启'),
-            ('watchdog_requested', 'import std::watchdog;\nvoid main() { std::watchdog::enable(0); println("before stop"); std::watchdog::requestRestart(); println("after stop"); }', 'before stop\n', '软重启'),
+            ('step_limit', 'void main() { println("before stop"); while (true) {} }', 'before stop\n', '执行步数超过上限'),
         ]:
             source = work / (name + '.chl')
             source.write_text(source_text, encoding='utf-8')
             prefix = work / name
-            flags = []
+            flags = ['--step-limit', '1000']
             reference = execute([compiler, 'run', source, '--out', str(prefix) + '-vm', *flags])
             assert reference.stdout == expected and diagnostic in reference.stderr, reference
             built = execute([compiler, 'aot', source, '--out', prefix, *flags])

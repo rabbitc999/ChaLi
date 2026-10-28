@@ -410,13 +410,13 @@ chali: [CHL1205] 借用来源已释放，不能继续访问：表达式
 
 \begin{itemize}
 
-\item PC 上默认内存池 512 MiB（可用 \texttt{-\allowbreak{}-\allowbreak{}memory-\allowbreak{}size 字节} 调整，最小 64）；
+\item PC 上默认运行时内存预算 512 MiB（可用 \texttt{-\allowbreak{}-\allowbreak{}memory-\allowbreak{}size 字节} 调整，最小 64）；系统 \texttt{malloc} 为缺省分配器，也可用 \texttt{-\allowbreak{}-\allowbreak{}allocator pool} 选择内存池；
 
 \item 嵌入式目标按板子配置，见第 24 章。
 
 \end{itemize}
 
-长时间运行的服务可以用 \texttt{std:\allowbreak{}:\allowbreak{}watchdog} 开「软重启」：内存申请失败、显式请求重启、越过内存水位、或开启超时后整整一个周期没 \texttt{kick(\allowbreak{})\allowbreak{}} 时，重启自身逻辑而不杀进程。
+长时间运行的服务通过普通作用域释放每轮逻辑拥有的资源；需要限制执行预算时，可显式设置 \texttt{-\allowbreak{}-\allowbreak{}step-\allowbreak{}limit}。内存分配失败会报告预算错误，应用或宿主按业务需要处理进程生命周期。
 
 最后说清它不做什么。 ChaLi 不试图消除所有错误。它针对性地消除三类：
 

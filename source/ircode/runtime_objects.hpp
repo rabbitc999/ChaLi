@@ -22,7 +22,6 @@ enum class ObjectKind
     NativeRecord,  ///< 不透明宿主记录，语义由胶水及描述符回调维护。
     Obj,           ///< 装箱格子（obj）：一个值 + 它的类型号
     RawStorage,    ///< 显式初始化状态与类型身份的原始存储。
-    Arena,         ///< 批量持有字节堆分配的标准库 Arena
     Closure,       ///< 类型化函数入口和可写借用的捕获环境
 };
 
@@ -80,8 +79,6 @@ struct RuntimeObject
     std::int64_t iteratorLayout = 0;  ///< 状态叶子布局字符串地址。
     bool iteratorStateBox = false;    ///< 专用迭代状态箱拥有单元素存储。
     NativeContext iteratorContext;    ///< 迭代状态或 copy 捕获单元的堆与对象表，供复制和清理使用。
-    /// Arena：由该 arena 持有、reset/drop 时成批释放的字节堆地址。
-    Memory::Vector<std::size_t> arenaBlocks;
     std::shared_ptr<RawStorageState> rawStorage; ///< 仅 RawStorage 使用的存储及初始化状态。
 };
 

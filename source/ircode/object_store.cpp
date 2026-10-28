@@ -26,7 +26,6 @@ namespace runtimeDetail
     case ObjectKind::Closure: return "lambda";
     case ObjectKind::Obj: return "obj";
     case ObjectKind::RawStorage: return "raw storage";
-    case ObjectKind::Arena: return "arena";
     }
     return "?";
 }
@@ -207,7 +206,7 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
         copy->identity = identity;
         return copy;
     }
-    if (object.kind == ObjectKind::Arena || object.kind == ObjectKind::RawStorage)
+    if (object.kind == ObjectKind::RawStorage)
     {
         if (error != nullptr)
         {

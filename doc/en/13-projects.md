@@ -20,7 +20,7 @@ is written `chali`).
 | [Turtle graphics](#31-turtle-graphics-turtle_winapi) | [`doc/examples/turtle_winapi/`](../examples/turtle_winapi/) | `abi` blocks + shared library + GDI canvas | Windows + MinGW |
 | [Calculator (two ASTs)](#51-calculator-two-asts) | [`example/calculator/`](../../example/calculator/) | Recursive-descent parsing, recursive ownership under value semantics | none |
 | [Annotations and reflection](#53-annotations-and-reflection) | [`example/reflection/`](../../example/reflection/) | Compile-time annotations, runtime metadata queries | reflection build macros |
-| [Standard library companions](#54-standard-library-companions) | [`doc/examples/library/`](../examples/library/) | Four runnable programs: io / sqlite / watchdog / reflect | some need reflection |
+| [Standard library companions](#54-standard-library-companions) | [`doc/examples/library/`](../examples/library/) | Three runnable programs: io / sqlite / reflect | some need reflection |
 | [C ABI companions](#55-c-abi-companions) | [`doc/examples/abi_buffers/`](../examples/abi_buffers/), [`abi_dynamic/`](../examples/abi_dynamic/) | Static buffers vs. dynamic library bindings | a C compiler |
 | [Synchronous callbacks](../../example/native-callbacks/README.md) | [`example/native-callbacks/`](../../example/native-callbacks/) | C calling ChaLi function values under AOT: named functions, closures, references, reentry | a C compiler |
 | [Editor language servers](#62-editor-language-servers-and-the-vs-code-extension) | [`source/lsp/`](../../source/lsp), [`vscode/`](../../vscode/) | Macro pairing checks, semantic highlighting, real diagnostics | none / VS Code |
@@ -133,9 +133,8 @@ chali --reflection example/reflection/annotations.chl --out build/annotation-exa
 ### 5.4 Standard library companions
 
 **What it demonstrates**: library usage that needs a little project layout.
-[`doc/examples/library/`](../examples/library/) holds four: `io.chl` (file create / write / flush /
-seek), `sqlite.chl` (in-memory SQLite and Unicode strings), `watchdog.chl` (disabled and
-over-watermark branches) and `source/std/reflect.chl` (type and struct-field queries).
+[`doc/examples/library/`](../examples/library/) holds three: `io.chl` (file create / write / flush /
+seek), `sqlite.chl` (in-memory SQLite and Unicode strings), `source/std/reflect.chl` (type and struct-field queries).
 
 **How to run them**:
 

@@ -1,0 +1,5 @@
+/** 显式步数上限必须约束空循环，缺省执行不生成逐操作安全点。 */
+void main() {
+    println("before stop");
+    while (true) {}
+}

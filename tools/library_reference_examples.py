@@ -38,7 +38,6 @@ EXAMPLES = {
     'std::text':'example/samples/std_glue_edges.chl',
     'std::thread':'example/samples/thread_messages.chl',
     'std::toml':'example/samples/std_structured_data.chl',
-    'std::watchdog':'doc/examples/library/watchdog.chl',
 }
 
 # 同模块的新接口复用正式样例，仍由同一生成器写入网页和内嵌数据。
