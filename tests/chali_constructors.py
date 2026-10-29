@@ -41,6 +41,37 @@ class ConstructorTests(unittest.TestCase):
     def test_early_return_and_default(self):
         self.program('\nstruct Value {\n    int64 number;\n    static Value create(bool early) {\n        self.number=1;\n        if(early) { return; }\n        self.number=2;\n    }\n};\nstruct Partial {\n    int64 number;\n    static Partial create(bool set) { if(set) { self.number=7; } }\n};\nvoid main(){\n    Value unused;assert(unused.number==0);\n    Value a=Value::create(true);Value b=Value::create(false);\n    assert(a.number==1 && b.number==2);\n    {\n        int64 i=0;\n        while (i<10) {\n\n        Partial first=Partial::create(true);assert(first.number==7);\n        Partial second=Partial::create(false);assert(second.number==0);\n    \n            i=i+1;\n        }\n    }\n    return;\n}')
 
+    def test_explicit_self_return(self):
+        self.program('''
+struct Owned : Drop {
+    static int64 drops;
+    String text;
+    static Owned create(bool early) {
+        self.text="first";
+        if (early) { return self; }
+        self.text="second";
+        return self;
+    }
+    void drop() { Owned::drops=Owned::drops+1; }
+};
+struct Cell<T> {
+    T value;
+    static Cell<T> create(T value) { self.value=value; return self; }
+};
+enum State {
+    Empty, Text(String value);
+    static State create() { self=State::Text("enum"); return self; }
+};
+void main() {
+    { Owned a=Owned::create(true); Owned b=Owned::create(false);
+      assert(a.text=="first" && b.text=="second" && Owned::drops==0); }
+    assert(Owned::drops==2);
+    let c=Cell::create("generic"); assert(c.value=="generic");
+    State state=State::create();
+    match(state) { State::Text(value)=>{assert(value=="enum");} State::Empty=>{assert(false);} }
+}
+''')
+
     def test_reflection(self):
         if not WITH_REFLECTION:
             self.skipTest('使用 --reflection 验证已开启反射宏的编译器')

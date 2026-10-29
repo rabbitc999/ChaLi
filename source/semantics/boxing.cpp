@@ -3455,6 +3455,10 @@ ast::NodePtr LowerStmtImpl(int id)
         return nullptr;
     case MNode::Return:
     {
+        // 构造入口的 self 由调用方持有，显式返回只结束初始化，不复制或转移接收者。
+        if (g_namedConstructorBody && node.kids.size() == 1u
+            && N(node.kids[0]).kind == MNode::Var && N(node.kids[0]).s == "self")
+            return LowerStmt(M_Return(-1));
         if (!node.kids.empty()) InferExpression(node.kids[0], g_returnType);
         Memory::Set<Memory::String> borrowedTypes;
         if (!node.kids.empty() && ContainsBorrowedReferences(g_returnType, &borrowedTypes))
@@ -3878,9 +3882,12 @@ bool ValidateReturnForms(int statementId, const std::shared_ptr<MType> &result)
     switch (statement.kind)
     {
     case MNode::Return:
+        if (g_namedConstructorBody && statement.kids.size() == 1u
+            && N(statement.kids[0]).kind == MNode::Var && N(statement.kids[0]).s == "self")
+            return true;
         if (result && result->kind == MType::Void && !statement.kids.empty())
-            return Fail(g_namedConstructorBody ? Memory::String("`static T create(...)` 构造入口体内不要写 `return`："
-                                                                "往 `self`（或 `self.字段`）写值即可，返回值由调用点接住") :
+            return Fail(g_namedConstructorBody ? Memory::String("`static T create(...)` 只允许 `return;` 或 `return self;`："
+                                                                "返回值由调用点接住") :
                                                  Memory::String(CHALI_TEXT("void 函数不能返回值")));
         if (result && result->kind != MType::Void && statement.kids.empty())
             return Fail("返回类型为 " + Describe(result) + " 的函数必须返回一个值");
