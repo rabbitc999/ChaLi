@@ -1,0 +1,14 @@
+配置 1 个：chali-aot
+  构建 chali-aot/list_growth …
+  chali-aot  list_growth  中位    69.951 ms
+
+| 配置 | 各语言均从空容器动态增长，再遍历归并 |
+| --- | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 69.951 |
+
+相对 ChaLi 1.0.11（LLVM AOT，unchecked 导出） 的倍数：
+| 配置 | 各语言均从空容器动态增长，再遍历归并 ÷ ChaLi 1.0.11（LLVM AOT，unchecked 导出） |
+| --- | ---: |
+| ChaLi 1.0.11（LLVM AOT，unchecked 导出） | 1.00 |
+
+结果目录：benchmarks\results\1.0.11-numeric-list-inplace
