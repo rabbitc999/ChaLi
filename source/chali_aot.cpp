@@ -274,6 +274,7 @@ struct Translator
     bool cacheAddresses = true;                                   ///< 只在无失效屏障的直线路径复用已验证地址。
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
+    bool numericListAppend = true;                                ///< 数值 List 追加合并结构检查、容量增长和单槽写入。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
     bool objectCopyScalars = true;                                ///< 对象复制复用标量入口，不构造通用实参向量。
@@ -309,6 +310,8 @@ struct Translator
         cacheAddresses = !(cache && *cache);
         const char *scalars = std::getenv("CHALI_NO_AOT_COLLECTION_SCALARS");
         collectionScalars = !(scalars && *scalars);
+        const auto *listAppend = std::getenv("CHALI_NO_AOT_NUMERIC_LIST_APPEND");
+        numericListAppend = !(listAppend && *listAppend) && !request.options.debug;
         const char *references = std::getenv("CHALI_NO_AOT_REFERENCE_PRIMITIVES");
         referencePrimitives = !(references && *references);
         const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
@@ -1377,6 +1380,8 @@ struct Builder
             return true;
         }
         static const std::map<Text, std::pair<int, std::size_t>> listStorageCalls = {
+            { "std::lang::__bootListPushI", { 18, 4 } },
+            { "std::lang::__bootListPushF", { 18, 4 } },
             { "std::lang::__listStorageGuard", { 0, 3 } },
             { "std::lang::__listStorageCapacity", { 1, 1 } },
             { "std::lang::__listStorageMaxCapacity", { 17, 1 } },
@@ -1442,7 +1447,11 @@ struct Builder
                               mapStorage != mapStorageCalls.end()   ? &mapStorage->second :
                                                                       nullptr;
         const bool hashed = listStorage == listStorageCalls.end();
-        if (state.rawIntrinsics && !state.stepChecks && storage && arguments.size() == storage->second)
+        const bool numericAppend = !hashed && storage && storage->first == 18;
+        const bool eligibleAppend = !numericAppend || (state.numericListAppend && arguments.size() == 4u
+            && argument(2).type == "i64" && argument(2).text == "0"
+            && argument(3).type == "i64" && argument(3).text == "0");
+        if (state.rawIntrinsics && !state.stepChecks && storage && eligibleAppend && arguments.size() == storage->second)
         {
             std::vector<std::pair<Memory::String, Value>> saved;
             for (const auto &entry : state.temporaryUsers)
@@ -1458,6 +1467,12 @@ struct Builder
             for (std::size_t i = 0; i < (hashed ? 7u : 5u); ++i)
             {
                 Value value = i < arguments.size() ? arguments[i].second : Value{ "i64", "0" };
+                if (numericAppend)
+                {
+                    // 替代语言函数时仍执行其形参转换，整数形参不继承不透明槽的浮点标记。
+                    value = convert(value, i == 1u && callee == "std::lang::__bootListPushF" ? "double" : "i64");
+                    value.floating.clear();
+                }
                 if (value.type == "double")
                 {
                     value = instruction("i64", "bitcast double " + value.text + " to i64");

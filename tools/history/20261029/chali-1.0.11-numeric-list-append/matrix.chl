@@ -1,0 +1,155 @@
+#export("numeric_list_fill")
+int64 numericFill(int64 seed){
+    List<int64> values;int64 i=0;
+    while(i<257){values.push(seed+i);i=i+1;}
+    unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);
+        assert(std::lang::__listStorageCapacity(*raw)==512);}
+    int64 result=0;i=0;while(i<257){result=result+values[i];i=i+1;}return result;
+}
+void main(){assert(numericFill(3)==33667);
+{int8 expected=(int8)-128;List<int8> values;values.push(expected);
+List<int8> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int8,int8> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int8> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{int8 expected=(int8)127;List<int8> values;values.push(expected);
+List<int8> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int8,int8> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int8> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{uint8 expected=(uint8)255;List<uint8> values;values.push(expected);
+List<uint8> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<uint8,uint8> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<uint8> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{int16 expected=(int16)-32768;List<int16> values;values.push(expected);
+List<int16> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int16,int16> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int16> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{uint16 expected=(uint16)65535;List<uint16> values;values.push(expected);
+List<uint16> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<uint16,uint16> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<uint16> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{int32 expected=(int32)-2147483648;List<int32> values;values.push(expected);
+List<int32> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int32,int32> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int32> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{uint32 expected=(uint32)4294967295u;List<uint32> values;values.push(expected);
+List<uint32> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<uint32,uint32> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<uint32> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{int64 expected=(int64)0x8000000000000000u;List<int64> values;values.push(expected);
+List<int64> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int64,int64> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int64> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{int64 expected=9223372036854775807;List<int64> values;values.push(expected);
+List<int64> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<int64,int64> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<int64> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{uint64 expected=0xffffffffffffffffu;List<uint64> values;values.push(expected);
+List<uint64> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<uint64,uint64> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<uint64> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{bool expected=true;List<bool> values;values.push(expected);
+List<bool> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<bool,bool> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<bool> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{bool expected=false;List<bool> values;values.push(expected);
+List<bool> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<bool,bool> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<bool> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{char expected='A';List<char> values;values.push(expected);
+List<char> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<char,char> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<char> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{char expected='\0';List<char> values;values.push(expected);
+List<char> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<char,char> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<char> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{float32 expected=(float32)1.25;List<float32> values;values.push(expected);
+List<float32> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<float32,float32> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<float32> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{float64 expected=-2.5;List<float64> values;values.push(expected);
+List<float64> copy=values;values.clear();values.push(expected);
+assert(values[0]==expected && copy[0]==expected);
+Map<float64,float64> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
+Set<float64> keys;keys.add(expected);assert(keys.has(expected)!=0);}
+{List<float64> values;uint64 bits=0u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float64> values;uint64 bits=0x8000000000000000u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float64> values;uint64 bits=0x7ff8000000000042u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float64> values;uint64 bits=0xfff8000000000043u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float64> values;uint64 bits=0x7ff0000000000000u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float64> values;uint64 bits=1u;
+values.push(std::lang::__bootFloat64FromBits(bits));
+List<float64> copy=values;values.clear();
+assert(std::lang::__bootFloat64Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=0u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=0x80000000u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=0x7fc00042u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=0xffc00043u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=0x7f800000u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+{List<float32> values;uint64 bits=1u;
+values.push(std::lang::__bootFloat32FromBits(bits));
+List<float32> copy=values;values.clear();
+assert(std::lang::__bootFloat32Bits(copy[0])==bits);}
+int64 integerSource=17;
+List<float32> converted32;converted32.push(integerSource);assert(converted32[0]==17.0);
+List<float64> converted64;converted64.push(integerSource);assert(converted64[0]==17.0);
+List<float64> opaqueSource;opaqueSource.push(1.25);List<int64> opaqueDestination;
+unsafe{int64 mut& from=(int64 mut&)(int64)std::lang::address(&opaqueSource);
+int64 mut& to=(int64 mut&)(int64)std::lang::address(&opaqueDestination);
+std::lang::__bootListPushI(*to,std::lang::__listStorageReadI(*from,0,0,0),0,0);
+assert(std::lang::__bootListFindI(*to,(int64)std::lang::__bootFloat64Bits(1.25),0,0)==0);}
+List<int64> reserved;int64 handle=0;
+unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&reserved);handle=*raw;
+std::lang::__bootListReserve(handle,33);}
+int64 i=0;while(i<33){reserved.push(i);i=i+1;}
+unsafe{assert(std::lang::__listStorageCapacity(handle)==33);}
+reserved.push(33);unsafe{assert(std::lang::__listStorageCapacity(handle)==66);}
+reserved.clear();reserved.push(7);unsafe{assert(std::lang::__listStorageCapacity(handle)==66);}
+List<String> words;words.push("before");List<String> saved=words;
+words.clear();words.push("after");assert(saved[0]=="before" && words[0]=="after");
+println("numeric List append primitives OK");}

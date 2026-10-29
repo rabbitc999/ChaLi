@@ -780,6 +780,51 @@ std::size_t listStorageMaximum(const Record &object)
 }
 
 /**
+ * @brief 一次原生边界完成非拥有数值追加，沿用语言层的有界几何增长策略。
+ * @param ctx 当前封送与错误上下文。
+ * @param args 列表句柄、数值、零文本标志及零拥有布局。
+ * @return 成功返回零；失败保留结构检查、容量或内存诊断。
+ */
+static Slot numericListAppend(State &ctx, const Arguments &args)
+{
+    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "List storage");
+    if (!object) return Slot::fromInt(0);
+    if (object->iteratorLeases || !object->elementViews.empty())
+    {
+        ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
+        return Slot::fromInt(0);
+    }
+    if (nativeInt(args[2]) != 0 || nativeInt(args[3]) != 0)
+    {
+        ctx.error = "List 数值追加原语不接受文本或拥有值布局";
+        return Slot::fromInt(0);
+    }
+    const auto size = object->items.size();
+    const auto capacity = object->items.capacity();
+    if (size == capacity)
+    {
+        const auto maximum = listStorageMaximum(*object);
+        if (capacity > maximum)
+        {
+            ctx.error = "缓冲区容量参数无效";
+            return Slot::fromInt(0);
+        }
+        if (size >= maximum)
+        {
+            ctx.error = "缓冲区容量超出上限";
+            return Slot::fromInt(0);
+        }
+        const auto grown = capacity > maximum / 2u ? maximum : capacity * 2u;
+        const auto minimum = std::min<std::size_t>(8, maximum);
+        object->items.reserve(std::max({ size + 1u, grown, minimum }));
+    }
+    ObjectValue value;
+    if (!nativeValue(ctx, args[1], false, 0, true, &value)) return Slot::fromInt(0);
+    object->items.push_back(std::move(value));
+    return Slot::fromInt(0);
+}
+
+/**
  * @brief 为语言自举 List 提供固定槽存储原语，不执行查找、插删移动循环或容量策略。
  * @tparam Operation 0 验证结构操作、1 容量、2 预留、3 交换、4 移出后丢弃、5 比较单槽、6 复制单槽追加、7 比较外部值、8 比较两个槽、9 分配上限。
  * @param ctx 当前宿主值封送与所有权上下文。
@@ -1789,6 +1834,7 @@ ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::i
     case 15: result = listStoragePrimitive<8>(state, arguments); break;
     case 16: result = listStorageCloneInput(state, arguments); break;
     case 17: result = listStoragePrimitive<9>(state, arguments); break;
+    case 18: result = numericListAppend(state, arguments); break;
     default: state.error = "List 存储原语编号无效"; break;
     }
     if (!state.error.empty()) host.fail(state.error);

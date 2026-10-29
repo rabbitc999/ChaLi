@@ -17,7 +17,7 @@ struct ScalarResult
 /**
  * @brief 直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
  * @param host 当前运行时的内存、对象与同步回调上下文。
- * @param operation 存储原语编号，零至十六；十三为租约，十四至十六为单槽比较及复制。
+ * @param operation 存储原语编号，零至十八；十三为租约，十四至十六比较及复制，十七查询上限，十八合并数值追加。
  * @param first 句柄或第一个标量实参。
  * @param second 第二个实参的原始位模式。
  * @param third 第三个实参的原始位模式。

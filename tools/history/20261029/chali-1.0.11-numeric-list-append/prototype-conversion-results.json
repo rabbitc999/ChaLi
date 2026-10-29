@@ -1,0 +1,28 @@
+[
+  {
+    "fallback": false,
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "tmp\\numeric-list-coercion-probe\\matrix.chl",
+      "--out",
+      "tmp\\numeric-list-coercion-probe\\prototype"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：assert(x) 的 x 为假\n出错位置：<内建 std::lang>:860（std::lang::assert$bool）\n调用栈（内 → 外）：\n  std::lang::assert$bool\n  main\n"
+  },
+  {
+    "fallback": true,
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "run",
+      "tmp\\numeric-list-coercion-probe\\matrix.chl",
+      "--out",
+      "tmp\\numeric-list-coercion-probe\\bootstrap"
+    ],
+    "code": 0,
+    "stdout": "numeric List append primitives OK\n",
+    "stderr": ""
+  }
+]
