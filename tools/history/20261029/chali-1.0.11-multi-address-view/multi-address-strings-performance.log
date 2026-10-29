@@ -1,0 +1,13 @@
+build string_read chali-aot
+build string_concat chali-aot
+build string_slice chali-aot
+build string_find chali-aot
+verify string_read chali-aot OK
+verify string_concat chali-aot OK
+verify string_slice chali-aot OK
+verify string_find chali-aot OK
+median string_read chali-aot 9.5292 ms
+median string_concat chali-aot 18.645 ms
+median string_slice chali-aot 10.1035 ms
+median string_find chali-aot 11.5114 ms
+saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-multi-address-strings
