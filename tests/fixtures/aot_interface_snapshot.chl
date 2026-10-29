@@ -1,0 +1,24 @@
+/** 接口与 Any 的指针快照、修改、共享接收者和提前释放。 */
+interface Readable { int64 read(); };
+struct First:Readable { int64 value; int64 read(){return value;} };
+struct Second:Readable { int64 value; int64 read(){return value;} };
+First first; Second second;
+int64 consume(Readable const& view){return view.read();}
+void main(){
+    first.value=11;second.value=23;
+    Any source=&first;Any saved=source;
+    source.set(&second);
+    Readable const& original=saved.getReference();
+    {
+        Readable const& changed=source.getReference();
+        assert(consume(&original)==11 && consume(&changed)==23);
+    }
+    source.drop();
+    assert(original.read()==11);
+    first.value=17;
+    assert(original.read()==17);
+    Readable const& independent=original;
+    original=&second;
+    assert(independent.read()==17 && original.read()==23);
+    println("interface pointer snapshots OK");
+}

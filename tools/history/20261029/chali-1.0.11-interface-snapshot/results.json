@@ -1,0 +1,203 @@
+{
+  "compiler_sha256": "29245e5a695525058b8ff524cf5b9f922edb24800b20cb162e0c1c4b780302c1",
+  "results": [
+    {
+      "label": "compile-unit",
+      "command": [
+        "g++",
+        "-std=c++17",
+        "-O2",
+        "-pthread",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-DSTACKVM_AOT_ONLY=1",
+        "-DCHALI_CUSTOM_ALLOCATOR=1",
+        "-DCHALI_WITH_REFLECTION=1",
+        "-DSTACKVM_WITH_REFLECTION=1",
+        "-Isource",
+        "-Ilibrary",
+        "-I.",
+        "G:\\Desktop\\ChaLi\\tests\\chali_interface_snapshot.cpp",
+        "G:\\Desktop\\ChaLi\\source\\allocator\\system_arena.cpp",
+        "-Wl,--gc-sections",
+        "-Wl,--start-group",
+        "G:\\Desktop\\ChaLi\\build\\chali-ircode-aot-core\\libstackvm.a",
+        "G:\\Desktop\\ChaLi\\build\\chali-host-records\\librecords.a",
+        "G:\\Desktop\\ChaLi\\build\\chali-runtime\\libast.a",
+        "G:\\Desktop\\ChaLi\\build\\chali-runtime\\libpreprocess.a",
+        "-Wl,--end-group",
+        "-lwinhttp",
+        "-o",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\unit.exe"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "unit",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\unit.exe"
+      ],
+      "code": 0,
+      "stdout": "pointer snapshot allocations: shared=64 original=128; independent handles and detach OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-shared-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-shared-run"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-shared-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-shared"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-shared-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-shared.exe"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-original-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-original-run"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-original-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-original"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-original-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\malloc-original.exe"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-shared-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-shared-run"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-shared-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-shared"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-shared-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-shared.exe"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-original-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-original-run"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-original-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_snapshot.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-original"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-original-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-snapshot-7fcolrs5\\pool-original.exe"
+      ],
+      "code": 0,
+      "stdout": "interface pointer snapshots OK\n",
+      "stderr": ""
+    }
+  ]
+}

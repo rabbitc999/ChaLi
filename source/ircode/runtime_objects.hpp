@@ -92,6 +92,9 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
  */
 struct ObjectStore
 {
+    bool pointerSnapshots = true; ///< 非拥有指针包装共享不可变快照，修改时分离。
+    /** @brief 读取指针快照优化开关，不改变其他对象的复制协议。 */
+    ObjectStore();
     NativeContext recordContext;                                                  ///< 不透明记录清理所需的运行时存储上下文。
     Memory::Map<std::pair<std::size_t, std::int64_t>, std::size_t> movedStorage;  ///< 已销毁子对象的（地址、类型号）及存储大小。
     std::size_t largestMovedStorage = 0; ///< 标记的最大跨度上界，用于限制重叠查询范围。
@@ -127,6 +130,13 @@ struct ObjectStore
      * @retval 匹配项的指针，未找到时为空指针。
      */
     RuntimeObject *find(std::int64_t handle);
+
+    /**
+     * @brief 在修改共享的非拥有指针包装前分离该句柄的快照。
+     * @param handle 已验证的包装句柄。
+     * @return 当前句柄独占的可修改包装；无效句柄返回空。
+     */
+    RuntimeObject *detachPointerSnapshot(std::int64_t handle);
 
     /**
      * @brief 复制对象值并维护其引用或所有权。

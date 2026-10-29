@@ -10,6 +10,44 @@ using namespace runtimeDetail;
 namespace runtimeDetail
 {
 /**
+ * @brief 判断包装是否只有非拥有指针和描述元数据，不含需要复制或销毁的状态。
+ * @param object 待检查的运行时对象。
+ * @return 可以共享不可变包装快照时返回 true。
+ */
+static bool shareablePointerSnapshot(const RuntimeObject &object)
+{
+    return object.kind == ObjectKind::Obj && !object.objOwnsObject
+           && !object.objValue.ownsObject && !object.objValue.isStruct
+           && !object.objValue.isText && !object.objValue.isFloat
+           && object.objValue.fields.empty() && !object.objTextShape.empty()
+           && object.objTextShape.front() == 'R' && object.objTextCallbacks.empty()
+           && !object.iteratorStateBox && !object.closureCopy && !object.closureEnvironment
+           && object.items.empty() && object.elementViews.empty() && object.captureDestructors.empty()
+           && !object.nativeRecord && !object.rawStorage;
+}
+
+/** @brief 读取指针包装共享开关，默认保留独立句柄并共享不可变载荷。 */
+ObjectStore::ObjectStore()
+{
+    const auto *disabled = std::getenv("CHALI_NO_INTERFACE_COPY_COW");
+    pointerSnapshots = !(disabled && *disabled);
+}
+
+/**
+ * @brief 修改非拥有指针包装前创建私有载荷，保持其他句柄的快照不变。
+ * @param handle 已通过类别与存活检查的对象句柄。
+ * @return 当前可修改对象；句柄不存在时返回空。
+ */
+RuntimeObject *ObjectStore::detachPointerSnapshot(std::int64_t handle)
+{
+    const auto found = objects.find(handle);
+    if (found == objects.end()) return nullptr;
+    if (!found->second.unique() && shareablePointerSnapshot(*found->second))
+        found->second = Memory::makeShared<RuntimeObject>(*found->second);
+    return found->second.get();
+}
+
+/**
  * 对象句柄的起点（2^62）：编码堆地址与数据区地址均低于此边界。
  */
 
@@ -257,7 +295,8 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
         if (error != nullptr) *error = "不是一个能复制的对象句柄：" + Memory::toString(handle);
         return 0;
     }
-    RuntimeObject *object = find(handle);
+    const auto found = objects.find(handle);
+    RuntimeObject *object = found == objects.end() ? nullptr : found->second.get();
     if (object == nullptr)
     {
         if (error != nullptr) *error = "这个对象已经释放过了（句柄 " + Memory::toString(handle) + "）";
@@ -268,6 +307,7 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
         if (error) *error = object->iteratorContext.error;
         return 0;
     }
+    if (pointerSnapshots && shareablePointerSnapshot(*object)) return add(found->second);
     std::shared_ptr<RuntimeObject> copy = copyObject(*object, error);
     if (!copy) return 0;
     return add(std::move(copy));

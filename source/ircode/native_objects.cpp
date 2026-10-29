@@ -51,6 +51,12 @@ Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
         ctx.error = "obj.set 读不到文本布局";
         return Slot::fromInt(0);
     }
+    object = ctx.objects->detachPointerSnapshot(nativeInt(args[0]));
+    if (object == nullptr)
+    {
+        nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set");
+        return Slot::fromInt(0);
+    }
     object->objTextShape = std::move(textShape);
     object->objTextCallbacks.clear();
     for (std::size_t index = 7; index < args.size(); ++index) object->objTextCallbacks.push_back(nativeInt(args[index]));
