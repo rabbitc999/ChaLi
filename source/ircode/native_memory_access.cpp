@@ -147,6 +147,20 @@ bool nativeReadCString(const NativeContext &ctx, std::size_t address, Memory::St
         out->resize(storage.length);
         return storage.length == 0 || nativeRead(ctx, storage.data, out->data(), out->size());
     }
+    // 数据区在堆基址之前且映像完整时，一次有界扫描读取真实字节。
+    // 缺少哨兵时仍逐字节回退，保留部分输出、扫描上限和首次越界诊断。
+    if (ctx.data != nullptr && address < ctx.data->binary.size()
+        && (ctx.heap == nullptr || ctx.data->binary.size() <= ctx.heap->base()))
+    {
+        const auto count = std::min(kStringScanLimit, ctx.data->binary.size() - address);
+        const auto *begin = reinterpret_cast<const char *>(ctx.data->binary.data() + address);
+        const auto *end = static_cast<const char *>(std::memchr(begin, 0, count));
+        if (end != nullptr)
+        {
+            out->assign(begin, static_cast<std::size_t>(end - begin));
+            return true;
+        }
+    }
     for (std::size_t index = 0; index < kStringScanLimit; ++index)
     {
         char ch = 0;
