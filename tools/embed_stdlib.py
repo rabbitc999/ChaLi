@@ -164,6 +164,7 @@ GENERATOR_ASSETS = [
     "chali_aot.hpp",
     "chali_aot.cpp",
     "chali_aot_ast.hpp",
+    "chali_aot_numeric_list.hpp",
     "chali_aot_target.hpp",
     "chali_aot_target.cpp",
     "chali_aot_llvm.hpp",

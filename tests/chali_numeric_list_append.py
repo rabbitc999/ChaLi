@@ -51,7 +51,14 @@ assert(std::lang::__bootFloat{width}Bits(values[0])==bits);
 List<float{width}> copy=values;values.clear();
 assert(std::lang::__bootFloat{width}Bits(copy[0])==bits);}}
 '''
-    source += '''int64 integerSource=17;
+    source += '''List<int64> reused;int64 round=0;
+while(round<5){int64 j=0;while(j<65){reused.push(round*100+j);j=j+1;}
+assert(reused.len()==65 && reused[0]==round*100 && reused[64]==round*100+64);
+reused.clear();assert(reused.len()==0);round=round+1;}
+reused.push(9);reused.push(11);int64 visited=0;
+for(int64 element in reused){visited=visited+element;}
+assert(visited==20 && reused[0]==9 && reused[1]==11);
+int64 integerSource=17;
 List<float32> converted32;converted32.push(integerSource);assert(converted32[0]==17.0);
 List<float64> converted64;converted64.push(integerSource);assert(converted64[0]==17.0);
 List<float64> opaqueSource;opaqueSource.push(1.25);List<int64> opaqueDestination;
@@ -112,11 +119,16 @@ def main():
         llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
         bodies = re.findall(r'^define[^\n]*program__numericFill\(.*?^\}', llvm, re.M | re.S)
         assert len(bodies) == 1, (label, work)
-        primitive = re.search(r'call i64 @chali_host_list_storage(?:_scalar)?\(i64(?: noundef)? 18,', bodies[0])
+        primitive = re.search(r'call i64 @chali_(?:host_list_storage(?:_scalar)?|list_storage_fast)\(i64(?: noundef)? 18,', bodies[0])
         assert bool(primitive) != fallback, (label, bodies[0], work)
+        direct = re.search(r'call i64 @chali_list_storage_fast\(i64(?: noundef)? 18,', bodies[0])
+        expected_direct = not fallback and not old_abi and not env.get('CHALI_NO_AOT_NUMERIC_LIST_VIEWS')
+        assert bool(direct) == expected_direct, (label, bodies[0], work)
         (work / (label + '-fill.ll')).write_text(bodies[0] + '\n', encoding='utf-8')
         errors = {
             'invalid': ('void main(){unsafe{std::lang::__bootListPushI(0,1,0,0);}}', 'List storage'),
+            'bounds': ('''void main(){List<int64> values;values.push(7);
+assert(values[0]==7);println("{}",values[1]);}''', 'vec 下标越界'),
             'lease': ('''void main(){List<int64> values;values.push(1);int64 handle=0;
 unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);handle=*raw;}
 for(int64 value in values){unsafe{std::lang::__bootListPushI(handle,value,0,0);}}}''',

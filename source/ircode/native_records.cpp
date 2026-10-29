@@ -39,6 +39,7 @@ std::int64_t NativeCallContextImpl::makeNativeRecord(const NativeRecordType &typ
  */
 void *NativeCallContextImpl::nativeRecord(std::int64_t handle, const NativeRecordType &type) const
 {
+    if (context_.objects) context_.objects->invalidateNativeRecordViews();
     auto *object = context_.objects && !context_.objects->shuttingDown ? context_.objects->find(handle) : nullptr;
     if (!object || object->kind != ObjectKind::NativeRecord || !object->nativeType) return nullptr;
     const auto *actual = object->nativeType;

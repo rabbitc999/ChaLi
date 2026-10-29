@@ -14,6 +14,23 @@ struct ScalarResult
     unsigned char floating = 0;  ///< 浮点数为一，整数为零。
 };
 
+/** @brief LLVM 数值数组视图，代次由所属运行时对象表拥有；上下文退出前清空缓存。 */
+struct NumericListView
+{
+    std::int64_t handle = 0;
+    void *header = nullptr;
+    const std::uint64_t *revision = nullptr;
+    std::uint64_t stamp = 0;
+};
+
+/**
+ * @brief 查询已验证调用之后可直接访问的数值数组，不物化或改变集合。
+ * @param host 当前原生上下文。
+ * @param handle 目标集合句柄。
+ * @param view 接收数值头部和失效代次，不可用时清空。
+ */
+void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, NumericListView *view);
+
 /**
  * @brief 直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
  * @param host 当前运行时的内存、对象与同步回调上下文。

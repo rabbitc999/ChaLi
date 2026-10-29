@@ -5,6 +5,7 @@
 #pragma once
 #include "std_collection.hpp"
 #include "std_collection_storage.hpp"
+#include "std_numeric_list_storage.hpp"
 #include <functional>
 #include <memory>
 
@@ -141,7 +142,7 @@ struct Record
 {
     StorageKind kind = StorageKind::Vector;
     Memory::Vector<ObjectValue> items;
-    Memory::Vector<ScalarResult> scalarItems;  ///< 非拥有数值槽，不携带文本及聚合容器。
+    ScalarListStorage scalarItems;            ///< 非拥有数值槽，不携带文本及聚合容器。
     bool scalarItemsActive = false;           ///< 活跃数值布局；回退后保留原缓冲区直到 drop。
     Entries entries;
     /**

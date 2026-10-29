@@ -14,6 +14,21 @@
 namespace collection_glue
 {
 /**
+ * @brief 查询无需元素物化的数值视图；不执行用户回调。
+ * @param host 当前原生上下文。
+ * @param handle 目标集合句柄。
+ * @param view 接收头部和失效代次，不可用时清空。
+ */
+void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, NumericListView *view)
+{
+    *view = {};
+    auto *record = static_cast<Record *>(host.nativeRecord(handle, descriptor(StorageKind::Vector)));
+    const auto *revision = static_cast<const std::uint64_t *>(host.hostService("native.rev.v1"));
+    if (!revision || !*revision || !record || !record->scalarItemsActive || record->iteratorLeases || !record->elementViews.empty()) return;
+    *view = { handle, &record->scalarItems.header, revision, *revision };
+}
+
+/**
  * @brief 需要通用槽时物化数值布局，保留长度、容量与旧缓冲区。
  * @param object 待转换的集合记录。
  */
@@ -1630,7 +1645,10 @@ inline void *cloneRecord(const void *source, Memory::String &error)
  * @brief 销毁已由 dispose 清理拥有值的记录本体。
  * @param record 待销毁的宿主记录。
  */
-inline void destroyRecord(void *record) { delete static_cast<Record *>(record); }
+inline void destroyRecord(void *record)
+{
+    delete static_cast<Record *>(record);
+}
 /**
  * @brief 同步活跃元素引用后再供运行时复制或格式化。
  * @param host 当前运行时上下文。
@@ -1847,9 +1865,9 @@ inline bool textRecord(stackvm::NativeCallContext &host, const void *record, sta
  */
 const stackvm::NativeRecordType &descriptor(StorageKind kind)
 {
-    static const stackvm::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.2" };
-    static const stackvm::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.2" };
-    static const stackvm::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.2" };
+    static const stackvm::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.3" };
+    static const stackvm::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.3" };
+    static const stackvm::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.3" };
     static const stackvm::NativeRecordType lease{ "iterator lease", nullptr, destroyRecord, nullptr, copyRecord, disposeRecord, nullptr, nullptr, nullptr, nullptr, "chali.std.ListLease.1" };
     return kind == StorageKind::Vector ? list : kind == StorageKind::Set ? set :
                                             kind == StorageKind::Map     ? map :

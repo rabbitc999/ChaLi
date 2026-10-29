@@ -93,6 +93,9 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
  */
 struct ObjectStore
 {
+    std::uint64_t nativeRecordRevision = 1; ///< 宿主记录借用及释放的失效代次，零表示永久禁用视图。
+    /** @brief 使宿主记录的旧直接视图失效，溢出后保持禁用。 */
+    void invalidateNativeRecordViews();
     bool pointerSnapshots = true; ///< 非拥有指针包装共享不可变快照，修改时分离。
     bool inlineHandles = true; ///< 少量活跃 Obj 使用固定槽，宿主记录及冲突沿原表回退。
     /** @brief 不搬动的内联句柄槽；完整句柄比较拒绝已释放或碰撞的旧身份。 */

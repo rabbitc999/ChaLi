@@ -106,12 +106,19 @@ void ObjectStore::beginStorage(std::size_t address, std::size_t bytes, bool fres
 ObjectStore::~ObjectStore()
 
 {
+    invalidateNativeRecordViews();
     shuttingDown = true;
     // 固定槽只接收 Obj，宿主记录的 dispose 顺序继续使用原有按句柄排序的表。
     for (const auto &entry : objects)
         if (entry.second->kind == ObjectKind::NativeRecord) releaseContents(*entry.second);
     objects.clear();
     for (auto &slot : handleSlots) slot.object.reset();
+}
+
+/** @brief 递增宿主记录代次，耗尽后不重新启用旧视图。 */
+void ObjectStore::invalidateNativeRecordViews()
+{
+    if (nativeRecordRevision) ++nativeRecordRevision;
 }
 
 /**
@@ -200,6 +207,7 @@ void ObjectStore::releaseValue(const ObjectValue &value)
 void ObjectStore::releaseContents(const RuntimeObject &object)
 
 {
+    invalidateNativeRecordViews();
     if (object.kind == ObjectKind::NativeRecord && object.nativeType && object.nativeType->dispose)
     {
         NativeCallContextImpl host(recordContext);

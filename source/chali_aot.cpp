@@ -275,6 +275,7 @@ struct Translator
     bool bulkCopies = true;                                       ///< 聚合槽复制采用保留重叠和陷阱回退的原生助手。
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
     bool numericListAppend = true;                                ///< 数值 List 追加合并结构检查、容量增长和单槽写入。
+    bool numericListViews = true;                                 ///< 以失效代次保护数值 List 的 LLVM 直接读写。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
     bool objectCopyScalars = true;                                ///< 对象复制复用标量入口，不构造通用实参向量。
@@ -312,6 +313,8 @@ struct Translator
         collectionScalars = !(scalars && *scalars);
         const auto *listAppend = std::getenv("CHALI_NO_AOT_NUMERIC_LIST_APPEND");
         numericListAppend = !(listAppend && *listAppend) && !request.options.debug;
+        const auto *listViews = std::getenv("CHALI_NO_AOT_NUMERIC_LIST_VIEWS");
+        numericListViews = !(listViews && *listViews) && !request.options.debug;
         const char *references = std::getenv("CHALI_NO_AOT_REFERENCE_PRIMITIVES");
         referencePrimitives = !(references && *references);
         const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
@@ -1488,8 +1491,12 @@ struct Builder
             }
             values.push_back(instruction("i64", "or i64 " + dynamicFloating.text + ", " + std::to_string(floating)));
             if (state.collectionScalars) values.push_back({ "ptr", "%collection_result_kind" });
+            const bool scalarRead = !hashed && storage->first == 11 && arguments.size() == 4u
+                && argument(2).type == "i64" && argument(2).text == "0"
+                && argument(3).type == "i64" && argument(3).text == "0";
+            const bool directList = !hashed && state.numericListViews && state.collectionScalars && (numericAppend || scalarRead);
             Value result = call(hashed ? (state.collectionScalars ? "chali_host_map_storage_scalar" : "chali_host_map_storage") :
-                                        (state.collectionScalars ? "chali_host_list_storage_scalar" : "chali_host_list_storage"), "i64", values);
+                                        (directList ? "chali_list_storage_fast" : state.collectionScalars ? "chali_host_list_storage_scalar" : "chali_host_list_storage"), "i64", values);
             result.floating = state.collectionScalars ? instruction("i8", "load i8, ptr %collection_result_kind").text :
                                                        call("chali_host_result_float", "i8", {}).text;
             for (const auto &entry : saved) write(entry.first, entry.second);
@@ -2397,6 +2404,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i8 @chali_host_result_float()\n";
     out += astAddressPrimitive();
+    out += astNumericListPrimitive();
     out += astStringStoragePrimitive();
     out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";
     out += "declare double @llvm.ceil.f64(double)\ndeclare double @llvm.round.f64(double)\ndeclare double @llvm.trunc.f64(double)\n";

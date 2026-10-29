@@ -134,6 +134,7 @@ struct Runtime
     bool keepText = false;
     bool exiting = false;
     int exitCode = 0;
+    NativeServices services;
     ObjectStore objects;
 
     /**
@@ -154,6 +155,8 @@ struct Runtime
         context.heap = &heap;
         context.data = &data;
         context.objects = &objects;
+        services.emplace("native.rev.v1", &objects.nativeRecordRevision);
+        context.hostServices = &services;
         context.textSink = writeOutput;
         context.textKeep = &keepText;
         context.programArguments = &arguments;
@@ -301,12 +304,15 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
     Heap heap;
     heap.reset(data.size());
     Memory::Vector<Memory::String> arguments;
+    NativeServices services = root.services;
     ObjectStore objects;
     bool exiting = false;
     int exitCode = 0;
     context.heap = &heap;
     context.data = &data;
     context.objects = &objects;
+    services["native.rev.v1"] = &objects.nativeRecordRevision;
+    context.hostServices = &services;
     context.machine = &machine;
     context.programArguments = &arguments;
     context.exitRequested = &exiting;
@@ -1103,6 +1109,17 @@ std::int64_t chali_host_list_storage_scalar(std::int64_t operation, std::int64_t
     }
     *resultFloating = result.floating;
     return result.bits;
+}
+
+/**
+ * @brief 在已完成的存储调用之后取得数值数组视图，不调用用户代码。
+ * @param handle 已检查的集合句柄。
+ * @param view 接收稳定头部与失效代次。
+ */
+void chali_host_list_scalar_view(std::int64_t handle, collection_glue::NumericListView *view)
+{
+    NativeCallContextImpl bridge(currentContext(), &current().invoker);
+    collection_glue::numericListView(bridge, handle, view);
 }
 
 /**

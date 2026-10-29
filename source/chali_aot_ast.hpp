@@ -42,6 +42,8 @@ Memory::String astDataLiteral(const ast::NodePtr &node, const ast::TypePtr &type
     return "0";
 }
 
+#include "chali_aot_numeric_list.hpp"
+
 /**
  * @brief 生成保留映射代次及完整范围检查的 LLVM 地址操作原语。
  * @return 四项线程局部地址视图、上下文失效入口及可内联的物理地址解析函数。
@@ -68,6 +70,7 @@ entry:
   store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view3, i32 0, i32 3)
   store i64 0, ptr @chali_address_next
   store i64 0, ptr @chali_address_secondary_hits
+  store ptr null, ptr getelementptr ({ i64, ptr, ptr, i64 }, ptr @chali_list_view, i32 0, i32 2)
   ret void
 }
 define internal ptr @chali_cached_view_address(ptr %view, i64 %address, i64 %count) alwaysinline {
