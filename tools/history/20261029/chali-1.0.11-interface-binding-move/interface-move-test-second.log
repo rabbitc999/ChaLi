@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_interface_binding_move.py", line 69, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_interface_binding_move.py", line 60, in main
+    assert (copies > 0) == (fallback or function == 'callOperation'), (function, label, copies, work)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('choose', 'malloc-copy', 0, WindowsPath('G:/Desktop/ChaLi/tmp/interface-binding-move-9jbp8ejz'))

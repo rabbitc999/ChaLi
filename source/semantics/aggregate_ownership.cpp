@@ -805,6 +805,25 @@ ast::NodePtr TakeExpressionTempValue(const ast::NodePtr &value,
 ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared_ptr<MType> &type);
 extern bool g_usesNewArray;
 
+/** @brief 完整表达式的临时所有权登记，具体定义由语句降级提供。 */
+struct MFullExpressionTemps;
+extern MFullExpressionTemps *g_fullExpressionTemps;
+
+/**
+ * @brief 判断具体结构体引用绑定是否产生可以移交的新接口包装。
+ * @param valueId 源表达式编号。
+ * @param target 目标接口引用类型。
+ * @return 绑定创建新包装且临时所有权可以清空时返回 true。
+ */
+bool IsFreshInterfaceBinding(int valueId, const std::shared_ptr<MType> &target)
+{
+    const auto *disabled = std::getenv("CHALI_NO_INTERFACE_BINDING_MOVE");
+    if ((disabled && *disabled) || valueId < 0 || !IsInterfacePointer(target) || IsObjGetCall(valueId))
+        return false;
+    if (g_freshSink != nullptr && g_fullExpressionTemps == nullptr) return false;
+    return CanBindInterfaceReference(target, RawExprType(valueId));
+}
+
 /**
  * @brief 将字符串表达式保存为具有独立生存期的值。
  * @param valueId 表示输入值的节点或类型编号。
@@ -852,7 +871,8 @@ ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_ptr<MTy
             return Fail("不可复制的值禁止复制返回借用值（实现 Closeable 或声明了 #NonCopyable），请显式 move 拥有值或返回引用"), Bad();
     }
     const ast::NodePtr value = LowerValueForType(valueId, target);
-    if (IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
+    if (IsImplicitConversionValue(valueId, target) || IsFreshInterfaceBinding(valueId, target))
+        return TakeExpressionTempValue(value, target);
     if (target && target->kind == MType::Array)
     {
         if (IsFreshValue(valueId)) return TakeExpressionTempValue(value, target);
@@ -1291,7 +1311,7 @@ ast::NodePtr MaterializeObjectValue(int valueId, const std::shared_ptr<MType> &t
     if (OpcodeNonCopyable(target) && valueId >= 0 && !IsFreshValue(valueId))
         return Fail("不可复制的值禁止复制初始化或赋值（实现 Closeable 或声明了 #NonCopyable），请显式 move、传引用或改用临时值"), Bad();
     if (!IsObjectLike(target)) return LowerValueForType(valueId, target);
-    if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target))
+    if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target) || IsFreshInterfaceBinding(valueId, target))
         return TakeExpressionTempValue(LowerValueForType(valueId, target), target);
     return ast::Node::call(ObjectCopyFunction(target), { "__chali_v" },
                            { LowerValueForType(valueId, target) });
