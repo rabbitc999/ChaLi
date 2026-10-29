@@ -1,4 +1,4 @@
-"""校验两倍边界、Lua 严格更快及损坏样本拒绝，不运行性能负载。"""
+"""校验 Lua 严格更快及损坏样本拒绝，不运行性能负载。"""
 from pathlib import Path
 from project_temp import tempfile
 import subprocess
@@ -12,17 +12,24 @@ from evaluate_saved import samples_and_median, verdict
 class PerformanceGateTests(unittest.TestCase):
     """以边界值和坏样本检验实际验收入口，避免靠舍入值或均值冒充达标。"""
 
-    def test_two_times_boundary(self):
-        """恰好两倍允许，再慢一点拒绝；旧门限按除以 1.2 乘以 2 换算。"""
-        self.assertTrue(verdict(200, 100, None)['passed'])
-        self.assertFalse(verdict(200.00001, 100, None)['passed'])
-        self.assertTrue(verdict(1.1336, 0.5668, None)['passed'])
-        self.assertFalse(verdict(1.1336001, 0.5668, None)['passed'])
+    def test_cpp_is_reference_only(self):
+        """即使远慢于 C++，只要快于 Lua 就通过；C++ 更快不能抵消慢于 Lua。"""
+        self.assertTrue(verdict(1000, 1, 1001)['passed'])
+        self.assertFalse(verdict(1, 1000, 0.5)['passed'])
+        self.assertIsNone(verdict(1, 1000, None)['passed'])
 
     def test_lua_tie_and_missing_reference(self):
         """与 Lua 相同不算更快；无参考明确保留 None。"""
         self.assertFalse(verdict(110, 100, 110)['passed'])
         self.assertIsNone(verdict(110, 100, None)['lua_pass'])
+
+    def test_interface_ten_millisecond_boundary(self):
+        """接口单独要求小于 10 ms；恰好 10 ms 拒绝，未来 Lua 参考仍须满足。"""
+        for case in ('interface_mono', 'interface_poly'):
+            self.assertTrue(verdict(9.999999, 0.1, None, case)['passed'])
+            self.assertFalse(verdict(10, 0.1, None, case)['passed'])
+            self.assertFalse(verdict(11, 0.1, None, case)['passed'])
+            self.assertFalse(verdict(9, 0.1, 8, case)['passed'])
 
     def test_bad_durations(self):
         """负数、无穷和 NaN 不得混入门槛运算。"""

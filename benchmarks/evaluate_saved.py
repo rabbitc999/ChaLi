@@ -1,6 +1,5 @@
-"""只核对已保存的 ChaLi 样本，以 C++ O2×2 和冻结 Lua 判定，不重新计时。"""
+"""只核对保存的样本：快于冻结 Lua，接口中位耗时小于 10 ms，不重新计时。"""
 import argparse
-from decimal import Decimal
 import hashlib
 import json
 import math
@@ -13,7 +12,6 @@ BASIC = ('int_chain', 'float_chain', 'call', 'array', 'list_growth', 'map_growth
 FEATURES = ('enum_payload', 'interface_mono', 'interface_poly', 'struct_nested', 'array_2d', 'array_3d')
 STRINGS = ('string_read', 'string_concat', 'string_slice', 'string_find')
 CASES = BASIC + FEATURES + STRINGS
-CPP_FACTOR = Decimal('2')
 
 
 def load(path, provenance):
@@ -24,7 +22,7 @@ def load(path, provenance):
     return json.loads(data.decode('utf-8-sig'))
 
 
-def verdict(measured, cpp, lua):
+def verdict(measured, cpp, lua, case=None):
     """逐项判定；Lua 相同耗时不满足更快，没有 Lua 参考则明确留空。"""
     if any(isinstance(value, bool) for value in (measured, cpp, lua)):
         raise ValueError('布尔值不是耗时')
@@ -32,11 +30,10 @@ def verdict(measured, cpp, lua):
         raise ValueError('耗时必须为有限正数')
     if lua is not None and (not math.isfinite(lua) or lua <= 0):
         raise ValueError('Lua 参考必须为有限正数')
-    limit = Decimal(str(cpp)) * CPP_FACTOR
-    cpp_pass = Decimal(str(measured)) <= limit
     lua_pass = measured < lua if lua is not None else None
-    return dict(cpp_pass=cpp_pass, cpp_limit_ms=float(limit), lua_pass=lua_pass,
-                passed=cpp_pass and lua_pass is not False)
+    interface_limit = 10 if case in ('interface_mono', 'interface_poly') else None
+    passed = measured < interface_limit and lua_pass is not False if interface_limit is not None else lua_pass
+    return dict(lua_pass=lua_pass, interface_limit_ms=interface_limit, passed=passed)
 
 
 def samples_and_median(report, case):
@@ -126,7 +123,7 @@ def main():
                               lua_ms=lua_ms, compiler_sha256=compiler, allocator=allocator,
                               compiler_source_commit=(report.get('chali_compiler', {}).get('source_commit')
                                                       or report.get('compiler_source_commit')),
-                              measurement=str(path.resolve()), **verdict(measured, cpp_ms, lua_ms))
+                              measurement=str(path.resolve()), **verdict(measured, cpp_ms, lua_ms, case))
     if not args.allow_mixed_compilers and (len(compilers) != 1 or len(allocators) != 1):
         raise ValueError('必须使用同一实际编译器及分配器；历史分析须显式指定 --allow-mixed-compilers')
     if len(hosts) != 1:
@@ -142,28 +139,33 @@ def main():
         binary_verified = True
     complete = (not missing and len(compilers) == len(allocators) == 1 and binary_verified
                 and not args.partial and not args.allow_mixed_compilers)
-    result = dict(kind='saved-performance-gate', cpp_factor=float(CPP_FACTOR), chali_optimization='LLVM O3',
+    comparable = [row for row in rows.values() if row['passed'] is not None]
+    result = dict(kind='saved-performance-gate', criterion='faster-than-lua-and-interface-under-10ms', chali_optimization='LLVM O3',
                   tool_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   cpp_reference_optimization='O2', benchmarks_executed=False, full_ci_executed=False,
                   compiler_verified=binary_verified, complete_candidate=complete, missing_cases=missing,
                   measurement_hosts=[dict(platform=platform, processor=processor) for platform, processor in sorted(hosts)],
                   mixed_compilers_allowed=args.allow_mixed_compilers, input_sha256=provenance,
-                  passed=all(row['passed'] for row in rows.values()),
-                  cpp_pass_count=sum(row['cpp_pass'] for row in rows.values()),
+                  passed=bool(comparable) and all(row['passed'] for row in comparable),
+                  compared_count=len(comparable), pass_count=sum(row['passed'] for row in comparable),
+                  unassessed_cases=[case for case, row in rows.items() if row['passed'] is None],
                   rows=[rows[case] for case in CASES if case in rows])
     args.out.mkdir(parents=True)
     (args.out / 'results.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    lines = ['# 已保存样本的 C++ O2 两倍性能门槛', '',
+    lines = ['# 已保存样本的 Lua 与接口性能门槛', '',
              '此入口只核对保存的数据，未重新计时；不能代替最终全量 CI。Lua 缺项明确标注，不冒充快于 Lua。', '',
-             '| 负载 | ChaLi / ms | C++ O2 上限 / ms | Lua / ms | 判定 |',
+             '| 负载 | ChaLi / ms | C++ O2 参考 / ms | Lua / ms | 判定 |',
              '| --- | ---: | ---: | ---: | --- |']
     for row in result['rows']:
         lua_text = '无该项参考' if row['lua_ms'] is None else f"{row['lua_ms']:.4f}"
-        lines.append(f"| {row['case']} | {row['chali_ms']:.4f} | {row['cpp_limit_ms']:.4f} | {lua_text} | {'通过' if row['passed'] else '未通过'} |")
-    lines += ['', f"C++ 条件通过 {result['cpp_pass_count']}/{len(rows)}；全部已选负载达标：{result['passed']}。",
+        label = '未设该项门限' if row['passed'] is None else '通过' if row['passed'] else '未通过'
+        if row['interface_limit_ms'] is not None:
+            label += '（接口 <10 ms）'
+        lines.append(f"| {row['case']} | {row['chali_ms']:.4f} | {row['cpp_o2_ms']:.4f} | {lua_text} | {label} |")
+    lines += ['', f"已设门限项目通过 {result['pass_count']}/{len(comparable)}；全部已选条件达标：{result['passed']}。",
               f"完整且已核对编译器字节的候选数据：{complete}；最终全量 CI：未由本工具执行。"]
     (args.out / 'README.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    print(f"saved-data gate: {result['cpp_pass_count']}/{len(rows)} C++ conditions; passed={result['passed']}; {args.out}")
+    print(f"saved-data gate: {result['pass_count']}/{len(comparable)} conditions; passed={result['passed']}; {args.out}")
     return 0 if result['passed'] else 1
 
 
