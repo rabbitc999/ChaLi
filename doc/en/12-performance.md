@@ -8,6 +8,8 @@ This report compares the original **ChaLi 1.0.10 release with the measured 1.0.1
 
 Optimization stops after the current LLVM List work. Unmet targets remain visible; historical language references retain their original identities and dates.
 
+These measurements are frozen at the performance-stage commit a522cf0. Later 1.0.11 additions for owned interface values, joint patterns, propagation conversions and hygienic macro parameters receive separate functional validation. They are not retimed or assigned these older measurements.
+
 ## Identity and environment
 
 The new measurements were collected on **2026-10-29**, Windows 10 x64, AMD Ryzen 5 5600X, 6 cores and 12 logical processors. Both external-LLVM compilers use the same clang **23.1.4**, LLVM O3/LTO kernels and an `-O3 -DNDEBUG` C timing shell. Both use their default 512 MiB heap budget.

@@ -105,13 +105,14 @@ def verify_make(folder):
     rules = re.search(r'CHALI_EMBED_STAMP :=.*?^\$\(CHALI_STDLIB_OBJ\):.*?$', makefile, re.M | re.S)[0]
     (folder / 'Makefile').write_text(
         'all: build/embedded.o\nPYTHON := python\nFRONTEND_BUILD := build\n'
+        'CHALI_BUILD_ROOT := build\nCHALI_EMBED_SOURCE := source/chali_stdlib_embedded.cpp\n'
         'CHALI_EMBED_INPUTS := input\nCHALI_STDLIB_OBJ := build/embedded.o\n' + rules + '\n'
         'build/embedded.o: source/chali_stdlib_embedded.cpp\n'
         '\tpython -c "from pathlib import Path; Path(\'build/embedded.o\').write_bytes(Path(\'$<\').read_bytes())"\n',
         encoding='utf-8', newline='\n')
     (folder / 'tools/embed_stdlib.py').write_text(
         'from pathlib import Path\nimport sys\n'
-        'source = Path("input").read_bytes()\noutput = Path("source/chali_stdlib_embedded.cpp")\n'
+        'source = Path("input").read_bytes()\noutput = Path(sys.argv[sys.argv.index("--output") + 1]) if "--output" in sys.argv else Path("source/chali_stdlib_embedded.cpp")\n'
         'if not output.exists() or output.read_bytes() != source: output.write_bytes(source)\n'
         'if "--stamp" in sys.argv: Path(sys.argv[sys.argv.index("--stamp") + 1]).touch()\n', encoding='utf-8')
     previous = 0

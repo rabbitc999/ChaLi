@@ -4,7 +4,7 @@ import std::text;
 /* std::image 冒烟样例：像素读写、卷积、池化、格式转换、大津法与 BMP 往返。 */
 void main() {
     /* 1. 创建 4x2 图片，写入已知颜色。 */
-    Result<Image, MessageError> created = Image::make(4, 2);
+    Result<Image, Error> created = Image::make(4, 2);
     Image image = created.unwrap();
     image.setPixel(0, 0, 255, 0, 0, 255);
     image.setPixel(1, 0, 0, 255, 0, 255);
@@ -24,7 +24,7 @@ void main() {
     line.appendChar(',');
     line.appendInt(pixel.a);
     print("pixel(2,0)={}", line.toString());
-    Result<Pixel, MessageError> missed = image.getPixel(4, 0);
+    Result<Pixel, Error> missed = image.getPixel(4, 0);
     print("getPixel(4,0) err={}", missed.isErr());
 
     /* 2. 卷积：恒等核应还原原图。 */

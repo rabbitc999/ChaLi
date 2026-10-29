@@ -15,7 +15,7 @@ tested version, configuration and date; they do not automatically describe curre
 
 ## Language and resources
 
-Concrete standard-library errors implement the core `Error` interface and provide diagnostics through `toString()`. `IoError`, `ParseError`, `CsvError` and the other structured errors retain their variants, positions and original messages. Text-only failures use `MessageError`, constructed with `MessageError::from(text)`. Shared handlers accept `Error const&` or use an `<E: Error>` constraint. `Result<T, E>` retains its concrete error type, including during `?` propagation.
+Standard-library failures use `Result<T, Error>` with an owned interface payload that retains the concrete error. IoError, ParseError, CsvError and other structured errors keep their variants, positions and messages. Text errors use MessageError::from(text) before boxing as Error. Shared handlers accept an Error value, Error const& or an E: Error generic constraint. Custom Result<T, E> values may retain a concrete E; when E implements Error, ? can propagate into a function returning Result<U, Error>.
 
 Heap object allocation uses `new T`, or `new T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
 

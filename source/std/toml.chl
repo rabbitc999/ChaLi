@@ -3,17 +3,17 @@ module std::toml;
 import std::serialization;
 
 /** 将反射模型编码为 TOML 文档；根值必须是对象。 */
-Result<String,MessageError> serialize<T>(T const& value) {
+Result<String,std::lang::Error> serialize<T>(T const& value) {
     let encoded = std::json::serialize<T>(value);
-    if (encoded.isErr()) { return Result<String,MessageError>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<String,std::lang::Error>::Err(MessageError::from(encoded.error())); }
     String converted = std::serialization::__transcode(encoded.unwrap(), true);
-    if (!converted.startsWith("1")) { return Result<String,MessageError>::Err(MessageError::from(converted.removePrefix("0"))); }
-    return Result<String,MessageError>::Ok(converted.removePrefix("1"));
+    if (!converted.startsWith("1")) { return Result<String,std::lang::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
+    return Result<String,std::lang::Error>::Ok(converted.removePrefix("1"));
 }
 /** 按具体反射类型解码 TOML，不接受静默数值窄化。 */
-Result<T,MessageError> deserialize<T>(String text) {
+Result<T,std::lang::Error> deserialize<T>(String text) {
     String converted = std::serialization::__transcode(text, false);
-    if (!converted.startsWith("1")) { return Result<T,MessageError>::Err(MessageError::from(converted.removePrefix("0"))); }
+    if (!converted.startsWith("1")) { return Result<T,std::lang::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
     return std::json::deserialize<T>(converted.removePrefix("1"));
 }
 
@@ -130,9 +130,9 @@ struct TomlValue : Iterator<TomlValue> {
 };
 
 /** 解析文本；失败返回包含行列信息的诊断。 */
-Result<TomlValue, std::lang::MessageError> parse(std::lang::String text) {
+Result<TomlValue, std::lang::Error> parse(std::lang::String text) {
     __TomlValueStorage handle = __parse(text);
-    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<TomlValue, std::lang::MessageError>::Err(MessageError::from(message)); }
+    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<TomlValue, std::lang::Error>::Err(MessageError::from(message)); }
     TomlValue value; value.__storage = move handle;
-    return Result<TomlValue, std::lang::MessageError>::Ok(move value);
+    return Result<TomlValue, std::lang::Error>::Ok(move value);
 }

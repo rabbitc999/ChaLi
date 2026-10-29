@@ -425,13 +425,38 @@ void main()
 \midrule
 \endhead
 你在编译期就知道具体类型 & 直接调用 & 快，清楚，别绕 \\
-一个函数要吃多种类型，且类型在运行期才定 & 接口引用 & 只有它能做 \\
+一个函数要吃多种类型，且类型在运行期才定 & 接口值或接口引用 & 持有独立对象或借用已有对象 \\
 只是想让几个类型共享一段代码 & 先想想泛型（第 14 章） & 泛型在编译期展开，往往更合适 \\
 \bottomrule
 \end{longtable}
 }
 
 经验法则：只有「调用者不知道具体是谁」的时候，才需要接口引用。能静态调用就静态调用——这也是官方样例把静态和动态两条路摆在一起对比的原因。
+
+\subsection*{拥有接口值与泛型载荷}
+
+\texttt{Error error =\allowbreak{} Message\allowbreak{}Error:\allowbreak{}:\allowbreak{}from(\allowbreak{}"原因")\allowbreak{};} 持有具体错误的独立副本。它可作为泛型实参放进 \texttt{Result<\allowbreak{}String,\allowbreak{} Error>\allowbreak{}}、\texttt{Option<\allowbreak{}Error>\allowbreak{}} 或容器，复制后分别清理。\texttt{Error const\&} 则继续借用来源，不因接口分派延长生命周期；拥有接口值也不能隐藏非全局引用。
+
+接口值支持 \texttt{Concrete(\allowbreak{}value)\allowbreak{}} 类型分支，开放接口必须有 \texttt{\_\allowbreak{}} 或 \texttt{\_\allowbreak{}(\allowbreak{}other)\allowbreak{}} 兜底。泛型枚举支持联合匹配：
+
+\par
+\medskip
+\begin{lstlisting}[style=chali]
+match (res) // Result<A, B>；E、F 实现接口 B
+{
+    OK(A a) => { /* 成功载荷 */ }
+    Ok(_) => { /* 成功兜底，不绑定 */ }
+    Err(E b) => { /* 具体错误 E */ }
+    Err(F c) => { /* 具体错误 F */ }
+    Err(_ d) => { /* 其余错误，保留接口绑定 */ }
+}
+\end{lstlisting}
+\par
+\medskip
+
+同一标签的类型分支按源码顺序匹配；\texttt{Err(\allowbreak{}\_\allowbreak{})\allowbreak{}} 是不绑定的失败兜底。规范成功标签为 Ok，匹配位置兼容 OK。只有可证明穷尽时才省略兜底，不按当前实现列表假定开放接口封闭。完整程序见\href{https://github.com/rabbitc999/ChaLi/blob/master/example/samples/interface_payload_match.chl}{接口载荷匹配样例}。
+
+单接口载荷的 \texttt{Err(\allowbreak{}Io\allowbreak{}Error error)\allowbreak{}} 可简写为 \texttt{Err:\allowbreak{}:\allowbreak{}Io\allowbreak{}Error(\allowbreak{}error)\allowbreak{}}；只有唯一标签且无名称冲突时，才可进一步写 \texttt{Io\allowbreak{}Error(\allowbreak{}error)\allowbreak{}}。双／多载荷保留标签和括号内类型模式，例如 \texttt{Pair(\allowbreak{}A a,\allowbreak{} B b)\allowbreak{}} 或 \texttt{Many(\allowbreak{}A a,\allowbreak{} B b,\allowbreak{} text,\allowbreak{} count)\allowbreak{}}。非接口载荷直接写变量即可；接口载荷写普通变量时绑定原接口，写类型模式时才筛选动态类型。
 
 \section{小结}
 

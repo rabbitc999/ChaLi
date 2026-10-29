@@ -1,24 +1,24 @@
 import std::io;
 
 void main() {
-    Result<FileStream, IoError> opened =
+    Result<FileStream, Error> opened =
     std::io::FileStream::open("tmp/chali_std_io.txt", "w+");
     assert(opened.isOk(), "open failed");
     std::io::FileStream stream = opened.take();
-    /* `Result<_, IoError>` 的载荷带字符串（IoError 里有 message）——持资源的临时值
+    /* `Result<_, Error>` 的载荷带字符串（IoError 里有 message）——持资源的临时值
      * 不许直接链式调用，先落进变量。 */
-    Result<int64, std::io::IoError> writeResult = stream.write("alpha\nbeta\n");
+    Result<int64, Error> writeResult = stream.write("alpha\nbeta\n");
     int64 written = writeResult.expect("write failed");
-    Result<int64, std::io::IoError> flushResult = stream.flush();
+    Result<int64, Error> flushResult = stream.flush();
     int64 flushed = flushResult.expect("flush failed");
-    Result<int64, std::io::IoError> seekResult = stream.seek(0, std::io::SeekOrigin::Begin);
+    Result<int64, Error> seekResult = stream.seek(0, std::io::SeekOrigin::Begin);
     int64 position = seekResult.expect("seek failed");
-    Result<String, std::io::IoError> readResult = stream.read();
+    Result<String, Error> readResult = stream.read();
     String first = readResult.expect("read failed");
     println("{} {} {}", written, position, first);
     stream.close();
 
-    Result<std::io::FileStream, std::io::IoError> missing =
+    Result<std::io::FileStream, Error> missing =
     std::io::FileStream::open("tmp/no-such-chali-file.txt", "r");
     println("{}", missing.isErr());
 }

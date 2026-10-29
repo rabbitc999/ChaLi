@@ -67,7 +67,7 @@ struct MReflectionBuilder
     {
         if (!type) return "type:void";
         if (IsContainer(type)) return "type:" + type->name + "<" + key(type->elem) + (type->elem2 ? "," + key(type->elem2) : Memory::String()) + ">";
-        if (type->kind == MType::Struct || type->kind == MType::Host || type->kind == MType::Opcode)
+        if (type->kind == MType::Struct || type->kind == MType::Host || type->kind == MType::Opcode || IsInterfaceType(type))
         {
             const auto prefix = g_interfaces.count(type->name) ? "interface:" :
                                 g_enums.count(type->name)      ? "enum:" :

@@ -19,10 +19,13 @@ AstSubstitution::AstSubstitution(Memory::Deque<MNode> &nodes, std::size_t nodeBu
  * @param context 本次展开的上下文。
  * @param error 接收错误，成功时清空。
  * @param site 调用处来源及展开帧。
+ * @param values 表达式参数的单次求值绑定。
  * @return 实例化根编号，失败返回负一。
  */
-int AstSubstitution::instantiate(int root, const std::map<BindingId, int> &arguments, ContextId context, std::string &error, const ExpansionSite &site)
+int AstSubstitution::instantiate(int root, const std::map<BindingId, int> &arguments, ContextId context, std::string &error, const ExpansionSite &site,
+                                 const std::map<BindingId, int> *values)
 {
+    values_ = values;
     start_ = nodes_.size();
     const auto typeStart = types_ ? types_->size() : 0;
     arguments_ = &arguments;
@@ -96,7 +99,8 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
     if (static_cast<std::size_t>(id) >= start_) throw std::runtime_error("宏模板引用了无效的语法节点");
     if (depth >= 256) throw std::runtime_error("宏模板语法深度超过 256 层");
     const auto original = nodes_[id];
-    if (substitute && original.kind == MNode::ExprStmt && original.kids.size() == 1 && original.kids[0] >= 0 && nodes_[original.kids[0]].kind == MNode::MacroHole)
+    if (substitute && original.kind == MNode::ExprStmt && original.kids.size() == 1 && original.kids[0] >= 0 && nodes_[original.kids[0]].kind == MNode::MacroHole
+        && (!values_ || !values_->count(nodes_[original.kids[0]].bindingIdentity)))
     {
         const auto found = arguments_->find(nodes_[original.kids[0]].bindingIdentity);
         if (found != arguments_->end() && found->second >= 0 && static_cast<std::size_t>(found->second) < start_)
@@ -108,6 +112,25 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
     }
     if (substitute && (original.kind == MNode::MacroHole || (original.kind == MNode::MacroArgument && original.bindingIdentity && arguments_->count(original.bindingIdentity))))
     {
+        if (values_)
+        {
+            const auto evaluated = values_->find(original.bindingIdentity);
+            if (evaluated != values_->end())
+            {
+                const int reference = clone(evaluated->second, false, depth + 1);
+                if (original.kind == MNode::MacroHole) return reference;
+                const int forwarded = clone(arguments_->at(original.bindingIdentity), false, depth + 1);
+                if (nodes_[forwarded].kind != MNode::MacroArgument || nodes_[forwarded].kids.size() != 5u)
+                    return reference;
+                nodes_[forwarded].kids[0] = reference;
+                MNode statement;
+                statement.kind = MNode::ExprStmt;
+                statement.kids = { reference };
+                nodes_[forwarded].kids[4] = static_cast<int>(nodes_.size());
+                nodes_.push_back(std::move(statement));
+                return forwarded;
+            }
+        }
         const auto argument = arguments_->find(original.bindingIdentity);
         if (argument == arguments_->end()) throw std::runtime_error("宏形参没有绑定实参");
         int value = argument->second;

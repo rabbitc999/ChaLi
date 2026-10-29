@@ -65,7 +65,9 @@ def string_differential():
             f'assert({literal(text)}.reverse() == {literal(text[::-1])});',
             f'assert("".join({literal(text)}.unicodeChars()) == {literal(text)});',
         ])
-    return 'void main() {\n' + '\n'.join(statements) + '\nreturn;\n}'
+    # 保留全部差分断言，分批编译，避免单个巨型函数使 LLVM O3 编译耗时失控。
+    return ['void main() {\n' + '\n'.join(statements[start:start + 105]) + '\nreturn;\n}'
+            for start in range(0, len(statements), 105)]
 
 
 def main():
@@ -77,7 +79,8 @@ def main():
                  'std_parse_random_path_memory', 'regex_limits', 'event_timer'):
         cases.append((name, ROOT / 'example' / 'samples' / (name + '.chl'), {}))
     cases.append(('typed_messages_shared', ROOT / 'example/samples/typed_messages_shared.chl', {'threads': True}))
-    cases.append(('string_differential', string_differential(), {}))
+    for index, source in enumerate(string_differential()):
+        cases.append((f'string_differential_{index}', source, {}))
     cases.append(('generic_function_comparisons', '''import std::math;
 T identity<T>(T value) { return value; }
 void main() {

@@ -54,28 +54,28 @@ Image 是可深复制的 opcode，尺寸与连续 RGBA8888 像素存储由宿主
 | [Image::width](#api-0) | `int64 width()` |
 | [Image::height](#api-1) | `int64 height()` |
 | [Image::pixels](#api-2) | `List<uint8> pixels()` |
-| [Image::make](#api-3) | `static Result<Image, std::lang::MessageError> make(int64 width, int64 height)` |
-| [Image::decode](#api-4) | `static Result<Image, std::lang::MessageError> decode(List<uint8> bytes)` |
-| [Image::open](#api-5) | `static Result<Image, std::lang::MessageError> open(String path)` |
-| [Image::encodeBmp](#api-6) | `Result<List<uint8>, std::lang::MessageError> encodeBmp()` |
-| [Image::encodePpm](#api-7) | `Result<List<uint8>, std::lang::MessageError> encodePpm()` |
-| [Image::encodePgm](#api-8) | `Result<List<uint8>, std::lang::MessageError> encodePgm()` |
-| [Image::saveBmp](#api-9) | `Result<int64, std::lang::MessageError> saveBmp(String path)` |
-| [Image::savePpm](#api-10) | `Result<int64, std::lang::MessageError> savePpm(String path)` |
-| [Image::savePgm](#api-11) | `Result<int64, std::lang::MessageError> savePgm(String path)` |
-| [Image::getPixel](#api-12) | `Result<Pixel, std::lang::MessageError> getPixel(int64 x, int64 y)` |
-| [Image::setPixel](#api-13) | `Result<int64, std::lang::MessageError> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
-| [Image::convolve](#api-14) | `Result<Image, std::lang::MessageError> convolve(List<float64> kernel, int64 kw, int64 kh)` |
-| [Image::pool](#api-15) | `Result<Image, std::lang::MessageError> pool(int64 mode, int64 kw, int64 kh)` |
-| [Image::toGray](#api-16) | `Result<List<uint8>, std::lang::MessageError> toGray()` |
-| [Image::fromGray](#api-17) | `static Result<Image, std::lang::MessageError> fromGray(int64 width, int64 height, List<uint8> gray)` |
-| [Image::toARGB](#api-18) | `Result<List<uint32>, std::lang::MessageError> toARGB()` |
-| [Image::fromARGB](#api-19) | `static Result<Image, std::lang::MessageError> fromARGB(int64 width, int64 height, List<uint32> argb)` |
-| [Image::toRGB565](#api-20) | `Result<List<uint16>, std::lang::MessageError> toRGB565()` |
-| [Image::fromRGB565](#api-21) | `static Result<Image, std::lang::MessageError> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
-| [Image::otsuThreshold](#api-22) | `Result<int64, std::lang::MessageError> otsuThreshold()` |
-| [Image::binarize](#api-23) | `static Result<List<uint8>, std::lang::MessageError> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
-| [Image::otsuBinarize](#api-24) | `Result<List<uint8>, std::lang::MessageError> otsuBinarize()` |
+| [Image::make](#api-3) | `static Result<Image, std::lang::Error> make(int64 width, int64 height)` |
+| [Image::decode](#api-4) | `static Result<Image, std::lang::Error> decode(List<uint8> bytes)` |
+| [Image::open](#api-5) | `static Result<Image, std::lang::Error> open(String path)` |
+| [Image::encodeBmp](#api-6) | `Result<List<uint8>, std::lang::Error> encodeBmp()` |
+| [Image::encodePpm](#api-7) | `Result<List<uint8>, std::lang::Error> encodePpm()` |
+| [Image::encodePgm](#api-8) | `Result<List<uint8>, std::lang::Error> encodePgm()` |
+| [Image::saveBmp](#api-9) | `Result<int64, std::lang::Error> saveBmp(String path)` |
+| [Image::savePpm](#api-10) | `Result<int64, std::lang::Error> savePpm(String path)` |
+| [Image::savePgm](#api-11) | `Result<int64, std::lang::Error> savePgm(String path)` |
+| [Image::getPixel](#api-12) | `Result<Pixel, std::lang::Error> getPixel(int64 x, int64 y)` |
+| [Image::setPixel](#api-13) | `Result<int64, std::lang::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
+| [Image::convolve](#api-14) | `Result<Image, std::lang::Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
+| [Image::pool](#api-15) | `Result<Image, std::lang::Error> pool(int64 mode, int64 kw, int64 kh)` |
+| [Image::toGray](#api-16) | `Result<List<uint8>, std::lang::Error> toGray()` |
+| [Image::fromGray](#api-17) | `static Result<Image, std::lang::Error> fromGray(int64 width, int64 height, List<uint8> gray)` |
+| [Image::toARGB](#api-18) | `Result<List<uint32>, std::lang::Error> toARGB()` |
+| [Image::fromARGB](#api-19) | `static Result<Image, std::lang::Error> fromARGB(int64 width, int64 height, List<uint32> argb)` |
+| [Image::toRGB565](#api-20) | `Result<List<uint16>, std::lang::Error> toRGB565()` |
+| [Image::fromRGB565](#api-21) | `static Result<Image, std::lang::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
+| [Image::otsuThreshold](#api-22) | `Result<int64, std::lang::Error> otsuThreshold()` |
+| [Image::binarize](#api-23) | `static Result<List<uint8>, std::lang::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
+| [Image::otsuBinarize](#api-24) | `Result<List<uint8>, std::lang::Error> otsuBinarize()` |
 
 <a id="api-0"></a>
 
@@ -186,7 +186,7 @@ obj.pixels();
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> make(int64 width, int64 height);
+static Result<Image, std::lang::Error> make(int64 width, int64 height);
 ```
 
 **行为**
@@ -202,7 +202,7 @@ static Result<Image, std::lang::MessageError> make(int64 width, int64 height);
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。新图片；宽高不合法时返回错误。
+`Result<Image, std::lang::Error>`。新图片；宽高不合法时返回错误。
 
 **错误与边界**
 
@@ -223,7 +223,7 @@ std::image::Image::make(width, height);
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> decode(List<uint8> bytes);
+static Result<Image, std::lang::Error> decode(List<uint8> bytes);
 ```
 
 **行为**
@@ -238,7 +238,7 @@ static Result<Image, std::lang::MessageError> decode(List<uint8> bytes);
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。解码后的图片；格式不识别或数据不完整时返回错误。
+`Result<Image, std::lang::Error>`。解码后的图片；格式不识别或数据不完整时返回错误。
 
 **错误与边界**
 
@@ -259,7 +259,7 @@ std::image::Image::decode(bytes);
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> open(String path);
+static Result<Image, std::lang::Error> open(String path);
 ```
 
 **行为**
@@ -274,7 +274,7 @@ static Result<Image, std::lang::MessageError> open(String path);
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。解码后的图片；读取失败或格式不识别时返回错误。
+`Result<Image, std::lang::Error>`。解码后的图片；读取失败或格式不识别时返回错误。
 
 **错误与边界**
 
@@ -295,7 +295,7 @@ std::image::Image::open(path);
 **声明**
 
 ```chali
-Result<List<uint8>, std::lang::MessageError> encodeBmp();
+Result<List<uint8>, std::lang::Error> encodeBmp();
 ```
 
 **行为**
@@ -308,7 +308,7 @@ Result<List<uint8>, std::lang::MessageError> encodeBmp();
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。BMP 文件字节；缓冲长度不符时返回错误。
+`Result<List<uint8>, std::lang::Error>`。BMP 文件字节；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -329,7 +329,7 @@ obj.encodeBmp();
 **声明**
 
 ```chali
-Result<List<uint8>, std::lang::MessageError> encodePpm();
+Result<List<uint8>, std::lang::Error> encodePpm();
 ```
 
 **行为**
@@ -342,7 +342,7 @@ Result<List<uint8>, std::lang::MessageError> encodePpm();
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。PPM 文件字节；缓冲长度不符时返回错误。
+`Result<List<uint8>, std::lang::Error>`。PPM 文件字节；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -363,7 +363,7 @@ obj.encodePpm();
 **声明**
 
 ```chali
-Result<List<uint8>, std::lang::MessageError> encodePgm();
+Result<List<uint8>, std::lang::Error> encodePgm();
 ```
 
 **行为**
@@ -376,7 +376,7 @@ Result<List<uint8>, std::lang::MessageError> encodePgm();
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。PGM 文件字节；缓冲长度不符时返回错误。
+`Result<List<uint8>, std::lang::Error>`。PGM 文件字节；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -397,7 +397,7 @@ obj.encodePgm();
 **声明**
 
 ```chali
-Result<int64, std::lang::MessageError> saveBmp(String path);
+Result<int64, std::lang::Error> saveBmp(String path);
 ```
 
 **行为**
@@ -412,7 +412,7 @@ Result<int64, std::lang::MessageError> saveBmp(String path);
 
 **返回值**
 
-`Result<int64, std::lang::MessageError>`。写入的字节数；编码或写盘失败时返回错误。
+`Result<int64, std::lang::Error>`。写入的字节数；编码或写盘失败时返回错误。
 
 **错误与边界**
 
@@ -433,7 +433,7 @@ obj.saveBmp(path);
 **声明**
 
 ```chali
-Result<int64, std::lang::MessageError> savePpm(String path);
+Result<int64, std::lang::Error> savePpm(String path);
 ```
 
 **行为**
@@ -448,7 +448,7 @@ Result<int64, std::lang::MessageError> savePpm(String path);
 
 **返回值**
 
-`Result<int64, std::lang::MessageError>`。写入的字节数；编码或写盘失败时返回错误。
+`Result<int64, std::lang::Error>`。写入的字节数；编码或写盘失败时返回错误。
 
 **错误与边界**
 
@@ -469,7 +469,7 @@ obj.savePpm(path);
 **声明**
 
 ```chali
-Result<int64, std::lang::MessageError> savePgm(String path);
+Result<int64, std::lang::Error> savePgm(String path);
 ```
 
 **行为**
@@ -484,7 +484,7 @@ Result<int64, std::lang::MessageError> savePgm(String path);
 
 **返回值**
 
-`Result<int64, std::lang::MessageError>`。写入的字节数；编码或写盘失败时返回错误。
+`Result<int64, std::lang::Error>`。写入的字节数；编码或写盘失败时返回错误。
 
 **错误与边界**
 
@@ -505,7 +505,7 @@ obj.savePgm(path);
 **声明**
 
 ```chali
-Result<Pixel, std::lang::MessageError> getPixel(int64 x, int64 y);
+Result<Pixel, std::lang::Error> getPixel(int64 x, int64 y);
 ```
 
 **行为**
@@ -521,7 +521,7 @@ Result<Pixel, std::lang::MessageError> getPixel(int64 x, int64 y);
 
 **返回值**
 
-`Result<Pixel, std::lang::MessageError>`。像素颜色分量；坐标越界时返回错误。
+`Result<Pixel, std::lang::Error>`。像素颜色分量；坐标越界时返回错误。
 
 **错误与边界**
 
@@ -542,7 +542,7 @@ obj.getPixel(x, y);
 **声明**
 
 ```chali
-Result<int64, std::lang::MessageError> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a);
+Result<int64, std::lang::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a);
 ```
 
 **行为**
@@ -562,7 +562,7 @@ Result<int64, std::lang::MessageError> setPixel(int64 x, int64 y, int64 r, int64
 
 **返回值**
 
-`Result<int64, std::lang::MessageError>`。成功时为 0；坐标越界或分量超范围时返回错误，不修改缓冲。
+`Result<int64, std::lang::Error>`。成功时为 0；坐标越界或分量超范围时返回错误，不修改缓冲。
 
 **错误与边界**
 
@@ -583,7 +583,7 @@ obj.setPixel(x, y, r, g, b, a);
 **声明**
 
 ```chali
-Result<Image, std::lang::MessageError> convolve(List<float64> kernel, int64 kw, int64 kh);
+Result<Image, std::lang::Error> convolve(List<float64> kernel, int64 kw, int64 kh);
 ```
 
 **行为**
@@ -600,7 +600,7 @@ Result<Image, std::lang::MessageError> convolve(List<float64> kernel, int64 kw, 
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。卷积后的新图片；核形状或缓冲长度不符时返回错误。
+`Result<Image, std::lang::Error>`。卷积后的新图片；核形状或缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -621,7 +621,7 @@ obj.convolve(kernel, kw, kh);
 **声明**
 
 ```chali
-Result<Image, std::lang::MessageError> pool(int64 mode, int64 kw, int64 kh);
+Result<Image, std::lang::Error> pool(int64 mode, int64 kw, int64 kh);
 ```
 
 **行为**
@@ -638,7 +638,7 @@ Result<Image, std::lang::MessageError> pool(int64 mode, int64 kw, int64 kh);
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。池化后的新图片，尺寸为 (width/kw, height/kh) 向下取整；参数不合法时返回错误。
+`Result<Image, std::lang::Error>`。池化后的新图片，尺寸为 (width/kw, height/kh) 向下取整；参数不合法时返回错误。
 
 **错误与边界**
 
@@ -659,7 +659,7 @@ obj.pool(mode, kw, kh);
 **声明**
 
 ```chali
-Result<List<uint8>, std::lang::MessageError> toGray();
+Result<List<uint8>, std::lang::Error> toGray();
 ```
 
 **行为**
@@ -672,7 +672,7 @@ Result<List<uint8>, std::lang::MessageError> toGray();
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。长度 width height 的灰度缓冲，每像素按 BT.601 亮度取值；缓冲长度不符时返回错误。
+`Result<List<uint8>, std::lang::Error>`。长度 width height 的灰度缓冲，每像素按 BT.601 亮度取值；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -693,7 +693,7 @@ obj.toGray();
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> fromGray(int64 width, int64 height, List<uint8> gray);
+static Result<Image, std::lang::Error> fromGray(int64 width, int64 height, List<uint8> gray);
 ```
 
 **行为**
@@ -710,7 +710,7 @@ static Result<Image, std::lang::MessageError> fromGray(int64 width, int64 height
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。三通道同值、透明度 255 的图片；缓冲长度不符时返回错误。
+`Result<Image, std::lang::Error>`。三通道同值、透明度 255 的图片；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -731,7 +731,7 @@ std::image::Image::fromGray(width, height, gray);
 **声明**
 
 ```chali
-Result<List<uint32>, std::lang::MessageError> toARGB();
+Result<List<uint32>, std::lang::Error> toARGB();
 ```
 
 **行为**
@@ -744,7 +744,7 @@ Result<List<uint32>, std::lang::MessageError> toARGB();
 
 **返回值**
 
-`Result<List<uint32>, std::lang::MessageError>`。每像素一个 uint32 的列表，布局 (A<<24)|(R<<16)|(G<<8)|B；缓冲长度不符时返回错误。
+`Result<List<uint32>, std::lang::Error>`。每像素一个 uint32 的列表，布局 (A<<24)|(R<<16)|(G<<8)|B；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -765,7 +765,7 @@ obj.toARGB();
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> fromARGB(int64 width, int64 height, List<uint32> argb);
+static Result<Image, std::lang::Error> fromARGB(int64 width, int64 height, List<uint32> argb);
 ```
 
 **行为**
@@ -782,7 +782,7 @@ static Result<Image, std::lang::MessageError> fromARGB(int64 width, int64 height
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。还原后的图片；缓冲长度不符时返回错误。
+`Result<Image, std::lang::Error>`。还原后的图片；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -803,7 +803,7 @@ std::image::Image::fromARGB(width, height, argb);
 **声明**
 
 ```chali
-Result<List<uint16>, std::lang::MessageError> toRGB565();
+Result<List<uint16>, std::lang::Error> toRGB565();
 ```
 
 **行为**
@@ -816,7 +816,7 @@ Result<List<uint16>, std::lang::MessageError> toRGB565();
 
 **返回值**
 
-`Result<List<uint16>, std::lang::MessageError>`。每像素一个 uint16 的列表，R 高 5 位、G 中 6 位、B 低 5 位；缓冲长度不符时返回错误。
+`Result<List<uint16>, std::lang::Error>`。每像素一个 uint16 的列表，R 高 5 位、G 中 6 位、B 低 5 位；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -837,7 +837,7 @@ obj.toRGB565();
 **声明**
 
 ```chali
-static Result<Image, std::lang::MessageError> fromRGB565(int64 width, int64 height, List<uint16> rgb565);
+static Result<Image, std::lang::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565);
 ```
 
 **行为**
@@ -854,7 +854,7 @@ static Result<Image, std::lang::MessageError> fromRGB565(int64 width, int64 heig
 
 **返回值**
 
-`Result<Image, std::lang::MessageError>`。还原后的图片，5/6 位分量按高位复制扩展回 8 位；缓冲长度不符时返回错误。
+`Result<Image, std::lang::Error>`。还原后的图片，5/6 位分量按高位复制扩展回 8 位；缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -875,7 +875,7 @@ std::image::Image::fromRGB565(width, height, rgb565);
 **声明**
 
 ```chali
-Result<int64, std::lang::MessageError> otsuThreshold();
+Result<int64, std::lang::Error> otsuThreshold();
 ```
 
 **行为**
@@ -888,7 +888,7 @@ Result<int64, std::lang::MessageError> otsuThreshold();
 
 **返回值**
 
-`Result<int64, std::lang::MessageError>`。使类间方差最大的灰度阈值，0..255；图片无效时返回错误。
+`Result<int64, std::lang::Error>`。使类间方差最大的灰度阈值，0..255；图片无效时返回错误。
 
 **错误与边界**
 
@@ -909,7 +909,7 @@ obj.otsuThreshold();
 **声明**
 
 ```chali
-static Result<List<uint8>, std::lang::MessageError> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold);
+static Result<List<uint8>, std::lang::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold);
 ```
 
 **行为**
@@ -927,7 +927,7 @@ static Result<List<uint8>, std::lang::MessageError> binarize(int64 width, int64 
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。二值化后的灰度缓冲；阈值越界或缓冲长度不符时返回错误。
+`Result<List<uint8>, std::lang::Error>`。二值化后的灰度缓冲；阈值越界或缓冲长度不符时返回错误。
 
 **错误与边界**
 
@@ -948,7 +948,7 @@ std::image::Image::binarize(width, height, gray, threshold);
 **声明**
 
 ```chali
-Result<List<uint8>, std::lang::MessageError> otsuBinarize();
+Result<List<uint8>, std::lang::Error> otsuBinarize();
 ```
 
 **行为**
@@ -961,7 +961,7 @@ Result<List<uint8>, std::lang::MessageError> otsuBinarize();
 
 **返回值**
 
-`Result<List<uint8>, std::lang::MessageError>`。0/255 灰度缓冲；任何一步失败时返回错误。
+`Result<List<uint8>, std::lang::Error>`。0/255 灰度缓冲；任何一步失败时返回错误。
 
 **错误与边界**
 

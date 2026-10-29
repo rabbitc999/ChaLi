@@ -21,12 +21,12 @@ struct CliArguments {
         return Option<String>::Value(self.options[name]);
     }
     /** 严格转换整数参数，失败返回带参数名的错误。 */
-    Result<int64,CliError> getInt(String name) {
+    Result<int64,std::lang::Error> getInt(String name) {
         CliError error; error.argument=name; error.message="expected an integer option";
-        if (self.options.has(name)==0) { return Result<int64,CliError>::Err(error); }
+        if (self.options.has(name)==0) { return Result<int64,std::lang::Error>::Err(error); }
         let parsed=Parse::parseInt64(self.options[name]);
-        if (!parsed.isOk()) { return Result<int64,CliError>::Err(error); }
-        return Result<int64,CliError>::Ok(parsed.unwrap());
+        if (!parsed.isOk()) { return Result<int64,std::lang::Error>::Err(error); }
+        return Result<int64,std::lang::Error>::Ok(parsed.unwrap());
     }
 };
 /** @brief 生成参数诊断。 */
@@ -78,7 +78,7 @@ struct CliParser {
         return result;
     }
     /** 解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。 */
-    Result<CliArguments,CliError> parse(List<String> arguments) {
+    Result<CliArguments,std::lang::Error> parse(List<String> arguments) {
         CliArguments result; Map<String,bool> seen;
         for (CliOption option in self.definitions) {
             String initial=option.defaultValue;
@@ -115,15 +115,15 @@ struct CliParser {
                         j=j+1;
                     }
                 }
-                if (found<0) { return Result<CliArguments,CliError>::Err(cliError(argument,"unknown option")); }
+                if (found<0) { return Result<CliArguments,std::lang::Error>::Err(cliError(argument,"unknown option")); }
                 CliOption option=self.definitions[found];
                 if (option.takesValue) {
                     if (!assigned) {
-                        if (i+1>=arguments.len()) { return Result<CliArguments,CliError>::Err(cliError(argument,"missing value")); }
+                        if (i+1>=arguments.len()) { return Result<CliArguments,std::lang::Error>::Err(cliError(argument,"missing value")); }
                         i=i+1; value=arguments[i];
                     }
                 } else {
-                    if (assigned) { return Result<CliArguments,CliError>::Err(cliError(argument,"flag does not accept a value")); }
+                    if (assigned) { return Result<CliArguments,std::lang::Error>::Err(cliError(argument,"flag does not accept a value")); }
                     value="true";
                 }
                 result.options[name]=value; seen[name]=true;
@@ -143,13 +143,13 @@ struct CliParser {
                             k=k+1;
                         }
                     }
-                    if (found<0) { return Result<CliArguments,CliError>::Err(cliError(argument,"unknown short option")); }
+                    if (found<0) { return Result<CliArguments,std::lang::Error>::Err(cliError(argument,"unknown short option")); }
                     CliOption option=self.definitions[found]; String value="true";
                     if (option.takesValue) {
                         value="";
                         if (j+1<len(argument)) { value=cliTail(argument,j+1); }
                         if (j+1==len(argument)) {
-                            if (i+1>=arguments.len()) { return Result<CliArguments,CliError>::Err(cliError(argument,"missing value")); }
+                            if (i+1>=arguments.len()) { return Result<CliArguments,std::lang::Error>::Err(cliError(argument,"missing value")); }
                             i=i+1; value=arguments[i];
                         }
                         j=len(argument);
@@ -166,9 +166,9 @@ struct CliParser {
         }
         if (!result.helpRequested) {
             for (CliOption option in self.definitions) {
-                if (option.required && seen.has(option.name)==0) { return Result<CliArguments,CliError>::Err(cliError(option.name,"required option is missing")); }
+                if (option.required && seen.has(option.name)==0) { return Result<CliArguments,std::lang::Error>::Err(cliError(option.name,"required option is missing")); }
             }
         }
-        return Result<CliArguments,CliError>::Ok(result);
+        return Result<CliArguments,std::lang::Error>::Ok(result);
     }
 };

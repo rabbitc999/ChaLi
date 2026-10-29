@@ -34,54 +34,69 @@ import std::path;
 import std::random;
 
 void main() {
-    Result<int64, std::parse::ParseError> integer = std::parse::Parse::parseInt64("-42");
-    Result<uint64, std::parse::ParseError> natural = std::parse::Parse::parseUInt64("18446744073709551615");
-    Result<float64, std::parse::ParseError> real = std::parse::Parse::parseFloat64("12.5");
-    Result<bool, std::parse::ParseError> flag = std::parse::Parse::parseBool("true");
+    Result<int64, Error> integer = std::parse::Parse::parseInt64("-42");
+    Result<uint64, Error> natural = std::parse::Parse::parseUInt64("18446744073709551615");
+    Result<float64, Error> real = std::parse::Parse::parseFloat64("12.5");
+    Result<bool, Error> flag = std::parse::Parse::parseBool("true");
     match (integer) {
-        Result<int64, std::parse::ParseError>::Ok(value) => { println("int64={}", value); }
-        Result<int64, std::parse::ParseError>::Err(error) => { println("int64=error"); }
+        Result<int64, Error>::Ok(value) => { println("int64={}", value); }
+        Result<int64, Error>::Err(error) => { println("int64=error"); }
     }
     match (natural) {
-        Result<uint64, std::parse::ParseError>::Ok(value) => { println("uint64={}", value); }
-        Result<uint64, std::parse::ParseError>::Err(error) => { println("uint64=error"); }
+        Result<uint64, Error>::Ok(value) => { println("uint64={}", value); }
+        Result<uint64, Error>::Err(error) => { println("uint64=error"); }
     }
     match (real) {
-        Result<float64, std::parse::ParseError>::Ok(value) => { println("float64={:1F}", value); }
-        Result<float64, std::parse::ParseError>::Err(error) => { println("float64=error"); }
+        Result<float64, Error>::Ok(value) => { println("float64={:1F}", value); }
+        Result<float64, Error>::Err(error) => { println("float64=error"); }
     }
     match (flag) {
-        Result<bool, std::parse::ParseError>::Ok(value) => { println("bool={}", (int64)value); }
-        Result<bool, std::parse::ParseError>::Err(error) => { println("bool=error"); }
+        Result<bool, Error>::Ok(value) => { println("bool={}", (int64)value); }
+        Result<bool, Error>::Err(error) => { println("bool=error"); }
     }
 
-    Result<int64, std::parse::ParseError> empty = std::parse::Parse::parseInt64("");
-    Result<int64, std::parse::ParseError> invalid = std::parse::Parse::parseInt64("4x");
-    Result<int64, std::parse::ParseError> overflow =
+    Result<int64, Error> empty = std::parse::Parse::parseInt64("");
+    Result<int64, Error> invalid = std::parse::Parse::parseInt64("4x");
+    Result<int64, Error> overflow =
     std::parse::Parse::parseInt64("999999999999999999999999");
     match (empty) {
-        Result<int64, std::parse::ParseError>::Ok(value) => { println("empty=bad"); }
-        Result<int64, std::parse::ParseError>::Err(error) => {
+        Result<int64, Error>::Ok(value) => { println("empty=bad"); }
+        Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError::Empty => { println("empty=ok"); }
+                std::parse::ParseError(detail) => {
+                    match(detail) {
+                        std::parse::ParseError::Empty => { println("empty=ok"); }
+                        _ => { println("empty=bad"); }
+                    }
+                }
                 _ => { println("empty=bad"); }
             }
         }
     }
     match (invalid) {
-        Result<int64, std::parse::ParseError>::Ok(value) => { println("invalid=bad"); }
-        Result<int64, std::parse::ParseError>::Err(error) => {
+        Result<int64, Error>::Ok(value) => { println("invalid=bad"); }
+        Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError::Invalid => { println("invalid=ok"); }
+                std::parse::ParseError(detail) => {
+                    match(detail) {
+                        std::parse::ParseError::Invalid => { println("invalid=ok"); }
+                        _ => { println("invalid=bad"); }
+                    }
+                }
                 _ => { println("invalid=bad"); }
             }
         }
     }
     match (overflow) {
-        Result<int64, std::parse::ParseError>::Ok(value) => { println("overflow=bad"); }
-        Result<int64, std::parse::ParseError>::Err(error) => {
+        Result<int64, Error>::Ok(value) => { println("overflow=bad"); }
+        Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError::Overflow => { println("overflow=ok"); }
+                std::parse::ParseError(detail) => {
+                    match(detail) {
+                        std::parse::ParseError::Overflow => { println("overflow=ok"); }
+                        _ => { println("overflow=bad"); }
+                    }
+                }
                 _ => { println("overflow=bad"); }
             }
         }

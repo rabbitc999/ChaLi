@@ -78,6 +78,8 @@ Memory::String AggregateCopyName(const Memory::String &owner)
 Memory::Set<Memory::String> g_needsAggregateRelease;
 Memory::Set<Memory::String> g_needsAggregateCopy;
 Memory::Set<Memory::String> g_needsCaptureDestructor;  ///< 拥有型闭包捕获需要的用户析构助手。
+Memory::Set<Memory::String> g_needsInterfaceBox;       ///< 拥有接口值所需的具体类型复制与销毁助手。
+Memory::Set<int> g_exhaustiveMatches;                  ///< 已按实际主体类型证明穷尽的匹配节点。
 
 /* ── 运行时数组的元素释放 ──────────────────────────────────────────────
  *
@@ -514,11 +516,10 @@ bool CheckDeclaredType(const std::shared_ptr<MType> &type, const Memory::String 
             return CheckMapKey(type->elem, "Set");
         return true;
     }
-    /* 接口**不能当值类型**：它只描述"有哪些函数"，没有字段也没有大小，
-     * 所以 `Shape s;` 装不出东西来。要指向实现了它的对象就写接口引用。 */
+    /* 接口值的布局为拥有盒句柄，具体聚合大小由动态类型保存。 */
     if (IsInterfaceType(type))
     {
-        return Fail("接口不能当值类型（它只描述函数、没有字段也没有大小）：" + type->name + "（" + where + "）；要指向实现了它的对象就写 `" + type->name + " const&` 或 `" + type->name + " mut&`");
+        return true;
     }
     if (type->kind == MType::Struct && g_structs.count(type->name) == 0u)
     {
@@ -667,6 +668,12 @@ ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target);
  */
 ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> &target)
 {
+    if (IsInterfaceType(target))
+    {
+        const auto source = ExprType(valueId);
+        if (!Acceptable(target, source, true)) return Fail("类型未实现目标接口：" + Describe(source) + " -> " + Describe(target)), Bad();
+        if (!IsInterfaceType(source)) return LowerBoxedValue(valueId, target);
+    }
     /* 接口引用绑定时同时保存具体实现类型号与原引用地址；沿用既有胖引用分派。
      * 已有接口引用及 Any 提取保持原有路径。 */
     if (target && IsInterfacePointer(target) && !IsObjGetCall(valueId))
@@ -817,6 +824,7 @@ extern MFullExpressionTemps *g_fullExpressionTemps;
  */
 bool IsFreshInterfaceBinding(int valueId, const std::shared_ptr<MType> &target)
 {
+    if (valueId >= 0 && IsInterfaceType(target) && !IsInterfaceType(ExprType(valueId))) return true;
     const auto *disabled = std::getenv("CHALI_NO_INTERFACE_BINDING_MOVE");
     if ((disabled && *disabled) || valueId < 0 || !IsInterfacePointer(target) || IsObjGetCall(valueId))
         return false;

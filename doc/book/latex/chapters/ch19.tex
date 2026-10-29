@@ -187,16 +187,18 @@ void main() {
 \par
 \medskip
 
-实参 \texttt{1 + 2} 是完整表达式，替换进乘法的两个操作数，结果为 9。无需形参括号保护，也不自动给输出加括号、缓存参数或插入作用域；\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 仍调用两次 \texttt{next(\allowbreak{})\allowbreak{}}。语句宏的调用写完整分号；宏体的语句直接插入调用所在列表。需要块表达式时，在模板中显式书写 \texttt{\{ .\allowbreak{}.\allowbreak{}.\allowbreak{} yield value; \}}。
+表达式实参按从左到右的顺序各求值一次，再由宏体复用保存的值；\texttt{\$SQUARE(\allowbreak{}1 + 2)\allowbreak{}} 得到 9，\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 只调用一次 next，两个独立实参中的 next 则各调用一次。普通参数按值绑定，宏内修改只影响副本，不产生警告。编译器仅在不改变求值次数、别名、所有权与可观察行为时消除复制。语句宏调用仍写分号；名称、类型、语句等语法参数保留相应的结构和来源。
 
 \section{参数组、变长片段及卫生绑定}
+
+普通 \texttt{\$macro BUMP(\allowbreak{}n)\allowbreak{}} 中的 \texttt{n =\allowbreak{} n + 1;} 修改副本，调用 \texttt{\$BUMP(\allowbreak{}x)\allowbreak{}} 后 x 不变，也不警告。要写回 x，形参明确写为 \texttt{mut \&n}；只读借用写为 \texttt{\&n}，禁止通过它写入来源。每个实参仍只求值一次；编译器仅在证明行为等价时消除复制。
 
 裸定义 \texttt{\$macro A} 只能用 \texttt{\$A}；空组定义 \texttt{\$macro A(\allowbreak{})\allowbreak{}} 只能用 \texttt{\$A(\allowbreak{})\allowbreak{}}。\texttt{[\allowbreak{}]\allowbreak{}}、\texttt{(\allowbreak{})\allowbreak{}}、\texttt{\{\}} 按声明顺序严格匹配，允许重复组。每组支持固定形参和一个末尾变长形参 \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}rest} 或 \texttt{.\allowbreak{}.\allowbreak{}rest}，空捕获合法。固定形态优先于适用的变长形态。
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-$macro ACCUMULATE(out)[...values]
+$macro ACCUMULATE(mut &out)[...values]
 $for value in values
 int64 temporary = value;
 out += temporary;
@@ -237,7 +239,7 @@ void main() {
 \par
 \medskip
 
-\texttt{T:\allowbreak{}value} 只从指定实参的静态类型推导；未指定来源的 \texttt{T} 只从外层期望结果类型推导。显式类型优先，不执行参数、不自动转换、不改换推导来源。\texttt{let x =\allowbreak{} \$RESULT(\allowbreak{}42)\allowbreak{}} 缺少期望类型，编译失败。首版不支持宏泛型值参数、特化、偏特化或任意函数的编译期执行。
+\texttt{T:\allowbreak{}value} 只从指定实参的静态类型推导；未指定来源的 \texttt{T} 只从外层期望结果类型推导。显式类型优先，推导阶段不执行参数、不自动转换、不改换推导来源；展开后的运行期表达式参数仍各求值一次。\texttt{let x =\allowbreak{} \$RESULT(\allowbreak{}42)\allowbreak{}} 缺少期望类型，编译失败。首版不支持宏泛型值参数、特化、偏特化或任意函数的编译期执行。
 
 \section{五类完整语法匹配}
 
@@ -293,7 +295,7 @@ $end_macro
 
 只需计算并返回一个值时，优先函数；算法相同而类型不同，考虑泛型；需要组合调用处语法、生成声明或重复语句时，再考虑宏。宏展开在编译期完成，不等于模板内所有函数调用都在编译期执行。
 
-\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 展开后的两个操作数都含 \texttt{next(\allowbreak{})\allowbreak{}}，因而可能调用两次。如果必须只求值一次，在宏模板内部显式建立局部变量或改用函数；卫生性只保护名称绑定，并不改变求值次数。
+\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 将 next 的结果保存后复用，因此只调用一次。\texttt{\$PAIR(\allowbreak{}next(\allowbreak{})\allowbreak{},\allowbreak{} next(\allowbreak{})\allowbreak{})\allowbreak{}} 有两个独立实参，按从左到右顺序各求值一次；不能把它们合并成一次。
 
 \section{一个自己声明临时列表的 vec}
 
@@ -365,7 +367,7 @@ void main()
 
 \section{边界与验证}
 
-宏操作保留语法和来源，但不会自动缓存重复出现的实参。卫生绑定避免意外捕获，不能用调用者恰有同名变量来补救模板中的未定义名称。
+宏保留语法、来源与卫生绑定；表达式参数各求值一次并复用其值。普通参数修改的是副本，显式 mut \& 参数才写回来源。不能用调用者的同名变量补救模板中的未定义名称。
 
 \section{习题}
 
@@ -373,7 +375,7 @@ void main()
 
 \begin{enumerate}
 
-\item 为什么 SQUARE(next()) 可能执行两次 next？
+\item 为什么 SQUARE(next()) 只执行一次 next，而 PAIR(next(), next()) 执行两次？
 
 \item 写一个显式接收目标变量的累加宏。
 
@@ -387,9 +389,9 @@ void main()
 
 \begin{enumerate}
 
-\item 模板中参数出现两次，每个替换位置都可能求值；AST 宏并不自动记忆实参结果。
+\item 每个独立表达式实参求值一次，模板中的重复使用读取同一保存值；两个实参不能合并求值。
 
-\item 目标作为形参传入，循环展开逐项累加，验证空参数及多个参数。
+\item 目标声明为 mut \& 形参，循环展开逐项累加，验证空参数及多个参数。
 
 \item 模板未声明该名称且没有对应形参，调用处的同名局部变量不会自动被捕获，应优先报告名称解析错误。
 
@@ -403,16 +405,16 @@ void main()
 
 太原王生，早行，遇一丽人，抱一卷宏模板，步甚艰。生悦而纳之，问其能何为。女曰：“妾可将三行变作百行，且不烦君亲写。”生大喜，遂与共处，连展开结果也不曾看。
 
-一日，道士见生，曰：“子身上有两次求值之气。”生不信。归而窥之，见模板摊于屏上，参数在两处各写一遍，拿笔者乃一副重复执行的骨架。
+一日，道士见生，曰：“子身上有两次求值之气。”生不信。归而窥之，见模板摊于屏上，next() 在两处各写一遍，却没有任何形参，拿笔者乃一副重复执行的骨架。
 
-王生大惊，数其计数器，果然本欲加一，实已加二。女辩曰：“君调用一次，妾只展开一次；是君的表达式自己在两处活得精彩。”
+王生大惊，数其计数器，果然本欲加一，实已加二。女辩曰：“这两个 next() 本就是我在模板里写下的两次调用，怎能算作一个实参？”
 
 生又在门外放一个 \texttt{temp}，指望宏内同名者来替自己持家。道士拂尘一挥：“卫生绑定，各有来处，莫拿隔壁同名之人顶替户主。”
 
-生乃求救。道士令他将实参先存入明确的临时绑定，需要外界之物则明作参数。展开之后，照旧过名称、类型与借用检查，不能披一张漂亮的宏皮便免检。
+生乃求救。道士令他改用一个表达式形参，编译器便先求值一次，再在模板中复用；需要修改外界之物则明写 mut \& 参数。展开之后，照旧过名称、类型与借用检查，不能披一张漂亮的宏皮便免检。
 
 王生自此见到“少写九成代码”便先问：“生成的那九成，能给我看一眼么？”道士点头，说此人总算从审美转入了代码审查。
 
 \subsection*{技术对照}
 
-宏操作保留语法和来源，但不会自动缓存重复出现的实参。卫生绑定避免意外捕获，不能用调用者恰有同名变量来补救模板中的未定义名称。
+宏保留语法、来源与卫生绑定；表达式参数各求值一次并复用其值。普通参数修改的是副本，显式 mut \& 参数才写回来源。不能用调用者的同名变量补救模板中的未定义名称。

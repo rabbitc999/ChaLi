@@ -9,20 +9,20 @@ int64 rawSize<T>() {
 }
 
 /** 读取字符串存储中的一个字节；调用者已证明地址位于有效范围。 */
-unsafe int64 __bootStringByte(int64 address, int64 index) {
+inline unsafe int64 __bootStringByte(int64 address, int64 index) {
     uint8 mut& value = (uint8 mut&)(address + index);
     return (int64)*value;
 }
 /** 按 ASCII 固定规则识别空白，不依赖宿主区域设置。 */
-bool __bootStringSpace(int64 value) { return value == 32 || (value >= 9 && value <= 13); }
+inline bool __bootStringSpace(int64 value) { return value == 32 || (value >= 9 && value <= 13); }
 /** 将字节位置限制到闭区间 [0,length]。 */
-int64 __bootStringClamp(int64 index, int64 length) {
+inline int64 __bootStringClamp(int64 index, int64 length) {
     if (index < 0) { return 0; }
     if (index > length) { return length; }
     return index;
 }
 /** 比较两个已验证字节范围，不创建中间字符串。 */
-unsafe bool __bootStringEqualRange(int64 left, int64 start, int64 right, int64 width) {
+inline unsafe bool __bootStringEqualRange(int64 left, int64 start, int64 right, int64 width) {
     int64 i = 0;
     while (i < width) {
         if (__bootStringByte(left,start+i) != __bootStringByte(right,i)) { return false; }
@@ -31,7 +31,7 @@ unsafe bool __bootStringEqualRange(int64 left, int64 start, int64 right, int64 w
     return true;
 }
 /** KMP 搜索；原始存储只保存前缀表，最长线性扫描输入及模式。 */
-unsafe int64 __bootStringFind(int64 text,int64 length,int64 needle,int64 width,int64 start) {
+inline unsafe int64 __bootStringFind(int64 text,int64 length,int64 needle,int64 width,int64 start) {
     if (width == 0) { return start; }
     if (width > length-start) { return 0-1; }
     RawStorage<int64> table = RawStorage<int64>::allocate(width);
@@ -60,7 +60,7 @@ unsafe int64 __bootStringFind(int64 text,int64 length,int64 needle,int64 width,i
     return 0-1;
 }
 /** 严格解码一个 UTF-8 码点，返回下一字节位置。 */
-unsafe int64 __bootStringNext(int64 text,int64 length,int64 at) {
+inline unsafe int64 __bootStringNext(int64 text,int64 length,int64 at) {
     int64 first=__bootStringByte(text,at); at=at+1;
     if (first<128) { return at; }
     int64 remaining=0; int64 code=0; int64 minimum=0;
@@ -78,7 +78,7 @@ unsafe int64 __bootStringNext(int64 text,int64 length,int64 at) {
     return at;
 }
 /** 字符串查询在语言内执行；仅裸地址读取使用不安全内存原语。 */
-unsafe int64 __stringQuery(int64 text,int64 needle,int64 operation,int64 from) {
+inline unsafe int64 __stringQuery(int64 text,int64 needle,int64 operation,int64 from) {
     int64 length=__bootStringLength(text); int64 width=__bootStringLength(needle);
     int64 address=0; int64 pattern=0;
     unsafe { address=__stringStorageData(text); pattern=__stringStorageData(needle); }
@@ -160,22 +160,22 @@ unsafe int64 __bufferMaxBytes();
 unsafe int64 __stringRelease(int64 address);
 unsafe String __stringAdopt(int64 address);
 /** 读取字符串存储的长度元数据，字面量由存储边界识别。 */
-unsafe int64 __bootStringLength(int64 address) {
+inline unsafe int64 __bootStringLength(int64 address) {
     return __stringStorageLength(address);
 }
 /** 直接消费 byteAt 的 Value，不物化 Option；越界沿用 unwrap 的 None 诊断。 */
-unsafe uint8 __bootStringByteAtUnwrap(int64 address,int64 index) {
+inline unsafe uint8 __bootStringByteAtUnwrap(int64 address,int64 index) {
     if(index<0 || index>=__bootStringLength(address)){
         panic("called Option.unwrap() on None");
     }
     return (uint8)__bootStringByte(__stringStorageData(address),index);
 }
 /** 读取自举构造的容量描述符中的数据地址，不经过宿主分派。 */
-unsafe int64 __bootStringOwnedData(int64 address) {
+inline unsafe int64 __bootStringOwnedData(int64 address) {
     int64 mut& data=(int64 mut&)(address+24);return *data;
 }
 /** 构造稳定容量描述符；十六字节以内的初始缓冲区与描述符共块。 */
-unsafe int64 __bootStringBuffer(int64 length) {
+inline unsafe int64 __bootStringBuffer(int64 length) {
     if(length<0){panic("String：结果过长");}
     int64 maximum=__bufferMaxBytes();if(maximum<49){panic("String：分配上限不足");}maximum=maximum-1;
     int64 requested=length;if(requested==0){requested=1;}
@@ -191,18 +191,18 @@ unsafe int64 __bootStringBuffer(int64 length) {
     return result;
 }
 /** 将裸地址直接交给 LLVM 字节复制原语，不构造临时指针包装。 */
-unsafe void __bootStringCopyBytes(int64 destination,int64 source,int64 length) {
+inline unsafe void __bootStringCopyBytes(int64 destination,int64 source,int64 length) {
     if (length>0) { memcpy(destination,source,length); }
 }
 /** 构造独立空字符串。 */
-unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
+inline unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
 /** 一次分配取得独立副本。 */
-unsafe int64 __bootStringCopy(int64 source) {
+inline unsafe int64 __bootStringCopy(int64 source) {
     int64 length=__bootStringLength(source); int64 result=__bootStringBuffer(length);
     __bootStringCopyBytes(__bootStringOwnedData(result),__stringStorageData(source),length); return result;
 }
 /** 归还拥有的字符串存储。 */
-unsafe int64 __bootStringDrop(int64 address) {
+inline unsafe int64 __bootStringDrop(int64 address) {
     if(__stringStorageKind(address)!=0){
         int64 data=__bootStringOwnedData(address);
         if(data!=address+32){__stringRelease(data);}
@@ -210,7 +210,7 @@ unsafe int64 __bootStringDrop(int64 address) {
     return __stringRelease(address);
 }
 /** 为原值预留容量，只在扩容时回收旧的外置块，不复制拥有者。 */
-unsafe void __bootStringReserve(int64 address,int64 requested) {
+inline unsafe void __bootStringReserve(int64 address,int64 requested) {
     if(requested<0){panic("String：容量不能为负数");}
     if(__stringStorageKind(address)==0){panic("String：修改需要拥有型缓冲区");}
     int64 mut& cap=(int64 mut&)(address+16);int64 capacity=*cap;
@@ -224,7 +224,7 @@ unsafe void __bootStringReserve(int64 address,int64 requested) {
     int64 mut& pointer=(int64 mut&)(address+24);*pointer=data;*cap=grown;
 }
 /** 原地追加字节，先扩容再重新取得源地址，允许向自身追加。 */
-unsafe void __bootStringAppend(int64 address,int64 source) {
+inline unsafe void __bootStringAppend(int64 address,int64 source) {
     int64 length=__bootStringLength(address);int64 need=__bootStringLength(source);
     int64 required=__bootStringAddLength(length,need);
     __bootStringReserve(address,required);
@@ -234,14 +234,14 @@ unsafe void __bootStringAppend(int64 address,int64 source) {
     int64 mut& size=(int64 mut&)(address+8);*size=required;
 }
 /** 缩短逻辑字节长度并保留当前缓冲区，不进行 UTF-8 重编码。 */
-unsafe void __bootStringTruncate(int64 address,int64 length) {
+inline unsafe void __bootStringTruncate(int64 address,int64 length) {
     if(length<0){panic("String：截短长度不能为负数");}
     if(__stringStorageKind(address)==0){panic("String：修改需要拥有型缓冲区");}
     int64 mut& size=(int64 mut&)(address+8);if(length>=*size){return;}
     uint8 mut& zero=(uint8 mut&)(__bootStringOwnedData(address)+length);*zero=0u;*size=length;
 }
 /** 切片操作的负一终点表示余下全部，其余负下标拒绝。 */
-unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
+inline unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
     int64 length=__bootStringLength(source);
     if (end==0-1) { end=length; }
     if (!(begin>=0 && end>=0)) { panic("切片端点不能为负数（String 的切片按字节算）"); }
@@ -250,11 +250,11 @@ unsafe int64 __bootStringSlice(int64 source,int64 begin,int64 end) {
     return __bootStringSliceBytes(__stringStorageData(source),begin,end);
 }
 /** 复制已限制范围内的内容字节，返回带长度头的字符串值。 */
-unsafe int64 __bootStringSliceBytes(int64 source,int64 begin,int64 end) {
+inline unsafe int64 __bootStringSliceBytes(int64 source,int64 begin,int64 end) {
     int64 result=__bootStringBuffer(end-begin); __bootStringCopyBytes(__bootStringOwnedData(result),source+begin,end-begin); return result;
 }
 /** 无临时文本的字节字典序比较。 */
-unsafe int64 __bootStringCompare(int64 left,int64 right) {
+inline unsafe int64 __bootStringCompare(int64 left,int64 right) {
     int64 a=__bootStringLength(left); int64 b=__bootStringLength(right); int64 i=0;
     left=__stringStorageData(left); right=__stringStorageData(right);
     while (i<a && i<b) {
@@ -264,11 +264,11 @@ unsafe int64 __bootStringCompare(int64 left,int64 right) {
     if (a<b) { return 0-1; } if (a>b) { return 1; } return 0;
 }
 /** 为字符串运算符提供首个匹配的字节位置。 */
-unsafe int64 __bootStringPosition(int64 text,int64 needle) {
+inline unsafe int64 __bootStringPosition(int64 text,int64 needle) {
     return __bootStringFind(__stringStorageData(text),__bootStringLength(text),__stringStorageData(needle),__bootStringLength(needle),0);
 }
 /** 普通下标保留严格范围与 UTF-8 起点检查。 */
-unsafe int64 __bootStringAt(int64 source,int64 index) {
+inline unsafe int64 __bootStringAt(int64 source,int64 index) {
     int64 length=__bootStringLength(source);
     if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
     int64 value=__bootStringByte(__stringStorageData(source),index);
@@ -276,20 +276,20 @@ unsafe int64 __bootStringAt(int64 source,int64 index) {
     return value;
 }
 /** 写入一个原始字节，保持现有可变字符串的字节语义。 */
-unsafe int64 __bootStringSet(int64 source,int64 index,int64 value) {
+inline unsafe int64 __bootStringSet(int64 source,int64 index,int64 value) {
     int64 length=__bootStringLength(source);
     if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
     uint8 mut& target=(uint8 mut&)(__stringStorageData(source)+index);
     *target=(uint8)(value&255); return 0;
 }
 /** 字节引用保留现有下标范围；不额外限制为 UTF-8 码点起点。 */
-unsafe int64 __bootStringReference(int64 source,int64 index) {
+inline unsafe int64 __bootStringReference(int64 source,int64 index) {
     int64 length=__bootStringLength(source);
     if (!(index>=0 && index<length)) { panic("字符串下标越界"); }
     return __stringStorageData(source)+index;
 }
 /** 按十进制生成有符号整数，避免最小负数取负溢出。 */
-unsafe int64 __bootStringFromInt(int64 value) {
+inline unsafe int64 __bootStringFromInt(int64 value) {
     bool negative=value<0; uint64 magnitude=(uint64)value;
     if (negative) { magnitude=(uint64)(0-(value+1))+1u; }
     uint64 rest=magnitude; int64 length=1;
@@ -307,9 +307,9 @@ unsafe int64 __bootStringFromInt(int64 value) {
 }
 
 /** 检查拼接长度后相加，避免溢出先于分配。 */
-int64 __bootStringAddLength(int64 left,int64 right) { if (!(left>=0 && right>=0 && right<=9223372036854775806-left)) { panic("String：连接结果过长"); } return left+right; }
+inline int64 __bootStringAddLength(int64 left,int64 right) { if (!(left>=0 && right>=0 && right<=9223372036854775806-left)) { panic("String：连接结果过长"); } return left+right; }
 /** 在一个结果缓冲区中组合三个字节片段。 */
-unsafe int64 __bootStringCompose(int64 a,int64 an,int64 b,int64 bn,int64 c,int64 cn) {
+inline unsafe int64 __bootStringCompose(int64 a,int64 an,int64 b,int64 bn,int64 c,int64 cn) {
     if (!(an>=0 && bn>=0 && cn>=0 && an<=9223372036854775806-bn)) { panic("String：结果过长"); }
     int64 total=an+bn; if (!(cn<=9223372036854775806-total)) { panic("String：结果过长"); }
     int64 result=__bootStringBuffer(total+cn);
@@ -317,7 +317,7 @@ unsafe int64 __bootStringCompose(int64 a,int64 an,int64 b,int64 bn,int64 c,int64
     return result;
 }
 /** 变换直接写入独立结果区，不经宿主字符串算法。 */
-unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operation,int64 offset,int64 count) {
+inline unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operation,int64 offset,int64 count) {
     int64 n=__bootStringLength(text); int64 firstLength=__bootStringLength(first); int64 sn=__bootStringLength(second);
     int64 a=0; int64 b=0; int64 c=0;
     unsafe { a=__stringStorageData(text); b=__stringStorageData(first); c=__stringStorageData(second); }
@@ -416,7 +416,7 @@ unsafe String __stringTransform(int64 text,int64 first,int64 second,int64 operat
     if (!(false)) { panic("String：转换操作编号无效"); } return "";
 }
 /** 在语言内执行精确分隔、ASCII 空白、行及严格 UTF-8 字符分割。 */
-unsafe List<String> __stringSplit(int64 text,int64 separator,int64 operation,bool keepEmpty) {
+inline unsafe List<String> __stringSplit(int64 text,int64 separator,int64 operation,bool keepEmpty) {
     List<String> result; int64 n=__bootStringLength(text); int64 width=__bootStringLength(separator);
     int64 a=0; int64 b=0; int64 at=0; int64 begin=0;
     unsafe { a=__stringStorageData(text); b=__stringStorageData(separator); }
@@ -446,7 +446,7 @@ unsafe List<String> __stringSplit(int64 text,int64 separator,int64 operation,boo
     return result;
 }
 /** 预计算所有片段长度，一次分配并直接写入最终存储。 */
-unsafe String __stringJoinParts(int64 separator,List<String> const& items) {
+inline unsafe String __stringJoinParts(int64 separator,List<String> const& items) {
     int64 count=items.len(); int64 width=__bootStringLength(separator); int64 total=0; int64 i=0;
     List<int64> lengths;
     while (i<count) {
@@ -697,9 +697,9 @@ opcode Process {
  */
 int64 __std_stderr_write(String text);
 /** eprint 归一后的内部入口：文本原样写标准错误流，包装逻辑在 ChaLi 侧。 */
-int64 __std_eprint(String text) { return __std_stderr_write(text); }
+inline int64 __std_eprint(String text) { return __std_stderr_write(text); }
 /** eprintln 归一后的内部入口：补一个 LF 换行后写标准错误流。 */
-int64 __std_eprintln(String text) { return __std_stderr_write(text + "\n"); }
+inline int64 __std_eprintln(String text) { return __std_stderr_write(text + "\n"); }
 
 /**
  * @brief 按 `%.*f` 规则输出固定小数位文本的宿主原语。
@@ -714,7 +714,7 @@ String __std_str_fixed(float64 value, int64 precision);
  * @param precision 小数位数，负数按 3 位。
  * @return 默认 3 位小数并去掉尾随零和孤立小数点的文本，与 println 浮点排版完全一致。
  */
-String __std_str_of_flt(float64 value, int64 precision) {
+inline String __std_str_of_flt(float64 value, int64 precision) {
     if (precision < 0) { precision = 3; }
     String text = __std_str_fixed(value, precision);
     String point = ".";
@@ -733,7 +733,7 @@ String __readLine();
 /** 查询标准输入是否已到 EOF；仅用于区分 EOF 与读到空行。 */
 bool __stdinEof();
 /** 组合读行原语，在 ChaLi 中实现多行拼接，不额外追加 LF。 */
-String __readLines(int32 N) {
+inline String __readLines(int32 N) {
     String text = "";
     int32 index = 0;
     while (index < N) {
@@ -1216,7 +1216,7 @@ Option<T mut&> tryGetMut<T>(Any mut& value) {
 }
 
 /** 按原始字节生成列表，不把字节位置解释为字符边界。 */
-unsafe List<uint8> __stringBytes(int64 text) {
+inline unsafe List<uint8> __stringBytes(int64 text) {
     List<uint8> result; int64 size=__bootStringLength(text);
     unsafe {
         int64 address=__stringStorageData(text); int64 i=0;
@@ -1464,7 +1464,7 @@ unsafe int64 __listStorageLength(int64 handle);
 /** 计算有界几何增长容量；先验证 len+need，接近上限时不让倍增溢出。
  * 空间足够时原样返回 cap，否则一次满足本次需求；不分配或清理元素。
  */
-int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
+inline int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
     if(!(length>=0 && need>=0 && capacity>=length && minimum>=0 && maximum>=minimum && capacity<=maximum)){panic("缓冲区容量参数无效");}
     if(need>maximum-length){panic("缓冲区容量超出上限");}
     int64 required=length+need;
@@ -1477,7 +1477,7 @@ int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,
 }
 unsafe int64 __listStorageMaxCapacity(int64 handle);
 /** 按本次需求和分配器上限预留槽，不初始化尚未加入的用户元素。 */
-unsafe void __bootListReserve(int64 handle,int64 requested){
+inline unsafe void __bootListReserve(int64 handle,int64 requested){
     int64 capacity=__listStorageCapacity(handle);
     if(requested<=capacity){return;}
     int64 maximum=__listStorageMaxCapacity(handle);
@@ -1485,18 +1485,18 @@ unsafe void __bootListReserve(int64 handle,int64 requested){
     __listStorageReserve(handle,__bootBufferCapacity(0,requested,capacity,minimum,maximum));
 }
 /** 按逻辑下标向左移动元素，清理末尾并保留容量。 */
-unsafe int64 __bootListRemove(int64 handle,int64 index){
+inline unsafe int64 __bootListRemove(int64 handle,int64 index){
     int64 size=__listStorageGuard(handle,2,index);int64 i=index;
     while(i+1<size){__listStorageSwap(handle,i,i+1);i=i+1;}
     __listStorageDiscard(handle);return 0;
 }
 /** 清理有效槽位，保留已分配容量。 */
-unsafe int64 __bootListClear(int64 handle){
+inline unsafe int64 __bootListClear(int64 handle){
     int64 size=__listStorageGuard(handle,4,0);
     while(size>0){__listStorageDiscard(handle);size=size-1;}return 0;
 }
 /** 按槽复制独立拥有值，存储内核负责单个值的所有权封送。 */
-unsafe int64 __bootListCopy(int64 source){
+inline unsafe int64 __bootListCopy(int64 source){
     int64 result=__listStorageNew();int64 size=__listStorageLength(source);__bootListReserve(result,size);
     int64 i=0;while(i<size){__listStorageCloneAppend(result,source,i);i=i+1;}return result;
 }
@@ -1505,22 +1505,22 @@ unsafe int64 __listStorageAppendI(int64 handle,int64 value,int64 text,int64 layo
 unsafe int64 __listStorageTakeI(int64 handle,int64 text,int64 layout);
 unsafe int64 __listStorageEqualI(int64 handle,int64 index,int64 value,int64 text,int64 layout);
 /** 在语言中选择增长策略并追加一个值。 */
-unsafe int64 __bootListPushI(int64 handle,int64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListPushI(int64 handle,int64 value,int64 text,int64 layout){
     int64 size=__listStorageGuard(handle,0,0);__bootListReserve(handle,size+1);
     return __listStorageAppendI(handle,value,text,layout);
 }
 /** 先构造新槽，再以相邻槽交换将其移入目标位置。 */
-unsafe int64 __bootListInsertI(int64 handle,int64 index,int64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListInsertI(int64 handle,int64 index,int64 value,int64 text,int64 layout){
     int64 size=__listStorageGuard(handle,1,index);__bootListReserve(handle,size+1);
     __listStorageAppendI(handle,value,text,layout);
     int64 i=size;while(i>index){__listStorageSwap(handle,i,i-1);i=i-1;}return 0;
 }
 /** 移出末尾槽；空表在结构验证处报告错误。 */
-unsafe int64 __bootListPopI(int64 handle,int64 text,int64 layout){
+inline unsafe int64 __bootListPopI(int64 handle,int64 text,int64 layout){
     __listStorageGuard(handle,3,0);return __listStorageTakeI(handle,text,layout);
 }
 /** 遍历有效槽，返回首个相同值的下标。 */
-unsafe int64 __bootListFindI(int64 handle,int64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListFindI(int64 handle,int64 value,int64 text,int64 layout){
     int64 size=__listStorageLength(handle);int64 i=0;
     while(i<size){if(__listStorageEqualI(handle,i,value,text,layout)!=0){return i;}i=i+1;}return 0-1;
 }
@@ -1529,22 +1529,22 @@ unsafe int64 __listStorageAppendF(int64 handle,float64 value,int64 text,int64 la
 unsafe float64 __listStorageTakeF(int64 handle,int64 text,int64 layout);
 unsafe int64 __listStorageEqualF(int64 handle,int64 index,float64 value,int64 text,int64 layout);
 /** 在语言中选择增长策略并追加一个值。 */
-unsafe int64 __bootListPushF(int64 handle,float64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListPushF(int64 handle,float64 value,int64 text,int64 layout){
     int64 size=__listStorageGuard(handle,0,0);__bootListReserve(handle,size+1);
     return __listStorageAppendF(handle,value,text,layout);
 }
 /** 先构造新槽，再以相邻槽交换将其移入目标位置。 */
-unsafe int64 __bootListInsertF(int64 handle,int64 index,float64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListInsertF(int64 handle,int64 index,float64 value,int64 text,int64 layout){
     int64 size=__listStorageGuard(handle,1,index);__bootListReserve(handle,size+1);
     __listStorageAppendF(handle,value,text,layout);
     int64 i=size;while(i>index){__listStorageSwap(handle,i,i-1);i=i-1;}return 0;
 }
 /** 移出末尾槽；空表在结构验证处报告错误。 */
-unsafe float64 __bootListPopF(int64 handle,int64 text,int64 layout){
+inline unsafe float64 __bootListPopF(int64 handle,int64 text,int64 layout){
     __listStorageGuard(handle,3,0);return __listStorageTakeF(handle,text,layout);
 }
 /** 遍历有效槽，返回首个相同值的下标。 */
-unsafe int64 __bootListFindF(int64 handle,float64 value,int64 text,int64 layout){
+inline unsafe int64 __bootListFindF(int64 handle,float64 value,int64 text,int64 layout){
     int64 size=__listStorageLength(handle);int64 i=0;
     while(i<size){if(__listStorageEqualF(handle,i,value,text,layout)!=0){return i;}i=i+1;}return 0-1;
 }
@@ -1557,23 +1557,23 @@ unsafe int64 __mapStorageEmptyLike(int64 handle);
 unsafe int64 __mapStorageCloneAppend(int64 destination,int64 source,int64 index);
 
 /** 将哈希位模式映射到槽数组，负哈希仍按无符号位模式取模。 */
-int64 __bootMapHome(int64 hash,int64 capacity) { return (int64)((uint64)hash%(uint64)capacity); }
+inline int64 __bootMapHome(int64 hash,int64 capacity) { return (int64)((uint64)hash%(uint64)capacity); }
 /** 读取一个有效标志与密集位置编码，零代表无值。 */
-unsafe int64 __bootMapSlot(int64 handle,int64 index) { return __mapStorageState(handle,3,index,0); }
+inline unsafe int64 __bootMapSlot(int64 handle,int64 index) { return __mapStorageState(handle,3,index,0); }
 /** 按缓存 HashKey 放置一个已初始化项，不执行键比较或用户回调。 */
-unsafe void __bootMapPlace(int64 handle,int64 entry,int64 hash) {
+inline unsafe void __bootMapPlace(int64 handle,int64 entry,int64 hash) {
     int64 capacity=__mapStorageState(handle,1,0,0); int64 slot=__bootMapHome(hash,capacity);
     while (__bootMapSlot(handle,slot)!=0) { slot=(slot+1)%capacity; }
     __mapStorageState(handle,4,slot,entry+1);
 }
 /** 重建槽位数组，值与键保持原存储，不产生用户元素副本。 */
-unsafe void __bootMapRehash(int64 handle,int64 capacity) {
+inline unsafe void __bootMapRehash(int64 handle,int64 capacity) {
     __mapStorageState(handle,5,0,capacity); int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
     while (i<size) { __bootMapPlace(handle,i,__mapStorageState(handle,7,i,0)); i=i+1; }
     __mapStorageState(handle,6,0,0);
 }
 /** 宿主修改后按需恢复语言索引，无 Hash 的 Equal 契约仍使用线性查询。 */
-unsafe void __bootMapEnsure(int64 handle) {
+inline unsafe void __bootMapEnsure(int64 handle) {
     if (__mapStorageState(handle,2,0,0)!=0) { return; }
     if (__mapStorageState(handle,8,0,0)==0) { __mapStorageState(handle,5,0,0); __mapStorageState(handle,6,0,0); return; }
     int64 size=__mapStorageState(handle,0,0,0); int64 capacity=__mapStorageState(handle,1,0,0);
@@ -1584,7 +1584,7 @@ unsafe void __bootMapEnsure(int64 handle) {
     __bootMapRehash(handle,capacity);
 }
 /** 插入前按相同几何策略预留密集槽及索引，索引装载因子不超过一半。 */
-unsafe void __bootMapGrow(int64 handle) {
+inline unsafe void __bootMapGrow(int64 handle) {
     int64 size=__mapStorageState(handle,0,0,0); int64 dense=__mapStorageState(handle,10,0,0);
     if(size==dense){
         int64 maximum=__mapStorageState(handle,11,0,0);int64 minimum=8;if(minimum>maximum){minimum=maximum;}
@@ -1599,13 +1599,13 @@ unsafe void __bootMapGrow(int64 handle) {
     }
 }
 /** 已知槽号时定位其索引位置，不重复调用用户 Equal。 */
-unsafe int64 __bootMapLocate(int64 handle,int64 entry,int64 hash) {
+inline unsafe int64 __bootMapLocate(int64 handle,int64 entry,int64 hash) {
     int64 capacity=__mapStorageState(handle,1,0,0); int64 at=__bootMapHome(hash,capacity);
     while (__bootMapSlot(handle,at)!=entry+1) { at=(at+1)%capacity; }
     return at;
 }
 /** 删除保留容量，密集槽以末项补洞，开放寻址索引使用后移修复。 */
-unsafe void __bootMapErase(int64 handle,int64 entry,int64 hash) {
+inline unsafe void __bootMapErase(int64 handle,int64 entry,int64 hash) {
     int64 size=__mapStorageState(handle,0,0,0);
     int64 capacity=__mapStorageState(handle,1,0,0);
     if (capacity==0) { __mapStorageErase(handle,entry); __mapStorageState(handle,6,0,0); return; }
@@ -1627,14 +1627,14 @@ unsafe void __bootMapErase(int64 handle,int64 entry,int64 hash) {
     __mapStorageState(handle,6,0,0);
 }
 /** 清理拥有值并保留槽数组供后续插入复用。 */
-unsafe int64 __bootMapClear(int64 handle) {
+inline unsafe int64 __bootMapClear(int64 handle) {
     int64 size=__mapStorageState(handle,0,0,0);
     while (size>0) { __mapStorageErase(handle,size-1); size=size-1; }
     int64 capacity=__mapStorageState(handle,1,0,0);
     __mapStorageState(handle,5,0,capacity); __mapStorageState(handle,6,0,0); return 0;
 }
 /** 按槽复制独立值及键协议，随后重建索引，不执行 Hash/Equal 用户回调。 */
-unsafe int64 __bootMapCopy(int64 source) {
+inline unsafe int64 __bootMapCopy(int64 source) {
     int64 result=__mapStorageEmptyLike(source); int64 size=__mapStorageState(source,0,0,0); int64 i=0;
     if(size>0){
         int64 maximum=__mapStorageState(result,11,0,0);int64 minimum=8;if(minimum>maximum){minimum=maximum;}
@@ -1648,7 +1648,7 @@ unsafe int64 __mapStorageHashI(int64 handle,int64 key,int64 text,int64 layout);
 unsafe int64 __mapStorageMatchI(int64 handle,int64 entry,int64 key,int64 text,int64 layout);
 unsafe int64 __setStorageAppendI(int64 handle,int64 key,int64 text,int64 layout,int64 hash);
 /** 先比较缓存 HashKey，再调用精确键比较；空槽终止探测。 */
-unsafe int64 __bootMapFindI(int64 handle,int64 key,int64 text,int64 layout,int64 hash) {
+inline unsafe int64 __bootMapFindI(int64 handle,int64 key,int64 text,int64 layout,int64 hash) {
     __bootMapEnsure(handle); int64 capacity=__mapStorageState(handle,1,0,0);
     if (capacity==0) {
         int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
@@ -1664,19 +1664,19 @@ unsafe int64 __bootMapFindI(int64 handle,int64 key,int64 text,int64 layout,int64
     return 0-1;
 }
 /** 查询只产生一个 Hash 值，不构造 Option 或中间键值容器。 */
-unsafe int64 __bootMapHasI(int64 handle,int64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootMapHasI(int64 handle,int64 key,int64 text,int64 layout) {
     int64 hash=__mapStorageHashI(handle,key,text,layout);
     if (__bootMapFindI(handle,key,text,layout,hash)>=0) { return 1; } return 0;
 }
 /** 查找后移除一个项，命中时返回一。 */
-unsafe int64 __bootMapRemoveI(int64 handle,int64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootMapRemoveI(int64 handle,int64 key,int64 text,int64 layout) {
     int64 hash=__mapStorageHashI(handle,key,text,layout);
     int64 entry=__bootMapFindI(handle,key,text,layout,hash);
     if (entry<0) { return 0; } __bootMapErase(handle,entry,hash); return 1;
 }
 /** Set 使用自己的槽数组，重复插入不复制用户元素。 */
 unsafe int64 __setStoragePrepareI(int64 handle,int64 key,int64 text,int64 layout);
-unsafe int64 __bootSetAddI(int64 handle,int64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootSetAddI(int64 handle,int64 key,int64 text,int64 layout) {
     __setStoragePrepareI(handle,key,text,layout);
     int64 hash=__mapStorageHashI(handle,key,text,layout);
     if (__bootMapFindI(handle,key,text,layout,hash)>=0) { __setStorageCancel(handle); return 0; }
@@ -1689,7 +1689,7 @@ unsafe int64 __mapStorageHashF(int64 handle,float64 key,int64 text,int64 layout)
 unsafe int64 __mapStorageMatchF(int64 handle,int64 entry,float64 key,int64 text,int64 layout);
 unsafe int64 __setStorageAppendF(int64 handle,float64 key,int64 text,int64 layout,int64 hash);
 /** 先比较缓存 HashKey，再调用精确键比较；空槽终止探测。 */
-unsafe int64 __bootMapFindF(int64 handle,float64 key,int64 text,int64 layout,int64 hash) {
+inline unsafe int64 __bootMapFindF(int64 handle,float64 key,int64 text,int64 layout,int64 hash) {
     __bootMapEnsure(handle); int64 capacity=__mapStorageState(handle,1,0,0);
     if (capacity==0) {
         int64 size=__mapStorageState(handle,0,0,0); int64 i=0;
@@ -1705,19 +1705,19 @@ unsafe int64 __bootMapFindF(int64 handle,float64 key,int64 text,int64 layout,int
     return 0-1;
 }
 /** 查询只产生一个 Hash 值，不构造 Option 或中间键值容器。 */
-unsafe int64 __bootMapHasF(int64 handle,float64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootMapHasF(int64 handle,float64 key,int64 text,int64 layout) {
     int64 hash=__mapStorageHashF(handle,key,text,layout);
     if (__bootMapFindF(handle,key,text,layout,hash)>=0) { return 1; } return 0;
 }
 /** 查找后移除一个项，命中时返回一。 */
-unsafe int64 __bootMapRemoveF(int64 handle,float64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootMapRemoveF(int64 handle,float64 key,int64 text,int64 layout) {
     int64 hash=__mapStorageHashF(handle,key,text,layout);
     int64 entry=__bootMapFindF(handle,key,text,layout,hash);
     if (entry<0) { return 0; } __bootMapErase(handle,entry,hash); return 1;
 }
 /** Set 使用自己的槽数组，重复插入不复制用户元素。 */
 unsafe int64 __setStoragePrepareF(int64 handle,float64 key,int64 text,int64 layout);
-unsafe int64 __bootSetAddF(int64 handle,float64 key,int64 text,int64 layout) {
+inline unsafe int64 __bootSetAddF(int64 handle,float64 key,int64 text,int64 layout) {
     __setStoragePrepareF(handle,key,text,layout);
     int64 hash=__mapStorageHashF(handle,key,text,layout);
     if (__bootMapFindF(handle,key,text,layout,hash)>=0) { __setStorageCancel(handle); return 0; }
@@ -1729,7 +1729,7 @@ unsafe int64 __bootSetAddF(int64 handle,float64 key,int64 text,int64 layout) {
 unsafe int64 __mapStorageReadI(int64 handle,int64 entry,int64 text,int64 layout);
 unsafe int64 __mapStoragePrepareII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout);
 /** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
-unsafe int64 __bootMapPutII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapPutII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
     __mapStoragePrepareII(handle,key,keyText,keyLayout,value,valueText,valueLayout);
     int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
@@ -1739,14 +1739,14 @@ unsafe int64 __bootMapPutII(int64 handle,int64 key,int64 keyText,int64 keyLayout
     __mapStorageState(handle,6,0,0); return 0;
 }
 /** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
-unsafe int64 __bootMapGetII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapGetII(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
     int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash);
     return __mapStorageReadI(handle,entry,valueText,valueLayout);
 }
 unsafe int64 __mapStoragePrepareFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout);
 /** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
-unsafe int64 __bootMapPutFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapPutFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 value,int64 valueText,int64 valueLayout) {
     __mapStoragePrepareFI(handle,key,keyText,keyLayout,value,valueText,valueLayout);
     int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
@@ -1756,7 +1756,7 @@ unsafe int64 __bootMapPutFI(int64 handle,float64 key,int64 keyText,int64 keyLayo
     __mapStorageState(handle,6,0,0); return 0;
 }
 /** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
-unsafe int64 __bootMapGetFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapGetFI(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
     int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash);
     return __mapStorageReadI(handle,entry,valueText,valueLayout);
@@ -1765,7 +1765,7 @@ unsafe int64 __bootMapGetFI(int64 handle,float64 key,int64 keyText,int64 keyLayo
 unsafe float64 __mapStorageReadF(int64 handle,int64 entry,int64 text,int64 layout);
 unsafe int64 __mapStoragePrepareIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout);
 /** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
-unsafe int64 __bootMapPutIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapPutIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
     __mapStoragePrepareIF(handle,key,keyText,keyLayout,value,valueText,valueLayout);
     int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
@@ -1775,14 +1775,14 @@ unsafe int64 __bootMapPutIF(int64 handle,int64 key,int64 keyText,int64 keyLayout
     __mapStorageState(handle,6,0,0); return 0;
 }
 /** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
-unsafe float64 __bootMapGetIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+inline unsafe float64 __bootMapGetIF(int64 handle,int64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
     int64 hash=__mapStorageHashI(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindI(handle,key,keyText,keyLayout,hash);
     return __mapStorageReadF(handle,entry,valueText,valueLayout);
 }
 unsafe int64 __mapStoragePrepareFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout);
 /** 写入先复制值，再执行键协议；提交后只更新索引槽。 */
-unsafe int64 __bootMapPutFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
+inline unsafe int64 __bootMapPutFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,float64 value,int64 valueText,int64 valueLayout) {
     __mapStoragePrepareFF(handle,key,keyText,keyLayout,value,valueText,valueLayout);
     int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash); bool fresh=entry<0;
@@ -1792,7 +1792,7 @@ unsafe int64 __bootMapPutFF(int64 handle,float64 key,int64 keyText,int64 keyLayo
     __mapStorageState(handle,6,0,0); return 0;
 }
 /** 取得命中项的独立值，缺失键由单槽读取边界报告。 */
-unsafe float64 __bootMapGetFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
+inline unsafe float64 __bootMapGetFF(int64 handle,float64 key,int64 keyText,int64 keyLayout,int64 valueText,int64 valueLayout) {
     int64 hash=__mapStorageHashF(handle,key,keyText,keyLayout);
     int64 entry=__bootMapFindF(handle,key,keyText,keyLayout,hash);
     return __mapStorageReadF(handle,entry,valueText,valueLayout);
@@ -1801,27 +1801,27 @@ unsafe float64 __bootMapGetFF(int64 handle,float64 key,int64 keyText,int64 keyLa
 unsafe int64 __setStorageCancel(int64 handle);
 
 /** 保留向零截断及独立失败哨兵，不在失败路径执行浮点到整数转换。 */
-int64 __tryToInt32(float64 value) {
+inline int64 __tryToInt32(float64 value) {
     if (value> -2147483649.0 && value<2147483648.0) { return (int64)value; }
     return 2147483648;
 }
 /** 有限且可表示时才执行整数转换，诊断保留原接口含义。 */
-int64 __toInt64(float64 value) {
+inline int64 __toInt64(float64 value) {
     if (!(value>= -9223372036854775808.0 && value<9223372036854775808.0)) {
         panic("std::lang::toInt64：浮点值不是有限数或超出 int64 范围");
     }
     return (int64)value;
 }
 /** 语言浮点槽使用 binary64；通过不安全引用取得同一槽的原始位。 */
-uint64 __bootFloat64Bits(float64 value) {
+inline uint64 __bootFloat64Bits(float64 value) {
     unsafe { BarePtr<float64> source=pointerFromAddress<float64>((int64)&value); BarePtr<uint64> raw=source.castTo<uint64>(); uint64 mut& bits=dereference<uint64>(raw); return *bits; }
 }
 /** 取得 binary64 原始位代表的浮点值，不进行整数数值转换。 */
-float64 __bootFloat64FromBits(uint64 bits) {
+inline float64 __bootFloat64FromBits(uint64 bits) {
     unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<float64> raw=source.castTo<float64>(); float64 mut& value=dereference<float64>(raw); return *value; }
 }
 /** binary32 值已精确归一化到语言浮点槽，恢复其指数与尾数。 */
-uint64 __bootFloat32Bits(float32 value) {
+inline uint64 __bootFloat32Bits(float32 value) {
     uint64 raw=__bootFloat64Bits((float64)value);
     uint64 sign=(raw>>63)<<31; uint64 exponent=(raw>>52)&2047u;
     uint64 fraction=raw&4503599627370495u;
@@ -1835,7 +1835,7 @@ uint64 __bootFloat32Bits(float32 value) {
     return sign|((fraction|4503599627370496u)>>(926u-exponent));
 }
 /** 精确构造可由 binary32 表示的 binary64 槽，再恢复 binary32 类型。 */
-float32 __bootFloat32FromBits(uint64 bits) {
+inline float32 __bootFloat32FromBits(uint64 bits) {
     uint64 sign=((bits>>31)&1u)<<63;
     uint64 exponent=(bits>>23)&255u; uint64 fraction=bits&8388607u; uint64 raw=sign;
     if (exponent==255u) { raw=raw|9218868437227405312u|(fraction<<29); }
@@ -1848,21 +1848,21 @@ float32 __bootFloat32FromBits(uint64 bits) {
     return (float32)__bootFloat64FromBits(raw);
 }
 /** 按指定字节宽度翻转有效位，用于显式大端格式。 */
-uint64 __bootSwapBytes(uint64 bits,int64 count) {
+inline uint64 __bootSwapBytes(uint64 bits,int64 count) {
     uint64 result=0u; int64 i=0;
     while (i<count) { result=(result<<8)|(bits&255u); bits=bits>>8; i=i+1; }
     return result;
 }
 
 /** 按指定字节序编码 IEEE 754，不依赖宿主胶水。 */
-List<uint8> __float32ToBytes(float32 value,bool bigEndian) {
+inline List<uint8> __float32ToBytes(float32 value,bool bigEndian) {
     List<uint8> result; uint64 bits=__bootFloat32Bits(value);
     if (bigEndian) { bits=__bootSwapBytes(bits,4); }
     int64 i=0; while (i<4) { result.push((uint8)(bits&255u)); bits=bits>>8; i=i+1; }
     return result;
 }
 /** 列表入口在读取前校验完整输入长度。 */
-float32 __bytesToFloat32(List<uint8> bytes,bool bigEndian) {
+inline float32 __bytesToFloat32(List<uint8> bytes,bool bigEndian) {
     if (bytes.len()<4) { panic("IEEE 754 转换：字节不足"); }
     uint64 bits=0u; int64 i=0;
     while (i<4) { bits=bits|((uint64)bytes[i]<<(i*8)); i=i+1; }
@@ -1870,27 +1870,27 @@ float32 __bytesToFloat32(List<uint8> bytes,bool bigEndian) {
     return __bootFloat32FromBits(bits);
 }
 /** 整段检查后复制输入字节，避免越界时部分读取。 */
-float32 __arrayToFloat32(uint8 const& bytes,bool bigEndian) {
+inline float32 __arrayToFloat32(uint8 const& bytes,bool bigEndian) {
     uint64 bits=0u; unsafe { BarePtr<uint64> target=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> source=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target.castTo<uint8>(),source,4); }
     if (bigEndian) { bits=__bootSwapBytes(bits,4); }
     return __bootFloat32FromBits(bits);
 }
 /** 整段检查后一次写入，失败时不留下部分编码结果。 */
-bool __float32ToArray(float32 value,uint8 mut& bytes,bool bigEndian) {
+inline bool __float32ToArray(float32 value,uint8 mut& bytes,bool bigEndian) {
     uint64 bits=__bootFloat32Bits(value);
     if (bigEndian) { bits=__bootSwapBytes(bits,4); }
     unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> target=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target,source.castTo<uint8>(),4); } return true;
 }
 
 /** 按指定字节序编码 IEEE 754，不依赖宿主胶水。 */
-List<uint8> __float64ToBytes(float64 value,bool bigEndian) {
+inline List<uint8> __float64ToBytes(float64 value,bool bigEndian) {
     List<uint8> result; uint64 bits=__bootFloat64Bits(value);
     if (bigEndian) { bits=__bootSwapBytes(bits,8); }
     int64 i=0; while (i<8) { result.push((uint8)(bits&255u)); bits=bits>>8; i=i+1; }
     return result;
 }
 /** 列表入口在读取前校验完整输入长度。 */
-float64 __bytesToFloat64(List<uint8> bytes,bool bigEndian) {
+inline float64 __bytesToFloat64(List<uint8> bytes,bool bigEndian) {
     if (bytes.len()<8) { panic("IEEE 754 转换：字节不足"); }
     uint64 bits=0u; int64 i=0;
     while (i<8) { bits=bits|((uint64)bytes[i]<<(i*8)); i=i+1; }
@@ -1898,13 +1898,13 @@ float64 __bytesToFloat64(List<uint8> bytes,bool bigEndian) {
     return __bootFloat64FromBits(bits);
 }
 /** 整段检查后复制输入字节，避免越界时部分读取。 */
-float64 __arrayToFloat64(uint8 const& bytes,bool bigEndian) {
+inline float64 __arrayToFloat64(uint8 const& bytes,bool bigEndian) {
     uint64 bits=0u; unsafe { BarePtr<uint64> target=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> source=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target.castTo<uint8>(),source,8); }
     if (bigEndian) { bits=__bootSwapBytes(bits,8); }
     return __bootFloat64FromBits(bits);
 }
 /** 整段检查后一次写入，失败时不留下部分编码结果。 */
-bool __float64ToArray(float64 value,uint8 mut& bytes,bool bigEndian) {
+inline bool __float64ToArray(float64 value,uint8 mut& bytes,bool bigEndian) {
     uint64 bits=__bootFloat64Bits(value);
     if (bigEndian) { bits=__bootSwapBytes(bits,8); }
     unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<uint8> target=pointerFromAddress<uint8>((int64)address(bytes)); memcpy<uint8,uint8>(target,source.castTo<uint8>(),8); } return true;
@@ -1967,13 +1967,13 @@ unsafe int64 __listStorageCompareI(int64 source,int64 index,int64 value,int64 te
 unsafe int64 __listStorageReadI(int64 source,int64 index,int64 text,int64 layout);
 unsafe int64 __listStorageCloneI(int64 value,int64 text,int64 layout);
 /** 使用同一值键判等，计数不构造元素副本。 */
-unsafe int64 __bootListCountI(int64 source,int64 value,int64 text,int64 layout) {
+inline unsafe int64 __bootListCountI(int64 source,int64 value,int64 text,int64 layout) {
     int64 size=__listStorageLength(source); int64 i=0; int64 count=0;
     while (i<size) { if (__listStorageEqualI(source,i,value,text,layout)!=0) { count=count+1; } i=i+1; }
     return count;
 }
 /** lower_bound 保留相等元素的首个位置。 */
-unsafe int64 __bootListBinarySearchI(int64 source,int64 value,int64 text,int64 layout) {
+inline unsafe int64 __bootListBinarySearchI(int64 source,int64 value,int64 text,int64 layout) {
     int64 low=0; int64 high=__listStorageLength(source); int64 size=high;
     while (low<high) { int64 middle=low+(high-low)/2;
         if (__listStorageCompareI(source,middle,value,text,layout)<0) { low=middle+1; } else { high=middle; }
@@ -1983,14 +1983,14 @@ unsafe int64 __bootListBinarySearchI(int64 source,int64 value,int64 text,int64 l
     return -1;
 }
 /** 按原始顺序累加，保留浮点舍入次序。 */
-unsafe int64 __bootListSumI(int64 source,int64 floating) {
+inline unsafe int64 __bootListSumI(int64 source,int64 floating) {
     int64 total=0; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { total=total+__listStorageReadI(source,i,0,0); i=i+1; }
     return total;
 }
 
 /** 只复制最终选中的值，等值时保留首个参数。 */
-unsafe int64 __bootListMinI(int64 source,int64 first,int64 text,int64 layout) {
+inline unsafe int64 __bootListMinI(int64 source,int64 first,int64 text,int64 layout) {
     int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { int64 relation=0;
         if (best<0) { relation=__listStorageCompareI(source,i,first,text,layout); }
@@ -2002,7 +2002,7 @@ unsafe int64 __bootListMinI(int64 source,int64 first,int64 text,int64 layout) {
 }
 
 /** 只复制最终选中的值，等值时保留首个参数。 */
-unsafe int64 __bootListMaxI(int64 source,int64 first,int64 text,int64 layout) {
+inline unsafe int64 __bootListMaxI(int64 source,int64 first,int64 text,int64 layout) {
     int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { int64 relation=0;
         if (best<0) { relation=__listStorageCompareI(source,i,first,text,layout); }
@@ -2014,7 +2014,7 @@ unsafe int64 __bootListMaxI(int64 source,int64 first,int64 text,int64 layout) {
 }
 
 /** 验证边界顺序后返回独立拥有值。 */
-unsafe int64 __bootListClampI(int64 source,int64 value,int64 text,int64 layout) {
+inline unsafe int64 __bootListClampI(int64 source,int64 value,int64 text,int64 layout) {
     if (__listStorageLength(source)!=2) { panic("std::lang::algorithms::clamp 的边界胶水需要 low/high 两项"); }
     if (__listStorageCompareIndex(source,1,0)<0) { panic("std::lang::algorithms::clamp 要求 low <= high"); }
     if (__listStorageCompareI(source,0,value,text,layout)>0) { return __listStorageReadI(source,0,text,layout); }
@@ -2026,13 +2026,13 @@ unsafe int64 __listStorageCompareF(int64 source,int64 index,float64 value,int64 
 unsafe float64 __listStorageReadF(int64 source,int64 index,int64 text,int64 layout);
 unsafe float64 __listStorageCloneF(float64 value,int64 text,int64 layout);
 /** 使用同一值键判等，计数不构造元素副本。 */
-unsafe int64 __bootListCountF(int64 source,float64 value,int64 text,int64 layout) {
+inline unsafe int64 __bootListCountF(int64 source,float64 value,int64 text,int64 layout) {
     int64 size=__listStorageLength(source); int64 i=0; int64 count=0;
     while (i<size) { if (__listStorageEqualF(source,i,value,text,layout)!=0) { count=count+1; } i=i+1; }
     return count;
 }
 /** lower_bound 保留相等元素的首个位置。 */
-unsafe int64 __bootListBinarySearchF(int64 source,float64 value,int64 text,int64 layout) {
+inline unsafe int64 __bootListBinarySearchF(int64 source,float64 value,int64 text,int64 layout) {
     int64 low=0; int64 high=__listStorageLength(source); int64 size=high;
     while (low<high) { int64 middle=low+(high-low)/2;
         if (__listStorageCompareF(source,middle,value,text,layout)<0) { low=middle+1; } else { high=middle; }
@@ -2042,14 +2042,14 @@ unsafe int64 __bootListBinarySearchF(int64 source,float64 value,int64 text,int64
     return -1;
 }
 /** 按原始顺序累加，保留浮点舍入次序。 */
-unsafe float64 __bootListSumF(int64 source,int64 floating) {
+inline unsafe float64 __bootListSumF(int64 source,int64 floating) {
     float64 total=0; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { total=total+__listStorageReadF(source,i,0,0); i=i+1; }
     return total;
 }
 
 /** 只复制最终选中的值，等值时保留首个参数。 */
-unsafe float64 __bootListMinF(int64 source,float64 first,int64 text,int64 layout) {
+inline unsafe float64 __bootListMinF(int64 source,float64 first,int64 text,int64 layout) {
     int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { int64 relation=0;
         if (best<0) { relation=__listStorageCompareF(source,i,first,text,layout); }
@@ -2061,7 +2061,7 @@ unsafe float64 __bootListMinF(int64 source,float64 first,int64 text,int64 layout
 }
 
 /** 只复制最终选中的值，等值时保留首个参数。 */
-unsafe float64 __bootListMaxF(int64 source,float64 first,int64 text,int64 layout) {
+inline unsafe float64 __bootListMaxF(int64 source,float64 first,int64 text,int64 layout) {
     int64 best=-1; int64 i=0; int64 size=__listStorageLength(source);
     while (i<size) { int64 relation=0;
         if (best<0) { relation=__listStorageCompareF(source,i,first,text,layout); }
@@ -2073,7 +2073,7 @@ unsafe float64 __bootListMaxF(int64 source,float64 first,int64 text,int64 layout
 }
 
 /** 验证边界顺序后返回独立拥有值。 */
-unsafe float64 __bootListClampF(int64 source,float64 value,int64 text,int64 layout) {
+inline unsafe float64 __bootListClampF(int64 source,float64 value,int64 text,int64 layout) {
     if (__listStorageLength(source)!=2) { panic("std::lang::algorithms::clamp 的边界胶水需要 low/high 两项"); }
     if (__listStorageCompareIndex(source,1,0)<0) { panic("std::lang::algorithms::clamp 要求 low <= high"); }
     if (__listStorageCompareF(source,0,value,text,layout)>0) { return __listStorageReadF(source,0,text,layout); }

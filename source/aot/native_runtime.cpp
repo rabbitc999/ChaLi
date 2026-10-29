@@ -4,6 +4,7 @@
  */
 #include "ircode/runtime_internal.hpp"
 #include "chali_glue.hpp"
+#include "chali_i18n.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "allocator/system_arena.hpp"
 #include "glue/std_registry.hpp"
@@ -12,6 +13,8 @@
 #include <memory>
 #include <cstring>
 #include <limits>
+#include <map>
+#include <mutex>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -369,6 +372,35 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
 
 extern "C" {
 /**
+ * @brief 按声明路径加载动态库并解析原始 C 函数地址。
+ * @param path UTF-8 动态库路径。
+ * @param name 目标 C 符号。
+ * @return 解析后的机器函数地址；失败进入语言运行期错误路径。
+ * @note 库引用保留到进程结束，使跨模块重新初始化和持续宿主线程的缓存始终有效。
+ */
+void *chali_host_abi_symbol(const char *path, const char *name)
+{
+    static std::mutex mutex;
+    static std::map<std::string, std::shared_ptr<chali_glue::DynamicLibrary>> libraries;
+    std::shared_ptr<chali_glue::DynamicLibrary> library;
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        const auto found = libraries.find(path);
+        if (found != libraries.end()) library = found->second;
+    }
+    Memory::String error;
+    if (!library)
+    {
+        auto opened = std::make_shared<chali_glue::DynamicLibrary>();
+        if (!opened->open(path, &error)) chali_panic(error.c_str());
+        std::lock_guard<std::mutex> guard(mutex);
+        library = libraries.emplace(path, std::move(opened)).first->second;
+    }
+    void *address = library->resolve(name, &error);
+    if (!address) chali_panic(error.c_str());
+    return address;
+}
+/**
  * @brief 为原生模块建立独立的共享运行时服务。
  */
 void chali_host_init()
@@ -396,7 +428,7 @@ void chali_host_trace()
     for (std::size_t at = 0; at < chali_trace_count; ++at)
         if (chali_trace_functions[at] == function) name = chali_trace_names[at];
     if (file && *file && line > 0)
-        std::fprintf(stderr, "出错位置：%s:%lld%s%s%s\n", file, static_cast<long long>(line), name ? "（" : "", name ? name : "", name ? "）" : "");
+        std::fprintf(stderr, CHALI_TEXT("出错位置：%s:%lld%s%s%s\n"), file, static_cast<long long>(line), name ? "（" : "", name ? name : "", name ? "）" : "");
     void *frames[96];
     std::size_t count = 0;
 #ifdef _WIN32
@@ -412,7 +444,8 @@ void chali_host_trace()
     bool printed = false;
     if (name && *name)
     {
-        std::fprintf(stderr, "调用栈（内 → 外）：\n  %s\n", name);
+        std::fputs(CHALI_TEXT("调用栈（内 → 外）：\n"), stderr);
+        std::fprintf(stderr, "  %s\n", name);
         printed = true;
     }
     for (std::size_t frame = 0; frame < count; ++frame)
@@ -437,7 +470,7 @@ void chali_host_trace()
         {
             if (chali_trace_functions[at] != start || !*chali_trace_names[at]) continue;
             if (name && std::strcmp(name, chali_trace_names[at]) == 0) continue;
-            if (!printed) std::fputs("调用栈（内 → 外）：\n", stderr);
+            if (!printed) std::fputs(CHALI_TEXT("调用栈（内 → 外）：\n"), stderr);
             std::fprintf(stderr, "  %s\n", chali_trace_names[at]);
             printed = true;
             break;

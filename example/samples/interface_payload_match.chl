@@ -1,0 +1,40 @@
+interface A { int64 value(); };
+interface B { int64 code(); };
+struct Success : A { int64 value() { return 7; } };
+struct E : B { int64 code() { return 11; } };
+struct F : B { int64 code() { return 22; } };
+struct Other : B { int64 code() { return 33; } };
+
+int64 classify(Result<A, B> res)
+{
+    int64 result = 0;
+    match (res)
+    {
+        OK(A a) => { result = a.value(); }
+        Ok(_) => { result = -1; }
+        Err(E b) => { result = b.code(); }
+        Err(F c) => { result = c.code(); }
+        Err(_ d) => { result = d.code(); }
+    }
+    return result;
+}
+
+void main()
+{
+    Success success;
+    E e;
+    F f;
+    Other other;
+    assert(classify(Result<A, B>::Ok(success)) == 7);
+    assert(classify(Result<A, B>::Err(e)) == 11);
+    assert(classify(Result<A, B>::Err(f)) == 22);
+    assert(classify(Result<A, B>::Err(other)) == 33);
+    B error = f;
+    match (error)
+    {
+        E(value) => { assert(false); }
+        F(value) => { assert(value.code() == 22); }
+        _ => { assert(false); }
+    }
+    println("interface payload match OK");
+}

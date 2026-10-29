@@ -18,6 +18,7 @@ def main():
     if not compiler.is_file() and os.name == "nt":
         compiler = compiler.with_suffix(".exe")
     env = dict(os.environ, CHALI_LANG='zh')
+    env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
     with tempfile.TemporaryDirectory(prefix='chali-removed-libraries-') as directory:
         work = Path(directory)
         standalone = work / compiler.name

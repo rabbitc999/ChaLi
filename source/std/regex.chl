@@ -31,10 +31,10 @@ opcode Regex {
     copy = std::regex::__regexCopy;
     drop = std::regex::__regexDrop;
 
-    static Result<Regex, RegexError> compile(std::lang::String pattern) {
+    static Result<Regex, std::lang::Error> compile(std::lang::String pattern) {
         Regex value = __regexCompileHandle(pattern);
-        if (!__regexValid(value.opcode)) { return Result<Regex, RegexError>::Err(RegexError::Invalid); }
-        return Result<Regex, RegexError>::Ok(move value);
+        if (!__regexValid(value.opcode)) { return Result<Regex, std::lang::Error>::Err(RegexError::Invalid); }
+        return Result<Regex, std::lang::Error>::Ok(move value);
     }
 
     bool fullMatch(std::lang::String text) { return __regexFullMatch(self.opcode, text); }

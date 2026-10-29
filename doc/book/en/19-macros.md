@@ -6,7 +6,9 @@
 
 Macros transform program structure during compilation. They are useful when repeated syntax expresses one stable operation, but ordinary functions remain the clearer choice for most runtime calculations.
 
-ChaLi's hygienic macros preserve binding relationships so that an internal temporary does not accidentally capture a caller's variable. Macro arguments have documented fragment categories; expression, type, identifier, statement and token-group arguments should not be treated as one unstructured string.
+ChaLi's hygienic macros preserve binding relationships so that an internal temporary does not accidentally capture a caller's variable. Expression arguments are evaluated once each, in source order, and their saved values are reused: `$A(next())` calls next once and `$A(next(), next())` calls it twice. Ordinary parameters have value semantics. Assigning `n = n + 1;` changes the parameter's copy without modifying the caller or producing a warning. The compiler may eliminate a copy only when observable behavior stays equivalent.
+
+Declare `mut &n` for a writable reference parameter or `&n` for a readonly reference. The former writes through to the caller; the latter rejects mutation. Identifier, type, statement and token-group parameters retain their distinct syntax roles. Macro arguments should not be treated as one unstructured string.
 
 Macro declarations and invocations use the lowercase `$macro` system. Parameter groups and repetition describe how source fragments are matched. Regex branches use the documented ECMAScript behavior. Consult the [macro reference](../../en/25-literals-operators-macros.md) for the exact declaration forms rather than copying another language's macro syntax.
 

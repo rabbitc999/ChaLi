@@ -88,6 +88,21 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
             auto parameter = chali_syntax::trim(parameters[index]);
             const bool variadic = parameter.compare(0, 2, "..") == 0;
             if (variadic) parameter = chali_syntax::trim(parameter.substr(parameter.compare(0, 3, "...") == 0 ? 3 : 2));
+            Memory::String reference;
+            if (parameter.compare(0, 3, "mut") == 0)
+            {
+                const auto rest = chali_syntax::trim(parameter.substr(3));
+                if (!rest.empty() && rest[0] == '&')
+                {
+                    reference = "mut &";
+                    parameter = chali_syntax::trim(rest.substr(1));
+                }
+            }
+            else if (!parameter.empty() && parameter[0] == '&')
+            {
+                reference = "&";
+                parameter = chali_syntax::trim(parameter.substr(1));
+            }
             if (!signatureIdentifier(parameter) || !names.insert(parameter).second || (variadic && index + 1 != parameters.size()))
             {
                 error = "宏形参必须是互不重复的标识符，变长形参放在组末尾";
@@ -96,7 +111,7 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
             if (variadic)
                 group.rest = parameter;
             else
-                group.params.push_back(parameter);
+                group.params.push_back(reference + parameter);
         }
         signature.groups.push_back(std::move(group));
         at = end;

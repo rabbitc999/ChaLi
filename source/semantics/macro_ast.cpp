@@ -42,6 +42,19 @@ int M_MacroParameter(int name, bool variadic)
 }
 
 /**
+ * @brief 保存宏形参的引用绑定方式。
+ * @param name 名称池编号。
+ * @param mode 一表示只读引用，二表示可写引用。
+ * @return 参数节点编号。
+ */
+int M_MacroReferenceParameter(int name, int mode)
+{
+    const int id = M_MacroParameter(name, false);
+    g_nodes[id].type2 = mode;
+    return id;
+}
+
+/**
  * @brief 保存编译期循环及其片段变量，不创建运行时循环。
  * @param variable 循环变量名称。
  * @param source 变长形参名称。

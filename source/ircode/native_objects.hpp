@@ -16,6 +16,21 @@ namespace stackvm::runtimeDetail
 Slot objNew(NativeContext &ctx, const Memory::Vector<Slot> &);
 
 /**
+ * @brief 接管具体聚合地址并建立拥有型接口值。
+ * @param ctx 提供对象表及同步调用器的运行上下文。
+ * @param args 聚合地址、具体类型号、复制助手和销毁助手。
+ * @return 接口对象句柄。
+ */
+Slot interfaceBox(NativeContext &ctx, const Memory::Vector<Slot> &args);
+/**
+ * @brief 为拥有接口值建立非拥有引用包装。
+ * @param ctx 当前运行上下文。
+ * @param args 原接口值句柄。
+ * @return 保留动态类型且不接管聚合存储的新包装。
+ */
+Slot interfaceBorrow(NativeContext &ctx, const Memory::Vector<Slot> &args);
+
+/**
  * @brief `__std_obj_set(obj, 值, 类型号, 值是不是字符串, 值是不是对象句柄, 类型名地址) -> 0`：把值装进去。
  *
  * 原来的值直接丢掉（格子只有一个），类型号与类型名一起换成新的。

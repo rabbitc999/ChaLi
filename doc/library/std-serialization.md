@@ -24,8 +24,8 @@ serialize<T> 使用反射生成精确 JSON 载荷，并封装版本、稳定类�
 
 | 名称 | 声明 |
 | --- | --- |
-| [serialize](#api-0) | `Result<List<uint8>,MessageError> serialize<T>(T const& value)` |
-| [deserialize](#api-1) | `Result<T,MessageError> deserialize<T>(List<uint8> bytes)` |
+| [serialize](#api-0) | `Result<List<uint8>,std::lang::Error> serialize<T>(T const& value)` |
+| [deserialize](#api-1) | `Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes)` |
 
 <a id="api-0"></a>
 
@@ -34,7 +34,7 @@ serialize<T> 使用反射生成精确 JSON 载荷，并封装版本、稳定类�
 **声明**
 
 ```chali
-Result<List<uint8>,MessageError> serialize<T>(T const& value);
+Result<List<uint8>,std::lang::Error> serialize<T>(T const& value);
 ```
 
 **行为**
@@ -51,7 +51,7 @@ Result<List<uint8>,MessageError> serialize<T>(T const& value);
 
 **返回值**
 
-`Result<List<uint8>,MessageError>`。按具体反射类型编码独立值，失败返回诊断。
+`Result<List<uint8>,std::lang::Error>`。按具体反射类型编码独立值，失败返回诊断。
 
 **错误与边界**
 
@@ -72,7 +72,7 @@ std::serialization::serialize<T>(value);
 **声明**
 
 ```chali
-Result<T,MessageError> deserialize<T>(List<uint8> bytes);
+Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes);
 ```
 
 **行为**
@@ -89,7 +89,7 @@ Result<T,MessageError> deserialize<T>(List<uint8> bytes);
 
 **返回值**
 
-`Result<T,MessageError>`。按具体反射类型严格校验并恢复独立拥有的值。
+`Result<T,std::lang::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
 
 **错误与边界**
 

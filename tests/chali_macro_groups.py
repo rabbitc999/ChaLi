@@ -12,7 +12,7 @@ def main():
     """运行分组及来源回归，并核对错误来自编译器而非运行期。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chali", type=Path, default=compiler_path())
-    parser.add_argument("--default", action="store_true", help="使用含标准库的默认编译路径")
+    parser.add_argument("--default", action="store_true", help="使用标准库运行全部案例；缺省检查独立原始语法路径")
     options = parser.parse_args()
     compiler = options.chali.resolve()
     cases = [
@@ -20,8 +20,8 @@ def main():
         ("group_shape", "$macro A[a]\na\n$end_macro\nvoid main() { let __boom = $A(0); }", "参数组"),
         ("empty_groups", "$macro A[](){}\n0\n$end_macro\nvoid main() { let __boom = $A[](){}; }", None),
         ("variadic_empty", "$macro ADD(...xs)\n$for x in xs\nx;\n$end_for\n0\n$end_macro\nvoid main() { let __boom = $ADD(); }", None),
-        ("for_hygiene", "$macro ADD(total, ...xs)\n$for x in xs\nint64 temp = x; total += temp;\n$end_for\n$end_macro\nvoid main() { int64 temp = 100; int64 total = 0; $ADD(total, 1, 2, 3); let __boom = total + temp - 106; }", None),
-        ("for_match", "$macro ADD(total, ...xs)\n$for x in xs\n$match x is expr\ntotal += x;\n$end_match\n$end_for\n$end_macro\nvoid main() { int64 total = 0; $ADD(total, 1, 2); let __boom = total - 3; }", None),
+        ("for_hygiene", "$macro ADD(mut &total, ...xs)\n$for x in xs\nint64 temp = x; total += temp;\n$end_for\n$end_macro\nvoid main() { int64 temp = 100; int64 total = 0; $ADD(total, 1, 2, 3); let __boom = total + temp - 106; }", None),
+        ("for_match", "$macro ADD(mut &total, ...xs)\n$for x in xs\n$match x is expr\ntotal += x;\n$end_match\n$end_for\n$end_macro\nvoid main() { int64 total = 0; $ADD(total, 1, 2); let __boom = total - 3; }", None),
         ("variadic_not_last", "$macro A(...xs, y)\n0\n$end_macro\nvoid main() { return; }", "末尾"),
         ("for_non_variadic", "$macro A(xs)\n$for x in xs\nx;\n$end_for\n$end_macro\nvoid main() { $A(1); return; }", "变长"),
         ("source_line", "$macro LINE\n$line\n$end_macro\nvoid main() { let __boom = $LINE - 4; }", None),
@@ -34,15 +34,15 @@ def main():
         ("concat_reject", "void main() { let __boom = $concat(a, +); }", "单个标识符"),
         ("source_module", "module demo;\n$macro MODULE\n$module\n$end_macro\nvoid main() { String s = $MODULE; if (s == \"demo\") { return; } let __boom = 1; }", None),
         ("imported_macro", "module lib;\nint64 helper = 42;\n$macro VALUE\nhelper\n$end_macro\nmodule app;\nimport lib;\nvoid main() { int64 helper = 1; let __boom = $VALUE - 42; }", None),
-        ("forward_rest", "$macro INNER(out, ...xs)\n$for x in xs\nout += x;\n$end_for\n$end_macro\n$macro OUTER(out, ...xs)\n$INNER(out, xs);\n$end_macro\nvoid main() { int64 out = 0; $OUTER(out, 1, 2, 3); let __boom = out - 6; }", None),
+        ("forward_rest", "$macro INNER(mut &out, ...xs)\n$for x in xs\nout += x;\n$end_for\n$end_macro\n$macro OUTER(mut &out, ...xs)\n$INNER(out, xs);\n$end_macro\nvoid main() { int64 out = 0; $OUTER(out, 1, 2, 3); let __boom = out - 6; }", None),
         ("replace", "$replace ADD(a, b) a + b\nvoid main() { let __boom = $ADD(40, 2) - 42; }", None),
         ("replace_string", "$replace URL() \"https://example\" // keep comment\nvoid main() { String s = $URL(); if (s == \"https://example\") { return; } let __boom = 1; }", None),
-        ("type_parameter", "$macro DECLARE(T, name, value)\nT name = value;\n$end_macro\nvoid main() { $DECLARE(int32, value, 42); let __boom = value - 42; }", None),
+        ("type_parameter", "$macro DECLARE(T, name, value)\nT name = value;\n$end_macro\nvoid main() { $DECLARE(int32, value, (int32)42); let __boom = value - 42; }", None),
         ("variadic_call", "$macro ADD(...xs)\nadd(xs)\n$end_macro\nint64 add(int64 a, int64 b) { return a + b; } void main() { let __boom = $ADD(40, 2) - 42; }", None),
         ("variadic_tuple", "$macro PAIR(first, ...rest)\n(first, rest)\n$end_macro\nvoid main() { let pair = $PAIR(1 + 1, 2 + 2); let __boom = pair.0 * 10 + pair.1 - 24; }", None),
         ("empty_variadic_call", "$macro CALL(...xs)\nzero(xs)\n$end_macro\nint64 zero() { return 0; } void main() { let __boom = $CALL(); }", None),
         ("type_required", "$macro DECLARE(T, name)\nT name;\n$end_macro\nvoid main() { $DECLARE(1 + 2, value); return; }", "类型位置"),
-        ("type_iteration", "$macro ADD(out, ...Types)\n$for T in Types\nT temp = 1; out += temp;\n$end_for\n$end_macro\nvoid main() { int64 out = 0; $ADD(out, int32, int64); let __boom = out - 2; }", None),
+        ("type_iteration", "$macro ADD(mut &out, ...Types)\n$for T in Types\nT temp = 1; out += temp;\n$end_for\n$end_macro\nvoid main() { int64 out = 0; $ADD(out, int32, int64); let __boom = out - 2; }", None),
         ("control_inside_block", "$macro ADD(...xs)\n{ int64 total = 0;\n$for x in xs\ntotal += x;\n$end_for\nyield total; }\n$end_macro\nvoid main() { int64 value = $ADD(40, 2); let __boom = value - 42; }", None),
         ("type_qualifier", "$macro CALL(T)\nT::get()\n$end_macro\nstruct Box { static int64 get() { return 42; } } void main() { let __boom = $CALL(Box) - 42; }", None),
     ]
@@ -61,7 +61,7 @@ def main():
                 source += "\nint64 macroTestZero(int64 value) { if (value == 0) { return 0; } return 1 / (value - value); }\n"
             path = Path(directory) / (name + ".chl")
             path.write_text(source + "\n", encoding="utf-8")
-            result = subprocess.run([str(compiler), "run", str(path), *([] if options.default else ["--raw"]), "--out", str(Path(directory) / name)],
+            result = subprocess.run([str(compiler), "run" if options.default else "check", str(path), *([] if options.default else ["--raw"]), "--out", str(Path(directory) / name)],
                                     cwd=ROOT, env=dict(os.environ, CHALI_LANG="zh"), capture_output=True,
                                     text=True, encoding="utf-8", errors="replace", timeout=90)
             if error is None:

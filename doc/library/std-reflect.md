@@ -132,19 +132,19 @@ void main() {
 | [requireReflection](#api-0) | `void requireReflection()` |
 | [ReflectError::toString](#api-1) | `String toString()` |
 | [ReflectValue::typeId](#api-2) | `uint64 typeId()` |
-| [ReflectValue::asBool](#api-3) | `Result<bool,std::reflect::ReflectError> asBool()` |
-| [ReflectValue::asChar](#api-4) | `Result<char,std::reflect::ReflectError> asChar()` |
-| [ReflectValue::asI8](#api-5) | `Result<int8,std::reflect::ReflectError> asI8()` |
-| [ReflectValue::asI16](#api-6) | `Result<int16,std::reflect::ReflectError> asI16()` |
-| [ReflectValue::asI32](#api-7) | `Result<int32,std::reflect::ReflectError> asI32()` |
-| [ReflectValue::asI64](#api-8) | `Result<int64,std::reflect::ReflectError> asI64()` |
-| [ReflectValue::asU8](#api-9) | `Result<uint8,std::reflect::ReflectError> asU8()` |
-| [ReflectValue::asU16](#api-10) | `Result<uint16,std::reflect::ReflectError> asU16()` |
-| [ReflectValue::asU32](#api-11) | `Result<uint32,std::reflect::ReflectError> asU32()` |
-| [ReflectValue::asU64](#api-12) | `Result<uint64,std::reflect::ReflectError> asU64()` |
-| [ReflectValue::asF32](#api-13) | `Result<float32,std::reflect::ReflectError> asF32()` |
-| [ReflectValue::asF64](#api-14) | `Result<float64,std::reflect::ReflectError> asF64()` |
-| [ReflectValue::asText](#api-15) | `Result<std::lang::String,std::reflect::ReflectError> asText()` |
+| [ReflectValue::asBool](#api-3) | `Result<bool,std::lang::Error> asBool()` |
+| [ReflectValue::asChar](#api-4) | `Result<char,std::lang::Error> asChar()` |
+| [ReflectValue::asI8](#api-5) | `Result<int8,std::lang::Error> asI8()` |
+| [ReflectValue::asI16](#api-6) | `Result<int16,std::lang::Error> asI16()` |
+| [ReflectValue::asI32](#api-7) | `Result<int32,std::lang::Error> asI32()` |
+| [ReflectValue::asI64](#api-8) | `Result<int64,std::lang::Error> asI64()` |
+| [ReflectValue::asU8](#api-9) | `Result<uint8,std::lang::Error> asU8()` |
+| [ReflectValue::asU16](#api-10) | `Result<uint16,std::lang::Error> asU16()` |
+| [ReflectValue::asU32](#api-11) | `Result<uint32,std::lang::Error> asU32()` |
+| [ReflectValue::asU64](#api-12) | `Result<uint64,std::lang::Error> asU64()` |
+| [ReflectValue::asF32](#api-13) | `Result<float32,std::lang::Error> asF32()` |
+| [ReflectValue::asF64](#api-14) | `Result<float64,std::lang::Error> asF64()` |
+| [ReflectValue::asText](#api-15) | `Result<std::lang::String,std::lang::Error> asText()` |
 | [getFuncInfo](#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(std::lang::String name)` |
 | [getAnnotationInfo](#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::lang::String name)` |
 | [getTypeId](#api-18) | `uint64 getTypeId<T>()` |
@@ -158,18 +158,18 @@ void main() {
 | [getFuncAnnotations](#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(std::lang::String name)` |
 | [getMethodAnnotations](#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(std::lang::String name)` |
 | [getStaticMemberAnnotations](#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::lang::String name)` |
-| [call](#api-29) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> call(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callMethod](#api-30) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callMethodConst](#api-31) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callStatic](#api-32) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumMethod](#api-33) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumMethodConst](#api-34) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumStatic](#api-35) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [construct](#api-36) | `Result<T,std::reflect::ReflectError> construct<T>(List<std::reflect::ReflectValue> args)` |
-| [getField](#api-37) | `Result<F,std::reflect::ReflectError> getField<T,F>(T const& obj, std::lang::String name)` |
-| [setField](#api-38) | `Result<bool,std::reflect::ReflectError> setField<T,F>(T mut& obj, std::lang::String name, F value)` |
-| [callInterface](#api-39) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [callInterfaceConst](#api-40) | `Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [call](#api-29) | `Result<std::reflect::ReflectValue,std::lang::Error> call(std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callMethod](#api-30) | `Result<std::reflect::ReflectValue,std::lang::Error> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callMethodConst](#api-31) | `Result<std::reflect::ReflectValue,std::lang::Error> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callStatic](#api-32) | `Result<std::reflect::ReflectValue,std::lang::Error> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumMethod](#api-33) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumMethodConst](#api-34) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumStatic](#api-35) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [construct](#api-36) | `Result<T,std::lang::Error> construct<T>(List<std::reflect::ReflectValue> args)` |
+| [getField](#api-37) | `Result<F,std::lang::Error> getField<T,F>(T const& obj, std::lang::String name)` |
+| [setField](#api-38) | `Result<bool,std::lang::Error> setField<T,F>(T mut& obj, std::lang::String name, F value)` |
+| [callInterface](#api-39) | `Result<std::reflect::ReflectValue,std::lang::Error> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
+| [callInterfaceConst](#api-40) | `Result<std::reflect::ReflectValue,std::lang::Error> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
 
 <a id="api-0"></a>
 
@@ -291,7 +291,7 @@ obj.typeId();
 **声明**
 
 ```chali
-Result<bool,std::reflect::ReflectError> asBool();
+Result<bool,std::lang::Error> asBool();
 ```
 
 **行为**
@@ -304,7 +304,7 @@ Result<bool,std::reflect::ReflectError> asBool();
 
 **返回值**
 
-`Result<bool,std::reflect::ReflectError>`。精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<bool,std::lang::Error>`。精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -327,7 +327,7 @@ obj.asBool();
 **声明**
 
 ```chali
-Result<char,std::reflect::ReflectError> asChar();
+Result<char,std::lang::Error> asChar();
 ```
 
 **行为**
@@ -340,7 +340,7 @@ Result<char,std::reflect::ReflectError> asChar();
 
 **返回值**
 
-`Result<char,std::reflect::ReflectError>`。精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<char,std::lang::Error>`。精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -363,7 +363,7 @@ obj.asChar();
 **声明**
 
 ```chali
-Result<int8,std::reflect::ReflectError> asI8();
+Result<int8,std::lang::Error> asI8();
 ```
 
 **行为**
@@ -376,7 +376,7 @@ Result<int8,std::reflect::ReflectError> asI8();
 
 **返回值**
 
-`Result<int8,std::reflect::ReflectError>`。精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int8,std::lang::Error>`。精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -399,7 +399,7 @@ obj.asI8();
 **声明**
 
 ```chali
-Result<int16,std::reflect::ReflectError> asI16();
+Result<int16,std::lang::Error> asI16();
 ```
 
 **行为**
@@ -412,7 +412,7 @@ Result<int16,std::reflect::ReflectError> asI16();
 
 **返回值**
 
-`Result<int16,std::reflect::ReflectError>`。精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int16,std::lang::Error>`。精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -435,7 +435,7 @@ obj.asI16();
 **声明**
 
 ```chali
-Result<int32,std::reflect::ReflectError> asI32();
+Result<int32,std::lang::Error> asI32();
 ```
 
 **行为**
@@ -448,7 +448,7 @@ Result<int32,std::reflect::ReflectError> asI32();
 
 **返回值**
 
-`Result<int32,std::reflect::ReflectError>`。精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int32,std::lang::Error>`。精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -471,7 +471,7 @@ obj.asI32();
 **声明**
 
 ```chali
-Result<int64,std::reflect::ReflectError> asI64();
+Result<int64,std::lang::Error> asI64();
 ```
 
 **行为**
@@ -484,7 +484,7 @@ Result<int64,std::reflect::ReflectError> asI64();
 
 **返回值**
 
-`Result<int64,std::reflect::ReflectError>`。精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int64,std::lang::Error>`。精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -507,7 +507,7 @@ obj.asI64();
 **声明**
 
 ```chali
-Result<uint8,std::reflect::ReflectError> asU8();
+Result<uint8,std::lang::Error> asU8();
 ```
 
 **行为**
@@ -520,7 +520,7 @@ Result<uint8,std::reflect::ReflectError> asU8();
 
 **返回值**
 
-`Result<uint8,std::reflect::ReflectError>`。精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint8,std::lang::Error>`。精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -543,7 +543,7 @@ obj.asU8();
 **声明**
 
 ```chali
-Result<uint16,std::reflect::ReflectError> asU16();
+Result<uint16,std::lang::Error> asU16();
 ```
 
 **行为**
@@ -556,7 +556,7 @@ Result<uint16,std::reflect::ReflectError> asU16();
 
 **返回值**
 
-`Result<uint16,std::reflect::ReflectError>`。精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint16,std::lang::Error>`。精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -579,7 +579,7 @@ obj.asU16();
 **声明**
 
 ```chali
-Result<uint32,std::reflect::ReflectError> asU32();
+Result<uint32,std::lang::Error> asU32();
 ```
 
 **行为**
@@ -592,7 +592,7 @@ Result<uint32,std::reflect::ReflectError> asU32();
 
 **返回值**
 
-`Result<uint32,std::reflect::ReflectError>`。精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint32,std::lang::Error>`。精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -615,7 +615,7 @@ obj.asU32();
 **声明**
 
 ```chali
-Result<uint64,std::reflect::ReflectError> asU64();
+Result<uint64,std::lang::Error> asU64();
 ```
 
 **行为**
@@ -628,7 +628,7 @@ Result<uint64,std::reflect::ReflectError> asU64();
 
 **返回值**
 
-`Result<uint64,std::reflect::ReflectError>`。精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint64,std::lang::Error>`。精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -651,7 +651,7 @@ obj.asU64();
 **声明**
 
 ```chali
-Result<float32,std::reflect::ReflectError> asF32();
+Result<float32,std::lang::Error> asF32();
 ```
 
 **行为**
@@ -664,7 +664,7 @@ Result<float32,std::reflect::ReflectError> asF32();
 
 **返回值**
 
-`Result<float32,std::reflect::ReflectError>`。精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float32,std::lang::Error>`。精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -687,7 +687,7 @@ obj.asF32();
 **声明**
 
 ```chali
-Result<float64,std::reflect::ReflectError> asF64();
+Result<float64,std::lang::Error> asF64();
 ```
 
 **行为**
@@ -700,7 +700,7 @@ Result<float64,std::reflect::ReflectError> asF64();
 
 **返回值**
 
-`Result<float64,std::reflect::ReflectError>`。精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float64,std::lang::Error>`。精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -723,7 +723,7 @@ obj.asF64();
 **声明**
 
 ```chali
-Result<std::lang::String,std::reflect::ReflectError> asText();
+Result<std::lang::String,std::lang::Error> asText();
 ```
 
 **行为**
@@ -736,7 +736,7 @@ Result<std::lang::String,std::reflect::ReflectError> asText();
 
 **返回值**
 
-`Result<std::lang::String,std::reflect::ReflectError>`。精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<std::lang::String,std::lang::Error>`。精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -1241,7 +1241,7 @@ std::reflect::getStaticMemberAnnotations<T>(name);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> call(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> call(std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1257,7 +1257,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> call(std::lang::St
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。按名称动态调用函数，返回封闭值或 ReflectError。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。按名称动态调用函数，返回封闭值或 ReflectError。
 
 **错误与边界**
 
@@ -1280,7 +1280,7 @@ std::reflect::call(name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1297,7 +1297,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethod<T>(T mu
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过可写接收者动态调用实例方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过可写接收者动态调用实例方法。
 
 **错误与边界**
 
@@ -1320,7 +1320,7 @@ std::reflect::callMethod<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1337,7 +1337,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethodConst<T>
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过只读接收者动态调用允许的实例方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过只读接收者动态调用允许的实例方法。
 
 **错误与边界**
 
@@ -1360,7 +1360,7 @@ std::reflect::callMethodConst<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1376,7 +1376,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callStatic<T>(std:
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。动态调用 T 的静态方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。动态调用 T 的静态方法。
 
 **错误与边界**
 
@@ -1399,7 +1399,7 @@ std::reflect::callStatic<T>(name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1416,7 +1416,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethod<T>(
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过可写枚举接收者动态调用方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过可写枚举接收者动态调用方法。
 
 **错误与边界**
 
@@ -1439,7 +1439,7 @@ std::reflect::callEnumMethod<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1456,7 +1456,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethodCons
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过只读枚举接收者动态调用方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过只读枚举接收者动态调用方法。
 
 **错误与边界**
 
@@ -1479,7 +1479,7 @@ std::reflect::callEnumMethodConst<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1495,7 +1495,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumStatic<T>(
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。动态调用枚举的静态方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。动态调用枚举的静态方法。
 
 **错误与边界**
 
@@ -1518,7 +1518,7 @@ std::reflect::callEnumStatic<T>(name, args);
 **声明**
 
 ```chali
-Result<T,std::reflect::ReflectError> construct<T>(List<std::reflect::ReflectValue> args);
+Result<T,std::lang::Error> construct<T>(List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1533,7 +1533,7 @@ Result<T,std::reflect::ReflectError> construct<T>(List<std::reflect::ReflectValu
 
 **返回值**
 
-`Result<T,std::reflect::ReflectError>`。动态调用 T 的构造函数，返回 T 或错误。
+`Result<T,std::lang::Error>`。动态调用 T 的构造函数，返回 T 或错误。
 
 **错误与边界**
 
@@ -1556,7 +1556,7 @@ std::reflect::construct<T>(args);
 **声明**
 
 ```chali
-Result<F,std::reflect::ReflectError> getField<T,F>(T const& obj, std::lang::String name);
+Result<F,std::lang::Error> getField<T,F>(T const& obj, std::lang::String name);
 ```
 
 **行为**
@@ -1574,7 +1574,7 @@ Result<F,std::reflect::ReflectError> getField<T,F>(T const& obj, std::lang::Stri
 
 **返回值**
 
-`Result<F,std::reflect::ReflectError>`。按字段名读取精确类型的独立值。
+`Result<F,std::lang::Error>`。按字段名读取精确类型的独立值。
 
 **错误与边界**
 
@@ -1597,7 +1597,7 @@ std::reflect::getField<T,F>(obj, name);
 **声明**
 
 ```chali
-Result<bool,std::reflect::ReflectError> setField<T,F>(T mut& obj, std::lang::String name, F value);
+Result<bool,std::lang::Error> setField<T,F>(T mut& obj, std::lang::String name, F value);
 ```
 
 **行为**
@@ -1616,7 +1616,7 @@ Result<bool,std::reflect::ReflectError> setField<T,F>(T mut& obj, std::lang::Str
 
 **返回值**
 
-`Result<bool,std::reflect::ReflectError>`。按字段名写入精确类型的值。
+`Result<bool,std::lang::Error>`。按字段名写入精确类型的值。
 
 **错误与边界**
 
@@ -1639,7 +1639,7 @@ std::reflect::setField<T,F>(obj, name, value);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1656,7 +1656,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterface<I>(I
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过可写接口接收者动态调用方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过可写接口接收者动态调用方法。
 
 **错误与边界**
 
@@ -1679,7 +1679,7 @@ std::reflect::callInterface<I>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1696,7 +1696,7 @@ Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterfaceConst
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::reflect::ReflectError>`。通过只读接口接收者动态调用方法。
+`Result<std::reflect::ReflectValue,std::lang::Error>`。通过只读接口接收者动态调用方法。
 
 **错误与边界**
 

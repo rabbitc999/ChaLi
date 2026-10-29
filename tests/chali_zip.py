@@ -21,7 +21,7 @@ def main():
     compiler=parser.parse_args().chali.resolve()
     if os.name == "nt" and not compiler.is_file():
         compiler = compiler.with_suffix(".exe")
-    env=os.environ.copy();env['CHALI_LANG']='ja';env['CHALI_PYTHON']=os.sys.executable
+    env=os.environ.copy();env.setdefault('CHALI_LLVM_CLANG',str(ROOT/'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name=='nt' else 'clang');env['CHALI_LANG']='ja';env['CHALI_PYTHON']=os.sys.executable
     def run(*args,cwd):
         return subprocess.run([str(x) for x in args],cwd=cwd,env=env,capture_output=True,encoding='utf-8',timeout=180)
     with tempfile.TemporaryDirectory(prefix='chali-zip-') as directory:

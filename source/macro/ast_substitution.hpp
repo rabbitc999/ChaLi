@@ -23,7 +23,7 @@ struct ExpansionSite
 };
 /**
  * @brief 根据已绑定的参数占位克隆 AST，保留表达式结构及调用者来源。
- * @note 不插入括号、闭包、额外作用域或实参缓存，不修改原模板及实参节点。
+ * @note 实参运行时绑定由 Registry 提供；本层保留语法参数，不修改原模板及实参节点。
  */
 class AstSubstitution
 {
@@ -43,11 +43,14 @@ public:
      * @param context 本次宏展开的卫生上下文。
      * @param error 接收错误，成功时清空。
      * @param site 调用来源及父诊断帧，不覆盖实参来源。
+     * @param values 表达式参数的运行时绑定；为空时只进行结构替换。
      * @return 实例化根编号；失败返回负一并回滚新建节点。
      */
-    int instantiate(int root, const std::map<BindingId, int> &arguments, ContextId context, std::string &error, const ExpansionSite &site = ExpansionSite{});
+    int instantiate(int root, const std::map<BindingId, int> &arguments, ContextId context, std::string &error, const ExpansionSite &site = ExpansionSite{},
+                    const std::map<BindingId, int> *values = nullptr);
 
 private:
+    const std::map<BindingId, int> *values_ = nullptr;  ///< 表达式参数的单次求值绑定，不替换语法名称及类型。
     /**
      * @brief 收集声明名占位与局部绑定的关系，使其引用与调用者提供的名字同步。
      * @param id 当前模板节点。

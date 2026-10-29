@@ -765,6 +765,12 @@ _MESSAGES = {
   ],
   "chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n": [
     "chali: compiler memory budget exhausted (capacity %zu bytes, live at failure %zu bytes, requested %zu bytes)\n"
+  ],
+  "出错位置：%s:%lld%s%s%s\n": [
+    "Error location: %s:%lld%s%s%s\n"
+  ],
+  "调用栈（内 → 外）：\n": [
+    "Call stack (inner to outer):\n"
   ]
 }
 # CHALI_CATALOG_END

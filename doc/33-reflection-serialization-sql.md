@@ -27,7 +27,7 @@ struct Person {
 
 各模块提供 `serialize<T>(T const& value)` 和 `deserialize<T>(...)`。
 JSON/TOML 使用文本，序列化模块使用 `List<uint8>`。调用编码函数时传入 `&value`。
-所有接口返回 `Result<结果类型, MessageError>`，格式错误、缺失字段、数值越界和不支持的类型
+所有接口返回 `Result<结果类型, Error>`，格式错误、缺失字段、数值越界和不支持的类型
 通过错误分支报告。解码创建独立存储，修改返回值不会修改输入或其他副本。
 
 整数不经过浮点数。超过有符号 64 位范围的 `uint64` 使用十进制字符串；

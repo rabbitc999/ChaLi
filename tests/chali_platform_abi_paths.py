@@ -10,7 +10,7 @@ COMPILER = compiler_path()
 
 def run(args, cwd=ROOT):
     result = subprocess.run(list(map(str, args)), cwd=cwd, capture_output=True, text=True, encoding='utf-8')
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.returncode == 0, (result.returncode, args, result.stdout, result.stderr)
     return result
 
 def main():
@@ -35,8 +35,9 @@ def main():
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '7\n' and (not result.stderr), result.stdout + result.stderr
             run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
-            glue = prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
-            assert library.as_posix() in glue, glue
+            llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
+            encoded = ''.join(f'\\{byte:02X}' for byte in library.as_posix().encode('utf-8'))
+            assert encoded in llvm and 'chali_host_abi_symbol' in llvm, llvm[-2000:]
         nested = work / 'nested'
         nested.mkdir()
         signature = '#abi("C", "../native paths/' + library.name + '", "identity") int32 identity(int32 n);\n'
@@ -51,7 +52,7 @@ def main():
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '8\n', result.stdout + result.stderr
             run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
-            assert library.as_posix() in prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
+            assert ''.join(f'\\{byte:02X}' for byte in library.as_posix().encode('utf-8')) in prefix.with_suffix('.ll').read_text(encoding='utf-8')
         # 同文模块移到另一目录后必须绑定新目录的库；旧库仍存在且返回不同值，避免仅靠缺失文件发现问题。
         relocated = work / 'relocated'
         (relocated / 'nested').mkdir(parents=True)
@@ -72,7 +73,7 @@ def main():
         module.write_text('module probe;\n%if CHALI_OS == other && CHALI_BITS == 32 && CUSTOM == 9\nint64 value() { return 9; }\n%else\nint64 value() { return 1; }\n%endif\n', encoding='utf-8')
         source = work / 'platform.chl'
         source.write_text('module app;\nimport probe;\nvoid main() {\n%if CHALI_OS == windows\nstd::lang::println("windows");\n%elif CHALI_OS == linux\nstd::lang::println("linux");\n%elif CHALI_OS == macos\nstd::lang::println("macos");\n%else\nstd::lang::println("other");\n%endif\n%if CHALI_BITS == 64\nstd::lang::println("64");\n%elif CHALI_BITS == 32\nstd::lang::println("32");\n%else\n%error unexpected bits\n%endif\nstd::lang::println("{}", probe::value()); return; }\n', encoding='utf-8')
-        default = run([compiler, 'run', source, '--out', work / 'default'])
+        default = run([compiler, 'run', source, '--out', work / 'platform-default'])
         expected_os = 'windows' if os.name == 'nt' else 'macos' if __import__('sys').platform == 'darwin' else 'linux'
         lines = default.stdout.splitlines()
         assert lines[0] == expected_os and lines[1] in ('32', '64') and (lines[2] == '1'), default.stdout

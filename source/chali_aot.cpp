@@ -8,6 +8,7 @@
 #include "chali_aot_llvm.hpp"
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
+#include "chali_i18n.hpp"
 #include "glue/std_aot_modules.hpp"
 #include "chali_temp.hpp"
 #include "console/utf8.hpp"
@@ -34,6 +35,17 @@
 #endif
 namespace chali_aot
 {
+/**
+ * @brief 区分需要动态加载的 C ABI 库与显式链接的静态资产。
+ * @param function 外部函数声明。
+ * @return 库路径非空且不是静态资产时返回真。
+ */
+bool usesDynamicAbiLibrary(const ExternFunction &function)
+{
+    if (function.library.empty()) return false;
+    const auto extension = std::filesystem::u8path(std::string(function.library.c_str())).extension().u8string();
+    return extension != ".a" && extension != ".lib" && extension != ".o" && extension != ".obj";
+}
 namespace
 {
 /**
@@ -1653,7 +1665,8 @@ struct Builder
                 state.fail("AOT：不支持的 ABI 返回类型 " + signature.resultType);
                 return false;
             }
-            Value result = call(llvmSymbol(signature.symbol), resultType, values);
+            const Text target = usesDynamicAbiLibrary(signature) ? "chali_external_" + std::to_string(external->second - state.request.externs.data()) : llvmSymbol(signature.symbol);
+            Value result = call(target, resultType, values);
             if (resultType == "void") result = { "i64", "0" };
             if (!resultType.empty() && resultType.front() == 'i')
                 result = convert(result, "i64", signature.resultType.find("unsigned") != Memory::String::npos);
@@ -2541,6 +2554,41 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         if (state.usedExternLabels.count(textOf(external.label)) == 0u) continue;
         const Text resultType = abiType(external.resultType);
         if (resultType.empty()) continue;
+        if (usesDynamicAbiLibrary(external))
+        {
+            const Text name = "chali_external_" + std::to_string(&external - request.externs.data());
+            const auto literal = [&](const Text &label, const Memory::String &value) {
+                Text encoded;
+                for (const unsigned char byte : value)
+                {
+                    char escaped[4];
+                    std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+                    encoded += escaped;
+                }
+                return "@" + label + " = private constant [" + std::to_string(value.size() + 1) + " x i8] c\"" + encoded + "\\00\"\n";
+            };
+            out += literal(name + "_library", external.library) + literal(name + "_symbol", external.symbol);
+            out += "@" + name + "_pointer = internal thread_local global ptr null\n";
+            out += "define internal " + resultType + " @" + name + "(";
+            Text actual;
+            for (std::size_t index = 0; index < external.parameterTypes.size(); ++index)
+            {
+                if (index)
+                {
+                    out += ", ";
+                    actual += ", ";
+                }
+                const Text parameter = abiType(external.parameterTypes[index]) + " %a" + std::to_string(index);
+                out += parameter;
+                actual += parameter;
+            }
+            out += ") {\nentry:\n  %cached = load ptr, ptr @" + name + "_pointer\n  %missing = icmp eq ptr %cached, null\n  br i1 %missing, label %resolve, label %invoke\nresolve:\n";
+            out += "  %resolved = call ptr @chali_host_abi_symbol(ptr @" + name + "_library, ptr @" + name + "_symbol)\n";
+            out += "  store ptr %resolved, ptr @" + name + "_pointer\n  br label %invoke\ninvoke:\n  %target = phi ptr [ %cached, %entry ], [ %resolved, %resolve ]\n";
+            out += Text(resultType == "void" ? "  call void %target(" : "  %value = call " + resultType + " %target(") + actual + ")\n";
+            out += resultType == "void" ? "  ret void\n}\n" : "  ret " + resultType + " %value\n}\n";
+            continue;
+        }
         Text declaration = "declare " + resultType + " @" + llvmSymbol(external.symbol) + "(";
         for (std::size_t at = 0; at < external.parameterTypes.size(); ++at)
         {
@@ -2557,6 +2605,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         if (existing.second) out += declaration;
     }
     if (request.abiGlue.empty()) out += "define i1 @chali_program_abi_bind(ptr %registry, ptr %error) {\nentry:\n  ret i1 true\n}\n";
+    out += "declare ptr @chali_host_abi_symbol(ptr, ptr)\n";
     Memory::Vector<Memory::String> requiredNames;
     for (const auto &entry : state.nativeNames) requiredNames.push_back(entry.first.c_str());
     const auto modules = std_registry::aotModulesFor(requiredNames, diagnostics);
@@ -2888,6 +2937,22 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
 #ifdef _WIN32
     std::wstring command = tool_console::quoteArgument(product.wstring());
     for (const auto &argument : arguments) command += L" " + tool_console::quoteArgument(fs::u8path(std::string(argument.c_str())).wstring());
+    std::vector<wchar_t> childEnvironment;
+    if (wchar_t *inherited = GetEnvironmentStringsW())
+    {
+        std::vector<std::wstring> entries;
+        for (const wchar_t *entry = inherited; *entry; entry += std::wcslen(entry) + 1)
+            if (_wcsnicmp(entry, L"CHALI_LANG=", 11) != 0) entries.emplace_back(entry);
+        FreeEnvironmentStringsW(inherited);
+        entries.emplace_back(chali_i18n::language() == chali_i18n::Language::En ? L"CHALI_LANG=en" : L"CHALI_LANG=zh");
+        std::sort(entries.begin(), entries.end(), [](const auto &left, const auto &right) { return _wcsicmp(left.c_str(), right.c_str()) < 0; });
+        for (const auto &entry : entries)
+        {
+            childEnvironment.insert(childEnvironment.end(), entry.begin(), entry.end());
+            childEnvironment.push_back(0);
+        }
+        childEnvironment.push_back(0);
+    }
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
     HANDLE source = GetStdHandle(STD_INPUT_HANDLE);
@@ -2900,7 +2965,8 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
     limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
     if (job) SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits));
-    if (CreateProcessW(product.c_str(), command.data(), nullptr, nullptr, TRUE, CREATE_SUSPENDED, nullptr, nullptr, &startup, &process))
+    if (CreateProcessW(product.c_str(), command.data(), nullptr, nullptr, TRUE, CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT,
+                       childEnvironment.empty() ? nullptr : childEnvironment.data(), nullptr, &startup, &process))
     {
         if (job && !AssignProcessToJobObject(job, process.hProcess)) { CloseHandle(job); job = nullptr; }
         ResumeThread(process.hThread);
@@ -2922,6 +2988,7 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
     const pid_t child = fork();
     if (child == 0)
     {
+        setenv("CHALI_LANG", chali_i18n::language() == chali_i18n::Language::En ? "en" : "zh", 1);
         execv(product.c_str(), values.data());
         _exit(127);
     }

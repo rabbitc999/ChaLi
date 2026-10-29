@@ -1,5 +1,5 @@
 
-$macro SWAP(a, b)
+$macro SWAP(mut &a, mut &b)
 int64 temporary = a;
 a = b;
 b = temporary;
@@ -48,7 +48,7 @@ println("sum={}", temporary);
 $end_macro
 
 
-$replace SWAPV(a, b) { int64 temporary = a; a = b; b = temporary; }
+$replace SWAPV(mut &a, mut &b) { int64 temporary = a; a = b; b = temporary; }
 
 
 $macro LITERAL

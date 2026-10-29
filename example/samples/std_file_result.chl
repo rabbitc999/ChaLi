@@ -3,14 +3,14 @@ module stdFileResult;
 import std::io;
 
 void main() {
-    Result<File, IoError> opened =
+    Result<File, Error> opened =
     std::io::fileOpen("missing-file-for-chali-tests.txt", "r");
     match (opened) {
-        Result<File, IoError>::Ok(handle) => {
+        Result<File, Error>::Ok(handle) => {
             std::io::fileClose(&handle);
             println("opened");
         }
-        Result<File, IoError>::Err(message) => {
+        Result<File, Error>::Err(message) => {
             println("{}", message);
         }
     }

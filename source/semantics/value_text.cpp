@@ -149,6 +149,18 @@ ast::NodePtr LowerDefaultValueText(int valueId)
 {
     const auto type = ExprType(valueId);
     if (!type || type->kind == MType::Void) return Fail("void 不是可转换为字符串的值"), Bad();
+    if (IsInterfaceType(type))
+    {
+        std::shared_ptr<MType> result;
+        Memory::Vector<std::shared_ptr<MType>> parameters;
+        if (FindInterfaceMethod(type->name, "toString", &result, &parameters)
+            && parameters.empty() && IsStandardOpcode(result, "String"))
+        {
+            MarkInterfaceMethodUsed(type->name, "toString");
+            return ast::Node::call(InterfaceLabel(type->name, "toString"), { "__chali_self", "__chali_readonly" },
+                                   { OwnedObjectTemp(valueId, type), ast::Node::i(1) });
+        }
+    }
     auto value = type->kind == MType::Struct                                 ? OwnedAggregateTempFor(valueId, type) :
                  IsStandardOpcode(type, "String") && NeedsOwnedTemp(valueId) ? OwnedStringTemp(valueId) :
                  IsObjectLike(type)                                          ? OwnedObjectTemp(valueId, type) :

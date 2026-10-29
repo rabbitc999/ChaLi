@@ -222,7 +222,7 @@ inline std::lang::String __textPad(std::lang::String text, int64 width, char fil
 /* ---------------------------------------------------------------- 公开面 */
 
 /** 在线性时间内构造最长相等真前后缀表。 */
-List<int64> __kmpPrefix(List<uint8> const& pattern) {
+inline List<int64> __kmpPrefix(List<uint8> const& pattern) {
     List<int64> table; int64 size=pattern.len();
     if (size==0) { return table; }
     table.push(0); int64 prefix=0; int64 i=1;
@@ -234,11 +234,11 @@ List<int64> __kmpPrefix(List<uint8> const& pattern) {
     return table;
 }
 /** 回执接口保持兼容；失配表由语言 List 保存。 */
-void __kmpTable(List<uint8> pattern,KmpReply mut& reply) {
+inline void __kmpTable(List<uint8> pattern,KmpReply mut& reply) {
     reply.table=__kmpPrefix(&pattern); reply.value=pattern.len(); reply.flag=1;
 }
 /** 从指定字节位置起线性搜索，空针返回有效起点。 */
-void __kmpFind(List<uint8> hay,List<uint8> needle,int64 from,KmpReply mut& reply) {
+inline void __kmpFind(List<uint8> hay,List<uint8> needle,int64 from,KmpReply mut& reply) {
     reply.value=0-1; reply.flag=0;
     if (from<0 || from>hay.len()) { return; }
     if (needle.len()==0) { reply.value=from; reply.flag=1; return; }
@@ -252,7 +252,7 @@ void __kmpFind(List<uint8> hay,List<uint8> needle,int64 from,KmpReply mut& reply
     }
 }
 /** 返回全部可重叠匹配；空针保持空列表约定。 */
-void __kmpFindAll(List<uint8> hay,List<uint8> needle,KmpReply mut& reply) {
+inline void __kmpFindAll(List<uint8> hay,List<uint8> needle,KmpReply mut& reply) {
     List<int64> positions;
     if (needle.len()>0 && needle.len()<=hay.len()) {
         List<int64> table=__kmpPrefix(&needle); int64 matched=0; int64 i=0;

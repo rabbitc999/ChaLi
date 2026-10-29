@@ -1218,6 +1218,8 @@ void ResetState()
     }
     g_needsAggregateRelease.clear();
     g_needsCaptureDestructor.clear();
+    g_needsInterfaceBox.clear();
+    g_exhaustiveMatches.clear();
     g_needsAggregateCopy.clear();
     g_expectedFuncType = nullptr;
     g_expectedNewType = nullptr;

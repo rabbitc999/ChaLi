@@ -205,7 +205,7 @@ void main() {
 
 The argument is evaluated once. Existing resource handles and aggregate slots are transferred to the result, then the source storage is cleared and its value lifetime ends. Moving does not clone strings, containers, Any or closures and does not run the source's close/drop methods. The destination owns the transferred resources and eventually destroys them. Borrowed reference fields retain their original lifetime constraints.
 
-Only writable places are accepted; literals, temporaries, read-only references and const sources are rejected. Supported targets include scalars, strings, containers, Any, functions, concrete aggregates, and file/process handles. Arrays, interface values without a concrete layout, and opaque host types cannot be moved directly; concrete array elements can be moved.
+Only writable places are accepted; literals, temporaries, read-only references and const sources are rejected. Supported targets include scalars, strings, containers, Any, owned interface values, functions, concrete aggregates, and file/process handles. Arrays and opaque host types cannot be moved directly; concrete array elements can be moved.
 
 Statically tracked reads and repeated moves after a move are rejected, including scalar reads and aliases. Assignment does not restore usability; a new declaration is required. Redeclaration requires the whole variable to have been moved on every incoming path. Moving one field leaves disjoint fields usable but prevents reading the complete aggregate.
 
@@ -292,8 +292,10 @@ void main() {
 ```
 
 `static T create(...)` is a **named constructor entry point**: it also carries an implicit `self`, so the
-body just writes into `self` (or `self.field`) and does **not** write `return` — the value is taken by
-the call site. Discarding its result is an error.
+body writes into `self` (or `self.field`), and the call site takes the constructed value.
+The body may fall through, use `return self;`, or end initialization early with `return;`.
+Returning `self` neither copies nor moves the receiver; other return expressions are rejected.
+Discarding its result is an error.
 
 A generic struct’s `create` entry can infer the owner’s type arguments from its inputs, as in `Pair::create(key, value)` and `Pair::create((key, value))`. If the inputs do not uniquely determine the types, write `Pair<K, V>::create(...)` explicitly.
 
@@ -474,6 +476,25 @@ Warnings do not prevent compilation or change branch order. Patterns are tested 
 
 ### Guards
 
+Interface types can be owned values, generic arguments and enum payloads, for example `Error error = MessageError::from("reason");` and `Result<String, Error>`. Each owned interface copy has independent concrete storage and cleanup. Interface references continue to borrow their source. Owned interface values cannot hide nonglobal borrowed references.
+
+An interface match uses `Concrete(value)` and requires `_` or `_(other)` for unknown implementations. Nested enum patterns combine outer tags and payload types, in source order:
+
+```chali
+match (res) // Result<A, B>; E and F implement interface B
+{
+    OK(A a) => { /* success interface payload */ }
+    Ok(_) => { /* success fallback without a binding */ }
+    Err(E b) => { /* concrete error E */ }
+    Err(F c) => { /* concrete error F */ }
+    Err(_ d) => { /* remaining errors as interface B */ }
+}
+```
+
+`Err(_)` is an unbound fallback; an asterisk is not part of this syntax. Ok remains the canonical Result success tag; match patterns also accept OK. A fallback may be omitted only when exhaustiveness is provable. Known implementations do not close an open interface. See the [runnable example](../../example/samples/interface_payload_match.chl).
+
+For a single interface payload, `Err::IoError(e)` is equivalent to `Err(IoError e)`, with `Err::IoError(_)` for no binding. The tag may be omitted as `IoError(e)` only when its unique destination is unambiguous and its name does not collide with a variant. This sugar is restricted to single-payload variants. Multiple payloads retain the tag and parentheses: `Pair(A a, B b)` or `Many(A a, B b, text, count)`. Ordinary payloads may use untyped variable bindings; interface payloads need type annotations only for dynamic type filtering.
+
 Bind a variable, then add a condition with `if`:
 
 ```chali
@@ -610,7 +631,7 @@ for=9
 
 | Construct | Notes |
 | --- | --- |
-| `if / elif / else` | conditional branches |
+| `if / elif / else` | conditional branches; else if and elif are interchangeable |
 | `while (cond) { }` | test before body |
 | `loop { … yield v; }` | infinite loop; `yield` carries the result |
 | `for (T x in c) { }` | iterate a container / iterator |
@@ -1009,7 +1030,7 @@ interpreting its braces or percent signs again.
 
 Files offer `File.print` / `File.println`, `FileStream.print` / `FileStream.println`, and the
 `std::io::filePrint` / `filePrintln` functions, with format strings and variable arguments.
-File functions return the byte count; stream methods return `Result<int64, IoError>`. Counts include
+File functions return the byte count; stream methods return `Result<int64, Error>`. Counts include
 the LF, and closed/read-only errors retain the existing write behavior. File `println` with no text
 writes one LF; it does not automatically flush or close the file.
 

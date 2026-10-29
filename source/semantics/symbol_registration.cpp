@@ -346,6 +346,9 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
             g_opcodeTypes[node.s].handleType = node.s + "$opcode";
         }
     }
+    Memory::Set<Memory::String> interfaceNames;
+    for (const int id : g_top)
+        if (N(id).kind == MNode::InterfaceDecl) interfaceNames.insert(N(id).s);
     Memory::Vector<std::shared_ptr<MType>> parsedTypes;
     Memory::Set<const MType *> parsedTypeNodes;
     Memory::Function<void(const std::shared_ptr<MType> &)> collectType;
@@ -373,6 +376,7 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
             type->kind = opcode->second.aggregate ? MType::Struct : MType::Opcode;
         }
         if (FindGenericClosureDefinition(type->name)) *type = *GenericClosureType(type->name);
+        if (interfaceNames.count(type->name)) type->kind = MType::Obj;
         type->unresolvedName = false;
     }
     for (auto &node : g_nodes)

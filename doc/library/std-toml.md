@@ -39,7 +39,7 @@ import std::json;
 import std::toml;
 
 void main() {
-    Result<std::json::JsonValue, MessageError> parsed = std::json::parse(
+    Result<std::json::JsonValue, Error> parsed = std::json::parse(
     "{\"name\":\"中文\",\"items\":[1,2,3],\"active\":true,\"nothing\":null,"
     "\"ratio\":1.5,\"min\":-9223372036854775808}");
     std::json::JsonValue root = parsed.unwrap();
@@ -82,7 +82,7 @@ void main() {
     assert(format("{}", minNumber.unwrap()) == "-9223372036854775808");
 
     String rootText = root.dump();
-    Result<std::json::JsonValue, MessageError> reparsed = std::json::parse(rootText);
+    Result<std::json::JsonValue, Error> reparsed = std::json::parse(rootText);
     std::json::JsonValue reloaded = reparsed.unwrap();
     Option<std::json::JsonValue> reloadedName = reloaded.find("name");
     std::json::JsonValue reloadedNameValue = reloadedName.unwrap();
@@ -91,7 +91,7 @@ void main() {
     assert(reloaded.close());
     assert(root.close() && items.isValid() && !root.close());
 
-    Result<std::json::JsonValue, MessageError> parsedZero =
+    Result<std::json::JsonValue, Error> parsedZero =
     std::json::parse("{\"a\\u0000b\":\"x\\u0000y\"}");
     std::json::JsonValue zero = parsedZero.unwrap();
     Option<String> zeroKey = zero.keyAt(0);
@@ -108,12 +108,12 @@ void main() {
     assert(raw.len() == 3 && raw[0] == (uint8)120 && raw[1] == (uint8)0 &&
     raw[2] == (uint8)121);
     assert(zero.close());
-    Result<std::json::JsonValue, MessageError> badJson = std::json::parse("{\"x\":}");
+    Result<std::json::JsonValue, Error> badJson = std::json::parse("{\"x\":}");
     assert(badJson.isErr() && len(badJson.error().toString()) > 0);
-    Result<std::json::JsonValue, MessageError> trailing = std::json::parse("[1,]");
+    Result<std::json::JsonValue, Error> trailing = std::json::parse("[1,]");
     assert(trailing.isErr());
 
-    Result<std::toml::TomlValue, MessageError> parsedConfig = std::toml::parse(
+    Result<std::toml::TomlValue, Error> parsedConfig = std::toml::parse(
     "title = \"ChaLi\"\nreleased = 1979-05-27T07:32:00Z\n[server]\nport = 8080\n"
     "enabled = true\nvalues = [1, 2, 3]\n[[products]]\nname = \"one\"\n"
     "[[products]]\nname = \"two\"\n");
@@ -156,7 +156,7 @@ void main() {
     assert(missingMember.isNone());
 
     String configText = config.dump();
-    Result<std::toml::TomlValue, MessageError> reparsedConfig = std::toml::parse(configText);
+    Result<std::toml::TomlValue, Error> reparsedConfig = std::toml::parse(configText);
     std::toml::TomlValue copy = reparsedConfig.unwrap();
     Option<std::toml::TomlValue> copyServer = copy.find("server");
     std::toml::TomlValue copyServerValue = copyServer.unwrap();
@@ -165,22 +165,22 @@ void main() {
     Option<int64> copyPortNumber = copyPortValue.asInt();
     assert(copyPortNumber.unwrap() == 8080);
     assert(copy.close() && config.close() && server.isValid());
-    Result<std::toml::TomlValue, MessageError> duplicate = std::toml::parse("x = 1\nx = 2\n");
+    Result<std::toml::TomlValue, Error> duplicate = std::toml::parse("x = 1\nx = 2\n");
     assert(duplicate.isErr() && len(duplicate.error().toString()) > 0);
     {
         int64 i = 0;
         while (i < 50) {
 
-        Result<std::json::JsonValue, MessageError> parsedSmall = std::json::parse("[]");
+        Result<std::json::JsonValue, Error> parsedSmall = std::json::parse("[]");
         std::json::JsonValue small = parsedSmall.unwrap();
         assert(small.close());
-        Result<std::toml::TomlValue, MessageError> invalid = std::toml::parse("x = [");
+        Result<std::toml::TomlValue, Error> invalid = std::toml::parse("x = [");
         assert(invalid.isErr());
     
             i = i + 1;
         }
     }
-    Result<std::json::JsonValue, MessageError> trailingOk = std::json::parse("true");
+    Result<std::json::JsonValue, Error> trailingOk = std::json::parse("true");
     assert(trailingOk.isOk()); // 注册表结束时清理未显式关闭的文档
     println("JSON and TOML parsing OK");
 }
@@ -211,8 +211,8 @@ JSON and TOML parsing OK
 
 | 名称 | 声明 |
 | --- | --- |
-| [serialize](#api-0) | `Result<String,MessageError> serialize<T>(T const& value)` |
-| [deserialize](#api-1) | `Result<T,MessageError> deserialize<T>(String text)` |
+| [serialize](#api-0) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
+| [deserialize](#api-1) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
 | [TomlValue::isValid](#api-2) | `bool isValid()` |
 | [TomlValue::close](#api-3) | `bool close()` |
 | [TomlValue::kind](#api-4) | `int64 kind()` |
@@ -239,7 +239,7 @@ JSON and TOML parsing OK
 | [TomlValue::keyAt](#api-25) | `Option<std::lang::String> keyAt(int64 index)` |
 | [TomlValue::keyBytesAt](#api-26) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
 | [TomlValue::dump](#api-27) | `std::lang::String dump()` |
-| [parse](#api-28) | `Result<TomlValue, std::lang::MessageError> parse(std::lang::String text)` |
+| [parse](#api-28) | `Result<TomlValue, std::lang::Error> parse(std::lang::String text)` |
 
 <a id="api-0"></a>
 
@@ -248,7 +248,7 @@ JSON and TOML parsing OK
 **声明**
 
 ```chali
-Result<String,MessageError> serialize<T>(T const& value);
+Result<String,std::lang::Error> serialize<T>(T const& value);
 ```
 
 **行为**
@@ -265,7 +265,7 @@ Result<String,MessageError> serialize<T>(T const& value);
 
 **返回值**
 
-`Result<String,MessageError>`。按具体反射类型编码独立值，失败返回诊断。
+`Result<String,std::lang::Error>`。按具体反射类型编码独立值，失败返回诊断。
 
 **错误与边界**
 
@@ -288,7 +288,7 @@ std::toml::serialize<T>(value);
 **声明**
 
 ```chali
-Result<T,MessageError> deserialize<T>(String text);
+Result<T,std::lang::Error> deserialize<T>(String text);
 ```
 
 **行为**
@@ -305,7 +305,7 @@ Result<T,MessageError> deserialize<T>(String text);
 
 **返回值**
 
-`Result<T,MessageError>`。按具体反射类型严格校验并恢复独立拥有的值。
+`Result<T,std::lang::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
 
 **错误与边界**
 
@@ -1290,7 +1290,7 @@ obj.dump();
 **声明**
 
 ```chali
-Result<TomlValue, std::lang::MessageError> parse(std::lang::String text);
+Result<TomlValue, std::lang::Error> parse(std::lang::String text);
 ```
 
 **行为**
@@ -1307,7 +1307,7 @@ Result<TomlValue, std::lang::MessageError> parse(std::lang::String text);
 
 **返回值**
 
-`Result<TomlValue, std::lang::MessageError>`。解析TOML 文本；成功返回根节点，失败返回诊断字符串。
+`Result<TomlValue, std::lang::Error>`。解析TOML 文本；成功返回根节点，失败返回诊断字符串。
 
 **错误与边界**
 

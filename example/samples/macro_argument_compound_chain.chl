@@ -1,0 +1,8 @@
+/* 宏参数修改副本，外层的复合赋值保留自己的写入。 */
+$replace B(x) x += x
+void main() {
+    int64 x = 1;
+    x += $B(x);
+    assert(x == 3);
+    println("macro compound parameter copy");
+}

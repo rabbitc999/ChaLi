@@ -31,6 +31,14 @@ def main():
                 assert any(item["label"].endswith("external") for item in items), (suffix, items)
                 assert not any(item["label"] in {"variable", "ordinary", "main", "int64"} for item in items), items
                 assert all(not item.get("insertText", "").startswith("$$") for item in items), items
+            text = '$macro Update(mut &target, &source)\ntarget=source;\n$end_macro\nvoid main(){ $'
+            uri = (folder / 'reference-parameters.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            response = server.query("textDocument/completion", {"textDocument": {"uri": uri}, "position": position(text, len(text))})
+            items = response.get("items", []) if isinstance(response, dict) else response
+            update = next(item for item in items if item['label'].endswith('Update'))
+            inserted = update.get('insertText', update.get('textEdit', {}).get('newText', ''))
+            assert inserted and '&' not in inserted and 'mut ' not in inserted, update
         finally:
             server.close()
     print("LSP 宏补全：外部模块、$ 前缀与限定名称通过")

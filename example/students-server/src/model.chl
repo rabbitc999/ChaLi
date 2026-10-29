@@ -73,13 +73,13 @@ String columnDefinition(uint64 typeId, bool primary)
  * @brief 从反射元数据生成建表列清单（不含表级选项）。
  * @retval 逗号分隔的 MySQL 列定义；模型缺 @Reflect 或类型不可识别时报错。
  */
-Result<String, MessageError> mysqlColumns()
+Result<String, Error> mysqlColumns()
 {
     std::reflect::requireReflection();
     let reflected = std::reflect::getStructInfo<Student>();
     if (reflected.isNone())
     {
-        return Result<String, MessageError>::Err(MessageError::from("Student 模型需要 @Reflect"));
+        return Result<String, Error>::Err(MessageError::from("Student 模型需要 @Reflect"));
     }
     let info = reflected.unwrap();
     String output = "";
@@ -101,22 +101,22 @@ Result<String, MessageError> mysqlColumns()
     }
     if (output.isEmpty())
     {
-        return Result<String, MessageError>::Err(MessageError::from("Student 模型没有可映射字段"));
+        return Result<String, Error>::Err(MessageError::from("Student 模型没有可映射字段"));
     }
-    return Result<String, MessageError>::Ok(output);
+    return Result<String, Error>::Ok(output);
 }
 
 /**
  * @brief 模型字段清单（供 /api/schema 与排序字段校验使用）。
  * @retval JSON 数组文本：[{"name":"id","type":"int"},…]。
  */
-Result<String, MessageError> schemaJson()
+Result<String, Error> schemaJson()
 {
     std::reflect::requireReflection();
     let reflected = std::reflect::getStructInfo<Student>();
     if (reflected.isNone())
     {
-        return Result<String, MessageError>::Err(MessageError::from("Student 模型需要 @Reflect"));
+        return Result<String, Error>::Err(MessageError::from("Student 模型需要 @Reflect"));
     }
     List<String> items;
     for (std::reflect::FieldInfo field in reflected.unwrap().fields)
@@ -126,7 +126,7 @@ Result<String, MessageError> schemaJson()
         items.push("{\"name\":" + std::reflect::__serdeQuote(field.name) + ",\"type\":" + std::reflect::__serdeQuote(kind) + "}");
     }
     String separator = ",";
-    return Result<String, MessageError>::Ok("[" + separator.join(items) + "]");
+    return Result<String, Error>::Ok("[" + separator.join(items) + "]");
 }
 
 /**

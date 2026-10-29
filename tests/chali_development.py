@@ -53,12 +53,12 @@ def main():
         assert formatting_error['code'] == 'CHL1400', formatting_error
         cli_project = directory / 'cli-project'
         cli_project.mkdir()
-        (cli_project / 'chali.toml').write_text('[chali]\nrun="svmb"\n', encoding='utf-8')
+        (cli_project / 'chali.toml').write_text('[chali]\nrun="run"\n', encoding='utf-8')
         cli_source = cli_project / 'main.chl'
         cli_source.write_text('void main(){std::lang::println("executed");}', encoding='utf-8')
         cli_prefix = directory / 'cli-arguments'
         result = run('--out', cli_prefix, cli_source, '--', '--check')
-        assert result.stdout == '' and cli_prefix.with_suffix('.svmb').exists(), result
+        assert result.stdout == 'executed\n' and cli_prefix.with_suffix('.ll').exists(), result
         print('[通过] 检查模式、JSON 诊断、格式检查、程序参数边界与三个功能样例', flush=True)
         source.write_text('void main() {\nstd::lang::println("{}", "{ literal }"); // } comment\nif (true) {\nreturn;\n}\nreturn;\n}\n', encoding='utf-8')
         run('fmt', source, '--check', expected=1)
@@ -109,7 +109,7 @@ def main():
         cache_prefix = directory / 'cached'
         run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)
         cached = run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)
-        assert '增量缓存命中' in cached.stderr, cached.stderr
+        assert '2 个模块复用，0 个模块重新预处理' in cached.stderr, cached.stderr
         (library / 'values.chl').write_text('module values;\nint64 answer() { return 42; }\n', encoding='utf-8')
         run('deps', 'lock', '--offline', '--project', app)
         rebuilt = run('aot', app_source, '--emit-llvm', '--incremental', '--out', cache_prefix)

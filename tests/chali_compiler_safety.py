@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import subprocess
 from project_temp import tempfile
-import time
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,7 +15,7 @@ def run_native(cxx, work, sanitize):
     sources = [ROOT / 'tests/chali_native_safety.cpp']
     for pattern in ['source/bignum/bigint*.cpp', 'source/bignum/bigfloat*.cpp', 'source/ast/ast*.cpp']:
         sources.extend(sorted(ROOT.glob(pattern)))
-    sources += [ROOT / name for name in ['source/ast/ast.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
+    sources += [ROOT / name for name in ['source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
     flags = ['-std=c++17', '-O1' if sanitize else '-O2', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1']
     if sanitize:
         flags += ['-g', '-fsanitize=address,undefined,float-cast-overflow', '-fno-omit-frame-pointer', '-no-pie']
@@ -32,33 +31,22 @@ def run_owned(compiler, work, env):
 
 
 def run_snapshot(compiler, work, env):
-    """在优化转储管道阻塞期间覆盖磁盘映像，验证 VM 使用当前编译的内存快照。"""
+    """验证原生产物使用内嵌数据，不读取遗留的外部四元式数据映像。"""
     source = work / 'snapshot.chl'
     count = 2000
-    source.write_text('void main()\n{\n' + '    println("snapshot-safe");\n' * count + '    return;\n}\n', encoding='utf-8')
+    source.write_text('void main(){\n' + 'println("snapshot-safe");\n' * count + '}\n', encoding='utf-8')
     prefix = work / 'snapshot'
-    process = subprocess.Popen([str(compiler), 'run', str(source), '--out', str(prefix)], cwd=work, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    try:
-        deadline = time.monotonic() + 120
-        while not prefix.with_suffix('.layout').exists():
-            if process.poll() is not None:
-                out, error = process.communicate()
-                raise AssertionError((process.returncode, out, error))
-            if time.monotonic() >= deadline:
-                raise TimeoutError('等待数据映像写出超时')
-            time.sleep(0.005)
-        # 大量优化转储填满管道；此时数据文件已写出，但 VM 尚未装载数据。
-        prefix.with_suffix('.data.bin').write_bytes(b'\0' * 16)
-        prefix.with_suffix('.layout').write_bytes(b'')
-        output, error = process.communicate(timeout=120)
-        # Windows 控制台走文本模式给出 CRLF；比对前归一化，避免把换行差异当成失败。
-        normalized = output.replace(b'\r\n', b'\n')
-        assert process.returncode == 0 and normalized == b'snapshot-safe\n' * count, (process.returncode, normalized[:200], error[-2000:])
-        assert b'AddressSanitizer' not in error and b'runtime error:' not in error, error[-2000:]
-    finally:
-        if process.poll() is None:
-            process.kill()
-            process.communicate()
+    built = subprocess.run([str(compiler), 'aot', str(source), '--out', str(prefix)],
+                           cwd=work, capture_output=True, text=True, encoding='utf-8', env=env, timeout=300)
+    assert built.returncode == 0, built
+    for suffix in ('.data.bin', '.layout', '.quad'):
+        assert not prefix.with_suffix(suffix).exists(), suffix
+        prefix.with_suffix(suffix).write_bytes(b'invalid external snapshot\0')
+    source.write_text('void main(){panic("modified source");}', encoding='utf-8')
+    product = prefix.with_suffix('.exe' if os.name == 'nt' else '')
+    result = subprocess.run([str(product)], cwd=work, capture_output=True, text=True,
+                            encoding='utf-8', env=env, timeout=120)
+    assert (result.returncode, result.stdout, result.stderr) == (0, 'snapshot-safe\n' * count, ''), result
 
 
 def main():

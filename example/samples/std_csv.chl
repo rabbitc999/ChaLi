@@ -10,7 +10,10 @@ void main(){
     assert(parseCsv("").unwrap().len()==0 && parseCsv("\n").unwrap().len()==1);
     assert(parseCsv("a,").unwrap()[0].len()==2);
     let failure=parseCsv("a,b\n\"unfinished");assert(!failure.isOk());
-    CsvError error=failure.error();assert(error.line==2 && error.column==1);
+    match(failure){
+        Err(CsvError error)=>{assert(error.line==2 && error.column==1);}
+        _=>{assert(false);}
+    }
     assert(!parseCsv("\"x\"tail").isOk() && !parseCsv("x\"y").isOk());
     assert(!parseCsv("a,b",'"').isOk());
     println("CSV quoting, delimiters and positions OK");

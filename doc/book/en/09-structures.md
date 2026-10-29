@@ -6,6 +6,8 @@
 
 A structure gives related values a name. Fields should describe one coherent piece of state; functions and methods can then enforce operations on that state.
 
+A named `static T create(...)` entry initializes an implicit `self`. It may fall through, use `return;` for early completion, or explicitly write `return self;`. Returning self ends initialization without copying or moving the receiver; the caller takes the constructed value. Other return expressions are rejected.
+
 ```chali
 struct Point
 {

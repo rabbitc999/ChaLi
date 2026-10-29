@@ -4,18 +4,18 @@ import std::reflect;
 import std::parse;
 
 /** 将已暴露给反射的值编码为 JSON，数字和字段类型保持精确。 */
-Result<String,MessageError> serialize<T>(T const& value) {
+Result<String,std::lang::Error> serialize<T>(T const& value) {
     std::reflect::requireReflection();
     let result = std::reflect::__serializeJson<T>(value);
-    if (result.isErr()) { return Result<String,MessageError>::Err(result.error()); }
-    return Result<String,MessageError>::Ok(result.unwrap());
+    if (result.isErr()) { return Result<String,std::lang::Error>::Err(result.error()); }
+    return Result<String,std::lang::Error>::Ok(result.unwrap());
 }
 /** 按具体类型验证并恢复拥有独立存储的值。 */
-Result<T,MessageError> deserialize<T>(String text) {
+Result<T,std::lang::Error> deserialize<T>(String text) {
     std::reflect::requireReflection();
     let result = std::reflect::__deserializeJson<T>(text);
-    if (result.isErr()) { return Result<T,MessageError>::Err(result.error()); }
-    return Result<T,MessageError>::Ok(result.take());
+    if (result.isErr()) { return Result<T,std::lang::Error>::Err(result.error()); }
+    return Result<T,std::lang::Error>::Ok(result.take());
 }
 
 __JsonValueStorage __parse(std::lang::String text);
@@ -131,9 +131,9 @@ struct JsonValue : Iterator<JsonValue> {
 };
 
 /** 解析文本；失败返回包含行列信息的诊断。 */
-Result<JsonValue, std::lang::MessageError> parse(std::lang::String text) {
+Result<JsonValue, std::lang::Error> parse(std::lang::String text) {
     __JsonValueStorage handle = __parse(text);
-    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<JsonValue, std::lang::MessageError>::Err(MessageError::from(message)); }
+    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<JsonValue, std::lang::Error>::Err(MessageError::from(message)); }
     JsonValue value; value.__storage = move handle;
-    return Result<JsonValue, std::lang::MessageError>::Ok(move value);
+    return Result<JsonValue, std::lang::Error>::Ok(move value);
 }

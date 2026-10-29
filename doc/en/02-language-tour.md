@@ -184,18 +184,18 @@ none
 The version whose failure carries information is `Result<T, E>`, with `?` for early return:
 
 ```chali
-Result<int64, MessageError> parse_value(bool valid) {
-    if (valid) { return Result<int64, MessageError>::Ok(20); }
-    return Result<int64, MessageError>::Err(MessageError::from("bad input"));
+Result<int64, Error> parse_value(bool valid) {
+    if (valid) { return Result<int64, Error>::Ok(20); }
+    return Result<int64, Error>::Err(MessageError::from("bad input"));
 }
-Result<int64, MessageError> doubled(bool valid) {
+Result<int64, Error> doubled(bool valid) {
     int64 value = parse_value(valid)?;
-    return Result<int64, MessageError>::Ok(value * 2);
+    return Result<int64, Error>::Ok(value * 2);
 }
 void main() {
     match (doubled(true)) {
-        Result<int64, MessageError>::Ok(v) => { println("ok={}", v); }
-        Result<int64, MessageError>::Err(e) => { println("err={}", e.toString()); }
+        Result<int64, Error>::Ok(v) => { println("ok={}", v); }
+        Result<int64, Error>::Err(e) => { println("err={}", e.toString()); }
     }
 }
 ```

@@ -27,6 +27,8 @@ class SceneTests(unittest.TestCase):
 
     def test_dragged_source_arguments(self):
         (self.work / 'chali.toml').write_text('[chali]\nrun="svmb"\n', encoding='utf-8')
+        self.cli(self.source, code=1)
+        (self.work / 'chali.toml').write_text('[chali]\nrun="run"\n', encoding='utf-8')
         result = self.cli(self.source, 'Alice', 'two words', '', '--check', '--out', 'debug')
         self.assertEqual(result.stdout, '[Alice]\n[two words]\n[]\n[--check]\n[--out]\n[debug]\n')
         self.assertEqual(result.stderr, '')
@@ -52,7 +54,9 @@ class SceneTests(unittest.TestCase):
     def test_explicit_run(self):
         result = self.cli('run', self.source, 'out', 'debug', '--', 'out', '--check')
         self.assertEqual(result.stdout, '[out]\n[--check]\n')
-        self.assertTrue((self.work / 'debug.quad').exists())
+        self.assertTrue((self.work / 'debug.ll').exists())
+        self.assertTrue((self.work / ('debug.exe' if os.name == 'nt' else 'debug')).exists())
+        self.assertFalse((self.work / 'debug.quad').exists())
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=COMPILER)

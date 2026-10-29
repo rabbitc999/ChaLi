@@ -21,7 +21,7 @@ void main()
     assert(copy.toString() == "独立副本");
     assert((std::parse::ParseError::Overflow).toString() != "");
     assert((std::io::IoError::Closed).toString() != "");
-    Result<File, IoError> file = fileOpen("missing-error-protocol-file.chl", "r");
+    Result<File, Error> file = fileOpen("missing-error-protocol-file.chl", "r");
     assert(file.isErr());
     assert(file.error().toString().contains("fileOpen failed"));
     println("standard Error protocol OK");

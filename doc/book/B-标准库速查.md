@@ -91,7 +91,7 @@ sum=10
 | [`std::utf8`](../library/std-utf8.md) | UTF-8 有效性检查、码点解码与编码、按码点计数和截取 |
 | [`std::encoding`](../library/std-encoding.md) | 十六进制、Base64 和 URL 百分号编码与解码 |
 | [`std::csv`](../library/std-csv.md) | CSV 解析与写出，处理字段分隔、引号和换行 |
-| [`std::json`](../library/std-json.md) | `parse` → `Result<JsonValue, MessageError>`；再 `isInt` `isObject` `len` `asInt` `asString` 取值 |
+| [`std::json`](../library/std-json.md) | `parse` → `Result<JsonValue, Error>`；再 `isInt` `isObject` `len` `asInt` `asString` 取值 |
 | [`std::toml`](../library/std-toml.md) | `TomlValue` 文档访问、解析和保留格式的转储，以及反射编解码 |
 | [`std::regex`](../library/std-regex.md) | `Regex::compile`，整串匹配、包含、查找、捕获和替换；编译失败返回 `RegexError` |
 | [`std::parse`](../library/std-parse.md) | 字符串 → 整数，失败给 `ParseError` |

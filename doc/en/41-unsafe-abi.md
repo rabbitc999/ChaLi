@@ -6,6 +6,8 @@
 
 ## Unsafe scopes and storage
 
+`inline unsafe T f(...)` combines module visibility with the unsafe calling contract; the body retains unsafe permission.
+
 `unsafe { ... }` permits unsafe calls and explicit integer/reference conversions. An `unsafe` function requires an unsafe calling context and grants that permission to its body. Closures and other functions are checked independently. An unsafe function value cannot become an ordinary function value implicitly.
 
 ```chali
@@ -57,7 +59,7 @@ Here `slots` is a `RawStorage<int64>`. `barePointer<T>` obtains an address, allo
 
 Lengths in `memcpy<T,U>(destination, source, bytes)` and `memset<T>(destination, uint8 value, bytes)` are byte counts. Their implementation checks no element types, changes no raw-storage initialization bits, and invokes no copy, move or cleanup hooks. Nonempty ranges must lie within live allocations. Both complete copy ranges are validated before writing, and overlapping copies are rejected. Zero lengths allow null pointers. Bare pointers contain no allocation generation; callers must manage identity when freed addresses are reused.
 
-These types and operations belong to the implicit `std::lang` core; namespace qualification is optional. `memcpy`/`memset` produce dedicated quads and VM instructions, with LLVM intrinsics in AOT, avoiding language wrappers and generic native dispatch. Necessary dynamic raw-storage checks use a scalar kernel, small pointer wrappers are preferred for inlining, and bare dereferences directly extract the address.
+These types and operations belong to the implicit `std::lang` core; namespace qualification is optional. `memcpy`/`memset` lower directly from the checked AST to LLVM memory intrinsics, avoiding language wrappers and generic native dispatch. Necessary dynamic raw-storage checks use a scalar kernel, small pointer wrappers are preferred for inlining, and bare dereferences directly extract the address.
 
 Byte operations suit byte buffers and data the caller has established can be handled bitwise. Resource initialization, transfer and cleanup belong to operations such as `initAt`, `takeAt` and `dropAt`; copying handle bytes does not establish independent ownership. The bare-pointer String experiment uses bulk copy/fill. The earlier checked-slot implementation is retained as `bootstrap_string_checked.chl`, and reports distinguish the actual sources measured.
 

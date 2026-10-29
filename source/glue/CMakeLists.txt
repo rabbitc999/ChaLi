@@ -1,6 +1,7 @@
 # 标准库的实现只编入宿主胶水库；VM 核心继续使用通用原生记录协议。
 file(GLOB CHALI_STANDARD_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/std_*.cpp")
-list(REMOVE_ITEM CHALI_STANDARD_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/std_demo.cpp")
+file(GLOB CHALI_ABI_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../abi/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/../abi/*.cpp")
+list(APPEND CHALI_STANDARD_SOURCES ${CHALI_ABI_SOURCES})
 file(GLOB CHALI_BIGNUM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../source/bignum/bigint*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/../../source/bignum/bigfloat*.cpp")
 list(APPEND CHALI_STANDARD_SOURCES ${CHALI_BIGNUM_SOURCES}
     ../../source/json/json.cpp ../../source/toml/toml.cpp ../../source/toml/toml_source.cpp)

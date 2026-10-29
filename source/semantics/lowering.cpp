@@ -125,6 +125,13 @@ struct MExpressionFreshScope
  * @brief 保存拥有的聚合中间值；借用来源保持原地址。
  */
 ast::NodePtr OwnedAggregateTempFor(int exprId, const std::shared_ptr<MType> &type);
+/**
+ * @brief 将已降级的拥有对象登记为完整表达式临时值。
+ * @param value 对象句柄表达式。
+ * @param type 对象静态类型。
+ * @return 临时所有者的读取表达式。
+ */
+ast::NodePtr OwnedObjectTempNode(const ast::NodePtr &value, const std::shared_ptr<MType> &type);
 
 /**
  * @brief 交换律换边时把**左操作数**先钳到一个临时量里，保住源码的求值顺序。
@@ -776,7 +783,18 @@ ast::NodePtr LowerAddressOf(int id)
  */
 ast::NodePtr LowerUnary(const Memory::String &op, int operandId)
 {
-    if (op == "&") return LowerAddressOf(operandId);
+    if (op == "&")
+    {
+        const auto type = ExprType(operandId);
+        if (IsInterfaceType(type))
+        {
+            if (IsInterfacePointer(RawExprType(operandId))) return LowerRawExpr(operandId);
+            return OwnedObjectTempNode(ast::Node::call("__std_iface_borrow", { "object" },
+                                                       { OwnedObjectTemp(operandId, type) }),
+                                       PointerType(type, IsReadOnlyAccess(operandId)));
+        }
+        return LowerAddressOf(operandId);
+    }
     if (ExprType(operandId)->kind == MType::Host)
     {
         Fail("宿主类型不支持一元运算 " + op + "；请实现对应接口或先显式转换");
@@ -2242,7 +2260,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             }
             if (found->elementReference)
             {
-                if (found->type->kind == MType::Obj && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
+                if (found->type->kind == MType::Obj && !IsInterfaceType(found->type) && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
                 {
                     const auto temp = AllocateName("__chali_boxed_assignment");
                     return ast::Node::block({ ast::Node::declare(temp, LowerType(found->type, temp)),
@@ -2257,7 +2275,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                 return StoreOwnedValueAt(ast::Node::var(found->emitted), valueId, value,
                                          found->type);
             }
-            if (found->type && found->type->kind == MType::Obj && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
+            if (found->type && found->type->kind == MType::Obj && !IsInterfaceType(found->type) && ExprType(valueId)->kind != MType::Obj && !IsImplicitConversionValue(valueId, found->type))
             {
                 const Memory::String temp = AllocateName("__chali_box");
                 Memory::Vector<ast::NodePtr> out;
@@ -3037,6 +3055,13 @@ ast::NodePtr LowerLocalDecl(int id)
             return nullptr;
         }
         std::shared_ptr<MType> type = (decl.type < 0) ? ExprType(decl.kids[0]) : T(decl.type);
+        if (decl.s2 == "__chali_macro_const_ref" || decl.s2 == "__chali_macro_mut_ref")
+        {
+            if (!type || type->kind != MType::Ptr) return Fail("宏引用参数必须绑定可取址的值"), Bad();
+            const bool readOnly = decl.s2 == "__chali_macro_const_ref";
+            if (!readOnly && type->readOnly) return Fail("可变宏引用不能绑定只读值"), Bad();
+            type = PointerType(type->elem, readOnly);
+        }
         Memory::Vector<int> dims;
         if (decl.i >= 0)
         {
@@ -3124,7 +3149,7 @@ ast::NodePtr LowerLocalDecl(int id)
         {
             /* `static T new(...)` 工厂体的构造初始化已经发出。 */
         }
-        else if (decl.kids[0] >= 0 && type->kind == MType::Obj && ExprType(decl.kids[0])->kind != MType::Obj && !IsImplicitConversionValue(decl.kids[0], type))
+        else if (decl.kids[0] >= 0 && type->kind == MType::Obj && !IsInterfaceType(type) && ExprType(decl.kids[0])->kind != MType::Obj && !IsImplicitConversionValue(decl.kids[0], type))
         {
             out.push_back(DefaultInit(emitted, type));
             out.push_back(ast::Node::exprStmt(
@@ -3558,8 +3583,10 @@ ast::NodePtr LowerConditionWithFresh(int expressionId, Memory::Vector<ast::NodeP
  * @param item 待追加或处理的节点编号。
  * @param next 下一个匹配分支的标签。
  * @param body 待处理的函数体或循环体。
+ * @param owned 守卫失败时需清理的分支载荷副本；空表示尚无分支拥有值。
  */
-void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vector<ast::NodePtr> *body)
+void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vector<ast::NodePtr> *body,
+                      const MOwnedScope *owned = nullptr)
 {
     if (item.guard < 0) return;
     if (ExprType(item.guard)->kind != MType::Bool)
@@ -3570,7 +3597,70 @@ void AppendMatchGuard(const MNode &item, const Memory::String &next, Memory::Vec
     Memory::Vector<ast::NodePtr> fresh;
     auto condition = LowerConditionWithFresh(item.guard, &fresh);
     body->insert(body->end(), fresh.begin(), fresh.end());
-    body->push_back(ast::Node::ifThenElse(ast::Node::unary("!", condition), ast::Node::jump(next), nullptr));
+    Memory::Vector<ast::NodePtr> failure;
+    if (owned) AppendScopeDrops(*owned, Memory::String(), &failure);
+    failure.push_back(ast::Node::jump(next));
+    body->push_back(ast::Node::ifThenElse(ast::Node::unary("!", condition), ast::Node::block(std::move(failure)), nullptr));
+}
+
+/**
+ * @brief 解析载荷类型模式的声明身份，限定名必须属于实际声明模块。
+ * @param name 模式中的类型名称。
+ * @param key 接收规范声明名称。
+ * @return 找到结构体、枚举或接口时为真。
+ */
+bool ResolvePayloadPatternType(const Memory::String &name, Memory::String *key)
+{
+    if (g_structs.count(name) || g_interfaces.count(name))
+    {
+        *key = name;
+        return true;
+    }
+    const auto split = name.rfind("::");
+    if (split == Memory::String::npos)
+    {
+        if (FindStruct(name, key)) return true;
+        const auto local = ModuleSymbol(g_currentModule, name);
+        if (g_interfaces.count(local))
+        {
+            *key = local;
+            return true;
+        }
+        Memory::Set<Memory::String> visible{ "std::lang" };
+        if (const auto imported = g_moduleImports.find(g_currentModule); imported != g_moduleImports.end())
+            visible.insert(imported->second.begin(), imported->second.end());
+        Memory::String chosen;
+        for (const int declaration : g_top)
+        {
+            const auto &node = N(declaration);
+            if ((node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl)
+                && visible.count(node.module) && BareTypeName(node.s) == name)
+            {
+                if (!chosen.empty() && chosen != node.s) return Fail("载荷类型模式名称有歧义：" + name);
+                chosen = node.s;
+            }
+        }
+        if (!chosen.empty())
+        {
+            *key = chosen;
+            return true;
+        }
+        return false;
+    }
+    const auto module = name.substr(0, split);
+    const auto bare = name.substr(split + 2u);
+    for (const int declaration : g_top)
+    {
+        const auto &node = N(declaration);
+        if ((node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl)
+            && node.module == (module == "__root" ? Memory::String() : module) && BareTypeName(node.s) == bare
+            && (g_structs.count(node.s) || g_interfaces.count(node.s)))
+        {
+            *key = node.s;
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -3587,6 +3677,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
     if (enumIt == g_enums.end()) return Fail("没有声明的 enum：" + subjectType->name), Bad();
     bool hasDefault = false;
     Memory::Set<Memory::String> covered;
+    Memory::Set<Memory::String> coveredPatterns;
     Memory::Map<int, const MEnumVariantDef *> patterns;
     Memory::Map<int, MNode> normalizedPatterns;
     Memory::Map<int, Memory::Vector<std::pair<Memory::String, std::shared_ptr<MType>>>> groupBindings;
@@ -3614,11 +3705,72 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 pattern.kids = N(parsedPattern.kids[1]).kids;
             }
         }
+        const bool unqualifiedPattern = pattern.kind == MNode::Var;
+        const auto omittedType = unqualifiedPattern ? pattern.s : pattern.s + "::" + pattern.s2;
+        const auto qualifierSplit = pattern.s.find("::");
+        const auto firstQualifier = qualifierSplit == Memory::String::npos ? pattern.s : pattern.s.substr(0, qualifierSplit);
+        const bool explicitTag = pattern.kind == MNode::EnumCtor && FindEnumVariant(subjectType->name, firstQualifier);
+        const bool enumConstructor = pattern.kind == MNode::EnumCtor
+                                     && (FindEnumVariant(pattern.s, pattern.s2) || pattern.s == subjectType->name
+                                         || subjectType->name.compare(0u, pattern.s.size() + 2u, pattern.s + "__") == 0u);
+        const bool annotated = std::any_of(pattern.kids.begin(), pattern.kids.end(), [](int child) {
+            return N(child).kind == MNode::Var && N(child).type >= 0;
+        });
+        const bool singleBinding = pattern.kids.size() == 1u && N(pattern.kids[0]).kind == MNode::Var;
+        Memory::String omittedKey;
+        if (!explicitTag && !enumConstructor && !annotated && singleBinding && ResolvePayloadPatternType(omittedType, &omittedKey))
+        {
+            Memory::Vector<const MEnumVariantDef *> candidates;
+            for (const auto &candidate : enumIt->second.variants)
+                if (candidate.payloads.size() == 1u && IsInterfaceType(candidate.payloads[0].type)
+                    && ImplementsInterface(omittedKey, candidate.payloads[0].type->name))
+                    candidates.push_back(&candidate);
+            const bool collides = unqualifiedPattern && FindEnumVariant(subjectType->name, pattern.s);
+            if (candidates.size() > 1u || (!candidates.empty() && collides))
+                return Fail("省略枚举标签的接口类型模式存在歧义，请写 `标签::类型(变量)` 或 `标签(类型 变量)`"), Bad();
+            if (candidates.size() == 1u)
+            {
+                auto binder = N(pattern.kids[0]);
+                binder.type = M_AddType(NamedType(omittedKey));
+                binder.s2 = "__chali_typed_pattern";
+                const int typed = static_cast<int>(g_nodes.size());
+                g_nodes.push_back(std::move(binder));
+                pattern.kind = MNode::EnumCtor;
+                pattern.s = subjectType->name;
+                pattern.s2 = candidates[0]->name;
+                pattern.kids = { typed };
+            }
+        }
         if (pattern.kind == MNode::Var)
         {
             pattern.kind = MNode::EnumCtor;
             pattern.s2 = pattern.s;
             pattern.s = subjectType->name;
+        }
+        if (pattern.kind == MNode::EnumCtor && pattern.s != subjectType->name)
+        {
+            const auto split = pattern.s.find("::");
+            const auto tag = split == Memory::String::npos ? pattern.s : pattern.s.substr(0, split);
+            const auto outer = FindEnumVariant(subjectType->name, tag);
+            if (outer && (outer->payloads.size() != 1u || !IsInterfaceType(outer->payloads[0].type)))
+                return Fail("类型模式语法糖仅适用于单接口载荷变体；多载荷请写 `标签(类型 变量, 普通变量, ...)`，非接口载荷可直接绑定变量"), Bad();
+            if (outer && outer->payloads.size() == 1u && IsInterfaceType(outer->payloads[0].type))
+            {
+                const auto concrete = split == Memory::String::npos ? pattern.s2 : pattern.s.substr(split + 2u) + "::" + pattern.s2;
+                Memory::String key;
+                if (!ResolvePayloadPatternType(concrete, &key))
+                    return Fail("枚举接口载荷模式没有声明的具体类型：" + concrete), Bad();
+                if (pattern.kids.size() != 1u || N(pattern.kids[0]).kind != MNode::Var)
+                    return Fail("枚举接口模式应为 `标签::具体类型(绑定名)` 或 `标签::具体类型(_)`"), Bad();
+                auto binder = N(pattern.kids[0]);
+                binder.type = M_AddType(NamedType(key));
+                binder.s2 = "__chali_typed_pattern";
+                const int typed = static_cast<int>(g_nodes.size());
+                g_nodes.push_back(std::move(binder));
+                pattern.s = subjectType->name;
+                pattern.s2 = tag;
+                pattern.kids = { typed };
+            }
         }
         if (pattern.kind == MNode::EnumCtor && pattern.s.compare(0u, 11u, "std::lang::") == 0)
             pattern.s.erase(0u, 11u);
@@ -3635,6 +3787,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
             pattern.s = subjectType->name;
         if (pattern.s != subjectType->name)
             return Fail("分支的枚举类型必须与 match 主表达式一致：主表达式是 " + subjectType->name + "，分支是 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2)), Bad();
+        if (pattern.s2 == "OK" && StandardGeneric(subjectType->name, "Result")) pattern.s2 = "Ok";
         const MEnumVariantDef *variant = FindEnumVariant(pattern.s, pattern.s2);
         if (variant == nullptr)
             return Fail("enum " + pattern.s + " 没有变体 " + pattern.s2), Bad();
@@ -3642,22 +3795,46 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
             return Fail("match 中存在重复的 enum 变体：" + pattern.s + "::" + variant->name), Bad();
         if (pattern.kids.size() != variant->payloads.size())
             return Fail("enum 模式 " + pattern.s + "::" + variant->name + " 需要 " + Memory::toString(variant->payloads.size()) + " 个绑定，实际给了 " + Memory::toString(pattern.kids.size()) + " 个"), Bad();
-        if (item.guard < 0) covered.insert(variant->name);
+        bool unrestricted = true;
+        Memory::String patternKey = variant->name;
         Memory::Set<Memory::String> binders;
-        for (const int binderId : pattern.kids)
+        for (std::size_t bindingIndex = 0; bindingIndex < pattern.kids.size(); ++bindingIndex)
         {
+            const int binderId = pattern.kids[bindingIndex];
             const MNode &binder = N(binderId);
+            patternKey += binder.type >= 0 ? ":" + TypeKey(T(binder.type)) : Memory::String(":*");
             if (binder.kind != MNode::Var)
                 return Fail("enum 分支的载荷位置只能写绑定变量名，不能写表达式"), Bad();
+            if (binder.type >= 0)
+            {
+                const auto requested = T(binder.type);
+                const auto actual = variant->payloads[bindingIndex].type;
+                if (IsInterfaceType(actual))
+                {
+                    if (!IsInterfaceType(requested) && (requested->kind != MType::Struct || !ImplementsInterface(requested->name, actual->name)))
+                        return Fail("载荷模式类型未实现接口：" + Describe(requested)), Bad();
+                    if (IsInterfaceType(requested) && !InterfaceIsOrExtends(requested->name, actual->name))
+                        return Fail("载荷模式接口与来源不兼容"), Bad();
+                    unrestricted = false;
+                }
+                else if (!SameType(actual, requested))
+                    return Fail("载荷模式类型不匹配"), Bad();
+            }
+            if (binder.s == "_") continue;
             if (!CheckUserName(binder.s)) return Bad();
             if (!binders.insert(binder.s).second)
                 return Fail("同一个 enum 模式里不能重复绑定变量：" + binder.s), Bad();
         }
+        if (coveredPatterns.count(patternKey)) return Fail("match 中存在重复的枚举载荷类型模式"), Bad();
+        if (item.guard < 0) coveredPatterns.insert(patternKey);
+        if (item.guard < 0 && unrestricted) covered.insert(variant->name);
         if (item.type2 > 0)
         {
             Memory::Vector<std::pair<Memory::String, std::shared_ptr<MType>>> bindings;
             for (std::size_t i = 0; i < pattern.kids.size(); ++i)
-                bindings.emplace_back(N(pattern.kids[i]).s, variant->payloads[i].type);
+                if (N(pattern.kids[i]).s != "_")
+                    bindings.emplace_back(N(pattern.kids[i]).s,
+                                          N(pattern.kids[i]).type >= 0 ? T(N(pattern.kids[i]).type) : variant->payloads[i].type);
             const auto previous = groupBindings.find(item.type2);
             if (previous == groupBindings.end())
                 groupBindings[item.type2] = bindings;
@@ -3735,6 +3912,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         PushScope();
         PushOwnedScope();
         Memory::Vector<ast::NodePtr> body;
+        Memory::Vector<ast::NodePtr> patternChecks;
         if (variant != nullptr)
         {
             const MNode &pattern = normalizedPatterns.at(static_cast<int>(item.i));
@@ -3743,6 +3921,37 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 const MEnumPayload &payload = variant->payloads[index];
                 const auto &bindingSyntax = N(pattern.kids[index]);
                 const Memory::String sourceName = bindingSyntax.s;
+                if (bindingSyntax.type >= 0 && IsInterfaceType(payload.type))
+                {
+                    const auto requested = T(bindingSyntax.type);
+                    const auto field = FindField(subjectType->name, payload.storageName);
+                    auto handle = ast::Node::loadInt(ast::Node::offset(ast::Node::var(subject), ast::Node::i(field->slot), 8));
+                    auto tag = ast::Node::call("__std_obj_name", { "object" }, { handle });
+                    ast::NodePtr condition = ast::Node::i(0);
+                    if (IsInterfaceType(requested))
+                    {
+                        for (const auto &entry : g_structs)
+                            if (ImplementsInterface(entry.first, requested->name))
+                                condition = ast::Node::binary("||", condition, ast::Node::binary("==", tag, ast::Node::i(TypeIdOf(NamedType(entry.first)))));
+                    }
+                    else
+                        condition = ast::Node::binary("==", tag, ast::Node::i(TypeIdOf(requested)));
+                    patternChecks.push_back(ast::Node::ifThenElse(ast::Node::unary("!", condition), ast::Node::jump(next), nullptr));
+                    if (sourceName == "_") continue;
+                    const auto emitted = DeclareVar(sourceName, requested, Memory::String(), true, NodeBindingKey(bindingSyntax), bindingSyntax.bindingIdentity);
+                    body.push_back(ast::Node::declare(emitted, LowerType(requested, emitted)));
+                    auto value = IsInterfaceType(requested) ? handle : ast::Node::call("__std_obj_addr", { "object" }, { handle });
+                    if (switchNode.type2 == 1 && !IsInterfaceType(requested))
+                    {
+                        body.push_back(DefaultInit(emitted, requested, false, true));
+                        body.push_back(DeepCopyStructValue(ast::Node::var(emitted), value, requested));
+                        MarkDestructor(emitted, requested);
+                    }
+                    else
+                        body.push_back(ast::Node::assign(emitted, value));
+                    continue;
+                }
+                if (sourceName == "_") continue;
                 /*
                  * 载荷绑定默认是"只看不改"的：值载荷本来就是副本，`T const &` 载荷也只能读。
                  * 但 `Value(T mut & v)` 这种**可变引用载荷**要放开 —— 否则透过它写回原对象会被
@@ -3847,7 +4056,8 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 }
             }
         }
-        AppendMatchGuard(item, next, &body);
+        body.insert(body.begin(), patternChecks.begin(), patternChecks.end());
+        AppendMatchGuard(item, next, &body, &g_ownedScopes.back());
         const Memory::Vector<ast::NodePtr> statements = LowerStmtList(item.kids[0]);
         body.insert(body.end(), statements.begin(), statements.end());
         const MOwnedScope owned = g_ownedScopes.back();
@@ -3882,6 +4092,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
     }
     if (fallback >= 0) setup.push_back(lowerBody(N(fallback), nullptr, breakLabel));
     setup.push_back(ast::Node::label(breakLabel));
+    g_exhaustiveMatches.insert(id);
     return ast::Node::block(setup);
 }
 
@@ -4083,6 +4294,102 @@ void CheckMatchIntegerOverlap(int patternId, const std::shared_ptr<MType> &subje
 }
 
 /**
+ * @brief 按具体动态类型匹配拥有接口值，开放接口必须显式兜底。
+ * @param id 匹配语句编号。
+ * @param type 接口值的静态类型。
+ * @param cases 按源码顺序排列的分支。
+ * @return 只求值一次的接口匹配语句。
+ */
+ast::NodePtr LowerInterfaceSwitch(int id, const std::shared_ptr<MType> &type, const Memory::Vector<int> &cases)
+{
+    using ast::Node;
+    const auto iface = IsInterfacePointer(type) ? type->elem->name : type->name;
+    const auto subject = AllocateName("__chali_match_interface");
+    const auto done = NewBlockLabel("interface_done");
+    Memory::Vector<ast::NodePtr> out{ Node::declare(subject, ast::Type::i64()),
+                                      Node::assign(subject, OwnedObjectTemp(N(id).kids[0], type)) };
+    bool fallback = false;
+    Memory::Set<Memory::String> covered;
+    for (const int caseId : cases)
+    {
+        const auto item = N(caseId);
+        const auto next = NewBlockLabel("interface_next");
+        std::shared_ptr<MType> requested = type;
+        int binder = -1;
+        bool wildcard = item.i < 0;
+        if (!wildcard)
+        {
+            if (!NormalizeAstTypeQualifier(static_cast<int>(item.i))) return Bad();
+            const auto pattern = N(static_cast<int>(item.i));
+            MNode callee = pattern;
+            Memory::Vector<int> arguments = pattern.kids;
+            if (pattern.kind == MNode::Call && pattern.kids.size() == 2u)
+            {
+                callee = N(pattern.kids[0]);
+                arguments = N(pattern.kids[1]).kids;
+            }
+            const auto name = callee.kind == MNode::Var ? callee.s : callee.s + "::" + callee.s2;
+            wildcard = name == "_";
+            if (arguments.size() != 1u || N(arguments[0]).kind != MNode::Var)
+                return Fail("接口模式应为 `具体类型(绑定名)`、`_(绑定名)` 或 `_`"), Bad();
+            binder = arguments[0];
+            if (!wildcard)
+            {
+                Memory::String key;
+                if (!FindStruct(name, &key) || !ImplementsInterface(key, iface))
+                    return Fail("接口模式类型未实现目标接口：" + name), Bad();
+                requested = NamedType(key);
+                if (covered.count(key)) return Fail("接口模式重复：" + name), Bad();
+                if (item.guard < 0) covered.insert(key);
+                const auto tag = Node::call("__std_obj_name", { "object" }, { Node::var(subject) });
+                auto matches = Node::binary("==", tag, Node::i(TypeIdOf(requested)));
+                if (IsInterfacePointer(type))
+                {
+                    matches = Node::binary("||", matches, Node::binary("==", tag, Node::i(TypeIdOf(PointerType(requested, false)))));
+                    matches = Node::binary("||", matches, Node::binary("==", tag, Node::i(TypeIdOf(PointerType(requested, true)))));
+                }
+                out.push_back(Node::ifThenElse(Node::unary("!", matches), Node::jump(next), nullptr));
+            }
+        }
+        if (fallback) return Fail("接口 match 兜底后不能再有分支"), Bad();
+        if (wildcard && item.guard < 0) fallback = true;
+        PushScope();
+        PushOwnedScope();
+        Memory::Vector<ast::NodePtr> body;
+        if (binder >= 0 && N(binder).s != "_")
+        {
+            const auto syntax = N(binder);
+            if (!CheckUserName(syntax.s)) return Bad();
+            const auto emitted = DeclareVar(syntax.s, requested, Memory::String(), true, NodeBindingKey(syntax), syntax.bindingIdentity);
+            body.push_back(Node::declare(emitted, LowerType(requested, emitted)));
+            auto value = wildcard ? Node::var(subject) : Node::call("__std_obj_addr", { "object" }, { Node::var(subject) });
+            if (N(id).type2 == 1 && !wildcard)
+            {
+                body.push_back(DefaultInit(emitted, requested, false, true));
+                body.push_back(DeepCopyStructValue(Node::var(emitted), value, requested));
+                MarkDestructor(emitted, requested);
+            }
+            else
+                body.push_back(Node::assign(emitted, value));
+        }
+        AppendMatchGuard(item, next, &body, &g_ownedScopes.back());
+        const auto statements = LowerStmtList(item.kids[0]);
+        body.insert(body.end(), statements.begin(), statements.end());
+        const auto owned = g_ownedScopes.back();
+        g_ownedScopes.pop_back();
+        PopScope();
+        AppendScopeDrops(owned, Memory::String(), &body);
+        body.push_back(Node::jump(done));
+        out.push_back(Node::block(std::move(body)));
+        out.push_back(Node::label(next));
+    }
+    if (!fallback) return Fail("开放接口 match 必须提供 `_` 或 `_(绑定名)` 兜底"), Bad();
+    g_exhaustiveMatches.insert(id);
+    out.push_back(Node::label(done));
+    return Node::block(std::move(out));
+}
+
+/**
  * @brief 将 switch 或 match 分支降级为条件跳转。
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。
@@ -4093,6 +4400,7 @@ ast::NodePtr LowerSwitch(int id)
     const std::shared_ptr<MType> subjectType = ExprType(node.kids[0]);
     const Memory::Vector<int> cases = N(node.kids[1]).kids;
     if (IsEnumType(subjectType)) return LowerEnumSwitch(id, subjectType, cases);
+    if (IsInterfaceType(subjectType) || IsInterfacePointer(subjectType)) return LowerInterfaceSwitch(id, subjectType, cases);
     const bool numeric = subjectType && (subjectType->kind == MType::Int || subjectType->kind == MType::Char || subjectType->kind == MType::Bool || subjectType->kind == MType::Double);
     const bool strings = subjectType && IsStandardOpcode(subjectType, "String");
     const bool equality = !numeric && !strings;

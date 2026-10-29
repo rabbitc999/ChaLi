@@ -421,6 +421,10 @@ std::vector<CompletionItem> McDocument::completion(Position) const
             const auto end = call.find('>', generic);
             if (end != call.npos) call.erase(generic, end - generic + 1);
         }
+        // 引用标记属于宏声明，调用补全只插入实参名称。
+        for (auto reference = call.find("mut &"); reference != call.npos; reference = call.find("mut &"))
+            call.erase(reference, 5);
+        call.erase(std::remove(call.begin(), call.end(), '&'), call.end());
         result.push_back({ "$" + macro.name, "function", "卫生 AST 宏", "$" + call });
     }
     return result;

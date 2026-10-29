@@ -20,6 +20,41 @@ Slot objNew(NativeContext &ctx, const Memory::Vector<Slot> &)
 }
 
 /**
+ * @brief 接管独立聚合存储，复制与销毁通过语言函数调用约定执行。
+ * @param ctx 当前运行上下文。
+ * @param args 聚合地址、具体类型号、复制助手和销毁助手。
+ * @return 新接口句柄。
+ */
+Slot interfaceBox(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    auto object = Memory::makeShared<RuntimeObject>();
+    object->kind = ObjectKind::Obj;
+    object->objValue.integer = nativeInt(args[0]);
+    object->objTag = nativeInt(args[1]);
+    object->interfaceCopy = nativeInt(args[2]);
+    object->interfaceDrop = nativeInt(args[3]);
+    return Slot::fromInt(ctx.objects->add(std::move(object)));
+}
+
+/**
+ * @brief 借用接口值的稳定聚合地址，不复制或销毁来源载荷。
+ * @param ctx 当前运行上下文。
+ * @param args 原接口对象句柄。
+ * @return 独立引用包装句柄，来源无效时返回零并记录错误。
+ */
+Slot interfaceBorrow(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    const auto *source = nativeObject(ctx, args[0], ObjectKind::Obj, "接口值借用");
+    if (!source) return Slot::fromInt(0);
+    auto reference = Memory::makeShared<RuntimeObject>();
+    reference->kind = ObjectKind::Obj;
+    reference->objTag = source->objTag;
+    reference->objValue.integer = source->objValue.integer;
+    reference->objTextShape = "R";
+    return Slot::fromInt(ctx.objects->add(std::move(reference)));
+}
+
+/**
  * @brief `__std_obj_set(obj, 值, 类型号, 值是不是字符串, 值是不是对象句柄, 类型名地址) -> 0`：把值装进去。
  *
  * 原来的值直接丢掉（格子只有一个），类型号与类型名一起换成新的。

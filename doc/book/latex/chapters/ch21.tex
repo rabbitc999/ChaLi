@@ -32,6 +32,8 @@
 
 \texttt{\#abi} 指令是最轻的一条——不用改工具链，不用重新编译，运行时直接加载库。
 
+已有 C++ 宿主还可用 Registry 注册类型化实现，再以 \texttt{impl 类型 :\allowbreak{} 接口 =\allowbreak{} 宿主符号;} 关联语言接口。例如宿主演示用 \texttt{demo\_\allowbreak{}counter\_\allowbreak{}from\_\allowbreak{}uint} 实现显式转换；完整代码见 \href{https://github.com/rabbitc999/ChaLi/blob/master/example/samples/cpp_glue.chl}{cpp\_glue.chl}。普通 C 动态库直接使用 \texttt{\#abi}。
+
 \section{\texttt{\#abi} 指令：调动态库里的 C 函数}
 
 假设你有一个 C 文件 \texttt{native.\allowbreak{}c}：
@@ -108,7 +110,7 @@ void main()
 第三个参数是库里真实导出的符号名，函数声明使用的是 ChaLi 中的本地名称。两者可以不一样——给一批 C 函数起统一风格的 ChaLi 名，就靠它。
 
 \begin{tip}{提示}
-路径按声明所在的源文件解析。动态库本身要和产物放在同一目录——Windows 加载器在进程启动时按 exe 目录和 \texttt{PATH} 找库，放别处就是「找不到 DLL」。
+路径按声明所在的源文件解析。原始 C 函数首次使用时按该路径加载并缓存地址，后续由 LLVM 直接调用；复杂值沿类型化封送路径。部署时要准备声明对应的动态库及它自身的依赖，编译工具链与这些应用依赖分别核对。
 \end{tip}
 
 \section{结构体、引用、字符串}

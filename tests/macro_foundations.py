@@ -27,7 +27,8 @@ def main():
              "-DCHALI_WITH_REFLECTION=1", "-DSTACKVM_WITH_REFLECTION=1",
              *["-I" + value for value in includes]]
     libraries = ["build/chali-frontend/libparser.a", "build/chali-runtime/libast.a",
-                 "build/chali-stackvm-core/libstackvm.a", "build/chali-host-records/librecords.a",
+                 "-Wl,--start-group", "build/chali-ircode-aot-core/libstackvm.a",
+                 "build/chali-host-records/librecords.a", "-Wl,--end-group",
                  "build/chali-runtime/libpreprocess.a"]
     with tempfile.TemporaryDirectory(prefix="foundations-", dir=base) as directory:
         for name, module in (("macro_hygiene", "hygiene"), ("macro_regex", "regex_matcher"),

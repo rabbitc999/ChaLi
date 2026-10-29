@@ -385,6 +385,26 @@ int M_TypeStruct(int nameId)
     return id;
 }
 
+/**
+ * @brief 保存载荷模式的限定类型及绑定名称。
+ * @param type 类型池编号，负一表示通配绑定。
+ * @param nameId 绑定名称编号。
+ * @return 模式节点编号。
+ */
+int M_TypedPattern(int type, int nameId)
+{
+    const int id = M_Var(nameId);
+    g_nodes[id].type = type;
+    g_nodes[id].s2 = "__chali_typed_pattern";
+    return id;
+}
+
+/** @brief 建立不绑定名称的通配模式，返回节点编号。 */
+int M_WildcardPattern()
+{
+    return M_Var(M_Name("_"));
+}
+
 namespace
 {
 /**

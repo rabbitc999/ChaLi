@@ -1,1 +1,1 @@
-chali: 运行期错误：多线程已关闭；解释运行或 C++ 导出时去掉 --no-threads
+chali aot: 多线程已关闭；解释运行或 C++ 导出时去掉 --no-threads

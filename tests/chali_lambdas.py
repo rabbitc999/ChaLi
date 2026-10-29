@@ -28,6 +28,10 @@ def main():
     assert result.returncode == 0, result.stderr
     result = execute(unit)
     assert result.returncode == 0 and result.stdout == 'lambda unit tests OK\n' and (not result.stderr), result
+    legacy = WORK / 'legacy-arrow.chl'
+    legacy.write_text('void main(){let f=fn(x) -> let {x};}', encoding='utf-8')
+    result = execute(compiler, 'check', legacy)
+    assert result.returncode != 0 and result.stderr, result
     source = ROOT / 'example/samples/lambda_callbacks.chl'
     expected = (ROOT / 'example/expected/lambda_callbacks.txt').read_text(encoding='utf-8')
     result = execute(compiler, 'run', source, '--out', WORK / 'interpreted')

@@ -45,12 +45,13 @@ def main():
         assert execute().stdout == 'chali-ok\n'
         emitted = [args[0], 'aot', *args[2:], '--emit-llvm', '--incremental']
         first = run(emitted)
-        assert library.as_posix() in prefix.with_suffix('.abi.cpp').read_text(encoding='utf-8')
-        quad = prefix.with_suffix('.quad')
-        stamp = quad.stat().st_mtime_ns
+        llvm = prefix.with_suffix('.ll')
+        text = llvm.read_text(encoding='utf-8')
+        assert 'chali_host_abi_symbol' in text and not prefix.with_suffix('.abi.cpp').exists()
+        original_llvm = llvm.read_bytes()
         cached = run(emitted)
-        assert '增量缓存命中' in cached.stderr, cached.stderr
-        assert quad.stat().st_mtime_ns == stamp
+        assert '个模块复用' in cached.stderr, cached.stderr
+        assert llvm.read_bytes() == original_llvm
         dependencies = execute('--deps').stdout.replace('\\', '/')
         for file in (manifest, source, project / 'include/shared.chl', project / 'modules/tools/math.chl'):
             assert file.as_posix() in dependencies, dependencies

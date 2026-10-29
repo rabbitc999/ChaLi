@@ -50,7 +50,7 @@ String validate(Student const& student)
  * @param rows 参数化查询得到的完整结果。
  * @return 每个学生为一个 JSON 对象的数组文本。
  */
-Result<String, MessageError> encodeRows(std::sql::ResultSet const& rows)
+Result<String, Error> encodeRows(std::sql::ResultSet const& rows)
 {
     let fields = std::reflect::getStructInfo<Student>().unwrap().fields;
     List<String> records;
@@ -62,7 +62,7 @@ Result<String, MessageError> encodeRows(std::sql::ResultSet const& rows)
             int64 column = rows.columnIndex(field.name);
             if (column < 0)
             {
-                return Result<String, MessageError>::Err(MessageError::from("数据库缺少字段：" + field.name));
+                return Result<String, Error>::Err(MessageError::from("数据库缺少字段：" + field.name));
             }
             String value = rows.textAt(row, column);
             if (field.typeId == std::reflect::getTypeId<String>())
@@ -76,19 +76,19 @@ Result<String, MessageError> encodeRows(std::sql::ResultSet const& rows)
         let checked = std::json::deserialize<Student>(text);
         if (checked.isErr())
         {
-            return Result<String, MessageError>::Err(MessageError::from("数据库记录不符合学生模型：" + checked.error().toString()));
+            return Result<String, Error>::Err(MessageError::from("数据库记录不符合学生模型：" + checked.error().toString()));
         }
         Student student = checked.unwrap();
         String error = validate(&student);
         if (error != "")
         {
-            return Result<String, MessageError>::Err(MessageError::from(error));
+            return Result<String, Error>::Err(MessageError::from(error));
         }
         String encoded = std::json::serialize<Student>(&student)?;
         records.push(encoded);
     }
     String separator = ",";
-    return Result<String, MessageError>::Ok("[" + separator.join(records) + "]");
+    return Result<String, Error>::Ok("[" + separator.join(records) + "]");
 }
 
 /**
@@ -97,7 +97,7 @@ Result<String, MessageError> encodeRows(std::sql::ResultSet const& rows)
  * @param args 数据库路径、命令及其参数。
  * @return 成功时为输出文本，否则返回原始数据库或业务诊断。
  */
-Result<String, MessageError> execute(std::sql::Database mut& database, List<String> const& args)
+Result<String, Error> execute(std::sql::Database mut& database, List<String> const& args)
 {
     let query = std::sql::query<Student>()?;
     String command = args[1];
@@ -110,7 +110,7 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
             names.push(field.name);
         }
         String separator = ", ";
-        return Result<String, MessageError>::Ok("Student: " + separator.join(names));
+        return Result<String, Error>::Ok("Student: " + separator.join(names));
     }
     if ((command == "add" || command == "update") && args.len() == 3)
     {
@@ -118,7 +118,7 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
         String error = validate(&student);
         if (error != "")
         {
-            return Result<String, MessageError>::Err(MessageError::from(error));
+            return Result<String, Error>::Err(MessageError::from(error));
         }
         if (command == "update")
         {
@@ -133,21 +133,21 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, MessageError>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Err(MessageError::from(rows.error));
         }
         if (rows.affected != 1)
         {
-            return Result<String, MessageError>::Err(MessageError::from("学生不存在"));
+            return Result<String, Error>::Err(MessageError::from("学生不存在"));
         }
         String encoded = std::json::serialize<Student>(&student)?;
-        return Result<String, MessageError>::Ok(encoded);
+        return Result<String, Error>::Ok(encoded);
     }
     if ((command == "get" || command == "delete") && args.len() == 3)
     {
         let parsed = std::parse::Parse::parseInt64(args[2]);
         if (parsed.isErr() || parsed.unwrap() <= 0)
         {
-            return Result<String, MessageError>::Err(MessageError::from("学号必须是正整数"));
+            return Result<String, Error>::Err(MessageError::from("学号必须是正整数"));
         }
         std::sql::filter<int64>(&query, "id", parsed.unwrap())?;
         String operation = "select";
@@ -159,19 +159,19 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, MessageError>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Err(MessageError::from(rows.error));
         }
         if (command == "delete")
         {
             if (rows.affected != 1)
             {
-                return Result<String, MessageError>::Err(MessageError::from("学生不存在"));
+                return Result<String, Error>::Err(MessageError::from("学生不存在"));
             }
-            return Result<String, MessageError>::Ok("已删除");
+            return Result<String, Error>::Ok("已删除");
         }
         if (rows.isEmpty())
         {
-            return Result<String, MessageError>::Err(MessageError::from("学生不存在"));
+            return Result<String, Error>::Err(MessageError::from("学生不存在"));
         }
         return encodeRows(&rows);
     }
@@ -191,7 +191,7 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
         {
             if (args[3] != "asc" && args[3] != "desc")
             {
-                return Result<String, MessageError>::Err(MessageError::from("排序方向必须是 asc 或 desc"));
+                return Result<String, Error>::Err(MessageError::from("排序方向必须是 asc 或 desc"));
             }
             descending = args[3] == "desc";
         }
@@ -200,11 +200,11 @@ Result<String, MessageError> execute(std::sql::Database mut& database, List<Stri
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, MessageError>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Err(MessageError::from(rows.error));
         }
         return encodeRows(&rows);
     }
-    return Result<String, MessageError>::Err(MessageError::from("命令或参数错误：add/update JSON；get/delete 学号；list [字段 [asc|desc]]；search 姓名；schema"));
+    return Result<String, Error>::Err(MessageError::from("命令或参数错误：add/update JSON；get/delete 学号；list [字段 [asc|desc]]；search 姓名；schema"));
 }
 
 /**

@@ -2,6 +2,7 @@
 from compiler_path import compiler_path
 from pathlib import Path
 import os
+import re
 import subprocess
 from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,12 +41,14 @@ commands = ['import extra;']
         assert run(args).stdout == "20 2\n"
         emitted = [args[0], "aot", *args[2:], "--emit-llvm", "--incremental"]
         run(emitted)
-        assert "增量缓存命中" in run(emitted).stderr
+        # AOT 重用模块预处理；原生输出不采用已删除的四元式产物缓存。
+        repeated = run(emitted).stderr
+        assert re.search(r"增量编译：[1-9][0-9]* 个模块复用", repeated), repeated
         manifest.write_text(config.replace("['../first', '../second']", "['../second', '../first']"), encoding="utf-8")
-        assert "增量缓存命中" not in run(emitted).stderr
+        run(emitted)
         assert run(args).stdout == "90 2\n"
         (second / "settings.chl").write_text('module settings;\nint64 value() { return 88; }\n', encoding="utf-8")
-        assert "增量缓存命中" not in run(emitted).stderr
+        run(emitted)
         assert run(args).stdout == "88 2\n"
         for invalid in ('include = ["missing.chl"]', 'commands = [\'%include "extra.chl"\']'):
             manifest.write_text('[chali]\n' + invalid + '\n', encoding="utf-8")

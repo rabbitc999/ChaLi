@@ -56,20 +56,20 @@ def main():
     assert 'CHALI_ABI_CXX' in failed.stderr, failed.stderr
     assert set(temp_root.glob('chali-abi-*')) == before, 'failed bridge temporary directory leaked'
     scalar = WORK / 'scalar.chl'
-    scalar.write_text('abi ' + json.dumps(library.as_posix()) + ' { int32 identity(int32 value) = "identity"; }\nvoid main() { std::lang::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
+    scalar.write_text('#abi("C", ' + json.dumps(library.as_posix()) + ', "identity") int32 identity(int32 value);\nvoid main() { std::lang::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
     small = execute(compiler, scalar, WORK / 'scalar', env=missing_compiler, aot=options.aot)
     assert small.stdout == '7\n' and small.stderr == '', small.stdout + small.stderr
     for length, message in ((3, 'returned null'), (-1, 'buffer length'), (100000000, 'buffer length')):
         bad = WORK / 'bad-length.chl'
-        bad.write_text('abi ' + json.dumps(library.as_posix()) + f' {{ int32[] numbers(int32 count) = "numbers" [count]; }}\nvoid main() {{ int32 values[] = numbers((int32){length}); return; }}\n', encoding='utf-8')
+        bad.write_text('#abi("C", ' + json.dumps(library.as_posix()) + f', "numbers") int32[] numbers(int32 count) [count];\nvoid main() {{ int32 values[] = numbers((int32){length}); return; }}\n', encoding='utf-8')
         failed = execute(compiler, bad, WORK / 'bad-length', succeeds=False, aot=options.aot)
         assert message in failed.stderr, failed.stderr
         assert set(temp_root.glob('chali-abi-*')) == before, 'error bridge temporary directory leaked'
     bad = WORK / 'null-reference.chl'
-    bad.write_text('struct Packet { int32 value; }; abi ' + json.dumps(library.as_posix()) + ' { Packet mut& nothing() = "nothing"; }\nvoid main() { Packet mut& value = nothing(); return; }\n', encoding='utf-8')
+    bad.write_text('struct Packet { int32 value; }; #abi("C", ' + json.dumps(library.as_posix()) + ', "nothing") Packet mut& nothing();\nvoid main() { Packet mut& value = nothing(); return; }\n', encoding='utf-8')
     failed = execute(compiler, bad, WORK / 'null-reference', succeeds=False, aot=options.aot)
     assert 'ABI returned null for nonnull reference' in failed.stderr, failed.stderr
-    for declaration in ('struct Bad { String text; }; abi LIBRARY { void f(Bad p); }', 'struct Bad unknown { int32 value; }; abi LIBRARY { void f(Bad p); }', 'abi LIBRARY { int32[] f(int32 count) = "f" [missing]; }', 'abi LIBRARY { void f(int32 mut& mut& p); }'):
+    for declaration in ('struct Bad { String text; }; #abi("C", LIBRARY, "f") void f(Bad p);', 'struct Bad unknown { int32 value; }; #abi("C", LIBRARY, "f") void f(Bad p);', '#abi("C", LIBRARY, "f") int32[] f(int32 count) [missing];', '#abi("C", LIBRARY, "f") void f(int32 mut& mut& p);'):
         bad = WORK / 'bad.chl'
         bad.write_text(declaration.replace('LIBRARY', json.dumps(library.as_posix())) + '\nvoid main() { return; }\n', encoding='utf-8')
         result = run([compiler, 'aot', bad, '--emit-llvm', '--out', WORK / 'bad'], succeeds=False)

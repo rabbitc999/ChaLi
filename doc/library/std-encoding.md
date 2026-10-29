@@ -91,11 +91,11 @@ encoding RFC vectors OK
 | [EncodingError::toString](#api-0) | `String toString()` |
 | [encodeHex](#api-1) | `String encodeHex(List<uint8> bytes, bool uppercase=false)` |
 | [hexDigit](#api-2) | `int64 hexDigit(char value)` |
-| [decodeHex](#api-3) | `Result<List<uint8>,EncodingError> decodeHex(String text)` |
+| [decodeHex](#api-3) | `Result<List<uint8>,std::lang::Error> decodeHex(String text)` |
 | [encodeBase64](#api-4) | `String encodeBase64(List<uint8> bytes, bool url=false, bool padding=true)` |
 | [encodeBase64Url](#api-5) | `String encodeBase64Url(List<uint8> bytes, bool padding=false)` |
-| [decodeBase64](#api-6) | `Result<List<uint8>,EncodingError> decodeBase64(String text, bool url=false)` |
-| [decodeBase64Url](#api-7) | `Result<List<uint8>,EncodingError> decodeBase64Url(String text)` |
+| [decodeBase64](#api-6) | `Result<List<uint8>,std::lang::Error> decodeBase64(String text, bool url=false)` |
+| [decodeBase64Url](#api-7) | `Result<List<uint8>,std::lang::Error> decodeBase64Url(String text)` |
 
 <a id="api-0"></a>
 
@@ -219,7 +219,7 @@ std::encoding::hexDigit(value);
 **声明**
 
 ```chali
-Result<List<uint8>,EncodingError> decodeHex(String text);
+Result<List<uint8>,std::lang::Error> decodeHex(String text);
 ```
 
 **行为**
@@ -234,7 +234,7 @@ Result<List<uint8>,EncodingError> decodeHex(String text);
 
 **返回值**
 
-`Result<List<uint8>,EncodingError>`。严格解码偶数长度的十六进制文本，不忽略空白。
+`Result<List<uint8>,std::lang::Error>`。严格解码偶数长度的十六进制文本，不忽略空白。
 
 **错误与边界**
 
@@ -336,7 +336,7 @@ std::encoding::encodeBase64Url(bytes, padding);
 **声明**
 
 ```chali
-Result<List<uint8>,EncodingError> decodeBase64(String text, bool url=false);
+Result<List<uint8>,std::lang::Error> decodeBase64(String text, bool url=false);
 ```
 
 **行为**
@@ -352,7 +352,7 @@ Result<List<uint8>,EncodingError> decodeBase64(String text, bool url=false);
 
 **返回值**
 
-`Result<List<uint8>,EncodingError>`。严格 Base64 解码；接受正确填充或无填充形式，拒绝非零尾部位。
+`Result<List<uint8>,std::lang::Error>`。严格 Base64 解码；接受正确填充或无填充形式，拒绝非零尾部位。
 
 **错误与边界**
 
@@ -375,7 +375,7 @@ std::encoding::decodeBase64(text, url);
 **声明**
 
 ```chali
-Result<List<uint8>,EncodingError> decodeBase64Url(String text);
+Result<List<uint8>,std::lang::Error> decodeBase64Url(String text);
 ```
 
 **行为**
@@ -390,7 +390,7 @@ Result<List<uint8>,EncodingError> decodeBase64Url(String text);
 
 **返回值**
 
-`Result<List<uint8>,EncodingError>`。解码 URL 字母表，不接受标准字母表的加号与斜杠。
+`Result<List<uint8>,std::lang::Error>`。解码 URL 字母表，不接受标准字母表的加号与斜杠。
 
 **错误与边界**
 

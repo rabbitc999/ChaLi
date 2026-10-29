@@ -79,6 +79,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
                 const auto &name = nodes_[parameter].s;
                 entry.parameters.push_back(entry.bound.parameters.at(std::string(name.data(), name.size())));
                 entry.names.push_back(std::string(name.data(), name.size()));
+                entry.modes.push_back(std::max(0, nodes_[parameter].type2));
             }
             entry.groups.push_back(signature);
         }
@@ -302,8 +303,145 @@ int Registry::instantiate(int call, std::string &error,
             types.emplace(std::string(generic.s.data(), generic.s.size()), resolved);
         }
     }
+    const auto expansion = resolver_.createExpansion(entry.scope, entry.context);
+    std::set<BindingId> valueParameters;
+    std::set<BindingId> syntaxParameters;
+    std::set<BindingId> statementParameters;
+    // 编译期选择器在绑定后被选中分支替换，先从定义中保留其语法参数角色。
+    std::set<int> selectorVisited;
+    std::function<void(int)> inspectSelectors = [&](int id) {
+        if (id < 0 || !selectorVisited.insert(id).second) return;
+        const auto &syntax = nodes_[id];
+        if (syntax.kind == MNode::MacroMatch || syntax.kind == MNode::MacroRegex)
+        {
+            const auto found = bound.parameters.find(std::string(syntax.s.data(), syntax.s.size()));
+            if (found != bound.parameters.end()) syntaxParameters.insert(found->second);
+        }
+        for (const int child : syntax.kids) inspectSelectors(child);
+    };
+    inspectSelectors(entry.declaration);
+    std::set<const MType *> inspectedTypes;
+    std::function<void(const std::shared_ptr<MType> &)> inspectType = [&](const std::shared_ptr<MType> &type) {
+        if (!type || !inspectedTypes.insert(type.get()).second) return;
+        if (type->macroBinding) syntaxParameters.insert(type->macroBinding);
+        inspectType(type->elem);
+        inspectType(type->elem2);
+        for (const auto &parameter : type->paramTypes) inspectType(parameter);
+        for (const auto &argument : type->genericArguments) inspectType(argument);
+    };
+    bool exports = false;
+    std::set<int> visited;
+    std::set<int> textVisited;
+    std::function<void(int)> inspectText = [&](int id) {
+        if (id < 0 || !textVisited.insert(id).second) return;
+        const auto &syntax = nodes_[id];
+        if (syntax.bindingIdentity) syntaxParameters.insert(syntax.bindingIdentity);
+        if (syntax.nameParameter) syntaxParameters.insert(syntax.nameParameter);
+        for (const int child : syntax.kids) inspectText(child);
+    };
+    std::function<void(int)> inspect = [&](int id) {
+        if (id < 0 || !visited.insert(id).second) return;
+        const auto syntax = nodes_[id];
+        if (syntax.kind == MNode::ExprStmt && syntax.kids.size() == 1 && nodes_[syntax.kids[0]].kind == MNode::MacroHole)
+        {
+            statementParameters.insert(nodes_[syntax.kids[0]].bindingIdentity);
+            return;
+        }
+        Memory::String called = syntax.s;
+        int callArguments = syntax.kids.empty() ? -1 : syntax.kids[0];
+        if (syntax.kind == MNode::Call && syntax.s.empty() && syntax.kids.size() == 2)
+        {
+            const auto &callee = nodes_[syntax.kids[0]];
+            called = callee.kind == MNode::EnumCtor ? callee.s + "::" + callee.s2 : callee.s;
+            callArguments = syntax.kids[1];
+        }
+        if (syntax.kind == MNode::Call && callArguments >= 0 && (called == "print" || called == "println" || called == "std::lang::print" || called == "std::lang::println"))
+        {
+            const auto &arguments = nodes_[callArguments].kids;
+            for (std::size_t index = 0; index < arguments.size(); ++index)
+            {
+                const auto &argument = nodes_[arguments[index]];
+                if (index == 0 && argument.kind == MNode::MacroHole)
+                    syntaxParameters.insert(argument.bindingIdentity);
+                else
+                    inspect(arguments[index]);
+            }
+            return;
+        }
+        if (syntax.kind == MNode::MacroCall && (syntax.s == "stringify" || syntax.s == "concat"))
+        {
+            inspectText(id);
+            return;
+        }
+        if (syntax.nameParameter)
+        {
+            exports = true;
+            syntaxParameters.insert(syntax.nameParameter);
+        }
+        if (types_ && syntax.type >= 0) inspectType(types_->at(syntax.type));
+        if (syntax.kind == MNode::MacroHole) valueParameters.insert(syntax.bindingIdentity);
+        for (const int child : syntax.kids) inspect(child);
+        for (const int annotation : syntax.annotations) inspect(annotation);
+        inspect(syntax.guard);
+        if (syntax.kind == MNode::Block || syntax.kind == MNode::Case) inspect(static_cast<int>(syntax.i));
+    };
+    inspect(bound.root);
+    std::map<BindingId, int> values;
+    Memory::Vector<int> initializers;
+    const auto parameterScope = resolver_.createScope(entry.scope);
+    for (std::size_t index = 0; types_ && index < entry.names.size(); ++index)
+    {
+        const auto identity = bound.parameters.at(entry.names[index]);
+        if (!valueParameters.count(identity) && syntaxParameters.count(identity) && !entry.modes[index]) continue;
+        const auto actual = nodes_[inputs.at(entry.names[index])];
+        if (actual.kind != MNode::MacroArgument || actual.kids.size() != 5u || actual.kids[0] < 0) continue;
+        if (!valueParameters.count(identity) && statementParameters.count(identity) && actual.kids[3] >= 0 && nodes_[actual.kids[0]].kind == MNode::Loop && nodes_[actual.kids[0]].s == "block" && !entry.modes[index])
+            continue;
+        MNode variable;
+        variable.kind = MNode::Var;
+        variable.s.assign(entry.names[index].data(), entry.names[index].size());
+        variable.syntaxContext = expansion;
+        variable.bindingIdentity = resolver_.declare(entry.names[index], parameterScope, expansion);
+        variable.module = module;
+        variable.sourceLine = site.line;
+        variable.sourceColumn = site.column;
+        variable.macroExpansion = site.frame;
+        const int reference = static_cast<int>(nodes_.size());
+        nodes_.push_back(variable);
+        values[identity] = reference;
+        int expression = actual.kids[0];
+        if (entry.modes[index])
+        {
+            auto address = variable;
+            address.kind = MNode::Un;
+            address.s = "&";
+            address.bindingIdentity = 0;
+            address.kids = { expression };
+            expression = static_cast<int>(nodes_.size());
+            nodes_.push_back(std::move(address));
+        }
+        auto declaration = variable;
+        declaration.kind = MNode::Declare;
+        declaration.i = -1;
+        declaration.type2 = 0;
+        declaration.s2 = entry.modes[index] == 1 ? "__chali_macro_const_ref" : entry.modes[index] == 2 ? "__chali_macro_mut_ref" :
+                                                                                                         "";
+        declaration.kids = { expression };
+        const int declared = static_cast<int>(nodes_.size());
+        nodes_.push_back(std::move(declaration));
+        MNode list;
+        list.kind = MNode::List;
+        list.kids = { declared };
+        const int listed = static_cast<int>(nodes_.size());
+        nodes_.push_back(std::move(list));
+        auto group = variable;
+        group.kind = MNode::Declare;
+        group.kids = { listed };
+        initializers.push_back(static_cast<int>(nodes_.size()));
+        nodes_.push_back(std::move(group));
+    }
     AstSubstitution substitution(nodes_, remainingNodes_ - bindingCost, types_);
-    const int expanded = substitution.instantiate(bound.root, arguments, resolver_.createExpansion(entry.scope, entry.context), error, site);
+    const int expanded = substitution.instantiate(bound.root, arguments, expansion, error, site, &values);
     if (expanded >= 0 && entry.generic && (!applyTypes || !applyTypes(expanded, types, error)))
     {
         nodes_.resize(start);
@@ -312,6 +450,13 @@ int Registry::instantiate(int call, std::string &error,
     }
     if (expanded >= 0)
     {
+        if (!initializers.empty())
+        {
+            auto &statements = nodes_[nodes_[expanded].kids[0]].kids;
+            statements.insert(statements.begin(), initializers.begin(), initializers.end());
+            nodes_[expanded].i = static_cast<long long>(initializers.size());
+            nodes_[expanded].type2 = exports ? 2 : 1;
+        }
         remainingNodes_ -= nodes_.size() - start;
         rollback.committed = true;
     }

@@ -982,6 +982,14 @@ void collectInterfaces(const Memory::String &source,
         std::size_t begin = at;
         while (at < text.size() && identPart(text[at])) ++at;
         auto name = text.substr(begin, at - begin);
+        if (isInterface)
+        {
+            const auto qualified = module.empty() ? name : module + "::" + name;
+            implemented[name].insert(name);
+            implemented[name].insert(qualified);
+            implemented[qualified].insert(name);
+            implemented[qualified].insert(qualified);
+        }
         if (isInterface && name == "ToString")
             implemented["#string-protocol-declarations"].insert(module.empty() ? name : module + "::" + name);
         for (const auto &item : derived)
@@ -1034,6 +1042,8 @@ void collectInterfaces(const Memory::String &source,
         changed = false;
         for (auto &entry : implemented)
         {
+            // 此项记录协议的声明身份，不是可沿继承边扩展的类型实现集合。
+            if (entry.first == "#string-protocol-declarations") continue;
             auto bases = entry.second;
             for (const auto &base : bases)
             {

@@ -27,7 +27,7 @@ class ProjectTests(unittest.TestCase):
         return result
 
     def test_generated_project(self):
-        """验证新建应用的 VM 运行、测试发现与字节码产物交付。"""
+        """验证新建应用的原生运行、测试发现与 AOT 产物交付。"""
         env = dict(os.environ, CHALI_PYTHON='missing-python-for-project-test')
         self.run_cli('new', 'hello-chali', env=env)
         project = self.directory / 'hello-chali'
@@ -36,7 +36,7 @@ class ProjectTests(unittest.TestCase):
             self.assertTrue((project / '.git/HEAD').is_file())
         config = tomllib.loads((project / 'chali.toml').read_text(encoding='utf-8'))
         self.assertEqual(config['package'], {'name': 'hello-chali', 'version': '0.1.0'})
-        self.assertEqual(config['chali']['run'], 'interpret')
+        self.assertEqual(config['chali']['run'], 'run')
         self.run_cli('--check', 'src/main.chl', cwd=project)
         output = self.run_cli('run', 'src/main.chl', cwd=project)
         self.assertEqual(output.stdout, 'Hello, ChaLi!\n')
@@ -44,11 +44,13 @@ class ProjectTests(unittest.TestCase):
         env = dict(os.environ, CHALI_PYTHON=sys.executable)
         report = self.run_cli('test', 'tests', '--json', cwd=project, env=env)
         self.assertEqual(json.loads(report.stdout)['summary'], {'passed': 1, 'failed': 0, 'skipped': 0})
-        self.run_cli('svmb', 'src/main.chl', '--out', 'build/main', cwd=project)
+        self.run_cli('aot', 'src/main.chl', '--out', 'build/main', cwd=project)
         for suffix in ('.quad', '.data.bin', '.layout', '.svmb'):
-            self.assertTrue((project / ('build/main' + suffix)).is_file(), suffix)
-        self.assertFalse((project / 'build/main').is_file())
-        self.assertFalse((project / 'build/main.exe').exists())
+            self.assertFalse((project / ('build/main' + suffix)).exists(), suffix)
+        self.assertTrue((project / 'build/main.ll').is_file())
+        product = project / ('build/main.exe' if os.name == 'nt' else 'build/main')
+        result = subprocess.run([str(product)], cwd=project, capture_output=True, text=True, timeout=30)
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, 'Hello, ChaLi!\n', ''))
 
     def test_paths_and_names(self):
         (self.directory / 'my projects').mkdir()

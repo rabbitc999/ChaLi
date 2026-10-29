@@ -87,11 +87,11 @@ opcode Image {
      * @param height 图片高，单位像素，必须为正。
      * @return 新图片；宽高不合法时返回错误。
      */
-    static Result<Image, std::lang::MessageError> make(int64 width, int64 height) {
-        if (width <= 0 || height <= 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from("图片创建：宽高必须为正")); }
-        if (width > 536870911 / height) { return Result<Image, std::lang::MessageError>::Err(MessageError::from("图片创建：缓冲超过预算")); }
+    static Result<Image, std::lang::Error> make(int64 width, int64 height) {
+        if (width <= 0 || height <= 0) { return Result<Image, std::lang::Error>::Err(MessageError::from("图片创建：宽高必须为正")); }
+        if (width > 536870911 / height) { return Result<Image, std::lang::Error>::Err(MessageError::from("图片创建：缓冲超过预算")); }
         Image image = __std_imageMake(width, height);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
@@ -99,12 +99,12 @@ opcode Image {
      * @param bytes 文件字节，支持无压缩 24/32 位 BMP 与二进制 P5/P6。
      * @return 解码后的图片；格式不识别或数据不完整时返回错误。
      */
-    static Result<Image, std::lang::MessageError> decode(List<uint8> bytes) {
+    static Result<Image, std::lang::Error> decode(List<uint8> bytes) {
         ImageReply reply;
         __decode(bytes, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
@@ -113,9 +113,9 @@ opcode Image {
      * @return 解码后的图片；读取失败或格式不识别时返回错误。
      * @note 内部整读文件字节，预算 64 MiB。
      */
-    static Result<Image, std::lang::MessageError> open(String path) {
-        Result<List<uint8>, std::io::IoError> read = readAllBytes(path, 67108864);
-        if (read.isErr()) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(read.error().toString())); }
+    static Result<Image, std::lang::Error> open(String path) {
+        Result<List<uint8>, std::lang::Error> read = readAllBytes(path, 67108864);
+        if (read.isErr()) { return Result<Image, std::lang::Error>::Err(MessageError::from(read.error().toString())); }
         return Image::decode(read.unwrap());
     }
 
@@ -124,22 +124,22 @@ opcode Image {
      * @return BMP 文件字节；缓冲长度不符时返回错误。
      * @note 无压缩 BI_RGB，自底向上，行按 4 字节对齐；透明度丢弃。
      */
-    Result<List<uint8>, std::lang::MessageError> encodeBmp() {
+    Result<List<uint8>, std::lang::Error> encodeBmp() {
         ImageReply reply;
         __encodeBmp(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint8>, std::lang::MessageError>::Ok(reply.bytes);
+        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint8>, std::lang::Error>::Ok(reply.bytes);
     }
 
     /**
      * @brief 编码为二进制 PPM（P6）文件字节。
      * @return PPM 文件字节；缓冲长度不符时返回错误。
      */
-    Result<List<uint8>, std::lang::MessageError> encodePpm() {
+    Result<List<uint8>, std::lang::Error> encodePpm() {
         ImageReply reply;
         __encodePpm(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint8>, std::lang::MessageError>::Ok(reply.bytes);
+        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint8>, std::lang::Error>::Ok(reply.bytes);
     }
 
     /**
@@ -147,11 +147,11 @@ opcode Image {
      * @return PGM 文件字节；缓冲长度不符时返回错误。
      * @note 每像素写入 BT.601 亮度。
      */
-    Result<List<uint8>, std::lang::MessageError> encodePgm() {
+    Result<List<uint8>, std::lang::Error> encodePgm() {
         ImageReply reply;
         __encodePgm(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint8>, std::lang::MessageError>::Ok(reply.bytes);
+        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint8>, std::lang::Error>::Ok(reply.bytes);
     }
 
     /**
@@ -159,12 +159,12 @@ opcode Image {
      * @param path 目标文件路径，覆盖写入，不创建父目录。
      * @return 写入的字节数；编码或写盘失败时返回错误。
      */
-    Result<int64, std::lang::MessageError> saveBmp(String path) {
-        Result<List<uint8>, std::lang::MessageError> encoded = self.encodeBmp();
-        if (encoded.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(encoded.error())); }
-        Result<int64, std::io::IoError> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(written.error().toString())); }
-        return Result<int64, std::lang::MessageError>::Ok(written.unwrap());
+    Result<int64, std::lang::Error> saveBmp(String path) {
+        Result<List<uint8>, std::lang::Error> encoded = self.encodeBmp();
+        if (encoded.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        Result<int64, std::lang::Error> written = writeAllBytes(path, encoded.unwrap());
+        if (written.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(written.error().toString())); }
+        return Result<int64, std::lang::Error>::Ok(written.unwrap());
     }
 
     /**
@@ -172,12 +172,12 @@ opcode Image {
      * @param path 目标文件路径，覆盖写入，不创建父目录。
      * @return 写入的字节数；编码或写盘失败时返回错误。
      */
-    Result<int64, std::lang::MessageError> savePpm(String path) {
-        Result<List<uint8>, std::lang::MessageError> encoded = self.encodePpm();
-        if (encoded.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(encoded.error())); }
-        Result<int64, std::io::IoError> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(written.error().toString())); }
-        return Result<int64, std::lang::MessageError>::Ok(written.unwrap());
+    Result<int64, std::lang::Error> savePpm(String path) {
+        Result<List<uint8>, std::lang::Error> encoded = self.encodePpm();
+        if (encoded.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        Result<int64, std::lang::Error> written = writeAllBytes(path, encoded.unwrap());
+        if (written.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(written.error().toString())); }
+        return Result<int64, std::lang::Error>::Ok(written.unwrap());
     }
 
     /**
@@ -185,12 +185,12 @@ opcode Image {
      * @param path 目标文件路径，覆盖写入，不创建父目录。
      * @return 写入的字节数；编码或写盘失败时返回错误。
      */
-    Result<int64, std::lang::MessageError> savePgm(String path) {
-        Result<List<uint8>, std::lang::MessageError> encoded = self.encodePgm();
-        if (encoded.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(encoded.error())); }
-        Result<int64, std::io::IoError> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(written.error().toString())); }
-        return Result<int64, std::lang::MessageError>::Ok(written.unwrap());
+    Result<int64, std::lang::Error> savePgm(String path) {
+        Result<List<uint8>, std::lang::Error> encoded = self.encodePgm();
+        if (encoded.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        Result<int64, std::lang::Error> written = writeAllBytes(path, encoded.unwrap());
+        if (written.isErr()) { return Result<int64, std::lang::Error>::Err(MessageError::from(written.error().toString())); }
+        return Result<int64, std::lang::Error>::Ok(written.unwrap());
     }
 
     /**
@@ -199,9 +199,9 @@ opcode Image {
      * @param y 像素纵坐标，从 0 开始。
      * @return 像素颜色分量；坐标越界时返回错误。
      */
-    Result<Pixel, std::lang::MessageError> getPixel(int64 x, int64 y) {
+    Result<Pixel, std::lang::Error> getPixel(int64 x, int64 y) {
         if (x < 0 || y < 0 || x >= self.width() || y >= self.height()) {
-            return Result<Pixel, std::lang::MessageError>::Err(MessageError::from("getPixel：坐标越界"));
+            return Result<Pixel, std::lang::Error>::Err(MessageError::from("getPixel：坐标越界"));
         }
         int64 base = (y * self.width() + x) * 4;
         Pixel pixel;
@@ -209,7 +209,7 @@ opcode Image {
         pixel.g = __std_imageByte(self.opcode, base + 1);
         pixel.b = __std_imageByte(self.opcode, base + 2);
         pixel.a = __std_imageByte(self.opcode, base + 3);
-        return Result<Pixel, std::lang::MessageError>::Ok(pixel);
+        return Result<Pixel, std::lang::Error>::Ok(pixel);
     }
 
     /**
@@ -222,19 +222,19 @@ opcode Image {
      * @param a 透明度分量，0..255。
      * @return 成功时为 0；坐标越界或分量超范围时返回错误，不修改缓冲。
      */
-    Result<int64, std::lang::MessageError> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a) {
+    Result<int64, std::lang::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a) {
         if (x < 0 || y < 0 || x >= self.width() || y >= self.height()) {
-            return Result<int64, std::lang::MessageError>::Err(MessageError::from("setPixel：坐标越界"));
+            return Result<int64, std::lang::Error>::Err(MessageError::from("setPixel：坐标越界"));
         }
         if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255) {
-            return Result<int64, std::lang::MessageError>::Err(MessageError::from("setPixel：分量必须在 0..255"));
+            return Result<int64, std::lang::Error>::Err(MessageError::from("setPixel：分量必须在 0..255"));
         }
         int64 base = (y * self.width() + x) * 4;
         __std_imageSetByte(&self, base, (uint8)r);
         __std_imageSetByte(&self, base + 1, (uint8)g);
         __std_imageSetByte(&self, base + 2, (uint8)b);
         __std_imageSetByte(&self, base + 3, (uint8)a);
-        return Result<int64, std::lang::MessageError>::Ok(0);
+        return Result<int64, std::lang::Error>::Ok(0);
     }
 
     /**
@@ -245,12 +245,12 @@ opcode Image {
      * @return 卷积后的新图片；核形状或缓冲长度不符时返回错误。
      * @note 边缘复制填充，透明度保持原值，结果分量四舍五入并截断到 0..255。
      */
-    Result<Image, std::lang::MessageError> convolve(List<float64> kernel, int64 kw, int64 kh) {
+    Result<Image, std::lang::Error> convolve(List<float64> kernel, int64 kw, int64 kh) {
         ImageReply reply;
         __convolve(self.opcode, kernel, kw, kh, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
@@ -260,23 +260,23 @@ opcode Image {
      * @param kh 窗口高，必须为正。
      * @return 池化后的新图片，尺寸为 (width/kw, height/kh) 向下取整；参数不合法时返回错误。
      */
-    Result<Image, std::lang::MessageError> pool(int64 mode, int64 kw, int64 kh) {
+    Result<Image, std::lang::Error> pool(int64 mode, int64 kw, int64 kh) {
         ImageReply reply;
         __pool(self.opcode, mode, kw, kh, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
      * @brief 转为 8 位灰度。
      * @return 长度 width*height 的灰度缓冲，每像素按 BT.601 亮度取值；缓冲长度不符时返回错误。
      */
-    Result<List<uint8>, std::lang::MessageError> toGray() {
+    Result<List<uint8>, std::lang::Error> toGray() {
         ImageReply reply;
         __toGray(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint8>, std::lang::MessageError>::Ok(reply.gray);
+        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint8>, std::lang::Error>::Ok(reply.gray);
     }
 
     /**
@@ -286,23 +286,23 @@ opcode Image {
      * @param gray 灰度缓冲，长度必须为 width*height。
      * @return 三通道同值、透明度 255 的图片；缓冲长度不符时返回错误。
      */
-    static Result<Image, std::lang::MessageError> fromGray(int64 width, int64 height, List<uint8> gray) {
+    static Result<Image, std::lang::Error> fromGray(int64 width, int64 height, List<uint8> gray) {
         ImageReply reply;
         __fromGray(width, height, gray, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
      * @brief 转为 ARGB8888。
      * @return 每像素一个 uint32 的列表，布局 (A<<24)|(R<<16)|(G<<8)|B；缓冲长度不符时返回错误。
      */
-    Result<List<uint32>, std::lang::MessageError> toARGB() {
+    Result<List<uint32>, std::lang::Error> toARGB() {
         ImageReply reply;
         __toARGB(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint32>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint32>, std::lang::MessageError>::Ok(reply.argb);
+        if (len(reply.error) > 0) { return Result<List<uint32>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint32>, std::lang::Error>::Ok(reply.argb);
     }
 
     /**
@@ -312,23 +312,23 @@ opcode Image {
      * @param argb 像素值列表，长度必须为 width*height。
      * @return 还原后的图片；缓冲长度不符时返回错误。
      */
-    static Result<Image, std::lang::MessageError> fromARGB(int64 width, int64 height, List<uint32> argb) {
+    static Result<Image, std::lang::Error> fromARGB(int64 width, int64 height, List<uint32> argb) {
         ImageReply reply;
         __fromARGB(width, height, argb, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
      * @brief 转为 RGB565。
      * @return 每像素一个 uint16 的列表，R 高 5 位、G 中 6 位、B 低 5 位；缓冲长度不符时返回错误。
      */
-    Result<List<uint16>, std::lang::MessageError> toRGB565() {
+    Result<List<uint16>, std::lang::Error> toRGB565() {
         ImageReply reply;
         __toRGB565(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint16>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint16>, std::lang::MessageError>::Ok(reply.rgb565);
+        if (len(reply.error) > 0) { return Result<List<uint16>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint16>, std::lang::Error>::Ok(reply.rgb565);
     }
 
     /**
@@ -338,24 +338,24 @@ opcode Image {
      * @param rgb565 像素值列表，长度必须为 width*height。
      * @return 还原后的图片，5/6 位分量按高位复制扩展回 8 位；缓冲长度不符时返回错误。
      */
-    static Result<Image, std::lang::MessageError> fromRGB565(int64 width, int64 height, List<uint16> rgb565) {
+    static Result<Image, std::lang::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565) {
         ImageReply reply;
         __fromRGB565(width, height, rgb565, &reply);
-        if (len(reply.error) > 0) { return Result<Image, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, std::lang::Error>::Err(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
-        return Result<Image, std::lang::MessageError>::Ok(image);
+        return Result<Image, std::lang::Error>::Ok(image);
     }
 
     /**
      * @brief 用大津法求二值化阈值。
      * @return 使类间方差最大的灰度阈值，0..255；图片无效时返回错误。
      */
-    Result<int64, std::lang::MessageError> otsuThreshold() {
+    Result<int64, std::lang::Error> otsuThreshold() {
         List<uint8> gray = self.toGray()?;
         ImageReply reply;
         __otsu(self.width(), self.height(), gray, &reply);
-        if (len(reply.error) > 0) { return Result<int64, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<int64, std::lang::MessageError>::Ok(reply.threshold);
+        if (len(reply.error) > 0) { return Result<int64, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<int64, std::lang::Error>::Ok(reply.threshold);
     }
 
     /**
@@ -366,18 +366,18 @@ opcode Image {
      * @param threshold 阈值，0..255；大于阈值给 255，否则给 0。
      * @return 二值化后的灰度缓冲；阈值越界或缓冲长度不符时返回错误。
      */
-    static Result<List<uint8>, std::lang::MessageError> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold) {
+    static Result<List<uint8>, std::lang::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold) {
         ImageReply reply;
         __binarize(width, height, gray, threshold, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::MessageError>::Err(MessageError::from(reply.error)); }
-        return Result<List<uint8>, std::lang::MessageError>::Ok(reply.gray);
+        if (len(reply.error) > 0) { return Result<List<uint8>, std::lang::Error>::Err(MessageError::from(reply.error)); }
+        return Result<List<uint8>, std::lang::Error>::Ok(reply.gray);
     }
 
     /**
      * @brief 转灰度、大津法求阈值并二值化。
      * @return 0/255 灰度缓冲；任何一步失败时返回错误。
      */
-    Result<List<uint8>, std::lang::MessageError> otsuBinarize() {
+    Result<List<uint8>, std::lang::Error> otsuBinarize() {
         List<uint8> gray = self.toGray()?;
         int64 threshold = self.otsuThreshold()?;
         return Image::binarize(self.width(), self.height(), gray, threshold);

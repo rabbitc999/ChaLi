@@ -86,6 +86,7 @@ std::shared_ptr<MType> NamedType(const Memory::String &name)
     auto type = Memory::makeShared<MType>();
     type->kind = MType::Struct;
     type->name = name;
+    if (g_interfaces.count(name)) type->kind = MType::Obj;
     auto opcode = g_opcodeTypes.find(name);
     if (opcode == g_opcodeTypes.end() && name.find("::") != Memory::String::npos)
         opcode = g_opcodeTypes.find(name.substr(name.rfind("::") + 2));
@@ -132,13 +133,13 @@ std::int64_t TypeIdOf(const std::shared_ptr<MType> &type)
 /**
  * @brief 是不是**接口名**。
  *
- * 接口和结构体在类型系统里都写成 `MType::Struct`（都只写个名字），靠查表分开：
- * 名字落在 `g_interfaces` 里的就是接口。接口**不能当值类型**（它只描述函数、
- * 没有字段也没有大小），只能出现在引用的目标位置（那是"胖引用"）。
+ * 解析期使用命名类型，名称解析后接口值使用带接口身份的 Obj；
+ * 名字落在 g_interfaces 里的就是接口。拥有接口值持有独立聚合存储，
+ * 接口引用只借用来源，两者均通过动态类型号分派。
  */
 bool IsInterfaceType(const std::shared_ptr<MType> &type)
 {
-    return type && type->kind == MType::Struct && g_interfaces.count(type->name) != 0u;
+    return type && (type->kind == MType::Struct || type->kind == MType::Obj) && g_interfaces.count(type->name) != 0u;
 }
 
 /**
@@ -270,6 +271,7 @@ bool InterfaceIsOrExtends(const Memory::String &iface, const Memory::String &bas
  */
 bool ImplementsInterface(const Memory::String &owner, const Memory::String &iface)
 {
+    if (g_interfaces.count(owner)) return InterfaceIsOrExtends(owner, iface);
     const auto found = g_structs.find(owner);
     if (found == g_structs.end()) return false;
     for (const Memory::String &declared : found->second.interfaces)

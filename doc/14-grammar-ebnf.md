@@ -306,6 +306,7 @@ top_decl = struct_decl, type_decl_end
     | "unsafe", host_func_decl
     | "#export", "(", STRING, ")", func_def
     | "inline", func_def
+    | "inline", "unsafe", func_def
     | "export", func_def
     | lifetime_directives, func_def
     | lifetime_directives, "inline", func_def
@@ -655,7 +656,8 @@ match_item = match_patterns, "if", expr, "=>", if_block
 match_patterns = match_pattern
     | match_patterns, "|", match_pattern ;
 
-match_pattern = bxor_expr ;
+match_pattern = bxor_expr
+    | "_", "(", call_args, ")" ;
 
 decl_stmt = "let", "(", destructure_items, ")", "=", expr, ";"
     | type, name_token, "(", param_list, ")", block
@@ -813,7 +815,13 @@ call_args = ""
     | call_args_nonempty ;
 
 call_args_nonempty = expr
-    | call_args_nonempty, ",", expr ;
+    | "_"
+    | element_type, name_token
+    | "_", name_token
+    | call_args_nonempty, ",", expr
+    | call_args_nonempty, ",", "_"
+    | call_args_nonempty, ",", element_type, name_token
+    | call_args_nonempty, ",", "_", name_token ;
 
 primary = name_token
     | macro_call
@@ -968,6 +976,8 @@ macro_parameter_items = macro_parameter
     | macro_parameter_items, ",", macro_parameter ;
 
 macro_parameter = name_token
+    | "&", name_token
+    | "mut", "&", name_token
     | "...", name_token
     | "..", name_token ;
 

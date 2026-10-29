@@ -56,6 +56,7 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | UNSAFE host_func_decl { $$ = M_Unsafe($2); }
      | EXPORT_DIRECTIVE LPAREN STRING RPAREN func_def { $$ = M_ExportSymbol($3, $5); }
      | INLINE func_def { $$ = M_Inline($2); }
+     | INLINE UNSAFE func_def { $$ = M_Inline(M_Unsafe($3)); }
      | EXPORT func_def { $$ = M_Export($2); }
      /* 生命周期契约只挂在函数声明上，指令在它前面连写。 */
      | lifetime_directives func_def { $$ = M_LifetimeContract($1, $2); }
@@ -500,7 +501,8 @@ match_item := match_patterns IF expr FATARROW if_block
 /* 模式位置的 | 表示备选模式；普通表达式中的 | 仍是位或。 */
 match_patterns := match_pattern { $$ = M_List1($1); }
                 | match_patterns PIPE match_pattern { M_ListAdd($1, $3); $$ = $1; } ;
-match_pattern := bxor_expr { $$ = $1; } ;
+match_pattern := bxor_expr { $$ = $1; }
+               | WILDCARD LPAREN call_args RPAREN { $$ = M_CallOn(M_WildcardPattern(), $3); } ;
 
 /* 局部变量 */
 decl_stmt := LET LPAREN destructure_items RPAREN ASSIGN expr SEMI
@@ -699,7 +701,13 @@ call_args := %empty { $$ = M_List(); }
            | call_args_nonempty { $$ = $1; } ;
 
 call_args_nonempty := expr                                { $$ = M_List1($1); }
-                    | call_args_nonempty COMMA expr { M_ListAdd($1, $3); $$ = $1; } ;
+                    | WILDCARD { $$ = M_List1(M_WildcardPattern()); }
+                    | element_type name_token { $$ = M_List1(M_TypedPattern($1, $2)); }
+                    | WILDCARD name_token { $$ = M_List1(M_TypedPattern(-1, $2)); }
+                    | call_args_nonempty COMMA expr { M_ListAdd($1, $3); $$ = $1; }
+                    | call_args_nonempty COMMA WILDCARD { M_ListAdd($1, M_WildcardPattern()); $$ = $1; }
+                    | call_args_nonempty COMMA element_type name_token { M_ListAdd($1, M_TypedPattern($3, $4)); $$ = $1; }
+                    | call_args_nonempty COMMA WILDCARD name_token { M_ListAdd($1, M_TypedPattern(-1, $4)); $$ = $1; } ;
 
 /* 调用只有"后缀"一条路径 */
 primary := name_token                         { $$ = M_Var($1); }
@@ -855,6 +863,8 @@ macro_parameter_names := %empty { $$ = M_List(); }
 macro_parameter_items := macro_parameter { $$ = M_List1($1); }
     | macro_parameter_items COMMA macro_parameter { M_ListAdd($1, $3); $$ = $1; } ;
 macro_parameter := name_token { $$ = M_MacroParameter($1); }
+    | AMP name_token { $$ = M_MacroReferenceParameter($2, 1); }
+    | MUT AMP name_token { $$ = M_MacroReferenceParameter($3, 2); }
     | ELLIPSIS name_token { $$ = M_MacroParameter($2, 1); }
     | DOUBLE_DOT name_token { $$ = M_MacroParameter($2, 1); } ;
 macro_template := macro_template_parts { $$ = M_MacroTemplate($1, -1); }

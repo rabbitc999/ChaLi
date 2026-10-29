@@ -62,7 +62,7 @@ int64 contentLength(String head)
  * @note 请求体上限 1 MiB。头部用阻塞的 receiveLine 等待（自带超时，不依赖
  *       线程运行期）；请求体通常已在套接字缓冲里，用非阻塞接收有界自旋收完。
  */
-Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
+Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
 {
     String head = "";
     while (true)
@@ -70,17 +70,17 @@ Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
         String line = socket.receiveLine((int32)idleMs);
         if (socket.status() == std::net::NET_TIMEOUT)
         {
-            if (head.isEmpty()) { return Result<Request, MessageError>::Err(MessageError::from("空连接")); }
-            return Result<Request, MessageError>::Err(MessageError::from("等待请求超时"));
+            if (head.isEmpty()) { return Result<Request, Error>::Err(MessageError::from("空连接")); }
+            return Result<Request, Error>::Err(MessageError::from("等待请求超时"));
         }
         if (socket.status() == std::net::NET_CLOSED)
         {
-            if (head.isEmpty()) { return Result<Request, MessageError>::Err(MessageError::from("空连接")); }
-            return Result<Request, MessageError>::Err(MessageError::from("连接中断"));
+            if (head.isEmpty()) { return Result<Request, Error>::Err(MessageError::from("空连接")); }
+            return Result<Request, Error>::Err(MessageError::from("连接中断"));
         }
         if (socket.status() == std::net::NET_ERROR)
         {
-            return Result<Request, MessageError>::Err(MessageError::from("接收失败：" + socket.lastError()));
+            return Result<Request, Error>::Err(MessageError::from("接收失败：" + socket.lastError()));
         }
         if (line.isEmpty())
         {
@@ -91,7 +91,7 @@ Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
     }
     if (len(head) > 1048576)
     {
-        return Result<Request, MessageError>::Err(MessageError::from("请求超过 1 MiB 上限"));
+        return Result<Request, Error>::Err(MessageError::from("请求超过 1 MiB 上限"));
     }
     int64 lineEnd = std::text::Text::find(head, "\r\n");
     String requestLine = head;
@@ -100,7 +100,7 @@ Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
     int64 secondSpace = std::text::Text::find(requestLine[(firstSpace + 1):], " ");
     if (firstSpace < 0 || secondSpace < 0)
     {
-        return Result<Request, MessageError>::Err(MessageError::from("请求行不完整"));
+        return Result<Request, Error>::Err(MessageError::from("请求行不完整"));
     }
     Request request;
     request.method = requestLine[0:firstSpace];
@@ -130,20 +130,20 @@ Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
         }
         if (socket.status() == std::net::NET_CLOSED)
         {
-            return Result<Request, MessageError>::Err(MessageError::from("连接中断"));
+            return Result<Request, Error>::Err(MessageError::from("连接中断"));
         }
         if (socket.status() == std::net::NET_ERROR)
         {
-            return Result<Request, MessageError>::Err(MessageError::from("接收失败：" + socket.lastError()));
+            return Result<Request, Error>::Err(MessageError::from("接收失败：" + socket.lastError()));
         }
         spins = spins + 1;
         if (spins > 5000)
         {
-            return Result<Request, MessageError>::Err(MessageError::from("等待请求体超时"));
+            return Result<Request, Error>::Err(MessageError::from("等待请求体超时"));
         }
     }
     request.body = body;
-    return Result<Request, MessageError>::Ok(move request);
+    return Result<Request, Error>::Ok(move request);
 }
 
 /**
@@ -153,7 +153,7 @@ Result<Request, MessageError> readRequest(TcpSocket mut& socket, int64 idleMs)
  * @param contentType 响应类型（含字符集）。
  * @param body 响应体。
  */
-Result<bool, MessageError> sendResponse(TcpSocket mut& socket, int64 status, String reason, String contentType, String body)
+Result<bool, Error> sendResponse(TcpSocket mut& socket, int64 status, String reason, String contentType, String body)
 {
     String head = "HTTP/1.1 " + status.toString() + " " + reason
         + "\r\nContent-Type: " + contentType
@@ -162,7 +162,7 @@ Result<bool, MessageError> sendResponse(TcpSocket mut& socket, int64 status, Str
     int64 sent = socket.send(head + body);
     if (sent < 0)
     {
-        return Result<bool, MessageError>::Err(MessageError::from(socket.lastError()));
+        return Result<bool, Error>::Err(MessageError::from(socket.lastError()));
     }
-    return Result<bool, MessageError>::Ok(true);
+    return Result<bool, Error>::Ok(true);
 }

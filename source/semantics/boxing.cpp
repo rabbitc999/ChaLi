@@ -109,6 +109,22 @@ ast::NodePtr LowerObjSet(const ast::NodePtr &receiver, int valueId,
 ast::NodePtr LowerBoxedValue(int valueId, const std::shared_ptr<MType> &target)
 {
     using ast::Node;
+    if (IsInterfaceType(target))
+    {
+        const auto source = ExprType(valueId);
+        if (!Acceptable(target, source, true)) return Fail("类型未实现目标接口：" + Describe(source) + " -> " + Describe(target)), Bad();
+        if (IsInterfaceType(source)) return LowerExpr(valueId);
+        if (HasBorrowedValue(source))
+            g_borrowFacts.push_back({ chali_borrow_checker::Fact::ObjectArgument, BorrowSourceDepth(valueId), 0u,
+                                      g_reductionLine, "（拥有接口值不能隐藏非全局引用来源：" + Describe(source) + "）" });
+        g_needsInterfaceBox.insert(source->name);
+        const auto clone = "__chali_iface_copy_" + source->name;
+        const auto destroy = "__chali_iface_drop_" + source->name;
+        return OwnedObjectTempNode(Node::call("__std_iface_box", { "address", "tag", "copy", "drop" },
+                                              { Node::call(clone, { "source" }, { OwnedAggregateTempFor(valueId, source) }),
+                                                Node::i(TypeIdOf(source)), FunctionPointerValue(clone), FunctionPointerValue(destroy) }),
+                                   target);
+    }
     const auto name = AllocateName("__chali_box_value");
     Memory::Vector<ast::NodePtr> prefix;
     prefix.push_back(Node::declare(name, LowerType(target, name)));
@@ -541,7 +557,7 @@ ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExi
         type = ExprType(operand);
         source = LowerAddressOf(operand);
     }
-    if (!type || type->kind == MType::Void || (type->kind == MType::Array && !(implicitExit && IsRuntimeArray(type))) || IsInterfaceType(type) || type->kind == MType::Host)
+    if (!type || type->kind == MType::Void || (type->kind == MType::Array && !(implicitExit && IsRuntimeArray(type))) || (IsInterfaceType(type) && type->kind != MType::Obj) || type->kind == MType::Host)
         return Fail("move 的目标必须是具有具体布局的可移动值"), Bad();
     // 内建只借用源槽，移动值的内部借用由结果存储与返回边界继续检查。
     RecordObjectArgumentBorrow(operand, type);
@@ -762,8 +778,8 @@ ast::NodePtr LowerCall(int id)
         {
             std::shared_ptr<MType> result;
             Memory::Vector<std::shared_ptr<MType>> parameters;
-            if (!IsInterfacePointer(baseType)) return LowerValueText(receiverId);
-            if (!FindInterfaceMethod(baseType->elem->name, methodName, &result, &parameters)) return LowerDefaultValueText(receiverId);
+            if (!IsInterfacePointer(baseType) && !IsInterfaceType(baseType)) return LowerValueText(receiverId);
+            if (!FindInterfaceMethod(IsInterfaceType(baseType) ? baseType->name : baseType->elem->name, methodName, &result, &parameters)) return LowerDefaultValueText(receiverId);
         }
         /* ---- 运行时数组 `T[]` 的 `.len()` ----
          * 元素个数存在对象块头的前 8 字节（`new[n]` 建的时候写进去的），
@@ -1014,7 +1030,7 @@ ast::NodePtr LowerCall(int id)
          *
          * 类型号由前端在**编译期**算好一并传下去：`name()` 拿回来的就是它，
          * 和 `__typeTag(类型)` 比一比就是泛型分支。`get()` 的目标类型由上下文给。 */
-        if (baseType && baseType->kind == MType::Obj)
+        if (baseType && baseType->kind == MType::Obj && !IsInterfaceType(baseType))
         {
             const ast::NodePtr receiver = LowerExpr(receiverId);
             if (methodName == "copy")
@@ -1177,9 +1193,9 @@ ast::NodePtr LowerCall(int id)
          * `q.area()` → `__chali_iface.Shape.area(q, 实参…)`，那个分派函数是编译期生成的
          * （见 MakeInterfaceDispatcher）：它读出 q 的类型号，挑到 `Circle.area` / `Square.area`…
          * 再把 q 里的地址当 `self` 传下去。 */
-        if (IsInterfacePointer(baseType))
+        if (IsInterfacePointer(baseType) || IsInterfaceType(baseType))
         {
-            const Memory::String iface = baseType->elem->name;
+            const Memory::String iface = IsInterfaceType(baseType) ? baseType->name : baseType->elem->name;
             std::shared_ptr<MType> interfaceResult;
             Memory::Vector<std::shared_ptr<MType>> interfaceParams;
             if (!FindInterfaceMethod(iface, methodName, &interfaceResult, &interfaceParams))
@@ -2286,13 +2302,62 @@ ast::NodePtr EnumPayloadValue(const ast::NodePtr &value,
  * @param info 已验证的协议。
  * @return 成功载荷值。
  */
+/**
+ * @brief 在失败分支内构造独立残余转换，并登记该分支专有的清理。
+ * @param value 来源残余表达式。
+ * @param source 来源类型。
+ * @param target 接收协议要求的类型。
+ * @param prefix 求值及初始化语句。
+ * @param cleanup 接收协议返回后执行的清理语句。
+ * @return 已转换残余的值。
+ */
+ast::NodePtr LowerPropagationResidual(const ast::NodePtr &value, const std::shared_ptr<MType> &source,
+                                      const std::shared_ptr<MType> &target, Memory::Vector<ast::NodePtr> *prefix, Memory::Vector<ast::NodePtr> *cleanup)
+{
+    using ast::Node;
+    if (SameType(source, target) || (IsInterfaceType(source) && IsInterfaceType(target))) return value;
+    const auto result = AllocateName("__chali_residual_conversion");
+    prefix->push_back(Node::declare(result, LowerType(target, result)));
+    if (IsInterfaceType(target))
+    {
+        g_needsInterfaceBox.insert(source->name);
+        const auto clone = "__chali_iface_copy_" + source->name;
+        prefix->push_back(Node::assign(result, Node::call("__std_iface_box", { "address", "tag", "copy", "drop" },
+                                                          { Node::call(clone, { "source" }, { value }), Node::i(TypeIdOf(source)),
+                                                            FunctionPointerValue(clone), FunctionPointerValue("__chali_iface_drop_" + source->name) })));
+        cleanup->push_back(Node::exprStmt(Node::call("__std_object_free", { "object" }, { Node::var(result) })));
+    }
+    else
+    {
+        const auto from = FindField(source->name, "error");
+        const auto into = FindField(target->name, "error");
+        auto sourceValue = Node::offset(value, Node::i(from->slot), 8);
+        if (from->type->kind != MType::Struct) sourceValue = Node::loadFrom(sourceValue, LowerType(from->type, ""));
+        prefix->push_back(Node::assign(result, Node::alloc(Node::i(std::max(8, StructStride(target))))));
+        auto converted = LowerPropagationResidual(sourceValue, from->type, into->type, prefix, cleanup);
+        // 接口临时仍由本分支持有，包装单独复制后交给接收协议。
+        if (IsObjectLike(into->type)) converted = Node::call(ObjectCopyFunction(into->type), { "value" }, { converted });
+        prefix->push_back(Node::storeAt(Node::offset(Node::var(result), Node::i(into->slot), 8), converted, LowerType(into->type, "")));
+        const auto release = MakeAggregateCleanup(target, Node::var(result));
+        cleanup->insert(cleanup->begin(), release.begin(), release.end());
+        cleanup->push_back(Node::freeMemory(Node::var(result)));
+    }
+    return Node::var(result);
+}
+
+/**
+ * @brief 通过已解析传播协议生成失败返回与成功载荷接管。
+ * @param id 传播表达式节点。
+ * @param info 来源和接收协议。
+ * @return 成功载荷表达式。
+ */
 ast::NodePtr LowerProtocolTry(int id, const MPropagationInfo &info)
 {
     auto sink = g_freshSink;
     const int valueId = N(id).kids[0];
     const auto sourceType = ExprType(valueId);
     const auto source = AllocateName("__chali_try_source");
-    const auto sourceValue = LowerExpr(valueId);
+    const auto sourceValue = IsObjectLike(sourceType) ? OwnedObjectTemp(valueId, sourceType) : LowerExpr(valueId);
     g_freshSink = sink;
     sink->push_back(ast::Node::declare(source, LowerType(sourceType, source)));
     if (IsFreshAggregate(valueId))
@@ -2306,8 +2371,17 @@ ast::NodePtr LowerProtocolTry(int id, const MPropagationInfo &info)
     const auto branch = AllocateName("__chali_try_branch");
     sink->push_back(ast::Node::declare(branch, LowerType(info.branchType, branch)));
     sink->push_back(DefaultInit(branch, info.branchType));
-    sink->push_back(MoveStructValue(ast::Node::var(branch),
-                                    ast::Node::call(sourceType->name + "." + info.branch.name, { "self" }, { ast::Node::var(source) }), info.branchType));
+    ast::NodePtr split;
+    if (IsInterfaceType(sourceType) || IsInterfacePointer(sourceType))
+    {
+        const auto iface = IsInterfacePointer(sourceType) ? sourceType->elem->name : sourceType->name;
+        MarkInterfaceMethodUsed(iface, info.branch.name);
+        split = ast::Node::call(InterfaceLabel(iface, info.branch.name), { "__chali_self", "__chali_readonly" },
+                                { ast::Node::var(source), ast::Node::i(IsReadOnlyAccess(valueId) ? 1 : 0) });
+    }
+    else
+        split = ast::Node::call(sourceType->name + "." + info.branch.name, { "self" }, { ast::Node::var(source) });
+    sink->push_back(MoveStructValue(ast::Node::var(branch), split, info.branchType));
     MarkDestructor(branch, info.branchType);
     const auto yes = FindEnumVariant(info.branchType->name, "Continue");
     const auto no = FindEnumVariant(info.branchType->name, "Break");
@@ -2319,8 +2393,11 @@ ast::NodePtr LowerProtocolTry(int id, const MPropagationInfo &info)
     Memory::Vector<ast::NodePtr> failure;
     failure.push_back(ast::Node::declare(returned, LowerType(g_returnType, returned)));
     failure.push_back(DefaultInit(returned, g_returnType, false, false));
-    const auto residual = EnumPayloadValue(ast::Node::var(branch), info.branchType->name, no->payloads[0]);
+    auto residual = EnumPayloadValue(ast::Node::var(branch), info.branchType->name, no->payloads[0]);
+    Memory::Vector<ast::NodePtr> convertedCleanup;
+    residual = LowerPropagationResidual(residual, info.residual, info.receive.params[0].type, &failure, &convertedCleanup);
     failure.push_back(MoveStructValue(ast::Node::var(returned), ast::Node::call(g_returnType->name + "." + info.receive.name, { info.receive.params[0].emitted }, { residual }), g_returnType));
+    failure.insert(failure.end(), convertedCleanup.begin(), convertedCleanup.end());
     AppendDropsAll(Memory::String(), &failure);
     failure.push_back(ast::Node::ret(ast::Node::var(returned)));
     sink->push_back(ast::Node::ifThenElse(ast::Node::binary("==", tag, ast::Node::i(no->tag)),
@@ -2367,6 +2444,9 @@ ast::NodePtr LowerTry(int id)
     MPropagationInfo info;
     if (!ResolvePropagation(valueId, true, &info)) return Bad();
     const std::shared_ptr<MType> sourceType = ExprType(valueId);
+    if (!SameType(info.residual, info.receive.params[0].type) && HasBorrowedValue(info.residual))
+        g_borrowFacts.push_back({ chali_borrow_checker::Fact::ObjectArgument, BorrowSourceDepth(valueId), 0u,
+                                  g_reductionLine, "（传播转换不能将非全局引用隐藏在拥有接口值中）" });
     Memory::Set<Memory::String> returnedBorrow, residualBorrow;
     if (ContainsBorrowedReferences(g_returnType, &returnedBorrow) && ContainsBorrowedReferences(info.residual, &residualBorrow))
     {
@@ -2377,7 +2457,7 @@ ast::NodePtr LowerTry(int id)
         if (storageBorrow && IsFreshAggregate(valueId)) depth = g_scope.size();
         g_borrowFacts.push_back({ chali_borrow_checker::Fact::Return, depth, 0u, g_reductionLine, "（传播失败载荷不能借用已退出函数的局部存储）" });
     }
-    if (info.moving || !((StandardGeneric(sourceType->name, "Result") && StandardGeneric(g_returnType->name, "Result")) || (StandardGeneric(sourceType->name, "Option") && StandardGeneric(g_returnType->name, "Option"))))
+    if (info.moving || !SameType(info.residual, info.receive.params[0].type) || !((StandardGeneric(sourceType->name, "Result") && StandardGeneric(g_returnType->name, "Result")) || (StandardGeneric(sourceType->name, "Option") && StandardGeneric(g_returnType->name, "Option"))))
         return LowerProtocolTry(id, info);
     const MEnumVariantDef *sourceOk = nullptr;
     const MEnumVariantDef *sourceErr = nullptr;
@@ -4070,13 +4150,13 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
     }
     case MNode::Switch:
     {
-        bool hasDefault = false;
+        bool hasDefault = g_exhaustiveMatches.count(statementId) != 0u;
         const Memory::Vector<int> &cases = N(statement.kids[1]).kids;
         int flow = 0;
         for (const int caseId : cases)
         {
             const MNode &item = N(caseId);
-            if (item.i < 0) hasDefault = true;
+            if (item.i < 0 && item.guard < 0) hasDefault = true;
             int branch = StatementListReturnFlow(item.kids[0], transparentLoops, exits, depth);
             if (statement.s != "match" && (branch & FlowEscape) != 0)
                 branch = (branch & ~FlowEscape) | FlowNext;
@@ -4312,6 +4392,14 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
                             const Memory::Vector<MParam> &params,
                             int bodyId, const Memory::String &module)
 {
+    struct ConstructorBodyScope
+    {
+        bool saved;
+        /** @brief 恢复外层构造体标记，避免嵌套函数继承构造器返回规则。 */
+        ~ConstructorBodyScope() { g_namedConstructorBody = saved; }
+    } constructorBody{ g_namedConstructorBody };
+    g_namedConstructorBody = constructorBody.saved && !owner.empty() && name.size() >= 5u
+                             && name.compare(name.size() - 5u, 5u, "$body") == 0;
     FunctionReferenceStorageScope referenceStorage(bodyId);
     UnsafeScopeGuard unsafeGuard(false, true);
     ClearActiveError();
@@ -4321,11 +4409,6 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     function.owner = owner;
     if (!CheckDeclaredType(result, name)) return {}; /* 返回类型也得声明过 */
     if (!ValidateReturnForms(bodyId, result)) return {};
-    if (result && result->kind != MType::Void && (StatementReturnFlow(bodyId) & (FlowNext | FlowEscape | FlowContinue | FlowValueEscape)) != 0)
-    {
-        Fail("返回类型为 " + Describe(result) + " 的函数 " + name + " 不是所有路径都有 return");
-        return {};
-    }
     const std::shared_ptr<MType> savedReturnType = g_returnType;
     g_returnType = result; /* `return 2;` → `return 2.0;` */
     function.result = LowerType(result, "");
@@ -4447,6 +4530,9 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     } restoreBorrowCapture{ savedBorrowCapture };
     g_borrowFlowCapture = &borrowCapture;
     function.body = LowerStmt(bodyId);
+    if (g_error.empty() && result && result->kind != MType::Void
+        && (StatementReturnFlow(bodyId) & (FlowNext | FlowEscape | FlowContinue | FlowValueEscape)) != 0)
+        Fail("返回类型为 " + Describe(result) + " 的函数 " + name + " 不是所有路径都有 return");
     FinishBorrowFlow(bodyId, borrowCapture);
     /* 名字核对必须赶在 PopScope 之前：局部变量只在这时候还在作用域里。 */
     ValidateLifetimeCurrent();

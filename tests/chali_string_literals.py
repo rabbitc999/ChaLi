@@ -2,6 +2,7 @@
 from compiler_path import compiler_path
 import argparse
 import os
+import re
 import shutil
 from pathlib import Path
 import subprocess
@@ -29,12 +30,18 @@ def main():
         for mode in ('run',):
             target = work / (mode + '')
             runner = isolated_compiler
-            result = subprocess.run([str(runner), mode, str(source), '--out', str(target)], cwd=work, capture_output=True, text=True, encoding='utf-8', timeout=300)
+            env = dict(os.environ)
+            env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
+            result = subprocess.run([str(runner), mode, str(source), '--out', str(target)], cwd=work, env=env, capture_output=True, text=True, encoding='utf-8', timeout=300)
             assert result.returncode == 0, (mode, result.stdout, result.stderr)
             assert result.returncode == 0 and result.stdout == expected and (not result.stderr), (mode, result.stdout, result.stderr)
             if mode == 'run':
-                data = target.with_suffix('.data.bin').read_bytes()
+                llvm = target.with_suffix('.ll').read_text(encoding='utf-8')
+                image = re.search(r'^@chali_data_image = .*?c"(.*)"$', llvm, re.M)
+                assert image, 'LLVM 模块缺少内嵌初始数据'
+                data = bytes(int(byte, 16) for byte in re.findall(r'\\([0-9A-F]{2})', image[1]))
                 assert data.count('literal-pool-data-你好'.encode('utf-8')) == 1, '重复字面量未合并'
+                assert not target.with_suffix('.data.bin').exists()
         for index, statement in enumerate(('"hello"[0] = \'H\';', '"hello"[0]++;', 'char mut& byte = &"hello"[0];')):
             invalid = work / f'readonly-{index}.chl'
             invalid.write_text('void main() { ' + statement + ' }\n', encoding='utf-8')

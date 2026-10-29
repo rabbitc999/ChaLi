@@ -1,0 +1,8 @@
+/* 普通宏参数保存一次求值结果；x++ 只发生一次。 */
+$replace A(x) x + x
+void main() {
+    int64 x = 1;
+    int64 y = $A(x++);
+    assert(x == 2 && y == 2);
+    println("macro increment evaluated once");
+}

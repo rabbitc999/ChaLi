@@ -61,69 +61,69 @@ enum ReflectValue {
         }
         return id;
     }
-    Result<bool,std::reflect::ReflectError> asBool() {
-        Result<bool,std::reflect::ReflectError> result = Result<bool,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { Bool(value) => {result = Result<bool,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<bool,std::lang::Error> asBool() {
+        Result<bool,std::lang::Error> result = Result<bool,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { Bool(value) => {result = Result<bool,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<char,std::reflect::ReflectError> asChar() {
-        Result<char,std::reflect::ReflectError> result = Result<char,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { Char(value) => {result = Result<char,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<char,std::lang::Error> asChar() {
+        Result<char,std::lang::Error> result = Result<char,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { Char(value) => {result = Result<char,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<int8,std::reflect::ReflectError> asI8() {
-        Result<int8,std::reflect::ReflectError> result = Result<int8,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { I8(value) => {result = Result<int8,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<int8,std::lang::Error> asI8() {
+        Result<int8,std::lang::Error> result = Result<int8,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { I8(value) => {result = Result<int8,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<int16,std::reflect::ReflectError> asI16() {
-        Result<int16,std::reflect::ReflectError> result = Result<int16,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { I16(value) => {result = Result<int16,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<int16,std::lang::Error> asI16() {
+        Result<int16,std::lang::Error> result = Result<int16,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { I16(value) => {result = Result<int16,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<int32,std::reflect::ReflectError> asI32() {
-        Result<int32,std::reflect::ReflectError> result = Result<int32,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { I32(value) => {result = Result<int32,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<int32,std::lang::Error> asI32() {
+        Result<int32,std::lang::Error> result = Result<int32,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { I32(value) => {result = Result<int32,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<int64,std::reflect::ReflectError> asI64() {
-        Result<int64,std::reflect::ReflectError> result = Result<int64,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { I64(value) => {result = Result<int64,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<int64,std::lang::Error> asI64() {
+        Result<int64,std::lang::Error> result = Result<int64,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { I64(value) => {result = Result<int64,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<uint8,std::reflect::ReflectError> asU8() {
-        Result<uint8,std::reflect::ReflectError> result = Result<uint8,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { U8(value) => {result = Result<uint8,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<uint8,std::lang::Error> asU8() {
+        Result<uint8,std::lang::Error> result = Result<uint8,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { U8(value) => {result = Result<uint8,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<uint16,std::reflect::ReflectError> asU16() {
-        Result<uint16,std::reflect::ReflectError> result = Result<uint16,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { U16(value) => {result = Result<uint16,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<uint16,std::lang::Error> asU16() {
+        Result<uint16,std::lang::Error> result = Result<uint16,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { U16(value) => {result = Result<uint16,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<uint32,std::reflect::ReflectError> asU32() {
-        Result<uint32,std::reflect::ReflectError> result = Result<uint32,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { U32(value) => {result = Result<uint32,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<uint32,std::lang::Error> asU32() {
+        Result<uint32,std::lang::Error> result = Result<uint32,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { U32(value) => {result = Result<uint32,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<uint64,std::reflect::ReflectError> asU64() {
-        Result<uint64,std::reflect::ReflectError> result = Result<uint64,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { U64(value) => {result = Result<uint64,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<uint64,std::lang::Error> asU64() {
+        Result<uint64,std::lang::Error> result = Result<uint64,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { U64(value) => {result = Result<uint64,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<float32,std::reflect::ReflectError> asF32() {
-        Result<float32,std::reflect::ReflectError> result = Result<float32,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { F32(value) => {result = Result<float32,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<float32,std::lang::Error> asF32() {
+        Result<float32,std::lang::Error> result = Result<float32,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { F32(value) => {result = Result<float32,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<float64,std::reflect::ReflectError> asF64() {
-        Result<float64,std::reflect::ReflectError> result = Result<float64,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { F64(value) => {result = Result<float64,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<float64,std::lang::Error> asF64() {
+        Result<float64,std::lang::Error> result = Result<float64,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { F64(value) => {result = Result<float64,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
-    Result<std::lang::String,std::reflect::ReflectError> asText() {
-        Result<std::lang::String,std::reflect::ReflectError> result = Result<std::lang::String,std::reflect::ReflectError>::Err(ReflectError::TypeMismatch);
-        match(self) { Text(value) => {result = Result<std::lang::String,std::reflect::ReflectError>::Ok(value);} _ => {} }
+    Result<std::lang::String,std::lang::Error> asText() {
+        Result<std::lang::String,std::lang::Error> result = Result<std::lang::String,std::lang::Error>::Err(ReflectError::TypeMismatch);
+        match(self) { Text(value) => {result = Result<std::lang::String,std::lang::Error>::Ok(value);} _ => {} }
         return result;
     }
 };
@@ -195,25 +195,25 @@ List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::lang::String n
 }
 
 // 编译器只为已使用的具体签名生成桥接；所有动态参数均须精确匹配。
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> call(std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<T,std::reflect::ReflectError> construct<T>(List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> call(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<T,std::lang::Error> construct<T>(List<std::reflect::ReflectValue> args);
 /** 按名称读取字段的独立值；字段类型必须与 F 精确一致，不返回内部引用。 */
-Result<F,std::reflect::ReflectError> getField<T,F>(T const& obj, std::lang::String name);
+Result<F,std::lang::Error> getField<T,F>(T const& obj, std::lang::String name);
 /** 按名称写入字段，沿用普通赋值的复制、释放与借用规则。 */
-Result<bool,std::reflect::ReflectError> setField<T,F>(T mut& obj, std::lang::String name, F value);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
-Result<std::reflect::ReflectValue,std::reflect::ReflectError> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<bool,std::lang::Error> setField<T,F>(T mut& obj, std::lang::String name, F value);
+Result<std::reflect::ReflectValue,std::lang::Error> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,std::lang::Error> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args);
 int64 __reflect_actualType<I>(I const& obj);
 /** 根据反射暴露的具体类型生成精确 JSON 编码。 */
-Result<String,MessageError> __serializeJson<T>(T const& value);
+Result<String,std::lang::Error> __serializeJson<T>(T const& value);
 /** 根据反射暴露的具体类型生成校验后的 JSON 解码。 */
-Result<T,MessageError> __deserializeJson<T>(String text);
+Result<T,std::lang::Error> __deserializeJson<T>(String text);
 String __serdeQuote(String value);
 String __serdeFloat(float64 value);
 bool __serdeFinite(float64 value);

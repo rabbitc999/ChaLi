@@ -144,7 +144,7 @@ for src in "$SAMPLES"/*.chl; do
     fi
     raw="$actual.raw"
     if [ -n "$stdinFile" ]; then
-        "$DEMO" run "$src" --out "$actual.compile" "$@" <"$stdinFile" >"$raw" 2>"$actual.err"
+        CHALI_NO_STDIN_INPUT=0 "$DEMO" run "$src" --out "$actual.compile" "$@" <"$stdinFile" >"$raw" 2>"$actual.err"
     else
         "$DEMO" run "$src" --out "$actual.compile" "$@" >"$raw" 2>"$actual.err"
     fi

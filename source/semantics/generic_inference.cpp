@@ -48,6 +48,9 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
     if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ found->second.name, arguments };
     type->name = found->second.module.empty() ? name : found->second.module + "::" + name;
     if (!type->genericMember.empty()) type->name += "::" + type->genericMember;
+    for (const int declaration : g_top)
+        if (N(declaration).kind == MNode::InterfaceDecl && N(declaration).s == type->name)
+            type->kind = MType::Obj;
     type->unresolvedName = false;
     type->genericBase.clear();
     type->genericArguments.clear();
@@ -113,7 +116,7 @@ Memory::String InferenceTypeText(const std::shared_ptr<MType> &type)
         }
         return text + ")";
     }
-    if (type->kind == MType::Struct || type->kind == MType::Host) return type->name;
+    if (type->kind == MType::Struct || type->kind == MType::Host || IsInterfaceType(type)) return type->name;
     if (type->kind == MType::Ptr)
     {
         auto text = InferenceTypeText(type->elem);

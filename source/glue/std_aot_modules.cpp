@@ -8,6 +8,7 @@
 #include "std_collection.hpp"
 #include "std_file.hpp"
 #include "std_big_number.hpp"
+#include "std_demo.hpp"
 #include "std_cas.hpp"
 
 /* 统一的"标准胶水"注册入口：编译器 VM（InstallDemoGlue）与独立 VM 宿主（bindChaLiStandardGlue）

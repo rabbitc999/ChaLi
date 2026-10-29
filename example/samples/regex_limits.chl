@@ -12,7 +12,7 @@ void main() {
             i = i + 1;
         }
     }
-    Result<std::regex::Regex, std::regex::RegexError> longRule = std::regex::Regex::compile(oversized);
+    Result<std::regex::Regex, Error> longRule = std::regex::Regex::compile(oversized);
     assert(longRule.isOk());
     assert(longRule.unwrap().fullMatch(oversized));
 
@@ -21,7 +21,7 @@ void main() {
         int64 i = 0;
         while (i < 300) {
 
-        Result<std::regex::Regex, std::regex::RegexError> item =
+        Result<std::regex::Regex, Error> item =
         std::regex::Regex::compile(format("x{}y", i));
         assert(item.isOk());
     
@@ -31,7 +31,7 @@ void main() {
     int64 after = std::memory::Memory::stats().liveBlocks;
     assert(after == before);
 
-    Result<std::regex::Regex, std::regex::RegexError> bad = std::regex::Regex::compile("[");
+    Result<std::regex::Regex, Error> bad = std::regex::Regex::compile("[");
     assert(bad.isErr());
     println("regex limits OK");
 }

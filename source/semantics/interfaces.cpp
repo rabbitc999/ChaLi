@@ -323,7 +323,7 @@ Memory::String Describe(const std::shared_ptr<MType> &type)
         }
         return text + ")";
     }
-    case MType::Obj: return "std::lang::Any";
+    case MType::Obj: return IsInterfaceType(type) ? type->name : Memory::String("std::lang::Any");
     case MType::Ptr:
     {
         const Memory::String star = type->readOnly ? " const&" : " mut&";
@@ -370,7 +370,7 @@ bool SameType(const std::shared_ptr<MType> &left, const std::shared_ptr<MType> &
     case MType::Double:
         return left->bits == right->bits;
     case MType::Obj:
-        return true; /* 装箱格子只有一种（里面装什么不看静态类型，看运行期的类型号） */
+        return left->name == right->name;
     /* 解析后的名义类型键保留不同模块同名类型的身份。 */
     case MType::Struct:
         if (g_structs.count(left->name) && g_structs.count(right->name)) return left->name == right->name;
@@ -428,7 +428,7 @@ Memory::String TypeTag(const std::shared_ptr<MType> &type)
 
     case MType::Host: return "host_" + type->name;
     case MType::Opcode: return type->name;
-    case MType::Obj: return "Any";
+    case MType::Obj: return IsInterfaceType(type) ? type->name : Memory::String("Any");
     case MType::Struct: return type->name;
     case MType::Ptr: return TypeTag(type->elem) + (type->readOnly ? "_const_ptr" : "_ptr");
     case MType::Func:
@@ -540,6 +540,10 @@ bool Acceptable(const std::shared_ptr<MType> &param, const std::shared_ptr<MType
         return SameType(param->elem, argument->elem);
     }
     if (!widening || !param || !argument) return false;
+    if (IsInterfaceType(param))
+        return IsInterfaceType(argument) ? InterfaceIsOrExtends(argument->name, param->name) :
+                                           argument->kind == MType::Struct && ImplementsInterface(argument->name, param->name)
+                                               && !TypeNonCopyable(argument);
     // 开放长度的值参数接收一维定长数组，复制路径使用同一长度头与元素布局。
     if (IsRuntimeArray(param) && argument->kind == MType::Array && argument->dims.size() == 1u && SameType(param->elem, argument->elem))
         return true;
@@ -629,7 +633,7 @@ bool CheckStoredAddress(int valueId, const Memory::String &where)
 bool CheckContainerArgument(const std::shared_ptr<MType> &expected, int valueId,
                             const Memory::String &where, bool stored)
 {
-    if (stored && expected && expected->kind != MType::Struct && expected->kind != MType::Ptr && !HasImplicitConversion(ExprType(valueId), expected) && !CheckStoredAddress(valueId, where)) return false;
+    if (stored && expected && expected->kind != MType::Struct && expected->kind != MType::Ptr && !IsInterfaceType(expected) && !HasImplicitConversion(ExprType(valueId), expected) && !CheckStoredAddress(valueId, where)) return false;
     if (IsObjGetCall(valueId)) return true; /* get() uses the expected type at lowering. */
     const std::shared_ptr<MType> actual = expected && expected->kind == MType::Ptr ? RawExprType(valueId) : ExprType(valueId);
     if (expected && actual && (TypeKey(expected) == TypeKey(actual) || ((!IsContainer(expected) && expected->kind != MType::Array) && Acceptable(expected, actual, true))))

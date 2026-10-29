@@ -208,6 +208,12 @@ void ObjectStore::releaseContents(const RuntimeObject &object)
 
 {
     invalidateNativeRecordViews();
+    if (object.interfaceDrop)
+    {
+        NativeCallContextImpl context(recordContext, recordContext.invoker);
+        NativeValue result;
+        context.invoke(object.interfaceDrop, { NativeValue::fromInt(object.objValue.integer) }, result);
+    }
     if (object.kind == ObjectKind::NativeRecord && object.nativeType && object.nativeType->dispose)
     {
         NativeCallContextImpl host(recordContext);
@@ -286,6 +292,17 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
         return nullptr;
     }
     auto copy = Memory::makeShared<RuntimeObject>(object);
+    if (object.interfaceCopy)
+    {
+        NativeCallContextImpl context(recordContext, recordContext.invoker);
+        NativeValue result;
+        if (!context.invoke(object.interfaceCopy, { NativeValue::fromInt(object.objValue.integer) }, result))
+        {
+            if (error) *error = recordContext.error;
+            return nullptr;
+        }
+        copy->objValue.integer = result.integer;
+    }
     copy->elementViews.clear();
     copy->refreshingViews = false;
     for (ObjectValue &value : copy->items)

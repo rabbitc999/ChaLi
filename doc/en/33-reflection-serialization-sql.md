@@ -14,7 +14,7 @@ A model without `@Reflect` returns an error instead.
 ## Codecs and fields
 
 Each module provides `serialize<T>(T const& value)` and `deserialize<T>(...)`, returning
-`Result<Output, MessageError>`. JSON and TOML use text; serialization uses `List<uint8>`.
+`Result<Output, Error>`. JSON and TOML use text; serialization uses `List<uint8>`.
 Pass `&value` when encoding. Decoded values own independent storage.
 
 Codecs validate missing fields, numeric ranges, input kinds, and supported types.

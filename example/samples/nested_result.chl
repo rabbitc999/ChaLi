@@ -82,13 +82,13 @@ Result<int64, SyntaxError> parse(String field, String text) {
     if (text == "") {
         return Result<int64, SyntaxError>::Err(SyntaxError::EmptyField(field));
     }
-    Result<int64, std::parse::ParseError> parsed = std::parse::Parse::parseInt64(text);
+    Result<int64, Error> parsed = std::parse::Parse::parseInt64(text);
     Result<int64, SyntaxError> result;
     match (parsed) {
-        Result<int64, std::parse::ParseError>::Ok(value) => {
+        Result<int64, Error>::Ok(value) => {
             result = Result<int64, SyntaxError>::Ok(value);
         }
-        Result<int64, std::parse::ParseError>::Err(error) => {
+        Result<int64, Error>::Err(error) => {
             result = Result<int64, SyntaxError>::Err(SyntaxError::NotANumber(field, text));
         }
     }

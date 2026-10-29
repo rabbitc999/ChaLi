@@ -7,7 +7,7 @@
 ChaLi's built-in modules, grouped by capability. Everything needs an `import` except the core module
 `std::lang`.
 
-Concrete standard-library errors implement the core `Error` interface and provide diagnostics through `toString()`. `IoError`, `ParseError`, `CsvError` and the other structured errors retain their variants, positions and original messages. Text-only failures use `MessageError`, constructed with `MessageError::from(text)`. Shared handlers accept `Error const&` or use an `<E: Error>` constraint. `Result<T, E>` retains its concrete error type, including during `?` propagation.
+Standard-library failures use `Result<T, Error>` with an owned interface payload that retains the concrete error. IoError, ParseError, CsvError and other structured errors keep their variants, positions and messages. Text errors use MessageError::from(text) before boxing as Error. Shared handlers accept an Error value, Error const& or an E: Error generic constraint. Custom Result<T, E> values may retain a concrete E; when E implements Error, ? can propagate into a function returning Result<U, Error>.
 
 ```chali
 import std::math;
@@ -15,10 +15,10 @@ import std::json;
 void main() {
     println("sin0={} sqrt16={}", std::math::sin(0.0), std::math::sqrt(16.0));
     match (std::json::parse("{\"a\": 1}")) {
-        Result<std::json::JsonValue, MessageError>::Ok(doc) => {
+        Result<std::json::JsonValue, Error>::Ok(doc) => {
             println("isObject={} len={}", doc.isObject(), doc.len());
         }
-        Result<std::json::JsonValue, MessageError>::Err(e) => { println("err={}", e); }
+        Result<std::json::JsonValue, Error>::Err(e) => { println("err={}", e); }
     }
 }
 ```
@@ -66,7 +66,7 @@ No `import` needed.
 | Module | Contents |
 | --- | --- |
 | `std::text` | `Text::find` `split` `join` `replace` `trim` `toUpper` `padStart` … |
-| `std::json` | `parse` → `Result<JsonValue, MessageError>`; `isInt` `isObject` `len` `asInt` `asString` … |
+| `std::json` | `parse` → `Result<JsonValue, Error>`; `isInt` `isObject` `len` `asInt` `asString` … |
 | `std::toml` | TOML document access, isomorphic to the JSON API |
 | `std::regex` | patterns are cached host-side by string; ChaLi holds only an integer handle |
 | `std::parse` | string → integer parsing with `ParseError` |

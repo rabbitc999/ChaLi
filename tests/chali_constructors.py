@@ -88,6 +88,7 @@ void main() {
 
     def test_rejections(self):
         cases = {'wrong_return_type': 'struct V{static int64 create(){}};void main(){}', 'void_return_type': 'struct V{static void create(){}};void main(){}', 'return_value': 'struct V{static V create(){V v;return v;}};void main(){}', 'wrong_argument': 'struct V{static V create(int64 n){}};void main(){V v=V::create("x");}', 'variadic': 'struct V{static V create(int64... n){}};void main(){}', 'ordinary_static_self': 'struct V{int64 n;static void reset(){self.n=1;}};void main(){}', 'discarded': 'struct V{static V create(){}};void main(){V::create();}', 'discarded_parentheses': 'struct V{static V create(){}};void main(){(V::create());}', 'discarded_generic': 'struct V<T>{static V<T> create(){}};void main(){V<int64>::create();}', 'discarded_enum': 'enum V{Empty;static V create(){}};void main(){V::create();}'}
+        cases['nested_self_return'] = 'struct V{static V create(){void nested(){return self;}nested();}};void main(){}'
         for name, code in cases.items():
             with self.subTest(case=name):
                 source = self.work / (name + '.chl')

@@ -8,7 +8,7 @@
 
 按能力域列出 ChaLi 自带的模块。除核心模块 `std::lang` 自动加载外，其余都要 `import`。
 
-标准库的具体错误类型统一实现核心接口 `Error`，通过 `toString()` 获取诊断。`IoError`、`ParseError`、`CsvError` 等继续保留枚举分支、错误位置和原始消息；只有文本诊断的接口返回 `MessageError`，使用 `MessageError::from(text)` 构造。通用函数可以接收 `Error const&`，或使用 `<E: Error>` 约束。`Result<T, E>` 保留具体的 `E`，`?` 传播时保留这个类型与错误内容。
+标准库失败返回统一使用 `Result<T, Error>`，拥有接口载荷中仍保存具体错误。`IoError`、`ParseError`、`CsvError` 等保留枚举分支、位置和原始消息；文本错误以 `MessageError::from(text)` 构造后装入 Error。通用函数可接收 Error 值、`Error const&` 或使用 `<E: Error>` 约束。自定义 `Result<T, E>` 仍可保留具体 E；当 E 实现 Error 时，`?` 支持向返回 `Result<U, Error>` 的函数传播。
 
 ```chali
 import std::math;
@@ -16,10 +16,10 @@ import std::json;
 void main() {
     println("sin0={} sqrt16={}", std::math::sin(0.0), std::math::sqrt(16.0));
     match (std::json::parse("{\"a\": 1}")) {
-        Result<std::json::JsonValue, MessageError>::Ok(doc) => {
+        Result<std::json::JsonValue, Error>::Ok(doc) => {
             println("isObject={} len={}", doc.isObject(), doc.len());
         }
-        Result<std::json::JsonValue, MessageError>::Err(e) => { println("err={}", e); }
+        Result<std::json::JsonValue, Error>::Err(e) => { println("err={}", e); }
     }
 }
 ```
@@ -67,7 +67,7 @@ isObject=1 len=1
 | 模块 | 内容 |
 | --- | --- |
 | `std::text` | `Text::find` `split` `join` `replace` `trim` `toUpper` `padStart` …；`kmpFind` `kmpFindAll` `kmpFailureTable` 是字节级 KMP |
-| `std::json` | `parse` → `Result<JsonValue, MessageError>`；`isInt` `isObject` `len` `asInt` `asString` … |
+| `std::json` | `parse` → `Result<JsonValue, Error>`；`isInt` `isObject` `len` `asInt` `asString` … |
 | `std::toml` | 与 json 同构的 TOML 文档访问 |
 | `std::regex` | 模式在宿主侧按串缓存，ChaLi 侧只持整数句柄 |
 | `std::parse` | 字符串 → 整数的解析，带 `ParseError` |

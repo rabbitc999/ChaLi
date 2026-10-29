@@ -39,7 +39,7 @@ def check_contract():
             assert not depth, (file, start)
             if separator is not None:
                 error = text[separator + 1:cursor - 1].strip().split("::")[-1]
-                assert error in errors or error in {"E", "F"}, (file, error)
+                assert error in {"Error", "E", "F"}, (file, error)
             offset = cursor
 
 
@@ -53,10 +53,10 @@ SCENARIOS = {
     "utf8": 'assert((std::utf8::Utf8Error::InvalidSequence(12)).toString().contains("12"));',
     "regex": 'assert((std::regex::RegexError::Invalid).toString() != "");',
     "reflect": 'assert((std::reflect::ReflectError::NotFound).toString() != "");',
-    "json": 'Result<std::json::JsonValue, MessageError> result = std::json::parse("{bad"); assert(result.isErr()); assert(result.error().toString() != ""); assert(readNumber("42").unwrap() == 42); assert(readNumber("{bad").isErr());',
-    "toml": 'Result<std::toml::TomlValue, MessageError> result = std::toml::parse("x = ["); assert(result.isErr()); assert(result.error().toString() != "");',
-    "image": 'Result<Image, MessageError> result = Image::make(0, 1); assert(result.isErr()); assert(result.error().toString().contains("宽高"));',
-    "sql": 'Query query; query.page(-1); Result<SqlStatement, MessageError> result = query.build(); assert(result.isErr()); assert(result.error().toString().contains("分页"));',
+    "json": 'Result<std::json::JsonValue, Error> result = std::json::parse("{bad"); assert(result.isErr()); assert(result.error().toString() != ""); assert(readNumber("42").unwrap() == 42); assert(readNumber("{bad").isErr());',
+    "toml": 'Result<std::toml::TomlValue, Error> result = std::toml::parse("x = ["); assert(result.isErr()); assert(result.error().toString() != "");',
+    "image": 'Result<Image, Error> result = Image::make(0, 1); assert(result.isErr()); assert(result.error().toString().contains("宽高"));',
+    "sql": 'Query query; query.page(-1); Result<SqlStatement, Error> result = query.build(); assert(result.isErr()); assert(result.error().toString().contains("分页"));',
 }
 ERROR_VALUES = {
     'cli': 'error', 'csv': 'error',
@@ -87,7 +87,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="chali-error-modules-") as directory:
         for module, statements in SCENARIOS.items():
             source = Path(directory) / (module + ".chl")
-            helper = ('Result<int64, MessageError> readNumber(String text) { let value = std::json::parse(text)?; return Result<int64, MessageError>::Ok(value.asInt().unwrap()); }\n' if module == "json" else "")
+            helper = ('Result<int64, Error> readNumber(String text) { let value = std::json::parse(text)?; return Result<int64, Error>::Ok(value.asInt().unwrap()); }\n' if module == "json" else "")
             helper += ('String describe<E: Error>(E error) { return error.toString(); }\n'
                        'String describeInterface(Error const& error) { return error.toString(); }\n')
             checks = ('let witness = ' + ERROR_VALUES[module] + '; '

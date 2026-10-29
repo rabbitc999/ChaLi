@@ -50,8 +50,8 @@ int main()
     preprocess::Result legacy;
     legacy.text = "action(fn(x) -> let {x});";
     Memory::String migration;
-    require(!chali_lambda::run(legacy, migration) && migration.find("0.12.0") != Memory::String::npos,
-            "省略形参类型的旧箭头 lambda 绕过了迁移检查");
+    require(chali_lambda::run(legacy, migration) && legacy.text == "action(fn(x) -> let {x});",
+            "箭头写法应保留给权威文法处理，预处理不能误改函数类型");
     text = lower("apply(fn(x) {\"a;b\"}, 2);");
     require(text.find("return \"a;b\";") != Memory::String::npos, "字符串分号影响了函数体分类");
     text = lower("apply(fn(x) { /* ; return */ 7 }, 2);");

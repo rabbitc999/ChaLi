@@ -11,7 +11,8 @@ bool ContainsBorrowedReferences(const std::shared_ptr<MType> &type,
 {
     if (!type) return false;
     // Any 可以装入非拥有引用，复制盒子并不会延长引用来源的生命周期。
-    if (type->kind == MType::Func || type->kind == MType::Ptr || (includeObject && type->kind == MType::Obj)) return true;
+    if (type->kind == MType::Func || type->kind == MType::Ptr
+        || (includeObject && type->kind == MType::Obj && !IsInterfaceType(type))) return true;
     if (IsTupleType(type))
     {
         for (const auto &element : type->paramTypes)

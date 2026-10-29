@@ -310,6 +310,7 @@ Memory::Set<Memory::String> PropagationInterfaces(const Memory::String &owner, c
     Memory::Vector<Memory::String> pending;
     const auto definition = FindStruct(owner);
     if (definition) pending = definition->interfaces;
+    if (g_interfaces.count(owner)) pending.push_back(owner);
     while (!pending.empty())
     {
         const auto name = pending.back();
@@ -330,6 +331,21 @@ Memory::Set<Memory::String> PropagationInterfaces(const Memory::String &owner, c
  */
 bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method, Memory::Set<Memory::String> *visiting);
 /**
+ * @brief 判断传播残余能否增加接口抽象，保留标准错误包装的语义。
+ * @param source 来源残余类型。
+ * @param target 接收协议要求的残余类型。
+ * @return 类型相同或具有合法接口转换时为真。
+ */
+bool CompatiblePropagationResidual(const std::shared_ptr<MType> &source, const std::shared_ptr<MType> &target)
+{
+    if (SameType(source, target)) return true;
+    if (IsInterfaceType(target)) return Acceptable(target, source, true);
+    if (source && target && source->kind == MType::Struct && target->kind == MType::Struct
+        && StandardGeneric(source->name, "ErrorResidual") && StandardGeneric(target->name, "ErrorResidual"))
+        return CompatiblePropagationResidual(FieldType(source->name, "error"), FieldType(target->name, "error"));
+    return false;
+}
+/**
  * @brief 解析错误传播使用的枚举变体与结果类型。
  * @param value 待转换、保存或参与计算的值。
  * @param target 待访问或修改的目标。
@@ -339,31 +355,39 @@ bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method, M
 bool ResolvePropagation(int value, bool target, MPropagationInfo *info)
 {
     auto source = ExprType(value);
-    if (!source || source->kind != MType::Struct) return Fail("? 的来源类型必须显式实现 Try<T,R> 或 TryMove<T,R>，现在给的是 " + Describe(source));
+    if (!source || (source->kind != MType::Struct && !IsInterfaceType(source) && !IsInterfacePointer(source))) return Fail("? 的来源类型必须显式实现 Try<T,R> 或 TryMove<T,R>，现在给的是 " + Describe(source));
+    const auto sourceName = IsInterfacePointer(source) ? source->elem->name : source->name;
     const auto node = N(value);
     const bool explicitMove = node.kind == MNode::Call && !node.kids.empty() && ((N(node.kids[0]).kind == MNode::Var && N(node.kids[0]).s == "__move") || (N(node.kids[0]).kind == MNode::EnumCtor && N(node.kids[0]).s2 == "__move"));
     info->moving = explicitMove || IsFreshAggregate(value);
-    auto protocols = PropagationInterfaces(source->name, info->moving ? "TryMove" : "Try");
+    auto protocols = PropagationInterfaces(sourceName, info->moving ? "TryMove" : "Try");
     if (protocols.empty() && !explicitMove)
     {
         info->moving = false;
-        protocols = PropagationInterfaces(source->name, "Try");
+        protocols = PropagationInterfaces(sourceName, "Try");
     }
     if (protocols.size() != 1u) return Fail("? 的来源类型必须具有唯一传播协议：" + Describe(source));
     const auto &requirements = g_interfaces[*protocols.begin()];
     if (requirements.size() != 1u) return Fail("传播协议必须只有一个拆分方法");
     const auto &required = requirements[0];
-    const auto definition = FindStruct(source->name);
+    const auto definition = FindStruct(sourceName);
     bool found = false;
-    for (const auto &method : definition->methods)
-        if (!method.superseded && SameInterfaceSignature(required, method))
-        {
-            info->branch = method;
-            found = true;
-            break;
-        }
+    if (IsInterfaceType(source) || IsInterfacePointer(source))
+    {
+        info->branch.name = required.name;
+        info->branch.result = required.result;
+        found = true;
+    }
+    if (definition)
+        for (const auto &method : definition->methods)
+            if (!method.superseded && SameInterfaceSignature(required, method))
+            {
+                info->branch = method;
+                found = true;
+                break;
+            }
     Memory::Set<Memory::String> visiting;
-    if (found && !info->moving && MethodMutatesReceiver(source->name, info->branch, &visiting))
+    if (found && definition && !info->moving && MethodMutatesReceiver(sourceName, info->branch, &visiting))
         return Fail("Try.branch 必须是只读拆分，移动传播请实现 TryMove.intoBranch");
     if (!found || !StandardGeneric(required.result->name, "TryBranch")) return Fail("传播拆分方法必须返回 TryBranch<T,R>");
     info->branchType = required.result;
@@ -375,20 +399,28 @@ bool ResolvePropagation(int value, bool target, MPropagationInfo *info)
     if (!target) return true;
     auto receivers = g_returnType ? PropagationInterfaces(g_returnType->name, "FromResidual") : Memory::Set<Memory::String>();
     found = false;
+    bool exactReceiver = false;
+    bool ambiguousReceiver = false;
     for (const auto &receiver : receivers)
         for (const auto &contract : g_interfaces[receiver])
         {
-            if (!contract.isStatic || !SameType(contract.result, g_returnType) || contract.params.size() != 1u || !SameType(contract.params[0], info->residual)) continue;
+            if (!contract.isStatic || !SameType(contract.result, g_returnType) || contract.params.size() != 1u || !CompatiblePropagationResidual(info->residual, contract.params[0])) continue;
+            const bool exact = SameType(contract.params[0], info->residual);
+            if (exactReceiver && !exact) continue;
             const auto destination = FindStruct(g_returnType->name);
             for (const auto &method : destination->methods)
                 if (!method.superseded && SameInterfaceSignature(contract, method))
                 {
-                    if (found) return Fail("错误传播接收协议重复");
+                    if (found && exactReceiver && exact) return Fail("错误传播接收协议重复");
+                    if (found && !exactReceiver && !exact) ambiguousReceiver = true;
+                    if (exact) ambiguousReceiver = false;
                     info->receive = method;
                     found = true;
+                    exactReceiver = exact;
                 }
         }
     if (!found) return Fail("无法传播 " + PropagationTypeText(info->residual) + "：返回类型 " + PropagationTypeText(g_returnType) + " 未实现匹配的 FromResidual<F,R>");
+    if (ambiguousReceiver) return Fail("错误传播接收协议转换不明确");
     return true;
 }
 
@@ -841,6 +873,8 @@ std::shared_ptr<MType> RawExprType(int id)
     case MNode::GenericClosureSelect: return ExprType(node.kids[0]);
     case MNode::Var:
     {
+        if (node.s2 == "__chali_typed_pattern")
+            return Fail("类型载荷模式只能出现在 match 分支中"), T(M_TypeVoid());
         if (!NodeUsesDefinitionLookup(node) && FindGenericClosureDefinition(node.s)) return GenericClosureType(node.s);
         const MVar *found = FindNodeVar(node);
         if (found != nullptr) return found->type;
@@ -1067,7 +1101,7 @@ std::shared_ptr<MType> RawExprType(int id)
                         return T(M_TypeBigInt());
                 }
                 /* `obj`：`copy()` 给独立盒子；`name()` 给类型号，`get()` 看上下文。 */
-                if (baseType && baseType->kind == MType::Obj)
+                if (baseType && baseType->kind == MType::Obj && !IsInterfaceType(baseType))
                 {
                     if (calleeNode.s == "copy") return baseType;
                     if (calleeNode.s == "clear") return T(M_TypeVoid());
@@ -1078,11 +1112,11 @@ std::shared_ptr<MType> RawExprType(int id)
                     return T(M_TypeInt());
                 }
                 /* 接口引用上的方法：结果类型就是**接口里声明的返回类型**。 */
-                if (IsInterfacePointer(baseType))
+                if (IsInterfacePointer(baseType) || IsInterfaceType(baseType))
                 {
                     std::shared_ptr<MType> interfaceResult;
                     Memory::Vector<std::shared_ptr<MType>> interfaceParams;
-                    if (FindInterfaceMethod(baseType->elem->name, calleeNode.s, &interfaceResult,
+                    if (FindInterfaceMethod(IsInterfaceType(baseType) ? baseType->name : baseType->elem->name, calleeNode.s, &interfaceResult,
                                             &interfaceParams))
                     {
                         return interfaceResult;

@@ -166,14 +166,18 @@ void main() {
 }
 ```
 
-`1 + 2` remains a complete operand, so the square is 9. Expansion adds no automatic parentheses, argument cache, closure or scope. `$SQUARE(next())` still evaluates `next()` twice. Write a semicolon after a statement macro invocation. Templates splice statements into the surrounding list; a block expression requires an explicit `{ ... yield value; }` in the template.
+Expression arguments are each evaluated once, from left to right, and their saved values are reused inside the macro. `$SQUARE(1 + 2)` is 9; `$SQUARE(next())` calls next once, while two separate next arguments call it twice. Ordinary parameters have value semantics: modifying one changes its copy, without a warning. Copies can be eliminated only when evaluation count, aliasing, ownership and observable behavior remain equivalent. Statement invocations still require a semicolon. Identifier, type and statement parameters retain their respective syntax and source information.
 
 ## Groups, variadic fragments and bindings
+
+Use `$macro BUMP_REF(mut &n)` to modify the caller's writable value, and `$macro READ(&n)` for a readonly borrow. With an ordinary `$macro BUMP(n)` containing `n = n + 1;`, `$BUMP(x)` changes only the saved copy and produces no warning. A mutable reference parameter rejects readonly sources; a readonly reference parameter rejects writes. Aliasing and lifetime checks still apply. The compiler may remove a copy only when observable behavior is preserved.
+
+Ordinary parameter types are inferred from their arguments. An otherwise unconstrained integer literal defaults to int64; pass an explicitly typed value, such as `$SQUARE((int32)3)`, when another width is needed. References contained in a copied value retain their original borrow relationships.
 
 `$macro A` requires `$A`; `$macro A()` requires `$A()`. Square, round and curly groups must match in order and shape; repeated groups are allowed. Each group can end with `...rest` or `..rest`, including an empty capture. An applicable fixed signature takes priority over a variadic signature.
 
 ```chali
-$macro ACCUMULATE(out)[...values]
+$macro ACCUMULATE(mut &out)[...values]
 $for value in values
 int64 temporary = value;
 out += temporary;
@@ -208,7 +212,7 @@ void main() {
 }
 ```
 
-`T:value` uses only that argument's static type. A parameter without a source uses only the expected result type. Explicit types take priority. Inference does not evaluate arguments, insert conversions or switch sources. `let x = $RESULT(42)` fails because no expected type is available. Macro value parameters, specialization, partial specialization and arbitrary compile-time function execution are outside this interface.
+`T:value` uses only that argument's static type. A parameter without a source uses only the expected result type. Explicit types take priority. Inference does not evaluate arguments, insert conversions or switch sources; runtime expression arguments are still evaluated once each after expansion. `let x = $RESULT(42)` fails because no expected type is available. Macro value parameters, specialization, partial specialization and arbitrary compile-time function execution are outside this interface.
 
 ## Complete syntax matching
 

@@ -169,6 +169,9 @@ run_step "验证反射序列化与注解动态 SQL" "$PYTHON" tests/chali_reflec
 run_step "验证 CAS 核心全部回归" "$PYTHON" tests/cas_library.py
 run_step "验证卫生宏绑定、正则、AST 替换及生成解析器" "$PYTHON" tests/macro_foundations.py
 run_step "验证 AST 表达式宏语义与 VM 执行" "$PYTHON" tests/chali_ast_macros.py --default
+run_step "验证卫生宏参数副本、引用与单次求值" "$PYTHON" tests/chali_macro_parameters.py --chali "$CHALI_BIN"
+run_step "验证接口值、联合匹配与传播转换" "$PYTHON" tests/chali_interface_values.py --chali "$CHALI_BIN"
+run_step "验证 else if 与 elif 统一分支语义" "$PYTHON" tests/chali_else_if.py --chali "$CHALI_BIN"
 run_step "验证宏完整片段分类与正则分支" "$PYTHON" tests/chali_macro_branches.py --default
 run_step "验证卫生宏参数分组、片段循环与调用来源" "$PYTHON" tests/chali_macro_groups.py --default
 run_step "验证卫生宏静态类型参数推导" "$PYTHON" tests/chali_macro_generics.py --default
@@ -330,6 +333,8 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
     run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"
+    run_step "运行反射学生管理的持久化与校验回归" "$PYTHON" tests/chali_reflection_students.py --compiler "$CHALI_BIN"
+    run_step "检查学生管理服务器的统一错误类型" "$CHALI_BIN" check example/students-server/src/main.chl
     run_step "运行默认 program 模块回归" "$PYTHON" tests/chali_default_module.py --chali "$CHALI_BIN"
     run_step "运行默认模块与外部宏补全回归" "$PYTHON" tests/chali_lsp_macro_completion.py --chali "$CHALI_BIN"
     run_step "运行函数与宏重载提示回归" "$PYTHON" tests/chali_lsp_overloads.py --chali "$CHALI_BIN"

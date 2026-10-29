@@ -72,6 +72,7 @@ private:
         BoundTemplate bound;
         Memory::Vector<BindingId> parameters;
         Memory::Vector<std::string> names;
+        Memory::Vector<int> modes;  ///< 零为值参数，一为只读引用，二为可写引用。
         std::vector<Group> groups;
         ScopeId scope = 0;
         ContextId context = 0;

@@ -8,6 +8,8 @@
 
 `if` 可用于初始化、赋值、函数实参、返回值及嵌套表达式。简单分支只包含一个无分号表达式；复杂分支通过 `yield 值;` 给出结果。
 
+`else if` 是 `elif` 的等价语法糖，可以混用；语句和值表达式共用相同分支语义，只求值到被选中的分支。各分支仍须有大括号，值表达式仍须提供最终 else。
+
 ```chali
 int32 p = 1;
 bool odd = if (p % 2 == 1) { true } else { false };
@@ -35,11 +37,17 @@ interface TryMove<T,R> { TryBranch<T,R> intoBranch(); };
 interface FromResidual<F,R> { static F fromResidual(R residual); };
 ```
 
-来源显式实现唯一 `Try<T,R>`，成功分支给出 T；失败分支携带 R。当前函数返回类型 F 必须实现 `FromResidual<F,R>`。协议精确匹配，不搜索隐式转换链。静态接口方法属于编译期契约，不通过接口对象动态分派。
+来源显式实现唯一 `Try<T,R>`，成功分支给出 T；失败分支携带 R。当前函数返回类型 F 必须实现相应的 `FromResidual<F,R>`。优先选择残余类型完全相同的接收协议，也支持具体实现类型到接口的合法转换；多个同样适用的转换接收协议报歧义，不搜索任意隐式转换链。静态接收方法属于编译期契约；来源是实现传播协议的接口值或接口引用时，拆分方法可以动态分派。
 
 普通变量 `value?` 使用只读 `branch()`；显式 `move value?` 使用 `intoBranch()`；拥有型临时值优先选择移动协议，没有移动协议时可使用读取协议。来源只求值一次，失败时执行正常作用域清理后退出当前函数或 lambda。
 
 标准 `Result<T,E>` 使用 `ErrorResidual<E>`，`Option<T>` 使用 `NoneResidual`，因此不同成功类型可共享失败出口，缺失与错误不会自动混合。
+
+标准库失败返回统一使用 `Result<T, Error>`，盒内仍保存具体错误类型。若 `IoError` 实现 `Error`，自定义 `Result<T, IoError>` 可经 `?` 向返回 `Result<U, Error>` 的函数传播；标准错误包装随之转换。`Option<Concrete>` 的 `?` 仍取出 Concrete，调用方可将它装入 `Option<Interface>`；None 直接传播为目标 Option 的 None。自定义 `Try`、`TryMove`、`FromResidual` 同样支持残余的具体类型到接口转换。
+
+接口可用作泛型实参与拥有载荷。`Err(IoError error)` 检查动态类型并绑定具体错误，`Err(_)` 覆盖剩余错误且不绑定，`Err(_ error)` 保留接口绑定。同一外层标签的类型分支按源码顺序尝试，开放接口必须兜底。见[完整多标签程序](../example/samples/interface_payload_match.chl)。
+
+单接口载荷可使用 `Err::IoError(error)`，标签唯一且无名称冲突时可进一步写为 `IoError(error)`。双／多载荷仍写 `Tag(Type a, Type b, ordinary)`；非接口位置可直接写变量。所有写法共用类型关系、重复模式、分支顺序和穷尽检查。
 
 用户类型可返回 `TryBranch<T,ErrorResidual<AppError>>`，直接向标准 `Result<U,AppError>` 传播；自定义返回类型可实现 `FromResidual<F,ErrorResidual<AppError>>` 接收标准 Result。完整程序见 [自定义传播样例](../example/samples/try_custom.chl)。
 

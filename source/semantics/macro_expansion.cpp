@@ -53,12 +53,28 @@ bool ReportAstMacroFailure(int call, const Memory::String &message)
  * @brief 取得模板的表达式输出，显式书写的单个块沿用语言块表达式语义。
  * @param root 已实例化的模板根节点。
  * @return 表达式编号；模板不能用于表达式位置时返回负一。
- * @note 只转换用户原本写出的块，不给语句模板自动增加运行时作用域。
+ * @note 参数缓存使用私有值作用域；纯语法模板继续保持原有块结构。
  */
 int AstMacroExpression(int root)
 {
-    const auto &body = N(root);
+    const auto body = N(root);
     if (body.kind != MNode::MacroTemplate || body.kids.size() != 2) return -1;
+    if ((body.type2 == 1 || body.type2 == 2) && body.i > 0)
+    {
+        const auto original = N(body.kids[0]).kids;
+        const auto count = static_cast<std::size_t>(body.i);
+        if (count > original.size()) return -1;
+        const int tailStatements = M_List();
+        g_nodes[tailStatements].kids.assign(original.begin() + count, original.end());
+        const int tail = M_New(MNode::MacroTemplate);
+        g_nodes[tail].kids = { tailStatements, body.kids[1] };
+        const int value = AstMacroExpression(tail);
+        if (value < 0) return -1;
+        const int prefix = M_List();
+        g_nodes[prefix].kids.assign(original.begin(), original.begin() + count);
+        M_ListAdd(prefix, M_Break(value));
+        return M_BlockValue(M_Block(prefix));
+    }
     const auto &statements = N(body.kids[0]).kids;
     if (statements.empty()) return body.kids[1];
     if (body.kids[1] >= 0 || statements.size() != 1) return -1;
@@ -252,7 +268,7 @@ void RebindAstMacroExports(int root, const Memory::Map<Memory::String, std::uint
 }
 
 /**
- * @brief 将语句位置的宏模板直接拼入原语句列表，不增加运行时作用域。
+ * @brief 展开语句模板，为私有运行时参数建立作用域，保留显式语法名称导出。
  * @param id 语句列表节点。
  * @param registry 本次编译的宏注册表。
  * @param depth 当前展开深度。
@@ -275,6 +291,16 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
         {
             const auto body = g_nodes[child];
             if (!ExpandAstMacroStatements(body.kids[0], registry, depth + 1, budget)) return false;
+            if (body.type2 == 1)
+            {
+                if (body.kids[1] >= 0)
+                {
+                    if (!ExpandAstMacroNode(body.kids[1], registry, depth + 1, budget)) return false;
+                    M_ListAdd(body.kids[0], M_ExprStmt(body.kids[1]));
+                }
+                statements.push_back(M_Block(body.kids[0]));
+                continue;
+            }
             const auto &items = g_nodes[body.kids[0]].kids;
             statements.insert(statements.end(), items.begin(), items.end());
             if (body.kids[1] >= 0)
@@ -312,6 +338,16 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
         RecordEditorMacro(call, expanded);
         const auto body = g_nodes[expanded];
         if (!ExpandAstMacroStatements(body.kids[0], registry, depth + 1, budget)) return false;
+        if (body.type2 == 1)
+        {
+            if (body.kids[1] >= 0)
+            {
+                if (!ExpandAstMacroNode(body.kids[1], registry, depth + 1, budget)) return false;
+                M_ListAdd(body.kids[0], M_ExprStmt(body.kids[1]));
+            }
+            statements.push_back(M_Block(body.kids[0]));
+            continue;
+        }
         const auto &items = g_nodes[body.kids[0]].kids;
         statements.insert(statements.end(), items.begin(), items.end());
         if (body.kids[1] >= 0)

@@ -14,7 +14,7 @@
 
 ## 语言与资源
 
-标准库的具体错误类型统一实现核心接口 `Error`，通过 `toString()` 获取诊断。`IoError`、`ParseError`、`CsvError` 等继续保留枚举分支、错误位置和原始消息；只有文本诊断的接口返回 `MessageError`，使用 `MessageError::from(text)` 构造。通用函数可以接收 `Error const&`，或使用 `<E: Error>` 约束。`Result<T, E>` 保留具体的 `E`，`?` 传播时保留这个类型与错误内容。
+标准库失败返回统一使用 `Result<T, Error>`，拥有接口载荷中仍保存具体错误。`IoError`、`ParseError`、`CsvError` 等保留枚举分支、位置和原始消息；文本错误以 `MessageError::from(text)` 构造后装入 Error。通用函数可接收 Error 值、`Error const&` 或使用 `<E: Error>` 约束。自定义 `Result<T, E>` 仍可保留具体 E；当 E 实现 Error 时，`?` 支持向返回 `Result<U, Error>` 的函数传播。
 
 堆对象分配写 `new T`，带构造实参时写 `new T(实参)`。所有权转移写 `move value`，指针与引用自动解引用一层，操作数直接使用变量或引用，不接受额外取地址。
 

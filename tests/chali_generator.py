@@ -35,6 +35,7 @@ def command(arguments, *, succeeds=True):
 
 
 def main():
+    os.environ.setdefault("CHALI_LLVM_CLANG", str(ROOT / "build/dependencies/llvm/toolchain/bin/clang.exe") if os.name == "nt" else "clang")
     if not GENERATOR.exists():
         raise SystemExit(f"build chali first: {GENERATOR}")
     shutil.rmtree(WORK, ignore_errors=True)
@@ -53,7 +54,7 @@ def main():
             "chali_interpolation.hpp", "chali_analysis.hpp", "chali_report.hpp",
             "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "semantics/resource_lifetime.cpp", "semantics/borrow_flow.cpp", "semantics/borrow_return_sources.cpp", "semantics/borrow_facts.cpp", "semantics/expression_effects.cpp",
             "chali_package.hpp", "chali_project.hpp", "chali_cli.hpp", "chali_i18n.hpp", "console/utf8.hpp",
-            "runtime/event_service.cpp", "runtime/event_service.hpp", "runtime/execution_plan.hpp", "runtime/register_core.hpp", "runtime/allocation_index.hpp",
+            "runtime/event_service.cpp", "runtime/event_service.hpp", "runtime/execution_plan.hpp", "runtime/allocation_index.hpp",
             "runtime/data_capacity_index.hpp",
              "runtime/chali_pool.c", "runtime/chali_pool.h",
             "runtime/chali_allocator.hpp", "chali_runtime_allocator.hpp",
@@ -62,13 +63,13 @@ def main():
             "glue/std_big_number.hpp", "lztext/lztext.cpp",
             "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
             "LICENSE", "NOTICE", "licenses/miniz/LICENSE",
-            "template/engine.hpp", "dap/dap_server.cpp",
+            "template/engine.hpp", "chali_aot_ast.hpp", "chali_aot_target.cpp",
             "runtime/artifact_binary.cpp", "semantics/associated_types.cpp",
             ".chali-generator-manifest",
         ]
         required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
         required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
-        required += ["runtime/core_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
+        required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
         required += ["runtime/bigfloat_math.hpp", "runtime/bigfloat_math_detail.hpp", "runtime/bigfloat_transcendental.cpp", "runtime/bigfloat_trigonometry.cpp", "std/cas.chl", "glue/std_cas.cpp", "caspp/core_sources.txt"]
         required += ["caspp/" + name for name in (ROOT / "library/caspp/core_sources.txt").read_text().splitlines()]
         required += ["runtime/" + name for name in ["ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "bigint_multiplication.cpp", "bigint_division.cpp", "bigint_bits.cpp", "bigint_number_theory.cpp", "bigint_modular.cpp", "bigint_conversion.cpp", "bigfloat_roots.cpp"]]
@@ -99,7 +100,7 @@ def main():
                                     encoding="utf-8", errors="replace", timeout=900)
             assert result.returncode == 0, (arguments, result.stdout, result.stderr)
         dependency_file = build / "build.ninja" if (build / "build.ninja").exists() else build / "CMakeFiles/Makefile.cmake"
-        assert "core_sources.txt" in dependency_file.read_text(encoding="utf-8"), "核心清单修改必须触发 CMake 重新配置"
+        assert "aot_sources.txt" in dependency_file.read_text(encoding="utf-8"), "核心清单修改必须触发 CMake 重新配置"
         probe = WORK / "export_probe.chl"
         probe.write_text('import std::toml;\nvoid main()\n{\n'
                          '    String text = "# exported\\nvalue = 42 # inline\\n";\n'

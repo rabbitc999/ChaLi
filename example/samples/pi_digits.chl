@@ -72,10 +72,10 @@ void main(List<String> arguments) {
     int64 digits = 20;
     if (arguments.len() > 1) { panic("用法：pi_digits [小数位数]"); }
     if (arguments.len() == 1) {
-        Result<int64, std::parse::ParseError> parsed = std::parse::Parse::parseInt64(arguments[0]);
+        Result<int64, Error> parsed = std::parse::Parse::parseInt64(arguments[0]);
         match (parsed) {
-            Result<int64, std::parse::ParseError>::Ok(value) => { digits = value; }
-            Result<int64, std::parse::ParseError>::Err(error) => {
+            Result<int64, Error>::Ok(value) => { digits = value; }
+            Result<int64, Error>::Err(error) => {
                 panic("小数位数必须是非负整数");
             }
         }

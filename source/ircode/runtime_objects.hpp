@@ -77,6 +77,8 @@ struct RuntimeObject
     ObjectValue objValue;
     /// Obj：objValue.integer 是不是一份由这个盒子持有的运行期对象句柄。
     bool objOwnsObject = false;
+    std::int64_t interfaceCopy = 0;   ///< 拥有接口值的语言复制助手，零表示普通盒子。
+    std::int64_t interfaceDrop = 0;   ///< 拥有接口值的语言销毁与存储释放助手。
     std::int64_t iteratorLayout = 0;  ///< 状态叶子布局字符串地址。
     bool iteratorStateBox = false;    ///< 专用迭代状态箱拥有单元素存储。
     NativeContext iteratorContext;    ///< 迭代状态或 copy 捕获单元的堆与对象表，供复制和清理使用。

@@ -28,9 +28,9 @@ Option<int64> firstThree(int64 value) {
     return Option<int64>::None;
 }
 Option<int64> running(int64 mut& acc, int64 value) { acc = acc + value; return Option<int64>::Value(acc); }
-Result<int64, MessageError> checkedSum(int64 acc, int64 value) {
-    if (value == 3) { return Result<int64, MessageError>::Err(MessageError::from("three")); }
-    return Result<int64, MessageError>::Ok(acc + value);
+Result<int64, Error> checkedSum(int64 acc, int64 value) {
+    if (value == 3) { return Result<int64, Error>::Err(MessageError::from("three")); }
+    return Result<int64, Error>::Ok(acc + value);
 }
 struct Flaky : IterNext<int64> {
     int64 calls;

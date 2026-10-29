@@ -18,11 +18,18 @@ struct ExternFunction
 {
     Memory::String label;                           ///< 四元式里的调用标签。
     Memory::String symbol;                          ///< C 侧真正的符号名（`= "名字"`）。
-    Memory::String library;                         ///< 库路径（生成注释与链接参数用，可空）。
+    Memory::String library;                         ///< 动态库声明路径或静态链接资产路径；空值直接引用链接符号。
     Memory::String resultType = "long long";        ///< C 返回类型名。
     Memory::Vector<Memory::String> parameterTypes;  ///< C 形参类型名，按序。
     Memory::String abiConvention = "C";             ///< 已验证的外部调用约定。
 };
+
+/**
+ * @brief 判断外部声明是否需要按声明路径动态加载库。
+ * @param function 外部函数及其库路径。
+ * @return 非空且不是静态库或对象文件时返回真。
+ */
+bool usesDynamicAbiLibrary(const ExternFunction &function);
 
 /**
  * @brief AOT 输出的形态与开关。

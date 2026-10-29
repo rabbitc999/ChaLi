@@ -338,7 +338,7 @@ chali: struct Counter 没有匹配的构造函数：(int64)
 \medskip
 
 \begin{tip}{关于 \texttt{static T create(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}}
-这是「具名构造入口」写法，名字自取（习惯用 \texttt{create}）。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，不用（也不能）写 \texttt{return}——返回值由调用点接住。注意调用写法：\texttt{new Point(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 优先认真构造器，没有匹配时才落到具名入口；指明入口就写 \texttt{Point:\allowbreak{}:\allowbreak{}create(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
+这是「具名构造入口」写法，入口名固定为 \texttt{create}。它和普通构造器一样，隐式带着 \texttt{self}，体里往 \texttt{self} 上写字段就行，可以省略末尾返回，或写 \texttt{return self;}；\texttt{return;} 可提前结束初始化。返回值由调用点接住，\texttt{return self;} 不复制或转移接收者，其他返回表达式不允许。注意调用写法：\texttt{new Point(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}} 优先认真构造器，没有匹配时才落到具名入口；指明入口就写 \texttt{Point:\allowbreak{}:\allowbreak{}create(\allowbreak{}3,\allowbreak{} 4)\allowbreak{}}：
 \end{tip}
 
 \par

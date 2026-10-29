@@ -557,6 +557,12 @@ int runCli(int argc, char **argv)
     const auto rewriteIncludes = [](Memory::String *content, const Memory::String &target) {
         struct Fix { const char *from; const char *to; };
         static const Fix fixes[] = {
+            {"ast/ast.hpp", "runtime/ast.hpp"},
+            {"ircode/runtime_internal.hpp", "runtime/runtime_internal.hpp"},
+            {"ircode/runtime_context.hpp", "runtime/runtime_context.hpp"},
+            {"ircode/native_memory_access.hpp", "runtime/native_memory_access.hpp"},
+            {"ircode/native_memory.hpp", "runtime/native_memory.hpp"},
+            {"allocator/system_arena.hpp", "runtime/system_arena.hpp"},
             {"../../library/ipage/source/ipage/sql.hpp", "ipage/sql.hpp"},
             {"../../library/ipage/source/ipage/dialect.hpp", "ipage/dialect.hpp"},
             {"../../library/ipage/source/ipage/model.hpp", "ipage/model.hpp"},
@@ -613,7 +619,7 @@ int runCli(int argc, char **argv)
     };
     bool ok = true;
     ok = copy(mc / "VERSION", "VERSION") && ok;
-    for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime.c", "native_runtime.cpp", "backend_profile.cpp"})
+    for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime_linux_arm64.ll", "runtime.c", "native_runtime.cpp", "backend_profile.cpp"})
         ok = copy(mc / "source/aot" / name, Memory::String("aot/") + name) && ok;
     ok = copy(mc / "build/chali-aot-host/assets.txt", "aot/host_assets.txt") && ok;
     for (const char *name : {"chali_parser.cpp", "chali_parser.hpp",
@@ -622,7 +628,7 @@ int runCli(int argc, char **argv)
     for (const char *name : {"chali_driver.cpp", "chali_i18n.hpp", "chali_diagnostics.hpp", "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "chali_module.hpp",
                              "chali_incremental.hpp", "chali_package.hpp", "chali_project.hpp", "chali_cli.hpp",
                              "chali_lambda.hpp", "chali_generic.hpp", "chali_generic_name.hpp", "chali_glue.hpp",
-                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
+                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_ast.hpp", "chali_aot_numeric_list.hpp", "chali_aot_target.hpp", "chali_aot_target.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
                              "chali_aot_runtime_assets.hpp", "chali_aot_runtime_assets.cpp", "chali_temp.hpp", "chali_temp.cpp", "chali_ast.hpp", "chali_semantics.cpp"})
         ok = copy(mc / "source" / name, name) && ok;
     /* 控制台 UTF-8 头来自 `source/console/`，导出工程里仍放 `console/` 的目录名：副本站 `console/utf8.hpp`，
@@ -642,6 +648,8 @@ int runCli(int argc, char **argv)
         {"chali_allocator.hpp", mc / "source/allocator/chali_allocator.hpp"},
         {"chali_pool.h", mc / "source/allocator/chali_pool.h"},
         {"chali_pool.c", mc / "source/allocator/chali_pool.c"},
+        {"system_arena.hpp", mc / "source/allocator/system_arena.hpp"},
+        {"system_arena.cpp", mc / "source/allocator/system_arena.cpp"},
         {"ast.cpp", mc / "source/ast/ast.cpp"},
         {"ast.hpp", mc / "source/ast/ast.hpp"},
         {"preprocess.cpp", mc / "source/preprocess/preprocess.cpp"},

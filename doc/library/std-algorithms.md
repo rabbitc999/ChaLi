@@ -184,7 +184,7 @@ T choiceValue<T>(std::lang::List<T> items, uint64 seed);
 std::algorithms::choiceValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:1895](../../source/chali_generic.cpp#L1895)。
+**源码**：[source/chali_generic.cpp:1905](../../source/chali_generic.cpp#L1905)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -223,7 +223,7 @@ Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后�
 std::algorithms::shuffleValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:1904](../../source/chali_generic.cpp#L1904)。
+**源码**：[source/chali_generic.cpp:1914](../../source/chali_generic.cpp#L1914)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -263,7 +263,7 @@ Fisher-Yates 洗牌的**引用形式**：直接在 `data` 里 `count` 个元素�
 std::algorithms::shuffleReference<T>(data, count, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:1924](../../source/chali_generic.cpp#L1924)。
+**源码**：[source/chali_generic.cpp:1934](../../source/chali_generic.cpp#L1934)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -304,7 +304,7 @@ Pair corresponding elements; excess elements in the longer list are ignored.
 std::algorithms::zipValue<T, U>(left, right);
 ```
 
-**源码**：[source/chali_generic.cpp:1938](../../source/chali_generic.cpp#L1938)。
+**源码**：[source/chali_generic.cpp:1948](../../source/chali_generic.cpp#L1948)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -343,7 +343,7 @@ void sortReference<T>(T mut& data, int64 count);
 std::algorithms::sortReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:1968](../../source/chali_generic.cpp#L1968)。
+**源码**：[source/chali_generic.cpp:1978](../../source/chali_generic.cpp#L1978)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -382,7 +382,7 @@ void reverseReference<T>(T mut& data, int64 count);
 std::algorithms::reverseReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:1973](../../source/chali_generic.cpp#L1973)。
+**源码**：[source/chali_generic.cpp:1983](../../source/chali_generic.cpp#L1983)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -422,7 +422,7 @@ int64 findReference<T>(T const& data, int64 count, T value);
 std::algorithms::findReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:1986](../../source/chali_generic.cpp#L1986)。
+**源码**：[source/chali_generic.cpp:1996](../../source/chali_generic.cpp#L1996)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -462,7 +462,7 @@ int64 binarySearchReference<T>(T const& data, int64 count, T value);
 std::algorithms::binarySearchReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:1996](../../source/chali_generic.cpp#L1996)。
+**源码**：[source/chali_generic.cpp:2006](../../source/chali_generic.cpp#L2006)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -501,7 +501,7 @@ Option<T mut&> minReference<T>(T mut& data, int64 count);
 std::algorithms::minReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2008](../../source/chali_generic.cpp#L2008)。
+**源码**：[source/chali_generic.cpp:2018](../../source/chali_generic.cpp#L2018)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -540,7 +540,7 @@ Option<T mut&> maxReference<T>(T mut& data, int64 count);
 std::algorithms::maxReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2020](../../source/chali_generic.cpp#L2020)。
+**源码**：[source/chali_generic.cpp:2030](../../source/chali_generic.cpp#L2030)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -580,7 +580,7 @@ int64 countReference<T>(T const& data, int64 count, T value);
 std::algorithms::countReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2032](../../source/chali_generic.cpp#L2032)。
+**源码**：[source/chali_generic.cpp:2042](../../source/chali_generic.cpp#L2042)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -620,7 +620,7 @@ T sumReference<T>(T mut& data, int64 count);
 std::algorithms::sumReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2043](../../source/chali_generic.cpp#L2043)。
+**源码**：[source/chali_generic.cpp:2053](../../source/chali_generic.cpp#L2053)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -658,7 +658,7 @@ List<T> sortValue<T>(List<T> items);
 std::algorithms::sortValue<T>(items);
 ```
 
-**源码**：[source/semantics/boxing.cpp:417](../../source/semantics/boxing.cpp#L417)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:433](../../source/semantics/boxing.cpp#L433)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -697,7 +697,7 @@ int64 findValue<T>(List<T> items,T value);
 std::algorithms::findValue<T>(items, value);
 ```
 
-**源码**：[source/semantics/boxing.cpp:445](../../source/semantics/boxing.cpp#L445)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:461](../../source/semantics/boxing.cpp#L461)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -736,7 +736,7 @@ int64 binarySearchValue<T>(List<T> items,T value);
 std::algorithms::binarySearchValue<T>(items, value);
 ```
 
-**源码**：[source/semantics/boxing.cpp:445](../../source/semantics/boxing.cpp#L445)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:461](../../source/semantics/boxing.cpp#L461)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -775,7 +775,7 @@ T minValue<T>(T first,T rest...);
 std::algorithms::minValue<T>(first, rest);
 ```
 
-**源码**：[source/semantics/boxing.cpp:309](../../source/semantics/boxing.cpp#L309)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:325](../../source/semantics/boxing.cpp#L325)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -814,7 +814,7 @@ T maxValue<T>(T first,T rest...);
 std::algorithms::maxValue<T>(first, rest);
 ```
 
-**源码**：[source/semantics/boxing.cpp:309](../../source/semantics/boxing.cpp#L309)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:325](../../source/semantics/boxing.cpp#L325)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -854,7 +854,7 @@ T clampValue<T>(T value,T low,T high);
 std::algorithms::clampValue<T>(value, low, high);
 ```
 
-**源码**：[source/semantics/boxing.cpp:417](../../source/semantics/boxing.cpp#L417)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:433](../../source/semantics/boxing.cpp#L433)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -893,7 +893,7 @@ bool allValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::allValue<T>(items, predicate);
 ```
 
-**源码**：[source/semantics/boxing.cpp:456](../../source/semantics/boxing.cpp#L456)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:472](../../source/semantics/boxing.cpp#L472)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -932,7 +932,7 @@ bool anyValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::anyValue<T>(items, predicate);
 ```
 
-**源码**：[source/semantics/boxing.cpp:456](../../source/semantics/boxing.cpp#L456)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:472](../../source/semantics/boxing.cpp#L472)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -972,7 +972,7 @@ T foldValue<T>(List<T> items,T initial,T fn(T,T) folder);
 std::algorithms::foldValue<T>(items, initial, folder);
 ```
 
-**源码**：[source/semantics/boxing.cpp:417](../../source/semantics/boxing.cpp#L417)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:433](../../source/semantics/boxing.cpp#L433)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1011,7 +1011,7 @@ List<R> mapValue<T>(List<T> items,R fn(T) mapper);
 std::algorithms::mapValue<T>(items, mapper);
 ```
 
-**源码**：[source/semantics/boxing.cpp:344](../../source/semantics/boxing.cpp#L344)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:360](../../source/semantics/boxing.cpp#L360)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1050,7 +1050,7 @@ List<T> filterValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::filterValue<T>(items, predicate);
 ```
 
-**源码**：[source/semantics/boxing.cpp:364](../../source/semantics/boxing.cpp#L364)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:380](../../source/semantics/boxing.cpp#L380)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1089,7 +1089,7 @@ T reduceValue<T>(List<T> items,T fn(T,T) folder);
 std::algorithms::reduceValue<T>(items, folder);
 ```
 
-**源码**：[source/semantics/boxing.cpp:397](../../source/semantics/boxing.cpp#L397)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:413](../../source/semantics/boxing.cpp#L413)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1129,7 +1129,7 @@ T reduceValue<T>(List<T> items,T initial,T fn(T,T) folder);
 std::algorithms::reduceValue<T>(items, initial, folder);
 ```
 
-**源码**：[source/semantics/boxing.cpp:397](../../source/semantics/boxing.cpp#L397)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:413](../../source/semantics/boxing.cpp#L413)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1167,7 +1167,7 @@ T sumValue<T>(List<T> items);
 std::algorithms::sumValue<T>(items);
 ```
 
-**源码**：[source/semantics/boxing.cpp:331](../../source/semantics/boxing.cpp#L331)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:347](../../source/semantics/boxing.cpp#L347)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1206,7 +1206,7 @@ int64 countValue<T>(List<T> items,T value);
 std::algorithms::countValue<T>(items, value);
 ```
 
-**源码**：[source/semantics/boxing.cpp:375](../../source/semantics/boxing.cpp#L375)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:391](../../source/semantics/boxing.cpp#L391)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -1245,6 +1245,6 @@ int64 countValue<T>(List<T> items,bool fn(T) predicate);
 std::algorithms::countValue<T>(items, predicate);
 ```
 
-**源码**：[source/semantics/boxing.cpp:375](../../source/semantics/boxing.cpp#L375)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:391](../../source/semantics/boxing.cpp#L391)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。

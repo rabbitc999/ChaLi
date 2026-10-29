@@ -41,43 +41,41 @@ def main() -> None:
 
         first = run(*args)
         assert "2 个模块重新预处理" in first.stderr, first.stderr
-        original = (output.with_suffix(".quad")).read_bytes()
-        written_at = output.with_suffix(".quad").stat().st_mtime_ns
+        original = (output.with_suffix(".ll")).read_bytes()
         cached = run(*args)
-        assert "增量缓存命中：2 个模块复用" in cached.stderr, cached.stderr
-        assert (output.with_suffix(".quad")).read_bytes() == original
-        assert output.with_suffix(".quad").stat().st_mtime_ns == written_at
+        assert "增量编译：2 个模块复用" in cached.stderr, cached.stderr
+        assert (output.with_suffix(".ll")).read_bytes() == original
 
         for unit in Path(str(output) + ".chali-cache").glob("*.unit"):
             unit.write_bytes(b"damaged cache")
         recovered = run(*args)
-        assert "增量缓存命中：0 个模块复用" in recovered.stderr, recovered.stderr
+        assert "增量编译：0 个模块复用" in recovered.stderr, recovered.stderr
 
         body.write_text("module math::ops;\nint64 twice(int64 x) { return x + x + 1; }\n", encoding="utf-8")
         changed = run(*args)
         assert "1 个模块复用，1 个模块重新预处理" in changed.stderr, changed.stderr
-        assert output.with_suffix(".quad").read_bytes() != original
+        assert output.with_suffix(".ll").read_bytes() != original
 
-        with output.with_suffix(".quad").open("ab") as stream:
+        with output.with_suffix(".ll").open("ab") as stream:
             stream.write(b"tampered\n")
         repaired = run(*args)
         assert "2 个模块复用，0 个模块重新预处理" in repaired.stderr, repaired.stderr
-        assert not output.with_suffix(".quad").read_bytes().endswith(b"tampered\n")
+        assert not output.with_suffix(".ll").read_bytes().endswith(b"tampered\n")
 
         module.write_text("module math::ops;\nint64 twice(int64 x) { return ; }\n",
                           encoding="utf-8")
         run(*args, success=False)
         body.write_text("module math::ops;\nint64 twice(int64 x) { return x + x + 1; }\n", encoding="utf-8")
         run(*args)
-        assert "增量缓存命中" in run(*args).stderr
+        assert "个模块复用" in run(*args).stderr
 
-        # Compile switches stay in the cache signature: first switch misses, repeat hits.
-        plain_quad = output.with_suffix(".quad").read_bytes()
+        # 预处理模块可复用，LLVM 输出按本次调试配置重新生成。
+        plain_quad = output.with_suffix(".ll").read_bytes()
         debug = run(*args, "--debug")
         assert "2 个模块复用，0 个模块重新预处理" in debug.stderr, debug.stderr
         assert "增量缓存命中" not in debug.stderr
-        assert output.with_suffix(".quad").read_bytes() == plain_quad
-        assert "增量缓存命中" in run(*args, "--debug").stderr
+        assert b"DICompileUnit" in output.with_suffix(".ll").read_bytes()
+        assert "个模块复用" in run(*args, "--debug").stderr
         assert not Path(str(output) + ".symbol_map.json").exists()
 
         # A common include is content-hashed once per compiler invocation.
@@ -89,7 +87,7 @@ def main() -> None:
         checked = run(*args, "--stats")
         counts = re.search(r"增量文件校验：(\d+) 次读取，(\d+) 次复用", checked.stderr)
         assert counts and int(counts[2]) >= 1, checked.stderr
-        assert "增量缓存命中" in checked.stderr
+        assert "个模块复用" in checked.stderr
         print("shared dependency hash reads/reuses:", counts[1], counts[2])
         # Same-size edits with restored timestamps must still invalidate across runs.
         stamp = shared.stat()

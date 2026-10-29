@@ -94,12 +94,12 @@ CLI options, defaults and validation OK
 | --- | --- |
 | [CliError::toString](#api-0) | `String toString()` |
 | [CliArguments::get](#api-1) | `Option<String> get(String name)` |
-| [CliArguments::getInt](#api-2) | `Result<int64,CliError> getInt(String name)` |
+| [CliArguments::getInt](#api-2) | `Result<int64,std::lang::Error> getInt(String name)` |
 | [cliError](#api-3) | `CliError cliError(String argument, String message)` |
 | [cliTail](#api-4) | `String cliTail(String text,int64 start)` |
 | [CliParser::add](#api-5) | `bool add(CliOption option)` |
 | [CliParser::help](#api-6) | `String help()` |
-| [CliParser::parse](#api-7) | `Result<CliArguments,CliError> parse(List<String> arguments)` |
+| [CliParser::parse](#api-7) | `Result<CliArguments,std::lang::Error> parse(List<String> arguments)` |
 
 <a id="api-0"></a>
 
@@ -186,7 +186,7 @@ obj.get(name);
 **声明**
 
 ```chali
-Result<int64,CliError> getInt(String name);
+Result<int64,std::lang::Error> getInt(String name);
 ```
 
 **行为**
@@ -201,7 +201,7 @@ Result<int64,CliError> getInt(String name);
 
 **返回值**
 
-`Result<int64,CliError>`。严格转换整数参数，失败返回带参数名的错误。
+`Result<int64,std::lang::Error>`。严格转换整数参数，失败返回带参数名的错误。
 
 **错误与边界**
 
@@ -378,7 +378,7 @@ obj.help();
 **声明**
 
 ```chali
-Result<CliArguments,CliError> parse(List<String> arguments);
+Result<CliArguments,std::lang::Error> parse(List<String> arguments);
 ```
 
 **行为**
@@ -393,7 +393,7 @@ Result<CliArguments,CliError> parse(List<String> arguments);
 
 **返回值**
 
-`Result<CliArguments,CliError>`。解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。
+`Result<CliArguments,std::lang::Error>`。解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。
 
 **错误与边界**
 

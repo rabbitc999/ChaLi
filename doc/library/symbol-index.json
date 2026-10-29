@@ -1880,9 +1880,7 @@
     "line": 4,
     "page": "std-io.md",
     "anchor": "symbol-105",
-    "examples": [
-      "doc/examples/library/io.chl"
-    ],
+    "examples": [],
     "sourceLanguage": "zh"
   },
   {
@@ -4353,7 +4351,7 @@
     "comment": "",
     "parameters": [],
     "source": "source/chali_generic.cpp",
-    "line": 2074,
+    "line": 2084,
     "page": "std-lang.md",
     "anchor": "symbol-247",
     "examples": [],
@@ -4370,7 +4368,7 @@
     "comment": "",
     "parameters": [],
     "source": "source/chali_generic.cpp",
-    "line": 2082,
+    "line": 2092,
     "page": "std-lang.md",
     "anchor": "symbol-248",
     "examples": [],
@@ -5120,7 +5118,7 @@
     "comment": "",
     "parameters": [],
     "source": "source/chali_generic.cpp",
-    "line": 1764,
+    "line": 1774,
     "page": "std-lang.md",
     "anchor": "symbol-292",
     "examples": [],

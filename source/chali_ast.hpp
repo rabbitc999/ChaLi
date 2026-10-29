@@ -302,6 +302,22 @@ int M_TypeString();
 int M_TypeVoid();
 int M_TypeStruct(int nameId);
 /**
+ * @brief 建立仅用于 match 载荷位置的具名类型模式。
+ * @param type 类型池编号，负一表示任意类型。
+ * @param nameId 绑定名称编号。
+ * @return 模式节点编号。
+ */
+int M_TypedPattern(int type, int nameId);
+/** @brief 建立不绑定名称的通配模式，返回节点编号。 */
+int M_WildcardPattern();
+/**
+ * @brief 建立按引用接收的宏形参。
+ * @param name 名称池编号。
+ * @param mode 一表示只读引用，二表示可写引用。
+ * @return 宏形参节点。
+ */
+int M_MacroReferenceParameter(int name, int mode);
+/**
  * `(T1, T2, ...)`：异构定长元组类型（至少两个元素）。
  */
 int M_TypeTuple(int typeList);

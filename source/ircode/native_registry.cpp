@@ -53,6 +53,8 @@ const SlotNativeEntry kSlotNativeEntries[] = {
     { "std::lang::__rawStorage", { 6, rawStorage } },
     /* 装箱格子（obj）：值 + 类型号；也是接口指针（胖指针）的运行时表示 */
     { "__std_obj_new", { 0, objNew } },
+    { "__std_iface_box", { 4, interfaceBox } },
+    { "__std_iface_borrow", { 1, interfaceBorrow } },
     { "__std_obj_set", { -1, objSet } },
     { "__std_obj_get", { -1, objGet } }, /* 变参：后面跟一串"允许的类型号" */
     { "__std_obj_has_tag", { -1, objHasTag } },

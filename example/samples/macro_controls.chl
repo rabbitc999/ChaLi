@@ -15,7 +15,7 @@ $else
 0
 $end_regex
 $end_macro
-$macro POSITIVE(out, ...rest)
+$macro POSITIVE(mut &out, ...rest)
 $for item in rest
 if (item > 0) { out += item; }
 $end_for

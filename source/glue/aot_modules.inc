@@ -55,3 +55,4 @@ CHALI_AOT_MODULE(image, std_image_glue::bind(registry, error))
 #ifndef GLUE_NO_STD_NET
 CHALI_AOT_MODULE(net, std_net_glue::bind(registry, error))
 #endif
+CHALI_AOT_MODULE(demo, bindChaLiGlue(registry, error))

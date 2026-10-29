@@ -93,7 +93,7 @@ void main() {
 | [Query::orderBy](#api-0) | `void orderBy(String field, bool descending = false)` |
 | [Query::select](#api-1) | `void select(String field)` |
 | [Query::page](#api-2) | `void page(int64 limit, int64 offset = 0)` |
-| [Query::build](#api-3) | `Result<SqlStatement,MessageError> build(String operation = "select", String values = "{}")` |
+| [Query::build](#api-3) | `Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}")` |
 | [DataCell::isNull](#api-4) | `bool isNull()` |
 | [DataCell::isNumber](#api-5) | `bool isNumber()` |
 | [DataCell::text](#api-6) | `std::lang::String text()` |
@@ -140,11 +140,11 @@ void main() {
 | [intLiteral](#api-47) | `std::lang::String intLiteral(int64 value)` |
 | [realLiteral](#api-48) | `std::lang::String realLiteral(float64 value)` |
 | [displayWidth](#api-49) | `int64 displayWidth(std::lang::String text)` |
-| [query](#api-50) | `Result<Query,MessageError> query<T>()` |
-| [filter](#api-51) | `Result<bool,MessageError> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
-| [filterMany](#api-52) | `Result<bool,MessageError> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
-| [insert](#api-53) | `Result<SqlStatement,MessageError> insert<T>(Query mut& query, T const& value)` |
-| [update](#api-54) | `Result<SqlStatement,MessageError> update<T>(Query mut& query, T const& value)` |
+| [query](#api-50) | `Result<Query,std::lang::Error> query<T>()` |
+| [filter](#api-51) | `Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
+| [filterMany](#api-52) | `Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
+| [insert](#api-53) | `Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value)` |
+| [update](#api-54) | `Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value)` |
 
 <a id="api-0"></a>
 
@@ -271,7 +271,7 @@ obj.page(limit, offset);
 **声明**
 
 ```chali
-Result<SqlStatement,MessageError> build(String operation = "select", String values = "{}");
+Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}");
 ```
 
 **行为**
@@ -289,7 +289,7 @@ Result<SqlStatement,MessageError> build(String operation = "select", String valu
 
 **返回值**
 
-`Result<SqlStatement,MessageError>`。生成带参数列表的动态 SQL。
+`Result<SqlStatement,std::lang::Error>`。生成带参数列表的动态 SQL。
 
 **错误与边界**
 
@@ -2097,7 +2097,7 @@ std::sql::displayWidth(text);
 **声明**
 
 ```chali
-Result<Query,MessageError> query<T>();
+Result<Query,std::lang::Error> query<T>();
 ```
 
 **行为**
@@ -2112,7 +2112,7 @@ Result<Query,MessageError> query<T>();
 
 **返回值**
 
-`Result<Query,MessageError>`。从模型注解与反射元数据建立 ipage 查询。
+`Result<Query,std::lang::Error>`。从模型注解与反射元数据建立 ipage 查询。
 
 **错误与边界**
 
@@ -2135,7 +2135,7 @@ std::sql::query<T>();
 **声明**
 
 ```chali
-Result<bool,MessageError> filter<V>(Query mut& query, String field, V value, int64 operation = 0);
+Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0);
 ```
 
 **行为**
@@ -2155,7 +2155,7 @@ Result<bool,MessageError> filter<V>(Query mut& query, String field, V value, int
 
 **返回值**
 
-`Result<bool,MessageError>`。为动态 SQL 添加参数化单值条件。
+`Result<bool,std::lang::Error>`。为动态 SQL 添加参数化单值条件。
 
 **错误与边界**
 
@@ -2178,7 +2178,7 @@ std::sql::filter<V>(query, field, value, operation);
 **声明**
 
 ```chali
-Result<bool,MessageError> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11);
+Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11);
 ```
 
 **行为**
@@ -2198,7 +2198,7 @@ Result<bool,MessageError> filterMany<V>(Query mut& query, String field, List<V> 
 
 **返回值**
 
-`Result<bool,MessageError>`。为动态 SQL 添加多参数或空值条件。
+`Result<bool,std::lang::Error>`。为动态 SQL 添加多参数或空值条件。
 
 **错误与边界**
 
@@ -2221,7 +2221,7 @@ std::sql::filterMany<V>(query, field, values, operation);
 **声明**
 
 ```chali
-Result<SqlStatement,MessageError> insert<T>(Query mut& query, T const& value);
+Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value);
 ```
 
 **行为**
@@ -2239,7 +2239,7 @@ Result<SqlStatement,MessageError> insert<T>(Query mut& query, T const& value);
 
 **返回值**
 
-`Result<SqlStatement,MessageError>`。按反射模型值生成参数化 INSERT，返回 SQL 与有序参数列表。
+`Result<SqlStatement,std::lang::Error>`。按反射模型值生成参数化 INSERT，返回 SQL 与有序参数列表。
 
 **错误与边界**
 
@@ -2262,7 +2262,7 @@ std::sql::insert<T>(query, value);
 **声明**
 
 ```chali
-Result<SqlStatement,MessageError> update<T>(Query mut& query, T const& value);
+Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value);
 ```
 
 **行为**
@@ -2280,7 +2280,7 @@ Result<SqlStatement,MessageError> update<T>(Query mut& query, T const& value);
 
 **返回值**
 
-`Result<SqlStatement,MessageError>`。按反射模型值生成参数化更新。
+`Result<SqlStatement,std::lang::Error>`。按反射模型值生成参数化更新。
 
 **错误与边界**
 

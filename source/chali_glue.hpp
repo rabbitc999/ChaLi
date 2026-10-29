@@ -1328,34 +1328,41 @@ private:
 namespace detail
 {
 /**
- * @brief 按标量实际位宽读写语言存储，元素之间仍按八字节槽定位。
- * @tparam T 与语言标量宽度相同的 C 类型。
+ * @brief 在 C 标量与语言槽之间转换；普通数值槽为八字节，紧凑字节保持单字节。
+ * @tparam T 对应的 C 标量类型。
  */
 template <typename T>
 struct CAbiStorage
 {
     static constexpr std::size_t slots = 1;
     /**
-     * @brief 从语言存储读取一个标量，保留 float32 等窄类型的位模式。
+     * @brief 从语言槽读取并转换为 C 标量，浮点槽按 binary64 解码。
      * @param context 提供受检查内存访问的宿主上下文。
      * @param address 标量所在的语言内存偏移。
-     * @return 按实际位宽解码的 C 标量值。
+     * @return 符合 C 类型位宽的标量值。
      */
     static T read(Context &context, std::int64_t address)
     {
+        if constexpr (std::is_arithmetic_v<T> && !std::is_same_v<T, std::uint8_t>)
+            return readSlot<T>(context, address);
         T raw{};
         if (!context.readBytes(address, reinterpret_cast<char *>(&raw), sizeof(raw)))
             throw std::runtime_error("ABI read outside VM storage");
         return raw;
     }
     /**
-     * @brief 按标量实际位宽写回语言存储，不改变相邻字段与槽内填充。
+     * @brief 将 C 标量转换到语言槽；float32 扩展为 binary64，整数按槽保存符号。
      * @param context 提供受检查内存访问的宿主上下文。
      * @param address 标量所在的语言内存偏移。
      * @param value 要写入的 C 标量值。
      */
     static void write(Context &context, std::int64_t address, T value)
     {
+        if constexpr (std::is_arithmetic_v<T> && !std::is_same_v<T, std::uint8_t>)
+        {
+            writeSlot<T>(context, address, value);
+            return;
+        }
         if (!context.writeBytes(address, reinterpret_cast<const char *>(&value), sizeof(value)))
             context.fail("ABI write outside VM storage");
     }

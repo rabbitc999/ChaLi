@@ -204,7 +204,7 @@ void main()
 {
     List<std::reflect::ReflectValue> args;
     args.push(std::reflect::ReflectValue::I64(41));
-    Result<std::reflect::ReflectValue, std::reflect::ReflectError> r = std::reflect::call("plusOne", args);
+    Result<std::reflect::ReflectValue, Error> r = std::reflect::call("plusOne", args);
     println("{}", r.isOk());
 }
 \end{lstlisting}
@@ -244,7 +244,7 @@ void main()
     Counter c;
     c.n = 0;
     List<std::reflect::ReflectValue> args;
-    Result<std::reflect::ReflectValue, std::reflect::ReflectError> r =
+    Result<std::reflect::ReflectValue, Error> r =
     std::reflect::callMethod<Counter>(&c, "bump", args);
     println("{} {}", r.isOk(), c.n);
 }

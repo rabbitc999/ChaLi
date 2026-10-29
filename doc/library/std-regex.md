@@ -78,7 +78,7 @@ void main() {
 | 名称 | 声明 |
 | --- | --- |
 | [RegexError::toString](#api-0) | `String toString()` |
-| [Regex::compile](#api-1) | `static Result<Regex, RegexError> compile(std::lang::String pattern)` |
+| [Regex::compile](#api-1) | `static Result<Regex, std::lang::Error> compile(std::lang::String pattern)` |
 | [Regex::fullMatch](#api-2) | `bool fullMatch(std::lang::String text)` |
 | [Regex::contains](#api-3) | `bool contains(std::lang::String text)` |
 | [Regex::find](#api-4) | `Option<int64> find(std::lang::String text)` |
@@ -131,7 +131,7 @@ obj.toString();
 **声明**
 
 ```chali
-static Result<Regex, RegexError> compile(std::lang::String pattern);
+static Result<Regex, std::lang::Error> compile(std::lang::String pattern);
 ```
 
 **行为**
@@ -146,7 +146,7 @@ static Result<Regex, RegexError> compile(std::lang::String pattern);
 
 **返回值**
 
-`Result<Regex, RegexError>`。编译正则模式；失败返回 Err(Invalid)。
+`Result<Regex, std::lang::Error>`。编译正则模式；失败返回 Err(Invalid)。
 
 **错误与边界**
 

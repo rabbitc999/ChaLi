@@ -4,16 +4,16 @@ import std::io;
  * @param args 仅一个文件路径，该文件会被覆盖。 @return 成功为 0。 */
 void main(List<String> args) {
     assert(args.len() == 1, "请提供允许覆盖的示例文件路径");
-    Result<FileStream,IoError> opened = FileStream::open(args[0],"w+");
+    Result<FileStream,Error> opened = FileStream::open(args[0],"w+");
     assert(opened.isOk(), "打开失败");
     FileStream stream = opened.take();
-    Result<int64,IoError> written = stream.write("alpha\nbeta\n");
+    Result<int64,Error> written = stream.write("alpha\nbeta\n");
     assert(written.isOk());
-    Result<int64,IoError> flushed = stream.flush();
+    Result<int64,Error> flushed = stream.flush();
     assert(flushed.isOk());
-    Result<int64,IoError> located = stream.seek(0,SeekOrigin::Begin);
+    Result<int64,Error> located = stream.seek(0,SeekOrigin::Begin);
     assert(located.isOk());
-    Result<String,IoError> first = stream.read();
+    Result<String,Error> first = stream.read();
     assert(first.isOk() && first.unwrap() == "alpha");
     stream.close();
     println("io API ok");

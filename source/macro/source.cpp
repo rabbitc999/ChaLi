@@ -100,7 +100,18 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
             }
             bool parameters = true;
             for (auto index = header + 1; index < close; ++index)
-                if (!(std::isalnum(static_cast<unsigned char>(mask[index])) || mask[index] == '_' || mask[index] == ',' || mask[index] == '.' || std::isspace(static_cast<unsigned char>(mask[index])) || (opening == '<' && mask[index] == ':'))) parameters = false;
+            {
+                if (opening != '<' && mask[index] == '&')
+                {
+                    auto before = index;
+                    while (before > header + 1 && std::isspace(static_cast<unsigned char>(mask[before - 1]))) --before;
+                    if (before >= header + 4 && mask.compare(before - 3, 3, "mut") == 0) before -= 3;
+                    while (before > header + 1 && std::isspace(static_cast<unsigned char>(mask[before - 1]))) --before;
+                    if (before != header + 1 && mask[before - 1] != ',') parameters = false;
+                }
+                else if (!(std::isalnum(static_cast<unsigned char>(mask[index])) || mask[index] == '_' || mask[index] == ',' || mask[index] == '.' || std::isspace(static_cast<unsigned char>(mask[index])) || (opening == '<' && mask[index] == ':')))
+                    parameters = false;
+            }
             if (!parameters) break;
             header = close + 1;
             generic = false;

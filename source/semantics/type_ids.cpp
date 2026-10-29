@@ -399,7 +399,14 @@ bool IsTupleType(const std::shared_ptr<MType> &type)
  */
 void EnsureTupleDefinition(const std::shared_ptr<MType> &type)
 {
-    if (!IsTupleType(type)) return;
+    if (!type) return;
+    if (!IsTupleType(type))
+    {
+        EnsureTupleDefinition(type->elem);
+        EnsureTupleDefinition(type->elem2);
+        for (const auto &element : type->paramTypes) EnsureTupleDefinition(element);
+        return;
+    }
     auto known = g_tupleElements.find(type->name);
     if (known == g_tupleElements.end())
         known = g_tupleElements.emplace(type->name, type->paramTypes).first;

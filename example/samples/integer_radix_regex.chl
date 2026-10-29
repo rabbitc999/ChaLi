@@ -9,7 +9,7 @@ void main() {
     assert(binary == 35 && binaryWithSeparator == 35);
     assert(highBit == ((uint64)1 << 63));
 
-    Result<std::regex::Regex, std::regex::RegexError> compiled =
+    Result<std::regex::Regex, Error> compiled =
     std::regex::Regex::compile("[a-z]+[0-9]+");
     assert(compiled.isOk());
     std::regex::Regex lettersDigits = compiled.unwrap();

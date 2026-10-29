@@ -372,6 +372,8 @@ ast::Function MakeInterfaceDispatcher(const Memory::String &iface,
         condition = Node::binary(
             "||", condition,
             Node::binary("==", Node::var("__chali_t"), Node::i(TypeIdOf(PointerType(named, true)))));
+        condition = Node::binary("||", condition,
+                                 Node::binary("==", Node::var("__chali_t"), Node::i(TypeIdOf(named))));
         Memory::Vector<NodePtr> dispatch;
         Memory::Set<Memory::String> visiting;
         if (methodName == "drop" || MethodMutatesReceiver(item.first, *implementation, &visiting))
@@ -1380,6 +1382,29 @@ bool LowerProgram(ast::Program &program)
     /* 接口引用的方法调用：给每个用过的 `(接口, 方法)` 补一个分派函数。
      * 放在这里是因为"用过哪些"要等函数体全降级完才知道。 */
     AppendInterfaceDispatchers(program);
+    for (const auto &owner : g_needsInterfaceBox)
+    {
+        using ast::Node;
+        const auto type = NamedType(owner);
+        ast::Function copy;
+        copy.name = "__chali_iface_copy_" + owner;
+        copy.result = ast::Type::i64();
+        copy.parameters = { { "source", ast::Type::i64() } };
+        copy.body = Node::block({ Node::declare("target", ast::Type::i64()),
+                                  Node::assign("target", Node::alloc(Node::i(std::max(8, StructStride(type))))),
+                                  DeepCopyStructValue(Node::var("target"), Node::var("source"), type),
+                                  Node::ret(Node::var("target")) });
+        program.functions.push_back(std::move(copy));
+        ast::Function drop;
+        drop.name = "__chali_iface_drop_" + owner;
+        drop.result = ast::Type::i64();
+        drop.parameters = { { "address", ast::Type::i64() } };
+        auto body = MakeAggregateCleanup(type, Node::var("address"));
+        body.push_back(Node::freeMemory(Node::var("address")));
+        body.push_back(Node::ret(Node::i(0)));
+        drop.body = Node::block(std::move(body));
+        program.functions.push_back(std::move(drop));
+    }
     AppendOwnershipHelpers(program);
     /* 全局初始化塞进 main 的最前面：stackvm 从第一条四元式开始执行，引导的 `call main` 在最前 */
     if (!g_sharedLibrary && !g_globalInit.empty())

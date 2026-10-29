@@ -137,7 +137,7 @@ $(VM_LIB): $(VM_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 # 每个标准库模块独立编译；实际包含关系由编译器生成 .d 文件追踪。
-CHALI_STANDARD_SRCS := $(filter-out source/glue/std_demo.cpp,$(wildcard source/glue/std_*.cpp))
+CHALI_STANDARD_SRCS := $(wildcard source/glue/std_*.cpp)
 CHALI_STANDARD_OBJS := $(patsubst source/glue/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_STANDARD_SRCS))
 $(HOST_BUILD)/std_%.o: source/glue/std_%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
