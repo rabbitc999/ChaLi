@@ -1,0 +1,588 @@
+{
+  "mode": "chali-only",
+  "generated": "2026-10-29T08:31:33.630189+08:00",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "runs": 5,
+  "reps_per_run": 5,
+  "warmups": 1,
+  "allocator": "malloc",
+  "reference_allocators": "language defaults",
+  "compiler_source_commit": "9df8340664cb2c416bdbbe575068f8ca9ba8276e",
+  "compiler_sha256": "f214994585070ea8a92535869e596b02b5ced4dacf6c8cacda7473c9c350f328",
+  "compiler_path": "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+  "compiler_version": "1.0.11",
+  "git_commit": "32c5f252f661672ed32c8ffbbb574d5b52abc1cd",
+  "working_tree_dirty": false,
+  "source_hash_normalization": "CRLF to LF only",
+  "source_sha256": {
+    "benchmarks/features/timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "benchmarks/features/timing.rs": "230af02c586bf63f104b6391e40cd165bc2b4f8db4f8b368f65abb1e3cf215f0",
+    "benchmarks/perf/build_lua.py": "b7ca8a21e75f48ac84e8b4a5ccececd203d217a162d510c9afc34dfc85a4f6d0",
+    "benchmarks/perf/luabench.c": "ba98cfce33d66895f4a49b6ddb9febe1a0bcff00c83e6f5ea53d13fb4c393ae7",
+    "benchmarks/strings/cases.chl": "6eb65126b06d271c8ef8e1701172dcef8cc8bb3015a8ef6e148b18b3154187e3",
+    "benchmarks/strings/cases.cpp": "9b53356525fb9d5affa20ddb32fdf6b728e13890f3c00c69b7d2d72af39b46cb",
+    "benchmarks/strings/cases.lua": "c5960e108996a9546d402eb02566cb93edd5ccc86ab97ec42e0eadaa8dc39189",
+    "benchmarks/strings/cases.rs": "a6c9c440807d0feab43c36c33f56a9af318cbe7cf27eccb891e12e6147352a52",
+    "benchmarks/strings/run.py": "20aa848aba0f4d734c8f1110116cb84f4eecfe4cc278588dd610b603e5cdd3ed",
+    "benchmarks/strings/timing.lua": "e68142be814a97eed4ff24d32e485bb0116e658079ee77b9ae37cbd858a14d76",
+    "library/lua/manifest.json": "7c9d88e08504667eb810d36c50fba822acd1a13046c86f042d83c092a74980cf"
+  },
+  "llvm_clang": {
+    "path": "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+    "sha256": "f6599825884bd087a81ef01e7a662025a9553de01dc501c824b6c568aa4e5ec9",
+    "version": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n"
+  },
+  "sizes": {
+    "unit_bytes": 33,
+    "input_bytes": 8448,
+    "read_iterations": 131072,
+    "concat_chunks": 2048,
+    "concat_bytes": 67584,
+    "slice_iterations": 1024,
+    "find_iterations": 256
+  },
+  "model_values": {
+    "string_read": [
+      933359626,
+      563983303,
+      2085321474,
+      439211416,
+      1295157382
+    ],
+    "string_concat": [
+      1557423104,
+      1523966977,
+      1895195650,
+      1861739523,
+      85484548
+    ],
+    "string_slice": [
+      280348882,
+      1611246593,
+      1137154702,
+      474597159,
+      929386962
+    ],
+    "string_find": [
+      1374843591,
+      817066207,
+      185464464,
+      2130991237,
+      1213887908
+    ]
+  },
+  "environment": {},
+  "tools": {},
+  "builds": {
+    "chali-module": [
+      {
+        "command": [
+          "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+          "aot",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.chl",
+          "--shared",
+          "--unchecked",
+          "--allocator",
+          "malloc",
+          "--out",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\chali-kernel"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_read/chali-aot": [
+      {
+        "command": [
+          "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+          "-O3",
+          "-DNDEBUG",
+          "-DCHALI_FEATURE_AOT=1",
+          "-Dfeature_work=string_read",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\chali-kernel.dll",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_concat/chali-aot": [
+      {
+        "command": [
+          "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+          "-O3",
+          "-DNDEBUG",
+          "-DCHALI_FEATURE_AOT=1",
+          "-Dfeature_work=string_concat",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\chali-kernel.dll",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_slice/chali-aot": [
+      {
+        "command": [
+          "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+          "-O3",
+          "-DNDEBUG",
+          "-DCHALI_FEATURE_AOT=1",
+          "-Dfeature_work=string_slice",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\chali-kernel.dll",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_find/chali-aot": [
+      {
+        "command": [
+          "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+          "-O3",
+          "-DNDEBUG",
+          "-DCHALI_FEATURE_AOT=1",
+          "-Dfeature_work=string_find",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\chali-kernel.dll",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ]
+  },
+  "configurations": {
+    "string_read": {
+      "chali-aot": {
+        "binary_sha256": "3a88b0f264a1997bf026e93789800efb549cd6f7fe4603eff03d4c03eed4bb51",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 933359626\nvalue 1 563983303\nvalue 2 2085321474\nvalue 3 439211416\nvalue 4 1295157382\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 9054500\nrep 9033400\nrep 9443800\nrep 9030200\nrep 8922000\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              9054500,
+              9033400,
+              9443800,
+              9030200,
+              8922000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 9531300\nrep 9441900\nrep 9059100\nrep 9612100\nrep 8911500\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              9531300,
+              9441900,
+              9059100,
+              9612100,
+              8911500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 8951800\nrep 8972700\nrep 8908000\nrep 17229600\nrep 8940500\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              8951800,
+              8972700,
+              8908000,
+              17229600,
+              8940500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 9048700\nrep 8973000\nrep 9015700\nrep 8982000\nrep 8994800\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              9048700,
+              8973000,
+              9015700,
+              8982000,
+              8994800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_read-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 13369000\nrep 11976700\nrep 8862100\nrep 9125500\nrep 9113100\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              13369000,
+              11976700,
+              8862100,
+              9125500,
+              9113100
+            ]
+          }
+        ],
+        "median_ms": 9.0334,
+        "min_ms": 8.8621,
+        "max_ms": 17.2296
+      }
+    },
+    "string_concat": {
+      "chali-aot": {
+        "binary_sha256": "7ed488fd23302aa7442b06e713fbf5e8d2b682f076d40fd9ca7a8a0324cc912c",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 15706300\nrep 28115900\nrep 27154500\nrep 20237600\nrep 22195200\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              15706300,
+              28115900,
+              27154500,
+              20237600,
+              22195200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 14523500\nrep 28886200\nrep 24032300\nrep 18533700\nrep 17505900\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              14523500,
+              28886200,
+              24032300,
+              18533700,
+              17505900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 17166700\nrep 40488800\nrep 22915000\nrep 18944100\nrep 17332800\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              17166700,
+              40488800,
+              22915000,
+              18944100,
+              17332800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 15132000\nrep 31407200\nrep 21058800\nrep 18019300\nrep 18536700\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              15132000,
+              31407200,
+              21058800,
+              18019300,
+              18536700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_concat-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 14874000\nrep 29661500\nrep 20892700\nrep 18251900\nrep 18420200\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              14874000,
+              29661500,
+              20892700,
+              18251900,
+              18420200
+            ]
+          }
+        ],
+        "median_ms": 18.9441,
+        "min_ms": 14.5235,
+        "max_ms": 40.4888
+      }
+    },
+    "string_slice": {
+      "chali-aot": {
+        "binary_sha256": "4eeb99f7d619997dfd2e10041c7455ee39c04fe0296bf6cf4c16274f500f275c",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 280348882\nvalue 1 1611246593\nvalue 2 1137154702\nvalue 3 474597159\nvalue 4 929386962\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 10137600\nrep 10317100\nrep 10185200\nrep 10418500\nrep 10464100\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              10137600,
+              10317100,
+              10185200,
+              10418500,
+              10464100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 10106300\nrep 10138700\nrep 10076800\nrep 10041600\nrep 9875900\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              10106300,
+              10138700,
+              10076800,
+              10041600,
+              9875900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 10301500\nrep 10467300\nrep 9941300\nrep 10184500\nrep 9936000\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              10301500,
+              10467300,
+              9941300,
+              10184500,
+              9936000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 10107100\nrep 10199900\nrep 10377000\nrep 10154500\nrep 10385600\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              10107100,
+              10199900,
+              10377000,
+              10154500,
+              10385600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_slice-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 10402800\nrep 11686600\nrep 12850700\nrep 10896400\nrep 10187100\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              10402800,
+              11686600,
+              12850700,
+              10896400,
+              10187100
+            ]
+          }
+        ],
+        "median_ms": 10.1871,
+        "min_ms": 9.8759,
+        "max_ms": 12.8507
+      }
+    },
+    "string_find": {
+      "chali-aot": {
+        "binary_sha256": "5c5c20a0ecf9ad15c59515966f794c13ec81bf7fd76d7445962878516a71acd4",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1374843591\nvalue 1 817066207\nvalue 2 185464464\nvalue 3 2130991237\nvalue 4 1213887908\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 13584100\nrep 13282600\nrep 12060100\nrep 12000900\nrep 11717700\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              13584100,
+              13282600,
+              12060100,
+              12000900,
+              11717700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 11579400\nrep 12078400\nrep 12051500\nrep 12113900\nrep 11835300\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              11579400,
+              12078400,
+              12051500,
+              12113900,
+              11835300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 11562400\nrep 12027900\nrep 12058800\nrep 12064100\nrep 11895900\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              11562400,
+              12027900,
+              12058800,
+              12064100,
+              11895900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 11403000\nrep 12009300\nrep 12037500\nrep 12105100\nrep 11772600\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              11403000,
+              12009300,
+              12037500,
+              12105100,
+              11772600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-8qzoq9dj\\string_find-chali-aot.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 11686100\nrep 12158100\nrep 12144700\nrep 12230800\nrep 11956200\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              11686100,
+              12158100,
+              12144700,
+              12230800,
+              11956200
+            ]
+          }
+        ],
+        "median_ms": 12.0375,
+        "min_ms": 11.403,
+        "max_ms": 13.5841
+      }
+    }
+  },
+  "reused_reference": {
+    "path": "benchmarks\\results\\1.0.11-string-baseline\\results.json",
+    "sha256": "ed7cf80329c8e371e8de42d737c0c703403a489ac8209f1d037cb1b27d687625",
+    "generated": "2026-10-28T20:13:04.648993+08:00",
+    "rerun": false
+  },
+  "chali_kernel_sha256": "fc92b9e5471835804beeb7e8c54e6cadafd4f00fce15b5d872f82fbbe587d543",
+  "comparisons": {
+    "string_read": {
+      "chali_ms": 9.0334,
+      "cpp_o2_ms": 0.5427,
+      "rust_ms": 0.5437,
+      "lua_ms": 6.0014,
+      "lua_config": "lua",
+      "passed": false
+    },
+    "string_concat": {
+      "chali_ms": 18.9441,
+      "cpp_o2_ms": 0.1012,
+      "rust_ms": 0.0699,
+      "lua_ms": 4.1247,
+      "lua_config": "lua-builder",
+      "passed": false
+    },
+    "string_slice": {
+      "chali_ms": 10.1871,
+      "cpp_o2_ms": 0.1329,
+      "rust_ms": 0.1323,
+      "lua_ms": 0.3515,
+      "lua_config": "lua",
+      "passed": false
+    },
+    "string_find": {
+      "chali_ms": 12.0375,
+      "cpp_o2_ms": 0.1123,
+      "rust_ms": 0.0451,
+      "lua_ms": 0.1703,
+      "lua_config": "lua",
+      "passed": false
+    }
+  }
+}
