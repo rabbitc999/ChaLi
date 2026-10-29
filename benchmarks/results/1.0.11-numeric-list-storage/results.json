@@ -1,0 +1,172 @@
+{
+  "generated": "20261029-134152",
+  "host": "DESKTOP-5Q9FB8C",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "python": "3.12.3",
+  "runs": 5,
+  "reps_per_run": 5,
+  "cases": [
+    "list_growth"
+  ],
+  "sinks": {
+    "list_growth": {
+      "chali-aot": "5673410186"
+    }
+  },
+  "configs": {
+    "chali-aot": {
+      "label": "ChaLi 1.0.11（LLVM AOT，unchecked 导出）",
+      "note": "同一 ChaLi 计算函数直接生成 LLVM 模块，LLVM 默认 O3、unchecked；C 壳计时，初始化不计时；共享原生标准库",
+      "build_commands": {
+        "list_growth": [
+          "G:\\Python312\\python.exe",
+          "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build_aot.py",
+          "list_growth",
+          "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+          "--allocator",
+          "malloc"
+        ]
+      },
+      "median_ms": {
+        "list_growth": 45.053
+      },
+      "min_ms": {
+        "list_growth": 43.873
+      },
+      "max_ms": {
+        "list_growth": 59.734
+      },
+      "samples_ns": {
+        "list_growth": [
+          45426600,
+          45143200,
+          47775800,
+          45053000,
+          44797800,
+          44641900,
+          44335500,
+          52623700,
+          52614400,
+          53522100,
+          48980400,
+          44657700,
+          58084000,
+          47725800,
+          53838700,
+          44416600,
+          44881800,
+          53413300,
+          59734500,
+          43925100,
+          44189400,
+          44005100,
+          44000100,
+          44058100,
+          43873300
+        ]
+      },
+      "unavailable": {}
+    }
+  },
+  "chali_compiler": {
+    "reported_version": "1.0.11",
+    "sha256": "9b3f37c739ab19c0fbb94a4abaacbad03cdb01e50c2461d2529817c66e7aaf2d",
+    "source_commit": "7b4e90c11ab8ea31aafd0837cc76e3d2f50cb16c"
+  },
+  "chali_allocator": "malloc",
+  "command_line": [
+    "benchmarks/perf/run.py",
+    "--compiler-source-commit",
+    "7b4e90c",
+    "--allocator",
+    "malloc",
+    "--only",
+    "chali-aot",
+    "--cases",
+    "list_growth",
+    "--runs",
+    "5",
+    "--out",
+    "benchmarks/results/1.0.11-numeric-list-storage"
+  ],
+  "machine": {
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "logical_cpus": 12,
+    "architecture": "AMD64"
+  },
+  "git_commit": "7b4e90c11ab8ea31aafd0837cc76e3d2f50cb16c",
+  "working_tree_dirty": false,
+  "source_sha256": {
+    "build_aot.py": "4bf53aa0c3e723ec1d99a06fd27eed870a14c5359aa9e446a6a98212513723e8",
+    "build_lua.py": "83ee89087fb707f84cbc2e2e2f8581c6b562502300d623610b20f5fe0af0db8e",
+    "hash_int.h": "369a1ad92341245b7f366c23bee3a01490034716f2b3cee2ea851484988b267c",
+    "list_growth.c": "4eae7c22cae78464636818a7a5e0135cb847fa6f1682215db0f41e330dadf83b",
+    "list_growth.chl": "8382b6a668113e9a238a21a920c37523154bc30afa7792b58e8863be82d065cf",
+    "list_growth.cpp": "570fa343e20f6a941189a8a0bdbd64b4c66ae498c4c9291dc585de8fff608fcf",
+    "list_growth.lua": "bbb2ac73e06043607fe83b55fc82c4a479d612ae043716e0a7f5e0ac5bbf17e0",
+    "list_growth.rs": "503371ccfb53263f9e04c51ea26993fb2fa3603bc2037370aee9cb08529a4f70",
+    "luabench.c": "8399446c73d99eb102b06986862861a72ef06c8a2b345288df3cde213f14b4af",
+    "run.py": "a2b4d0d5d5d4cadf032a91a29cf9081ce37905511192d4b36beab1aca1824a03"
+  },
+  "case_notes": {
+    "list": "ChaLi and Lua grow dynamically; C/C++ preallocate storage and Rust uses with_capacity. Compare matched-growth cases separately before claiming container parity.",
+    "list_growth": "All implementations start with an empty container, append the same 400000 values without reserve, and perform the same ordered reduction.",
+    "map_growth": "All maps start empty with 20000 dispersed integer keys: insert, read and overwrite, hit/miss queries, remove every third key, reinsert, ordered reduction. Default standard hash policies; Lua uses table and Rust retains RandomState. C is a separate open-addressed reference.",
+    "set_growth": "All sets start empty with 20000 dispersed integer keys: insert twice, hit/miss queries, remove every third key, reinsert, ordered membership reduction. Lua uses table booleans; no iteration-order dependency."
+  },
+  "tool_versions": {
+    "llvm-clang": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg",
+    "gcc": "gcc.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "g++": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "go": "go version go1.27.1 windows/amd64",
+    "java": "java version \"22.0.1\" 2024-04-16\nJava(TM) SE Runtime Environment (build 22.0.1+8-16)\nJava HotSpot(TM) 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)",
+    "node": "v26.5.0",
+    "python": "Python 3.12.3"
+  },
+  "llvm_dependency": {
+    "version": "23.1.4",
+    "distribution": "llvm-mingw 20261020 ucrt x86_64",
+    "upstream": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+    "upstream_sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+    "platforms": {
+      "windows-x64": {
+        "version": "23.1.4",
+        "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip",
+        "sha256": "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd",
+        "format": "zip",
+        "distribution": "llvm-mingw 20261020 ucrt x86_64"
+      },
+      "linux-x64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-X64.tar.xz",
+        "sha256": "25d814fda50d5fb0084b42be09605d8b1595d49d5e2e03a3345d7e112ff6f9f3",
+        "bytes": 2017061664,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      },
+      "linux-arm64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-Linux-ARM64.tar.xz",
+        "sha256": "9b27cf263d711aa6ebfd4045ab241d947bd09b3cd19ffa5728f48a80c9eb3a91",
+        "bytes": 1829686400,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      },
+      "macos-arm64": {
+        "version": "23.1.4",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/LLVM-23.1.4-macOS-ARM64.tar.xz",
+        "sha256": "5d3179db39adeca5b17a34d82708fe976bc60e055b05fe557878fb3fb64d39ef",
+        "bytes": 1570051292,
+        "format": "tar.xz",
+        "distribution": "official LLVM release"
+      }
+    }
+  },
+  "lua_dependency": {
+    "version": "5.5.1",
+    "url": "https://www.lua.org/ftp/lua-5.5.1.tar.gz",
+    "sha256": "1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
+  }
+}
