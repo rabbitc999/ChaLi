@@ -818,9 +818,12 @@ static Slot numericListAppend(State &ctx, const Arguments &args)
         const auto minimum = std::min<std::size_t>(8, maximum);
         object->items.reserve(std::max({ size + 1u, grown, minimum }));
     }
-    ObjectValue value;
-    if (!nativeValue(ctx, args[1], false, 0, true, &value)) return Slot::fromInt(0);
-    object->items.push_back(std::move(value));
+    // 此入口已排除文本和拥有值；直接构造最终槽，避免临时快照及其分配器状态的移动。
+    const Slot value = args[1];
+    auto &stored = object->items.emplace_back();
+    stored.isFloat = value.isFloat;
+    stored.integer = value.integer;
+    stored.real = value.real;
     return Slot::fromInt(0);
 }
 

@@ -1,0 +1,356 @@
+[
+  {
+    "label": "malloc--checked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--checked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--checked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--checked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--checked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--checked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--unchecked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--unchecked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "malloc",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--unchecked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "malloc--unchecked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\malloc--unchecked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--checked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--checked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--checked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--checked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--checked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--checked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-direct-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--unchecked-direct"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-direct",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--unchecked-direct.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-fallback-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_buffer_growth.chl",
+      "--allocator",
+      "pool",
+      "--unchecked",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--unchecked-fallback"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "pool--unchecked-fallback",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\pool--unchecked-fallback.exe"
+    ],
+    "code": 0,
+    "stdout": "bounded buffer growth and retained List capacity OK\n",
+    "stderr": ""
+  },
+  {
+    "label": "overflow-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\overflow.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\overflow"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "overflow",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\overflow.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量超出上限\n出错位置：<内建 std::lang>:1469（std::lang::__bootBufferCapacity）\n调用栈（内 → 外）：\n  std::lang::__bootBufferCapacity\n"
+  },
+  {
+    "label": "over-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\over-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\over-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "over-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\over-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量超出上限\n出错位置：<内建 std::lang>:1469（std::lang::__bootBufferCapacity）\n调用栈（内 → 外）：\n  std::lang::__bootBufferCapacity\n"
+  },
+  {
+    "label": "negative-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\negative.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\negative"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "negative",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\negative.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:1468（std::lang::__bootBufferCapacity）\n调用栈（内 → 外）：\n  std::lang::__bootBufferCapacity\n"
+  },
+  {
+    "label": "bad-capacity-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-capacity.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-capacity"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "bad-capacity",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-capacity.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:1468（std::lang::__bootBufferCapacity）\n调用栈（内 → 外）：\n  std::lang::__bootBufferCapacity\n"
+  },
+  {
+    "label": "bad-minimum-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-minimum.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-minimum"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "bad-minimum",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\bad-minimum.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: panic：缓冲区容量参数无效\n出错位置：<内建 std::lang>:1468（std::lang::__bootBufferCapacity）\n调用栈（内 → 外）：\n  std::lang::__bootBufferCapacity\n"
+  },
+  {
+    "label": "map-index-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-index-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-index-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "map-index-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-index-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: Map/Set 存储槽或操作编号越界\n出错位置：G:/Desktop/ChaLi/tmp/buffer-growth-bdm93uxi/map-index-max.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+  },
+  {
+    "label": "map-entry-max-build",
+    "command": [
+      "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-entry-max.chl",
+      "--out",
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-entry-max"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "map-entry-max",
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\buffer-growth-bdm93uxi\\map-entry-max.exe"
+    ],
+    "code": 1,
+    "stdout": "",
+    "stderr": "chali aot: Map/Set 存储槽或操作编号越界\n出错位置：G:/Desktop/ChaLi/tmp/buffer-growth-bdm93uxi/map-entry-max.chl:1（main）\n调用栈（内 → 外）：\n  main\n"
+  }
+]
