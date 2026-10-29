@@ -183,7 +183,8 @@ def main():
         result = invoke([compiler, 'aot', abi, '--out', abi_exe, '--llvm', cc])
         assert result.returncode == 0, (result.stdout, result.stderr)
         abi_llvm = abi_exe.with_suffix('.ll').read_text(encoding='utf-8')
-        assert '@chali_host_abi_symbol(' in abi_llvm and '616F745F616464' in abi_llvm.upper(), '动态 ABI 缺少按库解析的符号入口'
+        encoded_symbol = ''.join(f'\\{byte:02X}' for byte in b'aot_add')
+        assert '@chali_host_abi_symbol(' in abi_llvm and encoded_symbol in abi_llvm, '动态 ABI 缺少按库解析的符号入口'
         assert 'declare i32 @"aot_add"(' not in abi_llvm, '动态库调用不能退回无路径的裸导入'
         result = invoke([abi_exe.with_suffix('.exe' if os.name == 'nt' else '')])
         assert result.returncode == 0 and result.stdout == expected_abi, result
