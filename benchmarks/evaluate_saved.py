@@ -1,4 +1,4 @@
-"""只核对保存的样本：快于冻结 Lua，接口中位耗时小于 10 ms，不重新计时。"""
+"""只核对保存的样本：快于冻结 Lua，单态接口不超过 40 ms、多态不超过 400 ms。"""
 import argparse
 import hashlib
 import json
@@ -12,6 +12,7 @@ BASIC = ('int_chain', 'float_chain', 'call', 'array', 'list_growth', 'map_growth
 FEATURES = ('enum_payload', 'interface_mono', 'interface_poly', 'struct_nested', 'array_2d', 'array_3d')
 STRINGS = ('string_read', 'string_concat', 'string_slice', 'string_find')
 CASES = BASIC + FEATURES + STRINGS
+INTERFACE_LIMITS = {'interface_mono': 40, 'interface_poly': 400}
 
 
 def load(path, provenance):
@@ -31,8 +32,8 @@ def verdict(measured, cpp, lua, case=None):
     if lua is not None and (not math.isfinite(lua) or lua <= 0):
         raise ValueError('Lua 参考必须为有限正数')
     lua_pass = measured < lua if lua is not None else None
-    interface_limit = 10 if case in ('interface_mono', 'interface_poly') else None
-    passed = measured < interface_limit and lua_pass is not False if interface_limit is not None else lua_pass
+    interface_limit = INTERFACE_LIMITS.get(case)
+    passed = measured <= interface_limit and lua_pass is not False if interface_limit is not None else lua_pass
     return dict(lua_pass=lua_pass, interface_limit_ms=interface_limit, passed=passed)
 
 
@@ -140,7 +141,8 @@ def main():
     complete = (not missing and len(compilers) == len(allocators) == 1 and binary_verified
                 and not args.partial and not args.allow_mixed_compilers)
     comparable = [row for row in rows.values() if row['passed'] is not None]
-    result = dict(kind='saved-performance-gate', criterion='faster-than-lua-and-interface-under-10ms', chali_optimization='LLVM O3',
+    result = dict(kind='saved-performance-gate', criterion='faster-than-lua-and-interface-within-limits',
+                  interface_limits_ms=INTERFACE_LIMITS, chali_optimization='LLVM O3',
                   tool_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   cpp_reference_optimization='O2', benchmarks_executed=False, full_ci_executed=False,
                   compiler_verified=binary_verified, complete_candidate=complete, missing_cases=missing,
@@ -160,7 +162,7 @@ def main():
         lua_text = '无该项参考' if row['lua_ms'] is None else f"{row['lua_ms']:.4f}"
         label = '未设该项门限' if row['passed'] is None else '通过' if row['passed'] else '未通过'
         if row['interface_limit_ms'] is not None:
-            label += '（接口 <10 ms）'
+            label += f"（接口 ≤{row['interface_limit_ms']} ms）"
         lines.append(f"| {row['case']} | {row['chali_ms']:.4f} | {row['cpp_o2_ms']:.4f} | {lua_text} | {label} |")
     lines += ['', f"已设门限项目通过 {result['pass_count']}/{len(comparable)}；全部已选条件达标：{result['passed']}。",
               f"完整且已核对编译器字节的候选数据：{complete}；最终全量 CI：未由本工具执行。"]

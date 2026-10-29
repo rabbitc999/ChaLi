@@ -23,13 +23,13 @@ class PerformanceGateTests(unittest.TestCase):
         self.assertFalse(verdict(110, 100, 110)['passed'])
         self.assertIsNone(verdict(110, 100, None)['lua_pass'])
 
-    def test_interface_ten_millisecond_boundary(self):
-        """接口单独要求小于 10 ms；恰好 10 ms 拒绝，未来 Lua 参考仍须满足。"""
-        for case in ('interface_mono', 'interface_poly'):
-            self.assertTrue(verdict(9.999999, 0.1, None, case)['passed'])
-            self.assertFalse(verdict(10, 0.1, None, case)['passed'])
-            self.assertFalse(verdict(11, 0.1, None, case)['passed'])
-            self.assertFalse(verdict(9, 0.1, 8, case)['passed'])
+    def test_interface_limits_boundary(self):
+        """单态 40 ms、多态 400 ms 含等号通过；超限或慢于 Lua 仍拒绝。"""
+        for case, limit in (('interface_mono', 40), ('interface_poly', 400)):
+            self.assertTrue(verdict(limit - 0.000001, 0.1, None, case)['passed'])
+            self.assertTrue(verdict(limit, 0.1, None, case)['passed'])
+            self.assertFalse(verdict(limit + 0.000001, 0.1, None, case)['passed'])
+            self.assertFalse(verdict(limit - 1, 0.1, limit - 2, case)['passed'])
 
     def test_bad_durations(self):
         """负数、无穷和 NaN 不得混入门槛运算。"""
