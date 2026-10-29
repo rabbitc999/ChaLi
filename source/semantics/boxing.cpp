@@ -724,6 +724,35 @@ ast::NodePtr LowerCall(int id)
             return Fail("只读引用（T const&）或 const 来源不能调用 drop；需要 T mut&"), Bad();
         const Memory::Vector<int> argIds = args;
         const std::shared_ptr<MType> baseType = ExprType(receiverId);
+        // 只消费标准 String 的立即 unwrap；保存、匹配或传递 Option 仍走原表示。
+        const auto *disableByteUnwrap = std::getenv("CHALI_NO_STRING_BYTE_UNWRAP");
+        if (!g_debugEnabled && g_stepLimit == 0u && !(disableByteUnwrap && *disableByteUnwrap)
+            && methodName == "unwrap" && argIds.empty() && receiverId >= 0)
+        {
+            const MNode inner = N(receiverId);
+            if (inner.kind == MNode::Call && inner.kids.size() == 2u)
+            {
+                const MNode member = N(inner.kids[0]);
+                const auto byteArgs = N(inner.kids[1]).kids;
+                if (member.kind == MNode::Member && member.s == "byteAt" && member.kids.size() == 1u
+                    && byteArgs.size() == 1u)
+                {
+                    const int source = member.kids[0];
+                    const MNode sourceNode = N(source);
+                    const MNode indexNode = N(byteArgs[0]);
+                    const MEnumVariantDef *valueVariant = nullptr;
+                    const auto indexType = ExprType(byteArgs[0]);
+                    if ((sourceNode.kind == MNode::Var || sourceNode.kind == MNode::Str)
+                        && (indexNode.kind == MNode::Var || indexNode.kind == MNode::Int)
+                        && IsStandardOpcode(ExprType(source), "String")
+                        && OptionVariants(baseType, &valueVariant, nullptr)
+                        && SameType(valueVariant->payloads[0].type, T(M_TypeIntBits(8, 1)))
+                        && SameType(indexType, T(M_TypeIntBits(64, 0))))
+                        return ast::Node::call("std::lang::__bootStringByteAtUnwrap",
+                                               { "address", "index" }, { LowerExpr(source), LowerExpr(byteArgs[0]) });
+                }
+            }
+        }
         bool declaredOpcodeMethod = false;
         if (FindOpcodeDeclaration(baseType))
             if (const auto *owner = FindStruct(baseType->name))

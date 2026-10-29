@@ -1,0 +1,6 @@
+chali aot: panic：String：非法 Unicode 码点
+出错位置：<内建 std::lang>:77（std::lang::__bootStringNext）
+调用栈（内 → 外）：
+  std::lang::__bootStringNext
+  std::lang::__stringTransform
+  main

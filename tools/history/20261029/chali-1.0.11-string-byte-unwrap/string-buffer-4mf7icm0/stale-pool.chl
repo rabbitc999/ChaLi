@@ -1,0 +1,1 @@
+void main(){String value="abcdefghijklmnopqrstuvwxyz0123456789";unsafe{int64 mut& slot=(int64 mut&)(int64)std::lang::address(&value);int64 old=std::lang::__bootStringOwnedData(*slot);value.reserve(100);int64 byte=std::lang::__bootStringByte(old,0);println("{}",byte);}}

@@ -1,0 +1,9 @@
+{
+  "label": "pool-scalar-negative-aot",
+  "command": [
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-l2ogtd5g\\pool-scalar-negative-aot.exe"
+  ],
+  "code": 1,
+  "stdout": "",
+  "stderr": "chali aot: panic：called Option.unwrap() on None\n出错位置：<内建 std::lang>:169（std::lang::__bootStringByteAtUnwrap）\n调用栈（内 → 外）：\n  std::lang::__bootStringByteAtUnwrap\n  main\n"
+}

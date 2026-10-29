@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-WORK = ROOT / "build/borrow-flow-tests"
+WORK = ROOT / "tmp/borrow-flow-tests"
 PREFIX = "struct S:Drop{int64 value;void drop(){}};struct B{S left;S right;};S mut& identity(S mut& p){return p;}struct View{S left;S right;S mut& leftRef(){return &self.left;}S mut& rightRef(){S mut& r=&self.right;return r;}S mut& from(S mut& p){return p;}S mut& deadLeft(){if(false){return &self.left;}return &self.right;}S mut& earlyRight(bool flag){if(flag){return &self.right;}S mut& p=&self.left;p=&self.right;return p;}S mut& shadowRight(){S mut& p=&self.right;{S mut& p=&self.left;}return p;}S mut& assignedRight(){S mut& p=&self.left;{p=&self.right;}return p;}S mut& fresh(){S mut& p = new S;return p;}};int64 fn() forwardFn(int64 fn() callback){return callback;}struct FnHolder{int64 fn() callback;};struct RefHolder{S mut& ptr;};"
 
 

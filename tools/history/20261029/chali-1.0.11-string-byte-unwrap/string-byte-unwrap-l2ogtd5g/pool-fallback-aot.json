@@ -1,0 +1,9 @@
+{
+  "label": "pool-fallback-aot",
+  "command": [
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-l2ogtd5g\\pool-fallback.exe"
+  ],
+  "code": 0,
+  "stdout": "String byte unwrap OK\n",
+  "stderr": ""
+}

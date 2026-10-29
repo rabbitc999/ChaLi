@@ -1,0 +1,30 @@
+/** 立即消费标准字节 Option 与保守回退的行为对照。 */
+int64 calls = 0;
+int64 position() { calls = calls + 1; return 1; }
+String source() { calls = calls + 10; return "xy"; }
+struct Custom {
+    Option<uint8> byteAt(int64 index) { return Option<uint8>::Value((uint8)77); }
+}
+int64 probe(String const& text, int64 index) {
+    return (int64)text.byteAt(index).unwrap();
+}
+void main() {
+    String text = "A中文🙂Z";
+    int64 index = 0;
+    while (index < text.byteLength()) {
+        Option<uint8> saved = text.byteAt(index);
+        assert(text.byteAt(index).unwrap() == saved.unwrap());
+        index = index + 1;
+    }
+    String const& borrowed = &text;
+    assert(probe(borrowed, 1) == 228);
+    assert("abc".byteAt(0).unwrap() == (uint8)97);
+    assert(text.byteAt(position()).unwrap() == (uint8)228 && calls == 1);
+    assert(source().byteAt(position()).unwrap() == (uint8)121 && calls == 12);
+    Custom custom;
+    assert(custom.byteAt(0).unwrap() == (uint8)77);
+    String copy = text;
+    copy.clear();
+    assert(text.byteAt(0).unwrap() == (uint8)65 && copy.isEmpty());
+    println("String byte unwrap OK");
+}

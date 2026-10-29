@@ -1,0 +1,15 @@
+{
+  "label": "malloc-scalar-run",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "run",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_string_byte_unwrap.chl",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-gqsqkiyg\\malloc-scalar-run"
+  ],
+  "code": 1,
+  "stdout": "",
+  "stderr": "chali: G:/Desktop/ChaLi/tests/fixtures/aot_string_byte_unwrap.chl:9:1: #export 参数必须为固定 C 标量或无资源纯值结构体\n 9 | int64 probe(String const& text, int64 index) {\n   | ~~~~~\n"
+}

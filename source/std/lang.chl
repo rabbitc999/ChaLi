@@ -163,6 +163,13 @@ unsafe String __stringAdopt(int64 address);
 unsafe int64 __bootStringLength(int64 address) {
     return __stringStorageLength(address);
 }
+/** 直接消费 byteAt 的 Value，不物化 Option；越界沿用 unwrap 的 None 诊断。 */
+unsafe uint8 __bootStringByteAtUnwrap(int64 address,int64 index) {
+    if(index<0 || index>=__bootStringLength(address)){
+        panic("called Option.unwrap() on None");
+    }
+    return (uint8)__bootStringByte(__stringStorageData(address),index);
+}
 /** 读取自举构造的容量描述符中的数据地址，不经过宿主分派。 */
 unsafe int64 __bootStringOwnedData(int64 address) {
     int64 mut& data=(int64 mut&)(address+24);return *data;

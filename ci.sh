@@ -252,6 +252,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
     run_step "运行有界增长与 List／Map／Set 容量复用回归" "$PYTHON" tests/chali_buffer_growth.py --chali "$CHALI_BIN"
     run_step "运行 String 缓冲区、复制、Drop 与借用回归" "$PYTHON" tests/chali_string_buffer.py --chali "$CHALI_BIN"
+    run_step "运行 String 字节 Option 标量化及回退回归" "$PYTHON" tests/chali_string_byte_unwrap.py --chali "$CHALI_BIN"
     run_step "运行默认 String 的语言自举回归" "$PYTHON" tests/chali_bootstrap_string.py --chali "$CHALI_BIN"
     run_step "运行数值转换的语言自举回归" "$PYTHON" tests/chali_bootstrap_numeric.py --chali "$CHALI_BIN"
     run_step "运行实验性集合的语言自举回归" "$PYTHON" tests/chali_bootstrap_containers.py --chali "$CHALI_BIN"

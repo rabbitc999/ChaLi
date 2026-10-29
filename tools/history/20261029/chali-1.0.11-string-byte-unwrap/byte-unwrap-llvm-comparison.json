@@ -1,0 +1,12 @@
+{
+  "scalar": {
+    "direct_host_allocation_calls": 0,
+    "static_call_sites": 12,
+    "scope": "optimized probe function only; callees are not included"
+  },
+  "fallback": {
+    "direct_host_allocation_calls": 1,
+    "static_call_sites": 22,
+    "scope": "optimized probe function only; callees are not included"
+  }
+}
