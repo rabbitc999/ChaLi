@@ -261,6 +261,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行接口指针快照共享与写时分离回归" "$PYTHON" tests/chali_interface_snapshot.py --chali "$CHALI_BIN"
     run_step "运行数据区文本批量读取与旧协议边界差分" "$PYTHON" tests/chali_data_cstring.py --chali "$CHALI_BIN"
     run_step "运行 List 数值追加原语及全标量类型回归" "$PYTHON" tests/chali_numeric_list_append.py --chali "$CHALI_BIN"
+    run_step "运行 List 数值存储布局与回退回归" "$PYTHON" tests/chali_numeric_list_storage.py
     run_step "运行默认 String 的语言自举回归" "$PYTHON" tests/chali_bootstrap_string.py --chali "$CHALI_BIN"
     run_step "运行数值转换的语言自举回归" "$PYTHON" tests/chali_bootstrap_numeric.py --chali "$CHALI_BIN"
     run_step "运行实验性集合的语言自举回归" "$PYTHON" tests/chali_bootstrap_containers.py --chali "$CHALI_BIN"

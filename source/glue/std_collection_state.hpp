@@ -141,6 +141,8 @@ struct Record
 {
     StorageKind kind = StorageKind::Vector;
     Memory::Vector<ObjectValue> items;
+    Memory::Vector<ScalarResult> scalarItems;  ///< 非拥有数值槽，不携带文本及聚合容器。
+    bool scalarItemsActive = false;           ///< 活跃数值布局；回退后保留原缓冲区直到 drop。
     Entries entries;
     /**
      * @brief 借用元素的稳定内存槽与嵌套借用次数。
@@ -360,9 +362,10 @@ Slot nativeNewObject(State &ctx, StorageKind kind);
  * @param handle 容器句柄。
  * @param kind 预期类别。
  * @param who 诊断入口名。
+ * @param allowScalars 是否由调用者直接处理非拥有数值布局。
  * @return 有效记录，失败时为空。
  */
-Record *nativeObject(State &ctx, const Slot &handle, StorageKind kind, const char *who);
+Record *nativeObject(State &ctx, const Slot &handle, StorageKind kind, const char *who, bool allowScalars = false);
 /**
  * @brief 将一个有类型槽转换为拥有或借用的原生值快照。
  * @param ctx 当前宿主上下文。

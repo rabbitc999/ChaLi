@@ -14,6 +14,37 @@
 namespace collection_glue
 {
 /**
+ * @brief 需要通用槽时物化数值布局，保留长度、容量与旧缓冲区。
+ * @param object 待转换的集合记录。
+ */
+static void materializeScalarItems(Record &object)
+{
+    if (!object.scalarItemsActive) return;
+    Memory::Vector<ObjectValue> expanded(object.items.get_allocator());
+    expanded.reserve(object.scalarItems.capacity());
+    for (const auto &scalar : object.scalarItems)
+    {
+        auto &value = expanded.emplace_back();
+        value.isFloat = scalar.floating != 0;
+        if (value.isFloat) std::memcpy(&value.real, &scalar.bits, sizeof(value.real));
+        else value.integer = scalar.bits;
+    }
+    object.items.swap(expanded);
+    object.scalarItems.clear();
+    object.scalarItemsActive = false;
+}
+
+/**
+ * @brief 返回当前活跃列表布局的元素个数。
+ * @param object 列表记录。
+ * @return 当前长度。
+ */
+static std::size_t listItemCount(const Record &object)
+{
+    return object.scalarItemsActive ? object.scalarItems.size() : object.items.size();
+}
+
+/**
  * @brief 读取整数参数，浮点输入按语言规则截断。
  * @param value 内部数值槽。
  * @return 整数参数。
@@ -83,9 +114,10 @@ Slot nativeNewObject(State &ctx, StorageKind kind)
  * @param handle 对象句柄。
  * @param kind 预期存储类别。
  * @param who 诊断中的操作名。
+ * @param allowScalars 是否允许调用者直接处理非拥有数值布局。
  * @return 可访问记录，校验失败返回空。
  */
-Record *nativeObject(State &ctx, const Slot &handle, StorageKind kind, const char *who)
+Record *nativeObject(State &ctx, const Slot &handle, StorageKind kind, const char *who, bool allowScalars)
 {
     auto *object = static_cast<Record *>(ctx.host.nativeRecord(handle.integer, descriptor(kind)));
     if (!object)
@@ -98,6 +130,7 @@ Record *nativeObject(State &ctx, const Slot &handle, StorageKind kind, const cha
         ctx.error = Memory::String("Equal / Hash 回调期间不能重入同一个 ") + (kind == StorageKind::Set ? "Set" : "Map");
         return nullptr;
     }
+    if (allowScalars && object->scalarItemsActive && object->elementViews.empty()) return object;
     return nativeRefreshViews(ctx, *object) ? object : nullptr;
 }
 
@@ -334,6 +367,7 @@ inline bool nativeViewValue(State &ctx, const Record::ElementView &view, ObjectV
  */
 bool nativeRefreshViews(State &ctx, Record &object)
 {
+    materializeScalarItems(object);
     if (object.refreshingViews || object.elementViews.empty()) return true;
     object.refreshingViews = true;
     for (const auto &entry : object.elementViews)
@@ -417,9 +451,9 @@ inline bool nativeWriteView(State &ctx, const Record::ElementView &view, const O
 inline bool vecIndex(State &ctx, Record *object, std::int64_t index, std::size_t *out,
                      const char *who)
 {
-    if (index < 0 || static_cast<std::size_t>(index) >= object->items.size())
+    if (index < 0 || static_cast<std::size_t>(index) >= listItemCount(*object))
     {
-        ctx.error = Memory::String(who) + " 下标越界：" + Memory::toString(index) + "（长度 " + Memory::toString(object->items.size()) + "）";
+        ctx.error = Memory::String(who) + " 下标越界：" + Memory::toString(index) + "（长度 " + Memory::toString(listItemCount(*object)) + "）";
         return false;
     }
     *out = static_cast<std::size_t>(index);
@@ -683,10 +717,18 @@ inline Slot iterLeaseRef(State &ctx, const Arguments &args)
  */
 inline Slot vecAt(State &ctx, const Arguments &args)
 {
-    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "vec 取元素");
+    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "vec 取元素", true);
     if (object == nullptr) return Slot::fromInt(0);
     std::size_t index = 0u;
     if (!vecIndex(ctx, object, nativeInt(args[1]), &index, "vec")) return Slot::fromInt(0);
+    if (object->scalarItemsActive)
+    {
+        const auto value = object->scalarItems[index];
+        if (!value.floating) return Slot::fromInt(value.bits);
+        double real = 0;
+        std::memcpy(&real, &value.bits, sizeof(real));
+        return Slot::fromDouble(real);
+    }
     Slot out;
     if (!nativeSlot(ctx, object->items[index], &out)) return Slot::fromInt(0);
     return out;
@@ -764,9 +806,9 @@ inline Slot vecPop(State &ctx, const Arguments &args)
  */
 inline Slot vecLen(State &ctx, const Arguments &args)
 {
-    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "len(vec)");
+    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "len(vec)", true);
     if (object == nullptr) return Slot::fromInt(0);
-    return Slot::fromInt(static_cast<std::int64_t>(object->items.size()));
+    return Slot::fromInt(static_cast<std::int64_t>(listItemCount(*object)));
 }
 
 /**
@@ -787,7 +829,7 @@ std::size_t listStorageMaximum(const Record &object)
  */
 static Slot numericListAppend(State &ctx, const Arguments &args)
 {
-    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "List storage");
+    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "List storage", true);
     if (!object) return Slot::fromInt(0);
     if (object->iteratorLeases || !object->elementViews.empty())
     {
@@ -799,8 +841,13 @@ static Slot numericListAppend(State &ctx, const Arguments &args)
         ctx.error = "List 数值追加原语不接受文本或拥有值布局";
         return Slot::fromInt(0);
     }
-    const auto size = object->items.size();
-    const auto capacity = object->items.capacity();
+    if (!object->scalarItemsActive && object->items.empty() && object->items.capacity() == 0)
+    {
+        const auto *disabled = std::getenv("CHALI_NO_NUMERIC_LIST_STORAGE");
+        object->scalarItemsActive = !(disabled && *disabled);
+    }
+    const auto size = listItemCount(*object);
+    const auto capacity = object->scalarItemsActive ? object->scalarItems.capacity() : object->items.capacity();
     if (size == capacity)
     {
         const auto maximum = listStorageMaximum(*object);
@@ -816,10 +863,17 @@ static Slot numericListAppend(State &ctx, const Arguments &args)
         }
         const auto grown = capacity > maximum / 2u ? maximum : capacity * 2u;
         const auto minimum = std::min<std::size_t>(8, maximum);
-        object->items.reserve(std::max({ size + 1u, grown, minimum }));
+        const auto next = std::max({ size + 1u, grown, minimum });
+        if (object->scalarItemsActive) object->scalarItems.reserve(next);
+        else object->items.reserve(next);
     }
     // 此入口已排除文本和拥有值；直接构造最终槽，避免临时快照及其分配器状态的移动。
     const Slot value = args[1];
+    if (object->scalarItemsActive)
+    {
+        object->scalarItems.push_back(value.scalar());
+        return Slot::fromInt(0);
+    }
     auto &stored = object->items.emplace_back();
     stored.isFloat = value.isFloat;
     stored.integer = value.integer;
@@ -837,7 +891,8 @@ static Slot numericListAppend(State &ctx, const Arguments &args)
 template <int Operation>
 Slot listStoragePrimitive(State &ctx, const Arguments &args)
 {
-    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "List storage");
+    Record *object = nativeObject(ctx, args[0], StorageKind::Vector, "List storage",
+                                 Operation == 0 || Operation == 1 || Operation == 2 || Operation == 3 || Operation == 4 || Operation == 9);
     if (!object) return Slot::fromInt(0);
     if constexpr (Operation == 3 || Operation == 4 || Operation == 6)
         if (object->iteratorLeases || !object->elementViews.empty())
@@ -854,17 +909,17 @@ Slot listStoragePrimitive(State &ctx, const Arguments &args)
         }
         const auto operation = nativeInt(args[1]);
         const auto index = nativeInt(args[2]);
-        if (operation == 1 && (index < 0 || static_cast<std::size_t>(index) > object->items.size()))
-            ctx.error = "vec.insert 的位置越界：" + Memory::toString(index) + "（长度 " + Memory::toString(object->items.size()) + "，只能落在 0..长度 之间）";
+        if (operation == 1 && (index < 0 || static_cast<std::size_t>(index) > listItemCount(*object)))
+            ctx.error = "vec.insert 的位置越界：" + Memory::toString(index) + "（长度 " + Memory::toString(listItemCount(*object)) + "，只能落在 0..长度 之间）";
         if (operation == 2)
         {
             std::size_t checked = 0;
             vecIndex(ctx, object, index, &checked, "vec.remove");
         }
-        if (operation == 3 && object->items.empty()) ctx.error = "vec.pop 的列表是空的";
-        return Slot::fromInt(static_cast<std::int64_t>(object->items.size()));
+        if (operation == 3 && listItemCount(*object) == 0) ctx.error = "vec.pop 的列表是空的";
+        return Slot::fromInt(static_cast<std::int64_t>(listItemCount(*object)));
     }
-    if constexpr (Operation == 1) return Slot::fromInt(static_cast<std::int64_t>(object->items.capacity()));
+    if constexpr (Operation == 1) return Slot::fromInt(static_cast<std::int64_t>(object->scalarItemsActive ? object->scalarItems.capacity() : object->items.capacity()));
     if constexpr (Operation == 9)
         return Slot::fromInt(static_cast<std::int64_t>(listStorageMaximum(*object)));
     if constexpr (Operation == 2)
@@ -874,6 +929,8 @@ Slot listStoragePrimitive(State &ctx, const Arguments &args)
             ctx.error = "List 容量超出存储范围";
         else if (object->iteratorLeases || !object->elementViews.empty())
             ctx.error = "活跃 for-in 引用期间不能移动或删除列表元素";
+        else if (object->scalarItemsActive)
+            object->scalarItems.reserve(static_cast<std::size_t>(capacity));
         else
             object->items.reserve(static_cast<std::size_t>(capacity));
     }
@@ -881,12 +938,17 @@ Slot listStoragePrimitive(State &ctx, const Arguments &args)
     {
         std::size_t left = 0, right = 0;
         if (vecIndex(ctx, object, nativeInt(args[1]), &left, "List storage") && vecIndex(ctx, object, nativeInt(args[2]), &right, "List storage"))
-            std::swap(object->items[left], object->items[right]);
+        {
+            if (object->scalarItemsActive) std::swap(object->scalarItems[left], object->scalarItems[right]);
+            else std::swap(object->items[left], object->items[right]);
+        }
     }
     if constexpr (Operation == 4)
     {
-        if (object->items.empty())
+        if (listItemCount(*object) == 0)
             ctx.error = "List storage 没有可清理的元素";
+        else if (object->scalarItemsActive)
+            object->scalarItems.pop_back();
         else
         {
             ctx.objects->releaseValue(object->items.back());
@@ -1200,6 +1262,7 @@ bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const N
         host.fail("listPush 的句柄不是 List");
         return false;
     }
+    materializeScalarItems(*object);
     ObjectValue out;
     if (value.isText())
     {
@@ -1242,6 +1305,7 @@ bool listPushStruct(stackvm::NativeCallContext &host, std::int64_t listHandle, s
         host.fail("listPushStruct 的句柄不是 List");
         return false;
     }
+    materializeScalarItems(*object);
     ObjectValue out;
     out.isStruct = true;
     out.fields.reserve(slotCount);
@@ -1615,6 +1679,8 @@ inline void *copyRecord(stackvm::NativeCallContext &host, const void *record)
     copy->mapEqual = source.mapEqual;
     copy->mapHash = source.mapHash;
     copy->iteratorLease = source.iteratorLease;
+    copy->scalarItemsActive = source.scalarItemsActive;
+    if (source.scalarItemsActive) copy->scalarItems = source.scalarItems;
     for (auto item : source.items)
     {
         if (!state.objects->copyValue(&item, &error))
@@ -1714,6 +1780,7 @@ void disposeRecord(stackvm::NativeCallContext &host, void *record)
 inline bool visitRecord(void *record, const Memory::Function<bool(ObjectValue &)> &visitor)
 {
     auto &value = *static_cast<Record *>(record);
+    materializeScalarItems(value);
     for (auto &item : value.items)
         if (!visitor(item)) return false;
     Entries entries;
@@ -1752,7 +1819,16 @@ inline bool textRecord(stackvm::NativeCallContext &host, const void *record, sta
     const bool list = value.kind == StorageKind::Vector;
     view.prefix = list ? "[" : "{";
     view.suffix = list ? "]" : "}";
-    if (list)
+    if (list && value.scalarItemsActive)
+        for (const auto &scalar : value.scalarItems)
+        {
+            ObjectValue item;
+            item.isFloat = scalar.floating != 0;
+            if (item.isFloat) std::memcpy(&item.real, &scalar.bits, sizeof(item.real));
+            else item.integer = scalar.bits;
+            view.rows.push_back({ item });
+        }
+    else if (list)
         for (const auto &item : value.items) view.rows.push_back({ item });
     else
         for (const auto &entry : value.entries)
@@ -1771,9 +1847,9 @@ inline bool textRecord(stackvm::NativeCallContext &host, const void *record, sta
  */
 const stackvm::NativeRecordType &descriptor(StorageKind kind)
 {
-    static const stackvm::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.1" };
-    static const stackvm::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.1" };
-    static const stackvm::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.1" };
+    static const stackvm::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.2" };
+    static const stackvm::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.2" };
+    static const stackvm::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.2" };
     static const stackvm::NativeRecordType lease{ "iterator lease", nullptr, destroyRecord, nullptr, copyRecord, disposeRecord, nullptr, nullptr, nullptr, nullptr, "chali.std.ListLease.1" };
     return kind == StorageKind::Vector ? list : kind == StorageKind::Set ? set :
                                             kind == StorageKind::Map     ? map :

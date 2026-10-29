@@ -35,6 +35,7 @@ void main(){assert(numericFill(3)==33667);
     )
     for kind, value in cases:
         source += f'''{{{kind} expected={value};List<{kind}> values;values.push(expected);
+assert(values[0]==expected);
 List<{kind}> copy=values;values.clear();values.push(expected);
 assert(values[0]==expected && copy[0]==expected);
 Map<{kind},{kind}> mapping;mapping[expected]=expected;assert(mapping[expected]==expected);
@@ -46,6 +47,7 @@ Set<{kind}> keys;keys.add(expected);assert(keys.has(expected)!=0);}}
         for pattern in patterns:
             source += f'''{{List<float{width}> values;uint64 bits={pattern};
 values.push(std::lang::__bootFloat{width}FromBits(bits));
+assert(std::lang::__bootFloat{width}Bits(values[0])==bits);
 List<float{width}> copy=values;values.clear();
 assert(std::lang::__bootFloat{width}Bits(copy[0])==bits);}}
 '''
