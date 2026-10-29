@@ -545,7 +545,7 @@ destructure_binding := name_token { $$ = M_Var($1); }
                      | WILDCARD { $$ = M_DestructureIgnore(); }
                      | LPAREN destructure_items RPAREN { $$ = $2; } ;
 
-/* if / elif / else：else 后面**必须**是大括号 —— 悬空 else 从文法上就不存在 */
+/* if / elif / else：else if 复用 elif，所有分支均保留大括号。 */
 if_block := block { $$ = $1; }
           | LBRACE expr RBRACE { $$ = M_ValueBlock($2); } ;
 
@@ -553,7 +553,8 @@ if_stmt := IF LPAREN expr RPAREN if_block elif_list else_part
     { $$ = M_If($3, $5, $6, $7); } ;
 
 elif_list := %empty { $$ = M_List(); }
-           | elif_list ELIF LPAREN expr RPAREN if_block { M_ListAdd($1, M_Elif($4, $6)); $$ = $1; } ;
+           | elif_list ELIF LPAREN expr RPAREN if_block { M_ListAdd($1, M_Elif($4, $6)); $$ = $1; }
+           | elif_list ELSE IF LPAREN expr RPAREN if_block { M_ListAdd($1, M_Elif($5, $7)); $$ = $1; } ;
 
 else_part := %empty             { $$ = -1; }
            | ELSE if_block      { $$ = $2; } ;

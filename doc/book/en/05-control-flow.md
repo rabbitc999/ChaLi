@@ -6,6 +6,8 @@
 
 `if`, `elif` and `else` select a branch. `while` repeats while its condition holds; `do` executes a body before testing. `for-in` traverses an iterable. Keep the update step visible so that the termination condition can be checked.
 
+`else if` is equivalent to `elif`; both may appear in the same chain. Statements and value expressions use the same branch semantics and evaluate only the conditions needed to select a branch. Every branch still requires braces, and a value expression requires a final else.
+
 ```chali
 void main()
 {

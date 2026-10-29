@@ -687,7 +687,8 @@ if_block = block
 if_stmt = "if", "(", expr, ")", if_block, elif_list, else_part ;
 
 elif_list = ""
-    | elif_list, "elif", "(", expr, ")", if_block ;
+    | elif_list, "elif", "(", expr, ")", if_block
+    | elif_list, "else", "if", "(", expr, ")", if_block ;
 
 else_part = ""
     | "else", if_block ;
