@@ -1,0 +1,191 @@
+{
+  "compiler_sha256": "6f4cb1320a7af2f46970e1e1f260a47a7467ecf102774b69623d022a5349eebc",
+  "results": [
+    {
+      "label": "malloc-scalar-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar-run"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-scalar-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-scalar-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar.exe"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-scalar-optimize",
+      "command": [
+        "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+        "-O3",
+        "-S",
+        "-emit-llvm",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar.ll",
+        "-o",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar-o3.ll"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-fallback-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback-run"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-fallback-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-fallback-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback.exe"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-fallback-optimize",
+      "command": [
+        "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+        "-O3",
+        "-S",
+        "-emit-llvm",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback.ll",
+        "-o",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback-o3.ll"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-scalar-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-scalar-run"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-scalar-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-scalar"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-scalar-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-scalar.exe"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-fallback-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-fallback-run"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-fallback-build",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-fallback"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-fallback-aot",
+      "command": [
+        "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\pool-fallback.exe"
+      ],
+      "code": 0,
+      "stdout": "interface snapshots and scalar object copy OK\n",
+      "stderr": ""
+    }
+  ]
+}

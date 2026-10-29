@@ -1,0 +1,41 @@
+/** 接口继承、包装快照、接收者共享及普通拥有值深复制。 */
+interface Operation { int64 apply(int64 value); };
+interface NamedOperation:Operation { int64 bias(); };
+struct Multiply:NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value){return value*factor+offset;}
+    int64 bias(){return offset;}
+};
+struct Subtract:NamedOperation {
+    int64 factor; int64 offset;
+    int64 apply(int64 value){return value*factor-offset;}
+    int64 bias(){return offset;}
+};
+Multiply first; Subtract second;
+int64 callOperation(NamedOperation const& operation,int64 value){return operation.apply(value);}
+NamedOperation const& choose(bool other){if(other){return &second;}return &first;}
+int64 rebind(NamedOperation const& operation){operation=&second;return operation.apply(4);}
+interface Mutator { void add(int64 delta); int64 value(); };
+struct Counter:Mutator {
+    int64 total;
+    void add(int64 delta){total=total+delta;}
+    int64 value(){return total;}
+};
+void update(Mutator mut& operation){operation.add(5);}
+void main(){
+    first.factor=3;first.offset=7;second.factor=5;second.offset=11;
+    NamedOperation const& original=&first;
+    NamedOperation const& snapshot=original;
+    original=&second;
+    assert(callOperation(&original,4)==9 && callOperation(&snapshot,4)==19);
+    assert(rebind(&snapshot)==9 && snapshot.apply(4)==19);
+    int64 i=0;
+    while(i<16){NamedOperation const& view=choose((i&1)!=0);assert(callOperation(&view,4)==(if((i&1)!=0){9}else{19}));i=i+1;}
+    Counter counter;Mutator mut& writable=&counter;update(&writable);
+    assert(counter.total==5 && writable.value()==5);
+    Any value=11;Any copied=value;value.set(23);int64 saved=copied.getValue();assert(saved==11);
+    List<String> strings;strings.push("before");List<String> duplicate=strings;strings[0]="after";assert(duplicate[0]=="before");
+    int64 captured=7;let closure=int64 fn copy(int64 x){x+captured};let closureCopy=closure;
+    captured=9;assert(closure(2)==9 && closureCopy(2)==9);
+    println("interface snapshots and scalar object copy OK");
+}

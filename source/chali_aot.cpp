@@ -276,6 +276,7 @@ struct Translator
     bool collectionScalars = true;                                ///< 集合返回数值与种类，避免通用值及线程局部查询。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
+    bool objectCopyScalars = true;                                ///< 对象复制复用标量入口，不构造通用实参向量。
     bool dataSnapshots = true;                                    ///< 无不透明调用的循环在函数帧内保存数据区基址。
     bool stringStorageViews = true;                               ///< 通过已验证堆视图读取拥有型字符串描述符。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
@@ -312,6 +313,8 @@ struct Translator
         referencePrimitives = !(references && *references);
         const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
         objectScalars = !(objects && *objects);
+        const auto *objectCopies = std::getenv("CHALI_NO_AOT_OBJECT_COPY_SCALAR");
+        objectCopyScalars = !(objectCopies && *objectCopies);
         const auto *data = std::getenv("CHALI_NO_AOT_DATA_SNAPSHOT");
         dataSnapshots = !(data && *data);
         const auto *stringViews = std::getenv("CHALI_NO_AOT_STRING_STORAGE_VIEW");
@@ -1262,6 +1265,30 @@ struct Builder
             {
                 write(destination, call("chali_host_object_scalar", "i64", {
                     { "i64", callee == "__std_obj_name" ? "0" : "1" }, convert(argument(0), "i64") }));
+                return true;
+            }
+            if (state.objectCopyScalars && callee == "__std_object_copy" && arguments.size() == 1u)
+            {
+                const auto source = argument(0);
+                Value operation{ "i64", "2" };
+                Value bits;
+                if (source.type == "double" || source.type == "float")
+                {
+                    const auto real = convert(source, "double");
+                    bits = instruction("i64", "bitcast double " + real.text + " to i64");
+                    operation.text = "3";
+                }
+                else
+                {
+                    bits = convert(source, "i64");
+                    if (!source.floating.empty())
+                    {
+                        const auto floating = instruction("i1", "icmp ne i8 " + source.floating + ", 0");
+                        operation = instruction("i64", "select i1 " + floating.text + ", i64 3, i64 2");
+                    }
+                }
+                write(destination, call("chali_host_object_scalar", "i64",
+                                        { operation, bits }));
                 return true;
             }
             if (state.referencePrimitives && callee == "__std_reference" && arguments.size() == 1u)

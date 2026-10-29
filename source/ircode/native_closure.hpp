@@ -73,6 +73,14 @@ Slot closureGet(NativeContext &ctx, const Memory::Vector<Slot> &args);
 Slot objectCopy(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
 /**
+ * @brief 复制单个对象句柄，沿用视图刷新、宿主复制回调及独立所有权。
+ * @param ctx 当前原生上下文及错误状态。
+ * @param handle 待复制的运行时对象句柄。
+ * @return 独立句柄；失败时返回零并记录原始诊断。
+ */
+std::int64_t copyObjectHandle(NativeContext &ctx, std::int64_t handle);
+
+/**
  * @brief 静态函数地址无需复制；带捕获函数值深拷贝环境。
  */
 Slot functionCopy(NativeContext &ctx, const Memory::Vector<Slot> &args);

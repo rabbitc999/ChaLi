@@ -1,0 +1,15 @@
+{
+  "label": "malloc-fallback-run",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "run",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_interface_copy_scalar.chl",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-fallback-run"
+  ],
+  "code": 0,
+  "stdout": "interface snapshots and scalar object copy OK\n",
+  "stderr": ""
+}

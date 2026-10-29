@@ -196,22 +196,32 @@ Slot closureGet(NativeContext &ctx, const Memory::Vector<Slot> &args)
  */
 Slot objectCopy(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
-    const std::int64_t handle = nativeInt(args[0]);
+    return Slot::fromInt(copyObjectHandle(ctx, nativeInt(args[0])));
+}
+
+/**
+ * @brief 复制对象的标量内核，不建立实参向量或改变宿主记录的复制协议。
+ * @param ctx 当前原生上下文及错误状态。
+ * @param handle 待复制的对象句柄。
+ * @return 独立句柄；失败时返回零，具体原因保存在上下文。
+ */
+std::int64_t copyObjectHandle(NativeContext &ctx, std::int64_t handle)
+{
     if (ctx.objects == nullptr)
     {
         ctx.error = "不是一个能复制的对象句柄：" + Memory::toString(handle);
-        return Slot::fromInt(0);
+        return 0;
     }
     Memory::String error;
     RuntimeObject *source = ctx.objects->find(handle);
-    if (source != nullptr && !nativeRefreshViews(ctx, *source)) return Slot::fromInt(0);
+    if (source != nullptr && !nativeRefreshViews(ctx, *source)) return 0;
     const std::int64_t copy = ctx.objects->copyHandle(handle, &error);
     if (copy == 0)
     {
         ctx.error = error;
-        return Slot::fromInt(0);
+        return 0;
     }
-    return Slot::fromInt(copy);
+    return copy;
 }
 
 /**

@@ -802,21 +802,35 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
 }
 
 /**
- * @brief 直接查询盒装对象的类型号或地址，沿用对象查找和视图刷新协议。
- * @param operation 零读取类型号，一读取引用地址；由生成代码传入固定值。
- * @param handle 对象或接口描述符句柄。
- * @return 整数类型号或地址；失败时按通用原生入口的错误优先级终止。
+ * @brief 直接查询盒装对象或复制句柄，沿用对象查找、视图刷新和复制协议。
+ * @param operation 零类型号，一引用地址，二整数句柄复制，三按原浮点槽转换后复制。
+ * @param handle 查询时为对象或接口描述符，复制时为原始可复制对象句柄。
+ * @return 整数查询结果或独立句柄；失败时按通用原生入口的错误优先级终止。
  */
 std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handle)
 {
     NativeContext &context = currentContext();
-    const char *name = operation == 0 ? "__std_obj_name" : "__std_obj_addr";
+    const bool copying = operation == 2 || operation == 3;
+    const char *name = operation == 0 ? "__std_obj_name" : copying ? "__std_object_copy" : "__std_obj_addr";
     std::int64_t result = 0;
     try
     {
-        RuntimeObject *object = nativeObject(context, Slot::fromInt(handle), ObjectKind::Obj,
-                                             operation == 0 ? "obj.name" : "接口指针");
-        if (object) result = operation == 0 ? object->objTag : object->objValue.integer;
+        if (copying)
+        {
+            if (operation == 3)
+            {
+                double real = 0.0;
+                std::memcpy(&real, &handle, sizeof(real));
+                handle = nativeInt(Slot::fromDouble(real));
+            }
+            result = copyObjectHandle(context, handle);
+        }
+        else
+        {
+            RuntimeObject *object = nativeObject(context, Slot::fromInt(handle), ObjectKind::Obj,
+                                                 operation == 0 ? "obj.name" : "接口指针");
+            if (object) result = operation == 0 ? object->objTag : object->objValue.integer;
+        }
     } catch (const std::exception &error)
     {
         context.error = Memory::String("宿主函数 ") + name + " 抛出异常：" + error.what();
