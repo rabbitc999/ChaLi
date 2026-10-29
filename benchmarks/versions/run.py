@@ -52,7 +52,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--old', type=Path, default=ROOT / 'dist/llvm-external/chali-1.0.10-llvm-external-windows-x64.exe')
     parser.add_argument('--new', type=Path, default=ROOT / 'chali-1.0.11-llvm-external-windows-x64.exe')
-    parser.add_argument('--new-source', default='a522cf0')
+    parser.add_argument('--new-source', help='构建测量时所用编译器的实际源码提交')
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--cases', default=','.join((*BASIC, *FEATURES, *STRINGS)))
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -61,20 +61,24 @@ def main():
     args = parser.parse_args()
     if os.name != 'nt':
         parser.error('当前版本对照驱动仅核对 Windows x64；其他平台请勿复用本机结果')
+    if args.build_only and not args.new_source:
+        parser.error('--build-only 必须用 --new-source 指明实际编译器源码提交')
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     report_path = out / 'results.json'
     if args.build_only:
+        if report_path.exists():
+            parser.error('输出报告已存在，请使用新的目录，禁止覆盖最终测量')
         cases = args.cases.split(',')
         assert len(set(cases)) == len(cases) and set(cases) <= set((*BASIC, *FEATURES, *STRINGS))
         sources = [Path(__file__), ROOT / 'benchmarks/perf/build_aot.py', ROOT / 'benchmarks/features/timing.c',
                    ROOT / 'benchmarks/strings/cases.chl']
         sources += [ROOT / 'benchmarks/perf' / (case + ext) for case in cases if case in BASIC for ext in ('.chl', '.c')]
         sources += [ROOT / 'benchmarks/features' / (case + '.chl') for case in cases if case in FEATURES]
-        refs = {key: ROOT / 'benchmarks/results' / folder / 'results.json' for key, folder in (
-            ('basic', '1.0.11-thread-state'), ('features', '1.0.11-feature-baseline'), ('strings', '1.0.11-string-baseline'))}
+        refs = {key: ROOT / 'benchmarks/results/1.0.11-final/references' / (key + '.json')
+                for key in ('basic', 'features', 'strings')}
         reference = {key: json.loads(path.read_text(encoding='utf-8')) for key, path in refs.items()}
-        expected = {case: reference['basic']['sinks'][case]['chali-aot'] for case in BASIC}
+        expected = {case: reference['basic']['sinks'][case]['lua'] for case in BASIC}
         values = {**reference['features']['oracle_values'], **reference['strings']['model_values']}
         expected.update({case: str(row[0] + sum(row)) for case, row in values.items()})
         clang = Path(llvm_compiler()).resolve()
@@ -195,6 +199,10 @@ def main():
         return
 
     report = json.loads(report_path.read_text(encoding='utf-8'))
+    if report.get('completed') and not any(cell.get('status') == 'ready'
+            for rows in report['configurations'].values() for cell in rows.values()):
+        print('正式测量已完成，保持原报告，不重复计时。', flush=True)
+        return
     for config, compiler in report['compilers'].items():
         assert digest(compiler['path']) == compiler['sha256'], ('编译器发生变化', config)
     for case in report['cases']:

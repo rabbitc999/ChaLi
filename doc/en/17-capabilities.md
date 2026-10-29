@@ -120,7 +120,7 @@ API manuals require `chali man api`; omitting `api` produces a usage error. `cha
 Copies call the declared glue function. `#NonCopyable` disables copying and omits copy.
 BigInteger multiplication selects Karatsuba or dual-prime NTT by padded operation cost, reuses forward transforms for squares, and has no schoolbook kernel.
 Division combines Knuth limb division with Burnikel–Ziegler recursion, truncating toward zero with the dividend's remainder sign.
-Algorithm boundaries, tuning interfaces and reproducible benchmarks are described in the [big-number library guide](../../source/bignum/README.md) and [raw measurements](../benchmarks/bigint-arithmetic.json).
+Algorithm boundaries, tuning interfaces and reproducible test entry points are described in the [big-number library guide](../../source/bignum/README.md). Historical measurements remain in Git history; the current version comparison does not include big-number workloads.
 A struct may declare multiple opcode fields. BigInteger, BigDecimal, File and Process
 records and operations reside in standard library glue; the VM core manages generic NativeRecord
 shells and a host service table. File and Process are noncopyable. Process is the public type name.

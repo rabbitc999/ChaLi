@@ -16,7 +16,7 @@ Graph, UnionFind, binary and general trees, red-black trees, heaps and linked li
 
 LinkedList owns doubly linked nodes and a cursor index through a private opcode while preserving Iterator. Copies rebuild their index and retain the correspondence of original cursors within the copy. Deleted or cleared cursors never become valid again. Cursor and end insertion/removal have average constant complexity; value lookup and indexed iteration remain linear.
 
-The [raw capacity measurement](../benchmarks/opcode-values.json) records the version, configuration and seed. Excluding construction, 30,000 queries took about 57.5 ms at 1,000 elements and 56.9 ms at 1,000,000 elements. This is one acceptance measurement on the same host, not a cross-machine performance guarantee.
+Capacity queries read existing storage metadata; active element views retain their synchronization protocol. The [current comparison](12-performance.md) measures complete container growth and access tasks. Historical capacity measurements were removed from the current branch and remain in Git history.
 
 JsonValue and TomlValue share one owning storage protocol, retain their Iterator wrappers and own independent subtrees. Copying deeply copies the subtree. Extracted children are independent values. Closing a value leaves copies and previously extracted children valid. TOML root dump preserves original comments, whitespace and line endings; repeated parse/save does not add or remove comments. Child dumps serialize only their own value.
 

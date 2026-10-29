@@ -1,12 +1,14 @@
 """校验 Lua 严格更快及损坏样本拒绝，不运行性能负载。"""
 from pathlib import Path
 from project_temp import tempfile
+import hashlib
+import json
 import subprocess
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'benchmarks'))
-from evaluate_saved import samples_and_median, verdict
+from evaluate_saved import BASIC, FEATURES, STRINGS, samples_and_median, verdict, version_input, verify_version_source
 
 
 class PerformanceGateTests(unittest.TestCase):
@@ -63,17 +65,30 @@ class PerformanceGateTests(unittest.TestCase):
     def test_cli_rejects_inconsistent_inputs(self):
         """缺项、重复、混合编译器和不匹配二进制均不得产生有效验收结果。"""
         root = Path(__file__).resolve().parents[1]
-        reports = [root / 'benchmarks/results' / name / 'results.json' for name in (
-            '1.0.11-multi-address-basic', '1.0.11-multi-address-features', '1.0.11-multi-address-strings')]
         with tempfile.TemporaryDirectory(prefix='performance-gate-rejections-') as temporary:
             work = Path(temporary)
+            reports = []
+            for group, names in (('basic', BASIC), ('features', FEATURES), ('strings', STRINGS)):
+                canonical = json.loads((root / 'benchmarks/results/1.0.11-final/references' / (group + '.json')).read_text(encoding='utf-8'))
+                fixture = dict(runs=5, reps_per_run=5, compiler_sha256='a' * 64,
+                    allocator='malloc', working_tree_dirty=False, platform='unit fixture', processor='unit fixture',
+                    source_sha256=canonical['source_sha256'], configurations={name: {'chali-aot': {
+                        'processes': [{'samples_ns': [1_000_000] * 25, 'stderr': ''}], 'median_ms': 1.0}}
+                        for name in names})
+                path = work / (group + '.json')
+                path.write_text(json.dumps(fixture), encoding='utf-8')
+                reports.append(path)
+            mixed = json.loads(reports[1].read_text())
+            mixed['compiler_sha256'] = 'b' * 64
+            mixed_path = work / 'mixed-source.json'
+            mixed_path.write_text(json.dumps(mixed), encoding='utf-8')
             fake = work / 'compiler.bin'
             fake.write_bytes(b'not a compiler')
             cases = [
                 ('missing', reports[:1], [], '缺少负载'),
                 ('duplicate', [reports[0], reports[0]], [], '重复负载'),
                 ('binary', reports, ['--compiler', fake], '编译器与测量报告'),
-                ('mixed', [reports[0], root / 'benchmarks/results/1.0.11-feature-baseline/results.json', reports[2]], [], '同一实际编译器'),
+                ('mixed', [reports[0], mixed_path, reports[2]], [], '同一实际编译器'),
             ]
             for name, sources, extra, message in cases:
                 with self.subTest(name=name):
@@ -84,6 +99,33 @@ class PerformanceGateTests(unittest.TestCase):
                     self.assertEqual(process.returncode, 2, process.stderr)
                     self.assertIn(message, process.stderr)
                     self.assertFalse(output.exists())
+
+    def test_version_configuration_keeps_identity(self):
+        """投影一个统一配置时保留编译器、分配器和样本，不混用另一个配置。"""
+        samples = [{'samples_ns': [2_000_000] * 25, 'stderr': ''}]
+        source = dict(runs=5, reps_per_run=5, working_tree_dirty=False, platform='fixture', processor='fixture',
+            compilers={'1.0.11-pool': dict(sha256='a' * 64, allocator='pool', source_commit='abcdef0')},
+            configurations={'array': {'1.0.11-pool': dict(status='measured', processes=samples, median_ms=2.0)}})
+        projected = version_input(source, '1.0.11-pool')
+        self.assertEqual(projected['allocator'], 'pool')
+        self.assertEqual(projected['compiler_sha256'], 'a' * 64)
+        self.assertEqual(samples_and_median(projected, 'array'), (2.0, 2.0, 25))
+        self.assertNotIn('chali-aot', source['configurations']['array'])
+
+    def test_version_source_authentication(self):
+        """从保留的 Git 快照核对构建脚本，拒绝篡改摘要与非法提交。"""
+        root = Path(__file__).resolve().parents[1]
+        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+        path = 'benchmarks/versions/run.py'
+        content = subprocess.check_output(['git', 'show', commit + ':' + path], cwd=root)
+        report = dict(benchmark_commit=commit, workloads_sha256={path: hashlib.sha256(content).hexdigest()})
+        verify_version_source(report, path)
+        report['workloads_sha256'][path] = '0' * 64
+        with self.assertRaises(ValueError):
+            verify_version_source(report, path)
+        report['benchmark_commit'] = '--help'
+        with self.assertRaises(ValueError):
+            verify_version_source(report, path)
 
 
 if __name__ == '__main__':

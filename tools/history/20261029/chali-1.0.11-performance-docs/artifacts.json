@@ -1,0 +1,13 @@
+{
+  "phase": "performance-documentation-snapshot",
+  "version": "1.0.11",
+  "compiler_path": "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+  "compiler_sha256": "b1c411a12a9b9c82075fae3381728a18ccbfbd033d540980e8af479fe319aa5e",
+  "performance_source_commit": "a522cf0",
+  "performance_compiler_sha256": "7f781f0ad808c2bfc5414302907b12fbb9e493d437b30a6695a1ceb87a6f736c",
+  "full_ci_executed": false,
+  "subsequent_language_supplements_pending": true,
+  "book_pdf_sha256": "ed2326520001b12aa635dcfb8604372a0976462f0c4ef0cd6f46f74e1bfd89a6",
+  "book_pages": 301,
+  "reviewed_physical_page": 266
+}

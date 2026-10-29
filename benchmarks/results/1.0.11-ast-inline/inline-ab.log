@@ -1,5 +1,0 @@
-all builds complete; interleaved measurement starts
-array {'on': 59.4306, 'off': 59.9438}
-list_growth {'on': 386.0787, 'off': 390.9938}
-map_growth {'on': 250.1185, 'off': 249.4869}
-set_growth {'on': 173.2197, 'off': 173.7019}

@@ -4,7 +4,9 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 import statistics
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,6 +62,34 @@ def samples_and_median(report, case):
     return exact, reported, len(samples)
 
 
+def version_input(report, configuration):
+    """将最终版本对照中的一个统一分配器配置投影为验收输入，不复制或修改原始样本。"""
+    compiler = report['compilers'][configuration]
+    return dict(runs=report['runs'], reps_per_run=report['reps_per_run'],
+                compiler_sha256=compiler['sha256'], allocator=compiler['allocator'],
+                compiler_source_commit=compiler['source_commit'],
+                working_tree_dirty=report['working_tree_dirty'], platform=report['platform'],
+                processor=report['processor'], version_source=report,
+                configurations={case: {'chali-aot': cells[configuration]}
+                    for case, cells in report['configurations'].items()
+                    if configuration in cells and cells[configuration]['status'] == 'measured'})
+
+
+def verify_version_source(report, path, expected=None):
+    """核对记录的构建输入与对应 Git 快照，允许 CRLF/LF，保留原始摘要。"""
+    commit = report['benchmark_commit']
+    if not re.fullmatch(r'[0-9a-fA-F]{7,40}', commit):
+        raise ValueError('版本对照缺少有效的基准源码提交')
+    result = subprocess.run(['git', 'show', commit + ':' + path], cwd=ROOT,
+                            capture_output=True, timeout=30)
+    if result.returncode:
+        raise ValueError('不能读取版本对照的原始构建输入：' + path)
+    lf = result.stdout.replace(b'\r\n', b'\n')
+    hashes = {hashlib.sha256(data).hexdigest() for data in (result.stdout, lf, lf.replace(b'\n', b'\r\n'))}
+    if report['workloads_sha256'].get(path) not in hashes or (expected is not None and expected not in hashes):
+        raise ValueError(path + ' 冻结源码／驱动／计时壳摘要不一致')
+
+
 def main():
     """缺项、重复、摘要不符或混用编译器默认失败，历史分析须显式选择宽松模式。"""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -68,21 +98,22 @@ def main():
     parser.add_argument('--compiler', type=Path, help='核对实际被交付编译器的字节摘要')
     parser.add_argument('--partial', action='store_true', help='只分析部分负载，不作为完整候选验证')
     parser.add_argument('--allow-mixed-compilers', action='store_true', help='仅供明确标注的历史快照')
+    parser.add_argument('--configuration', choices=('1.0.10-pool', '1.0.11-pool', '1.0.11-malloc'),
+                        default='1.0.11-malloc', help='最终版本对照中要核对的统一配置')
     args = parser.parse_args()
     if args.out.exists():
         parser.error('输出目录必须尚不存在，禁止覆盖历史判定')
     provenance = {}
-    saved = ROOT / 'benchmarks/results'
-    cpp = load(saved / '1.0.11-cpp-o2-reference/results.json', provenance)
-    lua = load(saved / '1.0.11-thread-state/results.json', provenance)
-    canonical = {
-        'basic': load(saved / '1.0.11-reference-storage-children/results.json', provenance),
-        'features': load(saved / '1.0.11-feature-baseline/results.json', provenance),
-        'strings': load(saved / '1.0.11-string-baseline/results.json', provenance),
-    }
+    saved = ROOT / 'benchmarks/results/1.0.11-final/references'
+    cpp = load(saved / 'cpp-o2.json', provenance)
+    lua = load(saved / 'basic.json', provenance)
+    canonical = {group: load(saved / (group + '.json'), provenance) for group in ('basic', 'features', 'strings')}
     rows, compilers, allocators, hosts = {}, set(), set(), set()
     for path in args.reports:
         report = load(path, provenance)
+        if 'compilers' in report:
+            verify_version_source(report, 'benchmarks/versions/run.py')
+            report = version_input(report, args.configuration)
         if report.get('runs') != 5 or report.get('reps_per_run') != 5:
             raise ValueError(str(path) + ' 不是正式的五进程各五样本配置')
         compiler = report.get('chali_compiler', {}).get('sha256') or report.get('compiler_sha256')
@@ -103,11 +134,21 @@ def main():
                 raise ValueError('未知或重复负载：' + case)
             group = 'basic' if case in BASIC else 'features' if case in FEATURES else 'strings'
             expected_hashes = canonical[group]['source_sha256']
-            hashes = report['source_sha256']
+            hashes = report.get('source_sha256', {})
             required = 'benchmarks/strings/cases.chl' if group == 'strings' else case + '.chl'
             common = ({'run.py', 'build_aot.py', 'build_lua.py', 'luabench.c', 'hash_int.h'} if group == 'basic' else
                       {'run.py', 'timing.c', 'timing.rs', 'FeatureTiming.java'} if group == 'features' else set(expected_hashes))
-            if not (common | {required}) <= hashes.keys() or any(expected_hashes.get(key) != value for key, value in hashes.items()):
+            if 'version_source' in report:
+                original = report['version_source']
+                source = ('benchmarks/strings/cases.chl' if group == 'strings' else
+                          'benchmarks/' + ('perf/' if group == 'basic' else 'features/') + case + '.chl')
+                verify_version_source(original, source, expected_hashes[required])
+                if group == 'basic':
+                    verify_version_source(original, 'benchmarks/perf/' + case + '.c', expected_hashes[case + '.c'])
+                else:
+                    verify_version_source(original, 'benchmarks/features/timing.c',
+                        expected_hashes['timing.c' if group == 'features' else 'benchmarks/features/timing.c'])
+            elif not (common | {required}) <= hashes.keys() or any(expected_hashes.get(key) != value for key, value in hashes.items()):
                 raise ValueError(case + ' 冻结源码／驱动／计时壳摘要不一致')
             measured, reported, count = samples_and_median(report, case)
             if count != 25:

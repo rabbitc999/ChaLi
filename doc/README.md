@@ -126,7 +126,7 @@ ChaLi 让业务逻辑只写一次：同一份源码由 LLVM AOT 编译成原生�
 
 - [11 借用控制流与算法验证](11-algorithm-validation.md)：独立数据流检查、链表 / BST / DFS / BFS、NOIP2015 运输计划与暴力对照。
 
-- [12 LLVM AOT 跨语言性能](12-performance.md)：五个微负载下 AOT 与 C、C++、Rust、Go、Java、Node、Lua、Python 的中位数对照，checked 与 unchecked 的差距，删除内部四元式优化对编译期与运行期的影响，以及原始样本与计时口径。
+- [12 性能对比：版本基线与其他语言](12-performance.md)：17 个负载的 1.0.10／1.0.11、pool／malloc 实测，冻结的 C++、Rust、Lua 与 Java JIT 参考，测试代码、原始样本、结果分析及静态优化趋势图。
 
 - 静态 SQLite 与 MySQL/MariaDB 连接入口：[SQL 接口](../example/sql-chali/doc/01-sql-library.md)、[SQLite 实库回归](../tests/chali_sqlite.py)、[连接 ABI 夹具回归](../tests/chali_sql_connections.py)、[MySQL/PostgreSQL 实库回归](../tests/chali_sql_live.py)。
 

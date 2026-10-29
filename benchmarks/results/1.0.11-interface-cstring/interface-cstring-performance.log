@@ -1,5 +1,0 @@
-build interface_mono chali-aot
-build interface_poly chali-aot
-median interface_mono chali-aot 35.1601 ms
-median interface_poly chali-aot 376.7253 ms
-saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-interface-cstring

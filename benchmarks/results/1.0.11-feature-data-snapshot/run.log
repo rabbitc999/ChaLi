@@ -1,9 +1,0 @@
-build enum_payload chali-aot
-build struct_nested chali-aot
-build array_2d chali-aot
-build array_3d chali-aot
-median enum_payload chali-aot 0.8615 ms
-median struct_nested chali-aot 1.7515 ms
-median array_2d chali-aot 0.691 ms
-median array_3d chali-aot 0.7627 ms
-saved G:\Desktop\ChaLi\benchmarks\results\1.0.11-feature-data-snapshot

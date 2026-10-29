@@ -4,7 +4,7 @@
 [English（中文原文）](20-memory-allocator.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本篇从 heap_address_reuse.chl 的地址复用反例和 std_parse_random_path_memory.chl 的 Arena 使用出发，区分 ChaLi 值的清理、运行期堆与宿主资源。随后说明容量统计和外部缓冲区接入。
+本篇从地址复用与作用域清理出发，区分 ChaLi 值的清理、运行期堆与宿主资源，并说明 malloc／pool 选择、容量统计和外部缓冲区接入。
 
 ## 地址复用样例揭示什么
 
@@ -12,41 +12,39 @@
 
 [heap_address_reuse.chl](../example/samples/heap_address_reuse.chl) 先分配整数并赋 11，释放后再分配同样大小的整数并赋 22，从新引用读取，正式预期输出为 [22](../example/expected/heap_address_reuse.txt)。物理块可以复用，逻辑身份不会复活；释放前的旧别名不能再解引用。拒绝旧别名的样例见 [heap_stale_alias.chl](../example/samples-error/heap_stale_alias.chl)，正常引用与所有权写法见[核心概念](03-core-concepts.md)。
 
-## Arena 的 reset 与普通值清理不同
+## new 与作用域清理
 
-[std_parse_random_path_memory.chl](../example/samples/std_parse_random_path_memory.chl) 使用 Arena/Span 检查批量分配；[arena_use_after_reset.chl](../example/samples-error/arena_use_after_reset.chl) 故意在 reset 后访问旧 Span，应报告运行错误。reset 让该 Arena 的所有旧分配一起失效，不能把仍持有 Span 变量当作来源仍有效。
+[std_parse_random_path_memory.chl](../example/samples/std_parse_random_path_memory.chl) 使用 new 和作用域释放观察分配。标准库 Arena 已删除；普通拥有值沿现有所有权规则清理，已释放分配的旧别名仍然失效。
 
 ## 用样例观察内存统计
 
 ```sh
-cd chali
-mkdir -p ../build/doc-example
-../build/work/chali/chali run example/samples/std_parse_random_path_memory.chl --stats --out ../build/doc-example/memory
+mkdir -p tmp/doc-example
+chali run example/samples/std_parse_random_path_memory.chl --allocator malloc --out tmp/doc-example/memory
 ```
 
-ChaLi 分配器通过 Memory 命名空间管理容器和对象，默认池 512 MiB；全局 C++ new/delete 保留宿主行为。通用分配器实现在仓库根的 [`source/allocator/`](../source/allocator)（`chali_pool.c` 与 `source/chali_allocator.hpp`），ChaLi 导出使用同一份资产。接入与宿主边界如下。
+ChaLi 通过 Memory 命名空间管理容器和对象，1.0.11 缺省使用系统 malloc，pool 可选，默认预算 512 MiB；全局 C++ new/delete 保留宿主行为。实现位于 [`source/allocator/`](../source/allocator)，原生导出使用构建时嵌入的匹配资产。
 
 ## PC 容量与统计
 
-PC 默认容量为 **512 MiB（536870912 字节）**。解释器与独立 exe 接受：
+默认堆预算为 **512 MiB（536870912 字节）**。在运行或导出时配置：
 
 ```sh
-chali run app.chl --memory-size 16777216 --stats
-./app --memory-size 16777216 --stats
+chali run app.chl --memory-size 16777216 --allocator malloc
+chali aot app.chl --memory-size 16777216 --allocator pool --out tmp/app
 ```
 
 ## 外部缓冲区
 
 缓冲区由宿主持有并覆盖整个调用生命周期。此路径不申请 PC 的后备池。
-返回值 0 表示成功，1 表示 VM / 分配失败；`stepLimit` 限制失控循环，**传 0 表示不设上限**
-（导出 exe 的 `--step-limit 0`、解释器的 `--step-limit 0` 同义）。
+返回值 0 表示成功，1 表示运行或分配失败；`stepLimit` 限制执行步数，**传 0 表示不设上限**。原生模块按编译配置保留相应检查。
 同一缓冲区可以反复调用。线程共用受锁保护的池，需等待全部工作线程退出后才能清零。
 
 ## C 分配器与 C++ 接入
 
 [`chali_pool.c`](../source/allocator/chali_pool.c) 可独立按 C99 编译，块元数据位于缓冲区内，
 无固定块数表，也不会调用全局 C++ 分配操作。底层实现由
-[`source/chali_pool.h`](../source/allocator/chali_pool.h) 的**分配器类型宏** `CHALI_ALLOCATOR_TYPE` 在编译期选择
+[`chali_pool.h`](../source/allocator/chali_pool.h) 的**分配器类型宏** `CHALI_ALLOCATOR_TYPE` 在编译期选择
 （用 `-DCHALI_ALLOCATOR_TYPE=…` 覆盖，必须对所有翻译单元一致）：
 
 - `CHALI_ALLOCATOR_LINKED`（缺省）：**TLSF**（两级隔离适配，Two-Level Segregated Fit）。
@@ -120,9 +118,11 @@ ChaLi 翻译单元及其依赖库必须一致定义 `CHALI_CUSTOM_ALLOCATOR=1`�
 
 编译器为新建的借用实参生成完整表达式临时所有者，接管返回值时清空源槽。显式释放只改变实际执行路径上的拥有槽与初始化状态；其他分支仍执行自动清理。可证明的重复销毁由编译器合并，释放后访问报 `CHL1205`，跨调用及不透明宿主操作仍由运行时核验活跃分配。
 
-## 统一内存池
+## 选择 malloc 或 pool
 
-不再支持 `CHALI_USE_MALLOC` 的逐次 malloc/free 模式，容量限制、统计和外部缓冲区清零均使用内存池口径。动态池在宿主侧预留和归还整块缓冲区仍使用宿主分配设施；ChaLi 的对象和容器不再转向逐次宿主堆分配。基准入口为 `benchmarks/compare-vm.ps1`，历史 malloc 对比报告仅用于存档。
+使用 `--allocator malloc|pool` 选择本模块的分配器，TOML 的 `[aot]` 同样支持 `allocator`。malloc 直接管理宿主块，pool 保留原内存池；两者保持预算、对齐、逻辑分配身份与释放后失效检查。不要用旧 `CHALI_USE_MALLOC` 开关替代当前配置。
+
+完整的版本与两种分配器对照见[性能文章](12-performance.md)。同一组数据中各负载的优劣不同，应保留实际配置，不能把不同分配器的单项最佳值拼成一个结果。
 
 ## 局部值存储与统计观测
 

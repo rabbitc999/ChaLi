@@ -1,5 +1,0 @@
-run: explicit close and repeated close OK
-aot: explicit close and repeated close OK
-implicit copy rejected: chali: G:/Desktop/ChaLi/tmp/segmented-implicit_copy.chl:73:1: 不可复制的值禁止复制：BootstrapList__int64（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用
- 73 | void main(){BootstrapList<int64> a;a.push(7);BootstrapList<int64> b=a;}
-    | ~~~~

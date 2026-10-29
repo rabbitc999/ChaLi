@@ -185,7 +185,7 @@ Test empty capacity, boundaries, double initialization, reads after move-out, gr
 
 Separate compilation from execution. Compare identical inputs with independently checked outputs. Record construction, incremental append, reading, search, copying and conversion from native String separately. Bulk operations can remove per-byte calls without guaranteeing that every workload becomes faster.
 
-The [String comparison report](../../../benchmarks/results/string-1.0.7/README.md) retains actual source and compiler hashes. The earlier checked-slot implementation is preserved as `bootstrap_string_checked.chl`; its measurements must not be relabeled as the bare-pointer implementation. Record results per compiler version and target separately.
+The [current performance comparison](../../en/12-performance.md) records the actual standard String version, configuration and hashes. The earlier checked-slot experiment remains in `bootstrap_string_checked.chl`; record each implementation and target separately, rather than assigning standard String results to that experiment.
 
 ## 23.10 Summary
 

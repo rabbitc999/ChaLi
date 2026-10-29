@@ -23,7 +23,7 @@ JSON 与 TOML 使用同一宿主拥有型协议。公开包装保留 `Iterator`�
 
 `Graph.snapshot()` 返回独立邻接数组和标量属性；`UnionFind.parents()`、`sizes()` 显式复制对应数组。并查集 find 使用路径压缩，unionSets 按集合大小合并，单次查询不扫描或复制完整容量。`BinarySearchTree.snapshot()`、`GeneralTree.snapshot()` 包含有效槽标记和根下标；`MinHeap.snapshot()` 返回独立堆数组。`LinkedList.toArray()` 和各树遍历返回独立值序列。修改快照不会反向修改容器。
 
-容量趋势的[原始测量](benchmarks/opcode-values.json)记录了版本、配置与固定种子：排除构造时间后，1,000 和 1,000,000 个元素各查询 30,000 次，约为 57.5 ms 和 56.9 ms。这是同一主机上的单次验收数据，不是跨机器的性能承诺。
+容量接口读取已有的存储元数据；活跃元素视图仍按原协议同步。当前实测与配置见[性能对比](12-performance.md)，其中容器项目测量完整的增长和访问任务。历史容量专项的原始数据从当前分支删除，保留在 Git 历史中。
 
 ## 红黑树删除
 

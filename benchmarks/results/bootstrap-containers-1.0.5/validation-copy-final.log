@@ -1,8 +1,0 @@
-missing_method: 语义拒绝通过
-wrong_result: 语义拒绝通过
-noncopyable: 语义拒绝通过
-missing_constraint: 语义拒绝通过
-closeable_fresh_copy: 语义拒绝通过
-closeable_inherited_copy: 语义拒绝通过
-opcode_copy: 语义拒绝通过
-opcode_inherited_copy: 语义拒绝通过

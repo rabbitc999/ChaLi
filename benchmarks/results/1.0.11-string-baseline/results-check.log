@@ -1,3 +1,0 @@
-17 cells, 85 processes, 425 verified samples, clean source hashes: PASS
-1.0.11
-{'cpp-o2': 'g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0', 'rust': 'rustc 1.98.1 (48a229cea 2026-09-01)', 'lua': 'Lua 5.5.1 (official VM, monotonic clock host)'}

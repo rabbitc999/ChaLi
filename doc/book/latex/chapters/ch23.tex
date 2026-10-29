@@ -226,7 +226,7 @@ void main() {
 
 性能测试要把编译与执行分开，用相同输入和可核对的输出比较。构造、逐字节追加、读取、查找、复制及原生 String 转入自举存储应分别记录。批量复制可能减少逐字节调用，但不能据此推断全部操作都会更快；查找算法、分配方式和剩余检查同样影响结果。
 
-\href{https://github.com/rabbitc999/ChaLi/blob/master/benchmarks/results/string-1.0.7/README.md}{原生与自举 String 报告}保留实际源码和编译器摘要。较早的逐槽受检版保存在 \texttt{bootstrap\_\allowbreak{}string\_\allowbreak{}checked.\allowbreak{}chl}，不能把它的测量改标为新的裸指针版。VM 与 AOT 也要分别记录。
+\href{https://github.com/rabbitc999/ChaLi/blob/master/doc/12-performance.md}{当前性能对比}记录标准 String 的实际版本、配置和摘要。较早的逐槽受检实验保存在 \texttt{bootstrap\_\allowbreak{}string\_\allowbreak{}checked.\allowbreak{}chl}，需按实际实现与目标分别记录结果；标准 String 的结果不能直接当作该实验的成绩。
 
 \section{小结}
 

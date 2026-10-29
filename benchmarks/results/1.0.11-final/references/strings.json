@@ -1,0 +1,1520 @@
+{
+  "mode": "baseline",
+  "generated": "2026-10-28T20:13:04.648993+08:00",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "runs": 5,
+  "reps_per_run": 5,
+  "warmups": 1,
+  "reference_allocators": "language defaults",
+  "git_commit": "a7f700b8c12ffccef1bd53cf9139cdd3538a6e00",
+  "working_tree_dirty": false,
+  "source_hash_normalization": "CRLF to LF only",
+  "source_sha256": {
+    "benchmarks/features/timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "benchmarks/features/timing.rs": "230af02c586bf63f104b6391e40cd165bc2b4f8db4f8b368f65abb1e3cf215f0",
+    "benchmarks/perf/build_lua.py": "b7ca8a21e75f48ac84e8b4a5ccececd203d217a162d510c9afc34dfc85a4f6d0",
+    "benchmarks/perf/luabench.c": "ba98cfce33d66895f4a49b6ddb9febe1a0bcff00c83e6f5ea53d13fb4c393ae7",
+    "benchmarks/strings/cases.chl": "6eb65126b06d271c8ef8e1701172dcef8cc8bb3015a8ef6e148b18b3154187e3",
+    "benchmarks/strings/cases.cpp": "9b53356525fb9d5affa20ddb32fdf6b728e13890f3c00c69b7d2d72af39b46cb",
+    "benchmarks/strings/cases.lua": "c5960e108996a9546d402eb02566cb93edd5ccc86ab97ec42e0eadaa8dc39189",
+    "benchmarks/strings/cases.rs": "a6c9c440807d0feab43c36c33f56a9af318cbe7cf27eccb891e12e6147352a52",
+    "benchmarks/strings/run.py": "20aa848aba0f4d734c8f1110116cb84f4eecfe4cc278588dd610b603e5cdd3ed",
+    "benchmarks/strings/timing.lua": "e68142be814a97eed4ff24d32e485bb0116e658079ee77b9ae37cbd858a14d76",
+    "library/lua/manifest.json": "7c9d88e08504667eb810d36c50fba822acd1a13046c86f042d83c092a74980cf"
+  },
+  "llvm_clang": {
+    "path": "G:\\Desktop\\ChaLi\\build\\dependencies\\llvm\\toolchain\\bin\\clang.exe",
+    "sha256": "f6599825884bd087a81ef01e7a662025a9553de01dc501c824b6c568aa4e5ec9",
+    "version": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n"
+  },
+  "sizes": {
+    "unit_bytes": 33,
+    "input_bytes": 8448,
+    "read_iterations": 131072,
+    "concat_chunks": 2048,
+    "concat_bytes": 67584,
+    "slice_iterations": 1024,
+    "find_iterations": 256
+  },
+  "model_values": {
+    "string_read": [
+      933359626,
+      563983303,
+      2085321474,
+      439211416,
+      1295157382
+    ],
+    "string_concat": [
+      1557423104,
+      1523966977,
+      1895195650,
+      1861739523,
+      85484548
+    ],
+    "string_slice": [
+      280348882,
+      1611246593,
+      1137154702,
+      474597159,
+      929386962
+    ],
+    "string_find": [
+      1374843591,
+      817066207,
+      185464464,
+      2130991237,
+      1213887908
+    ]
+  },
+  "environment": {},
+  "tools": {
+    "cpp-o2": {
+      "path": "D:\\MINGW64_YACC\\bin\\g++.EXE",
+      "sha256": "5085faff4367e99367403ee6d7329d2753d9d44afa5f55a8aabedb79da9f7a19",
+      "version": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "rust": {
+      "path": "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+      "sha256": "6d5b5709addc0122c916d8c810da8d8a7b086a5d64fa805ef404d506392aadc8",
+      "version": "rustc 1.98.1 (48a229cea 2026-09-01)\n"
+    },
+    "lua": {
+      "path": "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+      "sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+      "version": "Lua 5.5.1 (official VM, monotonic clock host)\n"
+    }
+  },
+  "builds": {
+    "string_read/cpp-o2": [
+      {
+        "command": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O2",
+          "-DNDEBUG",
+          "-finput-charset=UTF-8",
+          "-Dfeature_work=string_read",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.cpp",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_read/rust": [
+      {
+        "command": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "--edition=2021",
+          "--cfg",
+          "string_read",
+          "-A",
+          "dead_code",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_read/lua": [],
+    "string_concat/cpp-o2": [
+      {
+        "command": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O2",
+          "-DNDEBUG",
+          "-finput-charset=UTF-8",
+          "-Dfeature_work=string_concat",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.cpp",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_concat/rust": [
+      {
+        "command": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "--edition=2021",
+          "--cfg",
+          "string_concat",
+          "-A",
+          "dead_code",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_concat/lua": [],
+    "string_concat/lua-builder": [],
+    "string_slice/cpp-o2": [
+      {
+        "command": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O2",
+          "-DNDEBUG",
+          "-finput-charset=UTF-8",
+          "-Dfeature_work=string_slice",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.cpp",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_slice/rust": [
+      {
+        "command": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "--edition=2021",
+          "--cfg",
+          "string_slice",
+          "-A",
+          "dead_code",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_slice/lua": [],
+    "string_find/cpp-o2": [
+      {
+        "command": [
+          "D:\\MINGW64_YACC\\bin\\g++.EXE",
+          "-std=c++17",
+          "-O2",
+          "-DNDEBUG",
+          "-finput-charset=UTF-8",
+          "-Dfeature_work=string_find",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.cpp",
+          "G:\\Desktop\\ChaLi\\benchmarks\\features\\timing.c",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_find/rust": [
+      {
+        "command": [
+          "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+          "-O",
+          "--edition=2021",
+          "--cfg",
+          "string_find",
+          "-A",
+          "dead_code",
+          "G:\\Desktop\\ChaLi\\benchmarks\\strings\\cases.rs",
+          "-o",
+          "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+        ],
+        "code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "string_find/lua": []
+  },
+  "configurations": {
+    "string_read": {
+      "cpp-o2": {
+        "binary_sha256": "d2475669e8ee9d4d13f05738809f65d4c35c895dfb20b685f157373afb56f28a",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 933359626\nvalue 1 563983303\nvalue 2 2085321474\nvalue 3 439211416\nvalue 4 1295157382\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 545200\nrep 542600\nrep 545500\nrep 542400\nrep 543600\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              545200,
+              542600,
+              545500,
+              542400,
+              543600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 544000\nrep 542700\nrep 542000\nrep 539500\nrep 543100\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              544000,
+              542700,
+              542000,
+              539500,
+              543100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 542400\nrep 542000\nrep 539500\nrep 540800\nrep 539600\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              542400,
+              542000,
+              539500,
+              540800,
+              539600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 545100\nrep 542500\nrep 546400\nrep 542500\nrep 544000\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              545100,
+              542500,
+              546400,
+              542500,
+              544000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 545200\nrep 542500\nrep 551100\nrep 545400\nrep 549200\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              545200,
+              542500,
+              551100,
+              545400,
+              549200
+            ]
+          }
+        ],
+        "median_ms": 0.5427,
+        "min_ms": 0.5395,
+        "max_ms": 0.5511
+      },
+      "rust": {
+        "binary_sha256": "9553f06592b43cfca78b6e37bfc95850b8c3b53dd7e682b6e079385aa19ce560",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 933359626\nvalue 1 563983303\nvalue 2 2085321474\nvalue 3 439211416\nvalue 4 1295157382\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 542000\nrep 551700\nrep 539600\nrep 541100\nrep 539600\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              542000,
+              551700,
+              539600,
+              541100,
+              539600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 547800\nrep 548300\nrep 545500\nrep 547000\nrep 546800\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              547800,
+              548300,
+              545500,
+              547000,
+              546800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 542500\nrep 542400\nrep 539700\nrep 540900\nrep 539900\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              542500,
+              542400,
+              539700,
+              540900,
+              539900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 540800\nrep 578200\nrep 567800\nrep 546300\nrep 545700\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              540800,
+              578200,
+              567800,
+              546300,
+              545700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 544500\nrep 542700\nrep 544000\nrep 542500\nrep 543700\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              544500,
+              542700,
+              544000,
+              542500,
+              543700
+            ]
+          }
+        ],
+        "median_ms": 0.5437,
+        "min_ms": 0.5396,
+        "max_ms": 0.5782
+      },
+      "lua": {
+        "binary_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua-verify.lua"
+          ],
+          "code": 0,
+          "stdout": "value 0 933359626\nvalue 1 563983303\nvalue 2 2085321474\nvalue 3 439211416\nvalue 4 1295157382\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 5939100\nrep 5809200\nrep 6115500\nrep 5996200\nrep 6001400\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              5939100,
+              5809200,
+              6115500,
+              5996200,
+              6001400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 5882900\nrep 5997100\nrep 6088000\nrep 5921700\nrep 6093900\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              5882900,
+              5997100,
+              6088000,
+              5921700,
+              6093900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 5940500\nrep 6125700\nrep 6361700\nrep 6118500\nrep 6089500\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              5940500,
+              6125700,
+              6361700,
+              6118500,
+              6089500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 5769100\nrep 6052200\nrep 6038100\nrep 6563000\nrep 6357300\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              5769100,
+              6052200,
+              6038100,
+              6563000,
+              6357300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_read-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 5726200\nrep 5989000\nrep 5961100\nrep 5961400\nrep 6019600\nsink 6250392827\n",
+            "stderr": "",
+            "samples_ns": [
+              5726200,
+              5989000,
+              5961100,
+              5961400,
+              6019600
+            ]
+          }
+        ],
+        "median_ms": 6.0014,
+        "min_ms": 5.7262,
+        "max_ms": 6.563
+      }
+    },
+    "string_concat": {
+      "cpp-o2": {
+        "binary_sha256": "c0d73115d287c1e4191530ffbf5482206e9b0432dad05b4c427b242e392c3143",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 106100\nrep 103600\nrep 96900\nrep 97800\nrep 100300\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              106100,
+              103600,
+              96900,
+              97800,
+              100300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 108500\nrep 102200\nrep 95800\nrep 96200\nrep 96300\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              108500,
+              102200,
+              95800,
+              96200,
+              96300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 105600\nrep 103600\nrep 95700\nrep 101200\nrep 99200\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              105600,
+              103600,
+              95700,
+              101200,
+              99200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 105800\nrep 114000\nrep 97400\nrep 95900\nrep 95200\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              105800,
+              114000,
+              97400,
+              95900,
+              95200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 107500\nrep 105600\nrep 123600\nrep 106300\nrep 98000\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              107500,
+              105600,
+              123600,
+              106300,
+              98000
+            ]
+          }
+        ],
+        "median_ms": 0.1012,
+        "min_ms": 0.0952,
+        "max_ms": 0.1236
+      },
+      "rust": {
+        "binary_sha256": "36a927b3724e08ae5e4c83b4c07c1518fcc0b6b5d5c70132622f544db7f3a2dc",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 68600\nrep 69200\nrep 69900\nrep 59000\nrep 69900\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              68600,
+              69200,
+              69900,
+              59000,
+              69900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 68800\nrep 55100\nrep 76600\nrep 86100\nrep 75700\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              68800,
+              55100,
+              76600,
+              86100,
+              75700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 94000\nrep 104100\nrep 83200\nrep 66100\nrep 77900\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              94000,
+              104100,
+              83200,
+              66100,
+              77900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 75100\nrep 84200\nrep 63300\nrep 51500\nrep 69300\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              75100,
+              84200,
+              63300,
+              51500,
+              69300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 80500\nrep 94100\nrep 67500\nrep 51100\nrep 67000\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              80500,
+              94100,
+              67500,
+              51100,
+              67000
+            ]
+          }
+        ],
+        "median_ms": 0.0699,
+        "min_ms": 0.0511,
+        "max_ms": 0.1041
+      },
+      "lua": {
+        "binary_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-verify.lua"
+          ],
+          "code": 0,
+          "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 28975200\nrep 29345200\nrep 25647200\nrep 25275000\nrep 20104800\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              28975200,
+              29345200,
+              25647200,
+              25275000,
+              20104800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 51489500\nrep 45162100\nrep 36438300\nrep 21306900\nrep 12209500\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              51489500,
+              45162100,
+              36438300,
+              21306900,
+              12209500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 31027100\nrep 30468900\nrep 24831400\nrep 18610100\nrep 15301700\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              31027100,
+              30468900,
+              24831400,
+              18610100,
+              15301700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 32483500\nrep 26659100\nrep 23530200\nrep 22303700\nrep 15517400\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              32483500,
+              26659100,
+              23530200,
+              22303700,
+              15517400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 29132200\nrep 29263800\nrep 26158900\nrep 19440300\nrep 14090700\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              29132200,
+              29263800,
+              26158900,
+              19440300,
+              14090700
+            ]
+          }
+        ],
+        "median_ms": 25.6472,
+        "min_ms": 12.2095,
+        "max_ms": 51.4895
+      },
+      "lua-builder": {
+        "binary_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder-verify.lua"
+          ],
+          "code": 0,
+          "stdout": "value 0 1557423104\nvalue 1 1523966977\nvalue 2 1895195650\nvalue 3 1861739523\nvalue 4 85484548\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 2954900\nrep 2725400\nrep 2795800\nrep 3312900\nrep 3094900\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              2954900,
+              2725400,
+              2795800,
+              3312900,
+              3094900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 4256500\nrep 2910400\nrep 2750200\nrep 3311000\nrep 4860600\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              4256500,
+              2910400,
+              2750200,
+              3311000,
+              4860600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 2582500\nrep 4124700\nrep 5583100\nrep 5591200\nrep 4676200\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              2582500,
+              4124700,
+              5583100,
+              5591200,
+              4676200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 2725600\nrep 2641600\nrep 2585800\nrep 5577200\nrep 4354500\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              2725600,
+              2641600,
+              2585800,
+              5577200,
+              4354500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_concat-lua-builder.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 4311900\nrep 4217800\nrep 4515500\nrep 4433000\nrep 4599300\nsink 8481232906\n",
+            "stderr": "",
+            "samples_ns": [
+              4311900,
+              4217800,
+              4515500,
+              4433000,
+              4599300
+            ]
+          }
+        ],
+        "median_ms": 4.1247,
+        "min_ms": 2.5825,
+        "max_ms": 5.5912
+      }
+    },
+    "string_slice": {
+      "cpp-o2": {
+        "binary_sha256": "e83e09f1ce59eea99c19cbd454f153dce48fc98d693ccc6314b425a55338f1d1",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 280348882\nvalue 1 1611246593\nvalue 2 1137154702\nvalue 3 474597159\nvalue 4 929386962\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 136700\nrep 133000\nrep 132400\nrep 80100\nrep 83700\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              136700,
+              133000,
+              132400,
+              80100,
+              83700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 137500\nrep 132900\nrep 133100\nrep 79800\nrep 79200\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              137500,
+              132900,
+              133100,
+              79800,
+              79200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 139900\nrep 142200\nrep 133100\nrep 79700\nrep 79100\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              139900,
+              142200,
+              133100,
+              79700,
+              79100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 137600\nrep 133300\nrep 132700\nrep 80200\nrep 79800\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              137600,
+              133300,
+              132700,
+              80200,
+              79800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 137800\nrep 134300\nrep 229000\nrep 123100\nrep 100000\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              137800,
+              134300,
+              229000,
+              123100,
+              100000
+            ]
+          }
+        ],
+        "median_ms": 0.1329,
+        "min_ms": 0.0791,
+        "max_ms": 0.229
+      },
+      "rust": {
+        "binary_sha256": "f2c6563cf507f90ea33b127f560b5662fa9710a8b95f069c575bd56157596893",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 280348882\nvalue 1 1611246593\nvalue 2 1137154702\nvalue 3 474597159\nvalue 4 929386962\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 137200\nrep 134800\nrep 134100\nrep 84200\nrep 83600\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              137200,
+              134800,
+              134100,
+              84200,
+              83600
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 134300\nrep 133500\nrep 132100\nrep 79700\nrep 79100\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              134300,
+              133500,
+              132100,
+              79700,
+              79100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 141200\nrep 139500\nrep 138100\nrep 83600\nrep 82900\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              141200,
+              139500,
+              138100,
+              83600,
+              82900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 142200\nrep 134600\nrep 137100\nrep 84800\nrep 84100\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              142200,
+              134600,
+              137100,
+              84800,
+              84100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 132900\nrep 132300\nrep 130800\nrep 79300\nrep 78900\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              132900,
+              132300,
+              130800,
+              79300,
+              78900
+            ]
+          }
+        ],
+        "median_ms": 0.1323,
+        "min_ms": 0.0789,
+        "max_ms": 0.1422
+      },
+      "lua": {
+        "binary_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua-verify.lua"
+          ],
+          "code": 0,
+          "stdout": "value 0 280348882\nvalue 1 1611246593\nvalue 2 1137154702\nvalue 3 474597159\nvalue 4 929386962\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 365900\nrep 374200\nrep 371700\nrep 359300\nrep 357200\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              365900,
+              374200,
+              371700,
+              359300,
+              357200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 327100\nrep 327200\nrep 336300\nrep 322600\nrep 330000\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              327100,
+              327200,
+              336300,
+              322600,
+              330000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 327100\nrep 324200\nrep 371300\nrep 343900\nrep 316400\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              327100,
+              324200,
+              371300,
+              343900,
+              316400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 347900\nrep 351500\nrep 355100\nrep 350100\nrep 358700\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              347900,
+              351500,
+              355100,
+              350100,
+              358700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_slice-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 360200\nrep 355700\nrep 366100\nrep 349800\nrep 357300\nsink 4713083180\n",
+            "stderr": "",
+            "samples_ns": [
+              360200,
+              355700,
+              366100,
+              349800,
+              357300
+            ]
+          }
+        ],
+        "median_ms": 0.3515,
+        "min_ms": 0.3164,
+        "max_ms": 0.3742
+      }
+    },
+    "string_find": {
+      "cpp-o2": {
+        "binary_sha256": "a4a76137dbf06f6de531da099180c8071c370827fa4cbb7058175a6f4f799b68",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1374843591\nvalue 1 817066207\nvalue 2 185464464\nvalue 3 2130991237\nvalue 4 1213887908\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 103000\nrep 113000\nrep 118500\nrep 112000\nrep 103000\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              103000,
+              113000,
+              118500,
+              112000,
+              103000
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 103600\nrep 115000\nrep 121500\nrep 113200\nrep 102900\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              103600,
+              115000,
+              121500,
+              113200,
+              102900
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 104000\nrep 113500\nrep 113700\nrep 112300\nrep 103200\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              104000,
+              113500,
+              113700,
+              112300,
+              103200
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 102700\nrep 113100\nrep 113400\nrep 111800\nrep 118300\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              102700,
+              113100,
+              113400,
+              111800,
+              118300
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-cpp-o2.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 102500\nrep 112900\nrep 116100\nrep 112100\nrep 103000\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              102500,
+              112900,
+              116100,
+              112100,
+              103000
+            ]
+          }
+        ],
+        "median_ms": 0.1123,
+        "min_ms": 0.1025,
+        "max_ms": 0.1215
+      },
+      "rust": {
+        "binary_sha256": "fff0e5e2057b32171c81720adfdcb17fae877df8e6b771b654356537b31b9f46",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe",
+            "--verify"
+          ],
+          "code": 0,
+          "stdout": "value 0 1374843591\nvalue 1 817066207\nvalue 2 185464464\nvalue 3 2130991237\nvalue 4 1213887908\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 41400\nrep 45300\nrep 45300\nrep 45100\nrep 41400\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              41400,
+              45300,
+              45300,
+              45100,
+              41400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 41700\nrep 45400\nrep 45600\nrep 45300\nrep 41700\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              41700,
+              45400,
+              45600,
+              45300,
+              41700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 41800\nrep 45400\nrep 45600\nrep 44900\nrep 41700\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              41800,
+              45400,
+              45600,
+              44900,
+              41700
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 41400\nrep 45300\nrep 45300\nrep 45100\nrep 41400\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              41400,
+              45300,
+              45300,
+              45100,
+              41400
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-rust.exe"
+            ],
+            "code": 0,
+            "stdout": "rep 41400\nrep 45100\nrep 45100\nrep 44900\nrep 41300\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              41400,
+              45100,
+              45100,
+              44900,
+              41300
+            ]
+          }
+        ],
+        "median_ms": 0.0451,
+        "min_ms": 0.0413,
+        "max_ms": 0.0456
+      },
+      "lua": {
+        "binary_sha256": "e2f4c1302eb0e28ea1fd0488a8f6c09fcaed85c4261fd84aa4d07ccfed92b4fa",
+        "preflight": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+            "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua-verify.lua"
+          ],
+          "code": 0,
+          "stdout": "value 0 1374843591\nvalue 1 817066207\nvalue 2 185464464\nvalue 3 2130991237\nvalue 4 1213887908\n",
+          "stderr": ""
+        },
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 118300\nrep 170600\nrep 170900\nrep 179100\nrep 118100\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              118300,
+              170600,
+              170900,
+              179100,
+              118100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 118000\nrep 173800\nrep 172200\nrep 170300\nrep 156100\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              118000,
+              173800,
+              172200,
+              170300,
+              156100
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 118500\nrep 172000\nrep 170600\nrep 143900\nrep 117800\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              118500,
+              172000,
+              170600,
+              143900,
+              117800
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 118500\nrep 172800\nrep 174700\nrep 171200\nrep 118500\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              118500,
+              172800,
+              174700,
+              171200,
+              118500
+            ]
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\benchmarks\\perf\\build-lua\\luabench.exe",
+              "G:\\Desktop\\ChaLi\\tmp\\string-benchmark-r8eky23f\\string_find-lua.lua"
+            ],
+            "code": 0,
+            "stdout": "rep 162200\nrep 128800\nrep 173400\nrep 171400\nrep 157200\nsink 7097096998\n",
+            "stderr": "",
+            "samples_ns": [
+              162200,
+              128800,
+              173400,
+              171400,
+              157200
+            ]
+          }
+        ],
+        "median_ms": 0.1703,
+        "min_ms": 0.1178,
+        "max_ms": 0.1791
+      }
+    }
+  },
+  "comparisons": {
+    "string_read": {
+      "chali_ms": 1660.365,
+      "cpp_o2_ms": 0.5427,
+      "rust_ms": 0.5437,
+      "lua_ms": 6.0014,
+      "lua_config": "lua",
+      "passed": false
+    },
+    "string_concat": {
+      "chali_ms": 1096.1098,
+      "cpp_o2_ms": 0.1012,
+      "rust_ms": 0.0699,
+      "lua_ms": 4.1247,
+      "lua_config": "lua-builder",
+      "passed": false
+    },
+    "string_slice": {
+      "chali_ms": 1109.8474,
+      "cpp_o2_ms": 0.1329,
+      "rust_ms": 0.1323,
+      "lua_ms": 0.3515,
+      "lua_config": "lua",
+      "passed": false
+    },
+    "string_find": {
+      "chali_ms": 6095.4073,
+      "cpp_o2_ms": 0.1123,
+      "rust_ms": 0.0451,
+      "lua_ms": 0.1703,
+      "lua_config": "lua",
+      "passed": false
+    }
+  },
+  "original_report": {
+    "path": "benchmarks/results/1.0.11-string-baseline/results.json",
+    "sha256": "ed7cf80329c8e371e8de42d737c0c703403a489ac8209f1d037cb1b27d687625",
+    "git_snapshot": "0bb28ec",
+    "pruned_chali_measurements": true,
+    "retained_only_article_references": true,
+    "reference_languages_rerun": false
+  }
+}

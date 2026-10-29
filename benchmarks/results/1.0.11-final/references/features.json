@@ -1,0 +1,882 @@
+{
+  "generated": "2026-10-28T16:07:49.200144",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "runs": 5,
+  "reps_per_run": 5,
+  "git_commit": "3cfa6849b60ed47df1c3e5992abd8df0bb6c4516",
+  "working_tree_dirty": false,
+  "source_sha256": {
+    "FeatureTiming.java": "0ea5752f9f659c3ca5e5b0a4d46deccec3c50affebaf1d31abb29aeacefd9ba0",
+    "array_2d.chl": "8c67e97d95b4f1beb187e3871cf0ddd38ea4f4246cddc8d9296d384a07edfd92",
+    "array_2d.cpp": "93504122d0e96624b47aa138f4fa2c8e8a8700a1d26a374e3d2fa9876e5530e1",
+    "array_2d.rs": "dd1ae180de14056c7ba773c76b976dfc7d18c60bcf6c4ffcd2c490b7d2f8dba9",
+    "array_3d.chl": "771e1c57b73b4f6be8ff24b2f2ce70fee27f2b37d447b3559b5b9da4f5dac822",
+    "array_3d.cpp": "9ec37db36cb46565b8e7082ee316297584335e7f2ec5bcb2acc2318e4af796f0",
+    "array_3d.rs": "28c89112c95d9a6078530d2f1ecf4bdf1e03a489dba69b35df1ea9f51a4f150b",
+    "enum_payload.chl": "aab5fc5c7cc2bafcd9817217ae4e5fc4bd5b8d7011fe847f006cda8ac580ff4c",
+    "enum_payload.rs": "6ee8287fc3a72c52af493b134618292f4a59b7f8bf56275f77855e9513af386e",
+    "interface_mono.chl": "23a7065a51e651ebefe4bd4c8585ec5f9c31a7cdc6a360716bfd9a7fbc7a2b56",
+    "interface_mono.java": "0712f871188d137c70a8dae5156e40e1a1a32551657546a86bc8cf85465c39ba",
+    "interface_poly.chl": "29416adb2d0ddaccbe11ff7991883c5ff9d3cafb27294cd86625b431f4d1b82c",
+    "interface_poly.java": "d0cd39cb860615b61b997e95aa6a5d9099fad7aca5929fe76bdc6d518ac11a33",
+    "run.py": "3d9388728113418419a28043f3d08e4b3f8ed1de456c7dc1be6fe7c878903d68",
+    "struct_nested.chl": "842804adb7f25c3c4cf7baee0a1d35b3d44e013ceb824197a832e28e11e47159",
+    "struct_nested.cpp": "ed847e516f8941fe43c03f2c38dbfef85fa1e5493c34fde689f601bcc3a306b8",
+    "struct_nested.rs": "9413ecd740bd4fcd38260989d12b276772d1aaf7fb38e000552c17fc6638b9cf",
+    "timing.c": "1bf67f59e3a16a734dad688b7ee2a12cb84a0372ed99a88e2306631417c3cd80",
+    "timing.rs": "230af02c586bf63f104b6391e40cd165bc2b4f8db4f8b368f65abb1e3cf215f0"
+  },
+  "oracle_values": {
+    "enum_payload": [
+      1780561652,
+      1094190832,
+      998905774,
+      1533056942,
+      1629960806
+    ],
+    "interface_mono": [
+      1029177344,
+      1630011393,
+      83361794,
+      684195843,
+      1285029892
+    ],
+    "interface_poly": [
+      1550319616,
+      132644865,
+      562561026,
+      1790443523,
+      104333316
+    ],
+    "struct_nested": [
+      920649728,
+      208142337,
+      907018242,
+      923271171,
+      618659844
+    ],
+    "array_2d": [
+      468378773,
+      355189919,
+      825714386,
+      1680786591,
+      1930001307
+    ],
+    "array_3d": [
+      1501424005,
+      319368007,
+      1501489246,
+      802474988,
+      1839559941
+    ]
+  },
+  "enum_variant_counts": [
+    [
+      60122,
+      43782,
+      98155,
+      60085
+    ],
+    [
+      60100,
+      43743,
+      98216,
+      60085
+    ],
+    [
+      60104,
+      43768,
+      98192,
+      60080
+    ],
+    [
+      60108,
+      43771,
+      98190,
+      60075
+    ],
+    [
+      60099,
+      43768,
+      98197,
+      60080
+    ]
+  ],
+  "preflight": false,
+  "reference_languages_rerun": true,
+  "configurations": {
+    "enum_payload": {
+      "rust": {
+        "build": [
+          {
+            "command": [
+              "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+              "--edition=2021",
+              "-O",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\enum_payload.rs",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1220500,
+              1189000,
+              1197900,
+              1264300,
+              1204800
+            ],
+            "stdout": "rep 1220500\nrep 1189000\nrep 1197900\nrep 1264300\nrep 1204800\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1198600,
+              1184200,
+              1380500,
+              1286700,
+              1197900
+            ],
+            "stdout": "rep 1198600\nrep 1184200\nrep 1380500\nrep 1286700\nrep 1197900\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1241800,
+              1226000,
+              1239900,
+              1311000,
+              1255000
+            ],
+            "stdout": "rep 1241800\nrep 1226000\nrep 1239900\nrep 1311000\nrep 1255000\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1201100,
+              1212700,
+              1205900,
+              1403200,
+              1215400
+            ],
+            "stdout": "rep 1201100\nrep 1212700\nrep 1205900\nrep 1403200\nrep 1215400\nsink 8817237658\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\enum_payload\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1203500,
+              1198800,
+              1208600,
+              1286200,
+              1214000
+            ],
+            "stdout": "rep 1203500\nrep 1198800\nrep 1208600\nrep 1286200\nrep 1214000\nsink 8817237658\n",
+            "stderr": ""
+          }
+        ],
+        "median_ms": 1.214
+      }
+    },
+    "interface_mono": {
+      "java-jit": {
+        "build": [
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\javac.EXE",
+              "-d",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\FeatureTiming.java",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\interface_mono.java"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_mono-0-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "interface_mono"
+            ],
+            "samples_ns": [
+              282700,
+              292000,
+              282800,
+              282500,
+              292000
+            ],
+            "stdout": "warmup_calls 3470\nwarmup_ns 1013924200\nwarmup_complete_uptime_ms 1106\nrep 282700\nrep 292000\nrep 282800\nrep 282500\nrep 292000\nsink 5740953610\n",
+            "stderr": "",
+            "warmup_calls": 3470,
+            "warmup_ns": 1013924200,
+            "c2_work_lines": [
+              "[0.062s][debug][jit,compilation]  105 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.064s][debug][jit,compilation]  105 %     4       interface_mono::work @ 9 (30 bytes)   made not entrant",
+              "[0.064s][debug][jit,compilation]  106 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.065s][debug][jit,compilation]  107    b  4       interface_mono::work (30 bytes)"
+            ],
+            "jit_log_sha256": "0a44086a9b8ed7c38cfe6f108b12229e907ee56abb4a037d416fa9530b453a1e",
+            "warmup_complete_uptime_ms": 1106
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_mono-1-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "interface_mono"
+            ],
+            "samples_ns": [
+              285500,
+              288500,
+              282900,
+              282600,
+              284500
+            ],
+            "stdout": "warmup_calls 3486\nwarmup_ns 1013956300\nwarmup_complete_uptime_ms 1115\nrep 285500\nrep 288500\nrep 282900\nrep 282600\nrep 284500\nsink 5740953610\n",
+            "stderr": "",
+            "warmup_calls": 3486,
+            "warmup_ns": 1013956300,
+            "c2_work_lines": [
+              "[0.073s][debug][jit,compilation]  105 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.075s][debug][jit,compilation]  105 %     4       interface_mono::work @ 9 (30 bytes)   made not entrant",
+              "[0.075s][debug][jit,compilation]  106 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.076s][debug][jit,compilation]  107    b  4       interface_mono::work (30 bytes)"
+            ],
+            "jit_log_sha256": "ac9701ed32c9a4c7aa393b96e775bcc1787e288c817a296a57ba487fb6549e6b",
+            "warmup_complete_uptime_ms": 1115
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_mono-2-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "interface_mono"
+            ],
+            "samples_ns": [
+              282900,
+              316200,
+              353100,
+              322800,
+              353500
+            ],
+            "stdout": "warmup_calls 3483\nwarmup_ns 1013888200\nwarmup_complete_uptime_ms 1103\nrep 282900\nrep 316200\nrep 353100\nrep 322800\nrep 353500\nsink 5740953610\n",
+            "stderr": "",
+            "warmup_calls": 3483,
+            "warmup_ns": 1013888200,
+            "c2_work_lines": [
+              "[0.065s][debug][jit,compilation]  105 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.067s][debug][jit,compilation]  105 %     4       interface_mono::work @ 9 (30 bytes)   made not entrant",
+              "[0.067s][debug][jit,compilation]  106 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.068s][debug][jit,compilation]  107    b  4       interface_mono::work (30 bytes)"
+            ],
+            "jit_log_sha256": "e3886654e63e27943727409b339e001e59af7888dfc222a17028272dbd014c7f",
+            "warmup_complete_uptime_ms": 1103
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_mono-3-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "interface_mono"
+            ],
+            "samples_ns": [
+              290000,
+              290400,
+              282800,
+              282500,
+              287400
+            ],
+            "stdout": "warmup_calls 3484\nwarmup_ns 1014662800\nwarmup_complete_uptime_ms 1108\nrep 290000\nrep 290400\nrep 282800\nrep 282500\nrep 287400\nsink 5740953610\n",
+            "stderr": "",
+            "warmup_calls": 3484,
+            "warmup_ns": 1014662800,
+            "c2_work_lines": [
+              "[0.065s][debug][jit,compilation]  105 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.067s][debug][jit,compilation]  105 %     4       interface_mono::work @ 9 (30 bytes)   made not entrant",
+              "[0.067s][debug][jit,compilation]  106 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.068s][debug][jit,compilation]  107    b  4       interface_mono::work (30 bytes)"
+            ],
+            "jit_log_sha256": "829e1196c922b4299b6cf07e44c04c8db98c97c5a9636abccadd89422e70ac7f",
+            "warmup_complete_uptime_ms": 1108
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_mono-4-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_mono\\java-jit",
+              "interface_mono"
+            ],
+            "samples_ns": [
+              282600,
+              283100,
+              282500,
+              284900,
+              283100
+            ],
+            "stdout": "warmup_calls 3467\nwarmup_ns 1013892400\nwarmup_complete_uptime_ms 1104\nrep 282600\nrep 283100\nrep 282500\nrep 284900\nrep 283100\nsink 5740953610\n",
+            "stderr": "",
+            "warmup_calls": 3467,
+            "warmup_ns": 1013892400,
+            "c2_work_lines": [
+              "[0.065s][debug][jit,compilation]  105 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.067s][debug][jit,compilation]  105 %     4       interface_mono::work @ 9 (30 bytes)   made not entrant",
+              "[0.067s][debug][jit,compilation]  106 %  b  4       interface_mono::work @ 9 (30 bytes)",
+              "[0.069s][debug][jit,compilation]  107    b  4       interface_mono::work (30 bytes)"
+            ],
+            "jit_log_sha256": "1fab76d2d658297d05053a8ee17acc85e0d564e7ec7f06eeed73e25774091d9b",
+            "warmup_complete_uptime_ms": 1104
+          }
+        ],
+        "median_ms": 0.2845
+      }
+    },
+    "interface_poly": {
+      "java-jit": {
+        "build": [
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\javac.EXE",
+              "-d",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\FeatureTiming.java",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\interface_poly.java"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_poly-0-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "interface_poly"
+            ],
+            "samples_ns": [
+              1015500,
+              1065300,
+              1068700,
+              1371300,
+              1054200
+            ],
+            "stdout": "warmup_calls 807\nwarmup_ns 1015210300\nwarmup_complete_uptime_ms 1115\nrep 1015500\nrep 1065300\nrep 1068700\nrep 1371300\nrep 1054200\nsink 5690621962\n",
+            "stderr": "",
+            "warmup_calls": 807,
+            "warmup_ns": 1015210300,
+            "c2_work_lines": [
+              "[0.076s][debug][jit,compilation]  114 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.078s][debug][jit,compilation]  114 %     4       interface_poly::work @ 5 (41 bytes)   made not entrant",
+              "[0.078s][debug][jit,compilation]  115 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.079s][debug][jit,compilation]  116    b  4       interface_poly::work (41 bytes)"
+            ],
+            "jit_log_sha256": "4400575e657522487dea7e14d632e067226a2cea36afc83dc6dbb0e27bce046c",
+            "warmup_complete_uptime_ms": 1115
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_poly-1-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "interface_poly"
+            ],
+            "samples_ns": [
+              1057000,
+              1055000,
+              1068200,
+              1047400,
+              1310700
+            ],
+            "stdout": "warmup_calls 682\nwarmup_ns 1016600300\nwarmup_complete_uptime_ms 1110\nrep 1057000\nrep 1055000\nrep 1068200\nrep 1047400\nrep 1310700\nsink 5690621962\n",
+            "stderr": "",
+            "warmup_calls": 682,
+            "warmup_ns": 1016600300,
+            "c2_work_lines": [
+              "[0.068s][debug][jit,compilation]  114 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.070s][debug][jit,compilation]  114 %     4       interface_poly::work @ 5 (41 bytes)   made not entrant",
+              "[0.070s][debug][jit,compilation]  115 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.071s][debug][jit,compilation]  116    b  4       interface_poly::work (41 bytes)"
+            ],
+            "jit_log_sha256": "d8cf288e0287efec01597ba7ddc8229c6336e735ebf61482e2eaa9ff8e8e27a4",
+            "warmup_complete_uptime_ms": 1110
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_poly-2-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "interface_poly"
+            ],
+            "samples_ns": [
+              1254700,
+              1039300,
+              1039900,
+              1188900,
+              1147200
+            ],
+            "stdout": "warmup_calls 797\nwarmup_ns 1014153600\nwarmup_complete_uptime_ms 1112\nrep 1254700\nrep 1039300\nrep 1039900\nrep 1188900\nrep 1147200\nsink 5690621962\n",
+            "stderr": "",
+            "warmup_calls": 797,
+            "warmup_ns": 1014153600,
+            "c2_work_lines": [
+              "[0.077s][debug][jit,compilation]  114 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.078s][debug][jit,compilation]  114 %     4       interface_poly::work @ 5 (41 bytes)   made not entrant",
+              "[0.079s][debug][jit,compilation]  115 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.079s][debug][jit,compilation]  116    b  4       interface_poly::work (41 bytes)"
+            ],
+            "jit_log_sha256": "b8140bde91fbd8195bd95196b2ea5ac368acbde530e17702db54706db6a523e8",
+            "warmup_complete_uptime_ms": 1112
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_poly-3-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "interface_poly"
+            ],
+            "samples_ns": [
+              1712800,
+              1114800,
+              1052700,
+              1055000,
+              1157600
+            ],
+            "stdout": "warmup_calls 799\nwarmup_ns 1014769000\nwarmup_complete_uptime_ms 1110\nrep 1712800\nrep 1114800\nrep 1052700\nrep 1055000\nrep 1157600\nsink 5690621962\n",
+            "stderr": "",
+            "warmup_calls": 799,
+            "warmup_ns": 1014769000,
+            "c2_work_lines": [
+              "[0.072s][debug][jit,compilation]  114 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.074s][debug][jit,compilation]  114 %     4       interface_poly::work @ 5 (41 bytes)   made not entrant",
+              "[0.074s][debug][jit,compilation]  115 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.075s][debug][jit,compilation]  116    b  4       interface_poly::work (41 bytes)"
+            ],
+            "jit_log_sha256": "da9771784f7ceb3baa062fd6bfba23064720ab6d6daf604256757449e7aa7c86",
+            "warmup_complete_uptime_ms": 1110
+          },
+          {
+            "command": [
+              "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+              "-Xbatch",
+              "-Xlog:jit+compilation=debug:file=benchmarks/results/1.0.11-feature-baseline/interface_poly-4-jit.log",
+              "-cp",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\interface_poly\\java-jit",
+              "interface_poly"
+            ],
+            "samples_ns": [
+              1799600,
+              1724500,
+              1262000,
+              1049600,
+              1054100
+            ],
+            "stdout": "warmup_calls 763\nwarmup_ns 1017177200\nwarmup_complete_uptime_ms 1115\nrep 1799600\nrep 1724500\nrep 1262000\nrep 1049600\nrep 1054100\nsink 5690621962\n",
+            "stderr": "",
+            "warmup_calls": 763,
+            "warmup_ns": 1017177200,
+            "c2_work_lines": [
+              "[0.074s][debug][jit,compilation]  114 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.075s][debug][jit,compilation]  114 %     4       interface_poly::work @ 5 (41 bytes)   made not entrant",
+              "[0.076s][debug][jit,compilation]  115 %  b  4       interface_poly::work @ 5 (41 bytes)",
+              "[0.077s][debug][jit,compilation]  116    b  4       interface_poly::work (41 bytes)"
+            ],
+            "jit_log_sha256": "a5765486ddfba98175b14f2fd2ebd03db3cb19b4e4104c3e5fdf2d355d991049",
+            "warmup_complete_uptime_ms": 1115
+          }
+        ],
+        "median_ms": 1.0682
+      }
+    },
+    "struct_nested": {
+      "rust": {
+        "build": [
+          {
+            "command": [
+              "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+              "--edition=2021",
+              "-O",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\struct_nested.rs",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1137600,
+              977800,
+              1053200,
+              1023200,
+              1085800
+            ],
+            "stdout": "rep 1137600\nrep 977800\nrep 1053200\nrep 1023200\nrep 1085800\nsink 4498391050\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1063700,
+              978200,
+              1063800,
+              971700,
+              1155300
+            ],
+            "stdout": "rep 1063700\nrep 978200\nrep 1063800\nrep 971700\nrep 1155300\nsink 4498391050\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1130800,
+              975600,
+              1056800,
+              1040300,
+              1180700
+            ],
+            "stdout": "rep 1130800\nrep 975600\nrep 1056800\nrep 1040300\nrep 1180700\nsink 4498391050\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1061200,
+              968000,
+              1054300,
+              968100,
+              1175700
+            ],
+            "stdout": "rep 1061200\nrep 968000\nrep 1054300\nrep 968100\nrep 1175700\nsink 4498391050\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\struct_nested\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              1108000,
+              999400,
+              1052300,
+              971700,
+              1255200
+            ],
+            "stdout": "rep 1108000\nrep 999400\nrep 1052300\nrep 971700\nrep 1255200\nsink 4498391050\n",
+            "stderr": ""
+          }
+        ],
+        "median_ms": 1.0543
+      }
+    },
+    "array_2d": {
+      "rust": {
+        "build": [
+          {
+            "command": [
+              "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+              "--edition=2021",
+              "-O",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\array_2d.rs",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              556200,
+              538000,
+              543300,
+              537300,
+              539300
+            ],
+            "stdout": "rep 556200\nrep 538000\nrep 543300\nrep 537300\nrep 539300\nsink 5728449749\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              539700,
+              557000,
+              553500,
+              537500,
+              639300
+            ],
+            "stdout": "rep 539700\nrep 557000\nrep 553500\nrep 537500\nrep 639300\nsink 5728449749\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              537400,
+              540200,
+              545400,
+              540900,
+              539300
+            ],
+            "stdout": "rep 537400\nrep 540200\nrep 545400\nrep 540900\nrep 539300\nsink 5728449749\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              605000,
+              802500,
+              608900,
+              554000,
+              571900
+            ],
+            "stdout": "rep 605000\nrep 802500\nrep 608900\nrep 554000\nrep 571900\nsink 5728449749\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_2d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              665500,
+              653000,
+              538100,
+              540700,
+              537300
+            ],
+            "stdout": "rep 665500\nrep 653000\nrep 538100\nrep 540700\nrep 537300\nsink 5728449749\n",
+            "stderr": ""
+          }
+        ],
+        "median_ms": 0.5433
+      }
+    },
+    "array_3d": {
+      "rust": {
+        "build": [
+          {
+            "command": [
+              "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+              "--edition=2021",
+              "-O",
+              "G:\\Desktop\\ChaLi\\benchmarks\\features\\array_3d.rs",
+              "-o",
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "processes": [
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              612300,
+              744300,
+              626800,
+              629200,
+              615300
+            ],
+            "stdout": "rep 612300\nrep 744300\nrep 626800\nrep 629200\nrep 615300\nsink 7465740192\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              616300,
+              616300,
+              614200,
+              619100,
+              616100
+            ],
+            "stdout": "rep 616300\nrep 616300\nrep 614200\nrep 619100\nrep 616100\nsink 7465740192\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              669200,
+              731000,
+              663700,
+              671300,
+              673200
+            ],
+            "stdout": "rep 669200\nrep 731000\nrep 663700\nrep 671300\nrep 673200\nsink 7465740192\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              647900,
+              635300,
+              627800,
+              627900,
+              622700
+            ],
+            "stdout": "rep 647900\nrep 635300\nrep 627800\nrep 627900\nrep 622700\nsink 7465740192\n",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "G:\\Desktop\\ChaLi\\tmp\\features\\array_3d\\rust\\benchmark.exe"
+            ],
+            "samples_ns": [
+              618700,
+              627100,
+              629100,
+              619400,
+              627700
+            ],
+            "stdout": "rep 618700\nrep 627100\nrep 629100\nrep 619400\nrep 627700\nsink 7465740192\n",
+            "stderr": ""
+          }
+        ],
+        "median_ms": 0.6277
+      }
+    }
+  },
+  "tools": {
+    "clang": {
+      "command": [
+        "G:\\Desktop\\ChaLi/build/dependencies/llvm/toolchain/bin/clang.exe",
+        "--version"
+      ],
+      "output": "clang version 23.1.4 (https://github.com/llvm/llvm-project.git 7a941dfb2877a0b8cf30323fefa85ad019e0b0f5)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin\nConfiguration file: G:/Desktop/ChaLi/build/dependencies/llvm/toolchain/bin/x86_64-w64-windows-gnu.cfg\n"
+    },
+    "g++": {
+      "command": [
+        "D:\\MINGW64_YACC\\bin\\g++.EXE",
+        "--version"
+      ],
+      "output": "g++.EXE (x86_64-posix-seh-rev3, Built by MinGW-W64 project) 11.2.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "rustc": {
+      "command": [
+        "C:\\Users\\hw-h76gth9\\.cargo\\bin\\rustc.EXE",
+        "--version"
+      ],
+      "output": "rustc 1.98.1 (48a229cea 2026-09-01)\n"
+    },
+    "java": {
+      "command": [
+        "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\java.EXE",
+        "-version"
+      ],
+      "output": "java version \"22.0.1\" 2024-04-16\nJava(TM) SE Runtime Environment (build 22.0.1+8-16)\nJava HotSpot(TM) 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)\n"
+    },
+    "javac": {
+      "command": [
+        "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath\\javac.EXE",
+        "-version"
+      ],
+      "output": "javac 22.0.1\n"
+    }
+  },
+  "artifact_sha256": {
+    "array_2d\\chali-aot\\benchmark.exe": "c62ea02e1cf98666171a270ae907219a594563876da093d454becd2d7a2f8e35",
+    "array_2d\\chali-aot\\kernel.dll": "c992ed4d8c645e46ecc8f33da85d726a8d4a18f8aaa5087c990f427ac0a29859",
+    "array_2d\\cpp-o3\\benchmark.exe": "7603b322fbf592d073b0f122eceb0089b1676622b98ffe443ee95bda44723b9e",
+    "array_2d\\rust\\benchmark.exe": "d726355790331f1557c2ad12a10d522cf8d777b982e1ead93f95cf210b24f423",
+    "array_3d\\chali-aot\\benchmark.exe": "873508384695e678a552c248ece41f213695100340ffedd6f8f446363a7a6f5e",
+    "array_3d\\chali-aot\\kernel.dll": "0aad961d06c6fbe755ad2ab79151ffeb79730ae84d55bea163628d99a041f3c5",
+    "array_3d\\cpp-o3\\benchmark.exe": "6b8e5afa5f99f648a828eb399fe97b42c576133785690fd0f6330f3c43543da8",
+    "array_3d\\rust\\benchmark.exe": "c73a6d37f36b716999709dfc14b2ee77cf3acf292bde4b4cd7e8e0d4d0b3baab",
+    "enum_payload\\chali-aot\\benchmark.exe": "f5f7f4f9feb34eba1d6494e7a45a38411912e300d1a90a4e0b2be5b4cbf87d52",
+    "enum_payload\\chali-aot\\kernel.dll": "f56dd6fdd3c76d0548f5225b13e14c5c71d54d1daa4d68434ff5ef585d7be873",
+    "enum_payload\\rust\\benchmark.exe": "7fbe9a589acdd9a07b6e084f6e1faa426da94a4cb16500ad51abc17749cfddd9",
+    "interface_mono\\chali-aot\\benchmark.exe": "d825c2a4f4baa0cfac3058ace2770e7ebe5bb71c6699c72787ca071cc87e2984",
+    "interface_mono\\chali-aot\\kernel.dll": "0316d3192a54a501e5dd650be8ea07e44a7722577a330ccb77838ac78ed9c601",
+    "interface_mono\\java-jit\\FeatureTiming.class": "63d1252b9b731ea8d52b3b8b96311a37c16b31f24921857916c3b267a647c999",
+    "interface_mono\\java-jit\\interface_mono$Multiply.class": "dd9835309b49cf05426052efc3de7691db7e52a09850a0d2ce6306fca16d2291",
+    "interface_mono\\java-jit\\interface_mono$NamedOperation.class": "3fef89f9a1fde71158598d79a3246df7ebb500f8a91e49158eb55a8f0b7fa694",
+    "interface_mono\\java-jit\\interface_mono$Operation.class": "240e07514a6deeae38820487cd524faad6f88c8a873da11bd9f44f92bcb27047",
+    "interface_mono\\java-jit\\interface_mono.class": "f9aebf701ea3abac924b56203f6e7ede1bcb06def400437fe05f1aa0b68b8a03",
+    "interface_poly\\chali-aot\\benchmark.exe": "c97e93234fbace3e852ff6d93dda6c54c69a0f2065fe52d07c778b80a6033303",
+    "interface_poly\\chali-aot\\kernel.dll": "7bbc082dce72958a07f81171887841efc328264fc31769e092e726217b496b7f",
+    "interface_poly\\java-jit\\FeatureTiming.class": "63d1252b9b731ea8d52b3b8b96311a37c16b31f24921857916c3b267a647c999",
+    "interface_poly\\java-jit\\interface_poly$ExclusiveOr.class": "52bd49cf34bdb741721858a0a18a90932e42f7be88ec42c25097eb35d5f894c5",
+    "interface_poly\\java-jit\\interface_poly$Multiply.class": "406544af5c0048e89039fe86865caad9a222b6383fe6ad9fbf537aee5e071511",
+    "interface_poly\\java-jit\\interface_poly$NamedOperation.class": "d60eac1306d85e09c984d8f98c2624833864b148a50e9e67295860895dd4c8d1",
+    "interface_poly\\java-jit\\interface_poly$Operation.class": "8f1deb77d89e9a53c7437347c6ae1a22547395e7267f25346f8db074bcc8a2c9",
+    "interface_poly\\java-jit\\interface_poly$Subtract.class": "53db0839281e7718b5fa0ab394f8d744dafa636dd623570dd4594a4c0bbc9d25",
+    "interface_poly\\java-jit\\interface_poly.class": "b3e4cff86e837a927c3febca7cd76c3502597a7471226a56ac691820d9cf3365",
+    "struct_nested\\chali-aot\\benchmark.exe": "3c901c501a72299ea07426d1aac65da7a50d9698a8a0d8c1e1d1d1164f3b17ec",
+    "struct_nested\\chali-aot\\kernel.dll": "b412f7549672345fe6ccf7aa8f7a4be15b921b13f3856d6ef59c48accb136b46",
+    "struct_nested\\cpp-o3\\benchmark.exe": "2e9d3d642bd2fdc32b51f9419808b8058fdce85931e17b7c004be447df69f6a9",
+    "struct_nested\\rust\\benchmark.exe": "5f60191446c3cad07ada481e04256267619c7fc8967608fe903f6f08b3763c0f"
+  },
+  "original_report": {
+    "path": "benchmarks/results/1.0.11-feature-baseline/results.json",
+    "sha256": "233adb0296b614d6132eff58699353a324975b5679312b7dddadf9a1e5886dd4",
+    "git_snapshot": "0bb28ec",
+    "pruned_chali_measurements": true,
+    "retained_only_article_references": true,
+    "reference_languages_rerun": false
+  }
+}
