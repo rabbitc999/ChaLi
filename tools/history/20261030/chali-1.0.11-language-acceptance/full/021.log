@@ -1,0 +1,604 @@
+[ok]   aggregate_ownership
+[ok]   allocated_default_ownership
+[ok]   any_generics
+[ok]   aot_basic
+[ok]   array2d
+[ok]   array_parameter_values
+[ok]   array_pointer_decay
+[ok]   associated_types
+[ok]   backend_ownership
+[ok]   basic_casts
+[ok]   bigfloat
+[ok]   bigint
+[ok]   bigint_methods
+[ok]   bits
+[ok]   block_expression
+[ok]   book_macro_vec
+[ok]   borrowed_aggregate_return
+[ok]   borrowed_index_values
+[ok]   branch_owned_temp
+[ok]   break_level
+[ok]   break_move
+[ok]   break_values
+[ok]   bytes
+[ok]   cas
+[ok]   chain_expression_cleanup
+[ok]   chained_temporaries
+[ok]   closeable
+[ok]   closeable_move
+[ok]   collection_literals
+[ok]   collection_name_collision
+[ok]   collection_storage
+[ok]   compound_assignment
+[ok]   const
+[ok]   const_generics
+[ok]   constant_expressions
+[ok]   container_struct_map
+[ok]   container_struct_variadic
+[ok]   container_values
+[ok]   containers
+[ok]   control
+[ok]   conversion_interfaces
+[ok]   copy_interface
+[ok]   core_name_shadow
+[ok]   cpp_glue
+[ok]   crt
+[ok]   defer_scope
+[ok]   deprecated_identifiers
+[ok]   derive
+[ok]   destructuring_guards
+[ok]   drop_destructor
+[ok]   drop_twice
+[ok]   dynamic_array
+[ok]   enum_drop_active_payload
+[ok]   enum_methods
+[ok]   enum_payload_pointer
+[ok]   enums
+[ok]   error_adapters
+[ok]   event_timer
+[ok]   expression_effects
+[ok]   file_proc
+[ok]   fixed_array_values
+[ok]   flexptr
+[ok]   float
+[ok]   fn_capture_modes
+[ok]   fn_inline_arguments
+[ok]   fn_let
+[ok]   fn_move_binding
+[ok]   fn_trailing_return
+[ok]   foreach_interval
+[ok]   foreach_reference
+[ok]   fourier
+[ok]   funcptr
+[ok]   function_pointer_glue
+[ok]   function_type_identifiers
+[ok]   function_types
+[ok]   functions
+[ok]   gcd
+[ok]   generic_inference
+[ok]   generic_inherited_constraint
+[ok]   generic_qualified
+[ok]   generics
+[ok]   global_container_defaults
+[ok]   globals
+[ok]   glue_interface_inherit
+[ok]   glue_members
+[ok]   glue_system_interfaces
+[ok]   glue_types
+[ok]   heap_address_reuse
+[ok]   hello
+[ok]   if_expression
+[ok]   import_names
+[ok]   increment_decrement
+[ok]   increment_decrement_multiple_arguments
+[ok]   increment_decrement_multiple_different
+[ok]   increment_decrement_multiple_nested
+[ok]   input_text
+[ok]   int64_min_literal
+[ok]   integer_radix_regex
+[ok]   interface
+[ok]   interface_defaults
+[ok]   interface_inherit
+[ok]   interface_payload_match
+[ok]   interface_protocols
+[ok]   interface_system_inherit
+[ok]   interface_view_ownership
+[ok]   iter_pipeline
+[ok]   lambda_callbacks
+[ok]   lambda_capture_modes
+[ok]   lambda_captures
+[ok]   lambda_let
+[ok]   lang_float64_bytes
+[ok]   lang_float_bytes
+[ok]   lang_float_to_int
+[ok]   lifetime_contract
+[ok]   list
+[ok]   literal_context_type
+[ok]   loop_owned_values
+[ok]   macro_argument_compound_chain
+[ok]   macro_argument_increment
+[ok]   macro_concat_stringify
+[ok]   macro_controls
+[ok]   macro_expr
+[ok]   macro_for
+[ok]   macro_gensym
+[ok]   macro_groups
+[ok]   macro_meta
+[ok]   macro_name_vs_identifier
+[ok]   macro_overload
+[ok]   macro_parenthesize
+[ok]   macro_qualified
+[ok]   macro_rest_paren
+[ok]   macros
+[ok]   main_arguments
+[ok]   map_get_option
+[ok]   map_pair_iterator
+[ok]   match_expression
+[ok]   match_or_string
+[ok]   match_range
+[ok]   math
+[ok]   math_generic
+[ok]   mem
+[ok]   modules
+[ok]   multidimensional_arrays
+[ok]   named_function
+[ok]   nested_drop
+[ok]   nested_enum_ownership
+[ok]   nested_result
+[ok]   no_replace
+[ok]   numeric_v101
+[ok]   numeric_widths
+[ok]   obj
+[ok]   obj_assign
+[ok]   obj_copy_discard
+[ok]   object_copy
+[ok]   object_copy_discard
+[ok]   object_type_combinations
+[ok]   opcode_big_numbers
+[ok]   opcode_std_storage
+[ok]   opcode_value_semantics
+[ok]   operator_result_choice
+[ok]   operator_right_direction
+[ok]   operator_swap_eval_order
+[ok]   operator_symmetry
+[ok]   operator_unary_overload
+[ok]   option_result_methods
+[ok]   overload
+[ok]   ownership_exit_edges
+[ok]   ownership_operator_results
+[ok]   ownership_release
+[ok]   ownership_unary_edges
+[ok]   p1_reference_ownership
+[ok]   p2_tuple_readonly
+[ok]   pi_digits
+[ok]   pointer
+[ok]   pointer_conversion
+[ok]   pointer_deref_member
+[ok]   pointer_glue
+[ok]   pointer_iterators
+[ok]   pointer_sort
+[ok]   powmod
+[ok]   preprocess
+[ok]   print_interpolation
+[ok]   quad_optimization
+[ok]   rarray
+[ok]   raw_pointer
+[ok]   raw_storage
+[ok]   recursion
+[ok]   recursion_mutual
+[ok]   recursion_sort
+[ok]   recursion_strings
+[ok]   recursive_callable_ownership
+[ok]   recursive_local_ownership
+[ok]   recursive_reference_storage
+[ok]   redefine
+[ok]   reference
+[ok]   reference_combinations
+[ok]   reference_glue_optional
+[ok]   reference_lifetimes
+[ok]   reference_sugar
+[ok]   reference_value_types
+[ok]   reflect_fields
+[ok]   reflect_serialization
+[ok]   regex_limits
+[ok]   replace
+[ok]   replace_variadic
+[ok]   result_match_loop
+[ok]   return_expression
+[ok]   scope
+[ok]   set_key_protocol
+[ok]   short_circuit
+[ok]   slice_mid_char
+[ok]   sql_ipage
+[ok]   static_constructor_drop
+[ok]   static_new
+[ok]   std_algorithms_extra
+[ok]   std_binary
+[ok]   std_builtin_shadowing
+[ok]   std_cli
+[ok]   std_collections_algorithms
+[ok]   std_complex_fft
+[ok]   std_compress
+[ok]   std_csv
+[ok]   std_datetime
+[ok]   std_encoding
+[ok]   std_errors
+[ok]   std_file_bytes
+[ok]   std_file_result
+[ok]   std_file_strings
+[ok]   std_glue_edges
+[ok]   std_graph
+[ok]   std_image
+[ok]   std_index_callback
+[ok]   std_input
+[ok]   std_io
+[ok]   std_io_extended
+[ok]   std_lang
+[ok]   std_linalg_solve_glue
+[ok]   std_linkedlist
+[ok]   std_math_clock_random
+[ok]   std_naming
+[ok]   std_net
+[ok]   std_net_async
+[ok]   std_numerics_number_theory
+[ok]   std_parse_random_path_memory
+[ok]   std_pause
+[ok]   std_print
+[ok]   std_process_probe
+[ok]   std_read_lines
+[ok]   std_red_black_delete
+[ok]   std_string_builder
+[ok]   std_structured_data
+[ok]   std_text_kmp
+[ok]   std_tree
+[ok]   std_utf8
+[ok]   string_interpolation
+[ok]   string_literal_pool
+[ok]   string_method_reentry
+[ok]   string_methods
+[ok]   string_text
+[ok]   string_type_name
+[ok]   strings
+[ok]   struct_container_field
+[ok]   struct_op
+[ok]   struct_value
+[ok]   structs
+[ok]   temporary_ownership
+[ok]   thread_channel
+[ok]   thread_messages
+[ok]   thread_pool
+[ok]   tree
+[ok]   try_custom
+[ok]   try_option
+[ok]   try_temp_name_collision
+[ok]   tuple
+[ok]   tuple_swap
+[ok]   typed_messages_shared
+[ok]   unsigned_suffix
+[ok]   update_compound_arguments
+[ok]   update_compound_decrement
+[ok]   update_compound_lhs
+[ok]   update_compound_nested
+[ok]   update_compound_rhs
+[ok]   update_compound_short_circuit
+[ok]   value_text
+[ok]   variadic
+[ok]   variadic_glue
+[ok]   vm_basic
+[ok]   zip
+[ok]   288 个正常样例
+[ok]   abi_array_length（报错：chali: example/samples-error/abi_array_length.chl 第 2 行第 1 列：abi 数组返回值的 [长度] 必须引用整数形参）
+[ok]   algorithm_type_mismatch（报错：chali: example/samples-error/algorithm_type_mismatch.chl 第 5 行第 5 列：std::algorithms::findValue 的目标值必须兼容 int64）
+[ok]   array_oob（报错：chali aot: 下标越界：下标 4，长度 4）
+[ok]   array_oob_2d（报错：chali aot: 下标越界：下标 7，长度 4）
+[ok]   array_partial_index（报错：chali: example/samples-error/array_partial_index.chl 第 5 行第 5 列：不能隐式转换：int64[3] -> int64（请显式强转））
+[ok]   assert_failure（报错：chali aot: panic：assert(x) 的 x 为假）
+[ok]   assert_int（报错：chali: example/samples-error/assert_int.chl 第 2 行第 5 列：调用 函数 std::lang::assert 找不到匹配的重载：(int64)；没有参数类型能对上的重载（候选：std::lang::assert$bool、std::lang::assert$bool$std::lang::String、std::lang::assert$bool$int64、std::lang::assert$bool$std::lang::String$int64））
+[ok]   assert_panic（报错：chali aot: panic：n 必须为正（源码第 6 行））
+[ok]   bfloat_precision（报错：chali: example/samples-error/bfloat_precision.chl 第 2 行第 5 列：调用了没定义的函数：bfloat_precision）
+[ok]   bigdecimal_precision（报错：chali aot: BigDecimal 有效位数必须在 1..100000 之间，现在是 0）
+[ok]   biginteger_copy_args（报错：chali: example/samples-error/biginteger_copy_args.chl 第 3 行第 5 列：大整数的 `.copy()` 不带参数）
+[ok]   binary_bool（报错：chali aot: 二进制读取：bool 字节必须为 0 或 1）
+[ok]   binary_ieee_null_read（报错：chali: example/samples-error/binary_ieee_null_read.chl 第 2 行第 40 列：引用不能与整数地址互转；查看地址请使用 std::lang::address）
+[ok]   binary_ieee_null_write（报错：chali: example/samples-error/binary_ieee_null_write.chl 第 2 行第 36 列：引用不能与整数地址互转；查看地址请使用 std::lang::address）
+[ok]   binary_negative（报错：chali aot: 二进制读取：偏移和长度必须非负）
+[ok]   binary_null（报错：chali: example/samples-error/binary_null.chl 第 3 行第 39 列：引用不能与整数地址互转；查看地址请使用 std::lang::address）
+[ok]   binary_overflow（报错：chali aot: 二进制读取：数据不足）
+[ok]   binary_short（报错：chali aot: 二进制读取：数据不足）
+[ok]   binary_strings（报错：chali aot: 二进制读取：数据不足）
+[ok]   bool_arithmetic（报错：chali: example/samples-error/bool_arithmetic.chl 第 2 行第 26 列：bool 只支持 &&、||、==、!= 与一元 !，不支持 +）
+[ok]   break_value_while（报错：chali: example/samples-error/break_value_while.chl 第 3 行第 9 列：yield 值; 需要外层值表达式接收结果）
+[ok]   closeable_copy（报错：chali: example/samples-error/closeable_copy.chl 第 14 行第 5 列：不可复制的值禁止复制：Handle（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用）
+[ok]   closeable_missing（报错：chali: example/samples-error/closeable_missing.chl 第 5 行第 1 列：struct Widget 实现了接口 Closeable，但没有完全实现：close() -> void（接口要求同名、同返回类型、同形参类型；一个都不能少））
+[ok]   collection_bool_numeric（报错：chali: example/samples-error/collection_bool_numeric.chl 第 1 行第 1 列：bool 与数值之间不能隐式转换：int64 -> bool（请显式强转））
+[ok]   collection_empty_inference（报错：chali: example/samples-error/collection_empty_inference.chl 第 1 行第 1 列：空集合字面量 `{}` 需要 std::lang::Set<T> 或 std::lang::Map<K,V> 上下文）
+[ok]   collection_hash_owner（报错：chali: Hash<T> 必须声明 `uint64 hash(T value)`，T 必须是实现类型）
+[ok]   collection_map_key_equal（报错：chali: example/samples-error/collection_map_key_equal.chl 第 1 行第 1 列：Map 自定义键 Key 必须实现 Equal<bool,T> 等于重载接口；Hash<T> 哈希接口可选）
+[ok]   collection_map_key_mixed（报错：chali: example/samples-error/collection_map_key_mixed.chl 第 1 行第 1 列：集合字面量的键类型不一致：int64 与 std::lang::String）
+[ok]   collection_map_literal_equal（报错：chali: example/samples-error/collection_map_literal_equal.chl 第 1 行第 1 列：Map 自定义键 Key 必须实现 Equal<bool,T> 等于重载接口；Hash<T> 哈希接口可选）
+[ok]   collection_map_reentry（报错：chali aot: Equal / Hash 回调期间不能重入同一个 Map）
+[ok]   collection_map_value_mixed（报错：chali: example/samples-error/collection_map_value_mixed.chl 第 1 行第 1 列：集合字面量的值类型不一致：int64 与 std::lang::String）
+[ok]   collection_map_value_type（报错：chali: example/samples-error/collection_map_value_type.chl 第 1 行第 1 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   collection_missing_value（报错：语法错误：example/samples-error/collection_missing_value.chl 第 1 行第 30 列：期望 字符串 / 数字 / 标识符 / MACRO_IS 等 56 个之一，实际是 右花括号(})）
+[ok]   collection_mixed_entries（报错：语法错误：example/samples-error/collection_mixed_entries.chl 第 1 行第 35 列：期望 冒号(:)，实际是 右花括号(})）
+[ok]   collection_nested_empty（报错：chali: example/samples-error/collection_nested_empty.chl 第 1 行第 1 列：集合字面量的嵌套空值无法推导类型，请声明容器类型）
+[ok]   collection_set_hash_without_equal（报错：chali: example/samples-error/collection_set_hash_without_equal.chl 第 5 行第 1 列：Set 自定义键 HashOnly 必须实现 Equal<bool,T> 等于重载接口；Hash<T> 哈希接口可选）
+[ok]   collection_set_missing_equal（报错：chali: example/samples-error/collection_set_missing_equal.chl 第 2 行第 1 列：Set 自定义键 MissingSetEqual 必须实现 Equal<bool,T> 等于重载接口；Hash<T> 哈希接口可选）
+[ok]   collection_set_mixed（报错：chali: example/samples-error/collection_set_mixed.chl 第 1 行第 1 列：集合字面量的元素类型不一致：int64 与 std::lang::String）
+[ok]   collection_set_reentry（报错：chali aot: Equal / Hash 回调期间不能重入同一个 Set）
+[ok]   collection_set_type（报错：chali: example/samples-error/collection_set_type.chl 第 1 行第 1 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   collection_wrong_kind（报错：chali: example/samples-error/collection_wrong_kind.chl 第 1 行第 1 列：集合字面量类型不匹配：set 不能初始化 std::lang::Map<int64, int64>）
+[ok]   collection_wrong_set_kind（报错：chali: example/samples-error/collection_wrong_set_kind.chl 第 1 行第 1 列：集合字面量类型不匹配：map 不能初始化 std::lang::Set<int64>）
+[ok]   compound_assignment_chain_compound（报错：chali: example/samples-error/compound_assignment_chain_compound.chl 第 2 行第 51 列：复合赋值不能参与链式赋值）
+[ok]   compound_assignment_chain_compound_parenthesized（报错：chali: example/samples-error/compound_assignment_chain_compound_parenthesized.chl 第 2 行第 1 列：复合赋值不能参与链式赋值）
+[ok]   compound_assignment_chain_mixed（报错：chali: example/samples-error/compound_assignment_chain_mixed.chl 第 2 行第 50 列：复合赋值不能参与链式赋值）
+[ok]   compound_assignment_chain_parenthesized（报错：chali: example/samples-error/compound_assignment_chain_parenthesized.chl 第 2 行第 1 列：复合赋值不能参与链式赋值）
+[ok]   compound_assignment_chain_plain_rhs（报错：chali: example/samples-error/compound_assignment_chain_plain_rhs.chl 第 2 行第 50 列：复合赋值不能参与链式赋值）
+[ok]   compound_assignment_const（报错：chali: example/samples-error/compound_assignment_const.chl 第 2 行第 1 列：不可变变量（const）不能再赋值：local）
+[ok]   compound_assignment_incompatible（报错：chali: example/samples-error/compound_assignment_incompatible.chl 第 2 行第 1 列：不能隐式转换：float64 -> int64（请显式强转））
+[ok]   compound_assignment_invalid_target（报错：chali: example/samples-error/compound_assignment_invalid_target.chl 第 2 行第 20 列：赋值目标只能是变量、下标、成员或 `*p`）
+[ok]   compound_assignment_readonly（报错：chali: example/samples-error/compound_assignment_readonly.chl 第 2 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   compound_assignment_readonly_map（报错：chali: example/samples-error/compound_assignment_readonly_map.chl 第 2 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   compound_assignment_tuple（报错：chali: example/samples-error/compound_assignment_tuple.chl 第 2 行第 51 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   condition_int（报错：chali: example/samples-error/condition_int.chl 第 2 行第 5 列：if 条件必须是 bool，现在给的是 int64（数值条件请显式写成 `(bool)值` 或比较表达式））
+[ok]   const_assign（报错：chali: example/samples-error/const_assign.chl 第 6 行第 5 列：不可变变量（const）不能再赋值：local）
+[ok]   constant_call（报错：chali: example/samples-error/constant_call.chl 第 1 行第 1 列：[CHL1300] 常量表达式禁止调用、赋值、自增减或运行时操作）
+[ok]   constant_cycle（报错：chali: example/samples-error/constant_cycle.chl 第 1 行第 1 列：[CHL1300] 常量定义存在循环引用）
+[ok]   constant_runtime（报错：chali: example/samples-error/constant_runtime.chl 第 1 行第 1 列：[CHL1300] 常量表达式不能引用运行时变量：n）
+[ok]   constant_zero（报错：chali: example/samples-error/constant_zero.chl 第 1 行第 1 列：[CHL1300] 常量表达式除零）
+[ok]   container_bad_element（报错：chali: example/samples-error/container_bad_element.chl 第 3 行第 5 列：push 的元素/键 需要 int64，实际是 std::lang::String）
+[ok]   container_copy_args（报错：chali: example/samples-error/container_copy_args.chl 第 3 行第 5 列：std::lang::List<int64>.copy 需要 0 个参数，给了 1 个）
+[ok]   destructure_duplicate（报错：chali: example/samples-error/destructure_duplicate.chl 第 1 行第 1 列：解构绑定名称重复：a）
+[ok]   destructure_scalar（报错：chali: example/samples-error/destructure_scalar.chl 第 1 行第 1 列：解构初始化式必须是元组）
+[ok]   destructure_shape（报错：chali: example/samples-error/destructure_shape.chl 第 1 行第 1 列：元组解构的元素数量或嵌套形状不匹配）
+[ok]   drop_const（报错：chali: example/samples-error/drop_const.chl 第 4 行第 5 列：不能 drop 只读（const）变量：block）
+[ok]   drop_readonly（报错：chali: example/samples-error/drop_readonly.chl 第 6 行第 5 列：drop 只能用在可写引用（`T mut&`）或运行时数组（`T[]`）上；只读引用（`T const&`）不持有对象）
+[ok]   enum_direct_payload（报错：chali: example/samples-error/enum_direct_payload.chl 第 4 行第 28 列：enum 载荷不能直接按字段读取：Option.value；请在 match 的 `Option::变体(绑定名) => { ... }` 中解构）
+[ok]   enum_duplicate_variant（报错：chali: example/samples-error/enum_duplicate_variant.chl 第 1 行第 1 列：enum State 的变体重名：Ready）
+[ok]   enum_inference_ambiguous（报错：chali: example/samples-error/enum_inference_ambiguous.chl 第 3 行第 1 列：枚举变体 Empty 存在歧义，请指定枚举类型）
+[ok]   enum_inference_empty（报错：chali: example/samples-error/enum_inference_empty.chl 第 2 行第 1 列：无法推导无载荷枚举变体 None1 的类型参数，请提供目标类型）
+[ok]   enum_interface_missing（报错：chali: example/samples-error/enum_interface_missing.chl 第 6 行第 1 列：enum Status 实现了接口 Code，但没有完全实现：describe() -> std::lang::String（接口要求同名、同返回类型、同形参类型；一个都不能少））
+[ok]   enum_match_duplicate（报错：chali: example/samples-error/enum_match_duplicate.chl 第 4 行第 5 列：match 中存在重复的 enum 变体：Option::None）
+[ok]   enum_match_nonexhaustive（报错：chali: example/samples-error/enum_match_nonexhaustive.chl 第 4 行第 5 列：enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：Option::Some）
+[ok]   enum_pattern_expression（报错：chali: example/samples-error/enum_pattern_expression.chl 第 4 行第 5 列：enum 分支的载荷位置只能写绑定变量名，不能写表达式）
+[ok]   enum_payload_count（报错：chali: example/samples-error/enum_payload_count.chl 第 3 行第 28 列：enum 构造器 Option::Some 需要 1 个载荷，实际给了 0 个）
+[ok]   enum_payload_type（报错：chali: example/samples-error/enum_payload_type.chl 第 3 行第 28 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   enum_unknown_variant（报错：chali: example/samples-error/enum_unknown_variant.chl 第 3 行第 28 列：enum Option 没有变体 Missing）
+[ok]   extern_cast_forbidden（报错：语法错误：example/samples-error/extern_cast_forbidden.chl 第 2 行第 8 列：期望 数字 / 标识符 / 注解声明(@annotation) / at(@) 等 111 个之一，实际是 类型转换(cast)）
+[ok]   extern_overload（报错：chali: 宿主函数不能重载或与 CHALI 函数同名（胶水层按名称绑定）：cpp_pick）
+[ok]   extern_unbound（报错：chali aot: 找不到原生服务：cpp_missing）
+[ok]   float_int64_high（报错：chali aot: panic：std::lang::toInt64：浮点值不是有限数或超出 int64 范围）
+[ok]   float_int64_low（报错：chali aot: panic：std::lang::toInt64：浮点值不是有限数或超出 int64 范围）
+[ok]   foreach_int8_interval（报错：chali: example/samples-error/foreach_int8_interval.chl 第 1 行第 1 列：for-in 区间端点超出 int8 的取值范围（-128..127））
+[ok]   foreach_type_mismatch（报错：chali: example/samples-error/foreach_type_mismatch.chl 第 7 行第 5 列：for-in 变量类型与 Iterator<R> 不一致：写的是 std::lang::String，迭代器给出 int64）
+[ok]   fptr_bool_argument（报错：chali: example/samples-error/fptr_bool_argument.chl 第 7 行第 5 列：bool 与数值之间不能隐式转换：bool -> int64（请显式强转））
+[ok]   generic_constraint（报错：chali: 泛型：Box 的类型实参 program::Plain 未实现接口 Valued）
+[ok]   generic_enum_constraint（报错：chali: 泛型：Box 的类型实参 program::Plain 未实现接口 Valued）
+[ok]   generic_inference_conflict（报错：chali: example/samples-error/generic_inference_conflict.chl 第 2 行第 1 列：泛型函数 same 的类型实参推导冲突，请显式指定类型实参）
+[ok]   generic_inference_constraint（报错：chali: only 的类型实参 int64 未实现接口 Valued）
+[ok]   generic_inference_container_conflict（报错：chali: example/samples-error/generic_inference_container_conflict.chl 第 5 行第 5 列：泛型函数 sameContainer 的类型实参推导冲突，请显式指定类型实参）
+[ok]   generic_inference_missing（报错：chali: example/samples-error/generic_inference_missing.chl 第 2 行第 1 列：无法推导泛型函数 make 的全部类型实参，请显式指定）
+[ok]   generic_operator（报错：chali: example/samples-error/generic_operator.chl 第 5 行第 24 列：没有匹配的运算符接口实现：Plain + Plain（由左操作数实现 Add<R,T> 这类左接口，或由右操作数实现 RightAdd<R,T> 这类右接口）；不会偷偷按数值算）
+[ok]   generic_prefix_removed（报错：语法错误：example/samples-error/generic_prefix_removed.chl 第 1 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 27 个之一，实际是 小于(<)）
+[ok]   generic_too_many（报错：chali: 泛型：identity 至多接受 1 个类型实参）
+[ok]   glue_member_unbound（报错：chali aot: 找不到原生服务：glue_demo_rect_missing）
+[ok]   guard_not_bool（报错：chali: example/samples-error/guard_not_bool.chl 第 1 行第 1 列：match 守卫必须是 bool）
+[ok]   guard_not_exhaustive（报错：chali: example/samples-error/guard_not_exhaustive.chl 第 1 行第 1 列：enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：E::A）
+[ok]   heap_stale_alias（报错：chali: example/samples-error/heap_stale_alias.chl 第 5 行：[CHL1205] 借用来源已释放，不能继续访问：*）
+[ok]   host_arithmetic（报错：chali: example/samples-error/host_arithmetic.chl 第 7 行第 5 列：没有匹配的运算符接口实现：HostId + HostId（由左操作数实现 Add<R,T> 这类左接口，或由右操作数实现 RightAdd<R,T> 这类右接口）；不会偷偷按数值算）
+[ok]   host_cast_missing（报错：chali: example/samples-error/host_cast_missing.chl 第 5 行第 5 列：不支持从 uint64 强转成 HostId）
+[ok]   implicit_bool_from_int（报错：chali: example/samples-error/implicit_bool_from_int.chl 第 2 行第 5 列：bool 与数值之间不能隐式转换：int64 -> bool（请显式强转））
+[ok]   implicit_int_from_bool（报错：chali: example/samples-error/implicit_int_from_bool.chl 第 2 行第 5 列：bool 与数值之间不能隐式转换：bool -> int64（请显式强转））
+[ok]   import_distinct_types（报错：chali: example/samples-error/import_distinct_types.chl 第 4 行第 1 列：调用 函数 program::accept 找不到匹配的重载：(names::right::Shared)；没有参数类型能对上的重载（候选：program::accept））
+[ok]   import_name_ambiguous（报错：chali: example/samples-error/import_name_ambiguous.chl 第 3 行第 1 列：名称 duplicate 有歧义：names::left::duplicate 与 names::right::duplicate；请使用作用域限定名）
+[ok]   import_type_ambiguous（报错：chali: 类型 Shared 有歧义；请使用作用域限定名）
+[ok]   incompatible_assignment（报错：chali: example/samples-error/incompatible_assignment.chl 第 2 行第 5 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   incompatible_field_assignment（报错：chali: example/samples-error/incompatible_field_assignment.chl 第 5 行第 9 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   incompatible_fptr_argument（报错：chali: example/samples-error/incompatible_fptr_argument.chl 第 7 行第 5 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   incompatible_return（报错：chali: example/samples-error/incompatible_return.chl 第 2 行第 5 列：不能隐式转换：std::lang::String -> int64（请显式强转））
+[ok]   increment_decrement_bool（报错：chali: example/samples-error/increment_decrement_bool.chl 第 2 行第 1 列：自增和自减只支持数值或字符类型）
+[ok]   increment_decrement_const（报错：chali: example/samples-error/increment_decrement_const.chl 第 2 行第 1 列：不可变变量（const）的内容不能改：i）
+[ok]   increment_decrement_invalid_target（报错：chali: example/samples-error/increment_decrement_invalid_target.chl 第 2 行第 1 列：赋值目标只能是变量、下标、成员或 `*p`）
+[ok]   increment_decrement_multiple_same（报错：chali: example/samples-error/increment_decrement_multiple_same.chl 第 2 行：[CHL1301] 同一表达式中，自增减目标与其他读写冲突：i）
+[ok]   increment_decrement_multiple_short_circuit（报错：chali: example/samples-error/increment_decrement_multiple_short_circuit.chl 第 2 行：[CHL1301] 同一表达式中，自增减目标与其他读写冲突：i）
+[ok]   increment_decrement_readonly（报错：chali: example/samples-error/increment_decrement_readonly.chl 第 2 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   increment_decrement_readonly_map（报错：chali: example/samples-error/increment_decrement_readonly_map.chl 第 2 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   increment_decrement_tuple（报错：chali: example/samples-error/increment_decrement_tuple.chl 第 2 行第 1 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   index_write（报错：chali: example/samples-error/index_write.chl 第 7 行第 5 列：Index<R,T> 只重载读取；索引写入需要显式方法）
+[ok]   inline_module_visibility（报错：chali: example/samples-error/inline_module_visibility.chl 第 5 行第 5 列：模块 hidden::api 的 inline 函数 secret 不能从模块 inlineVisibility 访问）
+[ok]   int64_min_magnitude（报错：chali: example/samples-error/int64_min_magnitude.chl 第 3 行第 20 列：十进制整数超出 int64 范围：9223372036854775808）
+[ok]   interface_default_conflict（报错：chali: example/samples-error/interface_default_conflict.chl 第 7 行第 1 列：Both 的接口默认方法 answer() -> int64 同时来自 First 和 Second；请显式覆盖）
+[ok]   interface_field（报错：chali: example/samples-error/interface_field.chl 第 1 行第 1 列：接口不能定义字段：value）
+[ok]   interface_inherit_cycle（报错：chali: example/samples-error/interface_inherit_cycle.chl 第 2 行第 1 列：接口继承成环：A（接口不能直接或间接继承自己））
+[ok]   interface_inherit_default_conflict（报错：chali: example/samples-error/interface_inherit_default_conflict.chl 第 4 行第 1 列：接口 C 的默认方法 m() -> int64 同时来自 A 和 B；请显式覆盖）
+[ok]   interface_inherit_signature（报错：chali: example/samples-error/interface_inherit_signature.chl 第 5 行第 1 列：接口 B 里 m 有两个不同签名的声明：m(std::lang::String) -> int64 与 m(int64) -> int64）
+[ok]   interface_inherit_unknown（报错：chali: example/samples-error/interface_inherit_unknown.chl 第 2 行第 1 列：接口 A 继承的接口没有声明：Nope）
+[ok]   interface_missing（报错：chali: example/samples-error/interface_missing.chl 第 10 行第 1 列：struct Circle 实现了接口 Shape，但没有完全实现：area() -> int64、describe() -> std::lang::String（接口要求同名、同返回类型、同形参类型；一个都不能少））
+[ok]   iter_const_reference_write（报错：chali: example/samples-error/iter_const_reference_write.chl 第 2 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   iter_erase_borrowed（报错：chali aot: 活跃 for-in 引用期间不能移动或删除列表元素）
+[ok]   iter_mut_readonly（报错：chali: example/samples-error/iter_mut_readonly.chl 第 2 行第 1 列：泛型函数 listIterMut 的类型实参推导冲突，请显式指定类型实参）
+[ok]   iter_step_zero（报错：chali aot: panic：stepBy 步长必须大于零）
+[ok]   iter_take_negative（报错：chali aot: panic：take 数量不能为负数）
+[ok]   iter_transfer_borrowed（报错：chali aot: 活跃引用或比较回调期间不能 intoIter 转移容器）
+[ok]   lambda_capture_mutate（报错：chali: example/samples-error/lambda_capture_mutate.chl 第 3 行第 42 列：不可变变量（const）不能再赋值：value）
+[ok]   lambda_capture_reference（报错：chali: example/samples-error/lambda_capture_reference.chl 第 4 行第 5 列：lambda 的 mut/move 捕获不能借用或移动只读变量：reference）
+[ok]   lambda_missing_return（报错：chali: example/samples-error/lambda_missing_return.chl 第 2 行第 6 列：let 闭包必须返回值）
+[ok]   lambda_no_call（报错：chali: lambda：无法推导 lambda pending 的形参类型：至少调用一次）
+[ok]   legacy_delete_stmt（报错：chali: example/samples-error/legacy_delete_stmt.chl 第 4 行第 5 列：没有声明的类型：delete（block））
+[ok]   legacy_dollar_define（报错：语法错误：example/samples-error/legacy_dollar_define.chl 第 2 行第 12 列：期望 MACRO_END / MACRO_ELSE / MACRO_END_MATCH / MACRO_END_REGEX 等 52 个之一，实际是 标识符）
+[ok]   legacy_dollar_end（报错：chali: 宏定义缺少 $end_macro）
+[ok]   legacy_dollar_undef（报错：语法错误：example/samples-error/legacy_dollar_undef.chl 第 5 行第 11 列：期望 MACRO_END / MACRO_ELSE / MACRO_END_MATCH / MACRO_END_REGEX 等 52 个之一，实际是 标识符）
+[ok]   legacy_drop_stmt（报错：语法错误：example/samples-error/legacy_drop_stmt.chl 第 4 行第 5 列：期望 字符串 / 数字 / 标识符 / MACRO_END 等 74 个之一，实际是 丢弃(drop)）
+[ok]   legacy_exit（报错：chali: example/samples-error/legacy_exit.chl 第 2 行第 5 列：调用了没定义的函数：exit）
+[ok]   legacy_format（报错：chali: example/samples-error/legacy_format.chl 第 4 行第 5 列：std::lang::format 的第 1 个参数没有被占位符用到）
+[ok]   legacy_idrop_type（报错：chali: example/samples-error/legacy_idrop_type.chl 第 1 行第 1 列：struct Holder 继承的接口没有声明：IDrop）
+[ok]   legacy_iiterator_type（报错：语法错误：example/samples-error/legacy_iiterator_type.chl 第 1 行第 26 列：期望 右圆括号()) / 左花括号({) / 逗号(,) 之一，实际是 TYPE_ARGS_BEGIN）
+[ok]   legacy_input_function（报错：chali: example/samples-error/legacy_input_function.chl 第 3 行第 5 列：调用了没定义的函数：input_number）
+[ok]   legacy_ioption_type（报错：chali: 没有声明的泛型类型：IOption）
+[ok]   legacy_iresult_type（报错：chali: 没有声明的泛型类型：IResult）
+[ok]   legacy_map_type（报错：语法错误：example/samples-error/legacy_map_type.chl 第 2 行第 14 列：期望 常量(const) / 可变(mut) / 函数(fn) / 左方括号([) 等 5 个之一，实际是 逗号(,)）
+[ok]   legacy_printf（报错：chali: example/samples-error/legacy_printf.chl 第 2 行第 5 列：调用了没定义的函数：printf）
+[ok]   legacy_set_type（报错：语法错误：example/samples-error/legacy_set_type.chl 第 2 行第 14 列：期望 常量(const) / 可变(mut) / 函数(fn) / 左方括号([) 等 5 个之一，实际是 大于(>)）
+[ok]   legacy_vec_type（报错：语法错误：example/samples-error/legacy_vec_type.chl 第 2 行第 14 列：期望 常量(const) / 可变(mut) / 函数(fn) / 左方括号([) 等 5 个之一，实际是 大于(>)）
+[ok]   let_no_init（报错：chali: example/samples-error/let_no_init.chl 第 2 行第 5 列：let 变量必须给初值：value）
+[ok]   lifetime_return_source（报错：chali: example/samples-error/lifetime_return_source.chl 第 3 行：[CHL1211] 返回值借用了未声明的来源 b；请声明 #borrow(#ret, [a, b])，或把该来源标为 #static（它若是局部变量则不能返回））
+[ok]   lifetime_static_argument（报错：chali: example/samples-error/lifetime_static_argument.chl 第 6 行：[CHL1214] program::install 要求 'static 实参，但 x 是局部或形参来源；只能传全局变量或用 'static 存储）
+[ok]   lifetime_static_local（报错：chali: example/samples-error/lifetime_static_local.chl 第 2 行：[CHL1213] #static(local) 标的是局部变量；局部存储出块就没了，只有全局或形参才可能是 'static）
+[ok]   lifetime_store_source（报错：chali: example/samples-error/lifetime_store_source.chl 第 5 行：[CHL1212] refs 按契约只借用 [a]，却保存了来自 b 的引用；请改契约 #borrow(refs, [a, b])，或改从已声明的来源取引用）
+[ok]   lifetime_unknown_name（报错：chali: example/samples-error/lifetime_unknown_name.chl 第 3 行：[CHL1210] #borrow(#ret, ...) 的来源 nope 不是本函数的形参，返回值只能借用形参）
+[ok]   logical_and_int（报错：chali: example/samples-error/logical_and_int.chl 第 2 行第 26 列：逻辑运算 && 两侧都必须是 bool，现在是 bool 与 int64）
+[ok]   logical_not_int（报错：chali: example/samples-error/logical_not_int.chl 第 2 行第 19 列：逻辑非 ! 只能用于 bool，现在给的是 int64）
+[ok]   logical_operator_overload（报错：chali: example/samples-error/logical_operator_overload.chl 第 12 行第 5 列：`&&` 是短路运算符，不参与运算符重载：Vec && Vec（短路要先决定左边，与运算符重载「先求两个操作数再调方法」的模型对不上；要自定义请写成普通方法））
+[ok]   logical_or_int（报错：chali: example/samples-error/logical_or_int.chl 第 2 行第 23 列：逻辑运算 || 两侧都必须是 bool，现在是 int64 与 bool）
+[ok]   loop_mixed_break（报错：chali: example/samples-error/loop_mixed_break.chl 第 2 行第 6 列：同一个 loop 不能混用 `break;` 与 `break value;`）
+[ok]   macro_arity（报错：chali: example/samples-error/macro_arity.chl 第 4 行第 22 列：宏实参数量与形参不一致：ADD）
+[ok]   macro_bare_name（报错：chali: example/samples-error/macro_bare_name.chl 第 5 行第 5 列：调用了没定义的函数：ADD）
+[ok]   macro_body_backtick（报错：语法错误：example/samples-error/macro_body_backtick.chl 第 2 行第 1 列：认不出来的字符）
+[ok]   macro_concat_not_identifier（报错：chali: example/samples-error/macro_concat_not_identifier.chl 第 5 行第 22 列：拼名宏只能生成单个标识符）
+[ok]   macro_dsl_keyword（报错：语法错误：example/samples-error/macro_dsl_keyword.chl 第 2 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 7 个之一，实际是 循环(for)）
+[ok]   macro_end_for_orphan（报错：语法错误：example/samples-error/macro_end_for_orphan.chl 第 2 行第 1 列：期望 标识符 / 注解声明(@annotation) / at(@) / MACRO_DEFINE 等 50 个之一，实际是 MACRO_END_FOR）
+[ok]   macro_end_for_unpaired（报错：语法错误：example/samples-error/macro_end_for_unpaired.chl 第 4 行第 1 列：期望 MACRO_END，实际是 MACRO_END_FOR）
+[ok]   macro_gensym_invalid（报错：语法错误：example/samples-error/macro_gensym_invalid.chl 第 2 行第 7 列：认不出来的字符）
+[ok]   macro_gensym_outside（报错：语法错误：example/samples-error/macro_gensym_outside.chl 第 3 行第 15 列：认不出来的字符）
+[ok]   macro_gensym_zero（报错：语法错误：example/samples-error/macro_gensym_zero.chl 第 2 行第 21 列：认不出来的字符）
+[ok]   macro_group_order（报错：chali: example/samples-error/macro_group_order.chl 第 4 行第 15 列：宏调用的参数组与定义不一致：APPLY）
+[ok]   macro_old_call_annotation（报错：语法错误：example/samples-error/macro_old_call_annotation.chl 第 2 行第 22 列：认不出来的字符）
+[ok]   macro_old_parameter_annotation（报错：语法错误：example/samples-error/macro_old_parameter_annotation.chl 第 1 行第 12 列：认不出来的字符）
+[ok]   macro_old_result_annotation（报错：语法错误：example/samples-error/macro_old_result_annotation.chl 第 1 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 7 个之一，实际是 逻辑非(!)）
+[ok]   macro_qualified_undefined（报错：chali: example/samples-error/macro_qualified_undefined.chl 第 2 行第 15 列：未定义宏：std::nope::foo）
+[ok]   macro_recursive（报错：chali: example/samples-error/macro_recursive.chl 第 4 行第 22 列：宏展开超过深度或规模预算）
+[ok]   macro_stringify_arity（报错：chali: example/samples-error/macro_stringify_arity.chl 第 5 行第 15 列：字符串化需要一个片段，拼名需要至少一个片段）
+[ok]   macro_unterminated（报错：chali: 宏定义缺少 $end_macro）
+[ok]   macro_variadic_arity（报错：chali: example/samples-error/macro_variadic_arity.chl 第 4 行第 15 列：宏实参数量与形参不一致：CALL）
+[ok]   macro_variadic_declaration（报错：chali: example/samples-error/macro_variadic_declaration.chl 第 1 行第 1 列：变长宏形参必须位于参数组末尾）
+[ok]   macro_variadic_parenthesize（报错：语法错误：example/samples-error/macro_variadic_parenthesize.chl 第 1 行第 12 列：认不出来的字符）
+[ok]   map_bad_value（报错：chali: example/samples-error/map_bad_value.chl 第 3 行第 5 列：put 的值 需要 int64，实际是 std::lang::String）
+[ok]   map_get_removed（报错：chali: example/samples-error/map_get_removed.chl 第 5 行第 5 列：容器 std::lang::Map<std::lang::String, int64> 没有方法 get（支持的方法见 README 的「容器」一节））
+[ok]   map_missing_key（报错：chali aot: map 里没有这个键）
+[ok]   map_missing_key_int（报错：chali aot: map 里没有这个键）
+[ok]   match_nonexhaustive（报错：chali: example/samples-error/match_nonexhaustive.chl 第 5 行第 5 列：enum match 必须覆盖所有变体或提供 `_` 兜底分支；缺少：State::Failed）
+[ok]   match_or_binding_types（报错：chali: example/samples-error/match_or_binding_types.chl 第 2 行第 1 列：或模式的载荷绑定名称、顺序和类型必须一致）
+[ok]   match_or_bindings（报错：chali: example/samples-error/match_or_bindings.chl 第 2 行第 1 列：或模式的载荷绑定名称、顺序和类型必须一致）
+[ok]   match_range_type（报错：chali: example/samples-error/match_range_type.chl 第 1 行第 1 列：match 的 range 和 rangeEq 模式只支持整数或 char）
+[ok]   match_string_bounds（报错：chali: example/samples-error/match_string_bounds.chl 第 1 行第 1 列：range 两个端点的类型必须一致）
+[ok]   match_string_duplicate（报错：chali: example/samples-error/match_string_duplicate.chl 第 1 行第 1 列：match 中存在重复的字符串模式：a）
+[ok]   match_string_reverse（报错：chali: example/samples-error/match_string_reverse.chl 第 1 行第 1 列：match 的 range 和 rangeEq 模式只支持整数或 char）
+[ok]   math_constant_assign（报错：chali: example/samples-error/math_constant_assign.chl 第 4 行第 5 列：不可变变量（const）不能再赋值：std::math::PI）
+[ok]   missing_return（报错：chali: example/samples-error/missing_return.chl 第 1 行第 1 列：返回类型为 int64 的函数 program::choose 不是所有路径都有 return）
+[ok]   nonvoid_empty_return（报错：chali: example/samples-error/nonvoid_empty_return.chl 第 1 行第 1 列：返回类型为 int64 的函数必须返回一个值）
+[ok]   obj_copy_args（报错：chali: example/samples-error/obj_copy_args.chl 第 3 行第 5 列：obj.copy() 不带参数）
+[ok]   obj_local_address（报错：chali: example/samples-error/obj_local_address.chl 第 6 行第 5 列：obj.set 不能保存局部或临时结构体/数组的地址：只允许全局对象；需要手动管理生命周期时请显式存引用）
+[ok]   obj_local_assign（报错：chali: example/samples-error/obj_local_assign.chl 第 6 行第 5 列：obj 赋值 不能保存局部或临时结构体/数组的地址：只允许全局对象；需要手动管理生命周期时请显式存引用）
+[ok]   obj_local_init（报错：chali: example/samples-error/obj_local_init.chl 第 5 行第 5 列：obj 初始化 不能保存局部或临时结构体/数组的地址：只允许全局对象；需要手动管理生命周期时请显式存引用）
+[ok]   obj_type_mismatch（报错：chali aot: obj.get：类型对不上 —— Any 中是 int64，期望 std::lang::String。请使用 isType<T> 或 tryGet<T>）
+[ok]   operator_asymmetric_reverse（报错：chali: example/samples-error/operator_asymmetric_reverse.chl 第 13 行第 5 列：没有匹配的运算符接口实现：int64 - Diff（由左操作数实现 Subtract<R,T> 这类左接口，或由右操作数实现 RightSubtract<R,T> 这类右接口）；不会偷偷按数值算）
+[ok]   operator_binary_reference_readonly（报错：chali: example/samples-error/operator_binary_reference_readonly.chl 第 9 行第 6 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   operator_function_forbidden（报错：chali: example/samples-error/operator_function_forbidden.chl 第 3 行第 1 列：`operator+(...)` 自由函数式运算符重载已禁用；请实现 Add<R,T> 这类左接口或 RightAdd<R,T> 这类右接口）
+[ok]   operator_no_add_replace（报错：chali: example/samples-error/operator_no_add_replace.chl 第 16 行第 5 列：运算符 + 的自动推导被 #NoAddReplace 关闭：int64 + Vec（直接写出与实现匹配的运算符，或显式实现 RightAdd<R,T> 这类右接口））
+[ok]   operator_result_ambiguous（报错：chali: example/samples-error/operator_result_ambiguous.chl 第 23 行第 5 列：运算符 + 有多条声明匹配同一对操作数 A / int64，返回类型分别是 int64、Vec（先强转再算；若它们只是返回类型不同，给表达式一个目标类型就能定））
+[ok]   operator_right_explicit（报错：chali: example/samples-error/operator_right_explicit.chl 第 14 行第 5 列：右向归 A 自己实现：它声明了 RightAdd，int64 + A 对不上它的形参，不再借用 Add 兜底（改成能接住左操作数的形参，或写成显式强转））
+[ok]   operator_right_forbidden（报错：chali: example/samples-error/operator_right_forbidden.chl 第 13 行第 5 列：右向被编译器指令关闭：Vec 声明了 #NoRightAdd，int64 + Vec 不再推导；要去掉该指令，或改为实现 RightAdd<R,T>）
+[ok]   operator_unary_reference_readonly（报错：chali: example/samples-error/operator_unary_reference_readonly.chl 第 9 行第 7 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   overload_ambiguous（报错：chali: example/samples-error/overload_ambiguous.chl 第 13 行第 5 列：调用 函数 program::pick 找不到匹配的重载：(int64, int64)；有多个重载同样匹配：program::pick$int64$float64、program::pick$float64$int64）
+[ok]   overload_missing（报错：chali: example/samples-error/overload_missing.chl 第 14 行第 5 列：调用 函数 program::size 找不到匹配的重载：(Point)；没有参数类型能对上的重载（候选：program::size））
+[ok]   p1_const_decimal_method（报错：chali: example/samples-error/p1_const_decimal_method.chl 第 1 行第 1 列：不可变变量（const）不能调用修改方法：frozen）
+[ok]   p1_const_set_method（报错：chali: example/samples-error/p1_const_set_method.chl 第 1 行第 1 列：不可变变量（const）不能调用修改方法：frozen）
+[ok]   p1_index_array_bool（报错：chali: example/samples-error/p1_index_array_bool.chl 第 1 行第 1 列：下标 需要整数下标，实际是 bool）
+[ok]   p1_index_array_float（报错：chali: example/samples-error/p1_index_array_float.chl 第 1 行第 1 列：下标 需要整数下标，实际是 float64）
+[ok]   p1_index_buffer_float（报错：chali: example/samples-error/p1_index_buffer_float.chl 第 1 行第 1 列：下标 需要整数下标，实际是 float64）
+[ok]   p1_index_string_bool（报错：chali: example/samples-error/p1_index_string_bool.chl 第 1 行第 1 列：下标 需要整数下标，实际是 bool）
+[ok]   p1_index_string_float（报错：chali: example/samples-error/p1_index_string_float.chl 第 1 行第 1 列：下标 需要整数下标，实际是 float64）
+[ok]   p1_index_string_ref_float（报错：chali: example/samples-error/p1_index_string_ref_float.chl 第 1 行第 1 列：下标 需要整数下标，实际是 float64）
+[ok]   p1_index_string_write_float（报错：chali: example/samples-error/p1_index_string_write_float.chl 第 1 行第 1 列：下标 需要整数下标，实际是 float64）
+[ok]   p1_readonly_foreach_array（报错：chali: example/samples-error/p1_readonly_foreach_array.chl 第 1 行第 1 列：不可变变量（const）不能再赋值：item）
+[ok]   p1_readonly_foreach_list（报错：chali: example/samples-error/p1_readonly_foreach_list.chl 第 1 行第 1 列：不可变变量（const）不能再赋值：item）
+[ok]   p1_readonly_foreach_nested（报错：chali: example/samples-error/p1_readonly_foreach_nested.chl 第 1 行第 1 列：不可变变量（const）不能再赋值：item）
+[ok]   p1_readonly_foreach_set（报错：chali: example/samples-error/p1_readonly_foreach_set.chl 第 1 行第 1 列：不可变变量（const）不能调用修改方法：item）
+[ok]   p1_readonly_foreach_string（报错：chali: example/samples-error/p1_readonly_foreach_string.chl 第 1 行第 1 列：不可变变量（const）的内容不能改：item）
+[ok]   p1_readonly_struct_alias（报错：chali: example/samples-error/p1_readonly_struct_alias.chl 第 1 行第 1 列：只读接收者不能调用修改方法：Counter.update）
+[ok]   p1_readonly_struct_foreach（报错：chali: example/samples-error/p1_readonly_struct_foreach.chl 第 1 行第 1 列：只读接收者不能调用修改方法：Holder.update）
+[ok]   p1_readonly_struct_method（报错：chali: example/samples-error/p1_readonly_struct_method.chl 第 1 行第 1 列：只读接收者不能调用修改方法：Counter.increment）
+[ok]   p1_readonly_struct_native_field（报错：chali: example/samples-error/p1_readonly_struct_native_field.chl 第 1 行第 1 列：只读接收者不能调用修改方法：Counter.update）
+[ok]   p1_readonly_struct_transitive（报错：chali: example/samples-error/p1_readonly_struct_transitive.chl 第 1 行第 1 列：只读接收者不能调用修改方法：Counter.update）
+[ok]   p1_slice_float（报错：chali: example/samples-error/p1_slice_float.chl 第 1 行第 1 列：切片终点 需要整数下标，实际是 float64）
+[ok]   p2_tuple_character_reference（报错：chali: example/samples-error/p2_tuple_character_reference.chl 第 3 行第 1 列：不能隐式转换：char const& -> char mut&（请显式强转））
+[ok]   p2_tuple_character_write（报错：chali: example/samples-error/p2_tuple_character_write.chl 第 3 行第 1 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   p2_tuple_container_method（报错：chali: example/samples-error/p2_tuple_container_method.chl 第 3 行第 1 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   p2_tuple_foreach_write（报错：chali: example/samples-error/p2_tuple_foreach_write.chl 第 3 行第 1 列：不可变变量（const）的内容不能改：item）
+[ok]   p2_tuple_function_argument（报错：chali: example/samples-error/p2_tuple_function_argument.chl 第 3 行第 1 列：调用 函数 program::update 找不到匹配的重载：(int64 const&)；没有参数类型能对上的重载（候选：program::update））
+[ok]   p2_tuple_inferred_reference（报错：chali: example/samples-error/p2_tuple_inferred_reference.chl 第 3 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   p2_tuple_mutable_reference（报错：chali: example/samples-error/p2_tuple_mutable_reference.chl 第 3 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   p2_tuple_nested_reference（报错：chali: example/samples-error/p2_tuple_nested_reference.chl 第 3 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   p2_tuple_reference_field（报错：chali: example/samples-error/p2_tuple_reference_field.chl 第 3 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   p2_tuple_reference_field_address（报错：chali: example/samples-error/p2_tuple_reference_field_address.chl 第 2 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   p2_tuple_struct_field（报错：chali: example/samples-error/p2_tuple_struct_field.chl 第 3 行第 1 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   p2_tuple_struct_method（报错：chali: example/samples-error/p2_tuple_struct_method.chl 第 2 行第 1 列：只读接收者不能调用修改方法：Record.increment）
+[ok]   p2_tuple_struct_reference（报错：chali: example/samples-error/p2_tuple_struct_reference.chl 第 3 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   p2_tuple_whole_reference（报错：chali: example/samples-error/p2_tuple_whole_reference.chl 第 3 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   panic（报错：chali aot: panic：不可恢复的状态）
+[ok]   panic_int（报错：chali: example/samples-error/panic_int.chl 第 2 行第 5 列：panic 的参数必须是 std::lang::String，现在给的是 int64）
+[ok]   pointer_const_to_mut（报错：chali: example/samples-error/pointer_const_to_mut.chl 第 4 行第 5 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   pointer_multi（报错：语法错误：example/samples-error/pointer_multi.chl 第 27 行第 16 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 15 个之一，实际是 可变(mut)）
+[ok]   pointer_oob（报错：chali aot: 数组下标越界）
+[ok]   pointer_write（报错：chali: example/samples-error/pointer_write.chl 第 6 行第 5 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   pp_import_removed（报错：chali: 前处理：example/samples-error/pp_import_removed.chl:2:8: error: 不支持文本包含指令，请使用 import [unknown-directive]）
+[ok]   pp_include_once_removed（报错：chali: 前处理：example/samples-error/pp_include_once_removed.chl:2:14: error: 不支持文本包含指令，请使用 import [unknown-directive]）
+[ok]   pp_include_removed（报错：chali: 前处理：example/samples-error/pp_include_removed.chl:2:9: error: 不支持文本包含指令，请使用 import [unknown-directive]）
+[ok]   pp_unterminated_if（报错：chali: 前处理：example/samples-error/pp_unterminated_if.chl:2:1: error: 这个 %if 没有对应的 %endif [unterminated-if]）
+[ok]   printf_format（报错：chali: example/samples-error/printf_format.chl 第 4 行第 5 列：整数和 bool 的格式仅支持 `:b`、`:x`、`:X`：收到 `:Q`）
+[ok]   putchar_bool（报错：chali: example/samples-error/putchar_bool.chl 第 2 行第 5 列：调用了没定义的函数：putchar）
+[ok]   radix_invalid_digit（报错：chali: example/samples-error/radix_invalid_digit.chl 第 1 行第 29 列：整数进制字面量无效：b102）
+[ok]   radix_invalid_separator（报错：chali: example/samples-error/radix_invalid_separator.chl 第 1 行第 29 列：整数进制字面量无效：b10__01）
+[ok]   radix_overflow（报错：chali: example/samples-error/radix_overflow.chl 第 1 行第 29 列：整数位数超出 64 位：0x1_0000000000000000）
+[ok]   range_zero_step（报错：chali aot: panic：range 的步长不能为 0）
+[ok]   reference_address_arithmetic（报错：chali: example/samples-error/reference_address_arithmetic.chl 第 1 行第 76 列：引用不支持地址运算；请使用元素下标，地址仅由 std::lang::address 获取）
+[ok]   reference_address_cast（报错：chali: example/samples-error/reference_address_cast.chl 第 1 行第 54 列：引用不能与整数地址互转；查看地址请使用 std::lang::address）
+[ok]   reference_buffer_readonly_index（报错：chali: example/samples-error/reference_buffer_readonly_index.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_const_index（报错：chali: example/samples-error/reference_const_index.chl 第 1 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   reference_const_member（报错：chali: example/samples-error/reference_const_member.chl 第 2 行第 1 列：不能隐式转换：int64 const& -> int64 mut&（请显式强转））
+[ok]   reference_decimal_readonly_precision（报错：chali: example/samples-error/reference_decimal_readonly_precision.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_global_uninitialized（报错：chali: example/samples-error/reference_global_uninitialized.chl 第 1 行第 1 列：引用声明必须初始化，缺省值请使用 Option<T mut&>）
+[ok]   reference_integer_readonly_assign（报错：chali: example/samples-error/reference_integer_readonly_assign.chl 第 1 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   reference_list_readonly_pop（报错：chali: example/samples-error/reference_list_readonly_pop.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_map_readonly_index（报错：chali: example/samples-error/reference_map_readonly_index.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_map_readonly_put（报错：chali: example/samples-error/reference_map_readonly_put.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_nested_type（报错：语法错误：example/samples-error/reference_nested_type.chl 第 1 行第 63 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 15 个之一，实际是 可变(mut)）
+[ok]   reference_null（报错：chali: example/samples-error/reference_null.chl 第 1 行第 1 列：不能隐式转换：int64 -> int64 mut&（请显式强转））
+[ok]   reference_readonly_write（报错：chali: example/samples-error/reference_readonly_write.chl 第 1 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   reference_set_readonly_add（报错：chali: example/samples-error/reference_set_readonly_add.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_set_readonly_clear（报错：chali: example/samples-error/reference_set_readonly_clear.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_string_index_type（报错：chali: example/samples-error/reference_string_index_type.chl 第 1 行第 1 列：std::lang::String 下标只能写 char（整数请显式强转）：现在写的是 int64）
+[ok]   reference_string_readonly_assign（报错：chali: example/samples-error/reference_string_readonly_assign.chl 第 1 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   reference_string_readonly_index（报错：chali: example/samples-error/reference_string_readonly_index.chl 第 1 行第 1 列：只读引用（`T const&`）只能读，不能写入元素或成员）
+[ok]   reference_tuple_readonly_assign（报错：chali: example/samples-error/reference_tuple_readonly_assign.chl 第 1 行第 1 列：只读引用（`T const&`）不能写入元素）
+[ok]   reference_unbound_field（报错：chali aot: 引用尚未绑定有效元素；缺省值请使用 Option）
+[ok]   reference_uninitialized（报错：chali: example/samples-error/reference_uninitialized.chl 第 1 行第 1 列：引用声明必须初始化，缺省值请使用 Option<T mut&>）
+[ok]   replace_block_directive（报错：语法错误：example/samples-error/replace_block_directive.chl 第 1 行第 42 列：期望 MACRO_BODY，实际是 MACRO_END_FOR）
+[ok]   replace_empty_body（报错：chali: 单行宏必须在同一行提供正文）
+[ok]   replace_no_body（报错：chali: 单行宏必须在同一行提供正文）
+[ok]   runtime_oob（报错：chali aot: 下标越界：下标 3，长度 3）
+[ok]   std_compress_bad_data（报错：chali aot: std::compress::decompress：数据不是有效的 lztext 流或已损坏）
+[ok]   std_pause_old_namespace（报错：chali: example/samples-error/std_pause_old_namespace.chl 第 1 行第 1 列：调用了没导入或没定义的模块函数：std::pause）
+[ok]   string_byte_bool（报错：chali: example/samples-error/string_byte_bool.chl 第 3 行第 5 列：std::lang::String 下标只能写 char（整数请显式强转）：现在写的是 bool）
+[ok]   struct_no_operator（报错：chali: example/samples-error/struct_no_operator.chl 第 12 行第 5 列：没有匹配的运算符接口实现：Money + Money（由左操作数实现 Add<R,T> 这类左接口，或由右操作数实现 RightAdd<R,T> 这类右接口）；不会偷偷按数值算）
+[ok]   structured_closed（报错：chali aot: 结构化数据：值已经关闭或未初始化）
+[ok]   syntax_extern_function_removed（报错：语法错误：example/samples-error/syntax_extern_function_removed.chl 第 1 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 27 个之一，实际是 整数类型(int64)）
+[ok]   syntax_extern_impl_removed（报错：语法错误：example/samples-error/syntax_extern_impl_removed.chl 第 2 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 27 个之一，实际是 实现(impl)）
+[ok]   syntax_extern_type_removed（报错：语法错误：example/samples-error/syntax_extern_type_removed.chl 第 1 行第 8 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 27 个之一，实际是 类型别名(type)）
+[ok]   syntax_pointer_star_removed（报错：语法错误：example/samples-error/syntax_pointer_star_removed.chl 第 1 行第 20 列：期望 标识符 / MACRO_IS / MACRO_EXPR / MACRO_IDENT 等 25 个之一，实际是 星号(*)）
+[ok]   syntax_using_removed（报错：chali: example/samples-error/syntax_using_removed.chl 第 1 行第 1 列：没有声明的类型：using（lang））
+[ok]   thread_disabled（报错：chali aot: 多线程已关闭；解释运行或 C++ 导出时去掉 --no-threads）
+[ok]   thread_join_deadlock（报错：chali aot: 线程接收消息形成死锁）
+[ok]   thread_receive_deadlock（报错：chali aot: 线程接收消息形成死锁）
+[ok]   try_error_mismatch（报错：chali: example/samples-error/try_error_mismatch.chl 第 6 行第 5 列：无法传播 std::lang::ErrorResidual<std::lang::String>：返回类型 std::lang::Result<int64,int64> 未实现匹配的 FromResidual<F,R>）
+[ok]   try_non_result（报错：chali: example/samples-error/try_non_result.chl 第 2 行第 5 列：? 的来源类型必须显式实现 Try<T,R> 或 TryMove<T,R>，现在给的是 int64）
+[ok]   tuple_element_write（报错：chali: example/samples-error/tuple_element_write.chl 第 4 行第 5 列：元组元素是只读的；请构造新元组后给整个变量赋值）
+[ok]   tuple_index_oob（报错：chali: example/samples-error/tuple_index_oob.chl 第 4 行第 36 列：元组 (int64, int64) 没有第 2 个元素）
+[ok]   typed_message_mismatch（报错：chali aot: 线程消息类型不匹配：期望 std::lang::String，收到 int64）
+[ok]   typed_message_pointer（报错：chali: example/samples-error/typed_message_pointer.chl 第 7 行第 5 列：消息与 std::lang::Shared 不支持 int64 mut&：请改用标量、字符串、普通值结构体或容器；引用、数组、资源和 std::lang::Any 不能跨线程传递）
+[ok]   unreachable_return（报错：chali: example/samples-error/unreachable_return.chl 第 1 行第 1 列：返回类型为 int64 的函数 program::choose 不是所有路径都有 return）
+[ok]   use_after_free（报错：chali: example/samples-error/use_after_free.chl 第 9 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：表达式）
+[ok]   variadic_not_last（报错：chali: example/samples-error/variadic_not_last.chl 第 1 行第 1 列：函数 bad 的变长参数必须是最后一个形参）
+[ok]   variadic_type（报错：chali: example/samples-error/variadic_type.chl 第 2 行第 1 列：调用 函数 program::sum 找不到匹配的重载：(int64, std::lang::String)；没有参数类型能对上的重载（候选：program::sum））
+[ok]   void_return_value（报错：chali: example/samples-error/void_return_value.chl 第 1 行第 1 列：void 函数不能返回值）
+全部通过（288 个正常样例 + 314 个错误样例）

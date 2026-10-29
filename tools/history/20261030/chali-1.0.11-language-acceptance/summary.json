@@ -1,0 +1,116 @@
+{
+  "version": "1.0.11",
+  "platform": "Windows x64 / external LLVM",
+  "full_source_commit": "ab4057eb17a597ffb0d6863ac6a64adb70a98d35",
+  "full_compiler_sha256": "30fade72d04d741c0ad55c62e1f65455fe30396e4b8b68acc8034debe21e6023",
+  "full_steps": 148,
+  "full_passed": 138,
+  "full_failed": 10,
+  "full_skipped": 0,
+  "full_seconds": 9920.172,
+  "repair_source_commit": "feafbd1fcacb3872a194b1da465d861741a9b23a",
+  "repair_compiler_sha256": "5e54b729cff522b49bb15e3552aff377da4189a67d23f1258b365d4743d3b5e6",
+  "all_full_run_failures_resolved": true,
+  "single_full_run_was_green": false,
+  "resolved": [
+    {
+      "full_step": 23,
+      "title": "运行标准错误流与文件打印回归",
+      "exit_code": 0,
+      "evidence": "repair/001.log"
+    },
+    {
+      "full_step": 77,
+      "title": "运行 LLVM AOT 原生产物与 C 双向互调回归",
+      "exit_code": 0,
+      "evidence": "aot-final.log"
+    },
+    {
+      "full_step": 78,
+      "title": "运行有界增长与 List／Map／Set 容量复用回归",
+      "exit_code": 0,
+      "evidence": "repair/003.log"
+    },
+    {
+      "full_step": 79,
+      "title": "运行 String 缓冲区、复制、Drop 与借用回归",
+      "exit_code": 0,
+      "evidence": "repair/004.log"
+    },
+    {
+      "full_step": 82,
+      "title": "运行字符串描述符 LLVM 读取及旧布局回退回归",
+      "exit_code": 0,
+      "evidence": "repair/005.log"
+    },
+    {
+      "full_step": 88,
+      "title": "运行 List 数值追加原语及全标量类型回归",
+      "exit_code": 0,
+      "evidence": "repair/006.log"
+    },
+    {
+      "full_step": 90,
+      "title": "运行默认 String 的语言自举回归",
+      "exit_code": 0,
+      "evidence": "repair/007.log"
+    },
+    {
+      "full_step": 91,
+      "title": "运行数值转换的语言自举回归",
+      "exit_code": 0,
+      "evidence": "repair/008.log"
+    },
+    {
+      "full_step": 96,
+      "title": "验证裸地址字节原语与 UTF-8",
+      "exit_code": 0,
+      "evidence": "repair/009.log"
+    },
+    {
+      "full_step": 112,
+      "title": "python tests/chali_zip.py",
+      "exit_code": 0,
+      "evidence": "repair/010.log"
+    }
+  ],
+  "additional_rechecks": [
+    {
+      "title": "复验接口值与传播",
+      "exit_code": 0,
+      "evidence": "repair/011.log"
+    },
+    {
+      "title": "复验卫生宏参数",
+      "exit_code": 0,
+      "evidence": "repair/012.log"
+    },
+    {
+      "title": "复验 else if 与 elif",
+      "exit_code": 0,
+      "evidence": "repair/013.log"
+    },
+    {
+      "title": "核对标准库命名",
+      "exit_code": 0,
+      "evidence": "repair/014.log"
+    },
+    {
+      "title": "核对标准库文档索引",
+      "exit_code": 0,
+      "evidence": "repair/015.log"
+    }
+  ],
+  "aot_final": {
+    "command": [
+      "python",
+      "tests/chali_aot.py"
+    ],
+    "exit_code": 0,
+    "evidence": "aot-final.log",
+    "source_commit": "feafbd1fcacb3872a194b1da465d861741a9b23a"
+  },
+  "inner_skip": "tests/chali_project.py::test_symlinks: Windows WinError 1314, no symlink privilege",
+  "validation_method": "148-step full execution followed by affected-check repair verification; the full execution is not relabelled as a single all-green run.",
+  "performance": "Frozen a522cf0 measurements retained; no new language-performance baseline measured."
+}

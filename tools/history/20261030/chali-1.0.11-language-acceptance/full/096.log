@@ -1,0 +1,6 @@
+chali: tests/fixtures/aot_byte_primitives.chl 第 6 行第 5 列：模块 std::lang 的 inline 函数 __bootStringByte 不能从模块 program 访问
+ 6 |     unsafe { return std::lang::__bootStringByte(base, index); }
+   |     ~~~~~~
+chali: tests/fixtures/aot_byte_primitives.chl 第 39 行第 5 列：模块 std::lang 的 inline 函数 __bootStringByte 不能从模块 program 访问
+ 39 |     unsafe { assert(std::lang::__bootStringByte(baseArgument(), indexArgument()) == 128); }
+    |     ~~~~~~

@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_print_streams.py", line 120, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_print_streams.py", line 31, in main
+    result = run('''void main() {
+             ^^^^^^^^^^^^^^^^^^^^
+  File "G:\Desktop\ChaLi\tests\chali_print_streams.py", line 28, in run
+    assert (result.returncode == 0) == success, (result.returncode, result.stdout, result.stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (1, '', 'chali: G:/Desktop/ChaLi/tmp/chali-print-streams-zkz49sw4/case_1.chl 第 3 行第 13 列：模块 std::lang 的 inline 函数 __std_eprint 不能从模块 program 访问\n 3 |             assert(eprint("err={2:x}:{1:2F}", 1.25, 255) == 0);\n   |             ~~~~~~\nchali: G:/Desktop/ChaLi/tmp/chali-print-streams-zkz49sw4/case_1.chl 第 4 行第 13 列：模块 std::lang 的 inline 函数 __std_eprintln 不能从模块 program 访问\n 4 |             std::lang::eprintln(" 中文 {{}} {}", 7);\n   |             ~~~\nchali: G:/Desktop/ChaLi/tmp/chali-print-streams-zkz49sw4/case_1.chl 第 6 行第 13 列：模块 std::lang 的 inline 函数 __std_eprint 不能从模块 program 访问\n 6 |             eprint(literal);\n   |             ~~~~~~\nchali: G:/Desktop/ChaLi/tmp/chali-print-streams-zkz49sw4/case_1.chl 第 7 行第 13 列：模块 std::lang 的 inline 函数 __std_eprintln 不能从模块 program 访问\n 7 |             eprintln();\n   |             ~~~~~~~~\n')

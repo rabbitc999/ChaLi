@@ -1,0 +1,76 @@
+watchdog_removed OK 
+string_methods OK string methods: byte, UTF-8, empty, bounds and value semantics OK
+std_tree OK inorder 20 30 40 50 60 70
+preorder 50 30 20
+postorder 60 80 70
+rbt inorder 10 50 90 100
+heap 1 1 4 5
+gt kids 2 3 pr
+std_linkedlist OK array 5 10 12 15 20
+reversed 12 10
+linkedlist OK
+std_red_black_delete OK red-black delete: 12000 mixed operations, copy and snapshot OK
+std_graph OK bfs 0 2 1
+dfs 0 2
+topo 5 0 2 1 3 4
+dist 0 3 1 8 11
+mst 11
+union-find OK
+std_parse_random_path_memory OK int64=-42
+uint64=18446744073709551615
+float64=12.5
+bool=1
+empty=ok
+invalid=ok
+overflow=ok
+random=7191089600892374
+opcode_value_semantics OK opcode values: copy isolation, snapshots, cursors and owners OK
+regex_limits OK regex limits OK
+std_math_clock_random OK 2 3 3 -2
+1.5 -1.5
+1 0 1 0
+5 3 8 10
+2.5
+1 1 1
+11.3 7 0
+1 1
+1
+3 6 1
+1 1 1
+event_timer OK events ok
+typed_messages_shared OK 7 before 1 10 20 3
+std_structured_data OK JSON and TOML parsing OK
+string_differential_1 OK 
+string_differential_2 OK 
+string_differential_0 OK 
+string_differential_3 OK 
+string_differential_4 OK 
+string_differential_5 OK 
+string_differential_6 OK 
+string_differential_7 OK 
+generic_function_comparisons OK 
+string_differential_8 OK 
+string_differential_9 OK 
+timer_copy OK 
+negative_repeat OK 
+negative_padding OK 
+database_copy OK 
+owner_move_and_scope OK 
+invalid_utf8 OK 
+arena_removed OK 
+union_find_bounds OK 
+graph_bounds OK 
+random_range OK 
+structured_closed OK 
+spot_std_binary OK binary reader OK
+spot_std_algorithms_extra OK map    5 6 10
+map    1.5 **** 5
+filter 4 3 5
+reduce 14 114
+sum    14 7
+count  2 4
+closure 13 15
+float64    3.75
+spot_std_numerics_number_theory OK generic matrix numerics number theory OK
+union-find query ns: small=79065100 large=89337000
+38 targeted/spot cases, 1050 string differential assertions, capacity benchmark OK

@@ -1,0 +1,13 @@
+[通过] aot_basic 解释执行
+[通过] aot_basic AOT 产物与解释执行逐行一致
+[通过] Linux x64 LLVM 模块生成 ELF 目标文件
+[通过] AOT 默认 unchecked，显式 --checked 增加检查
+[通过] --emit-llvm 只出 LLVM 模块
+[通过] --mode aot 与缺少参数诊断
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_aot.py", line 303, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_aot.py", line 186, in main
+    assert '@chali_host_abi_symbol(' in abi_llvm and '616F745F616464' in abi_llvm.upper(), '动态 ABI 缺少按库解析的符号入口'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 动态 ABI 缺少按库解析的符号入口

@@ -1,0 +1,2 @@
+run: bootstrap List/Map/Set correctness OK
+aot: bootstrap List/Map/Set correctness OK

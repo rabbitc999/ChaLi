@@ -1,0 +1,30 @@
+ChaLi ZIP 验收通过：DEFLATE、UTF-8 路径、覆盖保护、故障清理、自包含运行；25446400 -> 17144672 字节
+Traceback (most recent call last):
+  File "G:\Python312\Lib\shutil.py", line 646, in _rmtree_unsafe
+    os.unlink(fullname)
+PermissionError: [WinError 5] 拒绝访问。: 'G:\\Desktop\\ChaLi\\tmp\\chali-zip-wi9gvmhp\\extracted compiler\\chali.exe'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_zip.py", line 79, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "G:\Desktop\ChaLi\tests\chali_zip.py", line 27, in main
+    with tempfile.TemporaryDirectory(prefix='chali-zip-') as directory:
+  File "G:\Python312\Lib\tempfile.py", line 946, in __exit__
+    self.cleanup()
+  File "G:\Python312\Lib\tempfile.py", line 950, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "G:\Python312\Lib\tempfile.py", line 930, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "G:\Python312\Lib\shutil.py", line 820, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Python312\Lib\shutil.py", line 643, in _rmtree_unsafe
+    _rmtree_unsafe(fullname, onexc)
+  File "G:\Python312\Lib\shutil.py", line 648, in _rmtree_unsafe
+    onexc(os.unlink, fullname, err)
+  File "G:\Python312\Lib\tempfile.py", line 905, in onexc
+    _os.unlink(path)
+PermissionError: [WinError 5] 拒绝访问。: 'G:\\Desktop\\ChaLi\\tmp\\chali-zip-wi9gvmhp\\extracted compiler\\chali.exe'
