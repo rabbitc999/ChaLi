@@ -1,0 +1,12 @@
+{
+  "label": "malloc-round-robin-lifecycle",
+  "command": [
+    "G:\\Python312\\python.exe",
+    "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+    "--worker",
+    "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-round-robin.dll"
+  ],
+  "code": 0,
+  "stdout": "persistent thread: 64 init/finish cycles OK\n",
+  "stderr": ""
+}

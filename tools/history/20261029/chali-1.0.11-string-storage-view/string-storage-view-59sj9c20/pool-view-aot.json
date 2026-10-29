@@ -1,0 +1,9 @@
+{
+  "label": "pool-view-aot",
+  "command": [
+    "G:\\Desktop\\ChaLi\\tmp\\string-storage-view-59sj9c20\\pool-view.exe"
+  ],
+  "code": 0,
+  "stdout": "literal-alike 0 9\nstring storage views OK\n",
+  "stderr": ""
+}

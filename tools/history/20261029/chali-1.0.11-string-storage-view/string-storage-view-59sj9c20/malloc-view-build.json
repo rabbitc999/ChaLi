@@ -1,0 +1,15 @@
+{
+  "label": "malloc-view-build",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "aot",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_string_storage_view.chl",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\string-storage-view-59sj9c20\\malloc-view"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -129,9 +129,11 @@ slow:
         }
         result += "  ret ptr %cached" + number + "\n";
     }
-    result += "slow:\n";
+    result += "slow:\n  %target = call ptr @chali_address_target()\n";
+    result += "  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr %target)\n  ret ptr %resolved\n}\n";
+    result += "define internal ptr @chali_address_target() alwaysinline {\nentry:\n";
     if (entries == 1u)
-        result += "  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr @chali_address_view)\n";
+        result += "  ret ptr @chali_address_view\n";
     else
         result += R"LLVM(
   %next = load i64, ptr @chali_address_next
@@ -144,10 +146,9 @@ slow:
   %following = add i64 %next, 1
   %wrapped = and i64 %following, 3
   store i64 %wrapped, ptr @chali_address_next
-  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr %target)
+  ret ptr %target
 )LLVM";
     result += R"LLVM(
-  ret ptr %resolved
 }
 define internal ptr @chali_data_address(i64 %address, i64 %count, ptr %base, i64 %size) alwaysinline {
 entry:
@@ -164,6 +165,83 @@ fast:
 slow:
   %resolved = call ptr @chali_primitive_address(i64 %address, i64 %count)
   ret ptr %resolved
+}
+)LLVM";
+    return result;
+}
+
+/**
+ * @brief 生成基于活跃堆视图的字符串描述符读取，不把数据区字面量解释为描述符。
+ * @return 仅在完整三十二字节视图和缓冲标记匹配时读取字段的 LLVM 内核。
+ */
+Text astStringStoragePrimitive()
+{
+    const auto *disabled = std::getenv("CHALI_NO_AOT_MULTI_ADDRESS_CACHE");
+    const unsigned entries = disabled && *disabled ? 1u : 4u;
+    // 宿主数据区视图始终从逻辑零开始；堆分配视图使用实际分配首。
+    Text result = R"LLVM(
+define internal ptr @chali_cached_string_header(ptr %view, i64 %address) alwaysinline {
+entry:
+  %begin = load i64, ptr %view
+  %heap = icmp ne i64 %begin, 0
+  br i1 %heap, label %check, label %miss
+check:
+  %header = call ptr @chali_cached_view_address(ptr %view, i64 %address, i64 32)
+  ret ptr %header
+miss:
+  ret ptr null
+}
+define internal i64 @chali_primitive_string_storage(i64 %operation, i64 %address) alwaysinline {
+entry:
+  br label %lookup0
+)LLVM";
+    for (unsigned index = 0; index < entries; ++index)
+    {
+        const Text number = Memory::toString(index);
+        const Text view = "@chali_address_view" + (index == 0u ? Text() : number);
+        const Text next = index + 1u == entries ? "slow" : "lookup" + Memory::toString(index + 1u);
+        result += "lookup" + number + ":\n  %header" + number + " = call ptr @chali_cached_string_header(ptr " + view + ", i64 %address)\n";
+        result += "  %found" + number + " = icmp ne ptr %header" + number + ", null\n  br i1 %found" + number + ", label %hit" + number + ", label %" + next + "\n";
+        result += "hit" + number + ":\n  br label %inspect\n";
+    }
+    result += "inspect:\n  %header = phi ptr ";
+    for (unsigned index = 0; index < entries; ++index)
+    {
+        const Text number = Memory::toString(index);
+        if (index != 0u) result += ", ";
+        result += "[ %header" + number + ", %hit" + number + " ]";
+    }
+    result += R"LLVM(
+  %marker = load i64, ptr %header, align 1
+  %buffered = icmp eq i64 %marker, -1
+  br i1 %buffered, label %select, label %slow
+select:
+  switch i64 %operation, label %slow [ i64 0, label %length
+                                     i64 1, label %data
+                                     i64 2, label %capacity
+                                     i64 3, label %kind ]
+length:
+  %length_slot = getelementptr i8, ptr %header, i64 8
+  br label %read
+data:
+  %data_slot = getelementptr i8, ptr %header, i64 24
+  br label %read
+capacity:
+  %capacity_slot = getelementptr i8, ptr %header, i64 16
+  br label %read
+read:
+  %slot = phi ptr [ %length_slot, %length ], [ %data_slot, %data ], [ %capacity_slot, %capacity ]
+  %value = load i64, ptr %slot, align 1
+  %valid = icmp sge i64 %value, 0
+  br i1 %valid, label %success, label %slow
+success:
+  ret i64 %value
+kind:
+  ret i64 1
+slow:
+  %target = call ptr @chali_address_target()
+  %fallback = call i64 @chali_host_string_storage_view(i64 %operation, i64 %address, ptr %target)
+  ret i64 %fallback
 }
 )LLVM";
     return result;

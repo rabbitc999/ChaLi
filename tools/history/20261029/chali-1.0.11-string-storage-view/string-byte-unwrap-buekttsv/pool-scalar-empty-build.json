@@ -1,0 +1,15 @@
+{
+  "label": "pool-scalar-empty-build",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "aot",
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\pool-scalar-empty.chl",
+    "--allocator",
+    "pool",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\pool-scalar-empty-aot"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": ""
+}

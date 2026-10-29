@@ -277,6 +277,7 @@ struct Translator
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
     bool dataSnapshots = true;                                    ///< 无不透明调用的循环在函数帧内保存数据区基址。
+    bool stringStorageViews = true;                               ///< 通过已验证堆视图读取拥有型字符串描述符。
     bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
@@ -313,6 +314,8 @@ struct Translator
         objectScalars = !(objects && *objects);
         const auto *data = std::getenv("CHALI_NO_AOT_DATA_SNAPSHOT");
         dataSnapshots = !(data && *data);
+        const auto *stringViews = std::getenv("CHALI_NO_AOT_STRING_STORAGE_VIEW");
+        stringStorageViews = !(stringViews && *stringViews);
         const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
@@ -1314,7 +1317,9 @@ struct Builder
             const auto operation = callee == "std::lang::__stringStorageLength" ? "0" :
                                    callee == "std::lang::__stringStorageData" ? "1" :
                                    callee == "std::lang::__stringStorageCapacity" ? "2" : "3";
-            write(destination, call("chali_host_string_storage", "i64",
+            const auto *primitive = state.stringStorageViews && state.cacheAddresses
+                                        ? "chali_primitive_string_storage" : "chali_host_string_storage";
+            write(destination, call(primitive, "i64",
                                     { { "i64", operation }, convert(argument(0), "i64") }));
             return true;
         }
@@ -2342,6 +2347,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_list_storage(i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_map_storage(i64, i64, i64, i64, i64, i64, i64, i64, i64)\n";
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
+    out += "declare i64 @chali_host_string_storage_view(i64, i64, ptr nocapture)\n";
     out += "declare i64 @chali_host_object_scalar(i64, i64)\n";
     out += "declare ptr @chali_host_data_snapshot(ptr nocapture writeonly)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
@@ -2349,6 +2355,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i8 @chali_host_result_float()\n";
     out += astAddressPrimitive();
+    out += astStringStoragePrimitive();
     out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";
     out += "declare double @llvm.ceil.f64(double)\ndeclare double @llvm.round.f64(double)\ndeclare double @llvm.trunc.f64(double)\n";
     out += "@chali_return_float = internal thread_local global i8 0\n";

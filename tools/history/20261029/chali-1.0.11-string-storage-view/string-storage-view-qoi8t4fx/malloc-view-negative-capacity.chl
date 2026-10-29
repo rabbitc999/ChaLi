@@ -1,0 +1,1 @@
+void main(){unsafe{int64 p=std::lang::__bootStringBuffer(0);int64 warm=std::lang::__stringStorageLength(p);int64 mut& field=(int64 mut&)(p+16);*field=0-1;println("{}",std::lang::__stringStorageCapacity(p));}}

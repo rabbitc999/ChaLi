@@ -1,0 +1,15 @@
+{
+  "label": "malloc-scalar-negative",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "run",
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\malloc-scalar-negative.chl",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\malloc-scalar-negative"
+  ],
+  "code": 1,
+  "stdout": "",
+  "stderr": "chali aot: panic：called Option.unwrap() on None\n出错位置：<内建 std::lang>:169（std::lang::__bootStringByteAtUnwrap）\n调用栈（内 → 外）：\n  std::lang::__bootStringByteAtUnwrap\n  main\n"
+}

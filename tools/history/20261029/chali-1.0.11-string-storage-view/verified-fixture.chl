@@ -1,0 +1,52 @@
+/** 查询结果不缓存字段值，保留字面量、旧布局和短描述符的查询边界。 */
+import std::memory;
+uint8 literalLike[40];
+void visitOwnedStrings(){
+    List<String> values;values.push("abcdef");values.push("xyz");
+    for(String item in values){
+        int64 i=0;
+        while(i<item.byteLength()){assert(item.byteAt(i).unwrap()!=0u);i=i+1;}
+    }
+}
+void main(){
+    unsafe {
+        int64 descriptor=std::lang::__bootStringBuffer(0);
+        int64 i=0;
+        while(i<64){
+            assert(std::lang::__stringStorageLength(descriptor)==0);
+            assert(std::lang::__stringStorageData(descriptor)==descriptor+32);
+            assert(std::lang::__stringStorageCapacity(descriptor)==16);
+            assert(std::lang::__stringStorageKind(descriptor)==1);
+            i=i+1;
+        }
+        int64 mut& length=(int64 mut&)(descriptor+8);*length=3;
+        assert(std::lang::__stringStorageLength(descriptor)==3);
+        std::lang::__bootStringDrop(descriptor);
+        int64 legacy=std::lang::__stringAllocate(12);
+        int64 mut& oldLength=(int64 mut&)legacy;*oldLength=3;
+        assert(std::lang::__stringStorageLength(legacy)==3);
+        assert(std::lang::__stringStorageData(legacy)==legacy+8);
+        assert(std::lang::__stringStorageCapacity(legacy)==4);
+        assert(std::lang::__stringStorageKind(legacy)==0);
+        std::lang::__bootStringDrop(legacy);
+        int64 shortHeader=std::lang::__stringAllocate(8);
+        int64 mut& marker=(int64 mut&)shortHeader;*marker=0-1;
+        assert(std::lang::__stringStorageKind(shortHeader)==1);
+        std::lang::__stringRelease(shortHeader);
+        assert(std::lang::__stringStorageLength(0)==0);
+        assert(std::lang::__stringStorageData(0)==0);
+        i=0;
+        while(i<8){literalLike[i]=255u;i=i+1;}
+        literalLike[8]=3u;literalLike[16]=16u;
+        int64 fake=(int64)std::lang::address(&literalLike[0]);
+        assert(std::lang::__bootStringByte(fake,0)==255);
+        println("literal-alike {} {}",std::lang::__stringStorageKind(fake),std::lang::__stringStorageLength(fake));
+    }
+    String text="中文🙂 and a longer owned string";
+    text.reserve(256);text.append("!");
+    assert(text.byteAt(0).unwrap()==(uint8)228);
+    int64 before=std::memory::__memoryLiveBlocks();
+    visitOwnedStrings();
+    assert(std::memory::__memoryLiveBlocks()==before);
+    println("string storage views OK");
+}

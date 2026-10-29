@@ -934,6 +934,27 @@ std::int64_t chali_host_string_storage(std::int64_t operation, std::int64_t addr
 }
 
 /**
+ * @brief 保留原字符串查询及错误优先级，并为后续 LLVM 读取缓存完整堆描述符。
+ * @param operation 零长度、一内容地址、二容量、三描述符标记。
+ * @param address 字符串的逻辑地址。
+ * @param view 可写视图；仅在完整三十二字节缓冲描述符有效时更新。
+ * @return 原查询结果，字面量和旧布局不要求额外的可访问字节。
+ */
+std::int64_t chali_host_string_storage_view(std::int64_t operation, std::int64_t address, Heap::AddressView *view)
+{
+    const auto result = chali_host_string_storage(operation, address);
+    auto &context = currentContext();
+    if (view && address >= 0 && context.heap)
+    {
+        auto *heap = static_cast<Heap *>(context.heap);
+        std::int64_t marker = 0;
+        const auto at = static_cast<std::size_t>(address);
+        if (heap->readInt(at, marker) && marker == -1) heap->borrowView(at, 32u, *view);
+    }
+    return result;
+}
+
+/**
  * @brief 以标量 ABI 连接 List 单槽内核，保留异常、存活检查和同步回调协议。
  * @param operation 存储原语编号。
  * @param first 第一个实参位模式。

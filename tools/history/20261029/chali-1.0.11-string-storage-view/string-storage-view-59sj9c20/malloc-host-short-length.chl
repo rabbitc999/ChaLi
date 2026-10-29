@@ -1,0 +1,1 @@
+void main(){unsafe{int64 p=std::lang::__stringAllocate(8);int64 mut& field=(int64 mut&)(p+0);*field=0-1;println("{}",std::lang::__stringStorageLength(p));}}

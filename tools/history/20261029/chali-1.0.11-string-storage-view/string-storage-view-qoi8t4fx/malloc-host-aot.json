@@ -1,0 +1,9 @@
+{
+  "label": "malloc-host-aot",
+  "command": [
+    "G:\\Desktop\\ChaLi\\tmp\\string-storage-view-qoi8t4fx\\malloc-host.exe"
+  ],
+  "code": 0,
+  "stdout": "literal-alike 0 9\nstring storage views OK\n",
+  "stderr": ""
+}

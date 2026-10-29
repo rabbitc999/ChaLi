@@ -1,0 +1,349 @@
+{
+  "compiler_sha256": "b5d5c0f75d5a3e2534433f61da006979183d2acdae5a159ce4738329b07d7795",
+  "results": [
+    {
+      "label": "malloc-multi-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-multi-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-multi-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-multi"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-multi-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-multi.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-round-robin-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-round-robin-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-round-robin-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-round-robin"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-round-robin-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-round-robin.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-single-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-single-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-single-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-single"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-single-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-single.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-off-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-off-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-off-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "malloc",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-off"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "malloc-off-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\malloc-off.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-multi-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-multi-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-multi-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-multi"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-multi-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-multi.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-round-robin-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-round-robin-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-round-robin-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-round-robin"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-round-robin-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-round-robin.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-single-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-single-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-single-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-single"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-single-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-single.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-off-run",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "run",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-off-run"
+      ],
+      "code": 0,
+      "stdout": "multiple address views OK\n",
+      "stderr": ""
+    },
+    {
+      "label": "pool-off-shared",
+      "command": [
+        "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+        "aot",
+        "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+        "--shared",
+        "--allocator",
+        "pool",
+        "--out",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-off"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "pool-off-lifecycle",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "G:\\Desktop\\ChaLi\\tests\\chali_address_multiview.py",
+        "--worker",
+        "G:\\Desktop\\ChaLi\\tmp\\address-multiview-8ko4i4gh\\pool-off.dll"
+      ],
+      "code": 0,
+      "stdout": "persistent thread: 64 init/finish cycles OK\n",
+      "stderr": ""
+    }
+  ]
+}
