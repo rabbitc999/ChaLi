@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "runtime_context.hpp"
+#include <array>
 
 namespace stackvm::runtimeDetail
 {
@@ -93,7 +94,16 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
 struct ObjectStore
 {
     bool pointerSnapshots = true; ///< 非拥有指针包装共享不可变快照，修改时分离。
-    /** @brief 读取指针快照优化开关，不改变其他对象的复制协议。 */
+    bool inlineHandles = true; ///< 少量活跃 Obj 使用固定槽，宿主记录及冲突沿原表回退。
+    /** @brief 不搬动的内联句柄槽；完整句柄比较拒绝已释放或碰撞的旧身份。 */
+    struct HandleSlot
+    {
+        std::int64_t handle = 0;
+        std::shared_ptr<RuntimeObject> object;
+    };
+    std::array<HandleSlot, 32> handleSlots;
+    std::size_t inlineHandleCount = 0; ///< 当前固定槽中的活跃对象数。
+    /** @brief 读取指针快照和内联槽开关，不改变其他对象的复制协议。 */
     ObjectStore();
     NativeContext recordContext;                                                  ///< 不透明记录清理所需的运行时存储上下文。
     Memory::Map<std::pair<std::size_t, std::int64_t>, std::size_t> movedStorage;  ///< 已销毁子对象的（地址、类型号）及存储大小。
@@ -130,6 +140,13 @@ struct ObjectStore
      * @retval 匹配项的指针，未找到时为空指针。
      */
     RuntimeObject *find(std::int64_t handle);
+
+    /**
+     * @brief 查找完整句柄对应的稳定存储槽，不创建对象。
+     * @param handle 对象的完整逻辑身份。
+     * @return 对应共享指针槽；身份不存在时返回空。
+     */
+    std::shared_ptr<RuntimeObject> *handleStorage(std::int64_t handle);
 
     /**
      * @brief 在修改共享的非拥有指针包装前分离该句柄的快照。

@@ -20,6 +20,7 @@ int main()
     {
         ObjectStore store;
         store.pointerSnapshots = mode == 0;
+        store.inlineHandles = false;
         auto pointer = Memory::makeShared<RuntimeObject>();
         pointer->kind = ObjectKind::Obj;
         pointer->objTag = 17;
@@ -58,4 +59,50 @@ int main()
     }
     assert(counts[0] + 64 <= counts[1]);
     std::printf("pointer snapshot allocations: shared=%zu original=%zu; independent handles and detach OK\n", counts[0], counts[1]);
+    std::size_t slotCounts[2]{};
+    for (unsigned mode = 0; mode < 2; ++mode)
+    {
+        ObjectStore store;
+        store.pointerSnapshots = true;
+        store.inlineHandles = mode == 0;
+        auto pointer = Memory::makeShared<RuntimeObject>();
+        pointer->kind = ObjectKind::Obj;
+        pointer->objValue.integer = 48;
+        pointer->objTextShape = "R0:0:0:8:0:0:";
+        const auto original = store.add(std::move(pointer));
+        Memory::String error;
+        std::int64_t handles[96]{};
+        for (auto &handle : handles) handle = store.copyHandle(original, &error);
+        assert(error.empty() && store.liveCount() == 97);
+        assert(store.inlineHandleCount == (mode == 0 ? 32u : 0u));
+        for (auto handle : handles)
+        {
+            assert(store.find(handle) != nullptr);
+            assert(store.release(handle));
+            assert(store.find(handle) == nullptr && !store.release(handle));
+        }
+        assert(store.liveCount() == 1 && store.find(original));
+        const auto before = arena.stats().totalBlocks;
+        std::int64_t previous = original;
+        for (unsigned i = 0; i < 4096; ++i)
+        {
+            const auto handle = store.copyHandle(original, &error);
+            assert(handle > previous && store.find(handle));
+            assert(store.find(handle - 32) == nullptr);
+            assert(store.release(handle) && store.find(handle) == nullptr);
+            assert(store.find(previous) == (previous == original ? store.find(original) : nullptr));
+            previous = handle;
+        }
+        slotCounts[mode] = arena.stats().totalBlocks - before;
+        assert(store.release(original) && store.liveCount() == 0);
+        assert(store.find(0) == nullptr && store.detachPointerSnapshot(0) == nullptr);
+        auto record = Memory::makeShared<RuntimeObject>();
+        record->kind = ObjectKind::NativeRecord;
+        const auto recordHandle = store.add(std::move(record));
+        assert(store.objects.count(recordHandle) == 1 && store.inlineHandleCount == 0);
+        assert(store.release(recordHandle));
+    }
+    assert(slotCounts[0] * 8 < slotCounts[1]);
+    assert(arena.stats().liveBlocks == 0);
+    std::printf("object slot allocations: inline=%zu original=%zu; collisions, 4096 lifetimes and cleanup OK\n", slotCounts[0], slotCounts[1]);
 }

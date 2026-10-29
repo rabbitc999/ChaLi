@@ -4,6 +4,7 @@ from project_temp import tempfile
 from pathlib import Path
 import argparse
 import hashlib
+from itertools import product
 import json
 import os
 import subprocess
@@ -42,25 +43,27 @@ def main():
              *libraries, '-Wl,--end-group', *(['-lwinhttp'] if os.name == 'nt' else []), '-o', unit], 'compile-unit')
     result = execute([unit], 'unit')
     assert 'independent handles and detach OK' in result.stdout and not result.stderr, (result, work)
-    for allocator in ('malloc', 'pool'):
-        for fallback in (False, True):
-            env = dict(os.environ, CHALI_LANG='zh')
-            env.pop('CHALI_NO_INTERFACE_COPY_COW', None)
-            if fallback:
-                env['CHALI_NO_INTERFACE_COPY_COW'] = '1'
-            label = allocator + ('-original' if fallback else '-shared')
-            fixture = ROOT / 'tests/fixtures/aot_interface_snapshot.chl'
-            prefix = work / label
-            checked = execute([compiler, 'run', fixture, '--allocator', allocator,
-                               '--out', str(prefix) + '-run'], label + '-run', env)
-            assert checked.stdout == 'interface pointer snapshots OK\n' and not checked.stderr, (checked, work)
-            execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], label + '-build', env)
-            native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], label + '-aot', env)
-            assert native.stdout == checked.stdout and not native.stderr, (native, work)
+    for allocator, fallback, no_slots in product(('malloc', 'pool'), (False, True), (False, True)):
+        env = dict(os.environ, CHALI_LANG='zh')
+        env.pop('CHALI_NO_INTERFACE_COPY_COW', None)
+        env.pop('CHALI_NO_OBJECT_INLINE_SLOTS', None)
+        if no_slots:
+            env['CHALI_NO_OBJECT_INLINE_SLOTS'] = '1'
+        if fallback:
+            env['CHALI_NO_INTERFACE_COPY_COW'] = '1'
+        label = allocator + ('-original' if fallback else '-shared') + ('-table' if no_slots else '-slots')
+        fixture = ROOT / 'tests/fixtures/aot_interface_snapshot.chl'
+        prefix = work / label
+        checked = execute([compiler, 'run', fixture, '--allocator', allocator,
+                           '--out', str(prefix) + '-run'], label + '-run', env)
+        assert checked.stdout == 'interface pointer snapshots OK\n' and not checked.stderr, (checked, work)
+        execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], label + '-build', env)
+        native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], label + '-aot', env)
+        assert native.stdout == checked.stdout and not native.stderr, (native, work)
     (work / 'results.json').write_text(json.dumps(dict(
         compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(), results=records),
         ensure_ascii=False, indent=2), encoding='utf-8')
-    print('interface snapshots: allocation counts, 4 modes checked/unchecked and Any rebind OK;', work)
+    print('interface snapshots: allocation counts, 8 modes checked/unchecked and Any rebind OK;', work)
 
 
 if __name__ == '__main__':

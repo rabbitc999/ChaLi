@@ -1,0 +1,42 @@
+[
+  {
+    "command": [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-pthread",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-DSTACKVM_AOT_ONLY=1",
+      "-DCHALI_CUSTOM_ALLOCATOR=1",
+      "-DCHALI_WITH_REFLECTION=1",
+      "-DSTACKVM_WITH_REFLECTION=1",
+      "-Isource",
+      "-Ilibrary",
+      "-I.",
+      "G:\\Desktop\\ChaLi\\tests\\chali_interface_snapshot.cpp",
+      "G:\\Desktop\\ChaLi\\source\\allocator\\system_arena.cpp",
+      "-Wl,--gc-sections",
+      "-Wl,--start-group",
+      "G:\\Desktop\\ChaLi\\build\\chali-ircode-aot-core\\libstackvm.a",
+      "G:\\Desktop\\ChaLi\\build\\chali-host-records\\librecords.a",
+      "G:\\Desktop\\ChaLi\\build\\chali-runtime\\libast.a",
+      "G:\\Desktop\\ChaLi\\build\\chali-runtime\\libpreprocess.a",
+      "-Wl,--end-group",
+      "-lwinhttp",
+      "-o",
+      "G:\\Desktop\\ChaLi\\tmp\\interface-slots-unit.exe"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "G:\\Desktop\\ChaLi\\tmp\\interface-slots-unit.exe"
+    ],
+    "code": 0,
+    "stdout": "pointer snapshot allocations: shared=64 original=128; independent handles and detach OK\nobject slot allocations: inline=128 original=4096; collisions, 4096 lifetimes and cleanup OK\n",
+    "stderr": ""
+  }
+]

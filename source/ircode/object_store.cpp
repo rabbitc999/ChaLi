@@ -31,6 +31,8 @@ ObjectStore::ObjectStore()
 {
     const auto *disabled = std::getenv("CHALI_NO_INTERFACE_COPY_COW");
     pointerSnapshots = !(disabled && *disabled);
+    const auto *disabledSlots = std::getenv("CHALI_NO_OBJECT_INLINE_SLOTS");
+    inlineHandles = !(disabledSlots && *disabledSlots);
 }
 
 /**
@@ -40,11 +42,11 @@ ObjectStore::ObjectStore()
  */
 RuntimeObject *ObjectStore::detachPointerSnapshot(std::int64_t handle)
 {
-    const auto found = objects.find(handle);
-    if (found == objects.end()) return nullptr;
-    if (!found->second.unique() && shareablePointerSnapshot(*found->second))
-        found->second = Memory::makeShared<RuntimeObject>(*found->second);
-    return found->second.get();
+    auto *storage = handleStorage(handle);
+    if (storage == nullptr) return nullptr;
+    if (!storage->unique() && shareablePointerSnapshot(**storage))
+        *storage = Memory::makeShared<RuntimeObject>(**storage);
+    return storage->get();
 }
 
 /**
@@ -105,9 +107,11 @@ ObjectStore::~ObjectStore()
 
 {
     shuttingDown = true;
+    // 固定槽只接收 Obj，宿主记录的 dispose 顺序继续使用原有按句柄排序的表。
     for (const auto &entry : objects)
         if (entry.second->kind == ObjectKind::NativeRecord) releaseContents(*entry.second);
     objects.clear();
+    for (auto &slot : handleSlots) slot.object.reset();
 }
 
 /**
@@ -120,7 +124,15 @@ std::int64_t ObjectStore::add(std::shared_ptr<RuntimeObject> object)
 {
     const std::int64_t handle = next++;
     if (object->identity == 0) object->identity = handle;
-    objects[handle] = std::move(object);
+    auto &slot = handleSlots[static_cast<std::uint64_t>(handle) % handleSlots.size()];
+    if (inlineHandles && object->kind == ObjectKind::Obj && !slot.object)
+    {
+        slot.handle = handle;
+        slot.object = std::move(object);
+        ++inlineHandleCount;
+    }
+    else
+        objects[handle] = std::move(object);
     return handle;
 }
 
@@ -134,8 +146,21 @@ std::int64_t ObjectStore::add(std::shared_ptr<RuntimeObject> object)
 RuntimeObject *ObjectStore::find(std::int64_t handle)
 
 {
+    const auto *storage = handleStorage(handle);
+    return storage == nullptr ? nullptr : storage->get();
+}
+
+/**
+ * @brief 比较固定槽中的完整身份，未命中时查询原有稳定节点表。
+ * @param handle 待查找的完整对象句柄。
+ * @return 活跃共享指针槽，或不存在时的空指针。
+ */
+std::shared_ptr<RuntimeObject> *ObjectStore::handleStorage(std::int64_t handle)
+{
+    auto &slot = handleSlots[static_cast<std::uint64_t>(handle) % handleSlots.size()];
+    if (slot.object && slot.handle == handle) return &slot.object;
     const auto found = objects.find(handle);
-    return (found == objects.end()) ? nullptr : found->second.get();
+    return found == objects.end() ? nullptr : &found->second;
 }
 
 /**
@@ -295,8 +320,8 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
         if (error != nullptr) *error = "不是一个能复制的对象句柄：" + Memory::toString(handle);
         return 0;
     }
-    const auto found = objects.find(handle);
-    RuntimeObject *object = found == objects.end() ? nullptr : found->second.get();
+    auto *storage = handleStorage(handle);
+    RuntimeObject *object = storage == nullptr ? nullptr : storage->get();
     if (object == nullptr)
     {
         if (error != nullptr) *error = "这个对象已经释放过了（句柄 " + Memory::toString(handle) + "）";
@@ -307,7 +332,7 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
         if (error) *error = object->iteratorContext.error;
         return 0;
     }
-    if (pointerSnapshots && shareablePointerSnapshot(*object)) return add(found->second);
+    if (pointerSnapshots && shareablePointerSnapshot(*object)) return add(*storage);
     std::shared_ptr<RuntimeObject> copy = copyObject(*object, error);
     if (!copy) return 0;
     return add(std::move(copy));
@@ -323,16 +348,23 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
 bool ObjectStore::release(std::int64_t handle)
 
 {
-    const auto found = objects.find(handle);
-    if (found == objects.end()) return false;
-    if (found->second->kind == ObjectKind::NativeRecord && found->second->nativeType && found->second->nativeType->releaseDecision)
+    auto *storage = handleStorage(handle);
+    if (storage == nullptr) return false;
+    if ((*storage)->kind == ObjectKind::NativeRecord && (*storage)->nativeType && (*storage)->nativeType->releaseDecision)
     {
-        const auto decision = found->second->nativeType->releaseDecision(found->second->nativeRecord.get());
+        const auto decision = (*storage)->nativeType->releaseDecision((*storage)->nativeRecord.get());
         if (decision == NativeRecordRelease::Deferred) return true;
         if (decision == NativeRecordRelease::Rejected) return false;
     }
-    std::shared_ptr<RuntimeObject> object = std::move(found->second);
-    objects.erase(found);
+    std::shared_ptr<RuntimeObject> object = std::move(*storage);
+    auto &slot = handleSlots[static_cast<std::uint64_t>(handle) % handleSlots.size()];
+    if (slot.handle == handle)
+    {
+        slot.handle = 0;
+        --inlineHandleCount;
+    }
+    else
+        objects.erase(handle);
     releaseContents(*object);
     return true;
 }
@@ -342,6 +374,6 @@ bool ObjectStore::release(std::int64_t handle)
  * @retval 还活着的对象个数（停机时 != 0 就是漏了）。
  */
 [[nodiscard]] std::size_t ObjectStore::liveCount() const
-{ return objects.size(); }
+{ return objects.size() + inlineHandleCount; }
 }  // namespace runtimeDetail
 }  // namespace stackvm
