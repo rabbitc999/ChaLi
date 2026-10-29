@@ -1,0 +1,14 @@
+/** 多个同时存活的分配交错访问，覆盖多项地址视图的命中及轮换。 */
+#export("address_probe")
+int64 addressProbe(int64 seed) {
+    int64 a[8]; int64 b[8]; int64 c[8]; int64 d[8]; int64 e[8];
+    int64 i=0;
+    while(i<8){
+        a[i]=seed+i; b[i]=seed+2*i; c[i]=seed+3*i;
+        d[i]=seed+4*i; e[i]=seed+5*i; i=i+1;
+    }
+    int64 total=0; i=0;
+    while(i<8){total=total+a[i]+b[i]+c[i]+d[i]+e[i];i=i+1;}
+    return total;
+}
+void main(){assert(addressProbe(7)==700);println("multiple address views OK");}

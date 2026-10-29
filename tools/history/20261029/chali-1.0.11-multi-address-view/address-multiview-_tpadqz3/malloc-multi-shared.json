@@ -1,0 +1,16 @@
+{
+  "label": "malloc-multi-shared",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "aot",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+    "--shared",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\address-multiview-_tpadqz3\\malloc-multi"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": ""
+}

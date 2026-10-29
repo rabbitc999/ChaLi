@@ -1,0 +1,15 @@
+{
+  "label": "pool-single-run",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "run",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+    "--allocator",
+    "pool",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\address-multiview-_tpadqz3\\pool-single-run"
+  ],
+  "code": 0,
+  "stdout": "multiple address views OK\n",
+  "stderr": ""
+}

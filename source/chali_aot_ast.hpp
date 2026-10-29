@@ -44,31 +44,44 @@ Memory::String astDataLiteral(const ast::NodePtr &node, const ast::TypePtr &type
 
 /**
  * @brief 生成保留映射代次及完整范围检查的 LLVM 地址操作原语。
- * @return 地址视图、上下文失效入口及可内联的物理地址解析函数。
+ * @return 四项线程局部地址视图、上下文失效入口及可内联的物理地址解析函数。
  */
 Text astAddressPrimitive()
 {
-    return R"LLVM(
+    const auto *disabled = std::getenv("CHALI_NO_AOT_MULTI_ADDRESS_CACHE");
+    const unsigned entries = disabled && *disabled ? 1u : 4u;
+    Text result = R"LLVM(
 @chali_address_view = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
+@chali_address_view1 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
+@chali_address_view2 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
+@chali_address_view3 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
+@chali_address_next = internal thread_local global i64 0
 declare ptr @chali_host_address_view(i64, i64, ptr nocapture)
 define void @chali_reset_address_view() {
 entry:
   store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 3)
+  store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view1, i32 0, i32 3)
+  store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view2, i32 0, i32 3)
+  store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view3, i32 0, i32 3)
+  store i64 0, ptr @chali_address_next
   ret void
 }
-define internal ptr @chali_primitive_address(i64 %address, i64 %count) alwaysinline {
+define internal ptr @chali_cached_view_address(ptr %view, i64 %address, i64 %count) alwaysinline {
 entry:
-  %revision_pointer = load ptr, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 3)
+  %revision_slot = getelementptr { i64, i64, ptr, ptr, i64 }, ptr %view, i32 0, i32 3
+  %revision_pointer = load ptr, ptr %revision_slot
   %has_revision = icmp ne ptr %revision_pointer, null
   br i1 %has_revision, label %check, label %slow
 check:
   %revision = load atomic i64, ptr %revision_pointer acquire, align 8
-  %stamp = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 4)
+  %stamp_slot = getelementptr { i64, i64, ptr, ptr, i64 }, ptr %view, i32 0, i32 4
+  %stamp = load i64, ptr %stamp_slot
   %same_revision = icmp eq i64 %revision, %stamp
   %enabled = icmp ne i64 %revision, 0
   %live = and i1 %same_revision, %enabled
-  %begin = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 0)
-  %size = load i64, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 1)
+  %begin = load i64, ptr %view
+  %size_slot = getelementptr { i64, i64, ptr, ptr, i64 }, ptr %view, i32 0, i32 1
+  %size = load i64, ptr %size_slot
   %offset = sub i64 %address, %begin
   %inside = icmp ult i64 %offset, %size
   %remaining = sub i64 %size, %offset
@@ -77,11 +90,42 @@ check:
   %valid = and i1 %live, %range
   br i1 %valid, label %fast, label %slow
 fast:
-  %base = load ptr, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, i32 0, i32 2)
+  %base_slot = getelementptr { i64, i64, ptr, ptr, i64 }, ptr %view, i32 0, i32 2
+  %base = load ptr, ptr %base_slot
   %physical = getelementptr i8, ptr %base, i64 %offset
   ret ptr %physical
 slow:
-  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr @chali_address_view)
+  ret ptr null
+}
+)LLVM";
+    result += "define internal ptr @chali_primitive_address(i64 %address, i64 %count) alwaysinline {\nentry:\n  br label %lookup0\n";
+    for (unsigned index = 0; index < entries; ++index)
+    {
+        const Text number = Memory::toString(index);
+        const Text view = "@chali_address_view" + (index == 0u ? Text() : number);
+        const Text next = index + 1u == entries ? "slow" : "lookup" + Memory::toString(index + 1u);
+        result += "lookup" + number + ":\n  %cached" + number + " = call ptr @chali_cached_view_address(ptr " + view + ", i64 %address, i64 %count)\n";
+        result += "  %found" + number + " = icmp ne ptr %cached" + number + ", null\n  br i1 %found" + number + ", label %hit" + number + ", label %" + next + "\n";
+        result += "hit" + number + ":\n  ret ptr %cached" + number + "\n";
+    }
+    result += "slow:\n";
+    if (entries == 1u)
+        result += "  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr @chali_address_view)\n";
+    else
+        result += R"LLVM(
+  %next = load i64, ptr @chali_address_next
+  %first = icmp eq i64 %next, 0
+  %second = icmp eq i64 %next, 1
+  %third = icmp eq i64 %next, 2
+  %tail = select i1 %third, ptr @chali_address_view2, ptr @chali_address_view3
+  %rest = select i1 %second, ptr @chali_address_view1, ptr %tail
+  %target = select i1 %first, ptr @chali_address_view, ptr %rest
+  %following = add i64 %next, 1
+  %wrapped = and i64 %following, 3
+  store i64 %wrapped, ptr @chali_address_next
+  %resolved = call ptr @chali_host_address_view(i64 %address, i64 %count, ptr %target)
+)LLVM";
+    result += R"LLVM(
   ret ptr %resolved
 }
 define internal ptr @chali_data_address(i64 %address, i64 %count, ptr %base, i64 %size) alwaysinline {
@@ -101,6 +145,7 @@ slow:
   ret ptr %resolved
 }
 )LLVM";
+    return result;
 }
 
 /**
