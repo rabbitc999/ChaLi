@@ -9,6 +9,10 @@ int64 addressProbe(int64 seed) {
     }
     int64 total=0; i=0;
     while(i<8){total=total+a[i]+b[i]+c[i]+d[i]+e[i];i=i+1;}
+    i=0;
+    while(i<96){total=total+a[i&7];i=i+1;}
+    i=0;
+    while(i<96){total=total+b[i&7];i=i+1;}
     return total;
 }
-void main(){assert(addressProbe(7)==700);println("multiple address views OK");}
+void main(){assert(addressProbe(7)==3052);println("multiple address views OK");}

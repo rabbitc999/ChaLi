@@ -50,12 +50,15 @@ Text astAddressPrimitive()
 {
     const auto *disabled = std::getenv("CHALI_NO_AOT_MULTI_ADDRESS_CACHE");
     const unsigned entries = disabled && *disabled ? 1u : 4u;
+    const auto *disablePromotion = std::getenv("CHALI_NO_AOT_ADDRESS_PROMOTION");
+    const bool promotion = entries > 1u && !(disablePromotion && *disablePromotion);
     Text result = R"LLVM(
 @chali_address_view = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
 @chali_address_view1 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
 @chali_address_view2 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
 @chali_address_view3 = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
 @chali_address_next = internal thread_local global i64 0
+@chali_address_secondary_hits = internal thread_local global i64 0
 declare ptr @chali_host_address_view(i64, i64, ptr nocapture)
 define void @chali_reset_address_view() {
 entry:
@@ -64,6 +67,7 @@ entry:
   store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view2, i32 0, i32 3)
   store ptr null, ptr getelementptr ({ i64, i64, ptr, ptr, i64 }, ptr @chali_address_view3, i32 0, i32 3)
   store i64 0, ptr @chali_address_next
+  store i64 0, ptr @chali_address_secondary_hits
   ret void
 }
 define internal ptr @chali_cached_view_address(ptr %view, i64 %address, i64 %count) alwaysinline {
@@ -106,7 +110,24 @@ slow:
         const Text next = index + 1u == entries ? "slow" : "lookup" + Memory::toString(index + 1u);
         result += "lookup" + number + ":\n  %cached" + number + " = call ptr @chali_cached_view_address(ptr " + view + ", i64 %address, i64 %count)\n";
         result += "  %found" + number + " = icmp ne ptr %cached" + number + ", null\n  br i1 %found" + number + ", label %hit" + number + ", label %" + next + "\n";
-        result += "hit" + number + ":\n  ret ptr %cached" + number + "\n";
+        result += "hit" + number + ":\n";
+        if (promotion && index != 0u)
+        {
+            // 首项热路径不写计数；每三十二次后续命中才摊销交换一个完整视图。
+            result += "  %hits" + number + " = load i64, ptr @chali_address_secondary_hits\n";
+            result += "  %increment" + number + " = add i64 %hits" + number + ", 1\n";
+            result += "  %period" + number + " = and i64 %increment" + number + ", 31\n";
+            result += "  store i64 %period" + number + ", ptr @chali_address_secondary_hits\n";
+            result += "  %promote" + number + " = icmp eq i64 %period" + number + ", 0\n";
+            result += "  br i1 %promote" + number + ", label %swap" + number + ", label %return" + number + "\n";
+            result += "swap" + number + ":\n";
+            result += "  %old" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, align 8\n";
+            result += "  %new" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr " + view + ", align 8\n";
+            result += "  store { i64, i64, ptr, ptr, i64 } %new" + number + ", ptr @chali_address_view, align 8\n";
+            result += "  store { i64, i64, ptr, ptr, i64 } %old" + number + ", ptr " + view + ", align 8\n";
+            result += "  br label %return" + number + "\nreturn" + number + ":\n";
+        }
+        result += "  ret ptr %cached" + number + "\n";
     }
     result += "slow:\n";
     if (entries == 1u)

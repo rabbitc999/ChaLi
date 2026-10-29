@@ -1,0 +1,16 @@
+{
+  "label": "pool-single-shared",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "aot",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+    "--shared",
+    "--allocator",
+    "pool",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\address-multiview-46ty_1vk\\pool-single"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,15 @@
+{
+  "label": "malloc-multi-run",
+  "command": [
+    "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+    "run",
+    "G:\\Desktop\\ChaLi\\tests\\fixtures\\aot_address_multiview.chl",
+    "--allocator",
+    "malloc",
+    "--out",
+    "G:\\Desktop\\ChaLi\\tmp\\address-multiview-46ty_1vk\\malloc-multi-run"
+  ],
+  "code": 0,
+  "stdout": "multiple address views OK\n",
+  "stderr": ""
+}

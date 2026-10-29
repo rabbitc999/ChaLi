@@ -1,0 +1,1 @@
+void bad(String const& value){value.clear();}void main(){String value="abc";bad(&value);}

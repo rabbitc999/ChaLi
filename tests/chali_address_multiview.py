@@ -43,9 +43,9 @@ def lifecycle(path):
             library.chali_init()
             try:
                 requests.put(cycle)
-                assert responses.get(timeout=30) == 40 * cycle + 420, (cycle, path)
+                assert responses.get(timeout=30) == 232 * cycle + 1428, (cycle, path)
                 requests.put(-cycle)
-                assert responses.get(timeout=30) == -40 * cycle + 420, (cycle, path)
+                assert responses.get(timeout=30) == -232 * cycle + 1428, (cycle, path)
             finally:
                 library.chali_finish()
     finally:
@@ -55,7 +55,7 @@ def lifecycle(path):
 
 
 def main():
-    """编译六种独立配置并保存命令、诊断与实际 LLVM 原语摘录。"""
+    """编译八种独立配置并保存命令、诊断与实际 LLVM 原语摘录。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--worker', type=Path)
@@ -68,11 +68,14 @@ def main():
     work = Path(tempfile.mkdtemp(prefix='address-multiview-'))
     results = []
     for allocator in ('malloc', 'pool'):
-        for mode in ('multi', 'single', 'off'):
+        for mode in ('multi', 'round-robin', 'single', 'off'):
             label = allocator + '-' + mode
             env = dict(os.environ)
             env.pop('CHALI_NO_AOT_ADDRESS_CACHE', None)
             env.pop('CHALI_NO_AOT_MULTI_ADDRESS_CACHE', None)
+            env.pop('CHALI_NO_AOT_ADDRESS_PROMOTION', None)
+            if mode == 'round-robin':
+                env['CHALI_NO_AOT_ADDRESS_PROMOTION'] = '1'
             if mode == 'single':
                 env['CHALI_NO_AOT_MULTI_ADDRESS_CACHE'] = '1'
             if mode == 'off':
@@ -98,6 +101,7 @@ def main():
             primitive = re.search(r'^define internal ptr @chali_primitive_address\(.*?^\}', llvm, re.M | re.S)
             assert primitive is not None, work
             assert primitive[0].count('call ptr @chali_cached_view_address') == (1 if mode == 'single' else 4), (label, work)
+            assert ('swap1:' in primitive[0]) == (mode in ('multi', 'off')), (label, work)
             reset = re.search(r'^define void @chali_reset_address_view\(.*?^\}', llvm, re.M | re.S)
             assert reset is not None and reset[0].count('store ptr null') == 4, (label, work)
             (work / (label + '-primitive.ll')).write_text(primitive[0] + '\n' + reset[0] + '\n', encoding='utf-8')
@@ -107,7 +111,7 @@ def main():
     (work / 'results.json').write_text(json.dumps(dict(
         compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(), results=results),
         ensure_ascii=False, indent=2), encoding='utf-8')
-    print('address views: 6 configurations, checked access and 384 persistent-thread lifecycle rounds OK;', work)
+    print('address views: 8 configurations, checked access and 512 persistent-thread lifecycle rounds OK;', work)
 
 
 if __name__ == '__main__':
