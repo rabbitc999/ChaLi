@@ -182,7 +182,9 @@ def main():
         abi_exe = work / 'abi_use'
         result = invoke([compiler, 'aot', abi, '--out', abi_exe, '--llvm', cc])
         assert result.returncode == 0, (result.stdout, result.stderr)
-        assert 'declare i32 @"aot_add"(' in (abi_exe.with_suffix('.ll')).read_text(encoding='utf-8'), 'abi 函数没生成 extern 声明'
+        abi_llvm = abi_exe.with_suffix('.ll').read_text(encoding='utf-8')
+        assert '@chali_host_abi_symbol(' in abi_llvm and '616F745F616464' in abi_llvm.upper(), '动态 ABI 缺少按库解析的符号入口'
+        assert 'declare i32 @"aot_add"(' not in abi_llvm, '动态库调用不能退回无路径的裸导入'
         result = invoke([abi_exe.with_suffix('.exe' if os.name == 'nt' else '')])
         assert result.returncode == 0 and result.stdout == expected_abi, result
         print('[通过] AOT 产物调用外部 C 函数', flush=True)

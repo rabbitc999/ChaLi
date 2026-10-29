@@ -3844,7 +3844,9 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
     for (const MFunctionDecl &declaration : g_functionDecls)
     {
         if (declaration.label != chosen || declaration.superseded) continue;
-        if (declaration.moduleLocal && declaration.module != g_currentModule)
+        const bool formattedOutputBridge = node.formattedOutputBridge && declaration.module == "std::lang"
+            && (declaration.source == "__std_eprint" || declaration.source == "__std_eprintln");
+        if (declaration.moduleLocal && declaration.module != g_currentModule && !formattedOutputBridge)
             return Fail("模块 " + declaration.module + " 的 inline 函数 " + declaration.source + " 不能从模块 " + (g_currentModule.empty() ? Memory::String("<root>") : g_currentModule) + " 访问");
         break;
     }

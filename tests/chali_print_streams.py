@@ -103,6 +103,8 @@ def main():
         }''')
         assert not result.stdout and not result.stderr
         for source, reason in [
+            ('void main() { std::lang::__std_eprint("private"); }', 'inline 函数'),
+            ('void main() { std::lang::__std_eprintln("private"); }', 'inline 函数'),
             ('void main() { eprintln("{}", 1, 2); }', '没有被占位符用到'),
             ('import std::io;\nvoid main() { FileStream s = FileStream::open("bad.txt", "wb").take(); s.print("{:bad}", 1); }', '格式仅支持'),
         ]:

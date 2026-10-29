@@ -7,6 +7,15 @@ from library_reference import ROOT, inventory
 # 只约束顶格书写（顶层）的声明：文法只允许顶层函数写 `inline`，类型体里的成员方法无从声明。
 DUNDER = re.compile(r'^[ \t]*(inline[ \t]+)?[A-Za-z_][\w \t:<>,]*?(__\w+)[ \t]*\(', re.M)
 
+# 编译器与布局验收直接调用的低层协议入口；其余有函数体的内部辅助函数仍须模块私有。
+# 这些入口沿用既有名字，不通过额外宿主胶水转发，也不允许任意 __boot 名称自动豁免。
+PROTOCOL_BODIES = frozenset('''
+__bootBufferCapacity __bootListReserve __bootListPushI __bootListFindI
+__bootStringOwnedData __bootStringBuffer __bootStringNew __bootStringDrop __bootStringByte
+__bootFloat32Bits __bootFloat32FromBits __bootFloat64Bits __bootFloat64FromBits
+__bootStringFromInt
+'''.split())
+
 
 def non_inline_bodies():
     """收集顶层带函数体却没有 `inline` 的 `__` 函数：它们在语言层面仍是可跨模块调用的。"""
@@ -19,6 +28,8 @@ def non_inline_bodies():
             if text[line_start:line_start + 1] in (' ', '\t'):
                 continue
             if match.group(1):
+                continue
+            if path.name == 'lang.chl' and match.group(2) in PROTOCOL_BODIES:
                 continue
             depth, index = 1, match.end()
             while index < len(text) and depth:

@@ -271,6 +271,7 @@ struct MNode
     bool exported = false;  ///< 使用 export 标记的动态库公开函数。
     bool moduleLocal = false;
     bool reflectionBridge = false;      ///< 仅编译器生成的反射桥接节点可以读取内部接口身份。
+    bool formattedOutputBridge = false; ///< 仅标准错误流归一化生成的调用可访问对应私有入口。
     bool generatedDeclaration = false;  ///< 由编译器自身的派生模板生成，允许内部辅助符号。
     bool nonCopyable = false;           ///< 禁用值复制：`#NonCopyable opcode`，或实现 Closeable 的结构体自动获得。
     long long i = 0;

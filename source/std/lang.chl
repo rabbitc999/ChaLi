@@ -9,7 +9,7 @@ int64 rawSize<T>() {
 }
 
 /** 读取字符串存储中的一个字节；调用者已证明地址位于有效范围。 */
-inline unsafe int64 __bootStringByte(int64 address, int64 index) {
+unsafe int64 __bootStringByte(int64 address, int64 index) {
     uint8 mut& value = (uint8 mut&)(address + index);
     return (int64)*value;
 }
@@ -171,11 +171,11 @@ inline unsafe uint8 __bootStringByteAtUnwrap(int64 address,int64 index) {
     return (uint8)__bootStringByte(__stringStorageData(address),index);
 }
 /** 读取自举构造的容量描述符中的数据地址，不经过宿主分派。 */
-inline unsafe int64 __bootStringOwnedData(int64 address) {
+unsafe int64 __bootStringOwnedData(int64 address) {
     int64 mut& data=(int64 mut&)(address+24);return *data;
 }
 /** 构造稳定容量描述符；十六字节以内的初始缓冲区与描述符共块。 */
-inline unsafe int64 __bootStringBuffer(int64 length) {
+unsafe int64 __bootStringBuffer(int64 length) {
     if(length<0){panic("String：结果过长");}
     int64 maximum=__bufferMaxBytes();if(maximum<49){panic("String：分配上限不足");}maximum=maximum-1;
     int64 requested=length;if(requested==0){requested=1;}
@@ -195,14 +195,14 @@ inline unsafe void __bootStringCopyBytes(int64 destination,int64 source,int64 le
     if (length>0) { memcpy(destination,source,length); }
 }
 /** 构造独立空字符串。 */
-inline unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
+unsafe int64 __bootStringNew() { return __bootStringBuffer(0); }
 /** 一次分配取得独立副本。 */
 inline unsafe int64 __bootStringCopy(int64 source) {
     int64 length=__bootStringLength(source); int64 result=__bootStringBuffer(length);
     __bootStringCopyBytes(__bootStringOwnedData(result),__stringStorageData(source),length); return result;
 }
 /** 归还拥有的字符串存储。 */
-inline unsafe int64 __bootStringDrop(int64 address) {
+unsafe int64 __bootStringDrop(int64 address) {
     if(__stringStorageKind(address)!=0){
         int64 data=__bootStringOwnedData(address);
         if(data!=address+32){__stringRelease(data);}
@@ -289,7 +289,7 @@ inline unsafe int64 __bootStringReference(int64 source,int64 index) {
     return __stringStorageData(source)+index;
 }
 /** 按十进制生成有符号整数，避免最小负数取负溢出。 */
-inline unsafe int64 __bootStringFromInt(int64 value) {
+unsafe int64 __bootStringFromInt(int64 value) {
     bool negative=value<0; uint64 magnitude=(uint64)value;
     if (negative) { magnitude=(uint64)(0-(value+1))+1u; }
     uint64 rest=magnitude; int64 length=1;
@@ -1464,7 +1464,7 @@ unsafe int64 __listStorageLength(int64 handle);
 /** 计算有界几何增长容量；先验证 len+need，接近上限时不让倍增溢出。
  * 空间足够时原样返回 cap，否则一次满足本次需求；不分配或清理元素。
  */
-inline int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
+int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 minimum,int64 maximum) {
     if(!(length>=0 && need>=0 && capacity>=length && minimum>=0 && maximum>=minimum && capacity<=maximum)){panic("缓冲区容量参数无效");}
     if(need>maximum-length){panic("缓冲区容量超出上限");}
     int64 required=length+need;
@@ -1477,7 +1477,7 @@ inline int64 __bootBufferCapacity(int64 length,int64 need,int64 capacity,int64 m
 }
 unsafe int64 __listStorageMaxCapacity(int64 handle);
 /** 按本次需求和分配器上限预留槽，不初始化尚未加入的用户元素。 */
-inline unsafe void __bootListReserve(int64 handle,int64 requested){
+unsafe void __bootListReserve(int64 handle,int64 requested){
     int64 capacity=__listStorageCapacity(handle);
     if(requested<=capacity){return;}
     int64 maximum=__listStorageMaxCapacity(handle);
@@ -1505,7 +1505,7 @@ unsafe int64 __listStorageAppendI(int64 handle,int64 value,int64 text,int64 layo
 unsafe int64 __listStorageTakeI(int64 handle,int64 text,int64 layout);
 unsafe int64 __listStorageEqualI(int64 handle,int64 index,int64 value,int64 text,int64 layout);
 /** 在语言中选择增长策略并追加一个值。 */
-inline unsafe int64 __bootListPushI(int64 handle,int64 value,int64 text,int64 layout){
+unsafe int64 __bootListPushI(int64 handle,int64 value,int64 text,int64 layout){
     int64 size=__listStorageGuard(handle,0,0);__bootListReserve(handle,size+1);
     return __listStorageAppendI(handle,value,text,layout);
 }
@@ -1520,7 +1520,7 @@ inline unsafe int64 __bootListPopI(int64 handle,int64 text,int64 layout){
     __listStorageGuard(handle,3,0);return __listStorageTakeI(handle,text,layout);
 }
 /** 遍历有效槽，返回首个相同值的下标。 */
-inline unsafe int64 __bootListFindI(int64 handle,int64 value,int64 text,int64 layout){
+unsafe int64 __bootListFindI(int64 handle,int64 value,int64 text,int64 layout){
     int64 size=__listStorageLength(handle);int64 i=0;
     while(i<size){if(__listStorageEqualI(handle,i,value,text,layout)!=0){return i;}i=i+1;}return 0-1;
 }
@@ -1813,15 +1813,15 @@ inline int64 __toInt64(float64 value) {
     return (int64)value;
 }
 /** 语言浮点槽使用 binary64；通过不安全引用取得同一槽的原始位。 */
-inline uint64 __bootFloat64Bits(float64 value) {
+uint64 __bootFloat64Bits(float64 value) {
     unsafe { BarePtr<float64> source=pointerFromAddress<float64>((int64)&value); BarePtr<uint64> raw=source.castTo<uint64>(); uint64 mut& bits=dereference<uint64>(raw); return *bits; }
 }
 /** 取得 binary64 原始位代表的浮点值，不进行整数数值转换。 */
-inline float64 __bootFloat64FromBits(uint64 bits) {
+float64 __bootFloat64FromBits(uint64 bits) {
     unsafe { BarePtr<uint64> source=pointerFromAddress<uint64>((int64)&bits); BarePtr<float64> raw=source.castTo<float64>(); float64 mut& value=dereference<float64>(raw); return *value; }
 }
 /** binary32 值已精确归一化到语言浮点槽，恢复其指数与尾数。 */
-inline uint64 __bootFloat32Bits(float32 value) {
+uint64 __bootFloat32Bits(float32 value) {
     uint64 raw=__bootFloat64Bits((float64)value);
     uint64 sign=(raw>>63)<<31; uint64 exponent=(raw>>52)&2047u;
     uint64 fraction=raw&4503599627370495u;
@@ -1835,7 +1835,7 @@ inline uint64 __bootFloat32Bits(float32 value) {
     return sign|((fraction|4503599627370496u)>>(926u-exponent));
 }
 /** 精确构造可由 binary32 表示的 binary64 槽，再恢复 binary32 类型。 */
-inline float32 __bootFloat32FromBits(uint64 bits) {
+float32 __bootFloat32FromBits(uint64 bits) {
     uint64 sign=((bits>>31)&1u)<<63;
     uint64 exponent=(bits>>23)&255u; uint64 fraction=bits&8388607u; uint64 raw=sign;
     if (exponent==255u) { raw=raw|9218868437227405312u|(fraction<<29); }

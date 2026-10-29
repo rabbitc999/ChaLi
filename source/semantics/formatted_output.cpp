@@ -72,5 +72,6 @@ void NormalizeFormattedOutputCall(int id)
         g_nodes[target].sourceColumn = call.sourceColumn;
         g_nodes[target].module = call.module;
         g_nodes[id].kids[0] = target;
+        g_nodes[id].formattedOutputBridge = true;
     }
 }
