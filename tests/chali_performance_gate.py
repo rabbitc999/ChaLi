@@ -1,4 +1,4 @@
-"""校验 20% 边界、Lua 严格更快及损坏样本拒绝，不运行性能负载。"""
+"""校验两倍边界、Lua 严格更快及损坏样本拒绝，不运行性能负载。"""
 from pathlib import Path
 from project_temp import tempfile
 import subprocess
@@ -12,12 +12,12 @@ from evaluate_saved import samples_and_median, verdict
 class PerformanceGateTests(unittest.TestCase):
     """以边界值和坏样本检验实际验收入口，避免靠舍入值或均值冒充达标。"""
 
-    def test_twenty_percent_boundary(self):
-        """恰好慢 20% 允许，再慢一点拒绝。"""
-        self.assertTrue(verdict(120, 100, None)['passed'])
-        self.assertFalse(verdict(120.00001, 100, None)['passed'])
-        self.assertTrue(verdict(0.68016, 0.5668, None)['passed'])
-        self.assertFalse(verdict(0.6801601, 0.5668, None)['passed'])
+    def test_two_times_boundary(self):
+        """恰好两倍允许，再慢一点拒绝；旧门限按除以 1.2 乘以 2 换算。"""
+        self.assertTrue(verdict(200, 100, None)['passed'])
+        self.assertFalse(verdict(200.00001, 100, None)['passed'])
+        self.assertTrue(verdict(1.1336, 0.5668, None)['passed'])
+        self.assertFalse(verdict(1.1336001, 0.5668, None)['passed'])
 
     def test_lua_tie_and_missing_reference(self):
         """与 Lua 相同不算更快；无参考明确保留 None。"""

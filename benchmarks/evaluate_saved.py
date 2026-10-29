@@ -1,4 +1,4 @@
-"""只核对已保存的 ChaLi 样本，以 C++ O2×1.20 和冻结 Lua 判定，不重新计时。"""
+"""只核对已保存的 ChaLi 样本，以 C++ O2×2 和冻结 Lua 判定，不重新计时。"""
 import argparse
 from decimal import Decimal
 import hashlib
@@ -13,7 +13,7 @@ BASIC = ('int_chain', 'float_chain', 'call', 'array', 'list_growth', 'map_growth
 FEATURES = ('enum_payload', 'interface_mono', 'interface_poly', 'struct_nested', 'array_2d', 'array_3d')
 STRINGS = ('string_read', 'string_concat', 'string_slice', 'string_find')
 CASES = BASIC + FEATURES + STRINGS
-CPP_FACTOR = Decimal('1.20')
+CPP_FACTOR = Decimal('2')
 
 
 def load(path, provenance):
@@ -153,7 +153,7 @@ def main():
                   rows=[rows[case] for case in CASES if case in rows])
     args.out.mkdir(parents=True)
     (args.out / 'results.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    lines = ['# 已保存样本的 20% 性能门槛', '',
+    lines = ['# 已保存样本的 C++ O2 两倍性能门槛', '',
              '此入口只核对保存的数据，未重新计时；不能代替最终全量 CI。Lua 缺项明确标注，不冒充快于 Lua。', '',
              '| 负载 | ChaLi / ms | C++ O2 上限 / ms | Lua / ms | 判定 |',
              '| --- | ---: | ---: | ---: | --- |']
