@@ -1,98 +1,11 @@
 \chapter{控制流}
 \label{ch:05}
 
-程序光会「从上往下做」是干不了活的。它得会拐弯（条件）和转圈（循环）。
+控制流决定哪些语句执行、执行多少次，以及值从哪条路径产生。用条件筛选成绩，再用循环累计；讨论退出规则时，同时观察循环之后的语句。
 
-第 2 章的猜数字已经把这两种都用上了，这一章把它们补全：ChaLi 一共有三种循环：\texttt{while}、\texttt{loop} 和 \texttt{for-\allowbreak{}in}，还有一套对「同一个变量在一个表达式里被读写两次」管得很严的规则。
+\section{条件链与条件表达式}
 
-\section{条件：\texttt{if} / \texttt{elif} / \texttt{else}}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-String classify(int64 value)
-{
-    if (value < 0)
-    {
-        return "负数";
-    }
-    elif (value == 0)
-    {
-        return "零";
-    }
-    else
-    {
-        return "正数";
-    }
-}
-
-void main()
-{
-    println("{} {} {}", classify(-3), classify(0), classify(8));
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-负数 零 正数
-\end{lstlisting}
-\par
-\medskip
-
-形态就是这些：
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-if (条件) { ... }
-elif (条件) { ... }
-else { ... }
-\end{lstlisting}
-\par
-\medskip
-
-三条要注意的：
-
-1. 条件必须真的能当条件。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    if (1)
-    {
-        println("x");
-    }
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-chali: if 条件必须是 bool，现在给的是 int64（数值条件请显式写成 `(bool)值` 或比较表达式）
-\end{lstlisting}
-\par
-\medskip
-
-没有「非零即真」。想判断「\texttt{count} 是不是 0」，写 \texttt{if (\allowbreak{}count !=\allowbreak{} 0)\allowbreak{}}——把你想说的说出来。
-
-2. \texttt{elif} 和 \texttt{else if} 等价，可以在同一条件链里混用；\texttt{elsif} 仍不是关键字。各分支继续要求大括号。
-
-3. 花括号不能省。 只写一句 \texttt{if (\allowbreak{}x)\allowbreak{} y =\allowbreak{} 1;} 是编译错误。这条和 C 不一样，但换来的是「这个 \texttt{y =\allowbreak{} 1} 到底属于哪个 if」永远不会有歧义。
-
-\begin{tip}{提示}
-ChaLi 没有三目运算符。 \texttt{cond ? a :\allowbreak{} b} 是语法错误（第 3 章提过）。简单替换就用 \texttt{if /\allowbreak{} else} 赋值；分支多了，第 10 章的 \texttt{match} 更好读。可以使用 \texttt{if (\allowbreak{}条件)\allowbreak{} \{ 值一 \} else \{ 值二 \}} 条件表达式；只求值命中的分支。
-\end{tip}
-
-\subsection*{条件也能产生值}
-
-\texttt{if} 可以出现在变量定义、赋值、函数实参和其他表达式里。只执行选中的分支，条件和分支都按短路规则求值。
+if、elif、else 按顺序检查条件，else if 与 elif 等价。条件本身为 bool。条件表达式的分支需要产生兼容的结果类型；语句形式不要求每个分支产生值。
 
 \par
 \medskip
@@ -143,45 +56,9 @@ void main()
 \par
 \medskip
 
-只有结果表达式时写 \texttt{\{ value \}}，块内不加分号；有声明、赋值等语句时用 \texttt{yield value;} 给出块的结果。各分支结果类型一致，并且必须有 \texttt{else}。外层变量定义和赋值仍以分号结束。
+\section{循环累计与区间}
 
-条件选择使用 \texttt{if} 表达式。
-
-\section{\texttt{while}：先判断，再执行}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 countdown = 3;
-    while (countdown > 0)
-    {
-        println("{}", countdown);
-        countdown = countdown - 1;
-    }
-    println("起飞！");
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-3
-2
-1
-起飞！
-\end{lstlisting}
-\par
-\medskip
-
-条件写在括号里，先判后做。条件一开始就不成立，循环体一次都不执行。
-
-\section{\texttt{for-\allowbreak{}in}：遍历区间}
-
-计数循环使用 \texttt{range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}，依次取得左闭右开区间中的值：
+for-in 遍历区间或实现迭代协议的对象。range(a,b) 的上界不包含 b；rangeEq 包含上界。while 在每轮前检查条件，loop 依靠循环体中的退出路径。先明确区间端点和状态更新，再计算迭代次数。
 
 \par
 \medskip
@@ -207,11 +84,9 @@ void main()
 \par
 \medskip
 
-输出为 \texttt{10}。需要包含上端点时使用 \texttt{range\allowbreak{}Eq(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}。循环变量只在循环中存在。整数和 \texttt{char} 直接支持区间遍历；其他值类型实现\texttt{Next\allowbreak{}Value<\allowbreak{}T>\allowbreak{}}，以 \texttt{Option<\allowbreak{}T>\allowbreak{} next\allowbreak{}Value(\allowbreak{}T end,\allowbreak{} bool inclusive)\allowbreak{}} 管理前进和终止。
+\section{从循环取得结果}
 
-\section{循环也能产生值}
-
-\texttt{for-\allowbreak{}in} 和 \texttt{while} 可以作为赋值表达式，循环体用 \texttt{yield} 给出结果，\texttt{else} 在没有产生结果而退出循环时给出后备值。\texttt{continue} 继续下一轮，普通\texttt{break} 结束循环并进入 \texttt{else}。
+带值循环使用 yield 产生结果；需要处理未产生结果的路径时使用 else。不要把一个无结果的循环当作整数使用。下例同时展示成功退出和无匹配时的结果。
 
 \par
 \medskip
@@ -251,214 +126,11 @@ void main()
 \par
 \medskip
 
-输出为 \texttt{6 结束}。分支只有一个值时，可以省略 \texttt{yield} 和值后的分号。表达式必须有 \texttt{else}，并且每条正常结束的路径都产生兼容类型的值。返回 String、数组或容器时仍遵守值语义；不可复制的 opcode 对象需转移所有权。
+\section{退出层级与清理}
 
-\section{\texttt{loop}：会「带值跳出来」的循环}
+continue 进入下一轮，break 退出循环。嵌套循环可用 break level N 或 break all 指定退出层级；带值退出还需有相应结果接收者。离开的作用域执行资源清理，第 8 章进一步说明。
 
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 attempts = 0;
-    loop
-    {
-        attempts = attempts + 1;
-        if (attempts >= 3)
-        {
-            break;
-        }
-    }
-    println("{}", attempts);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-3
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{loop \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 就是「一直转」，它自己不会停——出口全靠 \texttt{break}。
-
-它的特别之处在于：\texttt{loop} 是表达式，能算出一个结果。要交结果就用 \texttt{yield}：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-int64 firstEven = loop
-{
-    int64 candidate = nextNumber();
-    if (candidate % 2 == 0)
-    {
-        yield candidate;
-        // 这个 candidate 就是 firstEven
-    }
-};
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{yield candidate;} 把值交给这个 \texttt{loop}，\texttt{loop} 再把它交给 \texttt{first\allowbreak{}Even}。
-
-既然 \texttt{loop} 是表达式，分号该怎么写？看它站在哪个位置：
-
-\begin{itemize}
-
-\item 语句位置（单独一行，没人接它的结果）：\texttt{loop \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 直接写，后面不补分号，和 \texttt{while}、\texttt{for}、\texttt{if} 一样。
-
-\item 表达式位置（变量定义、赋值、函数实参、返回值）：\texttt{loop \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \}} 只是外层表达式的一部分，按外层语句的规矩收尾——\texttt{int64 first\allowbreak{}Even =\allowbreak{} loop \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} \};} 这个分号属于那条定义语句。
-
-\end{itemize}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 count = 0;
-    loop
-    {
-        count = count + 1;
-        if (count >= 2)
-        {
-            break;
-        }
-    }
-
-    int64 doubled = loop
-    {
-        yield count * 2;
-    };
-    println("{} {}", count, doubled);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-2 4
-\end{lstlisting}
-\par
-\medskip
-
-前一个 \texttt{loop} 是语句，\texttt{\}} 后面干净收住；后一个被 \texttt{doubled} 接走，分号写在定义语句末尾。语句位置多写一个 \texttt{;} 也能编译（那是一个结果被丢掉的表达式语句），但没必要。
-
-\section{\texttt{for-\allowbreak{}in}：遍历一串东西}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    List<int64> scores;
-    scores.push(30);
-    scores.push(55);
-    scores.push(41);
-
-    int64 best = 0;
-    for (int64 score in scores)
-    {
-        if (score > best)
-        {
-            best = score;
-        }
-    }
-    println("最高分 {}", best);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-最高分 55
-\end{lstlisting}
-\par
-\medskip
-
-写法：
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-for ( 元素类型 名字 in 容器 ) { ... }
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{List<\allowbreak{}int64>\allowbreak{}} 是一个「有序的整数表」，\texttt{push} 往末尾加一个。容器是第 11 章的主题，现在你把它当成「一串东西」就够了。
-
-三个要点：
-
-\begin{itemize}
-
-\item 元素类型可以显式写成 \texttt{for (\allowbreak{}int64 score in scores)\allowbreak{}}，也可以由迭代源推导成 \texttt{for (\allowbreak{}score in scores)\allowbreak{}}。
-
-\item 遍历出来的 \texttt{score} 是元素的副本（还记得第 4 章吗），改它不影响容器。想改容器里的元素得用引用（第 7 章）。
-
-\item \texttt{for-\allowbreak{}in} 能遍历的不只是容器，凡是「能一个个吐出来的东西」都行，比如第 4 章的变长参数、第 17 章的迭代器。
-
-\end{itemize}
-
-显式 \texttt{for(\allowbreak{}let item in values)\allowbreak{}} 与省略类型的 \texttt{for(\allowbreak{}item in values)\allowbreak{}} 使用相同的元素类型推断；容器按元素类型，整数区间按端点类型推断。
-
-\section{\texttt{break} 与 \texttt{continue}}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    List<int64> scores;
-    scores.push(12);
-    scores.push(-5);
-    scores.push(0);
-    scores.push(99);
-
-    for (int64 score in scores)
-    {
-        if (score < 0)
-        {
-            continue;
-            // 负数不算，看下一个
-        }
-        if (score == 0)
-        {
-            break;
-            // 到此为止，后面的都别看了
-        }
-        println("分数 {}", score);
-    }
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-分数 12
-\end{lstlisting}
-\par
-\medskip
-
-（\texttt{0} 那一项触发了 \texttt{break}，所以 \texttt{99} 从没被打印。）
-
-\texttt{continue} = 「这一轮到此为止，直接进下一轮」；\texttt{break} = 「整个循环到此为止」。
-
-两个都只作用于最内层那一圈循环。想从两层里一次跳出来，得靠 \texttt{loop} 带值或者加个标志变量——ChaLi 没有「带标签的 break」。
-
-\subsection*{指定退出哪一层循环}
-
-\texttt{break;} 退出最近一层循环。\texttt{break level 2;} 退出两层，\texttt{break all;} 退出当前函数里所有包围它的循环。\texttt{level} 与 \texttt{all} 只在这个语法位置识别，其他地方仍是普通变量名。
+自增减和复合赋值会修改目标。避免在一个表达式里安排相互依赖的读写，拆成有明确顺序的语句。
 
 \par
 \medskip
@@ -499,247 +171,17 @@ void main()
 \par
 \medskip
 
-层数只计算 \texttt{while}、\texttt{for-\allowbreak{}in} 和 \texttt{loop}，普通块及 \texttt{if}、\texttt{match} 不增加层数。数字参数必须是正整数字面量，不能用变量代替层数。\texttt{all} 只在 \texttt{break} 后的层级参数位置表示「全部循环」，普通变量仍可命名为 \texttt{all}。
-
-层级退出不能携带结果，也不能跳出另一个函数的循环；离开路径上的清理照常执行。带值的 \texttt{yield value;} 则交给最近接收结果的值表达式，无值循环不会把这个值截走。返回表达式中禁止 \texttt{break level} / \texttt{break all}，详见第 4 章。
-
-\subsection*{带值退出与层级写法小结}
-
-\begin{center}
-\begin{tabular}{ll}
-\toprule
-写法 & 含义 \\
-\midrule
-\texttt{yield 值;} & 从最近的值表达式（loop / match / 块）交出结果 \\
-\texttt{break level N;} & 跳出 N 层循环，N 必须是正整数字面量 \\
-\texttt{break all;} & 跳出当前函数内所有包围它的循环 \\
-\texttt{break level all;} & 同 \texttt{break all;} \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main() {
-    // yield 值;（写在接收结果的值表达式里）
-    int64 v = loop { yield 42; };
-    assert(v == 42);
-    // break level N;
-    int64 n = 0;
-    loop { loop { n++; break level 2; } assert(false); }
-    assert(n == 1);
-    // break all;
-    int64 a = 0;
-    loop { loop { a++; break all; } assert(false); }
-    assert(a == 1);
-    println("break 写法 ok");
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-break 写法 ok
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{yield} 只在带值退出里是关键字：作为普通标识符仍可用（例如用户自定义的 \texttt{yield(\allowbreak{})\allowbreak{}} 不受影响），但不能写成 \texttt{yield(\allowbreak{}参数)\allowbreak{}} 这种调用形式。\texttt{break level} 后面必须跟正整数字面量层数或 \texttt{all}；\texttt{break level foo;}、\texttt{break level 0;}、\texttt{break level -\allowbreak{}1;} 都是错的。\texttt{all} 仍是普通变量名，只有在这里的层级参数位置才被识别为「全部循环」，所以你照样可以写 \texttt{int64 all =\allowbreak{} 0;}。
-
-\section{复合赋值与自增减}
-
-写累加的时候，\texttt{total =\allowbreak{} total + score;} 说三遍就烦了。可以缩短：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 value = 17;
-    value += 3;
-    // value = value + 3
-    value -= 1;
-    value *= 2;
-    println("{}", value);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-38
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{+=\allowbreak{}} \texttt{-\allowbreak{}=\allowbreak{}} \texttt{*=\allowbreak{}} \texttt{/\allowbreak{}=\allowbreak{}} \texttt{\%=\allowbreak{}} \texttt{\&=\allowbreak{}} \texttt{|=\allowbreak{}} \texttt{\textasciicircum{}=\allowbreak{}} \texttt{<\allowbreak{}<\allowbreak{}=\allowbreak{}} \texttt{>\allowbreak{}>\allowbreak{}=\allowbreak{}} 全都有，含义就是「把右边算出来，跟左边做这个运算，写回左边」。
-
-单独的自增自减也能写：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 i = 5;
-    i++;
-    println("{}", i);
-    i--;
-    ++i;
-    println("{}", i);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-6
-6
-\end{lstlisting}
-\par
-\medskip
-
-\subsection*{但 ChaLi 对「一个表达式里读写同一个对象」管得很严}
-
-这是 ChaLi 和 C 差异最大的地方之一。同一个完整表达式里，一个自增减的目标不能再被别的操作读写：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 i = 0;
-    i = i++;
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-chali: [CHL1301] 同一表达式中，自增减目标与其他读写冲突：i
-\end{lstlisting}
-\par
-\medskip
-
-C 程序员会心头一紧——\texttt{i =\allowbreak{} i++} 在 C 里是未定义行为（每个编译器给的结果可能不一样）。ChaLi 的做法是：干脆不让你写。你可能觉得它啰嗦，但它拦下的是一整类「换个编译器就换结果」的玄学 bug。
-
-那什么情况是合法的？目标互不影响就行，比如两个不同的变量：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    int64 i = 0;
-    int64 j = 0;
-    int64 sum =(i++) +(j++);
-    println("{} {} {}", sum, i, j);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-0 1 1
-\end{lstlisting}
-\par
-\medskip
-
-还有一条顺便记住：下标自增只发生一次。\texttt{xs[\allowbreak{}i]\allowbreak{} +=\allowbreak{} 1} 里，\texttt{xs[\allowbreak{}i]\allowbreak{}} 这个「位置」只算一次，不会因为复合赋值就把 \texttt{i} 加两次。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main()
-{
-    List<int64> store;
-    store.push(10);
-    store.push(20);
-    int64 i = 0;
-    store[i] += 1;
-    println("{} {}", store[0], i);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-11 0
-\end{lstlisting}
-\par
-\medskip
-
-\section{小结}
-
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.219\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.209\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.552\linewidth-2\tabcolsep\relax}}
-\toprule
-结构 & 什么时候用 & 备注 \\
-\midrule
-\endhead
-\texttt{if /\allowbreak{} elif /\allowbreak{} else} & 条件分支 & 条件必须是 \texttt{bool}；花括号不能省 \\
-\texttt{while (\allowbreak{}cond)\allowbreak{} \{ \}} & 先判断后执行 & 可能一次都不执行 \\
-\texttt{loop \{ .\allowbreak{}.\allowbreak{}.\allowbreak{} yield v; \}} & 出口不确定、要给个结果 & 是表达式；语句位置不补分号，表达式位置按外层语句收尾 \\
-\texttt{for (\allowbreak{}T x in c)\allowbreak{} \{ \}} & 遍历一串东西 & 类型可显式写出或推导，遍历出来是副本 \\
-\texttt{break} / \texttt{continue} & 跳出 / 下一个 & 普通无值形式作用于最近循环；\texttt{break level N} 可指定退出层数 \\
-\bottomrule
-\end{longtable}
-}
-
-还有一套要记住的规则：同一个表达式里对同一个目标读写两次是被禁止的 （\texttt{CHL1301}），这是 ChaLi 用来消灭「未定义行为」的手段。
-
-三件本章没讲的事：
-
-\begin{itemize}
-
-\item \texttt{for-\allowbreak{}in} 遍历出来的元素是副本，怎么改到原来的——第 7 章；
-
-\item 分支多了 \texttt{if /\allowbreak{} elif} 会很难看，\texttt{match} 怎么救场——第 10 章；
-
-\item \texttt{loop} 里 \texttt{yield} 出来的值，除了赋值还能怎么用——第 10 章的 \texttt{match}、第 16 章的 \texttt{?} 会陆续出现。
-
-\end{itemize}
-
-\section{下一步}
-
-到这里，「语言基础」这一部分就结束了。你现在会写变量、函数、判断、循环——用这些已经能写出完整的程序。
-
-但会写程序 \ensuremath{\neq} 会写对的程序。接下来三章是这本书最重要的一段：【第 6 章 值语义】【第 7 章 引用】【第 8 章 资源与作用域】。
-
-读懂了这三章，你会明白 ChaLi 为什么长成现在这样——以及为什么它愿意让你多写几个字。
-
-翻到\hyperref[ch:06]{第 6 章 值语义}。
-
-\section{边界与验证}
-
-break 和 continue 的目标由语法和所在循环决定。修改嵌套结构后必须重新核对目标；带值退出还需要满足所在表达式的结果类型要求。
-
 \section{习题}
-
-前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
 
 \begin{enumerate}
 
-\item 解释内层循环的 break 对外层循环有什么影响。
+\item 计算 range(0,5) 的迭代次数。
 
-\item 输出 1 到 20 中所有偶数，并验证输出项数。
+\item 将同一区间改为 rangeEq。
 
-\item 实现两层查找，并在发现目标后结束整个查找。
+\item 为无匹配搜索添加结果。
 
-\item 挑战：将查找结果写成带值的循环表达式，说明所有退出路径的类型。
+\item 区别 break level 2 与 return。
 
 \end{enumerate}
 
@@ -747,15 +189,17 @@ break 和 continue 的目标由语法和所在循环决定。修改嵌套结构�
 
 \begin{enumerate}
 
-\item 普通 break 退出当前对应的最近循环，外层通常继续；不能按缩进猜测为退出函数。
+\item 五次，值为 0 至 4。
 
-\item 用范围内的遍历和余数判断，预期十项；检查端点是否包含。
+\item 包含 5，共六次。
 
-\item 采用本章讲过的退出方式或明确状态变量；同时测试目标不存在的路径。
+\item 在相应 else 中产生与成功路径兼容的值。
 
-\item 成功和失败路径的值必须与表达式类型相容；不要遗漏无匹配时的终止路径。
+\item 前者退出两层循环，后者结束函数。
 
 \end{enumerate}
+
+下一章：\hyperref[ch:06]{第 6 章}。
 
 \section{番外：桃花源里的 break}
 

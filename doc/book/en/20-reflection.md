@@ -1,33 +1,87 @@
-# Chapter 20 Annotations and reflection
+# Chapter 20 Reflection and serialization
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../20-注解与反射.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Annotations associate explicit metadata with declarations. Reflection exposes supported type and member information to language programs and host services. Keep the model declaration authoritative instead of maintaining a second hand-written list of the same fields.
+Reflection exposes type and field metadata; serialization converts values to external formats. They reduce mapping duplication but do not establish authorization, database relations or input trust.
 
+## 20.1 Expose metadata explicitly
+
+Expose the required type and field metadata before querying it. An annotation stores declaration data that application code must interpret; attaching it does not automatically implement routing or validation.
+
+<!-- verify-book -->
+```chali
+@annotation Route(path: String, level: int32 = 2)
+
+@Route("/health", level: 1)
+int64 health()
+{
+    return 200;
+}
+
+void main()
+{
+    println("{}", health());
+}
+```
+
+```text
+200
+```
+
+## 20.2 Read and write fields
+
+Reflected accesses retain concrete types. Handle missing fields, incompatible types and forbidden writes through their failure results. Reflection does not bypass read-only access or ownership.
+
+<!-- verify-book -->
 ```chali
 import std::reflect;
 
 @Reflect
-struct Student
+struct Profile
 {
-    int64 id;
     String name;
+    int64 score;
 };
 
 void main()
 {
-    let information = std::reflect::getStructInfo<Student>();
-    if (!information.isNone())
-    {
-        println("Student metadata is available");
-    }
+    Profile profile;
+    profile.name = "原名";
+    profile.score = 80;
+    assert(std::reflect::setField<Profile, String>(&profile, "name", "新名").unwrap());
+    assert(std::reflect::getField<Profile, String>(&profile, "score").isErr());
+    assert(std::reflect::getField<Profile, int64>(&profile, "missing").isErr());
+    int64 score = std::reflect::getField<Profile, int64>(&profile, "score").unwrap();
+    println("{} {}", profile.name, score);
 }
 ```
 
-Reflection is built into the normal compiler and runtime configurations. A single program compilation can explicitly request `--no-reflection` when it does not need emitted reflection metadata; omitting a reflection flag does not mean reflection is disabled.
+```text
+新名 80
+```
 
-Serialization and model-driven SQL can consume the same metadata, but they remain fallible operations. Check unsupported shapes, invalid input and host errors through their declared result types. An annotation is not permission to trust external data.
+## 20.3 Serialization boundaries
 
-Exercise: add a field to the student model and inspect which consumers derive their field lists automatically. Then determine which business validation rules still require explicit application code. Next: [C interoperability](21-c-interop.md).
+Parse external data and validate structure and field constraints. An integer age can still be invalid, and an existing class ID can still exceed a teacher’s scope. Select response fields explicitly; reflected password hashes must not be exported automatically.
+
+## 20.4 Metadata and generation responsibilities
+
+Use reflection for repetitive type mappings and keep business decisions at explicit function boundaries. Chapter 25 separates field validation, related records and authorization in a database-backed application.
+
+## 20.5 Exercises
+
+1. Does an annotation execute a route by itself?
+2. How should a wrong-type field read be handled?
+3. Why not serialize an entire account structure?
+4. List two business checks reflection does not replace.
+
+### Answers and checks
+
+1. No; code must interpret and dispatch it.
+2. Check the result rather than treating failure as a value.
+3. Sensitive fields could leak; select output fields explicitly.
+4. For example class existence and the current teacher’s access scope.
+
+Next: [Chapter 21](21-c-interop.md).

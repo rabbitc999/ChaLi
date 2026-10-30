@@ -1,20 +1,6 @@
-/* api.chl —— REST 接口：把 HTTP 请求翻译成存取层调用。
- *
- * 路由（JSON 通信，错误统一 {"error":"…"}）：
- *   GET    /api/students?search=&order=&desc=   列表（可选姓名模糊搜索与排序）
- *   GET    /api/students/<学号>                  查一个
- *   POST   /api/students                        新增（学号可省，自动分配）
- *   PUT    /api/students/<学号>                  更新
- *   DELETE /api/students/<学号>                  删除
- *   GET    /api/schema                          模型字段清单（反射）
- */
-
+/** HTTP 响应与固定格式的编号解析，业务路由由 school_api 负责。 */
 module api;
-
-import std::json;
-import std::text;
-import model;
-import store;
+import std::reflect;
 
 /** 一次 HTTP 交互的应答。 */
 struct Reply
@@ -45,90 +31,6 @@ Reply errorReply(int64 status, String message)
 }
 
 /**
- * @brief 一个十六进制字符的数值；不是十六进制字符给 -1。
- */
-int64 hexDigit(char item)
-{
-    if (item >= '0' && item <= '9') { return (int64)item - '0'; }
-    if (item >= 'a' && item <= 'f') { return (int64)item - 'a' + 10; }
-    if (item >= 'A' && item <= 'F') { return (int64)item - 'A' + 10; }
-    return -1;
-}
-
-/**
- * @brief 解码百分号编码：`+` 还原空格，`%XX` 还原字节（UTF-8 原样拼回）。
- * @param encoded 编码文本。
- */
-String urlDecode(String encoded)
-{
-    String decoded = "";
-    int64 index = 0;
-    while (index < len(encoded))
-    {
-        char item = encoded[index];
-        if (item == '+')
-        {
-            decoded = decoded + " ";
-            index = index + 1;
-        }
-        elif (item == '%' && index + 2 < len(encoded))
-        {
-            int64 high = hexDigit(encoded[index + 1]);
-            int64 low = hexDigit(encoded[index + 2]);
-            if (high >= 0 && low >= 0)
-            {
-                String piece = " ";
-                piece[0] = (char)((high << 4) + low);
-                decoded = decoded + piece;
-                index = index + 3;
-            }
-            else
-            {
-                decoded = decoded + encoded[index:(index + 1)];
-                index = index + 1;
-            }
-        }
-        else
-        {
-            /* 原样字节按 UTF-8 字符步进，避免切进多字节字符中间。 */
-            int64 lead = (int64)item;
-            int64 step = 1;
-            if (lead >= 240) { step = 4; }
-            elif (lead >= 224) { step = 3; }
-            elif (lead >= 192) { step = 2; }
-            decoded = decoded + encoded[index:(index + step)];
-            index = index + step;
-        }
-    }
-    return decoded;
-}
-
-/**
- * @brief 查询串取值：按 `&` 切开后找 `key=value` 并做百分号解码。
- * @param query 原始查询串（不含 `?`）。
- * @param key 要取的键名。
- * @retval 键值；不存在给空串。
- */
-String queryValue(String query, String key)
-{
-    int64 position = 0;
-    while (position <= len(query))
-    {
-        int64 end = std::text::Text::find(query[position:], "&");
-        String pair = query[position:];
-        if (end >= 0) { pair = query[position:(position + end)]; }
-        int64 equals = std::text::Text::find(pair, "=");
-        if (equals > 0 && pair[0:equals] == key)
-        {
-            return urlDecode(pair[(equals + 1):]);
-        }
-        if (end < 0) { break; }
-        position = position + end + 1;
-    }
-    return "";
-}
-
-/**
  * @brief 把十进制文本解析成学号；含非数字或超长给 -1。
  */
 int64 parseId(String text)
@@ -142,71 +44,4 @@ int64 parseId(String text)
         value = value * 10 + ((int64)item - '0');
     }
     return value;
-}
-
-/**
- * @brief REST 路由入口。
- * @param database 已打开的 MySQL 连接。
- * @param method HTTP 方法。
- * @param path 不含查询串的路径。
- * @param query 原始查询串。
- * @param body 请求体（POST/PUT 是学生 JSON）。
- */
-Reply handle(std::sql::Database mut& database, String method, String path, String query, String body)
-{
-    if (path == "/api/students")
-    {
-        if (method == "GET")
-        {
-            let rows = store::list(&database, queryValue(query, "search"), queryValue(query, "order"),
-                                   queryValue(query, "desc") == "1");
-            if (rows.isErr()) { return errorReply(400, rows.error().toString()); }
-            return jsonReply(200, rows.unwrap());
-        }
-        if (method == "POST")
-        {
-            let parsed = std::json::deserialize<Student>(body);
-            if (parsed.isErr()) { return errorReply(400, parsed.error().toString()); }
-            Student incoming = parsed.unwrap();
-            let added = store::add(&database, &incoming);
-            if (added.isErr()) { return errorReply(400, added.error().toString()); }
-            return jsonReply(200, added.unwrap());
-        }
-        return errorReply(405, "方法不支持");
-    }
-    String prefix = "/api/students/";
-    if (std::text::Text::startsWith(path, prefix))
-    {
-        int64 id = parseId(path[len(prefix):]);
-        if (id <= 0) { return errorReply(400, "学号必须是正整数"); }
-        if (method == "GET")
-        {
-            let found = store::get(&database, id);
-            if (found.isErr()) { return errorReply(404, found.error().toString()); }
-            return jsonReply(200, found.unwrap());
-        }
-        if (method == "PUT")
-        {
-            let parsed = std::json::deserialize<Student>(body);
-            if (parsed.isErr()) { return errorReply(400, parsed.error().toString()); }
-            Student incoming = parsed.unwrap();
-            let updated = store::update(&database, id, &incoming);
-            if (updated.isErr()) { return errorReply(400, updated.error().toString()); }
-            return jsonReply(200, updated.unwrap());
-        }
-        if (method == "DELETE")
-        {
-            let removed = store::remove(&database, id);
-            if (removed.isErr()) { return errorReply(404, removed.error().toString()); }
-            return jsonReply(200, "{\"ok\":true}");
-        }
-        return errorReply(405, "方法不支持");
-    }
-    if (path == "/api/schema" && method == "GET")
-    {
-        let schema = model::schemaJson();
-        if (schema.isErr()) { return errorReply(500, schema.error().toString()); }
-        return jsonReply(200, "{\"model\":\"Student\",\"fields\":" + schema.unwrap() + "}");
-    }
-    return errorReply(404, "未知接口：" + path);
 }

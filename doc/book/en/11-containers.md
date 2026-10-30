@@ -1,57 +1,105 @@
-# Chapter 11 Containers
+# Chapter 11 Collections
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../11-容器.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Choose a container from the operations the program needs. `List<T>` stores an ordered growable sequence. `Map<K, V>` associates keys with values. `Set<T>` stores distinct keys. Their default implementations have different lookup, insertion and allocation behavior.
+Arrays, List, Map and Set serve fixed positions, variable sequences, keyed lookup and uniqueness. Choose by access pattern before examining capacity and traversal cost.
 
-Default container growth, lookup, insertion, deletion and copying are implemented in ChaLi. The host supplies single-slot storage, ownership marshalling and safety checks. Map uses occupied slots and cached HashKey values; Set owns independent slots. Ordinary assignment retains independent value semantics.
+## 11.1 Fixed arrays and nested layout
 
+Arrays have element types and bounds. Access multidimensional arrays within every dimension. Language arrays, nested field layout and C ABI contiguous buffers have distinct contracts. Checked execution includes runtime checks; unchecked defaults do not remove static typing or borrowing.
+
+Initialize a two-dimensional array, then copy it and modify the copy. Each index has its own dimensional bound.
+
+<!-- verify-book -->
 ```chali
 void main()
 {
-    List<int64> values;
-    values.push(10);
-    values.push(20);
-    int64 total = 0;
-    for (int64 value in values)
+    int64 matrix[2][3];
+    for (int64 row in range(0, 2))
     {
-        total = total + value;
+        for (int64 column in range(0, 3))
+        {
+            matrix[row][column] = row * 10 + column;
+        }
     }
-    println("{}", total);
+    println("{} {}", matrix[0][2], matrix[1][2]);
+    int64 copied[2][3] = matrix;
+    copied[1][2] = 99;
+    println("{} {}", matrix[1][2], copied[1][2]);
 }
 ```
 
-Value copying, borrowing and iteration are separate decisions. Copying a list creates independent values. Mutable iteration intentionally changes the source and must obey the borrow rules. Indexing retains bounds and live-memory checks in both the checked and unchecked AOT paths.
+```text
+2 12
+12 99
+```
 
-Map keys need the required equality and hashing behavior. Do not mutate a key in a way that invalidates its placement. Keep failed lookups distinct from a stored default value by using the API's declared result type.
+## 11.2 Choosing List, Map and Set
 
-Exercise: count repeated words in a map and collect unique words in a set. Verify an empty input and repeated insertion. The [performance report](../../en/12-performance.md) compares actual ChaLi AOT, C++, Python and Lua workloads. Next: [strings](12-strings-text.md).
-### Fixed multidimensional and growable arrays
+List preserves sequence positions, Map associates keys with values, and Set keeps unique keys. Map and Set keys need hashing and equality. Any accepts different static types but requires recovery or matching on read. Prefer concrete generic arguments when known.
 
-Write `int64 matrix[2, 3];` or `int64 cube[2, 3, 4];`. Chained brackets such as `int64 cube[2][3][4];` and mixed forms are equivalent, including array fields. Extents are positive compile-time integers. Storage is contiguous and row-major. `cube[i,j,k]` and `cube[i][j][k]` evaluate each index once and check every dimension; all indices are required. Assignment and value parameters preserve independent copies.
-
-`T a[] = new[n];` allocates a fixed-length runtime array on the heap. For growable storage, import `std::array` and use `std::array::DynamicArray<T>`, implemented in ChaLi:
-
+<!-- verify-book -->
 ```chali
-import std::array;
-void main() {
-    std::array::DynamicArray<int64> values;
-    values.reserve(8);
-    values.push(7);
-    values.resize(3);
-    values.set(1, 9);
-    assert(values[0] == 7 && values[1] == 9 && values[2] == 0);
-    assert(values.len() == 3 && values.capacity() >= 8);
+void main()
+{
+    List<Any> values = [1, "two", true];
+    values.push(1.5);
+    Any text = values[1];
+    println("{} {}", values.len(), tryGet<String>(&text).unwrap());
+
+    Set<Any> unique;
+    Any key = "key";
+    unique.add(key);
+    unique.add(key);
+    unique.add(2);
+    println("{}", unique.len());
+
+    Map<Any, Any> mixed;
+    mixed.put(key, "stored");
+    mixed.put(3, true);
+    Any saved = mixed[key];
+    println("{} {}", mixed.len(), tryGet<String>(&saved).unwrap());
+
+    Map<String, Any> record = {"count": 3, "name": "ChaLi"};
+    Any count = record["count"];
+    println("{}", tryGet<int64>(&count).unwrap());
+    saved.clear();
+    println("{}", saved.isEmpty());
 }
 ```
 
-`reserve(n)` only increases capacity; `push(value)` doubles capacity when full. `resize(n)` appends default values or releases removed values; `clear()` retains capacity. Read with `[]` / `at`, write with `set`. Invalid indices and negative lengths or capacities fail. `pop()` returns `Option<T>`; `toArray()` returns an independent runtime array. Copies own independent elements and buffers, cleaned up at scope exit. Growth replaces storage; do not retain references into the backing buffer. Growth currently follows runtime-array value copying; no speed advantage over builtin List is promised.
+```text
+4 two
+2
+2 stored
+3
+1
+```
 
+## 11.3 Capacity, length and cleanup
 
-### Explicit copying with `Copy<T>`
+Length counts live elements; capacity describes allocated space. Growth must check len + need and allocation bounds, then grow geometrically when needed. Removal, clear and truncation retain buffer capacity while cleaning removed owned elements. Reallocation can reclaim the old block; drop releases the final buffer.
 
-`Copy<T>` declares `T copy();`, returning an independent value. For example: `struct Packet: Copy<Packet> { String text; Packet copy() { return self; } };`. Returning `self` follows existing value semantics: strings, owning fields and arrays are copied independently; reference fields remain borrowed and retain their lifetime limits. `DynamicArray<T>` implements `Copy<DynamicArray<T>>` and preserves length and capacity in the copy.
+Element size, metadata, indexes, alignment and allocator limits also bound capacity. An integer maximum is not an allocatable element count for every type.
 
-Generic code may use `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`; interface references can dispatch `copy()` too. An explicit interface declaration is required; a same-named method alone does not satisfy the constraint. This interface does not change assignment or value parameters, is not an implicit-copy eligibility marker, and does not override `#NonCopyable` or `Closeable` restrictions. `Copy<T>` and `#NonCopyable` are mutually exclusive, including inherited interfaces and host `impl` declarations. `Closeable` types receive the noncopyable flag automatically and cannot implement `Copy<T>`, even if the method would return a fresh object. Existing `Clone<T>::clone()` behavior and the supported `#derive` traits remain unchanged.
+## 11.4 Borrowing and traversal
+
+Avoid structural changes that may move a buffer while element references are live. Copying obtains a value, moving transfers ownership, and iteration obtains successive elements through its protocol. Chapter 17 demonstrates iterator consumption and transformations.
+
+## 11.5 Exercises
+
+1. Choose collections for scores, student-ID lookup and unique subjects.
+2. What happens to capacity and resources after clear?
+3. Why must key hashing agree with equality?
+4. List checks before growing a collection.
+
+### Answers and checks
+
+1. Usually List, Map and Set, subject to actual access patterns.
+2. Retain capacity and clean removed owned elements.
+3. Equal keys must follow consistent indexing rules.
+4. Check addition and growth overflow, limits and allocation failure.
+
+Next: [Chapter 12](12-strings-text.md).

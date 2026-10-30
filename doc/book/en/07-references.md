@@ -4,42 +4,64 @@
 **English** · [简体中文](../07-引用.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-A reference borrows an existing value. `const&` provides read-only access; `mut&` permits mutation under the borrowing rules. Creating a reference is explicit, and its source must stay alive for every use of the reference.
+A reference accesses an existing object instead of creating another owning value. Use the score variable to distinguish readonly access and write-back, then relate reference validity to the source lifetime.
 
+## 7.1 Readonly and mutable borrowing
+
+T const& is a readonly reference and T mut& a mutable reference. Supply a source with &value. Mutable borrowing requires writable storage; a readonly reference does not permit mutating methods.
+
+<!-- verify-book -->
 ```chali
 void increment(int64 mut& value)
 {
-    value = value + 1;
+    value += 1;
+}
+
+int64 read(int64 const& value)
+{
+    return value;
 }
 
 void main()
 {
-    int64 number = 41;
-    increment(&number);
-    println("{}", number);
+    int64 score = 3;
+    increment(&score);
+    println("{}", read(&score));
 }
 ```
 
-Returning a reference to a local variable would let the reference outlive its storage, so the compiler rejects it. The same rule applies when a reference is hidden in an aggregate or captured by a closure. Adding another layer of syntax does not extend the source object's lifetime.
-
-A lifetime contract written before a function declaration states in the signature where a borrowed result comes from. `#borrow(out, in)` means `out` borrows from `in`, and the list form `#borrow(out, [in1, in2, in3])` borrows from each of them. `#ret` is a reserved name for the return value, so `#borrow(#ret, [a])` on `int64 mut& first(int64 mut& a, int64 mut& b)` says the same thing as Rust's `fn first<'a, 'b>(a: &'a mut i64, b: &'b mut i64) -> &'a mut i64`:
-
-```chali
-#borrow(#ret, [a])
-int64 mut& first(int64 mut& a, int64 mut& b)
-{
-    return a;
-}
+```text
+4
 ```
 
-Without the contract the checker has to be conservative at the call site and fold in every reference argument, so returning `first(&x, &local)` is rejected because `local` dies at the end of the block. With it, only `a` propagates and the return is accepted. `#static(a)` declares that a's origin is `'static`, which means callers must pass a global. A contract is also an obligation: returning or storing a reference from an undeclared source is an error.
+## 7.2 A reference needs a source
 
-Use a reference to describe access, not ownership. If a result needs independent storage after the callee returns, return an owned value. If a callback must survive its defining scope, select a legal capture mode and check the lifetime of every captured member.
+A reference is bound to a source when declared; ordinary references do not use null. Option<T const&> and Option<T mut&> represent an optional reference, with None indicating absence.
 
-## A lifetime metaphor
+A copied reference still borrows the same object. Alias sharing does not remove writability or source checks; the language does not impose global exclusive mutable borrowing.
 
-ChaLi's borrow checker can be pictured as a “dead-object detector”: it follows reference origins through control flow and asks whether an origin has been moved, destroyed, freed, or left its valid scope at a particular use. The Chinese nickname “死人遥测程序” describes compile-time origin and state analysis, not background telemetry. Existing runtime checks cover cases that static analysis cannot establish; unsafe callers remain responsible for raw-pointer initialization and ownership requirements.
+## 7.3 Lifetime, invalidation and escape
 
-Calling Rust a “life-history checker” can suggest its additional inference of borrow regions and access permissions, but should not imply that it tracks every instant from an object's creation to destruction. Rust's non-lexical lifetimes also use control flow and actual uses. ChaLi currently permits multiple mutable aliases and checks origins, escapes and accesses after invalidation; it does not enforce Rust's exclusive mutable-borrow rule. The metaphor describes an emphasis, not equivalent safety guarantees. See the [official Rust borrow-checker description](https://rustc-dev-guide.rust-lang.org/borrow-check.html).
+A returned reference needs a source that survives the call. Local references cannot escape, and a borrowing closure must not outlive its sources. Collection structure changes, release and moves can also invalidate borrows.
 
-Exercise: write a read-only helper and attempt to modify its parameter. Then design a function that returns a value instead of a reference to a local. Add `#borrow(#ret, [a])` to a two-parameter function returning a reference and see what the compiler says when you return the other parameter. Next: [resources and scopes](08-resources-scopes.md).
+CHL1204 reports source and use paths. Typical fixes return an owning value, use caller-owned storage or shorten a borrow. Raw address casts do not repair lifetime errors.
+
+## 7.4 Choose a parameter form
+
+Small copyable values can be passed by value. Use a reference when accessing an existing object and make mutation explicit. An owning return transfers a value to the caller; a reference return continues borrowing a source. Chapter 8 connects this distinction with cleanup.
+
+## 7.5 Exercises
+
+1. Change increment to a value parameter.
+2. Can const storage be passed as mut&?
+3. How is an optional reference represented?
+4. Why cannot a local reference escape?
+
+### Answers and checks
+
+1. Score is not changed by mutation of the copy.
+2. No; change the interface or provide writable storage.
+3. Use an Option reference type and handle None.
+4. The local source ends when the function returns.
+
+Next: [Chapter 8](08-resources-scopes.md).

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="880" viewBox="0 0 1200 880">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8" fill="none" stroke="#6d86b2" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="880" fill="#f5f7fb"/>
+<style>text{font-family:"Microsoft YaHei","Segoe UI",sans-serif;fill:#182c49}.title{font-size:28px;font-weight:650}.sub{font-size:15px;fill:#64748b}.heading{font-size:18px;font-weight:650}.body{font-size:14px;fill:#50657f}.label{font-size:13px;fill:#466293}.arrow{stroke:#6d86b2;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+<text x="48" y="55" class="title">Student management system</text>
+<text x="48" y="85" class="sub">Requests, authorization and persistent data</text>
+<rect x="50" y="120" width="360" height="123" rx="13" fill="#172945" stroke="#d6e0ef"/>
+<text x="72" y="154" style="font-size:18px;font-weight:650;fill:white">Browser · three role views</text>
+<text x="72" y="183" style="font-size:14px;fill:#c8d8ed">Login / overview / six management views</text>
+<text x="72" y="208" style="font-size:14px;fill:#c8d8ed">Safe text output · filters · pagination</text>
+<rect x="490" y="120" width="660" height="123" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="512" y="154" class="heading">HTTP entry · main.chl / httpd.chl</text>
+<text x="512" y="183" class="body">Parse bounded requests / serve HTML / return JSON</text>
+<path class="arrow" d="M410 181H490"/>
+<text x="418" y="166" class="label">HTTP</text>
+<rect x="490" y="285" width="660" height="103" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="512" y="319" class="heading">Router · school_api.chl</text>
+<text x="512" y="348" class="body">Authenticate before business API dispatch</text>
+<path class="arrow" d="M820 243V285"/>
+<text x="835" y="270" class="label">Bearer token / JSON</text>
+<rect x="50" y="438" width="510" height="120" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="72" y="472" class="heading">Authentication · school_auth.chl</text>
+<text x="72" y="501" class="body">PBKDF2 verification / token / expiry / account version</text>
+<rect x="640" y="438" width="510" height="120" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="662" y="472" class="heading">Business · school_data / school_accounts</text>
+<text x="662" y="501" class="body">Role checks / teaching scope / validation / CRUD</text>
+<path class="arrow" d="M760 388V410H305V438"/><path class="arrow" d="M820 388V410H895V438"/>
+<path class="arrow" d="M560 497H640"/>
+<text x="571" y="485" class="label">User</text>
+<rect x="50" y="655" width="510" height="115" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="72" y="689" class="heading">Windows CNG · bcrypt.dll</text>
+<text x="72" y="718" class="body">System random / PBKDF2-HMAC-SHA256</text>
+<rect x="640" y="640" width="510" height="145" rx="13" fill="#fff" stroke="#d6e0ef"/>
+<text x="662" y="674" class="heading">MySQL · school_* tables</text>
+<text x="662" y="703" class="body">Users / classes / subjects / teachers / students</text>
+<text x="662" y="728" class="body">Teaching assignments / grades / foreign keys</text>
+<path class="arrow" d="M305 558V655"/><path class="arrow" d="M895 558V640"/><path class="arrow" d="M490 558V598H700V640"/>
+<text x="320" y="611" class="label">System C ABI</text>
+<text x="910" y="608" class="label">Quoted literals / fixed identifiers</text>
+<text x="50" y="835" class="sub">Sessions are held in this process; restart requires login. Existing students data is left intact.</text>
+</svg>

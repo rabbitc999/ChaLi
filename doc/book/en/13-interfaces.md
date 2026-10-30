@@ -1,19 +1,119 @@
-# Chapter 13 Interfaces and runtime polymorphism
+# Chapter 13 Interfaces and concrete-type matching
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../13-接口与运行期多态.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-An interface states a contract shared by several concrete types. Runtime polymorphism lets code call that contract on a value whose actual concrete type is selected at runtime. A generic constraint, in contrast, is checked while compiling the relevant specialization.
+An interface describes callable behavior implemented by concrete structs or enums. Callers can depend on that behavior or match a concrete type when domain handling differs.
 
-Use an interface when a caller needs a common operation rather than knowledge of every concrete implementation. Keep the contract small and meaningful. An interface reference still borrows an object; dispatch does not extend that object's lifetime or transfer ownership.
+## 13.1 Organize calls around behavior
 
-The standard `Error` interface is a practical example. Standard-library results use `Result<T, Error>` while the owned interface payload retains the concrete error, including positions, categories and messages. Copies own independent concrete values and clean up independently. Interface references continue to borrow their source. Interface types can also be generic arguments in Option and containers.
+Put common operations in an interface, such as area, error display, reading or writing. Interface consumers depend on these operations rather than implementation fields. Concrete values retain their own ownership and resource rules.
 
-Match an interface using `Concrete(value)`, with `_` or `_(other)` covering unknown implementations. Nested enum patterns combine the outer tag and the dynamic payload type: `Err(E error)`, `Err(F error)`, then `Err(_)` or `Err(_ other)`. Repeated tags with different payload types are tried in source order. An open interface requires a fallback. The canonical Result success tag is Ok; match patterns also accept OK. The [complete multi-tag example](../../../example/samples/interface_payload_match.chl) uses `Result<A, B>` with both success and failure interface payloads.
+<!-- verify-book -->
+```chali
+interface Shape
+{
+    int64 area();
+    String describe();
+};
 
-Do not confuse `Any`, which erases the concrete value type, with an interface contract that exposes specific operations. Choose the representation that gives the consumer the guarantees it needs.
+struct Circle: Shape
+{
+    int64 r;
+    int64 area()
+    {
+        return 3 * r * r;
+    }
+    String describe()
+    {
+        return "圆";
+    }
+};
 
-For a single interface payload, `Err::IoError(error)` is shorthand for `Err(IoError error)`. `IoError(error)` may omit the tag only when the tag is unique and no variant-name collision exists. Multiple payloads retain the tag and parenthesized patterns, such as `Pair(A a, B b)` or `Many(A a, B b, text, count)`. Ordinary payloads can bind directly without a type annotation; an untyped interface binding retains its original interface type.
+struct Square: Shape
+{
+    int64 side;
+    int64 area()
+    {
+        return side * side;
+    }
+    String describe()
+    {
+        return "正方形";
+    }
+};
 
-Exercise: design a common display operation for two domain types. Explain which data remains concrete, which operation is dispatched and who owns the object being referenced. Consult the [reference](../../en/04-language-reference.md) for declarations and implementation syntax. Next: [generics](14-generics.md).
+String report(Shape const& shape)
+{
+    return shape.describe() + "：" + format("{}", shape.area());
+}
+
+void main()
+{
+    Circle c;
+    c.r = 2;
+    Square s;
+    s.side = 3;
+    Shape const& shape1 = &c;
+    Shape const& shape2 = &s;
+    println("{}", report(shape1));
+    println("{}", report(shape2));
+}
+```
+
+```text
+圆：12
+正方形：9
+```
+
+## 13.2 Recognize a concrete error
+
+IoError implements Error. Match can recognize that concrete value and bind it to e. A wildcard handles other implementations, and _(other) names the fallback value. An open interface generally needs a fallback because listed implementations do not exhaust future ones.
+
+<!-- verify-book -->
+```chali
+import std::io;
+void describe(Error error)
+{
+    match (error)
+    {
+        std::io::IoError(e) => { println("io: {}", e.toString()); }
+        _ => { println("other: {}", error.toString()); }
+    }
+}
+void main()
+{
+    describe(std::io::IoError::Closed);
+    describe(MessageError::from("invalid score"));
+}
+```
+
+```text
+io: 文件已关闭
+other: invalid score
+```
+
+## 13.3 Generic interfaces and inheritance
+
+Interfaces can take type parameters and inherit other interfaces. Type arguments identify data used by their behavior, while inheritance combines required capabilities. It does not inherit class field layout or let casts invent missing implementations. The next chapter develops generic constraints.
+
+## 13.4 Matching versus calling
+
+Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 16 handles interface payloads inside Result and propagation.
+
+## 13.5 Exercises
+
+1. Add another error implementation and check fallback.
+2. How do you write a wildcard without a binding?
+3. Does interface inheritance inherit fields?
+4. When should you call instead of matching?
+
+### Answers and checks
+
+1. Retain _ and confirm the fallback executes.
+2. Write _ => {...}.
+3. No; it combines behavioral requirements.
+4. When the interface fully expresses the operation without concrete payload access.
+
+Next: [Chapter 14](14-generics.md).

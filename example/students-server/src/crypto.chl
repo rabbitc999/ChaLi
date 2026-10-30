@@ -1,0 +1,93 @@
+/** Windows CNG 认证原语；直接调用系统 C ABI，不使用伪随机数生成会话。 */
+module crypto;
+
+/** CNG 输出的 32 个字节，按四个小端整数接收。 */
+struct Bytes32 { uint64 a; uint64 b; uint64 c; uint64 d; };
+
+/** 从系统首选随机数提供器填充 32 字节。 */
+#abi("C", "C:/Windows/System32/bcrypt.dll", "BCryptGenRandom")
+int32 nativeRandom(int64 provider, Bytes32 mut& bytes, uint32 size, uint32 flags);
+/** 打开指定的 HMAC 算法提供器。 */
+#abi("C", "C:/Windows/System32/bcrypt.dll", "BCryptOpenAlgorithmProvider")
+int32 nativeOpen(int64 mut& handle, uint16[] algorithm, int64 implementation, uint32 flags);
+/** 根据密码与盐派生固定长度密钥。 */
+#abi("C", "C:/Windows/System32/bcrypt.dll", "BCryptDeriveKeyPBKDF2")
+int32 nativeDerive(int64 provider, String password, uint32 passwordSize, String salt, uint32 saltSize,
+    uint64 iterations, Bytes32 mut& result, uint32 resultSize, uint32 flags);
+/** 关闭算法提供器。 */
+#abi("C", "C:/Windows/System32/bcrypt.dll", "BCryptCloseAlgorithmProvider")
+int32 nativeClose(int64 provider, uint32 flags);
+
+/** 将一个小端字的八个字节转换成十六进制。 */
+String hexWord(uint64 value)
+{
+    String digits = "0123456789abcdef";
+    String result = "";
+    for (int64 index in range(0, 8))
+    {
+        int64 item = (int64)((value >> (index * 8)) & (uint64)255);
+        int64 high = item >> 4;
+        int64 low = item & 15;
+        result += digits[high:(high + 1)] + digits[low:(low + 1)];
+    }
+    return result;
+}
+
+/** 编码系统返回的 32 字节。 */
+String encode(Bytes32 bytes)
+{
+    return hexWord(bytes.a) + hexWord(bytes.b) + hexWord(bytes.c) + hexWord(bytes.d);
+}
+
+/** 取得 256 位随机令牌；系统调用失败时拒绝生成，不降级到普通随机数。 */
+Result<String, Error> token()
+{
+    Bytes32 bytes;
+    if (nativeRandom(0, &bytes, (uint32)32, (uint32)2) != 0)
+    {
+        return Result<String, Error>::Err(MessageError::from("系统随机数生成失败"));
+    }
+    return Result<String, Error>::Ok(encode(bytes));
+}
+
+/** 使用 PBKDF2-HMAC-SHA256 派生密码摘要，盐按 UTF-8 字节输入。 */
+Result<String, Error> derive(String password, String salt, uint64 iterations)
+{
+    if (len(password) > 1024 || len(salt) > 128 || iterations < (uint64)1)
+    {
+        return Result<String, Error>::Err(MessageError::from("密码派生参数超出范围"));
+    }
+    uint16 algorithm[7];
+    algorithm[0] = (uint16)83;
+    algorithm[1] = (uint16)72;
+    algorithm[2] = (uint16)65;
+    algorithm[3] = (uint16)50;
+    algorithm[4] = (uint16)53;
+    algorithm[5] = (uint16)54;
+    int64 provider = 0;
+    if (nativeOpen(&provider, algorithm, 0, (uint32)8) != 0)
+    {
+        return Result<String, Error>::Err(MessageError::from("无法打开 SHA256 HMAC 提供器"));
+    }
+    Bytes32 result;
+    int32 status = nativeDerive(provider, password, (uint32)len(password), salt, (uint32)len(salt),
+        iterations, &result, (uint32)32, (uint32)0);
+    int32 closed = nativeClose(provider, (uint32)0);
+    if (status != 0 || closed != 0)
+    {
+        return Result<String, Error>::Err(MessageError::from("密码派生失败"));
+    }
+    return Result<String, Error>::Ok(encode(result));
+}
+
+/** 比较固定长度摘要，不在首个不同字符处提前返回。 */
+bool equalDigest(String left, String right)
+{
+    if (len(left) != 64 || len(right) != 64) { return false; }
+    int64 difference = 0;
+    for (int64 index in range(0, 64))
+    {
+        difference = difference | ((int64)left[index] ^ (int64)right[index]);
+    }
+    return difference == 0;
+}

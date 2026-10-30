@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import sys
+import json
 from project_temp import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
@@ -25,6 +26,8 @@ def main():
         assert re.search(r'\\input\{chapters/%s\}' % name[:-4], book), name
     headings=Converter().convert('## 3.7 字面量\n\n### 数字后缀\n\n说明。')
     assert r'\subsection*{数字后缀}' in headings and r'\subsection{数字后缀}' not in headings
+    directive=Converter().convert('#borrow 描述借用来源。\n\n## 22.3 借用\n\n正文。')
+    assert r'\#borrow' in directive and r'\chapter{' not in directive, directive
     numbered=Converter().convert('## 15.7 捕获\n\n### 15.7.1 借用\n\n正文。\n\n### 15.7.2 拥有\n\n正文。')
     assert r'\subsection{借用}' in numbered and r'\subsection{拥有}' in numbered
     try:
@@ -73,6 +76,8 @@ def main():
                 assert '番外：' in re.findall(r'^## (.+)$', text, re.M)[-1], source
             mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-')) else 'chapter'
             expected=Converter(mode).convert(text)
+            if mode == 'chapter':
+                assert expected.count(r'\chapter{') == 1, ('正文被误识别为章标题', source)
             assert (ROOT/'doc/book/latex/chapters'/target).read_text(encoding='utf-8')==expected,target
             assert 'minipage' not in expected and 'samepage' not in expected, target
             list_depth=0
@@ -83,14 +88,17 @@ def main():
                 else:
                     list_depth += 1 if direction == 'begin' else -1
             assert list_depth == 0, target
-            for code,output in re.findall(r'<!-- verify-book -->\s*```chali\n(.*?)```\s*```text\n(.*?)```',text,re.S):
+            for input_json,code,output in re.findall(r'<!-- verify-book(?:-input:\s*("(?:\\.|[^"\\])*"))? -->\s*```chali\n(.*?)```\s*```text\n(.*?)```',text,re.S):
                 count+=1;file=work/f'example{count}.chl';file.write_text(code,encoding='utf-8')
-                programs.append((source,file,work/f'output{count}',output))
+                programs.append((source,file,work/f'output{count}',output,json.loads(input_json) if input_json else None))
         def execute(program):
             """在独立产物路径并行验证一个书稿完整程序。"""
-            source,file,prefix,output=program
+            source,file,prefix,output,stdin=program
+            environment=dict(os.environ,CHALI_LANG='zh',CHALI_NO_STDIN_INPUT='1')
+            if stdin is not None:
+                environment.pop('CHALI_NO_STDIN_INPUT',None)
             result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(prefix)],cwd=work,
-                env=dict(os.environ,CHALI_LANG='zh',CHALI_NO_STDIN_INPUT='1'),capture_output=True,encoding='utf-8',timeout=180)
+                env=environment,input=stdin,capture_output=True,encoding='utf-8',timeout=180)
             assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(execute, programs))

@@ -1,0 +1,231 @@
+/** 教务数据结构、关系与三角色数据范围。 */
+module school_data;
+import std::sql;
+import std::json;
+import std::text;
+import school_auth;
+import api;
+
+/** 建立独立的 school_ 表，保留旧 students 表及其数据。 */
+Result<bool, Error> ensureSchema(std::sql::Database mut& database)
+{
+    List<String> statements;
+    statements.push("CREATE TABLE IF NOT EXISTS school_classes (id BIGINT PRIMARY KEY AUTO_INCREMENT, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(80) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    statements.push("CREATE TABLE IF NOT EXISTS school_subjects (id BIGINT PRIMARY KEY AUTO_INCREMENT, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(80) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    statements.push("CREATE TABLE IF NOT EXISTS school_teachers (id BIGINT PRIMARY KEY AUTO_INCREMENT, teacher_no VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(80) NOT NULL, user_id BIGINT UNIQUE, FOREIGN KEY(user_id) REFERENCES school_users(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    statements.push("CREATE TABLE IF NOT EXISTS school_students (id BIGINT PRIMARY KEY AUTO_INCREMENT, student_no VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(80) NOT NULL, age INT NOT NULL, class_id BIGINT NOT NULL, user_id BIGINT UNIQUE, FOREIGN KEY(class_id) REFERENCES school_classes(id), FOREIGN KEY(user_id) REFERENCES school_users(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    statements.push("CREATE TABLE IF NOT EXISTS school_assignments (id BIGINT PRIMARY KEY AUTO_INCREMENT, teacher_id BIGINT NOT NULL, class_id BIGINT NOT NULL, subject_id BIGINT NOT NULL, UNIQUE KEY teaching(teacher_id,class_id,subject_id), FOREIGN KEY(teacher_id) REFERENCES school_teachers(id), FOREIGN KEY(class_id) REFERENCES school_classes(id), FOREIGN KEY(subject_id) REFERENCES school_subjects(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    statements.push("CREATE TABLE IF NOT EXISTS school_grades (id BIGINT PRIMARY KEY AUTO_INCREMENT, student_id BIGINT NOT NULL, subject_id BIGINT NOT NULL, teacher_id BIGINT NOT NULL, term VARCHAR(40) NOT NULL, score DOUBLE NOT NULL, UNIQUE KEY student_grade(student_id,subject_id,term), FOREIGN KEY(student_id) REFERENCES school_students(id), FOREIGN KEY(subject_id) REFERENCES school_subjects(id), FOREIGN KEY(teacher_id) REFERENCES school_teachers(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    for (String statement in statements)
+    {
+        let result = database.exec(statement);
+        if (!result.ok) { return Result<bool, Error>::Err(MessageError::from(result.error)); }
+    }
+    return Result<bool, Error>::Ok(true);
+}
+
+/** 只接受固定业务表名，客户端路径不能成为任意 SQL 标识符。 */
+String table(String entity)
+{
+    if (entity == "classes" || entity == "subjects" || entity == "teachers" || entity == "students" || entity == "assignments" || entity == "grades")
+    {
+        return "school_" + entity;
+    }
+    return "";
+}
+
+/** 固定列清单同时限制写入字段，账号另走专用路径。 */
+List<String> fields(String entity)
+{
+    List<String> result;
+    if (entity == "classes" || entity == "subjects") { result.push("code");result.push("name"); }
+    if (entity == "teachers") { result.push("teacher_no");result.push("name");result.push("user_id"); }
+    if (entity == "students") { result.push("student_no");result.push("name");result.push("age");result.push("class_id");result.push("user_id"); }
+    if (entity == "assignments") { result.push("teacher_id");result.push("class_id");result.push("subject_id"); }
+    if (entity == "grades") { result.push("student_id");result.push("subject_id");result.push("teacher_id");result.push("term");result.push("score"); }
+    return result;
+}
+
+/** 按账号角色计算表内数据范围；所有返回表达式只组合固定 SQL 与服务端账号编号。 */
+String rowFilter(String entity, school_auth::User user)
+{
+    if (user.role == "admin") { return "1=1"; }
+    String id = user.id.toString();
+    String myTeacher = "SELECT id FROM school_teachers WHERE user_id=" + id;
+    String teacherClasses = "SELECT class_id FROM school_assignments WHERE teacher_id IN (" + myTeacher + ")";
+    String myStudent = "SELECT id FROM school_students WHERE user_id=" + id;
+    String studentClasses = "SELECT class_id FROM school_students WHERE user_id=" + id;
+    if (user.role == "teacher")
+    {
+        if (entity == "teachers") { return "user_id=" + id; }
+        if (entity == "students") { return "class_id IN (" + teacherClasses + ")"; }
+        if (entity == "classes") { return "id IN (" + teacherClasses + ")"; }
+        if (entity == "subjects") { return "id IN (SELECT subject_id FROM school_assignments WHERE teacher_id IN (" + myTeacher + "))"; }
+        if (entity == "assignments") { return "teacher_id IN (" + myTeacher + ")"; }
+        if (entity == "grades")
+        {
+            return "EXISTS(SELECT 1 FROM school_students scope_student JOIN school_assignments scope_assignment ON scope_assignment.class_id=scope_student.class_id WHERE scope_student.id=school_grades.student_id AND scope_assignment.subject_id=school_grades.subject_id AND scope_assignment.teacher_id IN (" + myTeacher + "))";
+        }
+    }
+    if (user.role == "student")
+    {
+        if (entity == "students") { return "user_id=" + id; }
+        if (entity == "classes") { return "id IN (" + studentClasses + ")"; }
+        if (entity == "grades") { return "student_id IN (" + myStudent + ")"; }
+        if (entity == "subjects") { return "id IN (SELECT subject_id FROM school_assignments WHERE class_id IN (" + studentClasses + ") UNION SELECT subject_id FROM school_grades WHERE student_id IN (" + myStudent + "))"; }
+        if (entity == "assignments") { return "class_id IN (" + studentClasses + ")"; }
+        if (entity == "teachers") { return "id IN (SELECT teacher_id FROM school_assignments WHERE class_id IN (" + studentClasses + ") UNION SELECT teacher_id FROM school_grades WHERE student_id IN (" + myStudent + "))"; }
+    }
+    return "1=0";
+}
+
+/** 编码已明确选列的结果；保留 NULL、数字和字符串的 JSON 类型。 */
+String rowsJson(std::sql::ResultSet const& rows)
+{
+    String result = "[";
+    for (int64 row in range(0, rows.rowCount()))
+    {
+        if (row > 0) { result += ","; }
+        result += "{";
+        for (int64 column in range(0, rows.colCount()))
+        {
+            if (column > 0) { result += ","; }
+            result += std::reflect::__serdeQuote(rows.columnName(column)) + ":";
+            let cell = rows.at(row, column);
+            if (cell.kind == 0) { result += "null"; }
+            elif (cell.kind == 1 || cell.kind == 2) { result += cell.text(); }
+            else { result += std::reflect::__serdeQuote(cell.text()); }
+        }
+        result += "}";
+    }
+    return result + "]";
+}
+
+/** 读取当前角色允许的记录；客户端不能提供任意排序列或 SQL 条件。 */
+api::Reply list(std::sql::Database mut& database, String entity, school_auth::User user)
+{
+    String source = table(entity);
+    if (source.isEmpty()) { return api::errorReply(404, "板块不存在"); }
+    let rows = database.exec("SELECT * FROM " + source + " WHERE " + rowFilter(entity, user) + " ORDER BY id DESC LIMIT 10001");
+    if (!rows.ok) { return api::errorReply(503, "读取教务数据失败"); }
+    if (rows.rowCount() > 10000) { return api::errorReply(400, "记录超过单次查询上限，请缩小数据范围"); }
+    return api::jsonReply(200, rowsJson(&rows));
+}
+
+/** 判断字段是不是文本字段，其他允许字段按其数值规则验证。 */
+bool textColumn(String name)
+{
+    return name == "code" || name == "name" || name == "teacher_no" || name == "student_no" || name == "term";
+}
+
+/** 将字段值校验为 SQL 字面量；空账号关联写入 NULL。 */
+Result<String, Error> literal(std::sql::Database mut& database, std::json::JsonValue const& body, String name)
+{
+    let found = body.find(name);
+    if (found.isNone())
+    {
+        if (name == "user_id") { return Result<String, Error>::Ok("NULL"); }
+        return Result<String, Error>::Err(MessageError::from("缺少字段：" + name));
+    }
+    let value = found.unwrap();
+    if (textColumn(name))
+    {
+        let text = value.asString();
+        if (text.isNone()) { return Result<String, Error>::Err(MessageError::from("字段需要文本：" + name)); }
+        String item = std::text::Text::trim(text.unwrap());
+        int64 maximum = 80;
+        if (name == "code" || name == "teacher_no" || name == "student_no") { maximum = 32; }
+        if (name == "term") { maximum = 40; }
+        if (len(item) < 1 || len(item) > maximum) { return Result<String, Error>::Err(MessageError::from("字段长度无效：" + name)); }
+        return Result<String, Error>::Ok(database.quote(item));
+    }
+    if (name == "score")
+    {
+        let score = value.asFloat64();
+        if (score.isNone() || score.unwrap() < 0.0 || score.unwrap() > 100.0) { return Result<String, Error>::Err(MessageError::from("成绩必须在 0–100 范围内")); }
+        return Result<String, Error>::Ok(value.dump());
+    }
+    if (name == "user_id" && value.isNull()) { return Result<String, Error>::Ok("NULL"); }
+    let number = value.asInt();
+    if (number.isNone()) { return Result<String, Error>::Err(MessageError::from("字段需要整数：" + name)); }
+    int64 item = number.unwrap();
+    if (name == "user_id" && item == 0) { return Result<String, Error>::Ok("NULL"); }
+    if (item < 1 || (name == "age" && item > 150)) { return Result<String, Error>::Err(MessageError::from("数值范围无效：" + name)); }
+    return Result<String, Error>::Ok(item.toString());
+}
+
+/** 读取已验证 JSON 整数字段；缺失时返回零供后续关系检查拒绝。 */
+int64 integer(std::json::JsonValue const& body, String name)
+{
+    let found = body.find(name);
+    if (found.isNone()) { return 0; }
+    let value = found.unwrap().asInt();
+    if (value.isNone()) { return 0; }
+    return value.unwrap();
+}
+
+/** 验证账号角色关联与教师授课范围，避免只有外键存在性而没有业务权限。 */
+bool relations(std::sql::Database mut& database, String entity, std::json::JsonValue const& body, school_auth::User user)
+{
+    if (entity == "students" || entity == "teachers")
+    {
+        int64 account = integer(&body, "user_id");
+        if (account > 0)
+        {
+            String role = "student";
+            if (entity == "teachers") { role = "teacher"; }
+            let rows = database.exec("SELECT id FROM school_users WHERE id=" + account.toString() + " AND role=" + database.quote(role));
+            if (!rows.ok || rows.rowCount() != 1) { return false; }
+        }
+    }
+    if (entity == "grades")
+    {
+        String sql = "SELECT a.id FROM school_assignments a JOIN school_students s ON s.class_id=a.class_id JOIN school_teachers t ON t.id=a.teacher_id WHERE s.id=" + integer(&body,"student_id").toString()
+            + " AND a.subject_id=" + integer(&body,"subject_id").toString() + " AND a.teacher_id=" + integer(&body,"teacher_id").toString();
+        if (user.role == "teacher") { sql += " AND t.user_id=" + user.id.toString(); }
+        let rows = database.exec(sql);
+        if (!rows.ok || rows.rowCount() != 1) { return false; }
+    }
+    return true;
+}
+
+/** 在服务端权限和关系校验后新增、修改或删除业务记录。 */
+api::Reply write(std::sql::Database mut& database, String entity, school_auth::User user, String method, int64 id, String text)
+{
+    String source = table(entity);
+    if (source.isEmpty()) { return api::errorReply(404, "板块不存在"); }
+    if (user.role != "admin" && !(user.role == "teacher" && entity == "grades")) { return api::errorReply(403, "没有此操作权限"); }
+    if (method != "POST" && method != "PUT" && method != "DELETE") { return api::errorReply(405, "请求方法不支持"); }
+    if ((method == "POST" && id != 0) || (method != "POST" && id <= 0)) { return api::errorReply(400, "记录编号无效"); }
+    String condition = "id=" + id.toString() + " AND (" + rowFilter(entity,user) + ")";
+    if (id > 0)
+    {
+        let existing = database.exec("SELECT id FROM " + source + " WHERE " + condition);
+        if (!existing.ok) { return api::errorReply(503, "读取记录失败"); }
+        if (existing.rowCount() != 1) { return api::errorReply(404, "记录不存在或无权访问"); }
+    }
+    String sql = "DELETE FROM " + source + " WHERE " + condition;
+    if (method != "DELETE")
+    {
+        let parsed = std::json::parse(text);
+        if (parsed.isErr() || !parsed.unwrap().isObject()) { return api::errorReply(400, "记录必须是 JSON 对象"); }
+        let body = parsed.unwrap();
+        List<String> names = fields(entity);
+        String columns = "";
+        String values = "";
+        String updates = "";
+        for (String name in names)
+        {
+            let item = literal(&database, &body, name);
+            if (item.isErr()) { return api::errorReply(400, item.error().toString()); }
+            if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
+            columns += name; values += item.unwrap(); updates += name + "=" + item.unwrap();
+        }
+        if (!relations(&database, entity, &body, user)) { return api::errorReply(403, "账号角色不匹配，或教师未获该班级与科目授权"); }
+        sql = "INSERT INTO " + source + "(" + columns + ") VALUES (" + values + ")";
+        if (method == "PUT") { sql = "UPDATE " + source + " SET " + updates + " WHERE " + condition; }
+    }
+    let result = database.exec(sql);
+    if (!result.ok) { return api::errorReply(400, "保存失败：编号重复、关联不存在，或记录仍被其他数据使用"); }
+    return api::jsonReply(200, "{\"ok\":true}");
+}

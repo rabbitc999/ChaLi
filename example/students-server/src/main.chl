@@ -1,9 +1,9 @@
 /* main.chl —— 学生信息管理系统入口：连库、建表、起 HTTP 服务。
  *
  * 用法（在本目录运行）：
- *   chali src/main.chl [端口] [前端目录]
+ *   chali run src/main.chl -- 8787 web config.local.json
  *
- * 默认端口 8787，前端目录 web/。数据库连接参数在本文件下方 ServerConfig 里改。
+ * 依次提供端口、前端目录和数据库配置文件。
  */
 
 module studentsServer;
@@ -14,7 +14,10 @@ import std::sql;
 import std::text;
 import api;
 import httpd;
-import model;
+import std::json;
+import school_api;
+import school_auth;
+import school_data;
 import store;
 
 /** 服务配置：监听地址与前端目录之外，数据库连接参数也在这里改。 */
@@ -46,7 +49,9 @@ ServerConfig defaultServerConfig()
  */
 Result<String, Error> readAsset(String webRoot, String fileName)
 {
-    let opened = std::io::FileStream::open(webRoot + "/" + fileName, "r");
+    String path = fileName;
+    if (!webRoot.isEmpty()) { path = webRoot + "/" + fileName; }
+    let opened = std::io::FileStream::open(path, "r");
     if (opened.isErr())
     {
         return Result<String, Error>::Err(MessageError::from("打不开前端文件 " + webRoot + "/" + fileName
@@ -68,7 +73,7 @@ Result<String, Error> readAsset(String webRoot, String fileName)
  * @param peer 客户端连接。
  * @param page 启动时读进内存的首页 HTML。
  */
-void serve(std::sql::Database mut& database, std::net::TcpSocket mut& peer, String page)
+void serve(std::sql::Database mut& database, school_auth::State mut& state, std::net::TcpSocket mut& peer, String page)
 {
     let read = httpd::readRequest(peer, 10000);
     if (read.isErr())
@@ -80,52 +85,69 @@ void serve(std::sql::Database mut& database, std::net::TcpSocket mut& peer, Stri
     if ((request.path == "/" || request.path == "/index.html") && request.method == "GET")
     {
         let sent = httpd::sendResponse(peer, 200, "OK", "text/html; charset=utf-8", page);
-        if (sent.isErr()) { println("发送首页失败：{}", sent.error().toString()); }
+        if (sent.isErr()) { eprintln("发送首页失败：{}", sent.error().toString()); }
         return;
     }
-    api::Reply reply = api::handle(&database, request.method, request.path, request.query, request.body);
+    api::Reply reply = school_api::handle(&database, &state, &request);
     String reason = "OK";
     if (reply.status == 400) { reason = "Bad Request"; }
+    elif (reply.status == 401) { reason = "Unauthorized"; }
+    elif (reply.status == 403) { reason = "Forbidden"; }
+    elif (reply.status == 429) { reason = "Too Many Requests"; }
+    elif (reply.status == 503) { reason = "Service Unavailable"; }
     elif (reply.status == 404) { reason = "Not Found"; }
     elif (reply.status == 405) { reason = "Method Not Allowed"; }
     elif (reply.status == 500) { reason = "Internal Server Error"; }
     let sent = httpd::sendResponse(peer, reply.status, reason, reply.contentType, reply.body);
-    if (sent.isErr()) { println("发送响应失败：{}", sent.error().toString()); }
-    println("{} {} -> {}", request.method, request.path, reply.status);
+    if (sent.isErr()) { eprintln("发送响应失败：{}", sent.error().toString()); }
+    eprintln("{} {} -> {}", request.method, request.path, reply.status);
 }
 
 /**
  * @brief 入口：解析参数 → 连库建表 → 读首页 → accept 循环。
- * @param args 命令行参数：[端口] [前端目录]（都可省略）。
+ * @param args 命令行参数：端口、前端目录、数据库 JSON 配置文件。
  */
 void main(List<String> args)
 {
+    if (len(args) < 3) { eprintln("用法：程序 端口 前端目录 数据库配置.json"); return; }
     ServerConfig config = defaultServerConfig();
     if (len(args) >= 1)
     {
-        int32 specified = (int32)api::parseId(args[0]);
-        if (specified <= 0)
+        int64 specified = api::parseId(args[0]);
+        if (specified <= 0 || specified > 65535)
         {
-            println("错误：端口必须是正整数，收到 [{}]", args[0]);
+            eprintln("错误：端口必须在 1–65535 范围内，收到 [{}]", args[0]);
             return;
         }
-        config.port = specified;
+        config.port = (int32)specified;
     }
     if (len(args) >= 2)
     {
         config.webRoot = std::text::Text::trim(args[1]);
     }
 
+    if (len(args) >= 3)
+    {
+        let file = readAsset("", args[2]);
+        if (file.isErr()) { eprintln("读取数据库配置失败"); return; }
+        let parsed = std::json::deserialize<store::Config>(file.unwrap());
+        if (parsed.isErr()) { eprintln("数据库配置格式错误：{}", parsed.error().toString()); return; }
+        config.database = parsed.unwrap();
+    }
+    if (!store::validDatabaseName(config.database.database)) { eprintln("数据库名只允许字母、数字与下划线"); return; }
+    if (config.database.port < 1 || config.database.port > 65535) { eprintln("数据库端口必须在 1–65535 范围内"); return; }
     std::sql::Database database = store::connect(&config.database);
     if (!database.isOpen())
     {
-        println("错误：连接 MySQL 失败：{}", database.lastError());
+        eprintln("错误：连接 MySQL 失败：{}", database.lastError());
         return;
     }
-    let schema = store::ensureSchema(&database);
+    let authSchema = school_auth::ensureSchema(&database);
+    if (authSchema.isErr()) { eprintln("账号表初始化失败：{}", authSchema.error().toString()); database.close(); return; }
+    let schema = school_data::ensureSchema(&database);
     if (schema.isErr())
     {
-        println("错误：建表失败：{}", schema.error().toString());
+        eprintln("错误：建表失败：{}", schema.error().toString());
         database.close();
         return;
     }
@@ -133,7 +155,7 @@ void main(List<String> args)
     let asset = readAsset(config.webRoot, "index.html");
     if (asset.isErr())
     {
-        println("错误：{}", asset.error().toString());
+        eprintln("错误：{}", asset.error().toString());
         database.close();
         return;
     }
@@ -142,14 +164,15 @@ void main(List<String> args)
     std::net::TcpListener listener = std::net::TcpListener::listen(config.host, config.port, (int32)16);
     if (!listener.isOpen())
     {
-        println("错误：监听失败：{}", listener.lastError());
+        eprintln("错误：监听失败：{}", listener.lastError());
         database.close();
         return;
     }
-    println("学生信息管理系统已启动：http://{}:{}", config.host, listener.localPort());
-    println("数据库 {}@{}:{}/{}（Ctrl+C 退出）", config.database.database, config.database.host,
+    eprintln("学生信息管理系统已启动：http://{}:{}", config.host, listener.localPort());
+    eprintln("数据库 {}，地址 {}:{}，用户 {}（Ctrl+C 退出）", config.database.database, config.database.host,
             config.database.port, config.database.user);
 
+    school_auth::State state;
     while (true)
     {
         std::net::TcpSocket peer = listener.accept((int32)500);
@@ -158,7 +181,7 @@ void main(List<String> args)
             /* 超时轮询：回到循环顶上再等，给 Ctrl+C 留出反应机会。 */
             continue;
         }
-        serve(&database, &peer, page);
+        serve(&database, &state, &peer, page);
         peer.close();
     }
 }

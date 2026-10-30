@@ -4,47 +4,55 @@
 **English** · [简体中文](../README.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-This English Markdown edition follows the chapter order of the [Chinese book](../README.md). It explains the core language, practical examples and deployment workflow in English. The Chinese edition contains additional extended discussions and chapter extras. This edition does not generate LaTeX or PDF.
+This book develops programs from checking and local execution through native delivery. Small examples establish types and control flow, then introduce values, references, resources, generics and interfaces before combining them in a database application. It describes implemented 1.0.11 behavior. [VERSION](../../../VERSION) identifies the release; pending plans are not presented as available syntax.
 
-The compiler embeds both editions. Export them without downloading documentation:
+## Reading and running examples
 
-```sh
-chali man book
-chali man book 1 --lang en
-chali man book 24 --lang en
-chali man book A --lang en
-```
+New programmers can start at Chapter 1. Experienced readers can use the topic map; read Chapters 6–8 together for the value, reference and resource rules. Chapters include exercises and answers. This English edition contains technical text and appendices, without the Chinese literary extras or a separate LaTeX/PDF build.
 
-The complete export uses `book/` for Chinese Markdown, `book/en/` for English Markdown and `book/images/` for shared images. Reading a chapter does not require Python or a source checkout. Source examples retain ChaLi syntax; changing the display language does not translate keywords or identifiers.
+Complete programs include main and expected output. Interactive examples specify fixed input; terminal echo is not program output. Short fragments need their enclosing declaration or expression context. Rejected examples demonstrate errors and are separate from successful programs.
 
-| Chapter | Topic |
+Commands use chali from PATH. Use the actual versioned filename for a Windows source build, or ./chali for an executable in the current Linux directory. Follow the [installation guide](../../en/39-installation-packages.md) and prepare application libraries and databases separately.
+
+## Chapter map
+
+| Chapter | Title | Topics |
+| --- | --- | --- |
+| [01](01-first-program.md) | Your first program | Tools, checking, running and export |
+| [02](02-guessing-game.md) | A guessing game | An interactive loop with fixed input |
+| [03](03-variables-types.md) | Variables and types | Declarations, numeric types and casts |
+| [04](04-functions.md) | Functions | Parameters, returns and calls |
+| [05](05-control-flow.md) | Control flow | Branches, loops and control expressions |
+| [06](06-value-semantics.md) | Value semantics | Copies, borrows, moves and observable behavior |
+| [07](07-references.md) | References | Reference validity and mutable access |
+| [08](08-resources-scopes.md) | Resources and scopes | Scope exit, deferred cleanup and resources |
+| [09](09-structures.md) | Structs and methods | Fields, methods and named construction |
+| [10](10-enums-patterns.md) | Enums and pattern matching | States, payloads and exhaustive matching |
+| [11](11-containers.md) | Collections | Arrays, List, Map, Set and capacity |
+| [12](12-strings-text.md) | Strings and formatting | UTF-8, formatting and safe output |
+| [13](13-interfaces.md) | Interfaces and concrete-type matching | Behavior, inheritance and concrete-type matching |
+| [14](14-generics.md) | Generics | Type parameters, constants and constraints |
+| [15](15-functions-closures.md) | Closures and higher-order functions | Captured environments and call boundaries |
+| [16](16-errors.md) | Errors and propagation | Option, Result, interface payloads and propagation |
+| [17](17-iterators.md) | Iterators | Consumption, composition and mutation |
+| [18](18-modules-projects.md) | Projects and modules | Module ownership, directories and configuration |
+| [19](19-macros.md) | Hygienic macros | Hygiene, parameter categories and result inference |
+| [20](20-reflection.md) | Reflection and serialization | Field metadata and serialization boundaries |
+| [21](21-c-interop.md) | C ABI and host interoperation | Prototypes, marshalling, resources and callbacks |
+| [22](22-compiler-commands.md) | Directives and derived behavior | Derivation, operators and borrow provenance |
+| [23](23-unsafe-code.md) | Unsafe code and raw storage | Addresses, initialization and raw storage |
+| [24](24-aot-export.md) | AOT export: delivering native artifacts | LLVM, target configuration and deployment |
+| [25](25-student-system.md) | A student information system | Authentication, permissions and school data |
+
+## Appendices and reference
+
+| Entry | Purpose |
 | --- | --- |
-| [1](01-first-program.md) | Your first program |
-| [2](02-guessing-game.md) | A guessing game |
-| [3](03-variables-types.md) | Variables and types |
-| [4](04-functions.md) | Functions |
-| [5](05-control-flow.md) | Control flow |
-| [6](06-value-semantics.md) | Value semantics |
-| [7](07-references.md) | References |
-| [8](08-resources-scopes.md) | Resources and scopes |
-| [9](09-structures.md) | Structures |
-| [10](10-enums-patterns.md) | Enums and pattern matching |
-| [11](11-containers.md) | Containers |
-| [12](12-strings-text.md) | Strings and text |
-| [13](13-interfaces.md) | Interfaces and runtime polymorphism |
-| [14](14-generics.md) | Generics |
-| [15](15-functions-closures.md) | Function values and closures |
-| [16](16-errors.md) | Error handling |
-| [17](17-iterators.md) | Iterators |
-| [18](18-modules-projects.md) | Modules and projects |
-| [19](19-macros.md) | Preprocessing and hygienic macros |
-| [20](20-reflection.md) | Annotations and reflection |
-| [21](21-c-interop.md) | C interoperability |
-| [22](22-compiler-commands.md) | Compiler commands |
-| [23](23-unsafe-code.md) | Unsafe code, raw storage, bare pointer arithmetic and byte operations |
-| [24](24-aot-export.md) | LLVM AOT export |
-| [25](25-student-system.md) | A student information system |
-| [A](A-common-errors.md) | Common errors |
-| [B](B-standard-library.md) | Standard-library reference |
+| [Appendix A](A-common-errors.md) | Diagnose common failures by stage |
+| [Appendix B](B-standard-library.md) | Find modules and APIs by task |
+| [Language reference](../../en/04-language-reference.md) | Detailed declarations and expressions |
+| [Library reference](../../library/README.md) | Signatures, results and limitations |
+| [Capabilities](../../en/17-capabilities.md) | Current implementation scope |
+| [Runnable examples](../../../example/samples/) | Standalone repository programs |
 
-For precise API signatures, use `chali man api` and the [API index](../../library/README.md). For measured VM and AOT performance, see the [performance report](../../en/12-performance.md).
+Identify whether a failure occurs in parsing, type or borrow checking, native linking, or application execution. Check the relevant preconditions and diagnostics instead of merely disabling checks.

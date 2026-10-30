@@ -1,383 +1,52 @@
-\chapter{与 C 互操作}
+\chapter{C ABI 与宿主互调}
 \label{ch:21}
 
-到第 20 章为止，你的程序都活在自己的世界里。可现实中有太多东西是现成的 C 库：压缩、加密、数据库、图形、系统调用……你不可能全都重写一遍。
+C ABI 用于与外部库交换固定约定的数据。语言值、借用、连续缓冲区和宿主指针各有边界；先确定库的原型和所有权，再声明调用。
 
-这一章讲怎么跨过 ChaLi 和 C 的边界，两个方向：
+\section{声明真实的宿主原型}
 
-\begin{itemize}
+用 \#abi 指定调用约定、动态库和符号。参数的宽度、符号、结构体布局及返回方式必须符合实际库，不把 int64 当成所有平台上所有指针与整数的通用替代。
 
-\item ChaLi 调 C——用 \texttt{\#abi} 指令调动态库里导出的函数；
+完整可运行例程见 \href{https://github.com/rabbitc999/ChaLi/blob/master/doc/examples/abi_buffers/demo.chl}{C ABI 缓冲区示例}；需要先构建其 native.c 动态库。
 
-\item C 调 ChaLi——把你的函数交给 C 的运行时。
-
-\end{itemize}
-
-\section{三种集成方式}
-
-工具链支持三条路，按「需要多少 C 侧配合」排：
-
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.217\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.479\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.285\linewidth-2\tabcolsep\relax}}
-\toprule
-方式 & 用在哪 & 你要准备什么 \\
-\midrule
-\endhead
-\texttt{\#abi} 指令 & 调动态库里按 C ABI 导出的函数 & 一份 \texttt{.\allowbreak{}dll} / \texttt{.\allowbreak{}so} \\
-函数值过边界 & ChaLi 把函数交给 C，C 在本次调用里同步回调 & 一个接收函数指针的 C 入口 \\
-\texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} & C 宿主调用 AOT 导出的动态库 & 生成的 \texttt{.\allowbreak{}h} 和加载代码 \\
-\bottomrule
-\end{longtable}
-}
-
-\texttt{\#abi} 指令是最轻的一条——不用改工具链，不用重新编译，运行时直接加载库。
-
-已有 C++ 宿主还可用 Registry 注册类型化实现，再以 \texttt{impl 类型 :\allowbreak{} 接口 =\allowbreak{} 宿主符号;} 关联语言接口。例如宿主演示用 \texttt{demo\_\allowbreak{}counter\_\allowbreak{}from\_\allowbreak{}uint} 实现显式转换；完整代码见 \href{https://github.com/rabbitc999/ChaLi/blob/master/example/samples/cpp_glue.chl}{cpp\_glue.chl}。普通 C 动态库直接使用 \texttt{\#abi}。
-
-\section{\texttt{\#abi} 指令：调动态库里的 C 函数}
-
-假设你有一个 C 文件 \texttt{native.\allowbreak{}c}：
-
-\par
-\medskip
-\begin{lstlisting}[style=c]
-#include <stdint.h>
-
-#if defined(_WIN32)
-#define CHALI_ABI_EXPORT __declspec(dllexport)
-#else
-#define CHALI_ABI_EXPORT
-#endif
-
-CHALI_ABI_EXPORT int32_t abi_add(int32_t left, int32_t right) {
-    return left + right;
-}
-
-CHALI_ABI_EXPORT const char *abi_name(void) {
-    return "native";
-}
-\end{lstlisting}
-\par
-\medskip
-
-先把它编成动态库（说句实话：「怎么编动态库」是 C 的事，和 ChaLi 无关）：
-
-\par
-\medskip
-\begin{lstlisting}[style=sh]
-gcc -shared -o native.dll native.c
-\end{lstlisting}
-\par
-\medskip
-
-然后在 ChaLi 里声明想用的函数：
+例如 C 的 int32\_t bump(int32\_t *value) 需要按真实返回类型和指针原型声明；若 C 原型实际返回 void，就不能照抄 int32 返回。下面的声明对应 void bump(int32\_t*)，调用传入 \&value：
 
 \par
 \medskip
 \begin{lstlisting}[style=chali]
-#abi("C", "./native.dll", "abi_add")
-int32 native_add(int32 left, int32 right);
-#abi("C", "./native.dll", "abi_name")
-String native_name();
-
-void main()
-{
-    println("{} {}", native_add((int32)20, (int32)22), native_name());
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-42 native
-\end{lstlisting}
-\par
-\medskip
-
-导入使用逐函数编译器指令：
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-#abi("C", "<动态库路径>", "<库里的符号名>")
-<返回类型> <ChaLi侧名字>(<形参表>);
-\end{lstlisting}
-\par
-\medskip
-
-第三个参数是库里真实导出的符号名，函数声明使用的是 ChaLi 中的本地名称。两者可以不一样——给一批 C 函数起统一风格的 ChaLi 名，就靠它。
-
-\begin{tip}{提示}
-路径按声明所在的源文件解析。原始 C 函数首次使用时按该路径加载并缓存地址，后续由 LLVM 直接调用；复杂值沿类型化封送路径。部署时要准备声明对应的动态库及它自身的依赖，编译工具链与这些应用依赖分别核对。
-\end{tip}
-
-\section{结构体、引用、字符串}
-
-标量只是热身。真实场景里你还要传结构体（按值）、引用（原地改）、字符串：
-
-\par
-\medskip
-\begin{lstlisting}[style=c]
-API Point move_point(Point p, int32_t dx, int32_t dy) {
-    p.x += dx; p.y += dy;
-    return p;
-}
-API void bump(int32_t *value) { ++*value; }
-API const char *greet(void) { return "hello from C"; }
-\end{lstlisting}
-\par
-\medskip
-
-ChaLi 侧：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-struct Point
-{
-    int32 x;
-    int32 y;
-};
-
-#abi("C", "./abi_demo.dll", "move_point")
-Point move_point(Point p, int32 dx, int32 dy);
-#abi("C", "./abi_demo.dll", "bump")
+#abi("C", "./native.dll", "bump")
 void bump(int32 mut& value);
-#abi("C", "./abi_demo.dll", "greet")
-String greet();
-
-void main()
-{
-    Point p;
-    p.x = 1;
-    p.y = 2;
-    Point q = move_point(p, (int32)10, (int32)20);
-    println("{} {} / {} {}", p.x, p.y, q.x, q.y);
-
-    int32 n = 41;
-    bump(&n);
-    println("{}", n);
-
-    println("{}", greet());
-}
 \end{lstlisting}
 \par
 \medskip
 
-\par
-\medskip
-\begin{lstlisting}[style=out]
-1 2 / 11 22
-42
-hello from C
-\end{lstlisting}
-\par
-\medskip
+库路径相对声明所在源文件解析，本地函数名可以与导出符号名不同。完整结构体、数组和可选引用示例由本节链接工程提供。
 
-三个要点：
+既有宿主注册表也支持 impl 类型 : 接口 = 宿主符号;，例如 demo\_counter\_from\_uint 的关联方式见 \href{https://github.com/rabbitc999/ChaLi/blob/master/example/samples/cpp_glue.chl}{cpp\_glue.chl}。这种注册入口需要已有宿主实现，不能把符号名当成任意 C 函数指针。
 
-\begin{enumerate}
+\section{引用、数组与封送}
 
-\item 结构体按值传——C 的 \texttt{Point p} 对应 ChaLi 的 \texttt{Point p}，布局默认按 C 规则对齐。所以 ChaLi 这边得声明一个字段顺序、类型都一致的 \texttt{struct}；
+单对象引用与数组参数不是同一种声明。宿主数组约定需要长度和有效缓冲区；返回数组必须使用支持的长度标注。语言侧数组对象本身不能直接当作机器缓冲区地址。变长数据还要核对由哪一方分配、复制、修改和释放。
 
-\item C 的 \texttt{int32\_\allowbreak{}t *value} 对应 \texttt{int32 mut\& value}（第 7 章的可变引用），调用处写 \texttt{bump(\allowbreak{}\&n)\allowbreak{}}——取地址用 \texttt{\&}，和 ChaLi 内部引用是同一套写法；
+\section{资源和错误边界}
 
-\item C 的 \texttt{const char *} 对应 \texttt{String}。
+检查库的错误返回值，并在所有返回路径关闭句柄。宿主返回的借用若指向会复用的内部缓冲区，应按文档规定取得稳定副本。原生库可以违反自身原型或写越界；语言的静态检查不能验证外部二进制的全部行为。
 
-\end{enumerate}
+\section{函数值与同步回调}
 
-\subsection*{支持的类型一览}
-
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.586\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.394\linewidth-2\tabcolsep\relax}}
-\toprule
-ChaLi 写法 & 含义 \\
-\midrule
-\endhead
-\texttt{int8}…\texttt{int64}、\texttt{uint8}…\texttt{uint64}、\texttt{float32}、\texttt{float64}、\texttt{bool} & 标量，按值传 \\
-\texttt{String} & 字符串（C 侧 \texttt{const char *}） \\
-\texttt{T mut\&} / \texttt{T const\&} & 可变 / 只读引用（C 侧 \texttt{T *} / \texttt{const T *}） \\
-\texttt{Option<\allowbreak{}T mut\&>\allowbreak{}} / \texttt{Option<\allowbreak{}T const\&>\allowbreak{}} & 可空引用（C 侧可以是空指针） \\
-\texttt{T[\allowbreak{}]\allowbreak{}} + 另给长度 & 数组视图（C 侧 \texttt{T *}） \\
-结构体 & 按值传，默认 C 布局 \\
-\texttt{struct X packed \{ … \}} & 紧凑布局，对接 C 的 \texttt{\#pragma pack} \\
-\bottomrule
-\end{longtable}
-}
-
-\section{数组与「可空」：边界上的两个特殊话题}
-
-数组用 \texttt{T[\allowbreak{}]\allowbreak{}} 传，长度单独给一个参数；如果返回的数组长度由某个形参决定，在末尾用 \texttt{[\allowbreak{}count]\allowbreak{}} 标注：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#abi("C", "./native.dll", "packed_numbers")
-Packed[] packed_numbers(int32 count) [count];
-#abi("C", "./native.dll", "packed_fill")
-void packed_fill(Packed[] values, int32 count);
-\end{lstlisting}
-\par
-\medskip
-
-「空」是这个边界上唯一允许出现空的地方。 ChaLi 内部的引用永远非空（第 7 章），但 C 函数可能返回空指针。这时候用 \texttt{Option<\allowbreak{}T mut\&>\allowbreak{}} / \texttt{Option<\allowbreak{}T const\&>\allowbreak{}} 接：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#abi("C", "./native.dll", "packed_snapshot")
-Option<Packed const&> packed_snapshot();
-\end{lstlisting}
-\par
-\medskip
-
-返回 \texttt{None} 就代表 C 那边给了个空指针；传参时也可以传\texttt{Option<\allowbreak{}Packet mut\&>\allowbreak{}:\allowbreak{}:\allowbreak{}None}，C 侧收到的就是空指针。
-
-\begin{tip}{提示}
-这是「空」唯一能跨过边界的通道。 跨过边界之后，一切又回到「引用非空」的老规矩。
-\end{tip}
-
-\texttt{packed} 结构体用于对接 C 侧 \texttt{\#pragma pack} 的紧凑布局——C 里用\texttt{\#pragma pack(\allowbreak{}push,\allowbreak{} 1)\allowbreak{}} 压过的地方，ChaLi 侧就声明成 \texttt{struct X packed \{ … \}}。
-
-完整例子见 \href{https://github.com/rabbitc999/ChaLi/tree/master/doc/examples/abi_buffers}{\texttt{doc/\allowbreak{}examples/\allowbreak{}abi\_\allowbreak{}buffers/\allowbreak{}}}——它覆盖了结构体嵌套、紧凑布局、数组读写、可空引用、返回值长度等全部边界情况。
-
-\section{同步回调：把 ChaLi 函数交给 C}
-
-反过来也成立：ChaLi 的函数值能当机器函数指针传给 C，C 在这次调用期间直接调它。
-
-\par
-\medskip
-\begin{lstlisting}[style=c]
-/* host.c 里导出：拿到 fn，用它处理 value */
-int64_t hostApply(int64_t (*fn)(int64_t), int64_t value) {
-    return fn(value) + 1;
-}
-\end{lstlisting}
-\par
-\medskip
-
-ChaLi 侧声明时把 \texttt{fn} 写成函数类型的形参，传一个普通函数进去：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-#abi("C", "./host.dll", "hostApply")
-int64 hostApply(int64 fn(int64) function, int64 value);
-
-int64 twice(int64 x) { return x * 2; }
-
-void main()
-{
-    println("{}", hostApply(twice, 21));
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-43
-\end{lstlisting}
-\par
-\medskip
-
-能传的不只是具名函数。闭包也能过边界，捕获的数据由运行时带着走——C 侧看到的仍然只是\texttt{int64\_\allowbreak{}t (\allowbreak{}*)\allowbreak{}(\allowbreak{}int64\_\allowbreak{}t)\allowbreak{}}，调用时它自然读到正确的捕获环境。传 \texttt{void}、\texttt{float32}、\texttt{bool}、\texttt{int64 mut\&} 形参的回调同理。
-
-三条规矩：
-
-\begin{enumerate}
-
-\item 只能同步用。函数值里的地址在这次调用期间、这条线程上有效；C 把它存进全局变量、过一会儿在别的线程上回调，就是野指针。
-
-\item \texttt{panic} 能穿过 C 帧。ChaLi 回调里 panic 会一路回到顶层，按运行期错误报告，不会悄悄变成 \texttt{0} 让 C 侧继续算下去。
-
-\item 别指望自动转移所有权。\texttt{String}、\texttt{List}、\texttt{Map} 这些带资源的值不走这条路，要么在接口上用标量和引用，要么自己管缓冲区。
-
-\end{enumerate}
-
-完整可运行版本（具名函数、内联 lambda、\texttt{copy} / \texttt{move} 捕获、\texttt{float32}、\texttt{bool}、\texttt{void}、\texttt{int64 mut\&}、重入）见\href{https://github.com/rabbitc999/ChaLi/blob/master/example/native-callbacks/README.md}{同步回调示例}。
-
-\section{反方向：宿主调用 ChaLi}
-
-要 C 程序主动调 ChaLi，用 \texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} 把函数导成动态库：
-
-\par
-\medskip
-\begin{lstlisting}[style=sh]
-chali aot app.chl --out build/app --shared --export add
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{build/\allowbreak{}app.\allowbreak{}h} 给出声明：
-
-\par
-\medskip
-\begin{lstlisting}[style=c]
-void chali_init(void);
-void chali_finish(void);
-int64_t f_add(int64_t p0, int64_t p1);
-\end{lstlisting}
-\par
-\medskip
-
-宿主按三段顺序调用：\texttt{chali\_\allowbreak{}init(\allowbreak{})\allowbreak{}} 分配运行期内存、装入数据区、跑全局初始化；然后调\texttt{f\_\allowbreak{}名字(\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{})\allowbreak{}}；最后 \texttt{chali\_\allowbreak{}finish(\allowbreak{})\allowbreak{}} 做全局清理、刷新输出、释放内存。\texttt{chali\_\allowbreak{}finish(\allowbreak{})\allowbreak{}} 之后原有句柄一律失效。
-
-导出函数只接收和返回 C 标量；要传结构体就按值传，要原地修改就用 \texttt{T *} 对应的引用形参。\texttt{panic} 会穿出 C 帧变成进程级错误，宿主看到的是非零退出而不是一个假返回值。
-
-不导出任何函数、直接 \texttt{chali aot app.\allowbreak{}chl} 时，得到的是一个自包含可执行文件——那是交给最终用户的形态，见\hyperref[ch:24]{第 24 章}。
-
-\section{小结}
-
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.124\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.856\linewidth-2\tabcolsep\relax}}
-\toprule
-你会了 & 关键点 \\
-\midrule
-\endhead
-三种集成 & \texttt{\#abi} 指令（ChaLi 调 C）／函数值同步回调／\texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export}（C 调 ChaLi） \\
-\texttt{\#abi} 指令 & \texttt{\#abi(\allowbreak{}"C",\allowbreak{} ".\allowbreak{}/\allowbreak{}x.\allowbreak{}dll",\allowbreak{} "C符号名")\allowbreak{} 返回类型 名字(\allowbreak{}形参)\allowbreak{};} \\
-名字映射 & 第三个指令参数是 C 侧真实符号名，声明使用 ChaLi 本地名称 \\
-结构体 & 按值传；ChaLi 侧声明字段一致的 \texttt{struct} \\
-引用 & C 的 \texttt{T *} \ensuremath{\leftrightarrow} ChaLi 的 \texttt{T mut\&}，调用处写 \texttt{\&x} \\
-字符串 & C 的 \texttt{const char *} \ensuremath{\leftrightarrow} ChaLi 的 \texttt{String} \\
-数组 & \texttt{T[\allowbreak{}]\allowbreak{}} + 长度另给；返回长度用 \texttt{[\allowbreak{}count]\allowbreak{}} 标注 \\
-「空」 & 只有 \texttt{Option<\allowbreak{}T \&>\allowbreak{}} 能把空送过边界 \\
-紧凑布局 & \texttt{struct X packed \{ … \}} 对接 \texttt{\#pragma pack} \\
-函数值 & 直接当机器函数指针传，C 同步调用；只能本次调用、同线程用 \\
-反向 & \texttt{-\allowbreak{}-\allowbreak{}shared -\allowbreak{}-\allowbreak{}export} 出库 + 头文件，\texttt{chali\_\allowbreak{}init} \ensuremath{\rightarrow} \texttt{f\_\allowbreak{}名字} \ensuremath{\rightarrow} \texttt{chali\_\allowbreak{}finish} \\
-\bottomrule
-\end{longtable}
-}
-
-\section{下一步}
-
-你能调 C 了、能被 C 调了。最后一个技术问题是：怎么把程序交出去——变成对方机器上能跑的东西。
-
-第 22 章介绍编译器指令，第 24 章集中讲解 AOT 导出、交叉编译、调试与交付。
-
-接下来阅读\hyperref[ch:22]{第 22 章 编译器指令}。
-
-\section{边界与验证}
-
-ABI 一致只是互操作的前提之一。指针、字符串、回调上下文的拥有与有效期必须明确；同步回调靠函数值里的运行期地址，它只在这条线程、这次调用里有效，不能缓存成通用机器入口。
+同步回调沿受支持的宿主上下文与函数值接口调用，需核对参数、返回值、闭包、重入和错误传播。捕获环境的函数值不是机器函数指针，不能只改类型就获得合法 C 回调。部署还必须准备实际使用的外部库及许可证。
 
 \section{习题}
 
-前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
-
 \begin{enumerate}
 
-\item 为什么两边函数名相同仍可能无法安全调用？
+\item 声明外部函数前应查哪些内容？
 
-\item 列出传入 UTF-8 字符串时宿主必须明确的三个约定。
+\item 数组参数与单对象引用能否互换？
 
-\item 说明宿主保存一次同步调用的临时上下文为何可能出错。
+\item 句柄打开后失败路径应做什么？
 
-\item 挑战：为一个宿主函数设计参数数目、返回类型和错误传播测试。
+\item 内置 LLVM 是否消除应用的外部库依赖？
 
 \end{enumerate}
 
@@ -385,15 +54,17 @@ ABI 一致只是互操作的前提之一。指针、字符串、回调上下文�
 
 \begin{enumerate}
 
-\item 还需要调用约定、参数宽度、布局、返回协议及生命周期一致。
+\item 查原型、布局、长度、所有权、线程和错误约定。
 
-\item 编码、长度或终止方式、缓冲区有效期与释放责任至少说明清楚。
+\item 不能，必须匹配实际 ABI。
 
-\item 调用结束后上下文不再有效，后续使用不受原同步调用保证，需使用实际支持的长期注册协议。
+\item 按库约定关闭已成功取得的资源。
 
-\item 覆盖合法调用与不匹配调用，保留原始错误来源，检查没有把 VM 值地址强转成机器入口。
+\item 不会，工具链与应用依赖分别核对。
 
 \end{enumerate}
+
+下一章：\hyperref[ch:22]{第 22 章}。
 
 \section{番外：借来的梨树与指针}
 

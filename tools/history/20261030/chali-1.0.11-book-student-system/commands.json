@@ -1,0 +1,105 @@
+{
+  "cwd": "仓库根目录",
+  "environment": {
+    "TMPDIR": "仓库根目录/tmp",
+    "TMP": "同 TMPDIR",
+    "TEMP": "同 TMPDIR",
+    "PYTHONUTF8": "1",
+    "CHALI_TEST_MYSQL_PASSWORD": "由环境提供，不记录值"
+  },
+  "commands": [
+    [
+      "make",
+      "all",
+      "-j6"
+    ],
+    [
+      "chali-1.0.11-llvm-external-windows-x64.exe",
+      "aot",
+      "example/students-server/src/main.chl",
+      "--checked",
+      "--out",
+      "tmp/book-rewrite/server/delivery-app"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/students_server.py",
+      "--app",
+      "tmp/book-rewrite/server/delivery-app.exe",
+      "--output",
+      "tmp/book-rewrite/delivery-school"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/students_server_protocol.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/students_server_ui.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_book_updates.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_book_rewrite.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_man.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_sql_connections.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_interface_values.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tests/chali_macro_parameters.py"
+    ],
+    [
+      "python",
+      "-B",
+      "tools/embed_manual.py",
+      "--check"
+    ],
+    [
+      "python",
+      "-B",
+      "tools/changelog.py",
+      "--check"
+    ],
+    [
+      "sh",
+      "-n",
+      "ci.sh"
+    ],
+    [
+      "python",
+      "-B",
+      "tools/history/20261030/chali-1.0.11-book-student-system/structure_check.py"
+    ]
+  ],
+  "pdf_command": [
+    "xelatex",
+    "-interaction=nonstopmode",
+    "-halt-on-error",
+    "-output-directory=G:/Desktop/ChaLi/tmp/book-rewrite/pdf",
+    "book.tex"
+  ],
+  "pdf_cwd": "doc/book/latex",
+  "pdf_final_passes": 2
+}

@@ -4,14 +4,7 @@
 [English](en/B-standard-library.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 的「标准库」不是一堆函数，而是一组**模块**：除核心 `std::lang` 自动加载外，
-其余都得先 `import`。这份附录按**能力域**把它们列一遍，让你知道「想干这件事，
-该去 `import` 谁」；每个模块的完整签名与错误边界，去[库函数 API 参考](../library/README.md)查。
-
-终端中可以直接用 `chali man` 查模块，用 `chali man 模块::符号` 查签名、说明和示例；
-命令说明见[命令行手册](../man/README.md)。本附录按当前 API 索引维护，不替代逐项接口参考。
-
----
+std::lang 提供默认加载的核心类型与行为，其他模块按需 import。本附录按任务查找模块；签名、错误返回和平台限制以 [API 参考](../library/README.md) 为准。终端可以用 chali man 模块::符号查询。
 
 ## B.1 先看一个例子
 
@@ -77,7 +70,7 @@ sum=10
 | [`std::math`](../library/std-math.md) | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数见 `std::lang::Math`） |
 | [`std::numerics`](../library/std-numerics.md) | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 |
 | [`std::numtheory`](../library/std-numtheory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`addMod` `mulMod` `powMod` `modInverse`，以及确定性的 `isPrime`（Miller-Rabin） |
-| [`std::complex`](../library/std-complex.md) | 复数 `Complex<T>`，加减乘除都是一等公民 |
+| [`std::complex`](../library/std-complex.md) | 复数 `Complex<T>` 及对应算术运算 |
 | [`std::linalg`](../library/std-linalg.md) | 稠密向量与矩阵：`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | [`std::random`](../library/std-random.md) | 确定性随机数（LCG）与熵播种；句柄型状态，实现 `Drop` |
 | [`std::signal`](../library/std-signal.md) | DFT / FFT 与逆变换；基 2 的 FFT 只接受 2 的幂长度 |
@@ -121,7 +114,7 @@ sum=10
 | [`std::serialization`](../library/std-serialization.md) | `serialize<T>`、`deserialize<T>`，字节流保存版本、稳定类型 ID 和长度，恢复时严格检查模型类型 |
 
 JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL 见 `std::sql`。
-默认编译器同时编入前端与 VM 反射，源码编译默认启用反射；关闭本次元数据输出时显式使用 `--no-reflection`。
+源码编译默认启用反射；关闭本次元数据输出时显式使用 `--no-reflection`。执行使用 checked AOT 或导出原生代码。
 
 ### 并发与协作
 
@@ -140,7 +133,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 | --- | --- |
 | [`std::io`](../library/std-io.md) | 文件读写；错误类型 `IoError`（`OpenFailed` `ReadFailed` `WriteFailed` `SeekFailed` `Closed`） |
 | [`std::net`](../library/std-net.md) | 独占的 `TcpSocket`、`TcpListener`，连接、监听、收发和 HTTP 客户端；HTTP 客户端不提供 TLS |
-| [`std::sql`](../library/std-sql.md) | `Database`、参数化查询、事务与模型操作；连接 MySQL / SQLite / PostgreSQL / SQL Server |
+| [`std::sql`](../library/std-sql.md) | `Database`、事务与模型操作；连接 MySQL / SQLite / PostgreSQL / SQL Server。参数绑定与后端能力分别核对，MySQL 文本使用 quote |
 | [`std::process`](../library/std-process.md) | `Process`，宿主进程创建、命令管道、等待与结果读取 |
 | [`std::clock`](../library/std-clock.md) | 单调时钟 `steady_clock`，只用来做差值，别当挂钟用 |
 | [`std::datetime`](../library/std-datetime.md) | `DateTime`、UTC 公历日期、Unix 秒、格式化和解析；不表示闰秒 |
@@ -170,7 +163,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 普通字符串下标仍要求 UTF-8 字符边界。按 Unicode 码点处理时使用显式码点接口或 `std::utf8`。
 
 实际文件、网络、数据库和线程能力以运行期胶水、系统库及构建配置为准。
-本表列出的是标准库的完整面貌；[AOT 入口](../38-aot.md)已覆盖全部条目，但个别能力仍受目标平台限制，编译时以实际诊断为准确认。
+模块是否可在某个目标使用，还取决于宿主服务、链接资产和外部库；按 [AOT 参考](../38-aot.md) 与模块页分别验证。
 
 ---
 
@@ -189,10 +182,6 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 
 ---
 
-## B.6 下一步
+## B.6 组合与验证
 
-标准库认完了，前面二十几章也读完了——接下来该自己写点东西了。
-
-- 想先复习报错怎么读：翻回[附录 A](A-常见错误速查.md)；
-- 想练习模型、编解码与参数化查询的组合：[反射编解码与动态 SQL](../33-reflection-serialization-sql.md)；
-- 想把这门语言接到你自己的 C/C++ 代码上：[第 21 章 与 C 互操作](21-与C互操作.md)。
+选择模块后检查输入类型、返回的 Result／Option、资源关闭及目标平台条件。先运行最小正常例程，再验证一个失败路径；跨模块组合时重新检查所有权与借用关系。数据库组合示例见[第 25 章](25-学生信息管理系统.md)，接口错误匹配见[第 16 章](16-错误处理.md)。

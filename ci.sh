@@ -334,6 +334,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行类型声明可选尾分号回归" "$PYTHON" tests/chali_type_decl_terminators.py
     run_step "运行发布脚本与归档一致性回归" "$PYTHON" tests/chali_release.py
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/chali_book_updates.py
+    run_step "核对番外原文与双语教程例程" "$PYTHON" tests/chali_book_rewrite.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
     run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"

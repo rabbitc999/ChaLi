@@ -3,5 +3,5 @@ name = "students-server"
 version = "0.1.0"
 
 [chali]
-run = "interpret"
+run = "run"
 main = "src/main.chl"

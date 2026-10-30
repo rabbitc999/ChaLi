@@ -1,26 +1,56 @@
-# Chapter 18 Modules and projects
+# Chapter 18 Projects and modules
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../18-模块与工程.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-A module provides a name for related declarations. Declare it explicitly with `module name;` and import other modules with `import`. A user source file without a module declaration belongs to lowercase `program`.
+A project organizes entry points, modules, resources and build configuration. Modules establish declaration ownership and visibility; configuration controls source lookup and application generation.
 
+## 18.1 Choose the entry point and directories
+
+Place the entry in src/main.chl, separate business modules by responsibility, and keep runtime assets such as web pages in a separate directory. Relative file access depends on the working directory; import search paths do not locate runtime assets.
+
+## 18.2 Module declarations and qualified names
+
+Module declarations give names an owner. Import required modules and qualify names to choose declarations explicitly, especially with identically named types. Do not depend on import order to resolve ambiguity.
+
+<!-- verify-book -->
 ```chali
-module application;
-
-import std::text;
+inline int64 square(int64 value)
+{
+    return value * value;
+}
 
 void main()
 {
-    println("Application started");
+    println("{}", square(3));
 }
 ```
 
-Keep module responsibilities visible: a model describes data, a store handles persistence and an entry point coordinates them. A module boundary does not by itself create an operating-system dynamic library. Native dynamic-library export is a separate AOT operation.
+```text
+9
+```
 
-Project configuration and dependency resolution belong in `chali.toml` and the documented dependency tools. Prefer reproducible dependency versions and preserve the lock information. Do not assume that starting the compiler from another directory changes which module the source declares.
+## 18.3 Project configuration and commands
 
-Imported macros are visible through the macro completion path. Typing `$` asks for macros rather than ordinary symbols; module qualification narrows that search. Function overloads and macro alternatives have separate matching rules.
+chali.toml records the entry and project options. Inspect configuration and chali help when working with an existing project; an old interpret setting does not establish an interpreter execution mode. Current run uses checked AOT and aot exports native artifacts. Chapter 24 covers target and linker configuration.
 
-Exercise: move a pure helper into another module, import it and call it with a qualified name. Compare an explicitly named module with the implicit `program` identity. Next: [macros](19-macros.md).
+## 18.4 Reproducible project boundaries
+
+Document the working directory, external libraries, data files and target platform. Separate checking, example execution and packaging. Maintain generated files through their sources so later regeneration preserves changes.
+
+## 18.5 Exercises
+
+1. Design src and web directories for a student system.
+2. Are source lookup and resource lookup the same?
+3. How do you choose between two Error declarations?
+4. Document project startup requirements.
+
+### Answers and checks
+
+1. Separate entry, HTTP, business, storage and web assets.
+2. No; import configuration and runtime paths govern them separately.
+3. Use a qualified name.
+4. Record the compiler, target, external libraries, configuration and working directory.
+
+Next: [Chapter 19](19-macros.md).

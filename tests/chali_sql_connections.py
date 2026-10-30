@@ -4,8 +4,8 @@ from pathlib import Path
 from chali_glue_edges import ROOT, CHALI, EXE, run
 
 def main():
-    """验证连接入口的 VM 行为；不代表真实数据库服务验收。"""
-    work = ROOT / 'build/sql-connections'
+    """验证连接入口的原生行为；不代表真实数据库服务验收。"""
+    work = ROOT / 'tmp/sql-connections'
     work.mkdir(parents=True, exist_ok=True)
     library = work / ('fixture.dll' if os.name == 'nt' else 'fixture.so')
     run('gcc', '-shared', '-fPIC', ROOT / 'tests/fixtures/chali_sql_mysql.c', '-o', library)

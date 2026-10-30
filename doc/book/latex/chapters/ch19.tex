@@ -1,241 +1,19 @@
-\chapter{预处理与宏}
+\chapter{卫生宏}
 \label{ch:19}
 
-本章介绍以 \texttt{\%} 和 \texttt{\$} 开头的两类源码加工工具：ChaLi 的预处理和卫生宏。预处理控制源码是否参与编译，宏由解析器建立 AST 并在语义分析期间展开。
+宏在编译阶段组合语法，卫生规则避免宏内部名字意外捕获调用方名字。参数种类还决定实参是先取得一个值，还是作为语法片段参与展开；这两件事必须分开理解。
 
-这一章分两半：
+\section{值参数、引用与卫生}
 
-\begin{itemize}
+未标注参数采用单次求值的值参数规则。\$A(next()) 的一个实参只求值一次，\$A(next(), next()) 的两个实参各求值一次。修改宏内的值参数只修改副本，调用者 x 不因此变化，也不为这种合法副本修改发出警告。编译器可在行为不变时减少复制。
 
-\item 预处理（\texttt{\%} 开头）：条件编译——「这段代码要不要编进去」；
+显式 \&n 借用只读值，mut \&n 允许修改调用方；静态借用要求仍然生效。宏内部临时名保持卫生，不能从外部依赖某个展开时生成的临时名字。
 
-\item 宏（\texttt{\$} 开头）：卫生 AST 替换——保留绑定、类型与来源的编译期代码。
+\section{参数类别决定展开方式}
 
-\end{itemize}
+x:value 保留单次求值规则，x:expr 接收表达式语法并按展开位置执行：使用两次可能执行两次，未使用则不会执行。name:ident、T:type、body:stmt 和 body:block 分别要求相应语法类别。类别诊断发生在不匹配位置，不把任意语法都当作值参数。
 
-先说一句要紧的话：它们不污染普通源码。 预处理指令以 \texttt{\%} 开头、宏调用以 \texttt{\$} 开头，和普通标识符不共享命名空间——不会像 C 的 \texttt{\#define} 那样，一个叫 \texttt{MIN} 的宏把别人的变量名、结构体字段一起换掉。所以用不用只看一条：这段文本是不是得在编译前就改。 是，就放心用；不是，函数、泛型、常量通常更省事。
-
-\section{条件编译：\texttt{\%define} + \texttt{\%if}}
-
-同一个程序，调试时想多打日志、发布时想去掉——这是条件编译最典型的用途：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-%define DEBUG 1
-
-void main() {
-%if DEBUG
-    println("debug on");
-%else
-    println("debug off");
-%endif
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-debug on
-\end{lstlisting}
-\par
-\medskip
-
-把第一行改成 \texttt{\%define DEBUG 0}，同一份代码就输出另一个分支：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-%define DEBUG 0
-
-void main() {
-%if DEBUG
-    println("debug on");
-%else
-    println("debug off");
-%endif
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-debug off
-\end{lstlisting}
-\par
-\medskip
-
-几条要点：
-
-\begin{itemize}
-
-\item \texttt{\%define} 定义预处理符号；
-
-\item \texttt{\%if 符号} 看它的值：非 0 走 \texttt{\%if} 分支，0 走 \texttt{\%else}；
-
-\item 不活跃的分支整块丢弃——一个字都不会编进去；
-
-\item 指令行必须顶格写在行首（\texttt{\%} 前面不能有别的字符）；
-
-\item 被丢弃/指令占用的行用空行占位，所以预处理后行号和源文件一一对应，报错永远指回你真正写错的那一行。
-
-\end{itemize}
-
-\begin{tip}{提示}
-\texttt{\%if} 后面要写符号名，不能写 \texttt{\%if 1} 这种字面量——写了会报「这里要写一个符号名」。这是它和 C 的 \texttt{\#if} 最容易混的地方。
-\end{tip}
-
-\section{按「有没有定义」分支：\texttt{\%ifdef} / \texttt{\%ifndef}}
-
-有时候你只关心「这个符号定义过没有」，不关心值：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-void main() {
-%ifdef FEATURE
-    println("有 FEATURE");
-%else
-    println("没有 FEATURE");
-%endif
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-没有 FEATURE
-\end{lstlisting}
-\par
-\medskip
-
-\begin{itemize}
-
-\item \texttt{\%ifdef 符号}：定义过就走；
-
-\item \texttt{\%ifndef 符号}：没定义才走（\texttt{\%ifdef} 的反面）。
-
-\end{itemize}
-
-\texttt{\%if} 和 \texttt{\%ifdef} 的分工记住一句话：\texttt{\%if} 看值，\texttt{\%ifdef} 看有没有。
-
-\section{从命令行传开关：\texttt{-\allowbreak{}D}}
-
-开关真正好用，是构建时才决定——同一份源码，编出不同版本：
-
-\par
-\medskip
-\begin{lstlisting}[style=sh]
-chali run app.chl -D FEATURE
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-有 FEATURE
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{-\allowbreak{}D FEATURE} 等价于在文件开头写了 \texttt{\%define FEATURE}。于是同一份代码：
-
-\begin{itemize}
-
-\item \texttt{chali run app.\allowbreak{}chl} \ensuremath{\rightarrow} 「没有 FEATURE」；
-
-\item \texttt{chali run app.\allowbreak{}chl -\allowbreak{}D FEATURE} \ensuremath{\rightarrow} 「有 FEATURE」。
-
-\end{itemize}
-
-发布版 / 调试版、不同硬件平台，就靠这个开关切。
-
-\section{条件编译的边界}
-
-\texttt{\%define} 管理当前编译单元内的预处理符号，命令行 \texttt{-\allowbreak{}D} 提供各模块编译时使用的开关。不活跃分支不参与后续语言编译，但行号仍保留。
-
-模块复用通过 \texttt{module} 和 \texttt{import}，完整规则归入\hyperref[ch:18]{第 18 章}。条件编译可控制导入语句是否参与编译，却不是把被导入文件当作文本贴到当前位置。
-
-\section{卫生 AST 宏}
-
-\texttt{\$macro} 定义由生成解析器建立语法树，语义分析按依赖展开，类型推导与展开交错进行，在生成 LLVM IR 前完成。宏不把替换结果拼成源码重新解析。参数保留原文、位置、语法候选及调用处绑定；引入的普通局部声明自动卫生，辅助名称在定义模块查找。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-$macro SQUARE(x)
-x * x
-$end_macro
-$macro ANSWER
-42
-$end_macro
-$macro EMPTY()
-42
-$end_macro
-void main() {
-    int64 temporary = 10;
-    println("{} {} {}", $SQUARE(1 + 2), $ANSWER, $EMPTY());
-}
-\end{lstlisting}
-\par
-\medskip
-
-表达式实参按从左到右的顺序各求值一次，再由宏体复用保存的值；\texttt{\$SQUARE(\allowbreak{}1 + 2)\allowbreak{}} 得到 9，\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 只调用一次 next，两个独立实参中的 next 则各调用一次。普通参数按值绑定，宏内修改只影响副本，不产生警告。编译器仅在不改变求值次数、别名、所有权与可观察行为时消除复制。语句宏调用仍写分号；名称、类型、语句等语法参数保留相应的结构和来源。
-
-\section{参数组、变长片段及卫生绑定}
-
-普通 \texttt{\$macro BUMP(\allowbreak{}n)\allowbreak{}} 中的 \texttt{n =\allowbreak{} n + 1;} 修改副本，调用 \texttt{\$BUMP(\allowbreak{}x)\allowbreak{}} 后 x 不变，也不警告。要写回 x，形参明确写为 \texttt{mut \&n}；只读借用写为 \texttt{\&n}，禁止通过它写入来源。每个实参仍只求值一次；编译器仅在证明行为等价时消除复制。
-
-裸定义 \texttt{\$macro A} 只能用 \texttt{\$A}；空组定义 \texttt{\$macro A(\allowbreak{})\allowbreak{}} 只能用 \texttt{\$A(\allowbreak{})\allowbreak{}}。\texttt{[\allowbreak{}]\allowbreak{}}、\texttt{(\allowbreak{})\allowbreak{}}、\texttt{\{\}} 按声明顺序严格匹配，允许重复组。每组支持固定形参和一个末尾变长形参 \texttt{.\allowbreak{}.\allowbreak{}.\allowbreak{}rest} 或 \texttt{.\allowbreak{}.\allowbreak{}rest}，空捕获合法。固定形态优先于适用的变长形态。
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-$macro ACCUMULATE(mut &out)[...values]
-$for value in values
-int64 temporary = value;
-out += temporary;
-$end_for
-$end_macro
-void main() {
-    int64 temporary = 100;
-    int64 total = 0;
-    $ACCUMULATE(total)[1, 2, 3];
-    println("{} {}", total, temporary);
-}
-\end{lstlisting}
-\par
-\medskip
-
-结果是 \texttt{6 100}。每轮展开中的局部声明互相独立，实参 \texttt{out} 保留调用者的绑定。变长片段可转发到另一宏，或在函数参数列表中逐项展开；\texttt{\$for} 只遍历变长形参。形参出现在声明名位置时必须传入单个标识符，该声明可供后续调用者代码使用。成员名与变量名按各自语法角色处理。
-
-\subsection*{显式参数类别}
-
-固定形参可以显式声明类别：
-
-\begin{center}
-\begin{tabular}{ll}
-\toprule
-类别 & 约束与展开行为 \\
-\midrule
-\texttt{x:\allowbreak{} value} & 完整表达式；进入展开体前求值一次，保存并复用值副本 \\
-\texttt{x:\allowbreak{} expr} & 完整表达式语法片段；在每个放置位置求值，未放置则不执行 \\
-\texttt{name:\allowbreak{} ident} & 单个标识符，可用作生成声明或成员的名称 \\
-\texttt{T:\allowbreak{} type} & 完整类型片段，用于类型位置 \\
-\texttt{body:\allowbreak{} stmt} & 完整语句片段，用于语句位置 \\
-\texttt{body:\allowbreak{} block} & 完整块片段，可按已有块语义用于语句或表达式位置 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-value 参数先按声明顺序求值，再执行展开体；expr 参数的求值位置由展开体决定。expr 是显式语法替换，作为赋值左侧时可以修改调用者变量。未标注形参保持原有按角色推断的兼容规则；普通表达式参数仍单次求值。\texttt{\&n:\allowbreak{} value} 和 \texttt{mut \&n:\allowbreak{} value} 保留只读／可写借用，未标注引用类别的旧写法也继续有效。引用不能标注为 expr 等语法片段类别。
+多个 value 实参按调用实参顺序先求值；expr 片段随后随宏体中的放置位置执行。不要用 expr 传入有副作用的代码却假定它仍只执行一次。
 
 \par
 \medskip
@@ -268,34 +46,11 @@ void main() {
 \par
 \medskip
 
-类别不匹配在展开前报错，value／expr 参数不能转作声明名称。带类别的变长形参、pattern／item 参数及结果类别尚未支持，不应据此认为已有声明级宏功能。
+\section{泛型参数与结果上下文}
 
-\section{宏泛型}
+宏可以声明类型参数。T:\#res 从使用结果的静态期望类型推导，U:b 从名为 b 的实参静态类型推导；它们不是在编译阶段运行实参表达式。显式类型参数优先，期望类型不足或约束冲突时需要补充类型。
 
-尖括号仅表示宏类型参数，不能作为任意文本参数组：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-$macro CONVERT<T:value>(value)
-cast<T>(value)
-$end_macro
-$macro RESULT<T>(value)
-cast<T>(value)
-$end_macro
-void main() {
-    int32 source = 42;
-    let same = $CONVERT(source);
-    int32 expected = $RESULT(42);
-    int64 explicitValue = $RESULT<int64>(42);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{T:\allowbreak{}value} 只从指定实参的静态类型推导；未指定来源的 \texttt{T} 只从外层期望结果类型推导。显式类型优先，推导阶段不执行参数、不自动转换、不改换推导来源；展开后的普通值参数仍各求值一次，显式 expr 参数按放置位置执行。\texttt{let x =\allowbreak{} \$RESULT(\allowbreak{}42)\allowbreak{}} 缺少期望类型，编译失败。首版不支持宏泛型值参数、特化、偏特化或任意函数的编译期执行。
-
-\texttt{\#res} 显式表示从调用位置的预期结果类型推导，可与实参来源组合：
+例如 \$macro Example<T:\#res, U:b>(a, b) 同时使用结果与实参信息，推导出的 T、U 还必须满足宏体与调用位置的检查。
 
 \par
 \medskip
@@ -323,67 +78,9 @@ void main() {
 \par
 \medskip
 
-这里 T 是 int32，U 是 int16，结果是 7。初始化、赋值、函数返回和可确定参数类型的函数实参均可提供结果上下文；推导不执行 a 或 b。\texttt{<\allowbreak{}T>\allowbreak{}} 保留相同的隐式结果来源语义。显式类型实参优先；缺少结果上下文时使用 \texttt{let} 不会自动改从 a 推导。
+\section{标准宏与扩展边界}
 
-\section{五类完整语法匹配}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-$macro CLASSIFY(value)
-$match value is ident
-1
-$else is expr
-2
-$else is type
-3
-$else is block
-4
-$else is stmt
-5
-$else
-0
-$end_match
-$end_macro
-\end{lstlisting}
-\par
-\medskip
-
-只支持 \texttt{expr}、\texttt{ident}、\texttt{type}、\texttt{block}、\texttt{stmt} 五类，使用同一生成解析器完整消费原始片段。按书写顺序选择首个成立分支；\texttt{ident} 也可能是 \texttt{expr}，因此顺序有意义。语法成立不代表名称存在或类型合法；只有最终展开的节点进入名称、类型、捕获、借用和资源检查。无匹配且无兜底不生成内容。未选分支的模板结构仍须合法。大括号参数组不等于块片段：传入一个完整块写 \texttt{\$A\{\{ statements; \}\}}。
-
-\section{正则、原文与来源}
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-$macro DECIMAL(value)
-$regex value is "[0-9]+"
-value
-$else
-0
-$end_regex
-$end_macro
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{\$regex} 使用 C++ \texttt{std:\allowbreak{}:\allowbreak{}regex} 的 ECMAScript 语法对去除首尾空白的完整参数原文匹配，保留内部注释、引号和换行。字符串按语言规则解码一次，合法与非法模式均缓存；非法模式报编译错误。正则捕获组仅用于匹配，不导出捕获变量。
-
-\texttt{\$stringify(\allowbreak{}value)\allowbreak{}} 返回实参原文的字符串，不先执行或展开参数。\texttt{\$concat(\allowbreak{}left,\allowbreak{} right)\allowbreak{}} 只生成单个标识符，不能生成任意代码；模板中生成的名字保持定义处上下文，不能借拼名捕获调用者局部变量。直接源码中的拼名按该源码上下文查找。\texttt{\$line}、\texttt{\$file}、\texttt{\$module} 可直接使用；模板内取调用处来源，嵌套参数转发保留原始来源。
-
-\texttt{\$replace ADD(\allowbreak{}a,\allowbreak{} b)\allowbreak{} a + b} 是同一 AST 机制的单行定义。宏递归与规模有预算，失败诊断保留调用、定义和参数来源链。编辑器宏预览显示卫生 AST，类型提示读取最终静态类型，不显示内部绑定编号。
-
-回归见 \href{https://github.com/rabbitc999/ChaLi/blob/master/tests/chali_ast_macros.py}{宏 AST}、\href{https://github.com/rabbitc999/ChaLi/blob/master/tests/chali_macro_groups.py}{分组与来源}、\href{https://github.com/rabbitc999/ChaLi/blob/master/tests/chali_macro_generics.py}{静态类型} 和 \href{https://github.com/rabbitc999/ChaLi/blob/master/tests/chali_macro_branches.py}{语法及正则}。
-
-\section{函数、泛型与宏如何选择}
-
-只需计算并返回一个值时，优先函数；算法相同而类型不同，考虑泛型；需要组合调用处语法、生成声明或重复语句时，再考虑宏。宏展开在编译期完成，不等于模板内所有函数调用都在编译期执行。
-
-\texttt{\$SQUARE(\allowbreak{}next(\allowbreak{})\allowbreak{})\allowbreak{}} 将 next 的结果保存后复用，因此只调用一次。\texttt{\$PAIR(\allowbreak{}next(\allowbreak{})\allowbreak{},\allowbreak{} next(\allowbreak{})\allowbreak{})\allowbreak{}} 有两个独立实参，按从左到右顺序各求值一次；不能把它们合并成一次。
-
-\section{一个自己声明临时列表的 vec}
-
-下面的宏通过首项推导 \texttt{T}，在显式块中创建临时列表，最后 \texttt{yield} 列表值。宏调用仍处在普通的类型与借用检查之下。
+使用现有标准宏构造常见结构时，仍需理解元素类型、求值次数和返回值。当前教程只使用已实现的类别和展开形式；声明宏暂缓，不把声明生成、任意结果类别或未支持的重复匹配写成可用功能。
 
 \par
 \medskip
@@ -418,17 +115,9 @@ void main()
 \par
 \medskip
 
-调用方也有 \texttt{result}，但它和宏内部临时列表没有成为同一个变量。宏内部名称由定义与卫生绑定决定，实参则保留调用处绑定。示例至少需要一项，因为首项负责类型推导；空列表应另行设计显式类型形态，不要假定本宏已经支持。
+\section{诊断定位与检查}
 
-\section{定位展开错误}
-
-将模板内部 \texttt{List<\allowbreak{}T>\allowbreak{} result;} 删除，再在调用方声明同名变量，不会使模板里的自由名称合法。应首先按名称解析问题处理，而不能被后续 \texttt{yield} 与其他节点的类型错误掩盖。
-
-排查时依次核对调用分隔符、固定与变长参数、类型来源、模板绑定和结果类型。宏预览用于查看展开结构，真正的合法性仍由最终语义检查确定。语法匹配成功不保证名称存在，也不保证借用可逃逸。
-
-\subsection*{故意失败示例}
-
-下面的模板引用未声明名称，即使 main 内存在同名变量也应拒绝。它是诊断习题，不是可运行程序。
+宏报错时先区分定义位置与调用位置，检查类别、类型参数、展开作用域和借用。下面是需要被拒绝的卫生示例：宏内部临时变量不能作为调用方可见名字读取。
 
 \par
 \medskip
@@ -449,23 +138,17 @@ void main()
 \par
 \medskip
 
-\section{边界与验证}
-
-宏保留语法、来源与卫生绑定；表达式参数各求值一次并复用其值。普通参数修改的是副本，显式 mut \& 参数才写回来源。不能用调用者的同名变量补救模板中的未定义名称。
-
 \section{习题}
-
-前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
 
 \begin{enumerate}
 
-\item 为什么 SQUARE(next()) 只执行一次 next，而 PAIR(next(), next()) 执行两次？
+\item 比较 value 与 expr 中 next 的调用次数。
 
-\item 写一个显式接收目标变量的累加宏。
+\item 修改未标注参数会改变调用方吗？
 
-\item 解释用户给出的 vec 宏中 temp 未定义的原因。
+\item T:\#res 的类型来自运行期返回值吗？
 
-\item 挑战：把 vec 宏改为自己拥有临时列表的块表达式。
+\item 为什么不能读取宏内部 temp？
 
 \end{enumerate}
 
@@ -473,15 +156,17 @@ void main()
 
 \begin{enumerate}
 
-\item 每个独立表达式实参求值一次，模板中的重复使用读取同一保存值；两个实参不能合并求值。
+\item value 每个实参一次；expr 按实际放置和执行次数。
 
-\item 目标声明为 mut \& 形参，循环展开逐项累加，验证空参数及多个参数。
+\item 不会，修改副本；需要修改调用方时显式可变引用。
 
-\item 模板未声明该名称且没有对应形参，调用处的同名局部变量不会自动被捕获，应优先报告名称解析错误。
+\item 不是，来自静态期望结果类型。
 
-\item 在模板内部显式声明 List<T> 临时值，追加实参并 yield；检查推导来源、空列表策略和返回值类型。
+\item 卫生隔离防止名称捕获，内部名不成为调用方声明。
 
 \end{enumerate}
+
+下一章：\hyperref[ch:20]{第 20 章}。
 
 \section{番外：宏展开之后}
 

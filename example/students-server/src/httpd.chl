@@ -9,6 +9,7 @@ module httpd;
 
 import std::net;
 import std::text;
+import std::clock;
 
 /** 解析后的一个 HTTP 请求。 */
 struct Request
@@ -17,6 +18,7 @@ struct Request
     String path;
     String query;
     String body;
+    String headers;
 };
 
 /**
@@ -26,32 +28,57 @@ struct Request
 int64 contentLength(String head)
 {
     int64 position = 0;
+    int64 result = 0;
+    bool found = false;
     while (position < len(head))
     {
         int64 end = std::text::Text::find(head[position:], "\r\n");
         String line = head[position:];
         if (end >= 0) { line = head[position:(position + end)]; }
         String lowered = std::text::Text::toLower(line);
+        if (std::text::Text::startsWith(lowered, "transfer-encoding:")) { return -1; }
         if (std::text::Text::startsWith(lowered, "content-length:"))
         {
+            if (found) { return -1; }
+            found = true;
             String number = std::text::Text::trim(line[15:]);
-            int64 value = 0;
-            int64 index = 0;
-            bool digits = len(number) > 0;
-            while (index < len(number))
+            if (len(number) == 0 || len(number) > 7) { return -1; }
+            for (int64 index in range(0, len(number)))
             {
                 char item = number[index];
-                if (item < '0' || item > '9') { digits = false; }
-                else { value = value * 10 + ((int64)item - '0'); }
-                index = index + 1;
+                if (item < '0' || item > '9') { return -1; }
+                result = result * 10 + ((int64)item - '0');
+                if (result > 1048576) { return -1; }
             }
-            if (digits) { return value; }
-            return 0;
         }
         if (end < 0) { break; }
-        position = position + end + 2;
+        position += end + 2;
     }
-    return 0;
+    return result;
+}
+
+/** 按不区分大小写的字段名读取请求头；重复字段返回空值以拒绝歧义认证。 */
+String header(Request const& request, String name)
+{
+    String prefix = std::text::Text::toLower(name) + ":";
+    String result = "";
+    bool found = false;
+    int64 position = 0;
+    while (position < len(request.headers))
+    {
+        int64 end = std::text::Text::find(request.headers[position:], "\r\n");
+        String line = request.headers[position:];
+        if (end >= 0) { line = request.headers[position:(position + end)]; }
+        if (std::text::Text::startsWith(std::text::Text::toLower(line), prefix))
+        {
+            if (found) { return ""; }
+            found = true;
+            result = std::text::Text::trim(line[len(prefix):]);
+        }
+        if (end < 0) { break; }
+        position += end + 2;
+    }
+    return result;
 }
 
 /**
@@ -65,6 +92,7 @@ int64 contentLength(String head)
 Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
 {
     String head = "";
+    int64 started = std::clock::nowMs();
     while (true)
     {
         String line = socket.receiveLine((int32)idleMs);
@@ -88,6 +116,10 @@ Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
             break;
         }
         head = head + line + "\r\n";
+        if (len(head) > 65536 || std::clock::nowMs() - started > idleMs)
+        {
+            return Result<Request, Error>::Err(MessageError::from("请求头超出大小或时间限制"));
+        }
     }
     if (len(head) > 1048576)
     {
@@ -116,7 +148,9 @@ Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
         request.path = target;
         request.query = "";
     }
+    request.headers = head;
     int64 needed = contentLength(head);
+    if (needed < 0) { return Result<Request, Error>::Err(MessageError::from("不支持的请求长度或传输编码")); }
     String body = "";
     int64 spins = 0;
     while (len(body) < needed)
@@ -124,6 +158,10 @@ Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
         String chunk = socket.receiveAsync((int32)65536);
         if (!chunk.isEmpty())
         {
+            if (len(chunk) > needed - len(body))
+            {
+                return Result<Request, Error>::Err(MessageError::from("请求体长度不匹配"));
+            }
             body = body + chunk;
             spins = 0;
             continue;
@@ -137,7 +175,7 @@ Result<Request, Error> readRequest(TcpSocket mut& socket, int64 idleMs)
             return Result<Request, Error>::Err(MessageError::from("接收失败：" + socket.lastError()));
         }
         spins = spins + 1;
-        if (spins > 5000)
+        if (spins > 5000 || std::clock::nowMs() - started > idleMs)
         {
             return Result<Request, Error>::Err(MessageError::from("等待请求体超时"));
         }
@@ -158,6 +196,9 @@ Result<bool, Error> sendResponse(TcpSocket mut& socket, int64 status, String rea
     String head = "HTTP/1.1 " + status.toString() + " " + reason
         + "\r\nContent-Type: " + contentType
         + "\r\nContent-Length: " + std::lang::len(body).toString()
+        + "\r\nCache-Control: no-store"
+        + "\r\nX-Content-Type-Options: nosniff"
+        + "\r\nReferrer-Policy: same-origin"
         + "\r\nConnection: close\r\n\r\n";
     int64 sent = socket.send(head + body);
     if (sent < 0)

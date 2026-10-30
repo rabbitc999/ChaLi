@@ -1,0 +1,150 @@
+/** 账号校验与内存会话；Bearer 令牌只交给当前页面，不写浏览器持久存储。 */
+module school_auth;
+import std::sql;
+import std::json;
+import std::clock;
+import std::text;
+import crypto;
+import httpd;
+import api;
+
+/** 一次认证后的账号，权限每次请求重新从数据库读取。 */
+struct User { int64 id; String username; String role; int64 version; };
+/** 服务端会话，不保存密码。 */
+struct Session { String token; int64 userId; int64 version; int64 expires; };
+/** 单进程会话状态；重启使现有令牌失效。 */
+struct State { List<Session> sessions; };
+
+/** 从 JSON 对象读取字符串，不将其他类型静默转换为字符串。 */
+String stringField(std::json::JsonValue const& value, String name)
+{
+    let field = value.find(name);
+    if (field.isNone()) { return ""; }
+    let text = field.unwrap().asString();
+    if (text.isNone()) { return ""; }
+    return text.unwrap();
+}
+
+/** 从请求头取出单一 Bearer 令牌。 */
+String bearer(httpd::Request const& request)
+{
+    String value = httpd::header(request, "authorization");
+    if (!std::text::Text::startsWith(value, "Bearer ")) { return ""; }
+    String token = value[7:];
+    if (len(token) != 64) { return ""; }
+    return token;
+}
+
+/** 创建账号表并在空表中生成一次性管理员口令；不插入业务演示记录。 */
+Result<bool, Error> ensureSchema(std::sql::Database mut& database)
+{
+    let created = database.exec("CREATE TABLE IF NOT EXISTS school_users (id BIGINT PRIMARY KEY AUTO_INCREMENT, username VARCHAR(64) NOT NULL UNIQUE, role VARCHAR(16) NOT NULL, enabled TINYINT NOT NULL DEFAULT 1, salt VARCHAR(64) NOT NULL, digest VARCHAR(64) NOT NULL, version BIGINT NOT NULL DEFAULT 1, failed_count INT NOT NULL DEFAULT 0, locked_until BIGINT NOT NULL DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    if (!created.ok) { return Result<bool, Error>::Err(MessageError::from(created.error)); }
+    let count = database.exec("SELECT COUNT(*) FROM school_users");
+    if (!count.ok) { return Result<bool, Error>::Err(MessageError::from(count.error)); }
+    if (count.intAt(0, 0) != 0) { return Result<bool, Error>::Ok(true); }
+    String password = crypto::token()?;
+    String salt = crypto::token()?;
+    String digest = crypto::derive(password, salt, (uint64)600000)?;
+    let inserted = database.exec("INSERT INTO school_users(username,role,salt,digest) VALUES ('admin','admin'," + database.quote(salt) + "," + database.quote(digest) + ")");
+    if (!inserted.ok) { return Result<bool, Error>::Err(MessageError::from(inserted.error)); }
+    eprintln("首次创建管理员 admin，一次性初始口令：{}", password);
+    eprintln("请保存口令，登录后修改；服务不会再次显示该口令。");
+    return Result<bool, Error>::Ok(true);
+}
+
+/** 清理超时会话；会话只在此进程内有效，使用单调时钟计算存活时间。 */
+void prune(State mut& state)
+{
+    List<Session> live;
+    int64 now = std::clock::nowMs();
+    for (Session session in state.sessions)
+    {
+        if (session.expires > now) { live.push(session); }
+    }
+    state.sessions = move live;
+}
+
+/** 验证会话并核对账号是否被停用或更新，失败返回 None。 */
+Option<User> authenticate(std::sql::Database mut& database, State mut& state, httpd::Request const& request)
+{
+    prune(&state);
+    String token = bearer(&request);
+    if (token.isEmpty()) { return Option<User>::None; }
+    for (Session session in state.sessions)
+    {
+        if (!crypto::equalDigest(session.token, token)) { continue; }
+        let rows = database.exec("SELECT id,username,role,version FROM school_users WHERE enabled=1 AND id=" + session.userId.toString());
+        if (!rows.ok || rows.rowCount() != 1 || rows.intAt(0, 3) != session.version) { return Option<User>::None; }
+        User user;
+        user.id = rows.intAt(0, 0);
+        user.username = rows.textAt(0, 1);
+        user.role = rows.textAt(0, 2);
+        user.version = rows.intAt(0, 3);
+        return Option<User>::Value(user);
+    }
+    return Option<User>::None;
+}
+
+/** 对外只序列化账号标识与角色，不导出盐和密码摘要。 */
+String userJson(User user)
+{
+    return "{\"id\":" + user.id.toString() + ",\"username\":" + std::reflect::__serdeQuote(user.username)
+        + ",\"role\":" + std::reflect::__serdeQuote(user.role) + "}";
+}
+
+/** 校验口令并创建 30 分钟会话，连续失败达到五次时暂时锁定账号。 */
+api::Reply login(std::sql::Database mut& database, State mut& state, String body)
+{
+    prune(&state);
+    let parsed = std::json::parse(body);
+    if (parsed.isErr()) { return api::errorReply(400, "登录数据必须是 JSON 对象"); }
+    let value = parsed.unwrap();
+    String username = stringField(&value, "username");
+    String password = stringField(&value, "password");
+    if (username.isEmpty() || len(username) > 64 || len(password) < 1 || len(password) > 1024)
+    {
+        return api::errorReply(400, "请填写有效账号与口令");
+    }
+    let rows = database.exec("SELECT id,username,role,version,enabled,salt,digest,failed_count,locked_until,CAST(UNIX_TIMESTAMP()*1000 AS SIGNED) AS now_ms FROM school_users WHERE username=" + database.quote(username));
+    if (!rows.ok) { return api::errorReply(503, "账号服务暂不可用"); }
+    if (rows.rowCount() != 1)
+    {
+        let ignored = crypto::derive(password, "school-unknown-account", (uint64)600000);
+        return api::errorReply(401, "账号、口令无效或账号暂不可用");
+    }
+    int64 now = rows.intAt(0, 9);
+    if (rows.intAt(0, 8) > now) { return api::errorReply(429, "登录尝试过多，请稍后再试"); }
+    let digest = crypto::derive(password, rows.textAt(0, 5), (uint64)600000);
+    if (digest.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+    int64 id = rows.intAt(0, 0);
+    if (rows.intAt(0, 4) != 1 || !crypto::equalDigest(digest.unwrap(), rows.textAt(0, 6)))
+    {
+        int64 attempts = rows.intAt(0, 7) + 1;
+        int64 until = 0;
+        if (attempts >= 5) { until = now + 900000; attempts = 0; }
+        let failed = database.exec("UPDATE school_users SET failed_count=" + attempts.toString() + ",locked_until=" + until.toString() + " WHERE id=" + id.toString());
+        return api::errorReply(401, "账号、口令无效或账号暂不可用");
+    }
+    if (len(state.sessions) >= 4096) { return api::errorReply(503, "会话数量已达上限"); }
+    let random = crypto::token();
+    if (random.isErr()) { return api::errorReply(503, "无法创建会话"); }
+    Session session;
+    session.token = random.unwrap(); session.userId = id; session.version = rows.intAt(0, 3); session.expires = std::clock::nowMs() + 1800000;
+    state.sessions.push(session);
+    let reset = database.exec("UPDATE school_users SET failed_count=0,locked_until=0 WHERE id=" + id.toString());
+    User user;user.id=id;user.username=rows.textAt(0,1);user.role=rows.textAt(0,2);user.version=session.version;
+    return api::jsonReply(200, "{\"token\":" + std::reflect::__serdeQuote(session.token) + ",\"user\":" + userJson(user) + "}");
+}
+
+/** 撤销当前令牌，不影响同账号的其他会话。 */
+void logout(State mut& state, httpd::Request const& request)
+{
+    String token = bearer(&request);
+    List<Session> live;
+    for (Session session in state.sessions)
+    {
+        if (!crypto::equalDigest(session.token, token)) { live.push(session); }
+    }
+    state.sessions = move live;
+}

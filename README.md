@@ -4,14 +4,7 @@
 **English** · [简体中文](README.cn.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-> **Write once, run anywhere.**
-> One logic, from embedded Linux to cloud; value semantics, non-null references, no GC.
-
-ChaLi is a statically typed, value-semantics-first, GC-free general-purpose programming language
-with borrow provenance and control-flow checks.
-It borrows C's expression and block syntax, but types, ownership and runtime behavior are defined by
-ChaLi itself, targeting the case where *one* program runs from the desktop all the way down to an
-embedded board.
+ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
 [ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export. .svmb has been removed.
@@ -19,19 +12,17 @@ The ChaLi compiler's front end is generated from this repository's `source/chali
 
 See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
 
-## The five letters of ChaLi
+## Name and capability references
 
-The name is not a decorative acronym — each letter locks one non-reversible guarantee:
+| Area | Current behavior |
+| --- | --- |
+| Values | Independent observable values, explicit references and moves; copies may be removed when behavior is preserved |
+| Macros | Hygienic names and parameter categories with defined evaluation rules |
+| Type erasure | Any retains concrete type information and follows ownership and provenance restrictions |
+| References | Static source and lifetime checks; unsafe and foreign-code preconditions remain separate |
+| Interfaces | Generic behavior, inheritance and concrete-type matching; known calls may be devirtualized or inlined |
 
-| Letter | Meaning | Guarantee |
-| --- | --- | --- |
-| **C** | Copy (deep-copy value semantics) | Assignment copies in full, never shares memory. Large objects go by explicit reference. |
-| **H** | Hygienic (hygienic macros) | Compile-time substitution that never captures or pollutes outer variables by accident. |
-| **A** | Any (universal box / type erasure) | Holds any type when no generic constraint applies. |
-| **L** | Lifetime (borrow checker) | A reference never outlives its source; otherwise it fails to compile (`CHL1204`). |
-| **I** | Interface (runtime polymorphism) | A shared contract dispatched on the object's real type at run time. |
-
-Runnable evidence and what counts as a violation: [Name freeze: the five letters of ChaLi](doc/en/37-name-freeze.md).
+See [naming and related capabilities](doc/en/37-name-freeze.md) for references and verification entry points.
 
 ## Compilation
 
@@ -83,11 +74,7 @@ The 36 old developer-facing chapters have been removed; the 7 that are standalon
 ([14 EBNF](doc/14-grammar-ebnf.md)–[20 memory allocator](doc/20-memory-allocator.md)) moved into `doc/`
 and were rewritten in the current voice. The rest remain in Git history.
 
-Only the prose is translated: **code snippets are kept verbatim**, including their Chinese comments.
-Every snippet in the documentation is executed before it is published, and the checking scripts
-(`tmp/{tour,core,ref}_check.sh`) generate those snippets from heredocs inside the script —
-translating the comments would break the correspondence and weaken that promise.
-Not translated: the 7 low-level spec pages (`doc/14-grammar-ebnf.md`–`doc/20-memory-allocator.md`) and `doc/examples/`.
+The Chinese and English technical text keep corresponding code examples, including comments. The book and selected guides have executable verification scripts; reports identify the compiler, commands and checks actually run. The [English book](doc/book/en/README.md) contains technical chapters and appendices without the Chinese literary extras.
 
 ## Build
 

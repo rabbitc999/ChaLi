@@ -4,145 +4,25 @@
 [English](en/24-aot-export.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-从 1.0.8 起，run 使用 checked AOT，aot 默认 unchecked 导出。--debug 保留原生源码行和变量信息；VS Code 断点、单步和变量查看通过 GDB 实现，见[原生调试](../43-native-debugging.md)。.svmb 导出已删除。
+AOT 把经过检查的程序提前编译成目标机器代码。交付时要分别核对编译工具、目标链接资产和应用动态依赖，而不是只检查文件是否已经生成。
 
-写完程序以后，你可以把它导出为目标平台的可执行文件，也可以导出动态库供 C 程序调用。AOT 是提前编译：编译器在交付前完成 LLVM 优化、机器码生成和链接，使用者直接运行生成的程序。
+## 24.1 运行与导出的配置
 
-本章先导出一个带列表的小程序，再说明工具链选择、运行期检查和动态库接口。完整选项见 [LLVM AOT 编译](../38-aot.md)。
+run 默认 checked AOT，适合开发时检查；aot 默认 unchecked，LLVM 优化等级默认为 O3。unchecked 的默认开关主要影响运行期数组与指针检查，不会允许绕过静态所有权或借用规则。
 
-## 24.1 从源码到原生产物
+命令选项以 chali help 和 [LLVM AOT 文档](../38-aot.md) 为准。不要再使用已删除的 emit 或 .svmb 路径。
 
-![ChaLi AOT 导出流程：前端检查、已检查 AST、LLVM IR、内置或外置 LLVM、链接与交付](images/chali-aot.png)
+![AOT 导出与工具链边界](images/chali-aot.png)
 
-前端完成类型、借用和生命周期检查后，AOT 后端直接遍历已检查的 AST，生成 LLVM IR。正常的 `run` 和 `aot` 路径跳过 ChaLi 四元式的生成、写盘、重读与装配。LLVM 负责 O3 优化、机器码生成和链接时优化，链接器将目标代码、AOT 运行时和所需库组合成原生产物。
+## 24.2 工具链依赖与应用依赖
 
-LLVM IR 是 LLVM 使用的中间表示；它与 ChaLi 四元式不同。输出的 `.ll` 文件可以保留，用于检查指令或接入其他 LLVM 工具。LLVM IR 由 C++ 后端生成，不通过 Python 转换。
+内置 LLVM 变体携带编译所需组件，外置变体使用已安装工具链。两者生成的应用按实际链接结果交付；编译器使用 LLVM 不等于应用必须携带 LLVM 动态库。
 
-## 24.2 导出第一个程序
+应用主动调用的 C ABI 动态库、数据库客户端和运行期资源仍按各自约定准备。对最终文件检查真实依赖，不从编译器变体名推断。
 
-把下面的代码保存为 `aot_demo.chl`：
+## 24.3 交叉编译需要哪些信息
 
-```chali
-int64 total(List<int64> const& values) {
-    int64 result = 0;
-    for (int64 value in values) {
-        result = result + value;
-    }
-    return result;
-}
-
-void main() {
-    List<int64> values;
-    values.push(10);
-    values.push(20);
-    values.push(30);
-    println("total={}", total(&values));
-}
-```
-
-在 Windows PowerShell 中执行：
-
-```sh
-chali aot aot_demo.chl --out build/aot_demo --checked
-./build/aot_demo.exe
-```
-
-输出为：
-
-```text
-total=60
-```
-
-`--out` 后面是输出前缀。Windows 下会得到可执行文件 `.exe`、LLVM 模块 `.ll` 和 C ABI 头文件；Linux 下可执行文件通常没有扩展名。输出针对编译时选择的目标平台，交付时需要匹配操作系统与处理器架构。
-
-只想导出 LLVM 模块时使用：
-
-```sh
-chali aot aot_demo.chl --out build/aot_demo --emit-llvm
-```
-
-这个命令不运行机器码生成和链接工具。
-
-## 24.3 选择内置或外置 LLVM
-
-两种编译器都接受前面的 `aot` 命令，区别在于生成机器码和链接时从哪里取得 LLVM。
-
-| 编译器变体 | 使用前的准备 | 适合的使用方式 |
-| --- | --- | --- |
-| 内置 LLVM | LLVM、LLD 与 CRT 链接资产已编入编译器 | 希望编译器单个 exe 就能导出 Windows x64 原生产物 |
-| 外置 LLVM | 准备 `library/llvm/` 工具链或通过 `--llvm` 指定 clang | 希望编译器体积较小，单独管理工具链 |
-
-在仓库根目录准备外置工具链：
-
-```sh
-python library/llvm/setup.py
-chali aot aot_demo.chl --out build/aot_demo --checked
-```
-
-准备脚本会在线下载固定版本的工具链并核对 SHA-256，缓存位于 `build/`，源码仓库不保存 SDK。静态构建通过 `python tools/fetch_llvm_sdk.py` 下载预编译 LLVM/LLD 与匹配 GCC，并隔离全部构建对象。使用其他工具链时，可传入 `--llvm 路径`，也可设置 `CHALI_LLVM_CLANG`。静态变体默认使用内置后端，显式传入 `--llvm` 时使用指定的外置工具。
-
-自己构建静态变体时执行 `make llvm-static`。构建程序会自动下载固定版本的预编译 LLVM/LLD 静态开发库和匹配 GCC，核验 SHA-256，并安装到 `build/dependencies/llvm/static-sdk/`。首次准备需要网络和磁盘空间，不编译 LLVM 源码；具体依赖见 [LLVM 工具链说明](../../library/llvm/README.md)。当前静态分发验收目标为 Windows x64。
-
-编译器的 LLVM 链接方式不会让导出的应用依赖 LLVM DLL。应用使用的外部 C ABI 动态库仍须按应用的链接约定交付。
-
-## 24.4 检查与支持范围
-
-`run` 默认启用数组边界和指针检查；`aot` 默认 unchecked 导出。使用 `--checked` 可在导出时保留检查，`--unchecked` 可显式关闭这些检查。列表的下标、对象存活与实际内存访问验证始终执行，活跃元素引用期间也不能进行会改变列表结构的操作。
-
-AOT 当前支持基本数值运算、分支、循环、直接调用、递归和固定数组，以及列表的创建、长度、追加、插入、下标读写、删除、弹出、清空、查找、复制与 `for-in` 引用。列表元素支持整数、浮点、字符串、嵌套列表和支持叶子布局的结构体；复制后各自拥有独立存储。
-
-自定义语言 `opcode` 可以将创建、复制和销毁绑定到可达的 ChaLi 函数或显式声明的 C ABI 函数，`move` 沿用前端的移动语义。需要宿主服务的标准库调用复用共享运行时的堆、对象表和胶水注册，语言函数体继续运行 LLVM 生成的机器码。捕获闭包、函数值与同步回调保留原有参数、返回值和清理协议；隔离线程使用同源的消息、通道、事件和任务控制服务。JSON/TOML、反射序列化、图像、网络与数据结构等组合调用通过原生产物的行为对照核对。
-
-学生信息管理系统使用反射、网络和数据库等服务，其 AOT 构建与原生启动步骤见第 25 章 25.1。数据库和前端页面仍按应用的实际宿主环境准备；平台能力见[当前能力](../17-capabilities.md)。
-
-## 24.5 导出动态库与 C ABI
-
-`export` 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
-
-```chali
-#export("f_add")
-int64 add(int64 left, int64 right)
-{
-    return left + right;
-}
-```
-
-执行 `ChaLi aot library.chl --shared --out build/library` 生成动态库和 C ABI 头文件，
-导出函数名以生成的头文件为准（上例为 `f_add`）。动态库源码可以没有 `main`；
-可执行程序仍需要 `main`。调用方先调用 `chali_init()`，再使用导出函数，最后调用
-`chali_finish()`；全局初始化与清理分别在这两个入口执行。`--export` 可以额外指定导出函数。
-模块限定名和重载使用各自的实际标签；应以生成头文件核对完整签名。
-
-程序调用外部 C 函数时，使用第 21 章介绍的 `abi` 声明；声明中的库按实际调用路径链接或由宿主加载，也可以重复使用 `--link 库路径` 添加库。标量参数与返回值按对应的 C ABI 类型传递。结构体、引用、数组、可选引用和同步回调等复杂形状通过类型化宿主适配器封送，导出时需要兼容的 GNU C++17 编译器；语言函数体仍直接降低到 LLVM。拥有资源的句柄须遵循创建和销毁协议，不可把运行时句柄当作机器函数指针。
-
-## 24.6 在 VS Code 中构建
-
-打开并保存 `.chl` 文件，使用编辑器标题栏的构建按钮，选择“可执行文件（LLVM AOT）”。也可以从命令面板或资源管理器右键菜单构建原生可执行文件。默认输出到工程的 `build` 目录；输出目录、外置 LLVM 路径和检查选项可在 ChaLi 设置中调整。
-
-插件提供内置 LLVM 与外置 LLVM 两个安装变体，二者是同一扩展的替代版本。构建结束后查看“ChaLi 构建”输出中的诊断和产物路径，再运行生成的应用。`.svmb` 已删除，不再作为构建或交付格式。
-
-## 24.7 交叉编译与项目配置
-
-交叉编译时，编译器运行的平台是宿主，生成程序运行的平台是目标。当前可选择 Windows x64、Linux x64 和 Linux ARM64，分别使用 `x86_64-w64-windows-gnu`、`x86_64-unknown-linux-gnu` 和 `aarch64-unknown-linux-gnu`；也可使用 `windows-x64`、`linux-x64`、`linux-arm64` 简写。
-
-先导出目标 LLVM IR 或目标文件，不必准备目标链接库：
-
-```sh
-chali aot aot_demo.chl --target linux-arm64 --emit-llvm --out build/arm64/demo
-chali aot aot_demo.chl --target linux-arm64 --emit-obj --out build/arm64/demo
-```
-
-`--emit-llvm` 生成目标对应的 `.ll`；`--emit-obj` 继续生成 `.o`，跳过链接。Windows 目标的 `.o` 内容为 COFF，Linux 目标为 ELF，文件格式由目标决定。两种选项不能同时使用。静态 LLVM 变体可通过内置后端生成目标文件；外置变体需要包含对应目标后端的 clang。
-
-完整链接还需要目标平台的 C/C++ 运行库、启动对象、链接器和 ChaLi 运行时。`--sysroot` 指定目标系统根目录，`--runtime-dir` 指定包含目标 `libchali_aot_host.a` 的目录；库的目标架构和 ABI 必须与 `--target` 一致。`--cpu` 可进一步选择目标 CPU。仓库提供在 Linux 或 WSL 中准备 GNU 目标运行时 SDK 的脚本，需要先安装对应的 GNU C/C++ 工具链：
-
-```sh
-sh tools/build_cross_runtime.sh linux-arm64 2
-```
-
-脚本将 ARM64 对象与宿主对象隔离构建，并在 `build/cross-sdk/linux-arm64/` 生成 `sysroot/`、`lib/`、许可证和摘要。Windows 编译器使用该目录时，应填写 Windows 能访问的实际路径。
-
-在 `chali.toml` 中集中保存配置：
+交叉编译至少要明确目标 triple、CPU／特性、目标 ABI、sysroot、链接器、目标运行库与启动资产。可将受支持配置写入 toml；具体键与命令行覆盖规则按 [AOT 配置参考](../38-aot.md) 使用，不把宿主库路径混入目标链接。
 
 ```toml
 [aot]
@@ -153,77 +33,35 @@ runtime_dir = "build/cross-sdk/linux-arm64/lib"
 output = "executable"
 ```
 
-路径相对于 `chali.toml` 所在目录解析。`output` 可选 `llvm`、`object` 或 `executable`；`llvm` 配置项可指定外置 clang 路径。执行 `chali aot` 会读取项目配置，显式命令行参数覆盖对应设置：
-
 ```sh
-chali aot --out build/arm64/app
-chali aot --target linux-x64 --emit-obj --out build/x64/app
+chali aot app.chl --target linux-arm64 --emit-obj --out build/arm64/app
 ```
 
-生成成功后应在目标机器或相应模拟器中验证参数、标准输入输出、文件、资源清理和错误路径。`run` 不会自动启动模拟器，目标与宿主不同时会拒绝直接运行。导出目标文件成功仅证明代码生成完成，不能据此声称目标链接或实际运行已验证。复杂 C ABI 的跨目标完整链接需要兼容的目标适配器；当前可先导出目标文件，并在目标工具链中完成适配器编译与链接。
+路径相对 chali.toml 解析，命令行显式选项覆盖对应配置。上述 --emit-obj 只生成对象文件，不执行目标链接。
 
-## 24.8 调试、发布与部署
+生成某架构对象文件不等于已经得到可部署应用。对象生成、目标链接和目标设备运行需要分别验收；构建出交叉架构编译器也不表示全部 AOT 目标自动可用。
 
-### 开发时运行
+## 24.4 部署核对与诊断
 
-```sh
-chali run app.chl
-chali run app.chl --out build/app
-```
+在干净目录核对配置文件、网页、动态库、数据目录权限及工作目录。首次启动先验证一个无副作用操作，再测试真实业务。需要原生调试时使用 DWARF 与 GDB/MI 路径；保留符号和错误日志，使用户能定位失败阶段。
 
-运行所需的编译器与 LLVM 工具链必须可用；外置 LLVM 变体使用安装好的 clang，静态变体使用内置 LLVM。`run` 开启数组与指针检查，普通所有权、借用与资源规则继续生效。
+## 24.5 习题
 
-### 交付时导出
-
-```sh
-chali aot app.chl --out build/app
-chali aot app.chl --checked --out build/app-checked
-```
-
-第一条命令采用 unchecked 导出默认值，第二条显式保留数组和指针检查。两种产物都保留实际内存访问与对象存活验证；unchecked 不允许绕过所有权或静态借用规则。
-
-将生成的原生可执行文件交给同平台、同架构的用户。Windows 使用 `.exe`，Linux 使用无后缀可执行文件；应用声明的 C ABI 动态库及必要资源文件一并交付。目标机器运行产物不需要 ChaLi 编译器、VM 或 LLVM 动态库。
-
-跨架构构建编译器不等于相应 AOT 目标已支持。实际目标和验证范围见[LLVM AOT 编译](../38-aot.md)，不能只改文件后缀就把 Windows 程序当成 Linux 程序。
-
-### 调试与发布
-
-```sh
-chali aot app.chl --checked --debug --out build/app-debug
-```
-
-调试构建保留 DWARF 源码行、参数和局部变量信息，使用 O0；通过 VS Code 的 ChaLi 调试入口或 GDB 进行源码断点、单步和变量查看。发布构建继续使用最高优化、LTO 和死代码消除。详细设置见[原生 AOT 调试](../43-native-debugging.md)。
-
-发布前检查参数、输入输出、C ABI 库、资源清理及错误路径，并记录实际编译器版本、目标与产物摘要。LLVM IR `.ll` 和目标文件可用于分析，不必作为应用运行依赖交付。
-
-
-## 24.9 小结
-
-导出前先确认程序使用的库已适配 AOT，再选择内置或外置 LLVM 编译器。`aot` 生成原生产物，`--emit-llvm` 保留 LLVM 模块，`--checked` 保留数组与指针运行期检查；动态库通过生成的 C ABI 头文件与宿主对接。
-
-## 24.10 习题
-
-1. 将列表中的 `30` 改为 `70`，导出后应得到什么结果？
-2. 只导出 LLVM 模块时应加哪个选项？
-3. 静态 LLVM 编译器会自动消除应用自身的 C ABI 动态库依赖吗？
-4. `--checked` 会关闭或开启列表的存活验证吗？
-5. 从 Windows 生成 Linux ARM64 的目标文件与可执行文件，各需要准备什么？
-6. 将交叉编译配置放入 `chali.toml`，再用命令行改为只生成 Linux x64 目标文件。
+1. 列出编译器依赖与应用依赖各一项。
+2. unchecked 是否取消静态借用检查？
+3. 跨架构对象生成后还缺什么证据？
+4. 部署网页服务时需要带上哪些资源？
 
 ### 参考解答与验收要点
 
-1. 将例子中的 `30` 改为 `70`，重新导出并运行。参考结果为 `total=100`，需要重新编译才能改变已导出的程序。
-2. 只导出 LLVM 模块时应加哪个选项？参考答案：`--emit-llvm`，该路径不执行目标代码生成和链接。
-3. 使用静态 LLVM 编译器后，应用自己依赖的 C ABI 动态库是否也会自动消失？参考答案：不会；这些依赖仍按应用的链接方式交付。
-4. 列表下标与对象存活验证始终执行；`--checked` 控制的是数组与指针运行期检查。
-5. 目标文件需要支持 ARM64 的 LLVM 后端；完整可执行文件还需要匹配的目标 sysroot、ChaLi 运行时与链接工具。实际运行须另在目标环境验证。
-6. 参考本章 `[aot]` 配置，再执行 `chali aot --target linux-x64 --emit-obj --out build/x64/app`；核对 `.o` 的架构、格式和项目配置覆盖结果。
+1. 例如 LLVM 工具与 MySQL 客户端动态库，按实际链接核对。
+2. 不会，默认运行期检查开关与静态规则分别处理。
+3. 目标链接与目标环境实际执行。
+4. 页面、配置、外部库及数据准备，路径按运行目录检查。
 
-## 下一步
+下一章：[第 25 章](25-学生信息管理系统.md)。
 
-下一章进入[第 25 章 学生信息管理系统](25-学生信息管理系统.md)，将前面学过的结构体、反射和标准库组织成完整项目。
-
-## 24.11 番外：行囊里的工具
+## 24.6 番外：行囊里的工具
 
 改写自欧阳修《卖油翁》。
 

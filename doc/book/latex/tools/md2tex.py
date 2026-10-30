@@ -144,7 +144,7 @@ class Converter:
             path = image.group(2)
             if '..' in path or not os.path.isfile(os.path.join(BOOK, path)):
                 raise ValueError('无效书稿图片：' + path)
-            return '\\begin{center}\n\\includegraphics[width=\\linewidth]{../' + path + '}\\par\n' + esc(image.group(1)) + '\n\\end{center}'
+            return '\\begin{center}\n\\includegraphics[width=\\linewidth,height=0.72\\textheight,keepaspectratio]{../' + path + '}\\par\n\\nopagebreak\n' + esc(image.group(1)) + '\n\\end{center}'
         # 双反引号代码段先于单反引号处理，否则 ``x`` 会被拆成 `x` 加一对裸反引号。
         s = re.sub(r'``((?:[^`\n]|`(?!`))+?)``', self._stash_code, s)
         s = re.sub(r'`([^`\n]+)`', self._stash_code, s)
@@ -397,9 +397,10 @@ class Converter:
             if not s or s == '---' or re.match(r'^\s*<!--.*-->\s*$', raw):
                 i += 1
                 continue
-            if raw.startswith('#'):
-                lvl = len(raw) - len(raw.lstrip('#'))
-                blocks.append(('h', lvl, raw.lstrip('#').strip()))
+            heading = re.match(r'^(#{1,6})[ \t]+(.*)$', raw)
+            if heading:
+                lvl = len(heading.group(1))
+                blocks.append(('h', lvl, heading.group(2).strip()))
                 i += 1
                 continue
             if raw.startswith('|'):
@@ -428,7 +429,8 @@ class Converter:
                 nxt = lines[i]
                 st = nxt.strip()
                 if (not st or st.startswith('```') or st == '---'
-                        or nxt.startswith(('#', '|', '>'))
+                        or nxt.startswith(('|', '>'))
+                        or re.match(r'^#{1,6}[ \t]+', nxt)
                         or re.match(r'^(-|\d+\.) ', nxt)
                         or re.match(r'^\s*<!--.*-->\s*$', nxt)):
                     break

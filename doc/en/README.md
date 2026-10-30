@@ -4,14 +4,9 @@
 **English** · [简体中文](../README.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-See [current capabilities and limits](17-capabilities.md) for the shared implementation contract and build defaults.
+See [current capabilities and limits](17-capabilities.md) for implemented behavior and build defaults. Tutorials develop language usage, while reference pages provide interface details. Verification reports identify programs, configurations and platforms actually exercised.
 
-**Write once, run anywhere.** One logic, from embedded Linux to cloud; value semantics, non-null references, no GC.
-
-ChaLi lets you write business logic once: the same source is AOT-compiled by LLVM into native
-machine code with identical semantics on desktop, server and embedded Linux targets, with platform
-differences handled by `#abi` declarations or an exported C ABI. There is no garbage collector, and
-resources are released deterministically when they leave scope.
+ChaLi uses LLVM AOT to generate native code. Prepare target runtimes, C ABI libraries, link assets and runtime resources for the actual platform; consult the module and AOT references for their conditions.
 
 Read the current language/toolchain version from [`VERSION`](../../VERSION).
 
@@ -107,13 +102,13 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 - [Standard library ownership and string methods](32-opcode-values-strings.md)
 - [Reflection serialization and dynamic SQL](33-reflection-serialization-sql.md)
 
-The [24-chapter beginner book](../book/en/README.md) includes exercises with reference answers, literary adaptations and compilation / VM execution diagrams. The Chinese book is the maintained source for this material.
+The [25-chapter English book](../book/en/README.md) contains technical chapters, exercises and appendices. The Chinese edition also includes literary extras and a PDF. Chapter 25 follows the actual school application with architecture and browser screenshots.
 
 - [Compiler safety boundaries and focused regression tests](34-compiler-safety.md)
 
 - [Opcode and standard-library host records](../35-opcode-storage.md)
 
-- [Name freeze: the five letters of ChaLi](37-name-freeze.md)
+- [Name and related capabilities](37-name-freeze.md)
 
 - [AOT compilation](38-aot.md)
 - [AOT lowering switches and counters](40-backend-ownership.md)

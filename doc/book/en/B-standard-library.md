@@ -1,36 +1,100 @@
-# Appendix B Standard-library reference
+# Appendix B Standard library lookup
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../B-标准库速查.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The maintained [API index](../../library/README.md) is the authoritative inventory of modules and signatures. The compiler embeds that index, so `chali man api` works without a source checkout. API pages may retain their source documentation language even when the terminal interface is English.
+std::lang supplies the default core types and behavior. Import other modules as needed. This appendix locates APIs by task; consult the [library reference](../../library/README.md) for exact signatures, errors and platform conditions. Use chali man module::symbol from the terminal.
 
-```sh
-chali man api
-chali man api std::text
-chali man api std::text::Text
-chali man api --search deserialize
+## B.1 Combine explicit imports
+
+<!-- verify-book -->
+```chali
+import std::math;
+import std::text;
+import std::iter;
+
+void main()
+{
+    println("sqrt={}", std::math::sqrt(144.0));
+    println("upper={}", std::text::Text::toUpper("chali"));
+    int64 sum = 0;
+    for (int64 v in std::iter::range(1, 5))
+    {
+        sum += v;
+    }
+    println("sum={}", sum);
+}
 ```
 
-| Need | Start with |
+```text
+sqrt=12
+upper=CHALI
+sum=10
+```
+
+range(1, 5) includes 1 through 4. Check endpoint and error conventions separately for other APIs.
+
+## B.2 Core facilities
+
+The core includes String, List, Map, Set, Pair, Option, Result, Error, MessageError, Any, formatting, assertions and numeric input. Value operations, borrowing and resources retain their type-specific rules. Explicit absence uses None; do not infer absence from default construction.
+
+## B.3 Modules by task
+
+| Module | Task |
 | --- | --- |
-| Core values, collections, results and common errors | `std::lang` |
-| Iteration and adapters | `std::iter` |
-| Text operations and construction | `std::text` |
-| Unicode validation and traversal | `std::utf8` |
-| Binary encodings | `std::encoding`, `std::binary` |
-| Structured data | `std::json`, `std::toml`, `std::csv` |
-| Files and terminal input/output | `std::io` |
-| Command-line parsing | `std::cli` |
-| Time measurement and dates | `std::clock`, `std::datetime` |
-| Numeric calculations | `std::math` and the numeric modules in the API index |
-| Type metadata and serialization support | `std::reflect` |
-| Database access and model annotations | `std::sql` |
-| Network services | `std::net` |
-| Images | `std::image` |
-| Regular expressions | `std::regex` |
+| [`std::math`](../../library/std-math.md) | Scalar mathematics |
+| [`std::numerics`](../../library/std-numerics.md) | Numerical methods |
+| [`std::numtheory`](../../library/std-numtheory.md) | Integer number theory |
+| [`std::complex`](../../library/std-complex.md) | Complex arithmetic |
+| [`std::linalg`](../../library/std-linalg.md) | Dense vectors and matrices |
+| [`std::random`](../../library/std-random.md) | Deterministic LCG and entropy seeding; not a session-token generator |
+| [`std::signal`](../../library/std-signal.md) | DFT and FFT |
+| [`std::cas`](../../library/std-cas.md) | Symbolic expressions and exact mathematics |
+| [`std::text`](../../library/std-text.md) | Text operations |
+| [`std::utf8`](../../library/std-utf8.md) | UTF-8 validation, code points and slicing |
+| [`std::encoding`](../../library/std-encoding.md) | Hex, Base64 and URL encoding |
+| [`std::csv`](../../library/std-csv.md) | CSV reading and writing |
+| [`std::json`](../../library/std-json.md) | JSON parsing and reflected conversion |
+| [`std::toml`](../../library/std-toml.md) | TOML values and reflected conversion |
+| [`std::regex`](../../library/std-regex.md) | Compiled regular expressions |
+| [`std::parse`](../../library/std-parse.md) | Text-to-number parsing |
+| [`std::binary`](../../library/std-binary.md) | Fixed-width binary decoding |
+| [`std::path`](../../library/std-path.md) | Path operations |
+| [`std::compress`](../../library/std-compress.md) | Binary compression as List<uint8> |
+| [`std::collections`](../../library/std-collections.md) | Deque, Queue and local value queues |
+| [`std::linkedlist`](../../library/std-linkedlist.md) | Doubly linked lists |
+| [`std::tree`](../../library/std-tree.md) | Search trees, red-black trees and heaps |
+| [`std::graph`](../../library/std-graph.md) | Graph algorithms and disjoint sets |
+| [`std::algorithms`](../../library/std-algorithms.md) | Sorting, searching and aggregate operations |
+| [`std::image`](../../library/std-image.md) | Raster data and image operations |
+| [`std::reflect`](../../library/std-reflect.md) | Type, field, method and annotation metadata |
+| [`std::serialization`](../../library/std-serialization.md) | Typed binary serialization |
+| [`std::thread`](../../library/std-thread.md) | Isolated threads and task groups |
+| [`std::message`](../../library/std-message.md) | Cross-thread messages |
+| [`std::concurrency`](../../library/std-concurrency.md) | Bounded shared channels and explicit shared state |
+| [`std::event`](../../library/std-event.md) | Events and timing sources |
+| [`std::io`](../../library/std-io.md) | Files and IoError |
+| [`std::net`](../../library/std-net.md) | TCP and HTTP client; no TLS client support |
+| [`std::sql`](../../library/std-sql.md) | Database connections and backend-specific querying |
+| [`std::process`](../../library/std-process.md) | Host processes and pipelines |
+| [`std::clock`](../../library/std-clock.md) | Monotonic timing for differences |
+| [`std::datetime`](../../library/std-datetime.md) | UTC calendar dates and Unix seconds |
+| [`std::cli`](../../library/std-cli.md) | Options, positionals and help |
+| [`std::memory`](../../library/std-memory.md) | Borrowed Span views and memory statistics |
+| [`std::iter`](../../library/std-iter.md) | Iterator composition and terminal operations |
 
-Use the index to discover the remaining data structures, algorithms, concurrency and system services; this overview does not maintain a separate module count. Check each API's declared result and resource behavior. Standard error types implement `Error` while preserving module-specific data. Use `MessageError` for message-only application failures.
 
-Host services require the corresponding operating-system facilities and external dependencies. A package for a CPU architecture does not by itself validate every host service or AOT target on that CPU. Performance measurements and supported capabilities have separate documentation.
+## B.4 Boundaries to check
+
+Resource cleanup and repeated-close behavior belong to each type; do not assume every object has an interchangeable close method. Binary compressed output is a byte list. UTF-8 byte lengths and code-point operations are different. Local collections queues and explicit cross-thread channels have different sharing rules.
+
+Database parameter binding varies by backend; the current MySQL example uses Database.quote for text. Reflection metadata does not validate business permissions. Optional modules and foreign libraries remain subject to the actual target and link configuration.
+
+## B.5 API and source lookup
+
+Use the [full symbol index](../../library/symbols.md) for signatures and source locations. Module bodies live in [source/std](../../../source/std/) and host services in [source/glue](../../../source/glue/); filenames need not match module names exactly. Current execution uses checked AOT or native exports.
+
+## B.6 Verify a combination
+
+Check input types, Result/Option returns, cleanup and platform support. Run a small successful example and a failure path, then validate borrowing and ownership across module boundaries. [Chapter 25](25-student-system.md) combines database services; [Chapter 16](16-errors.md) matches concrete interface errors.

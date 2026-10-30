@@ -1,296 +1,1718 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>学生信息管理系统</title>
-<style>
-  :root {
-    --bg: #f4f6fb;
-    --card: #ffffff;
-    --ink: #1f2937;
-    --muted: #6b7280;
-    --line: #e5e7eb;
-    --brand: #2563eb;
-    --brand-dark: #1d4ed8;
-    --danger: #dc2626;
-    --ok: #059669;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
-    background: var(--bg); color: var(--ink); min-height: 100vh;
-  }
-  header {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
-    color: #fff; padding: 28px 32px;
-  }
-  header h1 { font-size: 22px; font-weight: 600; }
-  header p { margin-top: 6px; font-size: 13px; opacity: .85; }
-  main { max-width: 1080px; margin: 0 auto; padding: 24px 32px 64px; }
-  .cards { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-  .card {
-    flex: 1; min-width: 160px; background: var(--card); border: 1px solid var(--line);
-    border-radius: 12px; padding: 16px 20px;
-  }
-  .card .num { font-size: 26px; font-weight: 700; color: var(--brand-dark); }
-  .card .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .toolbar {
-    display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;
-  }
-  input, select {
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
-    font-size: 14px; background: #fff; color: var(--ink); outline: none;
-  }
-  input:focus, select:focus { border-color: var(--brand); }
-  #search { width: 220px; }
-  button {
-    border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px;
-    cursor: pointer; background: var(--brand); color: #fff;
-  }
-  button:hover { background: var(--brand-dark); }
-  button.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
-  button.ghost:hover { border-color: var(--brand); color: var(--brand); }
-  button.danger { background: #fff; color: var(--danger); border: 1px solid #fecaca; }
-  button.danger:hover { background: #fef2f2; }
-  table {
-    width: 100%; border-collapse: collapse; background: var(--card);
-    border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.04);
-  }
-  th, td { padding: 12px 16px; text-align: left; font-size: 14px; }
-  th { background: #f9fafb; color: var(--muted); font-weight: 600; cursor: pointer; white-space: nowrap; }
-  th .arrow { font-size: 11px; margin-left: 4px; color: var(--brand); }
-  tbody tr { border-top: 1px solid var(--line); }
-  tbody tr:hover { background: #f8faff; }
-  td.actions { white-space: nowrap; }
-  td.actions button { padding: 5px 12px; font-size: 13px; margin-right: 6px; }
-  .empty { text-align: center; color: var(--muted); padding: 40px 0 !important; }
-  .mask {
-    display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45);
-    align-items: center; justify-content: center;
-  }
-  .mask.show { display: flex; }
-  .dialog {
-    background: #fff; border-radius: 14px; padding: 24px 28px; width: 400px;
-    box-shadow: 0 20px 50px rgba(0,0,0,.2);
-  }
-  .dialog h2 { font-size: 17px; margin-bottom: 16px; }
-  .dialog label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
-  .dialog input { width: 100%; }
-  .dialog .row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 22px; }
-  #toast {
-    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-    background: #111827; color: #fff; padding: 10px 20px; border-radius: 10px;
-    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s;
-    max-width: 70vw;
-  }
-  #toast.show { opacity: .95; }
-  #toast.err { background: var(--danger); }
-</style>
-</head>
-<body>
-<header>
-  <h1>学生信息管理系统</h1>
-  <p>ChaLi 反射 + MySQL —— 模型一份声明，接口、建表、校验全部派生</p>
-</header>
-<main>
-  <div class="cards">
-    <div class="card"><div class="num" id="stat-count">0</div><div class="label">学生总数</div></div>
-    <div class="card"><div class="num" id="stat-avg">-</div><div class="label">平均成绩</div></div>
-    <div class="card"><div class="num" id="stat-max">-</div><div class="label">最高成绩</div></div>
-    <div class="card"><div class="num" id="stat-schema">-</div><div class="label">模型字段数（反射）</div></div>
-  </div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>学生信息管理系统</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --card: #fff;
+        --ink: #18243b;
+        --muted: #64748b;
+        --line: #e3e9f2;
+        --brand: #325bd6;
+        --brand-dark: #2446ac;
+        --danger: #b42338;
+        --ok: #15816a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          14px/1.6 "Segoe UI",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        padding: 9px 16px;
+        background: var(--brand);
+        color: white;
+        transition: background 0.15s;
+      }
+      button:hover {
+        background: var(--brand-dark);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      button.ghost {
+        background: white;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      button.ghost:hover {
+        background: #eef3ff;
+        border-color: #b8c9f5;
+      }
+      button.danger {
+        color: var(--danger);
+        background: #fff5f5;
+        border-color: #f3d5da;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #91adff;
+        outline-offset: 3px;
+      }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 224px;
+        padding: 30px 20px;
+        background: #172945;
+        color: #d6e0ef;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 650;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: #456de0;
+        font-size: 18px;
+      }
+      .sidebar small {
+        color: #99aac4;
+      }
+      .nav-caption {
+        margin: 36px 12px 12px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: #99aac4;
+      }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: #fff;
+        border: 1px solid #55729c;
+        border-radius: 9px;
+        padding: 12px;
+        background: #2d4465;
+      }
+      .nav-link span:first-child {
+        font-size: 18px;
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        border-top: 1px solid #34445e;
+        padding-top: 18px;
+        font-size: 12px;
+      }
+      .workspace {
+        margin-left: 224px;
+      }
+      .topbar {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 36px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+      }
+      .breadcrumb {
+        color: var(--muted);
+      }
+      .breadcrumb strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #9ca3af;
+      }
+      .status[data-state="ready"] .dot {
+        background: var(--ok);
+      }
+      .status[data-state="error"] .dot {
+        background: var(--danger);
+      }
+      main {
+        max-width: 1440px;
+        margin: auto;
+        padding: 30px 36px 60px;
+      }
+      .page-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 26px;
+      }
+      h1 {
+        font-size: 26px;
+        letter-spacing: 0.5px;
+        margin: 0 0 4px;
+      }
+      .subtitle {
+        color: var(--muted);
+        margin: 0;
+      }
+      .eyebrow {
+        color: var(--brand);
+        font-size: 12px;
+        letter-spacing: 1px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 26px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px 22px;
+        box-shadow: 0 3px 12px #16243b03;
+      }
+      .card .label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .card .num {
+        font-size: 30px;
+        line-height: 1.25;
+        margin: 10px 0 5px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+      .card .hint {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        overflow: hidden;
+      }
+      .panel-heading {
+        padding: 20px 22px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .panel-heading h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .badge {
+        font-size: 11px;
+        color: var(--brand);
+        background: #eef2ff;
+        padding: 2px 9px;
+        border-radius: 20px;
+      }
+      .toolbar {
+        padding: 18px 22px;
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .search-box {
+        position: relative;
+      }
+      .search-box span {
+        position: absolute;
+        left: 12px;
+        top: 8px;
+        color: var(--muted);
+      }
+      input,
+      select {
+        color: var(--ink);
+        border: 1px solid #ccd6e4;
+        border-radius: 8px;
+        padding: 9px 12px;
+        background: #fff;
+        width: 100%;
+      }
+      #search {
+        width: 260px;
+        padding-left: 34px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin: 14px 0 5px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 14px 22px;
+        border-bottom: 1px solid #edf0f5;
+        font-size: 13px;
+      }
+      th {
+        background: #f8fafc;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      .sort-button {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        white-space: nowrap;
+      }
+      .sort-button:hover {
+        background: transparent;
+        color: var(--brand);
+      }
+      .arrow {
+        margin-left: 6px;
+        color: var(--brand);
+      }
+      tbody tr:hover {
+        background: #fafcff;
+      }
+      td:first-child {
+        font-variant-numeric: tabular-nums;
+      }
+      .actions button {
+        padding: 5px 10px;
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      .empty {
+        text-align: center;
+        padding: 52px 20px;
+        color: var(--muted);
+      }
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 22px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .pager-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .pager-controls button {
+        font-size: 12px;
+        padding: 5px 11px;
+      }
+      .mask {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #10213c70;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 20;
+      }
+      .mask.show {
+        display: flex;
+      }
+      .dialog {
+        width: 460px;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow: auto;
+        background: #fff;
+        border-radius: 15px;
+        padding: 26px;
+        box-shadow: 0 24px 90px #10213c40;
+      }
+      .dialog h2 {
+        font-size: 19px;
+        margin: 0 0 6px;
+      }
+      .dialog p {
+        font-size: 12px;
+        margin: 0;
+        color: var(--muted);
+      }
+      .dialog .row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 16px;
+      }
+      #toast {
+        position: fixed;
+        bottom: 28px;
+        left: calc(50% + 112px);
+        transform: translateX(-50%);
+        background: #172945;
+        color: #fff;
+        border-radius: 10px;
+        padding: 12px 20px;
+        opacity: 0;
+        pointer-events: none;
+        max-width: min(540px, 90vw);
+        z-index: 30;
+      }
+      #toast.show {
+        opacity: 1;
+      }
+      #toast.err {
+        background: var(--danger);
+      }
+      .inline-error {
+        display: none;
+        color: var(--danger);
+        background: #fff3f4;
+        padding: 12px 22px;
+        border-bottom: 1px solid #f3d5da;
+      }
+      .inline-error.show {
+        display: block;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      @media (max-width: 1000px) {
+        .sidebar {
+          width: 180px;
+          padding: 24px 15px;
+        }
+        .workspace {
+          margin-left: 180px;
+        }
+        main {
+          padding: 26px 22px;
+        }
+        .topbar {
+          padding: 0 22px;
+        }
+        .cards {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        #toast {
+          left: calc(50% + 90px);
+        }
+      }
+      @media (max-width: 640px) {
+        .sidebar {
+          position: static;
+          width: auto;
+          padding: 14px 18px;
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .sidebar small,
+        .nav-caption,
+        .sidebar-footer {
+          display: none;
+        }
+        .nav-link {
+          padding: 6px 12px;
+          font-size: 12px;
+        }
+        .brand {
+          font-size: 14px;
+        }
+        .brand-mark {
+          width: 30px;
+          height: 30px;
+          font-size: 14px;
+        }
+        .workspace {
+          margin: 0;
+        }
+        .topbar {
+          height: 52px;
+          padding: 0 18px;
+          font-size: 12px;
+        }
+        .topbar .status {
+          font-size: 11px;
+        }
+        main {
+          padding: 24px 16px 40px;
+        }
+        .page-heading {
+          align-items: flex-start;
+        }
+        h1 {
+          font-size: 23px;
+        }
+        .subtitle {
+          font-size: 12px;
+        }
+        .page-heading button {
+          padding: 8px 10px;
+          white-space: nowrap;
+          font-size: 12px;
+        }
+        .cards {
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+        .card {
+          padding: 15px;
+        }
+        .card .num {
+          font-size: 26px;
+        }
+        .toolbar {
+          padding: 16px;
+          gap: 7px;
+        }
+        .search-box {
+          flex: 1;
+          min-width: 140px;
+        }
+        #search {
+          width: 100%;
+        }
+        .toolbar button {
+          padding: 9px 11px;
+          font-size: 12px;
+        }
+        .panel-heading {
+          padding: 16px 16px 0;
+        }
+        th,
+        td {
+          padding: 12px 16px;
+        }
+        .pagination {
+          padding: 13px 16px;
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .pager-controls {
+          align-self: flex-end;
+        }
+        #toast {
+          left: 50%;
+        }
+        .dialog {
+          padding: 22px;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
 
-  <div class="toolbar">
-    <input id="search" placeholder="按姓名搜索…">
-    <button class="ghost" onclick="load()">搜索</button>
-    <button class="ghost" onclick="clearSearch()">清空</button>
-    <span style="flex:1"></span>
-    <button onclick="openAdd()">＋ 新增学生</button>
-  </div>
-
-  <table>
-    <thead>
-      <tr id="head-row"></tr>
-    </thead>
-    <tbody id="rows"><tr><td class="empty" colspan="9">加载中…</td></tr></tbody>
-  </table>
-</main>
-
-<div class="mask" id="mask">
-  <div class="dialog">
-    <h2 id="dialog-title">新增学生</h2>
-    <label>学号（留空自动分配）</label><input id="f-id" type="number" min="1">
-    <label>姓名</label><input id="f-name" maxlength="40">
-    <label>年龄</label><input id="f-age" type="number" min="1" max="150">
-    <label>班级</label><input id="f-class" maxlength="40">
-    <label>成绩</label><input id="f-score" type="number" min="0" max="100">
-    <div class="row">
-      <button class="ghost" onclick="closeDialog()">取消</button>
-      <button id="dialog-save" onclick="save()">保存</button>
+      [hidden] {
+        display: none !important;
+      }
+      .login-screen {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #fff;
+      }
+      .login-intro {
+        padding: 12vh 9vw;
+        background: #172945;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .login-intro h1 {
+        font-size: 38px;
+        margin: 32px 0 18px;
+      }
+      .login-intro p {
+        color: #bac9df;
+        max-width: 370px;
+        line-height: 1.9;
+      }
+      .login-intro .brand {
+        position: absolute;
+        top: 40px;
+      }
+      .login-form-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+      .login-form {
+        max-width: 380px;
+        width: 100%;
+      }
+      .login-form h2 {
+        font-size: 26px;
+        margin: 0 0 8px;
+      }
+      .login-form p {
+        color: var(--muted);
+        margin-bottom: 30px;
+      }
+      .login-form button {
+        width: 100%;
+        margin-top: 24px;
+      }
+      .login-error {
+        color: var(--danger);
+        min-height: 24px;
+        font-size: 13px;
+        margin-top: 14px;
+      }
+      .nav-link {
+        background: transparent;
+        border-color: transparent;
+        color: #bbcbe1;
+        margin: 5px 0;
+      }
+      .nav-link[aria-current="page"] {
+        background: #2d4465;
+        color: #fff;
+        border-color: #55729c;
+      }
+      .account-menu {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .account-menu button {
+        font-size: 12px;
+        padding: 5px 9px;
+      }
+      .role-badge {
+        font-size: 11px;
+        color: var(--brand);
+        background: #edf2ff;
+        padding: 3px 9px;
+        border-radius: 20px;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin: 0 0 18px;
+      }
+      .tabs button[aria-selected="true"] {
+        background: var(--brand);
+        color: white;
+      }
+      .permission-note {
+        padding: 14px 18px;
+        background: #eef3ff;
+        border-radius: 10px;
+        color: #476184;
+        margin: 0 0 20px;
+        font-size: 13px;
+      }
+      .dialog select {
+        width: 100%;
+        padding: 10px;
+      }
+      .dialog small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .mobile-title {
+        display: none;
+      }
+      .form-error {
+        color: var(--danger);
+        font-size: 13px;
+        min-height: 20px;
+        margin-top: 12px;
+      }
+      .user-label {
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .empty button {
+        margin-top: 12px;
+      }
+      .sidebar nav {
+        overflow: auto;
+      }
+      .list-subtitle {
+        padding: 0 22px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .panel .toolbar {
+        padding-top: 12px;
+      }
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .dashboard-panel {
+        padding: 22px;
+      }
+      .dashboard-panel h2 {
+        font-size: 16px;
+        margin-top: 0;
+      }
+      .dashboard-panel li {
+        margin: 12px 0;
+        color: var(--muted);
+      }
+      .dashboard-panel button {
+        margin-top: 10px;
+      }
+      .login-note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 28px;
+      }
+      .button-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .dialog .row button {
+        min-width: 72px;
+      }
+      @media (max-width: 640px) {
+        .login-screen {
+          grid-template-columns: 1fr;
+        }
+        .login-intro {
+          padding: 32px 24px;
+        }
+        .login-intro .brand {
+          position: static;
+        }
+        .login-intro h1 {
+          font-size: 27px;
+          margin: 24px 0 5px;
+        }
+        .login-intro p {
+          margin: 0;
+        }
+        .login-form-wrap {
+          padding: 30px 24px;
+        }
+        .sidebar {
+          display: block;
+        }
+        .sidebar > .brand {
+          display: none;
+        }
+        .sidebar nav {
+          display: flex;
+          gap: 5px;
+          overflow: auto;
+        }
+        .nav-link {
+          white-space: nowrap;
+          flex-shrink: 0;
+          margin: 0;
+        }
+        .nav-link span:first-child {
+          display: none;
+        }
+        .topbar {
+          height: auto;
+          min-height: 62px;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding: 10px 16px;
+        }
+        .breadcrumb {
+          display: none;
+        }
+        .account-menu {
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .user-label {
+          max-width: 100px;
+        }
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+        .page-heading {
+          margin-bottom: 18px;
+        }
+        .role-badge {
+          font-size: 10px;
+        }
+        .status {
+          margin-left: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section
+      id="login-screen"
+      class="login-screen"
+      aria-labelledby="login-heading"
+    >
+      <div class="login-intro">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">学</span>学生信息管理系统
+        </div>
+        <h1>教务工作台</h1>
+        <p>集中维护学生、班级、科目和教师资料，按授课范围管理成绩。</p>
+      </div>
+      <div class="login-form-wrap">
+        <form id="login-form" class="login-form">
+          <h2 id="login-heading">登录账号</h2>
+          <p>使用管理员分配的账号与口令登录。</p>
+          <label for="username">账号</label
+          ><input
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+            maxlength="64"
+            autofocus
+          /><label for="password">口令</label
+          ><input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="1024"
+          />
+          <div id="login-error" class="login-error" role="alert"></div>
+          <button id="login-submit" type="submit">登录工作台</button>
+          <div class="login-note">
+            管理员维护基础资料与账号；教师管理授权范围内的成绩；学生查看自己的资料和成绩。
+          </div>
+        </form>
+      </div>
+    </section>
+    <div id="app" hidden>
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">学</span>
+          <div>
+            学生管理<small
+              style="display: block; font-size: 10px; letter-spacing: 1px"
+              >CAMPUS WORKSPACE</small
+            >
+          </div>
+        </div>
+        <div class="nav-caption">教务工作台</div>
+        <nav id="navigation"></nav>
+        <div class="sidebar-footer">
+          学生信息管理系统<br /><small id="scope-label"></small>
+        </div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar">
+          <div class="breadcrumb">
+            教务工作台 / <strong id="breadcrumb-title">总览</strong>
+          </div>
+          <div class="account-menu">
+            <span id="user-label" class="user-label"></span
+            ><span id="role-label" class="role-badge"></span
+            ><button class="ghost" id="password-button">修改口令</button
+            ><button class="ghost" id="logout-button">退出</button>
+          </div>
+          <div
+            class="status"
+            id="connection-status"
+            data-state="loading"
+            role="status"
+          >
+            <span class="dot"></span><span id="connection-label">正在读取</span>
+          </div>
+        </header>
+        <main>
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow" id="eyebrow">CAMPUS WORKSPACE</div>
+              <h1 id="page-title">工作总览</h1>
+              <p class="subtitle" id="page-description"></p>
+            </div>
+            <button id="add-button" hidden>＋ 新增记录</button>
+          </div>
+          <div class="inline-error" id="load-error" role="alert"></div>
+          <section class="cards" aria-label="当前账号可访问的数据">
+            <div class="card">
+              <div class="label">学生</div>
+              <div class="num" id="stat-students">—</div>
+              <div class="hint">当前账号可见</div>
+            </div>
+            <div class="card">
+              <div class="label">班级</div>
+              <div class="num" id="stat-classes">—</div>
+              <div class="hint">当前账号可见</div>
+            </div>
+            <div class="card">
+              <div class="label">科目</div>
+              <div class="num" id="stat-subjects">—</div>
+              <div class="hint">当前账号可见</div>
+            </div>
+            <div class="card">
+              <div class="label">成绩记录</div>
+              <div class="num" id="stat-grades">—</div>
+              <div class="hint">当前账号可见</div>
+            </div>
+          </section>
+          <section id="dashboard" class="dashboard-grid">
+            <div class="panel dashboard-panel">
+              <h2>开始工作</h2>
+              <p id="welcome-message"></p>
+              <ul id="work-list"></ul>
+              <button id="start-button">查看学生</button>
+            </div>
+            <div class="panel dashboard-panel">
+              <h2>数据维护顺序</h2>
+              <ol>
+                <li>管理员建立班级与科目。</li>
+                <li>建立教师、学生账号，并关联对应资料。</li>
+                <li>在权限管理中配置教师授课班级与科目。</li>
+                <li>教师录入成绩，学生登录查看自己的记录。</li>
+              </ol>
+              <button class="ghost" id="dashboard-refresh">↻ 刷新数据</button>
+            </div>
+          </section>
+          <section id="directory" hidden>
+            <div
+              id="permission-tabs"
+              class="tabs"
+              role="tablist"
+              aria-label="权限管理分类"
+              hidden
+            >
+              <button class="ghost" data-tab="accounts" role="tab">
+                账号管理</button
+              ><button class="ghost" data-tab="assignments" role="tab">
+                授课授权
+              </button>
+            </div>
+            <div id="permission-note" class="permission-note" hidden>
+              管理员管理账号与基础资料；教师仅维护已授权班级、科目的成绩；学生只读自己的资料与成绩。停用账号、修改角色或口令后，已有会话失效。
+            </div>
+            <div class="panel">
+              <div class="panel-heading">
+                <h2 id="list-title">记录列表</h2>
+                <span class="badge" id="result-count">0 条</span>
+              </div>
+              <div class="toolbar">
+                <label class="sr-only" for="search">搜索当前列表</label>
+                <div class="search-box">
+                  <span aria-hidden="true">⌕</span
+                  ><input
+                    id="search"
+                    type="search"
+                    placeholder="搜索名称、编号或关联资料"
+                    autocomplete="off"
+                  />
+                </div>
+                <button id="search-button">搜索</button
+                ><button class="ghost" id="reset-search">重置</button
+                ><span style="flex: 1"></span
+                ><button class="ghost" id="refresh-button">↻ 刷新</button>
+              </div>
+              <div class="table-scroll">
+                <table aria-label="业务记录">
+                  <thead>
+                    <tr id="head-row"></tr>
+                  </thead>
+                  <tbody id="rows"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <span id="page-summary" role="status"></span>
+                <div class="pager-controls">
+                  <button class="ghost" id="previous-page">上一页</button
+                  ><span id="page-number"></span
+                  ><button class="ghost" id="next-page">下一页</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script>
-"use strict";
-const FIELDS = [
-  { key: "id", title: "学号" },
-  { key: "name", title: "姓名" },
-  { key: "age", title: "年龄" },
-  { key: "className", title: "班级" },
-  { key: "score", title: "成绩" },
-];
-let students = [];
-let order = "id", desc = false, editingId = null;
-
-function toast(message, isError) {
-  const node = document.getElementById("toast");
-  node.textContent = message;
-  node.className = isError ? "show err" : "show";
-  setTimeout(() => { node.className = ""; }, 2600);
-}
-
-async function request(method, url, body) {
-  const options = { method, headers: { "Content-Type": "application/json" } };
-  if (body !== undefined) options.body = JSON.stringify(body);
-  const response = await fetch(url, options);
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-  return data;
-}
-
-function renderHead() {
-  const row = document.getElementById("head-row");
-  row.innerHTML = "";
-  for (const field of FIELDS) {
-    const th = document.createElement("th");
-    th.textContent = field.title;
-    if (order === field.key) {
-      const arrow = document.createElement("span");
-      arrow.className = "arrow";
-      arrow.textContent = desc ? "▼" : "▲";
-      th.appendChild(arrow);
-    }
-    th.onclick = () => { order = field.key; desc = (order === field.key && !desc) || field.key !== order ? field.key === order ? desc : false : false; sortBy(field.key); };
-    row.appendChild(th);
-  }
-  const extra = document.createElement("th");
-  extra.textContent = "操作";
-  row.appendChild(extra);
-}
-
-function sortBy(field) {
-  if (order === field) { desc = !desc; } else { order = field; desc = false; }
-  renderHead();
-  load();
-}
-
-function renderRows() {
-  const body = document.getElementById("rows");
-  body.innerHTML = "";
-  if (!students.length) {
-    body.innerHTML = '<tr><td class="empty" colspan="9">暂无数据，点右上角「新增学生」试试</td></tr>';
-    return;
-  }
-  for (const student of students) {
-    const tr = document.createElement("tr");
-    for (const field of FIELDS) {
-      const td = document.createElement("td");
-      td.textContent = student[field.key];
-      tr.appendChild(td);
-    }
-    const actions = document.createElement("td");
-    actions.className = "actions";
-    const edit = document.createElement("button");
-    edit.className = "ghost"; edit.textContent = "编辑";
-    edit.onclick = () => openEdit(student);
-    const remove = document.createElement("button");
-    remove.className = "danger"; remove.textContent = "删除";
-    remove.onclick = () => removeStudent(student);
-    actions.appendChild(edit); actions.appendChild(remove);
-    tr.appendChild(actions);
-    body.appendChild(tr);
-  }
-  const scores = students.map(s => s.score);
-  document.getElementById("stat-count").textContent = students.length;
-  document.getElementById("stat-avg").textContent = scores.length
-    ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "-";
-  document.getElementById("stat-max").textContent = scores.length ? Math.max(...scores) : "-";
-}
-
-async function load() {
-  try {
-    const keyword = document.getElementById("search").value.trim();
-    const query = new URLSearchParams();
-    if (keyword) query.set("search", keyword);
-    query.set("order", order);
-    if (desc) query.set("desc", "1");
-    students = await request("GET", "/api/students?" + query.toString());
-    renderRows();
-  } catch (error) { toast(error.message, true); }
-}
-
-function clearSearch() { document.getElementById("search").value = ""; load(); }
-
-function openDialog(title, student) {
-  editingId = student ? student.id : null;
-  document.getElementById("dialog-title").textContent = title;
-  document.getElementById("f-id").value = student ? student.id : "";
-  document.getElementById("f-id").disabled = !!student;
-  document.getElementById("f-name").value = student ? student.name : "";
-  document.getElementById("f-age").value = student ? student.age : "";
-  document.getElementById("f-class").value = student ? student.className : "";
-  document.getElementById("f-score").value = student ? student.score : "";
-  document.getElementById("mask").classList.add("show");
-}
-
-function openAdd() { openDialog("新增学生", null); }
-function openEdit(student) { openDialog("编辑学生（学号 " + student.id + "）", student); }
-function closeDialog() { document.getElementById("mask").classList.remove("show"); }
-
-async function save() {
-  const payload = {
-    id: Number(document.getElementById("f-id").value) || 0,
-    name: document.getElementById("f-name").value.trim(),
-    age: Number(document.getElementById("f-age").value) || 0,
-    className: document.getElementById("f-class").value.trim(),
-    score: Number(document.getElementById("f-score").value) || 0,
-  };
-  try {
-    if (editingId === null) {
-      const saved = await request("POST", "/api/students", payload);
-      toast("已保存，学号 " + saved.id);
-    } else {
-      await request("PUT", "/api/students/" + editingId, payload);
-      toast("已更新学号 " + editingId);
-    }
-    closeDialog(); load();
-  } catch (error) { toast(error.message, true); }
-}
-
-async function removeStudent(student) {
-  if (!confirm("确定删除学号 " + student.id + "（" + student.name + "）？")) return;
-  try { await request("DELETE", "/api/students/" + student.id); toast("已删除"); load(); }
-  catch (error) { toast(error.message, true); }
-}
-
-async function loadSchema() {
-  try {
-    const schema = await request("GET", "/api/schema");
-    document.getElementById("stat-schema").textContent = schema.fields.length;
-  } catch (error) { /* 静默：统计卡而已 */ }
-}
-
-document.getElementById("search").addEventListener("keydown", event => {
-  if (event.key === "Enter") load();
-});
-
-renderHead();
-load();
-loadSchema();
-</script>
-</body>
+    <div class="mask" id="mask">
+      <form
+        class="dialog"
+        id="record-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+      >
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-description"></p>
+        <div id="form-fields"></div>
+        <div id="form-error" class="form-error" role="alert"></div>
+        <div class="row">
+          <button type="button" class="ghost" id="dialog-cancel">取消</button
+          ><button type="submit" id="dialog-save">保存</button>
+        </div>
+      </form>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const roles = { admin: "管理员", teacher: "教师", student: "学生" };
+      const scopeText = {
+        admin: "管理全部教务资料与账号",
+        teacher: "仅访问授权班级与科目",
+        student: "仅查看个人资料与成绩",
+      };
+      const column = (
+        key,
+        label,
+        type = "text",
+        source = null,
+        extra = {},
+      ) => ({ key, label, type, source, ...extra });
+      const definitions = {
+        students: {
+          title: "学生管理",
+          singular: "学生",
+          icon: "▤",
+          description: "维护学生资料、所属班级与登录账号的关联。",
+          fields: [
+            column("student_no", "学号"),
+            column("name", "姓名"),
+            column("age", "年龄", "number", null, { min: 1, max: 150 }),
+            column("class_id", "班级", "select", "classes"),
+            column("user_id", "关联学生账号", "select", "accounts", {
+              optional: true,
+              role: "student",
+            }),
+          ],
+        },
+        classes: {
+          title: "班级管理",
+          singular: "班级",
+          icon: "▦",
+          description:
+            "维护班级编号与名称。被学生或授课授权使用的班级不能删除。",
+          fields: [column("code", "班级编号"), column("name", "班级名称")],
+        },
+        grades: {
+          title: "成绩管理",
+          singular: "成绩",
+          icon: "▥",
+          description:
+            "按学生、科目与学期记录成绩，教师只能维护授课授权范围内的数据。",
+          fields: [
+            column("student_id", "学生", "select", "students"),
+            column("subject_id", "科目", "select", "subjects"),
+            column("teacher_id", "授课教师", "select", "teachers"),
+            column("term", "学期"),
+            column("score", "成绩", "number", null, {
+              min: 0,
+              max: 100,
+              step: "0.1",
+            }),
+          ],
+        },
+        subjects: {
+          title: "科目管理",
+          singular: "科目",
+          icon: "▧",
+          description: "维护科目编号与名称，关联授课安排和成绩记录。",
+          fields: [column("code", "科目编号"), column("name", "科目名称")],
+        },
+        teachers: {
+          title: "教师管理",
+          singular: "教师",
+          icon: "▣",
+          description: "维护教师资料及其登录账号；授课范围在权限管理中配置。",
+          fields: [
+            column("teacher_no", "工号"),
+            column("name", "姓名"),
+            column("user_id", "关联教师账号", "select", "accounts", {
+              optional: true,
+              role: "teacher",
+            }),
+          ],
+        },
+        accounts: {
+          title: "权限管理",
+          singular: "账号",
+          icon: "◇",
+          description: "管理登录账号、角色、启用状态与授课授权。",
+          fields: [
+            column("username", "账号"),
+            column("role", "角色", "enum", null, { choices: roles }),
+            column("enabled", "状态", "enum", null, {
+              choices: { 1: "启用", 0: "停用" },
+            }),
+            column("password", "口令", "password", null, { optional: true }),
+          ],
+        },
+        assignments: {
+          title: "授课授权",
+          singular: "授课授权",
+          icon: "◇",
+          description: "将教师与班级、科目关联，决定其可读写的成绩范围。",
+          fields: [
+            column("teacher_id", "教师", "select", "teachers"),
+            column("class_id", "班级", "select", "classes"),
+            column("subject_id", "科目", "select", "subjects"),
+          ],
+        },
+      };
+      const state = {
+        token: "",
+        user: null,
+        data: {},
+        view: "overview",
+        page: 1,
+        search: "",
+        sort: "id",
+        direction: -1,
+        busy: false,
+        epoch: 0,
+      };
+      let dialogMode = null,
+        editingId = null,
+        returnFocus = null,
+        toastTimer;
+      function element(tag, text, className) {
+        const node = document.createElement(tag);
+        if (text !== undefined) node.textContent = text;
+        if (className) node.className = className;
+        return node;
+      }
+      function toast(text, error = false) {
+        clearTimeout(toastTimer);
+        $("toast").textContent = text;
+        $("toast").className = error ? "show err" : "show";
+        toastTimer = setTimeout(() => ($("toast").className = ""), 3200);
+      }
+      function connection(status, text) {
+        $("connection-status").dataset.state = status;
+        $("connection-label").textContent = text;
+      }
+      function signedOut(message = "") {
+        state.epoch++;
+        state.token = "";
+        state.user = null;
+        state.data = {};
+        renderStats();
+        $("app").hidden = true;
+        $("login-screen").hidden = false;
+        $("login-error").textContent = message;
+        $("password").value = "";
+        $("mask").classList.remove("show");
+        $("form-fields").replaceChildren();
+        $("username").focus();
+      }
+      async function request(method, path, body) {
+        const token = state.token;
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers.Authorization = "Bearer " + token;
+        const response = await fetch(path, {
+          method,
+          headers,
+          body: body === undefined ? undefined : JSON.stringify(body),
+          cache: "no-store",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401 && state.user && state.token === token)
+            signedOut(data.error || "会话已失效，请重新登录");
+          throw new Error(data.error || `请求失败（${response.status}）`);
+        }
+        return data;
+      }
+      function writable(entity) {
+        return (
+          state.user &&
+          (state.user.role === "admin" ||
+            (state.user.role === "teacher" && entity === "grades"))
+        );
+      }
+      function labelFor(source, id) {
+        if (id === null || id === 0 || id === "0") return "未关联";
+        const row = (state.data[source] || []).find(
+          (value) => String(value.id) === String(id),
+        );
+        return row
+          ? row.name || row.username || row.code || String(row.id)
+          : "#" + id;
+      }
+      function display(row, field) {
+        if (field.type === "select")
+          return labelFor(field.source, row[field.key]);
+        if (field.type === "enum")
+          return field.choices[row[field.key]] || String(row[field.key] ?? "—");
+        return String(row[field.key] ?? "—");
+      }
+      function visibleFields() {
+        return definitions[state.view].fields.filter(
+          (field) =>
+            field.type !== "password" &&
+            (field.source !== "accounts" || state.user.role === "admin"),
+        );
+      }
+      function navigation() {
+        const nav = $("navigation");
+        nav.replaceChildren();
+        const entries = [
+          ["overview", "◫", "工作总览"],
+          ...Object.entries(definitions)
+            .filter(
+              ([key]) =>
+                key !== "assignments" &&
+                (key !== "accounts" || state.user.role === "admin"),
+            )
+            .map(([key, value]) => [key, value.icon, value.title]),
+        ];
+        for (const [key, icon, title] of entries) {
+          const link = element("a", undefined, "nav-link");
+          link.href = "#" + key;
+          link.append(element("span", icon), element("span", title));
+          if (
+            state.view === key ||
+            (key === "accounts" && state.view === "assignments")
+          )
+            link.setAttribute("aria-current", "page");
+          link.onclick = (event) => {
+            event.preventDefault();
+            showView(key);
+          };
+          nav.append(link);
+        }
+      }
+      function showView(view) {
+        if (!state.user) return;
+        if (
+          (view === "accounts" || view === "assignments") &&
+          state.user.role !== "admin"
+        )
+          view = "overview";
+        state.view = view;
+        state.page = 1;
+        state.search = "";
+        state.sort = "id";
+        state.direction = -1;
+        $("search").value = "";
+        const overview = view === "overview";
+        $("dashboard").hidden = !overview;
+        $("directory").hidden = overview;
+        $("add-button").hidden = overview || !writable(view);
+        $("page-title").textContent = overview
+          ? "工作总览"
+          : definitions[view].title;
+        $("breadcrumb-title").textContent = overview
+          ? "总览"
+          : definitions[view].title;
+        const readonlyDescriptions = {
+          students:
+            state.user.role === "student"
+              ? "查看自己的学号、姓名、年龄与所属班级。"
+              : "查看授课授权范围内的学生资料。",
+          classes: "查看当前账号可访问的班级。",
+          grades: "查看自己的各科目与学期成绩。",
+          subjects: "查看已安排或已有成绩的科目。",
+          teachers: "查看任课教师资料。",
+        };
+        $("page-description").textContent = overview
+          ? scopeText[state.user.role]
+          : !writable(view) && readonlyDescriptions[view]
+            ? readonlyDescriptions[view]
+            : definitions[view].description;
+        $("eyebrow").textContent = overview
+          ? "CAMPUS WORKSPACE"
+          : view.toUpperCase();
+        $("permission-tabs").hidden = !(
+          view === "accounts" || view === "assignments"
+        );
+        $("permission-note").hidden = $("permission-tabs").hidden;
+        for (const button of document.querySelectorAll("[data-tab]"))
+          button.setAttribute(
+            "aria-selected",
+            String(button.dataset.tab === view),
+          );
+        if (!overview) {
+          $("list-title").textContent =
+            view === "accounts" ? "账号列表" : definitions[view].title;
+          $("add-button").textContent = "＋ 新增" + definitions[view].singular;
+          renderRows();
+        }
+        navigation();
+      }
+      function renderStats() {
+        for (const key of ["students", "classes", "subjects", "grades"])
+          $("stat-" + key).textContent = Array.isArray(state.data[key])
+            ? state.data[key].length
+            : "—";
+      }
+      async function loadAll() {
+        if (!state.user || state.busy) return;
+        state.busy = true;
+        const epoch = state.epoch;
+        connection("loading", "正在更新");
+        $("load-error").className = "inline-error";
+        try {
+          const keys = Object.keys(definitions).filter(
+            (key) => key !== "accounts" || state.user.role === "admin",
+          );
+          const next = {};
+          for (const key of keys) {
+            const rows = await request("GET", "/api/" + key);
+            if (!Array.isArray(rows))
+              throw new Error("服务器返回的列表格式不正确");
+            next[key] = rows;
+          }
+          if (epoch !== state.epoch) return;
+          state.data = next;
+          renderStats();
+          if (state.view !== "overview") renderRows();
+          connection("ready", "数据已更新");
+        } catch (error) {
+          if (epoch !== state.epoch) return;
+          connection("error", "更新失败");
+          $("load-error").textContent =
+            "更新失败：" + error.message + "。请刷新重试。";
+          $("load-error").className = "inline-error show";
+        } finally {
+          if (epoch === state.epoch) {
+            state.busy = false;
+            if (state.view !== "overview") renderRows();
+          }
+        }
+      }
+      function renderRows() {
+        const fields = visibleFields(),
+          head = $("head-row"),
+          body = $("rows");
+        head.replaceChildren();
+        body.replaceChildren();
+        for (const field of [{ key: "id", label: "编号" }, ...fields]) {
+          const th = element("th");
+          th.scope = "col";
+          const button = element("button", field.label, "sort-button");
+          if (state.sort === field.key) {
+            th.setAttribute(
+              "aria-sort",
+              state.direction === 1 ? "ascending" : "descending",
+            );
+            const arrow = element(
+              "span",
+              state.direction === 1 ? "↑" : "↓",
+              "arrow",
+            );
+            arrow.setAttribute("aria-hidden", "true");
+            button.append(arrow);
+          }
+          button.onclick = () => {
+            state.direction = state.sort === field.key ? -state.direction : 1;
+            state.sort = field.key;
+            state.page = 1;
+            renderRows();
+          };
+          th.append(button);
+          head.append(th);
+        }
+        if (writable(state.view)) head.append(element("th", "操作"));
+        const all = state.data[state.view] || [];
+        const term = state.search.toLocaleLowerCase();
+        const filtered = all.filter((row) =>
+          [String(row.id), ...fields.map((field) => display(row, field))].some(
+            (value) => value.toLocaleLowerCase().includes(term),
+          ),
+        );
+        filtered.sort((a, b) => {
+          const av = a[state.sort],
+            bv = b[state.sort];
+          return (
+            (typeof av === "number" && typeof bv === "number"
+              ? av - bv
+              : String(av ?? "").localeCompare(String(bv ?? ""), "zh-CN", {
+                  numeric: true,
+                })) * state.direction
+          );
+        });
+        const pages = Math.max(1, Math.ceil(filtered.length / 10));
+        state.page = Math.min(Math.max(state.page, 1), pages);
+        for (const row of filtered.slice(
+          (state.page - 1) * 10,
+          state.page * 10,
+        )) {
+          const tr = element("tr");
+          tr.append(element("td", row.id));
+          for (const field of fields)
+            tr.append(element("td", display(row, field)));
+          if (writable(state.view)) {
+            const td = element("td", undefined, "actions");
+            const edit = element("button", "编辑", "ghost"),
+              remove = element("button", "删除", "danger");
+            edit.onclick = () => openRecord(row);
+            remove.onclick = () => removeRecord(row);
+            td.append(edit, remove);
+            tr.append(td);
+          }
+          body.append(tr);
+        }
+        if (!filtered.length) {
+          const td = element(
+            "td",
+            state.busy
+              ? "正在读取资料…"
+              : term
+                ? "没有符合条件的记录，请调整搜索条件。"
+                : "暂无记录。",
+            "empty",
+          );
+          td.colSpan = fields.length + 2;
+          const tr = element("tr");
+          tr.append(td);
+          body.append(tr);
+        }
+        $("result-count").textContent = filtered.length + " 条";
+        $("page-summary").textContent = filtered.length
+          ? `共 ${filtered.length} 条 · 显示 ${(state.page - 1) * 10 + 1}–${Math.min(state.page * 10, filtered.length)} 条`
+          : "共 0 条记录";
+        $("page-number").textContent = state.page + " / " + pages;
+        $("previous-page").disabled = state.page <= 1;
+        $("next-page").disabled = state.page >= pages;
+      }
+      function buildInput(field, row) {
+        const wrapper = element("div"),
+          label = element("label", field.label),
+          id = "field-" + field.key;
+        label.htmlFor = id;
+        let input;
+        if (field.type === "select" || field.type === "enum") {
+          input = element("select");
+          const empty = element("option", field.optional ? "不关联" : "请选择");
+          empty.value = field.optional ? "0" : "";
+          input.append(empty);
+          if (field.type === "enum") {
+            for (const [value, text] of Object.entries(field.choices)) {
+              const option = element("option", text);
+              option.value = value;
+              input.append(option);
+            }
+          } else {
+            for (const item of (state.data[field.source] || []).filter(
+              (item) => !field.role || item.role === field.role,
+            )) {
+              const option = element(
+                "option",
+                (item.name || item.username || item.code) + " · #" + item.id,
+              );
+              option.value = String(item.id);
+              input.append(option);
+            }
+          }
+        } else {
+          input = element("input");
+          input.type = field.type;
+          input.maxLength =
+            field.type === "password"
+              ? 1024
+              : field.key === "term"
+                ? 40
+                : field.key.includes("_no") || field.key === "code"
+                  ? 32
+                  : 80;
+          if (field.min !== undefined) input.min = field.min;
+          if (field.max !== undefined) input.max = field.max;
+          if (field.type === "number") input.step = field.step || "1";
+        }
+        input.id = id;
+        input.name = field.key;
+        input.required = !field.optional;
+        if (field.key === "password") {
+          input.required = !row;
+          input.autocomplete = "new-password";
+        } else if (
+          row &&
+          row[field.key] !== undefined &&
+          row[field.key] !== null
+        )
+          input.value = String(row[field.key]);
+        else if (field.key === "enabled") input.value = "1";
+        wrapper.append(label, input);
+        if (field.key === "password")
+          wrapper.append(
+            element(
+              "small",
+              row
+                ? "留空保持原口令；设置后原会话失效。"
+                : "至少 12 个 UTF-8 字节，最多 1024 字节。",
+            ),
+          );
+        return wrapper;
+      }
+      function openRecord(row = null) {
+        if (!writable(state.view)) return;
+        returnFocus = document.activeElement;
+        editingId = row ? row.id : null;
+        dialogMode = state.view;
+        $("dialog-title").textContent =
+          (row ? "编辑" : "新增") + definitions[state.view].singular;
+        $("dialog-description").textContent =
+          state.view === "assignments"
+            ? "授权决定教师可访问的班级和科目。"
+            : "请填写资料，保存前将校验关联关系。";
+        $("form-fields").replaceChildren(
+          ...definitions[state.view].fields.map((field) =>
+            buildInput(field, row),
+          ),
+        );
+        $("form-error").textContent = "";
+        $("mask").classList.add("show");
+        $("form-fields").querySelector("input,select").focus();
+      }
+      function closeDialog() {
+        if ($("dialog-save").disabled) return;
+        $("mask").classList.remove("show");
+        $("form-fields").replaceChildren();
+        if (returnFocus) returnFocus.focus();
+      }
+      async function saveRecord(event) {
+        event.preventDefault();
+        if ($("dialog-save").disabled) return;
+        const button = $("dialog-save");
+        button.disabled = true;
+        button.textContent = "保存中…";
+        $("form-error").textContent = "";
+        try {
+          const payload = {};
+          for (const input of $("form-fields").querySelectorAll(
+            "input,select",
+          )) {
+            const field =
+              dialogMode === "password"
+                ? null
+                : definitions[dialogMode].fields.find(
+                    (field) => field.key === input.name,
+                  );
+            payload[input.name] =
+              field &&
+              (field.type === "number" ||
+                field.type === "select" ||
+                field.key === "enabled")
+                ? Number(input.value)
+                : input.value.trim();
+            if (input.type === "password") payload[input.name] = input.value;
+          }
+          if (dialogMode === "password") {
+            await request("POST", "/api/auth/password", payload);
+            signedOut("口令已更新，请重新登录。");
+            return;
+          }
+          await request(
+            editingId === null ? "POST" : "PUT",
+            "/api/" + dialogMode + (editingId === null ? "" : "/" + editingId),
+            payload,
+          );
+          button.disabled = false;
+          closeDialog();
+          toast("已保存");
+          await loadAll();
+        } catch (error) {
+          $("form-error").textContent = error.message;
+        } finally {
+          button.disabled = false;
+          button.textContent = "保存";
+        }
+      }
+      async function removeRecord(row) {
+        if (
+          !confirm(
+            `确定删除${definitions[state.view].singular} #${row.id}？关联中的记录可能无法删除。`,
+          )
+        )
+          return;
+        try {
+          await request("DELETE", "/api/" + state.view + "/" + row.id);
+          toast("已删除");
+          await loadAll();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+      function openPassword() {
+        returnFocus = document.activeElement;
+        dialogMode = "password";
+        editingId = null;
+        $("dialog-title").textContent = "修改口令";
+        $("dialog-description").textContent =
+          "保存后当前账号的所有会话失效，需要重新登录。";
+        const fields = [
+          column("oldPassword", "原口令", "password"),
+          column("password", "新口令", "password"),
+        ];
+        $("form-fields").replaceChildren(
+          ...fields.map((field) => buildInput(field, null)),
+        );
+        $("field-oldPassword").autocomplete = "current-password";
+        $("form-error").textContent = "";
+        $("mask").classList.add("show");
+        $("field-oldPassword").focus();
+      }
+      $("login-form").onsubmit = async (event) => {
+        event.preventDefault();
+        const button = $("login-submit");
+        if (button.disabled) return;
+        button.disabled = true;
+        button.textContent = "正在登录…";
+        $("login-error").textContent = "";
+        try {
+          const result = await request("POST", "/api/auth/login", {
+            username: $("username").value.trim(),
+            password: $("password").value,
+          });
+          if (!result.token || !roles[result.user?.role])
+            throw new Error("登录响应无效");
+          state.epoch++;
+          state.busy = false;
+          state.token = result.token;
+          state.user = result.user;
+          $("password").value = "";
+          $("login-screen").hidden = true;
+          $("app").hidden = false;
+          $("user-label").textContent = state.user.username;
+          $("role-label").textContent = roles[state.user.role];
+          $("scope-label").textContent = scopeText[state.user.role];
+          $("welcome-message").textContent = scopeText[state.user.role] + "。";
+          $("work-list").replaceChildren(
+            ...(state.user.role === "admin"
+              ? [
+                  "维护班级、科目和人员基础资料",
+                  "分配账号角色与教师授课范围",
+                  "核对学生与账号、班级的关联",
+                ]
+              : state.user.role === "teacher"
+                ? ["查看授课班级的学生资料", "录入或更正授权科目的成绩"]
+                : ["查看自己的基本资料", "查询各科目与学期的成绩"]
+            ).map((text) => element("li", text)),
+          );
+          showView("overview");
+          await loadAll();
+        } catch (error) {
+          $("login-error").textContent = error.message;
+        } finally {
+          button.disabled = false;
+          button.textContent = "登录工作台";
+        }
+      };
+      $("logout-button").onclick = async () => {
+        try {
+          await request("POST", "/api/auth/logout");
+        } catch {
+        } finally {
+          state.busy = false;
+          signedOut("已退出登录。");
+        }
+      };
+      $("password-button").onclick = openPassword;
+      $("record-form").onsubmit = saveRecord;
+      $("dialog-cancel").onclick = closeDialog;
+      $("add-button").onclick = () => openRecord();
+      $("start-button").onclick = () => showView("students");
+      $("dashboard-refresh").onclick = loadAll;
+      $("refresh-button").onclick = loadAll;
+      function search() {
+        state.search = $("search").value.trim();
+        state.page = 1;
+        renderRows();
+      }
+      $("search-button").onclick = search;
+      $("search").onkeydown = (event) => {
+        if (event.key === "Enter") search();
+      };
+      $("reset-search").onclick = () => {
+        $("search").value = "";
+        search();
+      };
+      $("previous-page").onclick = () => {
+        state.page--;
+        renderRows();
+      };
+      $("next-page").onclick = () => {
+        state.page++;
+        renderRows();
+      };
+      for (const button of document.querySelectorAll("[data-tab]"))
+        button.onclick = () => showView(button.dataset.tab);
+      $("mask").onclick = (event) => {
+        if (event.target === $("mask")) closeDialog();
+      };
+      $("mask").onkeydown = (event) => {
+        if (event.key === "Escape") closeDialog();
+        if (event.key !== "Tab") return;
+        const nodes = [
+          ...$("record-form").querySelectorAll(
+            "input:not(:disabled),select:not(:disabled),button:not(:disabled)",
+          ),
+        ];
+        const first = nodes[0],
+          last = nodes.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+    </script>
+  </body>
 </html>

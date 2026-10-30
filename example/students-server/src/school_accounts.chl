@@ -1,0 +1,123 @@
+/** 管理员账号维护与本人密码修改；所有密码更新递增会话版本。 */
+module school_accounts;
+import std::sql;
+import std::json;
+import std::text;
+import crypto;
+import school_auth;
+import school_data;
+import api;
+
+/** 读取指定账号的非敏感字段。 */
+api::Reply list(std::sql::Database mut& database, school_auth::User user)
+{
+    if (user.role != "admin") { return api::errorReply(403, "只有管理员可以管理账号"); }
+    let rows = database.exec("SELECT id,username,role,enabled FROM school_users ORDER BY id DESC LIMIT 10001");
+    if (!rows.ok) { return api::errorReply(503, "读取账号失败"); }
+    if (rows.rowCount() > 10000) { return api::errorReply(400, "账号数量超过单次查询上限"); }
+    return api::jsonReply(200, school_data::rowsJson(&rows));
+}
+
+/** 检查用户名只包含可预测的 ASCII 标识字符，拒绝空白与控制字符。 */
+bool validName(String name)
+{
+    if (len(name) < 3 || len(name) > 64) { return false; }
+    for (int64 index in range(0, len(name)))
+    {
+        char item = name[index];
+        if (!((item >= 'a' && item <= 'z') || (item >= 'A' && item <= 'Z') || (item >= '0' && item <= '9') || item == '_' || item == '-' || item == '.')) { return false; }
+    }
+    return true;
+}
+
+/** 更换口令并使该账号现有会话失效。 */
+Result<bool, Error> password(std::sql::Database mut& database, int64 id, String value)
+{
+    if (len(value) < 12 || len(value) > 1024) { return Result<bool, Error>::Err(MessageError::from("口令长度须为 12–1024 个 UTF-8 字节")); }
+    String salt = crypto::token()?;
+    String digest = crypto::derive(value, salt, (uint64)600000)?;
+    let result = database.exec("UPDATE school_users SET salt=" + database.quote(salt) + ",digest=" + database.quote(digest) + ",version=version+1,failed_count=0,locked_until=0 WHERE id=" + id.toString());
+    if (!result.ok) { return Result<bool, Error>::Err(MessageError::from("无法更新口令")); }
+    return Result<bool, Error>::Ok(true);
+}
+
+/** 本人修改口令前再次校验旧口令，成功后由页面重新登录。 */
+api::Reply changePassword(std::sql::Database mut& database, school_auth::User user, String body)
+{
+    let parsed = std::json::parse(body);
+    if (parsed.isErr() || !parsed.unwrap().isObject()) { return api::errorReply(400, "口令请求必须是 JSON 对象"); }
+    let value = parsed.unwrap();
+    String old = school_auth::stringField(&value, "oldPassword");
+    String fresh = school_auth::stringField(&value, "password");
+    let rows = database.exec("SELECT salt,digest FROM school_users WHERE id=" + user.id.toString());
+    if (!rows.ok || rows.rowCount() != 1) { return api::errorReply(503, "账号服务暂不可用"); }
+    let digest = crypto::derive(old, rows.textAt(0, 0), (uint64)600000);
+    if (digest.isErr() || !crypto::equalDigest(digest.unwrap(), rows.textAt(0, 1))) { return api::errorReply(403, "原口令不正确"); }
+    let changed = password(&database, user.id, fresh);
+    if (changed.isErr()) { return api::errorReply(400, changed.error().toString()); }
+    return api::jsonReply(200, "{\"ok\":true}");
+}
+
+/** 管理员维护账号；禁止自身降权、停用及删除，已有角色关联不能改成其他角色。 */
+api::Reply write(std::sql::Database mut& database, school_auth::User user, String method, int64 id, String body)
+{
+    if (user.role != "admin") { return api::errorReply(403, "只有管理员可以管理账号"); }
+    if (method != "POST" && method != "PUT" && method != "DELETE") { return api::errorReply(405, "请求方法不支持"); }
+    if ((method == "POST" && id != 0) || (method != "POST" && id < 1)) { return api::errorReply(400, "账号编号无效"); }
+    if (id > 0)
+    {
+        let existing = database.exec("SELECT id FROM school_users WHERE id=" + id.toString());
+        if (!existing.ok) { return api::errorReply(503, "账号服务暂不可用"); }
+        if (existing.rowCount() != 1) { return api::errorReply(404, "账号不存在"); }
+    }
+    if (method == "DELETE")
+    {
+        if (id == user.id) { return api::errorReply(400, "不能删除当前登录账号"); }
+        let removed = database.exec("DELETE FROM school_users WHERE id=" + id.toString());
+        if (!removed.ok) { return api::errorReply(400, "账号仍关联学生或教师，不能删除"); }
+        return api::jsonReply(200, "{\"ok\":true}");
+    }
+    let parsed = std::json::parse(body);
+    if (parsed.isErr() || !parsed.unwrap().isObject()) { return api::errorReply(400, "账号必须是 JSON 对象"); }
+    let value = parsed.unwrap();
+    String username = school_auth::stringField(&value, "username");
+    String role = school_auth::stringField(&value, "role");
+    String fresh = school_auth::stringField(&value, "password");
+    let enabledValue = value.find("enabled");
+    if (enabledValue.isNone() || !enabledValue.unwrap().isInt()) { return api::errorReply(400, "启用状态必须是整数 0 或 1"); }
+    let passwordValue = value.find("password");
+    if (passwordValue.isValue() && !passwordValue.unwrap().isString()) { return api::errorReply(400, "口令必须是文本"); }
+    int64 enabled = enabledValue.unwrap().asInt().unwrap();
+    if (!validName(username) || (role != "admin" && role != "teacher" && role != "student") || (enabled != 0 && enabled != 1)) { return api::errorReply(400, "账号名称、角色或启用状态无效"); }
+    if (id == user.id && (role != "admin" || enabled != 1)) { return api::errorReply(400, "不能停用或降权当前登录账号"); }
+    if (!fresh.isEmpty() && (len(fresh) < 12 || len(fresh) > 1024)) { return api::errorReply(400, "口令长度须为 12–1024 个 UTF-8 字节"); }
+    if (method == "PUT")
+    {
+        let linked = database.exec("SELECT id FROM school_students WHERE user_id=" + id.toString() + " UNION ALL SELECT id FROM school_teachers WHERE user_id=" + id.toString());
+        let current = database.exec("SELECT role FROM school_users WHERE id=" + id.toString());
+        if (!linked.ok || !current.ok) { return api::errorReply(503, "账号关联查询失败"); }
+        if (linked.rowCount() > 0 && current.textAt(0, 0) != role) { return api::errorReply(400, "请先解除学生或教师关联再更改角色"); }
+        String sql = "UPDATE school_users SET username=" + database.quote(username) + ",role=" + database.quote(role) + ",enabled=" + enabled.toString() + ",version=version+1";
+        if (!fresh.isEmpty())
+        {
+            let salt = crypto::token();
+            if (salt.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+            let digest = crypto::derive(fresh, salt.unwrap(), (uint64)600000);
+            if (digest.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+            sql += ",salt=" + database.quote(salt.unwrap()) + ",digest=" + database.quote(digest.unwrap()) + ",failed_count=0,locked_until=0";
+        }
+        let updated = database.exec(sql + " WHERE id=" + id.toString());
+        if (!updated.ok) { return api::errorReply(400, "账号名称已存在或更新失败"); }
+    }
+    else
+    {
+        if (fresh.isEmpty()) { return api::errorReply(400, "新账号必须设置口令"); }
+        let salt = crypto::token();
+        if (salt.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+        let digest = crypto::derive(fresh, salt.unwrap(), (uint64)600000);
+        if (digest.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+        let inserted = database.exec("INSERT INTO school_users(username,role,enabled,salt,digest) VALUES (" + database.quote(username) + "," + database.quote(role) + "," + enabled.toString() + "," + database.quote(salt.unwrap()) + "," + database.quote(digest.unwrap()) + ")");
+        if (!inserted.ok) { return api::errorReply(400, "账号名称已存在或创建失败"); }
+    }
+    return api::jsonReply(200, "{\"ok\":true}");
+}

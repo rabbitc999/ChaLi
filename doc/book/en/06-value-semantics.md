@@ -4,20 +4,61 @@
 **English** · [简体中文](../06-值语义.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Assignment copies a value. For an owning aggregate, copying means independent owned storage rather than an invisible shared mutable object. This makes local reasoning easier: changing a copy should not unexpectedly change its source.
+Distinguish copying, borrowing and transfer by observable behavior. A copied owning value can be modified independently, while reference fields still refer to their source and resource types retain copy restrictions. Value semantics does not require a physical memory copy at every assignment.
 
+## 6.1 Modify copied values independently
+
+Ordinary List assignment has value semantics, including when the list is a structure field. Append to the copy and inspect the two lengths.
+
+<!-- verify-book -->
 ```chali
+struct Bag
+{
+    List<int64> items;
+}
+
 void main()
 {
-    String original = "cat";
-    String copied = original;
-    copied[0] = 'b';
-    println("{} {}", original, copied);
+    Bag original;
+    original.items.push(1);
+    Bag copy = original;
+    copy.items.push(2);
+    println("{} {}", original.items.len(), copy.items.len());
 }
 ```
 
-The result is `cat bat`. A reference, by contrast, explicitly borrows existing storage. Choose a copy for independent state and a reference for an operation on an existing value. Do not choose a reference solely to imitate the behavior of a different language.
+```text
+1 2
+```
 
-`move` transfers an owning value where supported. Write `move value`; it is an operator. A pointer or reference operand is dereferenced by one level according to the language rules. A moved value must not subsequently be used as though it still owned its original resource.
+## 6.2 Value parameters and returns
 
-Some resource types are noncopyable. Their creation, movement and destruction protocols protect external resources such as files and database connections. Exercise: repeat the string experiment with a list, then use an explicit mutable reference to intentionally change the original. Next: [references](07-references.md).
+A function receiving a copyable value modifies its own value. Use a mutable reference for write-back and a readonly reference for borrowed access. Copying a reference field preserves that reference; it does not copy the referent.
+
+Returning local owned values, value exits and proven last uses can use implicit transfer or copy elimination. Reason about availability and independent mutation rather than assuming a particular number of physical copies.
+
+## 6.3 Explicit move and noncopyable types
+
+Move expresses ownership transfer. A moved binding cannot subsequently be read, written or reassigned; a new binding can be declared under the language rules. Closeable structures and corresponding NonCopyable types restrict copying. Ordinary value passing does not bypass those restrictions.
+
+Implicit transfer follows ownership checks and does not invalidate a source that is still required. See the ownership documentation for detailed exit rules.
+
+## 6.4 Separate semantics from cost
+
+First determine which object changes, who owns resources and when a source becomes unavailable. Then choose value or reference interfaces. String and collection growth, copying and cleanup have costs; equivalent transformations can remove copies. Measure a concrete workload to assess runtime or allocation cost.
+
+## 6.5 Exercises
+
+1. What is the original list length after the copy changes?
+2. Does copying a reference field copy its referent?
+3. Why not reassign a moved binding?
+4. How can a readonly function avoid a value copy?
+
+### Answers and checks
+
+1. It remains 1; the copy has length 2.
+2. The reference is preserved and its lifetime still matters.
+3. The binding is in the moved state; use a new declaration or redesign the interface.
+4. Use const& where appropriate and keep the source alive.
+
+Next: [Chapter 7](07-references.md).

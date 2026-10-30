@@ -102,3 +102,7 @@ example/native-callbacks/demo.h
 .chali/
 
 /source/chali_precompiled_data.inc
+
+# 学生系统本地数据库凭据
+/example/students-server/config.local.json
+/example/students-server/*.local.json

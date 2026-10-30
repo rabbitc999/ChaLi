@@ -1,422 +1,11 @@
 \chapter{迭代器}
 \label{ch:17}
 
-第 15 章你手写过一个 \texttt{filter}：自己声明 \texttt{List}、自己 \texttt{for-\allowbreak{}in}、自己 \texttt{push}。能跑，但每换一种操作——求平方、取前几个、求和——都得再手搓一遍循环。
+迭代器把“下一项”抽象为协议。它既能遍历容器，也能组合筛选、映射和终止操作；理解消费状态和借用关系，才能正确复用结果。
 
-这一章讲 \texttt{std:\allowbreak{}:\allowbreak{}iter}：它把这些套路做成了能随意拼的链。写起来像说话，读起来也像说话：
+\section{消费状态与提前结束}
 
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-std::iter::range(1, 100).filter(是偶数).map(乘十).take(3).collect()
-\end{lstlisting}
-\par
-\medskip
-
-\section{一条链由三段组成}
-
-迭代器的写法永远是同一个形状：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-起点.中间操作.中间操作.….终结操作
-\end{lstlisting}
-\par
-\medskip
-
-\begin{itemize}
-
-\item 起点：从哪儿开始——一个区间、一个列表；
-
-\item 中间操作：\texttt{map} / \texttt{filter} / \texttt{take}……可以串好几个；
-
-\item 终结操作：\texttt{collect} / \texttt{fold} / \texttt{count}……干活的是它。
-
-\end{itemize}
-
-要 import：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-\end{lstlisting}
-\par
-\medskip
-
-\section{起点：\texttt{range} 和 \texttt{List.\allowbreak{}iter(\allowbreak{})\allowbreak{}}}
-
-最常用的起点是 \texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}range(\allowbreak{}start,\allowbreak{} stop)\allowbreak{}}——从 \texttt{start} 到 \texttt{stop}（不含 \texttt{stop}）：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    let xs = std::iter::range(1, 6).collect();
-    println("{} {}", xs.len(), xs[4]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-5 5
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{range(\allowbreak{}1,\allowbreak{} 6)\allowbreak{}} 数是 1、2、3、4、5——和切片一样左闭右开（第 12 章）。\texttt{collect(\allowbreak{})\allowbreak{}} 把它们收进一个 \texttt{List<\allowbreak{}int64>\allowbreak{}}。
-
-还有一个重载可以指定步长：\texttt{range(\allowbreak{}start,\allowbreak{} stop,\allowbreak{} step)\allowbreak{}}。
-
-另一种起点是从现成的容器出发：\texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}}。它和 \texttt{range} 有一个重要区别——\texttt{range} 每次调用都造一条新链，而容器迭代器是一次性消费品（见 17.8）。
-
-\section{中间操作：\texttt{map} / \texttt{filter} / \texttt{take} / \texttt{skip} / \texttt{rev}}
-
-\texttt{map}——对每一项做同一个变换：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    let ys = std::iter::range(1, 6).map(fn(int64 x)
-    {
-        x * x
-    }).collect();
-    println("{} {} {}", ys[0], ys[1], ys[4]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-1 4 25
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{filter}——只留下满足条件的：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    let evens = std::iter::range(1, 11)
-    .filter(fn(int64 x)
-    {
-        x % 2 == 0
-    })
-    .collect();
-    println("{} -> {} {} {}", evens.len(), evens[0], evens[1], evens[4]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-5 -> 2 4 10
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{take(\allowbreak{}n)\allowbreak{}} / \texttt{skip(\allowbreak{}n)\allowbreak{}} 取前 n 个 / 跳过前 n 个；\texttt{rev(\allowbreak{})\allowbreak{}} 反转。它们和 \texttt{map} / \texttt{filter} 一样，都是「中间操作」，返回的还是迭代器，可以继续往下接。
-
-\section{终结操作：\texttt{collect} / \texttt{fold} / \texttt{count}}
-
-中间操作只是搭管道，真正让数据流动的是终结操作。常用的三个：
-
-\begin{itemize}
-
-\item \texttt{collect(\allowbreak{})\allowbreak{}} —— 收成一个 \texttt{List}；
-
-\item \texttt{count(\allowbreak{})\allowbreak{}} —— 数一共多少个；
-
-\item \texttt{fold(\allowbreak{}初值,\allowbreak{} 函数)\allowbreak{}} —— 从头到尾累积，最灵活。
-
-\end{itemize}
-
-\texttt{fold} 是「求和、求积、求最大」这类操作的通用形式。求和：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    int64 s = std::iter::range(1, 101).fold(0, fn(int64 acc, int64 x)
-    {
-        acc + x
-    });
-    println("{}", s);
-    println("{}", std::iter::range(1, 101).count());
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-5050
-100
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{fold(\allowbreak{}0,\allowbreak{} …)\allowbreak{}} 里那个 \texttt{0} 是初值 \texttt{acc}，然后每来一个 \texttt{x}，用函数算出一个新的 \texttt{acc}：\texttt{0 → 0+1 → 1+2 → …}。想求最大值，初值给一个极小值，函数换成「取较大的」就行。
-
-还有几个「问一句就走」的终结操作：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    println("{}", std::iter::range(1, 6).all(fn(int64 x)
-    {
-        x > 0
-    }));
-    println("{}", std::iter::range(1, 6).any(fn(int64 x)
-    {
-        x > 3
-    }));
-    println("{}", std::iter::range(1, 6).find(fn(int64 x)
-    {
-        x % 2 == 0
-    }).unwrap());
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-1
-1
-2
-\end{lstlisting}
-\par
-\medskip
-
-\begin{itemize}
-
-\item \texttt{all(\allowbreak{}pred)\allowbreak{}} 全满足吗；\texttt{any(\allowbreak{}pred)\allowbreak{}} 有满足的吗——都返回 \texttt{bool}；
-
-\item \texttt{find(\allowbreak{}pred)\allowbreak{}} 返回第一个满足的（\texttt{Option}，第 16 章——所以后面能接 \texttt{.\allowbreak{}unwrap(\allowbreak{})\allowbreak{}}）。
-
-\end{itemize}
-
-\section{串成一条链}
-
-现在把中间操作串起来看威力——「1 到 99 里，乘 2 之后能被 3 整除的前 3 个」：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    let ys = std::iter::range(1, 100)
-    .map(fn(int64 x)
-    {
-        x * 2
-    })
-    .filter(fn(int64 x)
-    {
-        x % 3 == 0
-    })
-    .take(3)
-    .collect();
-    println("{} {} {} {}", ys.len(), ys[0], ys[1], ys[2]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-3 6 12 18
-\end{lstlisting}
-\par
-\medskip
-
-一行一句、从上往下读，和需求一一对应：\texttt{map} 乘 2、\texttt{filter} 要 3 的倍数、\texttt{take(\allowbreak{}3)\allowbreak{}} 取三个、\texttt{collect} 收起来。没有 \texttt{for-\allowbreak{}in}、没有下标、没有临时变量。
-
-\section{惰性：写了 \ensuremath{\neq} 跑了}
-
-这是迭代器最容易误解的地方。看下面这段：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-int64 seen = 0;
-
-void note(int64 x)
-{
-    seen = seen + 1;
-}
-
-void main()
-{
-    let lazy = std::iter::range(1, 6)
-    .inspect(note)
-    .map(fn(int64 x)
-    {
-        x * 10
-    });
-    println("{}", seen);
-
-    let got = lazy.collect();
-    println("{} {}", seen, got[0]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-0
-5 10
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{inspect} 是个「顺手看一眼」的中间操作——每过一项就调用一次 \texttt{note}。可注意：
-
-\begin{itemize}
-
-\item 第一次打印 \texttt{seen} 是 0——虽然链子搭好了，一项都还没走；
-
-\item 直到 \texttt{.\allowbreak{}collect(\allowbreak{})\allowbreak{}} 那一刻，才真的从头跑到尾，\texttt{seen} 变成 5。
-
-\end{itemize}
-
-中间操作是惰性的：不接终结操作，它们一行都不执行。 这条设计有两个好处：
-
-\begin{enumerate}
-
-\item 省事——\texttt{take(\allowbreak{}3)\allowbreak{}} 时，源数据只要产出 3 个就够了，后面的根本不碰；
-
-\item 能做无限序列——\texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}repeat(\allowbreak{}x)\allowbreak{}} 可以永远产下去，只要你用 \texttt{take} 限住。
-
-\end{enumerate}
-
-\begin{tip}{提示}
-记住一句话：迭代器链只有碰到 \texttt{collect} / \texttt{fold} / \texttt{count} 这类终结操作才会开跑。
-\end{tip}
-
-\section{一个坑：\texttt{List.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 的元素是引用}
-
-\texttt{range} 产出的是实打实的 \texttt{int64}，所以 \texttt{fn(\allowbreak{}int64 x)\allowbreak{}} 就够了。但从列表出发时，\texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 产出的是元素的只读引用，fn 的参数得写成引用：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void main()
-{
-    List<int64> xs;
-    xs.push(10);
-    xs.push(20);
-    xs.push(30);
-    int64 total = xs.iter().fold(0, fn(int64 acc, int64 const& x)
-    {
-        acc + x
-    });
-    println("{}", total);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-60
-\end{lstlisting}
-\par
-\medskip
-
-写 \texttt{fn(\allowbreak{}int64 acc,\allowbreak{} int64 x)\allowbreak{}} 会报「类型实参推导冲突」——因为元素实际是\texttt{int64 const\&}。这是借用检查器在提醒你：\texttt{.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 借用了那个列表，而不是把它复制一份（省内存，也符合第 7 章「引用」那一套）。
-
-要原地改元素，用 \texttt{.\allowbreak{}iter\allowbreak{}Mut(\allowbreak{})\allowbreak{}}——它产出可写引用 \texttt{T mut\&}（第 7 章）：
-
-\par
-\medskip
-\begin{lstlisting}[style=chali]
-import std::iter;
-
-void bump(int64 mut& x)
-{
-    x = x * 10;
-}
-
-void main()
-{
-    List<int64> xs;
-    xs.push(1);
-    xs.push(2);
-    xs.push(3);
-    xs.iterMut().forEach(bump);
-    println("{} {} {}", xs[0], xs[1], xs[2]);
-}
-\end{lstlisting}
-\par
-\medskip
-
-\par
-\medskip
-\begin{lstlisting}[style=out]
-10 20 30
-\end{lstlisting}
-\par
-\medskip
-
-\texttt{bump} 拿到的是可写引用，所以它改的就是列表里的原件。
-
-不想借、想要一份独立的元素值，用 \texttt{.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}}——它拿走列表的元素，fn 参数写 \texttt{int64} 就行。
-
-\begin{center}
-\begin{tabular}{lll}
-\toprule
-你想要 & 用 & 元素类型 \\
-\midrule
-只读遍历 & \texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}} & \texttt{T const\&} \\
-边走边改元素 & \texttt{xs.\allowbreak{}iter\allowbreak{}Mut(\allowbreak{})\allowbreak{}} & \texttt{T mut\&} \\
-拿走元素 & \texttt{xs.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} & \texttt{T} \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\section{迭代器是一次性消费品}
-
-17.2 留的那个问题现在回答：\texttt{range} 和 \texttt{列表.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 的区别是——迭代器只能从头到尾走一遍。走完之后再调 \texttt{next(\allowbreak{})\allowbreak{}}、再接 \texttt{all} / \texttt{any} / \texttt{fold}，得到的都是空：不会报错，就是没有数据。
+迭代器可能保存当前位置。all、any 等终止操作会消费元素，并可能短路；第二次操作不一定从头开始。需要独立遍历时重新建立迭代器，或按支持的复制规则取得独立状态。
 
 \par
 \medskip
@@ -459,13 +48,9 @@ void main()
 \par
 \medskip
 
-\texttt{first} 被 \texttt{all} 走完就耗干了，第二次 \texttt{any} 是在空迭代器上问的——答案当然是「没有」。想再走一遍，就再调一次 \texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 造一条新的（\texttt{second} 那两行）。\texttt{range} 没这个烦恼，因为它每次调用本来就是一条新链。
+\section{从序列建立管道}
 
-记住一句话：迭代器是一次性的，链子要走第二遍就重新造起点。
-
-\subsection*{从列表造起点：\texttt{from\allowbreak{}List}}
-
-\texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}from\allowbreak{}List<\allowbreak{}T>\allowbreak{}(\allowbreak{}list)\allowbreak{}} 也是一条起点：把列表的元素复制进迭代器，原来的列表完好无损：
+先明确输入序列，再组合变换，最后通过收集或汇总取得结果。不要把构造管道与执行完整遍历混为一谈；闭包捕获的有效期必须覆盖迭代器实际使用的时间。
 
 \par
 \medskip
@@ -496,9 +81,9 @@ void main()
 \par
 \medskip
 
-\subsection*{\texttt{Set.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 与 \texttt{Map.\allowbreak{}iter(\allowbreak{})\allowbreak{}}}
+\section{Map 和 Set 的遍历}
 
-\texttt{Set<\allowbreak{}T>\allowbreak{}} 和 \texttt{Map<\allowbreak{}K,\allowbreak{}V>\allowbreak{}} 同样有 \texttt{.\allowbreak{}iter(\allowbreak{})\allowbreak{}}：借用快照——把元素（Map 只能是 \texttt{Pair<\allowbreak{}K,\allowbreak{} V>\allowbreak{}}，用 \texttt{first} 读取键、\texttt{second} 读取值）复制进迭代器，来源容器保持不变；对应的 \texttt{.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} 则把容器搬空。
+Map 的迭代项包含键和值，Set 的迭代项是键。业务若需要固定顺序，应显式排序或选择有序结构；不要把一次运行的哈希表顺序写成持久化格式。
 
 \par
 \medskip
@@ -550,54 +135,21 @@ doubled = 50 len = 2
 \par
 \medskip
 
-迭代完了 \texttt{s.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 3、\texttt{m.\allowbreak{}len(\allowbreak{})\allowbreak{}} 还是 2——借用快照不动原件。Map 的每一项是元组，用 \texttt{pair.\allowbreak{}0} 取键、\texttt{pair.\allowbreak{}1} 取值。
+\section{结构修改与失效}
 
-\section{小结}
-
-{\small\setlength{\tabcolsep}{4pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{\dimexpr 0.081\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.899\linewidth-2\tabcolsep\relax}}
-\toprule
-你会了 & 关键点 \\
-\midrule
-\endhead
-三段式 & 起点 \texttt{.\allowbreak{}} 中间操作 \texttt{.\allowbreak{}} … \texttt{.\allowbreak{}} 终结操作 \\
-起点 & \texttt{std:\allowbreak{}:\allowbreak{}iter:\allowbreak{}:\allowbreak{}range(\allowbreak{}a,\allowbreak{} b)\allowbreak{}}（左闭右开）、\texttt{xs.\allowbreak{}iter(\allowbreak{})\allowbreak{}}、\texttt{from\allowbreak{}List(\allowbreak{}xs)\allowbreak{}}、\texttt{set.\allowbreak{}iter(\allowbreak{})\allowbreak{}} / \texttt{map.\allowbreak{}iter(\allowbreak{})\allowbreak{}}、\texttt{xs.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} \\
-中间操作 & \texttt{map} \texttt{filter} \texttt{take} \texttt{skip} \texttt{rev} \texttt{inspect} \texttt{enumerate} \texttt{chain} \texttt{zip} \\
-终结操作 & \texttt{collect} \texttt{fold} \texttt{count} \texttt{all} \texttt{any} \texttt{find} \texttt{last} \\
-组合 & 中间操作可无限串联，从上往下读即需求 \\
-惰性 & 不接终结操作就不执行；\texttt{take} 能省掉多余计算 \\
-一次性 & 迭代器只能走一遍；要走第二遍就重新造起点 \\
-引用坑 & \texttt{.\allowbreak{}iter(\allowbreak{})\allowbreak{}} 元素是 \texttt{T const\&}；要独立值用 \texttt{.\allowbreak{}into\allowbreak{}Iter(\allowbreak{})\allowbreak{}} \\
-引入 & \texttt{import std:\allowbreak{}:\allowbreak{}iter;} \\
-\bottomrule
-\end{longtable}
-}
-
-\section{下一步}
-
-单文件程序写多了，总得拆。函数、结构体、常量放哪儿？怎么让别的文件用上？测试和格式化怎么跑？
-
-第 18 章讲模块与工程：\texttt{import} 到底导入了什么、\texttt{chali new} 起出来的工程长什么样、\texttt{chali test} / \texttt{chali fmt} 怎么用。
-
-翻到\hyperref[ch:18]{第 18 章 模块与工程}。
-
-\section{边界与验证}
-
-惰性迭代器通常在消费时执行工作。修改当前元素与改变集合结构不是同一操作；遍历中的引用、源集合存活和结构修改按具体接口规则处理。
+遍历期间的扩容、删除或重排可能使当前位置和元素借用失效。遵守迭代器提供的修改方式；需要批量修改时，可以先收集稳定标识再在第二阶段更新。提前退出循环仍要清理迭代器和临时拥有值。
 
 \section{习题}
 
-前两题用于理解和基本实现，第三题检查边界，最后一题为综合挑战。先独立完成，再核对参考解答。
-
 \begin{enumerate}
 
-\item 构造一个惰性 map 链但不消费，能否断言映射工作已完成？
+\item 连续两次调用 any 时会重新从头开始吗？
 
-\item 使用 range、filter 和 collect 得到指定区间中的偶数。
+\item 何时真正执行一个迭代管道？
 
-\item 比较修改遍历元素与向源容器追加元素的区别。
+\item Map 遍历顺序能否直接当作排序？
 
-\item 挑战：过滤集合后删除原集合中的目标项，设计不依赖失效索引的方法。
+\item 如何安全地批量删除匹配元素？
 
 \end{enumerate}
 
@@ -605,15 +157,17 @@ doubled = 50 len = 2
 
 \begin{enumerate}
 
-\item 不能；先查接口的惰性约定，再通过消费操作观察实际结果。
+\item 不能假定；检查消费状态或重建迭代器。
 
-\item 明确区间端点，验证收集顺序和数量。
+\item 由消费或终止操作推进，按具体协议核对。
 
-\item 前者可能通过元素可写引用发生，后者改变结构，不能据此前者合法就推出后者也合法。
+\item 不能，需要时显式排序。
 
-\item 先收集稳定标识或构造新集合，再按明确策略更新；验证相邻目标、空集合和全匹配。
+\item 用受支持接口，或先收集标识再修改，避免保留失效引用。
 
 \end{enumerate}
+
+下一章：\hyperref[ch:18]{第 18 章}。
 
 \section{番外：少了一页的遍历}
 

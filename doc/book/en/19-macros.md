@@ -1,32 +1,24 @@
-# Chapter 19 Preprocessing and hygienic macros
+# Chapter 19 Hygienic macros
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../19-预处理与宏.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Macros transform program structure during compilation. They are useful when repeated syntax expresses one stable operation, but ordinary functions remain the clearer choice for most runtime calculations.
+Macros compose syntax during compilation. Hygiene prevents accidental capture of caller names, while parameter categories determine whether an argument is evaluated as a value or inserted as syntax.
 
-ChaLi's hygienic macros preserve binding relationships so that an internal temporary does not accidentally capture a caller's variable. Ordinary, unannotated expression arguments are evaluated once each, in source order, and their saved values are reused: `$A(next())` calls next once and `$A(next(), next())` calls it twice. Ordinary parameters have value semantics. Assigning `n = n + 1;` changes the parameter's copy without modifying the caller or producing a warning. The compiler may eliminate a copy only when observable behavior stays equivalent.
+## 19.1 Value parameters, references and hygiene
 
-Declare `mut &n` for a writable reference parameter or `&n` for a readonly reference. The former writes through to the caller; the latter rejects mutation. Identifier, type, statement and token-group parameters retain their distinct syntax roles. Macro arguments should not be treated as one unstructured string.
+Unannotated parameters use single-evaluation value semantics. One argument in $A(next()) is evaluated once; the two arguments in $A(next(), next()) are each evaluated once. Modifying a value parameter changes its copy, leaves the caller unchanged, and does not warrant a warning. Copies may be optimized when behavior is preserved.
 
-Macro declarations and invocations use the lowercase `$macro` system. Parameter groups and repetition describe how source fragments are matched. Regex branches use the documented ECMAScript behavior. Consult the [macro reference](../../en/25-literals-operators-macros.md) for the exact declaration forms rather than copying another language's macro syntax.
+Explicit &n borrows read-only and mut &n permits caller mutation, subject to static borrowing. Internal temporary names remain hygienic.
 
-Generated code still undergoes semantic checking. Expansion does not bypass types, references, resource ownership or the compiler's bounded fragment budgets. When debugging, inspect the expansion and its source mapping. The VS Code expansion view groups related results into tabs, with searchable macro names and a tree of expansion levels.
+## 19.2 Parameter categories control expansion
 
-Fixed parameters can declare their category explicitly:
+x:value keeps single evaluation. x:expr accepts expression syntax evaluated where inserted: two placements may execute twice and no placement does not execute it. name:ident, T:type, body:stmt and body:block require their corresponding syntax categories.
 
-| Category | Constraint and expansion behavior |
-| --- | --- |
-| `x: value` | A complete expression, evaluated once before the expansion body; its saved value copy is reused |
-| `x: expr` | A complete expression fragment, evaluated at each placement; unused fragments do not execute |
-| `name: ident` | One identifier, usable as a generated declaration or member name |
-| `T: type` | A complete type fragment used in a type position |
-| `body: stmt` | A complete statement fragment used in a statement position |
-| `body: block` | A complete block, following existing statement or block-expression rules |
+Value arguments are evaluated in argument order before expr placements execute in the expanded body. Do not assume expr preserves single evaluation for side effects.
 
-Value parameters evaluate in declaration order before the expansion body. Expression fragments evaluate wherever that body places them. An expr fragment used as an assignment target can modify the caller's variable. Unannotated parameters retain their existing role inference and ordinary expression arguments still evaluate once. `&n: value` and `mut &n: value` retain readonly and mutable borrowing; legacy reference declarations remain valid. References cannot use expr or other syntax-fragment categories.
-
+<!-- verify-book -->
 ```chali
 int64 count = 0;
 int64 next() { count += 1; return count; }
@@ -50,10 +42,13 @@ void main() {
 3 2
 ```
 
-Category mismatches are rejected before expansion. Value and expr parameters cannot supply declaration names. Annotated variadic parameters, pattern/item parameters and result categories are not supported yet; declaration macros are still separate pending work.
+## 19.3 Generic parameters and result context
 
-`#res` explicitly selects the expected result type at the call site and can be combined with an argument source:
+Macros may declare type parameters. T:#res infers from the statically expected result type, while U:b infers from argument b. Neither runs the argument expression during compilation. Explicit arguments take priority; missing context or conflicting constraints require more type information.
 
+For example, $macro Example<T:#res, U:b>(a, b) combines result and argument information. Its inferred types still must satisfy the body and call-site checks.
+
+<!-- verify-book -->
 ```chali
 $macro Example<T:#res, U:b>(a, b)
 {
@@ -68,6 +63,72 @@ void main() {
 }
 ```
 
-T is int32, U is int16, and the result is 7. Initialization, assignment, function returns and function arguments with a known parameter type can supply the expected result type. Inference does not evaluate either argument. `<T>` retains the same implicit result-source behavior. Explicit type arguments take priority. Without an expected type, `let` does not make T infer from a instead.
+```text
+7
+```
 
-Exercise: identify a repeated source pattern, first implement it as a function, then explain which additional requirement would justify a macro. Review variable names at the call site to understand why hygiene matters. Next: [reflection](20-reflection.md).
+## 19.4 Standard macros and extension boundaries
+
+When using existing standard macros, retain the element types, evaluation counts and return semantics. This tutorial uses implemented categories and expansion forms. Declaration macros are deferred; declaration generation, arbitrary result categories and unsupported repetition matching are not available features.
+
+<!-- verify-book -->
+```chali
+$macro vec<T:first>[first,...rest]
+{
+    List<T> result;
+    result.push(first);
+    $for element in rest
+    result.push(element);
+    $end_for
+    yield result;
+}
+$end_macro
+
+void main()
+{
+    List<int64> result;
+    result.push(99);
+    List<int64> values = $vec[1, 2, 3];
+    println("{} {} {}", values.len(), values.at(2), result.at(0));
+}
+```
+
+```text
+3 3 99
+```
+
+## 19.5 Diagnostics and checking
+
+For a macro diagnostic, distinguish definition and call sites, then inspect categories, type arguments, scope and borrowing. The following hygiene example is rejected because an internal temporary is not a caller-visible name.
+
+<!-- verify-book-error: temp -->
+```chali
+$macro broken(value)
+{
+    temp.push(value);
+    yield temp;
+}
+$end_macro
+
+void main()
+{
+    List<int64> temp;
+    List<int64> values = $broken(1);
+}
+```
+
+## 19.6 Exercises
+
+1. Compare next call counts with value and expr.
+2. Does changing an unannotated parameter change the caller?
+3. Does T:#res come from a runtime return value?
+4. Why cannot a caller read internal temp?
+
+### Answers and checks
+
+1. Value evaluates once per argument; expr follows placements and execution.
+2. No; it changes a copy. Use an explicit mutable reference to change the caller.
+3. No; it comes from the statically expected result type.
+4. Hygiene prevents capture; internal names do not become caller declarations.
+
+Next: [Chapter 20](20-reflection.md).

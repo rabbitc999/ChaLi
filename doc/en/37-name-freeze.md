@@ -1,126 +1,43 @@
-# 40 Name Freeze: The Five Letters of ChaLi
+# ChaLi name and related capabilities
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../37-name-freeze.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The language name **ChaLi** is not a pretty acronym — each letter locks one **non-reversible**
-guarantee. This page fixes those five guarantees and gives each a check you can run right now.
-If a check ever stops holding, the letter no longer means what it says.
+This page records naming and capability references. Actual scope comes from implementation, reference documentation and verification, rather than unconditional guarantees for every platform, external library or unsafe operation.
 
-Two neighbouring pages freeze the other layers: semantic contracts cover how values flow and when
-they are released; the syntax freeze list covers how tokens are spelled and shaped. This page
-covers what the *name* promises.
+## Names and files
 
-## 0 The name itself is frozen too
+| Item | Current spelling |
+| --- | --- |
+| Language | ChaLi |
+| Source suffix | .chl |
+| Diagnostic prefix | CHL |
+| Project configuration | chali.toml |
+| Compiler artifacts | Version, LLVM linkage, system and architecture in the filename |
 
-| Item | Frozen spelling | Note |
-| --- | --- | --- |
-| Language name | `ChaLi` (capital C and L) | Used in docs, help and the manual |
-| Source suffix | `.chl` | How the toolchain recognizes source files |
-| Diagnostic prefix | `CHL` | e.g. `CHL1204`; code values belong to the diagnostic system, this page fixes the prefix |
-| Executable | `ChaLi.exe` (Windows) | The command is still spelled lowercase `chali`; Windows matches it case-insensitively |
-| Project files | `chali.toml` / `chali.lock` | Manifest and dependency lock |
+Commands normally use chali; follow the [installation guide](39-installation-packages.md) for actual build filenames. Git and CHANGELOG retain historical names.
 
-The historical name survives only in `CHANGELOG.md` — that is change history, not something to
-rewrite.
+## Values, copies and moves
 
-## 1 C — Copy (deep-copy value semantics)
+Ordinary values retain independent observable value semantics; reference fields still express borrowing. Explicit moves transfer ownership. The compiler may remove copies or reuse storage while preserving behavior, so copy syntax does not imply a physical deep copy every time. Resource types retain noncopyable restrictions. See [values](../book/en/06-value-semantics.md) and [moves](24-ownership-move.md).
 
-**Contract**: assignment copies in full, never shares memory. Large objects go by explicit reference.
+## Macro hygiene and evaluation
 
-**Checks**
+Internal names are isolated from callers. Default value arguments evaluate once and mutations affect their copies. Reference arguments and expr syntax parameters have their own explicit behavior. Declaration macros are deferred. See [macros](../book/en/19-macros.md).
 
-- Ordinary assignment and pass-by-value copy; editing the copy leaves the source untouched.
-  Strings, containers and owning fields all follow value semantics
-  ([03 Core concepts §1](03-core-concepts.md)).
-- Runnable samples: `example/samples/struct_value.chl`, `example/samples/struct_container_field.chl`.
+## Type erasure
 
-**What counts as a violation**
+Any retains concrete type information for checked recovery. Erasure does not cancel provenance, ownership or resource rules, or invent interface implementations. See [Any and generics](23-any-generics-data.md).
 
-- Editing a copy after assignment also changes the source (memory was quietly shared).
-- Passing large objects by reference by default, with no explicit reference type in the signature —
-  that turns "copy" into an implicit, opt-in behaviour.
+## Reference validity
 
-## 2 H — Hygienic (hygienic macros)
+Static checks track sources and use scopes. Programs must also meet external C ABI and unsafe preconditions: static borrowing does not validate arbitrary external binaries. See [references](../book/en/07-references.md) and [unsafe boundaries](41-unsafe-abi.md).
 
-**Contract**: compile-time substitution that never captures or pollutes outer variables by accident.
+## Interfaces and dispatch
 
-**Checks**
+Interfaces describe behavior implemented by concrete types. They support generics, inheritance and concrete-type matching. Behavior follows the actual receiver; known targets may be devirtualized or inlined while preserving observable results. See [interfaces](../book/en/13-interfaces.md).
 
-- Names inside a macro body are renamed hygienically and never collide with same-named variables at
-  the call site: runnable sample `example/samples/macro_gensym.chl`.
-- Macros can be called across modules by qualified name (`$std::lang::assert(...)`) under the usual
-  visibility rules (`std::lang` is always visible; other modules must be imported first):
-  runnable sample `example/samples/macro_qualified.chl`. An undefined one reports at the call site.
-- Macro rules in full: [24 Literals, operators and macros](25-literals-operators-macros.md).
+## Verification
 
-**What counts as a violation**
-
-- Expansion captures a same-named variable from the call site, or leaks macro-internal temporaries
-  into the caller's scope.
-- A qualified call bypasses visibility (reaching another module's macro without importing it).
-
-## 3 A — Any (universal box / type erasure)
-
-**Contract**: holds any type when no generic constraint applies.
-
-**Checks**
-
-- `Any` erases the concrete type on store and validates it against the declared type on retrieval:
-  runnable sample `example/samples/any_generics.chl`; rules in
-  [22 Any and generic data](23-any-generics-data.md).
-
-**What counts as a violation**
-
-- `Any` accepting only a fixed set of types (that is a union, not a universal box).
-- Skipping the check on retrieval, so a type mismatch becomes undefined behaviour at run time.
-
-## 4 L — Lifetime (borrow checker)
-
-**Contract**: a reference never outlives its source; otherwise compilation fails (`CHL1204`).
-
-**Checks**
-
-- The borrow checker rejects three shapes at compile time (see `source/chali_borrow_checker.hpp`):
-  a stored reference outliving its source, a reference in a return value outliving a local source,
-  and an `Any` by-value argument hiding a non-global reference source (pass an explicit reference
-  type instead).
-- Legal uses: `example/samples/borrowed_aggregate_return.chl`,
-  `example/samples/borrowed_index_values.chl`. Rejected ones:
-  `example/samples-error/iter_erase_borrowed.chl`,
-  `example/samples-error/iter_transfer_borrowed.chl`.
-
-**What counts as a violation**
-
-- Letting an outliving reference compile and deferring it to a dangling reference at run time.
-- Downgrading `CHL1204` to a warning — the contract says "fails to compile".
-
-## 5 I — Interface (runtime polymorphism)
-
-**Contract**: a shared contract dispatched on the object's real type at run time.
-
-**Checks**
-
-- Interface methods dispatch on the receiver's actual type at run time: runnable samples
-  `example/samples/interface.chl`, `example/samples/interface_protocols.chl`,
-  `example/samples/interface_view_ownership.chl`. Default methods and inheritance:
-  `example/samples/interface_defaults.chl`, `example/samples/interface_inherit.chl`.
-
-**What counts as a violation**
-
-- Collapsing into static dispatch (the target fixed at compile time, actual type ignored at run time).
-- Letting a partially implemented object call an unimplemented method through the interface silently.
-
-## 6 Renaming and acceptance
-
-Each letter maps to the checks above; if a check fails, the language is not ChaLi. Whenever the
-language name, source suffix, diagnostic prefix or executable name changes, these must move together
-— no half renames:
-
-- The five-letter banner printed at the top of help and the manual (`PrintUsage` in
-  `source/chali_driver.cpp`, the `man` usage in `tools/native_man.hpp`), with both languages
-  supplied by `source/i18n/messages.tsv`.
-- Every version string (`VERSION`, `source/chali_package.hpp`, the language server,
-  `tools/chali_dev.py`, the VS Code extension's `chaliCompilerVersion`).
-- Command and suffix examples in the toolchain and quickstart pages.
+[Successful samples](../../example/samples/) and [rejected samples](../../example/samples-error/) provide concrete cases. Report source, compiler, target and options with results. Names and individual examples do not establish untested platforms or configurations.
