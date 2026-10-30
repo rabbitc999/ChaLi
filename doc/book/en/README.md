@@ -6,8 +6,6 @@
 
 This book develops programs from checking and local execution through native delivery. Small examples establish types and control flow, then introduce values, references, resources, generics and interfaces before combining them in a database application. It describes implemented 1.0.11 behavior. [VERSION](../../../VERSION) identifies the release; pending plans are not presented as available syntax.
 
-Each chapter introduces a problem, then follows code and output. Code walkthroughs explain key statements, state changes, result origins and common mistakes. Chapter summaries relate examples to later topics. Predict results before consulting the explanation instead of relying only on copying and running examples.
-
 ## Reading and running examples
 
 New programmers can start at Chapter 1. Experienced readers can use the topic map; read Chapters 6–8 together for the value, reference and resource rules. Chapters include exercises and answers. This English edition contains technical text and appendices, without the Chinese literary extras or a separate LaTeX/PDF build.

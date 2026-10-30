@@ -357,3 +357,25 @@ void main() {
 限定名找不到对应定义时报「未定义宏」，位置指向调用点。
 
 回归见 [宏 AST](../tests/chali_ast_macros.py)、[分组与来源](../tests/chali_macro_groups.py)、[静态类型](../tests/chali_macro_generics.py) 和 [语法及正则](../tests/chali_macro_branches.py)。
+
+## 显式结果类别与模块声明宏
+
+宏头可以在参数组后写 `-> expr`、`-> stmt` 或 `-> item`。未标注的旧宏保持原有展开规则。`expr` 需要表达式结果；`stmt` 生成语句，可在函数体中作为独立调用；二者均不能用于模块声明位置。`item` 在模块声明位置调用，调用后写分号，生成函数、结构体、枚举或接口，也可以调用另一个声明宏。
+
+```chali
+$macro RECORD<T>(name:ident) -> item
+struct name {T value;}
+$end_macro
+
+$macro ANSWER(name:ident) -> item
+int64 name(){return 42;}
+$end_macro
+
+$RECORD<int64>(Record);
+$ANSWER(answer);
+void main(){Record record;record.value=answer();assert(record.value==42);}
+```
+
+声明宏的类型实参须显式提供，形参须标注语法类别，不能使用运行期 value 或引用形参。类型参数替换到生成的字段、形参和返回类型中；`<T:arg>`、`<T:#res>` 在原有表达式宏中继续按既有规则推导。公开名称通过 ident 实参传入；模板内部声明的辅助函数和类型获得独立名称，重复调用不共享这些辅助声明。生成函数可正常重载，同签名冲突报错；生成类型接受普通名称、类型、借用和资源检查。声明宏不能生成 module、import 或新的宏定义，递归声明展开报告来源链。
+
+相关回归见 [声明宏测试](../tests/chali_macro_declarations.py)。

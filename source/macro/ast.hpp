@@ -73,6 +73,16 @@ int M_MacroTemplate(int statements, int expression);
  */
 int M_MacroDefinition(int name, int parameters, int body, int generics);
 /**
+ * @brief 保存宏的显式结果类别，不将声明模板当作运行期表达式。
+ * @param name 宏名称。
+ * @param parameters 形参组。
+ * @param body 已解析模板。
+ * @param generics 类型参数。
+ * @param category 结果类别名称池编号；负一表示声明结果。
+ * @return 宏定义节点。
+ */
+int M_MacroResultDefinition(int name, int parameters, int body, int generics, int category);
+/**
  * @brief 构造宏调用，保留完整实参 AST。
  * @param name 含美元前缀的名称池编号。
  * @param arguments 实参节点列表，负值表示没有参数组。

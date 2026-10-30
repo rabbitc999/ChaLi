@@ -18,7 +18,7 @@ def execute(command):
 
 def main():
     """在独立目录编译模块回归，并使用现有解析器库验证真实宏语法节点。"""
-    base = ROOT / "build/macro-hygiene"
+    base = ROOT / "tmp/macro-hygiene"
     base.mkdir(parents=True, exist_ok=True)
     includes = ["source", "library", "source/preprocess", "source/ast", "source/ircode",
                 "source/console", "source/lztext", "source/bignum", "source/json"]
@@ -32,7 +32,7 @@ def main():
                  "build/chali-runtime/libpreprocess.a"]
     with tempfile.TemporaryDirectory(prefix="foundations-", dir=base) as directory:
         for name, module in (("macro_hygiene", "hygiene"), ("macro_regex", "regex_matcher"),
-                             ("macro_source", "source"), ("macro_fragments", "fragments"), ("macro_ast_substitution", "ast_substitution"),
+                             ("macro_source", "source"), ("macro_signature", ["signature", "source/syntax/source_text.cpp"]), ("macro_fragments", "fragments"), ("macro_ast_substitution", "ast_substitution"),
                              ("macro_template_binding", ["template_binding", "ast_substitution", "hygiene", "registry", "regex_matcher", "source/literals/string_escape.cpp"]),
                              ("syntax_constants", ["source/syntax/source_text.cpp", "source/syntax/constant_expression.cpp"]),
                              ("macro_parser", None)):

@@ -313,3 +313,23 @@ $end_macro
 `$replace ADD(a, b) a + b` is a single-line definition using the same AST mechanism. Expansion has recursion and size budgets. Diagnostics retain invocation, definition and argument chains. The editor previews hygienic ASTs one graph per macro call; each graph is a self-contained page that can be embedded in a web page. Type hints come from final static types without exposing internal binding identifiers.
 
 See [AST tests](../../tests/chali_ast_macros.py), [groups and origins](../../tests/chali_macro_groups.py), [static types](../../tests/chali_macro_generics.py) and [syntax and regex branches](../../tests/chali_macro_branches.py).
+
+## Explicit result categories and module declaration macros
+
+A macro header may end in `-> expr`, `-> stmt`, or `-> item`. Unannotated macros retain their existing expansion rules. An expr macro produces an expression result. A stmt macro produces statements and may be invoked as a standalone call in a function body. An item macro is invoked at module declaration position, followed by a semicolon, and produces functions, structures, enums, interfaces, or calls to other item macros.
+
+```chali
+$macro RECORD<T>(name:ident) -> item
+struct name {T value;}
+$end_macro
+$macro ANSWER(name:ident) -> item
+int64 name(){return 42;}
+$end_macro
+$RECORD<int64>(Record);
+$ANSWER(answer);
+void main(){Record record;record.value=answer();assert(record.value==42);}
+```
+
+Item macros require explicit type arguments and categorized syntax parameters; runtime value and reference parameters are rejected. Type substitution applies to generated fields, parameters, and return types. Existing `<T:arg>` and `<T:#res>` inference remains available in expression macros. Public names come from ident arguments. Internal helper functions and types receive independent names on each invocation. Generated functions may overload, while duplicate signatures fail. Generated types and bodies pass ordinary name, type, borrow, and resource checks. Item macros cannot generate module declarations, imports, or new macro definitions. Recursive declaration expansion reports its origin chain.
+
+See [declaration macro tests](../../tests/chali_macro_declarations.py).

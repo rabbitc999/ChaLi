@@ -121,6 +121,7 @@ Box<int64 fn(int64)> box;
 | `MACRO_REPLACE` | `$replace` |
 | `MACRO_END` | `$end_macro` |
 | `MACRO_BODY` | `@!macrobody` |
+| `MACRO_ITEM` | `@!macroitem` |
 | `MACRO_MATCH` | `$match` |
 | `MACRO_ELSE` | `$else` |
 | `MACRO_END_MATCH` | `$end_match` |
@@ -949,7 +950,11 @@ qualified_ref = name_token, "::", name_token
     | qualified_ref, "::", "yield" ;
 
 macro_definition = "$macro", name_token, macro_generics, macro_parameters, "@!macrobody", macro_template, "$end_macro"
-    | "$replace", name_token, macro_generics, macro_parameters, "@!macrobody", macro_template, "$end_macro" ;
+    | "$replace", name_token, macro_generics, macro_parameters, "@!macrobody", macro_template, "$end_macro"
+    | "$macro", name_token, macro_generics, macro_parameters, "->", name_token, "@!macrobody", macro_template, "$end_macro"
+    | "$replace", name_token, macro_generics, macro_parameters, "->", name_token, "@!macrobody", macro_template, "$end_macro"
+    | "$macro", name_token, macro_generics, macro_parameters, "->", "@!macroitem", "@!macrobody", top_list, "$end_macro"
+    | "$replace", name_token, macro_generics, macro_parameters, "->", "@!macroitem", "@!macrobody", top_list, "$end_macro" ;
 
 macro_generics = ""
     | "<", macro_generic_items, ">" ;

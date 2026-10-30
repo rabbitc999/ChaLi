@@ -4,15 +4,11 @@
 **English** · [简体中文](../16-错误处理.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Absence and failure are ordinary outcomes that programs must express. Reusing a special integer or empty string for every case risks confusing valid data with status. Option and Result keep status and payload together in the type.
-
-Start with Value and None in lookup, then inspect interface errors, nested payloads, question-mark propagation and a custom Try protocol. Determine the outer state before the payload type to decide whether execution continues or returns early.
+Absence and failure are distinct. Option expresses presence, Result expresses success or error, and an error interface unifies boundaries while retaining concrete errors for recovery.
 
 ## 16.1 Branch on Option and Result
 
-Searching a score list can find an integer or nothing. Zero cannot distinguish them because it might be valid data. Option<int64> separates Value from None so the caller can respond to the actual state.
-
-FindFirst establishes the two return paths. Then compare unwrap with known presence, unwrapOr with a fallback and match with explicit handling of both alternatives.
+A default-constructed Option follows its default variant and value; use Option<T>::None for explicit absence. Match Value/None before reading an optional value and Ok/Err before reading a result. Use unwrap only after establishing its precondition, not as external input validation.
 
 <!-- verify-book -->
 ```chali
@@ -48,13 +44,6 @@ void main()
 -1
 found = 3
 ```
-
-### Code walkthrough
-
-FindFirst returns Option<int64>: Value contains a found item and None represents absence. A match returns immediately, ending the scan. None is returned only after exhausting the list. The list is passed by value and only read here.
-
-Searching for seven succeeds, so unwrap returns seven. Nine is absent, making unwrapOr(-1) choose its fallback. Searching for three selects the Value arm and binds v. Unwrap requires presence, whereas match and unwrapOr explicitly handle absence. Minus one is a fallback chosen by the caller, not a value stored inside None.
-
 
 ## 16.2 Match an interface inside an enum
 
@@ -92,13 +81,6 @@ qualified: 读取失败：demo
 short: 读取失败：demo
 ```
 
-### Code walkthrough
-
-ReadDemo does not access a real file. It directly builds Err with an IoError payload inside an Error interface. Both matches inspect that failure, so neither Ok arm executes.
-
-The first uses `Err::std::io::IoError(e)` to state the failure branch and concrete type together. The second uses the supported shorter type pattern. Both extract the same error text with different prefixes, exposing the chosen arms. Err(_) remains necessary for other Error implementations; one IoError pattern does not cover every possible failure.
-
-
 With two payloads keep Failed(code, Type value). When both Ok and Err can carry the same implementation, explicit variants distinguish the alternatives without ambiguity.
 
 <!-- verify-book -->
@@ -133,13 +115,6 @@ void main()
 503: 文件已关闭
 ok: 文件已关闭
 ```
-
-### Code walkthrough
-
-Response::Failed carries a code followed by Error. Its specialized arm binds 503 and requires the second payload to be IoError. The `_ other` fallback binds other error implementations for interface use.
-
-The second part deliberately constructs `Result<Error, Error>::Ok(...)`. Although the success payload has type Error, the outer state remains Ok. It matches the IoError pattern within Ok, not Err. For nested patterns, determine the outer success/failure state or enum variant before checking the inner concrete type. An error-valued payload does not by itself mean the operation failed.
-
 
 ## 16.3 Promote interface implementations while propagating
 
@@ -190,13 +165,6 @@ result: 文件已关闭
 option: 文件已关闭
 ```
 
-### Code walkthrough
-
-Leaf always returns the IoError::Closed failure. In readName, `leaf()?` propagates Err out of the current function, skipping Ok(name). Widening to the Error interface retains the identifiable IoError, allowing main's concrete match.
-
-OptionalError instead returns Value containing an error object. WidenedError's question mark therefore extracts a present value, widens it to Error and wraps it in Value again. Main prints the option-prefixed message. The question mark examines the container branch, not the payload's name: Err and None are the respective early-exit states.
-
-
 ## 16.4 Custom propagation and recovery boundaries
 
 A custom Try protocol defines both successful output and residual conversion. Recover where a useful decision can be made: retry file operations, report field errors, and display unknown implementations through their common interface. Early returns still follow cleanup rules.
@@ -236,19 +204,6 @@ void main()
 ```text
 5 1
 ```
-
-### Code walkthrough
-
-Step implements Try<int64, NoneResidual>. Its branch method translates business states into the propagation protocol: Value produces Continue(value), while Empty produces Break(NoneResidual::None). The final panic is not an expected path because the match handles both variants.
-
-In addOne, step? follows that protocol. Value(4) extracts four and returns Option::Value(5). Empty exits early with absence, skipping addition. Main unwraps the former to five and confirms the latter with isNone. Custom question-mark behavior requires a complete, type-compatible protocol rather than merely a similarly named method.
-
-
-### Summary
-
-Option expresses presence, Result success or failure, and interface payloads describe concrete contents. Unwrap depends on established premises, match exposes handling paths and question-mark propagation returns a noncontinuing state according to its protocol.
-
-Choose deliberately where to supply defaults and where to retain error information. An Error-valued successful payload remains success. Iterator examples next reuse Option to express traversal exhaustion.
 
 ## 16.5 Exercises
 

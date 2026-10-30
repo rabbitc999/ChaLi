@@ -241,6 +241,7 @@ void McDocument::setText(std::string text)
                 }
                 signature += chali_syntax::groupClose(group.opening);
             }
+            if (!parsed.result.empty()) signature += " -> " + std::string(parsed.result.c_str());
             recordMacro(line, match, std::move(params), {}, signature, shape);
             if (!replacementHeader) active = macros_.size() - 1;
         }

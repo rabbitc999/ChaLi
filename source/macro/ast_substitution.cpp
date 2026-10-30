@@ -78,6 +78,15 @@ void AstSubstitution::collectNames(int id, std::size_t depth)
             throw std::runtime_error("宏声明名称必须来自单个标识符实参");
         names_[node.bindingIdentity] = argument;
     }
+    if (!node.nameParameter && node.bindingIdentity && (node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl) && !names_.count(node.bindingIdentity))
+    {
+        MNode name;
+        name.kind = MNode::Var;
+        name.s = "__chali_decl_" + Memory::toString(context_) + "_" + Memory::toString(node.bindingIdentity) + "_" + node.s;
+        name.module = node.module;
+        names_[node.bindingIdentity] = static_cast<int>(nodes_.size());
+        nodes_.push_back(std::move(name));
+    }
     for (const int child : node.kids) collectNames(child, depth + 1);
     for (const int annotation : node.annotations) collectNames(annotation, depth + 1);
     collectNames(node.guard, depth + 1);
@@ -179,13 +188,15 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
             nodes_[result].s = nodes_[value].s;
         nodes_[result].nameParameter = 0;
     }
-    else if (substitute && (original.nameParameter || original.kind == MNode::Var))
+    else if (substitute && (original.nameParameter || original.kind == MNode::Var || original.kind == MNode::FuncDef || original.kind == MNode::StructDecl || original.kind == MNode::EnumDecl || original.kind == MNode::InterfaceDecl))
     {
         const auto name = names_.find(original.bindingIdentity);
         if (name != names_.end())
         {
             const auto &argument = nodes_[name->second];
             nodes_[result].s = argument.s;
+            nodes_[result].module = argument.module;
+            if (!original.nameParameter && original.kind != MNode::Var) nodes_[result].generatedDeclaration = true;
             nodes_[result].syntaxContext = argument.syntaxContext;
             nodes_[result].bindingContext = context_;
             nodes_[result].nameParameter = 0;
@@ -240,7 +251,17 @@ std::shared_ptr<MType> AstSubstitution::cloneType(const std::shared_ptr<MType> &
     if (type->macroBinding)
     {
         const auto actual = arguments_->find(type->macroBinding);
-        if (actual == arguments_->end()) throw std::runtime_error("宏类型形参没有绑定实参");
+        if (actual == arguments_->end())
+        {
+            const auto local = names_.find(type->macroBinding);
+            if (local == names_.end()) throw std::runtime_error("宏类型形参没有绑定实参");
+            auto result = Memory::makeShared<MType>(*type);
+            result->name = nodes_[local->second].s;
+            result->lookupModule = nodes_[local->second].module;
+            if (!result->genericBase.empty()) result->genericBase = result->name;
+            result->macroBinding = 0;
+            return result;
+        }
         const auto &fragment = nodes_[actual->second];
         if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != 5 || fragment.kids[2] < 0)
             throw std::runtime_error("宏形参在类型位置需要完整类型实参");

@@ -4,15 +4,11 @@
 **English** · [简体中文](../13-接口与运行期多态.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Different layouts can offer the same operations. Interfaces collect the behavior a caller needs, allowing one processing function to work across implementations. Shapes and errors provide concrete examples.
-
-First dispatch through Shape references, then identify concrete Error types when handling genuinely differs. Direct dispatch shares behavior; concrete-type matching supports implementation-specific handling.
+An interface describes callable behavior implemented by concrete structs or enums. Callers can depend on that behavior or match a concrete type when domain handling differs.
 
 ## 13.1 Organize calls around behavior
 
-A report that reads r or side directly must know every shape layout and change when a shape is added. Shape instead requires area and description behavior, leaving fields to each implementation.
-
-Report accepts an interface reference and invokes those common methods. Circle and Square differ internally but share the calling contract. Borrowing existing objects exposes dispatch while retaining the concrete model's value, resource and lifetime rules.
+Put common operations in an interface, such as area, error display, reading or writing. Interface consumers depend on these operations rather than implementation fields. Concrete values retain their own ownership and resource rules.
 
 <!-- verify-book -->
 ```chali
@@ -71,13 +67,6 @@ void main()
 正方形：9
 ```
 
-### Code walkthrough
-
-Shape declares area and describe without prescribing fields such as r or side. Circle and Square implement these behaviors. Report needs only Shape const&, with no branch on the concrete shape and no ownership transfer of the original object.
-
-Main borrows two live objects through interface references. The circle uses integer three as an illustrative coefficient, giving twelve for radius two; the square gives nine for side three. Report dispatches to each implementation and joins its description with the formatted area. This demonstrates interface dispatch rather than precise geometry, and the references cannot outlive c or s.
-
-
 ## 13.2 Recognize a concrete error
 
 IoError implements Error. Match can recognize that concrete value and bind it to e. A wildcard handles other implementations, and _(other) names the fallback value. An open interface generally needs a fallback because listed implementations do not exhaust future ones.
@@ -105,13 +94,6 @@ io: 文件已关闭
 other: invalid score
 ```
 
-### Code walkthrough
-
-Describe accepts Error statically, but the enclosed concrete implementation can vary. IoError::Closed matches the std::io::IoError type pattern and binds e, producing the io-prefixed message.
-
-MessageError does not match that type, so the wildcard fallback uses the Error interface's toString to print invalid score. Keeping a fallback allows other implementations. When every branch would merely call the same interface method, concrete-type matching is usually unnecessary; the differing prefixes here deliberately expose the two paths.
-
-
 ## 13.3 Generic interfaces and inheritance
 
 Interfaces can take type parameters and inherit other interfaces. Type arguments identify data used by their behavior, while inheritance combines required capabilities. It does not inherit class field layout or let casts invent missing implementations. The next chapter develops generic constraints.
@@ -119,12 +101,6 @@ Interfaces can take type parameters and inherit other interfaces. Type arguments
 ## 13.4 Matching versus calling
 
 Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 16 handles interface payloads inside Result and propagation.
-
-### Summary
-
-Interfaces promise callable behavior rather than a particular field layout. Borrowed implementations still need live sources, and value payloads retain concrete copy and resource semantics. Refine types only when recovery or extra data requires it.
-
-Chapter 14 applies behavior requirements to generic constraints and links implementations to results through associated types. Chapter 16 places interface errors inside Result states.
 
 ## 13.5 Exercises
 

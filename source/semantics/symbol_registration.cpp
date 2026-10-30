@@ -590,7 +590,7 @@ bool RegisterTop()
         const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::EnumDecl) continue;
-        if (!CheckUserName(top.s)) return false;
+        if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;
         if (g_enums.count(top.s) != 0u || g_structs.count(top.s) != 0u)
             return Fail("enum 重名：" + top.s);
         for (const int otherId : g_top)
@@ -652,7 +652,7 @@ bool RegisterTop()
         const MNode top = N(topId);
         ReductionSourceScope source(topId);
         if (top.kind != MNode::InterfaceDecl) continue;
-        if (!CheckUserName(top.s)) return false;
+        if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;
         if (g_interfaces.count(top.s) != 0u) return Fail("接口重名：" + top.s);
         for (const int otherId : g_top)
         {
@@ -800,7 +800,7 @@ bool RegisterTop()
         ReductionSourceScope source(topId);
         if (top.kind == MNode::StructDecl || top.kind == MNode::OpcodeDecl)
         {
-            if (!CheckUserName(top.s)) return false;
+            if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;
             if (g_enums.count(top.s) != 0u) return Fail("struct 和 enum 重名：" + top.s);
             if (g_structs.count(top.s) != 0u) return Fail("struct 重名：" + top.s);
             if (g_interfaces.count(top.s) != 0u) return Fail("struct 和接口重名：" + top.s);
@@ -1421,6 +1421,11 @@ bool RegisterTop()
         for (std::size_t before = 0; before < index; ++before)
         {
             if (g_functionDecls[before].label != declaration.label) continue;
+            const auto previousBody = g_functionDecls[before].bodyId;
+            if ((declaration.bodyId >= 0 && N(declaration.bodyId).macroExpansion >= 0) ||
+                (previousBody >= 0 && N(previousBody).macroExpansion >= 0))
+                return Fail("声明宏生成了重复函数：" + declaration.source);
+
             /* **重复定义：后面的覆盖前面的** —— 前面那条不再降级（函数体丢掉），
              * 标签与签名都沿用（两者本来就完全一样）。 */
             g_functionDecls[before].superseded = true;

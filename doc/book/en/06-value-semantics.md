@@ -4,15 +4,11 @@
 **English** · [简体中文](../06-值语义.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Two variables containing equal data do not necessarily share mutable state. Value semantics describes observable independence after copying. References borrow existing objects, while moves transfer ownership.
-
-An experiment with a structure containing a list anchors the discussion of parameters, returns and noncopyable resources. Explain behavior through independent mutation and continued source availability, not a promised physical copy or allocation count.
+Distinguish copying, borrowing and transfer by observable behavior. A copied owning value can be modified independently, while reference fields still refer to their source and resource types retain copy restrictions. Value semantics does not require a physical memory copy at every assignment.
 
 ## 6.1 Modify copied values independently
 
-Suppose an original list must remain available while a second list is edited experimentally. If editing the experiment changes the original, the requirement has failed. Value semantics explains the expected independence without first requiring allocation internals.
-
-The example wraps a List inside Bag and copies the whole Bag. Rather than merely comparing equal contents, append to the copy and inspect both lengths. That operation tests independent mutation directly.
+Ordinary List assignment has value semantics, including when the list is a structure field. Append to the copy and inspect the two lengths.
 
 <!-- verify-book -->
 ```chali
@@ -35,13 +31,6 @@ void main()
 1 2
 ```
 
-### Code walkthrough
-
-Bag owns a List<int64> in its items field. Original first receives one element. `Bag copy = original` copies this copyable model's value; wrapping a list in a structure does not change ordinary assignment into a shared mutable-list contract.
-
-Appending two to copy.items makes its length two while original still has one element, producing `1 2`. This verifies observable independence, not a particular allocation count. Reference fields preserve their reference relationships on copying, and resource-owning noncopyable types require a separate check before applying this pattern.
-
-
 ## 6.2 Value parameters and returns
 
 A function receiving a copyable value modifies its own value. Use a mutable reference for write-back and a readonly reference for borrowed access. Copying a reference field preserves that reference; it does not copy the referent.
@@ -57,12 +46,6 @@ Implicit transfer follows ownership checks and does not invalidate a source that
 ## 6.4 Separate semantics from cost
 
 First determine which object changes, who owns resources and when a source becomes unavailable. Then choose value or reference interfaces. String and collection growth, copying and cleanup have costs; equivalent transformations can remove copies. Measure a concrete workload to assess runtime or allocation cost.
-
-### Summary
-
-Identify copyable owners, references and noncopyable resources before judging assignment and later use. Reference copies retain their source, moves invalidate their source and ordinary owning copies retain independent mutation semantics. A composite model can contain several relationships.
-
-Chapter 7 explains intentional access to the same object. Choose an interface from the required data relationship before measuring performance.
 
 ## 6.5 Exercises
 

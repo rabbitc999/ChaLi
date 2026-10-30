@@ -138,6 +138,20 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
         at = end;
         chali_syntax::spaces(source, at);
     }
+    if (source.compare(at, 2, "->") == 0)
+    {
+        at += 2;
+        chali_syntax::spaces(source, at);
+        const auto begin = at;
+        while (at < source.size() && chali_syntax::identPart(source[at])) ++at;
+        signature.result = source.substr(begin, at - begin);
+        if (signature.result != "expr" && signature.result != "stmt" && signature.result != "item")
+        {
+            error = "不支持的宏结果类别：" + signature.result;
+            return false;
+        }
+        chali_syntax::spaces(source, at);
+    }
     if (!signature.replacement && at != source.size())
     {
         error = "宏头不允许额外内容或自动括号标注";

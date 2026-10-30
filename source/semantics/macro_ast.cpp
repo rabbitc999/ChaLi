@@ -340,3 +340,26 @@ int M_GenericClosureSyntax(int resultType, int generics, int params, int body, i
     }
     return id;
 }
+
+/**
+ * @brief 构造带显式输出类别的宏定义，保留原有形参与模板结构。
+ * @param name 宏名称。
+ * @param parameters 形参组。
+ * @param body 模板节点。
+ * @param generics 泛型参数。
+ * @param category 结果类别名称池编号；负一表示声明结果。
+ * @return 已标注的宏定义节点。
+ */
+int M_MacroResultDefinition(int name, int parameters, int body, int generics, int category)
+{
+    const int id = M_MacroDefinition(name, parameters, body, generics);
+    g_nodes[id].s2 = category < 0 ? Memory::String("item") : g_names[category];
+    if (category < 0)
+        for (const int child : g_nodes[g_nodes[body].kids[0]].kids)
+        {
+            const auto &declaration = g_nodes[child];
+            if (declaration.kind != MNode::FuncDef && declaration.kind != MNode::StructDecl && declaration.kind != MNode::EnumDecl && declaration.kind != MNode::InterfaceDecl && declaration.kind != MNode::MacroCall)
+                g_parseDiagnostics.push_back({ "声明宏只能生成函数、结构体、枚举、接口或声明宏调用", declaration.sourceLine, declaration.sourceColumn });
+        }
+    return id;
+}

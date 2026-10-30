@@ -4,9 +4,7 @@
 **English** · [简体中文](../B-标准库速查.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Start library lookup from the data and intended outcome: numerical operations, text conversion, iteration and external resources use different interfaces. Modules locate capabilities, signatures specify inputs/results and failure contracts describe premises and recovery.
-
-A combined example demonstrates lookup and invocation before the task-oriented reference entries. Short samples cannot cover every API boundary; inspect concrete types, source mutation, ownership and platform conditions for actual use.
+std::lang supplies the default core types and behavior. Import other modules as needed. This appendix locates APIs by task; consult the [library reference](../../library/README.md) for exact signatures, errors and platform conditions. Use chali man module::symbol from the terminal.
 
 ## B.1 Combine explicit imports
 
@@ -34,13 +32,6 @@ sqrt=12
 upper=CHALI
 sum=10
 ```
-
-### Code walkthrough
-
-The imports support three tasks: math supplies square root, text supplies case conversion and iter supplies range traversal. Qualified names identify each operation's module. Sqrt(144.0) yields twelve, and toUpper converts chali to CHALI for their respective outputs.
-
-Range(1,5) yields one through four. Sum lives outside the loop and accumulates ten. Math and text results are printed directly, whereas the range is reduced by iteration. Importing makes a module available rather than executing its business operations automatically. Consult input types, results and failure behavior when choosing APIs.
-
 
 range(1, 5) includes 1 through 4. Check endpoint and error conventions separately for other APIs.
 

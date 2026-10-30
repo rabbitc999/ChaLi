@@ -47,6 +47,13 @@ def main():
             category = next(item for item in items if item['label'].endswith('Categories'))
             inserted = category.get('insertText', category.get('textEdit', {}).get('newText', ''))
             assert inserted and ':value' not in inserted and ':expr' not in inserted and ': value' not in inserted and ': expr' not in inserted, category
+            text = '$macro Declare(name:ident) -> item\nint64 name(){return 42;}\n$end_macro\n$'
+            uri = (folder / 'result-category.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            response = server.query("textDocument/completion", {"textDocument": {"uri": uri}, "position": position(text, len(text))})
+            items = response.get("items", []) if isinstance(response, dict) else response
+            declaration = next(item for item in items if item['label'].endswith('Declare'))
+            assert '-> item' in str(declaration), declaration
         finally:
             server.close()
     print("LSP 宏补全：外部模块、$ 前缀与限定名称通过")

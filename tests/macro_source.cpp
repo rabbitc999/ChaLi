@@ -41,6 +41,15 @@ int main()
     Memory::String categorySource = "$replace Inline(x:expr) x+x\n";
     if (!chali_macro::markReplacementBoundaries(categorySource, error)) return 17;
     if (categorySource.find("(x:expr)  @!macrobody x+x") == Memory::String::npos) return 18;
+    Memory::String itemSource = "$macro Make(name:ident) -> item\nint64 name(){return 42;}\n$end_macro\n";
+    chali_macro::markHeaderBoundaries(itemSource);
+    if (itemSource.find("-> @!macroitem @!macrobody") == Memory::String::npos) return 19;
+    Memory::String inlineItem = "$replace Make(name:ident) -> item int64 name(){return 42;}\n";
+    if (!chali_macro::markReplacementBoundaries(inlineItem, error)) return 20;
+    if (inlineItem.find("-> @!macroitem  @!macrobody int64") == Memory::String::npos) return 21;
+    Memory::String bodyArrow = "$replace Member(x) x->item\n";
+    if (!chali_macro::markReplacementBoundaries(bodyArrow, error)) return 22;
+    if (bodyArrow.find("x->item") == Memory::String::npos) return 23;
     std::cout << "macro declaration boundaries passed\n";
     return 0;
 }

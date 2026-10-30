@@ -335,6 +335,7 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
             continue;
         }
         if (expanded < 0) return ReportAstMacroFailure(call, Memory::String(error.data(), error.size()));
+        if (N(expanded).s2 == "item") return ReportAstMacroFailure(call, "声明宏只能在模块声明位置调用");
         RecordEditorMacro(call, expanded);
         const auto body = g_nodes[expanded];
         if (!ExpandAstMacroStatements(body.kids[0], registry, depth + 1, budget)) return false;
@@ -389,6 +390,7 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
         const int expanded = registry.instantiate(id, error);
         if (expanded == -2) return true;
         if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+        if (N(expanded).s2 == "item" || N(expanded).s2 == "stmt") return ReportAstMacroFailure(id, "该宏结果不能用于表达式位置");
         RecordEditorMacro(id, expanded);
         const int expression = AstMacroExpression(expanded);
         if (expression < 0)
@@ -408,6 +410,8 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
     const bool indexedChild = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::NewPtr || ((node.kind == MNode::Declare || node.kind == MNode::Field) && !declarationGroup && node.i >= 0) || (node.kind == MNode::Index && node.s2 == "__chali_bare_index");
     return !indexedChild || ExpandAstMacroNode(static_cast<int>(node.i), registry, depth + 1, budget);
 }
+
+#include "macro_declarations.cpp"
 
 /**
  * @brief 注册当前程序的 AST 宏并在四元式生成前展开表达式模板。
@@ -447,6 +451,7 @@ bool ExpandAstMacros()
         Memory::Map<Memory::String, std::uint32_t> callerBindings;
         if (!BindMacroCallerSyntax(id, callerBindings, 0)) return false;
     }
+    if (!ExpandAstMacroDeclarations(registry)) return false;
     std::size_t budget = 1000000;
     for (const int id : g_top)
         if (!ExpandAstMacroNode(id, registry, 0, budget)) return false;
@@ -595,6 +600,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
     };
     const int expanded = g_macroRegistry->instantiate(id, error, resolve, ApplyAstMacroTypes);
     if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+    if (N(expanded).s2 == "item" || (!templateRoot && N(expanded).s2 == "stmt")) return ReportAstMacroFailure(id, "该宏结果不能用于当前位置");
     RecordEditorMacro(id, expanded);
     if (!activate(expanded)) return false;
     if (templateRoot)

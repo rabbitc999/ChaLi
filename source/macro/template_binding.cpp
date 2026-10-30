@@ -32,6 +32,7 @@ bool TemplateBinding::bind(int definition, ScopeId definitionScope, BoundTemplat
     result = {};
     error.clear();
     parameters_.clear();
+    typeDeclarations_.clear();
     inputs_ = inputs;
     result_ = &result;
     iterationInputs_ = inputs ? *inputs : std::map<std::string, int>{};
@@ -131,6 +132,28 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     if (static_cast<std::size_t>(id) >= nodes_.size() || depth >= 256) throw std::runtime_error("宏绑定遇到无效或过深的语法节点");
     auto &node = nodes_[id];
     if (node.kind == MNode::MacroDefinition) throw std::runtime_error("嵌套宏定义尚未接入模板绑定");
+    if (node.kind == MNode::MacroTemplate && node.kids.size() == 2)
+    {
+        std::map<Memory::String, int> declarations;
+        for (const int child : nodes_[node.kids[0]].kids)
+        {
+            auto &entry = nodes_[child];
+            if (entry.kind != MNode::FuncDef && entry.kind != MNode::StructDecl && entry.kind != MNode::EnumDecl && entry.kind != MNode::InterfaceDecl) continue;
+            const auto previous = declarations.find(entry.s);
+            if (previous != declarations.end() && entry.kind == MNode::FuncDef && nodes_[previous->second].kind == MNode::FuncDef)
+            {
+                entry.bindingIdentity = nodes_[previous->second].bindingIdentity;
+                entry.nameParameter = nodes_[previous->second].nameParameter;
+            }
+            else
+            {
+                declare(child, scope);
+                declarations.emplace(entry.s, child);
+            }
+            if (entry.kind != MNode::FuncDef) typeDeclarations_.insert(entry.bindingIdentity);
+        }
+    }
+
     if (node.kind == MNode::MacroFor)
     {
         const auto source = std::string(node.s2.data(), node.s2.size());
@@ -234,7 +257,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     if (node.kind == MNode::EnumCtor && types_)
     {
         const auto identity = resolver_.resolve(std::string_view(node.s.data(), node.s.size()), scope, node.syntaxContext);
-        if (parameters_.count(identity))
+        if (parameters_.count(identity) || typeDeclarations_.count(identity))
         {
             auto type = Memory::makeShared<MType>();
             type->kind = MType::Struct;
@@ -257,7 +280,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
         visit(static_cast<int>(node.i), resolver_.createScope(scope), depth + 1);
         return;
     }
-    if (node.kind == MNode::FuncDef || node.kind == MNode::MethodDef || node.kind == MNode::For || node.kind == MNode::GenericLambda)
+    if (node.kind == MNode::FuncDef || node.kind == MNode::MethodDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl || node.kind == MNode::For || node.kind == MNode::GenericLambda)
         scope = resolver_.createScope(scope);
     if (node.kind == MNode::Destructure && !node.i)
     {
@@ -326,7 +349,7 @@ std::shared_ptr<MType> TemplateBinding::bindType(const std::shared_ptr<MType> &t
     if (type->kind == MType::Struct && type->genericBase.empty())
     {
         const auto identity = resolver_.resolve(std::string_view(type->name.data(), type->name.size()), scope, context);
-        if (parameters_.count(identity))
+        if (parameters_.count(identity) || typeDeclarations_.count(identity))
             result->macroBinding = identity;
         else
         {

@@ -4,15 +4,11 @@
 **English** · [简体中文](../20-注解与反射.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Metadata avoids repeated mappings when tools need field names, types or declaration attributes. Annotations describe declarations, reflection queries or accesses objects through supported APIs, and serialization encodes external representations.
-
-Route and Profile separate these responsibilities before field access enters a validation workflow. Application code still decides authorization, ranges and exposed fields even when metadata removes repetitive mapping.
+Reflection exposes type and field metadata; serialization converts values to external formats. They reduce mapping duplication but do not establish authorization, database relations or input trust.
 
 ## 20.1 Expose metadata explicitly
 
-Attach route information to a function first. Path describes an association and level data an application may interpret; neither is the function's input or output. An annotated function still executes its ordinary body.
-
-An annotation declaration specifies the data's shape and an application supplies its values. The example deliberately calls the function directly to distinguish metadata from execution. Actual routing requires logic that consumes that metadata.
+Expose the required type and field metadata before querying it. An annotation stores declaration data that application code must interpret; attaching it does not automatically implement routing or validation.
 
 <!-- verify-book -->
 ```chali
@@ -33,13 +29,6 @@ void main()
 ```text
 200
 ```
-
-### Code walkthrough
-
-The annotation declaration defines Route's metadata: path requires a String and level is int32 with default two. The annotation on health supplies a path and explicitly overrides level with one. These values describe the declaration.
-
-Main calls health directly, its body returns 200 and println prints that integer. No HTTP server or metadata-driven request dispatch appears here. The value's resemblance to an HTTP status does not establish that a network response was sent.
-
 
 ## 20.2 Read and write fields
 
@@ -73,13 +62,6 @@ void main()
 新名 80
 ```
 
-### Code walkthrough
-
-Reflect exposes Profile's model information. SetField's type arguments specify the model and written value type; `&profile` supplies the object, and name selects its string field. Unwrap and assert confirm the known-success operation here, changing the name to the shown replacement.
-
-The next queries intentionally fail: score is not String, and missing is not a field. IsErr checks both. Querying score correctly as int64 returns eighty. Only the selected field is updated; failed queries do not silently supply defaults. With unknown external input, handle Result explicitly rather than unwrapping blindly.
-
-
 ## 20.3 Serialization boundaries
 
 Parse external data and validate structure and field constraints. An integer age can still be invalid, and an existing class ID can still exceed a teacher’s scope. Select response fields explicitly; reflected password hashes must not be exported automatically.
@@ -96,13 +78,7 @@ Separate external parsing, validation, business-object mutation and output selec
 
 Annotations require an interpreter in application logic. Route defines declaration data; directly calling health does not demonstrate HTTP route registration. A service still needs to consume the information, establish dispatch and handle requests. Declaring metadata and executing business behavior are separate actions.
 
-Runtime reflection and compile-time generation also have different roles. The getField and setField examples request typed access by field name at runtime. They do not demonstrate compiler iteration over heterogeneous fields to generate static code. That capability belongs to macro and compile-time reflection extensions not yet delivered. Use existing derive directives under their current contracts; reflection APIs do not imply arbitrary custom derives. See the [reflection reference (Chinese)](../../19-reflection.md) for interfaces.
-
-### Summary
-
-Metadata still requires interpretation, querying, validation and failure handling before business behavior occurs. Confirm exposed information, field identity and requested type before permitted access. External output additionally requires selected public fields and encoding.
-
-Runtime reflection and compile-time derivation have separate supported scopes. Host integration next makes explicit type, layout and ownership contracts even more important.
+Runtime reflection and compile-time generation also have different roles. The getField and setField examples request typed access by field name at runtime. They do not demonstrate compiler iteration over heterogeneous fields to generate static code. That capability belongs to macro and compile-time reflection extensions not yet delivered. Use existing derive directives under their current contracts; reflection APIs do not imply arbitrary custom derives. See the [reflection reference](../../en/19-reflection.md) for interfaces.
 
 ## 20.5 Exercises
 

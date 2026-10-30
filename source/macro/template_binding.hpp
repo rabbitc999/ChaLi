@@ -76,6 +76,7 @@ private:
     Memory::Deque<MNode> &nodes_;
     HygieneResolver &resolver_;
     std::set<BindingId> parameters_;
+    std::set<BindingId> typeDeclarations_;  ///< 当前模板内的类型声明身份。
     ScopeId parameterScope_ = 0;
     const std::map<std::string, int> *inputs_ = nullptr;
     RegexMatcher *matcher_ = nullptr;

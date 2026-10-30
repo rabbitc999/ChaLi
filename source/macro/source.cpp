@@ -59,6 +59,47 @@ static Memory::String directiveMask(const Memory::String &source, std::vector<st
 }
 
 /**
+ * @brief 只在宏头将 item 结果标记为内部词法项，避免新增普通保留字。
+ * @param source 待归一化源码。
+ * @return 无；只替换宏头中的结果标记。
+ */
+static void markDeclarationResults(Memory::String &source)
+{
+    const auto mask = directiveMask(source);
+    std::vector<std::size_t> positions;
+    for (std::size_t line = 0; line < mask.size();)
+    {
+        const auto end = mask.find('\n', line);
+        const auto limit = end == Memory::String::npos ? mask.size() : end;
+        auto at = mask.find_first_not_of(" \t\r", line);
+        if (at < limit && (mask.compare(at, 6, "$macro") == 0 || mask.compare(at, 8, "$replace") == 0))
+        {
+            auto arrow = at + (mask.compare(at, 6, "$macro") == 0 ? 6 : 8);
+            const auto spaces = [&] { while (arrow < limit && std::isspace(static_cast<unsigned char>(mask[arrow]))) ++arrow; };
+            spaces();
+            while (arrow < limit && (std::isalnum(static_cast<unsigned char>(mask[arrow])) || mask[arrow] == '_')) ++arrow;
+            spaces();
+            while (arrow < limit && (mask[arrow] == '(' || mask[arrow] == '[' || mask[arrow] == '{' || mask[arrow] == '<'))
+            {
+                const char close = mask[arrow] == '(' ? ')' : mask[arrow] == '[' ? ']' : mask[arrow] == '{' ? '}' : '>';
+                const auto endGroup = mask.find(close, arrow + 1);
+                if (endGroup >= limit) { arrow = limit; break; }
+                arrow = endGroup + 1;
+                spaces();
+            }
+            if (mask.compare(arrow, 2, "->") == 0)
+            {
+                auto result = mask.find_first_not_of(" \t", arrow + 2);
+                if (result < limit && mask.compare(result, 4, "item") == 0 && (result + 4 == limit || !(std::isalnum(static_cast<unsigned char>(mask[result + 4])) || mask[result + 4] == '_')))
+                    positions.push_back(result);
+            }
+        }
+        line = end == Memory::String::npos ? mask.size() : end + 1;
+    }
+    for (auto position = positions.rbegin(); position != positions.rend(); ++position) source.replace(*position, 4, "@!macroitem");
+}
+
+/**
  * @brief 给单行宏插入词法边界，不展开正文也不为表达式补括号。
  * @param source 待处理源码。
  * @param error 接收无正文或头部括号错误。
@@ -66,6 +107,7 @@ static Memory::String directiveMask(const Memory::String &source, std::vector<st
  */
 bool markReplacementBoundaries(Memory::String &source, std::string &error)
 {
+    markDeclarationResults(source);
     error.clear();
     std::vector<std::size_t> comments;
     const auto mask = directiveMask(source, &comments);
@@ -126,6 +168,14 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
             generic = false;
             spaces();
         }
+        if (mask.compare(header, 2, "->") == 0)
+        {
+            header += 2;
+            spaces();
+            if (mask.compare(header, 11, "@!macroitem") == 0) header += 11;
+            else while (header < end && (std::isalnum(static_cast<unsigned char>(mask[header])) || mask[header] == '_')) ++header;
+            spaces();
+        }
         if (header >= end)
         {
             error = "单行宏必须在同一行提供正文";
@@ -148,6 +198,7 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
  */
 void markHeaderBoundaries(Memory::String &source)
 {
+    markDeclarationResults(source);
     bool blockComment = false;
     bool lineComment = false;
     char quote = 0;

@@ -4,15 +4,11 @@
 **English** · [简体中文](../17-迭代器.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-An iterator encapsulates what remains to be visited, supporting traversal, predicates and reductions. It is distinct from its container: retained data does not mean an already consumed iterator restarts automatically.
-
-All and any expose position changes, fold follows an accumulator and manual next loops cover sets and maps. Understand state before composing longer chains so reuse is not mistaken for fresh traversal.
+An iterator abstracts the next item. It supports traversal and combinations of filtering, mapping and terminal operations. Correct reuse depends on consumption state and borrowing.
 
 ## 17.1 Consumption and early termination
 
-Consider checking that a list is entirely positive, then checking for a value greater than two. Both succeed when starting afresh. Reusing one iterator instead resumes from the position left by the previous operation.
-
-All and any consume that state rather than merely storing predicates. Compare reuse of first with creation of second to explain the differing results directly from execution.
+An iterator may retain its current position. Terminal operations such as all and any consume elements and can short-circuit. A second operation need not restart. Create a fresh iterator or copy its state only where supported.
 
 <!-- verify-book -->
 ```chali
@@ -48,13 +44,6 @@ void main()
 新建后 any: 1
 ```
 
-### Code walkthrough
-
-First is an iterator with a current position. All tests positivity, succeeds for one through four and consumes this iterator to its end. Any on the same first then has no remaining items, so it returns false even though the original list contains values greater than two.
-
-Calling xs.iter again creates second with a fresh position, allowing any to find a matching item and return true. Consuming iteration state does not delete list elements. All need not always traverse everything: it can stop at a failed predicate. This input reaches the end because every value is positive.
-
-
 ## 17.2 Build a pipeline from a sequence
 
 Identify the source, compose transformations and finally collect or reduce. Building a pipeline and traversing it fully are different operations. Captured environments must remain valid throughout actual iterator use.
@@ -80,13 +69,6 @@ void main()
 ```text
 12 3
 ```
-
-### Code walkthrough
-
-FromList<int64>(xs) supplies a sequence for fold, whose initial accumulator is zero. The closure receives the previous accumulator as acc and the current element as x. Returning acc+x yields successive totals two, six and twelve.
-
-The fold result initializes total while the original list retains three entries, producing `12 3`. Accumulator and callback result types must agree. A different reduction operation may need a different initial value; zero is not universal for every fold.
-
 
 ## 17.3 Traverse Map and Set
 
@@ -135,22 +117,9 @@ sum = 6 len = 3
 doubled = 50 len = 2
 ```
 
-### Code walkthrough
-
-The first loop calls a set iterator's next manually. Each Option indicates either an item or exhaustion. Value(v) adds to the sum; None breaks. The sum is six and the original set still has length three. Addition here does not depend on traversal order.
-
-Map next returns a pair, with the key in first and value in second. The actual formula is 1*10 plus 2*20, giving fifty rather than merely summing the values; the variable name doubled does not change it. Both loops read their containers. Structural mutation during traversal must follow iterator restrictions and is not authorized by this read-only example.
-
-
 ## 17.4 Structural mutation and invalidation
 
 Growth, deletion or reordering can invalidate traversal state and element borrows. Use supported mutation operations. For batch changes, collect stable identifiers and update in a second phase. Early loop exit still cleans iterator state and owned temporaries.
-
-### Summary
-
-Traversal obtains a source, advances, handles items and ends. All, any and fold consume current state; next expresses availability through Option. A new container iterator starts a fresh traversal.
-
-Check each interface for source mutation, value versus borrowed elements and invalidating modifications. An order-independent sum does not establish stable ordering. Chapter 18 extends the discussion from individual algorithms to modules and project dependencies.
 
 ## 17.5 Exercises
 

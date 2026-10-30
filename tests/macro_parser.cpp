@@ -74,6 +74,11 @@ int main()
     if (!parse("$macro Categories(x:value,y:expr,n:ident,T:type,s:stmt,b:block)\nx\n$end_macro\nvoid main(){}\n", root)) return 22;
     const auto categoryParameters = M_ParsedNode(M_ParsedNode(M_ParsedNode(root).kids[0]).kids[0]).kids;
     if (categoryParameters.size() != 6 || M_ParsedNode(categoryParameters[0]).s2 != "value" || M_ParsedNode(categoryParameters[5]).s2 != "block") return 23;
+    if (!parse("$macro Function(name:ident) -> item\nint64 name(){return 42;}\n$end_macro\n$Function(answer);\nvoid main(){}\n", root)) return 24;
+    const auto &itemDefinition = M_ParsedNode(M_ParsedNode(root).kids[0]);
+    if (itemDefinition.s2 != "item") return 25;
+    const auto &itemBody = M_ParsedNode(itemDefinition.kids[1]);
+    if (M_ParsedNode(M_ParsedNode(itemBody.kids[0]).kids[0]).kind != MNode::FuncDef) return 26;
     std::cout << "generated AST macro parser passed\n";
     return 0;
 }

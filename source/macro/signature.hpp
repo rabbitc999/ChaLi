@@ -22,6 +22,7 @@ struct Signature
     Memory::String name;
     Memory::Vector<Memory::String> generics;
     Memory::Vector<SignatureGroup> groups;
+    Memory::String result;  ///< 显式展开结果类别；空值保留旧宏行为。
     bool replacement = false;
 };
 /**

@@ -14,6 +14,7 @@
 %token MACRO_REPLACE "$replace"
 %token MACRO_END "$end_macro"
 %token MACRO_BODY "@!macrobody"
+%token MACRO_ITEM "@!macroitem"
 %token MACRO_MATCH "$match"
 %token MACRO_ELSE "$else"
 %token MACRO_END_MATCH "$end_match"

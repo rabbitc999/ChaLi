@@ -43,6 +43,11 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;
     }
+    if (!node.s2.empty() && node.s2 != "expr" && node.s2 != "stmt" && node.s2 != "item")
+    {
+        error = "不支持的宏结果类别：" + std::string(node.s2.data(), node.s2.size());
+        return false;
+    }
     Definition entry;
     entry.declaration = definition;
     entry.scope = scope;
@@ -91,6 +96,12 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
                 {
                     nodes_.resize(start);
                     error = "宏形参类别暂不支持变长参数，引用参数只能标注 value";
+                    return false;
+                }
+                if (node.s2 == "item" && (entry.modes.back() || category.empty() || category == "value"))
+                {
+                    nodes_.resize(start);
+                    error = "声明宏的形参必须显式标注语法类别，不能在模块作用域求值或借用运行期实参";
                     return false;
                 }
                 entry.categories.push_back(category);
@@ -199,6 +210,24 @@ int Registry::instantiate(int call, std::string &error,
     }
     const auto &entry = *selected;
     if (entry.generic && !resolveType) return -2;
+    if (nodes_[entry.declaration].s2 == "item")
+    {
+        std::string chain = name;
+        int frame = node.macroExpansion;
+        std::size_t depth = 0;
+        while (frame >= 0 && depth++ < 256)
+        {
+            const auto &origin = nodes_[frame];
+            chain += " <- " + std::string(origin.s.data(), origin.s.size());
+            if (origin.i == entry.declaration)
+            {
+                error = "声明宏展开存在循环依赖：" + chain;
+                return -1;
+            }
+            frame = origin.kids.empty() ? -1 : origin.kids[0];
+        }
+    }
+
     if (!entry.generic && node.kids.size() > 1)
     {
         error = "非泛型宏不能指定类型实参";
@@ -487,6 +516,16 @@ int Registry::instantiate(int call, std::string &error,
     }
     if (expanded >= 0)
     {
+        nodes_[expanded].s2 = nodes_[entry.declaration].s2;
+        const auto &result = nodes_[expanded];
+        const auto &items = nodes_[result.kids[0]].kids;
+        if ((result.s2 == "stmt" && result.kids[1] >= 0) ||
+            (result.s2 == "expr" && result.kids[1] < 0 && !(items.size() == 1 && (nodes_[items[0]].kind == MNode::Block || nodes_[items[0]].kind == MNode::If || nodes_[items[0]].kind == MNode::Switch))))
+        {
+            nodes_.resize(start);
+            error = "宏结果与显式类别不匹配";
+            return -1;
+        }
         if (!initializers.empty())
         {
             auto &statements = nodes_[nodes_[expanded].kids[0]].kids;

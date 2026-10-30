@@ -4,15 +4,11 @@
 **English** · [简体中文](../15-函数值与闭包.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Comparators, predicates and completion actions may vary while an algorithm's structure remains stable. Function values pass that varying behavior as data. Closures additionally retain the environment needed for later calls.
-
-Read nested function types first, then trace composition and captures. Returned closures, borrowed sources, named functions and recursion follow. For every example identify both the invoked function and the environment it reads.
+Function values let algorithms accept behavior. Closures also retain an environment. Understand capture modes and environment lifetimes before relying on syntax alone.
 
 ## 15.1 Pass behavior as a value
 
-Treat `int64 fn(int64)` as a type describing behavior with an integer input and result. A function accepting it decides where to invoke that behavior without prescribing its implementation. This separates a fixed workflow from a varying step.
-
-The first example nests this relationship several times. Read level1 and level2 before adding outer layers. Compose then applies the same idea to ordinary function composition. Even long nested signatures can be traced as a sequence of normal calls.
+A higher-order function accepts or returns a function value. Establish parameter and result types, then provide a matching function or closure. Equal signatures do not imply equal environments.
 
 <!-- verify-book -->
 ```chali
@@ -63,13 +59,6 @@ void main()
 22
 ```
 
-### Code walkthrough
-
-Read the innermost `int64 fn(int64)` as a function taking an integer and returning an integer. Each outer fn layer accepts the previous function type while still ultimately returning int64. Level2 supplies the numeric argument ten; the other levels pass suitable functions onward. Declaring or passing a function does not execute it.
-
-Main passes level5 and finish to hello. The chain evaluates level5(level4), level4(level3), level3(level2), level2(level1), then level1(10), producing eleven. That result returns through the chain to finish, which captures factor equal to two and produces 22. Separate passing a function from invoking it rather than interpreting level numbers as recursion counts.
-
-
 <!-- verify-book -->
 ```chali
 T fn(T) compose<T>(T fn(T) a, T fn(T) b)
@@ -101,13 +90,6 @@ void main()
 13
 ```
 
-### Code walkthrough
-
-Compose returns `T fn(T)`, a function value rather than an immediate T result. Copy capture retains a and b in the returned closure's environment after compose returns. Its final expression calls b first and passes that result to a.
-
-Main supplies increment as a and twice as b. Creating combined performs no arithmetic on six. Calling combined(6) computes twice(6)=12 and then increment(12)=13. Swapping the arguments changes composition order. The generic T must agree across both functions' input and output types.
-
-
 ## 15.2 Captures and independent copies
 
 Read-only, mutable and copy captures express different access relationships. Choose copying for an independent snapshot and validate mutable access for shared state. Capture and copy rules determine environment independence.
@@ -127,13 +109,6 @@ void main()
 2 1 2
 ```
 
-### Code walkthrough
-
-F uses mut capture to update the external n. G uses copy capture to retain the value one that n had when g was created. Their environments are established before invocation; g does not take a fresh external snapshot on every call.
-
-The output first calls f(1), updating external n to two and producing the shown result two. G(1) still multiplies by its captured one, giving one, and the final read observes external n equal to two. Hence `2 1 2`. This demonstrates distinct capture relationships rather than universal sharing between closures.
-
-
 <!-- verify-book -->
 ```chali
 void main()
@@ -150,13 +125,6 @@ void main()
 ```text
 1 1
 ```
-
-### Code walkthrough
-
-`String fn() b` declares a function-valued variable taking no arguments and returning String. The fn copy initializer retains a's value, and the final a expression supplies each call's result. Copy capture does not move away the external a, so main can still print it.
-
-`b()` invokes the function; b alone denotes its value. Printing the external string and the captured result gives one twice. Equal text does not establish shared mutation: the capture mode determines that relationship.
-
 
 ## 15.3 Return closures with valid environments
 
@@ -217,13 +185,6 @@ void main()
 6
 ```
 
-### Code walkthrough
-
-In main, read observes external base, increment mutates it through mut capture, and isolated retains the value ten through copy capture at creation. Sequential calls give initial=10 and changed=11. Isolated adds 100 to its own copy, yielding 110 while external base remains eleven. This explains the first line.
-
-MakeNamedCounter moves current into the returned next environment, keeping owned state alive after the factory exits. Calling the same counter twice changes zero to one and then two rather than reinitializing it. Finally callback is declared by signature and assigned an increment closure, so callback(5) returns six. These parts demonstrate capture relationships, returned-environment lifetime and function-valued assignment.
-
-
 <!-- verify-book -->
 ```chali
 fn makeAdder(int64 mut& amount) -> (int64 fn(int64))
@@ -246,13 +207,6 @@ void main()
 ```text
 6 15
 ```
-
-### Code walkthrough
-
-MakeAdder accepts a caller-provided reference and returns a closure using that source. One and ten are different objects in main, so plus1 and plus10 have the same function type but different associated sources.
-
-Calling both with five reads one and ten respectively, producing six and fifteen. Returning a function value does not remove the source's lifetime requirements; both sources remain alive throughout these calls. This pattern does not permit returning a borrow of a destroyed factory local or treating an environment-bearing function value as a C function pointer.
-
 
 ## 15.4 Recursion and named function values
 
@@ -282,13 +236,6 @@ void main()
 fac(3)=6
 ```
 
-### Code walkthrough
-
-Fac's function type is declared before assigning the closure, giving its body a named callable target. Starting at three, x decreases until zero. The recursive arm multiplies fac(x-1) by x; the else arm returns one, the multiplicative identity and termination case.
-
-The calls expand as fac(3)=fac(2)*3, fac(2)=fac(1)*2 and fac(1)=fac(0)*1, yielding six. Without a terminating path recursion would continue. Fac must also receive a valid function value before use. The example covers small nonnegative input, not large-integer overflow or excessive recursion depth.
-
-
 <!-- verify-book -->
 ```chali
 void main()
@@ -312,22 +259,9 @@ void main()
 shift is 100
 ```
 
-### Code walkthrough
-
-AddShift uses an fn prefix and an explicit int64 after the arrow. Its body reads shift from main, so this named function still carries environment information. Describe returns no business value and prints that same source.
-
-Calling addShift(4) yields 104; calling describe afterward prints shift is 100. The addition computed a result without changing shift. Interpret each declaration through its signature rather than treating an omitted business result as permission to return an arbitrary type.
-
-
 ## 15.5 Call boundaries and cost
 
 Environment creation, copying, cleanup and indirect calls have separate costs. Inlining depends on the known target, environment and optimizer; allocations are not guaranteed to disappear. Synchronous host callbacks use the prescribed function-value protocol, not casts to machine function pointers.
-
-### Summary
-
-Function types specify inputs and results, capture modes specify environmental relationships and lifetimes determine valid later calls. Matching signatures do not settle capture or lifetime questions. Copy retains independent values, mut permits corresponding writes and move transfers owned state into the environment.
-
-Intermediate results clarify complex call ordering. Check sources before returning closures and use supported protocols at host boundaries rather than casting language function values to machine callbacks. Next, make absence and failure explicit.
 
 ## 15.6 Exercises
 
