@@ -788,6 +788,7 @@ bool IsIntrinsicDropCall(int id)
 std::shared_ptr<MType> RawExprType(int id)
 {
     if (id < 0) return T(M_TypeInt());
+    if (!NormalizeMacroMetadata(id)) return T(M_TypeVoid());
     NormalizeFormattedOutputCall(id);
     ResolveBufferIndexShadowing(id);
     InferExpression(id);
@@ -805,6 +806,9 @@ std::shared_ptr<MType> RawExprType(int id)
         return NamedType("std::lang::__Interval_" + Describe(element));
     }
     case MNode::CollectionLiteral: return node.type >= 0 ? T(node.type) : InferCollectionLiteral(id, nullptr);
+    case MNode::MacroMetadata:
+        Fail("编译期元数据不能作为运行期值；请选择 name、index、count、id 或注解常量");
+        return T(M_TypeVoid());
     case MNode::TupleTypeItem:
         Fail("元组值不能包含类型名称");
         return T(M_TypeVoid());

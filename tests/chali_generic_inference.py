@@ -3,7 +3,7 @@ import os
 from chali_glue_edges import ROOT, CHALI, EXE, run
 
 def main():
-    work = ROOT / 'build/chali-generic-inference'
+    work = ROOT / 'tmp/chali-generic-inference'
     work.mkdir(parents=True, exist_ok=True)
     for name in ('generic_inference', 'function_pointer_glue', 'cpp_glue'):
         source = ROOT / f'example/samples/{name}.chl'

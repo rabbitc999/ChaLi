@@ -693,6 +693,7 @@ postfix := postfix CLOSURE_ARGS_BEGIN closure_type_arguments CLOSURE_ARGS_END { 
          | postfix DOT DROP                  { $$ = M_Member($1, M_KeywordName(1)); }
          | postfix ARROW DROP                { $$ = M_Arrow($1, M_KeywordName(1)); }
          | postfix DOT OPCODE                { $$ = M_Member($1, M_KeywordName(5)); }
+         | postfix DOT TYPE_KW               { $$ = M_Member($1, M_KeywordName(6)); }
          | postfix ARROW OPCODE              { $$ = M_Arrow($1, M_KeywordName(5)); }
          | postfix LPAREN call_args RPAREN { $$ = M_CallOn($1, $3); }
          | primary                        { $$ = $1; } ;

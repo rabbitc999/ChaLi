@@ -17,6 +17,7 @@
 #include "chali_resource_cleanup.hpp"
 #include "chali_lambda.hpp"
 #include "macro/registry.hpp"
+#include "macro/metadata.hpp"
 #include "macro/fragments.hpp"
 #include "macro/source.hpp"
 #include "chali_interpolation.hpp"
@@ -850,15 +851,14 @@ int M_Op(int which)
 /**
  * @brief **关键字当名字用**时的名字池下标（同样用序号取，动作里不写字符串字面量）。
  *
- * 目前只有一处：`o.set(x)` —— `set` 是容器类型的关键字（`std::lang::Set<int>`），但它也是
- * `obj` 的方法名。**关键字 Token 的词法路径不填 `text` / `pName`**（固定字面量不碰
+ * 用于 drop、opcode、type 等保留字成员选择。**关键字 Token 的词法路径不填 `text` / `pName`**（固定字面量不碰
  * 词法器的 scratch 缓冲），所以在动作里拿 `$n` 只会得到零值 —— 必须走这张表。
- * @param which 序号（0 = `set`）。
+ * @param which 序号：0 为 set，1 为 drop，2 为 new，3 为 copy，4 为 move，5 为 opcode，6 为 type。
  * @return 名字池下标。
  */
 int M_KeywordName(int which)
 {
-    static const char *const table[] = { "set", "drop", "new", "copy", "move", "opcode" };
+    static const char *const table[] = { "set", "drop", "new", "copy", "move", "opcode", "type" };
     const int count = static_cast<int>(sizeof(table) / sizeof(table[0]));
     return M_Name((which >= 0 && which < count) ? table[which] : "set");
 }
@@ -3226,6 +3226,7 @@ namespace
 #include "semantics/derive.cpp"
 #include "semantics/macro_fragments.cpp"
 #include "semantics/ast_generic_closures.cpp"
+#include "semantics/macro_metadata.cpp"
 #include "semantics/macro_expansion.cpp"
 }  // namespace
 
@@ -3650,6 +3651,7 @@ bool ReadUnitRef(std::istream &in, std::uint64_t &value)
  */
 void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<std::size_t> &canonical)
 {
+    if (node.compileMetadata) { out.setstate(std::ios::failbit); return; }
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.kind));
     chali_incremental::writeNumber(out, node.sourceLine < canonical.size() ? canonical[node.sourceLine] : node.sourceLine);
     chali_incremental::writeNumber(out, node.sourceColumn);
@@ -3715,7 +3717,7 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
 bool ReadUnitNode(std::istream &in, MNode &node)
 {
     std::uint64_t kind = 0, flags = 0, count = 0;
-    if (!chali_incremental::readNumber(in, kind) || kind > static_cast<std::uint64_t>(MNode::MacroFor)) return false;
+    if (!chali_incremental::readNumber(in, kind) || kind > static_cast<std::uint64_t>(MNode::MacroMetadata)) return false;
     node = MNode{};
     node.kind = static_cast<MNode::Kind>(kind);
     if (!chali_incremental::readNumber(in, node.sourceLine)) return false;

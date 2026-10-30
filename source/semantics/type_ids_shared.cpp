@@ -46,6 +46,21 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
 bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int *templateRoot = nullptr);
 
 /**
+ * @brief 判断节点是否为编译器内建的字段元数据查询入口。
+ * @param id 当前语法节点。
+ * @return 属于字段查询入口时返回真。
+ */
+bool IsMacroMetadataSource(int id);
+/**
+ * @brief 将元数据查询折叠为标量常量或编译期描述符。
+ * @param id 待归一化节点。
+ * @param depth 当前查询链深度。
+ * @return 查询合法或不属于元数据操作时返回真。
+ */
+bool NormalizeMacroMetadata(int id, std::size_t depth = 0);
+
+
+/**
  * @brief 造一个光秃秃的内建类型（不往类型池里放，纯粹为了算类型号）。
  * @param kind 待处理对象的类别。
  * @param isUnsigned 是否使用无符号数值类型。

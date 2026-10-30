@@ -94,6 +94,7 @@ struct MConstantContext
 bool ValidateConstantTree(int id, MConstantContext &context, MType::Kind *result = nullptr)
 {
     if (id < 0) return Fail("[CHL1300] 常量表达式缺少初值");
+    if (!NormalizeMacroMetadata(id)) return false;
     if (!context.budget-- || context.depth >= 128) return Fail("[CHL1300] 常量表达式超过计算限制");
     if (!context.active.insert(id).second) return Fail("[CHL1300] 常量定义存在循环引用");
     struct Scope

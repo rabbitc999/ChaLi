@@ -333,3 +333,34 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 Item macros require explicit type arguments and categorized syntax parameters; runtime value and reference parameters are rejected. Type substitution applies to generated fields, parameters, and return types. Existing `<T:arg>` and `<T:#res>` inference remains available in expression macros. Public names come from ident arguments. Internal helper functions and types receive independent names on each invocation. Generated functions may overload, while duplicate signatures fail. Generated types and bodies pass ordinary name, type, borrow, and resource checks. Item macros cannot generate module declarations, imports, or new macro definitions. Recursive declaration expansion reports its origin chain.
 
 See [declaration macro tests](../../tests/chali_macro_declarations.py).
+
+## Compile-time field metadata
+
+`$fields<T>()` queries a concrete ordinary structure in source declaration order, excluding static fields and methods. It does not create a runtime reflection table or require an import of std::reflect. Indices must be nonnegative integer constants. Write `($fields<T>())[index]` to distinguish indexing from a macro's `[]` argument group.
+
+```chali
+struct Item{int64 code;String name;}
+void main(){
+    assert($fields<Item>().count==2);
+    assert(($fields<Item>())[0].name=="code");
+    assert(($fields<Item>())[1].type.name=="std::lang::String");
+}
+```
+
+| Descriptor | Available queries |
+| --- | --- |
+| `$fields<T>()` | `count`, qualified `name`, type `id`, constant indexing |
+| Field | `name`, zero-based `index`, field `id`, `type`, `attributes` |
+| Field or annotation-argument `type` | Readable `name`, type `id`; an ordinary structure also provides `fields` |
+| `attributes` | `count`, constant indexing |
+| Attribute | Qualified `name`, annotation-declaration `id`, `arguments` |
+| `arguments` | `count`, constant indexing in annotation parameter declaration order |
+| Annotation argument | `name`, exact `type`, bound constant `value` |
+
+Generic instances expose substituted field types. Integer width and signedness, reference permissions, array dimensions, and container parameters remain intact. Continue into nested structures through `($fields<Outer>())[0].type.fields`. Type identities use qualified declarations and concrete arguments; field identities additionally use the owning type and field name. They do not depend on machine addresses or incidental source declaration order. An id is an opaque uint64, not an address, layout offset, or version-independent ABI identifier.
+
+Annotations retain their existing semantic checks and feature switch; annotated programs may explicitly use `--reflection`. For example, after `@annotation Label(text:String,limit:int16=(int16)7)`, a field annotated with `@Label("code")` exposes explicit and default arguments through `.attributes[0].arguments`. Values retain exact types such as int16.
+
+Descriptors cannot be stored in ordinary variables, passed to runtime functions, or converted into runtime objects. Scalar query results use their ordinary language types. The current field entry rejects enums, interfaces, and opcode objects; dynamic indices and layout queries such as `.offset` also fail.
+
+See [field metadata tests](../../tests/chali_macro_metadata.py).

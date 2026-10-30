@@ -24,6 +24,11 @@ namespace ast { struct Program; }
 #include <string>
 #include <vector>
 
+namespace chali_macro
+{
+struct MetadataValue;
+}
+
 namespace stackvm
 {
 class NativeRegistry;
@@ -237,6 +242,7 @@ struct MNode
         MacroExpansionFrame,  ///< 保存调用、定义及父展开的只读诊断来源，不进入运行时树。
         MacroVariadic,        ///< 变长实参的原始片段列表，不隐式转换为表达式。
         MacroFor,             ///< 编译期遍历变长片段，逐次绑定循环形参。
+        MacroMetadata,        ///< 编译期有类型元数据描述符，禁止作为运行期值。
     } kind = List;
     std::size_t sourceLine = 0;                         ///< 预处理后语法节点的起始行。
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。
@@ -248,6 +254,7 @@ struct MNode
     std::size_t expansionColumn = 0;                    ///< 引入当前模板的调用列。
     Memory::String expansionModule;                     ///< 引入当前模板的调用模块。
     int macroExpansion = -1;                            ///< 宏展开诊断帧，实参保持原有来源。
+    std::shared_ptr<const chali_macro::MetadataValue> compileMetadata;  ///< 编译期元数据的不可变快照，不写入标准库解析单元。
     Memory::Vector<int> annotations;                    ///< 附着于本声明的注解使用节点。
     Memory::Vector<Memory::String> derives;             ///< 请求按字段派生的接口名称。
     Memory::Vector<Memory::String> noReplace;           ///< 编译器指令关闭自动推导的运算符接口名（`#NoAddReplace` → `Add`）。

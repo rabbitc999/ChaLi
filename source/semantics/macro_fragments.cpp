@@ -361,7 +361,7 @@ void RefreshMacroActiveSyntax()
         if (id < 0) return;
         const auto &node = N(id);
         if (node.kind == MNode::MacroDefinition || !g_macroActiveNodes.insert(&node).second) return;
-        if (node.kind == MNode::MacroCall) return;
+        if (node.kind == MNode::MacroCall && !IsMacroMetadataSource(id)) return;
         if (node.type >= 0) type(T(node.type));
         if (node.kind == MNode::MacroArgument)
         {

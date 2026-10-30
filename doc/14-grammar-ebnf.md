@@ -809,6 +809,7 @@ postfix = postfix, "@!<", closure_type_arguments, "@!>"
     | postfix, ".", "drop"
     | postfix, "->", "drop"
     | postfix, ".", "opcode"
+    | postfix, ".", "type"
     | postfix, "->", "opcode"
     | postfix, "(", call_args, ")"
     | primary ;

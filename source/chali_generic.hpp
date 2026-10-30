@@ -296,6 +296,13 @@ bool validateConstraints(const Memory::Map<Memory::String, Expansion> &made,
 bool run(preprocess::Result &result, Memory::String &error);
 
 /**
+ * @brief 归一类型拼写，使语义请求与源码泛型展开共享同一实例身份。
+ * @param value 原始或已解析的类型名称。
+ * @return 保留名义类型遮蔽规则的规范类型文本。
+ */
+Memory::String canonicalType(Memory::String value);
+
+/**
  * @brief 将语义推导出的具体类型展开成普通声明；错误由调用方报告。
  * @param name 模板名称。
  * @param args 推导出的完整类型实参。

@@ -400,6 +400,30 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
 }
 
 /**
+ * @brief 解析声明字段的具体类型，供字段登记和编译期元数据共用。
+ * @param member 普通实例字段语法节点。
+ * @return 含数组维度的精确类型；字段无效时为空并保留原诊断。
+ */
+std::shared_ptr<MType> DeclaredFieldType(const MNode &member)
+{
+    std::shared_ptr<MType> field;
+    if (member.type < 0)
+    {
+        if (member.kids.size() != 1 || N(member.kids[0]).kind != MNode::Var || !FindGenericClosureDefinition(N(member.kids[0]).s))
+            return Fail("let 字段需要泛型闭包初始化式：" + member.s), nullptr;
+        field = GenericClosureType(N(member.kids[0]).s);
+    }
+    else field = T(member.type);
+    if (member.i >= 0)
+    {
+        Memory::Vector<int> dimensions;
+        if (!ReadDims(static_cast<int>(member.i), &dimensions)) return nullptr;
+        field = ArrayType(field, dimensions);
+    }
+    return field;
+}
+
+/**
  * @brief 登记顶层类型、函数与变量声明。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
@@ -848,21 +872,8 @@ bool RegisterTop()
                     /* 字段类型不再限制：数据区每个槽位 8 字节，整型 / 浮点 / 句柄
                      * （struct / array / string / ptr）都放得下，`load` / `store` 按
                      * 元素的类型后缀区分整数与 IEEE-754 双精度。 */
-                    std::shared_ptr<MType> field;
-                    if (member.type < 0)
-                    {
-                        if (member.kids.size() != 1 || N(member.kids[0]).kind != MNode::Var || !FindGenericClosureDefinition(N(member.kids[0]).s))
-                            return Fail("let 字段需要泛型闭包初始化式：" + member.s);
-                        field = GenericClosureType(N(member.kids[0]).s);
-                    }
-                    else
-                        field = T(member.type);
-                    if (member.i >= 0)
-                    {
-                        Memory::Vector<int> dimensions;
-                        if (!ReadDims(static_cast<int>(member.i), &dimensions)) return false;
-                        field = ArrayType(field, dimensions);
-                    }
+                    const auto field = DeclaredFieldType(member);
+                    if (!field) return false;
                     definition.fields.push_back(MField{ member.s, field });
                     if (!member.kids.empty()) definition.fields.back().initializer = member.kids[0];
                     continue;

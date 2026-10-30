@@ -1,5 +1,7 @@
 """编译并执行卫生宏基础模块及权威生成解析器的真实 C++ 回归。"""
 import os
+import argparse
+import shutil
 from pathlib import Path
 import subprocess
 from project_temp import tempfile
@@ -18,18 +20,32 @@ def execute(command):
 
 def main():
     """在独立目录编译模块回归，并使用现有解析器库验证真实宏语法节点。"""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--build-root', type=Path, default=ROOT / 'build')
+    parser.add_argument('--cxx', default='g++')
+    parser.add_argument('--sysroot', type=Path)
+    options = parser.parse_args()
+    build = options.build_root.resolve()
+    compiler = shutil.which(options.cxx)
+    if compiler:
+        os.environ['PATH'] = str(Path(compiler).parent) + os.pathsep + os.environ.get('PATH', '')
+
     base = ROOT / "tmp/macro-hygiene"
     base.mkdir(parents=True, exist_ok=True)
     includes = ["source", "library", "source/preprocess", "source/ast", "source/ircode",
                 "source/console", "source/lztext", "source/bignum", "source/json"]
-    flags = ["g++", "-std=c++17", "-O3", "-Wall", "-Wextra", "-pthread",
+    flags = [options.cxx, "-std=c++17", "-O3", "-Wall", "-Wextra", "-pthread",
              "-ffunction-sections", "-fdata-sections", "-DCHALI_CUSTOM_ALLOCATOR=1",
              "-DCHALI_WITH_REFLECTION=1", "-DSTACKVM_WITH_REFLECTION=1",
              *["-I" + value for value in includes]]
-    libraries = ["build/chali-frontend/libparser.a", "build/chali-runtime/libast.a",
-                 "-Wl,--start-group", "build/chali-ircode-aot-core/libstackvm.a",
-                 "build/chali-host-records/librecords.a", "-Wl,--end-group",
-                 "build/chali-runtime/libpreprocess.a"]
+    if os.name == 'nt':
+        flags.append('-static')
+    if options.sysroot:
+        flags.append('--sysroot=' + options.sysroot.resolve().as_posix())
+    libraries = [build / 'chali-frontend/libparser.a', build / 'chali-runtime/libast.a',
+                 '-Wl,--start-group', build / 'chali-ircode-aot-core/libstackvm.a',
+                 build / 'chali-host-records/librecords.a', '-Wl,--end-group',
+                 build / 'chali-runtime/libpreprocess.a']
     with tempfile.TemporaryDirectory(prefix="foundations-", dir=base) as directory:
         for name, module in (("macro_hygiene", "hygiene"), ("macro_regex", "regex_matcher"),
                              ("macro_source", "source"), ("macro_signature", ["signature", "source/syntax/source_text.cpp"]), ("macro_fragments", "fragments"), ("macro_ast_substitution", "ast_substitution"),

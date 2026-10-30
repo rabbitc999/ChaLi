@@ -53,7 +53,7 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
     }
     if (found == generics.end()) return Fail("没有声明的泛型类型：" + type->genericBase);
     Memory::Vector<Memory::String> arguments;
-    for (const auto &argument : type->genericArguments) arguments.push_back(Describe(argument));
+    for (const auto &argument : type->genericArguments) arguments.push_back(chali_generic::canonicalType(Describe(argument)));
     const auto name = chali_generic::mangle(found->second.name, arguments);
     if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ found->second.name, arguments };
     type->name = found->second.module.empty() ? name : found->second.module + "::" + name;
@@ -1601,9 +1601,11 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
          */
         ~Guard() { g_inferringExpressions.erase(id); }
     } guard{ id };
+    if (!NormalizeMacroMetadata(id)) return;
     if (N(id).kind == MNode::MacroCall)
     {
         if (!ExpandDeferredAstMacro(id, expected)) return;
+        if (!NormalizeMacroMetadata(id)) return;
     }
     if (!NormalizeAstTypeQualifier(id)) return;
     if (N(id).kind == MNode::Call && !N(id).kids.empty() && !NormalizeAstTypeQualifier(N(id).kids[0])) return;

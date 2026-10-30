@@ -67,12 +67,13 @@ struct MReflectionBuilder
     {
         if (!type) return "type:void";
         if (IsContainer(type)) return "type:" + type->name + "<" + key(type->elem) + (type->elem2 ? "," + key(type->elem2) : Memory::String()) + ">";
-        if (type->kind == MType::Struct || type->kind == MType::Host || type->kind == MType::Opcode || IsInterfaceType(type))
+        const auto declaration = declarations.find(type->name);
+        const auto declaredKind = declaration == declarations.end() ? MNode::ParseBad : declaration->second->kind;
+        if (type->kind == MType::Struct || type->kind == MType::Host || type->kind == MType::Opcode || IsInterfaceType(type) || declaredKind == MNode::InterfaceDecl)
         {
-            const auto prefix = g_interfaces.count(type->name) ? "interface:" :
-                                g_enums.count(type->name)      ? "enum:" :
-                                g_structs.count(type->name)    ? "struct:" :
-                                                                 "host:";
+            const auto prefix = g_interfaces.count(type->name) || declaredKind == MNode::InterfaceDecl ? "interface:" :
+                                g_enums.count(type->name) || declaredKind == MNode::EnumDecl ? "enum:" :
+                                g_structs.count(type->name) || declaredKind == MNode::StructDecl || (declaredKind == MNode::OpcodeDecl && g_opcodeTypes.count(type->name) && g_opcodeTypes.at(type->name).aggregate) ? "struct:" : "host:";
             return prefix + named(type->name);
         }
         if (type->kind == MType::Ptr) return "type:" + key(type->elem) + (type->readOnly ? " const&" : " mut&");
@@ -357,10 +358,10 @@ struct MReflectionBuilder
         table.interfaces.push_back(std::move(info));
     }
     /**
-     * @brief 从完整具体声明和实际布局构建表。
-     * @return 校验成功时为真。
+     * @brief 收集具体声明及泛型原始名称，供运行期反射和编译期宏共享类型身份。
+     * @return 无；只准备名称与声明索引，不生成运行期元数据表。
      */
-    bool build()
+    void indexDeclarations()
     {
         for (int id : g_top)
         {
@@ -384,6 +385,14 @@ struct MReflectionBuilder
             const auto qualified = ModuleSymbol(expansion.generic->module, expansion.name);
             if (names.count(qualified)) names[qualified] = name;
         }
+    }
+    /**
+     * @brief 从完整具体声明和实际布局构建表。
+     * @return 校验成功时为真。
+     */
+    bool build()
+    {
+        indexDeclarations();
         // 注解声明无论是否用于暴露声明都保留，保证可独立查询默认值。
         for (int id : g_top)
         {

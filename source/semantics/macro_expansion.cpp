@@ -326,6 +326,7 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
             continue;
         }
         const int call = statement.kids[0];
+        if (IsMacroMetadataSource(call)) { statements.push_back(child); continue; }
         ReductionSourceScope source(call);
         std::string error;
         const int expanded = registry.instantiate(call, error);
@@ -385,6 +386,7 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
     if (node.kind == MNode::List) return ExpandAstMacroStatements(id, registry, depth, budget);
     if (node.kind == MNode::MacroCall)
     {
+        if (IsMacroMetadataSource(id)) return true;
         ReductionSourceScope source(id);
         std::string error;
         const int expanded = registry.instantiate(id, error);
@@ -420,6 +422,8 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
  */
 bool ExpandAstMacros()
 {
+    g_macroMetadataIdentities.clear();
+    g_macroMetadataDependencies.clear();
     g_macroSyntaxFiltering = false;
     g_astGenericClosures.clear();
     g_astGenericImplementations.clear();
@@ -541,6 +545,8 @@ bool ApplyAstMacroTypes(int root, const std::map<std::string, int> &arguments, s
  */
 bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int *templateRoot)
 {
+    if (IsMacroMetadataSource(id))
+        return Fail("编译期元数据不能作为运行期值；请选择字段或类型属性"), false;
     if (N(id).kind != MNode::MacroCall || !g_macroRegistry) return false;
     if (g_macroSemanticDepth >= 256) return Fail("宏类型推导发生循环或超过展开深度预算"), false;
     ++g_macroSemanticDepth;

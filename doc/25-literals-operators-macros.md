@@ -379,3 +379,34 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 声明宏的类型实参须显式提供，形参须标注语法类别，不能使用运行期 value 或引用形参。类型参数替换到生成的字段、形参和返回类型中；`<T:arg>`、`<T:#res>` 在原有表达式宏中继续按既有规则推导。公开名称通过 ident 实参传入；模板内部声明的辅助函数和类型获得独立名称，重复调用不共享这些辅助声明。生成函数可正常重载，同签名冲突报错；生成类型接受普通名称、类型、借用和资源检查。声明宏不能生成 module、import 或新的宏定义，递归声明展开报告来源链。
 
 相关回归见 [声明宏测试](../tests/chali_macro_declarations.py)。
+
+## 编译期字段元数据
+
+`$fields<T>()` 查询具体普通结构体的字段，按源码声明顺序排列，排除 static 字段和方法。查询不会建立运行期反射表，也不要求导入 std::reflect。下标需要非负整数常量；为区分宏的 `[]` 实参组，字段下标写成 `($fields<T>())[index]`。
+
+```chali
+struct Item{int64 code;String name;}
+void main(){
+    assert($fields<Item>().count==2);
+    assert(($fields<Item>())[0].name=="code");
+    assert(($fields<Item>())[1].type.name=="std::lang::String");
+}
+```
+
+| 描述符 | 可查询内容 |
+| --- | --- |
+| `$fields<T>()` | `count`、限定 `name`、类型 `id`，以及常量下标 |
+| 字段 | `name`、从零开始的 `index`、字段 `id`、`type`、`attributes` |
+| 字段或注解实参的 `type` | 可读类型 `name`、类型 `id`；普通结构体还可查询 `fields` |
+| `attributes` | `count`、常量下标 |
+| 单个注解 | 限定 `name`、注解声明 `id`、`arguments` |
+| `arguments` | `count`、按注解形参声明顺序排列的常量下标 |
+| 单个注解实参 | `name`、精确 `type`、已绑定的常量 `value` |
+
+泛型实例返回替换后的字段类型；字段的整数位宽、符号、引用权限、数组维度和容器参数均保留。`($fields<Outer>())[0].type.fields` 可继续查询嵌套结构体。类型身份使用限定声明及具体类型参数，字段身份同时包含所属类型和字段名；身份不依赖机器地址或声明在文件中的偶然顺序。`id` 是不透明的 uint64，不能当作地址、布局偏移或跨版本 ABI 编号使用。
+
+注解沿用语言的语义检查与开关，使用注解的程序可显式加 `--reflection`。例如 `@annotation Label(text:String,limit:int16=(int16)7)` 定义后，字段上的 `@Label("code")` 可通过 `.attributes[0].arguments` 读取显式参数和默认值；`value` 保留 int16 等精确类型，不作隐式扩大。
+
+字段集合、字段、类型、注解及实参描述符只能用于编译期属性查询，不能保存到普通变量、传给运行期函数或转换成运行期对象。查询得到的名称、数量、身份或注解标量常量可按各自普通类型使用。当前字段入口不接受枚举、接口或 opcode 对象，动态下标和 `.offset` 等布局查询也会报错。
+
+回归见 [字段元数据测试](../tests/chali_macro_metadata.py)。
