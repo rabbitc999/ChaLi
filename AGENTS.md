@@ -44,6 +44,7 @@
 - CHANGELOG.md 从 tools/changelog_data.json 生成。历史测量保留真实版本、配置和原始数据，不因改版本号或 tag 重标结果。
 - 产物名使用 chali-版本-llvm-链接方式-系统或发行版-架构，例如 chali-1.0.8-llvm-external-windows-x64.exe。
 - 核对静态/外置 LLVM 编译器、安装包和 VSIX 的版本与内嵌字节；构建目标和实际验证平台分开说明。
+- 每完成一个 P0—P8（或后续 Px）阶段，都使用该阶段重建的编译器生成对应 VSCode 插件（VSIX），优先采用静态内置 LLVM 模式。各 LLVM 变体隔离构建并按实际变体命名；核对插件 version、chaliCompilerVersion 和包内编译器字节，不复用旧阶段产物。只有目标平台或静态工具链确实不支持时才回退外置 LLVM，并说明实际原因；产物留在交付目录，工具打包和验证历史不提交 Git。
 - 项目使用 Apache License 2.0，保留 LICENSE、NOTICE 和依赖各自的许可证及署名。
 - 文本比较忽略 CRLF/LF 与不承载语义的空白差异；二进制产物按真实字节比较。
 
