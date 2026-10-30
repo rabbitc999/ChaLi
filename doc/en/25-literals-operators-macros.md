@@ -540,3 +540,12 @@ Source buttons navigate to calls or original arguments; definition buttons navig
 The `chali/expandMacro` request accepts `mode: "one" | "all"` (default all) and an optional LSP position. Without a position it returns expansion records for the file. Each tree has depth and node budgets, with truncated nodes marking omitted content; total preview output is bounded.
 
 Use `--macro-backtrace short` for the nearest expansion frame while preserving the error, field, and argument location. `--macro-backtrace full` retains the full call/definition chain and remains the compatible default. See [production preview and diagnostic tests](../../tests/chali_macro_preview.py).
+
+
+## Debug inspection
+
+The standard Debug interface declares String debug(). #derive(Debug) generates ordinary methods from instance fields or active enum payloads in declaration order, excluding static fields. Nested user values must implement Debug, including handwritten borrowing implementations and inherited contracts. Strings preserve complete UTF-8 spans and escape quotes, backslashes and control bytes; characters use single quotes and booleans use true/false. The default program:: prefix is omitted; other module names and concrete generic identities remain.
+
+Derivation rejects an existing debug method, arrays, references, function values and containers without a Debug contract. Inspection does not grant copy permission for resources. Its text is not a stable cross-version format, JSON encoding or Error.toString. Generated code follows normal type, borrowing and cleanup checks.
+
+See the [macro tutorial](../book/en/22-macros.md) and [Debug regression](../../tests/chali_debug_derive.py).

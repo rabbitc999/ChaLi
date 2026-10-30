@@ -635,6 +635,12 @@ opcode String {
     String prepend(String text) { return text + self; }
 
 };
+/** 开发时的结构化显示协议；输出格式不保证跨版本稳定。 */
+interface Debug {
+    /** 返回供开发时检查的结构化文本；不作为持久化格式。 */
+    String debug();
+};
+
 /** 标准库错误的统一接口；诊断文本保留具体失败原因。 */
 interface Error {
     /** 返回可直接显示给用户的错误说明。 */

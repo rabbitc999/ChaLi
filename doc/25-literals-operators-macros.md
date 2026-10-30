@@ -589,3 +589,12 @@ VSCode 的“预览宏展开”显示当前文件的调用；“当前宏展开�
 协议 `chali/expandMacro` 接受 `mode: "one" | "all"`（缺省 all）和可选的 LSP `position`；省略 position 返回当前文件的展开记录。每棵树有深度和节点预算，超出部分标为 truncated，总预览数据受容量限制。
 
 命令行使用 `--macro-backtrace short` 仅显示最近一层展开帧，保留实际错误、字段与实参位置；`--macro-backtrace full` 显示完整调用—定义链，缺省 full 保持兼容。专项见 [生产预览与诊断验证](../tests/chali_macro_preview.py)。
+
+
+## Debug 调试显示
+
+标准库接口 Debug 声明 String debug()。在结构体或枚举前使用 #derive(Debug)，按实例字段或活动变体载荷的声明顺序生成普通方法；静态字段不参与。嵌套用户值须实现 Debug，支持手写借用实现和接口继承。字符串按 UTF-8 文本段复制，转义引号、反斜线和控制字节；char 使用单引号，bool 显示 true／false。默认 program:: 前缀省略，其他模块和具体泛型身份保留。
+
+派生不覆盖已有 debug，数组、引用、函数值和没有 Debug 契约的容器字段在编译时拒绝。显示不赋予资源复制权限，也不将接口内部所有权变为可复制。调试文本没有跨版本稳定格式保证，不替代 JSON 编码或 Error.toString；生成代码接受相同的类型、借用和清理检查。
+
+完整例程与逐段讲解见[宏教程](book/22-预处理与宏.md)，回归见 [Debug 专项](../tests/chali_debug_derive.py)。

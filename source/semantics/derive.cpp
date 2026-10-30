@@ -60,15 +60,18 @@ Memory::String DerivedVariantPattern(const Memory::String &owner, const MNode &v
     return result + ')';
 }
 
+#include "derive_debug.cpp"
+
 /**
  * @brief 按字段与变体元数据生成结构体或枚举的方法，不依赖语言宏引擎。
  * @param declaration 类型声明的语法节点。
- * @param trait Equal、Hash 或 Clone。
+ * @param trait Equal、Hash、Clone 或 Debug。
  * @param output 接收方法源码。
  * @retval 模板展开成功返回 true。
  */
 bool DerivedMethodSource(const MNode &declaration, const Memory::String &trait, Memory::String &output)
 {
+    if (trait == "Debug") return DerivedDebugMethodSource(declaration, output);
     Memory::Vector<Memory::String> pieces;
     const auto owner = declaration.s;
     if (declaration.kind == MNode::StructDecl)
@@ -192,9 +195,11 @@ uint64 __chali_derive_hash_float(float64 value) {
  */
 bool ExpandDerivedDeclarations()
 {
-    Memory::Set<Memory::String> hashModules;
+    Memory::Set<Memory::String> hashModules, debugModules;
     for (const auto id : g_top)
         if (N(id).kind == MNode::FuncDef && N(id).s == "__chali_derive_hash_string") hashModules.insert(N(id).module);
+    for (const auto id : g_top)
+        if (N(id).kind == MNode::FuncDef && N(id).s == "__chali_derive_debug_quote") debugModules.insert(N(id).module);
     for (std::size_t index = 0; index < g_top.size(); ++index)
     {
         const auto id = g_top[index];
@@ -206,6 +211,12 @@ bool ExpandDerivedDeclarations()
         Memory::Vector<Memory::String> names;
         for (const auto &trait : declaration.derives)
         {
+            if (trait == "Debug")
+            {
+                names.push_back(DerivedDebugInterfaceName());
+                if (!DerivedMethodSource(declaration, trait, methods)) return false;
+                continue;
+            }
             if (trait != "Equal" && trait != "Hash" && trait != "Clone")
             {
                 Memory::String implemented;
@@ -232,6 +243,8 @@ bool ExpandDerivedDeclarations()
         Memory::String source = interfaces + "\nmodule " + module + ";\n";
         if (std::find(declaration.derives.begin(), declaration.derives.end(), "Hash") != declaration.derives.end() && hashModules.insert(declaration.module).second)
             source += DerivedHashHelpers();
+        if (std::find(declaration.derives.begin(), declaration.derives.end(), "Debug") != declaration.derives.end() && debugModules.insert(declaration.module).second)
+            source += DerivedDebugHelpers();
         const auto wrapper = "__chali_derive_members_" + Memory::toString(id);
         source += "\nstruct " + wrapper + " {\n" + methods + "\n}\n";
         const auto savedTop = g_top;
@@ -309,12 +322,14 @@ bool ValidateDerivedFields()
             for (const auto &field : definition->fields) fields.push_back({ field.name, field.type });
         for (const auto &trait : declaration.derives)
         {
-            if (trait != "Equal" && trait != "Hash" && trait != "Clone") continue;
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone" && trait != "Debug") continue;
             for (const auto &field : fields)
             {
                 const auto type = field.second;
                 if (type->kind == MType::Int || type->kind == MType::Double || type->kind == MType::Bool || type->kind == MType::Char || IsStandardOpcode(type, "String")) continue;
                 bool implemented = false;
+                if (trait == "Debug" && type->kind == MType::Struct)
+                    implemented = TypeImplementsInterface(type->name, DerivedDebugInterfaceName());
                 if (type->kind == MType::Struct)
                 {
                     if (trait == "Equal")

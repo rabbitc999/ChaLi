@@ -763,6 +763,54 @@ A same-module, same-name interface/member-macro pair can be selected with `#deri
 
 Unlike passing a public name explicitly to `$METHOD(read)`, the interface contract determines published names. Derivation cannot add layout fields. Chapter 24 develops the complete field-count example and checks the result through an interface value.
 
+### Inspecting values with Debug
+
+The standard Debug interface declares String debug(). Place #derive(Debug) before a structure or enumeration to generate an ordinary implementation from its instance fields or active variant payloads.
+
+<!-- verify-book -->
+```chali
+#derive(Debug)
+struct Reading
+{
+    String sensor;
+    int64 value;
+}
+
+#derive(Debug)
+enum Event
+{
+    Idle,
+    Updated(Reading reading, bool saved)
+};
+
+void main()
+{
+    Reading reading;
+    reading.sensor = "温度";
+    reading.value = 23;
+    println("{}", reading.debug());
+    Event event = Event::Updated(reading, true);
+    println("{}", event.debug());
+}
+```
+
+```text
+Reading { sensor: "温度", value: 23 }
+Event::Updated(reading: Reading { sensor: "温度", value: 23 }, saved: true)
+```
+
+The first declaration generates Reading.debug in field order. Strings appear in double quotes, integers as numbers, and static fields are excluded because they belong to the type rather than the inspected instance.
+
+Event has an empty variant and a variant with two payloads. Updated displays only its active reading and saved values, calling Reading.debug for the nested value. Idle produces Event::Idle without reading any other payload. Additional payloads retain declaration order.
+
+main constructs the reading and then the event. Each println receives an ordinary String returned by debug. Generated methods follow the same type, borrowing and cleanup rules as handwritten methods; they do not walk runtime field tables.
+
+Newlines, carriage returns, tabs, quotes and backslashes are escaped. Other ASCII control bytes use `\xNN`; complete UTF-8 spans preserve Chinese text and emoji. Characters use single quotes and booleans use true or false. The default program:: module prefix is omitted, while other module names and concrete generic identities distinguish types.
+
+Nested user types must implement Debug. A handwritten implementation can omit sensitive fields or shorten output. Derivation rejects an existing debug method instead of replacing it. Arrays, references, function values and containers without a Debug contract are rejected at compile time. An owned resource can provide a borrowing Debug method without becoming copyable.
+
+Debug output is for inspection, has no cross-version format guarantee, and is not a JSON or persistence format. User-facing error descriptions still use Error.toString. The builtin form is #derive(Debug); custom derivation continues to pair an interface with a same-name member macro.
+
 ## 22.21 Choosing a Form
 
 Start with functions and generics. Choose a macro when repetition concerns syntax positions, declarations or field sets. Decide what each input represents and where the result belongs; encode both decisions in the definition header.

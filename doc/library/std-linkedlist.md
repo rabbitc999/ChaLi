@@ -26,7 +26,7 @@ LinkedList 以 ChaLi 结构体保存双向节点数组、复用槽与单调游�
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-320"></a>`struct LinkedList: Iterator<int64>, Copy<LinkedList>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
+| 模块 | <a id="symbol-321"></a>`struct LinkedList: Iterator<int64>, Copy<LinkedList>` | 持久双向链表，值复制独立，旧游标在删除或 clear 后永久失效。 |
 
 ## 函数索引
 
