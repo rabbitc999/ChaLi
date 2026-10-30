@@ -14,6 +14,16 @@ Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact option
 
 ![AOT export and toolchain boundaries](../images/chali-aot-en.png)
 
+### From source to native execution
+
+Separate the frontend, quadruple IR, LLVM IR and target artifacts. The frontend parses declarations and expressions and checks names, types, ownership and borrowing; macros expand during compilation. ChaLi quadruples express language operations, which the backend lowers to LLVM IR. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
+
+Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Internal quadruple optimization passes and aggregate optimization have been removed, with optimization delegated to LLVM through O3/LTO. Historical descriptions of those passes do not describe current execution, and O3 does not promise equal gains for every program.
+
+Run combines compilation and execution through checked AOT. It does not interpret quadruples in a VM. The current compiler and embedded assets contain no VM interpreter core, and .svmb export has been removed. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
+
+Checked execution helps detect the corresponding invalid accesses at runtime, while static checking rejects invalid programs before execution. Their coverage differs, and neither proves business inputs valid. Understand the actual switches before selecting unchecked and validate the release configuration itself rather than relying only on a development run.
+
 ## 24.2 Toolchain versus application dependencies
 
 The embedded LLVM variant carries compilation components; the external variant uses an installed toolchain. Deliver applications according to their actual linkage. Compiler use of LLVM does not itself require an LLVM DLL beside the application.
@@ -44,6 +54,16 @@ An object file does not establish a deployable application. Validate object gene
 ## 24.4 Deployment checks and diagnostics
 
 In a clean directory verify configuration, web assets, dynamic libraries, data-directory permissions and working directory. Begin with a harmless operation before real workflows. Native debugging uses DWARF and GDB/MI; retain symbols and diagnostics to identify the failing stage.
+
+### Collect evidence by failure stage
+
+Parsing or type-checking failures occur before a target program exists; follow source diagnostics first. If objects exist but linking fails, inspect ABI, library architecture, symbols and search paths. If linking succeeds but startup fails, inspect the operating-system loader, dynamic libraries, resource paths and permissions. Incorrect business results after startup require inputs, logs and native debugging. A file's existence only establishes that a step wrote it, not that later stages passed.
+
+Native debugging uses DWARF information and GDB/MI. Source mappings help explain machine instructions, but optimization may inline functions, combine operations or make locals difficult to inspect. Keep the tested binary, matching source, build settings and symbols together. Do not apply another build's line mappings to the current artifact. See [native AOT debugging](../../en/43-native-debugging.md) for entry points and platform requirements.
+
+Make acceptance reproducible: prepare dependencies on the target, enter the documented working directory, start the release artifact, perform a read, then an authorized write and verify its result. Database applications should also verify connection-failure and insufficient-permission diagnostics. Record host, target, compiler variant and completed steps. Generating a Linux object on Windows establishes object generation, not successful Linux deployment.
+
+The shared runtime core requires C++17 and operating-system services. It targets desktop and supported embedded Linux hosts, without promising bare-metal support. A target triple does not replace system libraries, startup assets or real-device validation.
 
 ## 24.5 Exercises
 

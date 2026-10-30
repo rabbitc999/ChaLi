@@ -70,6 +70,16 @@ Parse external data and validate structure and field constraints. An integer age
 
 Use reflection for repetitive type mappings and keep business decisions at explicit function boundaries. Chapter 25 separates field validation, related records and authorization in a database-backed application.
 
+### Place metadata inside a complete data flow
+
+The Profile example has three independent conditions: the type exposes reflection information, the field name identifies a real field, and the requested value type matches the field. An existing score does not permit reading it as String. A missing field does not establish that score metadata is broken. Preserve these distinctions when handling failures to identify incorrect API calls, external field names or unavailable model information.
+
+Separate external parsing, validation, business-object mutation and output selection. For a grade update, parse an integer, check its range, verify the student and course, confirm the account's authority, and only then update and persist. Reflection reduces mapping code but does not choose validation order or transaction boundaries.
+
+Annotations require an interpreter in application logic. Route defines declaration data; directly calling health does not demonstrate HTTP route registration. A service still needs to consume the information, establish dispatch and handle requests. Declaring metadata and executing business behavior are separate actions.
+
+Runtime reflection and compile-time generation also have different roles. The getField and setField examples request typed access by field name at runtime. They do not demonstrate compiler iteration over heterogeneous fields to generate static code. That capability belongs to macro and compile-time reflection extensions not yet delivered. Use existing derive directives under their current contracts; reflection APIs do not imply arbitrary custom derives. See the [reflection reference](../../en/19-reflection.md) for interfaces.
+
 ## 20.5 Exercises
 
 1. Does an annotation execute a route by itself?

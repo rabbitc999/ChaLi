@@ -42,6 +42,14 @@ void main() {
 3 2
 ```
 
+### Choose categories by evaluation behavior
+
+Decide whether the macro should reuse a computed value or place syntax at a new execution point. Input reads, counter increments and resource acquisition need explicit evaluation counts; ordinary value parameters are usually suitable. Choose expr when the expanded control structure must determine execution placement, and document that execution may be skipped or repeated. Copy costs and effects still follow the argument type's copy rules.
+
+Ident carries a name, type carries type syntax, and stmt and block carry statements or blocks. These categories describe syntax positions. A generic parameter T and a parameter written T:type have different roles. Category matching does not exempt names, types, borrows or ownership from ordinary checking, and an identifier does not grant permission to mutate its object.
+
+Hygiene associates names with their origins. A template's result can coexist with the caller's result without overwriting it. An undeclared temp in the template cannot be repaired by an unrelated caller variable of that name. Reusable macros therefore do not require callers to avoid a hidden list of temporary names. Interfaces should state explicitly when they affect caller objects.
+
 ## 19.3 Generic parameters and result context
 
 Macros may declare type parameters. T:#res infers from the statically expected result type, while U:b infers from argument b. Neither runs the argument expression during compilation. Explicit arguments take priority; missing context or conflicting constraints require more type information.
@@ -69,7 +77,7 @@ void main() {
 
 ## 19.4 Standard macros and extension boundaries
 
-When using existing standard macros, retain the element types, evaluation counts and return semantics. This tutorial uses implemented categories and expansion forms. Declaration macros are deferred; declaration generation, arbitrary result categories and unsupported repetition matching are not available features.
+When using existing standard macros, retain the element types, evaluation counts and return semantics. This tutorial uses implemented categories and expansion forms. Declaration macros are not yet delivered; declaration generation, arbitrary result categories and unsupported repetition matching are not available features.
 
 <!-- verify-book -->
 ```chali
@@ -116,6 +124,14 @@ void main()
     List<int64> values = $broken(1);
 }
 ```
+
+### Expansion and execution occur at different stages
+
+Expansion composes program structure during compilation; next in the examples still executes at runtime. Knowing an expression's static type does not execute that expression. T:#res obtains information from an expected type supplied by contexts such as assignment or return; it does not observe a runtime result. Supply explicit types when context is insufficient rather than depending on incidental literal inference.
+
+Expanded code undergoes ordinary checking and then reaches the quadruple IR and LLVM backend. Macros cannot remove cleanup obligations, bypass borrowing or make an invalid expression executable. Performance depends on generated operations and LLVM optimization; fewer template lines do not establish less runtime work. For diagnostics, first express the intended operation as ordinary code, verify types and resource relationships, then inspect whether the macro preserves them.
+
+The fixed parameter categories and existing variadic loop shown here are available. Explicit result categories, module-level declaration generation, compile-time field iteration, member macros and custom derive extensions are not yet delivered. Proposed forms are not current examples. The next chapter's runtime field queries have different stages and interfaces from compile-time AST generation over fields.
 
 ## 19.6 Exercises
 
