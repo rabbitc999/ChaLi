@@ -31,6 +31,11 @@ bool ExpandAstMacroDeclarations(chali_macro::Registry &registry)
         }
         ReductionSourceScope source(id);
         std::string error;
+        if (IsMacroCompileDiagnostic(id))
+        {
+            if (!PrepareMacroControls(id, {}, error)) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+            return true;
+        }
         const auto resolve = [&](int generic, int, int explicitType) {
             if (explicitType < 0)
             {

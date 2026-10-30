@@ -47,7 +47,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
     }
     const auto node = nodes_[definition];
     const auto key = std::make_pair(std::string(node.module.data(), node.module.size()), std::string(node.s.data(), node.s.size()));
-    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "member" || key.second == "count")
+    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "member" || key.second == "count" || key.second == "compile_error" || key.second == "compile_assert")
     {
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;
@@ -222,7 +222,7 @@ int Registry::instantiate(int call, std::string &error,
     std::function<bool(int)> needsPreparation = [&](int id) {
         if (id < 0 || !preparationSeen.insert(id).second) return false;
         const auto &syntax = nodes_[id];
-        if (syntax.kind == MNode::MacroFieldFor || syntax.kind == MNode::MacroCompileIf || (syntax.kind == MNode::MacroCall && syntax.s == "count")) return true;
+        if (syntax.kind == MNode::MacroFieldFor || syntax.kind == MNode::MacroCompileIf || (syntax.kind == MNode::MacroCall && (syntax.s == "count" || syntax.s == "compile_error" || syntax.s == "compile_assert"))) return true;
         for (const int child : syntax.kids)
             if (needsPreparation(child)) return true;
         if (needsPreparation(syntax.guard)) return true;

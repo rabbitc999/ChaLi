@@ -170,6 +170,19 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     if (node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf)
     {
         std::string error;
+        // 重复体的控制条件在绑定期间才准备；保留外层局部身份，不能误读同名全局常量。
+        std::function<void(int, std::size_t)> bindConstants = [&](int current, std::size_t level) {
+            if (current < 0) return;
+            if (level >= 256) throw std::runtime_error("编译期局部常量绑定超过深度预算");
+            auto &value = nodes_[current];
+            if (value.kind == MNode::Var)
+            {
+                const auto identity = resolver_.resolve(std::string_view(value.s.data(), value.s.size()), scope, value.syntaxContext);
+                if (identity && !parameters_.count(identity)) value.bindingIdentity = identity;
+            }
+            for (const int child : value.kids) bindConstants(child, level + 1);
+        };
+        if (!node.kids.empty()) bindConstants(node.kids[0], depth + 1);
         if (!prepare_ || !inputs_ || !prepare_(id, *inputs_, error)) throw std::runtime_error(error.empty() ? "编译期控制缺少类型化准备器" : error);
         visit(id, scope, depth + 1);
         return;

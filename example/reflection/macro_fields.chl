@@ -1,0 +1,110 @@
+module macro_fields;
+import std::json;
+
+/**
+ * @brief 将字符串按 JSON 字节转义，保留普通 UTF-8 字节并转义控制字节。
+ * @param text 待编码文本。
+ * @return 含双引号的 JSON 字符串。
+ */
+String quoteJson(String text) {
+    String result="\"";
+    String digits="0123456789abcdef";
+    int64 index=0;
+    while(index<text.length()) {
+        int64 byte=cast<int64>(text.byteAt(index).unwrap());
+        if(byte==34) {result+="\\\"";}
+        elif(byte==92) {result+="\\\\";}
+        elif(byte<32) {result+="\\u00"+digits.substring(byte/16,1)+digits.substring(byte%16,1);}
+        else {result+=text.substring(index,1);}
+        index+=1;
+    }
+    return result+"\"";
+}
+
+/**
+ * @brief 将 bool 转为 JSON 词素，避免普通数值格式化将其输出为 0 或 1。
+ * @param value 待编码布尔值。
+ * @return true 或 false 文本。
+ */
+String boolText(bool value) {if(value){return "true";}return "false";}
+
+/** 按源码字段顺序生成普通打印语句，读取实参使用显式只读引用。 */
+$macro PRINT_FIELDS<T>(&value:value) -> stmt
+$for field in $fields<T>()
+$if field.type.name=="bool"
+println("{} = {}",field.name,boolText($member(value,field)));
+$else
+println("{} = {}",field.name,$member(value,field));
+$end_if
+$end_for
+$end_macro
+
+/** 示例校验规则：字符串非空，int64 非负，bool 不附加约束。 */
+$macro VALIDATE_FIELDS<T>(&value:value) -> expr
+bool valid=true;
+$for field in $fields<T>()
+$if field.type.name=="std::lang::String"
+valid=valid && !$member(value,field).isEmpty();
+$else
+$if field.type.name=="int64"
+valid=valid && $member(value,field)>=0;
+$else
+$compile_assert(field.type.name=="bool","校验示例不支持类型 "+field.type.name);
+$end_if
+$end_if
+$end_for
+valid
+$end_macro
+
+/** 为 String、int64 和 bool 字段生成静态 JSON 编码，不查询运行期字段表。 */
+$macro JSON_FIELDS<T>(&value:value) -> expr
+$compile_assert($fields<T>().count<=64,"JSON 示例最多接受 64 个字段");
+String output="{";
+$for field in $fields<T>()
+$if field.index>0
+output+=",";
+$end_if
+output+=quoteJson(field.name)+":";
+$if field.type.name=="std::lang::String"
+output+=quoteJson($member(value,field));
+$else
+$if field.type.name=="int64"
+output+=format("{}",$member(value,field));
+$else
+$if field.type.name=="bool"
+output+=boolText($member(value,field));
+$else
+$compile_error("JSON 示例不支持类型 "+field.type.name);
+$end_if
+$end_if
+$end_if
+$end_for
+output+"}"
+$end_macro
+
+/** 演示字段按定义顺序静态生成三种操作。 */
+struct Student {String name;int64 score;bool active;}
+
+/**
+ * @brief 运行打印、校验和 JSON 生成，解析器仅用于核对生成结果。
+ * @return 无。
+ */
+void main() {
+    Student student;student.name="Ada \"A\"";student.score=95;student.active=true;
+    $PRINT_FIELDS<Student>(student);
+    String text=$JSON_FIELDS<Student>(student);
+    println("json = {}",text);
+    bool valid=$VALIDATE_FIELDS<Student>(student);
+    println("valid = {}",boolText(valid));
+    assert(valid);
+    let parsed=std::json::parse(text);
+    assert(parsed.isOk());
+    let object=parsed.take();
+    assert(object.find("name").unwrap().asString().unwrap()==student.name);
+    assert(object.find("score").unwrap().asInt().unwrap()==95);
+    assert(object.find("active").unwrap().asBool().unwrap()==student.active);
+    student.score=-1;assert(!$VALIDATE_FIELDS<Student>(student));
+    student.score=0;student.name="";assert(!$VALIDATE_FIELDS<Student>(student));
+    String controls="line\n\t\0中文";
+    assert(std::json::parse(quoteJson(controls)).unwrap().asString().unwrap()==controls);
+}

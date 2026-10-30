@@ -416,3 +416,27 @@ $end_macro
 `$if condition`, optional `$else`, and `$end_if` require a compile-time bool constant. Conditions can use metadata properties, variadic counts, and constant arguments. String properties support `==` and `!=` after ordinary language escape decoding. Unselected branches do not undergo ordinary name, type, or borrowing checks; generated branches do. No arbitrary user function or host side effect is executed. Each field iteration has distinct local declaration identities. Empty field collections generate no body, and descriptors cannot escape as runtime values.
 
 Regression entry points: [typed variadics](../../tests/chali_macro_variadics.py), [patterns](../../tests/chali_macro_patterns.py), and [field and structured controls](../../tests/chali_macro_controls.py).
+
+## Compile-time assertions and errors
+
+`$compile_assert(condition)` and `$compile_assert(condition, message)` require a provable bool constant. A successful assertion is a true-valued ordinary expression. As a macro statement it is removed from the generated statement list, including item macros. `$compile_error(message)` stops the current expansion.
+
+Messages must be constant strings. String concatenation, provable named const strings, and field metadata properties are supported. Top-level, module-qualified, and macro-local constants retain their lexical identities. Numeric constants preserve declared width and signedness; a runtime local cannot fall back to a same-named global const. Constant dependency cycles are rejected. An initializer that still calls a user function is not a compile-time value merely because its variable is const. No user function, IO, or runtime formatter executes inside the compiler. Integers cannot replace bool conditions, and an optional message must remain valid even when the assertion succeeds. String leaves and concatenated results have a 1 MiB expansion budget.
+
+```chali
+$macro REQUIRE_INT64<T>() -> stmt
+$for field in $fields<T>()
+$compile_assert(field.type.name=="int64", "unsupported type "+field.type.name);
+$end_for
+$end_macro
+```
+
+Failures retain the call and definition expansion chain and identify the diagnostic argument's source position. Inside field loops they also name each enclosing owner, field, and field index. Errors in unselected `$if` branches do not fire. Existing parameter rules remain in force: value arguments evaluate once, expr arguments are syntax fragments, and compile-time conditions do not make ordinary runtime functions executable in the compiler process.
+
+The [complete field tools example](../../example/reflection/macro_fields.chl) generates printing, validation, and JSON encoding:
+
+```text
+chali run example/reflection/macro_fields.chl --no-reflection
+```
+
+It preserves field declaration order and encodes String, int64, and bool fields. Other field types produce a compile-time diagnostic at the relevant field. String encoding escapes quotes, backslashes, and control bytes while preserving ordinary UTF-8 bytes; booleans use the JSON true/false tokens. The example imposes its own 64-field assertion, rather than a language limit. JSON parsing is used only to validate the result in main; encoding does not consult runtime field tables. See [diagnostic and field tool tests](../../tests/chali_macro_diagnostics.py).

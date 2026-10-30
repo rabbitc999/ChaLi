@@ -416,6 +416,8 @@ std::vector<CompletionItem> McDocument::completion(Position) const
         { "$fields", "function", "具体结构体的编译期字段集合", "$fields<T>()" },
         { "$member", "function", "按字段描述符生成普通成员访问", "$member(object, field)" },
         { "$count", "function", "变参捕获的元素数量", "$count(rest)" },
+        { "$compile_assert", "function", "检查编译期 bool 常量，失败时报告宏与字段来源", "$compile_assert(condition, \"message\")" },
+        { "$compile_error", "function", "以常量消息中止当前宏展开", "$compile_error(\"message\")" },
         { "$line", "keyword", "当前源码行号（可在 $macro 之外用）", "$line" },
         { "$file", "keyword", "当前源码文件名（可在 $macro 之外用）", "$file" },
         { "$match", "keyword", "完整语法片段匹配", "$match value is expr\n$end_match" },

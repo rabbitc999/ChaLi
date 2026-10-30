@@ -105,7 +105,7 @@
         },
         {
           "name": "variable.language.chali",
-          "match": "\\$(?:line|file|module|concat|stringify|fields|member|argc|count|typecheck)\\b"
+          "match": "\\$(?:line|file|module|concat|stringify|fields|member|compile_assert|compile_error|argc|count|typecheck)\\b"
         },
         {
           "name": "keyword.control.preprocessor.chali",

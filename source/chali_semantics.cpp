@@ -3227,6 +3227,7 @@ namespace
 #include "semantics/macro_fragments.cpp"
 #include "semantics/ast_generic_closures.cpp"
 #include "semantics/macro_metadata.cpp"
+#include "semantics/macro_diagnostics.cpp"
 #include "semantics/macro_controls.cpp"
 #include "semantics/macro_patterns.cpp"
 #include "semantics/macro_expansion.cpp"

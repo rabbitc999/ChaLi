@@ -247,7 +247,7 @@ GENERATOR_ASSETS = [
 if Path(CHALI, os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt").exists():
     GENERATOR_ASSETS.append("aot/host_assets.txt")
 
-GENERATOR_ASSETS += ["semantics/macro_controls.cpp", "semantics/macro_patterns.cpp", "semantics/macro_metadata.cpp", "semantics/macro_declarations.cpp", "semantics/abi_export.cpp", "glue/aot_modules.inc",
+GENERATOR_ASSETS += ["semantics/macro_diagnostics.cpp", "semantics/macro_controls.cpp", "semantics/macro_patterns.cpp", "semantics/macro_metadata.cpp", "semantics/macro_declarations.cpp", "semantics/abi_export.cpp", "glue/aot_modules.inc",
                      "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
                      "tools/llvm_static_imports.cpp",
                      "LICENSE", "NOTICE", "licenses/miniz/LICENSE"]

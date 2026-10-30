@@ -465,3 +465,27 @@ $end_macro
 `$if condition`、可选的 `$else` 与 `$end_if` 只接受编译期 bool 常量。可使用字段属性、变参数量和常量实参；字符串属性支持 `==` 与 `!=`，按语言转义规则解码后比较。未选分支不参与普通名称、类型和借用检查，实际生成的分支照常检查。这里不会执行任意用户函数或宿主副作用。每轮字段局部声明具有独立身份；字段集合为空时不生成循环正文。描述符仍不能逃逸为运行期值。
 
 专项入口为 [类别变参](../tests/chali_macro_variadics.py)、[模式参数](../tests/chali_macro_patterns.py)与[字段和结构化控制](../tests/chali_macro_controls.py)。
+
+## 编译期断言与错误
+
+`$compile_assert(condition)` 或 `$compile_assert(condition, message)` 检查可证明的 bool 常量。成功时可作为值为 true 的普通表达式使用；作为宏语句时会从生成的语句表中删除，包括 item 宏，不会占据声明位置。`$compile_error(message)` 中止当前展开。
+
+消息必须是常量字符串，支持常量字符串连接、可证明的具名 const 字符串及字段元数据属性。顶层、模块限定和宏局部常量保留各自的词法身份；数值常量按声明位宽与符号归一化，同名运行期局部不会退回读取全局 const。常量依赖环会报错。const 变量的初始化式如果仍需运行用户函数，就不能作为诊断消息或断言条件。原语不执行用户函数、IO 或运行期格式化。条件必须是 bool，不能用整数隐式代替；即使断言成立，消息参数也须合法。单条字符串及连接结果有 1 MiB 的展开预算。
+
+```chali
+$macro REQUIRE_INT64<T>() -> stmt
+$for field in $fields<T>()
+$compile_assert(field.type.name=="int64", "不支持类型 "+field.type.name);
+$end_for
+$end_macro
+```
+
+失败会保留调用与宏定义的展开链，报告实际诊断实参的位置；在字段循环内还会列出所属类型、字段名及字段序号。未选中的 `$if` 分支内的错误不触发。具名宏仍按普通参数规则处理：value 实参求值一次，expr 实参是语法片段，编译期条件不会将普通运行期函数改为可在编译器进程中执行的函数。
+
+[完整字段工具示例](../example/reflection/macro_fields.chl)生成字段打印、校验和 JSON 编码，可运行：
+
+```text
+chali run example/reflection/macro_fields.chl --no-reflection
+```
+
+示例按定义顺序输出字段，只为 String、int64 和 bool 生成 JSON 编码，其他类型在编译期定位到具体字段。字符串按 JSON 规则转义引号、反斜杠和控制字节，UTF-8 普通字节保留；bool 显式编码为 true／false。64 字段上限是该示例通过断言施加的约束，不是语言的结构体限制。JSON 解析只用于主函数验证生成结果，编码过程不读取运行期字段表。专项见 [编译期诊断与字段工具测试](../tests/chali_macro_diagnostics.py)。

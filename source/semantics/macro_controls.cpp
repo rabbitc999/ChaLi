@@ -29,7 +29,48 @@ bool PrepareMacroMember(int id)
 }
 
 /**
- * @brief 在卫生绑定前展开字段循环和常量分支，仅构造普通 AST。
+ * @brief 按声明类型展开可证明的常量初始化式，保持窄整数语义并检测依赖环。
+ * @param id 使用常量的节点。
+ * @param initializer 常量初始化式。
+ * @param declaredType 声明类型编号。
+ * @param depth 当前语法深度。
+ * @param active 当前常量依赖集合。
+ * @param visit 继续归一化子树的回调。
+ * @param error 接收循环依赖等错误。
+ * @return 常量展开成功时返回真。
+ */
+bool SubstituteMacroConstant(int id, int initializer, int declaredType, std::size_t depth, Memory::Set<int> &active,
+                             const std::function<bool(int, std::size_t, bool)> &visit, std::string &error)
+{
+    const auto source = N(id);
+    if (!active.insert(initializer).second)
+    {
+        error = "编译期常量存在循环依赖：" + std::string(source.s.data(), source.s.size());
+        return false;
+    }
+    g_nodes[id] = N(initializer);
+    if (declaredType >= 0)
+    {
+        const auto type = T(declaredType);
+        if (type->kind == MType::Int || type->kind == MType::Double || type->kind == MType::Bool || type->kind == MType::Char)
+        {
+            g_nodes[id].kind = MNode::Cast;
+            g_nodes[id].type = declaredType;
+            g_nodes[id].type2 = 0;
+            g_nodes[id].kids = { initializer };
+            g_nodes[id].s.clear();
+            g_nodes[id].s2.clear();
+        }
+    }
+    g_nodes[id].sourceLine = source.sourceLine;
+    g_nodes[id].sourceColumn = source.sourceColumn;
+    const bool success = visit(id, depth + 1, true);
+    active.erase(initializer);
+    return success;
+}
+
+/**
+ * @brief 在卫生绑定前处理字段循环、常量分支和编译期诊断，仅构造普通 AST。
  * @param root 已替换泛型类型的独立模板。
  * @param inputs 只读宏实参，条件只允许使用其中的常量表达式。
  * @param error 接收失败原因。
@@ -39,25 +80,40 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
 {
     using Meta = chali_macro::MetadataValue;
     Memory::Map<Memory::String, Meta> environment;
+    Memory::Map<Memory::String, int> localBindings;
+    Memory::Vector<Meta> fieldPath;
+    Memory::Set<int> statementLists;
+    Memory::Set<int> activeConstants;
     std::size_t budget = 1000000;
     std::function<bool(int, std::size_t, bool)> visit;
     visit = [&](int id, std::size_t depth, bool constant) {
         if (id < 0) return true;
         if (depth >= 256 || !budget--) return Fail("宏编译期控制超过深度或规模预算");
         const auto node = N(id);
+        if (node.kind == MNode::MacroTemplate && node.kids.size() == 2) statementLists.insert(node.kids[0]);
+        if (node.kind == MNode::Block && node.i >= 0) statementLists.insert(static_cast<int>(node.i));
+        if (node.kind == MNode::Case && !node.kids.empty()) statementLists.insert(node.kids[0]);
+        if (IsMacroCompileDiagnostic(id))
+            return PrepareMacroDiagnostic(id, [&](int child) { return visit(child, depth + 1, true); }, fieldPath, error);
         if (node.kind == MNode::MacroFor) return true;
         const bool localScope = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::FuncDef || node.kind == MNode::MethodDef || node.kind == MNode::GenericLambda || node.kind == MNode::For || node.kind == MNode::Foreach;
         struct RestoreFieldEnvironment
         {
             Memory::Map<Memory::String, Meta> &current;
             Memory::Map<Memory::String, Meta> saved;
+            Memory::Map<Memory::String, int> &locals;
+            Memory::Map<Memory::String, int> savedLocals;
             bool active;
             /** @brief 退出普通词法作用域后恢复外层字段迭代绑定。 */
             ~RestoreFieldEnvironment()
             {
-                if (active) current = std::move(saved);
+                if (active)
+                {
+                    current = std::move(saved);
+                    locals = std::move(savedLocals);
+                }
             }
-        } restore{ environment, localScope ? environment : Memory::Map<Memory::String, Meta>{}, localScope };
+        } restore{ environment, localScope ? environment : Memory::Map<Memory::String, Meta>{}, localBindings, localScope ? localBindings : Memory::Map<Memory::String, int>{}, localScope };
         if (node.kind == MNode::MacroCall && node.s == "count")
         {
             if (node.kids.size() != 1 || node.kids[0] < 0 || N(node.kids[0]).kids.size() != 1) return Fail("$count 需要一个变参来源");
@@ -76,7 +132,17 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             SetMacroMetadata(id, environment.at(node.s));
             return true;
         }
-        if (constant && node.kind == MNode::Var)
+        if (constant && node.kind == MNode::Var && node.syntaxContext && !node.bindingIdentity && localBindings.count(node.s))
+        {
+            const auto declaration = N(localBindings.at(node.s));
+            if (declaration.kind != MNode::Declare || declaration.type2 != 1 || declaration.kids.empty() || declaration.kids[0] < 0)
+            {
+                error = "编译期条件不能读取生成代码中的运行时局部变量：" + std::string(node.s.data(), node.s.size());
+                return false;
+            }
+            return SubstituteMacroConstant(id, declaration.kids[0], declaration.type, depth, activeConstants, visit, error);
+        }
+        if (constant && (node.kind == MNode::MacroHole || (node.kind == MNode::Var && node.syntaxContext && !node.bindingIdentity)))
         {
             const auto actual = inputs.find(std::string(node.s.data(), node.s.size()));
             if (actual != inputs.end())
@@ -84,7 +150,29 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                 const auto fragment = N(actual->second);
                 if (fragment.kind != MNode::MacroArgument || fragment.kids.empty() || fragment.kids[0] < 0) return Fail("编译期条件的参数必须是常量表达式");
                 g_nodes[id] = N(fragment.kids[0]);
-                return visit(id, depth + 1, false);
+                return visit(id, depth + 1, true);
+            }
+        }
+        if (constant && node.kind == MNode::Var)
+        {
+            const auto binding = FindNodeVar(node);
+            if (binding && binding->isConst && binding->constantExpression >= 0 && IsStandardOpcode(binding->type, "String"))
+            {
+                std::string text;
+                if (!ReadMacroDiagnosticString(binding->constantExpression, text, error)) return false;
+                SetMacroMetadataString(id, Memory::String(text.data(), text.size()));
+                return true;
+            }
+        }
+        if (constant && (node.kind == MNode::Var || node.kind == MNode::EnumCtor))
+        {
+            const auto binding = node.kind == MNode::Var ? FindNodeVar(node) : nullptr;
+            if (!binding || (binding->isConst && binding->constantExpression < 0))
+            {
+                int declaredType = -1;
+                const int initializer = FindMacroSyntaxConstant(node, error, &declaredType);
+                if (!error.empty()) return false;
+                if (initializer >= 0) return SubstituteMacroConstant(id, initializer, declaredType, depth, activeConstants, visit, error);
             }
         }
         if (node.kind == MNode::MacroFieldFor)
@@ -93,6 +181,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             const auto metadata = N(node.kids[0]).compileMetadata;
             if (!metadata || metadata->kind != Meta::Fields) return Fail("字段循环来源必须是 $fields<T>()");
             const auto saved = environment;
+            const auto savedLocals = localBindings;
             const int list = M_List();
             for (std::size_t index = 0; index < metadata->owner->fields.size(); ++index)
             {
@@ -100,7 +189,9 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                 field.kind = Meta::Field;
                 field.field = index;
                 environment = saved;
+                localBindings = savedLocals;
                 environment[node.s] = field;
+                fieldPath.push_back(field);
                 chali_macro::AstSubstitution copy(g_nodes, budget, &g_types);
                 const auto before = g_nodes.size();
                 const int body = copy.instantiate(node.kids[1], {}, node.syntaxContext, error);
@@ -109,10 +200,12 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                 if (cost >= budget) return Fail("字段循环生成节点超过规模预算");
                 budget -= cost;
                 if (!visit(body, depth + 1, false)) return false;
+                fieldPath.pop_back();
                 g_nodes[body].s2 = "__chali_field_iteration";
                 M_ListAdd(list, body);
             }
             environment = saved;
+            localBindings = savedLocals;
             g_nodes[id].kind = MNode::MacroTemplate;
             g_nodes[id].kids = { list, -1 };
             g_nodes[id].s.clear();
@@ -140,7 +233,11 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                 if (current < 0) return true;
                 if (level >= 256 || !budget--) return Fail("字段模板模式遮蔽超过预算");
                 const auto pattern = N(current);
-                if (payload && pattern.kind == MNode::Var) environment.erase(pattern.s);
+                if (payload && pattern.kind == MNode::Var)
+                {
+                    environment.erase(pattern.s);
+                    localBindings[pattern.s] = current;
+                }
                 if (pattern.kind == MNode::Call && pattern.kids.size() == 2) return mask(pattern.kids[1], true, level + 1);
                 for (const int child : pattern.kids)
                     if (!mask(child, payload || pattern.kind == MNode::EnumCtor || pattern.kind == MNode::TypeQualifiedRef, level + 1)) return false;
@@ -148,10 +245,20 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             };
             if (!mask(static_cast<int>(node.i), false, depth + 1) || !visit(static_cast<int>(node.i), depth + 1, constant)) return false;
         }
+        if (node.kind == MNode::Declare && node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List)
+            for (const int child : N(node.kids[0]).kids)
+            {
+                if (N(child).type < 0 && node.type >= 0) g_nodes[child].type = node.type;
+                if (N(child).type2 < 0) g_nodes[child].type2 = node.type2;
+            }
         if (node.kind == MNode::GenericLambda && !visit(node.type2, depth + 1, constant)) return false;
         for (std::size_t index = 0; index < node.kids.size(); ++index)
         {
-            if (node.kind == MNode::Foreach && index == 1) environment.erase(node.s);
+            if (node.kind == MNode::Foreach && index == 1)
+            {
+                environment.erase(node.s);
+                localBindings[node.s] = id;
+            }
             if (!visit(node.kids[index], depth + 1, constant)) return false;
         }
         for (const int annotation : node.annotations)
@@ -160,8 +267,35 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         const bool group = node.kind == MNode::Declare && node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
         const bool indexed = node.kind == MNode::Block || node.kind == MNode::NewPtr || ((node.kind == MNode::Declare || node.kind == MNode::Field) && !group && node.i >= 0);
         if (indexed && !visit(static_cast<int>(node.i), depth + 1, constant)) return false;
-        if ((node.kind == MNode::Declare && !group) || node.kind == MNode::Params || node.kind == MNode::Foreach) environment.erase(node.s);
+        if ((node.kind == MNode::Declare && !group) || node.kind == MNode::Params || node.kind == MNode::Foreach)
+        {
+            environment.erase(node.s);
+            localBindings[node.s] = id;
+        }
+        if (node.kind == MNode::List && statementLists.count(id))
+        {
+            Memory::Vector<int> statements;
+            for (const int child : N(id).kids)
+            {
+                if (child < 0)
+                {
+                    statements.push_back(child);
+                    continue;
+                }
+                const auto statement = N(child);
+                if (statement.s2 == "__chali_compile_assert_success") continue;
+                if (statement.kind == MNode::ExprStmt && statement.kids.size() == 1 && N(statement.kids[0]).s2 == "__chali_compile_assert_success") continue;
+                statements.push_back(child);
+            }
+            g_nodes[id].kids = std::move(statements);
+        }
         if (!NormalizeMacroMetadata(id, 0) || !PrepareMacroMember(id)) return false;
+        if (constant && node.kind == MNode::Bin && node.s == "+" && node.kids.size() == 2 && N(node.kids[0]).kind == MNode::Str && N(node.kids[1]).kind == MNode::Str)
+        {
+            std::string text;
+            if (!ReadMacroDiagnosticString(id, text, error)) return false;
+            SetMacroMetadataString(id, Memory::String(text.data(), text.size()));
+        }
         if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2 && N(node.kids[0]).kind == MNode::Str && N(node.kids[1]).kind == MNode::Str)
         {
             std::string left, right;
