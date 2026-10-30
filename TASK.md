@@ -1,6 +1,6 @@
 # TASK.md — ChaLi 1.0.12 实施计划与保留任务
 
-更新日期：2026-10-31。1.0.12 已获授权，目标为完成 P7、P8，推进胶水自举、统一 C API／C ABI、LLVM 原语直降，并删除被替代的旧 C++ 胶水体系。书稿随已验证功能同步更新。最新指令要求本次只写 TASK.md，写完结束；本次不实施功能、不升级 VERSION、不构建、不运行门禁。当前源码与发行版本仍为 1.0.11，后续开始实施时再建立 1.0.12 基线。
+更新日期：2026-10-31。1.0.12 已获授权，目标为完成 P7、P8，推进胶水自举、统一 C API／C ABI、LLVM 原语直降，并删除被替代的旧 C++ 胶水体系。书稿随已验证功能同步更新。最新指令已授权持续实施全部 1.0.12 任务，每阶段完成后提交推送，再继续下一阶段。当前开始建立 1.0.12 基线，未完成项继续保留。
 
 用户最新允许胶水实现文件使用 .cpp 后缀，但采用 C API。该要求覆盖原先“胶水实现必须写成 C 源文件”的限制；公开头须可由 C 编译器独立包含，调用边界不得依赖 C++ 类型。P6 后停止的阶段限制已由本次 1.0.12 授权解除，后续按下方顺序恢复 P7、P8。
 
@@ -16,12 +16,25 @@
 - 临时目录仅使用仓库根 tmp/，子进程继承 TMPDIR／TMP／TEMP。生成与验证结束后先结束进程、保留必要产物和证据，再运行 tools/clean_tmp.ps1。
 - 不重复测量已冻结的其他语言基线。只有确有性能验证需要且 CPU <40% 时计时；否则先检查功能并记录待测。性能改善不以取消所有权、借用、资源清理或必要运行期检查为代价。
 
-## 阶段一：建立 1.0.12 基线
+## 阶段一：基线已完成
 
-- [ ] 保留 1.0.11 的真实源码、产物身份、配置和已有数据，不重标旧测量。核对当前可复现构建与必要功能抽样。
-- [ ] 开始实施时统一 VERSION、语言服务、插件 version／chaliCompilerVersion 和构建产物命名；CHANGELOG 从 tools/changelog_data.json 生成。
-- [ ] 重新清点 P6 已有元数据、宏展开、控制流、诊断与预览实现；将 P7、P8 的验收拆到可单独检查的功能项，保留原有宏行为。
-- [ ] 按模块列出旧胶水入口、调用点、注册与封送、宿主依赖、生成模板、构建及打包资产，分别确定“ChaLi 自举”“C API 宿主服务”“LLVM 指令／intrinsic”去向。
+1.0.12 静态 LLVM 编译器及插件版本已统一，保留 1.0.11 真实 EXE 与身份。修正版本文件更新后内部 compilerVersion 仍为旧值的问题；--build-info 与产物名均报告 1.0.12。既有字段元数据 20 项、声明正例 3 项／拒绝 20 项、CHANGELOG 与插件清单检查，以及全部七组插件测试通过。静态 VSIX 位于 vscode/dist/1.0.12-baseline/chali-editor-1.0.12-llvm-static.vsix，已核对版本、static 和包内编译器字节。本地证据见 tools/history/20261031/chali-1.0.12-baseline/；未进行性能测量或整仓全量门禁。P7、P8 及其余阶段仍未完成。
+
+### 基线清点与迁移顺序
+
+| 当前模块／边界 | 目标路径 | 核对重点 |
+| --- | --- | --- |
+| print、string、math／clock、random 的现有 abi_*_records | 复用现有 C 入口，补统一注册协议 | 不重复迁移已直通的实现；保留槽类型与错误规则 |
+| reference、scalar_buffer、collection、native_record、records | LLVM 原语＋必要 C 运行时服务 | 类型、存活、边界、代次、拥有值清理；不得把逻辑句柄直接当机器地址 |
+| binary、parse、linalg、structured_data、serialization | 优先 ChaLi 实现，热点直接 LLVM 降低 | 字节序、数值位宽、格式错误、递归及自定义接口 |
+| json、toml | ChaLi 对象接口＋必要解析内核 C 入口 | 树／文档所有权、错误位置、注解与反射 |
+| file、filesystem、net、process、signal | 薄 C API 宿主服务 | 句柄生命周期、异步状态、取消、目标平台与 IO 失败 |
+| regex、compress、image、sql／sql_ipage | 第三方库的窄 C 适配边界 | 依赖库许可、借用缓冲、分配释放、回调及外部库错误 |
+| big_number、cas | ChaLi 上层策略＋必要数值内核 C API | 大对象所有权、异常转错误、泛型／表达式值与复制 |
+| std_registry、std_aot_modules、aot_modules.inc、std_binding | 统一 C 注册／选择表 | 消除 Registry／Memory::String 等 C++ 参数；保留按导入裁剪 |
+| std_demo、宿主样例、生成器与嵌入资产 | 新 C 注册／调用示例与生成模板 | 同步回调、重入、独立构建及 checked／unchecked |
+
+P6 当前实现集中在 source/macro/metadata.hpp 与 source/semantics/macro_metadata.cpp、macro_controls.cpp、macro_expansion.cpp；描述符仅覆盖字段／类型／注解，循环仅接受 Fields。P7 应扩展统一描述符与遍历协议，不能将枚举载荷伪装为可用 $member 访问的结构体字段。
 
 ## 阶段二：P7 — 元数据与宏控制流
 
