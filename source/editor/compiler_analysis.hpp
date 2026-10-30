@@ -1,6 +1,7 @@
 #ifndef CHALI_EDITOR_COMPILER_ANALYSIS_HPP
 #define CHALI_EDITOR_COMPILER_ANALYSIS_HPP
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,6 +23,7 @@ struct MacroExpansion
 {
     std::string file, name, tree;
     std::size_t line = 0, column = 0;
+    std::function<std::string()> expandedTree;  ///< 在语义检查完成后读取同一生产 AST，不重新执行展开。
 };
 /**
  * @brief 编码一个 JSON 字符串，保持非 ASCII 源码字节。

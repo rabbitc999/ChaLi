@@ -49,6 +49,36 @@ namespace
 {
 
 /**
+ * @brief 按显示设置保留完整宏展开栈或仅显示最近的展开帧。
+ * @param message 包含字段、实参和展开帧的完整诊断。
+ * @param full 是否保留全部展开帧。
+ * @return 用于文本或 JSON 输出的诊断，不改变语义检查结果。
+ */
+Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
+{
+    if (full) return message;
+    Memory::String result;
+    bool seen = false, omitted = false;
+    for (std::size_t begin = 0; begin <= message.size();)
+    {
+        const auto end = message.find('\n', begin);
+        const auto line = message.substr(begin, end == Memory::String::npos ? Memory::String::npos : end - begin);
+        const bool frame = line.rfind("  展开宏 $", 0) == 0 || line.rfind("  expanding macro $", 0) == 0;
+        if (frame && seen) omitted = true;
+        else
+        {
+            if (!result.empty()) result += '\n';
+            result += line;
+        }
+        if (frame) seen = true;
+        if (end == Memory::String::npos) break;
+        begin = end + 1;
+    }
+    if (omitted) result += "\n  --macro-backtrace full";
+    return result;
+}
+
+/**
  * @brief 注册与 AOT 共享的标准库和演示宿主接口。
  * @param registry 接收函数绑定的宿主注册表。
  * @return 无。
@@ -116,6 +146,7 @@ void PrintUsage(std::FILE *out)
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
+             "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n",
              "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
              "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
@@ -233,6 +264,7 @@ try
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
+    bool macroBacktraceFull = true;
     bool abiPrepareOnly = false, abiNoCache = false;
     Memory::String abiCache, abiBridge, abiWrite;
     bool hardRealtime = false;
@@ -461,6 +493,16 @@ try
             checkOnly = true;
             jsonDiagnostics = true;
             run = 0;
+            continue;
+        }
+        if (argument == "--macro-backtrace")
+        {
+            if (index + 1 >= argc || (Memory::String(argv[index + 1]) != "short" && Memory::String(argv[index + 1]) != "full"))
+            {
+                std::fprintf(stderr, "chali: --macro-backtrace short|full\n");
+                return 1;
+            }
+            macroBacktraceFull = Memory::String(argv[++index]) == "full";
             continue;
         }
         if (argument == "--source-stdin")
@@ -1150,8 +1192,9 @@ try
     if (code != 0)
     {
         Memory::Vector<chali_diagnostics::Diagnostic> diagnostics;
-        for (const auto &item : M_Diagnostics())
+        for (auto item : M_Diagnostics())
         {
+            item.message = MacroDiagnosticDisplay(item.message, macroBacktraceFull);
             const auto original = item.line && item.line <= processed.lineMap.size() ? processed.lineMap[item.line - 1] : preprocess::LineOrigin{ sourceLabel, item.line };
             diagnostics.push_back({ item.message, original.file, original.line, item.column ? item.column : 1u });
             if (!jsonDiagnostics)
@@ -1185,25 +1228,26 @@ try
         }
         if (diagnostics.empty() && M_LastError() && M_LastError()[0])
         {
+            const auto message = MacroDiagnosticDisplay(M_LastError(), macroBacktraceFull);
             const auto line = M_LastErrorLine();
             const auto column = M_LastErrorColumn();
             const auto original = line && line <= processed.lineMap.size() ? processed.lineMap[line - 1] : preprocess::LineOrigin{ sourceLabel, line };
-            diagnostics.push_back({ M_LastError(), original.file, original.line, column ? column : 1u });
+            diagnostics.push_back({ message, original.file, original.line, column ? column : 1u });
             if (!jsonDiagnostics)
             {
                 /* 行号为 0 = 这条错误没有可指的源码位置（比如运行期错误：位置得跑起来才知道，
                  * 它的 `出错位置` / `调用栈` 自己就写在下面几行）。这时保持单行原文不加前缀。 */
                 if (!line || original.file.empty() || original.file.front() == '<' || !chali_report::hasSourceLine(original.file, original.line))
-                    std::fprintf(stderr, "chali: %s\n", M_LastError());
+                    std::fprintf(stderr, "chali: %s\n", message.c_str());
                 else
                 {
                     const std::size_t anchored = column ? chali_report::anchoredColumn(original.file, original.line, column) : 0u;
                     if (anchored)
                         std::fprintf(stderr, CHALI_TEXT("chali: %s 第 %zu 行第 %zu 列：%s\n"),
-                                     original.file.c_str(), original.line, anchored, M_LastError());
+                                     original.file.c_str(), original.line, anchored, message.c_str());
                     else
                         std::fprintf(stderr, CHALI_TEXT("chali: %s 第 %zu 行：%s\n"),
-                                     original.file.c_str(), original.line, M_LastError());
+                                     original.file.c_str(), original.line, message.c_str());
                     const Memory::String snippet = chali_report::renderSnippet(
                         original.file, original.line, anchored,
                         anchored ? 0u : chali_report::kSnippetWholeLine);

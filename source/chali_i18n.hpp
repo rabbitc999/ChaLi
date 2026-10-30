@@ -92,6 +92,7 @@ inline constexpr Message messages[] = {
     {"  --include-path 目录    追加模块搜索目录\n", "  --include-path DIR    Add a module search directory\n"},
     {"  --incremental          跨次复用模块预处理与完整编译产物\n", "  --incremental          Reuse module preprocessing and compiled artifacts\n"},
     {"  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n", "  --keep-artifacts       Keep intermediates under .chali (cleared after run/export by default)\n"},
+    {"  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n", "  --macro-backtrace short|full  Macro diagnostic frames; default full\n"},
     {"  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n", "  --memory-size BYTES    Runtime memory capacity (default: 512MiB; minimum: 64)\n"},
     {"  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n", "  --no-debug             Omit debug information (also the default)\n"},
     {"  --no-panic-details 隐藏 panic 路径及调用记录（上游符号压缩时自动启用）。\n", "  --no-panic-details Hide panic paths and call traces (automatic with compressed symbols).\n"},

@@ -25,7 +25,7 @@ function expansionText() {
       {
         file: 'file:///project/main.chl', name: 'SUM_SQUARES', line: 34, column: 5,
         tree: { kind: 'template', name: '', origin: 'definition', children: [
-          { kind: 'declaration', name: 'local', origin: 'definition', type: 'int64', children: [] },
+          { kind: 'declaration', name: 'local', origin: 'definition', type: 'int64', symbol: 'local@1', declares: true, parameterCache: 'value', source: {file: '/project/main.chl', line: 34, column: 7}, definition: {file: '/project/macros.chl', line: 2, column: 1}, children: [] },
         ] },
       },
     ],
@@ -35,6 +35,8 @@ function expansionText() {
 async function main() {
   const errors = [], infos = [], handlers = [];
   let command, created = [], opened = null, shown = null, flushed = false;
+  const commands = new Map();
+  let requestedParams;
   const uri = (value) => ({
     scheme: value.split(':')[0], path: value.replace(/^file:\/\//, ''), toString: () => value,
   });
@@ -44,12 +46,13 @@ async function main() {
     Position: class { constructor(line, character) { Object.assign(this, { line, character }); } },
     Range: class { constructor(start, end) { Object.assign(this, { start, end }); } },
     Selection: class { constructor(anchor, active) { Object.assign(this, { anchor, active }); } },
-    Uri: { parse: uri },
-    workspace: { async openTextDocument(value) { opened = value; return { uri: value }; } },
+    Uri: { parse: uri, file: (value) => uri(`file://${value}`) },
+    workspace: { async openTextDocument(value) { opened = value; return { uri: value, lineAt: (line) => ({text: line === 33 ? '你好let value' : ' '.repeat(80)}) }; } },
     commands: {
       registerCommand(name, callback) {
-        assert.equal(name, 'chali.previewMacroExpansion');
-        command = callback;
+        assert.ok(['chali.previewMacroExpansion', 'chali.previewMacroExpansionOnce', 'chali.previewMacroExpansionAtCursor'].includes(name));
+        commands.set(name, callback);
+        if (name === 'chali.previewMacroExpansion') command = callback;
         return { dispose() {} };
       },
     },
@@ -90,6 +93,7 @@ async function main() {
       async request(method, params) {
         assert.ok(flushed); assert.equal(method, 'chali/expandMacro');
         assert.equal(params.textDocument.uri, document.uri.toString());
+        requestedParams = params;
         return result;
       },
     }),
@@ -122,11 +126,25 @@ async function main() {
   await handlers[0]({ type: 'reveal', index: 0 });
   assert.equal(opened.toString(), document.uri.toString());
   assert.equal(shown.selection.active.line, 31);
-  assert.equal(shown.selection.active.character, 5);
+  assert.equal(shown.selection.active.character, 4);
   assert.equal(shown.revealed.start.line, 31);
 
   await handlers[0]({ type: 'reveal', index: 1 });
   assert.equal(shown.selection.active.line, 33);
+  await handlers[0]({ type: 'revealNode', index: 1, location: {file: '/project/main.chl', line: 34, column: 7} });
+  assert.equal(shown.selection.active.character, 2);
+  await handlers[0]({ type: 'revealNode', index: 1, location: {file: '/project/macros.chl', line: 2, column: 1} });
+  assert.equal(opened.toString(), 'file:///project/macros.chl');
+  await handlers[0]({ type: 'revealNode', index: 1, location: {file: '/outside.chl', line: 1, column: 1} });
+  assert.equal(opened.toString(), 'file:///project/macros.chl');
+  vscode.window.activeTextEditor.selection = {active: {line: 33, character: 8}};
+  await commands.get('chali.previewMacroExpansionOnce')();
+  assert.equal(requestedParams.mode, 'one');
+  assert.deepEqual(requestedParams.position, {line: 33, character: 8});
+  await commands.get('chali.previewMacroExpansionAtCursor')();
+  assert.equal(requestedParams.mode, 'all');
+  assert.match(first.webview.html, /data-binding="local@1"/);
+  assert.match(first.webview.html, /data-node-location/);
   // 再次预览复用同一面板，不增加 VS Code 页面。
   await command();
   assert.equal(first.disposed, 0);

@@ -136,6 +136,9 @@ _MESSAGES = {
   "  --diagnostics=json     检查并输出稳定 JSON 诊断\n": [
     "  --diagnostics=json     Check and emit structured JSON diagnostics\n"
   ],
+  "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n": [
+    "  --macro-backtrace short|full  Macro diagnostic frames; default full\n"
+  ],
   "  test|fmt|lsp|deps      测试、格式化、语言服务与依赖锁定（原生内建）\n": [
     "  test|fmt|lsp|deps      Tests, formatting, language service, dependency locks (native)\n"
   ],

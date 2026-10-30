@@ -43,6 +43,8 @@
     "onCommand:chali.checkDependencies",
     "onCommand:chali.openLibraries",
     "onCommand:chali.previewMacroExpansion",
+    "onCommand:chali.previewMacroExpansionOnce",
+    "onCommand:chali.previewMacroExpansionAtCursor",
     "onCommand:chali.build",
     "onCommand:chali.buildExe"
   ],
@@ -186,6 +188,14 @@
       {
         "command": "chali.previewMacroExpansion",
         "title": "%chali.previewMacroExpansion.title%"
+      },
+      {
+        "command": "chali.previewMacroExpansionOnce",
+        "title": "%chali.previewMacroExpansionOnce.title%"
+      },
+      {
+        "command": "chali.previewMacroExpansionAtCursor",
+        "title": "%chali.previewMacroExpansionAtCursor.title%"
       },
       {
         "command": "chali.build",

@@ -211,6 +211,11 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
             if (!original.nameParameter && original.kind != MNode::Var) nodes_[result].generatedDeclaration = true;
             nodes_[result].syntaxContext = argument.syntaxContext;
             nodes_[result].bindingContext = context_;
+            if (original.nameParameter)
+            {
+                nodes_[result].sourceLine = argument.sourceLine;
+                nodes_[result].sourceColumn = argument.sourceColumn;
+            }
             nodes_[result].nameParameter = 0;
         }
     }

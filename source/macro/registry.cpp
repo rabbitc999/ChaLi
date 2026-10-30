@@ -542,7 +542,7 @@ int Registry::instantiate(int call, std::string &error,
         declaration.i = -1;
         declaration.type2 = 0;
         declaration.s2 = mode == 1 ? "__chali_macro_const_ref" : mode == 2 ? "__chali_macro_mut_ref" :
-                                                                             "";
+                                                                             "__chali_macro_value_cache";
         declaration.kids = { expression };
         const int declared = static_cast<int>(nodes_.size());
         nodes_.push_back(std::move(declaration));

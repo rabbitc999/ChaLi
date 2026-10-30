@@ -72,8 +72,12 @@ void CompilerAnalysis::addType(TypeHint hint)
 void CompilerAnalysis::addMacro(MacroExpansion expansion)
 {
     if (!enabled_ || macros_.size() >= 2048 || previewBytes_ + expansion.tree.size() > 16u * 1024u * 1024u) return;
-    for (const auto &item : macros_)
-        if (item.file == expansion.file && item.name == expansion.name && item.line == expansion.line && item.column == expansion.column && item.tree == expansion.tree) return;
+    for (auto &item : macros_)
+        if (item.file == expansion.file && item.name == expansion.name && item.line == expansion.line && item.column == expansion.column && item.tree == expansion.tree)
+        {
+            item.expandedTree = std::move(expansion.expandedTree);
+            return;
+        }
     previewBytes_ += expansion.tree.size();
     macros_.push_back(std::move(expansion));
 }
@@ -105,12 +109,18 @@ bool CompilerAnalysis::write(const std::string &path, bool complete, std::string
     }
     out << "],\"macros\":[";
     first = true;
+    std::size_t remaining = 16u * 1024u * 1024u;
     for (const auto &macro : macros_)
     {
+        if (macro.tree.size() > remaining) break;
+        auto expanded = macro.expandedTree ? macro.expandedTree() : std::string{};
+        if (expanded.empty() || expanded.size() > remaining - macro.tree.size()) expanded = macro.tree;
+        if (macro.tree.size() + expanded.size() > remaining) break;
+        remaining -= macro.tree.size() + expanded.size();
         if (!first) out << ',';
         first = false;
         out << "{\"file\":" << jsonString(macro.file) << ",\"name\":" << jsonString(macro.name)
-            << ",\"line\":" << macro.line << ",\"column\":" << macro.column << ",\"tree\":" << macro.tree << '}';
+            << ",\"line\":" << macro.line << ",\"column\":" << macro.column << ",\"tree\":" << macro.tree << ",\"expandedTree\":" << expanded << '}';
     }
     out << "]}\n";
     if (!out)

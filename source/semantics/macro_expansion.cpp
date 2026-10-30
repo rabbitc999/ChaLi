@@ -521,6 +521,8 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
  */
 bool ExpandAstMacros()
 {
+    g_editorMacroInferredTypes.clear();
+    g_editorMacroBindingTypes.clear();
     g_macroMetadataIdentities.clear();
     g_macroMetadataDependencies.clear();
     g_macroSyntaxFiltering = false;

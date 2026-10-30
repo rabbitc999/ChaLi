@@ -7,6 +7,8 @@
   "chali.checkDependencies.title": "ChaLi: 离线校验模块依赖",
   "chali.openLibraries.title": "ChaLi: 打开在线依赖缓存",
   "chali.previewMacroExpansion.title": "ChaLi: 预览宏展开",
+  "chali.previewMacroExpansionOnce.title": "ChaLi: 当前宏展开一层",
+  "chali.previewMacroExpansionAtCursor.title": "ChaLi: 当前宏全部展开",
   "chali.build.title": "ChaLi: 构建当前文件",
   "chali.buildExe.title": "ChaLi: 构建可执行文件（LLVM AOT）",
   "chali.path.description": "chali 编译器路径（语言服务器内嵌在它里面：`chali lsp`）；留空时先用插件自带的 `bin/chali`（打包时内嵌），再在工作区与 PATH 里自动探测。",

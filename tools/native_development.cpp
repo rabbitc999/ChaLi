@@ -3929,32 +3929,70 @@ class Server
      * @brief 为指定宏或源码位置生成展开预览。
      * @param u 待处理文档的 URI。
      * @param s 待处理的文本或节点文本值。
+     * @param params 展开层级及可选的原始调用位置。
      * @retval 保存为指定宏或源码位置生成展开预览结果的对象。
      */
-    J preview(const std::string &u, const std::string &s)
+    J preview(const std::string &u, const std::string &s, const J &params)
     {
-        (void)s;
+        const auto requested = str(params, "mode");
+        const auto mode = requested.empty() ? std::string("all") : requested;
+        if (mode != "one" && mode != "all")
+            return object({ { "text", "" }, { "format", "json" }, { "diagnostics", A{ J("macro mode must be one or all") } }, { "mappings", A{} } });
         auto report = checkReport(u, [] { return false; });
         const auto &analysis = get(report, "analysis");
         A expansions, diagnostics, mappings;
         for (const auto &entry : array(get(analysis, "macros")))
         {
             const auto file = str(entry, "file");
-            if (!file.empty() && file.front() != '<' && normalizedPath(fs::u8path(file)) == normalizedPath(pathOf(u))) expansions.push_back(entry);
+            if (!file.empty() && file.front() != '<' && normalizedPath(fs::u8path(file)) == normalizedPath(pathOf(u)))
+            {
+                auto selected = entry;
+                if (mode == "all" && get(entry, "expandedTree").asObject()) selected["tree"] = get(entry, "expandedTree");
+                if (auto fields = selected.asObject()) fields->erase("expandedTree");
+                expansions.push_back(std::move(selected));
+            }
+        }
+        if (get(params, "position").asObject())
+        {
+            const auto &position = get(params, "position");
+            const int line = integer(get(position, "line"), -1) + 1;
+            const auto cursor = offsetAt(s, position);
+            const auto newline = cursor ? s.rfind('\n', cursor - 1) : std::string::npos;
+            const int column = static_cast<int>(cursor - (newline == std::string::npos ? 0 : newline + 1)) + 1;
+            int best = -1;
+            for (const auto &entry : expansions)
+                if (integer(get(entry, "line")) == line && integer(get(entry, "column")) <= column)
+                    best = std::max(best, integer(get(entry, "column")));
+            A selected;
+            for (const auto &entry : expansions)
+                if (integer(get(entry, "line")) == line && integer(get(entry, "column")) == best) selected.push_back(entry);
+            expansions = std::move(selected);
         }
         for (const auto &entry : array(get(report, "diagnostics")))
             if (str(entry, "severity") == "error") diagnostics.push_back(str(entry, "message"));
-        const auto text = object({ { "format", "hygienic-ast" }, { "expansions", expansions } }).dump(2);
-        size_t cursor = 0;
+        std::string text = "{\n  \"format\": \"hygienic-ast\",\n  \"mode\": " + J(mode).dump() + ",\n  \"expansions\": [";
+        int expandedLine = 3;
+        bool firstExpansion = true;
         for (const auto &entry : expansions)
         {
-            const auto marker = "\"file\": " + J(str(entry, "file")).dump();
-            const auto at = text.find(marker, cursor);
-            if (at == text.npos) continue;
-            const auto line = static_cast<int>(std::count(text.begin(), text.begin() + at, '\n'));
-            mappings.push_back(object({ { "expandedLine", line }, { "uri", u }, { "sourceLine", std::max(0, integer(get(entry, "line")) - 1) } }));
-            cursor = at + marker.size();
+            if (!firstExpansion) text += ',';
+            firstExpansion = false;
+            text += '\n';
+            ++expandedLine;
+            mappings.push_back(object({ { "expandedLine", expandedLine }, { "uri", u }, { "sourceLine", std::max(0, integer(get(entry, "line")) - 1) } }));
+            const auto body = entry.dump(2);
+            text += "    ";
+            for (const auto ch : body)
+            {
+                text += ch;
+                if (ch == '\n')
+                {
+                    ++expandedLine;
+                    text += "    ";
+                }
+            }
         }
+        text += "\n  ]\n}";
         return object({ { "text", text }, { "format", "json" }, { "diagnostics", diagnostics }, { "mappings", mappings } });
     }
 #include "native_lsp_features.hpp"
@@ -4065,7 +4103,7 @@ class Server
             return inlayHints(s, records, get(params, "range"), get(report, "analysis"), u);
         }
         if (method == "chali/expandMacro")
-            return preview(u, s);
+            return preview(u, s, params);
         if (method == "textDocument/formatting")
         {
             auto output = format(s);

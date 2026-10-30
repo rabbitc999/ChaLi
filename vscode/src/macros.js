@@ -61,16 +61,24 @@ function renderNode(node, depth, language) {
   if (node.value !== undefined && node.value !== null && String(node.value) !== name)
     details.push(`<span class="value">= ${escapeHtml(node.value)}</span>`);
   if (node.type) details.push(`<span class="type">: ${escapeHtml(node.type)}</span>`);
+  if (node.symbol) details.push(`<button class="symbol" data-binding="${escapeHtml(node.symbol)}">${escapeHtml(node.symbol)}</button>`);
+  if (node.parameterCache) details.push(`<span class="type">${escapeHtml(ui(language, '参数缓存', 'parameter cache'))}: ${escapeHtml(node.parameterCache)}</span>`);
+  for (const [key, title] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')]]) {
+    const location = node[key];
+    if (location && typeof location.file === 'string' && location.file && !location.file.startsWith('<') && Number.isInteger(location.line) && location.line > 0 && Number.isInteger(location.column) && location.column > 0)
+      details.push(`<button data-node-location="${escapeHtml(JSON.stringify(location))}">${escapeHtml(title)}</button>`);
+  }
   const origin = node.origin === 'argument' ? 'argument' : 'definition';
   const label = `<span class="kind">${kind}</span>`
     + (name ? `<span class="name">${escapeHtml(name)}</span>` : '')
     + details.join('');
   const children = Array.isArray(node.children)
     ? node.children.filter((child) => child && typeof child === 'object') : [];
-  if (!children.length) return `<div class="leaf ${origin}"><span class="node-card">${label}</span></div>`;
+  const binding = node.symbol ? ` data-binding-node="${escapeHtml(node.symbol)}"` : '';
+  if (!children.length) return `<div class="leaf ${origin}"><span class="node-card"${binding}>${label}</span></div>`;
   const body = children.map((child) => renderNode(child, depth + 1, language)).join('');
   return `<details class="branch ${origin}"${depth < 3 ? ' open' : ''}>`
-    + `<summary>${label}<span class="count">${children.length}</span></summary>`
+    + `<summary${binding}>${label}<span class="count">${children.length}</span></summary>`
     + `<div class="children">${body}</div></details>`;
 }
 
@@ -90,6 +98,8 @@ function pageStyle() {
     font-size: var(--vscode-font-size, 13px); line-height: 1.5;
   }
   figure.macro { margin: 0; }
+  [data-binding-node].binding-selected { outline: 2px solid var(--vscode-focusBorder, #007acc); }
+  button.symbol, button[data-node-location] { font: inherit; color: inherit; background: transparent; border: 1px solid var(--vscode-panel-border, #888); border-radius: 3px; cursor: pointer; }
   figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 12px; }
   figcaption .macro { font-size: 1.35em; font-weight: 600; color: var(--vscode-symbolIcon-functionForeground, #8250df); }
   figcaption .site { color: var(--vscode-descriptionForeground, #57606a); font-size: .92em; }
@@ -303,6 +313,14 @@ ${views}
   document.querySelectorAll('figure.macro').forEach((figure) => {
     const tree = figure.querySelector('.tree');
     const zoom = figure.querySelector('[data-zoom]');
+    figure.querySelectorAll('[data-binding]').forEach((button) => button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      figure.querySelectorAll('[data-binding-node]').forEach((node) => node.classList.toggle('binding-selected', node.dataset.bindingNode === button.dataset.binding));
+    }));
+    figure.querySelectorAll('[data-node-location]').forEach((button) => button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (api) api.postMessage({ type: 'revealNode', index: Number(figure.dataset.index), location: JSON.parse(button.dataset.nodeLocation) });
+    }));
     zoom.addEventListener('input', () => { tree.style.zoom = String(Number(zoom.value) / 100); });
     figure.querySelectorAll('button[data-action]').forEach((button) => button.addEventListener('click', () => {
       if (button.dataset.action === 'fit') {
@@ -330,6 +348,7 @@ function registerMacroPreview(vscode, context, deps) {
   const language = vscode.env?.language || 'zh';
   let panel = null;
   let panelExpansions = [];
+  let panelLocations = new Set();
   let latestRequest = 0;
   let source = null;
   const close = () => {
@@ -337,7 +356,7 @@ function registerMacroPreview(vscode, context, deps) {
     panel = null;
   };
   context.subscriptions.push({ dispose() { close(); source = null; } });
-  context.subscriptions.push(vscode.commands.registerCommand('chali.previewMacroExpansion', async () => {
+  const showPreview = async (mode = 'all', atCursor = false) => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'chali' || editor.document.uri.scheme !== 'file') {
       await vscode.window.showInformationMessage(ui(language, 'ChaLi：请先打开一个 .chl 源文件。', 'ChaLi: Open a .chl source file first.'));
@@ -353,9 +372,12 @@ function registerMacroPreview(vscode, context, deps) {
     try {
       deps.flushDocument(document);
       const version = document.version;
-      const result = await client.request('chali/expandMacro', {
+      const params = {
         textDocument: { uri: document.uri.toString() },
-      });
+        mode,
+      };
+      if (atCursor && editor.selection?.active) params.position = { line: editor.selection.active.line, character: editor.selection.active.character };
+      const result = await client.request('chali/expandMacro', params);
       if (request !== latestRequest) return;
       if (document.version !== version) throw new Error(ui(language, '预览期间源码已更新，请重新展开。', 'The source changed during preview. Expand it again.'));
       if (!result || (result.diagnostics && result.diagnostics.length)) {
@@ -376,12 +398,22 @@ function registerMacroPreview(vscode, context, deps) {
           { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] },
         );
         panel.webview.onDidReceiveMessage(async (message) => {
-          if (!message || message.type !== 'reveal' || !source) return;
+          if (!message || !['reveal', 'revealNode'].includes(message.type) || !source) return;
           const expansion = panelExpansions[message.index];
           if (!Number.isInteger(message.index) || !expansion) return;
-          const open = await vscode.workspace.openTextDocument(source);
+          let target = source;
+          let location = { line: expansion.line, column: expansion.column };
+          if (message.type === 'revealNode') {
+            if (!panelLocations.has(JSON.stringify(message.location))) return;
+            location = message.location;
+            target = vscode.Uri.file(location.file);
+          }
+          const open = await vscode.workspace.openTextDocument(target);
+          const line = Math.max(0, Number(location.line) - 1);
+          let character = Math.max(0, Number(location.column) - 1);
+          if (typeof open.lineAt === 'function') character = Buffer.from(open.lineAt(line).text, 'utf8').subarray(0, character).toString('utf8').length;
           const position = new vscode.Position(
-            Math.max(0, Number(expansion.line) - 1), Math.max(0, Number(expansion.column)));
+            line, character);
           const shown = await vscode.window.showTextDocument(open, { viewColumn: vscode.ViewColumn.One, preview: true });
           if (shown && shown.selection !== undefined) shown.selection = new vscode.Selection(position, position);
           if (shown && shown.revealRange) shown.revealRange(new vscode.Range(position, position));
@@ -391,12 +423,26 @@ function registerMacroPreview(vscode, context, deps) {
         panel.reveal(vscode.ViewColumn.Beside);
       }
       panelExpansions = expansions;
+      panelLocations = new Set();
+      const collectLocations = (node) => {
+        if (!node || typeof node !== 'object') return;
+        for (const key of ['source', 'definition']) {
+          const location = node[key];
+          if (location && typeof location.file === 'string' && location.file && !location.file.startsWith('<') && Number.isInteger(location.line) && location.line > 0 && Number.isInteger(location.column) && location.column > 0)
+            panelLocations.add(JSON.stringify(location));
+        }
+        for (const child of node.children || []) collectLocations(child);
+      };
+      for (const expansion of expansions) collectLocations(expansion.tree);
       panel.title = ui(language, `宏展开（${expansions.length} 处）`, `Macro expansions (${expansions.length})`);
       panel.webview.html = renderTabs(expansions, { language });
     } catch (error) {
       await vscode.window.showErrorMessage(ui(language, `ChaLi：宏展开失败：${error.message}`, `ChaLi: Macro expansion failed: ${error.message}`));
     }
-  }));
+  };
+  context.subscriptions.push(vscode.commands.registerCommand('chali.previewMacroExpansion', () => showPreview()));
+  context.subscriptions.push(vscode.commands.registerCommand('chali.previewMacroExpansionOnce', () => showPreview('one', true)));
+  context.subscriptions.push(vscode.commands.registerCommand('chali.previewMacroExpansionAtCursor', () => showPreview('all', true)));
 }
 
 module.exports = { registerMacroPreview, renderPage, renderTabs, renderNode, parsePayload };

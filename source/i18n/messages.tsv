@@ -30,6 +30,7 @@ I -- Interface（接口 / 运行期多态）：定义一组共同的“契约”
   --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n|  --reflection           Write reflection metadata (default; reflection is not trimmable)\n
   --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n|  --no-reflection        Omit reflection metadata (reflection is not trimmable; still processed)\n
   --diagnostics=json     检查并输出稳定 JSON 诊断\n|  --diagnostics=json     Check and emit structured JSON diagnostics\n
+  --macro-backtrace short\pfull  宏诊断展开栈显示；缺省 full\n|  --macro-backtrace short\pfull  Macro diagnostic frames; default full\n
   test\pfmt\plsp\pdeps      测试、格式化、语言服务与依赖锁定（原生内建）\n|  test\pfmt\plsp\pdeps      Tests, formatting, language service, dependency locks (native)\n
   --emit                 只生成 .quad / .data，不执行\n|  --emit                 Export .quad / .data without executing\n
   --raw                  跳过前处理：源文件原样喂给解析器\n|  --raw                  Skip preprocessing and parse the source directly\n
