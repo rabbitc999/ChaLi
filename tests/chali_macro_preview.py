@@ -137,6 +137,27 @@ void main(){Value v;let total=$SUM<Value>(v);}
             field_nodes = [node for entry in json.loads(field_preview['text'])['expansions'] for node in nodes(entry['tree'])]
             assert any(node.get('field', {}).get('name') == 'number' and node['field']['owner'].endswith('Value') for node in field_nodes), field_nodes
             assert any(node.get('parameterCache') == 'borrow' for node in field_nodes), field_nodes
+            type_source = '''enum Notice{Empty,Value(int64 number)};
+$macro DESCRIBE<T>() -> stmt
+$for variant in $variants<T>()
+println("{}",variant.name);
+$for payload in variant.payloads
+println("{}",payload.type.name);
+$end_for
+$end_for
+$end_macro
+void main(){$DESCRIBE<Notice>();}
+'''
+            type_uri = (work / 'type-metadata.chl').as_uri()
+            server.send(dict(method='textDocument/didOpen', params=dict(textDocument=dict(uri=type_uri, text=type_source, version=1))))
+            for mode in ('one', 'all'):
+                metadata_preview = server.query('chali/expandMacro', dict(textDocument=dict(uri=type_uri), mode=mode))
+                assert not metadata_preview['diagnostics'] and metadata_preview['mappings'], metadata_preview
+                metadata_tree = json.loads(metadata_preview['text'])
+                metadata_nodes = [node for entry in metadata_tree['expansions'] for node in nodes(entry['tree'])]
+                assert any(node.get('kind') == 'string' and node.get('name') == 'Empty' for node in metadata_nodes), metadata_nodes
+                assert any(node.get('kind') == 'string' and node.get('name') == 'int64' for node in metadata_nodes), metadata_nodes
+                assert '__chali_decl_' not in metadata_preview['text'], metadata_preview
         finally:
             server.close()
         assert not path.exists(), 'LSP 不应写入未保存文档'

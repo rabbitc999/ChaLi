@@ -335,6 +335,46 @@ Item macros require explicit type arguments and categorized syntax parameters; r
 
 See [declaration macro tests](../../tests/chali_macro_declarations.py).
 
+## Compile-time enum, method and interface metadata
+
+`$variants<T>()`, `$methods<T>()` and `$interfaces<T>()` query a concrete enum's variants, a type's methods and its direct or inherited base interfaces. The `std::lang` qualified forms are equivalent. Each query requires one explicit, instantiated type argument and accepts no value arguments. Descriptors are read-only compile-time values: they cannot escape into runtime variables, use runtime indices or become callable machine addresses.
+
+| Query or descriptor | Properties |
+| --- | --- |
+| Variant, method or interface collection | `count`, owning type `name` / `id`, constant indexing |
+| Variant | `name`, `index`, `id`, `payloads` |
+| Payload | `name`, `index`, `id`, precise `type` |
+| Method | `name`, `index`, `id`, `declaringType`, `result`, `parameters`, `isStatic`, `isConstructor`, `hasBody`, `isInherited` |
+| Parameter | `name`, `index`, `id`, precise `type`, `isVariadic`, `hasDefault` |
+| Interface | canonical `name`, `index`, `id`, `type`, `isDirect` |
+| Payload or parameter collection | `count`, constant indexing |
+
+Variants and payloads retain declaration order. Empty variants have zero payloads. Methods include source declarations and inherited methods, excluding the compiler-supplied `toString`. Overloads have distinct identities. `declaringType` identifies the original owner; `isInherited` distinguishes inherited implementations. Static named factories such as `create` are both static and constructors. Parameters exclude the implicit receiver. Default expressions are not executed by metadata queries.
+
+Interfaces follow source-order depth-first traversal with first-appearance deduplication. Explicitly listed bases have `isDirect == true`. Querying an interface includes its bases, not itself. Concrete generic arguments remain in type descriptors. Continue through a type's `fields`, `variants`, `methods` or `interfaces` only when the queried type supports that kind of metadata.
+
+```chali
+enum Message { Quit, Text(String text), Move(int64 x, int64 y) };
+$macro PAYLOAD_COUNT<T>() -> expr
+int64 total = 0;
+$for variant in $variants<T>()
+$for payload in variant.payloads
+total += 1;
+$end_for
+$end_for
+total
+$end_macro
+void main()
+{
+    assert($PAYLOAD_COUNT<Message>() == 3);
+    assert(($variants<Message>())[1].payloads[0].type.name == "std::lang::String");
+}
+```
+
+The compile-time loops generate three additions. `$if`, `$compile_assert` and `$compile_error` can inspect each descriptor. Nested sources include `variant.payloads` and `method.parameters`. Write a direct query index as `($variants<T>())[0]` to distinguish it from bracketed macro argument groups. Payloads are not struct fields and cannot be passed to `$member`; inspect enum values with ordinary `match`.
+
+Identities are opaque `uint64` values for the current compilation. They retain concrete type and declaration identity without promising cross-version stability or representing offsets or addresses. See the [type metadata tests](../../tests/chali_macro_type_metadata.py).
+
 ## Compile-time field metadata
 
 `$fields<T>()` queries a concrete ordinary structure in source declaration order, excluding static fields and methods. It does not create a runtime reflection table or require an import of std::reflect. Indices must be nonnegative integer constants. Write `($fields<T>())[index]` to distinguish indexing from a macro's `[]` argument group.

@@ -398,7 +398,101 @@ $count returns capture counts. $compile_assert checks equality during expansion.
 
 $if requires a compile-time condition, such as metadata or a capture count. An ordinary runtime function cannot decide template structure. $match x is ident classifies complete syntax, and $regex x is "[0-9]+" matches complete source text. Neither is the runtime match statement or a runtime regex library.
 
-## 22.12 Reading a Complete Field Example
+## 22.12 Reading Enum Variants and Payloads
+
+Fields describe object data; variants describe an enum's alternatives. Print the declaration structure without creating a Message value.
+
+<!-- verify-book -->
+```chali
+enum Message
+{
+    Quit,
+    Text(String text),
+    Move(int64 x, int64 y)
+};
+$macro DESCRIBE<T>() -> stmt
+$for variant in $variants<T>()
+println("{}: {}", variant.name, variant.payloads.count);
+$for payload in variant.payloads
+println("  {}: {}", payload.name, payload.type.name);
+$end_for
+$end_for
+$end_macro
+void main()
+{
+    $DESCRIBE<Message>();
+}
+```
+
+```text
+Quit: 0
+Text: 1
+  text: std::lang::String
+Move: 2
+  x: int64
+  y: int64
+```
+
+The declaration has three variants. Quit has no payload, Text has one String and Move has two int64 values. Payload names and order come from the declaration.
+
+DESCRIBE obtains descriptors with `$variants<T>()`. The outer compile-time loop emits one output statement for each variant. The inner loop visits that variant's payloads and emits their names and types. Quit has an empty payload collection, so it produces no indented lines.
+
+`payload.type.name` is canonical, hence std::lang::String for text. Generic enums substitute concrete arguments before exposing payload types: a T payload in Box<int16> has type int16. Descriptors do not read an enum object; use ordinary match to inspect a Message value.
+
+main invokes the macro. Iteration happens during compilation; the generated println statements execute at runtime. Variants and payloads expose name, index and id. Variants additionally expose payloads, and payloads expose type. A payload is not a struct field and cannot be passed to `$member`.
+
+## 22.13 Querying Methods and Interfaces
+
+Method metadata describes declared operations; interface metadata describes inherited contracts.
+
+<!-- verify-book -->
+```chali
+interface Base
+{
+    int64 read();
+}
+interface Named: Base
+{
+    String label();
+}
+struct Counter: Named
+{
+    int64 read()
+    {
+        return 7;
+    }
+    String label()
+    {
+        return "counter";
+    }
+}
+void main()
+{
+    println("{}", $methods<Counter>().count);
+    println("{}", ($methods<Counter>())[0].name);
+    println("{}", $interfaces<Counter>().count);
+    println("{}", ($interfaces<Counter>())[0].isDirect);
+    println("{}", ($interfaces<Counter>())[1].isDirect);
+}
+```
+
+```text
+2
+read
+2
+1
+0
+```
+
+Base declares read. Named inherits Base and adds label. Counter implements both methods and therefore satisfies Named and its base.
+
+The first two output statements query methods: the count is 2 and the first source method is read. The parameters collection excludes the implicit receiver; each parameter exposes name, type, hasDefault and isVariadic. Methods also expose result, declaringType, isStatic, isConstructor, hasBody and isInherited. Compiler-supplied toString is excluded.
+
+The remaining statements inspect interfaces. Counter explicitly lists Named and inherits Base through it, so the count is 2. Traversal is source-order depth-first, deduplicating repeated bases. Named is direct and Base is inherited. Boolean output is 1 and 0, as elsewhere in this book.
+
+Use these collections in `$for method in $methods<T>()` or `$for contract in $interfaces<T>()`. A nested `$for parameter in method.parameters` reads parameters. Queries do not create callable machine pointers. Indices must be compile-time nonnegative constants. Collections and descriptors cannot escape into runtime storage; id only distinguishes identities within the current compilation.
+
+## 22.14 Reading a Complete Field Example
 
 [macro_fields.chl](../../../example/reflection/macro_fields.chl) applies these operations to printing, validation and JSON. Read it in four sections:
 
@@ -409,7 +503,7 @@ $if requires a compile-time condition, such as metadata or a capture count. An o
 
 Start with printing and validation before adding encoding. Add a bool field and inspect which statements are generated.
 
-## 22.13 Inspecting Expansions and Diagnosing Errors
+## 22.15 Inspecting Expansions and Diagnosing Errors
 
 In VS Code, use ChaLi's macro expansion preview to inspect one level or the complete expansion. A one-level preview may retain nested macro calls; the complete preview expands them further. Source mappings identify definitions and invocations. Preview output is not a stable source export format.
 
@@ -454,7 +548,7 @@ Prefer a regular function when it expresses the requirement; choose macros for n
 Expansion does not execute arbitrary user runtime logic or legalize invalid borrowing and resource use. Runtime reflection next addresses metadata-based object access, a different mechanism from compile-time syntax generation.
 
 
-## 22.14 Single-Line and Parameterless Macros
+## 22.16 Single-Line and Parameterless Macros
 
 Use $replace for a one-line template. It shares hygienic AST substitution and needs no $end_macro.
 
@@ -476,7 +570,7 @@ void main()
 
 ADD is invoked with parentheses. Its complete addition expression produces 5 before multiplication by 10, so the result is 50. LIMIT has no parameter group and is invoked without parentheses. A definition with an empty () group requires that group at the call. Use $macro and $end_macro for multi-line control structures.
 
-## 22.15 Source Text, Names and Locations
+## 22.17 Source Text, Names and Locations
 
 <!-- verify-book -->
 ```chali
@@ -508,7 +602,7 @@ MAKE concatenates identifier fragments into itemCount, resolving to the global v
 
 $module gives the module name. $file and $line provide source information for diagnostics. Paths vary across machines, so do not freeze a local absolute path as portable expected output. Follow source mappings through nested expansion rather than treating preview line numbers as original source positions.
 
-## 22.16 Selecting Templates by Syntax or Text
+## 22.18 Selecting Templates by Syntax or Text
 
 <!-- verify-book -->
 ```chali
@@ -546,7 +640,7 @@ NUMBER fully matches source spelling with an ECMAScript regular expression. The 
 
 $match supports ident, expr, type, block and stmt, ordered $else is branches and $end_match. $regex ends with $end_regex and matches the entire spelling: abc123 does not match [0-9]+.
 
-## 22.17 Groups and Nested Forwarding
+## 22.19 Groups and Nested Forwarding
 
 Ordered groups preserve their delimiter shapes. For ``$macro ADD[a](b){c}`` with body a + b + c, call `$ADD[1](2){3}`, not $ADD(1, 2, 3). Each group can end with its own variadic parameter; ..rest is a compatibility spelling for ...rest.
 
@@ -579,13 +673,13 @@ Single evaluation for value parameters survives forwarding. Forwarded expr param
 
 $std::lang::assert explicitly qualifies a macro by module. Use visible imported names or qualify them when the source needs to be explicit. Ordinary function calls and macro calls retain their respective call syntax.
 
-## 22.18 Choosing a Form
+## 22.20 Choosing a Form
 
 Start with functions and generics. Choose a macro when repetition concerns syntax positions, declarations or field sets. Decide what each input represents and where the result belongs; encode both decisions in the definition header.
 
 Generated code still undergoes name, type, borrow and resource checks. Start with a field-printing macro before adding serialization rules to a project.
 
-## 22.19 Exercises
+## 22.21 Exercises
 
 1. Compare next call counts with value and expr.
 2. Does changing an unannotated parameter change the caller?

@@ -25,7 +25,7 @@ std::uint64_t MacroMetadataIdentity(const Memory::String &key)
  * @param source 查询的已解析或待实例化类型。
  * @return 不可变字段快照；非法类型或实例化失败时为空。
  */
-std::shared_ptr<const chali_macro::MetadataFields> ReadMacroFields(const std::shared_ptr<const MType> &source)
+std::shared_ptr<const chali_macro::MetadataType> ReadMacroFields(const std::shared_ptr<const MType> &source)
 {
     if (!source) return Fail("字段元数据需要具体类型"), nullptr;
     auto type = Memory::makeShared<MType>(*source);
@@ -47,7 +47,7 @@ std::shared_ptr<const chali_macro::MetadataFields> ReadMacroFields(const std::sh
 
     MReflectionBuilder names;
     names.indexDeclarations();
-    auto result = Memory::makeShared<chali_macro::MetadataFields>();
+    auto result = Memory::makeShared<chali_macro::MetadataType>();
     result->name = names.named(type->name);
     result->identity = MacroMetadataIdentity("macro-type:" + names.key(type));
     result->type = type;
@@ -121,7 +121,58 @@ std::shared_ptr<const chali_macro::MetadataFields> ReadMacroFields(const std::sh
  */
 bool IsMacroMetadataSource(int id)
 {
-    return id >= 0 && N(id).kind == MNode::MacroCall && (N(id).s == "fields" || N(id).s == "std::lang::fields");
+    if (id < 0 || N(id).kind != MNode::MacroCall) return false;
+    const auto &name = N(id).s;
+    return name == "fields" || name == "std::lang::fields" || name == "variants" || name == "std::lang::variants"
+           || name == "methods" || name == "std::lang::methods" || name == "interfaces" || name == "std::lang::interfaces";
+}
+
+#include "macro_type_metadata.cpp"
+
+/**
+ * @brief 获取编译期集合的元素个数及对应描述符类别。
+ * @param value 待遍历的只读集合。
+ * @param count 接收元素数量。
+ * @param element 接收元素类别。
+ * @return 描述符属于支持的集合时返回真。
+ */
+bool MacroMetadataSequence(const chali_macro::MetadataValue &value, std::size_t &count, chali_macro::MetadataValue::Kind &element)
+{
+    using Meta = chali_macro::MetadataValue;
+    if (!value.owner) return false;
+    if (value.kind == Meta::Fields)
+    {
+        count = value.owner->fields.size();
+        element = Meta::Field;
+    }
+    else if (value.kind == Meta::Variants)
+    {
+        count = value.owner->variants.size();
+        element = Meta::Variant;
+    }
+    else if (value.kind == Meta::Payloads)
+    {
+        count = value.owner->variants[value.variant].payloads.size();
+        element = Meta::Payload;
+    }
+    else if (value.kind == Meta::Methods)
+    {
+        count = value.owner->methods.size();
+        element = Meta::Method;
+    }
+    else if (value.kind == Meta::Parameters)
+    {
+        count = value.owner->methods[value.method].parameters.size();
+        element = Meta::Parameter;
+    }
+    else if (value.kind == Meta::Interfaces)
+    {
+        count = value.owner->interfaces.size();
+        element = Meta::Interface;
+    }
+    else
+        return false;
+    return true;
 }
 
 /**
@@ -207,15 +258,24 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
     const auto original = N(id);
     if (IsMacroMetadataSource(id))
     {
+        const auto separator = original.s.rfind("::");
+        const auto name = separator == Memory::String::npos ? original.s : original.s.substr(separator + 2);
+        const bool variants = name == "variants";
+        const bool methods = name == "methods";
+        const bool interfaces = name == "interfaces";
+        const Memory::String query = "$" + name + "<T>()";
         if (original.kids.size() != 2 || N(original.kids[1]).kids.size() != 1)
-            return Fail("$fields<T>() 需要一个显式类型实参");
+            return Fail(query + " 需要一个显式类型实参");
         if (original.kids[0] < 0 || N(original.kids[0]).kids.size() != 1 || !N(N(original.kids[0]).kids[0]).kids.empty())
-            return Fail("$fields<T>() 不接受值实参");
+            return Fail(query + " 不接受值实参");
         const auto type = T(N(N(original.kids[1]).kids[0]).type);
-        auto fields = ReadMacroFields(type);
+        auto fields = variants ? ReadMacroVariants(type) : methods || interfaces ? ReadMacroTypeMembers(type, methods) :
+                                                                                   ReadMacroFields(type);
         if (!fields) return false;
         chali_macro::MetadataValue value;
-        value.kind = chali_macro::MetadataValue::Fields;
+        value.kind = variants ? chali_macro::MetadataValue::Variants : methods ? chali_macro::MetadataValue::Methods :
+                                                                   interfaces  ? chali_macro::MetadataValue::Interfaces :
+                                                                                 chali_macro::MetadataValue::Fields;
         value.owner = fields;
         SetMacroMetadata(id, std::move(value));
         return true;
@@ -235,7 +295,37 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         if (!EvaluateConstant(original.kids[1], &index)) return false;
         if (index.kind != MConstant::Integer || index.integer < 0) return Fail("编译期元数据索引必须为非负整数常量");
         const auto selected = static_cast<std::uint64_t>(index.integer);
-        if (value.kind == Meta::Fields)
+        if (value.kind == Meta::Methods)
+        {
+            if (selected >= value.owner->methods.size()) return Fail("编译期方法索引越界");
+            value.kind = Meta::Method;
+            value.method = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Parameters)
+        {
+            if (selected >= value.owner->methods[value.method].parameters.size()) return Fail("编译期参数索引越界");
+            value.kind = Meta::Parameter;
+            value.parameter = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Interfaces)
+        {
+            if (selected >= value.owner->interfaces.size()) return Fail("编译期接口索引越界");
+            value.kind = Meta::Interface;
+            value.interfaceIndex = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Variants)
+        {
+            if (selected >= value.owner->variants.size()) return Fail("编译期变体索引越界");
+            value.kind = Meta::Variant;
+            value.variant = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Payloads)
+        {
+            if (selected >= value.owner->variants[value.variant].payloads.size()) return Fail("编译期载荷索引越界");
+            value.kind = Meta::Payload;
+            value.payload = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Fields)
         {
             if (selected >= fields.size()) return Fail("编译期字段索引越界");
             value.kind = Meta::Field;
@@ -259,6 +349,147 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         return true;
     }
     const auto &property = original.s;
+    if (value.kind == Meta::Variants || value.kind == Meta::Payloads || value.kind == Meta::Methods
+        || value.kind == Meta::Parameters || value.kind == Meta::Interfaces)
+    {
+        std::size_t count = 0;
+        Meta::Kind element;
+        if (property == "count" && MacroMetadataSequence(value, count, element))
+            SetMacroMetadataInteger(id, count);
+        else if (property == "name")
+            SetMacroMetadataString(id, value.owner->name);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, value.owner->identity, true);
+        else
+            return Fail("元数据集合没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::Method)
+    {
+        const auto &method = value.owner->methods[value.method];
+        if (property == "name")
+            SetMacroMetadataString(id, method.name);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, method.identity, true);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, method.index);
+        else if (property == "declaringType")
+            SetMacroMetadataString(id, method.declaringType);
+        else if (property == "result")
+        {
+            value.kind = Meta::Type;
+            value.type = method.result;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "parameters")
+        {
+            value.kind = Meta::Parameters;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "isStatic" || property == "isConstructor" || property == "hasBody" || property == "isInherited")
+        {
+            const bool flag = property == "isStatic" ? method.isStatic : property == "isConstructor" ? method.isConstructor :
+                                                                     property == "hasBody"           ? method.hasBody :
+                                                                                                       method.inherited;
+            SetMacroMetadataInteger(id, flag);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
+        else
+            return Fail("方法没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::Interface)
+    {
+        const auto &item = value.owner->interfaces[value.interfaceIndex];
+        if (property == "name")
+        {
+            MReflectionBuilder names;
+            names.indexDeclarations();
+            SetMacroMetadataString(id, names.named(item.type->name));
+        }
+        else if (property == "id")
+            SetMacroMetadataInteger(id, item.identity, true);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, item.index);
+        else if (property == "type")
+        {
+            value.kind = Meta::Type;
+            value.type = item.type;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "isDirect")
+        {
+            SetMacroMetadataInteger(id, item.direct);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
+        else
+            return Fail("接口没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::Parameter)
+    {
+        const auto &parameter = value.owner->methods[value.method].parameters[value.parameter];
+        if (property == "name")
+            SetMacroMetadataString(id, parameter.name);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, parameter.identity, true);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, parameter.index);
+        else if (property == "type")
+        {
+            value.kind = Meta::Type;
+            value.type = parameter.type;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "isVariadic" || property == "hasDefault")
+        {
+            SetMacroMetadataInteger(id, property == "isVariadic" ? parameter.variadic : parameter.hasDefault);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
+        else
+            return Fail("参数没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::Variant)
+    {
+        const auto &variant = value.owner->variants[value.variant];
+        if (property == "name")
+            SetMacroMetadataString(id, variant.name);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, variant.index);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, variant.identity, true);
+        else if (property == "payloads")
+        {
+            value.kind = Meta::Payloads;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else
+            return Fail("变体没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::Payload)
+    {
+        const auto &payload = value.owner->variants[value.variant].payloads[value.payload];
+        if (property == "name")
+            SetMacroMetadataString(id, payload.name);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, payload.index);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, payload.identity, true);
+        else if (property == "type")
+        {
+            value.kind = Meta::Type;
+            value.type = payload.type;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else
+            return Fail("载荷没有此编译期属性：" + property);
+        return true;
+    }
     if (value.kind == Meta::Fields)
     {
         if (property == "count")
@@ -309,6 +540,20 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
             value.owner = ReadMacroFields(value.type);
             if (!value.owner) return false;
             value.kind = Meta::Fields;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "variants")
+        {
+            value.owner = ReadMacroVariants(value.type);
+            if (!value.owner) return false;
+            value.kind = Meta::Variants;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "methods" || property == "interfaces")
+        {
+            value.owner = ReadMacroTypeMembers(value.type, property == "methods");
+            if (!value.owner) return false;
+            value.kind = property == "methods" ? Meta::Methods : Meta::Interfaces;
             SetMacroMetadata(id, std::move(value));
         }
         else

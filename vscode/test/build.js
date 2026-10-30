@@ -63,7 +63,8 @@ async function main() {
     await commands.get('chali.buildExe')(uri(source));
     assert.equal(errors.length, 1);
     assert.equal(messages.filter((s) => s.includes('构建完成')).length, successes);
-    assert.ok(logs.join('\n').includes('missing_symbol'));
+    // append 接收任意管道分块，不能在块间插入换行拆开诊断中的标识符。
+    assert.ok(logs.join('').includes('missing_symbol'), logs.join(''));
     const count = logs.length;
     vscode.workspace.isTrusted = false;
     await commands.get('chali.buildExe')(uri(source));

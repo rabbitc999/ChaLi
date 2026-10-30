@@ -417,6 +417,12 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
             continue;
         }
         const int call = statement.kids[0];
+        if (N(call).s == "member")
+        {
+            if (!PrepareMacroMember(call)) return false;
+            statements.push_back(child);
+            continue;
+        }
         if (IsMacroMetadataSource(call) || IsMacroCompileDiagnostic(call))
         {
             statements.push_back(child);

@@ -31,6 +31,9 @@ def main():
                 assert any(item["label"].endswith("external") for item in items), (suffix, items)
                 assert not any(item["label"] in {"variable", "ordinary", "main", "int64"} for item in items), items
                 assert all(not item.get("insertText", "").startswith("$$") for item in items), items
+                if suffix == "$":
+                    for builtin in ["$variants", "$methods", "$interfaces"]:
+                        assert any(item["label"].startswith(builtin) for item in items), (builtin, items)
             text = '$macro Update(mut &target, &source)\ntarget=source;\n$end_macro\nvoid main(){ $'
             uri = (folder / 'reference-parameters.chl').as_uri()
             server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})

@@ -4314,6 +4314,18 @@ class Server
                 return true;
             };
             std::set<std::string> ownerTypes;
+            if (macroCompletion && !member && (!qualifiedName || receiver == "std::lang"))
+            {
+                for (const auto *builtin : { "fields", "variants", "methods", "interfaces" })
+                {
+                    const std::string plain = builtin;
+                    out.push_back(object({ { "label", "$" + plain },
+                                           { "insertText", (starts(name, "$") ? "" : "$") + plain },
+                                           { "kind", 3 },
+                                           { "detail", "$" + plain + "<T>()" },
+                                           { "documentation", markup("具体类型的编译期只读元数据；仅接受一个显式类型实参") } }));
+                }
+            }
             for (auto &r : records)
             {
                 if (macroCompletion && r.kind != "macro") continue;

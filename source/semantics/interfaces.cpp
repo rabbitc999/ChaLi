@@ -154,6 +154,7 @@ bool AddInterfaceDefaults(const Memory::String &owner, MStructDef &definition)
         method.params = required.bodyParams;
         method.bodyId = required.bodyId;
         method.module = required.module;
+        method.declarationOwner = required.owner;
         definition.methods.push_back(std::move(method));
     }
     return true;
@@ -199,6 +200,7 @@ bool AddDefaultToString(const Memory::String &owner, MStructDef &definition, con
             call = M_CallOn(M_Var(M_Name("__chali_default_to_string")), M_List1(self));
         MMethod method;
         method.source = "toString";
+        method.implicitDeclaration = true;
         method.defaultValueText = !conversion && !formatted;
         method.result = T(M_TypeString());
         method.bodyId = M_Block(M_List1(M_Return(call)));
@@ -892,8 +894,7 @@ bool FindOperator(const Memory::String &op, const std::shared_ptr<MType> &left,
     /* ② 交换律：`a + b` 里只有 b 那侧的类型实现了 `Add` 时，等价于 `b + a`
      * （`+ * == != & | ^` 才走这步，减法 / 除法 / 比较 / 移位不交换）。
      * 接收者用 `#No<接口>Replace` 关掉了这条接口的推导时不再换边。 */
-    if (OperatorIsSymmetric(op) && rightDirectionOpen &&
-        !(binary != nullptr && OperatorReplaceForbidden(right, *binary)))
+    if (OperatorIsSymmetric(op) && rightDirectionOpen && !(binary != nullptr && OperatorReplaceForbidden(right, *binary)))
     {
         const Outcome swapped = search(op, true, false);
         if (swapped == Outcome::Found) return true;

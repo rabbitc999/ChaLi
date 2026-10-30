@@ -47,7 +47,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
     }
     const auto node = nodes_[definition];
     const auto key = std::make_pair(std::string(node.module.data(), node.module.size()), std::string(node.s.data(), node.s.size()));
-    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "member" || key.second == "count" || key.second == "compile_error" || key.second == "compile_assert")
+    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "variants" || key.second == "methods" || key.second == "interfaces" || key.second == "member" || key.second == "count" || key.second == "compile_error" || key.second == "compile_assert")
     {
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;
@@ -404,7 +404,17 @@ int Registry::instantiate(int call, std::string &error,
         AstSubstitution copy(nodes_, remainingNodes_, types_);
         preparedDefinition = copy.instantiate(entry.declaration, {}, resolver_.createExpansion(entry.scope, entry.context), error);
         if (preparedDefinition < 0) return -1;
-        if (entry.generic && (!applyTypes || !applyTypes(preparedDefinition, types, error))) return -1;
+        auto preparationTypes = types;
+        // 显式 type 片段在字段／变体循环准备前绑定；普通值实参仍留待运行期求值。
+        for (std::size_t index = 0; index < entry.names.size(); ++index)
+        {
+            if (entry.categories[index] != "type") continue;
+            const auto argument = nodes_[inputs.at(entry.names[index])];
+            if (argument.kind != MNode::MacroArgument || argument.kids.size() != FragmentAlternativeCount || argument.kids[2] < 0) continue;
+            const int type = nodes_[argument.kids[2]].type;
+            if (type >= 0) preparationTypes.emplace(entry.names[index], type);
+        }
+        if (!preparationTypes.empty() && (!applyTypes || !applyTypes(preparedDefinition, preparationTypes, error))) return -1;
         if (!prepare_(nodes_[preparedDefinition].kids[1], inputs, error)) return -1;
     }
     TemplateBinding binder(nodes_, resolver_, types_);
@@ -610,8 +620,7 @@ int Registry::instantiate(int call, std::string &error,
         nodes_[expanded].s2 = nodes_[entry.declaration].s2;
         const auto &result = nodes_[expanded];
         const auto &items = nodes_[result.kids[0]].kids;
-        if ((result.s2 == "stmt" && result.kids[1] >= 0) ||
-            (result.s2 == "expr" && result.kids[1] < 0 && !(items.size() == 1 && (nodes_[items[0]].kind == MNode::Block || nodes_[items[0]].kind == MNode::If || nodes_[items[0]].kind == MNode::Switch))))
+        if ((result.s2 == "stmt" && result.kids[1] >= 0) || (result.s2 == "expr" && result.kids[1] < 0 && !(items.size() == 1 && (nodes_[items[0]].kind == MNode::Block || nodes_[items[0]].kind == MNode::If || nodes_[items[0]].kind == MNode::Switch))))
         {
             nodes_.resize(start);
             error = "宏结果与显式类别不匹配";

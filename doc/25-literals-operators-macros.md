@@ -381,6 +381,46 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 
 相关回归见 [声明宏测试](../tests/chali_macro_declarations.py)。
 
+## 编译期枚举、方法与接口元数据
+
+`$variants<T>()`、`$methods<T>()`、`$interfaces<T>()` 分别查询具体枚举的变体、类型的方法和直接／间接基接口。也可使用 `std::lang` 限定名。每次查询需要一个显式类型实参，不接收值实参；泛型须先实例化。结果是编译期只读描述符，不能存入运行期变量、按运行期下标读取或当作机器地址调用。
+
+| 查询／描述符 | 可读属性 |
+| --- | --- |
+| 变体、方法、接口集合 | `count`、所属类型的 `name`／`id`、常量下标 |
+| 变体 | `name`、`index`、`id`、`payloads` |
+| 载荷 | `name`、`index`、`id`、精确 `type` |
+| 方法 | `name`、`index`、`id`、`declaringType`、`result`、`parameters`、`isStatic`、`isConstructor`、`hasBody`、`isInherited` |
+| 参数 | `name`、`index`、`id`、精确 `type`、`isVariadic`、`hasDefault` |
+| 接口 | 规范 `name`、`index`、`id`、`type`、`isDirect` |
+| 载荷／参数集合 | `count`、常量下标 |
+
+变体与载荷按声明顺序排列，无载荷变体的 `payloads.count` 为零。方法列出源声明与继承所得的方法，排除编译器自动补入的 `toString`；重载具有不同身份。`declaringType` 标识原声明所在类型，`isInherited` 区分继承实现。静态 `create` 等具名工厂同时是 `isStatic` 与 `isConstructor`。参数不包含隐式接收者，默认参数只暴露是否存在，不执行默认表达式。
+
+接口按源码基接口顺序深度优先读取，首次出现时确定顺序，菱形继承去重；显式列出的基接口具有 `isDirect == true`。查询接口本身时，集合包含它的基接口，不包含自身。具体泛型实参保留在类型描述符中。类型描述符可继续读取 `fields`、`variants`、`methods`、`interfaces`，但查询对象仍须符合相应种类。
+
+```chali
+enum Message { Quit, Text(String text), Move(int64 x, int64 y) };
+$macro PAYLOAD_COUNT<T>() -> expr
+int64 total = 0;
+$for variant in $variants<T>()
+$for payload in variant.payloads
+total += 1;
+$end_for
+$end_for
+total
+$end_macro
+void main()
+{
+    assert($PAYLOAD_COUNT<Message>() == 3);
+    assert(($variants<Message>())[1].payloads[0].type.name == "std::lang::String");
+}
+```
+
+`$for` 在编译时生成三条累加语句；`$if`、`$compile_assert` 与 `$compile_error` 可以读取当前变体、载荷、方法或参数属性。嵌套集合可写成 `variant.payloads`、`method.parameters`，也可使用常量下标。直接查询后的下标写成 `($variants<T>())[0]`，避免与宏的方括号参数组混淆。载荷并非结构体字段，不能传给 `$member`；访问枚举值仍使用普通 `match`。
+
+身份是当前编译中的不透明 `uint64`，保留具体类型与声明身份，不承诺跨版本稳定，不表示布局、偏移或地址。回归见 [类型元数据测试](../tests/chali_macro_type_metadata.py)。
+
 ## 编译期字段元数据
 
 `$fields<T>()` 查询具体普通结构体的字段，按源码声明顺序排列，排除 static 字段和方法。查询不会建立运行期反射表，也不要求导入 std::reflect。下标需要非负整数常量；为区分宏的 `[]` 实参组，字段下标写成 `($fields<T>())[index]`。

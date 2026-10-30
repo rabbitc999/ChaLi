@@ -188,8 +188,28 @@ bool PrepareMacroDiagnostic(int id, const std::function<bool(int)> &normalize,
     error += message;
     for (const auto &field : fields)
     {
-        const auto &name = field.owner->fields[field.field].name;
-        error += "\n  字段 " + std::string(field.owner->name.data(), field.owner->name.size()) + "." + std::string(name.data(), name.size()) + "（序号 " + std::to_string(field.field) + "）";
+        using Meta = chali_macro::MetadataValue;
+        const bool variant = field.kind == Meta::Variant;
+        const bool payload = field.kind == Meta::Payload;
+        const bool method = field.kind == Meta::Method;
+        const bool parameter = field.kind == Meta::Parameter;
+        const bool interfaceItem = field.kind == Meta::Interface;
+        const auto &name = variant ? field.owner->variants[field.variant].name : payload   ? field.owner->variants[field.variant].payloads[field.payload].name :
+                                                                             method        ? field.owner->methods[field.method].name :
+                                                                             parameter     ? field.owner->methods[field.method].parameters[field.parameter].name :
+                                                                             interfaceItem ? field.owner->interfaces[field.interfaceIndex].type->name :
+                                                                                             field.owner->fields[field.field].name;
+        const auto index = variant ? field.variant : payload   ? field.payload :
+                                                 method        ? field.method :
+                                                 parameter     ? field.parameter :
+                                                 interfaceItem ? field.interfaceIndex :
+                                                                 field.field;
+        error += std::string("\n  ") + (variant ? "变体 " : payload   ? "载荷 " :
+                                                        method        ? "方法 " :
+                                                        parameter     ? "参数 " :
+                                                        interfaceItem ? "接口 " :
+                                                                        "字段 ")
+                 + std::string(field.owner->name.data(), field.owner->name.size()) + "." + std::string(name.data(), name.size()) + "（序号 " + std::to_string(index) + "）";
     }
     const auto &argument = N(arguments[0]);
     const auto sourceLine = argument.expansionLine ? argument.expansionLine : argument.sourceLine;

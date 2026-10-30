@@ -39,16 +39,57 @@ struct MetadataField
     std::size_t index = 0;
     std::shared_ptr<const MType> type;
     Memory::Vector<MetadataAttribute> attributes;
+    bool variadic = false;
+    bool hasDefault = false;
 };
 /**
- * @brief 已实例化类型的只读字段集合，元素顺序与原声明一致。
+ * @brief 枚举变体的声明身份与按声明顺序保存的精确载荷，不暴露合成存储字段。
  */
-struct MetadataFields
+struct MetadataVariant
+{
+    Memory::String name;
+    std::uint64_t identity = 0;
+    std::size_t index = 0;
+    Memory::Vector<MetadataField> payloads;
+};
+/**
+ * @brief 方法签名与接收者属性，不携带可直接执行的机器地址。
+ */
+struct MetadataMethod
+{
+    Memory::String name;
+    std::uint64_t identity = 0;
+    std::size_t index = 0;
+    std::shared_ptr<const MType> result;
+    Memory::Vector<MetadataField> parameters;
+    bool isStatic = false;
+    bool isConstructor = false;
+    bool hasBody = false;
+    bool inherited = false;
+    Memory::String declaringType;
+};
+/**
+ * @brief 类型实现的一个接口及其直接声明／继承来源。
+ */
+struct MetadataInterface
+{
+    std::shared_ptr<const MType> type;
+    std::uint64_t identity = 0;
+    std::size_t index = 0;
+    bool direct = false;
+};
+/**
+ * @brief 已实例化类型的只读声明快照，集合不包含目标布局或机器地址。
+ */
+struct MetadataType
 {
     Memory::String name;
     std::uint64_t identity = 0;
     std::shared_ptr<const MType> type;
     Memory::Vector<MetadataField> fields;
+    Memory::Vector<MetadataVariant> variants;
+    Memory::Vector<MetadataMethod> methods;
+    Memory::Vector<MetadataInterface> interfaces;
 };
 /**
  * @brief 仅供宏展开和编译期查询使用的有类型描述符，禁止转换为运行期值。
@@ -66,13 +107,28 @@ struct MetadataValue
         Attributes,
         Attribute,
         Arguments,
-        Argument
+        Argument,
+        Variants,
+        Variant,
+        Payloads,
+        Payload,
+        Methods,
+        Method,
+        Parameters,
+        Parameter,
+        Interfaces,
+        Interface
     } kind = Fields;
-    std::shared_ptr<const MetadataFields> owner;
+    std::shared_ptr<const MetadataType> owner;
     std::shared_ptr<const MType> type;
     std::size_t field = 0;
     std::size_t attribute = 0;
     std::size_t argument = 0;
+    std::size_t variant = 0;
+    std::size_t payload = 0;
+    std::size_t method = 0;
+    std::size_t parameter = 0;
+    std::size_t interfaceIndex = 0;
 };
 }  // namespace chali_macro
 #endif

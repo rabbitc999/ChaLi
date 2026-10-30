@@ -870,7 +870,7 @@ macro_member_list := %empty { $$ = M_List(); }
     { M_ListAdd($1, M_IfaceMethod($2, $3, $5, -1)); $$ = $1; }
     | macro_member_list STATIC type name_token LPAREN param_list RPAREN SEMI
     { M_ListAdd($1, M_StaticIfaceMethod($3, $4, $6)); $$ = $1; }
-    | macro_member_list MACRO_FOR name_token IN macro_call MACRO_BODY macro_member_template MACRO_END_FOR
+    | macro_member_list MACRO_FOR name_token IN macro_metadata_source MACRO_BODY macro_member_template MACRO_END_FOR
     { M_ListAdd($1, M_MacroFieldFor($3, $5, $7)); $$ = $1; }
     | macro_member_list MACRO_FOR name_token IN name_token MACRO_BODY macro_member_template MACRO_END_FOR
     { M_ListAdd($1, M_MacroFor($3, $5, $7)); $$ = $1; }
@@ -916,12 +916,18 @@ macro_control := MACRO_MATCH name_token MACRO_IS macro_category MACRO_BODY macro
     { $$ = M_MacroRegex($2, $4, $6, $7); }
     | MACRO_FOR name_token IN name_token MACRO_BODY macro_template MACRO_END_FOR
     { $$ = M_MacroFor($2, $4, $6); }
-    | MACRO_FOR name_token IN macro_call MACRO_BODY macro_template MACRO_END_FOR
+    | MACRO_FOR name_token IN macro_metadata_source MACRO_BODY macro_template MACRO_END_FOR
     { $$ = M_MacroFieldFor($2, $4, $6); }
     | MACRO_FOR LPAREN macro_zip_names RPAREN IN LPAREN macro_zip_names RPAREN MACRO_BODY macro_template MACRO_END_FOR
     { $$ = M_MacroZip($3, $7, $10); }
     | MACRO_IF expr MACRO_BODY macro_template macro_regex_else MACRO_END_IF
     { $$ = M_MacroCompileIf($2, $4, $5); } ;
+/* 只接收编译期查询链；裸名称仍按原有变参重复处理，避免改变旧宏绑定。 */
+macro_metadata_source := macro_call { $$ = $1; }
+    | name_token DOT name_token { $$ = M_Member(M_Var($1), $3); }
+    | macro_metadata_source DOT name_token { $$ = M_Member($1, $3); }
+    | macro_metadata_source LBRACKET expr RBRACKET { $$ = M_Index($1, $3); }
+    | LPAREN macro_metadata_source RPAREN { $$ = $2; } ;
 macro_zip_names := name_token { $$ = M_List1(M_Var($1)); }
     | macro_zip_names COMMA name_token { M_ListAdd($1, M_Var($3)); $$ = $1; } ;
 macro_category := MACRO_EXPR { $$ = $1; } | MACRO_IDENT { $$ = $1; }

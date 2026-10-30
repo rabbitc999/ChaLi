@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--default", action="store_true", help="使用含标准库的默认编译路径")
     options = parser.parse_args()
     compiler = options.chali.resolve()
-    work = ROOT / "build/macro-hygiene"
+    work = ROOT / "tmp/macro-hygiene"
     work.mkdir(parents=True, exist_ok=True)
     cases = [
         ("precedence", "$macro SQUARE(x)\nx * x\n$end_macro\nvoid main() { int32 a = 2; int32 b = 3; int32 result = $SQUARE(a + b); if (result == 25) { return; } let __boom = 1 / (result - result); }", None),

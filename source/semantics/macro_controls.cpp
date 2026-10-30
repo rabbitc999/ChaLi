@@ -179,15 +179,28 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         {
             if (!visit(node.kids[0], depth + 1, true)) return false;
             const auto metadata = N(node.kids[0]).compileMetadata;
-            if (!metadata || metadata->kind != Meta::Fields) return Fail("字段循环来源必须是 $fields<T>()");
+            std::size_t count = 0;
+            Meta::Kind element;
+            if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数或接口集合");
             const auto saved = environment;
             const auto savedLocals = localBindings;
             const int list = M_List();
-            for (std::size_t index = 0; index < metadata->owner->fields.size(); ++index)
+            for (std::size_t index = 0; index < count; ++index)
             {
                 Meta field = *metadata;
-                field.kind = Meta::Field;
-                field.field = index;
+                field.kind = element;
+                if (element == Meta::Field)
+                    field.field = index;
+                else if (element == Meta::Variant)
+                    field.variant = index;
+                else if (element == Meta::Payload)
+                    field.payload = index;
+                else if (element == Meta::Method)
+                    field.method = index;
+                else if (element == Meta::Parameter)
+                    field.parameter = index;
+                else if (element == Meta::Interface)
+                    field.interfaceIndex = index;
                 environment = saved;
                 localBindings = savedLocals;
                 environment[node.s] = field;
