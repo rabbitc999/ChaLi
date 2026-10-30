@@ -22,6 +22,9 @@ Memory::Map<Memory::String, Memory::Set<Memory::String>> nominalTypeNames;
 
 Memory::Set<Memory::String> coreAliasShadows;
 
+/** @brief 类型实参来源模块的直接导入，仅在当前编译会话中使用。 */
+Memory::Map<Memory::String, Memory::Set<Memory::String>> nominalTypeImports;
+
 Memory::Map<Memory::String, Memory::String> constantArguments;
 
 /**
@@ -1098,6 +1101,7 @@ void collectCoreAliasShadows(const Memory::String &source)
     coreAliasShadows.clear();
     nominalTypeNames.clear();
     genericTypeModules.clear();
+    nominalTypeImports.clear();
     Memory::String module;
     for (std::size_t at = 0; at < source.size();)
     {
@@ -1143,6 +1147,14 @@ void collectCoreAliasShadows(const Memory::String &source)
             if (module == "__root") module.clear();
             continue;
         }
+        if (word == "import")
+        {
+            skipSpace(source, at);
+            const auto name = at;
+            while (at < source.size() && (identPart(source[at]) || source[at] == ':')) ++at;
+            nominalTypeImports[module].insert(source.substr(name, at - name));
+            continue;
+        }
         if (word != "struct" && word != "enum" && word != "type" && word != "interface" && word != "opcode") continue;
         skipSpace(source, at);
         const auto name = at;
@@ -1159,9 +1171,11 @@ void collectCoreAliasShadows(const Memory::String &source)
 /**
  * @brief 归一化类型拼写并保留被用户声明遮蔽的内建别名。
  * @param value 待比较或生成实例的类型拼写。
+ * @param module 可选来源模块；为空指针时保留已解析类型的兼容归一规则。
+ * @param error 可选歧义或不可见类型诊断。
  * @return 统一空白、标准库限定名与泛型符号后的类型文本。
  */
-Memory::String canonicalType(Memory::String value)
+Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *module, Memory::String *error)
 {
     value = trim(value);
     /* 引用限定符与 & 之间的空白不参与泛型类型身份。 */
@@ -1194,10 +1208,10 @@ Memory::String canonicalType(Memory::String value)
                         if (index) parameters += ",";
                         const auto &part = parts[index];
                         const bool variadic = part.size() >= 3u && part.compare(part.size() - 3u, 3u, "...") == 0;
-                        parameters += canonicalType(variadic ? part.substr(0, part.size() - 3u) : part);
+                        parameters += canonicalTypeImpl(variadic ? part.substr(0, part.size() - 3u) : part, module, error);
                         if (variadic) parameters += "...";
                     }
-                    return canonicalType(value.substr(0, at)) + " fn(" + parameters + ")";
+                    return canonicalTypeImpl(value.substr(0, at), module, error) + " fn(" + parameters + ")";
                 }
             }
         }
@@ -1206,22 +1220,22 @@ Memory::String canonicalType(Memory::String value)
     for (const Memory::String suffix : { Memory::String(" const&"), Memory::String(" mut&") })
     {
         if (value.size() > suffix.size() && value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0)
-            return canonicalType(value.substr(0, value.size() - suffix.size())) + suffix;
+            return canonicalTypeImpl(value.substr(0, value.size() - suffix.size()), module, error) + suffix;
     }
     if (!value.empty() && value.back() == '&')
-        return canonicalType(value.substr(0, value.size() - 1u)) + " const&";
+        return canonicalTypeImpl(value.substr(0, value.size() - 1u), module, error) + " const&";
     if (value.size() > 2u && value.front() == '(' && value.back() == ')')
     {
         const auto parts = splitTop(value.substr(1, value.size() - 2u));
         if (parts.size() == 1u && (wordAt(trim(parts[0]), 0, "fn") || parts[0].find(" fn(") != Memory::String::npos))
-            return "(" + canonicalType(parts[0]) + ")";
+            return "(" + canonicalTypeImpl(parts[0], module, error) + ")";
         if (parts.size() >= 2u)
         {
             Memory::String tuple = "(";
             for (std::size_t index = 0; index < parts.size(); ++index)
             {
                 if (index) tuple += ",";
-                tuple += canonicalType(parts[index]);
+                tuple += canonicalTypeImpl(parts[index], module, error);
             }
             return tuple + ")";
         }
@@ -1238,6 +1252,22 @@ Memory::String canonicalType(Memory::String value)
         { "String", "std::lang::String" }, { "BigInteger", "std::lang::BigInteger" }, { "BigDecimal", "std::lang::BigDecimal" }, { "File", "std::lang::File" }, { "Process", "std::lang::Process" }, { "Any", "std::lang::Any" }
     };
     const auto implicit = implicitAliases.find(value);
+    const auto scopedNominal = nominalTypeNames.find(value);
+    if (module && scopedNominal != nominalTypeNames.end())
+    {
+        const auto local = module->empty() ? value : *module + "::" + value;
+        if (scopedNominal->second.count(local))
+            return module->empty() && scopedNominal->second.size() > 1u ? "__root::" + value : local;
+        if (scopedNominal->second.count(value)) return "__root::" + value;
+        Memory::Set<Memory::String> imports{ "std::lang" }, candidates;
+        const auto imported = nominalTypeImports.find(*module);
+        if (imported != nominalTypeImports.end()) imports.insert(imported->second.begin(), imported->second.end());
+        for (const auto &owner : imports)
+            if (scopedNominal->second.count(owner + "::" + value)) candidates.insert(owner + "::" + value);
+        if (candidates.size() == 1) return *candidates.begin();
+        if (error) *error = "泛型类型实参 " + value + (candidates.empty() ? " 未在来源模块声明或导入：" : " 在来源模块有歧义，请使用限定名：") + (module->empty() ? "__root" : *module);
+        return value;
+    }
     if (implicit != implicitAliases.end() && !coreAliasShadows.count(value)) return implicit->second;
     for (const auto &container : { Memory::String("List"), Memory::String("Set"), Memory::String("Map") })
     {
@@ -1250,7 +1280,7 @@ Memory::String canonicalType(Memory::String value)
         for (std::size_t index = 0; index < parts.size(); ++index)
         {
             if (index) value += ",";
-            value += canonicalType(parts[index]);
+            value += canonicalTypeImpl(parts[index], module, error);
         }
         return value + ">";
     }
@@ -1283,6 +1313,29 @@ Memory::String canonicalType(Memory::String value)
     if (value.compare(0u, 11u, "std::lang::") == 0u && value.compare(0u, 16u, "std::lang::List<") != 0u && value.compare(0u, 15u, "std::lang::Set<") != 0u && value.compare(0u, 15u, "std::lang::Map<") != 0u && value.find("::", 11u) == Memory::String::npos)
         return value.substr(11u);
     return value;
+}
+
+/**
+ * @brief 归一已经解析的类型拼写，保留原有调用接口。
+ * @param value 类型文本。
+ * @return 不依赖额外作用域的规范文本。
+ */
+Memory::String canonicalType(Memory::String value)
+{
+    return canonicalTypeImpl(std::move(value), nullptr, nullptr);
+}
+
+/**
+ * @brief 归一来源模块中的类型实参，防止其他模块的同名类型捕获它。
+ * @param value 类型文本。
+ * @param module 原始模块。
+ * @param error 歧义或不可见类型诊断。
+ * @return 规范类型文本。
+ */
+Memory::String canonicalTypeInModule(Memory::String value, const Memory::String &module, Memory::String &error)
+{
+    error.clear();
+    return canonicalTypeImpl(std::move(value), &module, &error);
 }
 
 /**
@@ -1434,20 +1487,22 @@ bool checkTypeNesting(const Memory::String &text, Memory::String &error)
  * @param pending 按发现顺序追加待展开的实例名。
  * @param error 失败时接收实参、约束或递归深度诊断。
  * @param depth 当前默认类型展开的递归层数。
+ * @param initialModule 类型片段继承的来源模块。
  * @return 所有泛型使用点可完成实例化时返回 true。
  */
 bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &generics,
              const Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented,
              Memory::Map<Memory::String, Expansion> &made, Memory::Vector<Memory::String> &pending,
-             Memory::String &error, std::size_t depth)
+             Memory::String &error, std::size_t depth, const Memory::String &initialModule)
 {
+    if (depth == 0) error.clear();
     if (depth >= 128u)
     {
         error = "泛型类型嵌套超过 128 层，请检查递归默认类型";
         return false;
     }
     Memory::String output;
-    Memory::String lookupModule;
+    Memory::String lookupModule = initialModule;
     Memory::Map<Memory::String, Memory::String> scopedGenerics;
     for (const auto &entry : generics)
         scopedGenerics[entry.second.module + "::" + (entry.second.sourceName.empty() ? entry.second.name : entry.second.sourceName)] = entry.first;
@@ -1552,11 +1607,14 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             return false;
         }
         Memory::Vector<Memory::String> args = splitTop(text.substr(open + 1, close - open - 1));
-        for (Memory::String &arg : args)
+        for (std::size_t index = 0; index < args.size(); ++index)
         {
+            auto &arg = args[index];
             if (!checkTypeNesting(arg, error)) return false;
-            if (!rewrite(arg, generics, implemented, made, pending, error, depth + 1u)) return false;
-            arg = canonicalType(arg);
+            if (!rewrite(arg, generics, implemented, made, pending, error, depth + 1u, lookupModule)) return false;
+            if (index < generic->second.params.size() && generic->second.params[index].constant) continue;
+            arg = lookupModule.empty() ? canonicalType(arg) : canonicalTypeInModule(arg, lookupModule, error);
+            if (!error.empty()) return false;
         }
         if (name == "Equal" && generic->second.origin.file == "<内建 Equal>" && args.size() == 1u)
             args.insert(args.begin(), Memory::String("bool"));
@@ -1596,8 +1654,9 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             }
             auto fallback = substituteIdentifiers(parameter.fallback, bindings);
             if (!checkTypeNesting(fallback, error)) return false;
-            if (!rewrite(fallback, generics, implemented, made, pending, error, depth + 1u)) return false;
-            fallback = canonicalType(fallback);
+            if (!rewrite(fallback, generics, implemented, made, pending, error, depth + 1u, generic->second.module)) return false;
+            if (!parameter.constant) fallback = generic->second.module.empty() ? canonicalType(fallback) : canonicalTypeInModule(fallback, generic->second.module, error);
+            if (!error.empty()) return false;
             if (!evaluateArgument(args.size(), fallback)) return false;
             bindings[parameter.name] = fallback;
             args.push_back(std::move(fallback));
@@ -1606,7 +1665,7 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         for (const auto &parameter : generic->second.params)
         {
             auto constraint = substituteIdentifiers(parameter.constraint, bindings);
-            if (!constraint.empty() && !rewrite(constraint, generics, implemented, made, pending, error, depth + 1u)) return false;
+            if (!constraint.empty() && !rewrite(constraint, generics, implemented, made, pending, error, depth + 1u, generic->second.module)) return false;
             constraints.push_back(std::move(constraint));
         }
         const Memory::String specialized = mangle(generic->second.name, args);

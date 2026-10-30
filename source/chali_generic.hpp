@@ -210,6 +210,15 @@ void collectCoreAliasShadows(const Memory::String &source);
 Memory::String canonicalType(Memory::String value);
 
 /**
+ * @brief 在类型片段原属模块中解析具名叶子，再归一其复合类型身份。
+ * @param value 原始类型拼写。
+ * @param module 实参或默认类型的定义来源模块。
+ * @param error 失败时接收不可见或歧义类型的诊断。
+ * @return 规范类型文本；错误由调用方检查。
+ */
+Memory::String canonicalTypeInModule(Memory::String value, const Memory::String &module, Memory::String &error);
+
+/**
  * @brief 单态化实例的实际参数、生成名称与已展开接口约束。
  */
 struct Expansion
@@ -270,12 +279,13 @@ bool checkTypeNesting(const Memory::String &text, Memory::String &error);
  * @param pending 按发现顺序追加待展开的实例名。
  * @param error 失败时接收实参、约束或递归深度诊断。
  * @param depth 当前默认类型展开的递归层数。
+ * @param initialModule 类型片段继承的来源模块，完整源码中的 module 声明可更新它。
  * @return 所有泛型使用点可完成实例化时返回 true。
  */
 bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &generics,
              const Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented,
              Memory::Map<Memory::String, Expansion> &made, Memory::Vector<Memory::String> &pending,
-             Memory::String &error, std::size_t depth = 0);
+             Memory::String &error, std::size_t depth = 0, const Memory::String &initialModule = {});
 
 /**
  * @brief 在全部嵌套实例展开后检查约束，包含泛型实例实现的接口及传递继承。

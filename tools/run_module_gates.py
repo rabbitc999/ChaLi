@@ -23,7 +23,7 @@ MODULES = {
     "language": ["chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],
     "borrow": ["chali_borrow_flow", "chali_analysis_diagnostics", "chali_reference_values"],
     "memory": ["chali_type_memory", "chali_resource_lifetime"],
-    "generics": ["chali_generic_monomorphization", "chali_language_move", "chali_tuple_returns"],
+    "generics": ["chali_generic_monomorphization", "chali_generic_scope", "chali_language_move", "chali_tuple_returns"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
     "lsp": ["chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",

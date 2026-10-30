@@ -189,13 +189,47 @@ FromLocal uses T consistently for its parameter, local and result. Instantiating
 
 ## 18.5 Instantiation and validation
 
-Concrete instances give the backend type information but can increase compilation work and artifact size. Test the combinations the application uses; one scalar case does not establish behavior for owned values, references or resources. Chapter 19 covers macro type parameters and #res inference.
+Concrete instances give the backend type information but can increase compilation work and artifact size. Test the combinations the application uses; one scalar case does not establish behavior for owned values, references or resources. Chapter 22 covers macro type parameters and #res inference.
+
+### Where type arguments are resolved
+
+Type names in generic code retain scope. This example deliberately declares a user type named String, then selects the standard string through its qualified name. They remain distinct types when passed to a generic function.
+
+<!-- verify-book -->
+```chali
+struct String
+{
+    int64 code;
+}
+
+T echo<T>(T value)
+{
+    return value;
+}
+
+void main()
+{
+    String token;
+    token.code = 7;
+    String copied = echo<String>(token);
+    std::lang::String label = echo<std::lang::String>("标签");
+    println("{} {}", copied.code, label);
+}
+```
+
+```text
+7 标签
+```
+
+The first declaration creates the current module's String with one integer field. The bare name in `echo<String>` resolves at the call site, selecting that user type. The qualified name in the next call selects the standard string for both parameter and result.
+
+Containers, tuples, references and function types preserve the source of their component types. Defaults resolve at the template definition: `Box<T = String>` keeps that module's String when a caller writes `Box<>`; explicit arguments still come from the caller. Qualify ambiguous names introduced by direct imports. Any remains reserved and cannot be redeclared this way.
 
 ### Summary
 
 Type parameters choose types, constants can determine array shape, constraints permit operations and associated types connect implementation choices to results. These are distinct static relationships rather than interchangeable runtime data.
 
-Instances retain copy, move, borrow and cleanup rules. Substitute the current arguments when diagnosing a template, then inspect the resulting path as ordinary code. Chapter 15 passes varying behavior as function values.
+Instances retain copy, move, borrow and cleanup rules. Substitute the current arguments when diagnosing a template, then inspect the resulting path as ordinary code. Chapter 19 passes varying behavior as function values.
 
 ## 18.6 Named Factories in Generic Structs
 

@@ -124,6 +124,8 @@ void main() {
 
 For example, replace `Pair<int64>` with `Pair<int64, String>`, or explicitly choose `Pair<int64, Any>` when type erasure is required.
 
+Type arguments resolve in the caller's module; defaults and constraints resolve at the template definition. References, tuples, function types and nested containers preserve their component types' sources. When an allowed user name shadows a core type, standard-library templates retain their standard types: `Box<String>` can select a user type, while `Box<std::lang::String>` selects the standard string. Qualify ambiguous imports. Any remains reserved. See the [generic tutorial](../book/en/18-generics.md) for a complete example.
+
 ## New modules
 
 | Module | Initial functionality | Errors and platform boundary |

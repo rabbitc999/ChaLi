@@ -108,5 +108,26 @@ int main()
     require(foundFieldOrigin, "语义期实例化丢失了字段原始行");
     const auto projected = substituteIdentifiers("T\n.\nItem value;", { { "T", "Concrete" } });
     require(std::count(projected.begin(), projected.end(), '\n') == 2, "关联投影替换改变了后续声明的行号");
+    require(expand("module sql_fixture;struct LegacyStatement{};module helper_fixture;struct LegacyBox<T>{T value;};module program;", result, error), error.c_str());
+    generated.clear();
+    require(instantiate("helper_fixture::LegacyBox", { "LegacyStatement" }, generated, error), error.c_str());
+    bool preservedLegacyArgument = false;
+    for (const auto &entry : session.made)
+        if (entry.second.generic->sourceName == "LegacyBox" && entry.second.args[0] == "sql_fixture::LegacyStatement") preservedLegacyArgument = true;
+    require(preservedLegacyArgument, "无来源的既有合成调用未保留已解析裸名的兼容归一");
+    collectCoreAliasShadows("module std::lang;opcode String{};module alpha;struct String{};struct OnlyAlpha{};module program;struct String{};module client;import alpha;");
+    require(canonicalTypeInModule("String", "std::lang", error) == "std::lang::String" && error.empty(), "标准库类型实参被用户同名类型捕获");
+    require(canonicalTypeInModule("String", "program", error) == "program::String" && error.empty(), "用户类型实参被标准别名捕获");
+    require(canonicalTypeInModule("String", "alpha", error) == "alpha::String" && error.empty(), "本模块同名类型未优先绑定");
+    require(canonicalTypeInModule("List<String>", "std::lang", error) == "std::lang::List<std::lang::String>" && error.empty(), "嵌套容器丢失模块来源");
+    require(canonicalTypeInModule("String const &", "std::lang", error) == "std::lang::String const&" && error.empty(), "引用包装丢失模块来源");
+    require(canonicalTypeInModule("(String,int64)", "alpha", error) == "(alpha::String,int64)" && error.empty(), "元组包装丢失模块来源");
+    require(canonicalTypeInModule("String fn(String)", "std::lang", error) == "std::lang::String fn(std::lang::String)" && error.empty(), "函数类型丢失模块来源");
+    require(canonicalTypeInModule("OnlyAlpha", "client", error) == "alpha::OnlyAlpha" && error.empty(), "直接导入类型未绑定");
+    canonicalTypeInModule("String", "client", error);
+    require(error.find("歧义") != Memory::String::npos, "导入同名核心类型未报告歧义");
+    canonicalTypeInModule("OnlyAlpha", "unrelated", error);
+    require(error.find("声明或导入") != Memory::String::npos, "不可见类型被全局唯一名称泄露");
+    require(canonicalTypeInModule("int64", "program", error) == "int64" && error.empty(), "成功调用未清除上一轮错误");
     std::puts("generic monomorphization unit tests OK");
 }
