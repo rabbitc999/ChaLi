@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_ast_macros.py", line 88, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_ast_macros.py", line 73, in main
+    assert result.returncode == 0 and not result.stderr, (name, result.returncode, result.stdout, result.stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('single_update', 1, '', 'chali: G:\\Desktop\\ChaLi\\tmp\\vm-ns8lezf_\\single_update.chl 第 4 行第 1 列：调用了没定义的函数：assert\n 4 | void main() { int32 a = 0; int32 result = $TWICE(++a); assert(a == 1 && result == 2); }\n   | ~~~~\n')

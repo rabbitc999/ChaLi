@@ -1,0 +1,198 @@
+{
+  "jobs": 2,
+  "seconds": 958.718,
+  "results": [
+    {
+      "title": "命令行产物清理与旧选项回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_tool.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 26.343,
+      "log": "tmp\\precompiled-compat-logs\\001.log",
+      "index": 1
+    },
+    {
+      "title": "内嵌资产生成缓存回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/embedded_asset_cache.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 4.094,
+      "log": "tmp\\precompiled-compat-logs\\002.log",
+      "index": 2
+    },
+    {
+      "title": "宏基础与生成解析器全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/macro_foundations.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 52.438,
+      "log": "tmp\\precompiled-compat-logs\\003.log",
+      "index": 3
+    },
+    {
+      "title": "表达式宏全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_ast_macros.py"
+      ],
+      "parallel": false,
+      "exit_code": 1,
+      "seconds": 5.156,
+      "log": "tmp\\precompiled-compat-logs\\004.log",
+      "index": 4
+    },
+    {
+      "title": "宏参数全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_macro_parameters.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 14.437,
+      "log": "tmp\\precompiled-compat-logs\\005.log",
+      "index": 5
+    },
+    {
+      "title": "接口值与传播全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_interface_values.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 66.235,
+      "log": "tmp\\precompiled-compat-logs\\006.log",
+      "index": 6
+    },
+    {
+      "title": "泛型单态化全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_generic_monomorphization.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 36.125,
+      "log": "tmp\\precompiled-compat-logs\\007.log",
+      "index": 7
+    },
+    {
+      "title": "标准错误接口全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_std_errors.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 155.656,
+      "log": "tmp\\precompiled-compat-logs\\008.log",
+      "index": 8
+    },
+    {
+      "title": "宏补全全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_lsp_macro_completion.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 1.672,
+      "log": "tmp\\precompiled-compat-logs\\009.log",
+      "index": 9
+    },
+    {
+      "title": "LSP共享语义与安全重构全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_lsp_semantic_features.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 19.75,
+      "log": "tmp\\precompiled-compat-logs\\010.log",
+      "index": 10
+    },
+    {
+      "title": "独立生成编译器全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_generator.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 479.328,
+      "log": "tmp\\precompiled-compat-logs\\011.log",
+      "index": 11
+    },
+    {
+      "title": "跨模块抽样：C ABI结构与缓冲区",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_abi_values.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 45.031,
+      "log": "tmp\\precompiled-compat-logs\\012.log",
+      "index": 12
+    },
+    {
+      "title": "跨模块抽样：else if",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_else_if.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 7.203,
+      "log": "tmp\\precompiled-compat-logs\\013.log",
+      "index": 13
+    },
+    {
+      "title": "跨模块抽样：原生同步回调",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_native_callbacks.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 14.641,
+      "log": "tmp\\precompiled-compat-logs\\014.log",
+      "index": 14
+    },
+    {
+      "title": "中英文命令与诊断全部回归",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tests/chali_i18n.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 30.031,
+      "log": "tmp\\precompiled-compat-logs\\015.log",
+      "index": 15
+    },
+    {
+      "title": "工具链文档链接检查",
+      "command": [
+        "G:\\Python312\\python.exe",
+        "tools/check_doc_links.py"
+      ],
+      "parallel": false,
+      "exit_code": 0,
+      "seconds": 0.578,
+      "log": "tmp\\precompiled-compat-logs\\016.log",
+      "index": 16
+    }
+  ]
+}

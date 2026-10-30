@@ -1,0 +1,10 @@
+{
+  "source_commit": "9e61028ff119106953c7f1936b3d5fb9a6d46508",
+  "working_tree": "",
+  "compiler_sha256": "917ecb62ecd56c44a0c933c39ef5a19097c76ba6dc95fa0ae753f00b79c68ddf",
+  "build_info": "{\"version\":\"1.0.11\",\"llvm\":\"external\",\"execution\":\"aot\",\"vm\":false,\"svmb\":false}\n",
+  "core_binary_header": [
+    "// 由 tools/build_stdlib_units.py 生成；从原始标准库维护。",
+    "// 二进制 SHA256: d3dae49ca036acd70eb6cc15ba67204bdaa7f5b656be27131486c4175e595574"
+  ]
+}

@@ -1,4 +1,4 @@
-"""通过真实编译器和 VM 验证 AST 表达式宏的阶段性语义接入。"""
+"""通过真实编译器和原生执行验证 AST 表达式宏语义。"""
 from compiler_path import compiler_path
 import os
 import argparse
@@ -31,7 +31,7 @@ def main():
         ("unknown", "void main() { let __boom = $MISSING; }", "未定义宏"),
         ("recursive", "$macro RECURSE(x)\n$RECURSE(x)\n$end_macro\nvoid main() { let __boom = $RECURSE(0); }", "预算"),
         ("capture", "$macro VALUE\nhelper\n$end_macro\nvoid main() { int32 helper = 1; let __boom = $VALUE; }", "没声明的变量"),
-        ("single_update", "$macro TWICE(x)\nx + x\n$end_macro\nvoid main() { int32 a = 0; int32 result = $TWICE(++a); assert(a == 1 && result == 2); }", None),
+        ("single_update", "$macro TWICE(x)\nx + x\n$end_macro\nvoid main() { int32 a = 0; int32 result = $TWICE(++a); if (a == 1 && result == 2) { return; } let __boom = 1 / (result - result); }", None),
         ("helper_global", "$macro VALUE\nhelper\n$end_macro\nint64 helper = 7; void main() { int64 helper = 100; int64 result = $VALUE; if (result == 7) { return; } let __boom = 1 / (result - result); }", None),
         ("statement_hygiene", "$macro BUMP(x)\nint64 temp = x; x = temp + 1;\n$end_macro\nvoid main() { int64 temp = 100; int64 value = 1; $BUMP(value); $BUMP(value); if (temp == 100 && value == 1) { return; } let __boom = 1 / (value - value); }", None),
         ("export_identifier", "$macro DECLARE(name, value)\nint64 name = value;\n$end_macro\nvoid main() { $DECLARE(created, 42); if (created == 42) { return; } let __boom = 1 / (created - created); }", None),
@@ -81,7 +81,7 @@ def main():
                     column = at - source.rfind("\n", 0, at)
                     assert f"第 4 行第 {column} 列" in result.stderr, result.stderr
                     assert "展开宏 $VALUE" in result.stderr and "定义于" in result.stderr, result.stderr
-    print(f"AST 表达式宏 VM 接入回归通过：{len(cases)} 项", flush=True)
+    print(f"AST 表达式宏原生执行回归通过：{len(cases)} 项", flush=True)
 
 
 if __name__ == "__main__":
