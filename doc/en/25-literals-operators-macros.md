@@ -191,11 +191,11 @@ void main() {
 }
 ```
 
-This prints `6 100`. Each iteration has distinct declaration identities without an added runtime block. Variadic fragments can be forwarded to another macro or spread in a function argument list. `$for` traverses variadic parameters only. A parameter in a declaration-name position requires a single identifier; that declaration is visible to subsequent caller code. Member selectors and variable references have separate syntax roles.
+This prints `6 100`. Each iteration has distinct declaration identities without an added runtime block. Variadic fragments can be forwarded to another macro or spread in a function argument list. `$for` traverses variadic parameters or statically iterates `$fields<T>()` inside a macro. A parameter in a declaration-name position requires a single identifier; that declaration is visible to subsequent caller code. Member selectors and variable references have separate syntax roles.
 
 ## Explicit parameter categories
 
-Fixed parameters can declare their category explicitly:
+Fixed and variadic parameters can declare their category explicitly:
 
 | Category | Constraint and expansion behavior |
 | --- | --- |
@@ -205,6 +205,7 @@ Fixed parameters can declare their category explicitly:
 | `T: type` | A complete type fragment used in a type position |
 | `body: stmt` | A complete statement fragment used in a statement position |
 | `body: block` | A complete block, following existing statement or block-expression rules |
+| `p: pattern` | A match pattern with payloads or top-level alternatives, accepted only in pattern positions |
 
 Value parameters evaluate in declaration order before the expansion body. Expression fragments evaluate wherever that body places them. An expr fragment used as an assignment target can modify the caller's variable. Unannotated parameters retain their existing role inference and ordinary expression arguments still evaluate once. `&n: value` and `mut &n: value` retain readonly and mutable borrowing; legacy reference declarations remain valid. References cannot use expr or other syntax-fragment categories.
 
@@ -231,7 +232,7 @@ void main() {
 3 2
 ```
 
-Category mismatches are rejected before expansion. Value and expr parameters cannot supply declaration names. Annotated variadic parameters, pattern/item parameters and result categories are not supported yet; declaration macros are still separate pending work.
+Category mismatches are rejected before expansion. Value and expr parameters cannot supply declaration names. Each `...xs: value` argument is evaluated once in source order before the body, including unused arguments; nested repetition and forwarding reuse those values. `...xs: expr` runs at each inserted location. Variadics cannot be references. Unannotated variadics retain their syntax-fragment behavior. `p: pattern` accepts a match pattern, including payloads and top-level `|` alternatives, and can only be inserted into a match pattern position. item is a result category, not a parameter category.
 
 ## Macro type parameters
 
@@ -364,3 +365,54 @@ Annotations retain their existing semantic checks and feature switch; annotated 
 Descriptors cannot be stored in ordinary variables, passed to runtime functions, or converted into runtime objects. Scalar query results use their ordinary language types. The current field entry rejects enums, interfaces, and opcode objects; dynamic indices and layout queries such as `.offset` also fail.
 
 See [field metadata tests](../../tests/chali_macro_metadata.py).
+
+## Pattern parameters and structured repetition
+
+`p: pattern` accepts a complete match pattern. Payload names belong to that branch and are available to a caller-supplied block; free names written in the macro definition retain the definition environment. Top-level `|` alternatives share the branch body and undergo ordinary payload-binding consistency checks. Nested payload positions accept a single pattern. `_` is an unbound wildcard. A pattern cannot supply a runtime expression, type, or declaration name.
+
+```chali
+$macro SELECT(value: value, p: pattern, body: block) -> expr
+match(value) { p => { yield body; } _ => { 0 } }
+$end_macro
+enum Box { Value(int64 value), Empty }
+void main() {
+    Box box = Box::Value(7);
+    assert($SELECT(box, Box::Value(x), { yield x + 1; }) == 8);
+    assert($SELECT(2, 1 | 2, { yield 9; }) == 9);
+}
+```
+
+Synchronize variadic groups with `$for (a, b) in (left, right)` and `$end_for`. Variable and source counts must agree, sources must be visible variadics, and their lengths must match. Empty groups are valid; nested repetitions keep separate lexical identities. `$count(xs)` returns the captured element count for optional fragments selected with `$if`. Function argument and tuple separators come from the corresponding AST lists rather than arbitrary text concatenation.
+
+```chali
+$macro DOT(...left: value)[...right: value] -> expr
+int64 total = 0;
+$for (a, b) in (left, right)
+total += a * b;
+$end_for
+total
+$end_macro
+```
+
+`$DOT(2, 3)[4, 5]` evaluates to 23. Each value argument is evaluated once before the generated body, including unused arguments.
+
+## Field iteration and compile-time conditions
+
+Inside a macro, `$for field in $fields<T>()` generates static code for each field. `$member(object, field)` becomes an ordinary member access and checks the object's concrete type against the descriptor's owner. Normal access, mutation and borrowing rules still apply. Passing `field.type` to a `T: type` parameter preserves the precise field type.
+
+```chali
+$macro SUM_INTEGERS<T>(value: value) -> expr
+int64 total = 0;
+$for field in $fields<T>()
+$if field.type.name == "int64"
+int64 local = $member(value, field);
+total += local;
+$end_if
+$end_for
+total
+$end_macro
+```
+
+`$if condition`, optional `$else`, and `$end_if` require a compile-time bool constant. Conditions can use metadata properties, variadic counts, and constant arguments. String properties support `==` and `!=` after ordinary language escape decoding. Unselected branches do not undergo ordinary name, type, or borrowing checks; generated branches do. No arbitrary user function or host side effect is executed. Each field iteration has distinct local declaration identities. Empty field collections generate no body, and descriptors cannot escape as runtime values.
+
+Regression entry points: [typed variadics](../../tests/chali_macro_variadics.py), [patterns](../../tests/chali_macro_patterns.py), and [field and structured controls](../../tests/chali_macro_controls.py).

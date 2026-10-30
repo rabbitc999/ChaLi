@@ -12,6 +12,15 @@ namespace chali_macro
 Registry::Registry(Memory::Deque<MNode> &nodes, HygieneResolver &resolver, Memory::Vector<std::shared_ptr<MType>> *types) : nodes_(nodes), resolver_(resolver), types_(types) {}
 
 /**
+ * @brief 保存本次编译的受限模板准备器。
+ * @param prepare 在卫生绑定前处理具体元数据和编译期分支的回调。
+ */
+void Registry::setPreparation(std::function<bool(int, const std::map<std::string, int> &, std::string &)> prepare)
+{
+    prepare_ = std::move(prepare);
+}
+
+/**
  * @brief 保存直接导入关系，供宏的定义环境查找使用。
  * @param from 声明所在模块。
  * @param target 被导入模块。
@@ -38,7 +47,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
     }
     const auto node = nodes_[definition];
     const auto key = std::make_pair(std::string(node.module.data(), node.module.size()), std::string(node.s.data(), node.s.size()));
-    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields")
+    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "member" || key.second == "count")
     {
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;
@@ -86,16 +95,16 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
                 entry.names.push_back(std::string(name.data(), name.size()));
                 entry.modes.push_back(std::max(0, nodes_[parameter].type2));
                 const auto category = nodes_[parameter].s2;
-                if (!category.empty() && category != "value" && category != "expr" && category != "ident" && category != "type" && category != "stmt" && category != "block")
+                if (!category.empty() && category != "value" && category != "expr" && category != "ident" && category != "type" && category != "stmt" && category != "block" && category != "pattern")
                 {
                     nodes_.resize(start);
                     error = "不支持的宏形参类别：" + std::string(category.data(), category.size());
                     return false;
                 }
-                if (!category.empty() && (signature.variadic || (entry.modes.back() && category != "value")))
+                if (!category.empty() && entry.modes.back() && category != "value")
                 {
                     nodes_.resize(start);
-                    error = "宏形参类别暂不支持变长参数，引用参数只能标注 value";
+                    error = "引用参数只能标注 value";
                     return false;
                 }
                 if (node.s2 == "item" && (entry.modes.back() || category.empty() || category == "value"))
@@ -209,7 +218,20 @@ int Registry::instantiate(int call, std::string &error,
         return -1;
     }
     const auto &entry = *selected;
-    if (entry.generic && !resolveType) return -2;
+    std::set<int> preparationSeen;
+    std::function<bool(int)> needsPreparation = [&](int id) {
+        if (id < 0 || !preparationSeen.insert(id).second) return false;
+        const auto &syntax = nodes_[id];
+        if (syntax.kind == MNode::MacroFieldFor || syntax.kind == MNode::MacroCompileIf || (syntax.kind == MNode::MacroCall && syntax.s == "count")) return true;
+        for (const int child : syntax.kids)
+            if (needsPreparation(child)) return true;
+        if (needsPreparation(syntax.guard)) return true;
+        const bool indexed = syntax.kind == MNode::Block || syntax.kind == MNode::Case;
+        if (indexed && needsPreparation(static_cast<int>(syntax.i))) return true;
+        return false;
+    };
+    const bool compileTime = needsPreparation(nodes_[entry.declaration].kids[1]);
+    if ((entry.generic || compileTime) && !resolveType) return -2;
     if (nodes_[entry.declaration].s2 == "item")
     {
         std::string chain = name;
@@ -278,25 +300,55 @@ int Registry::instantiate(int call, std::string &error,
             nodes_.push_back(std::move(rest));
         }
     }
+    const auto constrain = [&](int actual, const Memory::String &category) {
+        const auto fragment = nodes_[actual];
+        const int alternative = category == "ident" ? 1 : category == "type" ? 2 :
+                                                      category == "block"    ? 3 :
+                                                      category == "stmt"     ? 4 :
+                                                      category == "pattern"  ? 5 :
+                                                                               0;
+        if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != chali_macro::FragmentAlternativeCount || fragment.kids[alternative] < 0) return -1;
+        auto constrained = fragment;
+        for (std::size_t slot = 0; slot < constrained.kids.size(); ++slot)
+            if (slot != static_cast<std::size_t>(alternative) && !(category == "ident" && slot == 0) && !(category == "block" && (slot == 0 || slot == 4)))
+                constrained.kids[slot] = -1;
+        const int result = static_cast<int>(nodes_.size());
+        nodes_.push_back(std::move(constrained));
+        return result;
+    };
     for (std::size_t index = 0; index < entry.names.size(); ++index)
     {
         const auto &category = entry.categories[index];
         if (category.empty()) continue;
         const int actual = inputs.at(entry.names[index]);
-        const auto &fragment = nodes_[actual];
-        const int alternative = category == "ident" ? 1 : category == "type" ? 2 : category == "block" ? 3 : category == "stmt" ? 4 : 0;
-        if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != 5u || fragment.kids[alternative] < 0)
+        int constrained = -1;
+        if (nodes_[actual].kind == MNode::MacroVariadic)
         {
-            nodes_.resize(start);
+            auto rest = nodes_[actual];
+            bool valid = true;
+            for (auto &argument : rest.kids)
+            {
+                argument = constrain(argument, category);
+                if (argument < 0)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid)
+            {
+                constrained = static_cast<int>(nodes_.size());
+                nodes_.push_back(std::move(rest));
+            }
+        }
+        else
+            constrained = constrain(actual, category);
+        if (constrained < 0)
+        {
             error = "宏实参与形参类别不匹配：" + entry.names[index] + ": " + std::string(category.data(), category.size());
             return -1;
         }
-        auto constrained = fragment;
-        for (std::size_t slot = 0; slot < constrained.kids.size(); ++slot)
-            if (slot != static_cast<std::size_t>(alternative) && !(category == "ident" && slot == 0) && !(category == "block" && (slot == 0 || slot == 4)))
-                constrained.kids[slot] = -1;
-        inputs[entry.names[index]] = static_cast<int>(nodes_.size());
-        nodes_.push_back(std::move(constrained));
+        inputs[entry.names[index]] = constrained;
     }
     ExpansionSite site;
     site.line = node.expansionLine ? node.expansionLine : node.sourceLine;
@@ -313,27 +365,6 @@ int Registry::instantiate(int call, std::string &error,
     frame.kids = { node.macroExpansion };
     site.frame = static_cast<int>(nodes_.size());
     nodes_.push_back(std::move(frame));
-    TemplateBinding binder(nodes_, resolver_, types_);
-    BoundTemplate bound;
-    if (!binder.bind(entry.declaration, entry.scope, bound, error, &inputs, &matcher_))
-    {
-        nodes_.resize(start);
-        return -1;
-    }
-    if (!normalizeTemplate(bound.root, 0, error))
-    {
-        nodes_.resize(start);
-        return -1;
-    }
-    const auto bindingCost = nodes_.size() - start;
-    if (bindingCost >= remainingNodes_)
-    {
-        nodes_.resize(start);
-        error = "宏展开生成的语法节点超过编译预算";
-        return -1;
-    }
-    for (const auto &input : inputs) arguments.emplace(bound.parameters.at(input.first), input.second);
-    arguments.insert(bound.iterations.begin(), bound.iterations.end());
     std::map<std::string, int> types;
     if (entry.generic)
     {
@@ -367,6 +398,36 @@ int Registry::instantiate(int call, std::string &error,
             types.emplace(std::string(generic.s.data(), generic.s.size()), resolved);
         }
     }
+    int preparedDefinition = entry.declaration;
+    if (prepare_ && compileTime)
+    {
+        AstSubstitution copy(nodes_, remainingNodes_, types_);
+        preparedDefinition = copy.instantiate(entry.declaration, {}, resolver_.createExpansion(entry.scope, entry.context), error);
+        if (preparedDefinition < 0) return -1;
+        if (entry.generic && (!applyTypes || !applyTypes(preparedDefinition, types, error))) return -1;
+        if (!prepare_(nodes_[preparedDefinition].kids[1], inputs, error)) return -1;
+    }
+    TemplateBinding binder(nodes_, resolver_, types_);
+    BoundTemplate bound;
+    if (!binder.bind(preparedDefinition, entry.scope, bound, error, &inputs, &matcher_, true, prepare_))
+    {
+        nodes_.resize(start);
+        return -1;
+    }
+    if (!normalizeTemplate(bound.root, 0, error))
+    {
+        nodes_.resize(start);
+        return -1;
+    }
+    const auto bindingCost = nodes_.size() - start;
+    if (bindingCost >= remainingNodes_)
+    {
+        nodes_.resize(start);
+        error = "宏展开生成的语法节点超过编译预算";
+        return -1;
+    }
+    for (const auto &input : inputs) arguments.emplace(bound.parameters.at(input.first), input.second);
+    arguments.insert(bound.iterations.begin(), bound.iterations.end());
     const auto expansion = resolver_.createExpansion(entry.scope, entry.context);
     std::set<BindingId> valueParameters;
     std::set<BindingId> syntaxParameters;
@@ -453,30 +514,20 @@ int Registry::instantiate(int call, std::string &error,
     std::map<BindingId, int> values;
     Memory::Vector<int> initializers;
     const auto parameterScope = resolver_.createScope(entry.scope);
-    for (std::size_t index = 0; types_ && index < entry.names.size(); ++index)
-    {
-        const auto identity = bound.parameters.at(entry.names[index]);
-        const auto &category = entry.categories[index];
-        if (!category.empty() && category != "value") continue;
-        if (category.empty() && !valueParameters.count(identity) && syntaxParameters.count(identity) && !entry.modes[index]) continue;
-        const auto actual = nodes_[inputs.at(entry.names[index])];
-        if (actual.kind != MNode::MacroArgument || actual.kids.size() != 5u || actual.kids[0] < 0) continue;
-        if (category.empty() && !valueParameters.count(identity) && statementParameters.count(identity) && actual.kids[3] >= 0 && nodes_[actual.kids[0]].kind == MNode::Loop && nodes_[actual.kids[0]].s == "block" && !entry.modes[index])
-            continue;
+    const auto cacheValue = [&](const MNode &actual, const std::string &name, int mode) {
         MNode variable;
         variable.kind = MNode::Var;
-        variable.s.assign(entry.names[index].data(), entry.names[index].size());
+        variable.s.assign(name.data(), name.size());
         variable.syntaxContext = expansion;
-        variable.bindingIdentity = resolver_.declare(entry.names[index], parameterScope, expansion);
+        variable.bindingIdentity = resolver_.declare(name, resolver_.createScope(parameterScope), expansion);
         variable.module = module;
         variable.sourceLine = site.line;
         variable.sourceColumn = site.column;
         variable.macroExpansion = site.frame;
         const int reference = static_cast<int>(nodes_.size());
         nodes_.push_back(variable);
-        values[identity] = reference;
         int expression = actual.kids[0];
-        if (entry.modes[index])
+        if (mode)
         {
             auto address = variable;
             address.kind = MNode::Un;
@@ -490,8 +541,8 @@ int Registry::instantiate(int call, std::string &error,
         declaration.kind = MNode::Declare;
         declaration.i = -1;
         declaration.type2 = 0;
-        declaration.s2 = entry.modes[index] == 1 ? "__chali_macro_const_ref" : entry.modes[index] == 2 ? "__chali_macro_mut_ref" :
-                                                                                                         "";
+        declaration.s2 = mode == 1 ? "__chali_macro_const_ref" : mode == 2 ? "__chali_macro_mut_ref" :
+                                                                             "";
         declaration.kids = { expression };
         const int declared = static_cast<int>(nodes_.size());
         nodes_.push_back(std::move(declaration));
@@ -505,8 +556,48 @@ int Registry::instantiate(int call, std::string &error,
         group.kids = { listed };
         initializers.push_back(static_cast<int>(nodes_.size()));
         nodes_.push_back(std::move(group));
+        return reference;
+    };
+    for (std::size_t index = 0; types_ && index < entry.names.size(); ++index)
+    {
+        const auto identity = bound.parameters.at(entry.names[index]);
+        const auto &category = entry.categories[index];
+        if (!category.empty() && category != "value") continue;
+        if (category.empty() && !valueParameters.count(identity) && syntaxParameters.count(identity) && !entry.modes[index]) continue;
+        const auto actual = nodes_[inputs.at(entry.names[index])];
+        if (actual.kind == MNode::MacroVariadic)
+        {
+            if (category != "value") continue;
+            auto cached = actual;
+            std::map<int, int> replacements;
+            for (std::size_t slot = 0; slot < cached.kids.size(); ++slot)
+            {
+                const int source = cached.kids[slot];
+                auto argument = nodes_[source];
+                argument.kids[0] = cacheValue(argument, entry.names[index] + "_" + std::to_string(slot), entry.modes[index]);
+                const int replacement = static_cast<int>(nodes_.size());
+                nodes_.push_back(std::move(argument));
+                cached.kids[slot] = replacement;
+                replacements.emplace(source, replacement);
+            }
+            const int rest = static_cast<int>(nodes_.size());
+            nodes_.push_back(std::move(cached));
+            arguments[identity] = rest;
+            for (const auto &iteration : bound.iterations)
+                if (replacements.count(iteration.second)) arguments[iteration.first] = replacements.at(iteration.second);
+            continue;
+        }
+        if (actual.kind != MNode::MacroArgument || actual.kids.size() != chali_macro::FragmentAlternativeCount || actual.kids[0] < 0) continue;
+        if (category.empty() && !valueParameters.count(identity) && statementParameters.count(identity) && actual.kids[3] >= 0 && nodes_[actual.kids[0]].kind == MNode::Loop && nodes_[actual.kids[0]].s == "block" && !entry.modes[index]) continue;
+        values[identity] = cacheValue(actual, entry.names[index], entry.modes[index]);
     }
-    AstSubstitution substitution(nodes_, remainingNodes_ - bindingCost, types_);
+    const auto preparationCost = nodes_.size() - start;
+    if (preparationCost >= remainingNodes_)
+    {
+        error = "宏展开生成的语法节点超过编译预算";
+        return -1;
+    }
+    AstSubstitution substitution(nodes_, remainingNodes_ - preparationCost, types_);
     const int expanded = substitution.instantiate(bound.root, arguments, expansion, error, site, &values);
     if (expanded >= 0 && entry.generic && (!applyTypes || !applyTypes(expanded, types, error)))
     {

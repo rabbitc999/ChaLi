@@ -1104,6 +1104,9 @@ void ResetState()
     g_parameterReferenceOwners.clear();
     g_pendingParameterStorage.clear();
     g_parameterValueStorage.clear();
+    for (std::size_t index = 0; index < g_nodes.size(); ++index)
+        if (N(static_cast<int>(index)).kind == MNode::MacroCall)
+            CollectMacroArgumentReferenceNames(static_cast<int>(index), g_addressTakenNames);
     for (const auto &node : g_nodes)
         if (node.kind == MNode::Un && node.s == "&" && !node.kids.empty())
         {

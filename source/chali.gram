@@ -29,7 +29,9 @@ program := top_list { M_SetProgram($1); $$ = $1; }
          | MACRO_PARSE_IDENT name_token { $$ = M_Var($2); }
          | MACRO_PARSE_TYPE type { $$ = M_TupleTypeItem($2); }
          | MACRO_PARSE_BLOCK block { $$ = $2; }
-         | MACRO_PARSE_STMT stmt { $$ = $2; } ;
+         | MACRO_PARSE_STMT stmt { $$ = $2; }
+         | MACRO_PARSE_PATTERN match_patterns { $$ = M_MacroPatternFragment($2); }
+         | MACRO_PARSE_PATTERN WILDCARD { $$ = M_MacroPatternFragment(M_List1(M_WildcardPattern())); } ;
 
 top_list := %empty { $$ = M_List(); }
           | top_list top { M_ListAdd($1, $2); $$ = $1; } ;
@@ -751,7 +753,7 @@ interpolated_string := FSTRING LPAREN call_args RPAREN { $$ = M_FString($3); } ;
 /* `move` 已是保留字（`move x` 是移动运算），不再作为标识符名。 */
 name_token := VARIABLE { $$ = $1; } | COPY { $$ = M_KeywordName(3); }
     | MACRO_IS { $$ = $1; } | MACRO_EXPR { $$ = $1; } | MACRO_IDENT { $$ = $1; }
-    | MACRO_BLOCK { $$ = $1; } | MACRO_STMT { $$ = $1; } ;
+    | MACRO_BLOCK { $$ = $1; } | MACRO_STMT { $$ = $1; } | MACRO_PATTERN { $$ = $1; } ;
 lambda_capture := %empty { $$ = 0; }
                 | CONST { $$ = 0; }
                 | MUT { $$ = 1; }
@@ -890,9 +892,17 @@ macro_control := MACRO_MATCH name_token MACRO_IS macro_category MACRO_BODY macro
     | MACRO_REGEX name_token MACRO_IS STRING MACRO_BODY macro_template macro_regex_else MACRO_END_REGEX
     { $$ = M_MacroRegex($2, $4, $6, $7); }
     | MACRO_FOR name_token IN name_token MACRO_BODY macro_template MACRO_END_FOR
-    { $$ = M_MacroFor($2, $4, $6); } ;
+    { $$ = M_MacroFor($2, $4, $6); }
+    | MACRO_FOR name_token IN macro_call MACRO_BODY macro_template MACRO_END_FOR
+    { $$ = M_MacroFieldFor($2, $4, $6); }
+    | MACRO_FOR LPAREN macro_zip_names RPAREN IN LPAREN macro_zip_names RPAREN MACRO_BODY macro_template MACRO_END_FOR
+    { $$ = M_MacroZip($3, $7, $10); }
+    | MACRO_IF expr MACRO_BODY macro_template macro_regex_else MACRO_END_IF
+    { $$ = M_MacroCompileIf($2, $4, $5); } ;
+macro_zip_names := name_token { $$ = M_List1(M_Var($1)); }
+    | macro_zip_names COMMA name_token { M_ListAdd($1, M_Var($3)); $$ = $1; } ;
 macro_category := MACRO_EXPR { $$ = $1; } | MACRO_IDENT { $$ = $1; }
-    | TYPE_KW { $$ = $1; } | MACRO_BLOCK { $$ = $1; } | MACRO_STMT { $$ = $1; } ;
+    | TYPE_KW { $$ = $1; } | MACRO_BLOCK { $$ = $1; } | MACRO_STMT { $$ = $1; } | MACRO_PATTERN { $$ = $1; } ;
 macro_match_tail := %empty { $$ = M_List(); }
     | MACRO_ELSE MACRO_BODY macro_template { $$ = M_List1(M_MacroBranch(-1, $3)); }
     | MACRO_ELSE MACRO_IS macro_category MACRO_BODY macro_template macro_match_tail

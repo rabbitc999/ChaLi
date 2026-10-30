@@ -236,13 +236,16 @@ struct MNode
         MacroMatch,           ///< 编译期语法类别匹配。
         MacroBranch,          ///< 语法匹配的有序候选分支。
         MacroRegex,           ///< 编译期原文正则匹配。
-        MacroArgument,        ///< 同一原始实参的五类完整语法候选，保留原文及位置。
+        MacroArgument,        ///< 同一原始实参的六类完整语法候选，保留原文及位置。
         MacroArgumentGroup,   ///< 一组显式括号实参。
         MacroArguments,       ///< 按书写顺序保存全部括号实参组。
         MacroExpansionFrame,  ///< 保存调用、定义及父展开的只读诊断来源，不进入运行时树。
         MacroVariadic,        ///< 变长实参的原始片段列表，不隐式转换为表达式。
         MacroFor,             ///< 编译期遍历变长片段，逐次绑定循环形参。
         MacroMetadata,        ///< 编译期有类型元数据描述符，禁止作为运行期值。
+        MacroFieldFor,        ///< 遍历具体字段描述符的编译期模板。
+        MacroCompileIf,       ///< 只选取常量条件分支的编译期模板。
+        MacroPatternFragment,  ///< 已解析的 match 模式片段，只能插入模式位置。
     } kind = List;
     std::size_t sourceLine = 0;                         ///< 预处理后语法节点的起始行。
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。

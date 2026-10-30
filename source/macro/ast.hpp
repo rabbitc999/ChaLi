@@ -36,6 +36,30 @@ int M_MacroCategoryParameter(int parameter, int category);
  */
 int M_MacroFor(int variable, int source, int body);
 /**
+ * @brief 构造字段描述符的编译期循环。
+ * @param variable 迭代变量名称。
+ * @param source 字段集合查询表达式。
+ * @param body 每个字段对应的模板。
+ * @return 新节点编号。
+ */
+int M_MacroFieldFor(int variable, int source, int body);
+/**
+ * @brief 构造等长变参组的同步重复。
+ * @param variables 迭代变量列表。
+ * @param sources 变参来源名称列表。
+ * @param body 每组对应的模板。
+ * @return 新节点编号。
+ */
+int M_MacroZip(int variables, int sources, int body);
+/**
+ * @brief 构造编译期常量条件。
+ * @param condition 条件表达式。
+ * @param yes 条件成立时的模板。
+ * @param no 条件不成立时的模板，可省略。
+ * @return 新节点编号。
+ */
+int M_MacroCompileIf(int condition, int yes, int no);
+/**
  * @brief 保存通用类型应用，保持语法分类独立于模板是否声明。
  * @param name 类型名称池编号。
  * @param arguments 类型项节点列表。
@@ -155,4 +179,10 @@ int M_MacroMatch(int parameter, int branches);
  * @return 正则节点。
  */
 int M_MacroRegex(int parameter, int pattern, int body, int otherwise);
+/**
+ * @brief 保存完整 match 模式候选，不把模式当作运行期表达式求值。
+ * @param patterns 有序模式列表，支持单模式与备选标签。
+ * @return 仅供宏替换使用的模式包装节点。
+ */
+int M_MacroPatternFragment(int patterns);
 #endif

@@ -46,8 +46,14 @@ public:
      * @param target 被导入模块。
      */
     void addImport(const std::string &from, const std::string &target);
+    /**
+     * @brief 安装类型替换后、卫生绑定前的受限编译期模板准备器。
+     * @param prepare 处理独立模板及只读实参映射的回调，失败返回假并填写错误。
+     */
+    void setPreparation(std::function<bool(int, const std::map<std::string, int> &, std::string &)> prepare);
 
 private:
+    std::function<bool(int, const std::map<std::string, int> &, std::string &)> prepare_;
     /**
      * @brief 将选中的编译期分支拼入模板，保留表达式尾项及原有作用域。
      * @param root 模板根节点。

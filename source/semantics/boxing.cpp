@@ -4301,7 +4301,7 @@ void AppendCleanupBlock(ast::Function &function)
  */
 class FunctionReferenceStorageScope
 {
-    const Memory::Set<Memory::String> *saved_ = g_functionAddressTakenNames;
+    Memory::Set<Memory::String> *saved_ = g_functionAddressTakenNames;
     Memory::Set<Memory::String> names_;
 
 public:
@@ -4328,6 +4328,11 @@ public:
         std::function<void(int)> visit = [&](int id) {
             if (id < 0 || !exact || !visited.insert(id).second) return;
             const auto &node = N(id);
+            if (node.kind == MNode::MacroCall && !CollectMacroArgumentReferenceNames(id, names_))
+            {
+                exact = false;
+                return;
+            }
             if ((!allowCalls && node.kind == MNode::Call)
                 || node.kind == MNode::Lambda || node.kind == MNode::GenericLambda || node.kind == MNode::FuncDef
                 || node.kind == MNode::Defer || node.kind == MNode::Cast

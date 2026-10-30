@@ -82,6 +82,48 @@ int M_MacroFor(int variable, int source, int body)
 }
 
 /**
+ * @brief 保存字段集合查询与逐字段模板。
+ * @param variable 字段迭代名称。
+ * @param source 编译期集合表达式。
+ * @param body 循环模板。
+ * @return 新节点编号。
+ */
+int M_MacroFieldFor(int variable, int source, int body)
+{
+    const int id = M_New(MNode::MacroFieldFor, g_names[variable]);
+    g_nodes[id].kids = { source, body };
+    return id;
+}
+
+/**
+ * @brief 保存等长同步重复所需的变量与来源名称。
+ * @param variables 迭代变量列表。
+ * @param sources 来源列表。
+ * @param body 重复模板。
+ * @return 新节点编号。
+ */
+int M_MacroZip(int variables, int sources, int body)
+{
+    const int id = M_New(MNode::MacroFor);
+    g_nodes[id].kids = { body, variables, sources };
+    return id;
+}
+
+/**
+ * @brief 保存未选分支尚未检查的编译期条件。
+ * @param condition 常量条件。
+ * @param yes 真分支。
+ * @param no 假分支。
+ * @return 新节点编号。
+ */
+int M_MacroCompileIf(int condition, int yes, int no)
+{
+    const int id = M_New(MNode::MacroCompileIf);
+    g_nodes[id].kids = { condition, yes, no };
+    return id;
+}
+
+/**
  * @brief 保留类型应用结构，不在语法分类时执行模板名称查找或约束检查。
  * @param name 名称池中的类型名称。
  * @param arguments 按顺序保存的类型项。
@@ -361,5 +403,17 @@ int M_MacroResultDefinition(int name, int parameters, int body, int generics, in
             if (declaration.kind != MNode::FuncDef && declaration.kind != MNode::StructDecl && declaration.kind != MNode::EnumDecl && declaration.kind != MNode::InterfaceDecl && declaration.kind != MNode::MacroCall)
                 g_parseDiagnostics.push_back({ "声明宏只能生成函数、结构体、枚举、接口或声明宏调用", declaration.sourceLine, declaration.sourceColumn });
         }
+    return id;
+}
+
+/**
+ * @brief 构造带语法角色的 match 模式片段。
+ * @param patterns 模式列表节点。
+ * @return 包装节点编号；解包和载荷绑定由语义展开完成。
+ */
+int M_MacroPatternFragment(int patterns)
+{
+    const int id = M_New(MNode::MacroPatternFragment);
+    g_nodes[id].kids = { patterns };
     return id;
 }

@@ -3227,6 +3227,8 @@ namespace
 #include "semantics/macro_fragments.cpp"
 #include "semantics/ast_generic_closures.cpp"
 #include "semantics/macro_metadata.cpp"
+#include "semantics/macro_controls.cpp"
+#include "semantics/macro_patterns.cpp"
 #include "semantics/macro_expansion.cpp"
 }  // namespace
 
@@ -3717,7 +3719,7 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
 bool ReadUnitNode(std::istream &in, MNode &node)
 {
     std::uint64_t kind = 0, flags = 0, count = 0;
-    if (!chali_incremental::readNumber(in, kind) || kind > static_cast<std::uint64_t>(MNode::MacroMetadata)) return false;
+    if (!chali_incremental::readNumber(in, kind) || kind > static_cast<std::uint64_t>(MNode::MacroPatternFragment)) return false;
     node = MNode{};
     node.kind = static_cast<MNode::Kind>(kind);
     if (!chali_incremental::readNumber(in, node.sourceLine)) return false;

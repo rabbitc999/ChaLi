@@ -93,7 +93,7 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
             {
                 category = chali_syntax::trim(parameter.substr(categoryAt + 1));
                 parameter = chali_syntax::trim(parameter.substr(0, categoryAt));
-                if (category != "value" && category != "expr" && category != "ident" && category != "type" && category != "stmt" && category != "block")
+                if (category != "value" && category != "expr" && category != "ident" && category != "type" && category != "stmt" && category != "block" && category != "pattern")
                 {
                     error = "不支持的宏形参类别：" + category;
                     return false;
@@ -121,13 +121,16 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
                 error = "宏形参必须是互不重复的标识符，变长形参放在组末尾";
                 return false;
             }
-            if (!category.empty() && (variadic || (!reference.empty() && category != "value")))
+            if (!category.empty() && !reference.empty() && category != "value")
             {
-                error = "宏形参类别暂不支持变长参数，引用参数只能标注 value";
+                error = "引用参数只能标注 value";
                 return false;
             }
             if (variadic)
+            {
                 group.rest = parameter;
+                group.restCategory = category;
+            }
             else
             {
                 group.params.push_back(reference + parameter);

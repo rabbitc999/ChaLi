@@ -36,6 +36,10 @@ int main()
     Memory::String invalid = "$M(1]";
     const auto bad = invalid;
     if (fragments.capture(invalid, error) || error.empty() || invalid != bad) return 13;
+    Memory::String fieldHeader = "$for f in $fields<T>()\n{ use(f); }\n$end_for\n";
+    if (!fragments.capture(fieldHeader, error) || fragments.at(fragments.find(1, 11)).groups.size() != 1) return 19;
+    Memory::String separateGroups = "$M()\n{ value; }";
+    if (!fragments.capture(separateGroups, error) || fragments.at(fragments.find(1, 1)).groups.size() != 2) return 20;
     fragments.clear();
     Memory::String anchored = "$A( a + b ); $A(2)";
     if (!fragments.capture(anchored, error, 1, 1, true)) return 14;

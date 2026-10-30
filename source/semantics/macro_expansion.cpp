@@ -9,6 +9,85 @@
 bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t depth, std::size_t &budget);
 
 /**
+ * @brief 在延迟宏确定引用模式前，为调用实参中的变量保守准备稳定存储。
+ * @param root 宏实参或包含宏调用的语法根。
+ * @param names 接收可能被引用的变量名称。
+ * @return 结构与遍历预算合法时返回真。
+ */
+bool CollectMacroArgumentReferenceNames(int root, Memory::Set<Memory::String> &names)
+{
+    Memory::Set<int> seen;
+    std::size_t budget = 1000000;
+    std::function<bool(int, std::size_t)> visit;
+    visit = [&](int id, std::size_t depth) {
+        if (id < 0 || !seen.insert(id).second) return true;
+        if (depth >= 256 || !budget--) return Fail("延迟宏实参引用分析超过预算");
+        const auto node = N(id);
+        if (node.kind == MNode::Var) names.insert(node.s);
+        if (node.kind == MNode::EnumCtor) names.insert(node.s2);
+        if (node.kind == MNode::MacroCall) return node.kids.empty() || visit(node.kids[0], depth + 1);
+        if (node.kind == MNode::MacroArgument)
+        {
+            for (const int candidate : { 0, 3, 4 })
+                if (node.kids.size() > static_cast<std::size_t>(candidate) && node.kids[candidate] >= 0)
+                    return visit(node.kids[candidate], depth + 1);
+            return true;
+        }
+        for (const int child : node.kids)
+            if (!visit(child, depth + 1)) return false;
+        if (!visit(node.guard, depth + 1)) return false;
+        const bool group = node.kind == MNode::Declare && node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
+        const bool indexed = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::NewPtr || ((node.kind == MNode::Declare || node.kind == MNode::Field) && !group && node.i >= 0);
+        return !indexed || visit(static_cast<int>(node.i), depth + 1);
+    };
+    return visit(root, 0);
+}
+
+/**
+ * @brief 将延迟展开新增的取址与带值退出需求补入当前函数的存储规划。
+ * @param root 已完成语法替换的模板或表达式。
+ * @return 遍历未超过深度与节点预算时返回真。
+ */
+bool PrepareMacroReferenceStorage(int root)
+{
+    Memory::Set<int> seen;
+    std::size_t budget = 1000000;
+    std::function<void(int)> remember = [&](int id) {
+        if (id < 0) return;
+        const auto node = N(id);
+        if (node.kind == MNode::Var || node.kind == MNode::EnumCtor)
+        {
+            const auto name = node.kind == MNode::Var ? node.s : node.s2;
+            g_addressTakenNames.insert(name);
+            if (g_functionAddressTakenNames) g_functionAddressTakenNames->insert(name);
+        }
+        if (node.kind == MNode::Tuple || node.kind == MNode::List)
+            for (const int child : node.kids) remember(child);
+    };
+    std::function<bool(int, std::size_t)> visit;
+    visit = [&](int id, std::size_t depth) {
+        if (id < 0 || !seen.insert(id).second) return true;
+        if (depth >= 256 || !budget--) return Fail("宏新增引用存储分析超过预算");
+        const auto node = N(id);
+        if ((node.kind == MNode::Un && node.s == "&") || (node.kind == MNode::Break && node.type2 != 1))
+            for (const int child : node.kids) remember(child);
+        if (node.kind == MNode::Call && node.kids.size() == 2)
+        {
+            const auto callee = N(node.kids[0]);
+            if (StandardCallName(callee) == "__move") remember(node.kids[1]);
+            if (callee.kind == MNode::Member && !callee.kids.empty() && (callee.s == "iter" || callee.s == "iterMut" || callee.s == "intoIter" || callee.s == "getOption")) remember(callee.kids[0]);
+        }
+        for (const int child : node.kids)
+            if (!visit(child, depth + 1)) return false;
+        if (!visit(node.guard, depth + 1)) return false;
+        const bool group = node.kind == MNode::Declare && node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
+        const bool indexed = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::NewPtr || ((node.kind == MNode::Declare || node.kind == MNode::Field) && !group && node.i >= 0);
+        return !indexed || visit(static_cast<int>(node.i), depth + 1);
+    };
+    return visit(root, 0);
+}
+
+/**
  * @brief 为未完成实例化的调用错误保留定义位置及已有嵌套展开链。
  * @param call 发生错误的宏调用。
  * @param message 注册或替换失败的诊断。
@@ -68,6 +147,7 @@ int AstMacroExpression(int root)
         g_nodes[tailStatements].kids.assign(original.begin() + count, original.end());
         const int tail = M_New(MNode::MacroTemplate);
         g_nodes[tail].kids = { tailStatements, body.kids[1] };
+        g_nodes[tail].s2 = body.s2;
         const int value = AstMacroExpression(tail);
         if (value < 0) return -1;
         const int prefix = M_List();
@@ -77,6 +157,17 @@ int AstMacroExpression(int root)
     }
     const auto &statements = N(body.kids[0]).kids;
     if (statements.empty()) return body.kids[1];
+    if (body.kids[1] >= 0 && body.s2 == "expr")
+    {
+        const int sequence = M_List();
+        g_nodes[sequence].kids = statements;
+        M_ListAdd(sequence, M_Break(body.kids[1]));
+        const int expression = M_BlockValue(M_Block(sequence));
+        g_nodes[expression].syntaxContext = body.syntaxContext;
+        g_nodes[expression].module = body.module;
+        g_nodes[expression].macroExpansion = body.macroExpansion;
+        return expression;
+    }
     if (body.kids[1] >= 0 || statements.size() != 1) return -1;
     const auto source = N(statements[0]);
     const int expression = source.kind == MNode::Block  ? M_BlockValue(statements[0]) :
@@ -336,6 +427,7 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
             continue;
         }
         if (expanded < 0) return ReportAstMacroFailure(call, Memory::String(error.data(), error.size()));
+        if (!NormalizeMacroPatterns(expanded)) return false;
         if (N(expanded).s2 == "item") return ReportAstMacroFailure(call, "声明宏只能在模块声明位置调用");
         RecordEditorMacro(call, expanded);
         const auto body = g_nodes[expanded];
@@ -376,12 +468,13 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
     if (depth >= 256 || budget == 0) return Fail("宏展开超过深度或规模预算"), false;
     --budget;
     auto &node = g_nodes[id];
+    if (node.kind == MNode::MacroCall && node.s == "member" && !PrepareMacroMember(id)) return false;
     if (ExpandAstMacroSource(id)) return true;
     Memory::String textError;
     if (ExpandAstMacroText(id, textError))
         return textError.empty() || ReportAstMacroFailure(id, textError);
     if (node.kind == MNode::MacroDefinition) return true;
-    if (node.kind == MNode::MacroFor || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex)
+    if (node.kind == MNode::MacroFor || node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex)
         return AddDiagnostic("编译期分支与片段循环必须位于宏模板内部", node.sourceLine, node.sourceColumn), false;
     if (node.kind == MNode::List) return ExpandAstMacroStatements(id, registry, depth, budget);
     if (node.kind == MNode::MacroCall)
@@ -392,6 +485,7 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
         const int expanded = registry.instantiate(id, error);
         if (expanded == -2) return true;
         if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+        if (!NormalizeMacroPatterns(expanded)) return false;
         if (N(expanded).s2 == "item" || N(expanded).s2 == "stmt") return ReportAstMacroFailure(id, "该宏结果不能用于表达式位置");
         RecordEditorMacro(id, expanded);
         const int expression = AstMacroExpression(expanded);
@@ -433,6 +527,7 @@ bool ExpandAstMacros()
     g_macroRegistry.reset();
     g_macroResolver = std::make_unique<chali_macro::HygieneResolver>();
     g_macroRegistry = std::make_unique<chali_macro::Registry>(g_nodes, *g_macroResolver, &g_types);
+    g_macroRegistry->setPreparation(PrepareMacroControls);
     auto &registry = *g_macroRegistry;
     for (const int id : g_top)
         if (g_nodes[id].kind == MNode::ImportDecl)
@@ -448,7 +543,7 @@ bool ExpandAstMacros()
                 return AddDiagnostic(Memory::String(error.data(), error.size()), g_nodes[id].sourceLine, g_nodes[id].sourceColumn), false;
         }
     if (!hasDefinitions && std::none_of(g_nodes.begin(), g_nodes.end(), [](const MNode &node) {
-            return node.kind == MNode::MacroCall || node.kind == MNode::MacroFor || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex;
+            return node.kind == MNode::MacroCall || node.kind == MNode::MacroFor || node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex;
         })) return true;
     for (const int id : g_top)
     {
@@ -587,7 +682,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
         else if (argument >= 0)
         {
             const auto &fragment = N(argument);
-            if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != 5 || fragment.kids[0] < 0)
+            if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != chali_macro::FragmentAlternativeCount || fragment.kids[0] < 0)
             {
                 AddDiagnostic("宏泛型的实参推导来源必须是完整表达式", fragment.sourceLine, fragment.sourceColumn);
                 return -1;
@@ -606,6 +701,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
     };
     const int expanded = g_macroRegistry->instantiate(id, error, resolve, ApplyAstMacroTypes);
     if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+    if (!NormalizeMacroPatterns(expanded)) return false;
     if (N(expanded).s2 == "item" || (!templateRoot && N(expanded).s2 == "stmt")) return ReportAstMacroFailure(id, "该宏结果不能用于当前位置");
     RecordEditorMacro(id, expanded);
     if (!activate(expanded)) return false;
@@ -615,6 +711,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
         if (!ExpandAstMacroStatements(N(expanded).kids[0], *g_macroRegistry, 0, budget)) return false;
         if (N(expanded).kids[1] >= 0 && !ExpandAstMacroNode(N(expanded).kids[1], *g_macroRegistry, 0, budget)) return false;
         if (!activate(expanded)) return false;
+        if (!PrepareMacroReferenceStorage(expanded)) return false;
         *templateRoot = expanded;
         return true;
     }
@@ -623,6 +720,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
         return AddDiagnostic("表达式位置的宏必须产生一个表达式；语句模板请在语句位置调用", original.sourceLine, original.sourceColumn), false;
     std::size_t budget = 1000000;
     if (!ExpandAstMacroNode(expression, *g_macroRegistry, 0, budget)) return false;
+    if (!PrepareMacroReferenceStorage(expression)) return false;
     g_nodes[id] = N(expression);
     g_nodes[id].checkedExpression = original.checkedExpression || g_nodes[id].checkedExpression;
     if (!PrepareExpandedMacroLambdas()) return false;

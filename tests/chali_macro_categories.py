@@ -138,7 +138,6 @@ void main(){
         cases.append((name, definitions + 'void main(){' + call + '}', '形参类别不匹配'))
     cases += [
         ('unknown', '$macro BAD(x:mystery)\nx\n$end_macro\nvoid main(){}', '不支持的宏形参类别'),
-        ('variadic', '$macro BAD(...x:expr)\n0\n$end_macro\nvoid main(){}', '暂不支持变长参数'),
         ('reference', '$macro BAD(&x:expr)\nx\n$end_macro\nvoid main(){}', '引用参数只能标注 value'),
         ('readonly', '$macro BAD(&x:value)\nx+=1;\n$end_macro\nvoid main(){int64 x=0;$BAD(x);}', '只读'),
         ('name_value', '$macro BAD(x:value)\nint64 x=1;\n$end_macro\nvoid main(){$BAD(created);}', '标识符'),

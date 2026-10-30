@@ -2,6 +2,7 @@
 #define CHALI_MACRO_AST_SUBSTITUTION_HPP
 #include "allocator/chali_allocator.hpp"
 #include "hygiene.hpp"
+#include "fragments.hpp"
 #include <map>
 #include <string>
 #include <memory>
@@ -77,6 +78,7 @@ private:
     std::size_t start_ = 0;
     ContextId context_ = 0;
     bool preserveVariadicGroups_ = false;
+    bool patternPosition_ = false;  ///< 只有 match 模式结构边允许插入 pattern 片段。
     const std::map<BindingId, int> *arguments_ = nullptr;
     std::map<BindingId, int> names_;
     ExpansionSite site_;

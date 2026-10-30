@@ -21,6 +21,8 @@
 %token MACRO_REGEX "$regex"
 %token MACRO_END_REGEX "$end_regex"
 %token MACRO_FOR "$for"
+%token MACRO_IF "$if"
+%token MACRO_END_IF "$end_if"
 %token MACRO_END_FOR "$end_for"
 %token MACRO_IS "is"
 %token MACRO_RESULT_SOURCE "#res"
@@ -28,11 +30,13 @@
 %token MACRO_IDENT "ident"
 %token MACRO_BLOCK "block"
 %token MACRO_STMT "stmt"
+%token MACRO_PATTERN "pattern"
 %token MACRO_PARSE_EXPR "@!macroparse_expr"
 %token MACRO_PARSE_IDENT "@!macroparse_ident"
 %token MACRO_PARSE_TYPE "@!macroparse_type"
 %token MACRO_PARSE_BLOCK "@!macroparse_block"
 %token MACRO_PARSE_STMT "@!macroparse_stmt"
+%token MACRO_PARSE_PATTERN "@!macroparse_pattern"
 /* 宏调用名：支持限定名（`$std::lang::assert`）—— 名字被同名的函数 / 变量挡住，或者想
  * 明确点名某个模块时用。模块路径怎么切由语义层决定（从最长的模块前缀往下试）。 */
 %token regex MACRO_NAME "\\$[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*(@![0-9]+)?"

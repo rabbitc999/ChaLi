@@ -16,6 +16,7 @@ int main()
     if (!chali_macro::readSignature("$macro Old<T:type>(type)", signature, error) || !signature.result.empty()) return 2;
     if (chali_macro::readSignature("$macro Bad() -> unknown", signature, error) || error.empty()) return 3;
     if (!chali_macro::readSignature("$replace Make(name:ident) -> item int64 name(){return 42;}", signature, error) || signature.result != "item") return 4;
+    if (!chali_macro::readSignature("$macro Values(...xs:value)", signature, error) || signature.groups.size() != 1 || signature.groups[0].rest != "xs" || signature.groups[0].restCategory != "value") return 5;
     std::cout << "macro result signatures passed\n";
     return 0;
 }

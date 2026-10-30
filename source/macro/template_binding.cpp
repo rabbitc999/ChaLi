@@ -21,11 +21,13 @@ TemplateBinding::TemplateBinding(Memory::Deque<MNode> &nodes, HygieneResolver &r
  * @param error 接收错误文本。
  * @param inputs 本次调用的形参到实参映射。
  * @param matcher 共享正则缓存。
+ * @param prepare 已知实参与具体类型后处理元数据控制的回调。
  * @param bindBody 是否处理宏体。
  * @return 成功返回真。
  */
 bool TemplateBinding::bind(int definition, ScopeId definitionScope, BoundTemplate &result, std::string &error,
-                           const std::map<std::string, int> *inputs, RegexMatcher *matcher, bool bindBody)
+                           const std::map<std::string, int> *inputs, RegexMatcher *matcher, bool bindBody,
+                           const std::function<bool(int, const std::map<std::string, int> &, std::string &)> &prepare)
 {
     const auto start = nodes_.size();
     const auto typeStart = types_ ? types_->size() : 0;
@@ -33,11 +35,13 @@ bool TemplateBinding::bind(int definition, ScopeId definitionScope, BoundTemplat
     error.clear();
     parameters_.clear();
     typeDeclarations_.clear();
+    patternParameters_.clear();
     inputs_ = inputs;
     result_ = &result;
     iterationInputs_ = inputs ? *inputs : std::map<std::string, int>{};
     if (inputs) inputs_ = &iterationInputs_;
     matcher_ = matcher;
+    prepare_ = prepare;
     try
     {
         if (definition < 0 || static_cast<std::size_t>(definition) >= start || nodes_[definition].kind != MNode::MacroDefinition || nodes_[definition].kids.size() != 3)
@@ -62,6 +66,7 @@ bool TemplateBinding::bind(int definition, ScopeId definitionScope, BoundTemplat
                     if (!identity) throw std::runtime_error("宏形参重复：" + std::string(name.data(), name.size()));
                     result.parameters.emplace(std::string(name.data(), name.size()), identity);
                     parameters_.insert(identity);
+                    if (nodes_[parameter].s2 == "pattern") patternParameters_.insert(identity);
                 }
         }
         if (!bindBody)
@@ -111,7 +116,14 @@ void TemplateBinding::bindPattern(int id, ScopeId scope, std::size_t depth)
     auto &node = nodes_[id];
     if (node.kind == MNode::Var)
     {
-        if (node.s != "_") declare(id, scope);
+        const auto parameter = resolver_.resolve(std::string_view(node.s.data(), node.s.size()), scope, node.syntaxContext);
+        if (patternParameters_.count(parameter))
+        {
+            node.kind = MNode::MacroHole;
+            node.bindingIdentity = parameter;
+        }
+        else if (node.s != "_")
+            declare(id, scope);
         return;
     }
     if (node.kind == MNode::List || node.kind == MNode::Tuple)
@@ -132,6 +144,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     if (static_cast<std::size_t>(id) >= nodes_.size() || depth >= 256) throw std::runtime_error("宏绑定遇到无效或过深的语法节点");
     auto &node = nodes_[id];
     if (node.kind == MNode::MacroDefinition) throw std::runtime_error("嵌套宏定义尚未接入模板绑定");
+    if (node.kind == MNode::MacroTemplate && node.s2 == "__chali_field_iteration") scope = resolver_.createScope(scope);
     if (node.kind == MNode::MacroTemplate && node.kids.size() == 2)
     {
         std::map<Memory::String, int> declarations;
@@ -154,38 +167,66 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
         }
     }
 
+    if (node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf)
+    {
+        std::string error;
+        if (!prepare_ || !inputs_ || !prepare_(id, *inputs_, error)) throw std::runtime_error(error.empty() ? "编译期控制缺少类型化准备器" : error);
+        visit(id, scope, depth + 1);
+        return;
+    }
     if (node.kind == MNode::MacroFor)
     {
-        const auto source = std::string(node.s2.data(), node.s2.size());
-        const auto variable = std::string(node.s.data(), node.s.size());
-        if (!inputs_ || !inputs_->count(source) || nodes_[inputs_->at(source)].kind != MNode::MacroVariadic)
-            throw std::runtime_error("宏循环必须遍历变长片段参数：" + source);
-        const auto arguments = nodes_[inputs_->at(source)].kids;
+        std::vector<std::string> sources, variables;
+        if (node.kids.size() == 3)
+        {
+            for (const int variable : nodes_[node.kids[1]].kids) variables.emplace_back(nodes_[variable].s.data(), nodes_[variable].s.size());
+            for (const int source : nodes_[node.kids[2]].kids) sources.emplace_back(nodes_[source].s.data(), nodes_[source].s.size());
+        }
+        else
+        {
+            sources.emplace_back(node.s2.data(), node.s2.size());
+            variables.emplace_back(node.s.data(), node.s.size());
+        }
+        if (variables.size() != sources.size() || variables.empty()) throw std::runtime_error("宏成组重复的变量与来源数量必须一致");
+        std::vector<Memory::Vector<int>> arguments;
+        std::set<std::string> unique;
+        for (std::size_t index = 0; index < sources.size(); ++index)
+        {
+            if (!unique.insert(variables[index]).second) throw std::runtime_error("宏成组重复的变量不能重名");
+            const auto &source = sources[index];
+            if (!inputs_ || !inputs_->count(source) || nodes_[inputs_->at(source)].kind != MNode::MacroVariadic)
+                throw std::runtime_error("宏循环必须遍历变长片段参数：" + source);
+            arguments.push_back(nodes_[inputs_->at(source)].kids);
+            if (arguments.back().size() != arguments.front().size()) throw std::runtime_error("宏成组重复的来源长度必须一致");
+        }
         const int body = node.kids[0];
         MNode list;
         list.kind = MNode::List;
         const int items = static_cast<int>(nodes_.size());
         nodes_.push_back(std::move(list));
-        const auto saved = iterationInputs_.find(variable);
-        const int previous = saved == iterationInputs_.end() ? -1 : saved->second;
-        for (const int argument : arguments)
+        const auto previous = iterationInputs_;
+        for (std::size_t item = 0; item < arguments.front().size(); ++item)
         {
             const auto iterationScope = resolver_.createScope(scope);
-            const auto identity = resolver_.declare(variable, iterationScope, node.syntaxContext);
-            parameters_.insert(identity);
-            result_->iterations.emplace(identity, argument);
-            iterationInputs_[variable] = argument;
+            for (std::size_t index = 0; index < variables.size(); ++index)
+            {
+                const auto &variable = variables[index];
+                const int argument = arguments[index][item];
+                const auto identity = resolver_.declare(variable, iterationScope, node.syntaxContext);
+                parameters_.insert(identity);
+                if (nodes_[argument].kind == MNode::MacroArgument && nodes_[argument].kids.size() == chali_macro::FragmentAlternativeCount && nodes_[argument].kids[5] >= 0 && nodes_[argument].kids[0] < 0)
+                    patternParameters_.insert(identity);
+                result_->iterations.emplace(identity, argument);
+                iterationInputs_[variable] = argument;
+            }
             AstSubstitution copy(nodes_, 1000000, types_);
             std::string error;
             const int expanded = copy.instantiate(body, {}, node.syntaxContext, error);
             if (expanded < 0) throw std::runtime_error(error);
-            visit(expanded, iterationScope, depth + 1);
+            visit(expanded, resolver_.createScope(iterationScope), depth + 1);
             nodes_[items].kids.push_back(expanded);
         }
-        if (previous < 0)
-            iterationInputs_.erase(variable);
-        else
-            iterationInputs_[variable] = previous;
+        iterationInputs_ = previous;
         node.kind = MNode::MacroTemplate;
         node.kids = { items, -1 };
         node.s.clear();
@@ -207,8 +248,9 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
                                                     branch.s == "type"      ? 2 :
                                                     branch.s == "block"     ? 3 :
                                                     branch.s == "stmt"      ? 4 :
+                                                    branch.s == "pattern"   ? 5 :
                                                                               -1;
-                if (category < 0 || (argument.kind == MNode::MacroArgument && argument.kids.size() == 5 && argument.kids[category] >= 0))
+                if (category < 0 || (argument.kind == MNode::MacroArgument && argument.kids.size() == chali_macro::FragmentAlternativeCount && argument.kids[category] >= 0))
                 {
                     selected = branch.kids[0];
                     break;
@@ -242,7 +284,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
         node.type = static_cast<int>(types_->size());
         types_->push_back(std::move(type));
     }
-    if (node.kind == MNode::MacroArgument && node.kids.size() == 5 && node.kids[1] >= 0)
+    if (node.kind == MNode::MacroArgument && node.kids.size() == chali_macro::FragmentAlternativeCount && node.kids[1] >= 0)
     {
         const auto &identifier = nodes_[node.kids[1]];
         const auto identity = resolver_.resolve(std::string_view(identifier.s.data(), identifier.s.size()), scope, node.syntaxContext);
@@ -269,7 +311,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
             node.s.clear();
         }
     }
-    if (node.kind == MNode::Member || node.kind == MNode::Arrow || node.kind == MNode::EnumCtor || node.kind == MNode::TypeQualifiedRef)
+    if ((node.kind == MNode::Member || node.kind == MNode::Arrow || node.kind == MNode::EnumCtor || node.kind == MNode::TypeQualifiedRef) && node.s2.rfind("__chali_metadata_member:", 0) != 0)
     {
         const auto &name = node.kind == MNode::EnumCtor || node.kind == MNode::TypeQualifiedRef ? node.s2 : node.s;
         const auto identity = resolver_.resolve(std::string_view(name.data(), name.size()), scope, node.syntaxContext);

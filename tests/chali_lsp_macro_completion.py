@@ -54,6 +54,15 @@ def main():
             items = response.get("items", []) if isinstance(response, dict) else response
             declaration = next(item for item in items if item['label'].endswith('Declare'))
             assert '-> item' in str(declaration), declaration
+            text = '$macro Patterns(...ps:pattern) -> stmt\n$end_macro\nvoid main(){ $'
+            uri = (folder / 'pattern-variadic.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            response = server.query("textDocument/completion", {"textDocument": {"uri": uri}, "position": position(text, len(text))})
+            items = response.get("items", []) if isinstance(response, dict) else response
+            item = next(item for item in items if item['label'].endswith('Patterns'))
+            assert 'pattern' in str(item), item
+            inserted = item.get('insertText', item.get('textEdit', {}).get('newText', ''))
+            assert ':pattern' not in inserted and ': pattern' not in inserted, item
         finally:
             server.close()
     print("LSP 宏补全：外部模块、$ 前缀与限定名称通过")

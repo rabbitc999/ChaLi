@@ -170,27 +170,44 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
             PushScope();
             const MNode item = N(caseId);
             const auto subject = ExprType(statement.kids[0]);
-            if (item.i >= 0 && subject->kind == MType::Struct)
+            if (item.i >= 0 && subject->kind == MType::Struct && g_enums.count(subject->name))
             {
-                MNode pattern = N(static_cast<int>(item.i));
-                if (pattern.kind == MNode::Call && pattern.kids.size() == 2u)
+                MNode pattern;
+                if (!NormalizeEnumMatchPattern(static_cast<int>(item.i), subject, &pattern))
                 {
-                    const auto args = N(pattern.kids[1]).kids;
-                    pattern = N(pattern.kids[0]);
-                    pattern.kids = args;
+                    PopScope();
+                    return;
                 }
-                const auto name = pattern.kind == MNode::Var ? pattern.s : pattern.s2;
-                if (const auto variant = FindEnumVariant(subject->name, name))
-                    if (pattern.kids.size() == variant->payloads.size())
-                        for (std::size_t i = 0; i < pattern.kids.size(); ++i)
-                        {
-                            const auto binder = N(pattern.kids[i]);
-                            const auto type = variant->payloads[i].type;
-                            const bool frozen = statement.type2 == 1 ? type->kind == MType::Ptr : type->kind != MType::Ptr || type->readOnly;
-                            MVar binding{ type, binder.s, frozen };
-                            binding.bindingIdentity = binder.bindingIdentity;
-                            g_scope.back()[NodeBindingKey(binder)] = binding;
-                        }
+                const auto variant = FindEnumVariant(subject->name, pattern.s2);
+                if (variant && pattern.kids.size() == variant->payloads.size())
+                    for (std::size_t i = 0; i < pattern.kids.size(); ++i)
+                    {
+                        const auto binder = N(pattern.kids[i]);
+                        const auto type = binder.type >= 0 ? T(binder.type) : variant->payloads[i].type;
+                        const bool frozen = statement.type2 == 1 ? type->kind == MType::Ptr : type->kind != MType::Ptr || type->readOnly;
+                        MVar binding{ type, binder.s, frozen };
+                        binding.bindingIdentity = binder.bindingIdentity;
+                        g_scope.back()[NodeBindingKey(binder)] = binding;
+                    }
+            }
+            else if (item.i >= 0 && (IsInterfaceType(subject) || IsInterfacePointer(subject)))
+            {
+                auto pattern = N(static_cast<int>(item.i));
+                auto arguments = pattern.kids;
+                if (pattern.kind == MNode::Call && pattern.kids.size() == 2)
+                {
+                    arguments = N(pattern.kids[1]).kids;
+                    pattern = N(pattern.kids[0]);
+                }
+                const auto name = pattern.kind == MNode::Var ? pattern.s : pattern.s + "::" + pattern.s2;
+                Memory::String key;
+                if (arguments.size() == 1 && N(arguments[0]).kind == MNode::Var && (name == "_" || ResolvePayloadPatternType(name, &key)))
+                {
+                    const auto binder = N(arguments[0]);
+                    MVar binding{ name == "_" ? subject : NamedType(key), binder.s, true };
+                    binding.bindingIdentity = binder.bindingIdentity;
+                    g_scope.back()[NodeBindingKey(binder)] = binding;
+                }
             }
             for (const int child : Memory::Vector<int>(N(item.kids[0]).kids))
                 CollectLoopBreakValues(child, values, hasPlain, expected, borrowDepth, loopDepth);
@@ -931,6 +948,9 @@ std::shared_ptr<MType> RawExprType(int id)
     case MNode::Arrow:
     {
         const std::shared_ptr<MType> base = ExprType(node.kids[0]);
+        const Memory::String metadataPrefix = "__chali_metadata_member:";
+        if (node.s2.rfind(metadataPrefix, 0) == 0 && StructNameOf(base) != node.s2.substr(metadataPrefix.size()))
+            return Fail("字段描述符与对象的具体类型不一致"), T(M_TypeVoid());
         if (node.s == "opcode")
             if (const auto *declaration = FindOpcodeDeclaration(base))
             {

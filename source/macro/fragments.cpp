@@ -206,8 +206,10 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
     const auto saved = invocations_.size();
     activeBegin_ = saved;
     active_ = true;
+    std::size_t directiveLineEnd = std::string::npos;
     for (std::size_t at = 0; at < text.size();)
     {
+        if (at >= directiveLineEnd) directiveLineEnd = std::string::npos;
         const auto start = at;
         if (skipQuoted(text, at))
         {
@@ -238,9 +240,11 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
-        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for";
+        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if";
         if (control)
         {
+            if (name == "for" || name == "if" || name == "match" || name == "regex" || name == "else")
+                directiveLineEnd = text.find('\n', at);
             output.append(text, start, at - start);
             continue;
         }
@@ -267,7 +271,8 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
                 if (text.compare(next, 2, "//") != 0 && text.compare(next, 2, "/*") != 0) break;
                 skipQuoted(text, next);
             }
-            if (next == text.size()) break;
+            // 指令头在换行处结束；下一行的块属于模板正文，不是来源宏的额外参数组。
+            if (next == text.size() || next >= directiveLineEnd) break;
             const char opening = text[next];
             const bool types = opening == '<' && call.groups.empty() && !call.explicitTypes;
             if (!types && opening != '(' && opening != '[' && opening != '{') break;

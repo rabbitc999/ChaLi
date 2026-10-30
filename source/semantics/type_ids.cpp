@@ -426,7 +426,7 @@ bool EnsureTupleLayout(const std::shared_ptr<MType> &type);
  */
 Memory::Set<Memory::String> g_addressTakenNames;
 /** @brief 当前函数可精确收集的取址名字；空指针使用原全程序保守集合。 */
-const Memory::Set<Memory::String> *g_functionAddressTakenNames = nullptr;
+Memory::Set<Memory::String> *g_functionAddressTakenNames = nullptr;
 
 /**
  * @brief 所有者变量到引用存储槽的映射，清理时读取槽内当前值。

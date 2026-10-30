@@ -237,6 +237,7 @@ void McDocument::setText(std::string text)
                 {
                     if (comma) signature += ", ";
                     signature += "..." + std::string(group.rest.c_str());
+                    if (!group.restCategory.empty()) signature += ": " + std::string(group.restCategory.c_str());
                     params.emplace_back(group.rest.c_str());
                 }
                 signature += chali_syntax::groupClose(group.opening);
@@ -408,8 +409,13 @@ std::vector<CompletionItem> McDocument::completion(Position) const
     std::vector<CompletionItem> result = {
         { "$macro", "keyword", "开始参数宏", "$macro NAME()\n$end_macro" },
         { "$end_macro", "keyword", "结束参数宏", "$end_macro" },
-        { "$for", "keyword", "按变长尾参循环展开", "$for value in rest\n$end_for" },
+        { "$for", "keyword", "按变参或字段集合静态展开", "$for value in rest\n$end_for" },
         { "$end_for", "keyword", "结束 $for 循环", "$end_for" },
+        { "$if", "keyword", "按编译期 bool 常量选择模板", "$if condition\n$else\n$end_if" },
+        { "$end_if", "keyword", "结束编译期条件", "$end_if" },
+        { "$fields", "function", "具体结构体的编译期字段集合", "$fields<T>()" },
+        { "$member", "function", "按字段描述符生成普通成员访问", "$member(object, field)" },
+        { "$count", "function", "变参捕获的元素数量", "$count(rest)" },
         { "$line", "keyword", "当前源码行号（可在 $macro 之外用）", "$line" },
         { "$file", "keyword", "当前源码文件名（可在 $macro 之外用）", "$file" },
         { "$match", "keyword", "完整语法片段匹配", "$match value is expr\n$end_match" },

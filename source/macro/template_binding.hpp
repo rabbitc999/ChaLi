@@ -3,6 +3,7 @@
 #include "ast_substitution.hpp"
 #include "regex_matcher.hpp"
 #include <set>
+#include <functional>
 
 namespace chali_macro
 {
@@ -38,10 +39,12 @@ public:
      * @param inputs 按形参名提供的结构化实参；空时只做普通模板绑定。
      * @param matcher 本次编译的正则模式缓存。
      * @param bindBody 是否绑定宏体；登记签名时为假，避免检查未选中分支。
+     * @param prepare 处理元数据控制的回调，接收当前重复层次的实参。
      * @return 绑定成功返回真；失败回滚本次新建节点。
      */
     bool bind(int definition, ScopeId definitionScope, BoundTemplate &result, std::string &error,
-              const std::map<std::string, int> *inputs = nullptr, RegexMatcher *matcher = nullptr, bool bindBody = true);
+              const std::map<std::string, int> *inputs = nullptr, RegexMatcher *matcher = nullptr, bool bindBody = true,
+              const std::function<bool(int, const std::map<std::string, int> &, std::string &)> &prepare = {});
 
 private:
     /**
@@ -76,11 +79,13 @@ private:
     Memory::Deque<MNode> &nodes_;
     HygieneResolver &resolver_;
     std::set<BindingId> parameters_;
-    std::set<BindingId> typeDeclarations_;  ///< 当前模板内的类型声明身份。
+    std::set<BindingId> typeDeclarations_;
+    std::set<BindingId> patternParameters_;  ///< 当前模板内只允许插入模式位置的形参身份。
     ScopeId parameterScope_ = 0;
     const std::map<std::string, int> *inputs_ = nullptr;
     RegexMatcher *matcher_ = nullptr;
     BoundTemplate *result_ = nullptr;
+    std::function<bool(int, const std::map<std::string, int> &, std::string &)> prepare_;
     std::map<std::string, int> iterationInputs_;
     Memory::Vector<std::shared_ptr<MType>> *types_ = nullptr;
 };

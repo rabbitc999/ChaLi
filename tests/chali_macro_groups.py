@@ -1,4 +1,4 @@
-"""在真实 VM 中验证卫生宏的分组、变长片段及调用来源。"""
+"""在真实原生产物 中验证卫生宏的分组、变长片段及调用来源。"""
 from compiler_path import compiler_path
 import argparse
 import os
@@ -68,7 +68,7 @@ def main():
                 assert result.returncode == 0 and not result.stderr, (name, result.returncode, result.stdout, result.stderr)
             else:
                 assert result.returncode != 0 and error in result.stderr, (name, result.returncode, result.stderr)
-    print(f"宏参数组与来源 VM 回归通过：{len(cases)} 项", flush=True)
+    print(f"宏参数组与来源 原生回归通过：{len(cases)} 项", flush=True)
 
 
 if __name__ == "__main__":

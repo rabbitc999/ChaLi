@@ -13,6 +13,7 @@ struct SignatureGroup
     Memory::Vector<Memory::String> params;
     Memory::Vector<Memory::String> categories;  ///< 与固定形参对齐的显式类别，不计入绑定名称。
     Memory::String rest;
+    Memory::String restCategory;  ///< 变长形参的显式类别，空值保留原有片段语义。
 };
 /**
  * @brief 不完整文档可使用的宏头模型，最终语法合法性由生成解析器判断。

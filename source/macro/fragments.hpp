@@ -7,6 +7,8 @@
 
 namespace chali_macro
 {
+/** @brief 宏实参的表达式、名称、类型、块、语句与模式候选总数。 */
+inline constexpr std::size_t FragmentAlternativeCount = 6;
 /**
  * @brief 保留完整实参原文及其在输入源码中的起点。
  */

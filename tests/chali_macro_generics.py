@@ -58,7 +58,7 @@ def main():
                 assert result.returncode == 0 and not result.stderr, (name, result.returncode, result.stdout, result.stderr)
             else:
                 assert result.returncode != 0 and error in result.stderr, (name, result.returncode, result.stderr)
-    print(f"宏静态类型推导 VM 回归通过：{executed} 项", flush=True)
+    print(f"宏静态类型推导 原生回归通过：{executed} 项", flush=True)
 
 
 if __name__ == "__main__":

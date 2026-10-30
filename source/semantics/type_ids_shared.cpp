@@ -44,6 +44,28 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
  * @return 节点已成功转换为普通表达式时返回真。
  */
 bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int *templateRoot = nullptr);
+/**
+ * @brief 收集延迟宏实参中可能被引用的变量，供声明处预留稳定存储。
+ * @param root 宏调用或实参语法根。
+ * @param names 接收变量名称的集合。
+ * @return 语法遍历预算合法时返回真。
+ */
+bool CollectMacroArgumentReferenceNames(int root, Memory::Set<Memory::String> &names);
+/**
+ * @brief 解析接口载荷类型模式的规范声明名称。
+ * @param name 源码中的类型名。
+ * @param key 接收规范类型名。
+ * @return 找到合法声明时返回真。
+ */
+bool ResolvePayloadPatternType(const Memory::String &name, Memory::String *key);
+/**
+ * @brief 共用枚举模式语法糖归一化，供值类型推导和正常降级使用。
+ * @param patternId 模式节点。
+ * @param subjectType 来源枚举类型。
+ * @param result 接收含具体载荷类型的模式。
+ * @return 模式合法时返回真。
+ */
+bool NormalizeEnumMatchPattern(int patternId, const std::shared_ptr<MType> &subjectType, MNode *result);
 
 /**
  * @brief 判断节点是否为编译器内建的字段元数据查询入口。

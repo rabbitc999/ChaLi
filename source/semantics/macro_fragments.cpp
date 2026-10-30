@@ -112,13 +112,13 @@ bool BindMacroCallerSyntax(int id, Memory::Map<Memory::String, std::uint32_t> &b
 /**
  * @brief 用同一生成解析器完整检查一种实参语法，不将语法失败当最终语义诊断。
  * @param source 保留原文及起点的片段。
- * @param category 五类片段的编号。
+ * @param category 六类片段的编号。
  * @param module 调用或定义所在模块。
  * @return 语法成立时返回 AST 根编号，否则返回负一并回滚本次失败解析。
  */
 int ParseMacroFragment(const chali_macro::SourceFragment &source, int category, const Memory::String &module)
 {
-    static const char *entries[] = { "@!macroparse_expr\n", "@!macroparse_ident\n", "@!macroparse_type\n", "@!macroparse_block\n", "@!macroparse_stmt\n" };
+    static const char *entries[] = { "@!macroparse_expr\n", "@!macroparse_ident\n", "@!macroparse_type\n", "@!macroparse_block\n", "@!macroparse_stmt\n", "@!macroparse_pattern\n" };
     const auto nodes = g_nodes.size();
     const auto types = g_types.size();
     const auto names = g_names.size();
@@ -255,7 +255,7 @@ bool ApplyMacroFragmentEnvironment(int root, const MacroFragmentEnvironment &env
 }
 
 /**
- * @brief 为原始调用构建五类实参候选，保持结构不成立与语义非法的区别。
+ * @brief 为原始调用构建六类实参候选，保持结构不成立与语义非法的区别。
  * @param id 当前可达 AST 节点。
  * @param seen 已检查的节点集合，防止重复处理共享子树。
  * @param depth 当前遍历深度。
@@ -304,7 +304,7 @@ bool MaterializeMacroFragments(int id, Memory::Set<int> &seen, std::size_t depth
                 g_nodes[argument].module = module;
                 g_nodes[argument].sourceLine = source.line;
                 g_nodes[argument].sourceColumn = source.column;
-                for (int category = 0; category < 5; ++category)
+                for (int category = 0; category < static_cast<int>(chali_macro::FragmentAlternativeCount); ++category)
                 {
                     const int candidate = ParseMacroFragment(source, category, module);
                     if (!ApplyMacroFragmentEnvironment(candidate, environment)) return false;

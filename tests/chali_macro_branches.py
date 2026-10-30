@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """运行真实 VM，检查分支顺序、未选中语义隔离、原文及正则错误。"""
+    """运行真实原生产物，检查分支顺序、未选中语义隔离、原文及正则错误。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chali", type=Path, default=compiler_path())
     parser.add_argument("--default", action="store_true", help="使用含标准库的默认编译路径")
@@ -63,7 +63,7 @@ def main():
         assert result.returncode == 0 and not result.stderr, result.stderr
         result = execute("invalid_regex", '$macro BAD(A)\n$regex A is "["\n1\n$else\n0\n$end_regex\n$end_macro\nvoid main() { let __boom = $BAD(123); }')
         assert result.returncode != 0 and "宏正则模式非法" in result.stderr, result.stderr
-    print(f"宏语法分类与正则分支：{len(cases) + 3} 项 VM 回归通过", flush=True)
+    print(f"宏语法分类与正则分支：{len(cases) + 3} 项 原生回归通过", flush=True)
 
 
 if __name__ == "__main__":

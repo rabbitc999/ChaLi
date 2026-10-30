@@ -3664,6 +3664,119 @@ bool ResolvePayloadPatternType(const Memory::String &name, Memory::String *key)
 }
 
 /**
+ * @brief 为类型推导与降级共用枚举模式归一化，保留接口载荷具体类型。
+ * @param patternId 源模式节点。
+ * @param subjectType 被匹配的枚举类型。
+ * @param result 接收普通枚举构造模式及已标注载荷。
+ * @return 模式与来源枚举一致时返回真。
+ */
+bool NormalizeEnumMatchPattern(int patternId, const std::shared_ptr<MType> &subjectType, MNode *result)
+{
+    const auto enumIt = g_enums.find(subjectType->name);
+    if (enumIt == g_enums.end()) return Fail("没有声明的 enum：" + subjectType->name);
+    if (!NormalizeAstTypeQualifier(patternId)) return false;
+    const MNode &parsedPattern = N(patternId);
+    MNode pattern = parsedPattern;
+    if (pattern.kind == MNode::Call && pattern.kids.size() == 2u)
+    {
+        const MNode &callee = N(pattern.kids[0]);
+        if (callee.kind == MNode::EnumCtor || callee.kind == MNode::Var)
+        {
+            pattern = callee;
+            pattern.kids = N(parsedPattern.kids[1]).kids;
+        }
+    }
+    const bool unqualifiedPattern = pattern.kind == MNode::Var;
+    const auto omittedType = unqualifiedPattern ? pattern.s : pattern.s + "::" + pattern.s2;
+    const auto qualifierSplit = pattern.s.find("::");
+    const auto firstQualifier = qualifierSplit == Memory::String::npos ? pattern.s : pattern.s.substr(0, qualifierSplit);
+    const bool explicitTag = pattern.kind == MNode::EnumCtor && FindEnumVariant(subjectType->name, firstQualifier);
+    const bool enumConstructor = pattern.kind == MNode::EnumCtor
+                                 && (FindEnumVariant(pattern.s, pattern.s2) || pattern.s == subjectType->name
+                                     || subjectType->name.compare(0u, pattern.s.size() + 2u, pattern.s + "__") == 0u);
+    const bool annotated = std::any_of(pattern.kids.begin(), pattern.kids.end(), [](int child) {
+        return N(child).kind == MNode::Var && N(child).type >= 0;
+    });
+    const bool singleBinding = pattern.kids.size() == 1u && N(pattern.kids[0]).kind == MNode::Var;
+    Memory::String omittedKey;
+    if (!explicitTag && !enumConstructor && !annotated && singleBinding && ResolvePayloadPatternType(omittedType, &omittedKey))
+    {
+        Memory::Vector<const MEnumVariantDef *> candidates;
+        for (const auto &candidate : enumIt->second.variants)
+            if (candidate.payloads.size() == 1u && IsInterfaceType(candidate.payloads[0].type)
+                && ImplementsInterface(omittedKey, candidate.payloads[0].type->name))
+                candidates.push_back(&candidate);
+        const bool collides = unqualifiedPattern && FindEnumVariant(subjectType->name, pattern.s);
+        if (candidates.size() > 1u || (!candidates.empty() && collides))
+            return Fail("省略枚举标签的接口类型模式存在歧义，请写 `标签::类型(变量)` 或 `标签(类型 变量)`");
+        if (candidates.size() == 1u)
+        {
+            auto binder = N(pattern.kids[0]);
+            binder.type = M_AddType(NamedType(omittedKey));
+            binder.s2 = "__chali_typed_pattern";
+            const int typed = static_cast<int>(g_nodes.size());
+            g_nodes.push_back(std::move(binder));
+            pattern.kind = MNode::EnumCtor;
+            pattern.s = subjectType->name;
+            pattern.s2 = candidates[0]->name;
+            pattern.kids = { typed };
+        }
+    }
+    if (pattern.kind == MNode::Var)
+    {
+        pattern.kind = MNode::EnumCtor;
+        pattern.s2 = pattern.s;
+        pattern.s = subjectType->name;
+    }
+    if (pattern.kind == MNode::EnumCtor && pattern.s != subjectType->name)
+    {
+        const auto split = pattern.s.find("::");
+        const auto tag = split == Memory::String::npos ? pattern.s : pattern.s.substr(0, split);
+        const auto outer = FindEnumVariant(subjectType->name, tag);
+        if (outer && (outer->payloads.size() != 1u || !IsInterfaceType(outer->payloads[0].type)))
+            return Fail("类型模式语法糖仅适用于单接口载荷变体；多载荷请写 `标签(类型 变量, 普通变量, ...)`，非接口载荷可直接绑定变量");
+        if (outer && outer->payloads.size() == 1u && IsInterfaceType(outer->payloads[0].type))
+        {
+            const auto concrete = split == Memory::String::npos ? pattern.s2 : pattern.s.substr(split + 2u) + "::" + pattern.s2;
+            Memory::String key;
+            if (!ResolvePayloadPatternType(concrete, &key))
+                return Fail("枚举接口载荷模式没有声明的具体类型：" + concrete);
+            if (pattern.kids.size() != 1u || N(pattern.kids[0]).kind != MNode::Var)
+                return Fail("枚举接口模式应为 `标签::具体类型(绑定名)` 或 `标签::具体类型(_)`");
+            auto binder = N(pattern.kids[0]);
+            binder.type = M_AddType(NamedType(key));
+            binder.s2 = "__chali_typed_pattern";
+            const int typed = static_cast<int>(g_nodes.size());
+            g_nodes.push_back(std::move(binder));
+            pattern.s = subjectType->name;
+            pattern.s2 = tag;
+            pattern.kids = { typed };
+        }
+    }
+    if (pattern.kind == MNode::EnumCtor && pattern.s.compare(0u, 11u, "std::lang::") == 0)
+        pattern.s.erase(0u, 11u);
+    if (pattern.kind != MNode::EnumCtor)
+        return Fail("enum match 的分支必须写成 `" + subjectType->name + "::变体` 或 `" + subjectType->name + "::变体(绑定名)`；实际解析为 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2) + "（节点 " + Memory::toString(static_cast<int>(pattern.kind)) + "）");
+    /* 模式的枚举类型由主表达式唯一确定。泛型枚举允许把
+     * `Option<int>::Value` 简写为 `Option::Value`；普通构造表达式仍要求完整类型。
+     * 另外，`std::模块::枚举::变体` 这种限定写法按**裸类型名**归一：
+     * 类型在所有表里都以裸名登记（`std::io::SeekOrigin` == `SeekOrigin`）。 */
+    if (pattern.s.find("::") != Memory::String::npos && FindEnumVariant(BareTypeName(pattern.s), pattern.s2) != nullptr)
+        pattern.s = BareTypeName(pattern.s);
+    const Memory::String genericPrefix = pattern.s + "__";
+    if (subjectType->name.compare(0u, genericPrefix.size(), genericPrefix) == 0u)
+        pattern.s = subjectType->name;
+    if (pattern.s != subjectType->name)
+        return Fail("分支的枚举类型必须与 match 主表达式一致：主表达式是 " + subjectType->name + "，分支是 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2));
+    if (pattern.s2 == "OK" && StandardGeneric(subjectType->name, "Result")) pattern.s2 = "Ok";
+    const MEnumVariantDef *variant = FindEnumVariant(pattern.s, pattern.s2);
+    if (variant == nullptr)
+        return Fail("enum " + pattern.s + " 没有变体 " + pattern.s2);
+    *result = std::move(pattern);
+    return true;
+}
+
+/**
  * @brief 为枚举匹配生成标签判断及载荷绑定。
  * @param id 待查找或操作的对象编号。
  * @param subjectType 被匹配表达式的类型。
@@ -3693,104 +3806,9 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
             }
             continue;
         }
-        if (!NormalizeAstTypeQualifier(static_cast<int>(item.i))) return Bad();
-        const MNode &parsedPattern = N(static_cast<int>(item.i));
-        MNode pattern = parsedPattern;
-        if (pattern.kind == MNode::Call && pattern.kids.size() == 2u)
-        {
-            const MNode &callee = N(pattern.kids[0]);
-            if (callee.kind == MNode::EnumCtor || callee.kind == MNode::Var)
-            {
-                pattern = callee;
-                pattern.kids = N(parsedPattern.kids[1]).kids;
-            }
-        }
-        const bool unqualifiedPattern = pattern.kind == MNode::Var;
-        const auto omittedType = unqualifiedPattern ? pattern.s : pattern.s + "::" + pattern.s2;
-        const auto qualifierSplit = pattern.s.find("::");
-        const auto firstQualifier = qualifierSplit == Memory::String::npos ? pattern.s : pattern.s.substr(0, qualifierSplit);
-        const bool explicitTag = pattern.kind == MNode::EnumCtor && FindEnumVariant(subjectType->name, firstQualifier);
-        const bool enumConstructor = pattern.kind == MNode::EnumCtor
-                                     && (FindEnumVariant(pattern.s, pattern.s2) || pattern.s == subjectType->name
-                                         || subjectType->name.compare(0u, pattern.s.size() + 2u, pattern.s + "__") == 0u);
-        const bool annotated = std::any_of(pattern.kids.begin(), pattern.kids.end(), [](int child) {
-            return N(child).kind == MNode::Var && N(child).type >= 0;
-        });
-        const bool singleBinding = pattern.kids.size() == 1u && N(pattern.kids[0]).kind == MNode::Var;
-        Memory::String omittedKey;
-        if (!explicitTag && !enumConstructor && !annotated && singleBinding && ResolvePayloadPatternType(omittedType, &omittedKey))
-        {
-            Memory::Vector<const MEnumVariantDef *> candidates;
-            for (const auto &candidate : enumIt->second.variants)
-                if (candidate.payloads.size() == 1u && IsInterfaceType(candidate.payloads[0].type)
-                    && ImplementsInterface(omittedKey, candidate.payloads[0].type->name))
-                    candidates.push_back(&candidate);
-            const bool collides = unqualifiedPattern && FindEnumVariant(subjectType->name, pattern.s);
-            if (candidates.size() > 1u || (!candidates.empty() && collides))
-                return Fail("省略枚举标签的接口类型模式存在歧义，请写 `标签::类型(变量)` 或 `标签(类型 变量)`"), Bad();
-            if (candidates.size() == 1u)
-            {
-                auto binder = N(pattern.kids[0]);
-                binder.type = M_AddType(NamedType(omittedKey));
-                binder.s2 = "__chali_typed_pattern";
-                const int typed = static_cast<int>(g_nodes.size());
-                g_nodes.push_back(std::move(binder));
-                pattern.kind = MNode::EnumCtor;
-                pattern.s = subjectType->name;
-                pattern.s2 = candidates[0]->name;
-                pattern.kids = { typed };
-            }
-        }
-        if (pattern.kind == MNode::Var)
-        {
-            pattern.kind = MNode::EnumCtor;
-            pattern.s2 = pattern.s;
-            pattern.s = subjectType->name;
-        }
-        if (pattern.kind == MNode::EnumCtor && pattern.s != subjectType->name)
-        {
-            const auto split = pattern.s.find("::");
-            const auto tag = split == Memory::String::npos ? pattern.s : pattern.s.substr(0, split);
-            const auto outer = FindEnumVariant(subjectType->name, tag);
-            if (outer && (outer->payloads.size() != 1u || !IsInterfaceType(outer->payloads[0].type)))
-                return Fail("类型模式语法糖仅适用于单接口载荷变体；多载荷请写 `标签(类型 变量, 普通变量, ...)`，非接口载荷可直接绑定变量"), Bad();
-            if (outer && outer->payloads.size() == 1u && IsInterfaceType(outer->payloads[0].type))
-            {
-                const auto concrete = split == Memory::String::npos ? pattern.s2 : pattern.s.substr(split + 2u) + "::" + pattern.s2;
-                Memory::String key;
-                if (!ResolvePayloadPatternType(concrete, &key))
-                    return Fail("枚举接口载荷模式没有声明的具体类型：" + concrete), Bad();
-                if (pattern.kids.size() != 1u || N(pattern.kids[0]).kind != MNode::Var)
-                    return Fail("枚举接口模式应为 `标签::具体类型(绑定名)` 或 `标签::具体类型(_)`"), Bad();
-                auto binder = N(pattern.kids[0]);
-                binder.type = M_AddType(NamedType(key));
-                binder.s2 = "__chali_typed_pattern";
-                const int typed = static_cast<int>(g_nodes.size());
-                g_nodes.push_back(std::move(binder));
-                pattern.s = subjectType->name;
-                pattern.s2 = tag;
-                pattern.kids = { typed };
-            }
-        }
-        if (pattern.kind == MNode::EnumCtor && pattern.s.compare(0u, 11u, "std::lang::") == 0)
-            pattern.s.erase(0u, 11u);
-        if (pattern.kind != MNode::EnumCtor)
-            return Fail("enum match 的分支必须写成 `" + subjectType->name + "::变体` 或 `" + subjectType->name + "::变体(绑定名)`；实际解析为 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2) + "（节点 " + Memory::toString(static_cast<int>(pattern.kind)) + "）"), Bad();
-        /* 模式的枚举类型由主表达式唯一确定。泛型枚举允许把
-         * `Option<int>::Value` 简写为 `Option::Value`；普通构造表达式仍要求完整类型。
-         * 另外，`std::模块::枚举::变体` 这种限定写法按**裸类型名**归一：
-         * 类型在所有表里都以裸名登记（`std::io::SeekOrigin` == `SeekOrigin`）。 */
-        if (pattern.s.find("::") != Memory::String::npos && FindEnumVariant(BareTypeName(pattern.s), pattern.s2) != nullptr)
-            pattern.s = BareTypeName(pattern.s);
-        const Memory::String genericPrefix = pattern.s + "__";
-        if (subjectType->name.compare(0u, genericPrefix.size(), genericPrefix) == 0u)
-            pattern.s = subjectType->name;
-        if (pattern.s != subjectType->name)
-            return Fail("分支的枚举类型必须与 match 主表达式一致：主表达式是 " + subjectType->name + "，分支是 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2)), Bad();
-        if (pattern.s2 == "OK" && StandardGeneric(subjectType->name, "Result")) pattern.s2 = "Ok";
+        MNode pattern;
+        if (!NormalizeEnumMatchPattern(static_cast<int>(item.i), subjectType, &pattern)) return Bad();
         const MEnumVariantDef *variant = FindEnumVariant(pattern.s, pattern.s2);
-        if (variant == nullptr)
-            return Fail("enum " + pattern.s + " 没有变体 " + pattern.s2), Bad();
         if (covered.count(variant->name))
             return Fail("match 中存在重复的 enum 变体：" + pattern.s + "::" + variant->name), Bad();
         if (pattern.kids.size() != variant->payloads.size())

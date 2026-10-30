@@ -41,6 +41,7 @@ bool ExpandAstMacroDeclarations(chali_macro::Registry &registry)
         };
         const int expanded = registry.instantiate(id, error, resolve, ApplyAstMacroTypes);
         if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
+        if (!NormalizeMacroPatterns(expanded)) return false;
         if (N(expanded).s2 != "item") return ReportAstMacroFailure(id, "模块声明位置需要 -> item 宏");
         const auto items = N(N(expanded).kids[0]).kids;
         for (const int child : items)

@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 161 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 162 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -128,6 +128,8 @@ Box<int64 fn(int64)> box;
 | `MACRO_REGEX` | `$regex` |
 | `MACRO_END_REGEX` | `$end_regex` |
 | `MACRO_FOR` | `$for` |
+| `MACRO_IF` | `$if` |
+| `MACRO_END_IF` | `$end_if` |
 | `MACRO_END_FOR` | `$end_for` |
 | `MACRO_IS` | `is` |
 | `MACRO_RESULT_SOURCE` | `#res` |
@@ -135,11 +137,13 @@ Box<int64 fn(int64)> box;
 | `MACRO_IDENT` | `ident` |
 | `MACRO_BLOCK` | `block` |
 | `MACRO_STMT` | `stmt` |
+| `MACRO_PATTERN` | `pattern` |
 | `MACRO_PARSE_EXPR` | `@!macroparse_expr` |
 | `MACRO_PARSE_IDENT` | `@!macroparse_ident` |
 | `MACRO_PARSE_TYPE` | `@!macroparse_type` |
 | `MACRO_PARSE_BLOCK` | `@!macroparse_block` |
 | `MACRO_PARSE_STMT` | `@!macroparse_stmt` |
+| `MACRO_PARSE_PATTERN` | `@!macroparse_pattern` |
 | `STRUCT` | `struct` |
 | `OPCODE` | `opcode` |
 | `NONCOPYABLE` | `#NonCopyable` |
@@ -281,7 +285,9 @@ program = top_list
     | "@!macroparse_ident", name_token
     | "@!macroparse_type", type
     | "@!macroparse_block", block
-    | "@!macroparse_stmt", stmt ;
+    | "@!macroparse_stmt", stmt
+    | "@!macroparse_pattern", match_patterns
+    | "@!macroparse_pattern", "_" ;
 
 top_list = ""
     | top_list, top ;
@@ -866,7 +872,8 @@ name_token = VARIABLE
     | "expr"
     | "ident"
     | "block"
-    | "stmt" ;
+    | "stmt"
+    | "pattern" ;
 
 lambda_capture = ""
     | "const"
@@ -1004,13 +1011,20 @@ macro_template_parts = ""
 
 macro_control = "$match", name_token, "is", macro_category, "@!macrobody", macro_template, macro_match_tail, "$end_match"
     | "$regex", name_token, "is", STRING, "@!macrobody", macro_template, macro_regex_else, "$end_regex"
-    | "$for", name_token, "in", name_token, "@!macrobody", macro_template, "$end_for" ;
+    | "$for", name_token, "in", name_token, "@!macrobody", macro_template, "$end_for"
+    | "$for", name_token, "in", macro_call, "@!macrobody", macro_template, "$end_for"
+    | "$for", "(", macro_zip_names, ")", "in", "(", macro_zip_names, ")", "@!macrobody", macro_template, "$end_for"
+    | "$if", expr, "@!macrobody", macro_template, macro_regex_else, "$end_if" ;
+
+macro_zip_names = name_token
+    | macro_zip_names, ",", name_token ;
 
 macro_category = "expr"
     | "ident"
     | "type"
     | "block"
-    | "stmt" ;
+    | "stmt"
+    | "pattern" ;
 
 macro_match_tail = ""
     | "$else", "@!macrobody", macro_template

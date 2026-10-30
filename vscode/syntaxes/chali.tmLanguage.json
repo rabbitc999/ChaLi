@@ -97,7 +97,7 @@
         },
         {
           "name": "keyword.control.macro.chali",
-          "match": "\\$(?:end_macro|end_for|match|regex|else|end_match|end_regex)\\b"
+          "match": "\\$(?:end_macro|end_for|if|end_if|match|regex|else|end_match|end_regex)\\b"
         },
         {
           "name": "keyword.control.for.chali",
@@ -105,7 +105,7 @@
         },
         {
           "name": "variable.language.chali",
-          "match": "\\$(?:line|file|module|concat|stringify|argc|count|typecheck)\\b"
+          "match": "\\$(?:line|file|module|concat|stringify|fields|member|argc|count|typecheck)\\b"
         },
         {
           "name": "keyword.control.preprocessor.chali",

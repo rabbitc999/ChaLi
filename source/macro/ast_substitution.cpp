@@ -33,6 +33,7 @@ int AstSubstitution::instantiate(int root, const std::map<BindingId, int> &argum
     site_ = site;
     names_.clear();
     preserveVariadicGroups_ = false;
+    patternPosition_ = false;
     error.clear();
     try
     {
@@ -72,7 +73,7 @@ void AstSubstitution::collectNames(int id, std::size_t depth)
         const auto found = arguments_->find(node.nameParameter);
         if (found == arguments_->end()) throw std::runtime_error("宏声明名称没有绑定实参");
         int argument = found->second;
-        if (argument >= 0 && static_cast<std::size_t>(argument) < start_ && nodes_[argument].kind == MNode::MacroArgument && nodes_[argument].kids.size() == 5)
+        if (argument >= 0 && static_cast<std::size_t>(argument) < start_ && nodes_[argument].kind == MNode::MacroArgument && nodes_[argument].kids.size() == chali_macro::FragmentAlternativeCount)
             argument = nodes_[argument].kids[1];
         if (argument < 0 || static_cast<std::size_t>(argument) >= start_ || nodes_[argument].kind != MNode::Var || !nodes_[argument].kids.empty() || nodes_[argument].s.find("::") != Memory::String::npos)
             throw std::runtime_error("宏声明名称必须来自单个标识符实参");
@@ -115,7 +116,7 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
         if (found != arguments_->end() && found->second >= 0 && static_cast<std::size_t>(found->second) < start_)
         {
             const auto &argument = nodes_[found->second];
-            if (argument.kind == MNode::MacroArgument && argument.kids.size() == 5 && argument.kids[4] >= 0)
+            if (argument.kind == MNode::MacroArgument && argument.kids.size() == chali_macro::FragmentAlternativeCount && argument.kids[4] >= 0)
                 return clone(argument.kids[4], false, depth + 1);
         }
     }
@@ -129,7 +130,7 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
                 const int reference = clone(evaluated->second, false, depth + 1);
                 if (original.kind == MNode::MacroHole) return reference;
                 const int forwarded = clone(arguments_->at(original.bindingIdentity), false, depth + 1);
-                if (nodes_[forwarded].kind != MNode::MacroArgument || nodes_[forwarded].kids.size() != 5u)
+                if (nodes_[forwarded].kind != MNode::MacroArgument || nodes_[forwarded].kids.size() != chali_macro::FragmentAlternativeCount)
                     return reference;
                 nodes_[forwarded].kids[0] = reference;
                 MNode statement;
@@ -145,8 +146,16 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
         int value = argument->second;
         if (original.kind == MNode::MacroHole && value >= 0 && static_cast<std::size_t>(value) < start_ && nodes_[value].kind == MNode::MacroArgument)
         {
-            if (nodes_[value].kids.size() != 5 || nodes_[value].kids[0] < 0) throw std::runtime_error("宏形参在表达式位置需要完整表达式实参");
-            value = nodes_[value].kids[0];
+            const auto &fragment = nodes_[value];
+            if (fragment.kids.size() != chali_macro::FragmentAlternativeCount) throw std::runtime_error("宏实参候选结构无效");
+            if (patternPosition_ && fragment.kids[5] >= 0 && fragment.kids[0] < 0)
+                value = fragment.kids[5];
+            else
+            {
+                if (fragment.kids[0] < 0)
+                    throw std::runtime_error(fragment.kids[5] >= 0 ? "pattern 片段只能用于 match 模式位置" : "宏形参在表达式位置需要完整表达式实参");
+                value = fragment.kids[0];
+            }
         }
         return clone(value, false, depth + 1);
     }
@@ -179,7 +188,7 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
         const auto actual = arguments_->find(original.nameParameter);
         if (actual == arguments_->end()) throw std::runtime_error("宏成员名称没有绑定实参");
         int value = actual->second;
-        if (nodes_[value].kind == MNode::MacroArgument && nodes_[value].kids.size() == 5) value = nodes_[value].kids[1];
+        if (nodes_[value].kind == MNode::MacroArgument && nodes_[value].kids.size() == chali_macro::FragmentAlternativeCount) value = nodes_[value].kids[1];
         if (value < 0 || nodes_[value].kind != MNode::Var || !nodes_[value].kids.empty() || nodes_[value].s.find("::") != Memory::String::npos)
             throw std::runtime_error("宏成员名称必须来自单个标识符实参");
         if (original.kind == MNode::EnumCtor || original.kind == MNode::TypeQualifiedRef)
@@ -215,7 +224,7 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
                 {
                     if ((nodes_[result].kind == MNode::List || nodes_[result].kind == MNode::Tuple) && item >= 0 && nodes_[item].kind == MNode::MacroArgument)
                     {
-                        if (nodes_[item].kids.size() != 5 || nodes_[item].kids[0] < 0)
+                        if (nodes_[item].kids.size() != chali_macro::FragmentAlternativeCount || nodes_[item].kids[0] < 0)
                             throw std::runtime_error("变长实参在表达式列表中需要完整表达式");
                         items.push_back(nodes_[item].kids[0]);
                     }
@@ -233,7 +242,13 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
     if (nodes_[result].guard >= 0) nodes_[result].guard = clone(original.guard, substitute, depth + 1);
     const bool declarationGroup = original.kind == MNode::Declare && original.kids.size() == 1 && original.kids[0] >= 0 && static_cast<std::size_t>(original.kids[0]) < start_ && nodes_[original.kids[0]].kind == MNode::List;
     const bool indexedChild = original.kind == MNode::Block || original.kind == MNode::Case || original.kind == MNode::NewPtr || ((original.kind == MNode::Declare || original.kind == MNode::Field) && !declarationGroup && original.i >= 0) || (original.kind == MNode::Index && original.s2 == "__chali_bare_index");
-    if (indexedChild && original.i >= 0) nodes_[result].i = clone(static_cast<int>(original.i), substitute, depth + 1);
+    if (indexedChild && original.i >= 0)
+    {
+        const bool previousPattern = patternPosition_;
+        if (original.kind == MNode::Case) patternPosition_ = true;
+        nodes_[result].i = clone(static_cast<int>(original.i), substitute, depth + 1);
+        patternPosition_ = previousPattern;
+    }
     preserveVariadicGroups_ = previousGroupPolicy;
     return result;
 }
@@ -263,7 +278,7 @@ std::shared_ptr<MType> AstSubstitution::cloneType(const std::shared_ptr<MType> &
             return result;
         }
         const auto &fragment = nodes_[actual->second];
-        if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != 5 || fragment.kids[2] < 0)
+        if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != chali_macro::FragmentAlternativeCount || fragment.kids[2] < 0)
             throw std::runtime_error("宏形参在类型位置需要完整类型实参");
         const int typeId = nodes_[fragment.kids[2]].type;
         if (typeId < 0) throw std::runtime_error("宏类型片段没有类型描述");
