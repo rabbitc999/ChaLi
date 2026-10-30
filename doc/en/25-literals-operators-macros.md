@@ -345,11 +345,18 @@ See [declaration macro tests](../../tests/chali_macro_declarations.py).
 | Variant | `name`, `index`, `id`, `payloads` |
 | Payload | `name`, `index`, `id`, precise `type` |
 | Method | `name`, `index`, `id`, `declaringType`, `result`, `parameters`, `isStatic`, `isConstructor`, `hasBody`, `isInherited` |
+| Receiver and direct effects | `hasReceiver`, `receiverType`, `usesUnsafe`, `hasPropagation`, `hasMutableParameters`, `returnsMutableReference` |
 | Parameter | `name`, `index`, `id`, precise `type`, `isVariadic`, `hasDefault` |
-| Interface | canonical `name`, `index`, `id`, `type`, `isDirect` |
+| Interface | canonical `name`, `index`, `id`, `type`, `isDirect`, `associatedTypes` |
+| Associated-type collection | `count`, constant indexing; obtained through a type or interface descriptor's `associatedTypes` |
+| Associated type | `name`, `index`, `id`, `declaringType`, `hasDefinition`, and `type` when bound |
 | Payload or parameter collection | `count`, constant indexing |
 
 Variants and payloads retain declaration order. Empty variants have zero payloads. Methods include source declarations and inherited methods, excluding the compiler-supplied `toString`. Overloads have distinct identities. `declaringType` identifies the original owner; `isInherited` distinguishes inherited implementations. Static named factories such as `create` are both static and constructors. Parameters exclude the implicit receiver. Default expressions are not executed by metadata queries.
+
+An instance method's `receiverType` is the actual queried receiver; an inherited method retains its original `declaringType`. Static methods have `hasReceiver == false`, and querying their `receiverType` is an error. `usesUnsafe` and `hasPropagation` describe direct syntax in the current body, excluding nested functions and closures. `hasMutableParameters` and `returnsMutableReference` describe writable references in the signature. These flags do not establish purity, summarize transitive calls, or replace borrow and unsafe checks.
+
+An interface descriptor's `associatedTypes` binds requirements using the current implementation. A type descriptor reads its own definitions and inherited requirements. Own declarations precede source-order traversal of base interfaces, with names deduplicated. An unbound requirement has `hasDefinition == false`; querying its `type` is an error. Use `$if item.hasDefinition` before reading the concrete type. Collections support `$for item in contract.associatedTypes`. Queries read the declaration graph during member expansion as well as ordinary checking, and identities do not depend on interface registration order.
 
 Interfaces follow source-order depth-first traversal with first-appearance deduplication. Explicitly listed bases have `isDirect == true`. Querying an interface includes its bases, not itself. Concrete generic arguments remain in type descriptors. Continue through a type's `fields`, `variants`, `methods` or `interfaces` only when the queried type supports that kind of metadata.
 

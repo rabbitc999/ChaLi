@@ -201,6 +201,8 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                     field.parameter = index;
                 else if (element == Meta::Interface)
                     field.interfaceIndex = index;
+                else if (element == Meta::AssociatedType)
+                    field.field = index;
                 environment = saved;
                 localBindings = savedLocals;
                 environment[node.s] = field;

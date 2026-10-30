@@ -41,6 +41,7 @@ struct MetadataField
     Memory::Vector<MetadataAttribute> attributes;
     bool variadic = false;
     bool hasDefault = false;
+    Memory::String declaringType;
 };
 /**
  * @brief 枚举变体的声明身份与按声明顺序保存的精确载荷，不暴露合成存储字段。
@@ -67,6 +68,11 @@ struct MetadataMethod
     bool hasBody = false;
     bool inherited = false;
     Memory::String declaringType;
+    std::shared_ptr<const MType> receiver;
+    bool usesUnsafe = false;
+    bool hasPropagation = false;
+    bool hasMutableParameters = false;
+    bool returnsMutableReference = false;
 };
 /**
  * @brief 类型实现的一个接口及其直接声明／继承来源。
@@ -117,7 +123,9 @@ struct MetadataValue
         Parameters,
         Parameter,
         Interfaces,
-        Interface
+        Interface,
+        AssociatedTypes,
+        AssociatedType
     } kind = Fields;
     std::shared_ptr<const MetadataType> owner;
     std::shared_ptr<const MType> type;

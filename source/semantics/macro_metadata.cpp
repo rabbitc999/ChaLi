@@ -140,7 +140,12 @@ bool MacroMetadataSequence(const chali_macro::MetadataValue &value, std::size_t 
 {
     using Meta = chali_macro::MetadataValue;
     if (!value.owner) return false;
-    if (value.kind == Meta::Fields)
+    if (value.kind == Meta::AssociatedTypes)
+    {
+        count = value.owner->fields.size();
+        element = Meta::AssociatedType;
+    }
+    else if (value.kind == Meta::Fields)
     {
         count = value.owner->fields.size();
         element = Meta::Field;
@@ -295,7 +300,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         if (!EvaluateConstant(original.kids[1], &index)) return false;
         if (index.kind != MConstant::Integer || index.integer < 0) return Fail("编译期元数据索引必须为非负整数常量");
         const auto selected = static_cast<std::uint64_t>(index.integer);
-        if (value.kind == Meta::Methods)
+        if (value.kind == Meta::AssociatedTypes)
+        {
+            if (selected >= fields.size()) return Fail("编译期关联类型索引越界");
+            value.kind = Meta::AssociatedType;
+            value.field = static_cast<std::size_t>(selected);
+        }
+        else if (value.kind == Meta::Methods)
         {
             if (selected >= value.owner->methods.size()) return Fail("编译期方法索引越界");
             value.kind = Meta::Method;
@@ -350,7 +361,7 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
     }
     const auto &property = original.s;
     if (value.kind == Meta::Variants || value.kind == Meta::Payloads || value.kind == Meta::Methods
-        || value.kind == Meta::Parameters || value.kind == Meta::Interfaces)
+        || value.kind == Meta::Parameters || value.kind == Meta::Interfaces || value.kind == Meta::AssociatedTypes)
     {
         std::size_t count = 0;
         Meta::Kind element;
@@ -375,6 +386,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
             SetMacroMetadataInteger(id, method.index);
         else if (property == "declaringType")
             SetMacroMetadataString(id, method.declaringType);
+        else if (property == "receiverType")
+        {
+            if (!method.receiver) return Fail("静态方法没有接收者类型");
+            value.kind = Meta::Type;
+            value.type = method.receiver;
+            SetMacroMetadata(id, std::move(value));
+        }
         else if (property == "result")
         {
             value.kind = Meta::Type;
@@ -385,6 +403,16 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         {
             value.kind = Meta::Parameters;
             SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "hasReceiver" || property == "usesUnsafe" || property == "hasPropagation" || property == "hasMutableParameters" || property == "returnsMutableReference")
+        {
+            const bool flag = property == "hasReceiver" ? bool(method.receiver) : property == "usesUnsafe"       ? method.usesUnsafe :
+                                                                              property == "hasPropagation"       ? method.hasPropagation :
+                                                                              property == "hasMutableParameters" ? method.hasMutableParameters :
+                                                                                                                   method.returnsMutableReference;
+            SetMacroMetadataInteger(id, flag);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
         }
         else if (property == "isStatic" || property == "isConstructor" || property == "hasBody" || property == "isInherited")
         {
@@ -418,6 +446,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
             value.type = item.type;
             SetMacroMetadata(id, std::move(value));
         }
+        else if (property == "associatedTypes")
+        {
+            value.owner = ReadMacroAssociatedTypes(item.type, value.owner->type);
+            if (!value.owner) return false;
+            value.kind = Meta::AssociatedTypes;
+            SetMacroMetadata(id, std::move(value));
+        }
         else if (property == "isDirect")
         {
             SetMacroMetadataInteger(id, item.direct);
@@ -426,6 +461,34 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         }
         else
             return Fail("接口没有此编译期属性：" + property);
+        return true;
+    }
+    if (value.kind == Meta::AssociatedType)
+    {
+        const auto &item = fields[value.field];
+        if (property == "name")
+            SetMacroMetadataString(id, item.name);
+        else if (property == "id")
+            SetMacroMetadataInteger(id, item.identity, true);
+        else if (property == "index")
+            SetMacroMetadataInteger(id, item.index);
+        else if (property == "declaringType")
+            SetMacroMetadataString(id, item.declaringType);
+        else if (property == "hasDefinition")
+        {
+            SetMacroMetadataInteger(id, bool(item.type));
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
+        else if (property == "type")
+        {
+            if (!item.type) return Fail("关联类型要求尚未绑定具体定义：" + item.name);
+            value.kind = Meta::Type;
+            value.type = item.type;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else
+            return Fail("关联类型没有此编译期属性：" + property);
         return true;
     }
     if (value.kind == Meta::Parameter)
@@ -547,6 +610,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
             value.owner = ReadMacroVariants(value.type);
             if (!value.owner) return false;
             value.kind = Meta::Variants;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "associatedTypes")
+        {
+            value.owner = ReadMacroAssociatedTypes(value.type, value.type);
+            if (!value.owner) return false;
+            value.kind = Meta::AssociatedTypes;
             SetMacroMetadata(id, std::move(value));
         }
         else if (property == "methods" || property == "interfaces")

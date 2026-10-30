@@ -492,6 +492,43 @@ The remaining statements inspect interfaces. Counter explicitly lists Named and 
 
 Use these collections in `$for method in $methods<T>()` or `$for contract in $interfaces<T>()`. A nested `$for parameter in method.parameters` reads parameters. Queries do not create callable machine pointers. Indices must be compile-time nonnegative constants. Collections and descriptors cannot escape into runtime storage; id only distinguishes identities within the current compilation.
 
+### Receivers and associated types
+
+The interface declaring a method and the object receiving a call are separate pieces of information. An associated type likewise distinguishes an interface requirement from an implementation's definition.
+
+<!-- verify-book -->
+```chali
+interface Source
+{
+    type Item;
+    Item get();
+}
+struct Numbers: Source
+{
+    type Item = int64;
+    Item get() { return 7; }
+}
+void main()
+{
+    println("{} {}", ($interfaces<Numbers>())[0].associatedTypes[0].name,
+        ($interfaces<Numbers>())[0].associatedTypes[0].type.name);
+    println("{}", ($methods<Numbers>())[0].receiverType.name);
+}
+```
+
+```text
+Item int64
+Numbers
+```
+
+Source requires an Item definition and uses it as get's result type. Numbers supplies int64, so get returns an integer.
+
+Main first reads the associated type from Numbers' first implemented interface: name is Item and type.name is int64. An interface requirement without an implementation has hasDefinition set to false. Test it in a compile-time condition before reading type. Associated types also support `$for item in contract.associatedTypes`.
+
+The second statement reads get's receiver, producing Numbers. An inherited default method retains the queried receiverType and its original declaringType. Static factories have no caller receiver; check hasReceiver before querying receiverType.
+
+Methods also expose hasMutableParameters, returnsMutableReference, usesUnsafe and hasPropagation. The first pair describes writable references in the signature. The latter pair observes direct unsafe and question-mark propagation syntax in the current body, excluding nested functions and closures. They do not prove an entire call chain free of side effects. Generated code still undergoes ordinary type, borrow and resource checks.
+
 ## 22.14 Reading a Complete Field Example
 
 [macro_fields.chl](../../../example/reflection/macro_fields.chl) applies these operations to printing, validation and JSON. Read it in four sections:

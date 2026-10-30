@@ -194,6 +194,7 @@ bool PrepareMacroDiagnostic(int id, const std::function<bool(int)> &normalize,
         const bool method = field.kind == Meta::Method;
         const bool parameter = field.kind == Meta::Parameter;
         const bool interfaceItem = field.kind == Meta::Interface;
+        const bool associated = field.kind == Meta::AssociatedType;
         const auto &name = variant ? field.owner->variants[field.variant].name : payload   ? field.owner->variants[field.variant].payloads[field.payload].name :
                                                                              method        ? field.owner->methods[field.method].name :
                                                                              parameter     ? field.owner->methods[field.method].parameters[field.parameter].name :
@@ -208,6 +209,7 @@ bool PrepareMacroDiagnostic(int id, const std::function<bool(int)> &normalize,
                                                         method        ? "方法 " :
                                                         parameter     ? "参数 " :
                                                         interfaceItem ? "接口 " :
+                                                        associated    ? "关联类型 " :
                                                                         "字段 ")
                  + std::string(field.owner->name.data(), field.owner->name.size()) + "." + std::string(name.data(), name.size()) + "（序号 " + std::to_string(index) + "）";
     }

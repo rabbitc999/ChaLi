@@ -391,11 +391,18 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 | 变体 | `name`、`index`、`id`、`payloads` |
 | 载荷 | `name`、`index`、`id`、精确 `type` |
 | 方法 | `name`、`index`、`id`、`declaringType`、`result`、`parameters`、`isStatic`、`isConstructor`、`hasBody`、`isInherited` |
+| 方法接收者与直接效果 | `hasReceiver`、`receiverType`、`usesUnsafe`、`hasPropagation`、`hasMutableParameters`、`returnsMutableReference` |
 | 参数 | `name`、`index`、`id`、精确 `type`、`isVariadic`、`hasDefault` |
-| 接口 | 规范 `name`、`index`、`id`、`type`、`isDirect` |
+| 接口 | 规范 `name`、`index`、`id`、`type`、`isDirect`、`associatedTypes` |
+| 关联类型集合 | `count`、常量下标；通过类型或接口描述符的 `associatedTypes` 读取 |
+| 关联类型 | `name`、`index`、`id`、`declaringType`、`hasDefinition`、已绑定时的 `type` |
 | 载荷／参数集合 | `count`、常量下标 |
 
 变体与载荷按声明顺序排列，无载荷变体的 `payloads.count` 为零。方法列出源声明与继承所得的方法，排除编译器自动补入的 `toString`；重载具有不同身份。`declaringType` 标识原声明所在类型，`isInherited` 区分继承实现。静态 `create` 等具名工厂同时是 `isStatic` 与 `isConstructor`。参数不包含隐式接收者，默认参数只暴露是否存在，不执行默认表达式。
+
+实例方法的 `receiverType` 是本次查询的实际接收者类型，继承方法的 `declaringType` 仍保留原声明者。静态方法的 `hasReceiver` 为 false，读取其 `receiverType` 报错。`usesUnsafe` 与 `hasPropagation` 只记录当前方法体的直接语法，不把局部函数或闭包的内部效果算入外层；`hasMutableParameters` 与 `returnsMutableReference` 描述签名中的可写引用。它们不表示纯函数，不汇总被调用函数的传递效果，也不替代借用或 unsafe 检查。
+
+接口描述符的 `associatedTypes` 按当前实现者绑定关联类型；类型描述符则读取该类型自身及继承要求。自身声明在前，基接口按源码顺序遍历，同名要求只列一次。仅有接口要求时 `hasDefinition` 为 false，读取 `type` 报错；可用 `$if item.hasDefinition` 先判断，再查询具体类型。集合支持 `$for item in contract.associatedTypes`。定义来自声明图，成员宏展开期也能读取，身份不依赖接口登记先后。
 
 接口按源码基接口顺序深度优先读取，首次出现时确定顺序，菱形继承去重；显式列出的基接口具有 `isDirect == true`。查询接口本身时，集合包含它的基接口，不包含自身。具体泛型实参保留在类型描述符中。类型描述符可继续读取 `fields`、`variants`、`methods`、`interfaces`，但查询对象仍须符合相应种类。
 

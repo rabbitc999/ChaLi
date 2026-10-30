@@ -17,7 +17,7 @@ MODULES = {
                "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
                "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
                "chali_macro_declarations", "chali_macro_members", "chali_macro_metadata",
-               "chali_macro_type_metadata", "chali_macro_controls", "chali_macro_control_flow",
+               "chali_macro_type_metadata", "chali_macro_member_contract", "chali_macro_controls", "chali_macro_control_flow",
                "chali_macro_diagnostics", "chali_macro_preview", "chali_macro_control_preview", "chali_macro_editor",
                "chali_lsp_macro_completion", "chali_lsp_macro_highlighting"],
     "language": ["chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],

@@ -106,6 +106,8 @@ Container declares an associated type Item, which each implementation defines. N
 
 First's `C: Container` constraint permits calling get. Its `C.Item` return type ties the result to that same implementation's associated type. Main selects Numbers explicitly, establishing an int64 result. An associated type is neither a string containing a type name nor a field that changes arbitrarily at runtime.
 
+Compile-time metadata retains this relationship: Container as implemented by Numbers binds Item to int64, whereas Container's requirement alone is unbound. Chapter 22 shows how to test hasDefinition before generating code that depends on the concrete type.
+
 
 The interface itself can be generic. Source<int64> specifies integer output, ScoreSource implements it, and the caller uses that interface.
 

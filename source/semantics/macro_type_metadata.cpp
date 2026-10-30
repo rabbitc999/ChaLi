@@ -72,6 +72,8 @@ int MacroMetadataDeclaration(const Memory::String &name)
     return -1;
 }
 
+#include "macro_associated_metadata.cpp"
+
 /**
  * @brief 从参数签名构建与源声明绑定的只读方法描述符。
  * @param owner 查询对象的快照。
@@ -81,38 +83,45 @@ int MacroMetadataDeclaration(const Memory::String &name)
  * @param parameters 已解析的普通参数列表。
  * @param isStatic 方法是否为类型级函数。
  * @param constructor 方法是否为构造入口。
- * @param body 方法是否具有实现体。
+ * @param body 方法实现体的节点编号；负值表示抽象要求。
  * @return 签名有效并追加成功时返回真。
  */
 bool AppendMacroMethod(chali_macro::MetadataType &owner, const Memory::String &declaringType, const Memory::String &name,
-                       const std::shared_ptr<MType> &result, const Memory::Vector<MParam> &parameters, bool isStatic, bool constructor, bool body)
+                       const std::shared_ptr<MType> &result, const Memory::Vector<MParam> &parameters, bool isStatic, bool constructor, int body)
 {
     if (!result) return Fail("方法元数据缺少返回类型：" + name);
     MReflectionBuilder names;
     names.indexDeclarations();
     chali_macro::MetadataMethod method;
     method.name = name;
-    method.result = result;
+    method.result = MacroResolveAssociated(result, owner.type->name);
+    if (!method.result) return false;
     method.index = owner.methods.size();
     method.declaringType = names.named(declaringType);
     method.inherited = declaringType != owner.type->name;
     method.isStatic = isStatic;
     method.isConstructor = constructor;
-    method.hasBody = body;
+    method.hasBody = body >= 0;
+    if (!isStatic) method.receiver = owner.type;
+    method.returnsMutableReference = method.result->kind == MType::Ptr && !method.result->readOnly;
+    std::size_t budget = 100000;
+    if (!ReadMacroMethodEffects(body, method, budget)) return false;
     Memory::String signature = "macro-method:" + names.key(NamedType(declaringType)) + "::" + name + (isStatic ? ":static(" : ":instance(");
     for (const auto &parameter : parameters)
     {
         if (!parameter.type) return Fail("方法元数据缺少参数类型：" + name);
         chali_macro::MetadataField item;
         item.name = parameter.source;
-        item.type = parameter.type;
+        item.type = MacroResolveAssociated(parameter.type, owner.type->name);
+        if (!item.type) return false;
+        method.hasMutableParameters = method.hasMutableParameters || (item.type->kind == MType::Ptr && !item.type->readOnly);
         item.index = method.parameters.size();
         item.variadic = parameter.variadic;
         item.hasDefault = parameter.defaultExpr >= 0;
-        signature += names.key(parameter.type) + (parameter.variadic ? "...;" : ";");
+        signature += names.key(Memory::makeShared<MType>(*item.type)) + (parameter.variadic ? "...;" : ";");
         method.parameters.push_back(std::move(item));
     }
-    signature += ")->" + names.key(result);
+    signature += ")->" + names.key(Memory::makeShared<MType>(*method.result));
     method.identity = MacroMetadataIdentity(signature);
     for (auto &parameter : method.parameters)
         parameter.identity = MacroMetadataIdentity(signature + ":parameter:" + Memory::toString(parameter.index));
@@ -204,14 +213,14 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroTypeMembers(const std:
     {
         for (const auto &method : interfaceMethods->second)
             if (!AppendMacroMethod(*result, method.owner, method.name, method.result, method.bodyParams,
-                                   method.isStatic, false, method.bodyId >= 0)) return nullptr;
+                                   method.isStatic, false, method.bodyId)) return nullptr;
         return result;
     }
     const auto structure = g_structs.find(type->name);
     if (structure != g_structs.end() && !structure->second.methods.empty())
     {
         for (const auto &method : structure->second.methods)
-            if (!method.superseded && !method.implicitDeclaration && !AppendMacroMethod(*result, method.declarationOwner.empty() ? type->name : method.declarationOwner, method.source == "__ctor" ? result->name : method.source, method.result, method.params, method.isStatic, method.isConstructor, method.bodyId >= 0)) return nullptr;
+            if (!method.superseded && !method.implicitDeclaration && !AppendMacroMethod(*result, method.declarationOwner.empty() ? type->name : method.declarationOwner, method.source == "__ctor" ? result->name : method.source, method.result, method.params, method.isStatic, method.isConstructor, method.bodyId)) return nullptr;
         return result;
     }
     // 声明展开期尚未建立方法表，仅读取已解析的声明；不执行方法体。
@@ -226,7 +235,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroTypeMembers(const std:
                                          parameter.kids.empty() ? -1 : parameter.kids[0] });
         }
         return AppendMacroMethod(*result, owner, syntax.s, T(syntax.type), parameters, syntax.type2 == 1,
-                                 syntax.type2 == 2 || (syntax.type2 == 1 && syntax.s == "create"), syntax.kids.size() > 1 && syntax.kids[1] >= 0);
+                                 syntax.type2 == 2 || (syntax.type2 == 1 && syntax.s == "create"), syntax.kids.size() > 1 ? syntax.kids[1] : -1);
     };
     const std::size_t slot = declaration.kind == MNode::EnumDecl || declaration.kind == MNode::OpcodeDecl ? 1 : 0;
     if (slot < declaration.kids.size())
