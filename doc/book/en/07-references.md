@@ -4,11 +4,15 @@
 **English** · [简体中文](../07-引用.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-A reference accesses an existing object instead of creating another owning value. Use the score variable to distinguish readonly access and write-back, then relate reference validity to the source lifetime.
+Some functions need to update the caller's counter or read an existing large object rather than compute from a value copy. References encode access to that same object while requiring a valid source throughout use.
+
+A writing function and a reading function introduce mut& and const&, followed by source binding, absence and escape. Their convenience and restrictions have the same cause: borrowed data is not independently owned by the reference.
 
 ## 7.1 Readonly and mutable borrowing
 
-T const& is a readonly reference and T mut& a mutable reference. Supply a source with &value. Mutable borrowing requires writable storage; a readonly reference does not permit mutating methods.
+Independent copies suit experiments, but incrementing a counter often needs to change the original. Express that distinction in the interface: mut& borrows writable access and const& borrows read access. The call's &value identifies the source.
+
+Increment changes score and read subsequently observes it. They work on the same integer with different permissions. A read-only reference cannot invoke mutating operations, and a mutable parameter still requires a writable source.
 
 <!-- verify-book -->
 ```chali
@@ -34,6 +38,13 @@ void main()
 4
 ```
 
+### Code walkthrough
+
+Increment's mut& parameter permits mutation through a borrow, and `&score` explicitly supplies the source object. Updating value therefore changes score from three to four rather than changing an integer copy.
+
+Read accepts const&, allowing observation through that interface. It returns the integer it reads, so println prints four. The calls borrow the same live score in sequence; this does not authorize overlapping conflicting mutable access. Read both the reference parameter type and the call-site borrowing syntax to determine which object a function affects.
+
+
 ## 7.2 A reference needs a source
 
 A reference is bound to a source when declared; ordinary references do not use null. Option<T const&> and Option<T mut&> represent an optional reference, with None indicating absence.
@@ -49,6 +60,12 @@ CHL1204 reports source and use paths. Typical fixes return an owning value, use 
 ## 7.4 Choose a parameter form
 
 Small copyable values can be passed by value. Use a reference when accessing an existing object and make mutation explicit. An owning return transfers a value to the caller; a reference return continues borrowing a source. Chapter 8 connects this distinction with cleanup.
+
+### Summary
+
+Trace each reference from use back to its source, checking writability, lifetime and any move or release. Ordinary references need sources; Option expresses absence instead of an uninitialized reference.
+
+The language permits alias relationships without permitting every overlapping access. Interpret diagnostics through the actual access and source path rather than importing another language's global exclusivity model. Next, connect these sources to cleanup on exit.
 
 ## 7.5 Exercises
 

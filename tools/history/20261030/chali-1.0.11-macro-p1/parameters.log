@@ -1,9 +1,0 @@
-test_mutable_reference_rejects_const (__main__.MacroParameterTests.test_mutable_reference_rejects_const) ... ok
-test_owned_parameter_is_independent (__main__.MacroParameterTests.test_owned_parameter_is_independent) ... ok
-test_readonly_reference_rejects_mutation (__main__.MacroParameterTests.test_readonly_reference_rejects_mutation) ... ok
-test_value_and_reference_parameters (__main__.MacroParameterTests.test_value_and_reference_parameters) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 13.682s
-
-OK

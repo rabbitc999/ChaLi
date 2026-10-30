@@ -106,3 +106,6 @@ example/native-callbacks/demo.h
 # 学生系统本地数据库凭据
 /example/students-server/config.local.json
 /example/students-server/*.local.json
+
+# 工具日志与验证历史只作本地归档，不纳入新提交。
+/tools/history/
