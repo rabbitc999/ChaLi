@@ -1,6 +1,0 @@
-struct Pair { uint8 first; int64 second; };
-void main() {
-    println("u8={} i8={} bool={} char={} f32={} f64={} i64={} str={} list={} pair={}",
-        rawSize<uint8>(),rawSize<int8>(),rawSize<bool>(),rawSize<char>(),rawSize<float32>(),rawSize<float64>(),
-        rawSize<int64>(),rawSize<String>(),rawSize<List<int64>>(),rawSize<Pair>());
-}

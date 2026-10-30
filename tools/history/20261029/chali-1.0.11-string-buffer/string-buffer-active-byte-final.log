@@ -1,3 +1,0 @@
-chali: tmp/string-buffer-active-byte.chl 第 1 行第 1 列：活跃字节借用期间不能修改 String 缓冲区：byte
- 1 | void main(){String value="abc";char const& byte=&value[0];value.reserve(100);println("{}",*byte);}
-   | ~~~~

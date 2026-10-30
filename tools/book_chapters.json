@@ -1,0 +1,214 @@
+{
+  "title": "ChaLi 程序设计语言",
+  "chapters": [
+    {
+      "id": 1,
+      "zh": "01-第一个程序.md",
+      "en": "01-getting-started.md",
+      "title": "第一个程序",
+      "description": "先运行、修改和检查一个程序"
+    },
+    {
+      "id": 2,
+      "zh": "02-猜数字.md",
+      "en": "02-guessing-game.md",
+      "title": "猜数字",
+      "description": "跟着输入、比较和循环完成第一个小游戏"
+    },
+    {
+      "id": 3,
+      "zh": "03-变量与类型.md",
+      "en": "03-variables-types.md",
+      "title": "变量与类型",
+      "description": "名字、值、基本类型和表达式"
+    },
+    {
+      "id": 4,
+      "zh": "04-函数.md",
+      "en": "04-functions.md",
+      "title": "函数",
+      "description": "把一段计算交给有名字的函数"
+    },
+    {
+      "id": 5,
+      "zh": "05-控制流.md",
+      "en": "05-control-flow.md",
+      "title": "控制流",
+      "description": "选择、重复、提前结束和带值控制流"
+    },
+    {
+      "id": 6,
+      "zh": "06-结构体.md",
+      "en": "06-structs.md",
+      "title": "结构体",
+      "description": "用字段与方法描述一个事物"
+    },
+    {
+      "id": 7,
+      "zh": "07-值语义.md",
+      "en": "07-value-semantics.md",
+      "title": "值语义",
+      "description": "理解副本、拥有值和移动"
+    },
+    {
+      "id": 8,
+      "zh": "08-引用.md",
+      "en": "08-references.md",
+      "title": "引用",
+      "description": "在不接管对象的情况下访问它"
+    },
+    {
+      "id": 9,
+      "zh": "09-资源与作用域.md",
+      "en": "09-resources-scopes.md",
+      "title": "资源与作用域",
+      "description": "让文件等资源有明确的结束位置"
+    },
+    {
+      "id": 10,
+      "zh": "10-枚举与模式匹配.md",
+      "en": "10-enums-patterns.md",
+      "title": "枚举与模式匹配",
+      "description": "表达不同状态并逐一处理"
+    },
+    {
+      "id": 11,
+      "zh": "11-模块与工程.md",
+      "en": "11-modules-projects.md",
+      "title": "模块与工程",
+      "description": "把程序拆成能理解的文件"
+    },
+    {
+      "id": 12,
+      "zh": "12-字符串与文本.md",
+      "en": "12-strings-text.md",
+      "title": "字符串与文本",
+      "description": "处理 UTF-8、文本查找和格式化"
+    },
+    {
+      "id": 13,
+      "zh": "13-容器.md",
+      "en": "13-collections.md",
+      "title": "容器",
+      "description": "选择数组、List、Map 和 Set"
+    },
+    {
+      "id": 14,
+      "zh": "14-错误处理.md",
+      "en": "14-error-handling.md",
+      "title": "错误处理",
+      "description": "区分缺失、失败与成功，逐步引入传播"
+    },
+    {
+      "id": 15,
+      "zh": "15-测试与调试.md",
+      "en": "15-testing-debugging.md",
+      "title": "测试与调试",
+      "description": "把预期行为变成可以重复的检查"
+    },
+    {
+      "id": 16,
+      "zh": "16-日志检索工具.md",
+      "en": "16-log-search.md",
+      "title": "日志检索工具",
+      "description": "把参数、文件和文本组合成命令行工具",
+      "imports": [
+        "example/log-search/src"
+      ]
+    },
+    {
+      "id": 17,
+      "zh": "17-接口与运行期多态.md",
+      "en": "17-interfaces.md",
+      "title": "接口与运行期多态",
+      "description": "按行为合作，匹配具体错误类型"
+    },
+    {
+      "id": 18,
+      "zh": "18-泛型.md",
+      "en": "18-generics.md",
+      "title": "泛型",
+      "description": "在保留类型信息时复用算法和数据结构"
+    },
+    {
+      "id": 19,
+      "zh": "19-函数值与闭包.md",
+      "en": "19-closures.md",
+      "title": "函数值与闭包",
+      "description": "把计算作为值传递并理解捕获"
+    },
+    {
+      "id": 20,
+      "zh": "20-迭代器.md",
+      "en": "20-iterators.md",
+      "title": "迭代器",
+      "description": "按元素处理数据，组合筛选与映射"
+    },
+    {
+      "id": 21,
+      "zh": "21-并发与线程.md",
+      "en": "21-concurrency.md",
+      "title": "并发与线程",
+      "description": "分配工作、传递消息并收束任务"
+    },
+    {
+      "id": 22,
+      "zh": "22-预处理与宏.md",
+      "en": "22-macros.md",
+      "title": "预处理与宏",
+      "description": "在编译期复用语法而保留检查"
+    },
+    {
+      "id": 23,
+      "zh": "23-注解与反射.md",
+      "en": "23-annotations-reflection.md",
+      "title": "注解与反射",
+      "description": "描述和读取程序的结构信息"
+    },
+    {
+      "id": 24,
+      "zh": "24-编译器指令.md",
+      "en": "24-compiler-directives.md",
+      "title": "编译器指令",
+      "description": "为运算、派生及借用来源表达契约"
+    },
+    {
+      "id": 25,
+      "zh": "25-不安全代码.md",
+      "en": "25-unsafe.md",
+      "title": "不安全代码",
+      "description": "在清楚边界时使用原始地址和存储"
+    },
+    {
+      "id": 26,
+      "zh": "26-与C互操作.md",
+      "en": "26-c-interop.md",
+      "title": "与C互操作",
+      "description": "把语言值交给原生接口再带回来"
+    },
+    {
+      "id": 27,
+      "zh": "27-AOT导出.md",
+      "en": "27-aot-export.md",
+      "title": "AOT导出",
+      "description": "把程序交给另一台机器运行"
+    },
+    {
+      "id": 28,
+      "zh": "28-HTTP文件服务器.md",
+      "en": "28-http-file-server.md",
+      "title": "HTTP文件服务器",
+      "description": "逐步处理请求、文件响应和连接生命周期",
+      "imports": [
+        "example/http-files/src"
+      ]
+    },
+    {
+      "id": 29,
+      "zh": "29-学生信息管理系统.md",
+      "en": "29-student-management.md",
+      "title": "学生信息管理系统",
+      "description": "把登录、权限和教务数据组织成应用"
+    }
+  ]
+}

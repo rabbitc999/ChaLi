@@ -1,4 +1,0 @@
-usage: run.py [-h] [--runs RUNS] [--allocator {malloc,pool}]
-              [--compiler-source-commit COMPILER_SOURCE_COMMIT] [--only ONLY]
-              [--out OUT] [--cases CASES]
-run.py: error: unrecognized arguments: --chali chali-1.0.11-llvm-external-windows-x64.exe

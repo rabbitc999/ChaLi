@@ -1,3 +1,0 @@
-chali: tests/fixtures/aot_data_snapshot.chl:43:1: #export 参数必须为固定 C 标量或无资源纯值结构体
- 43 | int64 heapSum(int64 const& values, int64 count) {
-    | ~~~~~

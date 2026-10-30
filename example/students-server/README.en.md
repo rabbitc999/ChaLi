@@ -6,7 +6,7 @@
 
 A ChaLi school application with login, permissions, students, classes, grades, subjects and teachers. Administrators manage accounts and records, teachers maintain grades in their assigned class/subject scope, and students read their own profiles and grades. Every business API enforces permissions independently of visible browser actions.
 
-See [Chapter 25](../../doc/book/en/25-student-system.md) for architecture, actual screenshots and the complete walkthrough.
+See [Chapter 29](../../doc/book/en/29-student-management.md) for architecture, actual screenshots and the complete walkthrough.
 
 ## Configure and start
 

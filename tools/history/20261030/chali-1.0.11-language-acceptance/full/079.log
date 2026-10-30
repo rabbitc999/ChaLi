@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 86, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 43, in main
-    assert built.returncode == 0, (label, built.stdout, built.stderr, work)
-           ^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('malloc--checked-direct', '', 'chali: G:/Desktop/ChaLi/tests/fixtures/aot_string_buffer.chl 第 6 行第 5 列：模块 std::lang 的 inline 函数 __bootStringOwnedData 不能从模块 program 访问\n 6 |     return std::lang::__bootStringOwnedData(*slot);\n   |     ~~~~~~\n', WindowsPath('G:/Desktop/ChaLi/tmp/string-buffer-c3yqymgu'))

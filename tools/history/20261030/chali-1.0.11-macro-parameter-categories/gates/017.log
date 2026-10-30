@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_lsp_semantic_features.py", line 287, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_lsp_semantic_features.py", line 108, in main
-    assert 'a: value' in category_help['signatures'][0]['label'] and 'b: expr' in category_help['signatures'][0]['label'], category_help
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: {'signatures': [{'label': '宏 [1/1] $macro Categories(a:value,b:expr)', 'documentation': {'kind': 'markdown', 'value': '当前分组：a, b\n\n\n\na, b：2 项'}, 'parameters': [{'label': [26, 27]}, {'label': [34, 35]}], 'activeParameter': 1}], 'activeSignature': 0, 'activeParameter': 1, 'chaliGroups': [{'index': 0, 'name': 'a, b', 'count': 2, 'opening': '('}]}

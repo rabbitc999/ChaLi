@@ -36,7 +36,7 @@ Run `./ChaLi.exe aot input.chl --out build/program --checked` to lower the seman
 
 ![ChaLi AOT export: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
 
-The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/24-aot-export.md) for the supported scope and steps.
+The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
 
 ## Execution
 

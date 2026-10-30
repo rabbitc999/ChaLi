@@ -1,1 +1,0 @@
-struct Box{String text;void reset(){self.text.clear();}};void main(){Box original;const Box box=original;box.reset();}

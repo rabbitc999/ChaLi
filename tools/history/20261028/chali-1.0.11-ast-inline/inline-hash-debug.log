@@ -1,4 +1,0 @@
-malloc custom hash collision and value copies PASS
-pool custom hash collision and value copies PASS
-debug retains call boundaries and output PASS
-math special values match before inlining PASS

@@ -8,11 +8,36 @@ Strings serve human display and external file, network and database protocols. D
 
 Begin with interpolation and escaping, then compare structural display with custom toString behavior. Understanding how text is formed supports appropriate choices of persistence formats, escaping and buffering.
 
-## 12.1 Text and boundaries
+## 12.1 From concatenation to slicing
+
+<!-- verify-book -->
+```chali
+void main()
+{
+    String first = "ChaLi";
+    String second = " 2026";
+    String joined = first + second;
+    println("{}", joined);
+    println("{}", joined.length());
+    println("{}", joined.substring(0, 5));
+    println("{}", joined.substring(5, joined.length() - 5));
+}
+```
+
+```text
+ChaLi 2026
+10
+ChaLi
+ 2026
+```
+
+Concatenation creates joined from two strings. length counts bytes; ASCII uses one byte per character but Chinese does not. substring takes a start and a length, so the two calls select the first five bytes and the remaining suffix.
+
+## 12.2 Text and boundaries
 
 String uses UTF-8. Byte offsets are not necessarily character boundaries. State whether an input limit counts bytes or user-visible characters, and do not infer non-ASCII behavior from ASCII examples.
 
-## 12.2 Interpolation and escaping
+## 12.3 Interpolation and escaping
 
 To include a count in a message, interpolation places its expression beside the surrounding text. The relationship remains visible: evaluate the expression, then display its result.
 
@@ -32,14 +57,12 @@ void main()
 count=4, inner=3, {literal}
 ```
 
-### Code walkthrough
-
 The f prefix enables interpolation. `{count + 1}` evaluates to four before insertion. The second interpolation contains another f string, which reads the unchanged count and produces inner=3 for insertion into the outer text.
 
 Escaped braces around literal preserve those characters instead of requesting a variable lookup. Once text is constructed, println merely prints that completed string through its placeholder. Calculating count+1 does not assign to count, explaining why the result contains both four and three.
 
 
-## 12.3 Structural and custom display
+## 12.4 Structural and custom display
 
 Default structural display helps diagnostics but is not a stable storage format. Provide toString for domain display. Use a serialization protocol with explicit failure handling for persistence or transport.
 
@@ -77,8 +100,6 @@ void main()
 (1, "two", [1, "two", true])
 ```
 
-### Code walkthrough
-
 The five calls show structural display for a structure, list, set, map and tuple. Pair displays its field contents, while List<Any> formats integers, strings and booleans according to their contents. Quotes around two identify a string in the display; they are not extra characters added to the stored value.
 
 The tuple's third item is the whole list, so its output nests list notation inside parentheses. The set and map have the shown acceptance output, but that observation does not promise sorting after every operation or across implementations. Structural text supports reading and diagnostics. Use a serialization API for exchange data even when a display resembles JSON.
@@ -107,14 +128,12 @@ name=ChaLi
 name=ChaLi
 ```
 
-### Code walkthrough
-
 Named defines toString to join a fixed prefix with self.name. Setting name to ChaLi therefore produces name=ChaLi instead of the default structural field display.
 
 `String text = value` demonstrates conversion in a String destination context. `cast<String>(value)` requests it explicitly. Both use the model's display behavior and print the same text. Producing a string does not permanently change value's type or establish that conversion to other destination types exists.
 
 
-## 12.4 Appending, buffers and safe output
+## 12.5 Appending, buffers and safe output
 
 Repeated appends depend on copies, temporaries and capacity growth. String can reuse allocated buffers; shortening does not imply freeing capacity. Optimizations must preserve observable copy and borrow behavior. Chapter 24 distinguishes compiler settings, and Chapter 25 uses textContent to display user data without interpreting names as HTML.
 
@@ -124,7 +143,7 @@ Decide whether text is for display or exchange before choosing interpolation, to
 
 External text may still be malformed or violate business rules. Error handling and the final project place parsing, field validation, SQL quoting and page display at their respective boundaries.
 
-## 12.5 Exercises
+## 12.6 Exercises
 
 1. Print an error containing non-ASCII text.
 2. Does formatting safely construct SQL?
@@ -138,4 +157,4 @@ External text may still be malformed or violate business rules. Error handling a
 3. For display; use explicit formats for stable storage.
 4. No; retained capacity supports later growth and drop releases the final buffer.
 
-Next: [Chapter 13](13-interfaces.md).
+Next: [Chapter 17](17-interfaces.md).

@@ -1,4 +1,0 @@
-压缩 489601 -> 90850 字节（比率 0.186）
-压缩 28756561 -> 12558690 字节（比率 0.437）
-内嵌手册 SHA256 相同，跳过生成。
-wrote build/chali-frontend/chali_stdlib_embedded.cpp (42 modules, 438207 bytes; 300 generator assets, 27040721 bytes)

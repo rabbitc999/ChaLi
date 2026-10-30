@@ -1,7 +1,0 @@
-START chali_reference_escape
-Traceback (most recent call last):
-  File "<stdin>", line 5, in <module>
-  File "G:\Desktop\ChaLi\tests\chali_reference_escape.py", line 27, in main
-    assert result.returncode != 0 and 'CHL1204' in result.stderr, (name, result)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('allocated_payload', CompletedProcess(args=['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', '--check', 'G:\\Desktop\\ChaLi\\tmp\\chali_reference_escape\\allocated_payload.chl'], returncode=0, stdout='', stderr=''))

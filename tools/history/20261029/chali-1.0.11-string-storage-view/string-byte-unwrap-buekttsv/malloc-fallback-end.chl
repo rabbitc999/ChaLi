@@ -1,1 +1,0 @@
-void main(){ String text="abc"; int64 i=3; println("{}", text.byteAt(i).unwrap()); }

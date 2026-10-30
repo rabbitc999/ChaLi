@@ -1,1 +1,0 @@
-data CString: legacy=9 bulk=1 allocations; boundaries, partial errors, UTF-8 and heap layouts OK

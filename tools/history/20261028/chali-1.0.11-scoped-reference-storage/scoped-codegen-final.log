@@ -1,3 +1,0 @@
-enum_payload {'__chali_impl_program__work': 1} {'__chali_impl_program__work': 0}
-struct_nested {'__chali_impl_program__work': 1} {'__chali_impl_program__work': 0}
-interface_mono {'f_v234_Multiply_apply': 1, '__chali_impl_program__work': 0} {'f_v234_Multiply_apply': 0, '__chali_impl_program__work': 0}

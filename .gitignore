@@ -109,3 +109,4 @@ example/native-callbacks/demo.h
 
 # 工具日志与验证历史只作本地归档，不纳入新提交。
 /tools/history/
+/doc/book/latex/chapters/

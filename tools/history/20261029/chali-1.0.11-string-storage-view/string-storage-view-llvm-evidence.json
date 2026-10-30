@@ -1,6 +1,0 @@
-{
-  "primitive_definitions": 3,
-  "optimized_length_has_liveness_check": true,
-  "optimized_length_has_cold_host_fallback": true,
-  "fixture_sha256": "97941dbba0ae5b9db3a06d6a4ba2ee8e24ad08facef7b306f56d53c1c8eabca9"
-}

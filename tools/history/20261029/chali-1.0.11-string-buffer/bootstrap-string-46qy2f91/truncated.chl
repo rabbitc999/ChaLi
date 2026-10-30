@@ -1,1 +1,0 @@
-void main() { String value="a"; value[0]=(char)240; value.unicodeChars(); }

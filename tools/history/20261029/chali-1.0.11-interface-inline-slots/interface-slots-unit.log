@@ -1,2 +1,0 @@
-pointer snapshot allocations: shared=64 original=128; independent handles and detach OK
-object slot allocations: inline=128 original=4096; collisions, 4096 lifetimes and cleanup OK

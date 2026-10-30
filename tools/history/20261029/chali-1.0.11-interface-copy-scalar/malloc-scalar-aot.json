@@ -1,9 +1,0 @@
-{
-  "label": "malloc-scalar-aot",
-  "command": [
-    "G:\\Desktop\\ChaLi\\tmp\\interface-copy-scalar-o2l_5oql\\malloc-scalar.exe"
-  ],
-  "code": 0,
-  "stdout": "interface snapshots and scalar object copy OK\n",
-  "stderr": ""
-}

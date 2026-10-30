@@ -1,0 +1,13 @@
+% 由 tools/gen_book_syntax.py 生成；从词法声明维护，库名称单独登记。
+\lstdefinelanguage{ChaLi}{
+  sensitive=true,
+  alsoletter={\$\#@\%},
+  morekeywords={_,__rawAlign,__rawSize,__typeTag,break,cast,const,continue,copy,defer,drop,elif,else,enum,export,fn,for,if,impl,import,in,inline,interface,let,loop,match,module,move,mut,new,opcode,return,scope,static,struct,type,unsafe,while,yield},
+  morekeywords=[2]{Any,Closeable,Copy,Drop,Err,Error,List,Map,None,Ok,Option,Result,Set,String,Value,bool,char,float32,float64,int16,int32,int64,int8,self,uint16,uint32,uint64,uint8,void},
+  morekeywords=[3]{\#NonCopyable,\#abi,\#borrow,\#derive,\#export,\#res,\#ret,\#static,$argc,$compile_assert,$compile_error,$concat,$count,$else,$end_for,$end_if,$end_macro,$end_match,$end_regex,$fields,$file,$for,$if,$line,$macro,$match,$member,$module,$regex,$replace,$stringify,$typecheck,\%define,\%elif,\%else,\%endif,\%error,\%if,\%ifdef,\%ifndef,\%symbol,\%undefine,\%unsymbol,\%warning,@annotation},
+  morekeywords=[4]{block,expr,false,ident,is,item,member,pattern,stmt,true,value},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}

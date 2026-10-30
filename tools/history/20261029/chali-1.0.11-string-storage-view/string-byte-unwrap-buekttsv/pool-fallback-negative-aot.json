@@ -1,9 +1,0 @@
-{
-  "label": "pool-fallback-negative-aot",
-  "command": [
-    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\pool-fallback-negative-aot.exe"
-  ],
-  "code": 1,
-  "stdout": "",
-  "stderr": "chali aot: panic：called Option.unwrap() on None\n出错位置：<内建 std::lang>:888（Option__uint8.unwrap）\n调用栈（内 → 外）：\n  Option__uint8.unwrap\n  main\n"
-}

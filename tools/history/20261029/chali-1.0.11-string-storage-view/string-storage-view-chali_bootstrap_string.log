@@ -1,9 +1,0 @@
-values VM/AOT passed
-negative-repeat VM/AOT passed
-negative-pad VM/AOT passed
-negative-slice VM/AOT passed
-invalid-lead VM/AOT passed
-invalid-continuation VM/AOT passed
-truncated VM/AOT passed
-surrogate VM/AOT passed
-default String bootstrap checks passed; logs: G:\Desktop\ChaLi\tmp\bootstrap-string-hmyxdndr

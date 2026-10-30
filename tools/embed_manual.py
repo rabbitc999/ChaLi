@@ -52,10 +52,10 @@ def generate():
             source = 'doc/25-literals-operators-macros.md'
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         if word in ('defer', 'scope', 'drop'):
-            source = 'doc/book/08-资源与作用域.md'
+            source = 'doc/book/09-资源与作用域.md'
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         if word == 'impl':
-            source = 'doc/book/21-与C互操作.md'
+            source = 'doc/book/26-与C互操作.md'
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         assert selected, f'关键字缺少明确的文档映射：{word}'
         if word in ('return', 'fn', 'copy', 'move', 'mut', '#derive'):

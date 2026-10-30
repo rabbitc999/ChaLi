@@ -1,3 +1,0 @@
-Syntax error: tests/fixtures/aot_reference_storage_children.chl:17:32: expected one of MACRO_END / MACRO_ELSE / MACRO_END_MATCH / MACRO_END_REGEX (44 candidates), found left bracket([)
- 17 |     int64 mut& data = new int64[length(&value)];
-    |                                ~

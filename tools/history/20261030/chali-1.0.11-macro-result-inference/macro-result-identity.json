@@ -1,6 +1,0 @@
-{
-  "source_commit": "2c92b98b85e4e6929685946ccb100c75ae37293f",
-  "working_tree": "",
-  "compiler_sha256": "f615347f6ec3f9574c3870963c34c444241aa5d9b640ca89db9c067626ad9dbb",
-  "build_info": "{\"version\":\"1.0.11\",\"llvm\":\"external\",\"execution\":\"aot\",\"vm\":false,\"svmb\":false}\n"
-}

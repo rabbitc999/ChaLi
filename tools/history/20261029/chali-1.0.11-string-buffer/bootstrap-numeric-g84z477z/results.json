@@ -1,8 +1,0 @@
-{
-  "compiler": "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
-  "compiler_sha256": "4ab902c1e87c4ec808deca7bc808a2cf6e5fb68f8d0164be91e11fa48035721d",
-  "vm": "passed",
-  "aot": "passed",
-  "optimized_bitcasts": "passed",
-  "conversion_calls": "eliminated"
-}

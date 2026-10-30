@@ -1,7 +1,0 @@
-import std::memory;
-void iterate(){
- List<String> values;values.push("abcdef");values.push("xyz");
- for(String item in values){int64 i=0;while(i<item.byteLength()){uint8 x=item.byteAt(i).unwrap();assert(x!=0u);i=i+1;}}
-}
-void main(){int64 before=std::memory::__memoryLiveBlocks();iterate();int64 after=std::memory::__memoryLiveBlocks();println("blocks {} {}",before,after);}
-

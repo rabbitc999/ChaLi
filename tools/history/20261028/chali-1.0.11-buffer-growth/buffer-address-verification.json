@@ -1,7 +1,0 @@
-{
-  "calls": [
-    "chali_panic"
-  ],
-  "body": "entry:\n  %0 = icmp eq i64 %p0, 0\n  br i1 %0, label %1, label %chali_require_reference.exit\n\n1:                                                ; preds = %entry\n  tail call void @chali_panic(ptr noundef nonnull @.str.28)\n  unreachable\n\nchali_require_reference.exit:                     ; preds = %entry\n  store i8 0, ptr @chali_return_float, align 1\n  ret i64 %p0",
-  "compiler_sha256": "3852318f17dec919281602c9a2d60d02d2399a23daed619f569116429d16046b"
-}

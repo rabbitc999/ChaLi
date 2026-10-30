@@ -14,13 +14,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chapters', help='仅核对指定逗号分隔章号；番外摘要仍核对全部章节')
     args = parser.parse_args()
-    selected = set(map(int, args.chapters.split(','))) if args.chapters else set(range(1, 26))
+    chapters = json.loads((ROOT/'tools/book_chapters.json').read_text(encoding='utf-8'))['chapters']
+    selected = set(map(int, args.chapters.split(','))) if args.chapters else {c['id'] for c in chapters}
     fixture = json.loads((ROOT / 'tests/book_extras_manifest.json').read_text(encoding='utf-8'))
     for name, digest in fixture['sha256'].items():
         text = (ROOT / 'doc/book' / name).read_text(encoding='utf-8')
         match = re.search(r'^## [^\n]*番外：[^\n]*\n', text, re.M)
         assert match, name
-        tail = re.sub(r'^## \d+\.\d+ ', '## ', text[match.start():], count=1).rstrip() + '\n'
+        tail = re.sub(r'^## \d+\.\d+ ', '## ', text[match.start():], flags=re.M).rstrip() + '\n'
         assert hashlib.sha256(tail.encode()).hexdigest() == digest, ('番外原文改变', name)
         if int(name[:2]) not in selected:
             continue
@@ -30,6 +31,12 @@ def main():
         prose = re.sub(r'```.*?```', '', text[:match.start()], flags=re.S)
         for phrase in ('绝不共享内存', '深到底', '零开销', '永远是对的', '一定能', '万无一失', '每段代码都实测运行过', 'ChaLi 没有这回事'):
             assert phrase not in prose, (name, phrase)
+    for chapter in chapters:
+        if chapter['id'] not in selected:
+            continue
+        text=(ROOT/'doc/book'/chapter['zh']).read_text(encoding='utf-8')
+        translated=(ROOT/'doc/book/en'/chapter['en']).read_text(encoding='utf-8')
+        assert PROGRAM.findall(text)==PROGRAM.findall(translated), ('双语例程不同', chapter['zh'])
     print(f'番外原文 {len(fixture["sha256"])} 章一致；重写教程 {len(selected)} 章双语例程与表述检查通过')
 
 

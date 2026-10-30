@@ -23,6 +23,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 | Who you are | Start here |
 | --- | --- |
+| Learning step by step | [The ChaLi Programming Language](../book/en/README.md): 29 chapters with log search, HTTP file service and a student system |
 | New to ChaLi | [Vision](00-vision.md) → [5-minute quickstart](01-quickstart.md) |
 | Evaluating it for a project | [Vision](00-vision.md) (includes "who should not use it") → [Cross-platform deployment](06-deployment.md) |
 | Ready to write code | [Language tour](02-language-tour.md) → [Language reference](04-language-reference.md) |
@@ -102,7 +103,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 - [Standard library ownership and string methods](32-opcode-values-strings.md)
 - [Reflection serialization and dynamic SQL](33-reflection-serialization-sql.md)
 
-The [25-chapter English book](../book/en/README.md) contains technical chapters, exercises and appendices. The Chinese edition also includes literary extras and a PDF. Chapter 25 follows the actual school application with architecture and browser screenshots.
+The [29-chapter English book](../book/en/README.md) contains technical chapters, exercises and appendices. The Chinese edition also includes literary extras and a PDF. Chapter 29 follows the actual school application with architecture and browser screenshots.
 
 - [Compiler safety boundaries and focused regression tests](34-compiler-safety.md)
 

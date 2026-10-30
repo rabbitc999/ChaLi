@@ -1,0 +1,331 @@
+module http_files;
+
+import std::io;
+import std::net;
+import std::text;
+import std::clock;
+import std::thread;
+
+struct Asset
+{
+    String route;
+    String contentType;
+    String body;
+}
+
+struct Request
+{
+    int64 errorStatus;
+    String method;
+    String route;
+}
+
+#derive(Equal)
+enum Phase
+{
+    Reading,
+    Writing
+}
+
+struct Connection
+{
+    std::net::TcpSocket socket;
+    Phase phase;
+    String input;
+    String output;
+    int64 sent;
+    int64 deadline;
+}
+
+/** 只在启动时读取明确列出的文本文件，网络路径不参与文件路径拼接。 */
+Result<Asset, Error> loadAsset(String root, String route, String file, String contentType)
+{
+    std::io::FileStream stream = std::io::FileStream::open(root + "/" + file, "r")?;
+    Asset asset;
+    asset.route = route;
+    asset.contentType = contentType;
+    asset.body = stream.readAllString(1048576)?;
+    return Result<Asset, Error>::Ok(asset);
+}
+
+Result<List<Asset>, Error> loadAssets(String root)
+{
+    List<Asset> assets;
+    assets.push(loadAsset(root, "/", "index.html", "text/html; charset=utf-8")?);
+    assets.push(loadAsset(root, "/notes.txt", "notes.txt", "text/plain; charset=utf-8")?);
+    assets.push(loadAsset(root, "/style.css", "style.css", "text/css; charset=utf-8")?);
+    return Result<List<Asset>, Error>::Ok(assets);
+}
+
+/** 检查头部字节，避免控制字节进入状态行、字段名或请求目标。 */
+bool validHeadBytes(String head)
+{
+    for (int64 index in range(0, head.length()))
+    {
+        int64 byte = (int64)head.byteAt(index).unwrap();
+        if (byte == 0 || byte == 127 || (byte < 32 && byte != 9 && byte != 10 && byte != 13))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** 解析教学版支持的请求头；不接受请求体、分块编码或折叠字段。 */
+Request parseRequest(String head)
+{
+    Request request;
+    request.errorStatus = 400;
+    if (!validHeadBytes(head))
+    {
+        return request;
+    }
+    List<String> lines = std::text::Text::split(head, "\r\n");
+    if (lines.len() == 0)
+    {
+        return request;
+    }
+    List<String> first = std::text::Text::split(lines[0], " ");
+    if (first.len() != 3 || first[0].isEmpty() || first[1].isEmpty())
+    {
+        return request;
+    }
+    request.method = first[0];
+    if (first[2] != "HTTP/1.1" && first[2] != "HTTP/1.0")
+    {
+        request.errorStatus = 505;
+        return request;
+    }
+    String target = first[1];
+    if (!std::text::Text::startsWith(target, "/") || std::text::Text::contains(target, "#"))
+    {
+        return request;
+    }
+    int64 hosts = 0;
+    int64 lengths = 0;
+    for (int64 index in range(1, lines.len()))
+    {
+        String line = lines[index];
+        if (line.isEmpty())
+        {
+            break;
+        }
+        int64 colon = std::text::Text::find(line, ":");
+        if (colon <= 0)
+        {
+            return request;
+        }
+        String rawName = line.substring(0, colon);
+        for (int64 letter in range(0, rawName.length()))
+        {
+            char ch = rawName[letter];
+            if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-'))
+            {
+                return request;
+            }
+        }
+        String name = std::text::Text::toLower(rawName);
+        String value = std::text::Text::trim(line.substring(colon + 1));
+        if (name == "host")
+        {
+            hosts += 1;
+            if (value.isEmpty() || hosts > 1)
+            {
+                return request;
+            }
+        }
+        if (name == "transfer-encoding")
+        {
+            return request;
+        }
+        if (name == "content-length")
+        {
+            lengths += 1;
+            if (lengths > 1 || value != "0")
+            {
+                return request;
+            }
+        }
+    }
+    if (first[2] == "HTTP/1.1" && hosts != 1)
+    {
+        return request;
+    }
+    if (request.method != "GET" && request.method != "HEAD")
+    {
+        request.errorStatus = 405;
+        return request;
+    }
+    int64 query = std::text::Text::find(target, "?");
+    if (query >= 0)
+    {
+        target = target.substring(0, query);
+    }
+    request.route = target;
+    request.errorStatus = 0;
+    return request;
+}
+
+String reason(int64 status)
+{
+    match (status)
+    {
+        200 => { return "OK"; }
+        400 => { return "Bad Request"; }
+        404 => { return "Not Found"; }
+        405 => { return "Method Not Allowed"; }
+        408 => { return "Request Timeout"; }
+        431 => { return "Request Header Fields Too Large"; }
+        505 => { return "HTTP Version Not Supported"; }
+        _ => { return "Internal Server Error"; }
+    }
+}
+
+/** 长度按 UTF-8 字节计；HEAD 省略正文但保留 GET 的表示长度。 */
+String response(int64 status, String contentType, String body, bool headOnly)
+{
+    String result = "HTTP/1.1 " + format("{}", status) + " " + reason(status) + "\r\n";
+    result += "Content-Type: " + contentType + "\r\n";
+    result += "Content-Length: " + format("{}", body.length()) + "\r\n";
+    result += "Connection: close\r\nX-Content-Type-Options: nosniff\r\n";
+    if (status == 405)
+    {
+        result += "Allow: GET, HEAD\r\n";
+    }
+    result += "\r\n";
+    if (!headOnly)
+    {
+        result += body;
+    }
+    return result;
+}
+
+String reply(String head, List<Asset> const& assets)
+{
+    Request request = parseRequest(head);
+    bool headOnly = request.method == "HEAD";
+    if (request.errorStatus != 0)
+    {
+        return response(request.errorStatus, "text/plain; charset=utf-8", reason(request.errorStatus) + "\n", headOnly);
+    }
+    for (Asset asset in *assets)
+    {
+        if (asset.route == request.route)
+        {
+            return response(200, asset.contentType, asset.body, headOnly);
+        }
+    }
+    return response(404, "text/plain; charset=utf-8", "Not Found\n", headOnly);
+}
+
+void startReply(Connection mut& connection, String output)
+{
+    connection.output = output;
+    connection.sent = 0;
+    connection.phase = Phase::Writing;
+    connection.deadline = std::clock::nowMs() + 2000;
+}
+
+/** 推进一个连接一次，不在其中等待其他字节到达。 */
+void advance(Connection mut& connection, List<Asset> const& assets)
+{
+    if (connection.phase == Phase::Reading)
+    {
+        String part = connection.socket.receiveAsync((int32)1024);
+        if (!part.isEmpty())
+        {
+            int64 searchFrom = connection.input.length() - 3;
+            if (searchFrom < 0) { searchFrom = 0; }
+            connection.input += part;
+            if (connection.input.length() > 8192)
+            {
+                startReply(connection, response(431, "text/plain", "Header too large\n", false));
+                return;
+            }
+            int64 end = connection.input.indexOf("\r\n\r\n", searchFrom);
+            if (end >= 0)
+            {
+                startReply(connection, reply(connection.input.substring(0, end + 4), assets));
+                return;
+            }
+        }
+        else if (connection.socket.status() != std::net::NET_PENDING)
+        {
+            connection.socket.close();
+            return;
+        }
+        if (std::clock::nowMs() >= connection.deadline)
+        {
+            startReply(connection, response(408, "text/plain", "Request timed out\n", false));
+        }
+        return;
+    }
+    int64 count = connection.socket.sendAsync(connection.output, connection.sent);
+    if (count > 0)
+    {
+        connection.sent += count;
+    }
+    if (connection.sent >= connection.output.length() || count < 0 || std::clock::nowMs() >= connection.deadline)
+    {
+        connection.socket.close();
+        connection.input = "";
+        connection.output = "";
+    }
+}
+
+/** 一个线程轮流推进八个连接，套接字始终由同一运行时拥有。 */
+void serve(std::net::TcpListener mut& listener, List<Asset> const& assets, int64 acceptLimit)
+{
+    Connection connections[8];
+    int64 accepted = 0;
+    while (true)
+    {
+        if (acceptLimit == 0 || accepted < acceptLimit)
+        {
+            std::net::TcpSocket peer = listener.acceptAsync();
+            if (peer.isOpen())
+            {
+                accepted += 1;
+                int64 slot = -1;
+                for (int64 index in range(0, 8))
+                {
+                    if (!connections[index].socket.isOpen() && slot < 0)
+                    {
+                        slot = index;
+                    }
+                }
+                if (slot < 0)
+                {
+                    peer.close();
+                }
+                else
+                {
+                    connections[slot].socket = move peer;
+                    connections[slot].phase = Phase::Reading;
+                    connections[slot].input = "";
+                    connections[slot].output = "";
+                    connections[slot].sent = 0;
+                    connections[slot].deadline = std::clock::nowMs() + 2000;
+                }
+            }
+        }
+        int64 active = 0;
+        for (int64 index in range(0, 8))
+        {
+            if (connections[index].socket.isOpen())
+            {
+                advance(&connections[index], assets);
+            }
+            if (connections[index].socket.isOpen())
+            {
+                active += 1;
+            }
+        }
+        if (acceptLimit > 0 && accepted >= acceptLimit && active == 0)
+        {
+            break;
+        }
+        std::thread::sleepFor(1);
+    }
+    listener.close();
+}

@@ -1,1 +1,0 @@
-void main() { println("{}",std::lang::rawSize<void>()); }

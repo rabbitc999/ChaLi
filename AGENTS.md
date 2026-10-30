@@ -40,6 +40,7 @@
 
 - 文档索引为 doc/README.md；已有中英文对应页同步，链接使用相对路径，参考文档只写当前用法。
 - 中文书稿修改同步 Markdown、LaTeX 和 PDF；番外及技术对照放在章末，小结、习题与参考解答在前。英文书稿放在 doc/book/en/，不翻译番外、不生成 LaTeX/PDF，由 man book 内嵌和导出。
+- doc/book/latex/chapters/ 是 Markdown 自动生成的章节目录，只在本地生成与验证，由 .gitignore 排除；不提交生成章节。Markdown、生成脚本、LaTeX 主文件与高亮定义继续纳入版本控制。tools/history/ 同样只供本地归档，不提交，不为此改写历史。
 - 程序版本以 VERSION 为准，语言服务与插件 chaliCompilerVersion 一致；插件 version 与编译器版本一致，按 LLVM 静态／外置链接分别打包，并核对实际内嵌变体。
 - CHANGELOG.md 从 tools/changelog_data.json 生成。历史测量保留真实版本、配置和原始数据，不因改版本号或 tag 重标结果。
 - 产物名使用 chali-版本-llvm-链接方式-系统或发行版-架构，例如 chali-1.0.8-llvm-external-windows-x64.exe。

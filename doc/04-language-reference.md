@@ -761,7 +761,7 @@ void main() {
 
 `<T:a>` 从实参静态类型推导；`<T:#res>`（或兼容写法 `<T>`）从外层期望结果类型推导，显式类型优先。`[]`、`()`、`{}` 是严格有序参数组，`...rest` / `..rest` 是末尾变长形参，`$for` 遍历片段列表。`$match x is expr` 支持 `expr`、`ident`、`type`、`block`、`stmt`，`$else is` 顺序选分支，`$end_match` 结束。`$regex x is "模式"` 使用完整 ECMAScript 正则匹配原文，`$end_regex` 结束。未选分支不进入最终语义检查。
 
-固定形参可标注 `x: value`、`x: expr`、`name: ident`、`T: type`、`body: stmt` 或 `body: block`。value 参数在展开体执行前各求值一次；expr 是按放置位置执行的语法片段，可重复执行或不执行。未标注参数保持兼容；引用仅可标注 value。带类别的变参和 pattern／item 尚未支持。
+固定形参和末尾变参支持 value、expr、ident、type、stmt、block、pattern 类别。value 参数在展开体执行前按实参顺序各求值一次，修改的是副本；expr 按放置位置执行，可重复或不执行。引用仅可标注 value；`&n` 只读借用，`mut &n` 可写回来源。显式结果类别为 `-> expr`、`-> stmt`、`-> item`、`-> member`，分别生成表达式、语句、模块声明、类型成员。`$fields<T>()`、`$member`、`$for`、`$if` 与编译期诊断可按具体结构体字段生成操作，完整例子见[宏教程](book/22-预处理与宏.md)。
 
 `$stringify(x)` 读取原文，`$concat(a, b)` 仅产生标识符，`$line` / `$file` / `$module` 保留来源。`$replace A(x) x + 1` 为单行宏。完整规则与可运行示例见 [卫生宏](25-literals-operators-macros.md#编译期卫生-ast-宏)。
 
@@ -841,7 +841,7 @@ int64 c_function(int64 x);
 
 `std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。公开的 `std::lang::rawSize<T>()` 无需 unsafe，返回当前 ChaLi 值布局的字节数，例如 `rawSize<uint8>()` 为 1，`rawSize<int64>()` 为 8；聚合按语言布局计算。它不表示动态对象的占用，也不等于宿主 C ABI 的 `sizeof`。直接数组、宿主别名及 void 不支持该查询，数组可放进具名结构体。内部 `__rawSize(T)` 与 `__rawAlign(T)` 仍只供 unsafe 内核使用。借出的引用不得超过存储寿命或相应元素生命周期。
 
-`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](41-unsafe-abi.md)和[书稿第 25 章](book/23-不安全代码.md)。
+`BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](41-unsafe-abi.md)和[书稿第 25 章](book/25-不安全代码.md)。
 
 ---
 
@@ -878,7 +878,7 @@ int64 c_function(int64 x);
 
 同一块内，变量完整移动后可以用声明语法重新定义同名变量（也可使用不同类型）：`String a="1"; String b=move a; String a="2";`。新声明分配独立存储，旧引用仍指向旧对象，不能访问已移动对象。所有到达新声明的控制流路径都必须已完整移动旧变量；只移动字段或仅部分分支移动时，不允许重复声明。
 
-返回函数值的匿名函数也可以将返回类型括起：`(int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) { int64 fn copy(int64 x) { a(b(x)) } }`。外层末尾的闭包表达式与内层末尾的调用表达式都不加分号，分别返回函数值与整数；返回的闭包必须拥有 `a`、`b`，不能借用本次调用的局部形参。完整例子见[函数值与闭包](book/15-函数值与闭包.md)。
+返回函数值的匿名函数也可以将返回类型括起：`(int64 fn(int64)) fn(int64 fn(int64) a, int64 fn(int64) b) { int64 fn copy(int64 x) { a(b(x)) } }`。外层末尾的闭包表达式与内层末尾的调用表达式都不加分号，分别返回函数值与整数；返回的闭包必须拥有 `a`、`b`，不能借用本次调用的局部形参。完整例子见[函数值与闭包](book/19-函数值与闭包.md)。
 
 ## fn 捕获方式
 

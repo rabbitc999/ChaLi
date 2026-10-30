@@ -54,8 +54,6 @@ void main()
 copy original
 ```
 
-### Code walkthrough
-
 Packet has a Data variant carrying a String and an Empty variant carrying none. Packet currently holds Data, so both matches choose that arm. Empty still needs handling so the expression produces a result for every variant.
 
 The first match binds a value copy of the payload as text, changes it to copy and yields it to label. It does not update packet. Matching again therefore reads original, producing `copy original`. Each text binding belongs to its own arm scope; the second is not the modified variable from the first match.
@@ -93,8 +91,6 @@ Ada: ready
 ready
 ```
 
-### Code walkthrough
-
 Message declares two ordered payload fields. Construction supplies Ada for sender and ready for text. The first match binds both and prints `Ada: ready`; Idle is not selected on this run.
 
 The second match uses `_` to ignore the first payload while binding text, so it prints only ready. Ignoring a binding does not remove the sender from event. Read matching in two stages: the variant name selects the arm, then the positions in parentheses select the values to bind.
@@ -126,8 +122,6 @@ void main()
 1 1
 ```
 
-### Code walkthrough
-
 Derivation supplies comparison, hashing and cloning for BookPacket. First holds Text("value"), and second retains its variant and payload after cloning. The assertion checks that Text and Empty differ: their variant identities already differ before considering a string payload.
 
 Println then verifies equality between first and second and consistent hashes, giving two true results. Derived behavior must consider both variant and payload. The actual hash value is not printed here and should not be treated as a stable external identifier.
@@ -157,4 +151,4 @@ Option and Result apply this structure to absence and failure in Chapter 16. Fir
 3. Keep a fallback for remaining alternatives or interface implementations.
 4. No; lifetime and access restrictions remain.
 
-Next: [Chapter 11](11-containers.md).
+Next: [Chapter 13](13-collections.md).

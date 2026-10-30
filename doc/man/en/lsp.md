@@ -22,7 +22,7 @@ void main() {
 }
 ```
 
-This body computes factorial and prints `fac(3)=6`. Assignment targets respect lexical shadowing and also support function-typed struct fields. [Chapter 15](../../book/en/15-functions-closures.md) also includes Fibonacci and call counters showing that closure bodies execute when invoked.
+This body computes factorial and prints `fac(3)=6`. Assignment targets respect lexical shadowing and also support function-typed struct fields. [Chapter 19](../../book/en/19-closures.md) also includes Fibonacci and call counters showing that closure bodies execute when invoked.
 
 Completion, hover, definitions and refactoring share binding scans and type queries. Original document URIs and declaration offsets distinguish shadowed names. Queries cover `for(let item in values)` element types, generic fields and method results, inference of direct function type parameters, explicit generic arguments, nested `fn` results and contextual anonymous function parameters. Uncertain types do not produce inlay hints; compiler diagnostics remain authoritative.
 

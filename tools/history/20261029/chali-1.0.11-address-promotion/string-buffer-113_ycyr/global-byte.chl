@@ -1,1 +1,0 @@
-String value="abc";char const& byte=&value[0];void main(){value.clear();println("{}",*byte);}

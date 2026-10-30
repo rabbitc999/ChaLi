@@ -6,6 +6,8 @@
 可重跑、确定性输出；book.tex 手写，不归本脚本管。
 """
 import io
+import json
+from pathlib import Path
 import os
 import re
 
@@ -14,34 +16,11 @@ BOOK = os.path.normpath(os.path.join(HERE, '..', '..'))     # doc/book
 OUT = os.path.join(BOOK, 'latex', 'chapters')
 REPO_WEB = 'https://github.com/rabbitc999/ChaLi'
 
-FILES = [
-    ('01-第一个程序.md', 'ch01.tex'),
-    ('02-猜数字.md', 'ch02.tex'),
-    ('03-变量与类型.md', 'ch03.tex'),
-    ('04-函数.md', 'ch04.tex'),
-    ('05-控制流.md', 'ch05.tex'),
-    ('06-值语义.md', 'ch06.tex'),
-    ('07-引用.md', 'ch07.tex'),
-    ('08-资源与作用域.md', 'ch08.tex'),
-    ('09-结构体.md', 'ch09.tex'),
-    ('10-枚举与模式匹配.md', 'ch10.tex'),
-    ('11-容器.md', 'ch11.tex'),
-    ('12-字符串与文本.md', 'ch12.tex'),
-    ('13-接口与运行期多态.md', 'ch13.tex'),
-    ('14-泛型.md', 'ch14.tex'),
-    ('15-函数值与闭包.md', 'ch15.tex'),
-    ('16-错误处理.md', 'ch16.tex'),
-    ('17-迭代器.md', 'ch17.tex'),
-    ('18-模块与工程.md', 'ch18.tex'),
-    ('19-预处理与宏.md', 'ch19.tex'),
-    ('20-注解与反射.md', 'ch20.tex'),
-    ('21-与C互操作.md', 'ch21.tex'),
-    ('22-编译器指令.md', 'ch22.tex'),
-    ('23-不安全代码.md', 'ch23.tex'),
-    ('24-AOT导出.md', 'ch24.tex'),
-    ('25-学生信息管理系统.md', 'ch25.tex'),
+CHAPTERS = json.loads((Path(BOOK).parents[1] / 'tools/book_chapters.json').read_text(encoding='utf-8'))['chapters']
+FILES = [(chapter['zh'], f"ch{chapter['id']:02d}.tex") for chapter in CHAPTERS] + [
     ('A-常见错误速查.md', 'appendix-a.tex'),
     ('B-标准库速查.md', 'appendix-b.tex'),
+    ('C-语法与操作符.md', 'appendix-c.tex'),
     ('README.md', 'preface.tex'),
 ]
 
@@ -267,8 +246,14 @@ class Converter:
     def split_row(self, line):
         line = line.strip().strip('|')
         cells, buf, incode = [], '', False
+        escaped = False
         for ch in line:
-            if ch == '`':
+            if escaped:
+                buf += ch if ch == '|' else '\\' + ch
+                escaped = False
+            elif ch == '\\':
+                escaped = True
+            elif ch == '`':
                 incode = not incode
                 buf += ch
             elif ch == '|' and not incode:
@@ -276,6 +261,8 @@ class Converter:
                 buf = ''
             else:
                 buf += ch
+        if escaped:
+            buf += '\\'
         cells.append(buf.strip())
         return cells
 
@@ -513,7 +500,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for src, dst in FILES:
         mode = 'preface' if src == 'README.md' else (
-            'appendix' if re.match(r'^[AB]-', src) else 'chapter')
+            'appendix' if re.match(r'^[ABC]-', src) else 'chapter')
         text = io.open(os.path.join(BOOK, src), encoding='utf-8').read()
         tex = Converter(mode).convert(text)
         io.open(os.path.join(OUT, dst), 'w', encoding='utf-8', newline='\n').write(tex)

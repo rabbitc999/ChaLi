@@ -1,0 +1,143 @@
+module log_search;
+
+import std::io;
+import std::text;
+
+struct Options
+{
+    String query;
+    String path;
+    bool ignoreCase;
+    bool countOnly;
+    bool help;
+}
+
+struct Hit
+{
+    int64 lineNumber;
+    String text;
+}
+
+/** 把参数转换为配置；不读取文件，也不执行输出。 */
+Result<Options, Error> parseOptions(List<String> arguments)
+{
+    Options options;
+    List<String> positional;
+    bool flags = true;
+    for (String argument in arguments)
+    {
+        if (flags && argument == "--")
+        {
+            flags = false;
+        }
+        else if (flags && argument == "--ignore-case")
+        {
+            options.ignoreCase = true;
+        }
+        else if (flags && argument == "--count")
+        {
+            options.countOnly = true;
+        }
+        else if (flags && argument == "--help")
+        {
+            options.help = true;
+        }
+        else if (flags && std::text::Text::startsWith(argument, "--"))
+        {
+            return Result<Options, Error>::Err(MessageError::from("unknown option: " + argument));
+        }
+        else
+        {
+            positional.push(argument);
+        }
+    }
+    if (options.help)
+    {
+        return Result<Options, Error>::Ok(options);
+    }
+    if (positional.len() != 2)
+    {
+        return Result<Options, Error>::Err(MessageError::from("usage: log-search [--ignore-case] [--count] [--] QUERY FILE"));
+    }
+    options.query = positional[0];
+    options.path = positional[1];
+    if (options.query.isEmpty())
+    {
+        return Result<Options, Error>::Err(MessageError::from("query must not be empty"));
+    }
+    return Result<Options, Error>::Ok(options);
+}
+
+/** 读取至多四 MiB 文本；资源在作用域退出时清理。 */
+Result<String, Error> readText(String path)
+{
+    std::io::FileStream stream = std::io::FileStream::open(path, "r")?;
+    return stream.readAllString(4194304);
+}
+
+/** 找出匹配行，保留原文和从一开始的行号；大小写选项只折叠 ASCII。 */
+List<Hit> search(String text, String query, bool ignoreCase)
+{
+    List<Hit> hits;
+    List<String> lines = std::text::Text::split(text, "\n");
+    String needle = query;
+    if (ignoreCase)
+    {
+        needle = std::text::Text::toLower(needle);
+    }
+    for (int64 index in range(0, lines.len()))
+    {
+        String line = lines[index];
+        if (index == lines.len() - 1 && line.isEmpty())
+        {
+            break;
+        }
+        if (std::text::Text::endsWith(line, "\r"))
+        {
+            line = line.substring(0, line.length() - 1);
+        }
+        String candidate = line;
+        if (ignoreCase)
+        {
+            candidate = std::text::Text::toLower(candidate);
+        }
+        if (std::text::Text::contains(candidate, needle))
+        {
+            Hit hit;
+            hit.lineNumber = index + 1;
+            hit.text = line;
+            hits.push(hit);
+        }
+    }
+    return hits;
+}
+
+/** 完成一次查询；可预测的输入和读取错误继续交给调用方处理。 */
+Result<int64, Error> run(List<String> arguments)
+{
+    Options options = parseOptions(arguments)?;
+    if (options.help)
+    {
+        println("usage: log-search [--ignore-case] [--count] [--] QUERY FILE");
+        return Result<int64, Error>::Ok(0);
+    }
+    let loaded = readText(options.path);
+    if (loaded.isErr())
+    {
+        return Result<int64, Error>::Err(MessageError::from(options.path + ": " + loaded.error().toString()));
+    }
+    String text = loaded.unwrap();
+    List<Hit> hits = search(text, options.query, options.ignoreCase);
+    if (options.countOnly)
+    {
+        println("{}", hits.len());
+    }
+    else
+    {
+        for (Hit hit in hits)
+        {
+            println("{}:{}", hit.lineNumber, hit.text);
+        }
+    }
+    return Result<int64, Error>::Ok(hits.len());
+}

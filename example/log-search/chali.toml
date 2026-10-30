@@ -1,0 +1,7 @@
+[package]
+name = "log-search"
+version = "0.1.0"
+
+[chali]
+main = "src/main.chl"
+run = "run"

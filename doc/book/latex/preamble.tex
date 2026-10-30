@@ -17,31 +17,31 @@
 \title{ChaLi 程序设计语言}
 \subtitle{语言基础、标准库与应用实践}
 \author{小兔糖糖\_OvO}
-\institute{}
+\institute{家里蹲大学}
 \extrainfo{初次见面，我已经关注你很久了。别看我像个孩子，其实我比任何一位大人都了解这个世界。所以我可以用我的知识，换取你路上的见闻吗？——《原神》纳西妲}
 
-\date{ChaLi 1.0.11 · 2026年10月30日}
+\date{ChaLi 1.0.11 · 2026年10月31日}
 \hypersetup{pdftitle={ChaLi 程序设计语言},pdfauthor={小兔糖糖\_OvO}}
 \cover{figure/cover.pdf}
 
 % ------------------------- 代码样式 -------------------------
+\input{chali_language.tex}
 % chali 源码：带行号、关键字着色
 \lstdefinestyle{chali}{
-  language=C,
+  language=ChaLi,
   basicstyle=\ttfamily\small,
   numbers=left,
   numberstyle=\color{black},
   keywordstyle=\color{red!40!orange},
+  keywordstyle=[2]\color{blue!65!black},
+  keywordstyle=[3]\color{violet!80!black},
+  keywordstyle=[4]\color{teal!70!black},
   commentstyle=\color{gray},
   stringstyle=\color[RGB]{128,0,0},
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
   breaklines=true, columns=fullflexible, keepspaces=true,
   showstringspaces=false, tabsize=4,
-  morecomment=[l]{//},
-  morecomment=[s]{/*}{*/},
-  morestring=[b]",
-  morekeywords={int8,int16,int32,int64,uint8,uint16,uint32,uint64,float32,float64,bool,char,String,opcode,auto,const,let,struct,enum,interface,generic,fn,match,if,elif,else,while,for,loop,in,return,break,continue,module,import,inline,export,heap,as,new,delete,move,copy,mut,ref,self,static,true,false,void,unsafe,__rawSize,__rawAlign,annotation,Option,Result,Some,None,Ok,Err,List,Map,Set,Pair,Any,Drop,Closeable,main,println,print,assert,defer,scope,exit,type,yield}
 }
 % 程序输出
 \lstdefinestyle{out}{

@@ -1,18 +1,12 @@
-# Chapter 3 Variables and types
+# Chapter 3 Variables and Types
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../03-变量与类型.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Data needs both a name and a type explaining its representation. A number might represent a score, count or capacity, with different valid ranges and mutation rules. Choose types from the data's meaning before choosing concise syntax.
+Imagine recording an exam score. It starts at 70 and gains five points after review. The program needs a name by which later statements can find the current value.
 
-The chapter proceeds through declarations, updates, literal typing, overload observation and explicit conversion. Track the declared type separately from the changing value rather than treating inference as unrestricted runtime type changes.
-
-## 3.1 Declarations, assignment and inference
-
-Start with a score. Declaration gives it a name and int64 type; initialization supplies seventy. Later assignment changes the current value rather than selecting a new type, explaining why the same score can later hold seventy-five.
-
-Use let when the initializer provides enough type information. Use const to restrict changes through the binding. Inference and read-only access solve different problems, and ordinary const does not automatically meet every compile-time evaluation requirement, such as an array dimension.
+## 3.1 Name a value
 
 <!-- verify-book -->
 ```chali
@@ -30,18 +24,21 @@ void main()
 75 2 100
 ```
 
-### Code walkthrough
+The first statement in main, `int64 score = 70;`, declares score, selects the int64 type, and initializes it to 70. The right-hand expression supplies the first value for the new variable.
 
-`int64 score = 70` supplies a type, name and initial value. `+= 5` reads that value, adds five and stores the result, so score is 75 before printing. `let count = 2` asks the compiler to infer a type from the initializer; omitting an explicit type does not omit initialization.
+`score += 5;` updates that existing variable. It adds five to the current value and stores the result, 75, without creating a new score or changing its type.
 
-`const int64 limit = 100` prevents ordinary reassignment of that binding. The three `{}` placeholders receive score, count and limit in order, yielding 75, 2 and 100. The placeholder braces are formatting syntax rather than printed data. Distinguish declaration, mutation and read-only constraints when tracing the result.
+`let count = 2;` asks the compiler to infer a concrete type. It does not make count a dynamically typed box. `const int64 limit = 100;` restricts later modification of limit. Inference and read-only access solve different problems.
 
+The three output placeholders receive score, count, and limit in that order. Change the initial score to 60, predict the new first item, and run again.
 
-## 3.2 Numbers, booleans and text
+## 3.2 Choose a representation
 
-Integer types differ in width and signedness; float32/float64 represent floating-point values. Bool is used for conditions, char for character values, and String for UTF-8 bytes. Byte count, character count and numeric range are different properties. Floating-point arithmetic has representation error; use the appropriate library for exact or arbitrary-precision requirements.
+Common integer types include int8, int16, int32, int64, and unsigned uint counterparts. Width and signedness determine their ranges. int64 is a useful starting point for ordinary counters; narrower types become useful for formats, foreign interfaces, and explicit range requirements.
 
-Unconstrained integer literals normally use int64. Suffixes, expected types and overloads can select other types.
+float32 and float64 represent floating-point values; bool holds true or false. `'A'` is a character literal, while `"A"` is a string. Chapter 12 develops text handling.
+
+The following larger example uses two functions as type labels. They share a name but accept different parameter types. Chapter 4 explains functions and overloads in detail.
 
 <!-- verify-book -->
 ```chali
@@ -77,16 +74,17 @@ void main()
 18446744073709551615
 ```
 
-### Code walkthrough
+The function declarations do not execute merely because they appear before main. In main, `1.0f` selects float32 while `1.0` selects float64, so the two observations produce different labels.
 
-The floatingKind overloads differ by parameter type and return fixed markers, 32 and 64, to reveal overload selection. They do not calculate a float's size. The f suffix gives `1.0f` type float32, so single selects that overload; unsuffixed `1.0` selects float64.
+The integer declarations demonstrate unsigned values at different widths. A u suffix does not remove the target type's range limit. The first print shows four observations; the second preserves the complete large integer.
 
-The u suffix demonstrates unsigned literal typing. The destination in `uint8 narrow = 255u` also imposes a range: a u suffix does not allow an arbitrarily large value in uint8. Maximum is the largest uint64 value, and the second output verifies its full decimal representation. The first line contains the unsigned identity result, two overload markers and narrow, in that order.
+Hexadecimal forms such as `0xff` and grouped forms such as `1_000` are other spellings of values. They do not enlarge the target representation. Appendix C collects literal forms and suffixes for later reference.
 
+## 3.3 Expressions produce values
 
-## 3.3 Conversions at representation boundaries
+`score + 5` produces a value; `score = score + 5;` uses it to update a variable. Parentheses make evaluation order clear: `(2 + 3) * 4` yields 20. A comparison such as `score >= 60` produces bool.
 
-Saving int64 as int32 can lose range, so narrowing is explicit: use a cast expression or cast<int32>. Consult the reference for implicit conversions and literal range checks. An explicit cast does not replace application input validation.
+Conversions also produce values:
 
 <!-- verify-book -->
 ```chali
@@ -102,35 +100,26 @@ void main()
 42
 ```
 
-### Code walkthrough
+The first declaration preserves the original value. Both conversion forms express a target type without modifying original. The output places the results together for comparison.
 
-Original is int64 and narrowed is int32. `cast<int32>(original)` explicitly requests narrowing on the right-hand side, after which the result initializes narrowed. It does not change original's declared type.
+The value 42 fits int32. For arbitrary input, a written conversion is not a range check: validate an amount or measurement before narrowing it.
 
-Because 42 fits the destination range, the output remains 42. This input demonstrates explicit conversion syntax, not that every int64 value is suitable. Validate external values against business requirements and the destination range before converting; cast is not an input-validation function.
+## 3.4 Names have scope
 
+Braces can define a local scope. A name declared inside it is not automatically available afterward. Functions, references, and resources will give this rule more practical uses.
 
-## 3.4 Scope and later use
-
-A name can denote different bindings in different scopes. Initialize a variable before reading it; ownership rules additionally govern use after a move. Function parameter and return types extend these checks across calls.
-
-### Summary
-
-Check a variable's name, type, current value and writability separately. Let omits inferable type text, const restricts mutation and cast requests conversion. Valid representation may still need a narrower business range for age or grades.
-
-The next chapter places these contracts at function boundaries. Parameter and result types retain the same compatibility and conversion rules during calls.
+When reading a variable, ask for its name, type, current value, and whether the binding permits modification.
 
 ## 3.5 Exercises
 
-1. Represent the score as float64.
-2. Compare let and Any.
-3. Why consider range when converting to int32?
-4. Does const imply compile-time execution?
+1. Change the initial score to 60 and predict the output.
+2. Replace count's inferred declaration with an explicit one.
+3. Why does const restrict later assignment to limit?
+4. Store whether the updated score is at least 60 in a bool.
 
 ### Answers and checks
 
-1. Change the type and initializer and inspect output.
-2. Let infers a type; Any is an explicit erased value.
-3. The target range is smaller; validate before converting.
-4. No. Compile-time evaluation has its own expression and budget limits.
-
-Next: [Chapter 4](04-functions.md).
+1. The first output becomes 65; the other items remain unchanged.
+2. Write `int64 count = 2;`.
+3. const imposes a checked read-only restriction on the binding.
+4. `bool passed = score >= 60;` stores the comparison result without changing score.

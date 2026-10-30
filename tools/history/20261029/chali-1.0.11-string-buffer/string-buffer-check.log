@@ -1,9 +1,0 @@
-chali: tests/fixtures/aot_string_buffer.chl:13:5: for-in 变量类型与 Vector<T> 元素不一致：写的是 std::lang::String mut&，容器元素是 std::lang::String
- 13 |     for(String mut& text in values){text.append("-尾部🙂");}
-    |     ~~~
-chali: tests/fixtures/aot_string_buffer.chl:44:5: 调用了没导入或没定义的模块函数：std::memory::__memoryLiveBlocks
- 44 |     int64 before=std::memory::__memoryLiveBlocks();
-    |     ~~~~~
-chali: tests/fixtures/aot_string_buffer.chl:46:5: 调用了没导入或没定义的模块函数：std::memory::__memoryLiveBlocks
- 46 |     assert(std::memory::__memoryLiveBlocks()==before);
-    |     ~~~~~~

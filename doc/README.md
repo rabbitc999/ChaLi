@@ -22,7 +22,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 | 你是谁 | 从哪开始 |
 | --- | --- |
-| 按顺序学习 ChaLi 并完成综合项目 | 入门书[《ChaLi 程序设计语言》](book/README.md)（第 1 章装工具链，一路到综合项目） |
+| 按顺序学习 ChaLi 并完成综合项目 | 入门书[《ChaLi 程序设计语言》](book/README.md)（29 章，从第一个程序到日志检索、HTTP 文件服务与学生系统） |
 | 第一次听说 ChaLi | [使命宣言](00-vision.md) → [5 分钟快速开始](01-quickstart.md) |
 | 评估它能不能用在我的项目上 | [使命宣言](00-vision.md)（含"不适合谁"）→ [跨平台部署](06-deployment.md) |
 | 开始写代码 | [语言速览](02-language-tour.md) → [语言参考](04-language-reference.md) |
@@ -82,7 +82,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 - [`doc/examples/`](examples/) —— 需要配套工程布局的示例（ABI、SQLite、GUI）。
 - [`doc/examples/`](examples/) 里的配套工程总览见 [13 示例项目](13-projects.md)。
 - [项目 README](../README.cn.md) —— 构建、快速使用、调试、配置。
-- [入门书《ChaLi 程序设计语言》](book/README.md) —— 从零开始的 25 章教程与附录，含分层习题、经典作品改编番外，以及前端编译与 AOT 流程图；完整示例与生成内容按对应回归核验。
+- [入门书《ChaLi 程序设计语言》](book/README.md) —— 从第一个程序逐步学习的 29 章教程与附录，含分层习题、经典作品改编番外，以及前端编译与 AOT 流程图；完整示例与生成内容按对应回归核验。
 - [完整语法参考（EBNF）](14-grammar-ebnf.md) —— 文法的权威形式，由 [`source/chali.gram`](../source/chali.gram) 生成。
 
 ## 英文文档

@@ -10,6 +10,7 @@
 
 ```sh
 python doc/book/latex/tools/md2tex.py
+python tools/gen_book_syntax.py
 python tests/chali_book_rewrite.py
 python tests/chali_book_updates.py
 ```
@@ -25,7 +26,7 @@ xelatex -interaction=nonstopmode -halt-on-error -output-directory=../../../tmp/b
 cp ../../../tmp/book-latex/book.pdf book.pdf
 ```
 
-生成的 `.tex` 章节入库，`book.pdf` 与其它 LaTeX 产物（`.aux` / `.log` / `.toc` / `.synctex.gz` 等）不入库，需要时按上面的命令构建；跑文档链接门禁前先构建出 PDF，`doc/book/README.md` 的电子书链接指向它。完整程序用 `<!-- verify-book -->` 标记，紧接 ChaLi 代码和预期输出；[书稿回归](../../../tests/chali_book_updates.py) 执行这些程序并检查全部生成章节一致。
+生成的 `chapters/`、`book.pdf` 与其它 LaTeX 产物（`.aux` / `.log` / `.toc` / `.synctex.gz` 等）只在本地保留，不入库。`tools/history/` 同样忽略；已跟踪的生成文件取消索引，不改写原提交历史。Markdown、生成脚本、主文件与 `chali_language.tex` 高亮定义入库。需要时按上面的命令构建；跑文档链接门禁前先构建出 PDF，`doc/book/README.md` 的电子书链接指向它。完整程序用 `<!-- verify-book -->` 标记，紧接 ChaLi 代码和预期输出；[书稿回归](../../../tests/chali_book_updates.py) 执行这些程序并检查全部生成章节一致。
 
 正文包括表达式、插值、关联类型、整数泛型、作用域清理、宏补全、捕获错误诊断、行输入、文件文本读取和终端手册，调整表格列宽及行内代码换行，避免长签名挤出页边。
 
@@ -45,7 +46,7 @@ ChaLi 代码使用四空格缩进，赋值及二元运算符两侧、逗号后�
 
 ## 运行图与保留原文
 
-[make_students_diagram.py](../../../tools/make_students_diagram.py) 生成第 25 章中英文 SVG 图源与 PNG，渲染需要 Playwright 和 Edge。运行截图由 [students_server.py](../../../tests/students_server.py) 连接独立 MySQL 测试库、启动真实程序并通过浏览器操作生成；从已通过验收的结果中复制需要的图片，保留角色、数据范围和应用摘要。
+[make_students_diagram.py](../../../tools/make_students_diagram.py) 生成第 29 章中英文 SVG 图源与 PNG，渲染需要 Playwright 和 Edge。运行截图由 [students_server.py](../../../tests/students_server.py) 连接独立 MySQL 测试库、启动真实程序并通过浏览器操作生成；从已通过验收的结果中复制需要的图片，保留角色、数据范围和应用摘要。
 
 [book_extras_manifest.json](../../../tests/book_extras_manifest.json) 记录本次重写之前的番外原文摘要。检查忽略换行风格和章末小节序号调整，核对标题、故事与技术对照原文；中英文完整例程的源码、输入和输出也需对应。交互程序使用 verify-book-input 的 JSON 字符串记录固定输入。
 

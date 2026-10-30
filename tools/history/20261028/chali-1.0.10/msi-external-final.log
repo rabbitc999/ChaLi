@@ -1,2 +1,0 @@
-+ wix build -arch x64 -intermediateFolder G:\Desktop\ChaLi\tmp\installers-xoyf9gfm\wix -o G:\Desktop\ChaLi\dist\installers\chali-1.0.10-llvm-external-windows-x64.msi G:\Desktop\ChaLi\tmp\installers-xoyf9gfm\chali.wxs
-安装包生成完成：G:\Desktop\ChaLi\dist\installers

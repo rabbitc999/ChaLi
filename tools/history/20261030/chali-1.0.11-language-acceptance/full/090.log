@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_bootstrap_string.py", line 68, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_bootstrap_string.py", line 48, in main
-    assert built.returncode == 0, (name, built.stdout, built.stderr, work)
-           ^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('values', '', 'chali: G:/Desktop/ChaLi/tests/fixtures/bootstrap_string_default.chl 第 45 行第 9 列：模块 std::lang 的 inline 函数 __bootStringFromInt 不能从模块 program 访问\n 45 |         String minimum=__stringAdopt(__bootStringFromInt(-9223372036854775807-1));\n    |         ~~~~~~\n', WindowsPath('G:/Desktop/ChaLi/tmp/bootstrap-string-nsuf3u1i'))

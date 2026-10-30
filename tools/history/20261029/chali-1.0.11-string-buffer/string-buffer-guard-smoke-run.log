@@ -1,7 +1,0 @@
-chali aot: panic: read from unallocated memory at address 18446744073709551615, byte count 1
-出错位置：<内建 std::lang>:164（std::lang::__bootStringLength）
-调用栈（内 → 外）：
-  std::lang::__bootStringLength
-  std::lang::__bootStringAppend
-  std::lang::String.append
-  main

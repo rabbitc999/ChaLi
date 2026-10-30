@@ -1,9 +1,0 @@
-{
-  "label": "pool-scalar-aot",
-  "command": [
-    "G:\\Desktop\\ChaLi\\tmp\\string-byte-unwrap-buekttsv\\pool-scalar.exe"
-  ],
-  "code": 0,
-  "stdout": "String byte unwrap OK\n",
-  "stderr": ""
-}

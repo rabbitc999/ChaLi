@@ -20,11 +20,11 @@ Commands normally use chali; follow the [installation guide](39-installation-pac
 
 ## Values, copies and moves
 
-Ordinary values retain independent observable value semantics; reference fields still express borrowing. Explicit moves transfer ownership. The compiler may remove copies or reuse storage while preserving behavior, so copy syntax does not imply a physical deep copy every time. Resource types retain noncopyable restrictions. See [values](../book/en/06-value-semantics.md) and [moves](24-ownership-move.md).
+Ordinary values retain independent observable value semantics; reference fields still express borrowing. Explicit moves transfer ownership. The compiler may remove copies or reuse storage while preserving behavior, so copy syntax does not imply a physical deep copy every time. Resource types retain noncopyable restrictions. See [values](../book/en/07-value-semantics.md) and [moves](24-ownership-move.md).
 
 ## Macro hygiene and evaluation
 
-Internal names are isolated from callers. Default value arguments evaluate once and mutations affect their copies. Reference arguments and expr syntax parameters have their own explicit behavior. Declaration macros are deferred. See [macros](../book/en/19-macros.md).
+Internal names are isolated from callers. Default value arguments evaluate once and mutations affect their copies. Reference arguments and expr syntax parameters have their own explicit behavior. Declaration macros are deferred. See [macros](../book/en/22-macros.md).
 
 ## Type erasure
 
@@ -32,11 +32,11 @@ Any retains concrete type information for checked recovery. Erasure does not can
 
 ## Reference validity
 
-Static checks track sources and use scopes. Programs must also meet external C ABI and unsafe preconditions: static borrowing does not validate arbitrary external binaries. See [references](../book/en/07-references.md) and [unsafe boundaries](41-unsafe-abi.md).
+Static checks track sources and use scopes. Programs must also meet external C ABI and unsafe preconditions: static borrowing does not validate arbitrary external binaries. See [references](../book/en/08-references.md) and [unsafe boundaries](41-unsafe-abi.md).
 
 ## Interfaces and dispatch
 
-Interfaces describe behavior implemented by concrete types. They support generics, inheritance and concrete-type matching. Behavior follows the actual receiver; known targets may be devirtualized or inlined while preserving observable results. See [interfaces](../book/en/13-interfaces.md).
+Interfaces describe behavior implemented by concrete types. They support generics, inheritance and concrete-type matching. Behavior follows the actual receiver; known targets may be devirtualized or inlined while preserving observable results. See [interfaces](../book/en/17-interfaces.md).
 
 ## Verification
 

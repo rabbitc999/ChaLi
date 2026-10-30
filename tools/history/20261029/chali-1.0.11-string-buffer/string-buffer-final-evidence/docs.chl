@@ -1,1 +1,0 @@
-void main(){String buffer;buffer.reserve(128);buffer.append("中文🙂");int64 capacity=buffer.capacity();buffer.clear();assert(buffer.isEmpty() && buffer.capacity()==capacity);}

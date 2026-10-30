@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 85, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 80, in main
-    assert checked.returncode != 0 and diagnostic in checked.stderr + checked.stdout, (name, checked, work)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('readonly', CompletedProcess(args=['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', 'check', 'G:\\Desktop\\ChaLi\\tmp\\string-buffer-nruaf7s7\\readonly.chl'], returncode=1, stdout='', stderr='chali: G:/Desktop/ChaLi/tmp/string-buffer-nruaf7s7/readonly.chl:1:1: A read-only reference (`T const&`) cannot modify elements or members\n 1 | void bad(String const& value){value.clear();}void main(){String value="abc";bad(&value);}\n   | ~~~~\n'), WindowsPath('G:/Desktop/ChaLi/tmp/string-buffer-nruaf7s7'))

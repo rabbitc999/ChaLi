@@ -35,7 +35,7 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ![ChaLi AOT 导出流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 24 章 AOT 导出](doc/book/24-AOT导出.md)。
+生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 27 章 AOT 导出](doc/book/27-AOT导出.md)。
 
 ## 运行过程
 

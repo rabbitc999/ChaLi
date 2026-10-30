@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_macro_result_inference.py", line 94, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_macro_result_inference.py", line 89, in main
-    assert result.returncode != 0 and diagnostic in result.stderr, result
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: CompletedProcess(args=['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', 'check', 'G:\\Desktop\\ChaLi\\tmp\\macro-result-inference-kvcm1bdl\\case4.chl', '--out', 'G:\\Desktop\\ChaLi\\tmp\\macro-result-inference-kvcm1bdl\\case4'], returncode=1, stdout='', stderr='chali: G:/Desktop/ChaLi/tmp/macro-result-inference-kvcm1bdl/case4.chl 第 6 行第 46 列：类型未实现目标接口：Unrelated -> Expected\n  展开宏 $Wrap，调用于 G:/Desktop/ChaLi/tmp/macro-result-inference-kvcm1bdl/case4.chl:6:46，定义于 G:/Desktop/ChaLi/tmp/macro-result-inference-kvcm1bdl/case4.chl:3:1\n 6 | void main(){Unrelated source;Expected result=$Wrap(0,source);}\n   |                                              ~~~~~\n')

@@ -1,0 +1,31 @@
+module httpFilesApp;
+
+import http_files;
+import std::net;
+import std::parse;
+
+void main(List<String> arguments)
+{
+    if (arguments.len() < 2 || arguments.len() > 3)
+    {
+        panic("usage: http-files PORT ROOT [ACCEPT_LIMIT]");
+    }
+    int64 port = std::parse::Parse::parseInt64(arguments[0]).unwrap();
+    int64 acceptLimit = 0;
+    if (arguments.len() == 3)
+    {
+        acceptLimit = std::parse::Parse::parseInt64(arguments[2]).unwrap();
+    }
+    if (port < 0 || port > 65535 || acceptLimit < 0)
+    {
+        panic("port must be 0..65535 and accept limit must not be negative");
+    }
+    List<http_files::Asset> assets = http_files::loadAssets(arguments[1]).unwrap();
+    std::net::TcpListener listener = std::net::TcpListener::listen("127.0.0.1", (int32)port);
+    if (!listener.isOpen())
+    {
+        panic("cannot listen: " + listener.lastError());
+    }
+    eprintln("listening 127.0.0.1:{}", listener.localPort());
+    http_files::serve(&listener, &assets, acceptLimit);
+}

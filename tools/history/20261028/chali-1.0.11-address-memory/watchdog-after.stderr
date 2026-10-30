@@ -1,4 +1,0 @@
-chali aot: 软重启：程序显式请求重启（可恢复终止）
-出错位置：G:/Desktop/ChaLi/tests/fixtures/aot_watchdog_empty_loop.chl:5（main）
-调用栈（内 → 外）：
-  main

@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 84, in <module>
-    main()
-  File "G:\Desktop\ChaLi\tests\chali_string_buffer.py", line 66, in main
-    assert built.returncode == 0, (built.stdout, built.stderr, work)
-           ^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('', 'chali: G:/Desktop/ChaLi/tmp/string-buffer-v8hofc0q/stale-malloc.chl:1:1: std::lang::print/std::lang::println 的第一个参数必须是字符串字面量\n 1 | void main(){String value="abcdefghijklmnopqrstuvwxyz0123456789";unsafe{int64 mut& slot=(int64 mut&)(int64)std::lang::address(&value);int64 old=std::lang::__bootStringOwnedData(*slot);value.reserve(100);int64 byte=std::lang::__bootStringByte(old,0);println(byte);}}\n   | ~~~~\n', WindowsPath('G:/Desktop/ChaLi/tmp/string-buffer-v8hofc0q'))

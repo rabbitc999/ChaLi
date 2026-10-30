@@ -1,3 +1,0 @@
-old {'__bootStringBuffer': {'lines': 223, 'allocations': 3, 'calls': 35}, '__bootStringCopyBytes': {'lines': 330, 'allocations': 4, 'calls': 62}, '__bootStringSet': {'lines': 584, 'allocations': 6, 'calls': 75}}
-new {'__bootStringBuffer': {'lines': 175, 'allocations': 2, 'calls': 10}, '__bootStringCopyBytes': {'lines': 20, 'allocations': 0, 'calls': 2}, '__bootStringSet': {'lines': 261, 'allocations': 2, 'calls': 15}}
-actual inline hint disabled: PASS

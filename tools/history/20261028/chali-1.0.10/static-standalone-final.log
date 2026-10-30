@@ -1,1 +1,0 @@
-静态 LLVM：单文件隔离编译、无 LLVM DLL、无 clang PATH、可执行文件与 C ABI 共享库全部通过

@@ -12,11 +12,16 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT=Path(__file__).resolve().parents[1]
 COMPILER=Path(os.environ.get('CHALI_BIN',str(compiler_path())))
 sys.path.insert(0,str(ROOT/'doc/book/latex/tools'))
-from md2tex import Converter, FILES
+from md2tex import Converter, FILES, CHAPTERS, main as generate_chapters
+IMPORTS={c["zh"]:c.get("imports",[]) for c in CHAPTERS}
+EXTRAS=json.loads((ROOT/"tests/book_extras_manifest.json").read_text(encoding="utf-8"))["sha256"]
 
 
 def main():
     """新章节示例须产生所列输出，生成章节须与 Markdown 一致。"""
+    # 生成章节不入库：全新检出先生成，已有章节仍逐字核对是否过期。
+    if any(not (ROOT/'doc/book/latex/chapters'/target).exists() for _,target in FILES):
+        generate_chapters()
     book=(ROOT/'doc/book/latex/book.tex').read_text(encoding='utf-8')
     assert not re.search(r'^\s*\\part\*?\{',book,re.M), '书稿直接按章节排列，不使用 part 分组'
     # 章节数跟随 md2tex 的映射表，加章时只改那一处，不用再改这里的常数。
@@ -60,6 +65,8 @@ def main():
     # 双反引号代码段要整体识别，拆成单反引号会在 PDF 里漏出裸反引号。
     double = Converter().convert('| 指令 | 作用 |\n| --- | --- |\n| `` $macro N((a)) `` | 说明 |')
     assert '`' not in double and r'\texttt{ \$macro N(' in double, double
+    operators = Converter().convert('| 用途 | 操作符 |\n| --- | --- |\n| 逻辑 | \\|\\| |')
+    assert '逻辑 & ||' in operators, operators
     preface=(ROOT/'doc/book/latex/chapters/preface.tex').read_text(encoding='utf-8')
     for chapter in range(1, chapterCount + 1):
         assert preface.count(r'\hyperref[ch:%02d]{%02d} &' % (chapter, chapter)) == 1, chapter
@@ -71,10 +78,11 @@ def main():
             path=ROOT/'doc/book'/source
             text=path.read_text(encoding='utf-8')
             if re.match(r'^\d\d-', source):
-                assert '参考解答与验收要点' in text and '番外：' in text, source
+                assert '参考解答与验收要点' in text, source
                 assert len(re.findall(r'^\d+\. ', text[text.index('参考解答与验收要点'):], re.M)) >= 4, source
-                assert '番外：' in re.findall(r'^## (.+)$', text, re.M)[-1], source
-            mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-')) else 'chapter'
+                if source in EXTRAS:
+                    assert '番外：' in re.findall(r'^## (.+)$', text, re.M)[-1], source
+            mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-','C-')) else 'chapter'
             expected=Converter(mode).convert(text)
             if mode == 'chapter':
                 assert expected.count(r'\chapter{') == 1, ('正文被误识别为章标题', source)
@@ -97,17 +105,18 @@ def main():
             environment=dict(os.environ,CHALI_LANG='zh',CHALI_NO_STDIN_INPUT='1')
             if stdin is not None:
                 environment.pop('CHALI_NO_STDIN_INPUT',None)
-            result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(prefix)],cwd=work,
+            includes=[arg for directory in IMPORTS.get(source,[]) for arg in ('--include-path',str(ROOT/directory))]
+            result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(prefix),*includes],cwd=work,
                 env=environment,input=stdin,capture_output=True,encoding='utf-8',timeout=180)
             assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(execute, programs))
-        chapter=(ROOT/'doc/book/19-预处理与宏.md').read_text(encoding='utf-8')
+        chapter=(ROOT/'doc/book/22-预处理与宏.md').read_text(encoding='utf-8')
         invalid=re.search(r'<!-- verify-book-error: temp -->\s*```chali\n(.*?)```',chapter,re.S)[1]
         bad=work/'invalid_macro.chl';bad.write_text(invalid,encoding='utf-8')
         result=subprocess.run([str(COMPILER),'check',str(bad)],cwd=work,capture_output=True,encoding='utf-8',timeout=60)
         assert result.returncode!=0 and 'temp' in result.stderr and '分支结果类型必须一致' not in result.stderr,result
-        kong=(ROOT/'doc/book/15-函数值与闭包.md').read_text(encoding='utf-8')
+        kong=(ROOT/'doc/book/19-函数值与闭包.md').read_text(encoding='utf-8')
         assert '鲁镇的码栈' in kong and '违约金零头' in kong and not re.search(r'^\[\d+\]',kong,re.M)
     # 附录 A 的 <!-- fail --> 示例逐个重跑：必须失败，且文档记载的首条消息真实出现。
     with tempfile.TemporaryDirectory(prefix='chali-book-fail-') as failFolder:

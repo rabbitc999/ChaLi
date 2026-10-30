@@ -1,6 +1,0 @@
-chali: tmp/string-storage-view-iterator.chl:6:1: 调用了没导入或没定义的模块函数：std::memory::stats
- 6 | void main(){int64 before=std::memory::stats().liveBlocks;iterate();int64 after=std::memory::stats().liveBlocks;println("blocks {} {}",before,after);}
-   | ~~~~
-chali: tmp/string-storage-view-iterator.chl:6:1: 调用了没导入或没定义的模块函数：std::memory::stats
- 6 | void main(){int64 before=std::memory::stats().liveBlocks;iterate();int64 after=std::memory::stats().liveBlocks;println("blocks {} {}",before,after);}
-   | ~~~~

@@ -1,8 +1,0 @@
-python tools/write_build_config.py build/chali-runtime/buildConfig.json "g++" "-std=c++17 -Wall -Wextra -O2 -DNDEBUG -ffunction-sections -fdata-sections -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread -Isource -Ilibrary -Isource/allocator -Isource/lsp -Isource/bignum -Isource/json -Isource/toml -Ibuild/dependencies/sqlite -Ibuild/dependencies/miniz -Isource/console -Isource/lztext -Isource/ast -Isource/ircode -Isource/preprocess -DCHALI_FRONT_END_NO_MAIN=1 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1               " "-lm build/chali-runtime/libast.a -Wl,--start-group build/chali-ircode-aot-core/libstackvm.a build/chali-host-records/librecords.a -Wl,--end-group build/chali-runtime/libpreprocess.a -lwinhttp" "-Wl,--gc-sections -s -static"
-python tools/fetch_dependencies.py --dest build/dependencies
-python tools/write_build_config.py build/chali-native/llvmLinkMode.json "0" "build/dependencies/llvm/static-sdk" ""
-python tools/embed_stdlib.py --build-root "build" --output "build/chali-frontend/chali_stdlib_embedded.cpp"
-内嵌手册 SHA256 相同，跳过生成。
-压缩 496054 -> 92006 字节（比率 0.185）
-压缩 29154759 -> 12710566 字节（比率 0.436）
-unchanged build/chali-frontend/chali_stdlib_embedded.cpp (42 modules, 443990 bytes; 302 generator assets, 27411847 bytes)

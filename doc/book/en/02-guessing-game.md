@@ -1,29 +1,50 @@
-# Chapter 2 A guessing game
+# Chapter 2 A Guessing Game
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../02-猜数字.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The previous program ran straight through. Guessing introduces decisions: retain an answer, read guesses repeatedly, compare them and choose when to stop. It forms a complete small problem for learning control flow.
+Let us write a program that answers a guess. It holds the number 42 and responds with too small, too large, or found. A fixed answer makes it possible to compare the same inputs on every run.
 
-Fix the answer at 42 to make execution reproducible. Track each input, selected branch and return to the loop head. Only then add randomness or attempt limits, so the effect of each new requirement remains clear.
+## 2.1 Compare once
 
-## 2.1 Separate the interaction into steps
+Place these statements in main:
 
-Describe one round before writing syntax: read a guess, compare it and give feedback. End on a match; otherwise repeat. Establishing the actions first makes choosing language constructs easier.
+```chali
+int64 answer = 42;
+int64 guess = 30;
+println("{}", guess < answer);
+```
 
-The answer persists across rounds and belongs outside the loop. A fresh guess is used only in its current round. A later attempt counter also needs cross-round state, so the same placement reasoning applies.
+The first two lines store the answer and guess. The comparison produces a bool; the default formatter prints the true result as 1. Change 30 to 60 and it prints 0.
 
-## 2.2 Implement and run
+## 2.2 Choose a message
 
-The complete program reads integers with inputInt. Enter 30, 60 and 42 on separate lines. The output below excludes terminal echo of the input.
+Replace the print with:
+
+```chali
+if (guess < answer)
+{
+    println("small");
+}
+else
+{
+    println("not small");
+}
+```
+
+if evaluates its condition and executes the first body when true. Otherwise it executes the else body. Only one branch runs. This version still combines larger and equal guesses, so we will add another comparison and repeat the process.
+
+## 2.3 Read a guess each round
+
+Save the complete program as guess.chl. Enter 30, 60, and 42 on separate lines. The expected output excludes the terminal's input echo.
 
 <!-- verify-book-input: "30\n60\n42\n" -->
 ```chali
 void main()
 {
     int64 answer = 42;
-    while (true)
+    loop
     {
         int64 guess = inputInt();
         if (guess < answer)
@@ -39,7 +60,7 @@ void main()
             println("found");
             break;
         }
-    }
+    };
 }
 ```
 
@@ -49,41 +70,28 @@ large
 found
 ```
 
-### Code walkthrough
+The first section enters main and sets answer once, outside the loop. int64 is the integer type used here; Chapter 3 examines types in more detail.
 
-The answer is set to 42 before iteration and remains fixed. `while (true)` has no condition that ends it automatically. Each iteration reads a fresh guess with `inputInt()` and chooses exactly one of the less-than, greater-than or equal branches. An `elif` is tested only after the preceding condition fails.
+The second section starts at `loop`. Its body repeats while the condition is true. Each round calls inputInt to obtain a new guess, because the read is inside the loop.
 
-Trace the supplied input in order: a lower guess prints small and a higher guess prints large, after which both paths read again. A matching guess prints found and `break` exits the nearest while. Removing break would leave the program waiting for more input even after a match. This demonstrates control flow with valid integers, not complete handling of malformed input or end of input.
+The third section chooses a response. Input 30 takes the smaller branch. Input 60 reaches elif only after the first condition fails. Input 42 satisfies neither comparison and reaches else. There, println runs before break exits the loop. Without break the program keeps waiting. `else if` is another spelling of `elif`.
 
+## 2.4 Count the guesses
 
-## 2.3 Branches and state
+A counter must remember previous rounds, so declare it outside the loop, increment after reading, and print it when the guess is correct. Declaring it inside the loop resets it each time.
 
-If, elif and else form one branch chain. Else if is equivalent to elif. Break exits the current loop. To count guesses, keep a counter outside the loop and update it at one defined point after reading.
-
-A while(true) loop needs an explicit exit path. Without break it requests further input, so tests should exercise the terminating branch.
-
-## 2.4 Handle input errors at the appropriate layer
-
-This example assumes input accepted by the integer reader. Text tools commonly read a whole line, parse it with std::parse and handle errors through Result. Chapter 12 introduces text and Chapter 16 error returns. Invalid input and an incorrect guess are different outcomes. Keep fixed-answer tests when adding random answers.
-
-### Summary
-
-A round reads an integer, compares it, prints feedback and either continues or exits. The answer persists across rounds while guess belongs to one round. Declaration placement follows the required lifetime; an attempt counter likewise needs an explicit persistence scope.
-
-This chapter assumes valid integer input. Chapter 3 explains representation types, and Chapter 16 supplies ways to express parsing failure and absent results.
+This first version assumes valid integer input. Chapter 14 handles invalid input and end-of-input as errors rather than incorrect guesses. For now, test all three normal paths.
 
 ## 2.5 Exercises
 
-1. What is printed for input 42?
-2. Count guesses.
-3. Replace elif with else if.
-4. Why is the answer outside the loop?
+1. What happens if the first input is 42?
+2. Add and print a guess counter.
+3. Replace elif with else if and repeat the inputs.
+4. Why does removing break prevent termination after a correct guess?
 
 ### Answers and checks
 
-1. Only found is printed.
-2. Initialize outside and increment after each read.
-3. Preserve branch order and conditions.
-4. The answer persists across iterations; a guess belongs to one iteration.
-
-Next: [Chapter 3](03-variables-types.md).
+1. It prints found and exits the loop.
+2. Initialize to zero outside the loop and increment after each read; the sample needs three guesses.
+3. The output remains small, large, found.
+4. The loop condition remains true and its explicit exit has been removed.

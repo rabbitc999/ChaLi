@@ -106,4 +106,4 @@ Use the [full symbol index](../../library/symbols.md) for signatures and source 
 
 ## B.6 Verify a combination
 
-Check input types, Result/Option returns, cleanup and platform support. Run a small successful example and a failure path, then validate borrowing and ownership across module boundaries. [Chapter 25](25-student-system.md) combines database services; [Chapter 16](16-errors.md) matches concrete interface errors.
+Check input types, Result/Option returns, cleanup and platform support. Run a small successful example and a failure path, then validate borrowing and ownership across module boundaries. [Chapter 29](29-student-management.md) combines database services; [Chapter 14](14-error-handling.md) matches concrete interface errors.

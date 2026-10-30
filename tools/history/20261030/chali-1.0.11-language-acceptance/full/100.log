@@ -1,8 +1,0 @@
-test_dragged_source_arguments (__main__.SceneTests.test_dragged_source_arguments) ... ok
-test_explicit_run (__main__.SceneTests.test_explicit_run) ... ok
-test_short_scenes (__main__.SceneTests.test_short_scenes) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 22.421s
-
-OK

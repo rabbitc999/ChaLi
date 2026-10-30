@@ -45,7 +45,7 @@ def main():
             assert (exported/'en'/path.name).read_text(encoding='utf-8')==path.read_text(encoding='utf-8')
         english = json.loads(run('book', '1', '--lang', 'en', '--json').stdout)
         assert english['sourceLanguage'] == 'en'
-        assert english['chapter']['content'] == (ROOT/'doc/book/en/01-first-program.md').read_text(encoding='utf-8')
+        assert english['chapter']['content'] == (ROOT/'doc/book/en/01-getting-started.md').read_text(encoding='utf-8')
         for path in (ROOT/'doc/book/images').glob('*'):
             assert (exported/'images'/path.name).read_bytes()==path.read_bytes()
         sentinel=exported/'my-notes.txt';sentinel.write_text('keep',encoding='utf-8')
@@ -53,11 +53,14 @@ def main():
         assert sentinel.read_text(encoding='utf-8')=='keep'
         chapter=query('book','1')['chapter']
         assert chapter['content']==(ROOT/'doc/book/01-第一个程序.md').read_text(encoding='utf-8')
-        assert 'chali-compilation.png' in chapter['content'] and 'chali-execution.png' not in chapter['content']
-        rendered=run('book','1').stdout
-        assert '[图片](images/chali-compilation.png)' in rendered and '[图片](images/chali-execution.png)' not in rendered,rendered
+        aot_chapter=query('book','27')['chapter']
+        assert aot_chapter['content']==(ROOT/'doc/book/27-AOT导出.md').read_text(encoding='utf-8')
+        rendered=run('book','27').stdout
+        assert '[图片](images/chali-aot.png)' in rendered,rendered
         assert query('book','6')['chapter']['id']=='06'
         assert query('book','A')['chapter']['id']=='A'
+        assert query('book','C')['chapter']['id']=='C'
+        assert query('book','29')['chapter']['id']=='29'
         assert query('book','不存在',code=1)['diagnostics'][0]['code']=='CHL1701'
         keyword=query('keyword','break')['keyword']
         assert 'break level' in keyword['documentation'] and 'yield 值;' in keyword['documentation'] and 'BREAK' in keyword['syntax'],keyword

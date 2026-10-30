@@ -76,7 +76,10 @@ def main():
     native = set(re.findall(r'"([A-Za-z_]\w*)"', native_block[1]))
     expected = completion | grammar
     problems = []
-    book_style = (ROOT / 'doc/book/latex/preamble.tex').read_text(encoding='utf-8')
+    from gen_book_syntax import render
+    book_style = (ROOT / 'doc/book/latex/chali_language.tex').read_text(encoding='utf-8')
+    if book_style != render():
+        problems.append('书稿 ChaLi 高亮定义过期，请运行 tools/gen_book_syntax.py')
     book_match = re.search(r'morekeywords\s*=\s*\{([^}]+)\}', book_style)
     if not book_match:
         problems.append('找不到入门书的 morekeywords 表')

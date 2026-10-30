@@ -1,9 +1,0 @@
-Traceback (most recent call last):
-  File "G:\Desktop\ChaLi\benchmarks\strings\run.py", line 227, in <module>
-    main()
-  File "G:\Desktop\ChaLi\benchmarks\strings\run.py", line 129, in main
-    compiler_version=execute([compiler, '--version'])['stdout'].strip(),
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "G:\Desktop\ChaLi\benchmarks\strings\run.py", line 54, in execute
-    raise RuntimeError(json.dumps(entry, ensure_ascii=False))
-RuntimeError: {"command": ["G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe", "--version"], "code": 2, "stdout": "", "stderr": "Unknown option: --version\n"}
