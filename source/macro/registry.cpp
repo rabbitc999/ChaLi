@@ -286,13 +286,14 @@ int Registry::instantiate(int call, std::string &error,
         {
             const auto &generic = nodes_[generics[index]];
             const auto source = std::string(generic.s2.data(), generic.s2.size());
-            if (!source.empty() && !inputs.count(source))
+            const bool resultSource = source.empty() || source == "#res";
+            if (!resultSource && !inputs.count(source))
             {
                 nodes_.resize(start);
                 error = "宏泛型推导来源不是形参：" + source;
                 return -1;
             }
-            const int resolved = resolveType(generics[index], source.empty() ? -1 : inputs.at(source),
+            const int resolved = resolveType(generics[index], resultSource ? -1 : inputs.at(source),
                                              explicitCount ? nodes_[node.kids[1]].kids[index] : -1);
             if (resolved < 0)
             {

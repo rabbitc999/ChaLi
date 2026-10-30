@@ -35,6 +35,9 @@ int main()
     if (!chali_macro::markReplacementBoundaries(replacement, error)) return 12;
     if (replacement.find("$replace ADD<T:a>(a, b)  @!macrobody a + b  $end_macro // comment") == Memory::String::npos) return 13;
     if (replacement.find("\"https://example\" $end_macro") == Memory::String::npos) return 14;
+    Memory::String resultSource = "$replace Example<T: #res, U:b>(a,b) cast<T>(a) + cast<T>(b)\n";
+    if (!chali_macro::markReplacementBoundaries(resultSource, error)) return 15;
+    if (resultSource.find("(a,b)  @!macrobody cast<T>(a)") == Memory::String::npos) return 16;
     std::cout << "macro declaration boundaries passed\n";
     return 0;
 }

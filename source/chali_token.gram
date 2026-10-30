@@ -22,6 +22,7 @@
 %token MACRO_FOR "$for"
 %token MACRO_END_FOR "$end_for"
 %token MACRO_IS "is"
+%token MACRO_RESULT_SOURCE "#res"
 %token MACRO_EXPR "expr"
 %token MACRO_IDENT "ident"
 %token MACRO_BLOCK "block"

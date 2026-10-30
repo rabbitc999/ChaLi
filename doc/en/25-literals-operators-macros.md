@@ -214,6 +214,24 @@ void main() {
 
 `T:value` uses only that argument's static type. A parameter without a source uses only the expected result type. Explicit types take priority. Inference does not evaluate arguments, insert conversions or switch sources; runtime expression arguments are still evaluated once each after expansion. `let x = $RESULT(42)` fails because no expected type is available. Macro value parameters, specialization, partial specialization and arbitrary compile-time function execution are outside this interface.
 
+`#res` explicitly selects the expected result type at the call site and can be combined with an argument source:
+
+```chali
+$macro Example<T:#res, U:b>(a, b)
+{
+    T left = cast<T>(a);
+    U right = b;
+    yield left + cast<T>(right);
+}
+$end_macro
+void main() {
+    int32 result = $Example((int64)3, (int16)4);
+    println("{}", result);
+}
+```
+
+T is int32, U is int16, and the result is 7. Initialization, assignment, function returns and function arguments with a known parameter type can supply the expected result type. Inference does not evaluate either argument. `<T>` retains the same implicit result-source behavior. Explicit type arguments take priority. Without an expected type, `let` does not make T infer from a instead.
+
 ## Complete syntax matching
 
 ```chali

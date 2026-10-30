@@ -761,7 +761,7 @@ void main() {
 }
 ```
 
-`<T:a>` infers from the argument's static type; `<T>` infers from the expected result type. Explicit types take priority. Square, round and curly groups match strictly in order. `...rest` / `..rest` capture a variadic tail, traversed by `$for`. `$match x is expr` supports exactly `expr`, `ident`, `type`, `block` and `stmt`, with ordered `$else is` branches and `$end_match`. `$regex x is "pattern"` uses complete ECMAScript matching of original text and ends with `$end_regex`. Unselected output is excluded from final semantic checks.
+`<T:a>` infers from the argument's static type; `<T:#res>` (or the compatible `<T>` form) infers from the expected result type. Explicit types take priority. Square, round and curly groups match strictly in order. `...rest` / `..rest` capture a variadic tail, traversed by `$for`. `$match x is expr` supports exactly `expr`, `ident`, `type`, `block` and `stmt`, with ordered `$else is` branches and `$end_match`. `$regex x is "pattern"` uses complete ECMAScript matching of original text and ends with `$end_regex`. Unselected output is excluded from final semantic checks.
 
 `$stringify(x)` reads original spelling; `$concat(a, b)` produces identifiers only. `$line`, `$file` and `$module` preserve origins. `$replace A(x) x + 1` is a single-line definition. See [hygienic macros](25-literals-operators-macros.md#compile-time-hygienic-ast-macros).
 

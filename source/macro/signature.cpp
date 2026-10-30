@@ -62,7 +62,8 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
         for (const auto &item : signature.generics)
         {
             const auto colon = item.find(':');
-            if (!signatureIdentifier(chali_syntax::trim(item.substr(0, colon))) || (colon != Memory::String::npos && !signatureIdentifier(chali_syntax::trim(item.substr(colon + 1)))))
+            const auto source = colon == Memory::String::npos ? Memory::String() : chali_syntax::trim(item.substr(colon + 1));
+            if (!signatureIdentifier(chali_syntax::trim(item.substr(0, colon))) || (colon != Memory::String::npos && source != "#res" && !signatureIdentifier(source)))
             {
                 error = "宏类型参数应写为 T 或 T:参数名";
                 return false;

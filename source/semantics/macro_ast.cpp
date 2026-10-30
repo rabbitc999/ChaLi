@@ -175,13 +175,14 @@ int M_MacroCall(int name, int arguments)
 /**
  * @brief 保存泛型推导来源，空来源表示外部期望类型。
  * @param name 泛型参数名。
- * @param source 推导来源参数名，负值表示未指定。
+ * @param source 推导来源参数名，-1 表示隐式结果上下文，-2 表示显式 #res。
  * @return 泛型参数节点。
  */
 int M_MacroGeneric(int name, int source)
 {
     const int id = M_New(MNode::MacroGeneric, g_names[name]);
     if (source >= 0) g_nodes[id].s2 = g_names[source];
+    else if (source == -2) g_nodes[id].s2 = "#res";
     return id;
 }
 

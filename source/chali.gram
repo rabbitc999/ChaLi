@@ -850,7 +850,8 @@ macro_generics := %empty { $$ = M_List(); }
 macro_generic_items := macro_generic { $$ = M_List1($1); }
     | macro_generic_items COMMA macro_generic { M_ListAdd($1, $3); $$ = $1; } ;
 macro_generic := name_token { $$ = M_MacroGeneric($1, -1); }
-    | name_token COLON name_token { $$ = M_MacroGeneric($1, $3); } ;
+    | name_token COLON name_token { $$ = M_MacroGeneric($1, $3); }
+    | name_token COLON MACRO_RESULT_SOURCE { $$ = M_MacroGeneric($1, -2); } ;
 macro_parameters := %empty { $$ = -1; }
     | macro_parameter_groups { $$ = $1; } ;
 macro_parameter_groups := macro_parameter_group { $$ = $1; }

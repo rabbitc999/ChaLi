@@ -98,6 +98,16 @@ def main():
             completions = query('completion', incomplete, len(incomplete))
             assert any(item['label'] == 'value' for item in completions), completions
 
+            result_macro = '''$macro Example<T:#res,U:b>(a,b)
+    cast<T>(a) + cast<T>(b)
+    $end_macro
+    void main(){ int32 value=$Example((int64)1,(int16)2); }
+    '''
+            open_text(result_macro)
+            result_help = query('signatureHelp', result_macro, result_macro.index('((int64)1,') + 1)
+            assert '#res' in result_help['signatures'][0]['label'], result_help
+            result_preview = server.query('chali/expandMacro', dict(textDocument=dict(uri=uri)))
+            assert result_preview['text'] and not result_preview['diagnostics'], result_preview
             macro = '''$macro example(...A)(...B)
     {
         $for var in A

@@ -68,6 +68,9 @@ int main()
     chali::Engine unknownCategory;
     if (unknownCategory.runText(unknown, &root) == chali::Status::Ok) return 18;
     if (!parse("$macro RAW(A)\n$regex A is \"[0-9]+\"\n\"digits\"\n$else\nis + 1\n$end_regex\n$end_macro\nint32 main() { return 0; }\n", root)) return 19;
+    if (!parse("$macro Example<T:#res, U:b>(a,b)\na\n$end_macro\nvoid main() {}\n", root)) return 20;
+    const auto resultGenerics = M_ParsedNode(M_ParsedNode(M_ParsedNode(root).kids[0]).kids[2]).kids;
+    if (resultGenerics.size() != 2 || M_ParsedNode(resultGenerics[0]).s2 != "#res" || M_ParsedNode(resultGenerics[1]).s2 != "b") return 21;
     std::cout << "generated AST macro parser passed\n";
     return 0;
 }

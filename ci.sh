@@ -175,6 +175,7 @@ run_step "验证 else if 与 elif 统一分支语义" "$PYTHON" tests/chali_else
 run_step "验证宏完整片段分类与正则分支" "$PYTHON" tests/chali_macro_branches.py --default
 run_step "验证卫生宏参数分组、片段循环与调用来源" "$PYTHON" tests/chali_macro_groups.py --default
 run_step "验证卫生宏静态类型参数推导" "$PYTHON" tests/chali_macro_generics.py --default
+run_step "验证宏显式结果来源与混合类型推导" "$PYTHON" tests/chali_macro_result_inference.py --chali "$CHALI_BIN"
 
 # ---- 快速门禁核心三件套：样例回归 + 本次新增能力测试 + 文档同步 ----
 run_step "CHALI 样例回归（check.sh）" \

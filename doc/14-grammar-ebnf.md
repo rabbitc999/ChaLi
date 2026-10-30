@@ -129,6 +129,7 @@ Box<int64 fn(int64)> box;
 | `MACRO_FOR` | `$for` |
 | `MACRO_END_FOR` | `$end_for` |
 | `MACRO_IS` | `is` |
+| `MACRO_RESULT_SOURCE` | `#res` |
 | `MACRO_EXPR` | `expr` |
 | `MACRO_IDENT` | `ident` |
 | `MACRO_BLOCK` | `block` |
@@ -957,7 +958,8 @@ macro_generic_items = macro_generic
     | macro_generic_items, ",", macro_generic ;
 
 macro_generic = name_token
-    | name_token, ":", name_token ;
+    | name_token, ":", name_token
+    | name_token, ":", "#res" ;
 
 macro_parameters = ""
     | macro_parameter_groups ;

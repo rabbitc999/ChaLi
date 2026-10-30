@@ -75,7 +75,7 @@ int M_MacroCall(int name, int arguments);
 /**
  * @brief 保存宏泛型名称及可选的实参类型推导来源。
  * @param name 泛型名称池编号。
- * @param source 来源形参名称，负值表示结果上下文推导。
+ * @param source 来源形参名称，-1 表示隐式结果上下文，-2 表示显式 #res。
  * @return 泛型参数节点。
  */
 int M_MacroGeneric(int name, int source);

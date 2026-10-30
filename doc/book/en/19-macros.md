@@ -14,4 +14,22 @@ Macro declarations and invocations use the lowercase `$macro` system. Parameter 
 
 Generated code still undergoes semantic checking. Expansion does not bypass types, references, resource ownership or the compiler's bounded fragment budgets. When debugging, inspect the expansion and its source mapping. The VS Code expansion view groups related results into tabs, with searchable macro names and a tree of expansion levels.
 
+`#res` explicitly selects the expected result type at the call site and can be combined with an argument source:
+
+```chali
+$macro Example<T:#res, U:b>(a, b)
+{
+    T left = cast<T>(a);
+    U right = b;
+    yield left + cast<T>(right);
+}
+$end_macro
+void main() {
+    int32 result = $Example((int64)3, (int16)4);
+    println("{}", result);
+}
+```
+
+T is int32, U is int16, and the result is 7. Initialization, assignment, function returns and function arguments with a known parameter type can supply the expected result type. Inference does not evaluate either argument. `<T>` retains the same implicit result-source behavior. Explicit type arguments take priority. Without an expected type, `let` does not make T infer from a instead.
+
 Exercise: identify a repeated source pattern, first implement it as a function, then explain which additional requirement would justify a macro. Review variable names at the call site to understand why hygiene matters. Next: [reflection](20-reflection.md).

@@ -101,7 +101,16 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
             bool parameters = true;
             for (auto index = header + 1; index < close; ++index)
             {
-                if (opening != '<' && mask[index] == '&')
+                if (opening == '<' && mask.compare(index, 4, "#res") == 0)
+                {
+                    auto before = index;
+                    while (before > header + 1 && std::isspace(static_cast<unsigned char>(mask[before - 1]))) --before;
+                    if (before == header + 1 || mask[before - 1] != ':' ||
+                        (index + 4 < close && (std::isalnum(static_cast<unsigned char>(mask[index + 4])) || mask[index + 4] == '_')))
+                        parameters = false;
+                    index += 3;
+                }
+                else if (opening != '<' && mask[index] == '&')
                 {
                     auto before = index;
                     while (before > header + 1 && std::isspace(static_cast<unsigned char>(mask[before - 1]))) --before;

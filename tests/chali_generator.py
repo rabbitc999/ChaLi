@@ -102,7 +102,10 @@ def main():
         dependency_file = build / "build.ninja" if (build / "build.ninja").exists() else build / "CMakeFiles/Makefile.cmake"
         assert "aot_sources.txt" in dependency_file.read_text(encoding="utf-8"), "核心清单修改必须触发 CMake 重新配置"
         probe = WORK / "export_probe.chl"
-        probe.write_text('import std::toml;\nvoid main()\n{\n'
+        probe.write_text('import std::toml;\n'
+                         '$macro Example<T:#res, U:b>(a,b)\ncast<T>(a)+cast<T>(b)\n$end_macro\n'
+                         'void main()\n{\n'
+                         '    int32 inferred=$Example((int64)3,(int16)4);assert(inferred==7);\n'
                          '    String text = "# exported\\nvalue = 42 # inline\\n";\n'
                          '    std::toml::TomlValue root = std::toml::parse(text).unwrap();\n'
                          '    assert(root.dump() == text);\n'
