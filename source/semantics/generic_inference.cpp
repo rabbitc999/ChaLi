@@ -36,7 +36,7 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
     };
     const auto split = type->genericBase.rfind("::");
     auto found = split == Memory::String::npos ? findScoped(type->lookupModule, type->genericBase) :
-                                               findScoped(type->genericBase.substr(0, split), type->genericBase.substr(split + 2));
+                                                 findScoped(type->genericBase.substr(0, split), type->genericBase.substr(split + 2));
     if (found == generics.end()) found = generics.find(type->genericBase);
     if (found == generics.end()) found = findScoped("std::lang", type->genericBase);
     if (found == generics.end())
@@ -140,7 +140,7 @@ Memory::String InferenceTypeText(const std::shared_ptr<MType> &type)
         }
         return text + ")";
     }
-    if (type->kind == MType::Struct || type->kind == MType::Host || IsInterfaceType(type)) return type->name;
+    if (type->kind == MType::Struct || type->kind == MType::Host || (type->kind == MType::Obj && !type->name.empty())) return type->name;
     if (type->kind == MType::Ptr)
     {
         auto text = InferenceTypeText(type->elem);

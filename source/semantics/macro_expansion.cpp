@@ -148,12 +148,23 @@ int AstMacroExpression(int root)
         const int tail = M_New(MNode::MacroTemplate);
         g_nodes[tail].kids = { tailStatements, body.kids[1] };
         g_nodes[tail].s2 = body.s2;
+        g_nodes[tail].syntaxContext = body.syntaxContext;
+        g_nodes[tail].controlContext = MacroControlContext(body);
+        g_nodes[tail].macroExpansion = body.macroExpansion;
         const int value = AstMacroExpression(tail);
         if (value < 0) return -1;
         const int prefix = M_List();
         g_nodes[prefix].kids.assign(original.begin(), original.begin() + count);
-        M_ListAdd(prefix, M_Break(value));
-        return M_BlockValue(M_Block(prefix));
+        const int exit = M_Break(value);
+        g_nodes[exit].syntaxContext = body.syntaxContext;
+        g_nodes[exit].controlContext = MacroControlContext(body);
+        g_nodes[exit].macroExpansion = body.macroExpansion;
+        M_ListAdd(prefix, exit);
+        const int expression = M_BlockValue(M_Block(prefix));
+        g_nodes[expression].syntaxContext = body.syntaxContext;
+        g_nodes[expression].controlContext = MacroControlContext(body);
+        g_nodes[expression].macroExpansion = body.macroExpansion;
+        return expression;
     }
     const auto &statements = N(body.kids[0]).kids;
     if (statements.empty()) return body.kids[1];
@@ -161,9 +172,14 @@ int AstMacroExpression(int root)
     {
         const int sequence = M_List();
         g_nodes[sequence].kids = statements;
-        M_ListAdd(sequence, M_Break(body.kids[1]));
+        const int exit = M_Break(body.kids[1]);
+        g_nodes[exit].syntaxContext = body.syntaxContext;
+        g_nodes[exit].controlContext = MacroControlContext(body);
+        g_nodes[exit].macroExpansion = body.macroExpansion;
+        M_ListAdd(sequence, exit);
         const int expression = M_BlockValue(M_Block(sequence));
         g_nodes[expression].syntaxContext = body.syntaxContext;
+        g_nodes[expression].controlContext = MacroControlContext(body);
         g_nodes[expression].module = body.module;
         g_nodes[expression].macroExpansion = body.macroExpansion;
         return expression;
@@ -176,6 +192,7 @@ int AstMacroExpression(int root)
                                                           -1;
     if (expression < 0) return -1;
     g_nodes[expression].syntaxContext = source.syntaxContext;
+    g_nodes[expression].controlContext = MacroControlContext(source);
     g_nodes[expression].sourceLine = source.sourceLine;
     g_nodes[expression].sourceColumn = source.sourceColumn;
     g_nodes[expression].expansionLine = source.expansionLine;

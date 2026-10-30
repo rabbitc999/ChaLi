@@ -250,6 +250,7 @@ struct MNode
     std::size_t sourceLine = 0;                         ///< 预处理后语法节点的起始行。
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。
     std::uint32_t syntaxContext = 0;                    ///< 原始片段或宏展开的卫生上下文。
+    std::uint32_t controlContext = UINT32_MAX;          ///< 首次展开时固定的控制来源；未展开节点沿用卫生上下文。
     std::uint32_t bindingIdentity = 0;                  ///< 声明及引用解析后的稳定绑定身份。
     std::uint32_t nameParameter = 0;                    ///< 声明名称来自的宏形参身份，零表示普通名字。
     std::uint32_t bindingContext = 0;                   ///< 被引用声明的上下文，供循环展开引用外层声明。
@@ -257,6 +258,7 @@ struct MNode
     std::size_t expansionColumn = 0;                    ///< 引入当前模板的调用列。
     Memory::String expansionModule;                     ///< 引入当前模板的调用模块。
     int macroExpansion = -1;                            ///< 宏展开诊断帧，实参保持原有来源。
+    int controlTarget = -1;                             ///< 降级时解析的控制出口语法身份，不持久化到标准库解析单元。
     std::shared_ptr<const chali_macro::MetadataValue> compileMetadata;  ///< 编译期元数据的不可变快照，不写入标准库解析单元。
     Memory::Vector<int> annotations;                    ///< 附着于本声明的注解使用节点。
     Memory::Vector<Memory::String> derives;             ///< 请求按字段派生的接口名称。

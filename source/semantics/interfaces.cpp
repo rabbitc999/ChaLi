@@ -325,7 +325,8 @@ Memory::String Describe(const std::shared_ptr<MType> &type)
         }
         return text + ")";
     }
-    case MType::Obj: return IsInterfaceType(type) ? type->name : Memory::String("std::lang::Any");
+    // 名称解析可先于接口方法表登记；已有名字的 Obj 必须保留其接口身份。
+    case MType::Obj: return type->name.empty() ? Memory::String("std::lang::Any") : type->name;
     case MType::Ptr:
     {
         const Memory::String star = type->readOnly ? " const&" : " mut&";

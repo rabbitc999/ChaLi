@@ -35,7 +35,7 @@ def main():
         ("bad_source", "$macro ID<T:y>(x)\ncast<T>(x)\n$end_macro\nvoid main() { let __boom = $ID(42); }", "推导来源不是形参"),
         ("wrong_count", "$macro ID<T>(x)\ncast<T>(x)\n$end_macro\nvoid main() { let __boom = $ID<int64,int32>(42); }", "类型实参数量"),
     ]
-    work = ROOT / "build/macro-hygiene"
+    work = ROOT / "tmp/macro-hygiene"
     work.mkdir(parents=True, exist_ok=True)
     executed = 0
     with tempfile.TemporaryDirectory(prefix="generic-", dir=work) as directory:

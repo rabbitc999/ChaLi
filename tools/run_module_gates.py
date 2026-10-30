@@ -13,9 +13,16 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "macros": ["chali_ast_macros", "chali_macro_parameters", "chali_macro_categories",
+               "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
+               "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
+               "chali_macro_declarations", "chali_macro_members", "chali_macro_metadata",
+               "chali_macro_type_metadata", "chali_macro_controls", "chali_macro_control_flow",
+               "chali_macro_diagnostics", "chali_macro_preview", "chali_macro_control_preview", "chali_macro_editor",
+               "chali_lsp_macro_completion", "chali_lsp_macro_highlighting"],
     "language": ["chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],
     "borrow": ["chali_borrow_flow", "chali_analysis_diagnostics", "chali_reference_values"],
-    "memory": ["chali_memory_guard", "chali_resource_lifetime"],
+    "memory": ["chali_type_memory", "chali_resource_lifetime"],
     "generics": ["chali_generic_monomorphization", "chali_language_move", "chali_tuple_returns"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
@@ -59,6 +66,8 @@ def main():
                                     "--chali", str(args.chali.resolve())]
                 if module == "lsp" and script == "chali_lsp_closure_types":
                     commands[script].append("--lsp-only")
+                if module == "macros" and script == "chali_ast_macros":
+                    commands[script].append("--default")
             if module == "lsp":
                 for script in ("lspCancellation", "semanticProviders", "macroHighlighting"):
                     commands[script] = ["node", str(ROOT / "vscode" / "test" / (script + ".js"))]

@@ -322,11 +322,16 @@ Memory::String BootstrapCollectionLabel(const Memory::String &native, const std:
     if (native == "__std_object_copy") return "std::lang::__bootListCopy";
     if (native == "__std_vec_remove") return "std::lang::__bootListRemove";
     if (native == "__std_vec_clear") return "std::lang::__bootListClear";
-    const char *operation = native == "__std_vec_push" ? "Push" : native == "__std_vec_insert" ? "Insert" :
-                              native == "__std_vec_pop" ? "Pop" : native == "__std_vec_find" ? "Find" :
-                              native == "__std_vec_count_value" ? "Count" : native == "__std_vec_binary_search" ? "BinarySearch" :
-                              native == "__std_vec_sum" ? "Sum" : native == "__std_vec_min" ? "Min" :
-                              native == "__std_vec_max" ? "Max" : native == "__std_vec_clamp" ? "Clamp" : nullptr;
+    const char *operation = native == "__std_vec_push" ? "Push" : native == "__std_vec_insert"    ? "Insert" :
+                                                              native == "__std_vec_pop"           ? "Pop" :
+                                                              native == "__std_vec_find"          ? "Find" :
+                                                              native == "__std_vec_count_value"   ? "Count" :
+                                                              native == "__std_vec_binary_search" ? "BinarySearch" :
+                                                              native == "__std_vec_sum"           ? "Sum" :
+                                                              native == "__std_vec_min"           ? "Min" :
+                                                              native == "__std_vec_max"           ? "Max" :
+                                                              native == "__std_vec_clamp"         ? "Clamp" :
+                                                                                                    nullptr;
     if (!operation) return native;
     return Memory::String("std::lang::__bootList") + operation + (container->elem->kind == MType::Double ? "F" : "I");
 }
@@ -471,20 +476,7 @@ MBlockContext *FindBreakContext(bool hasValue = true, long long level = 0)
     return level < 0 ? outermost : nullptr;
 }
 
-/**
- * @brief 最近的 `continue` 目标（只用循环登记；`match` 那层的 continueLabel 是空的）。
- * @param scopeDepth 输出：那层循环进来时的 `g_ownedScopes` 深度。
- */
-Memory::String FindContinueTarget(std::size_t *scopeDepth)
-{
-    for (auto it = g_blockStack.rbegin(); it != g_blockStack.rend(); ++it)
-    {
-        if (it->continueLabel.empty()) continue;
-        if (scopeDepth != nullptr) *scopeDepth = it->scopeDepth;
-        return it->continueLabel;
-    }
-    return Memory::String();
-}
+#include "macro_control_flow.cpp"
 
 /* "用到才生成"的开关在下面统一声明，这里先用一下（同一个匿名命名空间）。 */
 extern bool g_usesStructCopy;

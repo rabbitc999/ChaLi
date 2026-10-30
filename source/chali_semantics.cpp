@@ -3568,7 +3568,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 3;
+constexpr std::uint64_t kStandardUnitVersion = 4;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3660,6 +3660,7 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     chali_incremental::writeNumber(out, node.sourceLine < canonical.size() ? canonical[node.sourceLine] : node.sourceLine);
     chali_incremental::writeNumber(out, node.sourceColumn);
     chali_incremental::writeNumber(out, node.syntaxContext);
+    chali_incremental::writeNumber(out, node.controlContext);
     chali_incremental::writeNumber(out, node.bindingIdentity);
     chali_incremental::writeNumber(out, node.nameParameter);
     chali_incremental::writeNumber(out, node.bindingContext);
@@ -3728,6 +3729,9 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     if (!chali_incremental::readNumber(in, node.sourceColumn)) return false;
     std::uint64_t context = 0, identity = 0, parameter = 0, binding = 0;
     if (!chali_incremental::readNumber(in, context)) return false;
+    std::uint64_t control = 0;
+    if (!chali_incremental::readNumber(in, control) || control > UINT32_MAX) return false;
+    node.controlContext = static_cast<std::uint32_t>(control);
     if (!chali_incremental::readNumber(in, identity)) return false;
     if (!chali_incremental::readNumber(in, parameter)) return false;
     if (!chali_incremental::readNumber(in, binding)) return false;

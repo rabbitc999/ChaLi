@@ -46,7 +46,7 @@ def main():
         ("control_inside_block", "$macro ADD(...xs)\n{ int64 total = 0;\n$for x in xs\ntotal += x;\n$end_for\nyield total; }\n$end_macro\nvoid main() { int64 value = $ADD(40, 2); let __boom = value - 42; }", None),
         ("type_qualifier", "$macro CALL(T)\nT::get()\n$end_macro\nstruct Box { static int64 get() { return 42; } } void main() { let __boom = $CALL(Box) - 42; }", None),
     ]
-    work = ROOT / "build/macro-hygiene"
+    work = ROOT / "tmp/macro-hygiene"
     work.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="groups-", dir=work) as directory:
         for name, source, error in cases:

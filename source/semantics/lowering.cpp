@@ -1797,8 +1797,7 @@ bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method,
 {
     if (method.source == "drop") return true;  // 销毁本身需要可写接收者，即使方法体为空。
     // String 的容量原语只接收内部句柄；补上其真实修改效果，供只读与借用分析使用。
-    if (IsStandardOpcode(NamedType(owner), "String") &&
-        (method.source == "reserve" || method.source == "append" || method.source == "clear" || method.source == "truncate")) return true;
+    if (IsStandardOpcode(NamedType(owner), "String") && (method.source == "reserve" || method.source == "append" || method.source == "clear" || method.source == "truncate")) return true;
     if (method.result && method.result->kind == MType::Ptr && !method.result->readOnly) return true;
     const auto label = owner + "." + method.name;
     if (visiting->count(label)) return false;
@@ -3911,10 +3910,9 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
      * 守卫可能调用函数并改变被借用的枚举，必须沿用逐分支读取。
      * 只有兜底的 match 不提前读取，以保留原来的访问与错误行为。 */
     const auto *disableTagSnapshot = std::getenv("CHALI_NO_ENUM_TAG_SNAPSHOT");
-    const bool snapshotTag = (!disableTagSnapshot || !*disableTagSnapshot) &&
-        !patterns.empty() && std::all_of(cases.begin(), cases.end(), [](int caseId) {
-            return N(caseId).guard < 0;
-        });
+    const bool snapshotTag = (!disableTagSnapshot || !*disableTagSnapshot) && !patterns.empty() && std::all_of(cases.begin(), cases.end(), [](int caseId) {
+                                 return N(caseId).guard < 0;
+                             });
     Memory::String tagSnapshot;
     if (snapshotTag)
     {
@@ -3922,8 +3920,9 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         const auto tagType = LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag");
         setup.push_back(ast::Node::declare(tagSnapshot, tagType));
         setup.push_back(ast::Node::assign(tagSnapshot,
-            ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject),
-                ast::Node::i(tagField->slot), 8), tagType)));
+                                          ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject),
+                                                                                ast::Node::i(tagField->slot), 8),
+                                                              tagType)));
     }
 
     const auto lowerBody = [&](const MNode &item, const MEnumVariantDef *variant, const Memory::String &next) {
@@ -4102,7 +4101,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         {
             const auto *variant = patterns.at(caseId);
             auto tag = snapshotTag ? ast::Node::var(tagSnapshot) :
-                ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject), ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
+                                     ast::Node::loadFrom(ast::Node::offset(ast::Node::var(subject), ast::Node::i(tagField->slot), 8), LowerType(T(M_TypeIntBits(32, 0)), subjectType->name + ".tag"));
             auto condition = ast::Node::binary("==", tag, ast::Node::i(variant->tag));
             setup.push_back(ast::Node::ifThenElse(condition, lowerBody(item, variant, next), nullptr));
         }
@@ -4666,6 +4665,7 @@ ast::NodePtr LowerLoop(int id, Memory::String *valueName)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, !node.s.empty() ? Memory::String() : loopLabel, g_ownedScopes.size(), slot, type, !node.s.empty(), g_scope.size() - 1u, node.returnExpression });
+    g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(node.kids[0]);
     g_blockStack.pop_back();
 
@@ -4852,6 +4852,7 @@ ast::NodePtr LowerForeach(int id)
                 "__std_vec_unref", { "__chali_v", "__chali_address" },
                 { ast::Node::var(source), ast::Node::var(item) })));
         g_blockStack.push_back(MBlockContext{ breakLabel, continueLabel, loopDepth, {}, nullptr });
+        g_blockStack.back().sourceNode = id;
         const ast::NodePtr body = LowerStmt(node.kids[1]);
         g_blockStack.pop_back();
         const MOwnedScope iteration = g_ownedScopes.back();
@@ -4963,6 +4964,7 @@ ast::NodePtr LowerForeach(int id)
     }
     g_blockStack.push_back(
         MBlockContext{ breakCleanup, continueLabel, g_ownedScopes.size(), {}, nullptr });
+    g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(node.kids[1]);
     g_blockStack.pop_back();
     const MOwnedScope iterationOwned = g_ownedScopes.back();
@@ -5033,6 +5035,7 @@ ast::NodePtr LowerWhile(int id)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, loopLabel, g_ownedScopes.size(), {}, nullptr });
+    g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(node.kids[1]);
     g_blockStack.pop_back();
 
@@ -5065,6 +5068,7 @@ ast::NodePtr LowerDoWhile(int id)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, contLabel, g_ownedScopes.size(), {}, nullptr });
+    g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(node.kids[0]);
     g_blockStack.pop_back();
 
@@ -5127,6 +5131,7 @@ ast::NodePtr LowerFor(int id)
 
     g_blockStack.push_back(
         MBlockContext{ breakLabel, contLabel, g_ownedScopes.size(), {}, nullptr });
+    g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(bodyId);
     g_blockStack.pop_back();
     out.push_back(body);

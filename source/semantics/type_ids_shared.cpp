@@ -81,7 +81,6 @@ bool IsMacroMetadataSource(int id);
  */
 bool NormalizeMacroMetadata(int id, std::size_t depth = 0);
 
-
 /**
  * @brief 造一个光秃秃的内建类型（不往类型池里放，纯粹为了算类型号）。
  * @param kind 待处理对象的类别。
@@ -825,7 +824,8 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
 ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
     for (const auto &declaration : g_functionDecls)
-        if (declaration.label == label && declaration.unsafeRequired) {
+        if (declaration.label == label && declaration.unsafeRequired)
+        {
             Fail("unsafe 函数不能转换为安全函数值：" + label);
             return ast::Node::i(0);
         }
@@ -895,8 +895,11 @@ struct MBlockContext
     bool valueOnly = false;            ///< 非循环值表达式不截获无值循环退出。
     std::size_t valueScopeDepth = 0u;  ///< 值出口的名字作用域深度。
     bool returnExpression = false;     ///< 返回表达式的内部拥有者必须在清理前消费。
+    int sourceNode = -1;               ///< 登记出口的源语法节点，避免宏展开层数改变控制目标。
 };
 Memory::Vector<MBlockContext> g_blockStack;
+std::uint32_t g_functionControlContext = 0;  ///< 当前函数的控制来源边界，宏实参不得越过新生成的函数。
+int g_functionControlNode = -1;              ///< 当前函数体的源节点，供只读预览显示返回／传播目标。
 /**
  * 生成循环 / match 分支用的标签名（`__chali_loop_7` 这种，和用户标签不撞）。
  */

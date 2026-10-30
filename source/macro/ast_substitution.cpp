@@ -162,6 +162,7 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
     if (nodes_.size() - start_ >= budget_) throw std::runtime_error("宏展开生成的语法节点超过预算");
     const int result = static_cast<int>(nodes_.size());
     nodes_.push_back(original);
+    nodes_[result].controlTarget = -1;  // 新语法位置重新解析出口，不能复用旧降级实例的物理目标。
     if (substitute && types_ && original.type >= 0)
     {
         auto type = cloneType(types_->at(original.type), depth);
@@ -170,6 +171,8 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
     }
     if (!substitute && nodes_[result].macroExpansion < 0 && site_.frame >= 0)
         nodes_[result].macroExpansion = site_.frame;
+    if (nodes_[result].controlContext == UINT32_MAX && site_.line)
+        nodes_[result].controlContext = substitute ? context_ : original.syntaxContext;
     if (substitute)
     {
         nodes_[result].syntaxContext = context_;

@@ -14,6 +14,7 @@ const NODE_LABELS = {
   parameter: '参数', argument: '实参', member: '成员访问', index: '下标访问',
   if: '条件分支', while: '循环', for: '遍历', return: '返回', break: '退出循环',
   continue: '继续循环', cast: '类型转换', struct: '结构体', enum: '枚举',
+  loop: '循环', foreach: '逐项循环', do_while: '后置条件循环', yield: '交付值', propagation: '错误传播',
   match: '模式匹配', array: '数组', list: '列表', null: '空值', node: '节点',
   macro_call: '宏调用', source_fragment: '源码片段', sequence: '语句序列',
   expression_statement: '表达式语句', value_block: '值块', closure: '闭包',
@@ -63,7 +64,7 @@ function renderNode(node, depth, language) {
   if (node.type) details.push(`<span class="type">: ${escapeHtml(node.type)}</span>`);
   if (node.symbol) details.push(`<button class="symbol" data-binding="${escapeHtml(node.symbol)}">${escapeHtml(node.symbol)}</button>`);
   if (node.parameterCache) details.push(`<span class="type">${escapeHtml(ui(language, '参数缓存', 'parameter cache'))}: ${escapeHtml(node.parameterCache)}</span>`);
-  for (const [key, title] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')]]) {
+  for (const [key, title] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')], ['controlTarget', ui(language, '出口', 'Target')]]) {
     const location = node[key];
     if (location && typeof location.file === 'string' && location.file && !location.file.startsWith('<') && Number.isInteger(location.line) && location.line > 0 && Number.isInteger(location.column) && location.column > 0)
       details.push(`<button data-node-location="${escapeHtml(JSON.stringify(location))}">${escapeHtml(title)}</button>`);

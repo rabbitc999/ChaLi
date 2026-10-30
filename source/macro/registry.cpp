@@ -362,6 +362,8 @@ int Registry::instantiate(int call, std::string &error,
     frame.sourceLine = site.line;
     frame.sourceColumn = site.column;
     frame.i = entry.declaration;
+    frame.syntaxContext = node.syntaxContext;
+    frame.controlContext = node.controlContext == UINT32_MAX ? node.syntaxContext : node.controlContext;
     frame.kids = { node.macroExpansion };
     site.frame = static_cast<int>(nodes_.size());
     nodes_.push_back(std::move(frame));
@@ -439,6 +441,7 @@ int Registry::instantiate(int call, std::string &error,
     for (const auto &input : inputs) arguments.emplace(bound.parameters.at(input.first), input.second);
     arguments.insert(bound.iterations.begin(), bound.iterations.end());
     const auto expansion = resolver_.createExpansion(entry.scope, entry.context);
+    nodes_[site.frame].bindingContext = expansion;
     std::set<BindingId> valueParameters;
     std::set<BindingId> syntaxParameters;
     std::set<BindingId> statementParameters;

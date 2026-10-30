@@ -20,6 +20,8 @@ int main()
     const int id = M_New(MNode::Int, "snapshot", 37);
     auto &node = const_cast<MNode &>(M_ParsedNode(id));
     node.syntaxContext = 123;
+    node.controlContext = 321;
+    node.controlTarget = id;
     node.bindingIdentity = 456;
     node.bindingContext = 789;
     node.formattedOutputBridge = true;
@@ -34,6 +36,17 @@ int main()
     std::ostringstream output(std::ios::binary);
     assert(M_WriteStandardUnit(output, count));
     const auto bytes = output.str();
+    std::ostringstream provenance(std::ios::binary);
+    chali_incremental::writeNumber(provenance, 123);
+    chali_incremental::writeNumber(provenance, 321);
+    chali_incremental::writeNumber(provenance, 456);
+    const auto provenanceOffset = bytes.find(provenance.str());
+    assert(provenanceOffset != bytes.npos);
+    auto invalidContext = bytes;
+    invalidContext.replace(provenanceOffset + 8, 8, 8, static_cast<char>(0xff));
+    std::istringstream invalidProvenance(invalidContext, std::ios::binary);
+    assert(!M_ReadStandardUnit(invalidProvenance));
+    assert(M_NodeCount() == count && M_ParsedNode(id).controlContext == 321);
     for (const auto size : { std::size_t(0), std::size_t(8), bytes.size() - 1 })
     {
         std::istringstream truncated(bytes.substr(0, size), std::ios::binary);
@@ -45,6 +58,10 @@ int main()
     std::istringstream old(incompatible, std::ios::binary);
     assert(!M_ReadStandardUnit(old));
     assert(M_NodeCount() == count);
+    incompatible[8] = 3;
+    std::istringstream previousFormat(incompatible, std::ios::binary);
+    assert(!M_ReadStandardUnit(previousFormat));
+    assert(M_NodeCount() == count);
     node.formattedOutputBridge = false;
     node.bindingIdentity = 0;
     std::istringstream input(bytes, std::ios::binary);
@@ -53,6 +70,7 @@ int main()
     assert(restored.formattedOutputBridge && restored.moduleLocal);
     assert(restored.unsafeRequired && restored.unsafeScope && restored.implicitExitMove);
     assert(restored.syntaxContext == 123 && restored.bindingIdentity == 456 && restored.bindingContext == 789);
+    assert(restored.controlContext == 321 && restored.controlTarget == -1);
     assert(restored.i == 37 && restored.s2 == "macro-category" && restored.kids[0] == id);
     std::ostringstream package(std::ios::binary);
     const Memory::String text = "standard core identity";

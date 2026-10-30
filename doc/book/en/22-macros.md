@@ -503,7 +503,49 @@ Use these collections in `$for method in $methods<T>()` or `$for contract in $in
 
 Start with printing and validation before adding encoding. Add a bool field and inspect which statements are generated.
 
-## 22.15 Inspecting Expansions and Diagnosing Errors
+## 22.15 Keeping Control Targets at Their Source
+
+A break passed to a macro still targets the caller's loop. A loop introduced by the template must not intercept it.
+
+<!-- verify-book -->
+```chali
+$macro RUN_ONCE(body:block) -> stmt
+int64 round = 0;
+while (round < 1)
+{
+    round += 1;
+    body;
+}
+$end_macro
+void main()
+{
+    int64 visited = 0;
+    loop
+    {
+        visited += 1;
+        $RUN_ONCE({ break; });
+        visited += 100;
+        break;
+    }
+    println("{}", visited);
+}
+```
+
+```text
+1
+```
+
+RUN_ONCE takes a complete block fragment. Its private round variable controls one while iteration, then the template places body inside the loop. The private binding does not accidentally resolve to a caller variable with the same spelling.
+
+main creates the outer loop and increments visited from 0 to 1. The supplied break belongs to that loop, so the addition of 100 is never executed. The result is 1. Selecting the physically nearest loop after expansion would instead exit the template's while and change the result.
+
+Continue follows the same origin rule. A return or ? in a supplied fragment belongs to the caller's function; yield belongs to the caller's existing value exit. Template caches and value blocks do not intercept them. Loops and functions declared inside the supplied fragment retain their own local boundaries.
+
+A template's ordinary control statements first search its loops or value exits. An explicit `-> stmt` macro may transfer control to the caller when there is no local target. Legacy macros without a result category retain that use. Break all continues through permitted caller origins to the outermost loop. An explicit `-> expr` template stops at its own boundary: it cannot itself return or propagate errors into the caller, nor escape the expression through break or continue. Returns inside functions declared by that template still belong to those functions.
+
+Explicit caller fragments may leave the caller, but cannot cross a newly generated function and then return to the original function. Exited scopes still execute defer actions and owned-value cleanup. Return and propagation values retain ordinary type, borrowing and move checks. Read the statement category, fragment categories and invocation's exit condition together before examining expansion nesting.
+
+## 22.16 Inspecting Expansions and Diagnosing Errors
 
 In VS Code, use ChaLi's macro expansion preview to inspect one level or the complete expansion. A one-level preview may retain nested macro calls; the complete preview expands them further. Source mappings identify definitions and invocations. Preview output is not a stable source export format.
 
@@ -548,7 +590,7 @@ Prefer a regular function when it expresses the requirement; choose macros for n
 Expansion does not execute arbitrary user runtime logic or legalize invalid borrowing and resource use. Runtime reflection next addresses metadata-based object access, a different mechanism from compile-time syntax generation.
 
 
-## 22.16 Single-Line and Parameterless Macros
+## 22.17 Single-Line and Parameterless Macros
 
 Use $replace for a one-line template. It shares hygienic AST substitution and needs no $end_macro.
 
@@ -570,7 +612,7 @@ void main()
 
 ADD is invoked with parentheses. Its complete addition expression produces 5 before multiplication by 10, so the result is 50. LIMIT has no parameter group and is invoked without parentheses. A definition with an empty () group requires that group at the call. Use $macro and $end_macro for multi-line control structures.
 
-## 22.17 Source Text, Names and Locations
+## 22.18 Source Text, Names and Locations
 
 <!-- verify-book -->
 ```chali
@@ -602,7 +644,7 @@ MAKE concatenates identifier fragments into itemCount, resolving to the global v
 
 $module gives the module name. $file and $line provide source information for diagnostics. Paths vary across machines, so do not freeze a local absolute path as portable expected output. Follow source mappings through nested expansion rather than treating preview line numbers as original source positions.
 
-## 22.18 Selecting Templates by Syntax or Text
+## 22.19 Selecting Templates by Syntax or Text
 
 <!-- verify-book -->
 ```chali
@@ -640,7 +682,7 @@ NUMBER fully matches source spelling with an ECMAScript regular expression. The 
 
 $match supports ident, expr, type, block and stmt, ordered $else is branches and $end_match. $regex ends with $end_regex and matches the entire spelling: abc123 does not match [0-9]+.
 
-## 22.19 Groups and Nested Forwarding
+## 22.20 Groups and Nested Forwarding
 
 Ordered groups preserve their delimiter shapes. For ``$macro ADD[a](b){c}`` with body a + b + c, call `$ADD[1](2){3}`, not $ADD(1, 2, 3). Each group can end with its own variadic parameter; ..rest is a compatibility spelling for ...rest.
 
@@ -673,13 +715,13 @@ Single evaluation for value parameters survives forwarding. Forwarded expr param
 
 $std::lang::assert explicitly qualifies a macro by module. Use visible imported names or qualify them when the source needs to be explicit. Ordinary function calls and macro calls retain their respective call syntax.
 
-## 22.20 Choosing a Form
+## 22.21 Choosing a Form
 
 Start with functions and generics. Choose a macro when repetition concerns syntax positions, declarations or field sets. Decide what each input represents and where the result belongs; encode both decisions in the definition header.
 
 Generated code still undergoes name, type, borrow and resource checks. Start with a field-printing macro before adding serialization rules to a project.
 
-## 22.21 Exercises
+## 22.22 Exercises
 
 1. Compare next call counts with value and expr.
 2. Does changing an unannotated parameter change the caller?

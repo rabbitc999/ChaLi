@@ -33,6 +33,10 @@ function expansionText() {
 }
 
 async function main() {
+  const control = renderNode({kind:'break',origin:'argument',controlTarget:{file:'/project/main.chl',line:20,column:3},children:[]},0,'zh');
+  assert.ok(control.includes('出口') && control.includes('data-node-location'));
+  const englishControl = renderNode({kind:'propagation',origin:'definition',controlTarget:{file:'/project/main.chl',line:20,column:3},children:[]},0,'en');
+  assert.ok(englishControl.includes('Target') && englishControl.includes('propagation'));
   const errors = [], infos = [], handlers = [];
   let command, created = [], opened = null, shown = null, flushed = false;
   const commands = new Map();

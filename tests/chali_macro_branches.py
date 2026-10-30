@@ -38,7 +38,7 @@ def main():
         ("regex_comment", '$regex A is "a /\\\\*keep\\\\*/ b"\n1\n$else\n0\n$end_regex', "a /*keep*/ b", 1),
         ("regex_newline", '$regex A is "[\\\\s\\\\S]+"\n1\n$else\n0\n$end_regex', "a\nb", 1),
     ]
-    work = ROOT / "build/macro-hygiene"
+    work = ROOT / "tmp/macro-hygiene"
     work.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="branches-", dir=work) as folder:
         directory = Path(folder)

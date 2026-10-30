@@ -291,8 +291,8 @@ bool CheckAlgorithmCallback(int callbackId, const std::shared_ptr<MType> &elemen
  * @return 指向具体语言实现的调用节点。
  */
 ast::NodePtr BootstrapAlgorithmCall(const Memory::String &name,
-                                  const Memory::Vector<std::shared_ptr<MType>> &types,
-                                  const Memory::Vector<int> &args)
+                                    const Memory::Vector<std::shared_ptr<MType>> &types,
+                                    const Memory::Vector<int> &args)
 {
     Memory::Vector<Memory::String> spellings;
     for (const auto &type : types) spellings.push_back(GenericArgumentText(type));
@@ -564,7 +564,8 @@ ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExi
     g_usesLanguageMove = true;
     const auto address = AllocateName("__chali_move_address");
     const auto result = AllocateName("__chali_move_result");
-    const int bytes = type->kind == MType::Struct ? std::max(8, StructStride(type)) : IsByteStorageType(type) ? 1 : 8;
+    const int bytes = type->kind == MType::Struct ? std::max(8, StructStride(type)) : IsByteStorageType(type) ? 1 :
+                                                                                                                8;
     Memory::Vector<ast::NodePtr> out{
         Node::declare(address, ast::Type::i64()), Node::assign(address, source),
         Node::exprStmt(Node::call("__std_move_require", { "address", "bytes", "type" },
@@ -1692,8 +1693,7 @@ ast::NodePtr LowerCall(int id)
     if (g_borrowFlowCapture) g_borrowFlowCapture->calls[id] = label;
     if (callee.kind == MNode::Member || callee.kind == MNode::Arrow)
     {
-        if (IsStandardOpcode(ExprType(callee.kids[0]), "String") &&
-            (callee.s == "reserve" || callee.s == "append" || callee.s == "clear" || callee.s == "truncate"))
+        if (IsStandardOpcode(ExprType(callee.kids[0]), "String") && (callee.s == "reserve" || callee.s == "append" || callee.s == "clear" || callee.s == "truncate"))
         {
             if (!CheckMutableReceiver(callee.kids[0])) return Bad();
             const auto receiver = EffectPlace(callee.kids[0]);
@@ -1701,8 +1701,7 @@ ast::NodePtr LowerCall(int id)
                 for (const auto &entry : scope)
                 {
                     const auto type = entry.second.type;
-                    if (!type || type->kind != MType::Ptr || !type->elem ||
-                        !(type->elem->kind == MType::Char || (type->elem->kind == MType::Int && type->elem->bits == 8))) continue;
+                    if (!type || type->kind != MType::Ptr || !type->elem || !(type->elem->kind == MType::Char || (type->elem->kind == MType::Int && type->elem->bits == 8))) continue;
                     const auto alias = g_effectAliases.find(entry.second.emitted);
                     if (alias != g_effectAliases.end() && OverlappingEffects(receiver, alias->second))
                         return Fail("活跃字节借用期间不能修改 String 缓冲区：" + entry.first), Bad();
@@ -1827,10 +1826,10 @@ ast::NodePtr LowerCall(int id)
         return ast::Node::call("__std_iter_lease", { "source" }, { LowerExpr(args[0]) });
     if (sourceName.rfind("std::lang::__algorithmCompareIndices__", 0) == 0)
         return ast::Node::call("std::lang::__listStorageCompareIndex", { "source", "left", "right" },
-                              { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
+                               { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
     if (sourceName.rfind("std::lang::__algorithmSwap__", 0) == 0)
         return ast::Node::call("std::lang::__listStorageSwap", { "source", "left", "right" },
-                              { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
+                               { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
     if (sourceName.rfind("std::iter::__iter", 0) == 0)
     {
         if (sourceName.rfind("std::iter::__iterBox__", 0) == 0)
@@ -2125,13 +2124,11 @@ ast::NodePtr LowerResourceDrop(int receiver)
         if (type->readOnly) return Fail("只读引用不能 drop String 对象"), Bad();
         const auto slot = AllocateName("__chali_drop_string_object");
         const auto pointer = ast::Node::var(slot);
-        const auto actions = ast::Node::block({
-            ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
-            ast::Node::freeMemory(pointer)
-        });
+        const auto actions = ast::Node::block({ ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
+                                                ast::Node::freeMemory(pointer) });
         removal = ast::Node::block({ ast::Node::declare(slot, ast::Type::i64()),
-                                    ast::Node::assign(slot, LowerRawExpr(receiver)),
-                                    ast::Node::ifThenElse(ast::Node::call("__std_heap_drop_live", { "address" }, { pointer }), actions, nullptr) });
+                                     ast::Node::assign(slot, LowerRawExpr(receiver)),
+                                     ast::Node::ifThenElse(ast::Node::call("__std_heap_drop_live", { "address" }, { pointer }), actions, nullptr) });
     }
     else if (type->kind == MType::Ptr && type->elem && type->elem->kind == MType::Struct)
     {
@@ -2435,6 +2432,7 @@ ast::NodePtr LowerProtocolTry(int id, const MPropagationInfo &info)
  */
 ast::NodePtr LowerTry(int id)
 {
+    if (!CheckMacroFunctionControl(id)) return Bad();
     if (g_freshSink == nullptr)
     {
         Fail("`?` 需要出现在可前置语句的表达式中（声明、赋值、return 或表达式语句）");
@@ -3009,7 +3007,8 @@ ast::NodePtr LowerUncheckedExpr(int id)
     }
     case MNode::NewPtr:
         return LowerNewPtr(id);
-    case MNode::RawLayout: {
+    case MNode::RawLayout:
+    {
         if (g_unsafeDepth == 0) return Fail("原始布局查询需要 unsafe 上下文"), Bad();
         const auto type = T(node.type);
         if (!type || type->kind == MType::Void) return Fail("原始布局查询不支持 void"), Bad();
@@ -3463,7 +3462,7 @@ ast::NodePtr LowerStmtImpl(int id)
     {
         /* 跳出去就不再回来：先把这个循环里**更深**的块中的所有者变量
          * 软释放掉，再跳（见"生命周期"一节）。 */
-        MBlockContext *const context = FindBreakContext(!node.kids.empty(), node.i);
+        MBlockContext *const context = FindMacroControlTarget(id, false);
         if (context == nullptr)
         {
             Fail(node.i != 0       ? "break #level 指定的循环层数超出当前函数的嵌套循环范围" :
@@ -3473,6 +3472,7 @@ ast::NodePtr LowerStmtImpl(int id)
         }
         // break 的值可包含内层 loop，压栈可能使 g_blockStack 中的指针失效。
         const MBlockContext breakContext = *context;
+        g_nodes[id].controlTarget = breakContext.sourceNode;
         int valueId = node.kids.empty() ? -1 : node.kids[0];
         if (valueId >= 0 && node.type2 != 1)
         {
@@ -3517,14 +3517,16 @@ ast::NodePtr LowerStmtImpl(int id)
     {
         /* `continue` 也是"离开这一轮"：同样先释放，再跳到下一轮的起点
          * （for 的下一轮起点在自增那一步，见 LowerFor）。 */
-        std::size_t depth = 0;
-        const Memory::String target = FindContinueTarget(&depth);
+        const auto *context = FindMacroControlTarget(id, true);
+        const std::size_t depth = context ? context->scopeDepth : 0;
+        const Memory::String target = context ? context->continueLabel : Memory::String();
         if (target.empty())
         {
             Fail("continue 只能用在循环里面");
             return nullptr;
         }
         Memory::Vector<ast::NodePtr> out;
+        g_nodes[id].controlTarget = context->sourceNode;
         AppendDropsAbove(depth, Memory::String(), &out);
         out.push_back(ast::Node::jump(target));
         return ast::Node::block(out);
@@ -3535,6 +3537,7 @@ ast::NodePtr LowerStmtImpl(int id)
         return nullptr;
     case MNode::Return:
     {
+        if (!CheckMacroFunctionControl(id)) return nullptr;
         // 构造入口的 self 由调用方持有，显式返回只结束初始化，不复制或转移接收者。
         if (g_namedConstructorBody && node.kids.size() == 1u
             && N(node.kids[0]).kind == MNode::Var && N(node.kids[0]).s == "self")
@@ -3825,8 +3828,7 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
         if (same && expected)
         {
             // 核心 memset 的字节参数允许范围内的整数字面量，与显式 uint8 转换一致。
-            const bool coreMemorySet = !candidates.empty() && std::all_of(candidates.begin(), candidates.end(),
-                [](const Memory::String &candidate) { return candidate.rfind("std::lang::memset__", 0u) == 0u; });
+            const bool coreMemorySet = !candidates.empty() && std::all_of(candidates.begin(), candidates.end(), [](const Memory::String &candidate) { return candidate.rfind("std::lang::memset__", 0u) == 0u; });
             if (index == 1u && coreMemorySet && !args.empty()
                 && IsBarePointerType(ExprType(args[0])) && expected->kind == MType::Int
                 && expected->isUnsigned && expected->bits == 8)
@@ -3845,7 +3847,7 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
     {
         if (declaration.label != chosen || declaration.superseded) continue;
         const bool formattedOutputBridge = node.formattedOutputBridge && declaration.module == "std::lang"
-            && (declaration.source == "__std_eprint" || declaration.source == "__std_eprintln");
+                                           && (declaration.source == "__std_eprint" || declaration.source == "__std_eprintln");
         if (declaration.moduleLocal && declaration.module != g_currentModule && !formattedOutputBridge)
             return Fail("模块 " + declaration.module + " 的 inline 函数 " + declaration.source + " 不能从模块 " + (g_currentModule.empty() ? Memory::String("<root>") : g_currentModule) + " 访问");
         break;
@@ -4009,7 +4011,30 @@ enum MReturnFlow
     FlowValueEscape = 16,
 };
 
-int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth);
+/**
+ * @brief 返回分析中的源出口；已解析身份不受宏新增循环影响，未解析时保留原层级。
+ */
+struct MReturnExit
+{
+    long long level = 0;
+    int target = -1;
+    bool continuation = false;
+    bool value = false;
+    /**
+     * @brief 按完整出口身份排序，避免不同种类的控制路径互相覆盖。
+     * @param other 另一条出口。
+     * @return 当前出口排序在前时返回真。
+     */
+    bool operator<(const MReturnExit &other) const
+    {
+        if (level != other.level) return level < other.level;
+        if (target != other.target) return target < other.target;
+        if (continuation != other.continuation) return continuation < other.continuation;
+        return value < other.value;
+    }
+};
+
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth);
 
 /**
  * @brief 分析表达式求值期间的函数返回、值退出及层级退出路径。
@@ -4019,7 +4044,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
  * @param depth 当前分析根内已进入的循环层数。
  * @retval 返回表达式可能继续或提前退出的路径位掩码。
  */
-int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
+int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
 {
     if (id < 0) return FlowNext;
     const MNode node = N(id);
@@ -4027,7 +4052,15 @@ int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<long long> *
     if (node.kind == MNode::Loop)
     {
         if (node.s.empty()) return StatementReturnFlowImpl(id, transparentLoops, exits, depth);
-        const int flow = StatementReturnFlowImpl(node.kids[0], true, exits, depth);
+        Memory::Set<MReturnExit> nested;
+        int flow = StatementReturnFlowImpl(node.kids[0], true, &nested, depth);
+        for (const auto &exit : nested)
+        {
+            if (exit.target == id)
+                flow |= FlowValueEscape;
+            else
+                exits->insert(exit);
+        }
         return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);
     }
     int flow = FlowNext;
@@ -4049,7 +4082,7 @@ int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<long long> *
  * @param depth 当前分析根内已进入的循环层数。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
+int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
 {
     if (listId < 0) return FlowNext;
     int flow = FlowNext;
@@ -4069,7 +4102,7 @@ int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<long 
  * @param depth 当前分析根内已进入的循环层数。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<long long> *exits, std::size_t depth)
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
 {
     if (statementId < 0) return FlowNext;
     const MNode &statement = N(statementId);
@@ -4080,13 +4113,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         {
             const MNode &value = N(statement.kids[0]);
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
-            if (value.kind == MNode::Loop)
-            {
-                if (value.s == "block") return StatementReturnFlowImpl(value.kids[0], transparentLoops, exits, depth);
-                if (value.s.empty()) return StatementReturnFlowImpl(statement.kids[0], transparentLoops, exits, depth);
-                const int flow = StatementReturnFlowImpl(value.kids[0], true, exits, depth);
-                return (flow & ~FlowValueEscape) | ((flow & FlowValueEscape) ? FlowNext : 0);
-            }
+            if (value.kind == MNode::Loop) return ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
         }
         return statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
     case MNode::Declare:
@@ -4108,13 +4135,24 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         return (flow & ~FlowNext) | ((flow & FlowNext) ? FlowReturn : 0);
     }
     case MNode::Break:
+        if (statement.controlTarget >= 0)
+        {
+            const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+            if (flow & FlowNext) exits->insert({ 0, statement.controlTarget, false, !statement.kids.empty() });
+            return flow & ~FlowNext;
+        }
         if (statement.i != 0)
         {
-            exits->insert(statement.i);
+            exits->insert({ statement.i });
             return 0;
         }
         return statement.kids.empty() ? FlowEscape : FlowValueEscape;
     case MNode::Continue:
+        if (statement.controlTarget >= 0)
+        {
+            exits->insert({ 0, statement.controlTarget, true });
+            return 0;
+        }
         return FlowContinue;
     case MNode::Block:
         return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops, exits, depth);
@@ -4135,14 +4173,27 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         const int bodyId = statement.kind == MNode::For                                      ? statement.kids[3] :
                            statement.kind == MNode::Loop || statement.kind == MNode::DoWhile ? statement.kids[0] :
                                                                                                statement.kids[1];
-        Memory::Set<long long> nested;
+        Memory::Set<MReturnExit> nested;
         int body = StatementReturnFlowImpl(bodyId, transparentLoops, &nested, depth + 1);
-        for (const long long level : nested)
+        for (auto exit : nested)
         {
+            if (exit.target >= 0)
+            {
+                if (exit.target == statementId)
+                    body |= exit.continuation ? FlowContinue : exit.value ? FlowValueEscape :
+                                                                            FlowEscape;
+                else
+                    exits->insert(exit);
+                continue;
+            }
+            const long long level = exit.level;
             if (level == 1 || (level < 0 && depth == 0 && FindBreakContext(false, -1) == nullptr))
                 body |= FlowEscape;
             else
-                exits->insert(level < 0 ? level : level - 1);
+            {
+                exit.level = level < 0 ? level : level - 1;
+                exits->insert(exit);
+            }
         }
         const int propagated = body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0));
         if (statement.kind == MNode::While || statement.kind == MNode::For || statement.kind == MNode::Foreach)
@@ -4208,7 +4259,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
  */
 int StatementReturnFlow(int statementId, bool transparentLoops)
 {
-    Memory::Set<long long> exits;
+    Memory::Set<MReturnExit> exits;
     const int flow = StatementReturnFlowImpl(statementId, transparentLoops, &exits, 0);
     return flow | (exits.empty() ? 0 : FlowEscape);
 }
@@ -4365,12 +4416,8 @@ public:
             /* 守卫、模式和分配长度不都存放在 kids；遗漏会让真实取址失去存储。
              * 声明组的 i 是标记而非子节点，不能按节点编号遍历。 */
             visit(node.guard);
-            const bool declarationGroup = node.kind == MNode::Declare && node.kids.size() == 1u &&
-                node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
-            const bool indexed = node.kind == MNode::Block || node.kind == MNode::Case ||
-                node.kind == MNode::NewPtr ||
-                ((node.kind == MNode::Declare || node.kind == MNode::Field) && !declarationGroup && node.i >= 0) ||
-                (node.kind == MNode::Index && node.s2 == "__chali_bare_index");
+            const bool declarationGroup = node.kind == MNode::Declare && node.kids.size() == 1u && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List;
+            const bool indexed = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::NewPtr || ((node.kind == MNode::Declare || node.kind == MNode::Field) && !declarationGroup && node.i >= 0) || (node.kind == MNode::Index && node.s2 == "__chali_bare_index");
             if (indexed) visit(static_cast<int>(node.i));
             for (const auto annotation : node.annotations) visit(annotation);
             for (const auto child : node.kids) visit(child);
@@ -4408,6 +4455,22 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     g_namedConstructorBody = constructorBody.saved && !owner.empty() && name.size() >= 5u
                              && name.compare(name.size() - 5u, 5u, "$body") == 0;
     FunctionReferenceStorageScope referenceStorage(bodyId);
+    struct MacroFunctionScope
+    {
+        std::uint32_t context;
+        int source;
+        Memory::Vector<MBlockContext> blocks;
+        /** @brief 退出当前函数时恢复外层的卫生边界与活动出口。 */
+        ~MacroFunctionScope()
+        {
+            g_functionControlContext = context;
+            g_functionControlNode = source;
+            g_blockStack = std::move(blocks);
+        }
+    } macroFunction{ g_functionControlContext, g_functionControlNode, std::move(g_blockStack) };
+    g_blockStack.clear();
+    g_functionControlContext = bodyId >= 0 ? MacroControlContext(N(bodyId)) : 0;
+    g_functionControlNode = bodyId;
     UnsafeScopeGuard unsafeGuard(false, true);
     ClearActiveError();
     ast::Function function;
@@ -4436,11 +4499,11 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         var.emitted = param.emitted;
         // 编译器算法适配器延续原 intrinsic 的借用约定；公开值参数仍按值复制。
         const bool algorithmBorrow = module == "std::lang"
-            && (name.rfind("__bootAlgorithm", 0u) == 0u || name.rfind("std::lang::__bootAlgorithm", 0u) == 0u)
-            && (((param.source == "source" || param.source.rfind("source$", 0u) == 0u)
-                 && IsContainer(param.type) && param.type->name == "vec")
-                || ((param.source == "callback" || param.source.rfind("callback$", 0u) == 0u)
-                    && param.type->kind == MType::Func));
+                                     && (name.rfind("__bootAlgorithm", 0u) == 0u || name.rfind("std::lang::__bootAlgorithm", 0u) == 0u)
+                                     && (((param.source == "source" || param.source.rfind("source$", 0u) == 0u)
+                                          && IsContainer(param.type) && param.type->name == "vec")
+                                         || ((param.source == "callback" || param.source.rfind("callback$", 0u) == 0u)
+                                             && param.type->kind == MType::Func));
         if (algorithmBorrow) var.isConst = true;
         Memory::Set<Memory::String> borrowedTypes;
         if (ContainsBorrowedReferences(param.type, &borrowedTypes))

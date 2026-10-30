@@ -18,10 +18,10 @@ struct MBorrowFlowCapture
     Memory::Map<int, bool> declarationReferences;
     Memory::Map<int, MBorrowPlace> redeclarations;
     Memory::Map<int, MBorrowPlace> foreachBindings;
-    Memory::Set<int> storageReleases;                                                ///< 明确释放堆存储的 drop() 调用。
-    Memory::Set<int> terminalCalls;                                                  ///< 确认为 Drop 协议的显式调用，不包括普通同名方法。
-    Memory::Map<int, std::pair<ast::NodePtr, ast::NodePtr>> releases;                ///< 显式终结及其路径守卫。
-    Memory::Set<int> valueLoops;                                                     ///< 实际分配了结果槽的循环，独立语句也可能接收并丢弃结果。
+    Memory::Set<int> storageReleases;                                  ///< 明确释放堆存储的 drop() 调用。
+    Memory::Set<int> terminalCalls;                                    ///< 确认为 Drop 协议的显式调用，不包括普通同名方法。
+    Memory::Map<int, std::pair<ast::NodePtr, ast::NodePtr>> releases;  ///< 显式终结及其路径守卫。
+    Memory::Set<int> valueLoops;                                       ///< 实际分配了结果槽的循环，独立语句也可能接收并丢弃结果。
 };
 Memory::Vector<chali_borrow_checker::FlowGraph> g_borrowFlows;
 MBorrowFlowCapture *g_borrowFlowCapture = nullptr;
@@ -115,8 +115,10 @@ struct MBorrowFlowBuilder
     const MBorrowFlowCapture &capture;
     chali_borrow_checker::FlowGraph graph;
     mutable Memory::Map<Memory::String, MBorrowOrigins> summaries;
-    Memory::Vector<std::size_t> loopStops;   ///< 按词法嵌套登记循环出口，供层级退出选择。
-    Memory::Vector<std::size_t> valueStops;  ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
+    Memory::Vector<std::size_t> loopStops;                       ///< 按词法嵌套登记循环出口，供层级退出选择。
+    Memory::Vector<std::size_t> valueStops;                      ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
+    Memory::Vector<std::pair<int, std::size_t>> controlStops;    ///< 解析后出口身份与当前图中的后继。
+    Memory::Vector<std::pair<int, std::size_t>> controlRepeats;  ///< 解析后循环身份与当前图中的下一轮入口。
     /**
      * @brief 将方法体返回来源替换为调用点的具体接收者或实参。
      * @param id 调用节点。
@@ -505,7 +507,9 @@ struct MBorrowFlowBuilder
         if (node.kind == MNode::Loop)
         {
             valueStops.push_back(next);
+            controlStops.push_back({ id, next });
             const auto entry = node.s.empty() ? statement(id, next, next, next) : statement(node.kids[0], next, next, next);
+            controlStops.pop_back();
             valueStops.pop_back();
             return entry;
         }
@@ -643,7 +647,11 @@ struct MBorrowFlowBuilder
             const bool ownValue = capture.valueLoops.count(id) != 0u;
             if (ownValue) valueStops.push_back(next);
             loopStops.push_back(next);
+            controlStops.push_back({ id, next });
+            controlRepeats.push_back({ id, update });
             auto bodyEntry = statement(body, update, next, update);
+            controlRepeats.pop_back();
+            controlStops.pop_back();
             loopStops.pop_back();
             if (ownValue) valueStops.pop_back();
             const auto iteration = capture.foreachBindings.find(id);
@@ -676,11 +684,27 @@ struct MBorrowFlowBuilder
         }
         if (node.kind == MNode::Break)
         {
+            if (node.controlTarget >= 0)
+            {
+                for (auto target = controlStops.rbegin(); target != controlStops.rend(); ++target)
+                    if (target->first == node.controlTarget)
+                        return node.kids.empty() ? target->second : expression(node.kids[0], target->second);
+                return Fail("借用控制流缺少已解析的退出目标"), next;
+            }
             if (node.i < 0 && !loopStops.empty()) return loopStops.front();
             if (node.i > 0 && static_cast<unsigned long long>(node.i) <= loopStops.size()) return loopStops[loopStops.size() - node.i];
             return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
         }
-        if (node.kind == MNode::Continue) return repeat;
+        if (node.kind == MNode::Continue)
+        {
+            if (node.controlTarget >= 0)
+            {
+                for (auto target = controlRepeats.rbegin(); target != controlRepeats.rend(); ++target)
+                    if (target->first == node.controlTarget) return target->second;
+                return Fail("借用控制流缺少已解析的继续目标"), next;
+            }
+            return repeat;
+        }
         if (node.kind == MNode::Return) return node.kids.empty() ? static_cast<std::size_t>(-1) : expression(node.kids[0], static_cast<std::size_t>(-1));
 
         return expression(id, next);

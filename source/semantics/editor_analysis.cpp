@@ -180,7 +180,14 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     case MNode::Declare: kind = "declaration"; break;
     case MNode::ExprStmt: kind = "expression_statement"; break;
     case MNode::Block: kind = "block"; break;
-    case MNode::Loop: kind = "value_block"; break;
+    case MNode::Loop: kind = node.s.empty() ? "loop" : "value_block"; break;
+    case MNode::While: kind = "while"; break;
+    case MNode::For: kind = "for"; break;
+    case MNode::Foreach: kind = "foreach"; break;
+    case MNode::DoWhile: kind = "do_while"; break;
+    case MNode::Break: kind = node.kids.empty() ? "break" : "yield"; break;
+    case MNode::Continue: kind = "continue"; break;
+    case MNode::Try: kind = "propagation"; break;
     case MNode::Return: kind = "return"; break;
     case MNode::Lambda: kind = "closure"; break;
     case MNode::FuncDef: kind = "function"; break;
@@ -201,8 +208,13 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     }
     const auto name = EditorMacroName(node.s);
     auto result = std::string("{\"kind\":") + chali_editor::jsonString(kind) + ",\"name\":" + chali_editor::jsonString(std::string_view(name.data(), name.size()));
-    result += ",\"origin\":" + chali_editor::jsonString(node.syntaxContext ? "definition" : "argument");
+    result += ",\"origin\":" + chali_editor::jsonString(MacroControlContext(node) ? "definition" : "argument");
     result += ",\"source\":" + EditorMacroLocation(node.sourceLine, node.sourceColumn);
+    if (node.controlTarget >= 0 && static_cast<std::size_t>(node.controlTarget) < g_nodes.size())
+    {
+        const auto &target = N(node.controlTarget);
+        result += ",\"controlTarget\":" + EditorMacroLocation(target.sourceLine, target.sourceColumn);
+    }
     if (node.macroExpansion >= 0 && static_cast<std::size_t>(node.macroExpansion) < g_nodes.size())
     {
         const auto &frame = N(node.macroExpansion);
