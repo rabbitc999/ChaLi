@@ -162,6 +162,10 @@ Built-in derivation reads parsed fields and variant payloads, emits restricted o
 
 Equal compares fields with short circuiting and checks enum variants before payloads. Hash combines variant tags and field hashes; strings use UTF-8 bytes and floating zero is normalized so equal values hash equally. Clone copies built-in values and invokes Clone for nested nominal fields; enum cloning visits only the active variant. Generated methods perform normal operations without a derive interpreter, runtime field enumeration or reflection lookup.
 
+All three derives visit instance fields only. Static fields are shared type state and do not participate in equality, hashing or cloning. String hashing reads bytes directly, so Chinese and emoji continuation bytes do not pass through character-boundary indexing. Integer width/sign rules remain intact; positive and negative zero have consistent hashes for float32/64, while equality keeps ordinary floating-point behavior.
+
+Handwritten Equal and Hash implementations must use the same value semantics: if equality compares only id, hashing should use id too. The compiler validates signatures and types rather than proving arbitrary method bodies mathematically. Nested values use their declared protocols. An explicitly implemented Clone may create an independent noncopyable resource; derived code invokes that Clone and retains normal move/cleanup rules. Missing required protocols are rejected.
+
 Field protocols are validated after all interfaces are registered, including for unused types. Scalars and String have built-in semantics. A nested custom struct or enum must implement the corresponding interface, either manually or through its own derive request. References, function values, raw arrays and other fields without a matching semantic protocol are not silently compared by address or raw bytes; provide a suitable wrapper and explicit interfaces.
 
 The core framework is [`derive.cpp`](../../source/semantics/derive.cpp):

@@ -52,6 +52,8 @@ All three Point fields participate in derived behavior. Origin starts with coord
 
 Changing copy.label to O2 changes overall equality even though coordinates still match. AfterChange becomes false while origin.label stays O, demonstrating independent mutation. Equal objects require consistent hashes, but equal hashes alone do not prove equality or provide persistent identity.
 
+Fields here mean instance fields. Static fields belong to shared type state and do not participate in these derives. Chinese and emoji labels are hashed as complete UTF-8 bytes; positive and negative zero also hash consistently for float32/64 fields. Nested types use their own protocols: if handwritten equality compares only id, handwritten hashing needs the same meaning.
+
 
 ### Deriving your own interface
 

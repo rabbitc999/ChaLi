@@ -76,7 +76,7 @@ bool DerivedMethodSource(const MNode &declaration, const Memory::String &trait, 
         for (const auto fieldId : N(declaration.kids[0]).kids)
         {
             const auto field = N(fieldId);
-            if (field.kind != MNode::Field) continue;
+            if (field.kind != MNode::Field || field.type2 == 1) continue;
             if (field.i >= 0) return Fail("#derive 尚无数组字段的接口契约：" + owner + "." + field.s);
             if (trait == "Equal")
                 pieces.push_back(field.s);
@@ -162,11 +162,11 @@ bool DerivedMethodSource(const MNode &declaration, const Memory::String &trait, 
 Memory::String DerivedHashHelpers()
 {
     return R"CHL(
-uint64 __chali_derive_hash_string(String value) {
+uint64 __chali_derive_hash_string(std::lang::String value) {
     uint64 result = 14695981039346656037u;
     int64 index = 0;
     while (index < std::lang::len(value)) {
-        result = (result ^ cast<uint64>(value[index])) * 1099511628211u;
+        result = (result ^ cast<uint64>(value.byteAt(index).unwrap())) * 1099511628211u;
         index = index + 1;
     }
     return result;
