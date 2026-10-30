@@ -66,6 +66,13 @@ void main(){
         (DEFINITION + 'void main(){let value=$Example(1,2);}', '缺少静态类型约束'),
         (DEFINITION + 'void main(){int32 value=$Example<int32>(1,2);}', '类型实参数量'),
         ('$macro Bad<T:missing>(a)\ncast<T>(a)\n$end_macro\nvoid main(){int64 x=$Bad(1);}', '推导来源不是形参'),
+        ('''interface Expected { int64 get(); }
+struct Unrelated { int64 value; }
+$macro Wrap<T:#res,U:b>(a,b)
+{ T result=b; yield result; }
+$end_macro
+void main(){Unrelated source;Expected result=$Wrap(0,source);}
+''', '类型未实现目标接口'),
     ]
     with tempfile.TemporaryDirectory(prefix='macro-result-inference-') as directory:
         work = Path(directory)

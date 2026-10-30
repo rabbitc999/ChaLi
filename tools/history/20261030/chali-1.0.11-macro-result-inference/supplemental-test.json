@@ -1,0 +1,8 @@
+{
+  "compiler_sha256": "f615347f6ec3f9574c3870963c34c444241aa5d9b640ca89db9c067626ad9dbb",
+  "production_source_commit": "2c92b98b85e4e6929685946ccb100c75ae37293f",
+  "test": "tests/chali_macro_result_inference.py",
+  "test_sha256": "fde681cb3b4b7aa6249f937f0b2430c4076a582750acc0361c450ef2d1ef7572",
+  "log": "macro-result-type-conflict-retest.log",
+  "exit_code": 0
+}
