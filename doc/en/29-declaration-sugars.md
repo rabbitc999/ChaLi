@@ -156,9 +156,9 @@ top_decl := derive_directive struct_decl type_decl_end
 DerivedDecl(traits, declaration) => declaration.derives = traits
 ```
 
-`#derive` is an individually registered compiler directive token. It attaches only to structs and enums. Only Equal, Hash and Clone are accepted. Drop, Closeable, unknown traits, duplicate requests and overwriting existing methods are rejected.
+`#derive` attaches only to structs and enums. Equal, Hash and Clone use built-in field derivation. Other names select a same-module interface/member-macro pair, including qualified module names. Drop, Closeable, duplicate requests, missing definitions and conflicting members are rejected.
 
-The semantic pass reads parsed field or variant-payload metadata and passes raw names or generated field fragments through existing `$macro`, `$for` and `$concat` templates. The macro engine receives text, performs no type checking and calls no Parser. After expansion finishes, the derive semantic pass uses the same generated parser to read ordinary generated methods, attach them to the original AST, and instantiate ordinary `Equal<bool,T>`, `Hash<T>` and `Clone<T>` interfaces. Normal type, interface, borrow and quadruple lowering then applies.
+Built-in derivation reads parsed fields and variant payloads, emits restricted ordinary method source, and uses the same generated parser to attach methods and instantiate ordinary `Equal<bool,T>`, `Hash<T>` and `Clone<T>` interfaces. Custom derivation reuses the AST member-macro expander. Both paths retain normal type, interface, borrow and resource checks before LLVM code generation.
 
 Equal compares fields with short circuiting and checks enum variants before payloads. Hash combines variant tags and field hashes; strings use UTF-8 bytes and floating zero is normalized so equal values hash equally. Clone copies built-in values and invokes Clone for nested nominal fields; enum cloning visits only the active variant. Generated methods perform normal operations without a derive interpreter, runtime field enumeration or reflection lookup.
 
@@ -169,14 +169,40 @@ The core framework is [`derive.cpp`](../../source/semantics/derive.cpp):
 ```text
 ExpandDerivedDeclarations():
     for each pending type:
-        enforce the Equal / Hash / Clone allowlist
-        source = expand existing macros over field metadata
-        generated = generatedParser.parse(source)
+        expand built-in fields or the paired AST member macro
         attach generated methods and concrete interfaces
 RegisterTop()
 ValidateDerivedFields()  // missing nested protocols always fail
-LowerProgram()          // ordinary typed methods -> ordinary quadruples
+LowerProgram()          // ordinary typed methods, normal ownership checks
 ```
+
+### Custom interface derivation
+
+The interface specifies public behavior; its same-name member macro supplies the implementation. The compiler passes the owner as the sole type argument.
+
+```chali
+interface Count { int64 count(); }
+$macro Count<T>() -> member
+int64 count() {
+    int64 result = 0;
+    $for field in $fields<T>()
+    result += 1;
+    $end_for
+    return result;
+}
+$end_macro
+#derive(Count)
+struct Record { int64 number; String text; }
+void main() { Record value; assert(value.count() == 2); }
+```
+
+The interface and macro must belong to the same module. The macro has one type parameter, an empty argument group, and the `member` result category. It may generate methods only; layout fields and associated types belong to the owner's declaration. The static field loop expands into ordinary statements.
+
+Methods matching interface signatures become public; helpers retain hygienic names. Matching a method name publishes its generated overload group. Derivation rejects an existing method with the same signature. Default implementations, inherited requirements, type checking, borrows, returns and resource cleanup retain their ordinary rules.
+
+After `import derive_tools;`, write `#derive(derive_tools::Count)` to choose that module explicitly. Unqualified names use normal macro scope/import resolution and ambiguous names require qualification. Generic owners expand per concrete instance. The paired interface may have one implementer parameter, for example `interface Describe<T> { String describe(T value); }` paired with `$macro Describe<T>() -> member`; the directive remains `#derive(Describe)`.
+
+Metadata queries that require additional generic instances instantiate them before retrying derivation. Existing expansion budgets reject recursive dependencies. One/all editor previews can select the `#derive` location and retain call, definition and metadata declaration sources without exposing writable hygiene identities.
 
 ## Closeable and operator derivation switches
 

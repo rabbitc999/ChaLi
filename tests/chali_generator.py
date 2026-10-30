@@ -1,6 +1,7 @@
 """Focused checks for the C++ ChaLi toolchain generator."""
 from compiler_path import compiler_path
 
+import argparse
 import os
 import hashlib
 import json
@@ -35,18 +36,43 @@ def command(arguments, *, succeeds=True):
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--reuse-build',action='store_true',help='复验失败后保留的独立构建，仅替换与新导出内容不同的受管理文件')
+    options=parser.parse_args()
     os.environ.setdefault("CHALI_LLVM_CLANG", str(ROOT / "build/dependencies/llvm/toolchain/bin/clang.exe") if os.name == "nt" else "clang")
     if not GENERATOR.exists():
         raise SystemExit(f"build chali first: {GENERATOR}")
-    shutil.rmtree(WORK, ignore_errors=True)
-    WORK.mkdir(parents=True)
+    assert WORK.resolve().is_relative_to((ROOT/'tmp').resolve())
+    if options.reuse_build:
+        assert (WORK/'compiler/.chali-generator-manifest').is_file() and (WORK/'compiler/build').is_dir(), '需要失败后保留的完整工程和构建目录'
+    else:
+        shutil.rmtree(WORK, ignore_errors=True)
+        WORK.mkdir(parents=True)
     try:
         command([GENERATOR, "compiler", "--out-dir", WORK / "removed-robot", "--module", "robot"], succeeds=False)
         assert not (WORK / "removed-robot").exists()
         command([GENERATOR, "compiler", "--out-dir", WORK / "removed-utils", "--module", "utils"], succeeds=False)
         assert not (WORK / "removed-utils").exists()
         compiler = WORK / "compiler"
-        command([GENERATOR, "compiler", "--out-dir", compiler])
+        if options.reuse_build:
+            updated=WORK/'updated-export'
+            command([GENERATOR,'compiler','--out-dir',updated])
+            manifest='.chali-generator-manifest'
+            previous=(compiler/manifest).read_text(encoding='utf-8').splitlines()
+            current=(updated/manifest).read_text(encoding='utf-8').splitlines()
+            assert previous==current, '复用只接受相同文件清单；清单变化需全新构建'
+            changed=[]
+            for relative in current[1:]+[manifest]:
+                destination=compiler/relative
+                assert destination.resolve().is_relative_to(compiler.resolve()), relative
+                source=updated/relative
+                assert source.resolve().is_relative_to(updated.resolve()), relative
+                if not destination.is_file() or destination.read_bytes()!=source.read_bytes():
+                    shutil.copy2(source,destination)
+                    changed.append(relative)
+            print('独立工程增量复验，已核对全部受管理文件，仅重新生成内容不同项：'+', '.join(changed),flush=True)
+        else:
+            command([GENERATOR, "compiler", "--out-dir", compiler])
         required = [
             "chali_parser.cpp", "chali_main.cpp", "chali_incremental.hpp", "chali_aot.hpp", "chali_aot.cpp",
             "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt",
@@ -68,7 +94,7 @@ def main():
             ".chali-generator-manifest",
         ]
         required += ["macro/metadata.hpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp",
-                     "semantics/macro_associated_metadata.cpp", "semantics/macro_control_flow.cpp", "semantics/editor_macro_effects.cpp"]
+                     "semantics/macro_associated_metadata.cpp", "semantics/macro_control_flow.cpp", "semantics/editor_macro_effects.cpp", "semantics/custom_derive.cpp"]
         required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
         required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
         required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
@@ -105,6 +131,10 @@ def main():
         assert "aot_sources.txt" in dependency_file.read_text(encoding="utf-8"), "核心清单修改必须触发 CMake 重新配置"
         probe = WORK / "export_probe.chl"
         probe.write_text('import std::toml;\n'
+                         'interface CountFields{int64 countFields();}\n'
+                         '$macro CountFields<T>() -> member\nint64 countFields(){int64 result=0;\n'
+                         '$for field in $fields<T>()\nresult+=1;\n$end_for\nreturn result;}\n$end_macro\n'
+                         '#derive(CountFields)\nstruct DerivedProbe{int64 number;String text;}\n'
                          '$macro Example<T:#res, U:b>(a,b)\ncast<T>(a)+cast<T>(b)\n$end_macro\n'
                          '$macro TwiceValue(x:value)\nx+x\n$end_macro\n'
                          '$macro TwiceExpr(x:expr)\nx+x\n$end_macro\n'
@@ -113,6 +143,7 @@ def main():
                          '$macro Escape(body:block) -> stmt\nloop{body;break;};\n$end_macro\n'
                          'int64 count=0;int64 next(){count+=1;return count;}\n'
                          'void main()\n{\n'
+                         '    DerivedProbe derived;CountFields contract=derived;assert(contract.countFields()==2);\n'
                          '    int32 inferred=$Example((int64)3,(int16)4);assert(inferred==7);\n'
                          '    int64 once=$TwiceValue(next());assert(once==2 && count==1);\n'
                          '    count=0;int64 twice=$TwiceExpr(next());assert(twice==3 && count==2);\n'

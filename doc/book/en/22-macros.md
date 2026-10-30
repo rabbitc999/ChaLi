@@ -757,6 +757,12 @@ Single evaluation for value parameters survives forwarding. Forwarded expr param
 
 $std::lang::assert explicitly qualifies a macro by module. Use visible imported names or qualify them when the source needs to be explicit. Ordinary function calls and macro calls retain their respective call syntax.
 
+### From member macros to interface derivation
+
+A same-module, same-name interface/member-macro pair can be selected with `#derive(Interface)`. The directive passes the following type as the macro's type parameter. Signature-matching methods become public; helpers remain hygienic. For example, `interface Count { int64 count(); }` pairs with `$macro Count<T>() -> member`.
+
+Unlike passing a public name explicitly to `$METHOD(read)`, the interface contract determines published names. Derivation cannot add layout fields. Chapter 24 develops the complete field-count example and checks the result through an interface value.
+
 ## 22.21 Choosing a Form
 
 Start with functions and generics. Choose a macro when repetition concerns syntax positions, declarations or field sets. Decide what each input represents and where the result belongs; encode both decisions in the definition header.

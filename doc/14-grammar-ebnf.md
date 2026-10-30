@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 166 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 167 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -330,7 +330,10 @@ top_decl = struct_decl, type_decl_end
 type_decl_end = ""
     | ";" ;
 
-derive_directive = "#derive", "(", iface_list, ")" ;
+derive_directive = "#derive", "(", derive_names, ")" ;
+
+derive_names = module_name
+    | derive_names, ",", module_name ;
 
 lifetime_directives = lifetime_directive
     | lifetime_directives, lifetime_directive ;

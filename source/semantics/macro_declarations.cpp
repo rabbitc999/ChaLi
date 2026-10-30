@@ -94,7 +94,7 @@ bool ExpandAstMacroMembers(int owner)
         for (std::size_t i = 0; i < members.size() && valid; ++i)
         {
             const auto &a = N(members[i]);
-            if (generated.count(members[i]) && a.kind == MNode::Field && g_macroMemberReads.count(owner))
+            if (generated.count(members[i]) && static_cast<std::size_t>(members[i]) >= nodeStart && a.kind == MNode::Field && g_macroMemberReads.count(owner))
                 valid = ReportAstMacroFailure(members[i], "成员生成与本类型字段元数据存在循环依赖");
             for (std::size_t j = 0; j < i && valid; ++j)
             {

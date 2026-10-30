@@ -3034,7 +3034,7 @@ int M_TokenValue(int tokenType, double number, const char *pName, Memory::String
     }
     g_reductionLine = line;
     g_reductionColumn = column;
-    if (tokenType == TOKEN_AT || tokenType == TOKEN_ANNOTATION)
+    if (tokenType == TOKEN_AT || tokenType == TOKEN_ANNOTATION || tokenType == TOKEN_DERIVE)
     {
         const int id = M_New(MNode::AnnotationMarker);
         g_nodes[id].sourceColumn = column;
@@ -3232,6 +3232,7 @@ bool ExpandAstMacroMembers(int owner);
 #include "semantics/macro_controls.cpp"
 #include "semantics/macro_patterns.cpp"
 #include "semantics/macro_expansion.cpp"
+#include "semantics/custom_derive.cpp"
 }  // namespace
 
 /**
@@ -3311,7 +3312,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         return 1;
     }
     if (!LiftReachableAstLambdas()) return 1;
-    if (!ExpandDerivedDeclarations()) return 1;
+    if (!ExpandReadyDerivedDeclarations()) return 1;
     if (!PrepareGenericSignatures()) return 1;
     auto parsedNodes = g_nodes;
     auto parsedTypes = g_types;
@@ -3454,7 +3455,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             if (!LiftReachableAstLambdas()) return 1;
             parsedTop.insert(parsedTop.end(), g_top.begin(), g_top.end());
             g_top = parsedTop;
-            if (!ExpandDerivedDeclarations()) return 1;
+            if (!ExpandReadyDerivedDeclarations()) return 1;
             parsedTop = g_top;
             parsedNodes = g_nodes;
             parsedTypes = g_types;
@@ -3578,7 +3579,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 5;
+constexpr std::uint64_t kStandardUnitVersion = 6;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3682,6 +3683,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(static_cast<std::int64_t>(node.macroExpansion)));
     WriteUnitInts(out, node.annotations);
     chali_incremental::writeStrings(out, node.derives);
+    chali_incremental::writeNumber(out, node.deriveLine < canonical.size() ? canonical[node.deriveLine] : node.deriveLine);
+    chali_incremental::writeNumber(out, node.deriveColumn);
     chali_incremental::writeStrings(out, node.noReplace);
     chali_incremental::writeStrings(out, node.noRight);
     chali_incremental::writeNumber(out, node.derivesExpanded ? 1u : 0u);
@@ -3763,6 +3766,8 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     node.macroExpansion = static_cast<int>(static_cast<std::int64_t>(frame));
     if (!ReadUnitInts(in, node.annotations)) return false;
     if (!chali_incremental::readStrings(in, node.derives)) return false;
+    if (!chali_incremental::readNumber(in, node.deriveLine) || !chali_incremental::readNumber(in, node.deriveColumn)) return false;
+    if ((node.deriveLine == 0) != (node.deriveColumn == 0) || node.deriveLine > (1ull << 32) || node.deriveColumn > (1ull << 32)) return false;
     if (!chali_incremental::readStrings(in, node.noReplace)) return false;
     if (!chali_incremental::readStrings(in, node.noRight)) return false;
     std::uint64_t derived = 0;
@@ -4065,6 +4070,7 @@ void M_ShiftNodeLines(std::size_t from, std::size_t lines)
     {
         g_nodes[i].sourceLine += lines;
         if (g_nodes[i].metadataLine != 0) g_nodes[i].metadataLine += lines;
+        if (g_nodes[i].deriveLine != 0) g_nodes[i].deriveLine += lines;
         if (g_nodes[i].expansionLine != 0) g_nodes[i].expansionLine += lines;
     }
 }

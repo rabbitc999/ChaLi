@@ -24,6 +24,8 @@ int main()
     node.controlTarget = id;
     node.metadataLine = 7;
     node.metadataColumn = 13;
+    node.deriveLine = 9;
+    node.deriveColumn = 3;
     node.bindingIdentity = 456;
     node.bindingContext = 789;
     node.formattedOutputBridge = true;
@@ -59,6 +61,19 @@ int main()
     std::istringstream incompleteMetadataInput(invalidMetadata, std::ios::binary);
     assert(!M_ReadStandardUnit(incompleteMetadataInput));
     assert(M_NodeCount() == count && M_ParsedNode(id).metadataColumn == 13);
+    std::ostringstream derivePosition(std::ios::binary);
+    chali_incremental::writeNumber(derivePosition, 9);
+    chali_incremental::writeNumber(derivePosition, 3);
+    const auto deriveOffset = bytes.find(derivePosition.str());
+    assert(deriveOffset != bytes.npos);
+    for (const auto malformed : { false, true })
+    {
+        auto invalid = bytes;
+        invalid.replace(deriveOffset + (malformed ? 0 : 8), 8, 8, malformed ? static_cast<char>(0xff) : '\0');
+        std::istringstream brokenDerive(invalid, std::ios::binary);
+        assert(!M_ReadStandardUnit(brokenDerive));
+        assert(M_NodeCount() == count && M_ParsedNode(id).deriveLine == 9 && M_ParsedNode(id).deriveColumn == 3);
+    }
     auto invalidContext = bytes;
     invalidContext.replace(provenanceOffset + 8, 8, 8, static_cast<char>(0xff));
     std::istringstream invalidProvenance(invalidContext, std::ios::binary);
@@ -75,7 +90,7 @@ int main()
     std::istringstream old(incompatible, std::ios::binary);
     assert(!M_ReadStandardUnit(old));
     assert(M_NodeCount() == count);
-    incompatible[8] = 4;
+    incompatible[8] = 5;
     std::istringstream previousFormat(incompatible, std::ios::binary);
     assert(!M_ReadStandardUnit(previousFormat));
     assert(M_NodeCount() == count);
@@ -89,6 +104,7 @@ int main()
     assert(restored.syntaxContext == 123 && restored.bindingIdentity == 456 && restored.bindingContext == 789);
     assert(restored.controlContext == 321 && restored.controlTarget == -1);
     assert(restored.metadataLine == 7 && restored.metadataColumn == 13);
+    assert(restored.deriveLine == 9 && restored.deriveColumn == 3);
     assert(restored.i == 37 && restored.s2 == "macro-category" && restored.kids[0] == id);
     std::ostringstream package(std::ios::binary);
     const Memory::String text = "standard core identity";

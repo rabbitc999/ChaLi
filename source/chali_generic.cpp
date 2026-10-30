@@ -422,10 +422,10 @@ bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, M
         {
             const auto trait = trim(item);
             if (!seenTraits.insert(trait).second) return error = "#derive 重复请求接口：" + trait, false;
-            if (trait == "Drop" || trait == "drop" || trait == "Closeable")
+            const auto separator = trait.rfind("::");
+            const auto bare = separator == Memory::String::npos ? trait : trait.substr(separator + 2);
+            if (bare == "Drop" || bare == "drop" || bare == "Closeable")
                 return error = "#derive 禁止生成 Drop 或 Closeable：值语义已经自动递归清理字段", false;
-            if (trait != "Equal" && trait != "Hash" && trait != "Clone")
-                return error = "#derive 只支持 Equal、Hash、Clone，不能生成 " + trait, false;
         }
         directives[name] = source.substr(at, end - at) + "\n";
         for (auto i = at; i < end; ++i)
@@ -1000,8 +1000,23 @@ void collectInterfaces(const Memory::String &source,
         for (const auto &item : derived)
         {
             const auto trait = trim(item);
-            if (trait != "Equal" && trait != "Hash" && trait != "Clone") continue;
             const auto owner = module.empty() ? name : module + "::" + name;
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone")
+            {
+                // 此处只预测约束身份；实际宏、配对接口及方法仍由派生语义完整验证。
+                const auto qualified = trait.find("::") != Memory::String::npos || module.empty() ? trait : module + "::" + trait;
+                auto generic = session.generics.find(qualified);
+                if (generic == session.generics.end()) generic = session.generics.find(trait);
+                const auto identity = generic == session.generics.end() ? qualified : mangle(generic->second.name, { owner });
+                implemented[name].insert(identity);
+                implemented[owner].insert(identity);
+                if (generic == session.generics.end())
+                {
+                    implemented[name].insert(trait);
+                    implemented[owner].insert(trait);
+                }
+                continue;
+            }
             const auto interface = trait == "Equal" ? mangle(trait, { "bool", owner }) : mangle(trait, { owner });
             implemented[name].insert(interface);
             implemented[owner].insert(interface);

@@ -12,7 +12,7 @@ Observe derived values, compare operator replacement directions and trace return
 
 Equality, cloning and hashing often repeat a model's field structure. Supported derive directives supply those implementations for protocol-based use.
 
-Request Equal, Hash and Clone for Point, compare its copy and then change one field. This connects directives to observable value semantics rather than syntax alone. Existing derives do not imply arbitrary custom declaration macros.
+Request Equal, Hash and Clone for Point, compare its copy and then change one field. This connects directives to observable value semantics rather than syntax alone.
 
 <!-- verify-book -->
 ```chali
@@ -52,6 +52,53 @@ All three Point fields participate in derived behavior. Origin starts with coord
 
 Changing copy.label to O2 changes overall equality even though coordinates still match. AfterChange becomes false while origin.label stays O, demonstrating independent mutation. Equal objects require consistent hashes, but equal hashes alone do not prove equality or provide persistent identity.
 
+
+### Deriving your own interface
+
+A same-name interface/member-macro pair can share an implementation across types. This example counts instance fields during expansion; the resulting method does not query a runtime reflection table.
+
+<!-- verify-book -->
+```chali
+interface Count
+{
+    int64 count();
+}
+
+$macro Count<T>() -> member
+int64 count()
+{
+    int64 result = 0;
+    $for field in $fields<T>()
+    result += 1;
+    $end_for
+    return result;
+}
+$end_macro
+
+#derive(Count)
+struct Record
+{
+    int64 number;
+    String text;
+}
+
+void main()
+{
+    Record record;
+    Count counted = record;
+    println("fields={}", counted.count());
+}
+```
+
+```text
+fields=2
+```
+
+The interface requires an instance method returning an integer; a handwritten implementation can satisfy it too. In the macro header, T is a type parameter, the empty group accepts no ordinary arguments, and `member` generates type members. `#derive(Count)` supplies Record as T. The interface and macro belong to the same module.
+
+The method creates result, and the static loop emits one increment for each of Record's two instance fields. It reads no field values and copies no String payload. Adding a third field and recompiling emits a third increment.
+
+Finally, assigning Record to Count and invoking count checks the actual interface implementation. Signature-matching methods become public while helpers remain hygienic. Derivation does not overwrite same-signature methods or add layout fields. Imported pairs can be selected as `#derive(derive_tools::Count)`; generic owners expand per instance, and enums can derive ordinary methods using Chapter 22's variant/payload descriptors.
 
 ## 24.2 Operator replacement and receivers
 

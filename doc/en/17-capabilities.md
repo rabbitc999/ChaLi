@@ -19,7 +19,7 @@ Standard-library failures use `Result<T, Error>` with an owned interface payload
 
 Heap object allocation uses `new T`, or `new T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
 
-Support includes [return control expressions, statement-level named closures and field derivation](29-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures; `#derive` generates only Equal/Hash/Clone, validates field protocols and never generates Drop.
+Support includes [return control expressions, statement-level named closures and field derivation](29-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures. `#derive` supports Equal/Hash/Clone and same-name interface/member-macro pairs, retaining normal interface, borrow and resource checks and never generating Drop.
 
 Generic closures support `fn<T>`, inference from argument types, full specialization and uniquely most specific partial specialization. They can be direct struct members and can be passed or stored as values of a generic type parameter `F`. Calls with different types share one closure environment, preserving ordinary capture, copy and borrow rules. See the [language reference](04-language-reference.md).
 

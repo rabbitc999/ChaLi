@@ -264,6 +264,8 @@ struct MNode
     std::shared_ptr<const chali_macro::MetadataValue> compileMetadata;  ///< 编译期元数据的不可变快照，不写入标准库解析单元。
     Memory::Vector<int> annotations;                    ///< 附着于本声明的注解使用节点。
     Memory::Vector<Memory::String> derives;             ///< 请求按字段派生的接口名称。
+    std::size_t deriveLine = 0;                        ///< 派生指令起始行，供诊断和展开预览定位。
+    std::size_t deriveColumn = 0;                      ///< 派生指令的一基列号。
     Memory::Vector<Memory::String> noReplace;           ///< 编译器指令关闭自动推导的运算符接口名（`#NoAddReplace` → `Add`）。
     Memory::Vector<Memory::String> noRight;             ///< 编译器指令关闭右向推导的运算符接口名（`#NoRightAdd` → `Add`）。
     bool derivesExpanded = false;                       ///< 已完成宏模板注入，泛型重放时不重复生成。
@@ -718,12 +720,19 @@ int M_Return(int value);
  */
 int M_ReturnValue(int value);
 /**
- * @brief 把编译期派生白名单附着于结构体或枚举声明。
+ * @brief 把编译期派生请求附着于结构体或枚举声明。
  * @param traits 请求派生的接口名称列表。
  * @param declaration 目标类型声明。
  * @retval 带派生元数据的声明节点；非法请求返回诊断节点。
  */
 int M_Derived(int traits, int declaration);
+/**
+ * @brief 将派生关键字的词法位置保存到请求列表。
+ * @param marker 派生关键字位置节点。
+ * @param traits 请求名称列表。
+ * @return 带精确指令位置的原列表。
+ */
+int M_DeriveDirective(int marker, int traits);
 /**
  * @brief 在语句位置声明具有确定返回类型的函数值。
  * @param resultType 返回类型编号。

@@ -1,6 +1,15 @@
 /* #derive 按语义字段元数据生成受限方法，再交给同一生成解析器。 */
 
 /**
+ * @brief 使用同名成员宏实现自定义派生，并返回待实现的接口身份。
+ * @param owner 被派生的具体类型声明。
+ * @param trait 源码中的派生名称。
+ * @param implemented 接收具体接口名称。
+ * @return 生成与签名绑定成功时返回真。
+ */
+bool ExpandCustomDerivedDeclaration(int owner, const Memory::String &trait, Memory::String &implemented);
+
+/**
  * @brief 生成字段的哈希表达式，嵌套结构体只调用其已声明的 Hash 方法。
  * @param type 字段类型。
  * @param expression 字段读取源码。
@@ -179,7 +188,7 @@ uint64 __chali_derive_hash_float(float64 value) {
 /**
  * @brief 在语义分析前将派生请求展开为普通方法及具体接口声明。
  * @retval 所有模板、具体接口与生成代码均有效时返回 true。
- * @note 派生过程只生成 Equal、Hash、Clone 的受限方法，不执行用户宏。
+ * @note 内建字段派生与用户成员宏均生成普通方法，后续统一验证接口及资源规则。
  */
 bool ExpandDerivedDeclarations()
 {
@@ -197,6 +206,13 @@ bool ExpandDerivedDeclarations()
         Memory::Vector<Memory::String> names;
         for (const auto &trait : declaration.derives)
         {
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone")
+            {
+                Memory::String implemented;
+                if (!ExpandCustomDerivedDeclaration(id, trait, implemented)) return false;
+                names.push_back(std::move(implemented));
+                continue;
+            }
             const auto type = declaration.module.empty() ? declaration.s : declaration.module + "::" + declaration.s;
             const Memory::Vector<Memory::String> arguments = trait == "Equal" ? Memory::Vector<Memory::String>{ "bool", type } : Memory::Vector<Memory::String>{ type };
             Memory::String request = trait + "<";
@@ -292,6 +308,8 @@ bool ValidateDerivedFields()
         else if (const auto definition = FindStruct(declaration.s))
             for (const auto &field : definition->fields) fields.push_back({ field.name, field.type });
         for (const auto &trait : declaration.derives)
+        {
+            if (trait != "Equal" && trait != "Hash" && trait != "Clone") continue;
             for (const auto &field : fields)
             {
                 const auto type = field.second;
@@ -312,6 +330,7 @@ bool ValidateDerivedFields()
                 }
                 if (!implemented) return Fail("#derive(" + trait + ") 的字段 " + declaration.s + "." + field.first + " 未实现 " + trait + "：" + Describe(type));
             }
+        }
     }
     return true;
 }

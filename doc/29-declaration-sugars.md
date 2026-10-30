@@ -168,12 +168,12 @@ DerivedDecl(traits, declaration)
   => declaration.derives = traits
 ```
 
-`#derive` 是独立登记的编译器指令 token。指令只修饰结构体和枚举声明。白名单为 Equal、Hash、Clone；Drop、Closeable、未知或重复的请求直接报错，不生成析构协议，也不覆盖已有同名方法。
+`#derive` 只修饰结构体和枚举声明。Equal、Hash、Clone 使用内建的字段派生；其他名称选择同模块同名接口与成员宏配对的自定义派生，支持模块限定名。Drop、Closeable、重复请求、缺少定义和成员冲突会报错，不生成析构协议。
 
-派生分为两个互相隔离的步骤：
+内建字段派生分为两个步骤：
 
-1. 语义层从已解析声明读取字段和枚举载荷元数据，把字段名或每字段代码片段交给现有 `$macro`、`$for`、`$concat` 文本模板。宏引擎只接收文本，不解析类型、不构建 AST，也不调用 Parser。
-2. 宏展开完毕后，派生语义层使用同一个生成解析器读取生成的普通方法，附加到原类型 AST，并实例化正常的 `Equal<bool,T>`、`Hash<T>`、`Clone<T>` 接口。之后统一进行接口、类型、借用和四元式降级检查。
+1. 语义层从已解析声明读取字段和枚举载荷，生成受限的普通方法源码。
+2. 同一个生成解析器读取这些方法，附加到原类型 AST，并实例化正常的 `Equal<bool,T>`、`Hash<T>`、`Clone<T>` 接口。之后统一进行接口、类型、借用检查和 LLVM 代码生成。自定义派生则复用现有 AST 成员宏展开器。
 
 Equal 按字段生成短路比较，枚举先匹配变体再比较对应载荷。Hash 把变体标签和字段哈希组合；字符串按 UTF-8 字节处理，浮点零做一致化，确保相等值具有相同哈希。Clone 逐字段复制内建值，调用嵌套自定义字段的 Clone 接口；枚举只克隆当前活动变体。生成的方法执行正常的比较、哈希和复制，不包含派生解释器、运行时字段枚举或反射查找。
 
@@ -184,15 +184,41 @@ Equal 按字段生成短路比较，枚举先匹配变体再比较对应载荷�
 ```text
 ExpandDerivedDeclarations():
     for each declared type with pending derives:
-        reject traits outside Equal / Hash / Clone
-        source = generate restricted methods from semantic field metadata
-        generated = generatedParser.parse(source)
+        expand built-in fields or the paired AST member macro
         attach generated methods and concrete interfaces to the original AST
 
 RegisterTop()
 ValidateDerivedFields()  // missing nested interface is always a compilation error
-LowerProgram()          // ordinary typed methods -> ordinary quadruples
+LowerProgram()          // ordinary typed methods, normal ownership checks
 ```
+
+### 自定义接口派生
+
+下面的接口规定公开能力，成员宏实现重复的方法体。编译器把 `Record` 作为宏的唯一类型实参，无须在指令里重复写类型。
+
+```chali
+interface Count { int64 count(); }
+$macro Count<T>() -> member
+int64 count() {
+    int64 result = 0;
+    $for field in $fields<T>()
+    result += 1;
+    $end_for
+    return result;
+}
+$end_macro
+#derive(Count)
+struct Record { int64 number; String text; }
+void main() { Record value; assert(value.count() == 2); }
+```
+
+`Count` 接口与 `Count` 宏必须定义在同一模块。宏使用一个类型形参和空实参组，结果类别为 `member`；生成内容只允许方法。类型的布局字段和关联类型由类型自身声明。`$fields<T>()` 读取实际实例字段，静态循环在编译期展开，运行时方法直接执行生成的语句。
+
+签名与接口要求一致的方法公开；其他辅助方法保持卫生名称。若一个方法名称下存在重载，匹配接口的名称会公开整个生成重载组。派生不覆盖已有同签名方法。接口默认实现、继承要求、方法体类型、借用、返回与资源清理继续执行普通规则；签名不匹配不会自动转换成满足接口的方法。
+
+`import derive_tools;` 后可用 `#derive(derive_tools::Count)` 显式选择模块。未限定名沿用宏的本模块／导入查找规则；歧义必须限定。泛型结构体在每个具体实例上展开。配对接口也可有一个实现者类型形参，例如 `interface Describe<T> { String describe(T value); }` 对应 `$macro Describe<T>() -> member`。类型实参由编译器提供，指令只写 `#derive(Describe)`。
+
+派生中的字段、方法或变体元数据需要额外泛型实例时，编译器先补充该实例，再重试展开。递归宏和循环依赖受现有预算限制。编辑器的一层／全部展开可在 `#derive` 位置查询，保留宏定义、调用和元数据声明来源；辅助卫生名称不作为可手写的公共名称暴露。
 
 ## Closeable 与运算符推导开关
 

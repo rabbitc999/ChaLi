@@ -236,6 +236,8 @@ Memory::String CAbiType(const std::shared_ptr<MType> &type)
  */
 bool ResolveImportedTypeNames(bool registerOpcodes = true)
 {
+    for (const int id : g_top)
+        if (N(id).kind == MNode::ImportDecl) g_moduleImports[N(id).module].insert(N(id).s);
     Memory::Map<Memory::String, Memory::Map<Memory::String, Memory::String>> declarations;
     Memory::Set<Memory::String> opcodeNames;
     for (const int id : g_top)
@@ -377,7 +379,8 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
         }
         if (FindGenericClosureDefinition(type->name)) *type = *GenericClosureType(type->name);
         if (interfaceNames.count(type->name)) type->kind = MType::Obj;
-        type->unresolvedName = false;
+        // 早期宏／派生查询只归一名称；opcode 注册前不能冻结其临时 Struct 表示。
+        type->unresolvedName = opcodeNames.count(type->name) && !g_opcodeTypes.count(type->name);
     }
     for (auto &node : g_nodes)
     {

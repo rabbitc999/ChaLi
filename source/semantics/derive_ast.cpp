@@ -10,14 +10,29 @@ int M_Derived(int traits, int declaration)
     for (const auto name : g_nodes[traits].kids)
     {
         const auto trait = g_names[name];
-        if (trait == "Drop" || trait == "drop" || trait == "Closeable")
+        const auto separator = trait.rfind("::");
+        const auto bare = separator == Memory::String::npos ? trait : trait.substr(separator + 2);
+        if (bare == "Drop" || bare == "drop" || bare == "Closeable")
             return M_New(MNode::ParseBad, "#derive 禁止生成 Drop 或 Closeable：值语义已经自动递归清理字段");
-        if (trait != "Equal" && trait != "Hash" && trait != "Clone")
-            return M_New(MNode::ParseBad, "#derive 只支持 Equal、Hash、Clone，不能生成 " + trait);
         if (!seen.insert(trait).second) return M_New(MNode::ParseBad, "#derive 重复请求接口：" + trait);
         g_nodes[declaration].derives.push_back(trait);
     }
+    g_nodes[declaration].deriveLine = g_nodes[traits].sourceLine;
+    g_nodes[declaration].deriveColumn = g_nodes[traits].sourceColumn;
     return declaration;
+}
+
+/**
+ * @brief 在归约派生指令时保存关键字的精确来源，不使用声明结束时的词法位置。
+ * @param marker 关键字位置节点。
+ * @param traits 请求名称列表。
+ * @return 带有来源的请求列表。
+ */
+int M_DeriveDirective(int marker, int traits)
+{
+    g_nodes[traits].sourceLine = g_nodes[marker].sourceLine;
+    g_nodes[traits].sourceColumn = g_nodes[marker].sourceColumn;
+    return traits;
 }
 
 /**
@@ -31,7 +46,7 @@ int M_Derived(int traits, int declaration)
 int M_OperatorSwitch(int interface, int declaration)
 {
     const Memory::String text = g_names[static_cast<std::size_t>(interface)];
-    const std::size_t replaceSuffix = 7u;  /* "Replace" */
+    const std::size_t replaceSuffix = 7u; /* "Replace" */
     if (text.size() > 3u + replaceSuffix && text.compare(text.size() - replaceSuffix, replaceSuffix, "Replace") == 0)
     {
         /* `#No` + 接口名 + `Replace` */
@@ -39,7 +54,7 @@ int M_OperatorSwitch(int interface, int declaration)
             text.substr(3u, text.size() - 3u - replaceSuffix));
         return declaration;
     }
-    const std::size_t rightPrefix = 8u;  /* "#NoRight" */
+    const std::size_t rightPrefix = 8u; /* "#NoRight" */
     if (text.size() > rightPrefix && text.compare(0u, rightPrefix, "#NoRight") == 0)
     {
         /* `#NoRight` + 左接口名：只关右向（右操作数当接收者）那一条推导。 */

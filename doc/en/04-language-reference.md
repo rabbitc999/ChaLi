@@ -1136,7 +1136,7 @@ Statements accept `int64 add(int64 x) { return x + 1; }` and a local function bi
 
 ## Field derivation
 
-`#derive(Equal, Hash, Clone)` before a struct or enum uses semantic field metadata to generate field-based methods, followed by normal semantic checking and quadruple lowering. Nested fields must implement each requested interface. Drop and Closeable derivation is forbidden. Generic methods are generated after instantiation. See [derivation rules](29-declaration-sugars.md).
+`#derive(Equal, Hash, Clone)` before a struct or enum generates restricted field/payload methods. `#derive(Trait)` can select a same-module interface and `$macro Trait<T>() -> member` pair; qualified names select imported definitions. Matching methods become public, helpers remain hygienic, layout fields cannot be generated, and existing same-signature methods are not overwritten. Nested fields must satisfy the requested protocols. Drop and Closeable derivation is forbidden. Generic owners expand per concrete instance, retaining normal type, borrow and resource checks. See [derivation rules](29-declaration-sugars.md).
 
 ## Lifetime contracts `#borrow` / `#static`
 

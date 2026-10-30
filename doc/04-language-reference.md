@@ -1112,7 +1112,7 @@ $end_macro
 
 ## #derive 字段派生
 
-在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过语义字段元数据生成受限接口方法，再由通常的语义检查与四元式降级处理。嵌套字段必须实现对应接口，禁止派生 Drop 或 Closeable。泛型声明在实例化后生成方法，见[派生规则](29-declaration-sugars.md)。
+在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过字段和载荷生成受限接口方法。也可用 `#derive(Trait)` 选择同模块同名接口与 `$macro Trait<T>() -> member`，或用模块限定名选择导入定义。签名匹配的方法公开，辅助方法保持卫生；不生成布局字段或覆盖已有同签名方法。嵌套字段须满足对应协议，禁止派生 Drop 或 Closeable。泛型类型按具体实例展开，生成代码仍执行通常的类型、借用和资源检查，见[派生规则](29-declaration-sugars.md)。
 
 ## #borrow 与 #static 生命周期契约
 

@@ -68,7 +68,7 @@ int MacroMetadataDeclaration(const Memory::String &name)
     for (const int root : roots)
     {
         const auto syntax = N(root);
-        if (syntax.s != name || (syntax.kind != MNode::StructDecl && syntax.kind != MNode::EnumDecl && syntax.kind != MNode::InterfaceDecl && syntax.kind != MNode::OpcodeDecl)) continue;
+        if ((syntax.s != name && AnnotationName(syntax) != name) || (syntax.kind != MNode::StructDecl && syntax.kind != MNode::EnumDecl && syntax.kind != MNode::InterfaceDecl && syntax.kind != MNode::OpcodeDecl)) continue;
         if (!ExpandAstMacroMembers(root)) return -1;
         return root;
     }
