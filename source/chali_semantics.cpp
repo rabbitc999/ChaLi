@@ -3425,13 +3425,23 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             g_top = parsedTop;
             if (!LiftReachableAstLambdas()) return 1;
             Memory::String source, error;
-            if (!chali_generic::instantiate(request.name, request.args, source, error)) return Fail(error), 1;
+            Memory::Vector<preprocess::LineOrigin> origins;
+            if (!chali_generic::instantiate(request.name, request.args, source, error, &origins)) return Fail(error), 1;
             if (source.empty()) return Fail("泛型实例化未产生新声明：" + request.name), 1;
             chali::Engine parser;
             int value = 0;
             g_parseModule.clear();
+            const auto firstGeneratedNode = g_nodes.size(), firstGeneratedDiagnostic = g_parseDiagnostics.size();
             if (parser.runText(source, &value) != chali::Status::Ok)
                 return Fail("推导出的泛型声明无法解析：" + request.name), 1;
+            const auto sourceBase = g_sourceFiles.size();
+            for (const auto &origin : origins)
+            {
+                g_sourceFiles.push_back(origin.file);
+                g_sourceLines.push_back(origin.line);
+            }
+            M_ShiftNodeLines(firstGeneratedNode, sourceBase);
+            M_ShiftParseDiagnostics(firstGeneratedDiagnostic, sourceBase);
             if (!g_parseDiagnostics.empty())
             {
                 for (const auto &item : g_parseDiagnostics) AddDiagnostic(item.message, item.line, item.column);
@@ -3568,7 +3578,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 4;
+constexpr std::uint64_t kStandardUnitVersion = 5;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3659,6 +3669,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.kind));
     chali_incremental::writeNumber(out, node.sourceLine < canonical.size() ? canonical[node.sourceLine] : node.sourceLine);
     chali_incremental::writeNumber(out, node.sourceColumn);
+    chali_incremental::writeNumber(out, node.metadataLine < canonical.size() ? canonical[node.metadataLine] : node.metadataLine);
+    chali_incremental::writeNumber(out, node.metadataColumn);
     chali_incremental::writeNumber(out, node.syntaxContext);
     chali_incremental::writeNumber(out, node.controlContext);
     chali_incremental::writeNumber(out, node.bindingIdentity);
@@ -3727,6 +3739,10 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     node.kind = static_cast<MNode::Kind>(kind);
     if (!chali_incremental::readNumber(in, node.sourceLine)) return false;
     if (!chali_incremental::readNumber(in, node.sourceColumn)) return false;
+    if (!chali_incremental::readNumber(in, node.metadataLine)) return false;
+    if (!chali_incremental::readNumber(in, node.metadataColumn)) return false;
+    if ((node.metadataLine == 0) != (node.metadataColumn == 0)) return false;
+    if (node.metadataLine > (1ull << 32) || node.metadataColumn > (1ull << 32)) return false;
     std::uint64_t context = 0, identity = 0, parameter = 0, binding = 0;
     if (!chali_incremental::readNumber(in, context)) return false;
     std::uint64_t control = 0;
@@ -4048,6 +4064,7 @@ void M_ShiftNodeLines(std::size_t from, std::size_t lines)
     for (std::size_t i = from; i < g_nodes.size(); ++i)
     {
         g_nodes[i].sourceLine += lines;
+        if (g_nodes[i].metadataLine != 0) g_nodes[i].metadataLine += lines;
         if (g_nodes[i].expansionLine != 0) g_nodes[i].expansionLine += lines;
     }
 }

@@ -884,6 +884,11 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
         item.nameOffset = nameAt - decl;
         const std::size_t line = lineOf(source, start);
         if (line < lines.size()) item.origin = lines[line];
+        const auto declarationLine = lineOf(source, decl);
+        const auto declarationLines = static_cast<std::size_t>(std::count(item.declaration.begin(), item.declaration.end(), '\n')) + 1u;
+        for (std::size_t index = 0; index < declarationLines; ++index)
+            item.declarationOrigins.push_back(declarationLine + index < lines.size() ? lines[declarationLine + index] : item.origin);
+        if (!item.declarationOrigins.empty()) item.declarationOrigins[0] = item.origin;
         if (generics.count(item.name))
         {
             if (generics.at(item.name).module == item.module)
@@ -1319,6 +1324,7 @@ Memory::String substituteIdentifiers(const Memory::String &source,
                     {
                         while (member < source.size() && identPart(source[member])) ++member;
                         result += found->second + "::" + source.substr(start, member - start);
+                        result.append(static_cast<std::size_t>(std::count(source.begin() + at, source.begin() + member, '\n')), '\n');
                         at = member;
                         continue;
                     }
@@ -1650,10 +1656,31 @@ bool validateConstraints(const Memory::Map<Memory::String, Expansion> &made,
 }
 
 /**
- * @brief 收集泛型模板、展开已知实例并标记剩余类型实参。
- * @param result 读取并替换源码及对应来源映射。
- * @param error 失败时接收泛型展开诊断。
- * @return 模板收集、约束检查和单态化成功时返回 true。
+ * @brief 为带模块前缀的实例文本追加逐行来源，生成指令映射到模板声明。
+ * @param expansion 本次具体实例。
+ * @param declaration 包含内层 module 行的实例声明文本。
+ * @param origins 接收与输出文本相同数量的行来源。
+ * @return 无。
+ */
+void appendInstantiationOrigins(const Expansion &expansion, const Memory::String &declaration,
+                                Memory::Vector<preprocess::LineOrigin> &origins)
+{
+    const auto &generic = *expansion.generic;
+    const auto prefix = generic.operatorSwitches + generic.derivation;
+    const auto headers = 3u + static_cast<std::size_t>(std::count(prefix.begin(), prefix.end(), '\n'));
+    const auto count = 3u + static_cast<std::size_t>(std::count(declaration.begin(), declaration.end(), '\n'));
+    for (std::size_t line = 0; line < count; ++line)
+    {
+        const auto index = line >= headers ? line - headers : generic.declarationOrigins.size();
+        origins.push_back(index < generic.declarationOrigins.size() ? generic.declarationOrigins[index] : generic.origin);
+    }
+}
+
+/**
+ * @brief 展开源码中的泛型声明并保留每行原始来源。
+ * @param result 待原地规范化的预处理结果。
+ * @param error 失败诊断。
+ * @return 全部实例与约束有效时返回真。
  */
 bool run(preprocess::Result &result, Memory::String &error)
 {
@@ -2176,9 +2203,7 @@ interface Closeable { void close(); };
         if (!rewrite(declaration, generics, implemented, made, pending, error)) return false;
         const Memory::String module = expansion.generic->module.empty() ? Memory::String("__root") : expansion.generic->module;
         generated += "\nmodule " + module + ";\n" + declaration + "\n";
-        const std::size_t lines = 3u + static_cast<std::size_t>(std::count(declaration.begin(), declaration.end(), '\n'));
-        for (std::size_t line = 0; line < lines; ++line)
-            generatedOrigins.push_back(expansion.generic->origin);
+        appendInstantiationOrigins(expansion, declaration, generatedOrigins);
     }
     collectInterfaces(result.text + generated, implemented);
     if (!validateConstraints(made, implemented, error)) return false;
@@ -2195,10 +2220,12 @@ interface Closeable { void close(); };
  * @param args 推导出的完整类型实参。
  * @param generated 接收本次新增声明。
  * @param error 失败时接收诊断。
+ * @param origins 可选输出，按生成文本行序追加原始来源。
  * @return 类型实参和约束有效且展开成功时返回 true。
  */
 bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String> &args,
-                 Memory::String &generated, Memory::String &error)
+                 Memory::String &generated, Memory::String &error,
+                 Memory::Vector<preprocess::LineOrigin> *origins)
 {
     Memory::String request = name + "<";
     for (std::size_t index = 0; index < args.size(); ++index)
@@ -2215,6 +2242,7 @@ bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String
         if (!rewrite(declaration, session.generics, session.implemented, session.made, session.pending, error)) return false;
         generated += "\nmodule " + (expansion.generic->module.empty() ? Memory::String("__root") : expansion.generic->module)
                      + ";\n" + declaration + "\n";
+        if (origins) appendInstantiationOrigins(expansion, declaration, *origins);
     }
     collectInterfaces(generated, session.implemented);
     if (!validateConstraints(session.made, session.implemented, error)) return false;

@@ -181,7 +181,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             const auto metadata = N(node.kids[0]).compileMetadata;
             std::size_t count = 0;
             Meta::Kind element;
-            if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数或接口集合");
+            if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数、关联类型或接口集合");
             const auto saved = environment;
             const auto savedLocals = localBindings;
             const int list = M_List();

@@ -64,7 +64,7 @@ function renderNode(node, depth, language) {
   if (node.type) details.push(`<span class="type">: ${escapeHtml(node.type)}</span>`);
   if (node.symbol) details.push(`<button class="symbol" data-binding="${escapeHtml(node.symbol)}">${escapeHtml(node.symbol)}</button>`);
   if (node.parameterCache) details.push(`<span class="type">${escapeHtml(ui(language, '参数缓存', 'parameter cache'))}: ${escapeHtml(node.parameterCache)}</span>`);
-  for (const [key, title] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')], ['controlTarget', ui(language, '出口', 'Target')]]) {
+  for (const [key, title] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')], ['controlTarget', ui(language, '出口', 'Target')], ['metadataSource', ui(language, '元数据声明', 'Metadata declaration')]]) {
     const location = node[key];
     if (location && typeof location.file === 'string' && location.file && !location.file.startsWith('<') && Number.isInteger(location.line) && location.line > 0 && Number.isInteger(location.column) && location.column > 0)
       details.push(`<button data-node-location="${escapeHtml(JSON.stringify(location))}">${escapeHtml(title)}</button>`);
@@ -112,6 +112,8 @@ function pageStyle() {
   }
   figcaption button:hover { background: var(--vscode-button-secondaryHoverBackground, #eaeef2); }
   .tree-viewport { overflow: auto; padding: 18px 12px 28px; border: 1px solid var(--vscode-panel-border, #d0d7de); border-radius: 8px; min-height: 200px; }
+  .effects { margin: 0 0 12px; color: var(--vscode-descriptionForeground, #57606a); overflow-wrap: anywhere; }
+  .effects p { margin: 4px 0; }
   div.tree { width: max-content; min-width: 100%; font-family: var(--vscode-editor-font-family, ui-monospace, Consolas, monospace); text-align: center; }
   details.branch { position: relative; width: max-content; margin: 0 auto; }
   summary, .node-card { list-style: none; display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 9px 12px;
@@ -154,11 +156,40 @@ function pageStyle() {
 }
 
 /**
- * 渲染一处展开的独立 AST 视图，供单图导出和 Tab 容器共用。
- * @param {object} expansion 展开记录。
- * @param {number} index 调用序号。
- * @param {number} total 调用总数。
- * @returns {string} figure 片段。
+ * 显示编译器提供的直接效果及未解析出口，不推测传递副作用。
+ * @param {object} effects 编译器汇总的直接效果。
+ * @param {string} language 编辑器语言。
+ * @returns {string} 已转义的效果信息片段。
+ */
+function renderEffects(effects, language) {
+  if (!effects || typeof effects !== 'object') return '';
+  const count = (value) => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+  const labels = {
+    resultCategory: ui(language, '结果类别', 'Result category'),
+    introducedBindings: ui(language, '引入绑定', 'Introduced bindings'),
+    sharedBorrows: ui(language, '只读借用', 'Shared borrows'),
+    mutableBorrows: ui(language, '可写借用', 'Mutable borrows'),
+    callerControl: ui(language, '调用方出口', 'Caller control'),
+    localControl: ui(language, '展开内出口', 'Local control'),
+    unresolvedControl: ui(language, '待解析出口', 'Unresolved control')
+  };
+  const values = { resultCategory: String(effects.resultCategory || 'legacy') };
+  for (const key of ['introducedBindings', 'sharedBorrows', 'mutableBorrows']) values[key] = String(count(effects[key]));
+  for (const key of ['callerControl', 'localControl', 'unresolvedControl']) {
+    const items = Array.isArray(effects[key]) ? effects[key].filter((item) => typeof item === 'string') : [];
+    values[key] = items.join(', ') || ui(language, '无', 'None');
+  }
+  const entries = Object.entries(labels).map(([key, label]) => `<span data-effect-key="${key}">${escapeHtml(label)}: ${escapeHtml(values[key])}</span>`).join(' · ');
+  return `<div class="effects">${entries}${effects.truncated ? ` · ${ui(language, '已截断', 'Truncated')}` : ''}<p>${ui(language, '直接效果，不代表调用链纯度；一层预览的出口可能尚未解析。', 'Direct effects do not establish call-chain purity; one-step control targets may remain unresolved.')}</p></div>`;
+}
+
+/**
+ * 渲染一处展开及其直接效果汇总。
+ * @param {object} expansion 生产展开记录。
+ * @param {number} index 当前调用序号。
+ * @param {number} total 同伴调用数量。
+ * @param {string} language 编辑器语言。
+ * @returns {string} 含树及效果的图形片段。
  */
 function renderFigure(expansion, index, total, language) {
   const line = Number(expansion.line) || 1;
@@ -177,6 +208,7 @@ function renderFigure(expansion, index, total, language) {
       <button type="button" data-action="fit">${ui(language, '适应宽度', 'Fit width')}</button>
     </span>
   </figcaption>
+  ${renderEffects(expansion.tree && expansion.tree.effects, language)}
   <div class="tree-viewport"><div class="tree">${renderNode(expansion.tree, 0, language) || `<div class="leaf">${ui(language, '（空模板）', '(Empty template)')}</div>`}</div></div>
 </figure>`;
 }

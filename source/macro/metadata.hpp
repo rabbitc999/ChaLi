@@ -10,10 +10,19 @@ struct MType;
 namespace chali_macro
 {
 /**
+ * @brief 不可变描述符在当前源码映射中的声明位置，不包含 AST 池编号。
+ */
+struct MetadataOrigin
+{
+    std::size_t line = 0;
+    std::size_t column = 0;
+};
+/**
  * @brief 编译期注解实参的精确类型及标量值，不保存语言运行时句柄。
  */
 struct MetadataArgument
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::shared_ptr<const MType> type;
     long long integer = 0;
@@ -25,6 +34,7 @@ struct MetadataArgument
  */
 struct MetadataAttribute
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::uint64_t identity = 0;
     Memory::Vector<MetadataArgument> arguments;
@@ -34,6 +44,7 @@ struct MetadataAttribute
  */
 struct MetadataField
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::uint64_t identity = 0;
     std::size_t index = 0;
@@ -48,6 +59,7 @@ struct MetadataField
  */
 struct MetadataVariant
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::uint64_t identity = 0;
     std::size_t index = 0;
@@ -58,6 +70,7 @@ struct MetadataVariant
  */
 struct MetadataMethod
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::uint64_t identity = 0;
     std::size_t index = 0;
@@ -79,6 +92,7 @@ struct MetadataMethod
  */
 struct MetadataInterface
 {
+    MetadataOrigin origin;
     std::shared_ptr<const MType> type;
     std::uint64_t identity = 0;
     std::size_t index = 0;
@@ -89,6 +103,7 @@ struct MetadataInterface
  */
 struct MetadataType
 {
+    MetadataOrigin origin;
     Memory::String name;
     std::uint64_t identity = 0;
     std::shared_ptr<const MType> type;
@@ -102,6 +117,7 @@ struct MetadataType
  */
 struct MetadataValue
 {
+    MetadataOrigin origin;
     /**
      * @brief 描述符的合法查询类别，避免将字段、类型和注解身份混用。
      */

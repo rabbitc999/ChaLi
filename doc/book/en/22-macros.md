@@ -513,6 +513,7 @@ void main()
     println("{} {}", ($interfaces<Numbers>())[0].associatedTypes[0].name,
         ($interfaces<Numbers>())[0].associatedTypes[0].type.name);
     println("{}", ($methods<Numbers>())[0].receiverType.name);
+    assert(($interfaces<Numbers>())[0].associatedTypes[0].sourceLine > 0);
 }
 ```
 
@@ -528,6 +529,8 @@ Main first reads the associated type from Numbers' first implemented interface: 
 The second statement reads get's receiver, producing Numbers. An inherited default method retains the queried receiverType and its original declaringType. Static factories have no caller receiver; check hasReceiver before querying receiverType.
 
 Methods also expose hasMutableParameters, returnsMutableReference, usesUnsafe and hasPropagation. The first pair describes writable references in the signature. The latter pair observes direct unsafe and question-mark propagation syntax in the current body, excluding nested functions and closures. They do not prove an entire call chain free of side effects. Generated code still undergoes ordinary type, borrow and resource checks.
+
+The final assertion confirms that Item retains its declaration line. Descriptors expose sourceFile, sourceLine and sourceColumn for diagnostics; fields, payloads, methods and parameters each have their own location. Generic instances retain template lines, and cross-module queries retain the original module's file. The preview's Metadata declaration button uses this provenance even after name or id folds into an ordinary constant.
 
 ## 22.14 Reading a Complete Field Example
 
@@ -585,6 +588,8 @@ Explicit caller fragments may leave the caller, but cannot cross a newly generat
 ## 22.16 Inspecting Expansions and Diagnosing Errors
 
 In VS Code, use ChaLi's macro expansion preview to inspect one level or the complete expansion. A one-level preview may retain nested macro calls; the complete preview expands them further. Source mappings identify definitions and invocations. Preview output is not a stable source export format.
+
+The summary lists direct effects: result category, introduced template bindings, shared or mutable parameter borrows, and control exits. Full expansion distinguishes caller control from local control using actual targets; one-step previews list unresolved targets separately. Creating a closure does not execute its body, so that body's return is excluded from the current macro's exits. The summary does not analyze effects along an entire call chain. An empty list still requires ordinary signature, type and borrow checks.
 
 Check parameter and result categories first, followed by type inference, descriptor ownership and name origin. The temp example below demonstrates the last issue.
 

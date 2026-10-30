@@ -33,9 +33,10 @@ struct Generic
     Memory::String declaration;
     std::size_t nameOffset = 0;
     preprocess::LineOrigin origin;
+    Memory::Vector<preprocess::LineOrigin> declarationOrigins;  ///< 声明逐行来源，保留字段和方法的原始行。
     bool intrinsic = false;
     Memory::String requiredQualifier;
-    Memory::String derivation;  ///< 保留到具体实例的 #derive 指令，不交给文本宏做语义检查。
+    Memory::String derivation;        ///< 保留到具体实例的 #derive 指令，不交给文本宏做语义检查。
     Memory::String operatorSwitches;  ///< 实例声明前的编译器指令 `#No<接口>Replace` / `#NoRight<接口>`，必须排在 `#derive` 之前。
 };
 /**
@@ -308,10 +309,12 @@ Memory::String canonicalType(Memory::String value);
  * @param args 推导出的完整类型实参。
  * @param generated 接收本次新增声明。
  * @param error 失败时接收诊断。
+ * @param origins 可选输出，按生成文本行序追加原始来源。
  * @return 类型实参和约束有效且展开成功时返回 true。
  */
 bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String> &args,
-                 Memory::String &generated, Memory::String &error);
+                 Memory::String &generated, Memory::String &error,
+                 Memory::Vector<preprocess::LineOrigin> *origins = nullptr);
 
 }  // namespace chali_generic
 

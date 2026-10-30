@@ -21,6 +21,16 @@ std::uint64_t MacroMetadataIdentity(const Memory::String &key)
 }
 
 /**
+ * @brief 截取描述符声明位置，未知位置不伪造可导航的列号。
+ * @param node 声明语法节点。
+ * @return 当前源码映射中的声明位置。
+ */
+chali_macro::MetadataOrigin MacroSyntaxOrigin(const MNode &node)
+{
+    return node.sourceLine && node.sourceColumn ? chali_macro::MetadataOrigin{ node.sourceLine, node.sourceColumn } : chali_macro::MetadataOrigin{};
+}
+
+/**
  * @brief 从具体结构体声明读取有序字段及精确注解实参，不依赖布局登记顺序。
  * @param source 查询的已解析或待实例化类型。
  * @return 不可变字段快照；非法类型或实例化失败时为空。
@@ -57,6 +67,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroFields(const std::shar
         {
             if (!ExpandAstMacroMembers(root)) return nullptr;
             declaration = &N(root);
+            result->origin = MacroSyntaxOrigin(*declaration);
             break;
         }
     if (!declaration || type->kind != MType::Struct)
@@ -78,6 +89,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroFields(const std::shar
         if (!fieldType) fieldType = DeclaredFieldType(field);
         if (!fieldType) return nullptr;
         chali_macro::MetadataField item;
+        item.origin = MacroSyntaxOrigin(field);
         item.name = field.s;
         item.index = result->fields.size();
         item.type = fieldType;
@@ -93,12 +105,14 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroFields(const std::shar
                     return Fail("编译期注解元数据尚未完成语义检查：" + field.s), nullptr;
 
                 chali_macro::MetadataAttribute attribute;
+                attribute.origin = MacroSyntaxOrigin(use);
                 attribute.name = use.type2 == -2 ? Memory::String("std::reflect::Reflect") : AnnotationName(N(use.type2));
                 attribute.identity = MacroMetadataIdentity("macro-annotation:" + attribute.name);
                 for (std::size_t index = 0; index < use.annotationValues.size(); ++index)
                 {
                     const auto &value = use.annotationValues[index];
                     chali_macro::MetadataArgument argument;
+                    argument.origin = MacroSyntaxOrigin(use);
                     argument.name = N(N(N(use.type2).kids[0]).kids[index]).s;
                     argument.type = T(value.type);
                     argument.integer = value.integer;
@@ -128,6 +142,40 @@ bool IsMacroMetadataSource(int id)
 }
 
 #include "macro_type_metadata.cpp"
+
+/**
+ * @brief 读取描述符所代表声明的来源，具体类型优先定位其类型声明。
+ * @param value 不可变描述符。
+ * @return 字段、载荷、方法、参数或类型的独立声明位置。
+ */
+chali_macro::MetadataOrigin MacroDescriptorOrigin(const chali_macro::MetadataValue &value)
+{
+    using Meta = chali_macro::MetadataValue;
+    if (!value.owner) return value.origin;
+    switch (value.kind)
+    {
+    case Meta::Field:
+    case Meta::Attributes:
+    case Meta::AssociatedType: return value.owner->fields[value.field].origin;
+    case Meta::Variant: return value.owner->variants[value.variant].origin;
+    case Meta::Payloads: return value.owner->variants[value.variant].origin;
+    case Meta::Payload: return value.owner->variants[value.variant].payloads[value.payload].origin;
+    case Meta::Method: return value.owner->methods[value.method].origin;
+    case Meta::Parameters: return value.owner->methods[value.method].origin;
+    case Meta::Parameter: return value.owner->methods[value.method].parameters[value.parameter].origin;
+    case Meta::Interface: return value.owner->interfaces[value.interfaceIndex].origin;
+    case Meta::Attribute:
+    case Meta::Arguments: return value.owner->fields[value.field].attributes[value.attribute].origin;
+    case Meta::Argument: return value.owner->fields[value.field].attributes[value.attribute].arguments[value.argument].origin;
+    case Meta::Type:
+        if (value.type)
+            for (const int root : g_top)
+                if (N(root).s == value.type->name && (N(root).kind == MNode::StructDecl || N(root).kind == MNode::EnumDecl || N(root).kind == MNode::InterfaceDecl || N(root).kind == MNode::OpcodeDecl))
+                    return MacroSyntaxOrigin(N(root));
+        return value.origin;
+    default: return value.owner->origin;
+    }
+}
 
 /**
  * @brief 获取编译期集合的元素个数及对应描述符类别。
@@ -188,7 +236,10 @@ bool MacroMetadataSequence(const chali_macro::MetadataValue &value, std::size_t 
  */
 void SetMacroMetadata(int id, chali_macro::MetadataValue value)
 {
+    value.origin = MacroDescriptorOrigin(value);
     auto &node = g_nodes[id];
+    node.metadataLine = value.origin.line;
+    node.metadataColumn = value.origin.column;
     node.kind = MNode::MacroMetadata;
     node.compileMetadata = Memory::makeShared<chali_macro::MetadataValue>(std::move(value));
     node.kids.clear();
@@ -291,8 +342,21 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
     if (parent.kind != MNode::MacroMetadata) return true;
     if (!parent.compileMetadata) return Fail("编译期元数据描述符缺少类型信息");
     auto value = *parent.compileMetadata;
+    const auto origin = MacroDescriptorOrigin(value);
+    g_nodes[id].metadataLine = origin.line;
+    g_nodes[id].metadataColumn = origin.column;
     using Meta = chali_macro::MetadataValue;
     const auto &fields = value.owner->fields;
+    if (original.kind == MNode::Member && (original.s == "sourceFile" || original.s == "sourceLine" || original.s == "sourceColumn"))
+    {
+        if (original.s == "sourceFile")
+            SetMacroMetadataString(id, !origin.line ? Memory::String{} : origin.line <= g_sourceFiles.size() && !g_sourceFiles[origin.line - 1].empty() ? g_sourceFiles[origin.line - 1] :
+                                                                                                                                                          g_sourceFallback);
+        else
+            SetMacroMetadataInteger(id, original.s == "sourceColumn" ? origin.column : origin.line && origin.line <= g_sourceLines.size() && g_sourceLines[origin.line - 1] ? g_sourceLines[origin.line - 1] :
+                                                                                                                                                                              origin.line);
+        return true;
+    }
     if (original.kind == MNode::Index)
     {
         if (original.kids.size() != 2 || !NormalizeMacroMetadataIndex(original.kids[1], depth + 1)) return false;

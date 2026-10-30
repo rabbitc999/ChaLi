@@ -150,15 +150,18 @@ Memory::String EditorMacroName(const Memory::String &name)
     return result;
 }
 
+#include "editor_macro_effects.cpp"
+
 /**
  * @brief 将宏生成的节点显示为有界的结构树，不重新打印或重新解析可执行源码。
  * @param id 节点编号。
  * @param depth 当前深度。
  * @param budget 剩余节点预算。
  * @param symbols 本树内卫生身份到稳定可读符号的映射。
+ * @param actualExpression 根宏在语义检查后的实际表达式，负值沿用首次展开树。
  * @return 合法 JSON 结构树。
  */
-std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memory::Map<std::uint32_t, Memory::String> &symbols)
+std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memory::Map<std::uint32_t, Memory::String> &symbols, int actualExpression = -1)
 {
     if (id < 0 || static_cast<std::size_t>(id) >= g_nodes.size()) return "null";
     if (!budget || depth >= 128) return "{\"kind\":\"truncated\"}";
@@ -210,6 +213,9 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     auto result = std::string("{\"kind\":") + chali_editor::jsonString(kind) + ",\"name\":" + chali_editor::jsonString(std::string_view(name.data(), name.size()));
     result += ",\"origin\":" + chali_editor::jsonString(MacroControlContext(node) ? "definition" : "argument");
     result += ",\"source\":" + EditorMacroLocation(node.sourceLine, node.sourceColumn);
+    if (node.metadataLine)
+        result += ",\"metadataSource\":" + EditorMacroLocation(node.metadataLine, node.metadataColumn);
+    if (depth == 0) result += ",\"effects\":" + EditorMacroEffects(id, actualExpression);
     if (node.controlTarget >= 0 && static_cast<std::size_t>(node.controlTarget) < g_nodes.size())
     {
         const auto &target = N(node.controlTarget);
@@ -268,6 +274,8 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     {
         auto children = node.kids;
         if (node.kind == MNode::Block) children.push_back(static_cast<int>(node.i));
+        if (node.guard >= 0) children.push_back(node.guard);
+        if (depth == 0 && actualExpression >= 0) children = { actualExpression };
         for (const int child : children)
         {
             if (!first) result += ',';
@@ -294,11 +302,12 @@ void RecordEditorMacro(int call, int root)
     std::size_t budget = 10000;
     Memory::Map<std::uint32_t, Memory::String> symbols;
     const auto frame = N(root).macroExpansion;
-    const auto complete = [root, frame] {
+    const auto complete = [root, frame, call] {
         if (root < 0 || static_cast<std::size_t>(root) >= g_nodes.size() || N(root).kind != MNode::MacroTemplate || N(root).macroExpansion != frame) return std::string{};
         std::size_t budget = 10000;
         Memory::Map<std::uint32_t, Memory::String> symbols;
-        return EditorMacroTree(root, 0, budget, symbols);
+        const int expression = call >= 0 && static_cast<std::size_t>(call) < g_nodes.size() && N(call).kind != MNode::MacroCall && N(call).kind != MNode::MacroTemplate ? call : -1;
+        return EditorMacroTree(root, 0, budget, symbols, expression);
     };
     chali_editor::compilerAnalysis.addMacro({ std::string(file.data(), file.size()), std::string(node.s.data(), node.s.size()), EditorMacroTree(root, 0, budget, symbols), line, column, complete });
 }

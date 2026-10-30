@@ -6,6 +6,7 @@
 #include "chali_glue.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <algorithm>
 
 /**
  * @brief 检查回归条件。
@@ -93,5 +94,19 @@ int main()
     require(expand("#derive(Equal,Hash,Clone)\nstruct DerivedBox<T>{T value;};DerivedBox<int64> value;", result, error), error.c_str());
     require(result.text.find("#derive(Equal,Hash,Clone)") != Memory::String::npos, "泛型实例丢失字段派生指令");
     require(!expand("#derive(Equal,Equal) struct Bad<T>{T value;};", result, error) && error.find("重复请求") != Memory::String::npos, "未实例化泛型的重复派生没有报错");
+    preprocess::Result mapped;
+    mapped.text = "struct AuditOrigin<T>{\nT value;\n};\n";
+    for (std::size_t line = 0; line < 3; ++line) mapped.lineMap.push_back({ "mapped.chl", 100u + line });
+    require(run(mapped, error), error.c_str());
+    Memory::String generated;
+    Memory::Vector<preprocess::LineOrigin> origins;
+    require(instantiate("AuditOrigin", { "int64" }, generated, error, &origins), error.c_str());
+    require(origins.size() == static_cast<std::size_t>(std::count(generated.begin(), generated.end(), '\n')), "实例行映射数量与生成源码不一致");
+    bool foundFieldOrigin = false;
+    for (const auto &origin : origins)
+        if (origin.file == "mapped.chl" && origin.line == 101) foundFieldOrigin = true;
+    require(foundFieldOrigin, "语义期实例化丢失了字段原始行");
+    const auto projected = substituteIdentifiers("T\n.\nItem value;", { { "T", "Concrete" } });
+    require(std::count(projected.begin(), projected.end(), '\n') == 2, "关联投影替换改变了后续声明的行号");
     std::puts("generic monomorphization unit tests OK");
 }

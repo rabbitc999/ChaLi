@@ -100,7 +100,13 @@ python tools/cas_sources.py --build-assets
 # 手册数据先于内嵌：embed_stdlib.py 会把 chali_manual.json 一起压进内嵌资产表。
 python tools/embed_manual.py
 mkdir -p build/chali-frontend
-python tools/embed_stdlib.py --stamp build/chali-frontend/stdlib_assets.stamp
+# 紧接 make 构建时可延后压缩，避免先嵌入旧解析器、生成后又压缩一次。
+# 默认仍生成完整资产；延后模式由 make 的资产依赖在编译前完成。
+if [ "${CHALI_DEFER_ASSET_EMBED:-0}" != "1" ]; then
+    python tools/embed_stdlib.py --stamp build/chali-frontend/stdlib_assets.stamp
+else
+    echo "内嵌资产延后到紧接的 make 构建生成。"
+fi
 
 # --no-build-files：本目录的 Makefile 是手写、纳入版本管理的「生成代码 → 构建」
 # 工程文件（见 Makefile / local.mk），不能让生成器覆盖它，也别删它。

@@ -249,6 +249,8 @@ struct MNode
     } kind = List;
     std::size_t sourceLine = 0;                         ///< 预处理后语法节点的起始行。
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。
+    std::size_t metadataLine = 0;                       ///< 折叠元数据属性的原声明行，零表示无独立声明来源。
+    std::size_t metadataColumn = 0;                     ///< 元数据原声明的一基列号，与调用和定义来源分别保留。
     std::uint32_t syntaxContext = 0;                    ///< 原始片段或宏展开的卫生上下文。
     std::uint32_t controlContext = UINT32_MAX;          ///< 首次展开时固定的控制来源；未展开节点沿用卫生上下文。
     std::uint32_t bindingIdentity = 0;                  ///< 声明及引用解析后的稳定绑定身份。

@@ -33,6 +33,14 @@ function expansionText() {
 }
 
 async function main() {
+  const metadata = renderNode({kind:'string',name:'value',metadataSource:{file:'/project/data.chl',line:3,column:2},children:[]},0,'zh');
+  assert.ok(metadata.includes('元数据声明') && metadata.includes('data-node-location'));
+  const effects = {resultCategory:'stmt',introducedBindings:2,sharedBorrows:1,mutableBorrows:1,callerControl:['break'],localControl:['yield'],unresolvedControl:['return'],truncated:false};
+  const effectPage = renderPage({name:'WRAP',tree:{kind:'template',effects,children:[]}},0,{language:'en'});
+  assert.ok(effectPage.includes('Introduced bindings: 2') && effectPage.includes('Mutable borrows: 1'));
+  assert.ok(effectPage.includes('Caller control: break') && effectPage.includes('Unresolved control: return'));
+  const hostileEffects = renderPage({tree:{kind:'template',effects:{...effects,resultCategory:'<img src=x onerror=alert(1)>',callerControl:['<img src=y>']},children:[]}},0,{language:'en'});
+  assert.ok(!hostileEffects.includes('<img src=') && hostileEffects.includes('&lt;img'));
   const control = renderNode({kind:'break',origin:'argument',controlTarget:{file:'/project/main.chl',line:20,column:3},children:[]},0,'zh');
   assert.ok(control.includes('出口') && control.includes('data-node-location'));
   const englishControl = renderNode({kind:'propagation',origin:'definition',controlTarget:{file:'/project/main.chl',line:20,column:3},children:[]},0,'en');

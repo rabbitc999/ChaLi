@@ -212,6 +212,13 @@ bool PrepareMacroDiagnostic(int id, const std::function<bool(int)> &normalize,
                                                         associated    ? "关联类型 " :
                                                                         "字段 ")
                  + std::string(field.owner->name.data(), field.owner->name.size()) + "." + std::string(name.data(), name.size()) + "（序号 " + std::to_string(index) + "）";
+        const auto origin = MacroDescriptorOrigin(field);
+        if (origin.line)
+        {
+            const auto file = origin.line <= g_sourceFiles.size() && !g_sourceFiles[origin.line - 1].empty() ? g_sourceFiles[origin.line - 1] : g_sourceFallback;
+            const auto line = origin.line <= g_sourceLines.size() && g_sourceLines[origin.line - 1] ? g_sourceLines[origin.line - 1] : origin.line;
+            error += "\n    声明位置 " + std::string(file.data(), file.size()) + ":" + std::to_string(line) + ":" + std::to_string(origin.column);
+        }
     }
     const auto &argument = N(arguments[0]);
     const auto sourceLine = argument.expansionLine ? argument.expansionLine : argument.sourceLine;

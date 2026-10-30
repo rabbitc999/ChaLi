@@ -67,6 +67,8 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroAssociatedTypes(const 
     MReflectionBuilder names;
     names.indexDeclarations();
     auto result = Memory::makeShared<chali_macro::MetadataType>();
+    const int declaration = MacroMetadataDeclaration(type->name);
+    if (declaration >= 0) result->origin = MacroSyntaxOrigin(N(declaration));
     result->type = type;
     result->name = names.named(type->name);
     result->identity = MacroMetadataIdentity("macro-type:" + names.key(type));
@@ -83,6 +85,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroAssociatedTypes(const 
                 const auto field = N(member);
                 if ((field.kind != MNode::AssociatedDecl && field.kind != MNode::AssociatedDef) || !seen.insert(field.s).second) continue;
                 chali_macro::MetadataField item;
+                item.origin = MacroSyntaxOrigin(field);
                 item.name = field.s;
                 item.index = result->fields.size();
                 item.declaringType = names.named(owner);
@@ -99,6 +102,42 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroAssociatedTypes(const 
         return true;
     };
     return append(type->name, 0) && g_error.empty() ? result : nullptr;
+}
+
+/**
+ * @brief 通过原声明者及具体参数签名定位一个方法，重载不互借来源。
+ * @param owner 原始声明者。
+ * @param name 对外方法名。
+ * @param parameters 具体参数签名。
+ * @param constructor 是否查询构造入口。
+ * @param implementation 当前具体接收者。
+ * @return 对应方法声明节点；没有源声明时返回负一。
+ */
+int FindMacroMethodDeclaration(const Memory::String &owner, const Memory::String &name,
+                               const Memory::Vector<MParam> &parameters, bool constructor,
+                               const Memory::String &implementation)
+{
+    const int declaration = MacroMetadataDeclaration(owner);
+    if (declaration < 0) return -1;
+    const auto node = N(declaration);
+    const auto slot = node.kind == MNode::EnumDecl || node.kind == MNode::OpcodeDecl ? 1u : 0u;
+    if (node.kids.size() <= slot) return -1;
+    for (const int member : N(node.kids[slot]).kids)
+    {
+        const auto method = N(member);
+        if (method.kind != MNode::MethodDef || method.kids.empty() || (method.s != name && !(constructor && method.type2 == 2))) continue;
+        const auto actuals = N(method.kids[0]).kids;
+        if (actuals.size() != parameters.size()) continue;
+        bool same = true;
+        for (std::size_t index = 0; same && index < actuals.size(); ++index)
+        {
+            auto actual = MacroResolveAssociated(T(N(actuals[index]).type), implementation);
+            auto expected = MacroResolveAssociated(parameters[index].type, implementation);
+            same = actual && expected && SameType(actual, expected);
+        }
+        if (same) return member;
+    }
+    return -1;
 }
 
 /**

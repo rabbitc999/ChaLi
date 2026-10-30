@@ -22,6 +22,8 @@ int main()
     node.syntaxContext = 123;
     node.controlContext = 321;
     node.controlTarget = id;
+    node.metadataLine = 7;
+    node.metadataColumn = 13;
     node.bindingIdentity = 456;
     node.bindingContext = 789;
     node.formattedOutputBridge = true;
@@ -42,6 +44,21 @@ int main()
     chali_incremental::writeNumber(provenance, 456);
     const auto provenanceOffset = bytes.find(provenance.str());
     assert(provenanceOffset != bytes.npos);
+    std::ostringstream metadata(std::ios::binary);
+    chali_incremental::writeNumber(metadata, 7);
+    chali_incremental::writeNumber(metadata, 13);
+    const auto metadataOffset = bytes.find(metadata.str());
+    assert(metadataOffset != bytes.npos);
+    auto invalidMetadata = bytes;
+    invalidMetadata.replace(metadataOffset, 8, 8, static_cast<char>(0xff));
+    std::istringstream invalidMetadataInput(invalidMetadata, std::ios::binary);
+    assert(!M_ReadStandardUnit(invalidMetadataInput));
+    assert(M_NodeCount() == count && M_ParsedNode(id).metadataLine == 7);
+    invalidMetadata = bytes;
+    invalidMetadata.replace(metadataOffset + 8, 8, 8, '\0');
+    std::istringstream incompleteMetadataInput(invalidMetadata, std::ios::binary);
+    assert(!M_ReadStandardUnit(incompleteMetadataInput));
+    assert(M_NodeCount() == count && M_ParsedNode(id).metadataColumn == 13);
     auto invalidContext = bytes;
     invalidContext.replace(provenanceOffset + 8, 8, 8, static_cast<char>(0xff));
     std::istringstream invalidProvenance(invalidContext, std::ios::binary);
@@ -58,7 +75,7 @@ int main()
     std::istringstream old(incompatible, std::ios::binary);
     assert(!M_ReadStandardUnit(old));
     assert(M_NodeCount() == count);
-    incompatible[8] = 3;
+    incompatible[8] = 4;
     std::istringstream previousFormat(incompatible, std::ios::binary);
     assert(!M_ReadStandardUnit(previousFormat));
     assert(M_NodeCount() == count);
@@ -71,6 +88,7 @@ int main()
     assert(restored.unsafeRequired && restored.unsafeScope && restored.implicitExitMove);
     assert(restored.syntaxContext == 123 && restored.bindingIdentity == 456 && restored.bindingContext == 789);
     assert(restored.controlContext == 321 && restored.controlTarget == -1);
+    assert(restored.metadataLine == 7 && restored.metadataColumn == 13);
     assert(restored.i == 37 && restored.s2 == "macro-category" && restored.kids[0] == id);
     std::ostringstream package(std::ios::binary);
     const Memory::String text = "standard core identity";

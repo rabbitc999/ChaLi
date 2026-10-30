@@ -150,6 +150,8 @@ MessageError does not match that type, so the wildcard fallback uses the Error i
 
 Interfaces can take type parameters and inherit other interfaces. Type arguments identify data used by their behavior, while inheritance combines required capabilities. It does not inherit class field layout or let casts invent missing implementations. The next chapter develops generic constraints.
 
+Compile-time tools can enumerate a type's implemented interfaces while retaining generic arguments, direct or inherited relationships and associated-type bindings. Chapter 22 uses that information to generate code and navigate back to declarations. First become comfortable with interface calls and concrete-type matching.
+
 ## 17.5 Matching versus calling
 
 Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 16 handles interface payloads inside Result and propagation.

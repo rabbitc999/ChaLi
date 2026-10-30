@@ -22,11 +22,13 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroVariants(const std::sh
     {
         const auto declaration = N(root);
         if (declaration.kind != MNode::EnumDecl || declaration.s != type->name) continue;
+        result->origin = MacroSyntaxOrigin(declaration);
         const auto variantIds = N(declaration.kids[0]).kids;
         for (const int variantId : variantIds)
         {
             const auto syntax = N(variantId);
             chali_macro::MetadataVariant variant;
+            variant.origin = MacroSyntaxOrigin(syntax);
             variant.name = syntax.s;
             variant.index = result->variants.size();
             const auto key = "macro-variant:" + names.key(type) + "::" + variant.name;
@@ -40,6 +42,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroVariants(const std::sh
                     auto payloadType = Memory::makeShared<MType>(*T(parameter.type));
                     if (!ResolveAstGenericType(payloadType)) return nullptr;
                     chali_macro::MetadataField payload;
+                    payload.origin = MacroSyntaxOrigin(parameter);
                     payload.name = parameter.s;
                     payload.index = variant.payloads.size();
                     payload.identity = MacroMetadataIdentity(key + "::payload:" + payload.name);
@@ -102,6 +105,11 @@ bool AppendMacroMethod(chali_macro::MetadataType &owner, const Memory::String &d
     method.isStatic = isStatic;
     method.isConstructor = constructor;
     method.hasBody = body >= 0;
+    const int source = FindMacroMethodDeclaration(declaringType, name, parameters, constructor, owner.type->name);
+    if (source >= 0)
+        method.origin = MacroSyntaxOrigin(N(source));
+    else if (body >= 0)
+        method.origin = MacroSyntaxOrigin(N(body));
     if (!isStatic) method.receiver = owner.type;
     method.returnsMutableReference = method.result->kind == MType::Ptr && !method.result->readOnly;
     std::size_t budget = 100000;
@@ -111,6 +119,8 @@ bool AppendMacroMethod(chali_macro::MetadataType &owner, const Memory::String &d
     {
         if (!parameter.type) return Fail("方法元数据缺少参数类型：" + name);
         chali_macro::MetadataField item;
+        if (source >= 0 && method.parameters.size() < N(N(source).kids[0]).kids.size())
+            item.origin = MacroSyntaxOrigin(N(N(N(source).kids[0]).kids[method.parameters.size()]));
         item.name = parameter.source;
         item.type = MacroResolveAssociated(parameter.type, owner.type->name);
         if (!item.type) return false;
@@ -157,6 +167,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroTypeMembers(const std:
     MReflectionBuilder names;
     names.indexDeclarations();
     auto result = Memory::makeShared<chali_macro::MetadataType>();
+    result->origin = MacroSyntaxOrigin(declaration);
     result->name = names.named(type->name);
     result->type = type;
     result->identity = MacroMetadataIdentity("macro-type:" + names.key(type));
@@ -179,6 +190,7 @@ std::shared_ptr<const chali_macro::MetadataType> ReadMacroTypeMembers(const std:
         seen.insert(name);
         active.insert(name);
         chali_macro::MetadataInterface item;
+        item.origin = MacroSyntaxOrigin(syntax);
         const auto interfaceType = NamedType(name);
         item.type = interfaceType;
         item.identity = MacroMetadataIdentity("macro-type:" + names.key(interfaceType));

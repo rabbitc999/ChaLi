@@ -67,6 +67,8 @@ def main():
             "runtime/artifact_binary.cpp", "semantics/associated_types.cpp",
             ".chali-generator-manifest",
         ]
+        required += ["macro/metadata.hpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp",
+                     "semantics/macro_associated_metadata.cpp", "semantics/macro_control_flow.cpp", "semantics/editor_macro_effects.cpp"]
         required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
         required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
         required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
@@ -90,7 +92,7 @@ def main():
             raise AssertionError("compiler lang.chl does not match the referenced language library")
         assert not (compiler / "utils.chl").exists()
         assert not (compiler / "reflect.chl").exists()
-        # 导出后构建完整编译器并运行 VM/TOML，检查独立单元、相对 include 及静态库链接。
+        # 导出后构建完整编译器并运行 checked AOT/TOML，检查独立单元、相对 include 及静态库链接。
         build = compiler / "build"
         configure = ["cmake", "-S", str(compiler), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release"]
         if os.name == "nt":
@@ -106,6 +108,9 @@ def main():
                          '$macro Example<T:#res, U:b>(a,b)\ncast<T>(a)+cast<T>(b)\n$end_macro\n'
                          '$macro TwiceValue(x:value)\nx+x\n$end_macro\n'
                          '$macro TwiceExpr(x:expr)\nx+x\n$end_macro\n'
+                         'interface Source{type Item;Item get();}\n'
+                         'struct Box<T>:Source{type Item=T;T value;T get(){return self.value;}}\n'
+                         '$macro Escape(body:block) -> stmt\nloop{body;break;};\n$end_macro\n'
                          'int64 count=0;int64 next(){count+=1;return count;}\n'
                          'void main()\n{\n'
                          '    int32 inferred=$Example((int64)3,(int16)4);assert(inferred==7);\n'
@@ -114,10 +119,14 @@ def main():
                          '    String text = "# exported\\nvalue = 42 # inline\\n";\n'
                          '    std::toml::TomlValue root = std::toml::parse(text).unwrap();\n'
                          '    assert(root.dump() == text);\n'
-                         '    println("exported compiler VM/TOML OK");\n}\n', encoding="utf-8")
+                         '    assert(($methods<Box<int64>>())[0].hasReceiver);\n'
+                         '    assert(($interfaces<Box<int64>>())[0].associatedTypes[0].type.name=="int64");\n'
+                         '    assert(($fields<Box<int64>>())[0].sourceLine>0);\n'
+                         '    int64 visits=0;loop{visits+=1;$Escape({break;});visits+=100;break;}assert(visits==1);\n'
+                         '    println("exported compiler AOT/TOML OK");\n}\n', encoding="utf-8")
         result = subprocess.run([str(build / EXPORTED_COMPILER), "run", str(probe), "--out", str(WORK / "export_probe")],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
-        assert result.returncode == 0 and result.stdout == "exported compiler VM/TOML OK\n" and not result.stderr, result
+        assert result.returncode == 0 and result.stdout == "exported compiler AOT/TOML OK\n" and not result.stderr, result
         aot_probe = WORK / "aot_probe.chl"
         aot_probe.write_text('void main()\n{\n    println("exported AOT entry OK");\n}\n', encoding="utf-8")
         aot_prefix = WORK / "aot_probe"
