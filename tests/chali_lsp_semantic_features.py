@@ -98,6 +98,16 @@ def main():
             completions = query('completion', incomplete, len(incomplete))
             assert any(item['label'] == 'value' for item in completions), completions
 
+            category_macro = '''$macro Categories(a:value,b:expr)
+    a+b
+    $end_macro
+    void main(){int64 result=$Categories(1,2);}
+    '''
+            open_text(category_macro)
+            category_help = query('signatureHelp', category_macro, category_macro.index('(1,2)') + 3)
+            assert 'a: value' in category_help['signatures'][0]['label'] and 'b: expr' in category_help['signatures'][0]['label'], category_help
+            category_preview = server.query('chali/expandMacro', dict(textDocument=dict(uri=uri)))
+            assert category_preview['text'] and not category_preview['diagnostics'], category_preview
             result_macro = '''$macro Example<T:#res,U:b>(a,b)
     cast<T>(a) + cast<T>(b)
     $end_macro

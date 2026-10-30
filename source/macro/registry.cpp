@@ -80,6 +80,20 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
                 entry.parameters.push_back(entry.bound.parameters.at(std::string(name.data(), name.size())));
                 entry.names.push_back(std::string(name.data(), name.size()));
                 entry.modes.push_back(std::max(0, nodes_[parameter].type2));
+                const auto category = nodes_[parameter].s2;
+                if (!category.empty() && category != "value" && category != "expr" && category != "ident" && category != "type" && category != "stmt" && category != "block")
+                {
+                    nodes_.resize(start);
+                    error = "不支持的宏形参类别：" + std::string(category.data(), category.size());
+                    return false;
+                }
+                if (!category.empty() && (signature.variadic || (entry.modes.back() && category != "value")))
+                {
+                    nodes_.resize(start);
+                    error = "宏形参类别暂不支持变长参数，引用参数只能标注 value";
+                    return false;
+                }
+                entry.categories.push_back(category);
             }
             entry.groups.push_back(signature);
         }
@@ -234,6 +248,26 @@ int Registry::instantiate(int call, std::string &error,
             inputs.emplace(entry.names[signature.begin + fixed], static_cast<int>(nodes_.size()));
             nodes_.push_back(std::move(rest));
         }
+    }
+    for (std::size_t index = 0; index < entry.names.size(); ++index)
+    {
+        const auto &category = entry.categories[index];
+        if (category.empty()) continue;
+        const int actual = inputs.at(entry.names[index]);
+        const auto &fragment = nodes_[actual];
+        const int alternative = category == "ident" ? 1 : category == "type" ? 2 : category == "block" ? 3 : category == "stmt" ? 4 : 0;
+        if (fragment.kind != MNode::MacroArgument || fragment.kids.size() != 5u || fragment.kids[alternative] < 0)
+        {
+            nodes_.resize(start);
+            error = "宏实参与形参类别不匹配：" + entry.names[index] + ": " + std::string(category.data(), category.size());
+            return -1;
+        }
+        auto constrained = fragment;
+        for (std::size_t slot = 0; slot < constrained.kids.size(); ++slot)
+            if (slot != static_cast<std::size_t>(alternative) && !(category == "ident" && slot == 0) && !(category == "block" && (slot == 0 || slot == 4)))
+                constrained.kids[slot] = -1;
+        inputs[entry.names[index]] = static_cast<int>(nodes_.size());
+        nodes_.push_back(std::move(constrained));
     }
     ExpansionSite site;
     site.line = node.expansionLine ? node.expansionLine : node.sourceLine;
@@ -393,10 +427,12 @@ int Registry::instantiate(int call, std::string &error,
     for (std::size_t index = 0; types_ && index < entry.names.size(); ++index)
     {
         const auto identity = bound.parameters.at(entry.names[index]);
-        if (!valueParameters.count(identity) && syntaxParameters.count(identity) && !entry.modes[index]) continue;
+        const auto &category = entry.categories[index];
+        if (!category.empty() && category != "value") continue;
+        if (category.empty() && !valueParameters.count(identity) && syntaxParameters.count(identity) && !entry.modes[index]) continue;
         const auto actual = nodes_[inputs.at(entry.names[index])];
         if (actual.kind != MNode::MacroArgument || actual.kids.size() != 5u || actual.kids[0] < 0) continue;
-        if (!valueParameters.count(identity) && statementParameters.count(identity) && actual.kids[3] >= 0 && nodes_[actual.kids[0]].kind == MNode::Loop && nodes_[actual.kids[0]].s == "block" && !entry.modes[index])
+        if (category.empty() && !valueParameters.count(identity) && statementParameters.count(identity) && actual.kids[3] >= 0 && nodes_[actual.kids[0]].kind == MNode::Loop && nodes_[actual.kids[0]].s == "block" && !entry.modes[index])
             continue;
         MNode variable;
         variable.kind = MNode::Var;

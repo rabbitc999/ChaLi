@@ -104,8 +104,13 @@ def main():
         probe = WORK / "export_probe.chl"
         probe.write_text('import std::toml;\n'
                          '$macro Example<T:#res, U:b>(a,b)\ncast<T>(a)+cast<T>(b)\n$end_macro\n'
+                         '$macro TwiceValue(x:value)\nx+x\n$end_macro\n'
+                         '$macro TwiceExpr(x:expr)\nx+x\n$end_macro\n'
+                         'int64 count=0;int64 next(){count+=1;return count;}\n'
                          'void main()\n{\n'
                          '    int32 inferred=$Example((int64)3,(int16)4);assert(inferred==7);\n'
+                         '    int64 once=$TwiceValue(next());assert(once==2 && count==1);\n'
+                         '    count=0;int64 twice=$TwiceExpr(next());assert(twice==3 && count==2);\n'
                          '    String text = "# exported\\nvalue = 42 # inline\\n";\n'
                          '    std::toml::TomlValue root = std::toml::parse(text).unwrap();\n'
                          '    assert(root.dump() == text);\n'

@@ -38,6 +38,9 @@ int main()
     Memory::String resultSource = "$replace Example<T: #res, U:b>(a,b) cast<T>(a) + cast<T>(b)\n";
     if (!chali_macro::markReplacementBoundaries(resultSource, error)) return 15;
     if (resultSource.find("(a,b)  @!macrobody cast<T>(a)") == Memory::String::npos) return 16;
+    Memory::String categorySource = "$replace Inline(x:expr) x+x\n";
+    if (!chali_macro::markReplacementBoundaries(categorySource, error)) return 17;
+    if (categorySource.find("(x:expr)  @!macrobody x+x") == Memory::String::npos) return 18;
     std::cout << "macro declaration boundaries passed\n";
     return 0;
 }

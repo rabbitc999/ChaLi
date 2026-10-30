@@ -26,16 +26,26 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
         return true;
     }
     const auto &generics = chali_generic::session.generics;
-    auto found = generics.find(type->lookupModule.empty() ? type->genericBase : type->lookupModule + "::" + type->genericBase);
+    const auto findScoped = [&](const Memory::String &module, const Memory::String &sourceName) {
+        auto direct = generics.find(module.empty() ? sourceName : module + "::" + sourceName);
+        if (direct != generics.end() && direct->second.module == module) return direct;
+        for (auto candidate = generics.begin(); candidate != generics.end(); ++candidate)
+            if (candidate->second.module == module && (candidate->second.sourceName.empty() ? candidate->second.name : candidate->second.sourceName) == sourceName)
+                return candidate;
+        return generics.end();
+    };
+    const auto split = type->genericBase.rfind("::");
+    auto found = split == Memory::String::npos ? findScoped(type->lookupModule, type->genericBase) :
+                                               findScoped(type->genericBase.substr(0, split), type->genericBase.substr(split + 2));
     if (found == generics.end()) found = generics.find(type->genericBase);
-    if (found == generics.end()) found = generics.find("std::lang::" + type->genericBase);
+    if (found == generics.end()) found = findScoped("std::lang", type->genericBase);
     if (found == generics.end())
     {
         const auto imports = g_moduleImports.find(type->lookupModule);
         if (imports != g_moduleImports.end())
             for (const auto &module : imports->second)
             {
-                const auto candidate = generics.find(module + "::" + type->genericBase);
+                const auto candidate = findScoped(module, type->genericBase);
                 if (candidate == generics.end()) continue;
                 if (found != generics.end()) return Fail("泛型类型名称有多个可见定义：" + type->genericBase);
                 found = candidate;
@@ -47,6 +57,20 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
     const auto name = chali_generic::mangle(found->second.name, arguments);
     if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ found->second.name, arguments };
     type->name = found->second.module.empty() ? name : found->second.module + "::" + name;
+    // 登记阶段按重名情况决定保留模块前缀；宏类型片段复用同一实际声明名称。
+    Memory::String declaredName;
+    std::size_t matchingDeclarations = 0;
+    for (const int declaration : g_top)
+    {
+        const auto &node = N(declaration);
+        if (node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl && node.kind != MNode::InterfaceDecl) continue;
+        if (node.s == name || node.s == (node.module.empty() ? name : node.module + "::" + name))
+        {
+            ++matchingDeclarations;
+            if (node.module == found->second.module) declaredName = node.s;
+        }
+    }
+    if (!declaredName.empty() && (matchingDeclarations == 1 || declaredName != name)) type->name = declaredName;
     if (!type->genericMember.empty()) type->name += "::" + type->genericMember;
     for (const int declaration : g_top)
         if (N(declaration).kind == MNode::InterfaceDecl && N(declaration).s == type->name)

@@ -21,6 +21,13 @@ int M_MacroParameterGroups(int groups, int group);
  */
 int M_MacroParameter(int name, bool variadic = false);
 /**
+ * @brief 在宏形参上保存显式片段类别，保留引用和名称身份。
+ * @param parameter 宏形参节点编号。
+ * @param category 类别名称池编号。
+ * @return 原形参节点编号。
+ */
+int M_MacroCategoryParameter(int parameter, int category);
+/**
  * @brief 构造编译期片段列表循环。
  * @param variable 循环参数名称。
  * @param source 变长参数名称。

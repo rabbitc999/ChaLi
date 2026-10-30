@@ -11,6 +11,7 @@ struct SignatureGroup
 {
     char opening = '(';
     Memory::Vector<Memory::String> params;
+    Memory::Vector<Memory::String> categories;  ///< 与固定形参对齐的显式类别，不计入绑定名称。
     Memory::String rest;
 };
 /**

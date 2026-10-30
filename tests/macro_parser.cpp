@@ -71,6 +71,9 @@ int main()
     if (!parse("$macro Example<T:#res, U:b>(a,b)\na\n$end_macro\nvoid main() {}\n", root)) return 20;
     const auto resultGenerics = M_ParsedNode(M_ParsedNode(M_ParsedNode(root).kids[0]).kids[2]).kids;
     if (resultGenerics.size() != 2 || M_ParsedNode(resultGenerics[0]).s2 != "#res" || M_ParsedNode(resultGenerics[1]).s2 != "b") return 21;
+    if (!parse("$macro Categories(x:value,y:expr,n:ident,T:type,s:stmt,b:block)\nx\n$end_macro\nvoid main(){}\n", root)) return 22;
+    const auto categoryParameters = M_ParsedNode(M_ParsedNode(M_ParsedNode(root).kids[0]).kids[0]).kids;
+    if (categoryParameters.size() != 6 || M_ParsedNode(categoryParameters[0]).s2 != "value" || M_ParsedNode(categoryParameters[5]).s2 != "block") return 23;
     std::cout << "generated AST macro parser passed\n";
     return 0;
 }

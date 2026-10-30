@@ -223,11 +223,14 @@ void McDocument::setText(std::string text)
                 shape += group.rest.empty() ? '-' : '+';
                 signature += group.opening;
                 bool comma = false;
+                std::size_t parameterIndex = 0;
                 for (const auto &parameter : group.params)
                 {
                     if (comma) signature += ", ";
                     comma = true;
                     signature += parameter.c_str();
+                    if (!group.categories[parameterIndex].empty()) signature += ": " + std::string(group.categories[parameterIndex].c_str());
+                    ++parameterIndex;
                     params.emplace_back(parameter.c_str());
                 }
                 if (!group.rest.empty())

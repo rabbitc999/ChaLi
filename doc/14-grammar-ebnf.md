@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 159 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 161 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -977,7 +977,13 @@ macro_parameter_names = ""
 macro_parameter_items = macro_parameter
     | macro_parameter_items, ",", macro_parameter ;
 
-macro_parameter = name_token
+macro_parameter = macro_parameter_binding
+    | macro_parameter_binding, ":", macro_parameter_category ;
+
+macro_parameter_category = name_token
+    | "type" ;
+
+macro_parameter_binding = name_token
     | "&", name_token
     | "mut", "&", name_token
     | "...", name_token

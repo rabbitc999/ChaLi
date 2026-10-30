@@ -761,6 +761,8 @@ void main() {
 
 `<T:a>` 从实参静态类型推导；`<T:#res>`（或兼容写法 `<T>`）从外层期望结果类型推导，显式类型优先。`[]`、`()`、`{}` 是严格有序参数组，`...rest` / `..rest` 是末尾变长形参，`$for` 遍历片段列表。`$match x is expr` 支持 `expr`、`ident`、`type`、`block`、`stmt`，`$else is` 顺序选分支，`$end_match` 结束。`$regex x is "模式"` 使用完整 ECMAScript 正则匹配原文，`$end_regex` 结束。未选分支不进入最终语义检查。
 
+固定形参可标注 `x: value`、`x: expr`、`name: ident`、`T: type`、`body: stmt` 或 `body: block`。value 参数在展开体执行前各求值一次；expr 是按放置位置执行的语法片段，可重复执行或不执行。未标注参数保持兼容；引用仅可标注 value。带类别的变参和 pattern／item 尚未支持。
+
 `$stringify(x)` 读取原文，`$concat(a, b)` 仅产生标识符，`$line` / `$file` / `$module` 保留来源。`$replace A(x) x + 1` 为单行宏。完整规则与可运行示例见 [卫生宏](25-literals-operators-macros.md#编译期卫生-ast-宏)。
 
 ## 15. 注解与反射

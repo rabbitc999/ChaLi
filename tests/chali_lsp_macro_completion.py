@@ -39,6 +39,14 @@ def main():
             update = next(item for item in items if item['label'].endswith('Update'))
             inserted = update.get('insertText', update.get('textEdit', {}).get('newText', ''))
             assert inserted and '&' not in inserted and 'mut ' not in inserted, update
+            text = '$macro Categories(a:value,b:expr)\na+b\n$end_macro\nvoid main(){ $'
+            uri = (folder / 'category-parameters.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            response = server.query("textDocument/completion", {"textDocument": {"uri": uri}, "position": position(text, len(text))})
+            items = response.get("items", []) if isinstance(response, dict) else response
+            category = next(item for item in items if item['label'].endswith('Categories'))
+            inserted = category.get('insertText', category.get('textEdit', {}).get('newText', ''))
+            assert inserted and ':value' not in inserted and ':expr' not in inserted and ': value' not in inserted and ': expr' not in inserted, category
         finally:
             server.close()
     print("LSP 宏补全：外部模块、$ 前缀与限定名称通过")

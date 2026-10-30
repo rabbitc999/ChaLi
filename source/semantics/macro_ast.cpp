@@ -42,6 +42,18 @@ int M_MacroParameter(int name, bool variadic)
 }
 
 /**
+ * @brief 记录显式宏形参类别，不执行或展开实参。
+ * @param parameter 已建立的宏形参节点编号。
+ * @param category 类别名称池编号。
+ * @return 保留引用绑定方式的原形参节点。
+ */
+int M_MacroCategoryParameter(int parameter, int category)
+{
+    g_nodes[parameter].s2 = g_names[category];
+    return parameter;
+}
+
+/**
  * @brief 保存宏形参的引用绑定方式。
  * @param name 名称池编号。
  * @param mode 一表示只读引用，二表示可写引用。

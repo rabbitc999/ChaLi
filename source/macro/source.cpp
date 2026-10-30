@@ -118,7 +118,7 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
                     while (before > header + 1 && std::isspace(static_cast<unsigned char>(mask[before - 1]))) --before;
                     if (before != header + 1 && mask[before - 1] != ',') parameters = false;
                 }
-                else if (!(std::isalnum(static_cast<unsigned char>(mask[index])) || mask[index] == '_' || mask[index] == ',' || mask[index] == '.' || std::isspace(static_cast<unsigned char>(mask[index])) || (opening == '<' && mask[index] == ':')))
+                else if (!(std::isalnum(static_cast<unsigned char>(mask[index])) || mask[index] == '_' || mask[index] == ',' || mask[index] == '.' || std::isspace(static_cast<unsigned char>(mask[index])) || mask[index] == ':'))
                     parameters = false;
             }
             if (!parameters) break;

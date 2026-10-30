@@ -193,6 +193,46 @@ void main() {
 
 This prints `6 100`. Each iteration has distinct declaration identities without an added runtime block. Variadic fragments can be forwarded to another macro or spread in a function argument list. `$for` traverses variadic parameters only. A parameter in a declaration-name position requires a single identifier; that declaration is visible to subsequent caller code. Member selectors and variable references have separate syntax roles.
 
+## Explicit parameter categories
+
+Fixed parameters can declare their category explicitly:
+
+| Category | Constraint and expansion behavior |
+| --- | --- |
+| `x: value` | A complete expression, evaluated once before the expansion body; its saved value copy is reused |
+| `x: expr` | A complete expression fragment, evaluated at each placement; unused fragments do not execute |
+| `name: ident` | One identifier, usable as a generated declaration or member name |
+| `T: type` | A complete type fragment used in a type position |
+| `body: stmt` | A complete statement fragment used in a statement position |
+| `body: block` | A complete block, following existing statement or block-expression rules |
+
+Value parameters evaluate in declaration order before the expansion body. Expression fragments evaluate wherever that body places them. An expr fragment used as an assignment target can modify the caller's variable. Unannotated parameters retain their existing role inference and ordinary expression arguments still evaluate once. `&n: value` and `mut &n: value` retain readonly and mutable borrowing; legacy reference declarations remain valid. References cannot use expr or other syntax-fragment categories.
+
+```chali
+int64 count = 0;
+int64 next() { count += 1; return count; }
+$macro TwiceValue(x: value)
+x + x
+$end_macro
+$macro TwiceExpr(x: expr)
+x + x
+$end_macro
+void main() {
+    int64 value = $TwiceValue(next());
+    println("{} {}", value, count);
+    count = 0;
+    int64 expression = $TwiceExpr(next());
+    println("{} {}", expression, count);
+}
+```
+
+```text
+2 1
+3 2
+```
+
+Category mismatches are rejected before expansion. Value and expr parameters cannot supply declaration names. Annotated variadic parameters, pattern/item parameters and result categories are not supported yet; declaration macros are still separate pending work.
+
 ## Macro type parameters
 
 Angle brackets are reserved for type parameters:
@@ -212,7 +252,7 @@ void main() {
 }
 ```
 
-`T:value` uses only that argument's static type. A parameter without a source uses only the expected result type. Explicit types take priority. Inference does not evaluate arguments, insert conversions or switch sources; runtime expression arguments are still evaluated once each after expansion. `let x = $RESULT(42)` fails because no expected type is available. Macro value parameters, specialization, partial specialization and arbitrary compile-time function execution are outside this interface.
+`T:value` uses only that argument's static type. A parameter without a source uses only the expected result type. Explicit types take priority. Inference does not evaluate arguments, insert conversions or switch sources; ordinary value arguments still evaluate once each after expansion, while explicit expr fragments follow their placements. `let x = $RESULT(42)` fails because no expected type is available. Macro value parameters, specialization, partial specialization and arbitrary compile-time function execution are outside this interface.
 
 `#res` explicitly selects the expected result type at the call site and can be combined with an argument source:
 
