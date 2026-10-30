@@ -4,11 +4,15 @@
 **English** · [简体中文](../21-与C互操作.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-C ABI exchanges data under a fixed external contract. Language values, borrows, contiguous buffers and host pointers have distinct boundaries. Establish prototypes and ownership before declaring calls.
+C libraries provide databases, system services and mature algorithms. Crossing the boundary requires agreement on widths, layout, pointers, results and resource responsibility. Finding a symbol does not establish that a call is correct.
+
+Build the interface through prototypes, marshalling, resource/error handling and synchronous callbacks. A declaration fragment still needs a real compatible library to run, and deployed applications retain their actual library dependencies.
 
 ## 21.1 Declare the actual host prototype
 
-Use #abi to specify calling convention, library and symbol. Widths, signedness, struct layout and return rules must match the library. int64 is not a universal substitute for pointers and integers on every platform.
+Begin with the library's real C prototype rather than guessing a declaration that compiles. Identify its name, result and parameters, then verify widths, pointer directions and structure layouts. Symbol existence is only the first step.
+
+The ABI directive connects the declaration to a convention, library and exported symbol. Int64 is not a universal substitute for platform pointers or integers, and a declaration cannot repair an incompatible native implementation.
 
 See the [C ABI buffer example](../../examples/abi_buffers/demo.chl), which requires building its native.c library.
 
@@ -18,6 +22,13 @@ Declare the actual C prototype: an int32_t return is different from void even wh
 #abi("C", "./native.dll", "bump")
 void bump(int32 mut& value);
 ```
+
+### Code walkthrough
+
+The ABI directive associates the following prototype with C symbol bump in the specified dynamic library. Its strings identify convention, library path and symbol. The trailing semicolon declares a prototype without a ChaLi body. The actual native implementation must match the signature and platform ABI.
+
+Mut& expresses possible writes to the supplied integer source, while void supplies no ordinary result. This fragment requires a real native.dll, compatible exports and calling code before it can run. Renaming a library suffix does not complete a port, and ChaLi logical addresses cannot simply be passed as C pointers.
+
 
 Library paths are relative to the source declaring the function, and local names may differ from exported symbol names. The linked project includes complete struct, array and optional-reference examples.
 
@@ -34,6 +45,12 @@ Check status codes and close handles on every return path. Copy borrowed host bu
 ## 21.4 Function values and synchronous callbacks
 
 Use the supported host context and function-value protocol for synchronous callbacks. Validate arguments, returns, captures, reentry and failure propagation. A captured function value is not a machine function pointer. Deployment also needs the external libraries and their licenses.
+
+### Summary
+
+Review agreement of prototypes, data transfer, ownership and failure reporting. Distinguish input from output pointers, object references from contiguous arrays, and borrowed buffers from owned copies.
+
+Environment-bearing functions require supported callback protocols. Pointer casts cannot remove environment or failure-propagation obligations. Contain low-level complexity behind small, checkable interfaces for business code.
 
 ## 21.5 Exercises
 

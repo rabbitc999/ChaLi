@@ -4,11 +4,15 @@
 **English** · [简体中文](../04-函数.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Functions separate score calculations so their results and parameter behavior can be checked independently. This chapter uses ordinary numeric parameters; Chapters 7 and 8 introduce references and resources.
+A function packages repeated score calculations with parameters for varying inputs and a return value for the result. This supports reuse and isolated checking without duplicating implementation at every call site.
+
+Start with integer value parameters, then examine blocks and control expressions that produce return values. Understanding an ordinary call provides the baseline for later reference parameters, ownership transfer and function values.
 
 ## 4.1 Parameters and return types
 
-A declaration specifies a return type, name and parameter list. Arguments follow parameter order and the result can initialize another value. For copyable values, mutation of a value parameter does not write back to the caller binding.
+Treat adding a bonus as a separate task. The caller supplies the original score and bonus; the function returns the calculation. Its signature records two parameters and a result type, while the body provides the steps.
+
+These integer parameters are passed by value. The score inside the call is a different binding from main's score, and result retains the returned value. Printing both makes that relationship observable.
 
 <!-- verify-book -->
 ```chali
@@ -29,6 +33,13 @@ void main()
 ```text
 70 75
 ```
+
+### Code walkthrough
+
+Main starts with score equal to 70. In addBonus, the arguments initialize the local value parameters score and bonus. Updating that parameter produces 75, and return supplies the value used to initialize result.
+
+Execution resumes at main's println. The caller's score is still 70 while result is 75, explaining the two different numbers. Changing the caller requires an explicit mutable-reference interface; giving a parameter the same name as a caller variable does not establish shared storage.
+
 
 ## 4.2 Overloads, defaults and variadics
 
@@ -88,9 +99,22 @@ void main()
 3 6 7 9
 ```
 
+### Code walkthrough
+
+The four functions use a block, if, match and loop as value-producing expressions, then return their results. Yield supplies a value to the current expression structure; function return acts at a different level. FromBlock yields the local integer 3.
+
+`choose(false)` selects else and produces 6. `fromMatch(0)` selects the zero arm and produces 7. FromLoop yields 9 on its first iteration, ending that loop expression. Main therefore prints 3, 6, 7 and 9. Every produced value must still satisfy the declared int64 return type; control expressions do not bypass type checking.
+
+
 ## 4.4 Make the call contract explicit
 
 Distinguish readonly inputs, writable targets and fallible computations using value/reference parameters and Option/Result returns. An executable main returns void, either with no parameters or a List<String> argument list. Native library entry points are covered in Chapters 21 and 24.
+
+### Summary
+
+For each call identify arguments, parameters, local changes and the return point. A change inside the function does not establish caller mutation; inspect whether the interface passes a value or a borrow and whether writes are permitted.
+
+When a return expression contains if, match or a loop, first determine that expression's result and then the function return. Chapter 5 follows these control structures and their result receivers in detail.
 
 ## 4.5 Exercises
 

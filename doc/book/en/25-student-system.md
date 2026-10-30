@@ -4,11 +4,15 @@
 **English** · [简体中文](../25-学生信息管理系统.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Combine types, errors, modules, JSON and database access in a school application. This chapter follows the complete repository project rather than an interface mockup. Its seven areas are login, permissions, students, classes, grades, subjects and teachers, with administrator, teacher and student roles.
+Bring types, borrows, errors and modules into one request: authenticate a user, determine access scope, read or change school data and display the outcome. Correct behavior also requires valid relations, explainable failures, successful startup and enforced authorization.
+
+This chapter follows the repository's real student system: login, permissions, students, classes, grades, subjects and teachers. Administrator, teacher and student roles connect configuration, authentication, data relations, UI and delivery. Screenshots and historical acceptance describe their actual environment rather than universal platform validation.
 
 ## 25.1 Start with actions and data boundaries
 
-Administrators maintain accounts and reference data and assign teachers to classes and subjects. Teachers read students in their teaching scope and maintain corresponding grades. Students read only their own profiles and grades.
+Start with one observable action: a teacher signs in and corrects a grade for a class they teach. The application must identify the account, class/subject assignment, student relation and valid score. The page initiates the action while the backend checks those relationships.
+
+Administrators manage accounts, reference data and assignments; teachers work within assigned scope; students read their own records. Establish these rules before arranging pages and routes instead of retrofitting authorization after building buttons.
 
 | Area | Main actions | Boundary |
 | --- | --- | --- |
@@ -46,11 +50,25 @@ Copy config.example.json to an untracked local configuration and provide a datab
 }
 ```
 
+### Code walkthrough
+
+Host and port identify the database server, serving a different purpose from the web listener's port 8787. User and password authenticate the application's MySQL connection; database selects its schema. These are not credentials for browser login to the student system.
+
+The password is placeholder text for a local test configuration, not a secret to retain in the book or Git. JSON quotes delimit keys and string values, while port is numeric. Successful parsing only validates readable configuration; schema existence and account privileges still require a real connection.
+
+
 Run from the repository root. The three application arguments are the port, web directory and database configuration:
 
 ```sh
 chali run example/students-server/src/main.chl -- 8787 example/students-server/web example/students-server/config.local.json
 ```
+
+### Code walkthrough
+
+Chali run compiles and executes the project entry. The double dash separates compiler options from application arguments. The following three values specify the web port, static-page directory and MySQL configuration file in that order. Reordering them changes their interpretation.
+
+These paths assume the documented repository-root working directory. Copying the command after changing into src would alter resolution. Observe database connection and initialization before opening the browser. Compilation success alone does not establish listening, readable assets or working authentication. The database's 3306 port is not the web entry.
+
 
 Open http://127.0.0.1:8787. An empty database gets school_-prefixed tables and a randomly generated admin password printed once to the console. Existing accounts are not reset. No demonstration records are inserted, and an existing students table is neither migrated nor deleted.
 
@@ -118,6 +136,12 @@ A native export still needs the web directory, database configuration and MySQL 
 Acceptance uses an isolated temporary database for valid CRUD, duplicate and foreign-key rejection, role isolation, unauthorized teacher writes, session revocation and browser interactions. It closes the service and drops only that test database afterward. The entry points are [students_server.py](../../../tests/students_server.py) and [students_server_ui.py](../../../tests/students_server_ui.py).
 
 Screenshots come from the real Windows x64 service, an isolated MySQL database and Edge. Names, classes and scores are acceptance data, and the shown roles and counts reflect actual access results.
+
+### Summary
+
+Follow a teacher's grade correction end to end: the browser submits a token and data, the server validates session/account state, checks fields and teaching scope, writes the database and returns an outcome for the page. Testing only buttons or only writes does not cover that chain.
+
+Structures organize values, enums and Result express states, modules separate responsibilities, C ABI connects system capabilities and AOT defines delivery. Preserve these boundaries and add positive and negative acceptance cases when extending the application rather than generalizing local results to arbitrary deployment.
 
 ## 25.10 Exercises
 

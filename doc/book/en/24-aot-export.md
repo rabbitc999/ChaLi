@@ -4,11 +4,15 @@
 **English** · [简体中文](../24-AOT导出.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-AOT compiles a checked program into target machine code ahead of execution. Verify compilation tools, target link assets and application dependencies separately instead of checking only that a file exists.
+Running a development example and delivering a deployable application require different evidence. AOT generates target machine code, while target libraries, loaders, dynamic dependencies and resources still need to match. File creation alone is insufficient acceptance.
+
+Begin with run/aot defaults, follow the frontend and backend representations, then distinguish toolchain and application dependencies. Cross compilation, native debugging and staged deployment complete the workflow. State host, target and completed steps for each configuration.
 
 ## 24.1 Run and export settings
 
-Run defaults to checked AOT for development; aot defaults to unchecked and LLVM O3. Unchecked defaults mainly affect runtime array and pointer checks and do not bypass static ownership or borrowing.
+Distinguish immediate development execution from exporting a native artifact for a particular environment. Run combines compilation and execution with checked AOT defaults. Aot exports with unchecked and LLVM O3 defaults.
+
+The relevant unchecked defaults mainly affect runtime array and pointer checking; static types, ownership and borrowing remain. Include configuration when comparing executions rather than checking source identity alone.
 
 Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options. The emit and .svmb paths have been removed.
 
@@ -43,9 +47,23 @@ runtime_dir = "build/cross-sdk/linux-arm64/lib"
 output = "executable"
 ```
 
+### Code walkthrough
+
+The [aot] table groups export settings. Target selects ARM64 Linux GNU, and generic avoids tuning for a particular CPU. Sysroot identifies the target-system root, while runtime_dir identifies its runtime link assets; host Windows libraries cannot substitute for target libraries.
+
+Output=executable records a desired artifact but does not download an SDK or supply missing libraries. Paths are relative to chali.toml, making that file's location part of reproducibility. An explicit object-output command overrides the corresponding setting, so inspect both configuration intent and actual invocation.
+
+
 ```sh
 chali aot app.chl --target linux-arm64 --emit-obj --out build/arm64/app
 ```
+
+### Code walkthrough
+
+Aot reads app.chl, --target selects linux-arm64 and --out chooses the output location. Crucially, --emit-obj stops after object generation, before linking target runtime and startup assets into an executable.
+
+This invocation can validate target code generation, but its ARM64 object cannot simply run on Windows and does not prove device execution. Follow it with matching target linking and target-system startup and business checks. Keep outputs separate from other architectures to avoid mixing objects.
+
 
 Paths are relative to chali.toml. Explicit command-line options override matching settings. The --emit-obj example generates an object without target linking.
 
@@ -64,6 +82,12 @@ Native debugging uses DWARF information and GDB/MI. Source mappings help explain
 Make acceptance reproducible: prepare dependencies on the target, enter the documented working directory, start the release artifact, perform a read, then an authorized write and verify its result. Database applications should also verify connection-failure and insufficient-permission diagnostics. Record host, target, compiler variant and completed steps. Generating a Linux object on Windows establishes object generation, not successful Linux deployment.
 
 The shared runtime core requires C++17 and operating-system services. It targets desktop and supported embedded Linux hosts, without promising bare-metal support. A target triple does not replace system libraries, startup assets or real-device validation.
+
+### Summary
+
+Use run to observe checked native execution, then validate the actual aot release configuration. Compiler LLVM components, application library dependencies and target startup are separate questions.
+
+Retain commands, source/binary identities, target conditions and business outcomes. Report object generation, linking and execution with their respective evidence. Chapter 25 applies these requirements to a complete web/database application.
 
 ## 24.5 Exercises
 

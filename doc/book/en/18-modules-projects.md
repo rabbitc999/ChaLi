@@ -4,11 +4,15 @@
 **English** · [简体中文](../18-模块与工程.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-A project organizes entry points, modules, resources and build configuration. Modules establish declaration ownership and visibility; configuration controls source lookup and application generation.
+Larger programs need explicit locations for entries, modules, configuration and runtime assets. Modules govern ownership and lookup, project configuration controls compilation, and working directories affect application file access. These responsibilities interact without being identical.
+
+Begin with directories and qualified names, then reproducible boundaries and the relationship between embedded core-library assets and user projects. A project should remain explainable outside its original development directory.
 
 ## 18.1 Choose the entry point and directories
 
-Place the entry in src/main.chl, separate business modules by responsibility, and keep runtime assets such as web pages in a separate directory. Relative file access depends on the working directory; import search paths do not locate runtime assets.
+Choose an explicit entry, then organize cooperating code by responsibility. Start from src/main.chl and separate HTTP, business and storage work rather than placing every responsibility in every file.
+
+Pages and configuration have runtime paths. Successful import establishes source availability, while relative application file access also depends on startup location. Record both during directory design to make deployment predictable.
 
 ## 18.2 Module declarations and qualified names
 
@@ -31,6 +35,13 @@ void main()
 9
 ```
 
+### Code walkthrough
+
+Square takes and returns int64, computing value*value. Passing three produces nine. Inline is a compilation-related annotation rather than a change to argument or return semantics; the marker alone does not prove actual machine-code inlining.
+
+This complete runnable example contains no module or import. It illustrates a function that can belong to a module rather than demonstrating multi-file lookup or visibility. Splitting a real project still requires checking ownership, qualification and source paths. Arithmetic behavior and module organization are separate concerns.
+
+
 ## 18.3 Project configuration and commands
 
 chali.toml records the entry and project options. Inspect configuration and chali help when working with an existing project; an old interpret setting does not establish an interpreter execution mode. Current run uses checked AOT and aot exports native artifacts. Chapter 24 covers target and linker configuration.
@@ -50,6 +61,12 @@ The [core-stage acceptance record](../../../tools/history/20261030/chali-1.0.11-
 ## 18.4 Reproducible project boundaries
 
 Document the working directory, external libraries, data files and target platform. Separate checking, example execution and packaging. Maintain generated files through their sources so later regeneration preserves changes.
+
+### Summary
+
+Record source inputs, compiler-owned assets and runtime application files separately. Successful import does not validate a web path, and restored core library data does not mean optional modules and user generic instances are already machine code.
+
+Document the entry, configuration location, working directory, target and external libraries. Macro and reflection mechanisms retain these name and type ownership boundaries even when they generate code.
 
 ## 18.5 Exercises
 

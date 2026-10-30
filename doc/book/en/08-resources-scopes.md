@@ -4,11 +4,15 @@
 **English** · [简体中文](../08-资源与作用域.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Files, buffers and other resources need an owner and a cleanup point. Scope exit, early return and transfer affect cleanup paths. Observe the order before distinguishing automatic owning values from manually allocated storage.
+Files, connections and buffers carry cleanup obligations as well as data. Acquisition must be followed by a clear account of ownership, transfer and cleanup on every exit path.
+
+Printed exit actions first distinguish registration from execution. A Closeable example then follows ownership through moves. Only after automatic cleanup is clear does the chapter introduce manual allocation with its separate protocol.
 
 ## 8.1 Actions at scope exit
 
-Defer registers an action for leaving the current scope; scope(exit) registers a cleanup block. Exit actions execute in reverse registration order, including paths that leave scopes early.
+Before opening a real file, use output to observe doing something when a block ends. Defer registers an exit action and scope(exit) can register a block of code. Execution continues after registration; actions run when that scope is actually left.
+
+Multiple actions run in reverse registration order, which supports unwinding layered resource acquisition. Early returns and loop exits also cross cleanup boundaries, so inspect more than just natural fall-through.
 
 <!-- verify-book -->
 ```chali
@@ -30,6 +34,13 @@ body
 second
 first
 ```
+
+### Code walkthrough
+
+Entering the inner block registers first with defer and then second with scope(exit). Registration does not print either message immediately. The ordinary statement executes first, producing body.
+
+Leaving the block runs exit actions in reverse registration order: second, then first. Main's outer braces describe a different scope; moving registrations there would change their timing. To trace cleanup, list the actions registered in each block and reverse that list when following its exit path.
+
 
 ## 8.2 Drop and field cleanup
 
@@ -78,11 +89,24 @@ third=2
 close 2
 ```
 
+### Code walkthrough
+
+Handle implements Closeable, and close prints its id to expose cleanup timing. After first receives id one, `consume(move first)` transfers ownership to the function parameter. Consume prints its message, then its owner closes resource one on return. The caller can no longer use first.
+
+Resource two moves from second to third without creating another independently owned copy. After printing third's id, main closes resource two when its scope ends. The output therefore follows consume one, close one, observe two, close two. Printing only demonstrates lifetime behavior; a real handle's close method must release its external resource.
+
+
 ## 8.4 Manual allocation boundaries
 
 New T creates manually allocated storage, optionally with constructor arguments. Its release protocol differs from ordinary automatic local values. Do not assume raw storage is an automatic resource wrapper.
 
 Closing, moving and release affect borrows. The compiler can merge known cleanup paths; repeated release is not a test of arbitrary pointer safety. Chapter 23 covers raw storage and unsafe operations.
+
+### Summary
+
+Track registered exit actions separately from the current owner of each resource. A move changes ownership; leaving scope executes exit actions and owning-value cleanup. References do not assume ownership of their sources.
+
+An absence of crashes does not prove correct closure. Verify order, ownership and outcomes on normal and early exits. Chapter 23 extends this reasoning to per-slot initialization and cleanup in raw storage.
 
 ## 8.5 Exercises
 
