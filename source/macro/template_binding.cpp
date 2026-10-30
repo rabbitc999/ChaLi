@@ -35,6 +35,7 @@ bool TemplateBinding::bind(int definition, ScopeId definitionScope, BoundTemplat
     error.clear();
     parameters_.clear();
     typeDeclarations_.clear();
+    memberDeclarations_.clear();
     patternParameters_.clear();
     inputs_ = inputs;
     result_ = &result;
@@ -148,12 +149,16 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     if (node.kind == MNode::MacroTemplate && node.kids.size() == 2)
     {
         std::map<Memory::String, int> declarations;
-        for (const int child : nodes_[node.kids[0]].kids)
+        const auto children = nodes_[node.kids[0]].kids;
+        for (const int child : children)
         {
             auto &entry = nodes_[child];
-            if (entry.kind != MNode::FuncDef && entry.kind != MNode::StructDecl && entry.kind != MNode::EnumDecl && entry.kind != MNode::InterfaceDecl) continue;
+            const bool associated = entry.kind == MNode::AssociatedDecl || entry.kind == MNode::AssociatedDef;
+            const bool member = associated || entry.kind == MNode::Field || entry.kind == MNode::MethodDef;
+            if (!member && entry.kind != MNode::FuncDef && entry.kind != MNode::StructDecl && entry.kind != MNode::EnumDecl && entry.kind != MNode::InterfaceDecl) continue;
+            if (entry.bindingIdentity) continue;
             const auto previous = declarations.find(entry.s);
-            if (previous != declarations.end() && entry.kind == MNode::FuncDef && nodes_[previous->second].kind == MNode::FuncDef)
+            if (previous != declarations.end() && (entry.kind == MNode::FuncDef || entry.kind == MNode::MethodDef) && nodes_[previous->second].kind == entry.kind)
             {
                 entry.bindingIdentity = nodes_[previous->second].bindingIdentity;
                 entry.nameParameter = nodes_[previous->second].nameParameter;
@@ -163,7 +168,9 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
                 declare(child, scope);
                 declarations.emplace(entry.s, child);
             }
-            if (entry.kind != MNode::FuncDef) typeDeclarations_.insert(entry.bindingIdentity);
+            if (member) memberDeclarations_.insert(entry.bindingIdentity);
+            else if (entry.kind != MNode::FuncDef) typeDeclarations_.insert(entry.bindingIdentity);
+            if (associated) typeDeclarations_.insert(entry.bindingIdentity);
         }
     }
 
@@ -329,6 +336,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
         const auto &name = node.kind == MNode::EnumCtor || node.kind == MNode::TypeQualifiedRef ? node.s2 : node.s;
         const auto identity = resolver_.resolve(std::string_view(name.data(), name.size()), scope, node.syntaxContext);
         if (parameters_.count(identity)) node.nameParameter = identity;
+        else if (memberDeclarations_.count(identity)) node.bindingIdentity = identity;
     }
     if (node.kind == MNode::Block)
     {

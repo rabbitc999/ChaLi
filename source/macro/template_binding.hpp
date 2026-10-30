@@ -80,6 +80,7 @@ private:
     HygieneResolver &resolver_;
     std::set<BindingId> parameters_;
     std::set<BindingId> typeDeclarations_;
+    std::set<BindingId> memberDeclarations_;
     std::set<BindingId> patternParameters_;  ///< 当前模板内只允许插入模式位置的形参身份。
     ScopeId parameterScope_ = 0;
     const std::map<std::string, int> *inputs_ = nullptr;

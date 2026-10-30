@@ -268,7 +268,7 @@ bool MaterializeMacroFragments(int id, Memory::Set<int> &seen, std::size_t depth
     if (depth >= 256 || seen.size() > 1000000) return Fail("宏原始片段超过深度或规模预算"), false;
     auto &node = g_nodes[id];
     MacroFragmentEnvironment environment = outer ? *outer : MacroFragmentEnvironment{};
-    if (node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl)
+    if (node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl)
     {
         auto instance = chali_generic::session.made.find(node.s);
         if (instance == chali_generic::session.made.end()) instance = chali_generic::session.made.find(BareTypeName(node.s));

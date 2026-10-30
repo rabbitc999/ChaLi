@@ -52,7 +52,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;
     }
-    if (!node.s2.empty() && node.s2 != "expr" && node.s2 != "stmt" && node.s2 != "item")
+    if (!node.s2.empty() && node.s2 != "expr" && node.s2 != "stmt" && node.s2 != "item" && node.s2 != "member")
     {
         error = "不支持的宏结果类别：" + std::string(node.s2.data(), node.s2.size());
         return false;
@@ -107,7 +107,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
                     error = "引用参数只能标注 value";
                     return false;
                 }
-                if (node.s2 == "item" && (entry.modes.back() || category.empty() || category == "value"))
+                if ((node.s2 == "item" || node.s2 == "member") && (entry.modes.back() || category.empty() || category == "value"))
                 {
                     nodes_.resize(start);
                     error = "声明宏的形参必须显式标注语法类别，不能在模块作用域求值或借用运行期实参";
@@ -232,7 +232,7 @@ int Registry::instantiate(int call, std::string &error,
     };
     const bool compileTime = needsPreparation(nodes_[entry.declaration].kids[1]);
     if ((entry.generic || compileTime) && !resolveType) return -2;
-    if (nodes_[entry.declaration].s2 == "item")
+    if (nodes_[entry.declaration].s2 == "item" || nodes_[entry.declaration].s2 == "member")
     {
         std::string chain = name;
         int frame = node.macroExpansion;

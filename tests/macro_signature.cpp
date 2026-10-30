@@ -8,7 +8,7 @@ int main()
 {
     chali_macro::Signature signature;
     Memory::String error;
-    for (const auto *category : { "expr", "stmt", "item" })
+    for (const auto *category : { "expr", "stmt", "item", "member" })
     {
         const Memory::String source = Memory::String("$macro Make<T>(name:ident) -> ") + category;
         if (!chali_macro::readSignature(source, signature, error) || signature.result != category || signature.name != "Make") return 1;

@@ -3226,6 +3226,7 @@ namespace
 #include "semantics/derive.cpp"
 #include "semantics/macro_fragments.cpp"
 #include "semantics/ast_generic_closures.cpp"
+bool ExpandAstMacroMembers(int owner);
 #include "semantics/macro_metadata.cpp"
 #include "semantics/macro_diagnostics.cpp"
 #include "semantics/macro_controls.cpp"

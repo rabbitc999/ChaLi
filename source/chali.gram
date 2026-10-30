@@ -173,7 +173,8 @@ iface_member_decl := STATIC type name_token LPAREN param_list RPAREN SEMI
   | ptr_type name_token LPAREN param_list RPAREN block
     { $$ = M_IfaceMethod($1, $2, $4, $6); }
   | type name_token SEMI { $$ = M_InterfaceFieldRejected($2); }
-  | ptr_type name_token SEMI { $$ = M_InterfaceFieldRejected($2); } ;
+  | ptr_type name_token SEMI { $$ = M_InterfaceFieldRejected($2); }
+  | macro_call SEMI { $$ = $1; } ;
 
 /* struct X : A, B { … } 里继承的那串接口名 */
 iface_list := name_token                     { $$ = M_List1($1); }
@@ -295,7 +296,8 @@ member_decl := LET name_token ASSIGN expr SEMI { $$ = M_ClosureField($2, $4); }
         | STATIC array_type name_token LPAREN param_list RPAREN block
             { $$ = M_StaticMethod($2, $3, $5, $7); }
         | name_token LPAREN param_list RPAREN block
-            { $$ = M_Constructor($1, $3, $5); } ;
+            { $$ = M_Constructor($1, $3, $5); }
+        | macro_call SEMI { $$ = $1; } ;
 
 /* 重载声明里的运算符名 */
 OPNAME := PLUS    { $$ = M_Op(0); }  | MINUS { $$ = M_Op(1); }
@@ -855,7 +857,28 @@ macro_definition := MACRO_DEFINE name_token macro_generics macro_parameters MACR
     | MACRO_DEFINE name_token macro_generics macro_parameters ARROW MACRO_ITEM MACRO_BODY top_list MACRO_END
     { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -1); }
     | MACRO_REPLACE name_token macro_generics macro_parameters ARROW MACRO_ITEM MACRO_BODY top_list MACRO_END
-    { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -1); } ;
+    { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -1); }
+    | MACRO_DEFINE name_token macro_generics macro_parameters ARROW MACRO_MEMBER MACRO_BODY macro_member_list MACRO_END
+    { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -2); }
+    | MACRO_REPLACE name_token macro_generics macro_parameters ARROW MACRO_MEMBER MACRO_BODY macro_member_list MACRO_END
+    { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -2); } ;
+macro_member_list := %empty { $$ = M_List(); }
+    | macro_member_list member { M_ListAdd($1, $2); $$ = $1; }
+    | macro_member_list TYPE_KW name_token SEMI
+    { M_ListAdd($1, M_AssociatedDecl($3)); $$ = $1; }
+    | macro_member_list type name_token LPAREN param_list RPAREN SEMI
+    { M_ListAdd($1, M_IfaceMethod($2, $3, $5, -1)); $$ = $1; }
+    | macro_member_list STATIC type name_token LPAREN param_list RPAREN SEMI
+    { M_ListAdd($1, M_StaticIfaceMethod($3, $4, $6)); $$ = $1; }
+    | macro_member_list MACRO_FOR name_token IN macro_call MACRO_BODY macro_member_template MACRO_END_FOR
+    { M_ListAdd($1, M_MacroFieldFor($3, $5, $7)); $$ = $1; }
+    | macro_member_list MACRO_FOR name_token IN name_token MACRO_BODY macro_member_template MACRO_END_FOR
+    { M_ListAdd($1, M_MacroFor($3, $5, $7)); $$ = $1; }
+    | macro_member_list MACRO_IF expr MACRO_BODY macro_member_template macro_member_else MACRO_END_IF
+    { M_ListAdd($1, M_MacroCompileIf($3, $5, $6)); $$ = $1; } ;
+macro_member_template := macro_member_list { $$ = M_MacroTemplate($1, -1); } ;
+macro_member_else := %empty { $$ = -1; }
+    | MACRO_ELSE MACRO_BODY macro_member_template { $$ = $3; } ;
 macro_generics := %empty { $$ = M_List(); }
     | LT macro_generic_items GT { $$ = $2; } ;
 macro_generic_items := macro_generic { $$ = M_List1($1); }

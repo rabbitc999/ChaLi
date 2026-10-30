@@ -50,6 +50,12 @@ int main()
     Memory::String bodyArrow = "$replace Member(x) x->item\n";
     if (!chali_macro::markReplacementBoundaries(bodyArrow, error)) return 22;
     if (bodyArrow.find("x->item") == Memory::String::npos) return 23;
+    Memory::String memberSource = "$macro Make(name:ident) -> member\nint64 name(){return 42;}\n$end_macro\n";
+    chali_macro::markHeaderBoundaries(memberSource);
+    if (memberSource.find("-> @!macromember @!macrobody") == Memory::String::npos) return 24;
+    Memory::String inlineMember = "$replace Make(name:ident) -> member int64 name(){return 42;}\n";
+    if (!chali_macro::markReplacementBoundaries(inlineMember, error)) return 25;
+    if (inlineMember.find("-> @!macromember  @!macrobody int64") == Memory::String::npos) return 26;
     std::cout << "macro declaration boundaries passed\n";
     return 0;
 }

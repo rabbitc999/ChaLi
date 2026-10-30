@@ -389,14 +389,14 @@ int M_GenericClosureSyntax(int resultType, int generics, int params, int body, i
  * @param parameters 形参组。
  * @param body 模板节点。
  * @param generics 泛型参数。
- * @param category 结果类别名称池编号；负一表示声明结果。
+ * @param category 结果类别名称池编号；负一为模块声明，负二为类型成员。
  * @return 已标注的宏定义节点。
  */
 int M_MacroResultDefinition(int name, int parameters, int body, int generics, int category)
 {
     const int id = M_MacroDefinition(name, parameters, body, generics);
-    g_nodes[id].s2 = category < 0 ? Memory::String("item") : g_names[category];
-    if (category < 0)
+    g_nodes[id].s2 = category == -2 ? Memory::String("member") : category < 0 ? Memory::String("item") : g_names[category];
+    if (category == -1)
         for (const int child : g_nodes[g_nodes[body].kids[0]].kids)
         {
             const auto &declaration = g_nodes[child];

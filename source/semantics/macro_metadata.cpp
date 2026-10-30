@@ -55,6 +55,7 @@ std::shared_ptr<const chali_macro::MetadataFields> ReadMacroFields(const std::sh
     for (const int root : g_top)
         if (N(root).kind == MNode::StructDecl && N(root).s == type->name)
         {
+            if (!ExpandAstMacroMembers(root)) return nullptr;
             declaration = &N(root);
             break;
         }

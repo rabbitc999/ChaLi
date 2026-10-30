@@ -691,7 +691,7 @@ bool RegisterTop()
             const MNode &member = N(memberId);
             if (member.kind == MNode::AssociatedDecl) continue;
             if (member.kind == MNode::ParseBad) return Fail(member.s);
-            if (!CheckUserName(member.s)) return false;
+            if (!member.generatedDeclaration && !CheckUserName(member.s)) return false;
             MInterfaceMethod method;
             method.isStatic = member.type2 == 1;
             method.name = member.s;
@@ -789,7 +789,7 @@ bool RegisterTop()
                 return Fail("enum " + top.s + " 内只能在变体后声明方法");
             if (member.type2 == 2)
                 return Fail("enum " + top.s + " 不声明构造函数；请使用变体构造器");
-            if (!CheckUserName(member.s)) return false;
+            if (!member.generatedDeclaration && !CheckUserName(member.s)) return false;
             MMethod method;
             method.source = member.s;
             method.result = T(member.type);
@@ -855,7 +855,7 @@ bool RegisterTop()
                 if (member.kind == MNode::Field)
                 {
                     if (opcodeOwner && member.s == "opcode") return Fail("opcode 是只读内部句柄的保留字段名");
-                    if (!CheckUserName(member.s)) return false;
+                    if (!member.generatedDeclaration && !CheckUserName(member.s)) return false;
                     const Memory::String qualified = top.s + "::" + member.s;
                     if (member.type2 == 1)
                     {
@@ -882,7 +882,7 @@ bool RegisterTop()
                 {
                     if (opcodeOwner && (member.type2 == 2 || member.s == "drop" || member.s == "copy"))
                         return Fail("opcode 生命周期使用 new/drop/copy 绑定，附加方法不能替代生命周期入口");
-                    if (!CheckUserName(member.s)) return false;
+                    if (!member.generatedDeclaration && !CheckUserName(member.s)) return false;
                     MMethod method;
                     method.isStatic = member.type2 == 1;
                     method.isConstructor = member.type2 == 2;

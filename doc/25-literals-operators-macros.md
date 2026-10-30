@@ -489,3 +489,19 @@ chali run example/reflection/macro_fields.chl --no-reflection
 ```
 
 示例按定义顺序输出字段，只为 String、int64 和 bool 生成 JSON 编码，其他类型在编译期定位到具体字段。字符串按 JSON 规则转义引号、反斜杠和控制字节，UTF-8 普通字节保留；bool 显式编码为 true／false。64 字段上限是该示例通过断言施加的约束，不是语言的结构体限制。JSON 解析只用于主函数验证生成结果，编码过程不读取运行期字段表。专项见 [编译期诊断与字段工具测试](../tests/chali_macro_diagnostics.py)。
+
+## 类型成员宏
+
+`-> member` 宏在结构体、枚举的方法区或接口的成员位置调用，展开结果参与普通布局、方法、接口和借用检查。它可以生成字段、方法、关联类型及嵌套成员宏调用；接口仍禁止字段，普通类型的方法必须提供方法体。成员宏形参须显式标注语法类别，泛型实参须显式提供，不在类型体求值或借用运行期实参。
+
+```chali
+$macro GET(name:ident, field:ident) -> member
+int64 name(){return self.field;}
+$end_macro
+struct Cell {
+    int64 value;
+    $GET(read, value);
+}
+```
+
+`name:ident` 明确导出调用方可见的成员名；未由 ident 指定的辅助成员按展开身份隔离，其内部引用同步重命名。旧 item 宏生成类型的原有字段名称规则保持兼容。生成成员与已有成员发生同名字段或相同方法签名冲突时报告错误，合法的方法重载仍由普通检查器处理。成员调用可使用编译期字段循环与条件；读取本类型字段再生成本类型字段会形成依赖环并报错，按字段生成方法不改变布局。专项见 [成员宏测试](../tests/chali_macro_members.py)。

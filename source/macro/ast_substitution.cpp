@@ -79,7 +79,7 @@ void AstSubstitution::collectNames(int id, std::size_t depth)
             throw std::runtime_error("宏声明名称必须来自单个标识符实参");
         names_[node.bindingIdentity] = argument;
     }
-    if (!node.nameParameter && node.bindingIdentity && (node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl) && !names_.count(node.bindingIdentity))
+    if (!node.nameParameter && node.bindingIdentity && (node.kind == MNode::AssociatedDef || node.kind == MNode::AssociatedDecl || node.kind == MNode::Field || node.kind == MNode::MethodDef || node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl) && !names_.count(node.bindingIdentity))
     {
         MNode name;
         name.kind = MNode::Var;
@@ -197,13 +197,16 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
             nodes_[result].s = nodes_[value].s;
         nodes_[result].nameParameter = 0;
     }
-    else if (substitute && (original.nameParameter || original.kind == MNode::Var || original.kind == MNode::FuncDef || original.kind == MNode::StructDecl || original.kind == MNode::EnumDecl || original.kind == MNode::InterfaceDecl))
+    else if (substitute && (original.nameParameter || original.kind == MNode::AssociatedDef || original.kind == MNode::AssociatedDecl || original.kind == MNode::Var || original.kind == MNode::Field || original.kind == MNode::MethodDef || original.kind == MNode::Member || original.kind == MNode::Arrow || original.kind == MNode::TypeQualifiedRef || original.kind == MNode::EnumCtor || original.kind == MNode::FuncDef || original.kind == MNode::StructDecl || original.kind == MNode::EnumDecl || original.kind == MNode::InterfaceDecl))
     {
         const auto name = names_.find(original.bindingIdentity);
         if (name != names_.end())
         {
             const auto &argument = nodes_[name->second];
-            nodes_[result].s = argument.s;
+            if (original.kind == MNode::TypeQualifiedRef || original.kind == MNode::EnumCtor)
+                nodes_[result].s2 = argument.s;
+            else
+                nodes_[result].s = argument.s;
             nodes_[result].module = argument.module;
             if (!original.nameParameter && original.kind != MNode::Var) nodes_[result].generatedDeclaration = true;
             nodes_[result].syntaxContext = argument.syntaxContext;

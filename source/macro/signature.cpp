@@ -148,7 +148,7 @@ bool readSignature(const Memory::String &source, Signature &signature, Memory::S
         const auto begin = at;
         while (at < source.size() && chali_syntax::identPart(source[at])) ++at;
         signature.result = source.substr(begin, at - begin);
-        if (signature.result != "expr" && signature.result != "stmt" && signature.result != "item")
+        if (signature.result != "expr" && signature.result != "stmt" && signature.result != "item" && signature.result != "member")
         {
             error = "不支持的宏结果类别：" + signature.result;
             return false;

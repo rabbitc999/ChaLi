@@ -93,7 +93,7 @@ Memory::String NodeBindingKey(const MNode &node)
  */
 bool NodeUsesDefinitionLookup(const MNode &node)
 {
-    return node.syntaxContext != 0 && node.bindingIdentity == 0;
+    return node.syntaxContext != 0 && node.bindingIdentity == 0 && node.s2 != "__chali_macro_receiver";
 }
 
 /**
@@ -103,6 +103,7 @@ bool NodeUsesDefinitionLookup(const MNode &node)
  */
 MVar *FindNodeVar(const MNode &node)
 {
+    if (node.s2 == "__chali_macro_receiver") return Find("self");
     if (node.bindingIdentity)
         for (auto scope = g_scope.rbegin(); scope != g_scope.rend(); ++scope)
             for (auto &entry : *scope)

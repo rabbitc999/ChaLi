@@ -433,6 +433,7 @@ bool ExpandAstMacroStatements(int id, chali_macro::Registry &registry, std::size
         if (expanded < 0) return ReportAstMacroFailure(call, Memory::String(error.data(), error.size()));
         if (!NormalizeMacroPatterns(expanded)) return false;
         if (N(expanded).s2 == "item") return ReportAstMacroFailure(call, "声明宏只能在模块声明位置调用");
+        if (N(expanded).s2 == "member") return ReportAstMacroFailure(call, "成员宏只能在类型成员位置调用");
         RecordEditorMacro(call, expanded);
         const auto body = g_nodes[expanded];
         if (!ExpandAstMacroStatements(body.kids[0], registry, depth + 1, budget)) return false;
@@ -490,7 +491,7 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
         if (expanded == -2) return true;
         if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
         if (!NormalizeMacroPatterns(expanded)) return false;
-        if (N(expanded).s2 == "item" || N(expanded).s2 == "stmt") return ReportAstMacroFailure(id, "该宏结果不能用于表达式位置");
+        if (N(expanded).s2 == "item" || N(expanded).s2 == "member" || N(expanded).s2 == "stmt") return ReportAstMacroFailure(id, "该宏结果不能用于表达式位置");
         RecordEditorMacro(id, expanded);
         const int expression = AstMacroExpression(expanded);
         if (expression < 0)
@@ -555,6 +556,8 @@ bool ExpandAstMacros()
         if (!BindMacroCallerSyntax(id, callerBindings, 0)) return false;
     }
     if (!ExpandAstMacroDeclarations(registry)) return false;
+    for (const int id : g_top)
+        if (!ExpandAstMacroMembers(id)) return false;
     std::size_t budget = 1000000;
     for (const int id : g_top)
         if (!ExpandAstMacroNode(id, registry, 0, budget)) return false;
@@ -718,7 +721,7 @@ bool ExpandDeferredAstMacro(int id, const std::shared_ptr<MType> &expected, int 
     const int expanded = g_macroRegistry->instantiate(id, error, resolve, ApplyAstMacroTypes);
     if (expanded < 0) return ReportAstMacroFailure(id, Memory::String(error.data(), error.size()));
     if (!NormalizeMacroPatterns(expanded)) return false;
-    if (N(expanded).s2 == "item" || (!templateRoot && N(expanded).s2 == "stmt")) return ReportAstMacroFailure(id, "该宏结果不能用于当前位置");
+    if (N(expanded).s2 == "item" || N(expanded).s2 == "member" || (!templateRoot && N(expanded).s2 == "stmt")) return ReportAstMacroFailure(id, "该宏结果不能用于当前位置");
     RecordEditorMacro(id, expanded);
     if (!activate(expanded)) return false;
     if (templateRoot)
@@ -758,6 +761,11 @@ bool ExpandAdditionalAstMacros()
         if (!MaterializeMacroFragments(id, seen, 0)) return false;
         Memory::Map<Memory::String, std::uint32_t> bindings;
         if (!BindMacroCallerSyntax(id, bindings, 0)) return false;
+    }
+    for (const int id : g_top)
+        if (!ExpandAstMacroMembers(id)) return false;
+    for (const int id : g_top)
+    {
         if (!ExpandAstMacroNode(id, *g_macroRegistry, 0, budget)) return false;
     }
     return true;

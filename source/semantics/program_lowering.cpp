@@ -1040,7 +1040,11 @@ int NamedConstructorFactoryBody(const Memory::String &owner, const MMethod &meth
     const int type = M_AddType(NamedType(owner));
     const int arguments = M_List();
     for (const auto &param : method.params)
-        M_ListAdd(arguments, M_Var(M_Name(param.source.c_str())));
+    {
+        const int argument = M_Var(M_Name(param.source.c_str()));
+        g_nodes[argument].bindingIdentity = param.bindingIdentity;
+        M_ListAdd(arguments, argument);
+    }
     const auto local = AllocateName("__new_result");
     const int name = M_Name(local.c_str());
     /* 排除正在展开的这条工厂（`method.name` 是它的修饰名），免得工厂体递归调自己。 */

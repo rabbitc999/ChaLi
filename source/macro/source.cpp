@@ -59,14 +59,14 @@ static Memory::String directiveMask(const Memory::String &source, std::vector<st
 }
 
 /**
- * @brief 只在宏头将 item 结果标记为内部词法项，避免新增普通保留字。
+ * @brief 只在宏头将声明结果标记为内部词法项，避免新增普通保留字。
  * @param source 待归一化源码。
  * @return 无；只替换宏头中的结果标记。
  */
 static void markDeclarationResults(Memory::String &source)
 {
     const auto mask = directiveMask(source);
-    std::vector<std::size_t> positions;
+    std::vector<std::pair<std::size_t, std::size_t>> positions;
     for (std::size_t line = 0; line < mask.size();)
     {
         const auto end = mask.find('\n', line);
@@ -90,13 +90,14 @@ static void markDeclarationResults(Memory::String &source)
             if (mask.compare(arrow, 2, "->") == 0)
             {
                 auto result = mask.find_first_not_of(" \t", arrow + 2);
-                if (result < limit && mask.compare(result, 4, "item") == 0 && (result + 4 == limit || !(std::isalnum(static_cast<unsigned char>(mask[result + 4])) || mask[result + 4] == '_')))
-                    positions.push_back(result);
+                for (const auto length : {4u, 6u})
+                    if (result < limit && mask.compare(result, length, length == 4 ? "item" : "member") == 0 && (result + length == limit || !(std::isalnum(static_cast<unsigned char>(mask[result + length])) || mask[result + length] == '_')))
+                        positions.emplace_back(result, length);
             }
         }
         line = end == Memory::String::npos ? mask.size() : end + 1;
     }
-    for (auto position = positions.rbegin(); position != positions.rend(); ++position) source.replace(*position, 4, "@!macroitem");
+    for (auto position = positions.rbegin(); position != positions.rend(); ++position) source.replace(position->first, position->second, position->second == 4 ? "@!macroitem" : "@!macromember");
 }
 
 /**
@@ -173,6 +174,7 @@ bool markReplacementBoundaries(Memory::String &source, std::string &error)
             header += 2;
             spaces();
             if (mask.compare(header, 11, "@!macroitem") == 0) header += 11;
+            else if (mask.compare(header, 13, "@!macromember") == 0) header += 13;
             else while (header < end && (std::isalnum(static_cast<unsigned char>(mask[header])) || mask[header] == '_')) ++header;
             spaces();
         }

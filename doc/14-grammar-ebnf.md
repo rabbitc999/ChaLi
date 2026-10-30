@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 162 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 165 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -122,6 +122,7 @@ Box<int64 fn(int64)> box;
 | `MACRO_END` | `$end_macro` |
 | `MACRO_BODY` | `@!macrobody` |
 | `MACRO_ITEM` | `@!macroitem` |
+| `MACRO_MEMBER` | `@!macromember` |
 | `MACRO_MATCH` | `$match` |
 | `MACRO_ELSE` | `$else` |
 | `MACRO_END_MATCH` | `$end_match` |
@@ -409,7 +410,8 @@ iface_member_decl = "static", type, name_token, "(", param_list, ")", ";"
     | ptr_type, name_token, "(", param_list, ")", ";"
     | ptr_type, name_token, "(", param_list, ")", block
     | type, name_token, ";"
-    | ptr_type, name_token, ";" ;
+    | ptr_type, name_token, ";"
+    | macro_call, ";" ;
 
 iface_list = name_token
     | iface_list, ",", name_token ;
@@ -501,7 +503,8 @@ member_decl = "let", name_token, "=", expr, ";"
     | "static", type, name_token, "(", param_list, ")", block
     | "static", ptr_type, name_token, "(", param_list, ")", block
     | "static", array_type, name_token, "(", param_list, ")", block
-    | name_token, "(", param_list, ")", block ;
+    | name_token, "(", param_list, ")", block
+    | macro_call, ";" ;
 
 OPNAME = "+"
     | "-"
@@ -962,7 +965,23 @@ macro_definition = "$macro", name_token, macro_generics, macro_parameters, "@!ma
     | "$macro", name_token, macro_generics, macro_parameters, "->", name_token, "@!macrobody", macro_template, "$end_macro"
     | "$replace", name_token, macro_generics, macro_parameters, "->", name_token, "@!macrobody", macro_template, "$end_macro"
     | "$macro", name_token, macro_generics, macro_parameters, "->", "@!macroitem", "@!macrobody", top_list, "$end_macro"
-    | "$replace", name_token, macro_generics, macro_parameters, "->", "@!macroitem", "@!macrobody", top_list, "$end_macro" ;
+    | "$replace", name_token, macro_generics, macro_parameters, "->", "@!macroitem", "@!macrobody", top_list, "$end_macro"
+    | "$macro", name_token, macro_generics, macro_parameters, "->", "@!macromember", "@!macrobody", macro_member_list, "$end_macro"
+    | "$replace", name_token, macro_generics, macro_parameters, "->", "@!macromember", "@!macrobody", macro_member_list, "$end_macro" ;
+
+macro_member_list = ""
+    | macro_member_list, member
+    | macro_member_list, "type", name_token, ";"
+    | macro_member_list, type, name_token, "(", param_list, ")", ";"
+    | macro_member_list, "static", type, name_token, "(", param_list, ")", ";"
+    | macro_member_list, "$for", name_token, "in", macro_call, "@!macrobody", macro_member_template, "$end_for"
+    | macro_member_list, "$for", name_token, "in", name_token, "@!macrobody", macro_member_template, "$end_for"
+    | macro_member_list, "$if", expr, "@!macrobody", macro_member_template, macro_member_else, "$end_if" ;
+
+macro_member_template = macro_member_list ;
+
+macro_member_else = ""
+    | "$else", "@!macrobody", macro_member_template ;
 
 macro_generics = ""
     | "<", macro_generic_items, ">" ;
