@@ -302,6 +302,8 @@ fi
 
 # ---- 6. Python 门禁 ----
 if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
+    run_step "运行标准库二进制读写与损坏输入回归" "$PYTHON" tests/chali_standard_unit.py
+    run_step "运行内嵌标准库核心、模块导入与无缓存回归" "$PYTHON" tests/chali_precompiled.py --chali "$CHALI_BIN"
     for t in chali_tool chali_generator chali_incremental chali_package chali_zip chali_i18n chali_development chali_package_paths chali_platform_abi_paths chali_abi_values; do
         if [ "$t" = chali_zip ] || [ "$t" = chali_i18n ] || [ "$t" = chali_development ]; then
             run_step "python tests/$t.py" "$PYTHON" "tests/$t.py" --chali "$CHALI_BIN"

@@ -200,11 +200,30 @@ inline preprocess::Result embeddedUnit(const Memory::String &name, const Memory:
 }
 
 /**
- * @brief 标准库段与用户代码段的分界标记行。
+ * @brief 在标准库核心末尾插入独立分界，后续导入与用户代码不进入核心资产。
+ * @param output 已装载标准库核心的合并输入及来源映射。
+ */
+inline void markStandardCore(preprocess::Result &output)
+{
+    if (!output.text.empty() && output.text.back() != '\n') output.text += '\n';
+    output.text += "// chali-standard-core-boundary\n";
+    output.lineMap.push_back({ "<标准库核心分界>", 1u });
+}
+/**
+ * @brief 查找经过前端文本处理后保留的标准库核心分界。
+ * @param text 合并处理后的源码。
+ * @return 分界行起始位置，不存在时返回 npos。
+ */
+inline std::size_t findStandardCoreBoundary(const Memory::String &text)
+{
+    return text.find("// chali-standard-core-boundary\n");
+}
+
+/**
+ * @brief 导入依赖段与入口单元的分界标记行。
  *
- * `Loader::load` 在把**入口单元**追加进合并源码之前插入这一行：它前面的所有内容都来自
- * 标准库（内嵌的 `std::lang` 与本次 `import` 的 `std::xxx`），同一份标准库在同一支编译器
- * 下每次编译都逐字节相同，可以只解析一次（见 `chali_precompiled.hpp`）。
+ * `Loader::load` 在追加入口单元之前插入；它之前可能包含标准库和用户导入模块。
+ * 内嵌核心资产使用独立的 core 分界，不将这段依赖整体固化到编译器中。
  * 写成行注释：词法当空白处理，前处理与宏 / 插值 / 泛型各道文本 pass 都不改写它。
  */
 inline const char *standardBoundaryLine() { return "// chali-standard-boundary\n"; }
@@ -269,6 +288,7 @@ public:
         const std::filesystem::path absolute = std::filesystem::weakly_canonical(path, ec);
         const Memory::String base = (ec ? std::filesystem::path(path) : absolute).parent_path().string();
         if (!loadStandard(base, output, error)) return false;
+        markStandardCore(output);
         return load(root, base, Memory::String(), true, output, error);
     }
 
@@ -287,6 +307,7 @@ public:
             if (!preprocessor.runText(text, label, base, root)) return diagnostics(root, error);
         }
         if (!loadStandard(base, output, error)) return false;
+        markStandardCore(output);
         return load(root, base, Memory::String(), true, output, error);
     }
 

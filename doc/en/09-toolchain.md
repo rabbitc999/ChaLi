@@ -100,3 +100,11 @@ create type overloads for identical macro headers. A `$` prefix completes only m
 modules and `$module::name`. VS Code discards cancelled requests and responses for changed document versions.
 
 `source/ast` compiles types, node construction, quadruple generation and data export separately. `source/bignum` separates integer multiplication, division, number theory, bit operations, conversion and decimal roots. Public headers retain the interfaces; Make dependency files track actual includes. Embedded assets and exported compiler projects carry all implementation units. Each library also provides a CMake target for independent builds. See the [AST library](../../source/ast/README.md) and [big-number library](../../source/bignum/README.md) for file responsibilities.
+
+## Embedded standard-library binary
+
+The compiler carries a binary parse unit for the `std::lang` core. Normal compilation restores its nodes, type pool, identifier pool and top-level declarations from memory. It requires neither an external `.unit` file nor a `.chali/chali-stdlib-cache` directory. Optional standard modules and user modules still use the regular frontend; generic processing, macro expansion, semantic checks and borrow checks remain active.
+
+`make all` builds a stage compiler, generates the core binary with `tools/build_stdlib_units.py`, and relinks the final compiler. The package contains no user source, project paths or process pointers. It validates the format, core/compiler identity, lengths and integrity. Core source locations are canonicalized so unrelated user input lengths do not change the binary. A missing content profile uses in-memory source parsing; a damaged matching asset produces an error.
+
+`--no-stdlib-cache` and `CHALI_NO_STDLIB_CACHE=1` remain compatibility controls for source parsing. Neither path writes a standard-library cache. `--stdlib-cache-dir` has been removed, and `CHALI_STDLIB_CACHE_DIR` no longer chooses a loading directory. Existing project files are preserved. `--stats` distinguishes an embedded-core hit, source parsing and a disabled unit.

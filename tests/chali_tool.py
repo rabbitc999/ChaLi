@@ -33,11 +33,11 @@ def main():
             assert result.stdout == 'VM command OK\n' and not result.stderr, result
             assert prefix.with_suffix('.ll').is_file(), '显式 --out 应保留 LLVM 模块'
             assert not prefix.with_suffix('.quad').exists(), '正常运行应从 AST 直达 LLVM'
-        # 未给 --out 时中间产物落在隐藏的 .chali/ 下，且运行后只剩标准库缓存。
+        # 未给 --out 时中间产物落在隐藏的 .chali/ 下，运行后不保留标准库磁盘缓存。
         result = run('run', source, cwd=work)
         assert result.stdout == 'VM command OK\n', result
         leftovers = sorted(entry.name for entry in (work / '.chali').iterdir())
-        assert leftovers == ['chali-stdlib-cache'], leftovers
+        assert leftovers == [], leftovers
         assert not list(work.glob('chali_out*')), '缺省前缀不应落在工作目录'
         # 已删除的三种 emit 写法都拒绝执行和生成产物。
         for arguments in [('emit', source), ('--mode', 'emit', source), ('run', source, '--emit')]:

@@ -771,6 +771,24 @@ _MESSAGES = {
   ],
   "调用栈（内 → 外）：\n": [
     "Call stack (inner to outer):\n"
+  ],
+  "内嵌标准库二进制整包校验失败": [
+    "Embedded standard-library binary package integrity check failed"
+  ],
+  "内嵌标准库二进制包头损坏": [
+    "Embedded standard-library binary package header is damaged"
+  ],
+  "内嵌标准库二进制内容损坏或与编译器不兼容": [
+    "Embedded standard-library binary is damaged or incompatible with this compiler"
+  ],
+  "chali: --stdlib-cache-dir 已删除；标准库预编译资产由编译器内嵌。\n": [
+    "chali: --stdlib-cache-dir has been removed; precompiled standard-library assets are embedded in the compiler.\n"
+  ],
+  "chali: 无法生成标准库二进制预编译资产\n": [
+    "chali: cannot generate the standard-library binary asset\n"
+  ],
+  "  --no-stdlib-cache      关闭内嵌标准库预编译（每次完整解析，不写缓存）\n": [
+    "  --no-stdlib-cache      Disable the embedded standard-library unit (parse source without writing a cache)\n"
   ]
 }
 # CHALI_CATALOG_END

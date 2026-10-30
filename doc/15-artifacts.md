@@ -29,10 +29,9 @@ Windows 上该目录带隐藏属性，资源管理器默认不显示。
   chali_out.llvm.log     后端诊断
   chali_out.abi.cpp      `#abi` 桥接源码（用到外部符号时才生成）
   chali_out.h            导出头（带 `--export` 时生成，属交付物）
-  chali-stdlib-cache/    标准库预编译单元缓存，跨次复用
 ```
 
-**只有 `chali-stdlib-cache/` 是长期驻留的。** 其余中间文件在命令成功后删除：
+标准库核心二进制直接内嵌在编译器中，常规运行不创建标准库磁盘缓存。以下中间文件在命令成功后删除：
 
 - `run`：删掉 `.ll`、`.llvm.log`、`.abi.cpp`，连临时可执行文件一起删；
 - `aot`：删掉同一组中间文件，保留导出的 `app.exe`；带 `--export` 时保留 `.h`。

@@ -20,7 +20,7 @@
 
 编译过程中间产物（`.ll`、ABI 头、LLVM 编译日志）统一落在当前目录的隐藏目录 `.chali/` 下，Windows 上带隐藏属性：
 
-- 运行或导出完成后只保留标准库预编译缓存 `.chali/chali-stdlib-cache/`，其余删除；
+- 运行或导出完成后删除中间产物；标准库核心预编译二进制内嵌在编译器中，不创建标准库磁盘缓存；
 - `--keep-artifacts` 保留全部中间产物，用于对照与排错；
 - `--out 前缀` 显式给路径时按用户要求全部保留，不做清理；`--incremental` 与 `--emit-llvm` 同样保留；
 - `.chali/` 已由 `chali new` 生成的 `.gitignore` 排除，不进版本库。
@@ -28,7 +28,7 @@
 `aot` 的可执行文件默认与源文件同级，Linux 等平台没有可执行文件后缀。LLVM IR 按显式 `--out` 前缀保留；`emit` 模式已删除。
 
 ```powershell
-chali run app.chl                     # .chali/ 里只剩标准库缓存
+chali run app.chl                     # 运行后清理中间产物，不写标准库缓存
 chali aot app.chl                     # 产出 ./app.exe
 chali aot app.chl --out build/app     # 产出 build/app.exe 与 build/app.ll 等，全部保留
 chali aot app.chl --emit-llvm --out build/app                    # 从 AST 直接生成 build/app.ll

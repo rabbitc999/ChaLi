@@ -72,7 +72,7 @@ endif
 
 .PHONY: all lib demo run clean gen check samples reflection llvm llvm-static
 
-all: $(LIB) $(TARGET)
+all: $(LIB) $(TARGET) stdlib-embedded
 
 tmp:
 	python -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
@@ -132,3 +132,10 @@ include features.mk
 -include local.mk
 
 override CXXFLAGS += $(CHALI_TRIM_FLAGS)
+
+# 先链接阶段编译器，再由它生成核心单元，最后重链接内嵌了二进制资产的发行编译器。
+.PHONY: stdlib-embedded
+stdlib-embedded: $(TARGET)
+	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(TARGET))"
+	$(MAKE) $(TARGET)
+	$(PYTHON) tools/build_stdlib_units.py --sync-embedded-source "$(CHALI_EMBED_SOURCE)"

@@ -100,3 +100,5 @@ example/native-callbacks/demo.h
 
 # ChaLi 编译中间产物目录（Windows 隐藏）；任意层级都算，示例目录里跑一次也会生成。
 .chali/
+
+/source/chali_precompiled_data.inc

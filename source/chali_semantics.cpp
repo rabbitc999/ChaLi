@@ -3554,17 +3554,16 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 /* ============================================================
  * 标准库预编译单元：解析产物的落盘与装载
  *
- * 标准库段（`std::lang` 加本次 `import` 的 `std::xxx`）在同一支编译器下每次编译都逐字节
- * 相同，于是它的解析产物可以只算一次：节点竞技场、类型池、标识符池、顶层表，连同解析期
- * 的游标（`g_reductionLine` 等）一起落盘，下次直接装载成竞技场前缀，再解析用户源码。
+ * 标准库核心的节点、类型池、标识符池、顶层表及解析游标在构建阶段序列化，
+ * 运行编译器时由内嵌二进制恢复为竞技场前缀；用户导入和用户节点不进入该资产。
  *
- * 单元只在**同一支编译器写的字节**下可信：调用方（`chali_driver.cpp`）把编译器版本、
- * 构建戳、标准库段内容与预处理定义一起算进缓存键，这里只认文件头与结构完整性。
+ * 单元格式在此版本化；chali_precompiled 包装层验证核心内容、编译器版本身份和完整性。
+ * 文件与原始行的重复映射在写出时归一，避免用户全文长度进入二进制。
  * ============================================================ */
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 2;
+constexpr std::uint64_t kStandardUnitVersion = 3;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3644,20 +3643,21 @@ bool ReadUnitRef(std::istream &in, std::uint64_t &value)
     return chali_incremental::readNumber(in, value);
 }
 /**
- * @brief 写出一个语法节点。
+ * @brief 写出一个语法节点，将重复来源映射到同一文件行的首次出现位置。
  * @param out 输出流。
  * @param node 待写出的节点。
+ * @param canonical 当前来源映射的规范行号表，消除用户输入长度带来的附加映射偏移。
  */
-void WriteUnitNode(std::ostream &out, const MNode &node)
+void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<std::size_t> &canonical)
 {
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.kind));
-    chali_incremental::writeNumber(out, node.sourceLine);
+    chali_incremental::writeNumber(out, node.sourceLine < canonical.size() ? canonical[node.sourceLine] : node.sourceLine);
     chali_incremental::writeNumber(out, node.sourceColumn);
     chali_incremental::writeNumber(out, node.syntaxContext);
     chali_incremental::writeNumber(out, node.bindingIdentity);
     chali_incremental::writeNumber(out, node.nameParameter);
     chali_incremental::writeNumber(out, node.bindingContext);
-    chali_incremental::writeNumber(out, node.expansionLine);
+    chali_incremental::writeNumber(out, node.expansionLine < canonical.size() ? canonical[node.expansionLine] : node.expansionLine);
     chali_incremental::writeNumber(out, node.expansionColumn);
     chali_incremental::writeString(out, node.expansionModule);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(static_cast<std::int64_t>(node.macroExpansion)));
@@ -3697,6 +3697,7 @@ void WriteUnitNode(std::ostream &out, const MNode &node)
     if (node.exported) flags |= 1u << 9;
     if (node.unsafeRequired) flags |= 1u << 10;
     if (node.unsafeScope) flags |= 1u << 11;
+    if (node.formattedOutputBridge) flags |= 1u << 12;
     chali_incremental::writeNumber(out, flags);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.i));
     WriteUnitDouble(out, node.d);
@@ -3778,6 +3779,7 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     node.exported = (flags & (1u << 9)) != 0;
     node.unsafeRequired = (flags & (1u << 10)) != 0;
     node.unsafeScope = (flags & (1u << 11)) != 0;
+    node.formattedOutputBridge = (flags & (1u << 12)) != 0;
     std::uint64_t integerValue = 0, guard = 0, type = 0, type2 = 0;
     if (!chali_incremental::readNumber(in, integerValue)) return false;
     node.i = static_cast<long long>(integerValue);
@@ -3901,10 +3903,18 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit)
     Memory::Map<const MType *, std::size_t> index;
     for (std::size_t i = 0; i < g_types.size(); ++i)
         if (g_types[i]) index[g_types[i].get()] = i;
+    // 原始宏来源被附加在全文映射之后；按文件及原始行归一，避免把用户全文长度写进核心包。
+    Memory::Map<std::pair<Memory::String, std::size_t>, std::size_t> firstOrigins;
+    Memory::Vector<std::size_t> canonical(g_sourceFiles.size() + 1, 0);
+    for (std::size_t i = 0; i < g_sourceFiles.size(); ++i)
+    {
+        const auto line = i < g_sourceLines.size() ? g_sourceLines[i] : i + 1;
+        canonical[i + 1] = firstOrigins.emplace(std::make_pair(g_sourceFiles[i], line), i + 1).first->second;
+    }
     chali_incremental::writeNumber(out, kStandardUnitMagic);
     chali_incremental::writeNumber(out, kStandardUnitVersion);
     chali_incremental::writeNumber(out, nodeLimit);
-    for (std::size_t i = 0; i < nodeLimit; ++i) WriteUnitNode(out, g_nodes[i]);
+    for (std::size_t i = 0; i < nodeLimit; ++i) WriteUnitNode(out, g_nodes[i], canonical);
     chali_incremental::writeNumber(out, g_types.size());
     for (const auto &type : g_types)
     {
@@ -3934,9 +3944,9 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit)
     WriteUnitInts(out, stringNodes);
     chali_incremental::writeStrings(out, stringValues);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(static_cast<std::int64_t>(g_globalType)));
-    chali_incremental::writeNumber(out, g_reductionLine);
+    chali_incremental::writeNumber(out, g_reductionLine < canonical.size() ? canonical[g_reductionLine] : g_reductionLine);
     chali_incremental::writeNumber(out, g_reductionColumn);
-    chali_incremental::writeNumber(out, g_macroFragmentFirstLine);
+    chali_incremental::writeNumber(out, g_macroFragmentFirstLine < canonical.size() ? canonical[g_macroFragmentFirstLine] : g_macroFragmentFirstLine);
     chali_incremental::writeNumber(out, g_macroFragmentFirstColumn);
     chali_incremental::writeString(out, g_parseModule);
     return true;

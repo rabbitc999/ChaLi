@@ -29,6 +29,7 @@
 #include "editor/compiler_analysis.hpp"
 #include "chali_interpolation.hpp"
 #include "chali_module.hpp"
+#include "chali_precompiled.hpp"
 #include "chali_incremental.hpp"
 #include "chali_analysis.hpp"
 #include "chali_lambda.hpp"
@@ -128,7 +129,7 @@ void PrintUsage(std::FILE *out)
              "  --memory-size 字节     运行时堆容量（缺省 512MiB，最小 64）\n",
              "  --no-debug             （兼容别名）显式不带调试信息；现在也是缺省\n",
              "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
-             "  --no-stdlib-cache      关闭标准库预编译单元（每次都完整解析标准库）\n",
+             "  --no-stdlib-cache      关闭内嵌标准库预编译（每次完整解析，不写缓存）\n",
              "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
              "  --out 前缀             生成产物的文件名前缀（缺省 .chali/chali_out）\n",
              "  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n",
@@ -164,43 +165,7 @@ const char *chali_development_tool(const char *name)
  * @retval 进程退出状态，0 表示成功，非零表示失败。
  */
 /**
- * @brief 计算标准库预编译单元的文件路径。
- * @param directory 缓存目录。
- * @param standardText 入口之前的依赖段源码，包含标准库和用户导入模块。
- * @param sourceFiles 合并源码每行对应的原始文件名。
- * @param lineCount 依赖段占用的行数，不包含入口单元。
- * @return 单元文件路径。
- * @note 缓存键包含版本、构建戳、依赖内容和来源，防止不同目录的同文模块共享 ABI 相对路径。
- */
-static Memory::String StandardUnitPath(const Memory::String &directory, const Memory::String &standardText, const Memory::Vector<Memory::String> &sourceFiles, std::size_t lineCount)
-{
-    std::uint64_t key = chali_incremental::hashBytes(standardText);
-    key = chali_incremental::hashBytes(chali_package::compilerVersion, key);
-    key = chali_incremental::hashBytes(__DATE__ __TIME__, key);
-    const auto count = std::min(lineCount, sourceFiles.size());
-    for (std::size_t line = 0; line < count; ++line)
-    {
-        if (line != 0 && sourceFiles[line] == sourceFiles[line - 1]) continue;
-        const auto &file = sourceFiles[line];
-        key = chali_incremental::hashBytes(Memory::toString(line) + ":" + Memory::toString(file.size()) + ":" + file, key);
-    }
-    return (std::filesystem::path(directory) / (Memory::toString(key) + ".unit")).string();
-}
-/**
- * @brief 把标准库段的解析产物写成预编译单元。
- * @param path 单元文件路径（原子替换写盘）。
- * @param nodeLimit 标准库段的节点数上限（不含用户节点）。
- * @note 写单元失败（例如解析期已经攒下诊断）时整份作废，不留半截文件。
- */
-static void SaveStandardUnit(const Memory::String &path, std::size_t nodeLimit)
-{
-    chali_incremental::replaceCacheFile(std::filesystem::path(path), [nodeLimit](std::ostream &out) {
-        if (!M_WriteStandardUnit(out, nodeLimit)) out.setstate(std::ios::badbit);
-    });
-}
-
-/**
- * @brief 删除 .chali 下的中间产物，保留标准库预编译缓存与显式导出物。
+ * @brief 删除 .chali 下的中间产物，保留显式导出物。
  * @param prefix 中间产物前缀（缺省 .chali/chali_out）。
  * @param withExecutable 是否连运行用的临时可执行文件一起删除。
  * @param withHeader 是否连 ABI 导出头一起删除；带 `--export` 时头文件是交付物，必须留下。
@@ -290,7 +255,7 @@ try
     bool incremental = false; /* --incremental：跨次复用模块预处理及完整编译产物 */
     /* 标准库预编译单元：跨次复用标准库段的解析产物；`--no-stdlib-cache` 关掉。 */
     bool standardUnit = std::getenv("CHALI_NO_STDLIB_CACHE") == nullptr;
-    Memory::String standardCacheDirectory;
+    Memory::String buildStandardUnit;
     bool sourceStdin = false;  ///< 编辑器用真实文件身份读取标准输入中的未保存内容。
     Memory::String cacheDirectory, overlayPath, analysisDependencies, analysisTypes;
     Memory::Vector<Memory::String> includeDirs;
@@ -515,8 +480,13 @@ try
         }
         if (argument == "--stdlib-cache-dir")
         {
+            std::fputs(CHALI_TEXT("chali: --stdlib-cache-dir 已删除；标准库预编译资产由编译器内嵌。\n"), stderr);
+            return 2;
+        }
+        if (argument == "--build-stdlib-unit")
+        {
             if (!NeedValue(index, argc, argument.c_str())) return 2;
-            standardCacheDirectory = argv[++index];
+            buildStandardUnit = argv[++index];
             continue;
         }
         if (argument == "--cache-dir" || argument == "--source-overlays" || argument == "--analysis-deps" || argument == "--analysis-types")
@@ -1009,30 +979,24 @@ try
     Memory::Vector<int> standardTop;      ///< 标准库段的顶层声明，解析完用户段后补回前面
     std::size_t firstUserDiagnostic = 0;  ///< 标准库段解析结束后已积累的解析期诊断条数
     std::size_t errorLineOffset = 0;      ///< 解析期报错的行号偏移：第二段解析出来的行号要加回标准库的行数
-    Memory::String standardUnitPath;
+
     bool standardUnitLoaded = false;
-    if (standardUnit && !raw)
+    if ((standardUnit || !buildStandardUnit.empty()) && !raw)
     {
-        boundary = chali_module::findStandardBoundary(text);
+        boundary = chali_module::findStandardCoreBoundary(text);
         if (boundary != Memory::String::npos)
         {
-            if (standardCacheDirectory.empty())
-            {
-                const char *configured = std::getenv("CHALI_STDLIB_CACHE_DIR");
-                standardCacheDirectory = (configured != nullptr && *configured != '\0') ? Memory::String(configured) : Memory::String(".chali/chali-stdlib-cache");
-            }
             for (std::size_t i = 0; i < boundary; ++i)
                 if (text[i] == '\n') ++standardLines;
-            standardUnitPath = StandardUnitPath(standardCacheDirectory, text.substr(0, boundary), sourceFiles, standardLines);
-            std::ifstream unit(std::filesystem::path(standardUnitPath), std::ios::binary);
-            if (unit.is_open())
+            if (buildStandardUnit.empty())
             {
-                standardUnitLoaded = M_ReadStandardUnit(unit);
-                /* 读不回来只是"这份缓存用不了"：静默退回全量解析，结果完全一致。
-                 * 缓存是纯加速手段，不能因为它坏了就在 stderr 上多一句话（会污染诊断比对）；
-                 * 想看命中情况用 `--stats`。 */
-                if (!standardUnitLoaded && runtimeStats)
-                    std::fprintf(stderr, "标准库预编译：单元不可用，本次按全量解析\n");
+                Memory::String error;
+                standardUnitLoaded = chali_precompiled::load(text.substr(0, boundary), error);
+                if (!error.empty())
+                {
+                    std::fprintf(stderr, "chali: %s\n", error.c_str());
+                    return 1;
+                }
             }
         }
     }
@@ -1051,8 +1015,16 @@ try
         standardTop = M_TopLevelIds();
         /* 解析期诊断也划一道线：这道线之后落下的都属于用户段，行号要平移。 */
         firstUserDiagnostic = M_ParseDiagnosticCount();
-        if (status == Status::Ok && !standardUnitPath.empty())
-            SaveStandardUnit(standardUnitPath, firstUserNode);
+        if (status == Status::Ok && !buildStandardUnit.empty())
+        {
+            std::ofstream output(std::filesystem::u8path(buildStandardUnit.begin(), buildStandardUnit.end()), std::ios::binary | std::ios::trunc);
+            if (!output || !chali_precompiled::write(output, text.substr(0, boundary), firstUserNode))
+            {
+                std::fputs(CHALI_TEXT("chali: 无法生成标准库二进制预编译资产\n"), stderr);
+                return 1;
+            }
+            return 0;
+        }
         if (status == Status::Ok)
         {
             /* 用户段是单独解析的，行号从 1 重新开始数；报错时要加回标准库占掉的行数，
@@ -1171,9 +1143,9 @@ try
         if (boundary == Memory::String::npos)
             std::fprintf(stderr, "标准库预编译：未启用（%s）\n", standardUnit ? "没有标准库分界" : "已用 --no-stdlib-cache 关闭");
         else if (standardUnitLoaded)
-            std::fprintf(stderr, "标准库预编译：命中（%zu 个节点，省掉标准库段解析）\n", firstUserNode);
+            std::fprintf(stderr, "标准库预编译：命中内嵌核心（%zu 个节点，省掉核心解析）\n", firstUserNode);
         else
-            std::fprintf(stderr, "标准库预编译：回写（%zu 个节点，%zu 行）\n", firstUserNode, standardLines);
+            std::fprintf(stderr, "标准库预编译：源码解析（%zu 个节点，%zu 行；不写磁盘缓存）\n", firstUserNode, standardLines);
     }
     if (code != 0)
     {

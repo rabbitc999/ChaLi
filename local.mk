@@ -384,3 +384,11 @@ $(CHALI_STDLIB_OBJ): | $(CHALI_EMBED_STAMP)
 chali-dependencies:
 	$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
 $(LIB_OBJS) $(DEMO_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/ipage_sql.o $(CHALI_MINIZ): | chali-dependencies
+
+# 标准库核心二进制装载器；构建生成的字节数组从权威生成脚本维护。
+CHALI_PRECOMPILED_OBJ := $(FRONTEND_BUILD)/chali_precompiled.o
+LIB_OBJS += $(CHALI_PRECOMPILED_OBJ)
+$(LIB): $(CHALI_PRECOMPILED_OBJ)
+$(CHALI_PRECOMPILED_OBJ): source/chali_precompiled.cpp source/chali_precompiled.hpp source/chali_ast.hpp source/chali_incremental.hpp source/chali_package.hpp source/chali_i18n.hpp $(wildcard source/chali_precompiled_data.inc) | $(FRONTEND_BUILD)
+	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+$(FRONTEND_BUILD)/chali_main.o: source/chali_precompiled.hpp

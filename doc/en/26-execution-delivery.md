@@ -20,7 +20,7 @@ Normal run and AOT compilation generate LLVM code directly from the semantically
 
 Compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) all land in a hidden `.chali/` directory in the current directory, marked hidden on Windows:
 
-- After a run or export only the standard-library precompiled cache `.chali/chali-stdlib-cache/` remains; everything else is deleted;
+- After a run or export, intermediate files are removed. The standard core binary is embedded in the compiler; no standard-library disk cache is created;
 - `--keep-artifacts` keeps every intermediate for comparison and debugging;
 - An explicit `--out PREFIX` keeps everything at the path you gave and skips cleanup; `--incremental` and `--emit-llvm` also keep artifacts;
 - `.chali/` is already excluded by the `.gitignore` that `chali new` writes.
@@ -28,7 +28,7 @@ Compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) all land i
 The `aot` executable defaults to the source directory and has no suffix on Linux and similar platforms. Preserve LLVM IR with an explicit `--out` prefix. The `emit` mode has been removed.
 
 ```powershell
-chali run app.chl                     # only the stdlib cache is left in .chali/
+chali run app.chl                     # cleans intermediates; no standard-library disk cache
 chali aot app.chl                     # writes ./app.exe
 chali aot app.chl --out build/app     # writes build/app.exe and build/app.ll, all kept
 chali aot app.chl --emit-llvm --out build/app                    # generates build/app.ll directly from the AST

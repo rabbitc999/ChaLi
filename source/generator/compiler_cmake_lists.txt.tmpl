@@ -61,7 +61,7 @@ endforeach()
 
 file(GLOB CHALI_MACRO_SOURCES CONFIGURE_DEPENDS macro/*.cpp literals/*.cpp syntax/*.cpp editor/*.cpp)
 add_library(chali_parser STATIC chali_parser.cpp chali_resource_cleanup.cpp chali_generic.cpp chali_lambda.cpp
-    chali_generic_closure.cpp chali_package.cpp chali_report.cpp chali_aot.cpp chali_aot_target.cpp chali_aot_debug.cpp chali_aot_llvm.cpp chali_aot_runtime_assets.cpp chali_temp.cpp chali_stdlib_embedded.cpp)
+    chali_generic_closure.cpp chali_package.cpp chali_report.cpp chali_aot.cpp chali_aot_target.cpp chali_aot_debug.cpp chali_aot_llvm.cpp chali_aot_runtime_assets.cpp chali_temp.cpp chali_precompiled.cpp chali_stdlib_embedded.cpp)
 target_sources(chali_parser PRIVATE ${CHALI_MACRO_SOURCES})
 target_include_directories(chali_parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(chali_parser PUBLIC chali_runtime)
