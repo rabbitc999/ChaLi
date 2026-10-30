@@ -1,0 +1,8 @@
+{
+  "production_source_commit": "4f04ad610915fb6548e82c6398a2c502a4acc0df",
+  "compiler_sha256": "6e0cf3bb81c59b095a948baae71efd6eb98c8a6baa85bf9078bb48c600ba4390",
+  "test": "tests/chali_lsp_semantic_features.py",
+  "test_sha256": "233106be84412aa46f5ccc2ec40f75455bf90d6bc6d4b85254e9250a559f38aa",
+  "log": "macro-categories-semantic-retest.log",
+  "exit_code": 0
+}

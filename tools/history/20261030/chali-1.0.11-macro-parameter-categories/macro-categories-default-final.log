@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\Desktop\ChaLi\tests\chali_macro_categories.py", line 165, in <module>
+    main()
+  File "G:\Desktop\ChaLi\tests\chali_macro_categories.py", line 160, in main
+    assert (result.returncode, result.stdout, result.stderr) == (0, '', ''), (name, result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('module_types', CompletedProcess(args=['G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe', 'run', 'G:\\Desktop\\ChaLi\\tmp\\macro-categories-cnwyxdqx\\module_types.chl', '--out', 'G:\\Desktop\\ChaLi\\tmp\\macro-categories-cnwyxdqx\\module_types'], returncode=1, stdout='', stderr='chali: 没有声明的泛型类型：left::Holder\n'))

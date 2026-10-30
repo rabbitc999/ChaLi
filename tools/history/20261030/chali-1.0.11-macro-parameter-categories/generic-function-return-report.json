@@ -1,0 +1,1349 @@
+[
+  {
+    "group": "generic_return",
+    "name": "implicit",
+    "outcome": "success",
+    "source_sha256": "97021bacbe74c45956146a590e7005e78b72115f10c287ae5ee2cad7649bc557",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\implicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\checked",
+          "elapsed": 3.6977504000242334,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\implicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\checked",
+          "elapsed": 4.027338000014424,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\implicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\aot",
+          "elapsed": 3.8579445999930613,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\implicit\\aot",
+          "elapsed": 0.33148600001004525,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "explicit",
+    "outcome": "success",
+    "source_sha256": "448ded9ead37f948c7325cc8a8d04a5e90cd0acce04f9bcec5dd852c91c2a045",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\checked",
+          "elapsed": 3.4169407000008505,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\checked",
+          "elapsed": 3.79976130000432,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\aot",
+          "elapsed": 3.5733350999944378,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\explicit\\aot",
+          "elapsed": 0.3299582999898121,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "numeric",
+    "outcome": "success",
+    "source_sha256": "0ba0760386ef21cf64ff427aa0135ebe51e8ee0a1bbb0f84e5614f96b766f315",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\numeric.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\checked",
+          "elapsed": 3.694440699997358,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\numeric.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\checked",
+          "elapsed": 3.909318899997743,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\numeric.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\aot",
+          "elapsed": 3.6086318000161555,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\numeric\\aot",
+          "elapsed": 0.296197999996366,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "floating",
+    "outcome": "success",
+    "source_sha256": "f5d2480c443e0ecbc4b20708dfb1345f1170d927c804112d1ed6c65f727c2568",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\floating.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\checked",
+          "elapsed": 3.7206436000124086,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\floating.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\checked",
+          "elapsed": 3.807405299972743,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\floating.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\aot",
+          "elapsed": 3.6584002999879885,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\floating\\aot",
+          "elapsed": 0.30769790001795627,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "local_typed",
+    "outcome": "success",
+    "source_sha256": "9ca85eb079a6fe0a97308d0d5dbc785653510dbe1e65b54a71eab31e06b6e5a2",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\local_typed.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\checked",
+          "elapsed": 3.8802925999916624,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\local_typed.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\checked",
+          "elapsed": 4.57856759999413,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\local_typed.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\aot",
+          "elapsed": 3.6392923000094015,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\local_typed\\aot",
+          "elapsed": 0.33794110000599176,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "immediate",
+    "outcome": "success",
+    "source_sha256": "860b073990fde6fecd8297659180f6a12e714767bddb3f9c21feb2c987a65e5b",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\immediate.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\checked",
+          "elapsed": 3.8956474000005983,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\immediate.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\checked",
+          "elapsed": 4.741410000016913,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\immediate.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\aot",
+          "elapsed": 3.753690799989272,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\immediate\\aot",
+          "elapsed": 0.409531400015112,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "list_storage",
+    "outcome": "success",
+    "source_sha256": "ca9db7be6978ede8408159d1859f9a4126fdaf678f7668c0195a5ff484bc4849",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\list_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\checked",
+          "elapsed": 4.397681200003717,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\list_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\checked",
+          "elapsed": 4.0079735000035726,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\list_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\aot",
+          "elapsed": 3.519973199989181,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\list_storage\\aot",
+          "elapsed": 0.33531669998774305,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "map_storage",
+    "outcome": "success",
+    "source_sha256": "fed44b419a4119d4a2bfc1ba28af54eca9ba80a106c72bbf45d3d7237fd2f85e",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\map_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\checked",
+          "elapsed": 4.297702600015327,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\map_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\checked",
+          "elapsed": 4.135785499995109,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\map_storage.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\aot",
+          "elapsed": 3.6526469999807887,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\map_storage\\aot",
+          "elapsed": 0.32532209999044426,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "closure_copy",
+    "outcome": "success",
+    "source_sha256": "45b2f80538c9ce841d0f7d32607ac256610da6605a78f05a6ef032becf93a472",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\closure_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\checked",
+          "elapsed": 3.531250900006853,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\closure_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\checked",
+          "elapsed": 3.8417517000052612,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\closure_copy.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\aot",
+          "elapsed": 3.5164141000132076,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\closure_copy\\aot",
+          "elapsed": 0.29763340001227334,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "nested_composition",
+    "outcome": "success",
+    "source_sha256": "a17fa82d5bfa16c15ff1b5d2ab90a6105635a36256845618ca33303336a575ba",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\nested_composition.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\checked",
+          "elapsed": 3.505391399987275,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\nested_composition.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\checked",
+          "elapsed": 3.8025064000103157,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\nested_composition.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\aot",
+          "elapsed": 3.481759399990551,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_composition\\aot",
+          "elapsed": 0.29981630001566373,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "string_result",
+    "outcome": "success",
+    "source_sha256": "c95b35ca27166931dddec01f53cd3da52ca3b3262cf2baa91967b4658a3bce59",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\string_result.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\checked",
+          "elapsed": 3.8606645000108983,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\string_result.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\checked",
+          "elapsed": 4.281471199996304,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\string_result.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\aot",
+          "elapsed": 3.923926499992376,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\string_result\\aot",
+          "elapsed": 0.32550950002041645,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "overloaded_callback",
+    "outcome": "success",
+    "source_sha256": "e6f0a8c8e380d77cf4e115856e2d7d66b51a683310212cb3fa2ae973b325c7d3",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\overloaded_callback.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\checked",
+          "elapsed": 3.4713824999926146,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\overloaded_callback.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\checked",
+          "elapsed": 3.8403923000150826,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\overloaded_callback.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\aot",
+          "elapsed": 3.5842276999901515,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback\\aot",
+          "elapsed": 0.3089839000022039,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "overloaded_callback_types",
+    "outcome": "success",
+    "source_sha256": "031a9d40515272f2cc186389028dfb3146a0fe2024050c1dfe221bd080346bf0",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\overloaded_callback_types.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\checked",
+          "elapsed": 3.5642928000015672,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\overloaded_callback_types.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\checked",
+          "elapsed": 3.873561600019457,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\overloaded_callback_types.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\aot",
+          "elapsed": 3.5287321000068914,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_types\\aot",
+          "elapsed": 0.3002373999916017,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "overloaded_callback_explicit",
+    "outcome": "success",
+    "source_sha256": "4e7a1c212ac866eb1aa8c398a88a05a121da3179f96670811777d120cf2d51ee",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\overloaded_callback_explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\checked",
+          "elapsed": 3.264415599987842,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\overloaded_callback_explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\checked",
+          "elapsed": 3.5890813999867532,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\overloaded_callback_explicit.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\aot",
+          "elapsed": 3.3011280999926385,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\overloaded_callback_explicit\\aot",
+          "elapsed": 0.3145579000120051,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "nested_factory_type",
+    "outcome": "success",
+    "source_sha256": "23a7ebfac5806f3c4c256ed923e36fe3ef43c19a451d308f5aaf5bf8ca7c80e5",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\checked",
+          "elapsed": 3.300839500006987,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "run",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\checked\\program-run",
+            "--"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\checked",
+          "elapsed": 3.6315905999799725,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\nested_factory_type.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\aot",
+          "elapsed": 3.3548293999920134,
+          "code": 0,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "",
+          "stdout_text": "",
+          "stderr_text": ""
+        },
+        "status": "pass",
+        "run": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\aot\\program.exe"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\nested_factory_type\\aot",
+          "elapsed": 0.30129969998961315,
+          "code": 0,
+          "timeout": false,
+          "stdout": "6c696d6974732d6f6b0d0a",
+          "stderr": "",
+          "stdout_text": "limits-ok\r\n",
+          "stderr_text": ""
+        }
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "wrong_value",
+    "outcome": "reject",
+    "source_sha256": "ca4e05b6180b7513a9fb385705f9085cd3eb7a954068e381ad8970cf19ab02d0",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\wrong_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\checked",
+          "elapsed": 2.8853353000013158,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+        },
+        "status": "rejected"
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\wrong_value.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\wrong_value\\aot",
+          "elapsed": 2.883281699992949,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a20e4b88de883bde99a90e5bc8fe8bdace68da2efbc9a696e743634202d3e20696e74363428696e74363429efbc88e8afb7e698bee5bc8fe5bcbae8bdacefbc890d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: 不能隐式转换：int64 -> int64(int64)（请显式强转）\r\n"
+        },
+        "status": "rejected"
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "borrowed_local",
+    "outcome": "reject",
+    "source_sha256": "d188743215fd327a10dacaea483df1fb850cfb272bc933e617d9d8ac4e60e19a",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\borrowed_local.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\checked",
+          "elapsed": 2.8918077000125777,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a205b43484c313230345d20e8bf94e59b9ee580bce4b8ade79a84e5bc95e794a8e4b88de883bde8b685e8bf87e5b180e983a8e69da5e6ba90e79a84e7949fe591bde591a8e69c9fefbc88696e74363428696e74363429efbc8ce68980e5b19ee7b1bbe59e8b20efbc8ce69da5e6ba90205f5f6368616c695f6c616d6264615f6173745f636f6e73745f31393330385f6d6163726f5f305f3139333039efbc890d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: [CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64(int64)，所属类型 ，来源 __chali_lambda_ast_const_19308_macro_0_19309）\r\n"
+        },
+        "status": "rejected"
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\borrowed_local.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\borrowed_local\\aot",
+          "elapsed": 2.9123874000215437,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a205b43484c313230345d20e8bf94e59b9ee580bce4b8ade79a84e5bc95e794a8e4b88de883bde8b685e8bf87e5b180e983a8e69da5e6ba90e79a84e7949fe591bde591a8e69c9fefbc88696e74363428696e74363429efbc8ce68980e5b19ee7b1bbe59e8b20efbc8ce69da5e6ba90205f5f6368616c695f6c616d6264615f6173745f636f6e73745f31393330385f6d6163726f5f305f3139333039efbc890d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: [CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64(int64)，所属类型 ，来源 __chali_lambda_ast_const_19308_macro_0_19309）\r\n"
+        },
+        "status": "rejected"
+      }
+    }
+  },
+  {
+    "group": "generic_return",
+    "name": "ambiguous_callbacks",
+    "outcome": "reject",
+    "source_sha256": "4ae47d8c2db345380433b7bb24fa6c0503be05d4e24d5a585d6845a60895a854",
+    "results": {
+      "checked": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\ambiguous_callbacks.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\checked\\program",
+            "--checked"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\checked",
+          "elapsed": 2.613496500009205,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d6d746970766d76672f67656e657269635f72657475726e2f616d626967756f75735f63616c6c6261636b732f616d626967756f75735f63616c6c6261636b732e63686c20e7acac20313420e8a18ce7acac203520e58897efbc9ae59b9ee8b08320696e6320e69c89e5a49ae4b8aae58cb9e9858de9878de8bdbdefbc9be8afb7e58588e8b58be7bb99e5b8a6e7adbee5908de79a84e587bde695b0e58f98e9878fe68896e698bee5bc8fe68c87e5ae9ae7b1bbe59e8be5ae9ee58f820d0a203134207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d6d746970766d76672f67656e657269635f72657475726e2f616d626967756f75735f63616c6c6261636b732f616d626967756f75735f63616c6c6261636b732e63686c20e7acac20313420e8a18ce7acac203520e58897efbc9ae8b083e794a8e4ba86e6b2a1e5ae9ae4b989e79a84e587bde695b0efbc9a660d0a203134207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: G:/Desktop/ChaLi/tmp/generic-function-returns-mtipvmvg/generic_return/ambiguous_callbacks/ambiguous_callbacks.chl 第 14 行第 5 列：回调 inc 有多个匹配重载；请先赋给带签名的函数变量或显式指定类型实参\r\n 14 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\nchali: G:/Desktop/ChaLi/tmp/generic-function-returns-mtipvmvg/generic_return/ambiguous_callbacks/ambiguous_callbacks.chl 第 14 行第 5 列：调用了没定义的函数：f\r\n 14 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\n"
+        },
+        "status": "rejected"
+      },
+      "aot": {
+        "build": {
+          "command": [
+            "G:\\Desktop\\ChaLi\\chali-1.0.11-llvm-external-windows-x64.exe",
+            "aot",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\ambiguous_callbacks.chl",
+            "--out",
+            "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\aot\\program"
+          ],
+          "cwd": "G:\\Desktop\\ChaLi\\tmp\\generic-function-returns-mtipvmvg\\generic_return\\ambiguous_callbacks\\aot",
+          "elapsed": 2.532608800014714,
+          "code": 1,
+          "timeout": false,
+          "stdout": "",
+          "stderr": "6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d6d746970766d76672f67656e657269635f72657475726e2f616d626967756f75735f63616c6c6261636b732f616d626967756f75735f63616c6c6261636b732e63686c20e7acac20313420e8a18ce7acac203520e58897efbc9ae59b9ee8b08320696e6320e69c89e5a49ae4b8aae58cb9e9858de9878de8bdbdefbc9be8afb7e58588e8b58be7bb99e5b8a6e7adbee5908de79a84e587bde695b0e58f98e9878fe68896e698bee5bc8fe68c87e5ae9ae7b1bbe59e8be5ae9ee58f820d0a203134207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a6368616c693a20473a2f4465736b746f702f4368614c692f746d702f67656e657269632d66756e6374696f6e2d72657475726e732d6d746970766d76672f67656e657269635f72657475726e2f616d626967756f75735f63616c6c6261636b732f616d626967756f75735f63616c6c6261636b732e63686c20e7acac20313420e8a18ce7acac203520e58897efbc9ae8b083e794a8e4ba86e6b2a1e5ae9ae4b989e79a84e587bde695b0efbc9a660d0a203134207c20202020206c65742066203d20636f6d706f736528696e632c207477696365293b206173736572742866283629203d3d203133293b0d0a202020207c20202020207e7e7e0d0a",
+          "stdout_text": "",
+          "stderr_text": "chali: G:/Desktop/ChaLi/tmp/generic-function-returns-mtipvmvg/generic_return/ambiguous_callbacks/ambiguous_callbacks.chl 第 14 行第 5 列：回调 inc 有多个匹配重载；请先赋给带签名的函数变量或显式指定类型实参\r\n 14 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\nchali: G:/Desktop/ChaLi/tmp/generic-function-returns-mtipvmvg/generic_return/ambiguous_callbacks/ambiguous_callbacks.chl 第 14 行第 5 列：调用了没定义的函数：f\r\n 14 |     let f = compose(inc, twice); assert(f(6) == 13);\r\n    |     ~~~\r\n"
+        },
+        "status": "rejected"
+      }
+    }
+  }
+]

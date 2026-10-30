@@ -105,7 +105,11 @@ def main():
     '''
             open_text(category_macro)
             category_help = query('signatureHelp', category_macro, category_macro.index('(1,2)') + 3)
-            assert 'a: value' in category_help['signatures'][0]['label'] and 'b: expr' in category_help['signatures'][0]['label'], category_help
+            category_signature = category_help['signatures'][0]
+            category_label = ''.join(category_signature['label'].split())
+            assert 'a:value' in category_label and 'b:expr' in category_label, category_help
+            begin, end = category_signature['parameters'][category_help['activeParameter']]['label']
+            assert category_signature['label'][begin:end] == 'b', category_help
             category_preview = server.query('chali/expandMacro', dict(textDocument=dict(uri=uri)))
             assert category_preview['text'] and not category_preview['diagnostics'], category_preview
             result_macro = '''$macro Example<T:#res,U:b>(a,b)

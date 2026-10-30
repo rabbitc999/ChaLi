@@ -1,0 +1,13 @@
+文法生成器：./ParseEngine.exe
+内嵌中英文消息 SHA256 相同，跳过生成。
+StackVM 资产清单 SHA256 相同，跳过生成。
+CAS 资产清单 SHA256 相同，跳过生成。
+内嵌手册 SHA256 相同，跳过生成。
+内嵌书稿、关键字与 SKILL 数据同步。
+压缩 495956 -> 92015 字节（比率 0.186）
+压缩 52198701 -> 13161445 字节（比率 0.252）
+内嵌手册 SHA256 相同，跳过生成。
+unchanged G:\Desktop\ChaLi\source\chali_stdlib_embedded.cpp (42 modules, 443892 bytes; 305 generator assets, 50442648 bytes)
+[Incremental generation] Analysis cache hit / 182 ms
+Skipped project build files as requested by --no-build-files / %build_files off
+Generation complete; see G:\Desktop\ChaLi\source\RESULT.md
