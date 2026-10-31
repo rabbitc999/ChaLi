@@ -59,6 +59,18 @@ int chali_abi_invoke(const ChaliAbiFrame *, int64_t, const int64_t *, const unsi
     return 0;
 }
 int64_t chali_abi_record_make(const ChaliAbiFrame *, const char *, void *, void (*)(void *)) { return 0; }
+/**
+ * @brief 表结构测试不创建拥有记录。
+ * @param frame 未使用的帧。
+ * @param name 未使用的类型名。
+ * @param value 未使用的记录。
+ * @param destroy 未使用的销毁回调。
+ * @param clone 未使用的复制回调。
+ * @return 固定零占位值。
+ */
+int64_t CHALI_ABI_CALL chali_abi_record_make_clonable(const ChaliAbiFrame *frame, const char *name,
+    void *value, ChaliAbiDestroy destroy, ChaliAbiClone clone)
+{ (void)frame; (void)name; (void)value; (void)destroy; (void)clone; return 0; }
 void *chali_abi_record_borrow(const ChaliAbiFrame *, int64_t, const char *) { return nullptr; }
 int64_t chali_abi_record_clone(const ChaliAbiFrame *, int64_t, const char *, void *(*)(const void *))
 {

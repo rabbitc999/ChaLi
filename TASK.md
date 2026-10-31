@@ -170,6 +170,12 @@ C 宿主记录自动复制协议已完成：新增 chali_abi_record_make_clonabl
 
 C API 模块与内存、并发 12 步全部通过，无失败或跳过；隔离标准库导入／源码回退／零磁盘缓存、最终手册及七组插件测试通过。静态编译器 SHA256 为 430bd5f01fe691d41ebd2ea742b402e46c15268e4cb579a5138876e020beae3d；vscode/dist/1.0.12-c-record-clone/chali-editor-1.0.12-llvm-static.vsix 版本、static 与包内 EXE 已核对，SHA256 为 f1f6a4c67728f64931803d29d4fd216f6e6c5f604bff98bc5c46c5e412aab75c。五项新鲜导出源核对通过，未冷构建独立编译器、执行整仓全量门禁或性能计时。证据仅保留 tools/history/20261031/chali-1.0.12-c-record-clone/；后续继续拥有型数据模块迁移，旧公开 C++ 胶水仍未删除。
 
+JSON／TOML 拥有值已迁移至 abi_structured_data.cpp 的 C 帧入口，使用公开 C 字符串、字节列表和可复制记录服务；解析、节点模型与格式算法仍为独立私有内核，不公开 C++ 类型。删除旧 std_json.cpp／hpp、std_toml.cpp／hpp 及 std_structured_data.hpp，两个注册路径与导出资产改用 C 表。保持独立子树、日期、零字节键／内容、关闭状态及专用 drop 诊断；C 服务单元新增两格式的自动复制、快照恢复、关闭后副本存活及各三个创建失败点清理。
+
+C API、序列化、内存与并发首轮 16 步为 15 通过、1 失败、0 跳过：新 C 服务测试帧遗漏参数类别数组，契约检查正确拒绝。补齐测试帧后完整 C 注册／运行时服务脚本复验通过，原始失败与复验分别保留。其余包含 JSON 派生 36 项、反射序列化／SQL 抽样、原解析内核与 malloc／pool × checked／unchecked 四配置、29 项资源清理及并发均通过。110 项 C 入口目录、六目标 C 头、最终手册、隔离标准库／源码回退／零磁盘缓存及七组插件测试通过。
+
+新鲜导出工程实际冷构建外置 LLVM 编译器，直接通过解析内核、结构化数据四配置及关闭后诊断；宿主为 GCC 11／O1，语言程序仍默认 LLVM O3，不作性能比较。EXE 保留 build/independent-validation/1.0.12-structured-c-api/，SHA256 为 c8570638c17873467b89ab31c9f814d636ed37bd571c8f87afdd7ea0f0e66e72。最终静态 EXE SHA256 为 c192a8e546bbf653f601fec52dc9ed5c345fbe0cc0e114a086188e60853b0a8f；vscode/dist/1.0.12-structured-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 69c1d9efd18d6114ab2201f4d1afc2f5134dcae2ee23276a87ebf64de6fba7d5。五项基础及新内核导出源一致，旧五文件不存在。证据仅保留 tools/history/20261031/chali-1.0.12-structured-c-api/；未运行整仓全量门禁或正式计时，继续其他模块迁移与旧胶水删除。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

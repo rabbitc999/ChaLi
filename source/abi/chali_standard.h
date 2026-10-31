@@ -24,6 +24,18 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_process_records(size_t *count);
  * @return 程序存活期间有效的入口表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_compress_records(size_t *count);
+/**
+ * @brief 取得 JSON 拥有值及序列化的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的入口表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_json_records(size_t *count);
+/**
+ * @brief 取得 TOML 拥有值的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的入口表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_toml_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

@@ -22,16 +22,6 @@
 #ifndef GLUE_NO_STD_REGEX
 #include "std_regex.hpp"
 #endif
-#ifndef GLUE_NO_STD_JSON
-#ifndef PARSE_ENGINE_STD_JSON_HPP
-#include "std_json.hpp"
-#endif
-#endif
-#ifndef GLUE_NO_STD_TOML
-#ifndef PARSE_ENGINE_STD_TOML_HPP
-#include "std_toml.hpp"
-#endif
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
@@ -65,10 +55,10 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
     ok = std_filesystem_glue::bind(registry, error) && ok;
 #endif
 #ifndef GLUE_NO_STD_JSON
-    ok = std_json_glue::bind(registry, error) && ok;
+    ok = (registry.bindModule(abi_serialization_records, error) && registry.bindModule(abi_json_records, error)) && ok;
 #endif
 #ifndef GLUE_NO_STD_TOML
-    ok = std_toml_glue::bind(registry, error) && ok;
+    ok = registry.bindModule(abi_toml_records, error) && ok;
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
     if (!registry.bindModule(abi_compress_records, error)) ok = false;

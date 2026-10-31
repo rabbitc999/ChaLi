@@ -40,6 +40,10 @@ static const ModuleRecords kModules[] = {
 #endif
 #ifndef GLUE_NO_STD_JSON
     abi_serialization_records,
+    abi_json_records,
+#endif
+#ifndef GLUE_NO_STD_TOML
+    abi_toml_records,
 #endif
 #ifndef GLUE_NO_STD_PARSE
     abi_parse_records,

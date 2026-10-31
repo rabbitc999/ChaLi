@@ -514,6 +514,57 @@ int main()
         }
         assert(byteCreationFailures >= 3);
         std::printf("C binary services: raw NUL bytes, atomic bounded output, numeric views and %d creation failure points passed\n", byteCreationFailures);
+        for (const char *format : {"json", "toml"})
+        {
+            const std::string prefix = std::string("std::") + format + "::__";
+            const auto call = [&](const char *operation, std::initializer_list<int64_t> arguments) {
+                auto entry = chali_abi_resolve((prefix + operation).c_str(), nullptr);
+                assert(entry);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                entry(&invocation);
+                return invocation.result;
+            };
+            const std::string text = std::string(format) == "json" ? "{\"value\":[1,2,3]}" : "value = [1,2,3]\n";
+            const auto input = chali_abi_string(&frame, text.data(), text.size());
+            const auto document = call("parse", {input});
+            assert(document && !runtime.status && call("valid", {document}));
+            assert(chali_abi_string_release(&frame, input));
+            NativeCallContextImpl host(context, &invoker);
+            const auto copied = host.cloneNativeRecord(document);
+            assert(copied && copied != document);
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, document, packet, active));
+            assert(call("close", {document}) == 1 && call("close", {document}) == 0);
+            assert(!call("valid", {document}) && call("valid", {copied}));
+            Memory::Vector<std::int64_t> created;
+            int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, document, active, created, &restored));
+            const auto dumped = call("dump", {restored, 0});
+            assert(dumped && !runtime.status);
+            assert(chali_abi_bytes(&frame, dumped, &view, &length) && length);
+            assert(chali_abi_string_release(&frame, dumped));
+            assert(chali_abi_record_release(&frame, copied));
+            assert(chali_abi_record_release(&frame, restored));
+            assert(!call("dump", {document, 0}) && runtime.status);
+            reset();
+            assert(chali_abi_record_release(&frame, document));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = call("valueNew", {});
+                arena.remaining = -1;
+                if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            std::printf("%s C records: independent copy, transfer, close and %d failure points passed\n", format, failures);
+        }
     }
     assert(arena.stats().liveBlocks == 0);
     std::puts("C services: buffered strings, memory ranges, borrowed invoker, errors and records passed");

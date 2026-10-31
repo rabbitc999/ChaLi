@@ -12,10 +12,10 @@ CHALI_AOT_MODULE(file, file_native_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(filesystem, std_filesystem_glue::bind(registry, error))
 #endif
 #ifndef GLUE_NO_STD_JSON
-CHALI_AOT_MODULE(json, std_json_glue::bind(registry, error))
+CHALI_AOT_MODULE(json, registry.bindModule(abi_serialization_records, error) && registry.bindModule(abi_json_records, error))
 #endif
 #ifndef GLUE_NO_STD_TOML
-CHALI_AOT_MODULE(toml, std_toml_glue::bind(registry, error))
+CHALI_AOT_MODULE(toml, registry.bindModule(abi_toml_records, error))
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
 CHALI_AOT_MODULE(compress, registry.bindModule(abi_compress_records, error))
