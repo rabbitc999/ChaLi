@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <exception>
 #include <mutex>
 #include <string>
@@ -104,10 +105,10 @@ namespace
 /**
  * @brief 取得当前帧可用的宿主上下文壳。
  * @param frame 当前调用帧。
- * @param host 接收构造结果。
+ * @param host 在调用栈中持有宿主壳，不拥有运行时或调用器。
  * @return 上下文壳可用时为 true。
  */
-bool prepareHost(const ChaliAbiFrame *frame, std::unique_ptr<NativeCallContextImpl> &host)
+bool prepareHost(const ChaliAbiFrame *frame, std::optional<NativeCallContextImpl> &host)
 {
     auto *context = contextOf(frame);
     if (context == nullptr)
@@ -115,7 +116,7 @@ bool prepareHost(const ChaliAbiFrame *frame, std::unique_ptr<NativeCallContextIm
         chali_abi_mark_failure(frame, "missing runtime context");
         return false;
     }
-    host = std::make_unique<NativeCallContextImpl>(*context, context->invoker);
+    host.emplace(*context, context->invoker);
     return true;
 }
 }  // namespace
@@ -212,7 +213,7 @@ int chali_abi_string_release(const ChaliAbiFrame *frame, int64_t address)
 try
 {
     if (!address) return 1;
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return 0;
     if (address < 0 || !host->releaseString(address, false))
     {
@@ -236,7 +237,7 @@ int chali_abi_temporary_release(const ChaliAbiFrame *frame, int64_t address)
 try
 {
     if (!address) return 1;
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return 0;
     if (address < 0 || !host->releaseMemory(address, false))
     {
@@ -567,7 +568,7 @@ int64_t chali_abi_record_make(const ChaliAbiFrame *frame, const char *typeName, 
                               void (*destroy)(void *))
 try
 {
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return 0;
     if (!record || !destroy)
     {
@@ -603,7 +604,7 @@ try
 void *chali_abi_record_borrow(const ChaliAbiFrame *frame, int64_t handle, const char *typeName)
 try
 {
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return nullptr;
     if (!handle)
     {
@@ -641,7 +642,7 @@ int64_t chali_abi_record_clone(const ChaliAbiFrame *frame, int64_t handle, const
                                void *(*clone)(const void *))
 try
 {
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return 0;
     if (!handle || !clone)
     {
@@ -703,7 +704,7 @@ try
 int chali_abi_record_release(const ChaliAbiFrame *frame, int64_t handle)
 try
 {
-    std::unique_ptr<NativeCallContextImpl> host;
+    std::optional<NativeCallContextImpl> host;
     if (!prepareHost(frame, host)) return 0;
     if (!handle || !host->releaseNativeRecord(handle))
     {

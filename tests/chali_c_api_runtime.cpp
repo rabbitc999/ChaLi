@@ -5,10 +5,55 @@
 #include "ircode/runtime_internal.hpp"
 #include "c_api_failure_arena.hpp"
 #include <cassert>
+#include <atomic>
+#include <cstdlib>
+#include <new>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
 #include <string>
+
+static std::atomic<std::size_t> allocationEvents{0};
+/**
+ * @brief 记录本测试可执行文件的实际 C++ 堆分配，不改变系统分配器。
+ * @param size 请求字节数。
+ * @return 系统 malloc 分配的块。
+ * @throws std::bad_alloc 系统分配失败。
+ */
+void *operator new(std::size_t size)
+{
+    allocationEvents.fetch_add(1, std::memory_order_relaxed);
+    if (void *value = std::malloc(size ? size : 1)) return value;
+    throw std::bad_alloc();
+}
+/**
+ * @brief 数组分配复用同一系统分配及计数。
+ * @param size 请求字节数。
+ * @return 已分配的块。
+ */
+void *operator new[](std::size_t size) { return ::operator new(size); }
+/**
+ * @brief 释放测试中的系统分配。
+ * @param value 可为空的分配块。
+ */
+void operator delete(void *value) noexcept { std::free(value); }
+/**
+ * @brief 释放数组对应的系统分配。
+ * @param value 可为空的分配块。
+ */
+void operator delete[](void *value) noexcept { std::free(value); }
+/**
+ * @brief 处理带大小的释放形式。
+ * @param value 可为空的分配块。
+ * @param size 编译器提供的原大小，不用于系统 free。
+ */
+void operator delete(void *value, std::size_t size) noexcept { (void)size; std::free(value); }
+/**
+ * @brief 处理带大小的数组释放形式。
+ * @param value 可为空的分配块。
+ * @param size 编译器提供的原大小，不用于系统 free。
+ */
+void operator delete[](void *value, std::size_t size) noexcept { (void)size; std::free(value); }
 
 using namespace stackvm;
 using namespace stackvm::runtimeDetail;
@@ -266,6 +311,15 @@ int main()
         reset();
         const auto record = chali_abi_record_make(&frame, "c-api-test::Integer", new int(42), destroyInteger);
         assert(record && *static_cast<int *>(chali_abi_record_borrow(&frame, record, "c-api-test::Integer")) == 42);
+        const auto allocationsBeforeBorrow = allocationEvents.load(std::memory_order_relaxed);
+        for (int index = 0; index < 100; ++index)
+            assert(*static_cast<int *>(chali_abi_record_borrow(&frame, record, "c-api-test::Integer")) == 42);
+        const auto borrowAllocations = allocationEvents.load(std::memory_order_relaxed) - allocationsBeforeBorrow;
+        const char *expectedEnvironment = std::getenv("CHALI_TEST_HOST_ALLOCATIONS");
+        const auto expectedAllocations = expectedEnvironment ? std::strtoull(expectedEnvironment, nullptr, 10) : 0;
+        std::printf("C host shells: %zu allocations for 100 warmed record borrows\n", borrowAllocations);
+        std::fflush(stdout);
+        assert(borrowAllocations == expectedAllocations);
         int cloneAttempts = 0;
         for (int point = 0; point < 32; ++point)
         {
