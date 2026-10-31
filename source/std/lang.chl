@@ -157,6 +157,8 @@ unsafe int64 __stringStorageData(int64 address);
 unsafe int64 __stringStorageCapacity(int64 address);
 unsafe int64 __stringStorageKind(int64 address);
 unsafe int64 __bufferMaxBytes();
+/** 标准库原语失败保留原始错误文本；沿用同步回调传播和运行期退出路径。 */
+void __runtimeFail(String message);
 unsafe int64 __stringRelease(int64 address);
 unsafe String __stringAdopt(int64 address);
 /** 读取字符串存储的长度元数据，字面量由存储边界识别。 */

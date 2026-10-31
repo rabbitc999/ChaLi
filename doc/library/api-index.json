@@ -496,7 +496,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -504,7 +504,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 16,
+    "line": 161,
     "page": "std-binary.md",
     "anchor": "api-0"
   },
@@ -528,7 +528,7 @@
       "documentation": "复制 bytes 为读取器自有存储。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -538,7 +538,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 18,
+    "line": 163,
     "page": "std-binary.md",
     "anchor": "api-1"
   },
@@ -568,7 +568,7 @@
       "documentation": "从连续数组复制元素；带 count 的重载由调用者保证有效范围。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -578,7 +578,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 26,
+    "line": 171,
     "page": "std-binary.md",
     "anchor": "api-2"
   },
@@ -602,7 +602,7 @@
       "documentation": "从连续数组复制元素；带 count 的重载由调用者保证有效范围。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -612,7 +612,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 34,
+    "line": 179,
     "page": "std-binary.md",
     "anchor": "api-3"
   },
@@ -629,7 +629,7 @@
       "documentation": "返回当前字节游标。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -639,7 +639,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 35,
+    "line": 180,
     "page": "std-binary.md",
     "anchor": "api-4"
   },
@@ -656,7 +656,7 @@
       "documentation": "返回游标后尚未消费的字节数。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -666,7 +666,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 36,
+    "line": 181,
     "page": "std-binary.md",
     "anchor": "api-5"
   },
@@ -683,7 +683,7 @@
       "documentation": "返回存储的总长度。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -693,7 +693,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 37,
+    "line": 182,
     "page": "std-binary.md",
     "anchor": "api-6"
   },
@@ -717,7 +717,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -727,7 +727,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 38,
+    "line": 183,
     "page": "std-binary.md",
     "anchor": "api-7"
   },
@@ -751,7 +751,7 @@
       "documentation": "绝对定位，失败返回 false 并保留游标。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -761,7 +761,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 40,
+    "line": 185,
     "page": "std-binary.md",
     "anchor": "api-8"
   },
@@ -785,7 +785,7 @@
       "documentation": "前进 count 字节；失败返回 false 且游标不变。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -795,7 +795,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 46,
+    "line": 191,
     "page": "std-binary.md",
     "anchor": "api-9"
   },
@@ -812,7 +812,7 @@
       "documentation": "读取一个 int8，成功后前进 1 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -822,7 +822,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 52,
+    "line": 197,
     "page": "std-binary.md",
     "anchor": "api-10"
   },
@@ -846,7 +846,7 @@
       "documentation": "读取 count 个 int8，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -856,7 +856,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 58,
+    "line": 203,
     "page": "std-binary.md",
     "anchor": "api-11"
   },
@@ -873,7 +873,7 @@
       "documentation": "读取一个 uint8，成功后前进 1 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -883,7 +883,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 64,
+    "line": 209,
     "page": "std-binary.md",
     "anchor": "api-12"
   },
@@ -907,7 +907,7 @@
       "documentation": "读取 count 个 uint8，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -917,7 +917,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 70,
+    "line": 215,
     "page": "std-binary.md",
     "anchor": "api-13"
   },
@@ -934,7 +934,7 @@
       "documentation": "读取一个 int16，成功后前进 2 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -944,7 +944,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 76,
+    "line": 221,
     "page": "std-binary.md",
     "anchor": "api-14"
   },
@@ -968,7 +968,7 @@
       "documentation": "读取 count 个 int16，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -978,7 +978,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 82,
+    "line": 227,
     "page": "std-binary.md",
     "anchor": "api-15"
   },
@@ -995,7 +995,7 @@
       "documentation": "读取一个 uint16，成功后前进 2 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1005,7 +1005,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 88,
+    "line": 233,
     "page": "std-binary.md",
     "anchor": "api-16"
   },
@@ -1029,7 +1029,7 @@
       "documentation": "读取 count 个 uint16，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1039,7 +1039,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 94,
+    "line": 239,
     "page": "std-binary.md",
     "anchor": "api-17"
   },
@@ -1056,7 +1056,7 @@
       "documentation": "读取一个 int32，成功后前进 4 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1066,7 +1066,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 100,
+    "line": 245,
     "page": "std-binary.md",
     "anchor": "api-18"
   },
@@ -1090,7 +1090,7 @@
       "documentation": "读取 count 个 int32，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1100,7 +1100,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 106,
+    "line": 251,
     "page": "std-binary.md",
     "anchor": "api-19"
   },
@@ -1117,7 +1117,7 @@
       "documentation": "读取一个 uint32，成功后前进 4 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1127,7 +1127,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 112,
+    "line": 257,
     "page": "std-binary.md",
     "anchor": "api-20"
   },
@@ -1151,7 +1151,7 @@
       "documentation": "读取 count 个 uint32，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1161,7 +1161,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 118,
+    "line": 263,
     "page": "std-binary.md",
     "anchor": "api-21"
   },
@@ -1178,7 +1178,7 @@
       "documentation": "读取一个 int64，成功后前进 8 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1188,7 +1188,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 124,
+    "line": 269,
     "page": "std-binary.md",
     "anchor": "api-22"
   },
@@ -1212,7 +1212,7 @@
       "documentation": "读取 count 个 int64，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1222,7 +1222,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 130,
+    "line": 275,
     "page": "std-binary.md",
     "anchor": "api-23"
   },
@@ -1239,7 +1239,7 @@
       "documentation": "读取一个 uint64，成功后前进 8 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1249,7 +1249,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 136,
+    "line": 281,
     "page": "std-binary.md",
     "anchor": "api-24"
   },
@@ -1273,7 +1273,7 @@
       "documentation": "读取 count 个 uint64，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1283,7 +1283,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 142,
+    "line": 287,
     "page": "std-binary.md",
     "anchor": "api-25"
   },
@@ -1300,7 +1300,7 @@
       "documentation": "读取一个 float32，成功后前进 4 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1310,7 +1310,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 148,
+    "line": 293,
     "page": "std-binary.md",
     "anchor": "api-26"
   },
@@ -1334,7 +1334,7 @@
       "documentation": "读取 count 个 float32，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1344,7 +1344,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 154,
+    "line": 299,
     "page": "std-binary.md",
     "anchor": "api-27"
   },
@@ -1361,7 +1361,7 @@
       "documentation": "读取一个 float64，成功后前进 8 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1371,7 +1371,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 160,
+    "line": 305,
     "page": "std-binary.md",
     "anchor": "api-28"
   },
@@ -1395,7 +1395,7 @@
       "documentation": "读取 count 个 float64，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1405,7 +1405,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 166,
+    "line": 311,
     "page": "std-binary.md",
     "anchor": "api-29"
   },
@@ -1422,7 +1422,7 @@
       "documentation": "读取一个 bool，成功后前进 1 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1432,7 +1432,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 172,
+    "line": 317,
     "page": "std-binary.md",
     "anchor": "api-30"
   },
@@ -1456,7 +1456,7 @@
       "documentation": "读取 count 个 bool，返回独立列表。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1466,7 +1466,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 178,
+    "line": 323,
     "page": "std-binary.md",
     "anchor": "api-31"
   },
@@ -1490,7 +1490,7 @@
       "documentation": "读取原始字节，保留零字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1500,7 +1500,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 184,
+    "line": 329,
     "page": "std-binary.md",
     "anchor": "api-32"
   },
@@ -1524,7 +1524,7 @@
       "documentation": "读取 length 字节文本字段，首个零字节终止文本，仍消费整个字段。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1534,7 +1534,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 186,
+    "line": 331,
     "page": "std-binary.md",
     "anchor": "api-33"
   },
@@ -1564,7 +1564,7 @@
       "documentation": "读取 count 个定宽字符串，每个字段占 width 字节。"
     },
     "errors": {
-      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
+      "documentation": "BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。",
       "preconditions": [],
       "panic": false
     },
@@ -1574,7 +1574,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/binary.chl",
-    "line": 192,
+    "line": 337,
     "page": "std-binary.md",
     "anchor": "api-34"
   },
@@ -14098,7 +14098,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 477,
+    "line": 479,
     "page": "std-lang.md",
     "anchor": "api-1"
   },
@@ -14123,7 +14123,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 479,
+    "line": 481,
     "page": "std-lang.md",
     "anchor": "api-2"
   },
@@ -14148,7 +14148,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 482,
+    "line": 484,
     "page": "std-lang.md",
     "anchor": "api-3"
   },
@@ -14173,7 +14173,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 485,
+    "line": 487,
     "page": "std-lang.md",
     "anchor": "api-4"
   },
@@ -14198,7 +14198,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 488,
+    "line": 490,
     "page": "std-lang.md",
     "anchor": "api-5"
   },
@@ -14230,7 +14230,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 491,
+    "line": 493,
     "page": "std-lang.md",
     "anchor": "api-6"
   },
@@ -14262,7 +14262,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 494,
+    "line": 496,
     "page": "std-lang.md",
     "anchor": "api-7"
   },
@@ -14287,7 +14287,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 497,
+    "line": 499,
     "page": "std-lang.md",
     "anchor": "api-8"
   },
@@ -14319,7 +14319,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 500,
+    "line": 502,
     "page": "std-lang.md",
     "anchor": "api-9"
   },
@@ -14344,7 +14344,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 503,
+    "line": 505,
     "page": "std-lang.md",
     "anchor": "api-10"
   },
@@ -14369,7 +14369,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 506,
+    "line": 508,
     "page": "std-lang.md",
     "anchor": "api-11"
   },
@@ -14394,7 +14394,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 509,
+    "line": 511,
     "page": "std-lang.md",
     "anchor": "api-12"
   },
@@ -14419,7 +14419,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 512,
+    "line": 514,
     "page": "std-lang.md",
     "anchor": "api-13"
   },
@@ -14444,7 +14444,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 515,
+    "line": 517,
     "page": "std-lang.md",
     "anchor": "api-14"
   },
@@ -14469,7 +14469,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 518,
+    "line": 520,
     "page": "std-lang.md",
     "anchor": "api-15"
   },
@@ -14494,7 +14494,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 521,
+    "line": 523,
     "page": "std-lang.md",
     "anchor": "api-16"
   },
@@ -14532,7 +14532,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 524,
+    "line": 526,
     "page": "std-lang.md",
     "anchor": "api-17"
   },
@@ -14570,7 +14570,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 527,
+    "line": 529,
     "page": "std-lang.md",
     "anchor": "api-18"
   },
@@ -14602,7 +14602,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 530,
+    "line": 532,
     "page": "std-lang.md",
     "anchor": "api-19"
   },
@@ -14634,7 +14634,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 533,
+    "line": 535,
     "page": "std-lang.md",
     "anchor": "api-20"
   },
@@ -14666,7 +14666,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 536,
+    "line": 538,
     "page": "std-lang.md",
     "anchor": "api-21"
   },
@@ -14698,7 +14698,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 539,
+    "line": 541,
     "page": "std-lang.md",
     "anchor": "api-22"
   },
@@ -14730,7 +14730,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 542,
+    "line": 544,
     "page": "std-lang.md",
     "anchor": "api-23"
   },
@@ -14762,7 +14762,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 545,
+    "line": 547,
     "page": "std-lang.md",
     "anchor": "api-24"
   },
@@ -14800,7 +14800,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 548,
+    "line": 550,
     "page": "std-lang.md",
     "anchor": "api-25"
   },
@@ -14838,7 +14838,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 551,
+    "line": 553,
     "page": "std-lang.md",
     "anchor": "api-26"
   },
@@ -14870,7 +14870,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 554,
+    "line": 556,
     "page": "std-lang.md",
     "anchor": "api-27"
   },
@@ -14902,7 +14902,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 557,
+    "line": 559,
     "page": "std-lang.md",
     "anchor": "api-28"
   },
@@ -14927,7 +14927,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 560,
+    "line": 562,
     "page": "std-lang.md",
     "anchor": "api-29"
   },
@@ -14952,7 +14952,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 563,
+    "line": 565,
     "page": "std-lang.md",
     "anchor": "api-30"
   },
@@ -14977,7 +14977,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 566,
+    "line": 568,
     "page": "std-lang.md",
     "anchor": "api-31"
   },
@@ -15002,7 +15002,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 569,
+    "line": 571,
     "page": "std-lang.md",
     "anchor": "api-32"
   },
@@ -15027,7 +15027,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 572,
+    "line": 574,
     "page": "std-lang.md",
     "anchor": "api-33"
   },
@@ -15065,7 +15065,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 575,
+    "line": 577,
     "page": "std-lang.md",
     "anchor": "api-34"
   },
@@ -15103,7 +15103,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 578,
+    "line": 580,
     "page": "std-lang.md",
     "anchor": "api-35"
   },
@@ -15141,7 +15141,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 581,
+    "line": 583,
     "page": "std-lang.md",
     "anchor": "api-36"
   },
@@ -15173,7 +15173,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 584,
+    "line": 586,
     "page": "std-lang.md",
     "anchor": "api-37"
   },
@@ -15198,7 +15198,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 587,
+    "line": 589,
     "page": "std-lang.md",
     "anchor": "api-38"
   },
@@ -15236,7 +15236,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 590,
+    "line": 592,
     "page": "std-lang.md",
     "anchor": "api-39"
   },
@@ -15274,7 +15274,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 593,
+    "line": 595,
     "page": "std-lang.md",
     "anchor": "api-40"
   },
@@ -15306,7 +15306,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 596,
+    "line": 598,
     "page": "std-lang.md",
     "anchor": "api-41"
   },
@@ -15338,7 +15338,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 599,
+    "line": 601,
     "page": "std-lang.md",
     "anchor": "api-42"
   },
@@ -15376,7 +15376,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 602,
+    "line": 604,
     "page": "std-lang.md",
     "anchor": "api-43"
   },
@@ -15414,7 +15414,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 605,
+    "line": 607,
     "page": "std-lang.md",
     "anchor": "api-44"
   },
@@ -15452,7 +15452,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 608,
+    "line": 610,
     "page": "std-lang.md",
     "anchor": "api-45"
   },
@@ -15484,7 +15484,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 611,
+    "line": 613,
     "page": "std-lang.md",
     "anchor": "api-46"
   },
@@ -15522,7 +15522,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 614,
+    "line": 616,
     "page": "std-lang.md",
     "anchor": "api-47"
   },
@@ -15547,7 +15547,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 617,
+    "line": 619,
     "page": "std-lang.md",
     "anchor": "api-48"
   },
@@ -15579,7 +15579,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 620,
+    "line": 622,
     "page": "std-lang.md",
     "anchor": "api-49"
   },
@@ -15604,7 +15604,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 623,
+    "line": 625,
     "page": "std-lang.md",
     "anchor": "api-50"
   },
@@ -15629,7 +15629,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 626,
+    "line": 628,
     "page": "std-lang.md",
     "anchor": "api-51"
   },
@@ -15661,7 +15661,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 629,
+    "line": 631,
     "page": "std-lang.md",
     "anchor": "api-52"
   },
@@ -15693,7 +15693,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 632,
+    "line": 634,
     "page": "std-lang.md",
     "anchor": "api-53"
   },
@@ -15725,7 +15725,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 635,
+    "line": 637,
     "page": "std-lang.md",
     "anchor": "api-54"
   },
@@ -15750,7 +15750,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 641,
+    "line": 643,
     "page": "std-lang.md",
     "anchor": "api-55"
   },
@@ -15775,7 +15775,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 647,
+    "line": 649,
     "page": "std-lang.md",
     "anchor": "api-56"
   },
@@ -15800,7 +15800,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 655,
+    "line": 657,
     "page": "std-lang.md",
     "anchor": "api-57"
   },
@@ -15834,7 +15834,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 657,
+    "line": 659,
     "page": "std-lang.md",
     "anchor": "api-58"
   },
@@ -15866,7 +15866,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 683,
+    "line": 685,
     "page": "std-lang.md",
     "anchor": "api-59"
   },
@@ -15901,7 +15901,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 689,
+    "line": 691,
     "page": "std-lang.md",
     "anchor": "api-60"
   },
@@ -15928,7 +15928,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 756,
+    "line": 758,
     "page": "std-lang.md",
     "anchor": "api-61"
   },
@@ -15962,7 +15962,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 760,
+    "line": 762,
     "page": "std-lang.md",
     "anchor": "api-62"
   },
@@ -15996,7 +15996,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 764,
+    "line": 766,
     "page": "std-lang.md",
     "anchor": "api-63"
   },
@@ -16028,7 +16028,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 768,
+    "line": 770,
     "page": "std-lang.md",
     "anchor": "api-64"
   },
@@ -16060,7 +16060,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 774,
+    "line": 776,
     "page": "std-lang.md",
     "anchor": "api-65"
   },
@@ -16092,7 +16092,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 776,
+    "line": 778,
     "page": "std-lang.md",
     "anchor": "api-66"
   },
@@ -16124,7 +16124,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 778,
+    "line": 780,
     "page": "std-lang.md",
     "anchor": "api-67"
   },
@@ -16162,7 +16162,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 781,
+    "line": 783,
     "page": "std-lang.md",
     "anchor": "api-68"
   },
@@ -16194,7 +16194,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 783,
+    "line": 785,
     "page": "std-lang.md",
     "anchor": "api-69"
   },
@@ -16232,7 +16232,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 785,
+    "line": 787,
     "page": "std-lang.md",
     "anchor": "api-70"
   },
@@ -16264,7 +16264,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 790,
+    "line": 792,
     "page": "std-lang.md",
     "anchor": "api-71"
   },
@@ -16308,7 +16308,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 792,
+    "line": 794,
     "page": "std-lang.md",
     "anchor": "api-72"
   },
@@ -16346,7 +16346,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 797,
+    "line": 799,
     "page": "std-lang.md",
     "anchor": "api-73"
   },
@@ -16384,7 +16384,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 799,
+    "line": 801,
     "page": "std-lang.md",
     "anchor": "api-74"
   },
@@ -16416,7 +16416,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 801,
+    "line": 803,
     "page": "std-lang.md",
     "anchor": "api-75"
   },
@@ -16466,7 +16466,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 803,
+    "line": 805,
     "page": "std-lang.md",
     "anchor": "api-76"
   },
@@ -16510,7 +16510,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 808,
+    "line": 810,
     "page": "std-lang.md",
     "anchor": "api-77"
   },
@@ -16554,7 +16554,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 810,
+    "line": 812,
     "page": "std-lang.md",
     "anchor": "api-78"
   },
@@ -16592,7 +16592,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 815,
+    "line": 817,
     "page": "std-lang.md",
     "anchor": "api-79"
   },
@@ -16630,7 +16630,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 818,
+    "line": 820,
     "page": "std-lang.md",
     "anchor": "api-80"
   },
@@ -16662,7 +16662,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 820,
+    "line": 822,
     "page": "std-lang.md",
     "anchor": "api-81"
   },
@@ -16700,7 +16700,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 822,
+    "line": 824,
     "page": "std-lang.md",
     "anchor": "api-82"
   },
@@ -16732,7 +16732,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 827,
+    "line": 829,
     "page": "std-lang.md",
     "anchor": "api-83"
   },
@@ -16776,7 +16776,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 829,
+    "line": 831,
     "page": "std-lang.md",
     "anchor": "api-84"
   },
@@ -16814,7 +16814,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 834,
+    "line": 836,
     "page": "std-lang.md",
     "anchor": "api-85"
   },
@@ -16852,7 +16852,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 836,
+    "line": 838,
     "page": "std-lang.md",
     "anchor": "api-86"
   },
@@ -16884,7 +16884,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 838,
+    "line": 840,
     "page": "std-lang.md",
     "anchor": "api-87"
   },
@@ -16934,7 +16934,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 840,
+    "line": 842,
     "page": "std-lang.md",
     "anchor": "api-88"
   },
@@ -16978,7 +16978,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 845,
+    "line": 847,
     "page": "std-lang.md",
     "anchor": "api-89"
   },
@@ -17022,7 +17022,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 847,
+    "line": 849,
     "page": "std-lang.md",
     "anchor": "api-90"
   },
@@ -17060,7 +17060,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 852,
+    "line": 854,
     "page": "std-lang.md",
     "anchor": "api-91"
   },
@@ -17094,7 +17094,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 865,
+    "line": 867,
     "page": "std-lang.md",
     "anchor": "api-92"
   },
@@ -17134,7 +17134,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 869,
+    "line": 871,
     "page": "std-lang.md",
     "anchor": "api-93"
   },
@@ -17174,7 +17174,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 873,
+    "line": 875,
     "page": "std-lang.md",
     "anchor": "api-94"
   },
@@ -17220,7 +17220,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 877,
+    "line": 879,
     "page": "std-lang.md",
     "anchor": "api-95"
   },
@@ -17245,7 +17245,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 888,
+    "line": 890,
     "page": "std-lang.md",
     "anchor": "api-96"
   },
@@ -17270,7 +17270,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 890,
+    "line": 892,
     "page": "std-lang.md",
     "anchor": "api-97"
   },
@@ -17302,7 +17302,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 892,
+    "line": 894,
     "page": "std-lang.md",
     "anchor": "api-98"
   },
@@ -17327,7 +17327,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 897,
+    "line": 899,
     "page": "std-lang.md",
     "anchor": "api-99"
   },
@@ -17352,7 +17352,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 903,
+    "line": 905,
     "page": "std-lang.md",
     "anchor": "api-100"
   },
@@ -17384,7 +17384,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 907,
+    "line": 909,
     "page": "std-lang.md",
     "anchor": "api-101"
   },
@@ -17409,7 +17409,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 908,
+    "line": 910,
     "page": "std-lang.md",
     "anchor": "api-102"
   },
@@ -17434,7 +17434,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 917,
+    "line": 919,
     "page": "std-lang.md",
     "anchor": "api-103"
   },
@@ -17459,7 +17459,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 920,
+    "line": 922,
     "page": "std-lang.md",
     "anchor": "api-104"
   },
@@ -17486,7 +17486,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 930,
+    "line": 932,
     "page": "std-lang.md",
     "anchor": "api-105"
   },
@@ -17518,7 +17518,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 939,
+    "line": 941,
     "page": "std-lang.md",
     "anchor": "api-106"
   },
@@ -17550,7 +17550,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 948,
+    "line": 950,
     "page": "std-lang.md",
     "anchor": "api-107"
   },
@@ -17582,7 +17582,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 957,
+    "line": 959,
     "page": "std-lang.md",
     "anchor": "api-108"
   },
@@ -17614,7 +17614,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 966,
+    "line": 968,
     "page": "std-lang.md",
     "anchor": "api-109"
   },
@@ -17639,7 +17639,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 987,
+    "line": 989,
     "page": "std-lang.md",
     "anchor": "api-110"
   },
@@ -17664,7 +17664,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 997,
+    "line": 999,
     "page": "std-lang.md",
     "anchor": "api-111"
   },
@@ -17696,7 +17696,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1003,
+    "line": 1005,
     "page": "std-lang.md",
     "anchor": "api-112"
   },
@@ -17721,7 +17721,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1004,
+    "line": 1006,
     "page": "std-lang.md",
     "anchor": "api-113"
   },
@@ -17746,7 +17746,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1010,
+    "line": 1012,
     "page": "std-lang.md",
     "anchor": "api-114"
   },
@@ -17771,7 +17771,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1019,
+    "line": 1021,
     "page": "std-lang.md",
     "anchor": "api-115"
   },
@@ -17796,7 +17796,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1022,
+    "line": 1024,
     "page": "std-lang.md",
     "anchor": "api-116"
   },
@@ -17823,7 +17823,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1032,
+    "line": 1034,
     "page": "std-lang.md",
     "anchor": "api-117"
   },
@@ -17855,7 +17855,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1041,
+    "line": 1043,
     "page": "std-lang.md",
     "anchor": "api-118"
   },
@@ -17887,7 +17887,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1050,
+    "line": 1052,
     "page": "std-lang.md",
     "anchor": "api-119"
   },
@@ -17912,7 +17912,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1060,
+    "line": 1062,
     "page": "std-lang.md",
     "anchor": "api-120"
   },
@@ -17937,7 +17937,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1070,
+    "line": 1072,
     "page": "std-lang.md",
     "anchor": "api-121"
   },
@@ -17969,7 +17969,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1079,
+    "line": 1081,
     "page": "std-lang.md",
     "anchor": "api-122"
   },
@@ -18001,7 +18001,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1088,
+    "line": 1090,
     "page": "std-lang.md",
     "anchor": "api-123"
   },
@@ -18039,7 +18039,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1109,
+    "line": 1111,
     "page": "std-lang.md",
     "anchor": "api-124"
   },
@@ -18079,7 +18079,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1165,
+    "line": 1167,
     "page": "std-lang.md",
     "anchor": "api-125"
   },
@@ -18113,7 +18113,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1175,
+    "line": 1177,
     "page": "std-lang.md",
     "anchor": "api-126"
   },
@@ -18138,7 +18138,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1184,
+    "line": 1186,
     "page": "std-lang.md",
     "anchor": "api-127"
   },
@@ -18170,7 +18170,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1208,
+    "line": 1210,
     "page": "std-lang.md",
     "anchor": "api-128"
   },
@@ -18202,7 +18202,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1214,
+    "line": 1216,
     "page": "std-lang.md",
     "anchor": "api-129"
   },
@@ -18234,7 +18234,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1219,
+    "line": 1221,
     "page": "std-lang.md",
     "anchor": "api-130"
   },
@@ -18266,7 +18266,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1234,
+    "line": 1236,
     "page": "std-lang.md",
     "anchor": "api-131"
   },
@@ -18298,7 +18298,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1285,
+    "line": 1287,
     "page": "std-lang.md",
     "anchor": "api-132"
   },
@@ -18330,7 +18330,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1291,
+    "line": 1293,
     "page": "std-lang.md",
     "anchor": "api-133"
   },
@@ -18362,7 +18362,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1293,
+    "line": 1295,
     "page": "std-lang.md",
     "anchor": "api-134"
   },
@@ -18396,7 +18396,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1299,
+    "line": 1301,
     "page": "std-lang.md",
     "anchor": "api-135"
   },
@@ -18428,7 +18428,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1309,
+    "line": 1311,
     "page": "std-lang.md",
     "anchor": "api-136"
   },
@@ -18460,7 +18460,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1316,
+    "line": 1318,
     "page": "std-lang.md",
     "anchor": "api-137"
   },
@@ -18492,7 +18492,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1331,
+    "line": 1333,
     "page": "std-lang.md",
     "anchor": "api-138"
   },
@@ -18536,7 +18536,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1338,
+    "line": 1340,
     "page": "std-lang.md",
     "anchor": "api-139"
   },
@@ -18580,7 +18580,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1347,
+    "line": 1349,
     "page": "std-lang.md",
     "anchor": "api-140"
   },
@@ -18618,7 +18618,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1352,
+    "line": 1354,
     "page": "std-lang.md",
     "anchor": "api-141"
   },
@@ -18650,7 +18650,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1360,
+    "line": 1362,
     "page": "std-lang.md",
     "anchor": "api-142"
   },
@@ -18682,7 +18682,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1367,
+    "line": 1369,
     "page": "std-lang.md",
     "anchor": "api-143"
   },
@@ -18714,7 +18714,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1372,
+    "line": 1374,
     "page": "std-lang.md",
     "anchor": "api-144"
   },
@@ -18746,7 +18746,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1381,
+    "line": 1383,
     "page": "std-lang.md",
     "anchor": "api-145"
   },
@@ -18795,7 +18795,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1386,
+    "line": 1388,
     "page": "std-lang.md",
     "anchor": "api-146"
   },
@@ -18827,7 +18827,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1418,
+    "line": 1420,
     "page": "std-lang.md",
     "anchor": "api-147"
   },
@@ -18852,7 +18852,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1426,
+    "line": 1428,
     "page": "std-lang.md",
     "anchor": "api-148"
   },
@@ -18886,7 +18886,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1431,
+    "line": 1433,
     "page": "std-lang.md",
     "anchor": "api-149"
   },
@@ -18918,7 +18918,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1439,
+    "line": 1441,
     "page": "std-lang.md",
     "anchor": "api-150"
   },
@@ -18943,7 +18943,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/lang.chl",
-    "line": 1443,
+    "line": 1445,
     "page": "std-lang.md",
     "anchor": "api-151"
   },

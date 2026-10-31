@@ -36,9 +36,6 @@
 #include "std_toml.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_BINARY
-#include "std_binary.hpp"
-#endif
 #ifndef GLUE_NO_STD_COMPRESS
 #include "std_compress.hpp"
 #endif
@@ -83,9 +80,6 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_TOML
     ok = std_toml_glue::bind(registry, error) && ok;
-#endif
-#ifndef GLUE_NO_STD_BINARY
-    if (!std_binary_glue::bind(registry, error)) ok = false;
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
     if (!std_compress_glue::bind(registry, error)) ok = false;

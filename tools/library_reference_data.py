@@ -13,7 +13,7 @@ MODULES = {
     'std::reflect': ('反射', '要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。'),
     'std::algorithms': ('通用算法', '需 import std::algorithms; 并使用完整限定名。Value 族由 ChaLi 实现列表遍历与回调；sortValue 采用稳定索引归并并返回独立副本，shuffleValue 也返回副本。Reference 族直接操作连续存储，调用者保证 count 对应有效元素数；返回的引用不能越过缓冲区生命周期。Reference 排序比较使用 >；默认稳定插入排序，构建时 SIMPLE_SORT 可切换到不稳定希尔排序。二分查找要求已升序排列。'),
     'std::image': ('图片处理', 'Image 是可深复制的 opcode，尺寸与连续 RGBA8888 像素存储由宿主记录拥有；width()/height() 返回尺寸，pixels() 返回独立列表快照。decode/open 支持无压缩 24/32 位 BMP 与二进制 P5/P6，按魔数自动识别；encodeBmp/encodePpm/encodePgm 与 saveBmp/savePpm/savePgm 生成对应文件字节或写盘。getPixel/setPixel 越界或分量超 0..255 返回错误，不 panic。卷积要求核边长为不超过 15 的奇数，边缘复制填充；池化窗口 0=最大 1=平均，输出尺寸向下取整。灰度采用 BT.601 亮度；ARGB8888 每像素一个 uint32，RGB565 每像素一个 uint16，还原时按高位复制扩展。大津法返回 0..255 阈值，二值化大于阈值给 255。重活由宿主胶水 glue/std_image.hpp 提供，裁剪宏 NO_CHALI_STD_IMAGE。'),
-    'std::binary': ('二进制读取', 'BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。'),
+    'std::binary': ('二进制读取', 'BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。'),
     'std::clock': ('单调时钟', '采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。'),
     'std::complex': ('泛型复数', 'Complex<T> 保存 real/imag；T 应支持所用的四则运算。leftAdd/leftSub/leftMul/leftDiv 是运算符接口，支持 +、-、*、/。整数 T 的除法仍采用整数运算规则。'),
     'std::compress': ('无损压缩', 'compress 输入文本，输出二进制 List<uint8>；不能把压缩结果当 UTF-8 文本输出。decompress 对无效编码或损坏数据报告宿主运行错误，不返回 Result。'),

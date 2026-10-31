@@ -1,0 +1,36 @@
+import std::binary;
+
+void main() {
+    uint8 input[8];
+    input[0] = (uint8)255;
+    input[1] = (uint8)254;
+    input[2] = (uint8)0;
+    input[3] = (uint8)88;
+    input[4] = (uint8)97;
+    input[5] = (uint8)0;
+    input[6] = (uint8)98;
+    input[7] = (uint8)99;
+    std::binary::BinaryReader reader = std::binary::BinaryReader::fromArray(input, 8);
+    input[0] = (uint8)0;
+    std::binary::BinaryReader copied = reader;
+    List<String> values = reader.readStringArray(2, 4);
+    assert(values[0].length() == 2);
+    assert(values[0].byteAt(0).unwrap() == (uint8)255);
+    assert(values[0].byteAt(1).unwrap() == (uint8)254);
+    assert(values[1] == "a" && reader.position() == 8);
+    String first = values[0];
+    values.clear();
+    assert(first.byteAt(0).unwrap() == (uint8)255);
+    assert(reader.readString(0) == "");
+    assert(reader.readUint64Array(0).len() == 0);
+    assert(reader.readStringArray(0, 9223372036854775807).len() == 0);
+    List<String> zeroWidth = reader.readStringArray(3, 0);
+    assert(zeroWidth.len() == 3 && zeroWidth[0] == "" && zeroWidth[2] == "");
+    assert(reader.position() == 8 && !reader.skip(-1) && !reader.seek(9));
+    reader.bytes.clear();
+    assert(copied.position() == 0 && copied.readUint8() == (uint8)255);
+    uint8 empty[] = new[0];
+    std::binary::BinaryReader none = std::binary::BinaryReader::fromArray(empty);
+    assert(none.size() == 0 && none.readBytes(0).len() == 0);
+    println("binary edge cases OK");
+}

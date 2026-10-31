@@ -14,7 +14,7 @@ import std::binary;
 
 ## 公共约定与错误边界
 
-BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。越界、负长度、元素数量乘法越界由宿主检查并报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。
+BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。
 
 ## 参考代码
 
@@ -301,7 +301,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/binary.chl:16](../../source/std/binary.chl#L16)。
+**源码**：[source/std/binary.chl:161](../../source/std/binary.chl#L161)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -341,7 +341,7 @@ static BinaryReader fromBytes(std::lang::List<uint8> bytes);
 std::binary::BinaryReader::fromBytes(bytes);
 ```
 
-**源码**：[source/std/binary.chl:18](../../source/std/binary.chl#L18)。
+**源码**：[source/std/binary.chl:163](../../source/std/binary.chl#L163)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -382,7 +382,7 @@ static BinaryReader fromArray(uint8 const& bytes, int64 count);
 std::binary::BinaryReader::fromArray(bytes, count);
 ```
 
-**源码**：[source/std/binary.chl:26](../../source/std/binary.chl#L26)。
+**源码**：[source/std/binary.chl:171](../../source/std/binary.chl#L171)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -422,7 +422,7 @@ static BinaryReader fromArray(uint8 bytes[]);
 std::binary::BinaryReader::fromArray(bytes);
 ```
 
-**源码**：[source/std/binary.chl:34](../../source/std/binary.chl#L34)。
+**源码**：[source/std/binary.chl:179](../../source/std/binary.chl#L179)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -458,7 +458,7 @@ int64 position();
 obj.position();
 ```
 
-**源码**：[source/std/binary.chl:35](../../source/std/binary.chl#L35)。
+**源码**：[source/std/binary.chl:180](../../source/std/binary.chl#L180)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -494,7 +494,7 @@ int64 remaining();
 obj.remaining();
 ```
 
-**源码**：[source/std/binary.chl:36](../../source/std/binary.chl#L36)。
+**源码**：[source/std/binary.chl:181](../../source/std/binary.chl#L181)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -530,7 +530,7 @@ int64 size();
 obj.size();
 ```
 
-**源码**：[source/std/binary.chl:37](../../source/std/binary.chl#L37)。
+**源码**：[source/std/binary.chl:182](../../source/std/binary.chl#L182)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -568,7 +568,7 @@ void setBigEndian(bool enabled);
 obj.setBigEndian(enabled);
 ```
 
-**源码**：[source/std/binary.chl:38](../../source/std/binary.chl#L38)。
+**源码**：[source/std/binary.chl:183](../../source/std/binary.chl#L183)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -606,7 +606,7 @@ bool seek(int64 position);
 obj.seek(position);
 ```
 
-**源码**：[source/std/binary.chl:40](../../source/std/binary.chl#L40)。
+**源码**：[source/std/binary.chl:185](../../source/std/binary.chl#L185)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -646,7 +646,7 @@ bool skip(int64 count);
 obj.skip(count);
 ```
 
-**源码**：[source/std/binary.chl:46](../../source/std/binary.chl#L46)。
+**源码**：[source/std/binary.chl:191](../../source/std/binary.chl#L191)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -682,7 +682,7 @@ int8 readInt8();
 obj.readInt8();
 ```
 
-**源码**：[source/std/binary.chl:52](../../source/std/binary.chl#L52)。
+**源码**：[source/std/binary.chl:197](../../source/std/binary.chl#L197)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -720,7 +720,7 @@ std::lang::List<int8> readInt8Array(int64 count);
 obj.readInt8Array(count);
 ```
 
-**源码**：[source/std/binary.chl:58](../../source/std/binary.chl#L58)。
+**源码**：[source/std/binary.chl:203](../../source/std/binary.chl#L203)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -756,7 +756,7 @@ uint8 readUint8();
 obj.readUint8();
 ```
 
-**源码**：[source/std/binary.chl:64](../../source/std/binary.chl#L64)。
+**源码**：[source/std/binary.chl:209](../../source/std/binary.chl#L209)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -794,7 +794,7 @@ std::lang::List<uint8> readUint8Array(int64 count);
 obj.readUint8Array(count);
 ```
 
-**源码**：[source/std/binary.chl:70](../../source/std/binary.chl#L70)。
+**源码**：[source/std/binary.chl:215](../../source/std/binary.chl#L215)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -830,7 +830,7 @@ int16 readInt16();
 obj.readInt16();
 ```
 
-**源码**：[source/std/binary.chl:76](../../source/std/binary.chl#L76)。
+**源码**：[source/std/binary.chl:221](../../source/std/binary.chl#L221)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -868,7 +868,7 @@ std::lang::List<int16> readInt16Array(int64 count);
 obj.readInt16Array(count);
 ```
 
-**源码**：[source/std/binary.chl:82](../../source/std/binary.chl#L82)。
+**源码**：[source/std/binary.chl:227](../../source/std/binary.chl#L227)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -904,7 +904,7 @@ uint16 readUint16();
 obj.readUint16();
 ```
 
-**源码**：[source/std/binary.chl:88](../../source/std/binary.chl#L88)。
+**源码**：[source/std/binary.chl:233](../../source/std/binary.chl#L233)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -942,7 +942,7 @@ std::lang::List<uint16> readUint16Array(int64 count);
 obj.readUint16Array(count);
 ```
 
-**源码**：[source/std/binary.chl:94](../../source/std/binary.chl#L94)。
+**源码**：[source/std/binary.chl:239](../../source/std/binary.chl#L239)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -978,7 +978,7 @@ int32 readInt32();
 obj.readInt32();
 ```
 
-**源码**：[source/std/binary.chl:100](../../source/std/binary.chl#L100)。
+**源码**：[source/std/binary.chl:245](../../source/std/binary.chl#L245)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1016,7 +1016,7 @@ std::lang::List<int32> readInt32Array(int64 count);
 obj.readInt32Array(count);
 ```
 
-**源码**：[source/std/binary.chl:106](../../source/std/binary.chl#L106)。
+**源码**：[source/std/binary.chl:251](../../source/std/binary.chl#L251)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1052,7 +1052,7 @@ uint32 readUint32();
 obj.readUint32();
 ```
 
-**源码**：[source/std/binary.chl:112](../../source/std/binary.chl#L112)。
+**源码**：[source/std/binary.chl:257](../../source/std/binary.chl#L257)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1090,7 +1090,7 @@ std::lang::List<uint32> readUint32Array(int64 count);
 obj.readUint32Array(count);
 ```
 
-**源码**：[source/std/binary.chl:118](../../source/std/binary.chl#L118)。
+**源码**：[source/std/binary.chl:263](../../source/std/binary.chl#L263)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1126,7 +1126,7 @@ int64 readInt64();
 obj.readInt64();
 ```
 
-**源码**：[source/std/binary.chl:124](../../source/std/binary.chl#L124)。
+**源码**：[source/std/binary.chl:269](../../source/std/binary.chl#L269)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1164,7 +1164,7 @@ std::lang::List<int64> readInt64Array(int64 count);
 obj.readInt64Array(count);
 ```
 
-**源码**：[source/std/binary.chl:130](../../source/std/binary.chl#L130)。
+**源码**：[source/std/binary.chl:275](../../source/std/binary.chl#L275)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1200,7 +1200,7 @@ uint64 readUint64();
 obj.readUint64();
 ```
 
-**源码**：[source/std/binary.chl:136](../../source/std/binary.chl#L136)。
+**源码**：[source/std/binary.chl:281](../../source/std/binary.chl#L281)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1238,7 +1238,7 @@ std::lang::List<uint64> readUint64Array(int64 count);
 obj.readUint64Array(count);
 ```
 
-**源码**：[source/std/binary.chl:142](../../source/std/binary.chl#L142)。
+**源码**：[source/std/binary.chl:287](../../source/std/binary.chl#L287)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1274,7 +1274,7 @@ float32 readFloat32();
 obj.readFloat32();
 ```
 
-**源码**：[source/std/binary.chl:148](../../source/std/binary.chl#L148)。
+**源码**：[source/std/binary.chl:293](../../source/std/binary.chl#L293)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1312,7 +1312,7 @@ std::lang::List<float32> readFloat32Array(int64 count);
 obj.readFloat32Array(count);
 ```
 
-**源码**：[source/std/binary.chl:154](../../source/std/binary.chl#L154)。
+**源码**：[source/std/binary.chl:299](../../source/std/binary.chl#L299)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1348,7 +1348,7 @@ float64 readFloat64();
 obj.readFloat64();
 ```
 
-**源码**：[source/std/binary.chl:160](../../source/std/binary.chl#L160)。
+**源码**：[source/std/binary.chl:305](../../source/std/binary.chl#L305)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1386,7 +1386,7 @@ std::lang::List<float64> readFloat64Array(int64 count);
 obj.readFloat64Array(count);
 ```
 
-**源码**：[source/std/binary.chl:166](../../source/std/binary.chl#L166)。
+**源码**：[source/std/binary.chl:311](../../source/std/binary.chl#L311)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1422,7 +1422,7 @@ bool readBool();
 obj.readBool();
 ```
 
-**源码**：[source/std/binary.chl:172](../../source/std/binary.chl#L172)。
+**源码**：[source/std/binary.chl:317](../../source/std/binary.chl#L317)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1460,7 +1460,7 @@ std::lang::List<bool> readBoolArray(int64 count);
 obj.readBoolArray(count);
 ```
 
-**源码**：[source/std/binary.chl:178](../../source/std/binary.chl#L178)。
+**源码**：[source/std/binary.chl:323](../../source/std/binary.chl#L323)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1498,7 +1498,7 @@ std::lang::List<uint8> readBytes(int64 count);
 obj.readBytes(count);
 ```
 
-**源码**：[source/std/binary.chl:184](../../source/std/binary.chl#L184)。
+**源码**：[source/std/binary.chl:329](../../source/std/binary.chl#L329)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1536,7 +1536,7 @@ std::lang::String readString(int64 length);
 obj.readString(length);
 ```
 
-**源码**：[source/std/binary.chl:186](../../source/std/binary.chl#L186)。
+**源码**：[source/std/binary.chl:331](../../source/std/binary.chl#L331)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。
 
@@ -1575,6 +1575,6 @@ std::lang::List<std::lang::String> readStringArray(int64 count, int64 width);
 obj.readStringArray(count, width);
 ```
 
-**源码**：[source/std/binary.chl:192](../../source/std/binary.chl#L192)。
+**源码**：[source/std/binary.chl:337](../../source/std/binary.chl#L337)。
 
 **完整示例**：[example/samples/std_binary.chl](../../example/samples/std_binary.chl)。

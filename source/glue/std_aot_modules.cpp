@@ -39,9 +39,6 @@
 #include "std_toml.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_BINARY
-#include "std_binary.hpp"
-#endif
 #ifndef GLUE_NO_STD_COMPRESS
 #include "std_compress.hpp"
 #endif

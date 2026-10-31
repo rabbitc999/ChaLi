@@ -35,6 +35,8 @@ def main():
             run(compiler, '-std=' + standard, '-fsyntax-only', '-I' + str(project), '-I' + str(project / 'runtime'), source)
         assert not (project / 'glue/std_parse.cpp').exists()
         assert not (project / 'glue/std_parse.hpp').exists()
+        assert not (project / 'glue/std_binary.cpp').exists()
+        assert not (project / 'glue/std_binary.hpp').exists()
         assert (project / 'abi/abi_parse.c').is_file()
         assert (project / 'compiler_entry.cpp').is_file()
         assert (project / 'tools/abi_import.hpp').is_file()

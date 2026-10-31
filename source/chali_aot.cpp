@@ -1,6 +1,6 @@
 /**
  * @file chali_aot.cpp
- * @brief 将优化后的 ChaLi 四元式直接降低为 LLVM 中间表示并生成原生产物。
+ * @brief 从已检查 AST 直接生成 LLVM IR 和原生产物，保留独立四元式调用方的兼容入口。
  */
 #include "chali_aot.hpp"
 #include "ast/ast.hpp"
@@ -307,7 +307,7 @@ struct Translator
     Memory::Map<Memory::String, ast::TypePtr> astTypes; ///< AST 类型查询环境。
 
     /**
-     * @brief 保存本次四元式分析请求和诊断输出。
+     * @brief 保存本次 AST 或四元式兼容请求和诊断输出。
      * @param in 本次 AOT 请求。
      * @param out 可选的诊断容器。
      */
@@ -1546,6 +1546,17 @@ struct Builder
             write(destination, { "i64", "0" });
             return true;
         }
+        /* 标准库错误直接调用 C 运行时；兼容旧宿主错误，不添加公开 panic 的前缀。 */
+        if (callee == "std::lang::__runtimeFail" && arguments.size() == 1u)
+        {
+            const auto handle = convert(argument(0), "i64");
+            const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
+            const auto content = call("chali_host_string_storage", "i64", { { "i64", "1" }, handle });
+            const auto data = call("chali_host_address", "ptr", { content, length });
+            call("chali_panic", "void", { data });
+            write(destination, { "i64", "0" });
+            return true;
+        }
         /* 浮点定长格式化直连：调用模块级辅助函数完成 snprintf 与新字符串分配。 */
         if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__std_str_fixed" && arguments.size() == 2u)
         {
@@ -2343,7 +2354,7 @@ Text exportDispatcher(Translator &state)
 
 /**
  * @brief 从 AST 直接生成包含运行时的 LLVM 模块，保留独立四元式调用方的兼容入口。
- * @param request 已优化的四元式、数据和输出选项。
+ * @param inputRequest 已检查 AST 或显式四元式兼容输入、数据和输出选项。
  * @param diagnostics 接收类型、操作和运行时资产错误。
  * @param header 可选的 C ABI 头文件输出。
  * @return LLVM 文本；生成失败时为空。

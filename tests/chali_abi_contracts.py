@@ -51,11 +51,13 @@ def main():
                          'let cb=int32 fn(int32 x){return x;};'
                          'assert(c_apply(cb,(int32)3)==7);return;}\n')
         invoke([compiler, 'run', imported])
-        for label, body in (
-            ('direct', 'panic("callback failure");return x;'),
-            ('nested', 'return apply(int32 fn(int32 y){panic("callback failure");return y;},x);')):
+        for label, body, expected_failure in (
+            ('direct', 'panic("callback failure");return x;', b'callback failure'),
+            ('nested', 'return apply(int32 fn(int32 y){panic("callback failure");return y;},x);', b'callback failure'),
+            ('binary', 'uint8 data[1];data[0]=(uint8)2;std::binary::BinaryReader reader=std::binary::BinaryReader::fromArray(data,1);reader.readBool();return x;',
+             '二进制读取：bool 字节必须为 0 或 1'.encode('utf-8'))):
             failure = work / ('callback-failure-' + label + '.chl')
-            failure.write_text('#abi("C", "' + library.as_posix() + '", "callback_owned") '
+            failure.write_text(('import std::binary;\n' if label == 'binary' else '') + '#abi("C", "' + library.as_posix() + '", "callback_owned") '
                                'String owned(int32 fn(int32) cb) ["free_owned"]; '
                                '#abi("C", "' + library.as_posix() + '", "apply") '
                                'int32 apply(int32 fn(int32) cb,int32 x); '
@@ -70,7 +72,7 @@ def main():
             else:
                 command = [str(compiler), 'run', str(failure), '--out', str(work / ('run-failure-' + label))]
             result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, timeout=600)
-            assert result.returncode != 0 and b'callback failure' in result.stderr + result.stdout, result
+            assert result.returncode != 0 and expected_failure in result.stderr + result.stdout, result
             assert marker.read_text().strip() == 'free', label
         print('Native ABI ownership, callbacks, header import and failure cleanup: OK')
 

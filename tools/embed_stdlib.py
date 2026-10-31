@@ -221,7 +221,6 @@ GENERATOR_ASSETS = [
     "toml/toml.cpp",
     "toml/toml_source.cpp",
     "toml/toml_source.hpp",
-    "glue/std_binary.hpp",
     "glue/std_compress.hpp",
     "lztext/lztext.hpp",
     "lztext/lztext.cpp",
