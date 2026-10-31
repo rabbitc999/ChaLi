@@ -44,7 +44,7 @@ def main():
         run(cc, '-std=c11', *target_flags, *common, packed, obj, '-o', host)
         run(host)
         objects = [obj]
-        for name in ('chali_abi', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random', 'abi_parse', 'abi_process'):
+        for name in ('chali_abi', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random', 'abi_parse', 'abi_process', 'abi_demo'):
             module_object = work / (name + '.o')
             run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/abi' / (name + '.c'), '-o', module_object)
             objects.append(module_object)
@@ -61,7 +61,7 @@ def main():
         kernels += [p for p in (ROOT / 'source/bignum').glob('*.cpp') if p.name not in ('main.cpp','test_bigint.cpp','test_bigfloat.cpp')]
         run(cxx, '-std=c++17', *target_flags, *common, '-I' + str(ROOT / 'source/bignum'), '-I' + str(ROOT / 'library/caspp/include'),
             ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-I' + str(ROOT / 'build/dependencies/sqlite'), '-pthread', '-lm', '-o', table)
-        output = run(table)
+        output = run(table, ROOT / 'tests/fixtures/demo_declarations.chl')
         assert '直通入口表自检通过' in output, output
         print(output.strip())
         overflow = work / ('overflow.exe' if os.name == 'nt' else 'overflow')

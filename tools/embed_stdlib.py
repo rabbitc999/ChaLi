@@ -185,7 +185,6 @@ GENERATOR_ASSETS = [
     "chali_i18n.hpp",
     "console/utf8.hpp",
     "glue/std_glue.cpp",
-    "glue/std_demo.cpp",
     # 直通 ABI：C 胶水、桥接与入口表聚合，生成工程必须一并导出。
     "abi/chali_abi.h",
     "abi/chali_standard.h",

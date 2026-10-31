@@ -6,6 +6,10 @@
  * 与具体胶水函数的语义无关。
  */
 #include "abi/chali_abi_internal.h"
+#include "abi/chali_standard.h"
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #include <cstdio>
 #include <cstring>
@@ -80,6 +84,20 @@ int64_t chali_abi_record_make_textual(const ChaliAbiFrame *frame,const char *nam
  * @param operation 未使用编号。
  */
 void chali_abi_collection_apply(ChaliAbiFrame *frame,size_t operation) {(void)frame;(void)operation;}
+/**
+ * @brief 入口表测试不构造运行期聚合暂存。
+ * @param frame 未使用帧。
+ * @param bytes 未使用大小。
+ * @return 固定零句柄。
+ */
+int64_t chali_abi_tracked_temporary(const ChaliAbiFrame *frame,size_t bytes) {(void)frame;(void)bytes;return 0;}
+/**
+ * @brief 表结构验证不释放实际临时块。
+ * @param frame 未使用帧。
+ * @param address 未使用地址。
+ * @return 固定成功占位值。
+ */
+int chali_abi_temporary_release(const ChaliAbiFrame *frame,int64_t address) {(void)frame;(void)address;return 1;}
 int64_t chali_abi_record_make(const ChaliAbiFrame *, const char *, void *, void (*)(void *)) { return 0; }
 /**
  * @brief 表结构检查不登记实际记录描述符。
@@ -173,10 +191,21 @@ void report(const char *message, const char *name)
 
 /**
  * @brief 逐项检查直通表的排序与解析一致性。
+ * @param argc 参数个数；可额外提供演示声明的冻结夹具。
+ * @param argv 程序名及可选夹具路径。
  * @return 全部通过时为 0，否则为失败项数。
  */
-int main()
+int main(int argc,char **argv)
 {
+    size_t length=0;const auto *source=abi_demo_declarations(&length);
+    if(!source||length!=std::strlen(source))return 10;
+    if(!abi_demo_declarations_used("GlueDemoPoint",13)||abi_demo_declarations_used("prefixGlueDemoPoint",19)||abi_demo_declarations_used("GlueDemoPointSuffix",19))return 11;
+    if(argc==2){
+        std::ifstream file(argv[1],std::ios::binary);std::ostringstream expected;expected<<file.rdbuf();
+        auto text=expected.str();for(size_t at=0;(at=text.find("\r\n",at))!=std::string::npos;)text.erase(at,1);
+        if(!file||text!=std::string(source,length))return 12;
+    }
+
     chali_abi_prepare();
 
     std::size_t count = 0;

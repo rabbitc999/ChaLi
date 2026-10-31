@@ -48,4 +48,4 @@ CHALI_AOT_MODULE(image, registry.bindModule(abi_image_records, error))
 #ifndef GLUE_NO_STD_NET
 CHALI_AOT_MODULE(net, registry.bindModule(abi_net_records, error))
 #endif
-CHALI_AOT_MODULE(demo, bindChaLiGlue(registry, error))
+CHALI_AOT_MODULE(demo, registry.bindModule(abi_demo_records, error))

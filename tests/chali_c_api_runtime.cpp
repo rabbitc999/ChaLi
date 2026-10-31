@@ -256,6 +256,33 @@ int main(int argc, char **argv)
         std::size_t length = 0;
         assert(chali_abi_bytes(&frame, 1, &view, &length) && std::string(reinterpret_cast<const char *>(view), length) == "text");
         {
+            const auto before=heap.liveBlocks();
+            const auto tracked=chali_abi_tracked_temporary(&frame,16);assert(tracked&&!runtime.status);
+            assert(objects.materializedHeap.size()==1&&objects.materializedHeap.back()==static_cast<size_t>(tracked));
+            int64_t words[]={0,INT64_MAX};
+            assert(chali_abi_write(&frame,tracked,words,sizeof(words)));
+            int64_t loaded[2]{};assert(chali_abi_read(&frame,tracked,loaded,sizeof(loaded))&&loaded[1]==INT64_MAX);
+            assert(chali_abi_temporary_release(&frame,tracked)&&objects.materializedHeap.empty()&&heap.liveBlocks()==before);
+            const auto raw=chali_abi_temporary(&frame,16);assert(raw&&objects.materializedHeap.empty());
+            assert(chali_abi_temporary_release(&frame,raw)&&heap.liveBlocks()==before);
+            int failures=0;
+            for(int point=0;point<32;++point){
+                objects.materializedHeap.shrink_to_fit();
+                const auto live=heap.liveBlocks();arena.remaining=point;
+                const auto address=chali_abi_tracked_temporary(&frame,16);
+                arena.remaining=-1;
+                if(address){assert(!runtime.status&&objects.materializedHeap.size()==1);assert(chali_abi_temporary_release(&frame,address));break;}
+                assert(runtime.status&&heap.liveBlocks()==live&&objects.materializedHeap.empty()&&point!=31);++failures;reset();
+            }
+            assert(failures>=1);
+            assert(!chali_abi_tracked_temporary(&frame,SIZE_MAX)&&runtime.status&&objects.materializedHeap.empty());reset();
+            const auto final=chali_abi_tracked_temporary(&frame,0);assert(final&&!runtime.status);
+            assert(objects.materializedHeap.size()==1);
+            for(const auto address:objects.materializedHeap)assert(heap.release(address));
+            objects.materializedHeap.clear();assert(heap.liveBlocks()==before);
+            std::printf("C tracked temporary: raw slots, early release, cleanup queue and %d atomic failure points passed\n",failures);
+        }
+        {
             int64_t slots[]={0,0,7,INT64_MIN,-91};
             unsigned char kinds[]={0,0,0,ChaliAbiSlotFloat,0};
             ChaliAbiFrame packed{&runtime,slots,kinds,5,0,0};
@@ -276,6 +303,10 @@ int main(int argc, char **argv)
             int64_t access[]={list,1,0,0};unsigned char accessKinds[4]{};
             ChaliAbiFrame readFrame{&runtime,access,accessKinds,4,0,0};at(&readFrame);
             assert(readFrame.resultIsFloat&&readFrame.result==INT64_MIN&&!runtime.status);
+            int64_t sumArguments[]={10,list};unsigned char sumKinds[2]{};
+            ChaliAbiFrame summed{&runtime,sumArguments,sumKinds,2,0,0};
+            const auto sum=chali_abi_resolve("demo_cpp_variadic_sum",nullptr);assert(sum);sum(&summed);
+            assert(!runtime.status&&!summed.resultIsFloat&&summed.result==-74);
             access[1]=3;at(&readFrame);assert(runtime.status);reset();
             lengthFrame.count=0;lengthFrame.slots=nullptr;lengthFrame.kinds=nullptr;len(&lengthFrame);assert(runtime.status);reset();
             assert(chali_abi_record_release(&frame,list));

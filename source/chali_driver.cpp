@@ -42,7 +42,7 @@
 #include "chali_glue.hpp"
 #include "chali_report.hpp"
 #include "glue/std_registry.hpp"
-#include "glue/std_demo.hpp"
+#include "abi/chali_standard.h"
 
 namespace
 {
@@ -86,7 +86,7 @@ Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
 void InstallDemoGlue(chali_glue::Registry &registry)
 {
     Memory::String error;
-    if (!std_registry::bindStandardGlue(registry, &error) || !bindChaLiGlue(registry, &error))
+    if (!std_registry::bindStandardGlue(registry, &error) || !registry.bindModule(abi_demo_records, &error))
         std::fprintf(stderr, "chali: 注册宿主胶水失败：%s\n", error.c_str());
 }
 
@@ -883,7 +883,7 @@ try
             return 1;
         }
 
-        /* 胶水层声明的 CHALI 类型 / 接口（`Registry::declarations()`）追加在**合并源码末尾**：
+        /* C 宿主演示提供的普通 ChaLi 类型 / 接口声明追加在**合并源码末尾**：
          * 于是 `.chl` 里不必重复写 `struct` / `enum` / `interface` / `impl`。
          *
          * 只有程序里真的出现了这些名字才注入：类型号按出现顺序分配，凭空多出的声明会让
@@ -891,8 +891,8 @@ try
          * 字节都不加；用到时追加在末尾，也尽量少动编号。合成行只进 lineMap，报错时指向
          * `<胶水声明>`。 */
         Memory::String glueDeclarations;
-        if (glue.declarations().usedBy(processed.text))
-            glueDeclarations = glue.declarationSource();
+        if (abi_demo_declarations_used(processed.text.data(), processed.text.size()))
+            glueDeclarations = abi_demo_declarations(nullptr);
         if (!glueDeclarations.empty())
         {
             if (!processed.text.empty() && processed.text.back() != '\n')

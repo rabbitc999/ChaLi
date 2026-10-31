@@ -108,6 +108,25 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_cas_records(size_t *count);
  * @return 进程期有效的只读表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_collection_records(size_t *count);
+/**
+ * @brief 取得宿主演示的 C 入口表。
+ * @param count 接收表项数量，可为空。
+ * @return 进程期有效的只读表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_demo_records(size_t *count);
+/**
+ * @brief 取得演示类型及接口的普通 ChaLi 声明。
+ * @param length 接收字节数，可为空。
+ * @return 只读语言源码，不由 C++ 模板构造。
+ */
+const char *CHALI_ABI_CALL abi_demo_declarations(size_t *length);
+/**
+ * @brief 依既有完整标识符规则判断是否需要注入演示声明。
+ * @param source 待编译源码，可为空。
+ * @param length 源码字节数。
+ * @return 至少使用一个演示声明名时为一。
+ */
+int CHALI_ABI_CALL abi_demo_declarations_used(const char *source,size_t length);
 #ifdef __cplusplus
 }
 #endif

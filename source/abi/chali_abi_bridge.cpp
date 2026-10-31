@@ -285,6 +285,11 @@ try
         chali_abi_mark_failure(frame, "invalid temporary release");
         return 0;
     }
+    auto *context=contextOf(frame);
+    if(context && context->objects) {
+        auto &temporaries=context->objects->materializedHeap;
+        temporaries.erase(std::remove(temporaries.begin(),temporaries.end(),static_cast<size_t>(address)),temporaries.end());
+    }
     return 1;
 } catch (...)
 {
@@ -1077,3 +1082,20 @@ try {
     frame->result=result.bits;frame->resultIsFloat=result.floating;
 } catch(const std::exception &error) {chali_abi_mark_failure(frame,error.what());}
 catch(...) {chali_abi_mark_failure(frame,"C collection service failed");}
+
+/**
+ * @brief 通过同一原生临时登记协议为 C 聚合封送分配存储。
+ * @param frame 当前帧。
+ * @param bytes 原始字节数。
+ * @return 已登记的逻辑地址，失败为零。
+ */
+int64_t chali_abi_tracked_temporary(const ChaliAbiFrame *frame,size_t bytes)
+try {
+    if(bytes>static_cast<uint64_t>(INT64_MAX)) {chali_abi_mark_failure(frame,"tracked temporary size overflow");return 0;}
+    std::optional<NativeCallContextImpl> host;
+    if(!prepareHost(frame,host))return 0;
+    const auto address=host->makeTemporary(bytes);
+    if(!address)chali_abi_mark_failure(frame,"tracked temporary allocation failed");
+    return address;
+} catch(const std::exception &error) {chali_abi_mark_failure(frame,error.what());return 0;}
+catch(...) {chali_abi_mark_failure(frame,"C tracked temporary service failed");return 0;}

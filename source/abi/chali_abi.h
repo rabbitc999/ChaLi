@@ -151,6 +151,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
 #define CHALI_ABI_CAP_LIST_TEXT     UINT64_C(256) ///< 文本列表直接追加服务。
 #define CHALI_ABI_CAP_LIST_NUMBERS  UINT64_C(512) ///< 保留整数及浮点位模式的数值列表服务。
+#define CHALI_ABI_CAP_TRACKED_TEMPORARY UINT64_C(4096) ///< 聚合封送的临时存储登记。
 #define CHALI_ABI_CAP_INPUT_TOKEN   UINT64_C(2048) ///< 消费现有运行时输入项。
 #define CHALI_ABI_CAP_RECORD_TEXT   UINT64_C(1024) ///< 通过 C 回调提供宿主记录默认文本。
 
@@ -551,6 +552,17 @@ int CHALI_ABI_CALL chali_abi_list_append_text(const ChaliAbiFrame *frame, int64_
  * @return 块地址；失败返回零。
  */
 int64_t CHALI_ABI_CALL chali_abi_temporary(const ChaliAbiFrame *frame, size_t bytes);
+
+/**
+ * @brief 为结构体、枚举或 ABI 封送分配登记到既有临时清理队列的原始字节块。
+ * @param frame 当前调用帧，须具有堆和对象表。
+ * @param bytes 字节数，零仍分配至少八字节。
+ * @return 独立逻辑地址，失败为零且不留下未登记的分配。
+ * @note 需要 CHALI_ABI_CAP_TRACKED_TEMPORARY；登记不表示每次 C 调用返回即释放。
+ *       调用方须遵守现有聚合值接管协议，或用 temporary_release 提前释放并移除登记。
+ *       本服务不隐式复制、销毁块内保存的 String、集合或其他拥有字段。
+ */
+int64_t CHALI_ABI_CALL chali_abi_tracked_temporary(const ChaliAbiFrame *frame,size_t bytes);
 
 /**
  * @brief 从受检查的逻辑地址复制字节，不把语言地址当宿主指针。

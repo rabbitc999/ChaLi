@@ -103,9 +103,15 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
         ok = false;
     }
 #endif
-    /* 已经迁移到 C 直通表的模块（print / math / clock / random）在这里补齐：
-     * 它们没有对应的 C++ 胶水文件，只能靠直通表自注册；已由 C++ 绑定的名字保持不变。 */
-    registry.bindDirectEntries();
+    ok = registry.bindModule(abi_print_records, error) && ok;
+    ok = registry.bindModule(abi_string_records, error) && ok;
+#ifndef GLUE_NO_STD_MATH
+    ok = registry.bindModule(abi_math_records, error) && ok;
+    ok = registry.bindModule(abi_clock_records, error) && ok;
+#endif
+#ifndef GLUE_NO_STD_RANDOM
+    ok = registry.bindModule(abi_random_records, error) && ok;
+#endif
     return ok;
 }
 

@@ -147,7 +147,8 @@ std::int64_t NativeCallContextImpl::makeTemporary(std::size_t bytes)
         fail("ABI temporary allocation failed");
         return 0;
     }
-    context_.objects->materializedHeap.push_back(address);
+    try { context_.objects->materializedHeap.push_back(address); }
+    catch (...) { context_.heap->release(address); throw; }
     return static_cast<std::int64_t>(address);
 }
 

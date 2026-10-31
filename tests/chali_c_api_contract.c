@@ -88,7 +88,7 @@ int main(void)
     assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
     changed.capabilities = CHALI_ABI_CAP_LIST_NUMBERS;
     assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
-    changed.capabilities = CHALI_ABI_CAP_RECORD_TEXT | CHALI_ABI_CAP_INPUT_TOKEN;
+    changed.capabilities = CHALI_ABI_CAP_RECORD_TEXT | CHALI_ABI_CAP_INPUT_TOKEN | CHALI_ABI_CAP_TRACKED_TEMPORARY;
     assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
     changed.capabilities = UINT64_C(1) << 63;
     assert(chali_abi_check(&changed, &error) == ChaliAbiIncompatible);
