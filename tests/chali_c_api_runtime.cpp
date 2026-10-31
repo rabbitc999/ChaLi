@@ -1173,6 +1173,51 @@ int main(int argc, char **argv)
             std::printf("C SQLite: bound int64/real/NUL text/null, exclusive owner and %d adoption failure points cleaned\n", failures);
         }
         {
+            const auto call = [&](const char *name,std::initializer_list<int64_t> values) {
+                std::vector<int64_t> slots(values);
+                std::vector<unsigned char> kinds(slots.size(),ChaliAbiSlotInteger);
+                ChaliAbiFrame operation{&runtime,slots.data(),kinds.data(),static_cast<int64_t>(slots.size()),0,0};
+                const auto entry=chali_abi_resolve(name,nullptr);assert(entry);entry(&operation);return operation.result;
+            };
+            for(const auto *prefix:{"bint","bfloat"}) {
+                const std::string name=std::string("__std_")+prefix;
+                const auto input=chali_abi_string(&frame,"123456789012345678901234567890",30);assert(input);
+                const auto original=call((name+"_from_str").c_str(),{input});assert(original&&!runtime.status);
+                const auto copy=call((name+"_copy").c_str(),{original});assert(copy&&!runtime.status);
+                TransferPacket packet;Memory::Set<int64_t> active;
+                assert(captureTransferObject(context,original,packet,active));
+                assert(chali_abi_record_release(&frame,original));
+                int64_t restored=0;Memory::Vector<int64_t> created;
+                assert(restoreTransferObject(context,packet,original,active,created,&restored));
+                for(auto value:{copy,restored}) {
+                    const auto text=call((name+"_str").c_str(),{value});assert(text&&!runtime.status);
+                    assert(chali_abi_bytes(&frame,text,&view,&length)&&std::string(reinterpret_cast<const char*>(view),length)==(std::string(prefix)=="bint"?"123456789012345678901234567890":"1.2345678901234567890123456789e+29"));
+                    assert(chali_abi_string_release(&frame,text));
+                    call((name+"_drop").c_str(),{value});assert(!runtime.status);
+                }
+                int failures=0;
+                for(int point=0;point<64;++point) {
+                    arena.remaining=point;
+                    const auto value=call((name+"_from_str").c_str(),{input});
+                    arena.remaining=-1;
+                    if(value) {assert(chali_abi_record_release(&frame,value));assert(!runtime.status);break;}
+                    assert(runtime.status&&point!=63);++failures;reset();
+                }
+                assert(failures>=2);
+                assert(chali_abi_string_release(&frame,input));
+                int64_t wrong=0;unsigned char floating=ChaliAbiSlotFloat;
+                ChaliAbiFrame malformed{&runtime,&wrong,&floating,1,0,0};
+                chali_abi_resolve((name+"_from_uint").c_str(),nullptr)(&malformed);
+                assert(runtime.status&&!malformed.result);reset();
+                for (auto *entry : {"_from_int","_from_flt","_from_str"}) {
+                    malformed.count=0;malformed.slots=nullptr;malformed.kinds=nullptr;
+                    chali_abi_resolve((name+entry).c_str(),nullptr)(&malformed);
+                    assert(runtime.status&&!malformed.result);reset();
+                }
+                std::printf("C %s: independent copy, transfer, wrong slots and %d allocation failure points passed\n",prefix,failures);
+            }
+        }
+        {
             value_text::Shape shape;
             shape.kind = 'O';
             const auto encoded = value_text::encode(shape);

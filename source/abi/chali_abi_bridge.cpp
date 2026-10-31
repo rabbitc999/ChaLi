@@ -1041,3 +1041,21 @@ try
 }
 
 }  // extern "C"
+
+/**
+ * @brief 从现有输入游标消费文本项，以 C 拥有型字符串返回。
+ * @param frame 当前帧。
+ * @param position 可选输入位置接收器。
+ * @return String 句柄，缺失项或服务失败时为零。
+ */
+int64_t chali_abi_input_token(const ChaliAbiFrame *frame, uint64_t *position)
+try
+{
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    Memory::String text;
+    const bool available = host->takeInputText(text);
+    if (position) *position = host->inputPosition();
+    return available ? host->makeString(text) : 0;
+} catch (const std::exception &error) { chali_abi_mark_failure(frame, error.what()); return 0; }
+catch (...) { chali_abi_mark_failure(frame, "C input service failed"); return 0; }

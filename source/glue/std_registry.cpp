@@ -1,7 +1,6 @@
 #include "std_native_record.hpp"
 #include "std_registry.hpp"
 #include "std_collection.hpp"
-#include "std_big_number.hpp"
 #include "std_cas.hpp"
 #include "abi/chali_standard.h"
 #include "abi/chali_abi_internal.h"
@@ -35,7 +34,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 {
     bool ok = true;
     ok = collection_glue::bind(registry.native(), error) && ok;
-    ok = big_number_glue::bind(registry.native(), error) && ok;
+    ok = registry.bindModule(abi_big_number_records, error) && ok;
     ok = std_cas_glue::bind(registry.native(), error) && ok;
     ok = registry.bindModule(abi_file_records, error) && ok;
 #ifndef GLUE_NO_STD_FILESYSTEM

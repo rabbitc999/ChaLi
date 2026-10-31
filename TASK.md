@@ -270,6 +270,14 @@ C 服务追加 SQLite 参数绑定的 int64 最小值、浮点结果类别／位
 
 最终静态编译器 SHA256 为 d7395f60b9657fb2628345eff6d791a64942b50bb2daf86357295be0b5975a37；vscode/dist/1.0.12-record-text-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 afdf4a29b2396e5cd6b9f12468a402c78fd7599d0461a38ea88b26a17d459ae9，版本、static 与包内 EXE 字节一致。独立编译器 SHA256 为 fc300910cbd9d497140059c458cad5cb2c7b138d8d53ee8bd54d4cc6c237a240，保留在 build/independent-validation/1.0.12-record-text-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-record-text-c-api/。未执行整仓全量门禁或性能计时；大数、CAS、集合注册及旧公开 C++ 胶水删除仍待完成。
 
+### 大数 C API 迁移已完成
+
+大整数与高精度小数的 64 个操作直接读取 C 帧并返回整数／浮点槽，删除旧 std_big_number.cpp／hpp 及其注册和生成资产引用。私有数值内核保留算法、精度、舍入、uint64 位模式和十进制显示；拥有记录采用 C 销毁、复制和文本回调。新增可选 INPUT_TOKEN 服务消费同一运行时输入游标，EOF、位置与临时 String 释放均明确；不另建标准输入流。C 入口自身核对精确数量与槽类别，避免直接调用绕过调度器后越界读取。
+
+最终 C API、大数及内存门禁 13 步全部通过，无失败或跳过，包含 malloc／pool × checked／unchecked 六组数值／输入用例、四类输入失败、CAS／泛型数学 20 项、反射序列化／SQL 及资源生命周期。真实运行时覆盖独立复制、线程快照、错误槽及缺失参数，大整数 9 个、小数 37 个分配失败点均清理，最终活动块为零。C11／C++17 与六目标头、335 项入口表及未启用数值内核的 C++17 语法检查通过。隔离手册、全部标准库导入／源码回退／零缓存、七组插件测试、12 项新鲜导出源与旧胶水缺席核对通过。
+
+独立导出工程实际冷构建 GCC11／O1 外置 LLVM 编译器，四个默认 LLVM O3 数值／复制／数论例程与原有期望输出逐字节一致。初轮资产生成遗漏固定旧头、测试的 arena 外参数分配、科学计数法期望及配套输入文件均已修正；原始失败与最终结果分别保留，未重标。最终静态编译器 SHA256 为 769333d73180bc84d193ae946ea643a8dad2e04564d3ca73c2cafbf44a4d0abf；vscode/dist/1.0.12-big-number-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 5ac2202303fb452f294bc06ac1f21e829e81801e715d8b9f8a4f4685d30de558，版本、static 与内嵌 EXE 字节一致。独立编译器 SHA256 为 895f224ccf546389a6b84ed980c091b273eb0e34ee431aabb9395215f46f227a，保留 build/independent-validation/1.0.12-big-number-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-big-number-c-api/。未执行整仓全量门禁或性能计时；CAS、集合注册和旧公开 C++ 胶水继续迁移。
+
 ## 阶段六：删除旧 C++ 胶水与发行核对
 
 独立工程的 gen abi 缺口已关闭：新增薄入口复用参数归一化、语言配置与同一 C 头导入实现，导出所需源文件与头，并在 CMake 关闭旧默认 main。新鲜导出 454 文件，完整冷构建外置 LLVM 编译器后，直接运行 ABI 头导入、拥有值、同步回调及直接／嵌套失败清理综合脚本通过；未使用本体预生成声明或开发工具回退。解析 65 输入／260 结果在四组合再次对齐。宿主编译器冷构建配置为 GCC 11／C++ O1，语言导出仍使用默认 LLVM O3，不据此报告性能。

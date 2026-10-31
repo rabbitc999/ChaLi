@@ -90,6 +90,12 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_records(size_t *count);
  * @return 程序存活期间有效的表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_ipage_records(size_t *count);
+/**
+ * @brief 取得大整数与高精度小数的 C 入口表。
+ * @param count 接收表项数，可为空。
+ * @return 进程存活期间有效的只读表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_big_number_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

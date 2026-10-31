@@ -151,6 +151,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
 #define CHALI_ABI_CAP_LIST_TEXT     UINT64_C(256) ///< 文本列表直接追加服务。
 #define CHALI_ABI_CAP_LIST_NUMBERS  UINT64_C(512) ///< 保留整数及浮点位模式的数值列表服务。
+#define CHALI_ABI_CAP_INPUT_TOKEN   UINT64_C(2048) ///< 消费现有运行时输入项。
 #define CHALI_ABI_CAP_RECORD_TEXT   UINT64_C(1024) ///< 通过 C 回调提供宿主记录默认文本。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
@@ -724,6 +725,15 @@ int64_t CHALI_ABI_CALL chali_abi_record_clone(const ChaliAbiFrame *frame, int64_
  * @return 接受释放时为 true；句柄无效时返回 false。
  */
 int CHALI_ABI_CALL chali_abi_record_release(const ChaliAbiFrame *frame, int64_t handle);
+
+/**
+ * @brief 消费运行时输入流中的下一个文本项；不直接读取宿主 stdin。
+ * @param frame 当前有效调用帧。
+ * @param position 接收消费后的输入位置，可为空；缺失输入时仍报告当前位置。
+ * @return 拥有型 String 句柄，EOF 或服务失败为零；EOF 本身不设置错误。
+ * @note 需要 CHALI_ABI_CAP_INPUT_TOKEN。成功后由调用方用 chali_abi_string_release 释放；分配失败可能已经消费输入。
+ */
+int64_t CHALI_ABI_CALL chali_abi_input_token(const ChaliAbiFrame *frame, uint64_t *position);
 
 #ifdef __cplusplus
 }  // extern "C"

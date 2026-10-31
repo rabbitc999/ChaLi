@@ -219,7 +219,6 @@ GENERATOR_ASSETS = [
     "glue/std_native_record.hpp",
     "glue/std_collection.hpp",
     "glue/std_collection_storage.hpp",
-    "glue/std_big_number.hpp",
     "json/json.hpp",
     "json/json.cpp",
     "toml/toml.hpp",

@@ -5,7 +5,6 @@
 #include "std_native_record.hpp"
 #include "std_registry.hpp"
 #include "std_collection.hpp"
-#include "std_big_number.hpp"
 #include "std_demo.hpp"
 #include "std_cas.hpp"
 
