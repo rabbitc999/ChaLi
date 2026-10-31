@@ -1,0 +1,35 @@
+import std::linalg;
+import std::parse;
+void checkColumn<T>() {
+    let matrix = std::linalg::Matrix<T>::zeros(3,4);
+    int64 row = 0;
+    while (row < 3) {
+        int64 column = 0;
+        while (column < 4) {
+            matrix.set(row,column,(T)(row * 4 + column));
+            column = column + 1;
+        }
+        row = row + 1;
+    }
+    let result = matrix.column(2);
+    assert(result.len() == 3 && result[0] == (T)2 && result[1] == (T)6 && result[2] == (T)10);
+    result.set(0,(T)99);
+    assert(matrix.at(0,2) == (T)2);
+    let last = matrix[3];
+    assert(last[0] == (T)3 && last[2] == (T)11);
+    int64 count = 0;
+    for (column in matrix) { assert(column.len() == 3); count = count + 1; }
+    assert(count == 4);
+    let empty = std::linalg::Matrix<T>::zeros(0,2);
+    assert(empty.column(1).len() == 0);
+}
+void main() {
+    checkColumn<float32>(); checkColumn<float64>();
+    checkColumn<int8>(); checkColumn<int16>(); checkColumn<int32>(); checkColumn<int64>();
+    checkColumn<uint8>(); checkColumn<uint16>(); checkColumn<uint32>(); checkColumn<uint64>();
+    uint64 maximum = std::parse::Parse::parseUInt64("18446744073709551615").unwrap();
+    let matrix = std::linalg::Matrix<uint64>::zeros(1,2);
+    matrix.set(0,1,maximum);
+    assert(matrix.column(1)[0] == maximum);
+    println("ten scalar columns, iteration and independent storage OK");
+}

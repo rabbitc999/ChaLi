@@ -2219,7 +2219,7 @@ LuFactorization luDecompose(Matrix<float64> input);
 std::linalg::luDecompose(input);
 ```
 
-**源码**：[source/std/linalg.chl:277](../../source/std/linalg.chl#L277)。
+**源码**：[source/std/linalg.chl:293](../../source/std/linalg.chl#L293)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2259,7 +2259,7 @@ LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。
 std::linalg::lurDecompose(input);
 ```
 
-**源码**：[source/std/linalg.chl:280](../../source/std/linalg.chl#L280)。
+**源码**：[source/std/linalg.chl:296](../../source/std/linalg.chl#L296)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2299,7 +2299,7 @@ EigenDecomposition symmetricEigen(Matrix<float64> input);
 std::linalg::symmetricEigen(input);
 ```
 
-**源码**：[source/std/linalg.chl:288](../../source/std/linalg.chl#L288)。
+**源码**：[source/std/linalg.chl:304](../../source/std/linalg.chl#L304)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2339,7 +2339,7 @@ SingularValueDecomposition svd(Matrix<float64> input);
 std::linalg::svd(input);
 ```
 
-**源码**：[source/std/linalg.chl:297](../../source/std/linalg.chl#L297)。
+**源码**：[source/std/linalg.chl:313](../../source/std/linalg.chl#L313)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2379,7 +2379,7 @@ JordanDecomposition jordan2(Matrix<float64> input);
 std::linalg::jordan2(input);
 ```
 
-**源码**：[source/std/linalg.chl:305](../../source/std/linalg.chl#L305)。
+**源码**：[source/std/linalg.chl:321](../../source/std/linalg.chl#L321)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2417,6 +2417,6 @@ JordanDecomposition diagonalize2(Matrix<float64> input);
 std::linalg::diagonalize2(input);
 ```
 
-**源码**：[source/std/linalg.chl:307](../../source/std/linalg.chl#L307)。
+**源码**：[source/std/linalg.chl:323](../../source/std/linalg.chl#L323)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。

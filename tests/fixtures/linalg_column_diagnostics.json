@@ -1,0 +1,12 @@
+{
+  "source_commit": "0df13e4d",
+  "compiler_sha256": "4e7a8a0639e3968eaa5f9271bbaa1c5a0e0748e666d3f09380e54bd6850c4aab",
+  "diagnostics": [
+    "chali aot: Matrix.column 列索引越界或维度无效",
+    "chali aot: Matrix.column 列索引越界或维度无效",
+    "chali aot: Matrix.column 列索引越界或维度无效",
+    "chali aot: Matrix.column 列索引越界或维度无效",
+    "chali aot: Matrix.column 存储长度与维度不匹配",
+    "chali aot: Matrix.column 存储长度与维度不匹配"
+  ]
+}

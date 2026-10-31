@@ -160,7 +160,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     /** 按零起始列索引返回独立列向量。 */
-    Vector<T> column(int64 key) { return __matrixColumn<T>(self, key); }
+    Vector<T> column(int64 key) { return __matrixColumn<T>(&self, key); }
     Vector<T> index(int64 key) { return self.column(key); }
     Option<Vector<T>> iterator(int64 position) {
         if (position >= 0 && position < self.cols) {
@@ -265,7 +265,23 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
 
 /* 求解由宿主按标量类型绑定，返回独立向量。 */
 Vector<T> __matrixSolve<T>(Matrix<T> input, Vector<T> rhs);
-Vector<T> __matrixColumn<T>(Matrix<T> input, int64 key);
+/** 按只读引用提取指定列，仅复制结果元素，返回独立向量。 */
+Vector<T> __matrixColumn<T>(Matrix<T> const& input, int64 key) {
+    if (input.rows < 0 || input.cols <= 0 || key < 0 || key >= input.cols) {
+        std::lang::__runtimeFail("Matrix.column 列索引越界或维度无效");
+    }
+    int64 count = input.values.len();
+    if (count / input.cols != input.rows || count % input.cols != 0) {
+        std::lang::__runtimeFail("Matrix.column 存储长度与维度不匹配");
+    }
+    Vector<T> result;
+    int64 row = 0;
+    while (row < input.rows) {
+        result.values.push(__std_scalarAt<T>(input.values.storage.opcode, row * input.cols + key));
+        row = row + 1;
+    }
+    return move result;
+}
 
 struct LuFactorization {
     Matrix<float64> lower;

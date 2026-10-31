@@ -664,38 +664,6 @@ inline std::int64_t matrixSolve(Context &ctx, Matrix input, Vector rhs)
 }
 
 /**
- * @brief 从行优先矩阵复制指定列，返回独立向量。
- * @param ctx 当前运行时上下文。
- * @param input 矩阵视图。
- * @param key 零起始列索引。
- * @return 新向量地址；非法索引或尺寸时报告错误。
- */
-template <typename Scalar>
-inline std::int64_t matrixColumn(Context &ctx, Matrix input, std::int64_t key)
-{
-    const auto rows = input.field<std::int64_t>(0);
-    const auto cols = input.field<std::int64_t>(1);
-    if (rows < 0 || cols <= 0 || key < 0 || key >= cols)
-    {
-        ctx.fail("Matrix.column 列索引越界或维度无效");
-        return 0;
-    }
-    auto values = scalar_buffer::read<Scalar>(ctx, input.field<std::int64_t>(2));
-    if (values.size() / static_cast<std::uint64_t>(cols) != static_cast<std::uint64_t>(rows) || values.size() % static_cast<std::uint64_t>(cols) != 0)
-    {
-        ctx.fail("Matrix.column 存储长度与维度不匹配");
-        return 0;
-    }
-    Memory::Vector<Scalar> column;
-    column.reserve(static_cast<std::size_t>(rows));
-    for (std::int64_t row = 0; row < rows; ++row)
-        column.push_back(values[static_cast<std::size_t>(row) * static_cast<std::size_t>(cols) + static_cast<std::size_t>(key)]);
-    const auto address = ctx.makeTemporary(8);
-    writeSlot(ctx, address, 0, scalar_buffer::make(ctx, column));
-    return address;
-}
-
-/**
  * @brief 注册指定数值标量的泛型求解胶水。
  * @param registry 宿主函数注册表。
  * @param name CHALI 标量类型名。
@@ -708,10 +676,7 @@ inline bool bindMatrixSolve(chali_glue::Registry &registry, const Memory::String
 {
     return registry.bindTypedWithContext<std::int64_t, Matrix, Vector>(
                chali_glue::specialize("std::linalg::__matrixSolve", { name }),
-               matrixSolve<Scalar>, error)
-           && registry.bindTypedWithContext<std::int64_t, Matrix, std::int64_t>(
-               chali_glue::specialize("std::linalg::__matrixColumn", { name }),
-               matrixColumn<Scalar>, error);
+               matrixSolve<Scalar>, error);
 }
 
 /* ---- 绑定泛型求解与六个顶层分解函数 ---- */
