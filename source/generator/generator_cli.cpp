@@ -704,7 +704,7 @@ int runCli(int argc, char **argv)
             ok = copy(mc / "source" / relative, relative) && ok;
         }
     }
-    for (const char *name : {                             "std_native_record.hpp", "std_big_number.hpp", "std_file.hpp", "std_file_api.hpp", "std_desktop_file.hpp",
+    for (const char *name : {"std_native_record.hpp", "std_big_number.hpp",
                              "std_linalg.hpp",
                              "std_sql.hpp", "std_net.hpp", "std_registry.hpp"})
         ok = copy(mc / "source/glue" / name, Memory::String("glue/") + name) && ok;

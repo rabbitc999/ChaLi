@@ -128,7 +128,7 @@ void main() {
 | [`std::encoding`](library/std-encoding.md) | Base64、Base64URL、十六进制 | 严格解码返回 `Result`，拒绝非法填充与非零尾部位；纯 ChaLi |
 | [`std::csv`](library/std-csv.md) | 文本读写、转义、分隔符、位置诊断 | 引号字段可含换行；位置为一基行号和字节列；纯 ChaLi |
 | [`std::datetime`](library/std-datetime.md) | Unix 秒、UTC 日期、解析格式化、日期运算 | 公历年份 1..9999，ISO 秒精度 UTC；换算为纯 ChaLi，当前时间需要宿主时钟 |
-| [`std::io`](library/std-io.md) | 字节流、整文件、目录、文件信息、创建与重命名 | `FileStream` 字节接口走 FileApi；路径操作使用桌面宿主文件系统 |
+| [`std::io`](library/std-io.md) | 字节流、整文件、目录、文件信息、创建与重命名 | 文件入口走 C 帧；路径操作使用宿主文件系统 |
 | [`std::cli`](library/std-cli.md) | 长短选项、位置参数、默认值、帮助、校验 | 不自动打印或退出，应用读取解析结果；纯 ChaLi |
 | [`std::utf8`](library/std-utf8.md) | 校验、码点编解码、数量、截取 | 严格 UTF-8；码点不是字素簇；字节接口完整支持 U+0000 |
 
@@ -149,11 +149,11 @@ void main() {
 
 ## 文件和目标宿主边界
 
-`FileStream.readBytes(count)` 在 EOF 返回短列表，`writeBytes` 保留零字节；失败返回 `IoError`。操作系统宿主提供字节读取；自定义旧 FileApi 后端未实现字节读取时明确报告不支持。
+`FileStream.readBytes(count)` 在 EOF 返回短列表，`writeBytes` 保留零字节；失败返回 `IoError`。操作系统宿主通过 C 入口提供文件读写。Windows 文件名与父目录按 UTF-8 转换为原生路径；文件内容继续按字节读取。
 
 `readAllBytes` 默认预算为 16 MiB，可显式传入上限。`readAllText` 读取完整内容而非一行，拒绝内嵌零字节；二进制文件必须使用字节接口。`listDirectory` 只枚举一层并排序；`fileInfo` 跟随符号链接；`renamePath` 的目标覆盖规则遵从平台。文件操作不承诺事务或原子写入。
 
-自定义宿主的文件系统能力由 FileApi 注入，目录操作需相应系统服务。日期换算不依赖操作系统时区，`nowUtc` 的宿主必须提供真实 UTC 时钟。
+自定义宿主通过 C 函数表登记文件服务，使用公开 C 记录、缓冲与错误协议；目录操作需相应系统服务。日期换算不依赖操作系统时区，`nowUtc` 的宿主必须提供真实 UTC 时钟。
 
 ## 四元式兼容格式与历史体积实测
 

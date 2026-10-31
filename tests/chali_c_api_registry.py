@@ -61,7 +61,8 @@ def main():
             else:
                 link += ['-ldl']
             run(*link)
-            print(label + ': ' + run(executable).strip(), flush=True)
+            arguments = [executable, work / 'owned-file.bin'] if label == 'services' else [executable]
+            print(label + ': ' + run(*arguments).strip(), flush=True)
         if args.chali:
             provider = work / ('callback.dll' if os.name == 'nt' else 'callback.so')
             run(args.cc, '-std=c11', *flags, '-shared', '-fPIC',

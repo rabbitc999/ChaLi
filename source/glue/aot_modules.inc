@@ -7,7 +7,7 @@ CHALI_AOT_MODULE(collection, collection_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(string, registry.bindModule(abi_string_records, error))
 CHALI_AOT_MODULE(big_number, big_number_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(cas, std_cas_glue::bind(registry.native(), error))
-CHALI_AOT_MODULE(file, file_native_glue::bind(registry.native(), error))
+CHALI_AOT_MODULE(file, registry.bindModule(abi_file_records, error))
 #ifndef GLUE_NO_STD_FILESYSTEM
 CHALI_AOT_MODULE(filesystem, registry.bindModule(abi_filesystem_records, error))
 #endif

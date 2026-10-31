@@ -436,10 +436,10 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_json_records(size_t *count)
         { "std::json::__valueDrop", valueEntry<JsonTraits, Operation::Drop>, 1 },
         { "std::json::__valueNew", valueEntry<JsonTraits, Operation::New>, 0 },
         { "std::reflect::__compiledReflection", serdeEntry<Serde::Compiled>, 0 },
-        { "std::reflect::__serdeQuote", serdeEntry<Serde::Quote>, 1 },
-        { "std::reflect::__serdeFloat", serdeEntry<Serde::Float>, 1 },
         { "std::reflect::__serdeFinite", serdeEntry<Serde::Finite>, 1 },
+        { "std::reflect::__serdeFloat", serdeEntry<Serde::Float>, 1 },
         { "std::reflect::__serdeNumber", serdeEntry<Serde::Number>, 2 },
+        { "std::reflect::__serdeQuote", serdeEntry<Serde::Quote>, 1 },
     };
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;

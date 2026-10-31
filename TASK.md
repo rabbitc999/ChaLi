@@ -188,7 +188,14 @@ C API、序列化、内存与并发首轮 16 步为 15 通过、1 失败、0 跳
 
 静态 EXE SHA256 为 18eff8709885c86901fea3ceb2bdc5ea4fb04c84dc8eec7d95305c87367a627a；vscode/dist/1.0.12-filesystem-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 0de2cdcc75cf7d73dc22b0561186b9dfcac1d5c97eb1c8dc493d97da916363c3。证据仅保留 tools/history/20261031/chali-1.0.12-filesystem-c-api/；未重复冷构建外置编译器、执行整仓全量门禁或正式计时。
 
-- [ ] File 模块迁移时修复 Windows Unicode 文件／父目录打开：旧 DesktopFileHandle 的 stream_.open(path, flags) 走窄字符串转换，与目录服务明确 UTF-8 路径不一致；覆盖文件名、父目录、模式、读写、错误及关闭，保留迁移前复现与修正证据。
+
+File 的 19 个入口已迁移至 abi_file.cpp 的 C 帧调用，文件流内核仅在实现内部，删除 std_file.cpp／hpp、std_file_api.cpp／hpp、std_desktop_file.cpp／hpp 六文件及旧绑定、资产与导出清单。公开宿主边界不再传递 FileApi／FileHandle 的 C++ 对象；自定义服务按 C 函数表登记。保留旧 read 的 CR、readLine 去 CR／拒绝零字节、EOF 成功短读、模式、定位、刷新、关闭和不可复制规则；字节列表直接使用 C 服务，引用参数直接读取受检查的句柄槽，不再复制通用实参数组。修复 Windows 文件及父目录的 UTF-8 原生路径转换，补齐两类实际 Unicode 路径和字节核对。反射辅助 C 表同时按既有模块访问器约定排序。
+
+迁移前 7b33e48a 完成四配置兼容基准；新实现的 C API、File／目录、资源转移／拥有枚举／数组／字段、打印流及内存共 14 步全部通过，无失败或跳过。C 服务单元以实际系统句柄数验证三个文件接管失败点均关闭流，且文件仍不可复制。四配置分别验证旧文本／字节／模式／定位／EOF／失败行为及实际 Unicode 文件名和父目录；隔离标准库／源码回退／零磁盘缓存和手册通过。
+
+新鲜导出工程冷构建 GCC 11／O1 外置 LLVM 编译器，语言程序保持默认 LLVM O3，完整通过相同四配置及 Unicode 文件验证；EXE 保留 build/independent-validation/1.0.12-file-c-api/，SHA256 为 57354dffd1239de30910523416e9b1da35e7ade962c50a16e0782f089f11e95b。功能门禁后更正三处私有参数注释并重建：文件内核对象 SHA256 cea61acda1ca4fef0906871c625bb95f38dc0021fbf808edb60a03641d870772、完整宿主记录库 SHA256 8b3af47760e6c96b51df5a94c8e42c3b85c3c1393eba6a4c363e24c167e09f1a 均与功能验证时字节一致。最终再次通过手册、七组插件测试及 Unicode 抽样，五项基础及文件内核新鲜导出源一致，六个旧文件及旧归档成员不存在。
+
+最终静态 EXE SHA256 为 4e7a8a0639e3968eaa5f9271bbaa1c5a0e0748e666d3f09380e54bd6850c4aab；vscode/dist/1.0.12-file-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌字节，SHA256 为 3f29d9b410dc0f1ed658a493f59a39fb0518b72f3a23a931844fbd89a9bab260。证据仅保留 tools/history/20261031/chali-1.0.12-file-c-api/；未运行整仓全量门禁或正式计时。其余数值、网络、数据库、图像和集合模块及旧公开 C++ 胶水仍待迁移。
 
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。

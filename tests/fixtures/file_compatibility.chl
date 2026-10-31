@@ -1,0 +1,56 @@
+import std::io;
+void main() {
+    String root = __ROOT__;
+    {
+        File raw = File::new(root + "/legacy.txt", "w+");
+        assert(fileWrite(&raw, "first\r\nlast") == 11);
+        assert(std::io::__fileTrySeek(&raw, 0, 0) == 0);
+        assert(fileRead(&raw) == "first\r");
+        assert(fileRead(&raw) == "last");
+        assert(fileRead(&raw) == "");
+        fileClose(&raw);
+    }
+    {
+        FileStream stream = FileStream::open(root + "/legacy.txt", "rb").take();
+        assert(stream.readLine().unwrap() == "first");
+        assert(stream.readLine().unwrap() == "last");
+        assert(stream.readLine().unwrap() == "");
+        assert(stream.seek(0, SeekOrigin::Begin).unwrap() == 0);
+        assert(stream.read().unwrap() == "first\r");
+        assert(stream.close() == 0 && stream.close() == 0);
+        assert(stream.readLine().isErr() && stream.readBytes(1).isErr());
+        assert(stream.write("x").isErr() && stream.flush().isErr());
+    }
+    {
+        FileStream stream = FileStream::open(root + "/legacy.txt", "ab").take();
+        assert(stream.write("!").unwrap() == 1);
+    }
+    assert(readAllText(root + "/legacy.txt").unwrap() == "first\r\nlast!");
+    {
+        FileStream stream = FileStream::open(root + "/legacy.txt", "rb").take();
+        assert(stream.write("forbidden").isErr());
+        assert(stream.seek(-1, SeekOrigin::Begin).isErr());
+        assert(stream.seek(0, SeekOrigin::Begin).isOk());
+        assert(stream.readBytes(0).unwrap().len() == 0);
+        assert(stream.readBytes(-1).isErr());
+        assert(stream.readBytes(99).unwrap().len() == 12);
+        assert(stream.readBytes(1).unwrap().len() == 0);
+    }
+    List<uint8> payload;
+    payload.push((uint8)0); payload.push((uint8)255);
+    payload.push((uint8)13); payload.push((uint8)10); payload.push((uint8)65);
+    assert(writeAllBytes(root + "/raw.bin", payload).unwrap() == 5);
+    let bytes = readAllBytes(root + "/raw.bin").unwrap();
+    assert(bytes.len() == 5 && bytes[0] == (uint8)0 && bytes[1] == (uint8)255);
+    assert(readAllText(root + "/raw.bin").isErr());
+    {
+        FileStream stream = FileStream::open(root + "/raw.bin", "rb").take();
+        assert(stream.readLine().isErr());
+        assert(stream.seek(2, SeekOrigin::Begin).isOk());
+        assert(stream.readLine().unwrap() == "");
+        assert(stream.readLine().unwrap() == "A");
+    }
+    assert(fileOpen(root + "/missing", "rb").isErr());
+    assert(FileStream::open(root + "/missing", "rb").isErr());
+    println("file legacy lines, CRLF, bytes, modes, seek and cleanup OK");
+}

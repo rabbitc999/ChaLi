@@ -133,7 +133,7 @@ Type arguments resolve in the caller's module; defaults and constraints resolve 
 | [`std::encoding`](../library/std-encoding.md) | Base64, Base64URL, hexadecimal | Strict `Result` decoding; implemented in ChaLi |
 | [`std::csv`](../library/std-csv.md) | Reading, writing, quoting, delimiters, error positions | Multiline quoted fields; one-based lines and byte columns; implemented in ChaLi |
 | [`std::datetime`](../library/std-datetime.md) | Unix seconds, UTC dates, formatting and arithmetic | Gregorian years 1..9999; UTC ISO text at second precision; current time needs a host clock |
-| [`std::io`](../library/std-io.md) | Byte streams, whole files, directory listing, metadata, creation and renaming | Stream bytes use FileApi; path operations use the desktop filesystem |
+| [`std::io`](../library/std-io.md) | Byte streams, whole files, directory listing, metadata, creation and renaming | File operations use C frames; path operations use the host filesystem |
 | [`std::cli`](../library/std-cli.md) | Long/short options, positional values, defaults, help and validation | Returns results without printing or exiting; implemented in ChaLi |
 | [`std::utf8`](../library/std-utf8.md) | Validation, code points, counts and slicing | Strict UTF-8; code points are not grapheme clusters; byte APIs support U+0000 |
 
@@ -154,11 +154,11 @@ void main() {
 
 ## Files and embedded hosts
 
-`FileStream.readBytes(count)` returns a short list at EOF. Byte writes preserve zero bytes. Operating-system host adapters implement byte reads; older custom backends explicitly report an unsupported operation until adapted.
+`FileStream.readBytes(count)` returns a short list at EOF. Byte writes preserve zero bytes. Operating-system hosts provide file access through C entries. Windows filenames and parent directories are converted from UTF-8 to native paths; file contents remain byte based.
 
 `readAllBytes` defaults to a 16 MiB limit that callers can change. `readAllText` reads the entire content but rejects embedded zero bytes; use byte APIs for binary files. Directory listing is one level deep and sorted. File metadata follows symbolic links. Rename replacement rules depend on the platform; these operations do not promise transactional or atomic writes.
 
-Embedded filesystems are injected through FileApi. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `nowUtc` requires an actual UTC clock from the host.
+Custom hosts register file services through the C function table, using public C record, buffer, and error protocols. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `nowUtc` requires an actual UTC clock from the host.
 
 ## Compatible quadruple formats and historical measurements
 

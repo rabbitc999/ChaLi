@@ -13,6 +13,14 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 static std::atomic<std::size_t> allocationEvents{0};
 /**
@@ -137,11 +145,33 @@ void *aliasedClone(const void *value) { return const_cast<void *>(value); }
 void conflictingDestroy(void *value) { delete static_cast<int *>(value); }
 
 /**
+ * @brief 查询本测试进程的系统句柄或文件描述符数量，核对打开失败后的真实清理。
+ * @return Windows 句柄数或 Linux 描述符数；其他宿主返回零。
+ */
+std::size_t systemHandleCount()
+{
+#if defined(_WIN32)
+    DWORD count = 0;
+    assert(GetProcessHandleCount(GetCurrentProcess(), &count));
+    return count;
+#elif defined(__linux__)
+    std::size_t count = 0;
+    for (const auto &entry : std::filesystem::directory_iterator("/proc/self/fd")) { (void)entry; ++count; }
+    return count;
+#else
+    return 0;
+#endif
+}
+
+/**
  * @brief 验证完整 C 服务路径，所有新建资源均显式释放。
+ * @param argc 参数数量，须提供一个位于项目 tmp 下的测试文件路径。
+ * @param argv 程序及测试文件路径。
  * @return 全部断言通过时为零。
  */
-int main()
+int main(int argc, char **argv)
 {
+    assert(argc == 2);
     FailingArena arena(8 * 1024 * 1024);
     {
         Memory::AllocationScope allocation(&arena);
@@ -673,6 +703,43 @@ int main()
             }
             assert(failures >= 2);
             std::printf("C text append: raw bytes, independent storage, lease rejection and %d atomic failure points passed\n", failures);
+        }
+        {
+            const std::string path = argv[1];
+            const auto pathText = chali_abi_string(&frame, path.data(), path.size());
+            const auto modeText = chali_abi_string(&frame, "wb", 2);
+            assert(pathText && modeText);
+            const auto open = chali_abi_resolve("__std_file_try_open", nullptr);
+            assert(open);
+            const int64_t arguments[] = {pathText, modeText};
+            const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+            ChaliAbiFrame invocation{&runtime, arguments, kinds, 2, 0, 0};
+            open(&invocation);
+            assert(invocation.result && !runtime.status);
+            NativeCallContextImpl host(context, &invoker);
+            assert(!host.cloneNativeRecord(invocation.result));
+            reset();
+            assert(chali_abi_record_release(&frame, invocation.result));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                const auto before = systemHandleCount();
+                invocation.result = 0;
+                arena.remaining = point;
+                open(&invocation);
+                arena.remaining = -1;
+                const auto handle = invocation.result;
+                if (handle) assert(chali_abi_record_release(&frame, handle));
+                assert(systemHandleCount() == before);
+                if (handle) break;
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            assert(chali_abi_string_release(&frame, pathText) && chali_abi_string_release(&frame, modeText));
+            assert(std::filesystem::remove(std::filesystem::u8path(path)));
+            std::printf("C files: non-copyable resource and %d adoption failures leave system handle count unchanged\n", failures);
         }
     }
     assert(arena.stats().liveBlocks == 0);
