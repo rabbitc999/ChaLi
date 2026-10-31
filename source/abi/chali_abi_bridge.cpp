@@ -540,6 +540,37 @@ try
 }
 
 /**
+ * @brief 通过同一集合存储批量追加数值，不构造通用原生值。
+ * @param frame 当前调用帧。
+ * @param handle 可写列表句柄。
+ * @param bits 独立宿主位模式数组。
+ * @param kinds 数值类别，空指针表示全部整数。
+ * @param count 追加数量。
+ * @return 成功为一，失败为零并保留诊断。
+ */
+int chali_abi_list_append_numbers(const ChaliAbiFrame *frame, int64_t handle,
+                                  const int64_t *bits, const unsigned char *kinds, size_t count)
+try
+{
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    if (!collection_glue::appendListNumbers(*host, handle, bits, kinds, count))
+    {
+        chali_abi_mark_failure(frame, "numeric list append failed");
+        return 0;
+    }
+    return 1;
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
  * @brief 在最终列表元素中复制文本，省去通用原生值中间封装。
  * @param frame 当前调用帧。
  * @param handle 文本列表句柄。

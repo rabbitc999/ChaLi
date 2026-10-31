@@ -1618,7 +1618,7 @@
     "kind": "struct",
     "type": "",
     "signature": "struct ImageReply",
-    "documentation": "胶水操作的统一回执；槽布局必须与 glue/std_image.hpp 的 Reply 一致。",
+    "documentation": "胶水操作的统一回执；槽布局必须与 C 内核的回执槽一致。",
     "comment": "",
     "parameters": [],
     "source": "source/std/image.chl",

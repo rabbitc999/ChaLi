@@ -15,13 +15,10 @@
 
 #include "../chali_glue.hpp"
 
-#ifndef GLUE_NO_STD_LINALG
-#endif
 #ifndef GLUE_NO_STD_SQL
 #include "std_sql.hpp"
 #endif
 #ifndef GLUE_NO_STD_IMAGE
-#include "std_image.hpp"
 #endif
 #ifndef GLUE_NO_STD_NET
 #include "std_net.hpp"
@@ -97,7 +94,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_IMAGE
     Memory::String imageError;
-    if (!std_image_glue::bind(registry, &imageError))
+    if (!registry.bindModule(abi_image_records, &imageError))
     {
         if (error) *error = imageError;
         ok = false;

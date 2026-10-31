@@ -14,7 +14,7 @@ import std::image;
 
 ## 公共约定与错误边界
 
-Image 是可深复制的 opcode，尺寸与连续 RGBA8888 像素存储由宿主记录拥有；width()/height() 返回尺寸，pixels() 返回独立列表快照。decode/open 支持无压缩 24/32 位 BMP 与二进制 P5/P6，按魔数自动识别；encodeBmp/encodePpm/encodePgm 与 saveBmp/savePpm/savePgm 生成对应文件字节或写盘。getPixel/setPixel 越界或分量超 0..255 返回错误，不 panic。卷积要求核边长为不超过 15 的奇数，边缘复制填充；池化窗口 0=最大 1=平均，输出尺寸向下取整。灰度采用 BT.601 亮度；ARGB8888 每像素一个 uint32，RGB565 每像素一个 uint16，还原时按高位复制扩展。大津法返回 0..255 阈值，二值化大于阈值给 255。重活由宿主胶水 glue/std_image.hpp 提供，裁剪宏 NO_CHALI_STD_IMAGE。
+Image 是可深复制的 opcode，尺寸与连续 RGBA8888 像素存储由宿主记录拥有；width()/height() 返回尺寸，pixels() 返回独立列表快照。decode/open 支持无压缩 24/32 位 BMP 与二进制 P5/P6，按魔数自动识别；encodeBmp/encodePpm/encodePgm 与 saveBmp/savePpm/savePgm 生成对应文件字节或写盘。getPixel/setPixel 越界或分量超 0..255 返回错误，不 panic。卷积要求核边长为不超过 15 的奇数，边缘复制填充；池化窗口 0=最大 1=平均，输出尺寸向下取整。灰度采用 BT.601 亮度；ARGB8888 每像素一个 uint32，RGB565 每像素一个 uint16，还原时按高位复制扩展。大津法返回 0..255 阈值，二值化大于阈值给 255。编解码与数值内核通过 abi/abi_image.cpp 的 C 入口提供，裁剪宏 NO_CHALI_STD_IMAGE。
 
 ## 参考代码
 
@@ -31,7 +31,7 @@ Image 是可深复制的 opcode，尺寸与连续 RGBA8888 像素存储由宿主
 | Pixel | <a id="symbol-87"></a>`int64 g` | 绿色分量，0..255。 |
 | Pixel | <a id="symbol-88"></a>`int64 b` | 蓝色分量，0..255。 |
 | Pixel | <a id="symbol-89"></a>`int64 a` | 透明度分量，0..255，255 为不透明。 |
-| 模块 | <a id="symbol-90"></a>`struct ImageReply` | 胶水操作的统一回执；槽布局必须与 glue/std_image.hpp 的 Reply 一致。 |
+| 模块 | <a id="symbol-90"></a>`struct ImageReply` | 胶水操作的统一回执；槽布局必须与 C 内核的回执槽一致。 |
 | ImageReply | <a id="symbol-91"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
 | ImageReply | <a id="symbol-92"></a>`int64 width` | 结果图片宽。 |
 | ImageReply | <a id="symbol-93"></a>`int64 height` | 结果图片高。 |

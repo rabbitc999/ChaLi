@@ -13,6 +13,7 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "image": ["chali_image", "chali_opcode_std_storage"],
     "collections": ["chali_collection_glue", "chali_numeric_list_storage", "chali_numeric_list_append", "chali_map_pair_iterator"],
     "scalar": ["chali_scalar_c_api", "chali_linalg_column", "chali_linalg_solve"],
     "linalg": ["chali_linalg_column", "chali_linalg_solve", "chali_linalg_decomposition"],

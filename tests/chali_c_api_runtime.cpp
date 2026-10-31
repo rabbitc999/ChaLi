@@ -908,6 +908,80 @@ int main(int argc, char **argv)
             context.hostServices = nullptr;
         }
         {
+            NativeCallContextImpl host(context, &invoker);
+            const unsigned char initial[] = {1, 2};
+            const int64_t extra[] = {3, 4, 5};
+            const auto list = chali_abi_list_from_bytes(&frame, initial, 2);
+            assert(list && chali_abi_list_append_numbers(&frame, list, extra, nullptr, 3));
+            assert(collection_glue::listStorageScalarOperation(host, 1, list, 0, 0, 0, 0, 0).bits == 8);
+            unsigned char copied[5] = {};
+            std::size_t count = 0;
+            assert(chali_abi_list_bytes(&frame, list, copied, 5, &count) && count == 5 && copied[0] == 1 && copied[4] == 5);
+            const unsigned char invalidKinds[] = {0, 2, 0};
+            assert(!chali_abi_list_append_numbers(&frame, list, extra, invalidKinds, 3));
+            reset();
+            const auto lease = collection_glue::listStorageScalarOperation(host, 13, list, 0, 0, 0, 0, 0).bits;
+            assert(lease && !chali_abi_list_append_numbers(&frame, list, extra, nullptr, 3));
+            reset();
+            assert(chali_abi_record_release(&frame, lease));
+            assert(!chali_abi_list_append_numbers(&frame, list, extra, nullptr, SIZE_MAX));
+            reset();
+            assert(chali_abi_list_bytes(&frame, list, copied, 5, &count) && count == 5 && copied[4] == 5);
+            const int64_t more[] = {6, 7, 8, 9};
+            arena.remaining = 0;
+            assert(!chali_abi_list_append_numbers(&frame, list, more, nullptr, 4));
+            arena.remaining = -1;
+            reset();
+            assert(chali_abi_list_bytes(&frame, list, copied, 5, &count) && count == 5 && copied[4] == 5);
+            assert(chali_abi_record_release(&frame, list));
+            assert(!chali_abi_list_append_numbers(&frame, list, extra, nullptr, 3));
+            reset();
+            std::puts("C numeric append: existing identity, repeated growth, lease rejection and atomic failures passed");
+        }
+        {
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                function(&invocation);
+                return invocation.result;
+            };
+            const auto image = call("std::image::__std_imageMake", {1, 1});
+            assert(image && !runtime.status);
+            call("std::image::__std_imageSetByte", {image, 0, 17});
+            NativeCallContextImpl host(context, &invoker);
+            const auto copy = host.cloneNativeRecord(image);
+            assert(copy);
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, image, packet, active));
+            call("std::image::__std_imageSetByte", {image, 0, 29});
+            assert(call("std::image::__std_imageByte", {copy, 0}) == 17);
+            assert(chali_abi_record_release(&frame, image));
+            Memory::Vector<std::int64_t> created;
+            int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, image, active, created, &restored));
+            assert(call("std::image::__std_imageByte", {restored, 0}) == 17 &&
+                   call("std::image::__std_imageWidth", {restored}) == 1 &&
+                   call("std::image::__std_imageHeight", {restored}) == 1);
+            assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, restored));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = call("std::image::__std_imageMake", {1, 1});
+                arena.remaining = -1;
+                if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 3);
+            std::printf("C image records: independent copies, transfer and %d creation failure points passed\n", failures);
+        }
+        {
             const std::string path = argv[1];
             const auto pathText = chali_abi_string(&frame, path.data(), path.size());
             const auto modeText = chali_abi_string(&frame, "wb", 2);

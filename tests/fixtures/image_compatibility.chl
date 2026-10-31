@@ -1,0 +1,27 @@
+import std::image;
+void main(){
+    println("{}",Image::make(0,1).error().toString());
+    List<uint8> bad;bad.push((uint8)0);
+    println("{}",Image::decode(bad).error().toString());
+    let image=Image::make(1,1).unwrap();image.setPixel(0,0,10,20,30,40);
+    List<float64> kernel;
+    println("{}",image.convolve(kernel,2,2).error().toString());
+    println("{}",image.pool(2,1,1).error().toString());
+    List<uint32> argb;
+    println("{}",Image::fromARGB(1,1,argb).error().toString());
+    List<uint16> rgb;
+    println("{}",Image::fromRGB565(1,1,rgb).error().toString());
+    ImageReply reply;reply.error="prior error";
+    std::image::__decode(bad,&reply);
+    println("{}",reply.error);
+    std::image::__decode(bad,&reply);
+    println("{}",reply.error);
+    ImageReply appended;appended.pixels.push((uint8)7);
+    let ppm=image.encodePpm().unwrap();
+    std::image::__decode(ppm,&appended);
+    assert(appended.width==1 && appended.height==1 && appended.pixels.len()==5);
+    assert(appended.pixels[0]==(uint8)7 && appended.pixels[1]==(uint8)10 && appended.pixels[4]==(uint8)255);
+    std::image::__decode(ppm,&appended);
+    assert(appended.pixels.len()==9 && appended.pixels[5]==(uint8)10 && appended.pixels[8]==(uint8)255);
+    println("image recoverable errors and repeated reply append OK");
+}

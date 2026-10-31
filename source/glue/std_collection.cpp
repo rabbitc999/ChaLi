@@ -1395,6 +1395,68 @@ bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std:
 }
 
 /**
+ * @brief 验证输入和租约后一次预留容量，再逐槽追加独立宿主数值。
+ * @param host 当前运行时上下文。
+ * @param handle 现有列表句柄。
+ * @param bits 独立数值位模式数组。
+ * @param kinds 数值类别，空指针表示全整数。
+ * @param count 追加数量。
+ * @return 成功为真，失败保留原有元素和长度。
+ */
+bool appendListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
+                        const unsigned char *kinds, std::size_t count)
+{
+    if ((count && !bits) || count > SIZE_MAX / sizeof(std::int64_t))
+    {
+        host.fail("数值列表长度或输入无效");
+        return false;
+    }
+    for (std::size_t index = 0; kinds && index < count; ++index)
+        if (kinds[index] > 1) { host.fail("数值列表元素类别无效"); return false; }
+    State state(host);
+    Record *object = state.objects ? state.objects->find(handle) : nullptr;
+    if (!object || object->kind != StorageKind::Vector || object->pendingRelease)
+    {
+        host.fail("数值列表句柄无效");
+        return false;
+    }
+    if (object->iteratorLeases || !object->elementViews.empty())
+    {
+        host.fail("活跃 for-in 引用期间不能改变列表结构");
+        return false;
+    }
+    if (!object->scalarItemsActive)
+        for (const auto &value : object->items)
+            if (value.isText || value.ownsObject || !value.fields.empty())
+            { host.fail("数值列表不接受文本、拥有值或聚合元素"); return false; }
+    const auto size = listItemCount(*object), maximum = listStorageMaximum(*object);
+    if (size > maximum || count > maximum - size)
+    { host.fail("缓冲区容量超出上限"); return false; }
+    const auto required = size + count;
+    auto capacity = object->scalarItemsActive ? object->scalarItems.capacity() : object->items.capacity();
+    if (capacity < required)
+    {
+        if (!capacity) capacity = 1;
+        while (capacity < required) capacity = capacity > maximum / 2 ? maximum : capacity * 2;
+        if (object->scalarItemsActive) object->scalarItems.reserve(capacity);
+        else object->items.reserve(capacity);
+    }
+    for (std::size_t index = 0; index < count; ++index)
+    {
+        const unsigned char floating = kinds ? kinds[index] : 0;
+        if (object->scalarItemsActive) object->scalarItems.push_back({bits[index], floating});
+        else
+        {
+            auto &value = object->items.emplace_back();
+            value.isFloat = floating != 0;
+            if (floating) std::memcpy(&value.real, bits + index, sizeof(value.real));
+            else value.integer = bits[index];
+        }
+    }
+    return true;
+}
+
+/**
  * @brief 物化现有元素视图后验证完整字节范围，再进行有界复制。
  * @param host 当前运行时上下文。
  * @param handle 列表句柄。

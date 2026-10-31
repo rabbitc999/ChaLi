@@ -110,3 +110,5 @@ ChaLi 函数值的捕获环境和错误通道。C API 模块调用运行时函�
 `chali_abi_list_numbers` 使用两个宿主数组接收数值：`int64_t bits[]` 保存整数或 IEEE-754 双精度位模式，`unsigned char kinds[]` 保存 `ChaliAbiSlotInteger`／`ChaliAbiSlotFloat`。两个指针同为空且容量为零时查询元素数；实际复制要求两个数组都足够大且不重叠。接口验证全部元素后才写入，拒绝文本、拥有值和聚合元素；没有活动元素视图时，读取保留原列表的紧凑数值布局。
 
 `chali_abi_list_from_numbers` 将独立宿主数组复制为拥有型列表；`kinds` 为空时全部按整数处理。bool、单字节 char、各宽度整数使用整数槽，float32 先扩展为 double。接口不自动进行目标元素类型转换，宿主应按声明的语言类型准备输入及解释输出。新列表沿用有界几何增长策略，完整构造后才发布句柄；交还语言或使用 `chali_abi_record_release` 释放。两项服务需要 `CHALI_ABI_CAP_LIST_NUMBERS`，没有新增列表类型或另一套集合注册表。
+
+`chali_abi_list_append_numbers` 将独立宿主数值数组批量追加到现有列表，保留列表身份、原有元素和存储布局。输入数组不得指向运行时借用视图或目标缓冲；活动迭代租约、元素视图、非数值元素及非法类别会被拒绝。接口先验证并预留容量，再写入全部数值；扩容沿现有容量逐次倍增。失败不改变原有元素和长度，使用同一个 `CHALI_ABI_CAP_LIST_NUMBERS` 能力位。

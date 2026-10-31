@@ -10,12 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """执行真实 VM 程序并确认独占资源和私有句柄的编译期限制。"""
+    """执行真实原生程序并确认独占资源和私有句柄的编译期限制。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()
     compiler = args.chali.resolve()
-    with tempfile.TemporaryDirectory(prefix='opcode-std-', dir=ROOT / 'build') as directory:
+    with tempfile.TemporaryDirectory(prefix='opcode-std-') as directory:
         work = Path(directory)
 
         def run(source, success=True, threads=False):
@@ -45,7 +45,7 @@ def main():
     data = json.loads((ROOT / 'tools/chali_stdlib_api.json').read_text(encoding='utf-8'))
     types = {r['name']: r['kind'] for r in data['symbols']}
     assert types['Image'] == 'opcode' and types['TcpSocket'] == 'opcode' and types['TcpListener'] == 'opcode'
-    print('standard opcode storage: VM ownership, scope cleanup, status isolation and API index passed')
+    print('standard opcode storage: native ownership, scope cleanup, status isolation and API index passed')
 
 
 if __name__ == '__main__':

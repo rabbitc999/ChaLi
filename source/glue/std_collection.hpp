@@ -46,6 +46,17 @@ std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_
  */
 bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
                       unsigned char *kinds, std::size_t capacity, std::size_t &required);
+/**
+ * @brief 将独立宿主数值批量追加到原列表，先验证与预留容量再写入元素。
+ * @param host 当前运行时上下文。
+ * @param handle 可写列表句柄。
+ * @param bits 独立数值位模式数组，非空跨度不得为空。
+ * @param kinds 类别数组，可为空表示全部整数。
+ * @param count 追加元素数量。
+ * @return 成功为真，失败不改变长度及原有元素。
+ */
+bool appendListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
+                        const unsigned char *kinds, std::size_t count);
 
 /** @brief LLVM 数值数组视图，代次由所属运行时对象表拥有；上下文退出前清空缓存。 */
 struct NumericListView

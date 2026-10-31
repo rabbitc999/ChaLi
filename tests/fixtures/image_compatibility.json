@@ -1,0 +1,5 @@
+{
+  "source_commit": "f6a205e4",
+  "compiler_sha256": "08059f936e8327cd1c32e01595da171f8fd356f983ee024233177c4e241e93ac",
+  "stdout": "图片创建：宽高必须为正\n图片解码：无法识别的格式（支持 BMP/P5/P6）\n卷积：核边长必须是不超过 15 的奇数\n池化：mode 只能是 0(max) 或 1(avg)\nARGB 还原：缓冲长度不符\nRGB565 还原：缓冲长度不符\n图片解码：无法识别的格式（支持 BMP/P5/P6）\n图片解码：无法识别的格式（支持 BMP/P5/P6）\nimage recoverable errors and repeated reply append OK\n"
+}

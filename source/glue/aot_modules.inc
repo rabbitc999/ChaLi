@@ -43,7 +43,7 @@ CHALI_AOT_MODULE(process, registry.bindModule(abi_process_records, error))
 CHALI_AOT_MODULE(sql, std_sql_glue::bind(registry, error))
 #endif
 #ifndef GLUE_NO_STD_IMAGE
-CHALI_AOT_MODULE(image, std_image_glue::bind(registry, error))
+CHALI_AOT_MODULE(image, registry.bindModule(abi_image_records, error))
 #endif
 #ifndef GLUE_NO_STD_NET
 CHALI_AOT_MODULE(net, std_net_glue::bind(registry, error))

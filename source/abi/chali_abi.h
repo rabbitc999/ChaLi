@@ -507,6 +507,18 @@ int CHALI_ABI_CALL chali_abi_list_numbers(const ChaliAbiFrame *frame, int64_t ha
  */
 int64_t CHALI_ABI_CALL chali_abi_list_from_numbers(const ChaliAbiFrame *frame,
                                                   const int64_t *bits, const unsigned char *kinds, size_t count);
+/**
+ * @brief 将独立宿主数值跨度批量追加到现有列表，保留列表身份及当前存储布局。
+ * @param frame 当前调用帧。
+ * @param handle 可写数值列表句柄，不得存在活动迭代租约或元素视图。
+ * @param bits 独立宿主数组，非空跨度不得为空，不得指向运行时借用视图或目标列表缓冲。
+ * @param kinds 整数为零、浮点为一；为空表示全部整数。
+ * @param count 追加元素数。
+ * @return 成功为一；无效输入、借用冲突或分配失败为零，原有元素和长度保持不变。
+ * @note 使用 CHALI_ABI_CAP_LIST_NUMBERS；扩容按现有容量逐次倍增，受最大容量约束。
+ */
+int CHALI_ABI_CALL chali_abi_list_append_numbers(const ChaliAbiFrame *frame, int64_t handle,
+                                                const int64_t *bits, const unsigned char *kinds, size_t count);
 
 /**
  * @brief 将借用文本复制为独立的 List<String> 元素，成功构造后才追加。

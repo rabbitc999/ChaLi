@@ -198,3 +198,25 @@ int main()
         std::printf("直通入口表自检通过：%zu 项\n", count);
     return failures;
 }
+
+/** @brief 表结构测试的数值列表查询占位。
+ * @param frame 未使用的帧。
+ * @param handle 未使用的句柄。
+ * @param bits 未使用的输出。
+ * @param kinds 未使用的类别。
+ * @param capacity 未使用的容量。
+ * @param required 清零的长度。
+ * @return 固定失败值。
+ */
+int chali_abi_list_numbers(const ChaliAbiFrame *frame,int64_t handle,int64_t *bits,unsigned char *kinds,size_t capacity,size_t *required)
+{(void)frame;(void)handle;(void)bits;(void)kinds;(void)capacity;if(required)*required=0;return 0;}
+/** @brief 表结构测试的数值追加占位。
+ * @param frame 未使用的帧。
+ * @param handle 未使用的句柄。
+ * @param bits 未使用的输入。
+ * @param kinds 未使用的类别。
+ * @param count 未使用的数量。
+ * @return 固定失败值。
+ */
+int chali_abi_list_append_numbers(const ChaliAbiFrame *frame,int64_t handle,const int64_t *bits,const unsigned char *kinds,size_t count)
+{(void)frame;(void)handle;(void)bits;(void)kinds;(void)count;return 0;}

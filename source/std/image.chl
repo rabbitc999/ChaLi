@@ -5,7 +5,7 @@ import std::io;
 /*
  * 图片处理标准库：加载/保存、像素读写、卷积、池化、格式转换与大津法二值化。
  *
- * 解码、编码与重活下沉在宿主胶水（glue/std_image.hpp）：
+ * 解码、编码与重活下沉在C 接口数值内核（abi/abi_image.cpp）：
  *   - 文件格式：BMP（无压缩 24/32 位）、Netpbm 二进制 P5/P6；
  *   - 像素缓冲统一 RGBA8888，每像素 4 字节，行优先；
  *   - 灰度用 ITU-R BT.601 亮度；(299R + 587G + 114B) / 1000。
@@ -25,7 +25,7 @@ List<uint8> __std_imagePixels(int64 image);
 uint8 __std_imageByte(int64 image, int64 index);
 void __std_imageSetByte(Image mut& image, int64 index, uint8 value);
 
-/* ---- 胶水声明：实现见 glue/std_image.hpp；槽布局与 ImageReply 一致 ---- */
+/* ---- C 原语声明：槽布局与 ImageReply 一致 ---- */
 void __decode(List<uint8> bytes, ImageReply mut& reply);
 void __encodeBmp(int64 image, ImageReply mut& reply);
 void __encodePpm(int64 image, ImageReply mut& reply);
@@ -51,7 +51,7 @@ struct Pixel {
     int64 a; ///< 透明度分量，0..255，255 为不透明。
 }
 
-/** 胶水操作的统一回执；槽布局必须与 glue/std_image.hpp 的 Reply 一致。 */
+/** 胶水操作的统一回执；槽布局必须与 C 内核的回执槽一致。 */
 struct ImageReply {
     String error; ///< 本次调用的错误说明；成功时为空串。
     int64 width; ///< 结果图片宽。
