@@ -60,6 +60,15 @@ int chali_abi_invoke(const ChaliAbiFrame *, int64_t, const int64_t *, const unsi
 }
 int64_t chali_abi_record_make(const ChaliAbiFrame *, const char *, void *, void (*)(void *)) { return 0; }
 /**
+ * @brief 表结构检查不登记实际记录描述符。
+ * @param name 未使用的类型名。
+ * @param destroy 未使用的销毁回调。
+ * @param clone 未使用的复制回调。
+ * @return 空占位描述符。
+ */
+const void *chali_abi_record_type(const char *name, void (*destroy)(void *), ChaliAbiClone clone)
+{ (void)name; (void)destroy; (void)clone; return nullptr; }
+/**
  * @brief 表结构测试不创建拥有记录。
  * @param frame 未使用的帧。
  * @param name 未使用的类型名。

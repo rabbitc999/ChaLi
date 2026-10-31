@@ -2,6 +2,7 @@
 
 #include "../chali_glue.hpp"
 #include "std_scalar_buffer.hpp"
+#include "../abi/chali_standard.h"
 
 #include <cmath>
 #include <cstdint>
@@ -682,7 +683,7 @@ inline bool bindMatrixSolve(chali_glue::Registry &registry, const Memory::String
 /* ---- 绑定泛型求解与六个顶层分解函数 ---- */
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
-    return scalar_buffer::bind(registry, error) && bindMatrixSolve<float>(registry, "float32", error) && bindMatrixSolve<double>(registry, "float64", error) && bindMatrixSolve<std::int8_t>(registry, "int8", error) && bindMatrixSolve<std::int16_t>(registry, "int16", error) && bindMatrixSolve<std::int32_t>(registry, "int32", error) && bindMatrixSolve<std::int64_t>(registry, "int64", error) && bindMatrixSolve<std::uint8_t>(registry, "uint8", error) && bindMatrixSolve<std::uint16_t>(registry, "uint16", error) && bindMatrixSolve<std::uint32_t>(registry, "uint32", error) && bindMatrixSolve<std::uint64_t>(registry, "uint64", error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::luDecompose", [](Context &ctx, Matrix input) -> std::int64_t {
+    return registry.bindModule(abi_scalar_records, error) && bindMatrixSolve<float>(registry, "float32", error) && bindMatrixSolve<double>(registry, "float64", error) && bindMatrixSolve<std::int8_t>(registry, "int8", error) && bindMatrixSolve<std::int16_t>(registry, "int16", error) && bindMatrixSolve<std::int32_t>(registry, "int32", error) && bindMatrixSolve<std::int64_t>(registry, "int64", error) && bindMatrixSolve<std::uint8_t>(registry, "uint8", error) && bindMatrixSolve<std::uint16_t>(registry, "uint16", error) && bindMatrixSolve<std::uint32_t>(registry, "uint32", error) && bindMatrixSolve<std::uint64_t>(registry, "uint64", error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::luDecompose", [](Context &ctx, Matrix input) -> std::int64_t {
                    const LUResult r = luDecomposeImpl(ctx, readMatrix(ctx, input));
                    if (r.lower.values.empty()) return 0;
                    const std::int64_t address = ctx.makeTemporary(9u * 8u);

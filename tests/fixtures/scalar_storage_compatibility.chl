@@ -1,0 +1,28 @@
+import std::linalg;
+import std::parse;
+void checkStorage<T>(T first,T second) {
+    std::linalg::ScalarArray<T> values;
+    values.push(first); values.push(second);
+    assert(values.len()==2 && values[0]==first && values[1]==second);
+    let copy=values.copy();
+    values.set(0,second);
+    assert(copy[0]==first && values[0]==second);
+    copy.clear(); assert(copy.len()==0 && values.len()==2);
+    copy.push(first); assert(copy[0]==first);
+    int64 count=0;
+    for (value in values) { assert(value==second); count=count+1; }
+    assert(count==2);
+}
+void main() {
+    checkStorage<float32>((float32)7.25,(float32)-2.5);
+    checkStorage<float64>(7.25,-2.5);
+    checkStorage<int8>((int8)-128,(int8)127);
+    checkStorage<int16>((int16)-32768,(int16)32767);
+    checkStorage<int32>((int32)-2147483648,(int32)2147483647);
+    checkStorage<int64>(std::parse::Parse::parseInt64("-9223372036854775808").unwrap(),std::parse::Parse::parseInt64("9223372036854775807").unwrap());
+    checkStorage<uint8>((uint8)0,(uint8)255);
+    checkStorage<uint16>((uint16)0,(uint16)65535);
+    checkStorage<uint32>((uint32)0,(uint32)4294967295);
+    checkStorage<uint64>((uint64)0,std::parse::Parse::parseUInt64("18446744073709551615").unwrap());
+    println("ten scalar buffers, boundaries, copies and iteration OK");
+}

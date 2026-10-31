@@ -48,8 +48,11 @@ def main():
             module_object = work / (name + '.o')
             run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/abi' / (name + '.c'), '-o', module_object)
             objects.append(module_object)
+        pool_object = work / 'pool.o'
+        run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/allocator/chali_pool.c', '-o', pool_object)
+        objects.append(pool_object)
         table = work / ('table.exe' if os.name == 'nt' else 'table')
-        kernels = [ROOT / name for name in ('source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
+        kernels = [ROOT / name for name in ('source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
         run(cxx, '-std=c++17', *target_flags, *common,
             ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-lm', '-o', table)
         output = run(table)

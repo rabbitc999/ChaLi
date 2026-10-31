@@ -180,8 +180,8 @@ LU glue solve OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-299"></a>`opcode ScalarStorage` | 线性代数专用数值存储，缓冲在宿主胶水中深复制和释放。 |
-| 模块 | <a id="symbol-300"></a>`struct ScalarArray<T>: Index<T, int64>, Iterator<T>` | 为内建数值类型提供泛型索引外观，元素保存在 opcode 中。 |
+| 模块 | <a id="symbol-299"></a>`opcode ScalarStorage` | 线性代数专用数值存储，由 C 原语管理连续数值槽；复制独立，clear 保留容量。 |
+| 模块 | <a id="symbol-300"></a>`struct ScalarArray<T>: Index<T, int64>, Iterator<T>` | 为 bool、char、全部整数与浮点类型提供泛型索引外观，元素保存在 opcode 中。 |
 | ScalarArray | <a id="symbol-301"></a>`ScalarStorage storage` | 独占此数组数值缓冲的 opcode 记录；复制时深复制。 |
 | 模块 | <a id="symbol-302"></a>`struct Vector<T>: Add<Vector<T>, Vector<T>>, Subtract<Vector<T>, Vector<T>>, Multiply<Vector<T>, T>, Index<T, int64>, Iterator<T>, Drop` | 稠密数值向量，元素按顺序存储。 |
 | Vector | <a id="symbol-303"></a>`ScalarArray<T> values` | 按声明顺序保存的元素存储。 |

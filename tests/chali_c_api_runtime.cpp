@@ -5,6 +5,7 @@
 #include "ircode/runtime_internal.hpp"
 #include "c_api_failure_arena.hpp"
 #include "glue/std_collection.hpp"
+#include "abi/scalar_storage.hpp"
 #include <cassert>
 #include <atomic>
 #include <cstdlib>
@@ -703,6 +704,76 @@ int main(int argc, char **argv)
             }
             assert(failures >= 2);
             std::printf("C text append: raw bytes, independent storage, lease rejection and %d atomic failure points passed\n", failures);
+        }
+        {
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = { ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger };
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{ &runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0 };
+                function(&invocation);
+                return invocation.result;
+            };
+            const auto original = call("std::linalg::__std_scalarNew", {});
+            assert(original && !runtime.status);
+            auto *storage = static_cast<scalar_buffer::Storage *>(
+                chali_abi_record_probe(&frame, original, "std::linalg::ScalarStorage"));
+            assert(storage && sizeof(scalar_buffer::Slot) < sizeof(NativeValue));
+            call("std::linalg::__std_scalarPush__int64", { original, INT64_MIN });
+            assert(!runtime.status && call("std::linalg::__std_scalarAt__int64", { original, 0 }) == INT64_MIN);
+            NativeCallContextImpl host(context, &invoker);
+            const auto copy = host.cloneNativeRecord(original);
+            assert(copy && !runtime.status);
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, original, packet, active));
+            const auto capacity = storage->values.capacity();
+            const auto data = storage->values.data();
+            call("std::linalg::__std_scalarClear", { original });
+            assert(!runtime.status && storage->values.empty() && storage->values.capacity() == capacity && storage->values.data() == data);
+            assert(call("std::linalg::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
+            assert(chali_abi_record_release(&frame, original));
+            Memory::Vector<std::int64_t> created;
+            int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, original, active, created, &restored));
+            assert(call("std::linalg::__std_scalarAt__int64", { restored, 0 }) == INT64_MIN);
+            call("std::linalg::__std_scalarSet__int64", { copy, -1, 4 });
+            assert(runtime.status);
+            reset();
+            assert(call("std::linalg::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
+            assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, restored));
+            call("std::linalg::__std_scalarDrop", { original });
+            call("std::linalg::__std_scalarDrop", { 0 });
+            assert(!runtime.status);
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = call("std::linalg::__std_scalarCopy", { 0 });
+                arena.remaining = -1;
+                if (attempted)
+                {
+                    assert(chali_abi_record_release(&frame, attempted));
+                    break;
+                }
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            const auto empty = call("std::linalg::__std_scalarNew", {});
+            auto *emptyStorage = static_cast<scalar_buffer::Storage *>(
+                chali_abi_record_probe(&frame, empty, "std::linalg::ScalarStorage"));
+            assert(emptyStorage && emptyStorage->values.capacity() == 0);
+            arena.remaining = 0;
+            call("std::linalg::__std_scalarPush__int64", { empty, 42 });
+            arena.remaining = -1;
+            assert(runtime.status && emptyStorage->values.empty() && emptyStorage->values.capacity() == 0);
+            reset();
+            assert(chali_abi_record_release(&frame, empty));
+            std::printf("C scalar buffers: %zu-byte slots, retained capacity, independent clones, transfer and %d adoption failures passed\n",
+                        sizeof(scalar_buffer::Slot), failures);
         }
         {
             const std::string path = argv[1];

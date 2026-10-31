@@ -7,7 +7,7 @@ module std::linalg;
 /* 稠密向量：T 为支持算术的标量；norm/normalized 适用于 float32/float64。 */
 import std::math;
 
-/** @brief 线性代数专用数值存储，缓冲在宿主胶水中深复制和释放。 */
+/** @brief 线性代数专用数值存储，由 C 原语管理连续数值槽；复制独立，clear 保留容量。 */
 opcode ScalarStorage {
     new = std::linalg::__std_scalarNew;
     drop = std::linalg::__std_scalarDrop;
@@ -19,7 +19,7 @@ T __std_scalarAt<T>(int64 handle, int64 index);
 void __std_scalarSet<T>(ScalarStorage mut& storage, int64 index, T value);
 void __std_scalarPush<T>(ScalarStorage mut& storage, T value);
 
-/** @brief 为内建数值类型提供泛型索引外观，元素保存在 opcode 中。 */
+/** @brief 为 bool、char、全部整数与浮点类型提供泛型索引外观，元素保存在 opcode 中。 */
 struct ScalarArray<T>: Index<T, int64>, Iterator<T> {
     /** @brief 独占此数组数值缓冲的 opcode 记录；复制时深复制。 */
     ScalarStorage storage;

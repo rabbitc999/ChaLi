@@ -205,6 +205,12 @@ File 的 19 个入口已迁移至 abi_file.cpp 的 C 帧调用，文件流内核
 
 最终静态 EXE SHA256 为 c5f536b757a2be8d035053c2d955c632d0d39a7ad5f2f292f66bd36e848f88ff；vscode/dist/1.0.12-linalg-column-selfhost/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 及内嵌字节，SHA256 为 1e479b4e8b5a5c52494f07d67f6ee3e28f1baff5edf36fd40cab957c39b62eb5。证据仅保留 tools/history/20261031/chali-1.0.12-linalg-column-selfhost/；未重复冷构建独立编译器、执行整仓全量门禁或正式计时。继续数值缓冲及剩余 C API 迁移。
 
+数值缓冲已迁移到 C 帧入口：ScalarStorage 使用运行时分配器管理连续 16 字节无所有权数值槽，替换通用 NativeValue 缓冲；保留整数位模式、float32 舍入、复制独立、clear 保留容量及 drop 释放。入口覆盖 bool、单字节 char、八种整数和 float32／64，删除旧 std_scalar_buffer.cpp 的模板注册；尚未迁移的私有矩阵内核通过同一稳定 C 记录描述符访问数据，不建立第二套记录类型或注册表。
+
+C API、数值缓冲、矩阵与内存／并发／泛型门禁首轮 19 步为 18 通过、1 失败、0 跳过；唯一失败属于下述 char 用例写法，最终完整标量专项与 C 服务复验通过。旧编译器的十类型四配置用例已冻结；最终编译器的十二类型四配置、读写越界、C 记录复制／线程快照恢复、16 字节槽布局、容量保留、三处分配接管失败和追加失败原子性通过。首轮 char Unicode 字面量及私有 opcode 字段访问属于测试写法错误，修正后的复验与原失败分别留证。最终隔离手册、核心预编译／源码回退／零磁盘缓存、库参考索引／链接、七组插件测试及十项新鲜导出源码核对通过；导出 C 内核独立 C++17 语法检查通过，本阶段未重复冷构建整个独立编译器。
+
+最终静态 EXE SHA256 为 ba81494681fd5e6d1284e71b83ae02f190cca1c08c11c14599eb6d15eb86ceb1；vscode/dist/1.0.12-scalar-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌 EXE 字节，SHA256 为 87582e2328212d9da8912bf4188f103961c18bd372a541d416ea4f5ff1712322。证据仅保留 tools/history/20261031/chali-1.0.12-scalar-c-api/；不据布局变化报告速度提升，未执行整仓全量门禁或正式计时。矩阵求解／分解和其余 C API 迁移仍待完成。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

@@ -203,6 +203,8 @@ GENERATOR_ASSETS = [
     "abi/abi_random.c",
     "abi/abi_parse.c",
     "abi/abi_compress.cpp",
+    "abi/abi_scalar.cpp",
+    "abi/scalar_storage.hpp",
     "abi/abi_file.cpp",
     "abi/abi_filesystem.cpp",
     "abi/abi_regex.cpp",
