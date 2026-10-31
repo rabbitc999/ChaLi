@@ -23,6 +23,9 @@ def main():
 
         def invoke(command):
             """执行外部命令，失败时保留完整诊断。"""
+            command = list(command)
+            if len(command) > 1 and str(command[1]) == 'run' and '--out' not in command:
+                command += ['--out', work / ('run-' + Path(command[2]).stem)]
             result = subprocess.run(list(map(str, command)), cwd=ROOT, env=env,
                                     capture_output=True, timeout=600)
             assert result.returncode == 0, (command, result.stdout, result.stderr)
@@ -65,7 +68,7 @@ def main():
                 invoke([compiler, 'aot', failure, '--checked', '--out', prefix])
                 command = [str(prefix) + ('.exe' if os.name == 'nt' else '')]
             else:
-                command = [str(compiler), 'run', str(failure)]
+                command = [str(compiler), 'run', str(failure), '--out', str(work / ('run-failure-' + label))]
             result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, timeout=600)
             assert result.returncode != 0 and b'callback failure' in result.stderr + result.stdout, result
             assert marker.read_text().strip() == 'free', label

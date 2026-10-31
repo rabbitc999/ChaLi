@@ -26,8 +26,8 @@ static void abiStrFixed(ChaliAbiFrame *frame)
 {
     double value = 0.0;
     int64_t precision = 3;
-    chali_abi_argument_real(frame, 0, &value);
-    chali_abi_argument_integer(frame, 1, &precision);
+    if (!chali_abi_argument_real(frame, 0, &value)) return;
+    if (!chali_abi_argument_integer(frame, 1, &precision)) return;
     if (precision < 0) precision = 3;
 
     char buffer[CHALI_ABI_TEXT_CAPACITY];

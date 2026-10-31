@@ -7,6 +7,7 @@
 #include "glue/std_collection.hpp"
 #include "chali_generic_name.hpp"
 #include "abi/chali_abi.h"
+#include "abi/chali_abi_registry.hpp"
 
 #include <cstddef>
 #include <array>
@@ -1148,22 +1149,34 @@ private:
 class Registry
 {
 public:
+    /** @brief 创建过渡适配视图，实际名称只存入其运行时表。 */
+    Registry() = default;
+    /**
+     * @brief 在旧模块迁移期间借用 C 句柄的同一张表。
+     * @param registry 有效的 C 注册句柄，必须比本视图存活更久。
+     */
+    explicit Registry(ChaliAbiRegistry *registry) : backend_(registry ? registry->backend : nullptr), handle_{{}, backend_}
+    { if (!backend_) throw std::invalid_argument("missing C registry"); }
+    /** @brief 禁止复制含有借用指针的过渡视图。 */
+    Registry(const Registry &) = delete;
+    /** @brief 禁止复制赋值改变视图所有权。 */
+    Registry &operator=(const Registry &) = delete;
     bool bind(const Memory::String &name, std::size_t arity, Callback callback,
               Memory::String *error = nullptr)
     {
         /* 绑定期就把名字解析成直通入口，之后每次调用都是一次函数指针调用。 */
         int directArity = 0;
         const auto direct = chali_abi_resolve(name.c_str(), &directArity);
-        return native_.addDirect(name, arity, std::move(callback), direct, directArity, error);
+        return native().addDirect(name, arity, std::move(callback), direct, directArity, error);
     }
 
-    bool unbind(const Memory::String &name) { return native_.remove(name); }
+    bool unbind(const Memory::String &name) { return native().remove(name); }
 
     /**
      * 把 C 直通表里尚未绑定的入口补进来。宿主在注册完 C++ 胶水之后调用，
      * 已迁移到 C 的模块即使没有对应的 C++ 胶水文件也仍然可达。
      */
-    std::size_t bindDirectEntries() { return native_.bindDirectEntries(); }
+    std::size_t bindDirectEntries() { return native().bindDirectEntries(); }
 
     /**
      * @brief 只登记某一个 C 模块的直通入口。
@@ -1183,13 +1196,13 @@ public:
         }
         std::size_t count = 0;
         const ChaliAbiRecord *records = module(&count);
-        for (std::size_t at = 0; at < count; ++at)
-        {
-            const ChaliAbiRecord &record = records[at];
-            const auto arity = record.arity < 0 ? std::size_t(-1) : static_cast<std::size_t>(record.arity);
-            if (!native_.addDirect(record.name, arity, Callback{}, record.entry, record.arity, error)) return false;
-        }
-        return true;
+        const auto abi = chali_abi_local_info(0);
+        const ChaliAbiModuleDescriptor descriptor{sizeof(ChaliAbiModuleDescriptor), &abi, records, count};
+        char diagnostic[512];
+        ChaliAbiError failure{diagnostic, sizeof(diagnostic), 0, ChaliAbiOk};
+        const auto status = chali_abi_registry_register(cApi(), &descriptor, &failure);
+        if (status != ChaliAbiOk && error) *error = diagnostic;
+        return status == ChaliAbiOk;
     }
 
     /**
@@ -1312,16 +1325,23 @@ public:
      * @brief 取得可直接注册通用记录协议的原生表。
      * @return 当前注册表持有的原生函数表。
      */
-    [[nodiscard]] stackvm::NativeRegistry &native() { return native_; }
-    [[nodiscard]] const stackvm::NativeRegistry &native() const { return native_; }
+    [[nodiscard]] stackvm::NativeRegistry &native() { return *backend_; }
+    [[nodiscard]] const stackvm::NativeRegistry &native() const { return *backend_; }
+    /**
+     * @brief 取得同一函数表的借用 C 句柄。
+     * @return 仅在本视图存活期间有效，不可交给 destroy。
+     */
+    [[nodiscard]] ChaliAbiRegistry *cApi() { return &handle_; }
 
     /**
      * 将本表用于后续源码即时执行；Registry 必须保持存活。
      */
-    void install() const { M_SetNativeRegistry(&native_); }
+    void install() const { M_SetNativeRegistry(&native()); }
 
 private:
     stackvm::NativeRegistry native_;
+    stackvm::NativeRegistry *backend_ = &native_;
+    ChaliAbiRegistry handle_{{}, backend_};
     Declarations declarations_;
 };
 

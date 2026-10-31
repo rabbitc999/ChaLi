@@ -54,16 +54,22 @@ def main():
         output = run(table)
         assert '直通入口表自检通过' in output, output
         print(output.strip())
+        overflow = work / ('overflow.exe' if os.name == 'nt' else 'overflow')
+        run(cc, '-std=c11', *target_flags, *common, ROOT / 'tests/chali_c_api_catalog_failure.c',
+            work / 'chali_abi.o', '-o', overflow)
+        assert run(overflow) == 'oversized C catalog rejected atomically\n'
         if args.clang:
             cross = work / 'cross.c'
-            cross.write_text('#include "abi/chali_abi.h"\n'
+            cross.write_text('#include "abi/chali_abi.h"\n#include "abi/chali_standard.h"\n'
                              '_Static_assert(sizeof(int64_t)==8,"slot");\n'
+                             '_Static_assert(CHALI_ABI_TARGET_CONVENTION==EXPECTED_CC,"calling convention");\n'
                              'ChaliAbiInfo probe(void){return chali_abi_local_info(0);}\n', encoding='utf-8')
-            for target in ('x86_64-w64-windows-gnu', 'i686-w64-windows-gnu',
-                           'x86_64-unknown-linux-gnu', 'aarch64-unknown-linux-gnu'):
+            for target, convention in (('x86_64-w64-windows-gnu', 1), ('i686-w64-windows-gnu', 1),
+                                       ('x86_64-unknown-linux-gnu', 1), ('aarch64-unknown-linux-gnu', 1),
+                                       ('armv7-unknown-linux-gnueabi', 1), ('armv7-unknown-linux-gnueabihf', 2)):
                 run(args.clang, '--target=' + target, '-ffreestanding', '-std=c11',
-                    *common, '-fsyntax-only', cross)
-            print('Four target C header checks passed; this does not validate target AOT execution')
+                    '-DEXPECTED_CC=' + str(convention), *common, '-fsyntax-only', cross)
+            print('Six target C header checks including ARM32 float ABI passed; this does not validate target AOT execution')
         else:
             print('clang unavailable: cross-target header checks not run')
     print('C11/C++17 interoperability and incompatible packing rejection passed')

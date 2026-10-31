@@ -112,10 +112,16 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     const auto cpp = root / "abi_binding.cpp", target = root / "abi_binding.o", log = root / "abi_compiler.log";
     {
         std::ofstream output(cpp, std::ios::binary);
-        output << "#include \"chali_glue.hpp\"\n"
+        output << "#include \"chali_glue.hpp\"\n#include \"abi/chali_abi_internal.h\"\n"
                << source
-               << "\n/**\n * @brief 为当前原生运行时登记类型化 C ABI 调用。\n * @param registry 当前运行时的胶水注册表。\n * @param error 接收库加载与符号绑定诊断。\n * @return 全部绑定成功时返回 true。\n */\n"
-               << "extern \"C\" bool chali_program_abi_bind(chali_glue::Registry *registry, Memory::String *error) { return bindChaLiAbi(*registry, error); }\n";
+               << "\n/**\n * @brief 为当前原生运行时登记 C ABI 适配。\n * @param registry 当前运行时的 C 注册句柄。\n * @param error 调用方的有界错误缓冲。\n * @return 稳定 C ABI 状态码，成功为零。\n */\n"
+               << "extern \"C\" int32_t chali_program_abi_bind(ChaliAbiRegistry *registry, ChaliAbiError *error) try {\n"
+               << "if (!registry || !registry->backend) return chali_abi_status(error, ChaliAbiInvalidArgument, \"missing registry\");\n"
+               << "Memory::AllocationScope allocation(registry->backend->allocationOwner());\n"
+               << "chali_glue::Registry view(registry); Memory::String message; const bool ok = bindChaLiAbi(view, &message);\n"
+               << "return chali_abi_status(error, ok ? ChaliAbiOk : ChaliAbiHostFailure, ok ? nullptr : message.c_str());\n"
+               << "} catch (const std::exception &failure) { return chali_abi_status(error, ChaliAbiHostFailure, failure.what()); }\n"
+               << "catch (...) { return chali_abi_status(error, ChaliAbiHostFailure, \"ABI registration failed\"); }\n";
         if (!output) return false;
     }
     const char *configured = std::getenv("CHALI_ABI_CXX");

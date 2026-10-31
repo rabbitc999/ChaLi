@@ -22,22 +22,13 @@ extern "C" {
 void chali_abi_prepare(void);
 
 /**
- * @brief 读取第 `index` 个实参并按双精度写出。
- * @param frame 当前调用帧。
- * @param index 实参下标。
- * @param out 接收双精度值的地址，不得为空。
- * @return 下标有效时为 true；越界时写出零并返回 false。
+ * @brief 向调用方缓冲写入有界诊断，不分配内存。
+ * @param error 可选的诊断缓冲。
+ * @param status 稳定状态码。
+ * @param message 失败文本，成功时为空。
+ * @return 输入状态码。
  */
-int chali_abi_argument_real(const ChaliAbiFrame *frame, int64_t index, double *out);
-
-/**
- * @brief 读取第 `index` 个实参并按 64 位整数写出。
- * @param frame 当前调用帧。
- * @param index 实参下标。
- * @param out 接收整数值的地址，不得为空。
- * @return 下标有效时为 true；越界时写出零并返回 false。
- */
-int chali_abi_argument_integer(const ChaliAbiFrame *frame, int64_t index, int64_t *out);
+int chali_abi_status(ChaliAbiError *error, int status, const char *message);
 
 /**
  * @brief 取得第 `index` 个实参的值类别。

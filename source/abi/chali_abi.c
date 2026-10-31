@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
 
 /* ---------------------------------------------------------------------------
  *  模块登记表
@@ -47,7 +48,7 @@ static const ModuleRecords kModules[] = {
 
 static ChaliAbiRecord gTable[CHALI_ABI_MAX_RECORDS];
 static size_t gCount = 0;
-static int gPrepared = 0;
+static atomic_int gPrepared = ATOMIC_VAR_INIT(0);  ///< 零未开始，一构建中，二成功，三失败。
 
 /**
  * @brief 按入口名称比较两个表项，供 `qsort` 使用。
@@ -64,34 +65,58 @@ static int compareRecord(const void *left, const void *right)
 
 /**
  * @brief 聚合各模块入口表并排序；可重复调用，只准备一次。
- * @note 约定在绑定原生函数之前（启动或模块初始化阶段）调用；并发绑定时由宿主串行化。
+ * @note 原子状态发布完整只读表，不允许其他线程读取构建中的数据。
  */
 void chali_abi_prepare(void)
 {
-    if (gPrepared) return;
+    if (atomic_load_explicit(&gPrepared, memory_order_acquire) >= 2) return;
+    int expected = 0;
+    if (!atomic_compare_exchange_strong_explicit(&gPrepared, &expected, 1, memory_order_acq_rel, memory_order_acquire))
+    {
+        while (atomic_load_explicit(&gPrepared, memory_order_acquire) == 1) {}
+        return;
+    }
     gCount = 0;
+    int valid = 1;
     for (size_t module = 0; module < sizeof(kModules) / sizeof(kModules[0]); ++module)
     {
         size_t count = 0;
         const ChaliAbiRecord *records = kModules[module](&count);
-        for (size_t at = 0; at < count && gCount < CHALI_ABI_MAX_RECORDS; ++at)
+        if ((count && records == NULL) || count > CHALI_ABI_MAX_RECORDS - gCount)
+        {
+            valid = 0;
+            break;
+        }
+        for (size_t at = 0; at < count; ++at)
+        {
+            if (!records[at].name || !records[at].name[0] || !records[at].entry || records[at].arity < -1)
+            {
+                valid = 0;
+                break;
+            }
             gTable[gCount++] = records[at];
+        }
+        if (!valid) break;
     }
     if (gCount > 1u) qsort(gTable, gCount, sizeof(gTable[0]), compareRecord);
-    gPrepared = 1;
+    for (size_t at = 1; at < gCount && valid; ++at)
+        if (strcmp(gTable[at - 1].name, gTable[at].name) == 0) valid = 0;
+    if (!valid) gCount = 0;
+    atomic_store_explicit(&gPrepared, valid ? 2 : 3, memory_order_release);
 }
 
 const ChaliAbiRecord *chali_abi_records(size_t *count)
 {
     chali_abi_prepare();
     if (count != NULL) *count = gCount;
-    return gTable;
+    return atomic_load_explicit(&gPrepared, memory_order_acquire) == 2 ? gTable : NULL;
 }
 
 ChaliAbiEntry chali_abi_resolve(const char *name, int *arity)
 {
     if (name == NULL || *name == '\0') return NULL;
     chali_abi_prepare();
+    if (atomic_load_explicit(&gPrepared, memory_order_acquire) != 2) return NULL;
     size_t low = 0;
     size_t high = gCount;
     while (low < high)
@@ -103,8 +128,10 @@ ChaliAbiEntry chali_abi_resolve(const char *name, int *arity)
             if (arity != NULL) *arity = gTable[middle].arity;
             return gTable[middle].entry;
         }
-        if (order < 0) high = middle;
-        else low = middle + 1u;
+        if (order < 0)
+            high = middle;
+        else
+            low = middle + 1u;
     }
     return NULL;
 }
@@ -115,18 +142,34 @@ ChaliAbiEntry chali_abi_resolve(const char *name, int *arity)
 
 int chali_abi_argument_integer(const ChaliAbiFrame *frame, int64_t index, int64_t *out)
 {
-    if (out == NULL) return 0;
+    if (out == NULL)
+    {
+        chali_abi_fail(frame, "missing integer argument output");
+        return 0;
+    }
     *out = 0;
-    if (frame == NULL || frame->slots == NULL || index < 0 || index >= frame->count) return 0;
+    if (frame == NULL || frame->slots == NULL || frame->kinds == NULL || index < 0 || index >= frame->count || frame->kinds[index] != ChaliAbiSlotInteger)
+    {
+        chali_abi_fail(frame, "invalid integer argument slot");
+        return 0;
+    }
     *out = frame->slots[index];
     return 1;
 }
 
 int chali_abi_argument_real(const ChaliAbiFrame *frame, int64_t index, double *out)
 {
-    if (out == NULL) return 0;
+    if (out == NULL)
+    {
+        chali_abi_fail(frame, "missing floating argument output");
+        return 0;
+    }
     *out = 0.0;
-    if (frame == NULL || frame->slots == NULL || index < 0 || index >= frame->count) return 0;
+    if (frame == NULL || frame->slots == NULL || frame->kinds == NULL || index < 0 || index >= frame->count || frame->kinds[index] != ChaliAbiSlotFloat)
+    {
+        chali_abi_fail(frame, "invalid floating argument slot");
+        return 0;
+    }
     const int64_t bits = frame->slots[index];
     double value = 0.0;
     memcpy(&value, &bits, sizeof(value));
@@ -136,9 +179,12 @@ int chali_abi_argument_real(const ChaliAbiFrame *frame, int64_t index, double *o
 
 int chali_abi_argument_kind(const ChaliAbiFrame *frame, int64_t index)
 {
-    if (frame == NULL || frame->kinds == NULL || index < 0 || index >= frame->count)
+    if (frame == NULL || frame->kinds == NULL || index < 0 || index >= frame->count || frame->kinds[index] > ChaliAbiSlotFloat)
+    {
+        chali_abi_fail(frame, "invalid argument slot kind");
         return ChaliAbiSlotInteger;
-    return frame->kinds[index] != 0 ? ChaliAbiSlotFloat : ChaliAbiSlotInteger;
+    }
+    return frame->kinds[index];
 }
 
 void chali_abi_return_integer(ChaliAbiFrame *frame, int64_t value)

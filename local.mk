@@ -3,8 +3,8 @@ CC := gcc
 endif
 
 # C 侧直通胶水使用 C11；与 C++ 胶水一起并入宿主记录库。
-ifeq ($(origin CFLAGS),default)
-CFLAGS := -std=c11
+ifeq ($(filter -std=%,$(CFLAGS)),)
+CFLAGS += -std=c11
 endif
 CFLAGS += -Isource -O2 -DNDEBUG
 

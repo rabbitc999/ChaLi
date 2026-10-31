@@ -65,18 +65,27 @@
 #endif
 
 #include "std_aot_modules.hpp"
+#include "abi/chali_abi_internal.h"
 #include <cstdlib>
 /**
  * @brief 注册单个已选择模块，独立函数节允许链接器回收未选模块。
  * @param target 接收绑定的注册表。
- * @param error 接收绑定错误。
- * @return 成功时为一，失败时为零。
+ * @param failure 调用方的有界错误缓冲。
+ * @return 稳定 C ABI 状态码，成功为零。
  */
-#define CHALI_AOT_MODULE(name, expression)                                                             \
-    extern "C" std::int32_t chali_std_bind_##name(chali_glue::Registry *target, Memory::String *error) \
-    {                                                                                                  \
-        auto &registry = *target;                                                                      \
-        return (expression) ? 1 : 0;                                                                   \
+#define CHALI_AOT_MODULE(name, expression) \
+    extern "C" int32_t chali_std_bind_##name(ChaliAbiRegistry *target, ChaliAbiError *failure) try \
+    { \
+        if (!target || !target->backend) return chali_abi_status(failure, ChaliAbiInvalidArgument, "missing registry"); \
+        Memory::AllocationScope allocation(target->backend->allocationOwner()); \
+        chali_glue::Registry registry(target); \
+        Memory::String text; \
+        auto *error = &text; \
+        const bool ok = (expression); \
+        return chali_abi_status(failure, ok ? ChaliAbiOk : ChaliAbiHostFailure, ok ? nullptr : text.empty() ? "standard module registration failed" : text.c_str()); \
+    } \
+    catch (const std::exception &error) { return chali_abi_status(failure, ChaliAbiHostFailure, error.what()); } \
+    catch (...) { return chali_abi_status(failure, ChaliAbiHostFailure, "standard module registration failed"); \
     }
 #include "aot_modules.inc"
 #undef CHALI_AOT_MODULE
@@ -95,7 +104,7 @@ Memory::Vector<Memory::String> aotModulesFor(const Memory::Vector<Memory::String
     struct Module
     {
         const char *name;
-        std::int32_t (*bind)(chali_glue::Registry *, Memory::String *);
+        int32_t (*bind)(ChaliAbiRegistry *, ChaliAbiError *);
     };
     static const Module modules[] = {
 #define CHALI_AOT_MODULE(name, expression) { #name, &chali_std_bind_##name },
@@ -112,10 +121,11 @@ Memory::Vector<Memory::String> aotModulesFor(const Memory::Vector<Memory::String
             continue;
         }
         chali_glue::Registry registry;
-        Memory::String error;
-        if (!module.bind(&registry, &error))
+        char message[1024];
+        ChaliAbiError error{message, sizeof(message), 0, ChaliAbiOk};
+        if (module.bind(registry.cApi(), &error) != ChaliAbiOk)
         {
-            if (diagnostics) diagnostics->push_back("AOT 标准库模块绑定失败：" + error);
+            if (diagnostics) diagnostics->push_back(Memory::String("AOT 标准库模块绑定失败：") + message);
             continue;
         }
         for (const auto &name : names)

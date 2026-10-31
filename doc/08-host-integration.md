@@ -6,7 +6,23 @@
 
 ChaLi 普通执行从语义检查后的 AST 直接生成 LLVM IR，再经 LLVM O3 生成原生代码。和 C 打交道有两个方向——
 **ChaLi 调 C 动态库**，和**C 宿主调 ChaLi 编出来的原生库**。两个方向都走平台 C ABI：中间没有字节码容器，
-也没有需要宿主注册函数表的运行环境。
+这两种互操作由生成代码完成封送。扩展宿主内核时，还可以使用下面的 C 函数表接口。
+
+## C 宿主函数表
+
+公开头为 `source/abi/chali_abi.h`，标准库宿主入口的集中注册另见 `chali_standard.h`。头文件可由 C11 编译器独立包含。运行时实现可以使用 C++，公开边界使用 C 结构、固定宽度槽、字节缓冲和不透明句柄。完整例子见 [C 宿主程序](../example/host-c-api/main.c)及其[构建说明](../example/host-c-api/README.md)。
+
+先用 `chali_abi_registry_create` 创建拥有的函数表，再构造 `ChaliAbiModuleDescriptor`。其中的 ABI 描述由模块自己的编译器调用 `chali_abi_local_info` 生成；宿主检查版本、目标架构／平台、调用约定、布局和必需能力。Windows x86 的公开入口显式使用 C 调用约定，ARM32 描述区分普通与硬浮点 ABI。
+
+`chali_abi_registry_register` 原子登记整模块。名称会复制，入口代码仍须存活；重名、稳定符号冲突或任何分配失败都不会留下部分入口，也不复制已有回调状态。拥有的 C 函数表使用宿主堆，不借用登记时的语言临时 arena。`chali_abi_registry_seal` 封存同一张运行时表，C 和私有实现的注册／移除路径都遵循封存状态。封存后可并发查询，入口自身的共享状态仍按其线程约定处理。
+
+`chali_abi_registry_call` 检查实参数量、数组、类别和返回值，恢复输入帧并在失败时清空部分输出；`chali_abi_registry_resolve` 只返回直接 C 入口。实参按整数或 double 位模式编码，带状态的 `chali_abi_argument_integer`／`chali_abi_argument_real` 拒绝类别不符，入口应在读取失败后返回。纯标量例子允许 `frame.runtime` 为空；访问语言堆、记录或函数值需要运行时提供的上下文，不能自行构造不透明句柄。`#abi` 外部调用继续按其真实 C 原型封送，并不自动接收这个内部调用帧。
+
+`chali_abi_read`／`chali_abi_write` 访问受检查的逻辑地址；它们检查范围与存活，不产生新的类型化所有权。`chali_abi_string` 创建拥有的 String，未转交语言调用方时用 `chali_abi_string_release` 成对释放描述符与缓冲区。`chali_abi_bytes` 同时识别长度头和容量描述符，借用视图只有效到下一次可能分配、扩容、释放或重入之前；需要保留时先复制。原始块由 `temporary` 创建，可用 `temporary_release` 提前释放。
+
+记录创建成功后转移原指针；返回零时调用方仍负责原指针。克隆登记失败会清理新副本，原记录保持存活。类型名称拥有独立副本，同名类型不能更换销毁协议；销毁回调不得抛异常，代码要存活到记录释放。同步函数值调用使用 `chali_abi_invoke`，保留捕获环境及检查，借用调用器而不复制其状态；函数句柄不是机器函数指针。
+
+错误通过 `ChaliAbiError` 的状态与有界缓冲返回。服务异常不会越过 C 边界；已有运行期错误与内存故障保留优先级，模块的首条显式诊断可以补充通用服务失败。内建入口目录并发发布完整只读表，超容量或非法目录整体失败。验证入口为 `python tests/chali_c_api_contract.py` 与 `python tests/chali_c_api_registry.py`。
 
 ## 从 ChaLi 调用 C 动态库
 

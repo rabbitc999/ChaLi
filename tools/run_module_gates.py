@@ -13,7 +13,7 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
-    "c_api": ["chali_c_api_contract", "chali_native_callbacks", "chali_abi_contracts", "chali_abi_directives", "chali_abi_values", "chali_glue_edges"],
+    "c_api": ["chali_c_api_contract", "chali_c_api_registry", "chali_native_callbacks", "chali_abi_contracts", "chali_abi_directives", "chali_abi_values", "chali_glue_edges"],
     "macros": ["chali_ast_macros", "chali_macro_parameters", "chali_macro_categories",
                "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
                "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
@@ -75,7 +75,7 @@ def main():
                     commands[script].append("--lsp-only")
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
-                if script == "chali_annotations":
+                if script in ("chali_annotations", "chali_c_api_registry"):
                     if args.build_root: commands[script] += ["--build-root", str(args.build_root.resolve())]
                     if args.cxx: commands[script] += ["--cxx", args.cxx]
                     if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]

@@ -5,6 +5,8 @@
 #include "std_file.hpp"
 #include "std_big_number.hpp"
 #include "std_cas.hpp"
+#include "abi/chali_standard.h"
+#include "abi/chali_abi_internal.h"
 
 /* 统一的"标准胶水"注册入口：编译器 VM（InstallDemoGlue）与独立 VM 宿主（bindChaLiStandardGlue）
  * 共用这一份。每个模块的注册都用 `#ifndef GLUE_NO_XXX` 包住，定义宏即整段不编进来：
@@ -162,3 +164,26 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 }
 
 }  // namespace std_registry
+
+/**
+ * @brief 用不透明 C 句柄登记完整标准库，捕获私有实现异常。
+ * @param registry 同一运行时函数表的句柄。
+ * @param error 调用方诊断缓冲。
+ * @return 稳定状态码，成功为零。
+ */
+extern "C" int32_t chali_abi_bind_standard(ChaliAbiRegistry *registry, ChaliAbiError *error) try
+{
+    if (!registry || !registry->backend) return chali_abi_status(error, ChaliAbiInvalidArgument, "missing registry");
+    if (registry->backend->sealed())
+        return chali_abi_status(error, ChaliAbiSealed, "registry is sealed");
+    Memory::AllocationScope allocation(registry->backend->allocationOwner());
+    chali_glue::Registry view(registry);
+    Memory::String message;
+    const bool ok = std_registry::bindStandardGlue(view, &message);
+    return chali_abi_status(error, ok ? ChaliAbiOk : ChaliAbiHostFailure,
+                           ok ? nullptr : message.empty() ? "standard registration failed" : message.c_str());
+}
+catch (const std::exception &failure)
+{ return chali_abi_status(error, ChaliAbiHostFailure, failure.what()); }
+catch (...)
+{ return chali_abi_status(error, ChaliAbiHostFailure, "standard registration failed"); }

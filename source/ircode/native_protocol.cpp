@@ -200,8 +200,14 @@ double NativeValue::asFloat() const
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
 bool NativeRegistry::addDirect(const Memory::String &name, std::size_t arity, NativeCallback callback,
-                                ChaliAbiEntry direct, int directArity, Memory::String *error)
+                               ChaliAbiEntry direct, int directArity, Memory::String *error)
 {
+    Memory::AllocationScope registration(allocationOwner());
+    if (sealed_)
+    {
+        if (error) *error = "原生函数表已封存";
+        return false;
+    }
     if (name.empty())
     {
         if (error != nullptr) *error = "原生函数名不能为空";
@@ -224,15 +230,92 @@ bool NativeRegistry::addDirect(const Memory::String &name, std::size_t arity, Na
         if (error) *error = "原生函数稳定编号碰撞";
         return false;
     }
-    compactNames_.emplace(key, name);
     Entry entry;
     entry.arity = arity;
     entry.callback = std::move(callback);
     entry.direct = direct;
     entry.directArity = directArity;
-    entries_.emplace(name, std::move(entry));
+    const auto compact = compactNames_.emplace(key, name);
+    try
+    {
+        entries_.emplace(name, std::move(entry));
+    } catch (...)
+    {
+        compactNames_.erase(compact.first);
+        throw;
+    }
     ++revision_;
     return true;
+}
+
+/**
+ * @brief 预备全部名称后提交模块；失败按稳定迭代器逆序撤销，不分配回滚内存。
+ * @param records 已检查的直接入口记录。
+ * @param count 记录数量。
+ * @return 成功为零；冲突或封存时不修改既有表和版本。
+ */
+int NativeRegistry::addDirectModule(const ChaliAbiRecord *records, std::size_t count)
+{
+    Memory::AllocationScope registration(allocationOwner());
+    if (sealed_) return ChaliAbiSealed;
+    if (count && !records) return ChaliAbiInvalidArgument;
+    /** @brief 提交前持有的独立名称及紧凑键。 */
+    struct Pending
+    {
+        Memory::String name, key;
+        Entry entry;
+    };
+    Memory::Vector<Pending> pending;
+    pending.reserve(count);
+    for (std::size_t at = 0; at < count; ++at)
+    {
+        const auto &record = records[at];
+        if (!record.name || !*record.name || !record.entry || record.arity < -1) return ChaliAbiInvalidArgument;
+        Pending item;
+        item.name = record.name;
+        item.key = symbols::key(symbols::logicalId(item.name));
+        if (entries_.count(item.name) || compactNames_.count(item.name) || entries_.count(item.key) || compactNames_.count(item.key)) return ChaliAbiDuplicate;
+        for (const auto &other : pending)
+            if (item.name == other.name || item.key == other.key || item.name == other.key || item.key == other.name) return ChaliAbiDuplicate;
+        item.entry.arity = record.arity < 0 ? std::size_t(-1) : static_cast<std::size_t>(record.arity);
+        item.entry.direct = record.entry;
+        item.entry.directArity = record.arity;
+        pending.push_back(std::move(item));
+    }
+    /** @brief 每次成功插入的节点；map 插入不使既有迭代器失效。 */
+    struct Inserted
+    {
+        decltype(entries_)::iterator entry;
+        decltype(compactNames_)::iterator compact;
+    };
+    Memory::Vector<Inserted> inserted;
+    inserted.reserve(count);
+    try
+    {
+        for (auto &item : pending)
+        {
+            const auto compact = compactNames_.emplace(item.key, item.name);
+            try
+            {
+                const auto entry = entries_.emplace(item.name, std::move(item.entry));
+                inserted.push_back({ entry.first, compact.first });
+            } catch (...)
+            {
+                compactNames_.erase(compact.first);
+                throw;
+            }
+        }
+    } catch (...)
+    {
+        for (auto at = inserted.rbegin(); at != inserted.rend(); ++at)
+        {
+            entries_.erase(at->entry);
+            compactNames_.erase(at->compact);
+        }
+        throw;
+    }
+    revision_ += count;
+    return ChaliAbiOk;
 }
 
 /**
@@ -255,9 +338,11 @@ bool NativeRegistry::add(const Memory::String &name, std::size_t arity, NativeCa
  */
 std::size_t NativeRegistry::bindDirectEntries()
 {
+    if (sealed_) return 0;
     std::size_t total = 0;
     std::size_t registered = 0;
     const auto *records = chali_abi_records(&total);
+    if (!records || total == 0) throw std::runtime_error("C 入口表初始化失败");
     for (std::size_t at = 0; at < total; ++at)
     {
         const Memory::String name(records[at].name);
@@ -265,8 +350,7 @@ std::size_t NativeRegistry::bindDirectEntries()
         const auto key = symbols::key(symbols::logicalId(name));
         if (compactNames_.count(key) != 0u) continue;
         Entry entry;
-        entry.arity = records[at].arity < 0 ? static_cast<std::size_t>(-1)
-                                            : static_cast<std::size_t>(records[at].arity);
+        entry.arity = records[at].arity < 0 ? static_cast<std::size_t>(-1) : static_cast<std::size_t>(records[at].arity);
         entry.direct = records[at].entry;
         entry.directArity = records[at].arity;
         compactNames_.emplace(key, name);
@@ -284,6 +368,7 @@ std::size_t NativeRegistry::bindDirectEntries()
  */
 bool NativeRegistry::remove(const Memory::String &name)
 {
+    if (sealed_) return false;
     compactNames_.erase(symbols::key(symbols::logicalId(name)));
     const bool removed = entries_.erase(name) != 0u;
     if (removed) ++revision_;

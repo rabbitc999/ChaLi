@@ -18,7 +18,7 @@
 static void abiStderrWrite(ChaliAbiFrame *frame)
 {
     int64_t address = 0;
-    chali_abi_argument_integer(frame, 0, &address);
+    if (!chali_abi_argument_integer(frame, 0, &address)) return;
     const unsigned char *data = NULL;
     size_t length = 0;
     if (!chali_abi_bytes(frame, address, &data, &length))

@@ -94,6 +94,9 @@ def main():
 
         def invoke(command, cwd=None, **kwargs):
             """执行编译或测试程序，捕获可比较的输出。"""
+            command = list(command)
+            if len(command) > 1 and str(command[1]) == 'run' and '--out' not in command:
+                command += ['--out', work / ('run-' + Path(command[2]).stem)]
             return subprocess.run(list(map(str, command)), cwd=cwd or ROOT, env=env, capture_output=True,
                                   text=True, encoding='utf-8', errors='replace', timeout=300, **kwargs)
 

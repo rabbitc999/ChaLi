@@ -30,9 +30,9 @@ extern "C" {
  * @brief 登记当前程序实际可达的标准库模块。
  * @param registry 注册表。
  * @param error 诊断。
- * @return 绑定是否成功。
+ * @return 稳定 C ABI 状态码，成功为零。
  */
-bool chali_program_std_bind(chali_glue::Registry *registry, Memory::String *error);
+int32_t chali_program_std_bind(ChaliAbiRegistry *registry, ChaliAbiError *error);
 
 extern const unsigned char chali_data_image[];
 /**
@@ -59,7 +59,7 @@ unsigned char chali_result_float();
 void chali_reset_slots();
 void chali_reset_address_view();
 void chali_host_tick(std::uint64_t steps);
-bool chali_program_abi_bind(chali_glue::Registry *registry, Memory::String *error);
+int32_t chali_program_abi_bind(ChaliAbiRegistry *registry, ChaliAbiError *error);
 void chali_location(const char **file, std::int64_t *line, const void **function);
 extern const std::size_t chali_trace_count;
 extern const void *const chali_trace_functions[];
@@ -205,9 +205,11 @@ struct Runtime
             return true;
         };
         objects.recordContext = context;
-        Memory::String error;
-        if (!chali_program_std_bind(&registry, &error)) chali_panic(error.c_str());
-        if (!chali_program_abi_bind(&registry, &error)) chali_panic(error.c_str());
+        char message[1024];
+        ChaliAbiError error{message, sizeof(message), 0, ChaliAbiOk};
+        if (chali_program_std_bind(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
+        if (chali_program_abi_bind(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
+        if (chali_abi_registry_seal(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
     }
 
     /**
@@ -810,6 +812,9 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
                 if (chali_abi_check_frame(&frame, entry->directArity, &abiError) != ChaliAbiOk)
                     chali_panic(diagnostic);
                 entry->direct(&frame);
+                if (runtime.status != ChaliAbiOk)
+                    chali_panic(!context.memoryFault.empty() ? context.memoryFault.c_str() :
+                                runtime.fallback ? runtime.fallback : runtime.diagnostic.c_str());
                 if (chali_abi_check_result(&frame, &abiError) != ChaliAbiOk)
                     chali_panic(diagnostic);
                 if (frame.resultIsFloat != 0)

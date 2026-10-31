@@ -186,10 +186,13 @@ GENERATOR_ASSETS = [
     "glue/std_demo.cpp",
     # 直通 ABI：C 胶水、桥接与入口表聚合，生成工程必须一并导出。
     "abi/chali_abi.h",
+    "abi/chali_standard.h",
     "abi/chali_abi_internal.h",
     "abi/chali_abi_runtime.hpp",
+    "abi/chali_abi_registry.hpp",
     "abi/chali_abi.c",
     "abi/chali_abi_contract.c",
+    "abi/chali_abi_registry.cpp",
     "abi/chali_abi_bridge.cpp",
     "abi/abi_print.c",
     "abi/abi_string.c",

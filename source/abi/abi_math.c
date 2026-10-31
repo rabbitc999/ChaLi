@@ -17,12 +17,12 @@
  * @param functionName 生成的入口函数名。
  * @param expression 以 `x` 为自变量的返回表达式。
  */
-#define CHALI_ABI_UNARY_REAL(functionName, expression) \
-    static void functionName(ChaliAbiFrame *frame)     \
-    {                                                  \
-        double x = 0.0;                                \
-        chali_abi_argument_real(frame, 0, &x);         \
-        chali_abi_return_real(frame, (expression));   \
+#define CHALI_ABI_UNARY_REAL(functionName, expression)      \
+    static void functionName(ChaliAbiFrame *frame)          \
+    {                                                       \
+        double x = 0.0;                                     \
+        if (!chali_abi_argument_real(frame, 0, &x)) return; \
+        chali_abi_return_real(frame, (expression));         \
     }
 
 /**
@@ -34,9 +34,9 @@
     static void functionName(ChaliAbiFrame *frame)          \
     {                                                       \
         double x = 0.0, y = 0.0;                            \
-        chali_abi_argument_real(frame, 0, &x);              \
-        chali_abi_argument_real(frame, 1, &y);              \
-        chali_abi_return_real(frame, (expression));        \
+        if (!chali_abi_argument_real(frame, 0, &x)) return; \
+        if (!chali_abi_argument_real(frame, 1, &y)) return; \
+        chali_abi_return_real(frame, (expression));         \
     }
 
 CHALI_ABI_UNARY_REAL(abiMathSin, sin(x))
@@ -64,7 +64,7 @@ CHALI_ABI_BINARY_REAL(abiMathFmod, fmod(x, y))
 static void abiMathIsNan(ChaliAbiFrame *frame)
 {
     double x = 0.0;
-    chali_abi_argument_real(frame, 0, &x);
+    if (!chali_abi_argument_real(frame, 0, &x)) return;
     chali_abi_return_integer(frame, isnan(x) ? 1 : 0);
 }
 
@@ -75,7 +75,7 @@ static void abiMathIsNan(ChaliAbiFrame *frame)
 static void abiMathIsInf(ChaliAbiFrame *frame)
 {
     double x = 0.0;
-    chali_abi_argument_real(frame, 0, &x);
+    if (!chali_abi_argument_real(frame, 0, &x)) return;
     chali_abi_return_integer(frame, isinf(x) ? 1 : 0);
 }
 
@@ -83,24 +83,42 @@ static void abiMathIsInf(ChaliAbiFrame *frame)
  * @brief 本模块入口表，按名称升序排列。
  */
 static const ChaliAbiRecord kRecords[] = {
-    { "std::math::__acos64", abiMathAcos, 1 },   { "std::math::__asin64", abiMathAsin, 1 },
-    { "std::math::__atan64", abiMathAtan, 1 },  { "std::math::__ceil64", abiMathCeil, 1 },
-    { "std::math::__cos64", abiMathCos, 1 },    { "std::math::__exp64", abiMathExp, 1 },
-    { "std::math::__floor64", abiMathFloor, 1 },{ "std::math::__fmod64", abiMathFmod, 2 },
-    { "std::math::__isInf64", abiMathIsInf, 1 }, { "std::math::__isNaN64", abiMathIsNan, 1 },
-    { "std::math::__ln64", abiMathLn, 1 },      { "std::math::__log1064", abiMathLog10, 1 },
-    { "std::math::__pow64", abiMathPow, 2 },    { "std::math::__round64", abiMathRound, 1 },
-    { "std::math::__sin64", abiMathSin, 1 },    { "std::math::__sqrt64", abiMathSqrt, 1 },
-    { "std::math::__tan64", abiMathTan, 1 },    { "std::math::__trunc64", abiMathTrunc, 1 },
-    { "std::math::acos", abiMathAcos, 1 },      { "std::math::asin", abiMathAsin, 1 },
-    { "std::math::atan", abiMathAtan, 1 },      { "std::math::ceil", abiMathCeil, 1 },
-    { "std::math::cos", abiMathCos, 1 },        { "std::math::exp", abiMathExp, 1 },
-    { "std::math::floor", abiMathFloor, 1 },    { "std::math::fmod", abiMathFmod, 2 },
-    { "std::math::isInf", abiMathIsInf, 1 },     { "std::math::isNaN", abiMathIsNan, 1 },
-    { "std::math::ln", abiMathLn, 1 },          { "std::math::log10", abiMathLog10, 1 },
-    { "std::math::pow", abiMathPow, 2 },        { "std::math::round", abiMathRound, 1 },
-    { "std::math::sin", abiMathSin, 1 },         { "std::math::sqrt", abiMathSqrt, 1 },
-    { "std::math::tan", abiMathTan, 1 },         { "std::math::trunc", abiMathTrunc, 1 },
+    { "std::math::__acos64", abiMathAcos, 1 },
+    { "std::math::__asin64", abiMathAsin, 1 },
+    { "std::math::__atan64", abiMathAtan, 1 },
+    { "std::math::__ceil64", abiMathCeil, 1 },
+    { "std::math::__cos64", abiMathCos, 1 },
+    { "std::math::__exp64", abiMathExp, 1 },
+    { "std::math::__floor64", abiMathFloor, 1 },
+    { "std::math::__fmod64", abiMathFmod, 2 },
+    { "std::math::__isInf64", abiMathIsInf, 1 },
+    { "std::math::__isNaN64", abiMathIsNan, 1 },
+    { "std::math::__ln64", abiMathLn, 1 },
+    { "std::math::__log1064", abiMathLog10, 1 },
+    { "std::math::__pow64", abiMathPow, 2 },
+    { "std::math::__round64", abiMathRound, 1 },
+    { "std::math::__sin64", abiMathSin, 1 },
+    { "std::math::__sqrt64", abiMathSqrt, 1 },
+    { "std::math::__tan64", abiMathTan, 1 },
+    { "std::math::__trunc64", abiMathTrunc, 1 },
+    { "std::math::acos", abiMathAcos, 1 },
+    { "std::math::asin", abiMathAsin, 1 },
+    { "std::math::atan", abiMathAtan, 1 },
+    { "std::math::ceil", abiMathCeil, 1 },
+    { "std::math::cos", abiMathCos, 1 },
+    { "std::math::exp", abiMathExp, 1 },
+    { "std::math::floor", abiMathFloor, 1 },
+    { "std::math::fmod", abiMathFmod, 2 },
+    { "std::math::isInf", abiMathIsInf, 1 },
+    { "std::math::isNaN", abiMathIsNan, 1 },
+    { "std::math::ln", abiMathLn, 1 },
+    { "std::math::log10", abiMathLog10, 1 },
+    { "std::math::pow", abiMathPow, 2 },
+    { "std::math::round", abiMathRound, 1 },
+    { "std::math::sin", abiMathSin, 1 },
+    { "std::math::sqrt", abiMathSqrt, 1 },
+    { "std::math::tan", abiMathTan, 1 },
+    { "std::math::trunc", abiMathTrunc, 1 },
 };
 
 const ChaliAbiRecord *abi_math_records(size_t *count)

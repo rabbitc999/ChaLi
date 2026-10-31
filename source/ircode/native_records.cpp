@@ -25,11 +25,25 @@ std::int64_t NativeCallContextImpl::makeNativeRecord(const NativeRecordType &typ
     context_.objects->recordContext.heap = context_.heap;
     context_.objects->recordContext.data = context_.data;
     context_.objects->recordContext.objects = context_.objects;
+    /** @brief 只有句柄登记成功后才接管资源，分配失败保留调用方所有权。 */
+    struct RecordOwner
+    {
+        void *record = nullptr;
+        void (*destroy)(void *) = nullptr;
+        bool committed = false;
+        /** @brief 对已完成转移的宿主记录执行非抛出销毁回调。 */
+        ~RecordOwner() { if (committed && destroy) destroy(record); }
+    };
+    auto owner = Memory::makeShared<RecordOwner>();
+    owner->record = record;
+    owner->destroy = type.destroy;
     auto object = Memory::makeShared<RuntimeObject>();
     object->kind = ObjectKind::NativeRecord;
     object->nativeType = &type;
-    object->nativeRecord = std::shared_ptr<void>(record, type.destroy);
-    return context_.objects->add(std::move(object));
+    object->nativeRecord = std::shared_ptr<void>(owner, record);
+    const auto handle = context_.objects->add(std::move(object));
+    if (handle) owner->committed = true;
+    return handle;
 }
 /**
  * @brief 按描述符身份借用当前运行时中的宿主记录。

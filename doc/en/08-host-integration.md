@@ -7,7 +7,23 @@
 Ordinary ChaLi execution lowers the checked AST directly to LLVM IR and uses LLVM O3 to produce native code. So
 talking to C has exactly two directions — **ChaLi calling a C shared library**, and **a C host calling
 a native library built from ChaLi**. Both go through the platform C ABI: no virtual machine, no
-bytecode, no host runtime with a function registry to populate.
+bytecode interpreter. Generated code marshals these calls. A host kernel can also use the C registry interface below.
+
+## C host registry
+
+The public headers are `source/abi/chali_abi.h` and, for standard-library host-entry registration, `chali_standard.h`. C11 clients can include them independently. The implementation may use C++, while the boundary contains C structures, fixed-width slots, byte buffers and opaque handles. See the [C host example](../../example/host-c-api/main.c) and its [build instructions](../../example/host-c-api/README.md).
+
+Create an owned table with `chali_abi_registry_create`, then supply a `ChaliAbiModuleDescriptor`. A module uses its own compiler to generate `chali_abi_local_info`; the host checks versions, architecture/platform, calling convention, layouts and required capabilities. Windows x86 public entries explicitly use the C calling convention. ARM32 descriptors distinguish ordinary and hard-float ABIs.
+
+`chali_abi_registry_register` commits a complete module atomically. Names are copied and entry code must remain alive. Duplicate names, symbol collisions and allocation failure leave no partial entries and do not copy existing callback state. Owned C registries use the host heap rather than a temporary language arena. Sealing applies to the same runtime table through both C and private implementation paths. Queries may then run concurrently; entry-owned shared state follows that entry's thread contract.
+
+`chali_abi_registry_call` checks arguments and results, restores input fields and clears partial output on failure. `chali_abi_registry_resolve` returns only direct C entries. Slots hold integers or double bit patterns; checked `chali_abi_argument_integer`/`chali_abi_argument_real` accessors reject a wrong kind, and an entry should return after a failed read. Pure scalar entries allow a null runtime. Language memory, records and function values require a runtime-provided context, never a fabricated opaque handle. External `#abi` calls retain their actual C prototypes rather than automatically receiving this frame.
+
+`chali_abi_read`/`chali_abi_write` check logical ranges and liveness; raw bytes do not acquire typed ownership. Release an owned String with `chali_abi_string_release` if it is not transferred to the language caller. Byte views recognize both length headers and capacity descriptors and expire before allocation, growth, release or reentry; copy bytes that must be retained. Pair temporary raw blocks with `temporary_release` when releasing early.
+
+A successful record creation transfers its pointer; a zero result leaves it with the caller. Failed clone registration destroys the new copy and preserves the source. Type names are copied, destruction protocols cannot change under the same name, and destruction callbacks must not throw or outlive their code. `chali_abi_invoke` calls checked language function values with their captures and borrows the invoker without copying its state; handles are not machine function pointers.
+
+`ChaliAbiError` carries a status and bounded caller-owned buffer. Service exceptions cannot escape the C boundary. Existing runtime errors and memory faults keep priority; the first explicit module diagnostic may refine a generic service failure. Built-in entry catalogs publish complete immutable data concurrently and reject invalid or oversized input as a whole. Run `python tests/chali_c_api_contract.py` and `python tests/chali_c_api_registry.py` to reproduce checks.
 
 ## Calling a C shared library from ChaLi
 

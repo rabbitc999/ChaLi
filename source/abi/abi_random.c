@@ -94,7 +94,7 @@ static uint64_t abiEntropyStamp(void)
 static void abiRandomWithSeed(ChaliAbiFrame *frame)
 {
     int64_t seed = 0;
-    chali_abi_argument_integer(frame, 0, &seed);
+    if (!chali_abi_argument_integer(frame, 0, &seed)) return;
     AbiRandomState *state = (AbiRandomState *)malloc(sizeof(AbiRandomState));
     if (state == NULL)
     {
@@ -142,7 +142,7 @@ static void abiRandomFromEntropy(ChaliAbiFrame *frame)
 static AbiRandomState *abiRandomBorrow(const ChaliAbiFrame *frame)
 {
     int64_t handle = 0;
-    chali_abi_argument_integer(frame, 0, &handle);
+    if (!chali_abi_argument_integer(frame, 0, &handle)) return NULL;
     void *record = chali_abi_record_borrow(frame, handle, kRandomType);
     if (record == NULL)
     {
@@ -174,8 +174,8 @@ static void abiRandomNextUInt64(ChaliAbiFrame *frame)
 static void abiRandomNextInt(ChaliAbiFrame *frame)
 {
     int64_t minimum = 0, maximum = 0;
-    chali_abi_argument_integer(frame, 1, &minimum);
-    chali_abi_argument_integer(frame, 2, &maximum);
+    if (!chali_abi_argument_integer(frame, 1, &minimum)) return;
+    if (!chali_abi_argument_integer(frame, 2, &maximum)) return;
     AbiRandomState *state = abiRandomBorrow(frame);
     if (state == NULL || maximum <= minimum)
     {
@@ -211,8 +211,8 @@ static void abiRandomNextFloat64(ChaliAbiFrame *frame)
 static void abiRandomNextRange(ChaliAbiFrame *frame)
 {
     double minimum = 0.0, maximum = 0.0;
-    chali_abi_argument_real(frame, 1, &minimum);
-    chali_abi_argument_real(frame, 2, &maximum);
+    if (!chali_abi_argument_real(frame, 1, &minimum)) return;
+    if (!chali_abi_argument_real(frame, 2, &maximum)) return;
     AbiRandomState *state = abiRandomBorrow(frame);
     if (state == NULL || !(maximum > minimum))
     {
@@ -247,7 +247,7 @@ static void abiRandomNextBool(ChaliAbiFrame *frame)
 static void abiRandomCopy(ChaliAbiFrame *frame)
 {
     int64_t handle = 0;
-    chali_abi_argument_integer(frame, 0, &handle);
+    if (!chali_abi_argument_integer(frame, 0, &handle)) return;
     chali_abi_return_integer(frame, chali_abi_record_clone(frame, handle, kRandomType, abiRandomClone));
 }
 
@@ -258,7 +258,7 @@ static void abiRandomCopy(ChaliAbiFrame *frame)
 static void abiRandomDrop(ChaliAbiFrame *frame)
 {
     int64_t handle = 0;
-    chali_abi_argument_integer(frame, 0, &handle);
+    if (!chali_abi_argument_integer(frame, 0, &handle)) return;
     if (chali_abi_record_release(frame, handle) == 0)
         chali_abi_fail(frame, "[CHL1205] drop 的对象已经释放或句柄无效");
     chali_abi_return_integer(frame, 0);

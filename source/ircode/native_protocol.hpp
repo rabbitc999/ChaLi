@@ -353,6 +353,31 @@ public:
     bool addDirect(const Memory::String &name, std::size_t arity, NativeCallback callback,
                    ChaliAbiEntry direct, int directArity, Memory::String *error = nullptr);
     /**
+     * @brief 原子登记已通过 C 协议验证的模块，不复制既有回调。
+     * @param records 模块入口数组。
+     * @param count 入口数量。
+     * @return 稳定 C ABI 状态码；分配异常由 C 边界转换。
+     */
+    int addDirectModule(const ChaliAbiRecord *records, std::size_t count);
+    /** @brief 封存后不再接受注册或移除。 */
+    void seal() { sealed_ = true; }
+    /** @brief 查询是否已封存。
+     * @return 已封存时为真。
+     */
+    [[nodiscard]] bool sealed() const { return sealed_; }
+    /**
+     * @brief 取得名称表的分配所有者，模块登记不能借用短期调用的 arena。
+     * @return 所有者指针；空表示系统堆。
+     */
+    [[nodiscard]] Memory::RuntimeAllocator *allocationOwner() const
+    {
+#if CHALI_CUSTOM_ALLOCATOR
+        return entries_.get_allocator().owner;
+#else
+        return nullptr;
+#endif
+    }
+    /**
      * @brief 把直通表里尚未登记的入口补进本注册表。
      * @return 补登记的数量。
      * @note 供宿主在注册完 C++ 胶水之后调用：已由 C++ 绑定的名字保持原样，
@@ -378,6 +403,7 @@ public:
     [[nodiscard]] std::size_t revision() const { return revision_; }
 
 private:
+    bool sealed_ = false; ///< 初始化结束后只读共享。
     std::size_t revision_ = 0;  ///< 注册或移除成功后递增。
     Memory::Map<Memory::String, Entry> entries_;
     Memory::Map<Memory::String, Memory::String> compactNames_;  ///< 编号键到宿主原名。

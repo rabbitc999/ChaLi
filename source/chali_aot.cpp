@@ -2604,7 +2604,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         }
         if (existing.second) out += declaration;
     }
-    if (request.abiGlue.empty()) out += "define i1 @chali_program_abi_bind(ptr %registry, ptr %error) {\nentry:\n  ret i1 true\n}\n";
+    if (request.abiGlue.empty()) out += "define i32 @chali_program_abi_bind(ptr %registry, ptr %error) {\nentry:\n  ret i32 0\n}\n";
     out += "declare ptr @chali_host_abi_symbol(ptr, ptr)\n";
     Memory::Vector<Memory::String> requiredNames;
     for (const auto &entry : state.nativeNames) requiredNames.push_back(entry.first.c_str());
@@ -2613,14 +2613,13 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     for (const auto &module : modules) out += " " + textOf(module);
     out += "\n";
     for (const auto &module : modules) out += "declare i32 @chali_std_bind_" + textOf(module) + "(ptr, ptr)\n";
-    out += "define i1 @chali_program_std_bind(ptr %registry, ptr %error) {\nentry:\n";
+    out += "define i32 @chali_program_std_bind(ptr %registry, ptr %error) {\nentry:\n";
     for (std::size_t i = 0; i < modules.size(); ++i)
     {
         const auto n = std::to_string(i);
-        out += "  %m" + n + " = call i32 @chali_std_bind_" + textOf(modules[i]) + "(ptr %registry, ptr %error)\n  %ok" + n + " = icmp ne i32 %m" + n + ", 0\n  br i1 %ok" + n + ", label %next" + n + ", label %failed\nnext" + n + ":\n";
+        out += "  %m" + n + " = call i32 @chali_std_bind_" + textOf(modules[i]) + "(ptr %registry, ptr %error)\n  %ok" + n + " = icmp eq i32 %m" + n + ", 0\n  br i1 %ok" + n + ", label %next" + n + ", label %failed" + n + "\nfailed" + n + ":\n  ret i32 %m" + n + "\nnext" + n + ":\n";
     }
-    out += "  ret i1 true\n";
-    if (!modules.empty()) out += "failed:\n  ret i1 false\n";
+    out += "  ret i32 0\n";
     out += "}\n";
     out += definitions;
     out += indirectDispatcher(state);
