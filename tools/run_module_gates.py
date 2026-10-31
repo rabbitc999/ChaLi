@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
     "binary": ["chali_binary"],
     "signal": ["chali_signal"],
+    "serialization": ["chali_serialization_selfhost", "chali_reflection_serialization", "chali_structured_data", "chali_json_derive"],
     "parse": ["chali_parse_selfhost", "chali_precompiled", "chali_glue_edges"],
     "c_api": ["chali_c_api_contract", "chali_c_api_export", "chali_c_api_registry", "chali_native_callbacks", "chali_abi_contracts", "chali_abi_directives", "chali_abi_values", "chali_glue_edges"],
     "macros": ["chali_ast_macros", "chali_macro_parameters", "chali_macro_categories",

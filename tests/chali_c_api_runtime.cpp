@@ -106,6 +106,45 @@ int main()
         const unsigned char *view = nullptr;
         std::size_t length = 0;
         assert(chali_abi_bytes(&frame, 1, &view, &length) && std::string(reinterpret_cast<const char *>(view), length) == "text");
+        const auto transcode = chali_abi_resolve("std::serialization::__transcode", nullptr);
+        assert(transcode && !chali_abi_resolve("std::serialization::__pack", nullptr) &&
+               !chali_abi_resolve("std::serialization::__unpack", nullptr));
+        for (const auto &text : {std::string("{\"value\":null}"), std::string("[]"), std::string("{"),
+                                 std::string("{\"value\":\"中文\"}"), std::string(4096, ' ') + "{}"})
+        {
+            int64_t arguments[] = {chali_abi_string(&frame, text.data(), text.size()), 1};
+            unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+            ChaliAbiFrame converted{&runtime, arguments, kinds, 2, 0, 0};
+            transcode(&converted);
+            assert(!runtime.status && !converted.resultIsFloat && converted.result);
+            assert(chali_abi_bytes(&frame, converted.result, &view, &length) && length);
+            const std::string output(reinterpret_cast<const char *>(view), length);
+            if (text == "{\"value\":null}") assert(output == "0TOML 不支持 null");
+            else if (text == "[]" || text == "{") assert(output == "0TOML 序列化要求对象根节点");
+            else assert(output[0] == '1');
+            assert(chali_abi_string_release(&frame, converted.result));
+            converted.result = 0;
+            arena.remaining = 0;
+            transcode(&converted);
+            arena.remaining = -1;
+            assert(runtime.status && !converted.result);
+            reset();
+            converted.count = 1;
+            transcode(&converted);
+            assert(runtime.status);
+            reset();
+            converted.count = 2;
+            kinds[0] = ChaliAbiSlotFloat;
+            transcode(&converted);
+            assert(runtime.status);
+            reset();
+            kinds[0] = ChaliAbiSlotInteger;
+            assert(chali_abi_string_release(&frame, arguments[0]));
+            transcode(&converted);
+            assert(runtime.status);
+            reset();
+        }
+        std::puts("C format conversion: independent buffers, null rejection, long input and invalid frames passed");
         const auto parseError = chali_abi_resolve("std::parse::__parseFloat64Error", nullptr);
         const auto parseValue = chali_abi_resolve("std::parse::__parseFloat64Value", nullptr);
         assert(parseError && parseValue);

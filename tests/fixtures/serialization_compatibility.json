@@ -1,0 +1,5 @@
+{
+  "source_commit": "e25443fc",
+  "compiler_sha256": "2eb462732821c9d39aa012d55f9a10e264414a717d6dd97e5c139d7848cb1b4e",
+  "output": "77 71 83 1 119 161 125 117 180 111 169 238 69 0 0 0 0 0 0 0 123 34 116 101 120 116 34 58 34 228 184 173 230 150 135 92 34 92 92 92 110 34 44 34 110 117 109 98 101 114 34 58 45 57 50 50 51 51 55 50 48 51 54 56 53 52 55 55 53 56 48 56 44 34 118 97 108 117 101 115 34 58 91 51 44 45 52 93 125 \nvalid:OK:中文\"\\\n:-9223372036854775808:2\nempty:ERR:无效序列化魔数或版本\nmagic:ERR:无效序列化魔数或版本\nversion:ERR:无效序列化魔数或版本\ntype:ERR:序列化类型不匹配\nlength:ERR:序列化长度不匹配\nhuge length:ERR:序列化长度不匹配\nextra:ERR:序列化长度不匹配\nzero:ERR:序列化载荷包含零字节\ntype priority:ERR:序列化类型不匹配\nlength priority:ERR:序列化长度不匹配\ninvalid json:ERR:1:8: 数组元素之间要有逗号，结尾要有 ']' [expected-comma]\nshort header:ERR:无效序列化魔数或版本\nwrong type:序列化类型不匹配\ntoml roundtrip OK\ntoml malformed:TOML 文本格式无效\ntoml scalar:TOML 序列化要求对象根节点\ntoml Option None OK\n"
+}

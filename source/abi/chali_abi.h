@@ -382,6 +382,13 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_string_records(size_t *count);
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_parse_records(size_t *count);
 
+/**
+ * @brief 取得 JSON 与 TOML 格式转换的 C 内核入口。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的只读表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_serialization_records(size_t *count);
+
 /* ---------------------------------------------------------------------------
  *  C 胶水使用的运行时服务
  *

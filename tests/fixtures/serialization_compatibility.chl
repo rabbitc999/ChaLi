@@ -1,0 +1,38 @@
+import std::serialization;
+import std::toml;
+
+@Reflect
+struct Record { String text; int64 number; List<int64> values; };
+@Reflect
+struct Nullable { Option<String> value; };
+
+void show(String label,List<uint8> bytes) {
+    let result=std::serialization::deserialize<Record>(bytes);
+    if(result.isOk()) { let value=result.unwrap(); println("{}:OK:{}:{}:{}",label,value.text,value.number,value.values.len()); }
+    else { println("{}:ERR:{}",label,result.error().toString()); }
+}
+void main() {
+    Record value; value.text="中文\"\\\n"; value.number=0-9223372036854775807-1;
+    value.values.push(3); value.values.push(-4);
+    let bytes=std::serialization::serialize<Record>(&value).unwrap();
+    int64 i=0; while(i<bytes.len()){print("{} ",(int64)bytes[i]);i++;}println("");
+    show("valid",bytes);
+    List<uint8> empty;show("empty",empty);
+    {let bad=bytes.copy();bad[0]=(uint8)0;show("magic",bad);}
+    {let bad=bytes.copy();bad[3]=(uint8)2;show("version",bad);}
+    {let bad=bytes.copy();bad[4]=(uint8)(bad[4] ^ (uint8)1);show("type",bad);}
+    {let bad=bytes.copy();bad[12]=(uint8)(bad[12] ^ (uint8)1);show("length",bad);}
+    {let bad=bytes.copy();i=12;while(i<20){bad[i]=(uint8)255;i++;}show("huge length",bad);}
+    {let bad=bytes.copy();bad.push((uint8)1);show("extra",bad);}
+    {let bad=bytes.copy();bad[20]=(uint8)0;show("zero",bad);}
+    {let bad=bytes.copy();bad[20]=(uint8)0;bad[4]=(uint8)(bad[4] ^ (uint8)1);bad.push((uint8)1);show("type priority",bad);}
+    {let bad=bytes.copy();bad[20]=(uint8)0;bad.push((uint8)1);show("length priority",bad);}
+    {let bad=bytes.copy();bad[20]=(uint8)91;show("invalid json",bad);}
+    {List<uint8> shortHeader;i=0;while(i<19){shortHeader.push(bytes[i]);i++;}show("short header",shortHeader);}
+    let wrong=std::serialization::deserialize<int64>(bytes);assert(wrong.isErr());println("wrong type:{}",wrong.error().toString());
+    let decoded=std::serialization::deserialize<Record>(bytes).unwrap();bytes.clear();assert(decoded.text==value.text);assert(decoded.values[1]==-4);
+    let text=std::toml::serialize<Record>(&value).unwrap();let restored=std::toml::deserialize<Record>(text).unwrap();assert(restored.text==value.text);assert(restored.number==value.number);println("toml roundtrip OK");
+    let invalid=std::toml::deserialize<Record>("broken = [");assert(invalid.isErr());println("toml malformed:{}",invalid.error().toString());
+    let scalar=std::toml::serialize<int64>(&value.number);assert(scalar.isErr());println("toml scalar:{}",scalar.error().toString());
+    Nullable nullable;nullable.value=Option<String>::None;let absent=std::toml::serialize<Nullable>(&nullable);assert(absent.isOk());println("toml Option None OK");
+}

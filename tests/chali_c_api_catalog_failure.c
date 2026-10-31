@@ -34,6 +34,7 @@ EMPTY_MODULE(abi_math_records)
 EMPTY_MODULE(abi_clock_records)
 EMPTY_MODULE(abi_random_records)
 EMPTY_MODULE(abi_parse_records)
+EMPTY_MODULE(abi_serialization_records)
 /**
  * @brief 空错误服务，仅用于连接未调用的参数访问器。
  * @param frame 未使用的帧。

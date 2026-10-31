@@ -14,7 +14,7 @@ import std::serialization;
 
 ## 公共约定与错误边界
 
-serialize<T> 使用反射生成精确 JSON 载荷，并封装版本、稳定类型 ID 和长度；deserialize<T> 严格检查后恢复独立拥有的值。编译器裁剪反射时 panic，模型未暴露时返回错误。
+serialize<T> 使用反射生成精确 JSON 载荷，并封装版本、稳定类型 ID 和长度；deserialize<T> 严格检查后恢复独立拥有的值。字节封装、类型与长度校验由 ChaLi 实现；JSON 与 TOML 转换通过 C 帧调用解析内核。编译器裁剪反射时 panic，模型未暴露时返回错误。
 
 ## 参考代码
 
@@ -63,7 +63,7 @@ Result<List<uint8>,std::lang::Error> serialize<T>(T const& value);
 std::serialization::serialize<T>(value);
 ```
 
-**源码**：[source/std/serialization.chl:10](../../source/std/serialization.chl#L10)。
+**源码**：[source/std/serialization.chl:49](../../source/std/serialization.chl#L49)。
 
 <a id="api-1"></a>
 
@@ -101,4 +101,4 @@ Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes);
 std::serialization::deserialize<T>(bytes);
 ```
 
-**源码**：[source/std/serialization.chl:16](../../source/std/serialization.chl#L16)。
+**源码**：[source/std/serialization.chl:55](../../source/std/serialization.chl#L55)。

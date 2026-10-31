@@ -2,7 +2,7 @@
 #include "std_json.hpp"
 #include "../../source/json/json.hpp"
 #include "std_structured_data.hpp"
-#include "std_serialization.hpp"
+#include "../abi/chali_abi.h"
 #include <cmath>
 
 /**
@@ -102,7 +102,7 @@ struct Traits
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
     using Memory::String;
-    return std_serialization_glue::bind(registry, error) && structured_data_glue::bind<Traits>(registry, "std::json::", error)
+    return registry.bindModule(abi_serialization_records, error) && structured_data_glue::bind<Traits>(registry, "std::json::", error)
            && registry.bindTyped<bool>("std::reflect::__compiledReflection", []() {
 #if CHALI_WITH_REFLECTION && STACKVM_WITH_REFLECTION
                   return true;

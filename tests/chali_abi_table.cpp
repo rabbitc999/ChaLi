@@ -2,7 +2,7 @@
  * @file chali_abi_table.cpp
  * @brief 直通入口表的自检：排序、解析一致性与越界查询。
  *
- * 只链接 C 侧胶水单元，不依赖运行时：验证的是「名字 → 入口」这张表本身，
+ * 链接实际 C API 入口及其私有格式内核，不依赖运行时：验证的是「名字 → 入口」这张表本身，
  * 与具体胶水函数的语义无关。
  */
 #include "abi/chali_abi_internal.h"
@@ -11,7 +11,7 @@
 #include <cstring>
 
 /* 本测试只验证表结构，不运行任何胶水函数。这里给运行时服务提供空实现，
- * 使测试可以脱离 VM 核心与桥接层单独编译。 */
+ * 使测试可以脱离运行时核心与桥接层单独编译。 */
 extern "C" {
 int chali_abi_bytes(const ChaliAbiFrame *, int64_t, const unsigned char **data, size_t *length)
 {

@@ -202,6 +202,7 @@ GENERATOR_ASSETS = [
     "abi/abi_clock.c",
     "abi/abi_random.c",
     "abi/abi_parse.c",
+    "abi/abi_serialization.cpp",
     "glue/std_regex.hpp",
     "glue/std_native_record.hpp",
     "glue/std_collection.hpp",

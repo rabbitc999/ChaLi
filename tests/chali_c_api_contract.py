@@ -49,8 +49,9 @@ def main():
             run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/abi' / (name + '.c'), '-o', module_object)
             objects.append(module_object)
         table = work / ('table.exe' if os.name == 'nt' else 'table')
+        kernels = [ROOT / name for name in ('source/abi/abi_serialization.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
         run(cxx, '-std=c++17', *target_flags, *common,
-            ROOT / 'tests/chali_abi_table.cpp', *objects, '-lm', '-o', table)
+            ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-lm', '-o', table)
         output = run(table)
         assert '直通入口表自检通过' in output, output
         print(output.strip())

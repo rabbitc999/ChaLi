@@ -415,7 +415,7 @@ void testIteration()
                                         return member.value.asInt() == 2;
                                     });
     CHECK(twos == 1);
-    std::forEach(record.begin(), record.end(), [](const json::Member &member) {
+    std::for_each(record.begin(), record.end(), [](const json::Member &member) {
         CHECK(!member.key.empty());
     });
 
