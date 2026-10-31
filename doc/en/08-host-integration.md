@@ -83,15 +83,16 @@ The `--shared` product is a shared library whose loading and lifetime belong to 
 
 ## Synchronous callbacks
 
-Both directions support synchronous callbacks under the same rules:
+Function-value parameters in `#abi` declarations use synchronous C adapter trampolines. The C library
+receives a machine callback matching its actual prototype, while the adapter retains the ChaLi capture
+environment and error channel. C API modules invoke runtime function values through `chali_abi_invoke`,
+with explicit slot kinds and a checked return kind. A runtime handle is **not** a general machine
+function pointer and must not be cast to bypass this adapter.
 
-- C calling ChaLi: pass a ChaLi function value to an `#abi` entry and C calls it directly;
-- ChaLi calling C: C hands a function pointer to ChaLi, which calls it like any function value.
-
-The runtime address inside a function value is **not** a general machine function pointer. Use it only
-during that synchronous call, on the same thread; do not cache it for an asynchronous callback. A
-`panic` inside a callback crosses the C frame back to the top level and is reported as a runtime error
-rather than a default return value.
+Use callbacks only on the same thread during the contracted synchronous call. Do not retain them as
+asynchronous entries. If a callback panics, the checked trampoline records failure. After the C function
+returns, the adapter releases its return buffer under the declared contract before propagating the
+original runtime error. Partial output does not become a successful result.
 
 Strings, lists, maps and other resource-owning values do not transfer ownership through this mechanism.
 Design the interface explicitly with scalars, references or a buffer you manage yourself.

@@ -20,15 +20,43 @@ Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact option
 
 ### From source to native execution
 
-Separate the frontend, quadruple IR, LLVM IR and target artifacts. The frontend parses declarations and expressions and checks names, types, ownership and borrowing; macros expand during compilation. ChaLi quadruples express language operations, which the backend lowers to LLVM IR. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
+Normal run and aot execution generates LLVM IR directly from the semantically checked AST. The frontend parses declarations and expressions, expands macros and checks names, types, ownership and borrowing. The backend reads the checked tree and emits LLVM instructions and required runtime calls. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
 
-Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Internal quadruple optimization passes and aggregate optimization have been removed, with optimization delegated to LLVM through O3/LTO. Historical descriptions of those passes do not describe current execution, and O3 does not promise equal gains for every program.
+Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal AOT does not require generating quadruples, writing them to disk and reading them back. Internal quadruple and aggregate optimization passes have been removed; LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
 
 Run combines compilation and execution through checked AOT. It does not interpret quadruples in a VM. The current compiler and embedded assets contain no VM interpreter core, and .svmb export has been removed. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
 
 Checked execution helps detect the corresponding invalid accesses at runtime, while static checking rejects invalid programs before execution. Their coverage differs, and neither proves business inputs valid. Understand the actual switches before selecting unchecked and validate the release configuration itself rather than relying only on a development run.
 
 ## 27.2 Toolchain versus application dependencies
+
+### Standard-library algorithms, C primitives and LLVM
+
+Algorithms expressed in ChaLi are compiled with the importing program. For example, integer parsing in `std::parse` scans complete decimal input and checks range before accumulation; Boolean parsing compares `true` and `false`. These functions enter the LLVM backend with their caller and do not require interpreting their source at runtime.
+
+<!-- verify-book -->
+```chali
+import std::parse;
+
+void main() {
+    match (std::parse::Parse::parseInt64("-42")) {
+        Ok(value) => { println("{}", value); }
+        Err(error) => { println("{}", error.toString()); }
+    }
+}
+```
+
+```text
+-42
+```
+
+The import makes the parsing module available. `parseInt64` returns `Result<int64, Error>`: the success branch prints its value, while the error branch obtains the reason through `Error`. This valid input prints -42. Empty, invalid and out-of-range input retain the corresponding `ParseError` under the same error protocol.
+
+Floating-point text conversion keeps a thin C entry with the existing `strtod` format rules and combines its status into a language result. Public C boundaries use slots, byte lengths and opaque handles. An implementation file may use C++ internally without exposing those internal types as C ABI. Suitable scalar and memory operations can lower directly to LLVM instructions or intrinsics.
+
+Files, networking and databases still require actual host services. LLVM optimizes and generates machine code; target operating systems and libraries perform IO. Primitive lowering preserves owned-value cleanup and the application's external library requirements.
+
+### Deliver dependencies according to actual linkage
 
 The embedded LLVM variant carries compilation components; the external variant uses an installed toolchain. Deliver applications according to their actual linkage. Compiler use of LLVM does not itself require an LLVM DLL beside the application.
 

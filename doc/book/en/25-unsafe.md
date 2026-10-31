@@ -128,11 +128,23 @@ Writing bytes does not establish source's typed initialization state, which the 
 
 Validate counts and bounds at the safe entry, maintain initialized regions internally and clean only live elements on exit. rawSize describes its raw-storage query; it does not establish host ABI layout, every alignment requirement or a serialization format. See [unsafe storage and ABI](../../en/41-unsafe-abi.md).
 
+### 25.4.1 Language addresses and C host handles
+
+`std::lang::address`, `BarePtr` and raw-storage operations follow the language runtime's address conventions. A logical address supplied to C still needs its runtime context. Widening its integer representation does not make it a directly dereferenceable C pointer.
+
+The public C API uses opaque handles for registries, strings and host records. Pair `chali_abi_registry_create` with `chali_abi_registry_destroy`, and `chali_abi_string` with `chali_abi_string_release`. A borrowed byte view is read using its returned length without acquiring ownership. The next chapter applies these rules in an actual C host program.
+
+### 25.4.2 Primitive lowering and object semantics
+
+Operations with fixed semantics, such as address calculations, scalar reads, byte copying and filling, can lower to LLVM instructions or intrinsics. Operations that maintain allocations, liveness and owned values use the corresponding runtime service. Lowering this chapter's eight-byte `memset` to an LLVM memory intrinsic still does not establish the initialization state of `RawStorage<String>`.
+
+Choose whether an operation handles bytes or constructs, copies, moves or destroys a value before selecting its interface. Owned values retain their language semantics, and C buffers follow their library's release contract. These responsibilities remain when optimization changes the call sequence.
+
 ### Summary
 
 Track allocation range, element layout, slot state and borrows. InitAt constructs, takeAt extracts, dropAt destroys an element and close releases storage. Raw byte operations do not automatically maintain those typed states.
 
-An address alone does not prove valid typed access. Safe entry points should check what they can, internal code must preserve remaining invariants and verification should cover failure and exit paths. AOT delivery next checks the resulting program together with its environment.
+An address alone does not prove valid typed access. Safe entry points should check what they can, internal code must preserve remaining invariants and verification should cover failure and exit paths. The next chapter applies these resource and lifetime rules to C interoperation.
 
 ## 25.5 Exercises
 
@@ -148,4 +160,4 @@ An address alone does not prove valid typed access. Safe entry points should che
 3. Owned values carry ownership and cleanup semantics.
 4. Capacity, initialized regions, live elements and borrow lifetimes.
 
-Next: [Chapter 27](27-aot-export.md).
+Next: [Chapter 26](26-c-interop.md).

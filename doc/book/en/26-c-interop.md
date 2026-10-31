@@ -44,6 +44,56 @@ Check status codes and close handles on every return path. Copy borrowed host bu
 
 Use the supported host context and function-value protocol for synchronous callbacks. Validate arguments, returns, captures, reentry and failure propagation. A captured function value is not a machine function pointer. Deployment also needs the external libraries and their licenses.
 
+### 26.4.1 Providing host capabilities through a C function table
+
+The earlier `#abi` declarations call existing C prototypes from ChaLi. A host can also register functions for the runtime to call by name. The public header is `source/abi/chali_abi.h`. See the complete [C11 host program](../../../example/host-c-api/main.c) and its [build instructions](../../../example/host-c-api/README.md).
+
+Begin with its addition entry:
+
+```c
+/**
+ * @brief 把两个已经检查的整数槽相加。
+ * @param frame 本次同步调用帧。
+ */
+static void CHALI_ABI_CALL add(ChaliAbiFrame *frame)
+{
+    int64_t left = 0, right = 0;
+    if (!chali_abi_argument_integer(frame, 0, &left)) return;
+    if (!chali_abi_argument_integer(frame, 1, &right)) return;
+    chali_abi_return_integer(frame, left + right);
+}
+```
+
+`ChaliAbiFrame` describes this call, with arguments stored in typed 64-bit slots. `chali_abi_argument_integer` checks the index and slot kind. Return immediately when it fails so that the computation does not continue with an invalid argument. The last line writes an integer result. The example passes 20 and 22 and receives 42.
+
+Registration also requires a target descriptor and argument count. This fragment uses the previously declared `add`:
+
+```c
+ChaliAbiInfo abi = chali_abi_local_info(0);
+const ChaliAbiRecord records[] = { { "host::add", add, 2 } };
+const ChaliAbiModuleDescriptor module = {
+    sizeof(module), &abi, records, 1
+};
+```
+
+The first line obtains version, target, calling convention and layout from the current C compiler rather than copying numbers from another target. The record associates a name and entry with two arguments. The module descriptor passes the entire table to `chali_abi_registry_register`; inspect its returned status before continuing.
+
+The complete program creates a registry with `chali_abi_registry_create`, then registers, seals and calls it, and finally releases it with `chali_abi_registry_destroy`. Registration copies names, while entry code must remain alive. A name collision or allocation failure rolls back all new entries from that module. A sealed table supports lookup and calls but no further mutations.
+
+Errors use the caller's bounded `ChaliAbiError` buffer together with a separate status code. A C entry reports failure with `chali_abi_fail`; partial output is not returned as a successful result. Host implementations must not throw C++ exceptions across the public C boundary.
+
+### 26.4.2 Byte views, owned values and callback contexts
+
+Addition does not access the language heap, so its example can use a null `frame.runtime`. Strings, logical memory, host records and language function values need a context supplied by the runtime. Obtain opaque handles through their corresponding interfaces instead of fabricating a context in C.
+
+`chali_abi_bytes` returns a byte view and length without guaranteeing a terminating zero. Stop using the view after the synchronous borrow. Allocation, growth, release or reentry into language code invalidates the previous pointer. Keep a copy in your own valid storage when stable text is needed, and process its actual length.
+
+`chali_abi_string` copies input bytes into a language string; pair the resulting owned handle with `chali_abi_string_release`. Temporary logical buffers use `chali_abi_temporary` and `chali_abi_temporary_release`. These handles and pointers returned by `malloc` have different owners; use the release operation belonging to the creator.
+
+To invoke a captured ChaLi function value, use `chali_abi_invoke`, provide slot kinds and check the result kind. The runtime maintains the environment, handles synchronous reentry and propagates failure. Machine callbacks in `#abi` prototypes use synchronous adapter trampolines. A runtime function handle itself cannot be cast to a machine function pointer.
+
+Follow the [actual C host](../../../tests/fixtures/c_api_library_host.c) and [C callback library](../../../tests/fixtures/c_api_owned_callback.c) for a full round trip. A C function table calls an exported ChaLi function, which captures an offset in a closure. The C library invokes its synchronous trampoline and returns owned text. The language adapter releases that C buffer under its contract before propagating the result or failure. The normal result is 42, and the buffer is released once.
+
 ### Summary
 
 Review agreement of prototypes, data transfer, ownership and failure reporting. Distinguish input from output pointers, object references from contiguous arrays, and borrowed buffers from owned copies.
@@ -64,4 +114,4 @@ Environment-bearing functions require supported callback protocols. Pointer cast
 3. Close successfully acquired resources under the library contract.
 4. No; toolchain and application dependencies are separate.
 
-Next: [Chapter 24](24-compiler-directives.md).
+Next: [Chapter 27](27-aot-export.md).
