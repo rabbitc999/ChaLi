@@ -14,7 +14,7 @@ import std::signal;
 
 ## 公共约定与错误边界
 
-DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。
+DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。
 
 ## 参考代码
 
@@ -106,14 +106,14 @@ dft 10
 
 | 名称 | 声明 |
 | --- | --- |
-| [signalDft](#api-0) | `std::lang::List<Complex<float64>> signalDft(std::lang::List<Complex<float64>> input)` |
-| [signalIdft](#api-1) | `std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> input)` |
-| [signalFft](#api-2) | `std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> input)` |
-| [signalIfft](#api-3) | `std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> input)` |
-| [dft](#api-4) | `std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input)` |
-| [idft](#api-5) | `std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input)` |
-| [fft](#api-6) | `std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input)` |
-| [ifft](#api-7) | `std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input)` |
+| [signalDft](#api-0) | `List<Complex<float64>> signalDft(List<Complex<float64>> input)` |
+| [signalIdft](#api-1) | `List<Complex<float64>> signalIdft(List<Complex<float64>> input)` |
+| [signalFft](#api-2) | `List<Complex<float64>> signalFft(List<Complex<float64>> input)` |
+| [signalIfft](#api-3) | `List<Complex<float64>> signalIfft(List<Complex<float64>> input)` |
+| [dft](#api-4) | `List<Complex<float64>> dft(List<Complex<float64>> input)` |
+| [idft](#api-5) | `List<Complex<float64>> idft(List<Complex<float64>> input)` |
+| [fft](#api-6) | `List<Complex<float64>> fft(List<Complex<float64>> input)` |
+| [ifft](#api-7) | `List<Complex<float64>> ifft(List<Complex<float64>> input)` |
 
 <a id="api-0"></a>
 
@@ -122,24 +122,22 @@ dft 10
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> signalDft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> signalDft(List<Complex<float64>> input);
 ```
 
 **行为**
 
 宿主入口：计算离散傅里叶正变换。
 
-DFT/FFT 下沉到宿主 C++（glue/std_signal.hpp）。DFT 接受任意长度，基 2 FFT 只接受 2 的幂； 逆变换按 N 归一化；不修改输入，返回新列表。
-
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。宿主入口：计算离散傅里叶正变换。
+`List<Complex<float64>>`。宿主入口：计算离散傅里叶正变换。
 
 **错误与边界**
 
@@ -151,7 +149,7 @@ DFT/FFT 下沉到宿主 C++（glue/std_signal.hpp）。DFT 接受任意长度，
 std::signal::signalDft(input);
 ```
 
-**源码**：[source/std/signal.chl:8](../../source/std/signal.chl#L8)。
+**源码**：[source/std/signal.chl:120](../../source/std/signal.chl#L120)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -162,7 +160,7 @@ std::signal::signalDft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> signalIdft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -173,11 +171,11 @@ std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> i
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。宿主入口：计算归一化离散傅里叶逆变换。
+`List<Complex<float64>>`。宿主入口：计算归一化离散傅里叶逆变换。
 
 **错误与边界**
 
@@ -189,7 +187,7 @@ std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> i
 std::signal::signalIdft(input);
 ```
 
-**源码**：[source/std/signal.chl:9](../../source/std/signal.chl#L9)。
+**源码**：[source/std/signal.chl:121](../../source/std/signal.chl#L121)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -200,7 +198,7 @@ std::signal::signalIdft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> signalFft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -211,11 +209,11 @@ std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> in
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。宿主入口：计算基 2 快速傅里叶正变换。
+`List<Complex<float64>>`。宿主入口：计算基 2 快速傅里叶正变换。
 
 **错误与边界**
 
@@ -227,7 +225,7 @@ std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> in
 std::signal::signalFft(input);
 ```
 
-**源码**：[source/std/signal.chl:10](../../source/std/signal.chl#L10)。
+**源码**：[source/std/signal.chl:122](../../source/std/signal.chl#L122)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -238,7 +236,7 @@ std::signal::signalFft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> signalIfft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -249,11 +247,11 @@ std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> i
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。宿主入口：计算归一化基 2 快速傅里叶逆变换。
+`List<Complex<float64>>`。宿主入口：计算归一化基 2 快速傅里叶逆变换。
 
 **错误与边界**
 
@@ -265,7 +263,7 @@ std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> i
 std::signal::signalIfft(input);
 ```
 
-**源码**：[source/std/signal.chl:11](../../source/std/signal.chl#L11)。
+**源码**：[source/std/signal.chl:123](../../source/std/signal.chl#L123)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -276,7 +274,7 @@ std::signal::signalIfft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> dft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -287,11 +285,11 @@ std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。计算离散傅里叶正变换。
+`List<Complex<float64>>`。计算离散傅里叶正变换。
 
 **错误与边界**
 
@@ -303,7 +301,7 @@ std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input);
 std::signal::dft(input);
 ```
 
-**源码**：[source/std/signal.chl:13](../../source/std/signal.chl#L13)。
+**源码**：[source/std/signal.chl:124](../../source/std/signal.chl#L124)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -314,7 +312,7 @@ std::signal::dft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> idft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -325,11 +323,11 @@ std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。计算归一化离散傅里叶逆变换。
+`List<Complex<float64>>`。计算归一化离散傅里叶逆变换。
 
 **错误与边界**
 
@@ -341,7 +339,7 @@ std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input);
 std::signal::idft(input);
 ```
 
-**源码**：[source/std/signal.chl:14](../../source/std/signal.chl#L14)。
+**源码**：[source/std/signal.chl:125](../../source/std/signal.chl#L125)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -352,7 +350,7 @@ std::signal::idft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> fft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -363,11 +361,11 @@ std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。计算基 2 快速傅里叶正变换。
+`List<Complex<float64>>`。计算基 2 快速傅里叶正变换。
 
 **错误与边界**
 
@@ -379,7 +377,7 @@ std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input);
 std::signal::fft(input);
 ```
 
-**源码**：[source/std/signal.chl:15](../../source/std/signal.chl#L15)。
+**源码**：[source/std/signal.chl:126](../../source/std/signal.chl#L126)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。
 
@@ -390,7 +388,7 @@ std::signal::fft(input);
 **声明**
 
 ```chali
-std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input);
+List<Complex<float64>> ifft(List<Complex<float64>> input);
 ```
 
 **行为**
@@ -401,11 +399,11 @@ std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `input` | `std::lang::List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
+| `input` | `List<Complex<float64>> input` | 输入矩阵、信号或数据值 | 无 |
 
 **返回值**
 
-`std::lang::List<Complex<float64>>`。计算归一化基 2 快速傅里叶逆变换。
+`List<Complex<float64>>`。计算归一化基 2 快速傅里叶逆变换。
 
 **错误与边界**
 
@@ -417,6 +415,6 @@ std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input);
 std::signal::ifft(input);
 ```
 
-**源码**：[source/std/signal.chl:16](../../source/std/signal.chl#L16)。
+**源码**：[source/std/signal.chl:127](../../source/std/signal.chl#L127)。
 
 **完整示例**：[example/samples/std_complex_fft.chl](../../example/samples/std_complex_fft.chl)。

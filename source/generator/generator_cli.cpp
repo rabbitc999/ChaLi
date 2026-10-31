@@ -706,7 +706,6 @@ int runCli(int argc, char **argv)
     }
     for (const char *name : {"std_regex.hpp",
                              "std_native_record.hpp", "std_big_number.hpp", "std_file.hpp", "std_file_api.hpp", "std_desktop_file.hpp",
-                             "std_signal.hpp",
                              "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_linalg.hpp",
                              "std_process.hpp", "std_sql.hpp", "std_net.hpp", "std_filesystem.hpp", "std_registry.hpp"})
         ok = copy(mc / "source/glue" / name, Memory::String("glue/") + name) && ok;
@@ -759,7 +758,7 @@ int runCli(int argc, char **argv)
     }
     for (const char *name : {"fetch_dependencies.py", "dependencies.lock.json", "cmake_dependencies.cmake"})
         ok = copy(mc / "tools" / name, Memory::String("tools/") + name) && ok;
-    for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE"})
+    for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/llvm/LICENSE.TXT"})
         ok = copy(mc / name, name) && ok;
     Memory::String langSource;
     Memory::String langTemplate;

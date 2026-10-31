@@ -31561,23 +31561,23 @@
     "module": "std::signal",
     "name": "signalDft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> signalDft(std::lang::List<Complex<float64>> input)",
-    "documentation": "宿主入口：计算离散傅里叶正变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
-    "comment": "/* DFT/FFT 下沉到宿主 C++（glue/std_signal.hpp）。DFT 接受任意长度，基 2 FFT 只接受 2 的幂；\n * 逆变换按 N 归一化；不修改输入，返回新列表。 */",
+    "signature": "List<Complex<float64>> signalDft(List<Complex<float64>> input)",
+    "documentation": "宿主入口：计算离散傅里叶正变换。\n\n**返回值**：List<Complex<float64>>。",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "宿主入口：计算离散傅里叶正变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31585,7 +31585,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 8,
+    "line": 120,
     "page": "std-signal.md",
     "anchor": "api-0"
   },
@@ -31593,23 +31593,23 @@
     "module": "std::signal",
     "name": "signalIdft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> input)",
-    "documentation": "宿主入口：计算归一化离散傅里叶逆变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> signalIdft(List<Complex<float64>> input)",
+    "documentation": "宿主入口：计算归一化离散傅里叶逆变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "宿主入口：计算归一化离散傅里叶逆变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31617,7 +31617,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 9,
+    "line": 121,
     "page": "std-signal.md",
     "anchor": "api-1"
   },
@@ -31625,23 +31625,23 @@
     "module": "std::signal",
     "name": "signalFft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> input)",
-    "documentation": "宿主入口：计算基 2 快速傅里叶正变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> signalFft(List<Complex<float64>> input)",
+    "documentation": "宿主入口：计算基 2 快速傅里叶正变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "宿主入口：计算基 2 快速傅里叶正变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31649,7 +31649,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 10,
+    "line": 122,
     "page": "std-signal.md",
     "anchor": "api-2"
   },
@@ -31657,23 +31657,23 @@
     "module": "std::signal",
     "name": "signalIfft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> input)",
-    "documentation": "宿主入口：计算归一化基 2 快速傅里叶逆变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> signalIfft(List<Complex<float64>> input)",
+    "documentation": "宿主入口：计算归一化基 2 快速傅里叶逆变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "宿主入口：计算归一化基 2 快速傅里叶逆变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31681,7 +31681,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 11,
+    "line": 123,
     "page": "std-signal.md",
     "anchor": "api-3"
   },
@@ -31689,23 +31689,23 @@
     "module": "std::signal",
     "name": "dft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input)",
-    "documentation": "计算离散傅里叶正变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> dft(List<Complex<float64>> input)",
+    "documentation": "计算离散傅里叶正变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "计算离散傅里叶正变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31715,7 +31715,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 13,
+    "line": 124,
     "page": "std-signal.md",
     "anchor": "api-4"
   },
@@ -31723,23 +31723,23 @@
     "module": "std::signal",
     "name": "idft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input)",
-    "documentation": "计算归一化离散傅里叶逆变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> idft(List<Complex<float64>> input)",
+    "documentation": "计算归一化离散傅里叶逆变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "计算归一化离散傅里叶逆变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31749,7 +31749,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 14,
+    "line": 125,
     "page": "std-signal.md",
     "anchor": "api-5"
   },
@@ -31757,23 +31757,23 @@
     "module": "std::signal",
     "name": "fft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input)",
-    "documentation": "计算基 2 快速傅里叶正变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> fft(List<Complex<float64>> input)",
+    "documentation": "计算基 2 快速傅里叶正变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "计算基 2 快速傅里叶正变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31783,7 +31783,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 15,
+    "line": 126,
     "page": "std-signal.md",
     "anchor": "api-6"
   },
@@ -31791,23 +31791,23 @@
     "module": "std::signal",
     "name": "ifft",
     "owner": "",
-    "signature": "std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input)",
-    "documentation": "计算归一化基 2 快速傅里叶逆变换。\n\n**返回值**：std::lang::List<Complex<float64>>。",
+    "signature": "List<Complex<float64>> ifft(List<Complex<float64>> input)",
+    "documentation": "计算归一化基 2 快速傅里叶逆变换。\n\n**返回值**：List<Complex<float64>>。",
     "comment": "",
     "parameters": [
       {
         "name": "input",
-        "label": "std::lang::List<Complex<float64>> input",
+        "label": "List<Complex<float64>> input",
         "documentation": "输入矩阵、信号或数据值",
         "default": ""
       }
     ],
     "returns": {
-      "type": "std::lang::List<Complex<float64>>",
+      "type": "List<Complex<float64>>",
       "documentation": "计算归一化基 2 快速傅里叶逆变换。"
     },
     "errors": {
-      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由宿主检查。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
+      "documentation": "DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。 FFT/IFFT 的长度必须为正的 2 的幂。",
       "preconditions": [],
       "panic": false
     },
@@ -31817,7 +31817,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/signal.chl",
-    "line": 16,
+    "line": 127,
     "page": "std-signal.md",
     "anchor": "api-7"
   },

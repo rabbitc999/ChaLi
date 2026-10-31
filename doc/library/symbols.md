@@ -1026,14 +1026,14 @@
 | [std::regex::RegexError::toString](std-regex.md#api-0) | `String toString()` |
 | [std::serialization::deserialize](std-serialization.md#api-1) | `Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes)` |
 | [std::serialization::serialize](std-serialization.md#api-0) | `Result<List<uint8>,std::lang::Error> serialize<T>(T const& value)` |
-| [std::signal::dft](std-signal.md#api-4) | `std::lang::List<Complex<float64>> dft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::fft](std-signal.md#api-6) | `std::lang::List<Complex<float64>> fft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::idft](std-signal.md#api-5) | `std::lang::List<Complex<float64>> idft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::ifft](std-signal.md#api-7) | `std::lang::List<Complex<float64>> ifft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::signalDft](std-signal.md#api-0) | `std::lang::List<Complex<float64>> signalDft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::signalFft](std-signal.md#api-2) | `std::lang::List<Complex<float64>> signalFft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::signalIdft](std-signal.md#api-1) | `std::lang::List<Complex<float64>> signalIdft(std::lang::List<Complex<float64>> input)` |
-| [std::signal::signalIfft](std-signal.md#api-3) | `std::lang::List<Complex<float64>> signalIfft(std::lang::List<Complex<float64>> input)` |
+| [std::signal::dft](std-signal.md#api-4) | `List<Complex<float64>> dft(List<Complex<float64>> input)` |
+| [std::signal::fft](std-signal.md#api-6) | `List<Complex<float64>> fft(List<Complex<float64>> input)` |
+| [std::signal::idft](std-signal.md#api-5) | `List<Complex<float64>> idft(List<Complex<float64>> input)` |
+| [std::signal::ifft](std-signal.md#api-7) | `List<Complex<float64>> ifft(List<Complex<float64>> input)` |
+| [std::signal::signalDft](std-signal.md#api-0) | `List<Complex<float64>> signalDft(List<Complex<float64>> input)` |
+| [std::signal::signalFft](std-signal.md#api-2) | `List<Complex<float64>> signalFft(List<Complex<float64>> input)` |
+| [std::signal::signalIdft](std-signal.md#api-1) | `List<Complex<float64>> signalIdft(List<Complex<float64>> input)` |
+| [std::signal::signalIfft](std-signal.md#api-3) | `List<Complex<float64>> signalIfft(List<Complex<float64>> input)` |
 | [std::sql::DataCell::asInt](std-sql.md#api-7) | `int64 asInt()` |
 | [std::sql::DataCell::asReal](std-sql.md#api-8) | `float64 asReal()` |
 | [std::sql::DataCell::isNull](std-sql.md#api-4) | `bool isNull()` |

@@ -8,3 +8,7 @@ SQLite 3.54.0: public domain, https://www.sqlite.org/copyright.html
 miniz 3.1.2: MIT license; see licenses/miniz/LICENSE.
 Their source archives are downloaded and verified during toolchain builds;
 their source code is not distributed in this repository.
+
+The non-finite complex multiplication recovery in source/std/signal.chl is
+adapted from LLVM compiler-rt muldc3 (The LLVM Project), licensed under
+Apache License v2.0 with LLVM Exceptions; see licenses/llvm/LICENSE.TXT.

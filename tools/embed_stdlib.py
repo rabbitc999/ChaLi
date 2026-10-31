@@ -203,7 +203,6 @@ GENERATOR_ASSETS = [
     "abi/abi_random.c",
     "abi/abi_parse.c",
     "glue/std_regex.hpp",
-    "glue/std_signal.hpp",
     "glue/std_native_record.hpp",
     "glue/std_collection.hpp",
     "glue/std_scalar_buffer.hpp",
@@ -255,7 +254,7 @@ if Path(CHALI, os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/as
 GENERATOR_ASSETS += ["semantics/macro_diagnostics.cpp", "semantics/macro_controls.cpp", "semantics/macro_control_flow.cpp", "semantics/macro_patterns.cpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp", "semantics/macro_associated_metadata.cpp", "semantics/macro_declarations.cpp", "semantics/abi_export.cpp", "glue/aot_modules.inc",
                      "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
                      "tools/llvm_static_imports.cpp",
-                     "LICENSE", "NOTICE", "licenses/miniz/LICENSE"]
+                     "LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/llvm/LICENSE.TXT"]
 
 GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
 
