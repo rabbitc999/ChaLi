@@ -1049,6 +1049,70 @@ int main(int argc, char **argv)
                         failures, asyncFailures);
         }
         {
+            int32_t resultIsFloat = 0;
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger,
+                                               ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                function(&invocation);
+                resultIsFloat = invocation.resultIsFloat;
+                return invocation.result;
+            };
+            const std::string path = std::string(argv[1]) + ".sqlite";
+            const auto pathText = chali_abi_string(&frame, path.data(), path.size());
+            const auto connection = call("std::sql::__sqlOpenSqlite", {pathText});
+            assert(connection >= 0 && !runtime.status);
+            const auto owner = call("std::sql::__sqlOwn", {connection, 1});
+            assert(owner && call("std::sql::__sqlOwnerState", {owner, 3}) && !runtime.status);
+            NativeCallContextImpl host(context, &invoker);
+            assert(!host.cloneNativeRecord(owner));
+            reset();
+            const char query[] = "SELECT ? AS number, ? AS text, ? AS real, ? AS absent";
+            const char parameters[] = "[-9223372036854775808,\"A\\u0000B\",1.25,null]";
+            const auto sql = chali_abi_string(&frame, query, sizeof(query) - 1);
+            const auto params = chali_abi_string(&frame, parameters, sizeof(parameters) - 1);
+            assert(sql && params);
+            const auto result = call("std::sql::__sqlExecBound", {connection, sql, params});
+            assert(result >= 0 && !runtime.status && call("std::sql::__sqlRowCount", {result}) == 1 &&
+                   call("std::sql::__sqlColCount", {result}) == 4);
+            assert(call("std::sql::__sqlCellInt", {result, 0, 0}) == INT64_MIN && !resultIsFloat);
+            const auto bits = call("std::sql::__sqlCellReal", {result, 0, 2});
+            double real = 0;
+            std::memcpy(&real, &bits, sizeof(real));
+            assert(resultIsFloat && real == 1.25);
+            const auto text = call("std::sql::__sqlCellText", {result, 0, 1});
+            assert(text && chali_abi_bytes(&frame, text, &view, &length) && length == 3 &&
+                   view[0] == 'A' && view[1] == 0 && view[2] == 'B');
+            assert(call("std::sql::__sqlCellKind", {result, 0, 3}) == 0);
+            assert(chali_abi_string_release(&frame, text) && chali_abi_string_release(&frame, sql) &&
+                   chali_abi_string_release(&frame, params));
+            assert(call("std::sql::__sqlFree", {result}) == 0 && !runtime.status);
+            assert(chali_abi_record_release(&frame, owner));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                const auto before = systemHandleCount();
+                const auto raw = call("std::sql::__sqlOpenSqlite", {pathText});
+                assert(raw >= 0 && !runtime.status);
+                arena.remaining = point;
+                const auto adopted = call("std::sql::__sqlOwn", {raw, 1});
+                arena.remaining = -1;
+                if (adopted) assert(chali_abi_record_release(&frame, adopted));
+                assert(systemHandleCount() == before);
+                if (adopted) break;
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            assert(chali_abi_string_release(&frame, pathText));
+            assert(std::filesystem::remove(std::filesystem::u8path(path)));
+            std::printf("C SQLite: bound int64/real/NUL text/null, exclusive owner and %d adoption failure points cleaned\n", failures);
+        }
+        {
             const std::string path = argv[1];
             const auto pathText = chali_abi_string(&frame, path.data(), path.size());
             const auto modeText = chali_abi_string(&frame, "wb", 2);

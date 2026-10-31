@@ -1,11 +1,17 @@
 """用明确标注的客户端 ABI 夹具验证 MySQL/MariaDB 新入口、端口和转义。"""
+import argparse
 import os
 from pathlib import Path
+from project_temp import tempfile
 from chali_glue_edges import ROOT, CHALI, EXE, run
 
 def main():
     """验证连接入口的原生行为；不代表真实数据库服务验收。"""
-    work = ROOT / 'tmp/sql-connections'
+    global CHALI
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--chali',type=Path,default=CHALI)
+    CHALI=parser.parse_args().chali.resolve()
+    work = Path(tempfile.mkdtemp(prefix='sql-connections-'))
     work.mkdir(parents=True, exist_ok=True)
     library = work / ('fixture.dll' if os.name == 'nt' else 'fixture.so')
     run('gcc', '-shared', '-fPIC', ROOT / 'tests/fixtures/chali_sql_mysql.c', '-o', library)
@@ -19,5 +25,6 @@ def main():
     old.write_text('import std::sql;\nvoid main(){Database db=Database::connect("h","u","p","d");return;}', encoding='utf-8')
     result = run(CHALI, 'check', old, succeeds=False)
     assert 'connect' in result.stdout + result.stderr
+    print('MySQL/MariaDB client ABI fixtures, quoting, ports and obsolete constructor rejection passed')
 if __name__ == '__main__':
     main()

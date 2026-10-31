@@ -40,7 +40,7 @@ CHALI_AOT_MODULE(parse, registry.bindModule(abi_parse_records, error))
 CHALI_AOT_MODULE(process, registry.bindModule(abi_process_records, error))
 #endif
 #ifndef GLUE_NO_STD_SQL
-CHALI_AOT_MODULE(sql, std_sql_glue::bind(registry, error))
+CHALI_AOT_MODULE(sql, (registry.bindModule(abi_sql_records, error) && registry.bindModule(abi_sql_ipage_records, error)))
 #endif
 #ifndef GLUE_NO_STD_IMAGE
 CHALI_AOT_MODULE(image, registry.bindModule(abi_image_records, error))

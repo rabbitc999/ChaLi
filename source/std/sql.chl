@@ -108,7 +108,7 @@ struct Query {
  *
  *   ChaLi 程序 (import std::sql;)
  *      ↓  std::sql::Database / ResultSet      ← 本文件
- *   C++ 胶水（glue/std_sql.hpp，随编译器一起编进来）
+ *   C++ 胶水（abi/abi_sql.cpp，随编译器一起编进来）
  *      ↓  __sql* 句柄接口
  *   外部 SQL 引擎（MySQL / SQLite / PostgreSQL libpq / SQL Server ODBC）
  *
@@ -128,7 +128,7 @@ struct Query {
  * 跨后端构造字符串字面量使用 db.quote(text)，按各自 SQL 方言处理反斜杠。
  */
 
-/* ── 宿主签名（由 glue/std_sql.hpp 注册） ─────────────────────────────── */
+/* ── 宿主签名（由 abi/abi_sql.cpp 注册） ─────────────────────────────── */
 int32 __sqlConnect(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database, int32 port);
 int32 __sqlOpenSqlite(std::lang::String path);
 int32 __sqlOpenPostgres(std::lang::String options);

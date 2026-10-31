@@ -19,7 +19,6 @@
 #include "../chali_glue.hpp"
 
 #ifndef GLUE_NO_STD_SQL
-#include "std_sql.hpp"
 #endif
 #ifndef GLUE_NO_STD_IMAGE
 #endif

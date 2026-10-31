@@ -78,6 +78,18 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_image_records(size_t *count);
  * @return 程序存活期间有效的入口表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_net_records(size_t *count);
+/**
+ * @brief 取得数据库驱动、拥有记录和结果访问的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_records(size_t *count);
+/**
+ * @brief 取得 JSON 元数据 SQL 生成的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_ipage_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

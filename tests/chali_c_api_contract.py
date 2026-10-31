@@ -51,10 +51,14 @@ def main():
         pool_object = work / 'pool.o'
         run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/allocator/chali_pool.c', '-o', pool_object)
         objects.append(pool_object)
+        sqlite_object=work/'sqlite.o'
+        run(cc,'-std=c11',*target_flags,'-O0','-DSQLITE_THREADSAFE=1','-DSQLITE_OMIT_LOAD_EXTENSION=1',
+            '-c',ROOT/'build/dependencies/sqlite/sqlite3.c','-o',sqlite_object)
+        objects.append(sqlite_object)
         table = work / ('table.exe' if os.name == 'nt' else 'table')
-        kernels = [ROOT / name for name in ('source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
+        kernels = [ROOT / name for name in ('source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_sql.cpp', 'source/abi/abi_sql_ipage.cpp', 'library/ipage/source/ipage/sql.cpp', 'library/ipage/source/ipage/dialect.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
         run(cxx, '-std=c++17', *target_flags, *common,
-            ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-lm', '-o', table)
+            ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-I' + str(ROOT / 'build/dependencies/sqlite'), '-pthread', '-lm', '-o', table)
         output = run(table)
         assert '直通入口表自检通过' in output, output
         print(output.strip())

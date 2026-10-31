@@ -1,9 +1,9 @@
-#include "std_sql.hpp"
-#include "std_native_record.hpp"
-#include "std_sql_ipage.hpp"
+/** @file abi_sql.cpp @brief 数据库私有驱动内核及 C 帧入口，连接由 C 记录协议拥有。 */
+#include "chali_standard.h"
+#include "../allocator/chali_allocator.hpp"
 #include "../../source/json/json.hpp"
 
-#include "../chali_glue.hpp"
+#include <stdexcept>
 #include <sqlite3.h>
 
 #include <cerrno>
@@ -47,10 +47,9 @@
  *   3. 系统搜索路径里的 `libmysql.dll` / `libmysqlclient.dll` / `libmariadb.dll`；
  *   4. 其它平台：`libmysqlclient.so.21` / `.so` / `libmariadb.so` / `.dylib`。
  */
-namespace std_sql_glue
+namespace
 {
 
-using chali_glue::Registry;
 using Memory::String;
 
 /* ── MySQL 运行期函数表 ───────────────────────────────────────────────── */
@@ -194,6 +193,10 @@ inline void *librarySymbol(void *library, const char *name)
 }
 
 /* 加载一个候选库；Windows 上先把客户端库旁边的 bin 目录加进搜索路径（OpenSSL 依赖在那）。 */
+/** @brief 加载候选客户端库；Windows 同时加入相邻 bin 搜索路径。
+ * @param path 候选客户端库路径。
+ * @return 已加载库句柄，失败为空。
+ */
 inline void *tryLoad(const std::string &path)
 {
     std::error_code code;
@@ -250,6 +253,9 @@ inline void loadSymbols(void *library)
 
 /* ── 客户端库定位 ─────────────────────────────────────────────────────── */
 
+/** @brief 按版本和系统目录添加客户端库候选路径。
+ * @param out 接收按搜索优先级排列的候选路径。
+ */
 inline void appendCandidates(std::vector<std::string> &out)
 {
 #if defined(_WIN32)
@@ -710,6 +716,11 @@ inline ResultSlot *resultAt(std::int32_t index)
 /**
  * @brief 按文本形状判断格子类型：整数 / 实数 / 其它当文本。
  */
+/** @brief 按文本形状将 MySQL 单元格归为整数、实数或文本。
+ * @param text 可为空的单元格原始文本。
+ * @param length 原始文本字节数。
+ * @return 保存原始文本及推断数值的单元格，空指针表示 NULL。
+ */
 inline Cell classify(const char *text, unsigned long long length)
 {
     Cell cell;
@@ -755,6 +766,10 @@ inline Cell classify(const char *text, unsigned long long length)
 /**
  * @brief `mysql_affected_rows` 在没有影响行信息时返回 (my_ulonglong)-1，统一折成 0。
  */
+/** @brief 将 MySQL 无影响行信息的哨兵归零。
+ * @param value 客户端返回的无符号受影响行数。
+ * @return 全一位哨兵为零，其余按有符号六十四位转换。
+ */
 inline std::int64_t normalizeAffected(unsigned long long value)
 {
     return value == ~0ULL ? 0 : static_cast<std::int64_t>(value);
@@ -762,6 +777,14 @@ inline std::int64_t normalizeAffected(unsigned long long value)
 
 /* ── 对外函数 ─────────────────────────────────────────────────────────── */
 
+/** @brief 建立 MySQL 连接并将资源登记到空闲槽。
+ * @param host 数据库主机名。
+ * @param user 用户名。
+ * @param password 密码，仅传给客户端库。
+ * @param database 数据库名。
+ * @param port 远端端口，零表示客户端默认值。
+ * @return 连接槽编号，失败为负一并保存诊断。
+ */
 inline std::int32_t sqlConnect(String host, String user, String password, String database, std::int32_t port)
 {
     if (!initMysql())
@@ -1706,91 +1729,626 @@ struct DatabaseOwner
  * @brief 释放独占连接，并清理所属状态。
  * @param value 待销毁的数据库所有者。
  */
-void destroyDatabaseOwner(void *value)
+void CHALI_ABI_CALL destroyDatabaseOwner(void *value)
 {
     delete static_cast<DatabaseOwner *>(value);
 }
-const stackvm::NativeRecordType databaseOwnerType{ "std::sql::Database", nullptr, destroyDatabaseOwner, nullptr };
+
 /**
  * @brief 校验并借用仍存活的连接所有者。
- * @param context 当前胶水上下文。
+ * @param frame 当前 C 帧。
  * @param handle 所有者记录句柄。
- * @return 对应状态；类型错误或已释放时报告错误并返回空。
+ * @return 对应状态；类型错误或已释放时记录错误并停止当前入口。
  */
-DatabaseOwner *databaseOwner(chali_glue::Context &context, std::int64_t handle)
+DatabaseOwner *databaseOwner(ChaliAbiFrame *frame, std::int64_t handle)
 {
-    auto *owner = static_cast<DatabaseOwner *>(context.nativeRecord(handle, databaseOwnerType));
-    if (!owner) context.fail("Database 连接所有者已经释放或类型无效");
+    auto *owner = static_cast<DatabaseOwner *>(chali_abi_record_probe(frame, handle, "std::sql::Database"));
+    if (!owner)
+    {
+        chali_abi_fail(frame, "Database 连接所有者已经释放或类型无效");
+        throw std::runtime_error("Database 连接所有者已经释放或类型无效");
+    }
     return owner;
+}
+/** @brief 在拥有记录构造前保护已建立的数据库连接槽。 */
+struct ConnectionOwner
+{
+    int32_t connection;
+    /** @brief 关闭尚未转移的连接。 */
+    ~ConnectionOwner()
+    {
+        if (connection >= 0) sqlClose(connection);
+    }
+    /** @brief 将连接转移给完整构造的拥有记录。
+     * @return 原槽编号。
+     */
+    int32_t release()
+    {
+        const auto value = connection;
+        connection = -1;
+        return value;
+    }
+};
+/** @brief 从语言字符串按精确字节数复制宿主参数。
+ * @param frame 当前 C 帧。
+ * @param address 字符串地址。
+ * @return 独立文本，失败记录错误并停止当前入口。
+ */
+String readText(ChaliAbiFrame *frame, int64_t address)
+{
+    const unsigned char *bytes = nullptr;
+    size_t count = 0;
+    if (!chali_abi_bytes(frame, address, &bytes, &count))
+    {
+        chali_abi_fail(frame, "胶水层读取 string 失败");
+        throw std::runtime_error("胶水层读取 string 失败");
+    }
+    return String(bytes ? reinterpret_cast<const char *>(bytes) : "", count);
 }
 /**
  * @brief 接管连接槽，使其生命周期随不可复制的 opcode 管理。
- * @param context 当前胶水上下文。
+ * @param frame 当前 C 帧。
  * @param connection 连接槽编号，失败时为负数。
  * @param driver 公开数据库驱动编号。
  * @return 新建所有者的原生记录句柄。
  */
-std::int64_t ownDatabase(chali_glue::Context &context, std::int32_t connection, std::int64_t driver)
+std::int64_t ownDatabase(ChaliAbiFrame *frame, std::int32_t connection, std::int64_t driver)
 {
+    ConnectionOwner pending{ connection };
     auto owner = std::make_unique<DatabaseOwner>();
-    owner->connection = connection;
+    owner->connection = pending.release();
     owner->driver = driver;
     if (connection < 0) owner->error = sqlError(connection);
-    const auto handle = context.makeNativeRecord(databaseOwnerType, owner.get());
+    const auto handle = chali_abi_record_make(frame, "std::sql::Database", owner.get(), destroyDatabaseOwner);
     if (handle)
         owner.release();
-    else if (connection >= 0)
-        sqlClose(connection);
     return handle;
 }
 /**
  * @brief 默认构造未连接的独占数据库值。
- * @param context 当前胶水上下文。
+ * @param frame 当前 C 帧。
  * @return 拥有空连接状态的记录句柄。
  */
-std::int64_t newDatabaseOwner(chali_glue::Context &context)
+std::int64_t newDatabaseOwner(ChaliAbiFrame *frame)
 {
     auto owner = std::make_unique<DatabaseOwner>();
-    const auto handle = context.makeNativeRecord(databaseOwnerType, owner.get());
+    const auto handle = chali_abi_record_make(frame, "std::sql::Database", owner.get(), destroyDatabaseOwner);
     if (handle) owner.release();
     return handle;
 }
-/**
- * @brief 注册连接所有者的访问、状态更新和关闭协议。
- * @param registry 当前宿主函数注册表。
- * @param error 接收注册失败的诊断。
- * @return 所有入口注册成功时返回 true。
- */
-bool bindDatabaseOwner(Registry &registry, String *error)
-{
-    return registry.bindTypedWithContext<std::int64_t>("std::sql::__sqlOwnerNew", newDatabaseOwner, error)
-           && registry.bindTypedWithContext<std::int64_t, std::int32_t, std::int64_t>("std::sql::__sqlOwn", ownDatabase, error)
-           && native_record_glue::bind(registry.native(), "std::sql::__sqlOwnerDrop", 1, native_record_glue::drop, error)
-           && registry.bindTypedWithContext<std::int64_t, std::int64_t, std::int64_t>("std::sql::__sqlOwnerState", [](chali_glue::Context &context, std::int64_t handle, std::int64_t operation) {
-                auto *owner = databaseOwner(context, handle);
-                if (!owner) return std::int64_t(0);
-                if (operation == 0) return std::int64_t(owner->connection);
-                if (operation == 1) return owner->driver;
-                if (operation == 2) return owner->affected;
-                if (operation == 3) {
-                    auto *slot = databaseAt(owner->connection);
-                    return std::int64_t(slot && slot->handle);
-                }
-                if (operation == 4) { if (owner->connection >= 0) sqlClose(owner->connection); owner->connection = -1; return std::int64_t(0); }
-                context.fail("Database 状态操作编号无效");
-                return std::int64_t(0); }, error) && registry.bindTypedWithContext<String, std::int64_t>("std::sql::__sqlOwnerError", [](chali_glue::Context &context, std::int64_t handle) { auto *owner = databaseOwner(context, handle); return owner ? owner->error : String(); }, error) && registry.bindTypedWithContext<void, std::int64_t, String, std::int64_t>("std::sql::__sqlOwnerUpdate", [](chali_glue::Context &context, std::int64_t handle, String text, std::int64_t affected) { auto *owner = databaseOwner(context, handle); if (owner) { owner->error = std::move(text); if (affected >= 0) owner->affected = affected; } }, error);
-}
 
-/**
- * @brief 为宿主注册 std_sql 模块的标准库接口。
- * @param registry 接收类型化函数绑定的宿主注册表。
- * @param error 绑定失败时接收原始诊断，可为空。
- * @return 全部入口绑定成功时返回 true。
+/** @brief 执行 std::sql::__sqlOwnerState 的拥有记录访问。
+ * @param frame 当前 C 帧。
+ * @param handle 拥有记录句柄。
+ * @param operation 状态查询或关闭操作编号。
+ * @return 连接状态或诊断文本。
  */
-bool bind(Registry &registry, String *error)
+std::int64_t ownerState(ChaliAbiFrame *frame, std::int64_t handle, std::int64_t operation)
 {
-    return std_sql_ipage_glue::bind(registry, error) && registry.bindTyped<std::int32_t, std::int32_t, String, String>("std::sql::__sqlExecBound", sqlExecBound, error) && bindDatabaseOwner(registry, error) && registry.bindTyped<std::int32_t, String, String, String, String, std::int32_t>("std::sql::__sqlConnect", sqlConnect, error)
-           && registry.bindTyped<std::int32_t, String>("std::sql::__sqlOpenSqlite", sqlOpenSqlite, error) && registry.bindTyped<std::int32_t, String>("std::sql::__sqlOpenPostgres", sqlOpenPostgres, error) && registry.bindTyped<std::int32_t, String>("std::sql::__sqlOpenOdbc", sqlOpenOdbc, error) && registry.bindTyped<std::int32_t, std::int32_t>("std::sql::__sqlClose", sqlClose, error) && registry.bindTyped<std::int32_t, std::int32_t, String>("std::sql::__sqlExec", sqlExec, error) && registry.bindTyped<std::int64_t, std::int32_t>("std::sql::__sqlAffected", sqlAffected, error) && registry.bindTyped<String, std::int32_t>("std::sql::__sqlError", sqlError, error) && registry.bindTyped<std::int32_t, std::int32_t>("std::sql::__sqlRowCount", sqlRowCount, error) && registry.bindTyped<std::int32_t, std::int32_t>("std::sql::__sqlColCount", sqlColCount, error) && registry.bindTyped<std::int64_t, std::int32_t>("std::sql::__sqlResultAffected", sqlResultAffected, error) && registry.bindTyped<String, std::int32_t, std::int32_t>("std::sql::__sqlColName", sqlColName, error) && registry.bindTyped<String, std::int32_t, std::int32_t, std::int32_t>("std::sql::__sqlCellText", sqlCellText, error) && registry.bindTyped<std::int64_t, std::int32_t, std::int32_t, std::int32_t>("std::sql::__sqlCellInt", sqlCellInt, error) && registry.bindTyped<double, std::int32_t, std::int32_t, std::int32_t>("std::sql::__sqlCellReal", sqlCellReal, error) && registry.bindTyped<std::int32_t, std::int32_t, std::int32_t, std::int32_t>("std::sql::__sqlCellKind", sqlCellKind, error) && registry.bindTyped<std::int32_t, std::int32_t>("std::sql::__sqlFree", sqlFree, error);
+    auto *owner = databaseOwner(frame, handle);
+    if (!owner) return std::int64_t(0);
+    if (operation == 0) return std::int64_t(owner->connection);
+    if (operation == 1) return owner->driver;
+    if (operation == 2) return owner->affected;
+    if (operation == 3)
+    {
+        auto *slot = databaseAt(owner->connection);
+        return std::int64_t(slot && slot->handle);
+    }
+    if (operation == 4)
+    {
+        if (owner->connection >= 0) sqlClose(owner->connection);
+        owner->connection = -1;
+        return std::int64_t(0);
+    }
+    chali_abi_fail(frame, "Database 状态操作编号无效");
+    return std::int64_t(0);
 }
-
-}  // namespace std_sql_glue
+/** @brief 执行 std::sql::__sqlOwnerError 的拥有记录访问。
+ * @param frame 当前 C 帧。
+ * @param handle 拥有记录句柄。
+ * @return 连接状态或诊断文本。
+ */
+String ownerError(ChaliAbiFrame *frame, std::int64_t handle)
+{
+    auto *owner = databaseOwner(frame, handle);
+    return owner ? owner->error : String();
+}
+/** @brief 执行 std::sql::__sqlOwnerUpdate 的拥有记录访问。
+ * @param frame 当前 C 帧。
+ * @param handle 拥有记录句柄。
+ * @param text 新的连接诊断。
+ * @param affected 受影响行数，负数表示保持原值。
+ */
+void ownerUpdate(ChaliAbiFrame *frame, std::int64_t handle, String text, std::int64_t affected)
+{
+    auto *owner = databaseOwner(frame, handle);
+    if (owner)
+    {
+        owner->error = std::move(text);
+        if (affected >= 0) owner->affected = affected;
+    }
+}
+/** @brief 释放存活数据库拥有记录，零值或已释放值不重复报错。
+ * @param frame 当前 C 帧。
+ * @param handle 拥有记录句柄。
+ */
+void ownerDrop(ChaliAbiFrame *frame, int64_t handle)
+{
+    if (chali_abi_record_probe(frame, handle, "std::sql::Database")) chali_abi_record_release(frame, handle);
+}
+/** @brief 解码 std::sql::__sqlExecBound 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryExecBound(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto text1 = readText(frame, a1);
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    auto text2 = readText(frame, a2);
+    chali_abi_return_integer(frame, int64_t(sqlExecBound(static_cast<std::int32_t>(a0), std::move(text1), std::move(text2))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlConnect 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryConnect(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto text0 = readText(frame, a0);
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto text1 = readText(frame, a1);
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    auto text2 = readText(frame, a2);
+    int64_t a3 = 0;
+    if (!chali_abi_argument_integer(frame, 3, &a3)) return;
+    auto text3 = readText(frame, a3);
+    int64_t a4 = 0;
+    if (!chali_abi_argument_integer(frame, 4, &a4)) return;
+    chali_abi_return_integer(frame, int64_t(sqlConnect(std::move(text0), std::move(text1), std::move(text2), std::move(text3), static_cast<std::int32_t>(a4))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOpenSqlite 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOpenSqlite(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto text0 = readText(frame, a0);
+    chali_abi_return_integer(frame, int64_t(sqlOpenSqlite(std::move(text0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOpenPostgres 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOpenPostgres(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto text0 = readText(frame, a0);
+    chali_abi_return_integer(frame, int64_t(sqlOpenPostgres(std::move(text0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOpenOdbc 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOpenOdbc(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto text0 = readText(frame, a0);
+    chali_abi_return_integer(frame, int64_t(sqlOpenOdbc(std::move(text0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlClose 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryClose(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlClose(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlExec 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryExec(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto text1 = readText(frame, a1);
+    chali_abi_return_integer(frame, int64_t(sqlExec(static_cast<std::int32_t>(a0), std::move(text1))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlAffected 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryAffected(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlAffected(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlError 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryError(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    const auto text = sqlError(static_cast<std::int32_t>(a0));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlRowCount 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryRowCount(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlRowCount(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlColCount 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryColCount(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlColCount(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlResultAffected 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryResultAffected(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlResultAffected(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlColName 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryColName(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    const auto text = sqlColName(static_cast<std::int32_t>(a0), static_cast<std::int32_t>(a1));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlCellText 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCellText(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    const auto text = sqlCellText(static_cast<std::int32_t>(a0), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlCellInt 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCellInt(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(sqlCellInt(static_cast<std::int32_t>(a0), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlCellReal 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCellReal(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_real(frame, sqlCellReal(static_cast<std::int32_t>(a0), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2)));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlCellKind 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCellKind(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(sqlCellKind(static_cast<std::int32_t>(a0), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlFree 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryFree(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(sqlFree(static_cast<std::int32_t>(a0))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwnerNew 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwnerNew(ChaliAbiFrame *frame)
+try
+{
+    chali_abi_return_integer(frame, int64_t(newDatabaseOwner(frame)));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwn 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwn(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    chali_abi_return_integer(frame, int64_t(ownDatabase(frame, static_cast<std::int32_t>(a0), static_cast<std::int64_t>(a1))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwnerState 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwnerState(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    chali_abi_return_integer(frame, int64_t(ownerState(frame, static_cast<std::int64_t>(a0), static_cast<std::int64_t>(a1))));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwnerError 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwnerError(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    const auto text = ownerError(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwnerUpdate 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwnerUpdate(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto text1 = readText(frame, a1);
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    ownerUpdate(frame, static_cast<std::int64_t>(a0), std::move(text1), static_cast<std::int64_t>(a2));
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+/** @brief 解码 std::sql::__sqlOwnerDrop 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryOwnerDrop(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    ownerDrop(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error)
+{
+    chali_abi_fail(frame, error.what());
+} catch (...)
+{
+    chali_abi_fail(frame, "数据库接口失败");
+}
+}  // namespace
+/** @brief 取得 SQL 连接、拥有记录和结果访问的 C 入口表。
+ * @param count 接收入口数，可为空。
+ * @return 生命周期覆盖进程的入口表。
+ */
+extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_records(size_t *count)
+{
+    static const ChaliAbiRecord records[] = {
+        { "std::sql::__sqlAffected", entryAffected, 1 },
+        { "std::sql::__sqlCellInt", entryCellInt, 3 },
+        { "std::sql::__sqlCellKind", entryCellKind, 3 },
+        { "std::sql::__sqlCellReal", entryCellReal, 3 },
+        { "std::sql::__sqlCellText", entryCellText, 3 },
+        { "std::sql::__sqlClose", entryClose, 1 },
+        { "std::sql::__sqlColCount", entryColCount, 1 },
+        { "std::sql::__sqlColName", entryColName, 2 },
+        { "std::sql::__sqlConnect", entryConnect, 5 },
+        { "std::sql::__sqlError", entryError, 1 },
+        { "std::sql::__sqlExec", entryExec, 2 },
+        { "std::sql::__sqlExecBound", entryExecBound, 3 },
+        { "std::sql::__sqlFree", entryFree, 1 },
+        { "std::sql::__sqlOpenOdbc", entryOpenOdbc, 1 },
+        { "std::sql::__sqlOpenPostgres", entryOpenPostgres, 1 },
+        { "std::sql::__sqlOpenSqlite", entryOpenSqlite, 1 },
+        { "std::sql::__sqlOwn", entryOwn, 2 },
+        { "std::sql::__sqlOwnerDrop", entryOwnerDrop, 1 },
+        { "std::sql::__sqlOwnerError", entryOwnerError, 1 },
+        { "std::sql::__sqlOwnerNew", entryOwnerNew, 0 },
+        { "std::sql::__sqlOwnerState", entryOwnerState, 2 },
+        { "std::sql::__sqlOwnerUpdate", entryOwnerUpdate, 3 },
+        { "std::sql::__sqlResultAffected", entryResultAffected, 1 },
+        { "std::sql::__sqlRowCount", entryRowCount, 1 },
+    };
+    if (count) *count = sizeof(records) / sizeof(records[0]);
+    return records;
+}

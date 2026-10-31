@@ -1,5 +1,6 @@
-#include "std_sql_ipage.hpp"
-#include "../chali_glue.hpp"
+/** @file abi_sql_ipage.cpp @brief 通过 C 帧传递 JSON 的私有 ipage SQL 生成器。 */
+#include "chali_standard.h"
+#include "../allocator/chali_allocator.hpp"
 #include "../../library/ipage/source/ipage/sql.hpp"
 #include "../../library/ipage/source/ipage/dialect.hpp"
 #include "../../library/ipage/source/ipage/model.hpp"
@@ -8,7 +9,7 @@
 #include <cmath>
 #include <set>
 
-namespace std_sql_ipage_glue
+namespace
 {
 /**
  * @brief 为 ChaLi 内置数据库提供 SQLite SQL 适配，保持 ipage 核心独立于数据库实现。
@@ -252,14 +253,36 @@ Memory::String build(Memory::String modelText, Memory::String operation, Memory:
     } catch (const std::exception &failure) { response.insert("error", json::Value(failure.what())); }
     return Memory::String(json::Value(std::move(response)).dump().c_str());
 }
-/**
- * @brief 将 ipage 动态生成函数注册到 std::sql。
- * @param registry 宿主注册表。
- * @param error 注册失败诊断。
- * @return 注册成功时返回 true。
+/** @brief 按声明次序复制四个 JSON／操作字符串，执行现有 SQL 生成器。
+ * @param frame 四个字符串参数及返回帧。
  */
-bool bind(chali_glue::Registry &registry, Memory::String *error)
+void CHALI_ABI_CALL entryBuild(ChaliAbiFrame *frame)
+try
 {
-    return registry.bindTyped<Memory::String, Memory::String, Memory::String, Memory::String, Memory::String>("std::sql::__ipageBuild", build, error);
+    Memory::String texts[4];
+    for (int64_t index = 0; index < 4; ++index)
+    {
+        int64_t address = 0;
+        if (!chali_abi_argument_integer(frame, index, &address)) return;
+        const unsigned char *bytes = nullptr;
+        size_t size = 0;
+        if (!chali_abi_bytes(frame, address, &bytes, &size)) return;
+        texts[index].assign(bytes ? reinterpret_cast<const char *>(bytes) : "", size);
+    }
+    const auto result = build(std::move(texts[0]), std::move(texts[1]), std::move(texts[2]), std::move(texts[3]));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, result.data(), result.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "SQL 生成接口失败");
 }
-}  // namespace std_sql_ipage_glue
+}  // namespace
+/** @brief 取得反射元数据 SQL 生成的 C 入口表。
+ * @param count 接收入口数，可为空。
+ * @return 生命周期覆盖进程的入口表。
+ */
+extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_ipage_records(size_t *count)
+{
+    static const ChaliAbiRecord records[] = { { "std::sql::__ipageBuild", entryBuild, 4 } };
+    if (count) *count = 1;
+    return records;
+}

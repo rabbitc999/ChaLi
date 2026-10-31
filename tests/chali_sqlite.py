@@ -1,6 +1,7 @@
-"""验证 SQLite 真实数据库在解释器、VM 的行为；只写隔离临时目录。"""
+"""验证 SQLite 真实数据库在原生 checked／unchecked 的行为；只写隔离临时目录。"""
 from pathlib import Path
 from contextlib import closing
+import argparse
 import os
 import sqlite3
 import shutil
@@ -9,7 +10,11 @@ from project_temp import tempfile
 from chali_glue_edges import ROOT, CHALI, EXE, run
 
 def main():
-    work = ROOT / 'tmp/chali-sqlite'
+    global CHALI
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--chali',type=Path,default=CHALI)
+    CHALI=parser.parse_args().chali.resolve()
+    work = Path(tempfile.mkdtemp(prefix='sqlite-c-api-'))
     work.mkdir(parents=True, exist_ok=True)
     os.environ['SQLITE_LIBRARY'] = str(work / 'missing-sqlite3.dll')
     source = ROOT / 'doc/examples/sqlite/demo.chl'
@@ -28,6 +33,6 @@ def main():
         for path in directory.glob('*.db'):
             with closing(sqlite3.connect(path)) as connection:
                 assert connection.execute('SELECT value FROM persisted').fetchone() == ('持久化',)
-    print('SQLite VM/AOT static database checks passed')
+    print('SQLite checked/unchecked static database checks passed')
 if __name__ == '__main__':
     main()

@@ -1,6 +1,7 @@
 """验证 PostgreSQL libpq ABI 夹具与真实 ODBC 数据源；不要求网络数据库服务。"""
 from pathlib import Path
 import json
+import argparse
 import os
 from project_temp import tempfile
 from chali_glue_edges import ROOT, CHALI, EXE, run
@@ -11,9 +12,14 @@ def triplet(source, expected, work, arguments_factory=lambda mode: []):
     prefix = work / source.stem
     result = run(CHALI, 'run', source, '--out', prefix, '--', *arguments_factory('interpreter'))
     assert result.stdout == expected and (not result.stderr), (result.stdout, result.stderr)
+    print(source.stem+': '+result.stdout.strip(),flush=True)
 
 def main():
-    work = ROOT / 'build/chali-sql-backends'
+    global CHALI
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--chali',type=Path,default=CHALI)
+    CHALI=parser.parse_args().chali.resolve()
+    work = Path(tempfile.mkdtemp(prefix='sql-backends-'))
     work.mkdir(parents=True, exist_ok=True)
     fixture = work / ('libpq-fixture.dll' if os.name == 'nt' else 'libpq-fixture.so')
     run('gcc', '-shared', *([] if os.name == 'nt' else ['-fPIC']), ROOT / 'tests/fixtures/chali_sql_pg.c', '-o', fixture)
@@ -21,7 +27,7 @@ def main():
     os.environ['POSTGRES_LIBRARY'] = str(fixture)
     try:
         source = work / 'postgres.chl'
-        declarations = 'abi ' + json.dumps(fixture.as_posix()) + ' { int32 fixture_live_connections() = "fixture_live_connections"; int32 fixture_live_results() = "fixture_live_results"; }\n'
+        declarations = '#abi("C", ' + json.dumps(fixture.as_posix()) + ', "fixture_live_connections")\nint32 fixture_live_connections();\n#abi("C", ' + json.dumps(fixture.as_posix()) + ', "fixture_live_results")\nint32 fixture_live_results();\n'
         source.write_text(POSTGRES_SOURCE.replace('import std::sql;', 'import std::sql;\n' + declarations, 1), encoding='utf-8')
         triplet(source, 'postgres ABI checks passed\n', work)
     finally:

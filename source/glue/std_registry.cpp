@@ -16,7 +16,6 @@
 #include "../chali_glue.hpp"
 
 #ifndef GLUE_NO_STD_SQL
-#include "std_sql.hpp"
 #endif
 #ifndef GLUE_NO_STD_IMAGE
 #endif
@@ -85,7 +84,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_SQL
     Memory::String sqlError;
-    if (!std_sql_glue::bind(registry, &sqlError))
+    if (!(registry.bindModule(abi_sql_records, &sqlError) && registry.bindModule(abi_sql_ipage_records, &sqlError)))
     {
         if (error) *error = sqlError;
         ok = false;
