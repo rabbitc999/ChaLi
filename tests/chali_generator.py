@@ -85,7 +85,7 @@ def main():
              "runtime/chali_pool.c", "runtime/chali_pool.h",
             "runtime/chali_allocator.hpp", "chali_runtime_allocator.hpp",
             "runtime/ast.cpp", "runtime/ast.hpp", "aot/backend_profile.cpp", "CMakeLists.txt", "std/lang.chl",
-            "glue/std_records.hpp", "abi/chali_abi.h", "abi/abi_file.cpp",
+            "abi/chali_standard_internal.h", "abi/chali_abi.h", "abi/abi_file.cpp",
             "abi/abi_big_number.cpp", "lztext/lztext.cpp",
             "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
             "LICENSE", "NOTICE", "licenses/miniz/LICENSE",

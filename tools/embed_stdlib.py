@@ -184,7 +184,6 @@ GENERATOR_ASSETS = [
     "chali_runtime_allocator.hpp",
     "chali_i18n.hpp",
     "console/utf8.hpp",
-    "glue/std_glue.cpp",
     # 直通 ABI：C 胶水、桥接与入口表聚合，生成工程必须一并导出。
     "abi/chali_abi.h",
     "abi/chali_standard.h",
@@ -225,7 +224,6 @@ GENERATOR_ASSETS = [
     "toml/toml_source.hpp",
     "lztext/lztext.hpp",
     "lztext/lztext.cpp",
-    "glue/std_registry.hpp",
     "allocator/chali_pool.h",
     "allocator/chali_pool.c",
     "allocator/chali_allocator.hpp",

@@ -3,7 +3,7 @@
  * @brief 按可达原生调用选择标准库宿主模块。
  */
 #pragma once
-#include "std_binding.hpp"
+#include "../allocator/chali_allocator.hpp"
 namespace std_registry
 {
 /**

@@ -308,6 +308,14 @@ List／Map／Set、迭代租约和程序参数的 63 个入口改用 C 帧；一
 
 最终静态编译器 SHA256 为 7cf92e01eb6b7d5124c67f73e0c9dd8429bd1ad058cb41e1719dbcb74c7d514d；vscode/dist/1.0.12-demo-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 66ee74966b9da77983397ce209e4034bf5212c9561284cb46dda9eacc331879a，版本、static 与内嵌 EXE 字节一致。独立编译器 SHA256 为 797ee68d5f82ff9723fe34c7de3c3118764e1bb113d10f89cf82524e135f5cf9，保留 build/independent-validation/1.0.12-demo-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-demo-c-api/。未执行整仓全量门禁或性能计时；公开旧 Registry／Codec／Builder／Function／Record 及生成 C ABI 封送依赖继续删除。
 
+### 集中注册与 AOT 模块选择的 C API 迁移已完成
+
+集中标准库和 AOT 独立绑定共用仅包含模块名与 C 取表函数的清单。共享登记辅助头可由 C11／C++17 包含，逐表复用原子注册，首个失败停止且保留诊断；标准库集中注册不包含 demo。驱动借用唯一 NativeRegistry 的 C 句柄，原生运行时同样使用私有函数表与借用句柄，模块选择通过 C 创建／查询／销毁接口完成。删除 std_registry.hpp、std_binding.hpp、std_glue.cpp／hpp、std_records.cpp／hpp 及其生成／嵌入依赖；运行时内部 C++ 函数表属于既有核心，不再使用旧公开 Registry 包装。
+
+C API 全部相关门禁及内存、泛型抽样共 15 步全部通过，无失败或跳过。新增真实注册回归逐项核对标准入口及别名，验证演示隔离、封存拒绝、空取表函数、print／demo 单模块选择及未知名称不选择模块；实际前端库解压的 35 项 ABI 资产与源码一致，六个退役包装文件缺席。演示十组 × 四配置 40 项及未绑定成员拒绝通过，独立工程完整冷构建 GCC11／O1 外置 LLVM 编译器，六组默认 LLVM O3 的冻结样例输出逐字节一致。首轮新增测试的 C 宏形参名与字段名冲突已修正，原始编译失败和复验分别留证。
+
+最终隔离手册、全部标准库导入／源码回退／零磁盘缓存、七组插件测试、17 项新鲜导出源及重新生成驱动核对通过。共享登记辅助头另外通过独立 C11／C++17 语法检查。静态编译器 SHA256 为 febdcf929d1cb022fa02f50559f2571594c8019c7057c35c17c484cfa2eef7c2；vscode/dist/1.0.12-c-registry/chali-editor-1.0.12-llvm-static.vsix SHA256 为 eaa48dc1981a0b750aaa8974560222987b1ae3d23a38db16a063d4111285f714，版本、static 与内嵌 EXE 字节一致。独立编译器 SHA256 为 69987df6694ab5d488f477e96a7db4f08d2bf16e9b4ed103e32b456b979a9ab4，保留 build/independent-validation/1.0.12-c-registry/。证据仅保留 tools/history/20261101/chali-1.0.12-c-registry/。未运行整仓全量门禁或性能计时；旧公开 Codec／Builder／Function／Record、动态库模板及生成 ABI 封送仍待替换，旧 ABI 准备选项仍在启用，不当作死代码删除。
+
 ## 阶段六：删除旧 C++ 胶水与发行核对
 
 独立工程的 gen abi 缺口已关闭：新增薄入口复用参数归一化、语言配置与同一 C 头导入实现，导出所需源文件与头，并在 CMake 关闭旧默认 main。新鲜导出 454 文件，完整冷构建外置 LLVM 编译器后，直接运行 ABI 头导入、拥有值、同步回调及直接／嵌套失败清理综合脚本通过；未使用本体预生成声明或开发工具回退。解析 65 输入／260 结果在四组合再次对齐。宿主编译器冷构建配置为 GCC 11／C++ O1，语言导出仍使用默认 LLVM O3，不据此报告性能。

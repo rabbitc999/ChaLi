@@ -1,51 +1,51 @@
-/* AOT 模块登记的统一清单；由不同宏展开为独立入口及编译器选择表。
- *
- * 已全部迁移到 C 直通表的模块没有 C++ 胶水文件，这里改成直接登记该模块的入口表；
- * `std::clock` 原先与数学函数同在一个胶水文件、共用 `GLUE_NO_STD_MATH`，一并归到 math。 */
-CHALI_AOT_MODULE(print, registry.bindModule(abi_print_records, error))
-CHALI_AOT_MODULE(collection, registry.bindModule(abi_collection_records, error))
-CHALI_AOT_MODULE(string, registry.bindModule(abi_string_records, error))
-CHALI_AOT_MODULE(big_number, registry.bindModule(abi_big_number_records, error))
-CHALI_AOT_MODULE(cas, registry.bindModule(abi_cas_records, error))
-CHALI_AOT_MODULE(file, registry.bindModule(abi_file_records, error))
+/* 模块名与 C 入口表提供函数的统一清单。每项可包含多张入口表。
+ * 标准库集中注册排除 demo，AOT 选择保留 demo；裁剪宏沿用既有约定。 */
+CHALI_AOT_MODULE(print, abi_print_records)
+CHALI_AOT_MODULE(collection, abi_collection_records)
+CHALI_AOT_MODULE(string, abi_string_records)
+CHALI_AOT_MODULE(big_number, abi_big_number_records)
+CHALI_AOT_MODULE(cas, abi_cas_records)
+CHALI_AOT_MODULE(file, abi_file_records)
 #ifndef GLUE_NO_STD_FILESYSTEM
-CHALI_AOT_MODULE(filesystem, registry.bindModule(abi_filesystem_records, error))
+CHALI_AOT_MODULE(filesystem, abi_filesystem_records)
 #endif
 #ifndef GLUE_NO_STD_JSON
-CHALI_AOT_MODULE(json, registry.bindModule(abi_serialization_records, error) && registry.bindModule(abi_json_records, error))
+CHALI_AOT_MODULE(json, abi_serialization_records, abi_json_records)
 #endif
 #ifndef GLUE_NO_STD_TOML
-CHALI_AOT_MODULE(toml, registry.bindModule(abi_toml_records, error))
+CHALI_AOT_MODULE(toml, abi_toml_records)
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
-CHALI_AOT_MODULE(compress, registry.bindModule(abi_compress_records, error))
+CHALI_AOT_MODULE(compress, abi_compress_records)
 #endif
 #ifndef GLUE_NO_STD_MATH
 CHALI_AOT_MODULE(math,
-                 registry.bindModule(abi_math_records, error) && registry.bindModule(abi_clock_records, error))
+                 abi_math_records, abi_clock_records)
 #endif
 #ifndef GLUE_NO_STD_RANDOM
-CHALI_AOT_MODULE(random, registry.bindModule(abi_random_records, error))
+CHALI_AOT_MODULE(random, abi_random_records)
 #endif
 #ifndef GLUE_NO_STD_REGEX
-CHALI_AOT_MODULE(regex, registry.bindModule(abi_regex_records, error))
+CHALI_AOT_MODULE(regex, abi_regex_records)
 #endif
 #ifndef GLUE_NO_STD_LINALG
-CHALI_AOT_MODULE(linalg, (registry.bindModule(abi_scalar_records, error) && registry.bindModule(abi_linalg_records, error)))
+CHALI_AOT_MODULE(linalg, abi_scalar_records, abi_linalg_records)
 #endif
 #ifndef GLUE_NO_STD_PARSE
-CHALI_AOT_MODULE(parse, registry.bindModule(abi_parse_records, error))
+CHALI_AOT_MODULE(parse, abi_parse_records)
 #endif
 #ifndef GLUE_NO_STD_PROCESS
-CHALI_AOT_MODULE(process, registry.bindModule(abi_process_records, error))
+CHALI_AOT_MODULE(process, abi_process_records)
 #endif
 #ifndef GLUE_NO_STD_SQL
-CHALI_AOT_MODULE(sql, (registry.bindModule(abi_sql_records, error) && registry.bindModule(abi_sql_ipage_records, error)))
+CHALI_AOT_MODULE(sql, abi_sql_records, abi_sql_ipage_records)
 #endif
 #ifndef GLUE_NO_STD_IMAGE
-CHALI_AOT_MODULE(image, registry.bindModule(abi_image_records, error))
+CHALI_AOT_MODULE(image, abi_image_records)
 #endif
 #ifndef GLUE_NO_STD_NET
-CHALI_AOT_MODULE(net, registry.bindModule(abi_net_records, error))
+CHALI_AOT_MODULE(net, abi_net_records)
 #endif
-CHALI_AOT_MODULE(demo, registry.bindModule(abi_demo_records, error))
+#ifndef CHALI_STANDARD_ONLY
+CHALI_AOT_MODULE(demo, abi_demo_records)
+#endif

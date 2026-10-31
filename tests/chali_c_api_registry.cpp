@@ -1,5 +1,7 @@
 /** @file chali_c_api_registry.cpp @brief 注册事务、异常隔离、生命周期与并发查询。 */
 #include "abi/chali_abi_registry.hpp"
+#include "abi/chali_standard_internal.h"
+#include "glue/std_aot_modules.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "c_api_failure_arena.hpp"
 #include <cassert>
@@ -196,6 +198,58 @@ void boundaries()
 }
 
 /**
+ * @brief 验证标准库统一清单、模块隔离与失败后的已登记入口。
+ */
+void standardModules()
+{
+    char text[512];
+    ChaliAbiError error{text, sizeof(text), 0, ChaliAbiOk};
+    auto *registry = chali_abi_registry_create(&error);
+    assert(registry);
+    assert(chali_abi_register_tables(nullptr, nullptr, 0, &error) == ChaliAbiInvalidArgument);
+    const ChaliAbiModule missing[] = {nullptr};
+    assert(chali_abi_register_tables(registry, missing, 1, &error) == ChaliAbiInvalidArgument);
+    assert(chali_abi_bind_standard(registry, &error) == ChaliAbiOk);
+#define CHALI_STANDARD_ONLY
+#define CHALI_AOT_MODULE(moduleName, ...) \
+    { \
+        const ChaliAbiModule modules[] = {__VA_ARGS__}; \
+        for (auto module : modules) \
+        { \
+            size_t count = 0; \
+            const auto *records = module(&count); \
+            for (size_t index = 0; index < count; ++index) \
+            { \
+                ChaliAbiEntry entry = nullptr; \
+                int32_t arity = 0; \
+                assert(chali_abi_registry_resolve(registry, records[index].name, &entry, &arity, &error) == ChaliAbiOk); \
+                assert(entry == records[index].entry && arity == records[index].arity); \
+            } \
+        } \
+    }
+#include "glue/aot_modules.inc"
+#undef CHALI_AOT_MODULE
+#undef CHALI_STANDARD_ONLY
+    size_t count = 0;
+    const auto *demo = abi_demo_records(&count);
+    assert(count);
+    ChaliAbiEntry entry = nullptr;
+    assert(chali_abi_registry_resolve(registry, demo[0].name, &entry, nullptr, &error) == ChaliAbiNotFound);
+    assert(chali_abi_registry_seal(registry, &error) == ChaliAbiOk);
+    assert(chali_abi_bind_standard(registry, &error) == ChaliAbiSealed);
+    assert(chali_abi_register_tables(registry, missing, 1, &error) == ChaliAbiInvalidArgument);
+    chali_abi_registry_destroy(registry);
+    Memory::Vector<Memory::String> diagnostics;
+    const auto *print = abi_print_records(&count);
+    auto selected = std_registry::aotModulesFor({print[0].name}, &diagnostics);
+    assert(diagnostics.empty() && selected.size() == 1 && selected[0] == "print");
+    selected = std_registry::aotModulesFor({demo[0].name}, &diagnostics);
+    assert(diagnostics.empty() && selected.size() == 1 && selected[0] == "demo");
+    selected = std_registry::aotModulesFor({"__unregistered_native_entry__"}, &diagnostics);
+    assert(diagnostics.empty() && selected.empty());
+}
+
+/**
  * @brief 运行注册与调用边界回归。
  * @return 全部断言通过时为零。
  */
@@ -216,6 +270,7 @@ int main()
         }
     });
     for (auto &thread : catalog) thread.join();
+    standardModules();
     transactions();
     boundaries();
     std::puts("C registry exception, ownership and concurrent lookup passed");

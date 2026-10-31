@@ -39,9 +39,9 @@
 #include "chali_aot.hpp"
 #include "ast/ast.hpp"
 #include "chali_aot_llvm.hpp"
-#include "chali_glue.hpp"
+#include "abi/chali_abi_registry.hpp"
+#include "abi/chali_standard_internal.h"
 #include "chali_report.hpp"
-#include "glue/std_registry.hpp"
 #include "abi/chali_standard.h"
 
 namespace
@@ -83,11 +83,14 @@ Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
  * @param registry 接收函数绑定的宿主注册表。
  * @return 无。
  */
-void InstallDemoGlue(chali_glue::Registry &registry)
+void InstallDemoGlue(ChaliAbiRegistry *registry)
 {
-    Memory::String error;
-    if (!std_registry::bindStandardGlue(registry, &error) || !registry.bindModule(abi_demo_records, &error))
-        std::fprintf(stderr, "chali: 注册宿主胶水失败：%s\n", error.c_str());
+    char message[1024];
+    ChaliAbiError error{message, sizeof(message), 0, ChaliAbiOk};
+    const ChaliAbiModule demo[] = {abi_demo_records};
+    if (chali_abi_bind_standard(registry, &error) != ChaliAbiOk ||
+        chali_abi_register_tables(registry, demo, 1, &error) != ChaliAbiOk)
+        std::fprintf(stderr, "chali: 注册宿主胶水失败：%s\n", message);
 }
 
 /**
@@ -252,9 +255,10 @@ try
         return 0;
     }
     if (argc > 1 && std::strcmp(argv[1], "new") == 0) return chali_project::runCli(argc, argv);
-    chali_glue::Registry glue;
-    InstallDemoGlue(glue);
-    glue.install();
+    stackvm::NativeRegistry nativeRegistry;
+    ChaliAbiRegistry glue{{}, &nativeRegistry};
+    InstallDemoGlue(&glue);
+    M_SetNativeRegistry(&nativeRegistry);
     const char *path = nullptr;
     /* 不给源文件时不再默默挂到标准输入上：默认把帮助打出来就退出，真要从管道喂源码得显式写 `--stdin`。 */
     bool readStdin = false;

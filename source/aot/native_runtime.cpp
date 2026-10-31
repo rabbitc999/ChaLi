@@ -7,7 +7,7 @@
 #include "chali_i18n.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "allocator/system_arena.hpp"
-#include "glue/std_registry.hpp"
+#include "abi/chali_abi_registry.hpp"
 #include "glue/std_collection.hpp"
 #include "console/utf8.hpp"
 #include <memory>
@@ -130,7 +130,8 @@ struct Runtime
     Memory::UniquePtr<execution_detail::DataCapacityIndex> dataCapacity;
     Heap heap;
     NativeInvoker invoker;
-    chali_glue::Registry registry;
+    NativeRegistry registry;
+    ChaliAbiRegistry registryHandle{{}, &registry};
     Machine machine;
     Program program;
     Memory::Vector<Memory::String> arguments;
@@ -207,9 +208,9 @@ struct Runtime
         objects.recordContext = context;
         char message[1024];
         ChaliAbiError error{message, sizeof(message), 0, ChaliAbiOk};
-        if (chali_program_std_bind(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
-        if (chali_program_abi_bind(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
-        if (chali_abi_registry_seal(registry.cApi(), &error) != ChaliAbiOk) chali_panic(message);
+        if (chali_program_std_bind(&registryHandle, &error) != ChaliAbiOk) chali_panic(message);
+        if (chali_program_abi_bind(&registryHandle, &error) != ChaliAbiOk) chali_panic(message);
+        if (chali_abi_registry_seal(&registryHandle, &error) != ChaliAbiOk) chali_panic(message);
     }
 
     /**
@@ -800,7 +801,7 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
         }
         else
         {
-            const auto *entry = state.registry.native().find(name);
+            const auto *entry = state.registry.find(name);
             if (entry && entry->arity != static_cast<std::size_t>(-1) && static_cast<std::size_t>(count) != entry->arity) chali_panic("宿主函数实参数量不匹配");
             if (entry != nullptr && entry->direct != nullptr)
             {
