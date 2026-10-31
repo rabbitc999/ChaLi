@@ -9,7 +9,7 @@ CHALI_AOT_MODULE(big_number, big_number_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(cas, std_cas_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(file, file_native_glue::bind(registry.native(), error))
 #ifndef GLUE_NO_STD_FILESYSTEM
-CHALI_AOT_MODULE(filesystem, std_filesystem_glue::bind(registry, error))
+CHALI_AOT_MODULE(filesystem, registry.bindModule(abi_filesystem_records, error))
 #endif
 #ifndef GLUE_NO_STD_JSON
 CHALI_AOT_MODULE(json, registry.bindModule(abi_serialization_records, error) && registry.bindModule(abi_json_records, error))

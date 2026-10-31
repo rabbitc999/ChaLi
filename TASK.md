@@ -182,6 +182,14 @@ C API、序列化、内存与并发首轮 16 步为 15 通过、1 失败、0 跳
 
 静态编译器 SHA256 为 4e38e1c26f47f454be39f3b897046e30458f2c89b1694fb73fa8335fbc69683d；vscode/dist/1.0.12-regex-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 6397bfafcc7f8f95e01632da6d4ccc2eb503a93b0bef08808feae551487802c4。五项基础及正则内核导出源一致，旧两文件不存在。证据仅保留 tools/history/20261031/chali-1.0.12-regex-c-api/；未重复冷构建外置编译器、执行整仓全量门禁或正式计时，继续其余模块迁移与旧胶水删除。
 
+文件系统及 UTC 时钟已迁移至 abi_filesystem.cpp 的 C 帧入口，删除 std_filesystem.cpp／hpp、旧绑定和导出清单。目录枚举、文件信息、创建与重命名通过公开 C 逻辑内存服务访问 IoReply，不使用 Record／Codec 视图；错误落槽失败时释放新字符串。新增 chali_abi_list_append_text／CHALI_ABI_CAP_LIST_TEXT，在最终元素中直接复制文本，避免通用原生值中间副本；查询记录前稳定输入，保留零字节及独立拥有存储，拒绝活动迭代／元素借用／待释放状态，两个分配失败点保持列表长度不变。
+
+新增文件系统用例先由 7d63a36a 真实编译器完成四配置与原完整 IO 样例对照，再由新入口复验 Unicode 路径排序、文件／目录信息、固定时间戳、UTC、拥有副本、重命名和五类可恢复错误。首版用例混用文件流创建 Unicode 文件，定位到旧文件流的 Windows 窄路径转换问题；目录基准改为测试宿主准备文件，保留初次失败及定位记录，文件流缺陷列为后续待修，不宣称已修复。C API、文件系统及内存 11 步全部通过，无失败或跳过；最终手册、隔离标准库／源码回退／零磁盘缓存、七组插件测试及六项新鲜导出源核对通过，旧两文件不存在。
+
+静态 EXE SHA256 为 18eff8709885c86901fea3ceb2bdc5ea4fb04c84dc8eec7d95305c87367a627a；vscode/dist/1.0.12-filesystem-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 0de2cdcc75cf7d73dc22b0561186b9dfcac1d5c97eb1c8dc493d97da916363c3。证据仅保留 tools/history/20261031/chali-1.0.12-filesystem-c-api/；未重复冷构建外置编译器、执行整仓全量门禁或正式计时。
+
+- [ ] File 模块迁移时修复 Windows Unicode 文件／父目录打开：旧 DesktopFileHandle 的 stream_.open(path, flags) 走窄字符串转换，与目录服务明确 UTF-8 路径不一致；覆盖文件名、父目录、模式、读写、错误及关闭，保留迁移前复现与修正证据。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

@@ -18,9 +18,6 @@
  * 两者互补，同时用才是完整裁剪。默认不定义任何宏 = 现有行为。 */
 
 #include "../chali_glue.hpp"
-#ifndef GLUE_NO_STD_FILESYSTEM
-#include "std_filesystem.hpp"
-#endif
 
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"

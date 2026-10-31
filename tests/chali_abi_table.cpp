@@ -86,6 +86,40 @@ int64_t chali_abi_record_clone(const ChaliAbiFrame *, int64_t, const char *, voi
     return 0;
 }
 int chali_abi_record_release(const ChaliAbiFrame *, int64_t) { return 0; }
+/** @brief 表结构测试不读运行时内存。
+ * @param frame 未使用的帧。
+ * @param address 未使用的地址。
+ * @param output 未使用的缓冲。
+ * @param length 未使用的长度。
+ * @return 固定失败占位值。
+ */
+int chali_abi_read(const ChaliAbiFrame *frame, int64_t address, void *output, size_t length)
+{ (void)frame; (void)address; (void)output; (void)length; return 0; }
+/** @brief 表结构测试不写运行时内存。
+ * @param frame 未使用的帧。
+ * @param address 未使用的地址。
+ * @param data 未使用的输入。
+ * @param length 未使用的长度。
+ * @return 固定失败占位值。
+ */
+int chali_abi_write(const ChaliAbiFrame *frame, int64_t address, const void *data, size_t length)
+{ (void)frame; (void)address; (void)data; (void)length; return 0; }
+/** @brief 表结构测试不释放实际字符串。
+ * @param frame 未使用的帧。
+ * @param address 未使用的地址。
+ * @return 固定失败占位值。
+ */
+int chali_abi_string_release(const ChaliAbiFrame *frame, int64_t address)
+{ (void)frame; (void)address; return 0; }
+/** @brief 表结构测试不向实际列表追加文本。
+ * @param frame 未使用的帧。
+ * @param handle 未使用的句柄。
+ * @param data 未使用的输入。
+ * @param length 未使用的长度。
+ * @return 固定失败占位值。
+ */
+int chali_abi_list_append_text(const ChaliAbiFrame *frame, int64_t handle, const char *data, size_t length)
+{ (void)frame; (void)handle; (void)data; (void)length; return 0; }
 }
 
 namespace

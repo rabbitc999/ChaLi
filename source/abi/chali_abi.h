@@ -138,6 +138,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_BINARY        UINT64_C(32)  ///< 原始字符串与字节列表服务。
 #define CHALI_ABI_CAP_RECORD_CLONE  UINT64_C(64)  ///< 宿主记录自动独立复制服务。
 #define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
+#define CHALI_ABI_CAP_LIST_TEXT     UINT64_C(256) ///< 文本列表直接追加服务。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -480,6 +481,17 @@ int CHALI_ABI_CALL chali_abi_list_bytes(const ChaliAbiFrame *frame, int64_t hand
  * @return 拥有型 List<uint8> 句柄，交还语言或使用 chali_abi_record_release 释放；失败为零。
  */
 int64_t CHALI_ABI_CALL chali_abi_list_from_bytes(const ChaliAbiFrame *frame, const unsigned char *data, size_t length);
+
+/**
+ * @brief 将借用文本复制为独立的 List<String> 元素，成功构造后才追加。
+ * @param frame 当前调用帧。
+ * @param handle 存活且可写的 List<String> 句柄；调用方负责匹配元素类型。
+ * @param data 借用的文本字节，空文本可为空；允许零字节。
+ * @param length 字节长度。
+ * @return 成功为一，错误为零；输入缓冲的所有权不转移。
+ * @note 调用方须遵守语言借用规则，不得在存在活动迭代租约时改变列表结构。
+ */
+int CHALI_ABI_CALL chali_abi_list_append_text(const ChaliAbiFrame *frame, int64_t handle, const char *data, size_t length);
 
 /**
  * @brief 分配随本次运行结束回收的临时字节块。

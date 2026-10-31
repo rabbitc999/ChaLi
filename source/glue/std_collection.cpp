@@ -1367,6 +1367,37 @@ bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const N
 }
 
 /**
+ * @brief 在最终元素中直接复制文本，仅成功构造后追加到列表。
+ * @param host 当前运行时上下文。
+ * @param listHandle 文本列表句柄。
+ * @param data 借用的文本字节。
+ * @param length 字节长度。
+ * @return 追加成功为真，类型或存活检查失败为假。
+ */
+bool listPushText(stackvm::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length)
+{
+    // 先在最终元素内复制输入，再查询记录；查询可能刷新并回收语言字节视图。
+    ObjectValue value;
+    value.isText = true;
+    value.text.assign(data ? data : "", length);
+    State state(host);
+    Record *object = state.objects ? state.objects->find(listHandle) : nullptr;
+    if (!object || object->kind != StorageKind::Vector)
+    {
+        host.fail("listPush 的句柄不是 List");
+        return false;
+    }
+    if (object->iteratorLeases || !object->elementViews.empty() || object->pendingRelease)
+    {
+        host.fail("活跃 for-in 引用期间不能改变列表结构");
+        return false;
+    }
+    materializeScalarItems(*object);
+    object->items.push_back(std::move(value));
+    return true;
+}
+
+/**
  * @brief 将结构体数据追加到运行时列表。
  * @param listHandle 目标运行时列表的句柄。
  * @param structAddress 结构体数据的运行时地址。

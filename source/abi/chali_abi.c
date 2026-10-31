@@ -32,6 +32,9 @@ typedef const ChaliAbiRecord *(*ModuleRecords)(size_t *count);
 static const ModuleRecords kModules[] = {
     abi_print_records,
     abi_string_records,
+#ifndef GLUE_NO_STD_FILESYSTEM
+    abi_filesystem_records,
+#endif
 #ifndef GLUE_NO_STD_REGEX
     abi_regex_records,
 #endif

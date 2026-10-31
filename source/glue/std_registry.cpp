@@ -15,9 +15,6 @@
  * 两者互补，同时用才是完整裁剪。默认不定义任何宏 = 现有行为。 */
 
 #include "../chali_glue.hpp"
-#ifndef GLUE_NO_STD_FILESYSTEM
-#include "std_filesystem.hpp"
-#endif
 
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
@@ -49,7 +46,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
     ok = std_cas_glue::bind(registry.native(), error) && ok;
     ok = file_native_glue::bind(registry.native(), error) && ok;
 #ifndef GLUE_NO_STD_FILESYSTEM
-    ok = std_filesystem_glue::bind(registry, error) && ok;
+    ok = registry.bindModule(abi_filesystem_records, error) && ok;
 #endif
 #ifndef GLUE_NO_STD_JSON
     ok = (registry.bindModule(abi_serialization_records, error) && registry.bindModule(abi_json_records, error)) && ok;

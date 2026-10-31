@@ -624,6 +624,56 @@ int main()
             assert(failures >= 2);
             std::printf("regex C records: non-failing probe, shared immutable copies, transfer and %d failure points passed\n", failures);
         }
+        {
+            const auto list = chali_abi_list_from_bytes(&frame, nullptr, 0);
+            assert(list);
+            char text[] = {'A', 0, char(255)};
+            assert(chali_abi_list_append_text(&frame, list, text, sizeof(text)));
+            text[0] = 'X';
+            assert(chali_abi_list_append_text(&frame, list, nullptr, 0));
+            const std::string borrowedText = "中文";
+            const auto ownedInput = chali_abi_string(&frame, borrowedText.data(), borrowedText.size());
+            assert(ownedInput && chali_abi_bytes(&frame, ownedInput, &view, &length));
+            assert(chali_abi_list_append_text(&frame, list, reinterpret_cast<const char *>(view), length));
+            assert(chali_abi_string_release(&frame, ownedInput));
+            NativeCallContextImpl host(context, &invoker);
+            Memory::Vector<NativeValue> values;
+            assert(collection_glue::readList(host, list, values) && values.size() == 3);
+            assert(values[0].isText() && values[0].text.size() == 3 && values[0].text[0] == 'A' && values[0].text[1] == 0);
+            assert(values[1].isText() && values[1].text.empty());
+            assert(values[2].isText() && values[2].text == borrowedText.c_str());
+            const auto lease = collection_glue::listStorageScalarOperation(host, 13, list, 0, 0, 0, 0, 0).bits;
+            assert(lease && !chali_abi_list_append_text(&frame, list, "forbidden", 9) && runtime.status);
+            reset();
+            assert(chali_abi_record_release(&frame, lease));
+            assert(!chali_abi_list_append_text(&frame, list, nullptr, 1) && runtime.status);
+            reset();
+            assert(!chali_abi_list_append_text(&frame, list, "x", SIZE_MAX) && runtime.status);
+            reset();
+            assert(collection_glue::readList(host, list, values) && values.size() == 3);
+            assert(chali_abi_record_release(&frame, list));
+            assert(!chali_abi_list_append_text(&frame, list, "x", 1) && runtime.status);
+            reset();
+            int failures = 0;
+            const std::string payload(128, 'x');
+            for (int point = 0; point < 32; ++point)
+            {
+                const auto destination = chali_abi_list_from_bytes(&frame, nullptr, 0);
+                assert(destination);
+                arena.remaining = point;
+                const bool appended = chali_abi_list_append_text(&frame, destination, payload.data(), payload.size());
+                arena.remaining = -1;
+                if (!appended) { assert(runtime.status); ++failures; reset(); }
+                assert(collection_glue::readList(host, destination, values));
+                assert(values.size() == (appended ? 1u : 0u));
+                if (appended) assert(values[0].isText() && values[0].text == payload.c_str());
+                assert(chali_abi_record_release(&frame, destination));
+                if (appended) break;
+                assert(point != 31);
+            }
+            assert(failures >= 2);
+            std::printf("C text append: raw bytes, independent storage, lease rejection and %d atomic failure points passed\n", failures);
+        }
     }
     assert(arena.stats().liveBlocks == 0);
     std::puts("C services: buffered strings, memory ranges, borrowed invoker, errors and records passed");

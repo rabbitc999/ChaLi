@@ -6,6 +6,16 @@ namespace collection_glue
 using NativeValue = stackvm::NativeValue;
 
 /**
+ * @brief 从借用字节直接构造并追加一个独立文本元素，避免通用原生值的中间副本。
+ * @param host 当前运行时上下文。
+ * @param listHandle List<String> 的存活句柄。
+ * @param data 输入字节，空文本可为空。
+ * @param length 字节数。
+ * @return 追加成功为真。
+ */
+bool listPushText(stackvm::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length);
+
+/**
  * @brief 集合原语的数值结果，直接保留位模式与种类，不构造拥有文本的通用值。
  */
 struct ScalarResult
