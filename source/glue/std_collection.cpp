@@ -2211,28 +2211,7 @@ ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::i
     return result.scalar();
 }
 
-/**
- * @brief 兼容通用原生值调用：使用栈上参数槽直接连接自举 List 的存储边界。
- * @param host 当前运行时上下文。
- * @param operation 存储操作编号。
- * @param first 第一个实参位模式。
- * @param second 第二个实参位模式。
- * @param third 第三个实参位模式。
- * @param fourth 第四个实参位模式。
- * @param fifth 第五个实参位模式。
- * @param floating 浮点实参位图。
- * @return 保持原始数值种类的结果。
- */
-NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
-                                 std::int64_t first, std::int64_t second, std::int64_t third,
-                                 std::int64_t fourth, std::int64_t fifth, std::uint64_t floating)
-{
-    const auto result = listStorageScalarOperation(host, operation, first, second, third, fourth, fifth, floating);
-    if (!result.floating) return NativeValue::fromInt(result.bits);
-    double real = 0;
-    std::memcpy(&real, &result.bits, sizeof(real));
-    return NativeValue::fromFloat(real);
-}
+
 
 /**
  * @brief 按标量桥接编号复用创建、长度和单槽读取，不包含查询或插删算法。
@@ -2259,71 +2238,41 @@ Slot mapStorageMetadata(State &state, std::int64_t operation, const Arguments &a
 }
 
 /**
- * @brief 注册集合存储边界及尚未迁移的算法入口。
- * @param registry 当前宿主函数注册表。
- * @param error 接收绑定失败的诊断。
- * @return 全部绑定成功时为 true。
+ * @brief 连接 Map/Set 私有操作编号，不创建函数查找或参数向量。
+ * @tparam Operation Map/Set 存储原语编号。
+ * @param state 本次运行时状态。
+ * @param arguments 借用的标量槽。
+ * @return 原始标量结果。
  */
-bool bind(stackvm::NativeRegistry &registry, Memory::String *error)
+template<int Operation> Slot hashPrimitive(State &state,const Arguments &arguments) {return hashedStorageOperation(state,Operation,arguments);}
+/**
+ * @brief 在同一对象表中执行一个 C 入口选择的私有集合存储原语。
+ * @param host 借用的运行时上下文。
+ * @param operation 唯一清单中的入口下标。
+ * @param bits 只读原始参数位模式。
+ * @param kinds 各参数的整数或浮点种类。
+ * @param count 参数数量，已由 C 入口精确检查。
+ * @return 不拥有资源的原始位模式与结果种类；失败写入上下文。
+ */
+ScalarResult applyPrimitive(stackvm::NativeCallContext &host, std::size_t operation,
+                            const std::int64_t *bits, const unsigned char *kinds, std::size_t count)
 {
-    if (!bindHashedStorage(registry, error)) return false;
-    struct Binding
+    using Operation = Slot (*)(State &, const Arguments &);
+    static const Operation operations[] = {
+#define CHALI_COLLECTION_LIST(id, name, arity, apply) apply,
+#define CHALI_COLLECTION_HASH(id, name, arity, op)    hashPrimitive<op>,
+#include "abi/collection_operations.inc"
+#undef CHALI_COLLECTION_LIST
+#undef CHALI_COLLECTION_HASH
+    };
+    if (operation >= sizeof(operations) / sizeof(operations[0]))
     {
-        const char *name;
-        std::size_t arity;
-        Slot (*apply)(State &, const Arguments &);
-    };
-    static const Binding bindings[] = {
-        { "std::lang::__listStorageGuard", 3, listStoragePrimitive<0> },
-        { "std::lang::__listStorageCapacity", 1, listStoragePrimitive<1> },
-        { "std::lang::__listStorageMaxCapacity", 1, listStoragePrimitive<9> },
-        { "std::lang::__listStorageReserve", 2, listStoragePrimitive<2> },
-        { "std::lang::__listStorageSwap", 3, listStoragePrimitive<3> },
-        { "std::lang::__listStorageDiscard", 1, listStoragePrimitive<4> },
-        { "std::lang::__listStorageEqualI", 5, listStoragePrimitive<5> },
-        { "std::lang::__listStorageEqualF", 5, listStoragePrimitive<5> },
-        { "std::lang::__listStorageCloneAppend", 3, listStoragePrimitive<6> },
-        { "std::lang::__listStorageCompareI", 5, listStoragePrimitive<7> },
-        { "std::lang::__listStorageCompareF", 5, listStoragePrimitive<7> },
-        { "std::lang::__listStorageCompareIndex", 3, listStoragePrimitive<8> },
-        { "std::lang::__listStorageReadI", 4, vecAt },
-        { "std::lang::__listStorageReadF", 4, vecAt },
-        { "std::lang::__listStorageCloneI", 3, listStorageCloneInput },
-        { "std::lang::__listStorageCloneF", 3, listStorageCloneInput },
-        { "std::lang::__listStorageAppendI", 4, vecPush },
-        { "std::lang::__listStorageAppendF", 4, vecPush },
-        { "std::lang::__listStorageTakeI", 3, vecPop },
-        { "std::lang::__listStorageTakeF", 3, vecPop },
-        { "std::lang::__listStorageNew", 0, vecNew },
-        { "std::lang::__listStorageLength", 1, vecLen },
-        { "__std_program_arguments", 0, programArguments },
-        { "__std_vec_new", 0, vecNew },
-        { "__std_vec_pack", static_cast<std::size_t>(-1), vecPack },
-        { "__std_vec_ref", 5, vecRef },
-        { "__std_iter_take", 1, iterTake },
-        { "__std_iter_lease", 1, iterLeaseNew },
-        { "__std_iter_lease_len", 1, iterLeaseLen },
-        { "__std_iter_lease_ref", 5, iterLeaseRef },
-        { "__std_vec_unref", 2, vecUnref },
-        { "__std_vec_at", 4, vecAt },
-        { "__std_vec_set", 5, vecSet },
-        { "__std_vec_len", 1, vecLen },
-        { "__std_set_new", 0, setNew },
-        { "__std_set_new_policy", 2, setNewPolicy },
-        { "__std_set_at", 4, setAt },
-        { "__std_set_len", 1, setLen },
-        { "__std_map_new", 0, mapNew },
-        { "__std_map_new_policy", 2, mapNewPolicy },
-        { "__std_map_len", 1, mapLen },
-        { "__std_map_key_at", 4, mapKeyAt },
-        { "__std_map_val_at", 4, mapValAt },
-    };
-    for (const auto &binding : bindings)
-        if (!registry.add(binding.name, binding.arity, [apply = binding.apply](stackvm::NativeCallContext &host, const Memory::Vector<NativeValue> &arguments) {
-            State state(host);
-            const auto result = apply(state, Arguments(arguments));
-            if (!state.error.empty()) host.fail(state.error);
-            return result.isFloat ? NativeValue::fromFloat(result.real) : NativeValue::fromInt(result.integer); }, error)) return false;
-    return true;
+        host.fail("集合 C 原语编号无效");
+        return {};
+    }
+    State state(host);
+    const auto result = operations[operation](state, Arguments(bits, kinds, count));
+    if (!state.error.empty()) host.fail(state.error);
+    return result.scalar();
 }
 }  // namespace collection_glue

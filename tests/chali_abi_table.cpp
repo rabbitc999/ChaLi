@@ -74,6 +74,12 @@ int64_t chali_abi_input_token(const ChaliAbiFrame *frame,uint64_t *position) {(v
  * @return 固定零句柄。
  */
 int64_t chali_abi_record_make_textual(const ChaliAbiFrame *frame,const char *name,void *value,ChaliAbiDestroy destroy,ChaliAbiClone clone,ChaliAbiFormat format) {(void)frame;(void)name;(void)value;(void)destroy;(void)clone;(void)format;return 0;}
+/**
+ * @brief 入口表测试不调用私有集合内核。
+ * @param frame 未使用帧。
+ * @param operation 未使用编号。
+ */
+void chali_abi_collection_apply(ChaliAbiFrame *frame,size_t operation) {(void)frame;(void)operation;}
 int64_t chali_abi_record_make(const ChaliAbiFrame *, const char *, void *, void (*)(void *)) { return 0; }
 /**
  * @brief 表结构检查不登记实际记录描述符。

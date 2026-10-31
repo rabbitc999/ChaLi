@@ -1049,11 +1049,11 @@ std::int64_t chali_host_list_storage(std::int64_t operation, std::int64_t first,
 {
     auto &state = current();
     NativeContext &context = currentContext();
-    NativeValue result;
+    collection_glue::ScalarResult result;
     try
     {
         NativeCallContextImpl bridge(context, &state.invoker);
-        result = collection_glue::listStorageOperation(bridge, operation, first, second, third, fourth, fifth,
+        result = collection_glue::listStorageScalarOperation(bridge, operation, first, second, third, fourth, fifth,
                                                        static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)
     {
@@ -1068,16 +1068,8 @@ std::int64_t chali_host_list_storage(std::int64_t operation, std::int64_t first,
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeThreadState.nativeResultFloat = result.isFloat();
-    std::int64_t bits = 0;
-    if (nativeThreadState.nativeResultFloat)
-    {
-        const double real = result.asFloat();
-        std::memcpy(&bits, &real, sizeof(bits));
-    }
-    else
-        bits = result.asInt();
-    return bits;
+    nativeThreadState.nativeResultFloat = result.floating != 0;
+    return result.bits;
 }
 /**
  * @brief 以标量 ABI 连接 Map/Set 单槽内核，保留异常、存活检查和同步回调协议。
@@ -1098,11 +1090,11 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
 {
     auto &state = current();
     NativeContext &context = currentContext();
-    NativeValue result;
+    collection_glue::ScalarResult result;
     try
     {
         NativeCallContextImpl bridge(context, &state.invoker);
-        result = collection_glue::mapStorageOperation(bridge, operation, first, second, third, fourth, fifth, sixth, seventh,
+        result = collection_glue::mapStorageScalarOperation(bridge, operation, first, second, third, fourth, fifth, sixth, seventh,
                                                       static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)
     {
@@ -1117,16 +1109,8 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeThreadState.nativeResultFloat = result.isFloat();
-    std::int64_t bits = 0;
-    if (nativeThreadState.nativeResultFloat)
-    {
-        const double real = result.asFloat();
-        std::memcpy(&bits, &real, sizeof(bits));
-    }
-    else
-        bits = result.asInt();
-    return bits;
+    nativeThreadState.nativeResultFloat = result.floating != 0;
+    return result.bits;
 }
 /**
  * @brief 直接返回数值与种类：以标量 ABI 连接 List 单槽内核，保留异常、存活检查和同步回调协议。

@@ -255,6 +255,34 @@ int main(int argc, char **argv)
         const unsigned char *view = nullptr;
         std::size_t length = 0;
         assert(chali_abi_bytes(&frame, 1, &view, &length) && std::string(reinterpret_cast<const char *>(view), length) == "text");
+        {
+            int64_t slots[]={0,0,7,INT64_MIN,-91};
+            unsigned char kinds[]={0,0,0,ChaliAbiSlotFloat,0};
+            ChaliAbiFrame packed{&runtime,slots,kinds,5,0,0};
+            const auto pack=chali_abi_resolve("__std_vec_pack",nullptr);
+            const auto len=chali_abi_resolve("__std_vec_len",nullptr);
+            const auto at=chali_abi_resolve("__std_vec_at",nullptr);
+            assert(pack&&len&&at);pack(&packed);assert(packed.result&&!runtime.status);
+            const auto list=packed.result;
+            int64_t readBits[3]{};unsigned char readKinds[3]{};size_t count=0;
+            assert(chali_abi_list_numbers(&frame,list,readBits,readKinds,3,&count)&&count==3);
+            assert(readBits[0]==7&&readBits[1]==INT64_MIN&&readBits[2]==-91&&readKinds[1]==ChaliAbiSlotFloat);
+            int64_t argument=list;unsigned char integer=0;
+            ChaliAbiFrame lengthFrame{&runtime,&argument,&integer,1,0,0};len(&lengthFrame);assert(lengthFrame.result==3&&!runtime.status);
+            const auto before=allocationEvents.load(std::memory_order_relaxed);
+            for(int repeat=0;repeat<100;++repeat){len(&lengthFrame);assert(lengthFrame.result==3&&!runtime.status);}
+            const auto allocations=allocationEvents.load(std::memory_order_relaxed)-before;
+            assert(!allocations);
+            int64_t access[]={list,1,0,0};unsigned char accessKinds[4]{};
+            ChaliAbiFrame readFrame{&runtime,access,accessKinds,4,0,0};at(&readFrame);
+            assert(readFrame.resultIsFloat&&readFrame.result==INT64_MIN&&!runtime.status);
+            access[1]=3;at(&readFrame);assert(runtime.status);reset();
+            lengthFrame.count=0;lengthFrame.slots=nullptr;lengthFrame.kinds=nullptr;len(&lengthFrame);assert(runtime.status);reset();
+            assert(chali_abi_record_release(&frame,list));
+            lengthFrame.count=1;lengthFrame.slots=&argument;lengthFrame.kinds=&integer;
+            len(&lengthFrame);assert(runtime.status);reset();
+            std::puts("C collection frames: variadic packing, float bits, bounds, stale handles and zero warmed allocations passed");
+        }
         const auto transcode = chali_abi_resolve("std::serialization::__transcode", nullptr);
         assert(transcode && !chali_abi_resolve("std::serialization::__pack", nullptr) &&
                !chali_abi_resolve("std::serialization::__unpack", nullptr));

@@ -67,7 +67,7 @@ static bool queryKey(State &state, Record &record, const Arguments &arguments, s
  * @param arguments 按对应入口签名传入的槽。
  * @return 原始结果槽，失败通过 state.error 报告。
  */
-static Slot hashedStorageOperation(State &state, int operation, const Arguments &arguments)
+Slot hashedStorageOperation(State &state, int operation, const Arguments &arguments)
 {
     if (operation >= 12) return mapStorageMetadata(state, operation, arguments);
     auto *record = hashedStorage(state, arguments[0]);
@@ -363,74 +363,6 @@ ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::in
     return result.scalar();
 }
 
-/**
- * @brief 兼容通用原生值调用：使用栈上数值槽连接自举哈希容器，避免动态参数数组与函数表查找。
- * @param host 当前运行时及同步回调上下文。
- * @param operation 存储原语编号。
- * @param first 第一个实参位模式。
- * @param second 第二个实参位模式。
- * @param third 第三个实参位模式。
- * @param fourth 第四个实参位模式。
- * @param fifth 第五个实参位模式。
- * @param sixth 第六个实参位模式。
- * @param seventh 第七个实参位模式。
- * @param floating 浮点实参位图。
- * @return 带有正确浮点种类的原始结果。
- */
-NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
-                                std::int64_t first, std::int64_t second, std::int64_t third,
-                                std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
-                                std::int64_t seventh, std::uint64_t floating)
-{
-    const auto result = mapStorageScalarOperation(host, operation, first, second, third, fourth, fifth, sixth, seventh, floating);
-    if (!result.floating) return NativeValue::fromInt(result.bits);
-    double real = 0;
-    std::memcpy(&real, &result.bits, sizeof(real));
-    return NativeValue::fromFloat(real);
-}
 
-/**
- * @brief 注册自举 Map/Set 使用的有类型单槽入口。
- * @param registry 当前宿主函数注册表。
- * @param error 接收绑定失败的诊断。
- * @return 全部绑定成功时为 true。
- */
-bool bindHashedStorage(stackvm::NativeRegistry &registry, Memory::String *error)
-{
-    struct Binding
-    {
-        const char *name;
-        std::size_t arity;
-        int operation;
-    };
-    static const Binding bindings[] = {
-        { "std::lang::__mapStorageState", 4, 0 },
-        { "std::lang::__mapStorageHashI", 4, 1 },
-        { "std::lang::__mapStorageHashF", 4, 1 },
-        { "std::lang::__mapStorageMatchI", 5, 2 },
-        { "std::lang::__mapStorageMatchF", 5, 2 },
-        { "std::lang::__mapStoragePrepareII", 7, 3 },
-        { "std::lang::__mapStoragePrepareIF", 7, 3 },
-        { "std::lang::__mapStoragePrepareFI", 7, 3 },
-        { "std::lang::__mapStoragePrepareFF", 7, 3 },
-        { "std::lang::__mapStorageCommit", 3, 4 },
-        { "std::lang::__setStorageAppendI", 5, 5 },
-        { "std::lang::__setStorageAppendF", 5, 5 },
-        { "std::lang::__mapStorageErase", 2, 6 },
-        { "std::lang::__mapStorageReadI", 4, 7 },
-        { "std::lang::__mapStorageReadF", 4, 7 },
-        { "std::lang::__mapStorageEmptyLike", 1, 8 },
-        { "std::lang::__mapStorageCloneAppend", 3, 9 },
-        { "std::lang::__setStoragePrepareI", 4, 10 },
-        { "std::lang::__setStoragePrepareF", 4, 10 },
-        { "std::lang::__setStorageCancel", 1, 11 }
-    };
-    for (const auto &binding : bindings)
-        if (!registry.add(binding.name, binding.arity, [operation = binding.operation](stackvm::NativeCallContext &host, const Memory::Vector<NativeValue> &values) {
-                State state(host);
-                const auto result = hashedStorageOperation(state, operation, Arguments(values));
-                if (!state.error.empty()) host.fail(state.error);
-                return result.isFloat ? NativeValue::fromFloat(result.real) : NativeValue::fromInt(result.integer); }, error)) return false;
-    return true;
-}
-}  // namespace collection_glue
+
+} // namespace collection_glue

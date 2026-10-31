@@ -272,8 +272,10 @@ GENERATOR_ASSETS += [
     if path.suffix in (".cpp", ".hpp")
 ]
 GENERATOR_ASSETS = list(dict.fromkeys(GENERATOR_ASSETS + [
-    "glue/" + path.name for path in sorted(Path(CHALI, "source/glue").iterdir())
-    if path.suffix in (".cpp", ".hpp", ".h", ".c")
+    directory + "/" + path.name
+    for directory in ("glue", "abi")
+    for path in sorted(Path(CHALI, "source", directory).iterdir())
+    if path.suffix in (".cpp", ".hpp", ".h", ".c", ".inc")
 ]))
 
 

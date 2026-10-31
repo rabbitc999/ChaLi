@@ -31,7 +31,7 @@ MODULES = {
     "parse": ["chali_parse_selfhost", "chali_precompiled", "chali_glue_edges"],
     "cas": ["chali_cas_c_api", "chali_cas_math", "chali_big_number_c_api", "chali_thread_wait"],
     "big_number": ["chali_big_number_c_api", "chali_cas_math", "chali_reflection_serialization"],
-    "c_api": ["chali_c_api_contract", "chali_c_api_export", "chali_c_api_registry", "chali_native_callbacks", "chali_abi_contracts", "chali_abi_directives", "chali_abi_values", "chali_glue_edges"],
+    "c_api": ["chali_c_api_contract", "chali_generator_assets", "chali_c_api_export", "chali_c_api_registry", "chali_native_callbacks", "chali_abi_contracts", "chali_abi_directives", "chali_abi_values", "chali_glue_edges"],
     "macros": ["chali_ast_macros", "chali_macro_parameters", "chali_macro_categories",
                "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
                "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
@@ -93,7 +93,7 @@ def main():
                     commands[script].append("--lsp-only")
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
-                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage"):
+                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets"):
                     if args.build_root: commands[script] += ["--build-root", str(args.build_root.resolve())]
                     if args.cxx: commands[script] += ["--cxx", args.cxx]
                     if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]

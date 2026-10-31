@@ -102,6 +102,12 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_big_number_records(size_t *count);
  * @return 进程存活期间有效的只读表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_cas_records(size_t *count);
+/**
+ * @brief 取得集合存储、迭代租约与程序参数的 C 入口表。
+ * @param count 接收表项数，可为空。
+ * @return 进程期有效的只读表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_collection_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

@@ -75,21 +75,7 @@ struct NumericListView
  */
 void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, NumericListView *view);
 
-/**
- * @brief 直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
- * @param host 当前运行时的内存、对象与同步回调上下文。
- * @param operation 存储原语编号，零至十八；十三为租约，十四至十六比较及复制，十七查询上限，十八合并数值追加。
- * @param first 句柄或第一个标量实参。
- * @param second 第二个实参的原始位模式。
- * @param third 第三个实参的原始位模式。
- * @param fourth 第四个实参的原始位模式。
- * @param fifth 第五个实参的原始位模式。
- * @param floating 各实参是否为浮点位模式的位图。
- * @return 原语的整数或浮点结果；失败写入当前运行时诊断。
- */
-NativeValue listStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
-                                 std::int64_t first, std::int64_t second, std::int64_t third,
-                                 std::int64_t fourth, std::int64_t fifth, std::uint64_t floating);
+
 
 /**
  * @brief 以无所有权数值结果返回：直接执行自举 List 的单槽存储原语，避免原生函数查找及动态实参向量。
@@ -107,24 +93,7 @@ ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::i
                                  std::int64_t first, std::int64_t second, std::int64_t third,
                                  std::int64_t fourth, std::int64_t fifth, std::uint64_t floating);
 
-/**
- * @brief 以标量 ABI 执行自举 Map/Set 的槽位及所有权封送原语。
- * @param host 当前运行时的内存、对象与同步回调上下文。
- * @param operation 存储原语编号。
- * @param first 第一个实参位模式。
- * @param second 第二个实参位模式。
- * @param third 第三个实参位模式。
- * @param fourth 第四个实参位模式。
- * @param fifth 第五个实参位模式。
- * @param sixth 第六个实参位模式。
- * @param seventh 第七个实参位模式。
- * @param floating 浮点实参位图。
- * @return 原语结果；失败写入当前运行时诊断。
- */
-NativeValue mapStorageOperation(stackvm::NativeCallContext &host, std::int64_t operation,
-                                std::int64_t first, std::int64_t second, std::int64_t third,
-                                std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
-                                std::int64_t seventh, std::uint64_t floating);
+
 
 /**
  * @brief 以无所有权数值结果返回：以标量 ABI 执行自举 Map/Set 的槽位及所有权封送原语。
@@ -269,10 +238,14 @@ bool readMap(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vect
 bool readSet(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &elements);
 
 /**
- * @brief 将集合胶水的内部槽函数绑定到公开的原生注册表。
- * @param registry 目标注册表。
- * @param error 接收注册失败原因。
- * @return 全部绑定成功时返回 true。
+ * @brief 执行由 C 入口统一清单选择的私有集合存储操作。
+ * @param host 当前对象表、内存与同步回调上下文。
+ * @param operation 唯一清单中的入口下标。
+ * @param bits 参数位模式。
+ * @param kinds 整数或浮点种类。
+ * @param count 参数数量，已由 C 入口校验。
+ * @return 原始结果位模式与种类；不建立第二套注册系统。
  */
-bool bind(stackvm::NativeRegistry &registry, Memory::String *error = nullptr);
-}  // namespace collection_glue
+ScalarResult applyPrimitive(stackvm::NativeCallContext &host,std::size_t operation,
+                            const std::int64_t *bits,const unsigned char *kinds,std::size_t count);
+} // namespace collection_glue

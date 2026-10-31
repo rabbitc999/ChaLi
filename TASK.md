@@ -286,6 +286,16 @@ C API、CAS 与内存门禁原 13 步全部通过，无失败或跳过，包含 
 
 新鲜独立工程实际冷构建 GCC11／O1 外置 LLVM 编译器，默认 LLVM O3 的 CAS、泛型数学与跨线程传递三组结果和寿命验证通过。12 项导出源与当前源码一致，四个旧 CAS／记录胶水文件均不在工程内。最终静态编译器 SHA256 为 5d587efb6f94ceb80edc2447070698fbc74435641f1b316a5b4a423db78b8bab；vscode/dist/1.0.12-cas-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 03e06c2491fca14be59b6f8d0892b2a912cbb0e2f23c6fba451f312e7cb23bd5，版本、static 和内嵌 EXE 字节一致。独立编译器 SHA256 为 6d05b9aa688cf42d84fee86aaa503a91d264d076db47a2ac92ec677cc2dbee3c，保留 build/independent-validation/1.0.12-cas-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-cas-c-api/。未执行整仓全量门禁或性能计时；集合注册、宿主样例和旧公开 C++ 胶水仍未删除。
 
+### 集合 C API 与直接标量结果已完成
+
+List／Map／Set、迭代租约和程序参数的 63 个入口改用 C 帧；一份 collection_operations.inc 同时定义 C 表与私有存储操作顺序，删除旧 bind／bindHashedStorage 注册和通用值参数向量读取。参数直接借用位模式及种类，私有对象表、租约、用户键协议、拥有值复制和清理继续复用。List／Map 标量 ABI 直接返回已有 ScalarResult，删除原先位模式→NativeValue→位模式的冗余转换及两个转换函数；不引入新的语言语义或取消检查。C 桥接补齐内核错误及内存故障向调用状态的同步。
+
+资产审查发现旧固定清单需手工列入新增 ABI 文件，改为受控 ABI／胶水目录统一收集，并支持唯一集合清单 .inc 导出。新增专项从实际前端库解压全部 33 个 ABI 资产，逐项与源码比对，确认大数、CAS、新集合清单已内嵌且六个已退役胶水文件缺席；不能将这项核对解释为 gen compiler 不需要源码根目录或 ParseEngine。
+
+最终 C API、集合与内存、泛型、标量抽样 22 步全部通过，无失败或跳过，包含 430 项实际入口、C11／C++17／六目标头、八配置数值追加及 Map／Set 类型矩阵、浮点位模式、容量、租约、复制、迭代、移动、矩阵列和求解及原有错误诊断。真实 C 帧专项验证变参打包、负零位模式、越界／缺参数／失效句柄及预热后 100 次长度查询零堆分配；并通过全部 C 记录、线程快照和失败清理单测。隔离手册、标准库全部导入／源码回退／零缓存与七组插件测试通过；手册首轮 Windows 临时 EXE 占用清理失败，重新执行通过。初轮 C 表格式警告及 C 错误状态遗漏已修正，失败与最终复验分别保存。
+
+新鲜导出工程实际冷构建 GCC11／O1 外置 LLVM 编译器，默认 LLVM O3 下集合传参／返回／复制的 checked 与 unchecked、集合算法、Map 键值迭代和迭代管线均通过，原有样例输出逐字节一致。17 项新鲜导出源及六个旧胶水缺席核对通过。最终静态编译器 SHA256 为 7e45afe58927e7f8b3a197716a49c80ff0eac34717b6f6751d36ea8344083feb；vscode/dist/1.0.12-collection-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 5f972db4512160b2f1fba98246caa6e17356c4e4a6f1d90bc6615e4f8567924f，版本、static 与内嵌 EXE 字节一致。独立编译器 SHA256 为 60726b5e10c1079207866ddc54f3a05366fff5ee7410863c73c88e4404110b74，保留 build/independent-validation/1.0.12-collection-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-collection-c-api/。未执行整仓全量门禁或性能计时；私有容器内核的 C++ 是运行时实现，公开旧 Registry／Codec／Builder、宿主演示及生成封送仍待迁移删除。
+
 ## 阶段六：删除旧 C++ 胶水与发行核对
 
 独立工程的 gen abi 缺口已关闭：新增薄入口复用参数归一化、语言配置与同一 C 头导入实现，导出所需源文件与头，并在 CMake 关闭旧默认 main。新鲜导出 454 文件，完整冷构建外置 LLVM 编译器后，直接运行 ABI 头导入、拥有值、同步回调及直接／嵌套失败清理综合脚本通过；未使用本体预生成声明或开发工具回退。解析 65 输入／260 结果在四组合再次对齐。宿主编译器冷构建配置为 GCC 11／C++ O1，语言导出仍使用默认 LLVM O3，不据此报告性能。

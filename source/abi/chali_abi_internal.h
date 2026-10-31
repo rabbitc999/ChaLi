@@ -54,6 +54,13 @@ int64_t chali_abi_slot_from_real(double value);
  */
 const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *), ChaliAbiClone clone);
 
+/**
+ * @brief 连接同一运行时的私有集合内核，不公开 C++ 上下文或值类型。
+ * @param frame 当前已校验数量和槽类型的 C 帧。
+ * @param operation 唯一集合入口清单中的操作下标。
+ */
+void chali_abi_collection_apply(ChaliAbiFrame *frame,size_t operation);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

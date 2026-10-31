@@ -35,6 +35,7 @@ static const ModuleRecords kModules[] = {
     abi_file_records,
     abi_big_number_records,
     abi_cas_records,
+    abi_collection_records,
 #ifndef GLUE_NO_STD_SQL
     abi_sql_records,
     abi_sql_ipage_records,

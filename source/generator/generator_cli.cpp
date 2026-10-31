@@ -724,7 +724,7 @@ int runCli(int argc, char **argv)
     for (const auto &entry : fs::directory_iterator(mc / "source/abi"))
     {
         const auto extension = entry.path().extension().string();
-        if (entry.is_regular_file() && (extension == ".h" || extension == ".hpp" || extension == ".c" || extension == ".cpp"))
+        if (entry.is_regular_file() && (extension == ".h" || extension == ".hpp" || extension == ".c" || extension == ".cpp" || extension == ".inc"))
             ok = copy(entry.path(), "abi/" + entry.path().filename().u8string()) && ok;
     }
     for (const auto &entry : fs::directory_iterator(mc / "source/std"))

@@ -55,10 +55,12 @@ class Arguments
 {
 public:
     /**
-     * @brief 直接借用统一原生调用协议提供的只读实参。
-     * @param values 当前宿主回调期间保持有效的原生值数组。
+     * @brief 直接借用经 C 帧校验的原始参数数组，不构造通用原生值。
+     * @param bits 参数位模式数组。
+     * @param kinds 浮点为一、整数为零。
+     * @param count 参数数量。
      */
-    explicit Arguments(const Memory::Vector<NativeValue> &values) : native_(values.data()), count_(values.size()) {}
+    Arguments(const std::int64_t *bits, const unsigned char *kinds, std::size_t count) : bits_(bits), kinds_(kinds), count_(count) {}
     /**
      * @brief 借用集合内部调用使用的栈上数值槽。
      * @param values 保持到内部调用返回的槽数组。
@@ -72,9 +74,11 @@ public:
      */
     Slot operator[](std::size_t index) const
     {
-        if (!native_) return local_[index];
-        const auto &value = native_[index];
-        return value.isFloat() ? Slot::fromDouble(value.asFloat()) : Slot::fromInt(value.asInt());
+        if (local_) return local_[index];
+        if (!kinds_ || !kinds_[index]) return Slot::fromInt(bits_[index]);
+        double real = 0;
+        std::memcpy(&real, &bits_[index], sizeof(real));
+        return Slot::fromDouble(real);
     }
     /**
      * @brief 查询本次调用的实参数量。
@@ -88,7 +92,8 @@ public:
     bool empty() const { return count_ == 0; }
 
 private:
-    const NativeValue *native_ = nullptr;
+    const std::int64_t *bits_ = nullptr;
+    const unsigned char *kinds_ = nullptr;
     const Slot *local_ = nullptr;
     std::size_t count_ = 0;
 };
@@ -397,12 +402,13 @@ bool nativeSlot(State &ctx, const ObjectValue &value, Slot *out);
 bool mapCallbackKey(State &ctx, const ObjectKey &key, Slot *out, Memory::Vector<std::size_t> *temporary);
 
 /**
- * @brief 注册自举 Map/Set 使用的单槽与封送边界。
- * @param registry 当前宿主函数注册表。
- * @param error 接收绑定失败的诊断。
- * @return 全部绑定成功时为 true。
+ * @brief 执行 Map/Set 的私有存储原语，与 C 入口共用同一实现。
+ * @param state 当前运行时状态。
+ * @param operation 存储原语编号。
+ * @param arguments 借用的标量实参。
+ * @return 无所有权的原始结果槽，错误写入 state。
  */
-bool bindHashedStorage(stackvm::NativeRegistry &registry, Memory::String *error);
+Slot hashedStorageOperation(State &state,int operation,const Arguments &arguments);
 
 /**
  * @brief 复用 Map/Set 的创建、长度及按槽读取边界，供 AOT 标量桥接。

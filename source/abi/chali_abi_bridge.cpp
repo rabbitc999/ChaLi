@@ -1059,3 +1059,21 @@ try
     return available ? host->makeString(text) : 0;
 } catch (const std::exception &error) { chali_abi_mark_failure(frame, error.what()); return 0; }
 catch (...) { chali_abi_mark_failure(frame, "C input service failed"); return 0; }
+
+/**
+ * @brief 用借用的宿主上下文连接私有集合内核，不复制参数或闭包调用器。
+ * @param frame 已通过 C 边界检查的调用帧。
+ * @param operation 唯一清单中的操作下标。
+ */
+void chali_abi_collection_apply(ChaliAbiFrame *frame,size_t operation)
+try {
+    if(frame){frame->result=0;frame->resultIsFloat=0;}
+    std::optional<NativeCallContextImpl> host;
+    if(!prepareHost(frame,host))return;
+    const auto result=collection_glue::applyPrimitive(*host,operation,frame->slots,frame->kinds,static_cast<size_t>(frame->count));
+    const auto *context=contextOf(frame);
+    if(!context->memoryFault.empty()) {chali_abi_mark_failure(frame,context->memoryFault.c_str());return;}
+    if(!context->error.empty()) {chali_abi_mark_failure(frame,context->error.c_str());return;}
+    frame->result=result.bits;frame->resultIsFloat=result.floating;
+} catch(const std::exception &error) {chali_abi_mark_failure(frame,error.what());}
+catch(...) {chali_abi_mark_failure(frame,"C collection service failed");}

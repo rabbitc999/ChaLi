@@ -31,7 +31,7 @@ namespace std_registry
 bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 {
     bool ok = true;
-    ok = collection_glue::bind(registry.native(), error) && ok;
+    ok = registry.bindModule(abi_collection_records, error) && ok;
     ok = registry.bindModule(abi_big_number_records, error) && ok;
     ok = registry.bindModule(abi_cas_records, error) && ok;
     ok = registry.bindModule(abi_file_records, error) && ok;
