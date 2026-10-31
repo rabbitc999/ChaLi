@@ -141,3 +141,13 @@ The 63 collection entries share one operation manifest and borrow parameter bits
 Aggregate marshalling can use `chali_abi_tracked_temporary` with `CHALI_ABI_CAP_TRACKED_TEMPORARY` to enroll a raw block in the existing temporary cleanup queue. Registration failure releases the new allocation. Early `chali_abi_temporary_release` removes the entry, preventing stale cleanup after address reuse. Owned fields still need layout-aware copying and cleanup; registration does not mean immediate destruction at C-call return.
 
 The built-in host examples now use 31 pure C entries in `source/abi/abi_demo.c`; historical `demo_cpp_*` names remain compatible. Types, interfaces, inheritance and external implementations are ordinary ChaLi declarations, appended only when a complete declared name is used so unrelated type identities remain stable. Optional references use standard Option tags and eight-byte logical slots, not C pointer casts.
+
+## Generated C ABI adapters
+
+LLVM can emit scalar external calls directly. Aggregates, arrays, references, optional references and synchronous callbacks use generated adapters; the host compiler lowers the actual platform's C aggregate calling convention.
+Entries receive `ChaliAbiFrame *`, use C services to access logical storage and invoke language function values, and copy native results into language storage.
+Implementations may use private C++17 resource management. Hosts include `chali_abi.h`, without private marshalling headers.
+
+Initialization checks declared symbols and release entries before atomically registering the program's table. References to the same language object share a marshalling copy; writable copies are written back when the call ends.
+A returned pointer may refer into an argument copy, so argument storage survives result copying. Owned native returns follow their release contract on success, callback failure and marshalling failure.
+Synchronous trampolines remain valid only during the current call on the current thread, and detach their language function values when that call ends.

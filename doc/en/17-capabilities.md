@@ -65,15 +65,17 @@ DWARF source locations and variables support GDB/MI breakpoints, stepping and va
 
 ## Host integration and reflection
 
-ChaLi calls C libraries through per-function `#abi("C", "library", "symbol")` directives and C++ through a Registry. `#export("symbol")` exports scalars and resource-free value structs through the C ABI. References, structs, arrays, optional
-references, returned-memory release and limited header bindings follow explicit ABI contracts; declarations
-must match the actual C signatures. Glue calls named functions, inline fn values and closures through
-`NativeCallContext::invoke` or `chali_glue::Function`. The AOT runtime checks argument counts and return values,
-and propagates errors. Wrappers and contexts are valid only synchronously, on the same thread, during
-the enclosing host callback. Resource values retain their Codec ownership requirements.
+ChaLi calls actual C prototypes through per-function `#abi("C", "library", "symbol")` directives or host entries
+in an opaque C registry. `#export("symbol")` exports scalars and resource-free value structs through the C ABI.
+References, aggregates, arrays, optional references, owned returns and limited header import follow explicit ABI
+contracts; declarations must match the target's actual signatures.
+
+Hosts invoke named functions, inline functions and captured closures through `chali_abi_invoke`, supplying slot
+kinds and checking result kind and status. Contexts remain valid only on the same thread during the enclosing
+synchronous call. Owned strings, temporary buffers and records use their respective release operations.
+`chali_abi_tracked_temporary` joins aggregate storage to the runtime cleanup queue; early release removes its entry.
 See [host integration](08-host-integration.md) and the [callback example](../../example/native-callbacks/README.md).
 
-Handwritten C++ boundaries that create owned strings with `NativeCallContext::makeString` use `releaseString` to release the descriptor and its separate buffer; `releaseMemory` continues to release only the specified raw block. Use `trackTemporaryString` when both parts belong in the existing temporary cleanup queue. These helpers are nonvirtual members and preserve the context vtable and object layout. Ordinary typed Codecs continue to manage their value ownership.
 
 **Reflection is a fixed part of the language and is not trimmable.** The root toolchain pins
 `CHALI_WITH_REFLECTION=1` and `STACKVM_WITH_REFLECTION=1` (unlike the `NO_CHALI_*` trim options these
@@ -142,7 +144,7 @@ Threads use `std::thread::Thread` with copied initial arguments, cancellation, c
 
 ## Backend layout and TOML saving
 
-There is a single backend: the front end emits quadruples, and the AOT path lowers them to LLVM IR and native code. Front-end and backend code live in separate compilation units, and the internal, external and static LLVM build variants share the same sources.
+Normal run/aot sends the semantically checked AST directly to LLVM code generation. Quadruple export and compatibility input remain available for analysis and native generation. LLVM performs O3/LTO optimization; static and external LLVM variants share the backend sources.
 
 Saving a parsed std::toml document root retains its original comments and layout. In the underlying C++ value model, edits with the same container shape preserve layout. Structural edits retain all comment content, but may move comments to the beginning of the document. Parsing and saving repeatedly neither loses nor duplicates comments. See the [TOML API](../library/std-toml.md).
 
@@ -152,4 +154,4 @@ Connections and timer sources have exclusive owners; containers and random gener
 
 Reflection provides exact typed field access and generates codecs for JSON, TOML, byte serialization, and annotated std::sql models. Dynamic SQL generation and direct binding currently support SQLite; bound execution on other backends reports an explicit error. See [reflection serialization and dynamic SQL](33-reflection-serialization-sql.md).
 
-The companion book contains 26 chapters, exercises with reference answers, literary adaptations and compilation / VM execution diagrams. General host callbacks and event APIs retain their documented protocols.
+The companion book contains 29 chapters, exercises with reference answers, literary adaptations and compilation and native AOT diagrams. General host callbacks and event APIs retain their documented protocols.

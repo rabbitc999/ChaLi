@@ -1,8 +1,8 @@
-/* glue_types.chl —— 结构体 / 枚举 / 接口的定义全部来自 C++ 胶水
+/* glue_types.chl —— 结构体 / 枚举 / 接口由 C 提供的普通语言声明定义
  *
  *   ./chali samples/glue_types.chl
  *
- * 本文件里没有 `struct` / `enum` / `interface` / `impl`：`chali_driver.inc` 的
+ * 本文件里没有 `struct` / `enum` / `interface` / `impl`：`chali_driver.cpp` 的
  * `abi_demo_declarations()` 提供下面这些普通语言声明，编译前追加到
  * 合并源码末尾，所以 `.chl` 里直接用就行（追加而不是前置：类型号按出现顺序分配，
  * 宿主类型采用独立的内部标签）：
@@ -15,8 +15,8 @@
  *   impl GlueDemoSignal : GlueDemoCoded   = glue_demo_signal;
  *
  * 多方法接口 `GlueDemoInspect` 的成员函数按 `<impl 符号>.<方法名>` 查宿主符号，
- * 所以 C++ 侧注册的是 `glue_demo_inspect.area` / `glue_demo_inspect.scaled`
- * （`registry.bindTypedMethod`）；单方法接口沿用原符号名。
+ * 所以 C 入口表登记的是 `glue_demo_inspect.area` / `glue_demo_inspect.scaled`
+ * ；单方法接口沿用原符号名。
  */
 void main()
 {

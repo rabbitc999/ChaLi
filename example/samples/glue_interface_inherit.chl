@@ -2,8 +2,8 @@
  *
  *   ./chali samples/glue_interface_inherit.chl
  *
- * 这个文件里没有任何 `interface` / `struct` / `impl`：`chali_driver.inc` 的
- * `InstallDemoGlue` 用 C++ 写好了下面这一串（编译前追加到合并源码末尾）：
+ * 这个文件里没有任何 `interface` / `struct` / `impl`：`chali_driver.cpp` 的
+ * `abi_demo_declarations` 提供下面这些普通语言声明（编译前追加到合并源码末尾）：
  *
  *   interface GlueDemoInspect  { int64 area(); int64 scaled(int64 factor); };
  *   interface GlueDemoMeasured : GlueDemoInspect { int64 unit(); };   // 带基接口

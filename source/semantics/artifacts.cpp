@@ -77,10 +77,10 @@ Memory::String CxxStringLiteral(const Memory::String &value)
 Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
 {
     if (const auto reference = CAbiOptionalReference(type))
-        return Memory::String("chali_glue::detail::CAbiOptionalReference<") + (reference->readOnly ? "const " : "") + CAbiType(reference->elem) + ">";
+        return Memory::String("chali_native_marshal::OptionalReference<") + (reference->readOnly ? "const " : "") + CAbiType(reference->elem) + ">";
     if (type && type->kind == MType::Func)
     {
-        Memory::String result = "chali_glue::detail::CAbiCallback<" + CAbiType(type->elem) + "(";
+        Memory::String result = "chali_native_marshal::Callback<" + CAbiType(type->elem) + "(";
         for (std::size_t i = 0; i < type->paramTypes.size(); ++i)
         {
             if (i) result += ",";
@@ -90,7 +90,7 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
     }
     const auto underlying = CAbiUnderlying(type);
     if (underlying && underlying->kind == MType::Array)
-        return "chali_glue::detail::CAbiArray<" + CAbiType(underlying->elem) + ">";
+        return "chali_native_marshal::Array<" + CAbiType(underlying->elem) + ">";
     return CAbiType(type);
 }
 
@@ -138,23 +138,21 @@ Memory::String AbiGlueSource()
             definitions += "    " + CAbiType(definition.fields[i].type) + " f" + Memory::toString(i) + ";\n";
         definitions += "};\n";
         if (definition.abiPacked) definitions += "#pragma pack(pop)\n";
-        definitions += "namespace chali_glue { namespace detail {\n";
-        definitions += "template <> struct CAbiStorage<" + name + "> {\nstatic constexpr std::size_t slots = " + Memory::toString(definition.slotCount) + ";\n";
-        definitions += "static " + name + " read(Context &c, std::int64_t a) { " + name + " v{};\n";
+        definitions += "namespace chali_native_marshal {\ntemplate <> struct Storage<" + name + "> {\n";
+        definitions += "static constexpr std::size_t slots = " + Memory::toString(definition.slotCount) + ";\n";
+        definitions += "/**\n * @brief 从语言字段槽读取原生聚合。\n * @param c 当前 C 帧。\n * @param a 逻辑地址。\n * @return 原生聚合副本。\n */\nstatic " + name + " read(Frame c, std::int64_t a) { " + name + " v{};\n";
         for (std::size_t i = 0; i < definition.fields.size(); ++i)
         {
             const auto &field = definition.fields[i];
-            definitions += "v.f" + Memory::toString(i) + " = CAbiStorage<" + CAbiType(field.type) + ">::read(c, a + " + Memory::toString(field.slot * 8) + ");\n";
+            definitions += "v.f" + Memory::toString(i) + " = Storage<" + CAbiType(field.type) + ">::read(c, a + " + Memory::toString(field.slot * 8) + ");\n";
         }
-        definitions += "return v; }\nstatic void write(Context &c, std::int64_t a, const " + name + " &v) {\n";
+        definitions += "return v; }\n/**\n * @brief 逐字段回写原生聚合。\n * @param c 当前 C 帧。\n * @param a 逻辑地址。\n * @param v 原生副本。\n * @return 全部字段写入成功时为 true。\n */\nstatic bool write(Frame c, std::int64_t a, const " + name + " &v) noexcept {\n";
         for (std::size_t i = 0; i < definition.fields.size(); ++i)
         {
             const auto &field = definition.fields[i];
-            definitions += "CAbiStorage<" + CAbiType(field.type) + ">::write(c, a + " + Memory::toString(field.slot * 8) + ", v.f" + Memory::toString(i) + ");\n";
+            definitions += "if (!Storage<" + CAbiType(field.type) + ">::write(c, a + " + Memory::toString(field.slot * 8) + ", v.f" + Memory::toString(i) + ")) return false;\n";
         }
-        definitions += "} };\n}\ntemplate <> struct Codec<" + name + "> {\n";
-        definitions += "static " + name + " decode(Context &c, const Value &v) { return detail::CAbiStorage<" + name + ">::read(c, v.asInt()); }\n";
-        definitions += "static Value encode(Context &c, const " + name + " &v) { auto a = c.makeTemporary(" + Memory::toString(definition.slotCount * 8) + "); if (a) detail::CAbiStorage<" + name + ">::write(c, a, v); return Value::fromInt(a); }\n};\n}\n";
+        definitions += "return true; }\n};\n}\n";
     };
     for (const auto &library : libraries)
         for (const auto *function : library.second)
@@ -166,27 +164,63 @@ Memory::String AbiGlueSource()
         emitType(function->signature.result);
         for (const auto &parameter : function->signature.params) emitType(parameter.type);
     }
-    Memory::String source = "bool bindChaLiAbi(chali_glue::Registry &registry, Memory::String *error) {\n";
-    std::size_t index = 0;
+    Memory::String source;
+    Memory::Vector<const MFunctionDecl *> functions;
     for (const auto &library : libraries)
+        for (const auto *function : library.second) functions.push_back(function);
+    std::sort(functions.begin(), functions.end(), [](const auto *left, const auto *right) { return left->label < right->label; });
+    for (std::size_t index = 0; index < functions.size(); ++index)
     {
-        const Memory::String local = "abi_library_" + Memory::toString(index++);
-        source += "    chali_glue::DynamicLibrary " + local + ";\n";
-        source += "    if (!" + local + ".open(" + CxxStringLiteral(library.first) + ", error)) return false;\n";
-        for (const MFunctionDecl *function : library.second)
+        const auto &function = *functions[index];
+        const auto suffix = Memory::toString(index);
+        const auto result = CAbiBindingType(function.signature.result);
+        const bool returns = CAbiType(function.signature.result) != "void";
+        source += "/**\n * @brief 通过 C 帧封送一次原生调用。\n * @param raw 当前 C 调用帧。\n */\nstatic void chali_abi_call_" + suffix + "(ChaliAbiFrame *raw) {\n";
+        source += "char diagnostic[256]; ChaliAbiError error{diagnostic, sizeof(diagnostic), 0, ChaliAbiOk};\n";
+        source += "if (chali_abi_check_frame(raw, " + Memory::toString(function.signature.params.size()) + ", &error) != ChaliAbiOk) { chali_abi_fail(raw, diagnostic); return; }\n";
+        source += "chali_abi_return_integer(raw, 0);\ntry {\nusing namespace chali_native_marshal; Frame frame{raw}; OwnedReturn owned;\n";
+        if (!function.abiRelease.empty())
+            source += "owned.release = reinterpret_cast<void (*)(void *)>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiRelease) + "));\n";
+        source += "const auto count = " + (function.abiResultCountIndex < 0 ? Memory::String("std::size_t{1}") :
+            "checkedCount(frame.integer(" + Memory::toString(function.abiResultCountIndex) + "), Result<" + result + ">::stride)") + ";\n";
+        Memory::String signature = "typename Result<" + result + ">::Native (*) (", arguments;
+        for (std::size_t arg = 0; arg < function.signature.params.size(); ++arg)
         {
-            Memory::String signature = CAbiBindingType(function->signature.result) + "(";
-            for (std::size_t arg = 0; arg < function->signature.params.size(); ++arg)
-            {
-                if (arg != 0u) signature += ", ";
-                signature += CAbiBindingType(function->signature.params[arg].type);
-            }
-            signature += ")";
-            source += "    if (!" + local + ".bind<" + signature + ">(registry, " + CxxStringLiteral(function->label) + ", " + CxxStringLiteral(function->abiSymbol) + ", error, " + (function->abiResultCountIndex < 0 ? "static_cast<std::size_t>(-1)" : Memory::toString(function->abiResultCountIndex)) + ", " + CxxStringLiteral(function->abiRelease) + ")) return false;\n";
+            const auto type = CAbiBindingType(function.signature.params[arg].type);
+            const auto n = Memory::toString(arg);
+            if (arg) { signature += ", "; arguments += ", "; }
+            signature += "decltype(std::declval<Argument<" + type + ">&>().get())";
+            arguments += "a" + n + ".get()";
+            source += "Argument<" + type + "> a" + n + "(frame, " + n + ");\n";
         }
+        source += "using NativeFunction = " + signature + ");\nstatic const auto call = reinterpret_cast<NativeFunction>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiSymbol) + "));\n";
+        source += (returns ? "const auto returned = " : "") + Memory::String("call(") + arguments + ");\n";
+        if (returns && CAbiType(function.signature.result).find('*') != Memory::String::npos)
+            source += "owned.pointer = returned;\n";
+        for (std::size_t arg = 0; arg < function.signature.params.size(); ++arg)
+            source += "a" + Memory::toString(arg) + ".check();\n";
+        if (returns) source += "Result<" + result + ">::store(frame, returned, count);\n";
+        else source += "(void)count;\n";
+        source += "} catch (const std::exception &error) { chali_abi_fail(raw, error.what()); } catch (...) { chali_abi_fail(raw, \"native ABI call failed\"); }\n}\n";
     }
-    source += "    return true;\n}\n";
-    return definitions + source + CAbiExportWrappers();
+    source += "/**\n * @brief 校验原生符号并原子登记 C 调用入口。\n * @param registry 当前运行时的 C 注册句柄。\n * @param error 可选的有界诊断。\n * @return 稳定 C 状态码。\n */\nextern \"C\" int32_t chali_program_abi_bind(ChaliAbiRegistry *registry, ChaliAbiError *error) {\n";
+    source += "if (!registry) return chali_abi_status(error, ChaliAbiInvalidArgument, \"missing registry\");\n";
+    for (const auto *function : functions)
+    {
+        source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiSymbol) + ", error)) return ChaliAbiHostFailure;\n";
+        if (!function->abiRelease.empty())
+            source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiRelease) + ", error)) return ChaliAbiHostFailure;\n";
+    }
+    if (!functions.empty())
+    {
+        source += "static const ChaliAbiRecord records[] = {\n";
+        for (std::size_t index = 0; index < functions.size(); ++index)
+            source += "{" + CxxStringLiteral(functions[index]->label) + ", &chali_abi_call_" + Memory::toString(index) + ", " + Memory::toString(functions[index]->signature.params.size()) + "},\n";
+        source += "};\nconst auto abi = chali_abi_local_info(CHALI_ABI_CAP_TRACKED_TEMPORARY);\nconst ChaliAbiModuleDescriptor module{sizeof(ChaliAbiModuleDescriptor), &abi, records, sizeof(records)/sizeof(records[0])};\nreturn chali_abi_registry_register(registry, &module, error);\n";
+    }
+    else source += "return chali_abi_status(error, ChaliAbiOk, nullptr);\n";
+    source += "}\n";
+    return "#include \"abi/chali_native_marshal.hpp\"\n#include \"abi/chali_abi_internal.h\"\n" + definitions + source + CAbiExportWrappers();
 }
 
 /**

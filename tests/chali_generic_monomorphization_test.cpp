@@ -3,7 +3,6 @@
  * @brief 泛型文本替换、类型身份和递归展开的回归。
  */
 #include "chali_generic.hpp"
-#include "chali_glue.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <algorithm>
@@ -83,7 +82,7 @@ int main()
     collectCoreAliasShadows("module demo;struct Concrete{};struct Generic<T>{T value;};");
     require(canonicalType("Concrete") == canonicalType("demo::Concrete"), "导入裸名称与限定名称的类型身份不一致");
     require(canonicalType("demo::Generic__int64") == "Generic__int64", "泛型实例限定名称未归一");
-    require(chali_glue::specialize("native", { "int64 fn(int64)", "(int64,std::lang::String)" }) == mangle("native", { "int64 fn(int64)", "(int64,std::lang::String)" }), "宿主胶水与单态化器的复杂类型符号不一致");
+    require(mangle("native", { "int64 fn(int64)", "(int64,std::lang::String)" }) == "native____chl_330bfbc9c27b9276_int64_fn_int64_____chl_1405e86bfee589e5__int64_std__lang__String_", "复杂类型的冻结宿主符号发生变化");
     require(mangle("native", { "int32" }) == "native__int32", "简单类型的既有宿主符号发生变化");
     Memory::String marked = "List<List<int64>> xs; List<int64 fn(int64)> fs; List</* < > */int64> cs; (a<b); a<b; a>>1;";
     markContainerTypeArguments(marked);

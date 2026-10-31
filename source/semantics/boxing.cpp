@@ -486,7 +486,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
  * 标准库里那些"只有签名"的宿主函数由 VM 内建提供（`std::thread::wait`、
  * `std::io::__fileTryRead`、`std::memory::__memoryLiveBytes`…），不一定挂在
  * `NativeRegistry` 上，所以不做"注册表里必须有"的校验。用户 / 胶水层声明落在入口模块，
- * 照常校验（`Declarations::hostFunction` 追加的也正是入口模块）。
+ * 照常校验，宿主追加的普通语言声明也属于入口模块。
  */
 bool IsStandardLibraryModule(const Memory::String &module)
 {
@@ -806,13 +806,11 @@ ast::NodePtr LowerCall(int id)
                                             &hostRequired, &hostSymbol);
         if (hostImpl != nullptr)
         {
-            /* 解释 / 内嵌路径这次编译完就要跑，宿主接口成员的绑定现在就得查得到：
-             * 只声明没绑定的成员在编译期报错，而不是等到运行期"函数入口不存在"。
-             * `--emit` 只产出 .quad（绑定由目标程序的 bindChaLiGlue 负责），不查。 */
+            /* 立即原生执行前核对宿主成员的 C 入口，缺失绑定在编译期报告。
+             * 仅供独立宿主接管的兼容产物不在本进程核对绑定。 */
             if (g_executeNow && g_nativeRegistry != nullptr && g_nativeRegistry->find(hostSymbol) == nullptr)
             {
-                Fail("宿主接口方法没有绑定：" + Describe(baseType) + "." + methodName + " → " + hostSymbol + "（宿主用 registry.bindTypedImplementation / "
-                                                                                                             "bindTypedMethod 注册）");
+                Fail("宿主接口方法没有绑定：" + Describe(baseType) + "." + methodName + " → " + hostSymbol + "（宿主须通过 C 注册接口登记该入口）");
                 return Bad();
             }
             Memory::Vector<Memory::String> names{ "__chali_self" };
@@ -1920,14 +1918,11 @@ ast::NodePtr LowerCall(int id)
         && IsBarePointerType(signature->second.params[0].type))
         return ast::Node::loadInt(values[0]);
 
-    /* 纯宿主函数（`T name(...);` / `Declarations::hostFunction`）与接口成员用同一条规矩：
-     * 解释 / 内嵌路径这次编译完就要跑，注册表里没有的宿主符号现在就该报错，而不是等到
-     * 运行期"函数入口不存在"。放在所有语义检查（如消息类型、参数匹配）之后，免得把更
-     * 贴切的诊断盖掉。`--emit` / `--svmb` 只产出 .quad，符号由目标程序的 `bindChaLiGlue`
-     * 稍后注册，那条路不查（与宿主接口方法一致）。 */
+    /* 普通宿主函数与接口成员沿用同一规则：立即原生执行前核对 C 入口。
+     * 在类型和参数检查后报告缺失绑定，保留更具体的语言诊断。 */
     if (g_executeNow && g_nativeRegistry != nullptr && IsRegistryHostFunctionLabel(label) && g_nativeRegistry->find(label) == nullptr)
     {
-        return Fail("宿主函数没有绑定：" + label + "（宿主用 registry.bindTyped / bindTypedWithContext 注册）"),
+        return Fail("宿主函数没有绑定：" + label + "（宿主须通过 C 注册接口登记该入口）"),
                Bad();
     }
     /* Drop 协议统一完成关闭、析构和拥有字段回收；成员接收者也只求值一次。

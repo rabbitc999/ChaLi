@@ -57,10 +57,20 @@ Project execution uses run; interpret remains only as an AOT alias, and svmb has
 ## Source modules and incremental builds
 
 C/C++ filenames under `source/` use descriptive module names with underscores. Existing class, member and
-function names are retained. Standard bindings live in `source/glue/std_xxx.{hpp,cpp}`: headers expose registration
-interfaces, while platform adapters, record layouts and algorithms compile in their own `.cpp` files.
-`std_binding.hpp` provides a registry forward declaration. Templates for structured data and value conversion
-remain in headers where their definitions are required. The VM core continues to use generic host protocols.
+function names are retained. Standard-library policy remains in ChaLi sources under `source/std/`,
+while host entry tables live under `source/abi/`. The C11 header `chali_abi.h` defines frames, fixed-width
+slots, opaque registry handles and caller-owned error buffers; `chali_standard.h` exposes standard registration.
+Implementations may use C or C++17, and their public boundaries use C types.
+
+`glue/aot_modules.inc` holds module names and C table providers. Standard registration excludes demo;
+AOT selects modules by actual reachable entry names. Each table registers atomically, and the first failure
+stops registration with its diagnostic. The runtime shares one function table and seals it after setup.
+
+`chali_host_call` forwards slot arrays to C entries. LLVM can call scalar C ABI functions directly.
+Generated C entries adapt aggregates, arrays, references, optional references and synchronous callbacks;
+private marshalling accesses language storage and function values only through C frame services.
+`chali_abi_bridge.cpp` reuses the heap, object store, error channel and synchronous invocation services.
+`GLUE_NO_STD_XXX` continues to control module trimming.
 
 Generic expansion, closures, project manifests and diagnostics compile through `chali_generic.cpp`,
 `chali_lambda.cpp`, `chali_generic_closure.cpp`, `chali_package.cpp` and `chali_report.cpp`.
@@ -85,9 +95,10 @@ Python and Node tests and build subprocesses inherit the same temporary path.
 no longer include the compressed data implementation. A generation stamp tracks inputs, and unchanged output
 is not rewritten. Exported compiler projects also link these implementations as separate CMake sources.
 
-A host includes `chali_glue.hpp` and the required `std_xxx.hpp`, then links the matching `.cpp` files or host-record
-library. Registration headers do not implicitly include all implementations. A complete command is provided in
-the [synchronous callback example](../../example/native-callbacks/README.md).
+A C host includes `chali_abi.h` and optionally `chali_standard.h`, then links matching runtime and host-record
+libraries. Entry code must outlive its registration and calls. Invoke language function values through
+`chali_abi_invoke`; a language handle is not a machine function pointer. Complete commands are in the
+[C host](../../example/host-c-api/README.md) and [synchronous callback](../../example/native-callbacks/README.md) examples.
 
 ## Independently compiled library modules
 

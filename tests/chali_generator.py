@@ -38,7 +38,16 @@ def command(arguments, *, succeeds=True):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--reuse-build',action='store_true',help='复验失败后保留的独立构建，仅替换与新导出内容不同的受管理文件')
+    parser.add_argument('--retain-compiler',type=Path,help='将验证过的独立编译器保留到仓库 build/ 下的指定文件')
+    parser.add_argument('--evidence-dir',type=Path,help='把成功及失败的构建输出保留到仓库 tmp/ 下')
     options=parser.parse_args()
+    if options.retain_compiler:
+        options.retain_compiler=options.retain_compiler.resolve()
+        assert options.retain_compiler.is_relative_to((ROOT/'build').resolve())
+    if options.evidence_dir:
+        options.evidence_dir=options.evidence_dir.resolve()
+        assert options.evidence_dir.is_relative_to((ROOT/'tmp').resolve())
+        options.evidence_dir.mkdir(parents=True,exist_ok=True)
     os.environ.setdefault("CHALI_LLVM_CLANG", str(ROOT / "build/dependencies/llvm/toolchain/bin/clang.exe") if os.name == "nt" else "clang")
     if not GENERATOR.exists():
         raise SystemExit(f"build chali first: {GENERATOR}")
@@ -123,9 +132,11 @@ def main():
         configure = ["cmake", "-S", str(compiler), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release"]
         if os.name == "nt":
             configure += ["-G", "MinGW Makefiles"]
-        for arguments in (configure, ["cmake", "--build", str(build), "--target", "chali", "-j4"]):
+        for label, arguments in (("configure",configure), ("build",["cmake", "--build", str(build), "--target", "chali", "-j4"])):
             result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True,
                                     encoding="utf-8", errors="replace", timeout=900)
+            if options.evidence_dir:
+                (options.evidence_dir/(label+'.log')).write_text(result.stdout+result.stderr,encoding='utf-8')
             assert result.returncode == 0, (arguments, result.stdout, result.stderr)
         dependency_file = build / "build.ninja" if (build / "build.ninja").exists() else build / "CMakeFiles/Makefile.cmake"
         assert "aot_sources.txt" in dependency_file.read_text(encoding="utf-8"), "核心清单修改必须触发 CMake 重新配置"
@@ -165,7 +176,7 @@ def main():
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 
-        for sample in ("cas", "math_generic", "string_methods", "opcode_value_semantics", "std_red_black_delete"):
+        for sample in ("cas", "math_generic", "string_methods", "opcode_value_semantics", "std_red_black_delete", "c_api_host"):
             # 全量红黑树混合负载以 AOT 验证导出编译器；VM 全量另由运行时回归执行。
             native = sample == "std_red_black_delete"
             target = WORK / (sample + "-aot")
@@ -184,8 +195,23 @@ def main():
                                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
             expected = (ROOT / "example/expected" / (sample + ".txt")).read_text(encoding="utf-8")
             assert result.returncode == 0 and result.stdout == expected and not result.stderr, (sample, result)
+        for script in ('chali_abi_contracts','chali_native_marshal'):
+            result=subprocess.run([sys.executable,str(ROOT/'tests'/(script+'.py')),'--chali',str(build/EXPORTED_COMPILER)],
+                                  cwd=ROOT,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=600)
+            if options.evidence_dir:
+                (options.evidence_dir/(script+'.log')).write_text(result.stdout+result.stderr,encoding='utf-8')
+            assert result.returncode==0,(script,result.stdout,result.stderr)
+        if options.retain_compiler:
+            options.retain_compiler.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(build/EXPORTED_COMPILER,options.retain_compiler)
+            print('已保留验证过的独立编译器：'+str(options.retain_compiler),flush=True)
         shutil.rmtree(build)
         (compiler / "keep.txt").write_text("user\n", encoding="utf-8")
+        cache = compiler / 'tmp/dependency_downloads'
+        cache.mkdir(parents=True, exist_ok=True)
+        (cache/'user-cache-proof.bin').write_bytes(b'user cache content\n')
+        preserved = {path.relative_to(compiler).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in cache.rglob('*') if path.is_file()}
         command([GENERATOR, "clear", "--out-dir", compiler])
         remaining = sorted(
             path.relative_to(compiler).as_posix()
@@ -193,11 +219,13 @@ def main():
         )
         # clear 只删除生成清单内文件；构建产生的下载缓存和用户文件均保留。
         dependencies = json.loads((ROOT / "tools/dependencies.lock.json").read_text(encoding="utf-8"))['packages']
-        expected_remaining = ["keep.txt", "tmp/dependency_downloads/.lock"]
+        expected_remaining = ["keep.txt", *preserved]
         for name, dependency in dependencies.items():
             relative = "tmp/dependency_downloads/" + name + "-" + dependency['version'] + ".zip"
-            expected_remaining.append(relative)
-            assert hashlib.sha256((compiler / relative).read_bytes()).hexdigest() == dependency['sha256']
+            if relative in preserved:
+                assert preserved[relative] == dependency['sha256']
+        for relative, expected in preserved.items():
+            assert hashlib.sha256((compiler / relative).read_bytes()).hexdigest() == expected
         if remaining != sorted(expected_remaining):
             raise AssertionError(f"compiler clear left unexpected files: {remaining}")
 

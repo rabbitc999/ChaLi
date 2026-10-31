@@ -99,8 +99,8 @@ endif
 # 避免只改泛型 / 宏展开头或降级实现时 make 误判为无需重编。
 $(FRONTEND_BUILD)/chali_tool.o $(FRONTEND_BUILD)/chali_main.o: source/chali_project.hpp source/chali_cli.hpp
 
-$(FRONTEND_BUILD)/chali_main.o: source/chali_analysis.hpp source/chali_diagnostics.hpp source/chali_stdlib.hpp source/chali_package.hpp source/chali_driver.cpp source/chali_incremental.hpp source/chali_module.hpp source/macro/signature.hpp source/syntax/source_text.hpp source/chali_lambda.hpp source/chali_generic_closure.hpp source/chali_generic.hpp source/chali_glue.hpp $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
-$(FRONTEND_BUILD)/chali_parser.o: source/chali_ast.hpp source/chali_semantics.cpp source/chali_generic.hpp $(wildcard source/semantics/*.cpp) $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h source/chali_glue.hpp $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/chali_main.o: source/chali_analysis.hpp source/chali_diagnostics.hpp source/chali_stdlib.hpp source/chali_package.hpp source/chali_driver.cpp source/chali_incremental.hpp source/chali_module.hpp source/macro/signature.hpp source/syntax/source_text.hpp source/chali_lambda.hpp source/chali_generic_closure.hpp source/chali_generic.hpp $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
+$(FRONTEND_BUILD)/chali_parser.o: source/chali_ast.hpp source/chali_semantics.cpp source/chali_generic.hpp $(wildcard source/semantics/*.cpp) $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(VM_DIR)/stackvm.hpp $(VM_DIR)/value_text.hpp $(VM_DIR)/reflection.hpp
 
 # 外部静态库更新后必须重链；只把它们写进 LDLIBS 不会让 make 追踪时间戳。
 $(TARGET): $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)

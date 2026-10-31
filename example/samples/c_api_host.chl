@@ -1,0 +1,14 @@
+type HostHandle<T> = uint64;
+impl uint64 : ExplicitConvert<HostHandle<int32>> = demo_counter_from_uint;
+impl HostHandle<int32> : ExplicitConvert<uint64> = demo_counter_to_uint;
+
+interface HostValue {
+    int64 hostValue();
+};
+impl HostHandle<int32> : HostValue = demo_counter_to_uint;
+
+void main()
+{
+    HostHandle<int32> counter = cast<HostHandle<int32>>((uint64)42);
+    println("{}", counter.hostValue());
+}

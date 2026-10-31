@@ -1232,7 +1232,7 @@ bool RegisterTop()
         /* 多方法接口没法用一个符号盖住全部方法：约定方法 `m` 查 `<符号>.m`。
          * 单方法接口沿用原符号名，兼容既有 `impl Owner : Interface = symbol;` 写法
          * （协议接口 Add / ExplicitConvert 等本来就只有一条方法）。
-         * 绑定入口见 `chali_glue.hpp` 的 `Registry::bindTypedMethod`。 */
+         * 宿主使用 C 注册接口登记对应的完整方法符号。 */
         const bool qualified = interfaceIt->second.size() > 1u;
         g_hostInterfaceImpls.push_back(MHostInterfaceImpl{ owner, top.s2, function, qualified });
         for (const MInterfaceMethod &required : interfaceIt->second)

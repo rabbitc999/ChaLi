@@ -36,12 +36,12 @@ def draw() -> Canvas:
     canvas = Canvas()
     canvas.text(40, 58, "ChaLi 语言 · 工具链与运行时总览", heading, TITLE)
     canvas.text(40, 88,
-                "从 .chl 源码到四元式、StackVM 与可部署程序 · 语言 / 编译器 / 运行时 / 导出四层",
+                "从 .chl 源码到已检查 AST、LLVM 与原生产物 · 语言 / 编译器 / 运行时 / 导出四层",
                 subtitle, SUBTITLE)
 
     columns = (
         (
-            "① CHALI 语言", "chali/source/std/lang.chl · example/samples/",
+            "① CHALI 语言", "source/std/lang.chl · example/samples/",
             (
                 ("类型与数据", (
                     ("静态类型与值语义", "struct / enum / tuple"),
@@ -60,7 +60,7 @@ def draw() -> Canvas:
             ),
         ),
         (
-            "② CHALI 编译器", "chali/source/chali.gram · chali",
+            "② CHALI 编译器", "source/chali.gram · chali",
             (
                 ("编译器从哪里来", (
                     ("CHALI 文法", "chali.gram 定义语法"),
@@ -69,22 +69,22 @@ def draw() -> Canvas:
                 )),
                 ("编译源码", (
                     ("预处理与展开", "%if / 宏 / lambda / 泛型"),
-                    ("解析与降级", "类型检查 → ast → 四元式"),
+                    ("解析与降级", "语义检查 → AST → LLVM IR"),
                 )),
                 ("编译产物", (
-                    ("可读中间文件", ".quad / .data.bin / .layout"),
-                    ("二进制程序", ".svmb 保存指令与公开符号"),
+                    ("分析与兼容产物", ".quad / .data.bin / .layout"),
+                    ("原生程序", "LLVM O3 / LTO → 目标机器码"),
                     ("构建入口", "chali gen compiler / clear"),
                 )),
             ),
         ),
         (
-            "③ 运行时与标准库", "chali/source/ircode · source/glue/",
+            "③ 运行时与标准库", "source/ircode · source/abi/",
             (
-                ("StackVM", (
-                    ("虚拟机执行", "四元式 → 栈指令；调用帧隔离"),
+                ("共享原生运行时", (
+                    ("原生执行", "run checked / aot unchecked"),
                     ("运行时对象", "堆、对象表、字符串与大数"),
-                    ("地址检查", "越界与释放后访问报运行期错误"),
+                    ("地址检查", "checked 核对边界与存活"),
                 )),
                 ("并发模型", (
                     ("线程", "隔离执行 · 通道 · 取消 · 显式事件"),
@@ -98,15 +98,15 @@ def draw() -> Canvas:
             ),
         ),
         (
-            "④ 原生产物与宿主", "source/ircode · source/chali_glue.hpp",
+            "④ 原生产物与宿主", "source/aot · source/abi/",
             (
                 ("部署形态", (
-                    ("VM 宿主集成", "字节码 · 原生注册表 · 同步回调"),
-                    ("嵌入式字节码", "固定容量 VM 字节堆"),
-                    ("调试与自包含", ".svmb v5 调试节 · 标准库内嵌 exe"),
+                    ("C 宿主集成", "C 函数表 · 不透明句柄 · 同步回调"),
+                    ("目标交付", "目标配置、系统库与实际运行核对"),
+                    ("调试与自包含", "DWARF / GDB-MI · 编译器内嵌资产"),
                 )),
                 ("宿主交互", (
-                    ("C++ 胶水", "NativeRegistry + Codec<T>"),
+                    ("C API 入口", "ChaliAbiFrame / ChaliAbiRecord"),
                     ("外部动态库", "通过 C ABI 绑定导出符号"),
                 )),
                 ("维护与验证", (
@@ -132,7 +132,7 @@ def draw() -> Canvas:
                 canvas.text(x + 29, y + 41, detail, item_detail, NOTE)
 
     canvas.text(40, 859,
-                "构建关系：ParseEngine 从 chali.gram 生成 CHALI 编译器；编译器将 .chl 降级为四元式，由 LLVM AOT 生成原生程序。",
+                "构建关系：ParseEngine 从 chali.gram 生成 CHALI 编译器；编译器检查 .chl 的 AST，由 LLVM O3 / LTO 生成原生程序。",
                 footer, NOTE)
     canvas.text(40, 885,
                 "语言细节与当前支持范围见 README.md；解析器生成器（ParseEngine）总览见它自己的仓库。",

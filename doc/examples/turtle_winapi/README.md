@@ -6,7 +6,7 @@
 
 ## 构建与运行
 
-在仓库根目录的 PowerShell 中，先构建 `chali/ChaLi.exe` 并准备 MinGW，再运行；编译器路径可由测试的 `--chali FILE` 指定：
+在仓库根目录的 PowerShell 中，先构建当前版本的编译器并准备 MinGW，再运行；编译器路径可由测试的 `--chali FILE` 指定：
 
 ```powershell
 python tests/chali_desktop.py --turtle-only
@@ -15,7 +15,7 @@ Push-Location build/chali-turtle-winapi
 Pop-Location
 ```
 
-程序在当前目录保存 `turtle.bmp`。自动验收时运行 `./demo.exe close`，绘制并保存后直接关闭窗口。[`tests/chali_desktop.py`](../../../tests/chali_desktop.py)完成 DLL、ChaLi 四元式和独立 C++ exe 的构建；DLL 必须与 exe 放在同一运行目录。
+程序在当前目录保存 `turtle.bmp`。自动验收时运行 `./demo.exe close`，绘制并保存后直接关闭窗口。[`tests/chali_desktop.py`](../../../tests/chali_desktop.py)完成 C11 DLL 和默认 LLVM O3 原生产物的构建，并清除旧画布后检查本次输出；示例使用逐函数 `#abi` 声明，DLL 必须与测试复制的 demo.chl 及生成的 exe 位于同一目录。
 
 ## 边界和绘图语义
 

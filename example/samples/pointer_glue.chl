@@ -1,16 +1,7 @@
-/* pointer_glue.chl —— 胶水侧的类型化引用读写（`chali_glue::Reference<T>`）
- *
- *   ./chali samples/pointer_glue.chl
- *
- * 宿主函数在 `chali_driver.cpp` 的 `InstallDemoGlue` 里用 `bindTypedWithContext`
- * 注册。`T mut&` / `T const&` 过边界就是 `Reference<T>`：`read(context)` 按 T 取值，
- * `write(context, value)` 按 T 写回，`at` / `setAt` / `offset` 按 8 字节槽步进 ——
- * 宿主侧不用再手算 VM 地址、读裸字节。结构体引用收 `Reference<Record<Tag>>`，
- * `read` 拿到视图后按字段 `field` 读、`set` 写。
- *
- * 数组可以直接喂给 `T mut&`：数组名自动退化成指向首元素的可写引用，不必写
- * `&a[0]`。下面 `call_bump(cell)` / `call_at(data, …)` / `call_offset(boxes, …)`
- * 都是整段数组直接过边界。
+/* pointer_glue.chl —— C 帧中的逻辑引用读写。
+ * abi_demo.c 的入口用 chali_abi_argument_integer 取得逻辑地址，再用
+ * chali_abi_read / chali_abi_write 访问语言槽；结构体按字段槽布局读取。
+ * 逻辑地址不能直接作为机器指针。数组仍按语言规则传递首元素引用。
  */
 
 struct PointerBox {

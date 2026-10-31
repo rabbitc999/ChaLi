@@ -30,7 +30,33 @@ Mut& expresses possible writes to the supplied integer source, while void suppli
 
 Library paths are relative to the source declaring the function, and local names may differ from exported symbol names. The linked project includes complete struct, array and optional-reference examples.
 
-An existing host registry can also associate implementations with impl Type : Interface = host_symbol;. See demo_counter_from_uint in [cpp_glue.chl](../../../example/samples/cpp_glue.chl). This requires an existing host implementation rather than treating a symbol name as an arbitrary C function pointer.
+A host can associate a registered C entry with a language interface method. This example uses the compiler's built-in counter entries; see the [complete C API example](../../../example/samples/c_api_host.chl) and its [C implementation](../../../source/abi/abi_demo.c).
+
+<!-- verify-book -->
+```chali
+type HostHandle<T> = uint64;
+impl uint64 : ExplicitConvert<HostHandle<int32>> = demo_counter_from_uint;
+impl HostHandle<int32> : ExplicitConvert<uint64> = demo_counter_to_uint;
+
+interface HostValue {
+    int64 hostValue();
+};
+impl HostHandle<int32> : HostValue = demo_counter_to_uint;
+
+void main()
+{
+    HostHandle<int32> counter = cast<HostHandle<int32>>((uint64)42);
+    println("{}", counter.hostValue());
+}
+```
+
+```text
+42
+```
+
+The first line declares a nominal generic handle backed by `uint64`. The next two `impl` declarations select explicit conversion entries between the integer and handle. `cast` uses these conversions; the language handle is not a C pointer.
+
+`HostValue` declares a method returning `int64`. The following `impl` associates that method with `demo_counter_to_uint` in the C function table. `main` converts 42 to the concrete handle, calls the interface method and prints 42. A table name selects a registered entry; it cannot stand in for an arbitrary machine function address.
 
 ## 26.2 References, arrays and marshalling
 
@@ -88,7 +114,7 @@ Addition does not access the language heap, so its example can use a null `frame
 
 `chali_abi_bytes` returns a byte view and length without guaranteeing a terminating zero. Stop using the view after the synchronous borrow. Allocation, growth, release or reentry into language code invalidates the previous pointer. Keep a copy in your own valid storage when stable text is needed, and process its actual length.
 
-`chali_abi_string` copies input bytes into a language string; pair the resulting owned handle with `chali_abi_string_release`. Temporary logical buffers use `chali_abi_temporary` and `chali_abi_temporary_release`. These handles and pointers returned by `malloc` have different owners; use the release operation belonging to the creator.
+`chali_abi_string` copies input bytes into a language string; pair the resulting owned handle with `chali_abi_string_release`. Temporary logical buffers use `chali_abi_temporary` and `chali_abi_temporary_release`. Generated aggregate adapters use `chali_abi_tracked_temporary` to join the runtime cleanup queue; early release removes its registration before the address can be reused. These handles and pointers returned by `malloc` have different owners; use the release operation belonging to the creator.
 
 To invoke a captured ChaLi function value, use `chali_abi_invoke`, provide slot kinds and check the result kind. The runtime maintains the environment, handles synchronous reentry and propagates failure. Machine callbacks in `#abi` prototypes use synchronous adapter trampolines. A runtime function handle itself cannot be cast to a machine function pointer.
 

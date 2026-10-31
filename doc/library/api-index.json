@@ -19155,7 +19155,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1361,
+    "line": 1359,
     "page": "std-lang.md",
     "anchor": "api-157"
   },
@@ -19196,7 +19196,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1361,
+    "line": 1359,
     "page": "std-lang.md",
     "anchor": "api-158"
   },
@@ -19310,7 +19310,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1365,
+    "line": 1363,
     "page": "std-lang.md",
     "anchor": "api-161"
   },
@@ -19342,7 +19342,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1411,
+    "line": 1409,
     "page": "std-lang.md",
     "anchor": "api-162"
   },
@@ -19367,7 +19367,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1372,
+    "line": 1370,
     "page": "std-lang.md",
     "anchor": "api-163"
   },
@@ -19392,7 +19392,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-164"
   },
@@ -19417,7 +19417,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-165"
   },
@@ -19442,7 +19442,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-166"
   },
@@ -19467,7 +19467,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-167"
   },
@@ -19492,7 +19492,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-168"
   },
@@ -19517,7 +19517,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-169"
   },
@@ -19542,7 +19542,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-170"
   },
@@ -19567,7 +19567,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1421,
+    "line": 1419,
     "page": "std-lang.md",
     "anchor": "api-171"
   },
@@ -19599,7 +19599,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1440,
+    "line": 1438,
     "page": "std-lang.md",
     "anchor": "api-172"
   },
@@ -19741,7 +19741,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1457,
+    "line": 1455,
     "page": "std-lang.md",
     "anchor": "api-176"
   },
@@ -19785,7 +19785,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1457,
+    "line": 1455,
     "page": "std-lang.md",
     "anchor": "api-177"
   },
@@ -20658,7 +20658,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 894,
+    "line": 892,
     "page": "std-lang.md",
     "anchor": "api-206"
   },
@@ -20715,7 +20715,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 909,
+    "line": 907,
     "page": "std-lang.md",
     "anchor": "api-208"
   },
@@ -20753,7 +20753,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 915,
+    "line": 913,
     "page": "std-lang.md",
     "anchor": "api-209"
   },
@@ -20785,7 +20785,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 921,
+    "line": 919,
     "page": "std-lang.md",
     "anchor": "api-210"
   },
@@ -20817,7 +20817,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 921,
+    "line": 919,
     "page": "std-lang.md",
     "anchor": "api-211"
   },
@@ -20849,7 +20849,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 929,
+    "line": 927,
     "page": "std-lang.md",
     "anchor": "api-212"
   },
@@ -20881,7 +20881,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 935,
+    "line": 933,
     "page": "std-lang.md",
     "anchor": "api-213"
   },
@@ -20913,7 +20913,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 941,
+    "line": 939,
     "page": "std-lang.md",
     "anchor": "api-214"
   },
@@ -20938,7 +20938,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 947,
+    "line": 945,
     "page": "std-lang.md",
     "anchor": "api-215"
   },
@@ -20963,7 +20963,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 953,
+    "line": 951,
     "page": "std-lang.md",
     "anchor": "api-216"
   },
@@ -20995,7 +20995,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 959,
+    "line": 957,
     "page": "std-lang.md",
     "anchor": "api-217"
   },
@@ -21027,7 +21027,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 959,
+    "line": 957,
     "page": "std-lang.md",
     "anchor": "api-218"
   },
@@ -21059,7 +21059,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 959,
+    "line": 957,
     "page": "std-lang.md",
     "anchor": "api-219"
   },
@@ -21091,7 +21091,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 970,
+    "line": 968,
     "page": "std-lang.md",
     "anchor": "api-220"
   },
@@ -21123,7 +21123,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 976,
+    "line": 974,
     "page": "std-lang.md",
     "anchor": "api-221"
   },
@@ -21148,7 +21148,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 894,
+    "line": 892,
     "page": "std-lang.md",
     "anchor": "api-222"
   },
@@ -21205,7 +21205,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 873,
+    "line": 871,
     "page": "std-lang.md",
     "anchor": "api-224"
   },
@@ -21237,7 +21237,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 909,
+    "line": 907,
     "page": "std-lang.md",
     "anchor": "api-225"
   },
@@ -21262,7 +21262,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 992,
+    "line": 990,
     "page": "std-lang.md",
     "anchor": "api-226"
   },
@@ -21287,7 +21287,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 998,
+    "line": 996,
     "page": "std-lang.md",
     "anchor": "api-227"
   },
@@ -21312,7 +21312,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1004,
+    "line": 1002,
     "page": "std-lang.md",
     "anchor": "api-228"
   },
@@ -21337,7 +21337,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1004,
+    "line": 1002,
     "page": "std-lang.md",
     "anchor": "api-229"
   },
@@ -21362,7 +21362,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1004,
+    "line": 1002,
     "page": "std-lang.md",
     "anchor": "api-230"
   },
@@ -21394,7 +21394,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1014,
+    "line": 1012,
     "page": "std-lang.md",
     "anchor": "api-231"
   },
@@ -21432,7 +21432,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1020,
+    "line": 1018,
     "page": "std-lang.md",
     "anchor": "api-232"
   },
@@ -21482,7 +21482,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1046,
+    "line": 1044,
     "page": "std-lang.md",
     "anchor": "api-234"
   },
@@ -21507,7 +21507,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1053,
+    "line": 1051,
     "page": "std-lang.md",
     "anchor": "api-235"
   },
@@ -21539,7 +21539,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1069,
+    "line": 1067,
     "page": "std-lang.md",
     "anchor": "api-236"
   },
@@ -21880,7 +21880,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 1226,
+    "line": 1224,
     "page": "std-lang.md",
     "anchor": "api-246"
   },
@@ -22032,7 +22032,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/semantics/boxing.cpp",
-    "line": 929,
+    "line": 927,
     "page": "std-lang.md",
     "anchor": "api-250"
   },

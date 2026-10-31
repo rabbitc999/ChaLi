@@ -1,12 +1,21 @@
 /* WinAPI 海龟绘图：DLL 通过 C ABI 提供绘图函数，ChaLi 只声明宿主签名。 */
+#abi("C", "./turtle.dll", "turtle_open")
 int32 turtle_open(int32 width, int32 height);
+#abi("C", "./turtle.dll", "turtle_forward")
 void turtle_forward(float64 distance);
+#abi("C", "./turtle.dll", "turtle_left")
 void turtle_left(float64 degrees);
+#abi("C", "./turtle.dll", "turtle_pen")
 void turtle_pen(int32 down);
+#abi("C", "./turtle.dll", "turtle_color")
 void turtle_color(uint32 rgb);
+#abi("C", "./turtle.dll", "turtle_clear")
 void turtle_clear();
+#abi("C", "./turtle.dll", "turtle_save_bmp")
 int32 turtle_save_bmp(String path);
+#abi("C", "./turtle.dll", "turtle_wait")
 void turtle_wait();
+#abi("C", "./turtle.dll", "turtle_close")
 void turtle_close();
 
 void koch(int64 depth, float64 distance) {

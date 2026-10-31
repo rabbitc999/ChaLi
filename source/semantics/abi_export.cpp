@@ -85,43 +85,39 @@ Memory::String ChaliAotAbiExportHeader()
     return out;
 }
 /**
- * @brief 生成由宿主 C++ 编译器承担平台聚合 ABI 降低的类型化包装。
+ * @brief 生成通过 C 帧服务完成平台聚合 ABI 封送的导出包装。
  * @return 包装实现；原生函数地址不与语言函数值相互转换。
  */
 Memory::String CAbiExportWrappers()
 {
     const auto functions = CAbiExportFunctions();
     if (functions.empty()) return {};
-    Memory::String out = "extern \"C\" std::int64_t chali_export_dispatch(std::int64_t, const std::int64_t *);\nextern \"C\" void chali_host_export_apply(void (*)(stackvm::NativeCallContext *, void *), void *);\n";
-    out += "/** @brief 清理本次导出参数的结构体封送副本。 */\nstruct __chali_export_arguments { chali_glue::Context &context; Memory::Vector<std::int64_t> addresses;\n/** @brief 清理本帧参数，不清理语言函数内部产生的返回借用。 */\n~__chali_export_arguments() { for (auto address : addresses) context.releaseMemory(address, true); } };\n";
+    Memory::String out = "extern \"C\" std::int64_t chali_export_dispatch(std::int64_t, const std::int64_t *);\nextern \"C\" void chali_host_export_apply(void (*)(ChaliAbiFrame *, void *), void *);\n";
+
     for (std::size_t index = 0; index < functions.size(); ++index)
     {
         const auto &function = *functions[index];
         const auto suffix = Memory::toString(index);
         const auto frame = "__chali_export_frame_" + suffix;
-        const bool returns = function.signature.result->kind != MType::Void;
+        const bool returns = CAbiType(function.signature.result) != "void";
         out += "/** @brief 当前导出调用的原生参数与返回值，重入时独立存储。 */\nstruct " + frame + " {\n";
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
             out += CAbiType(function.signature.params[i].type) + " p" + Memory::toString(i) + ";\n";
         if (returns) out += CAbiType(function.signature.result) + " result{};\n";
-        out += "};\n/**\n * @brief 编解码一次原生导出调用。\n * @param context 当前上下文。\n * @param payload 本次调用独立的参数帧。\n */\nstatic void __chali_export_marshal_" + suffix + "(stackvm::NativeCallContext *context, void *payload) {\n";
-        out += "__chali_export_arguments owned{*context, {}};\nauto &frame = *static_cast<" + frame + " *>(payload);\nstd::int64_t arguments[" + Memory::toString(std::max<std::size_t>(1, function.signature.params.size())) + "]{};\n";
+        out += "};\n/**\n * @brief 编解码一次原生导出调用。\n * @param context 当前上下文。\n * @param payload 本次调用独立的参数帧。\n */\nstatic void __chali_export_marshal_" + suffix + "(ChaliAbiFrame *context, void *payload) {\n";
+        out += "chali_native_marshal::Frame current{context};\nchali_native_marshal::ExportArguments<" + Memory::toString(function.signature.params.size()) + "> owned{current};\nauto &frame = *static_cast<" + frame + " *>(payload);\nstd::int64_t arguments[" + Memory::toString(std::max<std::size_t>(1, function.signature.params.size())) + "]{};\n";
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
             const auto n = Memory::toString(i);
-            out += "auto v" + n + " = chali_glue::Codec<" + CAbiType(function.signature.params[i].type) + ">::encode(*context, frame.p" + n + ");\n";
+            out += "const auto v" + n + " = chali_native_marshal::encode(current, frame.p" + n + ");\n";
             if (CAbiUnderlying(function.signature.params[i].type)->kind == MType::Struct)
-                out += "owned.addresses.push_back(v" + n + ".asInt());\n";
-            out += "if (v" + n + ".isFloat()) { const double real = v" + n + ".asFloat(); std::memcpy(&arguments[" + n + "], &real, 8); } else arguments[" + n + "] = v" + n + ".asInt();\n";
+                out += "owned.add(v" + n + ");\n";
+            out += "arguments[" + n + "] = v" + n + ";\n";
         }
         out += "const auto bits = chali_export_dispatch(" + suffix + ", arguments);\n";
         if (returns)
         {
-            if (CAbiUnderlying(function.signature.result)->kind == MType::Double)
-                out += "double real; std::memcpy(&real, &bits, 8); auto value = stackvm::NativeValue::fromFloat(real);\n";
-            else
-                out += "auto value = stackvm::NativeValue::fromInt(bits);\n";
-            out += "frame.result = chali_glue::Codec<" + CAbiType(function.signature.result) + ">::decode(*context, value);\n";
+            out += "frame.result = chali_native_marshal::decode<" + CAbiType(function.signature.result) + ">(current, bits);\n";
         }
         else
             out += "(void)bits;\n";

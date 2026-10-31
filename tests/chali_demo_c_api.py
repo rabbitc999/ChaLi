@@ -14,7 +14,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali',type=Path,default=compiler_path())
     compiler=parser.parse_args().chali.resolve()
-    names=('cpp_glue','variadic_glue','function_pointer_glue','glue_types','glue_interface_inherit',
+    names=('c_api_host','cpp_glue','variadic_glue','function_pointer_glue','glue_types','glue_interface_inherit',
            'glue_system_interfaces','glue_members','pointer_glue','reference_glue_optional','obj')
     with tempfile.TemporaryDirectory(prefix='demo-c-api-') as directory:
         work=Path(directory)
@@ -26,7 +26,7 @@ def main():
                                            '--out',str(work/(name+allocator+checks))],cwd=ROOT,capture_output=True,
                                           encoding='utf-8',errors='replace',timeout=120,env=dict(os.environ,CHALI_LANG='zh'))
                     assert (result.returncode,result.stdout,result.stderr)==(0,(ROOT/'example/expected'/(name+'.txt')).read_text(encoding='utf-8'),''),(name,allocator,checks,result)
-                print(allocator+'/'+checks+': ten frozen C host and type identity samples passed',flush=True)
+                print(allocator+'/'+checks+': eleven frozen C host and type identity samples passed',flush=True)
         source=ROOT/'example/samples-error/glue_member_unbound.chl'
         result=subprocess.run([str(compiler),'run',str(source),'--out',str(work/'missing')],cwd=ROOT,
                               capture_output=True,encoding='utf-8',timeout=120,env=dict(os.environ,CHALI_LANG='zh'))

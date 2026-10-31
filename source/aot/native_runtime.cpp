@@ -6,6 +6,7 @@
 #include "abi/chali_native_library.hpp"
 #include "chali_i18n.hpp"
 #include "abi/chali_abi_runtime.hpp"
+#include "abi/chali_abi_internal.h"
 #include "allocator/system_arena.hpp"
 #include "abi/chali_abi_registry.hpp"
 #include "glue/std_collection.hpp"
@@ -392,11 +393,17 @@ void chali_host_raise_callback_error(const char *message)
  * @brief 按声明路径加载动态库并解析原始 C 函数地址。
  * @param path UTF-8 动态库路径。
  * @param name 目标 C 符号。
- * @return 解析后的机器函数地址；失败进入语言运行期错误路径。
+ * @param failure 有界错误输出，可为空。
+ * @return 解析后的机器地址，失败返回空指针。
  * @note 库引用保留到进程结束，使跨模块重新初始化和持续宿主线程的缓存始终有效。
  */
-void *chali_host_abi_symbol(const char *path, const char *name)
+void *chali_host_abi_lookup(const char *path, const char *name, ChaliAbiError *failure) try
 {
+    if (!path || !name)
+    {
+        chali_abi_status(failure, ChaliAbiInvalidArgument, "missing library path or symbol");
+        return nullptr;
+    }
     static std::mutex mutex;
     static std::map<std::string, std::shared_ptr<chali_host_detail::NativeLibrary>> libraries;
     std::shared_ptr<chali_host_detail::NativeLibrary> library;
@@ -409,14 +416,43 @@ void *chali_host_abi_symbol(const char *path, const char *name)
     if (!library)
     {
         auto opened = std::make_shared<chali_host_detail::NativeLibrary>();
-        if (!opened->open(path, &error)) chali_panic(error.c_str());
+        if (!opened->open(path, &error))
+        {
+            chali_abi_status(failure, ChaliAbiHostFailure, error.c_str());
+            return nullptr;
+        }
         std::lock_guard<std::mutex> guard(mutex);
         library = libraries.emplace(path, std::move(opened)).first->second;
     }
     void *address = library->resolve(name, &error);
-    if (!address) chali_panic(error.c_str());
+    chali_abi_status(failure, address ? ChaliAbiOk : ChaliAbiHostFailure, address ? nullptr : error.c_str());
     return address;
 }
+catch (const std::exception &error)
+{
+    chali_abi_status(failure, ChaliAbiHostFailure, error.what());
+    return nullptr;
+}
+catch (...)
+{
+    chali_abi_status(failure, ChaliAbiHostFailure, "native library lookup failed");
+    return nullptr;
+}
+/**
+ * @brief 解析原生符号并在失败时进入原有运行时错误路径。
+ * @param path UTF-8 库路径。
+ * @param name 精确 C 符号名。
+ * @return 原生机器地址。
+ */
+void *chali_host_abi_symbol(const char *path, const char *name)
+{
+    char message[1024];
+    ChaliAbiError error{message, sizeof(message), 0, ChaliAbiOk};
+    void *address = chali_host_abi_lookup(path, name, &error);
+    if (!address) chali_panic(message);
+    return address;
+}
+
 /**
  * @brief 为原生模块建立独立的共享运行时服务。
  */
@@ -638,10 +674,10 @@ unsigned char *chali_host_address_view(std::int64_t address, std::size_t count, 
 
 /**
  * @brief 在现有原生上下文中执行类型化导出封送，保留重入和原始错误传播。
- * @param marshal 由 C++ 编译器生成的同步封送入口，不是语言函数值。
+ * @param marshal 接收 C 帧的同步封送入口，不是语言函数值。
  * @param frame 本次原生调用独立的参数和返回值帧。
  */
-void chali_host_export_apply(void (*marshal)(stackvm::NativeCallContext *, void *), void *frame)
+void chali_host_export_apply(void (*marshal)(ChaliAbiFrame *, void *), void *frame)
 {
     auto &context = currentContext();
     if (!marshal || !context.objects || !context.heap) chali_panic("导出调用上下文无效");
@@ -649,8 +685,11 @@ void chali_host_export_apply(void (*marshal)(stackvm::NativeCallContext *, void 
     const auto begin = temporaries.size();
     try
     {
-        NativeCallContextImpl call(context, context.invoker ? context.invoker : &current().invoker);
+        ChaliAbiRuntime services{&context};
+        ChaliAbiFrame call{&services, nullptr, nullptr, 0, 0, 0};
         marshal(&call, frame);
+        if (services.status != ChaliAbiOk)
+            context.error = services.fallback ? services.fallback : services.diagnostic.c_str();
     } catch (const std::exception &error)
     {
         context.error = Memory::String("C ABI 导出失败：") + error.what();

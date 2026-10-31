@@ -41,6 +41,10 @@ def test_turtle():
     output = ROOT / 'build/chali-turtle-winapi'
     output.mkdir(parents=True, exist_ok=True)
     run('gcc', '-std=c11', '-O2', '-Wall', '-Wextra', '-shared', source / 'turtle.c', '-o', output / 'turtle.dll', '-lgdi32', '-luser32', '-lm')
+    entry = output / 'demo.chl'
+    entry.write_text((source / 'demo.chl').read_text(encoding='utf-8'), encoding='utf-8')
+    run(CHALI, 'aot', entry, '--out', output / 'demo')
+    (output / 'turtle.bmp').unlink(missing_ok=True)
     run_program(output / 'demo.exe', 'close', cwd=output)
     bitmap = (output / 'turtle.bmp').read_bytes()
     assert bitmap[:2] == b'BM'

@@ -20,7 +20,7 @@
 - 帧槽只分配给形参和本函数 Op::Declare 声明的局部。跨帧共享暂存量继续使用全程序暂存表；同时存活的符号不得共槽，分配冲突时整体退回独立槽。
 - 分析位集和区间等临时结构按本函数可达指令规模分配，避免按全程序规模占用共享 arena。
 - 内存池只保证 16 字节对齐；8–120 字节小对象使用 SlabPool，空组立即归还，liveBlocks 只统计实际存活块。
-- 同步回调沿用 NativeCallContext::invoke 与 chali_glue::Function，核对参数、返回值、闭包、重入和错误传播；不把运行时函数值转换为机器函数指针。
+- 同步回调的公开边界使用 chali_abi_invoke，内部沿用 NativeCallContext::invoke，核对参数、返回值、闭包、重入和错误传播；不把运行时函数值转换为机器函数指针。私有 C++ 封送实现不得恢复旧公开 Registry／Codec／Function 模板接口。
 - VM 与 LLVM AOT 分清交付路径；跨架构编译器构建不等于该架构已支持 AOT。
 
 ## 代码与构建
