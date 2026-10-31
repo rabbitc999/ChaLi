@@ -136,6 +136,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_REGISTRY      UINT64_C(8)
 #define CHALI_ABI_CAP_MEMORY        UINT64_C(16)
 #define CHALI_ABI_CAP_BINARY        UINT64_C(32)  ///< 原始字符串与字节列表服务。
+#define CHALI_ABI_CAP_RECORD_CLONE  UINT64_C(64)  ///< 宿主记录自动独立复制服务。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -594,6 +595,19 @@ int CHALI_ABI_CALL chali_abi_invoke(const ChaliAbiFrame *frame, int64_t function
  */
 int64_t CHALI_ABI_CALL chali_abi_record_make(const ChaliAbiFrame *frame, const char *typeName, void *record,
                                              ChaliAbiDestroy destroy);
+
+/**
+ * @brief 创建可参与容器深复制及运行时快照的 C 宿主记录。
+ * @param frame 当前调用帧。
+ * @param typeName 类型身份名称；同名记录必须使用相同销毁及自动复制回调。
+ * @param record 成功后交给运行时的独立记录。
+ * @param destroy 非抛出销毁回调，不得为空。
+ * @param clone 非抛出复制回调，返回独立副本；空回调表示不可自动复制。
+ * @return 新句柄；失败为零且不接管 record。
+ * @note 回调代码须存活到最后一条记录释放；副本不得引用源运行时的拥有值。
+ */
+int64_t CHALI_ABI_CALL chali_abi_record_make_clonable(const ChaliAbiFrame *frame, const char *typeName,
+    void *record, ChaliAbiDestroy destroy, ChaliAbiClone clone);
 
 /**
  * @brief 借用类型匹配的存活宿主记录。

@@ -67,7 +67,7 @@ std::vector<std::unique_ptr<RecordTypeBinding>> &recordTypes()
  * @return 地址稳定的描述符；参数无效或未登记时返回空指针。
  * @note 描述符只增不删，对象表会长期持有其地址，因此返回指针始终有效。
  */
-const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *));
+const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *), ChaliAbiClone clone);
 
 namespace
 {
@@ -82,7 +82,7 @@ const NativeRecordType *asRecordType(const void *descriptor)
 }
 }  // namespace
 
-const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *))
+const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *), ChaliAbiClone clone)
 try
 {
     if (typeName == nullptr || *typeName == '\0') return nullptr;
@@ -90,12 +90,13 @@ try
     const std::lock_guard<std::mutex> guard(mutex);
     for (auto &binding : recordTypes())
         if (binding->name == typeName)
-            return destroy == nullptr || binding->descriptor.destroy == destroy ? &binding->descriptor : nullptr;
+            return destroy == nullptr || (binding->descriptor.destroy == destroy && binding->descriptor.cloneC == clone) ? &binding->descriptor : nullptr;
     if (destroy == nullptr) return nullptr;
     auto binding = std::make_unique<RecordTypeBinding>();
     binding->name = typeName;
     binding->descriptor.name = binding->name.c_str();
     binding->descriptor.destroy = destroy;
+    binding->descriptor.cloneC = clone;
     const NativeRecordType *descriptor = &binding->descriptor;
     recordTypes().push_back(std::move(binding));
     return descriptor;
@@ -654,15 +655,30 @@ try
 }
 
 /**
+ * @brief 创建不提供自动复制回调的 C 宿主记录。
+ * @param frame 当前调用帧。
+ * @param typeName 类型身份名称。
+ * @param record 成功后转移的记录。
+ * @param destroy 非抛出销毁回调。
+ * @return 新句柄；失败时不接管记录。
+ */
+int64_t chali_abi_record_make(const ChaliAbiFrame *frame, const char *typeName, void *record,
+                            ChaliAbiDestroy destroy)
+{
+    return chali_abi_record_make_clonable(frame, typeName, record, destroy, nullptr);
+}
+
+/**
  * @brief 把 C 胶水创建的宿主记录交给当前运行时托管。
  * @param frame 当前调用帧。
  * @param typeName 记录类型名，用于诊断与借用校验；首次登记时复制。
  * @param record 记录指针，成功时所有权交给运行时。
  * @param destroy 销毁回调，不得为空。
+ * @param clone 可选的独立副本回调，不得抛出异常。
  * @return 新句柄；失败返回零且调用方仍负责销毁记录。
  */
-int64_t chali_abi_record_make(const ChaliAbiFrame *frame, const char *typeName, void *record,
-                              void (*destroy)(void *))
+int64_t chali_abi_record_make_clonable(const ChaliAbiFrame *frame, const char *typeName, void *record,
+                              ChaliAbiDestroy destroy, ChaliAbiClone clone)
 try
 {
     std::optional<NativeCallContextImpl> host;
@@ -672,7 +688,7 @@ try
         chali_abi_mark_failure(frame, "invalid native record arguments");
         return 0;
     }
-    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, destroy));
+    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, destroy, clone));
     if (descriptor == nullptr)
     {
         chali_abi_mark_failure(frame, "native record type conflict");
@@ -708,7 +724,7 @@ try
         chali_abi_mark_failure(frame, "invalid native record handle");
         return nullptr;
     }
-    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, nullptr));
+    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, nullptr, nullptr));
     if (descriptor == nullptr)
     {
         chali_abi_mark_failure(frame, "unknown native record type");
@@ -746,7 +762,7 @@ try
         chali_abi_mark_failure(frame, "invalid native clone arguments");
         return 0;
     }
-    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, nullptr));
+    const NativeRecordType *descriptor = asRecordType(chali_abi_record_type(typeName, nullptr, nullptr));
     if (descriptor == nullptr)
     {
         chali_abi_mark_failure(frame, "unknown native record type");

@@ -48,10 +48,11 @@ int64_t chali_abi_slot_from_real(double value);
 /**
  * @brief 取（必要时登记）某个类型名对应的宿主记录描述符。
  * @param typeName 静态类型名，不得为空。
+ * @param clone 自动复制回调；为空时记录不可自动复制。
  * @param destroy 销毁回调，仅首次登记时使用。
  * @return 地址稳定的描述符；参数无效时返回空指针。
  */
-const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *));
+const void *chali_abi_record_type(const char *typeName, void (*destroy)(void *), ChaliAbiClone clone);
 
 #ifdef __cplusplus
 }  // extern "C"

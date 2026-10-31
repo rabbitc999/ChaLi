@@ -51,7 +51,7 @@ bool captureTransferObject(NativeContext &ctx, std::int64_t handle, TransferPack
         ctx.error = "消息包含已释放的对象句柄：" + Memory::toString(handle);
         return false;
     }
-    if (source->kind == ObjectKind::Obj || (source->kind == ObjectKind::NativeRecord && (!source->nativeType || !source->nativeType->clone)))
+    if (source->kind == ObjectKind::Obj || (source->kind == ObjectKind::NativeRecord && (!source->nativeType || (!source->nativeType->clone && !source->nativeType->cloneC))))
     {
         ctx.error = Memory::String("消息不能复制运行期资源或 std::lang::Any：") + objectKindName(source->kind);
         return false;
@@ -64,8 +64,13 @@ bool captureTransferObject(NativeContext &ctx, std::int64_t handle, TransferPack
         RuntimeObject copy;
         copy.kind = ObjectKind::NativeRecord;
         copy.nativeType = source->nativeType;
-        void *record = source->nativeType->clone(source->nativeRecord.get(), ctx.error);
-        if (!record) return false;
+        void *record = source->nativeType->clone ? source->nativeType->clone(source->nativeRecord.get(), ctx.error) :
+            source->nativeType->cloneC(source->nativeRecord.get());
+        if (!record || record == source->nativeRecord.get())
+        {
+            if (ctx.error.empty()) ctx.error = "宿主复制回调没有返回独立记录";
+            return false;
+        }
         copy.nativeRecord = std::shared_ptr<void>(record, source->nativeType->destroy);
         packet.objects.emplace(handle, std::move(copy));
     }
@@ -157,8 +162,13 @@ bool restoreTransferObject(NativeContext &ctx, const TransferPacket &packet,
     auto object = Memory::makeShared<RuntimeObject>(found->second);
     if (object->kind == ObjectKind::NativeRecord)
     {
-        void *record = object->nativeType->clone(object->nativeRecord.get(), ctx.error);
-        if (!record) return false;
+        void *record = object->nativeType->clone ? object->nativeType->clone(object->nativeRecord.get(), ctx.error) :
+            (object->nativeType->cloneC ? object->nativeType->cloneC(object->nativeRecord.get()) : nullptr);
+        if (!record || record == object->nativeRecord.get())
+        {
+            if (ctx.error.empty()) ctx.error = "宿主复制回调没有返回独立记录";
+            return false;
+        }
         object->nativeRecord = std::shared_ptr<void>(record, object->nativeType->destroy);
         ctx.objects->recordContext.heap = ctx.heap;
         ctx.objects->recordContext.data = ctx.data;

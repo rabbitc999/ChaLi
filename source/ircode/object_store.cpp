@@ -255,7 +255,7 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
         const auto *type = object.nativeType;
         const auto original = object.nativeRecord;
         const auto identity = object.identity;
-        if (!type || (!type->clone && !type->copy))
+        if (!type || (!type->clone && !type->copy && !type->cloneC))
         {
             if (error) *error = Memory::String(type && type->name ? type->name : "宿主记录") + " 不能复制";
             return nullptr;
@@ -269,17 +269,19 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
             if (error) *error = recordContext.memoryFault.empty() ? recordContext.error : recordContext.memoryFault;
             return nullptr;
         }
-        void *record = type->copy ? type->copy(host, original.get()) : type->clone(original.get(), reason);
+        void *record = type->copy ? type->copy(host, original.get()) :
+            (type->clone ? type->clone(original.get(), reason) : type->cloneC(original.get()));
         if (reason.empty()) reason = recordContext.memoryFault.empty() ? recordContext.error : recordContext.memoryFault;
         if (!record || record == original.get())
         {
             if (error) *error = reason.empty() ? "宿主复制回调没有返回独立记录" : reason;
             return nullptr;
         }
+        std::shared_ptr<void> owned(record, type->destroy);
         auto copy = Memory::makeShared<RuntimeObject>();
         copy->kind = ObjectKind::NativeRecord;
         copy->nativeType = type;
-        copy->nativeRecord = std::shared_ptr<void>(record, type->destroy);
+        copy->nativeRecord = std::move(owned);
         copy->identity = identity;
         return copy;
     }

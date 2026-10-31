@@ -119,6 +119,18 @@ void destroyInteger(void *value)
  */
 void *cloneInteger(const void *value) { return new int(*static_cast<const int *>(value)); }
 /**
+ * @brief 模拟不提供副本的 C 回调。
+ * @param value 不读取的源记录。
+ * @return 空指针。
+ */
+void *failedClone(const void *value) { (void)value; return nullptr; }
+/**
+ * @brief 模拟错误返回源指针的 C 回调，验证运行时不误销毁源。
+ * @param value 源记录。
+ * @return 原指针。
+ */
+void *aliasedClone(const void *value) { return const_cast<void *>(value); }
+/**
  * @brief 用另一身份的销毁函数检查类型冲突。
  * @param value 未转移所有权的对象。
  */
@@ -373,6 +385,76 @@ int main()
         assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, record) && destroyed == cloneAttempts + 3);
         assert(!chali_abi_record_release(&frame, record) && runtime.status != 0);
         reset();
+        const auto automatic = chali_abi_record_make_clonable(&frame, "c-api-test::AutomaticInteger",
+            new int(42), destroyInteger, cloneInteger);
+        assert(automatic && !runtime.status);
+        NativeCallContextImpl automaticHost(context, &invoker);
+        int automaticFailures = 0;
+        for (int point = 0; point < 32; ++point)
+        {
+            const auto before = destroyed;
+            arena.remaining = point;
+            std::int64_t attempted = 0;
+            try { attempted = automaticHost.cloneNativeRecord(automatic); }
+            catch (const std::bad_alloc &) {}
+            arena.remaining = -1;
+            if (attempted)
+            {
+                auto *value = static_cast<int *>(chali_abi_record_borrow(&frame, attempted,
+                    "c-api-test::AutomaticInteger"));
+                assert(value && *value == 42);
+                *value = 91;
+                assert(*static_cast<int *>(chali_abi_record_borrow(&frame, automatic,
+                    "c-api-test::AutomaticInteger")) == 42);
+                assert(chali_abi_record_release(&frame, attempted) && destroyed == before + 1);
+                break;
+            }
+            ++automaticFailures;
+            assert(destroyed == before + 1);
+            reset();
+            assert(point != 31);
+        }
+        assert(automaticFailures > 0);
+        {
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, automatic, packet, active));
+            assert(packet.objects.size() == 1);
+            *static_cast<int *>(packet.objects.at(automatic).nativeRecord.get()) = 63;
+            Memory::Vector<std::int64_t> created;
+            std::int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, automatic, active, created, &restored));
+            assert(created.size() == 1 && restored != automatic);
+            auto *value = static_cast<int *>(chali_abi_record_borrow(&frame, restored,
+                "c-api-test::AutomaticInteger"));
+            assert(value && *value == 63);
+            *value = 78;
+            assert(*static_cast<int *>(packet.objects.at(automatic).nativeRecord.get()) == 63);
+            assert(*static_cast<int *>(chali_abi_record_borrow(&frame, automatic,
+                "c-api-test::AutomaticInteger")) == 42);
+            assert(chali_abi_record_release(&frame, restored));
+        }
+        int *conflictingPolicy = new int(7);
+        assert(!chali_abi_record_make(&frame, "c-api-test::AutomaticInteger", conflictingPolicy, destroyInteger));
+        delete conflictingPolicy;
+        reset();
+        assert(chali_abi_record_release(&frame, automatic));
+        for (auto cloner : {failedClone, aliasedClone})
+        {
+            const char *name = cloner == failedClone ? "c-api-test::FailedClone" : "c-api-test::AliasedClone";
+            const auto original = chali_abi_record_make_clonable(&frame, name, new int(17), destroyInteger, cloner);
+            assert(original);
+            const auto before = destroyed;
+            assert(!automaticHost.cloneNativeRecord(original) && destroyed == before);
+            reset();
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(!captureTransferObject(context, original, packet, active) && destroyed == before);
+            reset();
+            assert(*static_cast<int *>(chali_abi_record_borrow(&frame, original, name)) == 17);
+            assert(chali_abi_record_release(&frame, original) && destroyed == before + 1);
+        }
+        std::printf("automatic C record copy: %d allocation failure points cleaned\n", automaticFailures);
         const char binaryText[] = {'A', 0, char(255)};
         const auto rawString = chali_abi_string_bytes(&frame, binaryText, sizeof(binaryText));
         assert(rawString && !runtime.status);

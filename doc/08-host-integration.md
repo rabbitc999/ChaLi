@@ -25,6 +25,8 @@ ChaLi 普通执行从语义检查后的 AST 直接生成 LLVM IR，再经 LLVM O
 `chali_abi_list_bytes` 以空目标、零容量查询长度，再向调用方缓冲区复制；它验证元素为 `0..255` 的整数，短缓冲或非法元素不会写入目标。`chali_abi_list_from_bytes` 创建独立拥有的 `List<uint8>`，完整构造后才发布句柄。未交还语言时，用 `chali_abi_record_release` 配对释放；交还语言拥有值后由语言清理。模块需要这些入口时，在所需能力中声明 `CHALI_ABI_CAP_BINARY`。
 
 
+`chali_abi_record_make_clonable` 登记 C 复制回调，使拥有记录可参与容器深复制及线程快照。回调必须返回独立记录，不得引用源运行时拥有的句柄；失败返回空，不得抛出异常。同名记录的销毁及自动复制回调必须一致，登记后不能更换。需要此服务时声明 `CHALI_ABI_CAP_RECORD_CLONE`；旧 `chali_abi_record_make` 创建的记录仍不支持自动复制。
+
 记录创建成功后转移原指针；返回零时调用方仍负责原指针。克隆登记失败会清理新副本，原记录保持存活。类型名称拥有独立副本，同名类型不能更换销毁协议；销毁回调不得抛异常，代码要存活到记录释放。同步函数值调用使用 `chali_abi_invoke`，保留捕获环境及检查，借用调用器而不复制其状态；函数句柄不是机器函数指针。
 
 错误通过 `ChaliAbiError` 的状态与有界缓冲返回。服务异常不会越过 C 边界；已有运行期错误与内存故障保留优先级，模块的首条显式诊断可以补充通用服务失败。内建入口目录并发发布完整只读表，超容量或非法目录整体失败。验证入口为 `python tests/chali_c_api_contract.py` 与 `python tests/chali_c_api_registry.py`。

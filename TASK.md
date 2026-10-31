@@ -166,6 +166,10 @@ C 服务单测通过原始零字节／255、短缓冲不写、非法整数／浮
 
 最终静态编译器 SHA256 为 afab5c2f15f7ee142af37904e1750b3003904a52a2d6b0eedb9e8442feb65340；vscode/dist/1.0.12-compress-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌 EXE，SHA256 为 b731f70159c0f818ebd6b8f26c1a65b6a3757e256d9c62a74c09d264887934ea。证据仅保留 tools/history/20261031/chali-1.0.12-compress-c-api/；未运行整仓全量门禁或正式计时，其他模块与旧公开 C++ 胶水仍待迁移。
 
+C 宿主记录自动复制协议已完成：新增 chali_abi_record_make_clonable 与 CHALI_ABI_CAP_RECORD_CLONE，C 回调参与容器深复制及线程快照，类型登记固定销毁与复制策略，不给不可复制资源自动增加复制能力。运行时复制立即接管新副本，修复创建对象壳分配失败时的泄漏；空副本或返回源指针均拒绝且不销毁原记录。新增回归验证两个分配失败点的清理、快照与恢复独立性、策略冲突及错误回调。
+
+C API 模块与内存、并发 12 步全部通过，无失败或跳过；隔离标准库导入／源码回退／零磁盘缓存、最终手册及七组插件测试通过。静态编译器 SHA256 为 430bd5f01fe691d41ebd2ea742b402e46c15268e4cb579a5138876e020beae3d；vscode/dist/1.0.12-c-record-clone/chali-editor-1.0.12-llvm-static.vsix 版本、static 与包内 EXE 已核对，SHA256 为 f1f6a4c67728f64931803d29d4fd216f6e6c5f604bff98bc5c46c5e412aab75c。五项新鲜导出源核对通过，未冷构建独立编译器、执行整仓全量门禁或性能计时。证据仅保留 tools/history/20261031/chali-1.0.12-c-record-clone/；后续继续拥有型数据模块迁移，旧公开 C++ 胶水仍未删除。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。
