@@ -207,6 +207,12 @@ bool ExpandDerivedDeclarations()
         if (declaration.kind == MNode::ParseBad) return Fail(declaration.s);
         if (declaration.derives.empty() || declaration.derivesExpanded) continue;
         ReductionSourceScope location(id);
+        Memory::Vector<Memory::String> builtinTraits;
+        for (const auto &trait : declaration.derives)
+            if (trait == "Equal" || trait == "Hash" || trait == "Clone" || trait == "Debug" || trait == "Json") builtinTraits.push_back(trait);
+        const int derivedFrame = BeginDerivedExpansion(id, builtinTraits);
+        ReductionSourceScope derivedLocation(derivedFrame >= 0 ? derivedFrame : id);
+        if (derivedFrame >= 0) g_macroDiagnosticFrame = derivedFrame;
         Memory::String interfaces, methods, error;
         Memory::Vector<Memory::String> names;
         for (const auto &trait : declaration.derives)
@@ -292,6 +298,7 @@ bool ExpandDerivedDeclarations()
             g_nodes[i].sourceLine = declaration.sourceLine;
             g_nodes[i].sourceColumn = declaration.sourceColumn;
             g_nodes[i].generatedDeclaration = true;
+            if (derivedFrame >= 0) g_nodes[i].macroExpansion = derivedFrame;
         }
         if (status != chali::Status::Ok)
             return Fail("#derive 生成的方法无法解析：" + declaration.s
@@ -303,6 +310,7 @@ bool ExpandDerivedDeclarations()
             target.i = -1;
         }
         const auto members = target.kids[target.kind == MNode::EnumDecl ? 1 : 0];
+        Memory::Vector<int> generatedMembers;
         for (const auto generated : added)
         {
             if (N(generated).kind == MNode::StructDecl && N(generated).s == wrapper)
@@ -313,6 +321,7 @@ bool ExpandDerivedDeclarations()
                         if (N(existing).kind == MNode::MethodDef && N(existing).s == N(member).s)
                             return Fail("#derive 不覆盖已有方法：" + declaration.s + "." + N(member).s);
                     M_ListAdd(members, member);
+                    generatedMembers.push_back(member);
                 }
             }
             else
@@ -327,6 +336,8 @@ bool ExpandDerivedDeclarations()
             if (!present) M_ListAdd(static_cast<int>(target.i), M_Name(name.c_str()));
         }
         target.derivesExpanded = true;
+        RecordDerivedMemberSources(id, generatedMembers);
+        RecordEditorDerived(id, generatedMembers, builtinTraits);
     }
     return true;
 }

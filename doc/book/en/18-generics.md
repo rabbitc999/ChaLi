@@ -225,6 +225,43 @@ The first declaration creates the current module's String with one integer field
 
 Containers, tuples, references and function types preserve the source of their component types. Defaults resolve at the template definition: `Box<T = String>` keeps that module's String when a caller writes `Box<>`; explicit arguments still come from the caller. Qualify ambiguous names introduced by direct imports. Any remains reserved and cannot be redeclared this way.
 
+### Derivation is checked for each concrete instance
+
+A derive directive on a generic type does not mean every T supports that operation. The compiler checks the fields after the concrete arguments are known.
+
+<!-- verify-book -->
+```chali
+#derive(Clone)
+struct Box<T>
+{
+    T value;
+}
+
+void main()
+{
+    Box<int64> number;
+    number.value = 7;
+    Box<int64> copiedNumber = number.clone();
+    println("{}", copiedNumber.value);
+
+    Box<String> text;
+    text.value = "kept";
+    Box<String> copiedText = text.clone();
+    text.value = "changed";
+    println("{}", copiedText.value);
+}
+```
+
+```text
+7
+kept
+```
+
+The first five lines define Box and request Clone. The field still has type T; at the first use it becomes int64, so copiedNumber.value is 7.
+
+The second half selects String. The clone independently owns its text. Changing text.value leaves copiedText.value unchanged, so the second output remains kept. Ordinary copying, explicit cloning and resource transfer retain their usual rules.
+
+A user-defined field type must provide the required Clone protocol. Deriving the outer template does not supply the inner requirement. Modules may each declare Box; each definition retains its own derivation and operator settings. Diagnostics and previews point back to the original directive, and concrete instances are checked separately.
 ### Summary
 
 Type parameters choose types, constants can determine array shape, constraints permit operations and associated types connect implementation choices to results. These are distinct static relationships rather than interchangeable runtime data.

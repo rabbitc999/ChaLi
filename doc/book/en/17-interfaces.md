@@ -276,6 +276,11 @@ The second retains the outer variant for multiple payloads, with code and typed 
 
 The third widens concrete errors through propagation. Option propagation tests Value versus None, independently of whether the stored object implements Error. Read the outer tag before the concrete payload type.
 
+### Interface requirements have compile-time descriptions
+
+Method names, parameters, results, receivers and default bodies can also be queried during compilation. Chapter 22 uses $methods and $interfaces to read these descriptions. Querying an interface describes its requirements; querying an implementation can additionally expose concrete associated-type bindings. A query neither executes a method nor constructs an interface object.
+
+Derived ordinary methods must satisfy the same requirements. Debug requires debug to return String; a method with the same name and a different result cannot substitute for it. Runtime interface dispatch follows the rules in this chapter, while field traversal and method generation happen during compilation.
 ## 17.7 Exercises
 
 1. Add another error implementation and check fallback.

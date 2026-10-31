@@ -3210,6 +3210,7 @@ namespace
 #include "semantics/builtins.cpp"
 #include "semantics/generic_inference.cpp"
 #include "semantics/editor_analysis.cpp"
+#include "semantics/editor_derive_preview.cpp"
 #include "semantics/constants.cpp"
 #include "semantics/lowering.cpp"
 #include "semantics/interface_dispatch.cpp"
@@ -3313,8 +3314,16 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         return 1;
     }
     if (!LiftReachableAstLambdas()) return 1;
-    if (!ExpandReadyDerivedDeclarations()) return 1;
-    if (!PrepareGenericSignatures()) return 1;
+    if (!ExpandReadyDerivedDeclarations())
+    {
+        RestoreFirstDiagnostic();
+        return 1;
+    }
+    if (!PrepareGenericSignatures())
+    {
+        RestoreFirstDiagnostic();
+        return 1;
+    }
     auto parsedNodes = g_nodes;
     auto parsedTypes = g_types;
     auto parsedNames = g_names;
@@ -3336,7 +3345,11 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 RestoreFirstDiagnostic();
                 return 1;
             }
-            if (!ValidateDerivedFields()) return 1;
+            if (!ValidateDerivedFields())
+            {
+                RestoreFirstDiagnostic();
+                return 1;
+            }
             const bool lowered = LowerProgram(program);
             // 独立借用检查阶段：语义仅记录事实，全部单态化完成后才执行规则。
             for (const auto &diagnostic : chali_borrow_checker::check(g_borrowFacts))

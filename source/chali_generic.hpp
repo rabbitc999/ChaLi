@@ -37,6 +37,7 @@ struct Generic
     bool intrinsic = false;
     Memory::String requiredQualifier;
     Memory::String derivation;        ///< 保留到具体实例的 #derive 指令，不交给文本宏做语义检查。
+    Memory::Vector<preprocess::LineOrigin> derivationOrigins;  ///< 派生指令逐行来源，与模板声明行分开保存。
     Memory::String operatorSwitches;  ///< 实例声明前的编译器指令 `#No<接口>Replace` / `#NoRight<接口>`，必须排在 `#derive` 之前。
 };
 /**

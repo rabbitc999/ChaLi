@@ -589,6 +589,9 @@ Explicit caller fragments may leave the caller, but cannot cross a newly generat
 
 In VS Code, use ChaLi's macro expansion preview to inspect one level or the complete expansion. A one-level preview may retain nested macro calls; the complete preview expands them further. Source mappings identify definitions and invocations. Preview output is not a stable source export format.
 
+Placing the cursor on #derive also previews built-in derivation. Inputs list the instance fields or enum variants actually used, followed by the injected methods; static fields are excluded. A metadata-declaration link returns to the original field, and short reference labels connect repeated accesses. Enum matches, branch patterns and payloads come from the same production syntax tree.
+
+A generic directive may have several concrete instances. Each shows its field types and generated methods while retaining the original directive as its source. One-level and complete views can differ after further name, type and macro resolution. Previewing does not execute user code again.
 The summary lists direct effects: result category, introduced template bindings, shared or mutable parameter borrows, and control exits. Full expansion distinguishes caller control from local control using actual targets; one-step previews list unresolved targets separately. Creating a closure does not execute its body, so that body's return is excluded from the current macro's exits. The summary does not analyze effects along an entire call chain. An empty list still requires ordinary signature, type and borrow checks.
 
 Check parameter and result categories first, followed by type inference, descriptor ownership and name origin. The temp example below demonstrates the last issue.
@@ -622,7 +625,7 @@ The example therefore fails during compilation and has no normal runtime output.
 
 Expansion composes program structure during compilation; next in the examples still executes at runtime. Knowing an expression's static type does not execute that expression. T:#res obtains information from an expected type supplied by contexts such as assignment or return; it does not observe a runtime result. Supply explicit types when context is insufficient rather than depending on incidental literal inference.
 
-Expanded code undergoes ordinary checking and then reaches the quadruple IR and LLVM backend. Macros cannot remove cleanup obligations, bypass borrowing or make an invalid expression executable. Performance depends on generated operations and LLVM optimization; fewer template lines do not establish less runtime work. For diagnostics, first express the intended operation as ordinary code, verify types and resource relationships, then inspect whether the macro preserves them.
+Expanded code undergoes ordinary semantic checking and then reaches the LLVM native backend. Macros cannot remove cleanup obligations, bypass borrowing or make an invalid expression executable. Performance depends on generated operations and LLVM optimization; fewer template lines do not establish less runtime work. For diagnostics, first express the intended operation as ordinary code, verify types and resource relationships, then inspect whether the macro preserves them.
 
 
 ### Summary

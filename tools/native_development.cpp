@@ -3587,9 +3587,10 @@ class Server
      * @brief 生成前端检查报告并复用有效缓存。
      * @param u 待处理文档的 URI。
      * @param cancelled 请求取消标志。
+     * @param timeout 本次前端检查的秒数上限；显式预览允许更长的生成工作。
      * @retval 保存生成前端检查报告并复用有效缓存结果的对象。
      */
-    J checkReport(const std::string &u, const std::function<bool()> &cancelled)
+    J checkReport(const std::string &u, const std::function<bool()> &cancelled, double timeout = 30)
     {
         const auto &body = documents.at(u)->first;
         collect(u, body);
@@ -3626,8 +3627,10 @@ class Server
                                       "--cache-dir", (cache->directory / "preprocess").u8string(), "--source-overlays", (temporary.path / "overlays.json").u8string(),
                                       "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
                                       "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() },
-                                    file.parent_path(), body, 30, cancelled);
+                                    file.parent_path(), body, timeout, cancelled);
         if (result.cancelled || cancelled()) return J();
+        if (result.error == "timed out") throw std::runtime_error("语义检查超时");
+        if (result.output.empty()) throw std::runtime_error("编译器未返回语义检查报告");
         auto report = parse(result.output);
         try
         {
@@ -3938,7 +3941,7 @@ class Server
         const auto mode = requested.empty() ? std::string("all") : requested;
         if (mode != "one" && mode != "all")
             return object({ { "text", "" }, { "format", "json" }, { "diagnostics", A{ J("macro mode must be one or all") } }, { "mappings", A{} } });
-        auto report = checkReport(u, [] { return false; });
+        auto report = checkReport(u, [] { return false; }, 120);
         const auto &analysis = get(report, "analysis");
         A expansions, diagnostics, mappings;
         for (const auto &entry : array(get(analysis, "macros")))

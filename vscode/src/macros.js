@@ -19,6 +19,8 @@ const NODE_LABELS = {
   macro_call: '宏调用', source_fragment: '源码片段', sequence: '语句序列',
   expression_statement: '表达式语句', value_block: '值块', closure: '闭包',
   qualified_member: '限定成员', truncated: '已截断',
+  derive: '派生', metadata: '声明元数据', field: '字段', method: '方法',
+  variant: '枚举变体', case: '匹配分支', switch: '多路分支',
 };
 
 /**
@@ -459,7 +461,7 @@ function registerMacroPreview(vscode, context, deps) {
       panelLocations = new Set();
       const collectLocations = (node) => {
         if (!node || typeof node !== 'object') return;
-        for (const key of ['source', 'definition']) {
+        for (const key of ['source', 'definition', 'metadataSource', 'controlTarget']) {
           const location = node[key];
           if (location && typeof location.file === 'string' && location.file && !location.file.startsWith('<') && Number.isInteger(location.line) && location.line > 0 && Number.isInteger(location.column) && location.column > 0)
             panelLocations.add(JSON.stringify(location));

@@ -541,6 +541,8 @@ The `chali/expandMacro` request accepts `mode: "one" | "all"` (default all) and 
 
 Use `--macro-backtrace short` for the nearest expansion frame while preserving the error, field, and argument location. `--macro-backtrace full` retains the full call/definition chain and remains the compatible default. See [production preview and diagnostic tests](../../tests/chali_macro_preview.py).
 
+Built-in #derive previews read the injected production methods and list their instance-field or enum-variant inputs, excluding static fields. Short labels connect field references, and metadata links return to declarations. Generic instances retain the original directive location and module identity and are checked separately. Similar names do not grant user types the behavior of standard Option/Result, and custom or built-in derivation cannot overwrite existing members.
+
 
 ## Debug inspection
 

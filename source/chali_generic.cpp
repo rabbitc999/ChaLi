@@ -372,11 +372,9 @@ bool operatorSwitchRange(const Memory::String &text, std::size_t at, std::size_t
     const std::size_t begin = cursor;
     while (cursor < text.size() && identPart(text[cursor])) ++cursor;
     if (cursor == begin) return false;
-    if (text.compare(cursor, 7, "Replace") == 0)
+    if (cursor > begin + 7u && text.compare(cursor - 7u, 7, "Replace") == 0)
     {
-        const std::size_t after = cursor + 7u;
-        if (after < text.size() && identPart(text[after])) return false;
-        end = after;
+        end = cursor;
         return true;
     }
     /* `#NoRightXxx`：以 `#NoRight` 开头且后面还有接口名才算（`#NonCopyable` 不匹配）。 */
@@ -388,20 +386,34 @@ bool operatorSwitchRange(const Memory::String &text, std::size_t at, std::size_t
 /**
  * @brief 暂存泛型类型前的派生指令，在产生具体实例时恢复原文。
  * @param source 待单态化源码；移走的指令以空白占位保持行号。
+ * @param lines 源码逐行来源。
  * @param directives 输出模板名到派生指令文本的映射。
  * @param switches 输出模板名到 `#No<接口>Replace` 指令文本的映射（实例声明前必须排在 `#derive` 之前）。
+ * @param origins 接收按模块隔离的派生指令逐行来源。
  * @param error 失败时接收非法派生请求的诊断。
  * @return 指令扫描成功返回 true，不执行字段或接口语义检查。
  */
-bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, Memory::String> &directives,
-                           Memory::Map<Memory::String, Memory::String> &switches, Memory::String &error)
+bool collectGenericDerives(Memory::String &source, const Memory::Vector<preprocess::LineOrigin> &lines,
+                           Memory::Map<Memory::String, Memory::String> &directives,
+                           Memory::Map<Memory::String, Memory::String> &switches,
+                           Memory::Map<Memory::String, Memory::Vector<preprocess::LineOrigin>> &origins, Memory::String &error)
 {
     auto mask = chali_lambda::codeMask(source);
+    Memory::String currentModule;
+    const auto updateModule = [&](std::size_t at) {
+        if (!wordAt(mask, at, "module")) return;
+        auto nameAt = at + 6;
+        skipSpace(mask, nameAt);
+        const auto end = mask.find(';', nameAt);
+        if (end != Memory::String::npos) currentModule = trim(mask.substr(nameAt, end - nameAt));
+        if (currentModule == "__root") currentModule.clear();
+    };
     int depth = 0;
     for (std::size_t at = 0; at < mask.size(); ++at)
     {
         if (mask[at] == '{') ++depth;
         if (mask[at] == '}') --depth;
+        if (!depth) updateModule(at);
         if (depth || !wordAt(mask, at, "#derive")) continue;
         std::size_t open = at + 7;
         skipSpace(mask, open);
@@ -430,7 +442,15 @@ bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, M
             if (bare == "Drop" || bare == "drop" || bare == "Closeable")
                 return error = "#derive 禁止生成 Drop 或 Closeable：值语义已经自动递归清理字段", false;
         }
-        directives[name] = source.substr(at, end - at) + "\n";
+        const auto key = currentModule.empty() ? name : currentModule + "::" + name;
+        const auto newline = at ? source.rfind('\n', at - 1) : Memory::String::npos;
+        const auto column = at - (newline == Memory::String::npos ? 0 : newline + 1);
+        directives[key] = Memory::String(column, ' ') + source.substr(at, end - at) + "\n";
+        const auto firstLine = lineOf(source, at);
+        const auto lineCount = static_cast<std::size_t>(std::count(directives[key].begin(), directives[key].end(), '\n'));
+        auto &locations = origins[key];
+        for (std::size_t line = 0; line < lineCount; ++line)
+            locations.push_back(firstLine + line < lines.size() ? lines[firstLine + line] : preprocess::LineOrigin{});
         for (auto i = at; i < end; ++i)
             if (source[i] != '\n') source[i] = mask[i] = ' ';
         at = end - 1;
@@ -441,10 +461,12 @@ bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, M
      * 识别不到。摘下来的文本按名字记进同一张表，实例化时和 `#derive` 一起贴回实例
      * 声明前面。 */
     depth = 0;
+    currentModule.clear();
     for (std::size_t at = 0; at < mask.size(); ++at)
     {
         if (mask[at] == '{') ++depth;
         if (mask[at] == '}') --depth;
+        if (!depth) updateModule(at);
         std::size_t switchEnd = 0;
         if (depth != 0 || !operatorSwitchRange(mask, at, switchEnd)) continue;
         std::size_t type = switchEnd;
@@ -457,9 +479,10 @@ bool collectGenericDerives(Memory::String &source, Memory::Map<Memory::String, M
         const auto name = mask.substr(begin, type - begin);
         skipSpace(mask, type);
         if (name.empty() || type >= mask.size() || mask[type] != '<') continue;
-        const auto found = switches.find(name);
+        const auto key = currentModule.empty() ? name : currentModule + "::" + name;
+        const auto found = switches.find(key);
         if (found == switches.end())
-            switches[name] = source.substr(at, switchEnd - at) + "\n";
+            switches[key] = source.substr(at, switchEnd - at) + "\n";
         else
             found->second = source.substr(at, switchEnd - at) + "\n" + found->second;
         for (auto i = at; i < switchEnd; ++i)
@@ -1741,12 +1764,16 @@ void appendInstantiationOrigins(const Expansion &expansion, const Memory::String
 {
     const auto &generic = *expansion.generic;
     const auto prefix = generic.operatorSwitches + generic.derivation;
+    const auto deriveBegin = 3u + static_cast<std::size_t>(std::count(generic.operatorSwitches.begin(), generic.operatorSwitches.end(), '\n'));
     const auto headers = 3u + static_cast<std::size_t>(std::count(prefix.begin(), prefix.end(), '\n'));
     const auto count = 3u + static_cast<std::size_t>(std::count(declaration.begin(), declaration.end(), '\n'));
     for (std::size_t line = 0; line < count; ++line)
     {
         const auto index = line >= headers ? line - headers : generic.declarationOrigins.size();
-        origins.push_back(index < generic.declarationOrigins.size() ? generic.declarationOrigins[index] : generic.origin);
+        if (line >= deriveBegin && line - deriveBegin < generic.derivationOrigins.size())
+            origins.push_back(generic.derivationOrigins[line - deriveBegin]);
+        else
+            origins.push_back(index < generic.declarationOrigins.size() ? generic.declarationOrigins[index] : generic.origin);
     }
 }
 
@@ -1763,7 +1790,8 @@ bool run(preprocess::Result &result, Memory::String &error)
     collectCoreAliasShadows(result.text);
     Memory::Map<Memory::String, Memory::String> derivedGenerics;
     Memory::Map<Memory::String, Memory::String> operatorSwitches;
-    if (!collectGenericDerives(result.text, derivedGenerics, operatorSwitches, error)) return false;
+    Memory::Map<Memory::String, Memory::Vector<preprocess::LineOrigin>> deriveOrigins;
+    if (!collectGenericDerives(result.text, result.lineMap, derivedGenerics, operatorSwitches, deriveOrigins, error)) return false;
     // 泛型方法的显式错误类型交给语义层补齐其余参数；跳过注释与字符串。
     for (std::size_t at = 0; at < result.text.size(); ++at)
     {
@@ -2259,10 +2287,19 @@ interface Closeable { void close(); };
                  noExpansions, noPending, error)) return false;
     normalizeGenericSyntax(result.text);
     if (!collect(result.text, result.lineMap, generics, error)) return false;
-    for (const auto &entry : derivedGenerics)
-        if (generics.count(entry.first)) generics[entry.first].derivation = entry.second;
-    for (const auto &entry : operatorSwitches)
-        if (generics.count(entry.first)) generics[entry.first].operatorSwitches = entry.second;
+    for (auto &entry : generics)
+    {
+        auto &generic = entry.second;
+        const auto key = generic.module.empty() ? generic.sourceName : generic.module + "::" + generic.sourceName;
+        const auto derived = derivedGenerics.find(key);
+        if (derived != derivedGenerics.end())
+        {
+            generic.derivation = derived->second;
+            generic.derivationOrigins = deriveOrigins[key];
+        }
+        const auto switched = operatorSwitches.find(key);
+        if (switched != operatorSwitches.end()) generic.operatorSwitches = switched->second;
+    }
     auto &implemented = session.implemented;
     collectInterfaces(result.text, implemented);
     auto &made = session.made;

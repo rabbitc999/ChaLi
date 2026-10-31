@@ -129,5 +129,17 @@ int main()
     canonicalTypeInModule("OnlyAlpha", "unrelated", error);
     require(error.find("声明或导入") != Memory::String::npos, "不可见类型被全局唯一名称泄露");
     require(canonicalTypeInModule("int64", "program", error) == "int64" && error.empty(), "成功调用未清除上一轮错误");
+
+    preprocess::Result derivedMap;
+    derivedMap.text = "#NoEqualReplace\n    #derive(Clone,\n            Debug)\nstruct AuditDerived<T>{T value;};\n";
+    for (std::size_t line = 0; line < 4; ++line) derivedMap.lineMap.push_back({ "derived.chl", 200u + line });
+    require(run(derivedMap, error), error.c_str());
+    require(session.generics.at("AuditDerived").operatorSwitches.find("#NoEqualReplace") != Memory::String::npos, "泛型运算符开关未保留");
+    generated.clear(); origins.clear();
+    require(instantiate("AuditDerived", { "int64" }, generated, error, &origins), error.c_str());
+    const auto derivePosition = generated.find("    #derive(Clone,");
+    require(derivePosition != Memory::String::npos, "派生指令缩进丢失");
+    const auto deriveRow = static_cast<std::size_t>(std::count(generated.begin(), generated.begin() + derivePosition, '\n'));
+    require(deriveRow + 1 < origins.size() && origins[deriveRow].file == "derived.chl" && origins[deriveRow].line == 201 && origins[deriveRow + 1].line == 202, "多行派生原始位置丢失");
     std::puts("generic monomorphization unit tests OK");
 }

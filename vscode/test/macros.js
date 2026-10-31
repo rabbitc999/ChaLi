@@ -25,7 +25,7 @@ function expansionText() {
       {
         file: 'file:///project/main.chl', name: 'SUM_SQUARES', line: 34, column: 5,
         tree: { kind: 'template', name: '', origin: 'definition', children: [
-          { kind: 'declaration', name: 'local', origin: 'definition', type: 'int64', symbol: 'local@1', declares: true, parameterCache: 'value', source: {file: '/project/main.chl', line: 34, column: 7}, definition: {file: '/project/macros.chl', line: 2, column: 1}, children: [] },
+          { kind: 'declaration', name: 'local', origin: 'definition', type: 'int64', symbol: 'local@1', declares: true, parameterCache: 'value', source: {file: '/project/main.chl', line: 34, column: 7}, definition: {file: '/project/macros.chl', line: 2, column: 1}, metadataSource: {file:'/project/data.chl',line:3,column:2}, controlTarget: {file:'/project/loop.chl',line:4,column:1}, children: [] },
         ] },
       },
     ],
@@ -149,6 +149,10 @@ async function main() {
   assert.equal(opened.toString(), 'file:///project/macros.chl');
   await handlers[0]({ type: 'revealNode', index: 1, location: {file: '/outside.chl', line: 1, column: 1} });
   assert.equal(opened.toString(), 'file:///project/macros.chl');
+  await handlers[0]({type:'revealNode',index:1,location:{file:'/project/data.chl',line:3,column:2}});
+  assert.equal(opened.toString(),'file:///project/data.chl');
+  await handlers[0]({type:'revealNode',index:1,location:{file:'/project/loop.chl',line:4,column:1}});
+  assert.equal(opened.toString(),'file:///project/loop.chl');
   vscode.window.activeTextEditor.selection = {active: {line: 33, character: 8}};
   await commands.get('chali.previewMacroExpansionOnce')();
   assert.equal(requestedParams.mode, 'one');

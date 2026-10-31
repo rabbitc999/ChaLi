@@ -376,7 +376,8 @@ void AddDiagnostic(const Memory::String &message, std::size_t line, std::size_t 
             const auto originalLine = sourceLine && sourceLine <= g_sourceLines.size() && g_sourceLines[sourceLine - 1] ? g_sourceLines[sourceLine - 1] : sourceLine;
             return file + ":" + Memory::toString(originalLine) + ":" + Memory::toString(sourceColumn);
         };
-        detailed += "\n  展开宏 $" + origin.s + "，调用于 " + location(origin.sourceLine, origin.sourceColumn);
+        detailed += (origin.s.rfind("#derive(", 0) == 0 ? "\n  派生 " : "\n  展开宏 $")
+                    + origin.s + "，调用于 " + location(origin.sourceLine, origin.sourceColumn);
         if (origin.i >= 0 && static_cast<std::size_t>(origin.i) < g_nodes.size())
             detailed += "，定义于 " + location(N(static_cast<int>(origin.i)).sourceLine, N(static_cast<int>(origin.i)).sourceColumn);
         frame = origin.kids.empty() ? -1 : origin.kids[0];

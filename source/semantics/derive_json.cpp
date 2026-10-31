@@ -103,8 +103,7 @@ bool ValidateDerivedJsonType(const std::shared_ptr<MType> &type, Memory::Set<Mem
         return ValidateDerivedJsonType(type->elem, visited);
     }
     if (type->kind != MType::Struct || HasNonCopyableValue(type)) return Fail("#derive(Json) 不支持引用、函数、动态接口、数组或不可复制资源：" + Describe(type));
-    const auto bare = BareTypeName(type->name);
-    const bool builtin = bare.rfind("Option__", 0) == 0 || bare.rfind("Result__", 0) == 0;
+    const bool builtin = StandardGeneric(type->name, "Option") || StandardGeneric(type->name, "Result");
     if (!builtin && !HasJsonDerivation(type->name)) return Fail("#derive(Json) 的嵌套类型必须派生 Json：" + Describe(type));
     if (const auto enumeration = g_enums.find(type->name); enumeration != g_enums.end())
     {

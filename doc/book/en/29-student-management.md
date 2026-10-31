@@ -394,6 +394,59 @@ The third checks relations and selects INSERT, UPDATE or DELETE. Only successful
 
 Read backward from exec and list every preceding identity, scope, field and association check. A teacher submitting a grade for an unauthorized class should fail here even when manually sending the HTTP request.
 
+### Decode a JSON object into a checkable input value
+
+Grade writes have fixed fields. This standalone example uses school_grades fields student_id, subject_id, teacher_id, term and score. It combines decoding and field validation in a function that can be tested independently.
+
+<!-- verify-book -->
+```chali
+import std::json;
+
+#derive(Json)
+struct GradeInput
+{
+    @std::json::Field("student_id") int64 student;
+    @std::json::Field("subject_id") int64 subject;
+    @std::json::Field("teacher_id") int64 teacher;
+    String term;
+    float64 score;
+}
+
+Result<GradeInput, Error> parseGrade(String text)
+{
+    GradeInput input = GradeInput::fromJson(text)?;
+    if (input.student <= 0 || input.subject <= 0 || input.teacher <= 0
+        || input.term.isEmpty() || input.term.length() > 40
+        || input.score < 0.0 || input.score > 100.0)
+    {
+        return Result<GradeInput, Error>::Err(MessageError::from("成绩字段无效"));
+    }
+    return Result<GradeInput, Error>::Ok(input);
+}
+
+void main()
+{
+    String text = "{\"student_id\":7,\"subject_id\":2,\"teacher_id\":3,\"term\":\"2026-1\",\"score\":92.5}";
+    GradeInput input = parseGrade(text).unwrap();
+    println("{} {}", input.student, input.score);
+    input.score = 101.0;
+    assert(parseGrade(input.toJson().unwrap()).isErr());
+    println("拒绝无效成绩");
+}
+```
+
+```text
+7 92.5
+拒绝无效成绩
+```
+
+GradeInput describes the write fields. Three Field annotations map external underscore-separated keys to shorter member names; term and score keep their names. Json derivation handles object shape, field types and encoding. Missing required fields, unknown keys and unrepresentable numbers produce Error from fromJson.
+
+The ? operator propagates decoding failures before a GradeInput is available. The if then checks positive identifiers, a nonempty term of at most 40 bytes and a score from 0 through 100. These are explicit business constraints: float64 alone does not mean a percentage grade. Validation failures use MessageError through the common Error interface.
+
+main decodes valid input and prints the student identifier and score. It then changes the score to 101, encodes it and sends it through the same entry, verifying rejection. This exercises decoding, validation and encoding together.
+
+Successful decoding still requires the role and record-scope checks in write, the teaching-association checks in relations and SQL literal conversion. An acceptable GradeInput does not authorize the current account to grade that student.
 ## 29.16 Exercises
 
 1. Create a teacher, class and subject and assign teaching scope.

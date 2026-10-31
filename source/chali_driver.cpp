@@ -63,7 +63,8 @@ Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
     {
         const auto end = message.find('\n', begin);
         const auto line = message.substr(begin, end == Memory::String::npos ? Memory::String::npos : end - begin);
-        const bool frame = line.rfind("  展开宏 $", 0) == 0 || line.rfind("  expanding macro $", 0) == 0;
+        const bool frame = line.rfind("  展开宏 $", 0) == 0 || line.rfind("  expanding macro $", 0) == 0
+                           || line.rfind("  派生 #derive(", 0) == 0;
         if (frame && seen) omitted = true;
         else
         {
