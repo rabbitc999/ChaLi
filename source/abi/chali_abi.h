@@ -20,6 +20,34 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(_WIN32) && (defined(_M_IX86) || defined(__i386__))
+#define CHALI_ABI_CALL __cdecl
+#else
+#define CHALI_ABI_CALL
+#endif
+
+#if defined(_M_X64) || defined(__x86_64__)
+#define CHALI_ABI_TARGET_ARCH 2u
+#elif defined(_M_IX86) || defined(__i386__)
+#define CHALI_ABI_TARGET_ARCH 1u
+#elif defined(_M_ARM64) || defined(__aarch64__)
+#define CHALI_ABI_TARGET_ARCH 4u
+#elif defined(_M_ARM) || defined(__arm__)
+#define CHALI_ABI_TARGET_ARCH 3u
+#else
+#define CHALI_ABI_TARGET_ARCH 0u
+#endif
+
+#if defined(_WIN32)
+#define CHALI_ABI_TARGET_PLATFORM 1u
+#elif defined(__linux__)
+#define CHALI_ABI_TARGET_PLATFORM 2u
+#elif defined(__APPLE__)
+#define CHALI_ABI_TARGET_PLATFORM 3u
+#else
+#define CHALI_ABI_TARGET_PLATFORM 0u
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,28 +77,166 @@ enum
  */
 typedef struct ChaliAbiFrame
 {
-    ChaliAbiRuntime *runtime;        ///< 本次调用的运行时句柄。
-    const int64_t *slots;            ///< 实参原始位模式，长度 `count`。
-    const unsigned char *kinds;      ///< 每个实参的值类别，长度 `count`。
-    int64_t count;                   ///< 实参数量。
-    int64_t result;                  ///< 直通入口写回的返回位模式。
-    int resultIsFloat;               ///< 返回值是否为浮点槽。
+    ChaliAbiRuntime *runtime;    ///< 本次调用的运行时句柄。
+    const int64_t *slots;        ///< 实参原始位模式，长度 `count`。
+    const unsigned char *kinds;  ///< 每个实参的值类别，长度 `count`。
+    int64_t count;               ///< 实参数量。
+    int64_t result;              ///< 直通入口写回的返回位模式。
+    int resultIsFloat;           ///< 返回值是否为浮点槽。
 } ChaliAbiFrame;
 
 /**
  * @brief 直通入口的统一签名：入参出参都在帧上，不分配、不抛异常。
  */
-typedef void (*ChaliAbiEntry)(ChaliAbiFrame *frame);
+typedef void(CHALI_ABI_CALL *ChaliAbiEntry)(ChaliAbiFrame *frame);
 
 /**
  * @brief 直通入口表项。
  */
 typedef struct ChaliAbiRecord
 {
-    const char *name;   ///< 原生函数完整名称，与注册表登记名一致。
-    ChaliAbiEntry entry;///< 直通入口。
-    int arity;          ///< 固定实参数量；-1 表示由入口自行检查的变参。
+    const char *name;     ///< 原生函数完整名称，与注册表登记名一致。
+    ChaliAbiEntry entry;  ///< 直通入口。
+    int arity;            ///< 固定实参数量；-1 表示由入口自行检查的变参。
 } ChaliAbiRecord;
+
+/** @brief C 宿主边界版本；只有兼容布局与含义完全相同时才接受。 */
+#define CHALI_ABI_VERSION           UINT32_C(1)
+
+/** @brief 可选能力位；未知的必需能力会导致模块被拒绝。 */
+#define CHALI_ABI_CAP_SYNC_CALLBACK UINT64_C(1)
+#define CHALI_ABI_CAP_RECORD        UINT64_C(2)
+#define CHALI_ABI_CAP_BYTE_VIEW     UINT64_C(4)
+
+/** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
+enum
+{
+    ChaliAbiOk = 0,
+    ChaliAbiInvalidArgument = 1,
+    ChaliAbiIncompatible = 2,
+    ChaliAbiDuplicate = 3,
+    ChaliAbiHostFailure = 4
+};
+
+/**
+ * @brief 调用方持有的诊断缓冲；不转移所有权，不分配内存。
+ * @note required 包含末尾零字节；容量不足时仍写入可容纳的完整前缀及零字节。
+ */
+typedef struct ChaliAbiError
+{
+    char *data;       ///< 可写字节缓冲；容量为零时可为空。
+    size_t capacity;  ///< 缓冲区字节容量。
+    size_t required;  ///< 完整诊断所需字节数；成功时为零。
+    int32_t status;   ///< ChaliAbiOk 或稳定错误码。
+} ChaliAbiError;
+
+/**
+ * @brief 当前编译目标的 ABI 描述；由模块自己的 C 编译器生成并与宿主比较。
+ * @note 不把宿主描述复制为模块描述；不同目标布局不能互相装载。
+ */
+typedef struct ChaliAbiInfo
+{
+    uint32_t structSize;         ///< 本描述结构字节数。
+    uint32_t version;            ///< CHALI_ABI_VERSION。
+    uint32_t pointerBits;        ///< 对象指针位数。
+    uint32_t littleEndian;       ///< 小端为一，大端为零。
+    uint32_t callingConvention;  ///< 一表示本头定义的 C 调用约定。
+    uint32_t architecture;       ///< 一为 x86，二为 x64，三为 ARM，四为 ARM64；零不支持。
+    uint32_t platform;           ///< 一为 Windows，二为 Linux，三为 Darwin；零不支持。
+    uint32_t frameSize;          ///< ChaliAbiFrame 字节数。
+    uint32_t frameAlignment;     ///< ChaliAbiFrame 对齐。
+    uint32_t recordSize;         ///< ChaliAbiRecord 字节数。
+    uint32_t recordAlignment;    ///< ChaliAbiRecord 对齐。
+    uint32_t frameOffsets[6];    ///< runtime、slots、kinds、count、result、resultIsFloat 偏移。
+    uint32_t recordOffsets[3];   ///< name、entry、arity 偏移。
+    uint64_t capabilities;       ///< 模块要求／宿主支持的能力位。
+} ChaliAbiInfo;
+
+/**
+ * @brief 用包含本头的编译器生成模块自身的目标布局。
+ * @param capabilities 模块实际要求的能力位。
+ * @return 不引用外部存储的 ABI 描述副本。
+ */
+static inline ChaliAbiInfo chali_abi_local_info(uint64_t capabilities)
+{
+    const uint32_t endian = 1;
+    ChaliAbiInfo info;
+    info.structSize = (uint32_t)sizeof(ChaliAbiInfo);
+    info.version = CHALI_ABI_VERSION;
+    info.pointerBits = (uint32_t)(sizeof(void *) * 8u);
+    info.littleEndian = *(const unsigned char *)&endian;
+    info.callingConvention = 1;
+    info.architecture = CHALI_ABI_TARGET_ARCH;
+    info.platform = CHALI_ABI_TARGET_PLATFORM;
+    info.frameSize = (uint32_t)sizeof(ChaliAbiFrame);
+    info.recordSize = (uint32_t)sizeof(ChaliAbiRecord);
+#ifdef __cplusplus
+    info.frameAlignment = (uint32_t)alignof(ChaliAbiFrame);
+    info.recordAlignment = (uint32_t)alignof(ChaliAbiRecord);
+#else
+    info.frameAlignment = (uint32_t)_Alignof(ChaliAbiFrame);
+    info.recordAlignment = (uint32_t)_Alignof(ChaliAbiRecord);
+#endif
+    info.frameOffsets[0] = (uint32_t)offsetof(ChaliAbiFrame, runtime);
+    info.frameOffsets[1] = (uint32_t)offsetof(ChaliAbiFrame, slots);
+    info.frameOffsets[2] = (uint32_t)offsetof(ChaliAbiFrame, kinds);
+    info.frameOffsets[3] = (uint32_t)offsetof(ChaliAbiFrame, count);
+    info.frameOffsets[4] = (uint32_t)offsetof(ChaliAbiFrame, result);
+    info.frameOffsets[5] = (uint32_t)offsetof(ChaliAbiFrame, resultIsFloat);
+    info.recordOffsets[0] = (uint32_t)offsetof(ChaliAbiRecord, name);
+    info.recordOffsets[1] = (uint32_t)offsetof(ChaliAbiRecord, entry);
+    info.recordOffsets[2] = (uint32_t)offsetof(ChaliAbiRecord, arity);
+    info.capabilities = capabilities;
+    return info;
+}
+
+/** @brief 模块的只读入口描述，注册成功后宿主必须复制名称和入口。 */
+typedef struct ChaliAbiModuleDescriptor
+{
+    uint32_t structSize;            ///< 本描述结构大小。
+    const ChaliAbiInfo *abi;        ///< 模块编译目标描述。
+    const ChaliAbiRecord *records;  ///< 入口数组；count 为零时可为空。
+    size_t count;                   ///< 入口数量。
+} ChaliAbiModuleDescriptor;
+
+/**
+ * @brief 获取当前编译目标的只读 ABI 描述。
+ * @return 进程存活期间有效的描述，不得修改或释放。
+ */
+const ChaliAbiInfo *chali_abi_info(void);
+
+/**
+ * @brief 检查模块 ABI 是否与当前宿主兼容。
+ * @param expected 模块使用自己的编译器生成的 ABI 描述。
+ * @param error 可选的调用方诊断缓冲。
+ * @return 稳定状态码；成功为 ChaliAbiOk。
+ */
+int chali_abi_check(const ChaliAbiInfo *expected, ChaliAbiError *error);
+
+/**
+ * @brief 无副作用检查整个模块；不注册入口，也不调用用户代码。
+ * @param module 模块入口及目标描述。
+ * @param error 可选的调用方诊断缓冲。
+ * @return 兼容且所有名称、入口、参数数量和模块内重复检查通过时为零。
+ */
+int chali_abi_check_module(const ChaliAbiModuleDescriptor *module, ChaliAbiError *error);
+
+/**
+ * @brief 调用前检查槽数组、参数数量及类别。
+ * @param frame 当前帧；函数不修改帧。
+ * @param arity 固定参数数量，-1 表示变参。
+ * @param error 可选的调用方诊断缓冲。
+ * @return 输入合法时为零；内存必须由调用方保证可访问。
+ */
+int chali_abi_check_frame(const ChaliAbiFrame *frame, int arity, ChaliAbiError *error);
+
+/**
+ * @brief 调用后检查返回槽类别。
+ * @param frame 调用后的帧。
+ * @param error 可选的调用方诊断缓冲。
+ * @return resultIsFloat 为零或一时为零。
+ */
+int chali_abi_check_result(const ChaliAbiFrame *frame, ChaliAbiError *error);
 
 /**
  * @brief 取直通入口表。

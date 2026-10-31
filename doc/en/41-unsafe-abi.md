@@ -111,6 +111,18 @@ On MinGW, the CAS 64 MiB zero-initialized backing pool occupies BSS instead of e
 
 The AOT data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_AOT_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
 
+## C frames for host entries
+
+The standard library's direct C entries use `source/abi/chali_abi.h`, a separate boundary from external signatures declared with `#abi`. A `ChaliAbiFrame` contains 64-bit argument slots and a separate kind array. Integer slots also carry checked language handles; floating slots hold double bit patterns. A handle is not a dereferenceable host pointer.
+
+A module calls `chali_abi_local_info(requiredCapabilities)` using its own compiler, and the host checks that descriptor with `chali_abi_check`. It records the ABI version, target architecture and platform, pointer width, byte order, C calling convention, and frame/record sizes, alignments and field offsets. Different versions, architectures/platforms, target layouts, packing or unsupported required capabilities are rejected. Copying the host descriptor does not describe a module's actual layout. Compatibility does not establish AOT execution support for a cross target.
+
+`chali_abi_check_module` validates a `ChaliAbiModuleDescriptor` before registration, including missing names/functions, invalid arities and duplicate names. It does not register anything. `chali_abi_check_frame` validates the argument count, arrays and slot kinds before a call; `chali_abi_check_result` checks the returned kind. The native direct-entry path performs these checks as well. Callers must still supply accessible, sufficiently large memory: these functions cannot prove arbitrary pointers are readable.
+
+`ChaliAbiError` uses a caller-owned buffer without allocating or transferring ownership. `status` holds a stable error code; `required` includes the terminating zero byte, or is zero on success. Truncated output remains terminated, and zero capacity supports a length query. Protocol diagnostics use fixed text independent of locale. Run `python tests/chali_c_api_contract.py` for independently compiled C11/C++17 interoperability and rejection of incompatible packing.
+
+A language failure inside a synchronous C callback returns to the checked invoker. Its trampoline stores the failure and returns a zero value to C. After the C function returns, the adapter releases its owned return pointer before reporting the original failure; a C++ exception does not escape through the user's C function. Callback pointers are valid only for that synchronous call and cannot be retained for asynchronous invocation. A panic outside a callback still terminates the process.
+
 ## Reproducing experiments
 
 ```text

@@ -15,6 +15,7 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <stdexcept>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -371,6 +372,19 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
 }  // namespace
 
 extern "C" {
+/**
+ * @brief 同步语言回调失败时退回受检查的调用器，让 C 调用完成资源释放。
+ * @param message 原始运行期错误。
+ * @note 无回调时正常返回，随后沿用终止进程的诊断；异常由回调跳板截获。
+ */
+void chali_host_raise_callback_error(const char *message)
+{
+    if (nativeThreadState.callbackDepth == 0) return;
+    auto &context = currentContext();
+    if (context.error.empty()) context.error = message ? message : "同步回调失败";
+    throw std::runtime_error(context.error.c_str());
+}
+
 /**
  * @brief 按声明路径加载动态库并解析原始 C 函数地址。
  * @param path UTF-8 动态库路径。
@@ -791,7 +805,13 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
                 /* 直通：实参直接是生成代码写好的槽数组，不构造 NativeValue 向量。 */
                 ChaliAbiRuntime runtime{ &context };
                 ChaliAbiFrame frame{ &runtime, bits, floating, count, 0, 0 };
+                char diagnostic[128];
+                ChaliAbiError abiError{diagnostic, sizeof(diagnostic), 0, ChaliAbiOk};
+                if (chali_abi_check_frame(&frame, entry->directArity, &abiError) != ChaliAbiOk)
+                    chali_panic(diagnostic);
                 entry->direct(&frame);
+                if (chali_abi_check_result(&frame, &abiError) != ChaliAbiOk)
+                    chali_panic(diagnostic);
                 if (frame.resultIsFloat != 0)
                 {
                     double value = 0.0;

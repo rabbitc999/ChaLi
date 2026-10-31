@@ -60,29 +60,32 @@ define dso_local ptr @chali_standard_stream(i32 noundef %0) local_unnamed_addr #
   ret ptr %11
 }
 
-; Function Attrs: cold noreturn nounwind uwtable
+; Function Attrs: cold noreturn uwtable
 define dso_local void @chali_panic(ptr noundef %0) local_unnamed_addr #1 {
+  tail call void @chali_host_raise_callback_error(ptr noundef %0)
   %2 = load ptr, ptr @stdout, align 8, !tbaa !16
   %3 = tail call i32 @fflush(ptr noundef %2)
   %4 = load ptr, ptr @stderr, align 8, !tbaa !16
   %5 = tail call i32 (ptr, ptr, ...) @fprintf(ptr noundef %4, ptr noundef nonnull @.str, ptr noundef %0) #19
-  tail call void @chali_host_trace() #20
-  tail call void @exit(i32 noundef 1) #21
+  tail call void @chali_host_trace()
+  tail call void @exit(i32 noundef 1) #20
   unreachable
 }
 
-; Function Attrs: nofree nounwind
-declare noundef i32 @fflush(ptr noundef captures(none)) local_unnamed_addr #2
+declare void @chali_host_raise_callback_error(ptr noundef) local_unnamed_addr #2
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @fprintf(ptr noundef captures(none), ptr noundef readonly captures(none), ...) local_unnamed_addr #2
+declare noundef i32 @fflush(ptr noundef captures(none)) local_unnamed_addr #3
 
-declare void @chali_host_trace() local_unnamed_addr #3
+; Function Attrs: nofree nounwind
+declare noundef i32 @fprintf(ptr noundef captures(none), ptr noundef readonly captures(none), ...) local_unnamed_addr #3
+
+declare void @chali_host_trace() local_unnamed_addr #2
 
 ; Function Attrs: nofree noreturn
 declare void @exit(i32 noundef) local_unnamed_addr #4
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_check_shift(i64 noundef %0) local_unnamed_addr #5 {
   %2 = icmp ugt i64 %0, 63
   br i1 %2, label %3, label %4
@@ -95,7 +98,7 @@ define dso_local void @chali_check_shift(i64 noundef %0) local_unnamed_addr #5 {
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_check_real_divisor(double noundef %0) local_unnamed_addr #5 {
   %2 = fcmp oeq double %0, 0.000000e+00
   br i1 %2, label %3, label %4
@@ -108,7 +111,7 @@ define dso_local void @chali_check_real_divisor(double noundef %0) local_unnamed
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local noundef i64 @chali_integer_divide(i64 noundef %0, i64 noundef %1, i32 noundef %2, i32 noundef %3) local_unnamed_addr #5 {
   %5 = icmp eq i64 %1, 0
   br i1 %5, label %6, label %7
@@ -163,43 +166,43 @@ define dso_local noundef i64 @chali_integer_divide(i64 noundef %0, i64 noundef %
   ret i64 %28
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_init() local_unnamed_addr #5 {
-  tail call void @chali_host_init() #20
+  tail call void @chali_host_init()
   ret void
 }
 
-declare void @chali_host_init() local_unnamed_addr #3
+declare void @chali_host_init() local_unnamed_addr #2
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_finish() local_unnamed_addr #5 {
   %1 = load ptr, ptr @stdout, align 8, !tbaa !16
   %2 = tail call i32 @fflush(ptr noundef %1)
-  tail call void @chali_host_finish() #20
+  tail call void @chali_host_finish()
   ret void
 }
 
-declare void @chali_host_finish() local_unnamed_addr #3
+declare void @chali_host_finish() local_unnamed_addr #2
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_alloc(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call i64 @chali_host_allocate(i64 noundef %0) #20
+  %2 = tail call i64 @chali_host_allocate(i64 noundef %0)
   ret i64 %2
 }
 
-declare i64 @chali_host_allocate(i64 noundef) local_unnamed_addr #3
+declare i64 @chali_host_allocate(i64 noundef) local_unnamed_addr #2
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_drop(i64 noundef %0) local_unnamed_addr #5 {
-  tail call void @chali_host_drop(i64 noundef %0) #20
+  tail call void @chali_host_drop(i64 noundef %0)
   ret void
 }
 
-declare void @chali_host_drop(i64 noundef) local_unnamed_addr #3
+declare void @chali_host_drop(i64 noundef) local_unnamed_addr #2
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_load_i64(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %3 = load i64, ptr %2, align 1
   ret i64 %3
 }
@@ -207,7 +210,7 @@ define dso_local i64 @chali_load_i64(i64 noundef %0) local_unnamed_addr #5 {
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.lifetime.start.p0(ptr captures(none)) #6
 
-declare ptr @chali_host_address(i64 noundef, i64 noundef) local_unnamed_addr #3
+declare ptr @chali_host_address(i64 noundef, i64 noundef) local_unnamed_addr #2
 
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none), ptr noalias readonly captures(none), i64, i1 immarg) #6
@@ -215,76 +218,76 @@ declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none), ptr no
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.lifetime.end.p0(ptr captures(none)) #6
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_store_i64(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
-  %3 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %3 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   store i64 %1, ptr %3, align 1
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local double @chali_load_f64(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %3 = load double, ptr %2, align 1
   ret double %3
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_store_f64(i64 noundef %0, double noundef %1) local_unnamed_addr #5 {
-  %3 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %3 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   store double %1, ptr %3, align 1
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 0, 256) i64 @chali_load_u8(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
   %3 = load i8, ptr %2, align 1, !tbaa !19
   %4 = zext i8 %3 to i64
   ret i64 %4
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_store_u8(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = trunc i64 %1 to i8
-  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
+  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
   store i8 %3, ptr %4, align 1, !tbaa !19
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 -2147483648, 2147483648) i64 @chali_load_i32(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 4) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 4)
   %3 = load i32, ptr %2, align 1
   %4 = sext i32 %3 to i64
   ret i64 %4
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_store_i32(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = trunc i64 %1 to i32
-  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 4) #20
+  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 4)
   store i32 %3, ptr %4, align 1
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 -32768, 32768) i64 @chali_load_i16(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 2) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 2)
   %3 = load i16, ptr %2, align 1
   %4 = sext i16 %3 to i64
   ret i64 %4
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_store_i16(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = trunc i64 %1 to i16
-  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 2) #20
+  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 2)
   store i16 %3, ptr %4, align 1
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_new(ptr nofree noundef readonly captures(none) %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = icmp ugt i64 %1, 9223372036854775774
   br i1 %3, label %4, label %5
@@ -296,7 +299,7 @@ define dso_local i64 @chali_string_new(ptr nofree noundef readonly captures(none
 5:                                                ; preds = %2
   %6 = icmp eq i64 %1, 0
   %7 = tail call i64 @llvm.umax.i64(i64 %1, i64 1)
-  %8 = tail call ptr @malloc(i64 noundef %7) #22
+  %8 = tail call ptr @malloc(i64 noundef %7) #21
   %9 = icmp eq ptr %8, null
   br i1 %9, label %10, label %11
 
@@ -314,7 +317,7 @@ define dso_local i64 @chali_string_new(ptr nofree noundef readonly captures(none
 13:                                               ; preds = %12, %11
   %14 = icmp ult i64 %1, 17
   %15 = select i1 %14, i64 49, i64 32
-  %16 = tail call i64 @chali_host_allocate(i64 noundef %15) #20
+  %16 = tail call i64 @chali_host_allocate(i64 noundef %15)
   br i1 %14, label %17, label %19
 
 17:                                               ; preds = %13
@@ -323,13 +326,13 @@ define dso_local i64 @chali_string_new(ptr nofree noundef readonly captures(none
 
 19:                                               ; preds = %13
   %20 = add nuw nsw i64 %1, 1
-  %21 = tail call i64 @chali_host_allocate(i64 noundef %20) #20
+  %21 = tail call i64 @chali_host_allocate(i64 noundef %20)
   br label %22
 
 22:                                               ; preds = %19, %17
   %23 = phi i64 [ 16, %17 ], [ %1, %19 ]
   %24 = phi i64 [ %18, %17 ], [ %21, %19 ]
-  %25 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 32) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 32)
   store i64 -1, ptr %25, align 1
   %26 = getelementptr inbounds nuw i8, ptr %25, i64 8
   store i64 %1, ptr %26, align 1
@@ -340,13 +343,13 @@ define dso_local i64 @chali_string_new(ptr nofree noundef readonly captures(none
   br i1 %6, label %31, label %29
 
 29:                                               ; preds = %22
-  %30 = tail call ptr @chali_host_address(i64 noundef %24, i64 noundef %1) #20
+  %30 = tail call ptr @chali_host_address(i64 noundef %24, i64 noundef %1)
   tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %30, ptr nonnull align 1 %8, i64 %1, i1 false)
   br label %31
 
 31:                                               ; preds = %29, %22
   %32 = add nsw i64 %24, %1
-  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 1) #20
+  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 1)
   store i8 0, ptr %33, align 1, !tbaa !19
   tail call void @free(ptr noundef %8)
   ret i64 %16
@@ -366,7 +369,7 @@ define dso_local range(i32 0, 2) i32 @chali_on_heap(i64 noundef %0) local_unname
   ret i32 %4
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_length(i64 noundef %0) local_unnamed_addr #5 {
   %2 = icmp eq i64 %0, 0
   br i1 %2, label %17, label %3
@@ -377,19 +380,19 @@ define dso_local i64 @chali_string_length(i64 noundef %0) local_unnamed_addr #5 
   br i1 %5, label %6, label %9
 
 6:                                                ; preds = %3
-  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %8 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %7) #20
+  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %8 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %7) #22
   br label %17
 
 9:                                                ; preds = %3
-  %10 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %10 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %11 = load i64, ptr %10, align 1
   %12 = icmp eq i64 %11, -1
   br i1 %12, label %13, label %17
 
 13:                                               ; preds = %9
   %14 = add nsw i64 %0, 8
-  %15 = tail call ptr @chali_host_address(i64 noundef %14, i64 noundef 8) #20
+  %15 = tail call ptr @chali_host_address(i64 noundef %14, i64 noundef 8)
   %16 = load i64, ptr %15, align 1
   br label %17
 
@@ -401,21 +404,21 @@ define dso_local i64 @chali_string_length(i64 noundef %0) local_unnamed_addr #5 
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
 declare i64 @strlen(ptr noundef captures(none)) local_unnamed_addr #10
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local ptr @chali_string_bytes(i64 noundef %0) local_unnamed_addr #5 {
   %2 = load i64, ptr @chali_data_size, align 8, !tbaa !20
   %3 = icmp slt i64 %0, %2
   br i1 %3, label %14, label %4
 
 4:                                                ; preds = %1
-  %5 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %5 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %6 = load i64, ptr %5, align 1
   %7 = icmp eq i64 %6, -1
   br i1 %7, label %8, label %12
 
 8:                                                ; preds = %4
   %9 = add nsw i64 %0, 24
-  %10 = tail call ptr @chali_host_address(i64 noundef %9, i64 noundef 8) #20
+  %10 = tail call ptr @chali_host_address(i64 noundef %9, i64 noundef 8)
   %11 = load i64, ptr %10, align 1
   br label %14
 
@@ -425,19 +428,19 @@ define dso_local ptr @chali_string_bytes(i64 noundef %0) local_unnamed_addr #5 {
 
 14:                                               ; preds = %1, %8, %12
   %15 = phi i64 [ %13, %12 ], [ %11, %8 ], [ %0, %1 ]
-  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 0) #20
+  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 0)
   ret ptr %16
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_literal(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %3 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #20
+  %2 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %3 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #22
   %4 = tail call i64 @chali_string_new(ptr noundef nonnull %2, i64 noundef %3)
   ret i64 %4
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_copy(i64 noundef %0) local_unnamed_addr #5 {
   %2 = icmp eq i64 %0, 0
   br i1 %2, label %33, label %3
@@ -448,14 +451,14 @@ define dso_local i64 @chali_string_copy(i64 noundef %0) local_unnamed_addr #5 {
   br i1 %5, label %16, label %6
 
 6:                                                ; preds = %3
-  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %8 = load i64, ptr %7, align 1
   %9 = icmp eq i64 %8, -1
   br i1 %9, label %10, label %14
 
 10:                                               ; preds = %6
   %11 = add nsw i64 %0, 24
-  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8) #20
+  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8)
   %13 = load i64, ptr %12, align 1
   br label %16
 
@@ -465,23 +468,23 @@ define dso_local i64 @chali_string_copy(i64 noundef %0) local_unnamed_addr #5 {
 
 16:                                               ; preds = %3, %10, %14
   %17 = phi i64 [ %15, %14 ], [ %13, %10 ], [ %0, %3 ]
-  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 0) #20
+  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 0)
   br i1 %5, label %19, label %22
 
 19:                                               ; preds = %16
-  %20 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %21 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %20) #20
+  %20 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %21 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %20) #22
   br label %30
 
 22:                                               ; preds = %16
-  %23 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %23 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %24 = load i64, ptr %23, align 1
   %25 = icmp eq i64 %24, -1
   br i1 %25, label %26, label %30
 
 26:                                               ; preds = %22
   %27 = add nsw i64 %0, 8
-  %28 = tail call ptr @chali_host_address(i64 noundef %27, i64 noundef 8) #20
+  %28 = tail call ptr @chali_host_address(i64 noundef %27, i64 noundef 8)
   %29 = load i64, ptr %28, align 1
   br label %30
 
@@ -495,7 +498,7 @@ define dso_local i64 @chali_string_copy(i64 noundef %0) local_unnamed_addr #5 {
   ret i64 %34
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_string_drop(i64 noundef %0) local_unnamed_addr #5 {
   %2 = icmp eq i64 %0, 0
   %3 = load i64, ptr @chali_data_size, align 8
@@ -504,41 +507,41 @@ define dso_local void @chali_string_drop(i64 noundef %0) local_unnamed_addr #5 {
   br i1 %5, label %17, label %6
 
 6:                                                ; preds = %1
-  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %7 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %8 = load i64, ptr %7, align 1
   %9 = icmp eq i64 %8, -1
   br i1 %9, label %10, label %17
 
 10:                                               ; preds = %6
   %11 = add nsw i64 %0, 24
-  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8) #20
+  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8)
   %13 = load i64, ptr %12, align 1
   %14 = add nsw i64 %0, 32
   %15 = icmp eq i64 %13, %14
   br i1 %15, label %17, label %16
 
 16:                                               ; preds = %10
-  tail call void @chali_host_drop(i64 noundef %13) #20
+  tail call void @chali_host_drop(i64 noundef %13)
   br label %17
 
 17:                                               ; preds = %10, %16, %6, %1
-  tail call void @chali_host_drop(i64 noundef %0) #20
+  tail call void @chali_host_drop(i64 noundef %0)
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 -9223372036854775800, -9223372036854775808) i64 @chali_new_array(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = tail call i64 @llvm.smax.i64(i64 %0, i64 0)
   %4 = mul i64 %3, %1
   %5 = add i64 %4, 8
-  %6 = tail call i64 @chali_host_allocate(i64 noundef %5) #20
-  %7 = tail call ptr @chali_host_address(i64 noundef %6, i64 noundef 8) #20
+  %6 = tail call i64 @chali_host_allocate(i64 noundef %5)
+  %7 = tail call ptr @chali_host_address(i64 noundef %6, i64 noundef 8)
   store i64 %3, ptr %7, align 1
   %8 = add nsw i64 %6, 8
   ret i64 %8
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_bounds(i64 noundef %0, i64 noundef %1, ptr noundef %2) local_unnamed_addr #5 {
   %4 = alloca [128 x i8], align 1
   %5 = icmp sgt i64 %0, -1
@@ -547,8 +550,8 @@ define dso_local void @chali_bounds(i64 noundef %0, i64 noundef %1, ptr noundef 
   br i1 %7, label %10, label %8
 
 8:                                                ; preds = %3
-  call void @llvm.lifetime.start.p0(ptr nonnull %4) #20
-  %9 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %4, i64 noundef 128, ptr noundef nonnull @.str.7, ptr noundef %2, i64 noundef %0, i64 noundef %1) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %4) #22
+  %9 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %4, i64 noundef 128, ptr noundef nonnull @.str.7, ptr noundef %2, i64 noundef %0, i64 noundef %1) #22
   call void @chali_panic(ptr noundef nonnull %4)
   unreachable
 
@@ -557,17 +560,17 @@ define dso_local void @chali_bounds(i64 noundef %0, i64 noundef %1, ptr noundef 
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @snprintf(ptr noalias noundef writeonly captures(none), i64 noundef, ptr noundef readonly captures(none), ...) local_unnamed_addr #2
+declare noundef i32 @snprintf(ptr noalias noundef writeonly captures(none), i64 noundef, ptr noundef readonly captures(none), ...) local_unnamed_addr #3
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_null(i64 noundef %0, ptr noundef %1) local_unnamed_addr #5 {
   %3 = alloca [128 x i8], align 1
   %4 = icmp eq i64 %0, 0
   br i1 %4, label %5, label %7
 
 5:                                                ; preds = %2
-  call void @llvm.lifetime.start.p0(ptr nonnull %3) #20
-  %6 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 128, ptr noundef nonnull @.str.8, ptr noundef %1) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %3) #22
+  %6 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 128, ptr noundef nonnull @.str.8, ptr noundef %1) #22
   call void @chali_panic(ptr noundef nonnull %3)
   unreachable
 
@@ -582,7 +585,7 @@ define dso_local void @chali_fmt_begin(i64 noundef %0) local_unnamed_addr #11 {
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i32 0, 256) i32 @chali_fmt_scan(ptr nofree noundef writeonly captures(none) %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = load i64, ptr @chali_fmt_at, align 8, !tbaa !22
   %4 = load i64, ptr @chali_data_size, align 8, !tbaa !20
@@ -590,14 +593,14 @@ define dso_local range(i32 0, 256) i32 @chali_fmt_scan(ptr nofree noundef writeo
   br i1 %5, label %16, label %6
 
 6:                                                ; preds = %2
-  %7 = tail call ptr @chali_host_address(i64 noundef %3, i64 noundef 8) #20
+  %7 = tail call ptr @chali_host_address(i64 noundef %3, i64 noundef 8)
   %8 = load i64, ptr %7, align 1
   %9 = icmp eq i64 %8, -1
   br i1 %9, label %10, label %14
 
 10:                                               ; preds = %6
   %11 = add nsw i64 %3, 24
-  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8) #20
+  %12 = tail call ptr @chali_host_address(i64 noundef %11, i64 noundef 8)
   %13 = load i64, ptr %12, align 1
   br label %16
 
@@ -607,7 +610,7 @@ define dso_local range(i32 0, 256) i32 @chali_fmt_scan(ptr nofree noundef writeo
 
 16:                                               ; preds = %2, %10, %14
   %17 = phi i64 [ %15, %14 ], [ %13, %10 ], [ %3, %2 ]
-  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 0) #20
+  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 0)
   %19 = load i64, ptr @chali_fmt_pos, align 8, !tbaa !20
   br label %20
 
@@ -814,20 +817,20 @@ define dso_local range(i32 0, 256) i32 @chali_fmt_scan(ptr nofree noundef writeo
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef i64 @fwrite(ptr noundef readonly captures(none), i64 noundef, i64 noundef, ptr noundef captures(none)) local_unnamed_addr #2
+declare noundef i64 @fwrite(ptr noundef readonly captures(none), i64 noundef, i64 noundef, ptr noundef captures(none)) local_unnamed_addr #3
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @fputc(i32 noundef, ptr noundef captures(none)) local_unnamed_addr #2
+declare noundef i32 @fputc(i32 noundef, ptr noundef captures(none)) local_unnamed_addr #3
 
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
 declare ptr @strchr(ptr noundef, i32 noundef) local_unnamed_addr #10
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 noundef %2, i32 noundef %3) local_unnamed_addr #5 {
   %5 = alloca [64 x i8], align 1
   %6 = alloca [40 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %5) #20
-  call void @llvm.lifetime.start.p0(ptr nonnull %6) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %5) #22
+  call void @llvm.lifetime.start.p0(ptr nonnull %6) #22
   switch i32 %0, label %51 [
     i32 115, label %7
     i32 99, label %43
@@ -839,25 +842,25 @@ define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 nounde
   br i1 %8, label %75, label %9
 
 9:                                                ; preds = %7
-  %10 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.11, ptr noundef %1) #20
+  %10 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.11, ptr noundef %1) #22
   %11 = load i64, ptr @chali_data_size, align 8, !tbaa !20
   %12 = icmp slt i64 %2, %11
   br i1 %12, label %13, label %16
 
 13:                                               ; preds = %9
-  %14 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 1) #20
-  %15 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %14) #20
+  %14 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 1)
+  %15 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %14) #22
   br label %24
 
 16:                                               ; preds = %9
-  %17 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 8) #20
+  %17 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 8)
   %18 = load i64, ptr %17, align 1
   %19 = icmp eq i64 %18, -1
   br i1 %19, label %20, label %24
 
 20:                                               ; preds = %16
   %21 = add nsw i64 %2, 8
-  %22 = tail call ptr @chali_host_address(i64 noundef %21, i64 noundef 8) #20
+  %22 = tail call ptr @chali_host_address(i64 noundef %21, i64 noundef 8)
   %23 = load i64, ptr %22, align 1
   br label %24
 
@@ -869,14 +872,14 @@ define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 nounde
   br i1 %28, label %39, label %29
 
 29:                                               ; preds = %24
-  %30 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 8) #20
+  %30 = tail call ptr @chali_host_address(i64 noundef %2, i64 noundef 8)
   %31 = load i64, ptr %30, align 1
   %32 = icmp eq i64 %31, -1
   br i1 %32, label %33, label %37
 
 33:                                               ; preds = %29
   %34 = add nsw i64 %2, 24
-  %35 = tail call ptr @chali_host_address(i64 noundef %34, i64 noundef 8) #20
+  %35 = tail call ptr @chali_host_address(i64 noundef %34, i64 noundef 8)
   %36 = load i64, ptr %35, align 1
   br label %39
 
@@ -886,7 +889,7 @@ define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 nounde
 
 39:                                               ; preds = %24, %33, %37
   %40 = phi i64 [ %38, %37 ], [ %36, %33 ], [ %2, %24 ]
-  %41 = tail call ptr @chali_host_address(i64 noundef %40, i64 noundef 0) #20
+  %41 = tail call ptr @chali_host_address(i64 noundef %40, i64 noundef 0)
   %42 = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) %5, i32 noundef %26, ptr noundef %41)
   br label %75
 
@@ -910,20 +913,20 @@ define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 nounde
 
 55:                                               ; preds = %51
   %56 = bitcast i64 %2 to double
-  %57 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %6, i64 noundef 40, ptr noundef nonnull @.str.13, ptr noundef %1) #20
-  %58 = call ptr @strchr(ptr noundef nonnull dereferenceable(1) %6, i32 noundef 46) #20
+  %57 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %6, i64 noundef 40, ptr noundef nonnull @.str.13, ptr noundef %1) #22
+  %58 = call ptr @strchr(ptr noundef nonnull dereferenceable(1) %6, i32 noundef 46) #22
   %59 = icmp eq ptr %58, null
   br i1 %59, label %60, label %64
 
 60:                                               ; preds = %55
-  %61 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %6) #20
+  %61 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %6) #22
   %62 = sub i64 39, %61
-  %63 = call ptr @strncat(ptr noundef nonnull dereferenceable(1) %6, ptr noundef nonnull @.str.14, i64 noundef %62) #20
+  %63 = call ptr @strncat(ptr noundef nonnull dereferenceable(1) %6, ptr noundef nonnull @.str.14, i64 noundef %62) #22
   br label %64
 
 64:                                               ; preds = %60, %55
   %65 = and i32 %52, 255
-  %66 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.15, ptr noundef nonnull %6, i32 noundef %65) #20
+  %66 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.15, ptr noundef nonnull %6, i32 noundef %65) #22
   %67 = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) %5, double noundef %56)
   br label %75
 
@@ -936,31 +939,31 @@ define dso_local void @chali_fmt_emit(i32 noundef %0, ptr noundef %1, i64 nounde
   ]
 
 69:                                               ; preds = %68, %68, %68, %68
-  %70 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.16, ptr noundef %1, i32 noundef %52) #20
+  %70 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.16, ptr noundef %1, i32 noundef %52) #22
   %71 = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef %2)
   br label %75
 
 72:                                               ; preds = %68
-  %73 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.17, ptr noundef %1) #20
+  %73 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef 64, ptr noundef nonnull @.str.17, ptr noundef %1) #22
   %74 = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) %5, i64 noundef %2)
   br label %75
 
 75:                                               ; preds = %7, %72, %69, %64, %43, %39
-  call void @llvm.lifetime.end.p0(ptr nonnull %6) #20
-  call void @llvm.lifetime.end.p0(ptr nonnull %5) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %6) #22
+  call void @llvm.lifetime.end.p0(ptr nonnull %5) #22
   ret void
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @printf(ptr noundef readonly captures(none), ...) local_unnamed_addr #2
+declare noundef i32 @printf(ptr noundef readonly captures(none), ...) local_unnamed_addr #3
 
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
 declare ptr @strncat(ptr noalias noundef returned, ptr noalias noundef readonly captures(none), i64 noundef) local_unnamed_addr #12
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_int(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
   %3 = call i32 @chali_fmt_scan(ptr noundef nonnull %2, i64 noundef 32)
   %4 = trunc nuw i32 %3 to i8
   switch i8 %4, label %5 [
@@ -973,14 +976,14 @@ define dso_local void @chali_fmt_int(i64 noundef %0) local_unnamed_addr #5 {
   br label %6
 
 6:                                                ; preds = %1, %1, %5
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_uint(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
   %3 = call i32 @chali_fmt_scan(ptr noundef nonnull %2, i64 noundef 32)
   %4 = trunc nuw i32 %3 to i8
   switch i8 %4, label %5 [
@@ -993,14 +996,14 @@ define dso_local void @chali_fmt_uint(i64 noundef %0) local_unnamed_addr #5 {
   br label %6
 
 6:                                                ; preds = %1, %1, %5
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_char(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
   %3 = call i32 @chali_fmt_scan(ptr noundef nonnull %2, i64 noundef 32)
   %4 = trunc nuw i32 %3 to i8
   switch i8 %4, label %5 [
@@ -1013,14 +1016,14 @@ define dso_local void @chali_fmt_char(i64 noundef %0) local_unnamed_addr #5 {
   br label %6
 
 6:                                                ; preds = %1, %1, %5
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_double(double noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
   %3 = call i32 @chali_fmt_scan(ptr noundef nonnull %2, i64 noundef 32)
   %4 = trunc nuw i32 %3 to i8
   switch i8 %4, label %5 [
@@ -1034,16 +1037,16 @@ define dso_local void @chali_fmt_double(double noundef %0) local_unnamed_addr #5
   br label %7
 
 7:                                                ; preds = %1, %1, %5
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_string(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
   %3 = alloca [48 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
-  call void @llvm.lifetime.start.p0(ptr nonnull %3) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
+  call void @llvm.lifetime.start.p0(ptr nonnull %3) #22
   %4 = call i32 @chali_fmt_scan(ptr noundef nonnull %2, i64 noundef 32)
   %5 = icmp eq i64 %0, 0
   br i1 %5, label %40, label %6
@@ -1061,14 +1064,14 @@ define dso_local void @chali_fmt_string(i64 noundef %0) local_unnamed_addr #5 {
   br i1 %10, label %21, label %11
 
 11:                                               ; preds = %8
-  %12 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %12 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %13 = load i64, ptr %12, align 1
   %14 = icmp eq i64 %13, -1
   br i1 %14, label %15, label %19
 
 15:                                               ; preds = %11
   %16 = add nsw i64 %0, 24
-  %17 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 8) #20
+  %17 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 8)
   %18 = load i64, ptr %17, align 1
   br label %21
 
@@ -1078,40 +1081,40 @@ define dso_local void @chali_fmt_string(i64 noundef %0) local_unnamed_addr #5 {
 
 21:                                               ; preds = %8, %15, %19
   %22 = phi i64 [ %20, %19 ], [ %18, %15 ], [ %0, %8 ]
-  %23 = tail call ptr @chali_host_address(i64 noundef %22, i64 noundef 0) #20
+  %23 = tail call ptr @chali_host_address(i64 noundef %22, i64 noundef 0)
   br i1 %10, label %24, label %27
 
 24:                                               ; preds = %21
-  %25 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #22
   br label %35
 
 27:                                               ; preds = %21
-  %28 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %28 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %29 = load i64, ptr %28, align 1
   %30 = icmp eq i64 %29, -1
   br i1 %30, label %31, label %35
 
 31:                                               ; preds = %27
   %32 = add nsw i64 %0, 8
-  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8) #20
+  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8)
   %34 = load i64, ptr %33, align 1
   br label %35
 
 35:                                               ; preds = %24, %27, %31
   %36 = phi i64 [ %26, %24 ], [ %29, %27 ], [ %34, %31 ]
   %37 = trunc i64 %36 to i32
-  %38 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 48, ptr noundef nonnull @.str.11, ptr noundef nonnull %2) #20
+  %38 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 48, ptr noundef nonnull @.str.11, ptr noundef nonnull %2) #22
   %39 = call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) %3, i32 noundef %37, ptr noundef %23)
   br label %40
 
 40:                                               ; preds = %1, %6, %6, %35
-  call void @llvm.lifetime.end.p0(ptr nonnull %3) #20
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %3) #22
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_fmt_finish() local_unnamed_addr #5 {
   %1 = load i64, ptr @chali_fmt_at, align 8, !tbaa !22
   %2 = load i64, ptr @chali_data_size, align 8, !tbaa !20
@@ -1119,14 +1122,14 @@ define dso_local void @chali_fmt_finish() local_unnamed_addr #5 {
   br i1 %3, label %14, label %4
 
 4:                                                ; preds = %0
-  %5 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %5 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %6 = load i64, ptr %5, align 1
   %7 = icmp eq i64 %6, -1
   br i1 %7, label %8, label %12
 
 8:                                                ; preds = %4
   %9 = add nsw i64 %1, 24
-  %10 = tail call ptr @chali_host_address(i64 noundef %9, i64 noundef 8) #20
+  %10 = tail call ptr @chali_host_address(i64 noundef %9, i64 noundef 8)
   %11 = load i64, ptr %10, align 1
   br label %14
 
@@ -1136,7 +1139,7 @@ define dso_local void @chali_fmt_finish() local_unnamed_addr #5 {
 
 14:                                               ; preds = %0, %8, %12
   %15 = phi i64 [ %13, %12 ], [ %11, %8 ], [ %1, %0 ]
-  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 0) #20
+  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 0)
   %17 = load i64, ptr @chali_fmt_pos, align 8, !tbaa !20
   br label %18
 
@@ -1172,7 +1175,7 @@ define dso_local void @chali_fmt_finish() local_unnamed_addr #5 {
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = icmp eq i64 %0, 0
   br i1 %3, label %18, label %4
@@ -1183,19 +1186,19 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
   br i1 %6, label %7, label %10
 
 7:                                                ; preds = %4
-  %8 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %9 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %8) #20
+  %8 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %9 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %8) #22
   br label %18
 
 10:                                               ; preds = %4
-  %11 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %11 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %12 = load i64, ptr %11, align 1
   %13 = icmp eq i64 %12, -1
   br i1 %13, label %14, label %18
 
 14:                                               ; preds = %10
   %15 = add nsw i64 %0, 8
-  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 8) #20
+  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 8)
   %17 = load i64, ptr %16, align 1
   br label %18
 
@@ -1210,19 +1213,19 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
   br i1 %23, label %24, label %27
 
 24:                                               ; preds = %21
-  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1) #20
-  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1)
+  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #22
   br label %35
 
 27:                                               ; preds = %21
-  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %29 = load i64, ptr %28, align 1
   %30 = icmp eq i64 %29, -1
   br i1 %30, label %31, label %35
 
 31:                                               ; preds = %27
   %32 = add nsw i64 %1, 8
-  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8) #20
+  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8)
   %34 = load i64, ptr %33, align 1
   br label %35
 
@@ -1238,14 +1241,14 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
   br i1 %41, label %52, label %42
 
 42:                                               ; preds = %39
-  %43 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %43 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %44 = load i64, ptr %43, align 1
   %45 = icmp eq i64 %44, -1
   br i1 %45, label %46, label %50
 
 46:                                               ; preds = %42
   %47 = add nsw i64 %0, 24
-  %48 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 8) #20
+  %48 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 8)
   %49 = load i64, ptr %48, align 1
   br label %52
 
@@ -1255,19 +1258,19 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
 
 52:                                               ; preds = %39, %46, %50
   %53 = phi i64 [ %51, %50 ], [ %49, %46 ], [ %0, %39 ]
-  %54 = tail call ptr @chali_host_address(i64 noundef %53, i64 noundef 0) #20
+  %54 = tail call ptr @chali_host_address(i64 noundef %53, i64 noundef 0)
   %55 = icmp slt i64 %1, %40
   br i1 %55, label %66, label %56
 
 56:                                               ; preds = %52
-  %57 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %57 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %58 = load i64, ptr %57, align 1
   %59 = icmp eq i64 %58, -1
   br i1 %59, label %60, label %64
 
 60:                                               ; preds = %56
   %61 = add nsw i64 %1, 24
-  %62 = tail call ptr @chali_host_address(i64 noundef %61, i64 noundef 8) #20
+  %62 = tail call ptr @chali_host_address(i64 noundef %61, i64 noundef 8)
   %63 = load i64, ptr %62, align 1
   br label %66
 
@@ -1277,7 +1280,7 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
 
 66:                                               ; preds = %52, %60, %64
   %67 = phi i64 [ %65, %64 ], [ %63, %60 ], [ %1, %52 ]
-  %68 = tail call ptr @chali_host_address(i64 noundef %67, i64 noundef 0) #20
+  %68 = tail call ptr @chali_host_address(i64 noundef %67, i64 noundef 0)
   %69 = tail call i32 @memcmp(ptr noundef %54, ptr noundef %68, i64 noundef %37)
   br label %70
 
@@ -1303,15 +1306,15 @@ define dso_local range(i64 -1, 2) i64 @chali_string_cmp(i64 noundef %0, i64 noun
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
 declare i32 @memcmp(ptr noundef captures(none), ptr noundef captures(none), i64 noundef) local_unnamed_addr #10
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 noundef %2) local_unnamed_addr #5 {
   %4 = icmp eq i64 %0, 0
   br i1 %4, label %5, label %13
 
 5:                                                ; preds = %3
-  %6 = tail call i64 @chali_host_allocate(i64 noundef 49) #20
+  %6 = tail call i64 @chali_host_allocate(i64 noundef 49)
   %7 = add nsw i64 %6, 32
-  %8 = tail call ptr @chali_host_address(i64 noundef %6, i64 noundef 32) #20
+  %8 = tail call ptr @chali_host_address(i64 noundef %6, i64 noundef 32)
   store i64 -1, ptr %8, align 1
   %9 = getelementptr inbounds nuw i8, ptr %8, i64 8
   store i64 0, ptr %9, align 1
@@ -1319,7 +1322,7 @@ define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 nound
   store i64 16, ptr %10, align 1
   %11 = getelementptr inbounds nuw i8, ptr %8, i64 24
   store i64 %7, ptr %11, align 1
-  %12 = tail call ptr @chali_host_address(i64 noundef %7, i64 noundef 1) #20
+  %12 = tail call ptr @chali_host_address(i64 noundef %7, i64 noundef 1)
   store i8 0, ptr %12, align 1, !tbaa !19
   br label %51
 
@@ -1329,19 +1332,19 @@ define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 nound
   br i1 %15, label %16, label %19
 
 16:                                               ; preds = %13
-  %17 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %18 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %17) #20
+  %17 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %18 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %17) #22
   br label %27
 
 19:                                               ; preds = %13
-  %20 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %20 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %21 = load i64, ptr %20, align 1
   %22 = icmp eq i64 %21, -1
   br i1 %22, label %23, label %27
 
 23:                                               ; preds = %19
   %24 = add nsw i64 %0, 8
-  %25 = tail call ptr @chali_host_address(i64 noundef %24, i64 noundef 8) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %24, i64 noundef 8)
   %26 = load i64, ptr %25, align 1
   br label %27
 
@@ -1357,14 +1360,14 @@ define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 nound
   br i1 %35, label %46, label %36
 
 36:                                               ; preds = %27
-  %37 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %37 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %38 = load i64, ptr %37, align 1
   %39 = icmp eq i64 %38, -1
   br i1 %39, label %40, label %44
 
 40:                                               ; preds = %36
   %41 = add nsw i64 %0, 24
-  %42 = tail call ptr @chali_host_address(i64 noundef %41, i64 noundef 8) #20
+  %42 = tail call ptr @chali_host_address(i64 noundef %41, i64 noundef 8)
   %43 = load i64, ptr %42, align 1
   br label %46
 
@@ -1374,7 +1377,7 @@ define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 nound
 
 46:                                               ; preds = %27, %40, %44
   %47 = phi i64 [ %45, %44 ], [ %43, %40 ], [ %0, %27 ]
-  %48 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 0) #20
+  %48 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 0)
   %49 = getelementptr inbounds i8, ptr %48, i64 %31
   %50 = tail call i64 @chali_string_new(ptr noundef %49, i64 noundef %33)
   br label %51
@@ -1384,7 +1387,7 @@ define dso_local i64 @chali_string_sub(i64 noundef %0, i64 noundef %1, i64 nound
   ret i64 %52
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_pos(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = icmp eq i64 %0, 0
   %4 = icmp eq i64 %1, 0
@@ -1397,19 +1400,19 @@ define dso_local i64 @chali_string_pos(i64 noundef %0, i64 noundef %1) local_unn
   br i1 %8, label %9, label %12
 
 9:                                                ; preds = %6
-  %10 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %11 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %10) #20
+  %10 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %11 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %10) #22
   br label %20
 
 12:                                               ; preds = %6
-  %13 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %13 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %14 = load i64, ptr %13, align 1
   %15 = icmp eq i64 %14, -1
   br i1 %15, label %16, label %20
 
 16:                                               ; preds = %12
   %17 = add nsw i64 %0, 8
-  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 8) #20
+  %18 = tail call ptr @chali_host_address(i64 noundef %17, i64 noundef 8)
   %19 = load i64, ptr %18, align 1
   br label %20
 
@@ -1420,19 +1423,19 @@ define dso_local i64 @chali_string_pos(i64 noundef %0, i64 noundef %1) local_unn
   br i1 %23, label %24, label %27
 
 24:                                               ; preds = %20
-  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1) #20
-  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1)
+  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #22
   br label %35
 
 27:                                               ; preds = %20
-  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %29 = load i64, ptr %28, align 1
   %30 = icmp eq i64 %29, -1
   br i1 %30, label %31, label %35
 
 31:                                               ; preds = %27
   %32 = add nsw i64 %1, 8
-  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8) #20
+  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8)
   %34 = load i64, ptr %33, align 1
   br label %35
 
@@ -1460,36 +1463,36 @@ define dso_local i64 @chali_string_pos(i64 noundef %0, i64 noundef %1) local_unn
   br i1 %42, label %57, label %50
 
 50:                                               ; preds = %48
-  %51 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %51 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %52 = load i64, ptr %51, align 1
   %53 = icmp eq i64 %52, -1
   br i1 %53, label %54, label %57
 
 54:                                               ; preds = %50
-  %55 = tail call ptr @chali_host_address(i64 noundef %44, i64 noundef 8) #20
+  %55 = tail call ptr @chali_host_address(i64 noundef %44, i64 noundef 8)
   %56 = load i64, ptr %55, align 1
   br label %57
 
 57:                                               ; preds = %50, %48, %54
   %58 = phi i64 [ %0, %48 ], [ %56, %54 ], [ %43, %50 ]
-  %59 = tail call ptr @chali_host_address(i64 noundef %58, i64 noundef 0) #20
+  %59 = tail call ptr @chali_host_address(i64 noundef %58, i64 noundef 0)
   %60 = getelementptr inbounds nuw i8, ptr %59, i64 %49
   br i1 %45, label %68, label %61
 
 61:                                               ; preds = %57
-  %62 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %62 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %63 = load i64, ptr %62, align 1
   %64 = icmp eq i64 %63, -1
   br i1 %64, label %65, label %68
 
 65:                                               ; preds = %61
-  %66 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 8) #20
+  %66 = tail call ptr @chali_host_address(i64 noundef %47, i64 noundef 8)
   %67 = load i64, ptr %66, align 1
   br label %68
 
 68:                                               ; preds = %61, %57, %65
   %69 = phi i64 [ %1, %57 ], [ %67, %65 ], [ %46, %61 ]
-  %70 = tail call ptr @chali_host_address(i64 noundef %69, i64 noundef 0) #20
+  %70 = tail call ptr @chali_host_address(i64 noundef %69, i64 noundef 0)
   %71 = tail call i32 @bcmp(ptr %60, ptr %70, i64 %36)
   %72 = icmp eq i32 %71, 0
   br i1 %72, label %77, label %73
@@ -1505,9 +1508,9 @@ define dso_local i64 @chali_string_pos(i64 noundef %0, i64 noundef %1) local_unn
   ret i64 %78
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_read_line() local_unnamed_addr #5 {
-  %1 = tail call dereferenceable_or_null(256) ptr @malloc(i64 noundef 256) #22
+  %1 = tail call dereferenceable_or_null(256) ptr @malloc(i64 noundef 256) #21
   %2 = icmp eq ptr %1, null
   br i1 %2, label %3, label %4
 
@@ -1587,19 +1590,19 @@ define dso_local i64 @chali_read_line() local_unnamed_addr #5 {
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @fgetc(ptr noundef captures(none)) local_unnamed_addr #2
+declare noundef i32 @fgetc(ptr noundef captures(none)) local_unnamed_addr #3
 
 ; Function Attrs: mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite, errnomem: write)
 declare noalias noundef ptr @realloc(ptr allocptr noundef captures(none), i64 noundef) local_unnamed_addr #13
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_fixed(double noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = alloca [256 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %3) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %3) #22
   %4 = icmp slt i64 %1, 0
   %5 = trunc i64 %1 to i32
   %6 = select i1 %4, i32 3, i32 %5
-  %7 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 256, ptr noundef nonnull @.str.22, i32 noundef %6, double noundef %0) #20
+  %7 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 256, ptr noundef nonnull @.str.22, i32 noundef %6, double noundef %0) #22
   %8 = icmp slt i32 %7, 0
   br i1 %8, label %9, label %10
 
@@ -1611,7 +1614,7 @@ define dso_local i64 @chali_string_fixed(double noundef %0, i64 noundef %1) loca
   %11 = tail call i32 @llvm.umin.i32(i32 %7, i32 255)
   %12 = zext nneg i32 %11 to i64
   %13 = call i64 @chali_string_new(ptr noundef nonnull %3, i64 noundef %12)
-  call void @llvm.lifetime.end.p0(ptr nonnull %3) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %3) #22
   ret i64 %13
 }
 
@@ -1620,7 +1623,7 @@ define dso_local i64 @chali_read_number(i32 noundef %0) local_unnamed_addr #14 {
   %2 = alloca [256 x i8], align 1
   %3 = alloca double, align 8
   %4 = alloca i64, align 8
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
   %5 = load ptr, ptr @stdin, align 8, !tbaa !16
   %6 = call ptr @fgets(ptr noundef nonnull %2, i32 noundef 256, ptr noundef %5)
   %7 = icmp eq ptr %6, null
@@ -1631,7 +1634,7 @@ define dso_local i64 @chali_read_number(i32 noundef %0) local_unnamed_addr #14 {
   br i1 %9, label %16, label %10
 
 10:                                               ; preds = %8
-  call void @llvm.lifetime.start.p0(ptr nonnull %3) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %3) #22
   store double 0.000000e+00, ptr %3, align 8, !tbaa !34
   %11 = call i32 (ptr, ptr, ...) @sscanf(ptr noundef nonnull %2, ptr noundef nonnull @.str.24, ptr noundef nonnull %3)
   %12 = icmp eq i32 %11, 1
@@ -1643,11 +1646,11 @@ define dso_local i64 @chali_read_number(i32 noundef %0) local_unnamed_addr #14 {
 
 14:                                               ; preds = %13, %10
   %15 = load i64, ptr %3, align 8, !tbaa !34
-  call void @llvm.lifetime.end.p0(ptr nonnull %3) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %3) #22
   br label %22
 
 16:                                               ; preds = %8
-  call void @llvm.lifetime.start.p0(ptr nonnull %4) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %4) #22
   store i64 0, ptr %4, align 8, !tbaa !22
   %17 = call i32 (ptr, ptr, ...) @sscanf(ptr noundef nonnull %2, ptr noundef nonnull @.str.25, ptr noundef nonnull %4)
   %18 = icmp eq i32 %17, 1
@@ -1659,20 +1662,20 @@ define dso_local i64 @chali_read_number(i32 noundef %0) local_unnamed_addr #14 {
 
 20:                                               ; preds = %19, %16
   %21 = load i64, ptr %4, align 8, !tbaa !22
-  call void @llvm.lifetime.end.p0(ptr nonnull %4) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %4) #22
   br label %22
 
 22:                                               ; preds = %1, %20, %14
   %23 = phi i64 [ %21, %20 ], [ %15, %14 ], [ 0, %1 ]
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret i64 %23
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef ptr @fgets(ptr noundef writeonly, i32 noundef, ptr noundef captures(none)) local_unnamed_addr #2
+declare noundef ptr @fgets(ptr noundef writeonly, i32 noundef, ptr noundef captures(none)) local_unnamed_addr #3
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @sscanf(ptr noundef readonly captures(none), ptr noundef readonly captures(none), ...) local_unnamed_addr #2
+declare noundef i32 @sscanf(ptr noundef readonly captures(none), ptr noundef readonly captures(none), ...) local_unnamed_addr #3
 
 ; Function Attrs: nofree nounwind uwtable
 define dso_local range(i64 0, 2) i64 @chali_stdin_eof() local_unnamed_addr #14 {
@@ -1684,31 +1687,31 @@ define dso_local range(i64 0, 2) i64 @chali_stdin_eof() local_unnamed_addr #14 {
 }
 
 ; Function Attrs: nofree nounwind
-declare noundef i32 @feof(ptr noundef captures(none)) local_unnamed_addr #2
+declare noundef i32 @feof(ptr noundef captures(none)) local_unnamed_addr #3
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_of_int(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [32 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
-  %3 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 32, ptr noundef nonnull @.str.25, i64 noundef %0) #20
-  %4 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
+  %3 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 32, ptr noundef nonnull @.str.25, i64 noundef %0) #22
+  %4 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #22
   %5 = call i64 @chali_string_new(ptr noundef nonnull %2, i64 noundef %4)
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret i64 %5
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_string_of_double(double noundef %0) local_unnamed_addr #5 {
   %2 = alloca [64 x i8], align 1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
-  %3 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 64, ptr noundef nonnull @.str.26, double noundef %0) #20
-  %4 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
+  %3 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 64, ptr noundef nonnull @.str.26, double noundef %0) #22
+  %4 = call i64 @strlen(ptr noundef nonnull dereferenceable(1) %2) #22
   %5 = call i64 @chali_string_new(ptr noundef nonnull %2, i64 noundef %4)
-  call void @llvm.lifetime.end.p0(ptr nonnull %2) #20
+  call void @llvm.lifetime.end.p0(ptr nonnull %2) #22
   ret i64 %5
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_check(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = alloca [128 x i8], align 1
   %4 = icmp sgt i64 %0, -1
@@ -1717,8 +1720,8 @@ define dso_local void @chali_check(i64 noundef %0, i64 noundef %1) local_unnamed
   br i1 %6, label %9, label %7
 
 7:                                                ; preds = %2
-  call void @llvm.lifetime.start.p0(ptr nonnull %3) #20
-  %8 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 128, ptr noundef nonnull @.str.7, ptr noundef nonnull @.str.27, i64 noundef %0, i64 noundef %1) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %3) #22
+  %8 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %3, i64 noundef 128, ptr noundef nonnull @.str.7, ptr noundef nonnull @.str.27, i64 noundef %0, i64 noundef %1) #22
   call void @chali_panic(ptr noundef nonnull %3)
   unreachable
 
@@ -1726,15 +1729,15 @@ define dso_local void @chali_check(i64 noundef %0, i64 noundef %1) local_unnamed
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_check_pointer(i64 noundef %0) local_unnamed_addr #5 {
   %2 = alloca [128 x i8], align 1
   %3 = icmp eq i64 %0, 0
   br i1 %3, label %4, label %6
 
 4:                                                ; preds = %1
-  call void @llvm.lifetime.start.p0(ptr nonnull %2) #20
-  %5 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 128, ptr noundef nonnull @.str.8, ptr noundef nonnull @.str.28) #20
+  call void @llvm.lifetime.start.p0(ptr nonnull %2) #22
+  %5 = call i32 (ptr, i64, ptr, ...) @snprintf(ptr noundef nonnull dereferenceable(1) %2, i64 noundef 128, ptr noundef nonnull @.str.8, ptr noundef nonnull @.str.28) #22
   call void @chali_panic(ptr noundef nonnull %2)
   unreachable
 
@@ -1742,7 +1745,7 @@ define dso_local void @chali_check_pointer(i64 noundef %0) local_unnamed_addr #5
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 1, 0) i64 @chali_require_reference(i64 noundef returned %0) local_unnamed_addr #5 {
   %2 = icmp eq i64 %0, 0
   br i1 %2, label %3, label %4
@@ -1764,7 +1767,7 @@ define dso_local void @chali_put_char(i64 noundef %0) local_unnamed_addr #14 {
   ret void
 }
 
-; Function Attrs: noreturn nounwind uwtable
+; Function Attrs: noreturn uwtable
 define dso_local void @chali_abort(i64 noundef %0) local_unnamed_addr #15 {
   %2 = icmp eq i64 %0, 0
   br i1 %2, label %4, label %3
@@ -1780,7 +1783,7 @@ define dso_local void @chali_abort(i64 noundef %0) local_unnamed_addr #15 {
   unreachable
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_assert(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = icmp eq i64 %0, 0
   br i1 %3, label %4, label %8
@@ -1803,10 +1806,10 @@ define dso_local void @chali_assert(i64 noundef %0, i64 noundef %1) local_unname
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local noundef i64 @chali_copy_bytes(i64 noundef returned %0, i64 noundef %1, i64 noundef %2) local_unnamed_addr #5 {
-  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %2) #20
-  %5 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef %2) #20
+  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %2)
+  %5 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef %2)
   tail call void @llvm.memmove.p0.p0.i64(ptr align 1 %4, ptr align 1 %5, i64 %2, i1 false)
   ret i64 %0
 }
@@ -1814,9 +1817,9 @@ define dso_local noundef i64 @chali_copy_bytes(i64 noundef returned %0, i64 noun
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.memmove.p0.p0.i64(ptr writeonly captures(none), ptr readonly captures(none), i64, i1 immarg) #6
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local noundef i64 @chali_set_bytes(i64 noundef returned %0, i64 noundef %1, i64 noundef %2) local_unnamed_addr #5 {
-  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %2) #20
+  %4 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %2)
   %5 = trunc i64 %1 to i8
   tail call void @llvm.memset.p0.i64(ptr align 1 %4, i8 %5, i64 %2, i1 false)
   ret i64 %0
@@ -1825,21 +1828,21 @@ define dso_local noundef i64 @chali_set_bytes(i64 noundef returned %0, i64 nound
 ; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write)
 declare void @llvm.memset.p0.i64(ptr writeonly captures(none), i8, i64, i1 immarg) #16
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 0, 256) i64 @chali_string_at(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = load i64, ptr @chali_data_size, align 8, !tbaa !20
   %4 = icmp slt i64 %0, %3
   br i1 %4, label %15, label %5
 
 5:                                                ; preds = %2
-  %6 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %6 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %7 = load i64, ptr %6, align 1
   %8 = icmp eq i64 %7, -1
   br i1 %8, label %9, label %13
 
 9:                                                ; preds = %5
   %10 = add nsw i64 %0, 24
-  %11 = tail call ptr @chali_host_address(i64 noundef %10, i64 noundef 8) #20
+  %11 = tail call ptr @chali_host_address(i64 noundef %10, i64 noundef 8)
   %12 = load i64, ptr %11, align 1
   br label %15
 
@@ -1849,24 +1852,24 @@ define dso_local range(i64 0, 256) i64 @chali_string_at(i64 noundef %0, i64 noun
 
 15:                                               ; preds = %2, %9, %13
   %16 = phi i64 [ %14, %13 ], [ %12, %9 ], [ %0, %2 ]
-  %17 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 0) #20
+  %17 = tail call ptr @chali_host_address(i64 noundef %16, i64 noundef 0)
   %18 = getelementptr inbounds i8, ptr %17, i64 %1
   %19 = load i8, ptr %18, align 1, !tbaa !19
   %20 = zext i8 %19 to i64
   ret i64 %20
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_string_set(i64 noundef %0, i64 noundef %1, i64 noundef %2) local_unnamed_addr #5 {
   %4 = add nsw i64 %0, 8
   %5 = add nsw i64 %4, %1
   %6 = trunc i64 %2 to i8
-  %7 = tail call ptr @chali_host_address(i64 noundef %5, i64 noundef 1) #20
+  %7 = tail call ptr @chali_host_address(i64 noundef %5, i64 noundef 1)
   store i8 %6, ptr %7, align 1, !tbaa !19
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1) local_unnamed_addr #5 {
   %3 = icmp eq i64 %0, 0
   br i1 %3, label %18, label %4
@@ -1877,19 +1880,19 @@ define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1
   br i1 %6, label %7, label %10
 
 7:                                                ; preds = %4
-  %8 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1) #20
-  %9 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %8) #20
+  %8 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 1)
+  %9 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %8) #22
   br label %18
 
 10:                                               ; preds = %4
-  %11 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %11 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %12 = load i64, ptr %11, align 1
   %13 = icmp eq i64 %12, -1
   br i1 %13, label %14, label %18
 
 14:                                               ; preds = %10
   %15 = add nsw i64 %0, 8
-  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 8) #20
+  %16 = tail call ptr @chali_host_address(i64 noundef %15, i64 noundef 8)
   %17 = load i64, ptr %16, align 1
   br label %18
 
@@ -1904,19 +1907,19 @@ define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1
   br i1 %23, label %24, label %27
 
 24:                                               ; preds = %21
-  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1) #20
-  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #20
+  %25 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 1)
+  %26 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %25) #22
   br label %35
 
 27:                                               ; preds = %21
-  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %28 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %29 = load i64, ptr %28, align 1
   %30 = icmp eq i64 %29, -1
   br i1 %30, label %31, label %35
 
 31:                                               ; preds = %27
   %32 = add nsw i64 %1, 8
-  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8) #20
+  %33 = tail call ptr @chali_host_address(i64 noundef %32, i64 noundef 8)
   %34 = load i64, ptr %33, align 1
   br label %35
 
@@ -1924,24 +1927,24 @@ define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1
   %36 = phi i64 [ %26, %24 ], [ 0, %18 ], [ %34, %31 ], [ %29, %27 ]
   %37 = add i64 %36, %19
   %38 = add i64 %37, 8
-  %39 = tail call i64 @chali_host_allocate(i64 noundef %38) #20
-  %40 = tail call ptr @chali_host_address(i64 noundef %39, i64 noundef 8) #20
+  %39 = tail call i64 @chali_host_allocate(i64 noundef %38)
+  %40 = tail call ptr @chali_host_address(i64 noundef %39, i64 noundef 8)
   store i64 %37, ptr %40, align 1
   %41 = add nsw i64 %39, 8
-  %42 = tail call ptr @chali_host_address(i64 noundef %41, i64 noundef %19) #20
+  %42 = tail call ptr @chali_host_address(i64 noundef %41, i64 noundef %19)
   %43 = load i64, ptr @chali_data_size, align 8, !tbaa !20
   %44 = icmp slt i64 %0, %43
   br i1 %44, label %55, label %45
 
 45:                                               ; preds = %35
-  %46 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8) #20
+  %46 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef 8)
   %47 = load i64, ptr %46, align 1
   %48 = icmp eq i64 %47, -1
   br i1 %48, label %49, label %53
 
 49:                                               ; preds = %45
   %50 = add nsw i64 %0, 24
-  %51 = tail call ptr @chali_host_address(i64 noundef %50, i64 noundef 8) #20
+  %51 = tail call ptr @chali_host_address(i64 noundef %50, i64 noundef 8)
   %52 = load i64, ptr %51, align 1
   br label %55
 
@@ -1951,22 +1954,22 @@ define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1
 
 55:                                               ; preds = %35, %49, %53
   %56 = phi i64 [ %54, %53 ], [ %52, %49 ], [ %0, %35 ]
-  %57 = tail call ptr @chali_host_address(i64 noundef %56, i64 noundef 0) #20
+  %57 = tail call ptr @chali_host_address(i64 noundef %56, i64 noundef 0)
   tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %42, ptr align 1 %57, i64 %19, i1 false)
   %58 = add i64 %41, %19
-  %59 = tail call ptr @chali_host_address(i64 noundef %58, i64 noundef %36) #20
+  %59 = tail call ptr @chali_host_address(i64 noundef %58, i64 noundef %36)
   %60 = icmp slt i64 %1, %43
   br i1 %60, label %71, label %61
 
 61:                                               ; preds = %55
-  %62 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8) #20
+  %62 = tail call ptr @chali_host_address(i64 noundef %1, i64 noundef 8)
   %63 = load i64, ptr %62, align 1
   %64 = icmp eq i64 %63, -1
   br i1 %64, label %65, label %69
 
 65:                                               ; preds = %61
   %66 = add nsw i64 %1, 24
-  %67 = tail call ptr @chali_host_address(i64 noundef %66, i64 noundef 8) #20
+  %67 = tail call ptr @chali_host_address(i64 noundef %66, i64 noundef 8)
   %68 = load i64, ptr %67, align 1
   br label %71
 
@@ -1976,32 +1979,32 @@ define dso_local noundef i64 @chali_string_concat(i64 noundef %0, i64 noundef %1
 
 71:                                               ; preds = %55, %65, %69
   %72 = phi i64 [ %70, %69 ], [ %68, %65 ], [ %1, %55 ]
-  %73 = tail call ptr @chali_host_address(i64 noundef %72, i64 noundef 0) #20
+  %73 = tail call ptr @chali_host_address(i64 noundef %72, i64 noundef 0)
   tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %59, ptr align 1 %73, i64 %36, i1 false)
   ret i64 %39
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local void @chali_owned_drop(i64 noundef %0) local_unnamed_addr #5 {
-  tail call void @chali_host_drop(i64 noundef %0) #20
+  tail call void @chali_host_drop(i64 noundef %0)
   ret void
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_function_target(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call i64 @chali_host_function(i64 noundef %0, i32 noundef 0) #20
+  %2 = tail call i64 @chali_host_function(i64 noundef %0, i32 noundef 0)
   ret i64 %2
 }
 
-declare i64 @chali_host_function(i64 noundef, i32 noundef) local_unnamed_addr #3
+declare i64 @chali_host_function(i64 noundef, i32 noundef) local_unnamed_addr #2
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local i64 @chali_function_environment(i64 noundef %0) local_unnamed_addr #5 {
-  %2 = tail call i64 @chali_host_function(i64 noundef %0, i32 noundef 1) #20
+  %2 = tail call i64 @chali_host_function(i64 noundef %0, i32 noundef 1)
   ret i64 %2
 }
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: uwtable
 define dso_local range(i64 0, 2) i64 @chali_function_match(i64 noundef %0, ptr nofree noundef readonly captures(none) %1) local_unnamed_addr #5 {
   %3 = icmp slt i64 %0, 1
   br i1 %3, label %17, label %4
@@ -2012,14 +2015,14 @@ define dso_local range(i64 0, 2) i64 @chali_function_match(i64 noundef %0, ptr n
   br i1 %6, label %7, label %17
 
 7:                                                ; preds = %4
-  %8 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %1) #20
+  %8 = tail call i64 @strlen(ptr noundef nonnull dereferenceable(1) %1) #22
   %9 = sub nuw i64 %5, %0
   %10 = icmp ult i64 %8, %9
   br i1 %10, label %11, label %17
 
 11:                                               ; preds = %7
   %12 = add nuw i64 %8, 1
-  %13 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %12) #20
+  %13 = tail call ptr @chali_host_address(i64 noundef %0, i64 noundef %12)
   %14 = tail call i32 @bcmp(ptr noundef nonnull dereferenceable(1) %13, ptr noundef nonnull dereferenceable(1) %1, i64 %12)
   %15 = icmp eq i32 %14, 0
   %16 = zext i1 %15 to i64
@@ -2055,11 +2058,11 @@ declare range(i64 -1, 2) i64 @llvm.ucmp.i64.i64(i64, i64) #17
 declare i64 @llvm.smin.i64(i64, i64) #17
 
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none, target_mem: none) uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
-attributes #1 = { cold noreturn nounwind uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
-attributes #2 = { nofree nounwind "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
-attributes #3 = { "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #1 = { cold noreturn uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #2 = { "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #3 = { nofree nounwind "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #4 = { nofree noreturn "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
-attributes #5 = { nounwind uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #5 = { uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #6 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
 attributes #7 = { mustprogress nofree nounwind willreturn allockind("alloc,uninitialized") allocsize(0) memory(inaccessiblemem: readwrite, errnomem: write) "alloc-family"="malloc" "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #8 = { mustprogress nounwind willreturn allockind("free") memory(argmem: readwrite, inaccessiblemem: readwrite) "alloc-family"="malloc" "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
@@ -2069,14 +2072,14 @@ attributes #11 = { mustprogress nofree norecurse nosync nounwind willreturn memo
 attributes #12 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #13 = { mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite, errnomem: write) "alloc-family"="malloc" "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #14 = { nofree nounwind uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
-attributes #15 = { noreturn nounwind uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #15 = { noreturn uwtable "frame-pointer"="non-leaf-no-reserve" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
 attributes #16 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write) }
 attributes #17 = { nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none) }
 attributes #18 = { nocallback nofree nosync nounwind willreturn memory(argmem: read) }
 attributes #19 = { cold nounwind }
-attributes #20 = { nounwind }
-attributes #21 = { cold noreturn nounwind }
-attributes #22 = { allocsize(0) }
+attributes #20 = { cold noreturn }
+attributes #21 = { allocsize(0) }
+attributes #22 = { nounwind }
 attributes #23 = { allocsize(1) }
 
 !llvm.module.flags = !{!0, !1, !2, !3, !4, !5, !6, !7, !8, !9}

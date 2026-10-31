@@ -66,6 +66,12 @@ int main()
 
     std::size_t count = 0;
     const ChaliAbiRecord *records = chali_abi_records(&count);
+    const auto local = chali_abi_local_info(0);
+    const ChaliAbiModuleDescriptor module{sizeof(ChaliAbiModuleDescriptor), &local, records, count};
+    char diagnostic[128];
+    ChaliAbiError error{diagnostic, sizeof(diagnostic), 0, 0};
+    if (chali_abi_check_module(&module, &error) != ChaliAbiOk)
+        report("聚合 C 模块不满足公开协议", diagnostic);
     if (records == nullptr || count == 0u)
     {
         std::fprintf(stderr, "失败：直通表为空\n");

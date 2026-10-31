@@ -21,6 +21,7 @@ list(APPEND CHALI_STANDARD_SOURCES ${CHALI_CAS_SOURCES}
 set_source_files_properties("${CHALI_SQLITE_DIR}/sqlite3.c" PROPERTIES
     COMPILE_DEFINITIONS "SQLITE_THREADSAFE=1;SQLITE_OMIT_LOAD_EXTENSION=1")
 add_library(chali_standard_records STATIC ${CHALI_STANDARD_SOURCES})
+set_target_properties(chali_standard_records PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
 add_dependencies(chali_standard_records chali_dependencies_check)
 target_link_libraries(chali_standard_records PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 target_include_directories(chali_standard_records PUBLIC

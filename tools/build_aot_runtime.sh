@@ -37,9 +37,9 @@ for platform in windows linux linux_arm64; do
     esac
     output="$directory/runtime-$platform.ll"
     if [ "$platform" = windows ]; then
-        "$clang" --target="$triple" -S -emit-llvm -O1 source/aot/runtime.c -o "$output" -isystem build/dependencies/llvm/toolchain/include
+        "$clang" --target="$triple" -S -emit-llvm -O1 -fexceptions -funwind-tables source/aot/runtime.c -o "$output" -isystem build/dependencies/llvm/toolchain/include
     else
-        "$clang" --target="$triple" -S -emit-llvm -O1 source/aot/runtime.c -o "$output"
+        "$clang" --target="$triple" -S -emit-llvm -O1 -fexceptions -funwind-tables source/aot/runtime.c -o "$output"
     fi
     target="source/aot/runtime_$platform.ll"
     if [ "$check" -eq 1 ]; then

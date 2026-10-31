@@ -47,6 +47,7 @@ extern unsigned char *chali_host_address(chali_i64, size_t);
 extern chali_i64 chali_host_allocate(size_t), chali_host_function(chali_i64, int);
 extern chali_i64 chali_host_call(const char *, chali_i64, const chali_i64 *, const unsigned char *);
 extern void chali_host_trace(void);
+extern void chali_host_raise_callback_error(const char *);
 
 /**
  * @brief 刷新输出、报告运行时错误并终止进程。
@@ -54,6 +55,7 @@ extern void chali_host_trace(void);
  */
 void chali_panic(const char *message)
 {
+    chali_host_raise_callback_error(message);
     fflush(stdout);
     fprintf(stderr, "chali aot: %s\n", message);
     chali_host_trace();

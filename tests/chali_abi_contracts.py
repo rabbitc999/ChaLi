@@ -1,4 +1,4 @@
-"""验证 ABI 返回值所有权、同步回调、桥复用和有限头文件导入。"""
+"""验证原生 ABI 返回值所有权、同步回调、有限头文件导入与失败清理。"""
 from compiler_path import compiler_path
 import argparse
 import os
@@ -38,14 +38,8 @@ def main():
             invoke([compiler, 'aot', source, '--out', output])
             assert invoke([str(output) + ('.exe' if os.name == 'nt' else '')]).strip() == b'ABI contracts OK'
             print('AOT C ABI 返回所有权、闭包与嵌套同步回调通过')
-            return
-        assert invoke([compiler, 'run', source]).strip() == b'ABI contracts OK'
-        bridge = work / ('bridge.dll' if os.name == 'nt' else 'bridge.so')
-        assert invoke([compiler, 'run', source, '--abi-prepare', '--abi-write-bridge', bridge]) == b''
-        env['CHALI_ABI_CXX'] = 'missing-chali-cxx-for-cache-test'
-        assert invoke([compiler, 'run', source]).strip() == b'ABI contracts OK'
-        assert invoke([compiler, 'run', source, '--abi-bridge', bridge, '--abi-no-cache']).strip() == b'ABI contracts OK'
-        env.pop('CHALI_ABI_CXX')
+        else:
+            assert invoke([compiler, 'run', source]).strip() == b'ABI contracts OK'
         imported = work / 'imported.chl'
         invoke([compiler, 'gen', 'abi', ROOT / 'doc/examples/abi_contracts/import.h',
                 '--library', library.as_posix(), '--out', imported])
@@ -54,18 +48,28 @@ def main():
                          'let cb=int32 fn(int32 x){return x;};'
                          'assert(c_apply(cb,(int32)3)==7);return;}\n')
         invoke([compiler, 'run', imported])
-        failure = work / 'callback-failure.chl'
-        failure.write_text('#abi("C", "' + library.as_posix() + '", "callback_owned") '
-                           'String owned(int32 fn(int32) cb) ["free_owned"]; '
-                           'void main(){let cb=int32 fn(int32 x){panic("callback failure");return x;};'
-                           'String text=owned(cb);}', encoding='utf-8')
-        marker = work / 'released.txt'
-        env['CHALI_ABI_FREE_MARKER'] = str(marker)
-        result = subprocess.run([str(compiler), 'run', str(failure)], cwd=ROOT, env=env,
-                                capture_output=True, timeout=600)
-        assert result.returncode != 0 and b'ABI callback invocation failed' in result.stderr + result.stdout, result
-        assert marker.read_text().strip() == 'free'
-        print('ABI ownership, callbacks, cache, precompiled bridge and import: OK')
+        for label, body in (
+            ('direct', 'panic("callback failure");return x;'),
+            ('nested', 'return apply(int32 fn(int32 y){panic("callback failure");return y;},x);')):
+            failure = work / ('callback-failure-' + label + '.chl')
+            failure.write_text('#abi("C", "' + library.as_posix() + '", "callback_owned") '
+                               'String owned(int32 fn(int32) cb) ["free_owned"]; '
+                               '#abi("C", "' + library.as_posix() + '", "apply") '
+                               'int32 apply(int32 fn(int32) cb,int32 x); '
+                               'void main(){let cb=int32 fn(int32 x){' + body + '};'
+                               'String text=owned(cb);}', encoding='utf-8')
+            marker = work / ('released-' + label + '.txt')
+            env['CHALI_ABI_FREE_MARKER'] = str(marker)
+            if args.aot:
+                prefix = work / ('failure-' + label)
+                invoke([compiler, 'aot', failure, '--checked', '--out', prefix])
+                command = [str(prefix) + ('.exe' if os.name == 'nt' else '')]
+            else:
+                command = [str(compiler), 'run', str(failure)]
+            result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, timeout=600)
+            assert result.returncode != 0 and b'callback failure' in result.stderr + result.stdout, result
+            assert marker.read_text().strip() == 'free', label
+        print('Native ABI ownership, callbacks, header import and failure cleanup: OK')
 
 
 if __name__ == '__main__':
