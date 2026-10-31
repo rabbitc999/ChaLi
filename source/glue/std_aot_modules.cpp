@@ -35,9 +35,6 @@
 #include "std_toml.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_COMPRESS
-#include "std_compress.hpp"
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif

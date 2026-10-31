@@ -18,7 +18,7 @@ CHALI_AOT_MODULE(json, std_json_glue::bind(registry, error))
 CHALI_AOT_MODULE(toml, std_toml_glue::bind(registry, error))
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
-CHALI_AOT_MODULE(compress, std_compress_glue::bind(registry, error))
+CHALI_AOT_MODULE(compress, registry.bindModule(abi_compress_records, error))
 #endif
 #ifndef GLUE_NO_STD_MATH
 CHALI_AOT_MODULE(math,

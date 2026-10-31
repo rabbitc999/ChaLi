@@ -142,6 +142,8 @@ CHALI_STANDARD_OBJS := $(patsubst source/glue/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_ST
 $(HOST_BUILD)/std_%.o: source/glue/std_%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/std_cas.o: private CXXFLAGS += -Ilibrary/caspp/include
+$(HOST_BUILD)/lztext_kernel.o: source/lztext/lztext.cpp source/lztext/lztext.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
+	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/json.o: source/json/json.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/toml.o: source/toml/toml.cpp | $(HOST_BUILD)
@@ -172,7 +174,7 @@ $(HOST_BUILD)/abi_%.o: source/abi/%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(CHALI_ABI_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
-$(HOST_LIB): $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
+$(HOST_LIB): $(HOST_BUILD)/lztext_kernel.o $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
 	$(AR) $(ARFLAGS) $@ $^
 
@@ -367,7 +369,7 @@ $(CHALI_AOT_SYSTEM_OBJECT): source/allocator/system_arena.cpp $(CHALI_BUILD_ROOT
 -include $(CHALI_AOT_HOST_BUILD)/native_runtime.d
 -include $(CHALI_AOT_HOST_BUILD)/backend_profile.d
 -include $(CHALI_AOT_HOST_BUILD)/system_arena.d
-$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(CHALI_AOT_SYSTEM_OBJECT) $(VM_LIB) $(HOST_LIB) $(FRONTEND_BUILD)/lztext.o tools/build_aot_host.py tools/embedded_asset_cache.py
+$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(CHALI_AOT_SYSTEM_OBJECT) $(VM_LIB) $(HOST_LIB) tools/build_aot_host.py tools/embedded_asset_cache.py
 	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --object $(CHALI_AOT_SYSTEM_OBJECT) --output $@
 
 # 更新标准库或胶水实现时只刷新单个内嵌资产对象，不重编宿主入口。

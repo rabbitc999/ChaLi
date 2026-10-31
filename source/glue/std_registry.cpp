@@ -32,9 +32,6 @@
 #include "std_toml.hpp"
 #endif
 #endif
-#ifndef GLUE_NO_STD_COMPRESS
-#include "std_compress.hpp"
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
@@ -74,7 +71,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
     ok = std_toml_glue::bind(registry, error) && ok;
 #endif
 #ifndef GLUE_NO_STD_COMPRESS
-    if (!std_compress_glue::bind(registry, error)) ok = false;
+    if (!registry.bindModule(abi_compress_records, error)) ok = false;
 #endif
 #ifndef GLUE_NO_STD_REGEX
     Memory::String regexError;

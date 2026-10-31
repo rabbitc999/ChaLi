@@ -24,7 +24,7 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     dependencies = [build_root / 'chali-ircode-aot-core/libstackvm.a',
                     build_root / 'chali-host-records/librecords.a',
-                    *[path.resolve() for path in args.object], build_root / 'chali-frontend/lztext.o']
+                    *[path.resolve() for path in args.object]]
     names = ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
     if os.name == 'nt':
         names += ['libmingw32.a', 'libmingwex.a', 'libmoldname.a', 'libwinpthread.a', 'libwinhttp.a', 'libws2_32.a', 'libcrypt32.a', 'libbcrypt.a']
@@ -49,7 +49,7 @@ def main():
                  "ADDLIB " + (build_root / "chali-ircode-aot-core/libstackvm.a").as_posix(),
                  "ADDLIB " + (build_root / "chali-host-records/librecords.a").as_posix(),
                  *["ADDMOD " + path.resolve().as_posix() for path in args.object],
-                 "ADDMOD " + (build_root / "chali-frontend/lztext.o").as_posix(), "SAVE", "END"]
+                 "SAVE", "END"]
         subprocess.run([args.ar, "-M"], input="\n".join(lines) + "\n", text=True, check=True, cwd=ROOT)
         entries = [("libchali_aot_host.a", archive)] + libraries
         lines = []

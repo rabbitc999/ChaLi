@@ -1,0 +1,18 @@
+import std::compress;
+import std::text;
+void verify(String label,String text) {
+    let packed=std::compress::compress(text);let copy=packed.copy();
+    String restored=std::compress::decompress(packed);assert(restored.length()==text.length());
+    int64 index=0;while(index<text.length()){assert(restored.byteAt(index).unwrap()==text.byteAt(index).unwrap());index++;}
+    print("{}:{}",label,packed.len());index=0;while(index<packed.len()){print(":{}",(int64)packed[index]);index++;}println("");
+    packed.clear();assert(std::compress::decompress(copy).length()==text.length());
+}
+void main(){
+    verify("empty","");verify("one","a");verify("unicode","中文🙂");
+    verify("repeated",std::text::Text::repeat("abc中文",100));
+    verify("noise","9f3a!Q7z@1mKp2Vb8Xc4Rt6Yh0Nj5Lw3Sg");
+    verify("control","line\n\tend\r");
+    List<uint8> raw;raw.push((uint8)77);raw.push((uint8)76);raw.push((uint8)90);raw.push((uint8)49);raw.push((uint8)0);raw.push((uint8)3);raw.push((uint8)0);raw.push((uint8)255);raw.push((uint8)65);
+    String binary=std::compress::decompress(raw);assert(binary.length()==3);assert(binary.byteAt(0).unwrap()==0 && binary.byteAt(1).unwrap()==255 && binary.byteAt(2).unwrap()==65);verify("binary",binary);
+    println("compression owned buffers OK");
+}

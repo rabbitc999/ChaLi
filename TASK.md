@@ -158,6 +158,14 @@ C 服务单测通过原始零字节／255、短缓冲不写、非法整数／浮
 
 中英文 C API 说明及最终内嵌资产已同步。静态编译器 SHA256 为 82ddcac901110f655d762ef063b3be48158242fc984babb8315b326ae5f4a52d；vscode/dist/1.0.12-binary-c-services/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌 EXE，SHA256 为 f003bc02e3c7b8b1070d78d75503d9506a4034558407061b3c58675ec419d84a。证据仅保留 tools/history/20261031/chali-1.0.12-binary-c-services/。另用 1219754e 真实编译器准备压缩兼容性数据，包含有效 lztext 流中的零字节／非 UTF-8 往返；压缩 C 帧入口只做语法准备，尚未接入。未冷构建独立编译器、运行整仓全量门禁或计时性能。
 
+文本压缩模块已迁移至 abi_compress.cpp 的 C 帧入口，仅调用公开 C 字符串／字节列表服务与独立 lztext 内核，不使用 Registry／Context／Codec 模板封送或运行时 C++ 类型；删除 std_compress.cpp／hpp、旧登记和资产依赖。以 1219754e 真实编译器冻结七组完整压缩流，包含零字节和非 UTF-8 的有效原始流；四配置输出逐字节一致，拥有结果、七类损坏输入和原样例通过。保留原算法接受五字节空原始流的行为，不借迁移收紧格式。
+
+模块、C API 与内存首轮 11 步为 9 通过、2 失败、0 跳过：新损坏用例误判上述合法空流，独立 C 宿主遗漏 lztext 依赖。修正用例及 Make／CMake 归属后，两项均完整复验通过；lztext 纳入运行时记录库，AOT 资产不再另装前端对象，库中只有新 C 帧压缩入口和必要内核，旧 std_compress 对象消失。完整 AOT、隔离标准库／源码回退／零磁盘缓存、最终手册、七组插件测试、公开头及六项导出源码核对通过，原始失败与修复复验分别保留。
+
+新鲜导出工程实际冷构建外置 LLVM 编译器，直接完成压缩四配置、原始字节和 ABI 头导入／拥有值／同步回调／失败清理复验；不借本体预生成声明。宿主冷构建为 GCC 11／C++ O1，语言程序仍按默认 LLVM O3 导出，不作为性能比较。该独立 EXE 保留 build/independent-validation/1.0.12-compress-c-api/，SHA256 为 ee5941179f8cb7298961d2095a859a3ea1e50c0a964fda201c3c3a1f4f5bfa35。
+
+最终静态编译器 SHA256 为 afab5c2f15f7ee142af37904e1750b3003904a52a2d6b0eedb9e8442feb65340；vscode/dist/1.0.12-compress-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌 EXE，SHA256 为 b731f70159c0f818ebd6b8f26c1a65b6a3757e256d9c62a74c09d264887934ea。证据仅保留 tools/history/20261031/chali-1.0.12-compress-c-api/；未运行整仓全量门禁或正式计时，其他模块与旧公开 C++ 胶水仍待迁移。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

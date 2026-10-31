@@ -20,6 +20,35 @@ int chali_abi_bytes(const ChaliAbiFrame *, int64_t, const unsigned char **data, 
     return 0;
 }
 int64_t chali_abi_string(const ChaliAbiFrame *, const char *, size_t) { return 0; }
+/**
+ * @brief 表结构测试不运行原始字符串分配。
+ * @param frame 未使用的帧。
+ * @param data 未使用的原始字节。
+ * @param length 未使用的长度。
+ * @return 固定零占位值。
+ */
+int64_t CHALI_ABI_CALL chali_abi_string_bytes(const ChaliAbiFrame *frame, const char *data, size_t length)
+{ (void)frame; (void)data; (void)length; return 0; }
+/**
+ * @brief 表结构测试不读取实际集合。
+ * @param frame 未使用的帧。
+ * @param handle 未使用的列表句柄。
+ * @param data 未使用的目标。
+ * @param capacity 未使用的容量。
+ * @param required 可选的长度接收器，清零。
+ * @return 固定失败占位值。
+ */
+int CHALI_ABI_CALL chali_abi_list_bytes(const ChaliAbiFrame *frame, int64_t handle, unsigned char *data, size_t capacity, size_t *required)
+{ (void)frame; (void)handle; (void)data; (void)capacity; if(required) *required=0; return 0; }
+/**
+ * @brief 表结构测试不创建实际集合。
+ * @param frame 未使用的帧。
+ * @param data 未使用的输入。
+ * @param length 未使用的长度。
+ * @return 固定零占位值。
+ */
+int64_t CHALI_ABI_CALL chali_abi_list_from_bytes(const ChaliAbiFrame *frame, const unsigned char *data, size_t length)
+{ (void)frame; (void)data; (void)length; return 0; }
 int64_t chali_abi_temporary(const ChaliAbiFrame *, size_t) { return 0; }
 void chali_abi_emit(const ChaliAbiFrame *, const char *, size_t) {}
 void chali_abi_emit_error(const ChaliAbiFrame *, const char *, size_t, int) {}

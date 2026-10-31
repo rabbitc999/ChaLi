@@ -16,7 +16,7 @@ MODULES = {
     'std::binary': ('二进制读取', 'BinaryReader 拥有输入的副本，默认小端。位置、长度均按字节；读取成功才推进游标。字节序、范围检查、标量／数组和定宽文本读取由 ChaLi 实现，复用核心浮点位转换及存储原语，不依赖单独的二进制宿主模块。负长度、越界和数量乘法溢出在读取前报错。seek/skip 失败返回 false 且保留游标；文本字段在首个零字节停止显示但消费整个字段。'),
     'std::clock': ('单调时钟', '采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。'),
     'std::complex': ('泛型复数', 'Complex<T> 保存 real/imag；T 应支持所用的四则运算。leftAdd/leftSub/leftMul/leftDiv 是运算符接口，支持 +、-、*、/。整数 T 的除法仍采用整数运算规则。'),
-    'std::compress': ('无损压缩', 'compress 输入文本，输出二进制 List<uint8>；不能把压缩结果当 UTF-8 文本输出。decompress 对无效编码或损坏数据报告宿主运行错误，不返回 Result。'),
+    'std::compress': ('无损压缩', 'compress 输入文本，输出二进制 List<uint8>；不能把压缩结果当 UTF-8 文本输出。decompress 对无效编码或损坏数据报告宿主运行错误，不返回 Result。 lztext 内核通过 C 帧和公开二进制服务接入，压缩字节和原始解压内容保留；不经过旧 C++ 模板封送。'),
     'std::concurrency': ('线程通信与共享', 'Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。'),
     'std::event': ('显式事件与定时源', '事件只在 receive/receiveFor/tryReceive 显式接收时交付值，绝不自动执行用户函数。队列容量 256，post 在队列满时返回 FULL。定时源使用宿主单调纳秒时钟、创建后立即计时，最多 1024 个活动定时源；服务计算截止时间，不按定时源创建线程。周期通知合并，missed 表示错过的周期数。Timer.stop/drop 删除未接收通知；队列关闭后先排空，结束后的宿主弱引用投递器返回 CLOSED。事件操作不支持同步胶水重入。'),
     'std::io': ('文件与流接口', '整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result<T, Error>，失败载荷保留具体 IoError 类型；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。'),

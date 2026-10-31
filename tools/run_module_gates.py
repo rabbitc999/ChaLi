@@ -16,6 +16,7 @@ MODULES = {
     "binary": ["chali_binary"],
     "signal": ["chali_signal"],
     "process": ["chali_process_c_api"],
+    "compress": ["chali_compress_c_api"],
     "concurrency": ["chali_shared_selfhost", "chali_thread_wait"],
     "serialization": ["chali_serialization_selfhost", "chali_reflection_serialization", "chali_structured_data", "chali_json_derive"],
     "parse": ["chali_parse_selfhost", "chali_precompiled", "chali_glue_edges"],

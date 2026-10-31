@@ -14,7 +14,7 @@ import std::compress;
 
 ## 公共约定与错误边界
 
-compress 输入文本，输出二进制 List<uint8>；不能把压缩结果当 UTF-8 文本输出。decompress 对无效编码或损坏数据报告宿主运行错误，不返回 Result。
+compress 输入文本，输出二进制 List<uint8>；不能把压缩结果当 UTF-8 文本输出。decompress 对无效编码或损坏数据报告宿主运行错误，不返回 Result。 lztext 内核通过 C 帧和公开二进制服务接入，压缩字节和原始解压内容保留；不经过旧 C++ 模板封送。
 
 ## 参考代码
 
@@ -93,7 +93,7 @@ std::lang::List<uint8> compress(std::lang::String text);
 
 **行为**
 
-文本压缩与解压：要 `import std::compress;` 才可见。 宿主绑定（lztext）的键名在 glue/std_compress.hpp 里，已改成 std::compress::*。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
+文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
 
 **参数**
 
@@ -103,7 +103,7 @@ std::lang::List<uint8> compress(std::lang::String text);
 
 **返回值**
 
-`std::lang::List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 宿主绑定（lztext）的键名在 glue/std_compress.hpp 里，已改成 std::compress::*。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
+`std::lang::List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
 
 **错误与边界**
 
