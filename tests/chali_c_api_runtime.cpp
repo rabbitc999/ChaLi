@@ -6,6 +6,7 @@
 #include "c_api_failure_arena.hpp"
 #include "glue/std_collection.hpp"
 #include "abi/scalar_storage.hpp"
+#include "ircode/native_value_text.hpp"
 #include <cassert>
 #include <atomic>
 #include <cstdlib>
@@ -144,6 +145,65 @@ void *aliasedClone(const void *value) { return const_cast<void *>(value); }
  * @param value 未转移所有权的对象。
  */
 void conflictingDestroy(void *value) { delete static_cast<int *>(value); }
+
+/** @brief C 文本协议的独立测试记录，文本可含零字节。 */
+struct TextRecord { std::string bytes; };
+static int textDestroyed = 0;
+static int textFormatCalls = 0;
+/** @brief 销毁 C 文本记录并记录销毁次数。
+ * @param value 拥有的文本记录。
+ */
+void destroyTextRecord(void *value) { ++textDestroyed; delete static_cast<TextRecord *>(value); }
+/** @brief 复制 C 文本记录，失败返回空且不越过 C 边界抛出异常。
+ * @param value 只读文本记录。
+ * @return 独立副本，失败为空。
+ */
+void *cloneTextRecord(const void *value)
+try { return new TextRecord(*static_cast<const TextRecord *>(value)); } catch (...) { return nullptr; }
+/** @brief 查询或完整写入测试文本，不写越界或终止字节。
+ * @param value 只读文本记录。
+ * @param data 输出，查询时为空。
+ * @param capacity 输出字节容量。
+ * @param required 接收完整长度。
+ * @return 查询或写入成功为一，短缓冲为零。
+ */
+int formatTextRecord(const void *value, char *data, std::size_t capacity, std::size_t *required)
+{
+    ++textFormatCalls;
+    const auto &text = static_cast<const TextRecord *>(value)->bytes;
+    *required = text.size();
+    if (!data && !capacity) return 1;
+    if (!data || capacity < text.size()) return 0;
+    if (!text.empty()) std::memcpy(data, text.data(), text.size());
+    return 1;
+}
+/** @brief 模拟 C 文本查询失败。
+ * @param value 不读取的记录。
+ * @param data 不写入的输出。
+ * @param capacity 不使用的容量。
+ * @param required 清零的长度。
+ * @return 固定失败值。
+ */
+int failTextRecord(const void *value, char *data, std::size_t capacity, std::size_t *required)
+{ (void)value; (void)data; (void)capacity; *required = 0; return 0; }
+/** @brief 模拟无法表示的 C 文本长度。
+ * @param value 不读取的记录。
+ * @param data 不写入的输出。
+ * @param capacity 不使用的容量。
+ * @param required 接收不可表示的长度。
+ * @return 查询成功，由调用方拒绝超大长度。
+ */
+int oversizedTextRecord(const void *value, char *data, std::size_t capacity, std::size_t *required)
+{ (void)value; (void)data; (void)capacity; *required = SIZE_MAX; return 1; }
+/** @brief 模拟第二次调用报告长度增长，但不向短缓冲写入。
+ * @param value 不读取的记录。
+ * @param data 用于区分查询与写入。
+ * @param capacity 不使用的容量。
+ * @param required 查询为一，写入为二。
+ * @return 固定成功值，由调用方检查长度变化。
+ */
+int growingTextRecord(const void *value, char *data, std::size_t capacity, std::size_t *required)
+{ (void)value; (void)capacity; *required = data ? 2 : 1; return 1; }
 
 /**
  * @brief 查询本测试进程的系统句柄或文件描述符数量，核对打开失败后的真实清理。
@@ -1111,6 +1171,65 @@ int main(int argc, char **argv)
             assert(chali_abi_string_release(&frame, pathText));
             assert(std::filesystem::remove(std::filesystem::u8path(path)));
             std::printf("C SQLite: bound int64/real/NUL text/null, exclusive owner and %d adoption failure points cleaned\n", failures);
+        }
+        {
+            value_text::Shape shape;
+            shape.kind = 'O';
+            const auto encoded = value_text::encode(shape);
+            const auto layout = chali_abi_string(&frame, encoded.data(), encoded.size());
+            assert(layout);
+            const auto render = [&](int64_t handle) {
+                const auto output = nativeInt(valueToString(context, {Slot::fromInt(handle), Slot::fromInt(layout)}));
+                if (!context.error.empty()) { assert(!output); return std::string(); }
+                assert(output && chali_abi_bytes(&frame, output, &view, &length));
+                std::string text(reinterpret_cast<const char *>(view), length);
+                assert(chali_abi_string_release(&frame, output));
+                return text;
+            };
+            std::string text(4096, 'x');
+            text += "中文";
+            text.push_back(0); text.push_back(char(255));
+            const auto original = chali_abi_record_make_textual(&frame, "c-api-test::Text", new TextRecord{text},
+                destroyTextRecord, cloneTextRecord, formatTextRecord);
+            assert(original && render(original) == text && textFormatCalls == 2);
+            NativeCallContextImpl host(context, &invoker);
+            const auto copy = host.cloneNativeRecord(original);
+            assert(copy && render(copy) == text);
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, original, packet, active));
+            assert(chali_abi_record_release(&frame, original));
+            Memory::Vector<std::int64_t> created;
+            int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, original, active, created, &restored));
+            assert(render(restored) == text);
+            assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, restored));
+            TextRecord rejected{"caller-owned"};
+            const auto before = textDestroyed;
+            assert(!chali_abi_record_make_clonable(&frame, "c-api-test::Text", &rejected, destroyTextRecord, cloneTextRecord));
+            reset();
+            assert(!chali_abi_record_make_textual(&frame, "c-api-test::Text", &rejected,
+                destroyTextRecord, cloneTextRecord, failTextRecord) && textDestroyed == before);
+            reset();
+            assert(!chali_abi_record_make_textual(&frame, "c-api-test::NoFormatter", &rejected,
+                destroyTextRecord, cloneTextRecord, nullptr) && textDestroyed == before);
+            reset();
+            const auto empty = chali_abi_record_make_textual(&frame, "c-api-test::Text", new TextRecord{},
+                destroyTextRecord, cloneTextRecord, formatTextRecord);
+            assert(empty && render(empty).empty() && !runtime.status);
+            assert(chali_abi_record_release(&frame, empty));
+            for (auto formatter : {failTextRecord, oversizedTextRecord, growingTextRecord})
+            {
+                const auto name = formatter == failTextRecord ? "c-api-test::FailedText" :
+                    formatter == oversizedTextRecord ? "c-api-test::OversizedText" : "c-api-test::GrowingText";
+                const auto record = chali_abi_record_make_textual(&frame, name, new TextRecord{},
+                    destroyTextRecord, nullptr, formatter);
+                assert(record && render(record).empty() && !context.error.empty());
+                reset();
+                assert(chali_abi_record_release(&frame, record));
+            }
+            assert(chali_abi_string_release(&frame, layout));
+            std::puts("C record text: raw/empty/long output, independent copies, transfer, immutable policies and invalid callbacks passed");
         }
         {
             const std::string path = argv[1];

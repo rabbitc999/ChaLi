@@ -87,6 +87,17 @@ typedef void(CHALI_ABI_CALL *ChaliAbiDestroy)(void *record);
 typedef void *(CHALI_ABI_CALL *ChaliAbiClone)(const void *record);
 
 /**
+ * @brief 查询或复制宿主记录的文本，回调不得抛出异常、修改记录或调用语言代码。
+ * @param record 本次调用期间存活的只读记录。
+ * @param data 调用方缓冲；为空且 capacity 为零时仅查询。
+ * @param capacity 可写字节数，不含额外终止字节，回调不得越界写入。
+ * @param required 接收完整文本字节数，不得为空；容量不足时不改写 data。
+ * @return 查询或完整写入成功为一；其他情况为零。
+ * @note 记录及回调输出均不转移所有权；两次调用期间文本应保持稳定，允许空文本和内嵌零字节。
+ */
+typedef int(CHALI_ABI_CALL *ChaliAbiFormat)(const void *record, char *data, size_t capacity, size_t *required);
+
+/**
  * @brief 直通槽的值类别，与生成代码写入的类型数组一一对应。
  */
 enum
@@ -140,6 +151,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
 #define CHALI_ABI_CAP_LIST_TEXT     UINT64_C(256) ///< 文本列表直接追加服务。
 #define CHALI_ABI_CAP_LIST_NUMBERS  UINT64_C(512) ///< 保留整数及浮点位模式的数值列表服务。
+#define CHALI_ABI_CAP_RECORD_TEXT   UINT64_C(1024) ///< 通过 C 回调提供宿主记录默认文本。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -659,6 +671,20 @@ int64_t CHALI_ABI_CALL chali_abi_record_make(const ChaliAbiFrame *frame, const c
  */
 int64_t CHALI_ABI_CALL chali_abi_record_make_clonable(const ChaliAbiFrame *frame, const char *typeName,
     void *record, ChaliAbiDestroy destroy, ChaliAbiClone clone);
+
+/**
+ * @brief 创建提供默认文本的 C 记录，可选提供独立复制，复用同一类型表与对象表。
+ * @param frame 当前调用帧。
+ * @param typeName 类型身份；同名类型的销毁、复制和格式化回调必须完全一致。
+ * @param record 成功后转移给运行时的记录。
+ * @param destroy 非抛出销毁回调，不得为空。
+ * @param clone 非抛出独立复制回调，可为空表示不可复制。
+ * @param format 非抛出文本查询／写入回调，不得为空。
+ * @return 新句柄；失败为零，调用方继续拥有 record。
+ * @note 需要 CHALI_ABI_CAP_RECORD_TEXT；所有回调代码须存活到最后一条记录释放。
+ */
+int64_t CHALI_ABI_CALL chali_abi_record_make_textual(const ChaliAbiFrame *frame, const char *typeName,
+    void *record, ChaliAbiDestroy destroy, ChaliAbiClone clone, ChaliAbiFormat format);
 
 /**
  * @brief 借用类型匹配的存活宿主记录。

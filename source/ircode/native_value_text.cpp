@@ -10,6 +10,37 @@ using namespace runtimeDetail;
 namespace runtimeDetail
 {
 /**
+ * @brief 通过纯 C 文本协议构造默认表示，先查询长度再有界写入，不转移记录所有权。
+ * @param context 当前原生上下文，接收回调失败和长度错误。
+ * @param type 已登记的宿主记录类型。
+ * @param record 只读的存活记录。
+ * @return 完整文本；回调失败返回空并保留错误，分配异常沿原生调用边界传播。
+ */
+static Memory::String cRecordText(NativeContext &context, const NativeRecordType &type, const void *record)
+{
+    std::size_t required = 0;
+    if (!type.formatC(record, nullptr, 0, &required))
+    {
+        context.error = "宿主记录文本格式化失败";
+        return {};
+    }
+    Memory::String text;
+    if (required > text.max_size() || required > static_cast<std::uint64_t>(INT64_MAX))
+    {
+        context.error = "宿主记录文本长度超出上限";
+        return {};
+    }
+    text.resize(required);
+    std::size_t actual = required;
+    if (!type.formatC(record, text.data(), text.size(), &actual) || actual > text.size())
+    {
+        context.error = "宿主记录文本写入失败或长度变化";
+        return {};
+    }
+    text.resize(actual);
+    return text;
+}
+/**
  * @brief 对默认复合表示中的字符串加引号并转义控制字符。
  * @param text 原始字节文本，可含零字节。
  * @param quote 使用的引号字符。
@@ -391,6 +422,8 @@ struct ValueTextRenderer
         if (!nativeRefreshViews(context, *object)) return {};
         if (object->kind == ObjectKind::NativeRecord && object->nativeType && object->nativeType->toString)
             return object->nativeType->toString(object->nativeRecord.get());
+        if (object->kind == ObjectKind::NativeRecord && object->nativeType && object->nativeType->formatC)
+            return cRecordText(context, *object->nativeType, object->nativeRecord.get());
         if (object->kind == ObjectKind::Obj)
         {
             if (object->objTag == 0) return "Any()";

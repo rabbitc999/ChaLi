@@ -118,6 +118,7 @@ struct NativeRecordType
     bool (*textView)(NativeCallContext &, const void *, NativeRecordTextView &) = nullptr;  ///< 提供结构化文本字段。
     const char *identityKey = nullptr;                                                      ///< 可选的跨动态库布局身份；非空时同键描述符必须遵守同一记录 ABI。
     void *(*cloneC)(const void *) = nullptr;                                                ///< 可选的纯 C 独立快照复制；失败返回空，不得抛出异常。
+    int (*formatC)(const void *, char *, std::size_t, std::size_t *) = nullptr;              ///< 可选的纯 C 文本查询／写入回调，不转移所有权，不得抛出异常。
 };
 
 /**
