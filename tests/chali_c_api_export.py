@@ -44,6 +44,8 @@ def main():
         assert (project / 'abi/abi_process.c').is_file()
         assert not (project / 'glue/std_process.cpp').exists()
         assert not (project / 'glue/std_process.hpp').exists()
+        assert not (project / 'glue/std_reference.cpp').exists()
+        assert not (project / 'glue/std_reference.hpp').exists()
         run(args.cc, '-std=c11', '-fsyntax-only', '-I' + str(project / 'abi'), project / 'abi/abi_process.c')
         assert (project / 'abi/abi_serialization.cpp').is_file()
         run(args.cxx, '-std=c++17', '-fsyntax-only', '-I' + str(project), project / 'abi/abi_serialization.cpp')

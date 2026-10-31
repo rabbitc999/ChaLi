@@ -1,6 +1,5 @@
 #include "std_native_record.hpp"
 #include "std_registry.hpp"
-#include "std_reference.hpp"
 #include "std_collection.hpp"
 #include "std_file.hpp"
 #include "std_big_number.hpp"
@@ -61,7 +60,6 @@ namespace std_registry
 bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 {
     bool ok = true;
-    ok = std_reference_glue::bind(registry, error) && ok;
     ok = collection_glue::bind(registry.native(), error) && ok;
     ok = big_number_glue::bind(registry.native(), error) && ok;
     ok = std_cas_glue::bind(registry.native(), error) && ok;

@@ -146,6 +146,12 @@ C API、进程与内存共 11 步全部通过，无失败或跳过，包括 26 �
 
 静态编译器 SHA256 为 41def4497d0b41c1ee6c0e1d1f1c7fdd302eaad501dfb07bad289b3eadafee93；vscode/dist/1.0.12-c-service-stack/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌 EXE 字节，SHA256 为 144ff3a86a75297672c34b221d18630b25319e3fd3c1ac8a0fa3214edf87623d。未冷构建独立编译器、运行整仓全量门禁或做正式性能计时；其余标准库与旧胶水迁移继续保留。
 
+共享引用已自举：Shared<T> 直接保存线程组共享槽的非拥有 int64 标识，删除仅装一个整数的 __SharedReference opcode 及 std_reference.cpp／hpp、复制／释放绑定和模块登记。槽与拥有载荷仍由线程组管理，引用复制保留同一槽、get／set／swap 继续执行原有类型与快照协议。空定时源通过 LLVM 零常量直接降低，关闭快速原语时也不回到已删除胶水。
+
+以 1742ab87 真实编译器冻结共享别名、局部引用销毁后存活、String／List 拥有载荷独立快照、线程参数／消息传递、双线程原子更新、默认／有效定时器及 stop 行为。malloc／pool × checked／unchecked 四组合一致，五个原有并发／定时器样例及关闭快速原语的完整用例通过；LLVM IR 不再包含旧引用模块或这些辅助函数的具名宿主调用。修正旧线程等待测试中只声明变量而不失败的分支，改为真正断言，并修复无限等待变体的替换目标；线程边界专项通过。
+
+并发、C API、内存及四组泛型共 16 步全部通过，无失败或跳过；隔离手册、标准库源码回退／零磁盘缓存、七组插件测试与六项最终导出源核对通过。新鲜导出 447 文件，旧引用文件和静态库对象已删除。静态编译器 SHA256 为 2a44fabcb016eaa358453fff23770071c71024eb39dace0b5cfd1697e5a6cb0f；vscode/dist/1.0.12-shared-selfhost/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌 EXE，SHA256 为 ae304e708fbb28fcb7391bed0e730214fec9f242e917cd393e02d9cdc4526e5d。证据仅保留 tools/history/20261031/chali-1.0.12-shared-selfhost/；未冷构建独立编译器、运行整仓全量门禁或测量运行速度，其他模块及旧公开胶水仍待迁移。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

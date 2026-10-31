@@ -5179,7 +5179,7 @@
       "documentation": "操作状态为 READY 时返回 true。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5213,7 +5213,7 @@
       "documentation": "创建值为 value 的原子共享槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5224,7 +5224,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 41,
+    "line": 29,
     "page": "std-concurrency.md",
     "anchor": "api-1"
   },
@@ -5241,7 +5241,7 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5251,7 +5251,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 42,
+    "line": 30,
     "page": "std-concurrency.md",
     "anchor": "api-2"
   },
@@ -5275,7 +5275,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5283,7 +5283,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 43,
+    "line": 31,
     "page": "std-concurrency.md",
     "anchor": "api-3"
   },
@@ -5307,7 +5307,7 @@
       "documentation": "原子替换共享槽并返回旧值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5317,7 +5317,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 44,
+    "line": 32,
     "page": "std-concurrency.md",
     "anchor": "api-4"
   },
@@ -5334,7 +5334,7 @@
       "documentation": "共享槽的引用标识，不拥有槽内值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5342,7 +5342,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 46,
+    "line": 34,
     "page": "std-concurrency.md",
     "anchor": "api-5"
   },
@@ -5366,7 +5366,7 @@
       "documentation": "创建 int64 原子槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5377,7 +5377,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 52,
+    "line": 40,
     "page": "std-concurrency.md",
     "anchor": "api-6"
   },
@@ -5394,7 +5394,7 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5404,7 +5404,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 53,
+    "line": 41,
     "page": "std-concurrency.md",
     "anchor": "api-7"
   },
@@ -5428,7 +5428,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5436,7 +5436,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 54,
+    "line": 42,
     "page": "std-concurrency.md",
     "anchor": "api-8"
   },
@@ -5460,7 +5460,7 @@
       "documentation": "原子累加 int64 并返回旧值，溢出按 64 位回绕。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5468,7 +5468,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 55,
+    "line": 43,
     "page": "std-concurrency.md",
     "anchor": "api-9"
   },
@@ -5492,7 +5492,7 @@
       "documentation": "创建指定容量的跨线程通道。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5503,7 +5503,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 61,
+    "line": 49,
     "page": "std-concurrency.md",
     "anchor": "api-10"
   },
@@ -5533,7 +5533,7 @@
       "documentation": "在截止时间内复制发送载荷，返回统一操作状态。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5541,7 +5541,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 62,
+    "line": 50,
     "page": "std-concurrency.md",
     "anchor": "api-11"
   },
@@ -5565,7 +5565,7 @@
       "documentation": "按值复制并等待发送，队列满时施加背压。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5575,7 +5575,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 63,
+    "line": 51,
     "page": "std-concurrency.md",
     "anchor": "api-12"
   },
@@ -5599,7 +5599,7 @@
       "documentation": "立即尝试复制发送，队列满返回 FULL。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5607,7 +5607,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 64,
+    "line": 52,
     "page": "std-concurrency.md",
     "anchor": "api-13"
   },
@@ -5631,7 +5631,7 @@
       "documentation": "显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5639,7 +5639,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 65,
+    "line": 53,
     "page": "std-concurrency.md",
     "anchor": "api-14"
   },
@@ -5656,7 +5656,7 @@
       "documentation": "等待并按值接收下一项，关闭排空后返回 CLOSED。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5666,7 +5666,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 72,
+    "line": 60,
     "page": "std-concurrency.md",
     "anchor": "api-15"
   },
@@ -5683,7 +5683,7 @@
       "documentation": "立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5691,7 +5691,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 73,
+    "line": 61,
     "page": "std-concurrency.md",
     "anchor": "api-16"
   },
@@ -5708,7 +5708,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -5718,7 +5718,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 74,
+    "line": 62,
     "page": "std-concurrency.md",
     "anchor": "api-17"
   },

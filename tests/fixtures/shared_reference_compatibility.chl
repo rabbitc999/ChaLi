@@ -1,0 +1,42 @@
+import std::concurrency;
+import std::thread;
+import std::message;
+import std::event;
+
+struct Payload { String text; List<int64> values; };
+void sharedWorker(std::concurrency::Shared<String> value) {
+    let copy=value;
+    assert(copy.id()==value.id());
+    String old=copy.swap("worker");
+    std::message::sendThread<String>(std::thread::parent(),old);
+}
+void atomicWorker(std::concurrency::AtomicInt64 value) {
+    int64 index=0;while(index<100){value.fetchAdd(1);index++;}
+}
+void main() {
+    std::concurrency::Shared<String> empty;assert(empty.id()==0);
+    std::concurrency::Shared<String> retained;
+    {
+        let local=std::concurrency::Shared<String>::create("before");retained=local;
+        assert(local.id()>0 && retained.id()==local.id());local.set("retained");
+    }
+    assert(retained.get()=="retained");
+    let alias=retained;assert(alias.swap("alias")=="retained");assert(retained.get()=="alias");
+    Thread task=std::thread::createWith<std::concurrency::Shared<String>>(sharedWorker,retained);
+    assert(std::message::receiveThread<String>()=="alias");std::thread::wait(task);assert(retained.get()=="worker");
+    println("shared alias, scope and thread transfer OK");
+    Payload input;input.text="payload";input.values.push(7);
+    let shared=std::concurrency::Shared<Payload>::create(input);input.text="local";input.values.push(8);
+    let first=shared.get();assert(first.text=="payload" && first.values.len()==1);
+    first.text="changed";first.values.push(9);assert(shared.get().values.len()==1);
+    shared.set(first);let second=shared.get();assert(second.text=="changed" && second.values.len()==2);
+    assert(std::lang::rawSize<std::concurrency::Shared<Payload>>()==8);println("shared owned payload snapshots OK");
+    let atomic=std::concurrency::AtomicInt64::create(5);
+    Thread left=std::thread::createWith<std::concurrency::AtomicInt64>(atomicWorker,atomic);
+    Thread right=std::thread::createWith<std::concurrency::AtomicInt64>(atomicWorker,atomic);
+    std::thread::wait(left);std::thread::wait(right);assert(atomic.get()==205);println("atomic aliases OK");
+    std::event::Timer timer;assert(!timer.isValid());timer.stop();timer.stop();
+    timer=std::event::Timer::afterMillis(2);assert(timer.isValid());
+    let event=std::event::receiveFor(1000);assert(event.isReady() && event.value.timer==timer.id());
+    timer.stop();assert(!timer.isValid());println("empty timer, stop and event OK");
+}

@@ -1,0 +1,5 @@
+{
+  "source_commit": "1742ab87",
+  "compiler_sha256": "41def4497d0b41c1ee6c0e1d1f1c7fdd302eaad501dfb07bad289b3eadafee93",
+  "output": "shared alias, scope and thread transfer OK\nshared owned payload snapshots OK\natomic aliases OK\nempty timer, stop and event OK\n"
+}

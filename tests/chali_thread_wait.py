@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 from project_temp import tempfile
 def main():
-    """在独立临时目录运行普通及压缩符号程序，检查等待边界。"""
+    """在独立临时目录运行真实原生程序，检查等待边界。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', default='chali')
     args = parser.parse_args()
@@ -35,12 +35,12 @@ void worker() {
 '''
         body = '''void main() {
     Thread task = std::thread::create(worker);
-    if (std::thread::tryWait(task)) { let __boom = 11; }
+    assert(!std::thread::tryWait(task));
     int64 started = std::clock::nowNanos();
-    if (std::thread::waitFor(task, 20)) { let __boom = 12; }
-    if (std::clock::nowNanos() - started < 20000000) { let __boom = 15; }
+    assert(!std::thread::waitFor(task, 20));
+    assert(std::clock::nowNanos() - started >= 20000000);
     std::thread::send(task, "alive");
-    if (!std::thread::waitFor(task, 9223372036854775807)) { let __boom = 13; }
+    assert(std::thread::waitFor(task, 9223372036854775807));
     println("done");
 
 }
@@ -52,7 +52,7 @@ void worker() {
 
         # 超时后既可以再次限时等待，也可以沿用无期限 wait。
         result = run(prelude + body.replace(
-            'if (!std::thread::waitFor(task, 9223372036854775807)) { return 13; }',
+            'assert(std::thread::waitFor(task, 9223372036854775807));',
             'std::thread::wait(task);'))
         assert result.returncode == 0, result.stderr
         assert result.stdout.count('worker:alive') == 1, result.stdout
@@ -86,7 +86,7 @@ std::thread::waitFor(task, 5000);
 void worker() {}
 void main() {
 Thread task = std::thread::create(worker);
-if (!std::thread::waitFor(task, 5000)) { let __boom = 14; }
+assert(std::thread::waitFor(task, 5000));
 std::thread::tryWait(task);
 
 }

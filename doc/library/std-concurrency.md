@@ -14,7 +14,7 @@ import std::concurrency;
 
 ## 公共约定与错误边界
 
-Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。
+Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。
 
 ## 参考代码
 
@@ -190,7 +190,7 @@ static Shared<T> create(T value);
 std::concurrency::Shared<T>::create(value);
 ```
 
-**源码**：[source/std/concurrency.chl:41](../../source/std/concurrency.chl#L41)。
+**源码**：[source/std/concurrency.chl:29](../../source/std/concurrency.chl#L29)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -226,7 +226,7 @@ T get();
 obj.get();
 ```
 
-**源码**：[source/std/concurrency.chl:42](../../source/std/concurrency.chl#L42)。
+**源码**：[source/std/concurrency.chl:30](../../source/std/concurrency.chl#L30)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -264,7 +264,7 @@ void set(T value);
 obj.set(value);
 ```
 
-**源码**：[source/std/concurrency.chl:43](../../source/std/concurrency.chl#L43)。
+**源码**：[source/std/concurrency.chl:31](../../source/std/concurrency.chl#L31)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -302,7 +302,7 @@ T swap(T value);
 obj.swap(value);
 ```
 
-**源码**：[source/std/concurrency.chl:44](../../source/std/concurrency.chl#L44)。
+**源码**：[source/std/concurrency.chl:32](../../source/std/concurrency.chl#L32)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -338,7 +338,7 @@ int64 id();
 obj.id();
 ```
 
-**源码**：[source/std/concurrency.chl:46](../../source/std/concurrency.chl#L46)。
+**源码**：[source/std/concurrency.chl:34](../../source/std/concurrency.chl#L34)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -376,7 +376,7 @@ static AtomicInt64 create(int64 value);
 std::concurrency::AtomicInt64::create(value);
 ```
 
-**源码**：[source/std/concurrency.chl:52](../../source/std/concurrency.chl#L52)。
+**源码**：[source/std/concurrency.chl:40](../../source/std/concurrency.chl#L40)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -412,7 +412,7 @@ int64 get();
 obj.get();
 ```
 
-**源码**：[source/std/concurrency.chl:53](../../source/std/concurrency.chl#L53)。
+**源码**：[source/std/concurrency.chl:41](../../source/std/concurrency.chl#L41)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -450,7 +450,7 @@ void set(int64 value);
 obj.set(value);
 ```
 
-**源码**：[source/std/concurrency.chl:54](../../source/std/concurrency.chl#L54)。
+**源码**：[source/std/concurrency.chl:42](../../source/std/concurrency.chl#L42)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -488,7 +488,7 @@ int64 fetchAdd(int64 delta);
 obj.fetchAdd(delta);
 ```
 
-**源码**：[source/std/concurrency.chl:55](../../source/std/concurrency.chl#L55)。
+**源码**：[source/std/concurrency.chl:43](../../source/std/concurrency.chl#L43)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -526,7 +526,7 @@ static Channel<T> create(int64 capacity);
 std::concurrency::Channel<T>::create(capacity);
 ```
 
-**源码**：[source/std/concurrency.chl:61](../../source/std/concurrency.chl#L61)。
+**源码**：[source/std/concurrency.chl:49](../../source/std/concurrency.chl#L49)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -565,7 +565,7 @@ int64 sendFor(T value, int64 millis);
 obj.sendFor(value, millis);
 ```
 
-**源码**：[source/std/concurrency.chl:62](../../source/std/concurrency.chl#L62)。
+**源码**：[source/std/concurrency.chl:50](../../source/std/concurrency.chl#L50)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -603,7 +603,7 @@ int64 send(T value);
 obj.send(value);
 ```
 
-**源码**：[source/std/concurrency.chl:63](../../source/std/concurrency.chl#L63)。
+**源码**：[source/std/concurrency.chl:51](../../source/std/concurrency.chl#L51)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -641,7 +641,7 @@ int64 trySend(T value);
 obj.trySend(value);
 ```
 
-**源码**：[source/std/concurrency.chl:64](../../source/std/concurrency.chl#L64)。
+**源码**：[source/std/concurrency.chl:52](../../source/std/concurrency.chl#L52)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -679,7 +679,7 @@ Receive<T> receiveFor(int64 millis);
 obj.receiveFor(millis);
 ```
 
-**源码**：[source/std/concurrency.chl:65](../../source/std/concurrency.chl#L65)。
+**源码**：[source/std/concurrency.chl:53](../../source/std/concurrency.chl#L53)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -715,7 +715,7 @@ Receive<T> receive();
 obj.receive();
 ```
 
-**源码**：[source/std/concurrency.chl:72](../../source/std/concurrency.chl#L72)。
+**源码**：[source/std/concurrency.chl:60](../../source/std/concurrency.chl#L60)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -751,7 +751,7 @@ Receive<T> tryReceive();
 obj.tryReceive();
 ```
 
-**源码**：[source/std/concurrency.chl:73](../../source/std/concurrency.chl#L73)。
+**源码**：[source/std/concurrency.chl:61](../../source/std/concurrency.chl#L61)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -787,7 +787,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/std/concurrency.chl:74](../../source/std/concurrency.chl#L74)。
+**源码**：[source/std/concurrency.chl:62](../../source/std/concurrency.chl#L62)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 

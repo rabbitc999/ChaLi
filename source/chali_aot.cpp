@@ -1546,6 +1546,12 @@ struct Builder
             write(destination, { "i64", "0" });
             return true;
         }
+        /* 空定时源是固定零标识，所有配置都直接生成 LLVM 常量，不经过宿主胶水。 */
+        if (callee == "std::event::__emptySource" && arguments.empty())
+        {
+            write(destination, { "i64", "0" });
+            return true;
+        }
         /* 标准库错误直接调用 C 运行时；兼容旧宿主错误，不添加公开 panic 的前缀。 */
         if (callee == "std::lang::__runtimeFail" && arguments.size() == 1u)
         {

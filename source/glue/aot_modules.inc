@@ -2,7 +2,6 @@
  *
  * 已全部迁移到 C 直通表的模块没有 C++ 胶水文件，这里改成直接登记该模块的入口表；
  * `std::clock` 原先与数学函数同在一个胶水文件、共用 `GLUE_NO_STD_MATH`，一并归到 math。 */
-CHALI_AOT_MODULE(reference, std_reference_glue::bind(registry, error))
 CHALI_AOT_MODULE(print, registry.bindModule(abi_print_records, error))
 CHALI_AOT_MODULE(collection, collection_glue::bind(registry.native(), error))
 CHALI_AOT_MODULE(string, registry.bindModule(abi_string_records, error))
