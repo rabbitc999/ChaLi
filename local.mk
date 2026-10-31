@@ -2,7 +2,7 @@ ifeq ($(origin CC),default)
 CC := gcc
 endif
 
-# C 侧直通胶水使用 C11；与 C++ 胶水一起并入宿主记录库。
+# C 入口使用 C11；允许采用 C++17 私有实现，公开调用边界统一为 C API。
 ifeq ($(filter -std=%,$(CFLAGS)),)
 CFLAGS += -std=c11
 endif
@@ -11,14 +11,14 @@ CFLAGS += -Isource -O2 -DNDEBUG
 # local.mk —— 生成工程自己的挂载点（生成的 Makefile 末尾有 `-include local.mk`）。
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：
-#   * source/ast：C 子集语法树 → 四元式 + .data（降级目标）
-#   * source/ircode：四元式分析、优化与 AOT 共享运行时（大整数用 source/bignum）
+#   * source/ast：已检查 AST 与可选的兼容四元式生成
+#   * source/ircode：四元式兼容工具与共享原生运行时（优化交给 LLVM）
 #   * source/preprocess：`%include` / `%if` / `%define` 那一步（源码进解析器之前）
 # 三份副本各跑 `make -C source/<名字>`（产物仍落在仓库根的 `build/<名字>/`），
 # 所有依赖都使用 CHALI 内部副本。
 #
 # 注意：`source/{ast,ircode,bignum}` 是从 ParseEngine 的 `library/` 复制进来的**副本**，
-# 改了这边不会自动同步到 ParseEngine 那份（反之亦然）——动其中一个时想清楚要不要一起改。
+# 这些库副本只在本仓库演进，不修改或同步外部 ParseEngine 仓库。
 #
 # 生成源码与报告位于 source/，对象文件与静态库位于 $(CHALI_BUILD_ROOT)/chali-frontend/。
 # 根目录只保留工具链入口与手写构建文件，重跑 gen.sh 不覆盖 local.mk。

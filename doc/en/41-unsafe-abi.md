@@ -133,3 +133,16 @@ python benchmarks/perf/bootstrap_string.py --size 512 --runs 3 --out tmp/string-
 ```
 
 String reports retain compiler/source SHA256 hashes, correctness results, raw timings and checksums. The three sides are the old native String, the current default self-hosted String and an experimental raw byte string. Conversion into experimental storage through a byte list is a separate workload. Timed workloads include their construction, allocation and cleanup; compilation is excluded from internal timings. Interpret comparisons alongside the algorithms used by each workload.
+
+## Current primitive lowering
+
+| Operation | LLVM path | Types and retained rules |
+| --- | --- | --- |
+| `memcpy` / `memset` | `llvm.memcpy` / `llvm.memset` after range preparation | Byte counts; validate complete ranges before writing, reject overlapping copies, permit null for zero length. |
+| Logical addresses and bare-pointer arithmetic | Address values and integer arithmetic, with small wrappers inlined by O3 | Element strides use language layout; logical addresses are not machine pointers. |
+| Scalar raw-slot access | LLVM loads/stores or C-signature scalar primitives for supported layouts | bool, char, signed/unsigned integer widths and float32/64; preserve narrowing, signs, negative zero and floating-point bits. |
+| `rawSize<T>()` | Language-layout constant in each generic instance | One byte for uint8/char, eight-byte ordinary value slots; aggregate language layout excludes dynamic allocations. |
+| `initAt` / `readAt` / `takeAt` / `dropAt` | Fixed semantic lowering plus initialization-state and cleanup kernels | Owned values follow their type protocols; bit copies do not establish ownership. |
+| C entry results | Return checked C-frame bits and result kind directly | Errors, memory faults, step limits and exit requests are checked first; scalar results avoid generic-value conversion. |
+
+Complex layouts, object lookup, resource protocols, callbacks and stale-access diagnostics retain their C runtime services. Checked and unchecked keep their documented array/pointer settings; static borrowing and ownership cleanup remain in force. The C++ backend generates production LLVM IR. Python tests invoke the compiler and verify results, IR and target files.

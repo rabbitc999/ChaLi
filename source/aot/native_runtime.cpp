@@ -17,6 +17,7 @@
 #include <map>
 #include <mutex>
 #include <stdexcept>
+#include <optional>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -808,7 +809,9 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
 {
     auto &state = current();
     NativeContext &context = currentContext();
-    NativeValue result;
+    std::optional<NativeValue> result;
+    std::int64_t directBits = 0;
+    int directKind = -1;
     const auto makeArguments = [&] {
         Memory::Vector<NativeValue> arguments;
         if (count > 0) arguments.reserve(static_cast<std::size_t>(count));
@@ -835,8 +838,8 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
                 arguments.push_back(floating[at] ? Slot::fromDouble(real) : Slot::fromInt(bits[at]));
             }
             const auto value = internal->second.apply(context, arguments);
-            result = value.isFloat ? NativeValue::fromFloat(value.real) : value.isText ? NativeValue::fromText(value.text) :
-                                                                                         NativeValue::fromInt(value.integer);
+            result.emplace(value.isFloat ? NativeValue::fromFloat(value.real) : value.isText ? NativeValue::fromText(value.text) :
+                                                                                                NativeValue::fromInt(value.integer));
         }
         else
         {
@@ -857,28 +860,20 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
                                 runtime.fallback ? runtime.fallback : runtime.diagnostic.c_str());
                 if (chali_abi_check_result(&frame, &abiError) != ChaliAbiOk)
                     chali_panic(diagnostic);
-                if (frame.resultIsFloat != 0)
-                {
-                    double value = 0.0;
-                    std::memcpy(&value, &frame.result, sizeof(value));
-                    result = NativeValue::fromFloat(value);
-                }
-                else
-                {
-                    result = NativeValue::fromInt(frame.result);
-                }
+                directBits = frame.result;
+                directKind = frame.resultIsFloat;
             }
             else if (entry != nullptr)
             {
                 Memory::Vector<NativeValue> arguments = makeArguments();
                 NativeCallContextImpl call(context, &state.invoker);
-                result = entry->callback(call, arguments);
+                result.emplace(entry->callback(call, arguments));
             }
             else
             {
                 const auto handled = context.machine->invokeNativeService(state.program, context, name, makeArguments(), nativeThreadState.callbackDepth);
                 if (!handled) chali_panic((Memory::String("找不到原生服务：") + name).c_str());
-                result = *handled;
+                result.emplace(*handled);
             }
         }
     } catch (const std::exception &error)
@@ -894,15 +889,21 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
         if (context.threadId != 0) throw NativeExit{ code };
         std::exit(code);
     }
-    nativeThreadState.nativeResultFloat = result.isFloat() ? 1 : 0;
-    if (result.isText()) return static_cast<std::int64_t>(nativeAllocString(context, result.text));
-    if (result.isFloat())
+    if (directKind >= 0)
+    {
+        nativeThreadState.nativeResultFloat = directKind;
+        return directBits;
+    }
+    const auto &value = *result;
+    nativeThreadState.nativeResultFloat = value.isFloat() ? 1 : 0;
+    if (value.isText()) return static_cast<std::int64_t>(nativeAllocString(context, value.text));
+    if (value.isFloat())
     {
         std::int64_t raw = 0;
-        std::memcpy(&raw, &result.floating, sizeof(raw));
+        std::memcpy(&raw, &value.floating, sizeof(raw));
         return raw;
     }
-    return result.integer;
+    return value.integer;
 }
 
 /**

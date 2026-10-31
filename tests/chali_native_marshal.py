@@ -55,6 +55,17 @@ def main():
                  'API void release_alias(void *value){++releases;free(value);}\n'
                  '/**\n * @brief 查询本次进程的释放次数。\n * @return 已释放文本数。\n */\n'
                  'API int64_t alias_releases(void){return releases;}\n')
+        body += ('/**\n * @brief 返回带符号零的精确位模式。\n * @return binary64 负零。\n */\n'
+                 'API double special_zero(void){uint64_t bits=UINT64_C(0x8000000000000000);double value;memcpy(&value,&bits,8);return value;}\n'
+                 '/**\n * @brief 返回带载荷的静默 NaN。\n * @return 精确 binary64 位模式。\n */\n'
+                 'API double special_nan(void){uint64_t bits=UINT64_C(0x7ff8000000000042);double value;memcpy(&value,&bits,8);return value;}\n'
+                 '/**\n * @brief 读取浮点返回值的全部位。\n * @param value 待检查的浮点值。\n * @return 原始位模式。\n */\n'
+                 'API uint64_t special_bits(double value){uint64_t bits;memcpy(&bits,&value,8);return bits;}\n'
+                 '/**\n * @brief 返回有符号整数下界。\n * @return int64 最小值。\n */\n'
+                 'API int64_t special_min(void){return INT64_MIN;}\n')
+        body += ('/**\n * @brief 同步检查浮点回调及嵌套的 C 帧返回。\n'
+                 ' * @param callback 浮点语言函数值。\n * @return 回调的精确浮点结果。\n */\n'
+                 'API double floating_callback(double (*callback)(double)){return callback(1.25); }\n')
         native.write_text(body, encoding='utf-8')
         result = subprocess.run(['gcc', '-std=c11', '-shared', '-fPIC', str(native), '-o', str(library)],
                                 capture_output=True, text=True, encoding='utf-8', timeout=90)
@@ -78,6 +89,18 @@ def main():
                             '#abi("C",' + json.dumps(library.as_posix()) + ',"alias_releases")\n'
                             'int64 aliasReleases();\n')
         statements.append('ownedAlias();assert(aliasReleases()==1);\n')
+        for symbol, signature in (
+            ('special_zero','float64 negativeZero()'),('special_nan','float64 payloadNaN()'),
+            ('special_bits','uint64 bitPattern(float64 value)'),('special_min','int64 minimum()')):
+            declarations.append('#abi("C",'+json.dumps(library.as_posix())+',"'+symbol+'")\n'+signature+';\n')
+        statements.append('assert(bitPattern(negativeZero())==((uint64)1<<63));'
+                          'float64 nan=payloadNaN();assert(nan!=nan);'
+                          'assert(bitPattern(nan)==(uint64)0x7ff8000000000042);'
+                          'assert(minimum()==(-9223372036854775807-1));\n')
+        declarations.append('#abi("C",'+json.dumps(library.as_posix())+',"floating_callback")\n'
+                            'float64 floatingCallback(float64 fn(float64) callback);\n')
+        statements.append('let floating=float64 fn(float64 value){assert(value==1.25);return negativeZero();};'
+                          'assert(bitPattern(floatingCallback(floating))==((uint64)1<<63));\n')
         statements.append('int64 captured=41;'
                           'let callback=int64 fn copy(uint8 small,float32 real,uint64 large){'
                           'assert(small==(uint8)200);assert(real==(float32)1.25);'
