@@ -29339,7 +29339,7 @@
     "owner": "",
     "signature": "Process processRun(std::lang::String command)",
     "documentation": "通过 shell 启动读取管道，返回进程句柄。\n\n**返回值**：Process。",
-    "comment": "/*\n * 进程与系统调用（从编译器注入正文里搬出来）：要 `import std::process;` 才能用。\n * 底层 `__processRun` / `__processRead` / `__processClose` / `__system` 是编译器内建的\n * 宿主调用（按裸名识别），本体在 Registry 胶水 `glue/std_process.hpp` 里：\n * 命令管道由 opcode 胶水记录独占，VM 只持有不透明对象壳；导出程序内嵌同一份胶水。\n */",
+    "comment": "/* 命令管道通过 C 帧和不透明记录服务接入宿主。显式关闭返回平台退出状态；\n * 离开作用域仍会释放记录并关闭尚未关闭的管道。每次读取最多 511 字节并移除尾部 CR／LF。 */",
     "parameters": [
       {
         "name": "command",
@@ -29353,7 +29353,7 @@
       "documentation": "通过 shell 启动读取管道，返回进程句柄。"
     },
     "errors": {
-      "documentation": "命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
+      "documentation": "命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
       "preconditions": [],
       "panic": false
     },
@@ -29363,7 +29363,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/process.chl",
-    "line": 9,
+    "line": 5,
     "page": "std-process.md",
     "anchor": "api-0"
   },
@@ -29387,7 +29387,7 @@
       "documentation": "读取进程管道的输出文本。"
     },
     "errors": {
-      "documentation": "命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
+      "documentation": "命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
       "preconditions": [],
       "panic": false
     },
@@ -29397,7 +29397,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/process.chl",
-    "line": 10,
+    "line": 6,
     "page": "std-process.md",
     "anchor": "api-1"
   },
@@ -29421,7 +29421,7 @@
       "documentation": "关闭管道并等待进程，返回宿主状态码。"
     },
     "errors": {
-      "documentation": "命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
+      "documentation": "命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
       "preconditions": [],
       "panic": false
     },
@@ -29431,7 +29431,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/process.chl",
-    "line": 11,
+    "line": 7,
     "page": "std-process.md",
     "anchor": "api-2"
   },
@@ -29455,7 +29455,7 @@
       "documentation": "同步执行 shell 命令并返回宿主状态码。"
     },
     "errors": {
-      "documentation": "命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
+      "documentation": "命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。",
       "preconditions": [],
       "panic": false
     },
@@ -29463,7 +29463,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/process.chl",
-    "line": 12,
+    "line": 8,
     "page": "std-process.md",
     "anchor": "api-3"
   },

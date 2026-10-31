@@ -1,0 +1,9 @@
+{
+  "source_commit": "a040210d",
+  "compiler_sha256": "bab8a357e69a21c293cd43b68ae6e9e5a02bb7c5aeba0bb51d0b75c48706d9bb",
+  "output": "line and repeated EOF OK\nchunks:511:511:2\nnonzero pipe status OK\nimplicit close and system status OK\n",
+  "errors": {
+    "processRead": "chali aot: pread 用到的进程句柄无效或已经关闭",
+    "processClose": "chali aot: pclose 用到的进程句柄无效或已经关闭"
+  }
+}

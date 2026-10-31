@@ -1,11 +1,7 @@
 module std::process;
 
-/*
- * 进程与系统调用（从编译器注入正文里搬出来）：要 `import std::process;` 才能用。
- * 底层 `__processRun` / `__processRead` / `__processClose` / `__system` 是编译器内建的
- * 宿主调用（按裸名识别），本体在 Registry 胶水 `glue/std_process.hpp` 里：
- * 命令管道由 opcode 胶水记录独占，VM 只持有不透明对象壳；导出程序内嵌同一份胶水。
- */
+/* 命令管道通过 C 帧和不透明记录服务接入宿主。显式关闭返回平台退出状态；
+ * 离开作用域仍会释放记录并关闭尚未关闭的管道。每次读取最多 511 字节并移除尾部 CR／LF。 */
 Process processRun(std::lang::String command) { return __processRun(command); }
 std::lang::String processRead(Process const& process) { return __processRead(process); }
 int64 processClose(Process const& process) { return __processClose(process); }

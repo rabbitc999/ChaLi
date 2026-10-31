@@ -42,9 +42,6 @@
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
-#ifndef GLUE_NO_STD_PROCESS
-#include "std_process.hpp"
-#endif
 #ifndef GLUE_NO_STD_SQL
 #include "std_sql.hpp"
 #endif
@@ -57,6 +54,7 @@
 
 #include "std_aot_modules.hpp"
 #include "abi/chali_abi_internal.h"
+#include "abi/chali_standard.h"
 #include <cstdlib>
 /**
  * @brief 注册单个已选择模块，独立函数节允许链接器回收未选模块。

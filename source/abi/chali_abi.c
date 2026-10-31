@@ -9,6 +9,7 @@
  * 无需改动本文件；若新增模块，则把它的登记表函数加进 `kModules`。
  */
 #include "chali_abi_internal.h"
+#include "chali_standard.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,9 @@ typedef const ChaliAbiRecord *(*ModuleRecords)(size_t *count);
 static const ModuleRecords kModules[] = {
     abi_print_records,
     abi_string_records,
+#ifndef GLUE_NO_STD_PROCESS
+    abi_process_records,
+#endif
 #ifndef GLUE_NO_STD_JSON
     abi_serialization_records,
 #endif

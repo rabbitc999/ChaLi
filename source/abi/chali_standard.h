@@ -12,6 +12,12 @@ extern "C" {
  * @return 稳定状态码；失败后应销毁该初始化中的表，不继续调用部分标准库。
  */
 int32_t CHALI_ABI_CALL chali_abi_bind_standard(ChaliAbiRegistry *registry, ChaliAbiError *error);
+/**
+ * @brief 取得进程管道与系统调用的只读 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的入口表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_process_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

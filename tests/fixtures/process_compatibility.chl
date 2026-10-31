@@ -1,0 +1,26 @@
+import std::process;
+
+String readThroughCall(Process const& process) { return std::process::processRead(process); }
+void main() {
+    {
+        Process process=std::process::processRun("echo process-line");
+        String text=readThroughCall(&process);assert(text=="process-line");
+        assert(std::process::processRead(&process)=="");assert(std::process::processRead(&process)=="");
+        assert(std::process::processClose(&process)==0);println("line and repeated EOF OK");
+        assert(text=="process-line");
+    }
+    {
+        Process process=std::process::processRun("echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        String first=std::process::processRead(&process);String second=std::process::processRead(&process);String third=std::process::processRead(&process);
+        assert(first.length()==511 && second.length()==511 && third.length()==2);
+        assert(std::process::processRead(&process)=="");assert(std::process::processClose(&process)==0);
+        println("chunks:{}:{}:{}",first.length(),second.length(),third.length());
+    }
+    {
+        Process process=std::process::processRun("exit 7");assert(std::process::processRead(&process)=="");
+        assert(std::process::processClose(&process)!=0);println("nonzero pipe status OK");
+    }
+    int64 index=0;
+    while(index<5) { Process process=std::process::processRun("echo implicit-close");assert(std::process::processRead(&process)=="implicit-close");index++; }
+    assert(std::process::system("exit 0")==0);assert(std::process::system("exit 7")!=0);println("implicit close and system status OK");
+}

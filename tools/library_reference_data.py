@@ -34,7 +34,7 @@ MODULES = {
     'std::parse': ('严格文本解析', '返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。'),
     'std::path': ('路径字符串', '只进行路径字符串处理，不创建文件、不验证目标存在；分隔符与规范化遵循宿主实现。不要把字符串规范化当作文件权限或符号链接安全校验。'),
     'std::probe': ('最小宿主集成探针', '用于验证模块导入和调用链，twice 执行整数乘二，遵循 int64 运算语义。'),
-    'std::process': ('宿主进程', '命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。'),
+    'std::process': ('宿主进程', '命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。'),
     'std::random': ('随机数', '固定种子采用确定性 LCG，可复现；不用于密码学。nextInt/nextRange 区间为 [minimum,maximum)，要求 maximum>minimum；nextFloat64 为 [0,1)。Random 是拥有序列状态的 opcode，普通复制保留当前位置并独立推进，作用域退出自动释放。'),
     'std::regex': ('正则表达式', 'Regex 是 opcode；复制共享不可变编译模式，每次匹配使用独立状态，最后一个值释放时回收模式。compile 失败返回 RegexError::Invalid。find 返回首个匹配的字节下标或 None。capture 的 group=0 表示完整匹配。语法和 replacement 捕获组替换规则采用宿主 std::regex 的默认 ECMAScript 规则。'),
     'std::signal': ('复数信号变换', 'DFT 接受一般长度，FFT 要求长度为 2 的幂；非法长度由 ChaLi 实现检查；变换算法不经过宿主胶水。正变换采用负指数，逆变换归一化。输入输出为 Complex<float64> 列表，结果拥有独立存储。DFT 为 O(n²)，基 2 FFT 为 O(n log n)。'),

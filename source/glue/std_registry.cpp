@@ -39,9 +39,6 @@
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
-#ifndef GLUE_NO_STD_PROCESS
-#include "std_process.hpp"
-#endif
 #ifndef GLUE_NO_STD_SQL
 #include "std_sql.hpp"
 #endif
@@ -107,7 +104,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_PROCESS
     Memory::String processError;
-    if (!std_process_glue::bind(registry, &processError))
+    if (!registry.bindModule(abi_process_records, &processError))
     {
         if (error) *error = processError;
         ok = false;

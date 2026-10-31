@@ -14,7 +14,7 @@ import std::process;
 
 ## 公共约定与错误边界
 
-命令交给宿主 shell；processRun 创建读取管道，processRead 读取输出，processClose 关闭并等待。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。
+命令通过 C 帧入口交给宿主 shell；processRun 创建独占读取管道，processRead 每次读取最多 511 字节并移除尾部换行，processClose 关闭并等待。drop 关闭尚未关闭的管道，显式关闭后仍保留记录直至 drop。system 同步执行命令，返回宿主状态码。程序自行构造和信任 command 的内容；不将外部输入直接拼入 shell 命令。
 
 ## 参考代码
 
@@ -79,6 +79,8 @@ Process processRun(std::lang::String command);
 
 通过 shell 启动读取管道，返回进程句柄。
 
+命令管道通过 C 帧和不透明记录服务接入宿主。显式关闭返回平台退出状态； 离开作用域仍会释放记录并关闭尚未关闭的管道。每次读取最多 511 字节并移除尾部 CR／LF。
+
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
@@ -99,7 +101,7 @@ Process processRun(std::lang::String command);
 std::process::processRun(command);
 ```
 
-**源码**：[source/std/process.chl:9](../../source/std/process.chl#L9)。
+**源码**：[source/std/process.chl:5](../../source/std/process.chl#L5)。
 
 **完整示例**：[example/samples/std_process_probe.chl](../../example/samples/std_process_probe.chl)。
 
@@ -137,7 +139,7 @@ std::lang::String processRead(Process const& process);
 std::process::processRead(process);
 ```
 
-**源码**：[source/std/process.chl:10](../../source/std/process.chl#L10)。
+**源码**：[source/std/process.chl:6](../../source/std/process.chl#L6)。
 
 **完整示例**：[example/samples/std_process_probe.chl](../../example/samples/std_process_probe.chl)。
 
@@ -175,7 +177,7 @@ int64 processClose(Process const& process);
 std::process::processClose(process);
 ```
 
-**源码**：[source/std/process.chl:11](../../source/std/process.chl#L11)。
+**源码**：[source/std/process.chl:7](../../source/std/process.chl#L7)。
 
 **完整示例**：[example/samples/std_process_probe.chl](../../example/samples/std_process_probe.chl)。
 
@@ -213,6 +215,6 @@ int64 system(std::lang::String command);
 std::process::system(command);
 ```
 
-**源码**：[source/std/process.chl:12](../../source/std/process.chl#L12)。
+**源码**：[source/std/process.chl:8](../../source/std/process.chl#L8)。
 
 **完整示例**：[example/samples/std_process_probe.chl](../../example/samples/std_process_probe.chl)。
