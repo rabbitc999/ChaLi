@@ -72,6 +72,12 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_scalar_records(size_t *count);
  * @return 程序存活期间有效的入口表。
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_image_records(size_t *count);
+/**
+ * @brief 取得同步及异步 TCP 与连接资源的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的入口表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_net_records(size_t *count);
 #ifdef __cplusplus
 }
 #endif

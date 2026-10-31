@@ -1,7 +1,8 @@
-#include "std_net.hpp"
-
-#include "../chali_glue.hpp"
-#include "std_native_record.hpp"
+/** @file abi_net.cpp @brief 平台 TCP 内核及 C 帧入口，连接由 C 记录协议独占。 */
+#include "chali_standard.h"
+#include "../allocator/chali_allocator.hpp"
+#include <memory>
+#include <stdexcept>
 
 #include <algorithm>
 #include <chrono>
@@ -29,10 +30,10 @@
 #endif
 
 /*
- * `std::net` 的宿主胶水：TCP 客户端 / 监听器。
+ * `std::net` 的私有平台内核：TCP 客户端 / 监听器，通过 C 帧接入。
  *
- * 与 `std::sql` 同一套做法：宿主侧的套接字（Windows 是 `SOCKET`，POSIX 是 `int fd`）
- * 收进句柄表，CHALI 一侧只看见 `int32` 句柄 + 标量：
+ * 平台套接字（Windows 是 `SOCKET`，POSIX 是 `int fd`）保存在私有槽表中；
+ * 语言通过不可复制的 C 宿主记录持有连接，平台槽编号不作为公开资源身份：
  *
  *   __netInit / __netError / __netStatus
  *   __netConnect / __netListen / __netAccept
@@ -40,7 +41,7 @@
  *   __netClose / __netLocalPort / __netPeer
  *
  * **不链接 winsock 导入库**：Windows 下运行期 `LoadLibraryA("ws2_32.dll")` 取符号，
- * 这样ChaLi VM 与独立 VM 宿主都不用改链接参数；POSIX 平台直接调用 libc
+ * 这样编译器与独立宿主都不用改链接参数；POSIX 平台直接调用 libc
  * 里的同名接口。
  *
  * 地址解析用 `getaddrinfo(name, NULL, NULL, &res)`（hints 传 NULL，避开平台相关的
@@ -48,10 +49,9 @@
  * Windows 与 glibc 不同（winsock 把 ai_canonname 排在 ai_addr 前面），按平台取。
  * 端口不在 getaddrinfo 里要，解析完自己按网络字节序写进 sockaddr 的第 2、3 字节。
  */
-namespace std_net_glue
+namespace
 {
 
-using chali_glue::Registry;
 using Memory::String;
 
 /* ── 平台函数表 ───────────────────────────────────────────────────────── */
@@ -140,6 +140,7 @@ inline void setErrorText(const char *message)
 
 /**
  * @brief 把最近一次套接字错误写进 errorText()。
+ * @param what 操作诊断前缀。
  */
 inline void captureSocketError(const char *what)
 {
@@ -354,6 +355,10 @@ inline int unixGetOpt(std::intptr_t fd, int level, int name, void *value, int *l
 
 /* ── 初始化 ───────────────────────────────────────────────────────────── */
 
+/**
+ * @brief 按宿主平台装载套接字函数并初始化一次网络服务。
+ * @return 初始化成功为真，失败保存平台诊断并返回假。
+ */
 inline bool initNet()
 {
     if (apiReady()) return true;
@@ -542,6 +547,10 @@ inline bool isInvalid(std::intptr_t fd)
 
 /* ── select 用的 fd_set（两个平台布局不同，手工拼） ───────────────────── */
 
+/**
+ * @brief 清空当前平台 select 描述符集合。
+ * @param set 可写的平台描述符集合缓冲。
+ */
 inline void fdSetClear(void *set)
 {
     std::memset(set, 0, static_cast<std::size_t>(kFdSetBytes));
@@ -572,6 +581,9 @@ inline void fdSetAdd(void *set, std::intptr_t fd, int *maxFd)
 
 /**
  * @brief 等 fd 可读；返回 1 就绪、0 超时、-1 出错。
+ * @param fd 平台套接字。
+ * @param timeoutMs 超时毫秒数。
+ * @return 一表示可读，零表示超时，负一表示系统或分配失败。
  */
 inline int waitReadable(std::intptr_t fd, int timeoutMs)
 {
@@ -601,6 +613,9 @@ inline int waitReadable(std::intptr_t fd, int timeoutMs)
 
 /**
  * @brief 等 fd 可写（非阻塞 connect 用）；返回 1 就绪、0 超时、-1 出错。
+ * @param fd 平台套接字。
+ * @param timeoutMs 超时毫秒数。
+ * @return 一表示写入或连接结果就绪，零表示超时，负一表示失败。
  */
 inline int waitWritable(std::intptr_t fd, int timeoutMs)
 {
@@ -636,6 +651,9 @@ inline int waitWritable(std::intptr_t fd, int timeoutMs)
 
 /**
  * @brief 开关非阻塞模式。
+ * @param fd 平台套接字。
+ * @param enabled 真表示启用非阻塞，假表示恢复阻塞。
+ * @return 模式切换成功为真，缺少入口或系统调用失败为假。
  */
 inline bool setNonBlocking(std::intptr_t fd, bool enabled)
 {
@@ -645,6 +663,11 @@ inline bool setNonBlocking(std::intptr_t fd, bool enabled)
 
 /* ── 地址解析 ─────────────────────────────────────────────────────────── */
 
+/**
+ * @brief 检查非空地址文本是否只包含数字和点号，不执行名称解析。
+ * @param host 主机名或数值地址。
+ * @return 文本非空且仅含数字与点号时为真；IPv4 有效性由后续系统解析确认。
+ */
 inline bool numericHost(const std::string &host)
 {
     if (host.empty()) return false;
@@ -657,7 +680,9 @@ inline bool numericHost(const std::string &host)
 }
 
 /**
- * @brief 读 addrinfo 的 ai_family / ai_addr / ai_next（偏移见文件头注释）。
+ * @brief 读取当前平台 addrinfo 节点的地址族字段。
+ * @param info 名称解析链表中的节点。
+ * @return 系统地址族编号。
  */
 inline int addrInfoFamily(const void *info)
 {
@@ -707,6 +732,9 @@ inline int addressLength(int family)
 /**
  * @brief 把主机名 + 端口解析成 sockaddr 字节。
  * @return 地址长度；失败 0。
+ * @param host 主机名或数值地址。
+ * @param port 端口。
+ * @param buffer 接收 sockaddr 字节的可写缓冲，至少 kAddrBuffer 字节。
  */
 inline int resolveAddress(const std::string &host, int port, unsigned char *buffer)
 {
@@ -760,6 +788,10 @@ inline int resolveAddress(const std::string &host, int port, unsigned char *buff
 
 /* ── 对外函数 ─────────────────────────────────────────────────────────── */
 
+/**
+ * @brief 将一次网络初始化结果转换为语言整数状态。
+ * @return 初始化成功为零，失败为负一。
+ */
 inline std::int32_t netInit()
 {
     if (!initNet()) return -1;
@@ -982,6 +1014,9 @@ inline std::int32_t netSend(std::int32_t sock, String data)
 
 /**
  * @brief 收一段文本；结果原因写进 __netStatus。
+ * @param sock 已连接的平台槽编号。
+ * @param maxBytes 最大接收字节数。
+ * @return 接收到的原始字节；空结果需结合 lastStatus 区分关闭与错误。
  */
 inline String netReceive(std::int32_t sock, std::int32_t maxBytes)
 {
@@ -1020,6 +1055,9 @@ inline String netReceive(std::int32_t sock, std::int32_t maxBytes)
 
 /**
  * @brief 收到行尾（`\n`）为止，返回不含换行的那一行。
+ * @param sock 已连接的平台槽编号。
+ * @param timeoutMs 超时毫秒数。
+ * @return 移除行尾后的字节；空结果需结合 lastStatus 区分空行、关闭、超时和错误。
  */
 inline String netReceiveLine(std::int32_t sock, std::int32_t timeoutMs)
 {
@@ -1101,6 +1139,8 @@ inline std::int32_t netClose(std::int32_t handle)
 
 /**
  * @brief 本端端口（监听器用得多：端口传 0 让系统分配）。
+ * @param handle 平台槽编号。
+ * @return 本地端口，句柄无效或系统查询失败为零。
  */
 inline std::int32_t netLocalPort(std::int32_t handle)
 {
@@ -1145,40 +1185,118 @@ struct SocketResource
  * @brief 销毁独占套接字资源，尚未关闭时同时归还系统句柄。
  * @param pointer 待销毁的 SocketResource。
  */
-inline void destroySocketResource(void *pointer)
+inline void CHALI_ABI_CALL destroySocketResource(void *pointer)
 {
     auto *resource = static_cast<SocketResource *>(pointer);
     if (resource->slot >= 0) netClose(resource->slot);
     delete resource;
 }
 
-inline const stackvm::NativeRecordType socketType{ "std::net::SocketResource", nullptr, destroySocketResource };
-
+/** @brief 在记录尚未接管平台槽时负责失败清理。 */
+struct SocketSlotOwner
+{
+    int32_t slot;
+    /** @brief 归还尚未转移的平台槽。 */
+    ~SocketSlotOwner()
+    {
+        if (slot >= 0) netClose(slot);
+    }
+    /** @brief 转移平台槽所有权。
+     * @return 原槽位置。
+     */
+    int32_t release()
+    {
+        const auto value = slot;
+        slot = -1;
+        return value;
+    }
+};
+/** @brief 语言尚未取得异步结果记录时负责异常清理。 */
+struct PendingRecord
+{
+    ChaliAbiFrame *frame;
+    int64_t handle;
+    /** @brief 释放尚未返回语言的记录。 */
+    ~PendingRecord()
+    {
+        if (handle) chali_abi_record_release(frame, handle);
+    }
+    /** @brief 将结果交还语言。
+     * @return 原句柄。
+     */
+    int64_t release()
+    {
+        const auto value = handle;
+        handle = 0;
+        return value;
+    }
+};
+/** @brief 解码直接资源句柄或语言引用槽。
+ * @param frame 当前 C 帧。
+ * @param reference 接收者。
+ * @return 记录句柄。
+ */
+int64_t referenceHandle(ChaliAbiFrame *frame, int64_t reference)
+{
+    if (chali_abi_record_probe(frame, reference, "std::net::SocketResource")) return reference;
+    unsigned char bytes[8];
+    if (!chali_abi_read(frame, reference, bytes, 8))
+    {
+        chali_abi_fail(frame, "opcode 引用槽不可读");
+        throw std::runtime_error("opcode 引用槽不可读");
+    }
+    uint64_t value = 0;
+    for (unsigned i = 0; i < 8; ++i) value |= uint64_t(bytes[i]) << (8 * i);
+    return int64_t(value);
+}
+/** @brief 从语言字符串复制独立宿主文本或二进制负载。
+ * @param frame 当前 C 帧。
+ * @param address 语言字符串地址。
+ * @return 按精确字节长度复制的文本。
+ */
+String readText(ChaliAbiFrame *frame, int64_t address)
+{
+    const unsigned char *bytes = nullptr;
+    size_t count = 0;
+    if (!chali_abi_bytes(frame, address, &bytes, &count))
+    {
+        chali_abi_fail(frame, "胶水层读取 string 失败");
+        throw std::runtime_error("胶水层读取 string 失败");
+    }
+    return String(bytes ? reinterpret_cast<const char *>(bytes) : "", count);
+}
 /**
- * @brief 将平台连接收进当前 VM 的不透明记录。
- * @param ctx 当前胶水调用上下文。
+ * @brief 将平台连接收进当前运行时的不透明记录。
+ * @param frame 当前 C 帧的调用上下文。
  * @param slot 平台连接表位置，负值表示未连接。
  * @return 独占记录句柄。
  */
-inline std::int64_t makeSocketResource(chali_glue::Context &ctx, std::int32_t slot)
+inline std::int64_t makeSocketResource(ChaliAbiFrame *frame, std::int32_t slot)
 {
-    auto *resource = new SocketResource;
-    resource->slot = slot;
+    SocketSlotOwner pending{ slot };
+    std::unique_ptr<SocketResource, decltype(&destroySocketResource)> resource(new SocketResource, destroySocketResource);
+    resource->slot = pending.release();
     resource->status = lastStatus();
     if (slot < 0) resource->error = netError();
-    return ctx.makeNativeRecord(socketType, resource);
+    const auto handle = chali_abi_record_make(frame, "std::net::SocketResource", resource.get(), destroySocketResource);
+    if (handle) resource.release();
+    return handle;
 }
 
 /**
  * @brief 校验并借用当前运行时拥有的套接字资源。
- * @param ctx 当前胶水调用上下文。
+ * @param frame 当前 C 帧的调用上下文。
  * @param handle 不透明记录句柄。
- * @return 有效资源；已经释放或类型不匹配时报告错误并返回空。
+ * @return 有效资源；已经释放或类型不匹配时记录错误并停止当前内核。
  */
-inline SocketResource *socketResource(chali_glue::Context &ctx, std::int64_t handle)
+inline SocketResource *socketResource(ChaliAbiFrame *frame, std::int64_t handle)
 {
-    auto *resource = static_cast<SocketResource *>(ctx.nativeRecord(handle, socketType));
-    if (!resource) ctx.fail("网络 opcode 已释放或类型不匹配");
+    auto *resource = static_cast<SocketResource *>(chali_abi_record_probe(frame, handle, "std::net::SocketResource"));
+    if (!resource)
+    {
+        chali_abi_fail(frame, "网络 opcode 已释放或类型不匹配");
+        throw std::runtime_error("网络 opcode 已释放或类型不匹配");
+    }
     return resource;
 }
 
@@ -1221,48 +1339,49 @@ inline std::int64_t asyncError(SocketResource &resource, const String &message)
 
 /**
  * @brief 创建非阻塞 IPv4 连接，地址解析仅接受数值 IP。
- * @param ctx 当前胶水上下文。
+ * @param frame 当前 C 帧的上下文。
  * @param host 数值 IPv4 地址。
  * @param port 远端端口。
  * @param timeoutMs 正数表示连接超时毫秒数，非正数表示无内建超时。
- * @return 由当前 VM 拥有的连接记录，status 表示完成、进行中或失败。
+ * @return 由当前运行时 拥有的连接记录，status 表示完成、进行中或失败。
  */
-inline std::int64_t connectAsync(chali_glue::Context &ctx, String host, std::int32_t port, std::int32_t timeoutMs)
+inline std::int64_t connectAsync(ChaliAbiFrame *frame, String host, std::int32_t port, std::int32_t timeoutMs)
 {
-    auto handle = makeSocketResource(ctx, -1);
-    auto *resource = socketResource(ctx, handle);
+    auto handle = makeSocketResource(frame, -1);
+    PendingRecord pendingRecord{ frame, handle };
+    auto *resource = socketResource(frame, handle);
     if (!resource) return 0;
     resource->error.clear();
     if (!initNet())
     {
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     if (!numericHost(host) || port <= 0 || port > 65535)
     {
         asyncError(*resource, "connectAsync 需要数值 IPv4 地址及 1..65535 端口；域名请使用 connect");
-        return handle;
+        return pendingRecord.release();
     }
     unsigned char address[kAddrBuffer]{};
     int length = resolveAddress(host, port, address);
     if (!length)
     {
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     auto fd = api().create(2, 1, 6);
     if (isInvalid(fd))
     {
         captureSocketError("创建异步连接");
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     if (!setNonBlocking(fd, true))
     {
         captureSocketError("设置非阻塞连接");
         api().close(fd);
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     int result = api().connect(fd, address, length);
     const bool pending = result != 0 && wouldBlock();
@@ -1271,14 +1390,14 @@ inline std::int64_t connectAsync(chali_glue::Context &ctx, String host, std::int
         captureSocketError("异步连接");
         api().close(fd);
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     auto slot = allocateSlot(false, fd);
     if (slot < 0)
     {
         api().close(fd);
         asyncError(*resource, netError());
-        return handle;
+        return pendingRecord.release();
     }
     resource->slot = slot;
     resource->connecting = pending;
@@ -1291,7 +1410,7 @@ inline std::int64_t connectAsync(chali_glue::Context &ctx, String host, std::int
         resource->slot = -1;
         asyncError(*resource, "恢复连接模式失败");
     }
-    return handle;
+    return pendingRecord.release();
 }
 
 /**
@@ -1327,43 +1446,46 @@ inline std::int64_t pollConnect(SocketResource &resource)
 
 /**
  * @brief 以零等待接受一条连接，不就绪时保留监听器并返回 pending 状态记录。
- * @param ctx 当前胶水上下文。
+ * @param frame 当前 C 帧的上下文。
  * @param resource 监听器记录。
  * @return 新连接或 pending/错误结果的记录句柄。
  */
-inline std::int64_t acceptAsync(chali_glue::Context &ctx, SocketResource &resource)
+inline std::int64_t acceptAsync(ChaliAbiFrame *frame, SocketResource &resource)
 {
     auto *slot = slotAt(resource.slot);
     if (!slot || !slot->listener)
     {
         asyncError(resource, "不是有效监听器");
-        auto handle = makeSocketResource(ctx, -1);
-        auto *result = socketResource(ctx, handle);
+        auto handle = makeSocketResource(frame, -1);
+        PendingRecord pendingRecord{ frame, handle };
+        auto *result = socketResource(frame, handle);
         if (result)
         {
             result->status = resource.status;
             result->error = resource.error;
         }
-        return handle;
+        return pendingRecord.release();
     }
     if (!setNonBlocking(slot->fd, true))
     {
         asyncError(resource, "设置非阻塞监听失败");
-        auto handle = makeSocketResource(ctx, -1);
-        auto *result = socketResource(ctx, handle);
+        auto handle = makeSocketResource(frame, -1);
+        PendingRecord pendingRecord{ frame, handle };
+        auto *result = socketResource(frame, handle);
         if (result)
         {
             result->status = resource.status;
             result->error = resource.error;
         }
-        return handle;
+        return pendingRecord.release();
     }
     const auto accepted = netAccept(resource.slot, 0);
     const auto status = accepted >= 0 ? kNetOk : lastStatus() == kNetTimeout || wouldBlock() ? kNetPending :
                                                                                                kNetError;
     setNonBlocking(slot->fd, false);
-    const auto handle = makeSocketResource(ctx, accepted);
-    auto *result = socketResource(ctx, handle);
+    const auto handle = makeSocketResource(frame, accepted);
+    PendingRecord pendingRecord{ frame, handle };
+    auto *result = socketResource(frame, handle);
     resource.status = status;
     if (result)
     {
@@ -1371,7 +1493,7 @@ inline std::int64_t acceptAsync(chali_glue::Context &ctx, SocketResource &resour
         if (status == kNetPending) result->error.clear();
     }
     if (status == kNetError) resource.error = netError();
-    return handle;
+    return pendingRecord.release();
 }
 
 /**
@@ -1486,41 +1608,540 @@ inline String receiveAsync(SocketResource &resource, std::int32_t maxBytes, bool
     return String(result);
 }
 
-/**
- * @brief 注册网络 opcode 的独占生命周期及所有连接操作。
- * @param registry 宿主函数注册表。
- * @param error 注册失败时接收诊断。
- * @return 全部入口注册成功时返回 true。
+/** @brief 执行 std::net::__std_netNew 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @return 当前连接、负载或操作状态。
  */
-bool bind(Registry &registry, String *error)
+std::int64_t socketNew(ChaliAbiFrame *frame) { return makeSocketResource(frame, -1); }
+/** @brief 执行 std::net::__std_netDrop 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param handle 平台槽编号。
+ */
+void socketDrop(ChaliAbiFrame *frame, std::int64_t handle)
 {
-    using Context = chali_glue::Context;
-    bool ok = registry.bindTypedWithContext<std::int64_t>("std::net::__std_netNew", [](Context &ctx) { return makeSocketResource(ctx, -1); }, error);
-    ok = registry.bindTypedWithContext<void, std::int64_t>("std::net::__std_netDrop", [](Context &ctx, std::int64_t handle) { ctx.releaseNativeRecord(handle); }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, String, std::int32_t, std::int32_t>("std::net::__std_netConnect", [](Context &ctx, String host, std::int32_t port, std::int32_t timeout) { return makeSocketResource(ctx, netConnect(host, port, timeout)); }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, String, std::int32_t, std::int32_t>("std::net::__std_netListen", [](Context &ctx, String host, std::int32_t port, std::int32_t backlog) { return makeSocketResource(ctx, netListen(host, port, backlog)); }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t, std::int32_t>("std::net::__std_netAccept", [](Context &ctx, std::int64_t reference, std::int32_t timeout) {
-        auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType));
-        if (!resource) return std::int64_t{};
-        auto slot = netAccept(resource->slot, timeout);
-        saveSocketStatus(*resource);
-        return makeSocketResource(ctx, slot); }, error) && ok;
-    ok = registry.bindTypedWithContext<bool, std::int64_t>("std::net::__std_netIsOpen", [](Context &ctx, std::int64_t handle) { auto *r = socketResource(ctx, handle); return r && r->slot >= 0 && !r->connecting; }, error) && ok;
-    ok = registry.bindTypedWithContext<String, std::int64_t>("std::net::__std_netError", [](Context &ctx, std::int64_t handle) { auto *r = socketResource(ctx, handle); return r ? r->error : String{}; }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t>("std::net::__std_netStatus", [](Context &ctx, std::int64_t handle) { auto *r = socketResource(ctx, handle); return r ? r->status : kNetError; }, error) && ok;
-    ok = registry.bindTypedWithContext<void, std::int64_t>("std::net::__std_netCloseSocket", [](Context &ctx, std::int64_t reference) { auto *r = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); if (r && r->slot >= 0) { netClose(r->slot); r->slot = -1; r->connecting = false; r->status = kNetClosed; } }, error) && ok;
-    ok = registry.bindTypedWithContext<void, std::int64_t>("std::net::__std_netCloseListener", [](Context &ctx, std::int64_t reference) { auto *r = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); if (r && r->slot >= 0) { netClose(r->slot); r->slot = -1; r->connecting = false; r->status = kNetClosed; } }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t>("std::net::__std_netLocalPort", [](Context &ctx, std::int64_t handle) { auto *r = socketResource(ctx, handle); return r ? static_cast<std::int64_t>(netLocalPort(r->slot)) : 0; }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t, String>("std::net::__std_netSend", [](Context &ctx, std::int64_t reference, String data) { auto *r = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); if (!r) return std::int64_t{-1}; auto count = netSend(r->slot, data); saveSocketStatus(*r); return static_cast<std::int64_t>(count); }, error) && ok;
-    ok = registry.bindTypedWithContext<String, std::int64_t, std::int32_t>("std::net::__std_netReceive", [](Context &ctx, std::int64_t reference, std::int32_t count) { auto *r = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); if (!r) return String{}; auto text = netReceive(r->slot, count); saveSocketStatus(*r); return text; }, error) && ok;
-    ok = registry.bindTypedWithContext<String, std::int64_t, std::int32_t>("std::net::__std_netReceiveLine", [](Context &ctx, std::int64_t reference, std::int32_t timeout) { auto *r = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); if (!r) return String{}; auto text = netReceiveLine(r->slot, timeout); saveSocketStatus(*r); return text; }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, String, std::int32_t, std::int32_t>("std::net::__std_netConnectAsync", connectAsync, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t>("std::net::__std_netPollConnect", [](Context &ctx, std::int64_t reference) { auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); return resource ? pollConnect(*resource) : std::int64_t{kNetError}; }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t>("std::net::__std_netAcceptAsync", [](Context &ctx, std::int64_t reference) { auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); return resource ? acceptAsync(ctx, *resource) : 0; }, error) && ok;
-    ok = registry.bindTypedWithContext<std::int64_t, std::int64_t, String, std::int64_t>("std::net::__std_netSendAsync", [](Context &ctx, std::int64_t reference, String data, std::int64_t offset) { auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); return resource ? sendAsync(*resource, data, offset) : std::int64_t{-1}; }, error) && ok;
-    ok = registry.bindTypedWithContext<String, std::int64_t, std::int32_t>("std::net::__std_netReceiveAsync", [](Context &ctx, std::int64_t reference, std::int32_t count) { auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); return resource ? receiveAsync(*resource, count, false) : String{}; }, error) && ok;
-    ok = registry.bindTypedWithContext<String, std::int64_t>("std::net::__std_netReceiveLineAsync", [](Context &ctx, std::int64_t reference) { auto *resource = socketResource(ctx, native_record_glue::referenceHandle(ctx, reference, socketType)); return resource ? receiveAsync(*resource, 1048576, true) : String{}; }, error) && ok;
-    return ok;
+    if (chali_abi_record_probe(frame, handle, "std::net::SocketResource")) chali_abi_record_release(frame, handle);
 }
-
-}  // namespace std_net_glue
+/** @brief 执行 std::net::__std_netConnect 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param host 主机名或数值地址。
+ * @param port 端口。
+ * @param timeout 超时毫秒数。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketConnect(ChaliAbiFrame *frame, String host, std::int32_t port, std::int32_t timeout) { return makeSocketResource(frame, netConnect(host, port, timeout)); }
+/** @brief 执行 std::net::__std_netListen 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param host 主机名或数值地址。
+ * @param port 端口。
+ * @param backlog 监听队列长度。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketListen(ChaliAbiFrame *frame, String host, std::int32_t port, std::int32_t backlog) { return makeSocketResource(frame, netListen(host, port, backlog)); }
+/** @brief 执行 std::net::__std_netAccept 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param timeout 超时毫秒数。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketAccept(ChaliAbiFrame *frame, std::int64_t reference, std::int32_t timeout)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    if (!resource) return std::int64_t{};
+    SocketSlotOwner accepted{ netAccept(resource->slot, timeout) };
+    saveSocketStatus(*resource);
+    return makeSocketResource(frame, accepted.release());
+}
+/** @brief 执行 std::net::__std_netIsOpen 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param handle 平台槽编号。
+ * @return 当前连接、负载或操作状态。
+ */
+bool socketIsOpen(ChaliAbiFrame *frame, std::int64_t handle)
+{
+    auto *r = socketResource(frame, handle);
+    return r && r->slot >= 0 && !r->connecting;
+}
+/** @brief 执行 std::net::__std_netError 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param handle 平台槽编号。
+ * @return 当前连接、负载或操作状态。
+ */
+String socketError(ChaliAbiFrame *frame, std::int64_t handle)
+{
+    auto *r = socketResource(frame, handle);
+    return r ? r->error : String{};
+}
+/** @brief 执行 std::net::__std_netStatus 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param handle 平台槽编号。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketStatus(ChaliAbiFrame *frame, std::int64_t handle)
+{
+    auto *r = socketResource(frame, handle);
+    return r ? r->status : kNetError;
+}
+/** @brief 执行 std::net::__std_netCloseSocket 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ */
+void socketCloseSocket(ChaliAbiFrame *frame, std::int64_t reference)
+{
+    auto *r = socketResource(frame, referenceHandle(frame, reference));
+    if (r && r->slot >= 0)
+    {
+        netClose(r->slot);
+        r->slot = -1;
+        r->connecting = false;
+        r->status = kNetClosed;
+    }
+}
+/** @brief 执行 std::net::__std_netCloseListener 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ */
+void socketCloseListener(ChaliAbiFrame *frame, std::int64_t reference)
+{
+    auto *r = socketResource(frame, referenceHandle(frame, reference));
+    if (r && r->slot >= 0)
+    {
+        netClose(r->slot);
+        r->slot = -1;
+        r->connecting = false;
+        r->status = kNetClosed;
+    }
+}
+/** @brief 执行 std::net::__std_netLocalPort 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param handle 平台槽编号。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketLocalPort(ChaliAbiFrame *frame, std::int64_t handle)
+{
+    auto *r = socketResource(frame, handle);
+    return r ? static_cast<std::int64_t>(netLocalPort(r->slot)) : 0;
+}
+/** @brief 执行 std::net::__std_netSend 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param data 待发送负载。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketSend(ChaliAbiFrame *frame, std::int64_t reference, String data)
+{
+    auto *r = socketResource(frame, referenceHandle(frame, reference));
+    if (!r) return std::int64_t{ -1 };
+    auto count = netSend(r->slot, data);
+    saveSocketStatus(*r);
+    return static_cast<std::int64_t>(count);
+}
+/** @brief 执行 std::net::__std_netReceive 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param count 请求字节数。
+ * @return 当前连接、负载或操作状态。
+ */
+String socketReceive(ChaliAbiFrame *frame, std::int64_t reference, std::int32_t count)
+{
+    auto *r = socketResource(frame, referenceHandle(frame, reference));
+    if (!r) return String{};
+    auto text = netReceive(r->slot, count);
+    saveSocketStatus(*r);
+    return text;
+}
+/** @brief 执行 std::net::__std_netReceiveLine 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param timeout 超时毫秒数。
+ * @return 当前连接、负载或操作状态。
+ */
+String socketReceiveLine(ChaliAbiFrame *frame, std::int64_t reference, std::int32_t timeout)
+{
+    auto *r = socketResource(frame, referenceHandle(frame, reference));
+    if (!r) return String{};
+    auto text = netReceiveLine(r->slot, timeout);
+    saveSocketStatus(*r);
+    return text;
+}
+/** @brief 执行 std::net::__std_netPollConnect 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketPollConnect(ChaliAbiFrame *frame, std::int64_t reference)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    return resource ? pollConnect(*resource) : std::int64_t{ kNetError };
+}
+/** @brief 执行 std::net::__std_netAcceptAsync 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketAcceptAsync(ChaliAbiFrame *frame, std::int64_t reference)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    return resource ? acceptAsync(frame, *resource) : 0;
+}
+/** @brief 执行 std::net::__std_netSendAsync 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param data 待发送负载。
+ * @param offset 发送起始字节位置。
+ * @return 当前连接、负载或操作状态。
+ */
+std::int64_t socketSendAsync(ChaliAbiFrame *frame, std::int64_t reference, String data, std::int64_t offset)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    return resource ? sendAsync(*resource, data, offset) : std::int64_t{ -1 };
+}
+/** @brief 执行 std::net::__std_netReceiveAsync 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @param count 请求字节数。
+ * @return 当前连接、负载或操作状态。
+ */
+String socketReceiveAsync(ChaliAbiFrame *frame, std::int64_t reference, std::int32_t count)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    return resource ? receiveAsync(*resource, count, false) : String{};
+}
+/** @brief 执行 std::net::__std_netReceiveLineAsync 的固定套接字操作。
+ * @param frame 当前 C 帧。
+ * @param reference 语言声明的实参。
+ * @return 当前连接、负载或操作状态。
+ */
+String socketReceiveLineAsync(ChaliAbiFrame *frame, std::int64_t reference)
+{
+    auto *resource = socketResource(frame, referenceHandle(frame, reference));
+    return resource ? receiveAsync(*resource, 1048576, true) : String{};
+}
+/** @brief 解码 std::net::__std_netNew 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryNew(ChaliAbiFrame *frame)
+try
+{
+    chali_abi_return_integer(frame, int64_t(socketNew(frame)));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netDrop 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryDrop(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    socketDrop(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netConnect 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryConnect(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto host = readText(frame, a0);
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(socketConnect(frame, std::move(host), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netListen 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryListen(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto host = readText(frame, a0);
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(socketListen(frame, std::move(host), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netAccept 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryAccept(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    chali_abi_return_integer(frame, int64_t(socketAccept(frame, static_cast<std::int64_t>(a0), static_cast<std::int32_t>(a1))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netIsOpen 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryIsOpen(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(socketIsOpen(frame, static_cast<std::int64_t>(a0))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netError 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryError(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    const auto text = socketError(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netStatus 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryStatus(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(socketStatus(frame, static_cast<std::int64_t>(a0))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netCloseSocket 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCloseSocket(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    socketCloseSocket(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netCloseListener 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryCloseListener(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    socketCloseListener(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netLocalPort 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryLocalPort(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(socketLocalPort(frame, static_cast<std::int64_t>(a0))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netSend 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entrySend(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto data = readText(frame, a1);
+    chali_abi_return_integer(frame, int64_t(socketSend(frame, static_cast<std::int64_t>(a0), std::move(data))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netReceive 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryReceive(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    const auto text = socketReceive(frame, static_cast<std::int64_t>(a0), static_cast<std::int32_t>(a1));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netReceiveLine 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryReceiveLine(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    const auto text = socketReceiveLine(frame, static_cast<std::int64_t>(a0), static_cast<std::int32_t>(a1));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netPollConnect 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryPollConnect(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(socketPollConnect(frame, static_cast<std::int64_t>(a0))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netAcceptAsync 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryAcceptAsync(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    chali_abi_return_integer(frame, int64_t(socketAcceptAsync(frame, static_cast<std::int64_t>(a0))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netSendAsync 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entrySendAsync(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    auto data = readText(frame, a1);
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(socketSendAsync(frame, static_cast<std::int64_t>(a0), std::move(data), static_cast<std::int64_t>(a2))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netReceiveAsync 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryReceiveAsync(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    const auto text = socketReceiveAsync(frame, static_cast<std::int64_t>(a0), static_cast<std::int32_t>(a1));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netReceiveLineAsync 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryReceiveLineAsync(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    const auto text = socketReceiveLineAsync(frame, static_cast<std::int64_t>(a0));
+    chali_abi_return_integer(frame, chali_abi_string_bytes(frame, text.data(), text.size()));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+/** @brief 解码 std::net::__std_netConnectAsync 的 C 实参并隔离异常。
+ * @param frame 实参及返回帧。
+ */
+void CHALI_ABI_CALL entryConnectAsync(ChaliAbiFrame *frame)
+try
+{
+    int64_t a0 = 0;
+    if (!chali_abi_argument_integer(frame, 0, &a0)) return;
+    auto host = readText(frame, a0);
+    int64_t a1 = 0;
+    if (!chali_abi_argument_integer(frame, 1, &a1)) return;
+    int64_t a2 = 0;
+    if (!chali_abi_argument_integer(frame, 2, &a2)) return;
+    chali_abi_return_integer(frame, int64_t(connectAsync(frame, std::move(host), static_cast<std::int32_t>(a1), static_cast<std::int32_t>(a2))));
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "网络接口失败");
+}
+}  // namespace
+/** @brief 取得同步及异步 TCP 的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 生命周期覆盖进程的表。
+ */
+extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_net_records(size_t *count)
+{
+    static const ChaliAbiRecord records[] = {
+        { "std::net::__std_netAccept", entryAccept, 2 },
+        { "std::net::__std_netAcceptAsync", entryAcceptAsync, 1 },
+        { "std::net::__std_netCloseListener", entryCloseListener, 1 },
+        { "std::net::__std_netCloseSocket", entryCloseSocket, 1 },
+        { "std::net::__std_netConnect", entryConnect, 3 },
+        { "std::net::__std_netConnectAsync", entryConnectAsync, 3 },
+        { "std::net::__std_netDrop", entryDrop, 1 },
+        { "std::net::__std_netError", entryError, 1 },
+        { "std::net::__std_netIsOpen", entryIsOpen, 1 },
+        { "std::net::__std_netListen", entryListen, 3 },
+        { "std::net::__std_netLocalPort", entryLocalPort, 1 },
+        { "std::net::__std_netNew", entryNew, 0 },
+        { "std::net::__std_netPollConnect", entryPollConnect, 1 },
+        { "std::net::__std_netReceive", entryReceive, 2 },
+        { "std::net::__std_netReceiveAsync", entryReceiveAsync, 2 },
+        { "std::net::__std_netReceiveLine", entryReceiveLine, 2 },
+        { "std::net::__std_netReceiveLineAsync", entryReceiveLineAsync, 1 },
+        { "std::net::__std_netSend", entrySend, 2 },
+        { "std::net::__std_netSendAsync", entrySendAsync, 3 },
+        { "std::net::__std_netStatus", entryStatus, 1 },
+    };
+    if (count) *count = sizeof(records) / sizeof(records[0]);
+    return records;
+}

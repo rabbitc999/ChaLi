@@ -705,7 +705,7 @@ int runCli(int argc, char **argv)
         }
     }
     for (const char *name : {"std_native_record.hpp", "std_big_number.hpp",
-                             "std_sql.hpp", "std_net.hpp", "std_registry.hpp"})
+                             "std_sql.hpp", "std_registry.hpp"})
         ok = copy(mc / "source/glue" / name, Memory::String("glue/") + name) && ok;
     // 前端头和标准胶水随实现扩展；按受控目录收集，避免固定清单遗漏新依赖。
     for (const auto &entry : fs::directory_iterator(mc / "source"))

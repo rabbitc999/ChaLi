@@ -21,7 +21,6 @@
 #ifndef GLUE_NO_STD_IMAGE
 #endif
 #ifndef GLUE_NO_STD_NET
-#include "std_net.hpp"
 #endif
 
 namespace std_registry
@@ -102,7 +101,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_NET
     Memory::String netError;
-    if (!std_net_glue::bind(registry, &netError))
+    if (!registry.bindModule(abi_net_records, &netError))
     {
         if (error) *error = netError;
         ok = false;

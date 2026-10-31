@@ -982,6 +982,73 @@ int main(int argc, char **argv)
             std::printf("C image records: independent copies, transfer and %d creation failure points passed\n", failures);
         }
         {
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                function(&invocation);
+                return invocation.result;
+            };
+            const auto loopback = chali_abi_string(&frame, "127.0.0.1", 9);
+            const auto listener = call("std::net::__std_netListen", {loopback, 0, 8});
+            assert(listener && call("std::net::__std_netIsOpen", {listener}) && !runtime.status);
+            const auto port = call("std::net::__std_netLocalPort", {listener});
+            const auto client = call("std::net::__std_netConnect", {loopback, port, 2000});
+            const auto peer = call("std::net::__std_netAccept", {listener, 2000});
+            assert(client && peer && !runtime.status);
+            NativeCallContextImpl host(context, &invoker);
+            assert(!host.cloneNativeRecord(client));
+            reset();
+            const char payload[] = {'A', 0, char(255), 'Z'};
+            const auto text = chali_abi_string_bytes(&frame, payload, sizeof(payload));
+            assert(text && call("std::net::__std_netSend", {client, text}) == sizeof(payload));
+            std::string combined;
+            while (combined.size() < sizeof(payload))
+            {
+                const auto received = call("std::net::__std_netReceive", {peer, int64_t(sizeof(payload) - combined.size())});
+                assert(received && !runtime.status && chali_abi_bytes(&frame, received, &view, &length) && length);
+                combined.append(reinterpret_cast<const char *>(view), length);
+                assert(chali_abi_string_release(&frame, received));
+            }
+            assert(combined.size() == sizeof(payload) && std::memcmp(combined.data(), payload, sizeof(payload)) == 0);
+            assert(chali_abi_string_release(&frame, text));
+            assert(chali_abi_record_release(&frame, peer) && chali_abi_record_release(&frame, client) &&
+                   chali_abi_record_release(&frame, listener));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                const auto before = systemHandleCount();
+                arena.remaining = point;
+                const auto attempted = call("std::net::__std_netListen", {loopback, 0, 8});
+                arena.remaining = -1;
+                if (attempted) assert(chali_abi_record_release(&frame, attempted));
+                assert(systemHandleCount() == before);
+                if (attempted) break;
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            const auto hostname = chali_abi_string(&frame, "example.com", 11);
+            int asyncFailures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = call("std::net::__std_netConnectAsync", {hostname, 80, 2000});
+                arena.remaining = -1;
+                if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+                assert(runtime.status && point != 31);
+                ++asyncFailures;
+                reset();
+            }
+            assert(asyncFailures > failures);
+            assert(chali_abi_string_release(&frame, loopback) && chali_abi_string_release(&frame, hostname));
+            std::printf("C TCP: raw NUL/255 payload, exclusive records, %d socket adoption and %d async failure points cleaned\n",
+                        failures, asyncFailures);
+        }
+        {
             const std::string path = argv[1];
             const auto pathText = chali_abi_string(&frame, path.data(), path.size());
             const auto modeText = chali_abi_string(&frame, "wb", 2);

@@ -24,7 +24,6 @@
 #ifndef GLUE_NO_STD_IMAGE
 #endif
 #ifndef GLUE_NO_STD_NET
-#include "std_net.hpp"
 #endif
 
 #include "std_aot_modules.hpp"

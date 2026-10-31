@@ -38,7 +38,7 @@ chali run example/samples/std_net.chl
  *   1. 先在本进程里 listen（端口给 0 让系统分配）→ connect → accept，双向收发；
  *   2. 再单独测三个纯函数：地址解析、请求拼装、响应解析。
  *
- * 因此输出是确定的（端口号不打印）。套接字实现见 `glue/std_net.hpp`
+ * 因此输出是确定的（端口号不打印）。套接字实现见 `abi/abi_net.cpp`
  * （Windows 运行期加载 ws2_32.dll，POSIX 直接调用同名接口）。
  */
 

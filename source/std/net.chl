@@ -3,7 +3,7 @@ module std::net;
 /*
  * std::net —— ChaLi 语言连接**外部网络**的标准库模块（TCP + 极简 HTTP 客户端）。
  *
- * 套接字在宿主胶水（glue/std_net.hpp）里，ChaLi 一侧通过独占 opcode 管理连接：
+ * 套接字在C 接口内核（abi/abi_net.cpp）里，ChaLi 一侧通过独占 opcode 管理连接：
  * Windows 运行期加载 ws2_32.dll，POSIX 平台直接调用同名接口，两边都不用改链接参数。
  *
  * 用法：
