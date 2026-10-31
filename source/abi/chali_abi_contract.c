@@ -57,7 +57,7 @@ const ChaliAbiInfo *chali_abi_info(void)
         _Alignof(ChaliAbiRecord),
         { offsetof(ChaliAbiFrame, runtime), offsetof(ChaliAbiFrame, slots), offsetof(ChaliAbiFrame, kinds), offsetof(ChaliAbiFrame, count), offsetof(ChaliAbiFrame, result), offsetof(ChaliAbiFrame, resultIsFloat) },
         { offsetof(ChaliAbiRecord, name), offsetof(ChaliAbiRecord, entry), offsetof(ChaliAbiRecord, arity) },
-        CHALI_ABI_CAP_SYNC_CALLBACK | CHALI_ABI_CAP_RECORD | CHALI_ABI_CAP_BYTE_VIEW | CHALI_ABI_CAP_REGISTRY | CHALI_ABI_CAP_MEMORY
+        CHALI_ABI_CAP_SYNC_CALLBACK | CHALI_ABI_CAP_RECORD | CHALI_ABI_CAP_BYTE_VIEW | CHALI_ABI_CAP_REGISTRY | CHALI_ABI_CAP_MEMORY | CHALI_ABI_CAP_BINARY
     };
     return &info;
 }

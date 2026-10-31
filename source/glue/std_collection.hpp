@@ -109,6 +109,27 @@ ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::in
 std::int64_t makeList(stackvm::NativeCallContext &host);
 
 /**
+ * @brief 从独立字节跨度构造拥有型整数列表，保持原有逐元素增长策略。
+ * @param host 当前运行时上下文。
+ * @param data 待复制字节，非空跨度不能为空。
+ * @param count 字节数。
+ * @return 完整创建后发布的列表句柄，失败为零。
+ */
+std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char *data, std::size_t count);
+
+/**
+ * @brief 查询或复制列表中的字节值，短缓冲和无效元素不写入目标。
+ * @param host 当前运行时上下文。
+ * @param handle 列表句柄。
+ * @param data 可写目标；为空且 capacity 为零时仅查询。
+ * @param capacity 目标字节容量。
+ * @param required 接收实际字节数。
+ * @return 验证及复制成功时为真。
+ */
+bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsigned char *data,
+                   std::size_t capacity, std::size_t &required);
+
+/**
  * @brief 将一个原生值追加到运行时列表。
  * @param listHandle 目标运行时列表的句柄。
  * @param value 待转换、保存或参与计算的值。

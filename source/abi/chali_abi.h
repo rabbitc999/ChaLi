@@ -135,6 +135,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_BYTE_VIEW     UINT64_C(4)
 #define CHALI_ABI_CAP_REGISTRY      UINT64_C(8)
 #define CHALI_ABI_CAP_MEMORY        UINT64_C(16)
+#define CHALI_ABI_CAP_BINARY        UINT64_C(32)  ///< 原始字符串与字节列表服务。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -449,6 +450,34 @@ int CHALI_ABI_CALL chali_abi_bytes(const ChaliAbiFrame *frame, int64_t address, 
  * @return 新字符串地址；分配失败返回零并记录运行时诊断。
  */
 int64_t CHALI_ABI_CALL chali_abi_string(const ChaliAbiFrame *frame, const char *data, size_t length);
+
+/**
+ * @brief 按精确长度复制原始字符串字节，保留零字节及非 UTF-8 数据。
+ * @param frame 当前帧。
+ * @param data 输入跨度，非空时不能为零指针。
+ * @param length 字节数。
+ * @return 拥有型 String 句柄，使用 chali_abi_string_release 配对释放；失败为零。
+ */
+int64_t CHALI_ABI_CALL chali_abi_string_bytes(const ChaliAbiFrame *frame, const char *data, size_t length);
+/**
+ * @brief 查询或复制字节列表，短缓冲或无效元素不写入目标。
+ * @param frame 当前帧。
+ * @param handle 列表句柄，所有元素必须为 0..255 的整数。
+ * @param data 可写目标，空指针配合零容量表示查询。
+ * @param capacity 目标字节容量。
+ * @param required 接收所需字节数，不得为空。
+ * @return 成功为一，失败记录帧错误并返回零。
+ */
+int CHALI_ABI_CALL chali_abi_list_bytes(const ChaliAbiFrame *frame, int64_t handle,
+                                       unsigned char *data, size_t capacity, size_t *required);
+/**
+ * @brief 按原有逐元素增长策略复制字节跨度为独立列表。
+ * @param frame 当前帧。
+ * @param data 输入跨度，非空时不得为空。
+ * @param length 字节数。
+ * @return 拥有型 List<uint8> 句柄，交还语言或使用 chali_abi_record_release 释放；失败为零。
+ */
+int64_t CHALI_ABI_CALL chali_abi_list_from_bytes(const ChaliAbiFrame *frame, const unsigned char *data, size_t length);
 
 /**
  * @brief 分配随本次运行结束回收的临时字节块。

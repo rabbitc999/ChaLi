@@ -8,6 +8,7 @@
  */
 #include "chali_abi_internal.h"
 #include "chali_abi_runtime.hpp"
+#include "../glue/std_collection.hpp"
 
 #include "ircode/runtime_internal.hpp"
 #include "ircode/native_memory_access.hpp"
@@ -102,6 +103,34 @@ try
 
 namespace
 {
+/**
+ * @brief 共用文本和原始字节字符串的分配路径，先复制输入再分配运行时存储。
+ * @param frame 当前帧。
+ * @param data 借用的输入字节。
+ * @param length 字节数。
+ * @param allowZero 是否允许内容中的零字节。
+ * @return 拥有型字符串句柄，失败为零。
+ */
+int64_t createRuntimeString(const ChaliAbiFrame *frame, const char *data, size_t length, bool allowZero)
+{
+    auto *context = contextOf(frame);
+    if (context == nullptr)
+    {
+        chali_abi_mark_failure(frame, "missing runtime context");
+        return 0;
+    }
+    if ((length && !data) || (!allowZero && length && std::memchr(data, 0, length)))
+    {
+        chali_abi_mark_failure(frame, "invalid String bytes");
+        return 0;
+    }
+    Memory::String text;
+    if (length != 0u && data != nullptr) text.assign(data, length);
+    const auto created = nativeAllocString(*context, text);
+    if (!created) chali_abi_mark_failure(frame, "String allocation failed");
+    return static_cast<int64_t>(created);
+}
+
 /**
  * @brief 取得当前帧可用的宿主上下文壳。
  * @param frame 当前调用帧。
@@ -344,22 +373,90 @@ try
 int64_t chali_abi_string(const ChaliAbiFrame *frame, const char *data, size_t length)
 try
 {
-    auto *context = contextOf(frame);
-    if (context == nullptr)
+    return createRuntimeString(frame, data, length, false);
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
+ * @brief 按显式长度构造原始字符串，保持运行时已有的二进制内容行为。
+ * @param frame 当前帧。
+ * @param data 原始内容。
+ * @param length 字节数。
+ * @return 拥有型字符串句柄，失败为零。
+ */
+int64_t chali_abi_string_bytes(const ChaliAbiFrame *frame, const char *data, size_t length)
+try
+{
+    return createRuntimeString(frame, data, length, true);
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
+ * @brief 通过集合原语验证并读取完整字节跨度。
+ * @param frame 当前帧。
+ * @param handle 字节列表句柄。
+ * @param data 目标缓冲区或查询用空指针。
+ * @param capacity 目标容量。
+ * @param required 接收实际长度。
+ * @return 成功为一，失败为零并保留运行时诊断。
+ */
+int chali_abi_list_bytes(const ChaliAbiFrame *frame, int64_t handle, unsigned char *data,
+                         size_t capacity, size_t *required)
+try
+{
+    if (!required || (!data && capacity))
     {
-        chali_abi_mark_failure(frame, "missing runtime context");
+        chali_abi_mark_failure(frame, "invalid byte list output");
         return 0;
     }
-    if ((length && !data) || (length && std::memchr(data, 0, length)))
+    *required = 0;
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    if (!collection_glue::copyListBytes(*host, handle, data, capacity, *required))
     {
-        chali_abi_mark_failure(frame, "invalid String bytes");
+        chali_abi_mark_failure(frame, "byte list read failed");
         return 0;
     }
-    Memory::String text;
-    if (length != 0u && data != nullptr) text.assign(data, length);
-    const auto created = nativeAllocString(*context, text);
-    if (!created) chali_abi_mark_failure(frame, "String allocation failed");
-    return static_cast<int64_t>(created);
+    return 1;
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
+ * @brief 完成字节列表后才发布句柄，失败前不转移任何输入所有权。
+ * @param frame 当前帧。
+ * @param data 借用的输入字节。
+ * @param length 字节数。
+ * @return 独立列表句柄，失败为零。
+ */
+int64_t chali_abi_list_from_bytes(const ChaliAbiFrame *frame, const unsigned char *data, size_t length)
+try
+{
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    const auto handle = collection_glue::makeByteList(*host, data, length);
+    if (!handle) chali_abi_mark_failure(frame, "byte list allocation failed");
+    return handle;
 } catch (const std::exception &error)
 {
     chali_abi_mark_failure(frame, error.what());

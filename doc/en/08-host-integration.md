@@ -21,6 +21,11 @@ Create an owned table with `chali_abi_registry_create`, then supply a `ChaliAbiM
 
 `chali_abi_read`/`chali_abi_write` check logical ranges and liveness; raw bytes do not acquire typed ownership. Release an owned String with `chali_abi_string_release` if it is not transferred to the language caller. Byte views recognize both length headers and capacity descriptors and expire before allocation, growth, release or reentry; copy bytes that must be retained. Pair temporary raw blocks with `temporary_release` when releasing early.
 
+`CHALI_ABI_CAP_BINARY` identifies raw-string and byte-list services. `chali_abi_string_bytes` copies an explicit byte length and preserves zero bytes and non-UTF-8 data; `chali_abi_string` still rejects embedded zero bytes. Both constructors share storage and release rules.
+
+Query a byte-list length with `chali_abi_list_bytes` using a null output and zero capacity, then copy into a caller-owned buffer. Elements must be integers in `0..255`; invalid elements or a short buffer leave the output untouched. `chali_abi_list_from_bytes` creates an independent owned `List<uint8>` and publishes its handle only after construction. Pair it with `chali_abi_record_release` unless ownership has been returned to the language. Declare `CHALI_ABI_CAP_BINARY` among the module's required capabilities when using these services.
+
+
 A successful record creation transfers its pointer; a zero result leaves it with the caller. Failed clone registration destroys the new copy and preserves the source. Type names are copied, destruction protocols cannot change under the same name, and destruction callbacks must not throw or outlive their code. `chali_abi_invoke` calls checked language function values with their captures and borrows the invoker without copying its state; handles are not machine function pointers.
 
 `ChaliAbiError` carries a status and bounded caller-owned buffer. Service exceptions cannot escape the C boundary. Existing runtime errors and memory faults keep priority; the first explicit module diagnostic may refine a generic service failure. Built-in entry catalogs publish complete immutable data concurrently and reject invalid or oversized input as a whole. Run `python tests/chali_c_api_contract.py` and `python tests/chali_c_api_registry.py` to reproduce checks.

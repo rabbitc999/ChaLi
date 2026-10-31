@@ -4,6 +4,7 @@
 #include "abi/chali_abi_registry.hpp"
 #include "ircode/runtime_internal.hpp"
 #include "c_api_failure_arena.hpp"
+#include "glue/std_collection.hpp"
 #include <cassert>
 #include <atomic>
 #include <cstdlib>
@@ -372,6 +373,65 @@ int main()
         assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, record) && destroyed == cloneAttempts + 3);
         assert(!chali_abi_record_release(&frame, record) && runtime.status != 0);
         reset();
+        const char binaryText[] = {'A', 0, char(255)};
+        const auto rawString = chali_abi_string_bytes(&frame, binaryText, sizeof(binaryText));
+        assert(rawString && !runtime.status);
+        assert(chali_abi_bytes(&frame, rawString, &view, &length) && length == sizeof(binaryText));
+        assert(std::memcmp(view, binaryText, length) == 0);
+        assert(chali_abi_string_release(&frame, rawString));
+        assert(!chali_abi_string_bytes(&frame, nullptr, 1) && runtime.status);
+        reset();
+        const unsigned char sourceBytes[] = {0, 255, 65};
+        const auto byteList = chali_abi_list_from_bytes(&frame, sourceBytes, sizeof(sourceBytes));
+        assert(byteList && !runtime.status);
+        assert(chali_abi_list_bytes(&frame, byteList, nullptr, 0, &length) && length == 3);
+        unsigned char outputBytes[] = {17, 17, 17};
+        assert(!chali_abi_list_bytes(&frame, byteList, outputBytes, 2, &length) && length == 3 && runtime.status);
+        assert(outputBytes[0] == 17 && outputBytes[1] == 17 && outputBytes[2] == 17);
+        reset();
+        assert(chali_abi_list_bytes(&frame, byteList, outputBytes, sizeof(outputBytes), &length));
+        assert(length == 3 && std::memcmp(outputBytes, sourceBytes, length) == 0);
+        assert(!chali_abi_list_bytes(&frame, byteList, outputBytes, sizeof(outputBytes), nullptr) && runtime.status);
+        reset();
+        assert(chali_abi_record_release(&frame, byteList));
+        assert(!chali_abi_list_bytes(&frame, byteList, outputBytes, sizeof(outputBytes), &length) && runtime.status);
+        reset();
+        const auto emptyList = chali_abi_list_from_bytes(&frame, nullptr, 0);
+        assert(emptyList && chali_abi_list_bytes(&frame, emptyList, nullptr, 0, &length) && length == 0);
+        assert(chali_abi_record_release(&frame, emptyList));
+        assert(!chali_abi_list_from_bytes(&frame, nullptr, 1) && runtime.status);
+        reset();
+        assert(!chali_abi_list_from_bytes(&frame, sourceBytes, SIZE_MAX) && runtime.status);
+        reset();
+        NativeCallContextImpl byteHost(context, &invoker);
+        for (const auto &invalid : {NativeValue::fromInt(-1), NativeValue::fromInt(256), NativeValue::fromFloat(1.0), NativeValue::fromText(Memory::String("bad"))})
+        {
+            const auto invalidList = collection_glue::makeList(byteHost);
+            assert(invalidList && collection_glue::listPush(byteHost, invalidList, invalid));
+            outputBytes[0] = 17;
+            assert(!chali_abi_list_bytes(&frame, invalidList, outputBytes, sizeof(outputBytes), &length) && runtime.status && outputBytes[0] == 17);
+            reset();
+            assert(chali_abi_record_release(&frame, invalidList));
+        }
+        const auto numericList = collection_glue::listStorageScalarOperation(byteHost, 9, 0, 0, 0, 0, 0, 0).bits;
+        assert(numericList);
+        collection_glue::listStorageScalarOperation(byteHost, 7, numericList, 255, 0, 0, 0, 0);
+        assert(chali_abi_list_bytes(&frame, numericList, outputBytes, sizeof(outputBytes), &length) && length == 1 && outputBytes[0] == 255);
+        assert(chali_abi_record_release(&frame, numericList));
+        int byteCreationFailures = 0;
+        for (int point = 0; point < 32; ++point)
+        {
+            arena.remaining = point;
+            const auto attempted = chali_abi_list_from_bytes(&frame, sourceBytes, sizeof(sourceBytes));
+            arena.remaining = -1;
+            if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+            assert(runtime.status);
+            ++byteCreationFailures;
+            reset();
+            assert(point != 31);
+        }
+        assert(byteCreationFailures >= 3);
+        std::printf("C binary services: raw NUL bytes, atomic bounded output, numeric views and %d creation failure points passed\n", byteCreationFailures);
     }
     assert(arena.stats().liveBlocks == 0);
     std::puts("C services: buffered strings, memory ranges, borrowed invoker, errors and records passed");

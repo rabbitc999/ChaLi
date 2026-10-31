@@ -1257,6 +1257,75 @@ std::int64_t makeList(stackvm::NativeCallContext &host)
 }
 
 /**
+ * @brief 完成所有元素后才将新字节列表交给记录服务，失败时自动回收临时存储。
+ * @param host 当前运行时上下文。
+ * @param data 待复制字节。
+ * @param count 字节数量。
+ * @return 新列表句柄，失败为零。
+ */
+std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char *data, std::size_t count)
+{
+    auto object = std::make_unique<Record>();
+    object->kind = StorageKind::Vector;
+    if ((count && !data) || count > storageMaximum(object->items))
+    {
+        host.fail("字节列表长度或输入无效");
+        return 0;
+    }
+    for (std::size_t index = 0; index < count; ++index)
+    {
+        ObjectValue value;
+        value.integer = data[index];
+        object->items.push_back(std::move(value));
+    }
+    const auto handle = host.makeNativeRecord(descriptor(StorageKind::Vector), object.get());
+    if (handle) object.release();
+    return handle;
+}
+
+/**
+ * @brief 物化现有元素视图后验证完整字节范围，再进行有界复制。
+ * @param host 当前运行时上下文。
+ * @param handle 列表句柄。
+ * @param data 可写目标，空指针配合零容量表示仅查询。
+ * @param capacity 目标字节容量。
+ * @param required 接收列表长度。
+ * @return 验证与复制成功时为真。
+ */
+bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsigned char *data,
+                   std::size_t capacity, std::size_t &required)
+{
+    required = 0;
+    State state(host);
+    Record *object = state.objects ? state.objects->find(handle) : nullptr;
+    if (!object || object->kind != StorageKind::Vector)
+    {
+        host.fail("字节列表句柄无效");
+        return false;
+    }
+    if (!nativeRefreshViews(state, *object))
+    {
+        if (!state.error.empty()) host.fail(state.error);
+        return false;
+    }
+    required = object->items.size();
+    for (const auto &value : object->items)
+        if (value.isText || value.isFloat || value.ownsObject || !value.fields.empty() || value.integer < 0 || value.integer > 255)
+        {
+            host.fail("字节列表元素必须是 0..255 的整数");
+            return false;
+        }
+    if (!data && capacity == 0) return true;
+    if (!data || capacity < required)
+    {
+        host.fail("字节列表输出缓冲区不足");
+        return false;
+    }
+    for (std::size_t index = 0; index < required; ++index) data[index] = static_cast<unsigned char>(object->items[index].integer);
+    return true;
+}
+
+/**
  * @brief 将一个原生值追加到运行时列表。
  * @param listHandle 目标运行时列表的句柄。
  * @param value 待转换、保存或参与计算的值。
