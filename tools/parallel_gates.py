@@ -10,7 +10,7 @@ import time
 # 已登记测试使用各自的产物路径；网络、打包、生成器和未知测试保持串行。
 PARALLEL_TESTS = frozenset("""
 bigint_arithmetic bigfloat_math chali_cas_math chali_compiler_safety
-chali_print_streams chali_resource_lifetime chali_type_memory chali_lsp_closure_types
+chali_print_streams chali_resource_lifetime chali_type_memory chali_lsp_closure_types chali_parse_selfhost
 chali_array_parameters chali_string_literals chali_opcode_declarations
 chali_range_loop_values chali_opcode_resources chali_opcode_visibility
 opcode_core_isolation chali_collection_glue chali_map_pair_iterator

@@ -106,6 +106,34 @@ int main()
         const unsigned char *view = nullptr;
         std::size_t length = 0;
         assert(chali_abi_bytes(&frame, 1, &view, &length) && std::string(reinterpret_cast<const char *>(view), length) == "text");
+        const auto parseError = chali_abi_resolve("std::parse::__parseFloat64Error", nullptr);
+        const auto parseValue = chali_abi_resolve("std::parse::__parseFloat64Value", nullptr);
+        assert(parseError && parseValue);
+        for (const auto &text : { std::string(), std::string("3.5"), std::string("1e309x"), std::string("nan"), std::string(300, '0') + ".5" })
+        {
+            std::int64_t handle = chali_abi_string(&frame, text.data(), text.size());
+            unsigned char kind = ChaliAbiSlotInteger;
+            ChaliAbiFrame parsed{ &runtime, &handle, &kind, 1, 0, 0 };
+            parseError(&parsed);
+            const auto expected = text.empty() ? 1 : text == "1e309x" || text == "nan" ? 2 : 0;
+            assert(runtime.status == 0 && parsed.result == expected && !parsed.resultIsFloat);
+            if (expected == 0)
+            {
+                parseValue(&parsed);
+                double number = 0.0;
+                std::memcpy(&number, &parsed.result, sizeof(number));
+                assert(runtime.status == 0 && parsed.resultIsFloat && number == (text == "3.5" ? 3.5 : 0.5));
+            }
+            assert(chali_abi_string_release(&frame, handle));
+            parseError(&parsed);
+            assert(runtime.status != 0);
+            reset();
+            kind = ChaliAbiSlotFloat;
+            parseError(&parsed);
+            assert(runtime.status != 0);
+            reset();
+        }
+        std::puts("C float parser: empty, buffered, overflow priority, stale handles and slot kinds passed");
         for (const auto &text : { std::string(), std::string("中文"), std::string(300, 'x') })
         {
             const auto handle = chali_abi_string(&frame, text.data(), text.size());

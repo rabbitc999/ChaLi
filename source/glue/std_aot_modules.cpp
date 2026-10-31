@@ -48,9 +48,6 @@
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
-#ifndef GLUE_NO_STD_PARSE
-#include "std_parse.hpp"
-#endif
 #ifndef GLUE_NO_STD_PROCESS
 #include "std_process.hpp"
 #endif

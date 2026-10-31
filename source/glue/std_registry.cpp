@@ -45,9 +45,6 @@
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
-#ifndef GLUE_NO_STD_PARSE
-#include "std_parse.hpp"
-#endif
 #ifndef GLUE_NO_STD_PROCESS
 #include "std_process.hpp"
 #endif
@@ -119,7 +116,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_PARSE
     Memory::String parseError;
-    if (!std_parse_glue::bind(registry, &parseError))
+    if (!registry.bindModule(abi_parse_records, &parseError))
     {
         if (error) *error = parseError;
         ok = false;

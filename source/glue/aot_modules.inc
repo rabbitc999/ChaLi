@@ -41,7 +41,7 @@ CHALI_AOT_MODULE(signal, std_signal_glue::bind(registry, error))
 CHALI_AOT_MODULE(linalg, std_linalg_glue::bind(registry, error))
 #endif
 #ifndef GLUE_NO_STD_PARSE
-CHALI_AOT_MODULE(parse, std_parse_glue::bind(registry, error))
+CHALI_AOT_MODULE(parse, registry.bindModule(abi_parse_records, error))
 #endif
 #ifndef GLUE_NO_STD_PROCESS
 CHALI_AOT_MODULE(process, std_process_glue::bind(registry, error))

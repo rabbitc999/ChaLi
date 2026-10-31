@@ -14,7 +14,7 @@ import std::parse;
 
 ## 公共约定与错误边界
 
-返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。
+返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。
 
 ## 参考代码
 
@@ -164,8 +164,8 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-350"></a>`enum ParseError : Error` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。 |
-| ParseError | `Empty, Invalid, Overflow` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。 变体及载荷见声明。 |
+| 模块 | <a id="symbol-350"></a>`enum ParseError : Error` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 |
+| ParseError | `Empty, Invalid, Overflow` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 变体及载荷见声明。 |
 | 模块 | <a id="symbol-351"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
 
 ## 函数索引
@@ -250,7 +250,7 @@ static Result<int64, std::lang::Error> parseInt64(std::lang::String text);
 std::parse::Parse::parseInt64(text);
 ```
 
-**源码**：[source/std/parse.chl:27](../../source/std/parse.chl#L27)。
+**源码**：[source/std/parse.chl:48](../../source/std/parse.chl#L48)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -288,7 +288,7 @@ static Result<uint64, std::lang::Error> parseUInt64(std::lang::String text);
 std::parse::Parse::parseUInt64(text);
 ```
 
-**源码**：[source/std/parse.chl:37](../../source/std/parse.chl#L37)。
+**源码**：[source/std/parse.chl:59](../../source/std/parse.chl#L59)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -326,7 +326,7 @@ static Result<float64, std::lang::Error> parseFloat64(std::lang::String text);
 std::parse::Parse::parseFloat64(text);
 ```
 
-**源码**：[source/std/parse.chl:47](../../source/std/parse.chl#L47)。
+**源码**：[source/std/parse.chl:64](../../source/std/parse.chl#L64)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -364,6 +364,6 @@ static Result<bool, std::lang::Error> parseBool(std::lang::String text);
 std::parse::Parse::parseBool(text);
 ```
 
-**源码**：[source/std/parse.chl:57](../../source/std/parse.chl#L57)。
+**源码**：[source/std/parse.chl:74](../../source/std/parse.chl#L74)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。

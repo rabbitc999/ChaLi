@@ -562,6 +562,7 @@ int runCli(int argc, char **argv)
             {"ircode/runtime_context.hpp", "runtime/runtime_context.hpp"},
             {"ircode/native_memory_access.hpp", "runtime/native_memory_access.hpp"},
             {"ircode/native_memory.hpp", "runtime/native_memory.hpp"},
+            {"ircode/native_protocol.hpp", "runtime/native_protocol.hpp"},
             {"allocator/system_arena.hpp", "runtime/system_arena.hpp"},
             {"../../library/ipage/source/ipage/sql.hpp", "ipage/sql.hpp"},
             {"../../library/ipage/source/ipage/dialect.hpp", "ipage/dialect.hpp"},
@@ -601,6 +602,24 @@ int runCli(int argc, char **argv)
             if (needle == value) continue;
             std::size_t at = 0;
             while ((at = content->find(needle, at)) != Memory::String::npos) {
+                // 只改预处理指令；内嵌资产索引和普通字符串仍使用原始资源名。
+                const auto newline = content->rfind('\n', at);
+                std::size_t cursor = newline == Memory::String::npos ? 0 : newline + 1;
+                const auto skipSpace = [&] {
+                    while (cursor < at && ((*content)[cursor] == ' ' || (*content)[cursor] == '\t' || (*content)[cursor] == '\r')) ++cursor;
+                };
+                skipSpace();
+                bool directive = cursor < at && (*content)[cursor++] == '#';
+                if (directive) {
+                    skipSpace();
+                    directive = content->compare(cursor, 7, "include") == 0;
+                    if (directive) {
+                        cursor += 7;
+                        skipSpace();
+                        directive = cursor == at;
+                    }
+                }
+                if (!directive) { at += needle.size(); continue; }
                 content->replace(at, needle.size(), value);
                 at += value.size();
             }
@@ -686,7 +705,7 @@ int runCli(int argc, char **argv)
     for (const char *name : {"std_regex.hpp",
                              "std_native_record.hpp", "std_big_number.hpp", "std_file.hpp", "std_file_api.hpp", "std_desktop_file.hpp",
                              "std_signal.hpp",
-                             "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_binary.hpp", "std_linalg.hpp", "std_parse.hpp",
+                             "std_structured_data.hpp", "std_json.hpp", "std_toml.hpp", "std_binary.hpp", "std_linalg.hpp",
                              "std_process.hpp", "std_sql.hpp", "std_net.hpp", "std_filesystem.hpp", "std_registry.hpp"})
         ok = copy(mc / "source/glue" / name, Memory::String("glue/") + name) && ok;
     // 前端头和标准胶水随实现扩展；按受控目录收集，避免固定清单遗漏新依赖。

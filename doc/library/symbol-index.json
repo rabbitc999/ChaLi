@@ -6144,7 +6144,7 @@
     "kind": "enum",
     "type": "",
     "signature": "enum ParseError : Error",
-    "documentation": "从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::parse;` 才能用）。",
+    "documentation": "区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。",
     "comment": "",
     "parameters": [],
     "source": "source/std/parse.chl",
@@ -6167,7 +6167,7 @@
     "comment": "",
     "parameters": [],
     "source": "source/std/parse.chl",
-    "line": 26,
+    "line": 47,
     "page": "std-parse.md",
     "anchor": "symbol-351",
     "examples": [

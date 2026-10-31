@@ -29009,7 +29009,7 @@
       "documentation": "由实现者将当前值转换为文本，Formattable 重载接收 style。"
     },
     "errors": {
-      "documentation": "返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。",
+      "documentation": "返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。",
       "preconditions": [],
       "panic": false
     },
@@ -29041,7 +29041,7 @@
       "documentation": "严格解析有符号 64 位十进制整数。"
     },
     "errors": {
-      "documentation": "返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。",
+      "documentation": "返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。",
       "preconditions": [],
       "panic": false
     },
@@ -29051,7 +29051,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/parse.chl",
-    "line": 27,
+    "line": 48,
     "page": "std-parse.md",
     "anchor": "api-1"
   },
@@ -29075,7 +29075,7 @@
       "documentation": "严格解析无符号 64 位十进制整数。"
     },
     "errors": {
-      "documentation": "返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。",
+      "documentation": "返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。",
       "preconditions": [],
       "panic": false
     },
@@ -29085,7 +29085,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/parse.chl",
-    "line": 37,
+    "line": 59,
     "page": "std-parse.md",
     "anchor": "api-2"
   },
@@ -29109,7 +29109,7 @@
       "documentation": "解析 64 位浮点数并报告非法输入/溢出。"
     },
     "errors": {
-      "documentation": "返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。",
+      "documentation": "返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。",
       "preconditions": [],
       "panic": false
     },
@@ -29119,7 +29119,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/parse.chl",
-    "line": 47,
+    "line": 64,
     "page": "std-parse.md",
     "anchor": "api-3"
   },
@@ -29143,7 +29143,7 @@
       "documentation": "解析布尔文本并报告非法输入。"
     },
     "errors": {
-      "documentation": "返回 Result<T,ParseError>，区分 Empty、Invalid、Overflow。不会静默返回零代替失败。整数的位宽与符号由具体函数确定；调用者处理 Err 后再取值。",
+      "documentation": "返回 Result<T,Error>，错误中保存 ParseError 的 Empty、Invalid、Overflow。整数按完整十进制解析，不接受前后空白或加号；有符号入口允许负号，无符号入口拒绝负号。数字前缀已经溢出时保留 Overflow 优先级。bool 只接受 true 或 false。整数与布尔算法在 ChaLi 层执行；float64 保留 C strtod 的格式规则，非有限值和范围错误报告 Overflow。不会静默返回零代替失败。",
       "preconditions": [],
       "panic": false
     },
@@ -29153,7 +29153,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/parse.chl",
-    "line": 57,
+    "line": 74,
     "page": "std-parse.md",
     "anchor": "api-4"
   },

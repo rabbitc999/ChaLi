@@ -44,7 +44,7 @@ def main():
         run(cc, '-std=c11', *target_flags, *common, packed, obj, '-o', host)
         run(host)
         objects = [obj]
-        for name in ('chali_abi', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random'):
+        for name in ('chali_abi', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random', 'abi_parse'):
             module_object = work / (name + '.o')
             run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/abi' / (name + '.c'), '-o', module_object)
             objects.append(module_object)

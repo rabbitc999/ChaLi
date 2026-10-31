@@ -31,6 +31,9 @@ typedef const ChaliAbiRecord *(*ModuleRecords)(size_t *count);
 static const ModuleRecords kModules[] = {
     abi_print_records,
     abi_string_records,
+#ifndef GLUE_NO_STD_PARSE
+    abi_parse_records,
+#endif
 #ifndef GLUE_NO_STD_MATH
     abi_math_records,
     /* 时钟原先与数学函数同在一个 C++ 胶水文件里，沿用同一个裁剪宏。 */
