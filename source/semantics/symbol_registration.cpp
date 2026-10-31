@@ -1,3 +1,43 @@
+/**
+ * @brief 将模块限定名转换为 chali_ 前缀的下划线宿主符号。
+ * @param mcName 源码中的模块限定名。
+ * @return 约定符号；名称非法时返回空串。
+ */
+Memory::String CAbiConventionSymbol(const Memory::String &mcName)
+{
+    Memory::String result = "chali_";
+    bool previousWasLowerOrDigit = false;
+    for (std::size_t i = 0; i < mcName.size(); ++i)
+    {
+        const unsigned char current = static_cast<unsigned char>(mcName[i]);
+        if (current == ':')
+        {
+            if (i + 1 >= mcName.size() || mcName[i + 1] != ':' || i == 0 || i + 2 >= mcName.size() || result.back() == '_')
+                return {};
+            result += '_';
+            previousWasLowerOrDigit = false;
+            ++i;
+            continue;
+        }
+        if (current == '_')
+        {
+            if (result.back() == '_') return {};
+            result += '_';
+            previousWasLowerOrDigit = false;
+            continue;
+        }
+        if (!std::isalnum(current)) return {};
+        const bool upper = std::isupper(current) != 0;
+        const bool nextLower = i + 1 < mcName.size() && std::islower(static_cast<unsigned char>(mcName[i + 1])) != 0;
+        if (upper && result.back() != '_' && (previousWasLowerOrDigit || (i > 0 && std::isupper(static_cast<unsigned char>(mcName[i - 1])) && nextLower)))
+            result += '_';
+        result += static_cast<char>(std::tolower(current));
+        previousWasLowerOrDigit = std::islower(current) || std::isdigit(current);
+    }
+    if (result.size() == 3 || result.back() == '_') return {};
+    return result;
+}
+
 /* ---------- 第一遍：登记 ---------- */
 
 /**
@@ -1263,7 +1303,7 @@ bool RegisterTop()
                 }
             }
             declaration.abiRelease = UnescapeText(top.abiRelease);
-            declaration.abiSymbol = top.s2.empty() ? chali_glue::conventionSymbol(ModuleSymbol(top.module, top.s)) : UnescapeText(top.s2);
+            declaration.abiSymbol = top.s2.empty() ? CAbiConventionSymbol(ModuleSymbol(top.module, top.s)) : UnescapeText(top.s2);
             if (declaration.abiLibrary.find(static_cast<char>(0)) != Memory::String::npos || declaration.abiSymbol.find(static_cast<char>(0)) != Memory::String::npos || declaration.abiRelease.find(static_cast<char>(0)) != Memory::String::npos)
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())

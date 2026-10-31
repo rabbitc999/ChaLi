@@ -6,13 +6,14 @@
 #include <unistd.h>
 #endif
 #include "chali_incremental.hpp"
+#include "chali_aot.hpp"
+#include <cctype>
 /* ============================================================
  * 实现：节点池 / 类型池 / 降级（C 语法树 → ast） / 生成与执行
  * ============================================================ */
 #include "ast.hpp"
 #include "stackvm.hpp"
 #include "../source/ircode/value_text.hpp"
-#include "chali_glue.hpp"
 #include "chali_generic.hpp"
 #include "chali_resource_cleanup.hpp"
 #include "chali_lambda.hpp"
@@ -76,9 +77,6 @@ std::size_t g_errorLine = 0;
 std::size_t g_errorColumn = 0;
 bool g_checkOnly = false;
 bool g_sharedLibrary = false;
-bool g_abiPrepareOnly = false;
-Memory::String g_abiCacheOption, g_abiBridgeOption, g_abiWriteOption;
-bool g_abiNoCache = false;
 bool g_reflectionEnabled = false;  ///< 本次编译显式启用的注解与反射开关。
 std::size_t g_runtimeMemory = Memory::defaultRuntimeCapacity;
 std::size_t g_runtimePeak = 0;
@@ -2930,26 +2928,6 @@ void M_SetCheckOnly(bool enabled) { g_checkOnly = enabled; }
  */
 void M_SetSharedLibrary(bool enabled) { g_sharedLibrary = enabled; }
 /**
- * @brief 控制是否仅准备 ABI 调用桥而不运行程序。
- * @param enabled 为 true 时跳过 VM 入口。
- */
-void M_SetAbiPrepareOnly(bool enabled) { g_abiPrepareOnly = enabled; }
-/**
- * @brief 设置本次编译使用的 ABI 桥位置与缓存选项。
- * @param cache 缓存目录，空值沿用环境默认。
- * @param bridge 预编译桥路径，空值沿用环境默认。
- * @param output 保存桥的路径，空值不显式导出。
- * @param noCache 是否禁用缓存。
- */
-void M_SetAbiOptions(const Memory::String &cache, const Memory::String &bridge, const Memory::String &output, bool noCache)
-{
-    g_abiCacheOption = cache;
-    g_abiBridgeOption = bridge;
-    g_abiWriteOption = output;
-    g_abiNoCache = noCache;
-}
-
-/**
  * @brief 设置单次编译开关，检查实际链接的 VM 能力。
  * @param enabled 是否开启。
  * @return 配置有效时返回 true。
@@ -3518,11 +3496,6 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     (void)run;
     (void)emitBinary;
     (void)inputText;
-    if (g_abiPrepareOnly)
-    {
-        chali_glue::Registry registry;
-        return BindRuntimeAbi(&registry) ? 0 : 1;
-    }
     return 0;
 }
 

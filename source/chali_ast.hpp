@@ -1252,20 +1252,6 @@ void M_SetSourceLines(const Memory::Vector<std::size_t> &lines);
  */
 void M_SetCheckOnly(bool enabled);
 /**
- * @brief 设置仅准备 ABI 桥的执行模式。
- * @param enabled 是否跳过程序入口。
- */
-void M_SetAbiPrepareOnly(bool enabled);
-/**
- * @brief 设置 ABI 调用桥和缓存的显式命令行选项。
- * @param cache 缓存目录。
- * @param bridge 预编译调用桥。
- * @param output 需要保存的桥路径。
- * @param noCache 是否禁用缓存。
- */
-void M_SetAbiOptions(const Memory::String &cache, const Memory::String &bridge, const Memory::String &output, bool noCache);
-
-/**
  * @brief 设置本次编译的注解与反射开关；失败时重置为关闭。
  * @param enabled 是否请求开启。
  * @return 前端和实际运行时均支持时返回 true。

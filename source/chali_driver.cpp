@@ -269,8 +269,6 @@ try
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
     bool macroBacktraceFull = true;
-    bool abiPrepareOnly = false, abiNoCache = false;
-    Memory::String abiCache, abiBridge, abiWrite;
     bool hardRealtime = false;
     /* 注解与反射默认开启：宿主（本 exe）没编入支持时静默降级为关闭，不打扰用户；
      * 只有显式写了 `--reflection` 才按"要求必须有支持"处理（不支持就报错）。 */
@@ -455,36 +453,11 @@ try
             reflectionExplicit = true;
             continue;
         }
-        if (argument == "--abi-cache" || argument == "--abi-bridge" || argument == "--abi-write-bridge")
+        if (argument == "--abi-cache" || argument == "--abi-bridge" || argument == "--abi-write-bridge" ||
+            argument == "--abi-no-cache" || argument == "--abi-prepare")
         {
-            if (index + 1 >= argc)
-            {
-                std::fputs("ABI 选项缺少路径\n", stderr);
-                return 2;
-            }
-            const Memory::String value = argv[++index];
-            if (value.empty())
-            {
-                std::fputs("ABI 路径不能为空\n", stderr);
-                return 2;
-            }
-            if (argument == "--abi-cache")
-                abiCache = value;
-            else if (argument == "--abi-bridge")
-                abiBridge = value;
-            else
-                abiWrite = value;
-            continue;
-        }
-        if (argument == "--abi-no-cache")
-        {
-            abiNoCache = true;
-            continue;
-        }
-        if (argument == "--abi-prepare")
-        {
-            abiPrepareOnly = true;
-            continue;
+            std::fprintf(stderr, "chali: 旧解释执行 ABI 选项 %s 已删除，请直接使用 run 或 aot。\n", argument.c_str());
+            return 2;
         }
         if (argument == "--check")
         {
@@ -1146,8 +1119,6 @@ try
     M_SetRuntimeMemory(memoryBytes);
     M_SetCheckOnly(checkOnly);
     M_SetSharedLibrary(aot && aotOptions.shared);
-    M_SetAbiPrepareOnly(abiPrepareOnly);
-    M_SetAbiOptions(abiCache, abiBridge, abiWrite, abiNoCache);
     chali_editor::compilerAnalysis.begin(!analysisTypes.empty());
     const int code = M_Compile("chali", prefix.c_str(), 0, 0, nullptr);
     if (!analysisTypes.empty())

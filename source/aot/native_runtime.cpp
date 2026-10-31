@@ -3,7 +3,7 @@
  * @brief LLVM 原生程序复用共享堆、对象表和标准库胶水，不解释语言指令。
  */
 #include "ircode/runtime_internal.hpp"
-#include "chali_glue.hpp"
+#include "abi/chali_native_library.hpp"
 #include "chali_i18n.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "allocator/system_arena.hpp"
@@ -398,8 +398,8 @@ void chali_host_raise_callback_error(const char *message)
 void *chali_host_abi_symbol(const char *path, const char *name)
 {
     static std::mutex mutex;
-    static std::map<std::string, std::shared_ptr<chali_glue::DynamicLibrary>> libraries;
-    std::shared_ptr<chali_glue::DynamicLibrary> library;
+    static std::map<std::string, std::shared_ptr<chali_host_detail::NativeLibrary>> libraries;
+    std::shared_ptr<chali_host_detail::NativeLibrary> library;
     {
         std::lock_guard<std::mutex> guard(mutex);
         const auto found = libraries.find(path);
@@ -408,7 +408,7 @@ void *chali_host_abi_symbol(const char *path, const char *name)
     Memory::String error;
     if (!library)
     {
-        auto opened = std::make_shared<chali_glue::DynamicLibrary>();
+        auto opened = std::make_shared<chali_host_detail::NativeLibrary>();
         if (!opened->open(path, &error)) chali_panic(error.c_str());
         std::lock_guard<std::mutex> guard(mutex);
         library = libraries.emplace(path, std::move(opened)).first->second;

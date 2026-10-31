@@ -31,8 +31,41 @@ def main():
             assert result.returncode == 0, (command, result.stdout, result.stderr)
             return result.stdout
 
+        for option in ('--abi-prepare', '--abi-cache', '--abi-bridge', '--abi-write-bridge', '--abi-no-cache'):
+            result = subprocess.run([str(compiler), option], cwd=work, env=dict(env, CHALI_LANG='zh'),
+                                    capture_output=True, encoding='utf-8', timeout=60)
+            assert result.returncode == 2 and option in result.stderr and '已删除' in result.stderr, result
+        assert not (work / '.chali').exists() and not (work / 'cache').exists()
+
         library = work / ('native.dll' if os.name == 'nt' else 'native.so')
-        invoke([args.cc, '-shared', '-fPIC', ROOT / 'doc/examples/abi_contracts/native.c', '-o', library])
+        provider = work / 'native.c'
+        provider.write_text('#include "' + (ROOT / 'doc/examples/abi_contracts/native.c').as_posix() + '"\n'
+                            '/**\n * @brief 验证默认宿主符号的缩写和大小写转换。\n'
+                            ' * @param value 输入值。\n * @return 原样返回输入值。\n */\n'
+                            'API int32_t chali_program_read_http_value(int32_t value){return value;}\n', encoding='utf-8')
+        invoke([args.cc, '-shared', '-fPIC', provider, '-o', library])
+        convention = work / 'convention.chl'
+        convention.write_text('#abi("C", "' + library.as_posix() + '", "") '
+                              'int32 readHTTPValue(int32 value); '
+                              'void main(){println("{}",readHTTPValue((int32)42));}', encoding='utf-8')
+        assert invoke([compiler, 'run', convention]).strip() == b'42'
+        unicode_library = work / ('原生 入口' + library.suffix)
+        unicode_library.write_bytes(library.read_bytes())
+        for label, path, symbol, message in (
+            ('unicode', unicode_library, 'identity', None),
+            ('missing-library', work / ('absent' + library.suffix), 'identity', '无法加载动态库'),
+            ('missing-symbol', library, '__absent_native_symbol__', '动态库中找不到 C 符号')):
+            probe = work / (label + '.chl')
+            probe.write_text('#abi("C", "' + path.as_posix() + '", "' + symbol + '") '
+                             'int32 scalar(int32 value); void main(){println("{}",scalar((int32)42));}', encoding='utf-8')
+            result = subprocess.run([str(compiler), 'run', str(probe), '--out', str(work / label)],
+                                    cwd=ROOT, env=dict(env, CHALI_LANG='zh'), capture_output=True,
+                                    encoding='utf-8', timeout=120)
+            if message is None:
+                assert (result.returncode, result.stdout, result.stderr) == (0, '42\n', ''), result
+            else:
+                assert result.returncode != 0 and message in result.stdout + result.stderr, result
+
         source = work / 'demo.chl'
         source.write_text((ROOT / 'doc/examples/abi_contracts/demo.chl').read_text(encoding='utf-8')
                           .replace('./native.dll', library.as_posix()), encoding='utf-8')
