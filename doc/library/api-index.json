@@ -13203,6 +13203,31 @@
   },
   {
     "module": "std::json",
+    "name": "Json::toJson",
+    "owner": "Json",
+    "signature": "Result<String,std::lang::Error> toJson()",
+    "documentation": "将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。\n\n**返回值**：Result<String,std::lang::Error>。",
+    "comment": "/** 将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。 */",
+    "parameters": [],
+    "returns": {
+      "type": "Result<String,std::lang::Error>",
+      "documentation": "将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。"
+    },
+    "errors": {
+      "documentation": "parse 返回 Result<JsonValue,MessageError>。节点由拥有型 opcode 保存独立子树；普通复制深复制，close 只关闭当前值，已取得的子值和副本继续有效，重复关闭返回 false。asXxx 返回 Option，不符合类型时为 None；asFloat64 可读取整数。含零字节的文本/键使用 asBytes/findBytes/keyBytesAt。kind：0 null、1 bool、2 int、3 float、4 string、5 array、6 object、7 date-time。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.toJson();",
+    "examples": [],
+    "sourceLanguage": "zh",
+    "source": "source/std/json.chl",
+    "line": 9,
+    "page": "std-json.md",
+    "anchor": "api-0"
+  },
+  {
+    "module": "std::json",
     "name": "serialize",
     "owner": "",
     "signature": "Result<String,std::lang::Error> serialize<T>(T const& value)",
@@ -13229,9 +13254,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 7,
+    "line": 16,
     "page": "std-json.md",
-    "anchor": "api-0"
+    "anchor": "api-1"
   },
   {
     "module": "std::json",
@@ -13261,9 +13286,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 14,
+    "line": 23,
     "page": "std-json.md",
-    "anchor": "api-1"
+    "anchor": "api-2"
   },
   {
     "module": "std::json",
@@ -13288,9 +13313,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 55,
+    "line": 64,
     "page": "std-json.md",
-    "anchor": "api-2"
+    "anchor": "api-3"
   },
   {
     "module": "std::json",
@@ -13315,9 +13340,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 57,
+    "line": 66,
     "page": "std-json.md",
-    "anchor": "api-3"
+    "anchor": "api-4"
   },
   {
     "module": "std::json",
@@ -13340,9 +13365,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 58,
+    "line": 67,
     "page": "std-json.md",
-    "anchor": "api-4"
+    "anchor": "api-5"
   },
   {
     "module": "std::json",
@@ -13367,9 +13392,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 59,
+    "line": 68,
     "page": "std-json.md",
-    "anchor": "api-5"
+    "anchor": "api-6"
   },
   {
     "module": "std::json",
@@ -13392,9 +13417,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 60,
+    "line": 69,
     "page": "std-json.md",
-    "anchor": "api-6"
+    "anchor": "api-7"
   },
   {
     "module": "std::json",
@@ -13417,9 +13442,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 61,
+    "line": 70,
     "page": "std-json.md",
-    "anchor": "api-7"
+    "anchor": "api-8"
   },
   {
     "module": "std::json",
@@ -13442,9 +13467,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 62,
+    "line": 71,
     "page": "std-json.md",
-    "anchor": "api-8"
+    "anchor": "api-9"
   },
   {
     "module": "std::json",
@@ -13467,9 +13492,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 63,
+    "line": 72,
     "page": "std-json.md",
-    "anchor": "api-9"
+    "anchor": "api-10"
   },
   {
     "module": "std::json",
@@ -13492,9 +13517,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 64,
+    "line": 73,
     "page": "std-json.md",
-    "anchor": "api-10"
+    "anchor": "api-11"
   },
   {
     "module": "std::json",
@@ -13519,9 +13544,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 65,
+    "line": 74,
     "page": "std-json.md",
-    "anchor": "api-11"
+    "anchor": "api-12"
   },
   {
     "module": "std::json",
@@ -13546,9 +13571,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 66,
+    "line": 75,
     "page": "std-json.md",
-    "anchor": "api-12"
+    "anchor": "api-13"
   },
   {
     "module": "std::json",
@@ -13571,9 +13596,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 67,
+    "line": 76,
     "page": "std-json.md",
-    "anchor": "api-13"
+    "anchor": "api-14"
   },
   {
     "module": "std::json",
@@ -13598,9 +13623,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 69,
+    "line": 78,
     "page": "std-json.md",
-    "anchor": "api-14"
+    "anchor": "api-15"
   },
   {
     "module": "std::json",
@@ -13625,9 +13650,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 70,
+    "line": 79,
     "page": "std-json.md",
-    "anchor": "api-15"
+    "anchor": "api-16"
   },
   {
     "module": "std::json",
@@ -13652,9 +13677,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 74,
+    "line": 83,
     "page": "std-json.md",
-    "anchor": "api-16"
+    "anchor": "api-17"
   },
   {
     "module": "std::json",
@@ -13679,9 +13704,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 78,
+    "line": 87,
     "page": "std-json.md",
-    "anchor": "api-17"
+    "anchor": "api-18"
   },
   {
     "module": "std::json",
@@ -13706,9 +13731,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 83,
+    "line": 92,
     "page": "std-json.md",
-    "anchor": "api-18"
+    "anchor": "api-19"
   },
   {
     "module": "std::json",
@@ -13733,9 +13758,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 88,
+    "line": 97,
     "page": "std-json.md",
-    "anchor": "api-19"
+    "anchor": "api-20"
   },
   {
     "module": "std::json",
@@ -13760,9 +13785,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 93,
+    "line": 102,
     "page": "std-json.md",
-    "anchor": "api-20"
+    "anchor": "api-21"
   },
   {
     "module": "std::json",
@@ -13794,9 +13819,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 98,
+    "line": 107,
     "page": "std-json.md",
-    "anchor": "api-21"
+    "anchor": "api-22"
   },
   {
     "module": "std::json",
@@ -13828,9 +13853,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 105,
+    "line": 114,
     "page": "std-json.md",
-    "anchor": "api-22"
+    "anchor": "api-23"
   },
   {
     "module": "std::json",
@@ -13862,9 +13887,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 112,
+    "line": 121,
     "page": "std-json.md",
-    "anchor": "api-23"
+    "anchor": "api-24"
   },
   {
     "module": "std::json",
@@ -13894,9 +13919,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 118,
+    "line": 127,
     "page": "std-json.md",
-    "anchor": "api-24"
+    "anchor": "api-25"
   },
   {
     "module": "std::json",
@@ -13928,9 +13953,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 120,
+    "line": 129,
     "page": "std-json.md",
-    "anchor": "api-25"
+    "anchor": "api-26"
   },
   {
     "module": "std::json",
@@ -13962,9 +13987,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 125,
+    "line": 134,
     "page": "std-json.md",
-    "anchor": "api-26"
+    "anchor": "api-27"
   },
   {
     "module": "std::json",
@@ -13989,9 +14014,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 130,
+    "line": 139,
     "page": "std-json.md",
-    "anchor": "api-27"
+    "anchor": "api-28"
   },
   {
     "module": "std::json",
@@ -14023,9 +14048,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/json.chl",
-    "line": 134,
+    "line": 143,
     "page": "std-json.md",
-    "anchor": "api-28"
+    "anchor": "api-29"
   },
   {
     "module": "std::lang",

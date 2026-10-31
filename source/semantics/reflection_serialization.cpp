@@ -45,6 +45,7 @@ struct MReflectionSerialization
      */
     bool exposed(const std::shared_ptr<MType> &type)
     {
+        if (HasJsonDerivation(type->name)) return true;
         const auto separator = type->name.rfind("::");
         const auto name = separator == Memory::String::npos ? type->name : type->name.substr(separator + 2);
         if (name.rfind("Option__", 0) == 0 || name.rfind("Result__", 0) == 0 || IsTupleType(type)) return true;
@@ -142,6 +143,8 @@ struct MReflectionSerialization
             {
                 encode = "match(value){";
                 decode = "if(!node.isObject() || node.find(\"$variant\").isNone() || node.find(\"$values\").isNone()){" + decodeError("需要枚举变体对象") + "}let variantNode=node.find(\"$variant\").unwrap();let parts=node.find(\"$values\").unwrap();if(!variantNode.isString() || !parts.isArray()){" + decodeError("无效枚举变体") + "}String variant=variantNode.asString().unwrap();";
+                if (HasJsonDerivation(type->name))
+                    decode += "if(node.len()!=2){" + decodeError("枚举对象仅允许 $variant 与 $values") + "}";
                 for (const auto &variant : enumeration->second.variants)
                 {
                     Memory::String pattern = variant.name, output = "String output=" + queries.quote("{\"$variant\":" + std::string(queries.quote(variant.name).c_str()) + ",\"$values\":[") + ";";
@@ -183,14 +186,23 @@ struct MReflectionSerialization
                 decode = "if(!node.isObject()){" + decodeError("需要结构体对象") + "}";
                 bool first = true;
                 const auto *definition = FindStruct(type->name);
+                if (definition && HasJsonDerivation(type->name))
+                {
+                    Memory::String known = "false";
+                    for (const auto &field : definition->fields)
+                        known += " || jsonKey==" + queries.quote(DerivedJsonFieldFor(metadata, type->name, field.name).name);
+                    decode += "int64 jsonIndex=0;while(jsonIndex<node.len()){if(node.keyAt(jsonIndex).isNone()){" + decodeError("对象键无法表示为 String") + "}String jsonKey=node.keyAt(jsonIndex).unwrap();if(!(" + known + ")){error=\"未知字段：\"+jsonKey;return false;}jsonIndex=jsonIndex+1;}";
+                }
                 if (definition)
                     for (const auto &field : definition->fields)
                     {
-                        const auto child = ensure(field.type), fieldName = queries.quote(field.name);
+                        const auto rule = DerivedJsonFieldFor(metadata, type->name, field.name);
+                        if (rule.skip) continue;
+                        const auto child = ensure(field.type), fieldName = queries.quote(rule.name);
                         if (!first) encode += "output=output+\",\";";
                         first = false;
-                        encode += "output=output+" + queries.quote(std::string(queries.quote(field.name).c_str()) + ":") + "+" + child + "Encode(&value." + field.name + ",&error,depth+1);if(error!=\"\"){return \"\";}";
-                        decode += "{if(node.find(" + fieldName + ").isNone()){" + decodeError("缺少字段：" + field.name) + "}let part=node.find(" + fieldName + ").unwrap();if(!" + child + "Decode(&part,&value." + field.name + ",&error,depth+1)){error=" + queries.quote(field.name + ": ") + "+error;return false;}}";
+                        encode += "output=output+" + queries.quote(std::string(queries.quote(rule.name).c_str()) + ":") + "+" + child + "Encode(&value." + field.name + ",&error,depth+1);if(error!=\"\"){return \"\";}";
+                        decode += "{if(node.find(" + fieldName + ").isNone()){" + decodeError("缺少字段：" + rule.name) + "}let part=node.find(" + fieldName + ").unwrap();if(!" + child + "Decode(&part,&value." + field.name + ",&error,depth+1)){error=" + queries.quote(rule.name + ": ") + "+error;return false;}}";
                     }
                 encode += "return output+\"}\";";
                 decode += "return true;";

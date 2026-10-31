@@ -19,6 +19,25 @@ bool AnnotationFail(const MNode &node, const Memory::String &message)
     if (g_error.empty()) g_errorColumn = node.sourceColumn;
     return Fail(message);
 }
+
+/**
+ * @brief 限制标准 JSON 字段注解的附着位置，避免无效配置被静默忽略。
+ * @param node 已完成普通注解绑定的声明。
+ * @param eligible 是否属于派生 Json 的结构体实例字段。
+ * @return 没有该注解或附着位置有效时返回真。
+ */
+bool ValidateJsonFieldAnnotationTarget(const MNode &node, bool eligible)
+{
+    for (const auto id : node.annotations)
+    {
+        const auto &use = N(id);
+        if (use.type2 < 0) continue;
+        const auto &definition = N(use.type2);
+        if (definition.module == "std::json" && (definition.s == "Field" || definition.s == "std::json::Field") && !eligible)
+            return AnnotationFail(use, "std::json::Field 只能用于派生 Json 的结构体实例字段");
+    }
+    return true;
+}
 /**
  * @brief 归一声明所属命名空间。
  * @param node 声明。
@@ -255,8 +274,8 @@ bool ValidateAnnotations()
         Memory::Function<bool(int)> check;
         check = [&](int id) {
             const auto &node = N(id);
-            // 标准库的模型注解声明不妨碍无反射配置使用普通数据库接口。
-            if (node.kind == MNode::AnnotationDecl && node.module == "std::sql") return true;
+            // 标准库的预定义注解不妨碍关闭反射时使用基础数据库与 JSON 入口。
+            if (node.kind == MNode::AnnotationDecl && (node.module == "std::sql" || node.module == "std::json")) return true;
 #if !CHALI_WITH_REFLECTION || !STACKVM_WITH_REFLECTION
             // 裁剪构建不生成元数据；高级入口保留到 VM 执行时统一报告 panic。
             if (node.kind == MNode::AnnotationDecl || !node.annotations.empty()) return true;
@@ -321,16 +340,17 @@ bool ValidateAnnotations()
             g_annotationDeclarations.emplace(name, id);
             continue;
         }
-        if (!bindTarget(node)) return false;
+        if (!bindTarget(node) || !ValidateJsonFieldAnnotationTarget(node, false)) return false;
         if (node.kind == MNode::StructDecl || node.kind == MNode::InterfaceDecl)
         {
+            const bool json = node.kind == MNode::StructDecl && std::find(node.derives.begin(), node.derives.end(), "Json") != node.derives.end();
             for (int member : N(node.kids[0]).kids)
-                if (!bindTarget(N(member))) return false;
+                if (!bindTarget(N(member)) || !ValidateJsonFieldAnnotationTarget(N(member), json && N(member).kind == MNode::Field && N(member).type2 != 1)) return false;
         }
         else if (node.kind == MNode::EnumDecl && node.kids.size() > 1)
         {
             for (int member : N(node.kids[1]).kids)
-                if (!bindTarget(N(member))) return false;
+                if (!bindTarget(N(member)) || !ValidateJsonFieldAnnotationTarget(N(member), false)) return false;
         }
     }
     return true;

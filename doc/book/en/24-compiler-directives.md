@@ -252,6 +252,61 @@ left changed
 
 The inner value declares derived capabilities, and the enclosing type composes them from its fields. Equal contents compare equal; using them as Map keys also checks compatible hashing. Derivation uses field behavior, not merely a type name, and missing field capabilities remain compilation errors.
 
+### Generating JSON encoding and decoding rules
+
+Program field names need not match external keys. This example keeps the language member id, publishes student_id, and excludes an internal string.
+
+<!-- verify-book -->
+```chali
+import std::json;
+
+#derive(Json)
+struct Profile
+{
+    @std::json::Field(name:"student_id")
+    int64 id;
+    String name;
+    @std::json::Field(skip:true)
+    String secret;
+}
+
+void main()
+{
+    Profile profile;
+    profile.id = 7;
+    profile.name = "Ada";
+    profile.secret = "internal";
+    println("{}", profile.toJson().unwrap());
+
+    let decoded = Profile::fromJson("{\"student_id\":7,\"name\":\"Ada\"}");
+    match (decoded)
+    {
+        Ok(value) => { println("{} {}", value.id, value.name); }
+        Err::MessageError(error) => { println("{}", error.toString()); }
+        Err(_) => { println("unavailable"); }
+    }
+}
+```
+
+```text
+{"student_id":7,"name":"Ada"}
+7 Ada
+```
+
+Import std::json first. Json declares toJson; derivation also generates a static fromJson on the concrete type. Both return Result with Error: encoding produces String and decoding produces an independently owned Profile.
+
+The name annotation changes the JSON key, not profile.id. skip excludes secret from encoding and input reconstruction, leaving its default-constructed value after decoding. This annotation is restricted to instance fields of structures that derive Json; functions, static fields and unrelated types reject it.
+
+main constructs the value and prints its encoding in declaration order. The second half decodes external text. Ok receives the owned value, MessageError handles a concrete diagnostic, and Err(_) covers other Error implementations. A real application must still validate the identifier and enforce account permissions.
+
+Missing required fields, unknown keys, wrong types and out-of-range values return Err. A known skipped input key is ignored. Renamed fields use their new key. Duplicate mapped names, repeated field annotations and ASCII controls in key names are compile-time errors. Derived enum tag objects also reject unknown fields.
+
+Supported values include all base numeric types, bool, char, String, List, Set, String-keyed Map and recursively supported Option/Result. char encodes as a byte number. uint64 above the signed 64-bit range encodes as a decimal string to preserve precision. Floats must be finite and decoding checks the destination width. Enums use objects with $variant and $values in payload declaration order.
+
+Nested user types must also derive Json. References, functions, dynamic interfaces, arrays, noncopyable resources and other unsupported types fail at compile time, including skipped fields. Existing toJson/fromJson methods are never replaced. The implementation generates ordinary concrete methods and currently requires reflection code generation; basic JSON parsing remains available without it.
+
+Json derivation does not expose runtime fields through @Reflect. These are separate choices. Existing reflected types without Json derivation retain their previous serialization policy. Debug in Chapter 22 is for inspection, not JSON persistence.
+
 ## 24.6 Exercises
 
 1. What should be checked alongside derived Hash?

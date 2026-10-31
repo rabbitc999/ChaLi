@@ -64,7 +64,7 @@ CASES = [
 def main():
     """构建原生产物后逐条执行用例，最后报告通过数量。"""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--compiler', default=str(compiler_path()))
+    parser.add_argument('--compiler', '--chali', dest='compiler', default=str(compiler_path()))
     options = parser.parse_args()
     options.compiler = str(Path(options.compiler).resolve())
 

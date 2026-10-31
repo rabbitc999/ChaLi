@@ -3222,6 +3222,7 @@ namespace
 #include "semantics/reflection_metadata.cpp"
 #include "semantics/reflection_queries.cpp"
 #include "semantics/reflection_calls.cpp"
+#include "semantics/derive_json.cpp"
 #include "semantics/reflection_serialization.cpp"
 #include "semantics/derive.cpp"
 #include "semantics/macro_fragments.cpp"

@@ -1,4 +1,4 @@
-"""仅通过 VM 验证表达式临时值、严格释放和分支上的自动清理。"""
+"""通过 checked AOT 验证表达式临时值、严格释放和分支上的自动清理。"""
 from compiler_path import compiler_path
 import argparse
 import os
@@ -77,6 +77,32 @@ def main():
                 if (condition) { value.drop(); }
             }
             void main() { release(''' + condition + '''); }''')
+        for condition in ('true', 'false'):
+            run('''struct Nested { String title; };
+            struct Owned { Nested nested; List<String> names; };
+            void release(bool condition) {
+                Owned mut& value = new Owned;
+                value.nested.title = "owned";
+                value.names.push("first");
+                if (condition) { value.drop(); }
+            }
+            void main() { release(''' + condition + '''); }''')
+            run('''void release(bool condition) {
+                String mut& value = new String;
+                value = "owned";
+                if (condition) { value.drop(); }
+            }
+            void main() { release(''' + condition + '''); }''')
+        run('''struct Owned { String text; };
+            void main() {
+                Owned mut& value = new Owned;
+                value.text = "first";
+                value.drop();
+                value = new Owned;
+                value.text = "second";
+                assert(value.text == "second");
+                value.drop();
+            }''')
         for condition in ('true', 'false'):
             run('void release(bool condition) { int64 values[] = new[2]; if (condition) { values.drop(); } values.drop(); values = new[3]; values[2] = 7; assert(values[2] == 7); values.drop(); } void main() { release(' + condition + '); }')
         run('int64 calls = 0; struct Counter { int64 drop() { calls++; return calls; } }; void main() { Counter value; assert(value.drop() == 1); assert(value.drop() == 2); }')

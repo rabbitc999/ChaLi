@@ -13,9 +13,12 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--front-end-only', action='store_true')
     parser.add_argument('--cxx', default='g++')
+    parser.add_argument('--build-root', type=Path, default=ROOT / 'build')
+    parser.add_argument('--sysroot', type=Path)
     args = parser.parse_args()
     compiler = args.chali.resolve()
-    work = ROOT / 'build/chali-annotations'
+    environment = dict(os.environ, CHALI_LANG='zh')
+    work = ROOT / 'tmp/chali-annotations'
     work.mkdir(parents=True, exist_ok=True)
     checks = 0
     with tempfile.TemporaryDirectory(prefix='suite-', dir=work, ignore_cleanup_errors=os.name == 'nt') as temporary:
@@ -23,7 +26,7 @@ def main():
         source = directory / 'case.chl'
 
         def run(*arguments, expected=0):
-            result = subprocess.run([str(compiler), *map(str, arguments)], cwd=directory, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
+            result = subprocess.run([str(compiler), *map(str, arguments)], cwd=directory, env=environment, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
             assert result.returncode == expected, (arguments, result.returncode, result.stdout, result.stderr)
             return result
 
@@ -70,7 +73,7 @@ def main():
         check('@annotation A(v:uint64)\n@A(0xFFFFFFFFFFFFFFFF)\n' + main_fn)
         check('@annotation A(v:uint8)\n@A(b_11111111)\n' + main_fn)
         check('@annotation A(v:float32=-1.5)\n@A\n' + main_fn)
-        check('@annotation A(v:float64=2.0e308)\n' + main_fn, '超出声明类型范围')
+        check('@annotation A(v:float64=2.0e308)\n' + main_fn, '超出可表示范围')
         check('@annotation A(v:float32=3.5e38)\n' + main_fn, '超出声明类型范围')
         check('@annotation A(v:int32)\n@A((int32)2)\n' + main_fn)
         check('@annotation A(v:int32)\n@A((int64)2)\n' + main_fn, '类型不匹配')
@@ -86,7 +89,8 @@ def main():
         check('@annotation A\n@annotation A\n' + main_fn, '不可重新声明', location=(2, 1))
         check('@annotation A\nstruct A{};\n' + main_fn, '名称与类型冲突')
         check('struct A{};\n@annotation A\n' + main_fn, '名称与类型冲突')
-        check('@annotation String\n' + main_fn, '名称与类型冲突')
+        check('@annotation String\n' + main_fn)
+        check('struct Conflict{};\n@annotation Conflict\n' + main_fn, '名称与类型冲突')
         check('  @Unknown\n' + main_fn, '先声明后使用', location=(1, 3))
         check('@A\nint64 f(){return 0;}\n@annotation A\n' + main_fn, '先声明后使用', location=(1, 1))
         check('@annotation A(x:int32,y:String="ok")\n@A\n' + main_fn, '缺少必填参数')
@@ -109,19 +113,34 @@ def main():
         check('import one;\nimport two;\n@A\n' + main_fn, '有歧义')
         check('import one;\n@A\n' + main_fn)
         included = directory / 'included.chl'
-        included.write_text('   @Missing\nint64 f(){return 0;}\n', encoding='utf-8')
-        source.write_text('%INCLUDE "included.chl"\n' + main_fn, encoding='utf-8')
+        included.write_text('module included;\n   @Missing\nint64 f(){return 0;}\n', encoding='utf-8')
+        source.write_text('import included;\n' + main_fn, encoding='utf-8')
         diagnostic = json.loads(run('--reflection', '--diagnostics=json', source, expected=1).stdout)['diagnostics'][0]
         assert Path(diagnostic['span']['file']).resolve() == included.resolve(), diagnostic
-        assert (diagnostic['span']['line'], diagnostic['span']['column']) == (1, 4), diagnostic
+        assert (diagnostic['span']['line'], diagnostic['span']['column']) == (2, 4), diagnostic
         checks += 1
         check('@annotation A(v:String="ok")\n@A\nvoid main(){const int64 x=1;x=2;return;}', '不可变变量')
         check('@annotation A(v:String="ok")\n@A\n' + main_fn)
         check('@annotation A(v:std::lang::String="ok")\n@A\n' + main_fn)
         check('type F = uint64;\n@annotation F\n' + main_fn, '名称与类型冲突')
         unit = directory / ('annotation-unit.exe' if os.name == 'nt' else 'annotation-unit')
-        command = [args.cxx, '-std=c++17', '-O1', '-pthread', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1', '-I' + str(ROOT), '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'library'), '-I' + str(ROOT / 'source/ast'), '-I' + str(ROOT / 'source/ircode'), '-I' + str(ROOT / 'source/preprocess'), ROOT / 'tests/chali_annotations_test.cpp', ROOT / 'source/json/json.cpp', ROOT / 'build/chali-frontend/libparser.a', ROOT / 'build/chali-runtime/libast.a', ROOT / 'build/chali-stackvm/libstackvm.a', ROOT / 'build/chali-runtime/libpreprocess.a', '-lm', '-o', unit]
-        compiled = subprocess.run(list(map(str, command)), capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
+        build = args.build_root.resolve()
+        command = [args.cxx, '-std=c++17', '-O1', '-pthread', '-ffunction-sections', '-fdata-sections',
+                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1', '-DSTACKVM_AOT_ONLY=1',
+                   '-I' + str(ROOT), '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'library'), '-I' + str(ROOT / 'source/ast'),
+                   '-I' + str(ROOT / 'source/ircode'), '-I' + str(ROOT / 'source/preprocess'),
+                   ROOT / 'tests/chali_annotations_test.cpp', ROOT / 'source/json/json.cpp',
+                   build / 'chali-frontend/libparser.a', build / 'chali-runtime/libast.a', '-Wl,--start-group',
+                   build / 'chali-ircode-aot-core/libstackvm.a', build / 'chali-host-records/librecords.a', '-Wl,--end-group',
+                   build / 'chali-runtime/libpreprocess.a', '-Wl,--gc-sections', '-lm', '-o', unit]
+        if os.name == 'nt':
+            command.insert(1, '-static')
+            command[-2:-2] = ['-lwinhttp']
+        if args.sysroot: command.insert(1, '--sysroot=' + args.sysroot.resolve().as_posix())
+        compile_environment = dict(environment)
+        if args.sysroot:
+            compile_environment['PATH'] = str(args.sysroot.resolve() / 'bin') + os.pathsep + compile_environment.get('PATH', '')
+        compiled = subprocess.run(list(map(str, command)), env=compile_environment, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
         assert compiled.returncode == 0, (compiled.stdout, compiled.stderr)
         tested = subprocess.run([str(unit)], cwd=directory, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
         assert tested.returncode == 0, (tested.stdout, tested.stderr)

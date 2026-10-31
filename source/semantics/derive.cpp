@@ -211,6 +211,36 @@ bool ExpandDerivedDeclarations()
         Memory::Vector<Memory::String> names;
         for (const auto &trait : declaration.derives)
         {
+            if (trait == "Json")
+            {
+                if (!g_reflectionEnabled) return Fail("#derive(Json) 需要启用反射代码生成");
+                const auto contract = DerivedJsonInterfaceName();
+                if (contract.empty()) return Fail("#derive(Json) 需要 import std::json");
+                names.push_back(contract);
+                const auto owner = AnnotationName(declaration);
+                const auto prepare = [&](const Memory::String &generic, const Memory::Vector<Memory::String> &arguments,
+                                         Memory::String &target) -> bool {
+                    target = generic + "<";
+                    for (std::size_t i = 0; i < arguments.size(); ++i)
+                    {
+                        if (i) target += ',';
+                        target += arguments[i];
+                    }
+                    target += '>';
+                    if (!chali_generic::rewrite(target, chali_generic::session.generics, chali_generic::session.implemented,
+                                                chali_generic::session.made, chali_generic::session.pending, error)
+                        || !chali_generic::instantiate(generic, arguments, interfaces, error)) return Fail("#derive(Json) 实例化失败：" + error);
+                    return true;
+                };
+                Memory::String encoded, decoded, encoder, decoder;
+                if (!prepare("Result", { "std::lang::String", "std::lang::Error" }, encoded)
+                    || !prepare("Result", { owner, "std::lang::Error" }, decoded)
+                    || !prepare("std::json::serialize", { owner }, encoder)
+                    || !prepare("std::json::deserialize", { owner }, decoder)) return false;
+                methods += encoded + " toJson(){return " + encoder + "(&self);}\n";
+                methods += "static " + decoded + " fromJson(std::lang::String text){return " + decoder + "(text);}\n";
+                continue;
+            }
             if (trait == "Debug")
             {
                 names.push_back(DerivedDebugInterfaceName());
@@ -263,7 +293,9 @@ bool ExpandDerivedDeclarations()
             g_nodes[i].sourceColumn = declaration.sourceColumn;
             g_nodes[i].generatedDeclaration = true;
         }
-        if (status != chali::Status::Ok) return Fail("#derive 生成的方法无法解析：" + declaration.s);
+        if (status != chali::Status::Ok)
+            return Fail("#derive 生成的方法无法解析：" + declaration.s
+                        + (parser.lastError() ? "：" + parser.lastError()->message() : Memory::String{}));
         auto &target = g_nodes[id];
         if (target.kind == MNode::EnumDecl && target.kids.size() == 1)
         {
@@ -310,6 +342,11 @@ bool ValidateDerivedFields()
         const auto declaration = N(id);
         if (declaration.derives.empty()) continue;
         ReductionSourceScope location(id);
+        if (std::find(declaration.derives.begin(), declaration.derives.end(), "Json") != declaration.derives.end())
+        {
+            Memory::Set<Memory::String> visited;
+            if (!ValidateDerivedJsonType(NamedType(declaration.s), visited)) return false;
+        }
         Memory::Vector<std::pair<Memory::String, std::shared_ptr<MType>>> fields;
         if (declaration.kind == MNode::EnumDecl)
         {

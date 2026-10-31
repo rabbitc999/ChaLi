@@ -37,7 +37,7 @@
 | [`std::image`](std-image.md) | 图片处理 | 25 |
 | [`std::io`](std-io.md) | 文件与流接口 | 38 |
 | [`std::iter`](std-iter.md) | 惰性迭代器 | 109 |
-| [`std::json`](std-json.md) | JSON 文档与反射编解码 | 29 |
+| [`std::json`](std-json.md) | JSON 文档与反射编解码 | 30 |
 | [`std::lang`](std-lang.md) | 核心库 | 297 |
 | [`std::linalg`](std-linalg.md) | 向量与矩阵 | 56 |
 | [`std::linkedlist`](std-linkedlist.md) | 双向链表 | 20 |

@@ -1,4 +1,4 @@
-"""CHALI 调用桥接真实VM回归，覆盖全部调用形式与精确类型拒绝。"""
+"""ChaLi 原生调用桥接回归，覆盖全部调用形式与精确类型拒绝。"""
 from compiler_path import compiler_path
 from pathlib import Path
 import argparse
@@ -13,11 +13,12 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--fixtures', nargs='+', choices=('calls', 'operators', 'defaults'), default=['calls', 'operators', 'defaults'])
     args = parser.parse_args()
+    environment = dict(os.environ, CHALI_LANG='zh')
     checks = 0
 
     def run(command, ok=True):
         nonlocal checks
-        result = subprocess.run(list(map(str, command)), cwd=ROOT, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=240)
+        result = subprocess.run(list(map(str, command)), cwd=ROOT, env=environment, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=240)
         assert (result.returncode == 0) == ok, (command, result.stdout, result.stderr)
         checks += 1
         return result

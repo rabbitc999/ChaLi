@@ -16,7 +16,7 @@ MODULES = {
     "macros": ["chali_ast_macros", "chali_macro_parameters", "chali_macro_categories",
                "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
                "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
-               "chali_macro_declarations", "chali_macro_members", "chali_custom_derive", "chali_value_derive", "chali_debug_derive", "chali_declaration_sugars", "chali_macro_metadata",
+               "chali_macro_declarations", "chali_macro_members", "chali_custom_derive", "chali_value_derive", "chali_debug_derive", "chali_json_derive", "chali_declaration_sugars", "chali_macro_metadata",
                "chali_macro_type_metadata", "chali_macro_member_contract", "chali_macro_provenance", "chali_macro_controls", "chali_macro_control_flow",
                "chali_macro_diagnostics", "chali_macro_preview", "chali_macro_control_preview", "chali_macro_effects_preview", "chali_macro_editor",
                "chali_lsp_macro_completion", "chali_lsp_macro_highlighting"],
@@ -24,6 +24,9 @@ MODULES = {
     "borrow": ["chali_borrow_flow", "chali_analysis_diagnostics", "chali_reference_values"],
     "memory": ["chali_type_memory", "chali_resource_lifetime"],
     "generics": ["chali_generic_monomorphization", "chali_generic_scope", "chali_language_move", "chali_tuple_returns"],
+    "reflection": ["chali_json_derive", "chali_reflection_features", "chali_reflection_metadata", "chali_reflection_declarations",
+                   "chali_reflection_queries", "chali_reflection_calls", "chali_reflection_e2e", "chali_reflection_students",
+                   "chali_reflection_serialization", "chali_annotations"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
     "lsp": ["chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
@@ -42,6 +45,9 @@ def main():
     parser.add_argument("--random-recheck", type=int, default=0, help="从已通过门禁抽样复测的次数")
     parser.add_argument("--seed", type=int, default=20261013)
     parser.add_argument("--jobs", type=positive_jobs, default=None, help="并行工作数，默认最多四个；1 为串行")
+    parser.add_argument("--build-root", type=Path, help="需要链接前端库的模块门禁使用的隔离构建目录")
+    parser.add_argument("--cxx", help="模块 C++ 单元使用的编译器")
+    parser.add_argument("--sysroot", type=Path, help="模块 C++ 单元使用的工具链 sysroot")
     args = parser.parse_args()
     try:
         jobs = args.jobs if args.jobs is not None else default_jobs()
@@ -68,6 +74,10 @@ def main():
                     commands[script].append("--lsp-only")
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
+                if script == "chali_annotations":
+                    if args.build_root: commands[script] += ["--build-root", str(args.build_root.resolve())]
+                    if args.cxx: commands[script] += ["--cxx", args.cxx]
+                    if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]
             if module == "lsp":
                 for script in ("lspCancellation", "semanticProviders", "macroHighlighting"):
                     commands[script] = ["node", str(ROOT / "vscode" / "test" / (script + ".js"))]

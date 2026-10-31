@@ -2122,6 +2122,7 @@ ast::NodePtr LowerResourceDrop(int receiver)
     else if (type->kind == MType::Ptr && IsStandardOpcode(type->elem, "String"))
     {
         if (type->readOnly) return Fail("只读引用不能 drop String 对象"), Bad();
+        clearOwner = true;
         const auto slot = AllocateName("__chali_drop_string_object");
         const auto pointer = ast::Node::var(slot);
         const auto actions = ast::Node::block({ ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
@@ -2133,6 +2134,7 @@ ast::NodePtr LowerResourceDrop(int receiver)
     else if (type->kind == MType::Ptr && type->elem && type->elem->kind == MType::Struct)
     {
         if (type->readOnly) return Fail("drop 只能用在可写引用（`T mut&`）或运行时数组（`T[]`）上；只读引用（`T const&`）不持有对象"), Bad();
+        clearOwner = true;
         // new 创建的拥有资源对象：先按活动载荷析构，再释放对象本身的分配块。
         const auto slot = AllocateName("__chali_drop_object");
         Memory::Vector<ast::NodePtr> out{
@@ -2169,6 +2171,7 @@ ast::NodePtr LowerResourceDrop(int receiver)
     }
     else
     {
+        clearOwner = true;
         removal = ast::Node::freeMemory(ownerSlot ? ast::Node::loadInt(ownerSlot) : LowerRawExpr(receiver));
     }
 

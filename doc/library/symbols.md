@@ -457,35 +457,36 @@
 | [std::iter::takeWhile](std-iter.md#api-38) | `Iter<T> takeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::tryFold](std-iter.md#api-74) | `Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)` |
 | [std::iter::zip](std-iter.md#api-53) | `Iter<(T,U)> zip<T,U>(Iter<T> left, Iter<U> right)` |
-| [std::json::JsonValue::asBool](std-json.md#api-17) | `Option<bool> asBool()` |
-| [std::json::JsonValue::asBytes](std-json.md#api-19) | `Option<std::lang::List<uint8>> asBytes()` |
-| [std::json::JsonValue::asDateTime](std-json.md#api-20) | `Option<std::lang::String> asDateTime()` |
-| [std::json::JsonValue::asFloat64](std-json.md#api-16) | `Option<float64> asFloat64()` |
-| [std::json::JsonValue::asInt](std-json.md#api-15) | `Option<int64> asInt()` |
-| [std::json::JsonValue::asString](std-json.md#api-18) | `Option<std::lang::String> asString()` |
-| [std::json::JsonValue::at](std-json.md#api-23) | `Option<JsonValue> at(int64 index)` |
-| [std::json::JsonValue::close](std-json.md#api-3) | `bool close()` |
-| [std::json::JsonValue::dump](std-json.md#api-27) | `std::lang::String dump()` |
-| [std::json::JsonValue::find](std-json.md#api-21) | `Option<JsonValue> find(std::lang::String key)` |
-| [std::json::JsonValue::findBytes](std-json.md#api-22) | `Option<JsonValue> findBytes(std::lang::List<uint8> key)` |
-| [std::json::JsonValue::isArray](std-json.md#api-10) | `bool isArray()` |
-| [std::json::JsonValue::isBool](std-json.md#api-6) | `bool isBool()` |
-| [std::json::JsonValue::isDateTime](std-json.md#api-13) | `bool isDateTime()` |
-| [std::json::JsonValue::isFloat](std-json.md#api-8) | `bool isFloat()` |
-| [std::json::JsonValue::isInt](std-json.md#api-7) | `bool isInt()` |
-| [std::json::JsonValue::isNull](std-json.md#api-5) | `bool isNull()` |
-| [std::json::JsonValue::isObject](std-json.md#api-11) | `bool isObject()` |
-| [std::json::JsonValue::isString](std-json.md#api-9) | `bool isString()` |
-| [std::json::JsonValue::isTable](std-json.md#api-12) | `bool isTable()` |
-| [std::json::JsonValue::isValid](std-json.md#api-2) | `bool isValid()` |
-| [std::json::JsonValue::iterator](std-json.md#api-24) | `Option<JsonValue> iterator(int64 index)` |
-| [std::json::JsonValue::keyAt](std-json.md#api-25) | `Option<std::lang::String> keyAt(int64 index)` |
-| [std::json::JsonValue::keyBytesAt](std-json.md#api-26) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
-| [std::json::JsonValue::kind](std-json.md#api-4) | `int64 kind()` |
-| [std::json::JsonValue::len](std-json.md#api-14) | `int64 len()` |
-| [std::json::deserialize](std-json.md#api-1) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
-| [std::json::parse](std-json.md#api-28) | `Result<JsonValue, std::lang::Error> parse(std::lang::String text)` |
-| [std::json::serialize](std-json.md#api-0) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
+| [std::json::Json::toJson](std-json.md#api-0) | `Result<String,std::lang::Error> toJson()` |
+| [std::json::JsonValue::asBool](std-json.md#api-18) | `Option<bool> asBool()` |
+| [std::json::JsonValue::asBytes](std-json.md#api-20) | `Option<std::lang::List<uint8>> asBytes()` |
+| [std::json::JsonValue::asDateTime](std-json.md#api-21) | `Option<std::lang::String> asDateTime()` |
+| [std::json::JsonValue::asFloat64](std-json.md#api-17) | `Option<float64> asFloat64()` |
+| [std::json::JsonValue::asInt](std-json.md#api-16) | `Option<int64> asInt()` |
+| [std::json::JsonValue::asString](std-json.md#api-19) | `Option<std::lang::String> asString()` |
+| [std::json::JsonValue::at](std-json.md#api-24) | `Option<JsonValue> at(int64 index)` |
+| [std::json::JsonValue::close](std-json.md#api-4) | `bool close()` |
+| [std::json::JsonValue::dump](std-json.md#api-28) | `std::lang::String dump()` |
+| [std::json::JsonValue::find](std-json.md#api-22) | `Option<JsonValue> find(std::lang::String key)` |
+| [std::json::JsonValue::findBytes](std-json.md#api-23) | `Option<JsonValue> findBytes(std::lang::List<uint8> key)` |
+| [std::json::JsonValue::isArray](std-json.md#api-11) | `bool isArray()` |
+| [std::json::JsonValue::isBool](std-json.md#api-7) | `bool isBool()` |
+| [std::json::JsonValue::isDateTime](std-json.md#api-14) | `bool isDateTime()` |
+| [std::json::JsonValue::isFloat](std-json.md#api-9) | `bool isFloat()` |
+| [std::json::JsonValue::isInt](std-json.md#api-8) | `bool isInt()` |
+| [std::json::JsonValue::isNull](std-json.md#api-6) | `bool isNull()` |
+| [std::json::JsonValue::isObject](std-json.md#api-12) | `bool isObject()` |
+| [std::json::JsonValue::isString](std-json.md#api-10) | `bool isString()` |
+| [std::json::JsonValue::isTable](std-json.md#api-13) | `bool isTable()` |
+| [std::json::JsonValue::isValid](std-json.md#api-3) | `bool isValid()` |
+| [std::json::JsonValue::iterator](std-json.md#api-25) | `Option<JsonValue> iterator(int64 index)` |
+| [std::json::JsonValue::keyAt](std-json.md#api-26) | `Option<std::lang::String> keyAt(int64 index)` |
+| [std::json::JsonValue::keyBytesAt](std-json.md#api-27) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
+| [std::json::JsonValue::kind](std-json.md#api-5) | `int64 kind()` |
+| [std::json::JsonValue::len](std-json.md#api-15) | `int64 len()` |
+| [std::json::deserialize](std-json.md#api-2) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
+| [std::json::parse](std-json.md#api-29) | `Result<JsonValue, std::lang::Error> parse(std::lang::String text)` |
+| [std::json::serialize](std-json.md#api-1) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
 | [std::lang::Add::leftAdd](std-lang.md#api-252) | `R leftAdd(T value)` |
 | [std::lang::And::leftBitAnd](std-lang.md#api-274) | `R leftBitAnd(T value)` |
 | [std::lang::Any::clear](std-lang.md#api-235) | `void clear()` |

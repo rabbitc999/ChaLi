@@ -184,7 +184,7 @@ struct MReflectionCalls
                 return;
             }
             // 一个接口调用永远通过普通接口分派；这里仅检查实际实现的权限。
-            body += "int64 actual=__reflect_actualType<" + owner + ">(obj);";
+            body += "int64 actual=__reflect_actualType<" + metadata.named(owner) + ">(obj);";
             Memory::String known = "false";
             for (const auto &entry : g_structs)
             {
@@ -210,7 +210,7 @@ struct MReflectionCalls
                 {
                     auto &candidate = candidates.back();
                     candidate.params.clear();
-                    candidate.expression = "__reflect_unary<" + owner + "," + InferenceTypeText(method.result) + ">";
+                    candidate.expression = "__reflect_unary<" + metadata.named(owner) + "," + chali_generic::canonicalType(InferenceTypeText(method.result)) + ">";
                     candidate.fixedArgs = "obj," + queries.quote(method.name);
                     if (method.params.size() == 1 && method.params[0]->kind == MType::Struct)
                         candidate.receiverOperand = method.params[0]->name;

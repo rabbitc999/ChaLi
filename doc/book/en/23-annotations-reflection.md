@@ -109,6 +109,8 @@ The next queries intentionally fail: score is not String, and missing is not a f
 
 Parse external data and validate structure and field constraints. An integer age can still be invalid, and an existing class ID can still exceed a teacher’s scope. Select response fields explicitly; reflected password hashes must not be exported automatically.
 
+Chapter 24 uses #derive(Json) and @std::json::Field to select external keys and skipped fields. That choice does not grant runtime field-query access: @Reflect remains independent. Successful decoding still needs business and permission checks.
+
 ## 23.5 Metadata and generation responsibilities
 
 Use reflection for repetitive type mappings and keep business decisions at explicit function boundaries. Chapter 25 separates field validation, related records and authorization in a database-backed application.
@@ -121,7 +123,7 @@ Separate external parsing, validation, business-object mutation and output selec
 
 Annotations require an interpreter in application logic. Route defines declaration data; directly calling health does not demonstrate HTTP route registration. A service still needs to consume the information, establish dispatch and handle requests. Declaring metadata and executing business behavior are separate actions.
 
-Runtime reflection and compile-time generation also have different roles. The getField and setField examples request typed access by field name at runtime. They do not demonstrate compiler iteration over heterogeneous fields to generate static code. That capability belongs to macro and compile-time reflection extensions not yet delivered. Use existing derive directives under their current contracts; reflection APIs do not imply arbitrary custom derives. See the [reflection reference (Chinese)](../../19-reflection.md) for interfaces.
+Runtime reflection and compile-time generation operate at different stages. getField and setField request typed access by name at runtime; Chapter 22 uses $fields and $for to inspect fields at compile time, and Chapter 24 uses member macros and interface derivation to generate ordinary methods. Generated code follows type, borrowing and resource checks. Runtime field queries still require explicit exposure; compile-time generation does not use runtime field-name lookup. See the [reflection reference (Chinese)](../../19-reflection.md).
 
 ### Summary
 

@@ -6,7 +6,7 @@
 
 [文档目录](README.md) · [Context-typed literals, operator inference and macros](25-literals-operators-macros.md)
 
-This guide covers integer literals now take their type from context, operator overloading infers more on its own (commutativity, comparison duality, right-hand switches, multiple result types), and the macro DSL has exactly one form. The first two let you write fewer casts and fewer right-hand interfaces; the third leaves exactly one way to write a macro and halves the diagnostic surface.
+This guide describes context-typed integer literals, operator inference, and hygienic macro parameters, declarations and derivation. The operator sections cover commutativity, comparison duality, right-hand switches and result types; the macro sections explain each form at its actual expansion stage.
 
 
 ## Integer literals take their type from context
@@ -549,3 +549,14 @@ The standard Debug interface declares String debug(). #derive(Debug) generates o
 Derivation rejects an existing debug method, arrays, references, function values and containers without a Debug contract. Inspection does not grant copy permission for resources. Its text is not a stable cross-version format, JSON encoding or Error.toString. Generated code follows normal type, borrowing and cleanup checks.
 
 See the [macro tutorial](../book/en/22-macros.md) and [Debug regression](../../tests/chali_debug_derive.py).
+
+
+## Json derivation field protocol
+
+With std::json imported, #derive(Json) implements Json.toJson() and generates a static fromJson(String) on the concrete structure or enum. They return Result<String, Error> and Result<T, Error>. This currently requires reflection code generation but does not expose runtime fields through @Reflect.
+
+Instance fields accept @std::json::Field(name:"external_name", skip:false). An empty name keeps the member name. Skipped fields are neither encoded nor reconstructed; they retain default-constructed values, and known skipped input keys are ignored. Duplicate mapped names or annotations, controls in key names, and use on functions/static fields/unrelated types fail at compile time. Missing required fields, unknown keys and type/range errors return Err. Enums use objects containing only $variant and $values, validating both tag and payload count.
+
+Supported values include all basic numerics, bool, char, standard String, List, Set, String-keyed Map and recursively supported Option/Result. char uses a byte number; uint64 above the signed range uses a precise decimal string. Nonfinite float encoding and out-of-range float decoding fail. Nested user types must also derive Json. References, functions, dynamic interfaces, arrays, noncopyable resources and other unsupported values are compile-time errors, even when skipped. Existing toJson/fromJson methods are not overwritten.
+
+Reflected types without Json derivation keep their existing field policy. Basic JSON parsing remains available with --no-reflection. See the [compiler-directives tutorial](../book/en/24-compiler-directives.md) and [JSON derive regression](../../tests/chali_json_derive.py).

@@ -55,6 +55,10 @@ void main(){alpha::Box<String> value;value.value.caller=9;assert(value.value.cal
         ('standard_module','''import std::json;
 struct String{int64 tag;}
 void main(){std::lang::String text="{\\\"value\\\":7}";let value=std::json::parse(text).unwrap();assert(value.find("value").unwrap().asInt().unwrap()==7);}''',None),
+        ('reflection_interface','''import std::reflect;
+@Reflect interface View{int64 read(){return 7;}}
+@Reflect struct Record:View{}
+void main(){Record mut& object=new Record;Any holder;holder.set(&object);View const& view=holder.getReference();List<std::reflect::ReflectValue> args;assert(std::reflect::callInterfaceConst<View>(view,"read",args).unwrap().asI64().unwrap()==7);object.drop();}''',None),
         ('ambiguous','''import alpha;
 import beta;
 struct Box<T>{T value;}
