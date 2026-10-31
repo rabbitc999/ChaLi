@@ -1,7 +1,7 @@
 # ChaLi compiler
 
-This project was generated from `chali.gram`. It includes the matching StackVM,
-preprocessor, big-number runtime, the referenced `lang.chl` template, and core host glue.
+This project was generated from `chali.gram`. It includes the checked-AST to LLVM backend,
+native runtime services, preprocessor, big-number runtime, the referenced `lang.chl` template, and host adapters.
 Standard modules, including `std::collections` and `std::reflect`, are embedded in the compiler.
 
 SQLite and miniz sources are downloaded into the build directory from fixed releases in
@@ -32,4 +32,14 @@ cmake --build build --config Release
 
 使用 `chali new hello-chali` 新建应用工程，再用 `chali hello-chali/src/main.chl` 运行。新建指令无需 Python 或磁盘模板，目标目录必须不存在。完整的 test / fmt 等开发命令由仓库统一工具链 chali 提供。
 
-VM 核心与大数、SQLite 宿主后端分别构建为静态目标；标准胶水通过通用不透明记录接口访问宿主对象。
+原生运行时核心与大数、SQLite 宿主后端分别构建为静态目标；标准胶水通过通用不透明记录接口访问宿主对象。
+
+## C 头文件导入
+
+独立工程包含 `gen abi` 的命令分发和 `tools/abi_import.hpp` 实现，无需本体编译器或 Python 预先生成声明：
+
+```sh
+chali gen abi native.h --library ./native.dll --out native.chl
+```
+
+导入器检查固定宽度标量、简单值结构体、整数枚举及支持的函数原型。不支持的 C 结构返回失败，原有输出保持不变。调用实际库时，仍需按其目标 ABI 准备动态库，并核对缓冲区长度、回调和分配释放约定。

@@ -36,6 +36,12 @@ def main():
         assert not (project / 'glue/std_parse.cpp').exists()
         assert not (project / 'glue/std_parse.hpp').exists()
         assert (project / 'abi/abi_parse.c').is_file()
+        assert (project / 'compiler_entry.cpp').is_file()
+        assert (project / 'tools/abi_import.hpp').is_file()
+        cmake = (project / 'CMakeLists.txt').read_text(encoding='utf-8')
+        assert 'add_executable(chali chali_main.cpp compiler_entry.cpp)' in cmake
+        assert 'COMPILE_DEFINITIONS CHALI_FRONT_END_NO_MAIN=1' in cmake
+        run(args.cxx, '-std=c++17', '-fsyntax-only', '-I' + str(project), project / 'compiler_entry.cpp')
         embedded = (project / 'chali_stdlib_embedded.cpp').read_text(encoding='utf-8')
         assert '"ircode/native_protocol.hpp"' in embedded
         assert '"ircode/runtime_internal.hpp"' in embedded

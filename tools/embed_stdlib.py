@@ -156,6 +156,8 @@ def asset_disk_path(relative):
 # 生成器（chali-generator）在运行期需要的运行时资产。相对路径键与仓库布局一致，
 # 磁盘读失败时按"整段后缀"或"唯一 basename"回退到这里的文本。
 GENERATOR_ASSETS = [
+    "generator/compiler_entry.cpp",
+    "tools/abi_import.hpp",
     "tools/chali_manual.json",
     "tools/chali_stdlib_api.json",
     "chali_glue.hpp",

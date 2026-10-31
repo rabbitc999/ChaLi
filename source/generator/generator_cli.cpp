@@ -638,6 +638,8 @@ int runCli(int argc, char **argv)
     };
     bool ok = true;
     ok = copy(mc / "VERSION", "VERSION") && ok;
+    ok = copy(mc / "source/generator/compiler_entry.cpp", "compiler_entry.cpp") && ok;
+    ok = copy(mc / "tools/abi_import.hpp", "tools/abi_import.hpp") && ok;
     for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime_linux_arm64.ll", "runtime.c", "native_runtime.cpp", "backend_profile.cpp"})
         ok = copy(mc / "source/aot" / name, Memory::String("aot/") + name) && ok;
     ok = copy(mc / "build/chali-aot-host/assets.txt", "aot/host_assets.txt") && ok;
