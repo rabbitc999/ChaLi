@@ -834,6 +834,80 @@ int main(int argc, char **argv)
             std::printf("C matrix results: %d allocation failures including partial ownership and malformed shape rejection passed\n", failures);
         }
         {
+            NativeServices services;
+            services.emplace("native.rev.v1", &objects.nativeRecordRevision);
+            context.hostServices = &services;
+            int64_t source[] = {0, 1, 65, 255, -128, 127, -32768, 32767, -2147483647 - 1,
+                                2147483647, INT64_MIN, INT64_MAX, -1,
+                                0, int64_t(UINT64_C(0x8000000000000000)), int64_t(UINT64_C(0x7ff0000000000000)),
+                                int64_t(UINT64_C(0xfff0000000000000)), int64_t(UINT64_C(0x7ff8000000001234)), 1};
+            unsigned char sourceKinds[sizeof(source) / sizeof(source[0])] = {};
+            for (std::size_t i = 13; i < sizeof(sourceKinds); ++i) sourceKinds[i] = ChaliAbiSlotFloat;
+            const auto handle = chali_abi_list_from_numbers(&frame, source, sourceKinds, sizeof(sourceKinds));
+            assert(handle && !runtime.status);
+            std::size_t required = 0;
+            assert(chali_abi_list_numbers(&frame, handle, nullptr, nullptr, 0, &required) && required == sizeof(sourceKinds));
+            int64_t copied[sizeof(sourceKinds)] = {};
+            unsigned char copiedKinds[sizeof(sourceKinds)] = {};
+            assert(chali_abi_list_numbers(&frame, handle, copied, copiedKinds, sizeof(copiedKinds), &required));
+            assert(std::memcmp(source, copied, sizeof(source)) == 0 &&
+                   std::memcmp(sourceKinds, copiedKinds, sizeof(sourceKinds)) == 0);
+            NativeCallContextImpl host(context, &invoker);
+            collection_glue::NumericListView numeric;
+            collection_glue::numericListView(host, handle, &numeric);
+            const auto *disabled = std::getenv("CHALI_NO_NUMERIC_LIST_STORAGE");
+            assert((numeric.header != nullptr) == !(disabled && *disabled));
+            copied[0] = 918; copiedKinds[0] = 17;
+            assert(!chali_abi_list_numbers(&frame, handle, copied, copiedKinds, 1, &required) &&
+                   required == sizeof(sourceKinds) && copied[0] == 918 && copiedKinds[0] == 17);
+            reset();
+            source[0] = 99;
+            assert(chali_abi_list_numbers(&frame, handle, copied, copiedKinds, sizeof(copiedKinds), &required) && copied[0] == 0);
+            const auto clone = host.cloneNativeRecord(handle);
+            assert(clone && chali_abi_record_release(&frame, handle));
+            assert(chali_abi_list_numbers(&frame, clone, copied, copiedKinds, sizeof(copiedKinds), &required) && copied[0] == 0);
+            assert(chali_abi_record_release(&frame, clone));
+            assert(!chali_abi_list_numbers(&frame, handle, copied, copiedKinds, sizeof(copiedKinds), &required));
+            reset();
+            const unsigned char invalidKind[] = {2};
+            assert(!chali_abi_list_from_numbers(&frame, source, invalidKind, 1));
+            reset();
+            assert(!chali_abi_list_from_numbers(&frame, nullptr, nullptr, 1));
+            reset();
+            assert(!chali_abi_list_from_numbers(&frame, source, nullptr, SIZE_MAX));
+            reset();
+            const auto empty = chali_abi_list_from_numbers(&frame, nullptr, nullptr, 0);
+            assert(empty && chali_abi_list_numbers(&frame, empty, nullptr, nullptr, 0, &required) && !required);
+            assert(chali_abi_record_release(&frame, empty));
+            const int64_t integers[] = {0, 65, 255};
+            const auto integerList = chali_abi_list_from_numbers(&frame, integers, nullptr, 3);
+            unsigned char bytes[3] = {};
+            assert(integerList && chali_abi_list_bytes(&frame, integerList, bytes, sizeof(bytes), &required) &&
+                   required == 3 && bytes[0] == 0 && bytes[1] == 65 && bytes[2] == 255);
+            assert(chali_abi_record_release(&frame, integerList));
+            const auto textList = chali_abi_list_from_bytes(&frame, nullptr, 0);
+            assert(textList && chali_abi_list_append_text(&frame, textList, "owned", 5));
+            copied[0] = 918; copiedKinds[0] = 17;
+            assert(!chali_abi_list_numbers(&frame, textList, copied, copiedKinds, sizeof(copiedKinds), &required) &&
+                   copied[0] == 918 && copiedKinds[0] == 17);
+            reset();
+            assert(chali_abi_record_release(&frame, textList));
+            int failures = 0;
+            for (int point = 0; point < 64; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = chali_abi_list_from_numbers(&frame, source, sourceKinds, sizeof(sourceKinds));
+                arena.remaining = -1;
+                if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+                assert(runtime.status && point != 63);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 3);
+            std::printf("C numeric lists: scalar extrema, IEEE bit patterns, compact/fallback layout, atomic outputs, copies and %d failure points passed\n", failures);
+            context.hostServices = nullptr;
+        }
+        {
             const std::string path = argv[1];
             const auto pathText = chali_abi_string(&frame, path.data(), path.size());
             const auto modeText = chali_abi_string(&frame, "wb", 2);

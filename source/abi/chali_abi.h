@@ -139,6 +139,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_RECORD_CLONE  UINT64_C(64)  ///< 宿主记录自动独立复制服务。
 #define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
 #define CHALI_ABI_CAP_LIST_TEXT     UINT64_C(256) ///< 文本列表直接追加服务。
+#define CHALI_ABI_CAP_LIST_NUMBERS  UINT64_C(512) ///< 保留整数及浮点位模式的数值列表服务。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -481,6 +482,31 @@ int CHALI_ABI_CALL chali_abi_list_bytes(const ChaliAbiFrame *frame, int64_t hand
  * @return 拥有型 List<uint8> 句柄，交还语言或使用 chali_abi_record_release 释放；失败为零。
  */
 int64_t CHALI_ABI_CALL chali_abi_list_from_bytes(const ChaliAbiFrame *frame, const unsigned char *data, size_t length);
+
+/**
+ * @brief 查询或复制非拥有数值列表，保留整数及 IEEE-754 双精度位模式，不做数值转换。
+ * @param frame 当前调用帧。
+ * @param handle 数值列表句柄；文本、拥有值和聚合元素被拒绝。
+ * @param bits 接收八字节位模式；与 kinds 同为空且 capacity 为零时仅查询。
+ * @param kinds 接收 ChaliAbiSlotInteger 或 ChaliAbiSlotFloat，复制时不得为空。
+ * @param capacity 两个输出数组各自可容纳的元素数量。
+ * @param required 接收实际元素数，不得为空。
+ * @return 成功为一；无效元素或容量不足时为零，两个输出数组均不改写。
+ * @note 输出数组由宿主拥有且不得相互重叠；调用方负责将整数位模式缩窄为语言元素类型。
+ */
+int CHALI_ABI_CALL chali_abi_list_numbers(const ChaliAbiFrame *frame, int64_t handle,
+                                        int64_t *bits, unsigned char *kinds, size_t capacity, size_t *required);
+/**
+ * @brief 从独立数值跨度复制为拥有型列表，直接使用集合数值槽，不构造通用原生值。
+ * @param frame 当前调用帧。
+ * @param bits 八字节整数或浮点位模式，非空跨度不得为空。
+ * @param kinds 各元素为 ChaliAbiSlotInteger 或 ChaliAbiSlotFloat；为空时全部按整数处理。
+ * @param count 元素数量。
+ * @return 独立拥有型列表句柄；失败为零且不发布部分列表，成功后交还语言或以 record_release 释放。
+ * @note bool、单字节 char 和各宽度整数使用整数槽；float32 先扩展为 double，保留扩展后的位模式。
+ */
+int64_t CHALI_ABI_CALL chali_abi_list_from_numbers(const ChaliAbiFrame *frame,
+                                                  const int64_t *bits, const unsigned char *kinds, size_t count);
 
 /**
  * @brief 将借用文本复制为独立的 List<String> 元素，成功构造后才追加。

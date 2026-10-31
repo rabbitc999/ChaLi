@@ -470,6 +470,76 @@ try
 }
 
 /**
+ * @brief 通过集合存储查询或复制数值位模式，异常留在 C 边界内。
+ * @param frame 当前调用帧。
+ * @param handle 数值列表句柄。
+ * @param bits 接收位模式，查询时为空。
+ * @param kinds 接收数值类别，查询时为空。
+ * @param capacity 输出元素容量。
+ * @param required 接收实际元素数量，不得为空。
+ * @return 成功为一，失败为零并保留诊断。
+ */
+int chali_abi_list_numbers(const ChaliAbiFrame *frame, int64_t handle, int64_t *bits,
+                           unsigned char *kinds, size_t capacity, size_t *required)
+try
+{
+    if (!required || ((!bits || !kinds) && (bits || kinds || capacity)) || capacity > SIZE_MAX / sizeof(int64_t))
+    {
+        chali_abi_mark_failure(frame, "invalid numeric list output");
+        return 0;
+    }
+    *required = 0;
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    if (!collection_glue::copyListNumbers(*host, handle, bits, kinds, capacity, *required))
+    {
+        chali_abi_mark_failure(frame, "numeric list read failed");
+        return 0;
+    }
+    return 1;
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
+ * @brief 直接从 C 数值跨度构造完整拥有列表，异常不越过调用边界。
+ * @param frame 当前调用帧。
+ * @param bits 输入整数或浮点位模式。
+ * @param kinds 数值类别，空指针表示全部整数。
+ * @param count 元素数量。
+ * @return 独立列表句柄，失败为零。
+ */
+int64_t chali_abi_list_from_numbers(const ChaliAbiFrame *frame, const int64_t *bits,
+                                    const unsigned char *kinds, size_t count)
+try
+{
+    if ((count && !bits) || count > SIZE_MAX / sizeof(int64_t))
+    {
+        chali_abi_mark_failure(frame, "invalid numeric list input");
+        return 0;
+    }
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host)) return 0;
+    const auto handle = collection_glue::makeNumericList(*host, bits, kinds, count);
+    if (!handle) chali_abi_mark_failure(frame, "numeric list allocation failed");
+    return handle;
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return 0;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return 0;
+}
+
+/**
  * @brief 在最终列表元素中复制文本，省去通用原生值中间封装。
  * @param frame 当前调用帧。
  * @param handle 文本列表句柄。

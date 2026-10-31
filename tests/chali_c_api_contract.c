@@ -86,6 +86,8 @@ int main(void)
     assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
     changed.capabilities = CHALI_ABI_CAP_LIST_TEXT;
     assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
+    changed.capabilities = CHALI_ABI_CAP_LIST_NUMBERS;
+    assert(chali_abi_check(&changed, &error) == ChaliAbiOk);
     changed.capabilities = UINT64_C(1) << 63;
     assert(chali_abi_check(&changed, &error) == ChaliAbiIncompatible);
     assert(strstr(text, "capability") != NULL);

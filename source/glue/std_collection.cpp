@@ -1284,6 +1284,117 @@ std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char 
 }
 
 /**
+ * @brief 完整验证输入后构造数值列表，使用与语言数值追加相同的有界倍增策略。
+ * @param host 当前运行时上下文。
+ * @param bits 数值原始位模式。
+ * @param kinds 整数为零、浮点为一，空指针表示全整数。
+ * @param count 元素数量。
+ * @return 完整列表句柄，失败为零，未发布对象由本地所有者清理。
+ */
+std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_t *bits,
+                             const unsigned char *kinds, std::size_t count)
+{
+    auto object = std::make_unique<Record>();
+    object->kind = StorageKind::Vector;
+    const auto maximum = listStorageMaximum(*object);
+    if ((count && !bits) || count > maximum)
+    {
+        host.fail("数值列表长度或输入无效");
+        return 0;
+    }
+    for (std::size_t index = 0; kinds && index < count; ++index)
+        if (kinds[index] > 1)
+        {
+            host.fail("数值列表元素类别无效");
+            return 0;
+        }
+    const auto *disabled = std::getenv("CHALI_NO_NUMERIC_LIST_STORAGE");
+    object->scalarItemsActive = !(disabled && *disabled);
+    for (std::size_t index = 0; index < count; ++index)
+    {
+        const auto capacity = object->scalarItemsActive ? object->scalarItems.capacity() : object->items.capacity();
+        if (index == capacity)
+        {
+            const auto grown = capacity > maximum / 2u ? maximum : capacity * 2u;
+            const auto next = std::max({index + 1u, grown, std::min<std::size_t>(8, maximum)});
+            if (object->scalarItemsActive) object->scalarItems.reserve(next);
+            else object->items.reserve(next);
+        }
+        const unsigned char floating = kinds ? kinds[index] : 0;
+        if (object->scalarItemsActive)
+            object->scalarItems.push_back({bits[index], floating});
+        else
+        {
+            auto &value = object->items.emplace_back();
+            value.isFloat = floating != 0;
+            if (floating) std::memcpy(&value.real, bits + index, sizeof(value.real));
+            else value.integer = bits[index];
+        }
+    }
+    const auto handle = host.makeNativeRecord(descriptor(StorageKind::Vector), object.get());
+    if (handle) object.release();
+    return handle;
+}
+
+/**
+ * @brief 数值列表在完整验证后有界复制，无活动元素视图时保留紧凑布局。
+ * @param host 当前运行时上下文。
+ * @param handle 数值列表句柄。
+ * @param bits 接收位模式；查询时为空。
+ * @param kinds 接收数值类别；查询时为空。
+ * @param capacity 两个输出数组的元素容量。
+ * @param required 接收实际长度。
+ * @return 查询或复制成功为真，失败不改写输出数组。
+ */
+bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
+                      unsigned char *kinds, std::size_t capacity, std::size_t &required)
+{
+    required = 0;
+    State state(host);
+    Record *object = state.objects ? state.objects->find(handle) : nullptr;
+    if (!object || object->kind != StorageKind::Vector)
+    {
+        host.fail("数值列表句柄无效");
+        return false;
+    }
+    if (!object->elementViews.empty() && !nativeRefreshViews(state, *object))
+    {
+        if (!state.error.empty()) host.fail(state.error);
+        return false;
+    }
+    required = listItemCount(*object);
+    if (!object->scalarItemsActive)
+        for (const auto &value : object->items)
+            if (value.isText || value.ownsObject || !value.fields.empty())
+            {
+                host.fail("数值列表不接受文本、拥有值或聚合元素");
+                return false;
+            }
+    if (!bits && !kinds && capacity == 0) return true;
+    if (!bits || !kinds || capacity < required)
+    {
+        host.fail("数值列表输出缓冲区不足");
+        return false;
+    }
+    for (std::size_t index = 0; index < required; ++index)
+    {
+        if (object->scalarItemsActive)
+        {
+            bits[index] = object->scalarItems[index].bits;
+            kinds[index] = object->scalarItems[index].floating;
+        }
+        else
+        {
+            const auto &value = object->items[index];
+            kinds[index] = value.isFloat ? 1 : 0;
+            if (value.isFloat) std::memcpy(bits + index, &value.real, sizeof(value.real));
+            else bits[index] = value.integer;
+        }
+    }
+    return true;
+}
+
+/**
  * @brief 物化现有元素视图后验证完整字节范围，再进行有界复制。
  * @param host 当前运行时上下文。
  * @param handle 列表句柄。

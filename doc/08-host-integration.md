@@ -106,3 +106,7 @@ ChaLi 函数值的捕获环境和错误通道。C API 模块调用运行时函�
 `chali_abi_record_probe` 借用类型匹配的存活记录；零句柄、未知类型、失效句柄或类型不匹配返回空，不覆盖已有错误。它用于可失败的有效性查询，仍要求有效调用帧，并沿用记录借用期。需要此服务时声明 `CHALI_ABI_CAP_RECORD_PROBE`。严格借用仍用 `chali_abi_record_borrow`，后者对无效记录报告错误。
 
 `chali_abi_list_append_text` 将借用字节直接复制为一个独立的 `List<String>` 元素，保留零字节，不经过通用原生值封装。调用方须传入匹配的列表类型；运行时核对句柄、活动迭代借用和输入长度，完整构造元素后才追加。声明 `CHALI_ABI_CAP_LIST_TEXT` 使用该服务，输入缓冲仍由调用方拥有。
+
+`chali_abi_list_numbers` 使用两个宿主数组接收数值：`int64_t bits[]` 保存整数或 IEEE-754 双精度位模式，`unsigned char kinds[]` 保存 `ChaliAbiSlotInteger`／`ChaliAbiSlotFloat`。两个指针同为空且容量为零时查询元素数；实际复制要求两个数组都足够大且不重叠。接口验证全部元素后才写入，拒绝文本、拥有值和聚合元素；没有活动元素视图时，读取保留原列表的紧凑数值布局。
+
+`chali_abi_list_from_numbers` 将独立宿主数组复制为拥有型列表；`kinds` 为空时全部按整数处理。bool、单字节 char、各宽度整数使用整数槽，float32 先扩展为 double。接口不自动进行目标元素类型转换，宿主应按声明的语言类型准备输入及解释输出。新列表沿用有界几何增长策略，完整构造后才发布句柄；交还语言或使用 `chali_abi_record_release` 释放。两项服务需要 `CHALI_ABI_CAP_LIST_NUMBERS`，没有新增列表类型或另一套集合注册表。

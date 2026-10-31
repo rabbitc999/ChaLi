@@ -24,6 +24,29 @@ struct ScalarResult
     unsigned char floating = 0;  ///< 浮点数为一，整数为零。
 };
 
+/**
+ * @brief 直接复制数值位模式为集合拥有的槽，完整创建后发布句柄。
+ * @param host 当前运行时上下文。
+ * @param bits 数值位模式，非空跨度不能为空。
+ * @param kinds 浮点为一、整数为零；空指针表示全部整数。
+ * @param count 元素数量。
+ * @return 独立列表句柄，失败为零。
+ */
+std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_t *bits,
+                             const unsigned char *kinds, std::size_t count);
+/**
+ * @brief 验证完整数值列表后复制位模式，不为没有元素视图的列表物化通用槽。
+ * @param host 当前运行时上下文。
+ * @param handle 数值列表句柄。
+ * @param bits 接收位模式；与 kinds 同为空且 capacity 为零时仅查询。
+ * @param kinds 接收整数／浮点类别。
+ * @param capacity 输出元素容量。
+ * @param required 接收实际元素数量。
+ * @return 验证及复制成功时为真；失败不改写两个输出数组。
+ */
+bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
+                      unsigned char *kinds, std::size_t capacity, std::size_t &required);
+
 /** @brief LLVM 数值数组视图，代次由所属运行时对象表拥有；上下文退出前清空缓存。 */
 struct NumericListView
 {
