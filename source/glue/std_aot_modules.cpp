@@ -2,11 +2,9 @@
  * @file std_aot_modules.cpp
  * @brief 每个标准库模块的独立 C 入口与仅编译器使用的选择表。
  */
-#include "std_native_record.hpp"
 #include "std_registry.hpp"
 #include "std_collection.hpp"
 #include "std_demo.hpp"
-#include "std_cas.hpp"
 
 /* 统一的"标准胶水"注册入口：编译器 VM（InstallDemoGlue）与独立 VM 宿主（bindChaLiStandardGlue）
  * 共用这一份。每个模块的注册都用 `#ifndef GLUE_NO_XXX` 包住，定义宏即整段不编进来：

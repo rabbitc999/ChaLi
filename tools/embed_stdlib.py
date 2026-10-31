@@ -216,7 +216,6 @@ GENERATOR_ASSETS = [
     "abi/abi_structured_data.cpp",
     "abi/abi_process.c",
     "abi/abi_serialization.cpp",
-    "glue/std_native_record.hpp",
     "glue/std_collection.hpp",
     "glue/std_collection_storage.hpp",
     "json/json.hpp",

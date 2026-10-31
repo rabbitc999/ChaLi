@@ -1,8 +1,6 @@
-#include "std_native_record.hpp"
 #include "std_records.hpp"
 #include "std_collection.hpp"
 #include "../chali_glue.hpp"
-#include "std_cas.hpp"
 #include "abi/chali_standard.h"
 
 namespace chali_standard_records
@@ -15,7 +13,7 @@ namespace chali_standard_records
  */
 bool bind(chali_glue::Registry &registry, Memory::String *error)
 {
-    const bool ok = collection_glue::bind(registry.native(), error) && registry.bindModule(abi_big_number_records, error) && std_cas_glue::bind(registry.native(), error) && registry.bindModule(abi_file_records, error) && registry.bindModule(abi_process_records, error);
+    const bool ok = collection_glue::bind(registry.native(), error) && registry.bindModule(abi_big_number_records, error) && registry.bindModule(abi_cas_records, error) && registry.bindModule(abi_file_records, error) && registry.bindModule(abi_process_records, error);
     /* `std::lang` 的标准错误流输出已全部是 C 直通入口，没有 C++ 胶水可调。 */
     registry.bindDirectEntries();
     return ok;

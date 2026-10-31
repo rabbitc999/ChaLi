@@ -1174,6 +1174,48 @@ int main(int argc, char **argv)
         }
         {
             const auto call = [&](const char *name,std::initializer_list<int64_t> values) {
+                std::vector<int64_t> slots(values);std::vector<unsigned char> kinds(slots.size(),ChaliAbiSlotInteger);
+                ChaliAbiFrame operation{&runtime,slots.data(),kinds.data(),static_cast<int64_t>(slots.size()),0,0};
+                const auto entry=chali_abi_resolve(name,nullptr);assert(entry);entry(&operation);return operation.result;
+            };
+            const auto textOf = [&](int64_t record) {
+                const auto text=call("__std_cas_text",{record,0});assert(text&&!runtime.status);
+                assert(chali_abi_bytes(&frame,text,&view,&length));
+                std::string result(reinterpret_cast<const char*>(view),length);
+                assert(chali_abi_string_release(&frame,text));return result;
+            };
+            const auto input=chali_abi_string(&frame,"x^2+1",5);assert(input);
+            const auto original=call("__std_cas_parse",{input});assert(original&&!runtime.status);
+            const auto expected=textOf(original);
+            const auto copy=call("std::cas::__std_cas_copy",{original});assert(copy&&!runtime.status);
+            const auto child=call("__std_cas_child",{original,0});assert(child&&!runtime.status);
+            const auto childText=textOf(child);
+            TransferPacket packet;Memory::Set<int64_t> active;
+            assert(captureTransferObject(context,original,packet,active));
+            assert(chali_abi_record_release(&frame,original));
+            assert(textOf(copy)==expected&&textOf(child)==childText);
+            call("__std_cas_drop",{copy});assert(!runtime.status);
+            int64_t restored=0;Memory::Vector<int64_t> created;
+            assert(restoreTransferObject(context,packet,original,active,created,&restored));
+            assert(textOf(restored)==expected&&textOf(child)==childText);
+            value_text::Shape shape;shape.kind='O';const auto encoded=value_text::encode(shape);
+            const auto layout=chali_abi_string(&frame,encoded.data(),encoded.size());assert(layout);
+            const auto display=nativeInt(valueToString(context,{Slot::fromInt(restored),Slot::fromInt(layout)}));
+            assert(display&&!runtime.status&&chali_abi_bytes(&frame,display,&view,&length));
+            assert(std::string(reinterpret_cast<const char*>(view),length)==expected);
+            assert(chali_abi_string_release(&frame,display)&&chali_abi_string_release(&frame,layout));
+            call("__std_cas_child",{restored,-1});assert(runtime.status);reset();
+            int64_t bad=0;unsigned char floating=ChaliAbiSlotFloat;
+            ChaliAbiFrame malformed{&runtime,&bad,&floating,1,0,0};
+            chali_abi_resolve("__std_cas_parse",nullptr)(&malformed);assert(runtime.status&&!malformed.result);reset();
+            malformed.count=0;malformed.slots=nullptr;malformed.kinds=nullptr;
+            chali_abi_resolve("__std_cas_parse",nullptr)(&malformed);assert(runtime.status&&!malformed.result);reset();
+            assert(chali_abi_record_release(&frame,restored)&&chali_abi_record_release(&frame,child));
+            assert(chali_abi_string_release(&frame,input));
+            std::puts("C CAS: immutable roots, retained children, copies, transfer, default text and invalid calls passed");
+        }
+        {
+            const auto call = [&](const char *name,std::initializer_list<int64_t> values) {
                 std::vector<int64_t> slots(values);
                 std::vector<unsigned char> kinds(slots.size(),ChaliAbiSlotInteger);
                 ChaliAbiFrame operation{&runtime,slots.data(),kinds.data(),static_cast<int64_t>(slots.size()),0,0};

@@ -85,7 +85,7 @@ def main():
              "runtime/chali_pool.c", "runtime/chali_pool.h",
             "runtime/chali_allocator.hpp", "chali_runtime_allocator.hpp",
             "runtime/ast.cpp", "runtime/ast.hpp", "aot/backend_profile.cpp", "CMakeLists.txt", "std/lang.chl",
-            "glue/std_records.hpp", "glue/std_native_record.hpp", "abi/abi_file.cpp",
+            "glue/std_records.hpp", "abi/chali_abi.h", "abi/abi_file.cpp",
             "abi/abi_big_number.cpp", "lztext/lztext.cpp",
             "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
             "LICENSE", "NOTICE", "licenses/miniz/LICENSE",
@@ -98,7 +98,7 @@ def main():
         required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
         required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
         required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
-        required += ["runtime/bigfloat_math.hpp", "runtime/bigfloat_math_detail.hpp", "runtime/bigfloat_transcendental.cpp", "runtime/bigfloat_trigonometry.cpp", "std/cas.chl", "glue/std_cas.cpp", "caspp/core_sources.txt"]
+        required += ["runtime/bigfloat_math.hpp", "runtime/bigfloat_math_detail.hpp", "runtime/bigfloat_transcendental.cpp", "runtime/bigfloat_trigonometry.cpp", "std/cas.chl", "abi/abi_cas.cpp", "caspp/core_sources.txt"]
         required += ["caspp/" + name for name in (ROOT / "library/caspp/core_sources.txt").read_text().splitlines()]
         required += ["runtime/" + name for name in ["ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "bigint_multiplication.cpp", "bigint_division.cpp", "bigint_bits.cpp", "bigint_number_theory.cpp", "bigint_modular.cpp", "bigint_conversion.cpp", "bigfloat_roots.cpp"]]
         missing = [name for name in required if not (compiler / name).is_file()]

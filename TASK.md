@@ -278,6 +278,14 @@ C 服务追加 SQLite 参数绑定的 int64 最小值、浮点结果类别／位
 
 独立导出工程实际冷构建 GCC11／O1 外置 LLVM 编译器，四个默认 LLVM O3 数值／复制／数论例程与原有期望输出逐字节一致。初轮资产生成遗漏固定旧头、测试的 arena 外参数分配、科学计数法期望及配套输入文件均已修正；原始失败与最终结果分别保留，未重标。最终静态编译器 SHA256 为 769333d73180bc84d193ae946ea643a8dad2e04564d3ca73c2cafbf44a4d0abf；vscode/dist/1.0.12-big-number-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 5ac2202303fb452f294bc06ac1f21e829e81801e715d8b9f8a4f4685d30de558，版本、static 与内嵌 EXE 字节一致。独立编译器 SHA256 为 895f224ccf546389a6b84ed980c091b273eb0e34ee431aabb9395215f46f227a，保留 build/independent-validation/1.0.12-big-number-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-big-number-c-api/。未执行整仓全量门禁或性能计时；CAS、集合注册和旧公开 C++ 胶水继续迁移。
 
+### CAS C API 与旧记录辅助层删除已完成
+
+CAS 的 32 个入口及完整限定名别名直接读取 C 帧，表达式记录采用 C 销毁、复制和有界文本回调，删除 std_cas.cpp／hpp。不可变根共享、父节点释放后的子树存活、CAS 递归锁及进程级数值分配作用域保留；异常在 C 入口隔离，原始解析／定义域／下标诊断保留。所有调用者迁移后删除无调用者的 std_native_record.cpp／hpp、native_record_glue 及其注册和生成资产依赖。
+
+C API、CAS 与内存门禁原 13 步全部通过，无失败或跳过，包含 367 项实际入口表、C11／C++17 和六目标头、真实 C 记录服务、CAS／泛型数学 20 项、大数四配置、线程等待与资源寿命。新增四配置专项另行通过：malloc／pool × checked／unchecked 的符号变换和线程拥有值 8 项，已加入后续 cas 模块清单；未把附加执行改写成同一次 14 步。运行时单测核对保留子树、独立副本、快照恢复、默认文本、越界和错误槽／数量，最终活动块为零。显式裁剪 CAS 的 C++17 语法、隔离手册、全部标准库导入／源码回退／零磁盘缓存和七组插件测试通过。
+
+新鲜独立工程实际冷构建 GCC11／O1 外置 LLVM 编译器，默认 LLVM O3 的 CAS、泛型数学与跨线程传递三组结果和寿命验证通过。12 项导出源与当前源码一致，四个旧 CAS／记录胶水文件均不在工程内。最终静态编译器 SHA256 为 5d587efb6f94ceb80edc2447070698fbc74435641f1b316a5b4a423db78b8bab；vscode/dist/1.0.12-cas-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 03e06c2491fca14be59b6f8d0892b2a912cbb0e2f23c6fba451f312e7cb23bd5，版本、static 和内嵌 EXE 字节一致。独立编译器 SHA256 为 6d05b9aa688cf42d84fee86aaa503a91d264d076db47a2ac92ec677cc2dbee3c，保留 build/independent-validation/1.0.12-cas-c-api/。证据仅保留 tools/history/20261101/chali-1.0.12-cas-c-api/。未执行整仓全量门禁或性能计时；集合注册、宿主样例和旧公开 C++ 胶水仍未删除。
+
 ## 阶段六：删除旧 C++ 胶水与发行核对
 
 独立工程的 gen abi 缺口已关闭：新增薄入口复用参数归一化、语言配置与同一 C 头导入实现，导出所需源文件与头，并在 CMake 关闭旧默认 main。新鲜导出 454 文件，完整冷构建外置 LLVM 编译器后，直接运行 ABI 头导入、拥有值、同步回调及直接／嵌套失败清理综合脚本通过；未使用本体预生成声明或开发工具回退。解析 65 输入／260 结果在四组合再次对齐。宿主编译器冷构建配置为 GCC 11／C++ O1，语言导出仍使用默认 LLVM O3，不据此报告性能。

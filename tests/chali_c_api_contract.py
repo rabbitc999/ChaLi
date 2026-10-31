@@ -56,9 +56,10 @@ def main():
             '-c',ROOT/'build/dependencies/sqlite/sqlite3.c','-o',sqlite_object)
         objects.append(sqlite_object)
         table = work / ('table.exe' if os.name == 'nt' else 'table')
-        kernels = [ROOT / name for name in ('source/abi/abi_big_number.cpp', 'source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_sql.cpp', 'source/abi/abi_sql_ipage.cpp', 'library/ipage/source/ipage/sql.cpp', 'library/ipage/source/ipage/dialect.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
+        kernels = [ROOT / name for name in ('source/abi/abi_cas.cpp', 'source/abi/abi_big_number.cpp', 'source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_sql.cpp', 'source/abi/abi_sql_ipage.cpp', 'library/ipage/source/ipage/sql.cpp', 'library/ipage/source/ipage/dialect.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
+        kernels += [ROOT / 'library/caspp' / line for line in (ROOT / 'library/caspp/core_sources.txt').read_text(encoding='utf-8').splitlines()]
         kernels += [p for p in (ROOT / 'source/bignum').glob('*.cpp') if p.name not in ('main.cpp','test_bigint.cpp','test_bigfloat.cpp')]
-        run(cxx, '-std=c++17', *target_flags, *common, '-I' + str(ROOT / 'source/bignum'),
+        run(cxx, '-std=c++17', *target_flags, *common, '-I' + str(ROOT / 'source/bignum'), '-I' + str(ROOT / 'library/caspp/include'),
             ROOT / 'tests/chali_abi_table.cpp', *objects, *kernels, '-I' + str(ROOT / 'build/dependencies/sqlite'), '-pthread', '-lm', '-o', table)
         output = run(table)
         assert '直通入口表自检通过' in output, output

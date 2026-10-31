@@ -141,7 +141,7 @@ CHALI_STANDARD_SRCS := $(wildcard source/glue/std_*.cpp)
 CHALI_STANDARD_OBJS := $(patsubst source/glue/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_STANDARD_SRCS))
 $(HOST_BUILD)/std_%.o: source/glue/std_%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
-$(HOST_BUILD)/std_cas.o: private CXXFLAGS += -Ilibrary/caspp/include
+$(HOST_BUILD)/abi_abi_cas.o: private CXXFLAGS += -Ilibrary/caspp/include
 $(HOST_BUILD)/lztext_kernel.o: source/lztext/lztext.cpp source/lztext/lztext.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/json.o: source/json/json.cpp | $(HOST_BUILD)
