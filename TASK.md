@@ -211,6 +211,14 @@ C API、数值缓冲、矩阵与内存／并发／泛型门禁首轮 19 步为 1
 
 最终静态 EXE SHA256 为 ba81494681fd5e6d1284e71b83ae02f190cca1c08c11c14599eb6d15eb86ceb1；vscode/dist/1.0.12-scalar-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 和内嵌 EXE 字节，SHA256 为 87582e2328212d9da8912bf4188f103961c18bd372a541d416ea4f5ff1712322。证据仅保留 tools/history/20261031/chali-1.0.12-scalar-c-api/；不据布局变化报告速度提升，未执行整仓全量门禁或正式计时。矩阵求解／分解和其余 C API 迁移仍待完成。
 
+线性代数 C 接口迁移已完成：Matrix.solve 与六个顶层分解由普通 ChaLi 函数创建拥有结果，C 帧原语以只读输入引用和可变结果引用执行私有数值内核；不再使用 Record／Context 模板、通用参数向量或宿主临时聚合对象。沿用原数值公式、浮点精度与整数回绕顺序，加入受检查小端槽读写和分解输入形状检查。删除 std_linalg.cpp／hpp 和最后一个 std_scalar_buffer.hpp 私有旧桥；增量静态库及新鲜导出工程均不含这些旧文件／对象成员。
+
+C API、完整线性代数与内存／泛型抽样共 17 步全部通过，无失败或跳过。迁移前 8ee8e95c 的真实编译器已冻结六种分解的重构结果及六项诊断；新静态编译器与新鲜独立外置编译器在 malloc／pool × checked／unchecked 下通过 LU、LUR、特征分解、SVD、Jordan、对角化、求解和独立复制对照，错误首行与冻结结果一致。C 服务追加 13 个真实分配失败点，包含部分拥有字段已发布后的清理，以及损坏形状拒绝；最终作用域退出时 liveBlocks 为零。初始测试误用不存在的 LuFactorization.copy()，改用普通值复制后通过，原日志单独保留。
+
+独立导出工程已完整冷构建，宿主配置 GCC 11／C++ O1、语言仍默认 LLVM O3；外置 EXE 保留 build/independent-validation/1.0.12-linalg-c-api/，SHA256 为 827860071cf6237573b4c37580510f0c754abd5e276661c3f7da46297d012942。最终注释定稿后的静态编译器通过隔离手册、分解抽查、七组插件测试、版本／static／内嵌字节与十项新鲜导出源核对；注释修改前后宿主库字节一致。标准库核心隔离加载／源码回退／零磁盘缓存及库参考索引／链接检查通过。
+
+最终静态 EXE SHA256 为 4ed24a2fe6f84f52f47f5b350fe86a30ed181169dc72c5f3b4b7f404d1a174b2；vscode/dist/1.0.12-linalg-c-api/chali-editor-1.0.12-llvm-static.vsix SHA256 为 00ba5dd55972511e326b4ff24774577fb0a91c9cd23db7677a50ab19316def05。证据仅保留 tools/history/20261031/chali-1.0.12-linalg-c-api/；未运行整仓全量门禁或性能测量。数值内核为有 C API 的私有 C++ 实现；图像、网络、数据库、大数、CAS、集合及旧公开胶水仍待迁移。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

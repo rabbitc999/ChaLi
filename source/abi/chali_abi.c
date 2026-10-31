@@ -35,6 +35,7 @@ static const ModuleRecords kModules[] = {
     abi_file_records,
 #ifndef GLUE_NO_STD_LINALG
     abi_scalar_records,
+    abi_linalg_records,
 #endif
 #ifndef GLUE_NO_STD_FILESYSTEM
     abi_filesystem_records,

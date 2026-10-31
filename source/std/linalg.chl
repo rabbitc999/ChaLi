@@ -1,9 +1,6 @@
 module std::linalg;
 
-/* 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::linalg;` 才能用）。
- * 6 个非泛型顶层算法（luDecompose / lurDecompose / symmetricEigen / svd / jordan2 /
- * diagonalize2）下沉到宿主 C++ 胶水（glue/std_linalg.hpp），本文件只留宿主签名；
- * Matrix<T>::solve 同样转发到胶水；泛型结构体定义与其他运算符 trait 保留在此。 */
+/* 泛型结构与基础运算由 ChaLi 实现；求解和分解使用 C 数值内核，结果由语言对象拥有。 */
 /* 稠密向量：T 为支持算术的标量；norm/normalized 适用于 float32/float64。 */
 import std::math;
 
@@ -254,7 +251,9 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
     }
     /* 带部分主元的 LU 求解；复制系数矩阵，不修改调用者。 */
     Vector<T> solve(Vector<T> rhs) {
-        return __matrixSolve<T>(self, rhs);
+        Vector<T> result;
+        __matrixSolveInto<T>(&self, &rhs, &result);
+        return move result;
     }
     Matrix<T> leftAdd(Matrix<T> right) { return self.add(right); }
     Matrix<T> leftSub(Matrix<T> right) { return self.subtract(right); }
@@ -263,8 +262,8 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
     Matrix<T> leftMul(T right) { return self.scale(right); }
 };
 
-/* 求解由宿主按标量类型绑定，返回独立向量。 */
-Vector<T> __matrixSolve<T>(Matrix<T> input, Vector<T> rhs);
+/* 求解原语只读输入，将结果写入已初始化的独立向量。 */
+void __matrixSolveInto<T>(Matrix<T> const& input, Vector<T> const& rhs, Vector<T> mut& output);
 /** 按只读引用提取指定列，仅复制结果元素，返回独立向量。 */
 Vector<T> __matrixColumn<T>(Matrix<T> const& input, int64 key) {
     if (input.rows < 0 || input.cols <= 0 || key < 0 || key >= input.cols) {
@@ -290,10 +289,20 @@ struct LuFactorization {
 };
 
 /* 部分行主元分解，满足 permutation * input == lower * upper。 */
-LuFactorization luDecompose(Matrix<float64> input);
+void __luDecomposeInto(Matrix<float64> const& input, LuFactorization mut& output);
+LuFactorization luDecompose(Matrix<float64> input) {
+    LuFactorization result;
+    __luDecomposeInto(&input, &result);
+    return move result;
+}
 
 /* LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。 */
-LuFactorization lurDecompose(Matrix<float64> input);
+void __lurDecomposeInto(Matrix<float64> const& input, LuFactorization mut& output);
+LuFactorization lurDecompose(Matrix<float64> input) {
+    LuFactorization result;
+    __lurDecomposeInto(&input, &result);
+    return move result;
+}
 
 struct EigenDecomposition {
     Vector<float64> eigenvalues;
@@ -301,7 +310,12 @@ struct EigenDecomposition {
 };
 
 /* 实对称矩阵的 Jacobi 特征分解；A=V*diag(values)*V^T。 */
-EigenDecomposition symmetricEigen(Matrix<float64> input);
+void __symmetricEigenInto(Matrix<float64> const& input, EigenDecomposition mut& output);
+EigenDecomposition symmetricEigen(Matrix<float64> input) {
+    EigenDecomposition result;
+    __symmetricEigenInto(&input, &result);
+    return move result;
+}
 
 struct SingularValueDecomposition {
     Matrix<float64> u;
@@ -310,7 +324,12 @@ struct SingularValueDecomposition {
 };
 
 /* 薄 SVD：A=U*diag(sigma)*V^T；适合小规模矩阵。 */
-SingularValueDecomposition svd(Matrix<float64> input);
+void __svdInto(Matrix<float64> const& input, SingularValueDecomposition mut& output);
+SingularValueDecomposition svd(Matrix<float64> input) {
+    SingularValueDecomposition result;
+    __svdInto(&input, &result);
+    return move result;
+}
 
 struct JordanDecomposition {
     Matrix<float64> basis;
@@ -318,6 +337,16 @@ struct JordanDecomposition {
 };
 
 /* 实数 2x2 矩阵的 Jordan/对角化；复特征值须由复数后端处理。 */
-JordanDecomposition jordan2(Matrix<float64> input);
+void __jordan2Into(Matrix<float64> const& input, JordanDecomposition mut& output);
+JordanDecomposition jordan2(Matrix<float64> input) {
+    JordanDecomposition result;
+    __jordan2Into(&input, &result);
+    return move result;
+}
 
-JordanDecomposition diagonalize2(Matrix<float64> input);
+void __diagonalize2Into(Matrix<float64> const& input, JordanDecomposition mut& output);
+JordanDecomposition diagonalize2(Matrix<float64> input) {
+    JordanDecomposition result;
+    __diagonalize2Into(&input, &result);
+    return move result;
+}

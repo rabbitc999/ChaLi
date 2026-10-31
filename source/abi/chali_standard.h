@@ -55,6 +55,12 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_filesystem_records(size_t *count);
  */
 const ChaliAbiRecord *CHALI_ABI_CALL abi_file_records(size_t *count);
 /**
+ * @brief 取得线性代数求解与分解的 C 入口表。
+ * @param count 接收入口数量，可为空。
+ * @return 程序存活期间有效的入口表。
+ */
+const ChaliAbiRecord *CHALI_ABI_CALL abi_linalg_records(size_t *count);
+/**
  * @brief 取得数值缓冲及全部基础类型访问的 C 入口表。
  * @param count 接收入口数量，可为空。
  * @return 程序存活期间有效的入口表。

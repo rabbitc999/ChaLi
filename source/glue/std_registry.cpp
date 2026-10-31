@@ -16,7 +16,6 @@
 #include "../chali_glue.hpp"
 
 #ifndef GLUE_NO_STD_LINALG
-#include "std_linalg.hpp"
 #endif
 #ifndef GLUE_NO_STD_SQL
 #include "std_sql.hpp"
@@ -66,7 +65,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_LINALG
     Memory::String linalgError;
-    if (!std_linalg_glue::bind(registry, &linalgError))
+    if (!(registry.bindModule(abi_scalar_records, &linalgError) && registry.bindModule(abi_linalg_records, &linalgError)))
     {
         if (error) *error = linalgError;
         ok = false;

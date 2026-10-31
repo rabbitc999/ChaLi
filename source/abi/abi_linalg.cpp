@@ -1,43 +1,100 @@
-#include "std_linalg.hpp"
-
-#include "../chali_glue.hpp"
-#include "std_scalar_buffer.hpp"
-#include "../abi/chali_standard.h"
-
+/** @file abi_linalg.cpp @brief 线性代数 C 帧入口及私有数值内核，结果由 ChaLi 拥有。 */
+#include "chali_standard.h"
+#include "scalar_storage.hpp"
 #include <cmath>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <vector>
 #include <limits>
+#include <memory>
+#include <stdexcept>
 
-/* `std::linalg` 的 LU 求解与顶层分解算法下沉到宿主 C++。
- *
- * 泛型类型定义与基础运算符保留在 CHALI；Matrix.solve 按内置数值类型注册特化，
- * 顶层分解函数采用 float64。求解保留逐步运算顺序与标量精度。
- *
- * 结构体是「摊平槽布局」：值字段（嵌套结构体）内联展开，每个标量/ScalarStorage 字段占一个 8 字节槽。
- *   Vector<float64>            = { ScalarStorage values }                          → 1 槽
- *   Matrix<float64>            = { int rows, int cols, ScalarStorage values }      → 3 槽
- *   LuFactorization            = { Matrix×3 }                             → 9 槽
- *   EigenDecomposition         = { Vector, Matrix }                       → 4 槽
- *   SingularValueDecomposition = { Matrix, Vector, Matrix }               → 7 槽
- *   JordanDecomposition        = { Matrix, Matrix }                       → 6 槽
+namespace
+{
+/** @brief 记录数值算法失败并停止当前内核。
+ * @param frame 当前 C 帧。
+ * @param message 原始错误。
  */
-namespace std_linalg_glue
+[[noreturn]] void fail(ChaliAbiFrame *frame, const char *message)
 {
-
-using Context = chali_glue::Context;
-using Value = chali_glue::Value;
-
-struct MatrixTag
+    chali_abi_fail(frame, message);
+    throw std::runtime_error(message);
+}
+/** @brief 从受检查逻辑地址读取一个小端八字节槽。
+ * @param frame 当前 C 帧。
+ * @param address 聚合对象地址。
+ * @param slot 槽序号。
+ * @return 整数位模式。
+ */
+int64_t readSlot(ChaliAbiFrame *frame, int64_t address, size_t slot)
 {
-};
-struct VectorTag
+    if (address < 0 || slot > size_t(INT64_MAX / 8) || address > INT64_MAX - int64_t(slot * 8))
+        fail(frame, "矩阵输入槽地址溢出");
+    unsigned char bytes[8];
+    if (!chali_abi_read(frame, address + int64_t(slot * 8), bytes, 8)) fail(frame, "矩阵输入槽不可读");
+    uint64_t value = 0;
+    for (unsigned i = 0; i < 8; ++i) value |= uint64_t(bytes[i]) << (8 * i);
+    return int64_t(value);
+}
+/** @brief 向受检查逻辑地址写入一个小端八字节槽。
+ * @param frame 当前 C 帧。
+ * @param address 聚合对象地址。
+ * @param slot 槽序号。
+ * @param value 整数位模式。
+ */
+void writeSlot(ChaliAbiFrame *frame, int64_t address, size_t slot, int64_t value)
 {
-};
-using Matrix = chali_glue::Record<MatrixTag>;
-using Vector = chali_glue::Record<VectorTag>;
-
+    if (address < 0 || slot > size_t(INT64_MAX / 8) || address > INT64_MAX - int64_t(slot * 8))
+        fail(frame, "矩阵输出槽地址溢出");
+    unsigned char bytes[8];
+    for (unsigned i = 0; i < 8; ++i) bytes[i] = unsigned(uint64_t(value) >> (8 * i));
+    if (!chali_abi_write(frame, address + int64_t(slot * 8), bytes, 8)) fail(frame, "矩阵输出槽不可写");
+}
+/** @brief 复制只读标量记录为算法工作数组。
+ * @tparam Scalar 工作精度。
+ * @param frame 当前 C 帧。
+ * @param handle 存储句柄，零代表空数组。
+ * @return 独立工作数组。
+ */
+template <class Scalar>
+Memory::Vector<Scalar> readValues(ChaliAbiFrame *frame, int64_t handle)
+{
+    Memory::Vector<Scalar> result;
+    if (!handle) return result;
+    auto *storage = static_cast<scalar_buffer::Storage *>(chali_abi_record_probe(frame, handle, "std::linalg::ScalarStorage"));
+    if (!storage) fail(frame, "线性代数存储 opcode 已释放或类型不匹配");
+    result.reserve(storage->values.size());
+    for (const auto &slot : storage->values) result.push_back(scalar_buffer::decode<Scalar>(slot));
+    return result;
+}
+/** @brief 向语言已初始化的拥有字段发布独立数值存储，失败时清理未发布资源。
+ * @tparam Values 数值数组类型。
+ * @param frame 当前 C 帧。
+ * @param output 语言结果对象地址。
+ * @param slot 拥有字段的槽序号。
+ * @param values 待复制数值。
+ */
+template <class Values>
+void writeOwnedValues(ChaliAbiFrame *frame, int64_t output, size_t slot, const Values &values)
+{
+    const auto previous = readSlot(frame, output, slot);
+    if (previous && !chali_abi_record_probe(frame, previous, "std::linalg::ScalarStorage")) fail(frame, "矩阵输出存储类型不匹配");
+    auto storage = std::make_unique<scalar_buffer::Storage>();
+    storage->values.reserve(values.size());
+    for (auto value : values) storage->values.push_back(scalar_buffer::encode(value));
+    const auto handle = scalar_buffer::publish(frame, std::move(storage));
+    if (!handle) fail(frame, "矩阵结果存储创建失败");
+    try
+    {
+        writeSlot(frame, output, slot, handle);
+    } catch (...)
+    {
+        chali_abi_record_release(frame, handle);
+        throw;
+    }
+    if (previous) chali_abi_record_release(frame, previous);
+}
 struct MatrixData
 {
     int rows = 0;
@@ -69,122 +126,39 @@ struct JordanResult
     MatrixData jordan;
 };
 
-/* ---- 槽读写 ---- */
-/**
- * @brief 从结构体的指定八字节槽读取整数位模式。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param address 目标结构体或数组的运行时起始地址。
- * @param slot 从零开始的八字节槽下标。
- * @return 读取到的整数位模式；访问失败由上下文记录诊断。
+/** @brief 从语言矩阵复制经过形状校验的私有数值数据。
+ * @param frame 当前 C 帧。
+ * @param input 输入矩阵地址。
+ * @return 独立矩阵数据。
  */
-inline std::int64_t readSlot(Context &ctx, std::int64_t address, std::size_t slot)
+MatrixData readMatrix(ChaliAbiFrame *frame, int64_t input)
 {
-    std::int64_t raw = 0;
-    ctx.readBytes(address + static_cast<std::int64_t>(slot) * 8,
-                  reinterpret_cast<char *>(&raw), 8);
-    return raw;
+    const auto rows = readSlot(frame, input, 0), cols = readSlot(frame, input, 1);
+    const auto values = readValues<double>(frame, readSlot(frame, input, 2));
+    if (rows < 0 || cols < 0 || rows > INT_MAX || cols > INT_MAX || (cols == 0 ? !values.empty() : (values.size() / uint64_t(cols) != uint64_t(rows) || values.size() % uint64_t(cols))))
+        fail(frame, "矩阵存储长度与维度不匹配");
+    return { int(rows), int(cols), std::vector<double>(values.begin(), values.end()) };
 }
-/**
- * @brief 将整数位模式写入结构体指定槽。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param address 目标结构体或数组的运行时起始地址。
- * @param slot 从零开始的八字节槽下标。
- * @param value 需要写入该槽的数值或位模式。
+/** @brief 将矩阵写入语言拥有的结果字段。
+ * @param frame 当前 C 帧。
+ * @param output 输出对象地址。
+ * @param base 矩阵起始槽。
+ * @param value 已计算矩阵。
  */
-inline void writeSlot(Context &ctx, std::int64_t address, std::size_t slot, std::int64_t value)
+void writeMatrixInto(ChaliAbiFrame *frame, int64_t output, size_t base, const MatrixData &value)
 {
-    ctx.writeBytes(address + static_cast<std::int64_t>(slot) * 8,
-                   reinterpret_cast<const char *>(&value), 8);
+    writeSlot(frame, output, base, value.rows);
+    writeSlot(frame, output, base + 1, value.cols);
+    writeOwnedValues(frame, output, base + 2, value.values);
 }
-/**
- * @brief 将双精度浮点位模式写入结构体指定槽。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param address 目标结构体或数组的运行时起始地址。
- * @param slot 从零开始的八字节槽下标。
- * @param value 需要写入该槽的数值或位模式。
+/** @brief 将向量写入语言拥有的结果字段。
+ * @param frame 当前 C 帧。
+ * @param output 输出对象地址。
+ * @param base 向量起始槽。
+ * @param value 已计算向量。
  */
-inline void writeSlotF64(Context &ctx, std::int64_t address, std::size_t slot, double value)
-{
-    ctx.writeBytes(address + static_cast<std::int64_t>(slot) * 8,
-                   reinterpret_cast<const char *>(&value), 8);
-}
-
-/* ---- ScalarStorage<float64> 读写 ---- */
-/**
- * @brief 将标量 opcode 存储复制为双精度宿主数组。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param handle 当前模块中的资源句柄。
- * @return 与原记录独立的数值副本。
- */
-inline std::vector<double> readListF64(Context &ctx, std::int64_t handle)
-{
-    const auto values = scalar_buffer::read<double>(ctx, handle);
-    return std::vector<double>(values.begin(), values.end());
-}
-/**
- * @brief 为双精度数值创建拥有独立存储的标量记录。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param values 需要复制到新运行时存储的宿主数值数组。
- * @return 新建标量记录的运行时句柄。
- */
-inline std::int64_t makeListF64(Context &ctx, const std::vector<double> &values)
-{
-    return scalar_buffer::make(ctx, values);
-}
-
-/* ---- Matrix / Vector 结构体读写（摊平槽） ---- */
-/**
- * @brief 读取矩阵视图的尺寸和标量存储副本。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param m 作为输入或输出的行优先矩阵。
- * @return 按行优先保存元素的宿主矩阵。
- */
-inline MatrixData readMatrix(Context &ctx, const Matrix &m)
-{
-    MatrixData out;
-    out.rows = static_cast<int>(m.field<std::int64_t>(0u));
-    out.cols = static_cast<int>(m.field<std::int64_t>(1u));
-    out.values = readListF64(ctx, m.field<std::int64_t>(2u));
-    return out;
-}
-/**
- * @brief 将矩阵尺寸及独立标量记录写入聚合结果的指定位置。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param address 目标结构体或数组的运行时起始地址。
- * @param base 目标聚合结构体内的起始槽下标。
- * @param m 作为输入或输出的行优先矩阵。
- */
-inline void writeMatrixInto(Context &ctx, std::int64_t address, std::size_t base, const MatrixData &m)
-{
-    writeSlot(ctx, address, base + 0u, static_cast<std::int64_t>(m.rows));
-    writeSlot(ctx, address, base + 1u, static_cast<std::int64_t>(m.cols));
-    writeSlot(ctx, address, base + 2u, makeListF64(ctx, m.values));
-}
-/**
- * @brief 为矩阵结果创建临时结构体及独立标量存储。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param m 作为输入或输出的行优先矩阵。
- * @return 临时矩阵结构体的运行时地址。
- */
-inline std::int64_t writeMatrix(Context &ctx, const MatrixData &m)
-{
-    const std::int64_t address = ctx.makeTemporary(3u * 8u);
-    writeMatrixInto(ctx, address, 0u, m);
-    return address;
-}
-/**
- * @brief 将向量的独立标量存储写入聚合结果指定槽。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
- * @param address 目标结构体或数组的运行时起始地址。
- * @param base 目标聚合结构体内的起始槽下标。
- * @param v 需要保存的数值。
- */
-inline void writeVectorInto(Context &ctx, std::int64_t address, std::size_t base, const VectorData &v)
-{
-    writeSlot(ctx, address, base, makeListF64(ctx, v.values));
-}
-
-/* ---- 矩阵运算（照抄 CHALI 的 float64 语义，row-major） ---- */
+void writeVectorInto(ChaliAbiFrame *frame, int64_t output, size_t base, const VectorData &value)
+{ writeOwnedValues(frame, output, base, value.values); }
 /**
  * @brief 读取已验证行列范围内的矩阵元素。
  * @param m 作为输入或输出的行优先矩阵。
@@ -192,7 +166,7 @@ inline void writeVectorInto(Context &ctx, std::int64_t address, std::size_t base
  * @param j 从零开始的列下标。
  * @return 对应行列的双精度数值。
  */
-inline double at(const MatrixData &m, int i, int j) { return m.values[static_cast<std::size_t>(i * m.cols + j)]; }
+inline double at(const MatrixData &m, int i, int j) { return m.values[static_cast<std::size_t>(i) * static_cast<std::size_t>(m.cols) + static_cast<std::size_t>(j)]; }
 /**
  * @brief 写入已验证行列范围内的矩阵元素。
  * @param m 作为输入或输出的行优先矩阵。
@@ -200,14 +174,14 @@ inline double at(const MatrixData &m, int i, int j) { return m.values[static_cas
  * @param j 从零开始的列下标。
  * @param v 写入指定矩阵元素的数值。
  */
-inline void set(MatrixData &m, int i, int j, double v) { m.values[static_cast<std::size_t>(i * m.cols + j)] = v; }
+inline void set(MatrixData &m, int i, int j, double v) { m.values[static_cast<std::size_t>(i) * static_cast<std::size_t>(m.cols) + static_cast<std::size_t>(j)] = v; }
 /**
  * @brief 创建按行优先保存的全零矩阵。
  * @param rows 输出矩阵的行数。
  * @param cols 输出矩阵的列数。
  * @return 具有指定行列数且独占元素数组的矩阵。
  */
-inline MatrixData zerosMatrix(int rows, int cols) { return { rows, cols, std::vector<double>(static_cast<std::size_t>(rows * cols), 0.0) }; }
+inline MatrixData zerosMatrix(int rows, int cols) { return { rows, cols, std::vector<double>(static_cast<std::size_t>(rows) * static_cast<std::size_t>(cols), 0.0) }; }
 /**
  * @brief 创建指定长度的全零向量。
  * @param n 输出向量长度或方阵阶数。
@@ -259,16 +233,16 @@ inline MatrixData multiply(const MatrixData &a, const MatrixData &b)
 /* ---- 6 个顶层算法 ---- */
 /**
  * @brief 执行带主元选择的 LU 分解并构造排列信息。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
+ * @param frame 提供内存访问、资源创建和诊断的当前调用上下文。
  * @param input 需要分解、求解或取列的输入矩阵。
  * @return 分解所得上下三角矩阵及排列结果。
  */
-inline LUResult luDecomposeImpl(Context &ctx, const MatrixData &input)
+inline LUResult luDecomposeImpl(ChaliAbiFrame *frame, const MatrixData &input)
 {
     LUResult bad;
     if (input.rows != input.cols)
     {
-        ctx.fail("LU 分解要求方阵");
+        fail(frame, "LU 分解要求方阵");
         return bad;
     }
     const int n = input.rows;
@@ -290,7 +264,7 @@ inline LUResult luDecomposeImpl(Context &ctx, const MatrixData &input)
         }
         if (!(largest > 0.000000000001))
         {
-            ctx.fail("LU 分解遇到奇异或近奇异矩阵");
+            fail(frame, "LU 分解遇到奇异或近奇异矩阵");
             return bad;
         }
         if (pivot != k)
@@ -328,16 +302,16 @@ inline LUResult luDecomposeImpl(Context &ctx, const MatrixData &input)
 
 /**
  * @brief 对实对称矩阵迭代求特征值和正交特征向量。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
+ * @param frame 提供内存访问、资源创建和诊断的当前调用上下文。
  * @param input 需要分解、求解或取列的输入矩阵。
  * @return 特征值对角矩阵及对应特征向量矩阵。
  */
-inline EigenResult symmetricEigenImpl(Context &ctx, const MatrixData &input)
+inline EigenResult symmetricEigenImpl(ChaliAbiFrame *frame, const MatrixData &input)
 {
     EigenResult bad;
     if (!(input.rows == input.cols && input.rows > 0))
     {
-        ctx.fail("特征分解要求非空方阵");
+        fail(frame, "特征分解要求非空方阵");
         return bad;
     }
     const int n = input.rows;
@@ -345,7 +319,7 @@ inline EigenResult symmetricEigenImpl(Context &ctx, const MatrixData &input)
         for (int j = i + 1; j < n; ++j)
             if (!(std::fabs(at(input, i, j) - at(input, j, i)) < 0.00000001))
             {
-                ctx.fail("symmetricEigen 要求对称矩阵");
+                fail(frame, "symmetricEigen 要求对称矩阵");
                 return bad;
             }
     MatrixData a = input;
@@ -396,7 +370,7 @@ inline EigenResult symmetricEigenImpl(Context &ctx, const MatrixData &input)
     }
     if (!(iteration < 64 * n * n))
     {
-        ctx.fail("Jacobi 特征分解未收敛");
+        fail(frame, "Jacobi 特征分解未收敛");
         return bad;
     }
     VectorData eigenvalues = zerosVector(n);
@@ -422,24 +396,24 @@ inline EigenResult symmetricEigenImpl(Context &ctx, const MatrixData &input)
 
 /**
  * @brief 通过对称特征分解计算实矩阵的奇异值分解。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
+ * @param frame 提供内存访问、资源创建和诊断的当前调用上下文。
  * @param input 需要分解、求解或取列的输入矩阵。
  * @return 左右奇异向量及奇异值矩阵。
  */
-inline SvdResult svdImpl(Context &ctx, const MatrixData &input)
+inline SvdResult svdImpl(ChaliAbiFrame *frame, const MatrixData &input)
 {
     SvdResult bad;
     if (!(input.rows > 0 && input.cols > 0))
     {
-        ctx.fail("SVD 要求非空矩阵");
+        fail(frame, "SVD 要求非空矩阵");
         return bad;
     }
     const int m = input.rows, n = input.cols;
     const int r = m < n ? m : n;
     const MatrixData inputTranspose = transpose(input);
     const MatrixData gram = multiply(inputTranspose, input);
-    const EigenResult eigen = symmetricEigenImpl(ctx, gram);
-    if (eigen.eigenvalues.values.empty()) return bad; /* ctx.fail 已置 */
+    const EigenResult eigen = symmetricEigenImpl(frame, gram);
+    if (eigen.eigenvalues.values.empty()) return bad; /* C 帧已记录失败 */
     MatrixData u = zerosMatrix(m, r);
     VectorData singularValues = zerosVector(r);
     MatrixData vTranspose = zerosMatrix(r, n);
@@ -491,16 +465,16 @@ inline SvdResult svdImpl(Context &ctx, const MatrixData &input)
 
 /**
  * @brief 按当前支持的阶数计算实 Jordan 分解。
- * @param ctx 提供内存访问、资源创建和诊断的当前调用上下文。
+ * @param frame 提供内存访问、资源创建和诊断的当前调用上下文。
  * @param input 需要分解、求解或取列的输入矩阵。
  * @return 基矩阵及 Jordan 形；不支持的输入通过上下文诊断。
  */
-inline JordanResult jordan2Impl(Context &ctx, const MatrixData &input)
+inline JordanResult jordan2Impl(ChaliAbiFrame *frame, const MatrixData &input)
 {
     JordanResult bad;
     if (!(input.rows == 2 && input.cols == 2))
     {
-        ctx.fail("jordan2 只支持 2x2 矩阵");
+        fail(frame, "jordan2 只支持 2x2 矩阵");
         return bad;
     }
     const double a = at(input, 0, 0), b = at(input, 0, 1);
@@ -508,7 +482,7 @@ inline JordanResult jordan2Impl(Context &ctx, const MatrixData &input)
     double discriminant = (a - d) * (a - d) + 4.0 * b * c;
     if (!(discriminant >= -0.000000000001))
     {
-        ctx.fail("jordan2 不支持复特征值");
+        fail(frame, "jordan2 不支持复特征值");
         return bad;
     }
     if (discriminant < 0.0) discriminant = 0.0;
@@ -599,22 +573,22 @@ inline Scalar divideScalar(Scalar numerator, Scalar denominator)
 
 /**
  * @brief 按原标量精度进行部分主元 LU 求解，不修改输入矩阵与右端向量。
- * @param ctx 当前运行时上下文。
+ * @param frame 当前运行时上下文。
  * @param input 行优先矩阵视图。
  * @param rhs 右端向量视图。
- * @return 新向量的临时结构体地址；失败时返回零并设置运行时错误。
+ * @param output 语言拥有的已初始化结果向量地址。
  */
 template <typename Scalar>
-inline std::int64_t matrixSolve(Context &ctx, Matrix input, Vector rhs)
+inline void matrixSolve(ChaliAbiFrame *frame, std::int64_t input, std::int64_t rhs, std::int64_t output)
 {
-    const auto rows = input.field<std::int64_t>(0);
-    const auto cols = input.field<std::int64_t>(1);
-    auto lu = scalar_buffer::read<Scalar>(ctx, input.field<std::int64_t>(2));
-    auto b = scalar_buffer::read<Scalar>(ctx, rhs.field<std::int64_t>(0));
+    const auto rows = readSlot(frame, input, 0);
+    const auto cols = readSlot(frame, input, 1);
+    auto lu = readValues<Scalar>(frame, readSlot(frame, input, 2));
+    auto b = readValues<Scalar>(frame, readSlot(frame, rhs, 0));
     if (rows < 0 || rows != cols || static_cast<std::uint64_t>(rows) != b.size() || (rows != 0 && (lu.size() / static_cast<std::uint64_t>(rows) != static_cast<std::uint64_t>(rows) || lu.size() % static_cast<std::uint64_t>(rows) != 0)) || (rows == 0 && !lu.empty()))
     {
-        ctx.fail("Matrix.solve 维度不匹配");
-        return 0;
+        fail(frame, "Matrix.solve 维度不匹配");
+        return;
     }
     const auto n = static_cast<std::size_t>(rows);
     auto at = [&](std::size_t row, std::size_t col) -> Scalar & { return lu[row * n + col]; };
@@ -633,8 +607,8 @@ inline std::int64_t matrixSolve(Context &ctx, Matrix input, Vector rhs)
         }
         if (!(largest > 1e-12))
         {
-            ctx.fail("Matrix.solve 奇异或近奇异矩阵");
-            return 0;
+            fail(frame, "Matrix.solve 奇异或近奇异矩阵");
+            return;
         }
         if (pivot != k)
         {
@@ -659,72 +633,113 @@ inline std::int64_t matrixSolve(Context &ctx, Matrix input, Vector rhs)
             sum = subtractProduct(sum, at(i, j), answer[j]);
         answer[i] = divideScalar(sum, at(i, i));
     }
-    const auto address = ctx.makeTemporary(8);
-    writeSlot(ctx, address, 0, scalar_buffer::make(ctx, answer));
-    return address;
+    writeOwnedValues(frame, output, 0, answer);
 }
 
-/**
- * @brief 注册指定数值标量的泛型求解胶水。
- * @param registry 宿主函数注册表。
- * @param name CHALI 标量类型名。
- * @param error 绑定失败时的错误输出。
- * @return 是否注册成功。
+/** @brief 从 C 帧读取一个聚合引用地址。
+ * @param frame 当前 C 帧。
+ * @param index 参数位置。
+ * @return 逻辑地址。
  */
-template <typename Scalar>
-inline bool bindMatrixSolve(chali_glue::Registry &registry, const Memory::String &name,
-                            Memory::String *error)
+int64_t argument(ChaliAbiFrame *frame, int64_t index)
 {
-    return registry.bindTypedWithContext<std::int64_t, Matrix, Vector>(
-               chali_glue::specialize("std::linalg::__matrixSolve", { name }),
-               matrixSolve<Scalar>, error);
+    int64_t value = 0;
+    if (!chali_abi_argument_integer(frame, index, &value)) fail(frame, "矩阵引用参数无效");
+    return value;
 }
-
-/* ---- 绑定泛型求解与六个顶层分解函数 ---- */
-bool bind(chali_glue::Registry &registry, Memory::String *error)
+/** @brief 执行指定精度的求解，结果写入语言向量。
+ * @tparam Scalar 标量精度。
+ * @param frame 输入、右端及结果引用。
+ */
+template <class Scalar>
+void CHALI_ABI_CALL solve(ChaliAbiFrame *frame)
+try
 {
-    return registry.bindModule(abi_scalar_records, error) && bindMatrixSolve<float>(registry, "float32", error) && bindMatrixSolve<double>(registry, "float64", error) && bindMatrixSolve<std::int8_t>(registry, "int8", error) && bindMatrixSolve<std::int16_t>(registry, "int16", error) && bindMatrixSolve<std::int32_t>(registry, "int32", error) && bindMatrixSolve<std::int64_t>(registry, "int64", error) && bindMatrixSolve<std::uint8_t>(registry, "uint8", error) && bindMatrixSolve<std::uint16_t>(registry, "uint16", error) && bindMatrixSolve<std::uint32_t>(registry, "uint32", error) && bindMatrixSolve<std::uint64_t>(registry, "uint64", error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::luDecompose", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const LUResult r = luDecomposeImpl(ctx, readMatrix(ctx, input));
-                   if (r.lower.values.empty()) return 0;
-                   const std::int64_t address = ctx.makeTemporary(9u * 8u);
-                   writeMatrixInto(ctx, address, 0u, r.lower);
-                   writeMatrixInto(ctx, address, 3u, r.upper);
-                   writeMatrixInto(ctx, address, 6u, r.permutation);
-                   return address; }, error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::lurDecompose", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const LUResult r = luDecomposeImpl(ctx, readMatrix(ctx, input));
-                   if (r.lower.values.empty()) return 0;
-                   const std::int64_t address = ctx.makeTemporary(9u * 8u);
-                   writeMatrixInto(ctx, address, 0u, r.lower);
-                   writeMatrixInto(ctx, address, 3u, r.upper);
-                   writeMatrixInto(ctx, address, 6u, r.permutation);
-                   return address; }, error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::symmetricEigen", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const EigenResult r = symmetricEigenImpl(ctx, readMatrix(ctx, input));
-                   if (r.eigenvalues.values.empty() && r.eigenvectors.values.empty()) return 0;
-                   const std::int64_t address = ctx.makeTemporary(4u * 8u);
-                   writeVectorInto(ctx, address, 0u, r.eigenvalues);
-                   writeMatrixInto(ctx, address, 1u, r.eigenvectors);
-                   return address; }, error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::svd", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const SvdResult r = svdImpl(ctx, readMatrix(ctx, input));
-                   if (r.u.values.empty() && r.singularValues.values.empty() && r.vTranspose.values.empty())
-                       return 0;
-                   const std::int64_t address = ctx.makeTemporary(7u * 8u);
-                   writeMatrixInto(ctx, address, 0u, r.u);
-                   writeVectorInto(ctx, address, 3u, r.singularValues);
-                   writeMatrixInto(ctx, address, 4u, r.vTranspose);
-                   return address; }, error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::jordan2", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const JordanResult r = jordan2Impl(ctx, readMatrix(ctx, input));
-                   if (r.basis.values.empty() && r.jordan.values.empty()) return 0;
-                   const std::int64_t address = ctx.makeTemporary(6u * 8u);
-                   writeMatrixInto(ctx, address, 0u, r.basis);
-                   writeMatrixInto(ctx, address, 3u, r.jordan);
-                   return address; }, error) && registry.bindTypedWithContext<std::int64_t, Matrix>("std::linalg::diagonalize2", [](Context &ctx, Matrix input) -> std::int64_t {
-                   const JordanResult r = jordan2Impl(ctx, readMatrix(ctx, input));
-                   if (r.basis.values.empty() && r.jordan.values.empty()) return 0;
-                   if (!(std::fabs(at(r.jordan, 0, 1)) < 0.00000001)) { ctx.fail("矩阵不可对角化"); return 0; }
-                   const std::int64_t address = ctx.makeTemporary(6u * 8u);
-                   writeMatrixInto(ctx, address, 0u, r.basis);
-                   writeMatrixInto(ctx, address, 3u, r.jordan);
-                   return address; }, error);
+    const auto input = argument(frame, 0), rhs = argument(frame, 1), output = argument(frame, 2);
+    matrixSolve<Scalar>(frame, input, rhs, output);
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "矩阵求解失败");
 }
-
-}  // namespace std_linalg_glue
+/** @brief 分解操作类别。 */
+enum class Decomposition
+{
+    LU,
+    LUR,
+    Eigen,
+    SVD,
+    Jordan,
+    Diagonal
+};
+/** @brief 执行固定分解，不构造原生临时聚合或通用实参向量。
+ * @tparam operation 分解类别。
+ * @param frame 输入及结果引用。
+ */
+template <Decomposition operation>
+void CHALI_ABI_CALL decompose(ChaliAbiFrame *frame)
+try
+{
+    const auto inputAddress = argument(frame, 0), output = argument(frame, 1);
+    const auto input = readMatrix(frame, inputAddress);
+    if constexpr (operation == Decomposition::LU || operation == Decomposition::LUR)
+    {
+        const auto value = luDecomposeImpl(frame, input);
+        writeMatrixInto(frame, output, 0, value.lower);
+        writeMatrixInto(frame, output, 3, value.upper);
+        writeMatrixInto(frame, output, 6, value.permutation);
+    }
+    else if constexpr (operation == Decomposition::Eigen)
+    {
+        const auto value = symmetricEigenImpl(frame, input);
+        writeVectorInto(frame, output, 0, value.eigenvalues);
+        writeMatrixInto(frame, output, 1, value.eigenvectors);
+    }
+    else if constexpr (operation == Decomposition::SVD)
+    {
+        const auto value = svdImpl(frame, input);
+        writeMatrixInto(frame, output, 0, value.u);
+        writeVectorInto(frame, output, 3, value.singularValues);
+        writeMatrixInto(frame, output, 4, value.vTranspose);
+    }
+    else
+    {
+        const auto value = jordan2Impl(frame, input);
+        if constexpr (operation == Decomposition::Diagonal)
+            if (!(std::fabs(at(value.jordan, 0, 1)) < 0.00000001)) fail(frame, "矩阵不可对角化");
+        writeMatrixInto(frame, output, 0, value.basis);
+        writeMatrixInto(frame, output, 3, value.jordan);
+    }
+    chali_abi_return_integer(frame, 0);
+} catch (const std::exception &error) { chali_abi_fail(frame, error.what()); } catch (...)
+{
+    chali_abi_fail(frame, "矩阵分解失败");
+}
+}  // namespace
+/** @brief 取得线性代数的 C 帧入口。
+ * @param count 接收入口数量，可为空。
+ * @return 生命周期覆盖进程的表。
+ */
+extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_linalg_records(size_t *count)
+{
+    static const ChaliAbiRecord records[] = {
+        { "std::linalg::__diagonalize2Into", decompose<Decomposition::Diagonal>, 2 },
+        { "std::linalg::__jordan2Into", decompose<Decomposition::Jordan>, 2 },
+        { "std::linalg::__luDecomposeInto", decompose<Decomposition::LU>, 2 },
+        { "std::linalg::__lurDecomposeInto", decompose<Decomposition::LUR>, 2 },
+        { "std::linalg::__matrixSolveInto__float32", solve<float>, 3 },
+        { "std::linalg::__matrixSolveInto__float64", solve<double>, 3 },
+        { "std::linalg::__matrixSolveInto__int16", solve<int16_t>, 3 },
+        { "std::linalg::__matrixSolveInto__int32", solve<int32_t>, 3 },
+        { "std::linalg::__matrixSolveInto__int64", solve<int64_t>, 3 },
+        { "std::linalg::__matrixSolveInto__int8", solve<int8_t>, 3 },
+        { "std::linalg::__matrixSolveInto__uint16", solve<uint16_t>, 3 },
+        { "std::linalg::__matrixSolveInto__uint32", solve<uint32_t>, 3 },
+        { "std::linalg::__matrixSolveInto__uint64", solve<uint64_t>, 3 },
+        { "std::linalg::__matrixSolveInto__uint8", solve<uint8_t>, 3 },
+        { "std::linalg::__svdInto", decompose<Decomposition::SVD>, 2 },
+        { "std::linalg::__symmetricEigenInto", decompose<Decomposition::Eigen>, 2 },
+    };
+    if (count) *count = sizeof(records) / sizeof(records[0]);
+    return records;
+}

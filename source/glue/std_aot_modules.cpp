@@ -19,7 +19,6 @@
 #include "../chali_glue.hpp"
 
 #ifndef GLUE_NO_STD_LINALG
-#include "std_linalg.hpp"
 #endif
 #ifndef GLUE_NO_STD_SQL
 #include "std_sql.hpp"

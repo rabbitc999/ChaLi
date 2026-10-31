@@ -776,6 +776,64 @@ int main(int argc, char **argv)
                         sizeof(scalar_buffer::Slot), failures);
         }
         {
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                function(&invocation);
+                return invocation.result;
+            };
+            const auto put = [&](int64_t address, int64_t value) {
+                unsigned char bytes[8];
+                for (unsigned i = 0; i < 8; ++i) bytes[i] = unsigned(uint64_t(value) >> (8 * i));
+                assert(chali_abi_write(&frame, address, bytes, sizeof(bytes)));
+            };
+            const auto take = [&](int64_t address) {
+                unsigned char bytes[8];
+                assert(chali_abi_read(&frame, address, bytes, sizeof(bytes)));
+                uint64_t value = 0;
+                for (unsigned i = 0; i < 8; ++i) value |= uint64_t(bytes[i]) << (8 * i);
+                return int64_t(value);
+            };
+            const auto input = chali_abi_temporary(&frame, 24);
+            const auto output = chali_abi_temporary(&frame, 72);
+            const auto values = call("std::linalg::__std_scalarNew", {});
+            assert(input && output && values);
+            for (auto value : {1, 0, 0, 1}) call("std::linalg::__std_scalarPush__int64", {values, value});
+            put(input, 2); put(input + 8, 2); put(input + 16, values);
+            int failures = 0;
+            bool partialResult = false;
+            for (int point = 0; point < 64; ++point)
+            {
+                for (int slot = 0; slot < 9; ++slot) put(output + slot * 8, 0);
+                arena.remaining = point;
+                call("std::linalg::__luDecomposeInto", {input, output});
+                arena.remaining = -1;
+                const bool failed = runtime.status != 0;
+                int owned = 0;
+                reset();
+                for (int slot : {2, 5, 8})
+                {
+                    const auto handle = take(output + slot * 8);
+                    if (handle) { ++owned; assert(chali_abi_record_release(&frame, handle)); }
+                }
+                if (!failed) { assert(owned == 3); break; }
+                assert(point != 63);
+                partialResult = partialResult || owned != 0;
+                ++failures;
+            }
+            assert(failures >= 3 && partialResult);
+            put(input, 3);
+            call("std::linalg::__svdInto", {input, output});
+            assert(runtime.status && context.error.find("矩阵存储长度与维度不匹配") != Memory::String::npos);
+            reset();
+            assert(chali_abi_record_release(&frame, values));
+            assert(chali_abi_temporary_release(&frame, input) && chali_abi_temporary_release(&frame, output));
+            std::printf("C matrix results: %d allocation failures including partial ownership and malformed shape rejection passed\n", failures);
+        }
+        {
             const std::string path = argv[1];
             const auto pathText = chali_abi_string(&frame, path.data(), path.size());
             const auto modeText = chali_abi_string(&frame, "wb", 2);

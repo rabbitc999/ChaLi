@@ -1,0 +1,12 @@
+{
+  "source_commit": "8ee8e95c",
+  "compiler_sha256": "ba81494681fd5e6d1284e71b83ae02f190cca1c08c11c14599eb6d15eb86ceb1",
+  "diagnostics": [
+    "chali aot: LU 分解要求方阵",
+    "chali aot: symmetricEigen 要求对称矩阵",
+    "chali aot: SVD 要求非空矩阵",
+    "chali aot: jordan2 只支持 2x2 矩阵",
+    "chali aot: jordan2 不支持复特征值",
+    "chali aot: 矩阵不可对角化"
+  ]
+}

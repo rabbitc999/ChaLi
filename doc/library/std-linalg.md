@@ -297,7 +297,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/linalg.chl:26](../../source/std/linalg.chl#L26)。
+**源码**：[source/std/linalg.chl:23](../../source/std/linalg.chl#L23)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -333,7 +333,7 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/linalg.chl:30](../../source/std/linalg.chl#L30)。
+**源码**：[source/std/linalg.chl:27](../../source/std/linalg.chl#L27)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -371,7 +371,7 @@ T at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/std/linalg.chl:31](../../source/std/linalg.chl#L31)。
+**源码**：[source/std/linalg.chl:28](../../source/std/linalg.chl#L28)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -409,7 +409,7 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/linalg.chl:32](../../source/std/linalg.chl#L32)。
+**源码**：[source/std/linalg.chl:29](../../source/std/linalg.chl#L29)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -448,7 +448,7 @@ void set(int64 index, T value);
 obj.set(index, value);
 ```
 
-**源码**：[source/std/linalg.chl:33](../../source/std/linalg.chl#L33)。
+**源码**：[source/std/linalg.chl:30](../../source/std/linalg.chl#L30)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -486,7 +486,7 @@ void push(T value);
 obj.push(value);
 ```
 
-**源码**：[source/std/linalg.chl:34](../../source/std/linalg.chl#L34)。
+**源码**：[source/std/linalg.chl:31](../../source/std/linalg.chl#L31)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -522,7 +522,7 @@ ScalarArray<T> copy();
 obj.copy();
 ```
 
-**源码**：[source/std/linalg.chl:35](../../source/std/linalg.chl#L35)。
+**源码**：[source/std/linalg.chl:32](../../source/std/linalg.chl#L32)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -560,7 +560,7 @@ Option<T> iterator(int64 position);
 obj.iterator(position);
 ```
 
-**源码**：[source/std/linalg.chl:36](../../source/std/linalg.chl#L36)。
+**源码**：[source/std/linalg.chl:33](../../source/std/linalg.chl#L33)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -596,7 +596,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/linalg.chl:46](../../source/std/linalg.chl#L46)。
+**源码**：[source/std/linalg.chl:43](../../source/std/linalg.chl#L43)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -635,7 +635,7 @@ static Vector<T> zeros(int64 n);
 std::linalg::Vector<T>::zeros(n);
 ```
 
-**源码**：[source/std/linalg.chl:48](../../source/std/linalg.chl#L48)。
+**源码**：[source/std/linalg.chl:45](../../source/std/linalg.chl#L45)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -677,7 +677,7 @@ static Vector<T> fromArray(T const& data, int64 count);
 std::linalg::Vector<T>::fromArray(data, count);
 ```
 
-**源码**：[source/std/linalg.chl:59](../../source/std/linalg.chl#L59)。
+**源码**：[source/std/linalg.chl:56](../../source/std/linalg.chl#L56)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -715,7 +715,7 @@ static Vector<T> fromArray(T data[]);
 std::linalg::Vector<T>::fromArray(data);
 ```
 
-**源码**：[source/std/linalg.chl:66](../../source/std/linalg.chl#L66)。
+**源码**：[source/std/linalg.chl:63](../../source/std/linalg.chl#L63)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -753,7 +753,7 @@ T[] toArray();
 obj.toArray();
 ```
 
-**源码**：[source/std/linalg.chl:68](../../source/std/linalg.chl#L68)。
+**源码**：[source/std/linalg.chl:65](../../source/std/linalg.chl#L65)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -791,7 +791,7 @@ T index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/linalg.chl:74](../../source/std/linalg.chl#L74)。
+**源码**：[source/std/linalg.chl:71](../../source/std/linalg.chl#L71)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -829,7 +829,7 @@ Option<T> iterator(int64 position);
 obj.iterator(position);
 ```
 
-**源码**：[source/std/linalg.chl:75](../../source/std/linalg.chl#L75)。
+**源码**：[source/std/linalg.chl:72](../../source/std/linalg.chl#L72)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -865,7 +865,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/linalg.chl:79](../../source/std/linalg.chl#L79)。
+**源码**：[source/std/linalg.chl:76](../../source/std/linalg.chl#L76)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -903,7 +903,7 @@ T at(int64 i);
 obj.at(i);
 ```
 
-**源码**：[source/std/linalg.chl:80](../../source/std/linalg.chl#L80)。
+**源码**：[source/std/linalg.chl:77](../../source/std/linalg.chl#L77)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -942,7 +942,7 @@ void set(int64 i, T value);
 obj.set(i, value);
 ```
 
-**源码**：[source/std/linalg.chl:81](../../source/std/linalg.chl#L81)。
+**源码**：[source/std/linalg.chl:78](../../source/std/linalg.chl#L78)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -981,7 +981,7 @@ T dot(Vector<T> other);
 obj.dot(other);
 ```
 
-**源码**：[source/std/linalg.chl:82](../../source/std/linalg.chl#L82)。
+**源码**：[source/std/linalg.chl:79](../../source/std/linalg.chl#L79)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1017,7 +1017,7 @@ float64 norm();
 obj.norm();
 ```
 
-**源码**：[source/std/linalg.chl:89](../../source/std/linalg.chl#L89)。
+**源码**：[source/std/linalg.chl:86](../../source/std/linalg.chl#L86)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1054,7 +1054,7 @@ Vector<T> normalized();
 obj.normalized();
 ```
 
-**源码**：[source/std/linalg.chl:90](../../source/std/linalg.chl#L90)。
+**源码**：[source/std/linalg.chl:87](../../source/std/linalg.chl#L87)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1093,7 +1093,7 @@ Vector<T> add(Vector<T> other);
 obj.add(other);
 ```
 
-**源码**：[source/std/linalg.chl:95](../../source/std/linalg.chl#L95)。
+**源码**：[source/std/linalg.chl:92](../../source/std/linalg.chl#L92)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1132,7 +1132,7 @@ Vector<T> subtract(Vector<T> other);
 obj.subtract(other);
 ```
 
-**源码**：[source/std/linalg.chl:102](../../source/std/linalg.chl#L102)。
+**源码**：[source/std/linalg.chl:99](../../source/std/linalg.chl#L99)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1170,7 +1170,7 @@ Vector<T> scale(T amount);
 obj.scale(amount);
 ```
 
-**源码**：[source/std/linalg.chl:109](../../source/std/linalg.chl#L109)。
+**源码**：[source/std/linalg.chl:106](../../source/std/linalg.chl#L106)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1208,7 +1208,7 @@ Vector<T> leftAdd(Vector<T> right);
 obj.leftAdd(right);
 ```
 
-**源码**：[source/std/linalg.chl:115](../../source/std/linalg.chl#L115)。
+**源码**：[source/std/linalg.chl:112](../../source/std/linalg.chl#L112)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1246,7 +1246,7 @@ Vector<T> leftSub(Vector<T> right);
 obj.leftSub(right);
 ```
 
-**源码**：[source/std/linalg.chl:116](../../source/std/linalg.chl#L116)。
+**源码**：[source/std/linalg.chl:113](../../source/std/linalg.chl#L113)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1284,7 +1284,7 @@ Vector<T> leftMul(T right);
 obj.leftMul(right);
 ```
 
-**源码**：[source/std/linalg.chl:117](../../source/std/linalg.chl#L117)。
+**源码**：[source/std/linalg.chl:114](../../source/std/linalg.chl#L114)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1320,7 +1320,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/linalg.chl:129](../../source/std/linalg.chl#L129)。
+**源码**：[source/std/linalg.chl:126](../../source/std/linalg.chl#L126)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1360,7 +1360,7 @@ static Matrix<T> zeros(int64 rows, int64 cols);
 std::linalg::Matrix<T>::zeros(rows, cols);
 ```
 
-**源码**：[source/std/linalg.chl:131](../../source/std/linalg.chl#L131)。
+**源码**：[source/std/linalg.chl:128](../../source/std/linalg.chl#L128)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1406,7 +1406,7 @@ static Matrix<T> fromArray(T const& data, int64 count, int64 rows, int64 cols);
 std::linalg::Matrix<T>::fromArray(data, count, rows, cols);
 ```
 
-**源码**：[source/std/linalg.chl:143](../../source/std/linalg.chl#L143)。
+**源码**：[source/std/linalg.chl:140](../../source/std/linalg.chl#L140)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1446,7 +1446,7 @@ static Matrix<T> fromArray(T data[], int64 rows, int64 cols);
 std::linalg::Matrix<T>::fromArray(data, rows, cols);
 ```
 
-**源码**：[source/std/linalg.chl:152](../../source/std/linalg.chl#L152)。
+**源码**：[source/std/linalg.chl:149](../../source/std/linalg.chl#L149)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1484,7 +1484,7 @@ T[] toArray();
 obj.toArray();
 ```
 
-**源码**：[source/std/linalg.chl:156](../../source/std/linalg.chl#L156)。
+**源码**：[source/std/linalg.chl:153](../../source/std/linalg.chl#L153)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1524,7 +1524,7 @@ Vector<T> column(int64 key);
 obj.column(key);
 ```
 
-**源码**：[source/std/linalg.chl:163](../../source/std/linalg.chl#L163)。
+**源码**：[source/std/linalg.chl:160](../../source/std/linalg.chl#L160)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1562,7 +1562,7 @@ Vector<T> index(int64 key);
 obj.index(key);
 ```
 
-**源码**：[source/std/linalg.chl:164](../../source/std/linalg.chl#L164)。
+**源码**：[source/std/linalg.chl:161](../../source/std/linalg.chl#L161)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1600,7 +1600,7 @@ Option<Vector<T>> iterator(int64 position);
 obj.iterator(position);
 ```
 
-**源码**：[source/std/linalg.chl:165](../../source/std/linalg.chl#L165)。
+**源码**：[source/std/linalg.chl:162](../../source/std/linalg.chl#L162)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1638,7 +1638,7 @@ static Matrix<T> identity(int64 n);
 std::linalg::Matrix<T>::identity(n);
 ```
 
-**源码**：[source/std/linalg.chl:171](../../source/std/linalg.chl#L171)。
+**源码**：[source/std/linalg.chl:168](../../source/std/linalg.chl#L168)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1678,7 +1678,7 @@ T at(int64 row, int64 col);
 obj.at(row, col);
 ```
 
-**源码**：[source/std/linalg.chl:177](../../source/std/linalg.chl#L177)。
+**源码**：[source/std/linalg.chl:174](../../source/std/linalg.chl#L174)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1719,7 +1719,7 @@ void set(int64 row, int64 col, T value);
 obj.set(row, col, value);
 ```
 
-**源码**：[source/std/linalg.chl:181](../../source/std/linalg.chl#L181)。
+**源码**：[source/std/linalg.chl:178](../../source/std/linalg.chl#L178)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1755,7 +1755,7 @@ Matrix<T> transpose();
 obj.transpose();
 ```
 
-**源码**：[source/std/linalg.chl:185](../../source/std/linalg.chl#L185)。
+**源码**：[source/std/linalg.chl:182](../../source/std/linalg.chl#L182)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1794,7 +1794,7 @@ Matrix<T> add(Matrix<T> other);
 obj.add(other);
 ```
 
-**源码**：[source/std/linalg.chl:195](../../source/std/linalg.chl#L195)。
+**源码**：[source/std/linalg.chl:192](../../source/std/linalg.chl#L192)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1833,7 +1833,7 @@ Matrix<T> subtract(Matrix<T> other);
 obj.subtract(other);
 ```
 
-**源码**：[source/std/linalg.chl:206](../../source/std/linalg.chl#L206)。
+**源码**：[source/std/linalg.chl:203](../../source/std/linalg.chl#L203)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1871,7 +1871,7 @@ Matrix<T> scale(T factor);
 obj.scale(factor);
 ```
 
-**源码**：[source/std/linalg.chl:217](../../source/std/linalg.chl#L217)。
+**源码**：[source/std/linalg.chl:214](../../source/std/linalg.chl#L214)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1910,7 +1910,7 @@ Matrix<T> multiply(Matrix<T> other);
 obj.multiply(other);
 ```
 
-**源码**：[source/std/linalg.chl:227](../../source/std/linalg.chl#L227)。
+**源码**：[source/std/linalg.chl:224](../../source/std/linalg.chl#L224)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1949,7 +1949,7 @@ Vector<T> apply(Vector<T> vector);
 obj.apply(vector);
 ```
 
-**源码**：[source/std/linalg.chl:243](../../source/std/linalg.chl#L243)。
+**源码**：[source/std/linalg.chl:240](../../source/std/linalg.chl#L240)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -1989,7 +1989,7 @@ Vector<T> solve(Vector<T> rhs);
 obj.solve(rhs);
 ```
 
-**源码**：[source/std/linalg.chl:256](../../source/std/linalg.chl#L256)。
+**源码**：[source/std/linalg.chl:253](../../source/std/linalg.chl#L253)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2027,7 +2027,7 @@ Matrix<T> leftAdd(Matrix<T> right);
 obj.leftAdd(right);
 ```
 
-**源码**：[source/std/linalg.chl:259](../../source/std/linalg.chl#L259)。
+**源码**：[source/std/linalg.chl:258](../../source/std/linalg.chl#L258)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2065,7 +2065,7 @@ Matrix<T> leftSub(Matrix<T> right);
 obj.leftSub(right);
 ```
 
-**源码**：[source/std/linalg.chl:260](../../source/std/linalg.chl#L260)。
+**源码**：[source/std/linalg.chl:259](../../source/std/linalg.chl#L259)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2103,7 +2103,7 @@ Matrix<T> leftMul(Matrix<T> right);
 obj.leftMul(right);
 ```
 
-**源码**：[source/std/linalg.chl:261](../../source/std/linalg.chl#L261)。
+**源码**：[source/std/linalg.chl:260](../../source/std/linalg.chl#L260)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2141,7 +2141,7 @@ Vector<T> leftMul(Vector<T> right);
 obj.leftMul(right);
 ```
 
-**源码**：[source/std/linalg.chl:262](../../source/std/linalg.chl#L262)。
+**源码**：[source/std/linalg.chl:261](../../source/std/linalg.chl#L261)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2179,7 +2179,7 @@ Matrix<T> leftMul(T right);
 obj.leftMul(right);
 ```
 
-**源码**：[source/std/linalg.chl:263](../../source/std/linalg.chl#L263)。
+**源码**：[source/std/linalg.chl:262](../../source/std/linalg.chl#L262)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2196,8 +2196,6 @@ LuFactorization luDecompose(Matrix<float64> input);
 **行为**
 
 计算带主元置换的 LU 分解。
-
-部分行主元分解，满足 permutation * input == lower * upper。
 
 **参数**
 
@@ -2237,8 +2235,6 @@ LuFactorization lurDecompose(Matrix<float64> input);
 
 计算 LUR 分解结果。
 
-LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。
-
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
@@ -2259,7 +2255,7 @@ LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。
 std::linalg::lurDecompose(input);
 ```
 
-**源码**：[source/std/linalg.chl:296](../../source/std/linalg.chl#L296)。
+**源码**：[source/std/linalg.chl:301](../../source/std/linalg.chl#L301)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2276,8 +2272,6 @@ EigenDecomposition symmetricEigen(Matrix<float64> input);
 **行为**
 
 计算实对称矩阵的特征分解。
-
-实对称矩阵的 Jacobi 特征分解；A=V*diag(values)*V^T。
 
 **参数**
 
@@ -2299,7 +2293,7 @@ EigenDecomposition symmetricEigen(Matrix<float64> input);
 std::linalg::symmetricEigen(input);
 ```
 
-**源码**：[source/std/linalg.chl:304](../../source/std/linalg.chl#L304)。
+**源码**：[source/std/linalg.chl:314](../../source/std/linalg.chl#L314)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2316,8 +2310,6 @@ SingularValueDecomposition svd(Matrix<float64> input);
 **行为**
 
 计算奇异值分解。
-
-薄 SVD：A=U*diag(sigma)*V^T；适合小规模矩阵。
 
 **参数**
 
@@ -2339,7 +2331,7 @@ SingularValueDecomposition svd(Matrix<float64> input);
 std::linalg::svd(input);
 ```
 
-**源码**：[source/std/linalg.chl:313](../../source/std/linalg.chl#L313)。
+**源码**：[source/std/linalg.chl:328](../../source/std/linalg.chl#L328)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2356,8 +2348,6 @@ JordanDecomposition jordan2(Matrix<float64> input);
 **行为**
 
 计算 2×2 矩阵的 Jordan 分解。
-
-实数 2x2 矩阵的 Jordan/对角化；复特征值须由复数后端处理。
 
 **参数**
 
@@ -2379,7 +2369,7 @@ JordanDecomposition jordan2(Matrix<float64> input);
 std::linalg::jordan2(input);
 ```
 
-**源码**：[source/std/linalg.chl:321](../../source/std/linalg.chl#L321)。
+**源码**：[source/std/linalg.chl:341](../../source/std/linalg.chl#L341)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。
 
@@ -2417,6 +2407,6 @@ JordanDecomposition diagonalize2(Matrix<float64> input);
 std::linalg::diagonalize2(input);
 ```
 
-**源码**：[source/std/linalg.chl:323](../../source/std/linalg.chl#L323)。
+**源码**：[source/std/linalg.chl:348](../../source/std/linalg.chl#L348)。
 
 **完整示例**：[example/samples/std_linalg_solve_glue.chl](../../example/samples/std_linalg_solve_glue.chl)。

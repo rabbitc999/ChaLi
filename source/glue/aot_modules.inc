@@ -31,7 +31,7 @@ CHALI_AOT_MODULE(random, registry.bindModule(abi_random_records, error))
 CHALI_AOT_MODULE(regex, registry.bindModule(abi_regex_records, error))
 #endif
 #ifndef GLUE_NO_STD_LINALG
-CHALI_AOT_MODULE(linalg, std_linalg_glue::bind(registry, error))
+CHALI_AOT_MODULE(linalg, (registry.bindModule(abi_scalar_records, error) && registry.bindModule(abi_linalg_records, error)))
 #endif
 #ifndef GLUE_NO_STD_PARSE
 CHALI_AOT_MODULE(parse, registry.bindModule(abi_parse_records, error))

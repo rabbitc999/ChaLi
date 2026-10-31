@@ -23511,7 +23511,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 26,
+    "line": 23,
     "page": "std-linalg.md",
     "anchor": "api-0"
   },
@@ -23536,7 +23536,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 30,
+    "line": 27,
     "page": "std-linalg.md",
     "anchor": "api-1"
   },
@@ -23570,7 +23570,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 31,
+    "line": 28,
     "page": "std-linalg.md",
     "anchor": "api-2"
   },
@@ -23602,7 +23602,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 32,
+    "line": 29,
     "page": "std-linalg.md",
     "anchor": "api-3"
   },
@@ -23642,7 +23642,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 33,
+    "line": 30,
     "page": "std-linalg.md",
     "anchor": "api-4"
   },
@@ -23674,7 +23674,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 34,
+    "line": 31,
     "page": "std-linalg.md",
     "anchor": "api-5"
   },
@@ -23699,7 +23699,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 35,
+    "line": 32,
     "page": "std-linalg.md",
     "anchor": "api-6"
   },
@@ -23731,7 +23731,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 36,
+    "line": 33,
     "page": "std-linalg.md",
     "anchor": "api-7"
   },
@@ -23756,7 +23756,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 46,
+    "line": 43,
     "page": "std-linalg.md",
     "anchor": "api-8"
   },
@@ -23792,7 +23792,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 48,
+    "line": 45,
     "page": "std-linalg.md",
     "anchor": "api-9"
   },
@@ -23834,7 +23834,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 59,
+    "line": 56,
     "page": "std-linalg.md",
     "anchor": "api-10"
   },
@@ -23868,7 +23868,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 66,
+    "line": 63,
     "page": "std-linalg.md",
     "anchor": "api-11"
   },
@@ -23895,7 +23895,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 68,
+    "line": 65,
     "page": "std-linalg.md",
     "anchor": "api-12"
   },
@@ -23927,7 +23927,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 74,
+    "line": 71,
     "page": "std-linalg.md",
     "anchor": "api-13"
   },
@@ -23959,7 +23959,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 75,
+    "line": 72,
     "page": "std-linalg.md",
     "anchor": "api-14"
   },
@@ -23986,7 +23986,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 79,
+    "line": 76,
     "page": "std-linalg.md",
     "anchor": "api-15"
   },
@@ -24020,7 +24020,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 80,
+    "line": 77,
     "page": "std-linalg.md",
     "anchor": "api-16"
   },
@@ -24060,7 +24060,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 81,
+    "line": 78,
     "page": "std-linalg.md",
     "anchor": "api-17"
   },
@@ -24094,7 +24094,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 82,
+    "line": 79,
     "page": "std-linalg.md",
     "anchor": "api-18"
   },
@@ -24119,7 +24119,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 89,
+    "line": 86,
     "page": "std-linalg.md",
     "anchor": "api-19"
   },
@@ -24146,7 +24146,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 90,
+    "line": 87,
     "page": "std-linalg.md",
     "anchor": "api-20"
   },
@@ -24180,7 +24180,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 95,
+    "line": 92,
     "page": "std-linalg.md",
     "anchor": "api-21"
   },
@@ -24214,7 +24214,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 102,
+    "line": 99,
     "page": "std-linalg.md",
     "anchor": "api-22"
   },
@@ -24246,7 +24246,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 109,
+    "line": 106,
     "page": "std-linalg.md",
     "anchor": "api-23"
   },
@@ -24278,7 +24278,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 115,
+    "line": 112,
     "page": "std-linalg.md",
     "anchor": "api-24"
   },
@@ -24310,7 +24310,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 116,
+    "line": 113,
     "page": "std-linalg.md",
     "anchor": "api-25"
   },
@@ -24342,7 +24342,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 117,
+    "line": 114,
     "page": "std-linalg.md",
     "anchor": "api-26"
   },
@@ -24367,7 +24367,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 129,
+    "line": 126,
     "page": "std-linalg.md",
     "anchor": "api-27"
   },
@@ -24409,7 +24409,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 131,
+    "line": 128,
     "page": "std-linalg.md",
     "anchor": "api-28"
   },
@@ -24465,7 +24465,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 143,
+    "line": 140,
     "page": "std-linalg.md",
     "anchor": "api-29"
   },
@@ -24511,7 +24511,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 152,
+    "line": 149,
     "page": "std-linalg.md",
     "anchor": "api-30"
   },
@@ -24538,7 +24538,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 156,
+    "line": 153,
     "page": "std-linalg.md",
     "anchor": "api-31"
   },
@@ -24572,7 +24572,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 163,
+    "line": 160,
     "page": "std-linalg.md",
     "anchor": "api-32"
   },
@@ -24604,7 +24604,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 164,
+    "line": 161,
     "page": "std-linalg.md",
     "anchor": "api-33"
   },
@@ -24636,7 +24636,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 165,
+    "line": 162,
     "page": "std-linalg.md",
     "anchor": "api-34"
   },
@@ -24670,7 +24670,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 171,
+    "line": 168,
     "page": "std-linalg.md",
     "anchor": "api-35"
   },
@@ -24712,7 +24712,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 177,
+    "line": 174,
     "page": "std-linalg.md",
     "anchor": "api-36"
   },
@@ -24760,7 +24760,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 181,
+    "line": 178,
     "page": "std-linalg.md",
     "anchor": "api-37"
   },
@@ -24785,7 +24785,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 185,
+    "line": 182,
     "page": "std-linalg.md",
     "anchor": "api-38"
   },
@@ -24819,7 +24819,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 195,
+    "line": 192,
     "page": "std-linalg.md",
     "anchor": "api-39"
   },
@@ -24853,7 +24853,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 206,
+    "line": 203,
     "page": "std-linalg.md",
     "anchor": "api-40"
   },
@@ -24885,7 +24885,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 217,
+    "line": 214,
     "page": "std-linalg.md",
     "anchor": "api-41"
   },
@@ -24919,7 +24919,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 227,
+    "line": 224,
     "page": "std-linalg.md",
     "anchor": "api-42"
   },
@@ -24953,7 +24953,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 243,
+    "line": 240,
     "page": "std-linalg.md",
     "anchor": "api-43"
   },
@@ -24987,7 +24987,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 256,
+    "line": 253,
     "page": "std-linalg.md",
     "anchor": "api-44"
   },
@@ -25019,7 +25019,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 259,
+    "line": 258,
     "page": "std-linalg.md",
     "anchor": "api-45"
   },
@@ -25051,7 +25051,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 260,
+    "line": 259,
     "page": "std-linalg.md",
     "anchor": "api-46"
   },
@@ -25083,7 +25083,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 261,
+    "line": 260,
     "page": "std-linalg.md",
     "anchor": "api-47"
   },
@@ -25115,7 +25115,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 262,
+    "line": 261,
     "page": "std-linalg.md",
     "anchor": "api-48"
   },
@@ -25147,7 +25147,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 263,
+    "line": 262,
     "page": "std-linalg.md",
     "anchor": "api-49"
   },
@@ -25157,7 +25157,7 @@
     "owner": "",
     "signature": "LuFactorization luDecompose(Matrix<float64> input)",
     "documentation": "计算带主元置换的 LU 分解。\n\n**返回值**：LuFactorization。",
-    "comment": "/* 部分行主元分解，满足 permutation * input == lower * upper。 */",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
@@ -25189,7 +25189,7 @@
     "owner": "",
     "signature": "LuFactorization lurDecompose(Matrix<float64> input)",
     "documentation": "计算 LUR 分解结果。\n\n**返回值**：LuFactorization。",
-    "comment": "/* LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。 */",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
@@ -25211,7 +25211,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 296,
+    "line": 301,
     "page": "std-linalg.md",
     "anchor": "api-51"
   },
@@ -25221,7 +25221,7 @@
     "owner": "",
     "signature": "EigenDecomposition symmetricEigen(Matrix<float64> input)",
     "documentation": "计算实对称矩阵的特征分解。\n\n**返回值**：EigenDecomposition。",
-    "comment": "/* 实对称矩阵的 Jacobi 特征分解；A=V*diag(values)*V^T。 */",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
@@ -25243,7 +25243,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 304,
+    "line": 314,
     "page": "std-linalg.md",
     "anchor": "api-52"
   },
@@ -25253,7 +25253,7 @@
     "owner": "",
     "signature": "SingularValueDecomposition svd(Matrix<float64> input)",
     "documentation": "计算奇异值分解。\n\n**返回值**：SingularValueDecomposition。",
-    "comment": "/* 薄 SVD：A=U*diag(sigma)*V^T；适合小规模矩阵。 */",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
@@ -25275,7 +25275,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 313,
+    "line": 328,
     "page": "std-linalg.md",
     "anchor": "api-53"
   },
@@ -25285,7 +25285,7 @@
     "owner": "",
     "signature": "JordanDecomposition jordan2(Matrix<float64> input)",
     "documentation": "计算 2×2 矩阵的 Jordan 分解。\n\n**返回值**：JordanDecomposition。",
-    "comment": "/* 实数 2x2 矩阵的 Jordan/对角化；复特征值须由复数后端处理。 */",
+    "comment": "",
     "parameters": [
       {
         "name": "input",
@@ -25307,7 +25307,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 321,
+    "line": 341,
     "page": "std-linalg.md",
     "anchor": "api-54"
   },
@@ -25339,7 +25339,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/linalg.chl",
-    "line": 323,
+    "line": 348,
     "page": "std-linalg.md",
     "anchor": "api-55"
   },

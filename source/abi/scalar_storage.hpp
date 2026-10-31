@@ -1,6 +1,8 @@
 /** @file scalar_storage.hpp @brief 数值内核私有的定长标量槽及转换，不作为 C 宿主头暴露。 */
 #pragma once
 #include "../allocator/chali_allocator.hpp"
+#include "chali_abi.h"
+#include <memory>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
@@ -53,9 +55,10 @@ Slot encode(Scalar value)
         result.bits = static_cast<std::int64_t>(value);
     return result;
 }
-/**
- * @brief 取得与 C 服务共用的进程级描述符，供尚未迁移的私有数值内核使用。
- * @return 不透明描述符，登记失败为空；不向公开 C ABI 暴露运行时类型。
+/** @brief 发布已经完整构造的私有数值记录，失败由本地所有者清理。
+ * @param frame 当前 C 帧。
+ * @param value 待转移记录。
+ * @return 新记录句柄，失败为零。
  */
-const void *descriptor();
+int64_t publish(const ChaliAbiFrame *frame, std::unique_ptr<Storage> value);
 }  // namespace scalar_buffer

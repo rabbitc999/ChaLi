@@ -1,6 +1,5 @@
 /** @file abi_scalar.cpp @brief 数值缓冲的 C 帧入口，支持全部基础标量，不使用通用值封送。 */
 #include "chali_standard.h"
-#include "chali_abi_internal.h"
 #include "scalar_storage.hpp"
 #include <memory>
 
@@ -20,10 +19,6 @@ try
 {
     return new Storage(*static_cast<const Storage *>(value));
 } catch (...) { return nullptr; }
-/** @brief 取得 C 服务共用的稳定描述符。
- * @return 记录描述符，登记失败为空。
- */
-const void *descriptor() { return chali_abi_record_type(typeName, destroy, clone); }
 /** @brief 发布完整数值缓冲，失败时仍保留本地所有权。
  * @param frame 当前 C 帧。
  * @param value 待转移的记录。
