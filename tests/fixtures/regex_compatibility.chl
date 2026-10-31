@@ -1,0 +1,33 @@
+import std::regex;
+void main() {
+    let parsed = std::regex::Regex::compile("([a-z]+)-([0-9]+)");
+    let rule = parsed.unwrap();
+    println("{}", rule.fullMatch("abc-123"));
+    println("{}", rule.fullMatch("!abc-123!"));
+    println("{}", rule.contains("!abc-123!"));
+    println("{}", rule.contains("nothing"));
+    println("{}", rule.find("中文abc-123").unwrap());
+    println("{}", rule.find("nothing").isNone());
+    println("{}", rule.capture("!abc-123!", 0));
+    println("{}", rule.capture("!abc-123!", 1));
+    println("{}", rule.capture("!abc-123!", 2));
+    println("{}", rule.capture("!abc-123!", 3));
+    println("{}", rule.capture("!abc-123!", -1));
+    println("{}", rule.capture("!abc-123!", 4294967297));
+    println("{}", rule.replaceFirst("ab-12 cd-34", "$2:$1"));
+    println("{}", rule.replaceAll("ab-12 cd-34", "$2:$1"));
+    println("{}", rule.replaceAll("nothing", "x"));
+    println("{}", std::regex::Regex::compile("[").isErr());
+    let empty = std::regex::Regex::compile("").unwrap();
+    println("{}", empty.fullMatch(""));
+    println("{}", empty.find("abc").unwrap());
+    println("{}", empty.replaceAll("ab", "-"));
+    {
+        let copy = rule;
+        println("{}", copy.capture("ef-56", 2));
+        List<std::regex::Regex> rules;
+        rules.push(copy);
+        println("{}", rules[0].contains("ef-56"));
+    }
+    println("{}", rule.contains("gh-78"));
+}

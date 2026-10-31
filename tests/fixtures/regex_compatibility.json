@@ -1,0 +1,5 @@
+{
+  "source_commit": "69d115b9",
+  "compiler_sha256": "c192a8e546bbf653f601fec52dc9ed5c345fbe0cc0e114a086188e60853b0a8f",
+  "output": "1\n0\n1\n0\n6\n1\nabc-123\nabc\n123\n\n\nabc\n12:ab cd-34\n12:ab 34:cd\nnothing\n1\n1\n0\n-a-b-\n56\n1\n1\n"
+}

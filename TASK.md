@@ -176,6 +176,12 @@ C API、序列化、内存与并发首轮 16 步为 15 通过、1 失败、0 跳
 
 新鲜导出工程实际冷构建外置 LLVM 编译器，直接通过解析内核、结构化数据四配置及关闭后诊断；宿主为 GCC 11／O1，语言程序仍默认 LLVM O3，不作性能比较。EXE 保留 build/independent-validation/1.0.12-structured-c-api/，SHA256 为 c8570638c17873467b89ab31c9f814d636ed37bd571c8f87afdd7ea0f0e66e72。最终静态 EXE SHA256 为 c192a8e546bbf653f601fec52dc9ed5c345fbe0cc0e114a086188e60853b0a8f；vscode/dist/1.0.12-structured-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 69c1d9efd18d6114ab2201f4d1afc2f5134dcae2ee23276a87ebf64de6fba7d5。五项基础及新内核导出源一致，旧五文件不存在。证据仅保留 tools/history/20261031/chali-1.0.12-structured-c-api/；未运行整仓全量门禁或正式计时，继续其他模块迁移与旧胶水删除。
 
+正则模块已迁移至 abi_regex.cpp 的 C 帧入口，删除 std_regex.cpp／hpp、旧登记与资产依赖。使用公开 C 字符串及可复制记录服务，模式引用独立拥有并共享不可变编译结果，匹配状态局部保存；保持字节索引、捕获组 int 缩窄、空匹配和替换语义。新增 chali_abi_record_probe／CHALI_ABI_CAP_RECORD_PROBE，未知、失效、零或类型不匹配的记录返回空且不覆盖已有错误，用于保留正则有效性查询行为。严格借用及匹配失败仍报告错误。
+
+迁移前 69d115b9 真实编译器冻结正则输出，四配置逐字节一致；长模式、300 模式生命周期、容器副本及无效接收者诊断通过。C 服务单元验证无错误探测、已有诊断保留、不可变模式复制／快照和三个创建失败点清理。首轮构建发现驱动生成源仍包含已删除头；移除该 include 并重新生成驱动，文法及语义未改。修正后 C API、正则及内存 11 步全部通过，无失败或跳过；最终手册、隔离标准库／源码回退／零磁盘缓存及七组插件测试通过。原始构建失败与最终验证分别保留。
+
+静态编译器 SHA256 为 4e38e1c26f47f454be39f3b897046e30458f2c89b1694fb73fa8335fbc69683d；vscode/dist/1.0.12-regex-c-api/chali-editor-1.0.12-llvm-static.vsix 已核对版本、static 与内嵌字节，SHA256 为 6397bfafcc7f8f95e01632da6d4ccc2eb503a93b0bef08808feae551487802c4。五项基础及正则内核导出源一致，旧两文件不存在。证据仅保留 tools/history/20261031/chali-1.0.12-regex-c-api/；未重复冷构建外置编译器、执行整仓全量门禁或正式计时，继续其余模块迁移与旧胶水删除。
+
 - [ ] ChaLi 层承接能直接表达的业务逻辑与标准库算法，包括校验、解析流程、格式化策略、容器算法和错误组合；按模块迁移并保留输出、诊断及所有权对照。
 - [ ] 文件、网络、线程、时钟、动态库、数据库等宿主服务使用薄 C API；LLVM C API 用于编译器接入 LLVM，不能代替操作系统 IO。
 - [ ] 低层固定语义操作按目标生成 LLVM 指令或 intrinsic：内存复制／移动／填充、地址计算、标量读写及适合的位运算。维护支持列表、类型规则与运行期回退，不靠 Python 生成生产 LLVM IR。

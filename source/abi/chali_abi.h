@@ -137,6 +137,7 @@ typedef struct ChaliAbiRecord
 #define CHALI_ABI_CAP_MEMORY        UINT64_C(16)
 #define CHALI_ABI_CAP_BINARY        UINT64_C(32)  ///< 原始字符串与字节列表服务。
 #define CHALI_ABI_CAP_RECORD_CLONE  UINT64_C(64)  ///< 宿主记录自动独立复制服务。
+#define CHALI_ABI_CAP_RECORD_PROBE  UINT64_C(128) ///< 不改变错误状态的宿主记录存活与类型探测。
 
 /** @brief C 宿主边界的稳定状态码，不使用 errno 或 C++ 异常。 */
 enum
@@ -618,6 +619,16 @@ int64_t CHALI_ABI_CALL chali_abi_record_make_clonable(const ChaliAbiFrame *frame
  * @note 指针只在本次直通调用期间有效，不得跨调用保存。
  */
 void *CHALI_ABI_CALL chali_abi_record_borrow(const ChaliAbiFrame *frame, int64_t handle, const char *typeName);
+
+/**
+ * @brief 探测并借用类型匹配的存活记录，不将句柄未找到视为错误。
+ * @param frame 当前调用帧；帧无效仍报告服务错误。
+ * @param handle 待检查的句柄。
+ * @param typeName 记录类型名称。
+ * @return 存活且类型匹配的记录，否则为空；指针沿用借用记录的有效期。
+ * @note 未知类型、零值、已释放或类型不匹配不改变已有错误状态。
+ */
+void *CHALI_ABI_CALL chali_abi_record_probe(const ChaliAbiFrame *frame, int64_t handle, const char *typeName);
 
 /**
  * @brief 用 C 侧复制回调生成独立记录副本。

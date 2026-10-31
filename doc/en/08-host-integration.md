@@ -117,3 +117,5 @@ See [toolchain](09-toolchain.md), [AOT compilation](38-aot.md) and the
 [callback example](../../example/native-callbacks/README.md).
 
 `chali_abi_record_make_clonable` registers a C clone callback for container deep copies and thread snapshots. The callback must return an independent record without handles owned by the source runtime, return null on failure, and never throw. Records with the same type name must retain identical destroy and automatic-clone callbacks. Require `CHALI_ABI_CAP_RECORD_CLONE` when using this service. Records created by `chali_abi_record_make` remain unavailable for automatic copying.
+
+`chali_abi_record_probe` borrows a live record with a matching type. Zero, unknown, stale, and mismatched handles return null without replacing an existing error. It requires a valid frame and uses the usual record borrow lifetime. Declare `CHALI_ABI_CAP_RECORD_PROBE` when using this optional query. Use `chali_abi_record_borrow` for a strict borrow that reports invalid records.

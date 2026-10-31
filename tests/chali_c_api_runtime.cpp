@@ -385,9 +385,21 @@ int main()
         assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, record) && destroyed == cloneAttempts + 3);
         assert(!chali_abi_record_release(&frame, record) && runtime.status != 0);
         reset();
+        assert(!chali_abi_record_probe(&frame, record, "c-api-test::Integer") && !runtime.status);
+        assert(!chali_abi_record_probe(&frame, 0, "c-api-test::Integer") && !runtime.status);
+        assert(!chali_abi_record_probe(&frame, record, "unknown::Type") && !runtime.status);
+        assert(!chali_abi_record_probe(nullptr, record, "c-api-test::Integer"));
         const auto automatic = chali_abi_record_make_clonable(&frame, "c-api-test::AutomaticInteger",
             new int(42), destroyInteger, cloneInteger);
         assert(automatic && !runtime.status);
+        assert(chali_abi_record_probe(&frame, automatic, "c-api-test::AutomaticInteger"));
+        assert(!chali_abi_record_probe(&frame, automatic, "c-api-test::Integer") && !runtime.status);
+        chali_abi_fail(&frame, "probe retains existing error");
+        const auto probeStatus = runtime.status;
+        const auto probeError = runtime.diagnostic;
+        assert(!chali_abi_record_probe(&frame, 0, "unknown::Type"));
+        assert(runtime.status == probeStatus && runtime.diagnostic == probeError);
+        reset();
         NativeCallContextImpl automaticHost(context, &invoker);
         int automaticFailures = 0;
         for (int point = 0; point < 32; ++point)
@@ -564,6 +576,53 @@ int main()
             }
             assert(failures >= 2);
             std::printf("%s C records: independent copy, transfer, close and %d failure points passed\n", format, failures);
+        }
+        {
+            const auto call = [&](const char *name, std::initializer_list<int64_t> arguments) {
+                auto function = chali_abi_resolve(name, nullptr);
+                assert(function);
+                const unsigned char kinds[] = {ChaliAbiSlotInteger, ChaliAbiSlotInteger, ChaliAbiSlotInteger};
+                assert(arguments.size() <= sizeof(kinds));
+                ChaliAbiFrame invocation{&runtime, arguments.begin(), kinds, int64_t(arguments.size()), 0, 0};
+                function(&invocation);
+                return invocation.result;
+            };
+            const auto empty = call("std::regex::__regexNew", {});
+            assert(empty && !call("std::regex::__regexValid", {empty}) && !runtime.status);
+            assert(chali_abi_record_release(&frame, empty));
+            assert(!call("std::regex::__regexValid", {empty}) && !runtime.status);
+            assert(!call("std::regex::__regexValid", {0}) && !runtime.status);
+            const auto text = chali_abi_string(&frame, "a+", 2);
+            const auto original = call("std::regex::__regexCompileHandle", {text});
+            assert(original && call("std::regex::__regexValid", {original}) && !runtime.status);
+            assert(chali_abi_string_release(&frame, text));
+            TransferPacket packet;
+            Memory::Set<std::int64_t> active;
+            assert(captureTransferObject(context, original, packet, active));
+            NativeCallContextImpl host(context, &invoker);
+            const auto copy = host.cloneNativeRecord(original);
+            assert(copy && chali_abi_record_release(&frame, original));
+            Memory::Vector<std::int64_t> created;
+            int64_t restored = 0;
+            assert(restoreTransferObject(context, packet, original, active, created, &restored));
+            const auto input = chali_abi_string(&frame, "aaa", 3);
+            assert(call("std::regex::__regexFullMatch", {copy, input}) && !runtime.status);
+            assert(call("std::regex::__regexFullMatch", {restored, input}) && !runtime.status);
+            assert(chali_abi_string_release(&frame, input));
+            assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, restored));
+            int failures = 0;
+            for (int point = 0; point < 32; ++point)
+            {
+                arena.remaining = point;
+                const auto attempted = call("std::regex::__regexNew", {});
+                arena.remaining = -1;
+                if (attempted) { assert(chali_abi_record_release(&frame, attempted)); break; }
+                assert(runtime.status && point != 31);
+                ++failures;
+                reset();
+            }
+            assert(failures >= 2);
+            std::printf("regex C records: non-failing probe, shared immutable copies, transfer and %d failure points passed\n", failures);
         }
     }
     assert(arena.stats().liveBlocks == 0);

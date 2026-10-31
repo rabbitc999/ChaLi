@@ -13,6 +13,7 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "regex": ["chali_regex_c_api"],
     "binary": ["chali_binary"],
     "signal": ["chali_signal"],
     "process": ["chali_process_c_api"],

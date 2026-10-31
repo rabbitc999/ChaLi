@@ -38,6 +38,7 @@ EMPTY_MODULE(abi_process_records)
 EMPTY_MODULE(abi_compress_records)
 EMPTY_MODULE(abi_json_records)
 EMPTY_MODULE(abi_toml_records)
+EMPTY_MODULE(abi_regex_records)
 EMPTY_MODULE(abi_serialization_records)
 /**
  * @brief 空错误服务，仅用于连接未调用的参数访问器。

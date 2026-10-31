@@ -19,9 +19,6 @@
 #include "std_filesystem.hpp"
 #endif
 
-#ifndef GLUE_NO_STD_REGEX
-#include "std_regex.hpp"
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif
@@ -65,7 +62,7 @@ bool bindStandardGlue(chali_glue::Registry &registry, Memory::String *error)
 #endif
 #ifndef GLUE_NO_STD_REGEX
     Memory::String regexError;
-    if (!std_regex::bind(registry, &regexError))
+    if (!registry.bindModule(abi_regex_records, &regexError))
     {
         if (error) *error = regexError;
         ok = false;

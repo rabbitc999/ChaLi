@@ -22,9 +22,6 @@
 #include "std_filesystem.hpp"
 #endif
 
-#ifndef GLUE_NO_STD_REGEX
-#include "std_regex.hpp"
-#endif
 #ifndef GLUE_NO_STD_LINALG
 #include "std_linalg.hpp"
 #endif

@@ -64,6 +64,7 @@ std::vector<std::unique_ptr<RecordTypeBinding>> &recordTypes()
  * @brief 取（必要时登记）某个类型名对应的宿主记录描述符。
  * @param typeName 类型名，不得为空，首次登记时复制。
  * @param destroy 销毁回调，仅首次登记时使用；为空表示只查找不登记。
+ * @param clone 自动复制回调；首次登记后不得更换。
  * @return 地址稳定的描述符；参数无效或未登记时返回空指针。
  * @note 描述符只增不删，对象表会长期持有其地址，因此返回指针始终有效。
  */
@@ -705,6 +706,30 @@ try
 {
     chali_abi_mark_failure(frame, "C runtime service failed");
     return 0;
+}
+
+/**
+ * @brief 探测存活记录；普通未找到不写入错误通道。
+ * @param frame 当前调用帧。
+ * @param handle 待检查的记录句柄。
+ * @param typeName 类型身份名称。
+ * @return 匹配的借用指针，未找到为空。
+ */
+void *chali_abi_record_probe(const ChaliAbiFrame *frame, int64_t handle, const char *typeName)
+try
+{
+    std::optional<NativeCallContextImpl> host;
+    if (!prepareHost(frame, host) || !handle) return nullptr;
+    const auto *descriptor = asRecordType(chali_abi_record_type(typeName, nullptr, nullptr));
+    return descriptor ? host->nativeRecord(handle, *descriptor) : nullptr;
+} catch (const std::exception &error)
+{
+    chali_abi_mark_failure(frame, error.what());
+    return nullptr;
+} catch (...)
+{
+    chali_abi_mark_failure(frame, "C runtime service failed");
+    return nullptr;
 }
 
 /**
