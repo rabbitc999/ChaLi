@@ -281,6 +281,17 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         tomlText(entry.value, "dependencies." + entry.key);
                 continue;
             }
+            if (name == "warnings")
+            {
+                for (const toml::Member &entry : table.value.asTable()->members())
+                {
+                    const auto value = tomlText(entry.value, "warnings." + entry.key);
+                    if (value != "allow" && value != "warn" && value != "error")
+                        throw std::runtime_error("warnings expects allow, warn or error: " + entry.key);
+                    project.warnings[entry.key] = value;
+                }
+                continue;
+            }
             if (name != "package" && name != "chali" && name != "aot")
                 throw std::runtime_error("unknown or repeated table: " + name);
             for (const toml::Member &entry : table.value.asTable()->members())

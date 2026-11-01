@@ -18,6 +18,8 @@ struct Project
     /// 编译器最低版本、依赖清单与锁文件签名。
     Memory::String compiler, lockSignature;
     Memory::Map<Memory::String, Memory::String> dependencies;
+    /// [warnings] 中按规则配置 allow、warn 或 error，命令行可覆盖。
+    Memory::Map<Memory::String, Memory::String> warnings;
     Memory::Vector<Memory::String> authors, imports, searchPaths, includePaths, importPaths;
     /**
      * `[chali] debug`：是否按 `--debug` 构建（O0、保留符号与源码行），缺省 `false`。

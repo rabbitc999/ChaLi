@@ -9,7 +9,6 @@ from native_lsp_transport import Transport
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-from chali_lsp import naming_warnings
 
 
 def main():
@@ -86,7 +85,11 @@ def main():
         warnings = diagnostics[documents['bad.chl']][0]
         assert len(warnings) == 3 and all(d['severity']==2 for d in warnings), warnings
         assert {d['code'] for d in warnings} == {'CHL2101','CHL2102'}
-        assert warnings == naming_warnings(bad), (warnings, naming_warnings(bad))
+        for warning in warnings:
+            assert warning['data']['fixes'], warning
+            span = warning['range']
+            name = bad.encode('utf-16-le')[span['start']['character']*2:span['end']['character']*2].decode('utf-16-le')
+            assert name in ('bad_type', 'Bad_Method', 'Bad_Function'), warning
         assert diagnostics[documents['bad.chl']][-1] == [], diagnostics[documents['bad.chl']]
         assert diagnostics[documents['good.chl']][-1] == [], diagnostics[documents['good.chl']]
         labels = lambda key: {r['label'] for r in responses[key]}

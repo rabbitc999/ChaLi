@@ -119,3 +119,25 @@ The compiler carries a binary parse unit for the `std::lang` core. Normal compil
 `make all` builds a separate standard-library stage compiler, generates each binary twice with `tools/build_stdlib_units.py` to check determinism, atomically updates the assets, and builds the final compiler. The package contains no user source, project paths or process pointers. Parse-unit format 7 preserves the complete type-reference graph and lifetime contracts. Template-record format 1 stores no user instances or process addresses. Package format 2 validates content/compiler identity, reflection configuration, lengths and integrity. Core source locations are canonicalized so unrelated user input lengths do not change the binary. A missing content profile uses in-memory source parsing; a damaged matching asset produces an error.
 
 `--no-stdlib-cache` and `CHALI_NO_STDLIB_CACHE=1` remain compatibility controls for source parsing. Neither path writes a standard-library cache. `--stdlib-cache-dir` has been removed, and `CHALI_STDLIB_CACHE_DIR` no longer chooses a loading directory. Existing project files are preserved. `--stats` reports core, module-AST and template-record hits and source fallbacks, including matched module names. `std::__range` identifies a generated standard-library asset; it is not a user-importable module.
+
+## Warning configuration
+
+Warnings have stable codes. `CHL1601` (`overlapping-pattern`) is enabled by default. Naming rules `CHL2101`/`CHL2102` (`type-naming`/`function-naming`) and `CHL2201` (`unused-local`) are opt-in. Constructors and generated macro declarations are exempt. Unused-local analysis uses the checked AST and conservatively treats cleanup or borrowing reads as uses.
+
+```console
+chali --check main.chl --warn=unused-local
+chali --check main.chl --warn=naming --warnings-as-errors
+chali --diagnostics=json main.chl --deny=CHL2201
+```
+
+`--warn=RULE`, `--allow=RULE`, and `--deny=RULE` select warning, disabled, and error levels. Use a code, rule name, or the `naming`/`all` group. `--warnings-as-errors` promotes enabled warnings only. Unknown rules are rejected. Project configuration:
+
+```toml
+[warnings]
+unused-local = "warn"
+CHL2101 = "allow"
+```
+
+Levels are `allow`, `warn`, and `error`. The editor preset enables naming; project settings override the preset, and explicit CLI rules override project settings in command-line order. A real line comment `// chali: allow-next-line CHL2201` suppresses the next line; `// chali: allow CHL2201` suppresses its own line. Strings and block comments do not act as directives.
+
+CLI JSON and LSP share codes, severity, original locations, and safe fix data. The current fix inserts a local suppression and preserves initialization and cleanup. Errors prevent execution. Ordinary macro parameter copies and compiler copy elimination produce no warning.

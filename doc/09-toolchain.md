@@ -128,3 +128,30 @@ C 宿主包含 `chali_abi.h`，需要集中登记标准库时另包含 `chali_st
 ## 基础库独立编译单元
 
 `source/ast` 的类型、节点构造、四元式生成和数据导出分别独立编译；`source/bignum` 的整数乘除法、数论、位操作、转换和十进制方根也按职责分离。公开头保留接口，Make 自动依赖记录各单元的实际包含关系。导出编译器和内嵌资产包含全部实现，独立构建使用各库 CMake 目标。具体文件职责见 [AST 库说明](../source/ast/README.md) 与 [大数库说明](../source/bignum/README.md)。
+
+## 警告配置
+
+警告使用稳定代码。`CHL1601`（`overlapping-pattern`）默认启用；命名规则 `CHL2101`／`CHL2102`（`type-naming`／`function-naming`）和 `CHL2201`（`unused-local`）默认关闭。命名只检查已有真实声明位置的类型、函数和方法，构造器及宏生成声明不报告；未使用变量检查只报告已检查 AST 中没有读取的用户局部，清理或借用产生的读取会保守地视为使用。
+
+```console
+chali --check main.chl --warn=unused-local
+chali --check main.chl --warn=naming --warnings-as-errors
+chali --diagnostics=json main.chl --deny=CHL2201
+```
+
+`--warn=规则`、`--allow=规则`、`--deny=规则` 分别选择警告、关闭、错误；可以使用稳定代码、规则名以及 `naming`／`all` 规则组。`--warnings-as-errors` 只提升已启用的规则。未知规则报错。项目清单可配置：
+
+```toml
+[warnings]
+unused-local = "warn"
+CHL2101 = "allow"
+```
+
+级别为 `allow`、`warn` 或 `error`。编辑器预设启用命名规则，项目配置覆盖预设，命令行显式规则最后覆盖；同一命令行按出现顺序应用。逐行抑制写在真实行注释中：
+
+```chali
+// chali: allow-next-line CHL2201
+int64 reserved = prepare();
+```
+
+也可在目标行末写 `// chali: allow CHL2201`。字符串或块注释中的相同文本不生效。JSON 和 LSP 共用代码、级别、原始位置及安全修复数据；当前修复仅插入局部抑制，不删除初始化或清理。提升为错误时不执行程序。正常宏参数副本和编译器消除复制的行为不产生警告。

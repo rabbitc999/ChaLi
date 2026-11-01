@@ -13,6 +13,7 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "warnings": ["chali_warnings", "chali_analysis_diagnostics", "chali_match_overlap", "chali_lsp_naming_scopes"],
     "stdlib": ["chali_standard_unit", "chali_precompiled", "chali_generic_scope", "chali_macro_generics"]
               + (["chali_precompiled_readonly"] if os.name == "nt" else []),
     "sql": ["chali_sqlite", "chali_sql_connections", "chali_sql_backends", "chali_reflection_serialization"],

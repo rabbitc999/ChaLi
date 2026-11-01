@@ -3469,7 +3469,12 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     }
     MReflectionBuilder reflection;
     if (g_reflectionEnabled && !reflection.build()) return 1;
-    if (g_checkOnly) return 0;
+    if (g_checkOnly)
+    {
+        // 检查模式保留已验证的 AST，供诊断规则使用；不添加运行时辅助函数。
+        g_aotSyntax = std::make_unique<ast::Program>(std::move(program));
+        return 0;
+    }
 
     AddRuntimeHelpers(program);
     if (!FinalizeBootstrapCalls(program))

@@ -60,6 +60,19 @@ struct Diagnostic
     Memory::String message, file;
     std::size_t line = 1, column = 1;
     bool warning = false;
+    Memory::String id, sourceText, fixText;
+    std::size_t endColumn = 0;
+    bool hasSource = false;
+    /**
+     * @brief 构造原始位置上的诊断，附加字段由规则补齐。
+     * @param text 消息。
+     * @param filename 原文件。
+     * @param row 一基行。
+     * @param col 一基列。
+     * @param isWarning 是否为警告。
+     */
+    Diagnostic(Memory::String text = {}, Memory::String filename = {}, std::size_t row = 1,
+               std::size_t col = 1, bool isWarning = false) : message(std::move(text)), file(std::move(filename)), line(row), column(col), warning(isWarning) {}
 };
 /**
  * @brief 将全部诊断写入一个 JSON 文档。
@@ -75,8 +88,12 @@ inline void reportMany(const Memory::Vector<Diagnostic> &diagnostics)
         const auto &message = diagnostic.message;
         const auto line = diagnostic.line ? diagnostic.line : 1u, column = diagnostic.column ? diagnostic.column : 1u;
         Memory::String source;
-        std::ifstream input(Memory::u8path(diagnostic.file));
-        for (std::size_t i = 0; i < line; ++i)
+        std::ifstream input;
+        if (diagnostic.hasSource)
+            source = diagnostic.sourceText;
+        else
+            input.open(Memory::u8path(diagnostic.file));
+        for (std::size_t i = 0; !diagnostic.hasSource && i < line; ++i)
             if (!std::getline(input, source))
             {
                 source.clear();
@@ -87,10 +104,15 @@ inline void reportMany(const Memory::Vector<Diagnostic> &diagnostics)
         const auto notes = note == Memory::String::npos ? Memory::String("[]") : "[" + quote(message.substr(note + 7)) + "]";
         if (!first) std::fputc(',', stdout);
         first = false;
-        std::printf("{\"code\":%s,\"severity\":%s,\"message\":%s,\"span\":{\"file\":%s,\"line\":%zu,\"column\":%zu,\"endLine\":%zu,\"endColumn\":%zu},\"source\":%s,\"notes\":%s}",
-                    quote(code(message)).c_str(), diagnostic.warning ? "\"warning\"" : "\"error\"", quote(note == Memory::String::npos ? message : message.substr(0, note)).c_str(),
-                    quote(diagnostic.file).c_str(), line, column, line, source.size() >= column ? source.size() + 1u : column + 1u,
+        std::printf("{\"code\":%s,\"severity\":%s,\"message\":%s,\"span\":{\"file\":%s,\"line\":%zu,\"column\":%zu,\"endLine\":%zu,\"endColumn\":%zu},\"source\":%s,\"notes\":%s",
+                    quote(diagnostic.id.empty() ? Memory::String(code(message)) : diagnostic.id).c_str(), diagnostic.warning ? "\"warning\"" : "\"error\"", quote(note == Memory::String::npos ? message : message.substr(0, note)).c_str(),
+                    quote(diagnostic.file).c_str(), line, column, line, diagnostic.endColumn ? diagnostic.endColumn : source.size() >= column ? source.size() + 1u :
+                                                                                                                                                column + 1u,
                     quote(source).c_str(), notes.c_str());
+        if (!diagnostic.fixText.empty())
+            std::printf(",\"fixes\":[{\"title\":\"仅抑制本行警告\",\"file\":%s,\"line\":%zu,\"column\":1,\"endLine\":%zu,\"endColumn\":1,\"newText\":%s}]",
+                        quote(diagnostic.file).c_str(), line, line, quote(diagnostic.fixText).c_str());
+        std::fputc('}', stdout);
     }
     std::puts("]}");
 }

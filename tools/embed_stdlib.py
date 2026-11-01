@@ -160,6 +160,7 @@ GENERATOR_ASSETS = [
     "tools/abi_import.hpp",
     "tools/chali_manual.json",
     "tools/chali_stdlib_api.json",
+    "chali_warnings.hpp",
     "chali_aot_debug.hpp",
     "chali_aot_debug.cpp",
     "chali_aot.hpp",

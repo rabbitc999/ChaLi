@@ -3623,7 +3623,7 @@ class Server
         }
         write(temporary.path / "overlays.json", J(std::move(overlays)).dump());
         ++cache->checks;
-        const auto result = execute({ compiler.u8string(), "--check", "--diagnostics=json", "--incremental", "--source-stdin",
+        const auto result = execute({ compiler.u8string(), "--check", "--diagnostics=json", "--warning-profile=editor", "--incremental", "--source-stdin",
                                       "--cache-dir", (cache->directory / "preprocess").u8string(), "--source-overlays", (temporary.path / "overlays.json").u8string(),
                                       "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
                                       "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() },
@@ -3728,7 +3728,8 @@ class Server
                              { "severity", str(entry, "severity") == "warning" ? 2 : 1 },
                              { "source", "chali" },
                              { "code", get(entry, "code") },
-                             { "message", message } }));
+                             { "message", message },
+                             { "data", object({ { "fixes", get(entry, "fixes") } }) } }));
             }
         } catch (const std::exception &e)
         {
@@ -3741,23 +3742,6 @@ class Server
         }
         // 命名风格只产生编辑器警告，和编译器错误独立，不改变程序是否可编译。
         for (auto &diagnostic : diagnostics) diagnostic = ownershipInformation(document.first, u, std::move(diagnostic));
-        static const std::regex methodName("[a-z][A-Za-z0-9]*");
-        static const std::regex typeName("[A-Z][a-z0-9]*([A-Z][a-z0-9]+)*");
-        for (const auto &record : unit->records)
-        {
-            const bool type = record.kind == "struct" || record.kind == "enum" || record.kind == "interface" || record.kind == "opcode";
-            const bool function = record.kind == "function";
-            if ((!type && !function) || starts(record.name, "__") || (function && (record.name == tail(record.owner) || starts(record.signature, record.name + "("))))
-                continue;
-            if (std::regex_match(record.name, type ? typeName : methodName)) continue;
-            diagnostics.push_back(object({ { "range", range(document.first, record.offset, record.offset + record.name.size()) },
-                                           { "severity", 2 },
-                                           { "source", "chali" },
-                                           { "code", type ? "CHL2101" : "CHL2102" },
-                                           { "message", (type ? "类型名应使用大驼峰（PascalCase）：" :
-                                                                "函数或方法名应使用小驼峰（camelCase）：")
-                                                            + record.name } }));
-        }
         return object({ { "uri", u },
                         { "version", document.second },
                         { "diagnostics", diagnostics } });

@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "preprocess.hpp"
 #include "chali_diagnostics.hpp"
+#include "chali_warnings.hpp"
 #include "macro/source.hpp"
 #include "macro/fragments.hpp"
 #include "editor/compiler_analysis.hpp"
@@ -148,7 +149,9 @@ void PrintUsage(std::FILE *out)
              "  --check                仅检查，不执行、不生成产物\n",
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
-             "  --diagnostics=json     检查并输出稳定 JSON 诊断\n",
+             "  --diagnostics=json     检查并输出稳定 JSON 诊断\n"
+             "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
+             "  --warnings-as-errors  把启用的警告提升为错误\n",
              "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n",
              "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
              "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
@@ -268,6 +271,8 @@ try
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
+    chali_warnings::Options warningOptions;
+    Memory::Vector<std::pair<Memory::String, Memory::String>> warningOverrides;
     bool macroBacktraceFull = true;
     bool hardRealtime = false;
     /* 注解与反射默认开启：宿主（本 exe）没编入支持时静默降级为关闭，不打扰用户；
@@ -470,6 +475,30 @@ try
             checkOnly = true;
             jsonDiagnostics = true;
             run = 0;
+            continue;
+        }
+        if (argument == "--warnings-as-errors")
+        {
+            warningOptions.errors = true;
+            continue;
+        }
+        if (argument == "--warning-profile=editor")
+        {
+            warningOptions.set("naming", "warn");
+            continue;
+        }
+        if (argument.compare(0, 7, "--warn=") == 0 || argument.compare(0, 8, "--allow=") == 0 || argument.compare(0, 7, "--deny=") == 0)
+        {
+            const auto split = argument.find('=');
+            const auto rule = argument.substr(split + 1);
+            const auto level = argument.compare(0, 7, "--warn=") == 0 ? "warn" : argument.compare(0, 8, "--allow=") == 0 ? "allow" :
+                                                                                                                           "error";
+            if (!warningOptions.set(rule, level))
+            {
+                std::fprintf(stderr, "chali: 未知警告规则：%s\n", rule.c_str());
+                return 2;
+            }
+            warningOverrides.push_back({ rule, level });
             continue;
         }
         if (argument == "--macro-backtrace")
@@ -726,6 +755,18 @@ try
             std::fprintf(stderr, "chali: %s\n", packageError.c_str());
         return 1;
     }
+    for (const auto *group : { "all", "naming" })
+        if (project.warnings.count(group)) warningOptions.set(group, project.warnings.at(group));
+    for (const auto &entry : project.warnings)
+    {
+        if (entry.first == "all" || entry.first == "naming") continue;
+        if (!warningOptions.set(entry.first, entry.second))
+        {
+            std::fprintf(stderr, "chali: 未知警告规则：%s\n", entry.first.c_str());
+            return 2;
+        }
+    }
+    for (const auto &entry : warningOverrides) warningOptions.set(entry.first, entry.second);
     includeDirs.insert(includeDirs.end(), project.includePaths.begin(), project.includePaths.end());
     importDirs.insert(importDirs.end(), project.includePaths.begin(), project.includePaths.end());
     importDirs.insert(importDirs.end(), project.importPaths.begin(), project.importPaths.end());
@@ -784,6 +825,8 @@ try
         Memory::Vector<Memory::String> searchDirs = includeDirs;
         searchDirs.insert(searchDirs.end(), importDirs.begin(), importDirs.end());
         Memory::String pathSignature = project.signature() + "\ninclude paths\n";
+        for (const auto &entry : warningOptions.levels) pathSignature += entry.first + "=" + entry.second + "\n";
+        if (warningOptions.errors) pathSignature += "warnings as errors\n";
         for (const auto &directory : includeDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
         pathSignature += "import paths\n";
         for (const auto &directory : importDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
@@ -811,6 +854,7 @@ try
         text.assign(std::istreambuf_iterator<char>(std::cin), std::istreambuf_iterator<char>());
     }
 
+    const Memory::String originalRootSource = text;
     /* ---- 前处理：`%if` / `%define` / `%error` … ----
      *
      * 用 `forMetro()` 这套：只认 `%` 前缀，`%define` / `%undefine` 也算符号定义。
@@ -1202,12 +1246,72 @@ try
     {
         const auto original = item.line && item.line <= processed.lineMap.size() ? processed.lineMap[item.line - 1] : preprocess::LineOrigin{ sourceLabel, item.line };
         warnings.push_back({ item.message, original.file, original.line, item.column ? item.column : 1u, true });
+    }
+    if (code == 0)
+    {
+        auto candidates = warningOptions.level("CHL2201") == "allow" ? Memory::Vector<chali_diagnostics::Diagnostic>() : chali_warnings::collect(M_AotSyntax());
+        warnings.insert(warnings.end(), candidates.begin(), candidates.end());
+        const std::regex typeName("[A-Z][a-z0-9]*([A-Z][a-z0-9]+)*"), methodName("[a-z][A-Za-z0-9]*");
+        for (std::size_t i = 0; i < M_NodeCount(); ++i)
+        {
+            const auto &node = M_ParsedNode(static_cast<int>(i));
+            const bool type = node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl || node.kind == MNode::OpcodeDecl;
+            if (warningOptions.level(type ? "CHL2101" : "CHL2102") == "allow") continue;
+            if ((!type && node.kind != MNode::FuncDef && node.kind != MNode::MethodDef) || node.macroExpansion >= 0 || node.nameParameter || node.s.empty()) continue;
+            auto name = node.s;
+            const auto scope = name.rfind("::");
+            if (scope != name.npos) name = name.substr(scope + 2);
+            if (name.empty() || name[0] == '_' || name.find('<') != name.npos || name.find('$') != name.npos || (node.kind == MNode::MethodDef && node.type2 == 2)) continue;
+            if (std::regex_match(std::string(name.data(), name.size()), type ? typeName : methodName)) continue;
+            const auto origin = node.sourceLine && node.sourceLine <= processed.lineMap.size() ? processed.lineMap[node.sourceLine - 1] : preprocess::LineOrigin{ sourceLabel, node.sourceLine };
+            chali_diagnostics::Diagnostic d;
+            d.message = (type ? Memory::String("类型名建议使用大驼峰（PascalCase）：") : Memory::String("函数名建议使用小驼峰（camelCase）：")) + name;
+            d.file = origin.file;
+            d.line = origin.line;
+            d.id = type ? "CHL2101" : "CHL2102";
+            warnings.push_back(std::move(d));
+        }
+    }
+    Memory::Map<Memory::String, Memory::String> warningSources;
+    const auto originalBody = [&](const Memory::String &file) -> const Memory::String & {
+        auto found = warningSources.find(file);
+        if (found != warningSources.end()) return found->second;
+        Memory::String body;
+        const auto canonical = chali_incremental::canonical(file);
+        if (canonical == chali_incremental::canonical(sourceLabel))
+            body = originalRootSource;
+        else if (sourceOverlays.count(canonical))
+            body = sourceOverlays.at(canonical);
+        else
+        {
+            std::ifstream input(Memory::u8path(file), std::ios::binary);
+            body.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+        }
+        return warningSources.emplace(file, std::move(body)).first->second;
+    };
+    Memory::Vector<chali_diagnostics::Diagnostic> filteredWarnings;
+    bool deniedWarning = false;
+    Memory::Set<Memory::String> seenWarnings;
+    for (auto &item : warnings)
+    {
+        if (item.file.empty() || item.file[0] == '<') continue;
+        if (!chali_warnings::prepare(item, warningOptions, originalBody(item.file))) continue;
+        if (!seenWarnings.insert(item.file + ":" + std::to_string(item.line).c_str() + ":" + item.id + ":" + item.message).second) continue;
+        deniedWarning |= !item.warning;
         if (!jsonDiagnostics)
         {
-            std::fprintf(stderr, "chali: 警告：%s:%zu:%zu：%s\n", original.file.c_str(), original.line, item.column ? item.column : 1u, item.message.c_str());
-            const auto snippet = chali_report::renderSnippet(original.file, original.line, item.column ? item.column : 1u);
+            std::fprintf(stderr, "chali: %s：%s:%zu:%zu：%s%s%s\n", item.warning ? "警告" : "错误", item.file.c_str(), item.line, item.column,
+                         item.message.find("[" + item.id + "]") == item.message.npos ? ("[" + item.id + "] ").c_str() : "", item.message.c_str(), "");
+            const auto snippet = chali_report::renderSnippet(item.file, item.line, item.column);
             if (!snippet.empty()) std::fputs(snippet.c_str(), stderr);
         }
+        filteredWarnings.push_back(std::move(item));
+    }
+    warnings.swap(filteredWarnings);
+    if (code == 0 && deniedWarning)
+    {
+        if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);
+        return 1;
     }
     /* 后端两层的统计：指令选择覆盖率与帧槽复用前后。
      * 它们都只在编译期累加，和运行期内存统计一起挂在 `--stats` 下。 */
