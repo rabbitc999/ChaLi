@@ -3,8 +3,11 @@
  */
 #include "chali_library.hpp"
 #include "chali_aot.hpp"
+#include "chali_aot_llvm.hpp"
 #include "chali_native_tools.hpp"
 #include "chali_package.hpp"
+#include "json/json.hpp"
+#include <set>
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>
@@ -33,6 +36,16 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.compilerVersion = chali_package::compilerVersion;
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
         package.manifest.dependencies = dependencies;
+        package.manifest.license = original.options.libraryLicense.c_str();
+        json::Object producer;
+        producer.insert("generator", "ast-llvm");
+        producer.insert("optimization", "O3");
+        producer.insert("checked", original.options.checked);
+        producer.insert("runtime", "consumer");
+        producer.insert("llvmLinkage", chali_aot::builtin::available() && original.options.compiler.empty() ? "static" : "external");
+        json::Object extensions;
+        extensions.insert("producer", json::Value(std::move(producer)));
+        package.manifest.extensions = json::Value(std::move(extensions)).dump();
         chali_aot::TargetInfo known;
         Memory::String error;
         if (!chali_aot::describeTarget(original.options.target, known, &error)) throw std::runtime_error(error.c_str());
@@ -42,7 +55,33 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         target.dataLayout = known.dataLayout.c_str();
         target.cpu = original.options.cpu.empty() ? std::string(known.cpu.c_str()) : std::string(original.options.cpu.c_str());
         target.implementation = "native/" + target.triple + "/library.o";
+        for (const auto &name : original.options.librarySystemLibraries) target.systemLibraries.emplace_back(name.c_str());
+        for (const auto &name : original.options.libraryRuntimeLibraries) target.runtimeLibraries.emplace_back(name.c_str());
         package.manifest.targets.push_back(target);
+        std::uint64_t retained = interface.size() + 4096;
+        std::set<std::string> names{ package.manifest.interface, target.implementation };
+        for (const auto &asset : original.options.libraryLicenseAssets)
+        {
+            const std::string record(asset.c_str());
+            const auto equal = record.find('=');
+            if (equal == record.npos || equal == 0 || equal + 1 == record.size()) throw std::runtime_error("许可证资产格式应为 NAME=FILE");
+            const auto name = record.substr(0, equal);
+            if (name.size() > 240) throw std::runtime_error("许可证资产名字超过预算");
+            if (!names.insert(name).second) throw std::runtime_error("许可证资产名字重复或与实现及接口冲突");
+            const auto path = std::filesystem::u8path(record.substr(equal + 1));
+            if (std::filesystem::weakly_canonical(output) == std::filesystem::weakly_canonical(path)) throw std::runtime_error("库输出不能覆盖许可证或署名输入");
+            if (!std::filesystem::is_regular_file(path)) throw std::runtime_error("许可证输入不是普通文件");
+            const auto size = std::filesystem::file_size(path);
+            if (size > 32ull * 1024 * 1024 || size + 48 + name.size() > maximumPackageBytes - retained) throw std::runtime_error("许可证资产超过包预算");
+            std::ifstream input(path, std::ios::binary);
+            std::string bytes(static_cast<std::size_t>(size), '\0');
+            input.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+            if (!input || input.peek() != std::char_traits<char>::eof()) throw std::runtime_error("读取许可证输入失败或读取期间长度变化");
+            retained += size + 48 + name.size();
+            package.manifest.licenseFiles.push_back(name);
+            package.entries.push_back({ name, Kind::License, 0, std::move(bytes) });
+        }
+        // 在编译前检查全部名字、列表和声明，输入内容只读取一次。
         manifestJson(package.manifest);
         chali_native_tools::Workspace work;
         auto request = original;
@@ -63,7 +102,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         }
         const auto file = work.path / "library.o";
         const auto size = std::filesystem::file_size(file);
-        if (size > maximumPackageBytes - interface.size() - 4096) throw std::runtime_error("编译后的库实现超过包预算");
+        if (size > maximumPackageBytes - retained) throw std::runtime_error("编译后的库实现超过包预算");
         std::ifstream stream(file, std::ios::binary);
         std::string bytes(static_cast<std::size_t>(size), '\0');
         stream.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));

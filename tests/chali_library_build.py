@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import os
+import json
 import subprocess
 from chali_library_package import invoke, decode
 from compiler_path import compiler_path
@@ -48,12 +49,38 @@ def main():
         provider.write_text('module demo::other;\nint64 add(int64 a,int64 b){return a-b;}')
         invoke([compiler,'lib','build',provider,'--module','demo::other','--package-version','1.0.0','--out',other],work)
         host_package=package.read_bytes()
+        license_file=work/'LICENSE.txt';license_file.write_bytes(b'Example license\n')
+        notice_file=work/'NOTICE.txt';notice_file.write_bytes('ChaLi 示例署名\n'.encode())
+
+        system_library='kernel32' if os.name=='nt' else 'm'
         bridge=modules/'bridge.chlib'
         bridge_source='module demo::bridge;\nimport demo::math;\nint64 total(int64 x){return demo::math::add(x,2); }\n'
         bridge_source+=''.join(f'{type} identity_{type}({type} value){{return demo::math::identity_{type}(value);}}\n' for type in types)
         provider.write_text(bridge_source,encoding='utf-8')
-        invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge],work)
-        bridge_manifest,_=decode(bridge.read_bytes())
+        invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge,
+                '--license','Apache-2.0','--license-asset',f'legal/LICENSE.txt={license_file}',
+                '--license-asset',f'legal/NOTICE.txt={notice_file}','--system-library',system_library,'--runtime-library','example-plugin.dll'],work)
+        bridge_manifest,bridge_entries=decode(bridge.read_bytes())
+        assert bridge_manifest['license']=='Apache-2.0'
+        assert bridge_manifest['licenseFiles']==['legal/LICENSE.txt','legal/NOTICE.txt']
+        assert bridge_manifest['targets'][0]['systemLibraries']==[system_library]
+        assert bridge_manifest['targets'][0]['runtimeLibraries']==['example-plugin.dll']
+        producer_info=bridge_manifest['extensions']['producer']
+        build_info=json.loads(invoke([compiler,'--build-info'],work).stdout)
+        assert producer_info==dict(generator='ast-llvm',optimization='O3',checked=False,runtime='consumer',llvmLinkage=build_info['llvm'])
+        assert {e['name']:e['data'] for e in bridge_entries if e['kind']==8}=={'legal/LICENSE.txt':license_file.read_bytes(),'legal/NOTICE.txt':notice_file.read_bytes()}
+        protected=bridge.read_bytes()
+        for invalid in ['../bad=', 'interface/main.chl=']:
+            invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge,'--license-asset',invalid+str(license_file)],work,False)
+            assert bridge.read_bytes()==protected
+        invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge,
+                '--license-asset',f'legal/LICENSE.txt={license_file}','--license-asset',f'legal/LICENSE.txt={notice_file}'],work,False)
+        assert bridge.read_bytes()==protected
+        invoke([compiler,'check',provider,'--library-license','Apache-2.0'],work,False)
+        original_license=license_file.read_bytes()
+        invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',license_file,'--license-asset',f'legal/LICENSE.txt={license_file}'],work,False)
+        assert license_file.read_bytes()==original_license
+        license_file.unlink();notice_file.unlink()
         assert [x['module'] for x in bridge_manifest['dependencies']]==['demo::math']
         for target in ['linux-x64','linux-arm64']:
             # 精确依赖摘要随目标对象改变，先恢复对应目标的提供方包。

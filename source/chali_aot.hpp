@@ -49,6 +49,10 @@ struct Options
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。
+    Memory::String libraryLicense;                   ///< 生产包声明的许可证名称。
+    Memory::Vector<Memory::String> libraryLicenseAssets;     ///< NAME=FILE 形式的许可证及署名输入。
+    Memory::Vector<Memory::String> librarySystemLibraries;   ///< 最终消费者链接所需的系统库名。
+    Memory::Vector<Memory::String> libraryRuntimeLibraries;  ///< 应用需交付或由目标系统提供的动态库名。
     bool emitLLVMOnly = false;                       ///< `--emit-llvm`：只写 LLVM 模块，不调用目标代码工具。
     bool emitAssemblyOnly = false;                   ///< 只生成目标机器汇编 .s，不生成对象或执行链接。
     bool emitObjectOnly = false;                     ///< 只生成目标机器的对象文件，不执行链接。

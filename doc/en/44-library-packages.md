@@ -56,6 +56,16 @@ The initial producer supports ordinary functions with void/bool/char, fixed-widt
 
 Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain absent from the public language interface. An object entry does not automatically become a final shared-library export; configure final linker exports separately.
 
+`lib build` also accepts delivery metadata directly:
+
+```sh
+chali lib build math.chl --module example::math --package-version 1.0.0 --out modules/example/math.chlib --license Apache-2.0 --license-asset legal/LICENSE.txt=LICENSE --license-asset legal/NOTICE.txt=NOTICE --runtime-library example-plugin.dll
+```
+
+Repeat `--license-asset` with a package name on the left of `=` and an input file on the right. License and attribution bytes are preserved. Names, duplicates, size budgets and regular files are checked before code compilation; output cannot overwrite these inputs. Packaging uses the same read snapshots and failures preserve the previous package. `--system-library NAME` declares a final link input added by consumers; use names actually supplied by the target SDK, such as `kernel32` on Windows or `m` on applicable Linux targets. `--runtime-library` records an application dynamic dependency; it neither copies nor loads that file. The example plugin name is illustrative and must reflect actual application dependencies.
+
+`extensions.producer` records AST→LLVM, O3, checked mode, the actual static/external LLVM backend and the consumer-provided runtime contract, without absolute build-host paths. Exact language dependencies remain in `dependencies`. The producer's LLVM toolchain is separate from application dynamic dependencies. Runtime dependency names are publisher declarations, not a claim that every dynamic-loading path has been scanned.
+
 These packages require `scalar-unit-v1`, so compilers without that capability reject them before loading. Ordinary imports accept both these language-generated objects and the manually declared C ABI archives above; neither interface contains runtime function bodies.
 
 ## Ordinary imports

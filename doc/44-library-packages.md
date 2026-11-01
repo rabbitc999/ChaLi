@@ -56,6 +56,16 @@ chali lib inspect modules/example/math.chlib
 
 导入的预编译库会以精确版本和内容摘要记入生产包，最终消费者恢复完整依赖闭包。源码 `#export("native_name")` 保留额外的原生入口，普通语言导入仍使用包含模块及完整签名的稳定入口；`inline` 私有函数不出现在语言公开接口中。原生入口存在不等于最终动态库自动导出它，最终链接器的导出设置仍需单独指定。
 
+`lib build` 也可直接附带交付信息：
+
+```sh
+chali lib build math.chl --module example::math --package-version 1.0.0 --out modules/example/math.chlib --license Apache-2.0 --license-asset legal/LICENSE.txt=LICENSE --license-asset legal/NOTICE.txt=NOTICE --runtime-library example-plugin.dll
+```
+
+`--license-asset` 可重复，等号左边是包内名字，右边是输入文件；许可证与署名按原始字节随包保存。名字、重复、长度预算及普通文件检查在代码编译前进行，输出不能覆盖这些输入；读取后使用同一快照，失败保留原包。`--system-library NAME` 声明最终链接所需的库，消费者链接时加入；名称必须来自目标 SDK，例如 Windows 的 `kernel32` 或适用 Linux 目标的 `m`；`--runtime-library` 记录应用动态依赖，不自动复制或加载该文件。示例中的插件名只是交付记录，需要按应用实际依赖填写。
+
+`extensions.producer` 记录 AST→LLVM、O3、checked 设置、实际静态／外置 LLVM 后端和由最终消费者提供运行时的约定，不含构建机绝对路径。精确语言库依赖继续使用清单 `dependencies`，不把生产编译器的 LLVM 工具链写成应用动态依赖。运行依赖名称是发布者声明，工具不会据此声称已扫描出所有动态加载路径。
+
 此类包声明 `scalar-unit-v1` 必需能力，缺少该能力的编译器会在加载前拒绝。普通导入既可消费这种语言生成对象，也可消费前节手工声明的 C ABI 归档；两者的接口均不包含运行期函数体。
 
 ## 普通导入

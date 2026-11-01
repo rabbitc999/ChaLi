@@ -355,6 +355,19 @@ try
             PrintUsage(stdout);
             return 0;
         }
+        if (argument == "--library-license" || argument == "--library-license-asset" || argument == "--library-system-library" || argument == "--library-runtime-library")
+        {
+            if (++index >= argc || !argv[index][0])
+            {
+                std::fputs("chali lib: 库交付元数据选项缺少非空值\n", stderr);
+                return 2;
+            }
+            if (argument == "--library-license") aotOptions.libraryLicense = argv[index];
+            if (argument == "--library-license-asset") aotOptions.libraryLicenseAssets.push_back(argv[index]);
+            if (argument == "--library-system-library") aotOptions.librarySystemLibraries.push_back(argv[index]);
+            if (argument == "--library-runtime-library") aotOptions.libraryRuntimeLibraries.push_back(argv[index]);
+            continue;
+        }
         if (argument == "--library-module" || argument == "--library-version")
         {
             if (++index >= argc)
@@ -904,6 +917,11 @@ try
      * `preserveLines` 默认开着 —— 指令行与"条件为假"的行都输出成空行，所以
      * 预处理之后的**行号与源文件一一对应**（通过 lineMap 保留源位置）。
      * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
+    if (libraryModule.empty() && (!aotOptions.libraryLicense.empty() || !aotOptions.libraryLicenseAssets.empty() || !aotOptions.librarySystemLibraries.empty() || !aotOptions.libraryRuntimeLibraries.empty()))
+    {
+        std::fputs("chali lib: 库交付元数据只适用于 lib build\n", stderr);
+        return 2;
+    }
     if (!libraryModule.empty() || !libraryVersion.empty())
     {
         if (!aot || run || checkOnly || raw || !outGiven || !chali_package::moduleName(libraryModule) || libraryVersion.empty())

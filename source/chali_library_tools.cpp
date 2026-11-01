@@ -117,7 +117,7 @@ int runCli(int argc, char **argv)
         const std::string mode = argv[2];
         if (mode == "--help" || mode == "help" || mode == "-h")
         {
-            std::puts("chali lib build FILE.chl --module NAME --package-version VERSION --out FILE.chlib [--target TARGET] [--cpu CPU]\nchali lib template --module NAME --package-version VERSION [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME] [--dependency MODULE=VERSION#SHA256] [--system-library NAME] [--runtime-library NAME] [--out MANIFEST.json]\nchali lib pack --manifest MANIFEST.json --entry KIND:NAME=FILE ... --out FILE.chlib\nchali lib lock FILE.chlib ... --out chali.libraries.lock\nchali lib inspect FILE.chlib [--module EXPECTED] [--package-version EXPECTED] [--target TARGET] [--cpu CPU]\nKIND: interface, templates, object, archive, bitcode, bytecode, source, license\nbuild 编译受支持的语言函数；其余格式工具封装或检查资产。导出与导入不执行库初始化。");
+            std::puts("chali lib build FILE.chl --module NAME --package-version VERSION --out FILE.chlib [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME=FILE] [--system-library NAME] [--runtime-library NAME]\nchali lib template --module NAME --package-version VERSION [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME] [--dependency MODULE=VERSION#SHA256] [--system-library NAME] [--runtime-library NAME] [--out MANIFEST.json]\nchali lib pack --manifest MANIFEST.json --entry KIND:NAME=FILE ... --out FILE.chlib\nchali lib lock FILE.chlib ... --out chali.libraries.lock\nchali lib inspect FILE.chlib [--module EXPECTED] [--package-version EXPECTED] [--target TARGET] [--cpu CPU]\nKIND: interface, templates, object, archive, bitcode, bytecode, source, license\nbuild 编译受支持的语言函数；其余格式工具封装或检查资产。导出与导入不执行库初始化。");
             return 0;
         }
         if (mode == "build")
@@ -127,6 +127,10 @@ int runCli(int argc, char **argv)
             {
                 const std::string option = argv[index];
                 arguments.push_back(option == "--module" ? "--library-module" : option == "--package-version" ? "--library-version" :
+                                                                            option == "--license"             ? "--library-license" :
+                                                                            option == "--license-asset"       ? "--library-license-asset" :
+                                                                            option == "--system-library"      ? "--library-system-library" :
+                                                                            option == "--runtime-library"     ? "--library-runtime-library" :
                                                                                                                 option);
             }
             std::vector<char *> values;
