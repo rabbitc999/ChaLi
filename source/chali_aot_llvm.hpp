@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "chali_aot.hpp"
+#include "chali_linker.hpp"
 
 namespace chali_aot::builtin
 {
@@ -12,6 +13,15 @@ namespace chali_aot::builtin
  * @return 编入后端时为 true，外置工具变体为 false。
  */
 bool available();
+
+/**
+ * @brief 使用进程内 LLD 链接已检查的原生输入。
+ * @param request 对象、目标及运行时配置。
+ * @param product 工作区产物路径。
+ * @param diagnostics 接收链接错误。
+ * @return 成功为零，失败为一。
+ */
+int link(const chali_linker::Request &request, const Memory::String &product, Memory::Vector<Memory::String> *diagnostics);
 
 /**
  * @brief 使用进程内 LLVM 优化并生成对象，再使用进程内 LLD 链接。

@@ -161,7 +161,7 @@ GENERATOR_ASSETS = [
     "tools/chali_manual.json",
     "tools/chali_stdlib_api.json",
     "chali_warnings.hpp",
-    "chali_assembler.hpp",
+    "chali_linker.hpp", "chali_linker.cpp", "chali_archive_llvm.cpp", "chali_native_objects.hpp", "chali_native_objects.cpp", "chali_assembler.hpp",
     "chali_assembler.cpp",
     "chali_assembler_llvm.cpp",
     "chali_native_tools.hpp",

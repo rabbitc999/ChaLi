@@ -191,7 +191,7 @@ The [final P3-to-P5 LSP comparison](../../benchmarks/results/lsp-1.0.12-final/RE
 
 The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
-The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler below; a standalone link command is not yet available.
+The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler, linker and archiver below.
 
 ## Standalone assembler and assembly inputs
 
@@ -208,3 +208,22 @@ The static variant uses LLVM MC in process without clang; explicit `--llvm` sele
 AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
 For a symbol supplied by linked objects, declare `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. `@link` is a compiler marker, never a filename or dynamic-library lookup. Its current signatures support fixed scalar parameters/results (integer, boolean, floating point, and void result); aggregate, pointer, string, callback and release-function forms are rejected. It remains a direct call when other declarations need typed C marshalling. Ordinary host declarations and existing library paths retain their behavior; an empty library string does not select direct linkage.
+
+
+## Standalone linking and static archives
+
+```sh
+chali ar build/first.o build/second.o --out build/libexample.a
+chali link build/main.o build/libexample.a --out build/app.exe
+chali link build/main.o -L build --library example --out build/app.exe
+chali link build/public.o --shared --export public_entry --out build/example.dll
+chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
+```
+
+`ar` writes deterministic, indexed, self-contained archives from zero or more objects of the selected target. Timestamps, UID and GID are fixed. Windows `.lib` uses COFF archives; other suffixes use GNU ar format. Thin and nested archives are rejected. `--out` is an exact filename and its parent must exist. The static variant uses LLVM ArchiveWriter. The external variant finds llvm-ar beside clang or through `CHALI_LLVM_AR`; `--llvm LLVM-AR` selects an explicit archiver.
+
+`link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
+
+The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the supported Linux x64/ARM64 targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
+
+Input checks cover object format, width, architecture and archive-member bounds; LLVM/LLD performs the final symbol, section and relocation validation. These tools are not an untrusted-code sandbox. Output is generated in a private workspace and published only on success. Failures preserve an existing output, and output cannot overwrite an input. Callers must check the exit status rather than treat an old output as evidence of a successful link.

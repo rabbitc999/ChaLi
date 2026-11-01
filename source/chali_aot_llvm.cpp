@@ -24,6 +24,7 @@
 #include "chali_stdlib.hpp"
 #include <miniz_tinfl.h>
 LLD_HAS_DRIVER(mingw)
+LLD_HAS_DRIVER(elf)
 #endif
 
 namespace chali_aot::builtin
@@ -107,6 +108,95 @@ bool available()
     return true;
 #else
     return false;
+#endif
+}
+
+/**
+ * @brief 为本机 CRT 或独立跨目标入口组织参数并调用 LLD。
+ * @param request 已检查目标和路径的链接请求。
+ * @param product 工作区内的输出文件。
+ * @param diagnostics 接收链接器的完整说明。
+ * @return 成功为零，失败为非零。
+ */
+int link(const chali_linker::Request &request, const Memory::String &product, Memory::Vector<Memory::String> *diagnostics)
+{
+#if CHALI_STATIC_LLVM
+    TargetInfo target;
+    Memory::String error;
+    if (!describeTarget(request.options.target, target, &error))
+    {
+        if (diagnostics) diagnostics->push_back(error);
+        return 1;
+    }
+    LinkerAssets assets;
+    RuntimeAssets runtime;
+    std::string library, runtimeLibrary;
+    if (!request.noRuntime)
+    {
+        if (!target.windows || !target.native || !assets.restore())
+        {
+            if (diagnostics) diagnostics->push_back("无法恢复本机 CRT 链接资产");
+            return 1;
+        }
+        if (!runtime.restore(diagnostics)) return 1;
+        library = assets.root.generic_u8string();
+        runtimeLibrary = runtime.root.generic_u8string();
+    }
+    std::vector<std::string> storage{"ld.lld", "-m", target.windows ? "i386pep" : target.arm64 ? "aarch64linux" : "elf_x86_64", "-o", product.c_str(), "--gc-sections"};
+    if (!request.options.debug) storage.push_back("--strip-all");
+    if (request.options.shared) storage.push_back("--shared");
+    if (target.windows && request.options.shared) storage.push_back("--exclude-all-symbols");
+    if (!request.entry.empty()) { storage.push_back("--entry"); storage.emplace_back(request.entry.c_str()); }
+    if (!request.noRuntime)
+    {
+        storage.push_back(library + (request.options.shared ? "/dllcrt2.o" : "/crt2.o"));
+        storage.push_back(library + "/crtbegin.o");
+        storage.push_back("-L" + library);
+        storage.push_back("-L" + runtimeLibrary);
+    }
+    for (const auto &path : request.libraryDirectories) storage.push_back("-L" + std::string(path.c_str()));
+    storage.push_back("--start-group");
+    for (const auto &input : request.inputs) storage.emplace_back(input.c_str());
+    for (const auto &name : request.libraryNames) storage.push_back("-l" + std::string(name.c_str()));
+    if (!request.noRuntime)
+    {
+        storage.push_back(runtimeLibrary + "/libstdc++.a");
+        for (const char *name : {"chali_aot_host", "gcc_eh", "gcc", "winpthread", "winhttp", "ws2_32", "crypt32", "bcrypt"}) storage.push_back(std::string("-l") + name);
+        for (const char *name : {"gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a"}) storage.push_back(runtimeLibrary + "/" + name);
+    }
+    storage.push_back("--end-group");
+    if (!request.noRuntime)
+    {
+        const auto builtins = library + "/libclang_rt.builtins-x86_64.a";
+        for (int round = 0; round < 2; ++round)
+            for (const auto &argument : std::vector<std::string>{"-lmingw32", builtins, "-lunwind", "-lmoldname", "-lmingwex", "-lmsvcrt", "-ladvapi32", "-lshell32", "-luser32", "-lkernel32"}) storage.push_back(argument);
+        storage.push_back(library + "/crtend.o");
+    }
+    std::filesystem::path script = std::filesystem::u8path(product.c_str());
+    script += target.windows ? ".def" : ".map";
+    if (!request.options.exports.empty() || (!target.windows && request.options.shared))
+    {
+        std::ofstream text(script, std::ios::binary);
+        text << (target.windows ? "EXPORTS\n" : request.options.exports.empty() ? "{\n" : "{ global:\n");
+        for (const auto &name : request.options.exports) text << '"' << name.c_str() << '"' << (target.windows ? "\n" : ";\n");
+        if (!target.windows) text << "local: *; };\n";
+        text.close();
+        if (!text) { if (diagnostics) diagnostics->push_back("无法写入导出符号说明"); return 1; }
+        if (target.windows) storage.push_back(script.u8string());
+        else { storage.push_back("--version-script"); storage.push_back(script.u8string()); }
+    }
+    std::vector<const char *> arguments;
+    for (const auto &argument : storage) arguments.push_back(argument.c_str());
+    std::string output;
+    llvm::raw_string_ostream stream(output);
+    const lld::DriverDef drivers[] = {{lld::MinGW, &lld::mingw::link}, {lld::Gnu, &lld::elf::link}};
+    const auto result = lld::lldMain(arguments, stream, stream, drivers);
+    if (!output.empty() && diagnostics) diagnostics->push_back(output.c_str());
+    return result.retCode;
+#else
+    (void)request; (void)product;
+    if (diagnostics) diagnostics->push_back("此构建未静态链接 LLD");
+    return 1;
 #endif
 }
 

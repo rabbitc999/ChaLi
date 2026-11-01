@@ -205,7 +205,7 @@ P7 的重命名编辑附带当前源码指纹；扩展在返回编辑前核对�
 
 项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
-同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编入口见下节；独立链接入口尚未交付。
+同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编、链接与归档入口见下文。
 
 ## 独立汇编器与汇编输入
 
@@ -222,3 +222,22 @@ chali aot main.chl --asm native/add.s --asm-include native/include --out build/a
 AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
 引用最终链接提供的符号时，可声明 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。`@link` 是编译器标记，不作为文件名或动态库查询。目前仅支持固定标量参数／返回（整数、布尔、浮点及 void 返回），聚合、指针、字符串、回调和释放函数形式明确拒绝。即使其他声明需要类型化 C 封送，该标记仍直接调用链接符号；普通宿主声明及既有库路径规则保留，空库字符串不表示直接链接。
+
+
+## 独立链接与静态归档
+
+```sh
+chali ar build/first.o build/second.o --out build/libexample.a
+chali link build/main.o build/libexample.a --out build/app.exe
+chali link build/main.o -L build --library example --out build/app.exe
+chali link build/public.o --shared --export public_entry --out build/example.dll
+chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
+```
+
+`ar` 创建带符号索引的确定性自包含归档，接受零个或多个同目标对象；时间、UID 和 GID 不随构建变化。Windows 的 `.lib` 选择 COFF 归档，其他后缀使用 GNU ar 格式。薄归档和嵌套归档不接受。`--out` 指定完整文件名，父目录须已存在。静态变体调用 LLVM ArchiveWriter；外置变体查找 clang 旁的 llvm-ar 或 `CHALI_LLVM_AR`，也可用 `--llvm LLVM-AR` 显式指定。
+
+`link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
+
+静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为受支持 Linux x64／ARM64 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
+
+输入先检查对象格式、位宽、架构及归档成员边界；实际符号、节和重定位仍由 LLVM／LLD 检查。这些工具不构成执行不可信代码的沙箱。产物先在私有工作区生成，成功后才替换最终文件；失败保留原文件，禁止输出覆盖输入。链接错误不能作为旧产物仍有效的依据，调用方必须检查返回状态。
