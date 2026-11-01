@@ -17,6 +17,7 @@ namespace chali_aot
 struct ExternFunction
 {
     Memory::String label;                           ///< 四元式里的调用标签。
+    Memory::String nativeAlias;                     ///< 独立语言库保留的显式原生导出名。
     Memory::String symbol;                          ///< C 侧真正的符号名（`= "名字"`）。
     Memory::String library;                         ///< 动态库声明路径或静态链接资产路径；空值直接引用链接符号。
     Memory::String resultType = "long long";        ///< C 返回类型名。

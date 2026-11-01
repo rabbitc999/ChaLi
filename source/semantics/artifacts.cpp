@@ -104,7 +104,7 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
 bool CAbiNeedsMarshalling(const MFunctionDecl &function)
 {
     const auto scalar = [](const std::shared_ptr<MType> &type) {
-        return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
+        return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
     };
     if (!scalar(function.signature.result)) return true;
     for (const auto &parameter : function.signature.params)

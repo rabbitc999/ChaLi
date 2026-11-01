@@ -1059,6 +1059,26 @@ Text abiExtension(const Memory::String &name, const TargetInfo &target)
 }
 
 /**
+ * @brief 生成准确保留目标扩展属性的直接 C ABI 声明。
+ * @param external 已验证的外部签名。
+ * @param target 实际输出目标。
+ * @return 可重复核对的 LLVM 外部声明。
+ */
+Text linkedCDeclaration(const ExternFunction &external, const TargetInfo &target)
+{
+    Text declaration = "declare " + abiExtension(external.resultType, target) + abiType(external.resultType) + " @" + llvmSymbol(external.symbol) + "(";
+    for (std::size_t at = 0; at < external.parameterTypes.size(); ++at)
+    {
+        if (at != 0u) declaration += ", ";
+        declaration += abiType(external.parameterTypes[at]);
+        const auto extension = abiExtension(external.parameterTypes[at], target);
+        if (!extension.empty()) declaration += " " + extension.substr(0, extension.size() - 1);
+    }
+    declaration += ")\n";
+    return declaration;
+}
+
+/**
  * @brief 将函数内的可变符号降低为内存槽，将四元式运算降低为 LLVM 指令。
  * @note 只有形参与本函数声明的局部使用 alloca，跨函数暂存量保持模块级共享。
  */
@@ -2639,15 +2659,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
             out += resultType == "void" ? "  ret void\n}\n" : "  ret " + resultType + " %value\n}\n";
             continue;
         }
-        Text declaration = "declare " + abiExtension(external.resultType, state.target) + resultType + " @" + llvmSymbol(external.symbol) + "(";
-        for (std::size_t at = 0; at < external.parameterTypes.size(); ++at)
-        {
-            if (at != 0u) declaration += ", ";
-            declaration += abiType(external.parameterTypes[at]);
-            const auto extension = abiExtension(external.parameterTypes[at], state.target);
-            if (!extension.empty()) declaration += " " + extension.substr(0, extension.size() - 1);
-        }
-        declaration += ")\n";
+        const Text declaration = linkedCDeclaration(external, state.target);
         const auto existing = externalDeclarations.emplace(textOf(external.symbol), declaration);
         if (!existing.second && existing.first->second != declaration)
         {

@@ -58,7 +58,16 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
             if (state.globals.count(textOf(node->text)) || (node->kids.size() > 1 && node->kids.front()->kind != N::Var)) return false;
             break;
         case N::Call:
-            if (!state.astFunctions.count(textOf(node->text))) return false;
+            if (!state.astFunctions.count(textOf(node->text)))
+            {
+                const auto external = state.externsByLabel.find(textOf(node->text));
+                if (external == state.externsByLabel.end()) return false;
+                const auto &entry = *external->second;
+                if (entry.abiConvention != "C" || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
+                if (abiType(entry.resultType).empty() || abiType(entry.resultType) == "ptr") return false;
+                for (const auto &parameter : entry.parameterTypes)
+                    if (abiType(parameter).empty() || abiType(parameter) == "ptr" || abiType(parameter) == "void") return false;
+            }
             break;
         default: return false;
         }
@@ -194,7 +203,25 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
         }
         out += "@source_file" + std::to_string(source.second) + " = private constant [" + std::to_string(source.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
     }
+    std::map<Text, Text> declarations;
+    for (const auto &entry : request.externs)
+    {
+        if (!state.usedExternLabels.count(textOf(entry.label))) continue;
+        const auto declaration = linkedCDeclaration(entry, state.target);
+        const auto inserted = declarations.emplace(textOf(entry.symbol), declaration);
+        if (!inserted.second && inserted.first->second != declaration) return state.fail("库单元外部符号 ABI 冲突：" + entry.symbol), Memory::String();
+        if (inserted.second) out += declaration;
+    }
     out += functions;
-    for (const auto &entry : request.abiExports) out += libraryExportThunk(state, entry);
+    for (const auto &entry : request.abiExports)
+    {
+        out += libraryExportThunk(state, entry);
+        if (!entry.nativeAlias.empty() && entry.nativeAlias != entry.symbol)
+        {
+            auto native = entry;
+            native.symbol = entry.nativeAlias;
+            out += libraryExportThunk(state, native);
+        }
+    }
     return Memory::String(out.data(), out.size());
 }

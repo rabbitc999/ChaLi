@@ -3323,10 +3323,11 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
     Memory::String interface = "module " + module + ";\n";
     for (const auto &function : g_functionDecls)
     {
-        if (function.module != module || function.moduleLocal || function.superseded || function.external || function.bodyId < 0) continue;
+        if (function.module != module || (function.moduleLocal && function.exportSymbol.empty()) || function.superseded || function.external || function.bodyId < 0) continue;
         if (function.source == "main" || function.unsafeRequired) throw std::runtime_error("首批原生库暂不导出 main 或 unsafe 函数");
         chali_aot::ExternFunction entry;
         entry.label = function.label;
+        entry.nativeAlias = function.exportSymbol;
         entry.abiConvention = "C";
         entry.resultType = AotCType(CAbiType(function.signature.result));
         Memory::String declaration = LibraryScalarType(function.signature.result, true) + " " + function.source + "(";
@@ -3344,7 +3345,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         declaration += ");\n";
         const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())));
         entry.symbol = Memory::String(("chali_lib_" + hash).c_str());
-        interface += "#abi(\"C\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
+        if (!function.moduleLocal) interface += "#abi(\"C\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
         exports.push_back(std::move(entry));
     }
     if (exports.empty()) throw std::runtime_error("库模块没有可导出的公开普通函数");

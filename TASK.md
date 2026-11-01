@@ -28,12 +28,15 @@
 - 6f837eec 的最终静态编译器通过 libraries／c_api／toolchain／docs 共 23 项及随机复测一项，静态 VSIX 八组检查通过；独立工程冷构建的外置编译器通过语言库生产／消费专项。实际执行平台 Windows x64，Linux x64／ARM64 仅对象生成和目标检查。没有整仓全量或性能重测。
 - 该阶段产物位于 build/independent-validation/1.0.12-a5-build/ 与 vscode/dist/1.0.12-a5-build/，证据仅在 tools/history/20261101/chali-1.0.12-a5-build/。EXE SHA-256：bba2bce73dbfb0dd9dbea4a3ace567b0052b5e631f312178a052feb4d768e1be；VSIX：6a53d551f3bef3cd3294088a31a475ae6120bfe017692254ddf5e89a7b48fcec。
 
-## 下一步：A5.4 标量库之间的调用与公开约定
+## A5.4 验收摘要
 
-- [ ] 允许独立标量单元调用已导入库的准确原生入口，清单保留真实依赖，最终链接恢复完整闭包。
-- [ ] 保留源码已有的显式原生导出约定，避免语言库生成时丢弃 #export 的公开符号意图。
-- [ ] 核对多库同名／重载、直接链接签名冲突、隐藏实现、返回与错误路径；不恢复按名称绑定的宿主重载。
-- [ ] 重新生成资产和编译器，执行 libraries／ABI／工具链的相关全量及抽样，生成并核对本阶段 VSIX，提交推送。
+已完成导入标量库之间的直接 C ABI 调用、精确依赖及最终闭包链接，保留源码 #export 原生入口和普通语言稳定入口。全部基础标量跨库传参与三目标对象生成、同名／重载、私有隔离、损坏依赖及分离对象链接均已验证；动态宿主和非标量仍明确拒绝。
+
+libraries／abi／toolchain／docs 共 17 项与随机复测一项通过；本阶段静态 VSIX 八组检查及版本、变体、编译器与关键脚本字节核对通过。独立工程冷构建的外置 LLVM 编译器通过相同跨库专项。实际运行平台 Windows x64，Linux x64／ARM64 为对象生成验证，未运行整仓全量或性能重测。
+
+产物位于 build/independent-validation/1.0.12-a5-cross/ 与 vscode/dist/1.0.12-a5-cross/，证据只在 tools/history/20261101/chali-1.0.12-a5-cross/。静态 EXE SHA-256：3485a0bc91dc1abb3604f09e17b2ba5a3a2c1da73c23cdf380059cd149b385da；VSIX：4a4d9ff365a3f868d566ea574316da1c1b0381e2665becc4f207d0fc1e56efce。
+
+下一步先补齐语言库生产器的许可证、署名及构建／链接依赖记录，再继续完整公共类型与共用运行时。
 
 ## A4／A5：完整公共类型与语言契约
 
