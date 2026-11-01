@@ -63,14 +63,16 @@ int64 addDefault(int64 x, int64 y=defaultValue()) { return x+y; }
 
 After import, `example::math::addDefault(3)` evaluates the default only for this omitted `y`; `addDefault(3,9)` does not evaluate it. The producer compiles the checked expression into a scalar entry. The public interface stores declarations and calls, without private bodies, and importing or building does not execute the expression. Multiple omitted parameters retain their evaluation order; private and imported calls resolve in definition scope. Scalar-unit restrictions still apply: defaults do not enable globals, owning values or other unsupported operations. Generated default entries are implementation declarations, not APIs intended for manual use.
 
-Public interfaces also preserve plain record declarations. Fields may be basic scalars or nested plain records from the same module, retaining names, order and complete module identity. For example, a provider may declare:
+Public interfaces also preserve plain record declarations. Fields may be basic scalars or nested plain records from the same module or verified precompiled dependencies, retaining names, order and complete module identity. For example, a provider may declare:
 
 ```chali
 struct Point { int64 x; float64 y; };
 struct Bounds { Point low; Point high; char marker; };
 ```
 
-A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts, cross-module nested records and interface-inheritance contracts remain rejected. A package still needs at least one public scalar function. Function entries still accept scalars only: importing record declarations does not enable passing record objects across libraries. Same-named records in different modules remain different types.
+A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one public scalar function. Function entries still accept scalars only: importing record declarations does not enable passing record objects across libraries. Same-named records in different modules remain different types.
+
+Nested records from a verified `.chlib` dependency retain their original module names. A consuming library records exact dependency pins and references the original declaration instead of copying it into its own module. Transitive consumers load the declaring package even when they import only the outer library. Cross-module record fields originating only from implementation source are rejected; precompile that dependency first.
 
 Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain absent from the public language interface. An object entry does not automatically become a final shared-library export; configure final linker exports separately.
 

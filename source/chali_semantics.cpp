@@ -3311,14 +3311,22 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
  */
 Memory::String LibraryRecordDeclarations(const Memory::String &module)
 {
-    Memory::Set<Memory::String> records;
+    Memory::Set<Memory::String> records, packagedRecords;
+    Memory::Map<Memory::String, Memory::String> owners;
+    const auto packaged = [&](std::size_t line) {
+        return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
+    };
     for (const auto id : g_top)
     {
         const auto &node = N(id);
-        if (node.module != module) continue;
-        if (node.kind == MNode::InterfaceDecl || node.kind == MNode::EnumDecl || node.kind == MNode::OpcodeDecl)
+        if (node.module == module && (node.kind == MNode::InterfaceDecl || node.kind == MNode::EnumDecl || node.kind == MNode::OpcodeDecl))
             throw std::runtime_error("原生记录接口暂不导出接口、枚举或 opcode 定义");
-        if (node.kind == MNode::StructDecl && g_structs.count(node.s)) records.insert(node.s);
+        if (node.kind != MNode::StructDecl || !g_structs.count(node.s)) continue;
+        owners[node.s] = node.module;
+        if (node.module == module)
+            records.insert(node.s);
+        else if (packaged(node.sourceLine) || packaged(node.expansionLine))
+            packagedRecords.insert(node.s);
     }
     Memory::Set<Memory::String> visited, visiting;
     Memory::String result;
@@ -3341,9 +3349,10 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
             Memory::String type;
             if (field.type && field.type->kind == MType::Struct)
             {
-                if (!records.count(field.type->name)) throw std::runtime_error("记录接口暂只导出本模块内嵌套类型");
+                if (!records.count(field.type->name) && !packagedRecords.count(field.type->name))
+                    throw std::runtime_error("跨模块记录字段必须来自已验证的预编译库依赖");
                 emit(field.type->name);
-                type = module + "::" + BareTypeName(field.type->name);
+                type = owners.at(field.type->name) + "::" + BareTypeName(field.type->name);
             }
             else
                 type = LibraryScalarType(field.type);
@@ -3351,7 +3360,7 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
         }
         visiting.erase(name);
         visited.insert(name);
-        result += "struct " + BareTypeName(name) + " {\n" + fields + "};\n";
+        if (records.count(name)) result += "struct " + BareTypeName(name) + " {\n" + fields + "};\n";
     };
     for (const auto &name : records) emit(name);
     return result;

@@ -60,7 +60,15 @@ libraries／defaults／docs 共 11 项及随机复测一项全部通过，新增
 
 产物位于 build/independent-validation/1.0.12-a5-defaults/ 与 vscode/dist/1.0.12-a5-defaults/，证据只在 tools/history/20261101/chali-1.0.12-a5-defaults/。静态 EXE SHA-256：26ebba850f2140256fc94bedb31367efd3874c7c80ec6dfe714ed455b73d2ad9；VSIX：5970f3f36acd922506a529e8605049307f3fd351ec7349c1dbb97e6e7c837108。
 
-下一步接入已验证预编译依赖的嵌套记录身份，之后继续聚合调用、完整类型及共用运行时。
+## A5.8 验收摘要
+
+公开记录可嵌套已验证预编译依赖的普通记录，字段按原声明模块写完整类型名，生产包保留精确依赖，消费者恢复原声明而不复制成外层模块的新类型。原布局、拥有状态与方法限制继续核对；仅实现源码来源的跨模块记录拒绝。只导入外层库的隔离消费者、嵌套值独立复制、原类型身份、三目标对象及分离链接通过。
+
+libraries／memory／docs 共 10 项及随机复测一项全部通过；本阶段静态 VSIX 八组测试与版本、变体、编译器及关键脚本字节核对通过。实际运行 Windows x64，Linux x64／ARM64 仅对象生成；未运行整仓全量、性能测试或本阶段外置变体冷构建。
+
+产物位于 build/independent-validation/1.0.12-a5-nested-packages/ 与 vscode/dist/1.0.12-a5-nested-packages/，证据只在 tools/history/20261101/chali-1.0.12-a5-nested-packages/。静态 EXE SHA-256：e59a0e5c9b0524104f3f82fcda730c7731b28b4c1a12fb2d81f128a70c53cb41；VSIX：43d3b352b9b5afaeb65e0c1057bcbbe4f2d6e299f66b36199f2c92068c81bc15。
+
+下一步补充公开枚举声明和多载荷消费验证，之后继续聚合调用、完整类型及共用运行时。
 
 ## A4／A5：完整公共类型与语言契约
 

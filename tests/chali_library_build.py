@@ -67,7 +67,7 @@ def main():
 
         system_library='kernel32' if os.name=='nt' else 'm'
         bridge=modules/'bridge.chlib'
-        bridge_source='module demo::bridge;\nimport demo::math;\nint64 total(int64 x){return demo::math::add(x,2); }\n'
+        bridge_source='module demo::bridge;\nimport demo::math;\nstruct Wrapper {demo::math::Bounds bounds;int64 tag;};\nint64 total(int64 x){return demo::math::add(x,2); }\n'
         bridge_source+=''.join(f'{type} identity_{type}({type} value){{return demo::math::identity_{type}(value);}}\n' for type in types)
         provider.write_text(bridge_source,encoding='utf-8')
         invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge,
@@ -95,6 +95,8 @@ def main():
         assert license_file.read_bytes()==original_license
         license_file.unlink();notice_file.unlink()
         assert [x['module'] for x in bridge_manifest['dependencies']]==['demo::math']
+        bridge_interface=next(e['data'].decode() for e in bridge_entries if e['kind']==1)
+        assert 'demo::math::Bounds bounds;' in bridge_interface and 'struct Bounds' not in bridge_interface
         for target in ['linux-x64','linux-arm64']:
             # 精确依赖摘要随目标对象改变，先恢复对应目标的提供方包。
             package.write_bytes((work/(target+'.chlib')).read_bytes())
@@ -107,7 +109,7 @@ def main():
             value=dict(int8="-100",uint8="230",int16="-30000",uint16="60000",int32="-123456",uint32="4000000000",int64="-1234567890123",uint64="-1",float32="1.25",float64="-2.25",bool="true",char="'A'")[type]
             assertions+=f'assert(demo::math::identity_{type}()==({type}){value});assert(demo::math::identity_{type}(({type}){value})==({type}){value});assert(demo::bridge::identity_{type}(({type}){value})==({type}){value});'
         consumer=work/'consumer.chl'
-        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(demo::math::withDefault(77)==77);assert(demo::math::withDefault()==1);assert(demo::math::withDefault()==2);assert(demo::math::withDefault(78)==78);assert(demo::math::withDefault()==3);assert(demo::math::twoDefaults()==45);assert(demo::math::twoDefaults(1)==16);assert(demo::math::twoDefaults(1,2)==12);assert(demo::math::withDefault()==7);assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
+        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);demo::bridge::Wrapper wrapper;wrapper.bounds=copied;wrapper.tag=12;demo::bridge::Wrapper wrapperCopy=wrapper;wrapperCopy.bounds.low.x=15;assert(wrapper.bounds.low.x==9);assert(wrapperCopy.bounds.high.y==2.5);assert(wrapperCopy.tag==12);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(demo::math::withDefault(77)==77);assert(demo::math::withDefault()==1);assert(demo::math::withDefault()==2);assert(demo::math::withDefault(78)==78);assert(demo::math::withDefault()==3);assert(demo::math::twoDefaults()==45);assert(demo::math::twoDefaults(1)==16);assert(demo::math::twoDefaults(1,2)==12);assert(demo::math::withDefault()==7);assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
                             'assert(demo::math::factorial(8)==40320);assert(demo::math::sum(10)==45);'
                             'assert(demo::math::overloaded(9)==10);assert(demo::math::overloaded(1.5)==3.0);assert(demo::math::multiply(1.5,2.0)==3.0);demo::math::noop();'+assertions+'println("compiled library OK");}',encoding='utf-8')
         invoke([compiler,'check',consumer],work)
@@ -122,18 +124,23 @@ def main():
         package.write_bytes(good_dependency[:-1]+bytes([good_dependency[-1]^1]))
         invoke([compiler,'run',consumer,'--link',tick_object,'--out',work/'bad-dependency'],work,False)
         package.write_bytes(good_dependency)
+        bridge_only=work/'bridge-only.chl'
+        bridge_only.write_text('import demo::bridge;\nvoid main(){demo::bridge::Wrapper wrapper;wrapper.bounds.low.x=42;assert(wrapper.bounds.low.x==42);}')
+        invoke([compiler,'run',bridge_only,'--link',tick_object,'--out',work/'bridge-only'],work)
         bad=work/'private.chl';bad.write_text('import demo::math;void main(){demo::math::hidden(1);}')
         invoke([compiler,'check',bad],work,False)
         bad.write_text('import demo::math;\nimport demo::other;\nvoid main(){demo::math::Point a;demo::other::Point b=a;}')
         invoke([compiler,'check',bad],work,False)
+        (modules/'source.chl').write_text('module demo::source;\nstruct Source {int64 value;};')
         original=package.read_bytes()
         for source in ['module demo::math;String text(){return "unsupported";}',
                        'module demo::math;int64 state=1;int64 value(){return state;}',
                        'module demo::math;int64 unusedState=1;int64 value(){return 2;}',
                        'module demo::math;int64 generic<T>(T value){return 0;}',
                        'module demo::math;struct Owned {String value;};int64 value(){return 1;}',
-                       'module demo::math;struct Record {int64 x;int64 read(){return self.x;}};int64 value(){return 1;}']:
-            provider.write_text(source.replace('module demo::math;','module demo::math;\n'))
+                       'module demo::math;struct Record {int64 x;int64 read(){return self.x;}};int64 value(){return 1;}',
+                       'module demo::math;import demo::source;struct Record {demo::source::Source item;};int64 value(){return 1;}']:
+            provider.write_text(source.replace('module demo::math;','module demo::math;\n').replace('import demo::source;','import demo::source;\n'))
             result=invoke([compiler,'lib','build',provider,'--module','demo::math','--package-version','1.0.0','--out',package],work,False)
             assert any(word in result.stdout+result.stderr for word in ["标量","全局","泛型","记录"]),(source,result.stdout,result.stderr)
             assert package.read_bytes()==original
