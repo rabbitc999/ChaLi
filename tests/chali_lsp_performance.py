@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from project_temp import tempfile
 import time
+from cpu_budget import timing_budget
 from native_lsp_transport import Transport, position
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +16,8 @@ COMPILER = compiler_path()
 
 def main():
     """在隔离的程序目录运行真实服务，验证缓存不会写到工程或系统临时目录。"""
+    budget = timing_budget()
+    measure = budget['allowed']
     with tempfile.TemporaryDirectory(prefix='chali-lsp-performance-') as directory:
         work = Path(directory)
         binary = work / 'compiler directory' / COMPILER.name
@@ -43,11 +46,11 @@ def main():
         server.query('initialize', dict(rootUri=project.as_uri()))
         server.send(dict(method='textDocument/didOpen', params={'textDocument':dict(uri=uri,text=text,version=1)}))
         cursor = position(text, text.index('value') + 2)
-        started = time.monotonic()
+        started = time.monotonic() if measure else None
         hover = server.query('textDocument/hover', dict(textDocument=dict(uri=uri),position=cursor))
-        latency = time.monotonic() - started
+        latency = time.monotonic() - started if measure else None
         assert 'int64 value' in hover['contents']['value'], hover
-        assert not any(n.get('method') == 'textDocument/publishDiagnostics' for n in server.notifications)
+        if measure: assert not any(n.get('method') == 'textDocument/publishDiagnostics' for n in server.notifications)
         server.diagnostic(uri, 1, lambda values: not values)
         stats = server.query('chali/lspStats')
         assert Path(stats['cacheDirectory']) == cache and stats['removed'] >= 1, stats
@@ -110,7 +113,9 @@ def main():
         assert 'int64 value' in result['contents']['value'], result
         assert corrupted.query('chali/lspStats')['scans'] >= 1
         corrupted.close()
-        print(json.dumps(dict(firstHoverSeconds=round(latency,4), indexScans=scanned, cache=str(cache)),ensure_ascii=False))
+        after = timing_budget() if measure else budget
+        measure = measure and after['allowed']
+        print(json.dumps(dict(firstHoverSeconds=round(latency,4) if measure else None, timingDeferred=not measure, cpuBefore=budget, cpuAfter=after, indexScans=scanned, cache=str(cache)),ensure_ascii=False))
     print('LSP 并行提示、增量 UTF-16、未保存依赖、缓存复用/恢复、版本合并与清理通过。')
 
 

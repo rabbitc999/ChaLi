@@ -35,6 +35,7 @@
 #include <mutex>
 #include <future>
 #include "native_lsp_scheduler.hpp"
+#include "native_lsp_budget.hpp"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -3259,9 +3260,12 @@ class Server
     const std::set<std::string> &baseTypes;
     std::set<std::string> types;
     std::shared_ptr<LspCache> cache;
+    std::shared_ptr<LspAnalysisBudget> analysisBudget = std::make_shared<LspAnalysisBudget>();
+    bool backgroundAnalysis = false;
     std::shared_ptr<std::mutex> outputMutex;
     std::mutex stateMutex;
     std::map<std::string, std::shared_ptr<std::atomic<bool>>> requests, diagnostics;
+    std::map<std::string, std::string> requestDocuments;
     std::array<std::unique_ptr<LspQueue>, 6> queues;
     std::shared_ptr<std::atomic<uint64_t>> revision = std::make_shared<std::atomic<uint64_t>>(0);
     uint64_t snapshotRevision = 0;
@@ -3279,7 +3283,7 @@ class Server
      */
     Server(const Server &parent, Documents snapshot, std::vector<fs::path> folders, uint64_t version) : compiler(parent.compiler), documents(std::move(snapshot)), roots(std::move(folders)),
                                                                                                         library(parent.library), standard(library->standard), standardImports(library->imports),
-                                                                                                        baseTypes(library->types), types(baseTypes), cache(parent.cache), outputMutex(parent.outputMutex), revision(parent.revision), snapshotRevision(version) {}
+                                                                                                        baseTypes(library->types), types(baseTypes), cache(parent.cache), analysisBudget(parent.analysisBudget), outputMutex(parent.outputMutex), revision(parent.revision), snapshotRevision(version) {}
     /**
      * @brief 取得指定 URI 对应的当前源码内容。
      * @param u 待处理文档的 URI。
@@ -3663,12 +3667,15 @@ class Server
             if (!path.empty() && path.extension() == ".chl") overlays[normalizedPath(path).u8string()] = source.second;
         }
         write(temporary.path / "overlays.json", J(std::move(overlays)).dump());
+        auto slot = analysisBudget->acquire(!backgroundAnalysis, interrupted);
+        if (!slot) return J();
         ++cache->checks;
         const auto result = execute({ compiler.u8string(), "--check", "--diagnostics=json", "--warning-profile=editor", "--incremental", "--source-stdin",
                                       "--cache-dir", (cache->directory / "preprocess").u8string(), "--source-overlays", (temporary.path / "overlays.json").u8string(),
                                       "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
                                       "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() },
                                     file.parent_path(), body, timeout, interrupted);
+        slot.reset();
         if (result.cancelled || interrupted()) return J();
         if (result.error == "timed out") throw std::runtime_error("语义检查超时");
         if (result.output.empty()) throw std::runtime_error("编译器未返回语义检查报告");
@@ -4074,7 +4081,15 @@ class Server
         }
         if (method == "workspace/symbol")
             return symbols(str(params, "query"));
-        if (method == "chali/lspStats") return cache->stats();
+        if (method == "chali/lspStats")
+        {
+            auto result = cache->stats();
+            const auto budget = analysisBudget->state();
+            (*result.asObject())["analysisActive"] = int64_t(budget.active);
+            (*result.asObject())["analysisPeak"] = int64_t(budget.peak);
+            (*result.asObject())["analysisWaiting"] = int64_t(budget.interactive);
+            return result;
+        }
         auto u = str(get(params, "textDocument"), "uri");
         auto d = documents.find(u);
         if (d == documents.end())
@@ -4606,6 +4621,46 @@ class Server
     }
 
     /**
+     * @brief 估计排队快照持有的源码预算，共享文档按保守上界计入。
+     * @param snapshot 捕获的文档集合。
+     * @return 源码、URI 和映射节点的估计字节数。
+     */
+    static size_t snapshotBytes(const Documents &snapshot)
+    {
+        size_t total = 0;
+        for (const auto &entry : snapshot)
+        {
+            const auto bytes = entry.first.size() + entry.second->first.size() + sizeof(Document) + 128;
+            if (bytes > std::numeric_limits<size_t>::max() - total) return std::numeric_limits<size_t>::max();
+            total += bytes;
+        }
+        return total;
+    }
+    /**
+     * @brief 编辑或关闭文档时取消旧请求，及时释放其排队快照。
+     * @param u 文档 URI。
+     */
+    void cancelDocumentRequests(const std::string &u)
+    {
+        std::vector<std::shared_ptr<std::atomic<bool>>> flags;
+        {
+            std::lock_guard<std::mutex> lock(stateMutex);
+            for (const auto &entry : requestDocuments)
+                if (entry.second == u)
+                {
+                    const auto found = requests.find(entry.first);
+                    if (found != requests.end())
+                    {
+                        found->second->store(true);
+                        flags.push_back(found->second);
+                    }
+                }
+        }
+        for (const auto &flag : flags)
+            for (auto &queue : queues)
+                if (queue) queue->cancel(flag);
+    }
+    /**
      * @brief 为文档安排延迟诊断任务。
      * @param u 待处理文档的 URI。
      * @param delay 延迟启动诊断的等待时长。
@@ -4628,10 +4683,12 @@ class Server
             document = found->second;
             version = revision->load();
         }
+        const auto bytes = snapshotBytes(snapshot);
         queues[5]->post(u, [this, u, cancelled, document, version, snapshot = std::move(snapshot), folders = std::move(folders)] {
       if (cancelled->load()) return;
       try {
         Server view(*this, snapshot, folders, version);
+        view.backgroundAnalysis = true;
         const auto result = view.diagnose(u, [cancelled] { return cancelled->load(); });
         bool retry = false;
         {
@@ -4645,7 +4702,7 @@ class Server
         if (retry) scheduleDiagnostics(u);
       } catch (const std::exception &e) {
         if (!cancelled->load()) notify("window/logMessage",object({{"type",1},{"message",e.what()}}));
-      } }, cancelled, delay);
+      } }, cancelled, delay, bytes);
     }
     /**
      * @brief 将协议消息分派到相应的请求处理函数。
@@ -4663,6 +4720,7 @@ class Server
         {
             std::lock_guard<std::mutex> lock(stateMutex);
             requests[key] = cancelled;
+            requestDocuments[key] = u;
             snapshot = documents;
             folders = roots;
             version = revision->load();
@@ -4671,6 +4729,7 @@ class Server
                                                            (method == "textDocument/completion" || method == "textDocument/signatureHelp") ? 0 :
                                                            (method == "textDocument/hover" || method == "textDocument/definition")         ? 1 :
                                                                                                                                              2;
+        const auto bytes = snapshotBytes(snapshot);
         queues[lane]->post("", [this, message, id, key, u, cancelled, version, snapshot = std::move(snapshot), folders = std::move(folders)] {
       J response;
       try {
@@ -4710,7 +4769,7 @@ class Server
         response = object({{"jsonrpc","2.0"},{"id",id},{"error",object({{"code",-32800},{"message","请求已取消或文档已更新"}})}});
       }
       send(response);
-      std::lock_guard<std::mutex> lock(stateMutex); requests.erase(key); }, cancelled);
+      std::lock_guard<std::mutex> lock(stateMutex); requests.erase(key); requestDocuments.erase(key); }, cancelled, 0, bytes);
     }
     /**
      * @brief 结束会话并收尾异步工作。
@@ -4722,8 +4781,15 @@ class Server
             for (auto &entry : diagnostics) entry.second->store(true);
         }
         if (queues[5]) queues[5]->stop();
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
         for (size_t i = 0; i < 5; ++i)
-            if (queues[i]) queues[i]->drain();
+            if (queues[i]) queues[i]->drainUntil(deadline);
+        {
+            std::lock_guard<std::mutex> lock(stateMutex);
+            for (auto &entry : requests) entry.second->store(true);
+        }
+        for (size_t i = 0; i < 5; ++i)
+            if (queues[i]) queues[i]->stop();
     }
 
 public:
@@ -4889,6 +4955,7 @@ public:
                             diagnostics.erase(u);
                         }
                     }
+                    cancelDocumentRequests(u);
                     notify("textDocument/publishDiagnostics",
                            object({ { "uri", u }, { "diagnostics", A{} } }));
                     cache->forget(u);
@@ -4926,6 +4993,7 @@ public:
                             documents[u] = std::make_shared<const Document>(str(params, "text"), documents.count(u) ? documents[u]->second : J());
                         ++*revision;
                     }
+                    if (method != "textDocument/didSave") cancelDocumentRequests(u);
                     if (documents.count(u) && !pathOf(u).empty())
                         scheduleDiagnostics(u, method == "textDocument/didSave" ? 0 : 250);
                     for (const auto &dependent : cache->dependents(u))

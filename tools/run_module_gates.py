@@ -52,7 +52,7 @@ MODULES = {
                    "chali_reflection_serialization", "chali_annotations"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
-    "lsp": ["chali_lsp_snapshots", "chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
+    "lsp": ["chali_lsp_scheduler", "chali_lsp_pipeline", "chali_lsp_snapshots", "chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
             "chali_lsp_overloads", "chali_lsp_naming_scopes", "chali_lsp_symbols",
             "chali_lsp_lambda_capture", "chali_lsp_semantic_features",
             "chali_lsp_macro_completion", "chali_lsp_macro_highlighting",
