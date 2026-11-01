@@ -5,6 +5,8 @@
 #include "chali_aot_target.hpp"
 #include "chali_package.hpp"
 #include "abi/chali_abi.h"
+#include "chali_digest.hpp"
+#include "quad_model.hpp"
 #include "json/json.hpp"
 #include <algorithm>
 #include <set>
@@ -152,7 +154,7 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "unit-data-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
     uniqueStrings(manifest.licenseFiles);
     for (const auto &name : manifest.licenseFiles)
         if (!entryName(name)) throw std::runtime_error("许可证资产名字非法");
@@ -180,6 +182,13 @@ void validateManifest(const Manifest &manifest)
         if ((target.implementation.empty() && target.bitcode.empty()) || (!target.implementation.empty() && !entryName(target.implementation)) || (!target.bitcode.empty() && (!entryName(target.bitcode) || !nativeName(target.llvmVersion))))
             throw std::runtime_error("库目标缺少实现或 bitcode 兼容信息");
         if (target.bitcode.empty() && !target.llvmVersion.empty()) throw std::runtime_error("不含 bitcode 的目标不能声明 LLVM 版本要求");
+        if (!target.unitData.empty() || !target.unitLayout.empty() || !target.unitSymbol.empty())
+        {
+            if (!entryName(target.unitData) || !entryName(target.unitLayout) || target.unitSymbol.size() != 80 || target.unitSymbol.rfind("chali_unit_data_", 0) != 0 || target.unitSymbol.substr(16).find_first_not_of("0123456789abcdef") != std::string::npos)
+                throw std::runtime_error("单元数据资产或基址符号非法");
+            if (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "unit-data-v1") == manifest.requiredFeatures.end())
+                throw std::runtime_error("单元数据缺少必需能力标记");
+        }
         for (const auto *values : { &target.features, &target.systemLibraries, &target.runtimeLibraries })
         {
             uniqueStrings(*values);
@@ -256,6 +265,12 @@ std::string manifestJson(const Manifest &manifest)
         record.insert("implementation", target.implementation);
         record.insert("bitcode", target.bitcode);
         record.insert("llvmVersion", target.llvmVersion);
+        if (!target.unitData.empty())
+        {
+            record.insert("unitData", target.unitData);
+            record.insert("unitLayout", target.unitLayout);
+            record.insert("unitSymbol", target.unitSymbol);
+        }
         record.insert("systemLibraries", array(target.systemLibraries));
         record.insert("runtimeLibraries", array(target.runtimeLibraries));
         implementations.emplace_back(std::move(record));
@@ -302,7 +317,10 @@ Manifest parseManifest(std::string_view bytes)
     }
     for (const auto &item : *targets)
     {
-        keys(item, { "triple", "objectFormat", "pointerBits", "endian", "dataLayout", "cpu", "features", "nativeAbi", "implementation", "bitcode", "llvmVersion", "systemLibraries", "runtimeLibraries" });
+        if (item.find("unitData") || item.find("unitLayout") || item.find("unitSymbol"))
+            keys(item, { "triple", "objectFormat", "pointerBits", "endian", "dataLayout", "cpu", "features", "nativeAbi", "implementation", "bitcode", "llvmVersion", "unitData", "unitLayout", "unitSymbol", "systemLibraries", "runtimeLibraries" });
+        else
+            keys(item, { "triple", "objectFormat", "pointerBits", "endian", "dataLayout", "cpu", "features", "nativeAbi", "implementation", "bitcode", "llvmVersion", "systemLibraries", "runtimeLibraries" });
         if (number(field(item, "pointerBits")) != 64 || text(field(item, "endian")) != "little") throw std::runtime_error("库目标位宽或字节序不兼容");
         Target target;
         target.triple = text(field(item, "triple"));
@@ -314,6 +332,12 @@ Manifest parseManifest(std::string_view bytes)
         target.implementation = text(field(item, "implementation"));
         target.bitcode = text(field(item, "bitcode"));
         target.llvmVersion = text(field(item, "llvmVersion"));
+        if (item.find("unitData"))
+        {
+            target.unitData = text(field(item, "unitData"));
+            target.unitLayout = text(field(item, "unitLayout"));
+            target.unitSymbol = text(field(item, "unitSymbol"));
+        }
         target.systemLibraries = strings(field(item, "systemLibraries"));
         target.runtimeLibraries = strings(field(item, "runtimeLibraries"));
         manifest.targets.push_back(std::move(target));
@@ -335,7 +359,7 @@ void validate(const Package &package)
     for (const auto &entry : package.entries)
     {
         const auto kind = static_cast<std::uint16_t>(entry.kind);
-        if (!entryName(entry.name) || !names.insert(entry.name).second || (entry.flags & ~1u) || ((kind < 1 || kind > 8) && !(entry.flags & 1u))) throw std::runtime_error("库条目名字、种类、标志或唯一性非法");
+        if (!entryName(entry.name) || !names.insert(entry.name).second || (entry.flags & ~1u) || ((kind < 1 || kind > 9) && !(entry.flags & 1u))) throw std::runtime_error("库条目名字、种类、标志或唯一性非法");
         const std::uint64_t size = 48 + entry.name.size() + entry.bytes.size();
         if (size > maximumPackageBytes || total > maximumPackageBytes - size) throw std::runtime_error("库包超出二百五十六 MiB 预算");
         total += size;
@@ -356,6 +380,21 @@ void validate(const Package &package)
     for (const auto &target : package.manifest.targets)
     {
         require(target.bitcode, Kind::Bitcode);
+        require(target.unitData, Kind::UnitData);
+        require(target.unitLayout, Kind::UnitData);
+        if (!target.unitData.empty())
+        {
+            const auto &data = package.find(target.unitData)->bytes;
+            const auto &layout = package.find(target.unitLayout)->bytes;
+            const auto identity = package.manifest.module + "\n" + target.triple + "\n" + layout + "\n" + data;
+            if (target.unitSymbol != "chali_unit_data_" + chali_digest::hex(chali_digest::sha256(identity))) throw std::runtime_error("单元数据身份与基址符号不匹配");
+            Memory::Vector<stackvm::LayoutRow> rows;
+            if (data.empty() || layout.size() > 32ull * 1024 * 1024 || !stackvm::decodeDataLayout(layout, rows) || rows.empty()) throw std::runtime_error("单元数据布局无效");
+            std::set<Memory::String> names;
+            for (const auto &row : rows)
+                if (!names.insert(row.name).second || !row.hasSize || row.offset > data.size() || row.size > data.size() - row.offset)
+                    throw std::runtime_error("单元数据布局越界或符号重复");
+        }
         if (!target.implementation.empty())
         {
             const auto entry = package.find(target.implementation);

@@ -49,7 +49,7 @@ bool libraryPlainValue(const ast::TypePtr &type)
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if (!function.owner.empty() || !libraryScalar(function.result, true)) return state.fail("原生库尚未接入聚合返回的共享数据登记：" + function.name), false;
+    if (!function.owner.empty() || (!libraryScalar(function.result, true) && !libraryPlainValue(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
         if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
@@ -63,6 +63,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         if (!node) return false;
         using N = ast::Node::Kind;
         if (node->kind == N::Alloc) return true;
+        if (node->kind == N::StructNew) return true;
         if (node->kind == N::Call)
         {
             const auto own = state.astFunctions.find(textOf(node->text));
@@ -110,6 +111,9 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::Drop:
         case N::MemoryCopy:
         case N::MemorySet: break;
+        case N::StructNew:
+            if (!libraryPlainValue(ast::inferType(node, environment))) return false;
+            break;
         case N::Declare:
             environment[node->text] = node->declared;
             if (!libraryScalar(node->declared) && !libraryBorrow(node->declared) && !libraryPlainValue(node->declared))
@@ -298,6 +302,7 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     Memory::String runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();
     Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
+    if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
     if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";

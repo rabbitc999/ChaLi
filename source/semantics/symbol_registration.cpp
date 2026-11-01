@@ -1378,7 +1378,14 @@ bool RegisterTop()
                     return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
                 };
                 const bool values = declaration.abiConvention == "ChaLiValue";
-                if (!scalar(declaration.signature.result, true)) return Fail("语言入口返回类型不受支持");
+                if (!scalar(declaration.signature.result, true))
+                {
+                    const auto dataSource = [&](std::size_t line) {
+                        return line && line <= g_sourceFiles.size() && g_libraryDataSources.count(g_sourceFiles[line - 1]);
+                    };
+                    if (!values || !LibraryPlainValue(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
+                        return Fail("语言记录返回需要已验证的单元数据登记");
+                }
                 for (const auto &parameter : declaration.signature.params)
                     if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryPlainValue(parameter.type))) return Fail("语言入口参数类型不受支持");
             }

@@ -87,7 +87,7 @@ struct ImportSession::State
 {
     std::string target, cpu;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources, borrowSources;
+    std::vector<std::string> sources, borrowSources, dataSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -142,6 +142,7 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->paths.push_back(std::filesystem::weakly_canonical(path));
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
     if (borrowed) state_->borrowSources.push_back(state_->sources.back());
+    if (!select(package, state_->target, state_->cpu).unitData.empty()) state_->dataSources.push_back(state_->sources.back());
     return state_->packages.emplace(identity, std::move(package)).first->second;
 }
 /**
@@ -202,6 +203,9 @@ std::vector<std::string> ImportSession::sources() const { return state_->sources
 /** @brief 返回已验证语言借用接口来源。
  * @return 与当前目标原生 ABI 对应的稳定标签。 */
 std::vector<std::string> ImportSession::borrowSources() const { return state_->borrowSources; }
+/** @brief 返回当前目标携带已验证数据映像的来源。
+ * @return 对应本次快照的稳定接口标签。 */
+std::vector<std::string> ImportSession::dataSources() const { return state_->dataSources; }
 /** @brief 返回成功加载的真实来源路径。
  * @return 本次会话持有快照对应的规范包路径。 */
 std::vector<std::filesystem::path> ImportSession::paths() const { return state_->paths; }
@@ -224,6 +228,12 @@ void ImportSession::appendTo(chali_aot::Options &options)
         stream.close();
         if (!stream) throw std::runtime_error("无法暂存库实现：" + item.first);
         options.linkObjects.push_back(Memory::String(file.u8string().c_str()));
+        if (!target.unitData.empty())
+        {
+            const auto &data = item.second.find(target.unitData)->bytes;
+            const auto &layout = item.second.find(target.unitLayout)->bytes;
+            options.unitData.push_back({ Memory::String(target.unitSymbol.c_str()), Memory::String(data.data(), data.size()), Memory::String(layout.data(), layout.size()) });
+        }
         for (const auto &library : target.systemLibraries)
             options.linkLibraries.push_back(Memory::String(("-l" + library).c_str()));
     }

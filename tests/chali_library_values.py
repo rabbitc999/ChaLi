@@ -35,7 +35,7 @@ def main():
         interface = next(e['data'].decode() for e in entries if e['kind'] == 1)
         assert '#abi("ChaLiValue"' in interface
         original = package.read_bytes()
-        provider.write_text(source + 'Point returned(Point value){return value;}\n', encoding='utf-8')
+        provider.write_text(source + 'Point mut& returned(Point mut& value){return value;}\n', encoding='utf-8')
         invoke([compiler, 'lib', 'build', provider, '--module', 'demo::values',
                 '--package-version', '1.0.0', '--out', package], work, False)
         assert package.read_bytes() == original

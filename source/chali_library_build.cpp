@@ -102,7 +102,8 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         request.options.linkObjects.clear();
         request.abiGlue.clear();
         Memory::Vector<Memory::String> diagnostics;
-        if (chali_aot::run(request, &diagnostics))
+        chali_aot::UnitData unit;
+        if (chali_aot::run(request, &diagnostics, &unit))
         {
             for (const auto &diagnostic : diagnostics) std::fprintf(stderr, "chali lib: %s\n", diagnostic.c_str());
             return 1;
@@ -116,6 +117,17 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (!stream || stream.peek() != std::char_traits<char>::eof()) throw std::runtime_error("读取本次原生实现失败");
         package.entries.push_back({ package.manifest.interface, Kind::Interface, 0, interface });
         package.entries.push_back({ target.implementation, Kind::Object, 0, std::move(bytes) });
+        if (!unit.symbol.empty())
+        {
+            target.unitData = "native/" + target.triple + "/data.bin";
+            target.unitLayout = "native/" + target.triple + "/data.layout";
+            target.unitSymbol = unit.symbol.c_str();
+            if (!names.insert(target.unitData).second || !names.insert(target.unitLayout).second) throw std::runtime_error("单元数据资产与许可证名字冲突");
+            package.manifest.requiredFeatures.push_back("unit-data-v1");
+            package.entries.push_back({ target.unitData, Kind::UnitData, 0, std::string(unit.bytes.data(), unit.bytes.size()) });
+            package.entries.push_back({ target.unitLayout, Kind::UnitData, 0, std::string(unit.layout.data(), unit.layout.size()) });
+            package.manifest.targets[0] = target;
+        }
         std::string diagnostic;
         if (!write(output, package, diagnostic)) throw std::runtime_error(diagnostic);
         return 0;

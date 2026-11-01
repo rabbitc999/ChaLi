@@ -26,6 +26,14 @@ struct ExternFunction
     bool requiresMarshalling = false;               ///< 非标量签名必须通过 C 帧封送，不按槽位冒充原生布局。
 };
 
+/** @brief 独立原生单元的数据映像、逐符号布局和可重定位基址名称。 */
+struct UnitData
+{
+    Memory::String symbol;  ///< 含模块及数据身份摘要的 LLVM 基址符号。
+    Memory::String bytes;   ///< 原始数据映像，不含宿主指针。
+    Memory::String layout;  ///< 相对于单元基址的逐符号布局。
+};
+
 /**
  * @brief 判断外部声明是否需要按声明路径动态加载库。
  * @param function 外部函数及其库路径。
@@ -49,6 +57,7 @@ struct Options
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。
+    Memory::Vector<UnitData> unitData;               ///< 从已验证库快照恢复的只初始化一次的数据段。
     Memory::String libraryLicense;                   ///< 生产包声明的许可证名称。
     Memory::Vector<Memory::String> libraryLicenseAssets;     ///< NAME=FILE 形式的许可证及署名输入。
     Memory::Vector<Memory::String> librarySystemLibraries;   ///< 最终消费者链接所需的系统库名。
@@ -148,13 +157,21 @@ void setAbiGlueProvider(Memory::String (*provider)());
 
 /**
  * @brief 生成自包含的 LLVM 模块。
- * @param request 已优化四元式、数据映像、ABI 声明和输出选项。
+ * @param request 已检查 AST 或显式兼容四元式、数据映像及输出选项。
  * @param diagnostics 不支持的构造等诊断（非空 = 失败）。
  * @param header 给外部 C 用的头文件；不需要可以传 nullptr。
  * @return LLVM 模块文本；失败时返回空串。
  */
 [[nodiscard]] Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics,
                                           Memory::String *header = nullptr);
+/** @brief 生成 LLVM 模块并导出独立单元的数据重定位资产。
+ * @param request 已检查的输入。
+ * @param diagnostics 接收失败诊断。
+ * @param header 可选公开 C 头文件输出。
+ * @param unit 可选单元数据输出，每次调用首先清空。
+ * @return LLVM 模块文本；失败为空。 */
+[[nodiscard]] Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics,
+                                          Memory::String *header, UnitData *unit);
 
 /**
  * @brief 生成 LLVM 模块、写盘、并调 LLVM clang 驱动产出可执行文件 / 动态库。
@@ -163,6 +180,12 @@ void setAbiGlueProvider(Memory::String (*provider)());
  * @return 0 成功，非 0 失败。
  */
 [[nodiscard]] int run(const Request &request, Memory::Vector<Memory::String> *diagnostics);
+/** @brief 编译原生程序并导出独立单元的数据映像。
+ * @param request 输入及输出选项。
+ * @param diagnostics 接收失败诊断。
+ * @param unit 可选独立数据输出。
+ * @return 成功为零，失败非零。 */
+[[nodiscard]] int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, UnitData *unit);
 /**
  * @brief 查找实际外置 LLVM 驱动，不启动子进程。
  * @param wanted 显式路径；空值使用环境、发行目录或 PATH。

@@ -32,7 +32,8 @@ enum class Kind : std::uint16_t
     Bitcode = 5,
     Bytecode = 6,
     Source = 7,
-    License = 8
+    License = 8,
+    UnitData = 9
 };
 /** @brief 一项以完整模块身份和内容摘要锁定的库依赖。 */
 struct Dependency
@@ -53,6 +54,7 @@ struct Target
     std::string implementation;                 ///< 对象或归档条目名。
     std::string bitcode;                        ///< 可选 bitcode 条目名。
     std::string llvmVersion;                    ///< bitcode 所需的精确 LLVM 版本。
+    std::string unitData, unitLayout, unitSymbol;  ///< 可选单元数据、布局条目及基址符号，三者同时存在。
     std::vector<std::string> systemLibraries;   ///< 最终链接需要的系统库名。
     std::vector<std::string> runtimeLibraries;  ///< 应用运行需要交付或由目标系统提供的动态库名。
 };
@@ -139,6 +141,9 @@ public:
     /** @brief 取得启用语言借用调用约定的已验证接口标签。
      * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
     std::vector<std::string> borrowSources() const;
+    /** @brief 取得当前目标携带已验证数据映像的接口标签。
+     * @return 可声明普通记录返回的库来源。 */
+    std::vector<std::string> dataSources() const;
     /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
      * @return 本次成功加载的规范包路径。 */
     std::vector<std::filesystem::path> paths() const;

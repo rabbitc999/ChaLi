@@ -49,7 +49,7 @@ namespace
 {
 /* 语法动作会在读取旧节点的同时创建新节点；deque 保持旧节点引用有效。 */
 Memory::Deque<MNode> g_nodes;
-Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources;
+Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -3001,6 +3001,7 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
 {
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
+    g_libraryDataSources.clear();
     g_librarySources.insert(files.begin(), files.end());
 }
 /** @brief 保存当前目标允许语言借用 ABI 的来源标签。
@@ -3010,6 +3011,14 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryBorrowSources.clear();
     g_libraryBorrowSources.insert(files.begin(), files.end());
+}
+/** @brief 保存当前目标携带已验证单元数据的来源。
+ * @param files 已验证映像、布局和基址符号的接口。
+ * @return 无。 */
+void M_SetLibraryDataSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryDataSources.clear();
+    g_libraryDataSources.insert(files.begin(), files.end());
 }
 
 /**
@@ -3600,9 +3609,16 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         entry.label = function.label;
         entry.nativeAlias = function.exportSymbol;
         entry.abiConvention = "C";
-        entry.resultType = AotCType(CAbiType(function.signature.result));
-        Memory::String declaration = LibraryScalarType(function.signature.result, true) + " " + function.source + "(";
+        const bool valueResult = LibraryPlainValue(function.signature.result);
+        entry.resultType = AotCType(LibraryNativeType(function.signature.result));
+        if (valueResult) entry.abiConvention = "ChaLiValue";
+        Memory::String declaration = (valueResult ? LibraryDeclaredType(function.signature.result->name) : LibraryScalarType(function.signature.result, true)) + " " + function.source + "(";
         Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
+        if (valueResult)
+        {
+            if (!function.exportSymbol.empty()) throw std::runtime_error("语言记录返回不能同时声明物理 C ABI 的 #export");
+            identity += "\nchali-value-v1:" + LibraryRecordShape(function.signature.result->name, recordShapes);
+        }
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
             const auto &parameter = function.signature.params[i];

@@ -8,6 +8,7 @@
 #include "chali_aot_llvm.hpp"
 #include "chali_assembler.hpp"
 #include "chali_native_tools.hpp"
+#include "chali_digest.hpp"
 #include <memory>
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
@@ -316,6 +317,7 @@ struct Translator
     std::set<std::string> astInlineFunctions; ///< 已证明无递归且符合展开预算的 AST 函数。
     std::map<std::string, Memory::Map<Memory::String, Memory::String>> astSymbols; ///< 函数内名字的独立存储身份。
     std::map<const ast::Node *, std::size_t> astData; ///< AST 常量节点的数据地址。
+    Memory::String unitDataSymbol;                    ///< 当前独立单元数据映像的重定位基址。
     Memory::Map<Memory::String, ast::TypePtr> astTypes; ///< AST 类型查询环境。
 
     /**
@@ -2417,6 +2419,19 @@ Text exportDispatcher(Translator &state)
  */
 Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
 {
+    return generateLLVM(inputRequest, diagnostics, header, nullptr);
+}
+/**
+ * @brief 生成原生 LLVM 模块并可选导出单元数据，保留原有三参数入口。
+ * @param inputRequest 已检查的输入。
+ * @param diagnostics 接收诊断。
+ * @param header 接收 C 头文件。
+ * @param unit 接收独立数据；无数据时清空。
+ * @return LLVM 模块；失败为空。
+ */
+Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header, UnitData *unit)
+{
+    if (unit) *unit = {};
     Request request = inputRequest;
     Translator state(request, diagnostics);
     if (state.target.runtime.empty()) return {};
@@ -2431,7 +2446,54 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     if (request.syntax) prepareAst(request, state);
     else { loadLayout(state); analyze(state); }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
-    if (!request.options.libraryModule.empty()) return generateLibraryLLVM(request, state);
+    if (!request.options.libraryModule.empty())
+    {
+        if (!state.astData.empty())
+        {
+            Memory::String identity = request.options.libraryModule + "\n" + state.target.triple + "\n" + request.dataLayout + "\n" + request.dataBytes;
+            state.unitDataSymbol = Memory::String(("chali_unit_data_" + chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())))).c_str());
+            if (unit) *unit = { state.unitDataSymbol, request.dataBytes, request.dataLayout };
+        }
+        return generateLibraryLLVM(request, state);
+    }
+    Memory::Map<Memory::String, std::size_t> unitBases;
+    Memory::Map<Memory::String, const UnitData *> unitImages;
+    Memory::Vector<stackvm::LayoutRow> unitRows;
+    for (const auto &data : request.options.unitData)
+    {
+        if (data.symbol.size() != 80 || data.symbol.rfind("chali_unit_data_", 0) != 0 || data.symbol.substr(16).find_first_not_of("0123456789abcdef") != Memory::String::npos)
+            return state.fail("预编译单元数据基址符号无效"), Memory::String();
+        const auto previous = unitImages.find(data.symbol);
+        if (previous != unitImages.end())
+        {
+            if (previous->second->bytes != data.bytes || previous->second->layout != data.layout) return state.fail("同一单元数据符号对应不同映像"), Memory::String();
+            continue;
+        }
+        while (request.dataBytes.size() % 16) request.dataBytes.push_back('\0');
+        const auto base = request.dataBytes.size();
+        if (data.bytes.size() > 256ull * 1024 * 1024 || base > 256ull * 1024 * 1024 - data.bytes.size())
+            return state.fail("预编译单元数据总量超过预算"), Memory::String();
+        Memory::Vector<stackvm::LayoutRow> rows;
+        if (!stackvm::decodeDataLayout(data.layout, rows)) return state.fail("预编译单元数据布局无效"), Memory::String();
+        for (auto &row : rows)
+        {
+            if (!row.hasSize || row.offset > data.bytes.size() || row.size > data.bytes.size() - row.offset)
+                return state.fail("预编译单元数据布局越界"), Memory::String();
+            row.name = data.symbol + "_" + row.name;
+            row.offset += base;
+            unitRows.push_back(std::move(row));
+        }
+        request.dataBytes += data.bytes;
+        unitBases.emplace(data.symbol, base);
+        unitImages.emplace(data.symbol, &data);
+    }
+    if (!unitRows.empty())
+    {
+        Memory::Vector<stackvm::LayoutRow> rows;
+        if (!stackvm::decodeDataLayout(request.dataLayout, rows)) return state.fail("主单元数据布局无效"), Memory::String();
+        rows.insert(rows.end(), unitRows.begin(), unitRows.end());
+        request.dataLayout = stackvm::encodeDataLayout(rows);
+    }
     for (const auto &name : request.options.exports)
         if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
@@ -2513,6 +2575,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     }
     out += "]\n";
     emitDataImage(state, out);
+    for (const auto &base : unitBases) out += "@" + textOf(base.first) + " = constant i64 " + std::to_string(base.second) + "\n";
     out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
     out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
     out += "@chali_allocator_kind = constant i32 " + Text(request.options.allocator == "pool" ? "0" : "1") + "\n";
@@ -2828,6 +2891,18 @@ Memory::String llvmCompilerPath(const Memory::String &wanted)
  */
 int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
 {
+    return run(request, diagnostics, nullptr);
+}
+/**
+ * @brief 编译原生程序并输出独立单元数据，沿用既有两参数入口。
+ * @param request 原生编译输入。
+ * @param diagnostics 接收生成和工具链错误。
+ * @param unit 可选数据输出。
+ * @return 成功为零，失败非零。
+ */
+int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, UnitData *unit)
+{
+    if (unit) *unit = {};
     TargetInfo target;
     Memory::String targetError;
     if (!describeTarget(request.options.target, target, &targetError))
@@ -2859,7 +2934,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         return 1;
     }
     Memory::String header;
-    const Memory::String source = generateLLVM(request, diagnostics, &header);
+    const Memory::String source = generateLLVM(request, diagnostics, &header, unit);
     if (source.empty()) return 1;
     const Text prefix = request.options.outputPrefix.empty() ? "chali_aot" : textOf(request.options.outputPrefix);
     const Text llvmPath = prefix + ".ll";

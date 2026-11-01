@@ -1235,6 +1235,10 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许语言借用调用约定的已验证库接口来源。
  * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
 void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
+/** @brief 设置已验证且具备单元数据重定位能力的库来源。
+ * @param files 当前目标携带单元映像与布局的来源。
+ * @return 无。 */
+void M_SetLibraryDataSources(const Memory::Vector<Memory::String> &files);
 
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);

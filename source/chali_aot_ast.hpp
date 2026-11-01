@@ -728,6 +728,11 @@ struct AstBuilder : Builder
         case N::ArrayNew:
         case N::StructNew:
         case N::EnumNew:
+            if (!state.unitDataSymbol.empty())
+            {
+                const auto base = instruction("i64", "load i64, ptr @" + textOf(state.unitDataSymbol));
+                return instruction("i64", "add i64 " + base.text + ", " + std::to_string(state.astData.at(node.get())));
+            }
             return { "i64", std::to_string(state.astData.at(node.get())) };
         case N::Sequence:
             for (std::size_t index = 0; index + 1 < node->kids.size(); ++index) statement(node->kids[index]);
