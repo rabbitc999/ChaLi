@@ -118,3 +118,5 @@ The [29-chapter English book](../book/en/README.md) contains technical chapters,
 - [Downloaded build dependencies](42-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
 
 - [Native AOT debugging](43-native-debugging.md): GDB breakpoints, stepping and variables.
+
+- [Library containers and asset inspection](44-library-packages.md): canonical manifests, independent ABIs, target assets, digests and budgets.

@@ -24,7 +24,8 @@ async function main() {
   const selectedCompiler = process.env.CHALI_BIN || require('../src/locator').resolveChaLi(root).chali;
   assert.ok(selectedCompiler, '没有找到当前版本的 ChaLi 编译器');
   const sourceCompiler = path.resolve(selectedCompiler);
-  const directory = fs.mkdtempSync(path.join(require('./projectTemp').root, 'chali vscode deps '));
+  const temporaryRoot = path.resolve(require('./projectTemp').root);
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, 'chali vscode deps '));
   const compilerDir = path.join(directory, 'tool chain'); fs.mkdirSync(compilerDir);
   const compiler = path.join(compilerDir, path.basename(sourceCompiler)); fs.copyFileSync(sourceCompiler, compiler);
   const app = path.join(directory, 'my project'); fs.mkdirSync(app);
@@ -94,7 +95,8 @@ async function main() {
   } finally {
     for (const subscription of context.subscriptions) subscription.dispose();
     if (server.listening) await new Promise((resolve) => server.close(resolve));
-    fs.rmSync(directory, { recursive: true, force: true });
+    assert.ok(path.resolve(directory).startsWith(temporaryRoot + path.sep), '临时清理路径必须位于本测试的根目录内');
+    fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
 

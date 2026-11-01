@@ -41,7 +41,7 @@ inline std::vector<std::string> normalize(int argc, char **argv)
         return result;
     }
     const bool sourceCommand = command == "run" || command == "interpret" || command == "emit" || command == "check" || command == "new" || command == "gen" || command == "aot";
-    const bool scenario = sourceCommand || command == "link" || command == "ar" || command == "asm" || command == "help" || command == "clear" || command == "test" || command == "fmt" || command == "deps" || command == "lsp" || command == "man";
+    const bool scenario = sourceCommand || command == "lib" || command == "link" || command == "ar" || command == "asm" || command == "help" || command == "clear" || command == "test" || command == "fmt" || command == "deps" || command == "lsp" || command == "man";
     if (!scenario && !command.empty() && command[0] != '-')
     {
         result.emplace_back("run");
@@ -117,7 +117,7 @@ inline std::vector<std::string> normalize(int argc, char **argv)
         for (const char *option : { "--lang", "--out", "--out-dir", "--name", "--memory-size", "--step-limit",
                                     "--include-dir", "--include-path", "--import-dir", "--define", "--symbol-map", "-I", "-D",
                                     "--run-mode", "--mode", "--backend", "--filter", "--timeout", "--project",
-                                    "--search", "--cache-dir", "--source-overlays", "--analysis-deps", "--macro-backtrace", "--llvm", "--target", "--cpu", "--sysroot", "--runtime-dir", "--allocator", "--export", "--link", "--asm", "--asm-include", "--entry", "--library", "--library-path", "-L" })
+                                    "--search", "--cache-dir", "--source-overlays", "--analysis-deps", "--macro-backtrace", "--llvm", "--target", "--cpu", "--sysroot", "--runtime-dir", "--allocator", "--export", "--link", "--asm", "--asm-include", "--entry", "--library", "--library-path", "-L", "--module", "--package-version", "--manifest", "--license", "--license-asset", "--dependency", "--system-library", "--runtime-library" })
             if (value == option) takesValue = true;
         result.push_back(value);
         if (takesValue && i + 1 < argc)

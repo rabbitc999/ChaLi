@@ -5,6 +5,7 @@
 #include "chali_cli.hpp"
 #include "chali_assembler.hpp"
 #include "chali_linker.hpp"
+#include "chali_library.hpp"
 #include "chali_i18n.hpp"
 #include "tools/abi_import.hpp"
 #include <cstdio>
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
     values.clear();
     for (auto &argument : arguments) values.push_back(argument.data());
     values.push_back(nullptr);
+    if (arguments.size() > 1 && arguments[1] == "lib") return chali_library::runCli(static_cast<int>(arguments.size()), values.data());
     if (arguments.size() > 1 && (arguments[1] == "link" || arguments[1] == "ar")) return chali_linker::runCli(static_cast<int>(arguments.size()), values.data());
     if (arguments.size() > 1 && arguments[1] == "asm") return chali_assembler::runCli(static_cast<int>(arguments.size()), values.data());
     if (arguments.size() > 2 && arguments[1] == "gen" && arguments[2] == "abi")

@@ -43,11 +43,20 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
     target.arm64 = triple == "aarch64-unknown-linux-gnu";
     target.cpu = target.arm64 ? "generic" : "x86-64";
     if (target.windows)
+    {
         target.runtime = "aot/runtime_windows.ll";
+        target.dataLayout = "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
+    }
     else if (triple == "x86_64-unknown-linux-gnu")
+    {
         target.runtime = "aot/runtime_linux.ll";
+        target.dataLayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
+    }
     else if (target.arm64)
+    {
         target.runtime = "aot/runtime_linux_arm64.ll";
+        target.dataLayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-Fn32";
+    }
     else
     {
         if (error) *error = "AOT：没有登记的目标运行时：" + triple + "；支持 windows-x64、linux-x64、linux-arm64";

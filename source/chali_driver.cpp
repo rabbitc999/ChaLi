@@ -132,6 +132,9 @@ void PrintUsage(std::FILE *out)
              "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
+             "  lib            库包格式工具：template、pack、inspect\n"
+             "  link           链接原生对象与归档\n"
+             "  ar             创建确定性静态归档\n"
              "  asm            将目标 .s 汇编为对象文件，不执行链接\n"
              "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",

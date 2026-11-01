@@ -3,6 +3,7 @@ from pathlib import Path
 from project_temp import tempfile
 import argparse
 import os
+import shutil
 import subprocess
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -18,16 +19,17 @@ def main():
     parser.add_argument('--cxx',default=str(sdk/'bin/g++.exe') if os.name=='nt' and sdk.exists() else 'g++')
     parser.add_argument('--sysroot',type=Path)
     args=parser.parse_args();build=args.build_root.resolve()
-    use_sdk=Path(args.cxx).resolve().parent==(sdk/'bin').resolve()
-    environment=dict(os.environ,PATH=str(Path(args.cxx).resolve().parent)+os.pathsep+os.environ.get('PATH',''))
+    compiler=Path(shutil.which(args.cxx) or args.cxx).resolve()
+    use_sdk=compiler.parent==(sdk/'bin').resolve()
+    environment=dict(os.environ,PATH=str(compiler.parent)+os.pathsep+os.environ.get('PATH',''))
     with tempfile.TemporaryDirectory(prefix='generator-assets-') as directory:
         work=Path(directory);output=work/('assets.exe' if os.name=='nt' else 'assets')
         flags=['-std=c++17','-O1','-DCHALI_CUSTOM_ALLOCATOR=1','-DSTACKVM_AOT_ONLY=1','-DSTACKVM_WITH_REFLECTION=1','-DCHALI_WITH_REFLECTION=1','-I'+str(ROOT/'source'),'-I'+str(ROOT/'library'),'-pthread']
         if args.sysroot or use_sdk:flags+=['--sysroot='+str((args.sysroot or sdk).resolve())]
-        command=[args.cxx,*flags,ROOT/'tests/chali_generator_assets.cpp',ROOT/'source/allocator/system_arena.cpp',
+        command=[str(compiler),*flags,ROOT/'tests/chali_generator_assets.cpp',ROOT/'source/allocator/system_arena.cpp',
                  '-Wl,--gc-sections','-Wl,--start-group',build/'chali-frontend/libparser.a',
                  build/'chali-ircode-aot-core/libstackvm.a',build/'chali-host-records/librecords.a','-Wl,--end-group','-o',output]
-        command+=['-static','-fuse-ld=lld','-lws2_32','-lwinhttp','-lbcrypt','-lcrypt32'] if os.name=='nt' else ['-ldl']
+        command+=['-static',*(['-fuse-ld=lld'] if use_sdk else []),'-lws2_32','-lwinhttp','-lbcrypt','-lcrypt32'] if os.name=='nt' else ['-ldl']
         result=subprocess.run(list(map(str,command)),cwd=ROOT,env=environment,capture_output=True,encoding='utf-8',errors='replace',timeout=180)
         assert result.returncode==0,(result.stdout,result.stderr)
         result=subprocess.run([str(output),str(ROOT)],cwd=work,env=environment,capture_output=True,encoding='utf-8',timeout=60)

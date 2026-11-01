@@ -155,3 +155,5 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 - [在线构建依赖](42-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
 
 - [原生 AOT 调试](43-native-debugging.md)：GDB 断点、单步、变量与 `--debug` 构建。
+
+- [库包格式与资产检查](44-library-packages.md)：规范清单、独立 ABI、目标实现、摘要与预算。

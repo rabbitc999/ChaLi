@@ -59,7 +59,7 @@ def main():
         cmake = (project / 'CMakeLists.txt').read_text(encoding='utf-8')
         assert 'add_executable(chali chali_main.cpp compiler_entry.cpp)' in cmake
         assert 'COMPILE_DEFINITIONS CHALI_FRONT_END_NO_MAIN=1' in cmake
-        run(args.cxx, '-std=c++17', '-fsyntax-only', '-I' + str(project), project / 'compiler_entry.cpp')
+        run(args.cxx, '-std=c++17', '-fsyntax-only', '-I' + str(project), '-I' + str(project / 'runtime'), project / 'compiler_entry.cpp')
         embedded = (project / 'chali_stdlib_embedded.cpp').read_text(encoding='utf-8')
         assert '"ircode/native_protocol.hpp"' in embedded
         assert '"ircode/runtime_internal.hpp"' in embedded

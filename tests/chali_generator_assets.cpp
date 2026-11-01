@@ -39,6 +39,12 @@ int main(int argc,char **argv) {
         assert(assets.count(name)&&normalized(assets.at(name))==normalized(text.str()));++count;
     }
     assert(!assets.count("chali_glue.hpp"));
+    for (const auto *name : {"chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_tools.cpp"})
+    {
+        std::ifstream file(std::filesystem::u8path(argv[1])/"source"/name,std::ios::binary);
+        assert(file);std::ostringstream text;text<<file.rdbuf();
+        assert(assets.count(name)&&normalized(assets.at(name))==normalized(text.str()));
+    }
     assert(count>20&&assets.count("abi/collection_operations.inc")&&assets.count("abi/abi_big_number.cpp")&&assets.count("abi/abi_cas.cpp"));
     for(auto *name:{"std_native_record.hpp","std_native_record.cpp","std_big_number.hpp","std_big_number.cpp","std_cas.hpp","std_cas.cpp","std_demo.cpp","std_demo.hpp","std_registry.hpp","std_glue.cpp","std_glue.hpp","std_records.cpp","std_records.hpp","std_binding.hpp"})
         assert(!assets.count(std::string("glue/")+name));

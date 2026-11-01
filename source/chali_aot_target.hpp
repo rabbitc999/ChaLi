@@ -18,6 +18,7 @@ struct TargetInfo
     bool windows = false;    ///< 使用 Windows CRT、COFF 和 PE 产物。
     bool arm64 = false;      ///< 使用 AArch64 指令集。
     bool native = false;     ///< 三元组与当前编译器宿主一致。
+    Memory::String dataLayout; ///< 与目标运行时一致的数据布局，用于独立实现兼容检查。
 };
 
 /**
