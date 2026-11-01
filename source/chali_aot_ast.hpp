@@ -794,6 +794,14 @@ struct AstBuilder : Builder
         case N::Call:
         case N::CallPointer:
         {
+            if (!state.request.options.libraryModule.empty() && node->text == "__std_move_begin" && node->kids.size() == 2)
+            {
+                const auto address = expression(node->kids[0]);
+                const auto bytes = expression(node->kids[1]);
+                location(node);
+                call("chali_host_storage_begin", "void", { convert(address, "i64"), convert(bytes, "i64") });
+                return { "i64", "0" };
+            }
             // 独立语言单元不持有宿主名称表，借用 ABI 始终使用共享运行时的同一非空检查。
             if (!state.request.options.libraryModule.empty() && node->text == "__std_reference" && node->kids.size() == 1)
             {

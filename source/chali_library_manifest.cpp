@@ -152,7 +152,7 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
     uniqueStrings(manifest.licenseFiles);
     for (const auto &name : manifest.licenseFiles)
         if (!entryName(name)) throw std::runtime_error("许可证资产名字非法");
@@ -171,10 +171,12 @@ void validateManifest(const Manifest &manifest)
         Memory::String error;
         if (!chali_aot::describeTarget(Memory::String(target.triple.c_str()), known, &error) || target.triple != std::string(known.triple.c_str()) || !targets.insert(target.triple).second)
             throw std::runtime_error("库目标不是唯一的规范三元组：" + target.triple);
-        if (target.objectFormat != (known.windows ? "coff" : "elf") || target.dataLayout != known.dataLayout.c_str() || !nativeName(target.cpu) || (target.nativeAbi != "c-v1" && target.nativeAbi != "chali-borrow-v1"))
+        if (target.objectFormat != (known.windows ? "coff" : "elf") || target.dataLayout != known.dataLayout.c_str() || !nativeName(target.cpu) || (target.nativeAbi != "c-v1" && target.nativeAbi != "chali-borrow-v1" && target.nativeAbi != "chali-value-v1"))
             throw std::runtime_error("库目标格式、数据布局、CPU 或原生 ABI 不兼容");
         if (target.nativeAbi == "chali-borrow-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-record-v1") == manifest.requiredFeatures.end())
             throw std::runtime_error("语言借用 ABI 缺少必需能力标记");
+        if (target.nativeAbi == "chali-value-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "plain-record-value-v1") == manifest.requiredFeatures.end())
+            throw std::runtime_error("语言记录值 ABI 缺少必需能力标记");
         if ((target.implementation.empty() && target.bitcode.empty()) || (!target.implementation.empty() && !entryName(target.implementation)) || (!target.bitcode.empty() && (!entryName(target.bitcode) || !nativeName(target.llvmVersion))))
             throw std::runtime_error("库目标缺少实现或 bitcode 兼容信息");
         if (target.bitcode.empty() && !target.llvmVersion.empty()) throw std::runtime_error("不含 bitcode 的目标不能声明 LLVM 版本要求");

@@ -38,6 +38,8 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
         const bool borrowed = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow"; });
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
+        const bool values = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue"; });
+        if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");
         package.manifest.dependencies = dependencies;
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;
@@ -54,6 +56,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (!chali_aot::describeTarget(original.options.target, known, &error)) throw std::runtime_error(error.c_str());
         Target target;
         if (borrowed) target.nativeAbi = "chali-borrow-v1";
+        if (values) target.nativeAbi = "chali-value-v1";
         target.triple = known.triple.c_str();
         target.objectFormat = known.windows ? "coff" : "elf";
         target.dataLayout = known.dataLayout.c_str();

@@ -126,7 +126,8 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
             || expected->second.sha256 != package.contentSha256)
             throw std::runtime_error("库不在项目锁中或版本／摘要发生变化：" + identity);
     }
-    const bool borrowed = select(package, state_->target, state_->cpu).nativeAbi == "chali-borrow-v1";
+    const auto &abi = select(package, state_->target, state_->cpu).nativeAbi;
+    const bool borrowed = abi == "chali-borrow-v1" || abi == "chali-value-v1";
     const auto existing = state_->packages.find(identity);
     if (existing != state_->packages.end())
     {

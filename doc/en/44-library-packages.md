@@ -70,7 +70,7 @@ struct Point { int64 x; float64 y; };
 struct Bounds { Point low; Point high; char marker; };
 ```
 
-A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one supported public function. Parameters may use scalars or plain record borrows as described below; results remain scalars or void. Record declarations do not enable by-value aggregate calls. Same-named records in different modules remain different types.
+A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one supported public function. Parameters may use scalars or plain record borrows as described below; results remain scalars or void. By-value record parameters are described below; record results and owning aggregate calls remain unavailable. Same-named records in different modules remain different types.
 
 Public enums support empty, single-payload and multiple-payload variants. Payloads may use basic scalars or supported records/enums. For example:
 
@@ -92,7 +92,7 @@ int64 read(Point const& value) { return value.x; }
 void bump(Point mut& value, int64 delta) { value.x = value.x + delta; }
 ```
 
-These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Results remain basic scalars or void; bodies retain the supported scalar control flow, field access and direct calls. Owning values, enum references, by-value records, record-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
+These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Results remain basic scalars or void; bodies retain the supported scalar control flow, field access and direct calls. Owning values, enum references, record-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
 
 Packages use native ABI `chali-borrow-v1` and required feature `borrowed-record-v1`. The generated `ChaLiBorrow` marker is allowed only in verified library sources with matching ABI; copying it into ordinary source is rejected. Symbols include full record and nested-layout hashes, so an old independent consumer object cannot link to a package with a changed layout under the old symbol. Ordinary C ABI packages retain `c-v1`. Borrowed calls and the complete owning-value, closure and dynamic-function contracts remain separately verified capabilities.
 
@@ -135,7 +135,7 @@ void main() {
 
 `chali --check consumer.chl` checks declarations; `chali aot consumer.chl --out build/consumer` links the selected implementation. Provider implementation source is not needed. Search proceeds through the current unit directory, its `modules/` directory and `-I` directories, preferring `.chlib` over `.chl` at each location. A found but invalid/incompatible package fails without source fallback. Embedded standard-library loading remains available.
 
-The current native interface accepts type/function declarations with explicit C ABI entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and the owning-value internal language ABI are not enabled by carrying optional source/template assets.
+The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and the owning-value internal language ABI are not enabled by carrying optional source/template assets.
 
 Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
 
@@ -227,3 +227,9 @@ python tests/chali_library_package.py --chali STATIC_PATH --other-chali EXTERNAL
 Tests independently decode the public format and compare digests with `hashlib`. They cover chunk/padding boundaries, canonical encoding, corruption, budgets, optional entries, three-target selection and transactional publication. A restored archive is linked and executed with the standalone linker. Cross-target generation/format checks and host execution are recorded separately.
 
 Explicit lifetime contracts are not yet stored in library interfaces. Functions with #static or #borrow are rejected during export so that consumer constraints cannot be weakened by omitting a contract.
+
+## Plain record parameters by value
+
+Nonowning plain records can be passed by value using native ABI chali-value-v1 and required feature plain-record-value-v1. The private ChaLiValue declaration is restricted to verified package interfaces. The callee allocates an independent copy with the shared allocator and frees it on exit. Mutating a copied parameter does not change the caller. Nested record identity and layout hashes are included in entry symbols.
+
+For example, an int64 shifted(Point value, int64 delta) function may update value.x and return it. Calling shifted(point, 2) with point.x equal to 40 returns 42 and leaves point.x equal to 40. Results remain basic scalars or void. Record return data registration, owning fields, explicit lifetime contracts and the complete shared type registry remain unavailable; these entries cannot declare a physical C ABI #export.

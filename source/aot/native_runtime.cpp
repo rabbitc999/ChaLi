@@ -625,6 +625,18 @@ void chali_host_check_pointer(std::int64_t index, std::int64_t address, std::int
 }
 
 /**
+ * @brief 在共享对象表中开始普通聚合存储的新生命周期。
+ * @param address 已分配存储的逻辑地址。
+ * @param bytes 聚合存储的字节数。
+ * @return 无。
+ */
+void chali_host_storage_begin(std::int64_t address, std::int64_t bytes)
+{
+    if (address < 0 || bytes < 0) chali_panic("聚合生命周期地址或长度无效");
+    currentContext().objects->beginStorage(static_cast<std::size_t>(address), static_cast<std::size_t>(bytes));
+}
+
+/**
  * @brief 验证数据区或活跃堆区间，借用一次同步操作所需的物理存储。
  * @param address 语言逻辑地址。
  * @param count 必须可访问的字节数。

@@ -2427,7 +2427,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         return {};
     }
     for (const auto &external : request.externs)
-        if (external.abiConvention != "C" && external.abiConvention != "ChaLiBorrow") state.fail("AOT：外部调用约定不受支持");
+        if (external.abiConvention != "C" && external.abiConvention != "ChaLiBorrow" && external.abiConvention != "ChaLiValue") state.fail("AOT：外部调用约定不受支持");
     if (request.syntax) prepareAst(request, state);
     else { loadLayout(state); analyze(state); }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};

@@ -30,6 +30,18 @@ bool libraryBorrow(const ast::TypePtr &type)
     return !type->element->fields.empty();
 }
 /**
+ * @brief 判断独立单元按逻辑地址传递且不含拥有字段的记录值。
+ * @param type 已展开的 AST 类型。
+ * @return 全部存储字段为基础标量时为真。
+ */
+bool libraryPlainValue(const ast::TypePtr &type)
+{
+    if (!type || type->kind != ast::Type::Kind::Struct || type->fields.empty()) return false;
+    for (const auto &field : type->fields)
+        if (!libraryScalar(field.second)) return false;
+    return true;
+}
+/**
  * @brief 核对标量单元可达函数，不把未实现的拥有值或全局状态按标量误编译。
  * @param state 当前直接 AST 生成状态。
  * @param function 可达函数。
@@ -37,19 +49,27 @@ bool libraryBorrow(const ast::TypePtr &type)
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if (!function.owner.empty() || !libraryScalar(function.result, true)) return state.fail("原生标量库暂不支持方法或拥有值返回：" + function.name), false;
+    if (!function.owner.empty() || !libraryScalar(function.result, true)) return state.fail("原生库尚未接入聚合返回的共享数据登记：" + function.name), false;
     for (const auto &parameter : function.parameters)
-        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
+        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
     std::set<Text> borrowed;
     for (const auto &parameter : function.parameters)
     {
         environment[parameter.first] = parameter.second;
-        if (libraryBorrow(parameter.second)) borrowed.insert(textOf(parameter.first));
+        if (libraryBorrow(parameter.second) || libraryPlainValue(parameter.second)) borrowed.insert(textOf(parameter.first));
     }
     std::function<bool(const ast::NodePtr &)> addressOrigin = [&](const ast::NodePtr &node) {
         if (!node) return false;
         using N = ast::Node::Kind;
+        if (node->kind == N::Alloc) return true;
+        if (node->kind == N::Call)
+        {
+            const auto own = state.astFunctions.find(textOf(node->text));
+            if (own != state.astFunctions.end() && libraryPlainValue(own->second->result)) return true;
+            const auto external = state.externsByLabel.find(textOf(node->text));
+            if (external != state.externsByLabel.end() && external->second->abiConvention == "ChaLiValue") return true;
+        }
         if (node->kind == N::Var) return borrowed.count(textOf(node->text)) != 0;
         if (node->kind == N::Cast || node->kind == N::Offset || node->kind == N::Member || node->kind == N::Index)
             return !node->kids.empty() && addressOrigin(node->kids.front());
@@ -84,10 +104,15 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::Offset:
         case N::LoadInt:
         case N::StoreAt:
-        case N::CheckPointer: break;
+        case N::CheckPointer:
+        case N::Alloc:
+        case N::Free:
+        case N::Drop:
+        case N::MemoryCopy:
+        case N::MemorySet: break;
         case N::Declare:
             environment[node->text] = node->declared;
-            if (!libraryScalar(node->declared) && !libraryBorrow(node->declared))
+            if (!libraryScalar(node->declared) && !libraryBorrow(node->declared) && !libraryPlainValue(node->declared))
             {
                 unsupported = "局部类型 " + (node->declared ? textOf(node->declared->describe()) : Text("无类型"));
                 return false;
@@ -120,14 +145,20 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         {
             const auto target = node->kids.size() > 1 && node->kids.front()->kind == N::Var ? node->kids.front()->text : node->text;
             const auto found = environment.find(target);
-            if (found != environment.end() && libraryBorrow(found->second))
+            if (found != environment.end() && (libraryBorrow(found->second) || libraryPlainValue(found->second)))
             {
-                if (node->kids.empty() || !addressOrigin(node->kids.back()))
+                const auto value = node->kids.empty() ? ast::NodePtr() : node->kids.back();
+                if (value && value->kind == N::IntLit && value->intValue == 0)
+                    borrowed.erase(textOf(target));
+                else
                 {
-                    unsupported = "记录引用来源 " + textOf(target);
-                    return false;
+                    if (!addressOrigin(value))
+                    {
+                        unsupported = "记录引用来源 " + textOf(target);
+                        return false;
+                    }
+                    borrowed.insert(textOf(target));
                 }
-                borrowed.insert(textOf(target));
             }
             if (state.globals.count(textOf(node->text)))
             {
@@ -139,6 +170,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
             break;
         }
         case N::Call:
+            if (node->text == "__std_move_begin" && node->kids.size() == 2) break;
             if (node->text == "__std_reference" && node->kids.size() == 1) break;
             if (!state.astFunctions.count(textOf(node->text)))
             {
@@ -149,7 +181,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
                     return false;
                 }
                 const auto &entry = *external->second;
-                if ((entry.abiConvention != "C" && entry.abiConvention != "ChaLiBorrow") || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
+                if ((entry.abiConvention != "C" && entry.abiConvention != "ChaLiBorrow" && entry.abiConvention != "ChaLiValue") || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
                 if (abiType(entry.resultType).empty() || abiType(entry.resultType) == "ptr") return false;
                 for (const auto &parameter : entry.parameterTypes)
                     if (abiType(parameter).empty() || abiType(parameter) == "ptr" || abiType(parameter) == "void") return false;
@@ -270,6 +302,9 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
     if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";
     if (out.find("@chali_host_address(") == Text::npos) out += "declare ptr @chali_host_address(i64, i64)\n";
+    out += "declare void @chali_host_storage_begin(i64, i64)\n";
+    if (out.find("@chali_host_copy_words(") == Text::npos) out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
+    if (out.find("@chali_host_memory_prepare(") == Text::npos) out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     Text functions;
     for (auto &function : state.functions)
     {

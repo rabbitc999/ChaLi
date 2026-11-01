@@ -270,17 +270,26 @@ Memory::String CAbiType(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 判断语言单元当前可借用的非拥有普通记录引用。
+ * @brief 判断语言单元可以复制的非拥有普通记录值。
  * @param type 已解析语言类型。
- * @return 可直接传递逻辑地址且不需要 C 布局封送时为真。
+ * @return 字段没有拥有资源且采用普通记录布局时为真。
  */
-bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
+bool LibraryPlainValue(const std::shared_ptr<MType> &type)
 {
-    if (!type || type->kind != MType::Ptr || !type->elem || type->elem->kind != MType::Struct) return false;
-    const auto &name = type->elem->name;
+    if (!type || type->kind != MType::Struct) return false;
+    const auto &name = type->name;
     const auto found = g_structs.find(name);
     return found != g_structs.end() && !g_enums.count(name) && !g_opcodeTypes.count(name)
            && !found->second.abiPacked && !found->second.nonCopyable && !CAbiType(type).empty();
+}
+/**
+ * @brief 判断逻辑地址传递的普通记录借用。
+ * @param type 已解析语言类型。
+ * @return 引用目标可按普通记录布局访问时为真。
+ */
+bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
+{
+    return type && type->kind == MType::Ptr && LibraryPlainValue(type->elem);
 }
 /**
  * @brief 为私有语言借用入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
@@ -289,7 +298,7 @@ bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
  */
 Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
 {
-    return LibraryBorrowParameter(type) ? Memory::String("long long") : CAbiType(type);
+    return LibraryBorrowParameter(type) || LibraryPlainValue(type) ? Memory::String("long long") : CAbiType(type);
 }
 /**
  * @brief 在完整声明与导入已知后解析类型裸名，并隔离不同模块的同名类型。
@@ -1363,14 +1372,15 @@ bool RegisterTop()
             for (const MParam &param : declaration.signature.params)
                 if (param.variadic || CAbiType(param.type).empty() || CAbiType(param.type) == "void")
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
-            if (declaration.abiConvention == "ChaLiBorrow")
+            if (declaration.abiConvention == "ChaLiBorrow" || declaration.abiConvention == "ChaLiValue")
             {
                 const auto scalar = [](const std::shared_ptr<MType> &type, bool result) {
                     return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
                 };
-                if (!scalar(declaration.signature.result, true)) return Fail("语言借用入口当前只返回基础标量");
+                const bool values = declaration.abiConvention == "ChaLiValue";
+                if (!scalar(declaration.signature.result, true)) return Fail("语言入口返回类型不受支持");
                 for (const auto &parameter : declaration.signature.params)
-                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type)) return Fail("语言借用入口参数必须是基础标量或普通记录引用");
+                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryPlainValue(parameter.type))) return Fail("语言入口参数类型不受支持");
             }
             for (const auto &previous : g_functionDecls)
             {

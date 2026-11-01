@@ -2388,7 +2388,7 @@ int M_Unsafe(int id)
 int M_AbiDeclaration(int convention, int declaration)
 {
     const auto mode = g_names[convention];
-    if (mode != "C" && mode != "ChaLiBorrow") return M_ParseBad("#abi 调用约定不受支持");
+    if (mode != "C" && mode != "ChaLiBorrow" && mode != "ChaLiValue") return M_ParseBad("#abi 调用约定不受支持");
     auto &node = g_nodes[declaration];
     node.abiConvention = mode;
     if (node.kind == MNode::AbiBlock)
@@ -3004,7 +3004,8 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
     g_librarySources.insert(files.begin(), files.end());
 }
 /** @brief 保存当前目标允许语言借用 ABI 的来源标签。
- * @param files 已验证的借用 ABI 库接口。 */
+ * @param files 已验证的借用或记录值 ABI 库接口。
+ * @return 无。 */
 void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryBorrowSources.clear();
@@ -3277,7 +3278,7 @@ bool ValidateNativeLibraryInterfaces()
         const auto isLibrary = [&](std::size_t line) {
             return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
         };
-        if (node.abiConvention == "ChaLiBorrow")
+        if (node.abiConvention == "ChaLiBorrow" || node.abiConvention == "ChaLiValue")
         {
             const auto permitted = [&](std::size_t line) {
                 return line && line <= g_sourceFiles.size() && g_libraryBorrowSources.count(g_sourceFiles[line - 1]);
@@ -3346,6 +3347,7 @@ Memory::String LibraryDeclaredType(const Memory::String &name)
 Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
 {
     if (LibraryBorrowParameter(type)) return LibraryDeclaredType(type->elem->name) + (type->readOnly ? " const&" : " mut&");
+    if (LibraryPlainValue(type)) return LibraryDeclaredType(type->name);
     return LibraryScalarType(type);
 }
 /**
@@ -3607,12 +3609,16 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
             if (parameter.variadic) throw std::runtime_error("独立原生库暂不导出变参函数");
             const auto type = LibraryParameterType(parameter.type);
             identity += "\n" + type;
-            if (LibraryBorrowParameter(parameter.type))
+            if (LibraryBorrowParameter(parameter.type) || LibraryPlainValue(parameter.type))
             {
                 if (!function.exportSymbol.empty()) throw std::runtime_error("语言借用入口不能同时声明物理 C ABI 的 #export");
                 if (parameter.defaultExpr >= 0) throw std::runtime_error("记录借用参数暂不支持默认值");
-                entry.abiConvention = "ChaLiBorrow";
-                identity += "\nchali-borrow-v1:" + LibraryRecordShape(parameter.type->elem->name, recordShapes);
+                const bool value = LibraryPlainValue(parameter.type);
+                if (value)
+                    entry.abiConvention = "ChaLiValue";
+                else if (entry.abiConvention == "C")
+                    entry.abiConvention = "ChaLiBorrow";
+                identity += Memory::String(value ? "\nchali-value-v1:" : "\nchali-borrow-v1:") + LibraryRecordShape(value ? parameter.type->name : parameter.type->elem->name, recordShapes);
             }
             entry.parameterTypes.push_back(AotCType(LibraryNativeType(parameter.type)));
         }
