@@ -520,7 +520,24 @@ struct AstBuilder : Builder
     Value dataBase, dataSize;   ///< 只在当前帧内有效的基址和完整字节数。
     std::map<std::size_t, DebugLine> debugLines;
     std::size_t debugBlocks = 1;
+    std::size_t profileIndex = 0;  ///< 当前函数中计数位置的稳定遍历编号。
     ast::NodePtr lastLocation;  ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
+
+    /**
+     * @brief 在已经求值的 AST 操作旁记录计数，不重新计算用户实参。
+     * @param event 操作类别。
+     * @param node 当前操作节点。
+     * @param bytes 已求值的请求字节数，零表示不适用。
+     * @return 无。
+     */
+    void profile(const Text &event, const ast::NodePtr &node, Value bytes = { "i64", "0" })
+    {
+        if (!state.profileOwnership) return;
+        const auto source = node && node->sourceLine ? node : lastLocation;
+        const Text site = event + "\t" + textOf(function.label) + "\t" + (source ? textOf(source->sourceFile) + ":" + std::to_string(source->sourceLine) : Text("<generated>:0")) + "\tast=" + std::to_string(profileIndex++);
+        const auto index = state.profileSites.emplace(site, state.profileSites.size()).first->second;
+        call("chali_backend_profile_event", "void", { { "ptr", "@backend_profile_site" + std::to_string(index) }, convert(bytes, "i64") });
+    }
 
     /**
      * @brief 为当前 AST 函数登记独立局部存储和表达式类型环境。
@@ -799,19 +816,38 @@ struct AstBuilder : Builder
         case N::Call:
         case N::CallPointer:
         {
-            if (!state.request.options.libraryModule.empty() && node->text == "__std_move_begin" && node->kids.size() == 2)
+            if (node->text == "__std_move_begin" && node->kids.size() == 2)
             {
                 const auto address = expression(node->kids[0]);
                 const auto bytes = expression(node->kids[1]);
                 location(node);
+                profile("call:" + textOf(node->text), node);
                 call("chali_host_storage_begin", "void", { convert(address, "i64"), convert(bytes, "i64") });
                 return { "i64", "0" };
+            }
+            if ((node->text == "__std_move_live" || node->text == "__std_move_require" || node->text == "__std_move_end") && node->kids.size() == 3)
+            {
+                const auto address = expression(node->kids[0]);
+                const auto bytes = expression(node->kids[1]);
+                Value typeId;
+                const auto &tag = node->kids[2];
+                const auto symbol = tag->kind == N::IntLit ? state.request.syntax->nativeTypeSymbols.find(tag->intValue) : state.request.syntax->nativeTypeSymbols.end();
+                if (symbol != state.request.syntax->nativeTypeSymbols.end())
+                    typeId = instruction("i64", "load i64, ptr @" + llvmSymbol(symbol->second));
+                else
+                    typeId = expression(tag);
+                location(node);
+                profile("call:" + textOf(node->text), node);
+                const auto operation = node->text == "__std_move_live" ? 0 : node->text == "__std_move_require" ? 1 :
+                                                                                                                  2;
+                return call("chali_host_storage_lifetime", "i64", { { "i64", std::to_string(operation) }, convert(address, "i64"), convert(bytes, "i64"), convert(typeId, "i64") });
             }
             // 独立语言单元不持有宿主名称表，借用 ABI 始终使用共享运行时的同一非空检查。
             if (!state.request.options.libraryModule.empty() && node->text == "__std_reference" && node->kids.size() == 1)
             {
                 const auto value = expression(node->kids.front());
                 location(node);
+                profile("call:" + textOf(node->text), node);
                 return call("chali_require_reference", "i64", { convert(value, "i64") });
             }
             const bool indirect = node->kind == N::CallPointer;
@@ -820,6 +856,7 @@ struct AstBuilder : Builder
             std::vector<Value> values;
             for (std::size_t index = indirect ? 1u : 0u; index < node->kids.size(); ++index) values.push_back(expression(node->kids[index]));
             location(node);
+            profile(indirect ? Text("indirect_call") : "call:" + textOf(node->text), node);
             arguments.clear();
             for (std::size_t index = 0; index < values.size(); ++index) arguments.push_back({ index < node->names.size() ? node->names[index] : Memory::String("arg"), values[index] });
             const auto output = valueToken({ astKind(type) == Kind::Float ? "double" : "i64", astKind(type) == Kind::Float ? "0.0" : "0" });
@@ -860,7 +897,13 @@ struct AstBuilder : Builder
             return memory(at, type);
         }
         case N::Offset: return address(node);
-        case N::Alloc: location(node); return call("chali_alloc", "i64", { convert(expression(node->kids[0]), "i64") });
+        case N::Alloc:
+        {
+            const auto bytes = convert(expression(node->kids[0]), "i64");
+            location(node);
+            profile("allocation_request", node, bytes);
+            return call("chali_alloc", "i64", { bytes });
+        }
         case N::CheckIndex:
         case N::CheckPointer:
         {
@@ -883,6 +926,7 @@ struct AstBuilder : Builder
             const auto bytes = expression(node->kids[2]);
             location(node);
             const bool copy = node->kind == N::MemoryCopy;
+            profile(copy ? "memcpy" : "memset", node, bytes);
             call("chali_host_memory_prepare", "void", { { "i64", copy ? "7" : "8" }, convert(destination, "i64"), convert(source, "i64"), convert(bytes, "i64"), { "ptr", "%raw_memory_output" }, { "ptr", "%raw_memory_input" } });
             const auto output = instruction("ptr", "load ptr, ptr %raw_memory_output");
             if (copy)
@@ -925,6 +969,9 @@ struct AstBuilder : Builder
         case N::Assign:
         {
             const auto value = expression(node->kids.back());
+            const auto target = node->kids.size() > 1 && node->kids.front()->kind == N::Var ? node->kids.front()->text : node->text;
+            if (target.rfind("__chali_move_source", 0) == 0) profile("aggregate_move", node);
+            if (target.rfind("__chali_array_copy_source", 0) == 0) profile("array_copy", node);
             if (node->kids.size() == 1)
                 write(symbol(node->text), value);
             else if (node->kids[0]->kind == N::Var)
@@ -1015,7 +1062,13 @@ struct AstBuilder : Builder
             return;
         }
         case N::Drop:
-        case N::Free: call("chali_owned_drop", "void", { convert(expression(node->kids[0]), "i64") }); return;
+        case N::Free:
+        {
+            const auto value = convert(expression(node->kids[0]), "i64");
+            profile("cleanup", node);
+            call("chali_owned_drop", "void", { value });
+            return;
+        }
         case N::Putc: call("chali_put_char", "void", { convert(expression(node->kids[0]), "i64") }); return;
         default: expression(node); return;
         }

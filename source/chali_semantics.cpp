@@ -49,7 +49,7 @@ namespace
 {
 /* 语法动作会在读取旧节点的同时创建新节点；deque 保持旧节点引用有效。 */
 Memory::Deque<MNode> g_nodes;
-Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources;
+Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -3002,6 +3002,7 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
     g_libraryDataSources.clear();
+    g_libraryTypeSources.clear();
     g_librarySources.insert(files.begin(), files.end());
 }
 /** @brief 保存当前目标允许语言借用 ABI 的来源标签。
@@ -3019,6 +3020,14 @@ void M_SetLibraryDataSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryDataSources.clear();
     g_libraryDataSources.insert(files.begin(), files.end());
+}
+/** @brief 保存要求统一类型编号的已验证库来源。
+ * @param files 携带共享类型能力的稳定接口标签。
+ * @return 无。 */
+void M_SetLibraryTypeSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryTypeSources.clear();
+    g_libraryTypeSources.insert(files.begin(), files.end());
 }
 
 /**
@@ -3384,6 +3393,34 @@ Memory::String LibraryRecordShape(const Memory::String &name, Memory::Map<Memory
     return cache.emplace(name, Memory::String(hash.c_str())).first->second;
 }
 /**
+ * @brief 为原生库声明登记按完整模块及布局匹配的类型编号符号。
+ * @param program 接收本次编号与稳定符号的 AST。
+ * @param module 非空时还登记正在生成库的本模块类型。
+ * @return 类型身份有效时为真；失败保留正常诊断。
+ */
+bool RegisterLibraryTypeSymbols(ast::Program &program, const Memory::String &module = {})
+{
+    if (module.empty() && g_libraryBorrowSources.empty() && g_libraryTypeSources.empty()) return true;
+    Memory::Map<Memory::String, Memory::String> shapes;
+    const auto imported = [&](std::size_t line) {
+        return line && line <= g_sourceFiles.size() && (g_libraryBorrowSources.count(g_sourceFiles[line - 1]) || g_libraryTypeSources.count(g_sourceFiles[line - 1]));
+    };
+    for (const auto id : g_top)
+    {
+        const auto &node = N(id);
+        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s) || (!(node.module == module && !module.empty()) && !imported(node.sourceLine) && !imported(node.expansionLine))) continue;
+        const auto type = NamedType(node.s);
+        const auto &definition = g_structs.at(node.s);
+        if (definition.abiPacked || definition.nonCopyable || CAbiType(type).empty()) continue;
+        ReductionSourceScope location(id);
+        try
+        {
+            program.nativeTypeSymbols[TypeIdOf(type)] = "chali_native_type_" + LibraryRecordShape(node.s, shapes);
+        } catch (const std::exception &error) { return Fail("预编译类型身份无法登记：" + Memory::String(error.what())); }
+    }
+    return true;
+}
+/**
  * @brief 导出标量抽象接口及其已验证继承关系，不携带默认方法实现。
  * @param module 当前生产模块。
  * @return 接口声明及精确依赖模块的导入语句。
@@ -3593,6 +3630,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
     Memory::String interface = "module " + module + ";\n" + LibraryInterfaceDeclarations(module) + LibraryTypeDeclarations(module);
+    if (!RegisterLibraryTypeSymbols(*g_aotSyntax, module)) throw std::runtime_error("原生库类型身份登记失败");
     Memory::Map<Memory::String, Memory::String> recordShapes;
     const auto declarations = g_functionDecls;
     for (const auto &function : declarations)
@@ -3875,6 +3913,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         RestoreFirstDiagnostic();
         return 1;
     }
+    if (!RegisterLibraryTypeSymbols(program)) return 1;
     MReflectionBuilder reflection;
     if (g_reflectionEnabled && !reflection.build()) return 1;
     if (g_checkOnly)

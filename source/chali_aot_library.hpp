@@ -175,6 +175,15 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         }
         case N::Call:
             if (node->text == "__std_move_begin" && node->kids.size() == 2) break;
+            if (node->text == "__std_move_live" || node->text == "__std_move_require" || node->text == "__std_move_end")
+            {
+                if (node->kids.size() != 3 || node->kids[2]->kind != N::IntLit || !state.request.syntax->nativeTypeSymbols.count(node->kids[2]->intValue))
+                {
+                    unsupported = "未登记的跨单元移动类型";
+                    return false;
+                }
+                break;
+            }
             if (node->text == "__std_reference" && node->kids.size() == 1) break;
             if (!state.astFunctions.count(textOf(node->text)))
             {
@@ -303,11 +312,14 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();
     Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
     if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
+    for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
+    if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
     if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";
     if (out.find("@chali_host_address(") == Text::npos) out += "declare ptr @chali_host_address(i64, i64)\n";
     out += "declare void @chali_host_storage_begin(i64, i64)\n";
+    out += "declare i64 @chali_host_storage_lifetime(i64, i64, i64, i64)\n";
     if (out.find("@chali_host_copy_words(") == Text::npos) out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
     if (out.find("@chali_host_memory_prepare(") == Text::npos) out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     Text functions;
@@ -320,6 +332,7 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
         function.exported = false;
         functions += AstBuilder(state, function).generateAst();
     }
+    out += profileSiteDeclarations(state);
     for (const auto &source : state.sourceFiles)
     {
         Text bytes;

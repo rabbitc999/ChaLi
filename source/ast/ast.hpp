@@ -441,6 +441,7 @@ struct Program
     Memory::Vector<std::pair<Memory::String, TypePtr>> variables;       ///< 全局变量。
     Memory::Vector<std::pair<Memory::String, TypePtr>> constantValues;  ///< 常量的字面量原文。
     Memory::Vector<Function> functions;                                 ///< 函数。
+    Memory::Map<std::int64_t, Memory::String> nativeTypeSymbols;        ///< 本次类型编号到跨单元名义及布局身份符号。
 
     /**
      * @brief 声明一个常量（值必须是字面量）。

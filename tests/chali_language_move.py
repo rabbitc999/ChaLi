@@ -9,7 +9,7 @@ from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
-    """同时检查解释执行、VM 与编译期错误。"""
+    """检查 checked AOT 的所有权转移与编译期错误。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()

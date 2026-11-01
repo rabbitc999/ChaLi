@@ -87,7 +87,7 @@ struct ImportSession::State
 {
     std::string target, cpu;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources, borrowSources, dataSources;
+    std::vector<std::string> sources, borrowSources, dataSources, typeSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -143,6 +143,8 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
     if (borrowed) state_->borrowSources.push_back(state_->sources.back());
     if (!select(package, state_->target, state_->cpu).unitData.empty()) state_->dataSources.push_back(state_->sources.back());
+    if (std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "shared-type-id-v1") != package.manifest.requiredFeatures.end())
+        state_->typeSources.push_back(state_->sources.back());
     return state_->packages.emplace(identity, std::move(package)).first->second;
 }
 /**
@@ -206,6 +208,9 @@ std::vector<std::string> ImportSession::borrowSources() const { return state_->b
 /** @brief 返回当前目标携带已验证数据映像的来源。
  * @return 对应本次快照的稳定接口标签。 */
 std::vector<std::string> ImportSession::dataSources() const { return state_->dataSources; }
+/** @brief 返回要求统一类型编号的已验证来源。
+ * @return 当前快照的共享类型接口标签。 */
+std::vector<std::string> ImportSession::typeSources() const { return state_->typeSources; }
 /** @brief 返回成功加载的真实来源路径。
  * @return 本次会话持有快照对应的规范包路径。 */
 std::vector<std::filesystem::path> ImportSession::paths() const { return state_->paths; }

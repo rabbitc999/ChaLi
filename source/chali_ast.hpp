@@ -1239,6 +1239,10 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
  * @param files 当前目标携带单元映像与布局的来源。
  * @return 无。 */
 void M_SetLibraryDataSources(const Memory::Vector<Memory::String> &files);
+/** @brief 设置要求统一类型编号的已验证原生库来源。
+ * @param files 携带 shared-type-id-v1 能力的接口标签。
+ * @return 无。 */
+void M_SetLibraryTypeSources(const Memory::Vector<Memory::String> &files);
 
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);

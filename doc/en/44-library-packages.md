@@ -240,4 +240,12 @@ A nonowning plain record can be returned by value. For example, Point make(int64
 
 Targets carrying data add unitData, unitLayout and unitSymbol together and require unit-data-v1. Image and layout entries use kind 9 (unit-data). The base symbol hashes module, target triple, complete layout and image. Missing assets, mismatched identities, duplicate layout names and out-of-bounds ranges are rejected. Packages without unit data retain the existing encoding.
 
-Record result declarations require a verified interface carrying this capability. Explicit moves and fresh cross-unit aggregate transfers still require the upcoming shared type registry; unsupported bodies are rejected. Owning fields, interface/closure results and initialization rollback remain separate acceptance work.
+Record result declarations require a verified interface carrying this capability. Plain record moves and fresh transfers use the shared lifetime identity contract below; other unsupported bodies remain rejected. Owning fields, interface/closure results and initialization rollback remain separate acceptance work.
+
+## Shared lifetime type identities
+
+Packages using native record lifetime operations require shared-type-id-v1. Generated LLVM code references type symbols derived from the full module identity and record layout. The final program supplies its current type numbers. Adding same-named or unrelated consumer types cannot redirect move markers to a different type. Only explicit lifetime type positions are relocated; ordinary integer values are not guessed or rewritten.
+
+Lifetime queries, checks and end markers call shared C primitives and use the same object table. Fresh plain record forwarding, recursion and explicit moves are supported; repeated moves remain rejected. Interface boxing, closures, dynamic type queries and owning resources still require further shared registration work.
+
+Independent units also support AST ownership counters when compiled with CHALI_BACKEND_PROFILE=1. Site strings remain private to the unit and calls reach the final program shared counter. CHALI_BACKEND_PROFILE_OUTPUT selects a local JSON file. Instrumented results are not release timing measurements.

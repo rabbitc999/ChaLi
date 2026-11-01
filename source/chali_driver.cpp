@@ -1132,6 +1132,9 @@ try
     Memory::Vector<Memory::String> dataSources;
     for (const auto &file : libraries.dataSources()) dataSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryDataSources(dataSources);
+    Memory::Vector<Memory::String> typeSources;
+    for (const auto &file : libraries.typeSources()) typeSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryTypeSources(typeSources);
     M_SetSourceFiles(sourceFiles, sourceLabel);
     Memory::Vector<std::size_t> sourceLines;
     for (const auto &origin : processed.lineMap) sourceLines.push_back(origin.line);

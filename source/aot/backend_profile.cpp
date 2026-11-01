@@ -68,7 +68,7 @@ struct Profile
         try
         {
             std::ofstream out(output, std::ios::binary);
-            out << "{\"schema\":1,\"scope\":\"executed AOT quad ownership sites; allocation requests, not heap residency\",\"events\":[";
+            out << "{\"schema\":1,\"scope\":\"executed AOT AST or compatibility quad ownership sites; allocation requests, not heap residency\",\"events\":[";
             bool first = true;
             for (const auto &entry : counters)
             {
@@ -86,7 +86,7 @@ struct Profile
 
 /**
  * @brief 记录一次插桩所有权操作；仅插桩 AOT 模块调用本入口。
- * @param site 包含操作种类、函数、源位置和四元式编号的常量字符串。
+ * @param site 包含操作种类、函数、源位置和 AST 或显式兼容指令编号的常量字符串。
  * @param bytes 已知的非负请求字节数；零表示不适用或未知。
  */
 extern "C" void chali_backend_profile_event(const char *site, std::int64_t bytes)

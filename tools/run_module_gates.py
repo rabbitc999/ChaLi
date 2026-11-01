@@ -13,8 +13,9 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "moves": ["chali_language_move", "chali_resource_lifetime", "chali_native_callbacks", "chali_backend_ownership"],
     "debug": ["chali_native_debug"],
-    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_data", "chali_generator_assets"],
+    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],
     "interfaces": ["chali_interface_values", "chali_interface_binding_move", "chali_copy_interface", "chali_interface_copy_scalar"],
     "abi": ["chali_link_abi", "chali_abi_values", "chali_abi_contracts", "chali_c_api_contract"],
@@ -103,7 +104,7 @@ def main():
                     commands[script].append("--lsp-only")
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
-                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets", "chali_standard_unit"):
+                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets", "chali_standard_unit", "chali_backend_ownership"):
                     if args.build_root: commands[script] += ["--build-root", str(args.build_root.resolve())]
                     if args.cxx: commands[script] += ["--cxx", args.cxx]
                     if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]

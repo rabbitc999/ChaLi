@@ -3,6 +3,7 @@
  */
 #include "chali_library.hpp"
 #include "chali_aot.hpp"
+#include "ast/ast.hpp"
 #include "chali_aot_llvm.hpp"
 #include "chali_native_tools.hpp"
 #include "chali_package.hpp"
@@ -40,6 +41,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
         const bool values = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue"; });
         if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");
+        if (original.syntax && !original.syntax->nativeTypeSymbols.empty()) package.manifest.requiredFeatures.push_back("shared-type-id-v1");
         package.manifest.dependencies = dependencies;
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;

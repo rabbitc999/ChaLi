@@ -637,6 +637,35 @@ void chali_host_storage_begin(std::int64_t address, std::int64_t bytes)
 }
 
 /**
+ * @brief 在共享对象表中查询、核对或结束已统一类型编号的聚合生命周期。
+ * @param operation 零查询、一核对、二结束。
+ * @param value 聚合逻辑地址。
+ * @param count 聚合存储字节数。
+ * @param type 最终程序登记的类型编号。
+ * @return 查询返回存活标志，其余成功返回零；失效核对报告原运行错误。
+ */
+std::int64_t chali_host_storage_lifetime(std::int64_t operation, std::int64_t value, std::int64_t count, std::int64_t type)
+{
+    auto &context = currentContext();
+    const auto address = static_cast<std::size_t>(value);
+    const auto bytes = static_cast<std::size_t>(count);
+    auto &ranges = context.objects->movedStorage;
+    const auto key = std::make_pair(address, type);
+    std::size_t capacity = 0;
+    const bool allocationLive = !context.heap->contains(address) || context.heap->capacityAt(address, capacity);
+    const bool live = !bytes || (allocationLive && ranges.find(key) == ranges.end());
+    if (operation == 0) return live;
+    if (operation == 1 && !live) chali_panic("move 的源对象已经销毁，必须先重新赋值");
+    if (operation == 2)
+    {
+        ranges[key] = bytes;
+        context.objects->largestMovedStorage = std::max(context.objects->largestMovedStorage, bytes);
+    }
+    if (operation < 0 || operation > 2) chali_panic("聚合生命周期操作无效");
+    return 0;
+}
+
+/**
  * @brief 验证数据区或活跃堆区间，借用一次同步操作所需的物理存储。
  * @param address 语言逻辑地址。
  * @param count 必须可访问的字节数。

@@ -144,6 +144,9 @@ public:
     /** @brief 取得当前目标携带已验证数据映像的接口标签。
      * @return 可声明普通记录返回的库来源。 */
     std::vector<std::string> dataSources() const;
+    /** @brief 取得要求最终程序统一类型编号的已验证接口标签。
+     * @return 当前会话的共享类型来源。 */
+    std::vector<std::string> typeSources() const;
     /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
      * @return 本次成功加载的规范包路径。 */
     std::vector<std::filesystem::path> paths() const;

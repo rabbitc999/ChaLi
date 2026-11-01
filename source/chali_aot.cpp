@@ -2238,6 +2238,28 @@ struct Builder
     }
 };
 
+/**
+ * @brief 汇出已登记计数位置的常量字符串，AST 与显式兼容路径共用。
+ * @param state 本模块的计数位置表。
+ * @return 不含执行操作的 LLVM 字符串声明。
+ */
+Text profileSiteDeclarations(const Translator &state)
+{
+    Text output;
+    for (const auto &site : state.profileSites)
+    {
+        Text bytes;
+        for (const unsigned char byte : site.first)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        output += "@backend_profile_site" + std::to_string(site.second) + " = private constant [" + std::to_string(site.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
+    return output;
+}
+
 #include "chali_aot_ast.hpp"
 #include "chali_aot_library.hpp"
 
@@ -2561,6 +2583,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare void @chali_host_poll()\n";
     out += "declare void @chali_host_tick(i64)\n";
     out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
+    out += "declare void @chali_host_storage_begin(i64, i64)\ndeclare i64 @chali_host_storage_lifetime(i64, i64, i64, i64)\n";
     if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_threads_enabled = constant i32 " + Text(request.options.threadsEnabled ? "1" : "0") + "\n";
     out += "@chali_step_limit = constant i64 " + std::to_string(request.options.stepLimit) + "\n";
@@ -2576,6 +2599,8 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "]\n";
     emitDataImage(state, out);
     for (const auto &base : unitBases) out += "@" + textOf(base.first) + " = constant i64 " + std::to_string(base.second) + "\n";
+    if (request.syntax)
+        for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = constant i64 " + std::to_string(type.first) + "\n";
     out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
     out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
     out += "@chali_allocator_kind = constant i32 " + Text(request.options.allocator == "pool" ? "0" : "1") + "\n";
@@ -2602,17 +2627,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
     for (const auto &entry : state.globals) shared.insert(entry.first);
-    for (const auto &site : state.profileSites)
-    {
-        Text bytes;
-        for (const unsigned char byte : site.first)
-        {
-            char escaped[4];
-            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
-            bytes += escaped;
-        }
-        out += "@backend_profile_site" + std::to_string(site.second) + " = private constant [" + std::to_string(site.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
-    }
+    out += profileSiteDeclarations(state);
     for (const auto &file : state.sourceFiles)
     {
         Text bytes;

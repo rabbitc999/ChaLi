@@ -40,7 +40,7 @@ def main():
         invoke([compiler,'lib','build',provider,'--module','demo::math','--package-version','1.0.0','--out',package],work)
         manifest,entries=decode(package.read_bytes())
         assert manifest['source']=='' and manifest['templates']=='' and manifest['dependencies']==[]
-        assert set(manifest['requiredFeatures'])=={'native-c-v1','scalar-unit-v1'}
+        assert set(manifest['requiredFeatures'])=={'native-c-v1','scalar-unit-v1','shared-type-id-v1'}
         interface=next(x['data'].decode() for x in entries if x['kind']==1)
         assert 'factorial' in interface and 'hidden' not in interface and 'return' not in interface
         assert 'struct Point' in interface and 'struct Bounds' in interface and 'demo::math::Point low;' in interface

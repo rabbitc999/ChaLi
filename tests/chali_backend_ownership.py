@@ -5,6 +5,7 @@ from collections import Counter
 import json
 import os
 import subprocess
+import shutil
 from compiler_path import compiler_path
 from project_temp import tempfile
 
@@ -18,21 +19,41 @@ def main():
     """以同编译器关闭／开启新优化，核对实际输出及运行时操作计数。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
+    sdk = ROOT / 'build/dependencies/llvm/static-sdk'
+    static = os.name == 'nt' and (sdk / 'bin/g++.exe').is_file()
+    parser.add_argument('--build-root', type=Path, default=ROOT / ('build/llvm-static-gcc16' if static else 'build'))
+    parser.add_argument('--cxx')
+    parser.add_argument('--sysroot', type=Path)
     args = parser.parse_args()
     compiler = args.chali.resolve()
+    build = args.build_root.resolve()
+    cxx = Path(shutil.which(args.cxx or '') or args.cxx or (sdk / 'bin/g++.exe' if static else 'g++'))
+    use_sdk = cxx.resolve().parent == (sdk / 'bin').resolve()
+    environment = dict(os.environ, PATH=str(cxx.resolve().parent) + os.pathsep + os.environ.get('PATH', ''))
     with tempfile.TemporaryDirectory(prefix='backend-ownership-') as directory:
         work = Path(directory)
-        libraries = [ROOT / p for p in ['build/chali-frontend/libparser.a', 'build/chali-runtime/libast.a',
-                     'build/chali-stackvm-core/libstackvm.a', 'build/chali-host-records/librecords.a', 'build/chali-runtime/libpreprocess.a']]
+        libraries = [build / p for p in ['chali-frontend/libparser.a', 'chali-runtime/libast.a',
+                     'chali-ircode-aot-core/libstackvm.a', 'chali-host-records/librecords.a', 'chali-runtime/libpreprocess.a']]
+        assert all(p.is_file() for p in libraries), '先构建匹配工具链的后端归档'
         unit = work / ('unit.exe' if os.name == 'nt' else 'unit')
-        command = ['g++', '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
-                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
+        command = [str(cxx), '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
+                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DSTACKVM_AOT_ONLY=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
                    '-I'+str(ROOT), '-I'+str(ROOT/'source'), '-I'+str(ROOT/'library'), '-I'+str(ROOT/'source/preprocess'),
                    '-I'+str(ROOT/'source/ircode'), '-I'+str(ROOT/'source/ast'),
-                   str(ROOT/'tests/backend_ownership_test.cpp'), '-Wl,--gc-sections',
+                   str(ROOT/'tests/backend_ownership_test.cpp'), str(ROOT/'source/allocator/system_arena.cpp'), '-Wl,--gc-sections',
                    '-Wl,--start-group', *map(str,libraries), '-Wl,--end-group',
                    *(['-lwinhttp'] if os.name == 'nt' else []), '-o', str(unit)]
-        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=240)
+        if args.sysroot or use_sdk:
+            command += ['--sysroot=' + str((args.sysroot or sdk).resolve())]
+        info = json.loads(subprocess.check_output([str(compiler), '--build-info'], cwd=ROOT, text=True, encoding='utf-8'))
+        if info['llvm'] == 'static':
+            config = sdk / 'bin/llvm-config.exe' if use_sdk else Path(shutil.which('llvm-config') or 'llvm-config')
+            directory = subprocess.check_output([str(config), '--libdir'], text=True).strip()
+            flags = subprocess.check_output([str(config), '--link-static', '--libs', 'all', '--system-libs'], text=True).split()
+            command += ['-L' + directory, '-Wl,--start-group', *flags, '-Wl,--end-group']
+        if os.name == 'nt': command += ['-static', '-lws2_32', '-lbcrypt', '-lcrypt32', *(['-fuse-ld=lld'] if use_sdk else [])]
+        else: command += ['-ldl']
+        result = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True, encoding='utf-8', timeout=240)
         assert result.returncode == 0, result.stdout + result.stderr
         result = subprocess.run([str(unit)], cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=120)
         assert result.returncode == 0 and result.stdout == 'backend ownership generation OK\n' and not result.stderr, result

@@ -4,9 +4,9 @@
 **English** · [简体中文](../40-backend-ownership.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-After the ChaLi front end completes type, borrow and deterministic-cleanup lowering, quadruples go straight to LLVM AOT; LLVM performs all optimization. Independent value semantics for ordinary assignment and the exclusion between `Copy<T>` and `#NonCopyable` remain in force.
+After the ChaLi front end completes type, borrow and deterministic-cleanup lowering, the checked AST goes straight to LLVM AOT; LLVM performs all optimization. Independent value semantics for ordinary assignment and the exclusion between `Copy<T>` and `#NonCopyable` remain in force.
 
-LLVM optimization for AOT is always fully enabled: static LLVM uses `default<O3>` and aggressive code generation; external LLVM uses `-O3`. Normal floating-point semantics remain enabled without fast-math. Safety checks and fallbacks still apply, and instrumentation is off by default.
+Release AOT defaults to full LLVM optimization: static LLVM uses `default<O3>` and aggressive code generation; external LLVM uses `-O3`. Debug builds retain their documented lower optimization. Normal floating-point semantics remain enabled without fast-math. Safety checks and fallbacks still apply, and instrumentation is off by default.
 
 ## Retained AOT fast paths
 
@@ -35,7 +35,7 @@ Case entry points: [language sample](../../example/samples/backend_ownership.chl
 
 ## Optional counters
 
-Compile with `CHALI_BACKEND_PROFILE=1` to insert counters at ownership-related quad sites. At execution, set `CHALI_BACKEND_PROFILE_OUTPUT` to a JSON path. Normal process exit writes accumulated counts from all threads.
+Compile with `CHALI_BACKEND_PROFILE=1` to insert counters at ownership-related AST sites (or explicit compatibility quad sites). At execution, set `CHALI_BACKEND_PROFILE_OUTPUT` to a JSON path. Normal process exit writes accumulated counts from all threads.
 
 ```powershell
 $env:CHALI_BACKEND_PROFILE='1'
@@ -49,3 +49,5 @@ python tools/backend_profile.py tmp/ownership-profile.json --top 20
 Default builds contain no counter calls. Use instrumented builds to investigate costs and separately built, uninstrumented programs for timing. Setting the output variable does not instrument an ordinary binary.
 
 Records contain the operation, function, source location, quad index, execution count and known requested bytes. These count remaining lowered operations, not source-language semantic copies. Eliminated operations do not appear. Allocation bytes cover quad `alloc` requests, not every allocation inside host objects, heap residency or peak memory. Recursive cleanup and low-level release are different layers and must not be summed as user-destructor calls. Raw word transfers are distinct from deep copies of owned fields.
+
+Normal AOT consumes the checked AST directly. AST counters reuse evaluated operands and never reevaluate user arguments. Calls, allocation requests, copies, fills, moves and cleanup are lowered-operation counts, not optimized machine instruction counts or heap residency.
