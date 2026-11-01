@@ -111,21 +111,46 @@ public:
     ImportSession &operator=(const ImportSession &) = delete;
     /** @brief 加载并锁定模块。
      * @param path 包文件。
-     * @param module 预期完整模块名。
+     * @param module 预期完整模块名；独立链接传空值时采用清单身份。
      * @param pin 可选精确依赖约束。
      * @return 已验证且会话内地址稳定的库。 */
     const Package &open(const std::filesystem::path &path, const std::string &module, const Dependency *pin = nullptr);
     /** @brief 从同一已验证快照生成链接输入。
      * @param options 接收原生对象及系统库。 */
     void appendTo(chali_aot::Options &options);
+    /** @brief 在加载前启用项目级精确锁。
+     * @param path 规范 JSON 锁文件；失败抛出诊断。 */
+    void loadLock(const std::filesystem::path &path);
+    /** @brief 判断模块是否被项目锁指定为库包。
+     * @param module 完整模块名。
+     * @return 锁中存在时为真，禁止源码回退。 */
+    bool requiresPackage(const std::string &module) const;
+
+    /** @brief 为独立链接递归解析包清单依赖。
+     * @param path 根包文件。
+     * @param searchRoots 额外库根。
+     * @return 已验证的根包。 */
+    const Package &openRecursive(const std::filesystem::path &path, const std::vector<std::filesystem::path> &searchRoots = {});
+
     /** @brief 取得用于诊断及接口封装检查的来源标签。
      * @return 已装载接口的稳定标签。 */
     std::vector<std::string> sources() const;
+    /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
+     * @return 本次成功加载的规范包路径。 */
+    std::vector<std::filesystem::path> paths() const;
 
 private:
     struct State;
     std::unique_ptr<State> state_;
 };
+/** @brief 按模块排序并生成独立库锁，不保存宿主路径。
+ * @param modules 精确版本及整个包摘要。
+ * @return 格式一的规范 JSON。 */
+std::string lockJson(std::vector<Dependency> modules);
+/** @brief 有界读取精确库锁，拒绝不兼容、重复键和非规范编码。
+ * @param path 项目锁文件。
+ * @return 按模块排序的精确约束。 */
+std::vector<Dependency> readLock(const std::filesystem::path &path);
 /**
  * @brief 序列化已验证的清单为格式一的规范 JSON。
  * @param manifest 模块与目标契约。

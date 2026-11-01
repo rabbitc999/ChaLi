@@ -41,6 +41,44 @@ def main():
         assert invoke([compiler,'run',consumer,'--out',work/'checked-run'],work).stdout=='package import OK\n'
         (modules/'math.chl').write_text('module example::math;\nint64 add(int64 a,int64 b){return 0;}\n')
         original=package.read_bytes()
+        lock=work/'chali.libraries.lock'
+        invoke([compiler,'lib','lock',package,'--out',lock],work)
+        locked=lock.read_bytes()
+        assert json.loads(locked)['modules']==[dict(module='example::math',version='1.0.0',sha256=hashlib.sha256(original).hexdigest())]
+        invoke([compiler,'lib','lock',package,'--out',lock],work)
+        assert lock.read_bytes()==locked
+        invoke([compiler,'check',consumer,'--library-lock',lock],work)
+        object_prefix=work/'separate'
+        invoke([compiler,'aot',consumer,'--emit-obj','--library-lock',lock,'--out',object_prefix],work)
+        linked=work/('standalone.exe' if os.name=='nt' else 'standalone')
+        invoke([compiler,'link',object_prefix.with_suffix('.o'),'--package',package,'--library-lock',lock,'--out',linked],work)
+        assert invoke([linked],work).stdout=='package import OK\n'
+        preserved=linked.read_bytes()
+        stale=copy.deepcopy(manifest);stale['version']='1.0.1'
+        package.write_bytes(encode(stale,entries))
+        invoke([compiler,'check',consumer,'--library-lock',lock],work,False)
+        invoke([compiler,'link',object_prefix.with_suffix('.o'),'--package',package,'--library-lock',lock,'--out',linked],work,False)
+        assert linked.read_bytes()==preserved
+        package.unlink()
+        invoke([compiler,'check',consumer,'--library-lock',lock],work,False)
+        package.write_bytes(original)
+        for destination in [package,lock]:
+            before=destination.read_bytes()
+            invoke([compiler,'link',object_prefix.with_suffix('.o'),'--package',package,'--library-lock',lock,'--out',destination],work,False)
+            assert destination.read_bytes()==before
+        invoke([compiler,'lib','lock',package,'--out',package],work,False)
+        assert package.read_bytes()==original
+        for invalid in [b'{}',locked.replace(b'"format":1',b'"format":2'),locked.rstrip()[:-1]+b',"unknown":0}',b'{"format":1,"compilerVersion":"1.0.12","modules":[]}']:
+            lock.write_bytes(invalid)
+            invoke([compiler,'check',consumer,'--library-lock',lock],work,False)
+        duplicate=json.loads(locked);duplicate['modules']*=2
+        for invalid in [json.dumps(duplicate,separators=(',',':')).encode(),b'{"format":1,'+locked.lstrip()[1:]]:
+            lock.write_bytes(invalid)
+            invoke([compiler,'check',consumer,'--library-lock',lock],work,False)
+        with lock.open('wb') as handle:handle.truncate(1024*1024+1)
+        invoke([compiler,'check',consumer,'--library-lock',lock],work,False)
+        lock.write_bytes(locked)
+
         for implementation in [b'int64 secret(){return 1;}\n', b'int64 state=7;\n']:
             invalid=copy.deepcopy(entries)
             invalid[0]['data']+=implementation
@@ -61,12 +99,32 @@ def main():
         dependency_entries[0]['data']=b'module example::dependency;\n'
         dependency_data=encode(dependency,dependency_entries)
         dependency_path=modules/'dependency.chlib';dependency_path.write_bytes(dependency_data)
+        unlisted=copy.deepcopy(entries)
+        unlisted[0]['data']=unlisted[0]['data'].replace(b'module example::math;\n',b'module example::math;\nimport example::dependency;\n')
+        package.write_bytes(encode(manifest,unlisted))
+        result=invoke([compiler,'check',consumer],work,False)
+        assert '清单' in result.stdout+result.stderr
         pinned=copy.deepcopy(manifest)
         pinned['dependencies']=[dict(module='example::dependency',version='1.0.0',sha256=hashlib.sha256(dependency_data).hexdigest())]
         package.write_bytes(encode(pinned,entries))
         # 已找到的包提供其完整模块根，传递依赖无需重复指定搜索目录。
         invoke([compiler,'--check',consumer],work)
         invoke([compiler,'aot',consumer,'-I',work/'modules','--out',work/'with-dependency'],work)
+        before=lock.read_bytes()
+        invoke([compiler,'lib','lock',package,'--out',lock],work,False)
+        assert lock.read_bytes()==before
+        invoke([compiler,'lib','lock',package,dependency_path,'--out',lock],work)
+        closure=lock.read_bytes()
+        invoke([compiler,'lib','lock',dependency_path,package,'--out',lock],work)
+        assert lock.read_bytes()==closure
+        invoke([compiler,'check',consumer,'--library-lock',lock],work)
+        invoke([compiler,'aot',consumer,'--emit-obj','--library-lock',lock,'--out',object_prefix],work)
+        invoke([compiler,'link',object_prefix.with_suffix('.o'),'--package',package,'--library-lock',lock,'--out',linked],work)
+        assert invoke([linked],work).stdout=='package import OK\n'
+
+        dependency_before=dependency_path.read_bytes()
+        invoke([compiler,'link',object_prefix.with_suffix('.o'),'--package',package,'--library-lock',lock,'--out',dependency_path],work,False)
+        assert dependency_path.read_bytes()==dependency_before
         pinned['dependencies'][0]['sha256']='0'*64
         package.write_bytes(encode(pinned,entries))
         invoke([compiler,'--check',consumer,'-I',work/'modules'],work,False)

@@ -47,7 +47,30 @@ The current native interface accepts type/function declarations with explicit C 
 
 Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
 
-Object/assembly output covers the current compilation unit. A subsequent standalone link must still supply library implementations; consumer `.o`/`.s` files do not embed them. Standalone link receipts and project-level library lock files are not produced yet.
+Non-standard imports in a package interface must appear in its exact manifest dependencies; unpinned source modules cannot complete that interface.
+
+## Project content locks and standalone linking
+
+Generate a separate lock for every selected package, including all transitive dependencies:
+
+```sh
+chali lib lock modules/example/math.chlib --out chali.libraries.lock
+chali check consumer.chl --library-lock chali.libraries.lock
+chali aot consumer.chl --library-lock chali.libraries.lock --out build/consumer
+```
+
+Pass multiple package paths to `lib lock`. Every manifest dependency must be supplied with the matching version and digest. The lock records its format, compiler version and sorted module/version/whole-package SHA-256 records without absolute host paths. The same set produces identical bytes. Failed generation preserves an existing lock and cannot overwrite an input package. Checking never creates or modifies a lock.
+
+`--library-lock` checks every loaded package. Unlisted packages and changed versions/digests fail. A module named in the lock cannot fall back to `.chl`; other ordinary project source modules retain normal importing. The format-one canonical JSON is limited to 128 modules and 1 MiB. Duplicate keys, unknown fields and incompatible versions fail. This separate file does not alter the existing source dependency `chali.lock` format.
+
+Objects/assembly do not embed library archives. Supply original packages to a standalone link:
+
+```sh
+chali aot consumer.chl --emit-obj --library-lock chali.libraries.lock --out build/consumer
+chali link build/consumer.o --package modules/example/math.chlib --library-lock chali.libraries.lock --out build/consumer.exe
+```
+
+`--package` is repeatable; `-L` also supplies additional package roots. Standalone linking reads the manifests and exact transitive dependencies without parsing/executing interface source or running initialization. Native implementations come from verified snapshots and target system libraries join the link. Output cannot overwrite a package or lock. Link receipts are not generated automatically; callers explicitly retain the packages and lock used.
 
 ## Independent compatibility fields
 

@@ -132,7 +132,7 @@ void PrintUsage(std::FILE *out)
              "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
-             "  lib            库包格式工具：template、pack、inspect\n"
+             "  lib            库包工具：template、pack、inspect、lock\n"
              "  link           链接原生对象与归档\n"
              "  ar             创建确定性静态归档\n"
              "  asm            将目标 .s 汇编为对象文件，不执行链接\n"
@@ -153,6 +153,7 @@ void PrintUsage(std::FILE *out)
              "  --check                仅检查，不执行、不生成产物\n",
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
+             "  --library-lock 文件    按精确版本及摘要检查预编译库\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n"
              "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
              "  --warnings-as-errors  把启用的警告提升为错误\n",
@@ -289,6 +290,7 @@ try
 
     bool aot = false;
     chali_aot::Options aotOptions;
+    Memory::String libraryLock;
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
@@ -352,6 +354,16 @@ try
         {
             PrintUsage(stdout);
             return 0;
+        }
+        if (argument == "--library-lock")
+        {
+            if (++index >= argc)
+            {
+                std::fputs("chali: --library-lock 缺少路径\n", stderr);
+                return 2;
+            }
+            libraryLock = argv[index];
+            continue;
         }
         if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm" || argument == "--emit-obj" || argument == "--emit-asm"))
         {
@@ -878,6 +890,17 @@ try
      * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
     chali_report::clearVirtualSources();
     chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str());
+    if (!libraryLock.empty())
+    {
+        try
+        {
+            libraries.loadLock(std::filesystem::u8path(libraryLock.c_str()));
+        } catch (const std::exception &failure)
+        {
+            std::fprintf(stderr, "chali: %s\n", failure.what());
+            return 2;
+        }
+    }
     preprocess::Result processed;
     chali_macro::sourceFragments.clear();
     Memory::Vector<preprocess::LineOrigin> originalMacroOrigins;

@@ -1,3 +1,4 @@
+#include "chali_library.hpp"
 /** @file chali_linker.cpp
  * @brief 原生链接命令、目标前置检查、外置工具参数及事务发布。
  */
@@ -102,6 +103,22 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         chali_aot::TargetInfo target;
         Memory::String targetError;
         if (!chali_aot::describeTarget(request.options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
+        const auto requestedOutput = fs::weakly_canonical(fs::absolute(fs::u8path(output.c_str())));
+        for (const auto &package : request.packages)
+            if (requestedOutput == fs::weakly_canonical(fs::u8path(package.c_str()))) throw std::runtime_error("链接输出不能覆盖输入库包");
+        if (!request.libraryLock.empty() && requestedOutput == fs::weakly_canonical(fs::u8path(request.libraryLock.c_str())))
+            throw std::runtime_error("链接输出不能覆盖库锁");
+        chali_library::ImportSession libraries(request.options.target.c_str(), request.options.cpu.c_str());
+        if (!request.libraryLock.empty()) libraries.loadLock(fs::u8path(request.libraryLock.c_str()));
+        std::vector<fs::path> roots;
+        for (const auto &directory : request.libraryDirectories) roots.push_back(fs::u8path(directory.c_str()));
+        for (const auto &package : request.packages) libraries.openRecursive(fs::u8path(package.c_str()), roots);
+        for (const auto &path : libraries.paths())
+            if (requestedOutput == path) throw std::runtime_error("链接输出不能覆盖传递依赖库包");
+        chali_aot::Options packageInputs;
+        libraries.appendTo(packageInputs);
+        request.inputs.insert(request.inputs.end(), packageInputs.linkObjects.begin(), packageInputs.linkObjects.end());
+        for (const auto &library : packageInputs.linkLibraries) request.libraryNames.push_back(library.substr(2));
         if (request.inputs.empty() && request.libraryNames.empty()) throw std::runtime_error("链接需要对象或库输入");
         if (!request.entry.empty() && !symbolName(request.entry, target.windows)) throw std::runtime_error("入口符号不受支持");
         for (const auto &name : request.options.exports)
@@ -280,7 +297,7 @@ int runCli(int argc, char **argv)
         }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
+            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--package FILE.chlib] [--library-lock FILE] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
             return 0;
         }
         if (!ar && argument == "--shared")
@@ -298,7 +315,7 @@ int runCli(int argc, char **argv)
             request.noRuntime = true;
             continue;
         }
-        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && (argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link")))
+        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && argument == "--cpu") || (!ar && (argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link" || argument == "--package" || argument == "--library-lock")))
         {
             if (++index >= argc)
             {
@@ -308,6 +325,7 @@ int runCli(int argc, char **argv)
             const auto value = argv[index];
             if (argument == "--out") output = value;
             if (argument == "--target") request.options.target = value;
+            if (argument == "--cpu") request.options.cpu = value;
             if (argument == "--llvm") request.options.compiler = value;
             if (argument == "--entry") request.entry = value;
             if (argument == "--export") request.options.exports.push_back(value);
@@ -316,6 +334,8 @@ int runCli(int argc, char **argv)
             if (argument == "--library") request.libraryNames.push_back(value);
             if (argument == "--library-path" || argument == "-L") request.libraryDirectories.push_back(value);
             if (argument == "--link") request.inputs.push_back(value);
+            if (argument == "--package") request.packages.push_back(value);
+            if (argument == "--library-lock") request.libraryLock = value;
             continue;
         }
         if (!ar && argument.size() > 2 && argument.compare(0, 2, "-L") == 0)

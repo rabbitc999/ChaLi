@@ -518,7 +518,7 @@ private:
         }
         else
         {
-            if (pin)
+            if (pin || (libraries_ && libraries_->requiresPackage(name.c_str())))
             {
                 error = "锁定的库依赖不能回退到源码：" + name;
                 return false;
@@ -588,6 +588,19 @@ private:
         }
         for (const Memory::String &imported : info.imports)
         {
+            if (!unit.lineMap.empty() && imported.compare(0, 5, "std::") != 0)
+            {
+                const auto library = libraryUnits_.find(unit.lineMap.front().file);
+                if (library != libraryUnits_.end())
+                {
+                    const auto &dependencies = library->second->manifest.dependencies;
+                    if (std::none_of(dependencies.begin(), dependencies.end(), [&](const auto &item) { return imported == item.module.c_str(); }))
+                    {
+                        error = "库接口导入未在清单中锁定：" + imported;
+                        return false;
+                    }
+                }
+            }
             if (imported == "std::lang") continue;
             /* `std::algorithms` 没有 CHALI 文件，但仍在合并源码里保留模块边界。限定调用由
              * 编译器直接降级到 StackVM 胶水，不在这里注入函数体。 */

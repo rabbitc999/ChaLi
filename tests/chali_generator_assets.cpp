@@ -39,7 +39,7 @@ int main(int argc,char **argv) {
         assert(assets.count(name)&&normalized(assets.at(name))==normalized(text.str()));++count;
     }
     assert(!assets.count("chali_glue.hpp"));
-    for (const auto *name : {"chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_tools.cpp"})
+    for (const auto *name : { "chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_import.cpp", "chali_library_tools.cpp" })
     {
         std::ifstream file(std::filesystem::u8path(argv[1])/"source"/name,std::ios::binary);
         assert(file);std::ostringstream text;text<<file.rdbuf();

@@ -47,7 +47,30 @@ void main() {
 
 清单内的依赖即使未写在公开接口的 `import` 中也会解析，要求精确版本和整包 SHA-256。已找到的包会补充其完整模块根来搜索传递依赖，也可显式使用 `-I modules`；锁定依赖不接受 `.chl` 回退。重复模块必须具有同一摘要，循环导入拒绝。一轮编译最多加载 128 个包，总有效载荷最多 256 MiB。检查和链接使用同一份已验证的拥有型快照；导入不执行初始化。系统库随目标实现加入链接，运行时动态库仍由部署方提供。
 
-对象和汇编输出只生成当前编译单元；再次独立链接时仍须提供库实现，它们不会被嵌入消费者的 `.o` 或 `.s`。当前尚未生成独立链接依赖回执或项目级库锁文件。
+库接口中的非标准模块导入必须出现在清单的精确依赖中，不能借用未锁定的源码模块补齐接口。
+
+## 项目级内容锁与独立链接
+
+为本项目选定的所有包生成独立锁，包含每个包的传递依赖：
+
+```sh
+chali lib lock modules/example/math.chlib --out chali.libraries.lock
+chali check consumer.chl --library-lock chali.libraries.lock
+chali aot consumer.chl --library-lock chali.libraries.lock --out build/consumer
+```
+
+有多个包时逐一传入 `lib lock`；清单要求的依赖必须同时提供且版本、摘要匹配。锁文件保存格式、编译器版本以及按模块排序的精确版本和整包 SHA-256，不保存机器上的绝对路径。再次生成同一集合得到相同字节。生成失败保留旧锁，输出禁止覆盖任何输入包。普通检查不会创建或修改锁。
+
+`--library-lock` 对实际加载的每个库核对记录，未列入的包、不同版本和不同摘要拒绝。锁中指定的模块不得回退到 `.chl`；未列入锁的普通项目源码模块仍按正常规则导入。锁采用格式一的规范 JSON，最多 128 个模块、1 MiB，重复键、未知字段及不兼容版本拒绝。它与源码依赖的 `chali.lock` 分开，不改变原有源码包锁格式。
+
+对象与汇编输出不会把库归档嵌进消费者。独立链接时通过 `--package` 提供原始包，链接器直接解析其清单和精确传递依赖：
+
+```sh
+chali aot consumer.chl --emit-obj --library-lock chali.libraries.lock --out build/consumer
+chali link build/consumer.o --package modules/example/math.chlib --library-lock chali.libraries.lock --out build/consumer.exe
+```
+
+`--package` 可重复；`-L` 同时提供额外库根。独立链接不解析或执行接口源文，不启动初始化；原生实现从已验证快照恢复，系统库加入最终链接。包及锁文件不能成为链接输出。当前不自动生成链接依赖回执；调用方显式保留本次使用的包和锁。
 
 ## 独立的兼容信息
 
