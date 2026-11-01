@@ -55,6 +55,23 @@ def main():
                                 cwd=work, env=environment, capture_output=True, timeout=180)
         if repeat.returncode or repeated.read_bytes() != data:
             raise RuntimeError('相同阶段编译器生成的标准库二进制不确定')
+        modules = []
+        for module in sorted((ROOT / 'source/std').glob('*.chl')):
+            if module.stem == 'lang':
+                continue
+            name = 'std::' + module.stem
+            source.write_text('import ' + name + ';\nvoid main(){}\n', encoding='utf-8')
+            output = work / (module.stem + '.unit')
+            command = [str(compiler), 'check', str(source), '--build-stdlib-module', name, str(output)]
+            result = subprocess.run(command, cwd=work, env=environment, capture_output=True, timeout=180)
+            if result.returncode:
+                raise RuntimeError(name + ': ' + result.stderr.decode('utf-8', errors='replace'))
+            payload = output.read_bytes()
+            repeated = subprocess.run(command, cwd=work, env=environment, capture_output=True, timeout=180)
+            if repeated.returncode or output.read_bytes() != payload:
+                raise RuntimeError(name + ': 模块二进制不确定')
+            modules.append((name, payload))
+            print(name + ': ' + str(len(payload)) + ' 字节', flush=True)
     lines = ['// 由 tools/build_stdlib_units.py 生成；从原始标准库维护。',
              '// 二进制 SHA256: ' + hashlib.sha256(data).hexdigest(),
              'constexpr unsigned char kStandardUnit[] = {']
@@ -65,6 +82,19 @@ def main():
         checksum = ((checksum ^ byte) * 1099511628211) & ((1 << 64) - 1)
     lines += ['};', 'constexpr std::size_t kStandardUnitSize = sizeof(kStandardUnit);',
               f'constexpr std::uint64_t kStandardUnitChecksum = {checksum}ull;', '']
+    lines.append('#define CHALI_EMBED_MODULE_UNITS 1')
+    directory = []
+    for index, (name, payload) in enumerate(modules):
+        symbol = 'kStandardModule' + str(index)
+        lines.append('constexpr unsigned char ' + symbol + '[] = {')
+        for at in range(0, len(payload), 24):
+            lines.append('    ' + ', '.join(f'0x{byte:02x}' for byte in payload[at:at + 24]) + ',')
+        lines.append('};')
+        checksum = 14695981039346656037
+        for byte in payload:
+            checksum = ((checksum ^ byte) * 1099511628211) & ((1 << 64) - 1)
+        directory.append('    {"' + name + '", ' + symbol + ', sizeof(' + symbol + '), ' + str(checksum) + 'ull},')
+    lines += ['constexpr StandardModuleEntry kStandardModules[] = {', *directory, '    {nullptr, nullptr, 0, 0}', '};', '']
     output = '\n'.join(lines)
     options.output.parent.mkdir(parents=True, exist_ok=True)
     if not options.output.exists() or options.output.read_text(encoding='utf-8') != output:

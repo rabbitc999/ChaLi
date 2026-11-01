@@ -80,6 +80,11 @@ public:
      */
     const SourceInvocation &at(std::size_t index) const;
     /**
+     * @brief 取得当前编译会话保存的原始宏调用数量。
+     * @return 包含已结束捕获批次的调用总数。
+     */
+    std::size_t size() const { return invocations_.size(); }
+    /**
      * @brief 在当前解析输入的捕获批次内查找调用词素。
      * @param line 原始输入行。
      * @param column 原始输入列。

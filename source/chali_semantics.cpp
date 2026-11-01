@@ -3566,7 +3566,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 6;
+constexpr std::uint64_t kStandardUnitVersion = 7;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3860,7 +3860,8 @@ void WriteUnitTypeRefs(std::ostream &out, const MType &type, const Memory::Map<c
     const auto write = [&](const std::shared_ptr<MType> &target) {
         if (!target) return chali_incremental::writeNumber(out, std::uint64_t{ 0 });
         const auto found = index.find(target.get());
-        chali_incremental::writeNumber(out, found == index.end() ? std::uint64_t{ 0 } : static_cast<std::uint64_t>(found->second) + 1);
+        if (found == index.end()) { out.setstate(std::ios::failbit); return; }
+        chali_incremental::writeNumber(out, static_cast<std::uint64_t>(found->second) + 1);
     };
     chali_incremental::writeNumber(out, type.genericArguments.size());
     for (const auto &argument : type.genericArguments) write(argument);
@@ -3937,9 +3938,23 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit)
     /* 解析期已经攒下诊断的标准库段不固化：固化下来等于把一次带错的解析结果留到以后。 */
     if (!g_parseDiagnostics.empty() || !g_error.empty()) return false;
     if (nodeLimit == 0 || nodeLimit > g_nodes.size()) return false;
+    /* 关联类型替换会构造未单独登记的子类型。保留原池编号并追加完整引用闭包。 */
+    auto types = g_types;
     Memory::Map<const MType *, std::size_t> index;
-    for (std::size_t i = 0; i < g_types.size(); ++i)
-        if (g_types[i]) index[g_types[i].get()] = i;
+    for (std::size_t i = 0; i < types.size(); ++i)
+        if (types[i]) index[types[i].get()] = i;
+    const auto include = [&](const std::shared_ptr<MType> &type) {
+        if (type && index.emplace(type.get(), types.size()).second) types.push_back(type);
+    };
+    for (std::size_t i = 0; i < types.size(); ++i)
+    {
+        const auto type = types[i];
+        if (!type) continue;
+        for (const auto &argument : type->genericArguments) include(argument);
+        include(type->elem);
+        for (const auto &parameter : type->paramTypes) include(parameter);
+        include(type->elem2);
+    }
     // 原始宏来源被附加在全文映射之后；按文件及原始行归一，避免把用户全文长度写进核心包。
     Memory::Map<std::pair<Memory::String, std::size_t>, std::size_t> firstOrigins;
     Memory::Vector<std::size_t> canonical(g_sourceFiles.size() + 1, 0);
@@ -3952,8 +3967,8 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit)
     chali_incremental::writeNumber(out, kStandardUnitVersion);
     chali_incremental::writeNumber(out, nodeLimit);
     for (std::size_t i = 0; i < nodeLimit; ++i) WriteUnitNode(out, g_nodes[i], canonical);
-    chali_incremental::writeNumber(out, g_types.size());
-    for (const auto &type : g_types)
+    chali_incremental::writeNumber(out, types.size());
+    for (const auto &type : types)
     {
         WriteUnitTypeBody(out, type ? *type : MType{});
         WriteUnitTypeRefs(out, type ? *type : MType{}, index);
@@ -3986,10 +4001,42 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit)
     chali_incremental::writeNumber(out, g_macroFragmentFirstLine < canonical.size() ? canonical[g_macroFragmentFirstLine] : g_macroFragmentFirstLine);
     chali_incremental::writeNumber(out, g_macroFragmentFirstColumn);
     chali_incremental::writeString(out, g_parseModule);
+    Memory::Map<int, int> contracts;
+    for (const auto &entry : chali_lifetime::g_directiveNodes)
+        if (entry.first >= 0 && static_cast<std::size_t>(entry.first) < nodeLimit
+            && entry.second >= 0 && static_cast<std::size_t>(entry.second) < nodeLimit) contracts.insert(entry);
+    chali_incremental::writeNumber(out, contracts.size());
+    for (const auto &entry : contracts)
+    {
+        chali_incremental::writeNumber(out, entry.first);
+        chali_incremental::writeNumber(out, entry.second);
+    }
     return true;
 }
 
-bool M_ReadStandardUnit(std::istream &in)
+namespace
+{
+/** @brief 已验证但尚未发布的解析单元，拥有独立节点、类型与名称。 */
+struct ParsedStandardUnit
+{
+    Memory::Deque<MNode> nodes;
+    Memory::Vector<std::shared_ptr<MType>> types;
+    Memory::Vector<Memory::String> names;
+    Memory::Vector<int> top;
+    Memory::Map<int, std::size_t> rawMacroNames;
+    Memory::Map<int, Memory::String> stringSources;
+    Memory::Map<int, int> directiveNodes;
+    int globalType = -1;
+    std::size_t reductionLine = 0, reductionColumn = 0, fragmentLine = 0, fragmentColumn = 0;
+    Memory::String parseModule;
+};
+/**
+ * @brief 在独立对象中恢复并验证解析单元，分配或格式失败不修改当前解析池。
+ * @param in 包含完整单元的可定位二进制流。
+ * @param unit 成功时接收验证后的拥有状态。
+ * @return 全部字段有效时返回 true。
+ */
+bool ReadStandardUnitState(std::istream &in, ParsedStandardUnit &unit)
 {
     std::uint64_t magic = 0, version = 0, nodeLimit = 0, typeCount = 0, globalType = 0;
     if (!chali_incremental::readNumber(in, magic) || magic != kStandardUnitMagic) return false;
@@ -4053,6 +4100,15 @@ bool M_ReadStandardUnit(std::istream &in)
     if (!chali_incremental::readNumber(in, fragmentColumn)) return false;
     Memory::String parseModule;
     if (!chali_incremental::readString(in, parseModule)) return false;
+    std::uint64_t contractCount = 0;
+    if (!chali_incremental::readNumber(in, contractCount) || !UnitPayloadFits(in, contractCount, 16)) return false;
+    for (std::uint64_t i = 0; i < contractCount; ++i)
+    {
+        std::uint64_t function = 0, directives = 0;
+        if (!chali_incremental::readNumber(in, function) || !chali_incremental::readNumber(in, directives)
+            || function >= nodeLimit || directives >= nodeLimit
+            || !unit.directiveNodes.emplace(static_cast<int>(function), static_cast<int>(directives)).second) return false;
+    }
     if (in.peek() != std::char_traits<char>::eof()) return false;
     /* 所有编号和尾部均验证后才替换全局状态，失败不得污染既有解析单元。 */
     for (const int id : rawNames)
@@ -4068,22 +4124,50 @@ bool M_ReadStandardUnit(std::istream &in)
             if (kid >= (1 << 26)) return false;
     for (const int id : top)
         if (id < 0 || static_cast<std::size_t>(id) >= nodeLimit) return false;
-    g_nodes = std::move(nodes);
-    g_types = std::move(types);
-    g_names = std::move(names);
-    g_top = std::move(top);
-    g_rawMacroNames.clear();
-    for (std::size_t i = 0; i < rawNames.size(); ++i) g_rawMacroNames[rawNames[i]] = rawFragments[i];
-    g_stringSources.clear();
-    for (std::size_t i = 0; i < stringNodes.size(); ++i) g_stringSources[stringNodes[i]] = stringValues[i];
-    g_globalType = static_cast<int>(static_cast<std::int64_t>(globalType));
-    g_reductionLine = reductionLine;
-    g_reductionColumn = reductionColumn;
-    g_macroFragmentFirstLine = fragmentLine;
-    g_macroFragmentFirstColumn = fragmentColumn;
-    g_parseModule = parseModule;
+    unit.nodes = std::move(nodes);
+    unit.types = std::move(types);
+    unit.names = std::move(names);
+    unit.top = std::move(top);
+    unit.rawMacroNames.clear();
+    for (std::size_t i = 0; i < rawNames.size(); ++i) unit.rawMacroNames[rawNames[i]] = rawFragments[i];
+    unit.stringSources.clear();
+    for (std::size_t i = 0; i < stringNodes.size(); ++i) unit.stringSources[stringNodes[i]] = stringValues[i];
+    unit.globalType = static_cast<int>(static_cast<std::int64_t>(globalType));
+    unit.reductionLine = reductionLine;
+    unit.reductionColumn = reductionColumn;
+    unit.fragmentLine = fragmentLine;
+    unit.fragmentColumn = fragmentColumn;
+    unit.parseModule = parseModule;
     return true;
 }
+}  // namespace
+
+/**
+ * @brief 验证单元并一次发布为当前解析状态。
+ * @param in 包含完整单元的可定位二进制流。
+ * @return 成功时返回 true；失败保留原状态。
+ */
+bool M_ReadStandardUnit(std::istream &in)
+{
+    ParsedStandardUnit unit;
+    if (!ReadStandardUnitState(in, unit)) return false;
+    g_nodes.swap(unit.nodes);
+    g_types.swap(unit.types);
+    g_names.swap(unit.names);
+    g_top.swap(unit.top);
+    g_rawMacroNames.swap(unit.rawMacroNames);
+    g_stringSources.swap(unit.stringSources);
+    chali_lifetime::g_directiveNodes.swap(unit.directiveNodes);
+    g_globalType = unit.globalType;
+    g_reductionLine = unit.reductionLine;
+    g_reductionColumn = unit.reductionColumn;
+    g_macroFragmentFirstLine = unit.fragmentLine;
+    g_macroFragmentFirstColumn = unit.fragmentColumn;
+    g_parseModule.swap(unit.parseModule);
+    return true;
+}
+
+#include "semantics/standard_module_units.cpp"
 
 void M_ShiftNodeLines(std::size_t from, std::size_t lines)
 {

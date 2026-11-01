@@ -258,7 +258,7 @@ GENERATOR_ASSETS += ["ipage/" + path.name for path in sorted(Path(CHALI, "librar
 GENERATOR_ASSETS += ["ipage/LICENSE"]
 
 # 胶水接口及实现作为同一组资产导出，固定清单不能遗漏独立编译单元。
-GENERATOR_ASSETS += ["chali_temp.hpp", "chali_temp.cpp", "chali_precompiled.hpp", "chali_precompiled.cpp", "semantics/editor_macro_effects.cpp", "semantics/custom_derive.cpp"]
+GENERATOR_ASSETS += ["chali_temp.hpp", "chali_temp.cpp", "chali_precompiled.hpp", "chali_precompiled.cpp", "semantics/editor_macro_effects.cpp", "semantics/custom_derive.cpp", "semantics/standard_module_units.cpp"]
 if Path(CHALI, "source/chali_precompiled_data.inc").exists():
     GENERATOR_ASSETS.append("chali_precompiled_data.inc")
 GENERATOR_ASSETS += [

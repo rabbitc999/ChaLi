@@ -6,6 +6,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -65,6 +66,30 @@ def main():
             checked = subprocess.run([str(isolated), 'check', str(source), '--stats'], cwd=work,
                                      env=env, capture_output=True, encoding='utf-8', timeout=180)
             assert checked.returncode == 0 and '标准库预编译：命中' in checked.stderr, (module.name, checked)
+            modules = re.search(r'标准模块二进制：(\d+) 命中，(\d+) 源码解析', checked.stderr)
+            assert modules and int(modules[1]) >= 1 and int(modules[2]) == 0, (module.name, checked.stderr)
+        (work / 'middle.chl').write_text('module middle;\nimport std::parse;\n'
+            'struct Record{int64 value;};\nint64 number(){return std::parse::Parse::parseInt64("42").unwrap();}\n', encoding='utf-8')
+        combinations = (
+            'import middle;\nimport std::json;\nvoid main(){middle::Record r;r.value=middle::number();assert(r.value==42);println("mixed modules");}',
+            'import std::json;\nimport middle;\nvoid main(){assert(middle::number()==42);println("mixed modules");}',
+            'import std::binary;\nimport std::text;\nimport std::parse;\n'
+            '$macro once(n)\nn+n\n$end_macro\nint64 calls=0;int64 next(){calls=calls+1;return 3;}\n'
+            'void main(){assert($once(next())==6 && calls==1);println("mixed modules");}',
+        )
+        for index, text in enumerate(combinations):
+            source = work / 'combined.chl'
+            source.write_text(text, encoding='utf-8')
+            values = []
+            for disable in (False, True):
+                command = [str(isolated), 'run', str(source), '--out', str(work / f'combined-{index}-{disable}'), '--stats']
+                if disable: command.append('--no-stdlib-cache')
+                result = subprocess.run(command, cwd=work, env=env, capture_output=True, encoding='utf-8', timeout=180)
+                assert result.returncode == 0, (index, disable, result)
+                if not disable:
+                    assert re.search(r'标准模块二进制：[1-9]\d* 命中，0 源码解析', result.stderr), result.stderr
+                values.append(result.stdout)
+            assert values == ['mixed modules\n', 'mixed modules\n'], values
         for statement in ('int64 value="wrong";', 'std::lang::__std_eprint("private");'):
             source.write_text('void main(){' + statement + '}\n', encoding='utf-8')
             failures = []
@@ -80,7 +105,7 @@ def main():
         removed = subprocess.run([str(isolated), 'check', str(source), '--stdlib-cache-dir', str(work / 'old')],
                                  cwd=work, env=env, capture_output=True, encoding='utf-8', timeout=30)
         assert removed.returncode != 0 and '已删除' in removed.stderr and not (work / 'old').exists(), removed
-    print('embedded standard core: isolated compiler, imports, generics, macro hygiene and zero disk cache passed')
+    print('embedded standard modules: isolated compiler, all imports, mixed ordering, generics, macro hygiene and zero disk cache passed')
 
 
 if __name__ == '__main__':

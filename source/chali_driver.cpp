@@ -289,7 +289,7 @@ try
     bool incremental = false; /* --incremental：跨次复用模块预处理及完整编译产物 */
     /* 标准库预编译单元：跨次复用标准库段的解析产物；`--no-stdlib-cache` 关掉。 */
     bool standardUnit = std::getenv("CHALI_NO_STDLIB_CACHE") == nullptr;
-    Memory::String buildStandardUnit;
+    Memory::String buildStandardUnit, buildStandardModule, buildStandardModuleOutput;
     bool sourceStdin = false;  ///< 编辑器用真实文件身份读取标准输入中的未保存内容。
     Memory::String cacheDirectory, overlayPath, analysisDependencies, analysisTypes;
     Memory::Vector<Memory::String> includeDirs;
@@ -501,6 +501,14 @@ try
         {
             std::fputs(CHALI_TEXT("chali: --stdlib-cache-dir 已删除；标准库预编译资产由编译器内嵌。\n"), stderr);
             return 2;
+        }
+        if (argument == "--build-stdlib-module")
+        {
+            if (!NeedValue(index, argc, argument.c_str())) return 2;
+            buildStandardModule = argv[++index];
+            if (!NeedValue(index, argc, argument.c_str())) return 2;
+            buildStandardModuleOutput = argv[++index];
+            continue;
         }
         if (argument == "--build-stdlib-unit")
         {
@@ -988,15 +996,37 @@ try
     chali_lambda::markClosureTypeArguments(text);
     chali_generic::markContainerTypeArguments(text);
     chali_macro::markHeaderBoundaries(text);
-    /* 标准库预编译单元：分界行之前那一整段（`std::lang` 加本次 `import` 的 `std` 模块）
-     * 在同一支编译器下每次编译都逐字节相同，于是它的解析产物只算一次 —— 命中缓存就直接
-     * 装载成竞技场前缀，用户源码照常解析，行号整体平移标准库的行数，落回同一张行映射表。
-     * 命中不了时按「标准库段 + 用户段」两次解析，并把标准库段那份产物写回缓存。 */
+    const auto dependencyEnd = chali_module::findStandardBoundary(text);
+    const auto optionalUnits = chali_precompiled::moduleSlices(text, sourceFiles,
+        dependencyEnd == Memory::String::npos ? 0 : dependencyEnd);
+    if (!buildStandardModule.empty())
+    {
+        const auto found = std::find_if(optionalUnits.begin(), optionalUnits.end(), [&](const auto &unit) { return unit.name == buildStandardModule; });
+        if (raw || found == optionalUnits.end())
+        {
+            std::fprintf(stderr, "chali: 无法定位标准模块资产：%s\n", buildStandardModule.c_str());
+            return 1;
+        }
+        const auto moduleText = text.substr(found->begin, found->end - found->begin);
+        const auto padding = static_cast<std::size_t>(std::count(text.begin(), text.begin() + found->begin, '\n'));
+        if (engine.runText(Memory::String(padding, '\n') + moduleText, &value) != Status::Ok)
+        {
+            std::fprintf(stderr, "chali: 标准模块资产解析失败：%s\n", buildStandardModule.c_str());
+            return 1;
+        }
+        std::ofstream output(Memory::u8path(buildStandardModuleOutput), std::ios::binary | std::ios::trunc);
+        if (!output || !chali_precompiled::writeModule(output, moduleText))
+        {
+            std::fprintf(stderr, "chali: 标准模块二进制生成失败：%s\n", buildStandardModule.c_str());
+            return 1;
+        }
+        return 0;
+    }
+    /* 核心先恢复；可选标准模块按原导入顺序追加，用户依赖和实例尾部仍独立解析。 */
+    std::size_t standardModuleHits = 0, standardModuleMisses = 0;
     std::size_t boundary = Memory::String::npos;
     std::size_t standardLines = 0;
     std::size_t firstUserNode = 0;
-    Memory::Vector<int> standardTop;      ///< 标准库段的顶层声明，解析完用户段后补回前面
-    std::size_t firstUserDiagnostic = 0;  ///< 标准库段解析结束后已积累的解析期诊断条数
     std::size_t errorLineOffset = 0;      ///< 解析期报错的行号偏移：第二段解析出来的行号要加回标准库的行数
 
     bool standardUnitLoaded = false;
@@ -1030,10 +1060,6 @@ try
         /* 标准库段自己解析出来的行号就是合并源码里的行号，不需要偏移。 */
         errorLineOffset = 0;
         firstUserNode = M_NodeCount();
-        /* 顶层表在后一段解析里会被 `M_SetProgram` 清空，先把标准库段的声明抄下来。 */
-        standardTop = M_TopLevelIds();
-        /* 解析期诊断也划一道线：这道线之后落下的都属于用户段，行号要平移。 */
-        firstUserDiagnostic = M_ParseDiagnosticCount();
         if (status == Status::Ok && !buildStandardUnit.empty())
         {
             std::ofstream output(std::filesystem::u8path(buildStandardUnit.begin(), buildStandardUnit.end()), std::ios::binary | std::ios::trunc);
@@ -1046,19 +1072,36 @@ try
         }
         if (status == Status::Ok)
         {
-            /* 用户段是单独解析的，行号从 1 重新开始数；报错时要加回标准库占掉的行数，
-             * 才能翻到 `processed.lineMap` 里真正的那一行。 */
-            errorLineOffset = standardLines;
-            /* 用户段的 token 行号从 1 开始，ABI 路径的来源也必须使用同一段行映射。 */
-            Memory::Vector<Memory::String> userSourceFiles;
-            if (standardLines < sourceFiles.size())
-                userSourceFiles.assign(sourceFiles.begin() + standardLines, sourceFiles.end());
-            M_SetSourceFiles(userSourceFiles, sourceLabel);
-            status = engine.runText(text.substr(boundary), &value);
-            M_SetSourceFiles(sourceFiles, sourceLabel);
-            M_ShiftNodeLines(firstUserNode, standardLines);
-            M_ShiftParseDiagnostics(firstUserDiagnostic, standardLines);
-            M_PrefixTopLevel(standardTop);
+            /* 用前导空行保留绝对坐标，原始宏调用来源不再经过重复平移。 */
+            const auto parsePart = [&](std::size_t begin, std::size_t end) {
+                if (begin >= end || status != Status::Ok) return;
+                const auto prefix = M_TopLevelIds();
+                const auto padding = static_cast<std::size_t>(std::count(text.begin(), text.begin() + begin, '\n'));
+                status = engine.runText(Memory::String(padding, '\n') + text.substr(begin, end - begin), &value);
+                M_PrefixTopLevel(prefix);
+                errorLineOffset = 0;
+            };
+            std::size_t cursor = boundary;
+            for (const auto &unit : optionalUnits)
+            {
+                if (unit.begin < cursor) continue;
+                parsePart(cursor, unit.begin);
+                if (status != Status::Ok) break;
+                Memory::String error;
+                if (chali_precompiled::loadModule(unit.name, text.substr(unit.begin, unit.end - unit.begin), error)) ++standardModuleHits;
+                else
+                {
+                    if (!error.empty())
+                    {
+                        std::fprintf(stderr, "chali: %s：%s\n", unit.name.c_str(), error.c_str());
+                        return 1;
+                    }
+                    ++standardModuleMisses;
+                    parsePart(unit.begin, unit.end);
+                }
+                cursor = unit.end;
+            }
+            parsePart(cursor, text.size());
         }
     }
     if (status != Status::Ok)
@@ -1163,6 +1206,8 @@ try
             std::fprintf(stderr, "标准库预编译：命中内嵌核心（%zu 个节点，省掉核心解析）\n", firstUserNode);
         else
             std::fprintf(stderr, "标准库预编译：源码解析（%zu 个节点，%zu 行；不写磁盘缓存）\n", firstUserNode, standardLines);
+        if (standardUnit && !optionalUnits.empty())
+            std::fprintf(stderr, "标准模块二进制：%zu 命中，%zu 源码解析\n", standardModuleHits, standardModuleMisses);
     }
     if (code != 0)
     {

@@ -1169,6 +1169,18 @@ bool M_WriteStandardUnit(std::ostream &out, std::size_t nodeLimit);
  */
 bool M_ReadStandardUnit(std::istream &in);
 /**
+ * @brief 写出当前独立标准模块的解析状态和原始来源。
+ * @param out 模块二进制输出流。
+ * @return 仅含合法内嵌来源且写入成功时返回 true。
+ */
+bool M_WriteModuleUnit(std::ostream &out);
+/**
+ * @brief 按当前来源映射重定位并追加独立标准模块。
+ * @param in 模块二进制输入流。
+ * @return 完整校验并发布成功时返回 true，失败保留当前状态。
+ */
+bool M_AppendModuleUnit(std::istream &in);
+/**
  * @brief 取当前顶层声明编号表。
  * @return 顶层声明节点编号，按声明顺序。
  */

@@ -658,7 +658,7 @@ int runCli(int argc, char **argv)
     ok = copy(mc / "tools/llvm_static_imports.cpp", "tools/llvm_static_imports.cpp") && ok;
     /* `chali_semantics.cpp` 按职责拆成 `semantics/*.cpp`，它用相对 `#include`
      * 拼回；生成工程必须把分片一起带过去（编译 `chali_parser.cpp` 时按相对路径找到）。 */
-    for (const char *name : {"symbol_table.cpp", "type_ids.cpp", "type_ids_shared.cpp",
+    for (const char *name : {"standard_module_units.cpp", "symbol_table.cpp", "type_ids.cpp", "type_ids_shared.cpp",
                              "lifetime.cpp", "aggregate_ownership.cpp", "resource_lifetime.cpp", "scope.cpp",
                              "return_expression_ast.cpp", "named_function_ast.cpp", "derive_ast.cpp", "derive.cpp",
                              "types.cpp", "interfaces.cpp", "formatted_output.cpp", "builtins.cpp", "generic_inference.cpp", "constants.cpp", "annotation_ast.cpp", "annotations.cpp", "reflection_metadata.cpp", "reflection_queries.cpp", "reflection_calls.cpp", "reflection_serialization.cpp",
