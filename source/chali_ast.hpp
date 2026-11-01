@@ -1,3 +1,7 @@
+namespace chali_aot
+{
+struct ExternFunction;
+}
 namespace ast { struct Program; }
 /**
  * @def CHALI_WITH_REFLECTION
@@ -905,6 +909,12 @@ void M_SetSharedLibrary(bool enabled);
  * @return 未被覆盖的导出函数标签列表。
  */
 Memory::Vector<Memory::String> M_AotExports();
+/** @brief 导出首批独立原生库的公开标量接口。
+ * @param module 完整模块身份。
+ * @param exports 接收稳定原生签名。
+ * @return 不含函数实现体的接口源文。 */
+Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<chali_aot::ExternFunction> &exports);
+
 /**
  * @brief 建立 lambda 表达式。
  * @param resultType 返回类型。

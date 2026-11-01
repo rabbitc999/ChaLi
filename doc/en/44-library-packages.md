@@ -29,6 +29,33 @@ Without `--out`, `template` prints canonical single-line JSON. The manifest uses
 
 `inspect` reports the whole-package SHA-256, manifest and each entry's name, kind, length and payload SHA-256. It does not print source or binary payloads. `--module` and `--package-version` check expected identity; `--target`/`--cpu` check native selection. Inspection without a target can examine cross-target packages. Successful inspection does not establish execution on that target.
 
+## Building native libraries from language functions
+
+`lib build` compiles checked functions directly through LLVM into an independent object and bundles an automatically generated public interface. A supported scalar example is:
+
+```chali
+module example::math;
+inline int64 adjust(int64 value) {
+    return value + 1;
+}
+int64 add(int64 a, int64 b) {
+    return adjust(a) + b - 1;
+}
+```
+
+The `inline` declaration keeps `adjust` module-local. The public interface contains only `add`'s signature; consumers do not recompile its body. Arrange package directories by qualified module name:
+
+```sh
+chali lib build math.chl --module example::math --package-version 1.0.0 --out modules/example/math.chlib
+chali lib inspect modules/example/math.chlib
+```
+
+The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
+
+The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit and recursion. LLVM emits C ABI width/floating conversions directly. Named aggregates, generic definitions, owning values, globals, methods, default/variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+
+These packages require `scalar-unit-v1`, so compilers without that capability reject them before loading. Ordinary imports accept both these language-generated objects and the manually declared C ABI archives above; neither interface contains runtime function bodies.
+
 ## Ordinary imports
 
 Place the package at `modules/example/math.chlib`. A consumer uses:

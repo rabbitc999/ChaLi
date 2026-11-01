@@ -7,6 +7,7 @@
 #endif
 #include "chali_incremental.hpp"
 #include "chali_aot.hpp"
+#include "chali_digest.hpp"
 #include <cctype>
 /* ============================================================
  * 实现：节点池 / 类型池 / 降级（C 语法树 → ast） / 生成与执行
@@ -3287,6 +3288,67 @@ bool ValidateNativeLibraryInterfaces()
         return Fail("当前 c-v1 预编译库接口不允许全局变量；初始化契约尚未开放");
     }
     return true;
+}
+
+/** @brief 将已检查基础类型恢复成公开语言拼写。
+ * @param type 具体语义类型。
+ * @param allowVoid 是否允许 void 返回。
+ * @return 类型拼写；不支持的类型抛出诊断。 */
+Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowVoid = false)
+{
+    if (!type) throw std::runtime_error("库导出类型缺失");
+    if (type->kind == MType::Void && allowVoid) return "void";
+    if (type->kind == MType::Bool) return "bool";
+    if (type->kind == MType::Char) return "char";
+    if (type->kind == MType::Int) return Memory::String(type->isUnsigned ? "uint" : "int") + Memory::toString(type->bits);
+    if (type->kind == MType::Double) return Memory::String("float") + Memory::toString(type->bits);
+    throw std::runtime_error("首批独立原生库只支持基础标量签名；聚合与拥有值待语言库 ABI 接入");
+}
+/** @brief 根据公开函数的真实签名生成不含实现体的接口及稳定 C 符号。
+ * @param module 完整模块身份。
+ * @param exports 接收公开原生签名。
+ * @return 可直接普通导入的公开接口文本。 */
+Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<chali_aot::ExternFunction> &exports)
+{
+    exports.clear();
+    for (const auto &item : chali_generic::session.generics)
+        if (item.second.module == module) throw std::runtime_error("首批独立原生库暂不导出泛型定义");
+    const auto prefix = module + "::";
+    const auto &program = *M_AotSyntax();
+    for (const auto &type : program.types)
+        if (type->name.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不导出具名聚合类型");
+    for (const auto *entries : { &program.variables, &program.constants })
+        for (const auto &entry : *entries)
+            if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
+    Memory::String interface = "module " + module + ";\n";
+    for (const auto &function : g_functionDecls)
+    {
+        if (function.module != module || function.moduleLocal || function.superseded || function.external || function.bodyId < 0) continue;
+        if (function.source == "main" || function.unsafeRequired) throw std::runtime_error("首批原生库暂不导出 main 或 unsafe 函数");
+        chali_aot::ExternFunction entry;
+        entry.label = function.label;
+        entry.abiConvention = "C";
+        entry.resultType = AotCType(CAbiType(function.signature.result));
+        Memory::String declaration = LibraryScalarType(function.signature.result, true) + " " + function.source + "(";
+        Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
+        for (std::size_t i = 0; i < function.signature.params.size(); ++i)
+        {
+            const auto &parameter = function.signature.params[i];
+            if (parameter.variadic || parameter.defaultExpr >= 0) throw std::runtime_error("首批独立原生库暂不导出默认参数或变参函数");
+            const auto type = LibraryScalarType(parameter.type);
+            if (i) declaration += ", ";
+            declaration += type + " " + parameter.source;
+            identity += "\n" + type;
+            entry.parameterTypes.push_back(AotCType(CAbiType(parameter.type)));
+        }
+        declaration += ");\n";
+        const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())));
+        entry.symbol = Memory::String(("chali_lib_" + hash).c_str());
+        interface += "#abi(\"C\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
+        exports.push_back(std::move(entry));
+    }
+    if (exports.empty()) throw std::runtime_error("库模块没有可导出的公开普通函数");
+    return interface;
 }
 
 /**

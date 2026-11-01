@@ -290,7 +290,7 @@ try
 
     bool aot = false;
     chali_aot::Options aotOptions;
-    Memory::String libraryLock;
+    Memory::String libraryLock, libraryModule, libraryVersion;
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
@@ -354,6 +354,22 @@ try
         {
             PrintUsage(stdout);
             return 0;
+        }
+        if (argument == "--library-module" || argument == "--library-version")
+        {
+            if (++index >= argc)
+            {
+                std::fputs("chali lib: 模块或包版本缺少值\n", stderr);
+                return 2;
+            }
+            if (argument == "--library-module")
+            {
+                libraryModule = argv[index];
+                aotOptions.shared = true;
+            }
+            else
+                libraryVersion = argv[index];
+            continue;
         }
         if (argument == "--library-lock")
         {
@@ -888,6 +904,19 @@ try
      * `preserveLines` 默认开着 —— 指令行与"条件为假"的行都输出成空行，所以
      * 预处理之后的**行号与源文件一一对应**（通过 lineMap 保留源位置）。
      * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
+    if (!libraryModule.empty() || !libraryVersion.empty())
+    {
+        if (!aot || run || checkOnly || raw || !outGiven || !chali_package::moduleName(libraryModule) || libraryVersion.empty())
+        {
+            std::fputs("chali lib: build 需要模块、精确包版本、--out 路径及实现文件\n", stderr);
+            return 2;
+        }
+        if (path && std::filesystem::weakly_canonical(std::filesystem::u8path(path)) == std::filesystem::weakly_canonical(std::filesystem::u8path(prefix.c_str())))
+        {
+            std::fputs("chali lib: 输出不能覆盖实现源码\n", stderr);
+            return 2;
+        }
+    }
     chali_report::clearVirtualSources();
     chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str());
     if (!libraryLock.empty())
@@ -930,6 +959,12 @@ try
         chali_module::Loader loader(options, moduleDirs, cache.get(), &project, &libraries);
         Memory::String moduleError;
         const bool ok = (path != nullptr && !sourceStdin) ? loader.rootFile(path, processed, moduleError) : loader.rootText(text, sourceLabel, path ? Memory::String(std::filesystem::path(path).parent_path().string()) : Memory::String("."), processed, moduleError);
+        if (ok && !libraryModule.empty() && loader.rootModule() != libraryModule)
+        {
+            std::fprintf(stderr, "chali lib: 入口实际模块 %s 与请求模块 %s 不符\n", loader.rootModule().c_str(), libraryModule.c_str());
+            return 1;
+        }
+        if (!libraryLock.empty()) processed.dependencies.push_back(std::filesystem::weakly_canonical(std::filesystem::u8path(libraryLock.c_str())).u8string().c_str());
         auto analysisFiles = processed.dependencies;
         if (path) analysisFiles.push_back(path);
         if (!project.file.empty())
@@ -1501,6 +1536,24 @@ try
             return 1;
         }
         request.options = aotOptions;
+        if (!libraryModule.empty())
+        {
+            try
+            {
+                const auto output = std::filesystem::weakly_canonical(std::filesystem::u8path(exportPrefix.c_str()));
+                for (const auto &input : libraries.paths())
+                    if (input == output) throw std::runtime_error("库输出不能覆盖导入的库包");
+                if (!libraryLock.empty() && output == std::filesystem::weakly_canonical(std::filesystem::u8path(libraryLock.c_str())))
+                    throw std::runtime_error("库输出不能覆盖内容锁");
+                const auto interface = M_LibraryInterface(libraryModule, request.abiExports);
+                return chali_library::buildNative(request, libraryModule.c_str(), libraryVersion.c_str(),
+                                                  std::string(interface.data(), interface.size()), libraries.records(), output);
+            } catch (const std::exception &failure)
+            {
+                std::fprintf(stderr, "chali lib: %s\n", failure.what());
+                return 1;
+            }
+        }
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;

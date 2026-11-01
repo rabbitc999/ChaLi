@@ -223,4 +223,12 @@ void ImportSession::appendTo(chali_aot::Options &options)
             options.linkLibraries.push_back(Memory::String(("-l" + library).c_str()));
     }
 }
+/** @brief 导出快照身份，避免再次读取路径导致内容竞态。
+ * @return 本次会话全部包的精确身份记录。 */
+std::vector<Dependency> ImportSession::records() const
+{
+    std::vector<Dependency> records;
+    for (const auto &item : state_->packages) records.push_back({ item.first, item.second.manifest.version, item.second.contentSha256 });
+    return records;
+}
 }  // namespace chali_library

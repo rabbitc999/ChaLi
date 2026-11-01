@@ -29,6 +29,33 @@ chali lib inspect build/math.chlib --module example::math --package-version 1.2.
 
 `inspect` 的报告包含整包 SHA-256、清单和每条资产的名字、种类、长度、负载 SHA-256。它不打印源文或二进制负载。`--module`、`--package-version` 可核对预期身份，`--target`／`--cpu` 可核对原生选择。不给目标时可以检查含交叉目标的包；检查成功不表示已在目标系统运行。
 
+## 从语言函数构建原生库
+
+`lib build` 将已检查函数直接生成 LLVM 代码并编译成独立对象，再与自动生成的公开接口一起封装。以首批支持的标量函数为例：
+
+```chali
+module example::math;
+inline int64 adjust(int64 value) {
+    return value + 1;
+}
+int64 add(int64 a, int64 b) {
+    return adjust(a) + b - 1;
+}
+```
+
+`adjust` 的 `inline` 声明使它只在模块内可见；公开接口只包含 `add` 的签名。调用方不会重新编译它的实现。包的目录应按完整模块名排列：
+
+```sh
+chali lib build math.chl --module example::math --package-version 1.0.0 --out modules/example/math.chlib
+chali lib inspect modules/example/math.chlib
+```
+
+输出目录须已存在，入口实际模块必须与 `--module` 一致。包内保存公开接口和当前目标对象，不保存实现源码或独立运行时副本；最终应用提供同一套运行时。公开符号由模块、签名及 ABI 身份计算，内部函数不向消费者公开。`--target`／`--cpu` 选择实现目标，跨目标生成仍须按实际目标验证。
+
+当前构建范围是普通函数的 void／bool／char、各宽度有符号和无符号整数、float32／float64 签名，函数体支持标量运算、局部变量、控制流、当前单元内直接调用及递归。C ABI 入口直接由 LLVM 生成位宽和浮点转换。首批构建明确拒绝具名聚合类型、泛型定义、拥有值、全局状态、方法、默认／变参、unsafe 导出、宿主及地址操作，以及独立调试／构建期步数预算，不会忽略这些声明或把它们改为标量。模板、初始化与更广的语言内部 ABI 继续在后续阶段接入。
+
+此类包声明 `scalar-unit-v1` 必需能力，缺少该能力的编译器会在加载前拒绝。普通导入既可消费这种语言生成对象，也可消费前节手工声明的 C ABI 归档；两者的接口均不包含运行期函数体。
+
 ## 普通导入
 
 将上例的包放在 `modules/example/math.chlib`，消费者写：

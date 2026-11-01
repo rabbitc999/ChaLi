@@ -96,7 +96,7 @@ async function main() {
     for (const subscription of context.subscriptions) subscription.dispose();
     if (server.listening) await new Promise((resolve) => server.close(resolve));
     assert.ok(path.resolve(directory).startsWith(temporaryRoot + path.sep), '临时清理路径必须位于本测试的根目录内');
-    fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    await fs.promises.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 }
 

@@ -327,6 +327,9 @@ public:
     }
 
     bool preprocessError() const { return preprocessError_; }
+    /** @brief 取得入口单元实际声明的模块身份。
+     * @return 无显式声明时为 program。 */
+    const Memory::String &rootModule() const { return rootModule_; }
 
     /**
      * @brief 源文件 → 模块名（`$module` 的取值来源）。
@@ -568,6 +571,7 @@ private:
             error = "import " + expected + " 找到的文件声明的是 module " + info.name;
             return false;
         }
+        if (root) rootModule_ = info.name;
         const Memory::String key = info.hasModule ? info.name : Memory::String("__root");
         if (visiting_.count(key) != 0u)
         {
@@ -653,6 +657,7 @@ private:
     chali_library::ImportSession *libraries_ = nullptr;
     Memory::Map<Memory::String, const chali_library::Package *> libraryUnits_;
     Memory::Map<Memory::String, bool> modulePackageKinds_;
+    Memory::String rootModule_;
     preprocess::Options options_;
     Memory::Vector<Memory::String> includeDirs_;
     Memory::Set<Memory::String> visiting_;

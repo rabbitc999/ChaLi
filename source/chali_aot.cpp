@@ -2217,6 +2217,7 @@ struct Builder
 };
 
 #include "chali_aot_ast.hpp"
+#include "chali_aot_library.hpp"
 
 /**
  * @brief 前端提供的 ABI 声明读取回调。
@@ -2409,6 +2410,8 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         if (external.abiConvention != "C") state.fail("AOT：外部调用约定不受支持");
     if (request.syntax) prepareAst(request, state);
     else { loadLayout(state); analyze(state); }
+    if (diagnostics != nullptr && !diagnostics->empty()) return {};
+    if (!request.options.libraryModule.empty()) return generateLibraryLLVM(request, state);
     for (const auto &name : request.options.exports)
         if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
@@ -2470,6 +2473,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "@chali_return_float = internal thread_local global i8 0\n";
     out += "@chali_source_function = internal thread_local global ptr null\n@chali_source_file = internal thread_local global ptr null\n@chali_source_line = internal thread_local global i64 0\n";
     out += "define void @chali_location(ptr %file, ptr %line, ptr %function) {\nentry:\n  %f = load ptr, ptr @chali_source_file\n  %l = load i64, ptr @chali_source_line\n  %n = load ptr, ptr @chali_source_function\n  store ptr %n, ptr %function\n  store ptr %f, ptr %file\n  store i64 %l, ptr %line\n  ret void\n}\n";
+    out += "define void @chali_set_location(ptr %file, i64 %line, ptr %function) {\nentry:\n  store ptr %file, ptr @chali_source_file\n  store i64 %line, ptr @chali_source_line\n  store ptr %function, ptr @chali_source_function\n  ret void\n}\n";
     out += "define i8 @chali_result_float() {\nentry:\n  %flag = load i8, ptr @chali_return_float\n  ret i8 %flag\n}\n";
     out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
     out += "declare void @chali_host_poll()\n";

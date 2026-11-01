@@ -380,6 +380,7 @@ void prepareAst(Request &request, Translator &state)
         }
         else if (target.exported)
             target.llvmName = "f_" + sanitize(target.label.rfind("program::", 0u) == 0u ? target.label.substr(9u) : target.label);
+        if (!request.options.libraryModule.empty()) target.llvmName = "f_" + state.identifier(target.label, "libfn");
         state.astFunctions[textOf(target.label)] = &function;
         state.astTypes[target.label] = function.result;
         state.astTypes[function.name] = function.result;
@@ -409,7 +410,8 @@ void prepareAst(Request &request, Translator &state)
         state.functions.push_back(std::move(target));
     }
     if (!request.options.shared && !state.functionByLabel.count("main")) state.fail("AOT：找不到入口 main");
-    std::vector<std::string> pending{ "main", "__chali_library_init", "__chali_library_finish" };
+    std::vector<std::string> pending;
+    if (request.options.libraryModule.empty()) pending = { "main", "__chali_library_init", "__chali_library_finish" };
     for (const auto &name : request.options.exports) pending.push_back(textOf(name));
     for (const auto &entry : request.abiExports) pending.push_back(textOf(entry.label));
     while (!pending.empty())
@@ -624,9 +626,14 @@ struct AstBuilder : Builder
                 debugLines[index] = { textOf(source->sourceFile), source->sourceLine };
             }
             const auto file = state.sourceFiles.emplace(textOf(source->sourceFile), state.sourceFiles.size()).first;
-            body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
-            body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
-            body += "  store i64 " + std::to_string(source->sourceLine) + ", ptr @chali_source_line\n";
+            if (!state.request.options.libraryModule.empty())
+                body += "  call void @chali_set_location(ptr @source_file" + std::to_string(file->second) + ", i64 " + std::to_string(source->sourceLine) + ", ptr @" + textOf(function.llvmName) + ")\n";
+            else
+            {
+                body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
+                body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
+                body += "  store i64 " + std::to_string(source->sourceLine) + ", ptr @chali_source_line\n";
+            }
         }
         if (state.stepChecks && (source || controlPoint)) call("chali_host_tick", "void", { { "i64", "1" } });
     }

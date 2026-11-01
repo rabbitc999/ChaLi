@@ -12,6 +12,7 @@
 namespace chali_aot
 {
 struct Options;
+struct Request;
 }
 
 namespace chali_library
@@ -138,11 +139,24 @@ public:
     /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
      * @return 本次成功加载的规范包路径。 */
     std::vector<std::filesystem::path> paths() const;
+    /** @brief 导出当前快照的精确依赖记录，不重新打开包。
+     * @return 完整模块、版本及内容摘要。 */
+    std::vector<Dependency> records() const;
 
 private:
     struct State;
     std::unique_ptr<State> state_;
 };
+/** @brief 从已检查函数生成不含运行时副本的标量原生库。
+ * @param request 完整检查结果和公开原生签名。
+ * @param module 完整模块身份。
+ * @param version 精确包版本。
+ * @param interface 不含实现的公开接口。
+ * @param dependencies 已验证的实际依赖。
+ * @param output 最终包路径。
+ * @return 成功为零，失败为一并输出诊断。 */
+int buildNative(const chali_aot::Request &request, const std::string &module, const std::string &version,
+                const std::string &interface, const std::vector<Dependency> &dependencies, const std::filesystem::path &output);
 /** @brief 按模块排序并生成独立库锁，不保存宿主路径。
  * @param modules 精确版本及整个包摘要。
  * @return 格式一的规范 JSON。 */

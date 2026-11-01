@@ -1454,11 +1454,14 @@ bool RegisterTop()
     {
         MFunctionDecl &declaration = g_functionDecls[index];
         std::size_t sameName = 0;
+        bool linkedOverloads = chali_aot::isDirectLinkLibrary(declaration.abiLibrary);
         for (const MFunctionDecl &other : g_functionDecls)
         {
-            if (other.source == declaration.source && other.module == declaration.module) ++sameName;
+            if (other.source != declaration.source || other.module != declaration.module) continue;
+            ++sameName;
+            linkedOverloads = linkedOverloads && other.external && chali_aot::isDirectLinkLibrary(other.abiLibrary);
         }
-        if (declaration.external && sameName > 1u)
+        if (declaration.external && sameName > 1u && !linkedOverloads)
             return Fail("宿主函数不能重载或与 CHALI 函数同名（胶水层按名称绑定）：" + declaration.source);
         /* main 只保留 void 这一种：程序不再靠 main 的返回值带退出码，
          * 要带就用 `std::process::exit`。以前允许 int64，现在直接报错。 */

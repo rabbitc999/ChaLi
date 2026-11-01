@@ -48,6 +48,9 @@ def main():
         invoke([compiler,'lib','lock',package,'--out',lock],work)
         assert lock.read_bytes()==locked
         invoke([compiler,'check',consumer,'--library-lock',lock],work)
+        dependencies=invoke([compiler,'--deps',consumer,'--library-lock',lock],work).stdout.replace('\\','/')
+        assert str(lock.resolve()).replace('\\','/') in dependencies,dependencies
+
         object_prefix=work/'separate'
         invoke([compiler,'aot',consumer,'--emit-obj','--library-lock',lock,'--out',object_prefix],work)
         linked=work/('standalone.exe' if os.name=='nt' else 'standalone')
