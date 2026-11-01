@@ -97,6 +97,7 @@ function main() {
   if (!SKIP_TESTS) {
     run(process.execPath, [path.join('test', 'debugConfiguration.js')]);
     run(process.execPath, [path.join('test', 'debugIntegration.js')]);
+    run(process.execPath, [path.join('test', 'debugMetadata.js')]);
     run(process.execPath, [path.join('test', 'debugProtocol.js')]);
     run(process.execPath, [path.join('test', 'smoke.js')]);
     run(process.execPath, [path.join('test', 'dependencies.js')]);

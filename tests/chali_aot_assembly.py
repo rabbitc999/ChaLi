@@ -98,6 +98,14 @@ def main():
             command([clang, '--target='+triple, '-c', prefix.with_suffix('.s'), '-o', obj], work)
             raw = obj.read_bytes()
             assert raw[:4] == b'\x7fELF' and struct.unpack_from('<H', raw, 18)[0] == machine
+            debug_prefix = work / (name + '-debug')
+            command([compiler, 'aot', source, '--emit-asm', '--debug', '--checked', '--target', triple, '--out', debug_prefix, *backend], work)
+            debug_assembly = debug_prefix.with_suffix('.s').read_text(encoding='utf-8')
+            assert '.debug_info' in debug_assembly and 'chali_debug_catalog' in debug_assembly and 'chali_debug_positions' in debug_assembly
+            debug_object = debug_prefix.with_suffix('.o')
+            command([clang, '--target='+triple, '-c', debug_prefix.with_suffix('.s'), '-o', debug_object], work)
+            debug_bytes = debug_object.read_bytes()
+            assert debug_bytes[:4] == b'\x7fELF' and struct.unpack_from('<H', debug_bytes, 18)[0] == machine
         for left, right in itertools.combinations(['--emit-asm','--emit-obj','--emit-llvm'], 2):
             result = command([compiler,'aot',source,left,right,'--out',work/'invalid'],work,expected=2)
             assert '只能选择一种' in result.stderr
@@ -116,7 +124,7 @@ def main():
         command([compiler,'aot',source,'--emit-obj','--out',work/'override',*backend],work)
         assert (work/'override.o').is_file() and not (work/'override.s').exists()
         assert command([compiler,'run',source,'--out',work/'run',*backend],work).stdout == 'assembly 48\n'
-    print('assembly: checked/unchecked/debug native roundtrips, two ELF targets, exclusive flags, TOML override, ABI sidecar without a C++ compiler and run default passed')
+    print('assembly: checked/unchecked/debug native roundtrips, two ELF targets including debug source maps, exclusive flags, TOML override, ABI sidecar without a C++ compiler and run default passed')
 
 
 if __name__ == '__main__':

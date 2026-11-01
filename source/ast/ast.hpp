@@ -48,6 +48,16 @@ struct Type;
 using TypePtr = std::shared_ptr<Type>;
 
 /**
+ * @brief 已检查声明的源码位置与用户类型名，只供原生调试描述使用。
+ */
+struct DeclarationSource
+{
+    Memory::String file, typeName, storage;
+    std::size_t line = 0, column = 0;
+    bool readOnly = false;
+};
+
+/**
  * @brief 类型。
  *
  * 常见类型直接 `Type::i32()` 这样构造；复合类型用 `array()` / `ref()` / `structOf()` /
@@ -172,6 +182,9 @@ struct Node
     std::size_t sourceLine = 0;            ///< 原始源码行号，零为未知。
     std::size_t sourceColumn = 0;          ///< 原始源码一基列号，零为未知。
     bool lexicalScope = false;            ///< 用户词法作用域；合成清理块不引入名字作用域。
+    Memory::String debugTypeName;         ///< 检查后的用户类型拼写，不改变槽位布局。
+    Memory::String debugStorage;          ///< 取引用后真实绑定的逻辑存储；原槽仅作调试镜像。
+    bool debugReadOnly = false;           ///< 原声明只读性，不参与已有语义检查。
     Kind kind = Kind::IntLit;              ///< 种类。
     Memory::String text;                   ///< 名字 / 运算符 / 类型名 / 字符串内容。
     Memory::String typeName;               ///< 构造类节点（结构体 / 枚举）的类型名。
@@ -423,6 +436,9 @@ struct Function
     TypePtr result = Type::i32();                                   ///< 返回类型。
     NodePtr body;                                                   ///< 函数体（`Block`）。
     Memory::Vector<TypePtr> genericParams;                          ///< 简单泛型参数（不做特化）。
+    Memory::String debugName = {};                                  ///< 用户可读的完整函数实例名。
+    DeclarationSource declaration = {};                             ///< 函数声明位置。
+    Memory::Map<Memory::String, DeclarationSource> parameterSources = {}; ///< 参数原声明与类型，键为实际绑定名。
 
     /**
      * 四元式里的标签：方法是 `Type.name`，普通函数就是 `name`。

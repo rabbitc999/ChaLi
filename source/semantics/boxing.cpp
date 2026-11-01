@@ -4433,6 +4433,53 @@ public:
 };
 
 /**
+ * @brief 将声明或宏调用的真实来源保存为调试位置，不改变诊断与类型规则。
+ * @param id 原语法节点，负值表示合成声明。
+ * @return 源位置；合成声明返回空位置。
+ */
+ast::DeclarationSource DebugDeclarationSource(int id)
+{
+    ast::DeclarationSource result;
+    if (id < 0) return result;
+    const auto &node = N(id);
+    const auto line = node.expansionLine ? node.expansionLine : node.sourceLine;
+    if (!line) return result;
+    result.file = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
+    result.line = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+    result.column = node.expansionLine ? node.expansionColumn : node.sourceColumn;
+    return result;
+}
+/**
+ * @brief 将实际模板实例标签还原为用户可读函数名，保留模块限定。
+ * @param name 编译器的唯一函数标签。
+ * @param owner 所属类型。
+ * @param module 声明模块。
+ * @return 不改变链接符号的显示名称。
+ */
+Memory::String DebugFunctionName(const Memory::String &name, const Memory::String &owner, const Memory::String &module)
+{
+    const auto base = name.substr(0, name.find('$'));
+    const auto instance = chali_generic::session.made.find(BareTypeName(base));
+    Memory::String result;
+    if (instance != chali_generic::session.made.end())
+    {
+        const auto &definition = *instance->second.generic;
+        result = definition.sourceName.empty() ? definition.name : definition.sourceName;
+        if (!definition.module.empty() && definition.module != "program" && result.find("::") == result.npos) result = definition.module + "::" + result;
+        result += "<";
+        for (std::size_t index = 0; index < instance->second.args.size(); ++index)
+        {
+            if (index) result += ", ";
+            result += instance->second.args[index];
+        }
+        result += ">";
+    }
+    else result = base;
+    if (!owner.empty()) result = EditorTypeText(NamedType(owner), 0) + "." + BareTypeName(result);
+    else if (!module.empty() && module != "program" && result.find("::") == result.npos) result = module + "::" + result;
+    return result;
+}
+/**
  * @brief 创建函数形参副本和作用域，降低函数体并附加确定性清理。
  * @param name 生成函数使用的唯一标签名称。
  * @param owner 成员函数所属类型名称；顶层函数使用空字符串。
@@ -4477,6 +4524,8 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     ClearActiveError();
     ast::Function function;
     function.name = name;
+    function.debugName = DebugFunctionName(name, owner, module);
+    function.declaration = DebugDeclarationSource(g_lifetimePendingFunction >= 0 ? g_lifetimePendingFunction : bodyId);
     // 清理块先于 addMethod 生成，必须提前设置所属类型，避免同名方法的标签冲突。
     function.owner = owner;
     if (!CheckDeclaredType(result, name)) return {}; /* 返回类型也得声明过 */
@@ -4515,6 +4564,10 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         var.bindingIdentity = param.bindingIdentity;
         g_scope.back()[parameterKey] = var;
         function.parameters.emplace_back(param.emitted, LowerType(param.type, param.emitted));
+        auto parameterSource = DebugDeclarationSource(param.declaration);
+        parameterSource.typeName = EditorTypeText(param.type, 0);
+        parameterSource.readOnly = var.isConst;
+        function.parameterSources[param.emitted] = std::move(parameterSource);
         const bool ownedValue = !algorithmBorrow && (IsStandardOpcode(param.type, "String") || IsObjectLike(param.type) || param.type->kind == MType::Array || OpcodeNonCopyable(param.type));
         if (NeedsFunctionReferenceStorage(param.source, param.type))
         {
@@ -4531,6 +4584,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
                 value = CopyRuntimeArrayValue(value, param.type);
             parameterReferences.push_back(ast::Node::storeAt(ast::Node::var(storage), value, LowerType(param.type, storage)));
             g_referenceStorage[param.emitted] = storage;
+            function.parameterSources[param.emitted].storage = storage;
             if (ownedValue) g_parameterReferenceOwners.push_back({ param.emitted, param.type });
             g_scope.back()[parameterKey].emitted = storage;
             g_scope.back()[parameterKey].elementReference = true;

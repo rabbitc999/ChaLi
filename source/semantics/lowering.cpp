@@ -3134,6 +3134,8 @@ ast::NodePtr LowerLocalDecl(int id)
          * 反过来登记时布局还没建，`StructHasOwnedLeaves` 查不到元组里的字符串叶子，
          * `auto t = (1, "x");` 的 t 就不会被回收。 */
         auto declaration = ast::Node::declare(emitted, LowerType(type, emitted));
+        declaration->debugTypeName = EditorTypeText(type, 0);
+        declaration->debugReadOnly = isConst;
         // 警告依据真实用户声明定位；合成宏局部不作为用户未使用变量报告。
         if (decl.macroExpansion < 0 && !decl.nameParameter && decl.sourceLine)
         {
@@ -3142,7 +3144,7 @@ ast::NodePtr LowerLocalDecl(int id)
             declaration->sourceLine = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
             declaration->sourceColumn = decl.sourceColumn;
         }
-        out.push_back(std::move(declaration));
+        out.push_back(declaration);
         MarkDestructor(emitted, type);
         Memory::Set<Memory::String> referenceTypes;
         if (ContainsBorrowedReferences(type, &referenceTypes))
@@ -3229,6 +3231,7 @@ ast::NodePtr LowerLocalDecl(int id)
                 break;
             }
             g_referenceStorage[emitted] = storage;
+            declaration->debugStorage = storage;
             FindNodeVar(decl)->emitted = storage;
             FindNodeVar(decl)->elementReference = true;
         }

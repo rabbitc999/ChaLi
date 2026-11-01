@@ -9,6 +9,7 @@ const { constants: osConstants } = require('node:os');
 const { RequestReader, stopProcessTree, BODY_LIMIT } = require('./debugProtocol');
 const { debugEnvironment, buildDiagnostics } = require('./debugConfiguration');
 const { DebugTerminal } = require('./debugTerminal');
+const { DebugMetadata } = require('./debugMetadata');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -205,6 +206,7 @@ class Adapter {
   }
   /** 暂停状态变化后废弃全部帧及变量句柄。 */
   invalidate() {
+    this.metadata?.cancel();
     this.epoch++;
     this.frames.clear();
     this.handles.clear();
@@ -218,6 +220,7 @@ class Adapter {
     if (this.shutdownPromise) return this.shutdownPromise;
     this.invalidate();
     const gdb = this.gdb;
+    this.metadata?.cancel(); this.metadata = null;
     const compiler = this.compilerProcess;
     const terminal = this.terminal;
     this.terminal = null;
@@ -315,6 +318,7 @@ class Adapter {
     this.state = 'starting';
     this.gdb = new Gdb(config.debuggerPath || process.env.CHALI_GDB || 'gdb', cwd, env);
     const gdb = this.gdb;
+    this.metadata = new DebugMetadata((text, options) => gdb.command(text, options), output => this.event('output', { category: 'console', output }));
     this.gdb.on('output', (output, category) => this.event('output', { output, category }));
     this.gdb.on('exit', () => { if (this.gdb === gdb) this.end(); });
     this.gdb.on('fault', (error) => { if (this.gdb === gdb) { this.event('output', { category: 'stderr', output: error.message + '\n' }); this.end(); } });
@@ -434,6 +438,8 @@ class Adapter {
           break;
         }
         case 'stackTrace': {
+          await this.metadata?.load(signal);
+          this.stopped(epoch);
           const thread = args.threadId === undefined ? 1 : args.threadId;
           const start = args.startFrame === undefined ? 0 : args.startFrame;
           const levels = args.levels === undefined || args.levels === 0 ? 50 : args.levels;
@@ -443,8 +449,9 @@ class Adapter {
           body.stackFrames = (data.stack || []).map((entry) => {
             const frame = entry.frame || entry;
             const id = this.nextHandle++;
-            this.frames.set(id, { thread, level: Number(frame.level) });
-            return { id, name: frame.func || '<native>', line: Number(frame.line) || 1, column: 1,
+            const sourceInfo = this.metadata?.frame(frame);
+            this.frames.set(id, { thread, level: Number(frame.level), native: frame, metadata: sourceInfo });
+            return { id, name: sourceInfo?.name || frame.func || '<native>', line: Number(frame.line) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
               source: frame.fullname || frame.file ? { path: frame.fullname || frame.file, name: path.basename(frame.fullname || frame.file) } : undefined,
               instructionPointerReference: frame.addr };
           });

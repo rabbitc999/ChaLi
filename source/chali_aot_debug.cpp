@@ -33,6 +33,46 @@ std::string metadataString(const std::string &text)
         }
     return result + "\"";
 }
+/**
+ * @brief 将 UTF-8 字符串写为严格 JSON 字符串，不生成或执行目标程序。
+ * @param text 原始文本。
+ * @return 带引号的 JSON 字符串。
+ */
+std::string debugJsonString(const std::string &text)
+{
+    std::string result = "\"";
+    for (const unsigned char byte : text)
+    {
+        if (byte == '"' || byte == '\\')
+        {
+            result += '\\';
+            result += static_cast<char>(byte);
+        }
+        else if (byte < 32)
+        {
+            char escaped[7];
+            std::snprintf(escaped, sizeof escaped, "\\u%04x", static_cast<unsigned>(byte));
+            result += escaped;
+        }
+        else
+            result += static_cast<char>(byte);
+    }
+    return result + "\"";
+}
+/**
+ * @brief 固定真实源文件的构建期绝对路径，虚拟和不可访问来源保留原身份。
+ * @param value 编译器记录的 UTF-8 来源。
+ * @return 不依赖调试启动目录的文件名。
+ */
+std::string debugSourcePath(const std::string &value)
+{
+    if (value.empty() || value.front() == '<' || value.find("://") != value.npos) return value;
+    std::error_code error;
+    const auto source = std::filesystem::u8path(value);
+    if (!std::filesystem::is_regular_file(source, error)) return value;
+    const auto absolute = std::filesystem::absolute(source, error);
+    return error ? value : absolute.lexically_normal().u8string();
+}
 }  // namespace
 /**
  * @brief 追加独立的元数据节点。
@@ -54,7 +94,7 @@ std::size_t NativeDebugInfo::file(const std::string &path)
 {
     const auto found = files_.find(path);
     if (found != files_.end()) return found->second;
-    auto source = std::filesystem::u8path(path.empty() ? "<generated>" : path);
+    auto source = std::filesystem::u8path(path.empty() ? "<generated>" : debugSourcePath(path));
     const auto id = node("!DIFile(filename: " + metadataString(source.filename().u8string()) + ", directory: " + metadataString(source.parent_path().u8string()) + ")");
     files_.emplace(path, id);
     return id;
@@ -94,6 +134,14 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
             origin = entry.second;
             break;
         }
+    if (const auto declaration = scopes.find(0); declaration != scopes.end() && declaration->second.origin.line) origin = declaration->second.origin;
+    if (!scopes.empty())
+    {
+        const auto function = functions_.size();
+        functions_.push_back({ name, linkage, origin, variables, scopes });
+        for (const auto &entry : lines)
+            if (entry.second.line && !entry.second.file.empty()) positions_.push_back({ function, entry.first, entry.second });
+    }
     const auto source = file(origin.file);
     if (!unit_)
     {
@@ -200,6 +248,57 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
 void NativeDebugInfo::finish(std::string &module)
 {
     if (!unit_) return;
+    std::string catalog = "{\"version\":1,\"pointerBytes\":8,\"byteOrder\":\"little\",\"functions\":[";
+    for (std::size_t index = 0; index < functions_.size(); ++index)
+    {
+        const auto &function = functions_[index];
+        if (index) catalog += ",";
+        catalog += "{\"name\":" + debugJsonString(function.name) + ",\"linkage\":" + debugJsonString(function.linkage)
+                   + ",\"file\":" + debugJsonString(debugSourcePath(function.origin.file)) + ",\"line\":" + std::to_string(function.origin.line)
+                   + ",\"column\":" + std::to_string(function.origin.column) + ",\"scopes\":[";
+        bool comma = false;
+        for (const auto &entry : function.scopes)
+        {
+            if (comma) catalog += ",";
+            comma = true;
+            catalog += "{\"id\":" + std::to_string(entry.first) + ",\"parent\":" + std::to_string(entry.second.parent) + "}";
+        }
+        catalog += "],\"variables\":[";
+        comma = false;
+        for (const auto &variable : function.variables)
+        {
+            if (variable.name.empty() || variable.name.rfind("__", 0) == 0) continue;
+            if (comma) catalog += ",";
+            comma = true;
+            catalog += "{\"name\":" + debugJsonString(variable.name.substr(0, variable.name.find('$')))
+                       + ",\"binding\":" + debugJsonString(variable.name) + ",\"type\":" + debugJsonString(variable.typeName)
+                       + ",\"scope\":" + std::to_string(variable.scope) + ",\"file\":" + debugJsonString(debugSourcePath(variable.file))
+                       + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
+                       + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
+                       + ",\"readOnly\":" + (variable.readOnly ? "true" : "false") + "}";
+        }
+        catalog += "]}";
+    }
+    catalog += "],\"positions\":[";
+    std::string addresses;
+    for (std::size_t index = 0; index < positions_.size(); ++index)
+    {
+        const auto &entry = positions_[index];
+        if (index)
+        {
+            catalog += ",";
+            addresses += ", ";
+        }
+        catalog += "{\"function\":" + std::to_string(entry.function) + ",\"file\":" + debugJsonString(debugSourcePath(entry.position.file))
+                   + ",\"line\":" + std::to_string(entry.position.line) + ",\"column\":" + std::to_string(entry.position.column)
+                   + ",\"scope\":" + std::to_string(entry.position.scope) + "}";
+        addresses += "ptr blockaddress(@" + functions_[entry.function].linkage + ", %q" + std::to_string(entry.block) + ")";
+    }
+    catalog += "]}";
+    module += "@chali_debug_catalog = constant [" + std::to_string(catalog.size() + 1) + " x i8] c" + metadataString(catalog + '\0') + "\n";
+    module += "@chali_debug_catalog_size = constant i64 " + std::to_string(catalog.size()) + "\n";
+    module += "@chali_debug_positions = constant [" + std::to_string(positions_.size()) + " x ptr] " + (positions_.empty() ? "zeroinitializer" : "[" + addresses + "]") + "\n";
+    module += "@llvm.used = appending global [3 x ptr] [ptr @chali_debug_catalog, ptr @chali_debug_catalog_size, ptr @chali_debug_positions], section \"llvm.metadata\"\n";
     std::string flags;
     if (module.find("!\"Debug Info Version\"") == std::string::npos)
         flags = "!" + std::to_string(node("!{i32 2, !\"Debug Info Version\", i32 3}"));

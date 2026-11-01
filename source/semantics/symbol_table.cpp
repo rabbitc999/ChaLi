@@ -35,6 +35,7 @@ struct MParam
     int captureMode = 0;                ///< lambda 捕获：0 只读引用，1 可写引用，2 独立可写副本，3 移入的拥有值。
     Memory::String bindingKey{};        ///< 宏引入形参在词法作用域中的卫生绑定键。
     std::uint32_t bindingIdentity = 0;  ///< 形参原声明的稳定身份。
+    int declaration = -1;              ///< 参数原语法节点；合成参数可不带来源。
 };
 
 /**

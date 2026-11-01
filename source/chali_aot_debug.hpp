@@ -23,6 +23,8 @@ struct DebugVariable
     std::size_t scope = 0, line = 0, column = 0;
     std::size_t block = 0;  ///< 声明生效的原生基本块，零表示函数序言。
     std::string file = {};
+    bool readOnly = false;
+    std::string storage = {};  ///< 非空表示原始槽只提供源码停点镜像，写入必须定位真实绑定。
 };
 /**
  * @brief AST 或兼容四元式节点的原始源码位置及词法范围。
@@ -46,6 +48,22 @@ struct DebugScope
  */
 class NativeDebugInfo
 {
+    /** @brief 单个函数的源码名、参数和局部声明，仅在调试产物中保存。 */
+    struct FunctionSource
+    {
+        std::string name, linkage;
+        DebugLine origin;
+        std::vector<DebugVariable> variables;
+        std::map<std::size_t, DebugScope> scopes;
+    };
+    /** @brief 原生基本块地址与源码位置之间的只读对应。 */
+    struct PositionSource
+    {
+        std::size_t function = 0, block = 0;
+        DebugLine position;
+    };
+    std::vector<FunctionSource> functions_;
+    std::vector<PositionSource> positions_;
     std::size_t next_ = 1000000, unit_ = 0, empty_ = 0, integer_ = 0, real_ = 0;
     std::string metadata_;
     std::map<std::string, std::size_t> files_;

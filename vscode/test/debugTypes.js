@@ -53,6 +53,7 @@ async function main() {
   const ir = fs.readFileSync(irPrefix + '.ll', 'utf8');
   assert.match(ir, /DILexicalBlock\(/); assert.match(ir, /DILocation\(line: 14, column: [1-9][0-9]*/);
   assert.match(ir, /DILocalVariable\(name: "visible"[^\n]*line: 14/);
+  assert.match(ir, /DILocalVariable\(name: "number", arg: 1[^\n]*line: 1/);
   for (const name of ['int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64', 'float32', 'float64', 'bool', 'char']) {
     assert(ir.includes('DIBasicType(name: "' + name + '"'), name);
   }
@@ -66,6 +67,7 @@ async function main() {
     await client.request('configurationDone');
     let stop = await client.event('stopped'), data = await view(client, stop);
     assert.equal(data.top.line, 12);
+    assert.equal(data.top.name, 'main'); assert(data.top.column > 1, JSON.stringify(data.top));
     const expected = { signed8: '-7', unsigned8: '255', signed16: '-300', unsigned16: '65000', signed32: '-70000', unsigned32: '4000000000', signed64: '-9000000000', unsigned64: '18446744073709551615', single: '1.5', real: '2.25', truth: 'true', falsehood: 'false', visible: '11' };
     for (const [name, value] of Object.entries(expected)) assert.equal(data.values[name]?.value, value, JSON.stringify({ name, data }));
     assert.match(data.values.letter.value, /65.*A/); assert.equal(data.values.letter.type, 'char');

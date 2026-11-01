@@ -522,6 +522,15 @@ struct AstBuilder : Builder
     std::map<std::size_t, DebugScope> debugScopes;
     std::map<Text, DebugVariable> debugDeclarations;
     std::size_t debugScope = 0;
+    /** @brief 真实绑定的逻辑存储及其源码有效区间，镜像只在调试路径刷新。 */
+    struct DebugBox
+    {
+        Memory::String storage;
+        ast::TypePtr valueType;
+        std::size_t scope = 0;
+    };
+    std::map<Text, DebugBox> debugBoxes;
+    bool refreshingDebugBindings = false;
     std::size_t debugBlocks = 1;
     std::size_t profileIndex = 0;  ///< 当前函数中计数位置的稳定遍历编号。
     ast::NodePtr lastLocation;     ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
@@ -583,6 +592,34 @@ struct AstBuilder : Builder
     }
 
     /**
+     * @brief 在源码停点之前从真实绑定刷新帧镜像，不执行用户方法或创建语言对象。
+     * @return 无；发布构建不调用此路径。
+     */
+    void refreshDebugBindings()
+    {
+        if (refreshingDebugBindings || terminated || debugBoxes.empty()) return;
+        refreshingDebugBindings = true;
+        for (const auto &entry : debugBoxes)
+        {
+            auto scope = debugScope;
+            while (scope && scope != entry.second.scope) scope = debugScopes.at(scope).parent;
+            if (scope != entry.second.scope) continue;
+            const auto address = convert(read(symbol(entry.second.storage)), "i64");
+            const auto test = instruction("i1", "icmp ne i64 " + address.text + ", 0");
+            const auto valid = blockName(), done = blockName();
+            body += "  br i1 " + test.text + ", label %" + valid + ", label %" + done + "\n";
+            terminated = true;
+            enter(valid);
+            const auto value = expression(ast::Node::loadFrom(ast::Node::var(entry.second.storage), entry.second.valueType));
+            write(symbol(Memory::String(entry.first.c_str())), value);
+            body += "  br label %" + done + "\n";
+            terminated = true;
+            enter(done);
+        }
+        refreshingDebugBindings = false;
+    }
+
+    /**
      * @brief 在已经求值的 AST 操作旁记录计数，不重新计算用户实参。
      * @param event 操作类别。
      * @param node 当前操作节点。
@@ -634,6 +671,13 @@ struct AstBuilder : Builder
             for (const auto &child : node->kids) visit(child);
         };
         visit(syntax.body);
+        if (state.request.options.debug)
+            for (const auto &parameter : syntax.parameters)
+            {
+                const auto origin = syntax.parameterSources.find(parameter.first);
+                if (origin != syntax.parameterSources.end() && !origin->second.storage.empty())
+                    debugBoxes.emplace(textOf(parameter.first), DebugBox{ origin->second.storage, parameter.second, 0u });
+            }
         const bool inlineBody = !function.exported && !state.addressedFunctions.count(textOf(function.label)) &&
                                 state.astInlineFunctions.count(textOf(function.label));
         snapshotData = state.request.options.libraryModule.empty() && state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics && state.referencePrimitives && !state.stepChecks && !state.request.options.debug && !inlineBody && loop && memoryAccess && stable;
@@ -695,6 +739,7 @@ struct AstBuilder : Builder
             lastLocation = source;
             if (state.request.options.debug)
             {
+                if (!refreshingDebugBindings) refreshDebugBindings();
                 const auto index = debugBlocks++;
                 enter("q" + std::to_string(index));
                 debugLines[index] = { textOf(source->sourceFile), source->sourceLine, source->sourceColumn, debugScope };
@@ -1038,6 +1083,10 @@ struct AstBuilder : Builder
             if (position) location(position);
             descriptor.block = debugBlocks - 1u;
             debugType(descriptor, node->declared);
+            if (!node->debugTypeName.empty()) descriptor.typeName = textOf(node->debugTypeName);
+            descriptor.readOnly = node->debugReadOnly;
+            descriptor.storage = textOf(node->debugStorage);
+            if (!node->debugStorage.empty()) debugBoxes[textOf(node->text)] = { node->debugStorage, node->declared, debugScope };
             debugDeclarations[textOf(node->text)] = std::move(descriptor);
         }
         if (node->kind != N::Declare || !state.request.options.debug) location(node);
@@ -1161,6 +1210,8 @@ struct AstBuilder : Builder
      */
     Text generateAst()
     {
+        if (state.request.options.debug && syntax.declaration.line)
+            debugScopes.emplace(0u, DebugScope{ 0u, { textOf(syntax.declaration.file), syntax.declaration.line, syntax.declaration.column, 0u } });
         Text signature = "define ";
         const bool typedExport = std::any_of(state.request.abiExports.begin(), state.request.abiExports.end(), [&](const auto &entry) { return entry.label == function.label; });
         if (state.target.windows && function.exported && !typedExport) signature += "dllexport ";
@@ -1216,8 +1267,21 @@ struct AstBuilder : Builder
             variable.pointer = pointer(entry.second);
             variable.floating = type(entry.second) == "double";
             variable.argument = parameter == function.parameters.end() ? 0u : static_cast<std::size_t>(parameter - function.parameters.begin() + 1u);
+            if (variable.argument)
+            {
+                const auto origin = syntax.parameterSources.find(entry.first);
+                if (origin != syntax.parameterSources.end())
+                {
+                    variable.file = textOf(origin->second.file);
+                    variable.line = origin->second.line;
+                    variable.column = origin->second.column;
+                    variable.readOnly = origin->second.readOnly;
+                    variable.storage = textOf(origin->second.storage);
+                    if (!origin->second.typeName.empty()) variable.typeName = textOf(origin->second.typeName);
+                }
+            }
             variables.push_back(std::move(variable));
         }
-        return state.debugInfo.annotate(definition, textOf(function.label), textOf(function.llvmName), debugLines, variables, debugScopes);
+        return state.debugInfo.annotate(definition, textOf(syntax.debugName.empty() ? function.label : syntax.debugName), textOf(function.llvmName), debugLines, variables, debugScopes);
     }
 };

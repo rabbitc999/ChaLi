@@ -798,6 +798,7 @@ bool RegisterTop()
                 method.bodyParams.push_back(MParam{ param.s, Memory::String(), T(param.type), false });
                 method.bodyParams.back().bindingKey = NodeBindingKey(param);
                 method.bodyParams.back().bindingIdentity = param.bindingIdentity;
+                method.bodyParams.back().declaration = paramId;
             }
             /* **去重**：同名同签名只算一条要求；同名**不同签名**是真冲突，直接报。 */
             bool duplicate = false;
@@ -894,6 +895,7 @@ bool RegisterTop()
                                                 N(paramId).i != 0, N(paramId).kids.empty() ? -1 : N(paramId).kids[0] });
                 method.params.back().bindingKey = NodeBindingKey(N(paramId));
                 method.params.back().bindingIdentity = N(paramId).bindingIdentity;
+                method.params.back().declaration = paramId;
             }
             if (!ValidateVariadicParameters(method.params,
                                             "enum 方法 " + top.s + "." + member.s))
@@ -991,6 +993,7 @@ bool RegisterTop()
                                     N(paramId).i != 0, N(paramId).kids.empty() ? -1 : N(paramId).kids[0] });
                         method.params.back().bindingKey = NodeBindingKey(N(paramId));
                         method.params.back().bindingIdentity = N(paramId).bindingIdentity;
+                        method.params.back().declaration = paramId;
                     }
                     if (!ValidateVariadicParameters(method.params,
                                                     "方法 " + top.s + "." + member.s))
@@ -1327,6 +1330,7 @@ bool RegisterTop()
                         N(paramId).i != 0, N(paramId).kids.empty() ? -1 : N(paramId).kids[0] });
             declaration.signature.params.back().bindingKey = NodeBindingKey(N(paramId));
             declaration.signature.params.back().bindingIdentity = N(paramId).bindingIdentity;
+            declaration.signature.params.back().declaration = paramId;
         }
         if (!ValidateVariadicParameters(declaration.signature.params,
                                         "函数 " + declaration.source))

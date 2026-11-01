@@ -65,6 +65,14 @@ Conditional/log breakpoints, language-container views and runtime-error filters 
 python tools/run_module_gates.py debug --chali PATH --random-recheck 1
 ```
 
+## Source maps carried by the artifact
+
+Debug artifacts contain a versioned read-only catalog and a basic-block address table with function instance names, parameter declarations, lexical ranges and source positions. The adapter selects positions using the actual machine PC. Existing artifacts need no temporary source-side map files. Generic names retain complete arguments, such as `identity<int64>` and `Holder<int64>`, while link symbols retain their existing convention.
+
+Loading uses internal symbol and memory queries without calling target functions. The catalog budget is 4 MiB with at most 65,536 positions; each memory request reads at most 64 KiB. Version, pointer width, byte order, contiguous addresses and references are validated. Continuing cancels unfinished reads. Queries share loading, while cancellation of one waiter does not cancel other waiters. Missing or damaged catalogs report the reason and fall back to DWARF; fallback columns are not precise positions.
+
+Address-taken locals and value parameters may use separate logical storage. Debug builds refresh their frame display values through existing memory primitives before source stops, preserving the view after assignment, mutable macro borrowing and pool growth. Refreshing creates no language objects and calls no user methods. Release builds contain no refresh instructions. Owning values, containers and arbitrary native interrupt locations still require their actual logical layout; frame handles are not machine pointers.
+
 ## Command line
 
 ```text
