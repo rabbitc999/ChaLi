@@ -1347,6 +1347,7 @@ try
             item.message = MacroDiagnosticDisplay(item.message, macroBacktraceFull);
             const auto original = item.line && item.line <= processed.lineMap.size() ? processed.lineMap[item.line - 1] : preprocess::LineOrigin{ sourceLabel, item.line };
             diagnostics.push_back({ item.message, original.file, original.line, item.column ? item.column : 1u });
+            diagnostics.back().bindSource(originalBody(original.file));
             if (!jsonDiagnostics)
             {
                 /* `<内建 lang>` 这类合成文件是编译器自己拼出来的源码（前处理的行映射会翻
@@ -1383,6 +1384,7 @@ try
             const auto column = M_LastErrorColumn();
             const auto original = line && line <= processed.lineMap.size() ? processed.lineMap[line - 1] : preprocess::LineOrigin{ sourceLabel, line };
             diagnostics.push_back({ message, original.file, original.line, column ? column : 1u });
+            diagnostics.back().bindSource(originalBody(original.file));
             if (!jsonDiagnostics)
             {
                 /* 行号为 0 = 这条错误没有可指的源码位置（比如运行期错误：位置得跑起来才知道，

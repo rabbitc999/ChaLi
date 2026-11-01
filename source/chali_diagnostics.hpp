@@ -73,6 +73,25 @@ struct Diagnostic
      */
     Diagnostic(Memory::String text = {}, Memory::String filename = {}, std::size_t row = 1,
                std::size_t col = 1, bool isWarning = false) : message(std::move(text)), file(std::move(filename)), line(row), column(col), warning(isWarning) {}
+    /**
+     * @brief 从本次检查的不可变原文绑定摘录，避免读取较旧的磁盘文件。
+     * @param body 原始源码。
+     * @return 无；保存当前诊断行，不改变位置。
+     */
+    void bindSource(const Memory::String &body)
+    {
+        std::size_t begin = 0;
+        for (std::size_t row = 1; row < line; ++row)
+        {
+            const auto end = body.find('\n', begin);
+            if (end == body.npos) return;
+            begin = end + 1;
+        }
+        const auto end = body.find('\n', begin);
+        sourceText = body.substr(begin, end == body.npos ? body.size() - begin : end - begin);
+        if (!sourceText.empty() && sourceText.back() == '\r') sourceText.pop_back();
+        hasSource = true;
+    }
 };
 /**
  * @brief 将全部诊断写入一个 JSON 文档。

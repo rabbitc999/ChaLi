@@ -133,6 +133,17 @@ class LspCache
     size_t unitBytes_ = 0, diskBytes_ = 0;
     uint64_t unitClock_ = 0, diskClock_ = 0;
     std::string stamp_;
+    struct ReportEntry
+    {
+        std::shared_ptr<const J> value;
+        size_t bytes;
+        uint64_t used;
+    };
+    std::mutex reportMutex_;
+    std::map<std::string, ReportEntry> reports_;
+    std::map<std::string, std::weak_ptr<std::timed_mutex>> reportLocks_;
+    size_t reportBytes_ = 0;
+    uint64_t reportClock_ = 0;
     J record(const Record &r) const
     {
         return object({ { "name", r.name }, { "module", r.module }, { "owner", r.owner }, { "qualified", r.qualified }, { "signature", r.signature }, { "documentation", r.documentation }, { "source", r.source }, { "type", r.type }, { "kind", r.kind }, { "offset", int64_t(r.offset) }, { "parameters", r.parameters } });
@@ -141,6 +152,66 @@ class LspCache
 public:
     fs::path directory;
     std::atomic<uint64_t> scans{ 0 }, hits{ 0 }, restored{ 0 }, checks{ 0 }, diagnosticHits{ 0 }, cancelled{ 0 }, removed{ 0 };
+    std::atomic<uint64_t> memoryReportHits{ 0 }, mergedChecks{ 0 };
+    /**
+     * @brief 合并同一入口的语义检查，等待者可以独立取消。
+     * @param source 入口 URI。
+     * @return 共享互斥量；不持有索引缓存锁。
+     */
+    std::shared_ptr<std::timed_mutex> reportLock(const std::string &source)
+    {
+        std::lock_guard<std::mutex> lock(reportMutex_);
+        for (auto it = reportLocks_.begin(); it != reportLocks_.end();)
+            if (it->second.expired())
+                it = reportLocks_.erase(it);
+            else
+                ++it;
+        auto result = reportLocks_[source].lock();
+        if (!result)
+        {
+            result = std::make_shared<std::timed_mutex>();
+            reportLocks_[source] = result;
+        }
+        return result;
+    }
+    /**
+     * @brief 读取不可变语义报告，调用方仍校验输入、语言和实际依赖。
+     * @param source 入口 URI。
+     * @return 报告记录或空指针。
+     */
+    std::shared_ptr<const J> report(const std::string &source)
+    {
+        std::lock_guard<std::mutex> lock(reportMutex_);
+        const auto found = reports_.find(source);
+        if (found == reports_.end()) return {};
+        found->second.used = ++reportClock_;
+        return found->second.value;
+    }
+    /**
+     * @brief 保存报告；最多 64 个入口、32 MiB，单项超过 8 MiB 不驻留。
+     * @param source 入口 URI。
+     * @param value 包含依赖指纹的完整记录。
+     */
+    void rememberReport(const std::string &source, const J &value)
+    {
+        const auto bytes = value.dump().size();
+        std::lock_guard<std::mutex> lock(reportMutex_);
+        auto previous = reports_.find(source);
+        if (previous != reports_.end())
+        {
+            reportBytes_ -= previous->second.bytes;
+            reports_.erase(previous);
+        }
+        if (bytes > 8ULL * 1024 * 1024) return;
+        reports_[source] = { std::make_shared<const J>(value), bytes, ++reportClock_ };
+        reportBytes_ += bytes;
+        while (reports_.size() > 64 || reportBytes_ > 32ULL * 1024 * 1024)
+        {
+            auto oldest = std::min_element(reports_.begin(), reports_.end(), [](const auto &a, const auto &b) { return a.second.used < b.second.used; });
+            reportBytes_ -= oldest->second.bytes;
+            reports_.erase(oldest);
+        }
+    }
     /**
      * @brief 选择程序目录的 build/lsp，并按编译版本隔离记录。
      * @param compiler 编译器路径。
@@ -243,6 +314,15 @@ public:
      */
     void forget(const std::string &root)
     {
+        {
+            std::lock_guard<std::mutex> lock(reportMutex_);
+            const auto found = reports_.find(root);
+            if (found != reports_.end())
+            {
+                reportBytes_ -= found->second.bytes;
+                reports_.erase(found);
+            }
+        }
         std::lock_guard<std::mutex> lock(mutex_);
         dependencies_.erase(root);
     }
@@ -420,7 +500,7 @@ public:
      */
     J stats()
     {
-        std::scoped_lock lock(mutex_, diskMutex_);
-        return object({ { "scans", int64_t(scans.load()) }, { "indexHits", int64_t(hits.load()) }, { "restored", int64_t(restored.load()) }, { "checks", int64_t(checks.load()) }, { "diagnosticHits", int64_t(diagnosticHits.load()) }, { "cancelled", int64_t(cancelled.load()) }, { "removed", int64_t(removed.load()) }, { "cacheDirectory", directory.u8string() }, { "indexBytes", int64_t(unitBytes_) }, { "sourceBytes", int64_t(diskBytes_) }, { "indexEntries", int64_t(units_.size()) } });
+        std::scoped_lock lock(mutex_, diskMutex_, reportMutex_);
+        return object({ { "memoryReportHits", int64_t(memoryReportHits.load()) }, { "mergedChecks", int64_t(mergedChecks.load()) }, { "reportEntries", int64_t(reports_.size()) }, { "reportBytes", int64_t(reportBytes_) }, { "scans", int64_t(scans.load()) }, { "indexHits", int64_t(hits.load()) }, { "restored", int64_t(restored.load()) }, { "checks", int64_t(checks.load()) }, { "diagnosticHits", int64_t(diagnosticHits.load()) }, { "cancelled", int64_t(cancelled.load()) }, { "removed", int64_t(removed.load()) }, { "cacheDirectory", directory.u8string() }, { "indexBytes", int64_t(unitBytes_) }, { "sourceBytes", int64_t(diskBytes_) }, { "indexEntries", int64_t(units_.size()) } });
     }
 };

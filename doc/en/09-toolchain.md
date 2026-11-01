@@ -141,3 +141,11 @@ CHL2101 = "allow"
 Levels are `allow`, `warn`, and `error`. The editor preset enables naming; project settings override the preset, and explicit CLI rules override project settings in command-line order. A real line comment `// chali: allow-next-line CHL2201` suppresses the next line; `// chali: allow CHL2201` suppresses its own line. Strings and block comments do not act as directives.
 
 CLI JSON and LSP share codes, severity, original locations, and safe fix data. The current fix inserts a local suppression and preserves initialization and cleanup. Errors prevent execution. Ordinary macro parameter copies and compiler copy elimination produce no warning.
+
+## Language-service analysis reuse
+
+Requests retain immutable open-document versions and freeze closed modules read during that request. These module texts are passed to the compiler as source overlays. Lexical indexes serve completion and highlighting directly; diagnostics, type hints, and macro previews share full semantic reports. Concurrent semantic requests for one entry are merged while waiters remain cancellable. Compiler frontend globals are not shared between concurrent analyses.
+
+The memory report cache holds at most 64 entries and 32 MiB; records larger than 8 MiB are not retained. Every hit validates input, language, module graph, actual dependencies, and project/lock-file fingerprints. Valid memory reports remain usable without disk reports. File watching also invalidates entries when a previously missing manifest or lock file is created.
+
+An edit crossing a full semantic check cancels the old request and reschedules diagnostics. Captured versions are checked again before publication. JSON excerpts for unsaved documents come from the checked source. `chali/lspStats` exposes `checks`, `diagnosticHits`, `memoryReportHits`, `mergedChecks`, `reportEntries`, and `reportBytes` to distinguish checks, reuse, and retained memory.

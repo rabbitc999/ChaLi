@@ -3263,7 +3263,9 @@ class Server
     std::mutex stateMutex;
     std::map<std::string, std::shared_ptr<std::atomic<bool>>> requests, diagnostics;
     std::array<std::unique_ptr<LspQueue>, 6> queues;
-    uint64_t revision = 0;
+    std::shared_ptr<std::atomic<uint64_t>> revision = std::make_shared<std::atomic<uint64_t>>(0);
+    uint64_t snapshotRevision = 0;
+    std::map<std::string, std::string> sourceSnapshot;
     std::string analysisGraph;
     std::set<std::string> usedDocuments;
     bool shutdown = false;
@@ -3273,10 +3275,11 @@ class Server
      * @param parent 语言服务器父进程的信息。
      * @param snapshot 用于当前请求的一致性文档快照。
      * @param folders 工作区文件夹列表。
+     * @param version 捕获文档快照时的全局编辑版本。
      */
-    Server(const Server &parent, Documents snapshot, std::vector<fs::path> folders) : compiler(parent.compiler), documents(std::move(snapshot)), roots(std::move(folders)),
-                                                                                      library(parent.library), standard(library->standard), standardImports(library->imports),
-                                                                                      baseTypes(library->types), types(baseTypes), cache(parent.cache), outputMutex(parent.outputMutex) {}
+    Server(const Server &parent, Documents snapshot, std::vector<fs::path> folders, uint64_t version) : compiler(parent.compiler), documents(std::move(snapshot)), roots(std::move(folders)),
+                                                                                                        library(parent.library), standard(library->standard), standardImports(library->imports),
+                                                                                                        baseTypes(library->types), types(baseTypes), cache(parent.cache), outputMutex(parent.outputMutex), revision(parent.revision), snapshotRevision(version) {}
     /**
      * @brief 取得指定 URI 对应的当前源码内容。
      * @param u 待处理文档的 URI。
@@ -3285,7 +3288,12 @@ class Server
     std::string source(const std::string &u)
     {
         auto it = documents.find(u);
-        return it == documents.end() ? cache->source(pathOf(u)) : it->second->first;
+        if (it != documents.end()) return it->second->first;
+        const auto previous = sourceSnapshot.find(u);
+        if (previous != sourceSnapshot.end()) return previous->second;
+        const auto body = cache->source(pathOf(u));
+        sourceSnapshot.emplace(u, body);
+        return body;
     }
     /**
      * @brief 取得语言服务器可见的源码路径。
@@ -3594,10 +3602,22 @@ class Server
     {
         const auto &body = documents.at(u)->first;
         collect(u, body);
+        const auto interrupted = [&] { return cancelled() || (requestCancelled && requestCancelled->load()) || revision->load() != snapshotRevision; };
+        const auto serial = cache->reportLock(u);
+        std::unique_lock<std::timed_mutex> single(*serial, std::defer_lock);
+        bool waited = false;
+        while (!single.try_lock_for(std::chrono::milliseconds(20)))
+        {
+            waited = true;
+            if (interrupted()) return J();
+        }
+        if (waited) ++cache->mergedChecks;
+        if (interrupted()) return J();
         const auto file = pathOf(u), saved = cache->path("diagnostics", u);
         try
         {
-            const auto entry = parse(read(saved));
+            const auto memory = cache->report(u);
+            const auto entry = memory ? *memory : parse(read(saved));
             bool valid = integer(get(entry, "schema")) == 2 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
             if (valid)
                 for (const auto &dependency : get(entry, "dependencies").asObject()->members())
@@ -3609,11 +3629,27 @@ class Server
             if (valid && get(entry, "report").find("diagnostics"))
             {
                 ++cache->diagnosticHits;
+                if (memory)
+                    ++cache->memoryReportHits;
+                else
+                    cache->rememberReport(u, entry);
                 cache->touch(cache->path("diagnostics", u));
                 return get(entry, "report");
             }
         } catch (...) {}
-        if (cancelled()) return J();
+        if (interrupted()) return J();
+        std::map<std::string, std::string> configurations;
+        for (auto parent = file.parent_path(); !parent.empty();)
+        {
+            for (const auto name : { "chali.toml", "chali.lock" })
+            {
+                const auto config = (parent / name).u8string();
+                configurations[config] = fingerprint(config);
+            }
+            const auto next = parent.parent_path();
+            if (next == parent) break;
+            parent = next;
+        }
         Temporary temporary;
         json::Object overlays;
         for (const auto &document : documents)
@@ -3621,14 +3657,19 @@ class Server
             const auto path = pathOf(document.first);
             if (!path.empty()) overlays[normalizedPath(path).u8string()] = document.second->first;
         }
+        for (const auto &source : sourceSnapshot)
+        {
+            const auto path = pathOf(source.first);
+            if (!path.empty() && path.extension() == ".chl") overlays[normalizedPath(path).u8string()] = source.second;
+        }
         write(temporary.path / "overlays.json", J(std::move(overlays)).dump());
         ++cache->checks;
         const auto result = execute({ compiler.u8string(), "--check", "--diagnostics=json", "--warning-profile=editor", "--incremental", "--source-stdin",
                                       "--cache-dir", (cache->directory / "preprocess").u8string(), "--source-overlays", (temporary.path / "overlays.json").u8string(),
                                       "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
                                       "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() },
-                                    file.parent_path(), body, timeout, cancelled);
-        if (result.cancelled || cancelled()) return J();
+                                    file.parent_path(), body, timeout, interrupted);
+        if (result.cancelled || interrupted()) return J();
         if (result.error == "timed out") throw std::runtime_error("语义检查超时");
         if (result.output.empty()) throw std::runtime_error("编译器未返回语义检查报告");
         auto report = parse(result.output);
@@ -3653,20 +3694,16 @@ class Server
                         dependencyUris.insert(uri(fs::u8path(name)));
                     }
                 }
-                cache->dependencies(u, dependencyUris);
-                // 配置和锁文件的创建、删除也必须使已缓存的诊断失效。
-                for (auto parent = file.parent_path(); !parent.empty();)
+                for (const auto &config : configurations)
                 {
-                    for (const auto name : { "chali.toml", "chali.lock" })
-                    {
-                        const auto config = (parent / name).u8string();
-                        hashes[config] = fingerprint(config);
-                    }
-                    const auto next = parent.parent_path();
-                    if (next == parent) break;
-                    parent = next;
+                    hashes[config.first] = config.second;
+                    dependencyUris.insert(uri(fs::u8path(config.first)));
                 }
-                cache->save(saved, object({ { "schema", 2 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } }));
+                cache->dependencies(u, dependencyUris);
+                if (interrupted()) return J();
+                const auto entry = object({ { "schema", 2 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
+                cache->rememberReport(u, entry);
+                cache->save(saved, entry);
             }
         } catch (...) {}
         return report;
@@ -4579,6 +4616,7 @@ class Server
         std::vector<fs::path> folders;
         auto cancelled = std::make_shared<std::atomic<bool>>(false);
         std::shared_ptr<const Document> document;
+        uint64_t version;
         {
             std::lock_guard<std::mutex> lock(stateMutex);
             const auto found = documents.find(u);
@@ -4588,16 +4626,23 @@ class Server
             snapshot = documents;
             folders = roots;
             document = found->second;
+            version = revision->load();
         }
-        queues[5]->post(u, [this, u, cancelled, document, snapshot = std::move(snapshot), folders = std::move(folders)] {
+        queues[5]->post(u, [this, u, cancelled, document, version, snapshot = std::move(snapshot), folders = std::move(folders)] {
       if (cancelled->load()) return;
       try {
-        Server view(*this, snapshot, folders);
+        Server view(*this, snapshot, folders, version);
         const auto result = view.diagnose(u, [cancelled] { return cancelled->load(); });
-        std::lock_guard<std::mutex> lock(stateMutex);
-        const auto found = documents.find(u);
-        if (!cancelled->load() && found != documents.end() && found->second == document && !result.isNull())
-          notify("textDocument/publishDiagnostics", result);
+        bool retry = false;
+        {
+          std::lock_guard<std::mutex> lock(stateMutex);
+          const auto found = documents.find(u);
+          if (!cancelled->load() && found != documents.end() && found->second == document) {
+            retry = revision->load() != version;
+            if (!retry && !result.isNull()) notify("textDocument/publishDiagnostics", result);
+          }
+        }
+        if (retry) scheduleDiagnostics(u);
       } catch (const std::exception &e) {
         if (!cancelled->load()) notify("window/logMessage",object({{"type",1},{"message",e.what()}}));
       } }, cancelled, delay);
@@ -4620,7 +4665,7 @@ class Server
             requests[key] = cancelled;
             snapshot = documents;
             folders = roots;
-            version = revision;
+            version = revision->load();
         }
         const size_t lane = method == "workspace/symbol" ? 3 : method == "chali/expandMacro"                                               ? 4 :
                                                            (method == "textDocument/completion" || method == "textDocument/signatureHelp") ? 0 :
@@ -4630,12 +4675,19 @@ class Server
       J response;
       try {
         if (cancelled->load()) throw std::runtime_error("请求已取消");
-        Server view(*this,snapshot,folders);
+        Server view(*this, snapshot, folders, version);
         view.requestCancelled=cancelled;
         const auto result = view.request(str(message,"method"),get(message,"params"));
         {
           std::lock_guard<std::mutex> lock(stateMutex);
-          if (u.empty() || str(message,"method")=="textDocument/rename" || str(message,"method")=="textDocument/references") {if(revision != version)cancelled->store(true);}
+          if (str(message, "method") == "chali/expandMacro" || str(message, "method") == "textDocument/inlayHint" || str(message, "method") == "textDocument/codeAction")
+          {
+              if (revision->load() != version) cancelled->store(true);
+          }
+          if (u.empty() || str(message, "method") == "textDocument/rename" || str(message, "method") == "textDocument/references")
+          {
+              if (revision->load() != version) cancelled->store(true);
+          }
           else {
             const auto current=documents.find(u);const auto previous=snapshot.find(u);
             if(current==documents.end() || previous==snapshot.end() || current->second!=previous->second)cancelled->store(true);
@@ -4830,7 +4882,7 @@ public:
                     {
                         std::lock_guard<std::mutex> lock(stateMutex);
                         documents.erase(u);
-                        ++revision;
+                        ++*revision;
                         if (diagnostics.count(u))
                         {
                             diagnostics[u]->store(true);
@@ -4872,7 +4924,7 @@ public:
                         }
                         else if (params.find("text"))
                             documents[u] = std::make_shared<const Document>(str(params, "text"), documents.count(u) ? documents[u]->second : J());
-                        ++revision;
+                        ++*revision;
                     }
                     if (documents.count(u) && !pathOf(u).empty())
                         scheduleDiagnostics(u, method == "textDocument/didSave" ? 0 : 250);
@@ -4883,7 +4935,7 @@ public:
                 {
                     {
                         std::lock_guard<std::mutex> lock(stateMutex);
-                        ++revision;
+                        ++*revision;
                     }
                     for (const auto &change : array(get(params, "changes")))
                     {
@@ -4897,7 +4949,7 @@ public:
                 else if (method == "workspace/didChangeWorkspaceFolders")
                 {
                     std::lock_guard<std::mutex> lock(stateMutex);
-                    ++revision;
+                    ++*revision;
                     auto &event = get(params, "event");
                     for (auto &folder : array(get(event, "removed")))
                     {
