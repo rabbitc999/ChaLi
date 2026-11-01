@@ -74,6 +74,8 @@ gdb build/app-debug.exe
 
 Linux executables have no `.exe` suffix. Use `break app.chl:line`, `run`, `next`, `step`, `finish`, `backtrace`, `info locals` and `print expression`. `--debug` retains debug information; `--checked` independently controls array and pointer checks.
 
-Native variable descriptions currently cover parameter and local scalar slots. Owning aggregates and containers still appear as ChaLi logical handles, which must not be dereferenced as C machine pointers. Expressions use syntax accepted by GDB.
+DWARF distinguishes signed and unsigned 8/16/32/64-bit integers, bool, char, float32 and float64 using their actual storage. It retains declaration lines, source columns and user lexical blocks. Inner bindings shadow outer names within their valid range, and loop bindings disappear after the loop. Generated cleanup blocks do not create user name scopes. Numeric frames currently store rounded float32 values in double slots: debugging reads the actual 64-bit representation while retaining the float32 name. Native debugger sizeof therefore does not replace the language std::lang::rawSize operation.
+
+Owning aggregates and containers still appear as ChaLi logical handles, which must not be dereferenced as C machine pointers. Expressions use syntax accepted by GDB.
 
 Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it needs no VM installation and does not cast runtime function values into machine function pointers.

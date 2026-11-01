@@ -170,6 +170,8 @@ struct Node
 
     Memory::String sourceFile;             ///< 原始 CHALI 文件或宏定义来源。
     std::size_t sourceLine = 0;            ///< 原始源码行号，零为未知。
+    std::size_t sourceColumn = 0;          ///< 原始源码一基列号，零为未知。
+    bool lexicalScope = false;            ///< 用户词法作用域；合成清理块不引入名字作用域。
     Kind kind = Kind::IntLit;              ///< 种类。
     Memory::String text;                   ///< 名字 / 运算符 / 类型名 / 字符串内容。
     Memory::String typeName;               ///< 构造类节点（结构体 / 枚举）的类型名。

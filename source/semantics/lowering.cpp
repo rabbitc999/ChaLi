@@ -3140,6 +3140,7 @@ ast::NodePtr LowerLocalDecl(int id)
             const auto line = decl.sourceLine;
             declaration->sourceFile = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
             declaration->sourceLine = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+            declaration->sourceColumn = decl.sourceColumn;
         }
         out.push_back(std::move(declaration));
         MarkDestructor(emitted, type);

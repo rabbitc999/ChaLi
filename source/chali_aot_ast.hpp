@@ -519,9 +519,68 @@ struct AstBuilder : Builder
     bool snapshotData = false;  ///< 无不透明调用的循环可在本函数帧内保存数据区视图。
     Value dataBase, dataSize;   ///< 只在当前帧内有效的基址和完整字节数。
     std::map<std::size_t, DebugLine> debugLines;
+    std::map<std::size_t, DebugScope> debugScopes;
+    std::map<Text, DebugVariable> debugDeclarations;
+    std::size_t debugScope = 0;
     std::size_t debugBlocks = 1;
     std::size_t profileIndex = 0;  ///< 当前函数中计数位置的稳定遍历编号。
-    ast::NodePtr lastLocation;  ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
+    ast::NodePtr lastLocation;     ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
+
+    /**
+     * @brief 从检查后的基础类型描述实际帧表示，复合逻辑句柄不伪装成机器指针。
+     * @param variable 待补齐的变量描述。
+     * @param valueType 检查后的类型。
+     * @return 无。
+     */
+    void debugType(DebugVariable &variable, const ast::TypePtr &valueType)
+    {
+        if (!valueType) return;
+        using K = ast::Type::Kind;
+        variable.bits = 64;
+        variable.encoding = "DW_ATE_unsigned";
+        switch (valueType->kind)
+        {
+        case K::Bool:
+            variable.typeName = "bool";
+            variable.bits = 8;
+            variable.encoding = "DW_ATE_boolean";
+            break;
+        case K::Int:
+            variable.typeName = "int" + std::to_string(valueType->bits);
+            variable.bits = valueType->bits;
+            variable.encoding = "DW_ATE_signed";
+            break;
+        case K::Uint:
+            variable.typeName = valueType->name == "char" ? "char" : "uint" + std::to_string(valueType->bits);
+            variable.bits = valueType->bits;
+            if (valueType->name == "char") variable.encoding = "DW_ATE_unsigned_char";
+            break;
+        case K::Float:
+            variable.typeName = "float" + std::to_string(valueType->bits);
+            variable.encoding = "DW_ATE_float";  // 前端数值帧当前以 double 保存 f32 与 f64。
+            break;
+        case K::String: variable.typeName = "String"; break;
+        case K::Struct: variable.typeName = textOf(valueType->name); break;
+        case K::Ref: variable.typeName = "ChaLi reference"; break;
+        case K::Array: variable.typeName = "ChaLi array"; break;
+        default: variable.typeName = "ChaLi handle"; break;
+        }
+    }
+
+    /**
+     * @brief 打开用户块或声明后的有效区间，合成清理块沿用父区间。
+     * @param source 最接近的用户源码节点。
+     * @return 无。
+     */
+    void openDebugScope(const ast::NodePtr &source)
+    {
+        const auto position = source && source->sourceLine ? source : lastLocation;
+        const auto id = debugScopes.size() + 1u;
+        DebugLine origin;
+        if (position) origin = { textOf(position->sourceFile), position->sourceLine, position->sourceColumn, id };
+        debugScopes.emplace(id, DebugScope{ debugScope, origin });
+        debugScope = id;
+    }
 
     /**
      * @brief 在已经求值的 AST 操作旁记录计数，不重新计算用户实参。
@@ -638,7 +697,7 @@ struct AstBuilder : Builder
             {
                 const auto index = debugBlocks++;
                 enter("q" + std::to_string(index));
-                debugLines[index] = { textOf(source->sourceFile), source->sourceLine };
+                debugLines[index] = { textOf(source->sourceFile), source->sourceLine, source->sourceColumn, debugScope };
             }
             const auto file = state.sourceFiles.emplace(textOf(source->sourceFile), state.sourceFiles.size()).first;
             if (!state.request.options.libraryModule.empty())
@@ -949,7 +1008,12 @@ struct AstBuilder : Builder
         using N = ast::Node::Kind;
         if (node->kind == N::Block)
         {
+            const auto saved = debugScope;
+            const bool lexical = state.request.options.debug && (node->lexicalScope || node == syntax.body);
+            if (state.request.options.debug && node->sourceLine) lastLocation = node;
+            if (lexical) openDebugScope(node);
             for (const auto &child : node->kids) statement(child);
+            if (lexical) debugScope = saved;
             return;
         }
         if (node->kind == N::Label)
@@ -959,7 +1023,24 @@ struct AstBuilder : Builder
             return;
         }
         if (terminated) enter(blockName());
-        location(node);
+        if (state.request.options.debug && node->kind == N::Declare && node->text.rfind("__", 0) != 0)
+        {
+            openDebugScope(node);
+            DebugVariable descriptor;
+            descriptor.scope = debugScope;
+            const auto position = node->sourceLine ? node : lastLocation;
+            if (position)
+            {
+                descriptor.file = textOf(position->sourceFile);
+                descriptor.line = position->sourceLine;
+                descriptor.column = position->sourceColumn;
+            }
+            if (position) location(position);
+            descriptor.block = debugBlocks - 1u;
+            debugType(descriptor, node->declared);
+            debugDeclarations[textOf(node->text)] = std::move(descriptor);
+        }
+        if (node->kind != N::Declare || !state.request.options.debug) location(node);
         switch (node->kind)
         {
         case N::Declare: return;
@@ -1125,8 +1206,18 @@ struct AstBuilder : Builder
         for (const auto &entry : state.astSymbols.at(textOf(function.label)))
         {
             const auto parameter = std::find(function.parameters.begin(), function.parameters.end(), entry.second);
-            variables.push_back({ textOf(entry.first), pointer(entry.second), type(entry.second) == "double", parameter == function.parameters.end() ? 0u : static_cast<std::size_t>(parameter - function.parameters.begin() + 1u) });
+            DebugVariable variable;
+            const auto declaration = debugDeclarations.find(textOf(entry.first));
+            if (declaration != debugDeclarations.end())
+                variable = declaration->second;
+            else if (const auto declared = environment.find(entry.first); declared != environment.end())
+                debugType(variable, declared->second);
+            variable.name = textOf(entry.first);
+            variable.pointer = pointer(entry.second);
+            variable.floating = type(entry.second) == "double";
+            variable.argument = parameter == function.parameters.end() ? 0u : static_cast<std::size_t>(parameter - function.parameters.begin() + 1u);
+            variables.push_back(std::move(variable));
         }
-        return state.debugInfo.annotate(definition, textOf(function.label), textOf(function.llvmName), debugLines, variables);
+        return state.debugInfo.annotate(definition, textOf(function.label), textOf(function.llvmName), debugLines, variables, debugScopes);
     }
 };

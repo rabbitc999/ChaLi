@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <filesystem>
 #include <sstream>
+#include <functional>
+#include <tuple>
 
 namespace chali_aot
 {
@@ -69,6 +71,22 @@ std::size_t NativeDebugInfo::file(const std::string &path)
 std::string NativeDebugInfo::annotate(const std::string &definition, const std::string &name, const std::string &linkage,
                                       const std::map<std::size_t, DebugLine> &lines, const std::vector<DebugVariable> &variables)
 {
+    return annotate(definition, name, linkage, lines, variables, {});
+}
+/**
+ * @brief 按实际表示类型、声明位置和词法层级建立原生调试描述。
+ * @param definition LLVM 函数定义。
+ * @param name 用户函数名。
+ * @param linkage 实际符号。
+ * @param lines 源码位置及所在作用域。
+ * @param variables 源变量和实际帧地址。
+ * @param scopes 用户词法作用域树。
+ * @return 标注后的 LLVM 函数。
+ */
+std::string NativeDebugInfo::annotate(const std::string &definition, const std::string &name, const std::string &linkage,
+                                      const std::map<std::size_t, DebugLine> &lines, const std::vector<DebugVariable> &variables,
+                                      const std::map<std::size_t, DebugScope> &scopes)
+{
     DebugLine origin;
     for (const auto &entry : lines)
         if (!entry.second.file.empty() && entry.second.line)
@@ -90,28 +108,61 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
                             + ", scope: !" + std::to_string(source) + ", file: !" + std::to_string(source) + ", line: " + std::to_string(std::max<std::size_t>(1, origin.line))
                             + ", type: !" + std::to_string(type) + ", scopeLine: " + std::to_string(std::max<std::size_t>(1, origin.line))
                             + ", spFlags: DISPFlagDefinition, unit: !" + std::to_string(unit_) + ", retainedNodes: !" + std::to_string(empty_) + ")");
-    std::map<std::pair<std::string, std::size_t>, std::size_t> locations;
+    std::map<std::size_t, std::size_t> lexicalScopes{ { 0, scope } };
+    std::function<std::size_t(std::size_t)> lexicalScope = [&](std::size_t id) {
+        const auto found = lexicalScopes.find(id);
+        if (found != lexicalScopes.end()) return found->second;
+        const auto descriptor = scopes.find(id);
+        if (descriptor == scopes.end()) return scope;
+        const auto parent = lexicalScope(descriptor->second.parent);
+        const auto &position = descriptor->second.origin;
+        const auto result = node("distinct !DILexicalBlock(scope: !" + std::to_string(parent) + ", file: !" + std::to_string(file(position.file.empty() ? origin.file : position.file))
+                                 + ", line: " + std::to_string(std::max<std::size_t>(1, position.line)) + ", column: " + std::to_string(position.column) + ")");
+        lexicalScopes.emplace(id, result);
+        return result;
+    };
+    std::map<std::tuple<std::string, std::size_t, std::size_t, std::size_t>, std::size_t> locations;
     const auto location = [&](DebugLine position) {
         if (position.file.empty() || position.line == 0) position = origin;
-        const auto key = std::make_pair(position.file, position.line);
+        const auto key = std::make_tuple(position.file, position.line, position.column, position.scope);
         const auto found = locations.find(key);
         if (found != locations.end()) return found->second;
-        const auto localScope = position.file == origin.file ? scope : node("!DILexicalBlockFile(scope: !" + std::to_string(scope) + ", file: !" + std::to_string(file(position.file)) + ", discriminator: 0)");
-        const auto id = node("!DILocation(line: " + std::to_string(std::max<std::size_t>(1, position.line)) + ", column: 1, scope: !" + std::to_string(localScope) + ")");
+        auto localScope = lexicalScope(position.scope);
+        const auto descriptor = scopes.find(position.scope);
+        const auto &scopeFile = descriptor == scopes.end() || descriptor->second.origin.file.empty() ? origin.file : descriptor->second.origin.file;
+        if (position.file != scopeFile) localScope = node("!DILexicalBlockFile(scope: !" + std::to_string(localScope) + ", file: !" + std::to_string(file(position.file)) + ", discriminator: 0)");
+        const auto id = node("!DILocation(line: " + std::to_string(std::max<std::size_t>(1, position.line)) + ", column: " + std::to_string(position.column) + ", scope: !" + std::to_string(localScope) + ")");
         locations.emplace(key, id);
         return id;
     };
     const auto entryLocation = location(origin);
-    std::string declarations;
+    // 按父先子后的编号预建词法树，避免大量顺序声明触发深递归。
+    for (const auto &entry : scopes) lexicalScope(entry.first);
+    std::map<std::size_t, std::string> declarations;
     for (const auto &variable : variables)
     {
         if (variable.name.empty() || variable.name.rfind("__", 0) == 0u) continue;
         auto visible = variable.name.substr(0, variable.name.find('$'));
+        auto variableType = variable.floating ? real_ : integer_;
+        if (!variable.typeName.empty())
+        {
+            const auto encoding = variable.encoding.empty() ? (variable.floating ? "DW_ATE_float" : "DW_ATE_signed") : variable.encoding;
+            const auto key = variable.typeName + ":" + std::to_string(variable.bits) + ":" + encoding;
+            const auto found = types_.find(key);
+            if (found != types_.end())
+                variableType = found->second;
+            else
+            {
+                variableType = node("!DIBasicType(name: " + metadataString(variable.typeName) + ", size: " + std::to_string(variable.bits) + ", encoding: " + encoding + ")");
+                types_.emplace(key, variableType);
+            }
+        }
         const auto id = node("!DILocalVariable(name: " + metadataString(visible) + (variable.argument ? ", arg: " + std::to_string(variable.argument) : "")
-                             + ", scope: !" + std::to_string(scope) + ", file: !" + std::to_string(source) + ", line: " + std::to_string(std::max<std::size_t>(1, origin.line))
-                             + ", type: !" + std::to_string(variable.floating ? real_ : integer_) + ")");
-        declarations += "  call void @llvm.dbg.declare(metadata ptr " + variable.pointer + ", metadata !" + std::to_string(id)
-                        + ", metadata !DIExpression()), !dbg !" + std::to_string(entryLocation) + "\n";
+                             + ", scope: !" + std::to_string(lexicalScope(variable.scope)) + ", file: !" + std::to_string(file(variable.file.empty() ? origin.file : variable.file)) + ", line: " + std::to_string(std::max<std::size_t>(1, variable.line ? variable.line : origin.line))
+                             + ", type: !" + std::to_string(variableType) + ")");
+        const auto declarationLocation = variable.block ? location({ variable.file, variable.line, variable.column, variable.scope }) : entryLocation;
+        declarations[variable.block] += "  call void @llvm.dbg.declare(metadata ptr " + variable.pointer + ", metadata !" + std::to_string(id)
+                                        + ", metadata !DIExpression()), !dbg !" + std::to_string(declarationLocation) + "\n";
     }
     std::istringstream input(definition);
     std::string line, output;
@@ -120,6 +171,7 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
     bool inserted = false;
     while (std::getline(input, line))
     {
+        std::string after;
         if (line.rfind("define ", 0) == 0u)
             line.insert(line.rfind('{'), "!dbg !" + std::to_string(scope) + " ");
         if (line.size() > 2u && line[0] == 'q' && line.back() == ':')
@@ -127,15 +179,17 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
             const auto at = static_cast<std::size_t>(std::stoull(line.substr(1)));
             const auto found = lines.find(at);
             if (found != lines.end()) currentLocation = location(found->second);
+            if (at) after = declarations[at];
         }
         if (!inserted && line.rfind("  br label %q", 0) == 0u)
         {
-            output += declarations;
+            output += declarations[0];
             inserted = true;
         }
         if (line.rfind("  ", 0) == 0u && line.find("!dbg !") == std::string::npos)
             line += ", !dbg !" + std::to_string(currentLocation);
         output += line + "\n";
+        output += after;
     }
     return output;
 }
@@ -157,12 +211,16 @@ void NativeDebugInfo::finish(std::string &module)
     if (!flags.empty())
     {
         const auto at = module.find("!llvm.module.flags = !{");
-        if (at == std::string::npos) module += "!llvm.module.flags = !{" + flags + "}\n";
-        else module.insert(module.find('}', at), ", " + flags);
+        if (at == std::string::npos)
+            module += "!llvm.module.flags = !{" + flags + "}\n";
+        else
+            module.insert(module.find('}', at), ", " + flags);
     }
     const auto units = module.find("!llvm.dbg.cu = !{");
-    if (units == std::string::npos) module += "!llvm.dbg.cu = !{!" + std::to_string(unit_) + "}\n";
-    else module.insert(module.find('}', units), ", !" + std::to_string(unit_));
+    if (units == std::string::npos)
+        module += "!llvm.dbg.cu = !{!" + std::to_string(unit_) + "}\n";
+    else
+        module.insert(module.find('}', units), ", !" + std::to_string(unit_));
     module += "declare void @llvm.dbg.declare(metadata, metadata, metadata)\n" + metadata_;
 }
 }  // namespace chali_aot

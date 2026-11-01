@@ -2594,11 +2594,12 @@ ast::NodePtr LocateNode(ast::NodePtr value, int id)
 {
     if (value && id >= 0 && value->sourceLine == 0)
     {
-        const auto line = N(id).sourceLine;
+        const auto line = N(id).expansionLine ? N(id).expansionLine : N(id).sourceLine;
         if (line > 0)
         {
             value->sourceFile = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
             value->sourceLine = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+            value->sourceColumn = N(id).expansionLine ? N(id).expansionColumn : N(id).sourceColumn;
         }
     }
     return value;
@@ -3283,6 +3284,7 @@ ast::NodePtr LowerStmt(int id)
     Memory::Vector<ast::NodePtr> fresh;
     MExpressionFreshScope sink(&fresh);
     const auto statement = LowerStmtImpl(id);
+    if (statement && id >= 0 && (N(id).kind == MNode::For || N(id).kind == MNode::Foreach)) statement->lexicalScope = true;
     auto cleanup = temporaries.finish();
     if (cleanup.empty() && fresh.empty()) return LocateNode(statement, id);
     if (statement) fresh.push_back(statement);
@@ -3436,7 +3438,9 @@ ast::NodePtr LowerStmtImpl(int id)
         g_ownedScopes.pop_back();
         PopScope();
         AppendScopeDrops(scope, Memory::String(), &out);
-        return ast::Node::block(out);
+        auto block = ast::Node::block(out);
+        block->lexicalScope = true;
+        return block;
     }
     case MNode::Destructure:
         return LowerDestructure(id);

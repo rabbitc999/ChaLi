@@ -34,7 +34,12 @@ ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String 
     {
     case MType::Void: return Type::i32();     /* ast 没有 void，用 i32 占位 */
     case MType::Bool: return Type::boolean(); /* i8：0 / 1 */
-    case MType::Char: return Type::make(Type::Kind::Uint, 8);
+    case MType::Char:
+    {
+        auto result = Type::make(Type::Kind::Uint, 8);
+        result->name = "char";
+        return result;
+    }
     case MType::Int:
         return type->isUnsigned ? Type::make(Type::Kind::Uint, type->bits) : Type::make(Type::Kind::Int, type->bits);
     case MType::Double: return Type::make(Type::Kind::Float, type->bits);

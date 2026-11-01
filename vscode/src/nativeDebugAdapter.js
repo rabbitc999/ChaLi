@@ -461,7 +461,15 @@ class Adapter {
           const frame = this.handles.get(args.variablesReference);
           if (!frame) throw new Error('变量引用已经过期');
           const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal });
-          body.variables = (data.variables || []).map((variable) => ({ name: variable.name, value: variable.value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 }));
+          // GDB 从最内层逐块列举，保留首先遇到的绑定，隐藏被遮蔽的外层同名值。
+          const visible = new Set();
+          body.variables = (data.variables || []).filter(variable => {
+            if (visible.has(variable.name)) return false;
+            visible.add(variable.name); return true;
+          }).map((variable) => {
+            const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
+            return { name: variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 };
+          });
           break;
         }
         case 'evaluate': {
