@@ -36,10 +36,46 @@ int main()
     node.s2 = "macro-category";
     node.module = "std::lang";
     node.kids = { id };
+    const int integerType = M_TypeInt();
+    M_TypeKind(MType::Ptr, "unit-pointer-marker");
+    M_TypePtr(integerType);
     const auto count = M_NodeCount();
     std::ostringstream output(std::ios::binary);
     assert(M_WriteStandardUnit(output, count));
     const auto bytes = output.str();
+    const auto reject = [&](const std::string &data) {
+        std::istringstream broken(data, std::ios::binary);
+        assert(!M_ReadStandardUnit(broken));
+        assert(M_NodeCount() == count && M_ParsedNode(id).bindingIdentity == 456);
+    };
+    reject(bytes + "trailing data");
+    auto largeCount = bytes;
+    largeCount.replace(16, 8, 8, static_cast<char>(0xff));
+    reject(largeCount);
+    const auto readNumber = [&](std::size_t offset) {
+        std::uint64_t value = 0;
+        for (unsigned i = 0; i < 8; ++i) value |= std::uint64_t(static_cast<unsigned char>(bytes[offset + i])) << (8 * i);
+        return value;
+    };
+    auto at = bytes.find("unit-pointer-marker");
+    assert(at != bytes.npos);
+    at += std::string("unit-pointer-marker").size();
+    at += 8 + static_cast<std::size_t>(readNumber(at)); // lookupModule
+    const auto unresolvedOffset = at;
+    at += 8;
+    at += 8 + static_cast<std::size_t>(readNumber(at)); // genericBase
+    at += 8 + static_cast<std::size_t>(readNumber(at)); // genericMember
+    const auto bindingOffset = at;
+    at += 24; // macroBinding, bits, isUnsigned
+    at += 8 + static_cast<std::size_t>(readNumber(at)) * 8; // dims
+    at += 24; // readOnly, variadic, generic argument count
+    const auto elementOffset = at;
+    for (const auto offset : { unresolvedOffset, bindingOffset, elementOffset })
+    {
+        auto invalid = bytes;
+        invalid.replace(offset, 8, 8, static_cast<char>(0xff));
+        reject(invalid);
+    }
     std::ostringstream provenance(std::ios::binary);
     chali_incremental::writeNumber(provenance, 123);
     chali_incremental::writeNumber(provenance, 321);
@@ -98,6 +134,8 @@ int main()
     node.bindingIdentity = 0;
     std::istringstream input(bytes, std::ios::binary);
     assert(M_ReadStandardUnit(input));
+    std::ostringstream roundtrip(std::ios::binary);
+    assert(M_WriteStandardUnit(roundtrip, count) && roundtrip.str() == bytes);
     const auto &restored = M_ParsedNode(id);
     assert(restored.formattedOutputBridge && restored.moduleLocal);
     assert(restored.unsafeRequired && restored.unsafeScope && restored.implicitExitMove);
@@ -114,6 +152,14 @@ int main()
     Memory::String error;
     assert(chali_precompiled::loadBytes(reinterpret_cast<const unsigned char *>(packed.data()), packed.size(), checksum, text, error));
     assert(error.empty());
+    for (const auto offset : { std::size_t(8), std::size_t(16), std::size_t(40), std::size_t(56) })
+    {
+        auto damaged = packed;
+        damaged[offset] ^= 1;
+        const auto updated = chali_incremental::hashBytes(Memory::String(damaged.data(), damaged.size()));
+        assert(!chali_precompiled::loadBytes(reinterpret_cast<const unsigned char *>(damaged.data()), damaged.size(), updated, text, error));
+        assert(!error.empty() && M_NodeCount() == count);
+    }
     for (const auto offset : { std::size_t(0), std::size_t(8), packed.size() - 1 })
     {
         auto damaged = packed;

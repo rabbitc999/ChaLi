@@ -3580,6 +3580,23 @@ struct UnitTypeRefs
 };
 
 /**
+ * @brief 在分配容器前按可定位输入流的剩余字节校验最小负载预算。
+ * @param in 单元输入流，定位后恢复原读取位置。
+ * @param count 即将恢复的元素数量。
+ * @param minimum 每个元素至少需要的序列化字节数。
+ * @return 剩余负载足够时返回 true；不可定位或预算不足返回 false。
+ */
+bool UnitPayloadFits(std::istream &in, std::uint64_t count, std::uint64_t minimum)
+{
+    const auto position = in.tellg();
+    if (position == std::streampos(-1)) return false;
+    in.seekg(0, std::ios::end);
+    const auto end = in.tellg();
+    in.seekg(position);
+    return in && end >= position && count <= static_cast<std::uint64_t>(end - position) / minimum;
+}
+
+/**
  * @brief 写出一组节点编号（加一后写成无符号，`-1` 落为 0）。
  * @param out 输出流。
  * @param values 节点编号。
@@ -3601,13 +3618,15 @@ void WriteUnitInts(std::ostream &out, const Memory::Vector<int> &values)
 bool ReadUnitInts(std::istream &in, Memory::Vector<int> &values)
 {
     std::uint64_t count = 0;
-    if (!chali_incremental::readNumber(in, count) || count > (1ull << 26)) return false;
+    if (!chali_incremental::readNumber(in, count) || count > (1ull << 26) || !UnitPayloadFits(in, count, 8)) return false;
     values.resize(static_cast<std::size_t>(count));
     for (auto &value : values)
     {
         std::uint64_t stored = 0;
         if (!chali_incremental::readNumber(in, stored)) return false;
-        value = static_cast<int>(static_cast<std::int64_t>(stored));
+        const auto signedValue = static_cast<std::int64_t>(stored);
+        if (signedValue < std::numeric_limits<int>::min() || signedValue > std::numeric_limits<int>::max()) return false;
+        value = static_cast<int>(signedValue);
     }
     return true;
 }
@@ -3760,7 +3779,7 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     std::uint64_t derived = 0;
     if (!chali_incremental::readNumber(in, derived)) return false;
     node.derivesExpanded = derived != 0;
-    if (!chali_incremental::readNumber(in, count) || count > (1ull << 20)) return false;
+    if (!chali_incremental::readNumber(in, count) || count > (1ull << 20) || !UnitPayloadFits(in, count, 8)) return false;
     node.annotationValues.resize(static_cast<std::size_t>(count));
     for (auto &value : node.annotationValues)
     {
@@ -3865,21 +3884,21 @@ bool ReadUnitTypeBody(std::istream &in, std::shared_ptr<MType> &type, UnitTypeRe
     type->kind = static_cast<MType::Kind>(kind);
     if (!chali_incremental::readString(in, type->name)) return false;
     if (!chali_incremental::readString(in, type->lookupModule)) return false;
-    if (!chali_incremental::readNumber(in, flag)) return false;
+    if (!chali_incremental::readNumber(in, flag) || flag > 1) return false;
     type->unresolvedName = flag != 0;
     if (!chali_incremental::readString(in, type->genericBase)) return false;
     if (!chali_incremental::readString(in, type->genericMember)) return false;
     std::uint64_t binding = 0;
-    if (!chali_incremental::readNumber(in, binding)) return false;
+    if (!chali_incremental::readNumber(in, binding) || binding > std::numeric_limits<std::uint32_t>::max()) return false;
     type->macroBinding = static_cast<std::uint32_t>(binding);
     if (!chali_incremental::readNumber(in, bits)) return false;
     type->bits = static_cast<int>(static_cast<std::int64_t>(bits));
-    if (!chali_incremental::readNumber(in, flag)) return false;
+    if (!chali_incremental::readNumber(in, flag) || flag > 1) return false;
     type->isUnsigned = flag != 0;
     if (!ReadUnitInts(in, type->dims)) return false;
-    if (!chali_incremental::readNumber(in, flag)) return false;
+    if (!chali_incremental::readNumber(in, flag) || flag > 1) return false;
     type->readOnly = flag != 0;
-    if (!chali_incremental::readNumber(in, flag)) return false;
+    if (!chali_incremental::readNumber(in, flag) || flag > 1) return false;
     type->variadic = flag != 0;
     if (!chali_incremental::readNumber(in, count) || count > (1ull << 20)) return false;
     refs.arguments.resize(static_cast<std::size_t>(count));
@@ -3887,7 +3906,7 @@ bool ReadUnitTypeBody(std::istream &in, std::shared_ptr<MType> &type, UnitTypeRe
         if (!ReadUnitRef(in, value)) return false;
     if (!ReadUnitRef(in, refs.elem)) return false;
     std::uint64_t parameterCount = 0;
-    if (!chali_incremental::readNumber(in, parameterCount) || parameterCount > (1ull << 20)) return false;
+    if (!chali_incremental::readNumber(in, parameterCount) || parameterCount > (1ull << 20) || !UnitPayloadFits(in, parameterCount, 8)) return false;
     refs.parameters.resize(static_cast<std::size_t>(parameterCount));
     for (auto &value : refs.parameters)
         if (!ReadUnitRef(in, value)) return false;
@@ -3975,17 +3994,27 @@ bool M_ReadStandardUnit(std::istream &in)
     std::uint64_t magic = 0, version = 0, nodeLimit = 0, typeCount = 0, globalType = 0;
     if (!chali_incremental::readNumber(in, magic) || magic != kStandardUnitMagic) return false;
     if (!chali_incremental::readNumber(in, version) || version != kStandardUnitVersion) return false;
-    if (!chali_incremental::readNumber(in, nodeLimit) || nodeLimit == 0 || nodeLimit > (1ull << 26)) return false;
+    if (!chali_incremental::readNumber(in, nodeLimit) || nodeLimit == 0 || nodeLimit > (1ull << 26)
+        || !UnitPayloadFits(in, nodeLimit, 128)) return false;
     Memory::Deque<MNode> nodes;
     nodes.resize(static_cast<std::size_t>(nodeLimit));
     for (auto &node : nodes)
         if (!ReadUnitNode(in, node)) return false;
-    if (!chali_incremental::readNumber(in, typeCount) || typeCount > (1ull << 24)) return false;
+    if (!chali_incremental::readNumber(in, typeCount) || typeCount > (1ull << 24) || !UnitPayloadFits(in, typeCount, 64)) return false;
     Memory::Vector<std::shared_ptr<MType>> types;
     Memory::Vector<UnitTypeRefs> references(static_cast<std::size_t>(typeCount));
     types.resize(static_cast<std::size_t>(typeCount));
     for (std::size_t i = 0; i < types.size(); ++i)
         if (!ReadUnitTypeBody(in, types[i], references[i])) return false;
+    /* 非零引用必须指向实际类型；不能把损坏编号静默恢复为空引用。 */
+    for (const auto &refs : references)
+    {
+        if (refs.elem > types.size() || refs.elem2 > types.size()) return false;
+        for (const auto value : refs.arguments)
+            if (value > types.size()) return false;
+        for (const auto value : refs.parameters)
+            if (value > types.size()) return false;
+    }
     /* 第二趟接引用：先建好全部对象，再按「池下标 + 1」回填，共享与自指都不丢。 */
     const auto resolve = [&](std::uint64_t value) -> std::shared_ptr<MType> {
         if (value == 0 || value > types.size()) return nullptr;
@@ -4024,6 +4053,12 @@ bool M_ReadStandardUnit(std::istream &in)
     if (!chali_incremental::readNumber(in, fragmentColumn)) return false;
     Memory::String parseModule;
     if (!chali_incremental::readString(in, parseModule)) return false;
+    if (in.peek() != std::char_traits<char>::eof()) return false;
+    /* 所有编号和尾部均验证后才替换全局状态，失败不得污染既有解析单元。 */
+    for (const int id : rawNames)
+        if (id < 0 || static_cast<std::size_t>(id) >= nodeLimit) return false;
+    for (const int id : stringNodes)
+        if (id < 0 || static_cast<std::size_t>(id) >= nodeLimit) return false;
     /* 装载前先自检：只挡明显离谱的编号（结构错位才会读出天文数字）。
      * **不能**把"暂时越界"当单元损坏：标准库段解析里存在回滚（`nodes_.resize`）收回节点后
      * 没清掉的旧子节点编号，它当下确实超出竞技场末尾 —— 但这与一次性解析整段源码时的

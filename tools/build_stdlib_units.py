@@ -50,6 +50,11 @@ def main():
         if result.returncode:
             raise RuntimeError(result.stderr.decode('utf-8', errors='replace'))
         data = binary.read_bytes()
+        repeated = work / 'core-repeat.unit'
+        repeat = subprocess.run([str(compiler), 'check', str(source), '--build-stdlib-unit', str(repeated)],
+                                cwd=work, env=environment, capture_output=True, timeout=180)
+        if repeat.returncode or repeated.read_bytes() != data:
+            raise RuntimeError('相同阶段编译器生成的标准库二进制不确定')
     lines = ['// 由 tools/build_stdlib_units.py 生成；从原始标准库维护。',
              '// 二进制 SHA256: ' + hashlib.sha256(data).hexdigest(),
              'constexpr unsigned char kStandardUnit[] = {']
@@ -63,7 +68,15 @@ def main():
     output = '\n'.join(lines)
     options.output.parent.mkdir(parents=True, exist_ok=True)
     if not options.output.exists() or options.output.read_text(encoding='utf-8') != output:
-        options.output.write_text(output, encoding='utf-8')
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix='stdlib-unit-', delete=False) as stream:
+                temporary = Path(stream.name)
+                stream.write(output.encode('utf-8'))
+            os.replace(temporary, options.output)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
     print(f'标准库核心二进制：{len(data)} 字节；SHA256 {hashlib.sha256(data).hexdigest()}')
 
 

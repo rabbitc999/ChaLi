@@ -10,6 +10,13 @@ namespace chali_precompiled
 namespace
 {
 constexpr std::uint64_t kPackageMagic = 0x31424c5355484348ull;
+constexpr std::uint64_t kPackageVersion = 2;
+constexpr std::size_t kPackageHeaderSize = 64;
+#if defined(CHALI_WITH_REFLECTION) && CHALI_WITH_REFLECTION
+constexpr std::uint64_t kPackageFeatures = 1;
+#else
+constexpr std::uint64_t kPackageFeatures = 0;
+#endif
 #if __has_include("chali_precompiled_data.inc")
 #include "chali_precompiled_data.inc"
 #else
@@ -32,10 +39,13 @@ bool write(std::ostream &out, const Memory::String &text, std::size_t nodes)
     if (!M_WriteStandardUnit(body, nodes) || !body) return false;
     const auto bytes = body.str();
     chali_incremental::writeNumber(out, kPackageMagic);
-    chali_incremental::writeNumber(out, chali_incremental::hashBytes(chali_package::compilerVersion, chali_incremental::hashBytes(text)));
+    chali_incremental::writeNumber(out, kPackageVersion);
+    chali_incremental::writeNumber(out, chali_incremental::hashBytes(chali_package::compilerVersion));
+    chali_incremental::writeNumber(out, chali_incremental::hashBytes(text));
     chali_incremental::writeNumber(out, text.size());
     chali_incremental::writeNumber(out, bytes.size());
     chali_incremental::writeNumber(out, chali_incremental::hashBytes(Memory::String(bytes.data(), bytes.size())));
+    chali_incremental::writeNumber(out, kPackageFeatures);
     out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
     return static_cast<bool>(out);
 }
@@ -65,25 +75,28 @@ bool loadBytes(const unsigned char *bytes, std::size_t packageSize, std::uint64_
 {
     error.clear();
     if (packageSize == 0) return false;
-    if (!bytes || packageSize < 40
+    if (!bytes || packageSize < kPackageHeaderSize
         || packageChecksum != chali_incremental::hashBytes(Memory::String(reinterpret_cast<const char *>(bytes), packageSize)))
     {
         error = CHALI_TEXT("内嵌标准库二进制整包校验失败");
         return false;
     }
     std::istringstream input(std::string(reinterpret_cast<const char *>(bytes), packageSize), std::ios::binary);
-    std::uint64_t magic = 0, identity = 0, length = 0, size = 0, checksum = 0;
+    std::uint64_t magic = 0, version = 0, compiler = 0, identity = 0, length = 0, size = 0, checksum = 0, features = 0;
     if (!chali_incremental::readNumber(input, magic) || magic != kPackageMagic
+        || !chali_incremental::readNumber(input, version) || version != kPackageVersion
+        || !chali_incremental::readNumber(input, compiler) || compiler != chali_incremental::hashBytes(chali_package::compilerVersion)
         || !chali_incremental::readNumber(input, identity) || !chali_incremental::readNumber(input, length)
         || !chali_incremental::readNumber(input, size) || !chali_incremental::readNumber(input, checksum)
-        || size != packageSize - 40)
+        || !chali_incremental::readNumber(input, features) || features != kPackageFeatures
+        || size != packageSize - kPackageHeaderSize)
     {
         error = CHALI_TEXT("内嵌标准库二进制包头损坏");
         return false;
     }
     if (length != text.size()
-        || identity != chali_incremental::hashBytes(chali_package::compilerVersion, chali_incremental::hashBytes(text))) return false;
-    const Memory::String body(reinterpret_cast<const char *>(bytes + 40), static_cast<std::size_t>(size));
+        || identity != chali_incremental::hashBytes(text)) return false;
+    const Memory::String body(reinterpret_cast<const char *>(bytes + kPackageHeaderSize), static_cast<std::size_t>(size));
     if (checksum != chali_incremental::hashBytes(body) || !M_ReadStandardUnit(input))
     {
         error = CHALI_TEXT("内嵌标准库二进制内容损坏或与编译器不兼容");

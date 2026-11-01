@@ -72,7 +72,7 @@ endif
 
 .PHONY: all lib demo run clean gen check samples reflection llvm llvm-static
 
-all: $(LIB) $(TARGET) stdlib-embedded
+all: stdlib-embedded
 
 tmp:
 	python -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
@@ -133,9 +133,14 @@ include features.mk
 
 override CXXFLAGS += $(CHALI_TRIM_FLAGS)
 
-# 先链接阶段编译器，再由它生成核心单元，最后重链接内嵌了二进制资产的发行编译器。
+# 阶段编译器与发行文件分开：生成资产失败时不覆盖已经交付的编译器。
+CHALI_STDLIB_BOOTSTRAP := $(FRONTEND_BUILD)/chali-stdlib-bootstrap$(suffix $(TARGET))
+$(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_AOT_LDLIBS)
+
+# 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。
 .PHONY: stdlib-embedded
-stdlib-embedded: $(TARGET)
-	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(TARGET))"
+stdlib-embedded: $(CHALI_STDLIB_BOOTSTRAP)
+	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_BOOTSTRAP))"
 	$(MAKE) $(TARGET)
 	$(PYTHON) tools/build_stdlib_units.py --sync-embedded-source "$(CHALI_EMBED_SOURCE)"
