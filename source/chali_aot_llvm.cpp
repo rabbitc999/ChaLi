@@ -317,14 +317,14 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     storage.push_back("--gc-sections");
     if (!request.options.debug) storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");
+    storage.push_back("--start-group");
     for (const auto &object : request.options.linkObjects) storage.emplace_back(object.c_str());
     storage.push_back("-L" + runtimeLibrary);
-    storage.push_back("--start-group");
     storage.push_back(runtimeLibrary + "/libstdc++.a");
     for (const char *name : { "chali_aot_host", "gcc_eh", "gcc", "winpthread", "winhttp", "ws2_32", "crypt32", "bcrypt" }) storage.push_back(std::string("-l") + name);
     for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) storage.push_back(runtimeLibrary + "/" + name);
-    storage.push_back("--end-group");
     for (const auto &path : request.options.linkLibraries) storage.emplace_back(path.c_str());
+    storage.push_back("--end-group");
     for (int round = 0; round < 2; ++round)
         for (const auto &argument : std::vector<std::string>{ "-lmingw32", builtins, "-lunwind", "-lmoldname", "-lmingwex", "-lmsvcrt", "-ladvapi32", "-lshell32", "-luser32", "-lkernel32" }) storage.push_back(argument);
     storage.push_back(library + "/crtend.o");

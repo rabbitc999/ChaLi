@@ -1219,6 +1219,10 @@ void M_ShiftParseDiagnostics(std::size_t from, std::size_t lines);
  * 设置下一次 M_Compile 执行时传给 `main(std::lang::List<std::lang::String>)` 的参数。
  */
 void M_SetSourceFiles(const Memory::Vector<Memory::String> &files, const Memory::String &fallback);
+/** @brief 设置仅声明的原生库接口来源。
+ * @param files 本次编译的库接口标签；空表清除上次设置。 */
+void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
+
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);
 /**

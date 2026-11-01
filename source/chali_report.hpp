@@ -153,6 +153,12 @@ std::size_t wordExtentAt(const std::string &raw, std::size_t start);
  * @return 按行存好的文本；读不到就是空表。
  */
 const std::vector<std::string> &cachedFileLines(const Memory::String &file);
+/** @brief 注册本次编译持有的虚拟接口源码，供位置诊断读取。
+ * @param file 稳定来源标签。
+ * @param text 已验证接口文本。 */
+void registerVirtualSource(const Memory::String &file, const Memory::String &text);
+/** @brief 清除上次编译注册的虚拟来源，不清除磁盘缓存。 */
+void clearVirtualSources();
 
 /**
  * @brief 这一行能不能从磁盘上读回来 —— 决定**要不要补"第 N 行"**。

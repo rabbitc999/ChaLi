@@ -229,3 +229,13 @@ A0 与 V0 确定边界 → A1～A4 原生汇编及链接 → A5～A6 库包及 A
 静态 EXE SHA256：911f0edd8f982d636ef8c73780a764646b9fec42aae7aadc7c69dd2bbfa3480e；VSIX：498d0f75a75867ea8ac7093c6f7f0eb8b7afc5ef6a71409cafa78785b6622a3e。外置 EXE：b6a7a62a2de357fcd6f5231bc77b9d04156dc857a7c722ace8075e7b84c60ecf；VSIX：59ccb9f5a97d92a2e9ff77915565b16d39956204c434264f080fd7fe14ef8e2d。
 
 编译器保留 build/independent-validation/1.0.12-a0-library-format/，插件位于 vscode/dist/1.0.12-a0-library-format/；证据在 tools/history/20261101/chali-1.0.12-a0-library-format/。普通语言库 import、自动实现编译及私有声明筛选留在 A5；泛型、初始化、语言类型身份和运行时去重留在 A6 与 A4 未完成项。依赖资产到消费阶段缺失或摘要不匹配时必须拒绝；格式 inspect 只检查依赖记录，不执行或展开依赖。源码回退仍须显式启用，当前原生选择不使用 source 资产。
+
+## A5 第一步交付摘要：普通导入 C ABI 原生库
+
+普通 import 按模块路径选择 .chlib 接口，c-v1 接口保留正常类型、可见性及借用检查，消费者无需提供方实现源码。编译会话保留已验证快照，核对完整模块身份、目标、CPU 和重复模块内容；传递依赖按精确版本及整包 SHA-256 解析，补充包的模块根，拒绝锁定依赖回退源码和同一模块混用源码／库。原生实现从同一快照暂存后加入最终链接，导入不执行初始化。两条 AOT 链接路径将附加归档和额外库纳入链接组。虚拟接口来源供诊断读取，语义检查拒绝运行期函数体、全局变量与静态字段。必要前端配套仅限库包加载和声明封装检查，没有修改文法、宏、借用规则或 LSP。
+
+最终静态编译器通过 libraries、c_api、toolchain、docs 去重后的 22 项和随机复测一项；包含删除实现源码后的检查／AOT／默认 checked run、模块结构体访问、传递依赖、多归档链接、身份／摘要／缺失依赖拒绝及禁止同名源码回退。测试补上 ARM64 宿主分支后，同套 Windows x64 专项再次通过；没有在 Linux／ARM64 执行。增加封装检查时有一次定义顺序编译错误，调整检查函数位置后重建通过，原始日志保留。没有运行整仓全量或重测性能，没有读取历史 VM。
+
+重建的静态 LLVM VSIX 八组插件门禁通过，版本均为 1.0.12，实际变体、不含 VM、EXE 和七份关键 JS 字节核对一致。静态 EXE SHA-256：4d9e2794fb26cfc03f33b7ce799e8ad55849d10b8350a37dad27b6ac53e8b715；VSIX：74300a363083391d969ff60eaaefb7349498eabc39cea1d8c7659998c628ad64。本步只构建和验证静态变体，外置变体随 A5 后续闭环核对。
+
+编译器保留 build/independent-validation/1.0.12-a5-import/，插件保留 vscode/dist/1.0.12-a5-import/，证据仅在 tools/history/20261101/chali-1.0.12-a5-import/。自动语言库导出、项目级库锁、独立链接依赖接入及 A6 的模板／初始化／拥有值内部 ABI 尚未完成；A5 与其余待办保留，继续推进，不在此阶段结束。

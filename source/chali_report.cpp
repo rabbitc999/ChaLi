@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -440,6 +441,26 @@ std::size_t wordExtentAt(const std::string &raw, std::size_t start)
     return end > start ? end - start : 1u;
 }
 
+/** @brief 保存本次编译的包接口行文本，键与前处理来源标签一致。 */
+static std::map<std::string, std::vector<std::string>> virtualSources;
+/** @brief 登记接口源码行。
+ * @param file 稳定来源标签。
+ * @param text 已验证接口源文。 */
+void registerVirtualSource(const Memory::String &file, const Memory::String &text)
+{
+    std::vector<std::string> lines;
+    std::istringstream input(std::string(text.data(), text.size()));
+    std::string line;
+    while (std::getline(input, line))
+    {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        lines.push_back(std::move(line));
+    }
+    virtualSources[std::string(file.data(), file.size())] = std::move(lines);
+}
+/** @brief 开始一次编译时清除旧虚拟接口。 */
+void clearVirtualSources() { virtualSources.clear(); }
+
 /**
  * @brief 读一个源文件的全部行并缓存（同一轮里报好几处错时只读一次）。
  * @param file 源文件路径。
@@ -450,6 +471,8 @@ const std::vector<std::string> &cachedFileLines(const Memory::String &file)
     static std::map<std::string, std::vector<std::string>> cache;
     if (file.empty()) return cache[std::string()];
     const std::string path(file.data(), file.size());
+    const auto virtualFile = virtualSources.find(path);
+    if (virtualFile != virtualSources.end()) return virtualFile->second;
     auto found = cache.find(path);
     if (found == cache.end())
     {

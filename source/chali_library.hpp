@@ -7,6 +7,12 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <memory>
+
+namespace chali_aot
+{
+struct Options;
+}
 
 namespace chali_library
 {
@@ -88,6 +94,37 @@ struct Package
      * @return 对应条目；不存在时为空。
      */
     const Entry *find(std::string_view name) const;
+};
+/** @brief 单次编译持有的已验证库及原生实现快照，不执行初始化。 */
+class ImportSession
+{
+public:
+    /** @brief 创建目标明确的会话。
+     * @param target 目标别名或三元组。
+     * @param cpu 目标 CPU。 */
+    ImportSession(std::string target, std::string cpu);
+    /** @brief 释放本次会话拥有的原生暂存文件。 */
+    ~ImportSession();
+    /** @brief 禁止复制快照及工作区所有权。 */
+    ImportSession(const ImportSession &) = delete;
+    /** @brief 禁止赋值快照及工作区所有权。 */
+    ImportSession &operator=(const ImportSession &) = delete;
+    /** @brief 加载并锁定模块。
+     * @param path 包文件。
+     * @param module 预期完整模块名。
+     * @param pin 可选精确依赖约束。
+     * @return 已验证且会话内地址稳定的库。 */
+    const Package &open(const std::filesystem::path &path, const std::string &module, const Dependency *pin = nullptr);
+    /** @brief 从同一已验证快照生成链接输入。
+     * @param options 接收原生对象及系统库。 */
+    void appendTo(chali_aot::Options &options);
+    /** @brief 取得用于诊断及接口封装检查的来源标签。
+     * @return 已装载接口的稳定标签。 */
+    std::vector<std::string> sources() const;
+
+private:
+    struct State;
+    std::unique_ptr<State> state_;
 };
 /**
  * @brief 序列化已验证的清单为格式一的规范 JSON。

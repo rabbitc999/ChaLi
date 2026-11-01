@@ -4,7 +4,7 @@
 [English](en/44-library-packages.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-`.chlib` 是保存语言接口、目标实现及依赖身份的单文件容器。`chali lib template` 生成规范清单，`pack` 封装已有文件，`inspect` 核对格式并输出 JSON。当前普通 `import` 仍读取 `.chl`；这些格式命令不编译语言实现，不执行库初始化，也不检查接口源文的完整语言语义。
+`.chlib` 是保存语言接口、目标实现及依赖身份的单文件容器。`chali lib template` 生成规范清单，`pack` 封装已有文件，`inspect` 核对格式并输出 JSON。普通 `import` 可加载 `c-v1` 库包接口及原生对象／归档。格式命令不编译语言实现，也不执行库初始化；接口的语言语义在消费者编译时检查。
 
 ## 生成与检查
 
@@ -28,6 +28,26 @@ chali lib inspect build/math.chlib --module example::math --package-version 1.2.
 `template` 不给 `--out` 时输出规范单行 JSON。目标使用规范三元组，清单内的实现名与示例中的归档条目名一致。`pack` 读取这份规范清单；清单的字段顺序、集合排序与 JSON 编码属于格式的一部分，输出末尾允许 CR／LF 换行。资产参数是 `KIND:NAME=FILE`：`NAME` 是包内名字，`FILE` 是真实输入路径，二者分别处理。可重复指定资产，实际封装顺序按名字排序。
 
 `inspect` 的报告包含整包 SHA-256、清单和每条资产的名字、种类、长度、负载 SHA-256。它不打印源文或二进制负载。`--module`、`--package-version` 可核对预期身份，`--target`／`--cpu` 可核对原生选择。不给目标时可以检查含交叉目标的包；检查成功不表示已在目标系统运行。
+
+## 普通导入
+
+将上例的包放在 `modules/example/math.chlib`，消费者写：
+
+```chali
+import example::math;
+void main() {
+    int64 answer = example::math::add(20, 22);
+    assert(answer == 42);
+}
+```
+
+`chali --check consumer.chl` 检查公开声明；`chali aot consumer.chl --out build/consumer` 自动链接所选实现。提供方的实现源码不参与消费者编译。搜索依次经过当前单元目录、其 `modules/` 目录和 `-I` 目录；每个位置优先 `.chlib`，其次 `.chl`。已找到的库包若损坏或不兼容，直接报错，不回退到同名源码。标准库仍沿现有内嵌加载路径。
+
+当前原生接口允许类型与函数声明，函数入口使用显式 C ABI；不允许运行期函数体、全局变量或静态字段。接口内的类型、可见性和借用继续接受正常语言检查。模板实例、库初始化及拥有值的语言内部 ABI 尚未开放。库包存在可选源码或模板资产，不会因此自动启用它们。
+
+清单内的依赖即使未写在公开接口的 `import` 中也会解析，要求精确版本和整包 SHA-256。已找到的包会补充其完整模块根来搜索传递依赖，也可显式使用 `-I modules`；锁定依赖不接受 `.chl` 回退。重复模块必须具有同一摘要，循环导入拒绝。一轮编译最多加载 128 个包，总有效载荷最多 256 MiB。检查和链接使用同一份已验证的拥有型快照；导入不执行初始化。系统库随目标实现加入链接，运行时动态库仍由部署方提供。
+
+对象和汇编输出只生成当前编译单元；再次独立链接时仍须提供库实现，它们不会被嵌入消费者的 `.o` 或 `.s`。当前尚未生成独立链接依赖回执或项目级库锁文件。
 
 ## 独立的兼容信息
 
@@ -85,6 +105,7 @@ chali lib inspect build/math.chlib --module example::math --package-version 1.2.
 
 ```sh
 python tests/chali_digest.py
+python tests/chali_library_import.py --chali PATH
 python tests/chali_library_package.py --chali PATH
 python tests/chali_library_package.py --chali STATIC_PATH --other-chali EXTERNAL_PATH
 ```

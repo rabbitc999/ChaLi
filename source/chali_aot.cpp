@@ -2951,8 +2951,9 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     {
         const auto runtime = quote(runtimeDirectory.generic_u8string());
         if (runtime.empty()) return 1;
+        command += " -Wl,--start-group";
         for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
-        command += " -L" + runtime + " -Wl,--start-group -lchali_aot_host ";
+        command += " -L" + runtime + " -lchali_aot_host ";
         if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
         else command += "-lstdc++";
         command += " -lgcc_eh -lgcc";
@@ -2963,7 +2964,6 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
                 for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
         }
         else command += " -pthread -lm -ldl ";
-        command += " -Wl,--end-group";
         for (const auto &library : request.options.linkLibraries)
         {
             const Text argument = quote(textOf(library));
@@ -2974,6 +2974,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
             }
             command += " " + argument;
         }
+        command += " -Wl,--end-group";
     }
     const Text log = prefix + ".llvm.log";
     command += " > " + quote(log) + " 2>&1";

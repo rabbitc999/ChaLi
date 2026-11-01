@@ -876,6 +876,8 @@ try
      * `preserveLines` 默认开着 —— 指令行与"条件为假"的行都输出成空行，所以
      * 预处理之后的**行号与源文件一一对应**（通过 lineMap 保留源位置）。
      * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
+    chali_report::clearVirtualSources();
+    chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str());
     preprocess::Result processed;
     chali_macro::sourceFragments.clear();
     Memory::Vector<preprocess::LineOrigin> originalMacroOrigins;
@@ -902,7 +904,7 @@ try
             options.defines.push_back(define);
         }
         Memory::Vector<Memory::String> moduleDirs = importDirs;
-        chali_module::Loader loader(options, moduleDirs, cache.get(), &project);
+        chali_module::Loader loader(options, moduleDirs, cache.get(), &project, &libraries);
         Memory::String moduleError;
         const bool ok = (path != nullptr && !sourceStdin) ? loader.rootFile(path, processed, moduleError) : loader.rootText(text, sourceLabel, path ? Memory::String(std::filesystem::path(path).parent_path().string()) : Memory::String("."), processed, moduleError);
         auto analysisFiles = processed.dependencies;
@@ -1045,6 +1047,9 @@ try
     Memory::Vector<Memory::String> sourceFiles;
     sourceFiles.reserve(processed.lineMap.size());
     for (const auto &origin : processed.lineMap) sourceFiles.push_back(origin.file);
+    Memory::Vector<Memory::String> librarySources;
+    for (const auto &file : libraries.sources()) librarySources.push_back(Memory::String(file.c_str()));
+    M_SetLibrarySources(librarySources);
     M_SetSourceFiles(sourceFiles, sourceLabel);
     Memory::Vector<std::size_t> sourceLines;
     for (const auto &origin : processed.lineMap) sourceLines.push_back(origin.line);
@@ -1464,6 +1469,14 @@ try
         for (const auto &external : request.externs)
             if (request.abiGlue.empty() && !external.library.empty() && !chali_aot::isDirectLinkLibrary(external.library) && !chali_aot::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
                 aotOptions.linkLibraries.push_back(external.library);
+        try
+        {
+            libraries.appendTo(aotOptions);
+        } catch (const std::exception &failure)
+        {
+            std::fprintf(stderr, "chali: %s\n", failure.what());
+            return 1;
+        }
         request.options = aotOptions;
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());

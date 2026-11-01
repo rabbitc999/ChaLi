@@ -48,6 +48,7 @@ namespace
 {
 /* 语法动作会在读取旧节点的同时创建新节点；deque 保持旧节点引用有效。 */
 Memory::Deque<MNode> g_nodes;
+Memory::Set<Memory::String> g_librarySources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -2993,6 +2994,13 @@ void M_SetSourceFiles(const Memory::Vector<Memory::String> &files, const Memory:
     g_sourceFallback = fallback;
     g_stringSources.clear();
 }
+/** @brief 保存本次编译的库接口标签。
+ * @param files 仅允许声明的来源文件。 */
+void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
+{
+    g_librarySources.clear();
+    g_librarySources.insert(files.begin(), files.end());
+}
 
 /**
  * @brief 将词法值转换为语义值并更新源码位置。
@@ -3250,6 +3258,37 @@ static std::unique_ptr<ast::Program> g_aotSyntax;
  */
 const ast::Program *M_AotSyntax() { return g_aotSyntax.get(); }
 
+/** @brief 校验 C 原生库接口未夹带运行期实现。
+ * @return 所有来源内节点满足声明限制为真。 */
+bool ValidateNativeLibraryInterfaces()
+{
+    for (std::size_t id = 0; id < g_nodes.size(); ++id)
+    {
+        const auto &node = g_nodes[id];
+        const auto isLibrary = [&](std::size_t line) {
+            return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
+        };
+        if (!isLibrary(node.sourceLine) && !isLibrary(node.expansionLine)) continue;
+        const bool body = node.kind == MNode::FuncDef || node.kind == MNode::OperatorDef
+                          || node.kind == MNode::Lambda || node.kind == MNode::GenericLambda
+                          || (node.kind == MNode::MethodDef && node.kids.size() > 1 && node.kids[1] >= 0);
+        if (body || (node.kind == MNode::Field && node.type2 == 1))
+        {
+            ReductionSourceScope location(static_cast<int>(id));
+            return Fail("当前 c-v1 预编译库接口仅允许声明，不允许运行期函数体或静态字段");
+        }
+    }
+    for (const auto id : g_top)
+    {
+        const auto &node = N(id);
+        if (node.kind != MNode::Declare || !node.sourceLine || node.sourceLine > g_sourceFiles.size()
+            || !g_librarySources.count(g_sourceFiles[node.sourceLine - 1])) continue;
+        ReductionSourceScope location(id);
+        return Fail("当前 c-v1 预编译库接口不允许全局变量；初始化契约尚未开放");
+    }
+    return true;
+}
+
 /**
  * @brief 完成语义检查和所有权展开，保留供 LLVM 直接访问的 AST。
  * @param moduleName 仅用于显式兼容导出的模块名称。
@@ -3320,7 +3359,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             program = ast::Program{};
             // 第一轮只发现具体签名，不执行生成前的占位宿主；最终重放恢复全部绑定检查。
             g_executeNow = run != 0 && !(!reflectionQueriesReady && HasReflectionQueries());
-            if (!RegisterTop())
+            if (!ValidateNativeLibraryInterfaces() || !RegisterTop())
             {
                 RestoreFirstDiagnostic();
                 return 1;

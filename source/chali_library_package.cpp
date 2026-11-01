@@ -2,6 +2,8 @@
  * @brief 有界读取库包，显式小端编码元数据并逐条验证 SHA-256。
  */
 #include "chali_library.hpp"
+#include "chali_aot.hpp"
+#include <map>
 #include "chali_digest.hpp"
 #include "chali_aot_target.hpp"
 #include "chali_native_objects.hpp"
@@ -235,6 +237,78 @@ bool write(const std::filesystem::path &path, const Package &package, std::strin
     {
         error = path.u8string() + "：" + exception.what();
         return false;
+    }
+}
+/** @brief 本次编译独占的目标、内容锁及工作区。 */
+struct ImportSession::State
+{
+    std::string target, cpu;
+    std::map<std::string, Package> packages;
+    std::vector<std::string> sources;
+    std::unique_ptr<chali_native_tools::Workspace> workspace;
+    std::uint64_t bytes = 0;
+};
+/** @brief 初始化目标与 CPU。
+ * @param target 目标别名或三元组。
+ * @param cpu 目标 CPU。 */
+ImportSession::ImportSession(std::string target, std::string cpu) : state_(new State)
+{
+    state_->target = std::move(target);
+    state_->cpu = std::move(cpu);
+}
+/** @brief 在消费者执行完毕后释放快照及暂存实现。 */
+ImportSession::~ImportSession() = default;
+/** @brief 校验模块身份、依赖内容锁和目标后保留拥有型快照。
+ * @param path 包文件。
+ * @param module 预期完整模块名。
+ * @param pin 可选依赖版本与摘要。
+ * @return 会话内稳定的已验证包。 */
+const Package &ImportSession::open(const std::filesystem::path &path, const std::string &module, const Dependency *pin)
+{
+    Package package;
+    std::string error;
+    if (!read(path, package, error)) throw std::runtime_error(path.u8string() + ": " + error);
+    if (package.manifest.module != module) throw std::runtime_error("库模块身份不匹配：" + module);
+    if (pin && (package.manifest.version != pin->version || package.contentSha256 != pin->sha256))
+        throw std::runtime_error("库依赖版本或摘要不匹配：" + module);
+    select(package, state_->target, state_->cpu);
+    const auto existing = state_->packages.find(module);
+    if (existing != state_->packages.end())
+    {
+        if (existing->second.contentSha256 != package.contentSha256) throw std::runtime_error("同一模块解析到不同库内容：" + module);
+        return existing->second;
+    }
+    std::uint64_t size = 0;
+    for (const auto &entry : package.entries) size += entry.bytes.size();
+    if (state_->packages.size() >= 128 || size > maximumPackageBytes - state_->bytes)
+        throw std::runtime_error("本次编译的库数量或总资产超过预算");
+    state_->bytes += size;
+    state_->sources.push_back(std::filesystem::weakly_canonical(path).u8string() + ".interface.chl");
+    return state_->packages.emplace(module, std::move(package)).first->second;
+}
+/** @brief 返回接口来源标签。
+ * @return 本次编译全部已加载接口的标签。 */
+std::vector<std::string> ImportSession::sources() const { return state_->sources; }
+/** @brief 只将已验证快照写入私有工作区，避免重新打开包时发生内容替换。
+ * @param options 接收对象路径和系统库的链接选项。 */
+void ImportSession::appendTo(chali_aot::Options &options)
+{
+    if (state_->packages.empty()) return;
+    if (!state_->workspace) state_->workspace.reset(new chali_native_tools::Workspace);
+    std::size_t index = 0;
+    for (const auto &item : state_->packages)
+    {
+        const std::vector<std::string> features;
+        const auto &target = select(item.second, state_->target, state_->cpu, features);
+        const auto &entry = *item.second.find(target.implementation);
+        const auto file = state_->workspace->path / (std::to_string(index++) + (entry.kind == Kind::Archive ? ".a" : ".o"));
+        std::ofstream stream(file, std::ios::binary | std::ios::trunc);
+        stream.write(entry.bytes.data(), static_cast<std::streamsize>(entry.bytes.size()));
+        stream.close();
+        if (!stream) throw std::runtime_error("无法暂存库实现：" + item.first);
+        options.linkObjects.push_back(Memory::String(file.u8string().c_str()));
+        for (const auto &library : target.systemLibraries)
+            options.linkLibraries.push_back(Memory::String(("-l" + library).c_str()));
     }
 }
 }  // namespace chali_library

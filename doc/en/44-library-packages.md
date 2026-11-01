@@ -4,7 +4,7 @@
 **English** · [简体中文](../44-library-packages.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-A `.chlib` is a single-file container for a language interface, target implementations and dependency identities. `chali lib template` produces a canonical manifest, `pack` bundles existing files, and `inspect` validates the format and reports JSON. Ordinary `import` currently reads `.chl`. These format commands do not compile language implementations, execute initialization or perform complete language semantic checks on interface source.
+A `.chlib` is a single-file container for a language interface, target implementations and dependency identities. `chali lib template` produces a canonical manifest, `pack` bundles existing files, and `inspect` validates the format and reports JSON. Ordinary `import` can load a `c-v1` package interface and its native object/archive. Format commands do not compile implementations or execute initialization; consumer compilation checks interface language semantics.
 
 ## Creating and inspecting a container
 
@@ -28,6 +28,26 @@ chali lib inspect build/math.chlib --module example::math --package-version 1.2.
 Without `--out`, `template` prints canonical single-line JSON. The manifest uses the canonical target triple; its implementation name matches the archive entry above. `pack` reads that canonical manifest. Field order, set ordering and JSON encoding are part of the format; trailing CR/LF is allowed in the manifest input file. Each asset argument is `KIND:NAME=FILE`, keeping its container identity separate from its actual input path. Repeated assets are serialized in name order.
 
 `inspect` reports the whole-package SHA-256, manifest and each entry's name, kind, length and payload SHA-256. It does not print source or binary payloads. `--module` and `--package-version` check expected identity; `--target`/`--cpu` check native selection. Inspection without a target can examine cross-target packages. Successful inspection does not establish execution on that target.
+
+## Ordinary imports
+
+Place the package at `modules/example/math.chlib`. A consumer uses:
+
+```chali
+import example::math;
+void main() {
+    int64 answer = example::math::add(20, 22);
+    assert(answer == 42);
+}
+```
+
+`chali --check consumer.chl` checks declarations; `chali aot consumer.chl --out build/consumer` links the selected implementation. Provider implementation source is not needed. Search proceeds through the current unit directory, its `modules/` directory and `-I` directories, preferring `.chlib` over `.chl` at each location. A found but invalid/incompatible package fails without source fallback. Embedded standard-library loading remains available.
+
+The current native interface accepts type/function declarations with explicit C ABI entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and the owning-value internal language ABI are not enabled by carrying optional source/template assets.
+
+Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
+
+Object/assembly output covers the current compilation unit. A subsequent standalone link must still supply library implementations; consumer `.o`/`.s` files do not embed them. Standalone link receipts and project-level library lock files are not produced yet.
 
 ## Independent compatibility fields
 
@@ -83,6 +103,7 @@ Packages are written in an isolated workspace under root `tmp/` and published on
 
 ```sh
 python tests/chali_digest.py
+python tests/chali_library_import.py --chali PATH
 python tests/chali_library_package.py --chali PATH
 python tests/chali_library_package.py --chali STATIC_PATH --other-chali EXTERNAL_PATH
 ```

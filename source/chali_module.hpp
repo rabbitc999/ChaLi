@@ -5,6 +5,8 @@
 #include "preprocess.hpp"
 #include "chali_incremental.hpp"
 #include "chali_package.hpp"
+#include "chali_library.hpp"
+#include "chali_report.hpp"
 #include "chali_stdlib.hpp"
 
 #include <cctype>
@@ -153,7 +155,7 @@ inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::Str
 }
 
 inline bool findModule(const Memory::String &name, const Memory::String &fromDir,
-                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path)
+                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path, bool packages = false)
 {
     namespace fs = std::filesystem;
     Memory::String relative = name;
@@ -164,12 +166,24 @@ inline bool findModule(const Memory::String &name, const Memory::String &fromDir
     candidates.push_back(fs::path(fromDir) / "modules" / (relative + ".chl"));
     for (const Memory::String &dir : includeDirs)
         candidates.push_back(fs::path(dir) / (relative + ".chl"));
+    if (packages)
+    {
+        Memory::Vector<fs::path> expanded;
+        for (const auto &candidate : candidates)
+        {
+            auto package = candidate;
+            package.replace_extension(".chlib");
+            expanded.push_back(package);
+            expanded.push_back(candidate);
+        }
+        candidates = std::move(expanded);
+    }
     for (const fs::path &candidate : candidates)
     {
         std::error_code ec;
         if (!fs::is_regular_file(candidate, ec)) continue;
-        path = fs::weakly_canonical(candidate, ec).string();
-        if (path.empty()) path = candidate.lexically_normal().string();
+        path = fs::weakly_canonical(candidate, ec).u8string();
+        if (path.empty()) path = candidate.lexically_normal().u8string();
         return true;
     }
     return false;
@@ -257,8 +271,9 @@ class Loader
 public:
     Loader(preprocess::Options options, Memory::Vector<Memory::String> includeDirs,
            chali_incremental::Cache *cache = nullptr,
-           const chali_package::Project *project = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
+           const chali_package::Project *project = nullptr, chali_library::ImportSession *libraries = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
     {
+        libraries_ = libraries;
         options_.allowIncludes = false;
 #if defined(_WIN32)
         const char *os = "windows";
@@ -444,6 +459,77 @@ private:
                                    input.dependencies.end());
     }
 
+    /**
+     * @brief 按普通导入路径装载源码或精确锁定的库包接口。
+     * @param name 完整模块名。
+     * @param base 当前模块目录。
+     * @param output 合并输入。
+     * @param error 失败诊断。
+     * @param pin 可选依赖清单中的精确锁。
+     * @return 成功为真；不执行库初始化。
+     */
+    bool importFile(const Memory::String &name, const Memory::String &base, preprocess::Result &output,
+                    Memory::String &error, const chali_library::Dependency *pin = nullptr)
+    {
+        Memory::String path;
+        if (!findModule(name, base, includeDirs_, path, libraries_ != nullptr))
+        {
+            error = "找不到模块 " + name + "（需要 .chlib 或 .chl）";
+            return false;
+        }
+        const bool packaged = std::filesystem::u8path(path.c_str()).extension() == ".chlib";
+        const auto prior = modulePackageKinds_.find(name);
+        if (prior != modulePackageKinds_.end() && prior->second != packaged)
+        {
+            error = "同一模块不能混用源码与预编译库：" + name;
+            return false;
+        }
+        modulePackageKinds_[name] = packaged;
+        preprocess::Result child;
+        const auto parent = std::filesystem::u8path(path.c_str()).parent_path().u8string();
+        if (packaged)
+        {
+            if (!libraries_)
+            {
+                error = "当前入口未启用库包加载";
+                return false;
+            }
+            try
+            {
+                const auto &package = libraries_->open(std::filesystem::u8path(path.c_str()), name.c_str(), pin);
+                const Memory::String label = path + ".interface.chl";
+                auto libraryRoot = std::filesystem::u8path(parent);
+                for (std::size_t at = 0; (at = name.find("::", at)) != Memory::String::npos; at += 2)
+                    libraryRoot = libraryRoot.parent_path();
+                const Memory::String rootDirectory(libraryRoot.u8string().c_str());
+                if (std::find(includeDirs_.begin(), includeDirs_.end(), rootDirectory) == includeDirs_.end())
+                    includeDirs_.push_back(rootDirectory);
+                libraryUnits_[label] = &package;
+                chali_report::registerVirtualSource(label, Memory::String(package.find(package.manifest.interface)->bytes.c_str()));
+                preprocess::Preprocessor processor(options_);
+                if (!processor.runText(Memory::String(package.find(package.manifest.interface)->bytes.c_str()), label,
+                                       Memory::String(parent.c_str()), child)) return diagnostics(child, error);
+                child.dependencies.clear();
+            } catch (const std::exception &failure)
+            {
+                error = failure.what();
+                return false;
+            }
+        }
+        else
+        {
+            if (pin)
+            {
+                error = "锁定的库依赖不能回退到源码：" + name;
+                return false;
+            }
+            if (!preprocessFile(path, child)) return diagnostics(child, error);
+        }
+        if (!load(child, Memory::String(parent.c_str()), name, false, output, error)) return false;
+        output.dependencies.push_back(path);
+        return true;
+    }
+
     bool load(const preprocess::Result &unit, const Memory::String &base,
               const Memory::String &expected, bool root, preprocess::Result &output,
               Memory::String &error)
@@ -493,6 +579,13 @@ private:
         /* 这个单元（连同它 `%include` 的文件）属于哪个模块 —— `$module` 就查这张表。 */
         for (const preprocess::LineOrigin &origin : effective.lineMap)
             if (!origin.file.empty()) moduleByFile_[origin.file] = key;
+        if (!unit.lineMap.empty())
+        {
+            const auto library = libraryUnits_.find(unit.lineMap.front().file);
+            if (library != libraryUnits_.end())
+                for (const auto &dependency : library->second->manifest.dependencies)
+                    if (!importFile(Memory::String(dependency.module.c_str()), base, output, error, &dependency)) return false;
+        }
         for (const Memory::String &imported : info.imports)
         {
             if (imported == "std::lang") continue;
@@ -517,17 +610,7 @@ private:
                 if (!load(child, base, imported, false, output, error)) return false;
                 continue;
             }
-            Memory::String path;
-            if (!findModule(imported, base, includeDirs_, path))
-            {
-                error = "找不到模块 " + imported + "（需要 " + imported + ".chl）";
-                return false;
-            }
-            preprocess::Result child;
-            if (!preprocessFile(path, child)) return diagnostics(child, error);
-            if (!load(child, std::filesystem::path(path).parent_path().string(), imported,
-                      false, output, error)) return false;
-            output.dependencies.push_back(path);
+            if (!importFile(imported, base, output, error)) return false;
         }
         visiting_.erase(key);
         loaded_.insert(key);
@@ -554,6 +637,9 @@ private:
         return true;
     }
 
+    chali_library::ImportSession *libraries_ = nullptr;
+    Memory::Map<Memory::String, const chali_library::Package *> libraryUnits_;
+    Memory::Map<Memory::String, bool> modulePackageKinds_;
     preprocess::Options options_;
     Memory::Vector<Memory::String> includeDirs_;
     Memory::Set<Memory::String> visiting_;
