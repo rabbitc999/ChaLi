@@ -9,6 +9,7 @@
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
 #include "generator/generator_cli.hpp"
+#include "chali_assembler.hpp"
 #include <filesystem>
 #include <cstdlib>
 #include <cstdio>
@@ -76,6 +77,7 @@ int main(int argc, char **argv)
     normalizedArgv.push_back(nullptr);
     argc = static_cast<int>(normalized.size());
     argv = normalizedArgv.data();
+    if (argc > 1 && std::strcmp(argv[1], "asm") == 0) return chali_assembler::runCli(argc, argv);
     if (argc > 2 && std::strcmp(argv[1], "gen") == 0 && std::strcmp(argv[2], "abi") == 0) return chali_abi_import::run(argc, argv);
     if (argc > 1 && std::strcmp(argv[1], "new") == 0) return chali_project::runCli(argc, argv);
     /* `chali lsp --macros`：在**本进程内**跑 ChaLi 宏/块的 LSP（chali/source/lsp 编进了编译器，

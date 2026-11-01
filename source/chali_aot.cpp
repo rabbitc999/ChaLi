@@ -6,6 +6,9 @@
 #include "ast/ast.hpp"
 #include "chali_aot_debug.hpp"
 #include "chali_aot_llvm.hpp"
+#include "chali_assembler.hpp"
+#include "chali_native_tools.hpp"
+#include <memory>
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_i18n.hpp"
@@ -42,9 +45,18 @@ namespace chali_aot
  */
 bool usesDynamicAbiLibrary(const ExternFunction &function)
 {
-    if (function.library.empty()) return false;
+    if (function.library.empty() || isDirectLinkLibrary(function.library)) return false;
     const auto extension = std::filesystem::u8path(std::string(function.library.c_str())).extension().u8string();
     return extension != ".a" && extension != ".lib" && extension != ".o" && extension != ".obj";
+}
+/**
+ * @brief 检查显式 C 链接标记，不把它当作动态库路径。
+ * @param library 原始库身份。
+ * @return @link 标记为真。
+ */
+bool isDirectLinkLibrary(const Memory::String &library)
+{
+    return library == "@link";
 }
 namespace
 {
@@ -1656,7 +1668,7 @@ struct Builder
             }
         }
         const auto external = state.externsByLabel.find(textOf(callee));
-        if (external != state.externsByLabel.end() && state.request.abiGlue.empty())
+        if (external != state.externsByLabel.end() && (state.request.abiGlue.empty() || isDirectLinkLibrary(external->second->library)))
         {
             state.usedExternLabels.insert(textOf(callee));
             const auto &signature = *external->second;
@@ -2764,6 +2776,16 @@ bool writeFile(const Text &path, const Memory::String &contents)
 }  // namespace
 
 /**
+ * @brief 复用原生后端的驱动路径解析，供汇编和链接入口使用。
+ * @param wanted 显式 LLVM 驱动路径。
+ * @return 拥有型驱动路径。
+ */
+Memory::String llvmCompilerPath(const Memory::String &wanted)
+{
+    return Memory::String(compilerPath(wanted).c_str());
+}
+
+/**
  * @brief 将 LLVM 模块写盘，由 LLVM 优化与生成目标代码，再链接原生产物。
  * @param request 四元式、运行时数据、外部函数及输出配置。
  * @param diagnostics 接收生成、写入或 LLVM 工具失败的诊断。
@@ -2796,6 +2818,11 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         if (diagnostics) diagnostics->push_back("AOT：跨目标复杂 C ABI 封送需要目标 C++ 工具链；请先使用 --emit-obj 导出对象及 .abi.cpp，再在目标 SDK 中链接");
         return 1;
     }
+    if (!request.options.assemblySources.empty() && (codeOnly || request.options.emitLLVMOnly))
+    {
+        if (diagnostics) diagnostics->push_back("AOT：--asm 只用于最终链接，不能与 --emit-asm、--emit-obj 或 --emit-llvm 组合");
+        return 1;
+    }
     Memory::String header;
     const Memory::String source = generateLLVM(request, diagnostics, &header);
     if (source.empty()) return 1;
@@ -2819,6 +2846,17 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     {
         if (diagnostics) diagnostics->push_back("AOT：无法写入目标 ABI 封送源码");
         return 1;
+    }
+    std::unique_ptr<chali_native_tools::Workspace> assemblyWork;
+    if (!request.options.assemblySources.empty())
+    {
+        assemblyWork = std::make_unique<chali_native_tools::Workspace>();
+        for (std::size_t index = 0; index < request.options.assemblySources.size(); ++index)
+        {
+            const auto object = assemblyWork->path / ("input-" + std::to_string(index) + ".o");
+            if (chali_assembler::assemble(request.options.assemblySources[index], Memory::String(object.u8string().c_str()), request.options, diagnostics) != 0) return 1;
+            linked.options.linkObjects.push_back(Memory::String(object.u8string().c_str()));
+        }
     }
     const Text product = prefix + (assemblyOnly ? ".s" : objectOnly         ? ".o" :
                                                      request.options.shared ? target.windows ? ".dll" : ".so" :

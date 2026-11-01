@@ -104,7 +104,7 @@ Memory::String AbiGlueSource()
 {
     Memory::Map<Memory::String, Memory::Vector<const MFunctionDecl *>> libraries;
     for (const MFunctionDecl &function : g_functionDecls)
-        if (!function.abiLibrary.empty() && !function.superseded)
+        if (!function.abiLibrary.empty() && !::chali_aot::isDirectLinkLibrary(function.abiLibrary) && !function.superseded)
             libraries[function.abiLibrary].push_back(&function);
     if (libraries.empty() && CAbiExportFunctions().empty()) return {};
     Memory::String definitions;

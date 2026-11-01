@@ -132,6 +132,7 @@ void PrintUsage(std::FILE *out)
              "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
+             "  asm            将目标 .s 汇编为对象文件，不执行链接\n"
              "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
@@ -154,6 +155,8 @@ void PrintUsage(std::FILE *out)
              "  --warnings-as-errors  把启用的警告提升为错误\n",
              "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n",
              "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
+             "  --asm 文件.s          汇编后加入最终链接，可重复指定\n"
+             "  --asm-include 目录     汇编 .include 的搜索目录，可重复指定\n"
              "  --emit-asm             生成目标机器汇编 .s，不链接；可配合 --target\n"
              "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
@@ -357,7 +360,7 @@ try
             if (argument == "--emit-obj") aotOptions.emitObjectOnly = true;
             continue;
         }
-        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--allocator"))
+        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--asm" || argument == "--asm-include" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--allocator"))
         {
             if (index + 1 >= argc)
             {
@@ -367,6 +370,8 @@ try
             const Memory::String value = argv[++index];
             if (argument == "--llvm") aotOptions.compiler = value;
             if (argument == "--export") aotOptions.exports.push_back(value);
+            if (argument == "--asm") aotOptions.assemblySources.push_back(value);
+            if (argument == "--asm-include") aotOptions.assemblyIncludes.push_back(value);
             if (argument == "--link") aotOptions.linkLibraries.push_back(value);
             if (argument == "--target") aotOptions.target = value;
             if (argument == "--allocator") aotOptions.allocator = value;
@@ -1454,7 +1459,7 @@ try
         aotOptions.stepLimit = stepLimit;
         aotOptions.threadsEnabled = threadsEnabled;
         for (const auto &external : request.externs)
-            if (request.abiGlue.empty() && !external.library.empty() && !chali_aot::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
+            if (request.abiGlue.empty() && !external.library.empty() && !chali_aot::isDirectLinkLibrary(external.library) && !chali_aot::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
                 aotOptions.linkLibraries.push_back(external.library);
         request.options = aotOptions;
         const int status = chali_aot::run(request, &diagnostics);

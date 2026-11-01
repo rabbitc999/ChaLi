@@ -118,4 +118,20 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
-The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. This option does not introduce a standalone `chali asm` or `chali link` command.
+The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler below; a standalone link command is not yet available.
+
+## Standalone assembler and assembly inputs
+
+```sh
+chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
+chali asm native/add.s --target linux-x64 --out build/add.o
+chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+```
+
+`asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.
+
+The static variant uses LLVM MC in process without clang; explicit `--llvm` selects the external integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
+
+AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
+
+For a symbol supplied by linked objects, declare `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. `@link` is a compiler marker, never a filename or dynamic-library lookup. Its current signatures support fixed scalar parameters/results (integer, boolean, floating point, and void result); aggregate, pointer, string, callback and release-function forms are rejected. It remains a direct call when other declarations need typed C marshalling. Ordinary host declarations and existing library paths retain their behavior; an empty library string does not select direct linkage.

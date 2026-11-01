@@ -30,6 +30,12 @@ struct ExternFunction
  * @return 非空且不是静态库或对象文件时返回真。
  */
 bool usesDynamicAbiLibrary(const ExternFunction &function);
+/**
+ * @brief 判断是否显式声明最终链接阶段解析的 C 符号。
+ * @param library ABI 库说明；@link 表示直接链接。
+ * @return 是直接链接标记时为真。
+ */
+bool isDirectLinkLibrary(const Memory::String &library);
 
 /**
  * @brief AOT 输出的形态与开关。
@@ -52,6 +58,8 @@ struct Options
     Memory::String outputPrefix;                     ///< LLVM 模块、头文件和原生产物的公共前缀。
     Memory::Vector<Memory::String> exports;          ///< 显式导出给 C 的 ChaLi 函数名。
     Memory::Vector<Memory::String> linkLibraries;    ///< 额外的链接库（`abi` 里的库路径）。
+    Memory::Vector<Memory::String> assemblySources;  ///< 显式加入最终链接的 .s 输入。
+    Memory::Vector<Memory::String> assemblyIncludes;  ///< 汇编 .include 的搜索目录。
     Memory::Vector<Memory::String> linkObjects;      ///< 本次编译生成的宿主封送目标文件。
     std::size_t memoryBytes = 512u * 1024u * 1024u;  ///< 数据区之外的堆预算。
     std::size_t stepLimit = 0;                       ///< 运行安全点的逻辑步数上限，零表示不限。
@@ -148,5 +156,11 @@ void setAbiGlueProvider(Memory::String (*provider)());
  * @return 0 成功，非 0 失败。
  */
 [[nodiscard]] int run(const Request &request, Memory::Vector<Memory::String> *diagnostics);
+/**
+ * @brief 查找实际外置 LLVM 驱动，不启动子进程。
+ * @param wanted 显式路径；空值使用环境、发行目录或 PATH。
+ * @return 驱动路径或 clang 程序名。
+ */
+Memory::String llvmCompilerPath(const Memory::String &wanted);
 
 }  // namespace chali_aot

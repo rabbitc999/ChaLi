@@ -1291,7 +1291,7 @@ bool RegisterTop()
         if (!top.abiLibrary.empty())
         {
             declaration.abiLibrary = DecodeAbiLibraryPath(top.abiLibrary);
-            if (!declaration.abiLibrary.empty())
+            if (!declaration.abiLibrary.empty() && !chali_aot::isDirectLinkLibrary(declaration.abiLibrary))
             {
                 namespace fs = std::filesystem;
                 const auto library = Memory::u8path(declaration.abiLibrary);
@@ -1308,6 +1308,15 @@ bool RegisterTop()
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())
                 return Fail("abi 库路径与 C 符号名不能为空");
+            if (chali_aot::isDirectLinkLibrary(declaration.abiLibrary))
+            {
+                const auto scalar = [](const std::shared_ptr<MType> &type) {
+                    return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
+                };
+                if (!declaration.abiRelease.empty() || !scalar(declaration.signature.result)) return Fail("@link 当前仅支持固定标量 C ABI 签名，不接受释放函数");
+                for (const auto &parameter : declaration.signature.params)
+                    if (!scalar(parameter.type) || parameter.type->kind == MType::Void) return Fail("@link 当前仅支持固定标量 C ABI 签名");
+            }
             if (!declaration.abiRelease.empty())
             {
                 const auto result = CAbiUnderlying(declaration.signature.result);

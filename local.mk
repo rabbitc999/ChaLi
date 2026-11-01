@@ -271,7 +271,7 @@ endif
 -include $(CHALI_BUILD_ROOT)/chali-native-development.d
 
 # 泛型与闭包文本处理实现独立编译，解析器和语言服务只依赖声明。
-CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_target chali_aot_debug chali_aot_llvm chali_aot_runtime_assets chali_temp
+CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_target chali_aot_debug chali_aot_llvm chali_aot_runtime_assets chali_temp chali_native_tools chali_assembler chali_assembler_llvm
 CHALI_FRONTEND_MODULE_OBJS := $(addprefix $(FRONTEND_BUILD)/,$(addsuffix .o,$(CHALI_FRONTEND_MODULES)))
 LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)
@@ -311,6 +311,13 @@ CHALI_AOT_LDLIBS := -L$(CHALI_LLVM_SDK)/lib -Wl,--start-group -llldMinGW -llldCO
 $(CHALI_LLVM_STATIC_OBJ): source/chali_aot_llvm.cpp source/chali_aot_llvm.hpp source/chali_aot.hpp $(CHALI_LLVM_CONFIG) | $(CHALI_BUILD_ROOT)/chali-native
 	$(CXX) $(CXXFLAGS) -DCHALI_STATIC_LLVM=1 -DLLVM_BUILD_STATIC -I$(CHALI_LLVM_SDK)/include -Ilibrary -MMD -MP -c $< -o $@
 -include $(CHALI_BUILD_ROOT)/chali-native/chali_aot_llvm_static.d
+CHALI_ASSEMBLER_STATIC_OBJ := $(CHALI_BUILD_ROOT)/chali-native/chali_assembler_llvm_static.o
+DEMO_OBJS += $(CHALI_ASSEMBLER_STATIC_OBJ)
+$(TARGET): $(CHALI_ASSEMBLER_STATIC_OBJ)
+$(CHALI_ASSEMBLER_STATIC_OBJ): source/chali_assembler_llvm.cpp source/chali_assembler.hpp source/chali_aot.hpp $(CHALI_LLVM_CONFIG) | $(CHALI_BUILD_ROOT)/chali-native
+	$(CXX) $(CXXFLAGS) -DCHALI_STATIC_LLVM=1 -DLLVM_BUILD_STATIC -I$(CHALI_LLVM_SDK)/include -Ilibrary -MMD -MP -c $< -o $@
+-include $(CHALI_BUILD_ROOT)/chali-native/chali_assembler_llvm_static.d
+
 endif
 
 # 编译期 AST 宏的独立实现，避免 regex 等重型头传播到解析器接口。

@@ -125,4 +125,20 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
-同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。本选项尚未提供独立的 `chali asm` 或 `chali link` 命令。
+同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编入口见下节；独立链接入口尚未交付。
+
+## 独立汇编器与汇编输入
+
+```sh
+chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
+chali asm native/add.s --target linux-x64 --out build/add.o
+chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+```
+
+`asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。
+
+静态变体直接调用 LLVM MC，无需 clang；显式 `--llvm` 使用外置集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
+
+AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
+
+引用最终链接提供的符号时，可声明 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。`@link` 是编译器标记，不作为文件名或动态库查询。目前仅支持固定标量参数／返回（整数、布尔、浮点及 void 返回），聚合、指针、字符串、回调和释放函数形式明确拒绝。即使其他声明需要类型化 C 封送，该标记仍直接调用链接符号；普通宿主声明及既有库路径规则保留，空库字符串不表示直接链接。
