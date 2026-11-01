@@ -174,3 +174,7 @@ allocator = "malloc"
 ```
 
 Build Current File respects executable, `.o`, or `.ll` output. Linux executables have no `.exe` suffix. Build Executable requires `output = "executable"` and does not rewrite the manifest. The status bar shows the target, output kind, and actual compiler LLVM variant. Choices include only registered Windows x64, Linux x64, and Linux ARM64 targets. Object generation does not validate target linking or execution; cross executables still require the corresponding SDK, runtime, and link dependencies.
+
+P7 rename edits include source fingerprints. Before returning edits, the extension checks open versions and the current text of closed dependencies. Standard sources are read-only; ambiguous bindings or macro-template references reject the complete rename.
+
+Code actions can fill directly listed non-generic interface methods and add a fallback to an incomplete match. Generated bodies contain explicit `TODO panic` placeholders that need implementation. Each candidate must pass an isolated compiler check without entering the normal report or preprocessing cache. Other errors, generics, or ambiguous declarations can prevent an action. The macro preview's “Expansion origins and bindings” summary lists compiler-recorded source, definition, metadata and control-target locations with navigation; it does not infer transitive purity.

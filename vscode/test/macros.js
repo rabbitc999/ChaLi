@@ -200,6 +200,13 @@ async function main() {
   assert.match(english, /Search macros/);
   assert.match(english, /<span class="kind">call<\/span><span class="name">userName<\/span>/);
   assert.doesNotMatch(english, /搜索宏/);
+  const origins = renderTabs([{ name: 'M', tree: { kind: 'identifier', symbol: 'binding<1>',
+    source: { file: 'a&b.chl', line: 2, column: 3 },
+    definition: { file: '<builtin>', line: 1, column: 1 },
+    children: [{ kind: 'identifier', source: { file: 'a&b.chl', line: 2, column: 3 } }] } }], { language: 'en' });
+  assert.match(origins, /Expansion origins and bindings \(1\)/);
+  assert.match(origins, /Hygienic bindings: binding&lt;1&gt;/);
+  assert.doesNotMatch(origins, /&lt;builtin&gt;/);
   console.log('宏展开插件验证通过：单页多 Tab、搜索、树形节点、独立静态导出、双击回源、面板复用与错误展示。');
 }
 

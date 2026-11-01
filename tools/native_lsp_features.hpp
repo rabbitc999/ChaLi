@@ -204,7 +204,7 @@ J refactor(const std::string &method, const J &params, const std::string &u, con
         if (!edits.empty())
         {
             auto document = documents.find(file.first);
-            changes.push_back(object({ { "textDocument", object({ { "uri", file.first }, { "version", document == documents.end() ? J() : document->second->second } }) }, { "edits", edits } }));
+            changes.push_back(object({ { "textDocument", object({ { "uri", file.first }, { "version", document == documents.end() ? J() : document->second->second } }) }, { "expectedHash", lspHash(body) }, { "edits", edits } }));
         }
     }
     usedDocuments.insert(dependencies.begin(), dependencies.end());

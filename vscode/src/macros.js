@@ -210,9 +210,31 @@ function renderFigure(expansion, index, total, language) {
       <button type="button" data-action="fit">${ui(language, '适应宽度', 'Fit width')}</button>
     </span>
   </figcaption>
+  ${renderOrigins(expansion.tree, language)}
   ${renderEffects(expansion.tree && expansion.tree.effects, language)}
   <div class="tree-viewport"><div class="tree">${renderNode(expansion.tree, 0, language) || `<div class="leaf">${ui(language, '（空模板）', '(Empty template)')}</div>`}</div></div>
 </figure>`;
+}
+
+/** 汇总编译器给出的来源位置及卫生绑定，不从渲染文本猜测来源。 */
+function renderOrigins(tree, language) {
+  const locations = new Map(), bindings = new Set();
+  const visit = node => {
+    if (!node || typeof node !== 'object') return;
+    if (node.symbol) bindings.add(String(node.symbol));
+    for (const [key, label] of [['source', ui(language, '来源', 'Source')], ['definition', ui(language, '定义', 'Definition')],
+      ['metadataSource', ui(language, '元数据声明', 'Metadata declaration')], ['controlTarget', ui(language, '出口', 'Target')]]) {
+      const loc = node[key];
+      if (!loc || typeof loc.file !== 'string' || !loc.file || loc.file.startsWith('<') ||
+          !Number.isInteger(loc.line) || loc.line <= 0 || !Number.isInteger(loc.column) || loc.column <= 0) continue;
+      const id = `${key}:${JSON.stringify(loc)}`;
+      if (!locations.has(id)) locations.set(id, `<li>${escapeHtml(label)} <button data-node-location="${escapeHtml(JSON.stringify(loc))}">${escapeHtml(loc.file)}:${loc.line}:${loc.column}</button></li>`);
+    }
+    for (const child of node.children || []) visit(child);
+  };
+  visit(tree);
+  return `<details class="origins"><summary>${ui(language, '展开来源与绑定', 'Expansion origins and bindings')} (${locations.size})</summary>`
+    + `<ul>${[...locations.values()].join('')}</ul><p>${ui(language, '卫生绑定', 'Hygienic bindings')}: ${[...bindings].map(escapeHtml).join(', ') || '—'}</p></details>`;
 }
 
 /**

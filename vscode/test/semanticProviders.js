@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const Module = require('node:module');
-const { registerSemanticProviders } = require('../src/semanticProviders');
+const { registerSemanticProviders, textHash } = require('../src/semanticProviders');
 
 /** 验证编辑器 provider 的协议转换、版本拒绝和类型提示开关。 */
 async function main() {
@@ -46,6 +46,15 @@ async function main() {
   assert.equal((await providers.rename.provideRenameEdits(document, range.start, 'input')).changes[0].edits[0].newText, 'input');
   document.version = 5;
   await assert.rejects(providers.rename.provideRenameEdits(document, range.start, 'input'), /文档已更新/);
+  document.version = 4;
+  const closedUri = 'file:///project/dependency.chl';
+  const closed = { getText: () => 'int64 值 = 1;\n' };
+  vscode.workspace.openTextDocument = async () => closed;
+  response = { documentChanges: [{ textDocument: { uri: closedUri, version: null }, expectedHash: textHash(closed.getText()), edits: [{ range, newText: 'input' }] }] };
+  assert.equal((await providers.rename.provideRenameEdits(document, range.start, 'input')).changes.length, 1);
+  closed.getText = () => 'int64 值 = 2;\n';
+  await assert.rejects(providers.rename.provideRenameEdits(document, range.start, 'input'), /依赖源码已更新/);
+  assert.equal(textHash('hello'), 'a430d84680aabd0b');
   response = [{ position: range.end, label: ': int32', tooltip: { value: '推断类型' } }];
   const hints = await providers.inlay.provideInlayHints(document, range);
   assert.equal(hints[0].label, ': int32'); assert.equal(hints[0].tooltip.value, '推断类型');

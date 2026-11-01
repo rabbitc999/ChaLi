@@ -1,5 +1,13 @@
 'use strict';
 
+/** 核对编译器按 UTF-8 字节计算的 FNV-1a 内容指纹。 */
+function textHash(text) {
+  let hash = 14695981039346656037n;
+  for (const byte of Buffer.from(text, 'utf8')) hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 1099511628211n);
+  return hash.toString(16);
+}
+
+
 /**
  * 注册以服务端绑定身份为依据的引用、重命名和可选类型提示。
  * @param {object} vscode 编辑器 API。
@@ -43,6 +51,13 @@ function registerSemanticProviders(vscode, context, deps) {
           if (change.textDocument.version !== null && (!open || open.version !== change.textDocument.version)) {
             throw new Error('重命名期间文档已更新，请重新执行。');
           }
+          if (target.scheme === 'chali-stdlib') throw new Error('标准库源码只读，不能重命名。');
+          if (change.expectedHash) {
+            const current = open || await vscode.workspace.openTextDocument(target);
+            if (token && token.isCancellationRequested) return null;
+            if (textHash(current.getText()) !== change.expectedHash)
+              throw new Error('重命名期间依赖源码已更新，请重新执行。');
+          }
           edit.set(target, change.edits.map((item) => new vscode.TextEdit(toRange(item.range), item.newText)));
         }
         return edit;
@@ -68,4 +83,4 @@ function registerSemanticProviders(vscode, context, deps) {
   );
 }
 
-module.exports = { registerSemanticProviders };
+module.exports = { registerSemanticProviders, textHash };

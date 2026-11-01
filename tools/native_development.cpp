@@ -3266,6 +3266,7 @@ class Server
     std::shared_ptr<LspCache> cache;
     std::shared_ptr<LspAnalysisBudget> analysisBudget = std::make_shared<LspAnalysisBudget>();
     bool backgroundAnalysis = false;
+    bool ephemeralAnalysis = false;
     std::shared_ptr<std::mutex> outputMutex;
     std::mutex stateMutex;
     std::map<std::string, std::shared_ptr<std::atomic<bool>>> requests, diagnostics;
@@ -3616,7 +3617,7 @@ class Server
     J checkReport(const std::string &u, const std::function<bool()> &cancelled, double timeout = 30)
     {
         const auto &body = documents.at(u)->first;
-        collect(u, body);
+        if (!ephemeralAnalysis) collect(u, body);
         const auto interrupted = [&] { return cancelled() || (requestCancelled && requestCancelled->load()) || revision->load() != snapshotRevision; };
         const auto serial = cache->reportLock(u);
         std::unique_lock<std::timed_mutex> single(*serial, std::defer_lock);
@@ -3631,6 +3632,7 @@ class Server
         const auto file = pathOf(u), saved = cache->path("diagnostics", u);
         try
         {
+            if (ephemeralAnalysis) throw std::runtime_error("candidate report is not cached");
             const auto memory = cache->report(u);
             const auto entry = memory ? *memory : parse(read(saved));
             bool valid = integer(get(entry, "schema")) == 2 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
@@ -3681,11 +3683,12 @@ class Server
         auto slot = analysisBudget->acquire(!backgroundAnalysis, interrupted);
         if (!slot) return J();
         ++cache->checks;
-        const auto result = execute({ compiler.u8string(), "--check", "--diagnostics=json", "--warning-profile=editor", "--incremental", "--source-stdin",
-                                      "--cache-dir", (cache->directory / "preprocess").u8string(), "--source-overlays", (temporary.path / "overlays.json").u8string(),
-                                      "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
-                                      "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() },
-                                    file.parent_path(), body, timeout, interrupted);
+        std::vector<std::string> command{ compiler.u8string(), "--check", "--diagnostics=json", "--warning-profile=editor", "--source-stdin",
+                                          "--source-overlays", (temporary.path / "overlays.json").u8string(),
+                                          "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
+                                          "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() };
+        if (!ephemeralAnalysis) command.insert(command.end(), { "--incremental", "--cache-dir", (cache->directory / "preprocess").u8string() });
+        const auto result = execute(command, file.parent_path(), body, timeout, interrupted);
         slot.reset();
         if (result.cancelled || interrupted()) return J();
         if (result.error == "timed out") throw std::runtime_error("语义检查超时");
@@ -3698,6 +3701,7 @@ class Server
         } catch (...) {}
         try
         {
+            if (ephemeralAnalysis) return report;
             const auto dependencies = parse(read(temporary.path / "dependencies.json"));
             if (get(dependencies, "complete").asBool() && *get(dependencies, "complete").asBool())
             {
@@ -4039,6 +4043,7 @@ class Server
     }
 #include "native_lsp_features.hpp"
 #include "native_lsp_integration.hpp"
+#include "native_lsp_actions.hpp"
     /**
      * @brief 处理一个语言服务器请求并构造结果。
      * @param method 压缩方法编号或目标方法名称。
@@ -4156,7 +4161,7 @@ class Server
         }
         if (method == "textDocument/references" || method == "textDocument/prepareRename" || method == "textDocument/rename")
             return refactor(method, params, u, s, records, cursor);
-        if (method == "textDocument/codeAction") return warningActions(u, s, params);
+        if (method == "textDocument/codeAction") return codeActions(u, s, params, records);
         if (method == "textDocument/inlayHint")
         {
             const auto report = checkReport(u, [] { return false; });

@@ -236,11 +236,19 @@ def main():
             assert len(refs) == 2 and {r['uri'] for r in refs} == {uri, module.as_uri()}, refs
             edit = query('rename', text, text.index('compute'), newName='calculate')
             assert len(edit['documentChanges']) == 2, edit
+            def source_hash(value):
+                """按真实 UTF-8 文本复核服务端重命名内容指纹。"""
+                digest = 14695981039346656037
+                for byte in value.encode('utf-8'):
+                    digest = ((digest ^ byte) * 1099511628211) & ((1 << 64) - 1)
+                return format(digest, 'x')
+            assert all(c['expectedHash'] == source_hash(text if c['textDocument']['uri'] == uri else module.read_text(encoding='utf-8')) for c in edit['documentChanges']), edit
             assert any(c['textDocument']['uri'] == module.as_uri() and c['textDocument']['version'] is None for c in edit['documentChanges'])
             unsaved = 'module alpha;\n// 未保存修改\nint64 compute(int64 value){return value+1;}'
             server.send(dict(method='textDocument/didOpen', params=dict(textDocument=dict(uri=module.as_uri(), text=unsaved, version=7))))
             edit = query('rename', text, text.index('compute'), newName='calculate')
             assert any(c['textDocument']['uri'] == module.as_uri() and c['textDocument']['version'] == 7 and c['edits'][0]['range']['start']['line'] == 2 for c in edit['documentChanges']), edit
+            assert any(c['expectedHash'] == source_hash(unsaved) for c in edit['documentChanges'] if c['textDocument']['uri'] == module.as_uri()), edit
             assert '未保存修改' not in module.read_text(encoding='utf-8')
 
             text = '''int64 pick(int64 value){return value;}
