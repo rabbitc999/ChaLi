@@ -3602,7 +3602,7 @@ ast::NodePtr LowerStmtImpl(int id)
             if (g_parameterValueStorage.count(name)) out.push_back(MakeDrop(name, false));
         /* 入口 `main` 的全局停机清理不在这里插：函数体全部降级完后由
          * `InsertGlobalCleanupBeforeReturns` 统一补，免得后面别的函数又改了全局的登记项。 */
-        out.push_back(ast::Node::ret(ast::Node::var(slot)));
+        out.push_back(LocateNode(ast::Node::ret(ast::Node::var(slot)), id));
         return ast::Node::block(out);
     }
     case MNode::ExprStmt:

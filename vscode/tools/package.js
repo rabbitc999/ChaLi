@@ -95,6 +95,7 @@ function main() {
   run(process.execPath, [path.join('tools', 'embed-compiler.js')]);
   run(process.execPath, [path.join('tools', 'check-manifest.js')]);
   if (!SKIP_TESTS) {
+    run(process.execPath, [path.join('test', 'debugProtocol.js')]);
     run(process.execPath, [path.join('test', 'smoke.js')]);
     run(process.execPath, [path.join('test', 'dependencies.js')]);
     run(process.execPath, [path.join('test', 'macros.js')]);

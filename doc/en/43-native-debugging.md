@@ -27,6 +27,20 @@ Install the ChaLi extension and a GDB matching the target platform. Open a `.chl
 
 Debug builds use `-O0` and retain native symbols and source locations, allowing variables and steps to remain observable. Release builds retain highest optimization, LTO and dead-code elimination. Debug timings are not release-performance measurements.
 
+## Session control
+
+Build, configuration, running, stopped and ended are distinct states. Control requests execute in order. Stack frames, variables and expressions belong to the current stop; continuing invalidates their references, and late inspection responses report expiration instead of displaying stale values.
+
+Debug builds and inspections can be cancelled. Clients supporting progress reporting can also cancel the build progress. Disconnect and terminate clean up the session compiler and GDB process trees. Restart rebuilds the program and reinstalls source breakpoints, including when the previous build is still active. Normal exit and repeated cleanup produce one termination event.
+
+DAP headers are limited to 8 KiB, message bodies and individual MI records to 16 MiB. DAP and MI each allow at most 256 pending requests. Malformed lengths, truncated envelopes and invalid JSON stop dispatch. MI requests default to a 20-second timeout; late replies cannot satisfy newer requests. Cancelling submitted execution does not undo program actions; an uncertain execution state ends the session.
+
+Conditional/log breakpoints, language-container views and runtime-error filters are not yet provided. The debugger advertises only implemented capabilities. Run the protocol, real GDB and lifecycle checks with:
+
+```sh
+python tools/run_module_gates.py debug --chali PATH --random-recheck 1
+```
+
 ## Command line
 
 ```text

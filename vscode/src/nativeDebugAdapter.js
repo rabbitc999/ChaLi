@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { EventEmitter } = require('node:events');
+const { constants: osConstants } = require('node:os');
+const { RequestReader, stopProcessTree, BODY_LIMIT } = require('./debugProtocol');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -13,8 +15,9 @@ function parseMi(text) {
     at++;
     const bytes = [];
     while (at < text.length) {
-      const c = text[at++];
-      if (c === '"') break;
+      const c = String.fromCodePoint(text.codePointAt(at));
+      at += c.length;
+      if (c === '"') return Buffer.from(bytes).toString('utf8');
       if (c !== '\\') { bytes.push(...Buffer.from(c)); continue; }
       const escaped = text[at++];
       if (/[0-7]/.test(escaped)) {
@@ -23,7 +26,7 @@ function parseMi(text) {
         bytes.push(parseInt(digits, 8));
       } else bytes.push(...Buffer.from(({ n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' })[escaped] || escaped));
     }
-    return Buffer.from(bytes).toString('utf8');
+    throw new Error('GDB/MI 字符串未结束');
   }
   function item() {
     if (text[at] === '"') return string();
@@ -42,25 +45,28 @@ function parseMi(text) {
         if (text[at] !== ',') break;
         at++;
       }
-      if (text[at] === close) at++;
+      if (text[at] !== close) throw new Error('GDB/MI 容器未结束');
+      at++;
       return result;
     }
     const start = at;
     while (at < text.length && !',]}'.includes(text[at])) at++;
     return text.slice(start, at);
   }
-  return item();
+  const result = item();
+  if (at !== text.length) throw new Error('GDB/MI 记录存在多余内容');
+  return result;
 }
 
 /** 为一次调试会话管理 MI 请求、异步停止和目标输出。 */
 class Gdb extends EventEmitter {
-  constructor(executable, cwd, env) {
+  constructor(executable, cwd, env, options = {}) {
     super();
     this.pending = new Map();
     this.serial = 1;
     this.buffer = '';
-    this.process = spawn(executable, ['--quiet', '--nx', '--interpreter=mi2'], { cwd, env, windowsHide: true });
-    this.process.stdin.on('error', (error) => this.fail(error));
+    this.process = (options.spawn || spawn)(executable, ['--quiet', '--nx', '--interpreter=mi2'], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
+    this.process.stdin.on('error', (error) => this.fault(error));
     this.process.stdout.setEncoding('utf8');
     this.process.stdout.on('data', (chunk) => {
       this.buffer += chunk;
@@ -68,8 +74,12 @@ class Gdb extends EventEmitter {
       while ((end = this.buffer.indexOf('\n')) >= 0) {
         const line = this.buffer.slice(0, end).replace(/\r$/, '');
         this.buffer = this.buffer.slice(end + 1);
-        this.line(line);
+        try {
+          if (Buffer.byteLength(line) > BODY_LIMIT) throw new Error('GDB/MI 记录超过限制');
+          this.line(line);
+        } catch (error) { this.fault(error); }
       }
+      if (Buffer.byteLength(this.buffer) > BODY_LIMIT) { this.buffer = ''; this.fault(new Error('GDB/MI 记录超过限制')); }
     });
     this.process.stderr.on('data', (chunk) => this.emit('output', chunk.toString(), 'stderr'));
     this.process.on('error', (error) => { this.closed = true; this.fail(new Error(`无法启动原生调试器 ${executable}：${error.message}`)); this.emit('exit'); });
@@ -78,6 +88,12 @@ class Gdb extends EventEmitter {
   fail(error) {
     for (const entry of this.pending.values()) { clearTimeout(entry.timer); entry.reject(error); }
     this.pending.clear();
+  }
+  /** 协议或管道故障终结等待，并明确报告进程树清理失败。 */
+  fault(error) {
+    this.fail(error);
+    this.emit('fault', error);
+    void stopProcessTree(this.process).catch((failure) => this.emit('output', failure.message + '\n', 'stderr'));
   }
   line(line) {
     if (!line || line.startsWith('(gdb)')) return;
@@ -92,17 +108,28 @@ class Gdb extends EventEmitter {
       const entry = this.pending.get(Number(token));
       if (entry) {
         this.pending.delete(Number(token)); clearTimeout(entry.timer);
-        if (status === 'error') entry.reject(new Error(result.msg || 'GDB 请求失败'));
+        if (status === 'error') entry.reject(Object.assign(new Error(result.msg || 'GDB 请求失败'), { gdbError: true }));
         else entry.resolve(result);
       }
     } else if (kind === '*' && status === 'stopped') this.emit('stopped', result);
+    else if (kind === '*' && status === 'running') this.emit('running', result);
   }
-  command(command) {
+  command(command, options = {}) {
     if (this.closed) return Promise.reject(new Error('GDB 已退出'));
+    if (this.pending.size >= 256) return Promise.reject(new Error('GDB 并发请求超过限制'));
+    if (options.signal && options.signal.aborted) return Promise.reject(new Error('调试请求已取消'));
     return new Promise((resolve, reject) => {
       const token = this.serial++;
-      const timer = setTimeout(() => { this.pending.delete(token); reject(new Error('GDB 请求超时：' + command)); }, 20000);
-      this.pending.set(token, { resolve, reject, timer });
+      const finish = (callback) => (value) => {
+        clearTimeout(timer);
+        this.pending.delete(token);
+        if (options.signal) options.signal.removeEventListener('abort', abort);
+        callback(value);
+      };
+      const abort = () => finish(reject)(new Error('调试请求已取消'));
+      const timer = setTimeout(() => finish(reject)(new Error('GDB 请求超时：' + command)), options.timeoutMs || 20000);
+      this.pending.set(token, { resolve: finish(resolve), reject: finish(reject), timer });
+      if (options.signal) options.signal.addEventListener('abort', abort, { once: true });
       this.process.stdin.write(token + command + '\n');
     });
   }
@@ -124,28 +151,26 @@ class Adapter {
   constructor(compiler, input = process.stdin, output = process.stdout) {
     this.compiler = compiler;
     this.output = output;
-    this.buffer = Buffer.alloc(0);
     this.sequence = 1;
     this.handles = new Map();
     this.frames = new Map();
     this.breakpoints = new Map();
     this.nextHandle = 1;
     this.terminated = false;
-    input.on('data', (chunk) => {
-      this.buffer = Buffer.concat([this.buffer, chunk]);
-      while (true) {
-        const end = this.buffer.indexOf('\r\n\r\n');
-        if (end < 0) break;
-        const match = /Content-Length:\s*(\d+)/i.exec(this.buffer.subarray(0, end).toString());
-        if (!match) { this.buffer = Buffer.alloc(0); break; }
-        const size = Number(match[1]);
-        if (this.buffer.length < end + 4 + size) break;
-        const request = JSON.parse(this.buffer.subarray(end + 4, end + 4 + size).toString());
-        this.buffer = this.buffer.subarray(end + 4 + size);
-        void this.request(request);
-      }
+    this.state = 'created';
+    this.epoch = 0;
+    this.requests = new Map();
+    this.control = Promise.resolve();
+    this.progressRequests = new Map();
+    this.nextProgress = 1;
+    this.reader = new RequestReader((request) => this.dispatch(request), (error) => {
+      this.event('output', { category: 'stderr', output: error.message + '\n' });
+      this.end();
     });
-    input.on('end', () => { if (this.gdb) void this.gdb.command('-gdb-exit').catch(() => {}); });
+    input.on('data', (chunk) => this.reader.push(chunk));
+    input.on('end', () => { this.reader.finish(); this.end(); });
+    input.on('error', () => this.end());
+    output.on('error', () => this.end());
   }
   send(value) {
     const data = Buffer.from(JSON.stringify({ seq: this.sequence++, ...value }));
@@ -155,79 +180,213 @@ class Adapter {
   end() {
     if (this.terminated) return;
     this.terminated = true;
+    this.state = 'ended';
+    for (const task of this.requests.values()) task.abort();
+    void this.shutdown().catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
     this.event('terminated');
   }
+  /** 控制请求顺序执行，查询可并行；停止和取消不等待正在进行的构建。 */
+  dispatch(request) {
+    if (this.requests.has(request.seq)) throw new Error('DAP 请求编号重复');
+    if (this.requests.size >= 256) throw new Error('DAP 并发请求超过限制');
+    const controller = new AbortController();
+    if (request.command === 'restart') {
+      this.restartPending = true;
+      for (const task of this.requests.values()) task.abort();
+    }
+    this.requests.set(request.seq, controller);
+    const run = () => this.request(request, controller).finally(() => this.requests.delete(request.seq));
+    const immediate = ['cancel', 'disconnect', 'terminate'];
+    const reads = ['threads', 'stackTrace', 'scopes', 'variables', 'evaluate'];
+    if (immediate.includes(request.command) || reads.includes(request.command)) void run();
+    else this.control = this.control.then(run, run);
+  }
+  /** 暂停状态变化后废弃全部帧及变量句柄。 */
+  invalidate() {
+    this.epoch++;
+    this.frames.clear();
+    this.handles.clear();
+  }
+  /** 保证查看请求属于当前暂停代次。 */
+  stopped(epoch = this.epoch) {
+    if (this.state !== 'stopped' || epoch !== this.epoch) throw new Error('程序没有暂停，或调试引用已经过期');
+  }
+  /** 回收本会话的构建进程和 GDB 进程树，重复调用共享同一次清理。 */
+  async shutdown() {
+    if (this.shutdownPromise) return this.shutdownPromise;
+    this.invalidate();
+    const gdb = this.gdb;
+    const compiler = this.compilerProcess;
+    this.gdb = null;
+    this.compilerProcess = null;
+    this.shutdownPromise = (async () => {
+      if (gdb) {
+        gdb.fail(new Error('调试会话已关闭'));
+        await gdb.command('-gdb-exit', { timeoutMs: 1000 }).catch(() => {});
+        await stopProcessTree(gdb.process);
+      }
+      await stopProcessTree(compiler);
+    })();
+    try { await this.shutdownPromise; } finally { this.shutdownPromise = null; }
+  }
   handle(value) { const id = this.nextHandle++; this.handles.set(id, value); return id; }
-  async launch(config) {
+  async launch(config, signal, restart = false, requestId) {
+    if (signal.aborted) throw new Error('调试请求已取消');
+    if (!config.program || typeof config.program !== 'string') throw new Error('缺少调试入口 program');
+    this.state = 'building';
+    this.configuration = { ...config };
+    this.terminated = false;
     const cwd = config.cwd || path.dirname(config.program);
     const root = temporaryRoot(cwd);
     fs.mkdirSync(root, { recursive: true });
     this.directory = fs.mkdtempSync(path.join(root, 'native-debug-'));
     const env = { ...process.env, ...config.env, TMP: root, TEMP: root, TMPDIR: root };
     const prefix = path.join(this.directory, 'program');
-    await new Promise((resolve, reject) => {
+    const progressId = 'build-' + this.nextProgress++;
+    try { await new Promise((resolve, reject) => {
       this.compilerProcess = spawn(this.compiler, ['aot', config.program, '--checked', '--debug', '--out', prefix], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
       this.compilerProcess.stdout.on('data', (chunk) => this.event('output', { category: 'console', output: chunk.toString() }));
       this.compilerProcess.stderr.on('data', (chunk) => this.event('output', { category: 'stderr', output: chunk.toString() }));
-      this.compilerProcess.on('error', reject);
-      this.compilerProcess.on('exit', (code) => code === 0 ? resolve() : reject(new Error(`AOT 调试构建失败，退出码 ${code}`)));
-    });
-    this.gdb = new Gdb(config.debuggerPath || process.env.CHALI_GDB || 'gdb', cwd, env);
-    this.gdb.on('output', (output, category) => this.event('output', { output, category }));
-    this.gdb.on('exit', () => this.end());
-    this.gdb.on('stopped', (data) => {
-      if ((data.reason || '').startsWith('exited')) {
-        this.event('exited', { exitCode: parseInt(data['exit-code'] || '0', 8) }); this.end(); return;
+      const buildChild = this.compilerProcess;
+      const abort = () => {
+        void stopProcessTree(buildChild).catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
+        reject(new Error('调试构建已取消'));
+      };
+      signal.addEventListener('abort', abort, { once: true });
+      buildChild.on('error', (error) => { signal.removeEventListener('abort', abort); reject(error); });
+      buildChild.on('exit', (code) => { signal.removeEventListener('abort', abort); code === 0 ? resolve() : reject(new Error(`AOT 调试构建失败，退出码 ${code}`)); });
+      if (this.progressReporting) {
+        this.progressRequests.set(progressId, requestId);
+        this.event('progressStart', { progressId, title: '构建 ChaLi 调试程序', requestId, cancellable: true });
       }
-      this.frames.clear(); this.handles.clear();
+    }); } finally {
+      this.progressRequests.delete(progressId);
+      if (this.progressReporting) this.event('progressEnd', { progressId });
+    }
+    if (signal.aborted || this.terminated) throw new Error('调试请求已取消');
+    this.state = 'starting';
+    this.gdb = new Gdb(config.debuggerPath || process.env.CHALI_GDB || 'gdb', cwd, env);
+    const gdb = this.gdb;
+    this.gdb.on('output', (output, category) => this.event('output', { output, category }));
+    this.gdb.on('exit', () => { if (this.gdb === gdb) this.end(); });
+    this.gdb.on('fault', (error) => { if (this.gdb === gdb) { this.event('output', { category: 'stderr', output: error.message + '\n' }); this.end(); } });
+    this.gdb.on('running', (data) => {
+      if (this.gdb !== gdb || this.terminated) return;
+      this.invalidate();
+      this.state = 'running';
+      this.event('continued', { threadId: Number(data['thread-id']) || 1, allThreadsContinued: true });
+    });
+    this.gdb.on('stopped', (data) => {
+      if (this.gdb !== gdb || this.terminated) return;
+      if ((data.reason || '').startsWith('exited')) {
+        const exitCode = data.reason === 'exited-signalled' ? 128 + (osConstants.signals[data['signal-name']] || 1) : parseInt(data['exit-code'] || '0', 8);
+        this.event('exited', { exitCode: Number.isFinite(exitCode) ? exitCode : 1 }); this.end(); return;
+      }
+      this.invalidate();
+      this.state = 'stopped';
       this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : data.reason === 'signal-received' ? 'exception' : 'step',
         threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: data['signal-meaning'] });
     });
-    await this.gdb.command('-gdb-set pagination off');
-    await this.gdb.command('-gdb-set confirm off');
-    await this.gdb.command('-gdb-set mi-async on');
-    await this.gdb.command('-file-exec-and-symbols ' + JSON.stringify(prefix + (process.platform === 'win32' ? '.exe' : '')));
-    if (Array.isArray(config.args) && config.args.length) await this.gdb.command('-exec-arguments ' + config.args.map((value) => JSON.stringify(String(value))).join(' '));
-    if (config.stopOnEntry) await this.gdb.command('-break-insert -t f_main');
-    this.event('initialized');
+    const command = (text) => gdb.command(text, { signal });
+    await command('-gdb-set pagination off');
+    await command('-gdb-set confirm off');
+    await command('-gdb-set mi-async on');
+    await command('-file-exec-and-symbols ' + JSON.stringify(prefix + (process.platform === 'win32' ? '.exe' : '')));
+    if (Array.isArray(config.args) && config.args.length) await command('-exec-arguments ' + config.args.map((value) => JSON.stringify(String(value))).join(' '));
+    if (config.stopOnEntry) await command('-break-insert -t f_main');
+    this.state = 'configuring';
+    if (!restart) this.event('initialized');
   }
-  async request(request) {
+  /** 为一个源文件替换断点；重启时复用原始位置而不复用 GDB 编号。 */
+  async setSourceBreakpoints(args, signal) {
+    const source = path.resolve(args.source.path);
+    const previous = this.breakpoints.get(source) || [];
+    if (previous.length) await this.gdb.command('-break-delete ' + previous.join(' '), { signal });
+    const ids = [], breakpoints = [];
+    for (const point of args.breakpoints || []) {
+      try {
+        const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(source.replace(/\\/g, '/') + ':' + point.line), { signal });
+        const bp = result.bkpt;
+        ids.push(bp.number);
+        breakpoints.push({ id: Number(bp.number), verified: !bp.pending, line: Number(bp.line) || point.line, source: args.source });
+      } catch (error) {
+        if (signal.aborted) throw error;
+        breakpoints.push({ verified: false, line: point.line, message: error.message });
+      }
+    }
+    this.breakpoints.set(source, ids);
+    if (!this.breakpointSpecs) this.breakpointSpecs = new Map();
+    this.breakpointSpecs.set(source, { ...args, breakpoints: (args.breakpoints || []).map((point) => ({ ...point })) });
+    return { breakpoints };
+  }
+  async request(request, controller = new AbortController()) {
     const args = request.arguments || {};
+    const signal = controller.signal;
     let body = {};
+    let startsSession = false;
     try {
+      if (signal.aborted) throw new Error('调试请求已取消');
+      const inspecting = ['stackTrace', 'scopes', 'variables', 'evaluate'].includes(request.command);
+      const epoch = this.epoch;
+      if (inspecting) this.stopped();
+      const independent = ['initialize', 'launch', 'cancel', 'disconnect', 'terminate', 'restart'];
+      if (!independent.includes(request.command) && (!this.gdb || this.terminated)) throw new Error('原生调试器尚未启动或已经结束');
       switch (request.command) {
-        case 'initialize': body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true }; break;
-        case 'launch': await this.launch(args); break;
-        case 'setBreakpoints': {
-          const source = path.resolve(args.source.path);
-          const previous = this.breakpoints.get(source) || [];
-          if (previous.length) await this.gdb.command('-break-delete ' + previous.join(' '));
-          const ids = [];
-          body.breakpoints = [];
-          for (const point of args.breakpoints || []) {
-            try {
-              const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(source.replace(/\\/g, '/') + ':' + point.line));
-              const bp = result.bkpt;
-              ids.push(bp.number);
-              body.breakpoints.push({ id: Number(bp.number), verified: !bp.pending, line: Number(bp.line) || point.line, source: args.source });
-            } catch (error) { body.breakpoints.push({ verified: false, line: point.line, message: error.message }); }
-          }
-          this.breakpoints.set(source, ids);
+        case 'initialize':
+          if (this.state !== 'created') throw new Error('调试会话已经初始化');
+          this.state = 'ready';
+          this.progressReporting = args.supportsProgressReporting === true;
+          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true };
+          break;
+        case 'launch':
+          if (this.state !== 'ready') throw new Error('调试会话不能重复 launch');
+          startsSession = true;
+          await this.launch(args, signal, false, request.seq);
+          break;
+        case 'cancel': {
+          const task = this.requests.get(args.requestId === undefined ? this.progressRequests.get(args.progressId) : args.requestId);
+          if (task && task !== controller) task.abort();
           break;
         }
-        case 'setExceptionBreakpoints': break;
-        case 'configurationDone': await this.gdb.command('-exec-run'); break;
+        case 'restart': {
+          if (!this.configuration) { this.restartPending = false; throw new Error('尚无可重启的调试配置'); }
+          startsSession = true;
+          await this.shutdown();
+          this.restartPending = false;
+          this.breakpoints.clear();
+          await this.launch(this.configuration, signal, true, request.seq);
+          for (const spec of this.breakpointSpecs ? [...this.breakpointSpecs.values()] : []) await this.setSourceBreakpoints(spec, signal);
+          try { await this.gdb.command('-exec-run', { signal }); }
+          catch (error) { if (error.gdbError) this.state = 'configuring'; else this.end(); throw error; }
+          break;
+        }
+        case 'setBreakpoints': body = await this.setSourceBreakpoints(args, signal); break;
+        case 'setExceptionBreakpoints':
+          if ((args.filters || []).length) throw new Error('运行期错误过滤器尚未接入');
+          break;
+        case 'configurationDone':
+          if (this.state !== 'configuring') throw new Error('调试配置已经完成或当前不能启动程序');
+          this.state = 'running';
+          this.invalidate();
+          try { await this.gdb.command('-exec-run', { signal }); }
+          catch (error) { if (error.gdbError) this.state = 'configuring'; else this.end(); throw error; }
+          break;
         case 'threads': {
-          const data = await this.gdb.command('-thread-info');
+          const data = await this.gdb.command('-thread-info', { signal });
           body.threads = (data.threads || []).map((thread) => ({ id: Number(thread.id), name: thread.name || thread['target-id'] || `线程 ${thread.id}` }));
           break;
         }
         case 'stackTrace': {
-          const data = await this.gdb.command(`-stack-list-frames --thread ${args.threadId || 1} ${args.startFrame || 0} ${(args.startFrame || 0) + (args.levels || 50) - 1}`);
+          const thread = args.threadId === undefined ? 1 : args.threadId;
+          const start = args.startFrame === undefined ? 0 : args.startFrame;
+          const levels = args.levels === undefined || args.levels === 0 ? 50 : args.levels;
+          if (!Number.isSafeInteger(thread) || thread < 1 || !Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(levels) || levels < 1 || levels > 1000 || !Number.isSafeInteger(start + levels)) throw new Error('调用栈线程或分页参数无效');
+          const data = await this.gdb.command(`-stack-list-frames --thread ${thread} ${start} ${start + levels - 1}`, { signal });
+          this.stopped(epoch);
           body.stackFrames = (data.stack || []).map((entry) => {
             const frame = entry.frame || entry;
             const id = this.nextHandle++;
-            this.frames.set(id, { thread: args.threadId || 1, level: Number(frame.level) });
+            this.frames.set(id, { thread, level: Number(frame.level) });
             return { id, name: frame.func || '<native>', line: Number(frame.line) || 1, column: 1,
               source: frame.fullname || frame.file ? { path: frame.fullname || frame.file, name: path.basename(frame.fullname || frame.file) } : undefined,
               instructionPointerReference: frame.addr };
@@ -237,43 +396,63 @@ class Adapter {
         }
         case 'scopes': {
           const frame = this.frames.get(args.frameId);
-          body.scopes = frame ? [{ name: '局部变量与参数', presentationHint: 'locals', expensive: false, variablesReference: this.handle(frame) }] : [];
+          if (!frame) throw new Error('调用帧已经过期');
+          body.scopes = [{ name: '局部变量与参数', presentationHint: 'locals', expensive: false, variablesReference: this.handle(frame) }];
           break;
         }
         case 'variables': {
           const frame = this.handles.get(args.variablesReference);
-          if (!frame) { body.variables = []; break; }
-          const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`);
+          if (!frame) throw new Error('变量引用已经过期');
+          const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal });
           body.variables = (data.variables || []).map((variable) => ({ name: variable.name, value: variable.value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 }));
           break;
         }
         case 'evaluate': {
           const frame = this.frames.get(args.frameId);
+          if (args.frameId !== undefined && !frame) throw new Error('调用帧已经过期');
           const selector = frame ? ` --thread ${frame.thread} --frame ${frame.level}` : '';
-          const data = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify(args.expression));
+          const data = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify(args.expression), { signal });
           body = { result: data.value || '', variablesReference: 0 };
           break;
         }
-        case 'continue': await this.gdb.command('-exec-continue'); body.allThreadsContinued = true; break;
-        case 'next': await this.gdb.command('-exec-next'); break;
-        case 'stepIn': await this.gdb.command('-exec-step'); break;
-        case 'stepOut': await this.gdb.command('-exec-finish'); break;
-        case 'pause': await this.gdb.command('-exec-interrupt'); break;
+        case 'continue':
+        case 'next':
+        case 'stepIn':
+        case 'stepOut': {
+          this.stopped();
+          this.state = 'running'; this.invalidate();
+          const commands = { continue: '-exec-continue', next: '-exec-next', stepIn: '-exec-step', stepOut: '-exec-finish' };
+          try { await this.gdb.command(commands[request.command], { signal }); }
+          catch (error) {
+            if (error.gdbError && this.state === 'running') this.state = 'stopped';
+            else if (!this.restartPending) this.end();
+            throw error;
+          }
+          if (request.command === 'continue') body.allThreadsContinued = true;
+          break;
+        }
+        case 'pause':
+          if (this.state !== 'running') throw new Error('程序当前没有运行');
+          await this.gdb.command('-exec-interrupt', { signal });
+          break;
         case 'disconnect':
         case 'terminate':
-          if (this.compilerProcess && this.compilerProcess.exitCode === null) {
-            if (process.platform === 'win32') spawn('taskkill', ['/PID', String(this.compilerProcess.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-            else { try { process.kill(-this.compilerProcess.pid, 'SIGTERM'); } catch { this.compilerProcess.kill(); } }
-          }
-          if (this.gdb) await this.gdb.command('-gdb-exit').catch(() => {});
+          this.state = 'ending';
+          for (const task of this.requests.values()) if (task !== controller) task.abort();
+          await this.shutdown();
           this.end();
           break;
         default: throw new Error('原生调试暂不支持请求：' + request.command);
       }
+      if (inspecting) this.stopped(epoch);
       this.send({ type: 'response', request_seq: request.seq, command: request.command, success: true, body });
     } catch (error) {
       this.send({ type: 'response', request_seq: request.seq, command: request.command, success: false, message: error.message });
-      if (request.command === 'launch') this.end();
+      if (startsSession) {
+        try { await this.shutdown(); }
+        catch (failure) { this.event('output', { category: 'stderr', output: failure.message + '\n' }); }
+        if (!this.restartPending) this.end();
+      }
     }
   }
 }
