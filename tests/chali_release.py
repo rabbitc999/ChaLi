@@ -6,6 +6,7 @@ from project_temp import tempfile
 import unittest
 import zipfile
 import hashlib
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('chali_release', ROOT / 'tools/release.py')
@@ -36,6 +37,32 @@ class ReleaseTests(unittest.TestCase):
             (root / 'VERSION').write_text('../bad', encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'VERSION'):
                 release.version_of(root)
+
+    def test_isolated_build_config(self):
+        """指定隔离目录时不读取根目录中过期的反射构建配置。"""
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'vscode').mkdir()
+            (root / 'vscode/package.json').write_text('{"version":"1.0.12","chaliCompilerVersion":"1.0.12"}', encoding='utf-8')
+            (root / 'VERSION').write_text('1.0.12', encoding='utf-8')
+            (root / 'doc/book/latex').mkdir(parents=True)
+            (root / 'doc/book/latex/book.pdf').write_bytes(b'%PDF-1.7')
+            binary = root / 'chali'
+            binary.write_bytes(b'compiler')
+            vsix = root / 'editor.vsix'
+            with zipfile.ZipFile(vsix, 'w') as package:
+                package.writestr('extension/package.json', '{"version":"1.0.12","chaliCompilerVersion":"1.0.12"}')
+                package.writestr('extension.vsixmanifest', '<Package><Identity Version="1.0.12"/></Package>')
+                package.writestr('extension/bin/chali', b'compiler')
+            isolated = root / 'isolated'
+            (isolated / 'chali-runtime').mkdir(parents=True)
+            config = isolated / 'chali-runtime/buildConfig.json'
+            config.write_text('CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1', encoding='utf-8')
+            with patch.object(release, 'compiler_version', return_value='1.0.12'):
+                release.verify_assets(root, binary, vsix, '1.0.12', False, build_root=isolated)
+                config.write_text('CHALI_WITH_REFLECTION=0 STACKVM_WITH_REFLECTION=0', encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, '反射'):
+                    release.verify_assets(root, binary, vsix, '1.0.12', False, build_root=isolated)
 
     def test_archive_and_failed_replacement(self):
         """归档包含源码身份、样例和正确摘要；输入丢失不破坏原 ZIP。"""

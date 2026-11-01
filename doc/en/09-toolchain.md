@@ -146,7 +146,7 @@ CLI JSON and LSP share codes, severity, original locations, and safe fix data. T
 
 Requests retain immutable open-document versions and freeze closed modules read during that request. These module texts are passed to the compiler as source overlays. Lexical indexes serve completion and highlighting directly; diagnostics, type hints, and macro previews share full semantic reports. Concurrent semantic requests for one entry are merged while waiters remain cancellable. Compiler frontend globals are not shared between concurrent analyses.
 
-The memory report cache holds at most 64 entries and 32 MiB; records larger than 8 MiB are not retained. Every hit validates input, language, module graph, actual dependencies, and project/lock-file fingerprints. Valid memory reports remain usable without disk reports. File watching also invalidates entries when a previously missing manifest or lock file is created.
+The memory report cache holds at most 64 entries and an estimated 32 MiB of serialized JSON; records larger than 8 MiB are not retained. This estimate is not the JSON objects’ actual heap size or a process-wide memory cap. Every hit validates input, language, module graph, actual dependencies, and project/lock-file fingerprints. Valid memory reports remain usable without disk reports. File watching also invalidates entries when a previously missing manifest or lock file is created.
 
 An edit crossing a full semantic check cancels the old request and reschedules diagnostics. Captured versions are checked again before publication. JSON excerpts for unsaved documents come from the checked source. `chali/lspStats` exposes `checks`, `diagnosticHits`, `memoryReportHits`, `mergedChecks`, `reportEntries`, and `reportBytes` to distinguish checks, reuse, and retained memory.
 
@@ -178,3 +178,9 @@ Build Current File respects executable, `.o`, or `.ll` output. Linux executables
 P7 rename edits include source fingerprints. Before returning edits, the extension checks open versions and the current text of closed dependencies. Standard sources are read-only; ambiguous bindings or macro-template references reject the complete rename.
 
 Code actions can fill directly listed non-generic interface methods and add a fallback to an incomplete match. Generated bodies contain explicit `TODO panic` placeholders that need implementation. Each candidate must pass an isolated compiler check without entering the normal report or preprocessing cache. Other errors, generics, or ambiguous declarations can prevent an action. The macro preview's “Expansion origins and bindings” summary lists compiler-recorded source, definition, metadata and control-target locations with navigation; it does not infer transitive purity.
+
+## Verifying both distribution variants
+
+Static and external LLVM builds use separate build directories and versioned artifact names. Before packaging, check `--build-info`, extension versions, exact VSIX compiler bytes and the actual variant's build configuration. Do not substitute the other variant's configuration. `tools/release_variants.py --package-only` accepts `--static-build-root` and `--external-build-root` for these directories. Check installer and ZIP executables, versions, LICENSE/NOTICE and dependency licenses separately. Record cross-object generation separately from execution on the target system.
+
+The [final P3-to-P5 LSP comparison](../../benchmarks/results/lsp-1.0.12-final/README.md) is frozen by actual compiler hashes; it does not describe later P6-to-P8 rebuild bytes. Subsequent artifact checks do not relabel or repeat that measurement.

@@ -77,3 +77,9 @@ Semantic highlighting advances lexical positions and UTF-16 columns in source or
 On the same Windows machine with a 600 function file, first hover took approximately 1.52 seconds in 0.17.1 and 0.16 seconds in 0.17.2. Repeated semantic token requests took about 0.70 and 0.02 seconds. These measurements describe language service requests; overall editor responsiveness also depends on project size, extensions, and machine load.
 
 [Command line manual](README.md) · [Documentation index](../../en/README.md)
+
+## Semantic budgets and editing
+
+Requests use immutable document snapshots. Diagnostics, type hints and macro previews share reports validated against actual dependencies. At most two semantic compiler processes run, with waiting interactive work prioritized. Each lane queues up to 128 items or an estimated 16 MiB of snapshots; an empty queue can accept one larger item. Reports retain at most 64 entries and an estimated 32 MiB of serialized JSON, excluding entries above 8 MiB. These are not process-wide memory caps. Edits cancel old requests, and shutdown waits for reclamation.
+
+Warning fixes use the current compiler report and version checks. Standard declarations open in read-only `chali-stdlib:` source. Cross-file rename also verifies content fingerprints and rejects ambiguity or conflicts. Interface/match TODO edits must pass an isolated compiler check; unsupported candidates are omitted. Macro origin summaries use actual compiler locations. VSCode target/output selection makes undoable TOML edits, and build saves dirty configuration first. See the [toolchain reference](../../en/09-toolchain.md).

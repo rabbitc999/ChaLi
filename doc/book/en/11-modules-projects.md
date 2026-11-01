@@ -48,13 +48,13 @@ chali.toml records the entry and project options. Inspect configuration and chal
 
 Distinguish source text, precompiled frontend representation and final machine code. Source supports reading, diagnostics and export. Frontend representation preserves recognized declarations and syntax. Machine code depends on the target and instantiated types. Embedding one layer does not complete all subsequent work.
 
-In 1.0.11, the parsed std::lang core is embedded as a binary asset and restored inside the compiler process. A distributed compiler does not need its original build directory to find that asset, and default standard-library compilation does not read or write a disk standard-library cache. This reduces repeated parsing of core source and removes a developer cache directory as a deployment prerequisite.
+Version 1.0.12 embeds the std::lang core, optional standard modules and template catalogs as binary assets. Imports restore parsing nodes and template definitions in process, checking the format, source identity and content digest. Distributed compilers do not need the original build directory for these assets, and default standard-library compilation does not read or write a disk standard-library cache.
 
-This stage covers core parsing results only. Optional modules and uninstantiated templates still require source frontend work. Concrete generic instantiation, macro expansion, user-program checking and target code generation remain necessary. A container template used with two element types still requires the corresponding checks and generated code. Embedded templates do not establish that all library calls have prebuilt machine code, and historical acceptance results do not measure the current program's compilation time.
+Concrete generic instantiation, macro expansion, user-program checking and target code generation still take place. For example, `List<int64>` and `List<String>` share an embedded template definition, while the current compilation checks their concrete types and generates target code. The embedded representation is relocatable frontend data, so it does not copy one target's container machine code to another. Source remains embedded for reading, diagnostics, export and parsing fallback when needed.
 
 Embedded library assets, user-project incremental results and application resources serve different purposes. Copying a compiler does not copy web pages, configuration or databases. Deleting project caches does not repair a damaged embedded asset. Identify whether a failure concerns asset loading, user-module parsing or application resource access before choosing a remedy.
 
-The [core-stage acceptance record](../../../tools/history/20261030/chali-1.0.11-precompiled-core/README.md) identifies the compiler, platform and checks performed at that time. It does not establish completion of the full standard-library precompilation plan.
+See the [toolchain reference](../../en/09-toolchain.md) for asset formats, source fallback and project incremental-check options.
 
 ## 11.4 Reproducible project boundaries
 

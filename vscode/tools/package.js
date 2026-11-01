@@ -112,7 +112,9 @@ function main() {
     const releaseManifest = JSON.parse(original);
     releaseManifest.chaliLLVMVariant = variant;
     fs.writeFileSync(manifestPath, JSON.stringify(releaseManifest, null, 2) + '\n');
-    run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository'],
+    run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository',
+      '--baseContentUrl', 'https://github.com/rabbitc999/ChaLi/blob/master/vscode',
+      '--baseImagesUrl', 'https://github.com/rabbitc999/ChaLi/raw/master/vscode'],
         process.platform === 'win32');
   } finally {
     fs.writeFileSync(manifestPath, original);

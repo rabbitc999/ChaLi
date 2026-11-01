@@ -76,7 +76,7 @@ def compiler_version(binary):
     raise ValueError('编译器没有返回 initialize 响应')
 
 
-def verify_assets(root, binary, vsix, version, windows, env=None):
+def verify_assets(root, binary, vsix, version, windows, env=None, build_root=None):
     """核对版本、VSIX 内嵌字节、PDF、反射构建配置及 Windows 动态依赖。"""
     if compiler_version(binary) != version:
         raise ValueError('编译器版本与 VERSION 不一致')
@@ -93,7 +93,7 @@ def verify_assets(root, binary, vsix, version, windows, env=None):
     pdf = root / 'doc/book/latex/book.pdf'
     if not pdf.read_bytes().startswith(b'%PDF-'):
         raise ValueError('书本 PDF 无效')
-    config = (root / 'build/chali-runtime/buildConfig.json').read_text(encoding='utf-8')
+    config = ((Path(build_root) if build_root else root / 'build') / 'chali-runtime/buildConfig.json').read_text(encoding='utf-8')
     for flag in ('CHALI_WITH_REFLECTION=1', 'STACKVM_WITH_REFLECTION=1'):
         if flag not in config:
             raise ValueError('发布构建必须同时启用前端与运行时反射：' + flag)

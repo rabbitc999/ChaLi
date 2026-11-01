@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--out-dir', type=Path, default=ROOT / 'dist')
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--package-only', action='store_true')
+    parser.add_argument('--external-build-root', type=Path, help='外置 LLVM 的实际隔离构建目录')
+    parser.add_argument('--static-build-root', type=Path, help='静态 LLVM 的实际隔离构建目录')
     parser.add_argument('--skip-tests', action='store_true', help='按授权跳过 AOT 与 VS Code 回归，仅构建并核对产物')
     args = parser.parse_args()
     if os.name != 'nt' or args.jobs < 1:
@@ -39,6 +41,10 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
         binary = output / f'chali-{version}-llvm-{variant}-windows-x64.exe'
         env = dict(os.environ, CHALI_LANG='zh', PYTHONUTF8='1', CHALI_BIN=str(binary))
+        build_root = getattr(args, variant + '_build_root')
+        if build_root:
+            env['CHALI_BUILD_ROOT'] = str(build_root.resolve())
+            env['CHALI_EMBED_OUTPUT'] = str(build_root.resolve() / 'chali-frontend/chali_stdlib_embedded.cpp')
         if not args.package_only:
             release.run(['sh', '-c', 'exec "$@"', 'chali-variant', 'make', '-j' + str(args.jobs),
                          'CHALI_STATIC_LLVM=' + ('1' if variant == 'static' else '0'),
@@ -50,7 +56,8 @@ def main():
             release.run(['npm.cmd', 'run', 'package', '--', '--llvm-variant', variant,
                          '--compiler', str(binary), *(['--skip-tests'] if args.skip_tests else [])], cwd=ROOT / 'vscode', env=env)
         vsix = ROOT / f'vscode/dist/chali-editor-{extension}-llvm-{variant}.vsix'
-        release.verify_assets(ROOT, binary, vsix, version, True, env)
+        release.verify_assets(ROOT, binary, vsix, version, True, env,
+                              build_root=getattr(args, variant + '_build_root'))
         if variant == 'static':
             shutil.copy2(vsix, ROOT / f'vscode/dist/chali-editor-{extension}.vsix')
         archive = release.package_assets(ROOT, output, binary, vsix, version, 'windows-x64', revision, dirty, variant)
