@@ -18,16 +18,22 @@ const vscode = require('vscode');
 const path = require('node:path');
 
 const { LspClient } = require('./src/lspClient');
+const { ServerLifecycle } = require('./src/serverLifecycle');
 const locator = require('./src/locator');
 const runner = require('./src/runner');
 const { registerDependencies } = require('./src/dependencies');
 const { registerBuild } = require('./src/build');
 const { registerMacroPreview } = require('./src/macros');
+const { registerStandardSources } = require('./src/standardSources');
+const { registerProjectTools } = require('./src/projectTools');
 const providers = require('./src/providers');
 const { registerDebugger } = require('./src/debugger');
 
 /** @type {LspClient|null} 当前的 `chali lsp` 客户端。 */
 let client = null;
+let standardSources = null;
+let projectTools = null;
+let serverLifecycle = null;
 
 /** 上一次「运行」开的终端（同一时刻只留一个）。 */
 let runTerminal = null;
@@ -52,6 +58,7 @@ const documentVersions = new Map();
  * @param {vscode.ExtensionContext} context 扩展上下文。
  */
 function activate(context) {
+  serverLifecycle = new ServerLifecycle({ start: startServerNow, stop: stopServer });
   outputChannel = vscode.window.createOutputChannel('ChaLi');
   diagnosticCollection = vscode.languages.createDiagnosticCollection(providers.LANGUAGE_ID);
   statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
@@ -64,6 +71,7 @@ function activate(context) {
 
   // 1. 语言能力：诊断由服务器推送，其余按需请求。
   providers.registerProviders(context, { getClient: () => client, logLine });
+  standardSources = registerStandardSources(vscode, context, { getClient: () => client });
 
   // 2. 文档同步。
   registerDocumentSync(context);
@@ -71,7 +79,8 @@ function activate(context) {
   // 3. 命令。
   registerCommands(context);
   registerDependencies(vscode, context, { readConfig, refresh: () => startServer(context) });
-  registerBuild(vscode, context, { readConfig });
+  projectTools = registerProjectTools(vscode, context, { getClient: () => client });
+  registerBuild(vscode, context, { readConfig, projectInfo: uri => projectTools.info(uri) });
   registerMacroPreview(vscode, context, { getClient: () => client, flushDocument: notifyChange });
 
   // 3.5 断点调试：把编译器当 DAP 适配器起起来（`chali --dap <文件>`）。
@@ -97,7 +106,7 @@ function activate(context) {
  * 插件停用：关掉服务器。
  */
 function deactivate() {
-  void stopServer();
+  return serverLifecycle ? serverLifecycle.dispose() : stopServer();
 }
 
 // ---------------------------------------------------------------------------
@@ -197,7 +206,12 @@ async function runCurrentFile(context) {
  * @param {vscode.ExtensionContext} context 扩展上下文。
  * @returns {Promise<void>} 完成后返回。
  */
-async function startServer(context) {
+function startServer(context) {
+  return serverLifecycle.restart(context).catch(error => logLine(`服务切换失败：${error.message}`));
+}
+
+/** 等待旧进程关闭后创建当前设置对应的服务。 @param {object} context 扩展上下文。 */
+async function startServerNow(context) {
   await stopServer();
   setStatus('启动中…');
 
@@ -238,6 +252,8 @@ async function startServer(context) {
     await instance.initialize();
     client = instance;
     setStatus('运行中');
+    standardSources?.refresh();
+    projectTools?.refresh();
   } catch (error) {
     setStatus('启动失败');
     logLine(`启动失败：${error.message}`);
@@ -299,7 +315,7 @@ function publishDiagnostics(event) {
  * @param {vscode.TextDocument} document 文档。
  */
 function notifyOpen(document) {
-  if (!client || !client.running || document.uri.scheme === 'chali-expanded') return;
+  if (!client || !client.running || ['chali-expanded', 'chali-stdlib'].includes(document.uri.scheme)) return;
   const version = typeof document.version === 'number' ? document.version : 1;
   documentVersions.set(document.uri.toString(), version);
   client.notify('textDocument/didOpen', {
@@ -319,7 +335,7 @@ function notifyOpen(document) {
  * @param {Array<vscode.TextDocumentContentChangeEvent>} changes 编辑范围；未提供时发送全文。
  */
 function notifyChange(document, changes) {
-  if (!client || !client.running) return;
+  if (!client || !client.running || ['chali-expanded', 'chali-stdlib'].includes(document.uri.scheme)) return;
   const key = document.uri.toString();
   const previous = documentVersions.get(key);
   const version = typeof document.version === 'number' ? document.version : (previous || 1) + 1;
@@ -365,14 +381,14 @@ function registerDocumentSync(context) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (document.languageId === providers.LANGUAGE_ID) notifyChange(document);
-      if (document.languageId === providers.LANGUAGE_ID && client && client.running)
+      if (document.languageId === providers.LANGUAGE_ID && document.uri.scheme !== 'chali-stdlib' && client && client.running)
         client.notify('textDocument/didSave', { textDocument: { uri: document.uri.toString() } });
     }),
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidCloseTextDocument((document) => {
-      if (document.languageId !== providers.LANGUAGE_ID) return;
+      if (document.languageId !== providers.LANGUAGE_ID || document.uri.scheme === 'chali-stdlib') return;
       const key = document.uri.toString();
       documentVersions.delete(key);
       if (client && client.running) client.notify('textDocument/didClose', {

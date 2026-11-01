@@ -31,7 +31,7 @@
   "scripts": {
     "embed": "node tools/embed-compiler.js",
     "check": "node tools/check-manifest.js",
-    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/macroHighlighting.js && node test/build.js",
+    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/build.js",
     "vscode:prepublish": "node tools/embed-compiler.js",
     "package": "node tools/package.js"
   },
@@ -46,7 +46,10 @@
     "onCommand:chali.previewMacroExpansionOnce",
     "onCommand:chali.previewMacroExpansionAtCursor",
     "onCommand:chali.build",
-    "onCommand:chali.buildExe"
+    "onCommand:chali.buildExe",
+    "onCommand:chali.configureTarget",
+    "onCommand:chali.configureOutput",
+    "onCommand:chali.openProjectConfig"
   ],
   "contributes": {
     "languages": [
@@ -205,6 +208,18 @@
       {
         "command": "chali.buildExe",
         "title": "%chali.buildExe.title%"
+      },
+      {
+        "command": "chali.configureTarget",
+        "title": "%chali.configureTarget.title%"
+      },
+      {
+        "command": "chali.configureOutput",
+        "title": "%chali.configureOutput.title%"
+      },
+      {
+        "command": "chali.openProjectConfig",
+        "title": "%chali.openProjectConfig.title%"
       }
     ],
     "configuration": {

@@ -40,7 +40,29 @@ async function main() {
   client._handle({ method: 'textDocument/publishDiagnostics', params: { uri: params.textDocument.uri, version: 7, diagnostics: [] } });
   assert.equal(diagnostic.version, 7);
   assert.equal(client.pending.size, 0);
-  console.log('LSP 客户端乱序响应、请求替换、取消通知、监听释放和诊断版本透传通过。');
+  const sourceA = client.request('chali/standardSource', { uri: 'chali-stdlib:/std/parse.chl' });
+  const sourceAId = sent.at(-1).id;
+  const sourceB = client.request('chali/standardSource', { uri: 'chali-stdlib:/std/io.chl' });
+  const sourceBId = sent.at(-1).id;
+  client._handle({ id: sourceAId, result: 'parse' }); client._handle({ id: sourceBId, result: 'io' });
+  assert.equal(await sourceA, 'parse'); assert.equal(await sourceB, 'io');
+  // exit 之后管道仍可能未关闭；stop 必须等待 close 才允许回收工作目录。
+  const { EventEmitter } = require('node:events');
+  const closing = new LspClient('unused');
+  const child = new EventEmitter(); child.exitCode = null;
+  let killed = 0, closed = false, finished = false;
+  child.kill = () => { killed++; };
+  closing.process = child;
+  closing.closePromise = new Promise(resolve => child.once('close', () => { closed = true; resolve(); }));
+  closing.request = async method => { assert.equal(method, 'shutdown'); };
+  closing.notify = method => {
+    assert.equal(method, 'exit'); child.exitCode = 0; child.emit('exit', 0);
+    setTimeout(() => child.emit('close'), 30);
+  };
+  const stopping = closing.stop().then(() => { finished = true; });
+  await new Promise(resolve => setTimeout(resolve, 10)); assert.equal(finished, false);
+  await stopping; assert.equal(closed, true); assert.equal(killed, 0);
+  console.log('LSP 乱序响应、取消、独立源码请求、诊断版本和真实关闭等待通过。');
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });

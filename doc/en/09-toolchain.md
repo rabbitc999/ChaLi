@@ -157,3 +157,20 @@ Six independent worker lanes remain available. At most two compiler subprocesses
 Editing or closing a document cancels its old requests and releases queued snapshots. Every request still receives a result or cancellation response. Shutdown first cancels background diagnostics, gives request lanes a shared five-second drain deadline, then cancels remaining work and joins workers. Mutable frontend state remains isolated in compiler subprocesses. `analysisActive`, `analysisPeak`, and `analysisWaiting` in `chali/lspStats` expose the semantic budget.
 
 LSP timing checks CPU usage before and after measurement. At 40% or above, or without a reliable counter, only functional checks run and no performance numbers are reported. Set `CHALI_SKIP_LSP_TIMING=1` to request functional checks explicitly. Comparisons record actual compiler SHA256 values, process startup/first diagnostics with empty LSP caches, and P50/P95 for edit diagnostics, completion, and hover. Latency includes JSON-RPC client round trips; process-cold measurements do not flush OS file caches. Other languages' runtime baselines are not remeasured.
+
+## VSCode fixes, standard sources, and project targets
+
+Warning lightbulbs use the compiler's current report. The current safe fix inserts a line-local suppression while retaining initialization, cleanup, and other statements. Document versions are checked before application; further edits invalidate old actions.
+
+Go to Definition opens a `chali-stdlib:` read-only document for standard declarations that have embedded language source. Locations come from actual declaration indexes. Source and indexes are loaded on demand into memory, without source copies or standard-library disk indexes. Standard declarations cannot be renamed. Backend intrinsics without a language declaration do not receive invented bodies. Open standard views refresh after server restart.
+
+Select Project Target, Select AOT Output, and Open Project Configuration use the compiler's TOML parser and source-preserving serializer. Other fields, comments, and multiline strings remain intact. Changes stay in an undoable buffer, and the status bar marks unsaved configuration. Builds save the source and an open dirty manifest before querying the actual target:
+
+```toml
+[aot]
+target = "linux-arm64"
+output = "object"
+allocator = "malloc"
+```
+
+Build Current File respects executable, `.o`, or `.ll` output. Linux executables have no `.exe` suffix. Build Executable requires `output = "executable"` and does not rewrite the manifest. The status bar shows the target, output kind, and actual compiler LLVM variant. Choices include only registered Windows x64, Linux x64, and Linux ARM64 targets. Object generation does not validate target linking or execution; cross executables still require the corresponding SDK, runtime, and link dependencies.

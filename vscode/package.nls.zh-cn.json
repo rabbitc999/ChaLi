@@ -16,5 +16,8 @@
   "chali.inlayHints.enabled.description": "显示 let、for-in 元素与上下文匿名函数参数的推断类型；仍受编辑器内联提示设置控制。",
   "chali.build.outputDirectory.description": "构建输出目录；相对路径以最近的 ChaLi 工程目录为基准，没有工程清单时以源文件目录为基准。",
   "chali.build.llvmPath.description": "可执行文件构建所用的外置 LLVM clang 路径；留空时使用编译器的内置后端或默认工具链。",
-  "chali.build.checked.description": "为 AOT 导出开启数组和指针检查，缺省关闭；run 始终 checked。"
+  "chali.build.checked.description": "为 AOT 导出开启数组和指针检查，缺省关闭；run 始终 checked。",
+  "chali.configureTarget.title": "ChaLi：选择项目目标",
+  "chali.configureOutput.title": "ChaLi：选择 AOT 输出",
+  "chali.openProjectConfig.title": "ChaLi：打开项目配置"
 }

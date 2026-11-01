@@ -39,6 +39,7 @@ class LspClient extends EventEmitter {
     this.pending = new Map();
     this.nextId = 1;
     this.stopped = false;
+    this.closePromise = null;
   }
 
   /** 服务器是否还在运行。 */
@@ -66,6 +67,7 @@ class LspClient extends EventEmitter {
         return;
       }
       this.process = child;
+      this.closePromise = new Promise(resolve => child.once('close', resolve));
 
       // 2. 进程起不来（路径错、缺依赖）时把错误抛给调用方。
       child.once('error', (error) => {
@@ -104,7 +106,7 @@ class LspClient extends EventEmitter {
 
       // 1. 登记 id，等响应回来配对。
       const id = this.nextId++;
-      const key = method + ':' + ((params && params.textDocument && params.textDocument.uri) || '');
+      const key = method + ':' + ((params && params.textDocument && params.textDocument.uri) || (params && params.uri) || '');
       for (const [previousId, previous] of this.pending) {
         if (previous.key === key) this._cancel(previousId);
       }
@@ -191,23 +193,29 @@ class LspClient extends EventEmitter {
    * 关闭服务器：先按协议请它退出，再兜底强杀。
    */
   async stop() {
-    if (!this.process || this.stopped) return;
-    try {
-      await this.request('shutdown');
-    } catch {
-      // 服务器已经不响应也没关系，下面还有强杀。
-    }
-    this.notify('exit');
-    this.stopped = true;
-
-    // 给 300ms 让它自己退，然后强杀。
-    setTimeout(() => {
+    const child = this.process;
+    if (!child) return;
+    let shutdownTimer;
+    if (!this.stopped && child.exitCode === null) {
       try {
-        if (this.process && this.process.exitCode === null) this.process.kill();
+        await Promise.race([
+          this.request('shutdown'),
+          new Promise((_, reject) => { shutdownTimer = setTimeout(() => reject(new Error('Shutdown timed out')), 6000); }),
+        ]);
       } catch {
-        // 已经退了就无所谓。
-      }
-    }, 300);
+        // 无响应时仍在下面终止进程并等待管道关闭。
+      } finally { clearTimeout(shutdownTimer); }
+      this.notify('exit');
+    }
+    this.stopped = true;
+    let killTimer, exitTimer;
+    try {
+      killTimer = setTimeout(() => { if (child.exitCode === null) child.kill(); }, 300);
+      await Promise.race([
+        this.closePromise || new Promise(resolve => child.once('close', resolve)),
+        new Promise((_, reject) => { exitTimer = setTimeout(() => reject(new Error('Language server did not exit')), 2000); }),
+      ]);
+    } finally { clearTimeout(killTimer); clearTimeout(exitTimer); }
   }
 
   /**

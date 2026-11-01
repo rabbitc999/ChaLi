@@ -181,6 +181,7 @@ function registerProviders(context, deps) {
   require('./semanticProviders').registerSemanticProviders(vscode, context, {
     request, selector: SELECTOR, toRange, toPosition,
   });
+  require('./codeActions').registerCodeActions(vscode, context, { request, selector: SELECTOR });
 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(SELECTOR, {

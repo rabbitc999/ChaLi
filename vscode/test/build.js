@@ -79,10 +79,37 @@ async function main() {
     await commands.get('chali.buildExe')(uri(source));
     assert.equal(errors.length, 2);
     assert.ok(messages.some((s) => s.includes('Build completed')));
-    console.log('VS Code 构建：原生产物、已删除字节码入口、保存、右键目标、空格与中文路径、取消、信任和诊断全部通过');
+    // 通过真实 LSP 解析清单；构建按钮先保存脏配置，并核对交叉对象／LLVM IR 的实际后缀。
+    const { LspClient } = require('../src/lspClient');
+    const { pathToFileURL } = require('node:url');
+    const client = new LspClient(compiler, ['lsp'], { cwd: directory });
+    const manifestPath = path.join(directory, 'chali.toml');
+    let configSaved = 0;
+    const manifest = { uri: uri(manifestPath), isDirty: true,
+      text: '[aot]\ntarget="linux-arm64"\noutput="object"\n',
+      async save() { ++configSaved; fs.writeFileSync(manifestPath, this.text); this.isDirty = false; return true; } };
+    fs.writeFileSync(manifestPath, '');
+    vscode.workspace.textDocuments.push(manifest);
+    settings['build.llvmPath'] = '';
+    try {
+      await client.start(); await client.initialize();
+      registerBuild(vscode, context, { readConfig: () => ({ chaliPath: compiler }),
+        projectInfo: target => client.request('chali/projectInfo', { uri: pathToFileURL(target.fsPath).toString() }) });
+      await commands.get('chali.build')(uri(source));
+      assert.equal(errors.length, 2, errors.join('\n')); assert.equal(configSaved, 1);
+      const object = fs.readFileSync(prefix + '.o');
+      assert.equal(object.subarray(0, 4).toString('hex'), '7f454c46'); assert.equal(object.readUInt16LE(18), 183);
+      await commands.get('chali.buildExe')(uri(source));
+      assert.equal(errors.length, 3); assert.match(errors[2], /object or LLVM IR/);
+      manifest.text = '[aot]\ntarget="linux-arm64"\noutput="llvm"\n'; manifest.isDirty = true;
+      await commands.get('chali.build')(uri(source));
+      assert.equal(errors.length, 3, errors.join('\n')); assert.equal(configSaved, 2);
+      assert.ok(fs.readFileSync(prefix + '.ll', 'utf8').includes('aarch64-unknown-linux-gnu'));
+    } finally { await client.stop(); }
+    console.log('VS Code 构建：原生产物、配置保存、ARM64 对象、LLVM IR、错误输出模式及既有交互通过');
   } finally {
     for (const item of context.subscriptions) item.dispose();
-    fs.rmSync(directory, { recursive: true, force: true });
+    fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
 

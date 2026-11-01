@@ -52,7 +52,7 @@ MODULES = {
                    "chali_reflection_serialization", "chali_annotations"],
     "samples": [],
     "tools": ["chali_tool", "chali_package", "chali_map_pair_iterator", "chali_generic_constructors"],
-    "lsp": ["chali_lsp_scheduler", "chali_lsp_pipeline", "chali_lsp_snapshots", "chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
+    "lsp": ["chali_lsp_editor", "chali_lsp_scheduler", "chali_lsp_pipeline", "chali_lsp_snapshots", "chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
             "chali_lsp_overloads", "chali_lsp_naming_scopes", "chali_lsp_symbols",
             "chali_lsp_lambda_capture", "chali_lsp_semantic_features",
             "chali_lsp_macro_completion", "chali_lsp_macro_highlighting",
@@ -102,7 +102,7 @@ def main():
                     if args.cxx: commands[script] += ["--cxx", args.cxx]
                     if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]
             if module == "lsp":
-                for script in ("lspCancellation", "semanticProviders", "macroHighlighting"):
+                for script in ("lspCancellation", "semanticProviders", "editorIntegration", "macroHighlighting"):
                     commands[script] = ["node", str(ROOT / "vscode" / "test" / (script + ".js"))]
     environment = dict(DEMO=args.chali.resolve().as_posix(), CHALI_COMPILER=str(args.chali.resolve()),
                        CHALI_TEST_COMPILER=str(args.chali.resolve()))

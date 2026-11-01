@@ -14,6 +14,8 @@
 #include "../source/chali_package.hpp"
 #include "../source/chali_module.hpp"
 #include "../source/chali_diagnostics.hpp"
+#include "../source/chali_aot_llvm.hpp"
+#include "../source/chali_aot_target.hpp"
 #include <miniz_tinfl.h>
 #include "../source/toml/toml.hpp"
 #include <algorithm>
@@ -3243,7 +3245,9 @@ struct LspLibrary
 {
     std::vector<Record> standard;
     std::map<std::string, std::vector<std::string>> imports;
-    std::set<std::string> types;
+    std::set<std::string> types, sourceModules;
+    std::mutex sourceMutex;
+    std::map<std::string, std::shared_ptr<const LspUnit>> sources;
 };
 #include "native_lsp_macro_help.hpp"
 #include "native_lsp_macro_tokens.hpp"
@@ -3291,6 +3295,7 @@ class Server
      */
     std::string source(const std::string &u)
     {
+        if (starts(u, "chali-stdlib:")) return *standardUnit(u)->text;
         auto it = documents.find(u);
         if (it != documents.end()) return it->second->first;
         const auto previous = sourceSnapshot.find(u);
@@ -3550,6 +3555,12 @@ class Server
             if (!r.source.empty())
                 try
                 {
+                    if (starts(r.source, "chali-stdlib:"))
+                    {
+                        const auto location = standardLocation(r);
+                        if (!location.isNull()) out.push_back(location);
+                        continue;
+                    }
                     auto s = source(r.source);
                     out.push_back(object(
                         { { "uri", r.source },
@@ -4027,6 +4038,7 @@ class Server
         return object({ { "text", text }, { "format", "json" }, { "diagnostics", diagnostics }, { "mappings", mappings } });
     }
 #include "native_lsp_features.hpp"
+#include "native_lsp_integration.hpp"
     /**
      * @brief 处理一个语言服务器请求并构造结果。
      * @param method 压缩方法编号或目标方法名称。
@@ -4056,6 +4068,7 @@ class Server
                           { "completionProvider",
                             object({ { "triggerCharacters", A{ ":", ".", "$", "%" } } }) },
                           { "definitionProvider", true },
+                          { "codeActionProvider", object({ { "codeActionKinds", A{ J("quickfix") } }, { "resolveProvider", false } }) },
                           { "referencesProvider", true },
                           { "renameProvider", object({ { "prepareProvider", true } }) },
                           { "inlayHintProvider", true },
@@ -4079,6 +4092,13 @@ class Server
             shutdown = true;
             return J();
         }
+        if (method == "chali/standardSource")
+        {
+            const auto target = str(params, "uri");
+            return object({ { "uri", target }, { "text", standardText(target) }, { "languageId", "chali" }, { "readonly", true } });
+        }
+        if (method == "chali/projectInfo") return projectInfo(params);
+        if (method == "chali/projectEdit") return projectEdit(params);
         if (method == "workspace/symbol")
             return symbols(str(params, "query"));
         if (method == "chali/lspStats")
@@ -4136,6 +4156,7 @@ class Server
         }
         if (method == "textDocument/references" || method == "textDocument/prepareRename" || method == "textDocument/rename")
             return refactor(method, params, u, s, records, cursor);
+        if (method == "textDocument/codeAction") return warningActions(u, s, params);
         if (method == "textDocument/inlayHint")
         {
             const auto report = checkReport(u, [] { return false; });
@@ -4739,25 +4760,38 @@ class Server
         const auto result = view.request(str(message,"method"),get(message,"params"));
         {
           std::lock_guard<std::mutex> lock(stateMutex);
-          if (str(message, "method") == "chali/expandMacro" || str(message, "method") == "textDocument/inlayHint" || str(message, "method") == "textDocument/codeAction")
+          if (str(message, "method") != "chali/standardSource")
           {
-              if (revision->load() != version) cancelled->store(true);
-          }
-          if (u.empty() || str(message, "method") == "textDocument/rename" || str(message, "method") == "textDocument/references")
-          {
-              if (revision->load() != version) cancelled->store(true);
-          }
-          else {
-            const auto current=documents.find(u);const auto previous=snapshot.find(u);
-            if(current==documents.end() || previous==snapshot.end() || current->second!=previous->second)cancelled->store(true);
-            for(const auto &dependency:view.usedDocuments) {
-              const auto before=snapshot.find(dependency);const auto after=documents.find(dependency);
-              if(before!=snapshot.end()) {
-                if(after==documents.end() || before->second->first!=after->second->first)cancelled->store(true);
-              } else if(after!=documents.end()) {
-                try {if(cache->source(pathOf(dependency))!=after->second->first)cancelled->store(true);} catch(...) {cancelled->store(true);}
+              if (str(message, "method") == "chali/expandMacro" || str(message, "method") == "textDocument/inlayHint" || str(message, "method") == "textDocument/codeAction")
+              {
+                  if (revision->load() != version) cancelled->store(true);
               }
-            }
+              if (u.empty() || str(message, "method") == "textDocument/rename" || str(message, "method") == "textDocument/references")
+              {
+                  if (revision->load() != version) cancelled->store(true);
+              }
+              else
+              {
+                  const auto current = documents.find(u);
+                  const auto previous = snapshot.find(u);
+                  if (current == documents.end() || previous == snapshot.end() || current->second != previous->second) cancelled->store(true);
+                  for (const auto &dependency : view.usedDocuments)
+                  {
+                      const auto before = snapshot.find(dependency);
+                      const auto after = documents.find(dependency);
+                      if (before != snapshot.end())
+                      {
+                          if (after == documents.end() || before->second->first != after->second->first) cancelled->store(true);
+                      }
+                      else if (after != documents.end())
+                      {
+                          try
+                          {
+                              if (cache->source(pathOf(dependency)) != after->second->first) cancelled->store(true);
+                          } catch (...) { cancelled->store(true); }
+                      }
+                  }
+              }
           }
         }
         response = object({{"jsonrpc","2.0"},{"id",id},{"result",result}});
@@ -4806,6 +4840,7 @@ public:
         // 工程内同名符号属于用户自己的命名空间，不受此限。
         for (auto &v : array(get(data, "types")))
             if (!starts(str(v), "__")) library->types.insert(str(v));
+        for (const auto *entry = chali_module::embedded::table(); entry->name; ++entry) library->sourceModules.insert(entry->name);
         A entries = array(get(data, "functions"));
         for (const auto &symbol : array(get(data, "symbols"))) entries.push_back(symbol);
         for (auto &r : entries)
@@ -4822,6 +4857,11 @@ public:
             entry.documentation =
                 str(r, "documentation") + "\n\n" + doc(str(r, "comment"));
             entry.parameters = array(get(r, "parameters"));
+            if (library->sourceModules.count(entry.module))
+            {
+                entry.source = standardUri(entry.module);
+                entry.offset = size_t(std::max(1, integer(get(r, "line"))));
+            }
             library->standard.push_back(entry);
         }
         if (auto modules = get(data, "modules").asObject())

@@ -100,6 +100,7 @@ function main() {
     run(process.execPath, [path.join('test', 'macros.js')]);
     run(process.execPath, [path.join('test', 'lspCancellation.js')]);
     run(process.execPath, [path.join('test', 'semanticProviders.js')]);
+    run(process.execPath, [path.join('test', 'editorIntegration.js')]);
     run(process.execPath, [path.join('test', 'macroHighlighting.js')]);
     run(process.execPath, [path.join('test', 'build.js')]);
   }

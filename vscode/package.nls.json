@@ -16,5 +16,8 @@
   "chali.inlayHints.enabled.description": "Show inferred types for let, for-in elements and contextually typed fn parameters.",
   "chali.build.outputDirectory.description": "Build output directory, relative to the nearest ChaLi project or the source directory when no project manifest exists.",
   "chali.build.llvmPath.description": "External LLVM clang path for native builds. Empty uses the built-in backend or default toolchain.",
-  "chali.build.checked.description": "Enable array and pointer checks for AOT exports; off by default. run is always checked."
+  "chali.build.checked.description": "Enable array and pointer checks for AOT exports; off by default. run is always checked.",
+  "chali.configureTarget.title": "ChaLi: Select Project Target",
+  "chali.configureOutput.title": "ChaLi: Select AOT Output",
+  "chali.openProjectConfig.title": "ChaLi: Open Project Configuration"
 }
