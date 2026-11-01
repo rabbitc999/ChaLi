@@ -2580,6 +2580,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "define void @chali_set_location(ptr %file, i64 %line, ptr %function) {\nentry:\n  store ptr %file, ptr @chali_source_file\n  store i64 %line, ptr @chali_source_line\n  store ptr %function, ptr @chali_source_function\n  ret void\n}\n";
     out += "define i8 @chali_result_float() {\nentry:\n  %flag = load i8, ptr @chali_return_float\n  ret i8 %flag\n}\n";
     out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
+    if (request.options.debug) out += "declare void @chali_debug_console()\n";
     out += "declare void @chali_host_poll()\n";
     out += "declare void @chali_host_tick(i64)\n";
     out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";
@@ -2772,7 +2773,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         out += "define " + visibility + "void @chali_init() {\nentry:\n  call void @chali_runtime_init()\n  %initialized = call i64 @f___chali_library_init()\n  ret void\n}\n";
         out += "define " + visibility + "void @chali_finish() {\nentry:\n  %finished = call i64 @f___chali_library_finish()\n  call void @chali_runtime_finish()\n  ret void\n}\n";
     }
-    if (!request.options.shared) out += "define i32 @main(i32 %argc, ptr %argv) {\nentry:\n  call void @chali_init()\n  call void @chali_host_process_arguments(i32 %argc, ptr %argv)\n  %result = call i64 @f_main()\n  call void @chali_finish()\n  %code = trunc i64 %result to i32\n  ret i32 %code\n}\n";
+    if (!request.options.shared) out += Text("define i32 @main(i32 %argc, ptr %argv) {\nentry:\n") + (request.options.debug ? "  call void @chali_debug_console()\n" : "") + "  call void @chali_init()\n  call void @chali_host_process_arguments(i32 %argc, ptr %argv)\n  %result = call i64 @f_main()\n  call void @chali_finish()\n  %code = trunc i64 %result to i32\n  ret i32 %code\n}\n";
     if (header != nullptr)
     {
         Text declarations = "/* ChaLi LLVM AOT C ABI */\n#ifndef CHALI_AOT_H\n#define CHALI_AOT_H\n#include <stdint.h>\n#include <stdbool.h>\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n";

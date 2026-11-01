@@ -4,8 +4,11 @@
 
 const vscode = require('vscode');
 const path = require('node:path');
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
 
 const locator = require('./locator');
+const { resolveConfiguration } = require('./debugConfiguration');
 
 /** 调试类型：`launch.json` 里的 `"type": "chali"`。 */
 const DEBUG_TYPE = 'chali';
@@ -19,6 +22,87 @@ const DEBUG_TYPE = 'chali';
  * @returns {void}
  */
 function registerDebugger(context, deps) {
+  context.subscriptions.push(vscode.commands.registerCommand('chali.checkDebugEnvironment', async () => {
+    try {
+      if (vscode.workspace.isTrusted === false) throw new Error('调试环境检查需要受信任的工作区');
+      const folder = deps.workspaceDir();
+      const compiler = locator.resolveChaLi(folder, deps.readConfig(), context.extensionPath).chali;
+      if (!compiler) throw new Error('未找到 ChaLi 编译器');
+      const gdb = vscode.workspace.getConfiguration('chali').get('debuggerPath') || process.env.CHALI_GDB || 'gdb';
+      const run = promisify(execFile);
+      const build = await run(compiler, ['--build-info'], { cwd: folder, windowsHide: true, timeout: 10000, maxBuffer: 1048576 });
+      const debuggerInfo = await run(gdb, ['--version'], { cwd: folder, windowsHide: true, timeout: 10000, maxBuffer: 1048576 });
+      const version = JSON.parse(build.stdout);
+      if (version.execution !== 'aot') throw new Error('当前编译器未提供原生 AOT');
+      deps.logLine(`调试环境：${compiler}\n${build.stdout}\n${gdb}\n${debuggerInfo.stdout}`);
+      void vscode.window.showInformationMessage(`ChaLi ${version.version} (${version.llvm})；${debuggerInfo.stdout.split(/\r?\n/)[0]}`);
+    } catch (error) { void vscode.window.showErrorMessage('ChaLi 调试环境：' + error.message); }
+  }));
+  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, {
+    provideDebugConfigurations() {
+      return [
+        { type: DEBUG_TYPE, request: 'launch', name: 'ChaLi：调试当前文件', program: '${file}' },
+        { type: DEBUG_TYPE, request: 'launch', name: 'ChaLi：调试项目入口', entry: 'project' },
+      ];
+    },
+    async resolveDebugConfigurationWithSubstitutedVariables(folder, configuration) {
+      try {
+        const config = await resolveConfiguration(vscode, folder, configuration, deps.projectInfo);
+        if (!config.debuggerPath) config.debuggerPath = vscode.workspace.getConfiguration('chali', folder?.uri).get('debuggerPath');
+        return config;
+      }
+      catch (error) { void vscode.window.showErrorMessage('ChaLi：' + error.message); return null; }
+    },
+  }));
+  const diagnostics = vscode.languages.createDiagnosticCollection('chali-debug-build');
+  context.subscriptions.push(diagnostics, vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, {
+    createDebugAdapterTracker(session) {
+      let terminal, emitter, line = '';
+      return { onDidSendMessage(message) {
+        if (message.type === 'event' && message.event === 'chali/terminal') {
+          const previous = terminal; terminal = null; previous?.dispose(); emitter?.dispose();
+          emitter = new vscode.EventEmitter(); line = '';
+          let owned;
+          terminal = vscode.window.createTerminal({ name: message.body.name, pty: {
+            onDidWrite: emitter.event,
+            open() {},
+            close() { if (terminal === owned) void vscode.debug.stopDebugging(session); },
+            handleInput(text) {
+              for (const character of text.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '').replace(/\r\n/g, '\r')) {
+                if (character === '\r' || character === '\n') {
+                  emitter.fire('\r\n');
+                  void session.customRequest('chali/input', { text: line + '\n' }).catch(error => emitter.fire(error.message + '\r\n'));
+                  line = '';
+                } else if (character === '\x7f' || character === '\b') {
+                  if (line) { line = [...line].slice(0, -1).join(''); emitter.fire('\b \b'); }
+                } else if (character === '\x03') {
+                  line = ''; emitter.fire('^C\r\n');
+                  void session.customRequest('pause', { threadId: 1 }).catch(error => emitter.fire(error.message + '\r\n'));
+                } else if (character === '\x04' || character === '\x1a') {
+                  void session.customRequest('chali/input', { text: line, end: true }).catch(error => emitter.fire(error.message + '\r\n'));
+                  line = '';
+                } else if ((character === '\t' || character >= ' ') && Buffer.byteLength(line) < 65532) { line += character; emitter.fire(character); }
+              }
+            },
+          } });
+          owned = terminal;
+          terminal.show();
+          return;
+        }
+        if (message.type === 'event' && message.event === 'chali/terminalOutput') { emitter?.fire(message.body.output.replace(/\r?\n/g, '\r\n')); return; }
+        if (message.type === 'event' && message.event === 'terminated') { emitter?.fire('\r\n[调试会话已结束]\r\n'); return; }
+        if (message.type !== 'event' || message.event !== 'chali/buildDiagnostics') return;
+        diagnostics.clear();
+        const files = new Map();
+        for (const item of message.body.diagnostics) {
+          const values = files.get(item.path) || [];
+          values.push(new vscode.Diagnostic(new vscode.Range(item.line, item.column, item.line, item.column + 1), item.message, vscode.DiagnosticSeverity.Error));
+          files.set(item.path, values);
+        }
+        for (const [file, values] of files) diagnostics.set(vscode.Uri.file(file), values);
+      }, onExit() { emitter?.dispose(); } };
+    },
+  }));
   const factory = {
     /**
      * 拉起一次调试：把编译器当适配器进程起起来。
@@ -43,14 +127,14 @@ function registerDebugger(context, deps) {
         return null;
       }
 
-      const program = resolveProgram(session);
+      const program = session.configuration.executable || resolveProgram(session);
       if (!program) {
         deps.logLine('调试启动失败：没拿到要调试的 .chl 文件（先打开一个文件再启动调试）');
         void vscode.window.showErrorMessage('ChaLi：请先打开一个 .chl 文件再启动调试。');
         return null;
       }
 
-      session.configuration.program = program;
+      if (!session.configuration.executable) session.configuration.program = program;
       const adapter = path.join(__dirname, 'nativeDebugAdapter.js');
 
       // 工作目录取源文件所在目录：调试表里记的是相对路径，两边一致才对得上断点。

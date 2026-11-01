@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     env = dict(os.environ, CHALI_BIN=str(args.chali.resolve()))
-    for script in ['debugProtocol.js', 'debugLifecycle.js', 'nativeDebug.js']:
+    for script in ['debugConfiguration.js', 'debugIntegration.js', 'debugProtocol.js', 'debugLaunch.js', 'debugLifecycle.js', 'nativeDebug.js']:
         result = subprocess.run(['node', str(root / 'vscode/test' / script)], cwd=root,
                                 env=env, text=True, encoding='utf-8', errors='replace',
                                 capture_output=True, timeout=300)

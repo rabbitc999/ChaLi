@@ -19,5 +19,6 @@
   "chali.build.checked.description": "为 AOT 导出开启数组和指针检查，缺省关闭；run 始终 checked。",
   "chali.configureTarget.title": "ChaLi：选择项目目标",
   "chali.configureOutput.title": "ChaLi：选择 AOT 输出",
-  "chali.openProjectConfig.title": "ChaLi：打开项目配置"
+  "chali.openProjectConfig.title": "ChaLi：打开项目配置",
+  "chali.checkDebugEnvironment.title": "ChaLi：检查调试环境"
 }

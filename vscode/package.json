@@ -49,7 +49,8 @@
     "onCommand:chali.buildExe",
     "onCommand:chali.configureTarget",
     "onCommand:chali.configureOutput",
-    "onCommand:chali.openProjectConfig"
+    "onCommand:chali.openProjectConfig",
+    "onCommand:chali.checkDebugEnvironment"
   ],
   "contributes": {
     "languages": [
@@ -91,13 +92,11 @@
         ],
         "configurationAttributes": {
           "launch": {
-            "required": [
-              "program"
-            ],
+            "required": [],
             "properties": {
               "program": {
                 "type": "string",
-                "description": "要调试的 .chl 文件（缺省是当前打开的文件）。",
+                "description": "要调试的 .chl 文件；与 executable 二选一。",
                 "default": "${file}"
               },
               "args": {
@@ -119,8 +118,38 @@
               },
               "cwd": {
                 "type": "string",
-                "description": "工作目录；缺省用源文件所在目录。",
-                "default": "${fileDirname}"
+                "description": "工作目录；默认工程根或入口文件目录。"
+              },
+              "entry": {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "project"
+                ],
+                "description": "选择当前文件或 chali.toml 的 main。"
+              },
+              "executable": {
+                "type": "string",
+                "description": "直接启动已有带符号原生产物，不触发构建。"
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": "覆盖环境变量，null 删除继承项。"
+              },
+              "console": {
+                "type": "string",
+                "enum": [
+                  "internalConsole",
+                  "integratedTerminal"
+                ],
+                "default": "internalConsole",
+                "description": "集成终端支持标准输入，要求当前 ChaLi --debug 产物。"
               }
             }
           }
@@ -132,6 +161,13 @@
             "name": "ChaLi：调试当前文件",
             "program": "${file}",
             "cwd": "${fileDirname}"
+          },
+          {
+            "type": "chali",
+            "request": "launch",
+            "name": "ChaLi：调试项目入口",
+            "entry": "project",
+            "console": "integratedTerminal"
           }
         ],
         "configurationSnippets": [
@@ -220,6 +256,10 @@
       {
         "command": "chali.openProjectConfig",
         "title": "%chali.openProjectConfig.title%"
+      },
+      {
+        "command": "chali.checkDebugEnvironment",
+        "title": "%chali.checkDebugEnvironment.title%"
       }
     ],
     "configuration": {
@@ -258,6 +298,11 @@
           "type": "boolean",
           "default": false,
           "description": "%chali.build.checked.description%"
+        },
+        "chali.debuggerPath": {
+          "type": "string",
+          "default": "",
+          "description": "GDB 路径；留空时使用 CHALI_GDB 或 PATH。"
         }
       }
     },

@@ -7,6 +7,8 @@ const { spawn } = require('node:child_process');
 const { EventEmitter } = require('node:events');
 const { constants: osConstants } = require('node:os');
 const { RequestReader, stopProcessTree, BODY_LIMIT } = require('./debugProtocol');
+const { debugEnvironment, buildDiagnostics } = require('./debugConfiguration');
+const { DebugTerminal } = require('./debugTerminal');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -182,8 +184,8 @@ class Adapter {
     this.terminated = true;
     this.state = 'ended';
     for (const task of this.requests.values()) task.abort();
-    void this.shutdown().catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
-    this.event('terminated');
+    void this.shutdown().catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }))
+      .finally(() => this.event('terminated'));
   }
   /** 控制请求顺序执行，查询可并行；停止和取消不等待正在进行的构建。 */
   dispatch(request) {
@@ -196,7 +198,7 @@ class Adapter {
     }
     this.requests.set(request.seq, controller);
     const run = () => this.request(request, controller).finally(() => this.requests.delete(request.seq));
-    const immediate = ['cancel', 'disconnect', 'terminate'];
+    const immediate = ['cancel', 'disconnect', 'terminate', 'chali/input'];
     const reads = ['threads', 'stackTrace', 'scopes', 'variables', 'evaluate'];
     if (immediate.includes(request.command) || reads.includes(request.command)) void run();
     else this.control = this.control.then(run, run);
@@ -217,36 +219,74 @@ class Adapter {
     this.invalidate();
     const gdb = this.gdb;
     const compiler = this.compilerProcess;
+    const terminal = this.terminal;
+    this.terminal = null;
     this.gdb = null;
     this.compilerProcess = null;
     this.shutdownPromise = (async () => {
-      if (gdb) {
-        gdb.fail(new Error('调试会话已关闭'));
-        await gdb.command('-gdb-exit', { timeoutMs: 1000 }).catch(() => {});
-        await stopProcessTree(gdb.process);
+      try {
+        if (gdb) {
+          gdb.fail(new Error('调试会话已关闭'));
+          await gdb.command('-gdb-exit', { timeoutMs: 1000 }).catch(() => {});
+          await stopProcessTree(gdb.process);
+        }
+        await stopProcessTree(compiler);
+      } finally {
+        await terminal?.drain();
+        terminal?.close();
       }
-      await stopProcessTree(compiler);
     })();
     try { await this.shutdownPromise; } finally { this.shutdownPromise = null; }
   }
   handle(value) { const id = this.nextHandle++; this.handles.set(id, value); return id; }
   async launch(config, signal, restart = false, requestId) {
     if (signal.aborted) throw new Error('调试请求已取消');
-    if (!config.program || typeof config.program !== 'string') throw new Error('缺少调试入口 program');
+    if ((!config.program || typeof config.program !== 'string') && (!config.executable || typeof config.executable !== 'string')) throw new Error('缺少调试入口 program 或 executable');
+    if (config.args !== undefined && (!Array.isArray(config.args) || config.args.length > 65536 || config.args.some(value => typeof value !== 'string' || value.includes('\0')))) throw new Error('args 必须是无 NUL 的字符串数组，且数量不得超过限制');
     this.state = 'building';
     this.configuration = { ...config };
     this.terminated = false;
-    const cwd = config.cwd || path.dirname(config.program);
+    const cwd = path.resolve(config.cwd || path.dirname(config.executable || config.program));
     const root = temporaryRoot(cwd);
     fs.mkdirSync(root, { recursive: true });
     this.directory = fs.mkdtempSync(path.join(root, 'native-debug-'));
-    const env = { ...process.env, ...config.env, TMP: root, TEMP: root, TMPDIR: root };
+    const env = debugEnvironment(debugEnvironment(process.env, config.env), { TMP: root, TEMP: root, TMPDIR: root });
+    for (const name of Object.keys(env)) {
+      const key = process.platform === 'win32' ? name.toUpperCase() : name;
+      if (key === 'CHALI_DEBUG_CONSOLE' || key === 'CHALI_DEBUG_ARGUMENTS') delete env[name];
+    }
+    if (process.platform === 'win32' && Array.isArray(config.args)) {
+      if (config.args.length > 65536 || config.args.some(value => typeof value !== 'string' || value.includes('\0'))) throw new Error('args 参数数量或内容无效');
+      const chunks = [Buffer.alloc(4)]; chunks[0].writeUInt32LE(config.args.length);
+      let bytes = 4;
+      for (const value of config.args) {
+        const data = Buffer.from(value, 'utf8'), header = Buffer.alloc(4);
+        header.writeUInt32LE(data.length); bytes += 4 + data.length;
+        if (bytes > BODY_LIMIT) throw new Error('调试参数超过限制');
+        chunks.push(header, data);
+      }
+      env.CHALI_DEBUG_ARGUMENTS = path.join(this.directory, 'arguments.bin');
+      fs.writeFileSync(env.CHALI_DEBUG_ARGUMENTS, Buffer.concat(chunks));
+    }
+    if (config.console && !['internalConsole', 'integratedTerminal'].includes(config.console)) throw new Error('console 必须是 internalConsole 或 integratedTerminal');
     const prefix = path.join(this.directory, 'program');
+    let executable = config.executable && path.resolve(cwd, config.executable);
+    if (executable && !fs.statSync(executable).isFile()) throw new Error('executable 不是普通文件');
     const progressId = 'build-' + this.nextProgress++;
-    try { await new Promise((resolve, reject) => {
+    const diagnosticChunks = [];
+    let diagnosticBytes = 0;
+    const collect = (chunk, category) => {
+      this.event('output', { category, output: chunk.toString() });
+      if (diagnosticBytes < BODY_LIMIT) {
+        const part = chunk.subarray(0, BODY_LIMIT - diagnosticBytes);
+        diagnosticChunks.push(part); diagnosticBytes += part.length;
+      }
+    };
+    this.event('chali/buildDiagnostics', { diagnostics: [] });
+    if (!executable) try { await new Promise((resolve, reject) => {
       this.compilerProcess = spawn(this.compiler, ['aot', config.program, '--checked', '--debug', '--out', prefix], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
-      this.compilerProcess.stdout.on('data', (chunk) => this.event('output', { category: 'console', output: chunk.toString() }));
-      this.compilerProcess.stderr.on('data', (chunk) => this.event('output', { category: 'stderr', output: chunk.toString() }));
+      this.compilerProcess.stdout.on('data', (chunk) => collect(chunk, 'console'));
+      this.compilerProcess.stderr.on('data', (chunk) => collect(chunk, 'stderr'));
       const buildChild = this.compilerProcess;
       const abort = () => {
         void stopProcessTree(buildChild).catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
@@ -254,16 +294,24 @@ class Adapter {
       };
       signal.addEventListener('abort', abort, { once: true });
       buildChild.on('error', (error) => { signal.removeEventListener('abort', abort); reject(error); });
-      buildChild.on('exit', (code) => { signal.removeEventListener('abort', abort); code === 0 ? resolve() : reject(new Error(`AOT 调试构建失败，退出码 ${code}`)); });
+      buildChild.on('close', (code) => { signal.removeEventListener('abort', abort); code === 0 ? resolve() : reject(new Error(`AOT 调试构建失败，退出码 ${code}`)); });
       if (this.progressReporting) {
         this.progressRequests.set(progressId, requestId);
         this.event('progressStart', { progressId, title: '构建 ChaLi 调试程序', requestId, cancellable: true });
       }
     }); } finally {
+      this.event('chali/buildDiagnostics', { diagnostics: buildDiagnostics(Buffer.concat(diagnosticChunks).toString('utf8'), cwd) });
       this.progressRequests.delete(progressId);
       if (this.progressReporting) this.event('progressEnd', { progressId });
     }
+    executable = executable || prefix + (process.platform === 'win32' ? '.exe' : '');
     if (signal.aborted || this.terminated) throw new Error('调试请求已取消');
+    if (config.console === 'integratedTerminal') {
+      this.terminal = new DebugTerminal(this.directory, output => this.event('chali/terminalOutput', { output }));
+      await this.terminal.listen();
+      env.CHALI_DEBUG_CONSOLE = this.terminal.endpoint;
+      this.event('chali/terminal', { name: config.name || 'ChaLi 调试' });
+    }
     this.state = 'starting';
     this.gdb = new Gdb(config.debuggerPath || process.env.CHALI_GDB || 'gdb', cwd, env);
     const gdb = this.gdb;
@@ -291,7 +339,12 @@ class Adapter {
     await command('-gdb-set pagination off');
     await command('-gdb-set confirm off');
     await command('-gdb-set mi-async on');
-    await command('-file-exec-and-symbols ' + JSON.stringify(prefix + (process.platform === 'win32' ? '.exe' : '')));
+    await command('-gdb-set charset UTF-8');
+    await command('-file-exec-and-symbols ' + JSON.stringify(executable));
+    if (this.terminal) {
+      try { await command('-data-evaluate-expression "&chali_debug_console"'); }
+      catch { throw new Error('集成终端要求带终端支持的 ChaLi --debug 产物'); }
+    }
     if (Array.isArray(config.args) && config.args.length) await command('-exec-arguments ' + config.args.map((value) => JSON.stringify(String(value))).join(' '));
     if (config.stopOnEntry) await command('-break-insert -t f_main');
     this.state = 'configuring';
@@ -332,6 +385,10 @@ class Adapter {
       const independent = ['initialize', 'launch', 'cancel', 'disconnect', 'terminate', 'restart'];
       if (!independent.includes(request.command) && (!this.gdb || this.terminated)) throw new Error('原生调试器尚未启动或已经结束');
       switch (request.command) {
+        case 'chali/input':
+          if (!this.terminal) throw new Error('当前会话没有集成终端');
+          this.terminal.input(args.text === undefined ? '' : args.text, args.end === true);
+          break;
         case 'initialize':
           if (this.state !== 'created') throw new Error('调试会话已经初始化');
           this.state = 'ready';

@@ -84,7 +84,7 @@ function activate(context) {
   registerMacroPreview(vscode, context, { getClient: () => client, flushDocument: notifyChange });
 
   // 3.5 断点调试：把编译器当 DAP 适配器起起来（`chali --dap <文件>`）。
-  registerDebugger(context, { logLine, workspaceDir, readConfig });
+  registerDebugger(context, { logLine, workspaceDir, readConfig, projectInfo: uri => projectTools.info(uri) });
 
   // 4. 设置变化时重启服务器（编译器路径或协议跟踪开关可能变了）。
   context.subscriptions.push(
