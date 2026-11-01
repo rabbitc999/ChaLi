@@ -184,7 +184,7 @@ T choiceValue<T>(std::lang::List<T> items, uint64 seed);
 std::algorithms::choiceValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2034](../../source/chali_generic.cpp#L2034)。
+**源码**：[source/chali_generic.cpp:2069](../../source/chali_generic.cpp#L2069)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -223,7 +223,7 @@ Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后�
 std::algorithms::shuffleValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2043](../../source/chali_generic.cpp#L2043)。
+**源码**：[source/chali_generic.cpp:2078](../../source/chali_generic.cpp#L2078)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -263,7 +263,7 @@ Fisher-Yates 洗牌的**引用形式**：直接在 `data` 里 `count` 个元素�
 std::algorithms::shuffleReference<T>(data, count, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2063](../../source/chali_generic.cpp#L2063)。
+**源码**：[source/chali_generic.cpp:2098](../../source/chali_generic.cpp#L2098)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -304,7 +304,7 @@ Pair corresponding elements; excess elements in the longer list are ignored.
 std::algorithms::zipValue<T, U>(left, right);
 ```
 
-**源码**：[source/chali_generic.cpp:2077](../../source/chali_generic.cpp#L2077)。
+**源码**：[source/chali_generic.cpp:2112](../../source/chali_generic.cpp#L2112)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -343,7 +343,7 @@ void sortReference<T>(T mut& data, int64 count);
 std::algorithms::sortReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2107](../../source/chali_generic.cpp#L2107)。
+**源码**：[source/chali_generic.cpp:2142](../../source/chali_generic.cpp#L2142)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -382,7 +382,7 @@ void reverseReference<T>(T mut& data, int64 count);
 std::algorithms::reverseReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2112](../../source/chali_generic.cpp#L2112)。
+**源码**：[source/chali_generic.cpp:2147](../../source/chali_generic.cpp#L2147)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -422,7 +422,7 @@ int64 findReference<T>(T const& data, int64 count, T value);
 std::algorithms::findReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2125](../../source/chali_generic.cpp#L2125)。
+**源码**：[source/chali_generic.cpp:2160](../../source/chali_generic.cpp#L2160)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -462,7 +462,7 @@ int64 binarySearchReference<T>(T const& data, int64 count, T value);
 std::algorithms::binarySearchReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2135](../../source/chali_generic.cpp#L2135)。
+**源码**：[source/chali_generic.cpp:2170](../../source/chali_generic.cpp#L2170)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -501,7 +501,7 @@ Option<T mut&> minReference<T>(T mut& data, int64 count);
 std::algorithms::minReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2147](../../source/chali_generic.cpp#L2147)。
+**源码**：[source/chali_generic.cpp:2182](../../source/chali_generic.cpp#L2182)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -540,7 +540,7 @@ Option<T mut&> maxReference<T>(T mut& data, int64 count);
 std::algorithms::maxReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2159](../../source/chali_generic.cpp#L2159)。
+**源码**：[source/chali_generic.cpp:2194](../../source/chali_generic.cpp#L2194)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -580,7 +580,7 @@ int64 countReference<T>(T const& data, int64 count, T value);
 std::algorithms::countReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2171](../../source/chali_generic.cpp#L2171)。
+**源码**：[source/chali_generic.cpp:2206](../../source/chali_generic.cpp#L2206)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -620,7 +620,7 @@ T sumReference<T>(T mut& data, int64 count);
 std::algorithms::sumReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2182](../../source/chali_generic.cpp#L2182)。
+**源码**：[source/chali_generic.cpp:2217](../../source/chali_generic.cpp#L2217)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 

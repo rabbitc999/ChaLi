@@ -10,11 +10,19 @@
 #include "syntax/source_text.hpp"
 #include "syntax/constant_expression.hpp"
 #include "chali_lambda.hpp"
+#include "chali_incremental.hpp"
 
 namespace chali_generic
 {
 
 Session session;
+namespace { TemplateLoader standardTemplateLoader = nullptr; }
+
+/**
+ * @brief 为本次编译设置标准模板恢复入口。
+ * @param loader 只读资产回调，空指针禁用。
+ */
+void setTemplateLoader(TemplateLoader loader) { standardTemplateLoader = loader; }
 
 Memory::Map<Memory::String, Memory::String> genericTypeModules;
 
@@ -785,136 +793,163 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
             continue;
         }
         const std::size_t start = at;
-        at += sizeof("__chali_template") - 1u;
-        skipSpace(source, at);
-        if (at >= source.size() || source[at] != '<')
-        {
-            error = "泛型声明名称后需要 <...>";
-            return false;
-        }
-        std::size_t paramsEnd = 0;
-        if (!balanced(source, at, '<', '>', paramsEnd))
-        {
-            error = "泛型参数缺少 >";
-            return false;
-        }
         Generic item;
-        item.module = currentModule;
-        if (!parseParameters(source.substr(at + 1, paramsEnd - at - 1), item.params, error)) return false;
-        std::size_t decl = paramsEnd + 1;
-        skipSpace(source, decl);
-        std::size_t nameAt = Memory::String::npos;
-        const bool structDecl = wordAt(source, decl, "struct");
-        const bool enumDecl = wordAt(source, decl, "enum");
-        const bool interfaceDecl = wordAt(source, decl, "interface");
-        const bool hostTypeDecl = wordAt(source, decl, "type");
-        if (structDecl || enumDecl || interfaceDecl)
+        std::size_t end = 0;
+        int cached = 0;
+        const auto sourceLine = lineOf(source, start);
+        if (standardTemplateLoader && sourceLine < lines.size())
+            cached = standardTemplateLoader(currentModule, lines[sourceLine], source, start, end, item, error);
+        if (cached < 0) return false;
+        if (cached && (end <= start || end > source.size() || item.module != currentModule))
         {
-            nameAt = decl + (structDecl ? 6u : interfaceDecl ? 9u :
-                                                               4u);
-            skipSpace(source, nameAt);
-        }
-        else if (hostTypeDecl)
-        {
-            nameAt = decl + 4u;
-            skipSpace(source, nameAt);
-        }
-        else
-        {
-            std::size_t open = Memory::String::npos;
-            int angleDepth = 0;
-            std::size_t signatureBegin = decl;
-            // 元组返回类型的括号不是函数参数表。
-            if (source[signatureBegin] == '(')
-            {
-                std::size_t tupleEnd = 0;
-                if (balanced(source, signatureBegin, '(', ')', tupleEnd)) signatureBegin = tupleEnd + 1u;
-            }
-            for (std::size_t cursor = signatureBegin; cursor < source.size(); ++cursor)
-            {
-                if (source[cursor] == '<')
-                    ++angleDepth;
-                else if (source[cursor] == '>' && (cursor == 0 || source[cursor - 1] != '-'))
-                    --angleDepth;
-                else if (source[cursor] == '(' && angleDepth == 0)
-                {
-                    std::size_t word = cursor;
-                    while (word > signatureBegin && std::isspace(static_cast<unsigned char>(source[word - 1]))) --word;
-                    const auto end = word;
-                    while (word > signatureBegin && identPart(source[word - 1])) --word;
-                    if (source.substr(word, end - word) == "fn" || word == end)
-                    {
-                        std::size_t close = 0;
-                        if (balanced(source, cursor, '(', ')', close))
-                        {
-                            cursor = close;
-                            continue;
-                        }
-                    }
-                    open = cursor;
-                    break;
-                }
-                else if (source[cursor] == ';' || source[cursor] == '{')
-                    break;
-            }
-            if (open == Memory::String::npos)
-            {
-                error = "泛型函数缺少参数表";
-                return false;
-            }
-            nameAt = open;
-            while (nameAt > decl && std::isspace(static_cast<unsigned char>(source[nameAt - 1]))) --nameAt;
-            while (nameAt > decl && identPart(source[nameAt - 1])) --nameAt;
-        }
-        if (nameAt >= source.size() || !identStart(source[nameAt]))
-        {
-            error = "找不到泛型声明名称";
+            error = "标准模板资产返回了无效的声明范围或模块";
             return false;
         }
-        std::size_t nameEnd = nameAt + 1;
-        while (nameEnd < source.size() && identPart(source[nameEnd])) ++nameEnd;
-        item.name = source.substr(nameAt, nameEnd - nameAt);
-        item.sourceName = item.name;
-        std::size_t end = 0;
-        const std::size_t semicolon = source.find(';', nameEnd);
-        const std::size_t body = source.find('{', nameEnd);
-        const bool hostFunctionDecl = !structDecl && !enumDecl && !interfaceDecl && !hostTypeDecl && semicolon != Memory::String::npos && (body == Memory::String::npos || semicolon < body);
-        if (hostTypeDecl || hostFunctionDecl)
+        if (standardTemplateLoader && sourceLine < lines.size()
+            && (lines[sourceLine].file == "<内建 range>" || lines[sourceLine].file.compare(0, 13, "<内建 std::") == 0))
         {
-            end = semicolon;
-            if (end == Memory::String::npos)
+            if (cached) ++session.templateHits;
+            else ++session.templateMisses;
+        }
+        if (!cached)
+        {
+            at += sizeof("__chali_template") - 1u;
+            skipSpace(source, at);
+            if (at >= source.size() || source[at] != '<')
             {
-                error = "泛型宿主声明 " + item.name + " 缺少 ;";
+                error = "泛型声明名称后需要 <...>";
                 return false;
             }
-            ++end;
+            std::size_t paramsEnd = 0;
+            if (!balanced(source, at, '<', '>', paramsEnd))
+            {
+                error = "泛型参数缺少 >";
+                return false;
+            }
+            item.module = currentModule;
+            if (!parseParameters(source.substr(at + 1, paramsEnd - at - 1), item.params, error)) return false;
+            std::size_t decl = paramsEnd + 1;
+            skipSpace(source, decl);
+            std::size_t nameAt = Memory::String::npos;
+            const bool structDecl = wordAt(source, decl, "struct");
+            const bool enumDecl = wordAt(source, decl, "enum");
+            const bool interfaceDecl = wordAt(source, decl, "interface");
+            const bool hostTypeDecl = wordAt(source, decl, "type");
+            if (structDecl || enumDecl || interfaceDecl)
+            {
+                nameAt = decl + (structDecl ? 6u : interfaceDecl ? 9u :
+                                                                   4u);
+                skipSpace(source, nameAt);
+            }
+            else if (hostTypeDecl)
+            {
+                nameAt = decl + 4u;
+                skipSpace(source, nameAt);
+            }
+            else
+            {
+                std::size_t open = Memory::String::npos;
+                int angleDepth = 0;
+                std::size_t signatureBegin = decl;
+                // 元组返回类型的括号不是函数参数表。
+                if (source[signatureBegin] == '(')
+                {
+                    std::size_t tupleEnd = 0;
+                    if (balanced(source, signatureBegin, '(', ')', tupleEnd)) signatureBegin = tupleEnd + 1u;
+                }
+                for (std::size_t cursor = signatureBegin; cursor < source.size(); ++cursor)
+                {
+                    if (source[cursor] == '<')
+                        ++angleDepth;
+                    else if (source[cursor] == '>' && (cursor == 0 || source[cursor - 1] != '-'))
+                        --angleDepth;
+                    else if (source[cursor] == '(' && angleDepth == 0)
+                    {
+                        std::size_t word = cursor;
+                        while (word > signatureBegin && std::isspace(static_cast<unsigned char>(source[word - 1]))) --word;
+                        const auto end = word;
+                        while (word > signatureBegin && identPart(source[word - 1])) --word;
+                        if (source.substr(word, end - word) == "fn" || word == end)
+                        {
+                            std::size_t close = 0;
+                            if (balanced(source, cursor, '(', ')', close))
+                            {
+                                cursor = close;
+                                continue;
+                            }
+                        }
+                        open = cursor;
+                        break;
+                    }
+                    else if (source[cursor] == ';' || source[cursor] == '{')
+                        break;
+                }
+                if (open == Memory::String::npos)
+                {
+                    error = "泛型函数缺少参数表";
+                    return false;
+                }
+                nameAt = open;
+                while (nameAt > decl && std::isspace(static_cast<unsigned char>(source[nameAt - 1]))) --nameAt;
+                while (nameAt > decl && identPart(source[nameAt - 1])) --nameAt;
+            }
+            if (nameAt >= source.size() || !identStart(source[nameAt]))
+            {
+                error = "找不到泛型声明名称";
+                return false;
+            }
+            std::size_t nameEnd = nameAt + 1;
+            while (nameEnd < source.size() && identPart(source[nameEnd])) ++nameEnd;
+            item.name = source.substr(nameAt, nameEnd - nameAt);
+            item.sourceName = item.name;
+            const std::size_t semicolon = source.find(';', nameEnd);
+            const std::size_t body = source.find('{', nameEnd);
+            const bool hostFunctionDecl = !structDecl && !enumDecl && !interfaceDecl && !hostTypeDecl && semicolon != Memory::String::npos && (body == Memory::String::npos || semicolon < body);
+            if (hostTypeDecl || hostFunctionDecl)
+            {
+                end = semicolon;
+                if (end == Memory::String::npos)
+                {
+                    error = "泛型宿主声明 " + item.name + " 缺少 ;";
+                    return false;
+                }
+                ++end;
+            }
+            else
+            {
+                if (body == Memory::String::npos)
+                {
+                    error = "泛型声明 " + item.name + " 缺少函数体";
+                    return false;
+                }
+                std::size_t bodyEnd = 0;
+                if (!balanced(source, body, '{', '}', bodyEnd))
+                {
+                    error = "泛型声明 " + item.name + " 缺少 }";
+                    return false;
+                }
+                end = bodyEnd + 1;
+                skipSpace(source, end);
+                if ((structDecl || enumDecl || interfaceDecl) && end < source.size() && source[end] == ';') ++end;
+            }
+            item.declaration = source.substr(decl, end - decl);
+            item.nameOffset = nameAt - decl;
+            const std::size_t line = lineOf(source, start);
+            if (line < lines.size()) item.origin = lines[line];
+            const auto declarationLine = lineOf(source, decl);
+            const auto declarationLines = static_cast<std::size_t>(std::count(item.declaration.begin(), item.declaration.end(), '\n')) + 1u;
+            for (std::size_t index = 0; index < declarationLines; ++index)
+                item.declarationOrigins.push_back(declarationLine + index < lines.size() ? lines[declarationLine + index] : item.origin);
+            if (!item.declarationOrigins.empty()) item.declarationOrigins[0] = item.origin;
+            if (item.origin.file == "<内建 range>" || item.origin.file.compare(0, 13, "<内建 std::") == 0)
+                item.sourceTemplate = source.substr(start, end - start);
         }
         else
         {
-            if (body == Memory::String::npos)
-            {
-                error = "泛型声明 " + item.name + " 缺少函数体";
-                return false;
-            }
-            std::size_t bodyEnd = 0;
-            if (!balanced(source, body, '{', '}', bodyEnd))
-            {
-                error = "泛型声明 " + item.name + " 缺少 }";
-                return false;
-            }
-            end = bodyEnd + 1;
-            skipSpace(source, end);
-            if ((structDecl || enumDecl || interfaceDecl) && end < source.size() && source[end] == ';') ++end;
+            item.name = item.sourceName;
+            /* 匹配原文保留在只读资产表，当前实例会话不再复制一份模板正文。 */
+            Memory::String{}.swap(item.sourceTemplate);
         }
-        item.declaration = source.substr(decl, end - decl);
-        item.nameOffset = nameAt - decl;
-        const std::size_t line = lineOf(source, start);
-        if (line < lines.size()) item.origin = lines[line];
-        const auto declarationLine = lineOf(source, decl);
-        const auto declarationLines = static_cast<std::size_t>(std::count(item.declaration.begin(), item.declaration.end(), '\n')) + 1u;
-        for (std::size_t index = 0; index < declarationLines; ++index)
-            item.declarationOrigins.push_back(declarationLine + index < lines.size() ? lines[declarationLine + index] : item.origin);
-        if (!item.declarationOrigins.empty()) item.declarationOrigins[0] = item.origin;
         if (generics.count(item.name))
         {
             if (generics.at(item.name).module == item.module)
@@ -2273,13 +2308,18 @@ interface Closeable { void close(); };
     const std::size_t sortReferenceSlot = rangeBuiltin.find(sortReferenceMarker);
     if (sortReferenceSlot != Memory::String::npos)
         rangeBuiltin.replace(sortReferenceSlot, sortReferenceMarker.size(), sortReferenceImpl);
+    rangeBuiltin = "// chali-builtin-range-begin\n" + rangeBuiltin + "\n// chali-builtin-range-end\n";
     result.text += rangeBuiltin;
     preprocess::LineOrigin rangeOrigin;
     rangeOrigin.file = "<内建 range>";
     rangeOrigin.line = 1u;
     const std::size_t rangeLines = static_cast<std::size_t>(
         std::count(rangeBuiltin.begin(), rangeBuiltin.end(), '\n'));
-    result.lineMap.insert(result.lineMap.end(), rangeLines, rangeOrigin);
+    for (std::size_t line = 0; line < rangeLines; ++line)
+    {
+        rangeOrigin.line = line + 1;
+        result.lineMap.push_back(rangeOrigin);
+    }
     Memory::Map<Memory::String, Memory::Set<Memory::String>> noImplementations;
     Memory::Map<Memory::String, Expansion> noExpansions;
     Memory::Vector<Memory::String> noPending;
@@ -2361,5 +2401,7 @@ bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String
     chali_lambda::markClosureTypeArguments(generated);
     return true;
 }
+
+#include "generic/standard_templates.cpp"
 
 }  // namespace chali_generic

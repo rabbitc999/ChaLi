@@ -1,5 +1,6 @@
 #pragma once
 #include "allocator/chali_allocator.hpp"
+#include "chali_generic.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iosfwd>
@@ -61,4 +62,24 @@ bool writeModule(std::ostream &out, const Memory::String &text);
  * @return 成功追加时返回 true，未匹配时返回 false 且不设置错误。
  */
 bool loadModule(const Memory::String &name, const Memory::String &text, Memory::String &error);
+/**
+ * @brief 导出标准模块未实例化模板的版本化二进制包。
+ * @param out 输出流。
+ * @param module 资产目录模块名称。
+ * @return 写入成功时返回 true。
+ */
+bool writeTemplates(std::ostream &out, const Memory::String &module);
+/**
+ * @brief 依据原始来源和完整声明恢复标准模板，并重绑定当前宏调用编号。
+ * @param module 当前语言模块。
+ * @param origin 模板在内嵌源码中的原始位置。
+ * @param source 当前前端归一后的完整输入。
+ * @param begin 模板标记的字节位置。
+ * @param end 命中时接收声明结束位置。
+ * @param item 命中时接收当前会话可用的模板副本。
+ * @param error 资产损坏时接收诊断。
+ * @return 1 表示命中，0 表示源码回退，-1 表示资产错误。
+ */
+int loadTemplate(const Memory::String &module, const preprocess::LineOrigin &origin, const Memory::String &source,
+                 std::size_t begin, std::size_t &end, chali_generic::Generic &item, Memory::String &error);
 }  // namespace chali_precompiled

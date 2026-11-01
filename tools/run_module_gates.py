@@ -13,6 +13,8 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
+    "stdlib": ["chali_standard_unit", "chali_precompiled", "chali_generic_scope", "chali_macro_generics"]
+              + (["chali_precompiled_readonly"] if os.name == "nt" else []),
     "sql": ["chali_sqlite", "chali_sql_connections", "chali_sql_backends", "chali_reflection_serialization"],
     "net": ["chali_net_c_api", "chali_opcode_std_storage"],
     "image": ["chali_image", "chali_opcode_std_storage"],
@@ -94,7 +96,7 @@ def main():
                     commands[script].append("--lsp-only")
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
-                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets"):
+                if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets", "chali_standard_unit"):
                     if args.build_root: commands[script] += ["--build-root", str(args.build_root.resolve())]
                     if args.cxx: commands[script] += ["--cxx", args.cxx]
                     if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]

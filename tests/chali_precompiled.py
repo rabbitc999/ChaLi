@@ -56,6 +56,8 @@ def main():
                 assert result.returncode == 0, (index, disable, result)
                 if not disable:
                     assert '标准库预编译：命中' in result.stderr, (index, result.stderr)
+                    assert '标准模块二进制命中：std::__range' in result.stderr, result.stderr
+                    assert re.search(r'标准模板二进制：[1-9]\d* 命中，0 源码收集', result.stderr), result.stderr
                 results.append(result.stdout)
             assert results[0] == results[1], (index, results)
         for module in sorted((ROOT / 'source/std').glob('*.chl')):
@@ -68,6 +70,8 @@ def main():
             assert checked.returncode == 0 and '标准库预编译：命中' in checked.stderr, (module.name, checked)
             modules = re.search(r'标准模块二进制：(\d+) 命中，(\d+) 源码解析', checked.stderr)
             assert modules and int(modules[1]) >= 1 and int(modules[2]) == 0, (module.name, checked.stderr)
+            assert '标准模块二进制命中：std::' + module.stem in checked.stderr, checked.stderr
+            assert re.search(r'标准模板二进制：[1-9]\d* 命中，0 源码收集', checked.stderr), (module.name, checked.stderr)
         (work / 'middle.chl').write_text('module middle;\nimport std::parse;\n'
             'struct Record{int64 value;};\nint64 number(){return std::parse::Parse::parseInt64("42").unwrap();}\n', encoding='utf-8')
         combinations = (

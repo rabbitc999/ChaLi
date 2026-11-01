@@ -163,10 +163,15 @@ int main()
     Memory::String error;
     assert(chali_precompiled::loadBytes(reinterpret_cast<const unsigned char *>(packed.data()), packed.size(), checksum, text, error));
     assert(error.empty());
+    auto compatibleProducer = packed;
+    compatibleProducer[56] ^= 1;
+    const auto producerChecksum = chali_incremental::hashBytes(Memory::String(compatibleProducer.data(), compatibleProducer.size()));
+    assert(chali_precompiled::loadBytes(reinterpret_cast<const unsigned char *>(compatibleProducer.data()), compatibleProducer.size(), producerChecksum, text, error));
+    assert(error.empty());
     for (const auto offset : { std::size_t(8), std::size_t(16), std::size_t(40), std::size_t(56) })
     {
         auto damaged = packed;
-        damaged[offset] ^= 1;
+        damaged[offset] ^= offset == 56 ? 0x80 : 1;
         const auto updated = chali_incremental::hashBytes(Memory::String(damaged.data(), damaged.size()));
         assert(!chali_precompiled::loadBytes(reinterpret_cast<const unsigned char *>(damaged.data()), damaged.size(), updated, text, error));
         assert(!error.empty() && M_NodeCount() == count);
@@ -206,5 +211,45 @@ int main()
     assert(M_ParsedNode(static_cast<int>(count) + id).metadataLine == 10);
     assert(M_ParsedNode(static_cast<int>(count) + id).deriveLine == 12);
     assert(chali_lifetime::g_directiveNodes.at(static_cast<int>(count) + id) == static_cast<int>(count) + id);
+    const Memory::String templateSource = "module std::unit;\nstruct Demo<T=int64>{T value;};\n";
+    const Memory::Vector<preprocess::LineOrigin> templateOrigins = {
+        { "<内建 std::unit>", 1 }, { "<内建 std::unit>", 2 }, { "<内建 std::unit>", 3 }
+    };
+    chali_generic::session = chali_generic::Session{};
+    auto templateInput = templateSource;
+    chali_generic::normalizeGenericSyntax(templateInput);
+    assert(chali_generic::collect(templateInput, templateOrigins, chali_generic::session.generics, error));
+    std::ostringstream templates(std::ios::binary);
+    assert(chali_generic::writeTemplateUnit(templates, "std::unit"));
+    const auto templateBytes = templates.str();
+    Memory::Vector<chali_generic::Generic> records;
+    std::istringstream templateStream(templateBytes, std::ios::binary);
+    assert(chali_generic::readTemplateUnit(templateStream, "std::unit", records));
+    assert(records.size() == 1 && records[0].sourceName == "Demo" && records[0].params[0].fallback == "int64");
+    for (const auto &invalid : { templateBytes.substr(0, templateBytes.size() - 1), templateBytes + "trailing" })
+    {
+        std::istringstream input(invalid, std::ios::binary);
+        assert(!chali_generic::readTemplateUnit(input, "std::unit", records));
+        assert(records.size() == 1 && records[0].sourceName == "Demo");
+    }
+    static chali_generic::Generic cachedTemplate;
+    cachedTemplate = records[0];
+    chali_generic::setTemplateLoader(+[](const Memory::String &module, const preprocess::LineOrigin &, const Memory::String &source,
+                                        std::size_t begin, std::size_t &end, chali_generic::Generic &item, Memory::String &) -> int {
+        if (module != "std::unit" || source.compare(begin, cachedTemplate.sourceTemplate.size(), cachedTemplate.sourceTemplate) != 0) return 0;
+        item = cachedTemplate;
+        end = begin + cachedTemplate.sourceTemplate.size();
+        return 1;
+    });
+    Memory::Map<Memory::String, chali_generic::Generic> current;
+    auto caller = cachedTemplate;
+    caller.module = "user";
+    current.emplace("Demo", caller);
+    templateInput = templateSource;
+    chali_generic::normalizeGenericSyntax(templateInput);
+    assert(chali_generic::collect(templateInput, templateOrigins, current, error));
+    assert(current.at("Demo").module == "user" && current.at("__module_std__unit_Demo").module == "std::unit");
+    assert(chali_generic::session.templateHits == 1);
+    chali_generic::setTemplateLoader(nullptr);
     return 0;
 }

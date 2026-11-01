@@ -289,7 +289,7 @@ try
     bool incremental = false; /* --incremental：跨次复用模块预处理及完整编译产物 */
     /* 标准库预编译单元：跨次复用标准库段的解析产物；`--no-stdlib-cache` 关掉。 */
     bool standardUnit = std::getenv("CHALI_NO_STDLIB_CACHE") == nullptr;
-    Memory::String buildStandardUnit, buildStandardModule, buildStandardModuleOutput;
+    Memory::String buildStandardUnit, buildStandardModule, buildStandardModuleOutput, buildStandardTemplates, buildStandardTemplatesOutput;
     bool sourceStdin = false;  ///< 编辑器用真实文件身份读取标准输入中的未保存内容。
     Memory::String cacheDirectory, overlayPath, analysisDependencies, analysisTypes;
     Memory::Vector<Memory::String> includeDirs;
@@ -501,6 +501,14 @@ try
         {
             std::fputs(CHALI_TEXT("chali: --stdlib-cache-dir 已删除；标准库预编译资产由编译器内嵌。\n"), stderr);
             return 2;
+        }
+        if (argument == "--build-stdlib-templates")
+        {
+            if (!NeedValue(index, argc, argument.c_str())) return 2;
+            buildStandardTemplates = argv[++index];
+            if (!NeedValue(index, argc, argument.c_str())) return 2;
+            buildStandardTemplatesOutput = argv[++index];
+            continue;
         }
         if (argument == "--build-stdlib-module")
         {
@@ -946,6 +954,8 @@ try
             std::fprintf(stderr, "chali: lambda：%s\n", macroError.c_str());
             return 1;
         }
+        chali_generic::setTemplateLoader(standardUnit && buildStandardUnit.empty() && buildStandardModule.empty() && buildStandardTemplates.empty()
+                                          ? chali_precompiled::loadTemplate : nullptr);
         if (!chali_generic::run(processed, macroError))
         {
             if (jsonDiagnostics)
@@ -996,6 +1006,16 @@ try
     chali_lambda::markClosureTypeArguments(text);
     chali_generic::markContainerTypeArguments(text);
     chali_macro::markHeaderBoundaries(text);
+    if (!buildStandardTemplates.empty())
+    {
+        std::ofstream output(Memory::u8path(buildStandardTemplatesOutput), std::ios::binary | std::ios::trunc);
+        if (raw || !output || !chali_precompiled::writeTemplates(output, buildStandardTemplates))
+        {
+            std::fprintf(stderr, "chali: 标准泛型模板二进制生成失败：%s\n", buildStandardTemplates.c_str());
+            return 1;
+        }
+        return 0;
+    }
     const auto dependencyEnd = chali_module::findStandardBoundary(text);
     const auto optionalUnits = chali_precompiled::moduleSlices(text, sourceFiles,
         dependencyEnd == Memory::String::npos ? 0 : dependencyEnd);
@@ -1088,7 +1108,11 @@ try
                 parsePart(cursor, unit.begin);
                 if (status != Status::Ok) break;
                 Memory::String error;
-                if (chali_precompiled::loadModule(unit.name, text.substr(unit.begin, unit.end - unit.begin), error)) ++standardModuleHits;
+                if (chali_precompiled::loadModule(unit.name, text.substr(unit.begin, unit.end - unit.begin), error))
+                {
+                    ++standardModuleHits;
+                    if (runtimeStats) std::fprintf(stderr, "标准模块二进制命中：%s\n", unit.name.c_str());
+                }
                 else
                 {
                     if (!error.empty())
@@ -1208,6 +1232,8 @@ try
             std::fprintf(stderr, "标准库预编译：源码解析（%zu 个节点，%zu 行；不写磁盘缓存）\n", firstUserNode, standardLines);
         if (standardUnit && !optionalUnits.empty())
             std::fprintf(stderr, "标准模块二进制：%zu 命中，%zu 源码解析\n", standardModuleHits, standardModuleMisses);
+        if (standardUnit)
+            std::fprintf(stderr, "标准模板二进制：%zu 命中，%zu 源码收集\n", chali_generic::session.templateHits, chali_generic::session.templateMisses);
     }
     if (code != 0)
     {

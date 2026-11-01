@@ -652,6 +652,8 @@ int runCli(int argc, char **argv)
                              "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_precompiled.cpp", "chali_precompiled.hpp", "chali_precompiled_data.inc", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_ast.hpp", "chali_aot_numeric_list.hpp", "chali_aot_target.hpp", "chali_aot_target.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
                              "chali_aot_runtime_assets.hpp", "chali_aot_runtime_assets.cpp", "chali_temp.hpp", "chali_temp.cpp", "chali_ast.hpp", "chali_semantics.cpp"})
         ok = copy(mc / "source" / name, name) && ok;
+    ok = copy(mc / "source/generic/standard_templates.cpp", "generic/standard_templates.cpp") && ok;
+    ok = copy(mc / "source/precompiled/standard_templates.cpp", "precompiled/standard_templates.cpp") && ok;
     /* 控制台 UTF-8 头来自 `source/console/`，导出工程里仍放 `console/` 的目录名：副本站 `console/utf8.hpp`，
      * `chali_i18n.hpp` 里也是 `#include "console/utf8.hpp"`，导出工程保持同一相对布局。 */
     ok = copy(mc / "source/console/utf8.hpp", "console/utf8.hpp") && ok;

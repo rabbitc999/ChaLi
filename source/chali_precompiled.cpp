@@ -6,6 +6,10 @@
 #include "lztext/lztext.hpp"
 #include <algorithm>
 #include <sstream>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string_view>
 
 namespace chali_precompiled
 {
@@ -37,6 +41,9 @@ constexpr std::uint64_t kStandardUnitChecksum = 0;
 #if !defined(CHALI_EMBED_MODULE_UNITS)
 constexpr StandardModuleEntry kStandardModules[] = { { nullptr, nullptr, 0, 0 } };
 #endif
+#if !defined(CHALI_EMBED_TEMPLATE_UNITS)
+constexpr StandardModuleEntry kStandardTemplates[] = { { nullptr, nullptr, 0, 0 } };
+#endif
 }  // namespace
 
 /**
@@ -45,14 +52,15 @@ constexpr StandardModuleEntry kStandardModules[] = { { nullptr, nullptr, 0, 0 } 
  * @param text 已解析的标准库核心文本。
  * @param nodes 要写入的核心节点数量。
  * @param module 为 true 时写出压缩的独立模块及重定位信息。
+ * @param templates 为 true 时写出压缩的未实例化模板记录。
  * @return 序列化和输出均成功时返回 true。
  */
-static bool writePackage(std::ostream &out, const Memory::String &text, std::size_t nodes, bool module)
+static bool writePackage(std::ostream &out, const Memory::String &text, std::size_t nodes, bool module, bool templates = false)
 {
     std::ostringstream body(std::ios::binary);
-    if (!(module ? M_WriteModuleUnit(body) : M_WriteStandardUnit(body, nodes)) || !body) return false;
+    if (!(templates ? chali_generic::writeTemplateUnit(body, text) : module ? M_WriteModuleUnit(body) : M_WriteStandardUnit(body, nodes)) || !body) return false;
     auto bytes = body.str();
-    if (module)
+    if (module || templates)
     {
         const auto compressed = lztext::compress(bytes);
         bytes.assign(reinterpret_cast<const char *>(compressed.data()), compressed.size());
@@ -64,7 +72,7 @@ static bool writePackage(std::ostream &out, const Memory::String &text, std::siz
     chali_incremental::writeNumber(out, text.size());
     chali_incremental::writeNumber(out, bytes.size());
     chali_incremental::writeNumber(out, chali_incremental::hashBytes(Memory::String(bytes.data(), bytes.size())));
-    chali_incremental::writeNumber(out, kPackageFeatures | (module ? 2u : 0u));
+    chali_incremental::writeNumber(out, kPackageFeatures | (templates ? 4u : module ? 2u : 0u));
     out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
     return static_cast<bool>(out);
 }
@@ -88,10 +96,11 @@ bool load(const Memory::String &text, Memory::String &error)
  * @param text 当前标准库核心文本。
  * @param error 损坏或不兼容时接收说明。
  * @param module 为 true 时验证独立模块并追加到当前解析状态。
+ * @param templates 非空时接收已验证解压的模板负载，不发布解析状态。
  * @return 包匹配并恢复成功时返回 true。
  */
 static bool loadPackage(const unsigned char *bytes, std::size_t packageSize, std::uint64_t packageChecksum,
-                        const Memory::String &text, Memory::String &error, bool module)
+                        const Memory::String &text, Memory::String &error, bool module, std::string *templates = nullptr)
 {
     error.clear();
     if (packageSize == 0) return false;
@@ -108,7 +117,8 @@ static bool loadPackage(const unsigned char *bytes, std::size_t packageSize, std
         || !chali_incremental::readNumber(input, compiler) || compiler != chali_incremental::hashBytes(chali_package::compilerVersion)
         || !chali_incremental::readNumber(input, identity) || !chali_incremental::readNumber(input, length)
         || !chali_incremental::readNumber(input, size) || !chali_incremental::readNumber(input, checksum)
-        || !chali_incremental::readNumber(input, features) || features != (kPackageFeatures | (module ? 2u : 0u))
+        /* 反射位记录生产编译器能力，不改变解析单元布局；使用权限仍由 M_SetReflectionEnabled 核对。 */
+        || !chali_incremental::readNumber(input, features) || (features & ~std::uint64_t{ 1 }) != (templates ? 4u : module ? 2u : 0u)
         || size != packageSize - kPackageHeaderSize)
     {
         error = CHALI_TEXT("内嵌标准库二进制包头损坏");
@@ -123,7 +133,7 @@ static bool loadPackage(const unsigned char *bytes, std::size_t packageSize, std
         return false;
     }
     bool restored = false;
-    if (module)
+    if (module || templates)
     {
         /* 解压前限制容器中的原始长度，不允许损坏长度触发超额分配。 */
         std::uint64_t rawSize = 0;
@@ -143,8 +153,12 @@ static bool loadPackage(const unsigned char *bytes, std::size_t packageSize, std
         if (bounded && rawSize <= 64u * 1024u * 1024u
             && lztext::decompress(reinterpret_cast<const unsigned char *>(body.data()), body.size(), decoded))
         {
-            std::istringstream restoredInput(decoded, std::ios::binary);
-            restored = M_AppendModuleUnit(restoredInput);
+            if (templates) { templates->swap(decoded); restored = true; }
+            else
+            {
+                std::istringstream restoredInput(decoded, std::ios::binary);
+                restored = M_AppendModuleUnit(restoredInput);
+            }
         }
     }
     else restored = M_ReadStandardUnit(input);
@@ -262,13 +276,22 @@ Memory::Vector<ModuleSlice> moduleSlices(const Memory::String &text, const Memor
     Memory::Vector<ModuleSlice> result;
     const Memory::String prefix = "<内建 ";
     limit = std::min(limit, text.size());
-    std::size_t at = 0, line = 0;
-    while (at < limit && line < files.size())
+    std::size_t at = 0, line = 0, rangeBegin = Memory::String::npos;
+    while (at < text.size() && line < files.size())
     {
         const auto newline = text.find('\n', at);
-        const auto end = newline == Memory::String::npos ? limit : std::min(limit, newline + 1);
+        const auto end = newline == Memory::String::npos ? text.size() : newline + 1;
         const auto &file = files[line++];
-        if (file.compare(0, prefix.size(), prefix) == 0 && file.size() > prefix.size() && file.back() == '>')
+        if (file == "<内建 range>")
+        {
+            if (text.compare(at, end - at, "// chali-builtin-range-begin\n") == 0) rangeBegin = at;
+            else if (rangeBegin != Memory::String::npos && text.compare(at, end - at, "// chali-builtin-range-end\n") == 0)
+            {
+                result.push_back({ "std::__range", rangeBegin, end });
+                rangeBegin = Memory::String::npos;
+            }
+        }
+        if (at < limit && file.compare(0, prefix.size(), prefix) == 0 && file.size() > prefix.size() && file.back() == '>')
         {
             const auto name = file.substr(prefix.size(), file.size() - prefix.size() - 1);
             if (name.compare(0, 5, "std::") == 0 && name != "std::lang")
@@ -281,4 +304,5 @@ Memory::Vector<ModuleSlice> moduleSlices(const Memory::String &text, const Memor
     }
     return result;
 }
+#include "precompiled/standard_templates.cpp"
 }  // namespace chali_precompiled

@@ -11,11 +11,19 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     """链接实际前端库，验证真实读写器和内嵌包装载器。"""
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-root',type=Path,default=ROOT/'build')
-    parser.add_argument('--cxx',default='g++')
+    sdk = ROOT / 'build/dependencies/llvm/static-sdk'
+    static = os.name == 'nt' and (sdk / 'bin/g++.exe').is_file()
+    parser.add_argument('--chali',type=Path,help='模块门禁兼容参数，专项直接连接匹配的前端库')
+    parser.add_argument('--build-root',type=Path,default=ROOT/('build/llvm-static-gcc16' if static else 'build'))
+    parser.add_argument('--cxx')
     parser.add_argument('--sysroot',type=Path)
     options=parser.parse_args()
     build=options.build_root.resolve()
+    use_sdk = static and build == (ROOT / 'build/llvm-static-gcc16').resolve()
+    options.cxx = options.cxx or (str(sdk / 'bin/g++.exe') if use_sdk else 'g++')
+    if Path(options.cxx).resolve().parent == (sdk / 'bin').resolve():
+        options.sysroot = options.sysroot or sdk
+    environment = dict(os.environ, PATH=str(Path(options.cxx).resolve().parent) + os.pathsep + os.environ.get('PATH', ''))
     with tempfile.TemporaryDirectory(prefix='standard-unit-') as directory:
         output = Path(directory) / ('unit.exe' if os.name == 'nt' else 'unit')
         includes = ('source', 'library', 'source/preprocess', 'source/ast', 'source/ircode',
@@ -30,8 +38,8 @@ def main():
                    *(['-lwinhttp'] if os.name == 'nt' else []), '-o', str(output)]
         if options.sysroot: command.insert(1,'--sysroot='+options.sysroot.resolve().as_posix())
         if os.name=='nt': command.insert(1,'-static')
-        subprocess.run(command, cwd=ROOT, check=True, timeout=180)
-        subprocess.run([str(output)], cwd=ROOT, check=True, timeout=30)
+        subprocess.run(command, cwd=ROOT, env=environment, check=True, timeout=180)
+        subprocess.run([str(output)], cwd=ROOT, env=environment, check=True, timeout=30)
     print('standard unit: semantic flags, hygiene identities, truncated/versioned inputs and package integrity passed')
 
 

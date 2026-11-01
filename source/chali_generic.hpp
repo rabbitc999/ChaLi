@@ -4,6 +4,7 @@
 
 #include "preprocess.hpp"
 #include "chali_generic_name.hpp"
+#include <iosfwd>
 
 namespace chali_generic
 {
@@ -31,6 +32,7 @@ struct Generic
     Memory::String sourceName;  ///< 模块内原始名称，用于隔离不同模块的同名模板。
     Memory::Vector<Parameter> params;
     Memory::String declaration;
+    Memory::String sourceTemplate;  ///< 归一后尚未移除的完整模板，供二进制身份匹配。
     std::size_t nameOffset = 0;
     preprocess::LineOrigin origin;
     Memory::Vector<preprocess::LineOrigin> declarationOrigins;  ///< 声明逐行来源，保留字段和方法的原始行。
@@ -40,6 +42,29 @@ struct Generic
     Memory::Vector<preprocess::LineOrigin> derivationOrigins;  ///< 派生指令逐行来源，与模板声明行分开保存。
     Memory::String operatorSwitches;  ///< 实例声明前的编译器指令 `#No<接口>Replace` / `#NoRight<接口>`，必须排在 `#derive` 之前。
 };
+/** @brief 标准模板恢复回调：1 为命中，0 为源码回退，-1 为资产错误。 */
+using TemplateLoader = int (*)(const Memory::String &, const preprocess::LineOrigin &, const Memory::String &,
+                              std::size_t, std::size_t &, Generic &, Memory::String &);
+/**
+ * @brief 设置当前编译会话的只读模板装载器，空指针使用源码收集。
+ * @param loader 编译器资产层提供的回调，不保存用户实例。
+ */
+void setTemplateLoader(TemplateLoader loader);
+/**
+ * @brief 导出指定标准模块的未实例化模板记录，不保存已生成的具体实例。
+ * @param out 二进制输出流。
+ * @param module 标准模块名，std::__range 表示编译器内建辅助模板。
+ * @return 元数据和输出有效时返回 true。
+ */
+bool writeTemplateUnit(std::ostream &out, const Memory::String &module);
+/**
+ * @brief 在独立容器中验证标准模块的模板记录。
+ * @param in 完整二进制模板单元。
+ * @param module 期望的标准模块名。
+ * @param records 成功时接收模板记录，失败时保留原值。
+ * @return 格式、来源及所有字段有效时返回 true。
+ */
+bool readTemplateUnit(std::istream &in, const Memory::String &module, Memory::Vector<Generic> &records);
 /**
  * @brief 可用于整数泛型实参的模块常量原文；求值时仍拒绝运行时初始化式。
  */
@@ -241,6 +266,7 @@ struct Session
     Memory::Map<Memory::String, Memory::Vector<Memory::String>> intrinsicArguments;
     Memory::Vector<Memory::String> pending;
     std::size_t emitted = 0;
+    std::size_t templateHits = 0, templateMisses = 0;  ///< 本会话的标准模板恢复统计，不写入资产。
 };
 extern Session session;
 
