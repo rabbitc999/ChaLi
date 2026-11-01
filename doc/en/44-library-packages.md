@@ -85,6 +85,15 @@ enum Event {
 
 Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Owning payloads, user methods, interface contracts and aggregate function calls across libraries remain unsupported; enums are not exported as integer prototypes.
 
+Abstract interface declarations support scalar parameters/results (including void results), static protocol methods and inheritance. Bases must come from the same module or verified precompiled dependencies. Generated interfaces preserve original inheritance, adding imports for foreign bases so a consumer's same-named declaration cannot change resolution. For example:
+
+```chali
+interface Error { int64 code(); };
+interface DetailedError : Error { bool retry(); };
+```
+
+Consumers may implement these interfaces, call through a base interface and use interface type matches such as `IoError(error)`. Declarations preserve original parameter names and static markers; inherited methods retain their original declaring interface. Default method bodies, associated types, generic definitions and nonscalar method signatures remain rejected by the producer. Creating interface values inside library code or passing them through native entries still requires the shared-runtime work.
+
 Nested records from a verified `.chlib` dependency retain their original module names. A consuming library records exact dependency pins and references the original declaration instead of copying it into its own module. Transitive consumers load the declaring package even when they import only the outer library. Cross-module record fields originating only from implementation source are rejected; precompile that dependency first.
 
 Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain absent from the public language interface. An object entry does not automatically become a final shared-library export; configure final linker exports separately.

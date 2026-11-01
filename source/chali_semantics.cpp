@@ -3305,6 +3305,65 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     throw std::runtime_error("首批独立原生库只支持基础标量签名；聚合与拥有值待语言库 ABI 接入");
 }
 /**
+ * @brief 导出标量抽象接口及其已验证继承关系，不携带默认方法实现。
+ * @param module 当前生产模块。
+ * @return 接口声明及精确依赖模块的导入语句。
+ */
+Memory::String LibraryInterfaceDeclarations(const Memory::String &module)
+{
+    Memory::Map<Memory::String, int> declarations;
+    Memory::Set<Memory::String> roots, packaged, visited, imports;
+    for (const auto id : g_top)
+    {
+        const auto &node = N(id);
+        if (node.kind != MNode::InterfaceDecl || !g_interfaces.count(node.s)) continue;
+        declarations[node.s] = id;
+        if (node.module == module) roots.insert(node.s);
+        const auto libraryLine = [&](std::size_t line) {
+            return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
+        };
+        if (libraryLine(node.sourceLine) || libraryLine(node.expansionLine)) packaged.insert(node.s);
+    }
+    Memory::String result;
+    Memory::Function<void(const Memory::String &)> emit = [&](const Memory::String &name) {
+        if (!visited.insert(name).second) return;
+        const auto declaration = declarations.find(name);
+        if (declaration == declarations.end() || (!roots.count(name) && !packaged.count(name)))
+            throw std::runtime_error("接口基类须来自本模块或已验证预编译依赖");
+        const auto &node = N(declaration->second);
+        for (const auto member : N(node.kids[0]).kids)
+            if (N(member).kind == MNode::AssociatedDecl) throw std::runtime_error("预编译接口尚未导出关联类型约束");
+        Memory::String bases, methods;
+        const auto parents = g_interfaceBases.find(name);
+        if (parents != g_interfaceBases.end())
+            for (const auto &parent : parents->second)
+            {
+                emit(parent);
+                if (!bases.empty()) bases += ", ";
+                bases += BareTypeName(parent);
+                const auto &base = N(declarations.at(parent));
+                if (roots.count(name) && base.module != module) imports.insert(base.module);
+            }
+        for (const auto &method : g_interfaces.at(name))
+        {
+            if (method.bodyId >= 0) throw std::runtime_error("预编译接口尚未导出默认方法实现");
+            if (method.owner != name) continue;
+            methods += "    " + Memory::String(method.isStatic ? "static " : "") + LibraryScalarType(method.result, true) + " " + method.name + "(";
+            for (std::size_t i = 0; i < method.params.size(); ++i)
+            {
+                if (i) methods += ", ";
+                methods += LibraryScalarType(method.params[i]) + " " + method.bodyParams[i].source;
+            }
+            methods += ");\n";
+        }
+        if (roots.count(name)) result += "interface " + BareTypeName(name) + (bases.empty() ? Memory::String() : " : " + bases) + " {\n" + methods + "};\n";
+    };
+    for (const auto &root : roots) emit(root);
+    Memory::String prefix;
+    for (const auto &dependency : imports) prefix += "import " + dependency + ";\n";
+    return prefix + result;
+}
+/**
  * @brief 导出无拥有状态的公开记录与枚举声明，保留字段、载荷及完整模块身份。
  * @param module 本次生产的完整模块身份。
  * @return 不含方法体、默认初始化器或运行时状态的类型声明。
@@ -3319,8 +3378,8 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
     for (const auto id : g_top)
     {
         const auto &node = N(id);
-        if (node.module == module && (node.kind == MNode::InterfaceDecl || node.kind == MNode::OpcodeDecl))
-            throw std::runtime_error("原生类型接口暂不导出接口或 opcode 定义");
+        if (node.module == module && node.kind == MNode::OpcodeDecl)
+            throw std::runtime_error("原生类型接口暂不导出 opcode 定义");
         if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s)) continue;
         owners[node.s] = node.module;
         if (node.module == module)
@@ -3454,7 +3513,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
     for (const auto *entries : { &program.variables, &program.constants })
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
-    Memory::String interface = "module " + module + ";\n" + LibraryTypeDeclarations(module);
+    Memory::String interface = "module " + module + ";\n" + LibraryInterfaceDeclarations(module) + LibraryTypeDeclarations(module);
     const auto declarations = g_functionDecls;
     for (const auto &function : declarations)
     {

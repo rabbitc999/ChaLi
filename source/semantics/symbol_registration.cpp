@@ -429,6 +429,20 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
             if (!resolve(node.s, node.module, &node.s)) return false;
         }
     }
+    // 基接口与普通类型使用同一模块解析规则；不改写被多个模块共享的名字池条目。
+    for (const int id : g_top)
+    {
+        const auto node = N(id);
+        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl && node.kind != MNode::InterfaceDecl) || node.i < 0) continue;
+        const auto list = static_cast<int>(node.i);
+        const auto names = N(list).kids;
+        for (std::size_t i = 0; i < names.size(); ++i)
+        {
+            Memory::String resolved;
+            if (!resolve(g_names[names[i]], node.module, &resolved)) return false;
+            g_nodes[list].kids[i] = M_Name(resolved.c_str());
+        }
+    }
     Memory::Set<const MType *> visited;
     Memory::Function<void(const std::shared_ptr<MType> &)> tuples;
     tuples = [&](const std::shared_ptr<MType> &type) {
