@@ -8,7 +8,7 @@ from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
-    """运行解释与 VM 回归，并检查非法默认参数。"""
+    """运行原生 AOT 默认参数回归，并检查非法默认参数。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()

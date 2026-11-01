@@ -52,7 +52,16 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Aggregate parameters/results, generic definitions, owning values, globals, methods, default/variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Aggregate parameters/results, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+
+Scalar default parameters preserve definition scope and call-time evaluation. For example:
+
+```chali
+inline int64 defaultValue() { return 7; }
+int64 addDefault(int64 x, int64 y=defaultValue()) { return x+y; }
+```
+
+After import, `example::math::addDefault(3)` evaluates the default only for this omitted `y`; `addDefault(3,9)` does not evaluate it. The producer compiles the checked expression into a scalar entry. The public interface stores declarations and calls, without private bodies, and importing or building does not execute the expression. Multiple omitted parameters retain their evaluation order; private and imported calls resolve in definition scope. Scalar-unit restrictions still apply: defaults do not enable globals, owning values or other unsupported operations. Generated default entries are implementation declarations, not APIs intended for manual use.
 
 Public interfaces also preserve plain record declarations. Fields may be basic scalars or nested plain records from the same module, retaining names, order and complete module identity. For example, a provider may declare:
 
@@ -173,6 +182,7 @@ Native headers and archive-member bounds are inspected on the same owned bytes w
 Packages are written in an isolated workspace under root `tmp/` and published only after validation. Failures preserve existing output. CLI packing cannot overwrite its manifest or input assets. Failed reading does not publish partial state. Digest, version, target and required-capability errors never silently select another implementation.
 
 ```sh
+python tools/run_module_gates.py libraries defaults docs --chali PATH --random-recheck 1
 python tests/chali_digest.py
 python tests/chali_library_import.py --chali PATH
 python tests/chali_library_package.py --chali PATH

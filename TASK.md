@@ -52,7 +52,15 @@ libraries／memory／docs 共 10 项及随机复测一项全部通过，静态 V
 
 产物位于 build/independent-validation/1.0.12-a5-records/ 与 vscode/dist/1.0.12-a5-records/，证据只在 tools/history/20261101/chali-1.0.12-a5-records/。静态 EXE SHA-256：4c389696b966dbbafde62a9bbe22f5e610e659f6d4795112f520f61fd3a9fd63；VSIX：6f92b75244ae9ab58057506b76546f71b1df6aaa9c6bc12c698913f84d349e2c。
 
-下一步保留标量函数默认参数的定义域与调用时求值契约，再继续完整语言类型及共用运行时。
+## A5.7 验收摘要
+
+标量默认表达式已编译为定义模块中的独立原生入口，公开接口不带私有函数体；只在本次省略实参时求值，保留私有调用及参数顺序。构建和导入不执行默认表达式，已有标量、拥有值与全局状态限制仍生效。独立汇编计数器验证显式参数跳过默认值、每次缺省求值一次及多个默认参数顺序；全部基础标量默认值、三目标对象和消费者分离链接通过。
+
+libraries／defaults／docs 共 11 项及随机复测一项全部通过，新增 defaults 模块入口包含默认参数、重载歧义和模块身份回归。静态 VSIX 八组测试与版本、变体、编译器及关键脚本字节核对通过。实际运行 Windows x64，Linux x64／ARM64 仅对象生成；未运行整仓全量、性能测试或本阶段外置变体冷构建。
+
+产物位于 build/independent-validation/1.0.12-a5-defaults/ 与 vscode/dist/1.0.12-a5-defaults/，证据只在 tools/history/20261101/chali-1.0.12-a5-defaults/。静态 EXE SHA-256：26ebba850f2140256fc94bedb31367efd3874c7c80ec6dfe714ed455b73d2ad9；VSIX：5970f3f36acd922506a529e8605049307f3fd351ec7349c1dbb97e6e7c837108。
+
+下一步接入已验证预编译依赖的嵌套记录身份，之后继续聚合调用、完整类型及共用运行时。
 
 ## A4／A5：完整公共类型与语言契约
 

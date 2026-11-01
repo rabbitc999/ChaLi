@@ -14,6 +14,7 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
     "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_generator_assets"],
+    "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],
     "abi": ["chali_link_abi", "chali_abi_values", "chali_abi_contracts", "chali_c_api_contract"],
     "toolchain": ["chali_link_abi", "chali_linker", "chali_assembler", "chali_aot_assembly", "chali_package", "chali_aot_arguments"],
     "warnings": ["chali_warnings", "chali_analysis_diagnostics", "chali_match_overlap", "chali_lsp_naming_scopes"],

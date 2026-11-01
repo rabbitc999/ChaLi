@@ -3356,6 +3356,52 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
     for (const auto &name : records) emit(name);
     return result;
 }
+/**
+ * @brief 将标量默认表达式编译为延迟求值入口，保留定义模块和私有调用。
+ * @param parameter 已检查的参数及默认表达式。
+ * @param symbol 根据所属函数和参数序号得到的稳定原生符号。
+ * @param module 对外声明所属模块。
+ * @param interface 接收供省略参数调用的接口声明。
+ * @param exports 接收额外原生入口。
+ * @return 接口内可使用的无参默认值调用表达式。
+ */
+Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String &symbol, const Memory::String &module,
+                                   Memory::String &interface, Memory::Vector<chali_aot::ExternFunction> &exports)
+{
+    const auto type = LibraryScalarType(parameter.type);
+    Memory::String languageName = "chaliDefault_" + symbol;
+    while (std::any_of(g_functionDecls.begin(), g_functionDecls.end(), [&](const auto &function) { return function.module == module && function.source == languageName; }))
+        languageName += "_";
+    const auto label = module + "::__chali_library_default_" + symbol;
+    struct RestoreLoweringState
+    {
+        decltype(g_cleanupItems) cleanup = g_cleanupItems;
+        decltype(g_globalCleanupItems) globalCleanup = g_globalCleanupItems;
+        decltype(g_cleanupBase) cleanupBase = g_cleanupBase;
+        ast::Program *previousProgram = g_loweringProgram;
+        /** @brief 在正常返回或异常退出时恢复库入口生成前的清理状态。 */
+        ~RestoreLoweringState()
+        {
+            g_cleanupItems = std::move(cleanup);
+            g_globalCleanupItems = std::move(globalCleanup);
+            g_cleanupBase = cleanupBase;
+            g_loweringProgram = previousProgram;
+        }
+    } restore;
+    g_loweringProgram = g_aotSyntax.get();
+    const int body = M_Block(M_List1(M_Return(parameter.defaultExpr)));
+    auto function = LowerFunction(label, {}, parameter.type, {}, body, N(parameter.defaultExpr).module);
+    if (!g_error.empty() || !function.body) throw std::runtime_error("库默认参数降级失败：" + std::string(g_error.c_str()));
+    g_aotSyntax->functions.push_back(std::move(function));
+    chali_aot::ExternFunction entry;
+    entry.label = label;
+    entry.symbol = symbol;
+    entry.resultType = AotCType(CAbiType(parameter.type));
+    entry.abiConvention = "C";
+    exports.push_back(std::move(entry));
+    interface += "#abi(\"C\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
+    return languageName + "()";
+}
 /** @brief 根据公开函数的真实签名生成不含实现体的接口及稳定 C 符号。
  * @param module 完整模块身份。
  * @param exports 接收公开原生签名。
@@ -3371,7 +3417,8 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
     Memory::String interface = "module " + module + ";\n" + LibraryRecordDeclarations(module);
-    for (const auto &function : g_functionDecls)
+    const auto declarations = g_functionDecls;
+    for (const auto &function : declarations)
     {
         if (function.module != module || (function.moduleLocal && function.exportSymbol.empty()) || function.superseded || function.external || function.bodyId < 0) continue;
         if (function.source == "main" || function.unsafeRequired) throw std::runtime_error("首批原生库暂不导出 main 或 unsafe 函数");
@@ -3385,16 +3432,22 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
             const auto &parameter = function.signature.params[i];
-            if (parameter.variadic || parameter.defaultExpr >= 0) throw std::runtime_error("首批独立原生库暂不导出默认参数或变参函数");
+            if (parameter.variadic) throw std::runtime_error("独立原生库暂不导出变参函数");
             const auto type = LibraryScalarType(parameter.type);
-            if (i) declaration += ", ";
-            declaration += type + " " + parameter.source;
             identity += "\n" + type;
             entry.parameterTypes.push_back(AotCType(CAbiType(parameter.type)));
         }
-        declaration += ");\n";
         const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())));
         entry.symbol = Memory::String(("chali_lib_" + hash).c_str());
+        for (std::size_t i = 0; i < function.signature.params.size(); ++i)
+        {
+            const auto &parameter = function.signature.params[i];
+            if (i) declaration += ", ";
+            declaration += LibraryScalarType(parameter.type) + " " + parameter.source;
+            if (parameter.defaultExpr >= 0 && !function.moduleLocal)
+                declaration += "=" + LibraryDefaultEntry(parameter, entry.symbol + "_default_" + Memory::toString(i), module, interface, exports);
+        }
+        declaration += ");\n";
         if (!function.moduleLocal) interface += "#abi(\"C\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
         exports.push_back(std::move(entry));
     }

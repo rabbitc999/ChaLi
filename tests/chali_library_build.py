@@ -17,9 +17,21 @@ def main():
     with tempfile.TemporaryDirectory(prefix='library-build-') as directory:
         work=Path(directory);modules=work/'modules/demo';modules.mkdir(parents=True)
         provider=work/'provider.chl';package=modules/'math.chlib'
+        tick_source=work/'tick.s';tick_object=work/'tick.o'
+        arm=os.name!='nt' and 'aarch64' in os.uname().machine.lower()
+        tick_source.write_text('.text\n.globl native_tick\nnative_tick:\n'+
+                              ('adrp x1,tick_count\nadd x1,x1,:lo12:tick_count\nldr x0,[x1]\nadd x0,x0,#1\nstr x0,[x1]\nret\n' if arm else
+                               'movq tick_count(%rip),%rax\naddq $1,%rax\nmovq %rax,tick_count(%rip)\nretq\n')+
+                              '.data\n.p2align 3\ntick_count:\n.quad 0\n')
+        invoke([compiler,'asm',tick_source,'--out',tick_object],work)
         types=['int8','uint8','int16','uint16','int32','uint32','int64','uint64','float32','float64','bool','char']
-        declarations=''.join(f'{type} identity_{type}({type} value){{return value;}}\n' for type in types)
+        values=dict(int8="-100",uint8="230",int16="-30000",uint16="60000",int32="-123456",uint32="4000000000",int64="-1234567890123",uint64="(uint64)-1",float32="1.25",float64="-2.25",bool="true",char="'A'")
+        declarations=''.join(f'{type} identity_{type}({type} value=({type}){values[type]}){{return value;}}\n' for type in types)
         provider.write_text('module demo::math;\nstruct Point {int64 x;float64 y;};\nstruct Bounds {Point low;Point high;char marker;};\ninline int64 hidden(int64 x){return x+1;}\n'
+                            '#abi("C","@link","native_tick") int64 nativeTick();\n'
+                            'inline int64 hiddenDefault(){return nativeTick();}\n'
+                            'int64 withDefault(int64 x=hiddenDefault()){return x;}\n'
+                            'int64 twoDefaults(int64 a=hiddenDefault(),int64 b=hiddenDefault()){return a*10+b;}\n'
                             '#export("native_add") int64 add(int64 a,int64 b){return hidden(a)+b-1;}\n'
                             'int64 factorial(int64 n){if(n<=1){return 1;}return n*factorial(n-1);}\n'
                             'int64 sum(int64 n){int64 result=0;int64 i=0;while(i<n){result=result+i;i=i+1;}return result;}\n'
@@ -93,22 +105,22 @@ def main():
 
         for type in types:
             value=dict(int8="-100",uint8="230",int16="-30000",uint16="60000",int32="-123456",uint32="4000000000",int64="-1234567890123",uint64="-1",float32="1.25",float64="-2.25",bool="true",char="'A'")[type]
-            assertions+=f'assert(demo::math::identity_{type}(({type}){value})==({type}){value});assert(demo::bridge::identity_{type}(({type}){value})==({type}){value});'
+            assertions+=f'assert(demo::math::identity_{type}()==({type}){value});assert(demo::math::identity_{type}(({type}){value})==({type}){value});assert(demo::bridge::identity_{type}(({type}){value})==({type}){value});'
         consumer=work/'consumer.chl'
-        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
+        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(demo::math::withDefault(77)==77);assert(demo::math::withDefault()==1);assert(demo::math::withDefault()==2);assert(demo::math::withDefault(78)==78);assert(demo::math::withDefault()==3);assert(demo::math::twoDefaults()==45);assert(demo::math::twoDefaults(1)==16);assert(demo::math::twoDefaults(1,2)==12);assert(demo::math::withDefault()==7);assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
                             'assert(demo::math::factorial(8)==40320);assert(demo::math::sum(10)==45);'
                             'assert(demo::math::overloaded(9)==10);assert(demo::math::overloaded(1.5)==3.0);assert(demo::math::multiply(1.5,2.0)==3.0);demo::math::noop();'+assertions+'println("compiled library OK");}',encoding='utf-8')
         invoke([compiler,'check',consumer],work)
-        result=invoke([compiler,'run',consumer,'--out',work/'checked'],work)
+        result=invoke([compiler,'run',consumer,'--link',tick_object,'--out',work/'checked'],work)
         assert result.stdout=='compiled library OK\n'
         detached=work/'detached'
         invoke([compiler,'aot',consumer,'--emit-obj','--out',detached],work)
         linked=work/('linked.exe' if os.name=='nt' else 'linked')
-        invoke([compiler,'link',detached.with_suffix('.o'),'--package',bridge,'--package',other,'--out',linked],work)
+        invoke([compiler,'link',detached.with_suffix('.o'),tick_object,'--package',bridge,'--package',other,'--out',linked],work)
         assert invoke([linked],work).stdout=='compiled library OK\n'
         good_dependency=package.read_bytes()
         package.write_bytes(good_dependency[:-1]+bytes([good_dependency[-1]^1]))
-        invoke([compiler,'run',consumer,'--out',work/'bad-dependency'],work,False)
+        invoke([compiler,'run',consumer,'--link',tick_object,'--out',work/'bad-dependency'],work,False)
         package.write_bytes(good_dependency)
         bad=work/'private.chl';bad.write_text('import demo::math;void main(){demo::math::hidden(1);}')
         invoke([compiler,'check',bad],work,False)

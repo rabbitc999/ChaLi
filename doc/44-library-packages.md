@@ -52,7 +52,16 @@ chali lib inspect modules/example/math.chlib
 
 输出目录须已存在，入口实际模块必须与 `--module` 一致。包内保存公开接口和当前目标对象，不保存实现源码或独立运行时副本；最终应用提供同一套运行时。公开符号由模块、签名及 ABI 身份计算，内部函数不向消费者公开。`--target`／`--cpu` 选择实现目标，跨目标生成仍须按实际目标验证。
 
-当前构建范围是普通函数的 void／bool／char、各宽度有符号和无符号整数、float32／float64 签名，函数体支持标量运算、局部变量、控制流、当前单元内直接调用、递归及已导入标量库的直接 C ABI 调用。C ABI 入口直接由 LLVM 生成位宽和浮点转换。函数入口仍明确拒绝聚合参数／返回值、泛型定义、拥有值、全局状态、方法、默认／变参、unsafe 导出、宿主及地址操作，以及独立调试／构建期步数预算，不会忽略这些声明或把它们改为标量。模板、初始化与更广的语言内部 ABI 继续在后续阶段接入。
+当前构建范围是普通函数的 void／bool／char、各宽度有符号和无符号整数、float32／float64 签名，函数体支持标量运算、局部变量、控制流、当前单元内直接调用、递归及已导入标量库的直接 C ABI 调用。C ABI 入口直接由 LLVM 生成位宽和浮点转换。函数入口仍明确拒绝聚合参数／返回值、泛型定义、拥有值、全局状态、方法、变参、unsafe 导出、宿主及地址操作，以及独立调试／构建期步数预算，不会忽略这些声明或把它们改为标量。模板、初始化与更广的语言内部 ABI 继续在后续阶段接入。
+
+标量函数的默认参数保留定义模块作用域和调用时求值。例如：
+
+```chali
+inline int64 defaultValue() { return 7; }
+int64 addDefault(int64 x, int64 y=defaultValue()) { return x+y; }
+```
+
+导入后 `example::math::addDefault(3)` 在本次调用缺省 `y` 时才求默认值；`addDefault(3,9)` 不求默认值。生产器将已检查表达式编译成独立标量入口，公开接口只保存该入口的声明和调用，不包含私有函数体，也不会在导入、构建时执行默认表达式。多个缺省参数保持原有求值次序，私有函数和已导入库调用仍在定义模块内解析。入口仍受标量单元限制；全局状态、拥有值与其他未接入操作不会因出现在默认值中而获得支持。生成的默认值入口是实现辅助声明，不作为需要手工调用的标准 API。
 
 公共接口也保留普通记录声明。字段可为基础标量或本模块内嵌套的普通记录，保留字段名、顺序和完整模块身份。例如提供方可声明：
 
@@ -175,6 +184,7 @@ chali link build/consumer.o --package modules/example/math.chlib --library-lock 
 相关回归：
 
 ```sh
+python tools/run_module_gates.py libraries defaults docs --chali PATH --random-recheck 1
 python tests/chali_digest.py
 python tests/chali_library_import.py --chali PATH
 python tests/chali_library_package.py --chali PATH
