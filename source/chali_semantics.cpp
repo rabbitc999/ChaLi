@@ -3304,6 +3304,58 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     if (type->kind == MType::Double) return Memory::String("float") + Memory::toString(type->bits);
     throw std::runtime_error("首批独立原生库只支持基础标量签名；聚合与拥有值待语言库 ABI 接入");
 }
+/**
+ * @brief 导出无拥有状态的公开记录声明，保留嵌套字段及完整模块身份。
+ * @param module 本次生产的完整模块身份。
+ * @return 不含方法体、默认初始化器或运行时状态的结构体声明。
+ */
+Memory::String LibraryRecordDeclarations(const Memory::String &module)
+{
+    Memory::Set<Memory::String> records;
+    for (const auto id : g_top)
+    {
+        const auto &node = N(id);
+        if (node.module != module) continue;
+        if (node.kind == MNode::InterfaceDecl || node.kind == MNode::EnumDecl || node.kind == MNode::OpcodeDecl)
+            throw std::runtime_error("原生记录接口暂不导出接口、枚举或 opcode 定义");
+        if (node.kind == MNode::StructDecl && g_structs.count(node.s)) records.insert(node.s);
+    }
+    Memory::Set<Memory::String> visited, visiting;
+    Memory::String result;
+    Memory::Function<void(const Memory::String &)> emit = [&](const Memory::String &name) {
+        if (visited.count(name)) return;
+        if (!visiting.insert(name).second) throw std::runtime_error("记录接口字段形成递归值布局");
+        const auto found = g_structs.find(name);
+        if (found == g_structs.end() || g_enums.count(name) || g_opcodeTypes.count(name)) throw std::runtime_error("记录字段必须是已检查的普通结构体");
+        const auto &definition = found->second;
+        if (definition.abiPacked || definition.nonCopyable || !definition.noReplace.empty() || !definition.noRight.empty())
+            throw std::runtime_error("原生记录接口暂不导出自定义布局、所有权或运算符契约");
+        for (const auto &method : definition.methods)
+            if (!method.implicitDeclaration) throw std::runtime_error("原生记录接口暂不导出用户方法或构造器");
+        for (const auto &interfaceName : definition.interfaces)
+            if (interfaceName != "std::io::ToString" && interfaceName != "ToString") throw std::runtime_error("原生记录接口暂不导出接口继承契约");
+        Memory::String fields;
+        for (const auto &field : definition.fields)
+        {
+            if (field.initializer >= 0) throw std::runtime_error("原生记录接口暂不导出字段默认初始化器");
+            Memory::String type;
+            if (field.type && field.type->kind == MType::Struct)
+            {
+                if (!records.count(field.type->name)) throw std::runtime_error("记录接口暂只导出本模块内嵌套类型");
+                emit(field.type->name);
+                type = module + "::" + BareTypeName(field.type->name);
+            }
+            else
+                type = LibraryScalarType(field.type);
+            fields += "    " + type + " " + field.name + ";\n";
+        }
+        visiting.erase(name);
+        visited.insert(name);
+        result += "struct " + BareTypeName(name) + " {\n" + fields + "};\n";
+    };
+    for (const auto &name : records) emit(name);
+    return result;
+}
 /** @brief 根据公开函数的真实签名生成不含实现体的接口及稳定 C 符号。
  * @param module 完整模块身份。
  * @param exports 接收公开原生签名。
@@ -3315,12 +3367,10 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         if (item.second.module == module) throw std::runtime_error("首批独立原生库暂不导出泛型定义");
     const auto prefix = module + "::";
     const auto &program = *M_AotSyntax();
-    for (const auto &type : program.types)
-        if (type->name.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不导出具名聚合类型");
     for (const auto *entries : { &program.variables, &program.constants })
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
-    Memory::String interface = "module " + module + ";\n";
+    Memory::String interface = "module " + module + ";\n" + LibraryRecordDeclarations(module);
     for (const auto &function : g_functionDecls)
     {
         if (function.module != module || (function.moduleLocal && function.exportSymbol.empty()) || function.superseded || function.external || function.bodyId < 0) continue;
