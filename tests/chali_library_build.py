@@ -1,4 +1,4 @@
-"""从语言实现构建无源码库包，验证基础类型、调用、隐藏与共用运行时。"""
+"""从语言实现构建无源码库包，验证标量入口、默认值、公开类型及精确依赖。"""
 from pathlib import Path
 import argparse
 import os
@@ -27,7 +27,7 @@ def main():
         types=['int8','uint8','int16','uint16','int32','uint32','int64','uint64','float32','float64','bool','char']
         values=dict(int8="-100",uint8="230",int16="-30000",uint16="60000",int32="-123456",uint32="4000000000",int64="-1234567890123",uint64="(uint64)-1",float32="1.25",float64="-2.25",bool="true",char="'A'")
         declarations=''.join(f'{type} identity_{type}({type} value=({type}){values[type]}){{return value;}}\n' for type in types)
-        provider.write_text('module demo::math;\nstruct Point {int64 x;float64 y;};\nstruct Bounds {Point low;Point high;char marker;};\ninline int64 hidden(int64 x){return x+1;}\n'
+        provider.write_text('module demo::math;\nstruct Point {int64 x;float64 y;};\nenum Event {Empty,Count(int64 value),Pair(int64 left,float64 right),At(Point position)};\nstruct Bounds {Point low;Point high;char marker;};\ninline int64 hidden(int64 x){return x+1;}\n'
                             '#abi("C","@link","native_tick") int64 nativeTick();\n'
                             'inline int64 hiddenDefault(){return nativeTick();}\n'
                             'int64 withDefault(int64 x=hiddenDefault()){return x;}\n'
@@ -44,6 +44,7 @@ def main():
         interface=next(x['data'].decode() for x in entries if x['kind']==1)
         assert 'factorial' in interface and 'hidden' not in interface and 'return' not in interface
         assert 'struct Point' in interface and 'struct Bounds' in interface and 'demo::math::Point low;' in interface
+        assert 'enum Event' in interface and 'Pair(int64 left, float64 right)' in interface and 'At(demo::math::Point position)' in interface
         assert {x['kind'] for x in entries}=={1,3}
         obj=work/'unit.o';obj.write_bytes(next(x['data'] for x in entries if x['kind']==3))
         symbols=subprocess.run(['nm','-g','--defined-only',str(obj)],capture_output=True,text=True,timeout=30)
@@ -67,7 +68,7 @@ def main():
 
         system_library='kernel32' if os.name=='nt' else 'm'
         bridge=modules/'bridge.chlib'
-        bridge_source='module demo::bridge;\nimport demo::math;\nstruct Wrapper {demo::math::Bounds bounds;int64 tag;};\nint64 total(int64 x){return demo::math::add(x,2); }\n'
+        bridge_source='module demo::bridge;\nimport demo::math;\nstruct Wrapper {demo::math::Bounds bounds;demo::math::Event event;int64 tag;};\nint64 total(int64 x){return demo::math::add(x,2); }\n'
         bridge_source+=''.join(f'{type} identity_{type}({type} value){{return demo::math::identity_{type}(value);}}\n' for type in types)
         provider.write_text(bridge_source,encoding='utf-8')
         invoke([compiler,'lib','build',provider,'--module','demo::bridge','--package-version','1.0.0','--out',bridge,
@@ -109,7 +110,7 @@ def main():
             value=dict(int8="-100",uint8="230",int16="-30000",uint16="60000",int32="-123456",uint32="4000000000",int64="-1234567890123",uint64="-1",float32="1.25",float64="-2.25",bool="true",char="'A'")[type]
             assertions+=f'assert(demo::math::identity_{type}()==({type}){value});assert(demo::math::identity_{type}(({type}){value})==({type}){value});assert(demo::bridge::identity_{type}(({type}){value})==({type}){value});'
         consumer=work/'consumer.chl'
-        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);demo::bridge::Wrapper wrapper;wrapper.bounds=copied;wrapper.tag=12;demo::bridge::Wrapper wrapperCopy=wrapper;wrapperCopy.bounds.low.x=15;assert(wrapper.bounds.low.x==9);assert(wrapperCopy.bounds.high.y==2.5);assert(wrapperCopy.tag==12);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(demo::math::withDefault(77)==77);assert(demo::math::withDefault()==1);assert(demo::math::withDefault()==2);assert(demo::math::withDefault(78)==78);assert(demo::math::withDefault()==3);assert(demo::math::twoDefaults()==45);assert(demo::math::twoDefaults(1)==16);assert(demo::math::twoDefaults(1,2)==12);assert(demo::math::withDefault()==7);assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
+        consumer.write_text('import demo::math;\nimport demo::other;\nimport demo::bridge;\n#abi("C","@link","native_add") int64 nativeAdd(int64 x,int64 y);\nint64 enumScore(demo::math::Event event){match(event){demo::math::Event::Empty=>{return 0;}demo::math::Event::Count(value)=>{return value;}demo::math::Event::Pair(left,right)=>{return left+(int64)right;}demo::math::Event::At(position)=>{return position.x;}}return -1;}\nvoid main(){demo::math::Bounds bounds;bounds.low.x=7;bounds.high.y=2.5;bounds.marker=\'Q\';demo::math::Bounds copied=bounds;copied.low.x=9;assert(bounds.low.x==7);demo::bridge::Wrapper wrapper;wrapper.bounds=copied;wrapper.event=demo::math::Event::At(copied.low);wrapper.tag=12;demo::bridge::Wrapper wrapperCopy=wrapper;wrapperCopy.bounds.low.x=15;assert(wrapper.bounds.low.x==9);assert(wrapperCopy.bounds.high.y==2.5);assert(wrapperCopy.tag==12);assert(enumScore(wrapperCopy.event)==9);wrapper.event=demo::math::Event::Count(99);assert(enumScore(wrapper.event)==99);assert(enumScore(wrapperCopy.event)==9);assert(enumScore(demo::math::Event::Empty)==0);assert(enumScore(demo::math::Event::Pair(5,2.5))==7);assert(copied.low.x==9);assert(copied.high.y==2.5);assert(copied.marker==\'Q\');assert(demo::math::withDefault(77)==77);assert(demo::math::withDefault()==1);assert(demo::math::withDefault()==2);assert(demo::math::withDefault(78)==78);assert(demo::math::withDefault()==3);assert(demo::math::twoDefaults()==45);assert(demo::math::twoDefaults(1)==16);assert(demo::math::twoDefaults(1,2)==12);assert(demo::math::withDefault()==7);assert(nativeAdd(20,22)==42);assert(demo::bridge::total(40)==42);assert(demo::other::add(22,20)==2);assert(demo::math::add(20,22)==42);'
                             'assert(demo::math::factorial(8)==40320);assert(demo::math::sum(10)==45);'
                             'assert(demo::math::overloaded(9)==10);assert(demo::math::overloaded(1.5)==3.0);assert(demo::math::multiply(1.5,2.0)==3.0);demo::math::noop();'+assertions+'println("compiled library OK");}',encoding='utf-8')
         invoke([compiler,'check',consumer],work)
@@ -125,7 +126,7 @@ def main():
         invoke([compiler,'run',consumer,'--link',tick_object,'--out',work/'bad-dependency'],work,False)
         package.write_bytes(good_dependency)
         bridge_only=work/'bridge-only.chl'
-        bridge_only.write_text('import demo::bridge;\nvoid main(){demo::bridge::Wrapper wrapper;wrapper.bounds.low.x=42;assert(wrapper.bounds.low.x==42);}')
+        bridge_only.write_text('import demo::bridge;\nvoid main(){demo::bridge::Wrapper wrapper;wrapper.bounds.low.x=42;assert(wrapper.bounds.low.x==42);wrapper.event=demo::math::Event::Pair(3,4.5);match(wrapper.event){demo::math::Event::Pair(left,right)=>{assert(left==3);assert(right==4.5);} _=>{assert(false);}}}')
         invoke([compiler,'run',bridge_only,'--link',tick_object,'--out',work/'bridge-only'],work)
         bad=work/'private.chl';bad.write_text('import demo::math;void main(){demo::math::hidden(1);}')
         invoke([compiler,'check',bad],work,False)
@@ -138,13 +139,14 @@ def main():
                        'module demo::math;int64 unusedState=1;int64 value(){return 2;}',
                        'module demo::math;int64 generic<T>(T value){return 0;}',
                        'module demo::math;struct Owned {String value;};int64 value(){return 1;}',
+                       'module demo::math;enum Owned {Empty,Text(String value)};int64 value(){return 1;}',
                        'module demo::math;struct Record {int64 x;int64 read(){return self.x;}};int64 value(){return 1;}',
                        'module demo::math;import demo::source;struct Record {demo::source::Source item;};int64 value(){return 1;}']:
             provider.write_text(source.replace('module demo::math;','module demo::math;\n').replace('import demo::source;','import demo::source;\n'))
             result=invoke([compiler,'lib','build',provider,'--module','demo::math','--package-version','1.0.0','--out',package],work,False)
             assert any(word in result.stdout+result.stderr for word in ["标量","全局","泛型","记录"]),(source,result.stdout,result.stderr)
             assert package.read_bytes()==original
-    print('precompiled language scalar libraries OK')
+    print('precompiled scalar entries, defaults and public types OK')
 
 
 if __name__=='__main__':

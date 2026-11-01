@@ -3305,11 +3305,11 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     throw std::runtime_error("首批独立原生库只支持基础标量签名；聚合与拥有值待语言库 ABI 接入");
 }
 /**
- * @brief 导出无拥有状态的公开记录声明，保留嵌套字段及完整模块身份。
+ * @brief 导出无拥有状态的公开记录与枚举声明，保留字段、载荷及完整模块身份。
  * @param module 本次生产的完整模块身份。
- * @return 不含方法体、默认初始化器或运行时状态的结构体声明。
+ * @return 不含方法体、默认初始化器或运行时状态的类型声明。
  */
-Memory::String LibraryRecordDeclarations(const Memory::String &module)
+Memory::String LibraryTypeDeclarations(const Memory::String &module)
 {
     Memory::Set<Memory::String> records, packagedRecords;
     Memory::Map<Memory::String, Memory::String> owners;
@@ -3319,9 +3319,9 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
     for (const auto id : g_top)
     {
         const auto &node = N(id);
-        if (node.module == module && (node.kind == MNode::InterfaceDecl || node.kind == MNode::EnumDecl || node.kind == MNode::OpcodeDecl))
-            throw std::runtime_error("原生记录接口暂不导出接口、枚举或 opcode 定义");
-        if (node.kind != MNode::StructDecl || !g_structs.count(node.s)) continue;
+        if (node.module == module && (node.kind == MNode::InterfaceDecl || node.kind == MNode::OpcodeDecl))
+            throw std::runtime_error("原生类型接口暂不导出接口或 opcode 定义");
+        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s)) continue;
         owners[node.s] = node.module;
         if (node.module == module)
             records.insert(node.s);
@@ -3334,7 +3334,7 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
         if (visited.count(name)) return;
         if (!visiting.insert(name).second) throw std::runtime_error("记录接口字段形成递归值布局");
         const auto found = g_structs.find(name);
-        if (found == g_structs.end() || g_enums.count(name) || g_opcodeTypes.count(name)) throw std::runtime_error("记录字段必须是已检查的普通结构体");
+        if (found == g_structs.end() || g_opcodeTypes.count(name)) throw std::runtime_error("类型字段必须是已检查的普通结构体或枚举");
         const auto &definition = found->second;
         if (definition.abiPacked || definition.nonCopyable || !definition.noReplace.empty() || !definition.noRight.empty())
             throw std::runtime_error("原生记录接口暂不导出自定义布局、所有权或运算符契约");
@@ -3342,25 +3342,54 @@ Memory::String LibraryRecordDeclarations(const Memory::String &module)
             if (!method.implicitDeclaration) throw std::runtime_error("原生记录接口暂不导出用户方法或构造器");
         for (const auto &interfaceName : definition.interfaces)
             if (interfaceName != "std::io::ToString" && interfaceName != "ToString") throw std::runtime_error("原生记录接口暂不导出接口继承契约");
-        Memory::String fields;
-        for (const auto &field : definition.fields)
-        {
-            if (field.initializer >= 0) throw std::runtime_error("原生记录接口暂不导出字段默认初始化器");
-            Memory::String type;
-            if (field.type && field.type->kind == MType::Struct)
+        const auto typeText = [&](const std::shared_ptr<MType> &type) {
+            if (type && type->kind == MType::Struct)
             {
-                if (!records.count(field.type->name) && !packagedRecords.count(field.type->name))
-                    throw std::runtime_error("跨模块记录字段必须来自已验证的预编译库依赖");
-                emit(field.type->name);
-                type = owners.at(field.type->name) + "::" + BareTypeName(field.type->name);
+                if (!records.count(type->name) && !packagedRecords.count(type->name))
+                    throw std::runtime_error("跨模块记录或枚举字段必须来自已验证的预编译库依赖");
+                emit(type->name);
+                return owners.at(type->name) + "::" + BareTypeName(type->name);
             }
-            else
-                type = LibraryScalarType(field.type);
-            fields += "    " + type + " " + field.name + ";\n";
+            return LibraryScalarType(type);
+        };
+        Memory::String declaration;
+        const auto enumeration = g_enums.find(name);
+        if (enumeration != g_enums.end())
+        {
+            declaration = "enum " + BareTypeName(name) + " {\n";
+            for (std::size_t i = 0; i < enumeration->second.variants.size(); ++i)
+            {
+                const auto &variant = enumeration->second.variants[i];
+                if (variant.tag != static_cast<int>(i)) throw std::runtime_error("枚举标签不符合当前顺序编号约定");
+                if (i) declaration += ",\n";
+                declaration += "    " + variant.name;
+                if (!variant.payloads.empty())
+                {
+                    declaration += "(";
+                    for (std::size_t j = 0; j < variant.payloads.size(); ++j)
+                    {
+                        if (j) declaration += ", ";
+                        const auto &payload = variant.payloads[j];
+                        declaration += typeText(payload.type) + " " + payload.name;
+                    }
+                    declaration += ")";
+                }
+            }
+            declaration += "\n};\n";
+        }
+        else
+        {
+            declaration = "struct " + BareTypeName(name) + " {\n";
+            for (const auto &field : definition.fields)
+            {
+                if (field.initializer >= 0) throw std::runtime_error("原生记录接口暂不导出字段默认初始化器");
+                declaration += "    " + typeText(field.type) + " " + field.name + ";\n";
+            }
+            declaration += "};\n";
         }
         visiting.erase(name);
         visited.insert(name);
-        if (records.count(name)) result += "struct " + BareTypeName(name) + " {\n" + fields + "};\n";
+        if (records.count(name)) result += declaration;
     };
     for (const auto &name : records) emit(name);
     return result;
@@ -3425,7 +3454,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
     for (const auto *entries : { &program.variables, &program.constants })
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
-    Memory::String interface = "module " + module + ";\n" + LibraryRecordDeclarations(module);
+    Memory::String interface = "module " + module + ";\n" + LibraryTypeDeclarations(module);
     const auto declarations = g_functionDecls;
     for (const auto &function : declarations)
     {

@@ -72,6 +72,19 @@ struct Bounds { Point low; Point high; char marker; };
 
 A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one public scalar function. Function entries still accept scalars only: importing record declarations does not enable passing record objects across libraries. Same-named records in different modules remain different types.
 
+Public enums support empty, single-payload and multiple-payload variants. Payloads may use basic scalars or supported records/enums. For example:
+
+```chali
+enum Event {
+    Empty,
+    Count(int64 value),
+    Pair(int64 left, float64 right),
+    At(Point position)
+};
+```
+
+Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Owning payloads, user methods, interface contracts and aggregate function calls across libraries remain unsupported; enums are not exported as integer prototypes.
+
 Nested records from a verified `.chlib` dependency retain their original module names. A consuming library records exact dependency pins and references the original declaration instead of copying it into its own module. Transitive consumers load the declaring package even when they import only the outer library. Cross-module record fields originating only from implementation source are rejected; precompile that dependency first.
 
 Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain absent from the public language interface. An object entry does not automatically become a final shared-library export; configure final linker exports separately.
