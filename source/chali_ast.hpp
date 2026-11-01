@@ -1232,6 +1232,9 @@ void M_SetSourceFiles(const Memory::Vector<Memory::String> &files, const Memory:
 /** @brief 设置仅声明的原生库接口来源。
  * @param files 本次编译的库接口标签；空表清除上次设置。 */
 void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
+/** @brief 设置允许语言借用调用约定的已验证库接口来源。
+ * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
+void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
 
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);

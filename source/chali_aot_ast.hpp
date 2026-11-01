@@ -560,9 +560,7 @@ struct AstBuilder : Builder
         visit(syntax.body);
         const bool inlineBody = !function.exported && !state.addressedFunctions.count(textOf(function.label)) &&
                                 state.astInlineFunctions.count(textOf(function.label));
-        snapshotData = state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics &&
-                       state.referencePrimitives && !state.stepChecks && !state.request.options.debug &&
-                       !inlineBody && loop && memoryAccess && stable;
+        snapshotData = state.request.options.libraryModule.empty() && state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics && state.referencePrimitives && !state.stepChecks && !state.request.options.debug && !inlineBody && loop && memoryAccess && stable;
     }
 
     /**
@@ -662,7 +660,7 @@ struct AstBuilder : Builder
         const bool byte = type && type->kind == ast::Type::Kind::Uint && type->bits == 8;
         const Text storage = real ? "double" : byte ? "i8" :
                                                       "i64";
-        const bool cache = state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
+        const bool cache = state.request.options.libraryModule.empty() && state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
         const auto pointer = snapshotData ? call("chali_data_address", "ptr",
             { convert(address, "i64"), { "i64", byte ? "1" : "8" }, dataBase, dataSize }) :
             call(cache ? "chali_primitive_address" : "chali_host_address", "ptr",
@@ -796,6 +794,13 @@ struct AstBuilder : Builder
         case N::Call:
         case N::CallPointer:
         {
+            // 独立语言单元不持有宿主名称表，借用 ABI 始终使用共享运行时的同一非空检查。
+            if (!state.request.options.libraryModule.empty() && node->text == "__std_reference" && node->kids.size() == 1)
+            {
+                const auto value = expression(node->kids.front());
+                location(node);
+                return call("chali_require_reference", "i64", { convert(value, "i64") });
+            }
             const bool indirect = node->kind == N::CallPointer;
             Value pointer{ "i64", "0" };
             if (indirect) pointer = expression(node->kids[0]);

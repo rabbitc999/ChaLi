@@ -87,7 +87,7 @@ struct ImportSession::State
 {
     std::string target, cpu;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources;
+    std::vector<std::string> sources, borrowSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -126,7 +126,7 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
             || expected->second.sha256 != package.contentSha256)
             throw std::runtime_error("库不在项目锁中或版本／摘要发生变化：" + identity);
     }
-    select(package, state_->target, state_->cpu);
+    const bool borrowed = select(package, state_->target, state_->cpu).nativeAbi == "chali-borrow-v1";
     const auto existing = state_->packages.find(identity);
     if (existing != state_->packages.end())
     {
@@ -140,6 +140,7 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->bytes += size;
     state_->paths.push_back(std::filesystem::weakly_canonical(path));
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
+    if (borrowed) state_->borrowSources.push_back(state_->sources.back());
     return state_->packages.emplace(identity, std::move(package)).first->second;
 }
 /**
@@ -197,6 +198,9 @@ const Package &ImportSession::openRecursive(const std::filesystem::path &path, c
 /** @brief 返回接口来源标签。
  * @return 本次编译全部已加载接口的标签。 */
 std::vector<std::string> ImportSession::sources() const { return state_->sources; }
+/** @brief 返回已验证语言借用接口来源。
+ * @return 与当前目标原生 ABI 对应的稳定标签。 */
+std::vector<std::string> ImportSession::borrowSources() const { return state_->borrowSources; }
 /** @brief 返回成功加载的真实来源路径。
  * @return 本次会话持有快照对应的规范包路径。 */
 std::vector<std::filesystem::path> ImportSession::paths() const { return state_->paths; }

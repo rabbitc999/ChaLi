@@ -1126,6 +1126,9 @@ try
     Memory::Vector<Memory::String> librarySources;
     for (const auto &file : libraries.sources()) librarySources.push_back(Memory::String(file.c_str()));
     M_SetLibrarySources(librarySources);
+    Memory::Vector<Memory::String> borrowSources;
+    for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryBorrowSources(borrowSources);
     M_SetSourceFiles(sourceFiles, sourceLabel);
     Memory::Vector<std::size_t> sourceLines;
     for (const auto &origin : processed.lineMap) sourceLines.push_back(origin.line);

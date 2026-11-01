@@ -52,7 +52,7 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Aggregate parameters/results, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. By-value aggregate parameters/results, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
 
 Scalar default parameters preserve definition scope and call-time evaluation. For example:
 
@@ -70,7 +70,7 @@ struct Point { int64 x; float64 y; };
 struct Bounds { Point low; Point high; char marker; };
 ```
 
-A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one public scalar function. Function entries still accept scalars only: importing record declarations does not enable passing record objects across libraries. Same-named records in different modules remain different types.
+A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, owning fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one supported public function. Parameters may use scalars or plain record borrows as described below; results remain scalars or void. Record declarations do not enable by-value aggregate calls. Same-named records in different modules remain different types.
 
 Public enums support empty, single-payload and multiple-payload variants. Payloads may use basic scalars or supported records/enums. For example:
 
@@ -83,7 +83,18 @@ enum Event {
 };
 ```
 
-Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Owning payloads, user methods, interface contracts and aggregate function calls across libraries remain unsupported; enums are not exported as integer prototypes.
+Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Owning payloads, user methods, interface contracts and by-value aggregate calls across libraries remain unsupported; enums are not exported as integer prototypes.
+
+Plain nonowning records can also enter compiled language units as read-only or mutable borrows:
+
+```chali
+int64 read(Point const& value) { return value.x; }
+void bump(Point mut& value, int64 delta) { value.x = value.x + delta; }
+```
+
+These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Results remain basic scalars or void; bodies retain the supported scalar control flow, field access and direct calls. Owning values, enum references, by-value records, record-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
+
+Packages use native ABI `chali-borrow-v1` and required feature `borrowed-record-v1`. The generated `ChaLiBorrow` marker is allowed only in verified library sources with matching ABI; copying it into ordinary source is rejected. Symbols include full record and nested-layout hashes, so an old independent consumer object cannot link to a package with a changed layout under the old symbol. Ordinary C ABI packages retain `c-v1`. Borrowed calls and the complete owning-value, closure and dynamic-function contracts remain separately verified capabilities.
 
 Abstract interface declarations support scalar parameters/results (including void results), static protocol methods and inheritance. Bases must come from the same module or verified precompiled dependencies. Generated interfaces preserve original inheritance, adding imports for foreign bases so a consumer's same-named declaration cannot change resolution. For example:
 
@@ -214,3 +225,5 @@ python tests/chali_library_package.py --chali STATIC_PATH --other-chali EXTERNAL
 ```
 
 Tests independently decode the public format and compare digests with `hashlib`. They cover chunk/padding boundaries, canonical encoding, corruption, budgets, optional entries, three-target selection and transactional publication. A restored archive is linked and executed with the standalone linker. Cross-target generation/format checks and host execution are recorded separately.
+
+Explicit lifetime contracts are not yet stored in library interfaces. Functions with #static or #borrow are rejected during export so that consumer constraints cannot be weakened by omitting a contract.

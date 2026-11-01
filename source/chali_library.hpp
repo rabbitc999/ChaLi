@@ -136,6 +136,9 @@ public:
     /** @brief 取得用于诊断及接口封装检查的来源标签。
      * @return 已装载接口的稳定标签。 */
     std::vector<std::string> sources() const;
+    /** @brief 取得启用语言借用调用约定的已验证接口标签。
+     * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
+    std::vector<std::string> borrowSources() const;
     /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
      * @return 本次成功加载的规范包路径。 */
     std::vector<std::filesystem::path> paths() const;

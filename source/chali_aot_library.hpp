@@ -18,6 +18,18 @@ bool libraryScalar(const ast::TypePtr &type, bool allowVoid = false)
            || (type->kind == K::Float && (type->bits == 32 || type->bits == 64));
 }
 /**
+ * @brief 判断仅包含扁平标量字段的记录逻辑引用。
+ * @param type 已检查且已展开字段布局的 AST 类型。
+ * @return 不传递拥有状态、可复用消费者共享内存时为真。
+ */
+bool libraryBorrow(const ast::TypePtr &type)
+{
+    if (!type || type->kind != ast::Type::Kind::Ref || !type->element || type->element->kind != ast::Type::Kind::Struct) return false;
+    for (const auto &field : type->element->fields)
+        if (!libraryScalar(field.second)) return false;
+    return !type->element->fields.empty();
+}
+/**
  * @brief 核对标量单元可达函数，不把未实现的拥有值或全局状态按标量误编译。
  * @param state 当前直接 AST 生成状态。
  * @param function 可达函数。
@@ -27,7 +39,27 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
     if (!function.owner.empty() || !libraryScalar(function.result, true)) return state.fail("原生标量库暂不支持方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
-        if (!libraryScalar(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
+        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
+    auto environment = state.astTypes;
+    std::set<Text> borrowed;
+    for (const auto &parameter : function.parameters)
+    {
+        environment[parameter.first] = parameter.second;
+        if (libraryBorrow(parameter.second)) borrowed.insert(textOf(parameter.first));
+    }
+    std::function<bool(const ast::NodePtr &)> addressOrigin = [&](const ast::NodePtr &node) {
+        if (!node) return false;
+        using N = ast::Node::Kind;
+        if (node->kind == N::Var) return borrowed.count(textOf(node->text)) != 0;
+        if (node->kind == N::Cast || node->kind == N::Offset || node->kind == N::Member || node->kind == N::Index)
+            return !node->kids.empty() && addressOrigin(node->kids.front());
+        if (node->kind == N::Sequence) return !node->kids.empty() && addressOrigin(node->kids.back());
+        if (node->kind == N::Call && node->text == "__std_reference" && node->kids.size() == 1) return addressOrigin(node->kids.front());
+        if (node->kind == N::Binary && (node->text == "+" || node->text == "-"))
+            return !node->kids.empty() && addressOrigin(node->kids.front());
+        return false;
+    };
+    Text unsupported;
     std::function<bool(const ast::NodePtr &)> visit = [&](const ast::NodePtr &node) {
         if (!node) return true;
         using N = ast::Node::Kind;
@@ -46,36 +78,90 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::ExprStmt:
         case N::Block:
         case N::Label:
-        case N::Jump: break;
+        case N::Jump:
+        case N::Member:
+        case N::Index:
+        case N::Offset:
+        case N::LoadInt:
+        case N::StoreAt:
+        case N::CheckPointer: break;
         case N::Declare:
+            environment[node->text] = node->declared;
+            if (!libraryScalar(node->declared) && !libraryBorrow(node->declared))
+            {
+                unsupported = "局部类型 " + (node->declared ? textOf(node->declared->describe()) : Text("无类型"));
+                return false;
+            }
+            break;
         case N::Cast:
-            if (!libraryScalar(node->declared, node->kind == N::Cast)) return false;
+            if (!libraryScalar(node->declared, true))
+            {
+                const auto source = node->kids.empty() ? ast::TypePtr() : ast::inferType(node->kids.front(), environment);
+                const auto sourceRecord = source && source->kind == ast::Type::Kind::Ref ? source->element : source;
+                const auto targetRecord = node->declared && node->declared->kind == ast::Type::Kind::Ref ? node->declared->element : node->declared;
+                if (!sourceRecord || !targetRecord || sourceRecord->kind != ast::Type::Kind::Struct || targetRecord->kind != ast::Type::Kind::Struct
+                    || sourceRecord->name != targetRecord->name)
+                {
+                    if (targetRecord && targetRecord->kind == ast::Type::Kind::Struct
+                        && !node->kids.empty() && addressOrigin(node->kids.front())) break;
+                    unsupported = "转换 " + (source ? textOf(source->describe()) : Text("无类型")) + " -> " + (node->declared ? textOf(node->declared->describe()) : Text("无类型"));
+                    return false;
+                }
+            }
             break;
         case N::Var:
-            if (state.globals.count(textOf(node->text))) return false;
+            if (state.globals.count(textOf(node->text)))
+            {
+                unsupported = "全局 " + textOf(node->text);
+                return false;
+            }
             break;
         case N::Assign:
-            if (state.globals.count(textOf(node->text)) || (node->kids.size() > 1 && node->kids.front()->kind != N::Var)) return false;
+        {
+            const auto target = node->kids.size() > 1 && node->kids.front()->kind == N::Var ? node->kids.front()->text : node->text;
+            const auto found = environment.find(target);
+            if (found != environment.end() && libraryBorrow(found->second))
+            {
+                if (node->kids.empty() || !addressOrigin(node->kids.back()))
+                {
+                    unsupported = "记录引用来源 " + textOf(target);
+                    return false;
+                }
+                borrowed.insert(textOf(target));
+            }
+            if (state.globals.count(textOf(node->text)))
+            {
+                unsupported = "全局 " + textOf(node->text);
+                return false;
+            }
+            if (node->kids.size() > 1 && node->kids.front()->kind != N::Var && node->kids.front()->kind != N::Member
+                && node->kids.front()->kind != N::Index && node->kids.front()->kind != N::Offset) return false;
             break;
+        }
         case N::Call:
+            if (node->text == "__std_reference" && node->kids.size() == 1) break;
             if (!state.astFunctions.count(textOf(node->text)))
             {
                 const auto external = state.externsByLabel.find(textOf(node->text));
-                if (external == state.externsByLabel.end()) return false;
+                if (external == state.externsByLabel.end())
+                {
+                    unsupported = "调用 " + textOf(node->text);
+                    return false;
+                }
                 const auto &entry = *external->second;
-                if (entry.abiConvention != "C" || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
+                if ((entry.abiConvention != "C" && entry.abiConvention != "ChaLiBorrow") || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
                 if (abiType(entry.resultType).empty() || abiType(entry.resultType) == "ptr") return false;
                 for (const auto &parameter : entry.parameterTypes)
                     if (abiType(parameter).empty() || abiType(parameter) == "ptr" || abiType(parameter) == "void") return false;
             }
             break;
-        default: return false;
+        default: unsupported = "节点 " + std::to_string(static_cast<int>(node->kind)); return false;
         }
         for (const auto &child : node->kids)
             if (!visit(child)) return false;
         return true;
     };
-    if (!visit(function.body)) return state.fail("原生标量库含当前未支持的全局状态、宿主、聚合或地址操作：" + function.name), false;
+    if (!visit(function.body)) return state.fail("原生库含当前未支持的全局状态、宿主、聚合或地址操作：" + function.name + " " + Memory::String(unsupported.c_str())), false;
     return true;
 }
 /**
@@ -182,6 +268,8 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
+    if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";
+    if (out.find("@chali_host_address(") == Text::npos) out += "declare ptr @chali_host_address(i64, i64)\n";
     Text functions;
     for (auto &function : state.functions)
     {

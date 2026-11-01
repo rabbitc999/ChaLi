@@ -103,6 +103,7 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
  */
 bool CAbiNeedsMarshalling(const MFunctionDecl &function)
 {
+    if (function.abiConvention == "ChaLiBorrow") return false;
     const auto scalar = [](const std::shared_ptr<MType> &type) {
         return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
     };
@@ -295,7 +296,7 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
         entry.requiresMarshalling = CAbiNeedsMarshalling(function);
         entry.resultType = AotCType(CAbiType(function.signature.result));
         for (const auto &parameter : function.signature.params)
-            entry.parameterTypes.push_back(AotCType(CAbiType(parameter.type)));
+            entry.parameterTypes.push_back(AotCType(function.abiConvention == "ChaLiBorrow" ? LibraryNativeType(parameter.type) : CAbiType(parameter.type)));
         out.push_back(std::move(entry));
     }
     return out;

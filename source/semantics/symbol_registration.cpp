@@ -270,6 +270,28 @@ Memory::String CAbiType(const std::shared_ptr<MType> &type)
 }
 
 /**
+ * @brief 判断语言单元当前可借用的非拥有普通记录引用。
+ * @param type 已解析语言类型。
+ * @return 可直接传递逻辑地址且不需要 C 布局封送时为真。
+ */
+bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
+{
+    if (!type || type->kind != MType::Ptr || !type->elem || type->elem->kind != MType::Struct) return false;
+    const auto &name = type->elem->name;
+    const auto found = g_structs.find(name);
+    return found != g_structs.end() && !g_enums.count(name) && !g_opcodeTypes.count(name)
+           && !found->second.abiPacked && !found->second.nonCopyable && !CAbiType(type).empty();
+}
+/**
+ * @brief 为私有语言借用入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
+ * @param type 语言类型。
+ * @return 记录引用为逻辑地址字，其余为原生 C 类型。
+ */
+Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
+{
+    return LibraryBorrowParameter(type) ? Memory::String("long long") : CAbiType(type);
+}
+/**
  * @brief 在完整声明与导入已知后解析类型裸名，并隔离不同模块的同名类型。
  * @param registerOpcodes 是否同时登记 opcode 声明；延迟宏只归一化新增类型时为假。
  * @return 无歧义时返回 true；失败保留普通名称解析错误。
@@ -1341,9 +1363,20 @@ bool RegisterTop()
             for (const MParam &param : declaration.signature.params)
                 if (param.variadic || CAbiType(param.type).empty() || CAbiType(param.type) == "void")
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
+            if (declaration.abiConvention == "ChaLiBorrow")
+            {
+                const auto scalar = [](const std::shared_ptr<MType> &type, bool result) {
+                    return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
+                };
+                if (!scalar(declaration.signature.result, true)) return Fail("语言借用入口当前只返回基础标量");
+                for (const auto &parameter : declaration.signature.params)
+                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type)) return Fail("语言借用入口参数必须是基础标量或普通记录引用");
+            }
             for (const auto &previous : g_functionDecls)
             {
                 if (previous.superseded || previous.abiLibrary != declaration.abiLibrary || previous.abiSymbol != declaration.abiSymbol) continue;
+                if ((previous.abiConvention.empty() ? Memory::String("C") : previous.abiConvention) != (declaration.abiConvention.empty() ? Memory::String("C") : declaration.abiConvention))
+                    return Fail("同一原生符号的调用约定不一致：" + declaration.abiSymbol);
                 bool compatible = CAbiType(previous.signature.result) == CAbiType(declaration.signature.result)
                     && previous.signature.params.size() == declaration.signature.params.size();
                 if (compatible)

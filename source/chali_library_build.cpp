@@ -8,6 +8,7 @@
 #include "chali_package.hpp"
 #include "json/json.hpp"
 #include <set>
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>
@@ -35,6 +36,8 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.version = version;
         package.manifest.compilerVersion = chali_package::compilerVersion;
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
+        const bool borrowed = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow"; });
+        if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
         package.manifest.dependencies = dependencies;
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;
@@ -50,6 +53,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         Memory::String error;
         if (!chali_aot::describeTarget(original.options.target, known, &error)) throw std::runtime_error(error.c_str());
         Target target;
+        if (borrowed) target.nativeAbi = "chali-borrow-v1";
         target.triple = known.triple.c_str();
         target.objectFormat = known.windows ? "coff" : "elf";
         target.dataLayout = known.dataLayout.c_str();
