@@ -361,6 +361,8 @@ int Registry::instantiate(int call, std::string &error,
     frame.module = module;
     frame.sourceLine = site.line;
     frame.sourceColumn = site.column;
+    frame.metadataLine = node.macroDefinitionLine ? node.macroDefinitionLine : node.sourceLine;
+    frame.metadataColumn = node.macroDefinitionLine ? node.macroDefinitionColumn : node.sourceColumn;
     frame.i = entry.declaration;
     frame.syntaxContext = node.syntaxContext;
     frame.controlContext = node.controlContext == UINT32_MAX ? node.syntaxContext : node.controlContext;

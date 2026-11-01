@@ -2585,13 +2585,20 @@ ast::NodePtr LowerUncheckedExpr(int id);
  */
 ast::NodePtr LowerRawExprImpl(int id);
 /**
- * @brief 给降级节点附加原始来源。
- * @param value 降级节点。
+ * @brief 查询节点已有的宏来源。
  * @param id 原语法节点。
- * @return 带位置的节点。
+ * @return 可选只读来源。
+ */
+std::shared_ptr<const ast::MacroDebugLocation> DebugMacroLocation(int id);
+/**
+ * @brief 附加实际调用位置及宏定义来源，不改变节点操作。
+ * @param value 已降低的节点。
+ * @param id 原语法节点。
+ * @return 具有来源的同一节点。
  */
 ast::NodePtr LocateNode(ast::NodePtr value, int id)
 {
+    if (value && id >= 0 && !value->debugMacro) value->debugMacro = DebugMacroLocation(id);
     if (value && id >= 0 && value->sourceLine == 0)
     {
         const auto line = N(id).expansionLine ? N(id).expansionLine : N(id).sourceLine;
@@ -4435,18 +4442,69 @@ public:
 /**
  * @brief 将声明或宏调用的真实来源保存为调试位置，不改变诊断与类型规则。
  * @param id 原语法节点，负值表示合成声明。
+ * @param expanded 为 true 时选择宏调用位置，否则保留节点原始来源。
  * @return 源位置；合成声明返回空位置。
  */
-ast::DeclarationSource DebugDeclarationSource(int id)
+ast::DeclarationSource DebugDeclarationSource(int id, bool expanded = true)
 {
     ast::DeclarationSource result;
     if (id < 0) return result;
     const auto &node = N(id);
-    const auto line = node.expansionLine ? node.expansionLine : node.sourceLine;
+    const auto line = expanded && node.expansionLine ? node.expansionLine : node.sourceLine;
     if (!line) return result;
     result.file = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
     result.line = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
-    result.column = node.expansionLine ? node.expansionColumn : node.sourceColumn;
+    result.column = expanded && node.expansionLine ? node.expansionColumn : node.sourceColumn;
+    return result;
+}
+/**
+ * @brief 捕获已经验证的宏来源树；读取真实源位置，不实例化或执行宏。
+ * @param id 原语法节点。
+ * @return 普通节点为空，宏节点共享不可变来源。
+ */
+std::shared_ptr<const ast::MacroDebugLocation> DebugMacroLocation(int id)
+{
+    if (!g_debugEnabled || id < 0 || N(id).macroExpansion < 0) return {};
+    const auto known = g_debugMacroLocations.find(id);
+    if (known != g_debugMacroLocations.end()) return known->second;
+    std::function<std::shared_ptr<const ast::MacroDebugFrame>(int, unsigned)> frame;
+    frame = [&](int current, unsigned depth) -> std::shared_ptr<const ast::MacroDebugFrame> {
+        if (current < 0 || depth >= 256 || static_cast<std::size_t>(current) >= g_nodes.size()) return {};
+        const auto cached = g_debugMacroFrames.find(current);
+        if (cached != g_debugMacroFrames.end()) return cached->second;
+        const auto &source = N(current);
+        if (source.kind != MNode::MacroExpansionFrame || source.i < 0 || static_cast<std::size_t>(source.i) >= g_nodes.size()) return {};
+        auto result = std::make_shared<ast::MacroDebugFrame>();
+        result->id = current;
+        result->name = source.s;
+        result->call = DebugDeclarationSource(current, false);
+        result->definition = DebugDeclarationSource(static_cast<int>(source.i), false);
+        result->invocation = result->call;
+        if (source.metadataLine)
+        {
+            const auto line = source.metadataLine;
+            result->invocation.file = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
+            result->invocation.line = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+            result->invocation.column = source.metadataColumn;
+        }
+        const auto parent = source.kids.empty() ? -1 : source.kids.front();
+        if (parent >= 0 && parent < current) result->parent = frame(parent, depth + 1);
+        g_debugMacroFrames[current] = result;
+        return result;
+    };
+    auto result = std::make_shared<ast::MacroDebugLocation>();
+    result->frame = frame(N(id).macroExpansion, 0);
+    if (!result->frame) return {};
+    result->definition = DebugDeclarationSource(id, false);
+    if (N(id).macroDefinitionLine)
+    {
+        const auto line = N(id).macroDefinitionLine;
+        result->definition.file = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
+        result->definition.line = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+        result->definition.column = N(id).macroDefinitionColumn;
+    }
+    result->privateBinding = (N(id).kind == MNode::Declare || N(id).kind == MNode::Var) && N(id).syntaxContext != 0 && !N(id).nameParameter;
+    g_debugMacroLocations[id] = result;
     return result;
 }
 /**

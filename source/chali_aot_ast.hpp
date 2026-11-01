@@ -590,6 +590,36 @@ struct AstBuilder : Builder
         debugScopes.emplace(id, DebugScope{ debugScope, origin });
         debugScope = id;
     }
+    /**
+     * @brief 将共享宏来源登记一次，并给当前指令保存原定义位置。
+     * @param source 指令的源码节点。
+     * @return 当前词法区间和展开来源。
+     */
+    DebugLine debugLocation(const ast::NodePtr &source)
+    {
+        DebugLine result{ textOf(source->sourceFile), source->sourceLine, source->sourceColumn, debugScope };
+        if (!source->debugMacro || !source->debugMacro->frame) return result;
+        const auto &origin = *source->debugMacro;
+        result.macro = origin.frame->id;
+        result.definitionFile = textOf(origin.definition.file);
+        result.definitionLine = origin.definition.line;
+        result.definitionColumn = origin.definition.column;
+        const auto position = [](const ast::DeclarationSource &value) { return DebugLine{ textOf(value.file), value.line, value.column }; };
+        auto frame = origin.frame;
+        while (frame)
+        {
+            DebugMacroFrame descriptor;
+            descriptor.id = frame->id;
+            descriptor.parent = frame->parent ? frame->parent->id : -1;
+            descriptor.name = textOf(frame->name);
+            descriptor.call = position(frame->call);
+            descriptor.invocation = position(frame->invocation);
+            descriptor.definition = position(frame->definition);
+            state.debugInfo.recordMacro(std::move(descriptor));
+            frame = frame->parent;
+        }
+        return result;
+    }
 
     /**
      * @brief 在源码停点之前从真实绑定刷新帧镜像，不执行用户方法或创建语言对象。
@@ -742,7 +772,7 @@ struct AstBuilder : Builder
                 if (!refreshingDebugBindings) refreshDebugBindings();
                 const auto index = debugBlocks++;
                 enter("q" + std::to_string(index));
-                debugLines[index] = { textOf(source->sourceFile), source->sourceLine, source->sourceColumn, debugScope };
+                debugLines[index] = debugLocation(source);
             }
             const auto file = state.sourceFiles.emplace(textOf(source->sourceFile), state.sourceFiles.size()).first;
             if (!state.request.options.libraryModule.empty())
@@ -1068,12 +1098,22 @@ struct AstBuilder : Builder
             return;
         }
         if (terminated) enter(blockName());
-        if (state.request.options.debug && node->kind == N::Declare && node->text.rfind("__", 0) != 0)
+        if (state.request.options.debug && node->kind == N::Declare && (node->text.rfind("__", 0) != 0 || (node->debugMacro && node->debugMacro->privateBinding)))
         {
             openDebugScope(node);
             DebugVariable descriptor;
             descriptor.scope = debugScope;
-            const auto position = node->sourceLine ? node : lastLocation;
+            auto position = node->sourceLine ? node : lastLocation;
+            const auto origin = node->debugBindingSource ? node->debugBindingSource.get() :
+                                node->debugMacro && node->debugMacro->frame ? &node->debugMacro->frame->call : nullptr;
+            if (!node->sourceLine && origin && origin->line)
+            {
+                position = ast::Node::i(0);
+                position->sourceFile = origin->file;
+                position->sourceLine = origin->line;
+                position->sourceColumn = origin->column;
+                position->debugMacro = node->debugMacro;
+            }
             if (position)
             {
                 descriptor.file = textOf(position->sourceFile);
@@ -1086,6 +1126,7 @@ struct AstBuilder : Builder
             if (!node->debugTypeName.empty()) descriptor.typeName = textOf(node->debugTypeName);
             descriptor.readOnly = node->debugReadOnly;
             descriptor.storage = textOf(node->debugStorage);
+            if (node->debugMacro && node->debugMacro->privateBinding && node->debugMacro->frame) descriptor.macro = node->debugMacro->frame->id;
             if (!node->debugStorage.empty()) debugBoxes[textOf(node->text)] = { node->debugStorage, node->declared, debugScope };
             debugDeclarations[textOf(node->text)] = std::move(descriptor);
         }
@@ -1264,6 +1305,7 @@ struct AstBuilder : Builder
             else if (const auto declared = environment.find(entry.first); declared != environment.end())
                 debugType(variable, declared->second);
             variable.name = textOf(entry.first);
+            if (variable.macro >= 0) variable.dwarfName = "__chali_macro_debug_" + std::to_string(variable.macro) + "_" + std::to_string(variable.scope) + "_" + std::to_string(variables.size());
             variable.pointer = pointer(entry.second);
             variable.floating = type(entry.second) == "double";
             variable.argument = parameter == function.parameters.end() ? 0u : static_cast<std::size_t>(parameter - function.parameters.begin() + 1u);

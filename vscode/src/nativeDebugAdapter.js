@@ -462,6 +462,12 @@ class Adapter {
           const frame = this.frames.get(args.frameId);
           if (!frame) throw new Error('调用帧已经过期');
           body.scopes = [{ name: '局部变量与参数', presentationHint: 'locals', expensive: false, variablesReference: this.handle(frame) }];
+          for (const macro of frame.metadata?.macros || []) {
+            body.scopes.push({ name: '$' + macro.name, expensive: false,
+              variablesReference: this.handle({ ...frame, macro: macro.id }),
+              source: { path: macro.definition.file, name: path.basename(macro.definition.file) },
+              line: macro.definition.line || 1, column: macro.definition.column || 1 });
+          }
           break;
         }
         case 'variables': {
@@ -470,12 +476,16 @@ class Adapter {
           const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal });
           // GDB 从最内层逐块列举，保留首先遇到的绑定，隐藏被遮蔽的外层同名值。
           const visible = new Set();
+          const bindings = new Map((frame.metadata?.function.variables || []).map(variable => [variable.dwarf || variable.name, variable]));
           body.variables = (data.variables || []).filter(variable => {
+            const binding = bindings.get(variable.name);
+            if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
           }).map((variable) => {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
-            return { name: variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 };
+            const binding = bindings.get(variable.name);
+            return { name: binding?.name || variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 };
           });
           break;
         }

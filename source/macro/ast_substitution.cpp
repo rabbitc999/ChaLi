@@ -178,6 +178,8 @@ int AstSubstitution::clone(int id, bool substitute, std::size_t depth)
         nodes_[result].syntaxContext = context_;
         if (site_.line)
         {
+            nodes_[result].macroDefinitionLine = original.macroDefinitionLine ? original.macroDefinitionLine : original.sourceLine;
+            nodes_[result].macroDefinitionColumn = original.macroDefinitionLine ? original.macroDefinitionColumn : original.sourceColumn;
             nodes_[result].expansionLine = site_.line;
             nodes_[result].expansionColumn = site_.column;
             nodes_[result].sourceLine = site_.line;

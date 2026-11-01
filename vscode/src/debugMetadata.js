@@ -85,6 +85,22 @@ class DebugMetadata {
     if (catalog.version !== 1 || catalog.pointerBytes !== 8 || catalog.byteOrder !== 'little'
       || !Array.isArray(catalog.functions) || !Array.isArray(catalog.positions)
       || catalog.functions.length > POINT_LIMIT || catalog.positions.length > POINT_LIMIT) throw new Error('调试映射版本、目标或条目预算不匹配');
+    const macros = new Map();
+    const origin = value => { if (!value) throw new Error('宏来源缺失'); text(value.file); integer(value.line); integer(value.column); };
+    if (catalog.macros !== undefined && (!Array.isArray(catalog.macros) || catalog.macros.length > POINT_LIMIT)) throw new Error('宏来源超过预算');
+    for (const macro of catalog.macros || []) {
+      integer(macro.id); text(macro.name); origin(macro.call); origin(macro.invocation); origin(macro.definition);
+      if (macros.has(macro.id) || !Number.isSafeInteger(macro.parent) || macro.parent < -1 || macro.parent >= macro.id) throw new Error('宏来源树无效');
+      macros.set(macro.id, macro);
+    }
+    for (const macro of macros.values()) {
+      let cursor = macro, depth = 0;
+      while (cursor.parent !== -1) {
+        cursor = macros.get(cursor.parent);
+        if (!cursor || ++depth > 256) throw new Error('宏来源父级无效');
+      }
+    }
+    const macroId = value => { if (value !== undefined && value !== -1 && !macros.has(value)) throw new Error('宏来源引用无效'); };
     const byLinkage = new Map();
     for (const fn of catalog.functions) {
       text(fn.name); text(fn.linkage); text(fn.file); integer(fn.line); integer(fn.column);
@@ -98,6 +114,8 @@ class DebugMetadata {
       for (const variable of fn.variables) {
         text(variable.name); text(variable.binding); text(variable.type); text(variable.file); integer(variable.line); integer(variable.column); integer(variable.scope);
         if (variable.storage !== undefined) text(variable.storage);
+        if (variable.dwarf !== undefined) text(variable.dwarf);
+        macroId(variable.macro);
         if (variable.boxed !== undefined && typeof variable.boxed !== 'boolean') throw new Error('调试绑定存储标记无效');
         if (!fn.parents.has(variable.scope) || typeof variable.readOnly !== 'boolean') throw new Error('调试变量来源无效');
       }
@@ -112,10 +130,12 @@ class DebugMetadata {
       const position = catalog.positions[index]; integer(position.function); integer(position.line); integer(position.column); integer(position.scope); text(position.file);
       const fn = catalog.functions[position.function];
       if (!fn || !fn.parents.has(position.scope)) throw new Error('调试位置引用无效');
+      macroId(position.macro);
+      if (position.definition !== undefined) origin(position.definition);
       fn.positions.push({ ...position, address: addresses.readBigUInt64LE(index * 8), ordinal: index });
     }
     for (const fn of catalog.functions) fn.positions.sort((a, b) => a.address < b.address ? -1 : a.address > b.address ? 1 : a.ordinal - b.ordinal);
-    return { byLinkage, catalog };
+    return { byLinkage, catalog, macros };
   }
   /** 用当前机器 PC 选择同函数、同文件和同源码行的位置，不猜测源文件缩进。 */
   frame(frame) {
@@ -129,7 +149,11 @@ class DebugMetadata {
     for (let at = low - 1; at >= 0; --at) {
       const position = fn.positions[at];
       if (position.line === Number(frame.line) && sourcePath(position.file) === file) {
-        result.column = position.column || result.column; result.position = position; break;
+        result.column = position.column || result.column; result.position = position;
+        result.macros = [];
+        let macro = this.cache.macros.get(position.macro);
+        while (macro) { result.macros.push(macro); macro = this.cache.macros.get(macro.parent); }
+        break;
       }
     }
     return result;

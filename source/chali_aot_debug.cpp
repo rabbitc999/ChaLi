@@ -86,6 +86,15 @@ std::size_t NativeDebugInfo::node(const std::string &value)
     return id;
 }
 /**
+ * @brief 在一份目标模块中只保存一次宏展开来源。
+ * @param frame 已解析的编译期来源。
+ * @return 无。
+ */
+void NativeDebugInfo::recordMacro(DebugMacroFrame frame)
+{
+    if (frame.id >= 0) macros_.emplace(frame.id, std::move(frame));
+}
+/**
  * @brief 为原始路径登记 DWARF 文件。
  * @param path UTF-8 路径。
  * @return 对应文件节点。
@@ -189,8 +198,8 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
     std::map<std::size_t, std::string> declarations;
     for (const auto &variable : variables)
     {
-        if (variable.name.empty() || variable.name.rfind("__", 0) == 0u) continue;
-        auto visible = variable.name.substr(0, variable.name.find('$'));
+        if (variable.name.empty() || (variable.name.rfind("__", 0) == 0u && variable.dwarfName.empty())) continue;
+        auto visible = variable.dwarfName.empty() ? variable.name.substr(0, variable.name.find('$')) : variable.dwarfName;
         auto variableType = variable.floating ? real_ : integer_;
         if (!variable.typeName.empty())
         {
@@ -267,17 +276,32 @@ void NativeDebugInfo::finish(std::string &module)
         comma = false;
         for (const auto &variable : function.variables)
         {
-            if (variable.name.empty() || variable.name.rfind("__", 0) == 0) continue;
+            if (variable.name.empty() || (variable.name.rfind("__", 0) == 0 && variable.dwarfName.empty())) continue;
             if (comma) catalog += ",";
             comma = true;
             catalog += "{\"name\":" + debugJsonString(variable.name.substr(0, variable.name.find('$')))
                        + ",\"binding\":" + debugJsonString(variable.name) + ",\"type\":" + debugJsonString(variable.typeName)
+                       + ",\"dwarf\":" + debugJsonString(variable.dwarfName.empty() ? variable.name.substr(0, variable.name.find('$')) : variable.dwarfName)
+                       + ",\"macro\":" + std::to_string(variable.macro)
                        + ",\"scope\":" + std::to_string(variable.scope) + ",\"file\":" + debugJsonString(debugSourcePath(variable.file))
                        + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
                        + ",\"readOnly\":" + (variable.readOnly ? "true" : "false") + "}";
         }
         catalog += "]}";
+    }
+    const auto sourceJson = [&](const DebugLine &position) {
+        return "{\"file\":" + debugJsonString(debugSourcePath(position.file)) + ",\"line\":" + std::to_string(position.line) + ",\"column\":" + std::to_string(position.column) + "}";
+    };
+    catalog += "],\"macros\":[";
+    bool macroComma = false;
+    for (const auto &entry : macros_)
+    {
+        if (macroComma) catalog += ",";
+        macroComma = true;
+        const auto &frame = entry.second;
+        catalog += "{\"id\":" + std::to_string(frame.id) + ",\"parent\":" + std::to_string(frame.parent) + ",\"name\":" + debugJsonString(frame.name)
+                   + ",\"call\":" + sourceJson(frame.call) + ",\"invocation\":" + sourceJson(frame.invocation) + ",\"definition\":" + sourceJson(frame.definition) + "}";
     }
     catalog += "],\"positions\":[";
     std::string addresses;
@@ -291,7 +315,10 @@ void NativeDebugInfo::finish(std::string &module)
         }
         catalog += "{\"function\":" + std::to_string(entry.function) + ",\"file\":" + debugJsonString(debugSourcePath(entry.position.file))
                    + ",\"line\":" + std::to_string(entry.position.line) + ",\"column\":" + std::to_string(entry.position.column)
-                   + ",\"scope\":" + std::to_string(entry.position.scope) + "}";
+                   + ",\"scope\":" + std::to_string(entry.position.scope) + ",\"macro\":" + std::to_string(entry.position.macro);
+        if (entry.position.macro >= 0)
+            catalog += ",\"definition\":" + sourceJson({ entry.position.definitionFile, entry.position.definitionLine, entry.position.definitionColumn });
+        catalog += "}";
         addresses += "ptr blockaddress(@" + functions_[entry.function].linkage + ", %q" + std::to_string(entry.block) + ")";
     }
     catalog += "]}";

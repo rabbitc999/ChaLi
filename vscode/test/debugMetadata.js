@@ -42,6 +42,17 @@ async function main() {
   assert.equal(frame.name, 'identity<int64>'); assert.equal(frame.column, 13); assert.equal(frame.position.scope, 2);
   frame = healthy.reader.frame({ func: 'f_identity_i64', fullname: source, line: '3', addr: '0x' + (start + 10n).toString(16) });
   assert.equal(frame.column, 1, '不能把其他源码行的列号冒充当前列');
+  const expanded = target(value => {
+    const location = { file: source, line: 1, column: 2 };
+    value.macros = [ { id: 8, parent: -1, name: 'Outer', call: location, invocation: location, definition: location },
+      { id: 9, parent: 8, name: 'Inner', call: location, invocation: location, definition: location } ];
+    value.positions[1].macro = 9; value.positions[1].definition = location;
+    Object.assign(value.functions[0].variables[0], { dwarf: '__chali_macro_debug_9_1', macro: 9 });
+    return value;
+  });
+  assert(await expanded.reader.load());
+  const macroFrame = expanded.reader.frame({ func: 'f_identity_i64', fullname: source, line: '2', addr: '0x' + (start + 10n).toString(16) });
+  assert.deepEqual(macroFrame.macros.map(item => item.name), ['Inner', 'Outer']);
   const count = healthy.calls.length; healthy.reader.cancel(); await healthy.reader.load(); assert.equal(healthy.calls.length, count);
   const large = target(value => ({ ...value, padding: 'x'.repeat(131072) }));
   assert(await large.reader.load()); assert(large.calls.filter(command => command.startsWith('-data-read-memory-bytes ')).length >= 4);
@@ -51,6 +62,8 @@ async function main() {
     () => target(value => { value.functions[0].scopes.push({ id: 3, parent: 3 }); return value; }),
     () => target(value => { value.positions[0].function = 3; return value; }),
     () => target(value => { value.functions[0].variables[0].scope = 99; return value; }),
+    () => target(value => { value.positions[0].macro = 99; return value; }),
+    () => target(value => { value.macros = [{ id: 2, parent: 1, name: 'Broken', call: {file: source,line: 1,column: 1}, invocation: {file: source,line: 1,column: 1}, definition: {file: source,line: 1,column: 1} }]; return value; }),
     () => target(undefined, { size: LIMIT + 1 }),
     () => target(undefined, { gap: 1 }),
     () => target(undefined, { truncate: 1 }),

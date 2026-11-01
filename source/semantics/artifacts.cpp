@@ -368,6 +368,8 @@ bool WriteArtifacts(const Memory::String &prefix, const ast::CodegenResult &resu
  */
 void ResetState()
 {
+    g_debugMacroFrames.clear();
+    g_debugMacroLocations.clear();
     chali_editor::compilerAnalysis.resetPass();
     g_diagnostics.clear();
     g_warnings.clear();

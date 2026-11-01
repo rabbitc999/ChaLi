@@ -49,6 +49,8 @@ namespace
 {
 /* 语法动作会在读取旧节点的同时创建新节点；deque 保持旧节点引用有效。 */
 Memory::Deque<MNode> g_nodes;
+Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
+Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
 Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
@@ -4018,7 +4020,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 7;
+constexpr std::uint64_t kStandardUnitVersion = 8;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -4130,6 +4132,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     chali_incremental::writeNumber(out, node.sourceColumn);
     chali_incremental::writeNumber(out, node.metadataLine < canonical.size() ? canonical[node.metadataLine] : node.metadataLine);
     chali_incremental::writeNumber(out, node.metadataColumn);
+    chali_incremental::writeNumber(out, node.macroDefinitionLine < canonical.size() ? canonical[node.macroDefinitionLine] : node.macroDefinitionLine);
+    chali_incremental::writeNumber(out, node.macroDefinitionColumn);
     chali_incremental::writeNumber(out, node.syntaxContext);
     chali_incremental::writeNumber(out, node.controlContext);
     chali_incremental::writeNumber(out, node.bindingIdentity);
@@ -4202,6 +4206,10 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     if (!chali_incremental::readNumber(in, node.sourceColumn)) return false;
     if (!chali_incremental::readNumber(in, node.metadataLine)) return false;
     if (!chali_incremental::readNumber(in, node.metadataColumn)) return false;
+    if (!chali_incremental::readNumber(in, node.macroDefinitionLine)) return false;
+    if (!chali_incremental::readNumber(in, node.macroDefinitionColumn)) return false;
+    if ((node.macroDefinitionLine == 0) != (node.macroDefinitionColumn == 0)
+        || node.macroDefinitionLine > (1ull << 32) || node.macroDefinitionColumn > (1ull << 32)) return false;
     if ((node.metadataLine == 0) != (node.metadataColumn == 0)) return false;
     if (node.metadataLine > (1ull << 32) || node.metadataColumn > (1ull << 32)) return false;
     std::uint64_t context = 0, identity = 0, parameter = 0, binding = 0;
@@ -4628,6 +4636,7 @@ void M_ShiftNodeLines(std::size_t from, std::size_t lines)
     {
         g_nodes[i].sourceLine += lines;
         if (g_nodes[i].metadataLine != 0) g_nodes[i].metadataLine += lines;
+        if (g_nodes[i].macroDefinitionLine != 0) g_nodes[i].macroDefinitionLine += lines;
         if (g_nodes[i].deriveLine != 0) g_nodes[i].deriveLine += lines;
         if (g_nodes[i].expansionLine != 0) g_nodes[i].expansionLine += lines;
     }

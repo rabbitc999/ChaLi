@@ -1,6 +1,44 @@
 /* ---------- 语句 / 表达式的降级 ---------- */
 
 /**
+ * @brief 查询宏来源，不执行新的模板展开。
+ * @param id 语法节点。
+ * @return 可选只读来源。
+ */
+std::shared_ptr<const ast::MacroDebugLocation> DebugMacroLocation(int id);
+/**
+ * @brief 为已有模式绑定附加调试声明，不改变字段布局或拥有关系。
+ * @param name 已分配的绑定名。
+ * @param type 绑定的静态类型。
+ * @param source 原模式变量节点。
+ * @param readOnly 绑定是否只读。
+ * @param storageType 实际帧类型，空时使用绑定类型。
+ * @return 带独立来源的声明节点。
+ */
+ast::NodePtr DebugPatternDeclaration(const Memory::String &name, const std::shared_ptr<MType> &type,
+                                     int source, bool readOnly, ast::TypePtr storageType = {})
+{
+    auto result = ast::Node::declare(name, storageType ? storageType : LowerType(type, name));
+    if (!g_debugEnabled) return result;
+    const auto &syntax = N(source);
+    auto origin = std::make_shared<ast::DeclarationSource>();
+    const auto line = syntax.expansionLine ? syntax.expansionLine : syntax.sourceLine;
+    if (line)
+    {
+        origin->file = line <= g_sourceFiles.size() && !g_sourceFiles[line - 1].empty() ? g_sourceFiles[line - 1] : g_sourceFallback;
+        origin->line = line <= g_sourceLines.size() ? g_sourceLines[line - 1] : line;
+        origin->column = syntax.expansionLine ? syntax.expansionColumn : syntax.sourceColumn;
+    }
+    origin->typeName = EditorTypeText(type, 0);
+    origin->readOnly = readOnly;
+    result->debugTypeName = origin->typeName;
+    result->debugReadOnly = readOnly;
+    result->debugBindingSource = std::move(origin);
+    result->debugMacro = DebugMacroLocation(source);
+    return result;
+}
+
+/**
  * @brief 当前完整表达式中创建的内部所有者，独立于用户变量的块生命周期。
  */
 struct MFullExpressionTemps;
@@ -3136,6 +3174,7 @@ ast::NodePtr LowerLocalDecl(int id)
         auto declaration = ast::Node::declare(emitted, LowerType(type, emitted));
         declaration->debugTypeName = EditorTypeText(type, 0);
         declaration->debugReadOnly = isConst;
+        declaration->debugMacro = DebugMacroLocation(declId);
         // 警告依据真实用户声明定位；合成宏局部不作为用户未使用变量报告。
         if (decl.macroExpansion < 0 && !decl.nameParameter && decl.sourceLine)
         {
@@ -3968,7 +4007,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                     patternChecks.push_back(ast::Node::ifThenElse(ast::Node::unary("!", condition), ast::Node::jump(next), nullptr));
                     if (sourceName == "_") continue;
                     const auto emitted = DeclareVar(sourceName, requested, Memory::String(), true, NodeBindingKey(bindingSyntax), bindingSyntax.bindingIdentity);
-                    body.push_back(ast::Node::declare(emitted, LowerType(requested, emitted)));
+                    body.push_back(DebugPatternDeclaration(emitted, requested, pattern.kids[index], true));
                     auto value = IsInterfaceType(requested) ? handle : ast::Node::call("__std_obj_addr", { "object" }, { handle });
                     if (switchNode.type2 == 1 && !IsInterfaceType(requested))
                     {
@@ -3994,8 +4033,8 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 // 被闭包借用的载荷直接使用主体的稳定槽，避免建立指向临时标量的引用。
                 const bool captureStorage = !valueMatch && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type);
                 FindNodeVar(bindingSyntax)->elementReference = captureStorage;
-                body.push_back(ast::Node::declare(emitted,
-                                                  captureStorage ? ast::Type::i64() : LowerType(payload.type, emitted)));
+                body.push_back(DebugPatternDeclaration(emitted, payload.type, pattern.kids[index], frozen,
+                                                        captureStorage ? ast::Type::i64() : LowerType(payload.type, emitted)));
                 const MField *field = FindField(subjectType->name, payload.storageName);
                 if (field == nullptr)
                 {
@@ -4094,7 +4133,9 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         PopScope();
         AppendScopeDrops(owned, Memory::String(), &body);
         body.push_back(ast::Node::jump(breakLabel));
-        return ast::Node::block(body);
+        auto block = ast::Node::block(body);
+        block->lexicalScope = true;
+        return block;
     };
 
     int fallback = -1;
@@ -4390,7 +4431,7 @@ ast::NodePtr LowerInterfaceSwitch(int id, const std::shared_ptr<MType> &type, co
             const auto syntax = N(binder);
             if (!CheckUserName(syntax.s)) return Bad();
             const auto emitted = DeclareVar(syntax.s, requested, Memory::String(), true, NodeBindingKey(syntax), syntax.bindingIdentity);
-            body.push_back(Node::declare(emitted, LowerType(requested, emitted)));
+            body.push_back(DebugPatternDeclaration(emitted, requested, binder, true));
             auto value = wildcard ? Node::var(subject) : Node::call("__std_obj_addr", { "object" }, { Node::var(subject) });
             if (N(id).type2 == 1 && !wildcard)
             {
@@ -4409,7 +4450,9 @@ ast::NodePtr LowerInterfaceSwitch(int id, const std::shared_ptr<MType> &type, co
         PopScope();
         AppendScopeDrops(owned, Memory::String(), &body);
         body.push_back(Node::jump(done));
-        out.push_back(Node::block(std::move(body)));
+        auto block = Node::block(std::move(body));
+        block->lexicalScope = true;
+        out.push_back(std::move(block));
         out.push_back(Node::label(next));
     }
     if (!fallback) return Fail("开放接口 match 必须提供 `_` 或 `_(绑定名)` 兜底"), Bad();

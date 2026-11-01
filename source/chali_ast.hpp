@@ -255,6 +255,8 @@ struct MNode
     std::size_t sourceColumn = 0;                       ///< 注解起始 token 的一基列号。
     std::size_t metadataLine = 0;                       ///< 折叠元数据属性的原声明行，零表示无独立声明来源。
     std::size_t metadataColumn = 0;                     ///< 元数据原声明的一基列号，与调用和定义来源分别保留。
+    std::size_t macroDefinitionLine = 0;                ///< 展开前模板节点的原始行，不覆盖主诊断调用位置。
+    std::size_t macroDefinitionColumn = 0;              ///< 展开前模板节点的原始列。
     std::uint32_t syntaxContext = 0;                    ///< 原始片段或宏展开的卫生上下文。
     std::uint32_t controlContext = UINT32_MAX;          ///< 首次展开时固定的控制来源；未展开节点沿用卫生上下文。
     std::uint32_t bindingIdentity = 0;                  ///< 声明及引用解析后的稳定绑定身份。
@@ -1247,7 +1249,9 @@ void M_SetLibraryTypeSources(const Memory::Vector<Memory::String> &files);
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);
 /**
- * 开关 `--debug`：带上调试节，并在执行时按源码位置逐行打印轨迹（stderr）。
+ * @brief 设置原生调试信息捕获，保留必要的宏来源并关闭不适合单步的快速路径。
+ * @param enabled 非零时保留调试元数据。
+ * @return 无。
  */
 void M_SetDebugEnabled(int enabled);
 /**

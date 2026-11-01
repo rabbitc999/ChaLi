@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <map>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -25,6 +26,8 @@ struct DebugVariable
     std::string file = {};
     bool readOnly = false;
     std::string storage = {};  ///< 非空表示原始槽只提供源码停点镜像，写入必须定位真实绑定。
+    std::string dwarfName = {}; ///< 私有宏变量的独立调试名，避免遮蔽调用方绑定。
+    std::int64_t macro = -1;    ///< 非负值表示只在该宏展开帧内可见。
 };
 /**
  * @brief AST 或兼容四元式节点的原始源码位置及词法范围。
@@ -34,6 +37,18 @@ struct DebugLine
     std::string file;
     std::size_t line = 0;
     std::size_t column = 1, scope = 0;
+    std::int64_t macro = -1;
+    std::string definitionFile = {};
+    std::size_t definitionLine = 0, definitionColumn = 0;
+};
+/**
+ * @brief 与运行时无关的编译期宏来源，父编号严格小于子编号。
+ */
+struct DebugMacroFrame
+{
+    std::int64_t id = -1, parent = -1;
+    std::string name;
+    DebugLine call, invocation, definition;
 };
 /**
  * @brief 用户块及声明后区间的词法作用域；零号表示函数作用域。
@@ -64,6 +79,7 @@ class NativeDebugInfo
     };
     std::vector<FunctionSource> functions_;
     std::vector<PositionSource> positions_;
+    std::map<std::int64_t, DebugMacroFrame> macros_;
     std::size_t next_ = 1000000, unit_ = 0, empty_ = 0, integer_ = 0, real_ = 0;
     std::string metadata_;
     std::map<std::string, std::size_t> files_;
@@ -82,6 +98,12 @@ class NativeDebugInfo
     std::size_t file(const std::string &path);
 
 public:
+    /**
+     * @brief 登记同一源码展开的调用与定义，不加入语言执行状态。
+     * @param frame 完整且有界的来源。
+     * @return 无。
+     */
+    void recordMacro(DebugMacroFrame frame);
     /**
      * @brief 给一个函数附加源码位置和实际变量地址。
      * @param definition 完整 LLVM 函数定义。

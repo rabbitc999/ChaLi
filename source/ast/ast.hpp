@@ -56,6 +56,25 @@ struct DeclarationSource
     std::size_t line = 0, column = 0;
     bool readOnly = false;
 };
+/**
+ * @brief 单个编译期宏展开的调用、定义及父展开，仅供原生调试使用。
+ */
+struct MacroDebugFrame
+{
+    std::int64_t id = -1;
+    Memory::String name;
+    DeclarationSource call, invocation, definition;
+    std::shared_ptr<const MacroDebugFrame> parent;
+};
+/**
+ * @brief 具体宏生成节点的定义位置及私有绑定身份。
+ */
+struct MacroDebugLocation
+{
+    std::shared_ptr<const MacroDebugFrame> frame;
+    DeclarationSource definition;
+    bool privateBinding = false;
+};
 
 /**
  * @brief 类型。
@@ -185,6 +204,8 @@ struct Node
     Memory::String debugTypeName;         ///< 检查后的用户类型拼写，不改变槽位布局。
     Memory::String debugStorage;          ///< 取引用后真实绑定的逻辑存储；原槽仅作调试镜像。
     bool debugReadOnly = false;           ///< 原声明只读性，不参与已有语义检查。
+    std::shared_ptr<const MacroDebugLocation> debugMacro; ///< 宏来源及私有绑定标记，不改变运行时作用域。
+    std::shared_ptr<const DeclarationSource> debugBindingSource; ///< 模式等合成声明的原始位置，不参与未使用变量警告。
     Kind kind = Kind::IntLit;              ///< 种类。
     Memory::String text;                   ///< 名字 / 运算符 / 类型名 / 字符串内容。
     Memory::String typeName;               ///< 构造类节点（结构体 / 枚举）的类型名。
