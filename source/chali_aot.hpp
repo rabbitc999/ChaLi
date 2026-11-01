@@ -41,6 +41,7 @@ struct Options
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     bool emitLLVMOnly = false;                       ///< `--emit-llvm`：只写 LLVM 模块，不调用目标代码工具。
+    bool emitAssemblyOnly = false;                   ///< 只生成目标机器汇编 .s，不生成对象或执行链接。
     bool emitObjectOnly = false;                     ///< 只生成目标机器的对象文件，不执行链接。
     Memory::String target;                           ///< 目标三元组，空值使用实际宿主。
     Memory::String cpu;                              ///< 目标 CPU，空值使用目标的通用 CPU。

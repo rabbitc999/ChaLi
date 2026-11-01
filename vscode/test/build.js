@@ -100,11 +100,17 @@ async function main() {
       const object = fs.readFileSync(prefix + '.o');
       assert.equal(object.subarray(0, 4).toString('hex'), '7f454c46'); assert.equal(object.readUInt16LE(18), 183);
       await commands.get('chali.buildExe')(uri(source));
-      assert.equal(errors.length, 3); assert.match(errors[2], /object or LLVM IR/);
+      assert.equal(errors.length, 3); assert.match(errors[2], /object, assembly or LLVM IR/);
       manifest.text = '[aot]\ntarget="linux-arm64"\noutput="llvm"\n'; manifest.isDirty = true;
       await commands.get('chali.build')(uri(source));
       assert.equal(errors.length, 3, errors.join('\n')); assert.equal(configSaved, 2);
       assert.ok(fs.readFileSync(prefix + '.ll', 'utf8').includes('aarch64-unknown-linux-gnu'));
+      manifest.text = '[aot]\ntarget="linux-arm64"\noutput="assembly"\n'; manifest.isDirty = true;
+      await commands.get('chali.build')(uri(source));
+      assert.equal(errors.length, 3, errors.join('\n')); assert.equal(configSaved, 3);
+      const assembly = fs.readFileSync(prefix + '.s', 'utf8');
+      assert.ok(assembly.includes('.text') && !assembly.includes('target triple ='));
+
     } finally { await client.stop(); }
     console.log('VS Code 构建：原生产物、配置保存、ARM64 对象、LLVM IR、错误输出模式及既有交互通过');
   } finally {

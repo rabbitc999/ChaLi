@@ -132,7 +132,7 @@ void PrintUsage(std::FILE *out)
              "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
-             "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--shared、--export）\n",
+             "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
              "  clear out DIR  清理登记过的中间产物（不重新编译）\n",
@@ -154,6 +154,7 @@ void PrintUsage(std::FILE *out)
              "  --warnings-as-errors  把启用的警告提升为错误\n",
              "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n",
              "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
+             "  --emit-asm             生成目标机器汇编 .s，不链接；可配合 --target\n"
              "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
              "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n",
@@ -346,12 +347,13 @@ try
             PrintUsage(stdout);
             return 0;
         }
-        if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm" || argument == "--emit-obj"))
+        if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm" || argument == "--emit-obj" || argument == "--emit-asm"))
         {
             if (argument == "--checked") aotOptions.checked = true;
             if (argument == "--unchecked") aotOptions.checked = false;
             if (argument == "--shared") aotOptions.shared = true;
             if (argument == "--emit-llvm") aotOptions.emitLLVMOnly = true;
+            if (argument == "--emit-asm") aotOptions.emitAssemblyOnly = true;
             if (argument == "--emit-obj") aotOptions.emitObjectOnly = true;
             continue;
         }
@@ -782,17 +784,22 @@ try
     if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
     if (aotOptions.allocator.empty()) aotOptions.allocator = project.aotAllocator;
     if (aotOptions.compiler.empty()) aotOptions.compiler = project.aotCompiler;
-    if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly)
+    if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly && !aotOptions.emitAssemblyOnly)
     {
         aotOptions.emitLLVMOnly = project.aotOutput == "llvm";
         aotOptions.emitObjectOnly = project.aotOutput == "object";
+        aotOptions.emitAssemblyOnly = project.aotOutput == "assembly";
     }
-    if (aotOptions.emitLLVMOnly && aotOptions.emitObjectOnly)
+    if (int(aotOptions.emitLLVMOnly) + int(aotOptions.emitObjectOnly) + int(aotOptions.emitAssemblyOnly) > 1)
     {
-        std::fputs("chali: --emit-llvm 与 --emit-obj 不能同时指定。\n", stderr);
+        std::fputs("chali: --emit-llvm、--emit-obj 与 --emit-asm 只能选择一种。\n", stderr);
         return 2;
     }
-    if (aotOptions.emitLLVMOnly || aotOptions.emitObjectOnly) { aot = true; run = 0; }
+    if (aotOptions.emitLLVMOnly || aotOptions.emitObjectOnly || aotOptions.emitAssemblyOnly)
+    {
+        aot = true;
+        run = 0;
+    }
     chali_aot::TargetInfo selectedTarget;
     Memory::String targetError;
     if ((aot || run) && !chali_aot::describeTarget(aotOptions.target, selectedTarget, &targetError))
@@ -1455,7 +1462,7 @@ try
         if (status != 0) return status;
         /* 缺省运行或导出完成后清理中间产物；--out 显式给路径时按用户要求全部保留，
          * --keep-artifacts、--incremental 与 --emit-llvm 同样保留。 */
-        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly;
+        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly && !aotOptions.emitAssemblyOnly;
         /* 带 `--export` 时 ABI 头是交给宿主代码的交付物，不能当中间产物删掉。 */
         const bool withHeader = aotOptions.exports.empty();
         if (run)

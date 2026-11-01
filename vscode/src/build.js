@@ -8,18 +8,19 @@ const { findProject } = require('./dependencies');
 
 /**
  * 构造构建参数，保持文件名和工具路径为独立 argv，不进入 shell。
- * @param {string} format exe、object 或 llvm。
+ * @param {string} format exe、object、assembly 或 llvm。
  * @param {string} source 源文件绝对路径。
  * @param {string} prefix 输出前缀。
  * @param {object} options LLVM 路径及检查开关。
  * @returns {string[]} 编译器实参。
  */
 function buildArguments(format, source, prefix, options = {}) {
-  if (!['exe', 'object', 'llvm'].includes(format)) throw new Error('未知构建格式');
+  if (!['exe', 'object', 'assembly', 'llvm'].includes(format)) throw new Error('未知构建格式');
   const args = ['aot', source, '--out', prefix];
   if (options.llvmPath) args.push('--llvm', options.llvmPath);
   if (options.checked) args.push('--checked');
   if (options.checked === false) args.push('--unchecked');
+  if (format === 'assembly') args.push('--emit-asm');
   if (format === 'object') args.push('--emit-obj');
   if (format === 'llvm') args.push('--emit-llvm');
   return args;
@@ -88,8 +89,8 @@ function registerBuild(vscode, context, deps) {
       if (manifest?.isDirty && !(await manifest.save())) throw new Error(text('项目配置保存失败，构建已取消', 'Project configuration could not be saved; build cancelled'));
       const project = deps.projectInfo ? await deps.projectInfo(selected) : null;
       if (deps.projectInfo && !project?.valid && (project || fs.existsSync(path.join(cwd, 'chali.toml')))) throw new Error(project?.error || text('无法确认项目目标，请等待语言服务就绪', 'Cannot confirm project target; wait for the language server'));
-      if (explicitExecutable && project && project.output !== 'executable') throw new Error(text('项目当前导出对象或 LLVM IR，请使用“构建当前文件”或修改输出设置。', 'The project exports an object or LLVM IR; use Build Current File or change the output setting.'));
-      format = explicitExecutable ? 'exe' : ({ object: 'object', llvm: 'llvm', executable: 'exe' }[project?.output] || 'exe');
+      if (explicitExecutable && project && project.output !== 'executable') throw new Error(text('项目当前导出对象、汇编或 LLVM IR，请使用“构建当前文件”或修改输出设置。', 'The project exports an object, assembly or LLVM IR; use Build Current File or change the output setting.'));
+      format = explicitExecutable ? 'exe' : ({ object: 'object', assembly: 'assembly', llvm: 'llvm', executable: 'exe' }[project?.output] || 'exe');
       const compiler = locator.resolveChaLi(cwd, deps.readConfig(), context.extensionPath).chali;
       if (!compiler) throw new Error(text('未找到 ChaLi 编译器，请设置 chali.path', 'ChaLi compiler not found; configure chali.path'));
       const config = vscode.workspace.getConfiguration('chali', selected);
@@ -99,7 +100,7 @@ function registerBuild(vscode, context, deps) {
       const args = buildArguments(format, selected.fsPath, prefix, {
         llvmPath: config.get('build.llvmPath', '').trim(), checked: config.get('build.checked', false),
       });
-      const product = prefix + (format === 'object' ? '.o' : format === 'llvm' ? '.ll' : (project ? project.windows : process.platform === 'win32') ? '.exe' : '');
+      const product = prefix + (format === 'assembly' ? '.s' : format === 'object' ? '.o' : format === 'llvm' ? '.ll' : (project ? project.windows : process.platform === 'win32') ? '.exe' : '');
       output.show(true);
       output.appendLine(text(`编译器：${compiler}\n源文件：${selected.fsPath}\n产物：${product}`, `Compiler: ${compiler}\nSource: ${selected.fsPath}\nOutput: ${product}`));
       await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification,

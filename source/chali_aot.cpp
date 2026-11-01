@@ -2779,17 +2779,19 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         return 1;
     }
     const bool objectOnly = request.options.emitObjectOnly;
-    if (objectOnly && request.options.emitLLVMOnly)
+    const bool assemblyOnly = request.options.emitAssemblyOnly;
+    const bool codeOnly = objectOnly || assemblyOnly;
+    if (int(objectOnly) + int(assemblyOnly) + int(request.options.emitLLVMOnly) > 1)
     {
-        if (diagnostics) diagnostics->push_back("AOT：LLVM 模块与对象文件输出不能同时选择");
+        if (diagnostics) diagnostics->push_back("AOT：LLVM 模块、对象文件与机器汇编输出只能选择一种");
         return 1;
     }
-    if (!target.native && !objectOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
+    if (!target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
     {
-        if (diagnostics) diagnostics->push_back("AOT：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj 或 --emit-llvm");
+        if (diagnostics) diagnostics->push_back("AOT：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj、--emit-asm 或 --emit-llvm");
         return 1;
     }
-    if (!target.native && !objectOnly && !request.options.emitLLVMOnly && !request.abiGlue.empty())
+    if (!target.native && !codeOnly && !request.options.emitLLVMOnly && !request.abiGlue.empty())
     {
         if (diagnostics) diagnostics->push_back("AOT：跨目标复杂 C ABI 封送需要目标 C++ 工具链；请先使用 --emit-obj 导出对象及 .abi.cpp，再在目标 SDK 中链接");
         return 1;
@@ -2807,19 +2809,22 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     if (request.options.emitLLVMOnly) return 0;
     RuntimeAssets abiAssets;
     Request linked = request;
-    if (!request.abiGlue.empty() && !objectOnly)
+    if (!request.abiGlue.empty() && !codeOnly)
     {
         Memory::String object;
         if (!abiAssets.prepareAbi(request.abiGlue, &object, diagnostics)) return 1;
         linked.options.linkObjects.push_back(object);
     }
-    if (objectOnly && !request.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", request.abiGlue))
+    if (codeOnly && !request.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", request.abiGlue))
     {
         if (diagnostics) diagnostics->push_back("AOT：无法写入目标 ABI 封送源码");
         return 1;
     }
-    const Text product = prefix + (objectOnly ? ".o" : request.options.shared ? target.windows ? ".dll" : ".so" : target.windows ? ".exe" : "");
-    if (builtin::available() && request.options.compiler.empty() && (objectOnly || (target.native && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
+    const Text product = prefix + (assemblyOnly ? ".s" : objectOnly         ? ".o" :
+                                                     request.options.shared ? target.windows ? ".dll" : ".so" :
+                                                     target.windows         ? ".exe" :
+                                                                              "");
+    if (builtin::available() && request.options.compiler.empty() && (codeOnly || (target.native && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
         return builtin::compile(linked, Memory::String(llvmPath.c_str()), source, Memory::String(product.c_str()), diagnostics);
     const Text compiler = compilerPath(request.options.compiler);
     if (quote(compiler).empty() || quote(llvmPath).empty() || quote(product).empty())
@@ -2829,7 +2834,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     RuntimeAssets runtimeAssets;
     std::filesystem::path runtimeDirectory;
-    if (!objectOnly)
+    if (!codeOnly)
     {
         if (request.options.runtimeDirectory.empty())
         {
@@ -2873,7 +2878,10 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         command += Text(target.arm64 ? " -mcpu=" : " -march=") + cpu;
     }
     command += request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module " : " -O3 -Wno-override-module ";
-    if (objectOnly) command += "-c ";
+    if (assemblyOnly)
+        command += "-S ";
+    else if (objectOnly)
+        command += "-c ";
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
@@ -2882,7 +2890,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     if (!target.windows) command += "-fPIC ";
     command += quote(llvmPath) + " -o " + quote(product);
-    if (!objectOnly)
+    if (!codeOnly)
     {
         const auto runtime = quote(runtimeDirectory.generic_u8string());
         if (runtime.empty()) return 1;

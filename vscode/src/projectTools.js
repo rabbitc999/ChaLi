@@ -49,7 +49,7 @@ function registerProjectTools(vscode, context, deps) {
           status.tooltip = result.error;
         } else {
           const target = result.targets.find(item => item.target === result.target)?.label || result.target;
-          const format = { object: text('对象文件', 'Object'), llvm: 'LLVM IR', executable: text('可执行文件', 'Executable') }[result.output];
+          const format = { object: text('对象文件', 'Object'), assembly: text('机器汇编', 'Assembly'), llvm: 'LLVM IR', executable: text('可执行文件', 'Executable') }[result.output];
           status.text = `$(target) ChaLi ${target} · ${format}`;
           status.tooltip = `ChaLi ${result.compilerVersion} · LLVM ${result.llvm}\n${result.manifestUri}\n${text('点击选择目标', 'Click to select target')}`;
         }
@@ -73,6 +73,7 @@ function registerProjectTools(vscode, context, deps) {
       const choices = key === 'target' ? project.targets : [
         { label: text('可执行文件', 'Executable'), target: 'executable' },
         { label: text('对象文件', 'Object file'), target: 'object' },
+        { label: text('机器汇编', 'Assembly'), target: 'assembly' },
         { label: 'LLVM IR', target: 'llvm' },
       ];
       const selected = await vscode.window.showQuickPick(choices, { placeHolder: text('选择项目 AOT 配置', 'Select project AOT configuration') });

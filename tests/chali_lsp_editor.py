@@ -92,9 +92,9 @@ def main():
             other_source.write_text('void main(){}\n', encoding='utf-8')
             info = server.query('chali/projectInfo', dict(uri=other_source.as_uri()))
             assert not info['exists'], info
-            creation = server.query('chali/projectEdit', dict(uri=other_source.as_uri(), text='', version=None, key='output', value='object'))
+            creation = server.query('chali/projectEdit', dict(uri=other_source.as_uri(), text='', version=None, key='output', value='assembly'))
             assert creation['documentChanges'][0]['kind'] == 'create' and not (other / 'chali.toml').exists()
-            assert tomllib.loads(creation['documentChanges'][1]['edits'][0]['newText'])['aot']['output'] == 'object'
+            assert tomllib.loads(creation['documentChanges'][1]['edits'][0]['newText'])['aot']['output'] == 'assembly'
         finally:
             server.close()
         # 项目清单由编辑结果决定目标与输出；只验证 Linux ARM64 对象，不执行目标机器码。

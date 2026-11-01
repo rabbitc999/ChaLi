@@ -198,3 +198,11 @@ P7 的重命名编辑附带当前源码指纹；扩展在返回编辑前核对�
 静态与外置 LLVM 使用独立构建目录和同版本命名。打包前核对 `--build-info`、插件版本、VSIX 内嵌 EXE 字节和实际构建配置；不要用另一变体的配置文件代替核对。`tools/release_variants.py --package-only` 可用 `--static-build-root`／`--external-build-root` 指定本次配置目录。安装包和 ZIP 另核对 EXE、版本及 LICENSE／NOTICE／依赖许可；生成交叉对象与在目标系统执行分别记录。
 
 语言服务的[最终 P3→P5 对照](../benchmarks/results/lsp-1.0.12-final/README.md)按具体编译器摘要冻结，不代表后续重新生成的 P6～P8 字节。后续产物核对不重新命名或重复测量该数据。
+
+## 目标机器汇编
+
+`chali aot app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
+
+项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
+
+同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。本选项尚未提供独立的 `chali asm` 或 `chali link` 命令。

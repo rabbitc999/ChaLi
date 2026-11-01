@@ -314,8 +314,8 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                     else if (key == "llvm") project.aotCompiler = path(value, base);
                     else if (key == "output")
                     {
-                        if (value != "llvm" && value != "object" && value != "executable")
-                            throw std::runtime_error("aot.output expects llvm, object or executable");
+                        if (value != "llvm" && value != "object" && value != "assembly" && value != "executable")
+                            throw std::runtime_error("aot.output expects llvm, object, assembly or executable");
                         project.aotOutput = value;
                     }
                     else throw std::runtime_error("unknown aot key: " + key);

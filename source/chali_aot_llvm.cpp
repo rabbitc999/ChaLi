@@ -187,10 +187,10 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     // 保留 LLVM bitcode 到链接阶段，由 LLD 根据真实外部引用和导出确定内部化边界。
     if (!failed)
     {
-        if (request.options.emitObjectOnly)
+        if (request.options.emitObjectOnly || request.options.emitAssemblyOnly)
         {
             auto file = product;
-            failed = LLVMTargetMachineEmitToFile(machine, program, file.data(), LLVMObjectFile, &message) != 0;
+            failed = LLVMTargetMachineEmitToFile(machine, program, file.data(), request.options.emitAssemblyOnly ? LLVMAssemblyFile : LLVMObjectFile, &message) != 0;
         }
         else
         {
@@ -207,7 +207,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (program) LLVMDisposeModule(program);
     LLVMContextDispose(context);
     if (failed) return 1;
-    if (request.options.emitObjectOnly) return 0;
+    if (request.options.emitObjectOnly || request.options.emitAssemblyOnly) return 0;
     // 链接资产在打包时内嵌并恢复到专用临时目录，LLVM/LLD 本身均为静态代码。
     LinkerAssets assets;
     if (!assets.restore())

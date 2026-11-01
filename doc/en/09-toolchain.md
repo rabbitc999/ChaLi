@@ -184,3 +184,11 @@ Code actions can fill directly listed non-generic interface methods and add a fa
 Static and external LLVM builds use separate build directories and versioned artifact names. Before packaging, check `--build-info`, extension versions, exact VSIX compiler bytes and the actual variant's build configuration. Do not substitute the other variant's configuration. `tools/release_variants.py --package-only` accepts `--static-build-root` and `--external-build-root` for these directories. Check installer and ZIP executables, versions, LICENSE/NOTICE and dependency licenses separately. Record cross-object generation separately from execution on the target system.
 
 The [final P3-to-P5 LSP comparison](../../benchmarks/results/lsp-1.0.12-final/README.md) is frozen by actual compiler hashes; it does not describe later P6-to-P8 rebuild bytes. Subsequent artifact checks do not relabel or repeat that measurement.
+
+## Target machine assembly
+
+`chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
+
+The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+
+The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. This option does not introduce a standalone `chali asm` or `chali link` command.

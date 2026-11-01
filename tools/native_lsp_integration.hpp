@@ -113,7 +113,7 @@ J projectEdit(const J &params)
         Memory::String error;
         if (!chali_aot::describeTarget(Memory::String(value.data(), value.size()), target, &error)) throw std::runtime_error(projectText(error));
     }
-    else if (key != "output" || (value != "executable" && value != "object" && value != "llvm"))
+    else if (key != "output" || (value != "executable" && value != "object" && value != "assembly" && value != "llvm"))
         throw std::runtime_error("仅支持编辑 AOT target 或 output");
     auto parsed = toml::parse(text);
     if (!parsed.ok()) throw std::runtime_error("配置原文不是有效 TOML，请先修正语法");

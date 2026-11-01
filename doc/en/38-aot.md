@@ -111,3 +111,11 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 ```
 
 `run` rejects a foreign target instead of starting an emulator. Object generation, full linking and execution are separate validation steps. Test the resulting application on its target or an appropriate emulator. Complex imported C ABI adapters currently require target-toolchain compilation and linking after object export.
+
+## Target machine assembly
+
+`chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
+
+The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+
+The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. This option does not introduce a standalone `chali asm` or `chali link` command.
