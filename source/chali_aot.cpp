@@ -1035,11 +1035,27 @@ Text abiType(const Memory::String &name)
     if (name == "void") return "void";
     if (name == "double") return "double";
     if (name == "float") return "float";
-    if (name.find("char") != Memory::String::npos || name == "bool") return "i8";
+    if (name == "bool") return "i1";
+    if (name.find("char") != Memory::String::npos) return "i8";
     if (name.find("short") != Memory::String::npos) return "i16";
     if (name.find("long long") != Memory::String::npos || name.find("int64") != Memory::String::npos) return "i64";
     if (name == "int" || name == "unsigned int") return "i32";
     return Text();
+}
+
+/**
+ * @brief 按目标 C ABI 选择小整数的寄存器扩展属性。
+ * @param name 原生 C 类型拼写。
+ * @param target 实际输出目标。
+ * @return 带尾部空格的 signext／zeroext，或无需属性的空串。
+ */
+Text abiExtension(const Memory::String &name, const TargetInfo &target)
+{
+    if (name == "bool") return target.arm64 ? Text() : Text("zeroext ");
+    if (target.windows || target.arm64) return {};
+    const auto type = abiType(name);
+    if (type == "i8" || type == "i16") return name.find("unsigned") != Memory::String::npos ? "zeroext " : "signext ";
+    return {};
 }
 
 /**
@@ -1249,15 +1265,16 @@ struct Builder
      * @param name LLVM 函数符号，不含 @。
      * @param resultType 返回类型。
      * @param values 已完成类型转换的实际参数。
+     * @param abi 可选的原生签名，用于目标相关的整数扩展。
      * @return 调用返回的 SSA 值；void 调用返回无结果标记。
      */
-    Value call(const Text &name, const Text &resultType, const std::vector<Value> &values)
+    Value call(const Text &name, const Text &resultType, const std::vector<Value> &values, const ExternFunction *abi = nullptr)
     {
-        Text operation = "call " + resultType + " @" + name + "(";
+        Text operation = "call " + (abi ? abiExtension(abi->resultType, state.target) : Text()) + resultType + " @" + name + "(";
         for (std::size_t index = 0; index < values.size(); ++index)
         {
             if (index != 0u) operation += ", ";
-            operation += values[index].type + " " + values[index].text;
+            operation += values[index].type + " " + (abi ? abiExtension(abi->parameterTypes[index], state.target) : Text()) + values[index].text;
         }
         operation += ")";
         if (resultType != "void") return instruction(resultType, operation);
@@ -1668,7 +1685,7 @@ struct Builder
             }
         }
         const auto external = state.externsByLabel.find(textOf(callee));
-        if (external != state.externsByLabel.end() && (state.request.abiGlue.empty() || isDirectLinkLibrary(external->second->library)))
+        if (external != state.externsByLabel.end() && !external->second->requiresMarshalling && (state.request.abiGlue.empty() || isDirectLinkLibrary(external->second->library)))
         {
             state.usedExternLabels.insert(textOf(callee));
             const auto &signature = *external->second;
@@ -1695,7 +1712,7 @@ struct Builder
                 return false;
             }
             const Text target = usesDynamicAbiLibrary(signature) ? "chali_external_" + std::to_string(external->second - state.request.externs.data()) : llvmSymbol(signature.symbol);
-            Value result = call(target, resultType, values);
+            Value result = call(target, resultType, values, &signature);
             if (resultType == "void") result = { "i64", "0" };
             if (!resultType.empty() && resultType.front() == 'i')
                 result = convert(result, "i64", signature.resultType.find("unsigned") != Memory::String::npos);
@@ -2598,7 +2615,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
             };
             out += literal(name + "_library", external.library) + literal(name + "_symbol", external.symbol);
             out += "@" + name + "_pointer = internal thread_local global ptr null\n";
-            out += "define internal " + resultType + " @" + name + "(";
+            out += "define internal " + abiExtension(external.resultType, state.target) + resultType + " @" + name + "(";
             Text actual;
             for (std::size_t index = 0; index < external.parameterTypes.size(); ++index)
             {
@@ -2607,22 +2624,24 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
                     out += ", ";
                     actual += ", ";
                 }
-                const Text parameter = abiType(external.parameterTypes[index]) + " %a" + std::to_string(index);
+                const Text parameter = abiType(external.parameterTypes[index]) + " " + abiExtension(external.parameterTypes[index], state.target) + "%a" + std::to_string(index);
                 out += parameter;
                 actual += parameter;
             }
             out += ") {\nentry:\n  %cached = load ptr, ptr @" + name + "_pointer\n  %missing = icmp eq ptr %cached, null\n  br i1 %missing, label %resolve, label %invoke\nresolve:\n";
             out += "  %resolved = call ptr @chali_host_abi_symbol(ptr @" + name + "_library, ptr @" + name + "_symbol)\n";
             out += "  store ptr %resolved, ptr @" + name + "_pointer\n  br label %invoke\ninvoke:\n  %target = phi ptr [ %cached, %entry ], [ %resolved, %resolve ]\n";
-            out += Text(resultType == "void" ? "  call void %target(" : "  %value = call " + resultType + " %target(") + actual + ")\n";
+            out += Text(resultType == "void" ? "  call void %target(" : "  %value = call " + abiExtension(external.resultType, state.target) + resultType + " %target(") + actual + ")\n";
             out += resultType == "void" ? "  ret void\n}\n" : "  ret " + resultType + " %value\n}\n";
             continue;
         }
-        Text declaration = "declare " + resultType + " @" + llvmSymbol(external.symbol) + "(";
+        Text declaration = "declare " + abiExtension(external.resultType, state.target) + resultType + " @" + llvmSymbol(external.symbol) + "(";
         for (std::size_t at = 0; at < external.parameterTypes.size(); ++at)
         {
             if (at != 0u) declaration += ", ";
             declaration += abiType(external.parameterTypes[at]);
+            const auto extension = abiExtension(external.parameterTypes[at], state.target);
+            if (!extension.empty()) declaration += " " + extension.substr(0, extension.size() - 1);
         }
         declaration += ")\n";
         const auto existing = externalDeclarations.emplace(textOf(external.symbol), declaration);

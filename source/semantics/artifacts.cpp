@@ -97,6 +97,22 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
 #include "abi_export.cpp"
 
 /**
+ * @brief 判断是否需要将语言逻辑槽封送为平台 C ABI。
+ * @param function 已验证的外部函数声明。
+ * @return 结果或参数含非标量类型时为真。
+ */
+bool CAbiNeedsMarshalling(const MFunctionDecl &function)
+{
+    const auto scalar = [](const std::shared_ptr<MType> &type) {
+        return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
+    };
+    if (!scalar(function.signature.result)) return true;
+    for (const auto &parameter : function.signature.params)
+        if (!scalar(parameter.type)) return true;
+    return false;
+}
+
+/**
  * @brief 生成外部 ABI 声明对应的宿主胶水源码。
  * @retval 生成或读取的结果文本。
  */
@@ -104,7 +120,7 @@ Memory::String AbiGlueSource()
 {
     Memory::Map<Memory::String, Memory::Vector<const MFunctionDecl *>> libraries;
     for (const MFunctionDecl &function : g_functionDecls)
-        if (!function.abiLibrary.empty() && !::chali_aot::isDirectLinkLibrary(function.abiLibrary) && !function.superseded)
+        if (!function.abiLibrary.empty() && (!::chali_aot::isDirectLinkLibrary(function.abiLibrary) || CAbiNeedsMarshalling(function)) && !function.superseded)
             libraries[function.abiLibrary].push_back(&function);
     if (libraries.empty() && CAbiExportFunctions().empty()) return {};
     Memory::String definitions;
@@ -175,12 +191,25 @@ Memory::String AbiGlueSource()
         const auto suffix = Memory::toString(index);
         const auto result = CAbiBindingType(function.signature.result);
         const bool returns = CAbiType(function.signature.result) != "void";
+        const bool linked = ::chali_aot::isDirectLinkLibrary(function.abiLibrary);
+        if (linked)
+        {
+            source += "extern \"C\" typename chali_native_marshal::Result<" + result + ">::Native chali_linked_" + suffix + "(";
+            for (std::size_t arg = 0; arg < function.signature.params.size(); ++arg)
+            {
+                if (arg) source += ", ";
+                source += "decltype(std::declval<chali_native_marshal::Argument<" + CAbiBindingType(function.signature.params[arg].type) + ">&>().get())";
+            }
+            source += ") __asm__(" + CxxStringLiteral(function.abiSymbol) + ");\n";
+            if (!function.abiRelease.empty())
+                source += "extern \"C\" void chali_linked_release_" + suffix + "(void *) __asm__(" + CxxStringLiteral(function.abiRelease) + ");\n";
+        }
         source += "/**\n * @brief 通过 C 帧封送一次原生调用。\n * @param raw 当前 C 调用帧。\n */\nstatic void chali_abi_call_" + suffix + "(ChaliAbiFrame *raw) {\n";
         source += "char diagnostic[256]; ChaliAbiError error{diagnostic, sizeof(diagnostic), 0, ChaliAbiOk};\n";
         source += "if (chali_abi_check_frame(raw, " + Memory::toString(function.signature.params.size()) + ", &error) != ChaliAbiOk) { chali_abi_fail(raw, diagnostic); return; }\n";
         source += "chali_abi_return_integer(raw, 0);\ntry {\nusing namespace chali_native_marshal; Frame frame{raw}; OwnedReturn owned;\n";
         if (!function.abiRelease.empty())
-            source += "owned.release = reinterpret_cast<void (*)(void *)>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiRelease) + "));\n";
+            source += linked ? "owned.release = &chali_linked_release_" + suffix + ";\n" : "owned.release = reinterpret_cast<void (*)(void *)>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiRelease) + "));\n";
         source += "const auto count = " + (function.abiResultCountIndex < 0 ? Memory::String("std::size_t{1}") :
             "checkedCount(frame.integer(" + Memory::toString(function.abiResultCountIndex) + "), Result<" + result + ">::stride)") + ";\n";
         Memory::String signature = "typename Result<" + result + ">::Native (*) (", arguments;
@@ -193,7 +222,8 @@ Memory::String AbiGlueSource()
             arguments += "a" + n + ".get()";
             source += "Argument<" + type + "> a" + n + "(frame, " + n + ");\n";
         }
-        source += "using NativeFunction = " + signature + ");\nstatic const auto call = reinterpret_cast<NativeFunction>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiSymbol) + "));\n";
+        source += "using NativeFunction = " + signature + ");\n";
+        source += linked ? "const NativeFunction call = &chali_linked_" + suffix + ";\n" : "static const auto call = reinterpret_cast<NativeFunction>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiSymbol) + "));\n";
         source += (returns ? "const auto returned = " : "") + Memory::String("call(") + arguments + ");\n";
         if (returns && CAbiType(function.signature.result).find('*') != Memory::String::npos)
             source += "owned.pointer = returned;\n";
@@ -207,6 +237,7 @@ Memory::String AbiGlueSource()
     source += "if (!registry) return chali_abi_status(error, ChaliAbiInvalidArgument, \"missing registry\");\n";
     for (const auto *function : functions)
     {
+        if (::chali_aot::isDirectLinkLibrary(function->abiLibrary)) continue;
         source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiSymbol) + ", error)) return ChaliAbiHostFailure;\n";
         if (!function->abiRelease.empty())
             source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiRelease) + ", error)) return ChaliAbiHostFailure;\n";
@@ -232,7 +263,7 @@ static Memory::String AotCType(const Memory::String &abiType)
 {
     if (abiType.empty()) return "long long";
     if (abiType == "void") return "void";
-    if (abiType == "bool") return "int";
+    if (abiType == "bool") return "bool";
     if (abiType == "float" || abiType == "double") return abiType;
     if (abiType == "const char *" || abiType == "char *") return "const char *";
     const bool unsigned_ = abiType.find("uint") != Memory::String::npos;
@@ -261,6 +292,7 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
         entry.label = function.label;
         entry.symbol = function.abiSymbol.empty() ? function.label : function.abiSymbol;
         entry.library = function.abiLibrary;
+        entry.requiresMarshalling = CAbiNeedsMarshalling(function);
         entry.resultType = AotCType(CAbiType(function.signature.result));
         for (const auto &parameter : function.signature.params)
             entry.parameterTypes.push_back(AotCType(CAbiType(parameter.type)));
@@ -281,12 +313,7 @@ Memory::String ChaliAotAbiGlue()
     for (const auto &function : g_functionDecls)
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
-        const auto scalar = [](const std::shared_ptr<MType> &type) {
-            return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
-        };
-        if (!scalar(function.signature.result)) return AbiGlueSource();
-        for (const auto &parameter : function.signature.params)
-            if (!scalar(parameter.type)) return AbiGlueSource();
+        if (CAbiNeedsMarshalling(function)) return AbiGlueSource();
     }
     return {};
 }

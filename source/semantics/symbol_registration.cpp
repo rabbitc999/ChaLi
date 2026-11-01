@@ -1308,15 +1308,6 @@ bool RegisterTop()
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())
                 return Fail("abi 库路径与 C 符号名不能为空");
-            if (chali_aot::isDirectLinkLibrary(declaration.abiLibrary))
-            {
-                const auto scalar = [](const std::shared_ptr<MType> &type) {
-                    return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
-                };
-                if (!declaration.abiRelease.empty() || !scalar(declaration.signature.result)) return Fail("@link 当前仅支持固定标量 C ABI 签名，不接受释放函数");
-                for (const auto &parameter : declaration.signature.params)
-                    if (!scalar(parameter.type) || parameter.type->kind == MType::Void) return Fail("@link 当前仅支持固定标量 C ABI 签名");
-            }
             if (!declaration.abiRelease.empty())
             {
                 const auto result = CAbiUnderlying(declaration.signature.result);
@@ -1336,6 +1327,16 @@ bool RegisterTop()
             for (const MParam &param : declaration.signature.params)
                 if (param.variadic || CAbiType(param.type).empty() || CAbiType(param.type) == "void")
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
+            for (const auto &previous : g_functionDecls)
+            {
+                if (previous.superseded || previous.abiLibrary != declaration.abiLibrary || previous.abiSymbol != declaration.abiSymbol) continue;
+                bool compatible = CAbiType(previous.signature.result) == CAbiType(declaration.signature.result)
+                    && previous.signature.params.size() == declaration.signature.params.size();
+                if (compatible)
+                    for (std::size_t index = 0; index < declaration.signature.params.size(); ++index)
+                        if (CAbiType(previous.signature.params[index].type) != CAbiType(declaration.signature.params[index].type)) compatible = false;
+                if (!compatible) return Fail("同一 C 符号的 ABI 签名不一致：" + declaration.abiSymbol);
+            }
         }
         declaration.moduleLocal = top.moduleLocal;
         if (!declaration.exportSymbol.empty()) {

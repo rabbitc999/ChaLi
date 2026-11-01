@@ -22,6 +22,7 @@ struct ExternFunction
     Memory::String resultType = "long long";        ///< C 返回类型名。
     Memory::Vector<Memory::String> parameterTypes;  ///< C 形参类型名，按序。
     Memory::String abiConvention = "C";             ///< 已验证的外部调用约定。
+    bool requiresMarshalling = false;               ///< 非标量签名必须通过 C 帧封送，不按槽位冒充原生布局。
 };
 
 /**

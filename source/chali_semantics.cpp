@@ -2403,6 +2403,7 @@ int M_AbiDeclaration(int convention, int declaration)
  */
 int M_AbiImport(int convention, int library, int symbol, int declaration)
 {
+    if (g_names[library].empty()) return M_ParseBad("#abi 库路径不能为空；最终链接符号请使用 @link");
     const int result = M_AbiDeclaration(convention, declaration);
     if (g_nodes[result].kind == MNode::ParseBad) return result;
     auto &node = g_nodes[result];
@@ -2491,6 +2492,7 @@ int M_AbiOwned(int function, int release)
  */
 int M_AbiBlock(int libraryId, int functionsId)
 {
+    if (g_names[static_cast<std::size_t>(libraryId)].empty()) return M_ParseBad("#abi 库路径不能为空；最终链接符号请使用 @link");
     const int id = M_New(MNode::AbiBlock);
     MNode &block = g_nodes[static_cast<std::size_t>(id)];
     block.s = g_names[static_cast<std::size_t>(libraryId)];

@@ -97,9 +97,9 @@ def main():
         invoke([compiler,'aot',mixed,'--asm',assembly,'--asm',data,'--asm-include',include,'--out',work/'mixed',*backend],work)
         assert invoke([work/('mixed.exe' if os.name=='nt' else 'mixed')],work).stdout=='mixed 53\n'
         unsupported=work/'unsupported.chl'
-        unsupported.write_text('struct Packet{int64 value;};#abi("C","@link","transform") Packet transform(Packet value);void main(){}',encoding='utf-8')
+        unsupported.write_text('struct Packet{String value;};#abi("C","@link","transform") Packet transform(Packet value);void main(){}',encoding='utf-8')
         failure=invoke([compiler,'--check',unsupported],work,False)
-        assert '@link' in failure.stderr
+        assert 'abi' in failure.stderr.lower()
         for flag in ['--emit-asm','--emit-obj','--emit-llvm']:
             invoke([compiler,'aot',consumer,'--asm',assembly,flag,'--out',work/'invalid',*backend],work,False)
         if info['llvm']=='static':

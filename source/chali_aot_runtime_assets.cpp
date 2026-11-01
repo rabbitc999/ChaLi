@@ -5,6 +5,7 @@
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_temp.hpp"
+#include "chali_native_tools.hpp"
 #include <miniz_tinfl.h>
 #include <chrono>
 #include <cstdlib>
@@ -117,40 +118,19 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     }
     const char *configured = std::getenv("CHALI_ABI_CXX");
     const std::string compiler = configured && *configured ? configured : "g++";
-    const auto quoted = [](const std::string &text) -> std::string {
-#ifdef _WIN32
-        if (text.find_first_of("\"%\r\n") != std::string::npos) return {};
-        return "\"" + text + "\"";
-#else
-        std::string result = "'";
-        for (const char value : text) result += value == '\'' ? "'\\''" : std::string(1, value);
-        return result + "'";
-#endif
-    };
-    if (quoted(compiler).empty() || quoted(root.u8string()).empty())
-    {
-        if (diagnostics) diagnostics->push_back("AOT：ABI 编译器或临时路径含不支持的命令行字符");
-        return false;
-    }
-    std::string command = quoted(compiler) + " -std=c++17 -O2 -fPIC -DCHALI_CUSTOM_ALLOCATOR=1 -DCHALI_WITH_REFLECTION=" + std::to_string(CHALI_WITH_REFLECTION)
-                          + " -DSTACKVM_WITH_REFLECTION=" + std::to_string(STACKVM_WITH_REFLECTION) + " -I" + quoted(root.u8string())
-                          + " -I" + quoted((root / "allocator").u8string()) + " -I" + quoted((root / "ircode").u8string())
-                          + " -I" + quoted((root / "stackvm").u8string())
-                          + " -c " + quoted(cpp.u8string()) + " -o " + quoted(target.u8string()) + " > " + quoted(log.u8string()) + " 2>&1";
-#ifdef _WIN32
-    command = "\"" + command + "\"";
-    const int status = _wsystem(std::filesystem::u8path(command).wstring().c_str());
-#else
-    const int status = std::system(command.c_str());
-#endif
+    const std::vector<std::string> arguments{compiler, "-std=c++17", "-O2", "-fPIC", "-DCHALI_CUSTOM_ALLOCATOR=1",
+        "-DCHALI_WITH_REFLECTION=" + std::to_string(CHALI_WITH_REFLECTION),
+        "-DSTACKVM_WITH_REFLECTION=" + std::to_string(STACKVM_WITH_REFLECTION),
+        "-I" + root.u8string(), "-I" + (root / "allocator").u8string(), "-I" + (root / "ircode").u8string(),
+        "-I" + (root / "stackvm").u8string(), "-c", cpp.u8string(), "-o", target.u8string()};
+    std::string toolDiagnostic;
+    const int status = chali_native_tools::execute(arguments, log, toolDiagnostic);
     if (status != 0)
     {
         if (diagnostics)
         {
             diagnostics->push_back("AOT：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器");
-            std::ifstream input(log, std::ios::binary);
-            const std::string text((std::istreambuf_iterator<char>(input)), {});
-            diagnostics->push_back(Memory::String(text.c_str()));
+            diagnostics->push_back(Memory::String(toolDiagnostic.c_str()));
         }
         return false;
     }
