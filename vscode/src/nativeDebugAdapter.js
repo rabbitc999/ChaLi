@@ -12,6 +12,7 @@ const { DebugTerminal } = require('./debugTerminal');
 const { DebugMetadata, visibleBindings, LIMIT: MEMORY_LIMIT } = require('./debugMetadata');
 const { DebugMemory } = require('./debugMemory');
 const { parseLayout, decode, expandable } = require('./debugValue');
+const { parseExpression, evaluateExpression } = require('./debugExpression');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -812,7 +813,7 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
               }
             }
-            return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: variable.name, variablesReference, memoryReference };
+            return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference };
           }));
           break;
         }
@@ -872,11 +873,54 @@ class Adapter {
           break;
         }
         case 'evaluate': {
+          const tree = parseExpression(args.expression);
           const frame = this.frames.get(args.frameId);
-          if (args.frameId !== undefined && !frame) throw new Error('调用帧已经过期');
-          const selector = frame ? ` --thread ${frame.thread} --frame ${frame.level}` : '';
-          const data = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify(args.expression), { signal });
-          body = { result: data.value || '', variablesReference: 0 };
+          if (!frame) throw new Error('只读表达式需要当前有效的源码调用帧');
+          const bindings = visibleBindings(frame.metadata);
+          let rows;
+          const resolve = async name => {
+            if (!rows) rows = (await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal })).variables || [];
+            const variable = rows.find(row => {
+              const binding = bindings.get(row.name);
+              return binding && binding.name === name && (binding.macro ?? -1) === (frame.macro ?? -1);
+            });
+            if (!variable) throw new Error('当前作用域没有可读变量：' + name);
+            const binding = bindings.get(variable.name), layout = this.layoutAt(binding.layout);
+            let text = variable.value || '<不可用>';
+            if (/^(?:int8|uint8)$/.test(variable.type || '')) text = text.replace(/^(-?[0-9]+)\s+'.*'$/, '$1');
+            const addressable = layout && (binding.address || ['L', 'M', 'E', 'O', 'F'].includes(layout.kind));
+            const address = addressable && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(text) ? BigInt(text) : null;
+            if (address !== null) text = (await decode(layout, address, await this.memoryFor(frame.thread, signal), { count: 0 })).text;
+            else if (addressable) throw new Error('变量没有可读取的地址：' + name);
+            return { text, type: variable.type, layout: address === null ? null : layout, address };
+          };
+          const project = async (target, key, indexed, tupleOnly = false) => {
+            if (!target.layout) throw new Error('该值没有可读取的字段或索引');
+            let layout = target.layout;
+            while (layout.kind === 'R' && layout.children.length) layout = layout.children[0];
+            const tuple = layout.kind === 'T' || (layout.kind === 'S' && /^\(/.test(target.type || ''));
+            if (tupleOnly && !tuple) throw new Error('数字字段只支持元组');
+            if (indexed ? !tuple && !['a', 'A', 'L'].includes(layout.kind) : !['S', 'O'].includes(layout.kind)) throw new Error('该类型不支持此字段或索引表达式：' + target.type);
+            // 普通记录的现行布局把嵌套字段登记成 start.first；保留原偏移构造只读子视图。
+            if (!indexed && layout.kind === 'S' && !layout.children.some(child => child.name === key)) {
+              const prefix = key + '.';
+              const children = layout.children.filter(child => child.name.startsWith(prefix)).map(child => ({ ...child, name: child.name.slice(prefix.length) }));
+              if (children.length) {
+                const nested = { ...layout, name: key, children };
+                return { text: '{…}', type: '记录', layout: nested, address: target.address, stored: target.stored };
+              }
+            }
+            const decoded = await decode(target.layout, target.address, await this.memoryFor(frame.thread, signal),
+              indexed ? { start: key, count: 1 } : { count: 1000 }, target.stored);
+            const item = indexed ? decoded.children[0] : decoded.children.find(child => child.name === key);
+            if (!item || (indexed && !tuple && item.name !== String(key))) throw new Error(indexed ? '索引越界或不可读' : '字段不存在或超过读取预算：' + key + '（可读字段：' + decoded.children.map(child => child.name).join(', ') + '）');
+            if (item.value.startsWith('<不可读：')) throw new Error(item.value);
+            return { text: item.value, type: item.type, layout: item.childLayout, address: item.address, stored: item.stored };
+          };
+          const value = await evaluateExpression(tree, resolve, project);
+          const variablesReference = value.layout && expandable(value.layout) && value.layout.kind !== 's'
+            ? this.handle({ kind: 'value', thread: frame.thread, address: value.address, layout: value.layout, stored: value.stored }) : 0;
+          body = { result: value.text, type: value.type, variablesReference };
           break;
         }
         case 'continue':

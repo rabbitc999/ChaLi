@@ -106,7 +106,17 @@ The adapter supports the standard DAP `disassemble` request: it returns machine 
 
 The compiler publishes a directory only after a block has executed source statements, so the stop at a function's first statement reuses the most recent publication from before the call. That directory remains readable when nothing was allocated or released since; otherwise inspection reports an unavailable mapping until the next statement. Publishing this way keeps the inserted call from becoming the first source stop after the function entry, so stepping into a function still stops at its first statement.
 
-Owning aggregates and containers still appear as ChaLi logical handles, which must not be dereferenced as C machine pointers. Expressions use syntax accepted by GDB.
+Owning aggregates and containers still appear as ChaLi logical handles, which must not be dereferenced as C machine pointers. Command-line GDB `print` uses native syntax; VSCode inspection uses the read-only ChaLi subset below.
+
+## Read-only expressions
+
+VSCode hovers, watches and debug-console inspection require a valid source frame at the current stop. Supported expressions include in-scope ChaLi names, ordinary record fields such as `line.start.first`, fields through aggregate references, nonnegative integer array/List indices, tuple indices, and integer, floating-point and bool literals. Operators are parentheses, unary `+ - !`, `+ - * / %`, `< <= > >= == !=`, and short-circuit `&& ||`. Examples include `row.first + values[1700]` and `large > 9007199254740993`. Name shadowing follows the frame's actual lexical scope. Continuing expires old frames and expansion references.
+
+Parsing and arithmetic run in the extension host. Field and index reads reuse the stopped process's read-only layouts and memory snapshots. User input is never assembled into GDB evaluation commands; inspection calls no target functions or user methods and changes no target values. Aggregate results remain expandable. Flattened nested record layouts become child views retaining their original offsets, without allocating target records. Invisible names, out-of-range indices, unreadable snapshots and unsupported types produce explicit errors.
+
+Integer arithmetic is exact, division truncates toward zero, and results range from the signed 64-bit minimum to the unsigned 64-bit maximum. Overflow, division by zero and non-finite floating-point results are rejected. Mixed integer/floating-point operations require integers with absolute values at most `9007199254740991`, avoiding implicit precision loss. Arithmetic does not simulate overflow of each narrow source integer type. Strings and char values can be inspected by name or field but do not participate in this arithmetic/comparison subset. Function/method calls, assignment, increment/decrement, casts, address/pointer operations and allocation expressions are unsupported. Syntax errors are rejected before target-value reads.
+
+Each expression allows 4096 characters, 512 tokens and 64 levels of parser recursion. Field lookup reads at most 1000 children per operation; array and List indexing reads one requested element and still shares the memory budget. Variable modification is a separate pending feature. Breakpoint conditions and log interpolation retain the native GDB syntax described above.
 
 Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it needs no VM installation and does not cast runtime function values into machine function pointers.
 

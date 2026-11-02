@@ -93,7 +93,7 @@ async function session() {
   let resolveRead;
   adapter.gdb = {
     command(command, options = {}) {
-      if (command.startsWith('-data-evaluate')) return new Promise((resolve, reject) => {
+      if (command.startsWith('-stack-list-variables')) return new Promise((resolve, reject) => {
         resolveRead = resolve;
         options.signal.addEventListener('abort', () => reject(new Error('已取消')), { once: true });
       });

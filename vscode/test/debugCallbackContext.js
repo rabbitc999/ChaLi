@@ -64,16 +64,15 @@ async function main() {
       await client.event('initialized');
       await client.request('setBreakpoints', { source: { path: source }, breakpoints: [{ line: 7 }] });
       await client.request('configurationDone');
-      const threads = [], contexts = [];
+      const threads = [];
       let previous;
       for (const [seed, callerName, dataName, marker] of [[10, 'main', 'rootData', '111'], [20, 'worker', 'workerData', '222']]) {
         const stop = await client.event('stopped'); threads.push(stop.threadId);
         if (previous) await assert.rejects(client.request('variables', { variablesReference: previous }), /过期/);
         const frames = (await client.request('stackTrace', { threadId: stop.threadId })).stackFrames;
-        // 固定宽度目录的链表头是刚发布的线程，读取 context 字段不执行目标代码。
-        const published = await client.request('evaluate', { frameId: frames[0].id,
-          expression: '*(unsigned long long*)(*(unsigned long long*)((unsigned long long)&chali_debug_memory+16)+88)' });
-        contexts.push(BigInt(published.result));
+        // 从源码表达式核对当前回调的真实上下文和堆，公开求值不接受原生指针转换。
+        const published = await client.request('evaluate', { frameId: frames[0].id, expression: 'row.marker + data[0]' });
+        assert.equal(published.result, String(seed * 2 + 1));
         const own = await variables(client, frames[0].id);
         assert.equal(await first(client, own.row), String(seed));
         assert.equal(await first(client, own.data), String(seed + 1));
@@ -84,8 +83,6 @@ async function main() {
         await client.request('continue', { threadId: stop.threadId });
       }
       assert.notEqual(threads[0], threads[1]);
-      assert.equal(contexts[0], 0n);
-      assert.notEqual(contexts[1], 0n);
       assert.equal((await client.event('exited')).exitCode, 0);
       await client.event('terminated');
     } finally { await client.close(); }
