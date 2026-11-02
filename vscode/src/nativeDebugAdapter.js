@@ -630,7 +630,7 @@ class Adapter {
           if (this.state !== 'created') throw new Error('调试会话已经初始化');
           this.state = 'ready';
           this.progressReporting = args.supportsProgressReporting === true;
-          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true,
+          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true, supportsDisassembleRequest: true,
             supportsConditionalBreakpoints: true, supportsHitConditionalBreakpoints: true, supportsFunctionBreakpoints: true, supportsLogPoints: true };
           break;
         case 'launch':
@@ -759,6 +759,41 @@ class Adapter {
             }
             return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: variable.name, variablesReference, memoryReference };
           }));
+          break;
+        }
+        case 'disassemble': {
+          if (typeof args.memoryReference !== 'string' || !/^0x[0-9a-f]+$/i.test(args.memoryReference)) throw new Error('反汇编地址无效');
+          if (!Number.isSafeInteger(args.offset) || !Number.isSafeInteger(args.instructionOffset) || !Number.isSafeInteger(args.instructionCount)
+            || args.instructionCount < 1 || args.instructionCount > 4096) throw new Error('反汇编偏移或数量无效');
+          const base = BigInt(args.memoryReference) + BigInt(args.offset);
+          // 先向后多取一段，按地址切片；GDB 只能从低地址向前反汇编。
+          const span = 64n + BigInt(args.instructionCount + Math.abs(args.instructionOffset)) * 16n;
+          const begin = base - BigInt(args.instructionOffset < 0 ? Math.min(256, -args.instructionOffset * 16) : 0);
+          const listed = [];
+          let from = begin;
+          while (from < base + span && listed.length < args.instructionCount + Math.abs(args.instructionOffset) + 64) {
+            const result = await this.gdb.command(`-data-disassemble -s 0x${from.toString(16)} -e 0x${(from + 1024n).toString(16)} -- 0`, { signal });
+            const rows = result.asm_insns || [];
+            if (!rows.length) break;
+            for (const row of rows) {
+              const address = BigInt(row.address);
+              if (!listed.length || address > listed[listed.length - 1].address) listed.push({ address, text: String(row.inst || ''), symbol: row['func-name'], offset: Number(row.offset) || 0 });
+            }
+            const last = listed[listed.length - 1].address;
+            if (last + 1n <= from) break;
+            from = last + 1n;
+          }
+          if (!listed.length) throw new Error('反汇编区间不可读');
+          let anchor = listed.findIndex((item) => item.address >= base);
+          if (anchor < 0) anchor = listed.length - 1;
+          const start = Math.max(0, anchor + args.instructionOffset);
+          const chosen = listed.slice(start, start + args.instructionCount);
+          if (!chosen.length) throw new Error('反汇编不超过可用区间');
+          body = {
+            memoryReference: args.memoryReference,
+            instructions: chosen.map((item) => ({ address: '0x' + item.address.toString(16), instruction: item.text,
+              presentationHint: 'normal', symbol: item.symbol })),
+          };
           break;
         }
         case 'readMemory': {

@@ -101,6 +101,7 @@ function main() {
     run(process.execPath, [path.join('test', 'debugMemory.js')]);
     run(process.execPath, [path.join('test', 'debugValue.js')]);
     run(process.execPath, [path.join('test', 'debugFrames.js')]);
+    run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
     run(process.execPath, [path.join('test', 'debugFailure.js')]);
     run(process.execPath, [path.join('test', 'debugBreakpoints.js')]);
     run(process.execPath, [path.join('test', 'debugProtocol.js')]);
