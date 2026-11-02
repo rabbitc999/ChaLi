@@ -266,7 +266,23 @@ Consumers default to `native`. `--library-implementation native|bitcode` applies
 
 Bitcode selection checks package digests and targets, then reads the payload target triple, data layout, producer LLVM version and format epoch. The payload, manifest and actual static LLVM or external clang must agree on the exact LLVM version. This conservative policy does not promise consumption across LLVM versions. Metadata inspection has byte, record, operand and nesting budgets; the actual LLVM reader still validates the complete module.
 
-`--lto` passes verified library bitcode to the final linker for full LTO. `--no-lto` compiles the selected bitcode into an independent native object before linking; it does not select the package's native implementation instead. Interface, unit-data and shared-runtime contracts remain the same. ThinLTO is not yet implemented, and these options do not imply a performance benefit for every workload. Cross-target generation and execution on the target are validated separately.
+`--lto-mode off|full|thin` explicitly selects final linking mode; the default is `full`. `--lto` retains its meaning of full LTO, and `--no-lto` disables LTO. The last CLI mode flag wins. Project `[aot].lto` accepts legacy booleans and the strings `"off"`, `"full"`, `"thin"`; explicit CLI settings take precedence.
+
+```toml
+[aot]
+library_implementation = "bitcode"
+lto = "thin"
+```
+
+Full LTO submits the main unit and selected library modules to the final linker for joint optimization. ThinLTO emits module summaries and content hashes for LLVM/LLD cross-module importing and optimization. Consumers regenerate actual library summaries for ThinLTO. Full LTO consumers re-encode libraries carrying ThinLTO summaries as full modules, so production configuration does not silently select linking mode. Packages need only one interface and one unit-data image. Language package entries have hidden visibility within the final unit; explicit native aliases retain public visibility, preventing private ABI entries from being preserved as dynamic exports.
+
+Each library's LLVM source identity includes a module-name digest to distinguish same-named local symbols in different libraries. Independent library functions use ordinary code sections so LLVM can promote and import internal functions; the main program retains its native debug code region. Summary generation assigns global-value GUIDs and provides the module analysis context required by the actual LLVM version.
+
+All library modules are re-encoded for the consumer mode with consistent module flags. Full LTO retains the splitting flag required by the toolchain; ThinLTO disables type-unit splitting. External LLVM conversion first exports text using the same tool, normalizes only the mode and splitting flags referenced by the module flag table, and lets LLVM read it again. Conversion text is limited to 256 MiB; output summaries, targets, layouts and versions are checked again.
+
+With LTO disabled, selected bitcode is independently compiled into native objects; the package's native implementation is not selected instead. Native library selection can coexist with main-unit LTO but does not enable cross-module optimization of native library bodies. Interface, unit-data and shared-runtime contracts remain unchanged. Development debugging still uses O0; selecting LTO does not upgrade it to O3. Persistent ThinLTO caches and parallelism configuration are not exposed. No performance benefit is promised for every workload. Cross-target generation and target execution are validated separately.
+
+`tests/chali_library_lto.py` compares actual results and exported-function instructions across two libraries and a consumer in off/full/thin modes, checking cross-library inlining, constant folding and removal of unused entries. It covers consumption of Full/Thin packages in both modes, independent linking and configuration overrides. Structural acceptance is not a timing or runtime-performance measurement.
 
 ## Shared lifetime type identities
 

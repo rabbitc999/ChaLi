@@ -46,8 +46,10 @@ struct Project
     Memory::Vector<Memory::String> aotObjects;
     /// [aot] 库锁文件路径；命令行 --library-lock 优先。
     Memory::String aotLibraryLock;
-    /// [aot] 最终链接是否启用全量 LTO，默认开启。
+    /// [aot] 最终链接是否启用 LTO，默认开启，模式由 aotThinLto 区分。
     bool aotLto = true;
+    /// [aot] lto = "thin" 时为真；布尔 true 仍表示完整 LTO。
+    bool aotThinLto = false;
     /// [aot] 消费库时明确选择 native 或 bitcode，默认 native。
     Memory::String aotLibraryImplementation = "native";
     /**

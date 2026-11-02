@@ -1422,7 +1422,10 @@ struct AstBuilder : Builder
         signature += ") ";
         if (!function.exported && !state.addressedFunctions.count(textOf(function.label))
             && state.astInlineFunctions.count(textOf(function.label))) signature += "alwaysinline ";
-        signature += "uwtable section \"chali_code\" {\nentry:\n";
+        signature += "uwtable";
+        // 显式节中的局部函数不能由 ThinLTO 提升；独立库尚不提供该调试代码区登记，使用普通代码节。
+        if (state.request.options.libraryModule.empty()) signature += " section \"chali_code\"";
+        signature += " {\nentry:\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
         signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";
         if (snapshotData) signature += "  %data_snapshot_size = alloca i64\n";

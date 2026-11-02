@@ -84,6 +84,7 @@ struct Options
     Memory::Vector<Memory::String> linkObjects;      ///< 用户提供及本次编译生成的目标文件。
     Memory::Vector<Memory::String> linkBitcode;      ///< 由库快照核对目标、布局及 LLVM 版本后恢复的 bitcode。
     bool lto = true;                                ///< 最终链接保留 LLVM bitcode，默认启用全量 LTO。
+    bool thinLto = false;                           ///< 启用 LTO 时改用带模块摘要的 ThinLTO，默认完整 LTO。
     std::size_t memoryBytes = 512u * 1024u * 1024u;  ///< 数据区之外的堆预算。
     std::size_t stepLimit = 0;                       ///< 运行安全点的逻辑步数上限，零表示不限。
 };
@@ -211,6 +212,14 @@ Memory::String llvmVersion(const Options &options, Memory::Vector<Memory::String
  * @param diagnostics 接收代码生成或工具失败。
  * @return 成功为零，失败非零。 */
 int bitcodeObject(const Memory::String &bytes, const Options &options, const Memory::String &output,
+                  Memory::Vector<Memory::String> *diagnostics);
+/** @brief 按所选完整／ThinLTO 模式重新编码已验证模块，核对后才用于最终链接。
+ * @param bytes 已验证目标、布局及版本的原始 bitcode。
+ * @param options 目标、优化及 LTO 模式。
+ * @param output 私有工作区中的 bitcode 路径。
+ * @param diagnostics 接收 LLVM 读取或生成错误。
+ * @return 成功零，失败非零。 */
+int bitcodeModule(const Memory::String &bytes, const Options &options, const Memory::String &output,
                   Memory::Vector<Memory::String> *diagnostics);
 
 }  // namespace chali_aot

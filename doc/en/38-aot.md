@@ -118,7 +118,9 @@ The project `[aot]` table accepts arrays named `assembly_sources`, `assembly_inc
 
 Explicit `--asm`, `--asm-include`, and `--link` options replace their corresponding manifest lists. `--library-lock` replaces the manifest lock file. Manifest search paths follow command-line search paths. Object and assembly inputs participate in final linking.
 
-The boolean `lto` setting defaults to `true`. `--lto` or `--no-lto` overrides the project setting. Disabling it emits a machine object before linking; LLVM module optimization retains the selected optimization level. External LLVM debug builds continue to omit LTO.
+`lto` defaults to `true` (full LTO) and also accepts `false`, `"off"`, `"full"`, and `"thin"`. `--lto-mode off|full|thin` overrides the project setting. `--lto` retains full-LTO behavior and `--no-lto` disables LTO; the last CLI mode flag wins. Disabling it emits a machine object before linking while module optimization retains the selected level. Static and external LLVM debug builds use O0 in the selected mode without upgrading to release optimization.
+
+`library_implementation = "native"` is the default library selection; `"bitcode"` selects LLVM bitcode. `--library-implementation native|bitcode` overrides the manifest for all direct and transitive libraries. Selected bitcode must match the actual target, layout and exact LLVM version. See [library packages](44-library-packages.md#native-and-bitcode-implementation-selection) for mode conversion, missing-implementation errors and limits.
 
 The manifest's `library_lock` also applies to source checking and language-server analysis. The lock and imported `.chlib` files enter the dependency set. The editor watches these files and requests fresh consumer diagnostics when they change. Invalid locks or packages produce errors; restoring valid contents triggers another check.
 

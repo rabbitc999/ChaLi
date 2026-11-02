@@ -3066,7 +3066,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     }
     command += request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module " : " -O3 -Wno-override-module ";
     if (bitcodeOnly)
-        command += "-c -emit-llvm ";
+        command += request.options.lto && request.options.thinLto ? "-c -emit-llvm -flto=thin -fno-split-lto-unit " : "-c -emit-llvm -flto=full ";
     else if (assemblyOnly)
         command += "-S ";
     else if (objectOnly)
@@ -3074,7 +3074,12 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
-        if (request.options.lto) command += request.options.debug ? "-flto=full -Wl,--lto-O0 " : "-flto=full -Wl,--lto-O3 ";
+        if (request.options.lto)
+        {
+            command += request.options.thinLto ? "-flto=thin " : "-flto=full ";
+            if (request.options.thinLto) command += "-fno-split-lto-unit ";
+            command += request.options.debug ? "-Wl,--lto-O0 " : "-Wl,--lto-O3 ";
+        }
         if (!request.options.debug)
         {
             command += "-s ";

@@ -267,7 +267,7 @@ class Reader
                 if (child == 8 && ++modules_ != 1) throw std::runtime_error("库 bitcode 必须只含一个模块");
                 if (child == 13 && ++identifications_ != 1) throw std::runtime_error("bitcode 生产头必须唯一");
                 if ((child == 8 || child == 13) && id != rootBlock) throw std::runtime_error("bitcode 模块或生产头位置非法");
-                if (id == 8 && (child == 20 || child == 24)) info_.summary = true;
+                if (id == 8 && child == 20) info_.summary = true;
                 if (child == 0 || child == 8 || child == 13)
                     block(child, static_cast<unsigned>(childWidth), childEnd, depth + 1);
                 else

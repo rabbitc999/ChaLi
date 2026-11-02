@@ -23,6 +23,12 @@
 #include <lld/Common/Driver.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Config/llvm-config.h>
+#include <llvm/Analysis/ModuleSummaryAnalysis.h>
+#include <llvm/Analysis/ProfileSummaryInfo.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Transforms/Utils/AssignGUID.h>
 #include "chali_stdlib.hpp"
 #include <miniz_tinfl.h>
 LLD_HAS_DRIVER(mingw)
@@ -98,6 +104,36 @@ struct LinkerAssets
         return files == 14;
     }
 };
+/** @brief 按完整或 ThinLTO 写出模块；ThinLTO 携带实际模块摘要与内容散列。
+ * @param program 已由 LLVM 解析及优化的模块。
+ * @param path 私有产物路径。
+ * @param thin 是否生成 ThinLTO 摘要。
+ * @param diagnostics 接收文件错误。
+ * @return 成功为真，文件创建或写入失败为假。 */
+bool writeBitcode(LLVMModuleRef program, const Memory::String &path, bool thin, Memory::Vector<Memory::String> *diagnostics)
+{
+    if (!thin) return LLVMWriteBitcodeToFile(program, path.c_str()) == 0;
+    std::error_code error;
+    llvm::raw_fd_ostream stream(path.c_str(), error, llvm::sys::fs::OF_None);
+    if (error)
+    {
+        if (diagnostics) diagnostics->push_back(Memory::String(error.message().c_str()));
+        return false;
+    }
+    auto &module = *llvm::unwrap(program);
+    llvm::AssignGUIDPass::runOnModule(module);
+    llvm::ProfileSummaryInfo profile(module);
+    const auto index = llvm::buildModuleSummaryIndex(module, [](const llvm::Function &) -> llvm::BlockFrequencyInfo * { return nullptr; }, &profile);
+    llvm::WriteBitcodeToFile(module, stream, false, &index, true);
+    stream.close();
+    if (stream.has_error())
+    {
+        if (diagnostics) diagnostics->push_back("AOT：写入 ThinLTO 模块失败");
+        stream.clear_error();
+        return false;
+    }
+    return true;
+}
 }  // namespace
 #endif
 /**
@@ -287,6 +323,12 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     }
     if (!failed)
     {
+        if (request.options.lto)
+        {
+            auto &module = *llvm::unwrap(program);
+            module.setModuleFlag(llvm::Module::Error, "EnableSplitLTOUnit", std::uint32_t(!request.options.thinLto));
+            module.setModuleFlag(llvm::Module::Error, "ThinLTO", std::uint32_t(request.options.thinLto));
+        }
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
         LLVMErrorRef error = LLVMRunPasses(program, request.options.debug ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
         LLVMDisposePassBuilderOptions(options);
@@ -304,7 +346,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     {
         if (request.options.emitBitcodeOnly)
         {
-            failed = LLVMWriteBitcodeToFile(program, product.c_str()) != 0;
+            failed = !writeBitcode(program, product, request.options.lto && request.options.thinLto, diagnostics);
             if (failed && diagnostics) diagnostics->push_back("AOT：无法写入 LLVM bitcode");
         }
         else if (request.options.emitObjectOnly || request.options.emitAssemblyOnly || !request.options.lto)
@@ -314,7 +356,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
         }
         else
         {
-            failed = LLVMWriteBitcodeToFile(program, object.c_str()) != 0;
+            failed = !writeBitcode(program, object.c_str(), request.options.thinLto, diagnostics);
             if (failed && diagnostics) diagnostics->push_back("AOT：无法写入链接时优化的 LLVM bitcode");
         }
     }

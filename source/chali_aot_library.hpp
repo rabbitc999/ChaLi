@@ -257,7 +257,9 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
     if (found == state.functionByLabel.end()) throw std::runtime_error("库导出函数缺少已检查实现");
     const auto &function = state.functions[found->second];
     const Text resultType = abiType(entry.resultType);
-    Text out = "define " + abiExtension(entry.resultType, state.target) + resultType + " @" + llvmSymbol(entry.symbol) + "(";
+    // 语言包入口在最终单元内链接；显式原生别名保留公开可见性，避免把私有 ABI 入口当成动态导出保活。
+    const bool native = !entry.nativeAlias.empty() && entry.nativeAlias == entry.symbol;
+    Text out = Text("define ") + (native ? "" : "hidden ") + abiExtension(entry.resultType, state.target) + resultType + " @" + llvmSymbol(entry.symbol) + "(";
     Text arguments, body;
     for (std::size_t i = 0; i < entry.parameterTypes.size(); ++i)
     {
@@ -310,7 +312,8 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     if (request.options.debug || request.options.stepLimit) return state.fail("独立原生库暂不支持独立调试或构建期步数预算"), Memory::String();
     Memory::String runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();
-    Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
+    const auto identity = chali_digest::hex(chali_digest::sha256(std::string_view(request.options.libraryModule.data(), request.options.libraryModule.size())));
+    Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library-" + identity + "\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
     if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
     for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));

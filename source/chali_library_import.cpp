@@ -256,7 +256,8 @@ void ImportSession::appendTo(chali_aot::Options &options)
         const auto &entry = *item.second.find(bitcode ? target.bitcode : target.implementation);
         const auto file = state_->workspace->path / (std::to_string(index++) + (bitcode && options.lto ? ".bc" : entry.kind == Kind::Archive ? ".a" :
                                                                                                                                                ".o"));
-        if (bitcode && !options.lto)
+        const bool rewrite = bitcode && options.lto;
+        if (bitcode && (!options.lto || rewrite))
         {
             chali_aot::Options materialize;
             materialize.target = state_->target.c_str();
@@ -264,9 +265,24 @@ void ImportSession::appendTo(chali_aot::Options &options)
             materialize.compiler = state_->compiler.c_str();
             materialize.sysroot = options.sysroot;
             materialize.debug = options.debug;
+            materialize.lto = options.lto;
+            materialize.thinLto = options.thinLto;
             Memory::Vector<Memory::String> diagnostics;
-            if (chali_aot::bitcodeObject(Memory::String(entry.bytes.data(), entry.bytes.size()), materialize, Memory::String(file.u8string().c_str()), &diagnostics))
+            const auto compile = rewrite ? chali_aot::bitcodeModule : chali_aot::bitcodeObject;
+            if (compile(Memory::String(entry.bytes.data(), entry.bytes.size()), materialize, Memory::String(file.u8string().c_str()), &diagnostics))
                 throw std::runtime_error("无法物化库 bitcode：" + item.first + (diagnostics.empty() ? "" : "：" + std::string(diagnostics.front().c_str())));
+            if (rewrite)
+            {
+                const auto size = std::filesystem::file_size(file);
+                if (size > maximumPackageBytes) throw std::runtime_error("重编码 bitcode 超过包预算");
+                std::ifstream input(file, std::ios::binary);
+                std::string bytes(static_cast<std::size_t>(size), '\0');
+                input.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+                if (!input || input.peek() != std::char_traits<char>::eof()) throw std::runtime_error("无法读取重编码 bitcode");
+                const auto info = inspectBitcode(bytes);
+                if (info.summary != options.thinLto || info.triple != target.triple || info.dataLayout != target.dataLayout || info.llvmVersion != state_->llvmVersion)
+                    throw std::runtime_error("重编码 bitcode 的模式或兼容性头不匹配");
+            }
         }
         else
         {

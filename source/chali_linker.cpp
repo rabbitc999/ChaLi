@@ -155,7 +155,8 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-fuse-ld=lld", "-o", temporary.u8string(), "-Wl,--gc-sections" };
             if (!request.options.linkBitcode.empty())
             {
-                arguments.push_back("-flto=full");
+                arguments.push_back(request.options.thinLto ? "-flto=thin" : "-flto=full");
+                if (request.options.thinLto) arguments.push_back("-fno-split-lto-unit");
                 arguments.push_back(request.options.debug ? "-Wl,--lto-O0" : "-Wl,--lto-O3");
             }
             if (!request.options.sysroot.empty()) arguments.push_back("--sysroot=" + std::string(request.options.sysroot.c_str()));
@@ -308,7 +309,7 @@ int runCli(int argc, char **argv)
         }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--package FILE.chlib] [--library-lock FILE] [--library-implementation native|bitcode] [--lto|--no-lto] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
+            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--package FILE.chlib] [--library-lock FILE] [--library-implementation native|bitcode] [--lto|--no-lto|--lto-mode off|full|thin] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
             return 0;
         }
         if (!ar && argument == "--shared")
@@ -324,6 +325,18 @@ int runCli(int argc, char **argv)
         if (!ar && (argument == "--lto" || argument == "--no-lto"))
         {
             request.options.lto = argument == "--lto";
+            request.options.thinLto = false;
+            continue;
+        }
+        if (!ar && argument == "--lto-mode")
+        {
+            if (++index >= argc || (std::string(argv[index]) != "off" && std::string(argv[index]) != "full" && std::string(argv[index]) != "thin"))
+            {
+                std::fputs("chali: --lto-mode 需要 off、full 或 thin\n", stderr);
+                return 2;
+            }
+            request.options.lto = std::string(argv[index]) != "off";
+            request.options.thinLto = std::string(argv[index]) == "thin";
             continue;
         }
         if (!ar && argument == "--no-runtime")

@@ -40,7 +40,7 @@ struct BitcodeInfo
 {
     std::string triple, dataLayout, producer, llvmVersion;
     std::uint64_t epoch = 0;
-    bool summary = false;
+    bool summary = false;  ///< 携带 GLOBALVAL_SUMMARY，供 ThinLTO 模式核对，不把完整 LTO 摘要混为一类。
 };
 /** @brief 在预算内读取单模块 LLVM bitcode 的兼容性头，不执行或优化模块。
  * @param bytes 已通过库包内容摘要核对的载荷。

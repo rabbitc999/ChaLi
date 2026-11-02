@@ -53,7 +53,7 @@ class Bits:
         return bytes(sum(self.values[base + bit] << bit for bit in range(8)) for base in range(0, len(self.values), 8))
 
 
-def model(epoch=0, duplicate=False, producer='LLVM23.1.4', triple='x86_64-w64-windows-gnu', layout='e-p:64:64'):
+def model(epoch=0, duplicate=False, producer='LLVM23.1.4', triple='x86_64-w64-windows-gnu', layout='e-p:64:64', summary_block=20):
     """编码 BLOCKINFO 继承、Char6 生产者、Blob 布局和摘要子块。"""
     root, definitions, identity, module, summary = (Bits() for _ in range(5))
     definitions.record(1, [13], 2)
@@ -85,7 +85,7 @@ def model(epoch=0, duplicate=False, producer='LLVM23.1.4', triple='x86_64-w64-wi
         module.fixed(value, 8)
     module.align()
     summary.end(2)
-    module.block(20, 2, summary, outer=3)
+    module.block(summary_block, 2, summary, outer=3)
     module.end(3)
     root.block(8, 3, module)
     return b'BC\xc0\xde' + root.bytes()
@@ -139,6 +139,7 @@ int main(int argc,char**argv){try{if(argc!=2)return 2;std::ifstream f(argv[1],st
         encoded = model()
         expected = ['x86_64-w64-windows-gnu', 'e-p:64:64', 'LLVM23.1.4', '23.1.4', '0', '1']
         assert inspect(encoded) == expected
+        assert inspect(model(summary_block=24)) == expected[:-1] + ['0'], '完整 LTO 摘要不能识别成 ThinLTO 摘要'
         wrapper = struct.pack('<5I', 0x0b17c0de, 0, 20, len(encoded), 0) + encoded
         assert inspect(wrapper) == expected
         for size in range(len(encoded)):

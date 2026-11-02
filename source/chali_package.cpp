@@ -302,7 +302,15 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 {
                     if (key == "lto")
                     {
-                        project.aotLto = tomlBool(entry.value, where);
+                        if (entry.value.isBool())
+                            project.aotLto = tomlBool(entry.value, where);
+                        else
+                        {
+                            const auto mode = tomlText(entry.value, where);
+                            if (mode != "off" && mode != "full" && mode != "thin") throw std::runtime_error("aot.lto expects bool or off/full/thin");
+                            project.aotLto = mode != "off";
+                            project.aotThinLto = mode == "thin";
+                        }
                         continue;
                     }
                     if (key == "assembly_sources" || key == "assembly_includes" || key == "libraries" || key == "search_paths" || key == "objects")

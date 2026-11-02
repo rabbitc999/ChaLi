@@ -155,6 +155,7 @@ void PrintUsage(std::FILE *out)
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --library-lock 文件    按精确版本及摘要检查预编译库\n",
              "  --library-implementation native|bitcode  显式选择库实现；缺省 native\n",
+             "  --lto-mode off|full|thin  最终链接的 LLVM 优化模式；缺省 full\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n"
              "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
              "  --warnings-as-errors  把启用的警告提升为错误\n",
@@ -416,6 +417,19 @@ try
         if ((aot || run) && (argument == "--lto" || argument == "--no-lto"))
         {
             aotOptions.lto = argument == "--lto";
+            aotOptions.thinLto = false;
+            ltoGiven = true;
+            continue;
+        }
+        if ((aot || run) && argument == "--lto-mode")
+        {
+            if (++index >= argc || (std::strcmp(argv[index], "off") != 0 && std::strcmp(argv[index], "full") != 0 && std::strcmp(argv[index], "thin") != 0))
+            {
+                std::fputs("chali: --lto-mode 需要 off、full 或 thin\n", stderr);
+                return 2;
+            }
+            aotOptions.lto = std::strcmp(argv[index], "off") != 0;
+            aotOptions.thinLto = std::strcmp(argv[index], "thin") == 0;
             ltoGiven = true;
             continue;
         }
@@ -863,7 +877,11 @@ try
     if (aotOptions.assemblyIncludes.empty()) aotOptions.assemblyIncludes = project.aotAssemblyIncludes;
     if (aotOptions.linkLibraries.empty()) aotOptions.linkLibraries = project.aotLibraries;
     if (aotOptions.linkObjects.empty()) aotOptions.linkObjects = project.aotObjects;
-    if (!ltoGiven) aotOptions.lto = project.aotLto;
+    if (!ltoGiven)
+    {
+        aotOptions.lto = project.aotLto;
+        aotOptions.thinLto = project.aotThinLto;
+    }
     if (!libraryImplementationGiven) aotOptions.libraryImplementation = project.aotLibraryImplementation;
     if (libraryLock.empty()) libraryLock = project.aotLibraryLock;
     includeDirs.insert(includeDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
