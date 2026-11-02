@@ -13,6 +13,7 @@ const { DebugMetadata, visibleBindings, LIMIT: MEMORY_LIMIT } = require('./debug
 const { DebugMemory } = require('./debugMemory');
 const { parseLayout, decode, expandable } = require('./debugValue');
 const { parseExpression, evaluateExpression } = require('./debugExpression');
+const { encodeAssignment } = require('./debugAssignment');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -224,6 +225,13 @@ class Adapter {
     this.handles.clear();
     this.valueMemories?.clear();
     this.layoutCache?.clear();
+  }
+  /** 基础值修改后废弃读取与聚合快照，保留仍处于相同暂停位置的源码帧和局部作用域。 */
+  invalidateValues() {
+    this.epoch++;
+    this.metadata?.cancel();
+    for (const [id, value] of this.handles) if (['value', 'memory'].includes(value.kind)) this.handles.delete(id);
+    this.valueMemories?.clear();
   }
   /**
    * @brief 解析并缓存调试目录里的版本化布局；缺失或损坏只影响结构化展示。
@@ -676,7 +684,8 @@ class Adapter {
           if (this.state !== 'created') throw new Error('调试会话已经初始化');
           this.state = 'ready';
           this.progressReporting = args.supportsProgressReporting === true;
-          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true, supportsDisassembleRequest: true,
+          this.invalidatedEvents = args.supportsInvalidatedEvent === true;
+          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsSetVariable: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true, supportsDisassembleRequest: true,
             supportsConditionalBreakpoints: true, supportsHitConditionalBreakpoints: true, supportsFunctionBreakpoints: true, supportsLogPoints: true,
             exceptionBreakpointFilters: [{ filter: 'runtime', label: 'ChaLi runtime failures', description: 'panic, assertions and checked memory failures', default: true }] };
           break;
@@ -771,7 +780,7 @@ class Adapter {
               const memoryReference = item.childLayout && !item.stored && !['L', 'M', 'E', 'O', 'F'].includes(item.childLayout.kind) && item.address > 0n
                 ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, address: item.address }) : undefined;
               return { name: item.name, value: item.value, type: item.type, variablesReference: reference, memoryReference,
-                presentationHint: item.readOnly ? { attributes: ['readOnly'] } : undefined };
+                presentationHint: { attributes: ['readOnly'] } };
             });
             break;
           }
@@ -813,7 +822,10 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
               }
             }
-            return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference };
+            const readOnly = !binding || binding.readOnly || binding.address || binding.storage || binding.boxed
+              || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
+            return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference,
+              presentationHint: readOnly ? { attributes: ['readOnly'] } : undefined };
           }));
           break;
         }
@@ -870,6 +882,36 @@ class Adapter {
           const address = reference.address + BigInt(offset);
           const data = await snapshot.read(address, args.count);
           body = { address: '0x' + address.toString(16), data: data.toString('base64'), unreadableBytes: 0 };
+          break;
+        }
+        case 'setVariable': {
+          this.stopped();
+          const frame = this.handles.get(args.variablesReference);
+          if (!frame || frame.kind) throw new Error('需要当前有效的局部变量作用域；不支持直接修改聚合、引用或拥有值');
+          if (typeof args.name !== 'string' || args.name.length > 1024) throw new Error('变量名称无效');
+          const bindings = visibleBindings(frame.metadata);
+          const entry = [...bindings].find(([, binding]) => binding.name === args.name && (binding.macro ?? -1) === (frame.macro ?? -1));
+          if (!entry) throw new Error('当前作用域没有可修改变量：' + args.name);
+          const [name, binding] = entry;
+          if (!/^[\p{L}_][\p{L}\p{N}_]*$/u.test(name)) throw new Error('变量原生名称不可安全定位');
+          const value = await encodeAssignment(binding, this.layoutAt(binding.layout), args.value);
+          this.stopped(epoch);
+          const selector = ` --thread ${frame.thread} --frame ${frame.level}`;
+          const rows = (await this.gdb.command('-stack-list-variables' + selector + ' --simple-values', { signal })).variables || [];
+          const variable = rows.find(row => row.name === name);
+          if (!variable || variable.type !== binding.type || /optimized out|不可用/.test(variable.value || '')) throw new Error('变量已经不可用或类型不匹配');
+          const result = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify('(unsigned long long)&(' + name + ')'), { signal });
+          if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有真实可写地址');
+          this.stopped(epoch);
+          if (signal.aborted) throw new Error('变量修改已取消');
+          this.invalidateValues();
+          try {
+            await this.gdb.command('-data-write-memory-bytes 0x' + BigInt(result.value).toString(16) + ' ' + value.bytes.toString('hex'), { signal });
+            body = { value: value.text, type: value.type, variablesReference: 0 };
+          } finally {
+            this.invalidateValues();
+            if (this.invalidatedEvents && this.state === 'stopped') this.event('invalidated', { areas: ['variables'], threadId: frame.thread });
+          }
           break;
         }
         case 'evaluate': {

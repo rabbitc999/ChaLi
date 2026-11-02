@@ -18,9 +18,10 @@ struct DebugVariable
     std::string name, pointer;
     bool floating = false;
     std::size_t argument = 0;
-    std::string typeName = {};  ///< 用户类型名；空时兼容旧帧槽描述。
-    std::size_t bits = 64;      ///< 实际帧槽中该值的表示位宽。
-    std::string encoding = {};  ///< DWARF 基础值编码。
+    std::string typeName = {};       ///< 用户类型名；空时兼容旧帧槽描述。
+    std::size_t bits = 64;           ///< DWARF 展示位宽，窄整数可能小于实际帧槽。
+    std::string nativeStorage = {};  ///< 实际 alloca 类型；为空的旧描述不允许调试器写入。
+    std::string encoding = {};       ///< DWARF 基础值编码。
     std::size_t scope = 0, line = 0, column = 0;
     std::size_t block = 0;  ///< 声明生效的原生基本块，零表示函数序言。
     std::string file = {};

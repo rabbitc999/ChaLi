@@ -1468,6 +1468,7 @@ struct AstBuilder : Builder
             if (variable.macro >= 0) variable.dwarfName = "__chali_macro_debug_" + std::to_string(variable.macro) + "_" + std::to_string(variable.scope) + "_" + std::to_string(variables.size());
             variable.pointer = pointer(entry.second);
             variable.floating = type(entry.second) == "double";
+            variable.nativeStorage = type(entry.second);
             variable.argument = parameter == function.parameters.end() ? 0u : static_cast<std::size_t>(parameter - function.parameters.begin() + 1u);
             if (variable.argument)
             {

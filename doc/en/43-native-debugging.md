@@ -116,9 +116,17 @@ Parsing and arithmetic run in the extension host. Field and index reads reuse th
 
 Integer arithmetic is exact, division truncates toward zero, and results range from the signed 64-bit minimum to the unsigned 64-bit maximum. Overflow, division by zero and non-finite floating-point results are rejected. Mixed integer/floating-point operations require integers with absolute values at most `9007199254740991`, avoiding implicit precision loss. Arithmetic does not simulate overflow of each narrow source integer type. Strings and char values can be inspected by name or field but do not participate in this arithmetic/comparison subset. Function/method calls, assignment, increment/decrement, casts, address/pointer operations and allocation expressions are unsupported. Syntax errors are rejected before target-value reads.
 
-Each expression allows 4096 characters, 512 tokens and 64 levels of parser recursion. Field lookup reads at most 1000 children per operation; array and List indexing reads one requested element and still shares the memory budget. Variable modification is a separate pending feature. Breakpoint conditions and log interpolation retain the native GDB syntax described above.
+Each expression allows 4096 characters, 512 tokens and 64 levels of parser recursion. Field lookup reads at most 1000 children per operation; array and List indexing reads one requested element and still shares the memory budget. Basic variable modification is described below. Breakpoint conditions and log interpolation retain the native GDB syntax described above.
 
 Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it needs no VM installation and does not cast runtime function values into machine function pointers.
+
+## Basic variable modification
+
+VSCode's local-variable and parameter view supports Set Value for mutable basic bindings in the current scope: `int8/16/32/64`, `uint8/16/32/64`, `float32/64`, `bool` and single-byte `char`. Integers are range-checked against the destination type, bool rejects numeric substitutes, and float32 rounds to the source type before writing its actual double frame slot. Use a single-quoted character or JSON string for char, such as `'Z'` or `'\n'`. Other values accept literals and basic operations on literals, without names, function calls or native GDB expressions.
+
+The compiler separately records the physical frame-slot type in the debug catalog. A write checks the current lexical scope, mutability, the GDB variable type and address availability. Narrow integers update the entire eight-byte slot with the appropriate sign extension, preventing a changed display value from hiding stale high bits used by execution. Modification neither resumes execution nor calls target functions. Late reads and old aggregate/memory references expire after modification; source frames and local scopes remain valid for fresh reads. Clients supporting standard DAP `invalidated` events receive a variable refresh notification. Cancelling a submitted write does not guarantee rollback.
+
+Immutable bindings, address-taken display mirrors, references, aggregates and owning values are read-only and reject changes. String or container assignment is never simulated by overwriting a handle or bypassing ownership and cleanup. Aggregate children are currently read-only. Older artifacts lacking physical-slot metadata remain inspectable but cannot be modified. Safe assignment to mirrored bindings and owning values remains pending; this is not complete variable-modification support.
 
 ## Real VSCode extension tests
 

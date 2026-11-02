@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     env = dict(os.environ, CHALI_BIN=str(args.chali.resolve()))
-    for script in ['debugConfiguration.js', 'debugIntegration.js', 'debugProtocol.js', 'debugMetadata.js', 'debugMemory.js', 'debugTypes.js', 'debugSources.js', 'debugMemoryNative.js', 'debugValue.js', 'debugValueNative.js', 'debugBreakpoints.js', 'debugLaunch.js', 'debugLifecycle.js', 'nativeDebug.js', 'debugFailure.js', 'debugFrames.js', 'debugDisassemble.js', 'debugObjectMemory.js', 'debugContainers.js', 'debugContainerMetadata.js', 'debugContainersNative.js', 'debugCallbackContext.js', 'debugDynamicValues.js', 'debugInterfacesNative.js', 'debugClosureValues.js', 'debugClosuresNative.js', 'debugExpression.js', 'debugExpressionNative.js']:
+    for script in ['debugConfiguration.js', 'debugIntegration.js', 'debugProtocol.js', 'debugMetadata.js', 'debugMemory.js', 'debugTypes.js', 'debugSources.js', 'debugMemoryNative.js', 'debugValue.js', 'debugValueNative.js', 'debugBreakpoints.js', 'debugLaunch.js', 'debugLifecycle.js', 'nativeDebug.js', 'debugFailure.js', 'debugFrames.js', 'debugDisassemble.js', 'debugObjectMemory.js', 'debugContainers.js', 'debugContainerMetadata.js', 'debugContainersNative.js', 'debugCallbackContext.js', 'debugDynamicValues.js', 'debugInterfacesNative.js', 'debugClosureValues.js', 'debugClosuresNative.js', 'debugExpression.js', 'debugExpressionNative.js', 'debugAssignment.js', 'debugAssignmentNative.js']:
         result = subprocess.run(['node', str(root / 'vscode/test' / script)], cwd=root,
                                 env=env, text=True, encoding='utf-8', errors='replace',
                                 capture_output=True, timeout=300)

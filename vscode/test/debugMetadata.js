@@ -66,6 +66,7 @@ async function main() {
     captures: [{ name: 'n', layout: 0, mode: 2, address: false }] }] }));
   assert.equal((await closure.reader.load()).closures.get(24n).captures[0].name, 'n');
   for (const invalid of [
+    () => target(value => { value.functions[0].variables[0].nativeStorage = 'ptr'; return value; }),
     () => target(value => ({ ...value, closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 4, address: true }] }] })),
     () => target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 2, address: true }] }] })),
     () => target(value => ({ ...value, dynamicTypes: [{ id: 42, layout: 0 }] })),

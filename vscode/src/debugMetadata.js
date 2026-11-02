@@ -137,6 +137,7 @@ class DebugMetadata {
       for (const variable of fn.variables) {
         text(variable.name); text(variable.binding); text(variable.type); text(variable.file); integer(variable.line); integer(variable.column); integer(variable.scope);
         if (variable.storage !== undefined) text(variable.storage);
+        if (variable.nativeStorage !== undefined && !['', 'i64', 'double'].includes(variable.nativeStorage)) throw new Error('调试变量原生槽表示无效');
         if (variable.dwarf !== undefined) text(variable.dwarf);
         macroId(variable.macro);
         if (variable.boxed !== undefined && typeof variable.boxed !== 'boolean') throw new Error('调试绑定存储标记无效');

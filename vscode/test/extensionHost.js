@@ -79,7 +79,7 @@ exports.run = async function () {
     for (const mode of ['values', 'cancel', 'exception']) {
       const source = path.join(folder.uri.fsPath, 'test_' + mode + '.chl');
       fs.writeFileSync(source, mode === 'exception' ? 'void main(){\n panic("extension-host-failure");\n}\n'
-        : 'void main(){\n int64 number=42;\n int64 data[]=new[2]; data[0]=73;\n println("{}",number);\n}\n');
+        : 'void main(){\n int64 number=42;\n int64 data[]=new[2]; data[0]=73;\n println("{}",number);\n assert(number==43);\n}\n');
       const document = await vscode.workspace.openTextDocument(source);
       assert.equal(document.languageId, 'chali');
       await vscode.window.showTextDocument(document);
@@ -107,6 +107,10 @@ exports.run = async function () {
         assert.equal(named.number.value, '42');
         const items = await active.customRequest('variables', { variablesReference: named.data.variablesReference, count: 1 });
         assert.equal(items.variables[0].value, '73');
+        assert.equal((await active.customRequest('evaluate', { frameId: stack.stackFrames[0].id, expression: 'number+data[0]' })).result, '115');
+        assert.equal((await active.customRequest('setVariable', { variablesReference: scopes.scopes[0].variablesReference, name: 'number', value: '43' })).value, '43');
+        assert.equal((await active.customRequest('evaluate', { frameId: stack.stackFrames[0].id, expression: 'number' })).result, '43');
+        state.modifiedVariables = 1;
         await active.customRequest('continue', { threadId: stop.threadId });
         assert.equal((await event(state, 'exited')).exitCode, 0);
       } else if (mode === 'exception') {
@@ -126,6 +130,7 @@ exports.run = async function () {
       activated: true, scenarios: scenarios.map(state => ({ name: state.session.name,
         stopped: state.messages.filter(message => message.event === 'stopped').length,
         processesExited: state.processes.length,
+        modifiedVariables: state.modifiedVariables || 0,
         terminated: state.messages.some(message => message.event === 'terminated') })) }, null, 2));
   } catch (error) {
     fs.writeFileSync(path.join(work, 'failure.json'), JSON.stringify({ error: error.stack,
