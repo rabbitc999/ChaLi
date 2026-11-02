@@ -254,9 +254,13 @@ class Adapter {
       this.stopped();
       return result;
     });
-    const snapshot = await memory.snapshot(thread, signal);
-    this.valueMemories.set(thread, snapshot);
-    return snapshot;
+    const pending = memory.snapshot(thread, signal);
+    this.valueMemories.set(thread, pending);
+    try { return await pending; }
+    catch (error) {
+      if (this.valueMemories.get(thread) === pending) this.valueMemories.delete(thread);
+      throw error;
+    }
   }
   /** 保证查看请求属于当前暂停代次。 */
   stopped(epoch = this.epoch) {
@@ -754,11 +758,11 @@ class Adapter {
           if (!target || target.kind === 'memory') throw new Error('变量引用已经过期或类别无效');
           if (target.kind === 'value') {
             const memory = await this.memoryFor(target.thread, signal);
-            const decoded = await decode(target.layout, target.address, memory, { start: args.start, count: args.count === undefined ? 100 : args.count });
+            const decoded = await decode(target.layout, target.address, memory, { start: args.start, count: args.count === undefined ? 100 : args.count }, target.stored);
             body.variables = decoded.children.map((item) => {
-              const reference = item.childLayout && item.address > 0n
-                ? this.handle({ kind: 'value', thread: target.thread, address: item.address, layout: item.childLayout }) : 0;
-              const memoryReference = item.childLayout && item.address > 0n
+              const reference = item.childLayout && (item.stored || item.address > 0n)
+                ? this.handle({ kind: 'value', thread: target.thread, address: item.address, layout: item.childLayout, stored: item.stored }) : 0;
+              const memoryReference = item.childLayout && !item.stored && !['L', 'M', 'E'].includes(item.childLayout.kind) && item.address > 0n
                 ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, address: item.address }) : undefined;
               return { name: item.name, value: item.value, type: item.type, variablesReference: reference, memoryReference };
             });
@@ -781,18 +785,23 @@ class Adapter {
             const binding = bindings.get(variable.name);
             const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
             // 内存目录按线程发布，调用栈任意帧的聚合槽位都可读取；上下文变化由目录自身核对。
-            const addressable = binding?.address === true && numeric !== null && numeric > 0n;
-            const layout = addressable ? this.layoutAt(binding.layout) : null;
+            const declaredLayout = binding ? this.layoutAt(binding.layout) : null;
+            const container = declaredLayout && ['L', 'M', 'E'].includes(declaredLayout.kind);
+            const addressable = (binding?.address === true || container) && numeric !== null && numeric > 0n;
+            const layout = addressable ? declaredLayout : null;
             let display = value || '<不可用>';
             let memoryReference;
             let variablesReference = 0;
             if (addressable) {
-              memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: numeric });
+              if (!container) memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: numeric });
               if (layout) {
                 try {
                   const memory = await this.memoryFor(frame.thread, signal);
                   display = (await decode(layout, numeric, memory, { count: 0 })).text;
-                } catch { /* 目录不可用时保留原始槽值，内存引用仍可单独读取。 */ }
+                } catch (error) {
+                  if (container) display = '<不可读：' + error.message + '>';
+                  // 普通聚合目录不可用时保留原始槽值及可选内存引用。
+                }
                 if (layout && expandable(layout) && layout.kind !== 's')
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
               }

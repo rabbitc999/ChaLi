@@ -5,9 +5,10 @@
 
 /**
  * @brief 直接读写已验证的数值缓冲区；扩容、未知布局和失效视图回退宿主。
+ * @param debug 调试构建使用宿主路径，保证所有访问更新对象观察代次。
  * @return LLVM 数值视图缓存及内联操作函数。
  */
-Text astNumericListPrimitive()
+Text astNumericListPrimitive(bool debug)
 {
     return R"LLVM(
 @chali_list_view = internal thread_local global { i64, ptr, ptr, i64 } zeroinitializer
@@ -17,7 +18,9 @@ define internal i64 @chali_list_storage_fast(i64 %op, i64 %handle, i64 %second, 
 entry:
   %append = icmp eq i64 %op, 18
   %read = icmp eq i64 %op, 11
-  %supported_op = or i1 %append, %read
+  %supported_kind = or i1 %append, %read
+  %supported_op = and i1 %supported_kind, )LLVM"
+           + Text(debug ? "false" : "true") + R"LLVM(
   %allowed = select i1 %append, i64 2, i64 0
   %disallowed = xor i64 %allowed, -1
   %other_floats = and i64 %floating, %disallowed

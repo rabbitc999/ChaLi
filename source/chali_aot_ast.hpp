@@ -570,6 +570,16 @@ struct AstBuilder : Builder
     {
         LayoutShape out;
         if (!type || depth > 32) return out;
+        const Memory::String prefix = "debug-layout:";
+        if (type->meta.rfind(prefix, 0) == 0)
+        {
+            const auto encoded = type->meta.substr(prefix.size());
+            stackvm::value_text::Shape shape;
+            std::size_t at = 0, remaining = 4096;
+            if (stackvm::value_text::decode(encoded, at, shape, remaining) && at == encoded.size())
+                return debugShape(shape);
+            return out;
+        }
         using K = ast::Type::Kind;
         out.name = textOf(type->name);
         switch (type->kind)
@@ -645,6 +655,23 @@ struct AstBuilder : Builder
     }
 
     /**
+     * @brief 将已验证的只读值布局转换为调试目录节点，忽略格式化回调。
+     * @param shape 容器及元素的静态布局。
+     * @return 不含用户方法的调试节点。
+     */
+    static LayoutShape debugShape(const stackvm::value_text::Shape &shape)
+    {
+        LayoutShape out;
+        out.kind = shape.kind;
+        out.name = textOf(shape.name);
+        out.offset = shape.offset;
+        out.count = shape.count;
+        out.width = shape.width;
+        for (const auto &child : shape.children) out.children.push_back(debugShape(child));
+        return out;
+    }
+
+    /**
      * @brief 编码变量的逻辑布局。
      * @param type 已检查类型。
      * @return 布局文本；空类型返回空文本。
@@ -699,6 +726,7 @@ struct AstBuilder : Builder
         case K::Array: variable.typeName = "ChaLi array"; break;
         default: variable.typeName = "ChaLi handle"; break;
         }
+        if (valueType->meta.rfind("debug-layout:", 0) == 0) variable.typeName = layoutOf(valueType).name;
     }
 
     /**

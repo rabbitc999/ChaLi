@@ -51,7 +51,7 @@ function parseLayout(text) {
     if (depth > MAX_DEPTH || ++cursor.nodes > MAX_NODES) throw new Error('调试布局超过深度或节点预算');
     if (cursor.at >= cursor.text.length) throw new Error('调试布局被截断');
     const kind = String.fromCharCode(cursor.text[cursor.at++]);
-    if (!/^[iufbcsRSTAaNVLEMXFHID]$/.test(kind)) throw new Error('调试布局节点类别无效');
+    if (!/^[iufbcsRSTAaNVLEMXFHIOD]$/.test(kind)) throw new Error('调试布局节点类别无效');
     const name = cursor.name(cursor.number());
     const offset = cursor.number(), count = cursor.number(), width = cursor.number();
     cursor.number();  // 自定义文本回调在调试路径不使用。
@@ -68,7 +68,7 @@ function parseLayout(text) {
 
 /** 聚合布局需要真实内存地址才能展开。 */
 function expandable(layout) {
-  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's'].includes(layout.kind);
+  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's', 'L', 'M', 'E'].includes(layout.kind);
 }
 
 /** 按 UTF-8 解码展示文本，超长时截断并标记。 */
@@ -115,6 +115,11 @@ async function string(address, memory) {
 
 /** 只生成聚合摘要，不读取全部子项。 */
 async function summary(layout, address, memory) {
+  if (['L', 'M', 'E'].includes(layout.kind)) {
+    const object = await memory.object(address);
+    if (object.kind !== layout.kind) throw new Error('容器快照类型不匹配');
+    return ({ L: 'List', M: 'Map', E: 'Set' }[layout.kind]) + '[' + object.count + ']';
+  }
   if (layout.kind === 'R') return address === 0n ? 'null' : '&<' + (layout.name || '引用') + '>';
   if (layout.kind === 'a' || layout.kind === 'A') {
     let count = layout.count;
@@ -143,10 +148,25 @@ async function summary(layout, address, memory) {
  * @param {{start?:number,count?:number}} [page] 子项分页；count 为零时只取摘要。
  * @returns {Promise<{text:string,children:Array}>} 展示文本与可继续展开的子项。
  */
-async function decode(layout, address, memory, page = {}) {
+async function decode(layout, address, memory, page = {}, stored = null) {
+  if (stored) return decodeStored(layout, stored, memory, page);
   const start = Number.isSafeInteger(page.start) && page.start > 0 ? page.start : 0;
   const limit = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
   switch (layout.kind) {
+    case 'L': case 'M': case 'E': {
+      const object = await memory.object(address);
+      if (object.kind !== layout.kind || layout.children.length !== (layout.kind === 'M' ? 2 : 1)) throw new Error('容器布局不匹配');
+      const children = [];
+      for (let index = start; index < Math.min(object.count, start + limit); ++index) {
+        let element = layout.children[0], node = object.values[object.first + index];
+        if (layout.kind === 'M') {
+          element = { kind: 'S', name: 'entry', children: layout.children.map((item, part) => ({ ...item, typeName: typeName(item), name: part ? 'value' : 'key', offset: part * 8 })) };
+          node = { flags: 1, first: object.first + index * 2, count: 2 };
+        }
+        children.push(await storedChild(element, { node, values: object.values }, String(index), memory));
+      }
+      return { text: await summary(layout, address, memory), children };
+    }
     case 'i': case 'u': case 'f': case 'b': case 'c':
       return { text: await scalar(layout, address, memory), children: [] };
     case 's':
@@ -203,8 +223,54 @@ async function decode(layout, address, memory, page = {}) {
   }
 }
 
+/** 解码已复制的宿主值快照，不把其索引伪装成目标地址。 */
+async function decodeStored(layout, stored, memory, page = {}) {
+  await memory.validateObjects();
+  const { node, values } = stored;
+  if (!(node.flags & 1)) {
+    if (['S', 'T', 'N'].includes(layout.kind)) throw new Error('快照缺少聚合字段');
+    if (layout.kind === 's' && (node.flags & 2)) return { text: quoted(node.text), children: [] };
+    if (['i', 'u', 'f', 'b', 'c'].includes(layout.kind)) {
+      const raw = Buffer.alloc(8); raw.writeBigUInt64LE(node.bits);
+      return { text: await scalar(layout, 1n, { read: async (_, length) => raw.subarray(0, length) }), children: [] };
+    }
+    return decode(layout, node.bits, memory, page);
+  }
+  let fields = layout.children;
+  let text = '{…}';
+  if (layout.kind === 'N') {
+    if (!node.count || !values[node.first] || values[node.first].flags !== 0) throw new Error('枚举快照缺少有效标签');
+    const tag = Number(BigInt.asIntN(32, values[node.first]?.bits || 0n));
+    const variant = layout.children.find(item => item.count === tag);
+    if (!variant) return { text: '<未知变体 ' + tag + '>', children: [] };
+    fields = variant.children; text = variant.name + '(…)';
+  } else if (!['S', 'T'].includes(layout.kind)) throw new Error('快照聚合类型不匹配');
+  const start = Number.isSafeInteger(page.start) && page.start > 0 ? page.start : 0;
+  const count = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
+  const children = [];
+  for (const field of fields.slice(start, start + count)) {
+    const slot = field.offset / 8;
+    if (!Number.isSafeInteger(slot) || slot < 0 || slot >= node.count) throw new Error('快照字段超出范围');
+    let fieldNode = values[node.first + slot];
+    if (['S', 'T', 'N'].includes(field.kind) && !(fieldNode.flags & 1)) {
+      const width = field.width / 8;
+      if (!Number.isSafeInteger(width) || width < 0 || slot + width > node.count) throw new Error('快照子记录超出范围');
+      fieldNode = { flags: 1, first: node.first + slot, count: width };
+    }
+    children.push(await storedChild(field, { node: fieldNode, values }, field.name, memory));
+  }
+  return { text, children };
+}
+
+/** 为只读宿主快照创建子项，展开仍受暂停代次约束。 */
+async function storedChild(layout, stored, name, memory) {
+  const value = await decodeStored(layout, stored, memory, { count: 0 });
+  return { name, type: typeName(layout), value: value.text, childLayout: expandable(layout) && layout.kind !== 's' ? layout : null, stored };
+}
+
 /** 按布局推导子项的类型拼写：字段名不能冒充类型名。 */
 function typeName(layout) {
+  if (layout.typeName) return layout.typeName;
   switch (layout.kind) {
     case 'i': return 'int' + layout.width * 8;
     case 'u': return 'uint' + layout.width * 8;
@@ -221,6 +287,10 @@ function typeName(layout) {
 /** 读取并格式化一个子项，标量直接展示，聚合给出摘要并保留展开地址。 */
 async function child(layout, address, name, memory) {
   try {
+    if (['L', 'M', 'E'].includes(layout.kind)) {
+      const handle = (await memory.read(address, 8)).readBigUInt64LE(0);
+      return { name, type: typeName(layout), value: await summary(layout, handle, memory), childLayout: layout, address: handle };
+    }
     if (layout.kind === 'R') {
       const pointer = (await memory.read(address, 8)).readBigUInt64LE(0);
       return { name, type: typeName(layout), value: pointer === 0n ? 'null' : '&<' + (layout.name || '引用') + '>', childLayout: pointer === 0n ? null : layout, address: pointer };

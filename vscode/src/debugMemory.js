@@ -33,12 +33,13 @@ class DebugMemory {
     const identity = systemThread(selected['target-id']);
     const base = await this.transport.scalar('(unsigned long long)&chali_debug_memory', signal);
     const header = await bytes(base, 24);
-    if (header.readBigUInt64LE(0) !== 1n || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
+    const version = header.readBigUInt64LE(0);
+    if (![1n, 2n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
     const visited = new Set(); let address = header.readBigUInt64LE(16), record;
     while (address) {
       if (visited.has(address) || visited.size >= 4096) throw new Error('内存线程目录循环或超过预算');
       visited.add(address);
-      const row = await bytes(address, 96);
+      const row = await bytes(address, version === 2n ? 160 : 96);
       const state = row.readBigUInt64LE(8);
       if (row.readBigUInt64LE(0) === identity && state !== 0n) { record = { address, row, state }; break; }
       address = row.readBigUInt64LE(72);
@@ -66,8 +67,55 @@ class DebugMemory {
     const data = row.readBigUInt64LE(32), dataSize = row.readBigUInt64LE(40);
     if ((dataSize && !data) || data + dataSize > MAXIMUM) throw new Error('静态数据区描述无效');
     if (regions.length && regions[0].begin < dataSize) throw new Error('堆区间与静态数据区重叠');
+    let objectTables;
+    const checkObjects = async () => {
+      await checkState();
+      if (!row.readBigUInt64LE(152) || !row.readBigUInt64LE(144)
+        || (await bytes(row.readBigUInt64LE(144), 8)).readBigUInt64LE() !== row.readBigUInt64LE(152)) throw new Error('对象快照已经失效');
+    };
+    const objects = async handle => {
+      if (version !== 2n) throw new Error('目标未发布容器快照');
+      await checkObjects();
+      if (!objectTables) objectTables = (async () => {
+        const objectCount = row.readBigUInt64LE(104), valueCount = row.readBigUInt64LE(120), textSize = row.readBigUInt64LE(136);
+        if (objectCount > 4096n || valueCount > 32768n || textSize > 2097152n
+          || objectCount * 32n + valueCount * 48n + textSize > 2097152n) throw new Error('对象快照超过预算');
+        const load = async (pointer, size) => {
+          if (size && (!pointer || pointer + size > MAXIMUM)) throw new Error('对象快照物理范围无效');
+          return size ? bytes(pointer, Number(size)) : Buffer.alloc(0);
+        };
+        const rawObjects = await load(row.readBigUInt64LE(96), objectCount * 32n);
+        const rawValues = await load(row.readBigUInt64LE(112), valueCount * 48n);
+        const text = await load(row.readBigUInt64LE(128), textSize);
+        const values = [];
+        for (let at = 0; at < rawValues.length; at += 48) {
+          const flags = rawValues.readBigUInt64LE(at), first = rawValues.readBigUInt64LE(at + 16), count = rawValues.readBigUInt64LE(at + 24);
+          const begin = rawValues.readBigUInt64LE(at + 32), length = rawValues.readBigUInt64LE(at + 40);
+          if (![0n, 1n, 2n, 4n].includes(flags) || first + count > valueCount || begin + length > textSize
+            || ((flags & 1n) && count && first <= BigInt(values.length))) throw new Error('对象值快照范围或递归无效');
+          values.push({ flags: Number(flags), bits: rawValues.readBigUInt64LE(at + 8), first: Number(first), count: Number(count),
+            text: text.subarray(Number(begin), Number(begin + length)) });
+        }
+        const records = new Map();
+        for (let at = 0; at < rawObjects.length; at += 32) {
+          const id = rawObjects.readBigUInt64LE(at), rawKind = rawObjects.readBigUInt64LE(at + 8);
+          if (rawKind > 127n) throw new Error('容器种类编码无效');
+          const kind = String.fromCharCode(Number(rawKind));
+          const count = rawObjects.readBigUInt64LE(at + 16), first = rawObjects.readBigUInt64LE(at + 24);
+          if (!id || records.has(id) || !['L', 'M', 'E'].includes(kind) || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('容器快照身份或范围无效');
+          records.set(id, { kind, count: Number(count), first: Number(first), values });
+        }
+        await checkObjects();
+        return records;
+      })();
+      const records = await objectTables;
+      await checkObjects();
+      const object = records.get(handle);
+      if (!object) throw new Error('容器已经释放、未同步或超过快照预算');
+      return object;
+    };
     return {
-      regions, dataSize,
+      regions, dataSize, object: objects, validateObjects: checkObjects,
       read: async (logical, length) => {
         if (typeof logical !== 'bigint' || logical <= 0n || logical > MAXIMUM || !Number.isSafeInteger(length) || length < 0 || length > LIMIT) throw new Error('逻辑地址或读取长度无效');
         await checkState();

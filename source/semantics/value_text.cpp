@@ -5,10 +5,11 @@
  * @param callbacks 接收只读自定义方法及其临时字段布局。
  * @param custom 是否允许当前节点使用用户覆盖。
  * @param depth 当前布局嵌套深度。
+ * @param debugOnly 是否在整个类型树中禁止登记用户方法。
  * @retval 保持字段顺序、容器元素类型和数组边界的布局。
  */
 stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
-                                          Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0)
+                                          Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0, bool debugOnly = false)
 {
     using stackvm::value_text::Shape;
     Shape out;
@@ -25,8 +26,8 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                                                                      'M';
         if (visiting.insert(TypeKey(type)).second)
         {
-            out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1));
-            if (type->elem2) out.children.push_back(ValueTextShape(type->elem2, visiting, callbacks, true, depth + 1));
+            out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly));
+            if (type->elem2) out.children.push_back(ValueTextShape(type->elem2, visiting, callbacks, true, depth + 1, debugOnly));
             visiting.erase(TypeKey(type));
         }
         return out;
@@ -53,7 +54,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
         for (const auto dimension : type->dims) out.count *= static_cast<std::size_t>(dimension);
         out.width = type->elem->kind == MType::Struct ? StructStride(type->elem) : type->elem->kind == MType::Char ? 1 :
                                                                                                                      8;
-        out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1));
+        out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly));
         break;
     case MType::Struct:
     {
@@ -62,7 +63,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
         if (definition == g_structs.end() || !visiting.insert(type->name).second) break;
         out.kind = IsTupleType(type) ? 'T' : 'S';
         out.width = static_cast<std::size_t>(StructStride(type));
-        if (custom)
+        if (custom && !debugOnly)
             for (const auto &method : definition->second.methods)
                 if (!method.superseded && !method.defaultValueText && !method.isStatic && method.source == "toString" && method.params.empty() && IsStandardOpcode(method.result, "String"))
                 {
@@ -90,7 +91,8 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                 child.count = static_cast<std::size_t>(variant.tag);
                 for (const auto &payload : variant.payloads)
                 {
-                    auto field = ValueTextShape(payload.type, visiting, callbacks, true, depth + 1);
+                    auto field = ValueTextShape(payload.type, visiting, callbacks, true, depth + 1, debugOnly);
+                    if (debugOnly) field.name = payload.name;
                     if (const auto declared = FindField(type->name, payload.storageName)) field.offset = static_cast<std::size_t>(declared->slot) * 8;
                     child.children.push_back(std::move(field));
                 }
@@ -101,7 +103,8 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
             for (const auto &declared : definition->second.fields)
             {
                 if (const auto *opcode = FindOpcodeDeclaration(declared.type); opcode && opcode->internal) continue;
-                auto field = ValueTextShape(declared.type, visiting, callbacks, true, depth + 1);
+                auto field = ValueTextShape(declared.type, visiting, callbacks, true, depth + 1, debugOnly);
+                if (debugOnly) field.name = declared.name;
                 field.offset = static_cast<std::size_t>(declared.slot) * 8;
                 out.children.push_back(std::move(field));
             }
@@ -124,6 +127,18 @@ Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRo
     Memory::Set<Memory::String> visiting;
     Memory::Vector<ast::NodePtr> callbacks;
     return stackvm::value_text::encode(ValueTextShape(type, visiting, callbacks, customRoot));
+}
+
+/**
+ * @brief 构造整个类型树均不登记用户方法的只读调试布局。
+ * @param type 已检查类型。
+ * @return 包含容器元素及键值类型的布局文本。
+ */
+Memory::String DebugValueLayout(const std::shared_ptr<MType> &type)
+{
+    Memory::Set<Memory::String> visiting;
+    Memory::Vector<ast::NodePtr> callbacks;
+    return stackvm::value_text::encode(ValueTextShape(type, visiting, callbacks, false, 0, true));
 }
 
 /**

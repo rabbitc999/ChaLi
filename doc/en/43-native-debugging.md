@@ -65,7 +65,9 @@ Stepping into internal standard modules automatically finishes the current inter
 
 Exception breakpoints provide a `runtime` filter, enabled by default, for panics, assertions and checked memory errors. Disabling it lets the program follow its original failure exit path; enabling it restores the stop, and restart preserves the selection. Native signals are independent of this filter. Filter conditions and exception-path options are unsupported and rejected.
 
-Typed display for List/Map/Set containers, interface dynamic types and closure captures is not yet available. Run the protocol, real GDB and lifecycle checks with:
+List/Map/Set display their length and paginated elements using static layouts; each Map entry expands into key/value fields. Scalars, strings, ordinary records and nested containers are supported. Read-only snapshots are copied during normal execution before source stops. Inspection calls no user methods, creates no language objects and does not resume execution. Container handles and snapshot indices are never exposed as memory addresses.
+
+Each thread's container snapshot allows at most 4096 collections, 32768 value nodes, 32 aggregate levels and 2 MiB of tables and text, within the overall memory-read budget. Released values, unsynchronized element borrows, publication races and exhausted budgets report unavailable data. Continuing invalidates old references. Debug builds route numeric List access through host revision checks; release builds retain the fast path. Interface dynamic types and closure captures remain pending. Run the protocol, real GDB and lifecycle checks with:
 
 ```sh
 python tools/run_module_gates.py debug --chali PATH --random-recheck 1

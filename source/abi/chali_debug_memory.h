@@ -13,6 +13,19 @@ typedef struct ChaliDebugAllocation
 {
     uint64_t address, size, physical;
 } ChaliDebugAllocation;
+/** @brief 容器句柄的只读快照；kind 使用 L、M、E，first 是值表索引。 */
+typedef struct ChaliDebugObject
+{
+    uint64_t handle, kind, count, first;
+} ChaliDebugObject;
+/**
+ * @brief 无所有权单值快照，flags 的低三位分别表示聚合、文本、浮点。
+ * @note first/count 为子字段索引范围，text/length 为 UTF-8 字节表范围，不是机器指针。
+ */
+typedef struct ChaliDebugValue
+{
+    uint64_t flags, bits, first, count, text, length;
+} ChaliDebugValue;
 /** @brief 单线程的暂停点快照；state 为零表示线程结束，奇数表示正在发布。 */
 typedef struct ChaliDebugMemoryThread
 {
@@ -21,8 +34,11 @@ typedef struct ChaliDebugMemoryThread
     uint64_t revision, revision_address;
     uint64_t data, data_size, allocations, count, complete, next;
     uint64_t context_address, context;
+    /** @brief 版本二追加的只读容器快照及对象表失效代次，失败时表数量为零。 */
+    uint64_t objects, object_count, values, value_count, text, text_size;
+    uint64_t object_revision_address, object_revision;
 } ChaliDebugMemoryThread;
-/** @brief 版本一使用 64 位小端字段和进程寿命内稳定的线程目录节点。 */
+/** @brief 使用 64 位小端字段和稳定线程节点；版本二在线程记录尾部追加容器快照。 */
 typedef struct ChaliDebugMemoryIndex
 {
     uint64_t version, pointer_bytes;

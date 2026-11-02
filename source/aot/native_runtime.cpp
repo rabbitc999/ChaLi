@@ -21,6 +21,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <optional>
+#include <vector>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -39,13 +40,14 @@
 namespace
 {
 bool debugArgumentsEnabled = false;
-static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 96
+static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 160
+                  && sizeof(ChaliDebugObject) == 32 && sizeof(ChaliDebugValue) == 48
                   && sizeof(ChaliDebugMemoryIndex) == 24,
               "调试内存目录需要固定的 64 位布局");
 }
 extern "C" {
 /** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
-ChaliDebugMemoryIndex chali_debug_memory{ 1, 8, 0 };
+ChaliDebugMemoryIndex chali_debug_memory{ 2, 8, 0 };
 /**
  * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
@@ -325,10 +327,118 @@ std::size_t debugMemoryThreadCount = 0;  ///< 进程目录节点总数，包含�
 /** @brief 每个调试线程的宿主观察缓冲，不计入语言对象或堆分配。 */
 struct DebugMemoryState
 {
+    std::vector<ChaliDebugObject> objects;
+    std::vector<ChaliDebugValue> values;
+    std::vector<char> text;
     ChaliDebugMemoryThread *record = nullptr;
     ChaliDebugAllocation *allocations = nullptr;
     std::size_t capacity = 0;
     bool disabled = false;
+    /**
+     * @brief 核对所有宿主快照缓冲的总预算。
+     * @param extra 即将增加的字节数。
+     * @return 预算允许时为真。
+     */
+    bool room(std::size_t extra) const
+    {
+        const auto used = objects.size() * sizeof(ChaliDebugObject) + values.size() * sizeof(ChaliDebugValue) + text.size();
+        return used <= 2 * 1024 * 1024 && extra <= 2 * 1024 * 1024 - used;
+    }
+    /**
+     * @brief 把借用值复制到固定宽度节点，索引不受缓冲扩容影响。
+     * @param source 当前正常执行期间有效的借用值。
+     * @param index 已预留的目标节点。
+     * @param depth 聚合递归深度。
+     * @return 所有字段均在预算内时为真。
+     */
+    bool copyValue(const collection_glue::DebugValueView &source, std::size_t index, std::size_t depth)
+    {
+        if (depth > 32 || source.length > 2 * 1024 * 1024 || source.fields > 32768
+            || !room(source.length + source.fields * sizeof(ChaliDebugValue))) return false;
+        ChaliDebugValue value{};
+        value.flags = (source.aggregate ? 1u : 0u) | (source.textValue ? 2u : 0u) | (source.floating ? 4u : 0u);
+        value.bits = source.bits;
+        if (source.textValue)
+        {
+            value.text = text.size();
+            value.length = source.length;
+            if (source.length) text.insert(text.end(), source.text, source.text + source.length);
+        }
+        if (source.aggregate)
+        {
+            value.first = values.size();
+            value.count = source.fields;
+            if (value.first + value.count > 32768) return false;
+            values.resize(values.size() + source.fields);
+            for (std::size_t field = 0; field < source.fields; ++field)
+            {
+                collection_glue::DebugValueView child;
+                if (!collection_glue::debugCollectionField(source, field, &child) || !copyValue(child, value.first + field, depth + 1)) return false;
+            }
+        }
+        values[index] = value;
+        return true;
+    }
+    /**
+     * @brief 复制一个活跃集合，不调用宿主记录的方法或同步回调。
+     * @param handle 原运行时句柄。
+     * @param object 当前存活对象。
+     * @return 集合复制成功或对象不是集合时为真，预算耗尽为假。
+     */
+    bool copyObject(std::int64_t handle, const RuntimeObject &object)
+    {
+        if (object.kind != ObjectKind::NativeRecord) return true;
+        collection_glue::DebugCollectionView view;
+        if (!collection_glue::debugCollection(object.nativeType, object.nativeRecord.get(), &view)) return true;
+        const std::size_t stride = view.kind == 'M' ? 2 : 1;
+        if (objects.size() >= 4096 || view.count > 32768 / stride || values.size() > 32768 - view.count * stride
+            || !room(sizeof(ChaliDebugObject) + view.count * stride * sizeof(ChaliDebugValue))) return false;
+        const auto first = values.size();
+        objects.push_back({ static_cast<std::uint64_t>(handle), static_cast<std::uint64_t>(view.kind), view.count, first });
+        values.resize(first + view.count * stride);
+        for (std::size_t index = 0; index < view.count; ++index)
+            for (std::size_t part = 0; part < stride; ++part)
+            {
+                collection_glue::DebugValueView value;
+                if (!collection_glue::debugCollectionItem(view, index, stride == 2 && part == 0, &value)
+                    || !copyValue(value, first + index * stride + part, 0)) return false;
+            }
+        return true;
+    }
+    /**
+     * @brief 发布当前对象表的有界只读集合快照，失败只撤销本次集合查看。
+     * @param context 当前线程的实际原生上下文。
+     * @return 无返回值。
+     */
+    void publishObjects(NativeContext &context)
+    {
+        objects.clear();
+        values.clear();
+        text.clear();
+        auto *store = context.objects;
+        record->object_revision_address = store ? reinterpret_cast<std::uintptr_t>(&store->nativeRecordRevision) : 0;
+        record->object_revision = store ? store->nativeRecordRevision : 0;
+        try
+        {
+            if (!store || !store->nativeRecordRevision) throw std::runtime_error("对象视图失效");
+            for (const auto &slot : store->handleSlots)
+                if (slot.handle && slot.object && !copyObject(slot.handle, *slot.object)) throw std::runtime_error("对象视图超过预算");
+            for (const auto &entry : store->objects)
+                if (entry.second && !copyObject(entry.first, *entry.second)) throw std::runtime_error("对象视图超过预算");
+            if (record->object_revision != store->nativeRecordRevision) throw std::runtime_error("对象视图代次变化");
+        } catch (...)
+        {
+            objects.clear();
+            values.clear();
+            text.clear();
+        }
+        record->objects = reinterpret_cast<std::uintptr_t>(objects.data());
+        record->object_count = objects.size();
+        record->values = reinterpret_cast<std::uintptr_t>(values.data());
+        record->value_count = values.size();
+        record->text = reinterpret_cast<std::uintptr_t>(text.data());
+        record->text_size = text.size();
+    }
     /** @brief 线程结束时撤销目录并释放观察缓冲，目录节点保留进程寿命。 */
     ~DebugMemoryState()
     {
@@ -404,6 +514,7 @@ struct DebugMemoryState
         record->allocations = reinterpret_cast<std::uintptr_t>(allocations);
         record->count = record->complete ? count : 0;
         record->revision = revision;
+        publishObjects(context);
         std::atomic_thread_fence(std::memory_order_release);
         record->state = (previous | 1u) + 1;
     }

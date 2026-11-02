@@ -3,6 +3,7 @@
  * @brief 从已检查 AST 直接生成 LLVM IR 和原生产物，保留独立四元式调用方的兼容入口。
  */
 #include "chali_aot.hpp"
+#include "ircode/value_text.hpp"
 #include "ast/ast.hpp"
 #include "chali_aot_debug.hpp"
 #include "chali_aot_llvm.hpp"
@@ -2570,7 +2571,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "declare i64 @chali_host_map_storage_scalar(i64, i64, i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";
     out += "declare i8 @chali_host_result_float()\n";
     out += astAddressPrimitive();
-    out += astNumericListPrimitive();
+    out += astNumericListPrimitive(request.options.debug);
     out += astStringStoragePrimitive();
     out += "declare double @llvm.sqrt.f64(double)\ndeclare double @llvm.floor.f64(double)\n";
     out += "declare double @llvm.ceil.f64(double)\ndeclare double @llvm.round.f64(double)\ndeclare double @llvm.trunc.f64(double)\n";

@@ -5,6 +5,50 @@ namespace collection_glue
 {
 using NativeValue = stackvm::NativeValue;
 
+struct ObjectKey;
+/** @brief 调试发布期间借用的单值视图，不取得对象或文本所有权。 */
+struct DebugValueView
+{
+    bool aggregate = false, textValue = false, floating = false;
+    std::uint64_t bits = 0;
+    const char *text = nullptr;
+    std::size_t length = 0, fields = 0;
+    const stackvm::NativeStoredValue *stored = nullptr;
+    const ObjectKey *key = nullptr;
+};
+/** @brief 已核对身份的集合只读视图，仅在当前正常执行的发布期间有效。 */
+struct DebugCollectionView
+{
+    const void *record = nullptr;
+    char kind = 0;
+    std::size_t count = 0;
+};
+/**
+ * @brief 不同步借用、不调用方法地取得集合只读视图。
+ * @param type 运行时记录描述符。
+ * @param record 不透明记录。
+ * @param view 接收视图，不可用时清空。
+ * @return 活跃集合且没有未同步写入时返回真。
+ */
+bool debugCollection(const stackvm::NativeRecordType *type, const void *record, DebugCollectionView *view);
+/**
+ * @brief 读取集合元素或 Map 键的借用快照。
+ * @param collection 已验证集合视图。
+ * @param index 元素位置。
+ * @param key 是否读取 Map 键。
+ * @param value 接收单值视图。
+ * @return 位置与种类有效时返回真。
+ */
+bool debugCollectionItem(const DebugCollectionView &collection, std::size_t index, bool key, DebugValueView *value);
+/**
+ * @brief 读取聚合快照中的字段，不物化语言对象。
+ * @param parent 当前字段视图。
+ * @param index 字段位置。
+ * @param value 接收子字段。
+ * @return 字段存在时返回真。
+ */
+bool debugCollectionField(const DebugValueView &parent, std::size_t index, DebugValueView *value);
+
 /**
  * @brief 从借用字节直接构造并追加一个独立文本元素，避免通用原生值的中间副本。
  * @param host 当前运行时上下文。

@@ -14,6 +14,115 @@
 namespace collection_glue
 {
 /**
+ * @brief 将通用值或键借用为不分配的调试标量与字段视图。
+ * @tparam T 通用值或键快照类型。
+ * @param source 当前存储值。
+ * @return 不拥有源存储的只读视图。
+ */
+template <class T>
+static DebugValueView debugValue(const T &source)
+{
+    DebugValueView out;
+    out.aggregate = source.isStruct;
+    out.textValue = source.isText;
+    out.floating = source.isFloat;
+    out.bits = static_cast<std::uint64_t>(source.integer);
+    if (source.isFloat) std::memcpy(&out.bits, &source.real, sizeof(out.bits));
+    out.text = source.text.data();
+    out.length = source.text.size();
+    out.fields = source.fields.size();
+    return out;
+}
+
+/**
+ * @brief 核对集合描述符并借用现有存储，拒绝未同步状态。
+ * @param type 运行时描述符。
+ * @param record 不透明记录。
+ * @param view 接收视图。
+ * @return 安全可观察时返回真。
+ */
+bool debugCollection(const stackvm::NativeRecordType *type, const void *record, DebugCollectionView *view)
+{
+    *view = {};
+    if (!record) return false;
+    char kind = 0;
+    for (const auto candidate : { StorageKind::Vector, StorageKind::Set, StorageKind::Map })
+        if (type == &descriptor(candidate)) kind = candidate == StorageKind::Vector ? 'L' : candidate == StorageKind::Set ? 'E' :
+                                                                                                                            'M';
+    if (!kind) return false;
+    const auto &object = *static_cast<const Record *>(record);
+    if (object.pendingWrite || object.pendingRelease || object.refreshingViews || !object.elementViews.empty()) return false;
+    *view = { record, kind, kind == 'L' ? object.scalarItemsActive ? object.scalarItems.size() : object.items.size() : object.entries.size() };
+    return true;
+}
+
+/**
+ * @brief 按位置借用集合中的值或 Map 键，不执行比较与哈希。
+ * @param collection 已验证视图。
+ * @param index 元素位置。
+ * @param key 是否读取 Map 键。
+ * @param value 接收单值视图。
+ * @return 请求有效时返回真。
+ */
+bool debugCollectionItem(const DebugCollectionView &collection, std::size_t index, bool key, DebugValueView *value)
+{
+    *value = {};
+    if (!collection.record || index >= collection.count || (key && collection.kind != 'M')) return false;
+    const auto &object = *static_cast<const Record *>(collection.record);
+    if (collection.kind == 'L')
+    {
+        if (object.scalarItemsActive)
+        {
+            const auto scalar = object.scalarItems[index];
+            value->bits = static_cast<std::uint64_t>(scalar.bits);
+            value->floating = scalar.floating != 0;
+            return true;
+        }
+        value->stored = &object.items[index];
+    }
+    else
+    {
+        const auto &entry = *(object.entries.begin() + index);
+        if (key)
+        {
+            *value = debugValue(entry.first);
+            value->key = &entry.first;
+            return true;
+        }
+        value->stored = &entry.second;
+    }
+    const auto *stored = value->stored;
+    *value = debugValue(*stored);
+    value->stored = stored;
+    return true;
+}
+
+/**
+ * @brief 借用值或键中的嵌套字段，保持原存储不变。
+ * @param parent 当前值视图。
+ * @param index 字段位置。
+ * @param value 接收子字段视图。
+ * @return 字段可用时返回真。
+ */
+bool debugCollectionField(const DebugValueView &parent, std::size_t index, DebugValueView *value)
+{
+    *value = {};
+    if (!parent.aggregate || index >= parent.fields) return false;
+    if (parent.stored)
+    {
+        const auto &field = parent.stored->fields[index];
+        *value = debugValue(field);
+        value->stored = &field;
+        return true;
+    }
+    if (!parent.key) return false;
+    const auto &field = parent.key->fields[index];
+    *value = debugValue(field);
+    value->key = &field;
+    return true;
+}
+
+/**
  * @brief 查询无需元素物化的数值视图；不执行用户回调。
  * @param host 当前原生上下文。
  * @param handle 目标集合句柄。

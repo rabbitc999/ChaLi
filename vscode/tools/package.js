@@ -100,6 +100,10 @@ function main() {
     run(process.execPath, [path.join('test', 'debugMetadata.js')]);
     run(process.execPath, [path.join('test', 'debugMemory.js')]);
     run(process.execPath, [path.join('test', 'debugValue.js')]);
+    run(process.execPath, [path.join('test', 'debugObjectMemory.js')]);
+    run(process.execPath, [path.join('test', 'debugContainers.js')]);
+    run(process.execPath, [path.join('test', 'debugContainerMetadata.js')]);
+    run(process.execPath, [path.join('test', 'debugContainersNative.js')]);
     run(process.execPath, [path.join('test', 'debugFrames.js')]);
     run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
     run(process.execPath, [path.join('test', 'debugFailure.js')]);

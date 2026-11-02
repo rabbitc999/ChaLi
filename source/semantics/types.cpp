@@ -1,6 +1,13 @@
 /* ---------- 类型 ---------- */
 
 /**
+ * @brief 编码不登记用户方法的调试值布局，实现在值布局编译单元中。
+ * @param type 已检查类型。
+ * @return 与运行时无关的长度前缀布局。
+ */
+Memory::String DebugValueLayout(const std::shared_ptr<MType> &type);
+
+/**
  * @brief 在类型层识别使用连续 u8 存储的类型，char 与 uint8 共用该布局。
  * @param type 待查询类型，名义宿主类型按其底层类型查询。
  * @return char、uint8 及对应宿主包装返回 true，其他类型返回 false。
@@ -30,6 +37,12 @@ ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String 
             g_opcodeValueTypes.erase(label);
     }
     if (IsStandardOpcode(type, "String")) return Type::stringType();
+    if (IsContainer(type))
+    {
+        auto lowered = Type::i64();
+        lowered->meta = "debug-layout:" + DebugValueLayout(type);
+        return lowered;
+    }
     switch (type->kind)
     {
     case MType::Void: return Type::i32();     /* ast 没有 void，用 i32 占位 */
