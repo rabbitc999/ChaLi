@@ -2581,7 +2581,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "define void @chali_set_location(ptr %file, i64 %line, ptr %function) {\nentry:\n  store ptr %file, ptr @chali_source_file\n  store i64 %line, ptr @chali_source_line\n  store ptr %function, ptr @chali_source_function\n  ret void\n}\n";
     out += "define i8 @chali_result_float() {\nentry:\n  %flag = load i8, ptr @chali_return_float\n  ret i8 %flag\n}\n";
     out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
-    if (request.options.debug) out += "declare void @chali_debug_console()\ndeclare void @chali_debug_publish_memory()\n";
+    if (request.options.debug) out += "declare void @chali_debug_console()\ndeclare void @chali_debug_publish_memory()\ndeclare void @chali_debug_capture_context(ptr)\n";
     out += "declare void @chali_host_poll()\n";
     out += "declare void @chali_host_tick(i64)\n";
     out += "declare i64 @chali_host_copy_words(i64, i64, i64)\n";

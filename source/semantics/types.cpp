@@ -69,7 +69,11 @@ ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String 
         const auto found = g_structType.find(type->name);
         /* 接口名不在 `g_structType` 里（它没有字段、没有大小）→ 退化成 i64：
          * 接口名只当引用的目标类型用，而接口引用的值是胖引用（对象表句柄）。 */
-        return (found == g_structType.end()) ? Type::i64() : found->second;
+        if (found == g_structType.end()) return Type::i64();
+        if (!g_debugEnabled) return found->second;
+        auto lowered = std::make_shared<Type>(*found->second);
+        lowered->meta = "debug-layout:" + DebugValueLayout(type);
+        return lowered;
     }
     case MType::Ptr:
         /* 引用就是"数据区里的地址"，用 ast 的可空引用承载：quadType = i64。

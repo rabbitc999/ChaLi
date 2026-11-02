@@ -87,6 +87,7 @@ void ObjectStore::beginStorage(std::size_t address, std::size_t bytes, bool fres
     // 含于新生命周期的标记从本地址开始；重叠查询只需额外考虑最大跨度以内的前驱。
     const auto first = fresh && largestMovedStorage < address ? address - largestMovedStorage : fresh ? 0u : address;
     auto it = movedStorage.lower_bound({ first, std::numeric_limits<std::int64_t>::min() });
+    bool changed = false;
     for (; it != movedStorage.end();)
     {
         const auto start = it->first.first;
@@ -94,7 +95,10 @@ void ObjectStore::beginStorage(std::size_t address, std::size_t bytes, bool fres
         const bool overlap = start >= address ? start - address < bytes : address - start < it->second;
         const bool contained = start >= address && start - address < bytes && it->second <= bytes - (start - address);
         if (fresh ? overlap : contained)
+        {
+            if (!changed) { invalidateDebugSnapshots(); changed = true; }
             it = movedStorage.erase(it);
+        }
         else
             ++it;
     }
@@ -115,10 +119,23 @@ ObjectStore::~ObjectStore()
     for (auto &slot : handleSlots) slot.object.reset();
 }
 
-/** @brief 递增宿主记录代次，耗尽后不重新启用旧视图。 */
+/**
+ * @brief 撤销调试快照并递增宿主记录代次，耗尽后不重新启用旧视图。
+ * @return 无；语言借用及调试观察分别维护各自代次。
+ */
 void ObjectStore::invalidateNativeRecordViews()
 {
+    invalidateDebugSnapshots();
     if (nativeRecordRevision) ++nativeRecordRevision;
+}
+
+/**
+ * @brief 撤销对象及存储状态的旧只读观察，不使语言借用失效。
+ * @return 无；溢出为零后不再恢复观察代次。
+ */
+void ObjectStore::invalidateDebugSnapshots()
+{
+    if (debugSnapshotRevision) ++debugSnapshotRevision;
 }
 
 /**

@@ -80,9 +80,25 @@ async function main() {
   const holderLayout = parseLayout(shape('S', 'Holder', [{ kind: 'R', name: '引用', offset: 0, width: 8, children: [parsed] }]));
   const holderView = await decode(holderLayout, 0x500n, memory([[0x500, holder], [0x100, pair]]), { count: 1 });
   const link = holderView.children[0];
-  assert.equal(link.value, '&<引用>');
+  assert.equal(link.value, '&{…}');
   assert.equal(link.address, 0x100n);
   assert.equal((await decode(link.childLayout, link.address, memory([[0x100, pair]]))).text, '&{}');
+  const movedMemory = memory([[0x500, holder], [0x100, pair]]);
+  movedMemory.readable = async address => { if (address === 0x100n) throw new Error('存储区间有移动或销毁标记'); };
+  const invalidReference = await decode(holderLayout, 0x500n, movedMemory, { count: 1 });
+  assert.match(invalidReference.children[0].value, /不可读.*移动或销毁/);
+  assert.equal(invalidReference.children[0].childLayout, null);
+  const scalarRef = parseLayout(shape('R', 'int64 const&', [{kind:'i',name:'',width:8}]));
+  assert.equal((await decode(scalarRef, 0x100n, memory([[0x100,pair]]))).text, '&-5');
+  const byteRef = parseLayout(shape('R','uint8 const&',[{kind:'u',name:'',width:1}]));
+  const byteMemory = memory([[0x100,Buffer.from([255])]]);
+  byteMemory.readable = async (address,width)=>{assert.equal(address,0x100n);assert.equal(width,1);};
+  assert.equal((await decode(byteRef,0x100n,byteMemory)).text,'&255');
+  const stringRef = parseLayout(shape('R','String const&',[{kind:'s',name:'String',width:8}]));
+  const stringSlot=Buffer.alloc(8);stringSlot.writeBigUInt64LE(0x20n);
+  const borrowedText=memory([[0x500,stringSlot],[0x20,Buffer.from('hello\0')]]);
+  borrowedText.dataSize=0x26n;
+  assert.equal((await decode(stringRef,0x500n,borrowedText)).text,'&"hello"');
 
   // 分页只读请求范围，且标记还有更多。
   const many = Buffer.alloc(0x100);

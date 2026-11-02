@@ -236,7 +236,8 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
         locations.emplace(key, id);
         return id;
     };
-    const auto entryLocation = location(origin);
+    // 形参及观察槽的声明属于序言，不为函数声明行制造可执行停点。
+    const auto entryLocation = node("!DILocation(line: 0, column: 0, scope: !" + std::to_string(scope) + ")");
     // 按父先子后的编号预建词法树，避免大量顺序声明触发深递归。
     for (const auto &entry : scopes) lexicalScope(entry.first);
     std::map<std::size_t, std::string> declarations;
@@ -271,6 +272,7 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
     auto currentLocation = node("!DILocation(line: 0, column: 0, scope: !" + std::to_string(scope) + ")");
     // 内存目录发布不属于源码语句：用 0 行位置，避免单步把它当成新的源码停点。
     const auto publishLocation = currentLocation;
+    const auto captureLocation = location({ "<native-debug-context>", 1, 0, 0 });
     bool inserted = false;
     while (std::getline(input, line))
     {
@@ -291,7 +293,7 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
         }
         if (line.rfind("  ", 0) == 0u && line.find("!dbg !") == std::string::npos)
             line += ", !dbg !"
-                    + std::to_string(line.find("@chali_debug_publish_memory") == std::string::npos ? currentLocation : publishLocation);
+                    + std::to_string(line.find("@chali_debug_capture_context") != std::string::npos ? captureLocation : line.find("@chali_debug_publish_memory") == std::string::npos ? currentLocation : publishLocation);
         output += line + "\n";
         output += after;
     }
@@ -323,7 +325,10 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
             comma = true;
             catalog += "{\"id\":" + std::to_string(entry.first) + ",\"parent\":" + std::to_string(entry.second.parent) + "}";
         }
-        catalog += "],\"variables\":[";
+        catalog += "]";
+        if (std::any_of(function.variables.begin(), function.variables.end(), [](const auto &value) { return value.internal && value.dwarfName == "__chali_context_heap"; }))
+            catalog += ",\"context\":{\"heap\":\"__chali_context_heap\",\"data\":\"__chali_context_data\",\"objects\":\"__chali_context_objects\"}";
+        catalog += ",\"variables\":[";
         comma = false;
         for (const auto &variable : function.variables)
         {

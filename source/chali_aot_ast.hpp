@@ -564,12 +564,17 @@ struct AstBuilder : Builder
      * @brief 从检查后的类型推导可解码布局；未知或过深的部分保留为不可解码节点。
      * @param type 已检查类型。
      * @param depth 当前嵌套深度。
+     * @param remaining 当前布局尚可生成的节点数；空指针表示建立独立预算。
      * @return 只读布局节点。
      */
-    LayoutShape layoutOf(const ast::TypePtr &type, std::size_t depth = 0)
+    LayoutShape layoutOf(const ast::TypePtr &type, std::size_t depth = 0, std::size_t *remaining = nullptr)
     {
         LayoutShape out;
-        if (!type || depth > 32) return out;
+        std::size_t budget = 4096;
+        if (!remaining) remaining = &budget;
+        if (!type) return out;
+        if (depth >= 32 || !*remaining) { out.name = "超过布局观察预算"; return out; }
+        --*remaining;
         const Memory::String prefix = "debug-layout:";
         if (type->meta.rfind(prefix, 0) == 0)
         {
@@ -604,12 +609,12 @@ struct AstBuilder : Builder
         case K::Ref:
             out.kind = 'R';
             out.width = 8;
-            if (type->element) out.children.push_back(layoutOf(type->element, depth + 1));
+            if (type->element) out.children.push_back(layoutOf(type->element, depth + 1, remaining));
             break;
         case K::Array:
             out.kind = 'a';
             out.width = type->element && type->element->kind == K::Uint && type->element->bits == 8 ? 1 : 8;
-            out.children.push_back(layoutOf(type->element, depth + 1));
+            out.children.push_back(layoutOf(type->element, depth + 1, remaining));
             break;
         case K::Struct:
         {
@@ -630,7 +635,7 @@ struct AstBuilder : Builder
                     {
                         const auto field = textOf(type->fields[index].first);
                         if (field.rfind(prefix, 0) != 0) continue;
-                        auto child = layoutOf(type->fields[index].second, depth + 1);
+                        auto child = layoutOf(type->fields[index].second, depth + 1, remaining);
                         child.name = field.substr(prefix.size());
                         child.offset = index * 8;
                         node.children.push_back(std::move(child));
@@ -642,7 +647,7 @@ struct AstBuilder : Builder
             out.kind = 'S';
             for (std::size_t index = 0; index < type->fields.size(); ++index)
             {
-                auto child = layoutOf(type->fields[index].second, depth + 1);
+                auto child = layoutOf(type->fields[index].second, depth + 1, remaining);
                 child.name = textOf(type->fields[index].first);
                 child.offset = index * 8;
                 out.children.push_back(std::move(child));
@@ -695,7 +700,9 @@ struct AstBuilder : Builder
         variable.logicalAddress = valueType->kind == K::Struct || valueType->kind == K::Array || valueType->kind == K::String
                                   || (valueType->kind == K::Ref && valueType->element
                                       && (valueType->element->kind == K::Struct || valueType->element->kind == K::Array
-                                          || valueType->element->kind == K::String));
+                                          || valueType->element->kind == K::String || valueType->element->kind == K::Bool
+                                          || valueType->element->kind == K::Int || valueType->element->kind == K::Uint
+                                          || valueType->element->kind == K::Float));
         variable.layout = state.debugInfo.registerLayout(encodedLayout(valueType));
         variable.bits = 64;
         variable.encoding = "DW_ATE_unsigned";
@@ -1443,6 +1450,17 @@ struct AstBuilder : Builder
         }
         if (state.request.options.debug)
         {
+            signature += "  %debug_context = alloca [3 x i64]\n";
+            signature += "  call void @chali_debug_capture_context(ptr %debug_context)\n";
+            // 私有观察槽需在优化调试中跨调用保留，避免身份仅存于已被覆盖的寄存器。
+            for (std::size_t index = 0; index < 3; ++index)
+            {
+                const auto suffix = std::to_string(index);
+                signature += "  %debug_context_" + suffix + " = alloca i64\n";
+                signature += "  %debug_context_source_" + suffix + " = getelementptr [3 x i64], ptr %debug_context, i64 0, i64 " + suffix + "\n";
+                signature += "  %debug_context_value_" + suffix + " = load i64, ptr %debug_context_source_" + suffix + "\n";
+                signature += "  store volatile i64 %debug_context_value_" + suffix + ", ptr %debug_context_" + suffix + "\n";
+            }
             signature += "  br label %q0\n";
             body = "q0:\n";
             debugEntryEnd = body.size();
@@ -1507,6 +1525,19 @@ struct AstBuilder : Builder
                 }
             }
             variables.push_back(std::move(variable));
+        }
+        for (std::size_t index = 0; index < 3; ++index)
+        {
+            DebugVariable context;
+            context.name = context.dwarfName = std::string("__chali_context_") + (index == 0 ? "heap" : index == 1 ? "data" : "objects");
+            context.pointer = "%debug_context_" + std::to_string(index);
+            context.typeName = "uint64";
+            context.encoding = "DW_ATE_unsigned";
+            context.nativeStorage = "i64";
+            context.file = textOf(syntax.declaration.file);
+            context.line = syntax.declaration.line;
+            context.internal = true;
+            variables.push_back(std::move(context));
         }
         return state.debugInfo.annotate(definition, textOf(syntax.debugName.empty() ? function.label : syntax.debugName), textOf(function.llvmName), debugLines, variables, debugScopes);
     }

@@ -6,10 +6,11 @@
  * @param custom 是否允许当前节点使用用户覆盖。
  * @param depth 当前布局嵌套深度。
  * @param debugOnly 是否在整个类型树中禁止登记用户方法。
+ * @param remaining 只读调试布局的共享节点预算；空指针表示建立独立预算。
  * @retval 保持字段顺序、容器元素类型和数组边界的布局。
  */
 stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
-                                          Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0, bool debugOnly = false)
+                                          Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0, bool debugOnly = false, std::size_t *remaining = nullptr)
 {
     using stackvm::value_text::Shape;
     Shape out;
@@ -19,6 +20,10 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
     out.width = type->kind == MType::Char || type->kind == MType::Bool ? 1 :
                 type->kind == MType::Int                               ? std::max(1, type->bits / 8) :
                                                                          8;
+    std::size_t budget = 4096;
+    if (!remaining) remaining = &budget;
+    if (debugOnly && (depth >= 32 || !*remaining)) { out.name = "超过布局观察预算"; return out; }
+    if (debugOnly) --*remaining;
     if (depth > 32) return out;
     if (debugOnly && (IsInterfaceType(type) || (type->kind == MType::Ptr && IsInterfaceType(type->elem))))
     {
@@ -31,8 +36,8 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                                                                      'M';
         if (visiting.insert(TypeKey(type)).second)
         {
-            out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly));
-            if (type->elem2) out.children.push_back(ValueTextShape(type->elem2, visiting, callbacks, true, depth + 1, debugOnly));
+            out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly, remaining));
+            if (type->elem2) out.children.push_back(ValueTextShape(type->elem2, visiting, callbacks, true, depth + 1, debugOnly, remaining));
             visiting.erase(TypeKey(type));
         }
         return out;
@@ -47,7 +52,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
     case MType::Obj: out.kind = 'O'; break;
     case MType::Ptr:
         out.kind = 'R';
-        if (debugOnly && type->elem) out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, false, depth + 1, true));
+        if (debugOnly && type->elem) out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, false, depth + 1, true, remaining));
         break;
     case MType::Func: out.kind = 'F'; break;
     case MType::Host: out.kind = 'H'; break;
@@ -62,7 +67,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
         for (const auto dimension : type->dims) out.count *= static_cast<std::size_t>(dimension);
         out.width = type->elem->kind == MType::Struct ? StructStride(type->elem) : type->elem->kind == MType::Char ? 1 :
                                                                                                                      8;
-        out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly));
+        out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, true, depth + 1, debugOnly, remaining));
         break;
     case MType::Struct:
     {
@@ -99,7 +104,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                 child.count = static_cast<std::size_t>(variant.tag);
                 for (const auto &payload : variant.payloads)
                 {
-                    auto field = ValueTextShape(payload.type, visiting, callbacks, true, depth + 1, debugOnly);
+                    auto field = ValueTextShape(payload.type, visiting, callbacks, true, depth + 1, debugOnly, remaining);
                     if (debugOnly) field.name = payload.name;
                     if (const auto declared = FindField(type->name, payload.storageName)) field.offset = static_cast<std::size_t>(declared->slot) * 8;
                     child.children.push_back(std::move(field));
@@ -111,7 +116,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
             for (const auto &declared : definition->second.fields)
             {
                 if (const auto *opcode = FindOpcodeDeclaration(declared.type); opcode && opcode->internal) continue;
-                auto field = ValueTextShape(declared.type, visiting, callbacks, true, depth + 1, debugOnly);
+                auto field = ValueTextShape(declared.type, visiting, callbacks, true, depth + 1, debugOnly, remaining);
                 if (debugOnly) field.name = declared.name;
                 field.offset = static_cast<std::size_t>(declared.slot) * 8;
                 out.children.push_back(std::move(field));

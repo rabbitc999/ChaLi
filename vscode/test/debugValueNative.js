@@ -101,13 +101,14 @@ async function main() {
     assert.equal(alias.first.value, '7');
     assert.equal(alias.tag.value, '3');
 
-    // 嵌套记录按语言存储展平为带点号的槽，顺序与声明一致。
+    // 源码布局保留嵌套记录，按每层声明顺序和实际偏移展开。
     const line = await expand(client, values.line);
-    assert.deepEqual(Object.keys(line), ['start.first', 'start.tag', 'end.first', 'end.tag', 'count']);
-    assert.equal(line['start.first'].value, '1');
-    assert.equal(line['start.tag'].value, '2');
-    assert.equal(line['end.first'].value, '9');
-    assert.equal(line['end.tag'].value, '8');
+    assert.deepEqual(Object.keys(line), ['start', 'end', 'count']);
+    const start = await expand(client,line.start), end = await expand(client,line.end);
+    assert.equal(start.first.value, '1');
+    assert.equal(start.tag.value, '2');
+    assert.equal(end.first.value, '9');
+    assert.equal(end.tag.value, '8');
     assert.equal(line.count.value, '5');
 
     // 载荷枚举、Option 与 Result 按标签显示变体，载荷字段只列真实名字。

@@ -140,6 +140,7 @@ Slot moveLifetime(NativeContext &ctx, const Memory::Vector<Slot> &args)
     if (Operation == 1 && !live) ctx.error = "move 的源对象已经销毁，必须先重新赋值";
     if (Operation == 2)
     {
+        ctx.objects->invalidateDebugSnapshots();
         ranges[key] = bytes;
         ctx.objects->largestMovedStorage = std::max(ctx.objects->largestMovedStorage, bytes);
     }

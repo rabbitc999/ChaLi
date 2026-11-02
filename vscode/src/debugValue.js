@@ -139,6 +139,7 @@ async function summary(layout, address, memory) {
     return variant ? variant.name + '(' + (variant.children.length ? '…' : '') + ')' : '<未知变体 ' + tag + '>';
   }
   if (layout.kind === 'S' || layout.kind === 'T') return layout.kind === 'T' ? '(' + (layout.children.length ? '…' : '') + ')' : '{' + (layout.children.length ? '…' : '') + '}';
+  if (layout.kind === 'X' && !layout.name) return '<布局不可用或超过观察预算>';
   return '<' + (layout.name || 'ChaLi 值') + '>';
 }
 
@@ -151,7 +152,18 @@ async function summary(layout, address, memory) {
  * @returns {Promise<{text:string,children:Array}>} 展示文本与可继续展开的子项。
  */
 async function decode(layout, address, memory, page = {}, stored = null) {
+  await memory.validateStorage?.();
+  const value = await decodeValue(layout, address, memory, page, stored);
+  await memory.validateStorage?.();
+  return value;
+}
+
+/** 在观察代次校验范围内解码实际节点，递归子项继续复用同一快照及预算。 */
+async function decodeValue(layout, address, memory, page = {}, stored = null) {
   if (stored) return decodeStored(layout, stored, memory, page);
+  if (address !== 0n && memory.readable && !['O', 'F', 'L', 'M', 'E', 'R'].includes(layout.kind)) {
+    await memory.readable(address, layout.kind === 's' && address < memory.dataSize ? 1 : Math.max(1, layout.width || 1));
+  }
   const start = Number.isSafeInteger(page.start) && page.start > 0 ? page.start : 0;
   const limit = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
   switch (layout.kind) {
@@ -177,8 +189,18 @@ async function decode(layout, address, memory, page = {}, stored = null) {
       return { text: await string(address, memory), children: [] };
     case 'R': {
       if (address === 0n) return { text: 'null', children: [] };
-      if (!layout.children.length) return { text: '&<' + (layout.name || '引用') + '>', children: [] };
-      const target = await decode(layout.children[0], address, memory, page);
+      if (!layout.children.length) {
+        if (memory.readable) await memory.readable(address, 1);
+        return { text: '&<' + (layout.name || '引用') + '>', children: [] };
+      }
+      let element = layout.children[0];
+      if (element.kind === 'X' && element.name) element = memory.referenceLayout?.(element.name) || element;
+      let targetAddress = address;
+      if (['s', 'a', 'L', 'M', 'E', 'O', 'F'].includes(element.kind)) {
+        if (memory.readable) await memory.readable(address, 8);
+        targetAddress = (await memory.read(address, 8)).readBigUInt64LE(0);
+      }
+      const target = await decode(element, targetAddress, memory, page);
       return { text: '&' + target.text, children: target.children };
     }
     case 'N': {
@@ -333,13 +355,15 @@ function typeName(layout) {
 /** 读取并格式化一个子项，标量直接展示，聚合给出摘要并保留展开地址。 */
 async function child(layout, address, name, memory) {
   try {
+    if (memory.readable) await memory.readable(address, Math.max(1, layout.width || 1));
     if (['L', 'M', 'E', 'O', 'F', 'a'].includes(layout.kind)) {
       const handle = (await memory.read(address, 8)).readBigUInt64LE(0);
       return { name, type: typeName(layout), value: await summary(layout, handle, memory), childLayout: layout, address: handle };
     }
     if (layout.kind === 'R') {
       const pointer = (await memory.read(address, 8)).readBigUInt64LE(0);
-      return { name, type: typeName(layout), value: pointer === 0n ? 'null' : '&<' + (layout.name || '引用') + '>', childLayout: pointer === 0n ? null : layout, address: pointer };
+      const value = pointer === 0n ? 'null' : (await decode(layout, pointer, memory, { count: 0 })).text;
+      return { name, type: typeName(layout), value, childLayout: pointer === 0n ? null : layout, address: pointer };
     }
     if (layout.kind === 's') {
       const pointer = (await memory.read(address, 8)).readBigUInt64LE(0);

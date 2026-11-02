@@ -34,12 +34,12 @@ class DebugMemory {
     const base = await this.transport.scalar('(unsigned long long)&chali_debug_memory', signal);
     const header = await bytes(base, 24);
     const version = header.readBigUInt64LE(0);
-    if (![1n, 2n, 3n, 4n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
+    if (![1n, 2n, 3n, 4n, 5n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
     const visited = new Set(); let address = header.readBigUInt64LE(16), record;
     while (address) {
       if (visited.has(address) || visited.size >= 4096) throw new Error('内存线程目录循环或超过预算');
       visited.add(address);
-      const row = await bytes(address, version >= 2n ? 160 : 96);
+      const row = await bytes(address, version >= 5n ? 232 : version >= 2n ? 160 : 96);
       const state = row.readBigUInt64LE(8);
       if (row.readBigUInt64LE(0) === identity && state !== 0n) { record = { address, row, state }; break; }
       address = row.readBigUInt64LE(72);
@@ -62,6 +62,10 @@ class DebugMemory {
     const checkState = async () => {
       if ((await bytes(record.address + 8n, 8)).readBigUInt64LE() !== state) throw new Error('内存目录暂停状态已经变化');
       if ((await bytes(row.readBigUInt64LE(80), 8)).readBigUInt64LE() !== row.readBigUInt64LE(88)) throw new Error('原生执行上下文已经变化，请执行到源码停点');
+      if (version >= 5n) for (const offset of [160, 176, 192]) {
+        const pointer = row.readBigUInt64LE(offset), identity = row.readBigUInt64LE(offset + 8);
+        if (!pointer || !identity || (await bytes(pointer, 8)).readBigUInt64LE() !== identity) throw new Error('原生内存所属上下文已经变化');
+      }
     };
     await checkState();
     const data = row.readBigUInt64LE(32), dataSize = row.readBigUInt64LE(40);
@@ -74,7 +78,9 @@ class DebugMemory {
         || (await bytes(row.readBigUInt64LE(144), 8)).readBigUInt64LE() !== row.readBigUInt64LE(152)) throw new Error('对象快照已经失效');
     };
     const objects = async handle => {
+      if (handle === 0n) throw new Error('空对象句柄：尚未初始化或已被清零');
       if (version < 2n) throw new Error('目标未发布对象快照');
+      if (version >= 5n && row.readBigUInt64LE(224) !== 1n) throw new Error('对象快照不完整或超过观察预算');
       await checkObjects();
       if (!objectTables) objectTables = (async () => {
         const objectCount = row.readBigUInt64LE(104), valueCount = row.readBigUInt64LE(120), textSize = row.readBigUInt64LE(136);
@@ -103,7 +109,8 @@ class DebugMemory {
           if (rawKind > 127n) throw new Error('对象种类编码无效');
           const kind = String.fromCharCode(Number(rawKind));
           const count = rawObjects.readBigUInt64LE(at + 16), first = rawObjects.readBigUInt64LE(at + 24);
-          if (!id || records.has(id) || !(version >= 4n ? ['L', 'M', 'E', 'O', 'F'] : version >= 3n ? ['L', 'M', 'E', 'O'] : ['L', 'M', 'E']).includes(kind)
+          if (!id || records.has(id) || !(version >= 5n ? ['L', 'M', 'E', 'O', 'F', 'X'] : version >= 4n ? ['L', 'M', 'E', 'O', 'F'] : version >= 3n ? ['L', 'M', 'E', 'O'] : ['L', 'M', 'E']).includes(kind)
+            || (kind === 'X' && (count || first))
             || (kind === 'O' && count !== 2n) || (kind === 'F' && count < 1n)
             || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('对象快照身份或范围无效');
           records.set(id, { kind, count: Number(count), first: Number(first), values });
@@ -114,11 +121,44 @@ class DebugMemory {
       const records = await objectTables;
       await checkObjects();
       const object = records.get(handle);
-      if (!object) throw new Error('对象已经释放、未同步或超过快照预算');
+      if (!object) throw new Error(version >= 5n ? '对象已经释放或不属于当前原生上下文' : '对象已经释放、未同步或超过快照预算');
+      if (object.kind === 'X') throw new Error('对象仍存活，但宿主布局不支持只读解码');
       return object;
     };
+    let movedTable;
+    const readable = async (logical, length) => {
+      if (typeof logical !== 'bigint' || logical <= 0n || logical > MAXIMUM || !Number.isSafeInteger(length) || length < 1 || length > LIMIT) throw new Error('引用地址或观察宽度无效');
+      await checkState();
+      if (version >= 5n) await checkObjects();
+      if (!(logical < dataSize && BigInt(length) <= dataSize - logical)) {
+        if (!stamp || (await bytes(revision, 8)).readBigUInt64LE() !== stamp) throw new Error('引用所属堆映射已经失效');
+        let low = 0, high = regions.length;
+        while (low < high) { const middle = (low + high) >>> 1; if (regions[middle].begin <= logical) low = middle + 1; else high = middle; }
+        const region = regions[low - 1];
+        if (!region || logical >= region.end || BigInt(length) > region.end - logical) throw new Error('引用无效、已释放或不属于当前存活分配');
+      }
+      if (version < 5n) return;
+      if (!movedTable) movedTable = (async () => {
+        const count = row.readBigUInt64LE(216), pointer = row.readBigUInt64LE(208);
+        if (count > 65536n || (count && (!pointer || pointer + count * 24n > MAXIMUM))) throw new Error('移动状态目录无效或超过预算');
+        const raw = count ? await bytes(pointer, Number(count) * 24) : Buffer.alloc(0), entries = [];
+        for (let at = 0; at < raw.length; at += 24) {
+          const begin = raw.readBigUInt64LE(at), size = raw.readBigUInt64LE(at + 8);
+          if (!begin || !size || begin + size > MAXIMUM) throw new Error('移动状态区间无效');
+          entries.push({ begin, end: begin + size, type: raw.readBigInt64LE(at + 16) });
+        }
+        await checkObjects(); return entries;
+      })();
+      for (const entry of await movedTable) if (logical >= entry.begin && logical + BigInt(length) <= entry.end) {
+        throw new Error('存储区间有移动或销毁标记（运行时类型 #' + entry.type + '）');
+      }
+      await checkObjects();
+      if (logical >= dataSize && (await bytes(revision, 8)).readBigUInt64LE() !== stamp) throw new Error('引用状态核对期间堆映射已经变化');
+    };
     return {
-      regions, dataSize, object: objects, validateObjects: checkObjects,
+      regions, dataSize, object: objects, validateObjects: checkObjects, readable,
+      validateStorage: version >= 5n ? checkObjects : undefined,
+      context: version >= 5n ? { heap: row.readBigUInt64LE(168), data: row.readBigUInt64LE(184), objects: row.readBigUInt64LE(200) } : undefined,
       /** 为基础值修改核对一个完整存活区间，只返回真实地址，不在此执行写入。 */
       address: async (logical, length) => {
         if (typeof logical !== 'bigint' || logical <= 0n || logical > MAXIMUM || ![1, 8].includes(length)) throw new Error('真实存储地址或宽度无效');

@@ -96,6 +96,11 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
 struct ObjectStore
 {
     std::uint64_t nativeRecordRevision = 1; ///< 宿主记录借用及释放的失效代次，零表示永久禁用视图。
+    /**
+     * @brief 使已有调试快照失效，不改变语言借用视图的有效性。
+     * @return 无；观察代次耗尽后保持禁用。
+     */
+    void invalidateDebugSnapshots();
     /** @brief 使宿主记录的旧直接视图失效，溢出后保持禁用。 */
     void invalidateNativeRecordViews();
     bool pointerSnapshots = true; ///< 非拥有指针包装共享不可变快照，修改时分离。
@@ -129,6 +134,7 @@ struct ObjectStore
     std::int64_t next = kObjectHandleBase;  ///< 下一个句柄
     Memory::Vector<std::size_t> materializedHeap;
     Memory::Vector<std::int64_t> materializedObjects;
+    std::uint64_t debugSnapshotRevision = 1; ///< 对象及移动状态的只读观察代次，零表示永久禁用快照。
 
     /**
      * @brief 收下一个对象，返回它的句柄。

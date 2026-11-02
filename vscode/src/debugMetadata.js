@@ -202,6 +202,9 @@ class DebugMetadata {
     const byLinkage = new Map();
     for (const fn of catalog.functions) {
       text(fn.name); text(fn.linkage); text(fn.file); integer(fn.line); integer(fn.column);
+      if (fn.context !== undefined && (!fn.context || typeof fn.context !== 'object'
+        || Object.keys(fn.context).length !== 3
+        || ['heap', 'data', 'objects'].some(key => fn.context[key] !== '__chali_context_' + key))) throw new Error('调试帧上下文描述无效');
       if (byLinkage.has(fn.linkage) || !Array.isArray(fn.scopes) || !Array.isArray(fn.variables) || fn.scopes.length > POINT_LIMIT || fn.variables.length > POINT_LIMIT) throw new Error('调试函数映射重复或超过预算');
       budget.points += fn.scopes.length + fn.variables.length;
       if (budget.points > POINT_LIMIT) throw new Error('跨库变量与作用域超过总预算');

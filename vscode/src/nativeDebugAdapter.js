@@ -11,7 +11,7 @@ const { debugEnvironment, buildDiagnostics } = require('./debugConfiguration');
 const { DebugTerminal } = require('./debugTerminal');
 const { DebugMetadata, visibleBindings, LIMIT: MEMORY_LIMIT } = require('./debugMetadata');
 const { DebugMemory } = require('./debugMemory');
-const { parseLayout, decode, expandable } = require('./debugValue');
+const { parseLayout, decode, expandable, typeName } = require('./debugValue');
 const { parseExpression, evaluateExpression } = require('./debugExpression');
 const { encodeAssignment } = require('./debugAssignment');
 const { DebugThreads } = require('./debugThreads');
@@ -22,7 +22,7 @@ const { remoteEndpoint, remoteImage, verifyRemoteImage } = require('./debugRemot
 
 /** 识别内部源码标记，包括 GDB 给合成 ABI 文件补上编译目录后的形式。 */
 function internalSource(file) {
-  return !file || file.startsWith('<') || path.posix.basename(file.replace(/\\/g, '/')) === '<native-library-entry>';
+  return !file || file.startsWith('<') || ['<native-library-entry>', '<native-debug-context>'].includes(path.posix.basename(file.replace(/\\/g, '/')));
 }
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
@@ -58,7 +58,8 @@ function parseMi(text) {
         if (text[at] === '=') { key = text.slice(start, at++); } else at = start;
         const value = item();
         if (array) result.push(key ? { [key]: value } : value);
-        else result[key] = value;
+        else if (key !== undefined) result[key] = value;
+        else (result.$values ||= []).push(value);
         if (text[at] !== ',') break;
         at++;
       }
@@ -313,6 +314,17 @@ class Adapter {
       snapshot.dynamicLayout = type => this.layoutAt(this.metadata?.cache?.dynamicTypes?.get(type));
       snapshot.closureInfo = address => this.metadata?.cache?.closures?.get(address);
       snapshot.layout = index => this.layoutAt(index);
+      snapshot.referenceLayout = name => {
+        let found, encoded;
+        for (let index = 0; index < (this.metadata?.cache?.catalog?.layouts || []).length; ++index) {
+          const layout = this.layoutAt(index);
+          if (!layout || !['S', 'T', 'N'].includes(layout.kind) || layout.name !== name) continue;
+          const text = this.metadata.cache.catalog.layouts[index];
+          if (found && text !== encoded) throw new Error('引用目标类型布局存在歧义：' + name);
+          found = layout; encoded = text;
+        }
+        return found;
+      };
       return snapshot;
     });
     this.valueMemories.set(thread, pending);
@@ -329,7 +341,23 @@ class Adapter {
     const expression = '(unsigned long long)(' + binding.storageDwarf + ')';
     const result = await this.gdb.command(`-data-evaluate-expression --thread ${frame.thread} --frame ${frame.level} ` + JSON.stringify(expression), { signal });
     if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有有效的真实存储地址');
-    return { logical: BigInt(result.value), memory: await this.memoryFor(frame.thread, signal) };
+    return { logical: BigInt(result.value), memory: await this.memoryForFrame(frame, signal) };
+  }
+  /** 核对源码帧保存的内存身份，禁止将其他原生上下文的逻辑地址用于活动快照。 */
+  async memoryForFrame(frame, signal, rows) {
+    const memory = await this.memoryFor(frame.thread, signal);
+    const descriptor = frame.metadata?.function?.context;
+    if (!descriptor || !memory.context) {
+      if (frame.level !== 0) throw new Error('该构件没有可核对的调用帧内存身份');
+      return memory;
+    }
+    if (!rows) rows = (await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal })).variables || [];
+    for (const key of ['heap', 'data', 'objects']) {
+      const matches = rows.filter(row => row.name === descriptor[key]);
+      if (matches.length !== 1 || !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(matches[0].value || '')
+        || BigInt(matches[0].value) !== memory.context[key]) throw new Error('源码帧不属于活动原生上下文，或帧身份已优化不可读');
+    }
+    return memory;
   }
   /** 保证查看请求属于当前暂停代次。 */
   stopped(epoch = this.epoch) {
@@ -584,13 +612,21 @@ class Adapter {
         const frame = data.frame || {};
         const file = String(frame.fullname || frame.file || '');
         const internal = internalSource(file);
-        if (internal) {
+        const mapped = this.metadata?.frame?.(frame);
+        const observation = path.posix.basename(file.replace(/\\/g, '/')) === '<native-debug-context>';
+        const entry = mapped && /^0x[0-9a-f]+$/i.test(frame.addr || '')
+          ? mapped.function?.positions?.find(position => position.address > BigInt(frame.addr)) : null;
+        const prologue = mapped && !mapped.optimized && mapped.function?.context && !mapped.position
+          && (Number(frame.line) === mapped.function.line || observation) && entry;
+        if (internal || prologue || observation) {
           if (this.stepAttempts >= 64) {
             this.event('output', { category: 'console', output: '内部代码步进超过限制，停在当前内部位置\n' });
           } else {
             this.stepAttempts++;
             this.suppressContinued = true;
-            void gdb.command('-exec-finish --thread ' + thread).catch((error) => {
+            const command = prologue ? '-exec-until --thread ' + thread + ' *0x' + entry.address.toString(16)
+              : (observation ? '-exec-next --thread ' : '-exec-finish --thread ') + thread;
+            void gdb.command(command).catch((error) => {
               if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
               this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
               this.event('output', { category: 'stderr', output: error.message + '\n' });
@@ -784,8 +820,34 @@ class Adapter {
         }
         const bp = result.bkpt, number = Number(bp.number);
         try {
-          if (condition) await this.gdb.command(`-break-condition ${number} ${condition}`, { signal });
-          if (hits > 1) await this.gdb.command(`-break-after ${number} ${hits - 1}`, { signal });
+          const locations = bp.locations || result.$values || [];
+          const observations = locations.filter(location => path.posix.basename(String(location.fullname || location.file || '').replace(/\\/g, '/')) === '<native-debug-context>');
+          let effectiveCondition = condition, guarded = false;
+          if (observations.length && observations.length < locations.length) {
+            // Windows 重定位会重建子位置；按符号相对位置筛选，不能依赖子位置的禁用状态。
+            const bases = new Map(), clauses = [];
+            for (const location of locations.filter(location => !observations.includes(location))) {
+              if (!/^[\p{L}_][\p{L}\p{N}_.$:]*$/u.test(location.func || '') || !/^0x[0-9a-f]+$/i.test(location.addr || '')) throw new Error('源码断点位置不能安全关联函数');
+              if (!bases.has(location.func)) {
+                const value = await this.gdb.command('-data-evaluate-expression ' + JSON.stringify('(unsigned long long)&' + location.func), { signal });
+                if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value.value || '')) throw new Error('源码断点函数地址不可读');
+                bases.set(location.func, BigInt(value.value));
+              }
+              const offset = BigInt(location.addr) - bases.get(location.func);
+              if (offset < 0n || offset > 16777216n) throw new Error('源码断点与函数地址不匹配');
+              clauses.push('((unsigned long long)$pc == (unsigned long long)&' + location.func + ' + ' + offset + ')');
+            }
+            effectiveCondition = '(' + clauses.join(' || ') + ')';
+            if (condition) effectiveCondition += ' && (' + condition + ')';
+            if (hits > 1) {
+              const counter = '$chali_debug_break_' + number;
+              await this.gdb.command('-interpreter-exec console ' + JSON.stringify('set ' + counter + ' = (unsigned long long)0'), { signal });
+              effectiveCondition += ' && (' + counter + ' >= ' + hits + ' || ++' + counter + ' >= ' + hits + ')';
+            }
+            guarded = true;
+          }
+          if (effectiveCondition) await this.gdb.command(`-break-condition ${number} ${effectiveCondition}`, { signal });
+          if (hits > 1 && !guarded) await this.gdb.command(`-break-after ${number} ${hits - 1}`, { signal });
         } catch (error) {
           await this.gdb.command('-break-delete ' + bp.number, { signal }).catch(() => {});
           throw error;
@@ -996,13 +1058,15 @@ class Adapter {
             const id = this.nextHandle++;
             const original = frame.fullname ? { ...frame, fullname: this.sourceMap.toTarget(frame.fullname) } : frame;
             const sourceInfo = this.metadata?.frame(original);
-            const localFile = frame.fullname || frame.file ? this.sourceMap.toLocal(this.sourceMap.toTarget(frame.fullname || frame.file)) : undefined;
+            const observation = sourceInfo?.function && path.posix.basename(String(frame.fullname || frame.file || '').replace(/\\/g, '/')) === '<native-debug-context>';
+            const sourceFile = observation ? sourceInfo.function.file : frame.fullname || frame.file;
+            const localFile = sourceFile ? this.sourceMap.toLocal(this.sourceMap.toTarget(sourceFile)) : undefined;
             const library = sourceInfo?.function?.library;
             const implementationHash = library?.implementation === 'bitcode' ? library.bitcodeSha256 : library?.implementationSha256;
             const sourceOrigin = library ? `预编译库 ${library.module}@${library.version} · ${library.implementation} · SHA-256 ${implementationHash}`
               + (localFile && !fs.existsSync(localFile) ? ' · 源码不可用；仍可查看符号、位置、变量及反汇编' : '') : undefined;
             this.frames.set(id, { thread, level: Number(frame.level), native: frame, metadata: sourceInfo });
-            return { id, name: sourceInfo?.name || frame.func || '<native>', line: Number(frame.line) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
+            return { id, name: sourceInfo?.name || frame.func || '<native>', line: (observation ? sourceInfo.function.line : Number(frame.line)) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
               source: localFile ? { path: localFile, name: path.basename(localFile), ...(sourceOrigin ? { origin: sourceOrigin } : {}) } : undefined,
               instructionPointerReference: frame.addr };
           });
@@ -1025,14 +1089,22 @@ class Adapter {
           const target = this.handles.get(args.variablesReference);
           if (!target || target.kind === 'memory') throw new Error('变量引用已经过期或类别无效');
           if (target.kind === 'value') {
-            const memory = await this.memoryFor(target.thread, signal);
+            const memory = target.frame ? await this.memoryForFrame(target.frame, signal) : await this.memoryFor(target.thread, signal);
             const decoded = await decode(target.layout, target.address, memory, { start: args.start, count: args.count === undefined ? 100 : args.count }, target.stored);
+            const identity = (layout, address) => {
+              while (layout.kind === 'R' && layout.children.length) layout = layout.children[0];
+              return layout.kind + ':' + layout.name + ':' + address;
+            };
+            const ancestors = [...(target.ancestors || []), identity(target.layout, target.address)];
+            if (ancestors.length > 32) throw new Error('变量展开超过引用深度预算');
             body.variables = decoded.children.map((item) => {
-              const reference = item.childLayout && (item.stored || item.address > 0n)
-                ? this.handle({ kind: 'value', thread: target.thread, address: item.address, layout: item.childLayout, stored: item.stored }) : 0;
+              const cycle = item.childLayout && !item.stored && (ancestors.includes(identity(item.childLayout, item.address))
+                || (item.childLayout.kind === 'R' && ancestors.some(key => key.endsWith(':' + item.address))));
+              const reference = !cycle && item.childLayout && (item.stored || item.address > 0n)
+                ? this.handle({ kind: 'value', thread: target.thread, frame: target.frame, address: item.address, layout: item.childLayout, stored: item.stored, ancestors }) : 0;
               const memoryReference = item.childLayout && !item.stored && !['L', 'M', 'E', 'O', 'F'].includes(item.childLayout.kind) && item.address > 0n
-                ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, address: item.address }) : undefined;
-              return { name: item.name, value: item.value, type: item.type, variablesReference: reference, memoryReference,
+                ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, frame: target.frame, address: item.address }) : undefined;
+              return { name: item.name, value: cycle ? '<循环引用：' + item.value + '>' : item.value, type: item.type, variablesReference: reference, memoryReference,
                 presentationHint: { attributes: ['readOnly'] } };
             });
             break;
@@ -1044,7 +1116,7 @@ class Adapter {
           const bindings = visibleBindings(frame.metadata);
           const rows = (data.variables || []).filter(variable => {
             const binding = bindings.get(variable.name);
-            if (!binding && (variable.name.startsWith('__chali_macro_debug_') || variable.name.startsWith('__chali_storage_'))) return false;
+            if (!binding && (variable.name.startsWith('__chali_macro_debug_') || variable.name.startsWith('__chali_storage_') || variable.name.startsWith('__chali_context_'))) return false;
             if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
@@ -1053,10 +1125,10 @@ class Adapter {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
             const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
-            // 内存目录按线程发布，调用栈任意帧的聚合槽位都可读取；上下文变化由目录自身核对。
+            // 帧身份与活动内存目录分别核对，逻辑地址本身不能证明所属上下文。
             const declaredLayout = binding ? this.layoutAt(binding.layout) : null;
             const container = declaredLayout && ['L', 'M', 'E', 'O', 'F'].includes(declaredLayout.kind);
-            const addressable = (binding?.address === true || container) && numeric !== null && numeric > 0n;
+            const addressable = (binding?.address === true || container) && numeric !== null && numeric >= 0n;
             const layout = addressable ? declaredLayout : null;
             let display = value || '<不可用>';
             if (/<optimized out>/i.test(display)) display = '<已优化：当前位置没有可读值>';
@@ -1074,17 +1146,18 @@ class Adapter {
               } catch (error) { display = '<不可读：' + error.message + '>'; mirrorReadable = false; }
             }
             if (addressable) {
-              if (!container) memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: numeric });
+              if (!container && numeric > 0n) memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, frame, address: numeric });
               if (layout) {
                 try {
-                  const memory = await this.memoryFor(frame.thread, signal);
+                  const memory = await this.memoryForFrame(frame, signal, data.variables || []);
                   display = (await decode(layout, numeric, memory, { count: 0 })).text;
                 } catch (error) {
-                  if (container) display = '<不可读：' + error.message + '>';
-                  // 普通聚合目录不可用时保留原始槽值及可选内存引用。
+                  display = '<不可读：' + error.message + '>';
+                  memoryReference = undefined;
+                  // 失效或无法核对的帧不继续暴露类型化展开。
                 }
-                if (layout && expandable(layout) && layout.kind !== 's')
-                  variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
+                if (layout && numeric > 0n && expandable(layout) && layout.kind !== 's' && !display.startsWith('<不可读：'))
+                  variablesReference = this.handle({ kind: 'value', thread: frame.thread, frame, address: numeric, layout });
               }
             }
             const readOnly = frame.metadata?.optimized || !binding || binding.readOnly || binding.address || !mirrorReadable || ((binding.storage || binding.boxed) && !mirror)
@@ -1146,7 +1219,7 @@ class Adapter {
             this.stopped(epoch);
             return result;
           });
-          const snapshot = await memory.snapshot(reference.thread, signal);
+          const snapshot = reference.frame ? await this.memoryForFrame(reference.frame, signal) : await memory.snapshot(reference.thread, signal);
           const address = reference.address + BigInt(offset);
           const data = await snapshot.read(address, args.count);
           body = { address: '0x' + address.toString(16), data: data.toString('base64'), unreadableBytes: 0 };
@@ -1214,8 +1287,12 @@ class Adapter {
             if (/^(?:int8|uint8)$/.test(variable.type || '')) text = text.replace(/^(-?[0-9]+)\s+'.*'$/, '$1');
             const addressable = layout && (binding.address || ['L', 'M', 'E', 'O', 'F'].includes(layout.kind));
             const address = addressable && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(text) ? BigInt(text) : null;
-            if (address !== null) text = (await decode(layout, address, await this.memoryFor(frame.thread, signal), { count: 0 })).text;
+            if (address !== null) text = (await decode(layout, address, await this.memoryForFrame(frame, signal), { count: 0 })).text;
             else if (addressable) throw new Error('变量没有可读取的地址：' + name);
+            if (address !== null && address > 0n && layout.kind === 'R' && layout.children.length === 1 && ['i', 'u', 'f', 'b', 'c'].includes(layout.children[0].kind)) {
+              const element = layout.children[0];
+              return {text:(await decode(element,address,await this.memoryForFrame(frame,signal),{count:0})).text,type:typeName(element),layout:element,address};
+            }
             return { text, type: variable.type, layout: address === null ? null : layout, address };
           };
           const project = async (target, key, indexed, tupleOnly = false) => {
@@ -1234,7 +1311,7 @@ class Adapter {
                 return { text: '{…}', type: '记录', layout: nested, address: target.address, stored: target.stored };
               }
             }
-            const decoded = await decode(target.layout, target.address, await this.memoryFor(frame.thread, signal),
+            const decoded = await decode(target.layout, target.address, await this.memoryForFrame(frame, signal),
               indexed ? { start: key, count: 1 } : { count: 1000 }, target.stored);
             const item = indexed ? decoded.children[0] : decoded.children.find(child => child.name === key);
             if (!item || (indexed && !tuple && item.name !== String(key))) throw new Error(indexed ? '索引越界或不可读' : '字段不存在或超过读取预算：' + key + '（可读字段：' + decoded.children.map(child => child.name).join(', ') + '）');
@@ -1242,8 +1319,8 @@ class Adapter {
             return { text: item.value, type: item.type, layout: item.childLayout, address: item.address, stored: item.stored };
           };
           const value = await evaluateExpression(tree, resolve, project);
-          const variablesReference = value.layout && expandable(value.layout) && value.layout.kind !== 's'
-            ? this.handle({ kind: 'value', thread: frame.thread, address: value.address, layout: value.layout, stored: value.stored }) : 0;
+          const variablesReference = value.layout && expandable(value.layout) && value.layout.kind !== 's' && (value.stored || value.address > 0n)
+            ? this.handle({ kind: 'value', thread: frame.thread, frame, address: value.address, layout: value.layout, stored: value.stored }) : 0;
           body = { result: value.text, type: value.type, variablesReference };
           break;
         }

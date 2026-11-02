@@ -3,15 +3,19 @@
 /** 二版容器目录通过真实 MI 字节格式读取，验证范围、预算、递归与竞态。 */
 const assert = require('node:assert/strict');
 const { DebugMemory } = require('../src/debugMemory');
-function target(change = () => {}, race = false) {
+function target(change = () => {}, race = false, version = 2) {
   let valueReads = 0;
-  const header = Buffer.alloc(24), row = Buffer.alloc(160), context = Buffer.alloc(8), revision = Buffer.alloc(8);
+  const header = Buffer.alloc(24), row = Buffer.alloc(232), context = Buffer.alloc(8), revision = Buffer.alloc(8);
   const object = Buffer.alloc(32), value = Buffer.alloc(96);
-  [2n, 8n, 8192n].forEach((item, i) => header.writeBigUInt64LE(item, i * 8));
+  [BigInt(version), 8n, 8192n].forEach((item, i) => header.writeBigUInt64LE(item, i * 8));
   row.writeBigUInt64LE(42n); row.writeBigUInt64LE(2n, 8); row.writeBigUInt64LE(1n, 64);
   row.writeBigUInt64LE(12288n, 80);
   [20480n, 1n, 24576n, 1n, 0n, 0n, 16384n, 7n].forEach((item, i) => row.writeBigUInt64LE(item, 96 + i * 8));
   revision.writeBigUInt64LE(7n);
+  if (version === 5) {
+    for (const offset of [160,176,192]) {row.writeBigUInt64LE(16384n,offset);row.writeBigUInt64LE(7n,offset+8);}
+    row.writeBigUInt64LE(1n,224);
+  }
   [100n, 76n, 1n, 0n].forEach((item, i) => object.writeBigUInt64LE(item, i * 8));
   value.writeBigUInt64LE(42n, 8);
   change({ header, row, object, value, revision });
@@ -32,6 +36,11 @@ function target(change = () => {}, race = false) {
   return { reader, revision, valueReads: () => valueReads };
 }
 async function main() {
+  const opaque = await target(state=>{state.object.writeBigUInt64LE(88n,8);state.object.writeBigUInt64LE(0n,16);},false,5).reader.snapshot(1);
+  await assert.rejects(opaque.object(100n),/仍存活.*不支持/);
+  await assert.rejects(opaque.object(999n),/释放或不属于当前/);
+  const incomplete = await target(state=>state.row.writeBigUInt64LE(0n,224),false,5).reader.snapshot(1);
+  await assert.rejects(incomplete.object(999n),/不完整/);
   const dynamic = await target(state => {
     state.header.writeBigUInt64LE(3n);
     state.row.writeBigUInt64LE(2n, 120);
@@ -48,6 +57,7 @@ async function main() {
   }).reader.snapshot(1);
   assert.equal((await closure.object(100n)).values[1].flags, 8);
   const healthy = target(), snapshot = await healthy.reader.snapshot(1);
+  await assert.rejects(snapshot.object(0n),/空对象句柄/);
   const concurrent = await Promise.all(Array.from({ length: 8 }, () => snapshot.object(100n)));
   assert(concurrent.every(object => object.values[0].bits === 42n));
   assert.equal(healthy.valueReads(), 1, '并发容器查看重复读取值表');

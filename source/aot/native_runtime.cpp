@@ -40,14 +40,15 @@
 namespace
 {
 bool debugArgumentsEnabled = false;
-static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 160
+static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 232
                   && sizeof(ChaliDebugObject) == 32 && sizeof(ChaliDebugValue) == 48
+                  && sizeof(ChaliDebugMoved) == 24 && sizeof(ChaliDebugFrameContext) == 24
                   && sizeof(ChaliDebugMemoryIndex) == 24,
               "调试内存目录需要固定的 64 位布局");
 }
 extern "C" {
 /** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
-ChaliDebugMemoryIndex chali_debug_memory{ 4, 8, 0 };
+ChaliDebugMemoryIndex chali_debug_memory{ 5, 8, 0 };
 /**
  * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
@@ -330,6 +331,7 @@ struct DebugMemoryState
     std::vector<ChaliDebugObject> objects;
     std::vector<ChaliDebugValue> values;
     std::vector<char> text;
+    std::vector<ChaliDebugMoved> moved;
     ChaliDebugMemoryThread *record = nullptr;
     ChaliDebugAllocation *allocations = nullptr;
     std::size_t capacity = 0;
@@ -341,7 +343,8 @@ struct DebugMemoryState
      */
     bool room(std::size_t extra) const
     {
-        const auto used = objects.size() * sizeof(ChaliDebugObject) + values.size() * sizeof(ChaliDebugValue) + text.size();
+        const auto used = objects.size() * sizeof(ChaliDebugObject) + values.size() * sizeof(ChaliDebugValue) + text.size()
+                          + moved.size() * sizeof(ChaliDebugMoved);
         return used <= 2 * 1024 * 1024 && extra <= 2 * 1024 * 1024 - used;
     }
     /**
@@ -455,9 +458,9 @@ struct DebugMemoryState
             values[first].bits = static_cast<std::uint64_t>(object.objTag);
             return copyStored(object.objValue, first + 1, 0);
         }
-        if (object.kind != ObjectKind::NativeRecord) return true;
+        if (object.kind != ObjectKind::NativeRecord) return copyOpaque(handle);
         collection_glue::DebugCollectionView view;
-        if (!collection_glue::debugCollection(object.nativeType, object.nativeRecord.get(), &view)) return true;
+        if (!collection_glue::debugCollection(object.nativeType, object.nativeRecord.get(), &view)) return copyOpaque(handle);
         const std::size_t stride = view.kind == 'M' ? 2 : 1;
         if (objects.size() >= 4096 || view.count > 32768 / stride || values.size() > 32768 - view.count * stride
             || !room(sizeof(ChaliDebugObject) + view.count * stride * sizeof(ChaliDebugValue))) return false;
@@ -474,6 +477,17 @@ struct DebugMemoryState
         return true;
     }
     /**
+     * @brief 保留无法展开的活跃宿主对象身份，不把缺少字段的对象误报为已释放。
+     * @param handle 实际对象表句柄。
+     * @return 观察预算足够时为真。
+     */
+    bool copyOpaque(std::int64_t handle)
+    {
+        if (objects.size() >= 4096 || !room(sizeof(ChaliDebugObject))) return false;
+        objects.push_back({ static_cast<std::uint64_t>(handle), 'X', 0, 0 });
+        return true;
+    }
+    /**
      * @brief 发布当前对象表的有界只读快照，失败只撤销本次对象查看。
      * @param context 当前线程的实际原生上下文。
      * @return 无返回值。
@@ -484,16 +498,18 @@ struct DebugMemoryState
         values.clear();
         text.clear();
         auto *store = context.objects;
-        record->object_revision_address = store ? reinterpret_cast<std::uintptr_t>(&store->nativeRecordRevision) : 0;
-        record->object_revision = store ? store->nativeRecordRevision : 0;
+        record->objects_complete = 0;
+        record->object_revision_address = store ? reinterpret_cast<std::uintptr_t>(&store->debugSnapshotRevision) : 0;
+        record->object_revision = store ? store->debugSnapshotRevision : 0;
         try
         {
-            if (!store || !store->nativeRecordRevision) throw std::runtime_error("对象视图失效");
+            if (!store || !store->debugSnapshotRevision) throw std::runtime_error("对象视图失效");
             for (const auto &slot : store->handleSlots)
                 if (slot.handle && slot.object && !copyObject(slot.handle, *slot.object)) throw std::runtime_error("对象视图超过预算");
             for (const auto &entry : store->objects)
                 if (entry.second && !copyObject(entry.first, *entry.second)) throw std::runtime_error("对象视图超过预算");
-            if (record->object_revision != store->nativeRecordRevision) throw std::runtime_error("对象视图代次变化");
+            if (record->object_revision != store->debugSnapshotRevision) throw std::runtime_error("对象视图代次变化");
+            record->objects_complete = 1;
         } catch (...)
         {
             objects.clear();
@@ -506,6 +522,34 @@ struct DebugMemoryState
         record->value_count = values.size();
         record->text = reinterpret_cast<std::uintptr_t>(text.data());
         record->text_size = text.size();
+    }
+    /**
+     * @brief 仅复制仍处于当前活跃分配或数据区内的销毁标记，共享观察预算。
+     * @param context 当前正常执行路径的实际上下文。
+     * @return 无；预算不足时撤销本轮完整内存观察。
+     */
+    void publishMoved(NativeContext &context)
+    {
+        if (!context.objects || !context.data || !context.heap)
+        {
+            record->complete = 0;
+            record->moved = record->moved_count = 0;
+            return;
+        }
+        std::size_t inspected = 0;
+        for (const auto &entry : context.objects->movedStorage)
+        {
+            if (inspected++ >= 65536) { record->complete = 0; break; }
+            const auto address = entry.first.first, size = entry.second;
+            if (!address || !size) continue;
+            const bool inData = address < context.data->size() && size <= context.data->size() - address;
+            std::size_t capacity = 0;
+            if (!inData && (!context.heap->capacityAt(address, capacity) || size > capacity)) continue;
+            if (moved.size() >= 65536 || !room(sizeof(ChaliDebugMoved))) { record->complete = 0; break; }
+            moved.push_back({ address, size, entry.first.second });
+        }
+        record->moved = reinterpret_cast<std::uintptr_t>(moved.data());
+        record->moved_count = moved.size();
     }
     /** @brief 线程结束时撤销目录并释放观察缓冲，目录节点保留进程寿命。 */
     ~DebugMemoryState()
@@ -557,8 +601,15 @@ struct DebugMemoryState
         std::atomic_thread_fence(std::memory_order_seq_cst);
         record->complete = 0;
         auto &context = currentContext();
+        moved.clear();
         record->context_address = reinterpret_cast<std::uintptr_t>(&nativeThreadState.activeContext);
         record->context = reinterpret_cast<std::uintptr_t>(nativeThreadState.activeContext);
+        record->heap_address = reinterpret_cast<std::uintptr_t>(&context.heap);
+        record->heap_identity = reinterpret_cast<std::uintptr_t>(context.heap);
+        record->data_address = reinterpret_cast<std::uintptr_t>(&context.data);
+        record->data_identity = reinterpret_cast<std::uintptr_t>(context.data);
+        record->objects_address = reinterpret_cast<std::uintptr_t>(&context.objects);
+        record->objects_identity = reinterpret_cast<std::uintptr_t>(context.objects);
         auto *heap = static_cast<Heap *>(context.heap);
         record->data = reinterpret_cast<std::uintptr_t>(context.data->binary.data());
         record->data_size = context.data->binary.size();
@@ -583,6 +634,7 @@ struct DebugMemoryState
         record->count = record->complete ? count : 0;
         record->revision = revision;
         publishObjects(context);
+        publishMoved(context);
         std::atomic_thread_fence(std::memory_order_release);
         record->state = (previous | 1u) + 1;
     }
@@ -722,6 +774,18 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
 }  // namespace
 
 extern "C" {
+/**
+ * @brief 在正常源码函数序言中捕获不透明的上下文身份，供暂停后核对。
+ * @param output 编译器生成的三个观察槽，空指针不写入。
+ * @return 无，不调用用户代码或创建语言对象。
+ */
+void chali_debug_capture_context(ChaliDebugFrameContext *output)
+{
+    if (!output) return;
+    auto &context = currentContext();
+    *output = { reinterpret_cast<std::uintptr_t>(context.heap), reinterpret_cast<std::uintptr_t>(context.data),
+                reinterpret_cast<std::uintptr_t>(context.objects) };
+}
 /**
  * @brief 在调试停点之前复制当前线程的内存目录，不在变量查看请求期间执行。
  * @return 无返回值，目录复制或预算失败时保持目标程序继续运行。
@@ -1050,6 +1114,7 @@ std::int64_t chali_host_storage_lifetime(std::int64_t operation, std::int64_t va
     if (operation == 1 && !live) chali_panic("move 的源对象已经销毁，必须先重新赋值");
     if (operation == 2)
     {
+        context.objects->invalidateDebugSnapshots();
         ranges[key] = bytes;
         context.objects->largestMovedStorage = std::max(context.objects->largestMovedStorage, bytes);
     }
