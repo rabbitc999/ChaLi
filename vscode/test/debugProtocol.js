@@ -154,8 +154,27 @@ async function ordering() {
   await adapter.shutdown();
 }
 
+/** 信号栈查询迟到时不能向已关闭或已切换的会话发送停点。 */
+async function signals() {
+  const adapter = new Adapter('unused', new PassThrough(), new PassThrough());
+  const events = [];
+  adapter.event = (name, body) => events.push({ name, body });
+  let resolveFrames;
+  adapter.gdb = { command: () => new Promise(resolve => { resolveFrames = resolve; }) };
+  const stale = adapter.reportSignal({ 'thread-id': '1', 'signal-name': 'SIGILL' });
+  adapter.invalidate();
+  resolveFrames({ stack: [{ frame: { fullname: 'stale.chl', line: '2' } }] });
+  await stale;
+  assert.deepEqual(events, []);
+  adapter.gdb = { command: async () => ({ stack: [{ frame: { fullname: 'main.chl', line: '7' } }] }) };
+  await adapter.reportSignal({ 'thread-id': '2', 'signal-name': 'SIGILL' });
+  const stop = events.find(event => event.name === 'stopped');
+  assert.equal(stop.body.threadId, 2);
+  assert.match(stop.body.text, /main.chl:7/);
+}
+
 async function main() {
-  framing(); await mi(); await session(); await ordering();
+  framing(); await mi(); await session(); await ordering(); await signals();
   console.log('DAP/MI：消息预算、分片、迟到响应、取消、暂停代次及幂等清理通过');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

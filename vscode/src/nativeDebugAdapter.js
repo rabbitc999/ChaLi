@@ -166,6 +166,7 @@ class Adapter {
     this.stepAttempts = 0;        ///< 连续跳过的内部停点计数。
     this.suppressContinued = false;  ///< 过滤内部停点时不为每次恢复上报 continued。
     this.panicPoint = null;          ///< 隐藏的 panic 入口断点编号。
+    this.runtimeFailures = true;     ///< 是否在运行期失败入口暂停，重启时保留选择。
     this.breakpointInfo = new Map();
     this.logPoints = new Map();
     this.nextHandle = 1;
@@ -411,6 +412,14 @@ class Adapter {
       this.stepCommand = null;
       this.stepAttempts = 0;
       this.suppressContinued = false;
+      if (data.reason === 'signal-received') {
+        void this.reportSignal(data).catch(error => {
+          this.event('output', { category: 'stderr', output: error.message + '\n' });
+          this.invalidate(); this.state = 'stopped';
+          this.event('stopped', { reason: 'exception', threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: data['signal-meaning'] || data['signal-name'] });
+        });
+        return;
+      }
       this.invalidate();
       this.state = 'stopped';
       this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : data.reason === 'signal-received' ? 'exception' : 'step',
@@ -431,8 +440,12 @@ class Adapter {
     await command('-gdb-set charset UTF-8');
     await command('-file-exec-and-symbols ' + JSON.stringify(executable));
     // 隐藏的 panic 断点让运行期失败停在调用现场，而不是只留下退出码。
-    try { const inserted = await command('-break-insert -f chali_panic'); this.panicPoint = Number(inserted.bkpt.number); }
+    try {
+      const inserted = await command('-break-insert -f chali_panic');
+      this.panicPoint = Number(inserted.bkpt.number);
+    }
     catch { this.panicPoint = null; }
+    if (this.panicPoint !== null && !this.runtimeFailures) await command('-break-disable ' + this.panicPoint);
     if (this.terminal) {
       try { await command('-data-evaluate-expression "&chali_debug_console"'); }
       catch { throw new Error('集成终端要求带终端支持的 ChaLi --debug 产物'); }
@@ -473,6 +486,29 @@ class Adapter {
     this.invalidate();
     this.state = 'stopped';
     this.event('stopped', { reason: 'exception', threadId: thread, allThreadsStopped: true, description: 'panic', text });
+  }
+
+  /** 原生信号保留信号描述，并关联最近可用的源码调用帧；不恢复目标执行。 */
+  async reportSignal(data) {
+    const gdb = this.gdb;
+    const epoch = this.epoch;
+    const thread = Number(data['thread-id']) || 1;
+    let location = '';
+    try {
+      const frames = await gdb.command(`-stack-list-frames --thread ${thread} 0 63`);
+      for (const entry of frames.stack || []) {
+        const frame = entry.frame || entry;
+        const file = String(frame.fullname || frame.file || '');
+        const line = Number(frame.line);
+        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
+      }
+    } catch { /* 缺少调试信息时保留信号描述。 */ }
+    if (this.gdb !== gdb || this.terminated || this.epoch !== epoch) return;
+    const description = [data['signal-name'], data['signal-meaning']].filter(Boolean).join(': ') || 'native signal';
+    const text = description + (location ? '（' + location + '）' : '');
+    this.event('output', { category: 'console', output: text + '\n' });
+    this.invalidate(); this.state = 'stopped';
+    this.event('stopped', { reason: 'exception', threadId: thread, allThreadsStopped: true, description, text });
   }
 
   /** 校验用户断点条件：只接受单行非空文本，避免 MI 命令注入。 */
@@ -631,7 +667,8 @@ class Adapter {
           this.state = 'ready';
           this.progressReporting = args.supportsProgressReporting === true;
           body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true, supportsDisassembleRequest: true,
-            supportsConditionalBreakpoints: true, supportsHitConditionalBreakpoints: true, supportsFunctionBreakpoints: true, supportsLogPoints: true };
+            supportsConditionalBreakpoints: true, supportsHitConditionalBreakpoints: true, supportsFunctionBreakpoints: true, supportsLogPoints: true,
+            exceptionBreakpointFilters: [{ filter: 'runtime', label: 'ChaLi runtime failures', description: 'panic, assertions and checked memory failures', default: true }] };
           break;
         case 'launch':
           if (this.state !== 'ready') throw new Error('调试会话不能重复 launch');
@@ -662,7 +699,10 @@ class Adapter {
         case 'setBreakpoints': body = await this.setSourceBreakpoints(args, signal); break;
         case 'setFunctionBreakpoints': body = await this.setFunctionBreakpoints(args, signal); break;
         case 'setExceptionBreakpoints':
-          if ((args.filters || []).length) throw new Error('运行期错误过滤器尚未接入');
+          if (!Array.isArray(args.filters) || args.filters.some(value => value !== 'runtime')) throw new Error('未知运行期错误过滤器');
+          if ((args.filterOptions || []).length || (args.exceptionOptions || []).length) throw new Error('不支持运行期错误条件或异常路径选项');
+          if (this.panicPoint !== null) await this.gdb.command((args.filters.includes('runtime') ? '-break-enable ' : '-break-disable ') + this.panicPoint, { signal });
+          this.runtimeFailures = args.filters.includes('runtime');
           break;
         case 'configurationDone':
           if (this.state !== 'configuring') throw new Error('调试配置已经完成或当前不能启动程序');
