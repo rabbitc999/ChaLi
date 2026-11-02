@@ -6,7 +6,7 @@
 # 要让它们成为正式语言名得给 Linguist 提 PR；在那之前，认这份声明的平台 / 工具
 # （以及本地统计）会按下面的名字显示。
 linguist-detectable=false
-*.chl linguist-language=ChaLi
+*.chl linguist-language=Rust
 *.gram linguist-language=Yacc
 *.tmpl linguist-language=Template
 
