@@ -68,7 +68,7 @@ function parseLayout(text) {
 
 /** 聚合布局需要真实内存地址才能展开。 */
 function expandable(layout) {
-  return Boolean(layout) && ['S', 'T', 'a', 'A', 'R', 's'].includes(layout.kind);
+  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's'].includes(layout.kind);
 }
 
 /** 按 UTF-8 解码展示文本，超长时截断并标记。 */
@@ -126,6 +126,11 @@ async function summary(layout, address, memory) {
     }
     return '[' + count + ']';
   }
+  if (layout.kind === 'N') {
+    const tag = (await memory.read(address, 4)).readInt32LE(0);
+    const variant = layout.children.find((item) => item.count === tag);
+    return variant ? variant.name + '(' + (variant.children.length ? '…' : '') + ')' : '<未知变体 ' + tag + '>';
+  }
   if (layout.kind === 'S' || layout.kind === 'T') return layout.kind === 'T' ? '(' + (layout.children.length ? '…' : '') + ')' : '{' + (layout.children.length ? '…' : '') + '}';
   return '<' + (layout.name || 'ChaLi 值') + '>';
 }
@@ -151,6 +156,21 @@ async function decode(layout, address, memory, page = {}) {
       if (!layout.children.length) return { text: '&<' + (layout.name || '引用') + '>', children: [] };
       const target = await decode(layout.children[0], address, memory, page);
       return { text: '&' + target.text, children: target.children };
+    }
+    case 'N': {
+      const tag = (await memory.read(address, 4)).readInt32LE(0);
+      const variant = layout.children.find((item) => item.count === tag);
+      if (!variant) return { text: '<未知变体 ' + tag + '>', children: [] };
+      const children = [];
+      if (limit > 0) {
+        const end = Math.min(variant.children.length, start + limit);
+        for (let index = start; index < end; ++index) {
+          const payload = variant.children[index];
+          children.push(await child(payload, address + BigInt(payload.offset), payload.name, memory));
+        }
+      }
+      const more = variant.children.length > start + limit ? '…' : '';
+      return { text: variant.name + '(' + more + ')', children };
     }
     case 'S': case 'T': {
       const children = [];

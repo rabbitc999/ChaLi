@@ -566,7 +566,7 @@ struct AstBuilder : Builder
      * @param depth 当前嵌套深度。
      * @return 只读布局节点。
      */
-    static LayoutShape layoutOf(const ast::TypePtr &type, std::size_t depth = 0)
+    LayoutShape layoutOf(const ast::TypePtr &type, std::size_t depth = 0)
     {
         LayoutShape out;
         if (!type || depth > 32) return out;
@@ -602,8 +602,34 @@ struct AstBuilder : Builder
             out.children.push_back(layoutOf(type->element, depth + 1));
             break;
         case K::Struct:
-            out.kind = 'S';
+        {
+            // 枚举在运行期是带 __tag 与 __vN_载荷 槽的普通记录；变体名由前端登记在类型上。
+            const bool enumeration = !type->variants.empty();
             out.width = type->fields.size() * 8;
+            if (enumeration)
+            {
+                out.kind = 'N';
+                for (std::size_t variant = 0; variant < type->variants.size(); ++variant)
+                {
+                    LayoutShape node;
+                    node.kind = 'V';
+                    node.name = textOf(type->variants[variant].first);
+                    node.count = variant;
+                    const auto prefix = "__v" + std::to_string(variant) + "_";
+                    for (std::size_t index = 0; index < type->fields.size(); ++index)
+                    {
+                        const auto field = textOf(type->fields[index].first);
+                        if (field.rfind(prefix, 0) != 0) continue;
+                        auto child = layoutOf(type->fields[index].second, depth + 1);
+                        child.name = field.substr(prefix.size());
+                        child.offset = index * 8;
+                        node.children.push_back(std::move(child));
+                    }
+                    out.children.push_back(std::move(node));
+                }
+                break;
+            }
+            out.kind = 'S';
             for (std::size_t index = 0; index < type->fields.size(); ++index)
             {
                 auto child = layoutOf(type->fields[index].second, depth + 1);
@@ -612,6 +638,7 @@ struct AstBuilder : Builder
                 out.children.push_back(std::move(child));
             }
             break;
+        }
         default: break;  // 枚举与容器需要运行时身份，留到后续布局扩展。
         }
         return out;
@@ -622,7 +649,7 @@ struct AstBuilder : Builder
      * @param type 已检查类型。
      * @return 布局文本；空类型返回空文本。
      */
-    static std::string encodedLayout(const ast::TypePtr &type)
+    std::string encodedLayout(const ast::TypePtr &type)
     {
         if (!type) return {};
         return encodeLayoutShape(layoutOf(type));

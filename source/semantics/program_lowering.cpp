@@ -143,7 +143,18 @@ bool BuildStructTypes(ast::Program &program)
             fields.emplace_back(leaf.first,
                                 LowerType(leaf.second, item.first + "." + leaf.first));
         }
-        g_structType[item.first] = ast::Type::structOf(item.first, fields);
+        auto lowered = ast::Type::structOf(item.first, fields);
+        // 枚举在运行期是带 __tag/__vN_ 槽的记录；把变体名留给调试布局，不改变运行期表示。
+        auto enumeration = g_enums.find(item.first);
+        if (enumeration == g_enums.end())
+        {
+            const auto separator = item.first.find("__");
+            if (separator != Memory::String::npos) enumeration = g_enums.find(item.first.substr(0u, separator));
+        }
+        if (enumeration != g_enums.end())
+            for (const auto &variant : enumeration->second.variants)
+                lowered->variants.emplace_back(variant.name, nullptr);
+        g_structType[item.first] = lowered;
     }
     for (const auto &item : g_structType) program.types.push_back(item.second);
     for (const auto &item : g_staticFields)

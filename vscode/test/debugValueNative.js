@@ -13,6 +13,7 @@ const source = path.join(work, 'main.chl');
 const lines = [
   'struct Pair { int64 first; uint8 tag; };',
   'struct Line { Pair start; Pair end; int64 count; };',
+  'enum Shape { Circle(int64 radius), Empty };',
   'void main() {',
   '    Pair row; row.first=7; row.tag=3;',
   '    String text="hello";',
@@ -20,6 +21,12 @@ const lines = [
   '    for (int64 i in std::lang::range(0, 12)) { values[i]=i*2; }',
   '    Pair const& alias=&row;',
   '    Line line; line.start.first=1; line.start.tag=2; line.end.first=9; line.end.tag=8; line.count=5;',
+  '    Shape shape=Shape::Circle(4);',
+  '    Shape empty=Shape::Empty;',
+  '    Option<int64> maybe=Option<int64>::Value(3);',
+  '    Option<int64> none=Option<int64>::None;',
+  '    Result<int64, int64> ok=Result<int64, int64>::Ok(9);',
+  '    Result<int64, int64> err=Result<int64, int64>::Err(5);',
   '    println("READY {}", row.first);',
   '    int64 keep=1;',
   '    println("KEEP {}", keep);',
@@ -103,6 +110,23 @@ async function main() {
     assert.equal(line['end.tag'].value, '8');
     assert.equal(line.count.value, '5');
 
+    // 载荷枚举、Option 与 Result 按标签显示变体，载荷字段只列真实名字。
+    assert.equal(values.shape.value, 'Circle(…)');
+    const circle = await expand(client, values.shape);
+    assert.deepEqual(Object.keys(circle), ['radius']);
+    assert.equal(circle.radius.value, '4');
+    assert.equal(circle.radius.type, 'int64');
+    assert.equal(values.empty.value, 'Empty()');
+    assert.equal(values.maybe.value, 'Value(…)');
+    const some = await expand(client, values.maybe);
+    assert.deepEqual(Object.keys(some), ['value']);
+    assert.equal(some.value.value, '3');
+    assert.equal(values.none.value, 'None()');
+    assert.equal(values.ok.value, 'Ok(…)');
+    assert.equal((await expand(client, values.ok)).value.value, '9');
+    assert.equal(values.err.value, 'Err(…)');
+    assert.equal((await expand(client, values.err)).error.value, '5');
+
     // 继续后旧的展开引用必须失效。
     const stale = values.row.variablesReference;
     await client.request('continue', { threadId: stop.threadId });
@@ -116,6 +140,6 @@ async function main() {
     fs.writeFileSync(path.join(work, 'messages.json'), JSON.stringify({ messages: client.messages, stderr: client.stderr }, null, 2));
     await client.close();
   }
-  console.log('原生调试取值：记录、嵌套记录、数组分页、字符串与引用展开、内存引用及过期拒绝通过');
+  console.log('原生调试取值：记录、嵌套记录、数组分页、字符串、引用展开、载荷枚举、Option／Result、内存引用及过期拒绝通过');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

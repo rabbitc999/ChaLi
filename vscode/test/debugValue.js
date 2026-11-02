@@ -92,6 +92,22 @@ async function main() {
   assert.equal(page.text, '[10…]');
   assert.deepEqual(page.children.map((item) => item.name), ['2', '3', '4']);
 
+  // 枚举：标签选择变体，载荷按变体偏移读取，未知标签明确报告。
+  const shapeLayout = parseLayout(shape('N', 'Shape', [
+    { kind: 'V', name: 'Circle', count: 0, width: 8, children: [{ kind: 'i', name: 'radius', width: 8, offset: 8 }] },
+    { kind: 'V', name: 'Empty', count: 1, width: 8, children: [] },
+  ]));
+  const circle = Buffer.alloc(0x10); circle.writeInt32LE(0, 0); circle.writeBigInt64LE(4n, 8);
+  const circleView = await decode(shapeLayout, 0x600n, memory([[0x600, circle]]));
+  assert.equal(circleView.text, 'Circle()');
+  assert.equal((await decode(shapeLayout, 0x600n, memory([[0x600, circle]]), { count: 0 })).text, 'Circle(…)');
+  assert.deepEqual(circleView.children.map((item) => [item.name, item.value]), [['radius', '4']]);
+  const empty = Buffer.alloc(0x10); empty.writeInt32LE(1, 0);
+  assert.equal((await decode(shapeLayout, 0x600n, memory([[0x600, empty]]))).text, 'Empty()');
+  const unknown = Buffer.alloc(0x10); unknown.writeInt32LE(9, 0);
+  assert.match((await decode(shapeLayout, 0x600n, memory([[0x600, unknown]]))).text, /未知变体/);
+  assert.equal(expandable(shapeLayout), true);
+
   // 损坏布局必须在解析期拒绝。
   for (const text of ['', '?0:', 'i9:', 'i0:0:0:8:0:1', shape('S', 'x', [{ kind: 'i' }]).slice(0, -3), 'z0:0:0:8:0:0:'])
     assert.throws(() => parseLayout(text), /布局/);
