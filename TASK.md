@@ -123,8 +123,15 @@
 
 本步修正交付：`build/independent-validation/1.0.12-a7-link-library-name/final/`，编译器 SHA-256 为 `2bc93306c8b4825bcf1242a3e123b353a0bc76c310ab68fda396d03f20126d68`；VSIX 在 `vscode/dist/1.0.12-a7-link-library-name/`，SHA-256 为 `78c94846727833379f3fae161b71e75ae7ae419cf582e62054a4e2a994f67e4b`。工具链及文档十项与文档随机复测、LTO 效果专项、外置链接、三十九资产字节核对及打包前二十八组脚本通过；真实 VSCode 三场景逐场四进程退出。版本、静态变体、CRC、编译器及二十二个扩展源码字节核对通过。初次性能协议失败记录独立保留在 `build/independent-validation/1.0.12-a7-lto-comparison/protocol-validation/`，不能用作正式计时结果；性能工具及负载仍在工作区推进，计时项继续保留。
 
-- [ ] 对照开关前后的行为、编译／链接耗时、体积和运行结果；遵循 CPU 与冻结基线规则。
-- [ ] 同步双语文档、重建编译器及对应 VSIX，通过专项和抽样后提交推送。
+- [x] 对照开关前后的行为、编译／链接耗时、体积和运行结果；遵循 CPU 与冻结基线规则。
+
+正式性能对照已完成并独立核对：源码身份 `66afd9adc30650649493c4d618638b84d1edbdae`，被测静态编译器 SHA-256 `2bc93306c8b4825bcf1242a3e123b353a0bc76c310ab68fda396d03f20126d68`。两类等量整数链负载、五种原生／bitcode 与 LTO 配置先核对全部 AOT、独立链接和冻结运行副本，随后记录六十六个构建样本、五十运行进程、二百五十内核样本；一百一十六次计时启动 CPU 为 1%—29%，没有绑核或固定频率。结果、源文件、包及运行二进制冻结在 `build/independent-validation/1.0.12-a7-lto-comparison/measurement/`，`results.json` SHA-256 为 `8c572e9c391001ccf5216a46ca6a7a9e2ea02019e073eaca926622177665f770`，独立 `audit.json` 核对原始命令、校验值、样本数量和字节身份通过。
+
+本机 call 内核 native／off 为 10.2953 ms，bitcode／full 与 thin 为 1.1566／1.1462 ms；bulk 为 6.3899 ms 与 1.1423／1.1523 ms。编译／链接和原生库主单元 LTO 无统一改善，两个负载的 AOT DLL 仅减少 10,240 字节。双语文档完整保留五配置结果、耗时和限制，不推广到所有负载，也未重测或重标其他语言及 1.0.10／1.0.11 基线。性能驱动及负载已完整执行功能与计时分支；定稿生成、最终链接及对应 VSIX 已完成并另做验收，不冒用冻结测量的身份。
+
+- [x] 同步双语文档、重建编译器及对应 VSIX，通过专项和抽样后提交推送。
+
+A7 最终静态交付：`build/independent-validation/1.0.12-a7-lto-comparison/final/`，编译器 SHA-256 为 `3b434e4ee1d7bb760355bc9478a59d9ad6aebd43283dcf26c3e7ef9b4906f103`；VSIX 在 `vscode/dist/1.0.12-a7-lto-comparison/`，SHA-256 为 `82491c421c91db388b2fa718177d880f3aaa4f4e0b1ee7533bc7aa24d8b601f6`。定稿后的最后链接与测量版真实比较仅 PE 时间字段的两个字节不同，代码和全部数据节一致；各自保留真实摘要，旧包放在本步 `before-final-link/`，不重标测量。最终字节已通过 LTO 效果与聚合 ABI 专项，文档三项和随机复测、三十九 ABI 内嵌资产核对通过；最终 VSIX 打包前二十八组脚本、真实 VSCode 三场景及每场四进程退出通过。版本、静态变体、CRC、编译器及二十二个扩展源码字节核对、双语表格与原始数值核对均通过，原始 `results.json` 摘要不变。外置工具路径及三目标格式证据沿用以上各步，未声称外置变体整包、其他目标实际执行或整仓最终全量通过；这些仍按 A8／D8 保留。
 
 ## A8：配置、编辑器、书稿与发行
 

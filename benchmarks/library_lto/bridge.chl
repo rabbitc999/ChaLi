@@ -1,0 +1,4 @@
+module bench::bridge;
+import bench::base;
+int64 step(int64 value,int64 index){return bench::base::step(value,index);}
+int64 bulk(int64 value,int64 start){return bench::base::bulk(value,start);}
