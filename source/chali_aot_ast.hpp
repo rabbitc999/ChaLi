@@ -536,6 +536,98 @@ struct AstBuilder : Builder
     std::size_t profileIndex = 0;  ///< 当前函数中计数位置的稳定遍历编号。
     ast::NodePtr lastLocation;     ///< 合成控制流节点缺少位置时，沿用本函数最近的源码位置。
 
+    /** @brief 与运行时 value_text 同格式的只读逻辑布局，不含地址或用户回调。 */
+    struct LayoutShape
+    {
+        char kind = 'X';
+        std::string name;
+        std::size_t offset = 0, count = 0, width = 8;
+        std::vector<LayoutShape> children;
+    };
+
+    /**
+     * @brief 编码一个布局节点，格式与运行时 value_text::encode 一致。
+     * @param shape 待编码布局。
+     * @return 长度前缀文本。
+     */
+    static std::string encodeLayoutShape(const LayoutShape &shape)
+    {
+        const auto number = [](std::size_t value) { return std::to_string(value) + ":"; };
+        std::string out(1, shape.kind);
+        out += number(shape.name.size()) + shape.name + number(shape.offset) + number(shape.count) + number(shape.width) + number(0)
+               + number(shape.children.size());
+        for (const auto &child : shape.children) out += encodeLayoutShape(child);
+        return out;
+    }
+
+    /**
+     * @brief 从检查后的类型推导可解码布局；未知或过深的部分保留为不可解码节点。
+     * @param type 已检查类型。
+     * @param depth 当前嵌套深度。
+     * @return 只读布局节点。
+     */
+    static LayoutShape layoutOf(const ast::TypePtr &type, std::size_t depth = 0)
+    {
+        LayoutShape out;
+        if (!type || depth > 32) return out;
+        using K = ast::Type::Kind;
+        out.name = textOf(type->name);
+        switch (type->kind)
+        {
+        case K::Bool:
+            out.kind = 'b';
+            out.width = 1;
+            break;
+        case K::Int:
+        case K::Uint:
+            out.kind = type->kind == K::Int ? 'i' : 'u';
+            out.width = static_cast<std::size_t>(std::max(1, type->bits / 8));
+            break;
+        case K::Float:
+            out.kind = 'f';
+            out.width = 8;  // 数值帧以 double 保存 f32 与 f64。
+            break;
+        case K::String:
+            out.kind = 's';
+            out.width = 8;
+            break;
+        case K::Ref:
+            out.kind = 'R';
+            out.width = 8;
+            if (type->element) out.children.push_back(layoutOf(type->element, depth + 1));
+            break;
+        case K::Array:
+            out.kind = 'a';
+            out.width = type->element && type->element->kind == K::Uint && type->element->bits == 8 ? 1 : 8;
+            out.children.push_back(layoutOf(type->element, depth + 1));
+            break;
+        case K::Struct:
+            out.kind = 'S';
+            out.width = type->fields.size() * 8;
+            for (std::size_t index = 0; index < type->fields.size(); ++index)
+            {
+                auto child = layoutOf(type->fields[index].second, depth + 1);
+                child.name = textOf(type->fields[index].first);
+                child.offset = index * 8;
+                out.children.push_back(std::move(child));
+            }
+            break;
+        default: break;  // 枚举与容器需要运行时身份，留到后续布局扩展。
+        }
+        return out;
+    }
+
+    /**
+     * @brief 编码变量的逻辑布局。
+     * @param type 已检查类型。
+     * @return 布局文本；空类型返回空文本。
+     */
+    static std::string encodedLayout(const ast::TypePtr &type)
+    {
+        if (!type) return {};
+        return encodeLayoutShape(layoutOf(type));
+    }
+
     /**
      * @brief 从检查后的基础类型描述实际帧表示，复合逻辑句柄不伪装成机器指针。
      * @param variable 待补齐的变量描述。
@@ -546,10 +638,11 @@ struct AstBuilder : Builder
     {
         if (!valueType) return;
         using K = ast::Type::Kind;
-        variable.logicalAddress = valueType->kind == K::Struct || valueType->kind == K::Array
+        variable.logicalAddress = valueType->kind == K::Struct || valueType->kind == K::Array || valueType->kind == K::String
                                   || (valueType->kind == K::Ref && valueType->element
                                       && (valueType->element->kind == K::Struct || valueType->element->kind == K::Array
                                           || valueType->element->kind == K::String));
+        variable.layout = state.debugInfo.registerLayout(encodedLayout(valueType));
         variable.bits = 64;
         variable.encoding = "DW_ATE_unsigned";
         switch (valueType->kind)

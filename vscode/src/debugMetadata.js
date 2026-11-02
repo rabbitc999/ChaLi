@@ -86,6 +86,9 @@ class DebugMetadata {
       || !Array.isArray(catalog.functions) || !Array.isArray(catalog.positions)
       || catalog.functions.length > POINT_LIMIT || catalog.positions.length > POINT_LIMIT) throw new Error('调试映射版本、目标或条目预算不匹配');
     const macros = new Map();
+    if (catalog.layouts !== undefined && (!Array.isArray(catalog.layouts) || catalog.layouts.length > POINT_LIMIT)) throw new Error('调试布局超过预算');
+    for (const layout of catalog.layouts || [])
+      if (typeof layout !== 'string' || layout.length > 1048576 || layout.includes('\0')) throw new Error('调试布局文本无效');
     const origin = value => { if (!value) throw new Error('宏来源缺失'); text(value.file); integer(value.line); integer(value.column); };
     if (catalog.macros !== undefined && (!Array.isArray(catalog.macros) || catalog.macros.length > POINT_LIMIT)) throw new Error('宏来源超过预算');
     for (const macro of catalog.macros || []) {
@@ -118,6 +121,7 @@ class DebugMetadata {
         macroId(variable.macro);
         if (variable.boxed !== undefined && typeof variable.boxed !== 'boolean') throw new Error('调试绑定存储标记无效');
         if (variable.address !== undefined && typeof variable.address !== 'boolean') throw new Error('调试地址类别无效');
+        if (variable.layout !== undefined && variable.layout !== -1) integer(variable.layout);
         if (!fn.parents.has(variable.scope) || typeof variable.readOnly !== 'boolean') throw new Error('调试变量来源无效');
       }
       fn.positions = []; byLinkage.set(fn.linkage, fn);

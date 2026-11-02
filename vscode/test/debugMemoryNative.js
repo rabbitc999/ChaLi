@@ -41,11 +41,17 @@ async function variables(client,thread) {
   const values=await client.request('variables',{variablesReference:scopes.scopes[0].variablesReference});
   return Object.fromEntries(values.variables.map(value=>[value.name,value]));
 }
+/** 取一次引用对应的逻辑基址；聚合值的显示文本不再是地址。 */
+async function addressOf(client,value) {
+  const response=await client.request('readMemory',{memoryReference:value.memoryReference,count:0});
+  return BigInt(response.address);
+}
 /** 只读指定逻辑值的字节，同时核对返回的逻辑地址。 */
 async function bytes(client,value,count,offset=0) {
   assert(value?.memoryReference,'值需要本次暂停的逻辑内存引用：'+JSON.stringify(value));
+  const base=await addressOf(client,value);
   const response=await client.request('readMemory',{memoryReference:value.memoryReference,count,offset});
-  assert.equal(BigInt(response.address),BigInt(value.value)+BigInt(offset));
+  assert.equal(BigInt(response.address),base+BigInt(offset));
   assert.equal(response.unreadableBytes,0);
   const data=Buffer.from(response.data,'base64');assert.equal(data.length,count);return data;
 }

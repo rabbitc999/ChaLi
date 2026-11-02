@@ -29,6 +29,7 @@ struct DebugVariable
     std::string dwarfName = {}; ///< 私有宏变量的独立调试名，避免遮蔽调用方绑定。
     std::int64_t macro = -1;    ///< 非负值表示只在该宏展开帧内可见。
     bool logicalAddress = false;  ///< 编译器确认槽值直接指向语言数据区或堆，不包括宿主对象编号。
+    std::int64_t layout = -1;     ///< 版本化逻辑布局索引；负值表示没有可解码布局。
 };
 /**
  * @brief AST 或兼容四元式节点的原始源码位置及词法范围。
@@ -81,6 +82,8 @@ class NativeDebugInfo
     std::vector<FunctionSource> functions_;
     std::vector<PositionSource> positions_;
     std::map<std::int64_t, DebugMacroFrame> macros_;
+    std::vector<std::string> layouts_;              ///< 去重后的逻辑布局文本，索引写进变量描述。
+    std::map<std::string, std::size_t> layoutIds_;  ///< 布局文本到公开索引。
     std::size_t next_ = 1000000, unit_ = 0, empty_ = 0, integer_ = 0, real_ = 0;
     std::string metadata_;
     std::map<std::string, std::size_t> files_;
@@ -105,6 +108,12 @@ public:
      * @return 无。
      */
     void recordMacro(DebugMacroFrame frame);
+    /**
+     * @brief 登记一份逻辑布局文本并返回稳定索引，相同文本只保存一次。
+     * @param encoded 已编码的布局文本；空文本表示没有可解码布局。
+     * @return 非负索引，空文本返回 -1。
+     */
+    std::int64_t registerLayout(const std::string &encoded);
     /**
      * @brief 给一个函数附加源码位置和实际变量地址。
      * @param definition 完整 LLVM 函数定义。

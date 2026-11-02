@@ -95,6 +95,21 @@ void NativeDebugInfo::recordMacro(DebugMacroFrame frame)
     if (frame.id >= 0) macros_.emplace(frame.id, std::move(frame));
 }
 /**
+ * @brief 登记一份逻辑布局文本并返回稳定索引，相同文本只保存一次。
+ * @param encoded 已编码的布局文本；空文本表示没有可解码布局。
+ * @return 非负索引，空文本返回 -1。
+ */
+std::int64_t NativeDebugInfo::registerLayout(const std::string &encoded)
+{
+    if (encoded.empty()) return -1;
+    const auto found = layoutIds_.find(encoded);
+    if (found != layoutIds_.end()) return static_cast<std::int64_t>(found->second);
+    const auto index = layouts_.size();
+    layouts_.push_back(encoded);
+    layoutIds_.emplace(encoded, index);
+    return static_cast<std::int64_t>(index);
+}
+/**
  * @brief 为原始路径登记 DWARF 文件。
  * @param path UTF-8 路径。
  * @return 对应文件节点。
@@ -287,6 +302,7 @@ void NativeDebugInfo::finish(std::string &module)
                        + ",\"dwarf\":" + debugJsonString(variable.dwarfName.empty() ? variable.name.substr(0, variable.name.find('$')) : variable.dwarfName)
                        + ",\"macro\":" + std::to_string(variable.macro)
                        + ",\"address\":" + (variable.logicalAddress ? "true" : "false")
+                       + ",\"layout\":" + std::to_string(variable.layout)
                        + ",\"scope\":" + std::to_string(variable.scope) + ",\"file\":" + debugJsonString(debugSourcePath(variable.file))
                        + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
@@ -306,6 +322,12 @@ void NativeDebugInfo::finish(std::string &module)
         const auto &frame = entry.second;
         catalog += "{\"id\":" + std::to_string(frame.id) + ",\"parent\":" + std::to_string(frame.parent) + ",\"name\":" + debugJsonString(frame.name)
                    + ",\"call\":" + sourceJson(frame.call) + ",\"invocation\":" + sourceJson(frame.invocation) + ",\"definition\":" + sourceJson(frame.definition) + "}";
+    }
+    catalog += "],\"layouts\":[";
+    for (std::size_t index = 0; index < layouts_.size(); ++index)
+    {
+        if (index) catalog += ",";
+        catalog += debugJsonString(layouts_[index]);
     }
     catalog += "],\"positions\":[";
     std::string addresses;

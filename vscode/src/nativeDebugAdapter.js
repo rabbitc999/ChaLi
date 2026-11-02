@@ -11,6 +11,7 @@ const { debugEnvironment, buildDiagnostics } = require('./debugConfiguration');
 const { DebugTerminal } = require('./debugTerminal');
 const { DebugMetadata, visibleBindings, LIMIT: MEMORY_LIMIT } = require('./debugMetadata');
 const { DebugMemory } = require('./debugMemory');
+const { parseLayout, decode, expandable } = require('./debugValue');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -215,6 +216,42 @@ class Adapter {
     this.epoch++;
     this.frames.clear();
     this.handles.clear();
+    this.valueMemories?.clear();
+    this.layoutCache?.clear();
+  }
+  /**
+   * @brief 解析并缓存调试目录里的版本化布局；缺失或损坏只影响结构化展示。
+   * @param index 变量登记的非负布局索引。
+   * @returns {object|null} 解析后的布局。
+   */
+  layoutAt(index) {
+    if (!Number.isSafeInteger(index) || index < 0) return null;
+    if (!this.layoutCache) this.layoutCache = new Map();
+    if (this.layoutCache.has(index)) return this.layoutCache.get(index);
+    const raw = this.metadata?.cache?.catalog?.layouts?.[index];
+    let parsed = null;
+    try { parsed = typeof raw === 'string' ? parseLayout(raw) : null; } catch { parsed = null; }
+    this.layoutCache.set(index, parsed);
+    return parsed;
+  }
+  /**
+   * @brief 取得本暂停代次共享的只读内存快照，供结构化变量展开使用。
+   * @param thread 目标线程。
+   * @param signal 取消信号。
+   * @returns {Promise<object>} 目录快照。
+   */
+  async memoryFor(thread, signal) {
+    if (!this.valueMemories) this.valueMemories = new Map();
+    if (this.valueMemories.has(thread)) return this.valueMemories.get(thread);
+    const memory = new DebugMemory(async (text, options) => {
+      this.stopped();
+      const result = await this.gdb.command(text, options);
+      this.stopped();
+      return result;
+    });
+    const snapshot = await memory.snapshot(thread, signal);
+    this.valueMemories.set(thread, snapshot);
+    return snapshot;
   }
   /** 保证查看请求属于当前暂停代次。 */
   stopped(epoch = this.epoch) {
@@ -606,25 +643,54 @@ class Adapter {
           break;
         }
         case 'variables': {
-          const frame = this.handles.get(args.variablesReference);
-          if (!frame || frame.kind === 'memory') throw new Error('变量引用已经过期或类别无效');
+          const target = this.handles.get(args.variablesReference);
+          if (!target || target.kind === 'memory') throw new Error('变量引用已经过期或类别无效');
+          if (target.kind === 'value') {
+            const memory = await this.memoryFor(target.thread, signal);
+            const decoded = await decode(target.layout, target.address, memory, { start: args.start, count: args.count === undefined ? 100 : args.count });
+            body.variables = decoded.children.map((item) => {
+              const reference = item.childLayout && item.address > 0n
+                ? this.handle({ kind: 'value', thread: target.thread, address: item.address, layout: item.childLayout }) : 0;
+              const memoryReference = item.childLayout && item.address > 0n
+                ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, address: item.address }) : undefined;
+              return { name: item.name, value: item.value, type: item.type, variablesReference: reference, memoryReference };
+            });
+            break;
+          }
+          const frame = target;
           const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal });
           // GDB 从最内层逐块列举，保留首先遇到的绑定，隐藏被遮蔽的外层同名值。
           const visible = new Set();
           const bindings = visibleBindings(frame.metadata);
-          body.variables = (data.variables || []).filter(variable => {
+          const rows = (data.variables || []).filter(variable => {
             const binding = bindings.get(variable.name);
             if (!binding && variable.name.startsWith('__chali_macro_debug_')) return false;
             if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
-          }).map((variable) => {
+          });
+          body.variables = await Promise.all(rows.map(async (variable) => {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
-            const memoryReference = frame.level === 0 && binding?.address === true && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') && BigInt(value) > 0n
-              ? 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: BigInt(value) }) : undefined;
-            return { name: binding?.name || variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0, memoryReference };
-          });
+            const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
+            const addressable = frame.level === 0 && binding?.address === true && numeric !== null && numeric > 0n;
+            const layout = addressable ? this.layoutAt(binding.layout) : null;
+            let display = value || '<不可用>';
+            let memoryReference;
+            let variablesReference = 0;
+            if (addressable) {
+              memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: numeric });
+              if (layout) {
+                try {
+                  const memory = await this.memoryFor(frame.thread, signal);
+                  display = (await decode(layout, numeric, memory, { count: 0 })).text;
+                } catch { /* 目录不可用时保留原始槽值，内存引用仍可单独读取。 */ }
+                if (layout && expandable(layout) && layout.kind !== 's')
+                  variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
+              }
+            }
+            return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: variable.name, variablesReference, memoryReference };
+          }));
           break;
         }
         case 'readMemory': {
