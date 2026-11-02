@@ -109,3 +109,11 @@ The compiler publishes a directory only after a block has executed source statem
 Owning aggregates and containers still appear as ChaLi logical handles, which must not be dereferenced as C machine pointers. Expressions use syntax accepted by GDB.
 
 Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it needs no VM installation and does not cast runtime function values into machine function pointers.
+
+## Real VSCode extension tests
+
+Run `npm run test:extension` from the repository's `vscode/` directory. This requires an installed VSCode, GDB, an executable ChaLi compiler and a graphical session. `CHALI_BIN` selects the stage compiler, defaulting to the bundled compiler. `CHALI_VSCODE_EXECUTABLE` selects the VSCode executable; Windows defaults to the Program Files installation, while other hosts resolve `code` on PATH. `CHALI_GDB` overrides GDB. Missing prerequisites cause a failure.
+
+The entry isolates user configuration, installed extensions and the workspace beneath the repository's root `tmp/`. The real extension host checks activation, language identification, source builds and breakpoints, stack frames, scalar and array values, cancellation, panic messages and failure exit. Each scenario records its adapter, GDB and target processes and verifies that all exit. Logs and result JSON remain in the temporary directory for archival and cleanup according to repository rules. VSCode 1.132.0 has been exercised on Windows x64. Process-tree readers exist for other hosts; this does not establish execution evidence for those platforms.
+
+`npm run test:extension -- --debug` pauses before extension tests for a JavaScript debugger on port 9333. The overall timeout is 240 seconds. Automated gates omit this option. Run the independent module gate from the repository root with `python tools/run_module_gates.py editor_host --chali COMPILER_PATH`. Release gates and VSIX packaging also run the real host tests.

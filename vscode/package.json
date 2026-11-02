@@ -29,6 +29,7 @@
   ],
   "main": "./extension.js",
   "scripts": {
+    "test:extension": "node tools/test-extension-host.js",
     "embed": "node tools/embed-compiler.js",
     "check": "node tools/check-manifest.js",
     "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/build.js",

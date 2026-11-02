@@ -42,3 +42,5 @@ node tools/package.js --llvm-variant static --compiler 编译器绝对路径 --o
 外置包将变体改为 `external`。打包检查清单、实际编译器版本／变体、原生 LSP、扩展交互、宏渲染与高亮、取消及构建输出。测试依赖和工具历史不入包；打包检查不等于整仓全量回归。
 
 发布者标识为 `rabbitc999`，作者为小兔糖糖_OvO <rabbitc999@outlook.com>。扩展使用 Apache-2.0，保留根目录 LICENSE、NOTICE 和依赖署名。
+
+真实扩展宿主测试入口为 `npm run test:extension`，调试测试使用 `npm run test:extension -- --debug`（端口 9333，总超时 240 秒）。需要已安装的 VSCode、GDB 和图形会话；可用 `CHALI_VSCODE_EXECUTABLE`、`CHALI_BIN`、`CHALI_GDB` 选择工具。测试覆盖断点值查看、取消、panic 和原生进程清理，详见[原生调试](../doc/43-native-debugging.md)。

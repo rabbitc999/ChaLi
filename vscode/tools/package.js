@@ -118,6 +118,7 @@ function main() {
     run(process.execPath, [path.join('test', 'editorIntegration.js')]);
     run(process.execPath, [path.join('test', 'macroHighlighting.js')]);
     run(process.execPath, [path.join('test', 'build.js')]);
+    run(process.execPath, [path.join('tools', 'test-extension-host.js')]);
   }
   const [command, prefix] = vsce();
   fs.mkdirSync(outDir, { recursive: true });

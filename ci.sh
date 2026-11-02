@@ -9,6 +9,7 @@
 #   sh ci.sh --help
 #
 # 环境要求：g++ / gcc / make / python3.11+ 必需；cmake 仅发布门禁需要。
+# 发布门禁的真实扩展测试还需 VSCode、GDB 和图形会话；可用 CHALI_VSCODE_EXECUTABLE 指定宿主。
 # 还要一份 **ParseEngine 文法生成器**：默认找 `${ENGINE:-../build/bin/ParseEngine}`，
 # 它由 ParseEngine 仓库（不含在本项目里）产出；不在就报错退出 2。
 #
@@ -340,6 +341,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "核对番外原文与双语教程例程" "$PYTHON" tests/chali_book_rewrite.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
     run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
+    run_step "运行真实 VSCode 扩展宿主调试与进程清理回归" "$PYTHON" tests/chali_vscode_extension_host.py --chali "$CHALI_BIN"
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"
     run_step "运行反射学生管理的持久化与校验回归" "$PYTHON" tests/chali_reflection_students.py --compiler "$CHALI_BIN"
     run_step "检查学生管理服务器的统一错误类型" "$CHALI_BIN" check example/students-server/src/main.chl

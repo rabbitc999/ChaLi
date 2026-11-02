@@ -213,6 +213,10 @@
 
 ## D8：VSCode、回归与最终交付
 
+本步已完成：新增 `npm run test:extension` 真实扩展宿主入口，`--debug` 提供端口 9333 的测试调试入口；独立 `editor_host`、发布门禁与 VSIX 打包接入。Windows x64 的 VSCode 1.132.0 已用本阶段重建静态编译器通过真实激活、源码构建、断点、调用栈、标量／数组查看、取消与 panic 三场景，逐场观察的四个调试进程全部退出。缺少环境明确失败；其他宿主路径提供进程树实现，未声称实测通过。
+
+静态交付：`build/independent-validation/1.0.12-d8-extension-host/` 与 `vscode/dist/1.0.12-d8-extension-host/`。编译器 SHA-256 为 `6cfa36d978a8c7640482af44bf05e793504137b3cd27bd52854180c36b4e8908`，VSIX 为 `c0e01781110813d9056fdd5da52715f65da2963c084bb45e215d6dfd8fc089e4`。正式真实宿主门禁、完整调试二十二组及其整组随机复测通过；线程等待跨模块抽样、文档链接检查通过。打包前二十四组脚本通过（含真实宿主），版本、静态变体、ZIP CRC、内嵌编译器和扩展入口及二十一个生产脚本字节核对通过。证据留在交付目录；初次宿主试验误用 stopped.description 断言异常消息，改为 stopped.text 后复验通过，原失败日志保留。没有据此声称最终整仓全量或双变体交付完成。
+
 ### 本次任务简介：D8.1 原始内存与反汇编能力
 
 目标：补齐 VSCode 原生调试面板依赖的底层查看能力，仍由 GDB 读取目标。
@@ -226,7 +230,7 @@
 产物：`build/independent-validation/1.0.12-d4-2-failures/` 与 `vscode/dist/1.0.12-d8-1-disassemble/`；本地证据：`tools/history/20261102/chali-1.0.12-d8-1-disassemble/`。编译器 SHA-256 与 D3.2b 相同（3c9b8f18a9d15b7231f398ac7b6110fb32325b4d5047b8dd0e66cb8c46f1f94b）；VSIX：53f21502b4d2de2f5ba6069ef4d3c447c5b973e74204949b06cdefa3c1f0f2dd。
 
 - [x] D8.1 原始内存与反汇编：标准 DAP `readMemory` 与 `disassemble` 均可用，反汇编支持前后窗口、字节偏移与数量上限。
-- [ ] 测试调试入口与真实 VSCode 扩展测试（需要 VS Code 下载与图形会话）；调试命令、环境检查与日志已在扩展中提供。
-- [ ] 覆盖协议单测、真实 GDB 集成和真实 VSCode 扩展测试；覆盖取消、异常和进程清理。
+- [x] 测试调试入口与真实 VSCode 扩展测试：独立隔离宿主、端口 9333 调试入口、正式模块／发布／VSIX 门禁接入，Windows x64 的本机 VSCode 1.132.0 实测通过。
+- [x] 覆盖协议单测、真实 GDB 集成和真实 VSCode 扩展测试；完整调试及复测、宿主断点／取消／panic、逐场原生进程退出通过。
 - [ ] 每个 D 阶段同样重建对应编译器与静态优先 VSIX，专项与抽样通过后中文提交推送 Gitee。
 - [ ] A5—A8 与 D0—D8 全部完成后运行整仓全量门禁；核对双变体、产物、文档和清理证据，再结束交付。
