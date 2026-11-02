@@ -75,6 +75,13 @@ std::string debugSourcePath(const std::string &value)
 }
 }  // namespace
 /**
+ * @brief 保存调试优化策略，后续位置及 DWARF 使用同一模式。
+ * @param optimized 是否允许优化管线内联及删除函数。
+ */
+NativeDebugInfo::NativeDebugInfo(bool optimized) : optimized_(optimized)
+{
+}
+/**
  * @brief 追加独立的元数据节点。
  * @param value 节点正文。
  * @return 节点编号。
@@ -186,7 +193,7 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
         const auto function = functions_.size();
         functions_.push_back({ name, linkage, origin, variables, scopes });
         for (const auto &entry : lines)
-            if (entry.second.line && !entry.second.file.empty()) positions_.push_back({ function, entry.first, entry.second });
+            if (!optimized_ && entry.second.line && !entry.second.file.empty()) positions_.push_back({ function, entry.first, entry.second });
     }
     const auto source = file(origin.file);
     if (!unit_)
@@ -195,13 +202,13 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
         integer_ = node("!DIBasicType(name: \"int64\", size: 64, encoding: DW_ATE_signed)");
         real_ = node("!DIBasicType(name: \"float64\", size: 64, encoding: DW_ATE_float)");
         unit_ = node("distinct !DICompileUnit(language: DW_LANG_C_plus_plus, file: !" + std::to_string(source)
-                     + ", producer: \"ChaLi\", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug)");
+                     + ", producer: \"ChaLi\", isOptimized: " + (optimized_ ? "true" : "false") + ", runtimeVersion: 0, emissionKind: FullDebug)");
     }
     const auto type = node("!DISubroutineType(types: !" + std::to_string(empty_) + ")");
     const auto scope = node("distinct !DISubprogram(name: " + metadataString(name) + ", linkageName: " + metadataString(linkage)
                             + ", scope: !" + std::to_string(source) + ", file: !" + std::to_string(source) + ", line: " + std::to_string(std::max<std::size_t>(1, origin.line))
                             + ", type: !" + std::to_string(type) + ", scopeLine: " + std::to_string(std::max<std::size_t>(1, origin.line))
-                            + ", spFlags: DISPFlagDefinition, unit: !" + std::to_string(unit_) + ", retainedNodes: !" + std::to_string(empty_) + ")");
+                            + ", spFlags: DISPFlagDefinition" + (optimized_ ? " | DISPFlagOptimized" : "") + ", unit: !" + std::to_string(unit_) + ", retainedNodes: !" + std::to_string(empty_) + ")");
     std::map<std::size_t, std::size_t> lexicalScopes{ { 0, scope } };
     std::function<std::size_t(std::size_t)> lexicalScope = [&](std::size_t id) {
         const auto found = lexicalScopes.find(id);
@@ -297,7 +304,8 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
 void NativeDebugInfo::finish(std::string &module)
 {
     if (!unit_) return;
-    std::string catalog = "{\"version\":1,\"pointerBytes\":8,\"byteOrder\":\"little\",\"functions\":[";
+    std::string catalog = "{\"version\":1,\"pointerBytes\":8,\"byteOrder\":\"little\",\"optimized\":"
+                          + std::string(optimized_ ? "true" : "false") + ",\"functions\":[";
     for (std::size_t index = 0; index < functions_.size(); ++index)
     {
         const auto &function = functions_[index];

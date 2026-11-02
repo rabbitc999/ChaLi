@@ -43,6 +43,9 @@ def _language():
 
 # CHALI_CATALOG_BEGIN
 _MESSAGES = {
+  "  --debug-optimized      保留调试信息并使用 O3／LTO，变量可能被优化\n": [
+    "  --debug-optimized      Keep debug info with O3/LTO; variables may be optimized out\n"
+  ],
   "lang 后需要 zh、en 或 auto": [
     "lang requires zh, en or auto"
   ],

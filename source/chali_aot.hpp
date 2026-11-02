@@ -56,6 +56,7 @@ struct Options
 {
     bool checked = false;                            ///< 原生导出默认 unchecked，run 驱动显式开启检查。
     bool debug = false;                               ///< 保留原生源码与局部变量调试信息。
+    bool debugOptimized = false;                      ///< debug 为真时使用 O3／LTO，不承诺变量或步骤完整保留。
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。

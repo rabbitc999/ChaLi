@@ -14,8 +14,9 @@ from parallel_gates import default_jobs, positive_jobs, run_tasks
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
     "moves": ["chali_language_move", "chali_resource_lifetime", "chali_native_callbacks", "chali_backend_ownership"],
-    "debug": ["chali_native_debug"],
+    "debug": ["chali_native_debug", "chali_debug_optimization"],
     "debug_remote": ["chali_native_remote_debug"],
+    "debug_bitcode": ["chali_debug_bitcode_optimization"],
     "editor_host": ["chali_vscode_extension_host"],
     "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_enums", "chali_library_lifetimes", "chali_library_bitcode_header", "chali_library_bitcode", "chali_library_bitcode_values", "chali_library_lto", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],

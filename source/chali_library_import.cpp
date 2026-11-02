@@ -265,6 +265,7 @@ void ImportSession::appendTo(chali_aot::Options &options)
             materialize.compiler = state_->compiler.c_str();
             materialize.sysroot = options.sysroot;
             materialize.debug = options.debug;
+            materialize.debugOptimized = options.debugOptimized;
             materialize.lto = options.lto;
             materialize.thinLto = options.thinLto;
             Memory::Vector<Memory::String> diagnostics;

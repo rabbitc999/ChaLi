@@ -206,7 +206,7 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
     storage.push_back("--start-group");
     for (const auto &input : request.inputs) storage.emplace_back(input.c_str());
     for (const auto &bitcode : request.options.linkBitcode) storage.emplace_back(bitcode.c_str());
-    if (!request.options.linkBitcode.empty()) storage.push_back(request.options.debug ? "--lto-O0" : "--lto-O3");
+    if (!request.options.linkBitcode.empty()) storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
     for (const auto &name : request.libraryNames) storage.push_back("-l" + std::string(name.c_str()));
     if (!request.noRuntime)
     {
@@ -311,7 +311,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (!failed)
     {
         const auto cpu = request.options.cpu.empty() ? targetInfo.cpu : request.options.cpu;
-        machine = LLVMCreateTargetMachine(target, triple, cpu.c_str(), "", request.options.debug ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
+        machine = LLVMCreateTargetMachine(target, triple, cpu.c_str(), "", (request.options.debug && !request.options.debugOptimized) ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
         failed = machine == nullptr;
         if (!failed)
         {
@@ -330,7 +330,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
             module.setModuleFlag(llvm::Module::Error, "ThinLTO", std::uint32_t(request.options.thinLto));
         }
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
-        LLVMErrorRef error = LLVMRunPasses(program, request.options.debug ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
+        LLVMErrorRef error = LLVMRunPasses(program, (request.options.debug && !request.options.debugOptimized) ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
         LLVMDisposePassBuilderOptions(options);
         if (error)
         {
@@ -384,8 +384,8 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     const std::string builtins = (assets.root / "libclang_rt.builtins-x86_64.a").generic_u8string();
     std::vector<std::string> storage{ "ld.lld", "-m", "i386pep", "-Bdynamic", "-o", product.c_str(),
                                       library + (request.options.shared ? "/dllcrt2.o" : "/crt2.o"), library + "/crtbegin.o", "-L" + library, object };
-    storage.push_back(request.options.debug ? "--lto-O0" : "--lto-O3");
-    storage.push_back(request.options.debug ? "--lto-CGO0" : "--lto-CGO3");
+    storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
+    storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-CGO0" : "--lto-CGO3");
     storage.push_back("--gc-sections");
     if (!request.options.debug) storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");

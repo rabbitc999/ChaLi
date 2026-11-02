@@ -37,7 +37,7 @@ To inspect the intermediate form only, run `chali aot src/main.chl --emit-llvm -
 
 Executables carry no publisher authentication. Release provenance and access control belong to the deployment system, code signing or the package manager.
 
-Default builds drop symbols and debug information (`--strip-all`). Pass `--debug` to keep function names and source locations; that mode compiles at `O0` and retains debug sections. String literals, type names and the [reflection table](../19-reflection.md) still appear in the artifact — if that matters, do not ship the source.
+Default builds drop symbols and debug information (`--strip-all`). Pass `--debug` to keep function names and source locations; that mode compiles at `O0` and retains debug sections. `--debug-optimized` retains DWARF at `O3`; see [native debugging](43-native-debugging.md). String literals, type names and the [reflection table](../19-reflection.md) still appear in the artifact — if that matters, do not ship the source.
 
 ## Artifact management
 

@@ -20,7 +20,7 @@ chali run app.chl
 chali aot app.chl --out build/app
 ```
 
-`aot` 是 unchecked AOT：同样是 `default<O3>`，但去掉运行期检查，产物是一个自包含的可执行文件（Windows 带 `.exe`）。把它和程序用到的动态库、数据文件一起拷到目标机器即可。`--debug` 切换成 `default<O0>,globaldce` 并保留调试信息，用于定位问题。
+`aot` 是 unchecked AOT：同样是 `default<O3>`，但去掉运行期检查，产物是一个自包含的可执行文件（Windows 带 `.exe`）。把它和程序用到的动态库、数据文件一起拷到目标机器即可。`--debug` 切换成 `default<O0>,globaldce` 并保留调试信息，用于定位问题；`--debug-optimized` 则保留 DWARF 并继续使用 O3，参见[原生调试](43-native-debugging.md)。
 
 启动时不需要宿主注册胶水、设置数据区或步数上限——这些是 VM 时代的接口。程序要调外部 C 函数时用 `#abi("C", "库路径", "符号")` 声明，路径按声明所在源文件目录解析，动态库要和产物放在同一目录。
 

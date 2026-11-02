@@ -136,7 +136,7 @@ make reflection     # 保留的显式启用入口
 
 ### 调试
 
-VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。调试构建保留符号并使用 O0；普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/43-native-debugging.md)。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/43-native-debugging.md)。
 
 ### 报错
 

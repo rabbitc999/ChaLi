@@ -27,7 +27,28 @@ Install the ChaLi extension and a GDB matching the target platform. Open a `.chl
 
 The Check Debug Environment command probes the selected compiler and GDB. `chali.debuggerPath` sets the default GDB; the launch configuration overrides it. Windows GDB may encode launch arguments through a system code page. Current ChaLi debug artifacts also read length-prefixed UTF-8 arguments, preserving empty strings, Unicode and non-BMP characters. Release programs continue to obtain arguments from the native process entry.
 
-Debug builds use `-O0` and retain native symbols and source locations, allowing variables and steps to remain observable. Release builds retain highest optimization, LTO and dead-code elimination. Debug timings are not release-performance measurements.
+Debug builds default to `-O0` and retain native symbols and source locations. Use the O3 mode below to inspect an optimized program. Release builds retain highest optimization, LTO and dead-code elimination.
+
+## Development and O3 debugging
+
+`--debug` selects O0 development debugging. `--debug-optimized` retains DWARF/native symbols while using LLVM O3 and the selected LTO mode. Between the command-line options `--debug`, `--debug-optimized` and `--no-debug`, the last option wins. The project's `debug = true` retains its existing enable-debug behavior without downgrading an explicitly selected O3 mode to O0.
+
+```sh
+chali aot main.chl --debug --out build/development
+chali aot main.chl --debug-optimized --out build/optimized
+```
+
+For VSCode source builds, use `"debugMode": "development"` (the default) or `"debugMode": "optimized"`. Launching or attaching to an existing executable uses its own debug catalog; configuration does not re-optimize an existing binary. Loading an O3 catalog reports its mode, and variable scopes are labelled O3.
+
+O3 debugging does not keep functions alive through fixed basic-block addresses. LLVM can inline, propagate constants and remove dead code normally. The stack preserves the inline frames reported by GDB/DWARF: several source frames can correspond to the same machine location, and the adapter does not merge them by address. Deleted statements may have no executable breakpoint location, and stepping order can differ from source order.
+
+Variables reported by GDB as `<optimized out>` are explicitly marked as having no readable value at the current location. The adapter neither invents a value nor invokes target functions to reconstruct it. Scalars with readable locations retain their actual values and read-only expressions. Optimized mode uses static layouts only for uniquely identified source names. When bindings with the same name cannot be distinguished, confirmed basic GDB values remain visible, but expressions or aggregate expansion requiring that binding are rejected. Unknown aggregate layouts report unavailable data rather than displaying slot or handle integers as aggregate contents. Optimized mode does not reconstruct development mode's PC-based lexical and private macro scopes; use O0 for those details.
+
+All O3 debug variables are read-only. `setVariable` reports an explicit error because the original frame slot may have disappeared or been reused. Inspection retains stop-generation and read budgets and calls no user functions. Debug safety points and snapshot publication remain present, so timings from either O0 or O3 debugging are not measurements of a release program without debugging.
+
+O0/O3 execution has been checked on Windows x64 with static LLVM and a matching external LLVM, using malloc and pool. Checks cover actual inline stacks and disassembly, unrecoverable optimized-out values, expressions over live variables and identical program results. Linux O3 execution has not been validated in this stage. Optional debug symbols for separately compiled libraries remain separate work and are not implied by this capability.
+
+When consuming library bitcode, native materialization with LTO disabled and module rewriting for Full/ThinLTO retain the selected O0/O3 debug level. Run `python tools/run_module_gates.py debug_bitcode --chali /path/to/compiler --jobs 1` with a C++17 compiler and a matching real external LLVM. `CHALI_ABI_CXX` and `CHALI_LLVM_CLANG` can select tools. The regression forwards actual clang invocations and checks both arguments and program results, without simulating LLVM output.
 
 ## Projects, existing artifacts and input
 

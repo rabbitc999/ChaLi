@@ -112,6 +112,7 @@ class NativeDebugInfo
     std::string metadata_;
     std::map<std::string, std::size_t> files_;
     std::map<std::string, std::size_t> types_;
+    bool optimized_ = false;  ///< 优化调试不通过块地址锚定函数，允许 LLVM 正常内联和删除。
     /**
      * @brief 追加一个 LLVM 元数据节点。
      * @param value 节点正文。
@@ -126,6 +127,11 @@ class NativeDebugInfo
     std::size_t file(const std::string &path);
 
 public:
+    /**
+     * @brief 选择开发或优化调试的元数据策略。
+     * @param optimized 为真时登记优化状态且不锚定基本块地址。
+     */
+    explicit NativeDebugInfo(bool optimized = false);
     /**
      * @brief 登记同一源码展开的调用与定义，不加入语言执行状态。
      * @param frame 完整且有界的来源。

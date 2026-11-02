@@ -157,7 +157,7 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             {
                 arguments.push_back(request.options.thinLto ? "-flto=thin" : "-flto=full");
                 if (request.options.thinLto) arguments.push_back("-fno-split-lto-unit");
-                arguments.push_back(request.options.debug ? "-Wl,--lto-O0" : "-Wl,--lto-O3");
+                arguments.push_back((request.options.debug && !request.options.debugOptimized) ? "-Wl,--lto-O0" : "-Wl,--lto-O3");
             }
             if (!request.options.sysroot.empty()) arguments.push_back("--sysroot=" + std::string(request.options.sysroot.c_str()));
             if (request.options.shared) arguments.push_back("-shared");

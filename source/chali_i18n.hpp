@@ -81,6 +81,7 @@ inline constexpr Message messages[] = {
     {"  --                     后面全部作为程序的命令行参数\n", "  --                     Pass all remaining arguments to the program\n"},
     {"  --check                仅检查，不执行、不生成产物\n", "  --check                Check only; do not execute or write artifacts\n"},
     {"  --dap                  作为调试适配器运行（VS Code 断点调试用，stdio 收发 DAP）\n", "  --dap                  Run the debug adapter over standard input/output\n"},
+    {"  --debug-optimized      保留调试信息并使用 O3／LTO，变量可能被优化\n", "  --debug-optimized      Keep debug info with O3/LTO; variables may be optimized out\n"},
     {"  --deps                 只列出 `%include` 拉进来的文件（构建脚本用）\n", "  --deps                 List files loaded by %include (for build scripts)\n"},
     {"  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n", "  --deps                 List imported modules and project dependencies for build scripts\n"},
     {"  --diagnostics=json     检查并输出稳定 JSON 诊断\n", "  --diagnostics=json     Check and emit structured JSON diagnostics\n"},

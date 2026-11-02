@@ -152,6 +152,7 @@ void PrintUsage(std::FILE *out)
              "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
              "  --check                仅检查，不执行、不生成产物\n",
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
+             "  --debug-optimized      保留调试信息并使用 O3／LTO，变量可能被优化\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --library-lock 文件    按精确版本及摘要检查预编译库\n",
              "  --library-implementation native|bitcode  显式选择库实现；缺省 native\n",
@@ -299,6 +300,7 @@ try
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
     bool debugEnabled = false; /* --debug：保留原生符号、源码行与变量信息，O0 构建 */
+    bool debugOptimized = false; /* --debug-optimized：保留调试信息并按发布优化管线生成。 */
     bool dapEnabled = false;   /* --dap：作为 VS Code 的调试适配器跑（stdio 上收发 DAP） */
     bool stripDebug = true;    /* 缺省 --strip-all；--debug 才保留调试信息 */
     std::size_t memoryBytes = Memory::defaultRuntimeCapacity;
@@ -694,6 +696,14 @@ try
         if (argument == "--debug") /* 带调试信息：O0 构建并保留符号、源码行与变量 */
         {
             debugEnabled = true;
+            debugOptimized = false;
+            stripDebug = false;
+            continue;
+        }
+        if (argument == "--debug-optimized")
+        {
+            debugEnabled = true;
+            debugOptimized = true;
             stripDebug = false;
             continue;
         }
@@ -711,6 +721,7 @@ try
         {
             stripDebug = true;
             debugEnabled = false;
+            debugOptimized = false;
             continue;
         }
         if (argument == "--raw") /* 跳过前处理：把源文件原样喂给解析器 */
@@ -818,6 +829,7 @@ try
     }
     if (run) { aot = true; aotOptions.checked = true; }
     aotOptions.debug = debugEnabled;
+    aotOptions.debugOptimized = debugOptimized;
     if (sourceStdin && (!path || !checkOnly))
     {
         std::fputs("chali: --source-stdin 需要 --check 和源文件路径\n", stderr);
@@ -942,7 +954,8 @@ try
         cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? prefix + ".chali-cache" : cacheDirectory, argv[0],
                                                              searchDirs, defineItems,
                                                              pathSignature,
-                                                             Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n") + "\n");
+                                                             Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n")
+                                                                 + (debugOptimized ? "optimized debug\n" : "development debug\n") + "\n");
         cache->setOverlays(sourceOverlays);
     }
 

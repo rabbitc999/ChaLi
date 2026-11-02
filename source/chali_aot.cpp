@@ -326,7 +326,7 @@ struct Translator
      * @param in 本次 AOT 请求。
      * @param out 可选的诊断容器。
      */
-    explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out)
+    explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out), debugInfo(in.options.debugOptimized)
     {
         Memory::String targetError;
         if (!describeTarget(request.options.target, target, &targetError)) fail(targetError);
@@ -356,7 +356,7 @@ struct Translator
         bulkCopies = !(bulk && *bulk);
         const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
         inlineHints = !(hint && *hint);
-        if (request.options.debug) inlineHints = false;
+        if (request.options.debug && !request.options.debugOptimized) inlineHints = false;
         const auto *direct = std::getenv("CHALI_NO_AOT_DIRECT_CALLS");
         directFunctionValues = !(direct && *direct);
         const auto *raw = std::getenv("CHALI_NO_AOT_RAW_INTRINSICS");
@@ -3064,7 +3064,9 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         if (cpu.empty()) return 1;
         command += Text(target.arm64 ? " -mcpu=" : " -march=") + cpu;
     }
-    command += request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module " : " -O3 -Wno-override-module ";
+    command += (request.options.debug && !request.options.debugOptimized) ? " -O0 " : " -O3 ";
+    if (request.options.debug) command += "-g -gdwarf-4 ";
+    command += "-Wno-override-module ";
     if (bitcodeOnly)
         command += request.options.lto && request.options.thinLto ? "-c -emit-llvm -flto=thin -fno-split-lto-unit " : "-c -emit-llvm -flto=full ";
     else if (assemblyOnly)
@@ -3078,7 +3080,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         {
             command += request.options.thinLto ? "-flto=thin " : "-flto=full ";
             if (request.options.thinLto) command += "-fno-split-lto-unit ";
-            command += request.options.debug ? "-Wl,--lto-O0 " : "-Wl,--lto-O3 ";
+            command += (request.options.debug && !request.options.debugOptimized) ? "-Wl,--lto-O0 " : "-Wl,--lto-O3 ";
         }
         if (!request.options.debug)
         {

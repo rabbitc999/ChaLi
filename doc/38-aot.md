@@ -125,7 +125,7 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 显式 `--asm`、`--asm-include`、`--link` 分别覆盖清单中的同类列表，`--library-lock` 覆盖清单锁文件；清单搜索目录追加在命令行搜索目录之后。对象及汇编输入用于最终链接。
 
-`lto` 默认 `true`（完整 LTO），也接受 `false`、`"off"`、`"full"`、`"thin"`。`--lto-mode off|full|thin` 覆盖项目设置；`--lto` 和 `--no-lto` 分别保留完整 LTO 与关闭语义，多个命令行模式开关以最后一个为准。关闭时先生成机器对象再链接，LLVM 的模块内优化仍按原优化级别执行。静态与外置 LLVM 的调试构建按所选模式执行 O0，不自动升级到发布优化。
+`lto` 默认 `true`（完整 LTO），也接受 `false`、`"off"`、`"full"`、`"thin"`。`--lto-mode off|full|thin` 覆盖项目设置；`--lto` 和 `--no-lto` 分别保留完整 LTO 与关闭语义，多个命令行模式开关以最后一个为准。关闭时先生成机器对象再链接，LLVM 的模块内优化仍按原优化级别执行。静态与外置 LLVM 的 `--debug` 开发调试按所选 LTO 模式使用 O0；`--debug-optimized` 明确保留 DWARF 并使用 O3，详见[原生调试](43-native-debugging.md)。
 
 `library_implementation = "native"` 是库实现的默认选择，可设为 `"bitcode"`；`--library-implementation native|bitcode` 优先于清单配置，对直接和传递库同时生效。所选 bitcode 需核对实际目标、布局及精确 LLVM 版本。模式转换、缺失实现拒绝及边界见[库包说明](44-library-packages.md#原生与-bitcode-实现选择)。
 

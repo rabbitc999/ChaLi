@@ -60,12 +60,21 @@ async function main() {
   const count = healthy.calls.length; healthy.reader.cancel(); await healthy.reader.load(); assert.equal(healthy.calls.length, count);
   const large = target(value => ({ ...value, padding: 'x'.repeat(131072) }));
   assert(await large.reader.load()); assert(large.calls.filter(command => command.startsWith('-data-read-memory-bytes ')).length >= 4);
+  const optimized = target(value => ({ ...value, optimized: true, positions: [] }));
+  assert(await optimized.reader.load());
+  const optimizedFrame = optimized.reader.frame({ func: 'f_identity_i64', fullname: source, line: '2', addr: '0x' + start.toString(16) });
+  assert.equal(optimizedFrame.optimized, true); assert.equal(optimizedFrame.position, undefined);
+  assert.equal(visibleBindings(optimizedFrame).get('value').type, 'int64');
+  assert(!optimized.calls.some(command => command.includes('&chali_debug_positions')));
+  assert.match(optimized.output[0], /O3 优化调试/);
   const dynamic = target(value => ({ ...value, layouts: ['O0:0:0:8:0:0:'], dynamicTypes: [{ id: 42, layout: 0 }] }));
   assert.equal((await dynamic.reader.load()).dynamicTypes.get(42n), 0);
   const closure = target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'counter',
     captures: [{ name: 'n', layout: 0, mode: 2, address: false }] }] }));
   assert.equal((await closure.reader.load()).closures.get(24n).captures[0].name, 'n');
   for (const invalid of [
+    () => target(value => ({ ...value, optimized: 'O3' })),
+    () => target(value => ({ ...value, optimized: true })),
     () => target(value => { value.functions[0].variables[0].nativeStorage = 'ptr'; return value; }),
     () => target(value => ({ ...value, closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 4, address: true }] }] })),
     () => target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 2, address: true }] }] })),

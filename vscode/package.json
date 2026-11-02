@@ -158,6 +158,15 @@
                   "type": "string"
                 },
                 "description": "目标源码绝对路径前缀到本地目录的映射；按最长目录边界匹配，支持断点反向映射。"
+              },
+              "debugMode": {
+                "enum": [
+                  "development",
+                  "optimized"
+                ],
+                "description": "源码构建模式：development 使用 O0，optimized 保留 DWARF 并使用 O3／LTO；已有产物以实际调试目录为准。",
+                "type": "string",
+                "default": "development"
               }
             }
           },

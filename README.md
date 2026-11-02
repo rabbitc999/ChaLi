@@ -145,7 +145,7 @@ subcommands and `--mode`.
 
 ### Debugging
 
-VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Debug builds retain symbols at O0; normal release builds retain highest optimization. See [Native AOT debugging](doc/en/43-native-debugging.md).
+VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [Native AOT debugging](doc/en/43-native-debugging.md).
 
 ### Diagnostics
 

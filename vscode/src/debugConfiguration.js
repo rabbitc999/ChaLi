@@ -39,6 +39,7 @@ async function resolveConfiguration(vscode, folder, configuration, projectInfo) 
   if (vscode.workspace.isTrusted === false) throw new Error('ChaLi 调试需要受信任的工作区');
   const config = { type: 'chali', request: 'launch', name: 'ChaLi', ...configuration };
   if (!['launch', 'attach'].includes(config.request)) throw new Error('调试 request 必须为 launch 或 attach');
+  if (config.debugMode !== undefined && !['development', 'optimized'].includes(config.debugMode)) throw new Error('debugMode 必须为 development 或 optimized');
   if (remoteEndpoint(config.remote) && config.request !== 'attach') throw new Error('remote 只用于附加已有 Linux gdbserver');
   if (config.request === 'attach') {
     config.processId = processId(config.processId);

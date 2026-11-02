@@ -33,7 +33,11 @@ class DebugMetadata {
     if (this.cache || this.unavailable) return this.cache;
     if (!this.pending) {
       const controller = new AbortController(); this.controller = controller;
-      const operation = this.read(controller.signal).then(value => { this.cache = value; return value; }).catch(error => {
+      const operation = this.read(controller.signal).then(value => {
+        this.cache = value;
+        if (value.catalog.optimized) this.report('O3 优化调试：变量可能被优化或内联，变量修改不可用；源码位置以 DWARF 为准。\n');
+        return value;
+      }).catch(error => {
         if (controller.signal.aborted) throw error;
         this.unavailable = true; this.report('调试源映射不可用，继续使用 DWARF：' + error.message + '\n');
         return null;
@@ -85,6 +89,8 @@ class DebugMetadata {
     if (catalog.version !== 1 || catalog.pointerBytes !== 8 || catalog.byteOrder !== 'little'
       || !Array.isArray(catalog.functions) || !Array.isArray(catalog.positions)
       || catalog.functions.length > POINT_LIMIT || catalog.positions.length > POINT_LIMIT) throw new Error('调试映射版本、目标或条目预算不匹配');
+    if (catalog.optimized !== undefined && typeof catalog.optimized !== 'boolean') throw new Error('调试优化模式无效');
+    if (catalog.optimized && catalog.positions.length) throw new Error('优化调试不能依赖固定基本块地址');
     const macros = new Map();
     if (catalog.layouts !== undefined && (!Array.isArray(catalog.layouts) || catalog.layouts.length > POINT_LIMIT)) throw new Error('调试布局超过预算');
     for (const layout of catalog.layouts || [])
@@ -165,9 +171,15 @@ class DebugMetadata {
   }
   /** 用当前机器 PC 选择同函数、同文件和同源码行的位置，不猜测源文件缩进。 */
   frame(frame) {
-    const fn = this.cache?.byLinkage.get(frame.func);
+    let fn = this.cache?.byLinkage.get(frame.func);
+    if (!fn && this.cache?.catalog.optimized) {
+      const candidates = this.cache.catalog.functions.filter(item => item.name === frame.func);
+      if (candidates.length === 1) fn = candidates[0];
+    }
     if (!fn) return null;
-    const result = { name: fn.name, column: Number(frame.col) || 1, function: fn };
+    const result = { name: fn.name === '__chali_main_arguments' ? 'main' : fn.name,
+      column: Number(frame.col) || 1, function: fn, optimized: this.cache.catalog.optimized === true };
+    if (result.optimized) return result;
     if (!/^0x[0-9a-f]+$/i.test(frame.addr || '') || !(frame.fullname || frame.file)) return result;
     const pc = BigInt(frame.addr), file = sourcePath(frame.fullname || frame.file);
     let low = 0, high = fn.positions.length;
@@ -189,6 +201,18 @@ class DebugMetadata {
 /** 按实际 PC 的词法祖先选择绑定，不把已经退出的同名聚合误认作当前标量。 */
 function visibleBindings(metadata) {
   const result = new Map(), ranks = new Map(), distances = new Map();
+  if (metadata?.optimized) {
+    // DWARF 负责实际可见性；名字有多个候选时不猜词法范围或聚合布局。
+    const ambiguous = new Set();
+    for (const variable of metadata.function?.variables || []) {
+      if ((variable.macro ?? -1) !== -1) continue;
+      const name = variable.dwarf || variable.name;
+      if (ambiguous.has(name)) continue;
+      if (result.has(name)) { result.delete(name); ambiguous.add(name); }
+      else result.set(name, variable);
+    }
+    return result;
+  }
   if (!metadata?.position || !metadata.function?.parents) return result;
   let scope = metadata.position.scope, distance = 0;
   while (true) {

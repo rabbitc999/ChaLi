@@ -25,6 +25,8 @@ async function main() {
   let config = await resolveConfiguration(vscode, folder, { entry: 'project' }, provider);
   assert.equal(config.program, main); assert.equal(config.cwd, project); assert.equal(saved, 1);
   config = await resolveConfiguration(vscode, folder, {}, provider); assert.equal(config.program, other);
+  config = await resolveConfiguration(vscode, folder, { debugMode: 'optimized' }, provider); assert.equal(config.debugMode, 'optimized');
+  await assert.rejects(resolveConfiguration(vscode, folder, { debugMode: 'fast' }, provider), /debugMode/);
   config = await resolveConfiguration(vscode, folder, { executable: path.relative(project, process.execPath), env: { X: null }, args: ['a b', '"'] }, provider);
   assert.equal(config.executable, process.execPath); assert.equal(saved, 1);
   config = await resolveConfiguration(vscode, folder, { request: 'attach', processId: '12345', executable: process.execPath, sourceFileMap: { '/build/source': project } }, provider);

@@ -71,7 +71,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;
         producer.insert("generator", "ast-llvm");
-        producer.insert("optimization", original.options.debug ? "O0" : "O3");
+        producer.insert("optimization", (original.options.debug && !original.options.debugOptimized) ? "O0" : "O3");
         producer.insert("checked", original.options.checked);
         producer.insert("runtime", "consumer");
         producer.insert("llvmLinkage", chali_aot::builtin::available() && original.options.compiler.empty() ? "static" : "external");

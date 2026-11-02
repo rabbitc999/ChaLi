@@ -121,6 +121,8 @@ function main() {
     run(process.execPath, [path.join('test', 'debugAttach.js')]);
     run(process.execPath, [path.join('test', 'debugAttachNative.js')]);
     run(process.execPath, [path.join('test', 'debugRemote.js')]);
+    run(process.execPath, [path.join('test', 'debugOptimized.js')]);
+    run(process.execPath, [path.join('test', 'debugOptimizedNative.js')]);
     run(process.execPath, [path.join('test', 'debugFrames.js')]);
     run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
     run(process.execPath, [path.join('test', 'debugFailure.js')]);

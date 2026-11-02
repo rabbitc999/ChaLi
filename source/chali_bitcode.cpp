@@ -125,7 +125,7 @@ int compileBitcode(const Memory::String &bytes, const Options &options, const Me
             normalizeLtoFlags(text, current, options.lto && options.thinLto);
         }
         std::vector<std::string> command{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()),
-                                          options.debug ? "-O0" : "-O3", "-c", "-x", "ir", current.u8string(), "-o", output.c_str() };
+                                          (options.debug && !options.debugOptimized) ? "-O0" : "-O3", "-c", "-x", "ir", current.u8string(), "-o", output.c_str() };
         if (module)
         {
             command.push_back("-emit-llvm");

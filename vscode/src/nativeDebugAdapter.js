@@ -415,6 +415,7 @@ class Adapter {
   async launch(config, signal, restart = false, requestId) {
     if (signal.aborted) throw new Error('调试请求已取消');
     const attaching = config.request === 'attach';
+    if (config.debugMode !== undefined && !['development', 'optimized'].includes(config.debugMode)) throw new Error('debugMode 必须为 development 或 optimized');
     const endpoint = remoteEndpoint(config.remote);
     if (endpoint && !attaching) throw new Error('remote 只用于附加已有 Linux gdbserver');
     const attachPid = attaching ? processId(config.processId) : null;
@@ -479,7 +480,7 @@ class Adapter {
     };
     this.event('chali/buildDiagnostics', { diagnostics: [] });
     if (!executable) try { await new Promise((resolve, reject) => {
-      this.compilerProcess = spawn(this.compiler, ['aot', config.program, '--checked', '--debug', '--out', prefix], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
+      this.compilerProcess = spawn(this.compiler, ['aot', config.program, '--checked', config.debugMode === 'optimized' ? '--debug-optimized' : '--debug', '--out', prefix], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
       this.compilerProcess.stdout.on('data', (chunk) => collect(chunk, 'console'));
       this.compilerProcess.stderr.on('data', (chunk) => collect(chunk, 'stderr'));
       const buildChild = this.compilerProcess;
@@ -976,7 +977,7 @@ class Adapter {
         case 'scopes': {
           const frame = this.frames.get(args.frameId);
           if (!frame) throw new Error('调用帧已经过期');
-          body.scopes = [{ name: '局部变量与参数', presentationHint: 'locals', expensive: false, variablesReference: this.handle(frame) }];
+          body.scopes = [{ name: frame.metadata?.optimized ? '局部变量与参数（O3 优化）' : '局部变量与参数', presentationHint: 'locals', expensive: false, variablesReference: this.handle(frame) }];
           for (const macro of frame.metadata?.macros || []) {
             body.scopes.push({ name: '$' + macro.name, expensive: false,
               variablesReference: this.handle({ ...frame, macro: macro.id }),
@@ -1023,6 +1024,9 @@ class Adapter {
             const addressable = (binding?.address === true || container) && numeric !== null && numeric > 0n;
             const layout = addressable ? declaredLayout : null;
             let display = value || '<不可用>';
+            if (/<optimized out>/i.test(display)) display = '<已优化：当前位置没有可读值>';
+            else if (frame.metadata?.optimized && !binding && !/^(?:u?int(?:8|16|32|64)|float(?:32|64)|bool|char)$/.test(variable.type || ''))
+              display = '<布局不可用：无法唯一对应优化变量>';
             let memoryReference;
             let variablesReference = 0;
             if (addressable) {
@@ -1039,7 +1043,7 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
               }
             }
-            const readOnly = !binding || binding.readOnly || binding.address || binding.storage || binding.boxed
+            const readOnly = frame.metadata?.optimized || !binding || binding.readOnly || binding.address || binding.storage || binding.boxed
               || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
             return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference,
               presentationHint: readOnly ? { attributes: ['readOnly'] } : undefined };
@@ -1105,6 +1109,7 @@ class Adapter {
           this.stopped();
           const frame = this.handles.get(args.variablesReference);
           if (!frame || frame.kind) throw new Error('需要当前有效的局部变量作用域；不支持直接修改聚合、引用或拥有值');
+          if (frame.metadata?.optimized) throw new Error('优化调试不修改变量：无法保证真实帧槽仍存在');
           if (typeof args.name !== 'string' || args.name.length > 1024) throw new Error('变量名称无效');
           const bindings = visibleBindings(frame.metadata);
           const entry = [...bindings].find(([, binding]) => binding.name === args.name && (binding.macro ?? -1) === (frame.macro ?? -1));
@@ -1143,9 +1148,10 @@ class Adapter {
               const binding = bindings.get(row.name);
               return binding && binding.name === name && (binding.macro ?? -1) === (frame.macro ?? -1);
             });
-            if (!variable) throw new Error('当前作用域没有可读变量：' + name);
+            if (!variable) throw new Error((frame.metadata?.optimized ? '当前优化作用域没有唯一可读绑定：' : '当前作用域没有可读变量：') + name);
             const binding = bindings.get(variable.name), layout = this.layoutAt(binding.layout);
             let text = variable.value || '<不可用>';
+            if (/<optimized out>/i.test(text)) throw new Error('变量已被优化，当前位置没有可读值：' + name);
             if (/^(?:int8|uint8)$/.test(variable.type || '')) text = text.replace(/^(-?[0-9]+)\s+'.*'$/, '$1');
             const addressable = layout && (binding.address || ['L', 'M', 'E', 'O', 'F'].includes(layout.kind));
             const address = addressable && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(text) ? BigInt(text) : null;
