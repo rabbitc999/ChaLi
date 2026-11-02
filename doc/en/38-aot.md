@@ -124,6 +124,8 @@ Explicit `--asm`, `--asm-include`, and `--link` options replace their correspond
 
 The manifest's `library_lock` also applies to source checking and language-server analysis. The lock and imported `.chlib` files enter the dependency set. The editor watches these files and requests fresh consumer diagnostics when they change. Invalid locks or packages produce errors; restoring valid contents triggers another check.
 
+Standalone `chali link --shared --out FILE` links under the final basename inside a private temporary directory before publishing. Windows DLL export tables and host import tables therefore record the delivered name, allowing C hosts to link and load the actual file. Failures still preserve the previous product.
+
 `chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
 The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.

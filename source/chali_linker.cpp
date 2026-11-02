@@ -144,8 +144,8 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         }
         if (!request.noRuntime && !target.native && request.options.runtimeDirectory.empty()) throw std::runtime_error("跨目标完整链接需要目标 --runtime-dir 和适用 sysroot；独立入口可用 --no-runtime");
         chali_native_tools::Workspace work;
-        const auto temporary = work.path / (target.windows ? (request.options.shared ? "output.dll" : "output.exe") : request.options.shared ? "output.so" :
-                                                                                                                                               "output");
+        // 私有目录隔离写入，同时保留最终文件名，避免 DLL 导出表及宿主导入表记录错误的临时名字。
+        const auto temporary = work.path / product.filename();
         int code = 1;
         if (chali_aot::builtin::available() && request.options.compiler.empty() && (request.noRuntime || (target.native && target.windows && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
             code = chali_aot::builtin::link(request, Memory::String(temporary.u8string().c_str()), diagnostics);

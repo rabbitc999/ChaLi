@@ -24,10 +24,14 @@ def main():
     """用真实对象与运行结果验证独立链接闭环。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
-    compiler = parser.parse_args().chali.resolve()
+    parser.add_argument('--external-clang', type=Path, help='额外核对显式外置 LLVM 链接路径')
+    args = parser.parse_args()
+    compiler = args.chali.resolve()
     info = json.loads(subprocess.check_output([str(compiler), '--build-info'], encoding='utf-8'))
     toolchain = ROOT/'build/dependencies/llvm/toolchain/bin'
     backend = [] if info['llvm'] == 'static' else ['--llvm', toolchain/'clang.exe'] if os.name == 'nt' else []
+    if args.external_clang:
+        backend = ['--llvm', args.external_clang.resolve()]
     ar_backend = [] if info['llvm'] == 'static' else ['--llvm', toolchain/'llvm-ar.exe'] if os.name == 'nt' else []
     with tempfile.TemporaryDirectory(prefix='native-link-') as folder:
         work = Path(folder)
@@ -106,6 +110,19 @@ def main():
             import _ctypes
             _ctypes.FreeLibrary(library._handle)
         del library
+        # ctypes 按路径加载不能发现 DLL 自身名字错误；另编译宿主，验证实际导入表及系统加载器。
+        host = work/'shared-host.c'
+        host.write_text('''/** @brief 由独立链接的共享库提供整数结果。
+ * @return 已实现的测试结果 73。 */
+int visible(void);
+/** @brief 从独立链接的实际库文件建立导入并核对导出函数。
+ * @return 结果一致时为零，否则失败。 */
+int main(void){return visible()==73?0:1;}
+''', encoding='utf-8')
+        host_product = work/('shared-host.exe' if os.name == 'nt' else 'shared-host')
+        run(['gcc', host, shared, *([] if os.name == 'nt' else ['-Wl,-rpath,'+str(work)]), '-o', host_product], work)
+        assert not (work/'output.dll').exists()
+        run([host_product], work)
         for target, machine, body in [
             ('x86_64-unknown-linux-gnu', 62, 'mov $60,%rax\nxor %rdi,%rdi\nsyscall\n'),
             ('aarch64-unknown-linux-gnu', 183, 'mov x8,#93\nmov x0,#0\nsvc #0\n')]:
