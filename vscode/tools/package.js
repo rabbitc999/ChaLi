@@ -115,6 +115,12 @@ function main() {
     run(process.execPath, [path.join('test', 'debugAssignmentNative.js')]);
     run(process.execPath, [path.join('test', 'debugThreads.js')]);
     run(process.execPath, [path.join('test', 'debugThreadsNative.js')]);
+    run(process.execPath, [path.join('test', 'debugIdentity.js')]);
+    run(process.execPath, [path.join('test', 'debugSourceMap.js')]);
+    run(process.execPath, [path.join('test', 'debugSourceMapNative.js')]);
+    run(process.execPath, [path.join('test', 'debugAttach.js')]);
+    run(process.execPath, [path.join('test', 'debugAttachNative.js')]);
+    run(process.execPath, [path.join('test', 'debugRemote.js')]);
     run(process.execPath, [path.join('test', 'debugFrames.js')]);
     run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
     run(process.execPath, [path.join('test', 'debugFailure.js')]);

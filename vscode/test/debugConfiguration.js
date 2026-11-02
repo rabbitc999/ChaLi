@@ -27,6 +27,14 @@ async function main() {
   config = await resolveConfiguration(vscode, folder, {}, provider); assert.equal(config.program, other);
   config = await resolveConfiguration(vscode, folder, { executable: path.relative(project, process.execPath), env: { X: null }, args: ['a b', '"'] }, provider);
   assert.equal(config.executable, process.execPath); assert.equal(saved, 1);
+  config = await resolveConfiguration(vscode, folder, { request: 'attach', processId: '12345', executable: process.execPath, sourceFileMap: { '/build/source': project } }, provider);
+  assert.equal(config.processId, 12345); assert.equal(config.request, 'attach'); assert.equal(saved, 1);
+  config = await resolveConfiguration(vscode, folder, { request: 'attach', processId: 12345, executable: process.execPath,
+    remote: { host: '127.0.0.1', port: 2345 } }, provider);
+  assert.equal(config.remote.port, 2345); assert.equal(saved, 1);
+  await assert.rejects(resolveConfiguration(vscode, folder, { executable: process.execPath, remote: { host: 'localhost', port: 2345 } }, provider), /attach|附加/);
+  for (const change of [{ processId: '1;run' }, { program: main }, { args: ['unexpected'] }, { console: 'integratedTerminal' }, { stopOnAttach: 1 }, { sourceFileMap: { relative: project } }])
+    await assert.rejects(resolveConfiguration(vscode, folder, { request: 'attach', processId: 12345, executable: process.execPath, ...change }, provider));
   await assert.rejects(resolveConfiguration(vscode, folder, { entry: 'project' }, async () => ({ ...info, native: false })), /宿主/);
   await assert.rejects(resolveConfiguration(vscode, folder, { entry: 'project' }, async () => ({ ...info, output: 'object' })), /可执行/);
   await assert.rejects(resolveConfiguration(vscode, folder, { args: [1] }, provider), /args/);

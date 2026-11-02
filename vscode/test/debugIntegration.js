@@ -28,6 +28,7 @@ try { ({ registerDebugger } = require('../src/debugger')); } finally { Module._l
 async function main() {
   registerDebugger({ subscriptions: [] }, {});
   assert(provider.provideDebugConfigurations().some(item => item.entry === 'project'));
+  assert(provider.provideDebugConfigurations().some(item => item.request === 'attach' && item.executable && item.processId));
   const tracker = trackerFactory.createDebugAdapterTracker({ async customRequest(command, arguments_) { requests.push({ command, arguments_ }); } });
   const event = (name, body) => tracker.onDidSendMessage({ type: 'event', event: name, body });
   event('chali/terminal', { name: 'example' });

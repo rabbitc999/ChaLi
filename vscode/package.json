@@ -151,6 +151,85 @@
                 ],
                 "default": "internalConsole",
                 "description": "集成终端支持标准输入，要求当前 ChaLi --debug 产物。"
+              },
+              "sourceFileMap": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "目标源码绝对路径前缀到本地目录的映射；按最长目录边界匹配，支持断点反向映射。"
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "processId",
+              "executable"
+            ],
+            "properties": {
+              "executable": {
+                "type": "string",
+                "description": "已有带符号原生产物；本机附加或核对 Linux 远程目标，不触发构建。"
+              },
+              "debuggerPath": {
+                "type": "string",
+                "description": "GDB 原生调试器路径，缺省从 CHALI_GDB 或 PATH 查找。"
+              },
+              "cwd": {
+                "type": "string",
+                "description": "工作目录；默认工程根或入口文件目录。"
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": "覆盖调试器环境；不改变已运行目标的环境。"
+              },
+              "sourceFileMap": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "目标源码绝对路径前缀到本地目录的映射；按最长目录边界匹配，支持断点反向映射。"
+              },
+              "processId": {
+                "type": [
+                  "number",
+                  "string"
+                ],
+                "minimum": 1,
+                "pattern": "^[1-9][0-9]*$",
+                "description": "本机目标 PID，或 Linux gdbserver 实际控制的目标 PID；核对映像身份后才开放查看。"
+              },
+              "stopOnAttach": {
+                "type": "boolean",
+                "default": true,
+                "description": "附加并完成断点配置后保持全停；false 继续到后续停点。"
+              },
+              "remote": {
+                "description": "连接已有 Linux gdbserver；省略时附加本机进程。",
+                "required": [
+                  "host",
+                  "port"
+                ],
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "已启动的 Linux gdbserver 的 TCP 主机地址。"
+                  },
+                  "port": {
+                    "maximum": 65535,
+                    "description": "gdbserver 的 TCP 监听端口。",
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
               }
             }
           }
@@ -169,6 +248,16 @@
             "name": "ChaLi：调试项目入口",
             "entry": "project",
             "console": "integratedTerminal"
+          },
+          {
+            "type": "chali",
+            "request": "attach",
+            "name": "ChaLi：附加到本机进程",
+            "processId": 12345,
+            "executable": "${workspaceFolder}/build/program",
+            "windows": {
+              "executable": "${workspaceFolder}/build/program.exe"
+            }
           }
         ],
         "configurationSnippets": [
@@ -181,6 +270,20 @@
               "name": "ChaLi：调试当前文件",
               "program": "^\"\\${file}\"",
               "cwd": "^\"\\${fileDirname}\""
+            }
+          },
+          {
+            "label": "ChaLi：附加到本机进程",
+            "description": "核对现有进程及符号产物，默认断开后保留目标。",
+            "body": {
+              "type": "chali",
+              "request": "attach",
+              "name": "ChaLi：附加到本机进程",
+              "processId": 12345,
+              "executable": "${workspaceFolder}/build/program",
+              "windows": {
+                "executable": "${workspaceFolder}/build/program.exe"
+              }
             }
           }
         ]

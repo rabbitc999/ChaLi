@@ -135,7 +135,7 @@ override CXXFLAGS += $(CHALI_TRIM_FLAGS)
 
 # 阶段编译器与发行文件分开：生成资产失败时不覆盖已经交付的编译器。
 CHALI_STDLIB_BOOTSTRAP := $(FRONTEND_BUILD)/chali-stdlib-bootstrap$(suffix $(TARGET))
-$(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB)
+$(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB) $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_AOT_LDLIBS)
 
 # 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。

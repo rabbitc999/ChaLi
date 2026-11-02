@@ -54,20 +54,22 @@ def pack_tool_path():
     env = os.environ.get("LZTEXT_PACK")
     if env and os.path.isfile(env):
         return env
-    for candidate in ("build/lztext/lztext-pack.exe", "build/lztext/lztext-pack"):
-        path = os.path.join(ROOT, candidate)
-        if os.path.isfile(path):
-            return path
+    build_root = os.path.join(ROOT, os.environ.get("CHALI_BUILD_ROOT", "build"))
+    out_dir = os.path.join(build_root, "lztext")
+    out_path = os.path.join(out_dir, "lztext-pack.exe" if os.name == "nt" else "lztext-pack")
+    if os.path.isfile(out_path):
+        return out_path
     compiler = shutil.which("g++") or shutil.which("c++") or shutil.which("clang++")
     if compiler is None:
         raise RuntimeError("找不到 lztext_pack，也没有可用的 C++ 编译器；"
                            "先跑 `make -C source/lztext pack`，或设置 LZTEXT_PACK 指向该工具")
     src_dir = os.path.join(ROOT, "source", "lztext")
-    out_dir = os.path.join(ROOT, "build", "lztext")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir,
-                            "lztext-pack.exe" if os.name == "nt" else "lztext-pack")
-    subprocess.check_call([compiler, "-std=c++17", "-O2", "-I", src_dir,
+    flags = []
+    sdk = os.path.abspath(os.environ.get("CHALI_LLVM_SDK", os.path.join(ROOT, "build/dependencies/llvm/static-sdk")))
+    if os.name == "nt" and Path(compiler).resolve().parent.parent == Path(sdk).resolve():
+        flags = ["--sysroot=" + sdk, "-static"]
+    subprocess.check_call([compiler, *flags, "-std=c++17", "-O2", "-I", src_dir,
                            os.path.join(src_dir, "lztext_pack.cpp"),
                            os.path.join(src_dir, "lztext.cpp"),
                            "-o", out_path])

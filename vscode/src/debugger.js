@@ -43,6 +43,7 @@ function registerDebugger(context, deps) {
       return [
         { type: DEBUG_TYPE, request: 'launch', name: 'ChaLi：调试当前文件', program: '${file}' },
         { type: DEBUG_TYPE, request: 'launch', name: 'ChaLi：调试项目入口', entry: 'project' },
+        { type: DEBUG_TYPE, request: 'attach', name: 'ChaLi：附加到本机进程', processId: 12345, executable: '${workspaceFolder}/build/program', windows: { executable: '${workspaceFolder}/build/program.exe' } },
       ];
     },
     async resolveDebugConfigurationWithSubstitutedVariables(folder, configuration) {

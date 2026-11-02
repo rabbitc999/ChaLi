@@ -5,6 +5,9 @@
  * 读数取自单调时钟，不受系统挂钟调整影响；与旧实现的取值基准一致
  * （均为"自实现基准起的纳秒数"，只用于差值计算）。
  */
+#if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
 #include "chali_abi_internal.h"
 
 #ifdef _WIN32
@@ -59,6 +62,11 @@ static const ChaliAbiRecord kRecords[] = {
     { "std::clock::nowNanos", abiClockNanos, 0 },
 };
 
+/**
+ * @brief 取得时钟模块的静态 ABI 入口表。
+ * @param count 非空时写入入口数量。
+ * @return 生命周期覆盖整个进程的只读入口表。
+ */
 const ChaliAbiRecord *abi_clock_records(size_t *count)
 {
     if (count != NULL) *count = sizeof(kRecords) / sizeof(kRecords[0]);

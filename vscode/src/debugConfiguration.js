@@ -3,6 +3,9 @@
 /** 调试配置规范化：只处理路径和工程入口，语言配置仍由编译器读取。 */
 const fs = require('node:fs');
 const path = require('node:path');
+const { processId } = require('./debugIdentity');
+const { DebugSourceMap } = require('./debugSourceMap');
+const { remoteEndpoint } = require('./debugRemote');
 const { findProject } = require('./dependencies');
 
 /** 保留未指定环境项，null 明确删除继承的环境变量。 */
@@ -35,6 +38,14 @@ function buildDiagnostics(output, cwd) {
 async function resolveConfiguration(vscode, folder, configuration, projectInfo) {
   if (vscode.workspace.isTrusted === false) throw new Error('ChaLi 调试需要受信任的工作区');
   const config = { type: 'chali', request: 'launch', name: 'ChaLi', ...configuration };
+  if (!['launch', 'attach'].includes(config.request)) throw new Error('调试 request 必须为 launch 或 attach');
+  if (remoteEndpoint(config.remote) && config.request !== 'attach') throw new Error('remote 只用于附加已有 Linux gdbserver');
+  if (config.request === 'attach') {
+    config.processId = processId(config.processId);
+    if (!config.executable || config.program) throw new Error('附加需要已有 executable，不执行 program 构建');
+    if ((config.args || []).length || config.console === 'integratedTerminal' || config.stopOnEntry) throw new Error('附加不修改参数或接管终端；暂停使用 stopOnAttach');
+    if (config.stopOnAttach !== undefined && typeof config.stopOnAttach !== 'boolean') throw new Error('stopOnAttach 必须是布尔值');
+  }
   const active = vscode.window.activeTextEditor?.document;
   const directory = folder?.uri.fsPath || (active?.uri.scheme === 'file' ? path.dirname(active.uri.fsPath) : null);
   if (!directory) throw new Error('请选择工作区或已保存的 ChaLi 文件');
@@ -44,6 +55,7 @@ async function resolveConfiguration(vscode, folder, configuration, projectInfo) 
     config.executable = path.resolve(directory, config.executable);
     if (!fs.statSync(config.executable).isFile()) throw new Error('executable 不是普通文件');
     config.cwd = path.resolve(directory, config.cwd || path.dirname(config.executable));
+    new DebugSourceMap(config.sourceFileMap, config.cwd);
     return config;
   }
   let program = config.program || (config.entry !== 'project' && active?.languageId === 'chali' ? active.uri.fsPath : '');
@@ -68,6 +80,7 @@ async function resolveConfiguration(vscode, folder, configuration, projectInfo) 
   config.program = path.resolve(directory, program);
   if (path.extname(config.program).toLowerCase() !== '.chl' || !fs.statSync(config.program).isFile()) throw new Error('program 必须是已保存的 .chl 文件');
   config.cwd = path.resolve(directory, config.cwd || projectRoot || path.dirname(config.program));
+  new DebugSourceMap(config.sourceFileMap, config.cwd);
   return config;
 }
 

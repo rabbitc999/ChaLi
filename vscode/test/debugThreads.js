@@ -46,6 +46,22 @@ async function stepping() {
   assert.equal(commands.length, 3);
 }
 
+async function boundlessNative() {
+  for (const source of [false, true]) {
+    const { value, messages } = adapter(), commands = [];
+    value.gdb = { command: async command => {
+      commands.push(command);
+      if (command === '-exec-next --thread 2') throw Object.assign(new Error('Cannot find bounds of current function'), { gdbError: true });
+      if (command === '-stack-list-frames --thread 2 0 0') return { stack: [{ level: '0', ...(source ? { fullname: 'main.chl' } : {}) }] };
+      return {};
+    } };
+    await value.request({ seq: 1, command: 'next', arguments: { threadId: 2 } });
+    assert.equal(messages.find(message => message.request_seq === 1).success, !source);
+    assert.deepEqual(commands, ['-exec-next --thread 2', '-stack-list-frames --thread 2 0 0', ...(!source ? ['-exec-finish --thread 2'] : [])]);
+    if (source) assert.equal(value.state, 'stopped');
+  }
+}
+
 async function exits() {
   const { value, messages } = adapter(); let release;
   value.handles.set(20, { thread: 2, level: 0 }); value.frames.set(10, { thread: 2 });
@@ -78,7 +94,7 @@ async function interruptIdentity() {
 }
 
 async function main() {
-  directory(); await stepping(); await exits(); await exceptions(); await interruptIdentity();
+  directory(); await stepping(); await boundlessNative(); await exits(); await exceptions(); await interruptIdentity();
   console.log('全停线程：事件去重、退出墓碑、迟到列表/读取、所选线程单步、退出后异常停点恢复通过');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

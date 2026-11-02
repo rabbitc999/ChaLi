@@ -16,6 +16,9 @@ const { parseExpression, evaluateExpression } = require('./debugExpression');
 const { encodeAssignment } = require('./debugAssignment');
 const { DebugThreads } = require('./debugThreads');
 const { interruptWindows } = require('./debugInterrupt');
+const { DebugSourceMap } = require('./debugSourceMap');
+const { processId, prepareLocalIdentity } = require('./debugIdentity');
+const { remoteEndpoint, remoteImage, verifyRemoteImage } = require('./debugRemote');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -172,6 +175,7 @@ class Adapter {
     this.pauseRequested = false;
     this.pauseThread = null;
     this.inferiorPid = null;
+    this.sourceMap = new DebugSourceMap();
     this.stepAttempts = 0;        ///< 连续跳过的内部停点计数。
     this.suppressContinued = false;  ///< 过滤内部停点时不为每次恢复上报 continued。
     this.panicPoint = null;          ///< 隐藏的 panic 入口断点编号。
@@ -214,7 +218,7 @@ class Adapter {
     if (this.requests.has(request.seq)) throw new Error('DAP 请求编号重复');
     if (this.requests.size >= 256) throw new Error('DAP 并发请求超过限制');
     const controller = new AbortController();
-    if (request.command === 'restart') {
+    if (request.command === 'restart' && !this.attached) {
       this.restartPending = true;
       for (const task of this.requests.values()) task.abort();
     }
@@ -316,46 +320,120 @@ class Adapter {
   /** 保证查看请求属于当前暂停代次。 */
   stopped(epoch = this.epoch) {
     if (this.state !== 'stopped' || epoch !== this.epoch) throw new Error('程序没有暂停，或调试引用已经过期');
+    if (this.attached && !this.identityVerified) throw new Error('附加目标身份尚未核对');
+  }
+  /** 对已绑定的本机目标请求中断；附加会话使用核对过的创建身份，而非父子进程关系。 */
+  async interruptTarget(signal) {
+    let interrupt;
+    try {
+      if (process.platform === 'win32' && !this.remote) await interruptWindows(this.inferiorPid, this.gdb.process.pid,
+        this.attachedIdentity?.image || this.debugExecutable, this.debugEnvironment, signal,
+        child => { interrupt = child; this.interruptProcess = child; }, this.attachedIdentity?.start || null);
+      else await this.gdb.command('-exec-interrupt', { signal });
+    } finally { if (this.interruptProcess === interrupt) this.interruptProcess = null; }
+  }
+  /** 在断开前确认真实全停；尚在附加中的目标等待 GDB 自己完成停止，避免重复中断。 */
+  async stopForClose(gdb, initiate) {
+    const controller = new AbortController(); let timer;
+    let stopped, exited;
+    const waiting = new Promise((resolve, reject) => {
+      stopped = () => { this.closeStopped = true; resolve(); };
+      exited = () => reject(new Error('调试器退出，无法确认目标的断开状态'));
+      gdb.once('stopped', stopped); gdb.once('exit', exited);
+      timer = setTimeout(() => reject(new Error('无法在断开前确认目标暂停')), 10000);
+    });
+    try { await Promise.all([waiting, initiate ? this.interruptTarget(controller.signal) : Promise.resolve()]); }
+    finally { clearTimeout(timer); gdb.off('stopped', stopped); gdb.off('exit', exited); controller.abort(); }
   }
   /** 回收本会话的构建进程和 GDB 进程树，重复调用共享同一次清理。 */
-  async shutdown() {
-    if (this.shutdownPromise) return this.shutdownPromise;
+  async shutdown(options) {
+    const explicit = options && Object.hasOwn(options, 'keepTarget');
+    const keepTarget = explicit ? options.keepTarget : this.attached === true;
+    if (this.shutdownPromise) {
+      if (explicit && this.closingMode !== (keepTarget ? 'detach' : 'terminate')) throw new Error('已有不同的关闭操作正在执行');
+      return this.shutdownPromise;
+    }
+    if (keepTarget && this.terminal) throw new Error('集成终端会话不能保留目标；请在外部启动后附加');
+    if (keepTarget && !this.attached && this.sourceBuilt) throw new Error('临时源码启动产物不能在断开后保留；请启动已有产物或从外部附加');
+    const previousState = this.state;
+    this.closeStopped = previousState === 'stopped' || Boolean(this.attachPending && this.pendingAttachStop) || (this.attached && previousState === 'configuring');
+    this.closingMode = keepTarget ? 'detach' : 'terminate';
+    this.closingTarget = keepTarget || this.attached;
+    if (!this.terminated) this.state = 'ending';
     this.invalidate();
     ++this.stopSerial;
     const gdb = this.gdb;
-    this.metadata?.cancel(); this.metadata = null;
+    this.metadata?.cancel();
     const compiler = this.compilerProcess;
     const interrupt = this.interruptProcess;
     this.interruptProcess = null;
     const terminal = this.terminal;
-    this.terminal = null;
-    this.gdb = null;
     this.compilerProcess = null;
     this.shutdownPromise = (async () => {
       try {
         await stopProcessTree(interrupt);
+        await stopProcessTree(this.identityProcess);
+        await this.identityLease?.release(); this.identityLease = null;
         if (gdb) {
           gdb.fail(new Error('调试会话已关闭'));
+          if (this.closingTarget && (this.attachCommandSent || (this.inferiorPid !== null && this.inferiorPid !== undefined)) && !this.targetDetached) {
+            if (!this.closeStopped) {
+              try { await this.stopForClose(gdb, !this.attachPending); }
+              catch (error) { if (this.inferiorPid !== null) throw error; }
+            }
+            if (this.inferiorPid !== null) {
+              await gdb.command(keepTarget ? '-target-detach' : '-interpreter-exec console "kill"', { timeoutMs: 5000 });
+              if (keepTarget) this.targetDetached = true;
+            }
+          }
+          gdb.fail(new Error('调试会话已关闭'));
           await gdb.command('-gdb-exit', { timeoutMs: 1000 }).catch(() => {});
-          await stopProcessTree(gdb.process);
+          if (keepTarget) {
+            const child = gdb.process;
+            if (child?.exitCode === null && child?.signalCode === null) await new Promise((resolve, reject) => {
+              const timer = setTimeout(() => { child.off('exit', done); reject(new Error('目标已保留，但调试器未退出；请重试断开，禁止结束目标进程树')); }, 2000);
+              const done = () => { clearTimeout(timer); resolve(); }; child.once('exit', done);
+            });
+          } else await stopProcessTree(gdb.process);
         }
+        this.gdb = null; this.metadata = null; this.terminal = null;
         await stopProcessTree(compiler);
+      } catch (error) {
+        if (!this.terminated) {
+          this.state = this.targetDetached ? 'detached' : this.closeStopped ? 'stopped' : previousState;
+          if (this.state === 'stopped' && this.threads.active.size) this.event('stopped', { reason: 'pause', threadId: this.threads.selected || this.threads.active.keys().next().value,
+            allThreadsStopped: true, description: '关闭未完成，目标保持暂停' });
+        }
+        throw error;
       } finally {
-        await terminal?.drain();
-        terminal?.close();
+        if (!this.gdb) { await terminal?.drain(); terminal?.close(); }
       }
     })();
-    try { await this.shutdownPromise; } finally { this.shutdownPromise = null; }
+    try { await this.shutdownPromise; } finally { this.shutdownPromise = null; this.closingTarget = false; this.closingMode = null; }
   }
   handle(value) { const id = this.nextHandle++; this.handles.set(id, value); return id; }
   async launch(config, signal, restart = false, requestId) {
     if (signal.aborted) throw new Error('调试请求已取消');
+    const attaching = config.request === 'attach';
+    const endpoint = remoteEndpoint(config.remote);
+    if (endpoint && !attaching) throw new Error('remote 只用于附加已有 Linux gdbserver');
+    const attachPid = attaching ? processId(config.processId) : null;
+    if (attaching && (!config.executable || typeof config.executable !== 'string' || config.program)) throw new Error('附加需要已有 executable，不执行 program 构建');
+    if (attaching && ((config.args || []).length || config.console === 'integratedTerminal' || config.stopOnEntry)) throw new Error('附加不修改目标参数、不接管集成终端；入口暂停使用 stopOnAttach');
+    if (config.stopOnAttach !== undefined && typeof config.stopOnAttach !== 'boolean') throw new Error('stopOnAttach 必须是布尔值');
     if ((!config.program || typeof config.program !== 'string') && (!config.executable || typeof config.executable !== 'string')) throw new Error('缺少调试入口 program 或 executable');
     if (config.args !== undefined && (!Array.isArray(config.args) || config.args.length > 65536 || config.args.some(value => typeof value !== 'string' || value.includes('\0')))) throw new Error('args 必须是无 NUL 的字符串数组，且数量不得超过限制');
     this.state = 'building';
     this.configuration = { ...config };
     this.terminated = false;
+    this.attached = attaching; this.identityVerified = !attaching; this.attachPending = attaching;
+    this.remote = endpoint;
+    this.panicArgument = process.arch === 'arm64' ? '$x0' : process.platform === 'win32' ? '$rcx' : '$rdi';
+    this.attachCommandSent = false;
+    this.pendingAttachStop = null; this.targetDetached = false; this.attachedIdentity = null;
+    this.sourceBuilt = !config.executable;
     const cwd = path.resolve(config.cwd || path.dirname(config.executable || config.program));
+    this.sourceMap = new DebugSourceMap(config.sourceFileMap, cwd);
     const root = temporaryRoot(cwd);
     fs.mkdirSync(root, { recursive: true });
     this.directory = fs.mkdtempSync(path.join(root, 'native-debug-'));
@@ -381,6 +459,14 @@ class Adapter {
     const prefix = path.join(this.directory, 'program');
     let executable = config.executable && path.resolve(cwd, config.executable);
     if (executable && !fs.statSync(executable).isFile()) throw new Error('executable 不是普通文件');
+    if (endpoint) {
+      this.remoteIdentity = await remoteImage(executable, signal);
+      this.panicArgument = this.remoteIdentity.argument;
+    } else if (attaching) {
+      this.identityLease = await prepareLocalIdentity(attachPid, executable, env, signal, child => { this.identityProcess = child; });
+      const identity = this.identityLease;
+      this.attachedIdentity = { pid: identity.pid, image: identity.image, start: identity.start, sha256: identity.sha256 };
+    }
     const progressId = 'build-' + this.nextProgress++;
     const diagnosticChunks = [];
     let diagnosticBytes = 0;
@@ -430,18 +516,28 @@ class Adapter {
     const gdb = this.gdb;
     this.metadata = new DebugMetadata((text, options) => gdb.command(text, options), output => this.event('output', { category: 'console', output }));
     this.gdb.on('output', (output, category) => this.event('output', { output, category }));
-    this.gdb.on('exit', () => { if (this.gdb === gdb) this.end(); });
-    this.gdb.on('fault', (error) => { if (this.gdb === gdb) { this.event('output', { category: 'stderr', output: error.message + '\n' }); this.end(); } });
+    this.gdb.on('exit', () => { if (this.gdb === gdb && !this.closingMode) this.end(); });
+    this.gdb.on('fault', (error) => { if (this.gdb === gdb) { this.event('output', { category: 'stderr', output: error.message + '\n' }); if (!this.closingMode) this.end(); } });
     this.gdb.on('running', (data) => {
       if (this.gdb !== gdb || this.terminated) return;
+      if (this.closingMode) return;
       ++this.stopSerial;
       this.invalidate();
       this.state = 'running';
       if (!this.suppressContinued) this.event('continued', { threadId: this.threads.selected || 1, allThreadsContinued: true });
     });
     this.gdb.on('stopped', (data) => {
-      if (this.gdb !== gdb || this.terminated) return;
+      if (this.gdb !== gdb) return;
       const serial = ++this.stopSerial;
+      const exitedTarget = (data.reason || '').startsWith('exited');
+      if (exitedTarget) this.inferiorPid = null;
+      if (this.closingMode) {
+        this.closeStopped = !exitedTarget; this.pendingCloseStop = data;
+        if (!this.terminated && !exitedTarget && data['thread-id'] !== undefined) this.threads.stop(data['thread-id']);
+        return;
+      }
+      if (this.terminated) return;
+      if (this.attachPending && (this.state !== 'configuring' || !exitedTarget)) { this.pendingAttachStop = data; return; }
       const paused = this.pauseRequested; this.pauseRequested = false;
       const pauseThread = this.pauseThread; this.pauseThread = null;
       const pauseStop = paused && data.reason !== 'breakpoint-hit'
@@ -508,9 +604,11 @@ class Adapter {
         threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: pauseStop ? undefined : data['signal-meaning'] });
     });
     this.gdb.on('notify', (status, data) => {
-      if (this.gdb !== gdb || this.terminated) return;
+      if (this.gdb !== gdb) return;
+      // 取消附加后仍须知道 GDB 实际接管了谁，才能在退出调试器之前安全分离。
       if (status === 'thread-group-started') { this.inferiorPid = DebugThreads.id(data.pid); return; }
       if (status === 'thread-group-exited') { this.inferiorPid = null; return; }
+      if (this.terminated) return;
       if (status === 'thread-created') { this.threads.start(data.id); return; }
       if (status === 'thread-exited') { this.threads.exit(data.id); return; }
       if (status !== 'breakpoint-modified' || !data.bkpt) return;
@@ -527,6 +625,21 @@ class Adapter {
     await command('-gdb-set non-stop off');
     await command('-gdb-set charset UTF-8');
     await command('-file-exec-and-symbols ' + JSON.stringify(executable));
+    for (const rule of this.sourceMap.forward)
+      await command('-gdb-set substitute-path ' + JSON.stringify(rule.from) + ' ' + JSON.stringify(rule.local.replace(/\\/g, '/')));
+    if (attaching) {
+      if (signal.aborted) throw new Error('附加已取消');
+      this.attachCommandSent = true;
+      try { await command(endpoint ? '-target-select remote ' + endpoint : '-target-attach ' + attachPid); this.attachCommandSent = false; }
+      catch (error) { if (error.gdbError) this.attachCommandSent = false; throw error; }
+      if (this.inferiorPid !== attachPid) throw new Error('GDB 附加目标 PID 与已核对进程不一致');
+      if (endpoint) await verifyRemoteImage(gdb, attachPid, executable, this.remoteIdentity, this.directory, signal);
+      else {
+        await this.identityLease.verify();
+        await this.identityLease.release(); this.identityLease = null; this.identityProcess = null;
+      }
+      this.identityVerified = true;
+    }
     // 隐藏的 panic 断点让运行期失败停在调用现场，而不是只留下退出码。
     try {
       const inserted = await command('-break-insert -f chali_panic');
@@ -541,6 +654,7 @@ class Adapter {
     if (Array.isArray(config.args) && config.args.length) await command('-exec-arguments ' + config.args.map((value) => JSON.stringify(String(value))).join(' '));
     if (config.stopOnEntry) await command('-break-insert -t f_main');
     this.state = 'configuring';
+    this.event('capabilities', { capabilities: { supportsRestartRequest: !attaching } });
     if (!restart) this.event('initialized');
   }
   /**
@@ -552,7 +666,7 @@ class Adapter {
     const gdb = this.gdb, serial = this.stopSerial;
     let message = '';
     // 运行期 IR 没有 DWARF 参数信息，按各平台 x64/ARM64 的第一个整型参数寄存器取消息指针。
-    for (const register of ['$rcx', '$rdi', '$x0']) {
+    for (const register of this.panicArgument ? [this.panicArgument] : ['$rcx', '$rdi', '$x0']) {
       try {
         const result = await gdb.command(`-data-evaluate-expression --thread ${thread} --frame 0 (char*)${register}`);
         const quoted = /^0x[0-9a-f]+\s+"(.*)"$/i.exec(String(result.value || ''));
@@ -567,7 +681,7 @@ class Adapter {
         const frame = entry.frame || entry;
         const file = String(frame.fullname || frame.file || '');
         const line = Number(frame.line);
-        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
+        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
       }
     } catch { /* 没有调用方源码时只报告消息。 */ }
     if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
@@ -591,7 +705,7 @@ class Adapter {
         const frame = entry.frame || entry;
         const file = String(frame.fullname || frame.file || '');
         const line = Number(frame.line);
-        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
+        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
       }
     } catch { /* 缺少调试信息时保留信号描述。 */ }
     if (this.gdb !== gdb || this.terminated || this.stopSerial !== serial) return;
@@ -635,7 +749,7 @@ class Adapter {
         const hits = Adapter.hitCount(point.hitCondition);
         const logMessage = point.logMessage === undefined ? '' : String(point.logMessage);
         if (logMessage.length > 8192) throw new Error('断点日志文本过长');
-        const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(source.replace(/\\/g, '/') + ':' + point.line), { signal });
+        const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(this.sourceMap.toTarget(source).replace(/\\/g, '/') + ':' + point.line), { signal });
         const bp = result.bkpt, number = Number(bp.number);
         try {
           if (condition) await this.gdb.command(`-break-condition ${number} ${condition}`, { signal });
@@ -750,7 +864,7 @@ class Adapter {
       const inspecting = ['stackTrace', 'scopes', 'variables', 'evaluate', 'readMemory'].includes(request.command);
       const epoch = this.epoch;
       if (inspecting) this.stopped();
-      const independent = ['initialize', 'launch', 'cancel', 'disconnect', 'terminate', 'restart'];
+      const independent = ['initialize', 'launch', 'attach', 'cancel', 'disconnect', 'terminate', 'restart'];
       if (!independent.includes(request.command) && (!this.gdb || this.terminated)) throw new Error('原生调试器尚未启动或已经结束');
       switch (request.command) {
         case 'chali/input':
@@ -771,12 +885,18 @@ class Adapter {
           startsSession = true;
           await this.launch(args, signal, false, request.seq);
           break;
+        case 'attach':
+          if (this.state !== 'ready') throw new Error('调试会话不能重复 attach');
+          startsSession = true;
+          await this.launch({ ...args, request: 'attach' }, signal, false, request.seq);
+          break;
         case 'cancel': {
           const task = this.requests.get(args.requestId === undefined ? this.progressRequests.get(args.progressId) : args.requestId);
           if (task && task !== controller) task.abort();
           break;
         }
         case 'restart': {
+          if (this.attached) { this.restartPending = false; throw new Error('附加会话不重启外部目标，请重新附加'); }
           if (!this.configuration) { this.restartPending = false; throw new Error('尚无可重启的调试配置'); }
           startsSession = true;
           await this.shutdown();
@@ -800,14 +920,30 @@ class Adapter {
           if (this.panicPoint !== null) await this.gdb.command((args.filters.includes('runtime') ? '-break-enable ' : '-break-disable ') + this.panicPoint, { signal });
           this.runtimeFailures = args.filters.includes('runtime');
           break;
-        case 'configurationDone':
+        case 'configurationDone': {
           if (this.state !== 'configuring') throw new Error('调试配置已经完成或当前不能启动程序');
+          if (this.attached) {
+            if (!this.identityVerified || this.inferiorPid === null) throw new Error('附加目标身份未确认或已经退出');
+            this.attachPending = false;
+            this.pendingAttachStop = null;
+            const generation = this.threads.generation;
+            const data = await this.gdb.command('-thread-info', { signal });
+            this.threads.sync(data.threads || [], data['current-thread-id'], generation);
+            const threadId = this.threads.active.keys().next().value;
+            if (!threadId) throw new Error('附加目标没有活动线程');
+            this.threads.selected = threadId;
+            this.invalidate(); this.state = 'stopped';
+            if (this.configuration.stopOnAttach !== false) {
+              this.event('stopped', { reason: 'entry', threadId, allThreadsStopped: true, description: '已附加到现有目标' }); break;
+            }
+          }
           this.state = 'running';
           ++this.stopSerial;
           this.invalidate();
-          try { await this.gdb.command('-exec-run', { signal }); }
+          try { await this.gdb.command(this.attached ? '-exec-continue' : '-exec-run', { signal }); }
           catch (error) { if (error.gdbError) this.state = 'configuring'; else this.end(); throw error; }
           break;
+        }
         case 'threads': {
           const generation = this.threads.generation;
           const data = await this.gdb.command('-thread-info', { signal });
@@ -826,10 +962,12 @@ class Adapter {
           body.stackFrames = (data.stack || []).map((entry) => {
             const frame = entry.frame || entry;
             const id = this.nextHandle++;
-            const sourceInfo = this.metadata?.frame(frame);
+            const original = frame.fullname ? { ...frame, fullname: this.sourceMap.toTarget(frame.fullname) } : frame;
+            const sourceInfo = this.metadata?.frame(original);
+            const localFile = frame.fullname || frame.file ? this.sourceMap.toLocal(this.sourceMap.toTarget(frame.fullname || frame.file)) : undefined;
             this.frames.set(id, { thread, level: Number(frame.level), native: frame, metadata: sourceInfo });
             return { id, name: sourceInfo?.name || frame.func || '<native>', line: Number(frame.line) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
-              source: frame.fullname || frame.file ? { path: frame.fullname || frame.file, name: path.basename(frame.fullname || frame.file) } : undefined,
+              source: localFile ? { path: localFile, name: path.basename(localFile) } : undefined,
               instructionPointerReference: frame.addr };
           });
           body.totalFrames = body.stackFrames.length;
@@ -842,7 +980,7 @@ class Adapter {
           for (const macro of frame.metadata?.macros || []) {
             body.scopes.push({ name: '$' + macro.name, expensive: false,
               variablesReference: this.handle({ ...frame, macro: macro.id }),
-              source: { path: macro.definition.file, name: path.basename(macro.definition.file) },
+              source: { path: this.sourceMap.toLocal(macro.definition.file), name: path.basename(this.sourceMap.toLocal(macro.definition.file)) },
               line: macro.definition.line || 1, column: macro.definition.column || 1 });
           }
           break;
@@ -1060,7 +1198,21 @@ class Adapter {
           this.stepThread = request.command === 'continue' ? null : thread;
           this.stepAttempts = 0;
           this.suppressContinued = false;
-          try { await this.gdb.command(commands[request.command] + (request.command === 'continue' ? '' : ' --thread ' + thread), { signal }); }
+          try {
+            try { await this.gdb.command(commands[request.command] + (request.command === 'continue' ? '' : ' --thread ' + thread), { signal }); }
+            catch (error) {
+              // Linux 精简系统库可能没有函数边界；只对确认无源码的所选线程退到其调用方。
+              if (!error.gdbError || !['next', 'stepIn'].includes(request.command)
+                  || !/Cannot find bounds of current function/.test(error.message)) throw error;
+              const gdb = this.gdb, serial = this.stopSerial;
+              const frames = await gdb.command('-stack-list-frames --thread ' + thread + ' 0 0', { signal });
+              const top = frames.stack?.[0]?.frame || frames.stack?.[0];
+              const file = String(top?.fullname || top?.file || '');
+              if (!top || (file && !file.startsWith('<')) || this.gdb !== gdb || serial !== this.stopSerial) throw error;
+              this.threads.resolve(thread);
+              await gdb.command('-exec-finish --thread ' + thread, { signal });
+            }
+          }
           catch (error) {
             this.stepCommand = null; this.stepThread = null;
             if (error.gdbError && this.state === 'running') this.state = 'stopped';
@@ -1074,23 +1226,22 @@ class Adapter {
           if (this.state !== 'running') throw new Error('程序当前没有运行');
           this.pauseThread = this.threads.resolve(args.threadId);
           this.pauseRequested = true; this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
-          let interrupt;
           try {
-            if (process.platform === 'win32') {
-              await interruptWindows(this.inferiorPid, this.gdb.process.pid, this.debugExecutable, this.debugEnvironment, signal,
-                child => { interrupt = child; this.interruptProcess = child; });
-            } else await this.gdb.command('-exec-interrupt', { signal });
+            await this.interruptTarget(signal);
           } catch (error) { this.pauseRequested = false; this.pauseThread = null; throw error; }
-          finally { if (this.interruptProcess === interrupt) this.interruptProcess = null; }
           break;
         }
         case 'disconnect':
-        case 'terminate':
-          this.state = 'ending';
+        case 'terminate': {
+          if (args.terminateDebuggee !== undefined && typeof args.terminateDebuggee !== 'boolean') throw new Error('terminateDebuggee 必须是布尔值');
+          if (args.suspendDebuggee !== undefined && typeof args.suspendDebuggee !== 'boolean') throw new Error('suspendDebuggee 必须是布尔值');
+          if (args.suspendDebuggee === true) throw new Error('不支持断开后保留暂停的目标');
+          const keepTarget = request.command === 'terminate' ? false : args.terminateDebuggee === undefined ? this.attached === true : !args.terminateDebuggee;
           for (const task of this.requests.values()) if (task !== controller) task.abort();
-          await this.shutdown();
+          await this.shutdown({ keepTarget });
           this.end();
           break;
+        }
         default: throw new Error('原生调试暂不支持请求：' + request.command);
       }
       if (inspecting) this.stopped(epoch);

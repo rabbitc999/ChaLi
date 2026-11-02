@@ -4,10 +4,11 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
+const { stopProcessTree } = require('../src/debugProtocol');
 
 /** 只记录当前扩展宿主下的 GDB、被调试程序及适配器，不触碰其他会话。 */
-function debugProcesses() {
+function debugProcesses(attaching = false) {
   const windows = process.platform === 'win32';
   const result = spawnSync(windows ? 'powershell.exe' : 'ps', windows ? ['-NoProfile', '-Command',
     'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name | ConvertTo-Json -Compress'] : ['-eo', 'pid=,ppid=,comm='],
@@ -29,8 +30,12 @@ function debugProcesses() {
   const debuggerRow = rows.find(row => /^gdb(?:\.exe)?$/i.test(row.Name) && belongs(row.ProcessId));
   assert(debuggerRow, '当前扩展宿主下必须存在真实 GDB');
   const pids = new Set([debuggerRow.ProcessId, debuggerRow.ParentProcessId]);
-  for (const row of rows) if (row.ParentProcessId === debuggerRow.ProcessId) pids.add(row.ProcessId);
-  assert(pids.size >= 3, '暂停时必须能观察到适配器、GDB 和被调试进程');
+  let changed;
+  do {
+    changed = false;
+    for (const row of rows) if (pids.has(row.ParentProcessId) && !pids.has(row.ProcessId)) { pids.add(row.ProcessId); changed = true; }
+  } while (changed);
+  assert(pids.size >= (attaching ? 2 : 3), '暂停时必须能观察到本会话的完整调试器进程树');
   return [...pids];
 }
 
@@ -49,6 +54,29 @@ function bounded(promise, label) {
   let timer;
   return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label + ' 超时')), 60000); })])
     .finally(() => clearTimeout(timer));
+}
+
+/** 为真实编辑器创建独立标准流的外部目标，失败时也回收本测试自建的进程。 */
+async function externalAttachTarget(source, work) {
+  const compiler = process.env.CHALI_BIN; assert(compiler);
+  const prefix = path.join(work, 'attach-program'), env = { ...process.env };
+  if (process.platform === 'linux') {
+    const input = path.join(work, 'allow_attach.c'), library = path.join(work, 'allow_attach.so');
+    fs.writeFileSync(input, '#include <sys/prctl.h>\n#include <unistd.h>\n/**\n * @brief 仅允许本专项目标被同一用户附加，不修改系统 ptrace 设置。\n * @return 无；设置失败以 97 退出。\n */\n__attribute__((constructor)) static void chali_test_allow_attach(void){if(prctl(PR_SET_PTRACER,PR_SET_PTRACER_ANY,0,0,0))_exit(97);}\n');
+    const host = spawnSync(process.env.CC || 'cc', ['-shared', '-fPIC', input, '-o', library], { encoding: 'utf8', timeout: 30000 });
+    assert.equal(host.status, 0, host.stdout + host.stderr); env.LD_PRELOAD = library;
+  }
+  const compiled = spawnSync(compiler, ['aot', source, '--checked', '--debug', '--out', prefix], { env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+  const child = spawn(prefix + (process.platform === 'win32' ? '.exe' : ''), [], { env, windowsHide: true, detached: process.platform !== 'win32' });
+  try {
+    await bounded(new Promise((resolve, reject) => {
+      let text = ''; child.stdout.resume(); child.stderr.setEncoding('utf8');
+      child.stderr.on('data', part => { text += part; if (text.includes('READY')) resolve(); });
+      child.once('error', reject); child.once('exit', () => reject(new Error('外部附加目标提前退出：' + text)));
+    }), '外部目标就绪');
+    return { child, executable: prefix + (process.platform === 'win32' ? '.exe' : '') };
+  } catch (error) { await stopProcessTree(child); throw error; }
 }
 
 exports.run = async function () {
@@ -74,16 +102,17 @@ exports.run = async function () {
     const found = state.messages.find(message => message.type === 'event' && message.event === name);
     return found ? Promise.resolve(found.body || {}) : bounded(new Promise(resolve => state.waiters.push({ event: name, resolve })), name);
   };
-  let active;
+  let active, external;
   try {
-    for (const mode of ['values', 'cancel', 'exception']) {
+    for (const mode of ['values', 'cancel', 'exception', 'attach']) {
       const source = path.join(folder.uri.fsPath, 'test_' + mode + '.chl');
-      fs.writeFileSync(source, mode === 'exception' ? 'void main(){\n panic("extension-host-failure");\n}\n'
+      fs.writeFileSync(source, mode === 'attach' ? 'import std::thread;\nvoid main(){\n int64 number=42;int64 data[]=new[2];data[0]=73;\n eprintln("READY");\n while(number==42){std::thread::sleepFor(10);}\n}\n'
+        : mode === 'exception' ? 'void main(){\n panic("extension-host-failure");\n}\n'
         : 'void main(){\n int64 number=42;\n int64 data[]=new[2]; data[0]=73;\n println("{}",number);\n assert(number==43);\n}\n');
       const document = await vscode.workspace.openTextDocument(source);
       assert.equal(document.languageId, 'chali');
       await vscode.window.showTextDocument(document);
-      const breakpoint = new vscode.SourceBreakpoint(new vscode.Location(document.uri, new vscode.Position(mode === 'exception' ? 1 : 3, 0)));
+      const breakpoint = new vscode.SourceBreakpoint(new vscode.Location(document.uri, new vscode.Position(mode === 'exception' ? 1 : mode === 'attach' ? 4 : 3, 0)));
       if (mode !== 'exception') vscode.debug.addBreakpoints([breakpoint]);
       let terminatedSubscription;
       const ended = new Promise(resolve => {
@@ -91,12 +120,15 @@ exports.run = async function () {
           if (session.name === 'ChaLi extension ' + mode) { terminatedSubscription.dispose(); resolve(); }
         });
       });
-      const launched = await vscode.debug.startDebugging(folder, { type: 'chali', request: 'launch', name: 'ChaLi extension ' + mode,
-        program: source, cwd: folder.uri.fsPath, console: 'internalConsole' });
+      if (mode === 'attach') external = await externalAttachTarget(source, work);
+      const launched = await vscode.debug.startDebugging(folder, { type: 'chali', name: 'ChaLi extension ' + mode,
+        ...(mode === 'attach' ? { request: 'attach', executable: external.executable, processId: external.child.pid, stopOnAttach: false } : { request: 'launch', program: source }),
+        cwd: folder.uri.fsPath, console: 'internalConsole' });
       assert.equal(launched, true);
       const state = scenarios.at(-1); assert(state); active = state.session;
       const stop = await event(state, 'stopped');
-      state.processes = debugProcesses();
+      state.processes = debugProcesses(mode === 'attach');
+      if (external) assert(!state.processes.includes(external.child.pid), '外部目标不属于调试器进程树');
       assert.equal(stop.reason, mode === 'exception' ? 'exception' : 'breakpoint');
       const stack = await active.customRequest('stackTrace', { threadId: stop.threadId });
       assert(stack.stackFrames.some(frame => path.resolve(frame.source?.path || '') === source));
@@ -113,6 +145,11 @@ exports.run = async function () {
         state.modifiedVariables = 1;
         await active.customRequest('continue', { threadId: stop.threadId });
         assert.equal((await event(state, 'exited')).exitCode, 0);
+      } else if (mode === 'attach') {
+        assert.equal((await active.customRequest('evaluate', { frameId: stack.stackFrames[0].id, expression: 'number' })).result, '42');
+        await active.customRequest('setBreakpoints', { source: { path: source }, breakpoints: [] });
+        await active.customRequest('continue', { threadId: stop.threadId });
+        await vscode.debug.stopDebugging(active);
       } else if (mode === 'exception') {
         assert.match(stop.text, /extension-host-failure/);
         await active.customRequest('continue', { threadId: stop.threadId });
@@ -123,6 +160,13 @@ exports.run = async function () {
       await event(state, 'terminated');
       await bounded(ended, 'VSCode 会话回收');
       await exited(state.processes);
+      if (external) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        assert.equal(external.child.exitCode, null); assert.equal(external.child.signalCode, null);
+        state.detachedTarget = external.child.pid;
+        await stopProcessTree(external.child); external = null;
+        state.detachedTargetPreserved = true;
+      }
       vscode.debug.removeBreakpoints([breakpoint]);
       active = null;
     }
@@ -130,6 +174,9 @@ exports.run = async function () {
       activated: true, scenarios: scenarios.map(state => ({ name: state.session.name,
         stopped: state.messages.filter(message => message.event === 'stopped').length,
         processesExited: state.processes.length,
+        processes: state.processes,
+        detachedTarget: state.detachedTarget,
+        detachedTargetPreserved: state.detachedTargetPreserved === true,
         modifiedVariables: state.modifiedVariables || 0,
         terminated: state.messages.some(message => message.event === 'terminated') })) }, null, 2));
   } catch (error) {
@@ -138,6 +185,7 @@ exports.run = async function () {
     throw error;
   } finally {
     if (active) await vscode.debug.stopDebugging(active);
+    await stopProcessTree(external?.child);
     tracker.dispose();
     vscode.debug.removeBreakpoints(vscode.debug.breakpoints);
   }

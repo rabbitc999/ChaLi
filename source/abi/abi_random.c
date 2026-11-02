@@ -9,6 +9,9 @@
  * 接口语义（创建 / 复制 / 释放）与区间约定保持等价。算法选用 splitmix64，
  * 通过 BigCrush 级别的常见统计检验，状态空间为 2^64。
  */
+#if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
 #include "chali_abi_internal.h"
 
 #include <stdlib.h>
@@ -279,6 +282,11 @@ static const ChaliAbiRecord kRecords[] = {
     { "std::random::randomWithSeed", abiRandomWithSeed, 1 },
 };
 
+/**
+ * @brief 取得随机数模块的静态 ABI 入口表。
+ * @param count 非空时写入入口数量。
+ * @return 生命周期覆盖整个进程的只读入口表。
+ */
 const ChaliAbiRecord *abi_random_records(size_t *count)
 {
     if (count != NULL) *count = sizeof(kRecords) / sizeof(kRecords[0]);

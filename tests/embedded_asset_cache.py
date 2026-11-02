@@ -79,6 +79,37 @@ def verify_generator(folder):
         assert embed_stdlib.main() == 0 and len(counts) == 8
 
 
+def verify_pack_tool(folder):
+    """异宿主工具和其他变体的工具不能命中当前构建目录。"""
+    shared = folder / 'build/lztext'
+    shared.mkdir(parents=True)
+    for name in ['lztext-pack', 'lztext-pack.exe']:
+        (shared / name).write_bytes(b'old foreign host tool')
+    variant = folder / 'build/isolated/lztext'
+    expected = variant / ('lztext-pack.exe' if os.name == 'nt' else 'lztext-pack')
+    with patch.object(embed_stdlib, 'ROOT', str(folder)), \
+         patch.dict(os.environ, {'CHALI_BUILD_ROOT': 'build/isolated', 'LZTEXT_PACK': ''}), \
+         patch.object(embed_stdlib.shutil, 'which', return_value='host-c++'), \
+         patch.object(embed_stdlib.subprocess, 'check_call') as compile_tool:
+        assert Path(embed_stdlib.pack_tool_path()) == expected
+        assert Path(compile_tool.call_args.args[0][-1]) == expected
+        expected.write_bytes(b'current host tool')
+        compile_tool.reset_mock()
+        assert Path(embed_stdlib.pack_tool_path()) == expected
+        compile_tool.assert_not_called()
+    if os.name == 'nt':
+        expected.unlink()
+        sdk = folder / 'static-sdk'
+        compiler = sdk / 'bin/g++.exe'
+        with patch.object(embed_stdlib, 'ROOT', str(folder)), \
+             patch.dict(os.environ, {'CHALI_BUILD_ROOT': 'build/isolated', 'LZTEXT_PACK': '', 'CHALI_LLVM_SDK': str(sdk)}), \
+             patch.object(embed_stdlib.shutil, 'which', return_value=str(compiler)), \
+             patch.object(embed_stdlib.subprocess, 'check_call') as compile_tool:
+            assert Path(embed_stdlib.pack_tool_path()) == expected
+            assert '--sysroot=' + str(sdk) in compile_tool.call_args.args[0]
+            assert '-static' in compile_tool.call_args.args[0]
+
+
 def verify_encoding(folder):
     """通过真实 sh 与 Python 子进程检查入口会覆盖不匹配的 Windows 默认编码。"""
     (folder / 'tools').mkdir(parents=True)
@@ -136,6 +167,7 @@ def main():
         folder = Path(directory)
         verify_cache(folder)
         verify_generator(folder / 'generator')
+        verify_pack_tool(folder / 'pack-tool')
         verify_encoding(folder / 'encoding')
         verify_make(folder / 'make')
     print('内嵌资产 SHA256：内容命中、索引变更、损坏/缺失恢复、Make 依赖更新与命中时对象复用、gen.sh 中文 UTF-8 输出通过')

@@ -134,13 +134,42 @@ VSCode 局部变量与参数视图支持对当前作用域的可变基础绑定�
 
 线程退出立即废弃已有调用帧、聚合及内存引用和进行中的旧读取，并通知客户端刷新栈与变量。线程列表查询期间发生退出时，迟到结果不能恢复旧线程。退出后的线程号不能继续查看或单步；原停止线程已退出时重新查询并选择仍活动的线程。异常查询按实际停点代次核对，其他线程退出不会吞掉仍存活线程的异常，也不会向已恢复或已关闭的会话发送旧停点。活动线程最多 4096 个、退出历史最多 65536 个、名称最多 4096 字符。
 
-内部原生帧继续过滤到源码，包括 Windows GDB 从等待函数返回时缺少停止原因的通知；过滤有既有次数上限。显式暂停会撤销自动单步过滤，目标暂停后只在用户继续时恢复。Windows 原生暂停使用系统 Windows PowerShell 调用系统调试中断；核对目标 PID、最多八层祖先进程链、创建时间及真实映像，持有进程句柄直至操作完成，辅助进程继承同一临时目录并在结束会话时回收。这也适用于本机 `gdb.exe` 启动器派生 `gdborig.exe` 的布局。Linux 路径使用 MI 中断；此阶段实际执行验收为 Windows x64，不据此声称 Linux 调度或远程实测。当前入口为启动调试，本机附加和远程连接不支持。
+内部原生帧继续过滤到源码，包括 Windows GDB 从等待函数返回时缺少停止原因的通知；过滤有既有次数上限。显式暂停会撤销自动单步过滤，目标暂停后只在用户继续时恢复。Windows 原生暂停使用系统 Windows PowerShell 调用系统调试中断；核对目标 PID、最多八层祖先进程链、创建时间及真实映像，持有进程句柄直至操作完成，辅助进程继承同一临时目录并在结束会话时回收。这也适用于本机 `gdb.exe` 启动器派生 `gdborig.exe` 的布局。Linux 路径使用 MI 中断；Linux 系统库缺少函数边界时，单步仅在确认所选线程无源码后退回调用方。Windows x64 与 Linux x64 已实际核对线程专项。本机附加和 Linux gdbserver 连接见下节。
+
+## 附加、断开与源码映射
+
+附加已有进程时使用 `attach`、明确的 `processId` 和与目标映像字节相同的带符号 `executable`。不会构建源码，也不改变目标的参数、环境和标准流。`env` 只配置调试器。附加默认在完成断点配置后保持全停，`stopOnAttach: false` 则继续执行。
+
+```json
+{
+  "type": "chali",
+  "request": "attach",
+  "name": "ChaLi 附加",
+  "processId": 12345,
+  "executable": "${workspaceFolder}/build/app-debug.exe",
+  "sourceFileMap": {
+    "C:/builder/project": "${workspaceFolder}"
+  }
+}
+```
+
+本机附加在 GDB 接管前后核对进程创建身份和实际映像 SHA-256。Windows 查询持有进程句柄，Linux 保留 `/proc/PID` 目录描述符；PID 重用、目标退出和映像变化明确报错。单份映像核对上限为 512 MiB。尚未核对身份时不开放调用栈、变量或内存查看。Windows 附加后的暂停按已经核对的创建时间和实际映像请求系统调试中断，不要求目标是调试器的子进程。
+
+附加会话默认断开并恢复目标；VSCode 的停止调试同样保留外部目标。DAP `disconnect` 可用 `terminateDebuggee: true` 明确终止，`terminate` 请求也明确终止目标。断开前先确认全停并让 GDB 解除调试关系，再退出调试器；保留目标的路径不强制结束调试器进程树。断开失败保留会话供重试，不伪报成功。附加不支持重启，也不支持 `suspendDebuggee: true`；临时源码构建及集成终端启动不能选择断开后保留目标。已有产物的普通启动可明确请求 `terminateDebuggee: false`。
+
+`sourceFileMap` 将目标源码绝对路径前缀映射到本地目录；本地相对目录按 `cwd` 解析。按最长目录前缀匹配并检查目录边界，断点使用反向映射。Windows 目标路径忽略大小写，Linux 目标路径保留大小写；路径支持空格和中文。最多 128 条映射，重复本地根及被更具体规则覆盖的反向路径明确拒绝，避免断点落入错误源码。调试目录仍保留原始源码身份，调用栈、宏来源和错误位置显示本地路径。
+
+远程配置在上述 `attach` 中增加 `"remote": { "host": "127.0.0.1", "port": 2345 }`，`processId` 必须是该 Linux gdbserver 实际控制的目标 PID，`executable` 为相同 ELF 的本地副本。只接受 TCP 地址，连接已有服务，不启动远程命令、不部署程序。远程目标限定为 64 位小端 Linux x64／ARM64，GDB 必须具有对应 Linux 目标支持；普通 Windows MinGW GDB 未必包含 Linux OS ABI。连接后核对 GDB 报告的 PID，并通过 gdbserver 文件传输读取 `/proc/PID/exe` 核对完整 SHA-256；缺少该能力或身份不符时断开并报告。远程暂停走 MI 中断，panic 消息按 ELF 目标 ABI 读取参数，不使用宿主 Windows 的参数寄存器。
+
+远程专项命令为 `python tools/run_module_gates.py debug_remote --chali Linux编译器路径 --jobs 1`，要求真实 Linux 宿主、匹配 GDB、gdbserver 和 LLVM 工具链；`CHALI_GDB`、`CHALI_GDBSERVER` 可指定工具。缺少环境会失败，不以跳过或模拟协议算作通过。目标架构格式检查不等于该架构已完成执行验收。
+
+当前远程实际执行平台为 Ubuntu 22.04 x64、GDB／gdbserver 12.1，分别覆盖 malloc 与 pool；本机附加、源码映射及线程专项也在该 Linux 环境执行。ARM64 尚无目标执行证据。WSL 的 NTFS 挂载工作区不能建立集成终端所用的 Unix socket，因此该环境的完整调试门禁在终端场景失败；本次远程专项通过不等于 Linux 全调试模块或 Linux 图形扩展宿主全量通过。
 
 ## 真实 VSCode 扩展测试
 
 在仓库的 `vscode/` 目录运行 `npm run test:extension`。需要本机已安装的 VSCode、GDB 和可执行的 ChaLi 编译器，以及可用的图形会话。`CHALI_BIN` 指定本阶段编译器，缺省使用扩展内嵌版本；`CHALI_VSCODE_EXECUTABLE` 可指定 VSCode 可执行文件，Windows 缺省使用 Program Files 中的安装，其他宿主从 PATH 查找 `code`；`CHALI_GDB` 可覆盖 GDB 路径。缺少环境会报告失败。
 
-入口使用隔离的用户配置、扩展目录和工作区，全部位于仓库根目录 `tmp/`。真实扩展宿主验证激活、语言识别、源码构建与断点、调用栈、标量和数组查看、取消、panic 消息及失败退出；每场景记录适配器、GDB 和目标进程，核对结束后全部退出。日志和结果 JSON 保留在本次临时目录，按仓库约定归档并清理。Windows x64 的 VSCode 1.132.0 已实际执行；其他宿主路径提供了进程树读取实现，尚未据此声称目标平台实测通过。
+入口使用隔离的用户配置、扩展目录和工作区，全部位于仓库根目录 `tmp/`。真实扩展宿主验证激活、语言识别、源码构建与断点、调用栈、标量和数组查看、基础变量修改、取消、panic 消息及失败退出，还验证外部目标附加与运行状态下停止调试。每场景记录适配器及完整调试器后代进程并核对结束后退出；附加目标单独核对仍存活，再由测试调用方清理。日志和结果 JSON 保留在本次临时目录，按仓库约定归档并清理。Windows x64 的 VSCode 1.132.0 已实际执行；其他宿主路径提供了进程树读取实现，尚未据此声称目标平台实测通过。
 
 `npm run test:extension -- --debug` 在扩展宿主运行测试前暂停，供 JavaScript 调试器连接端口 9333；测试总超时为 240 秒。自动门禁使用无此选项的入口。独立模块门禁为 `python tools/run_module_gates.py editor_host --chali 编译器路径`（从仓库根目录执行），发布门禁和 VSIX 打包同样执行真实宿主测试。
 
