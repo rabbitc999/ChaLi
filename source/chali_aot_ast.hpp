@@ -515,6 +515,7 @@ struct AstBuilder : Builder
     Memory::Map<Memory::String, ast::TypePtr> environment;
     const ast::Function &syntax;
     std::size_t expressions = 0, blocks = 0, argumentCapacity = 1;
+    std::size_t blockStart = 0;  ///< 当前基本块正文起点，用于避免在空块里追加调试调用。
     bool terminated = false;
     bool snapshotData = false;  ///< 无不透明调用的循环可在本函数帧内保存数据区视图。
     Value dataBase, dataSize;   ///< 只在当前帧内有效的基址和完整字节数。
@@ -545,6 +546,10 @@ struct AstBuilder : Builder
     {
         if (!valueType) return;
         using K = ast::Type::Kind;
+        variable.logicalAddress = valueType->kind == K::Struct || valueType->kind == K::Array
+                                  || (valueType->kind == K::Ref && valueType->element
+                                      && (valueType->element->kind == K::Struct || valueType->element->kind == K::Array
+                                          || valueType->element->kind == K::String));
         variable.bits = 64;
         variable.encoding = "DW_ATE_unsigned";
         switch (valueType->kind)
@@ -754,6 +759,7 @@ struct AstBuilder : Builder
         body += name + ":\n";
         terminated = false;
         checkedAddresses.clear();
+        blockStart = body.size();
     }
 
     /**
@@ -770,6 +776,8 @@ struct AstBuilder : Builder
             if (state.request.options.debug)
             {
                 if (!refreshingDebugBindings) refreshDebugBindings();
+                // 空块只连接入口，发布不产生新状态；跳过它才能让第一条语句仍是函数入口后的首个源码停点。
+                if (body.size() != blockStart) body += "  call void @chali_debug_publish_memory()\n";
                 const auto index = debugBlocks++;
                 enter("q" + std::to_string(index));
                 debugLines[index] = debugLocation(source);
@@ -1286,6 +1294,7 @@ struct AstBuilder : Builder
         {
             signature += "  br label %q0\n";
             body = "q0:\n";
+            blockStart = body.size();
         }
         if (function.label == "main" || function.label == "__chali_library_init")
             for (const auto &constant : state.request.syntax->constants)

@@ -32,14 +32,20 @@
 #include <execinfo.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 #endif
 
 namespace
 {
 bool debugArgumentsEnabled = false;
+static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 96
+                  && sizeof(ChaliDebugMemoryIndex) == 24,
+              "调试内存目录需要固定的 64 位布局");
 }
 extern "C" {
+/** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
+ChaliDebugMemoryIndex chali_debug_memory{ 1, 8, 0 };
 /**
  * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
@@ -314,6 +320,104 @@ NativeContext &currentContext()
     return nativeThreadState.activeContext ? *nativeThreadState.activeContext : current().context;
 }
 
+std::mutex debugMemoryMutex;             ///< 只保护调试目录节点登记，不参与语言堆分配。
+std::size_t debugMemoryThreadCount = 0;  ///< 进程目录节点总数，包含已退出线程。
+/** @brief 每个调试线程的宿主观察缓冲，不计入语言对象或堆分配。 */
+struct DebugMemoryState
+{
+    ChaliDebugMemoryThread *record = nullptr;
+    ChaliDebugAllocation *allocations = nullptr;
+    std::size_t capacity = 0;
+    bool disabled = false;
+    /** @brief 线程结束时撤销目录并释放观察缓冲，目录节点保留进程寿命。 */
+    ~DebugMemoryState()
+    {
+        if (record) record->state = 0;
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        std::free(allocations);
+    }
+    /**
+     * @brief 发布当前堆的有界公开区间，观察失败不改变程序运行结果。
+     * @return 无返回值。
+     */
+    void publish()
+    {
+        if (disabled) return;
+        if (!record)
+        {
+            std::lock_guard<std::mutex> guard(debugMemoryMutex);
+            if (debugMemoryThreadCount >= 4096)
+            {
+                disabled = true;
+                return;
+            }
+            record = static_cast<ChaliDebugMemoryThread *>(std::calloc(1, sizeof(ChaliDebugMemoryThread)));
+            if (!record)
+            {
+                disabled = true;
+                return;
+            }
+#ifdef _WIN32
+            record->thread = GetCurrentThreadId();
+#elif defined(__linux__)
+            record->thread = static_cast<std::uint64_t>(syscall(SYS_gettid));
+#endif
+            record->state = 1;
+            record->next = chali_debug_memory.first;
+            std::atomic_thread_fence(std::memory_order_release);
+            chali_debug_memory.first = reinterpret_cast<std::uintptr_t>(record);
+            ++debugMemoryThreadCount;
+        }
+        const auto previous = record->state;
+        if (previous > std::numeric_limits<std::uint64_t>::max() - 2)
+        {
+            record->state = 0;
+            disabled = true;
+            return;
+        }
+        record->state = previous | 1u;
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        record->complete = 0;
+        auto &context = currentContext();
+        record->context_address = reinterpret_cast<std::uintptr_t>(&nativeThreadState.activeContext);
+        record->context = reinterpret_cast<std::uintptr_t>(nativeThreadState.activeContext);
+        auto *heap = static_cast<Heap *>(context.heap);
+        record->data = reinterpret_cast<std::uintptr_t>(context.data->binary.data());
+        record->data_size = context.data->binary.size();
+        record->revision_address = reinterpret_cast<std::uintptr_t>(heap->mappingRevision());
+        std::size_t count = 0;
+        std::uint64_t revision = 0;
+        for (unsigned attempt = 0; attempt < 3; ++attempt)
+        {
+            if (heap->debugAllocations(allocations, capacity, count, revision))
+            {
+                record->complete = 1;
+                break;
+            }
+            if (count > 65536) break;
+            const auto wanted = std::min<std::size_t>(65536, std::max(count, capacity ? capacity * 2 : 16));
+            auto *replacement = static_cast<ChaliDebugAllocation *>(std::realloc(allocations, wanted * sizeof(ChaliDebugAllocation)));
+            if (!replacement) break;
+            allocations = replacement;
+            capacity = wanted;
+        }
+        record->allocations = reinterpret_cast<std::uintptr_t>(allocations);
+        record->count = record->complete ? count : 0;
+        record->revision = revision;
+        std::atomic_thread_fence(std::memory_order_release);
+        record->state = (previous | 1u) + 1;
+    }
+};
+/**
+ * @brief 仅在调试发布首次使用时建立线程观察状态，避免发布程序初始化额外 TLS 析构。
+ * @return 当前线程的调试观察状态。
+ */
+DebugMemoryState &debugMemoryState()
+{
+    static thread_local DebugMemoryState state;
+    return state;
+}
+
 /**
  * @brief 子线程安全点使用的协作取消信号。
  */
@@ -439,6 +543,23 @@ RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label
 }  // namespace
 
 extern "C" {
+/**
+ * @brief 在调试停点之前复制当前线程的内存目录，不在变量查看请求期间执行。
+ * @return 无返回值，目录复制或预算失败时保持目标程序继续运行。
+ */
+void chali_debug_publish_memory()
+{
+    if (!debugArgumentsEnabled) return;
+    DebugMemoryState *state = nullptr;
+    try
+    {
+        state = &debugMemoryState();
+        state->publish();
+    } catch (...)
+    {
+        if (state && state->record) state->record->state = 0;
+    }
+}
 /**
  * @brief 同步语言回调失败时退回受检查的调用器，让 C 调用完成资源释放。
  * @param message 原始运行期错误。

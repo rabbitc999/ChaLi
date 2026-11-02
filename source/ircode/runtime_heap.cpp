@@ -37,6 +37,30 @@ void Heap::invalidateViews()
 const std::atomic<std::uint64_t> *Heap::mappingRevision() const { return &addressMappingRevision; }
 
 /**
+ * @brief 复制当前活跃公开区间，不暴露分配器容器及对齐填充。
+ * @param output 调用方的固定宽度记录缓冲。
+ * @param capacity 缓冲容量。
+ * @param count 接收所需记录数。
+ * @param revision 接收同一锁区间内的映射代次。
+ * @return 缓冲足够且复制完成时为 true。
+ */
+bool Heap::debugAllocations(ChaliDebugAllocation *output, std::size_t capacity,
+                            std::size_t &count, std::uint64_t &revision) const
+{
+    std::lock_guard<std::mutex> guard(mutex_);
+    count = index_.liveBlocks();
+    revision = addressMappingRevision.load(std::memory_order_acquire);
+    if (count > capacity || (count && !output)) return false;
+    std::size_t index = 0;
+    index_.visitActive([&](const execution_detail::Allocation &block) {
+        const auto offset = block.viewLength ? block.viewOffset : 0u;
+        output[index++] = { block.address + offset, block.viewLength ? block.viewLength : block.size,
+                            reinterpret_cast<std::uintptr_t>(storageAt(block.offset) + offset) };
+    });
+    return true;
+}
+
+/**
  * @brief 使用分配时捕获的所有者查询预算，不依赖调用线程的分配器状态。
  * @return 最大单块载荷预算，尚未初始化时为零。
  */

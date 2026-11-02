@@ -3,7 +3,7 @@
 /** 核对只读映射的完整性、地址精度、预算和取消，不执行任何目标函数。 */
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { DebugMetadata, LIMIT } = require('../src/debugMetadata');
+const { DebugMetadata, LIMIT, visibleBindings } = require('../src/debugMetadata');
 const source = path.resolve(__dirname, 'catalog-source.chl');
 const start = 0x123456789abcdef0n;
 
@@ -40,6 +40,10 @@ async function main() {
   const healthy = target(); await healthy.reader.load();
   let frame = healthy.reader.frame({ func: 'f_identity_i64', fullname: source, line: '2', addr: '0x' + (start + 10n).toString(16) });
   assert.equal(frame.name, 'identity<int64>'); assert.equal(frame.column, 13); assert.equal(frame.position.scope, 2);
+  frame.function.variables.push({name:'value',dwarf:'value',scope:2,address:true});
+  assert.equal(visibleBindings(frame).get('value').address,true);
+  assert.equal(visibleBindings({...frame,position:{scope:0}}).get('value').scope,0);
+  assert.equal(visibleBindings({...frame,position:undefined}).size,0);
   frame = healthy.reader.frame({ func: 'f_identity_i64', fullname: source, line: '3', addr: '0x' + (start + 10n).toString(16) });
   assert.equal(frame.column, 1, '不能把其他源码行的列号冒充当前列');
   const expanded = target(value => {

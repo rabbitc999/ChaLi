@@ -22,9 +22,11 @@ function debugEnvironment(base, overrides = {}) {
 function buildDiagnostics(output, cwd) {
   const diagnostics = [];
   for (const line of output.replace(/\x1b\[[0-9;]*m/g, '').split(/\r?\n/)) {
-    const match = /^(?:chali:\s*)?(.+?):([0-9]+):([0-9]+):\s*(.+)$/.exec(line);
+    // 英文显示使用「文件:行:列:」，中文显示使用「文件 第 N 行[第 M 列]：」，两者都要定位。
+    const match = /^(?:chali:\s*)?(.+?):([0-9]+):([0-9]+):\s*(.+)$/.exec(line)
+      || /^(?:chali:\s*)?(.+?)\s*第\s*([0-9]+)\s*行(?:第\s*([0-9]+)\s*列)?：\s*(.+)$/.exec(line);
     if (match) diagnostics.push({ path: path.resolve(cwd, match[1]), line: Math.max(0, Number(match[2]) - 1),
-      column: Math.max(0, Number(match[3]) - 1), message: match[4] });
+      column: Math.max(0, Number(match[3] || 1) - 1), message: match[4] });
   }
   return diagnostics;
 }

@@ -117,6 +117,7 @@ class DebugMetadata {
         if (variable.dwarf !== undefined) text(variable.dwarf);
         macroId(variable.macro);
         if (variable.boxed !== undefined && typeof variable.boxed !== 'boolean') throw new Error('调试绑定存储标记无效');
+        if (variable.address !== undefined && typeof variable.address !== 'boolean') throw new Error('调试地址类别无效');
         if (!fn.parents.has(variable.scope) || typeof variable.readOnly !== 'boolean') throw new Error('调试变量来源无效');
       }
       fn.positions = []; byLinkage.set(fn.linkage, fn);
@@ -160,4 +161,25 @@ class DebugMetadata {
   }
 }
 
-module.exports = { DebugMetadata, LIMIT, POINT_LIMIT };
+/** 按实际 PC 的词法祖先选择绑定，不把已经退出的同名聚合误认作当前标量。 */
+function visibleBindings(metadata) {
+  const result = new Map(), ranks = new Map(), distances = new Map();
+  if (!metadata?.position || !metadata.function?.parents) return result;
+  let scope = metadata.position.scope, distance = 0;
+  while (true) {
+    if (distances.has(scope)) return new Map();
+    distances.set(scope, distance++);
+    if (scope === 0) break;
+    scope = metadata.function.parents.get(scope);
+    if (scope === undefined) return new Map();
+  }
+  for (const variable of metadata.function.variables || []) {
+    const rank = distances.get(variable.scope), name = variable.dwarf || variable.name;
+    if (rank !== undefined && (!ranks.has(name) || rank < ranks.get(name))) {
+      result.set(name, variable); ranks.set(name, rank);
+    }
+  }
+  return result;
+}
+
+module.exports = { DebugMetadata, LIMIT, POINT_LIMIT, visibleBindings };

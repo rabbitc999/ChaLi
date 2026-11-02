@@ -188,6 +188,8 @@ run_step "运行临时值与资源释放合并回归" "$PYTHON" tests/chali_reso
 run_step "运行闭包自动类型与嵌套返回语言服务回归" "$PYTHON" tests/chali_lsp_closure_types.py --chali "$CHALI_BIN"
 run_required_step "编译无墓碑分配身份回归" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=1 -Isource -Ilibrary -Isource/allocator tests/allocation_identity.cpp -o tmp/ci/allocation-identity
 run_step "运行百万次分配身份回归" tmp/ci/allocation-identity
+run_required_step "编译地址视图与调试内存目录回归" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=1 -Isource -Ilibrary -Isource/allocator tests/chali_heap_address_view.cpp source/ircode/runtime_heap.cpp source/allocator/system_arena.cpp -o tmp/ci/heap-address-view
+run_step "运行地址视图与调试内存目录回归" tmp/ci/heap-address-view
 run_required_step "编译直通胶水入口表单元测试" g++ -O2 -Isource tests/chali_abi_table.cpp -x c source/abi/*.c -x none -o tmp/ci/chali-abi-table
 run_step "运行直通胶水入口表单元测试" tmp/ci/chali-abi-table
 run_step "运行数组按值传参与引用回归" "$PYTHON" tests/chali_array_parameters.py --chali "$CHALI_BIN"

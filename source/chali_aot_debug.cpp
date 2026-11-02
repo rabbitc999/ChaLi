@@ -225,6 +225,8 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
     std::string line, output;
     // 入口清零与参数保存属于原生序言，不应作为首条源码语句停下。
     auto currentLocation = node("!DILocation(line: 0, column: 0, scope: !" + std::to_string(scope) + ")");
+    // 内存目录发布不属于源码语句：用 0 行位置，避免单步把它当成新的源码停点。
+    const auto publishLocation = currentLocation;
     bool inserted = false;
     while (std::getline(input, line))
     {
@@ -244,7 +246,8 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
             inserted = true;
         }
         if (line.rfind("  ", 0) == 0u && line.find("!dbg !") == std::string::npos)
-            line += ", !dbg !" + std::to_string(currentLocation);
+            line += ", !dbg !"
+                    + std::to_string(line.find("@chali_debug_publish_memory") == std::string::npos ? currentLocation : publishLocation);
         output += line + "\n";
         output += after;
     }
@@ -283,6 +286,7 @@ void NativeDebugInfo::finish(std::string &module)
                        + ",\"binding\":" + debugJsonString(variable.name) + ",\"type\":" + debugJsonString(variable.typeName)
                        + ",\"dwarf\":" + debugJsonString(variable.dwarfName.empty() ? variable.name.substr(0, variable.name.find('$')) : variable.dwarfName)
                        + ",\"macro\":" + std::to_string(variable.macro)
+                       + ",\"address\":" + (variable.logicalAddress ? "true" : "false")
                        + ",\"scope\":" + std::to_string(variable.scope) + ",\"file\":" + debugJsonString(debugSourcePath(variable.file))
                        + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
@@ -325,7 +329,8 @@ void NativeDebugInfo::finish(std::string &module)
     module += "@chali_debug_catalog = constant [" + std::to_string(catalog.size() + 1) + " x i8] c" + metadataString(catalog + '\0') + "\n";
     module += "@chali_debug_catalog_size = constant i64 " + std::to_string(catalog.size()) + "\n";
     module += "@chali_debug_positions = constant [" + std::to_string(positions_.size()) + " x ptr] " + (positions_.empty() ? "zeroinitializer" : "[" + addresses + "]") + "\n";
-    module += "@llvm.used = appending global [3 x ptr] [ptr @chali_debug_catalog, ptr @chali_debug_catalog_size, ptr @chali_debug_positions], section \"llvm.metadata\"\n";
+    module += "@chali_debug_memory = external global { i64, i64, i64 }\n";
+    module += "@llvm.used = appending global [4 x ptr] [ptr @chali_debug_catalog, ptr @chali_debug_catalog_size, ptr @chali_debug_positions, ptr @chali_debug_memory], section \"llvm.metadata\"\n";
     std::string flags;
     if (module.find("!\"Debug Info Version\"") == std::string::npos)
         flags = "!" + std::to_string(node("!{i32 2, !\"Debug Info Version\", i32 3}"));

@@ -9,7 +9,8 @@ const { constants: osConstants } = require('node:os');
 const { RequestReader, stopProcessTree, BODY_LIMIT } = require('./debugProtocol');
 const { debugEnvironment, buildDiagnostics } = require('./debugConfiguration');
 const { DebugTerminal } = require('./debugTerminal');
-const { DebugMetadata } = require('./debugMetadata');
+const { DebugMetadata, visibleBindings, LIMIT: MEMORY_LIMIT } = require('./debugMetadata');
+const { DebugMemory } = require('./debugMemory');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -200,7 +201,7 @@ class Adapter {
     this.requests.set(request.seq, controller);
     const run = () => this.request(request, controller).finally(() => this.requests.delete(request.seq));
     const immediate = ['cancel', 'disconnect', 'terminate', 'chali/input'];
-    const reads = ['threads', 'stackTrace', 'scopes', 'variables', 'evaluate'];
+    const reads = ['threads', 'stackTrace', 'scopes', 'variables', 'evaluate', 'readMemory'];
     if (immediate.includes(request.command) || reads.includes(request.command)) void run();
     else this.control = this.control.then(run, run);
   }
@@ -383,7 +384,7 @@ class Adapter {
     let startsSession = false;
     try {
       if (signal.aborted) throw new Error('调试请求已取消');
-      const inspecting = ['stackTrace', 'scopes', 'variables', 'evaluate'].includes(request.command);
+      const inspecting = ['stackTrace', 'scopes', 'variables', 'evaluate', 'readMemory'].includes(request.command);
       const epoch = this.epoch;
       if (inspecting) this.stopped();
       const independent = ['initialize', 'launch', 'cancel', 'disconnect', 'terminate', 'restart'];
@@ -397,7 +398,7 @@ class Adapter {
           if (this.state !== 'created') throw new Error('调试会话已经初始化');
           this.state = 'ready';
           this.progressReporting = args.supportsProgressReporting === true;
-          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true };
+          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true };
           break;
         case 'launch':
           if (this.state !== 'ready') throw new Error('调试会话不能重复 launch');
@@ -472,21 +473,44 @@ class Adapter {
         }
         case 'variables': {
           const frame = this.handles.get(args.variablesReference);
-          if (!frame) throw new Error('变量引用已经过期');
+          if (!frame || frame.kind === 'memory') throw new Error('变量引用已经过期或类别无效');
           const data = await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal });
           // GDB 从最内层逐块列举，保留首先遇到的绑定，隐藏被遮蔽的外层同名值。
           const visible = new Set();
-          const bindings = new Map((frame.metadata?.function.variables || []).map(variable => [variable.dwarf || variable.name, variable]));
+          const bindings = visibleBindings(frame.metadata);
           body.variables = (data.variables || []).filter(variable => {
             const binding = bindings.get(variable.name);
+            if (!binding && variable.name.startsWith('__chali_macro_debug_')) return false;
             if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
           }).map((variable) => {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
-            return { name: binding?.name || variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0 };
+            const memoryReference = frame.level === 0 && binding?.address === true && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') && BigInt(value) > 0n
+              ? 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: BigInt(value) }) : undefined;
+            return { name: binding?.name || variable.name, value: value || '<不可用>', type: variable.type, evaluateName: variable.name, variablesReference: 0, memoryReference };
           });
+          break;
+        }
+        case 'readMemory': {
+          if (typeof args.memoryReference !== 'string') throw new Error('内存引用类别无效');
+          const match = /^chali-memory:([1-9][0-9]{0,15})$/.exec(args.memoryReference || '');
+          const id = match ? Number(match[1]) : 0;
+          const reference = Number.isSafeInteger(id) && this.handles.get(id);
+          if (!reference || reference.kind !== 'memory') throw new Error('内存引用已经过期或类别无效');
+          const offset = args.offset === undefined ? 0 : args.offset;
+          if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(args.count) || args.count < 0 || args.count > MEMORY_LIMIT) throw new Error('内存偏移或读取预算无效');
+          const memory = new DebugMemory(async (text, options) => {
+            this.stopped(epoch);
+            const result = await this.gdb.command(text, options);
+            this.stopped(epoch);
+            return result;
+          });
+          const snapshot = await memory.snapshot(reference.thread, signal);
+          const address = reference.address + BigInt(offset);
+          const data = await snapshot.read(address, args.count);
+          body = { address: '0x' + address.toString(16), data: data.toString('base64'), unreadableBytes: 0 };
           break;
         }
         case 'evaluate': {

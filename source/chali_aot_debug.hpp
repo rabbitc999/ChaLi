@@ -28,6 +28,7 @@ struct DebugVariable
     std::string storage = {};  ///< 非空表示原始槽只提供源码停点镜像，写入必须定位真实绑定。
     std::string dwarfName = {}; ///< 私有宏变量的独立调试名，避免遮蔽调用方绑定。
     std::int64_t macro = -1;    ///< 非负值表示只在该宏展开帧内可见。
+    bool logicalAddress = false;  ///< 编译器确认槽值直接指向语言数据区或堆，不包括宿主对象编号。
 };
 /**
  * @brief AST 或兼容四元式节点的原始源码位置及词法范围。

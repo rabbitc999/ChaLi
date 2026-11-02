@@ -5,6 +5,7 @@
 #pragma once
 #include "runtime_slot.hpp"
 #include "allocation_index.hpp"
+#include "abi/chali_debug_memory.h"
 #include <atomic>
 
 namespace stackvm::runtimeDetail
@@ -201,6 +202,16 @@ public:
      * @return 原子代次地址；值为零时禁止缓存命中，防止计数回绕复活旧视图。
      */
     const std::atomic<std::uint64_t> *mappingRevision() const;
+    /**
+     * @brief 在堆锁内复制活跃公开区间及同一时刻的映射代次。
+     * @param output 调用方已有的输出缓冲，容量为零时允许为空。
+     * @param capacity 缓冲可容纳的记录数。
+     * @param count 接收所需记录数；容量不足时不写入缓冲。
+     * @param revision 接收目录对应的映射代次。
+     * @return 全部区间已复制时为 true，不足时为 false。
+     */
+    bool debugAllocations(ChaliDebugAllocation *output, std::size_t capacity,
+                          std::size_t &count, std::uint64_t &revision) const;
 
     /**
      * @brief 收窄完整分配的可访问区域，隐藏前后对齐填充。

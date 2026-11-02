@@ -306,6 +306,16 @@ public:
      */
     std::size_t liveBlocks() const { return active_.size(); }
     /**
+     * @brief 按逻辑首地址遍历活跃分配，供持有所属堆锁的内部观察者复制目录。
+     * @param visitor 接收只读分配记录的内部回调，不得修改索引。
+     * @return 无返回值，不分配额外存储。
+     */
+    template <class Visitor>
+    void visitActive(Visitor &&visitor) const
+    {
+        for (const auto &entry : active_) visitor(entry.second);
+    }
+    /**
      * @brief 查询活跃字节峰值。
      * @return 字节数。
      */

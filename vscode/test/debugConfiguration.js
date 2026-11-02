@@ -37,6 +37,11 @@ async function main() {
   if (process.platform === 'win32') assert.deepEqual(debugEnvironment({ Path: 'old' }, { PATH: 'new' }), { Path: 'new' });
   const diagnostics = buildDiagnostics('chali: '+other+':2:3: unknown name\n 2 | ignored\n', root);
   assert.deepEqual(diagnostics, [{ path: other, line: 1, column: 2, message: 'unknown name' }]);
+  assert.deepEqual(buildDiagnostics('chali: '+other+' 第 4 行第 5 列：引用了没声明的变量\n 4 | main\n', root),
+    [{ path: other, line: 3, column: 4, message: '引用了没声明的变量' }]);
+  assert.deepEqual(buildDiagnostics('chali: '+other+' 第 7 行：整行诊断\n', root),
+    [{ path: other, line: 6, column: 0, message: '整行诊断' }]);
+  assert.deepEqual(buildDiagnostics('chali: 没有位置的错误\n', root), []);
   console.log('调试配置：当前文件、项目入口、多工作区路径、保存、目标拒绝、已有产物、环境和构建诊断通过');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
