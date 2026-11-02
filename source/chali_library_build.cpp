@@ -1,5 +1,5 @@
 /** @file chali_library_build.cpp
- * @brief 已检查标量函数的独立原生编译与库包发布。
+ * @brief 已检查语言函数的独立原生编译与库包发布。
  */
 #include "chali_library.hpp"
 #include "chali_aot.hpp"
@@ -16,6 +16,18 @@
 
 namespace chali_library
 {
+/**
+ * @brief 判断公开签名是否直接传递枚举值或其借用。
+ * @param type 已检查的函数结果或参数类型。
+ * @return 枚举及枚举引用返回 true，其他类型返回 false。
+ */
+static bool enumValueType(const ast::TypePtr &type)
+{
+    if (!type) return false;
+    const auto value = type->kind == ast::Type::Kind::Ref ? type->element : type;
+    return value && value->kind == ast::Type::Kind::Struct && !value->variants.empty();
+}
+
 /**
  * @brief 直接沿 AST→LLVM 编译库单元，包内不携带实现源码或运行时副本。
  * @param original 已完成语言检查的函数及公开签名。
@@ -41,6 +53,15 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
         const bool values = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue"; });
         if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");
+        if (original.syntax)
+        {
+            std::set<Memory::String> labels;
+            for (const auto &entry : original.abiExports) labels.insert(entry.label);
+            const bool enums = std::any_of(original.syntax->functions.begin(), original.syntax->functions.end(), [&](const auto &function) {
+                return labels.count(function.name) && (enumValueType(function.result) || std::any_of(function.parameters.begin(), function.parameters.end(), [](const auto &parameter) { return enumValueType(parameter.second); }));
+            });
+            if (enums) package.manifest.requiredFeatures.push_back("plain-enum-value-v1");
+        }
         if (original.syntax && !original.syntax->nativeTypeSymbols.empty()) package.manifest.requiredFeatures.push_back("shared-type-id-v1");
         package.manifest.dependencies = dependencies;
         package.manifest.license = original.options.libraryLicense.c_str();

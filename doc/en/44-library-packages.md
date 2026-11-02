@@ -52,7 +52,7 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The initial producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. By-value aggregate parameters/results, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the nonowning record and enum parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Unsupported owning aggregates, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
 
 Scalar default parameters preserve definition scope and call-time evaluation. For example:
 
@@ -83,7 +83,16 @@ enum Event {
 };
 ```
 
-Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Owning payloads, user methods, interface contracts and by-value aggregate calls across libraries remain unsupported; enums are not exported as integer prototypes.
+Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Nonowning enum function entries are described below. Owning payloads, user methods and complete interface contracts remain unsupported.
+
+Nonowning enums support value parameters/results and read-only/mutable borrows, including empty and multiple payloads, nested records and nested enums. Qualified construction and matching resolve the actual declaring module, so consumer types with the same name do not shadow fully qualified names:
+
+```chali
+Event echo(Event value) { return value; }
+void replace(Event mut& value) { value = Event::Count(77); }
+```
+
+Value calls retain `chali-value-v1`/`ChaLiValue`; borrows retain `chali-borrow-v1`/`ChaLiBorrow`. These packages additionally require `plain-enum-value-v1`, so older compilers reject the unknown capability during package inspection. Calls pass ChaLi aggregate logical addresses with the language's tag/payload layout. Mutating a value copy leaves the caller unchanged; mutable borrows update the original. Results, recursion and cross-library forwarding share the final program's allocator and lifecycle type identities. Full module identity, field layout and variant order enter symbol hashes, preventing old consumer objects from linking new layouts or variant numbering under the previous symbols. Owning payloads, enum default arguments, reference results and physical C ABI `#export` entries are outside this contract.
 
 Plain nonowning records can also enter compiled language units as read-only or mutable borrows:
 
@@ -92,7 +101,7 @@ int64 read(Point const& value) { return value.x; }
 void bump(Point mut& value, int64 delta) { value.x = value.x + delta; }
 ```
 
-These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values, enum references, record-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
+These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values, aggregate-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
 
 Packages use native ABI `chali-borrow-v1` and required feature `borrowed-record-v1`. The generated `ChaLiBorrow` marker is allowed only in verified library sources with matching ABI; copying it into ordinary source is rejected. Symbols include full record and nested-layout hashes, so an old independent consumer object cannot link to a package with a changed layout under the old symbol. Ordinary C ABI packages retain `c-v1`. Borrowed calls and the complete owning-value, closure and dynamic-function contracts remain separately verified capabilities.
 

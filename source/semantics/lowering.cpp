@@ -3803,16 +3803,19 @@ bool NormalizeEnumMatchPattern(int patternId, const std::shared_ptr<MType> &subj
             pattern.kids = { typed };
         }
     }
-    if (pattern.kind == MNode::EnumCtor && pattern.s.compare(0u, 11u, "std::lang::") == 0)
-        pattern.s.erase(0u, 11u);
     if (pattern.kind != MNode::EnumCtor)
         return Fail("enum match 的分支必须写成 `" + subjectType->name + "::变体` 或 `" + subjectType->name + "::变体(绑定名)`；实际解析为 " + pattern.s + (pattern.s2.empty() ? Memory::String() : "::" + pattern.s2) + "（节点 " + Memory::toString(static_cast<int>(pattern.kind)) + "）");
     /* 模式的枚举类型由主表达式唯一确定。泛型枚举允许把
      * `Option<int>::Value` 简写为 `Option::Value`；普通构造表达式仍要求完整类型。
-     * 另外，`std::模块::枚举::变体` 这种限定写法按**裸类型名**归一：
-     * 类型在所有表里都以裸名登记（`std::io::SeekOrigin` == `SeekOrigin`）。 */
-    if (pattern.s.find("::") != Memory::String::npos && FindEnumVariant(BareTypeName(pattern.s), pattern.s2) != nullptr)
-        pattern.s = BareTypeName(pattern.s);
+     * 限定名称必须对应声明模块；核心泛型简写还须核对主表达式的声明来源。 */
+    if (pattern.s.find("::") != Memory::String::npos)
+    {
+        Memory::String resolved;
+        if (ResolvePayloadPatternType(pattern.s, &resolved))
+            pattern.s = resolved;
+        else if (pattern.s.compare(0u, 11u, "std::lang::") == 0 && StandardGeneric(subjectType->name, BareTypeName(pattern.s)))
+            pattern.s = subjectType->name;
+    }
     const Memory::String genericPrefix = pattern.s + "__";
     if (subjectType->name.compare(0u, genericPrefix.size(), genericPrefix) == 0u)
         pattern.s = subjectType->name;

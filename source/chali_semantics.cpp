@@ -2675,19 +2675,9 @@ int M_EnumVariant(int nameId, int paramsId)
  */
 int M_EnumCtor(int enumNameId, int variantNameId, int argsId)
 {
-    /* 限定构造器：`模块::名字`、`模块::子模块::名字`，或者 `模块::类型::成员`。
-     * 类型与它的成员在表里都按**裸名**登记，所以"三段及以上、最后一段是大驼峰"的写法
-     * 一律归一到最后一段（`std::io::SeekOrigin::Begin` == `SeekOrigin::Begin`）；
-     * 只有一段限定（`std::numtheory::gcd`）按模块函数保留全名。 */
-    Memory::String owner = g_names[static_cast<std::size_t>(enumNameId)];
-    const std::size_t firstScope = owner.find("::");
-    const std::size_t lastScope = owner.rfind("::");
-    if (firstScope != Memory::String::npos && lastScope != firstScope)
-    {
-        const Memory::String tail = owner.substr(lastScope + 2u);
-        if (!tail.empty() && std::isupper(static_cast<unsigned char>(tail[0])))
-            owner = tail;
-    }
+    /* 保留完整所有者名称，交给声明模块解析；不能按首字母截断限定名，
+     * 否则跨模块枚举和静态成员会被消费者中的同名类型遮蔽。 */
+    const Memory::String owner = g_names[static_cast<std::size_t>(enumNameId)];
     const int id = M_New(MNode::EnumCtor, owner);
     g_nodes[static_cast<std::size_t>(id)].s2 =
         g_names[static_cast<std::size_t>(variantNameId)];
@@ -3342,7 +3332,7 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     if (type->kind == MType::Char) return "char";
     if (type->kind == MType::Int) return Memory::String(type->isUnsigned ? "uint" : "int") + Memory::toString(type->bits);
     if (type->kind == MType::Double) return Memory::String("float") + Memory::toString(type->bits);
-    throw std::runtime_error("首批独立原生库只支持基础标量签名；聚合与拥有值待语言库 ABI 接入");
+    throw std::runtime_error("原生库支持基础标量及非拥有记录／枚举；该类型或拥有状态尚未接入语言库 ABI");
 }
 /**
  * @brief 取得已检查记录声明的真实模块身份，不依赖临时短名称。
@@ -3357,12 +3347,12 @@ Memory::String LibraryDeclaredType(const Memory::String &name)
         if ((node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl) && node.s == name)
             return node.module + "::" + BareTypeName(name);
     }
-    throw std::runtime_error("语言借用入口缺少具名记录声明");
+    throw std::runtime_error("语言聚合入口缺少具名记录或枚举声明");
 }
 /**
  * @brief 保留参数的语言类型及只读／可写借用约定。
  * @param type 参数类型。
- * @return 标量或普通记录引用的公开拼写。
+ * @return 标量、非拥有聚合或其借用的公开拼写。
  */
 Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
 {
@@ -3656,7 +3646,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
         if (valueResult)
         {
-            if (!function.exportSymbol.empty()) throw std::runtime_error("语言记录返回不能同时声明物理 C ABI 的 #export");
+            if (!function.exportSymbol.empty()) throw std::runtime_error("语言聚合返回不能同时声明物理 C ABI 的 #export");
             identity += "\nchali-value-v1:" + LibraryRecordShape(function.signature.result->name, recordShapes);
         }
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
@@ -3667,8 +3657,8 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
             identity += "\n" + type;
             if (LibraryBorrowParameter(parameter.type) || LibraryPlainValue(parameter.type))
             {
-                if (!function.exportSymbol.empty()) throw std::runtime_error("语言借用入口不能同时声明物理 C ABI 的 #export");
-                if (parameter.defaultExpr >= 0) throw std::runtime_error("记录借用参数暂不支持默认值");
+                if (!function.exportSymbol.empty()) throw std::runtime_error("语言聚合入口不能同时声明物理 C ABI 的 #export");
+                if (parameter.defaultExpr >= 0) throw std::runtime_error("聚合参数暂不支持默认值");
                 const bool value = LibraryPlainValue(parameter.type);
                 if (value)
                     entry.abiConvention = "ChaLiValue";

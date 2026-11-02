@@ -341,6 +341,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "核对番外原文与双语教程例程" "$PYTHON" tests/chali_book_rewrite.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
     run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
+    run_step "运行原生预编译库完整模块回归" "$PYTHON" tools/run_module_gates.py libraries --chali "$CHALI_BIN" --jobs 1
     run_step "运行真实 VSCode 扩展宿主调试与进程清理回归" "$PYTHON" tests/chali_vscode_extension_host.py --chali "$CHALI_BIN"
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"
     run_step "运行反射学生管理的持久化与校验回归" "$PYTHON" tests/chali_reflection_students.py --compiler "$CHALI_BIN"

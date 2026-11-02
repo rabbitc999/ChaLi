@@ -270,7 +270,7 @@ Memory::String CAbiType(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 判断语言单元可以复制的非拥有普通记录值。
+ * @brief 判断语言单元可以复制的非拥有记录或枚举值。
  * @param type 已解析语言类型。
  * @return 字段没有拥有资源且采用普通记录布局时为真。
  */
@@ -279,11 +279,11 @@ bool LibraryPlainValue(const std::shared_ptr<MType> &type)
     if (!type || type->kind != MType::Struct) return false;
     const auto &name = type->name;
     const auto found = g_structs.find(name);
-    return found != g_structs.end() && !g_enums.count(name) && !g_opcodeTypes.count(name)
+    return found != g_structs.end() && !g_opcodeTypes.count(name)
            && !found->second.abiPacked && !found->second.nonCopyable && !CAbiType(type).empty();
 }
 /**
- * @brief 判断逻辑地址传递的普通记录借用。
+ * @brief 判断逻辑地址传递的非拥有记录或枚举借用。
  * @param type 已解析语言类型。
  * @return 引用目标可按普通记录布局访问时为真。
  */
@@ -292,9 +292,9 @@ bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
     return type && type->kind == MType::Ptr && LibraryPlainValue(type->elem);
 }
 /**
- * @brief 为私有语言借用入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
+ * @brief 为私有语言聚合入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
  * @param type 语言类型。
- * @return 记录引用为逻辑地址字，其余为原生 C 类型。
+ * @return 记录、枚举及其引用为逻辑地址字，其余为原生 C 类型。
  */
 Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
 {

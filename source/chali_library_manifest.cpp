@@ -154,7 +154,7 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
     uniqueStrings(manifest.licenseFiles);
     for (const auto &name : manifest.licenseFiles)
         if (!entryName(name)) throw std::runtime_error("许可证资产名字非法");

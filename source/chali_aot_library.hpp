@@ -1,5 +1,5 @@
 /** @file chali_aot_library.hpp
- * @brief 已检查标量函数的独立 LLVM 原生单元，与最终程序共用运行时。
+ * @brief 已检查语言函数的独立 LLVM 原生单元，与最终程序共用运行时。
  */
 #pragma once
 
@@ -18,7 +18,7 @@ bool libraryScalar(const ast::TypePtr &type, bool allowVoid = false)
            || (type->kind == K::Float && (type->bits == 32 || type->bits == 64));
 }
 /**
- * @brief 判断仅包含扁平标量字段的记录逻辑引用。
+ * @brief 判断仅包含扁平标量字段的记录或枚举逻辑引用。
  * @param type 已检查且已展开字段布局的 AST 类型。
  * @return 不传递拥有状态、可复用消费者共享内存时为真。
  */
@@ -30,7 +30,7 @@ bool libraryBorrow(const ast::TypePtr &type)
     return !type->element->fields.empty();
 }
 /**
- * @brief 判断独立单元按逻辑地址传递且不含拥有字段的记录值。
+ * @brief 判断独立单元按逻辑地址传递且不含拥有字段的记录或枚举值。
  * @param type 已展开的 AST 类型。
  * @return 全部存储字段为基础标量时为真。
  */
@@ -42,7 +42,7 @@ bool libraryPlainValue(const ast::TypePtr &type)
     return true;
 }
 /**
- * @brief 核对标量单元可达函数，不把未实现的拥有值或全局状态按标量误编译。
+ * @brief 核对独立单元可达函数，不把未实现的拥有值或全局状态按标量误编译。
  * @param state 当前直接 AST 生成状态。
  * @param function 可达函数。
  * @return 函数及全部节点属于标量范围时为真。
@@ -51,7 +51,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
     if (!function.owner.empty() || (!libraryScalar(function.result, true) && !libraryPlainValue(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
-        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生标量库暂不支持该参数类型：" + parameter.first), false;
+        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
     std::set<Text> borrowed;
     for (const auto &parameter : function.parameters)
@@ -307,7 +307,7 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
 Memory::String generateLibraryLLVM(Request &request, Translator &state)
 {
     if (!request.syntax || request.abiExports.empty()) return state.fail("原生库需要至少一个公开标量函数"), Memory::String();
-    if (request.options.debug || request.options.stepLimit) return state.fail("首批原生标量库暂不支持独立调试或构建期步数预算"), Memory::String();
+    if (request.options.debug || request.options.stepLimit) return state.fail("独立原生库暂不支持独立调试或构建期步数预算"), Memory::String();
     Memory::String runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();
     Text out = "; ChaLi native scalar library unit\nsource_filename = \"chali-library\"\ntarget triple = \"" + textOf(state.target.triple) + "\"\ntarget datalayout = \"" + textOf(state.target.dataLayout) + "\"\n";
