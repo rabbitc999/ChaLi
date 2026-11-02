@@ -335,6 +335,11 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                     }
                     else if (key == "llvm") project.aotCompiler = path(value, base);
                     else if (key == "library_lock") project.aotLibraryLock = path(value, base);
+                    else if (key == "library_implementation")
+                    {
+                        if (value != "native" && value != "bitcode") throw std::runtime_error("aot.library_implementation expects native or bitcode");
+                        project.aotLibraryImplementation = value;
+                    }
                     else if (key == "output")
                     {
                         if (value != "llvm" && value != "object" && value != "assembly" && value != "executable")

@@ -85,7 +85,7 @@ std::vector<Dependency> readLock(const std::filesystem::path &path)
 /** @brief 本次编译独占的目标、内容锁及工作区。 */
 struct ImportSession::State
 {
-    std::string target, cpu;
+    std::string target, cpu, implementation, compiler, llvmVersion;
     std::map<std::string, Package> packages;
     std::vector<std::string> sources, borrowSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
     std::vector<std::filesystem::path> paths;
@@ -95,13 +95,19 @@ struct ImportSession::State
     std::map<std::string, Dependency> locks;
     std::set<std::string> visiting, resolved;
 };
-/** @brief 初始化目标与 CPU。
+/** @brief 初始化目标、CPU 与明确的实现选择。
  * @param target 目标别名或三元组。
- * @param cpu 目标 CPU。 */
-ImportSession::ImportSession(std::string target, std::string cpu) : state_(new State)
+ * @param cpu 目标 CPU。
+ * @param implementation native 或 bitcode。
+ * @param compiler 可选外置 LLVM 路径。
+ * @return 无。 */
+ImportSession::ImportSession(std::string target, std::string cpu, std::string implementation, std::string compiler) : state_(new State)
 {
     state_->target = std::move(target);
     state_->cpu = std::move(cpu);
+    state_->implementation = std::move(implementation);
+    state_->compiler = std::move(compiler);
+    if (state_->implementation != "native" && state_->implementation != "bitcode") throw std::runtime_error("库实现选择必须是 native 或 bitcode");
 }
 /** @brief 在消费者执行完毕后释放快照及暂存实现。 */
 ImportSession::~ImportSession() = default;
@@ -126,7 +132,17 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
             || expected->second.sha256 != package.contentSha256)
             throw std::runtime_error("库不在项目锁中或版本／摘要发生变化：" + identity);
     }
-    const auto &abi = select(package, state_->target, state_->cpu).nativeAbi;
+    if (state_->implementation == "bitcode" && state_->llvmVersion.empty())
+    {
+        chali_aot::Options options;
+        options.compiler = state_->compiler.c_str();
+        Memory::Vector<Memory::String> diagnostics;
+        state_->llvmVersion = chali_aot::llvmVersion(options, &diagnostics).c_str();
+        if (state_->llvmVersion.empty()) throw std::runtime_error(diagnostics.empty() ? "无法核对 bitcode 所需 LLVM 版本" : diagnostics.front().c_str());
+    }
+    const std::vector<std::string> features;
+    const auto &selected = select(package, state_->target, state_->cpu, features, state_->implementation, state_->llvmVersion);
+    const auto &abi = selected.nativeAbi;
     const bool borrowed = abi == "chali-borrow-v1" || abi == "chali-value-v1";
     const auto existing = state_->packages.find(identity);
     if (existing != state_->packages.end())
@@ -146,7 +162,7 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
         state_->lifetimeSources.push_back(state_->sources.back());
     if (borrowed && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "borrowed-result-v1") != package.manifest.requiredFeatures.end())
         state_->borrowResultSources.push_back(state_->sources.back());
-    if (!select(package, state_->target, state_->cpu).unitData.empty()) state_->dataSources.push_back(state_->sources.back());
+    if (!selected.unitData.empty()) state_->dataSources.push_back(state_->sources.back());
     if (std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "shared-type-id-v1") != package.manifest.requiredFeatures.end())
         state_->typeSources.push_back(state_->sources.back());
     return state_->packages.emplace(identity, std::move(package)).first->second;
@@ -235,14 +251,34 @@ void ImportSession::appendTo(chali_aot::Options &options)
     for (const auto &item : state_->packages)
     {
         const std::vector<std::string> features;
-        const auto &target = select(item.second, state_->target, state_->cpu, features);
-        const auto &entry = *item.second.find(target.implementation);
-        const auto file = state_->workspace->path / (std::to_string(index++) + (entry.kind == Kind::Archive ? ".a" : ".o"));
-        std::ofstream stream(file, std::ios::binary | std::ios::trunc);
-        stream.write(entry.bytes.data(), static_cast<std::streamsize>(entry.bytes.size()));
-        stream.close();
-        if (!stream) throw std::runtime_error("无法暂存库实现：" + item.first);
-        options.linkObjects.push_back(Memory::String(file.u8string().c_str()));
+        const auto &target = select(item.second, state_->target, state_->cpu, features, state_->implementation, state_->llvmVersion);
+        const bool bitcode = state_->implementation == "bitcode";
+        const auto &entry = *item.second.find(bitcode ? target.bitcode : target.implementation);
+        const auto file = state_->workspace->path / (std::to_string(index++) + (bitcode && options.lto ? ".bc" : entry.kind == Kind::Archive ? ".a" :
+                                                                                                                                               ".o"));
+        if (bitcode && !options.lto)
+        {
+            chali_aot::Options materialize;
+            materialize.target = state_->target.c_str();
+            materialize.cpu = state_->cpu.c_str();
+            materialize.compiler = state_->compiler.c_str();
+            materialize.sysroot = options.sysroot;
+            materialize.debug = options.debug;
+            Memory::Vector<Memory::String> diagnostics;
+            if (chali_aot::bitcodeObject(Memory::String(entry.bytes.data(), entry.bytes.size()), materialize, Memory::String(file.u8string().c_str()), &diagnostics))
+                throw std::runtime_error("无法物化库 bitcode：" + item.first + (diagnostics.empty() ? "" : "：" + std::string(diagnostics.front().c_str())));
+        }
+        else
+        {
+            std::ofstream stream(file, std::ios::binary | std::ios::trunc);
+            stream.write(entry.bytes.data(), static_cast<std::streamsize>(entry.bytes.size()));
+            stream.close();
+            if (!stream) throw std::runtime_error("无法暂存库实现：" + item.first);
+        }
+        if (bitcode && options.lto)
+            options.linkBitcode.push_back(Memory::String(file.u8string().c_str()));
+        else
+            options.linkObjects.push_back(Memory::String(file.u8string().c_str()));
         if (!target.unitData.empty())
         {
             const auto &data = item.second.find(target.unitData)->bytes;

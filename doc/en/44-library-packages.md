@@ -251,6 +251,23 @@ Targets carrying data add unitData, unitLayout and unitSymbol together and requi
 
 Record result declarations require a verified interface carrying this capability. Plain record moves and fresh transfers use the shared lifetime identity contract below; other unsupported bodies remain rejected. Owning fields, interface/closure results and initialization rollback remain separate acceptance work.
 
+## Native and bitcode implementation selection
+
+`lib build --with-bitcode` produces both a native object and LLVM bitcode and records the actual LLVM version. Without this flag, the producer emits only the native implementation. Both implementations share the same interface and unit-data identity.
+
+```sh
+chali lib build provider.chl --module example::math --package-version 1.0.0 --with-bitcode --out modules/example/math.chlib
+chali run main.chl --library-implementation bitcode --lto
+chali run main.chl --library-implementation bitcode --no-lto
+chali link main.o --package modules/example/math.chlib --library-implementation bitcode --out app.exe
+```
+
+Consumers default to `native`. `--library-implementation native|bitcode` applies to all direct and transitive libraries in the invocation. The `[aot]` table in `chali.toml` also accepts `library_implementation = "bitcode"`; the command line takes precedence. Missing selected implementations are errors without fallback. Native selection does not treat optional bitcode as an object or require its producer LLVM version to match the current tool.
+
+Bitcode selection checks package digests and targets, then reads the payload target triple, data layout, producer LLVM version and format epoch. The payload, manifest and actual static LLVM or external clang must agree on the exact LLVM version. This conservative policy does not promise consumption across LLVM versions. Metadata inspection has byte, record, operand and nesting budgets; the actual LLVM reader still validates the complete module.
+
+`--lto` passes verified library bitcode to the final linker for full LTO. `--no-lto` compiles the selected bitcode into an independent native object before linking; it does not select the package's native implementation instead. Interface, unit-data and shared-runtime contracts remain the same. ThinLTO is not yet implemented, and these options do not imply a performance benefit for every workload. Cross-target generation and execution on the target are validated separately.
+
 ## Shared lifetime type identities
 
 Packages using native record lifetime operations require shared-type-id-v1. Generated LLVM code references type symbols derived from the full module identity and record layout. The final program supplies its current type numbers. Adding same-named or unrelated consumer types cannot redirect move markers to a different type. Only explicit lifetime type positions are relocated; ordinary integer values are not guessed or rewritten.

@@ -2949,10 +2949,11 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     }
     const bool objectOnly = request.options.emitObjectOnly;
     const bool assemblyOnly = request.options.emitAssemblyOnly;
-    const bool codeOnly = objectOnly || assemblyOnly;
-    if (int(objectOnly) + int(assemblyOnly) + int(request.options.emitLLVMOnly) > 1)
+    const bool bitcodeOnly = request.options.emitBitcodeOnly;
+    const bool codeOnly = objectOnly || assemblyOnly || bitcodeOnly;
+    if (int(objectOnly) + int(assemblyOnly) + int(bitcodeOnly) + int(request.options.emitLLVMOnly) > 1)
     {
-        if (diagnostics) diagnostics->push_back("AOT：LLVM 模块、对象文件与机器汇编输出只能选择一种");
+        if (diagnostics) diagnostics->push_back("AOT：LLVM 文本、bitcode、对象文件与机器汇编输出只能选择一种");
         return 1;
     }
     if (!target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
@@ -3005,7 +3006,8 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
             linked.options.linkObjects.push_back(Memory::String(object.u8string().c_str()));
         }
     }
-    const Text product = prefix + (assemblyOnly ? ".s" : objectOnly         ? ".o" :
+    const Text product = prefix + (bitcodeOnly ? ".bc" : assemblyOnly       ? ".s" :
+                                                     objectOnly             ? ".o" :
                                                      request.options.shared ? target.windows ? ".dll" : ".so" :
                                                      target.windows         ? ".exe" :
                                                                               "");
@@ -3063,16 +3065,18 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         command += Text(target.arm64 ? " -mcpu=" : " -march=") + cpu;
     }
     command += request.options.debug ? " -O0 -g -gdwarf-4 -Wno-override-module " : " -O3 -Wno-override-module ";
-    if (assemblyOnly)
+    if (bitcodeOnly)
+        command += "-c -emit-llvm ";
+    else if (assemblyOnly)
         command += "-S ";
     else if (objectOnly)
         command += "-c ";
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
+        if (request.options.lto) command += request.options.debug ? "-flto=full -Wl,--lto-O0 " : "-flto=full -Wl,--lto-O3 ";
         if (!request.options.debug)
         {
-            if (request.options.lto) command += "-flto=full -Wl,--lto-O3 ";
             command += "-s ";
         }
         if (request.options.shared) command += "-shared ";
@@ -3085,6 +3089,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         if (runtime.empty()) return 1;
         command += " -Wl,--start-group";
         for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
+        for (const auto &bitcode : linked.options.linkBitcode) command += " " + quote(textOf(bitcode));
         command += " -L" + runtime + " -lchali_aot_host ";
         if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
         else command += "-lstdc++";

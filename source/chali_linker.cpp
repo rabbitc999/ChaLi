@@ -108,18 +108,23 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             if (requestedOutput == fs::weakly_canonical(fs::u8path(package.c_str()))) throw std::runtime_error("链接输出不能覆盖输入库包");
         if (!request.libraryLock.empty() && requestedOutput == fs::weakly_canonical(fs::u8path(request.libraryLock.c_str())))
             throw std::runtime_error("链接输出不能覆盖库锁");
-        chali_library::ImportSession libraries(request.options.target.c_str(), request.options.cpu.c_str());
+        chali_library::ImportSession libraries(request.options.target.c_str(), request.options.cpu.c_str(), request.options.libraryImplementation.c_str(), request.options.compiler.c_str());
         if (!request.libraryLock.empty()) libraries.loadLock(fs::u8path(request.libraryLock.c_str()));
         std::vector<fs::path> roots;
         for (const auto &directory : request.libraryDirectories) roots.push_back(fs::u8path(directory.c_str()));
         for (const auto &package : request.packages) libraries.openRecursive(fs::u8path(package.c_str()), roots);
         for (const auto &path : libraries.paths())
             if (requestedOutput == path) throw std::runtime_error("链接输出不能覆盖传递依赖库包");
-        chali_aot::Options packageInputs;
+        chali_aot::Options packageInputs = request.options;
+        packageInputs.linkObjects.clear();
+        packageInputs.linkBitcode.clear();
+        packageInputs.linkLibraries.clear();
+        packageInputs.unitData.clear();
         libraries.appendTo(packageInputs);
         request.inputs.insert(request.inputs.end(), packageInputs.linkObjects.begin(), packageInputs.linkObjects.end());
+        request.options.linkBitcode.insert(request.options.linkBitcode.end(), packageInputs.linkBitcode.begin(), packageInputs.linkBitcode.end());
         for (const auto &library : packageInputs.linkLibraries) request.libraryNames.push_back(library.substr(2));
-        if (request.inputs.empty() && request.libraryNames.empty()) throw std::runtime_error("链接需要对象或库输入");
+        if (request.inputs.empty() && request.libraryNames.empty() && request.options.linkBitcode.empty()) throw std::runtime_error("链接需要对象或库输入");
         if (!request.entry.empty() && !symbolName(request.entry, target.windows)) throw std::runtime_error("入口符号不受支持");
         for (const auto &name : request.options.exports)
             if (!symbolName(name, target.windows)) throw std::runtime_error("导出符号不受支持");
@@ -148,6 +153,11 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         {
             const auto compiler = chali_aot::llvmCompilerPath(request.options.compiler);
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-fuse-ld=lld", "-o", temporary.u8string(), "-Wl,--gc-sections" };
+            if (!request.options.linkBitcode.empty())
+            {
+                arguments.push_back("-flto=full");
+                arguments.push_back(request.options.debug ? "-Wl,--lto-O0" : "-Wl,--lto-O3");
+            }
             if (!request.options.sysroot.empty()) arguments.push_back("--sysroot=" + std::string(request.options.sysroot.c_str()));
             if (request.options.shared) arguments.push_back("-shared");
             if (!request.options.debug) arguments.push_back("-s");
@@ -157,6 +167,7 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             for (const auto &path : request.libraryDirectories) arguments.push_back("-L" + std::string(path.c_str()));
             arguments.push_back("-Wl,--start-group");
             for (const auto &input : request.inputs) arguments.push_back(input.c_str());
+            for (const auto &bitcode : request.options.linkBitcode) arguments.push_back(bitcode.c_str());
             for (const auto &name : request.libraryNames) arguments.push_back("-l" + std::string(name.c_str()));
             chali_aot::RuntimeAssets runtime;
             fs::path directory;
@@ -297,7 +308,7 @@ int runCli(int argc, char **argv)
         }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--package FILE.chlib] [--library-lock FILE] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
+            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--package FILE.chlib] [--library-lock FILE] [--library-implementation native|bitcode] [--lto|--no-lto] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
             return 0;
         }
         if (!ar && argument == "--shared")
@@ -310,12 +321,17 @@ int runCli(int argc, char **argv)
             request.options.debug = true;
             continue;
         }
+        if (!ar && (argument == "--lto" || argument == "--no-lto"))
+        {
+            request.options.lto = argument == "--lto";
+            continue;
+        }
         if (!ar && argument == "--no-runtime")
         {
             request.noRuntime = true;
             continue;
         }
-        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && argument == "--cpu") || (!ar && (argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link" || argument == "--package" || argument == "--library-lock")))
+        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && argument == "--cpu") || (!ar && (argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link" || argument == "--package" || argument == "--library-lock" || argument == "--library-implementation")))
         {
             if (++index >= argc)
             {
@@ -336,6 +352,15 @@ int runCli(int argc, char **argv)
             if (argument == "--link") request.inputs.push_back(value);
             if (argument == "--package") request.packages.push_back(value);
             if (argument == "--library-lock") request.libraryLock = value;
+            if (argument == "--library-implementation")
+            {
+                if (std::string(value) != "native" && std::string(value) != "bitcode")
+                {
+                    std::fputs("chali: --library-implementation 需要 native 或 bitcode\n", stderr);
+                    return 2;
+                }
+                request.options.libraryImplementation = value;
+            }
             continue;
         }
         if (!ar && argument.size() > 2 && argument.compare(0, 2, "-L") == 0)

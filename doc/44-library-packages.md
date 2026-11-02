@@ -185,7 +185,7 @@ chali link build/consumer.o --package modules/example/math.chlib --library-lock 
 | 对象格式、位宽、端序、布局 | COFF／ELF 与目标一致，当前为 64 位小端，数据布局与登记的目标运行时一致 |
 | CPU 与特性 | 默认 CPU 实现可供同架构目标使用；专用 CPU 要求匹配，未明确启用的必需特性拒绝 |
 | 原生调用约定 | 当前接受 c-v1、chali-borrow-v1 和 chali-value-v1，语言调用约定须带匹配的必需能力标记；与语言接口和运行时协议分开编号 |
-| bitcode | 可记录独立资产和精确 LLVM 版本；原生选择不把它当作机器对象 |
+| bitcode | 可选 LLVM bitcode 实现；显式选择时核对实际目标、布局及精确 LLVM 版本 |
 | 可忽略扩展 | 只放在 `extensions` 对象内；未知语义字段、必需能力或保留标志拒绝 |
 
 `template` 可重复使用 `--dependency "MODULE=VERSION#SHA256"` 记录精确依赖，使用 `--system-library NAME` 记录链接库，使用 `--runtime-library NAME` 记录应用需要的动态库。格式检查核对这些记录的合法性；依赖的文件解析与最终交付需要由使用这些资产的构建流程完成。
@@ -256,6 +256,23 @@ Point make(int64 x, float64 y) {
 单包最多 256 MiB，清单最多 1 MiB，条目最多 4096 个，包内名字最多 240 字节；文本资产最多 32 MiB 且不能包含 NUL。目标最多 64 项，依赖与各文本集合最多 1024 项。按实际剩余文件长度核对声明长度后才分配负载。这些是编码及有效载荷预算，不是编译器进程总内存上限。
 
 原生负载在已经摘要核对的拥有型字节上继续检查目标头和归档成员边界，不重新打开包来判定实现身份。符号索引、节、重定位和实际原生签名仍由对应工具链及互调契约核对。薄归档、嵌套归档与错误架构拒绝。
+
+## 原生与 bitcode 实现选择
+
+`lib build --with-bitcode` 同时生成原生对象与 LLVM bitcode，清单记录实际 LLVM 版本。未给此选项时仍只生成原生实现。两份实现共享同一接口和单元数据身份。
+
+```sh
+chali lib build provider.chl --module example::math --package-version 1.0.0 --with-bitcode --out modules/example/math.chlib
+chali run main.chl --library-implementation bitcode --lto
+chali run main.chl --library-implementation bitcode --no-lto
+chali link main.o --package modules/example/math.chlib --library-implementation bitcode --out app.exe
+```
+
+消费端缺省选择 `native`；`--library-implementation native|bitcode` 对本次全部直接与传递库生效，也可在 `chali.toml` 的 `[aot]` 中设置 `library_implementation = "bitcode"`，命令行优先。缺少所选实现时报告错误，不自动回退。选择原生实现时不会把可选 bitcode 当作对象，也不要求其生产 LLVM 与当前工具相同。
+
+选择 bitcode 时先核对包摘要及目标，再读取载荷内的目标三元组、数据布局、生产 LLVM 版本和格式纪元。载荷、清单及实际静态 LLVM／外置 clang 的精确版本必须一致；这是保守的兼容策略，不承诺跨 LLVM 版本消费。头部检查有字节、记录、字段和嵌套预算，完整模块仍交给实际 LLVM 读取器核验。
+
+`--lto` 把已验证的库 bitcode 交给最终链接器执行完整 LTO；`--no-lto` 先将所选 bitcode 独立编译为原生对象，再链接，不会改选包内原生实现。接口、数据映像和共享运行时约定不因选择改变。ThinLTO 尚未接入，当前选项不代表所有负载都能获得性能收益。交叉目标生成与实际目标执行分别验收。
 
 ## 失败与复现
 

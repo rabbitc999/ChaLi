@@ -154,6 +154,7 @@ void PrintUsage(std::FILE *out)
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
              "  --library-lock 文件    按精确版本及摘要检查预编译库\n",
+             "  --library-implementation native|bitcode  显式选择库实现；缺省 native\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n"
              "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
              "  --warnings-as-errors  把启用的警告提升为错误\n",
@@ -277,6 +278,7 @@ try
     Memory::String prefix = ".chali/chali_out";
     bool outGiven = false;      /* 用户是否显式给了 --out。 */
     bool ltoGiven = false;      /* 显式 LTO 开关优先于项目配置。 */
+    bool libraryImplementationGiven = false; /* 显式库实现选择优先于项目配置。 */
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
@@ -393,6 +395,22 @@ try
                 return 2;
             }
             libraryLock = argv[index];
+            continue;
+        }
+        if (argument == "--library-implementation")
+        {
+            if (++index >= argc || (std::strcmp(argv[index], "native") != 0 && std::strcmp(argv[index], "bitcode") != 0))
+            {
+                std::fputs("chali: --library-implementation 需要 native 或 bitcode\n", stderr);
+                return 2;
+            }
+            aotOptions.libraryImplementation = argv[index];
+            libraryImplementationGiven = true;
+            continue;
+        }
+        if ((aot || run) && argument == "--with-bitcode")
+        {
+            aotOptions.libraryBitcode = true;
             continue;
         }
         if ((aot || run) && (argument == "--lto" || argument == "--no-lto"))
@@ -846,6 +864,7 @@ try
     if (aotOptions.linkLibraries.empty()) aotOptions.linkLibraries = project.aotLibraries;
     if (aotOptions.linkObjects.empty()) aotOptions.linkObjects = project.aotObjects;
     if (!ltoGiven) aotOptions.lto = project.aotLto;
+    if (!libraryImplementationGiven) aotOptions.libraryImplementation = project.aotLibraryImplementation;
     if (libraryLock.empty()) libraryLock = project.aotLibraryLock;
     includeDirs.insert(includeDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
     importDirs.insert(importDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
@@ -952,7 +971,12 @@ try
         }
     }
     chali_report::clearVirtualSources();
-    chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str());
+    if (aotOptions.libraryBitcode && libraryModule.empty())
+    {
+        std::fputs("chali: --with-bitcode 只用于 lib build\n", stderr);
+        return 2;
+    }
+    chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str(), aotOptions.libraryImplementation.c_str(), aotOptions.compiler.c_str());
     if (!libraryLock.empty())
     {
         try

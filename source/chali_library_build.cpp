@@ -71,7 +71,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;
         producer.insert("generator", "ast-llvm");
-        producer.insert("optimization", "O3");
+        producer.insert("optimization", original.options.debug ? "O0" : "O3");
         producer.insert("checked", original.options.checked);
         producer.insert("runtime", "consumer");
         producer.insert("llvmLinkage", chali_aot::builtin::available() && original.options.compiler.empty() ? "static" : "external");
@@ -89,11 +89,19 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         target.dataLayout = known.dataLayout.c_str();
         target.cpu = original.options.cpu.empty() ? std::string(known.cpu.c_str()) : std::string(original.options.cpu.c_str());
         target.implementation = "native/" + target.triple + "/library.o";
+        if (original.options.libraryBitcode)
+        {
+            target.bitcode = "native/" + target.triple + "/library.bc";
+            Memory::Vector<Memory::String> diagnostics;
+            target.llvmVersion = chali_aot::llvmVersion(original.options, &diagnostics).c_str();
+            if (target.llvmVersion.empty()) throw std::runtime_error(diagnostics.empty() ? "无法核对 bitcode 生产 LLVM 版本" : diagnostics.front().c_str());
+        }
         for (const auto &name : original.options.librarySystemLibraries) target.systemLibraries.emplace_back(name.c_str());
         for (const auto &name : original.options.libraryRuntimeLibraries) target.runtimeLibraries.emplace_back(name.c_str());
         package.manifest.targets.push_back(target);
         std::uint64_t retained = interface.size() + 4096;
         std::set<std::string> names{ package.manifest.interface, target.implementation };
+        if (!target.bitcode.empty()) names.insert(target.bitcode);
         for (const auto &asset : original.options.libraryLicenseAssets)
         {
             const std::string record(asset.c_str());
@@ -122,11 +130,12 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         request.options.libraryModule = module.c_str();
         request.options.shared = true;
         request.options.emitObjectOnly = true;
-        request.options.emitLLVMOnly = request.options.emitAssemblyOnly = false;
+        request.options.emitLLVMOnly = request.options.emitAssemblyOnly = request.options.emitBitcodeOnly = false;
         request.options.outputPrefix = (work.path / "library").u8string().c_str();
         request.options.exports.clear();
         request.options.linkLibraries.clear();
         request.options.linkObjects.clear();
+        request.options.linkBitcode.clear();
         request.abiGlue.clear();
         Memory::Vector<Memory::String> diagnostics;
         chali_aot::UnitData unit;
@@ -144,6 +153,34 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (!stream || stream.peek() != std::char_traits<char>::eof()) throw std::runtime_error("读取本次原生实现失败");
         package.entries.push_back({ package.manifest.interface, Kind::Interface, 0, interface });
         package.entries.push_back({ target.implementation, Kind::Object, 0, std::move(bytes) });
+        retained += size;
+        if (original.options.libraryBitcode)
+        {
+            request.options.emitObjectOnly = false;
+            request.options.emitBitcodeOnly = true;
+            request.options.outputPrefix = (work.path / "bitcode").u8string().c_str();
+            chali_aot::UnitData bitcodeUnit;
+            diagnostics.clear();
+            if (chali_aot::run(request, &diagnostics, &bitcodeUnit))
+            {
+                for (const auto &diagnostic : diagnostics) std::fprintf(stderr, "chali lib: %s\n", diagnostic.c_str());
+                return 1;
+            }
+            if (bitcodeUnit.symbol != unit.symbol || bitcodeUnit.bytes != unit.bytes || bitcodeUnit.layout != unit.layout)
+                throw std::runtime_error("原生与 bitcode 实现的单元数据身份不一致");
+            const auto path = work.path / "bitcode.bc";
+            const auto length = std::filesystem::file_size(path);
+            if (length > maximumPackageBytes - retained) throw std::runtime_error("bitcode 实现超过库包预算");
+            std::ifstream input(path, std::ios::binary);
+            std::string code(static_cast<std::size_t>(length), '\0');
+            input.read(code.data(), static_cast<std::streamsize>(code.size()));
+            if (!input || input.peek() != std::char_traits<char>::eof()) throw std::runtime_error("读取本次 bitcode 实现失败");
+            const auto info = inspectBitcode(code);
+            if (info.llvmVersion != target.llvmVersion || info.triple != target.triple || info.dataLayout != target.dataLayout)
+                throw std::runtime_error("生成 bitcode 的实际目标、布局或 LLVM 版本与清单不一致");
+            retained += length;
+            package.entries.push_back({ target.bitcode, Kind::Bitcode, 0, std::move(code) });
+        }
         if (!unit.symbol.empty())
         {
             target.unitData = "native/" + target.triple + "/data.bin";

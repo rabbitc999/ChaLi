@@ -35,6 +35,17 @@ enum class Kind : std::uint16_t
     License = 8,
     UnitData = 9
 };
+/** @brief 从 bitcode 自身读取的目标及生产信息，不从清单猜测 LLVM 模块布局。 */
+struct BitcodeInfo
+{
+    std::string triple, dataLayout, producer, llvmVersion;
+    std::uint64_t epoch = 0;
+    bool summary = false;
+};
+/** @brief 在预算内读取单模块 LLVM bitcode 的兼容性头，不执行或优化模块。
+ * @param bytes 已通过库包内容摘要核对的载荷。
+ * @return 实际目标、布局和生产版本；截断、非法编码或预算耗尽时抛出异常。 */
+BitcodeInfo inspectBitcode(std::string_view bytes);
 /** @brief 一项以完整模块身份和内容摘要锁定的库依赖。 */
 struct Dependency
 {
@@ -104,8 +115,10 @@ class ImportSession
 public:
     /** @brief 创建目标明确的会话。
      * @param target 目标别名或三元组。
-     * @param cpu 目标 CPU。 */
-    ImportSession(std::string target, std::string cpu);
+     * @param cpu 目标 CPU。
+     * @param implementation 明确的 native 或 bitcode 选择。
+     * @param compiler 可选外置 LLVM 路径；只在选择 bitcode 时查询版本。 */
+    ImportSession(std::string target, std::string cpu, std::string implementation = "native", std::string compiler = {});
     /** @brief 释放本次会话拥有的原生暂存文件。 */
     ~ImportSession();
     /** @brief 禁止复制快照及工作区所有权。 */
@@ -219,15 +232,18 @@ bool read(const std::filesystem::path &path, Package &package, std::string &erro
  */
 bool write(const std::filesystem::path &path, const Package &package, std::string &error);
 /**
- * @brief 选择相同规范目标、布局与 CPU 契约的原生条目。
+ * @brief 按明确实现选择核对规范目标、布局、CPU 及 bitcode 版本契约。
  * @param package 已验证的库包。
  * @param requested 目标别名或三元组。
  * @param cpu 目标 CPU，空值为登记默认值。
  * @param enabledFeatures 调用方明确支持的 CPU 特性。
+ * @param implementation 明确选择 native 或 bitcode。
+ * @param llvmVersion 实际 LLVM 读取版本，选择 bitcode 时必须提供。
  * @return 匹配的目标，不进行链接或初始化。
  * @throws std::runtime_error 不兼容、目标缺失或能力不足。
  */
-const Target &select(const Package &package, const std::string &requested, const std::string &cpu = {}, const std::vector<std::string> &enabledFeatures = {});
+const Target &select(const Package &package, const std::string &requested, const std::string &cpu = {}, const std::vector<std::string> &enabledFeatures = {},
+                     const std::string &implementation = "native", const std::string &llvmVersion = {});
 /**
  * @brief 处理库包 pack／inspect 命令。
  * @param argc 归一化参数数目。

@@ -13,6 +13,9 @@ namespace chali_aot::builtin
  * @return 编入后端时为 true，外置工具变体为 false。
  */
 bool available();
+/** @brief 返回实际静态 LLVM 的精确版本，外置变体返回空串。
+ * @return 静态 LLVM 版本或空串。 */
+Memory::String version();
 
 /**
  * @brief 使用进程内 LLD 链接已检查的原生输入。

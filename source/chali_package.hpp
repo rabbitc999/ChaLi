@@ -48,6 +48,8 @@ struct Project
     Memory::String aotLibraryLock;
     /// [aot] 最终链接是否启用全量 LTO，默认开启。
     bool aotLto = true;
+    /// [aot] 消费库时明确选择 native 或 bitcode，默认 native。
+    Memory::String aotLibraryImplementation = "native";
     /**
      * @brief 清单内容 + 锁文件内容的签名（锁文件把依赖的签名也拼进来）。
      * @return 清单文件为空（没有项目）时是空串。

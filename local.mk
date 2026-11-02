@@ -271,7 +271,7 @@ endif
 -include $(CHALI_BUILD_ROOT)/chali-native-development.d
 
 # 泛型与闭包文本处理实现独立编译，解析器和语言服务只依赖声明。
-CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_target chali_aot_debug chali_aot_llvm chali_aot_runtime_assets chali_temp chali_digest chali_library_manifest chali_library_package chali_library_import chali_library_build chali_library_tools chali_native_tools chali_native_objects chali_linker chali_archive_llvm chali_assembler chali_assembler_llvm
+CHALI_FRONTEND_MODULES := chali_resource_cleanup chali_generic chali_lambda chali_generic_closure chali_package chali_report chali_aot chali_aot_target chali_aot_debug chali_aot_llvm chali_bitcode chali_aot_runtime_assets chali_temp chali_digest chali_library_bitcode chali_library_manifest chali_library_package chali_library_import chali_library_build chali_library_tools chali_native_tools chali_native_objects chali_linker chali_archive_llvm chali_assembler chali_assembler_llvm
 CHALI_FRONTEND_MODULE_OBJS := $(addprefix $(FRONTEND_BUILD)/,$(addsuffix .o,$(CHALI_FRONTEND_MODULES)))
 LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)

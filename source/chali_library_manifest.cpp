@@ -409,15 +409,19 @@ void validate(const Package &package)
     }
 }
 /**
- * @brief 保守核对目标和 CPU 能力，不把 bitcode 当成机器对象使用。
+ * @brief 按明确选择核对原生或 bitcode 实现，不作缺失实现回退。
  * @param package 已验证的库。
  * @param requested 目标或别名。
  * @param cpu 调用方 CPU。
  * @param enabledFeatures 明确允许的特性。
- * @return 对应原生目标。
+ * @param implementation native 或 bitcode。
+ * @param llvmVersion 实际 LLVM 工具版本，bitcode 路径必须提供。
+ * @return 对应目标，bitcode 同时核对载荷内目标、布局及生产版本。
  */
-const Target &select(const Package &package, const std::string &requested, const std::string &cpu, const std::vector<std::string> &enabledFeatures)
+const Target &select(const Package &package, const std::string &requested, const std::string &cpu, const std::vector<std::string> &enabledFeatures,
+                     const std::string &implementation, const std::string &llvmVersion)
 {
+    if (implementation != "native" && implementation != "bitcode") throw std::runtime_error("库实现选择必须是 native 或 bitcode");
     chali_aot::TargetInfo known;
     Memory::String error;
     if (!chali_aot::describeTarget(Memory::String(requested.c_str()), known, &error)) throw std::runtime_error(error.c_str());
@@ -428,7 +432,24 @@ const Target &select(const Package &package, const std::string &requested, const
         if (target.cpu != actualCpu && target.cpu != known.cpu.c_str()) throw std::runtime_error("库目标 CPU 不兼容：" + target.cpu);
         for (const auto &feature : target.features)
             if (std::find(enabledFeatures.begin(), enabledFeatures.end(), feature) == enabledFeatures.end()) throw std::runtime_error("库要求未启用的 CPU 特性：" + feature);
-        if (target.implementation.empty()) throw std::runtime_error("库只有 bitcode，当前选择需要原生实现");
+        if (implementation == "native")
+        {
+            if (target.implementation.empty()) throw std::runtime_error("库只有 bitcode，当前选择需要原生实现");
+        }
+        else
+        {
+            if (target.bitcode.empty()) throw std::runtime_error("库缺少明确选择的 bitcode 实现");
+            if (llvmVersion.empty()) throw std::runtime_error("bitcode 选择缺少可核对的实际 LLVM 版本");
+            if (target.llvmVersion != llvmVersion) throw std::runtime_error("库 bitcode LLVM 版本不兼容：需要 " + target.llvmVersion + "，实际 " + llvmVersion);
+            const auto *entry = package.find(target.bitcode);
+            if (!entry || entry->kind != Kind::Bitcode) throw std::runtime_error("库 bitcode 实现条目缺失");
+            const auto actual = inspectBitcode(entry->bytes);
+            chali_aot::TargetInfo module;
+            if (!chali_aot::describeTarget(actual.triple.c_str(), module, &error) || module.triple != known.triple)
+                throw std::runtime_error("bitcode 内部目标与库清单不一致：" + actual.triple);
+            if (actual.dataLayout != target.dataLayout) throw std::runtime_error("bitcode 内部数据布局与库清单不一致");
+            if (actual.llvmVersion != target.llvmVersion) throw std::runtime_error("bitcode 实际生产版本与清单不一致：" + actual.llvmVersion);
+        }
         return target;
     }
     std::string available;
