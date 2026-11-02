@@ -114,6 +114,12 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 ## Target machine assembly
 
+The project `[aot]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`, plus the `library_lock` string for a precompiled-library lock file. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.
+
+Explicit `--asm`, `--asm-include`, and `--link` options replace their corresponding manifest lists. `--library-lock` replaces the manifest lock file. Manifest search paths follow command-line search paths. Object and assembly inputs participate in final linking.
+
+The boolean `lto` setting defaults to `true`. `--lto` or `--no-lto` overrides the project setting. Disabling it emits a machine object before linking; LLVM module optimization retains the selected optimization level. External LLVM debug builds continue to omit LTO.
+
 `chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
 The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.

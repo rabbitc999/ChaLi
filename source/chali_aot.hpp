@@ -76,7 +76,8 @@ struct Options
     Memory::Vector<Memory::String> linkLibraries;    ///< 额外的链接库（`abi` 里的库路径）。
     Memory::Vector<Memory::String> assemblySources;  ///< 显式加入最终链接的 .s 输入。
     Memory::Vector<Memory::String> assemblyIncludes;  ///< 汇编 .include 的搜索目录。
-    Memory::Vector<Memory::String> linkObjects;      ///< 本次编译生成的宿主封送目标文件。
+    Memory::Vector<Memory::String> linkObjects;      ///< 用户提供及本次编译生成的目标文件。
+    bool lto = true;                                ///< 最终链接保留 LLVM bitcode，默认启用全量 LTO。
     std::size_t memoryBytes = 512u * 1024u * 1024u;  ///< 数据区之外的堆预算。
     std::size_t stepLimit = 0;                       ///< 运行安全点的逻辑步数上限，零表示不限。
 };

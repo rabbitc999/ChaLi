@@ -121,6 +121,12 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 ## 目标机器汇编
 
+项目 `[aot]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组，以及 `library_lock`（预编译库锁文件）字符串。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。
+
+显式 `--asm`、`--asm-include`、`--link` 分别覆盖清单中的同类列表，`--library-lock` 覆盖清单锁文件；清单搜索目录追加在命令行搜索目录之后。对象及汇编输入用于最终链接。
+
+`lto` 是布尔配置，默认 `true`。`--lto` 或 `--no-lto` 覆盖项目设置；关闭时先生成机器对象再链接，LLVM 的模块内优化仍按原优化级别执行。外置 LLVM 的调试构建沿用不启用 LTO 的行为。
+
 `chali aot app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
 项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。

@@ -300,6 +300,28 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 const Memory::String where = name + "." + key;
                 if (name == "aot")
                 {
+                    if (key == "lto")
+                    {
+                        project.aotLto = tomlBool(entry.value, where);
+                        continue;
+                    }
+                    if (key == "assembly_sources" || key == "assembly_includes" || key == "libraries" || key == "search_paths" || key == "objects")
+                    {
+                        auto &target = key == "assembly_sources" ? project.aotAssemblySources :
+                                       key == "assembly_includes" ? project.aotAssemblyIncludes :
+                                       key == "libraries" ? project.aotLibraries :
+                                       key == "objects" ? project.aotObjects : project.aotSearchPaths;
+                        for (const auto &item : tomlArray(entry.value, where))
+                        {
+                            const auto text = trim(item);
+                            if (text.empty()) throw std::runtime_error("aot list value cannot be empty: " + key);
+                            // 裸库名交给链接器解析，带路径或以点开头的项相对清单解析。
+                            const bool bare = key == "libraries" && text.find('/') == Memory::String::npos
+                                              && text.find('\\') == Memory::String::npos && text.find('.') == Memory::String::npos;
+                            target.push_back(bare ? text : path(text, base));
+                        }
+                        continue;
+                    }
                     const auto value = tomlText(entry.value, where);
                     if (value.empty()) throw std::runtime_error("aot value cannot be empty: " + key);
                     if (key == "target") project.aotTarget = value;
@@ -312,6 +334,7 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         project.aotAllocator = value;
                     }
                     else if (key == "llvm") project.aotCompiler = path(value, base);
+                    else if (key == "library_lock") project.aotLibraryLock = path(value, base);
                     else if (key == "output")
                     {
                         if (value != "llvm" && value != "object" && value != "assembly" && value != "executable")

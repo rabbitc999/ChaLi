@@ -276,6 +276,7 @@ try
     /* 默认中间产物落在隐藏的 .chali/ 下，不和源码混在一起（`--out` 显式给路径时按用户给的来）。 */
     Memory::String prefix = ".chali/chali_out";
     bool outGiven = false;      /* 用户是否显式给了 --out。 */
+    bool ltoGiven = false;      /* 显式 LTO 开关优先于项目配置。 */
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
@@ -392,6 +393,12 @@ try
                 return 2;
             }
             libraryLock = argv[index];
+            continue;
+        }
+        if ((aot || run) && (argument == "--lto" || argument == "--no-lto"))
+        {
+            aotOptions.lto = argument == "--lto";
+            ltoGiven = true;
             continue;
         }
         if ((aot || run) && (argument == "--checked" || argument == "--unchecked" || argument == "--shared" || argument == "--emit-llvm" || argument == "--emit-obj" || argument == "--emit-asm"))
@@ -833,6 +840,15 @@ try
     if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
     if (aotOptions.allocator.empty()) aotOptions.allocator = project.aotAllocator;
     if (aotOptions.compiler.empty()) aotOptions.compiler = project.aotCompiler;
+    // 清单里的链接输入在命令行未显式给出同类项时生效；命令行优先。
+    if (aotOptions.assemblySources.empty()) aotOptions.assemblySources = project.aotAssemblySources;
+    if (aotOptions.assemblyIncludes.empty()) aotOptions.assemblyIncludes = project.aotAssemblyIncludes;
+    if (aotOptions.linkLibraries.empty()) aotOptions.linkLibraries = project.aotLibraries;
+    if (aotOptions.linkObjects.empty()) aotOptions.linkObjects = project.aotObjects;
+    if (!ltoGiven) aotOptions.lto = project.aotLto;
+    if (libraryLock.empty()) libraryLock = project.aotLibraryLock;
+    includeDirs.insert(includeDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
+    importDirs.insert(importDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
     if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly && !aotOptions.emitAssemblyOnly)
     {
         aotOptions.emitLLVMOnly = project.aotOutput == "llvm";

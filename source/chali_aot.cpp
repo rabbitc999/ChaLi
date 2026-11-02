@@ -3049,7 +3049,11 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
-        if (!request.options.debug) command += "-flto=full -Wl,--lto-O3 -s ";
+        if (!request.options.debug)
+        {
+            if (request.options.lto) command += "-flto=full -Wl,--lto-O3 ";
+            command += "-s ";
+        }
         if (request.options.shared) command += "-shared ";
     }
     if (!target.windows) command += "-fPIC ";

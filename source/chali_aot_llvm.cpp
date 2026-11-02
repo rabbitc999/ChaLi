@@ -273,13 +273,13 @@ int compile(const Request &request, const Memory::String &module, const Memory::
             failed = true;
         }
     }
-    const std::string object = std::string(module.c_str()) + ".lto.bc";
+    const std::string object = std::string(module.c_str()) + (request.options.lto ? ".lto.bc" : ".native.o");
     // 保留 LLVM bitcode 到链接阶段，由 LLD 根据真实外部引用和导出确定内部化边界。
     if (!failed)
     {
-        if (request.options.emitObjectOnly || request.options.emitAssemblyOnly)
+        if (request.options.emitObjectOnly || request.options.emitAssemblyOnly || !request.options.lto)
         {
-            auto file = product;
+            std::string file = request.options.emitObjectOnly || request.options.emitAssemblyOnly ? std::string(product.c_str()) : object;
             failed = LLVMTargetMachineEmitToFile(machine, program, file.data(), request.options.emitAssemblyOnly ? LLVMAssemblyFile : LLVMObjectFile, &message) != 0;
         }
         else

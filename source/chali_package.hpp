@@ -40,6 +40,14 @@ struct Project
     Memory::String main;
     /// [aot] 交叉编译选项；相对 SDK、运行时和 LLVM 路径以清单所在目录为基准。
     Memory::String aotTarget, aotCpu, aotSysroot, aotRuntimeDirectory, aotCompiler, aotOutput, aotAllocator;
+    /// [aot] 最终链接输入由命令行同类项覆盖；搜索路径追加在命令行路径之后。
+    Memory::Vector<Memory::String> aotAssemblySources, aotAssemblyIncludes, aotLibraries, aotSearchPaths;
+    /// [aot] 参与最终链接的对象文件，相对路径以清单目录为基准。
+    Memory::Vector<Memory::String> aotObjects;
+    /// [aot] 库锁文件路径；命令行 --library-lock 优先。
+    Memory::String aotLibraryLock;
+    /// [aot] 最终链接是否启用全量 LTO，默认开启。
+    bool aotLto = true;
     /**
      * @brief 清单内容 + 锁文件内容的签名（锁文件把依赖的签名也拼进来）。
      * @return 清单文件为空（没有项目）时是空串。

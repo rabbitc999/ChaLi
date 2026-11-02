@@ -51,6 +51,7 @@ def main():
                          'TARGET=' + binary.relative_to(ROOT).as_posix()], env=env)
             if not args.skip_tests:
                 release.run([sys.executable, 'tests/chali_aot.py', '--chali', binary], env=env)
+                release.run([sys.executable, 'tests/chali_aot_project_config.py', '--chali', binary], env=env)
                 if variant == 'static':
                     release.run([sys.executable, 'tests/chali_aot_static.py', '--chali', binary], env=env)
             release.run(['npm.cmd', 'run', 'package', '--', '--llvm-variant', variant,
