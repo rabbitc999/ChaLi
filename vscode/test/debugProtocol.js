@@ -162,6 +162,7 @@ async function signals() {
   let resolveFrames;
   adapter.gdb = { command: () => new Promise(resolve => { resolveFrames = resolve; }) };
   const stale = adapter.reportSignal({ 'thread-id': '1', 'signal-name': 'SIGILL' });
+  ++adapter.stopSerial;
   adapter.invalidate();
   resolveFrames({ stack: [{ frame: { fullname: 'stale.chl', line: '2' } }] });
   await stale;

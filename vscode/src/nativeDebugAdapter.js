@@ -14,6 +14,8 @@ const { DebugMemory } = require('./debugMemory');
 const { parseLayout, decode, expandable } = require('./debugValue');
 const { parseExpression, evaluateExpression } = require('./debugExpression');
 const { encodeAssignment } = require('./debugAssignment');
+const { DebugThreads } = require('./debugThreads');
+const { interruptWindows } = require('./debugInterrupt');
 
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
@@ -165,6 +167,11 @@ class Adapter {
     this.breakpoints = new Map();
     this.functionBreakpoints = [];
     this.stepCommand = null;      ///< 最近一次单步命令，用于跳过内部代码。
+    this.stepThread = null;
+    this.stopSerial = 0;
+    this.pauseRequested = false;
+    this.pauseThread = null;
+    this.inferiorPid = null;
     this.stepAttempts = 0;        ///< 连续跳过的内部停点计数。
     this.suppressContinued = false;  ///< 过滤内部停点时不为每次恢复上报 continued。
     this.panicPoint = null;          ///< 隐藏的 panic 入口断点编号。
@@ -179,6 +186,7 @@ class Adapter {
     this.control = Promise.resolve();
     this.progressRequests = new Map();
     this.nextProgress = 1;
+    this.resetThreads();
     this.reader = new RequestReader((request) => this.dispatch(request), (error) => {
       this.event('output', { category: 'stderr', output: error.message + '\n' });
       this.end();
@@ -233,6 +241,35 @@ class Adapter {
     for (const [id, value] of this.handles) if (['value', 'memory'].includes(value.kind)) this.handles.delete(id);
     this.valueMemories?.clear();
   }
+  /** 新原生会话清空线程身份，退出事件立即使已有帧和读取失效。 */
+  resetThreads() {
+    if (this.threads) for (const id of [...this.threads.active.keys()]) this.threads.exit(id);
+    this.threads = new DebugThreads((reason, threadId) => {
+      if (reason === 'exited') {
+        this.invalidate();
+        if (this.stepThread === threadId) { this.stepThread = null; this.stepCommand = null; this.suppressContinued = false; }
+        if (this.invalidatedEvents && this.state === 'stopped') this.event('invalidated', { areas: ['stacks', 'variables'] });
+      }
+      this.event('thread', { reason, threadId });
+    });
+  }
+  /** 停止线程已退出时重新核对活动列表，避免用迟到的帧继续单步或伪造线程编号。 */
+  async recoverThreadStop(gdb, data) {
+    const serial = this.stopSerial, generation = this.threads.generation;
+    this.invalidate(); this.state = 'stopped';
+    try {
+      const result = await gdb.command('-thread-info');
+      if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
+      this.threads.sync(result.threads || [], result['current-thread-id'], generation);
+      const threadId = this.threads.selected;
+      if (!threadId) throw new Error('停止线程已退出，目标没有可用的活动线程');
+      this.event('stopped', { reason: data.pause ? 'pause' : data.reason === 'signal-received' ? 'exception' : 'step', threadId,
+        allThreadsStopped: true, description: '原停止线程已退出，已选择活动线程' });
+    } catch (error) {
+      if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
+      this.event('output', { category: 'stderr', output: error.message + '\n' }); this.end();
+    }
+  }
   /**
    * @brief 解析并缓存调试目录里的版本化布局；缺失或损坏只影响结构化展示。
    * @param index 变量登记的非负布局索引。
@@ -284,15 +321,19 @@ class Adapter {
   async shutdown() {
     if (this.shutdownPromise) return this.shutdownPromise;
     this.invalidate();
+    ++this.stopSerial;
     const gdb = this.gdb;
     this.metadata?.cancel(); this.metadata = null;
     const compiler = this.compilerProcess;
+    const interrupt = this.interruptProcess;
+    this.interruptProcess = null;
     const terminal = this.terminal;
     this.terminal = null;
     this.gdb = null;
     this.compilerProcess = null;
     this.shutdownPromise = (async () => {
       try {
+        await stopProcessTree(interrupt);
         if (gdb) {
           gdb.fail(new Error('调试会话已关闭'));
           await gdb.command('-gdb-exit', { timeoutMs: 1000 }).catch(() => {});
@@ -381,6 +422,10 @@ class Adapter {
       this.event('chali/terminal', { name: config.name || 'ChaLi 调试' });
     }
     this.state = 'starting';
+    this.resetThreads();
+    this.inferiorPid = null;
+    this.debugEnvironment = env;
+    this.debugExecutable = fs.realpathSync(executable);
     this.gdb = new Gdb(config.debuggerPath || process.env.CHALI_GDB || 'gdb', cwd, env);
     const gdb = this.gdb;
     this.metadata = new DebugMetadata((text, options) => gdb.command(text, options), output => this.event('output', { category: 'console', output }));
@@ -389,29 +434,41 @@ class Adapter {
     this.gdb.on('fault', (error) => { if (this.gdb === gdb) { this.event('output', { category: 'stderr', output: error.message + '\n' }); this.end(); } });
     this.gdb.on('running', (data) => {
       if (this.gdb !== gdb || this.terminated) return;
+      ++this.stopSerial;
       this.invalidate();
       this.state = 'running';
-      if (!this.suppressContinued) this.event('continued', { threadId: Number(data['thread-id']) || 1, allThreadsContinued: true });
+      if (!this.suppressContinued) this.event('continued', { threadId: this.threads.selected || 1, allThreadsContinued: true });
     });
     this.gdb.on('stopped', (data) => {
       if (this.gdb !== gdb || this.terminated) return;
+      const serial = ++this.stopSerial;
+      const paused = this.pauseRequested; this.pauseRequested = false;
+      const pauseThread = this.pauseThread; this.pauseThread = null;
+      const pauseStop = paused && data.reason !== 'breakpoint-hit'
+        && (data.reason !== 'signal-received' || ['SIGINT', 'SIGTRAP'].includes(data['signal-name']));
       if ((data.reason || '').startsWith('exited')) {
         const exitCode = data.reason === 'exited-signalled' ? 128 + (osConstants.signals[data['signal-name']] || 1) : parseInt(data['exit-code'] || '0', 8);
         this.event('exited', { exitCode: Number.isFinite(exitCode) ? exitCode : 1 }); this.end(); return;
       }
+      const exitedThread = data['thread-id'] !== undefined && this.threads.dead.has(DebugThreads.id(data['thread-id']));
+      let thread = this.threads.stop(data['thread-id']);
+      if (!thread || exitedThread) { void this.recoverThreadStop(gdb, { ...data, pause: pauseStop }); return; }
+      if (pauseStop && pauseThread && this.threads.active.has(pauseThread)) { thread = pauseThread; this.threads.selected = thread; }
+      data = { ...data, 'thread-id': String(thread) };
       if (data.reason === 'breakpoint-hit' && data.bkptno !== undefined && this.logPoints.has(Number(data.bkptno))) {
         void this.runLogPoint(this.logPoints.get(Number(data.bkptno))).catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
         return;
       }
       if (this.panicPoint !== null && data.reason === 'breakpoint-hit' && Number(data.bkptno) === this.panicPoint) {
         void this.reportPanic(Number(data['thread-id']) || 1).catch((error) => {
+          if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial || this.threads.dead.has(thread)) return;
           this.event('output', { category: 'stderr', output: error.message + '\n' });
           this.invalidate(); this.state = 'stopped';
           this.event('stopped', { reason: 'exception', threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: 'panic' });
         });
         return;
       }
-      const stepping = data.reason === 'end-stepping-range' || data.reason === 'function-finished';
+      const stepping = data.reason === 'end-stepping-range' || data.reason === 'function-finished' || (!data.reason && this.stepCommand);
       if (stepping && this.stepCommand) {
         const frame = data.frame || {};
         const file = String(frame.fullname || frame.file || '');
@@ -422,16 +479,23 @@ class Adapter {
           } else {
             this.stepAttempts++;
             this.suppressContinued = true;
-            void gdb.command('-exec-finish').catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
+            void gdb.command('-exec-finish --thread ' + thread).catch((error) => {
+              if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
+              this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
+              this.event('output', { category: 'stderr', output: error.message + '\n' });
+              void this.recoverThreadStop(gdb, data);
+            });
             return;
           }
         }
       }
       this.stepCommand = null;
+      this.stepThread = null;
       this.stepAttempts = 0;
       this.suppressContinued = false;
-      if (data.reason === 'signal-received') {
+      if (data.reason === 'signal-received' && !pauseStop) {
         void this.reportSignal(data).catch(error => {
+          if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial || this.threads.dead.has(thread)) return;
           this.event('output', { category: 'stderr', output: error.message + '\n' });
           this.invalidate(); this.state = 'stopped';
           this.event('stopped', { reason: 'exception', threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: data['signal-meaning'] || data['signal-name'] });
@@ -440,11 +504,16 @@ class Adapter {
       }
       this.invalidate();
       this.state = 'stopped';
-      this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : data.reason === 'signal-received' ? 'exception' : 'step',
-        threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: data['signal-meaning'] });
+      this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : pauseStop ? 'pause' : data.reason === 'signal-received' ? 'exception' : 'step',
+        threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: pauseStop ? undefined : data['signal-meaning'] });
     });
     this.gdb.on('notify', (status, data) => {
-      if (this.gdb !== gdb || this.terminated || status !== 'breakpoint-modified' || !data.bkpt) return;
+      if (this.gdb !== gdb || this.terminated) return;
+      if (status === 'thread-group-started') { this.inferiorPid = DebugThreads.id(data.pid); return; }
+      if (status === 'thread-group-exited') { this.inferiorPid = null; return; }
+      if (status === 'thread-created') { this.threads.start(data.id); return; }
+      if (status === 'thread-exited') { this.threads.exit(data.id); return; }
+      if (status !== 'breakpoint-modified' || !data.bkpt) return;
       const known = this.breakpointInfo.get(Number(data.bkpt.number));
       if (!known) return;
       known.verified = !data.bkpt.pending;
@@ -455,6 +524,7 @@ class Adapter {
     await command('-gdb-set pagination off');
     await command('-gdb-set confirm off');
     await command('-gdb-set mi-async on');
+    await command('-gdb-set non-stop off');
     await command('-gdb-set charset UTF-8');
     await command('-file-exec-and-symbols ' + JSON.stringify(executable));
     // 隐藏的 panic 断点让运行期失败停在调用现场，而不是只留下退出码。
@@ -479,11 +549,12 @@ class Adapter {
    * @returns {Promise<void>} 停点事件发送完成。
    */
   async reportPanic(thread) {
+    const gdb = this.gdb, serial = this.stopSerial;
     let message = '';
     // 运行期 IR 没有 DWARF 参数信息，按各平台 x64/ARM64 的第一个整型参数寄存器取消息指针。
     for (const register of ['$rcx', '$rdi', '$x0']) {
       try {
-        const result = await this.gdb.command(`-data-evaluate-expression (char*)${register}`);
+        const result = await gdb.command(`-data-evaluate-expression --thread ${thread} --frame 0 (char*)${register}`);
         const quoted = /^0x[0-9a-f]+\s+"(.*)"$/i.exec(String(result.value || ''));
         if (quoted) { message = quoted[1]; break; }
       } catch { /* 尝试下一个寄存器。 */ }
@@ -491,7 +562,7 @@ class Adapter {
     if (!message) message = '运行期失败';
     let location = '';
     try {
-      const data = await this.gdb.command(`-stack-list-frames --thread ${thread} 0 4`);
+      const data = await gdb.command(`-stack-list-frames --thread ${thread} 0 4`);
       for (const entry of data.stack || []) {
         const frame = entry.frame || entry;
         const file = String(frame.fullname || frame.file || '');
@@ -499,6 +570,8 @@ class Adapter {
         if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
       }
     } catch { /* 没有调用方源码时只报告消息。 */ }
+    if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
+    if (this.threads.dead.has(thread)) { await this.recoverThreadStop(gdb, { reason: 'signal-received' }); return; }
     const text = '运行期失败：' + message + (location ? '（' + location + '）' : '');
     this.event('output', { category: 'console', output: text + '\n' });
     this.invalidate();
@@ -509,7 +582,7 @@ class Adapter {
   /** 原生信号保留信号描述，并关联最近可用的源码调用帧；不恢复目标执行。 */
   async reportSignal(data) {
     const gdb = this.gdb;
-    const epoch = this.epoch;
+    const serial = this.stopSerial;
     const thread = Number(data['thread-id']) || 1;
     let location = '';
     try {
@@ -521,7 +594,8 @@ class Adapter {
         if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
       }
     } catch { /* 缺少调试信息时保留信号描述。 */ }
-    if (this.gdb !== gdb || this.terminated || this.epoch !== epoch) return;
+    if (this.gdb !== gdb || this.terminated || this.stopSerial !== serial) return;
+    if (this.threads.dead.has(thread)) { await this.recoverThreadStop(gdb, data); return; }
     const description = [data['signal-name'], data['signal-meaning']].filter(Boolean).join(': ') || 'native signal';
     const text = description + (location ? '（' + location + '）' : '');
     this.event('output', { category: 'console', output: text + '\n' });
@@ -653,14 +727,17 @@ class Adapter {
   /** 命中日志断点时输出展开文本并继续，不向客户端报告暂停。 */
   async runLogPoint(message) {
     if (this.logging) return;
+    const gdb = this.gdb, serial = this.stopSerial;
     this.logging = true;
     try {
       const text = await this.interpolate(message);
+      if (this.gdb !== gdb || this.terminated || this.stopSerial !== serial) return;
       this.event('output', { category: 'stdout', output: text.endsWith('\n') ? text : text + '\n' });
     } finally {
       this.logging = false;
     }
-    try { await this.gdb.command('-exec-continue'); }
+    if (this.gdb !== gdb || this.terminated || this.stopSerial !== serial) return;
+    try { await gdb.command('-exec-continue'); }
     catch (error) { this.event('output', { category: 'stderr', output: error.message + '\n' }); }
   }
   async request(request, controller = new AbortController()) {
@@ -726,19 +803,21 @@ class Adapter {
         case 'configurationDone':
           if (this.state !== 'configuring') throw new Error('调试配置已经完成或当前不能启动程序');
           this.state = 'running';
+          ++this.stopSerial;
           this.invalidate();
           try { await this.gdb.command('-exec-run', { signal }); }
           catch (error) { if (error.gdbError) this.state = 'configuring'; else this.end(); throw error; }
           break;
         case 'threads': {
+          const generation = this.threads.generation;
           const data = await this.gdb.command('-thread-info', { signal });
-          body.threads = (data.threads || []).map((thread) => ({ id: Number(thread.id), name: thread.name || thread['target-id'] || `线程 ${thread.id}` }));
+          body.threads = this.threads.sync(data.threads || [], data['current-thread-id'], generation);
           break;
         }
         case 'stackTrace': {
           await this.metadata?.load(signal);
           this.stopped(epoch);
-          const thread = args.threadId === undefined ? 1 : args.threadId;
+          const thread = this.threads.resolve(args.threadId);
           const start = args.startFrame === undefined ? 0 : args.startFrame;
           const levels = args.levels === undefined || args.levels === 0 ? 50 : args.levels;
           if (!Number.isSafeInteger(thread) || thread < 1 || !Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(levels) || levels < 1 || levels > 1000 || !Number.isSafeInteger(start + levels)) throw new Error('调用栈线程或分页参数无效');
@@ -970,13 +1049,20 @@ class Adapter {
         case 'stepIn':
         case 'stepOut': {
           this.stopped();
+          if (args.singleThread === true) throw new Error('当前仅支持全停调试模式');
+          const thread = this.threads.resolve(args.threadId);
+          this.threads.selected = thread;
+          ++this.stopSerial;
+          this.pauseRequested = false;
           this.state = 'running'; this.invalidate();
           const commands = { continue: '-exec-continue', next: '-exec-next', stepIn: '-exec-step', stepOut: '-exec-finish' };
           this.stepCommand = request.command === 'continue' ? null : commands[request.command];
+          this.stepThread = request.command === 'continue' ? null : thread;
           this.stepAttempts = 0;
           this.suppressContinued = false;
-          try { await this.gdb.command(commands[request.command], { signal }); }
+          try { await this.gdb.command(commands[request.command] + (request.command === 'continue' ? '' : ' --thread ' + thread), { signal }); }
           catch (error) {
+            this.stepCommand = null; this.stepThread = null;
             if (error.gdbError && this.state === 'running') this.state = 'stopped';
             else if (!this.restartPending) this.end();
             throw error;
@@ -984,10 +1070,20 @@ class Adapter {
           if (request.command === 'continue') body.allThreadsContinued = true;
           break;
         }
-        case 'pause':
+        case 'pause': {
           if (this.state !== 'running') throw new Error('程序当前没有运行');
-          await this.gdb.command('-exec-interrupt', { signal });
+          this.pauseThread = this.threads.resolve(args.threadId);
+          this.pauseRequested = true; this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
+          let interrupt;
+          try {
+            if (process.platform === 'win32') {
+              await interruptWindows(this.inferiorPid, this.gdb.process.pid, this.debugExecutable, this.debugEnvironment, signal,
+                child => { interrupt = child; this.interruptProcess = child; });
+            } else await this.gdb.command('-exec-interrupt', { signal });
+          } catch (error) { this.pauseRequested = false; this.pauseThread = null; throw error; }
+          finally { if (this.interruptProcess === interrupt) this.interruptProcess = null; }
           break;
+        }
         case 'disconnect':
         case 'terminate':
           this.state = 'ending';
