@@ -357,7 +357,7 @@ function notifyChange(document, changes) {
  */
 function registerDocumentSync(context) {
   if (vscode.workspace.createFileSystemWatcher) {
-    const watcher = vscode.workspace.createFileSystemWatcher('**/*.{chl,inc,toml,lock}');
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.{chl,chlib,inc,toml,lock}');
     const changed = (uri, type) => {
       if (client && client.running) client.notify('workspace/didChangeWatchedFiles', { changes: [{ uri: uri.toString(), type }] });
     };

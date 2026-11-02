@@ -8,6 +8,7 @@ import os
 from chali_library_package import invoke, encode
 from compiler_path import compiler_path
 from project_temp import tempfile
+from native_lsp_transport import Transport
 
 
 def main():
@@ -50,6 +51,37 @@ def main():
         invoke([compiler,'check',consumer,'--library-lock',lock],work)
         dependencies=invoke([compiler,'--deps',consumer,'--library-lock',lock],work).stdout.replace('\\','/')
         assert str(lock.resolve()).replace('\\','/') in dependencies,dependencies
+
+        # 工程清单选择真实内容锁；不传命令行锁也须解析包并追踪锁依赖。
+        project=work/'chali.toml'
+        project.write_text('[aot]\nlibrary_lock = "chali.libraries.lock"\n',encoding='utf-8')
+        invoke([compiler,'check',consumer],work)
+        configured=invoke([compiler,'--deps',consumer],work).stdout.replace('\\','/')
+        assert str(lock.resolve()).replace('\\','/') in configured,configured
+        assert str(package.resolve()).replace('\\','/') in configured,configured
+        lock.write_text('{}',encoding='utf-8')
+        invoke([compiler,'check',consumer],work,False)
+        lock.write_bytes(locked)
+        invoke([compiler,'check',consumer],work)
+        server=Transport(compiler,work)
+        consumer_uri=consumer.as_uri()
+        try:
+            server.query('initialize',dict(rootUri=work.as_uri()))
+            server.send(dict(method='initialized',params={}))
+            server.send(dict(method='textDocument/didOpen',params=dict(textDocument=dict(uri=consumer_uri,languageId='chali',version=1,text=consumer.read_text()))))
+            server.diagnostic(consumer_uri,1,lambda values:not values)
+            for dependency,original_bytes in ((lock,locked),(package,original)):
+                cursor=len(server.notifications)
+                dependency.write_bytes(b'{}')
+                server.send(dict(method='workspace/didChangeWatchedFiles',params=dict(changes=[dict(uri=dependency.as_uri(),type=2)])))
+                server.diagnostic(consumer_uri,1,lambda values:bool(values),after=cursor)
+                cursor=len(server.notifications)
+                dependency.write_bytes(original_bytes)
+                server.send(dict(method='workspace/didChangeWatchedFiles',params=dict(changes=[dict(uri=dependency.as_uri(),type=2)])))
+                server.diagnostic(consumer_uri,1,lambda values:not values,after=cursor)
+        finally:
+            server.close()
+        project.unlink()
 
         object_prefix=work/'separate'
         invoke([compiler,'aot',consumer,'--emit-obj','--library-lock',lock,'--out',object_prefix],work)

@@ -127,6 +127,8 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 `lto` 是布尔配置，默认 `true`。`--lto` 或 `--no-lto` 覆盖项目设置；关闭时先生成机器对象再链接，LLVM 的模块内优化仍按原优化级别执行。外置 LLVM 的调试构建沿用不启用 LTO 的行为。
 
+清单中的 `library_lock` 同样用于源码检查和语言服务分析。库锁与实际导入的 `.chlib` 都进入依赖集合；编辑器监听这些文件的变化，触发消费者重新诊断。锁或包损坏时报告错误，恢复有效内容后重新检查。
+
 `chali aot app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
 项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
