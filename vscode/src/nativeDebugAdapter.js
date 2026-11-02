@@ -740,7 +740,8 @@ class Adapter {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
             const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
-            const addressable = frame.level === 0 && binding?.address === true && numeric !== null && numeric > 0n;
+            // 内存目录按线程发布，调用栈任意帧的聚合槽位都可读取；上下文变化由目录自身核对。
+            const addressable = binding?.address === true && numeric !== null && numeric > 0n;
             const layout = addressable ? this.layoutAt(binding.layout) : null;
             let display = value || '<不可用>';
             let memoryReference;
