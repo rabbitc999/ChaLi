@@ -117,6 +117,7 @@ class Gdb extends EventEmitter {
       }
     } else if (kind === '*' && status === 'stopped') this.emit('stopped', result);
     else if (kind === '*' && status === 'running') this.emit('running', result);
+    else if (kind === '=') this.emit('notify', status, result);
   }
   command(command, options = {}) {
     if (this.closed) return Promise.reject(new Error('GDB 已退出'));
@@ -159,6 +160,9 @@ class Adapter {
     this.handles = new Map();
     this.frames = new Map();
     this.breakpoints = new Map();
+    this.functionBreakpoints = [];
+    this.breakpointInfo = new Map();
+    this.logPoints = new Map();
     this.nextHandle = 1;
     this.terminated = false;
     this.state = 'created';
@@ -335,10 +339,22 @@ class Adapter {
         const exitCode = data.reason === 'exited-signalled' ? 128 + (osConstants.signals[data['signal-name']] || 1) : parseInt(data['exit-code'] || '0', 8);
         this.event('exited', { exitCode: Number.isFinite(exitCode) ? exitCode : 1 }); this.end(); return;
       }
+      if (data.reason === 'breakpoint-hit' && data.bkptno !== undefined && this.logPoints.has(Number(data.bkptno))) {
+        void this.runLogPoint(this.logPoints.get(Number(data.bkptno))).catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
+        return;
+      }
       this.invalidate();
       this.state = 'stopped';
       this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : data.reason === 'signal-received' ? 'exception' : 'step',
         threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: data['signal-meaning'] });
+    });
+    this.gdb.on('notify', (status, data) => {
+      if (this.gdb !== gdb || this.terminated || status !== 'breakpoint-modified' || !data.bkpt) return;
+      const known = this.breakpointInfo.get(Number(data.bkpt.number));
+      if (!known) return;
+      known.verified = !data.bkpt.pending;
+      if (data.bkpt.line) known.line = Number(data.bkpt.line);
+      this.event('breakpoint', { reason: 'changed', breakpoint: known });
     });
     const command = (text) => gdb.command(text, { signal });
     await command('-gdb-set pagination off');
@@ -355,18 +371,52 @@ class Adapter {
     this.state = 'configuring';
     if (!restart) this.event('initialized');
   }
+  /** 校验用户断点条件：只接受单行非空文本，避免 MI 命令注入。 */
+  static conditionText(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value !== 'string' || !value.trim() || value.length > 4096 || /[\r\n]/.test(value)) throw new Error('断点条件必须是单行非空文本');
+    return value;
+  }
+  /** 校验 DAP 命中次数，返回正整数或零。 */
+  static hitCount(value) {
+    if (value === undefined || value === null) return 0;
+    const text = String(value).trim();
+    if (!/^[1-9][0-9]{0,8}$/.test(text)) throw new Error('断点命中次数必须是正整数');
+    return Number(text);
+  }
+  /** 撤销 GDB 断点登记的适配器状态，编号可被新断点复用。 */
+  forgetBreakpoint(id) {
+    const number = Number(id);
+    this.breakpointInfo.delete(number);
+    this.logPoints.delete(number);
+  }
   /** 为一个源文件替换断点；重启时复用原始位置而不复用 GDB 编号。 */
   async setSourceBreakpoints(args, signal) {
     const source = path.resolve(args.source.path);
     const previous = this.breakpoints.get(source) || [];
+    for (const id of previous) this.forgetBreakpoint(id);
     if (previous.length) await this.gdb.command('-break-delete ' + previous.join(' '), { signal });
     const ids = [], breakpoints = [];
     for (const point of args.breakpoints || []) {
       try {
+        const condition = Adapter.conditionText(point.condition);
+        const hits = Adapter.hitCount(point.hitCondition);
+        const logMessage = point.logMessage === undefined ? '' : String(point.logMessage);
+        if (logMessage.length > 8192) throw new Error('断点日志文本过长');
         const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(source.replace(/\\/g, '/') + ':' + point.line), { signal });
-        const bp = result.bkpt;
+        const bp = result.bkpt, number = Number(bp.number);
+        try {
+          if (condition) await this.gdb.command(`-break-condition ${number} ${condition}`, { signal });
+          if (hits > 1) await this.gdb.command(`-break-after ${number} ${hits - 1}`, { signal });
+        } catch (error) {
+          await this.gdb.command('-break-delete ' + bp.number, { signal }).catch(() => {});
+          throw error;
+        }
         ids.push(bp.number);
-        breakpoints.push({ id: Number(bp.number), verified: !bp.pending, line: Number(bp.line) || point.line, source: args.source });
+        const entry = { id: number, verified: !bp.pending, line: Number(bp.line) || point.line, source: args.source };
+        if (logMessage) this.logPoints.set(number, logMessage);
+        this.breakpointInfo.set(number, entry);
+        breakpoints.push(entry);
       } catch (error) {
         if (signal.aborted) throw error;
         breakpoints.push({ verified: false, line: point.line, message: error.message });
@@ -376,6 +426,84 @@ class Adapter {
     if (!this.breakpointSpecs) this.breakpointSpecs = new Map();
     this.breakpointSpecs.set(source, { ...args, breakpoints: (args.breakpoints || []).map((point) => ({ ...point })) });
     return { breakpoints };
+  }
+  /** 按函数名替换函数断点；待解析的断点在符号可用后由 GDB 通知更新。 */
+  async setFunctionBreakpoints(args, signal) {
+    if (this.functionBreakpoints.length) {
+      for (const id of this.functionBreakpoints) this.forgetBreakpoint(id);
+      await this.gdb.command('-break-delete ' + this.functionBreakpoints.join(' '), { signal });
+      this.functionBreakpoints = [];
+    }
+    // 源码函数名到实际链接名只在调试映射可用时翻译，缺失时交回 GDB 原生名称。
+    let functions = [];
+    try { await this.metadata?.load(signal); functions = this.metadata?.cache ? [...this.metadata.cache.byLinkage.values()] : []; }
+    catch (error) { if (signal.aborted) throw error; }
+    const breakpoints = [];
+    for (const point of args.breakpoints || []) {
+      try {
+        const name = typeof point.name === 'string' ? point.name.trim() : '';
+        if (!name || name.length > 1024 || /[\r\n]/.test(name)) throw new Error('函数断点名称无效');
+        const condition = Adapter.conditionText(point.condition);
+        const hits = Adapter.hitCount(point.hitCondition);
+        const source = functions.find((entry) => entry.name === name) || functions.find((entry) => entry.name.endsWith('::' + name));
+        const target = source ? source.linkage : name;
+        const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(target), { signal });
+        const bp = result.bkpt, number = Number(bp.number);
+        try {
+          if (condition) await this.gdb.command(`-break-condition ${number} ${condition}`, { signal });
+          if (hits > 1) await this.gdb.command(`-break-after ${number} ${hits - 1}`, { signal });
+        } catch (error) {
+          await this.gdb.command('-break-delete ' + bp.number, { signal }).catch(() => {});
+          throw error;
+        }
+        this.functionBreakpoints.push(bp.number);
+        const entry = { id: number, verified: !bp.pending, line: Number(bp.line) || 1, message: bp.pending ? '函数尚未加载，等待符号解析' : undefined };
+        this.breakpointInfo.set(number, entry);
+        breakpoints.push(entry);
+      } catch (error) {
+        if (signal.aborted) throw error;
+        breakpoints.push({ verified: false, message: error.message });
+      }
+    }
+    this.functionSpecs = { ...args, breakpoints: (args.breakpoints || []).map((point) => ({ ...point })) };
+    return { breakpoints };
+  }
+  /** 展开日志断点中的 {表达式}，不中断目标程序。 */
+  async interpolate(message) {
+    const parts = [];
+    let at = 0;
+    while (at < message.length) {
+      const open = message.indexOf('{', at);
+      if (open < 0) { parts.push(message.slice(at)); break; }
+      const close = message.indexOf('}', open + 1);
+      if (close < 0) { parts.push(message.slice(at)); break; }
+      parts.push(message.slice(at, open));
+      const expression = message.slice(open + 1, close).trim();
+      if (!expression) parts.push('{}');
+      else {
+        try {
+          const result = await this.gdb.command('-data-evaluate-expression ' + JSON.stringify(expression));
+          parts.push(String(result.value));
+        } catch {
+          parts.push('{' + expression + '}');
+        }
+      }
+      at = close + 1;
+    }
+    return parts.join('');
+  }
+  /** 命中日志断点时输出展开文本并继续，不向客户端报告暂停。 */
+  async runLogPoint(message) {
+    if (this.logging) return;
+    this.logging = true;
+    try {
+      const text = await this.interpolate(message);
+      this.event('output', { category: 'stdout', output: text.endsWith('\n') ? text : text + '\n' });
+    } finally {
+      this.logging = false;
+    }
+    try { await this.gdb.command('-exec-continue'); }
+    catch (error) { this.event('output', { category: 'stderr', output: error.message + '\n' }); }
   }
   async request(request, controller = new AbortController()) {
     const args = request.arguments || {};
@@ -398,7 +526,8 @@ class Adapter {
           if (this.state !== 'created') throw new Error('调试会话已经初始化');
           this.state = 'ready';
           this.progressReporting = args.supportsProgressReporting === true;
-          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true };
+          body = { supportsConfigurationDoneRequest: true, supportsEvaluateForHovers: true, supportsTerminateRequest: true, supportsCancelRequest: true, supportsRestartRequest: true, supportsReadMemoryRequest: true,
+            supportsConditionalBreakpoints: true, supportsHitConditionalBreakpoints: true, supportsFunctionBreakpoints: true, supportsLogPoints: true };
           break;
         case 'launch':
           if (this.state !== 'ready') throw new Error('调试会话不能重复 launch');
@@ -416,13 +545,18 @@ class Adapter {
           await this.shutdown();
           this.restartPending = false;
           this.breakpoints.clear();
+          this.functionBreakpoints = [];
+          this.breakpointInfo.clear();
+          this.logPoints.clear();
           await this.launch(this.configuration, signal, true, request.seq);
           for (const spec of this.breakpointSpecs ? [...this.breakpointSpecs.values()] : []) await this.setSourceBreakpoints(spec, signal);
+          if (this.functionSpecs) await this.setFunctionBreakpoints(this.functionSpecs, signal);
           try { await this.gdb.command('-exec-run', { signal }); }
           catch (error) { if (error.gdbError) this.state = 'configuring'; else this.end(); throw error; }
           break;
         }
         case 'setBreakpoints': body = await this.setSourceBreakpoints(args, signal); break;
+        case 'setFunctionBreakpoints': body = await this.setFunctionBreakpoints(args, signal); break;
         case 'setExceptionBreakpoints':
           if ((args.filters || []).length) throw new Error('运行期错误过滤器尚未接入');
           break;

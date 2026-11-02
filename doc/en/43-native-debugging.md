@@ -59,7 +59,9 @@ Debug builds and inspections can be cancelled. Clients supporting progress repor
 
 DAP headers are limited to 8 KiB, message bodies and individual MI records to 16 MiB. DAP and MI each allow at most 256 pending requests. Malformed lengths, truncated envelopes and invalid JSON stop dispatch. MI requests default to a 20-second timeout; late replies cannot satisfy newer requests. Cancelling submitted execution does not undo program actions; an uncertain execution state ends the session.
 
-Conditional/log breakpoints, language-container views and runtime-error filters are not yet provided. The debugger advertises only implemented capabilities. Run the protocol, real GDB and lifecycle checks with:
+Source breakpoints support conditions, hit counts and log text. Conditions are evaluated as native GDB expressions. Hit counts accept a positive integer and stop from the N-th hit onwards. Log breakpoints interpolate `{expression}` fragments, write the text as output and continue automatically without reporting a stop. Function breakpoints are registered by source name and translated to the actual linkage name through the debug catalog. Pending breakpoints update through DAP `breakpoint` events once GDB resolves them.
+
+Runtime-error filters, internal-code step filtering and language-container views are not yet provided. The debugger advertises only implemented capabilities. Run the protocol, real GDB and lifecycle checks with:
 
 ```sh
 python tools/run_module_gates.py debug --chali PATH --random-recheck 1
