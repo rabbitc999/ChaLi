@@ -52,7 +52,22 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the nonowning record and enum parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Unsupported owning aggregates, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and independent debugging/build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the nonowning record and enum parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Unsupported owning aggregates, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+
+### Optional native debug information
+
+`lib build --debug` includes O0 DWARF and an independent source catalog in the object and optional bitcode. `--debug-optimized` includes O3 debug information. Without either option, these catalogs are omitted. Packages still contain no implementation source or additional runtime copy.
+
+```sh
+chali lib build math.chl --module example::math --package-version 1.0.0 --debug --with-bitcode --out modules/example/math.chlib
+chali aot main.chl --debug --library-implementation native --out build/application-debug
+```
+
+For each target, `extensions.nativeDebug` records its format version, module catalog prefix, optimization state and native/bitcode payload SHA-256. Package loading checks actual payload bytes; consumers register the selected implementation from the verified snapshot. Final linking generates a separate read-only identity object from the current snapshot. The debugger checks catalog module, optimization state and final implementation digest. Relinking an old consumer object against a new library disables typed inspection through the stale catalog and requests recompilation on mismatch; DWARF and low-level disassembly remain available. Symbols cannot be separated from their implementation by changing a path. Final image identity checks also apply to launch, attach and remote sessions. These hashes establish content consistency, without authenticating a publisher signature.
+
+Build the application with `--debug` or `--debug-optimized` to retain final debug information. Each library keeps its own optimization state: an O0 native library may serve an O3 application, and an O3 library may serve an O0 application. An O3 consumer explicitly rejects O0 debug library bitcode, which would otherwise be reoptimized. Select `native` or rebuild the library with `--debug-optimized`; reoptimized storage must not be treated as writable O0 frame slots. Release applications continue to strip symbols.
+
+VSCode `sourceFileMap` uses the same prefix mappings for libraries and applications. Missing source leaves DWARF filenames, lines, real functions and instruction addresses available. Variables depend on readable locations; disassembly remains available. Source metadata identifies missing source, module, version, selected implementation and digest. The adapter does not invent source or reconstruct optimized-out variables. All libraries share the total catalog read budget. See [native debugging](43-native-debugging.md) for configuration and limits.
 
 Scalar default parameters preserve definition scope and call-time evaluation. For example:
 

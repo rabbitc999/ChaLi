@@ -300,8 +300,11 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
 /**
  * @brief 汇入调试节点并扩展既有模块版本标记。
  * @param module LLVM 模块。
+ * @param prefix 编译器生成的唯一目录符号前缀。
+ * @param libraries 已验证依赖的规范 JSON 数组。
+ * @param unit 独立库的完整模块身份。
  */
-void NativeDebugInfo::finish(std::string &module)
+void NativeDebugInfo::finish(std::string &module, const std::string &prefix, const std::string &libraries, const std::string &unit)
 {
     if (!unit_) return;
     std::string catalog = "{\"version\":1,\"pointerBytes\":8,\"byteOrder\":\"little\",\"optimized\":"
@@ -403,12 +406,12 @@ void NativeDebugInfo::finish(std::string &module)
         catalog += "}";
         addresses += "ptr blockaddress(@" + functions_[entry.function].linkage + ", %q" + std::to_string(entry.block) + ")";
     }
-    catalog += "]}";
-    module += "@chali_debug_catalog = constant [" + std::to_string(catalog.size() + 1) + " x i8] c" + metadataString(catalog + '\0') + "\n";
-    module += "@chali_debug_catalog_size = constant i64 " + std::to_string(catalog.size()) + "\n";
-    module += "@chali_debug_positions = constant [" + std::to_string(positions_.size()) + " x ptr] " + (positions_.empty() ? "zeroinitializer" : "[" + addresses + "]") + "\n";
+    catalog += "],\"unit\":" + debugJsonString(unit) + ",\"libraries\":" + libraries + "}";
+    module += "@" + prefix + "_catalog = constant [" + std::to_string(catalog.size() + 1) + " x i8] c" + metadataString(catalog + '\0') + "\n";
+    module += "@" + prefix + "_catalog_size = constant i64 " + std::to_string(catalog.size()) + "\n";
+    module += "@" + prefix + "_positions = constant [" + std::to_string(positions_.size()) + " x ptr] " + (positions_.empty() ? "zeroinitializer" : "[" + addresses + "]") + "\n";
     module += "@chali_debug_memory = external global { i64, i64, i64 }\n";
-    module += "@llvm.used = appending global [4 x ptr] [ptr @chali_debug_catalog, ptr @chali_debug_catalog_size, ptr @chali_debug_positions, ptr @chali_debug_memory], section \"llvm.metadata\"\n";
+    module += "@llvm.used = appending global [4 x ptr] [ptr @" + prefix + "_catalog, ptr @" + prefix + "_catalog_size, ptr @" + prefix + "_positions, ptr @chali_debug_memory], section \"llvm.metadata\"\n";
     std::string flags;
     if (module.find("!\"Debug Info Version\"") == std::string::npos)
         flags = "!" + std::to_string(node("!{i32 2, !\"Debug Info Version\", i32 3}"));

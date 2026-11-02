@@ -1,4 +1,5 @@
 'use strict';
+const { createHash } = require('node:crypto');
 
 /** 从目标的只读映射读取源码信息；不调用目标函数或用户代码。 */
 const path = require('node:path');
@@ -79,11 +80,75 @@ class DebugMetadata {
     }
     return output;
   }
-  /** 验证版本、目标表示及所有引用，然后建立物理地址到源码的索引。 */
+  /** 从已验证包描述加载独立目录，统一限制总字节及条目，不按每个库放大预算。 */
   async read(signal) {
-    const size = await this.scalar('*(unsigned long long*)&chali_debug_catalog_size', signal);
+    const budget = { bytes: 0, points: 0 };
+    const main = await this.readCatalog(signal, 'chali_debug', budget);
+    const descriptors = main.catalog.libraries || [];
+    if (!Array.isArray(descriptors) || descriptors.length > 128) throw new Error('库调试目录超过预算');
+    const seen = new Set();
+    for (const descriptor of descriptors) {
+      text(descriptor.module); text(descriptor.version);
+      if (!/^chali_debug_[a-f0-9]{64}$/.test(descriptor.prefix || '') || seen.has(descriptor.prefix)
+        || descriptor.format !== 1 || typeof descriptor.optimized !== 'boolean'
+        || !['native', 'bitcode'].includes(descriptor.implementation)
+        || !/^(?:[a-f0-9]{64})?$/.test(descriptor.implementationSha256 ?? '')
+        || !/^(?:[a-f0-9]{64})?$/.test(descriptor.bitcodeSha256 ?? '')) throw new Error('库调试身份无效');
+      if (descriptor.prefix !== 'chali_debug_' + createHash('sha256').update(descriptor.module).digest('hex')) throw new Error('库调试模块与符号身份不符');
+      const expected = descriptor.implementation === 'bitcode' ? descriptor.bitcodeSha256 : descriptor.implementationSha256;
+      if (!/^[a-f0-9]{64}$/.test(expected)) throw new Error('库调试所选实现摘要缺失');
+      seen.add(descriptor.prefix);
+      const library = await this.readCatalog(signal, descriptor.prefix, budget);
+      if (library.catalog.unit !== descriptor.module || !!library.catalog.optimized !== descriptor.optimized
+        || (library.catalog.libraries || []).length) throw new Error('库符号与已验证实现身份不符');
+      budget.bytes += 65;
+      if (budget.bytes > LIMIT) throw new Error('库调试身份超过读取总预算');
+      const identityAddress = await this.scalar(`(unsigned long long)&${descriptor.prefix}_implementation_sha256`, signal);
+      const identity = await this.memory(identityAddress, 65, signal);
+      if (identity[64] !== 0 || identity.subarray(0, 64).toString('ascii') !== expected) throw new Error('库符号与最终链接实现 SHA-256 不匹配；请重新编译消费者对象');
+      const layoutOffset = (main.catalog.layouts || []).length;
+      let macroOffset = 0;
+      for (const id of main.macros.keys()) macroOffset = Math.max(macroOffset, id + 1);
+      if (!Number.isSafeInteger(macroOffset)) throw new Error('跨库宏身份越界');
+      const macroId = id => {
+        if (id === undefined || id === -1) return id;
+        const relocated = id + macroOffset;
+        if (!Number.isSafeInteger(relocated)) throw new Error('跨库宏身份越界');
+        return relocated;
+      };
+      for (const [id, macro] of library.macros) main.macros.set(macroId(id),
+        { ...macro, id: macroId(id), parent: macroId(macro.parent) });
+      for (const fn of library.catalog.functions) {
+        if (main.byLinkage.has(fn.linkage)) throw new Error('跨库调试函数身份冲突');
+        fn.library = descriptor;
+        for (const variable of fn.variables) {
+          if (variable.layout !== undefined && variable.layout !== -1) variable.layout += layoutOffset;
+          variable.macro = macroId(variable.macro);
+        }
+        for (const position of fn.positions) position.macro = macroId(position.macro);
+        main.byLinkage.set(fn.linkage, fn); main.catalog.functions.push(fn);
+      }
+      for (const [id, layout] of library.dynamicTypes) {
+        const prior = main.dynamicTypes.get(id);
+        if (prior !== undefined && main.catalog.layouts[prior] !== library.catalog.layouts[layout]) throw new Error('跨库动态类型身份冲突');
+        main.dynamicTypes.set(id, layout + layoutOffset);
+      }
+      for (const [id, closure] of library.closures) {
+        if (main.closures.has(id)) throw new Error('跨库闭包身份冲突');
+        for (const capture of closure.captures) capture.layout += layoutOffset;
+        main.closures.set(id, closure);
+      }
+      main.catalog.layouts = [...(main.catalog.layouts || []), ...(library.catalog.layouts || [])];
+    }
+    return main;
+  }
+  /** 验证一个编译单元的版本、目标和引用，再建立物理地址到源码的索引。 */
+  async readCatalog(signal, prefix, budget) {
+    const size = await this.scalar(`*(unsigned long long*)&${prefix}_catalog_size`, signal);
     if (size < 2n || size > BigInt(LIMIT)) throw new Error('调试映射超过读取预算');
-    const address = await this.scalar('(unsigned long long)&chali_debug_catalog', signal);
+    budget.bytes += Number(size);
+    if (budget.bytes > LIMIT) throw new Error('调试映射总字节超过读取预算');
+    const address = await this.scalar(`(unsigned long long)&${prefix}_catalog`, signal);
     const bytes = await this.memory(address, Number(size), signal);
     const catalog = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
     if (catalog.version !== 1 || catalog.pointerBytes !== 8 || catalog.byteOrder !== 'little'
@@ -91,6 +156,10 @@ class DebugMetadata {
       || catalog.functions.length > POINT_LIMIT || catalog.positions.length > POINT_LIMIT) throw new Error('调试映射版本、目标或条目预算不匹配');
     if (catalog.optimized !== undefined && typeof catalog.optimized !== 'boolean') throw new Error('调试优化模式无效');
     if (catalog.optimized && catalog.positions.length) throw new Error('优化调试不能依赖固定基本块地址');
+    if (catalog.unit !== undefined && typeof catalog.unit !== 'string') throw new Error('调试编译单元身份无效');
+    budget.points += catalog.functions.length + catalog.positions.length + (catalog.macros || []).length + (catalog.layouts || []).length;
+    budget.bytes += catalog.positions.length * 8;
+    if (budget.bytes > LIMIT || budget.points > POINT_LIMIT) throw new Error('跨库调试目录超过总预算');
     const macros = new Map();
     if (catalog.layouts !== undefined && (!Array.isArray(catalog.layouts) || catalog.layouts.length > POINT_LIMIT)) throw new Error('调试布局超过预算');
     for (const layout of catalog.layouts || [])
@@ -134,6 +203,8 @@ class DebugMetadata {
     for (const fn of catalog.functions) {
       text(fn.name); text(fn.linkage); text(fn.file); integer(fn.line); integer(fn.column);
       if (byLinkage.has(fn.linkage) || !Array.isArray(fn.scopes) || !Array.isArray(fn.variables) || fn.scopes.length > POINT_LIMIT || fn.variables.length > POINT_LIMIT) throw new Error('调试函数映射重复或超过预算');
+      budget.points += fn.scopes.length + fn.variables.length;
+      if (budget.points > POINT_LIMIT) throw new Error('跨库变量与作用域超过总预算');
       fn.parents = new Map([[0, 0]]); const seen = new Set();
       for (const scope of fn.scopes) {
         integer(scope.id); integer(scope.parent);
@@ -151,11 +222,12 @@ class DebugMetadata {
         if (variable.layout !== undefined && variable.layout !== -1) integer(variable.layout);
         if (!fn.parents.has(variable.scope) || typeof variable.readOnly !== 'boolean') throw new Error('调试变量来源无效');
       }
+      fn.optimized = catalog.optimized === true;
       fn.positions = []; byLinkage.set(fn.linkage, fn);
     }
     let addresses = Buffer.alloc(0);
     if (catalog.positions.length) {
-      const pointAddress = await this.scalar('(unsigned long long)&chali_debug_positions', signal);
+      const pointAddress = await this.scalar(`(unsigned long long)&${prefix}_positions`, signal);
       addresses = await this.memory(pointAddress, catalog.positions.length * 8, signal);
     }
     for (let index = 0; index < catalog.positions.length; ++index) {
@@ -172,13 +244,13 @@ class DebugMetadata {
   /** 用当前机器 PC 选择同函数、同文件和同源码行的位置，不猜测源文件缩进。 */
   frame(frame) {
     let fn = this.cache?.byLinkage.get(frame.func);
-    if (!fn && this.cache?.catalog.optimized) {
-      const candidates = this.cache.catalog.functions.filter(item => item.name === frame.func);
+    if (!fn && this.cache) {
+      const candidates = this.cache.catalog.functions.filter(item => item.optimized && item.name === frame.func);
       if (candidates.length === 1) fn = candidates[0];
     }
     if (!fn) return null;
     const result = { name: fn.name === '__chali_main_arguments' ? 'main' : fn.name,
-      column: Number(frame.col) || 1, function: fn, optimized: this.cache.catalog.optimized === true };
+      column: Number(frame.col) || 1, function: fn, optimized: fn.optimized === true };
     if (result.optimized) return result;
     if (!/^0x[0-9a-f]+$/i.test(frame.addr || '') || !(frame.fullname || frame.file)) return result;
     const pc = BigInt(frame.addr), file = sourcePath(frame.fullname || frame.file);

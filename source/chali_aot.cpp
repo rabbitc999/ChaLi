@@ -2819,7 +2819,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
                 state.debugInfo.registerClosure(entry.first, textOf(syntax.debugName.empty() ? syntax.name : syntax.debugName), captures);
             }
         }
-        state.debugInfo.finish(out);
+        state.debugInfo.finish(out, "chali_debug", textOf(request.options.debugLibraries));
     }
     return Memory::String(out.data(), out.size());
 }

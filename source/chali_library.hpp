@@ -109,6 +109,13 @@ struct Package
      */
     const Entry *find(std::string_view name) const;
 };
+/**
+ * @brief 核对可选库调试目录与当前目标实现的字节身份。
+ * @param package 已持有全部条目的包快照。
+ * @param target 本包的目标描述。
+ * @return 规范调试描述；没有可选符号时为空。
+ */
+std::string debugDescriptor(const Package &package, const Target &target);
 /** @brief 单次编译持有的已验证库及原生实现快照，不执行初始化。 */
 class ImportSession
 {

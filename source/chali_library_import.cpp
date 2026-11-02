@@ -3,6 +3,8 @@
  */
 #include "chali_library.hpp"
 #include "chali_aot.hpp"
+#include "chali_aot_llvm.hpp"
+#include "chali_digest.hpp"
 #include "chali_native_tools.hpp"
 #include "chali_package.hpp"
 #include "json/json.hpp"
@@ -15,6 +17,48 @@
 
 namespace chali_library
 {
+/**
+ * @brief 从最终链接使用的包快照生成只读实现身份，不采用旧消费者对象中的声明。
+ * @param options 消费者的实际后端和目标配置。
+ * @param target 已核对的目标。
+ * @param prefix 由模块摘要限定的调试目录前缀。
+ * @param payload 最终选择的原生或 bitcode 负载。
+ * @param path 当前会话私有工作区中的对象输出。
+ * @return 无；生成失败抛出诊断。
+ */
+static void debugIdentityObject(const chali_aot::Options &options, const Target &target, const std::string &prefix,
+                                const std::string &payload, const std::filesystem::path &path)
+{
+    const auto digest = chali_digest::hex(chali_digest::sha256(payload));
+    const auto symbol = prefix + "_implementation_sha256";
+    const std::string source = "target triple = \"" + target.triple + "\"\ntarget datalayout = \"" + target.dataLayout
+                               + "\"\n@" + symbol + " = constant [65 x i8] c\"" + digest + "\\00\"\n"
+                               + "@llvm.used = appending global [1 x ptr] [ptr @" + symbol + "], section \"llvm.metadata\"\n";
+    const auto llvmFile = path.u8string() + ".ll";
+    if (chali_aot::builtin::available() && options.compiler.empty())
+    {
+        chali_aot::Request request;
+        request.options = options;
+        request.options.debug = request.options.debugOptimized = request.options.lto = false;
+        request.options.emitObjectOnly = true;
+        request.options.emitBitcodeOnly = request.options.emitLLVMOnly = request.options.emitAssemblyOnly = false;
+        Memory::Vector<Memory::String> diagnostics;
+        if (chali_aot::builtin::compile(request, llvmFile.c_str(), source.c_str(), path.u8string().c_str(), &diagnostics))
+            throw std::runtime_error("无法生成库调试身份对象" + (diagnostics.empty() ? std::string() : "：" + std::string(diagnostics.front().c_str())));
+    }
+    else
+    {
+        std::ofstream stream(std::filesystem::u8path(llvmFile), std::ios::binary);
+        stream.write(source.data(), static_cast<std::streamsize>(source.size()));
+        stream.close();
+        if (!stream) throw std::runtime_error("无法暂存库调试身份模块");
+        std::string report;
+        const auto compiler = chali_aot::llvmCompilerPath(options.compiler);
+        if (chali_native_tools::execute({ compiler.c_str(), "--target=" + target.triple, "-c", "-x", "ir", llvmFile, "-o", path.u8string() },
+                                        std::filesystem::u8path(llvmFile + ".log"), report))
+            throw std::runtime_error("无法编译库调试身份对象：" + report);
+    }
+}
 /**
  * @brief 按完整模块身份生成不含宿主路径的规范精确锁。
  * @param modules 待排序及校验的锁条目。
@@ -248,12 +292,29 @@ void ImportSession::appendTo(chali_aot::Options &options)
     if (state_->packages.empty()) return;
     if (!state_->workspace) state_->workspace.reset(new chali_native_tools::Workspace);
     std::size_t index = 0;
+    json::Array debugLibraries;
     for (const auto &item : state_->packages)
     {
         const std::vector<std::string> features;
         const auto &target = select(item.second, state_->target, state_->cpu, features, state_->implementation, state_->llvmVersion);
         const bool bitcode = state_->implementation == "bitcode";
         const auto &entry = *item.second.find(bitcode ? target.bitcode : target.implementation);
+        const auto description = debugDescriptor(item.second, target);
+        if (!description.empty())
+        {
+            auto debug = json::parse(description);
+            const bool optimized = *debug.value->find("optimized")->asBool();
+            if (bitcode && !optimized && (!options.debug || options.debugOptimized))
+                throw std::runtime_error("开发调试库的 bitcode 不允许按 O3 重新优化；请选择 native 实现或用 --debug-optimized 重建库：" + item.first);
+            auto &object = *debug.value->asObject();
+            object.insert("module", item.second.manifest.module);
+            object.insert("version", item.second.manifest.version);
+            object.insert("implementation", bitcode ? "bitcode" : "native");
+            const auto identityPath = state_->workspace->path / ("debug-identity-" + std::to_string(index) + ".o");
+            debugIdentityObject(options, target, std::string(*debug.value->find("prefix")->asString()), entry.bytes, identityPath);
+            options.linkObjects.push_back(identityPath.u8string().c_str());
+            debugLibraries.push_back(std::move(*debug.value));
+        }
         const auto file = state_->workspace->path / (std::to_string(index++) + (bitcode && options.lto ? ".bc" : entry.kind == Kind::Archive ? ".a" :
                                                                                                                                                ".o"));
         const bool rewrite = bitcode && options.lto;
@@ -305,6 +366,7 @@ void ImportSession::appendTo(chali_aot::Options &options)
         for (const auto &library : target.systemLibraries)
             options.linkLibraries.push_back(Memory::String(("-l" + library).c_str()));
     }
+    options.debugLibraries = json::Value(std::move(debugLibraries)).dump().c_str();
 }
 /** @brief 导出快照身份，避免再次读取路径导致内容竞态。
  * @return 本次会话全部包的精确身份记录。 */

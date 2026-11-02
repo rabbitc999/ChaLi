@@ -62,6 +62,7 @@ struct Options
     Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。
     bool libraryBitcode = false;                     ///< 独立库同时保留与原生对象同源的 bitcode。
     Memory::String libraryImplementation = "native";  ///< 消费库的明确选择：native 或 bitcode，不作静默回退。
+    Memory::String debugLibraries = "[]";             ///< 已验证库实现的调试目录身份，规范 JSON 数组，不重新读取包。
     Memory::Vector<UnitData> unitData;               ///< 从已验证库快照恢复的只初始化一次的数据段。
     Memory::String libraryLicense;                   ///< 生产包声明的许可证名称。
     Memory::Vector<Memory::String> libraryLicenseAssets;     ///< NAME=FILE 形式的许可证及署名输入。

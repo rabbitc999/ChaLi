@@ -285,7 +285,9 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
         }
         arguments += Text(type == "float" || type == "double" ? "double " : "i64 ") + value;
     }
-    out += ") uwtable {\nentry:\n" + body;
+    out += ") uwtable {\nentry:\n";
+    if (state.request.options.debug) out += "  br label %q1\nq1:\n";
+    out += body;
     const Text internalType = function.returnsFloat ? "double" : "i64";
     out += "  %value = call " + internalType + " @" + textOf(function.llvmName) + "(" + arguments + ")\n";
     if (resultType == "void")
@@ -298,7 +300,11 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
                                                                                                                 "trunc i64 %value to " + resultType;
         out += "  %converted = " + conversion + "\n  ret " + resultType + " %converted\n";
     }
-    return out + "}\n";
+    out += "}\n";
+    if (state.request.options.debug)
+        return state.debugInfo.annotate(out, textOf(function.label) + " [ABI]", entry.symbol.c_str(),
+                                        { { 1, { "<native-library-entry>", 1, 1 } } }, {});
+    return out;
 }
 /**
  * @brief 从已检查 AST 生成无入口和无运行时副本的首批标量库单元。
@@ -309,7 +315,7 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
 Memory::String generateLibraryLLVM(Request &request, Translator &state)
 {
     if (!request.syntax || request.abiExports.empty()) return state.fail("原生库需要至少一个公开标量函数"), Memory::String();
-    if (request.options.debug || request.options.stepLimit) return state.fail("独立原生库暂不支持独立调试或构建期步数预算"), Memory::String();
+    if (request.options.stepLimit) return state.fail("独立原生库暂不支持构建期步数预算"), Memory::String();
     Memory::String runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();
     const auto identity = chali_digest::hex(chali_digest::sha256(std::string_view(request.options.libraryModule.data(), request.options.libraryModule.size())));
@@ -317,6 +323,7 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
     for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
+    if (request.options.debug) out += "declare void @chali_debug_publish_memory()\n";
     if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
     if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";
@@ -367,5 +374,7 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
             out += libraryExportThunk(state, native);
         }
     }
+    if (request.options.debug)
+        state.debugInfo.finish(out, "chali_debug_" + identity, "[]", textOf(request.options.libraryModule));
     return Memory::String(out.data(), out.size());
 }

@@ -384,6 +384,7 @@ void validate(const Package &package)
     for (const auto &name : package.manifest.licenseFiles) require(name, Kind::License);
     for (const auto &target : package.manifest.targets)
     {
+        debugDescriptor(package, target);
         require(target.bitcode, Kind::Bitcode);
         require(target.unitData, Kind::UnitData);
         require(target.unitLayout, Kind::UnitData);
@@ -407,6 +408,37 @@ void validate(const Package &package)
             if (entry->kind == Kind::Archive && entry->bytes.compare(0, 8, "!<arch>\n") != 0) throw std::runtime_error("库归档条目不是自包含归档");
         }
     }
+}
+/**
+ * @brief 验证可选符号描述并将其绑定到实际对象及 bitcode 字节。
+ * @param package 同一事务恢复的包快照。
+ * @param target 本包中已验证结构的目标。
+ * @return 规范描述；未携带时为空。
+ */
+std::string debugDescriptor(const Package &package, const Target &target)
+{
+    const auto extras = json::parse(package.manifest.extensions);
+    if (!extras.value || !extras.value->isObject()) throw std::runtime_error("库调试可选元数据不是有效对象");
+    const auto debug = extras.value->find("nativeDebug");
+    if (!debug) return {};
+    if (!debug->isObject()) throw std::runtime_error("库调试目录不是目标对象");
+    for (const auto &item : *debug->asObject())
+        if (std::none_of(package.manifest.targets.begin(), package.manifest.targets.end(), [&](const auto &known) { return known.triple == item.key; }))
+            throw std::runtime_error("库调试目录含未知目标");
+    const auto descriptor = debug->find(target.triple);
+    if (!descriptor) return {};
+    keys(*descriptor, { "format", "prefix", "optimized", "implementationSha256", "bitcodeSha256" });
+    const auto prefix = "chali_debug_" + chali_digest::hex(chali_digest::sha256(package.manifest.module));
+    if (number(field(*descriptor, "format")) != 1 || text(field(*descriptor, "prefix")) != prefix || !field(*descriptor, "optimized").isBool())
+        throw std::runtime_error("库调试目录格式、模块身份或优化状态无效");
+    for (const auto &pair : { std::make_pair(target.implementation, "implementationSha256"), std::make_pair(target.bitcode, "bitcodeSha256") })
+    {
+        const auto declared = text(field(*descriptor, pair.second));
+        const auto payload = pair.first.empty() ? nullptr : package.find(pair.first);
+        if ((!pair.first.empty() && !payload) || declared != (payload ? chali_digest::hex(chali_digest::sha256(payload->bytes)) : ""))
+            throw std::runtime_error("库调试符号与实现 SHA-256 不匹配");
+    }
+    return descriptor->dump();
 }
 /**
  * @brief 按明确选择核对原生或 bitcode 实现，不作缺失实现回退。

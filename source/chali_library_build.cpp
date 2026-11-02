@@ -7,6 +7,7 @@
 #include "chali_aot_llvm.hpp"
 #include "chali_native_tools.hpp"
 #include "chali_package.hpp"
+#include "chali_digest.hpp"
 #include "json/json.hpp"
 #include <set>
 #include <algorithm>
@@ -191,6 +192,20 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
             package.entries.push_back({ target.unitData, Kind::UnitData, 0, std::string(unit.bytes.data(), unit.bytes.size()) });
             package.entries.push_back({ target.unitLayout, Kind::UnitData, 0, std::string(unit.layout.data(), unit.layout.size()) });
             package.manifest.targets[0] = target;
+        }
+        if (original.options.debug)
+        {
+            json::Object descriptor;
+            descriptor.insert("format", 1);
+            descriptor.insert("prefix", "chali_debug_" + chali_digest::hex(chali_digest::sha256(module)));
+            descriptor.insert("optimized", original.options.debugOptimized);
+            descriptor.insert("implementationSha256", chali_digest::hex(chali_digest::sha256(package.find(target.implementation)->bytes)));
+            descriptor.insert("bitcodeSha256", target.bitcode.empty() ? "" : chali_digest::hex(chali_digest::sha256(package.find(target.bitcode)->bytes)));
+            json::Object debug;
+            debug.insert(target.triple, json::Value(std::move(descriptor)));
+            auto metadata = json::parse(package.manifest.extensions);
+            metadata.value->asObject()->insert("nativeDebug", json::Value(std::move(debug)));
+            package.manifest.extensions = metadata.value->dump();
         }
         std::string diagnostic;
         if (!write(output, package, diagnostic)) throw std::runtime_error(diagnostic);

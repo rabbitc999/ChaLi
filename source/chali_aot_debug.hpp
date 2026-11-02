@@ -182,7 +182,10 @@ public:
     /**
      * @brief 将调试编译单元和版本标记加入 LLVM 模块。
      * @param module 完整模块文本。
+     * @param prefix 独立库的唯一目录前缀；完整程序使用 chali_debug。
+     * @param libraries 已验证依赖的规范 JSON 数组。
+     * @param unit 独立库的完整模块身份，完整程序为空。
      */
-    void finish(std::string &module);
+    void finish(std::string &module, const std::string &prefix = "chali_debug", const std::string &libraries = "[]", const std::string &unit = "");
 };
 }  // namespace chali_aot

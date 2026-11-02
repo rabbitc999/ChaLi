@@ -17,6 +17,7 @@ MODULES = {
     "debug": ["chali_native_debug", "chali_debug_optimization"],
     "debug_remote": ["chali_native_remote_debug"],
     "debug_bitcode": ["chali_debug_bitcode_optimization"],
+    "debug_libraries": ["chali_library_debug"],
     "editor_host": ["chali_vscode_extension_host"],
     "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_enums", "chali_library_lifetimes", "chali_library_bitcode_header", "chali_library_bitcode", "chali_library_bitcode_values", "chali_library_lto", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],

@@ -20,6 +20,11 @@ const { DebugSourceMap } = require('./debugSourceMap');
 const { processId, prepareLocalIdentity } = require('./debugIdentity');
 const { remoteEndpoint, remoteImage, verifyRemoteImage } = require('./debugRemote');
 
+/** 识别内部源码标记，包括 GDB 给合成 ABI 文件补上编译目录后的形式。 */
+function internalSource(file) {
+  return !file || file.startsWith('<') || path.posix.basename(file.replace(/\\/g, '/')) === '<native-library-entry>';
+}
+
 /** 解析 GDB/MI 的字符串、元组和结果列表，保留重复键列表。 */
 function parseMi(text) {
   let at = 0;
@@ -569,7 +574,7 @@ class Adapter {
       if (stepping && this.stepCommand) {
         const frame = data.frame || {};
         const file = String(frame.fullname || frame.file || '');
-        const internal = !file || file.startsWith('<');
+        const internal = internalSource(file);
         if (internal) {
           if (this.stepAttempts >= 64) {
             this.event('output', { category: 'console', output: '内部代码步进超过限制，停在当前内部位置\n' });
@@ -682,7 +687,7 @@ class Adapter {
         const frame = entry.frame || entry;
         const file = String(frame.fullname || frame.file || '');
         const line = Number(frame.line);
-        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
+        if (!internalSource(file) && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
       }
     } catch { /* 没有调用方源码时只报告消息。 */ }
     if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
@@ -706,7 +711,7 @@ class Adapter {
         const frame = entry.frame || entry;
         const file = String(frame.fullname || frame.file || '');
         const line = Number(frame.line);
-        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
+        if (!internalSource(file) && Number.isSafeInteger(line) && line > 0) { location = this.sourceMap.toLocal(this.sourceMap.toTarget(file)) + ':' + line; break; }
       }
     } catch { /* 缺少调试信息时保留信号描述。 */ }
     if (this.gdb !== gdb || this.terminated || this.stopSerial !== serial) return;
@@ -750,7 +755,24 @@ class Adapter {
         const hits = Adapter.hitCount(point.hitCondition);
         const logMessage = point.logMessage === undefined ? '' : String(point.logMessage);
         if (logMessage.length > 8192) throw new Error('断点日志文本过长');
-        const result = await this.gdb.command('-break-insert -f ' + JSON.stringify(this.sourceMap.toTarget(source).replace(/\\/g, '/') + ':' + point.line), { signal });
+        const targetSource = this.sourceMap.toTarget(source).replace(/\\/g, '/');
+        let result = await this.gdb.command('-break-insert -f ' + JSON.stringify(targetSource + ':' + point.line), { signal });
+        // 某些 GDB 编译单元按 substitute-path 后的全名索引；只在原位置未解析时尝试已验证的本地映射。
+        const localSource = source.replace(/\\/g, '/');
+        if (result.bkpt.pending && targetSource !== localSource) {
+          let mapped;
+          try {
+            mapped = await this.gdb.command('-break-insert -f ' + JSON.stringify(localSource + ':' + point.line), { signal });
+            if (!mapped.bkpt.pending) {
+              await this.gdb.command('-break-delete ' + result.bkpt.number, { signal });
+              result = mapped;
+            } else await this.gdb.command('-break-delete ' + mapped.bkpt.number, { signal });
+          } catch (error) {
+            for (const pending of [result, mapped])
+              if (pending?.bkpt?.number) await this.gdb.command('-break-delete ' + pending.bkpt.number).catch(() => {});
+            throw error;
+          }
+        }
         const bp = result.bkpt, number = Number(bp.number);
         try {
           if (condition) await this.gdb.command(`-break-condition ${number} ${condition}`, { signal });
@@ -966,9 +988,13 @@ class Adapter {
             const original = frame.fullname ? { ...frame, fullname: this.sourceMap.toTarget(frame.fullname) } : frame;
             const sourceInfo = this.metadata?.frame(original);
             const localFile = frame.fullname || frame.file ? this.sourceMap.toLocal(this.sourceMap.toTarget(frame.fullname || frame.file)) : undefined;
+            const library = sourceInfo?.function?.library;
+            const implementationHash = library?.implementation === 'bitcode' ? library.bitcodeSha256 : library?.implementationSha256;
+            const sourceOrigin = library ? `预编译库 ${library.module}@${library.version} · ${library.implementation} · SHA-256 ${implementationHash}`
+              + (localFile && !fs.existsSync(localFile) ? ' · 源码不可用；仍可查看符号、位置、变量及反汇编' : '') : undefined;
             this.frames.set(id, { thread, level: Number(frame.level), native: frame, metadata: sourceInfo });
             return { id, name: sourceInfo?.name || frame.func || '<native>', line: Number(frame.line) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
-              source: localFile ? { path: localFile, name: path.basename(localFile) } : undefined,
+              source: localFile ? { path: localFile, name: path.basename(localFile), ...(sourceOrigin ? { origin: sourceOrigin } : {}) } : undefined,
               instructionPointerReference: frame.addr };
           });
           body.totalFrames = body.stackFrames.length;
@@ -1214,7 +1240,7 @@ class Adapter {
               const frames = await gdb.command('-stack-list-frames --thread ' + thread + ' 0 0', { signal });
               const top = frames.stack?.[0]?.frame || frames.stack?.[0];
               const file = String(top?.fullname || top?.file || '');
-              if (!top || (file && !file.startsWith('<')) || this.gdb !== gdb || serial !== this.stopSerial) throw error;
+              if (!top || !internalSource(file) || this.gdb !== gdb || serial !== this.stopSerial) throw error;
               this.threads.resolve(thread);
               await gdb.command('-exec-finish --thread ' + thread, { signal });
             }
