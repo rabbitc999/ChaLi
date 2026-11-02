@@ -2803,8 +2803,22 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     if (request.options.debug)
     {
         if (request.syntax)
+        {
             for (const auto &entry : request.syntax->debugTypeLayouts)
                 state.debugInfo.registerDynamicType(entry.first, textOf(entry.second));
+            for (const auto &entry : state.functionAddresses)
+            {
+                const auto function = state.astFunctions.find(textOf(entry.second));
+                if (function == state.astFunctions.end()) continue;
+                std::vector<DebugCapture> captures;
+                const auto description = request.syntax->debugClosures.find(entry.second);
+                if (description != request.syntax->debugClosures.end())
+                    for (const auto &capture : description->second)
+                        captures.push_back({ textOf(capture.name), textOf(capture.layout), capture.mode, capture.address });
+                const auto &syntax = *function->second;
+                state.debugInfo.registerClosure(entry.first, textOf(syntax.debugName.empty() ? syntax.name : syntax.debugName), captures);
+            }
+        }
         state.debugInfo.finish(out);
     }
     return Memory::String(out.data(), out.size());

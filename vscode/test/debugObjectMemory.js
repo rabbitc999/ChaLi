@@ -41,6 +41,12 @@ async function main() {
   }).reader.snapshot(1);
   assert.equal((await dynamic.object(100n)).kind, 'O');
   assert.equal((await dynamic.object(100n)).values[1].bits, 4096n);
+  const closure = await target(state => {
+    state.header.writeBigUInt64LE(4n); state.row.writeBigUInt64LE(2n, 120);
+    state.object.writeBigUInt64LE(70n, 8); state.object.writeBigUInt64LE(2n, 16);
+    state.value.writeBigUInt64LE(8n, 48); state.value.writeBigUInt64LE(4096n, 56);
+  }).reader.snapshot(1);
+  assert.equal((await closure.object(100n)).values[1].flags, 8);
   const healthy = target(), snapshot = await healthy.reader.snapshot(1);
   const concurrent = await Promise.all(Array.from({ length: 8 }, () => snapshot.object(100n)));
   assert(concurrent.every(object => object.values[0].bits === 42n));
@@ -57,6 +63,9 @@ async function main() {
     state => state.value.writeBigUInt64LE(3n),
     state => { state.header.writeBigUInt64LE(3n); state.object.writeBigUInt64LE(79n, 8); },
     state => state.object.writeBigUInt64LE(79n, 8),
+    state => { state.header.writeBigUInt64LE(3n); state.object.writeBigUInt64LE(70n, 8); },
+    state => { state.header.writeBigUInt64LE(4n); state.object.writeBigUInt64LE(70n, 8); state.object.writeBigUInt64LE(0n, 16); },
+    state => state.value.writeBigUInt64LE(8n),
   ]) {
     const broken = await target(change).reader.snapshot(1);
     await assert.rejects(broken.object(100n));

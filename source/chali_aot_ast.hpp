@@ -515,7 +515,7 @@ struct AstBuilder : Builder
     Memory::Map<Memory::String, ast::TypePtr> environment;
     const ast::Function &syntax;
     std::size_t expressions = 0, blocks = 0, argumentCapacity = 1;
-    std::size_t blockStart = 0;  ///< 当前基本块正文起点，用于避免在空块里追加调试调用。
+    std::size_t debugEntryEnd = 0;  ///< 初始入口标签末尾，只有尚无正文的函数入口可以跳过发布。
     bool terminated = false;
     bool snapshotData = false;  ///< 无不透明调用的循环可在本函数帧内保存数据区视图。
     Value dataBase, dataSize;   ///< 只在当前帧内有效的基址和完整字节数。
@@ -907,7 +907,6 @@ struct AstBuilder : Builder
         body += name + ":\n";
         terminated = false;
         checkedAddresses.clear();
-        blockStart = body.size();
     }
 
     /**
@@ -923,9 +922,10 @@ struct AstBuilder : Builder
             lastLocation = source;
             if (state.request.options.debug)
             {
+                const bool publish = body.size() > debugEntryEnd;
                 if (!refreshingDebugBindings) refreshDebugBindings();
-                // 空块只连接入口，发布不产生新状态；跳过它才能让第一条语句仍是函数入口后的首个源码停点。
-                if (body.size() != blockStart) body += "  call void @chali_debug_publish_memory()\n";
+                // 镜像刷新和汇合也会形成空块；只有函数最初的空入口才没有需要重新发布的状态。
+                if (publish) body += "  call void @chali_debug_publish_memory()\n";
                 const auto index = debugBlocks++;
                 enter("q" + std::to_string(index));
                 debugLines[index] = debugLocation(source);
@@ -1442,7 +1442,7 @@ struct AstBuilder : Builder
         {
             signature += "  br label %q0\n";
             body = "q0:\n";
-            blockStart = body.size();
+            debugEntryEnd = body.size();
         }
         if (function.label == "main" || function.label == "__chali_library_init")
             for (const auto &constant : state.request.syntax->constants)

@@ -117,6 +117,20 @@ void NativeDebugInfo::registerDynamicType(std::int64_t type, const std::string &
 {
     if (type > 0 && !encoded.empty()) dynamicTypes_[type] = registerLayout(encoded);
 }
+/** @brief 登记函数标签及捕获布局，布局在目录输出前统一去重。
+ * @param address 函数标签的逻辑数据地址。
+ * @param name 可读函数名。
+ * @param captures 有序源码捕获。
+ * @return 无。 */
+void NativeDebugInfo::registerClosure(std::size_t address, const std::string &name, const std::vector<DebugCapture> &captures)
+{
+    if (!address) return;
+    ClosureSource source;
+    source.name = name;
+    for (const auto &capture : captures)
+        source.captures.push_back({ capture.name, registerLayout(capture.layout), capture.mode, capture.address });
+    closures_[address] = std::move(source);
+}
 /**
  * @brief 为原始路径登记 DWARF 文件。
  * @param path UTF-8 路径。
@@ -344,6 +358,23 @@ void NativeDebugInfo::finish(std::string &module)
         if (typeComma) catalog += ",";
         typeComma = true;
         catalog += "{\"id\":" + std::to_string(entry.first) + ",\"layout\":" + std::to_string(entry.second) + "}";
+    }
+    catalog += "],\"closures\":[";
+    bool closureComma = false;
+    for (const auto &entry : closures_)
+    {
+        if (closureComma) catalog += ",";
+        closureComma = true;
+        catalog += "{\"address\":" + std::to_string(entry.first) + ",\"name\":" + debugJsonString(entry.second.name) + ",\"captures\":[";
+        bool captureComma = false;
+        for (const auto &capture : entry.second.captures)
+        {
+            if (captureComma) catalog += ",";
+            captureComma = true;
+            catalog += "{\"name\":" + debugJsonString(capture.name) + ",\"layout\":" + std::to_string(capture.layout)
+                       + ",\"mode\":" + std::to_string(capture.mode) + ",\"address\":" + (capture.address ? "true" : "false") + "}";
+        }
+        catalog += "]}";
     }
     catalog += "],\"positions\":[";
     std::string addresses;

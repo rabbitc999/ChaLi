@@ -62,7 +62,12 @@ async function main() {
   assert(await large.reader.load()); assert(large.calls.filter(command => command.startsWith('-data-read-memory-bytes ')).length >= 4);
   const dynamic = target(value => ({ ...value, layouts: ['O0:0:0:8:0:0:'], dynamicTypes: [{ id: 42, layout: 0 }] }));
   assert.equal((await dynamic.reader.load()).dynamicTypes.get(42n), 0);
+  const closure = target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'counter',
+    captures: [{ name: 'n', layout: 0, mode: 2, address: false }] }] }));
+  assert.equal((await closure.reader.load()).closures.get(24n).captures[0].name, 'n');
   for (const invalid of [
+    () => target(value => ({ ...value, closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 4, address: true }] }] })),
+    () => target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 2, address: true }] }] })),
     () => target(value => ({ ...value, dynamicTypes: [{ id: 42, layout: 0 }] })),
     () => target(value => ({ ...value, layouts: ['x'], dynamicTypes: [{ id: 42, layout: 0 }, { id: 42, layout: 0 }] })),
     () => target(value => ({ ...value, version: 99 })),

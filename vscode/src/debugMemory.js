@@ -34,7 +34,7 @@ class DebugMemory {
     const base = await this.transport.scalar('(unsigned long long)&chali_debug_memory', signal);
     const header = await bytes(base, 24);
     const version = header.readBigUInt64LE(0);
-    if (![1n, 2n, 3n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
+    if (![1n, 2n, 3n, 4n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
     const visited = new Set(); let address = header.readBigUInt64LE(16), record;
     while (address) {
       if (visited.has(address) || visited.size >= 4096) throw new Error('内存线程目录循环或超过预算');
@@ -91,7 +91,8 @@ class DebugMemory {
         for (let at = 0; at < rawValues.length; at += 48) {
           const flags = rawValues.readBigUInt64LE(at), first = rawValues.readBigUInt64LE(at + 16), count = rawValues.readBigUInt64LE(at + 24);
           const begin = rawValues.readBigUInt64LE(at + 32), length = rawValues.readBigUInt64LE(at + 40);
-          if (![0n, 1n, 2n, 4n].includes(flags) || first + count > valueCount || begin + length > textSize
+          if (!(version >= 4n ? [0n, 1n, 2n, 4n, 8n] : [0n, 1n, 2n, 4n]).includes(flags)
+            || (flags === 8n && (first || count || begin || length)) || first + count > valueCount || begin + length > textSize
             || ((flags & 1n) && count && first <= BigInt(values.length))) throw new Error('对象值快照范围或递归无效');
           values.push({ flags: Number(flags), bits: rawValues.readBigUInt64LE(at + 8), first: Number(first), count: Number(count),
             text: text.subarray(Number(begin), Number(begin + length)) });
@@ -99,11 +100,12 @@ class DebugMemory {
         const records = new Map();
         for (let at = 0; at < rawObjects.length; at += 32) {
           const id = rawObjects.readBigUInt64LE(at), rawKind = rawObjects.readBigUInt64LE(at + 8);
-          if (rawKind > 127n) throw new Error('容器种类编码无效');
+          if (rawKind > 127n) throw new Error('对象种类编码无效');
           const kind = String.fromCharCode(Number(rawKind));
           const count = rawObjects.readBigUInt64LE(at + 16), first = rawObjects.readBigUInt64LE(at + 24);
-          if (!id || records.has(id) || !(version >= 3n ? ['L', 'M', 'E', 'O'] : ['L', 'M', 'E']).includes(kind)
-            || (kind === 'O' && count !== 2n) || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('对象快照身份或范围无效');
+          if (!id || records.has(id) || !(version >= 4n ? ['L', 'M', 'E', 'O', 'F'] : version >= 3n ? ['L', 'M', 'E', 'O'] : ['L', 'M', 'E']).includes(kind)
+            || (kind === 'O' && count !== 2n) || (kind === 'F' && count < 1n)
+            || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('对象快照身份或范围无效');
           records.set(id, { kind, count: Number(count), first: Number(first), values });
         }
         await checkObjects();
@@ -112,7 +114,7 @@ class DebugMemory {
       const records = await objectTables;
       await checkObjects();
       const object = records.get(handle);
-      if (!object) throw new Error('容器已经释放、未同步或超过快照预算');
+      if (!object) throw new Error('对象已经释放、未同步或超过快照预算');
       return object;
     };
     return {

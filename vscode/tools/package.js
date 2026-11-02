@@ -107,6 +107,8 @@ function main() {
     run(process.execPath, [path.join('test', 'debugCallbackContext.js')]);
     run(process.execPath, [path.join('test', 'debugDynamicValues.js')]);
     run(process.execPath, [path.join('test', 'debugInterfacesNative.js')]);
+    run(process.execPath, [path.join('test', 'debugClosureValues.js')]);
+    run(process.execPath, [path.join('test', 'debugClosuresNative.js')]);
     run(process.execPath, [path.join('test', 'debugFrames.js')]);
     run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
     run(process.execPath, [path.join('test', 'debugFailure.js')]);

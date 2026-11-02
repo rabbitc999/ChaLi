@@ -37,7 +37,7 @@ ast::TypePtr LowerType(const std::shared_ptr<MType> &type, const Memory::String 
             g_opcodeValueTypes.erase(label);
     }
     if (IsStandardOpcode(type, "String")) return Type::stringType();
-    if (IsContainer(type) || (g_debugEnabled && (type->kind == MType::Obj || IsInterfaceType(type) || (type->kind == MType::Ptr && IsInterfaceType(type->elem)))))
+    if (IsContainer(type) || (g_debugEnabled && (type->kind == MType::Obj || type->kind == MType::Func || IsInterfaceType(type) || (type->kind == MType::Ptr && IsInterfaceType(type->elem)))))
     {
         auto lowered = Type::i64();
         lowered->meta = "debug-layout:" + DebugValueLayout(type);

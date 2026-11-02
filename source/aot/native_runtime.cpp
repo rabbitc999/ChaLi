@@ -47,7 +47,7 @@ static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThrea
 }
 extern "C" {
 /** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
-ChaliDebugMemoryIndex chali_debug_memory{ 3, 8, 0 };
+ChaliDebugMemoryIndex chali_debug_memory{ 4, 8, 0 };
 /**
  * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
@@ -415,13 +415,36 @@ struct DebugMemoryState
         return true;
     }
     /**
-     * @brief 复制活跃集合或动态装箱，不调用宿主记录的方法或同步回调。
+     * @brief 复制活跃集合、动态装箱或闭包，不调用宿主记录的方法或同步回调。
      * @param handle 原运行时句柄。
      * @param object 当前存活对象。
-     * @return 集合复制成功或对象不是集合时为真，预算耗尽为假。
+     * @return 对象观察成功或该对象无需观察时为真，预算耗尽为假。
      */
     bool copyObject(std::int64_t handle, const RuntimeObject &object)
     {
+        if (object.kind == ObjectKind::Closure)
+        {
+            if (object.items.size() >= 32768) return false;
+            const auto count = object.items.size() + 1;
+            if (objects.size() >= 4096 || values.size() > 32768 - count
+                || !room(sizeof(ChaliDebugObject) + count * sizeof(ChaliDebugValue))) return false;
+            const auto first = values.size();
+            objects.push_back({ static_cast<std::uint64_t>(handle), 'F', count, first });
+            values.resize(first + count);
+            values[first].bits = static_cast<std::uint64_t>(object.closureTarget);
+            for (std::size_t index = 0; index < object.items.size(); ++index)
+            {
+                const auto view = object.elementViews.find(index);
+                if (view != object.elementViews.end())
+                {
+                    values[first + index + 1].flags = 8;
+                    values[first + index + 1].bits = view->second.address;
+                }
+                else if (!copyStored(object.items[index], first + index + 1, 0))
+                    return false;
+            }
+            return true;
+        }
         if (object.kind == ObjectKind::Obj)
         {
             if (objects.size() >= 4096 || values.size() > 32766
@@ -451,7 +474,7 @@ struct DebugMemoryState
         return true;
     }
     /**
-     * @brief 发布当前对象表的有界只读集合快照，失败只撤销本次集合查看。
+     * @brief 发布当前对象表的有界只读快照，失败只撤销本次对象查看。
      * @param context 当前线程的实际原生上下文。
      * @return 无返回值。
      */

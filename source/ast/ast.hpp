@@ -470,9 +470,15 @@ struct Function
     }
 };
 
-/**
- * @brief 一份"程序"：类型声明 + 常量 + 变量 + 函数。
- */
+/** @brief 闭包捕获的编译期只读布局，不参与运行时所有权与调用约定。 */
+struct DebugCapture
+{
+    Memory::String name, layout;  ///< 源码名字和不含用户方法的值布局。
+    int mode = 0;                 ///< 原捕获方式：只读借用、可写借用、copy、move。
+    bool address = false;         ///< 未物化单元时捕获槽是否保存来源存储地址。
+};
+
+/** @brief 一份程序：类型声明、常量、变量、函数及编译期调试描述。 */
 struct Program
 {
     Memory::Vector<TypePtr> types;                                      ///< 复合类型声明。
@@ -482,6 +488,7 @@ struct Program
     Memory::Vector<Function> functions;                                 ///< 函数。
     Memory::Map<std::int64_t, Memory::String> nativeTypeSymbols;        ///< 本次类型编号到跨单元名义及布局身份符号。
     Memory::Map<std::int64_t, Memory::String> debugTypeLayouts;         ///< 实际装箱类型的只读调试布局，不登记用户方法。
+    Memory::Map<Memory::String, Memory::Vector<DebugCapture>> debugClosures;  ///< 函数标签对应的源码捕获布局。
 
     /**
      * @brief 声明一个常量（值必须是字面量）。

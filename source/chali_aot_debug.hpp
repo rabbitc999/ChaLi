@@ -60,6 +60,13 @@ struct DebugScope
     std::size_t parent = 0;
     DebugLine origin;
 };
+/** @brief 源码捕获及其既有存储表示，只用于生成调试目录。 */
+struct DebugCapture
+{
+    std::string name, layout;  ///< 捕获名字及编码布局。
+    int mode = 0;              ///< 只读借用、可写借用、copy 或 move。
+    bool address = false;      ///< 原捕获值是否为来源存储地址。
+};
 /**
  * @brief 使用原生帧槽描述源码行和变量，不依赖解释器。
  */
@@ -85,6 +92,21 @@ class NativeDebugInfo
     std::vector<std::string> layouts_;              ///< 去重后的逻辑布局文本，索引写进变量描述。
     std::map<std::string, std::size_t> layoutIds_;  ///< 布局文本到公开索引。
     std::map<std::int64_t, std::int64_t> dynamicTypes_;  ///< 运行时实际类型号到只读布局索引。
+    /** @brief 已登记捕获的布局索引及原捕获方式。 */
+    struct CaptureSource
+    {
+        std::string name;
+        std::int64_t layout = -1;
+        int mode = 0;
+        bool address = false;
+    };
+    /** @brief 一个可作为值使用的函数及其有序捕获描述。 */
+    struct ClosureSource
+    {
+        std::string name;
+        std::vector<CaptureSource> captures;
+    };
+    std::map<std::size_t, ClosureSource> closures_;  ///< 不可变函数标签数据地址到捕获描述。
     std::size_t next_ = 1000000, unit_ = 0, empty_ = 0, integer_ = 0, real_ = 0;
     std::string metadata_;
     std::map<std::string, std::size_t> files_;
@@ -120,6 +142,12 @@ public:
      * @param encoded 不含用户方法的布局文本。
      * @return 无。 */
     void registerDynamicType(std::int64_t type, const std::string &encoded);
+    /** @brief 登记函数值的源码名字和有序捕获，不生成执行入口。
+     * @param address 数据区函数标签的逻辑地址。
+     * @param name 用户可读函数名。
+     * @param captures 原捕获顺序和只读布局。
+     * @return 无。 */
+    void registerClosure(std::size_t address, const std::string &name, const std::vector<DebugCapture> &captures);
     /**
      * @brief 给一个函数附加源码位置和实际变量地址。
      * @param definition 完整 LLVM 函数定义。

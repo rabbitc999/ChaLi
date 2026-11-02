@@ -68,7 +68,7 @@ function parseLayout(text) {
 
 /** 聚合布局需要真实内存地址才能展开。 */
 function expandable(layout) {
-  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's', 'L', 'M', 'E', 'O'].includes(layout.kind);
+  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's', 'L', 'M', 'E', 'O', 'F'].includes(layout.kind);
 }
 
 /** 按 UTF-8 解码展示文本，超长时截断并标记。 */
@@ -116,6 +116,7 @@ async function string(address, memory) {
 /** 只生成聚合摘要，不读取全部子项。 */
 async function summary(layout, address, memory) {
   if (layout.kind === 'O') return (await dynamicValue(address, memory, { count: 0 })).text;
+  if (layout.kind === 'F') return (await closureValue(address, memory, { count: 0 })).text;
   if (['L', 'M', 'E'].includes(layout.kind)) {
     const object = await memory.object(address);
     if (object.kind !== layout.kind) throw new Error('容器快照类型不匹配');
@@ -155,6 +156,7 @@ async function decode(layout, address, memory, page = {}, stored = null) {
   const limit = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
   switch (layout.kind) {
     case 'O': return dynamicValue(address, memory, page);
+    case 'F': return closureValue(address, memory, page);
     case 'L': case 'M': case 'E': {
       const object = await memory.object(address);
       if (object.kind !== layout.kind || layout.children.length !== (layout.kind === 'M' ? 2 : 1)) throw new Error('容器布局不匹配');
@@ -241,6 +243,32 @@ async function dynamicValue(handle, memory, page) {
   return { text: (layout.name || typeName(layout)) + ' ' + value.text, children: value.children };
 }
 
+/** 按函数标签及有序捕获描述读取现有闭包环境，禁止调用或物化捕获。 */
+async function closureValue(handle, memory, page) {
+  if (handle === 0n) return { text: '<空函数值>', children: [] };
+  const object = handle >= 0x4000000000000000n ? await memory.object(handle) : null;
+  if (object && (object.kind !== 'F' || object.count < 1 || object.values[object.first].flags !== 0)) throw new Error('闭包环境快照无效');
+  const info = memory.closureInfo?.(object ? object.values[object.first].bits : handle);
+  if (!info) return { text: '<未知函数值>', children: [] };
+  if (!object) return { text: '<函数 ' + info.name + '>', children: [] };
+  if (info.captures.length !== object.count - 1) throw new Error('闭包捕获数量与布局不匹配');
+  const start = Number.isSafeInteger(page.start) && page.start > 0 ? page.start : 0;
+  const count = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
+  const children = [];
+  for (let index = start; index < Math.min(info.captures.length, start + count); ++index) {
+    const capture = info.captures[index], layout = memory.layout?.(capture.layout);
+    if (!layout) throw new Error('闭包捕获布局不可用');
+    const node = object.values[object.first + index + 1];
+    const item = node.flags === 8 || capture.address
+      ? await child(layout, node.bits, capture.name, memory)
+      : await storedChild(layout, { node, values: object.values }, capture.name, memory);
+    item.type = layout.name || typeName(layout);
+    item.readOnly = capture.mode === 0;
+    children.push(item);
+  }
+  return { text: '<闭包 ' + info.name + ' [' + info.captures.length + ']>', children };
+}
+
 /** 解码已复制的宿主值快照，不把其索引伪装成目标地址。 */
 async function decodeStored(layout, stored, memory, page = {}) {
   await memory.validateObjects();
@@ -305,7 +333,7 @@ function typeName(layout) {
 /** 读取并格式化一个子项，标量直接展示，聚合给出摘要并保留展开地址。 */
 async function child(layout, address, name, memory) {
   try {
-    if (['L', 'M', 'E', 'O'].includes(layout.kind)) {
+    if (['L', 'M', 'E', 'O', 'F', 'a'].includes(layout.kind)) {
       const handle = (await memory.read(address, 8)).readBigUInt64LE(0);
       return { name, type: typeName(layout), value: await summary(layout, handle, memory), childLayout: layout, address: handle };
     }
