@@ -61,7 +61,9 @@ DAP headers are limited to 8 KiB, message bodies and individual MI records to 16
 
 Source breakpoints support conditions, hit counts and log text. Conditions are evaluated as native GDB expressions. Hit counts accept a positive integer and stop from the N-th hit onwards. Log breakpoints interpolate `{expression}` fragments, write the text as output and continue automatically without reporting a stop. Function breakpoints are registered by source name and translated to the actual linkage name through the debug catalog. Pending breakpoints update through DAP `breakpoint` events once GDB resolves them.
 
-Typed display for List/Map/Set containers, interface dynamic types and closure captures is not yet available, and neither are runtime-error filters or internal-code step filtering. The debugger advertises only implemented capabilities. Run the protocol, real GDB and lifecycle checks with:
+Stepping into internal standard modules automatically finishes the current internal frame and continues until user source is reached; user functions still stop normally, and repeated filtering is bounded with a notice. Panics, assertions and checked memory errors stop at the failing call in debug builds, and the adapter reports an exception stop with the original message and the nearest user source location. `Result::Err` is an ordinary value and does not produce an exception stop. Native signals are reported as exception stops but are not yet mapped to a source line.
+
+Typed display for List/Map/Set containers, interface dynamic types and closure captures is not yet available, and runtime-error filters are still unavailable. The debugger advertises only implemented capabilities. Run the protocol, real GDB and lifecycle checks with:
 
 ```sh
 python tools/run_module_gates.py debug --chali PATH --random-recheck 1

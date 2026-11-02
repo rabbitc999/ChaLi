@@ -162,6 +162,10 @@ class Adapter {
     this.frames = new Map();
     this.breakpoints = new Map();
     this.functionBreakpoints = [];
+    this.stepCommand = null;      ///< 最近一次单步命令，用于跳过内部代码。
+    this.stepAttempts = 0;        ///< 连续跳过的内部停点计数。
+    this.suppressContinued = false;  ///< 过滤内部停点时不为每次恢复上报 continued。
+    this.panicPoint = null;          ///< 隐藏的 panic 入口断点编号。
     this.breakpointInfo = new Map();
     this.logPoints = new Map();
     this.nextHandle = 1;
@@ -368,7 +372,7 @@ class Adapter {
       if (this.gdb !== gdb || this.terminated) return;
       this.invalidate();
       this.state = 'running';
-      this.event('continued', { threadId: Number(data['thread-id']) || 1, allThreadsContinued: true });
+      if (!this.suppressContinued) this.event('continued', { threadId: Number(data['thread-id']) || 1, allThreadsContinued: true });
     });
     this.gdb.on('stopped', (data) => {
       if (this.gdb !== gdb || this.terminated) return;
@@ -380,6 +384,33 @@ class Adapter {
         void this.runLogPoint(this.logPoints.get(Number(data.bkptno))).catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
         return;
       }
+      if (this.panicPoint !== null && data.reason === 'breakpoint-hit' && Number(data.bkptno) === this.panicPoint) {
+        void this.reportPanic(Number(data['thread-id']) || 1).catch((error) => {
+          this.event('output', { category: 'stderr', output: error.message + '\n' });
+          this.invalidate(); this.state = 'stopped';
+          this.event('stopped', { reason: 'exception', threadId: Number(data['thread-id']) || 1, allThreadsStopped: true, description: 'panic' });
+        });
+        return;
+      }
+      const stepping = data.reason === 'end-stepping-range' || data.reason === 'function-finished';
+      if (stepping && this.stepCommand) {
+        const frame = data.frame || {};
+        const file = String(frame.fullname || frame.file || '');
+        const internal = !file || file.startsWith('<');
+        if (internal) {
+          if (this.stepAttempts >= 64) {
+            this.event('output', { category: 'console', output: '内部代码步进超过限制，停在当前内部位置\n' });
+          } else {
+            this.stepAttempts++;
+            this.suppressContinued = true;
+            void gdb.command('-exec-finish').catch((error) => this.event('output', { category: 'stderr', output: error.message + '\n' }));
+            return;
+          }
+        }
+      }
+      this.stepCommand = null;
+      this.stepAttempts = 0;
+      this.suppressContinued = false;
       this.invalidate();
       this.state = 'stopped';
       this.event('stopped', { reason: data.reason === 'breakpoint-hit' ? 'breakpoint' : data.reason === 'signal-received' ? 'exception' : 'step',
@@ -399,6 +430,9 @@ class Adapter {
     await command('-gdb-set mi-async on');
     await command('-gdb-set charset UTF-8');
     await command('-file-exec-and-symbols ' + JSON.stringify(executable));
+    // 隐藏的 panic 断点让运行期失败停在调用现场，而不是只留下退出码。
+    try { const inserted = await command('-break-insert -f chali_panic'); this.panicPoint = Number(inserted.bkpt.number); }
+    catch { this.panicPoint = null; }
     if (this.terminal) {
       try { await command('-data-evaluate-expression "&chali_debug_console"'); }
       catch { throw new Error('集成终端要求带终端支持的 ChaLi --debug 产物'); }
@@ -408,6 +442,39 @@ class Adapter {
     this.state = 'configuring';
     if (!restart) this.event('initialized');
   }
+  /**
+   * @brief 在 panic 入口读取消息与调用方源码位置，报告异常停点而不继续执行。
+   * @param thread 发生失败的目标线程。
+   * @returns {Promise<void>} 停点事件发送完成。
+   */
+  async reportPanic(thread) {
+    let message = '';
+    // 运行期 IR 没有 DWARF 参数信息，按各平台 x64/ARM64 的第一个整型参数寄存器取消息指针。
+    for (const register of ['$rcx', '$rdi', '$x0']) {
+      try {
+        const result = await this.gdb.command(`-data-evaluate-expression (char*)${register}`);
+        const quoted = /^0x[0-9a-f]+\s+"(.*)"$/i.exec(String(result.value || ''));
+        if (quoted) { message = quoted[1]; break; }
+      } catch { /* 尝试下一个寄存器。 */ }
+    }
+    if (!message) message = '运行期失败';
+    let location = '';
+    try {
+      const data = await this.gdb.command(`-stack-list-frames --thread ${thread} 0 4`);
+      for (const entry of data.stack || []) {
+        const frame = entry.frame || entry;
+        const file = String(frame.fullname || frame.file || '');
+        const line = Number(frame.line);
+        if (file && !file.startsWith('<') && Number.isSafeInteger(line) && line > 0) { location = file + ':' + line; break; }
+      }
+    } catch { /* 没有调用方源码时只报告消息。 */ }
+    const text = '运行期失败：' + message + (location ? '（' + location + '）' : '');
+    this.event('output', { category: 'console', output: text + '\n' });
+    this.invalidate();
+    this.state = 'stopped';
+    this.event('stopped', { reason: 'exception', threadId: thread, allThreadsStopped: true, description: 'panic', text });
+  }
+
   /** 校验用户断点条件：只接受单行非空文本，避免 MI 命令注入。 */
   static conditionText(value) {
     if (value === undefined || value === null) return '';
@@ -728,6 +795,9 @@ class Adapter {
           this.stopped();
           this.state = 'running'; this.invalidate();
           const commands = { continue: '-exec-continue', next: '-exec-next', stepIn: '-exec-step', stepOut: '-exec-finish' };
+          this.stepCommand = request.command === 'continue' ? null : commands[request.command];
+          this.stepAttempts = 0;
+          this.suppressContinued = false;
           try { await this.gdb.command(commands[request.command], { signal }); }
           catch (error) {
             if (error.gdbError && this.state === 'running') this.state = 'stopped';
