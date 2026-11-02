@@ -16,7 +16,7 @@ MODULES = {
     "moves": ["chali_language_move", "chali_resource_lifetime", "chali_native_callbacks", "chali_backend_ownership"],
     "debug": ["chali_native_debug"],
     "editor_host": ["chali_vscode_extension_host"],
-    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_enums", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
+    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_enums", "chali_library_lifetimes", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],
     "interfaces": ["chali_interface_values", "chali_interface_binding_move", "chali_copy_interface", "chali_interface_copy_scalar"],
     "abi": ["chali_link_abi", "chali_abi_values", "chali_abi_contracts", "chali_c_api_contract"],

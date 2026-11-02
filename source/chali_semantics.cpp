@@ -51,7 +51,8 @@ namespace
 Memory::Deque<MNode> g_nodes;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
-Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources;
+Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources,
+    g_libraryLifetimeSources, g_libraryBorrowResultSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -2995,6 +2996,8 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
     g_libraryBorrowSources.clear();
     g_libraryDataSources.clear();
     g_libraryTypeSources.clear();
+    g_libraryLifetimeSources.clear();
+    g_libraryBorrowResultSources.clear();
     g_librarySources.insert(files.begin(), files.end());
 }
 /** @brief 保存当前目标允许语言借用 ABI 的来源标签。
@@ -3004,6 +3007,26 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryBorrowSources.clear();
     g_libraryBorrowSources.insert(files.begin(), files.end());
+}
+/**
+ * @brief 保存允许公开生命周期契约的已验证接口来源。
+ * @param files 本次快照携带契约能力的稳定标签。
+ * @return 无。
+ */
+void M_SetLibraryLifetimeSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryLifetimeSources.clear();
+    g_libraryLifetimeSources.insert(files.begin(), files.end());
+}
+/**
+ * @brief 保存允许借用返回的已验证接口来源。
+ * @param files 本次快照携带借用返回能力的稳定标签。
+ * @return 无。
+ */
+void M_SetLibraryBorrowResultSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryBorrowResultSources.clear();
+    g_libraryBorrowResultSources.insert(files.begin(), files.end());
 }
 /** @brief 保存当前目标携带已验证单元数据的来源。
  * @param files 已验证映像、布局和基址符号的接口。
@@ -3300,6 +3323,17 @@ bool ValidateNativeLibraryInterfaces()
             }
         }
         if (!isLibrary(node.sourceLine) && !isLibrary(node.expansionLine)) continue;
+        if (chali_lifetime::g_directiveNodes.count(static_cast<int>(id)))
+        {
+            const auto permitted = [&](std::size_t line) {
+                return line && line <= g_sourceFiles.size() && g_libraryLifetimeSources.count(g_sourceFiles[line - 1]);
+            };
+            if (!permitted(node.sourceLine) && !permitted(node.expansionLine))
+            {
+                ReductionSourceScope location(static_cast<int>(id));
+                return Fail("库接口生命周期契约缺少已验证的 lifetime-contract-v1 能力");
+            }
+        }
         const bool body = node.kind == MNode::FuncDef || node.kind == MNode::OperatorDef
                           || node.kind == MNode::Lambda || node.kind == MNode::GenericLambda
                           || (node.kind == MNode::MethodDef && node.kids.size() > 1 && node.kids[1] >= 0);
@@ -3607,6 +3641,70 @@ Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String
     interface += "#abi(\"C\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
     return languageName + "()";
 }
+/** @brief 一份公开生命周期声明及不依赖形参拼写的 ABI 身份。 */
+struct LibraryLifetimeDescription
+{
+    Memory::String declaration;        ///< 消费者需要执行的契约声明。
+    Memory::String identity;           ///< 按形参下标规范化的 ABI 摘要输入。
+    Memory::Vector<int> returnParams;  ///< 返回值实际允许借用的形参。
+    bool hasReturn = false;            ///< 是否显式声明返回来源。
+};
+
+/**
+ * @brief 从已核对的函数契约生成公开声明，局部约束由提供方自身验证。
+ * @param function 已检查的普通函数。
+ * @return 保留形参静态要求和借用关系的规范声明及身份。
+ */
+LibraryLifetimeDescription LibraryLifetimeInterface(const MFunctionDecl &function)
+{
+    const LifetimeContract *contract = nullptr;
+    for (const int nodeId : g_top)
+    {
+        const auto &node = N(nodeId);
+        if (node.kind != MNode::FuncDef || node.kids.size() < 2u || node.kids[1] != function.bodyId) continue;
+        const auto found = g_lifetimeContracts.find(nodeId);
+        if (found != g_lifetimeContracts.end()) contract = &found->second;
+        break;
+    }
+    LibraryLifetimeDescription out;
+    if (!contract) return out;
+    out.hasReturn = contract->hasRet;
+    out.returnParams = contract->retParams;
+    const auto &parameters = function.signature.params;
+    for (std::size_t i = 0; i < parameters.size(); ++i)
+        if (contract->statics.count(parameters[i].source))
+        {
+            out.declaration += "#static(" + parameters[i].source + ")\n";
+            out.identity += "static:" + Memory::toString(i) + "\n";
+        }
+    const auto appendBorrow = [&](const Memory::String &target, const Memory::String &key,
+                                  const Memory::Vector<Memory::String> &sources) {
+        Memory::Set<Memory::String> remaining(sources.begin(), sources.end());
+        Memory::String names, indices;
+        for (std::size_t i = 0; i < parameters.size(); ++i)
+            if (remaining.erase(parameters[i].source))
+            {
+                if (!names.empty())
+                {
+                    names += ",";
+                    indices += ",";
+                }
+                names += parameters[i].source;
+                indices += Memory::toString(i);
+            }
+        if (!remaining.empty() || names.empty()) throw std::runtime_error("公开借用契约的来源必须是非空形参集合");
+        out.declaration += "#borrow(" + target + ",[" + names + "])\n";
+        out.identity += "borrow:" + key + "=" + indices + "\n";
+    };
+    for (std::size_t i = 0; i < parameters.size(); ++i)
+    {
+        const auto found = contract->borrows.find(parameters[i].source);
+        if (found != contract->borrows.end()) appendBorrow(parameters[i].source, Memory::toString(i), found->second);
+    }
+    if (contract->hasRet) appendBorrow(chali_lifetime::RetName(), "ret", contract->retSources);
+    return out;
+}
+
 /** @brief 根据公开函数的真实签名生成不含实现体的接口及稳定 C 符号。
  * @param module 完整模块身份。
  * @param exports 接收公开原生签名。
@@ -3629,25 +3727,42 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
     {
         if (function.module != module || (function.moduleLocal && function.exportSymbol.empty()) || function.superseded || function.external || function.bodyId < 0) continue;
         if (function.source == "main" || function.unsafeRequired) throw std::runtime_error("首批原生库暂不导出 main 或 unsafe 函数");
-        for (const auto nodeId : g_top)
-        {
-            const auto &node = g_nodes[nodeId];
-            if (node.kind == MNode::FuncDef && node.kids.size() > 1u && node.kids[1] == function.bodyId && g_lifetimeContracts.count(nodeId))
-                throw std::runtime_error("独立原生库尚未接入显式生命周期契约，不能省略契约导出");
-        }
+        const auto lifetime = LibraryLifetimeInterface(function);
         chali_aot::ExternFunction entry;
         entry.label = function.label;
         entry.nativeAlias = function.exportSymbol;
         entry.abiConvention = "C";
         const bool valueResult = LibraryPlainValue(function.signature.result);
+        const bool borrowedResult = LibraryBorrowParameter(function.signature.result);
+        entry.borrowedResult = borrowedResult;
+        entry.hasLifetimeContract = !lifetime.declaration.empty();
+        if (borrowedResult)
+        {
+            if (!lifetime.hasReturn || lifetime.returnParams.empty()) throw std::runtime_error("语言借用返回必须显式声明形参来源契约");
+            for (const int index : lifetime.returnParams)
+                if (index < 0 || static_cast<std::size_t>(index) >= function.signature.params.size()
+                    || !LibraryBorrowParameter(function.signature.params[static_cast<std::size_t>(index)].type))
+                    throw std::runtime_error("语言借用返回只能来源于受支持的借用形参");
+        }
         entry.resultType = AotCType(LibraryNativeType(function.signature.result));
         if (valueResult) entry.abiConvention = "ChaLiValue";
-        Memory::String declaration = (valueResult ? LibraryDeclaredType(function.signature.result->name) : LibraryScalarType(function.signature.result, true)) + " " + function.source + "(";
+        else if (borrowedResult)
+            entry.abiConvention = "ChaLiBorrow";
+        Memory::String declaration = (valueResult ? LibraryDeclaredType(function.signature.result->name) : borrowedResult ? LibraryParameterType(function.signature.result) :
+                                                                                                                            LibraryScalarType(function.signature.result, true))
+                                     + " " + function.source + "(";
         Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
+        if (!lifetime.identity.empty()) identity += "\nlifetime-contract-v1:\n" + lifetime.identity;
         if (valueResult)
         {
             if (!function.exportSymbol.empty()) throw std::runtime_error("语言聚合返回不能同时声明物理 C ABI 的 #export");
             identity += "\nchali-value-v1:" + LibraryRecordShape(function.signature.result->name, recordShapes);
+        }
+        if (borrowedResult)
+        {
+            if (!function.exportSymbol.empty()) throw std::runtime_error("语言借用返回不能同时声明物理 C ABI 的 #export");
+            identity += Memory::String("\nchali-borrow-result-v1:") + (function.signature.result->readOnly ? "const:" : "mut:")
+                        + LibraryRecordShape(function.signature.result->elem->name, recordShapes);
         }
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
@@ -3679,7 +3794,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
                 declaration += "=" + LibraryDefaultEntry(parameter, entry.symbol + "_default_" + Memory::toString(i), module, interface, exports);
         }
         declaration += ");\n";
-        if (!function.moduleLocal) interface += "#abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
+        if (!function.moduleLocal) interface += lifetime.declaration + "#abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
         exports.push_back(std::move(entry));
     }
     if (exports.empty()) throw std::runtime_error("库模块没有可导出的公开普通函数");

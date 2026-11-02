@@ -53,6 +53,10 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
         const bool values = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue"; });
         if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");
+        if (std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.hasLifetimeContract; }))
+            package.manifest.requiredFeatures.push_back("lifetime-contract-v1");
+        if (std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.borrowedResult; }))
+            package.manifest.requiredFeatures.push_back("borrowed-result-v1");
         if (original.syntax)
         {
             std::set<Memory::String> labels;

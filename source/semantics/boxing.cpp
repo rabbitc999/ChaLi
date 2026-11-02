@@ -3868,6 +3868,55 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
 }
 
 /**
+ * @brief 为带契约的普通调用解析实际重载，避免按名称及参数数量误选契约。
+ * @param callId 调用节点编号。
+ * @return 具有精确契约目录的调用标签；其他调用返回空串。
+ */
+Memory::String LifetimeCallSymbol(int callId)
+{
+    if (callId < 0 || N(callId).kind != MNode::Call || N(callId).kids.size() < 2u) return {};
+    const auto callee = N(N(callId).kids[0]);
+    if (callee.kind == MNode::Var && FindNodeVar(callee)) return {};
+    const auto source = CallSymbol(callee);
+    if (source.empty()) return {};
+    const auto split = source.rfind("::");
+    if (!g_lifetimeContractsByName.count(source)
+        && (split == Memory::String::npos || !g_lifetimeContractsByName.count(source.substr(split + 2u)))) return {};
+    static Memory::Set<int> active;
+    if (!active.insert(callId).second) return {};
+    struct Guard
+    {
+        Memory::Set<int> &active;
+        int id;
+        /**
+         * @brief 退出本次调用的契约解析递归保护。
+         * @return 无。
+         */
+        ~Guard() { active.erase(id); }
+    } guard{ active, callId };
+    Memory::String label;
+    Memory::Vector<Memory::String> parameters;
+    std::shared_ptr<MType> result;
+    if (!ResolveCall(callId, &label, &parameters, &result)) return {};
+    return g_lifetimeContractsByName.count(label) ? label : Memory::String();
+}
+
+/**
+ * @brief 按实际重载及完整签名取得返回来源，缺省实参不丢弃契约。
+ * @param callId 调用节点编号。
+ * @return 已声明的来源形参下标；未声明时返回空指针。
+ */
+const Memory::Vector<int> *LifetimeCallRetParams(int callId)
+{
+    const auto label = LifetimeCallSymbol(callId);
+    const auto signature = g_funcs.find(label);
+    if (signature == g_funcs.end()) return nullptr;
+    const auto &parameters = signature->second.params;
+    const auto count = !parameters.empty() && parameters.back().variadic ? N(N(callId).kids[1]).kids.size() : parameters.size();
+    return LifetimeRetParams(label, count);
+}
+
+/**
  * @brief 解析并降级静态限定名称访问。
  * @param id 待查找或操作的对象编号。
  * @retval 生成的低层语法节点。

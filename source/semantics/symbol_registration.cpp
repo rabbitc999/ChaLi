@@ -1316,6 +1316,7 @@ bool RegisterTop()
         if (!top.generatedDeclaration && !CheckUserName(top.s)) return false;
         // 标准库小驼峰内建和其他 prelude 函数一样，允许用户函数遮蔽。
         MFunctionDecl declaration;
+        declaration.declarationId = topId;
         declaration.exported = top.exported;
         declaration.unsafeRequired = top.unsafeRequired;
         declaration.abiConvention = top.abiConvention;
@@ -1387,7 +1388,15 @@ bool RegisterTop()
                     const auto dataSource = [&](std::size_t line) {
                         return line && line <= g_sourceFiles.size() && g_libraryDataSources.count(g_sourceFiles[line - 1]);
                     };
-                    if (!values || !LibraryPlainValue(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
+                    const auto borrowedSource = [&](std::size_t line) {
+                        return line && line <= g_sourceFiles.size() && g_libraryBorrowResultSources.count(g_sourceFiles[line - 1]);
+                    };
+                    if (LibraryBorrowParameter(declaration.signature.result))
+                    {
+                        if (!borrowedSource(top.sourceLine) && !borrowedSource(top.expansionLine))
+                            return Fail("语言借用返回缺少已验证的 borrowed-result-v1 能力");
+                    }
+                    else if (!values || !LibraryPlainValue(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
                         return Fail("语言记录返回需要已验证的单元数据登记");
                 }
                 for (const auto &parameter : declaration.signature.params)
@@ -1443,6 +1452,32 @@ bool RegisterTop()
          * 调用点传播又要在别的函数体里去查这张表。 */
         LoadLifetimeContract(topId, ModuleSymbol(declaration.module, declaration.source),
                              declaration.signature.params, top.sourceLine);
+        if (declaration.external)
+        {
+            const auto contract = g_lifetimeContracts.find(topId);
+            if (contract != g_lifetimeContracts.end())
+            {
+                Memory::Set<Memory::String> parameters;
+                for (const auto &parameter : declaration.signature.params) parameters.insert(parameter.source);
+                for (const auto &name : contract->second.statics)
+                    if (!parameters.count(name)) return Fail("[CHL1210] 外部生命周期契约只允许形参名字：" + name);
+                for (const auto &borrow : contract->second.borrows)
+                {
+                    if (!parameters.count(borrow.first)) return Fail("[CHL1210] 外部借用契约目标必须是形参：" + borrow.first);
+                    for (const auto &source : borrow.second)
+                        if (!parameters.count(source)) return Fail("[CHL1210] 外部借用契约来源必须是形参：" + source);
+                }
+            }
+            if ((declaration.abiConvention == "ChaLiBorrow" || declaration.abiConvention == "ChaLiValue") && LibraryBorrowParameter(declaration.signature.result))
+            {
+                if (contract == g_lifetimeContracts.end() || !contract->second.hasRet || contract->second.retParams.empty())
+                    return Fail("语言借用返回必须显式声明形参来源契约");
+                for (const int index : contract->second.retParams)
+                    if (index < 0 || static_cast<std::size_t>(index) >= declaration.signature.params.size()
+                        || !LibraryBorrowParameter(declaration.signature.params[static_cast<std::size_t>(index)].type))
+                        return Fail("语言借用返回只能来源于受支持的借用形参");
+            }
+        }
         PublishLifetimeContractName(topId, declaration.source);
         /* 记录声明在表里的下标：降级时按同一个下标取标签。 */
         g_nodes[static_cast<std::size_t>(topId)].i =
@@ -1473,6 +1508,9 @@ bool RegisterTop()
             const auto binding = declaration.external && declaration.abiLibrary.empty() && declaration.module == "program" ? declaration.source : key;
             const bool argumentsMain = declaration.source == "main" && !declaration.signature.params.empty();
             const auto label = declaration.source == "main" ? (argumentsMain ? Memory::String("__chali_main_arguments") : Memory::String("main")) : MangledName(binding, declaration.signature.params, overloadCounts[key] > 1u);
+            g_lifetimeContractsByName.erase(label);
+            if (const auto contract = g_lifetimeContracts.find(declaration.declarationId); contract != g_lifetimeContracts.end())
+                g_lifetimeContractsByName[label].push_back(&contract->second);
             g_funcs[label] = declaration.signature;
             auto &candidates = g_functionIndex[key];
             if (std::find(candidates.begin(), candidates.end(), label) == candidates.end()) candidates.push_back(label);
@@ -1577,6 +1615,9 @@ bool RegisterTop()
             }
         }
         g_funcs[declaration.label] = declaration.signature;
+        g_lifetimeContractsByName.erase(declaration.label);
+        if (const auto contract = g_lifetimeContracts.find(declaration.declarationId); contract != g_lifetimeContracts.end())
+            g_lifetimeContractsByName[declaration.label].push_back(&contract->second);
         if (!superseded)
             g_functionIndex[ModuleSymbol(declaration.module, declaration.source)].push_back(declaration.label);
         if (!superseded && declaration.source == "main" && !declaration.module.empty())

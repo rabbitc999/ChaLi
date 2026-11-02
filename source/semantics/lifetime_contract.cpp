@@ -189,9 +189,12 @@ Memory::Set<int> g_lifetimeCheckedCalls;
 void CheckLifetimeStaticArguments(int callId, const Memory::String &symbol,
                                   const Memory::Vector<int> &arguments, std::size_t line)
 {
-    if (!g_lifetimeCheckedCalls.insert(callId).second) return;
-    const Memory::Vector<int> *indices = LifetimeStaticParams(symbol, arguments.size());
+    const auto label = LifetimeCallSymbol(callId);
+    const auto signature = g_funcs.find(label);
+    const auto count = signature == g_funcs.end() ? 0u : (!signature->second.params.empty() && signature->second.params.back().variadic ? arguments.size() : signature->second.params.size());
+    const Memory::Vector<int> *indices = signature == g_funcs.end() ? nullptr : LifetimeStaticParams(label, count);
     if (!indices) return;
+    if (!g_lifetimeCheckedCalls.insert(callId).second) return;
     Memory::Vector<Memory::String> offenders;
     for (const int index : *indices)
     {
@@ -251,9 +254,8 @@ void CollectLifetimeOrigins(int id, Memory::Set<Memory::String> &names, int guar
     }
     if (node.kind == MNode::Call && node.kids.size() >= 2u)
     {
-        const auto callee = N(node.kids[0]);
         const auto arguments = N(node.kids[1]).kids;
-        if (const Memory::Vector<int> *indices = LifetimeRetParams(CallSymbol(callee), arguments.size()))
+        if (const Memory::Vector<int> *indices = LifetimeCallRetParams(id))
         {
             for (const int index : *indices)
                 if (index >= 0 && static_cast<std::size_t>(index) < arguments.size())

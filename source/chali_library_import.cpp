@@ -87,7 +87,7 @@ struct ImportSession::State
 {
     std::string target, cpu;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources, borrowSources, dataSources, typeSources;
+    std::vector<std::string> sources, borrowSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -142,6 +142,10 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->paths.push_back(std::filesystem::weakly_canonical(path));
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
     if (borrowed) state_->borrowSources.push_back(state_->sources.back());
+    if (std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "lifetime-contract-v1") != package.manifest.requiredFeatures.end())
+        state_->lifetimeSources.push_back(state_->sources.back());
+    if (borrowed && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "borrowed-result-v1") != package.manifest.requiredFeatures.end())
+        state_->borrowResultSources.push_back(state_->sources.back());
     if (!select(package, state_->target, state_->cpu).unitData.empty()) state_->dataSources.push_back(state_->sources.back());
     if (std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "shared-type-id-v1") != package.manifest.requiredFeatures.end())
         state_->typeSources.push_back(state_->sources.back());
@@ -205,6 +209,12 @@ std::vector<std::string> ImportSession::sources() const { return state_->sources
 /** @brief 返回已验证语言借用接口来源。
  * @return 与当前目标原生 ABI 对应的稳定标签。 */
 std::vector<std::string> ImportSession::borrowSources() const { return state_->borrowSources; }
+/** @brief 返回允许公开生命周期契约的已验证来源。
+ * @return 当前快照的契约接口标签。 */
+std::vector<std::string> ImportSession::lifetimeSources() const { return state_->lifetimeSources; }
+/** @brief 返回允许借用返回的已验证来源。
+ * @return 当前快照的借用返回接口标签。 */
+std::vector<std::string> ImportSession::borrowResultSources() const { return state_->borrowResultSources; }
 /** @brief 返回当前目标携带已验证数据映像的来源。
  * @return 对应本次快照的稳定接口标签。 */
 std::vector<std::string> ImportSession::dataSources() const { return state_->dataSources; }

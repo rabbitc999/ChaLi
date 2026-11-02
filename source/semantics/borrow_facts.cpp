@@ -90,6 +90,8 @@ MVar *BorrowRootVariable(int id)
 /* 生命周期契约的四个入口定义在 lifetime_contract.cpp（本文件之后包含）。 */
 bool LifetimeIsStaticName(const Memory::String &name);
 const Memory::Vector<int> *LifetimeRetParams(const Memory::String &symbol, std::size_t argumentCount);
+Memory::String LifetimeCallSymbol(int callId);
+const Memory::Vector<int> *LifetimeCallRetParams(int callId);
 void CheckLifetimeStore(int target, int value, std::size_t line);
 void CheckLifetimeReturn(int value, std::size_t line);
 MVar *BorrowAliasOwner(const MVar *variable)
@@ -258,7 +260,7 @@ std::size_t BorrowSourceDepth(int id, bool address)
         }
         /* 带 `#borrow(#ret, [...])` 的函数只按声明的那几个实参传播来源，
          * 不再保守取全部引用实参的最大值（Rust 的 `-> &'a` 同形）。 */
-        if (const Memory::Vector<int> *indices = LifetimeRetParams(symbol, arguments.size()))
+        if (const Memory::Vector<int> *indices = LifetimeCallRetParams(id))
         {
             for (const int index : *indices)
                 if (index >= 0 && static_cast<std::size_t>(index) < arguments.size())

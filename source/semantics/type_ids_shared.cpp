@@ -825,6 +825,12 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
 ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
     for (const auto &declaration : g_functionDecls)
+        if (declaration.label == label && declaration.external && chali_lifetime::g_directiveNodes.count(declaration.declarationId))
+        {
+            Fail("带生命周期契约的外部函数须直接调用，当前函数值类型不能保留该契约：" + label);
+            return ast::Node::i(0);
+        }
+    for (const auto &declaration : g_functionDecls)
         if (declaration.label == label && declaration.unsafeRequired)
         {
             Fail("unsafe 函数不能转换为安全函数值：" + label);

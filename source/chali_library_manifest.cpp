@@ -154,7 +154,10 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "lifetime-contract-v1" && feature != "borrowed-result-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+    if (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-result-v1") != manifest.requiredFeatures.end()
+        && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "lifetime-contract-v1") == manifest.requiredFeatures.end())
+        throw std::runtime_error("语言借用返回缺少 lifetime-contract-v1 必需能力");
     uniqueStrings(manifest.licenseFiles);
     for (const auto &name : manifest.licenseFiles)
         if (!entryName(name)) throw std::runtime_error("许可证资产名字非法");
@@ -179,6 +182,8 @@ void validateManifest(const Manifest &manifest)
             throw std::runtime_error("语言借用 ABI 缺少必需能力标记");
         if (target.nativeAbi == "chali-value-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "plain-record-value-v1") == manifest.requiredFeatures.end())
             throw std::runtime_error("语言记录值 ABI 缺少必需能力标记");
+        if (target.nativeAbi == "c-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-result-v1") != manifest.requiredFeatures.end())
+            throw std::runtime_error("语言借用返回能力需要语言聚合 ABI");
         if ((target.implementation.empty() && target.bitcode.empty()) || (!target.implementation.empty() && !entryName(target.implementation)) || (!target.bitcode.empty() && (!entryName(target.bitcode) || !nativeName(target.llvmVersion))))
             throw std::runtime_error("库目标缺少实现或 bitcode 兼容信息");
         if (target.bitcode.empty() && !target.llvmVersion.empty()) throw std::runtime_error("不含 bitcode 的目标不能声明 LLVM 版本要求");

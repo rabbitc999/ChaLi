@@ -49,7 +49,7 @@ bool libraryPlainValue(const ast::TypePtr &type)
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if (!function.owner.empty() || (!libraryScalar(function.result, true) && !libraryPlainValue(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
+    if (!function.owner.empty() || (!libraryScalar(function.result, true) && !libraryPlainValue(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
         if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
@@ -67,9 +67,9 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         if (node->kind == N::Call)
         {
             const auto own = state.astFunctions.find(textOf(node->text));
-            if (own != state.astFunctions.end() && libraryPlainValue(own->second->result)) return true;
+            if (own != state.astFunctions.end() && (libraryPlainValue(own->second->result) || libraryBorrow(own->second->result))) return true;
             const auto external = state.externsByLabel.find(textOf(node->text));
-            if (external != state.externsByLabel.end() && external->second->abiConvention == "ChaLiValue") return true;
+            if (external != state.externsByLabel.end() && (external->second->abiConvention == "ChaLiValue" || external->second->borrowedResult)) return true;
         }
         if (node->kind == N::Var) return borrowed.count(textOf(node->text)) != 0;
         if (node->kind == N::Cast || node->kind == N::Offset || node->kind == N::Member || node->kind == N::Index)

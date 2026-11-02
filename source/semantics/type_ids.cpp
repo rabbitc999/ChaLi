@@ -68,6 +68,7 @@ struct MFuncSig
  */
 struct MFunctionDecl
 {
+    int declarationId = -1;  ///< 原始声明节点，供重载契约与外部函数值核对。
     Memory::String source; /* 源程序里的函数名 */
     Memory::String module; /* 空字符串表示兼容的全局模块 */
     Memory::String label;  /* 四元式标签 */

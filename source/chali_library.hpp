@@ -141,6 +141,12 @@ public:
     /** @brief 取得启用语言借用调用约定的已验证接口标签。
      * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
     std::vector<std::string> borrowSources() const;
+    /** @brief 取得允许公开生命周期契约的已验证接口标签。
+     * @return 携带 lifetime-contract-v1 的稳定来源。 */
+    std::vector<std::string> lifetimeSources() const;
+    /** @brief 取得允许借用返回的已验证接口标签。
+     * @return 携带 borrowed-result-v1 的稳定来源。 */
+    std::vector<std::string> borrowResultSources() const;
     /** @brief 取得当前目标携带已验证数据映像的接口标签。
      * @return 可声明普通记录返回的库来源。 */
     std::vector<std::string> dataSources() const;

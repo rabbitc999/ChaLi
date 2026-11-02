@@ -92,7 +92,7 @@ Event echo(Event value) { return value; }
 void replace(Event mut& value) { value = Event::Count(77); }
 ```
 
-Value calls retain `chali-value-v1`/`ChaLiValue`; borrows retain `chali-borrow-v1`/`ChaLiBorrow`. These packages additionally require `plain-enum-value-v1`, so older compilers reject the unknown capability during package inspection. Calls pass ChaLi aggregate logical addresses with the language's tag/payload layout. Mutating a value copy leaves the caller unchanged; mutable borrows update the original. Results, recursion and cross-library forwarding share the final program's allocator and lifecycle type identities. Full module identity, field layout and variant order enter symbol hashes, preventing old consumer objects from linking new layouts or variant numbering under the previous symbols. Owning payloads, enum default arguments, reference results and physical C ABI `#export` entries are outside this contract.
+Value calls retain `chali-value-v1`/`ChaLiValue`; borrows retain `chali-borrow-v1`/`ChaLiBorrow`. These packages additionally require `plain-enum-value-v1`, so older compilers reject the unknown capability during package inspection. Calls pass ChaLi aggregate logical addresses with the language's tag/payload layout. Mutating a value copy leaves the caller unchanged; mutable borrows update the original. Results, recursion and cross-library forwarding share the final program's allocator and lifecycle type identities. Full module identity, field layout and variant order enter symbol hashes, preventing old consumer objects from linking new layouts or variant numbering under the previous symbols. Owning payloads, enum default arguments and physical C ABI `#export` entries are outside this contract. Borrowed results follow the lifetime contract below.
 
 Plain nonowning records can also enter compiled language units as read-only or mutable borrows:
 
@@ -101,7 +101,7 @@ int64 read(Point const& value) { return value.x; }
 void bump(Point mut& value, int64 delta) { value.x = value.x + delta; }
 ```
 
-These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values, aggregate-reference defaults, reference results and library globals are not enabled. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
+These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values, aggregate-reference defaults and library globals are not enabled. Borrowed results follow the lifetime contract below. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
 
 Packages use native ABI `chali-borrow-v1` and required feature `borrowed-record-v1`. The generated `ChaLiBorrow` marker is allowed only in verified library sources with matching ABI; copying it into ordinary source is rejected. Symbols include full record and nested-layout hashes, so an old independent consumer object cannot link to a package with a changed layout under the old symbol. Ordinary C ABI packages retain `c-v1`. Borrowed calls and the complete owning-value, closure and dynamic-function contracts remain separately verified capabilities.
 
@@ -235,13 +235,13 @@ python tests/chali_library_package.py --chali STATIC_PATH --other-chali EXTERNAL
 
 Tests independently decode the public format and compare digests with `hashlib`. They cover chunk/padding boundaries, canonical encoding, corruption, budgets, optional entries, three-target selection and transactional publication. A restored archive is linked and executed with the standalone linker. Cross-target generation/format checks and host execution are recorded separately.
 
-Explicit lifetime contracts are not yet stored in library interfaces. Functions with #static or #borrow are rejected during export so that consumer constraints cannot be weakened by omitting a contract.
+Explicit lifetime contracts are stored in generated interfaces and enter symbol identity; see Public lifetime contracts and borrowed results below.
 
 ## Plain record parameters by value
 
 Nonowning plain records can be passed by value using native ABI chali-value-v1 and required feature plain-record-value-v1. The private ChaLiValue declaration is restricted to verified package interfaces. The callee allocates an independent copy with the shared allocator and frees it on exit. Mutating a copied parameter does not change the caller. Nested record identity and layout hashes are included in entry symbols.
 
-For example, an int64 shifted(Point value, int64 delta) function may update value.x and return it. Calling shifted(point, 2) with point.x equal to 40 returns 42 and leaves point.x equal to 40. Plain record results use the relocation contract below. Owning fields, explicit lifetime contracts and the complete shared type registry remain unavailable; these entries cannot declare a physical C ABI #export.
+For example, an int64 shifted(Point value, int64 delta) function may update value.x and return it. Calling shifted(point, 2) with point.x equal to 40 returns 42 and leaves point.x equal to 40. Plain record results use the relocation contract below. Owning fields and the complete shared type registry remain unavailable; these entries cannot declare a physical C ABI #export.
 
 ## Unit data and plain record results
 
@@ -258,3 +258,22 @@ Packages using native record lifetime operations require shared-type-id-v1. Gene
 Lifetime queries, checks and end markers call shared C primitives and use the same object table. Fresh plain record forwarding, recursion and explicit moves are supported; repeated moves remain rejected. Interface boxing, closures, dynamic type queries and owning resources still require further shared registration work.
 
 Independent units also support AST ownership counters when compiled with CHALI_BACKEND_PROFILE=1. Site strings remain private to the unit and calls reach the final program shared counter. CHALI_BACKEND_PROFILE_OUTPUT selects a local JSON file. Instrumented results are not release timing measurements.
+
+## Public lifetime contracts and borrowed results
+
+Ordinary library functions retain public `#static(parameter)`, `#borrow(parameter,[sources...])` and `#borrow(#ret,[sources...])` constraints. For example:
+
+```chali
+module example::views;
+struct Point { int64 x; };
+#borrow(#ret,[value])
+Point const& view(Point const& value) { return value; }
+#static(value)
+int64 readStatic(Point const& value) { return value.x; }
+```
+
+The producer writes lifetime directives before generated `#abi` declarations without implementation bodies. Packages require `lifetime-contract-v1`, plus `borrowed-result-v1` when returning record or enum borrows. Consumers use the existing lifetime checker for static origins, result origins and read-only/mutable constraints. Contracts follow the selected overload, and omitted scalar default arguments do not discard them. Parameter indices enter public symbol identity: renaming parameters preserves this component, while changing public result origins or other constraints changes entry symbols and prevents old consumer objects from linking through the old entries.
+
+Borrowed results currently support `const&`/`mut&` of nonowning records and enums, explicitly bound by `#borrow(#ret,...)` to supported borrowed parameters. Results are logical addresses into caller storage under `ChaLiBorrow`/`ChaLiValue`, without host-pointer marshaling. Normal scope checks prevent escaping local references or converting read-only results to mutable references. Libraries cannot return borrows into copied value parameters, locals or temporary owning values. Owning payloads, scalar-reference entries and static-global results remain outside this contract.
+
+Missing required capabilities, unknown contract parameters and borrowed-result declarations without origins are rejected. Contract-bearing external functions require direct calls: current function-value types cannot retain these contracts, so taking such functions as values is explicitly rejected.

@@ -1145,6 +1145,11 @@ try
     Memory::Vector<Memory::String> borrowSources;
     for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryBorrowSources(borrowSources);
+    Memory::Vector<Memory::String> lifetimeSources, borrowResultSources;
+    for (const auto &file : libraries.lifetimeSources()) lifetimeSources.push_back(Memory::String(file.c_str()));
+    for (const auto &file : libraries.borrowResultSources()) borrowResultSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryLifetimeSources(lifetimeSources);
+    M_SetLibraryBorrowResultSources(borrowResultSources);
     Memory::Vector<Memory::String> dataSources;
     for (const auto &file : libraries.dataSources()) dataSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryDataSources(dataSources);

@@ -32,9 +32,9 @@ def main():
         interface=next(e['data'].decode() for e in entries if e['kind']==1)
         assert '#abi("ChaLiBorrow"' in interface and 'demo::geometry::Point const& value' in interface
         original=geometry.read_bytes()
-        provider.write_text(source.replace('int64 read(', '#static(value)\nint64 read('),encoding='utf-8')
+        provider.write_text(source.replace('int64 read(', '#static(missing)\nint64 read('),encoding='utf-8')
         rejected=invoke([compiler,'lib','build',provider,'--module','demo::geometry','--package-version','1.0.0','--out',geometry],work,False)
-        assert '生命周期契约' in rejected.stderr and geometry.read_bytes()==original
+        assert '[CHL1210]' in rejected.stderr and geometry.read_bytes()==original
         provider.write_text(source,encoding='utf-8')
         for target in ['windows-x64','linux-x64','linux-arm64']:
             invoke([compiler,'lib','build',provider,'--module','demo::geometry','--package-version','1.0.0','--checked','--target',target,'--out',work/(target+'.chlib')],work)

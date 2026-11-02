@@ -294,7 +294,9 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
         entry.symbol = function.abiSymbol.empty() ? function.label : function.abiSymbol;
         entry.library = function.abiLibrary;
         entry.requiresMarshalling = CAbiNeedsMarshalling(function);
-        entry.resultType = AotCType(function.abiConvention == "ChaLiValue" ? LibraryNativeType(function.signature.result) : CAbiType(function.signature.result));
+        const bool languageAbi = function.abiConvention == "ChaLiBorrow" || function.abiConvention == "ChaLiValue";
+        entry.borrowedResult = languageAbi && LibraryBorrowParameter(function.signature.result);
+        entry.resultType = AotCType(languageAbi ? LibraryNativeType(function.signature.result) : CAbiType(function.signature.result));
         for (const auto &parameter : function.signature.params)
             entry.parameterTypes.push_back(AotCType((function.abiConvention == "ChaLiBorrow" || function.abiConvention == "ChaLiValue") ? LibraryNativeType(parameter.type) : CAbiType(parameter.type)));
         out.push_back(std::move(entry));
