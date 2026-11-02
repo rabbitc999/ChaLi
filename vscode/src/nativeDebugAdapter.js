@@ -322,6 +322,15 @@ class Adapter {
       throw error;
     }
   }
+  /** 只在活动源码栈顶定位基础镜像的真实存储，避免把调用方的逻辑地址用于另一个原生上下文。 */
+  async mirrorStorage(frame, binding, signal) {
+    if (frame.level !== 0 || frame.metadata?.optimized) throw new Error('真实绑定镜像仅支持栈顶开发源码帧');
+    if (!/^__chali_storage_[0-9]{1,6}$/.test(binding.storageDwarf || '') || ![1, 8].includes(binding.storageBytes)) throw new Error('缺少真实存储描述');
+    const expression = '(unsigned long long)(' + binding.storageDwarf + ')';
+    const result = await this.gdb.command(`-data-evaluate-expression --thread ${frame.thread} --frame ${frame.level} ` + JSON.stringify(expression), { signal });
+    if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有有效的真实存储地址');
+    return { logical: BigInt(result.value), memory: await this.memoryFor(frame.thread, signal) };
+  }
   /** 保证查看请求属于当前暂停代次。 */
   stopped(epoch = this.epoch) {
     if (this.state !== 'stopped' || epoch !== this.epoch) throw new Error('程序没有暂停，或调试引用已经过期');
@@ -1035,12 +1044,12 @@ class Adapter {
           const bindings = visibleBindings(frame.metadata);
           const rows = (data.variables || []).filter(variable => {
             const binding = bindings.get(variable.name);
-            if (!binding && variable.name.startsWith('__chali_macro_debug_')) return false;
+            if (!binding && (variable.name.startsWith('__chali_macro_debug_') || variable.name.startsWith('__chali_storage_'))) return false;
             if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
           });
-          body.variables = await Promise.all(rows.map(async (variable) => {
+          const formatVariable = async variable => {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
             const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
@@ -1055,6 +1064,15 @@ class Adapter {
               display = '<布局不可用：无法唯一对应优化变量>';
             let memoryReference;
             let variablesReference = 0;
+            let mirrorReadable = true;
+            const mirror = binding?.storageDwarf && frame.level === 0 && !frame.metadata?.optimized
+              && declaredLayout && ['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
+            if (mirror) {
+              try {
+                const storage = await this.mirrorStorage(frame, binding, signal);
+                display = (await decode(declaredLayout, storage.logical, storage.memory, { count: 0 })).text;
+              } catch (error) { display = '<不可读：' + error.message + '>'; mirrorReadable = false; }
+            }
             if (addressable) {
               if (!container) memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, address: numeric });
               if (layout) {
@@ -1069,11 +1087,14 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, address: numeric, layout });
               }
             }
-            const readOnly = frame.metadata?.optimized || !binding || binding.readOnly || binding.address || binding.storage || binding.boxed
+            const readOnly = frame.metadata?.optimized || !binding || binding.readOnly || binding.address || !mirrorReadable || ((binding.storage || binding.boxed) && !mirror)
               || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
             return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference,
               presentationHint: readOnly ? { attributes: ['readOnly'] } : undefined };
-          }));
+          };
+          body.variables = [];
+          for (let start = 0; start < rows.length; start += 16)
+            body.variables.push(...await Promise.all(rows.slice(start, start + 16).map(formatVariable)));
           break;
         }
         case 'disassemble': {
@@ -1142,19 +1163,27 @@ class Adapter {
           if (!entry) throw new Error('当前作用域没有可修改变量：' + args.name);
           const [name, binding] = entry;
           if (!/^[\p{L}_][\p{L}\p{N}_]*$/u.test(name)) throw new Error('变量原生名称不可安全定位');
+          if ((binding.storage || binding.boxed) && frame.level !== 0) throw new Error('真实绑定镜像仅支持栈顶开发源码帧修改');
           const value = await encodeAssignment(binding, this.layoutAt(binding.layout), args.value);
           this.stopped(epoch);
           const selector = ` --thread ${frame.thread} --frame ${frame.level}`;
           const rows = (await this.gdb.command('-stack-list-variables' + selector + ' --simple-values', { signal })).variables || [];
           const variable = rows.find(row => row.name === name);
           if (!variable || variable.type !== binding.type || /optimized out|不可用/.test(variable.value || '')) throw new Error('变量已经不可用或类型不匹配');
-          const result = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify('(unsigned long long)&(' + name + ')'), { signal });
-          if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有真实可写地址');
+          let physical;
+          if (binding.storage || binding.boxed) {
+            const storage = await this.mirrorStorage(frame, binding, signal);
+            physical = await storage.memory.address(storage.logical, value.bytes.length);
+          } else {
+            const result = await this.gdb.command('-data-evaluate-expression' + selector + ' ' + JSON.stringify('(unsigned long long)&(' + name + ')'), { signal });
+            if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有真实可写地址');
+            physical = BigInt(result.value);
+          }
           this.stopped(epoch);
           if (signal.aborted) throw new Error('变量修改已取消');
           this.invalidateValues();
           try {
-            await this.gdb.command('-data-write-memory-bytes 0x' + BigInt(result.value).toString(16) + ' ' + value.bytes.toString('hex'), { signal });
+            await this.gdb.command('-data-write-memory-bytes 0x' + physical.toString(16) + ' ' + value.bytes.toString('hex'), { signal });
             body = { value: value.text, type: value.type, variablesReference: 0 };
           } finally {
             this.invalidateValues();
@@ -1177,6 +1206,10 @@ class Adapter {
             if (!variable) throw new Error((frame.metadata?.optimized ? '当前优化作用域没有唯一可读绑定：' : '当前作用域没有可读变量：') + name);
             const binding = bindings.get(variable.name), layout = this.layoutAt(binding.layout);
             let text = variable.value || '<不可用>';
+            if (binding.storageDwarf && frame.level === 0 && !frame.metadata?.optimized && layout && ['i', 'u', 'f', 'b', 'c'].includes(layout.kind)) {
+              const storage = await this.mirrorStorage(frame, binding, signal);
+              text = (await decode(layout, storage.logical, storage.memory, { count: 0 })).text;
+            }
             if (/<optimized out>/i.test(text)) throw new Error('变量已被优化，当前位置没有可读值：' + name);
             if (/^(?:int8|uint8)$/.test(variable.type || '')) text = text.replace(/^(-?[0-9]+)\s+'.*'$/, '$1');
             const addressable = layout && (binding.address || ['L', 'M', 'E', 'O', 'F'].includes(layout.kind));

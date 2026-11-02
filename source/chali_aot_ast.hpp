@@ -1483,6 +1483,29 @@ struct AstBuilder : Builder
                     if (!origin->second.typeName.empty()) variable.typeName = textOf(origin->second.typeName);
                 }
             }
+            if (!variable.storage.empty() && !variable.logicalAddress
+                && (variable.typeName == "bool" || variable.typeName == "char" || variable.typeName.rfind("int", 0) == 0
+                    || variable.typeName.rfind("uint", 0) == 0 || variable.typeName.rfind("float", 0) == 0))
+            {
+                const auto storage = symbol(Memory::String(variable.storage.c_str()));
+                if (locals.count(textOf(storage)) && type(storage) == "i64")
+                {
+                    variable.storageDwarf = "__chali_storage_" + std::to_string(variables.size());
+                    variable.storageBytes = variable.typeName == "char" || variable.typeName == "uint8" ? 1u : 8u;
+                    auto hidden = variable;
+                    hidden.name = hidden.dwarfName = variable.storageDwarf;
+                    hidden.pointer = pointer(storage);
+                    hidden.typeName = "uint64";
+                    hidden.bits = 64;
+                    hidden.encoding = "DW_ATE_unsigned";
+                    hidden.floating = false;
+                    hidden.argument = 0;
+                    hidden.internal = true;
+                    hidden.storage.clear();
+                    hidden.nativeStorage = "i64";
+                    variables.push_back(std::move(hidden));
+                }
+            }
             variables.push_back(std::move(variable));
         }
         return state.debugInfo.annotate(definition, textOf(syntax.debugName.empty() ? function.label : syntax.debugName), textOf(function.llvmName), debugLines, variables, debugScopes);

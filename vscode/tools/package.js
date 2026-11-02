@@ -113,6 +113,8 @@ function main() {
     run(process.execPath, [path.join('test', 'debugExpressionNative.js')]);
     run(process.execPath, [path.join('test', 'debugAssignment.js')]);
     run(process.execPath, [path.join('test', 'debugAssignmentNative.js')]);
+    run(process.execPath, [path.join('test', 'debugMirrorAssignment.js')]);
+    run(process.execPath, [path.join('test', 'debugMirrorAssignmentNative.js')]);
     run(process.execPath, [path.join('test', 'debugThreads.js')]);
     run(process.execPath, [path.join('test', 'debugThreadsNative.js')]);
     run(process.execPath, [path.join('test', 'debugIdentity.js')]);

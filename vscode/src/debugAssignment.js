@@ -24,7 +24,10 @@ function character(text) {
 /** 按源码类型和明确登记的真实 64 位帧槽生成完整字节，避免窄类型写入留下旧高位。 */
 async function encodeAssignment(binding, layout, text) {
   if (binding.readOnly) throw new Error('不能修改不可变绑定');
-  if (binding.storage || binding.boxed) throw new Error('该变量使用真实绑定镜像，暂不支持安全修改');
+  const mirror = binding.storage || binding.boxed;
+  if (mirror && (!/^__chali_storage_[0-9]{1,6}$/.test(binding.storageDwarf || '') || ![1, 8].includes(binding.storageBytes)))
+    throw new Error('该变量使用真实绑定镜像，缺少安全修改描述');
+  if (mirror && binding.storageBytes !== (['char', 'uint8'].includes(binding.type) ? 1 : 8)) throw new Error('真实存储宽度与变量类型不匹配');
   if (binding.address || !layout || !['i', 'u', 'f', 'b', 'c'].includes(layout.kind)) throw new Error('只支持基础变量修改；引用、拥有值和句柄不能直接覆盖');
   const type = binding.type;
   const floating = /^float(?:32|64)$/.test(type || '');
@@ -56,7 +59,7 @@ async function encodeAssignment(binding, layout, text) {
     if (value < low || value > high) throw new Error('修改值超过 ' + type + ' 范围');
     bytes.writeBigUInt64LE(BigInt.asUintN(64, value));
   }
-  return { bytes, text: String(value), type };
+  return { bytes: mirror ? bytes.subarray(0, binding.storageBytes) : bytes, text: String(value), type };
 }
 
 module.exports = { encodeAssignment };

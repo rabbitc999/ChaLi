@@ -327,7 +327,7 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
         comma = false;
         for (const auto &variable : function.variables)
         {
-            if (variable.name.empty() || (variable.name.rfind("__", 0) == 0 && variable.dwarfName.empty())) continue;
+            if (variable.internal || variable.name.empty() || (variable.name.rfind("__", 0) == 0 && variable.dwarfName.empty())) continue;
             if (comma) catalog += ",";
             comma = true;
             catalog += "{\"name\":" + debugJsonString(variable.name.substr(0, variable.name.find('$')))
@@ -340,6 +340,7 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
                        + ",\"scope\":" + std::to_string(variable.scope) + ",\"file\":" + debugJsonString(debugSourcePath(variable.file))
                        + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
+                       + ",\"storageDwarf\":" + debugJsonString(variable.storageDwarf) + ",\"storageBytes\":" + std::to_string(variable.storageBytes)
                        + ",\"readOnly\":" + (variable.readOnly ? "true" : "false") + "}";
         }
         catalog += "]}";

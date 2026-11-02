@@ -27,7 +27,7 @@ const lines = [
   ' assert(signed8==-9 && signed16==6 && signed32==7 && signed64==-9000000001);',
   ' assert(unsigned8==4 && unsigned16==8 && unsigned32==9 && unsigned64==(uint64)-2);',
   ' assert(single==(float32)0.1 && real==2.5 && !truth && letter==\'Z\');',
-  ' assert(fixed==8 && owned=="kept" && borrowed==5 && alias==5 && values[0]==123);',
+  ' assert(fixed==8 && owned=="kept" && borrowed==9 && alias==9 && values[0]==123);',
   ' {int64 visible=42;',
   '  println("INNER");',
   '  assert(visible==99);',
@@ -64,8 +64,8 @@ async function main() {
       const originalScope = data.scope, oldValue = data.values.values.variablesReference, oldMemory = data.values.values.memoryReference;
       assert(oldValue && oldMemory);
       const set = (name, value) => client.request('setVariable', { variablesReference: data.scope, name, value });
-      for (const name of ['fixed', 'owned', 'borrowed', 'alias', 'values']) assert(data.values[name].presentationHint.attributes.includes('readOnly'), name);
-      for (const [name, value] of [['fixed', '9'], ['owned', '0'], ['borrowed', '9'], ['alias', '0'], ['values', '0'], ['signed8', '128'], ['unsigned8', '-1'], ['signed32', '1.5'], ['truth', '1'], ['single', '1e39'], ['signed64', 'inspect(9)'], ['missing', '1']]) await assert.rejects(set(name, value));
+      for (const name of ['fixed', 'owned', 'alias', 'values']) assert(data.values[name].presentationHint.attributes.includes('readOnly'), name);
+      for (const [name, value] of [['fixed', '9'], ['owned', '0'], ['alias', '0'], ['values', '0'], ['signed8', '128'], ['unsigned8', '-1'], ['signed32', '1.5'], ['truth', '1'], ['single', '1e39'], ['signed64', 'inspect(9)'], ['missing', '1']]) await assert.rejects(set(name, value));
       for (const [name, value] of [['signed8', '3'], ['signed8', '-9'], ['signed16', '6'], ['signed32', '7'], ['signed64', '-9000000001'], ['unsigned8', '4'], ['unsigned16', '8'], ['unsigned32', '9'], ['unsigned64', '18446744073709551614'], ['single', '0.1'], ['real', '2.5'], ['truth', 'false'], ['letter', "'Z'"]]) {
         await set(name, value);
         const event = await client.event('invalidated'); assert.deepEqual(event.areas, ['variables']);
@@ -74,6 +74,9 @@ async function main() {
       await assert.rejects(client.request('variables', { variablesReference: oldValue }), /过期/);
       await assert.rejects(client.request('readMemory', { memoryReference: oldMemory, count: 8 }), /过期|无效/);
       assert.equal((await view(client, stop.threadId)).values.single.value, String(Math.fround(0.1)));
+      await set('borrowed', '9');
+      assert.equal((await client.request('evaluate', { frameId: data.frameId, expression: 'borrowed' })).result, '9');
+      assert.equal((await view(client, stop.threadId)).values.borrowed.value, '9');
       await client.request('continue', { threadId: stop.threadId }); stop = await client.event('stopped'); data = await view(client, stop.threadId);
       await assert.rejects(client.request('setVariable', { variablesReference: originalScope, name: 'visible', value: '0' }), /有效|过期/);
       assert.equal(data.values.visible.value, '42'); await set('visible', '99');
@@ -85,6 +88,6 @@ async function main() {
       assert.equal((await client.event('exited')).exitCode, 0); await client.event('terminated');
     } finally { await client.close(); }
   }
-  console.log('基础变量修改真实 GDB：malloc/pool、全部基础类型、完整槽恢复执行、参数/遮蔽、只读/镜像/拥有值拒绝与引用失效通过');
+  console.log('基础变量修改真实 GDB：malloc/pool、全部基础类型、完整槽恢复执行、参数/遮蔽、镜像真实绑定、只读/拥有值拒绝与引用失效通过');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

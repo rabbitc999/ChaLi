@@ -31,6 +31,9 @@ struct DebugVariable
     std::int64_t macro = -1;    ///< 非负值表示只在该宏展开帧内可见。
     bool logicalAddress = false;  ///< 编译器确认槽值直接指向语言数据区或堆，不包括宿主对象编号。
     std::int64_t layout = -1;     ///< 版本化逻辑布局索引；负值表示没有可解码布局。
+    std::string storageDwarf = {};  ///< 基础镜像真实逻辑地址的私有 DWARF 名，不能由用户表达式指定。
+    std::size_t storageBytes = 0;   ///< 真实语言存储宽度；零表示不允许通过镜像修改。
+    bool internal = false;          ///< 只生成私有 DWARF 声明，不作为源码变量登记。
 };
 /**
  * @brief AST 或兼容四元式节点的原始源码位置及词法范围。

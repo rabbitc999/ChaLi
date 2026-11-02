@@ -119,6 +119,22 @@ class DebugMemory {
     };
     return {
       regions, dataSize, object: objects, validateObjects: checkObjects,
+      /** 为基础值修改核对一个完整存活区间，只返回真实地址，不在此执行写入。 */
+      address: async (logical, length) => {
+        if (typeof logical !== 'bigint' || logical <= 0n || logical > MAXIMUM || ![1, 8].includes(length)) throw new Error('真实存储地址或宽度无效');
+        await checkState();
+        if (logical < dataSize && BigInt(length) <= dataSize - logical) {
+          await checkState(); return data + logical;
+        }
+        if (!stamp || (await bytes(revision, 8)).readBigUInt64LE() !== stamp) throw new Error('真实存储的堆映射已经失效');
+        let low = 0, high = regions.length;
+        while (low < high) { const middle = (low + high) >>> 1; if (regions[middle].begin <= logical) low = middle + 1; else high = middle; }
+        const region = regions[low - 1];
+        if (!region || logical >= region.end || BigInt(length) > region.end - logical) throw new Error('真实存储越界或已经释放');
+        await checkState();
+        if ((await bytes(revision, 8)).readBigUInt64LE() !== stamp) throw new Error('定位期间真实存储的堆映射已经变化');
+        return region.physical + logical - region.begin;
+      },
       read: async (logical, length) => {
         if (typeof logical !== 'bigint' || logical <= 0n || logical > MAXIMUM || !Number.isSafeInteger(length) || length < 0 || length > LIMIT) throw new Error('逻辑地址或读取长度无效');
         await checkState();

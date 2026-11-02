@@ -43,6 +43,12 @@ async function main() {
   assert.equal((await snapshot.read(8n,8)).readBigUInt64LE(),123n);
   assert.equal((await snapshot.read(logical,8)).readBigUInt64LE(),777n);
   assert.deepEqual(await snapshot.read(logical+64n,4),Buffer.from([9,8,7,6]));
+  assert.equal(await snapshot.address(8n,8),20488n);
+  assert.equal(await snapshot.address(logical,8),1048576n);
+  assert.equal(await snapshot.address(logical+15n,1),1048591n);
+  assert.equal(await snapshot.address(logical+64n,1),2097152n);
+  for (const [address,count] of [[0n,8],[logical-1n,1],[logical+15n,8],[logical+64n,8],[logical+68n,1],[logical,0],[logical,2]])
+    await assert.rejects(snapshot.address(address,count),/地址|存储|越界|宽度|释放/);
   for (const [address,count] of [[0n,8],[logical-1n,1],[logical+15n,2],[logical+63n,1],[logical+68n,1],[logical, LIMIT+1]])
     await assert.rejects(snapshot.read(address,count),/地址|区间|越界|长度/);
   for (const change of [
@@ -59,8 +65,10 @@ async function main() {
   await assert.rejects(target(state=>state.context.writeBigUInt64LE(1n)).reader.snapshot(1),/上下文已经变化/);
   const changedContext=await target(undefined,{changeContextDuringRead:true}).reader.snapshot(1);
   await assert.rejects(changedContext.read(logical,8),/上下文已经变化/);
+  await assert.rejects(changedContext.address(logical,8),/上下文已经变化/);
   const stale=await target(state=>state.revision.writeBigUInt64LE(8n)).reader.snapshot(1);
   await assert.rejects(stale.read(logical,8),/映射已经失效/);
+  await assert.rejects(stale.address(logical,8),/映射已经失效/);
   const wrapped=await target(state=>{state.node.writeBigUInt64LE(0n,16);state.revision.writeBigUInt64LE(0n);}).reader.snapshot(1);
   await assert.rejects(wrapped.read(logical,8),/映射已经失效/);
   assert.equal((await stale.read(8n,8)).readBigUInt64LE(),123n,'堆失效不影响静态数据的有界读取');
@@ -69,6 +77,8 @@ async function main() {
   await assert.rejects(large.read(logical,1048576),/预算/);
   const cancelled=new AbortController();cancelled.abort();
   await assert.rejects(target().reader.snapshot(1,cancelled.signal),/取消/);
+  const addressCancel=new AbortController(), cancellableAddress=await target().reader.snapshot(1,addressCancel.signal);
+  addressCancel.abort(); await assert.rejects(cancellableAddress.address(logical,8),/取消/);
   assert(!healthy.calls.some(command=>/exec-|call |set variable/.test(command)));
   console.log('调试内存：只读 C 布局、真实线程身份、公开边界、失效代次、发布竞态、循环、取消及预算通过');
 }
