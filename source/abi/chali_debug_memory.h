@@ -13,7 +13,7 @@ typedef struct ChaliDebugAllocation
 {
     uint64_t address, size, physical;
 } ChaliDebugAllocation;
-/** @brief 容器句柄的只读快照；kind 使用 L、M、E，first 是值表索引。 */
+/** @brief 对象句柄的只读快照；L／M／E 为容器，O 的两项值依次为类型号与装箱值，first 是值表索引。 */
 typedef struct ChaliDebugObject
 {
     uint64_t handle, kind, count, first;
@@ -38,7 +38,7 @@ typedef struct ChaliDebugMemoryThread
     uint64_t objects, object_count, values, value_count, text, text_size;
     uint64_t object_revision_address, object_revision;
 } ChaliDebugMemoryThread;
-/** @brief 使用 64 位小端字段和稳定线程节点；版本二在线程记录尾部追加容器快照。 */
+/** @brief 使用 64 位小端字段和稳定线程节点；版本二追加容器快照，版本三增加动态装箱观察。 */
 typedef struct ChaliDebugMemoryIndex
 {
     uint64_t version, pointer_bytes;

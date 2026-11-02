@@ -6,7 +6,7 @@ const { DebugMemory } = require('../src/debugMemory');
 function target(change = () => {}, race = false) {
   let valueReads = 0;
   const header = Buffer.alloc(24), row = Buffer.alloc(160), context = Buffer.alloc(8), revision = Buffer.alloc(8);
-  const object = Buffer.alloc(32), value = Buffer.alloc(48);
+  const object = Buffer.alloc(32), value = Buffer.alloc(96);
   [2n, 8n, 8192n].forEach((item, i) => header.writeBigUInt64LE(item, i * 8));
   row.writeBigUInt64LE(42n); row.writeBigUInt64LE(2n, 8); row.writeBigUInt64LE(1n, 64);
   row.writeBigUInt64LE(12288n, 80);
@@ -32,6 +32,15 @@ function target(change = () => {}, race = false) {
   return { reader, revision, valueReads: () => valueReads };
 }
 async function main() {
+  const dynamic = await target(state => {
+    state.header.writeBigUInt64LE(3n);
+    state.row.writeBigUInt64LE(2n, 120);
+    state.object.writeBigUInt64LE(79n, 8);
+    state.object.writeBigUInt64LE(2n, 16);
+    state.value.writeBigUInt64LE(4096n, 56);
+  }).reader.snapshot(1);
+  assert.equal((await dynamic.object(100n)).kind, 'O');
+  assert.equal((await dynamic.object(100n)).values[1].bits, 4096n);
   const healthy = target(), snapshot = await healthy.reader.snapshot(1);
   const concurrent = await Promise.all(Array.from({ length: 8 }, () => snapshot.object(100n)));
   assert(concurrent.every(object => object.values[0].bits === 42n));
@@ -46,6 +55,8 @@ async function main() {
     state => { state.value.writeBigUInt64LE(1n); state.value.writeBigUInt64LE(1n, 24); },
     state => state.value.writeBigUInt64LE(1n, 40),
     state => state.value.writeBigUInt64LE(3n),
+    state => { state.header.writeBigUInt64LE(3n); state.object.writeBigUInt64LE(79n, 8); },
+    state => state.object.writeBigUInt64LE(79n, 8),
   ]) {
     const broken = await target(change).reader.snapshot(1);
     await assert.rejects(broken.object(100n));

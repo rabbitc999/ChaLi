@@ -34,12 +34,12 @@ class DebugMemory {
     const base = await this.transport.scalar('(unsigned long long)&chali_debug_memory', signal);
     const header = await bytes(base, 24);
     const version = header.readBigUInt64LE(0);
-    if (![1n, 2n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
+    if (![1n, 2n, 3n].includes(version) || header.readBigUInt64LE(8) !== 8n) throw new Error('内存目录版本或目标表示不匹配');
     const visited = new Set(); let address = header.readBigUInt64LE(16), record;
     while (address) {
       if (visited.has(address) || visited.size >= 4096) throw new Error('内存线程目录循环或超过预算');
       visited.add(address);
-      const row = await bytes(address, version === 2n ? 160 : 96);
+      const row = await bytes(address, version >= 2n ? 160 : 96);
       const state = row.readBigUInt64LE(8);
       if (row.readBigUInt64LE(0) === identity && state !== 0n) { record = { address, row, state }; break; }
       address = row.readBigUInt64LE(72);
@@ -74,7 +74,7 @@ class DebugMemory {
         || (await bytes(row.readBigUInt64LE(144), 8)).readBigUInt64LE() !== row.readBigUInt64LE(152)) throw new Error('对象快照已经失效');
     };
     const objects = async handle => {
-      if (version !== 2n) throw new Error('目标未发布容器快照');
+      if (version < 2n) throw new Error('目标未发布对象快照');
       await checkObjects();
       if (!objectTables) objectTables = (async () => {
         const objectCount = row.readBigUInt64LE(104), valueCount = row.readBigUInt64LE(120), textSize = row.readBigUInt64LE(136);
@@ -102,7 +102,8 @@ class DebugMemory {
           if (rawKind > 127n) throw new Error('容器种类编码无效');
           const kind = String.fromCharCode(Number(rawKind));
           const count = rawObjects.readBigUInt64LE(at + 16), first = rawObjects.readBigUInt64LE(at + 24);
-          if (!id || records.has(id) || !['L', 'M', 'E'].includes(kind) || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('容器快照身份或范围无效');
+          if (!id || records.has(id) || !(version >= 3n ? ['L', 'M', 'E', 'O'] : ['L', 'M', 'E']).includes(kind)
+            || (kind === 'O' && count !== 2n) || first + count * (kind === 'M' ? 2n : 1n) > valueCount) throw new Error('对象快照身份或范围无效');
           records.set(id, { kind, count: Number(count), first: Number(first), values });
         }
         await checkObjects();

@@ -68,7 +68,7 @@ function parseLayout(text) {
 
 /** 聚合布局需要真实内存地址才能展开。 */
 function expandable(layout) {
-  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's', 'L', 'M', 'E'].includes(layout.kind);
+  return Boolean(layout) && ['S', 'T', 'N', 'a', 'A', 'R', 's', 'L', 'M', 'E', 'O'].includes(layout.kind);
 }
 
 /** 按 UTF-8 解码展示文本，超长时截断并标记。 */
@@ -115,6 +115,7 @@ async function string(address, memory) {
 
 /** 只生成聚合摘要，不读取全部子项。 */
 async function summary(layout, address, memory) {
+  if (layout.kind === 'O') return (await dynamicValue(address, memory, { count: 0 })).text;
   if (['L', 'M', 'E'].includes(layout.kind)) {
     const object = await memory.object(address);
     if (object.kind !== layout.kind) throw new Error('容器快照类型不匹配');
@@ -153,6 +154,7 @@ async function decode(layout, address, memory, page = {}, stored = null) {
   const start = Number.isSafeInteger(page.start) && page.start > 0 ? page.start : 0;
   const limit = Math.min(MAX_PAGE, Number.isSafeInteger(page.count) ? Math.max(0, page.count) : DEFAULT_PAGE);
   switch (layout.kind) {
+    case 'O': return dynamicValue(address, memory, page);
     case 'L': case 'M': case 'E': {
       const object = await memory.object(address);
       if (object.kind !== layout.kind || layout.children.length !== (layout.kind === 'M' ? 2 : 1)) throw new Error('容器布局不匹配');
@@ -223,6 +225,22 @@ async function decode(layout, address, memory, page = {}, stored = null) {
   }
 }
 
+/** 根据已验证的实际类型号解码接口装箱，不执行类型查询或用户方法。 */
+async function dynamicValue(handle, memory, page) {
+  const object = await memory.object(handle);
+  if (object.kind !== 'O' || object.count !== 2) throw new Error('动态装箱快照类型不匹配');
+  const tag = object.values[object.first], node = object.values[object.first + 1];
+  if (tag.flags !== 0) throw new Error('动态类型号快照无效');
+  if (tag.bits === 0n) return { text: '<未初始化装箱>', children: [] };
+  const layout = memory.dynamicLayout?.(tag.bits);
+  if (!layout) return { text: '<未知实际类型 ' + tag.bits + '>', children: [] };
+  if (layout.kind === 'O') return { text: '<嵌套装箱：' + typeName(layout) + '>', children: [] };
+  const value = node.flags || ['i', 'u', 'f', 'b', 'c'].includes(layout.kind)
+    ? await decodeStored(layout, { node, values: object.values }, memory, page)
+    : await decode(layout, node.bits, memory, page);
+  return { text: (layout.name || typeName(layout)) + ' ' + value.text, children: value.children };
+}
+
 /** 解码已复制的宿主值快照，不把其索引伪装成目标地址。 */
 async function decodeStored(layout, stored, memory, page = {}) {
   await memory.validateObjects();
@@ -287,7 +305,7 @@ function typeName(layout) {
 /** 读取并格式化一个子项，标量直接展示，聚合给出摘要并保留展开地址。 */
 async function child(layout, address, name, memory) {
   try {
-    if (['L', 'M', 'E'].includes(layout.kind)) {
+    if (['L', 'M', 'E', 'O'].includes(layout.kind)) {
       const handle = (await memory.read(address, 8)).readBigUInt64LE(0);
       return { name, type: typeName(layout), value: await summary(layout, handle, memory), childLayout: layout, address: handle };
     }
@@ -295,8 +313,11 @@ async function child(layout, address, name, memory) {
       const pointer = (await memory.read(address, 8)).readBigUInt64LE(0);
       return { name, type: typeName(layout), value: pointer === 0n ? 'null' : '&<' + (layout.name || '引用') + '>', childLayout: pointer === 0n ? null : layout, address: pointer };
     }
-    const value = layout.kind === 's' ? await string(address, memory) :
-      (['i', 'u', 'f', 'b', 'c'].includes(layout.kind) ? await scalar(layout, address, memory) : await summary(layout, address, memory));
+    if (layout.kind === 's') {
+      const pointer = (await memory.read(address, 8)).readBigUInt64LE(0);
+      return { name, type: typeName(layout), value: await string(pointer, memory), childLayout: null, address: pointer };
+    }
+    const value = ['i', 'u', 'f', 'b', 'c'].includes(layout.kind) ? await scalar(layout, address, memory) : await summary(layout, address, memory);
     return { name, type: typeName(layout), value, childLayout: expandable(layout) ? layout : null, address };
   } catch (error) {
     return { name, type: typeName(layout), value: '<不可读：' + error.message + '>', childLayout: null, address: 0n };

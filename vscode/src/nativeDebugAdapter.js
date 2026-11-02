@@ -254,7 +254,10 @@ class Adapter {
       this.stopped();
       return result;
     });
-    const pending = memory.snapshot(thread, signal);
+    const pending = memory.snapshot(thread, signal).then(snapshot => {
+      snapshot.dynamicLayout = type => this.layoutAt(this.metadata?.cache?.dynamicTypes?.get(type));
+      return snapshot;
+    });
     this.valueMemories.set(thread, pending);
     try { return await pending; }
     catch (error) {
@@ -762,7 +765,7 @@ class Adapter {
             body.variables = decoded.children.map((item) => {
               const reference = item.childLayout && (item.stored || item.address > 0n)
                 ? this.handle({ kind: 'value', thread: target.thread, address: item.address, layout: item.childLayout, stored: item.stored }) : 0;
-              const memoryReference = item.childLayout && !item.stored && !['L', 'M', 'E'].includes(item.childLayout.kind) && item.address > 0n
+              const memoryReference = item.childLayout && !item.stored && !['L', 'M', 'E', 'O'].includes(item.childLayout.kind) && item.address > 0n
                 ? 'chali-memory:' + this.handle({ kind: 'memory', thread: target.thread, address: item.address }) : undefined;
               return { name: item.name, value: item.value, type: item.type, variablesReference: reference, memoryReference };
             });
@@ -786,7 +789,7 @@ class Adapter {
             const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
             // 内存目录按线程发布，调用栈任意帧的聚合槽位都可读取；上下文变化由目录自身核对。
             const declaredLayout = binding ? this.layoutAt(binding.layout) : null;
-            const container = declaredLayout && ['L', 'M', 'E'].includes(declaredLayout.kind);
+            const container = declaredLayout && ['L', 'M', 'E', 'O'].includes(declaredLayout.kind);
             const addressable = (binding?.address === true || container) && numeric !== null && numeric > 0n;
             const layout = addressable ? declaredLayout : null;
             let display = value || '<不可用>';

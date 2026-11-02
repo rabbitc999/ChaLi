@@ -109,6 +109,14 @@ std::int64_t NativeDebugInfo::registerLayout(const std::string &encoded)
     layoutIds_.emplace(encoded, index);
     return static_cast<std::int64_t>(index);
 }
+/** @brief 登记实际装箱类型与只读布局的关系。
+ * @param type 当前程序的内部类型号。
+ * @param encoded 不含用户方法的布局文本。
+ * @return 无。 */
+void NativeDebugInfo::registerDynamicType(std::int64_t type, const std::string &encoded)
+{
+    if (type > 0 && !encoded.empty()) dynamicTypes_[type] = registerLayout(encoded);
+}
 /**
  * @brief 为原始路径登记 DWARF 文件。
  * @param path UTF-8 路径。
@@ -328,6 +336,14 @@ void NativeDebugInfo::finish(std::string &module)
     {
         if (index) catalog += ",";
         catalog += debugJsonString(layouts_[index]);
+    }
+    catalog += "],\"dynamicTypes\":[";
+    bool typeComma = false;
+    for (const auto &entry : dynamicTypes_)
+    {
+        if (typeComma) catalog += ",";
+        typeComma = true;
+        catalog += "{\"id\":" + std::to_string(entry.first) + ",\"layout\":" + std::to_string(entry.second) + "}";
     }
     catalog += "],\"positions\":[";
     std::string addresses;

@@ -20,6 +20,11 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                 type->kind == MType::Int                               ? std::max(1, type->bits / 8) :
                                                                          8;
     if (depth > 32) return out;
+    if (debugOnly && (IsInterfaceType(type) || (type->kind == MType::Ptr && IsInterfaceType(type->elem))))
+    {
+        out.kind = 'O';
+        return out;
+    }
     if (IsContainer(type))
     {
         out.kind = type->name == "vec" ? 'L' : type->name == "set" ? 'E' :
@@ -40,7 +45,10 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
     case MType::Char: out.kind = 'c'; break;
 
     case MType::Obj: out.kind = 'O'; break;
-    case MType::Ptr: out.kind = 'R'; break;
+    case MType::Ptr:
+        out.kind = 'R';
+        if (debugOnly && type->elem) out.children.push_back(ValueTextShape(type->elem, visiting, callbacks, false, depth + 1, true));
+        break;
     case MType::Func: out.kind = 'F'; break;
     case MType::Host: out.kind = 'H'; break;
     case MType::Opcode:

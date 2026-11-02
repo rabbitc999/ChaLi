@@ -482,6 +482,7 @@ void ResetState()
     g_interfaceOrder.clear();
     g_usedInterfaceMethods.clear();
     g_typeIdIndex.clear();
+    g_debugTypeIds.clear();
     g_nextTypeId = 1;
     g_expectedObjGet = nullptr;
     RegisterBuiltinTypeIds(); /* 内建占 1..9、10..32 预留：`__typeTag(int)` 永远是 1 */

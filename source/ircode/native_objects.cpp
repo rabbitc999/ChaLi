@@ -92,6 +92,7 @@ Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
         nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set");
         return Slot::fromInt(0);
     }
+    ctx.objects->invalidateNativeRecordViews();
     object->objTextShape = std::move(textShape);
     object->objTextCallbacks.clear();
     for (std::size_t index = 7; index < args.size(); ++index) object->objTextCallbacks.push_back(nativeInt(args[index]));

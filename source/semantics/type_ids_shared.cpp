@@ -152,7 +152,11 @@ std::int64_t TypeIdOf(const std::shared_ptr<MType> &type)
 {
     const Memory::String key = TypeKey(type);
     const auto found = g_typeIdIndex.find(key);
-    if (found != g_typeIdIndex.end()) return found->second;
+    if (found != g_typeIdIndex.end())
+    {
+        if (g_debugEnabled) g_debugTypeIds[found->second] = type;
+        return found->second;
+    }
     if (g_nextTypeId >= kMaxTypeId)
     {
         /* 回绕比报错危险得多：号变成负数之后 `__typeTag` 出负数、`obj` 判等错乱、
@@ -163,6 +167,7 @@ std::int64_t TypeIdOf(const std::shared_ptr<MType> &type)
     }
     const std::int64_t id = g_nextTypeId++;
     g_typeIdIndex[key] = id;
+    if (g_debugEnabled) g_debugTypeIds[id] = type;
     return id;
 }
 

@@ -84,6 +84,7 @@ class NativeDebugInfo
     std::map<std::int64_t, DebugMacroFrame> macros_;
     std::vector<std::string> layouts_;              ///< 去重后的逻辑布局文本，索引写进变量描述。
     std::map<std::string, std::size_t> layoutIds_;  ///< 布局文本到公开索引。
+    std::map<std::int64_t, std::int64_t> dynamicTypes_;  ///< 运行时实际类型号到只读布局索引。
     std::size_t next_ = 1000000, unit_ = 0, empty_ = 0, integer_ = 0, real_ = 0;
     std::string metadata_;
     std::map<std::string, std::size_t> files_;
@@ -114,6 +115,11 @@ public:
      * @return 非负索引，空文本返回 -1。
      */
     std::int64_t registerLayout(const std::string &encoded);
+    /** @brief 登记运行时装箱类型的静态布局，不生成目标执行代码。
+     * @param type 本次程序的实际类型号。
+     * @param encoded 不含用户方法的布局文本。
+     * @return 无。 */
+    void registerDynamicType(std::int64_t type, const std::string &encoded);
     /**
      * @brief 给一个函数附加源码位置和实际变量地址。
      * @param definition 完整 LLVM 函数定义。

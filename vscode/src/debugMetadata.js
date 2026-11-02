@@ -89,6 +89,13 @@ class DebugMetadata {
     if (catalog.layouts !== undefined && (!Array.isArray(catalog.layouts) || catalog.layouts.length > POINT_LIMIT)) throw new Error('调试布局超过预算');
     for (const layout of catalog.layouts || [])
       if (typeof layout !== 'string' || layout.length > 1048576 || layout.includes('\0')) throw new Error('调试布局文本无效');
+    const dynamicTypes = new Map();
+    if (catalog.dynamicTypes !== undefined && (!Array.isArray(catalog.dynamicTypes) || catalog.dynamicTypes.length > POINT_LIMIT)) throw new Error('动态类型目录超过预算');
+    for (const entry of catalog.dynamicTypes || []) {
+      integer(entry.id); integer(entry.layout);
+      if (!entry.id || dynamicTypes.has(BigInt(entry.id)) || entry.layout >= (catalog.layouts || []).length) throw new Error('动态类型布局引用无效');
+      dynamicTypes.set(BigInt(entry.id), entry.layout);
+    }
     const origin = value => { if (!value) throw new Error('宏来源缺失'); text(value.file); integer(value.line); integer(value.column); };
     if (catalog.macros !== undefined && (!Array.isArray(catalog.macros) || catalog.macros.length > POINT_LIMIT)) throw new Error('宏来源超过预算');
     for (const macro of catalog.macros || []) {
@@ -140,7 +147,7 @@ class DebugMetadata {
       fn.positions.push({ ...position, address: addresses.readBigUInt64LE(index * 8), ordinal: index });
     }
     for (const fn of catalog.functions) fn.positions.sort((a, b) => a.address < b.address ? -1 : a.address > b.address ? 1 : a.ordinal - b.ordinal);
-    return { byLinkage, catalog, macros };
+    return { byLinkage, catalog, macros, dynamicTypes };
   }
   /** 用当前机器 PC 选择同函数、同文件和同源码行的位置，不猜测源文件缩进。 */
   frame(frame) {

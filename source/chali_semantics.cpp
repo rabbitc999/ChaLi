@@ -4037,6 +4037,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         return 1;
     }
 
+    for (const auto &entry : g_debugTypeIds) program.debugTypeLayouts[entry.first] = DebugValueLayout(entry.second);
     g_aotSyntax = std::make_unique<ast::Program>(std::move(program));
     /* 仅显式请求兼容四元式产物时生成；正常编译直接把 AST 交给 LLVM 后端。 */
     if (!emitBinary) return 0;

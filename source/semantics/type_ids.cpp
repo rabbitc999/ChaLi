@@ -40,6 +40,7 @@ bool IsBarePointerType(const std::shared_ptr<MType> &type)
  * 不保证跨程序、版本或增删声明后的编号稳定；持久化身份使用 std::reflect 的元数据 ID。
  */
 Memory::Map<Memory::String, std::int64_t> g_typeIdIndex;
+Memory::Map<std::int64_t, std::shared_ptr<MType>> g_debugTypeIds;  ///< 本次实际使用的类型号及检查后类型，供只读布局生成。
 /**
  * @brief 下一个内部标签，运行时与编译器都以 64 位有符号整数存储。
  */

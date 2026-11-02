@@ -481,6 +481,7 @@ struct Program
     Memory::Vector<std::pair<Memory::String, TypePtr>> constantValues;  ///< 常量的字面量原文。
     Memory::Vector<Function> functions;                                 ///< 函数。
     Memory::Map<std::int64_t, Memory::String> nativeTypeSymbols;        ///< 本次类型编号到跨单元名义及布局身份符号。
+    Memory::Map<std::int64_t, Memory::String> debugTypeLayouts;         ///< 实际装箱类型的只读调试布局，不登记用户方法。
 
     /**
      * @brief 声明一个常量（值必须是字面量）。

@@ -47,7 +47,7 @@ static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThrea
 }
 extern "C" {
 /** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
-ChaliDebugMemoryIndex chali_debug_memory{ 2, 8, 0 };
+ChaliDebugMemoryIndex chali_debug_memory{ 3, 8, 0 };
 /**
  * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
@@ -380,13 +380,58 @@ struct DebugMemoryState
         return true;
     }
     /**
-     * @brief 复制一个活跃集合，不调用宿主记录的方法或同步回调。
+     * @brief 复制已有动态值的存储，不执行复制、析构或格式化回调。
+     * @param source 暂停点前实际存在的值。
+     * @param index 已预留的观察节点。
+     * @param depth 当前递归深度。
+     * @return 所有内容均在观察预算内时为真。
+     */
+    bool copyStored(const stackvm::NativeStoredValue &source, std::size_t index, std::size_t depth)
+    {
+        if (depth > 32 || source.fields.size() > 32768 || source.text.size() > 2 * 1024 * 1024
+            || !room(source.text.size() + source.fields.size() * sizeof(ChaliDebugValue))) return false;
+        ChaliDebugValue value{};
+        value.flags = source.isStruct ? 1u : source.isText ? 2u :
+                                         source.isFloat    ? 4u :
+                                                             0u;
+        value.bits = static_cast<std::uint64_t>(source.integer);
+        if (source.isFloat) std::memcpy(&value.bits, &source.real, sizeof(value.bits));
+        if (source.isText)
+        {
+            value.text = text.size();
+            value.length = source.text.size();
+            text.insert(text.end(), source.text.begin(), source.text.end());
+        }
+        if (source.isStruct)
+        {
+            value.first = values.size();
+            value.count = source.fields.size();
+            if (value.first + value.count > 32768) return false;
+            values.resize(value.first + value.count);
+            for (std::size_t field = 0; field < source.fields.size(); ++field)
+                if (!copyStored(source.fields[field], value.first + field, depth + 1)) return false;
+        }
+        values[index] = value;
+        return true;
+    }
+    /**
+     * @brief 复制活跃集合或动态装箱，不调用宿主记录的方法或同步回调。
      * @param handle 原运行时句柄。
      * @param object 当前存活对象。
      * @return 集合复制成功或对象不是集合时为真，预算耗尽为假。
      */
     bool copyObject(std::int64_t handle, const RuntimeObject &object)
     {
+        if (object.kind == ObjectKind::Obj)
+        {
+            if (objects.size() >= 4096 || values.size() > 32766
+                || !room(sizeof(ChaliDebugObject) + 2 * sizeof(ChaliDebugValue))) return false;
+            const auto first = values.size();
+            objects.push_back({ static_cast<std::uint64_t>(handle), 'O', 2, first });
+            values.resize(first + 2);
+            values[first].bits = static_cast<std::uint64_t>(object.objTag);
+            return copyStored(object.objValue, first + 1, 0);
+        }
         if (object.kind != ObjectKind::NativeRecord) return true;
         collection_glue::DebugCollectionView view;
         if (!collection_glue::debugCollection(object.nativeType, object.nativeRecord.get(), &view)) return true;

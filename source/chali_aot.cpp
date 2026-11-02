@@ -2800,7 +2800,13 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         declarations += "#ifdef __cplusplus\n}\n#endif\n#endif\n";
         *header = Memory::String(declarations.c_str());
     }
-    if (request.options.debug) state.debugInfo.finish(out);
+    if (request.options.debug)
+    {
+        if (request.syntax)
+            for (const auto &entry : request.syntax->debugTypeLayouts)
+                state.debugInfo.registerDynamicType(entry.first, textOf(entry.second));
+        state.debugInfo.finish(out);
+    }
     return Memory::String(out.data(), out.size());
 }
 

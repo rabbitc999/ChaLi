@@ -60,7 +60,11 @@ async function main() {
   const count = healthy.calls.length; healthy.reader.cancel(); await healthy.reader.load(); assert.equal(healthy.calls.length, count);
   const large = target(value => ({ ...value, padding: 'x'.repeat(131072) }));
   assert(await large.reader.load()); assert(large.calls.filter(command => command.startsWith('-data-read-memory-bytes ')).length >= 4);
+  const dynamic = target(value => ({ ...value, layouts: ['O0:0:0:8:0:0:'], dynamicTypes: [{ id: 42, layout: 0 }] }));
+  assert.equal((await dynamic.reader.load()).dynamicTypes.get(42n), 0);
   for (const invalid of [
+    () => target(value => ({ ...value, dynamicTypes: [{ id: 42, layout: 0 }] })),
+    () => target(value => ({ ...value, layouts: ['x'], dynamicTypes: [{ id: 42, layout: 0 }, { id: 42, layout: 0 }] })),
     () => target(value => ({ ...value, version: 99 })),
     () => target(value => ({ ...value, pointerBytes: 4 })),
     () => target(value => { value.functions[0].scopes.push({ id: 3, parent: 3 }); return value; }),
