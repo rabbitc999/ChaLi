@@ -357,6 +357,23 @@ NodePtr Node::memorySet(NodePtr destination, NodePtr value, NodePtr bytes)
 }
 
 /**
+ * @brief 登记编译器已物化存储的原生调试观察，不执行用户表达式。
+ * @param operation 观察事件种类。
+ * @param address 已物化地址或绑定变量。
+ * @param bytes 存储宽度。
+ * @param type 运行时类型编号。
+ * @return 不影响四元式导出的内部节点。
+ */
+NodePtr Node::debugStorageLifetime(int operation, NodePtr address, std::size_t bytes, std::int64_t type)
+{
+    auto node = Memory::makeShared<Node>();
+    node->kind = Kind::DebugStorageLifetime;
+    node->intValue = operation;
+    node->kids = { std::move(address), i(static_cast<std::int64_t>(bytes)), i(type) };
+    return node;
+}
+
+/**
  * @brief 按地址读一个**指定类型**的值：`(load:T, 地址, _, t)`。
  *
  * 与 `loadInt` 的区别是"这 8 个字节怎么解释"由 `type` 决定（`f64` 按 IEEE-754

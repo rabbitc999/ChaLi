@@ -220,8 +220,9 @@ class DebugMetadata {
         if (variable.nativeStorage !== undefined && !['', 'i64', 'double'].includes(variable.nativeStorage)) throw new Error('调试变量原生槽表示无效');
         if (variable.storageDwarf !== undefined && variable.storageDwarf !== '') {
           if (!/^__chali_storage_[0-9]{1,6}$/.test(variable.storageDwarf) || !variable.storage
-            || ![1, 8].includes(variable.storageBytes) || variable.address) throw new Error('调试镜像的真实存储描述无效');
+            || ![1, 8].includes(variable.storageBytes)) throw new Error('调试镜像的真实存储描述无效');
         } else if (variable.storageBytes !== undefined && variable.storageBytes !== 0) throw new Error('调试镜像缺少真实存储身份');
+        if (variable.availabilityDwarf !== undefined && variable.availabilityDwarf !== '' && !/^__chali_available_[0-9]{1,6}$/.test(variable.availabilityDwarf)) throw new Error('调试绑定可用性描述无效');
         if (variable.dwarf !== undefined) text(variable.dwarf);
         macroId(variable.macro);
         if (variable.boxed !== undefined && typeof variable.boxed !== 'boolean') throw new Error('调试绑定存储标记无效');

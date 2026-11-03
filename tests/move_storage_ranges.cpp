@@ -50,5 +50,25 @@ int main()
     assert(store.movedStorage.count({100, 1}) == 1 && store.movedStorage.size() == 2);
     store.beginStorage(120, 8, true);
     assert(store.movedStorage.size() == 1 && store.movedStorage.count({200, 4}) == 1);
+    const auto languageState = store.movedStorage;
+    const auto languageRevision = store.nativeRecordRevision;
+    store.markDebugStorage(300, 16, 5);
+    store.markDebugStorage(308, 8, 6);
+    assert(store.debugMovedStorage.size() == 2);
+    const auto observedRevision = store.debugSnapshotRevision;
+    store.beginDebugStorage(308, 8);
+    assert(store.debugMovedStorage.size() == 1 && store.debugMovedStorage.count({300, 5}));
+    assert(store.debugSnapshotRevision != observedRevision);
+    store.beginDebugStorage(304, 1, true);
+    assert(store.debugMovedStorage.empty());
+    assert(store.movedStorage == languageState && store.nativeRecordRevision == languageRevision);
+    store.markDebugStorage(400, 8, 7);
+    store.beginStorage(400, 8, true);
+    assert(store.debugMovedStorage.empty());
+    store.debugSnapshotRevision = std::numeric_limits<std::uint64_t>::max();
+    store.markDebugStorage(500, 8, 8);
+    assert(store.debugSnapshotRevision == 0 && store.debugMovedStorage.empty());
+    store.markDebugStorage(600, 8, 9);
+    assert(store.debugSnapshotRevision == 0 && store.debugMovedStorage.empty());
     return 0;
 }

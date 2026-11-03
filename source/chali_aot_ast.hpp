@@ -522,6 +522,7 @@ struct AstBuilder : Builder
     std::map<std::size_t, DebugLine> debugLines;
     std::map<std::size_t, DebugScope> debugScopes;
     std::map<Text, DebugVariable> debugDeclarations;
+    std::map<Text, Text> debugAvailability;
     std::size_t debugScope = 0;
     /** @brief 真实绑定的逻辑存储及其源码有效区间，镜像只在调试路径刷新。 */
     struct DebugBox
@@ -852,7 +853,7 @@ struct AstBuilder : Builder
                 if (node->text != "__std_reference" && node->text != "__std_panic") stable = false;
                 break;
             case N::Alloc: case N::Free: case N::Drop: case N::CallPointer: case N::MethodCall:
-            case N::Lambda: case N::MemoryCopy: case N::MemorySet: case N::Read: case N::Write:
+            case N::Lambda: case N::MemoryCopy: case N::MemorySet: case N::DebugStorageLifetime: case N::Read: case N::Write:
             case N::Print: case N::Putc: stable = false; break;
             default: break;
             }
@@ -1215,6 +1216,20 @@ struct AstBuilder : Builder
             }
             return index;
         }
+        case N::DebugStorageLifetime:
+        {
+            if (state.request.options.debug && node->intValue == 2)
+            {
+                const auto found = debugAvailability.find(textOf(node->kids[0]->text));
+                if (found != debugAvailability.end()) body += "  store volatile i64 0, ptr " + found->second + "\n";
+                return { "i64", "0" };
+            }
+            if (state.request.options.debug)
+                call("chali_debug_storage_lifetime", "void", { { "i64", std::to_string(node->intValue) },
+                     convert(expression(node->kids[0]), "i64"), convert(expression(node->kids[1]), "i64"),
+                     convert(expression(node->kids[2]), "i64") });
+            return { "i64", "0" };
+        }
         case N::MemoryCopy:
         case N::MemorySet:
         {
@@ -1293,10 +1308,16 @@ struct AstBuilder : Builder
             if (!node->debugStorage.empty()) debugBoxes[textOf(node->text)] = { node->debugStorage, node->declared, debugScope };
             debugDeclarations[textOf(node->text)] = std::move(descriptor);
         }
-        if (node->kind != N::Declare || !state.request.options.debug) location(node);
+        const bool observer = node->kind == N::ExprStmt && !node->kids.empty() && node->kids[0]->kind == N::DebugStorageLifetime;
+        if (!observer && (node->kind != N::Declare || !state.request.options.debug)) location(node);
         switch (node->kind)
         {
-        case N::Declare: return;
+        case N::Declare:
+        {
+            const auto available = debugAvailability.find(textOf(node->text));
+            if (available != debugAvailability.end()) body += "  store volatile i64 1, ptr " + available->second + "\n";
+            return;
+        }
         case N::ExprStmt:
             if (!node->kids.empty()) expression(node->kids[0]);
             return;
@@ -1319,6 +1340,9 @@ struct AstBuilder : Builder
             const auto value = expression(node->kids[1]);
             const auto at = expression(node->kids[0]);
             const auto width = widthOf(node->text);
+            if (state.request.options.debug && node->debugLifetimeWrite)
+                call("chali_debug_storage_lifetime", "void", { { "i64", "0" }, convert(at, "i64"),
+                     { "i64", width.bits == 8 ? "1" : "8" }, { "i64", "0" } });
             memory(at, ast::Type::make(width.float_ ? ast::Type::Kind::Float : width.unsigned_ ? ast::Type::Kind::Uint :
                                                                                                  ast::Type::Kind::Int,
                                        width.bits),
@@ -1450,6 +1474,18 @@ struct AstBuilder : Builder
         }
         if (state.request.options.debug)
         {
+            std::vector<ast::NodePtr> pending{ syntax.body };
+            while (!pending.empty())
+            {
+                const auto node = pending.back();
+                pending.pop_back();
+                if (!node) continue;
+                if (node->kind == ast::Node::Kind::DebugStorageLifetime && node->intValue == 2)
+                    debugAvailability.emplace(textOf(node->kids[0]->text), "%debug_available_" + std::to_string(debugAvailability.size()));
+                pending.insert(pending.end(), node->kids.begin(), node->kids.end());
+            }
+            for (const auto &entry : debugAvailability)
+                signature += "  " + entry.second + " = alloca i64\n  store volatile i64 1, ptr " + entry.second + "\n";
             signature += "  %debug_context = alloca [3 x i64]\n";
             signature += "  call void @chali_debug_capture_context(ptr %debug_context)\n";
             // 私有观察槽需在优化调试中跨调用保留，避免身份仅存于已被覆盖的寄存器。
@@ -1501,9 +1537,7 @@ struct AstBuilder : Builder
                     if (!origin->second.typeName.empty()) variable.typeName = textOf(origin->second.typeName);
                 }
             }
-            if (!variable.storage.empty() && !variable.logicalAddress
-                && (variable.typeName == "bool" || variable.typeName == "char" || variable.typeName.rfind("int", 0) == 0
-                    || variable.typeName.rfind("uint", 0) == 0 || variable.typeName.rfind("float", 0) == 0))
+            if (!variable.storage.empty())
             {
                 const auto storage = symbol(Memory::String(variable.storage.c_str()));
                 if (locals.count(textOf(storage)) && type(storage) == "i64")
@@ -1523,6 +1557,23 @@ struct AstBuilder : Builder
                     hidden.nativeStorage = "i64";
                     variables.push_back(std::move(hidden));
                 }
+            }
+            const auto availability = debugAvailability.find(variable.storage.empty() ? variable.name : variable.storage);
+            if (availability != debugAvailability.end())
+            {
+                variable.availabilityDwarf = "__chali_available_" + std::to_string(variables.size());
+                auto hidden = variable;
+                hidden.name = hidden.dwarfName = variable.availabilityDwarf;
+                hidden.pointer = availability->second;
+                hidden.typeName = "uint64";
+                hidden.bits = 64;
+                hidden.encoding = "DW_ATE_unsigned";
+                hidden.floating = false;
+                hidden.argument = 0;
+                hidden.internal = true;
+                hidden.storage.clear();
+                hidden.nativeStorage = "i64";
+                variables.push_back(std::move(hidden));
             }
             variables.push_back(std::move(variable));
         }

@@ -83,6 +83,7 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
 void ObjectStore::beginStorage(std::size_t address, std::size_t bytes, bool fresh)
 
 {
+    beginDebugStorage(address, bytes, fresh);
     if ((!bytes && !fresh) || movedStorage.empty()) return;
     // 含于新生命周期的标记从本地址开始；重叠查询只需额外考虑最大跨度以内的前驱。
     const auto first = fresh && largestMovedStorage < address ? address - largestMovedStorage : fresh ? 0u : address;
@@ -136,6 +137,58 @@ void ObjectStore::invalidateNativeRecordViews()
 void ObjectStore::invalidateDebugSnapshots()
 {
     if (debugSnapshotRevision) ++debugSnapshotRevision;
+}
+
+/**
+ * @brief 登记有界的非聚合调试移动标记，失败不影响程序结果。
+ * @param address 逻辑存储地址。
+ * @param bytes 存储宽度。
+ * @param type 实际类型编号。
+ * @return 无；预算耗尽或分配失败后关闭观察。
+ */
+void ObjectStore::markDebugStorage(std::size_t address, std::size_t bytes, std::int64_t type) noexcept
+{
+    if (!address || !bytes || !debugSnapshotRevision) return;
+    invalidateDebugSnapshots();
+    if (!debugSnapshotRevision) return;
+    try
+    {
+        const auto key = std::make_pair(address, type);
+        if (debugMovedStorage.size() >= 65536 && !debugMovedStorage.count(key)) { debugSnapshotRevision = 0; return; }
+        debugMovedStorage[key] = bytes;
+        largestDebugMovedStorage = std::max(largestDebugMovedStorage, bytes);
+    } catch (...) { debugSnapshotRevision = 0; }
+}
+
+/**
+ * @brief 合法初始化只撤销调试标记，语言移动和借用状态保持独立。
+ * @param address 被初始化的逻辑地址。
+ * @param bytes 初始化宽度。
+ * @param fresh 是否为新分配存储。
+ * @return 无；观察失败后关闭快照。
+ */
+void ObjectStore::beginDebugStorage(std::size_t address, std::size_t bytes, bool fresh) noexcept
+{
+    if ((!bytes && !fresh) || debugMovedStorage.empty()) return;
+    bool changed = false;
+    try
+    {
+        const auto first = fresh && largestDebugMovedStorage < address ? address - largestDebugMovedStorage : fresh ? 0u : address;
+        auto it = debugMovedStorage.lower_bound({ first, std::numeric_limits<std::int64_t>::min() });
+        for (; it != debugMovedStorage.end();)
+        {
+            const auto start = it->first.first;
+            if (start >= address && start - address >= bytes) break;
+            const bool overlap = start >= address ? start - address < bytes : address - start < it->second;
+            const bool contained = start >= address && start - address < bytes && it->second <= bytes - (start - address);
+            if (fresh ? overlap : contained)
+            {
+                if (!changed) { invalidateDebugSnapshots(); changed = true; }
+                it = debugMovedStorage.erase(it);
+            }
+            else ++it;
+        }
+    } catch (...) { debugSnapshotRevision = 0; }
 }
 
 /**

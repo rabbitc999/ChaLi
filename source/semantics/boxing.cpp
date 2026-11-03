@@ -584,6 +584,8 @@ ast::NodePtr LowerLanguageMove(const Memory::Vector<int> &args, bool implicitExi
         auto value = Node::loadFrom(Node::var(address), LowerType(type, result));
         out.push_back(Node::assign(result, value));
     }
+    if (g_debugEnabled && type->kind != MType::Struct)
+        out.push_back(Node::exprStmt(Node::debugStorageLifetime(1, Node::var(address), bytes, TypeIdOf(type))));
     out.push_back(Node::exprStmt(Node::memorySet(Node::var(address), Node::i(0), Node::i(bytes))));
     if (type->kind == MType::Struct)
         AppendMovedAggregate(type->name, Node::var(address), &out);
@@ -2874,6 +2876,8 @@ ast::NodePtr LowerUncheckedExpr(int id)
                             g_borrowFlowCapture->lambdaMoves[id].push_back({ variable->emitted, {} });
                         if (capture.type->kind == MType::Ptr)
                         {
+                            if (g_debugEnabled)
+                                prefix.push_back(Node::exprStmt(Node::debugStorageLifetime(2, Node::var(variable->emitted), 8, TypeIdOf(capture.type))));
                             prefix.push_back(Node::exprStmt(Node::call("__std_closure_capture_copy",
                                                                        { "environment", "value", "text", "layout" },
                                                                        { Node::var(local), LowerRawExpr(source), Node::i(0), Node::i(0) })));
@@ -2886,6 +2890,8 @@ ast::NodePtr LowerUncheckedExpr(int id)
                             const auto address = AllocateName("__chali_capture_source");
                             prefix.push_back(Node::declare(address, ast::Type::i64()));
                             prefix.push_back(Node::assign(address, LowerAddressOf(source)));
+                            if (g_debugEnabled && capture.type->kind != MType::Struct)
+                                prefix.push_back(Node::exprStmt(Node::debugStorageLifetime(1, Node::var(address), capture.type->kind == MType::Char ? 1 : 8, TypeIdOf(capture.type))));
                             prefix.push_back(Node::exprStmt(Node::call("__std_closure_capture_move",
                                                                        { "environment", "address", "text", "layout", "float", "bytes" },
                                                                        { Node::var(local), Node::var(address), Node::i(IsStandardOpcode(capture.type, "String")), layout,

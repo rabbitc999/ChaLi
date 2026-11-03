@@ -195,6 +195,7 @@ struct Node
         CallPointer,
         MemoryCopy,  ///< 按字节非重叠复制，完整范围先验证。
         MemorySet,   ///< 按字节填充，不处理资源所有权。
+        DebugStorageLifetime, ///< 编译器生成的原生调试观察事件，不改变四元式语义。
     };
 
     Memory::String sourceFile;             ///< 原始 CHALI 文件或宏定义来源。
@@ -204,6 +205,7 @@ struct Node
     Memory::String debugTypeName;         ///< 检查后的用户类型拼写，不改变槽位布局。
     Memory::String debugStorage;          ///< 取引用后真实绑定的逻辑存储；原槽仅作调试镜像。
     bool debugReadOnly = false;           ///< 原声明只读性，不参与已有语义检查。
+    bool debugLifetimeWrite = false;      ///< 真正的源码存储写入，可恢复调试可用性；镜像刷新不设置。
     std::shared_ptr<const MacroDebugLocation> debugMacro; ///< 宏来源及私有绑定标记，不改变运行时作用域。
     std::shared_ptr<const DeclarationSource> debugBindingSource; ///< 模式等合成声明的原始位置，不参与未使用变量警告。
     Kind kind = Kind::IntLit;              ///< 种类。
@@ -339,6 +341,15 @@ struct Node
      * @return 整段检查后填充的表达式，结果为零。
      */
     static NodePtr memorySet(NodePtr destination, NodePtr value, NodePtr bytes);
+    /**
+     * @brief 构造仅供原生调试后端消费的存储可用性事件。
+     * @param operation 零为重新初始化，一为存储移动，二为绑定移动。
+     * @param address 已物化的逻辑地址或绑定变量，不包含用户副作用。
+     * @param bytes 存储宽度。
+     * @param type 运行时类型编号。
+     * @return 结果为零的内部观察节点，四元式导出不生成指令。
+     */
+    static NodePtr debugStorageLifetime(int operation, NodePtr address, std::size_t bytes, std::int64_t type);
     /**
      * 堆释放：`(free, 地址, _, _)`，当语句用（没有返回值）。地址不对就**报错**。
      */

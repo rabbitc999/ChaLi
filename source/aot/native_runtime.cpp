@@ -537,16 +537,20 @@ struct DebugMemoryState
             return;
         }
         std::size_t inspected = 0;
-        for (const auto &entry : context.objects->movedStorage)
+        for (const auto *entries : { &context.objects->movedStorage, &context.objects->debugMovedStorage })
         {
-            if (inspected++ >= 65536) { record->complete = 0; break; }
-            const auto address = entry.first.first, size = entry.second;
-            if (!address || !size) continue;
-            const bool inData = address < context.data->size() && size <= context.data->size() - address;
-            std::size_t capacity = 0;
-            if (!inData && (!context.heap->capacityAt(address, capacity) || size > capacity)) continue;
-            if (moved.size() >= 65536 || !room(sizeof(ChaliDebugMoved))) { record->complete = 0; break; }
-            moved.push_back({ address, size, entry.first.second });
+            for (const auto &entry : *entries)
+            {
+                if (inspected++ >= 65536) { record->complete = 0; break; }
+                const auto address = entry.first.first, size = entry.second;
+                if (!address || !size) continue;
+                const bool inData = address < context.data->size() && size <= context.data->size() - address;
+                std::size_t capacity = 0;
+                if (!inData && (!context.heap->capacityAt(address, capacity) || size > capacity)) continue;
+                if (moved.size() >= 65536 || !room(sizeof(ChaliDebugMoved))) { record->complete = 0; break; }
+                moved.push_back({ address, size, entry.first.second });
+            }
+            if (!record->complete) break;
         }
         record->moved = reinterpret_cast<std::uintptr_t>(moved.data());
         record->moved_count = moved.size();
@@ -785,6 +789,22 @@ void chali_debug_capture_context(ChaliDebugFrameContext *output)
     auto &context = currentContext();
     *output = { reinterpret_cast<std::uintptr_t>(context.heap), reinterpret_cast<std::uintptr_t>(context.data),
                 reinterpret_cast<std::uintptr_t>(context.objects) };
+}
+/**
+ * @brief 在程序正常执行期间更新独立的调试存储状态。
+ * @param operation 零为真实写入，一为移动。
+ * @param address 逻辑存储地址。
+ * @param bytes 存储宽度。
+ * @param type 实际类型编号。
+ * @return 无；状态更新失败只撤销观察。
+ */
+void chali_debug_storage_lifetime(std::uint64_t operation, std::uint64_t address, std::uint64_t bytes, std::int64_t type)
+{
+    if (!debugArgumentsEnabled) return;
+    auto &context = currentContext();
+    if (!context.objects) return;
+    if (operation == 0) context.objects->beginDebugStorage(address, bytes);
+    else if (operation == 1) context.objects->markDebugStorage(address, bytes, type);
 }
 /**
  * @brief 在调试停点之前复制当前线程的内存目录，不在变量查看请求期间执行。

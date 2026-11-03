@@ -245,6 +245,7 @@ TypePtr infer(const NodePtr &node, const TypeEnv &env)
         return infer(node->kids.empty() ? nullptr : node->kids[0], env);  // 值就是下标
     case Node::Kind::MemoryCopy:
     case Node::Kind::MemorySet:
+    case Node::Kind::DebugStorageLifetime:
         return Type::i32();
     case Node::Kind::LoadInt:
         return node->declared ? node->declared : Type::i64();
@@ -373,6 +374,8 @@ Memory::String emitExpr(const NodePtr &node, Emitter &emitter)
 
     switch (node->kind)
     {
+    case Node::Kind::DebugStorageLifetime:
+        return "0";
     case Node::Kind::Sequence:
         if (node->kids.empty()) return "0";
         for (std::size_t index = 0; index + 1u < node->kids.size(); ++index)

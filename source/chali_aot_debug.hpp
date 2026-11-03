@@ -33,6 +33,7 @@ struct DebugVariable
     std::int64_t layout = -1;     ///< 版本化逻辑布局索引；负值表示没有可解码布局。
     std::string storageDwarf = {};  ///< 基础镜像真实逻辑地址的私有 DWARF 名，不能由用户表达式指定。
     std::size_t storageBytes = 0;   ///< 真实语言存储宽度；零表示不允许通过镜像修改。
+    std::string availabilityDwarf = {}; ///< 引用绑定移动状态的私有观察槽，不是语言值。
     bool internal = false;          ///< 只生成私有 DWARF 声明，不作为源码变量登记。
 };
 /**

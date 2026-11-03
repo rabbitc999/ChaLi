@@ -338,10 +338,24 @@ class Adapter {
   async mirrorStorage(frame, binding, signal) {
     if (frame.level !== 0 || frame.metadata?.optimized) throw new Error('真实绑定镜像仅支持栈顶开发源码帧');
     if (!/^__chali_storage_[0-9]{1,6}$/.test(binding.storageDwarf || '') || ![1, 8].includes(binding.storageBytes)) throw new Error('缺少真实存储描述');
-    const expression = '(unsigned long long)(' + binding.storageDwarf + ')';
-    const result = await this.gdb.command(`-data-evaluate-expression --thread ${frame.thread} --frame ${frame.level} ` + JSON.stringify(expression), { signal });
-    if (!/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(result.value || '') || BigInt(result.value) === 0n) throw new Error('变量没有有效的真实存储地址');
-    return { logical: BigInt(result.value), memory: await this.memoryForFrame(frame, signal) };
+    return this.bindingStorage(frame, binding, signal);
+  }
+  /** 从当前帧的唯一私有槽读取绑定地址，并核对上下文和移动状态。 */
+  async bindingStorage(frame, binding, signal, rows) {
+    if (!/^__chali_storage_[0-9]{1,6}$/.test(binding.storageDwarf || '') || ![1, 8].includes(binding.storageBytes)) throw new Error('缺少真实存储描述');
+    if (!rows) rows = (await this.gdb.command(`-stack-list-variables --thread ${frame.thread} --frame ${frame.level} --simple-values`, { signal })).variables || [];
+    const matches = rows.filter(row => row.name === binding.storageDwarf);
+    if (matches.length !== 1 || !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(matches[0].value || '') || BigInt(matches[0].value) === 0n) throw new Error('变量真实存储不可唯一定位或已优化');
+    const logical = BigInt(matches[0].value), memory = await this.memoryForFrame(frame, signal, rows);
+    await memory.readable(logical, binding.storageBytes);
+    return { logical, memory };
+  }
+  /** 私有观察槽只证明该绑定尚未被移动，不代替源码作用域或存储检查。 */
+  bindingAvailable(binding, rows) {
+    if (!binding?.availabilityDwarf) return;
+    const matches = rows.filter(row => row.name === binding.availabilityDwarf);
+    if (matches.length !== 1 || !/^[01]$/.test(matches[0].value || '')) throw new Error('绑定可用性已优化或无法唯一核对');
+    if (matches[0].value === '0') throw new Error('绑定已经移动到闭包');
   }
   /** 核对源码帧保存的内存身份，禁止将其他原生上下文的逻辑地址用于活动快照。 */
   async memoryForFrame(frame, signal, rows) {
@@ -1116,7 +1130,7 @@ class Adapter {
           const bindings = visibleBindings(frame.metadata);
           const rows = (data.variables || []).filter(variable => {
             const binding = bindings.get(variable.name);
-            if (!binding && (variable.name.startsWith('__chali_macro_debug_') || variable.name.startsWith('__chali_storage_') || variable.name.startsWith('__chali_context_'))) return false;
+            if (!binding && (variable.name.startsWith('__chali_macro_debug_') || variable.name.startsWith('__chali_storage_') || variable.name.startsWith('__chali_context_') || variable.name.startsWith('__chali_available_'))) return false;
             if ((binding?.macro ?? -1) !== (frame.macro ?? -1)) return false;
             if (visible.has(variable.name)) return false;
             visible.add(variable.name); return true;
@@ -1124,27 +1138,35 @@ class Adapter {
           const formatVariable = async variable => {
             const value = /^(?:int8|uint8)$/.test(variable.type || '') ? (variable.value || '').replace(/^(-?[0-9]+)\s+'.*'$/, '$1') : variable.value;
             const binding = bindings.get(variable.name);
-            const numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
+            let numeric = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value || '') ? BigInt(value) : null;
             // 帧身份与活动内存目录分别核对，逻辑地址本身不能证明所属上下文。
             const declaredLayout = binding ? this.layoutAt(binding.layout) : null;
             const container = declaredLayout && ['L', 'M', 'E', 'O', 'F'].includes(declaredLayout.kind);
-            const addressable = (binding?.address === true || container) && numeric !== null && numeric >= 0n;
+            let addressable = (binding?.address === true || container) && numeric !== null && numeric >= 0n;
             const layout = addressable ? declaredLayout : null;
             let display = value || '<不可用>';
             if (/<optimized out>/i.test(display)) display = '<已优化：当前位置没有可读值>';
-            else if (frame.metadata?.optimized && !binding && !/^(?:u?int(?:8|16|32|64)|float(?:32|64)|bool|char)$/.test(variable.type || ''))
+            else if (frame.metadata?.optimized && !binding)
               display = '<布局不可用：无法唯一对应优化变量>';
             let memoryReference;
             let variablesReference = 0;
             let mirrorReadable = true;
-            const mirror = binding?.storageDwarf && frame.level === 0 && !frame.metadata?.optimized
-              && declaredLayout && ['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
+            const mirror = binding?.storageDwarf && declaredLayout && ['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
             if (mirror) {
               try {
-                const storage = await this.mirrorStorage(frame, binding, signal);
+                const storage = await this.bindingStorage(frame, binding, signal, data.variables || []);
                 display = (await decode(declaredLayout, storage.logical, storage.memory, { count: 0 })).text;
               } catch (error) { display = '<不可读：' + error.message + '>'; mirrorReadable = false; }
             }
+            if (binding?.storageDwarf && !mirror) {
+              try {
+                const storage = await this.bindingStorage(frame, binding, signal, data.variables || []);
+                numeric = (await storage.memory.read(storage.logical, 8)).readBigUInt64LE();
+                addressable = (binding.address === true || container) && numeric >= 0n;
+              } catch (error) { display = '<不可读：' + error.message + '>'; mirrorReadable = false; addressable = false; }
+            }
+            try { this.bindingAvailable(binding, data.variables || []); }
+            catch (error) { display = '<不可读：' + error.message + '>'; mirrorReadable = false; addressable = false; }
             if (addressable) {
               if (!container && numeric > 0n) memoryReference = 'chali-memory:' + this.handle({ kind: 'memory', thread: frame.thread, frame, address: numeric });
               if (layout) {
@@ -1160,7 +1182,7 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, frame, address: numeric, layout });
               }
             }
-            const readOnly = frame.metadata?.optimized || !binding || binding.readOnly || binding.address || !mirrorReadable || ((binding.storage || binding.boxed) && !mirror)
+            const readOnly = frame.metadata?.optimized || (binding?.storageDwarf && frame.level !== 0) || !binding || binding.readOnly || binding.address || !mirrorReadable || ((binding.storage || binding.boxed) && !mirror)
               || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
             return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference,
               presentationHint: readOnly ? { attributes: ['readOnly'] } : undefined };
@@ -1241,6 +1263,7 @@ class Adapter {
           this.stopped(epoch);
           const selector = ` --thread ${frame.thread} --frame ${frame.level}`;
           const rows = (await this.gdb.command('-stack-list-variables' + selector + ' --simple-values', { signal })).variables || [];
+          this.bindingAvailable(binding, rows);
           const variable = rows.find(row => row.name === name);
           if (!variable || variable.type !== binding.type || /optimized out|不可用/.test(variable.value || '')) throw new Error('变量已经不可用或类型不匹配');
           let physical;
@@ -1278,10 +1301,12 @@ class Adapter {
             });
             if (!variable) throw new Error((frame.metadata?.optimized ? '当前优化作用域没有唯一可读绑定：' : '当前作用域没有可读变量：') + name);
             const binding = bindings.get(variable.name), layout = this.layoutAt(binding.layout);
+            this.bindingAvailable(binding, rows);
             let text = variable.value || '<不可用>';
-            if (binding.storageDwarf && frame.level === 0 && !frame.metadata?.optimized && layout && ['i', 'u', 'f', 'b', 'c'].includes(layout.kind)) {
-              const storage = await this.mirrorStorage(frame, binding, signal);
-              text = (await decode(layout, storage.logical, storage.memory, { count: 0 })).text;
+            if (binding.storageDwarf && layout) {
+              const storage = await this.bindingStorage(frame, binding, signal, rows);
+              if (['i', 'u', 'f', 'b', 'c'].includes(layout.kind)) text = (await decode(layout, storage.logical, storage.memory, { count: 0 })).text;
+              else text = String((await storage.memory.read(storage.logical, 8)).readBigUInt64LE());
             }
             if (/<optimized out>/i.test(text)) throw new Error('变量已被优化，当前位置没有可读值：' + name);
             if (/^(?:int8|uint8)$/.test(variable.type || '')) text = text.replace(/^(-?[0-9]+)\s+'.*'$/, '$1');

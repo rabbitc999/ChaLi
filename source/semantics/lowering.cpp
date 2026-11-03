@@ -1973,11 +1973,17 @@ ast::NodePtr StoreOwnedValueAt(const ast::NodePtr &address, int valueId,
             Node::assign(previous, Node::loadInt(Node::var(destination)))
         };
         AppendOwnedDrop(previous, type, &out);
-        out.push_back(Node::storeAt(Node::var(destination), Node::var(replacement), ast::Type::i64()));
+        auto write = Node::storeAt(Node::var(destination), Node::var(replacement), ast::Type::i64());
+        write->debugLifetimeWrite = g_debugEnabled;
+        out.push_back(write);
         return Node::block(out);
     }
     if (!type || (!IsStandardOpcode(type, "String") && !IsObjectLike(type) && !OpcodeNonCopyable(type)))
-        return ast::Node::storeAt(address, value, LowerType(type, "assignment"));
+        {
+        auto write = ast::Node::storeAt(address, value, LowerType(type, "assignment"));
+        write->debugLifetimeWrite = g_debugEnabled;
+        return write;
+    }
     ast::NodePtr stored = (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)) ? TakeExpressionTempValue(value, type) : value;
     if (IsStandardOpcode(type, "String"))
     {
@@ -2010,9 +2016,9 @@ ast::NodePtr StoreOwnedValueAt(const ast::NodePtr &address, int valueId,
     const auto *opcode = FindOpcodeDefinition(type);
     out.push_back(ast::Node::ifThenElse(ast::Node::binary("!=", previous, ast::Node::i(0)),
                                         opcode ? ast::Node::exprStmt(ast::Node::call(opcode->destroy, { "value" }, { previous })) : ast::Node::release(previous), nullptr));
-    out.push_back(ast::Node::storeAt(ast::Node::var(slotAddress),
-                                     ast::Node::var(slotValue),
-                                     LowerType(type, "assignment")));
+    auto write = ast::Node::storeAt(ast::Node::var(slotAddress), ast::Node::var(slotValue), LowerType(type, "assignment"));
+    write->debugLifetimeWrite = g_debugEnabled;
+    out.push_back(write);
     return ast::Node::block(out);
 }
 

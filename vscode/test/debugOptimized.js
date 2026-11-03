@@ -30,7 +30,7 @@ async function main() {
   await adapter.request({ seq: 1, command: 'variables', arguments: { variablesReference: 20 } });
   const rows = messages.find(value => value.request_seq === 1).body.variables;
   assert.equal(rows[0].value, '7'); assert.match(rows[1].value, /已优化/);
-  assert.equal(rows[2].value, '11'); assert.match(rows[3].value, /布局不可用/);
+  assert.match(rows[2].value, /布局不可用/); assert.match(rows[3].value, /布局不可用/);
   assert(rows.every(row => row.presentationHint.attributes.includes('readOnly')));
   assert(rows.every(row => row.variablesReference === 0 && !row.memoryReference));
   await adapter.request({ seq: 2, command: 'evaluate', arguments: { frameId: 10, expression: 'live+1' } });

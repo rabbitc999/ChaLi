@@ -58,6 +58,14 @@ def main():
         result = subprocess.run([str(unit)], cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=120)
         assert result.returncode == 0 and result.stdout == 'backend ownership generation OK\n' and not result.stderr, result
         print('生成证据和检查屏障通过', flush=True)
+        ranges = work / ('storage-ranges.exe' if os.name == 'nt' else 'storage-ranges')
+        ranges_command = [str(ROOT/'tests/move_storage_ranges.cpp') if item == str(ROOT/'tests/backend_ownership_test.cpp')
+                          else str(ranges) if item == str(unit) else item for item in command]
+        result = subprocess.run(ranges_command, cwd=ROOT, env=environment, capture_output=True, text=True, encoding='utf-8', timeout=240)
+        assert result.returncode == 0, result.stdout + result.stderr
+        result = subprocess.run([str(ranges)], cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=120)
+        assert result.returncode == 0, result.stdout + result.stderr
+        print('随机存储范围、调试状态独立性及代次耗尽通过', flush=True)
         for mode, expected in [('overlap','1'), ('self','3'), ('empty','1'), ('stale',None), ('partial',None)]:
             outcomes = []
             for name, flags in [('baseline', DISABLE), ('optimized', ENABLED)]:

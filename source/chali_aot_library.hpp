@@ -110,7 +110,8 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::Free:
         case N::Drop:
         case N::MemoryCopy:
-        case N::MemorySet: break;
+        case N::MemorySet:
+        case N::DebugStorageLifetime: break;
         case N::StructNew:
             if (!libraryPlainValue(ast::inferType(node, environment))) return false;
             break;
@@ -323,7 +324,7 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
     for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
-    if (request.options.debug) out += "declare void @chali_debug_publish_memory()\ndeclare void @chali_debug_capture_context(ptr)\n";
+    if (request.options.debug) out += "declare void @chali_debug_publish_memory()\ndeclare void @chali_debug_capture_context(ptr)\ndeclare void @chali_debug_storage_lifetime(i64, i64, i64, i64)\n";
     if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
     if (out.find("@chali_host_check_pointer(") == Text::npos) out += "declare void @chali_host_check_pointer(i64, i64, i64)\n";

@@ -73,6 +73,15 @@ void chali_debug_publish_memory(void);
  * @return 无返回值，不调用用户方法或分配语言对象。
  */
 void chali_debug_capture_context(ChaliDebugFrameContext *output);
+/**
+ * @brief 正常执行时登记调试存储状态，不参与语言所有权判定。
+ * @param operation 零为重新写入，一为移动。
+ * @param address 已物化的逻辑存储地址。
+ * @param bytes 存储宽度。
+ * @param type 实际类型编号。
+ * @return 无；观察失败不改变程序结果。
+ */
+void chali_debug_storage_lifetime(uint64_t operation, uint64_t address, uint64_t bytes, int64_t type);
 #ifdef __cplusplus
 }
 #endif

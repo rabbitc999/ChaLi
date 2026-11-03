@@ -16,12 +16,24 @@ async function main() {
   for (const change of [{ storageDwarf: '' }, { storageDwarf: 'user()' }, { storageBytes: 1 }, { readOnly: true }])
     await assert.rejects(encodeAssignment({ ...binding, ...change }, scalar, '9'));
   const adapter = new Adapter('unused', new PassThrough(), new PassThrough());
+  const tracked = { availabilityDwarf: '__chali_available_0' };
+  assert.doesNotThrow(() => adapter.bindingAvailable(tracked, [{ name: tracked.availabilityDwarf, value: '1' }]));
+  assert.throws(() => adapter.bindingAvailable(tracked, [{ name: tracked.availabilityDwarf, value: '0' }]), /移动/);
+  assert.throws(() => adapter.bindingAvailable(tracked, []), /唯一/);
+  assert.throws(() => adapter.bindingAvailable(tracked, [{ name: tracked.availabilityDwarf, value: '1' }, { name: tracked.availabilityDwarf, value: '1' }]), /唯一/);
   const messages = [], commands = []; adapter.send = value => messages.push(value); adapter.state = 'stopped';
   const frame = { thread: 1, level: 0, metadata: { position: { scope: 0 }, function: { parents: new Map([[0, 0]]), variables: [binding] } } };
   adapter.frames.set(10, frame); adapter.handles.set(20, frame);
   adapter.metadata = { cache: { catalog: { layouts: ['i0:0:0:8:0:0:'] } }, cancel() {} };
   const actual = Buffer.alloc(8); actual.writeBigInt64LE(5n);
+  let active = 0, peak = 0;
   adapter.memoryFor = async () => ({
+    readable: async (address, length) => {
+      assert.equal(address, 123n); assert.equal(length, 8);
+      active++; peak = Math.max(peak, active);
+      try { assert(active <= 32); await new Promise(resolve => setTimeout(resolve, 1)); }
+      finally { active--; }
+    },
     read: async (address, length) => { assert.equal(address, 123n); assert.equal(length, 8); return Buffer.from(actual); },
     address: async (address, length) => { assert.equal(address, 123n); assert.equal(length, 8); return 4096n; },
   });
@@ -56,14 +68,10 @@ async function main() {
   assert.equal(messages.find(value => value.request_seq === 6).success, false); assert.equal(commands.length, legacyBefore);
   const many = Array.from({ length: 300 }, (_, index) => ({ ...binding, name: 'number' + index, storageDwarf: '__chali_storage_' + index }));
   frame.metadata.function.variables = many;
-  let active = 0, peak = 0;
+  active = 0; peak = 0;
   adapter.gdb.command = async command => {
-    if (command.startsWith('-stack-list-variables')) return { variables: many.map(item => ({ name: item.name, type: 'int64', value: '5' })) };
-    assert(command.startsWith('-data-evaluate-expression'));
-    active++; peak = Math.max(peak, active);
-    try { assert(active <= 32, '基础镜像查询不得耗尽 GDB 并发请求预算'); await new Promise(resolve => setTimeout(resolve, 1)); }
-    finally { active--; }
-    return { value: '123' };
+    if (command.startsWith('-stack-list-variables')) return { variables: many.flatMap(item => [{ name: item.name, type: 'int64', value: '5' }, { name: item.storageDwarf, type: 'uint64', value: '123' }]) };
+    assert.fail('镜像读取不得用表达式回退定位同名外层变量');
   };
   await adapter.request({ seq: 5, command: 'variables', arguments: { variablesReference: 20 } });
   const manyValues = messages.find(value => value.request_seq === 5);

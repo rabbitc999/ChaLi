@@ -135,6 +135,24 @@ struct ObjectStore
     Memory::Vector<std::size_t> materializedHeap;
     Memory::Vector<std::int64_t> materializedObjects;
     std::uint64_t debugSnapshotRevision = 1; ///< 对象及移动状态的只读观察代次，零表示永久禁用快照。
+    Memory::Map<std::pair<std::size_t, std::int64_t>, std::size_t> debugMovedStorage; ///< 仅调试使用的非聚合移动状态。
+    std::size_t largestDebugMovedStorage = 0; ///< 调试标记的最大跨度，不参与语言存活判定。
+    /**
+     * @brief 为已转移的非聚合存储登记调试状态，不改变语言生命周期表。
+     * @param address 已物化逻辑地址。
+     * @param bytes 完整存储宽度。
+     * @param type 运行时类型编号。
+     * @return 无；超出预算或观察失败时禁用快照。
+     */
+    void markDebugStorage(std::size_t address, std::size_t bytes, std::int64_t type) noexcept;
+    /**
+     * @brief 清除被合法初始化覆盖的调试移动标记。
+     * @param address 初始化起始逻辑地址。
+     * @param bytes 初始化宽度。
+     * @param fresh 新分配时清除所有重叠标记，否则仅清除完整覆盖项。
+     * @return 无；不修改语言存活表或借用代次。
+     */
+    void beginDebugStorage(std::size_t address, std::size_t bytes, bool fresh = false) noexcept;
 
     /**
      * @brief 收下一个对象，返回它的句柄。

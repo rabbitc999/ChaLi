@@ -293,7 +293,7 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
         }
         if (line.rfind("  ", 0) == 0u && line.find("!dbg !") == std::string::npos)
             line += ", !dbg !"
-                    + std::to_string(line.find("@chali_debug_capture_context") != std::string::npos ? captureLocation : line.find("@chali_debug_publish_memory") == std::string::npos ? currentLocation : publishLocation);
+                    + std::to_string(line.find("@chali_debug_capture_context") != std::string::npos ? captureLocation : (line.find("@chali_debug_publish_memory") != std::string::npos || line.find("@chali_debug_storage_lifetime") != std::string::npos) ? publishLocation : currentLocation);
         output += line + "\n";
         output += after;
     }
@@ -346,6 +346,7 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
                        + ",\"line\":" + std::to_string(variable.line) + ",\"column\":" + std::to_string(variable.column)
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
                        + ",\"storageDwarf\":" + debugJsonString(variable.storageDwarf) + ",\"storageBytes\":" + std::to_string(variable.storageBytes)
+                       + ",\"availabilityDwarf\":" + debugJsonString(variable.availabilityDwarf)
                        + ",\"readOnly\":" + (variable.readOnly ? "true" : "false") + "}";
         }
         catalog += "]}";
