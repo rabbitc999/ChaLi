@@ -347,6 +347,7 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
                        + ",\"storage\":" + debugJsonString(variable.storage) + ",\"boxed\":" + (variable.storage.empty() ? "false" : "true")
                        + ",\"storageDwarf\":" + debugJsonString(variable.storageDwarf) + ",\"storageBytes\":" + std::to_string(variable.storageBytes)
                        + ",\"availabilityDwarf\":" + debugJsonString(variable.availabilityDwarf)
+                       + ",\"stringOwner\":" + (variable.stringOwner ? "true" : "false")
                        + ",\"readOnly\":" + (variable.readOnly ? "true" : "false") + "}";
         }
         catalog += "]}";

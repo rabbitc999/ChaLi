@@ -64,7 +64,8 @@ async function main() {
       const originalScope = data.scope, oldValue = data.values.values.variablesReference, oldMemory = data.values.values.memoryReference;
       assert(oldValue && oldMemory);
       const set = (name, value) => client.request('setVariable', { variablesReference: data.scope, name, value });
-      for (const name of ['fixed', 'owned', 'alias', 'values']) assert(data.values[name].presentationHint.attributes.includes('readOnly'), name);
+      for (const name of ['fixed', 'alias', 'values']) assert(data.values[name].presentationHint.attributes.includes('readOnly'), name);
+      assert(!data.values.owned.presentationHint?.attributes.includes('readOnly'));
       for (const [name, value] of [['fixed', '9'], ['owned', '0'], ['alias', '0'], ['values', '0'], ['signed8', '128'], ['unsigned8', '-1'], ['signed32', '1.5'], ['truth', '1'], ['single', '1e39'], ['signed64', 'inspect(9)'], ['missing', '1']]) await assert.rejects(set(name, value));
       for (const [name, value] of [['signed8', '3'], ['signed8', '-9'], ['signed16', '6'], ['signed32', '7'], ['signed64', '-9000000001'], ['unsigned8', '4'], ['unsigned16', '8'], ['unsigned32', '9'], ['unsigned64', '18446744073709551614'], ['single', '0.1'], ['real', '2.5'], ['truth', 'false'], ['letter', "'Z'"]]) {
         await set(name, value);

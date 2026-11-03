@@ -206,6 +206,7 @@ struct Node
     Memory::String debugStorage;          ///< 取引用后真实绑定的逻辑存储；原槽仅作调试镜像。
     bool debugReadOnly = false;           ///< 原声明只读性，不参与已有语义检查。
     bool debugLifetimeWrite = false;      ///< 真正的源码存储写入，可恢复调试可用性；镜像刷新不设置。
+    bool debugStringOwner = false;        ///< 已建立独立拥有关系的普通局部 String，供受限内容修改核对。
     std::shared_ptr<const MacroDebugLocation> debugMacro; ///< 宏来源及私有绑定标记，不改变运行时作用域。
     std::shared_ptr<const DeclarationSource> debugBindingSource; ///< 模式等合成声明的原始位置，不参与未使用变量警告。
     Kind kind = Kind::IntLit;              ///< 种类。

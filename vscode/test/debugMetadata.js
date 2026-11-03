@@ -80,6 +80,8 @@ async function main() {
     () => target(value => { Object.assign(value.functions[0].variables[0], { storage: '__box', storageDwarf: '__chali_storage_0', storageBytes: 2 }); return value; }),
     () => target(value => { value.functions[0].variables[0].storageBytes = 8; return value; }),
     () => target(value => { value.functions[0].variables[0].availabilityDwarf = 'user()'; return value; }),
+    () => target(value => { value.functions[0].variables[0].stringOwner = true; return value; }),
+    () => target(value => { value.functions[0].variables[0].stringOwner = 'true'; return value; }),
     () => target(value => ({ ...value, closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 4, address: true }] }] })),
     () => target(value => ({ ...value, layouts: ['x'], closures: [{ address: 24, name: 'bad', captures: [{ name: 'n', layout: 0, mode: 2, address: true }] }] })),
     () => target(value => ({ ...value, dynamicTypes: [{ id: 42, layout: 0 }] })),

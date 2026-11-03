@@ -3257,6 +3257,7 @@ ast::NodePtr LowerLocalDecl(int id)
             if (type->kind == MType::Array && !IsRuntimeArray(type) && ArrayElementNeedsRelease(type->elem))
                 MarkOwnedArray(emitted, type);
         }
+        declaration->debugStringOwner = g_debugEnabled && !isConst && IsStandardOpcode(type, "String") && IsOwnedNow(emitted);
         if (NeedsFunctionReferenceStorage(decl.s, type))
         {
             const auto storage = AllocateName("__chali_reference_storage");

@@ -14,6 +14,7 @@ const { DebugMemory } = require('./debugMemory');
 const { parseLayout, decode, expandable, typeName } = require('./debugValue');
 const { parseExpression, evaluateExpression } = require('./debugExpression');
 const { encodeAssignment } = require('./debugAssignment');
+const { encodeStringAssignment, stringWriteAddress } = require('./debugStringAssignment');
 const { DebugThreads } = require('./debugThreads');
 const { interruptWindows } = require('./debugInterrupt');
 const { DebugSourceMap } = require('./debugSourceMap');
@@ -1151,6 +1152,7 @@ class Adapter {
             let memoryReference;
             let variablesReference = 0;
             let mirrorReadable = true;
+            let stringEditable = false;
             const mirror = binding?.storageDwarf && declaredLayout && ['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
             if (mirror) {
               try {
@@ -1173,6 +1175,8 @@ class Adapter {
                 try {
                   const memory = await this.memoryForFrame(frame, signal, data.variables || []);
                   display = (await decode(layout, numeric, memory, { count: 0 })).text;
+                  stringEditable = binding?.stringOwner === true && layout.kind === 's' && numeric >= memory.dataSize
+                    && frame.level === 0 && !frame.metadata?.optimized;
                 } catch (error) {
                   display = '<不可读：' + error.message + '>';
                   memoryReference = undefined;
@@ -1182,8 +1186,9 @@ class Adapter {
                   variablesReference = this.handle({ kind: 'value', thread: frame.thread, frame, address: numeric, layout });
               }
             }
-            const readOnly = frame.metadata?.optimized || (binding?.storageDwarf && frame.level !== 0) || !binding || binding.readOnly || binding.address || !mirrorReadable || ((binding.storage || binding.boxed) && !mirror)
-              || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind);
+            const readOnly = frame.metadata?.optimized || (binding?.storageDwarf && frame.level !== 0) || !binding || binding.readOnly || !mirrorReadable
+              || (!stringEditable && (binding.address || ((binding.storage || binding.boxed) && !mirror)
+                || !['i64', 'double'].includes(binding.nativeStorage) || !declaredLayout || !['i', 'u', 'f', 'b', 'c'].includes(declaredLayout.kind)));
             return { name: binding?.name || variable.name, value: display, type: variable.type, evaluateName: binding?.name || variable.name, variablesReference, memoryReference,
               presentationHint: readOnly ? { attributes: ['readOnly'] } : undefined };
           };
@@ -1259,7 +1264,10 @@ class Adapter {
           const [name, binding] = entry;
           if (!/^[\p{L}_][\p{L}\p{N}_]*$/u.test(name)) throw new Error('变量原生名称不可安全定位');
           if ((binding.storage || binding.boxed) && frame.level !== 0) throw new Error('真实绑定镜像仅支持栈顶开发源码帧修改');
-          const value = await encodeAssignment(binding, this.layoutAt(binding.layout), args.value);
+          const layout = this.layoutAt(binding.layout);
+          const stringValue = ['String', 'std::lang::String'].includes(binding.type) && layout?.kind === 's';
+          if (stringValue && frame.level !== 0) throw new Error('拥有 String 修改仅支持栈顶开发源码帧');
+          const value = stringValue ? encodeStringAssignment(binding, layout, args.value) : await encodeAssignment(binding, layout, args.value);
           this.stopped(epoch);
           const selector = ` --thread ${frame.thread} --frame ${frame.level}`;
           const rows = (await this.gdb.command('-stack-list-variables' + selector + ' --simple-values', { signal })).variables || [];
@@ -1267,7 +1275,19 @@ class Adapter {
           const variable = rows.find(row => row.name === name);
           if (!variable || variable.type !== binding.type || /optimized out|不可用/.test(variable.value || '')) throw new Error('变量已经不可用或类型不匹配');
           let physical;
-          if (binding.storage || binding.boxed) {
+          if (stringValue) {
+            let memory = await this.memoryForFrame(frame, signal, rows), handle;
+            if (binding.storage || binding.boxed) {
+              const storage = await this.mirrorStorage(frame, binding, signal);
+              memory = storage.memory;
+              handle = (await memory.read(storage.logical, 8)).readBigUInt64LE();
+            } else {
+              if (rows.filter(row => row.name === name).length !== 1 || !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(variable.value || ''))
+                throw new Error('拥有 String 绑定不能唯一定位或已优化');
+              handle = BigInt(variable.value);
+            }
+            physical = await stringWriteAddress(handle, value.bytes, memory);
+          } else if (binding.storage || binding.boxed) {
             const storage = await this.mirrorStorage(frame, binding, signal);
             physical = await storage.memory.address(storage.logical, value.bytes.length);
           } else {
@@ -1279,7 +1299,8 @@ class Adapter {
           if (signal.aborted) throw new Error('变量修改已取消');
           this.invalidateValues();
           try {
-            await this.gdb.command('-data-write-memory-bytes 0x' + physical.toString(16) + ' ' + value.bytes.toString('hex'), { signal });
+            if (physical !== null)
+              await this.gdb.command('-data-write-memory-bytes 0x' + physical.toString(16) + ' ' + value.bytes.toString('hex'), { signal });
             body = { value: value.text, type: value.type, variablesReference: 0 };
           } finally {
             this.invalidateValues();

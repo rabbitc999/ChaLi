@@ -1303,6 +1303,7 @@ struct AstBuilder : Builder
             debugType(descriptor, node->declared);
             if (!node->debugTypeName.empty()) descriptor.typeName = textOf(node->debugTypeName);
             descriptor.readOnly = node->debugReadOnly;
+            descriptor.stringOwner = node->debugStringOwner;
             descriptor.storage = textOf(node->debugStorage);
             if (node->debugMacro && node->debugMacro->privateBinding && node->debugMacro->frame) descriptor.macro = node->debugMacro->frame->id;
             if (!node->debugStorage.empty()) debugBoxes[textOf(node->text)] = { node->debugStorage, node->declared, debugScope };

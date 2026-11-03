@@ -26,6 +26,7 @@ struct DebugVariable
     std::size_t block = 0;  ///< 声明生效的原生基本块，零表示函数序言。
     std::string file = {};
     bool readOnly = false;
+    bool stringOwner = false; ///< 源码降级确认的可变局部 String 拥有关系，不由类型名推断。
     std::string storage = {};  ///< 非空表示原始槽只提供源码停点镜像，写入必须定位真实绑定。
     std::string dwarfName = {}; ///< 私有宏变量的独立调试名，避免遮蔽调用方绑定。
     std::int64_t macro = -1;    ///< 非负值表示只在该宏展开帧内可见。
