@@ -168,7 +168,7 @@ int execute(const std::vector<std::string> &arguments, const std::filesystem::pa
     return code;
 }
 /**
- * @brief 暂存到目标的同目录文件，只有复制成功才替换原产物。
+ * @brief 暂存到目标的同目录文件，Windows 短暂占用最多等待五秒，失败保留原产物。
  * @param source 已成功的工作区文件。
  * @param destination 最终路径。
  * @param error 接收失败说明。
@@ -245,8 +245,19 @@ bool publish(const std::filesystem::path &source, const std::filesystem::path &d
 #endif
     // 同目录只暂存一个文件，不创建 tmp 外的临时目录；替换失败不触碰原文件。
 #ifdef _WIN32
-    const bool ok = MoveFileExW(staged.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
-    if (!ok) error = "无法替换产物，系统错误 " + std::to_string(GetLastError());
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    bool ok = false;
+    while (!(ok = MoveFileExW(staged.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0))
+    {
+        const auto failure = GetLastError();
+        if ((failure != ERROR_ACCESS_DENIED && failure != ERROR_SHARING_VIOLATION && failure != ERROR_LOCK_VIOLATION)
+            || std::chrono::steady_clock::now() >= deadline)
+        {
+            error = "无法替换产物，系统错误 " + std::to_string(failure);
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    }
 #else
     std::filesystem::rename(staged, destination, ec);
     const bool ok = !ec;

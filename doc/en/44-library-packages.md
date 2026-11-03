@@ -195,6 +195,8 @@ void main() {
 
 `chali --check consumer.chl` checks declarations; `chali aot consumer.chl --out build/consumer` links the selected implementation. Provider implementation source is not needed. Search proceeds through the current unit directory, its `modules/` directory and `-I` directories, preferring `.chlib` over `.chl` at each location. A found but invalid/incompatible package fails without source fallback. Embedded standard-library loading remains available.
 
+Module headers follow statement boundaries. A `module`, multiple imports and subsequent declarations may share a line, for example `module consumer;import example::math;void main(){assert(example::math::add(20,22)==42);}`. Whitespace, line breaks and comments around module paths remain lexical separators. Apparent imports in comments, ordinary strings, characters or nested interpolated strings do not load packages. Headers must precede ordinary declarations; duplicate modules, reserved module names and missing or damaged packages are rejected. When a project manifest adds imports, header extraction preserves the following code on the same line and its original diagnostic coordinates. Native package loading does not depend on placing each statement on a separate line.
+
 The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and internal ABIs beyond standard String and its supported owning aggregates are not enabled by carrying optional source/template assets.
 
 Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
@@ -274,7 +276,7 @@ Native headers and archive-member bounds are inspected on the same owned bytes w
 
 ## Failure handling and reproduction
 
-Packages are written in an isolated workspace under root `tmp/` and published only after validation. Failures preserve existing output. CLI packing cannot overwrite its manifest or input assets. Failed reading does not publish partial state. Digest, version, target and required-capability errors never silently select another implementation.
+Packages are written in an isolated workspace under root `tmp/` and published only after validation. On Windows, native output replacement retries access-denied, sharing, or lock conflicts for at most five seconds. Persistent failures report an error, preserve the previous file, and remove the adjacent staging file. Failures preserve existing output. CLI packing cannot overwrite its manifest or input assets. Failed reading does not publish partial state. Digest, version, target and required-capability errors never silently select another implementation.
 
 ```sh
 python tools/run_module_gates.py libraries defaults docs --chali PATH --random-recheck 1

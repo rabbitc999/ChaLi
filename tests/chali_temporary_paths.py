@@ -9,8 +9,54 @@ from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_cleanup_failures():
+    """验证短暂占用可重试，持续权限错误和越界路径不能被吞掉。"""
+    directory = tempfile.TemporaryDirectory(prefix='cleanup-policy-')
+    implementation = type(directory)
+    environment = implementation.cleanup.__globals__
+    try:
+        with patch.object(implementation.__bases__[0], 'cleanup',
+                          side_effect=[PermissionError('busy'), None]) as cleanup:
+            with patch.object(environment['time'], 'sleep'):
+                if os.name == 'nt':
+                    directory.cleanup()
+                    assert cleanup.call_count == 2
+                else:
+                    try:
+                        directory.cleanup()
+                    except PermissionError:
+                        pass
+                    else:
+                        raise AssertionError('非 Windows 不应重试权限错误')
+                    assert cleanup.call_count == 1
+        with patch.object(implementation.__bases__[0], 'cleanup',
+                          side_effect=PermissionError('persistent')):
+            with patch.object(environment['time'], 'monotonic', side_effect=[0, 6]):
+                try:
+                    directory.cleanup()
+                except PermissionError as error:
+                    assert str(error) == 'persistent'
+                else:
+                    raise AssertionError('持续权限错误必须上报')
+        original = directory.name
+        try:
+            directory.name = str(ROOT)
+            try:
+                directory.cleanup()
+            except RuntimeError:
+                pass
+            else:
+                raise AssertionError('仓库根目录不能被递归清理')
+        finally:
+            directory.name = original
+    finally:
+        directory.cleanup()
+    print('临时目录：短暂占用重试、持续失败上报与越界清理拒绝通过')
+
+
 def main():
     """故意指定上级临时目录，确认仍使用仓库根目录下的 tmp。"""
+    check_cleanup_failures()
     expected = (ROOT / 'tmp').resolve()
     with tempfile.TemporaryDirectory(prefix='temporary-policy-', dir=ROOT.parent) as directory:
         folder = Path(directory)

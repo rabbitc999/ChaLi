@@ -1,4 +1,4 @@
-"""验证匿名 fn 类型、旧词法删除、组合语法及 VM 执行。"""
+"""验证匿名 fn 类型、旧词法删除、组合语法及原生执行。"""
 from compiler_path import compiler_path
 from pathlib import Path
 import argparse
@@ -8,29 +8,42 @@ ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / 'build/chali-function-types'
 EXE = '.exe' if os.name == 'nt' else ''
 
-def execute(*args):
+def execute(*args, environment=None):
     """执行工具并捕获输出，固定中文诊断便于回归比较。"""
     env = dict(os.environ, CHALI_LANG='zh')
+    env.update(environment or {})
     return subprocess.run([str(x) for x in args], cwd=ROOT, env=env, capture_output=True, encoding='utf-8', errors='replace', timeout=240)
 
 def main():
     """验证声明、嵌套签名、泛型推导、引用及不兼容代码的拒绝。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
-    parser.add_argument('--vm', type=Path)
+    sdk = ROOT / 'build/dependencies/llvm/static-sdk'
+    static = os.name == 'nt' and (sdk / 'bin/g++.exe').is_file()
+    parser.add_argument('--build-root', type=Path, default=ROOT / ('build/llvm-static-gcc16' if static else 'build'))
+    parser.add_argument('--cxx')
+    parser.add_argument('--sysroot', type=Path)
     args = parser.parse_args()
     compiler = args.chali.resolve()
     WORK.mkdir(parents=True, exist_ok=True)
     unit = WORK / ('unit' + EXE)
-    libraries = [ROOT / path for path in ('build/chali-frontend/libparser.a',
-                 'build/chali-runtime/libast.a', 'build/chali-stackvm-core/libstackvm.a',
-                 'build/chali-host-records/librecords.a', 'build/chali-runtime/libpreprocess.a')]
-    system = ['-lwinhttp'] if os.name == 'nt' else []
-    result = execute('g++', '-std=c++17', '-O3', '-pthread', '-ffunction-sections', '-fdata-sections',
+    build = args.build_root.resolve()
+    use_sdk = static and build == (ROOT / 'build/llvm-static-gcc16').resolve()
+    cxx = args.cxx or (str(sdk / 'bin/g++.exe') if use_sdk else 'g++')
+    if Path(cxx).resolve().parent == (sdk / 'bin').resolve():
+        args.sysroot = args.sysroot or sdk
+    libraries = [build / path for path in ('chali-frontend/libparser.a',
+                 'chali-runtime/libast.a', 'chali-ircode-aot-core/libstackvm.a',
+                 'chali-host-records/librecords.a', 'chali-runtime/libpreprocess.a')]
+    system = ['-static', '-lwinhttp'] if os.name == 'nt' else []
+    result = execute(cxx, *(['--sysroot=' + args.sysroot.resolve().as_posix()] if args.sysroot else []),
+                     '-std=c++17', '-O3', '-pthread', '-ffunction-sections', '-fdata-sections',
                      '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
+                     '-DSTACKVM_AOT_ONLY=1',
                      '-I' + str(ROOT), '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'library'),
                      '-I' + str(ROOT / 'source/preprocess'), ROOT / 'tests/chali_function_types_test.cpp',
-                     '-Wl,--gc-sections', *libraries, *system, '-o', unit)
+                     '-Wl,--gc-sections', '-Wl,--start-group', *libraries, '-Wl,--end-group', *system, '-o', unit,
+                     environment={'PATH': str(Path(cxx).resolve().parent) + os.pathsep + os.environ.get('PATH', '')})
     assert result.returncode == 0, result.stderr
     result = execute(unit)
     assert result.returncode == 0 and result.stdout == 'function type unit tests OK\n' and (not result.stderr), result
@@ -42,13 +55,6 @@ def main():
         result = execute(compiler, backend, source, '--out', target)
         assert result.returncode == 0, (backend, result.stderr)
         assert result.returncode == 0 and result.stdout == expected and (not result.stderr), result
-    if args.vm:
-        prefix = WORK / 'binary'
-        result = execute(compiler, 'svmb', source, '--out', prefix)
-        assert result.returncode == 0, result.stderr
-        result = execute(args.vm.resolve(), 'run', prefix.with_suffix('.svmb'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout'))
-        assert result.returncode == 0 and result.stdout.partition('\n\n;')[0] == expected.rstrip() and (not result.stderr), result
-        assert '没释放' not in result.stdout, result
     for name, text in {'legacy-function': 'void main(){fn(int64)->int64 f;}', 'legacy-typed-lambda': 'void main(){let f=fn(int64 x)->int64{x+1};let __boom = f(1);}', 'legacy-inferred-lambda': 'void main(){let f=fn(x)->let{x+1};let __boom = f(1);}', 'legacy-nested-function': 'struct Box<T>{T value;};Box<fn(int64)->int64> value;void main(){}'}.items():
         legacy = WORK / (name + '.chl')
         legacy.write_text(text, encoding='utf-8')

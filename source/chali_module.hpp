@@ -8,7 +8,9 @@
 #include "chali_library.hpp"
 #include "chali_report.hpp"
 #include "chali_stdlib.hpp"
+#include "chali_interpolation.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -21,12 +23,14 @@
 namespace chali_module
 {
 
+/** @brief 同一物理行内的模块头声明与保留原列号的剩余源码。 */
 struct HeaderLine
 {
     std::size_t index;
     Memory::String text, rest;
 };
 
+/** @brief 由词法可见头部收集的模块身份、依赖及工程头部抽取信息。 */
 struct UnitInfo
 {
     Memory::String name;
@@ -66,6 +70,13 @@ inline bool moduleName(const Memory::String &text)
     return false;
 }
 
+/**
+ * @brief 解析一条以分号结束的模块或导入声明，注释由调用方遮蔽。
+ * @param line 单条声明的词法可见源码。
+ * @param word 要求的声明关键字。
+ * @param name 成功时接收规范模块路径。
+ * @return 声明及路径均完整有效时为真。
+ */
 inline bool directive(const Memory::String &line, const Memory::String &word, Memory::String &name)
 {
     const Memory::String value = trim(line);
@@ -73,83 +84,176 @@ inline bool directive(const Memory::String &line, const Memory::String &word, Me
     if (value.size() <= word.size() || !std::isspace(static_cast<unsigned char>(value[word.size()])))
         return false;
     if (value.back() != ';') return false;
-    name = trim(value.substr(word.size(), value.size() - word.size() - 1u));
-    return moduleName(name);
+    std::size_t at = word.size();
+    name.clear();
+    while (at < value.size())
+    {
+        while (at < value.size() && std::isspace(static_cast<unsigned char>(value[at]))) ++at;
+        const auto begin = at;
+        while (at < value.size() && (std::isalnum(static_cast<unsigned char>(value[at])) || value[at] == '_')) ++at;
+        const auto part = value.substr(begin, at - begin);
+        if (!identifier(part)) return false;
+        if (!name.empty()) name += "::";
+        name += part;
+        while (at < value.size() && std::isspace(static_cast<unsigned char>(value[at]))) ++at;
+        if (at + 1u == value.size() && value[at] == ';') return true;
+        if (value.compare(at, 2u, "::") != 0) return false;
+        at += 2u;
+    }
+    return false;
 }
 
-inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::String &error)
+/**
+ * @brief 遮蔽注释及字符串内容，保留长度、换行及字面量的代码占位。
+ * @param source 尚未进行插值归一化的单元源码。
+ * @return 供模块头识别使用的同长度词法视图，不改写实际源码。
+ */
+inline Memory::String headerCode(const Memory::String &source)
 {
-    Memory::InputStringStream stream(input.text);
-    Memory::String line;
-    bool code = false;
-    bool blockComment = false;
-    std::size_t row = 0;
-    while (std::getline(stream, line))
+    Memory::String visible = source;
+    for (std::size_t at = 0; at < source.size();)
     {
-        const auto lineIndex = row++;
-        Memory::String visible;
-        Memory::Vector<std::size_t> codePositions;
-        for (std::size_t i = 0; i < line.size();)
+        const auto begin = at;
+        bool literal = false;
+        if (source.compare(at, 2u, "//") == 0)
         {
-            if (blockComment)
-            {
-                const std::size_t end = line.find("*/", i);
-                if (end == Memory::String::npos)
-                {
-                    i = line.size();
-                    continue;
-                }
-                blockComment = false;
-                i = end + 2u;
-                continue;
-            }
-            if (line.compare(i, 2, "//") == 0) break;
-            if (line.compare(i, 2, "/*") == 0)
-            {
-                blockComment = true;
-                i += 2u;
-                continue;
-            }
-            codePositions.push_back(i);
-            visible += line[i++];
+            const auto end = source.find('\n', at + 2u);
+            at = end == source.npos ? source.size() : end;
         }
-        visible = trim(visible);
-        if (visible.empty()) continue;
-        Memory::String name;
-        if (directive(visible, "module", name))
+        else if (source.compare(at, 2u, "/*") == 0)
         {
-            if (info.hasModule)
-            {
-                error = "同一文件只能声明一次 module";
-                return false;
-            }
-            if (code)
-            {
-                error = "module 声明必须是文件开头的第一条有效语句";
-                return false;
-            }
-            info.hasModule = true;
-            info.name = name;
-            Memory::String rest = line;
-            for (const auto pos : codePositions) rest[pos] = ' ';
-            info.headers.push_back({ lineIndex, visible, rest });
+            const auto end = source.find("*/", at + 2u);
+            at = end == source.npos ? source.size() : end + 2u;
         }
-        else if (directive(visible, "import", name))
+        else if (source[at] == 'f' && at + 1u < source.size() && source[at + 1u] == '"'
+                 && (at == 0u || !(std::isalnum(static_cast<unsigned char>(source[at - 1u])) || source[at - 1u] == '_' || source[at - 1u] == '$')))
         {
-            if (code)
+            Memory::String ignored;
+            chali_interpolation::Scanner scanner{ source, ignored };
+            scanner.at = at;
+            scanner.string();
+            at = ignored.empty() ? scanner.at : source.size();
+            literal = true;
+        }
+        else if (source[at] == '"' || source[at] == '\'')
+        {
+            const auto quote = source[at++];
+            while (at < source.size())
             {
-                error = "import 必须写在模块文件头部、普通声明之前";
-                return false;
+                const auto ch = source[at++];
+                if (ch == '\\' && at < source.size()) ++at;
+                else if (ch == quote) break;
             }
-            info.imports.push_back(name);
-            Memory::String rest = line;
-            for (const auto pos : codePositions) rest[pos] = ' ';
-            info.headers.push_back({ lineIndex, visible, rest });
+            literal = true;
         }
         else
         {
-            code = true;
+            ++at;
+            continue;
         }
+        for (auto index = begin; index < at; ++index)
+            if (visible[index] != '\n' && visible[index] != '\r' && visible[index] != '\t') visible[index] = ' ';
+        if (literal) visible[begin] = '@';
+    }
+    return visible;
+}
+
+/**
+ * @brief 按顶层语句边界收集模块头，保留同行后续代码及原始行列。
+ * @param input 已完成前处理的单元。
+ * @param info 接收身份、依赖和按物理行合并的头部信息。
+ * @param error 声明重复或位置不合法时接收诊断。
+ * @return 模块头满足装载约束时为真。
+ */
+inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::String &error)
+{
+    const auto visible = headerCode(input.text);
+    Memory::Vector<std::pair<std::size_t, std::size_t>> headers;
+    bool code = false;
+    bool statement = true;
+    std::size_t braces = 0, parentheses = 0, brackets = 0;
+    for (std::size_t at = 0; at < visible.size();)
+    {
+        const auto ch = visible[at];
+        if (std::isspace(static_cast<unsigned char>(ch)))
+        {
+            ++at;
+            continue;
+        }
+        if (statement && braces == 0u && parentheses == 0u && brackets == 0u)
+        {
+            auto wordEnd = at;
+            while (wordEnd < visible.size() && (std::isalnum(static_cast<unsigned char>(visible[wordEnd])) || visible[wordEnd] == '_')) ++wordEnd;
+            const auto word = visible.substr(at, wordEnd - at);
+            const auto end = (word == "module" || word == "import") ? visible.find(';', wordEnd) : visible.npos;
+            Memory::String name;
+            if (end != visible.npos && directive(visible.substr(at, end - at + 1u), word, name))
+            {
+                if (word == "module")
+                {
+                    if (info.hasModule)
+                    {
+                        error = "同一文件只能声明一次 module";
+                        return false;
+                    }
+                    if (code)
+                    {
+                        error = "module 声明必须是文件开头的第一条有效语句";
+                        return false;
+                    }
+                    info.hasModule = true;
+                    info.name = name;
+                }
+                else
+                {
+                    if (code)
+                    {
+                        error = "import 必须写在模块文件头部、普通声明之前";
+                        return false;
+                    }
+                    info.imports.push_back(name);
+                }
+                headers.emplace_back(at, end + 1u);
+                at = end + 1u;
+                continue;
+            }
+            code = true;
+            statement = false;
+        }
+        if (ch == '{') ++braces;
+        else if (ch == '}' && braces) --braces;
+        else if (ch == '(') ++parentheses;
+        else if (ch == ')' && parentheses) --parentheses;
+        else if (ch == '[') ++brackets;
+        else if (ch == ']' && brackets) --brackets;
+        if ((ch == ';' || ch == '}') && braces == 0u && parentheses == 0u && brackets == 0u) statement = true;
+        ++at;
+    }
+    std::size_t row = 0, next = 0;
+    for (std::size_t begin = 0; begin < input.text.size(); ++row)
+    {
+        const auto newline = input.text.find('\n', begin);
+        const auto end = newline == input.text.npos ? input.text.size() : newline;
+        while (next < headers.size() && headers[next].second <= begin) ++next;
+        if (next == headers.size()) break;
+        if (headers[next].first >= end)
+        {
+            begin = newline == input.text.npos ? input.text.size() : newline + 1u;
+            continue;
+        }
+        HeaderLine line{ row, Memory::String(end - begin, ' '), input.text.substr(begin, end - begin) };
+        bool found = false;
+        for (auto index = next; index < headers.size() && headers[index].first < end; ++index)
+        {
+            found = true;
+            for (auto pos = std::max(begin, headers[index].first); pos < std::min(end, headers[index].second); ++pos)
+            {
+                line.text[pos - begin] = visible[pos];
+                if (!std::isspace(static_cast<unsigned char>(visible[pos]))) line.rest[pos - begin] = ' ';
+            }
+        }
+        if (found) info.headers.push_back(std::move(line));
+        begin = newline == input.text.npos ? input.text.size() : newline + 1u;
     }
     return true;
 }

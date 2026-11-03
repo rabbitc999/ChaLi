@@ -31,7 +31,7 @@ struct Workspace
  */
 int execute(const std::vector<std::string> &arguments, const std::filesystem::path &log, std::string &diagnostic);
 /**
- * @brief 在目标同目录暂存一个文件，成功后原子替换最终产物。
+ * @brief 在目标同目录暂存后原子替换，Windows 占用有界等待五秒。
  * @param source 已经生成成功的工作区文件。
  * @param destination 用户请求的产物路径。
  * @param error 接收复制或替换失败原因。

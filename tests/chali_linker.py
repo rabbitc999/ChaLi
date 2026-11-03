@@ -6,6 +6,8 @@ import json
 import os
 import struct
 import subprocess
+import threading
+import time
 from compiler_path import compiler_path
 from project_temp import tempfile
 
@@ -60,6 +62,56 @@ def main():
         product = work/('program & 中文.exe' if os.name == 'nt' else 'program & 中文')
         run([compiler, 'link', main_object, liba, libb, '--out', product, *backend], work)
         run([product], work)
+        if os.name == 'nt':
+            kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+            kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32,
+                                          ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_void_p]
+            kernel.CreateFileW.restype = ctypes.c_void_p
+            kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+            sentinel = b'preserve previous output until publish succeeds'
+            for release in (True, False):
+                product.write_bytes(sentinel)
+                handle = kernel.CreateFileW(str(product), 0x80000000, 1, None, 3, 0x80, None)
+                assert handle not in (None, ctypes.c_void_p(-1).value), ctypes.get_last_error()
+                finished = threading.Event()
+                observed = threading.Event()
+
+                def unlock():
+                    """等发布暂存文件真实出现后解除占用，保证测试经过替换重试。"""
+                    try:
+                        deadline = time.monotonic() + 30
+                        while not finished.wait(0.01) and time.monotonic() < deadline:
+                            if list(work.glob(product.name + '.chali-*.tmp')):
+                                observed.set()
+                                time.sleep(0.3)
+                                break
+                    finally:
+                        kernel.CloseHandle(handle)
+
+                thread = threading.Thread(target=unlock) if release else None
+                if thread:
+                    thread.start()
+                started = time.monotonic()
+                try:
+                    result = run([compiler, 'link', main_object, liba, libb, '--out', product, *backend],
+                                 work, release)
+                    elapsed = time.monotonic() - started
+                    if release:
+                        assert observed.is_set() and elapsed >= 0.3
+                        run([product], work)
+                    else:
+                        assert 5 <= elapsed < 30 and '无法发布链接产物' in result.stderr, result
+                        assert product.read_bytes() == sentinel
+                    assert not list(work.glob(product.name + '.chali-*.tmp'))
+                    print(f'Windows publish lock: release={release}, elapsed={elapsed:.3f}s, staging removed', flush=True)
+                finally:
+                    finished.set()
+                    if thread:
+                        thread.join(timeout=35)
+                        assert not thread.is_alive()
+                    else:
+                        kernel.CloseHandle(handle)
+            run([compiler, 'link', main_object, liba, libb, '--out', product, *backend], work)
         run([compiler, 'link', main_object, '--library', 'beta', '--library', 'alpha', '-L', work,
              '--out', product, *backend], work)
         run([product], work)

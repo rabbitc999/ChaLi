@@ -7,11 +7,59 @@
 #include <sstream>
 
 /**
+ * @brief 核对头部语句边界、注释字面量隔离及工程抽取的原列占位。
+ * @return 全部断言通过时正常返回。
+ */
+void checkModuleHeaders()
+{
+    preprocess::Result source;
+    source.text = "module demo::main; import demo /* gap */ :: lib; import std::memory;void main(){String text=\"/* import fake; */\";}";
+    chali_module::UnitInfo info;
+    Memory::String error;
+    assert(chali_module::inspect(source, info, error));
+    assert(info.hasModule && info.name == "demo::main");
+    assert(info.imports == Memory::Vector<Memory::String>({ "demo::lib", "std::memory" }));
+    assert(info.headers.size() == 1 && info.headers[0].index == 0);
+    const auto suffix = source.text.find("void main");
+    assert(info.headers[0].rest.size() == source.text.size());
+    assert(info.headers[0].rest.substr(suffix) == source.text.substr(suffix));
+    assert(info.headers[0].rest.find("/* gap */") != Memory::String::npos);
+    assert(info.headers[0].text.find("void main") == Memory::String::npos);
+    source.text = "/* lead\nimport ghost;\n*/ module\n demo /* gap */ :: main;\nimport\n demo::one; import demo::two;\nvoid main(){}";
+    info = {};
+    assert(chali_module::inspect(source, info, error));
+    assert(info.name == "demo::main" && info.headers.size() == 4);
+    assert(info.imports == Memory::Vector<Memory::String>({ "demo::one", "demo::two" }));
+    source.text = R"CHALI(module demo::main;
+String text="/*";
+String fake="
+import ghost;
+module hidden;
+";
+void main(){println(f"{str("import missing; //")}");char quote='\'';}
+)CHALI";
+    info = {};
+    assert(chali_module::inspect(source, info, error));
+    assert(info.name == "demo::main" && info.imports.empty());
+    source.text = "im/* gap */port ghost;";
+    info = {};
+    assert(chali_module::inspect(source, info, error) && info.imports.empty());
+    for (const auto *invalid : { "int64 value=0;import ghost;", "void main(){} module late;", "module first;module second;" })
+    {
+        source.text = invalid;
+        info = {};
+        error.clear();
+        assert(!chali_module::inspect(source, info, error) && !error.empty());
+    }
+}
+
+/**
  * @brief 核对节点二进制往返、新语义标记和失败装载的原子性。
  * @return 全部断言通过返回零。
  */
 int main()
 {
+    checkModuleHeaders();
     preprocess::Result core;
     core.text = "module std::lang;";
     core.lineMap.push_back({ "core", 1 });

@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import tempfile as _tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = (ROOT / 'tmp').resolve()
@@ -23,6 +24,24 @@ def _directory(value):
     return str(TEMP_ROOT)
 
 
+class ProjectTemporaryDirectory(_tempfile.TemporaryDirectory):
+    """清理项目子目录时，有界等待 Windows 释放刚结束的可执行映像。"""
+
+    def cleanup(self):
+        """仅重试短暂权限错误；越界路径和持续失败均向调用方报告。"""
+        path = Path(self.name).resolve()
+        if TEMP_ROOT not in path.parents:
+            raise RuntimeError('拒绝清理项目 tmp 子目录以外的路径')
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                return super().cleanup()
+            except PermissionError:
+                if os.name != 'nt' or time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.1)
+
+
 class ProjectTempfile:
     """沿用标准 tempfile 文件操作，仅约束创建临时文件夹的位置。"""
 
@@ -32,7 +51,7 @@ class ProjectTempfile:
 
     def TemporaryDirectory(self, suffix=None, prefix=None, dir=None, **kwargs):
         """在项目 tmp 中创建可自动清理的独立子目录。"""
-        return _tempfile.TemporaryDirectory(suffix=suffix, prefix=prefix, dir=_directory(dir), **kwargs)
+        return ProjectTemporaryDirectory(suffix=suffix, prefix=prefix, dir=_directory(dir), **kwargs)
 
     def mkdtemp(self, suffix=None, prefix=None, dir=None):
         """在项目 tmp 中创建由调用方管理生命周期的独立子目录。"""
