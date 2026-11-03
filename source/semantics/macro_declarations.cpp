@@ -46,6 +46,7 @@ bool ExpandAstMacroMembers(int owner)
     std::function<bool(int, std::size_t)> expand = [&](int id, std::size_t depth) {
         if (depth >= 256 || !budget--) return ReportAstMacroFailure(id, "成员宏展开超过深度或规模预算");
         const auto node = N(id);
+        if (node.kind == MNode::ParseBad) return ReportAstMacroFailure(id, node.s);
         if (node.kind != MNode::MacroCall)
         {
             if (node.kind != MNode::Field && node.kind != MNode::MethodDef && node.kind != MNode::AssociatedDef && node.kind != MNode::AssociatedDecl)
@@ -53,7 +54,16 @@ bool ExpandAstMacroMembers(int owner)
             if (declaration.kind == MNode::InterfaceDecl && node.kind == MNode::Field)
                 return ReportAstMacroFailure(id, "接口不能包含生成字段");
             if (declaration.kind != MNode::InterfaceDecl && node.kind == MNode::MethodDef && (node.kids.size() < 2 || node.kids[1] < 0))
-                return ReportAstMacroFailure(id, "普通类型的生成方法必须提供方法体");
+            {
+                if (node.abiConvention.empty()) return ReportAstMacroFailure(id, "普通类型的生成方法必须提供方法体");
+                const auto permitted = [&](std::size_t line) {
+                    return line && line <= g_sourceFiles.size() && g_libraryMethodSources.count(g_sourceFiles[line - 1]);
+                };
+                if (!permitted(node.sourceLine) && !permitted(node.expansionLine))
+                    return ReportAstMacroFailure(id, "方法原型缺少已验证的 record-methods-v1 来源");
+                if (node.abiLibrary != "@link" || (node.abiLength != "const" && node.abiLength != "mut" && node.abiLength != "static"))
+                    return ReportAstMacroFailure(id, "原生方法原型缺少直接链接或接收者契约");
+            }
             members.push_back(id);
             if (depth || node.macroExpansion >= 0) generated.insert(id);
             return true;

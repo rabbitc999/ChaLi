@@ -902,6 +902,16 @@ int M_AbiDeclaration(int convention, int declaration);
  */
 int M_AbiImport(int convention, int library, int symbol, int declaration);
 /**
+ * @brief 为无实现体的方法原型保存直接链接入口和接收者契约。
+ * @param convention 已有语言 ABI 调用约定。
+ * @param library 直接链接标记。
+ * @param symbol 原生入口符号。
+ * @param receiver const、mut 或 static 接收者种类。
+ * @param declaration 方法签名节点。
+ * @return 带方法 ABI 信息的声明，非法组合返回诊断节点。
+ */
+int M_AbiMethod(int convention, int library, int symbol, int receiver, int declaration);
+/**
  * @brief 配置当前编译是否生成允许无 main 的 AOT 动态库。
  * @param enabled 为 true 时生成独立初始化和清理入口。
  */
@@ -1237,6 +1247,16 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许语言借用调用约定的已验证库接口来源。
  * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
 void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
+/**
+ * @brief 设置允许独立记录方法声明的已验证库来源。
+ * @param files 携带 record-methods-v1 的接口标签。
+ * @return 无。
+ */
+void M_SetLibraryMethodSources(const Memory::Vector<Memory::String> &files);
+/** @brief 设置已验证模板定义的来源，仅用于依赖类型身份核对。
+ * @param files generic-definitions-v1 定义标签；空表清除设置。
+ * @return 无。 */
+void M_SetLibraryTemplateSources(const Memory::Vector<Memory::String> &files);
 /**
  * @brief 设置允许标准 String 拥有值 ABI 的已验证库接口来源。
  * @param files 携带 owned-string-value-v1 的稳定来源标签。

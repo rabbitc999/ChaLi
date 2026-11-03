@@ -154,7 +154,10 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "lifetime-contract-v1" && feature != "borrowed-result-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1" && feature != "owned-string-value-v1" && feature != "owned-record-value-v1" && feature != "generic-definitions-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "lifetime-contract-v1" && feature != "borrowed-result-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1" && feature != "owned-string-value-v1" && feature != "owned-record-value-v1" && feature != "generic-definitions-v1" && feature != "record-methods-v1" && feature != "generic-record-values-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+    if (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "generic-record-values-v1") != manifest.requiredFeatures.end()
+        && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "shared-type-id-v1") == manifest.requiredFeatures.end())
+        throw std::runtime_error("具体泛型聚合缺少共享类型身份能力");
     if (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "owned-record-value-v1") != manifest.requiredFeatures.end()
         && (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "owned-string-value-v1") == manifest.requiredFeatures.end()
             || std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "shared-type-id-v1") == manifest.requiredFeatures.end()))

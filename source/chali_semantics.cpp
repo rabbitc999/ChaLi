@@ -52,7 +52,7 @@ Memory::Deque<MNode> g_nodes;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
 Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources,
-    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources, g_libraryOwnedRecordSources;
+    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources, g_libraryOwnedRecordSources, g_libraryMethodSources, g_libraryTemplateSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -2427,6 +2427,27 @@ int M_AbiImport(int convention, int library, int symbol, int declaration)
     return result;
 }
 /**
+ * @brief 保存已验证库的方法原型及其接收者种类，实际桥接在声明登记时建立。
+ * @param convention 语言 ABI 调用约定编号。
+ * @param library 直接链接路径编号。
+ * @param symbol 原生符号编号。
+ * @param receiver const、mut 或 static 字符串编号。
+ * @param declaration 无正文的方法节点。
+ * @return 原方法节点或非法契约诊断。
+ */
+int M_AbiMethod(int convention, int library, int symbol, int receiver, int declaration)
+{
+    if (g_nodes[declaration].kind != MNode::MethodDef) return M_ParseBad("方法 ABI 需要方法原型");
+    const auto mode = g_names[receiver];
+    if (mode != "const" && mode != "mut" && mode != "static") return M_ParseBad("方法 ABI 接收者必须是 const、mut 或 static");
+    if ((g_nodes[declaration].type2 == 1) != (mode == "static")) return M_ParseBad("方法 ABI 接收者与 static 声明不一致");
+    const int result = M_AbiImport(convention, library, symbol, declaration);
+    if (g_nodes[result].kind == MNode::ParseBad) return result;
+    if (g_nodes[result].abiConvention == "C" || g_nodes[result].abiLibrary != "@link") return M_ParseBad("方法 ABI 仅使用直接链接的语言调用约定");
+    g_nodes[result].abiLength = mode;
+    return result;
+}
+/**
  * @brief 标记 C ABI 导出实现并记录由指令指定的原生符号。
  * @param symbol 符号字符串编号。
  * @param declaration 函数实现节点。
@@ -3002,6 +3023,8 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
 {
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
+    g_libraryMethodSources.clear();
+    g_libraryTemplateSources.clear();
     g_libraryOwnedSources.clear();
     g_libraryOwnedRecordSources.clear();
     g_libraryDataSources.clear();
@@ -3018,6 +3041,25 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
     g_libraryBorrowSources.clear();
     g_libraryBorrowSources.insert(files.begin(), files.end());
 }
+/**
+ * @brief 保存当前目标允许原生记录方法声明的来源。
+ * @param files 携带 record-methods-v1 的已验证接口标签。
+ * @return 无。
+ */
+void M_SetLibraryMethodSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryMethodSources.clear();
+    g_libraryMethodSources.insert(files.begin(), files.end());
+}
+/** @brief 保存已验证的模板定义来源，不授予接口原生调用权限。
+ * @param files 模板虚拟源码标签。
+ * @return 无。 */
+void M_SetLibraryTemplateSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryTemplateSources.clear();
+    g_libraryTemplateSources.insert(files.begin(), files.end());
+}
+
 /**
  * @brief 保存当前目标允许标准 String 拥有值入口的来源。
  * @param files 同时核对原生 ABI 与必需能力的库接口标签。
@@ -3343,10 +3385,15 @@ bool ValidateNativeLibraryInterfaces()
         };
         if (LibraryLanguageAbi(node.abiConvention))
         {
+            const auto methodSource = [&](std::size_t line) {
+                return line && line <= g_sourceFiles.size() && g_libraryMethodSources.count(g_sourceFiles[line - 1]);
+            };
+            const bool method = node.kind == MNode::MethodDef && (methodSource(node.sourceLine) || methodSource(node.expansionLine))
+                                && (node.abiLength == "const" || node.abiLength == "mut" || node.abiLength == "static");
             const auto permitted = [&](std::size_t line) {
                 return line && line <= g_sourceFiles.size() && (node.abiConvention == "ChaLiOwned" ? g_libraryOwnedSources : g_libraryBorrowSources).count(g_sourceFiles[line - 1]);
             };
-            if ((!permitted(node.sourceLine) && !permitted(node.expansionLine)) || node.kind != MNode::ExternFuncDecl || !chali_aot::isDirectLinkLibrary(node.abiLibrary))
+            if ((!permitted(node.sourceLine) && !permitted(node.expansionLine)) || (node.kind != MNode::ExternFuncDecl && !method) || !chali_aot::isDirectLinkLibrary(node.abiLibrary))
             {
                 ReductionSourceScope location(static_cast<int>(id));
                 return Fail("语言库 ABI 仅用于具备对应已验证能力的直接链接声明");
@@ -3399,19 +3446,49 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     throw std::runtime_error("原生库支持基础标量、标准 String 及受支持记录／枚举；该类型或拥有状态尚未接入语言库 ABI");
 }
 /**
- * @brief 取得已检查记录声明的真实模块身份，不依赖临时短名称。
+ * @brief 查询已检查名称对应的具体泛型实例。
  * @param name 本次语义表中的类型名称。
- * @return 可用于公开语言接口的完整名称。
+ * @return 实例记录；普通具名类型返回空指针。
+ */
+const chali_generic::Expansion *LibraryGenericInstance(const Memory::String &name)
+{
+    for (const auto &entry : chali_generic::session.made)
+    {
+        const auto &instance = entry.second;
+        if (instance.generic && (instance.name == name || instance.generic->module + "::" + instance.name == name))
+            return &instance;
+    }
+    return nullptr;
+}
+/**
+ * @brief 将具体记录恢复为保留模块身份的公开类型拼写。
+ * @param name 已检查记录名称。
+ * @return 普通具名类型或带实际参数的泛型类型。
  */
 Memory::String LibraryDeclaredType(const Memory::String &name)
 {
+    if (const auto *instance = LibraryGenericInstance(name))
+    {
+        Memory::String text = instance->generic->module + "::" + instance->generic->sourceName + "<";
+        for (std::size_t index = 0; index < instance->args.size(); ++index)
+        {
+            if (index) text += ",";
+            const auto &argument = instance->args[index];
+            const auto scoped = instance->generic->module + "::" + argument;
+            const auto concrete = g_structs.count(scoped) ? scoped : argument;
+            if (concrete == "std::lang::String" || (g_opcodeTypes.count(concrete) && LibraryOwnedString(NamedType(concrete))))
+                text += "std::lang::String";
+            else text += g_structs.count(concrete) || LibraryGenericInstance(concrete) ? LibraryDeclaredType(concrete) : argument;
+        }
+        return text + ">";
+    }
     for (const auto id : g_top)
     {
         const auto &node = N(id);
         if ((node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl) && node.s == name)
             return node.module + "::" + BareTypeName(name);
     }
-    throw std::runtime_error("语言聚合入口缺少具名记录或枚举声明");
+    throw std::runtime_error("语言聚合入口缺少具名记录或枚举声明：" + std::string(name.c_str()));
 }
 /**
  * @brief 保留参数的语言类型及只读／可写借用约定。
@@ -3465,10 +3542,26 @@ bool RegisterLibraryTypeSymbols(ast::Program &program, const Memory::String &mod
     const auto imported = [&](std::size_t line) {
         return line && line <= g_sourceFiles.size() && (g_libraryBorrowSources.count(g_sourceFiles[line - 1]) || g_libraryTypeSources.count(g_sourceFiles[line - 1]));
     };
+    Memory::Set<Memory::String> required;
+    Memory::Function<void(const std::shared_ptr<MType> &)> require = [&](const std::shared_ptr<MType> &type) {
+        if (!type) return;
+        if (type->kind == MType::Ptr) { require(type->elem); return; }
+        if (!LibraryValueRecord(type) || !required.insert(type->name).second) return;
+        for (const auto &field : g_structs.at(type->name).fields) require(field.type);
+    };
+    for (const auto &function : g_functionDecls)
+    {
+        const bool own = !module.empty() && function.module == module;
+        if (function.declarationId < 0) continue;
+        const auto &declaration = N(function.declarationId);
+        if (!own && (!function.external || (!imported(declaration.sourceLine) && !imported(declaration.expansionLine)))) continue;
+        require(function.signature.result);
+        for (const auto &parameter : function.signature.params) require(parameter.type);
+    }
     for (const auto id : g_top)
     {
         const auto &node = N(id);
-        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s) || (!(node.module == module && !module.empty()) && !imported(node.sourceLine) && !imported(node.expansionLine))) continue;
+        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s) || (!(node.module == module && !module.empty()) && !imported(node.sourceLine) && !imported(node.expansionLine) && !required.count(node.s))) continue;
         const auto type = NamedType(node.s);
         const auto &definition = g_structs.at(node.s);
         if (definition.abiPacked || definition.nonCopyable || !LibraryValueRecord(type)) continue;
@@ -3480,6 +3573,51 @@ bool RegisterLibraryTypeSymbols(ast::Program &program, const Memory::String &mod
         } catch (const std::exception &error) { return Fail("预编译类型身份无法登记：" + Memory::String(error.what())); }
     }
     return true;
+}
+/**
+ * @brief 用模块私有的真实空函数签名恢复原生单元所需的泛型类型编号。
+ * @param program 已登记类型编号的生产程序。
+ * @param module 生产模块身份。
+ * @param exports 接收可链接的私有入口。
+ * @return 仅包含无正文原型的公开接口片段。
+ */
+Memory::String LibraryGenericTypeAnchors(ast::Program &program, const Memory::String &module,
+                                       Memory::Vector<chali_aot::ExternFunction> &exports)
+{
+    Memory::String text;
+    for (const auto id : g_top)
+    {
+        const auto &node = N(id);
+        if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !LibraryGenericInstance(node.s)) continue;
+        const auto type = NamedType(node.s);
+        if (!LibraryValueRecord(type)) continue;
+        const auto symbol = program.nativeTypeSymbols.find(TypeIdOf(type));
+        if (symbol == program.nativeTypeSymbols.end()) continue;
+        const auto suffix = symbol->second.substr(Memory::String("chali_native_type_").size());
+        const auto identity = module + "\n" + symbol->second;
+        const auto entryHash = chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())));
+        Memory::String languageName = "chaliTypeAnchor_" + suffix;
+        while (std::any_of(g_functionDecls.begin(), g_functionDecls.end(), [&](const auto &function) {
+            return function.module == module && function.source == languageName;
+        })) languageName += "_";
+        chali_aot::ExternFunction entry;
+        entry.label = module + "::__chali_generic_type_anchor_" + suffix;
+        entry.symbol = Memory::String(("chali_generic_type_anchor_" + entryHash).c_str());
+        entry.abiConvention = LibraryOwnedRecord(type) ? "ChaLiOwned" : "ChaLiBorrow";
+        entry.resultType = "void";
+        entry.parameterTypes.push_back("long long");
+        entry.genericTypeAnchor = true;
+        ast::Function function;
+        function.name = entry.label;
+        function.result = ast::Type::i64();
+        function.parameters.push_back({ "value", ast::Type::ref(LowerType(type, {})) });
+        function.body = ast::Node::block({ ast::Node::ret(ast::Node::i(0)) });
+        program.functions.push_back(std::move(function));
+        text += "inline #abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\")\nvoid "
+                + languageName + "(" + LibraryDeclaredType(node.s) + " const& value);\n";
+        exports.push_back(std::move(entry));
+    }
+    return text;
 }
 /**
  * @brief 导出标量抽象接口及其已验证继承关系，不携带默认方法实现。
@@ -3543,14 +3681,15 @@ Memory::String LibraryInterfaceDeclarations(const Memory::String &module)
 /**
  * @brief 导出受支持字段的公开记录与枚举声明，保留载荷及完整模块身份。
  * @param module 本次生产的完整模块身份。
+ * @param methods 按具体类型分组的已验证原生方法原型。
  * @return 不含方法体、默认初始化器或运行时状态的类型声明。
  */
-Memory::String LibraryTypeDeclarations(const Memory::String &module)
+Memory::String LibraryTypeDeclarations(const Memory::String &module, const Memory::Map<Memory::String, Memory::String> &methods)
 {
     Memory::Set<Memory::String> records, packagedRecords;
     Memory::Map<Memory::String, Memory::String> owners;
     const auto packaged = [&](std::size_t line) {
-        return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
+        return line && line <= g_sourceFiles.size() && (g_librarySources.count(g_sourceFiles[line - 1]) || g_libraryTemplateSources.count(g_sourceFiles[line - 1]));
     };
     for (const auto id : g_top)
     {
@@ -3574,8 +3713,9 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
         const auto &definition = found->second;
         if (definition.abiPacked || definition.nonCopyable || !definition.noReplace.empty() || !definition.noRight.empty())
             throw std::runtime_error("原生记录接口暂不导出自定义布局、所有权或运算符契约");
-        for (const auto &method : definition.methods)
-            if (!method.implicitDeclaration) throw std::runtime_error("原生记录接口暂不导出用户方法或构造器");
+        if (records.count(name) && !methods.count(name)
+            && std::any_of(definition.methods.begin(), definition.methods.end(), [](const auto &method) { return !method.implicitDeclaration && !method.superseded; }))
+            throw std::runtime_error("原生记录缺少用户方法入口元数据");
         for (const auto &interfaceName : definition.interfaces)
             if (interfaceName != "std::io::ToString" && interfaceName != "ToString") throw std::runtime_error("原生记录接口暂不导出接口继承契约");
         const auto typeText = [&](const std::shared_ptr<MType> &type) {
@@ -3584,8 +3724,8 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
             {
                 if (!records.count(type->name) && !packagedRecords.count(type->name))
                     throw std::runtime_error("跨模块记录或枚举字段必须来自已验证的预编译库依赖");
-                emit(type->name);
-                return owners.at(type->name) + "::" + BareTypeName(type->name);
+                if (!LibraryGenericInstance(type->name)) emit(type->name);
+                return LibraryDeclaredType(type->name);
             }
             return LibraryScalarType(type);
         };
@@ -3612,7 +3752,8 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
                     declaration += ")";
                 }
             }
-            declaration += "\n};\n";
+            const auto exportedMethods = methods.find(name);
+            declaration += exportedMethods == methods.end() ? "\n};\n" : ";\n" + exportedMethods->second + "};\n";
         }
         else
         {
@@ -3622,13 +3763,16 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
                 if (field.initializer >= 0) throw std::runtime_error("原生记录接口暂不导出字段默认初始化器");
                 declaration += "    " + typeText(field.type) + " " + field.name + ";\n";
             }
+            const auto exportedMethods = methods.find(name);
+            if (exportedMethods != methods.end()) declaration += exportedMethods->second;
             declaration += "};\n";
         }
         visiting.erase(name);
         visited.insert(name);
         if (records.count(name)) result += declaration;
     };
-    for (const auto &name : records) emit(name);
+    for (const auto &name : records)
+        if (!LibraryGenericInstance(name)) emit(name);
     return result;
 }
 /**
@@ -3743,6 +3887,99 @@ LibraryLifetimeDescription LibraryLifetimeInterface(const MFunctionDecl &functio
     return out;
 }
 
+/**
+ * @brief 为本模块的用户方法建立原生入口及无正文原型，接收者契约参与符号身份。
+ * @param module 生产模块完整身份。
+ * @param exports 接收方法及默认参数入口。
+ * @param defaults 接收模块私有的默认值函数声明。
+ * @param declarations 接收按所属具体类型分组的方法原型。
+ * @return 无；不支持的类型或契约抛出明确错误。
+ */
+void LibraryMethodDeclarations(const Memory::String &module, Memory::Vector<chali_aot::ExternFunction> &exports,
+                               Memory::String &defaults, Memory::Map<Memory::String, Memory::String> &declarations)
+{
+    Memory::Map<Memory::String, Memory::String> shapes;
+    for (const auto topId : g_top)
+    {
+        const auto &top = N(topId);
+        if (top.module != module || (top.kind != MNode::StructDecl && top.kind != MNode::EnumDecl)) continue;
+        const auto found = g_structs.find(top.s);
+        if (found == g_structs.end() || LibraryGenericInstance(top.s)) continue;
+        for (const auto &method : found->second.methods)
+        {
+            if (method.implicitDeclaration || method.superseded) continue;
+            if (method.bodyId < 0 || method.nativeBridge) throw std::runtime_error("生产模块的原生方法需要已检查实现");
+            if (method.result && method.result->kind == MType::Ptr) throw std::runtime_error("原生方法借用返回契约尚未导出");
+            Memory::Set<Memory::String> visiting;
+            const auto receiver = method.isStatic ? Memory::String("static") :
+                                  (method.isConstructor || MethodMutatesReceiver(top.s, method, &visiting)) ? Memory::String("mut") : Memory::String("const");
+            chali_aot::ExternFunction entry;
+            entry.methodEntry = true;
+            entry.label = top.s + "." + method.name;
+            entry.resultType = AotCType(LibraryNativeType(method.result));
+            const bool valueResult = LibraryValueRecord(method.result);
+            bool owned = LibraryOwnedString(method.result) || LibraryOwnedRecord(method.result);
+            Memory::String identity = "chali-record-method-abi1\n" + module + "\n" + LibraryDeclaredType(top.s)
+                                      + "\n" + LibraryRecordShape(top.s, shapes) + "\n" + method.source + "\n" + receiver + "\n";
+            identity += LibraryOwnedString(method.result) ? Memory::String("std::lang::String") : valueResult ? LibraryDeclaredType(method.result->name) : LibraryScalarType(method.result, true);
+            if (valueResult) identity += "\nresult-layout:" + LibraryRecordShape(method.result->name, shapes);
+            if (!method.isStatic)
+            {
+                entry.parameterTypes.push_back("long long");
+                owned |= LibraryOwnedRecord(NamedType(top.s));
+            }
+            for (const auto &parameter : method.params)
+            {
+                if (parameter.variadic) throw std::runtime_error("独立原生方法暂不导出变参");
+                const auto type = LibraryParameterType(parameter.type);
+                identity += "\nparameter:" + type;
+                entry.parameterTypes.push_back(AotCType(LibraryNativeType(parameter.type)));
+                const bool value = LibraryValueRecord(parameter.type);
+                const bool borrow = LibraryBorrowParameter(parameter.type);
+                if (value || borrow)
+                {
+                    const auto underlying = value ? parameter.type : parameter.type->elem;
+                    if (!LibraryOwnedString(underlying)) identity += "\nlayout:" + LibraryRecordShape(underlying->name, shapes);
+                    if (parameter.defaultExpr >= 0 && !LibraryOwnedString(underlying)) throw std::runtime_error("原生方法聚合参数暂不支持默认值");
+                    owned |= LibraryOwnedRecord(underlying);
+                }
+                owned |= LibraryOwnedString(parameter.type)
+                         || (parameter.type && parameter.type->kind == MType::Ptr && LibraryOwnedString(parameter.type->elem));
+            }
+            entry.abiConvention = owned ? "ChaLiOwned" : valueResult ? "ChaLiValue" : "ChaLiBorrow";
+            identity += "\n" + entry.abiConvention;
+            const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())));
+            entry.symbol = Memory::String(("chali_method_" + hash).c_str());
+            Memory::String text = "    #abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\",\"" + receiver + "\")\n    ";
+            if (method.isStatic) text += "static ";
+            if (!method.isConstructor || method.isNamedConstructor)
+                text += (LibraryOwnedString(method.result) ? Memory::String("std::lang::String") : valueResult ? LibraryDeclaredType(method.result->name) : LibraryScalarType(method.result, true)) + " ";
+            text += method.isConstructor && !method.isNamedConstructor ? BareTypeName(top.s) : method.source;
+            text += '(';
+            for (std::size_t index = 0; index < method.params.size(); ++index)
+            {
+                const auto &parameter = method.params[index];
+                if (index) text += ", ";
+                text += LibraryParameterType(parameter.type) + " " + parameter.source;
+                if (parameter.defaultExpr >= 0)
+                    text += "=" + LibraryDefaultEntry(parameter, entry.symbol + "_default_" + Memory::toString(index), module, defaults, exports, true);
+            }
+            declarations[top.s] += text + ");\n";
+            if (method.isNamedConstructor)
+            {
+                auto body = entry;
+                body.label += "$body";
+                body.symbol += "_body";
+                body.resultType = "void";
+                body.parameterTypes.insert(body.parameterTypes.begin(), "long long");
+                body.abiConvention = owned ? "ChaLiOwned" : "ChaLiBorrow";
+                exports.push_back(std::move(body));
+            }
+            exports.push_back(std::move(entry));
+        }
+    }
+}
+
 /** @brief 根据公开函数的真实签名生成不含实现体的接口及稳定 C 符号。
  * @param module 完整模块身份。
  * @param exports 接收公开原生签名。
@@ -3770,8 +4007,12 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
                 interface += "import " + imported + ";\n";
             }
     }
-    interface += LibraryInterfaceDeclarations(module) + LibraryTypeDeclarations(module);
-    if (!RegisterLibraryTypeSymbols(*g_aotSyntax, module)) throw std::runtime_error("原生库类型身份登记失败");
+    Memory::Map<Memory::String, Memory::String> methods;
+    Memory::String methodDefaults;
+    LibraryMethodDeclarations(module, exports, methodDefaults, methods);
+    interface += LibraryInterfaceDeclarations(module) + methodDefaults + LibraryTypeDeclarations(module, methods);
+    if (!RegisterLibraryTypeSymbols(*g_aotSyntax, module)) throw std::runtime_error("原生库类型身份登记失败：" + std::string(g_error.c_str()));
+    interface += LibraryGenericTypeAnchors(*g_aotSyntax, module, exports);
     Memory::Map<Memory::String, Memory::String> recordShapes;
     const auto declarations = g_functionDecls;
     for (const auto &function : declarations)

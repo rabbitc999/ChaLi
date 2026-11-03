@@ -84,6 +84,8 @@ struct MMethod
     bool implicitDeclaration = false;  ///< 编译器自动提供的辅助方法，不作为源码声明元数据公开。
     Memory::String declarationOwner;   ///< 接口默认方法的原始声明者；空值表示当前具体类型。
     bool defaultValueText = false;     ///< 此方法为无用户回调的默认字段表示。
+    bool nativeBridge = false;         ///< 已验证原生方法仅在消费者生成受类型检查的转发体。
+    int nativeConstructorBody = -1;     ///< 命名工厂在已分配对象上初始化时使用的独立转发体。
     bool superseded = false;           /* 同一个 struct 里重名同签名、被后面的定义顶掉了 */
 
     Memory::String source; /* 源程序里的方法名 */

@@ -1298,6 +1298,13 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
             return tuple + ")";
         }
     }
+    // 已生成实例的内部名称本身全局唯一；先识别它，避免名义类型补全与限定名前缀剥离来回切换。
+    for (const auto &entry : session.made)
+    {
+        const auto &instance = entry.second;
+        if (instance.generic && (value == instance.name || value == instance.generic->module + "::" + instance.name))
+            return instance.name;
+    }
     const Memory::Map<Memory::String, Memory::String> aliases = {
         { "std::lang::String", "std::lang::String" },
         { "std::lang::BigInteger", "std::lang::BigInteger" },

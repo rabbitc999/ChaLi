@@ -145,7 +145,6 @@ def main():
                        'module demo::math;struct Owned {List<int64> value;};int64 value(){return 1;}',
                        'module demo::math;enum Owned {Empty,Items(List<int64> value)};int64 value(){return 1;}',
                        'module demo::math;interface Defaulted {int64 code(){return 1;}};int64 value(){return 1;}',
-                       'module demo::math;struct Record {int64 x;int64 read(){return self.x;}};int64 value(){return 1;}',
                        'module demo::math;import demo::source;struct Record {demo::source::Source item;};int64 value(){return 1;}']:
             provider.write_text(source.replace('module demo::math;','module demo::math;\n').replace('import demo::source;','import demo::source;\n'))
             result=invoke([compiler,'lib','build',provider,'--module','demo::math','--package-version','1.0.0','--out',package],work,False)

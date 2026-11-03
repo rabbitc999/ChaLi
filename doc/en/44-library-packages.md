@@ -52,7 +52,7 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the supported ordinary record, enum and standard String parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and supported direct calls to imported libraries. LLVM emits C ABI width/floating conversions directly. Owning values beyond String and its supported owning aggregates, globals, user methods, variadic parameters, unsafe exports, general host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. The standard String implementation may use checked internal storage operations. Generic definitions are consumed as described below; initialization and broader internal language ABIs retain their separate support limits.
+The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the supported ordinary record, enum and standard String parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and supported direct calls to imported libraries. LLVM emits C ABI width/floating conversions directly. Owning values beyond String and its supported owning aggregates, globals, variadic parameters, unsafe exports, general host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. The standard String implementation may use checked internal storage operations. Generic definitions are consumed as described below; initialization and broader internal language ABIs retain their separate support limits.
 
 ### Standard String language-library entries
 
@@ -88,7 +88,7 @@ These packages additionally require `owned-record-value-v1`, together with `owne
 
 Value parameters follow existing deep-copy rules, so modifying a copy leaves the caller unchanged. Results, explicit moves and recursive forwarding preserve ownership. Nested String values use the application's allocator, heap and shared lifetime type identities. Enums copy, move and destroy only their active variant. Readonly/mutable borrows access caller storage directly; borrowed results still require explicit source contracts and cannot escape local objects. Native objects, bitcode, applicable Full/ThinLTO and detached links share these rules without another runtime copy.
 
-Fields currently remain limited to basic values, standard String and supported ordinary records/enums. Collections, arrays, interfaces, closures, File and other resources are excluded. User methods/constructors, field initializers, custom layouts and operator/destructor contracts remain rejected. Aggregate defaults and physical C ABI `#export` are outside this convention. The capability does not enable library global initialization. Standalone String values and borrows retain the previous section's convention.
+Fields currently remain limited to basic values, standard String and supported ordinary records/enums. Collections, arrays, interfaces, closures, File and other resources are excluded. Field initializers, custom layouts and operator/destructor contracts remain rejected. Aggregate defaults and physical C ABI `#export` are outside this convention. The capability does not enable library global initialization. Standalone String values and borrows retain the previous section's convention.
 
 ### Optional native debug information
 
@@ -121,7 +121,7 @@ struct Point { int64 x; float64 y; };
 struct Bounds { Point low; Point high; char marker; };
 ```
 
-A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. User methods, constructors, field initializers, other resource fields, custom layouts and interface-inheritance contracts remain rejected. A package still needs at least one supported public function. Parameters may use scalars, plain record values or borrows. Results may use standard String or the supported record contracts. String-owning aggregate calls use the convention above; other owning types remain unavailable. Same-named records in different modules remain different types.
+A consumer can declare `example::math::Bounds bounds;`, access `bounds.low.x` and make independent value copies. Interfaces retain original field structure; consumers reconstruct layout under the same language version instead of parsing flattened field names as source syntax. Implicit language methods are rebuilt by consumers. Field initializers, other resource fields, custom layouts and interface-inheritance contracts remain rejected. A native package needs a supported function or method entry; template/macro-only packages are also allowed. Parameters may use scalars, plain record values or borrows. Results may use standard String or the supported record contracts. String-owning aggregate calls use the convention above; other owning types remain unavailable. Same-named records in different modules remain different types.
 
 Public enums support empty, single-payload and multiple-payload variants. Payloads may use basic scalars, standard String or supported records/enums. For example:
 
@@ -134,7 +134,7 @@ enum Event {
 };
 ```
 
-Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Nonowning enum function entries are described below. String payloads use the owning convention above; other owning payloads, user methods and complete interface contracts remain unsupported.
+Declarations preserve variant order, original payload names and complete type names. Consumers can construct values and use `match`: `Event::Empty` has no payload, while `Event::Pair(3,4.5)` has two. Records may contain enums from precompiled dependencies, whose declarations remain in the original module. Nonowning enum function entries are described below. String payloads use the owning convention above; other owning payloads and complete interface contracts remain unsupported.
 
 Nonowning enums support value parameters/results and read-only/mutable borrows, including empty and multiple payloads, nested records and nested enums. Qualified construction and matching resolve the actual declaring module, so consumer types with the same name do not shadow fully qualified names:
 
@@ -181,6 +181,23 @@ Repeat `--license-asset` with a package name on the left of `=` and an input fil
 
 These packages require `scalar-unit-v1`, so compilers without that capability reject them before loading. Ordinary imports accept both these language-generated objects and the manually declared C ABI archives above; neither interface contains runtime function bodies.
 
+## User methods and receivers
+
+Ordinary records, records with supported String-owning fields and supported enums can export user methods. Packages declare the required `record-methods-v1` capability. Interfaces contain verified ABI method prototypes without bodies; implementations remain in native objects and optional bitcode. Consumers still rebuild implicit copy methods. Ordinary consumer source cannot forge these prototypes or put runtime method bodies in a package interface.
+
+Instance methods retain `const`/`mut` receiver contracts determined from their actual modifications. Readonly borrows can call only readonly methods. Static methods, overloads, scalar and String defaults, legacy constructors and named factories keep their language call syntax. Private entries in definition scope evaluate omitted defaults lazily. Parameters and results stay within the supported scalar, String and ordinary aggregate boundaries; value arguments retain copy/move semantics, and owning values cannot be overwritten as raw handles. Borrowed method results, aggregate defaults, custom layouts and broader interface/resource contracts remain unavailable.
+
+```chali
+struct Counter {
+    int64 value;
+    int64 read(){return self.value;}
+    void add(int64 amount=1){self.value=self.value+amount;}
+    static Counter create(int64 initial){self.value=initial;return self;}
+}
+```
+
+After removing provider source, consumers can still call `Counter::create(3)`, `value.read()` and `value.add()`. Receiver mutability, the complete method signature and record layout participate in stable entry identity. `tests/chali_library_methods.py` compares source and package behavior and checks readonly rejection, owning-field cleanup, unknown capabilities, invalid receivers and forged bodies.
+
 ## Generic definitions and macro context
 
 `lib build` stores this module's uninstantiated generic definitions in `templates/definitions.json` and requires `generic-definitions-v1`. Older compilers reject the capability explicitly. Ordinary functions remain target implementations. Generic instances incidentally used by the producer are no longer exported as ordinary public function declarations. Modules containing only generic or macro definitions can also produce packages.
@@ -198,7 +215,11 @@ Canonical format-one JSON records the module, imports, macro definitions and gen
 
 Non-standard imports used by templates require precompiled dependencies pinned by exact version and whole-package digest. Standard modules use the current compiler's embedded assets. A `.chl` file present on the producer's machine cannot substitute for dependency identity. Necessary private ordinary entries retain module-private ABI declarations. Calls and function values still enforce their original visibility, and default arguments retain defining-module semantics.
 
-This capability lets consumers generate methods belonging to template structs. Native entries still accept only their separately supported aggregates and owning values. Producer-instantiated aggregates with user methods, global initialization, collections, interface values and closures remain subject to their respective native-interface limits. Optional Templates assets without `generic-definitions-v1` cannot be consumed as language definitions.
+Consumers generate concrete types and their methods from template definitions. When a concrete generic record satisfies the ordinary-record or String-owning-field contract, native function entries can pass it under the same value/borrow boundaries. Packages also require `generic-record-values-v1` and shared type identity. Public signatures use `module::Template<complete arguments>` instead of redeclaring an internal instance name as an ordinary struct, avoiding collisions with consumer-generated instances. Same-named templates in different modules remain distinct.
+
+Real, module-private no-op function signatures register the concrete generic types used by a native unit, including internal instances not explicitly mentioned by the consumer. Their receiver is readonly and they execute no user methods. Type identity symbols match complete template arguments and field layout; registration entry symbols additionally distinguish production modules. Consumers rebuild template methods while native function implementations continue to use package objects or selected bitcode. This capability does not enable collections, interface values, closures, global initialization or other owning-value boundaries. Optional Templates assets without `generic-definitions-v1` cannot be consumed as language definitions.
+
+`tests/chali_library_generic_values.py` compares source/package generic results and parameters, same-named templates across modules, consumer shadowing, private instances, owning-field live-block counts and detached object linking.
 
 ## Ordinary imports
 

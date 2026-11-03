@@ -26,6 +26,8 @@ struct ExternFunction
     bool requiresMarshalling = false;               ///< 非标量签名必须通过 C 帧封送，不按槽位冒充原生布局。
     bool borrowedResult = false;                    ///< 已验证语言入口返回调用方借用的逻辑地址。
     bool hasLifetimeContract = false;               ///< 公开接口保留显式生命周期契约。
+    bool methodEntry = false;                       ///< 入口来自已验证接收者契约的记录方法。
+    bool genericTypeAnchor = false;                 ///< 私有签名强制恢复原生单元使用的具体泛型类型。
 };
 
 /** @brief 独立原生单元的数据映像、逐符号布局和可重定位基址名称。 */

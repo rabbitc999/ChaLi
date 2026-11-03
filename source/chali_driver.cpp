@@ -1289,6 +1289,12 @@ try
     Memory::Vector<Memory::String> borrowSources;
     for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryBorrowSources(borrowSources);
+    Memory::Vector<Memory::String> methodSources;
+    for (const auto &file : libraries.methodSources()) methodSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryMethodSources(methodSources);
+    Memory::Vector<Memory::String> templateSources;
+    for (const auto &file : libraries.templateSources()) templateSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryTemplateSources(templateSources);
     Memory::Vector<Memory::String> ownedSources;
     for (const auto &file : libraries.ownedSources()) ownedSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryOwnedSources(ownedSources);

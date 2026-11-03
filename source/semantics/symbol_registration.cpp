@@ -566,11 +566,90 @@ std::shared_ptr<MType> DeclaredFieldType(const MNode &member)
 }
 
 /**
- * @brief 登记顶层类型、函数与变量声明。
- * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
+ * @brief 为已验证的无正文方法建立私有 ABI 声明和受普通语义检查的转发体。
+ * @param owner 已限定身份的所属类型。
+ * @param declaration 保存原生符号与接收者契约的方法原型。
+ * @param method 接收生成正文及桥接标志的方法签名。
+ * @param pending 接收本轮需要登记的私有外部函数节点。
+ * @return 桥接建立成功时返回真，非法原型返回诊断。
+ */
+bool RegisterNativeMethodBridge(const MNode &owner, const MNode &declaration, MMethod &method, Memory::Vector<int> &pending)
+{
+    if (declaration.abiConvention.empty()) return true;
+    if (declaration.kids.size() != 2 || declaration.kids[1] >= 0) return Fail("原生方法接口不能携带实现正文");
+    const auto first = g_nodes.size();
+    const auto key = declaration.s2 + "\n" + owner.s + "\n" + method.source;
+    const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(key.data(), key.size())));
+    const auto helperName = Memory::String(("__chali_native_method_" + hash).c_str());
+    const int parameters = M_List(), arguments = M_List();
+    if (!method.isStatic)
+    {
+        auto receiver = Memory::makeShared<MType>();
+        receiver->kind = MType::Ptr;
+        receiver->elem = NamedType(owner.s);
+        receiver->readOnly = declaration.abiLength == "const";
+        Memory::String receiverName = "chaliReceiver";
+        while (std::any_of(method.params.begin(), method.params.end(), [&](const auto &parameter) { return parameter.source == receiverName; })) receiverName += '_';
+        g_nodes[parameters].kids.push_back(M_Param(M_AddType(receiver), M_Name(receiverName.c_str())));
+        g_nodes[arguments].kids.push_back(M_Un("&", M_Var(M_Name("self"))));
+    }
+    for (const auto parameter : N(declaration.kids[0]).kids)
+    {
+        const auto original = N(parameter);
+        const int copy = M_Param(original.type, M_Name(original.s.c_str()));
+        g_nodes[copy].i = original.i;
+        g_nodes[parameters].kids.push_back(copy);
+        const int value = M_Var(M_Name(original.s.c_str()));
+        const auto type = T(original.type);
+        const bool transfer = type && (type->kind == MType::Struct || LibraryOwnedString(type));
+        // 桥接体在全局位置扫描之后创建；显式登记移动所需槽位，再沿用普通 move 检查。
+        if (transfer) g_addressTakenNames.insert(original.s);
+        g_nodes[arguments].kids.push_back(transfer ? M_Move(value) : value);
+    }
+    const int helper = M_AbiFunc(declaration.type, M_Name(helperName.c_str()), parameters, -1);
+    auto &external = g_nodes[helper];
+    external.abiConvention = declaration.abiConvention;
+    external.abiLibrary = declaration.abiLibrary;
+    external.abiSourceFile = declaration.abiSourceFile;
+    external.s2 = declaration.s2;
+    external.moduleLocal = true;
+    external.generatedDeclaration = true;
+    pending.push_back(helper);
+    const int call = M_CallOn(M_Var(M_Name(helperName.c_str())), arguments);
+    method.bodyId = M_Block(M_List1(method.result->kind == MType::Void ? M_ExprStmt(call) : M_Return(call)));
+    method.nativeBridge = true;
+    for (auto index = first; index < g_nodes.size(); ++index)
+    {
+        auto &node = g_nodes[index];
+        node.module = owner.module;
+        node.sourceLine = declaration.sourceLine;
+        node.sourceColumn = declaration.sourceColumn;
+        node.expansionLine = declaration.expansionLine;
+        node.expansionModule = declaration.expansionModule;
+    }
+    if (method.isNamedConstructor)
+    {
+        auto bodyDeclaration = declaration;
+        bodyDeclaration.type = M_TypeVoid();
+        bodyDeclaration.type2 = 0;
+        bodyDeclaration.s2 += "_body";
+        bodyDeclaration.abiLength = "mut";
+        auto bodyMethod = method;
+        bodyMethod.result = SimpleType(MType::Void);
+        bodyMethod.isStatic = bodyMethod.isConstructor = bodyMethod.isNamedConstructor = false;
+        if (!RegisterNativeMethodBridge(owner, bodyDeclaration, bodyMethod, pending)) return false;
+        method.nativeConstructorBody = bodyMethod.bodyId;
+    }
+    return true;
+}
+
+/**
+ * @brief 登记所有顶层声明及方法，建立完整类型、重载和默认参数环境。
+ * @return 登记成功时返回真；失败保留实际声明位置的诊断。
  */
 bool RegisterTop()
 {
+    Memory::Vector<int> nativeMethods;
     RefreshMacroActiveSyntax();
     for (const int topId : g_top)
     {
@@ -954,6 +1033,7 @@ bool RegisterTop()
             if (!ValidateVariadicParameters(method.params,
                                             "enum 方法 " + top.s + "." + member.s))
                 return false;
+            if (!RegisterNativeMethodBridge(top, member, method, nativeMethods)) return false;
             definition.methods.push_back(method);
             g_nodes[static_cast<std::size_t>(memberId)].i =
                 static_cast<long long>(definition.methods.size()) - 1;
@@ -1052,6 +1132,7 @@ bool RegisterTop()
                     if (!ValidateVariadicParameters(method.params,
                                                     "方法 " + top.s + "." + member.s))
                         return false;
+                    if (!RegisterNativeMethodBridge(top, member, method, nativeMethods)) return false;
                     definition.methods.push_back(method);
                     /* 记录方法在定义表里的下标：降级时按同一个下标取标签与签名。 */
                     g_nodes[static_cast<std::size_t>(memberId)].i =
@@ -1362,7 +1443,9 @@ bool RegisterTop()
     }
 
     /* ---- 4. 普通函数：先把同名的一起收齐，再按"是不是重载"分配标签 ---- */
-    for (const int topId : g_top)
+    Memory::Vector<int> functionDeclarations(g_top.begin(), g_top.end());
+    functionDeclarations.insert(functionDeclarations.end(), nativeMethods.begin(), nativeMethods.end());
+    for (const int topId : functionDeclarations)
     {
         const MNode top = N(topId);
         ReductionSourceScope source(topId);

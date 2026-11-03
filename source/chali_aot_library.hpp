@@ -60,11 +60,22 @@ bool libraryRecord(const ast::TypePtr &type)
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if ((!function.owner.empty() && function.owner != "std::lang::String") || (!libraryScalar(function.result, true) && !libraryString(function.result) && !libraryRecord(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
+    if (!libraryScalar(function.result, true) && !libraryString(function.result) && !libraryRecord(function.result) && !libraryBorrow(function.result)) return state.fail("原生库尚不支持该拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
         if (!libraryScalar(parameter.second) && !libraryString(parameter.second) && !libraryBorrow(parameter.second) && !libraryRecord(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
     std::set<Text> borrowed;
+    if (!function.owner.empty())
+    {
+        const auto receiver = environment.find(function.owner);
+        if (function.owner != "std::lang::String" && (receiver == environment.end() || !libraryRecord(receiver->second)))
+            return state.fail("原生方法接收者尚未接入共享记录布局：" + function.owner), false;
+        if (receiver != environment.end())
+        {
+            environment["self"] = receiver->second;
+            if (libraryRecord(receiver->second)) borrowed.insert("self");
+        }
+    }
     for (const auto &parameter : function.parameters)
     {
         environment[parameter.first] = parameter.second;

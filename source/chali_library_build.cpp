@@ -50,6 +50,10 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.version = version;
         package.manifest.compilerVersion = chali_package::compilerVersion;
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
+        if (std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.methodEntry; }))
+            package.manifest.requiredFeatures.push_back("record-methods-v1");
+        if (std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.genericTypeAnchor; }))
+            package.manifest.requiredFeatures.push_back("generic-record-values-v1");
         const auto templates = exportTemplates(module);
         if (!templates.empty())
         {
@@ -73,7 +77,12 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
             std::set<Memory::String> labels;
             for (const auto &entry : original.abiExports) labels.insert(entry.label);
             const bool enums = std::any_of(original.syntax->functions.begin(), original.syntax->functions.end(), [&](const auto &function) {
-                return labels.count(function.name) && (enumValueType(function.result) || std::any_of(function.parameters.begin(), function.parameters.end(), [](const auto &parameter) { return enumValueType(parameter.second); }));
+                const auto label = function.owner.empty() ? function.name : function.owner + "." + function.name;
+                if (!labels.count(label)) return false;
+                const bool receiver = !function.owner.empty() && std::any_of(original.syntax->types.begin(), original.syntax->types.end(), [&](const auto &type) {
+                    return type && type->name == function.owner && enumValueType(type);
+                });
+                return receiver || enumValueType(function.result) || std::any_of(function.parameters.begin(), function.parameters.end(), [](const auto &parameter) { return enumValueType(parameter.second); });
             });
             if (enums) package.manifest.requiredFeatures.push_back("plain-enum-value-v1");
         }

@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 169 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 170 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -512,7 +512,14 @@ member_decl = "let", name_token, "=", expr, ";"
     | "static", ptr_type, name_token, "(", param_list, ")", block
     | "static", array_type, name_token, "(", param_list, ")", block
     | name_token, "(", param_list, ")", block
+    | "#abi", "(", STRING, ",", STRING, ",", STRING, ",", STRING, ")", abi_method
     | macro_call, ";" ;
+
+abi_method = type, name_token, "(", param_list, ")", ";"
+    | ptr_type, name_token, "(", param_list, ")", ";"
+    | "static", type, name_token, "(", param_list, ")", ";"
+    | "static", ptr_type, name_token, "(", param_list, ")", ";"
+    | name_token, "(", param_list, ")", ";" ;
 
 OPNAME = "+"
     | "-"

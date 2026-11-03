@@ -305,7 +305,21 @@ member_decl := LET name_token ASSIGN expr SEMI { $$ = M_ClosureField($2, $4); }
             { $$ = M_StaticMethod($2, $3, $5, $7); }
         | name_token LPAREN param_list RPAREN block
             { $$ = M_Constructor($1, $3, $5); }
+        | ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING COMMA STRING RPAREN abi_method
+            { $$ = M_AbiMethod($3, $5, $7, $9, $11); }
         | macro_call SEMI { $$ = $1; } ;
+
+/* 已验证预编译库的方法签名；不从接口读取运行期方法正文。 */
+abi_method := type name_token LPAREN param_list RPAREN SEMI
+            { $$ = M_Method($1, $2, -1, $4, -1); }
+        | ptr_type name_token LPAREN param_list RPAREN SEMI
+            { $$ = M_Method($1, $2, -1, $4, -1); }
+        | STATIC type name_token LPAREN param_list RPAREN SEMI
+            { $$ = M_StaticMethod($2, $3, $5, -1); }
+        | STATIC ptr_type name_token LPAREN param_list RPAREN SEMI
+            { $$ = M_StaticMethod($2, $3, $5, -1); }
+        | name_token LPAREN param_list RPAREN SEMI
+            { $$ = M_Constructor($1, $3, -1); } ;
 
 /* 重载声明里的运算符名 */
 OPNAME := PLUS    { $$ = M_Op(0); }  | MINUS { $$ = M_Op(1); }

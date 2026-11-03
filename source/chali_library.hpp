@@ -175,6 +175,14 @@ public:
      * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
     std::vector<std::string> borrowSources() const;
     /**
+     * @brief 取得允许独立记录方法声明的已验证接口标签。
+     * @return 携带 record-methods-v1 能力的稳定来源。
+     */
+    std::vector<std::string> methodSources() const;
+    /** @brief 取得已核对泛型定义载荷的虚拟源码标签。
+     * @return generic-definitions-v1 的定义来源，不授予原生 ABI 声明权限。 */
+    std::vector<std::string> templateSources() const;
+    /**
      * @brief 取得启用 String 拥有值 ABI 的已验证接口标签。
      * @return 当前目标使用 chali-owned-v1 的来源。
      */
