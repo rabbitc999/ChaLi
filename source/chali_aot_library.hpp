@@ -344,7 +344,8 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
 {
     // 独立单元复用最终程序的存储查询，不复制带全程序地址视图状态的内部快速路径。
     state.stringStorageViews = false;
-    if (!request.syntax || request.abiExports.empty()) return state.fail("原生库需要至少一个公开标量函数"), Memory::String();
+    if (!request.syntax || (request.abiExports.empty() && !request.options.libraryHasTemplates))
+        return state.fail("原生库需要公开函数或已验证的泛型定义"), Memory::String();
     if (request.options.stepLimit) return state.fail("独立原生库暂不支持构建期步数预算"), Memory::String();
     Memory::String runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(state.target.runtime, &runtime)) return state.fail("库单元缺少目标运行时声明"), Memory::String();

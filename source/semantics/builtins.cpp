@@ -864,6 +864,13 @@ std::shared_ptr<MType> RawExprType(int id)
         /* `模块::全局变量`：限定写法先认模块全局，再走 static 字段 / 枚举构造。 */
         if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr)
             return global->type;
+        if (IsQualifiedFunctionValue(node))
+        {
+            if (const auto signature = FindInferenceFunction(node.s, node.s2)) return FuncTypeOf(*signature);
+            const auto &overloads = g_functionIndex.at(ModuleSymbol(node.s, node.s2));
+            const auto signature = g_funcs.find(overloads.front());
+            if (signature != g_funcs.end()) return FuncTypeOf(signature->second);
+        }
         const MStaticField *field = FindStaticField(node.s, node.s2);
         if (node.type2 != 1 && field != nullptr) return field->type;
         /* `Type::method`：类型名两种写法都认（裸名按当前模块补全，见 FindStruct）。 */

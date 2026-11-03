@@ -722,7 +722,8 @@ ast::NodePtr LowerValueForType(int valueId, const std::shared_ptr<MType> &target
     }
     const bool contextualNew = value.kind == MNode::NewPtr;
     const bool nullHandle = value.kind == MNode::Null && target && (target->kind == MType::Ptr || target->kind == MType::Func || IsStandardOpcode(target, "String") || IsStandardOpcode(target, "File") || IsStandardOpcode(target, "Process"));
-    const bool overloadedFunction = target && target->kind == MType::Func && value.kind == MNode::Var && FindFunctionOverloads(value.module, value.s) != nullptr;
+    const bool overloadedFunction = target && target->kind == MType::Func
+        && ((value.kind == MNode::Var && FindFunctionOverloads(value.module, value.s) != nullptr) || IsQualifiedFunctionValue(value));
     if (target && actual && !objGet && !contextualNew && !nullHandle && !overloadedFunction && !Acceptable(target, actual, true) && !integerLiteral)
     {
         if (literalOutOfRange)

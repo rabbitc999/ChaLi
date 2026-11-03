@@ -50,6 +50,12 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.version = version;
         package.manifest.compilerVersion = chali_package::compilerVersion;
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
+        const auto templates = exportTemplates(module);
+        if (!templates.empty())
+        {
+            package.manifest.templates = "templates/definitions.json";
+            package.manifest.requiredFeatures.push_back("generic-definitions-v1");
+        }
         const bool ownedRecords = original.syntax && original.syntax->nativeOwnedAggregates;
         const bool owned = ownedRecords || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiOwned"; });
         if (owned) package.manifest.requiredFeatures.push_back("owned-string-value-v1");
@@ -73,6 +79,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         }
         if (original.syntax && !original.syntax->nativeTypeSymbols.empty()) package.manifest.requiredFeatures.push_back("shared-type-id-v1");
         package.manifest.dependencies = dependencies;
+        if (!templates.empty()) templateSource(package.manifest, templates);
         package.manifest.license = original.options.libraryLicense.c_str();
         json::Object producer;
         producer.insert("generator", "ast-llvm");
@@ -105,8 +112,9 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         for (const auto &name : original.options.librarySystemLibraries) target.systemLibraries.emplace_back(name.c_str());
         for (const auto &name : original.options.libraryRuntimeLibraries) target.runtimeLibraries.emplace_back(name.c_str());
         package.manifest.targets.push_back(target);
-        std::uint64_t retained = interface.size() + 4096;
+        std::uint64_t retained = interface.size() + templates.size() + 4096;
         std::set<std::string> names{ package.manifest.interface, target.implementation };
+        if (!templates.empty()) names.insert(package.manifest.templates);
         if (!target.bitcode.empty()) names.insert(target.bitcode);
         for (const auto &asset : original.options.libraryLicenseAssets)
         {
@@ -134,6 +142,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         chali_native_tools::Workspace work;
         auto request = original;
         request.options.libraryModule = module.c_str();
+        request.options.libraryHasTemplates = !templates.empty();
         request.options.shared = true;
         request.options.emitObjectOnly = true;
         request.options.emitLLVMOnly = request.options.emitAssemblyOnly = request.options.emitBitcodeOnly = false;
@@ -158,6 +167,7 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         stream.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
         if (!stream || stream.peek() != std::char_traits<char>::eof()) throw std::runtime_error("读取本次原生实现失败");
         package.entries.push_back({ package.manifest.interface, Kind::Interface, 0, interface });
+        if (!templates.empty()) package.entries.push_back({ package.manifest.templates, Kind::Templates, 0, templates });
         package.entries.push_back({ target.implementation, Kind::Object, 0, std::move(bytes) });
         retained += size;
         if (original.options.libraryBitcode)

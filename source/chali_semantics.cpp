@@ -1156,7 +1156,15 @@ int M_CallOn(int callee, int args)
     while (typeLetter < target.s.size() && target.s[typeLetter] == '_') ++typeLetter;
     const bool standardModule = target.s.compare(0u, 11u, "std::lang::") == 0 && IsStandardModule(target.s.substr(11u));
     const bool moduleQualifier = standardModule || target.s == "program";
-    if (target.kind == MNode::EnumCtor && !moduleQualifier && typeLetter < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeLetter])))
+    const auto instance = chali_generic::session.made.find(target.s.substr(typeStart));
+    const bool instantiatedType = instance != chali_generic::session.made.end() && instance->second.generic
+        && (chali_generic::wordAt(instance->second.generic->declaration, 0, "struct")
+            || chali_generic::wordAt(instance->second.generic->declaration, 0, "enum")
+            || chali_generic::wordAt(instance->second.generic->declaration, 0, "interface")
+            || chali_generic::wordAt(instance->second.generic->declaration, 0, "type"));
+    /* 同名模板的内部实例以 __module_ 开头，按实际声明识别类型而不是依赖首字母。 */
+    if (target.kind == MNode::EnumCtor && !moduleQualifier
+        && (instantiatedType || (typeLetter < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeLetter])))))
     {
         if (target.s.compare(0u, 11u, "std::lang::") == 0) target.s.erase(0u, 11u);
         target.kids = g_nodes[static_cast<std::size_t>(args)].kids;
@@ -2356,7 +2364,7 @@ int M_LambdaListed(int resultType, int params, int body, int groups, int default
 }
 #include "semantics/named_function_ast.cpp"
 /**
- * @brief 为函数声明添加内联标记。
+ * @brief 为函数定义或显式 ABI 声明添加本模块可见标记。
  * @param declarationId 待标记的声明节点编号。
  * @retval 生成的语法节点在节点池中的编号。
  */
@@ -3630,10 +3638,11 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
  * @param module 对外声明所属模块。
  * @param interface 接收供省略参数调用的接口声明。
  * @param exports 接收额外原生入口。
+ * @param moduleLocal 是否将默认值入口限制在定义模块内。
  * @return 接口内可使用的无参默认值调用表达式。
  */
 Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String &symbol, const Memory::String &module,
-                                   Memory::String &interface, Memory::Vector<chali_aot::ExternFunction> &exports)
+                                   Memory::String &interface, Memory::Vector<chali_aot::ExternFunction> &exports, bool moduleLocal = false)
 {
     const bool owned = LibraryOwnedString(parameter.type);
     const auto type = owned ? Memory::String("std::lang::String") : LibraryScalarType(parameter.type);
@@ -3667,7 +3676,7 @@ Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String
     entry.resultType = AotCType(LibraryNativeType(parameter.type));
     entry.abiConvention = owned ? "ChaLiOwned" : "C";
     exports.push_back(std::move(entry));
-    interface += "#abi(\"" + Memory::String(owned ? "ChaLiOwned" : "C") + "\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
+    interface += Memory::String(moduleLocal ? "inline " : "") + "#abi(\"" + Memory::String(owned ? "ChaLiOwned" : "C") + "\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
     return languageName + "()";
 }
 /** @brief 一份公开生命周期声明及不依赖形参拼写的 ABI 身份。 */
@@ -3741,20 +3750,36 @@ LibraryLifetimeDescription LibraryLifetimeInterface(const MFunctionDecl &functio
 Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<chali_aot::ExternFunction> &exports)
 {
     exports.clear();
-    for (const auto &item : chali_generic::session.generics)
-        if (item.second.module == module) throw std::runtime_error("首批独立原生库暂不导出泛型定义");
+    const bool hasTemplates = std::any_of(chali_generic::session.generics.begin(), chali_generic::session.generics.end(),
+                                        [&](const auto &entry) { return entry.second.module == module && !entry.second.intrinsic; })
+                              || std::any_of(chali_generic::session.libraryMacros.begin(), chali_generic::session.libraryMacros.end(),
+                                             [&](const auto &entry) { return entry.first == module; });
     const auto prefix = module + "::";
     const auto &program = *M_AotSyntax();
     for (const auto *entries : { &program.variables, &program.constants })
         for (const auto &entry : *entries)
             if (entry.first.rfind(prefix, 0) == 0) throw std::runtime_error("首批独立原生库暂不支持模块全局状态");
-    Memory::String interface = "module " + module + ";\n" + LibraryInterfaceDeclarations(module) + LibraryTypeDeclarations(module);
+    Memory::String interface = "module " + module + ";\n";
+    if (hasTemplates)
+    {
+        chali_generic::session.libraryImports.clear();
+        for (const auto &imported : g_moduleImports[module])
+            if (imported != module && imported != "std::lang")
+            {
+                chali_generic::session.libraryImports.push_back(imported);
+                interface += "import " + imported + ";\n";
+            }
+    }
+    interface += LibraryInterfaceDeclarations(module) + LibraryTypeDeclarations(module);
     if (!RegisterLibraryTypeSymbols(*g_aotSyntax, module)) throw std::runtime_error("原生库类型身份登记失败");
     Memory::Map<Memory::String, Memory::String> recordShapes;
     const auto declarations = g_functionDecls;
     for (const auto &function : declarations)
     {
-        if (function.module != module || (function.moduleLocal && function.exportSymbol.empty()) || function.superseded || function.external || function.bodyId < 0) continue;
+        if (function.module != module || (function.moduleLocal && function.exportSymbol.empty() && !hasTemplates) || function.superseded || function.external || function.bodyId < 0) continue;
+        const auto instance = chali_generic::session.made.find(function.source);
+        if (instance != chali_generic::session.made.end() && instance->second.generic && instance->second.generic->module == module)
+            continue;  // 模板实例保留为原生实现依赖，公开定义由 Templates 载荷恢复。
         if (function.source == "main" || function.unsafeRequired) throw std::runtime_error("首批原生库暂不导出 main 或 unsafe 函数");
         const auto lifetime = LibraryLifetimeInterface(function);
         chali_aot::ExternFunction entry;
@@ -3792,6 +3817,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
                                                                                                                             LibraryScalarType(function.signature.result, true))
                                      + " " + function.source + "(";
         Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
+        if (function.moduleLocal) identity += "\nmodule-local-v1";
         if (owned) identity += "\nchali-owned-string-v1:shared-heap-copy-parameters-transfer-result";
         if (!lifetime.identity.empty()) identity += "\nlifetime-contract-v1:\n" + lifetime.identity;
         if (valueResult)
@@ -3833,14 +3859,17 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
             const auto &parameter = function.signature.params[i];
             if (i) declaration += ", ";
             declaration += LibraryParameterType(parameter.type) + " " + parameter.source;
-            if (parameter.defaultExpr >= 0 && !function.moduleLocal)
-                declaration += "=" + LibraryDefaultEntry(parameter, entry.symbol + "_default_" + Memory::toString(i), module, interface, exports);
+            if (parameter.defaultExpr >= 0 && (!function.moduleLocal || hasTemplates))
+                declaration += "=" + LibraryDefaultEntry(parameter, entry.symbol + "_default_" + Memory::toString(i), module, interface, exports, function.moduleLocal);
         }
         declaration += ");\n";
-        if (!function.moduleLocal) interface += lifetime.declaration + "#abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
+        if (!function.moduleLocal || hasTemplates)
+            interface += lifetime.declaration + Memory::String(function.moduleLocal ? "inline " : "")
+                         + "#abi(\"" + entry.abiConvention + "\",\"@link\",\"" + entry.symbol + "\")\n" + declaration;
         exports.push_back(std::move(entry));
     }
-    if (exports.empty()) throw std::runtime_error("库模块没有可导出的公开普通函数");
+    if (exports.empty() && !hasTemplates)
+        throw std::runtime_error("库模块没有可导出的公开普通函数");
     return interface;
 }
 

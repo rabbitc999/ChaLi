@@ -486,6 +486,7 @@ bool UnifyGenericType(const std::shared_ptr<MType> &pattern, const std::shared_p
 bool IsOverloadedCallbackArgument(int id)
 {
     const auto &node = N(id);
+    if (IsQualifiedFunctionValue(node)) return g_functionIndex.at(ModuleSymbol(node.s, node.s2)).size() > 1u;
     if (node.kind != MNode::Var || FindNodeVar(node)) return false;
     const auto *overloads = FindFunctionOverloads(node.module, node.s);
     return overloads && overloads->size() > 1u;
@@ -502,7 +503,7 @@ std::shared_ptr<MType> InferOverloadedCallbackArgument(int id, const std::shared
                                                        const Memory::Map<Memory::String, std::shared_ptr<MType>> &bindings)
 {
     const auto node = N(id);
-    const auto *overloads = FindFunctionOverloads(node.module, node.s);
+    const auto *overloads = IsQualifiedFunctionValue(node) ? FindFunctionOverloads(node.s, node.s2) : FindFunctionOverloads(node.module, node.s);
     if (!overloads || overloads->empty())
         return Fail("没有可供泛型推导选择的回调重载：" + node.s), nullptr;
     std::shared_ptr<MType> selected;

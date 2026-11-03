@@ -2753,6 +2753,11 @@ ast::NodePtr LowerUncheckedExpr(int id)
     case MNode::EnumCtor:
         if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr)
             return global->elementReference ? ast::Node::loadFrom(ast::Node::var(global->emitted), LowerType(global->type, global->emitted)) : ast::Node::var(global->emitted);
+        if (IsQualifiedFunctionValue(node))
+        {
+            const auto label = ResolveFunctionValue(node.s, node.s2, g_expectedFuncType);
+            return label.empty() ? Bad() : FunctionPointerValue(label);
+        }
         if (node.type2 == 1 && FindEnumVariant(node.s, node.s2) == nullptr)
         {
             if (const auto owner = FindStruct(node.s))

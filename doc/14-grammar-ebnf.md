@@ -323,8 +323,10 @@ top_decl = struct_decl, type_decl_end
     | lifetime_directives, "inline", func_def
     | lifetime_directives, "export", func_def
     | lifetime_directives, "#abi", "(", STRING, ",", STRING, ",", STRING, ")", abi_func
+    | lifetime_directives, "inline", "#abi", "(", STRING, ",", STRING, ",", STRING, ")", abi_func
     | host_func_decl
     | "#abi", "(", STRING, ",", STRING, ",", STRING, ")", abi_func
+    | "inline", "#abi", "(", STRING, ",", STRING, ",", STRING, ")", abi_func
     | host_type_decl
     | host_impl_decl
     | operator_def

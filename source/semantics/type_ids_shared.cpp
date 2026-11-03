@@ -655,6 +655,18 @@ const Memory::Vector<Memory::String> *FindFunctionOverloads(const Memory::String
 const MFuncSig *FindInferenceFunction(const Memory::String &module, const Memory::String &name);
 
 /**
+ * @brief 判断限定引用是否命中真实模块函数，保留同名全局变量的优先级。
+ * @param node 不带调用实参的限定引用。
+ * @return 存在精确模块函数记录且未被模块全局遮蔽时返回 true。
+ */
+bool IsQualifiedFunctionValue(const MNode &node)
+{
+    if (node.kind != MNode::EnumCtor || node.type2 == 1 || !node.kids.empty() || node.s.empty()) return false;
+    const auto found = g_functionIndex.find(ModuleSymbol(node.s, node.s2));
+    return found != g_functionIndex.end() && !found->second.empty() && !FindQualifiedGlobal(node.s, node.s2);
+}
+
+/**
  * @brief 这次调用的"被调者"是不是**函数指针**（而不是函数名）。
  *
  * `fp(3, 4)`（fp 是变量 / 字段）走间接调用；`add(3, 4)`（add 是函数名）走直接调用 ——
@@ -665,6 +677,7 @@ const MFuncSig *FindInferenceFunction(const Memory::String &module, const Memory
 bool IsIndirectCallee(int calleeId)
 {
     const MNode &callee = N(calleeId);
+    if (IsQualifiedFunctionValue(callee)) return false;
     if (callee.kind == MNode::Var && callee.s.rfind("__chali_lambda_", 0) == 0) return true;
     if ((callee.kind == MNode::Var) && (FindNodeVar(callee) == nullptr) && (FindFunctionOverloads(callee.module, callee.s) != nullptr))
     {
@@ -829,6 +842,13 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
  */
 ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
+    for (const auto &declaration : g_functionDecls)
+        if (declaration.label == label && !declaration.superseded && declaration.moduleLocal && declaration.module != g_currentModule)
+        {
+            Fail("模块 " + declaration.module + " 的 inline 函数 " + declaration.source + " 不能从模块 "
+                 + (g_currentModule.empty() ? Memory::String("<root>") : g_currentModule) + " 取作函数值");
+            return ast::Node::i(0);
+        }
     for (const auto &declaration : g_functionDecls)
         if (declaration.label == label && declaration.external && chali_lifetime::g_directiveNodes.count(declaration.declarationId))
         {

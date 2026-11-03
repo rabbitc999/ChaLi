@@ -61,6 +61,7 @@ struct Options
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
     Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。
     bool libraryBitcode = false;                     ///< 独立库同时保留与原生对象同源的 bitcode。
+    bool libraryHasTemplates = false;                ///< 生产器已核对模板载荷，允许没有普通函数的原生单元。
     Memory::String libraryImplementation = "native";  ///< 消费库的明确选择：native 或 bitcode，不作静默回退。
     Memory::String debugLibraries = "[]";             ///< 已验证库实现的调试目录身份，规范 JSON 数组，不重新读取包。
     Memory::Vector<UnitData> unitData;               ///< 从已验证库快照恢复的只初始化一次的数据段。

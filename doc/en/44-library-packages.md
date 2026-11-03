@@ -52,7 +52,7 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the supported ordinary record, enum and standard String parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and supported direct calls to imported libraries. LLVM emits C ABI width/floating conversions directly. Owning values beyond String and its supported owning aggregates, generic definitions, globals, user methods, variadic parameters, unsafe exports, general host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. The standard String implementation may use checked internal storage operations. Templates, initialization and the broader internal language ABI remain subsequent work.
+The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the supported ordinary record, enum and standard String parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and supported direct calls to imported libraries. LLVM emits C ABI width/floating conversions directly. Owning values beyond String and its supported owning aggregates, globals, user methods, variadic parameters, unsafe exports, general host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. The standard String implementation may use checked internal storage operations. Generic definitions are consumed as described below; initialization and broader internal language ABIs retain their separate support limits.
 
 ### Standard String language-library entries
 
@@ -163,11 +163,11 @@ interface Error { int64 code(); };
 interface DetailedError : Error { bool retry(); };
 ```
 
-Consumers may implement these interfaces, call through a base interface and use interface type matches such as `IoError(error)`. Declarations preserve original parameter names and static markers; inherited methods retain their original declaring interface. Default method bodies, associated types, generic definitions and nonscalar method signatures remain rejected by the producer. Creating interface values inside library code or passing them through native entries still requires the shared-runtime work.
+Consumers may implement these interfaces, call through a base interface and use interface type matches such as `IoError(error)`. Declarations preserve original parameter names and static markers; inherited methods retain their original declaring interface. Default method bodies, associated types and nonscalar method signatures remain rejected by the producer. Creating interface values inside library code or passing them through native entries still requires the shared-runtime work.
 
 Nested records from a verified `.chlib` dependency retain their original module names. A consuming library records exact dependency pins and references the original declaration instead of copying it into its own module. Transitive consumers load the declaring package even when they import only the outer library. Cross-module record fields originating only from implementation source are rejected; precompile that dependency first.
 
-Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain absent from the public language interface. An object entry does not automatically become a final shared-library export; configure final linker exports separately.
+Imported packages are recorded with exact versions and content hashes; final consumers restore the complete dependency closure. Source `#export("native_name")` preserves an additional native entry, while ordinary language imports retain their module-and-signature-derived entries. Private `inline` functions remain inaccessible to other modules; packages with generics or macros may retain module-private ABI declarations for use in the defining module. An object entry does not automatically become a final shared-library export; configure final linker exports separately.
 
 `lib build` also accepts delivery metadata directly:
 
@@ -180,6 +180,25 @@ Repeat `--license-asset` with a package name on the left of `=` and an input fil
 `extensions.producer` records AST→LLVM, O3, checked mode, the actual static/external LLVM backend and the consumer-provided runtime contract, without absolute build-host paths. Exact language dependencies remain in `dependencies`. The producer's LLVM toolchain is separate from application dynamic dependencies. Runtime dependency names are publisher declarations, not a claim that every dynamic-loading path has been scanned.
 
 These packages require `scalar-unit-v1`, so compilers without that capability reject them before loading. Ordinary imports accept both these language-generated objects and the manually declared C ABI archives above; neither interface contains runtime function bodies.
+
+## Generic definitions and macro context
+
+`lib build` stores this module's uninstantiated generic definitions in `templates/definitions.json` and requires `generic-definitions-v1`. Older compilers reject the capability explicitly. Ordinary functions remain target implementations. Generic instances incidentally used by the producer are no longer exported as ordinary public function declarations. Modules containing only generic or macro definitions can also produce packages.
+
+```chali
+module example::generic;
+T identity<T>(T value) { return value; }
+T defaulted<T = int64>(T value) { return value; }
+struct Box<T> { T value; T read() { return self.value; } }
+```
+
+After removing the original implementation file, consumers can import the package and use `example::generic::identity<String>("text")`, `example::generic::defaulted<>(42)` and `example::generic::Box<int64>`. Instantiation occurs in the consumer compilation session, preserving complete module identity, constraints, default types and compile-time integer arguments. Recursion and ownership checks follow the source path. Same-named templates in different modules retain distinct nominal identities.
+
+Canonical format-one JSON records the module, imports, macro definitions and generic declarations. Each generic also records its parameters, derivation requests and operator switches. Macro arguments are restored to text that can be captured again; compilation-session identifiers and absolute implementation paths are excluded. Consumers parse these declarations and macros again. They are required definitions rather than an attachment containing the entire implementation source. Unknown fields or versions, module mismatches, duplicate definitions, ordinary implementations outside templates or macros, and internal fragment references are rejected. The payload budget is 32 MiB, each declaration is limited to 4 MiB, and there may be at most 4096 generics and 4096 macros.
+
+Non-standard imports used by templates require precompiled dependencies pinned by exact version and whole-package digest. Standard modules use the current compiler's embedded assets. A `.chl` file present on the producer's machine cannot substitute for dependency identity. Necessary private ordinary entries retain module-private ABI declarations. Calls and function values still enforce their original visibility, and default arguments retain defining-module semantics.
+
+This capability lets consumers generate methods belonging to template structs. Native entries still accept only their separately supported aggregates and owning values. Producer-instantiated aggregates with user methods, global initialization, collections, interface values and closures remain subject to their respective native-interface limits. Optional Templates assets without `generic-definitions-v1` cannot be consumed as language definitions.
 
 ## Ordinary imports
 
@@ -197,7 +216,7 @@ void main() {
 
 Module headers follow statement boundaries. A `module`, multiple imports and subsequent declarations may share a line, for example `module consumer;import example::math;void main(){assert(example::math::add(20,22)==42);}`. Whitespace, line breaks and comments around module paths remain lexical separators. Apparent imports in comments, ordinary strings, characters or nested interpolated strings do not load packages. Headers must precede ordinary declarations; duplicate modules, reserved module names and missing or damaged packages are rejected. When a project manifest adds imports, header extraction preserves the following code on the same line and its original diagnostic coordinates. Native package loading does not depend on placing each statement on a separate line.
 
-The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and internal ABIs beyond standard String and its supported owning aggregates are not enabled by carrying optional source/template assets.
+The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Generic definitions are restored only through verified `generic-definitions-v1` payloads. Library initialization and internal ABIs beyond standard String and its supported owning aggregates retain their separate support limits. Optional source assets do not enable implementation compilation.
 
 Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
 

@@ -66,9 +66,13 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | lifetime_directives EXPORT func_def { $$ = M_Export(M_LifetimeContract($1, $3)); }
      | lifetime_directives ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING RPAREN abi_func
        { $$ = M_LifetimeContract($1, M_AbiImport($4, $6, $8, $10)); }
+     | lifetime_directives INLINE ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING RPAREN abi_func
+       { $$ = M_Inline(M_LifetimeContract($1, M_AbiImport($5, $7, $9, $11))); }
      | host_func_decl { $$ = $1; }
      | ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING RPAREN abi_func
        { $$ = M_AbiImport($3, $5, $7, $9); }
+     | INLINE ABI_DIRECTIVE LPAREN STRING COMMA STRING COMMA STRING RPAREN abi_func
+       { $$ = M_Inline(M_AbiImport($4, $6, $8, $10)); }
      | host_type_decl { $$ = $1; }
      | host_impl_decl { $$ = $1; }
      | operator_def { $$ = $1; }

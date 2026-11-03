@@ -110,6 +110,19 @@ struct Package
     const Entry *find(std::string_view name) const;
 };
 /**
+ * @brief 导出当前编译会话中属于指定模块的未实例化泛型定义。
+ * @param module 完整模块名。
+ * @return 规范 JSON 模板载荷；没有模板时为空。
+ */
+std::string exportTemplates(const std::string &module);
+/**
+ * @brief 核对泛型元数据并恢复不含普通实现的模板文本。
+ * @param manifest 已验证的库清单。
+ * @param bytes 带版本、模块及语义形参的规范模板载荷。
+ * @return 可以同模块装载的模板声明；非法载荷抛出错误。
+ */
+std::string templateSource(const Manifest &manifest, std::string_view bytes);
+/**
  * @brief 核对可选库调试目录与当前目标实现的字节身份。
  * @param package 已持有全部条目的包快照。
  * @param target 本包的目标描述。

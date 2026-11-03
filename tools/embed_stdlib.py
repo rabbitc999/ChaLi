@@ -163,7 +163,7 @@ GENERATOR_ASSETS = [
     "tools/chali_manual.json",
     "tools/chali_stdlib_api.json",
     "chali_warnings.hpp",
-    "chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_import.cpp", "chali_library_bitcode.cpp", "chali_bitcode.cpp", "chali_library_build.cpp", "chali_library_tools.cpp", "chali_linker.hpp", "chali_linker.cpp", "chali_archive_llvm.cpp", "chali_native_objects.hpp", "chali_native_objects.cpp", "chali_assembler.hpp",
+    "chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_templates.cpp", "chali_library_package.cpp", "chali_library_import.cpp", "chali_library_bitcode.cpp", "chali_bitcode.cpp", "chali_library_build.cpp", "chali_library_tools.cpp", "chali_linker.hpp", "chali_linker.cpp", "chali_archive_llvm.cpp", "chali_native_objects.hpp", "chali_native_objects.cpp", "chali_assembler.hpp",
     "chali_assembler.cpp",
     "chali_assembler_llvm.cpp",
     "chali_native_tools.hpp",

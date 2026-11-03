@@ -333,6 +333,116 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
 }
 
 /**
+ * @brief 校验内部调用引用并恢复原始宏实参，不导出会话编号。
+ * @param source 待恢复文本，失败时保持原值。
+ * @param error 接收无效引用或预算错误。
+ * @return 引用和分组全部有效时返回真。
+ */
+bool SourceFragments::restore(Memory::String &source, std::string &error) const
+{
+    const std::string text(source.data(), source.size());
+    std::string output;
+    error.clear();
+    for (std::size_t at = 0; at < text.size();)
+    {
+        const auto begin = at;
+        if (skipQuoted(text, at))
+        {
+            output.append(text, begin, at - begin);
+            continue;
+        }
+        if (text[at] != '$')
+        {
+            bool lexical = false;
+            for (const auto &entry : { std::make_pair("@!macroitem", "item"), std::make_pair("@!macromember", "member"), std::make_pair("@!macrobody", "\n") })
+            {
+                const std::string_view marker(entry.first);
+                if (text.compare(at, marker.size(), marker) == 0
+                    && (at + marker.size() == text.size() || !identifierChar(text[at + marker.size()])))
+                {
+                    output += entry.second;
+                    at += marker.size();
+                    lexical = true;
+                    break;
+                }
+            }
+            if (lexical) continue;
+            if (text.compare(at, 2, "@!") == 0)
+            {
+                error = "模板含有未绑定的宏片段编号：" + text.substr(at, 80);
+                return false;
+            }
+            output += text[at++];
+            continue;
+        }
+        ++at;
+        while (at < text.size() && (identifierChar(text[at]) || text[at] == ':')) ++at;
+        if (text.compare(at, 2, "@!") != 0)
+        {
+            if (text.substr(begin, at - begin) == "$replace") output += "$macro";
+            else output.append(text, begin, at - begin);
+            continue;
+        }
+        at += 2;
+        while (at < text.size() && std::isdigit(static_cast<unsigned char>(text[at]))) ++at;
+        const auto id = resolveMarker(std::string_view(text).substr(begin, at - begin));
+        if (id == static_cast<std::size_t>(-1))
+        {
+            error = "模板引用的宏调用编号或名称无效";
+            return false;
+        }
+        const auto &call = invocations_[id];
+        output += '$' + call.name;
+        std::size_t argument = 0;
+        const auto group = [&](char opening, const std::vector<SourceFragment> &fragments) {
+            for (;;)
+            {
+                while (at < text.size() && std::isspace(static_cast<unsigned char>(text[at]))) ++at;
+                if (text.compare(at, 2, "//") != 0 && text.compare(at, 2, "/*") != 0) break;
+                skipQuoted(text, at);
+            }
+            if (at == text.size() || text[at] != opening)
+            {
+                error = "模板宏调用的实参组与记录不一致";
+                return false;
+            }
+            std::vector<std::pair<std::size_t, std::size_t>> ranges;
+            if (!readGroup(text, at, ranges, error)) return false;
+            if (ranges.size() != fragments.size())
+            {
+                error = "模板宏调用的实参数量与记录不一致";
+                return false;
+            }
+            output += opening;
+            for (std::size_t index = 0; index < fragments.size(); ++index)
+            {
+                const auto &range = ranges[index];
+                const auto marker = "@!macrofragment" + std::to_string(id) + '_' + std::to_string(argument++);
+                if (text.substr(range.first, range.second - range.first) != marker)
+                {
+                    error = "模板宏调用的片段标记与记录不一致";
+                    return false;
+                }
+                if (index) output += ',';
+                output.append(fragments[index].text.data(), fragments[index].text.size());
+            }
+            output += opening == '(' ? ')' : opening == '[' ? ']' : opening == '{' ? '}' : '>';
+            return true;
+        };
+        if (call.explicitTypes && !group('<', call.types)) return false;
+        for (const auto &entry : call.groups)
+            if (!group(entry.opening, entry.arguments)) return false;
+        if (output.size() > 32u * 1024u * 1024u)
+        {
+            error = "模板宏调用恢复超过字节预算";
+            return false;
+        }
+    }
+    source.assign(output.data(), output.size());
+    return true;
+}
+
+/**
  * @brief 整体移动宏调用和全部原始片段的来源索引，仍保留各自真实列号。
  * @param offset 保存原始文件映射的追加区起点。
  */

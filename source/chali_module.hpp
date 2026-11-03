@@ -616,6 +616,17 @@ private:
                 preprocess::Preprocessor processor(options_);
                 if (!processor.runText(Memory::String(package.find(package.manifest.interface)->bytes.c_str()), label,
                                        Memory::String(parent.c_str()), child)) return diagnostics(child, error);
+                if (!package.manifest.templates.empty())
+                {
+                    const auto source = chali_library::templateSource(package.manifest, package.find(package.manifest.templates)->bytes);
+                    const Memory::String templateLabel = path + ".templates.chl";
+                    const Memory::String templateText(source.data(), source.size());
+                    chali_report::registerVirtualSource(templateLabel, templateText);
+                    preprocess::Result definitions;
+                    if (!processor.runText(templateText, templateLabel, Memory::String(parent.c_str()), definitions))
+                        return diagnostics(definitions, error);
+                    append(child, definitions);
+                }
                 child.dependencies.clear();
             } catch (const std::exception &failure)
             {

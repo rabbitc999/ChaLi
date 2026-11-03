@@ -1252,6 +1252,17 @@ try
             std::fprintf(stderr, CHALI_TEXT("chali: 泛型：%s\n"), macroError.c_str());
             return 1;
         }
+        if (!libraryModule.empty())
+            for (const auto &definition : definitions.records())
+            {
+                const auto marker = processed.text.find(definition.first);
+                if (marker == Memory::String::npos) continue;
+                const auto line = static_cast<std::size_t>(std::count(processed.text.begin(), processed.text.begin() + marker, '\n'));
+                if (line >= processed.lineMap.size()) continue;
+                const auto owner = loader.moduleByFile().find(processed.lineMap[line].file);
+                if (owner != loader.moduleByFile().end() && owner->second == libraryModule)
+                    chali_generic::session.libraryMacros.emplace_back(owner->second, definition.second);
+            }
         chali_lambda::markClosureTypeArguments(processed.text);
         if (!definitions.restore(processed.text, syntaxError))
         {

@@ -165,6 +165,9 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     Package package;
     std::string error;
     if (!read(path, package, error)) throw std::runtime_error(path.u8string() + ": " + error);
+    if (!package.manifest.templates.empty()
+        && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "generic-definitions-v1") == package.manifest.requiredFeatures.end())
+        throw std::runtime_error("模板消费缺少已验证的 generic-definitions-v1 能力");
     const std::string identity = package.manifest.module;
     if (!module.empty() && identity != module) throw std::runtime_error("库模块身份不匹配：" + module);
     if (pin && (package.manifest.version != pin->version || package.contentSha256 != pin->sha256))

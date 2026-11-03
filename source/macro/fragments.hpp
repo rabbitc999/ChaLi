@@ -63,6 +63,13 @@ public:
      */
     bool capture(Memory::String &source, std::string &error, std::size_t firstLine = 1, std::size_t firstColumn = 1, bool anchored = false);
     /**
+     * @brief 将本会话捕获的调用恢复为具名实参组，用于跨编译保存模板。
+     * @param source 带已核对内部引用的源码；成功后替换为可重新捕获的原文。
+     * @param error 接收非法编号、分组或预算错误。
+     * @return 全部引用恢复时为真；失败保留输入。
+     */
+    bool restore(Memory::String &source, std::string &error) const;
+    /**
      * @brief 将已捕获来源移到追加的原文映射区，不受后续源码归一化行号变化影响。
      * @param offset 原文映射追加到当前映射中的起始偏移。
      */

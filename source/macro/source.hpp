@@ -39,6 +39,11 @@ public:
      * @return 恢复成功时返回真。
      */
     bool restore(Memory::String &source, std::string &error) const;
+    /**
+     * @brief 读取当前预处理单元暂存的宏定义，供库模板保存定义上下文。
+     * @return 占位标记与完整定义的只读对应表。
+     */
+    const std::vector<std::pair<Memory::String, Memory::String>> &records() const { return definitions_; }
 
 private:
     std::vector<std::pair<Memory::String, Memory::String>> definitions_;
