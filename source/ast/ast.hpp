@@ -501,6 +501,7 @@ struct Program
     Memory::Map<std::int64_t, Memory::String> nativeTypeSymbols;        ///< 本次类型编号到跨单元名义及布局身份符号。
     Memory::Map<std::int64_t, Memory::String> debugTypeLayouts;         ///< 实际装箱类型的只读调试布局，不登记用户方法。
     Memory::Map<Memory::String, Memory::Vector<DebugCapture>> debugClosures;  ///< 函数标签对应的源码捕获布局。
+    bool nativeOwnedAggregates = false;                              ///< 跨单元类型登记包含受支持的拥有记录或枚举。
 
     /**
      * @brief 声明一个常量（值必须是字面量）。

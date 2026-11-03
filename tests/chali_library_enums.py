@@ -44,7 +44,7 @@ void replace(Event mut& value){value=Event::Count(77);}
         assert '#abi("ChaLiValue"' in interface and '#abi("ChaLiBorrow"' in interface
         assert 'demo::events::Event' in interface and 'const& value' in interface
         original = package.read_bytes()
-        for rejected in ['enum Owned {Empty,Text(String value)};Owned owned(Owned value){return value;}',
+        for rejected in ['enum Owned {Empty,Items(List<int64> value)};Owned owned(Owned value){return value;}',
                          '#export("physical_enum") Event physical(Event value){return value;}']:
             provider.write_text(source + '\n' + rejected + '\n', encoding='utf-8')
             invoke([compiler, 'lib', 'build', provider, '--module', 'demo::events', '--package-version', '1.0.0', '--out', package], work, False)

@@ -19,7 +19,7 @@ MODULES = {
     "debug_bitcode": ["chali_debug_bitcode_optimization"],
     "debug_libraries": ["chali_library_debug"],
     "editor_host": ["chali_vscode_extension_host"],
-    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_strings", "chali_library_enums", "chali_library_lifetimes", "chali_library_bitcode_header", "chali_library_bitcode", "chali_library_bitcode_values", "chali_library_lto", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
+    "libraries": ["chali_digest", "chali_library_package", "chali_library_import", "chali_library_build", "chali_library_borrow", "chali_library_values", "chali_library_strings", "chali_library_owned_records", "chali_library_enums", "chali_library_lifetimes", "chali_library_bitcode_header", "chali_library_bitcode", "chali_library_bitcode_values", "chali_library_lto", "chali_library_data", "chali_library_moves", "chali_generator_assets"],
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],
     "interfaces": ["chali_interface_values", "chali_interface_binding_move", "chali_copy_interface", "chali_interface_copy_scalar"],
     "abi": ["chali_link_abi", "chali_abi_values", "chali_abi_contracts", "chali_c_api_contract"],

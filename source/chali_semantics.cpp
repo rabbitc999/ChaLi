@@ -52,7 +52,7 @@ Memory::Deque<MNode> g_nodes;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
 Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources,
-    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources;
+    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources, g_libraryOwnedRecordSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -2995,6 +2995,7 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
     g_libraryOwnedSources.clear();
+    g_libraryOwnedRecordSources.clear();
     g_libraryDataSources.clear();
     g_libraryTypeSources.clear();
     g_libraryLifetimeSources.clear();
@@ -3018,6 +3019,16 @@ void M_SetLibraryOwnedSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryOwnedSources.clear();
     g_libraryOwnedSources.insert(files.begin(), files.end());
+}
+/**
+ * @brief 保存当前目标已验证的拥有字段聚合入口来源。
+ * @param files 携带 owned-record-value-v1 的稳定来源标签。
+ * @return 无。
+ */
+void M_SetLibraryOwnedRecordSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryOwnedRecordSources.clear();
+    g_libraryOwnedRecordSources.insert(files.begin(), files.end());
 }
 /**
  * @brief 保存允许公开生命周期契约的已验证接口来源。
@@ -3377,7 +3388,7 @@ Memory::String LibraryScalarType(const std::shared_ptr<MType> &type, bool allowV
     if (type->kind == MType::Char) return "char";
     if (type->kind == MType::Int) return Memory::String(type->isUnsigned ? "uint" : "int") + Memory::toString(type->bits);
     if (type->kind == MType::Double) return Memory::String("float") + Memory::toString(type->bits);
-    throw std::runtime_error("原生库支持基础标量及非拥有记录／枚举；该类型或拥有状态尚未接入语言库 ABI");
+    throw std::runtime_error("原生库支持基础标量、标准 String 及受支持记录／枚举；该类型或拥有状态尚未接入语言库 ABI");
 }
 /**
  * @brief 取得已检查记录声明的真实模块身份，不依赖临时短名称。
@@ -3397,7 +3408,7 @@ Memory::String LibraryDeclaredType(const Memory::String &name)
 /**
  * @brief 保留参数的语言类型及只读／可写借用约定。
  * @param type 参数类型。
- * @return 标量、标准 String、非拥有聚合或其借用的公开拼写。
+ * @return 标量、标准 String、受支持聚合或其借用的公开拼写。
  */
 Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
 {
@@ -3405,7 +3416,7 @@ Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
     if (type && type->kind == MType::Ptr && LibraryOwnedString(type->elem))
         return Memory::String("std::lang::String") + (type->readOnly ? " const&" : " mut&");
     if (LibraryBorrowParameter(type)) return LibraryDeclaredType(type->elem->name) + (type->readOnly ? " const&" : " mut&");
-    if (LibraryPlainValue(type)) return LibraryDeclaredType(type->name);
+    if (LibraryValueRecord(type)) return LibraryDeclaredType(type->name);
     return LibraryScalarType(type);
 }
 /**
@@ -3423,7 +3434,8 @@ Memory::String LibraryRecordShape(const Memory::String &name, Memory::Map<Memory
     for (const auto &field : definition.fields)
     {
         identity += field.name + ":";
-        identity += field.type->kind == MType::Struct ? LibraryRecordShape(field.type->name, cache) : LibraryScalarType(field.type);
+        identity += LibraryOwnedString(field.type) ? Memory::String("std::lang::String:owned-string-value-v1") :
+                    field.type->kind == MType::Struct ? LibraryRecordShape(field.type->name, cache) : LibraryScalarType(field.type);
         identity += "\n";
     }
     const auto enumeration = g_enums.find(name);
@@ -3451,11 +3463,12 @@ bool RegisterLibraryTypeSymbols(ast::Program &program, const Memory::String &mod
         if ((node.kind != MNode::StructDecl && node.kind != MNode::EnumDecl) || !g_structs.count(node.s) || (!(node.module == module && !module.empty()) && !imported(node.sourceLine) && !imported(node.expansionLine))) continue;
         const auto type = NamedType(node.s);
         const auto &definition = g_structs.at(node.s);
-        if (definition.abiPacked || definition.nonCopyable || CAbiType(type).empty()) continue;
+        if (definition.abiPacked || definition.nonCopyable || !LibraryValueRecord(type)) continue;
         ReductionSourceScope location(id);
         try
         {
             program.nativeTypeSymbols[TypeIdOf(type)] = "chali_native_type_" + LibraryRecordShape(node.s, shapes);
+            program.nativeOwnedAggregates |= LibraryOwnedRecord(type);
         } catch (const std::exception &error) { return Fail("预编译类型身份无法登记：" + Memory::String(error.what())); }
     }
     return true;
@@ -3520,7 +3533,7 @@ Memory::String LibraryInterfaceDeclarations(const Memory::String &module)
     return prefix + result;
 }
 /**
- * @brief 导出无拥有状态的公开记录与枚举声明，保留字段、载荷及完整模块身份。
+ * @brief 导出受支持字段的公开记录与枚举声明，保留载荷及完整模块身份。
  * @param module 本次生产的完整模块身份。
  * @return 不含方法体、默认初始化器或运行时状态的类型声明。
  */
@@ -3558,6 +3571,7 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
         for (const auto &interfaceName : definition.interfaces)
             if (interfaceName != "std::io::ToString" && interfaceName != "ToString") throw std::runtime_error("原生记录接口暂不导出接口继承契约");
         const auto typeText = [&](const std::shared_ptr<MType> &type) {
+            if (LibraryOwnedString(type)) return Memory::String("std::lang::String");
             if (type && type->kind == MType::Struct)
             {
                 if (!records.count(type->name) && !packagedRecords.count(type->name))
@@ -3747,11 +3761,15 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         entry.label = function.label;
         entry.nativeAlias = function.exportSymbol;
         entry.abiConvention = "C";
-        const bool valueResult = LibraryPlainValue(function.signature.result);
+        const bool valueResult = LibraryValueRecord(function.signature.result);
         const bool stringResult = LibraryOwnedString(function.signature.result);
-        const bool owned = stringResult || (function.signature.result && function.signature.result->kind == MType::Ptr && LibraryOwnedString(function.signature.result->elem))
+        const bool owned = stringResult || LibraryOwnedRecord(function.signature.result)
+            || (function.signature.result && function.signature.result->kind == MType::Ptr
+                && (LibraryOwnedString(function.signature.result->elem) || LibraryOwnedRecord(function.signature.result->elem)))
             || std::any_of(function.signature.params.begin(), function.signature.params.end(), [](const auto &parameter) {
-                return LibraryOwnedString(parameter.type) || (parameter.type && parameter.type->kind == MType::Ptr && LibraryOwnedString(parameter.type->elem));
+                return LibraryOwnedString(parameter.type) || LibraryOwnedRecord(parameter.type)
+                    || (parameter.type && parameter.type->kind == MType::Ptr
+                        && (LibraryOwnedString(parameter.type->elem) || LibraryOwnedRecord(parameter.type->elem)));
             });
         const bool borrowedResult = LibraryBorrowParameter(function.signature.result);
         entry.borrowedResult = borrowedResult;
@@ -3769,7 +3787,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         else if (borrowedResult)
             entry.abiConvention = "ChaLiBorrow";
         if (owned) entry.abiConvention = "ChaLiOwned";
-        if (owned && !function.exportSymbol.empty()) throw std::runtime_error("String 语言入口不能同时声明物理 C ABI 的 #export");
+        if (owned && !function.exportSymbol.empty()) throw std::runtime_error("拥有值语言入口不能同时声明物理 C ABI 的 #export");
         Memory::String declaration = (stringResult ? Memory::String("std::lang::String") : valueResult ? LibraryDeclaredType(function.signature.result->name) : borrowedResult ? LibraryParameterType(function.signature.result) :
                                                                                                                             LibraryScalarType(function.signature.result, true))
                                      + " " + function.source + "(";
@@ -3795,11 +3813,11 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
             identity += "\n" + type;
             if (LibraryOwnedString(parameter.type) || (parameter.type && parameter.type->kind == MType::Ptr && LibraryOwnedString(parameter.type->elem)))
                 identity += "\nchali-owned-string-v1:" + type;
-            else if (LibraryBorrowParameter(parameter.type) || LibraryPlainValue(parameter.type))
+            else if (LibraryBorrowParameter(parameter.type) || LibraryValueRecord(parameter.type))
             {
                 if (!function.exportSymbol.empty()) throw std::runtime_error("语言聚合入口不能同时声明物理 C ABI 的 #export");
                 if (parameter.defaultExpr >= 0) throw std::runtime_error("聚合参数暂不支持默认值");
-                const bool value = LibraryPlainValue(parameter.type);
+                const bool value = LibraryValueRecord(parameter.type);
                 if (value)
                     entry.abiConvention = owned ? "ChaLiOwned" : "ChaLiValue";
                 else if (entry.abiConvention == "C")

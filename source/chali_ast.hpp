@@ -1243,6 +1243,12 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
  * @return 无。
  */
 void M_SetLibraryOwnedSources(const Memory::Vector<Memory::String> &files);
+/**
+ * @brief 设置允许标准 String 拥有字段聚合 ABI 的已验证库来源。
+ * @param files 携带 owned-record-value-v1 的稳定来源标签。
+ * @return 无。
+ */
+void M_SetLibraryOwnedRecordSources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许公开生命周期契约的已验证库来源。
  * @param files 携带 lifetime-contract-v1 的接口标签。
  * @return 无。 */

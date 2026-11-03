@@ -142,8 +142,8 @@ def main():
                        'module demo::math;int64 state=1;int64 value(){return state;}',
                        'module demo::math;int64 unusedState=1;int64 value(){return 2;}',
                        'module demo::math;int64 generic<T>(T value){return 0;}',
-                       'module demo::math;struct Owned {String value;};int64 value(){return 1;}',
-                       'module demo::math;enum Owned {Empty,Text(String value)};int64 value(){return 1;}',
+                       'module demo::math;struct Owned {List<int64> value;};int64 value(){return 1;}',
+                       'module demo::math;enum Owned {Empty,Items(List<int64> value)};int64 value(){return 1;}',
                        'module demo::math;interface Defaulted {int64 code(){return 1;}};int64 value(){return 1;}',
                        'module demo::math;struct Record {int64 x;int64 read(){return self.x;}};int64 value(){return 1;}',
                        'module demo::math;import demo::source;struct Record {demo::source::Source item;};int64 value(){return 1;}']:

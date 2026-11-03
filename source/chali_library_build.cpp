@@ -50,11 +50,13 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
         package.manifest.version = version;
         package.manifest.compilerVersion = chali_package::compilerVersion;
         package.manifest.requiredFeatures = { "native-c-v1", "scalar-unit-v1" };
-        const bool owned = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiOwned"; });
+        const bool ownedRecords = original.syntax && original.syntax->nativeOwnedAggregates;
+        const bool owned = ownedRecords || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiOwned"; });
         if (owned) package.manifest.requiredFeatures.push_back("owned-string-value-v1");
-        const bool borrowed = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow" || entry.abiConvention == "ChaLiOwned"; });
+        if (ownedRecords) package.manifest.requiredFeatures.push_back("owned-record-value-v1");
+        const bool borrowed = owned || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow" || entry.abiConvention == "ChaLiOwned"; });
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
-        const bool values = std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue" || entry.abiConvention == "ChaLiOwned"; });
+        const bool values = owned || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue" || entry.abiConvention == "ChaLiOwned"; });
         if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");
         if (std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.hasLifetimeContract; }))
             package.manifest.requiredFeatures.push_back("lifetime-contract-v1");

@@ -131,7 +131,7 @@ struct ImportSession::State
 {
     std::string target, cpu, implementation, compiler, llvmVersion;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources, borrowSources, ownedSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
+    std::vector<std::string> sources, borrowSources, ownedSources, ownedRecordSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -203,6 +203,8 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
     if (borrowed) state_->borrowSources.push_back(state_->sources.back());
     if (abi == "chali-owned-v1") state_->ownedSources.push_back(state_->sources.back());
+    if (abi == "chali-owned-v1" && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "owned-record-value-v1") != package.manifest.requiredFeatures.end())
+        state_->ownedRecordSources.push_back(state_->sources.back());
     if (std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "lifetime-contract-v1") != package.manifest.requiredFeatures.end())
         state_->lifetimeSources.push_back(state_->sources.back());
     if (borrowed && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "borrowed-result-v1") != package.manifest.requiredFeatures.end())
@@ -275,6 +277,11 @@ std::vector<std::string> ImportSession::borrowSources() const { return state_->b
  * @return 携带拥有值 ABI 及必需能力的稳定接口标签。
  */
 std::vector<std::string> ImportSession::ownedSources() const { return state_->ownedSources; }
+/**
+ * @brief 返回当前目标已验证的拥有字段记录或枚举入口来源。
+ * @return 携带 owned-record-value-v1 的稳定接口标签。
+ */
+std::vector<std::string> ImportSession::ownedRecordSources() const { return state_->ownedRecordSources; }
 /** @brief 返回允许公开生命周期契约的已验证来源。
  * @return 当前快照的契约接口标签。 */
 std::vector<std::string> ImportSession::lifetimeSources() const { return state_->lifetimeSources; }

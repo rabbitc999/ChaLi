@@ -108,15 +108,21 @@ def main():
             assert 'String 拥有值 ABI 与必需能力不匹配' in rejected.stderr, rejected.stderr
         package.write_bytes(original)
         invalid = work / 'invalid.chl'
+        invalid.write_text('import demo::strings;\nvoid main(){String value="x";demo::strings::append(&value);}', encoding='utf-8')
+        invoke([compiler, 'check', invalid], work)
         for source in ['#abi("ChaLiOwned","@link","forged") String forged(String value);void main(){}',
-                       'import demo::strings;void main(){String value="x";String const& view=&value;demo::strings::append(view);}',
-                       'import demo::strings;String const& escape(){String local="x";return demo::strings::view(&local);}void main(){}']:
+                       'import demo::strings;\nvoid main(){String value="x";String const& view=&value;demo::strings::append(view);}',
+                       'import demo::strings;\nString const& escape(){String local="x";return demo::strings::view(&local);}void main(){}']:
             invalid.write_text(source, encoding='utf-8')
-            invoke([compiler, 'check', invalid], work, False)
-        invalid.write_text('import demo::strings;void main(){demo::strings::fail("library String failure");}', encoding='utf-8')
+            rejected = invoke([compiler, 'check', invalid], work, False)
+            assert 'Undeclared' not in rejected.stderr and '未声明' not in rejected.stderr, rejected.stderr
+        invalid.write_text('import demo::strings;\nvoid main(){demo::strings::fail("library String failure");}', encoding='utf-8')
         for implementation in ['native', 'bitcode']:
-            failed = invoke([compiler, 'run', invalid, '--library-implementation', implementation,
-                             *tools, '--out', work / ('failure-' + implementation)], work, False)
+            failure = work / ('failure-' + implementation)
+            invoke([compiler, 'aot', invalid, '--checked', '--library-implementation', implementation,
+                    *tools, '--out', failure], work)
+            executable = failure.with_suffix('.exe') if os.name == 'nt' else failure
+            failed = invoke([executable], work, False)
             assert 'library String failure' in failed.stdout + failed.stderr
     print('owning String library: independent copies, borrowed mutation and shared lifetime OK')
 

@@ -27,7 +27,7 @@ bool libraryString(const ast::TypePtr &type)
     return type && type->kind == ast::Type::Kind::String;
 }
 /**
- * @brief 判断实现体可在共享内存中访问的基础值、String 槽位或非拥有聚合逻辑引用。
+ * @brief 判断实现体可在共享内存中访问的基础值、String 槽位或受支持聚合逻辑引用。
  * @param type 已检查且已展开字段布局的 AST 类型。
  * @return 不传递拥有状态、可复用消费者共享内存时为真。
  */
@@ -37,38 +37,38 @@ bool libraryBorrow(const ast::TypePtr &type)
     if (libraryScalar(type->element) || libraryString(type->element)) return true;
     if (type->element->kind != ast::Type::Kind::Struct) return false;
     for (const auto &field : type->element->fields)
-        if (!libraryScalar(field.second)) return false;
+        if (!libraryScalar(field.second) && !libraryString(field.second)) return false;
     return !type->element->fields.empty();
 }
 /**
- * @brief 判断独立单元按逻辑地址传递且不含拥有字段的记录或枚举值。
+ * @brief 判断独立单元按逻辑地址传递的基础字段或 String 字段记录及枚举。
  * @param type 已展开的 AST 类型。
- * @return 全部存储字段为基础标量时为真。
+ * @return 展开后的存储字段均为基础标量或标准 String 时为真。
  */
-bool libraryPlainValue(const ast::TypePtr &type)
+bool libraryRecord(const ast::TypePtr &type)
 {
     if (!type || type->kind != ast::Type::Kind::Struct || type->fields.empty()) return false;
     for (const auto &field : type->fields)
-        if (!libraryScalar(field.second)) return false;
+        if (!libraryScalar(field.second) && !libraryString(field.second)) return false;
     return true;
 }
 /**
- * @brief 核对独立单元可达函数，只允许已接入的 String 拥有值及已有普通值操作。
+ * @brief 核对独立单元可达函数，只允许已接入的 String 及其拥有字段聚合操作。
  * @param state 当前直接 AST 生成状态。
  * @param function 可达函数。
  * @return 函数及全部节点属于当前共用运行时支持范围时为真。
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if ((!function.owner.empty() && function.owner != "std::lang::String") || (!libraryScalar(function.result, true) && !libraryString(function.result) && !libraryPlainValue(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
+    if ((!function.owner.empty() && function.owner != "std::lang::String") || (!libraryScalar(function.result, true) && !libraryString(function.result) && !libraryRecord(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
-        if (!libraryScalar(parameter.second) && !libraryString(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
+        if (!libraryScalar(parameter.second) && !libraryString(parameter.second) && !libraryBorrow(parameter.second) && !libraryRecord(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
     std::set<Text> borrowed;
     for (const auto &parameter : function.parameters)
     {
         environment[parameter.first] = parameter.second;
-        if (libraryBorrow(parameter.second) || libraryPlainValue(parameter.second)) borrowed.insert(textOf(parameter.first));
+        if (libraryBorrow(parameter.second) || libraryRecord(parameter.second)) borrowed.insert(textOf(parameter.first));
     }
     std::function<bool(const ast::NodePtr &)> addressOrigin = [&](const ast::NodePtr &node) {
         if (!node) return false;
@@ -78,9 +78,11 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         if (node->kind == N::Call)
         {
             const auto own = state.astFunctions.find(textOf(node->text));
-            if (own != state.astFunctions.end() && (libraryPlainValue(own->second->result) || libraryBorrow(own->second->result))) return true;
+            if (own != state.astFunctions.end() && (libraryRecord(own->second->result) || libraryBorrow(own->second->result))) return true;
             const auto external = state.externsByLabel.find(textOf(node->text));
             if (external != state.externsByLabel.end() && (external->second->abiConvention == "ChaLiValue" || external->second->borrowedResult)) return true;
+            if (external != state.externsByLabel.end() && external->second->abiConvention == "ChaLiOwned"
+                && libraryRecord(ast::inferType(node, environment))) return true;
         }
         if (node->kind == N::Var) return borrowed.count(textOf(node->text)) != 0;
         if (node->kind == N::Cast || node->kind == N::Offset || node->kind == N::Member || node->kind == N::Index)
@@ -125,11 +127,11 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::MemorySet:
         case N::DebugStorageLifetime: break;
         case N::StructNew:
-            if (!libraryPlainValue(ast::inferType(node, environment))) return false;
+            if (!libraryRecord(ast::inferType(node, environment))) return false;
             break;
         case N::Declare:
             environment[node->text] = node->declared;
-            if (!libraryScalar(node->declared) && !libraryString(node->declared) && !libraryBorrow(node->declared) && !libraryPlainValue(node->declared))
+            if (!libraryScalar(node->declared) && !libraryString(node->declared) && !libraryBorrow(node->declared) && !libraryRecord(node->declared))
             {
                 unsupported = "局部类型 " + (node->declared ? textOf(node->declared->describe()) : Text("无类型"));
                 return false;
@@ -165,7 +167,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
             const auto target = node->kids.size() > 1 && node->kids.front()->kind == N::Var ? node->kids.front()->text : node->text;
             const auto found = environment.find(target);
             // 基础值与 String 槽位引用沿用已检查的 unsafe 地址操作；记录来源证明只约束聚合引用。
-            if (found != environment.end() && (libraryPlainValue(found->second)
+            if (found != environment.end() && (libraryRecord(found->second)
                 || (libraryBorrow(found->second) && found->second->element->kind == ast::Type::Kind::Struct)))
             {
                 const auto value = node->kids.empty() ? ast::NodePtr() : node->kids.back();

@@ -166,6 +166,11 @@ public:
      * @return 当前目标使用 chali-owned-v1 的来源。
      */
     std::vector<std::string> ownedSources() const;
+    /**
+     * @brief 取得启用拥有字段记录或枚举 ABI 的已验证接口标签。
+     * @return 携带 owned-record-value-v1 的当前目标来源。
+     */
+    std::vector<std::string> ownedRecordSources() const;
     /** @brief 取得允许公开生命周期契约的已验证接口标签。
      * @return 携带 lifetime-contract-v1 的稳定来源。 */
     std::vector<std::string> lifetimeSources() const;

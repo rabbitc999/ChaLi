@@ -292,6 +292,42 @@ bool LibraryOwnedString(const std::shared_ptr<MType> &type)
     return type && IsStandardOpcode(type, "String");
 }
 /**
+ * @brief 核对仅含基础值、标准 String 及嵌套普通记录的可复制布局。
+ * @param type 待导出或借用的已解析类型。
+ * @return 布局有限且不含未接入的拥有资源时为真。
+ */
+bool LibraryValueRecord(const std::shared_ptr<MType> &type)
+{
+    if (!type || type->kind != MType::Struct || g_opcodeTypes.count(type->name)) return false;
+    Memory::Set<Memory::String> visiting;
+    Memory::Function<bool(const std::shared_ptr<MType> &, unsigned)> visit;
+    visit = [&](const std::shared_ptr<MType> &value, unsigned depth) {
+        if (!value || depth > 64) return false;
+        if (LibraryOwnedString(value)) return true;
+        if (value->kind != MType::Struct)
+            return (value->kind == MType::Int || value->kind == MType::Double || value->kind == MType::Bool || value->kind == MType::Char)
+                && !CAbiType(value).empty();
+        const auto found = g_structs.find(value->name);
+        if (found == g_structs.end() || g_opcodeTypes.count(value->name) || found->second.fields.empty()
+            || found->second.abiPacked || found->second.nonCopyable || !visiting.insert(value->name).second) return false;
+        bool valid = true;
+        for (const auto &field : found->second.fields)
+            if (!visit(field.type, depth + 1)) valid = false;
+        visiting.erase(value->name);
+        return valid;
+    };
+    return visit(type, 0);
+}
+/**
+ * @brief 判断通过标准 String 字段持有资源的受支持普通记录或枚举。
+ * @param type 已解析类型。
+ * @return 可复制布局含拥有字段时为真。
+ */
+bool LibraryOwnedRecord(const std::shared_ptr<MType> &type)
+{
+    return LibraryValueRecord(type) && !LibraryPlainValue(type);
+}
+/**
  * @brief 判断使用逻辑值而非物理 C 封送的语言库入口。
  * @param convention 经过能力校验的调用约定。
  * @return 借用、普通聚合或拥有值入口时为真。
@@ -301,22 +337,22 @@ bool LibraryLanguageAbi(const Memory::String &convention)
     return convention == "ChaLiBorrow" || convention == "ChaLiValue" || convention == "ChaLiOwned";
 }
 /**
- * @brief 判断逻辑地址传递的非拥有记录、枚举或标准 String 槽位借用。
+ * @brief 判断逻辑地址传递的受支持记录、枚举或标准 String 槽位借用。
  * @param type 已解析语言类型。
  * @return 引用目标可按普通记录布局访问时为真。
  */
 bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
 {
-    return type && type->kind == MType::Ptr && (LibraryPlainValue(type->elem) || LibraryOwnedString(type->elem));
+    return type && type->kind == MType::Ptr && (LibraryValueRecord(type->elem) || LibraryOwnedString(type->elem));
 }
 /**
- * @brief 为私有语言聚合入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
+ * @brief 为私有语言聚合或 String 入口选择逻辑字宽；其余类型沿用固定标量 C ABI。
  * @param type 语言类型。
  * @return 记录、枚举及其引用为逻辑地址字，其余为原生 C 类型。
  */
 Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
 {
-    return LibraryBorrowParameter(type) || LibraryPlainValue(type) || LibraryOwnedString(type) ? Memory::String("long long") : CAbiType(type);
+    return LibraryBorrowParameter(type) || LibraryValueRecord(type) || LibraryOwnedString(type) ? Memory::String("long long") : CAbiType(type);
 }
 /**
  * @brief 在完整声明与导入已知后解析类型裸名，并隔离不同模块的同名类型。
@@ -1379,7 +1415,7 @@ bool RegisterTop()
             const bool languageAbi = LibraryLanguageAbi(declaration.abiConvention);
             const bool ownedAbi = declaration.abiConvention == "ChaLiOwned";
             if (ownedAbi && (!declaration.abiRelease.empty() || !top.abiLength.empty()))
-                return Fail("String 语言 ABI 不接受物理 C 释放函数或数组长度约定");
+                return Fail("拥有值语言 ABI 不接受物理 C 释放函数或数组长度约定");
             if (!declaration.abiRelease.empty())
             {
                 const auto result = CAbiUnderlying(declaration.signature.result);
@@ -1411,6 +1447,18 @@ bool RegisterTop()
                 if (!ownedAbi && (stringValue(declaration.signature.result)
                     || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [&](const auto &parameter) { return stringValue(parameter.type); })))
                     return Fail("String 语言入口需要 ChaLiOwned 及已验证的 owned-string-value-v1 能力");
+                const auto recordValue = [](const std::shared_ptr<MType> &type) {
+                    return LibraryOwnedRecord(type) || (type && type->kind == MType::Ptr && LibraryOwnedRecord(type->elem));
+                };
+                if (recordValue(declaration.signature.result)
+                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [&](const auto &parameter) { return recordValue(parameter.type); }))
+                {
+                    const auto permitted = [&](std::size_t line) {
+                        return line && line <= g_sourceFiles.size() && g_libraryOwnedRecordSources.count(g_sourceFiles[line - 1]);
+                    };
+                    if (!ownedAbi || (!permitted(top.sourceLine) && !permitted(top.expansionLine)))
+                        return Fail("拥有字段聚合入口需要 ChaLiOwned 及已验证的 owned-record-value-v1 能力");
+                }
                 if (!scalar(declaration.signature.result, true))
                 {
                     const auto dataSource = [&](std::size_t line) {
@@ -1428,11 +1476,11 @@ bool RegisterTop()
                         if (!borrowedSource(top.sourceLine) && !borrowedSource(top.expansionLine))
                             return Fail("语言借用返回缺少已验证的 borrowed-result-v1 能力");
                     }
-                    else if (!values || !LibraryPlainValue(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
+                    else if (!values || !LibraryValueRecord(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
                         return Fail("语言记录返回需要已验证的单元数据登记");
                 }
                 for (const auto &parameter : declaration.signature.params)
-                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryPlainValue(parameter.type))
+                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryValueRecord(parameter.type))
                         && !(ownedAbi && LibraryOwnedString(parameter.type))) return Fail("语言入口参数类型不受支持");
             }
             for (const auto &previous : g_functionDecls)
