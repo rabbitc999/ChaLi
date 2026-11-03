@@ -174,6 +174,9 @@ public:
     /** @brief 取得启用语言借用调用约定的已验证接口标签。
      * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
     std::vector<std::string> borrowSources() const;
+    /** @brief 取得允许基础标量逻辑引用的已验证接口标签。
+     * @return 携带 scalar-reference-v1 的稳定来源。 */
+    std::vector<std::string> scalarRefSources() const;
     /**
      * @brief 取得允许独立记录方法声明的已验证接口标签。
      * @return 携带 record-methods-v1 能力的稳定来源。

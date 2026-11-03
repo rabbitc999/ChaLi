@@ -131,7 +131,7 @@ struct ImportSession::State
 {
     std::string target, cpu, implementation, compiler, llvmVersion;
     std::map<std::string, Package> packages;
-    std::vector<std::string> sources, borrowSources, methodSources, templateSources, ownedSources, ownedRecordSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
+    std::vector<std::string> sources, borrowSources, scalarRefSources, methodSources, templateSources, ownedSources, ownedRecordSources, dataSources, typeSources, lifetimeSources, borrowResultSources;
     std::vector<std::filesystem::path> paths;
     std::unique_ptr<chali_native_tools::Workspace> workspace;
     std::uint64_t bytes = 0;
@@ -206,6 +206,8 @@ const Package &ImportSession::open(const std::filesystem::path &path, const std:
     state_->sources.push_back(state_->paths.back().u8string() + ".interface.chl");
     if (!package.manifest.templates.empty()) state_->templateSources.push_back(state_->paths.back().u8string() + ".templates.chl");
     if (borrowed) state_->borrowSources.push_back(state_->sources.back());
+    if (borrowed && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "scalar-reference-v1") != package.manifest.requiredFeatures.end())
+        state_->scalarRefSources.push_back(state_->sources.back());
     if (borrowed && std::find(package.manifest.requiredFeatures.begin(), package.manifest.requiredFeatures.end(), "record-methods-v1") != package.manifest.requiredFeatures.end())
         state_->methodSources.push_back(state_->sources.back());
     if (abi == "chali-owned-v1") state_->ownedSources.push_back(state_->sources.back());
@@ -278,6 +280,9 @@ std::vector<std::string> ImportSession::sources() const { return state_->sources
 /** @brief 返回已验证语言借用接口来源。
  * @return 与当前目标原生 ABI 对应的稳定标签。 */
 std::vector<std::string> ImportSession::borrowSources() const { return state_->borrowSources; }
+/** @brief 返回允许基础标量逻辑引用的已验证来源。
+ * @return 稳定来源标签副本。 */
+std::vector<std::string> ImportSession::scalarRefSources() const { return state_->scalarRefSources; }
 /**
  * @brief 返回允许独立记录方法声明的已验证来源。
  * @return 携带 record-methods-v1 的接口标签。

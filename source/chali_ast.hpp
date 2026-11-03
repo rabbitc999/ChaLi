@@ -1247,6 +1247,10 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许语言借用调用约定的已验证库接口来源。
  * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
 void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
+/** @brief 设置允许基础标量逻辑引用的已验证库来源。
+ * @param files 携带 scalar-reference-v1 的接口标签；空表清除设置。
+ * @return 无。 */
+void M_SetLibraryScalarRefSources(const Memory::Vector<Memory::String> &files);
 /**
  * @brief 设置允许独立记录方法声明的已验证库来源。
  * @param files 携带 record-methods-v1 的接口标签。

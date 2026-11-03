@@ -1289,6 +1289,9 @@ try
     Memory::Vector<Memory::String> borrowSources;
     for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryBorrowSources(borrowSources);
+    Memory::Vector<Memory::String> scalarRefSources;
+    for (const auto &file : libraries.scalarRefSources()) scalarRefSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryScalarRefSources(scalarRefSources);
     Memory::Vector<Memory::String> methodSources;
     for (const auto &file : libraries.methodSources()) methodSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryMethodSources(methodSources);

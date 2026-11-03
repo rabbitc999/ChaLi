@@ -28,6 +28,20 @@ static bool enumValueType(const ast::TypePtr &type)
     const auto value = type->kind == ast::Type::Kind::Ref ? type->element : type;
     return value && value->kind == ast::Type::Kind::Struct && !value->variants.empty();
 }
+/**
+ * @brief 判断已检查原生签名是否传递固定宽度基础标量的逻辑引用。
+ * @param type 函数结果或参数类型。
+ * @return 基础标量引用返回 true，其他类型返回 false。
+ */
+static bool scalarReferenceType(const ast::TypePtr &type)
+{
+    if (!type || type->kind != ast::Type::Kind::Ref || !type->element) return false;
+    const auto &element = type->element;
+    using K = ast::Type::Kind;
+    return element->kind == K::Bool
+           || ((element->kind == K::Int || element->kind == K::Uint) && (element->bits == 8 || element->bits == 16 || element->bits == 32 || element->bits == 64))
+           || (element->kind == K::Float && (element->bits == 32 || element->bits == 64));
+}
 
 /**
  * @brief 直接沿 AST→LLVM 编译库单元，包内不携带实现源码或运行时副本。
@@ -60,11 +74,17 @@ int buildNative(const chali_aot::Request &original, const std::string &module, c
             package.manifest.templates = "templates/definitions.json";
             package.manifest.requiredFeatures.push_back("generic-definitions-v1");
         }
+        const bool scalarReferences = original.syntax && std::any_of(original.syntax->functions.begin(), original.syntax->functions.end(), [&](const auto &function) {
+            const auto label = function.owner.empty() ? function.name : function.owner + "." + function.name;
+            if (std::none_of(original.abiExports.begin(), original.abiExports.end(), [&](const auto &entry) { return entry.label == label; })) return false;
+            return scalarReferenceType(function.result) || std::any_of(function.parameters.begin(), function.parameters.end(), [](const auto &parameter) { return scalarReferenceType(parameter.second); });
+        });
+        if (scalarReferences) package.manifest.requiredFeatures.push_back("scalar-reference-v1");
         const bool ownedRecords = original.syntax && original.syntax->nativeOwnedAggregates;
         const bool owned = ownedRecords || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiOwned"; });
         if (owned) package.manifest.requiredFeatures.push_back("owned-string-value-v1");
         if (ownedRecords) package.manifest.requiredFeatures.push_back("owned-record-value-v1");
-        const bool borrowed = owned || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow" || entry.abiConvention == "ChaLiOwned"; });
+        const bool borrowed = owned || scalarReferences || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiBorrow" || entry.abiConvention == "ChaLiOwned"; });
         if (borrowed) package.manifest.requiredFeatures.push_back("borrowed-record-v1");
         const bool values = owned || std::any_of(original.abiExports.begin(), original.abiExports.end(), [](const auto &entry) { return entry.abiConvention == "ChaLiValue" || entry.abiConvention == "ChaLiOwned"; });
         if (values) package.manifest.requiredFeatures.push_back("plain-record-value-v1");

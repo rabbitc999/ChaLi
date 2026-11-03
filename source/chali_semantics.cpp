@@ -52,7 +52,7 @@ Memory::Deque<MNode> g_nodes;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
 Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources,
-    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources, g_libraryOwnedRecordSources, g_libraryMethodSources, g_libraryTemplateSources;
+    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources, g_libraryOwnedRecordSources, g_libraryMethodSources, g_libraryTemplateSources, g_libraryScalarRefSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -3023,6 +3023,7 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
 {
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
+    g_libraryScalarRefSources.clear();
     g_libraryMethodSources.clear();
     g_libraryTemplateSources.clear();
     g_libraryOwnedSources.clear();
@@ -3041,6 +3042,15 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
     g_libraryBorrowSources.clear();
     g_libraryBorrowSources.insert(files.begin(), files.end());
 }
+/** @brief 保存当前目标允许基础标量逻辑引用的接口来源。
+ * @param files 携带 scalar-reference-v1 的稳定标签。
+ * @return 无。 */
+void M_SetLibraryScalarRefSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryScalarRefSources.clear();
+    g_libraryScalarRefSources.insert(files.begin(), files.end());
+}
+
 /**
  * @brief 保存当前目标允许原生记录方法声明的来源。
  * @param files 携带 record-methods-v1 的已验证接口标签。
@@ -3497,6 +3507,7 @@ Memory::String LibraryDeclaredType(const Memory::String &name)
  */
 Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
 {
+    if (LibraryScalarReference(type)) return LibraryScalarType(type->elem) + (type->readOnly ? " const&" : " mut&");
     if (LibraryOwnedString(type)) return "std::lang::String";
     if (type && type->kind == MType::Ptr && LibraryOwnedString(type->elem))
         return Memory::String("std::lang::String") + (type->readOnly ? " const&" : " mut&");
@@ -3939,8 +3950,8 @@ void LibraryMethodDeclarations(const Memory::String &module, Memory::Vector<chal
                 if (value || borrow)
                 {
                     const auto underlying = value ? parameter.type : parameter.type->elem;
-                    if (!LibraryOwnedString(underlying)) identity += "\nlayout:" + LibraryRecordShape(underlying->name, shapes);
-                    if (parameter.defaultExpr >= 0 && !LibraryOwnedString(underlying)) throw std::runtime_error("原生方法聚合参数暂不支持默认值");
+                    if (LibraryValueRecord(underlying)) identity += "\nlayout:" + LibraryRecordShape(underlying->name, shapes);
+                    if (parameter.defaultExpr >= 0 && (borrow || !LibraryOwnedString(underlying))) throw std::runtime_error("原生方法聚合或借用参数暂不支持默认值");
                     owned |= LibraryOwnedRecord(underlying);
                 }
                 owned |= LibraryOwnedString(parameter.type)
@@ -4070,7 +4081,8 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         {
             if (!function.exportSymbol.empty()) throw std::runtime_error("语言借用返回不能同时声明物理 C ABI 的 #export");
             identity += Memory::String("\nchali-borrow-result-v1:") + (function.signature.result->readOnly ? "const:" : "mut:")
-                        + (LibraryOwnedString(function.signature.result->elem) ? Memory::String("string-slot-v1") : LibraryRecordShape(function.signature.result->elem->name, recordShapes));
+                        + (LibraryScalarReference(function.signature.result) ? "scalar-reference-v1:" + LibraryScalarType(function.signature.result->elem)
+                           : LibraryOwnedString(function.signature.result->elem) ? Memory::String("string-slot-v1") : LibraryRecordShape(function.signature.result->elem->name, recordShapes));
         }
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
@@ -4089,7 +4101,8 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
                     entry.abiConvention = owned ? "ChaLiOwned" : "ChaLiValue";
                 else if (entry.abiConvention == "C")
                     entry.abiConvention = "ChaLiBorrow";
-                identity += Memory::String(value ? "\nchali-value-v1:" : "\nchali-borrow-v1:") + LibraryRecordShape(value ? parameter.type->name : parameter.type->elem->name, recordShapes);
+                identity += LibraryScalarReference(parameter.type) ? "\nscalar-reference-v1:" + LibraryScalarType(parameter.type->elem)
+                    : Memory::String(value ? "\nchali-value-v1:" : "\nchali-borrow-v1:") + LibraryRecordShape(value ? parameter.type->name : parameter.type->elem->name, recordShapes);
             }
             entry.parameterTypes.push_back(AotCType(LibraryNativeType(parameter.type)));
         }

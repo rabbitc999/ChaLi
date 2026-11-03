@@ -337,13 +337,26 @@ bool LibraryLanguageAbi(const Memory::String &convention)
     return convention == "ChaLiBorrow" || convention == "ChaLiValue" || convention == "ChaLiOwned";
 }
 /**
- * @brief 判断逻辑地址传递的受支持记录、枚举或标准 String 槽位借用。
+ * @brief 判断基础标量槽位的逻辑引用，不接受 void、宿主包装或其他资源。
+ * @param type 已解析语言类型。
+ * @return 引用目标属于受支持固定宽度基础类型时为真。
+ */
+bool LibraryScalarReference(const std::shared_ptr<MType> &type)
+{
+    if (!type || type->kind != MType::Ptr || !type->elem) return false;
+    const auto &element = type->elem;
+    return element->kind == MType::Bool || element->kind == MType::Char
+           || (element->kind == MType::Int && (element->bits == 8 || element->bits == 16 || element->bits == 32 || element->bits == 64))
+           || (element->kind == MType::Double && (element->bits == 32 || element->bits == 64));
+}
+/**
+ * @brief 判断逻辑地址传递的基础标量、受支持记录、枚举或标准 String 槽位借用。
  * @param type 已解析语言类型。
  * @return 引用目标可按普通记录布局访问时为真。
  */
 bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
 {
-    return type && type->kind == MType::Ptr && (LibraryValueRecord(type->elem) || LibraryOwnedString(type->elem));
+    return type && type->kind == MType::Ptr && (LibraryScalarReference(type) || LibraryValueRecord(type->elem) || LibraryOwnedString(type->elem));
 }
 /**
  * @brief 为私有语言聚合或 String 入口选择逻辑字宽；其余类型沿用固定标量 C ABI。
@@ -1520,6 +1533,16 @@ bool RegisterTop()
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
             if (LibraryLanguageAbi(declaration.abiConvention))
             {
+                const bool scalarReferences = LibraryScalarReference(declaration.signature.result)
+                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [](const auto &parameter) { return LibraryScalarReference(parameter.type); });
+                if (scalarReferences)
+                {
+                    const auto permitted = [&](std::size_t line) {
+                        return line && line <= g_sourceFiles.size() && g_libraryScalarRefSources.count(g_sourceFiles[line - 1]);
+                    };
+                    if (!permitted(top.sourceLine) && !permitted(top.expansionLine))
+                        return Fail("基础标量引用入口需要已验证的 scalar-reference-v1 能力");
+                }
                 const auto scalar = [](const std::shared_ptr<MType> &type, bool result) {
                     return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
                 };

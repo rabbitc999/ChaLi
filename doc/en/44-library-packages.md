@@ -432,6 +432,23 @@ int64 readStatic(Point const& value) { return value.x; }
 
 The producer writes lifetime directives before generated `#abi` declarations without implementation bodies. Packages require `lifetime-contract-v1`, plus `borrowed-result-v1` when returning record or enum borrows. Consumers use the existing lifetime checker for static origins, result origins and read-only/mutable constraints. Contracts follow the selected overload, and omitted scalar default arguments do not discard them. Parameter indices enter public symbol identity: renaming parameters preserves this component, while changing public result origins or other constraints changes entry symbols and prevents old consumer objects from linking through the old entries.
 
-Borrowed results currently support `const&`/`mut&` of the supported ordinary records/enums and standard String described above, explicitly bound by `#borrow(#ret,...)` to supported borrowed parameters. Results are logical addresses into caller storage under `ChaLiBorrow`/`ChaLiValue` for nonowning aggregates or `ChaLiOwned` for String and its owning aggregates, without host-pointer marshaling. Normal scope checks prevent escaping local references or converting read-only results to mutable references. Libraries cannot return borrows into copied value parameters, locals or temporary owning values. Other owning payloads, scalar-reference entries and static-global results remain outside this contract.
+Borrowed results currently support `const&`/`mut&` of basic scalars, the supported ordinary records/enums and standard String described above, explicitly bound by `#borrow(#ret,...)` to supported borrowed parameters. Results are logical addresses into caller storage under `ChaLiBorrow`/`ChaLiValue` for nonowning aggregates or `ChaLiOwned` for String and its owning aggregates, without host-pointer marshaling. Normal scope checks prevent escaping local references or converting read-only results to mutable references. Libraries cannot return borrows into copied value parameters, locals or temporary owning values. Other owning payloads and static-global results remain outside this contract.
 
 Missing required capabilities, unknown contract parameters and borrowed-result declarations without origins are rejected. Contract-bearing external functions require direct calls: current function-value types cannot retain these contracts, so taking such functions as values is explicitly rejected.
+
+
+## Basic scalar references
+
+Ordinary functions and user method parameters support `const&`/`mut&` of `bool`, single-byte `char`, signed and unsigned 8/16/32/64-bit integers, `float32` and `float64`. These carry logical addresses into caller storage and share the final application's liveness and bounds checks, without converting them to host C pointers. Mutable references update the original slot; readonly references cannot satisfy mutable parameters. Fields, array elements and cross-library forwarding with explicit origin contracts follow the same rules.
+
+```chali
+module example::scalar_views;
+int64 read(int64 const& value) { return *value; }
+void write(int64 mut& value, int64 next) { *value = next; }
+#borrow(#ret,[value])
+int64 mut& editable(int64 mut& value) { return value; }
+```
+
+Packages require `scalar-reference-v1` and `borrowed-record-v1`; borrowed results also require the existing lifetime and borrowed-result capabilities. Scalar width, mutability and result origins enter entry identity. Old compilers, missing capabilities and old objects targeting a different parameter type are rejected. Ordinary borrowed results must explicitly originate from supported borrowed parameters and cannot return local storage. `#static` parameters still require static origins; this does not enable library globals or static-global results.
+
+Native objects, bitcode, Full/ThinLTO, detached linking and both allocators share these semantics. Libraries built with `--checked` retain their internal checks even with a default unchecked `aot` consumer. Reference defaults, borrowed method results and reference parameters in physical C ABI `#export` functions remain explicitly rejected.
