@@ -154,7 +154,7 @@ void validateManifest(const Manifest &manifest)
     if (manifest.interface.empty() || (manifest.bytecode.empty() ? manifest.bytecodeVersion != 0 : manifest.bytecodeVersion != 1)) throw std::runtime_error("库接口缺失或字节码格式不兼容");
     uniqueStrings(manifest.requiredFeatures);
     for (const auto &feature : manifest.requiredFeatures)
-        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "lifetime-contract-v1" && feature != "borrowed-result-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
+        if (feature != "native-c-v1" && feature != "scalar-unit-v1" && feature != "borrowed-record-v1" && feature != "plain-record-value-v1" && feature != "plain-enum-value-v1" && feature != "lifetime-contract-v1" && feature != "borrowed-result-v1" && feature != "unit-data-v1" && feature != "shared-type-id-v1" && feature != "owned-string-value-v1") throw std::runtime_error("库要求未支持的能力：" + feature);
     if (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-result-v1") != manifest.requiredFeatures.end()
         && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "lifetime-contract-v1") == manifest.requiredFeatures.end())
         throw std::runtime_error("语言借用返回缺少 lifetime-contract-v1 必需能力");
@@ -176,12 +176,18 @@ void validateManifest(const Manifest &manifest)
         Memory::String error;
         if (!chali_aot::describeTarget(Memory::String(target.triple.c_str()), known, &error) || target.triple != std::string(known.triple.c_str()) || !targets.insert(target.triple).second)
             throw std::runtime_error("库目标不是唯一的规范三元组：" + target.triple);
-        if (target.objectFormat != (known.windows ? "coff" : "elf") || target.dataLayout != known.dataLayout.c_str() || !nativeName(target.cpu) || (target.nativeAbi != "c-v1" && target.nativeAbi != "chali-borrow-v1" && target.nativeAbi != "chali-value-v1"))
+        if (target.objectFormat != (known.windows ? "coff" : "elf") || target.dataLayout != known.dataLayout.c_str() || !nativeName(target.cpu) || (target.nativeAbi != "c-v1" && target.nativeAbi != "chali-borrow-v1" && target.nativeAbi != "chali-value-v1" && target.nativeAbi != "chali-owned-v1"))
             throw std::runtime_error("库目标格式、数据布局、CPU 或原生 ABI 不兼容");
         if (target.nativeAbi == "chali-borrow-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-record-v1") == manifest.requiredFeatures.end())
             throw std::runtime_error("语言借用 ABI 缺少必需能力标记");
         if (target.nativeAbi == "chali-value-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "plain-record-value-v1") == manifest.requiredFeatures.end())
             throw std::runtime_error("语言记录值 ABI 缺少必需能力标记");
+        const bool owned = std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "owned-string-value-v1") != manifest.requiredFeatures.end();
+        if ((target.nativeAbi == "chali-owned-v1") != owned)
+            throw std::runtime_error("String 拥有值 ABI 与必需能力不匹配");
+        if (owned && (std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "plain-record-value-v1") == manifest.requiredFeatures.end()
+            || std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-record-v1") == manifest.requiredFeatures.end()))
+            throw std::runtime_error("String 拥有值 ABI 缺少共用逻辑值能力");
         if (target.nativeAbi == "c-v1" && std::find(manifest.requiredFeatures.begin(), manifest.requiredFeatures.end(), "borrowed-result-v1") != manifest.requiredFeatures.end())
             throw std::runtime_error("语言借用返回能力需要语言聚合 ABI");
         if ((target.implementation.empty() && target.bitcode.empty()) || (!target.implementation.empty() && !entryName(target.implementation)) || (!target.bitcode.empty() && (!entryName(target.bitcode) || !nativeName(target.llvmVersion))))

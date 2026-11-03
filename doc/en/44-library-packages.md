@@ -52,7 +52,24 @@ chali lib inspect modules/example/math.chlib
 
 The output directory must exist and the entry's actual module must match `--module`. The package contains the public interface and target object, without implementation source or an independent runtime copy. The final application provides the shared runtime. Public symbols derive from module/signature/ABI identity; private functions remain hidden. `--target`/`--cpu` select the implementation target; cross-target generation still needs actual target validation.
 
-The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the nonowning record and enum parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and direct C ABI calls to imported scalar libraries. LLVM emits C ABI width/floating conversions directly. Unsupported owning aggregates, generic definitions, owning values, globals, methods, variadic parameters, unsafe exports, host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. Templates, initialization and the broader internal language ABI remain subsequent work.
+The producer supports ordinary functions with void/bool/char, fixed-width signed/unsigned integer and float32/float64 signatures, plus the nonowning record, enum and standard String parameters/results described below. Bodies support scalar operations, locals, control flow, direct calls within the unit, recursion and supported direct calls to imported libraries. LLVM emits C ABI width/floating conversions directly. Other unsupported owning values and aggregates, generic definitions, globals, user methods, variadic parameters, unsafe exports, general host/address operations and build-time step budgets are explicitly rejected. They are not silently omitted or treated as scalars. The standard String implementation may use checked internal storage operations. Templates, initialization and the broader internal language ABI remain subsequent work.
+
+### Standard String language-library entries
+
+Independent language libraries support standard `std::lang::String` value parameters/results and readonly/mutable borrows. For example:
+
+```chali
+module example::text;
+String copy(String value="default") { return value; }
+int64 size(String const& value) { return len(value); }
+void append(String mut& value) { value=value+"!"; }
+#borrow(#ret,[value])
+String const& view(String const& value) { return value; }
+```
+
+Entries use the `chali-owned-v1` native ABI, required feature `owned-string-value-v1` and private `ChaLiOwned` declarations. They pass logical handles or String-slot addresses in the application's shared heap. Libraries contain no separate allocator or runtime. Value parameters receive independent copies under existing language rules; results transfer ownership to the caller, while mutable borrows update the caller's original slot. Defaults are evaluated at call time in their defining module. Borrowed results require an explicit contract binding them to supported borrowed parameters, preserving readonly/mutable constraints. UTF-8 content and inline/separate buffers use the standard String copy, move and release implementation.
+
+Declarations and capabilities must come from a package verified for the current target. Ordinary source cannot declare `ChaLiOwned`; older compilers explicitly reject the unknown capability. This convention can mix with existing scalars, nonowning records/enums and transitive dependencies, using native implementations, bitcode and applicable Full/ThinLTO. Benefits depend on the workload. String entries cannot also declare a physical C ABI `#export`, release function or array-length convention. User types named String, other owning types, owning fields, interface/closure entries and library global initialization do not become supported through this capability. External functions with lifetime contracts still require direct calls.
 
 ### Optional native debug information
 
@@ -76,7 +93,7 @@ inline int64 defaultValue() { return 7; }
 int64 addDefault(int64 x, int64 y=defaultValue()) { return x+y; }
 ```
 
-After import, `example::math::addDefault(3)` evaluates the default only for this omitted `y`; `addDefault(3,9)` does not evaluate it. The producer compiles the checked expression into a scalar entry. The public interface stores declarations and calls, without private bodies, and importing or building does not execute the expression. Multiple omitted parameters retain their evaluation order; private and imported calls resolve in definition scope. Scalar-unit restrictions still apply: defaults do not enable globals, owning values or other unsupported operations. Generated default entries are implementation declarations, not APIs intended for manual use.
+After import, `example::math::addDefault(3)` evaluates the default only for this omitted `y`; `addDefault(3,9)` does not evaluate it. The producer compiles the checked expression into a separate entry. The public interface stores declarations and calls, without private bodies, and importing or building does not execute the expression. Multiple omitted parameters retain their evaluation order; private and imported calls resolve in definition scope. Defaults support basic scalars and standard String as described above; they do not enable globals, other owning values or unsupported operations. Generated default entries are implementation declarations, not APIs intended for manual use.
 
 Public interfaces also preserve plain record declarations. Fields may be basic scalars or nested plain records from the same module or verified precompiled dependencies, retaining names, order and complete module identity. For example, a provider may declare:
 
@@ -116,7 +133,7 @@ int64 read(Point const& value) { return value.x; }
 void bump(Point mut& value, int64 delta) { value.x = value.x + delta; }
 ```
 
-These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values, aggregate-reference defaults and library globals are not enabled. Borrowed results follow the lifetime contract below. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
+These entries pass the caller's ChaLi logical address directly and access fields through the final program's shared memory/checking context. They do not convert to host C structs or generate C++ argument marshaling. Plain record results use the relocation contract below; bodies retain the supported scalar control flow, field access and direct calls. Owning values other than standard String, aggregate-reference defaults and library globals are not enabled. Borrowed results follow the lifetime contract below. Language checks preserve read-only/mutable rules, and scalar parameters may accompany record borrows. A borrowed-record function cannot also use a physical-C-layout `#export`.
 
 Packages use native ABI `chali-borrow-v1` and required feature `borrowed-record-v1`. The generated `ChaLiBorrow` marker is allowed only in verified library sources with matching ABI; copying it into ordinary source is rejected. Symbols include full record and nested-layout hashes, so an old independent consumer object cannot link to a package with a changed layout under the old symbol. Ordinary C ABI packages retain `c-v1`. Borrowed calls and the complete owning-value, closure and dynamic-function contracts remain separately verified capabilities.
 
@@ -159,7 +176,7 @@ void main() {
 
 `chali --check consumer.chl` checks declarations; `chali aot consumer.chl --out build/consumer` links the selected implementation. Provider implementation source is not needed. Search proceeds through the current unit directory, its `modules/` directory and `-I` directories, preferring `.chlib` over `.chl` at each location. A found but invalid/incompatible package fails without source fallback. Embedded standard-library loading remains available.
 
-The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and the owning-value internal language ABI are not enabled by carrying optional source/template assets.
+The current native interface accepts type/function declarations with explicit C ABI or verified language entry points. Runtime function bodies, globals and static fields are rejected. Normal type, visibility and borrowing checks apply. Template instantiation, library initialization and internal ABIs for owning values other than standard String are not enabled by carrying optional source/template assets.
 
 Manifest dependencies are resolved even when absent from public imports, with exact versions and whole-package SHA-256. A located package contributes its qualified module root for transitive lookup; `-I modules` may also supply it explicitly. Pinned dependencies cannot fall back to source. Repeated module identities must have the same digest; cycles fail. A compilation loads at most 128 packages with at most 256 MiB of total payload. Checking and linking use the same verified owned snapshot; importing does not initialize a library. Target system libraries join the link; deployment still supplies application dynamic libraries.
 
@@ -354,6 +371,6 @@ int64 readStatic(Point const& value) { return value.x; }
 
 The producer writes lifetime directives before generated `#abi` declarations without implementation bodies. Packages require `lifetime-contract-v1`, plus `borrowed-result-v1` when returning record or enum borrows. Consumers use the existing lifetime checker for static origins, result origins and read-only/mutable constraints. Contracts follow the selected overload, and omitted scalar default arguments do not discard them. Parameter indices enter public symbol identity: renaming parameters preserves this component, while changing public result origins or other constraints changes entry symbols and prevents old consumer objects from linking through the old entries.
 
-Borrowed results currently support `const&`/`mut&` of nonowning records and enums, explicitly bound by `#borrow(#ret,...)` to supported borrowed parameters. Results are logical addresses into caller storage under `ChaLiBorrow`/`ChaLiValue`, without host-pointer marshaling. Normal scope checks prevent escaping local references or converting read-only results to mutable references. Libraries cannot return borrows into copied value parameters, locals or temporary owning values. Owning payloads, scalar-reference entries and static-global results remain outside this contract.
+Borrowed results currently support `const&`/`mut&` of nonowning records/enums and standard String as described above, explicitly bound by `#borrow(#ret,...)` to supported borrowed parameters. Results are logical addresses into caller storage under `ChaLiBorrow`/`ChaLiValue` for records/enums or `ChaLiOwned` for String, without host-pointer marshaling. Normal scope checks prevent escaping local references or converting read-only results to mutable references. Libraries cannot return borrows into copied value parameters, locals or temporary owning values. Owning payloads, scalar-reference entries and static-global results remain outside this contract.
 
 Missing required capabilities, unknown contract parameters and borrowed-result declarations without origins are rejected. Contract-bearing external functions require direct calls: current function-value types cannot retain these contracts, so taking such functions as values is explicitly rejected.

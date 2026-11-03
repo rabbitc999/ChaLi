@@ -1,13 +1,39 @@
 """在实际禁止项目写入的 Windows DACL 下验证标准库内存装载及项目外产物。"""
 from pathlib import Path
+from contextlib import contextmanager
 import argparse
 import os
 import shutil
 import subprocess
+import time
 from compiler_path import compiler_path
 from project_temp import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+@contextmanager
+def readonly_workspace():
+    """进程和 DACL 已恢复后，有界等待 Windows 释放刚执行文件的删除占用。"""
+    directory = tempfile.TemporaryDirectory(prefix='stdlib-readonly-')
+    path = Path(directory.name)
+    assert path.resolve().parent == (ROOT / 'tmp').resolve()
+    try:
+        yield path
+    finally:
+        deadline = time.monotonic() + 5
+        retries = 0
+        while True:
+            try:
+                directory.cleanup()
+                if retries:
+                    print(f'Windows executable cleanup completed after {retries} bounded retries')
+                break
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise
+                retries += 1
+                time.sleep(0.1)
 
 
 def main():
@@ -17,8 +43,7 @@ def main():
     compiler = parser.parse_args().chali.resolve()
     if os.name != 'nt':
         raise SystemExit('本专项使用 Windows DACL；其他系统需独立验证实际权限限制')
-    with tempfile.TemporaryDirectory(prefix='stdlib-readonly-') as directory:
-        work = Path(directory)
+    with readonly_workspace() as work:
         project = work / 'project'
         project.mkdir()
         isolated = project / compiler.name

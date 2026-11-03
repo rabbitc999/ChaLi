@@ -1237,6 +1237,12 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许语言借用调用约定的已验证库接口来源。
  * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
 void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
+/**
+ * @brief 设置允许标准 String 拥有值 ABI 的已验证库接口来源。
+ * @param files 携带 owned-string-value-v1 的稳定来源标签。
+ * @return 无。
+ */
+void M_SetLibraryOwnedSources(const Memory::Vector<Memory::String> &files);
 /** @brief 设置允许公开生命周期契约的已验证库来源。
  * @param files 携带 lifetime-contract-v1 的接口标签。
  * @return 无。 */

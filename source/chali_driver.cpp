@@ -1200,6 +1200,9 @@ try
     Memory::Vector<Memory::String> borrowSources;
     for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
     M_SetLibraryBorrowSources(borrowSources);
+    Memory::Vector<Memory::String> ownedSources;
+    for (const auto &file : libraries.ownedSources()) ownedSources.push_back(Memory::String(file.c_str()));
+    M_SetLibraryOwnedSources(ownedSources);
     Memory::Vector<Memory::String> lifetimeSources, borrowResultSources;
     for (const auto &file : libraries.lifetimeSources()) lifetimeSources.push_back(Memory::String(file.c_str()));
     for (const auto &file : libraries.borrowResultSources()) borrowResultSources.push_back(Memory::String(file.c_str()));

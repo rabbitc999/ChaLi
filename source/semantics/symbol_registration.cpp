@@ -283,13 +283,31 @@ bool LibraryPlainValue(const std::shared_ptr<MType> &type)
            && !found->second.abiPacked && !found->second.nonCopyable && !CAbiType(type).empty();
 }
 /**
- * @brief 判断逻辑地址传递的非拥有记录或枚举借用。
+ * @brief 判断共用运行时传递的标准拥有字符串，不把用户同名类型当成 String。
+ * @param type 已解析的语言类型。
+ * @return 类型为标准库 String 时为真。
+ */
+bool LibraryOwnedString(const std::shared_ptr<MType> &type)
+{
+    return type && IsStandardOpcode(type, "String");
+}
+/**
+ * @brief 判断使用逻辑值而非物理 C 封送的语言库入口。
+ * @param convention 经过能力校验的调用约定。
+ * @return 借用、普通聚合或拥有值入口时为真。
+ */
+bool LibraryLanguageAbi(const Memory::String &convention)
+{
+    return convention == "ChaLiBorrow" || convention == "ChaLiValue" || convention == "ChaLiOwned";
+}
+/**
+ * @brief 判断逻辑地址传递的非拥有记录、枚举或标准 String 槽位借用。
  * @param type 已解析语言类型。
  * @return 引用目标可按普通记录布局访问时为真。
  */
 bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
 {
-    return type && type->kind == MType::Ptr && LibraryPlainValue(type->elem);
+    return type && type->kind == MType::Ptr && (LibraryPlainValue(type->elem) || LibraryOwnedString(type->elem));
 }
 /**
  * @brief 为私有语言聚合入口选择准确原生字宽；其余类型沿用固定标量 C ABI。
@@ -298,7 +316,7 @@ bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
  */
 Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
 {
-    return LibraryBorrowParameter(type) || LibraryPlainValue(type) ? Memory::String("long long") : CAbiType(type);
+    return LibraryBorrowParameter(type) || LibraryPlainValue(type) || LibraryOwnedString(type) ? Memory::String("long long") : CAbiType(type);
 }
 /**
  * @brief 在完整声明与导入已知后解析类型裸名，并隔离不同模块的同名类型。
@@ -1358,15 +1376,19 @@ bool RegisterTop()
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())
                 return Fail("abi 库路径与 C 符号名不能为空");
+            const bool languageAbi = LibraryLanguageAbi(declaration.abiConvention);
+            const bool ownedAbi = declaration.abiConvention == "ChaLiOwned";
+            if (ownedAbi && (!declaration.abiRelease.empty() || !top.abiLength.empty()))
+                return Fail("String 语言 ABI 不接受物理 C 释放函数或数组长度约定");
             if (!declaration.abiRelease.empty())
             {
                 const auto result = CAbiUnderlying(declaration.signature.result);
                 if (!IsStandardOpcode(result, "String") && result->kind != MType::Ptr && result->kind != MType::Array && !CAbiOptionalReference(declaration.signature.result))
                     return Fail("abi 释放函数只能用于字符串、引用或数组返回值");
             }
-            if (CAbiUnderlying(declaration.signature.result)->kind == MType::Func || CAbiType(declaration.signature.result).empty())
+            if (!languageAbi && (CAbiUnderlying(declaration.signature.result)->kind == MType::Func || CAbiType(declaration.signature.result).empty()))
                 return Fail("abi 函数 " + declaration.source + " 的返回类型不是受支持的 C ABI 类型");
-            if (CAbiUnderlying(declaration.signature.result)->kind == MType::Array)
+            if (!languageAbi && CAbiUnderlying(declaration.signature.result)->kind == MType::Array)
             {
                 for (std::size_t i = 0; i < declaration.signature.params.size(); ++i)
                     if (declaration.signature.params[i].source == top.abiLength && CAbiUnderlying(declaration.signature.params[i].type)->kind == MType::Int)
@@ -1375,14 +1397,20 @@ bool RegisterTop()
                     return Fail("abi 数组返回值的 [长度] 必须引用整数形参");
             }
             for (const MParam &param : declaration.signature.params)
-                if (param.variadic || CAbiType(param.type).empty() || CAbiType(param.type) == "void")
+                if (param.variadic || (!languageAbi && (CAbiType(param.type).empty() || CAbiType(param.type) == "void")))
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
-            if (declaration.abiConvention == "ChaLiBorrow" || declaration.abiConvention == "ChaLiValue")
+            if (LibraryLanguageAbi(declaration.abiConvention))
             {
                 const auto scalar = [](const std::shared_ptr<MType> &type, bool result) {
                     return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
                 };
-                const bool values = declaration.abiConvention == "ChaLiValue";
+                const bool values = declaration.abiConvention == "ChaLiValue" || ownedAbi;
+                const auto stringValue = [](const std::shared_ptr<MType> &type) {
+                    return LibraryOwnedString(type) || (type && type->kind == MType::Ptr && LibraryOwnedString(type->elem));
+                };
+                if (!ownedAbi && (stringValue(declaration.signature.result)
+                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [&](const auto &parameter) { return stringValue(parameter.type); })))
+                    return Fail("String 语言入口需要 ChaLiOwned 及已验证的 owned-string-value-v1 能力");
                 if (!scalar(declaration.signature.result, true))
                 {
                     const auto dataSource = [&](std::size_t line) {
@@ -1391,7 +1419,11 @@ bool RegisterTop()
                     const auto borrowedSource = [&](std::size_t line) {
                         return line && line <= g_sourceFiles.size() && g_libraryBorrowResultSources.count(g_sourceFiles[line - 1]);
                     };
-                    if (LibraryBorrowParameter(declaration.signature.result))
+                    if (ownedAbi && LibraryOwnedString(declaration.signature.result))
+                    {
+                        // 新鲜返回值转交调用方；普通 String 值参数由被调函数按语言规则复制。
+                    }
+                    else if (LibraryBorrowParameter(declaration.signature.result))
                     {
                         if (!borrowedSource(top.sourceLine) && !borrowedSource(top.expansionLine))
                             return Fail("语言借用返回缺少已验证的 borrowed-result-v1 能力");
@@ -1400,7 +1432,8 @@ bool RegisterTop()
                         return Fail("语言记录返回需要已验证的单元数据登记");
                 }
                 for (const auto &parameter : declaration.signature.params)
-                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryPlainValue(parameter.type))) return Fail("语言入口参数类型不受支持");
+                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryPlainValue(parameter.type))
+                        && !(ownedAbi && LibraryOwnedString(parameter.type))) return Fail("语言入口参数类型不受支持");
             }
             for (const auto &previous : g_functionDecls)
             {
@@ -1412,6 +1445,12 @@ bool RegisterTop()
                 if (compatible)
                     for (std::size_t index = 0; index < declaration.signature.params.size(); ++index)
                         if (CAbiType(previous.signature.params[index].type) != CAbiType(declaration.signature.params[index].type)) compatible = false;
+                if (compatible && ownedAbi)
+                {
+                    compatible = SameType(previous.signature.result, declaration.signature.result);
+                    for (std::size_t index = 0; compatible && index < declaration.signature.params.size(); ++index)
+                        compatible = SameType(previous.signature.params[index].type, declaration.signature.params[index].type);
+                }
                 if (!compatible) return Fail("同一 C 符号的 ABI 签名不一致：" + declaration.abiSymbol);
             }
         }
@@ -1468,7 +1507,7 @@ bool RegisterTop()
                         if (!parameters.count(source)) return Fail("[CHL1210] 外部借用契约来源必须是形参：" + source);
                 }
             }
-            if ((declaration.abiConvention == "ChaLiBorrow" || declaration.abiConvention == "ChaLiValue") && LibraryBorrowParameter(declaration.signature.result))
+            if (LibraryLanguageAbi(declaration.abiConvention) && LibraryBorrowParameter(declaration.signature.result))
             {
                 if (contract == g_lifetimeContracts.end() || !contract->second.hasRet || contract->second.retParams.empty())
                     return Fail("语言借用返回必须显式声明形参来源契约");

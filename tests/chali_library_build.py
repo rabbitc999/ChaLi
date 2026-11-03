@@ -137,7 +137,8 @@ def main():
         bad.write_text('import demo::bridge;\nstruct Broken : BridgeError {int64 code(){return 1;}};void main(){}')
         invoke([compiler,'check',bad],work,False)
         original=package.read_bytes()
-        for source in ['module demo::math;String text(){return "unsupported";}',
+        for source in ['module demo::math;#export("native_text") String text(){return "unsupported";}',
+                       'module demo::math;struct Point {int64 x;};Point make(){Point value;value.x=1;return value;}int64 read(Point value=make()){return value.x;}',
                        'module demo::math;int64 state=1;int64 value(){return state;}',
                        'module demo::math;int64 unusedState=1;int64 value(){return 2;}',
                        'module demo::math;int64 generic<T>(T value){return 0;}',
@@ -148,7 +149,7 @@ def main():
                        'module demo::math;import demo::source;struct Record {demo::source::Source item;};int64 value(){return 1;}']:
             provider.write_text(source.replace('module demo::math;','module demo::math;\n').replace('import demo::source;','import demo::source;\n'))
             result=invoke([compiler,'lib','build',provider,'--module','demo::math','--package-version','1.0.0','--out',package],work,False)
-            assert any(word in result.stdout+result.stderr for word in ["标量","全局","泛型","记录","接口"]),(source,result.stdout,result.stderr)
+            assert any(word in result.stdout+result.stderr for word in ["标量","全局","泛型","记录","接口","聚合"]),(source,result.stdout,result.stderr)
             assert package.read_bytes()==original
     print('precompiled scalar entries, defaults and public types OK')
 

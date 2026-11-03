@@ -18,13 +18,24 @@ bool libraryScalar(const ast::TypePtr &type, bool allowVoid = false)
            || (type->kind == K::Float && (type->bits == 32 || type->bits == 64));
 }
 /**
- * @brief 判断仅包含扁平标量字段的记录或枚举逻辑引用。
+ * @brief 判断使用共享堆句柄表示的标准 String 值。
+ * @param type 已检查的 AST 类型。
+ * @return 类型为标准 String 时为真。
+ */
+bool libraryString(const ast::TypePtr &type)
+{
+    return type && type->kind == ast::Type::Kind::String;
+}
+/**
+ * @brief 判断实现体可在共享内存中访问的基础值、String 槽位或非拥有聚合逻辑引用。
  * @param type 已检查且已展开字段布局的 AST 类型。
  * @return 不传递拥有状态、可复用消费者共享内存时为真。
  */
 bool libraryBorrow(const ast::TypePtr &type)
 {
-    if (!type || type->kind != ast::Type::Kind::Ref || !type->element || type->element->kind != ast::Type::Kind::Struct) return false;
+    if (!type || type->kind != ast::Type::Kind::Ref || !type->element) return false;
+    if (libraryScalar(type->element) || libraryString(type->element)) return true;
+    if (type->element->kind != ast::Type::Kind::Struct) return false;
     for (const auto &field : type->element->fields)
         if (!libraryScalar(field.second)) return false;
     return !type->element->fields.empty();
@@ -42,16 +53,16 @@ bool libraryPlainValue(const ast::TypePtr &type)
     return true;
 }
 /**
- * @brief 核对独立单元可达函数，不把未实现的拥有值或全局状态按标量误编译。
+ * @brief 核对独立单元可达函数，只允许已接入的 String 拥有值及已有普通值操作。
  * @param state 当前直接 AST 生成状态。
  * @param function 可达函数。
- * @return 函数及全部节点属于标量范围时为真。
+ * @return 函数及全部节点属于当前共用运行时支持范围时为真。
  */
 bool validateLibraryFunction(Translator &state, const ast::Function &function)
 {
-    if (!function.owner.empty() || (!libraryScalar(function.result, true) && !libraryPlainValue(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
+    if ((!function.owner.empty() && function.owner != "std::lang::String") || (!libraryScalar(function.result, true) && !libraryString(function.result) && !libraryPlainValue(function.result) && !libraryBorrow(function.result))) return state.fail("原生库尚不支持该方法或拥有值返回：" + function.name), false;
     for (const auto &parameter : function.parameters)
-        if (!libraryScalar(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
+        if (!libraryScalar(parameter.second) && !libraryString(parameter.second) && !libraryBorrow(parameter.second) && !libraryPlainValue(parameter.second)) return state.fail("原生库暂不支持该参数类型：" + parameter.first), false;
     auto environment = state.astTypes;
     std::set<Text> borrowed;
     for (const auto &parameter : function.parameters)
@@ -89,6 +100,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         case N::IntLit:
         case N::FloatLit:
         case N::BoolLit:
+        case N::StringLit:
         case N::Binary:
         case N::Unary:
         case N::Sequence:
@@ -117,13 +129,15 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
             break;
         case N::Declare:
             environment[node->text] = node->declared;
-            if (!libraryScalar(node->declared) && !libraryBorrow(node->declared) && !libraryPlainValue(node->declared))
+            if (!libraryScalar(node->declared) && !libraryString(node->declared) && !libraryBorrow(node->declared) && !libraryPlainValue(node->declared))
             {
                 unsupported = "局部类型 " + (node->declared ? textOf(node->declared->describe()) : Text("无类型"));
                 return false;
             }
             break;
         case N::Cast:
+            if (libraryString(node->declared)) break;
+            if (libraryBorrow(node->declared) && node->declared->element->kind != ast::Type::Kind::Struct) break;
             if (!libraryScalar(node->declared, true))
             {
                 const auto source = node->kids.empty() ? ast::TypePtr() : ast::inferType(node->kids.front(), environment);
@@ -150,7 +164,9 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
         {
             const auto target = node->kids.size() > 1 && node->kids.front()->kind == N::Var ? node->kids.front()->text : node->text;
             const auto found = environment.find(target);
-            if (found != environment.end() && (libraryBorrow(found->second) || libraryPlainValue(found->second)))
+            // 基础值与 String 槽位引用沿用已检查的 unsafe 地址操作；记录来源证明只约束聚合引用。
+            if (found != environment.end() && (libraryPlainValue(found->second)
+                || (libraryBorrow(found->second) && found->second->element->kind == ast::Type::Kind::Struct)))
             {
                 const auto value = node->kids.empty() ? ast::NodePtr() : node->kids.back();
                 if (value && value->kind == N::IntLit && value->intValue == 0)
@@ -175,10 +191,19 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
             break;
         }
         case N::Call:
+            if (state.rawIntrinsics && !state.stepChecks
+                && ((node->kids.size() == 1 && (node->text == "std::lang::__stringStorageLength"
+                    || node->text == "std::lang::__stringStorageData" || node->text == "std::lang::__stringStorageCapacity"
+                    || node->text == "std::lang::__stringStorageKind"))
+                    || (node->kids.empty() && node->text == "std::lang::__bufferMaxBytes"))) break;
+            if (node->text == "std::lang::__runtimeFail" && node->kids.size() == 1) break;
+            if (node->text == "__std_panic" && node->kids.size() == 1) break;
             if (node->text == "__std_move_begin" && node->kids.size() == 2) break;
             if (node->text == "__std_move_live" || node->text == "__std_move_require" || node->text == "__std_move_end")
             {
-                if (node->kids.size() != 3 || node->kids[2]->kind != N::IntLit || !state.request.syntax->nativeTypeSymbols.count(node->kids[2]->intValue))
+                if (node->kids.size() != 3 || node->kids[2]->kind != N::IntLit
+                    || (!(node->kids[1]->kind == N::IntLit && node->kids[1]->intValue == 0)
+                        && !state.request.syntax->nativeTypeSymbols.count(node->kids[2]->intValue)))
                 {
                     unsupported = "未登记的跨单元移动类型";
                     return false;
@@ -195,7 +220,7 @@ bool validateLibraryFunction(Translator &state, const ast::Function &function)
                     return false;
                 }
                 const auto &entry = *external->second;
-                if ((entry.abiConvention != "C" && entry.abiConvention != "ChaLiBorrow" && entry.abiConvention != "ChaLiValue") || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
+                if ((entry.abiConvention != "C" && entry.abiConvention != "ChaLiBorrow" && entry.abiConvention != "ChaLiValue" && entry.abiConvention != "ChaLiOwned") || !isDirectLinkLibrary(entry.library) || entry.requiresMarshalling) return false;
                 if (abiType(entry.resultType).empty() || abiType(entry.resultType) == "ptr") return false;
                 for (const auto &parameter : entry.parameterTypes)
                     if (abiType(parameter).empty() || abiType(parameter) == "ptr" || abiType(parameter) == "void") return false;
@@ -308,13 +333,15 @@ Text libraryExportThunk(Translator &state, const ExternFunction &entry)
     return out;
 }
 /**
- * @brief 从已检查 AST 生成无入口和无运行时副本的首批标量库单元。
+ * @brief 从已检查 AST 生成无程序入口、复用最终程序运行时的独立库单元。
  * @param request 包含明确模块身份和公开签名的请求。
  * @param state 可达性和语义类型已准备好的生成状态。
  * @return 可单独编译的 LLVM 模块；错误时返回空文本。
  */
 Memory::String generateLibraryLLVM(Request &request, Translator &state)
 {
+    // 独立单元复用最终程序的存储查询，不复制带全程序地址视图状态的内部快速路径。
+    state.stringStorageViews = false;
     if (!request.syntax || request.abiExports.empty()) return state.fail("原生库需要至少一个公开标量函数"), Memory::String();
     if (request.options.stepLimit) return state.fail("独立原生库暂不支持构建期步数预算"), Memory::String();
     Memory::String runtime;
@@ -324,6 +351,9 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
     if (!state.unitDataSymbol.empty()) out += "@" + textOf(state.unitDataSymbol) + " = external constant i64\n";
     for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = external constant i64\n";
     out += libraryRuntimeDeclarations(textOf(runtime));
+    out += "@chali_heap_size = external constant i64\n";
+    out += "declare i64 @chali_host_call(ptr, i64, ptr, ptr)\ndeclare i8 @chali_host_result_float()\n";
+    if (out.find("@chali_host_string_storage(") == Text::npos) out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     if (request.options.debug) out += "declare void @chali_debug_publish_memory()\ndeclare void @chali_debug_capture_context(ptr)\ndeclare void @chali_debug_storage_lifetime(i64, i64, i64, i64)\n";
     if (state.profileOwnership) out += "declare void @chali_backend_profile_event(ptr, i64)\n";
     out += "@chali_return_float = internal thread_local global i8 0\ndeclare void @chali_set_location(ptr, i64, ptr)\n";
@@ -344,6 +374,17 @@ Memory::String generateLibraryLLVM(Request &request, Translator &state)
         functions += AstBuilder(state, function).generateAst();
     }
     out += profileSiteDeclarations(state);
+    for (const auto &native : state.nativeNames)
+    {
+        Text bytes;
+        for (const unsigned char byte : native.first)
+        {
+            char escaped[4];
+            std::snprintf(escaped, sizeof(escaped), "\\%02X", byte);
+            bytes += escaped;
+        }
+        out += "@native_name" + std::to_string(native.second) + " = private constant [" + std::to_string(native.first.size() + 1) + " x i8] c\"" + bytes + "\\00\"\n";
+    }
     for (const auto &source : state.sourceFiles)
     {
         Text bytes;

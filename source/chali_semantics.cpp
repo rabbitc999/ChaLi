@@ -52,7 +52,7 @@ Memory::Deque<MNode> g_nodes;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugFrame>> g_debugMacroFrames;
 Memory::Map<int, std::shared_ptr<const ast::MacroDebugLocation>> g_debugMacroLocations;
 Memory::Set<Memory::String> g_librarySources, g_libraryBorrowSources, g_libraryDataSources, g_libraryTypeSources,
-    g_libraryLifetimeSources, g_libraryBorrowResultSources;
+    g_libraryLifetimeSources, g_libraryBorrowResultSources, g_libraryOwnedSources;
 Memory::Map<int, std::size_t> g_rawMacroNames;
 std::size_t g_macroFragmentFirstLine = 0;
 std::size_t g_macroFragmentFirstColumn = 1;
@@ -2391,7 +2391,7 @@ int M_Unsafe(int id)
 int M_AbiDeclaration(int convention, int declaration)
 {
     const auto mode = g_names[convention];
-    if (mode != "C" && mode != "ChaLiBorrow" && mode != "ChaLiValue") return M_ParseBad("#abi 调用约定不受支持");
+    if (mode != "C" && mode != "ChaLiBorrow" && mode != "ChaLiValue" && mode != "ChaLiOwned") return M_ParseBad("#abi 调用约定不受支持");
     auto &node = g_nodes[declaration];
     node.abiConvention = mode;
     if (node.kind == MNode::AbiBlock)
@@ -2994,6 +2994,7 @@ void M_SetLibrarySources(const Memory::Vector<Memory::String> &files)
 {
     g_librarySources.clear();
     g_libraryBorrowSources.clear();
+    g_libraryOwnedSources.clear();
     g_libraryDataSources.clear();
     g_libraryTypeSources.clear();
     g_libraryLifetimeSources.clear();
@@ -3007,6 +3008,16 @@ void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files)
 {
     g_libraryBorrowSources.clear();
     g_libraryBorrowSources.insert(files.begin(), files.end());
+}
+/**
+ * @brief 保存当前目标允许标准 String 拥有值入口的来源。
+ * @param files 同时核对原生 ABI 与必需能力的库接口标签。
+ * @return 无。
+ */
+void M_SetLibraryOwnedSources(const Memory::Vector<Memory::String> &files)
+{
+    g_libraryOwnedSources.clear();
+    g_libraryOwnedSources.insert(files.begin(), files.end());
 }
 /**
  * @brief 保存允许公开生命周期契约的已验证接口来源。
@@ -3311,15 +3322,15 @@ bool ValidateNativeLibraryInterfaces()
         const auto isLibrary = [&](std::size_t line) {
             return line && line <= g_sourceFiles.size() && g_librarySources.count(g_sourceFiles[line - 1]);
         };
-        if (node.abiConvention == "ChaLiBorrow" || node.abiConvention == "ChaLiValue")
+        if (LibraryLanguageAbi(node.abiConvention))
         {
             const auto permitted = [&](std::size_t line) {
-                return line && line <= g_sourceFiles.size() && g_libraryBorrowSources.count(g_sourceFiles[line - 1]);
+                return line && line <= g_sourceFiles.size() && (node.abiConvention == "ChaLiOwned" ? g_libraryOwnedSources : g_libraryBorrowSources).count(g_sourceFiles[line - 1]);
             };
             if ((!permitted(node.sourceLine) && !permitted(node.expansionLine)) || node.kind != MNode::ExternFuncDecl || !chali_aot::isDirectLinkLibrary(node.abiLibrary))
             {
                 ReductionSourceScope location(static_cast<int>(id));
-                return Fail("ChaLiBorrow 仅用于已验证借用 ABI 库的直接链接声明");
+                return Fail("语言库 ABI 仅用于具备对应已验证能力的直接链接声明");
             }
         }
         if (!isLibrary(node.sourceLine) && !isLibrary(node.expansionLine)) continue;
@@ -3386,10 +3397,13 @@ Memory::String LibraryDeclaredType(const Memory::String &name)
 /**
  * @brief 保留参数的语言类型及只读／可写借用约定。
  * @param type 参数类型。
- * @return 标量、非拥有聚合或其借用的公开拼写。
+ * @return 标量、标准 String、非拥有聚合或其借用的公开拼写。
  */
 Memory::String LibraryParameterType(const std::shared_ptr<MType> &type)
 {
+    if (LibraryOwnedString(type)) return "std::lang::String";
+    if (type && type->kind == MType::Ptr && LibraryOwnedString(type->elem))
+        return Memory::String("std::lang::String") + (type->readOnly ? " const&" : " mut&");
     if (LibraryBorrowParameter(type)) return LibraryDeclaredType(type->elem->name) + (type->readOnly ? " const&" : " mut&");
     if (LibraryPlainValue(type)) return LibraryDeclaredType(type->name);
     return LibraryScalarType(type);
@@ -3607,7 +3621,8 @@ Memory::String LibraryTypeDeclarations(const Memory::String &module)
 Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String &symbol, const Memory::String &module,
                                    Memory::String &interface, Memory::Vector<chali_aot::ExternFunction> &exports)
 {
-    const auto type = LibraryScalarType(parameter.type);
+    const bool owned = LibraryOwnedString(parameter.type);
+    const auto type = owned ? Memory::String("std::lang::String") : LibraryScalarType(parameter.type);
     Memory::String languageName = "chaliDefault_" + symbol;
     while (std::any_of(g_functionDecls.begin(), g_functionDecls.end(), [&](const auto &function) { return function.module == module && function.source == languageName; }))
         languageName += "_";
@@ -3635,10 +3650,10 @@ Memory::String LibraryDefaultEntry(const MParam &parameter, const Memory::String
     chali_aot::ExternFunction entry;
     entry.label = label;
     entry.symbol = symbol;
-    entry.resultType = AotCType(CAbiType(parameter.type));
-    entry.abiConvention = "C";
+    entry.resultType = AotCType(LibraryNativeType(parameter.type));
+    entry.abiConvention = owned ? "ChaLiOwned" : "C";
     exports.push_back(std::move(entry));
-    interface += "#abi(\"C\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
+    interface += "#abi(\"" + Memory::String(owned ? "ChaLiOwned" : "C") + "\",\"@link\",\"" + symbol + "\")\n" + type + " " + languageName + "();\n";
     return languageName + "()";
 }
 /** @brief 一份公开生命周期声明及不依赖形参拼写的 ABI 身份。 */
@@ -3733,6 +3748,11 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         entry.nativeAlias = function.exportSymbol;
         entry.abiConvention = "C";
         const bool valueResult = LibraryPlainValue(function.signature.result);
+        const bool stringResult = LibraryOwnedString(function.signature.result);
+        const bool owned = stringResult || (function.signature.result && function.signature.result->kind == MType::Ptr && LibraryOwnedString(function.signature.result->elem))
+            || std::any_of(function.signature.params.begin(), function.signature.params.end(), [](const auto &parameter) {
+                return LibraryOwnedString(parameter.type) || (parameter.type && parameter.type->kind == MType::Ptr && LibraryOwnedString(parameter.type->elem));
+            });
         const bool borrowedResult = LibraryBorrowParameter(function.signature.result);
         entry.borrowedResult = borrowedResult;
         entry.hasLifetimeContract = !lifetime.declaration.empty();
@@ -3748,10 +3768,13 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         if (valueResult) entry.abiConvention = "ChaLiValue";
         else if (borrowedResult)
             entry.abiConvention = "ChaLiBorrow";
-        Memory::String declaration = (valueResult ? LibraryDeclaredType(function.signature.result->name) : borrowedResult ? LibraryParameterType(function.signature.result) :
+        if (owned) entry.abiConvention = "ChaLiOwned";
+        if (owned && !function.exportSymbol.empty()) throw std::runtime_error("String 语言入口不能同时声明物理 C ABI 的 #export");
+        Memory::String declaration = (stringResult ? Memory::String("std::lang::String") : valueResult ? LibraryDeclaredType(function.signature.result->name) : borrowedResult ? LibraryParameterType(function.signature.result) :
                                                                                                                             LibraryScalarType(function.signature.result, true))
                                      + " " + function.source + "(";
         Memory::String identity = "chali-library-abi1\n" + module + "\n" + declaration;
+        if (owned) identity += "\nchali-owned-string-v1:shared-heap-copy-parameters-transfer-result";
         if (!lifetime.identity.empty()) identity += "\nlifetime-contract-v1:\n" + lifetime.identity;
         if (valueResult)
         {
@@ -3762,7 +3785,7 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
         {
             if (!function.exportSymbol.empty()) throw std::runtime_error("语言借用返回不能同时声明物理 C ABI 的 #export");
             identity += Memory::String("\nchali-borrow-result-v1:") + (function.signature.result->readOnly ? "const:" : "mut:")
-                        + LibraryRecordShape(function.signature.result->elem->name, recordShapes);
+                        + (LibraryOwnedString(function.signature.result->elem) ? Memory::String("string-slot-v1") : LibraryRecordShape(function.signature.result->elem->name, recordShapes));
         }
         for (std::size_t i = 0; i < function.signature.params.size(); ++i)
         {
@@ -3770,13 +3793,15 @@ Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<c
             if (parameter.variadic) throw std::runtime_error("独立原生库暂不导出变参函数");
             const auto type = LibraryParameterType(parameter.type);
             identity += "\n" + type;
-            if (LibraryBorrowParameter(parameter.type) || LibraryPlainValue(parameter.type))
+            if (LibraryOwnedString(parameter.type) || (parameter.type && parameter.type->kind == MType::Ptr && LibraryOwnedString(parameter.type->elem)))
+                identity += "\nchali-owned-string-v1:" + type;
+            else if (LibraryBorrowParameter(parameter.type) || LibraryPlainValue(parameter.type))
             {
                 if (!function.exportSymbol.empty()) throw std::runtime_error("语言聚合入口不能同时声明物理 C ABI 的 #export");
                 if (parameter.defaultExpr >= 0) throw std::runtime_error("聚合参数暂不支持默认值");
                 const bool value = LibraryPlainValue(parameter.type);
                 if (value)
-                    entry.abiConvention = "ChaLiValue";
+                    entry.abiConvention = owned ? "ChaLiOwned" : "ChaLiValue";
                 else if (entry.abiConvention == "C")
                     entry.abiConvention = "ChaLiBorrow";
                 identity += Memory::String(value ? "\nchali-value-v1:" : "\nchali-borrow-v1:") + LibraryRecordShape(value ? parameter.type->name : parameter.type->elem->name, recordShapes);

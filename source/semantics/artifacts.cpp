@@ -103,7 +103,7 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
  */
 bool CAbiNeedsMarshalling(const MFunctionDecl &function)
 {
-    if (function.abiConvention == "ChaLiBorrow" || function.abiConvention == "ChaLiValue") return false;
+    if (LibraryLanguageAbi(function.abiConvention)) return false;
     const auto scalar = [](const std::shared_ptr<MType> &type) {
         return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
     };
@@ -294,11 +294,11 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
         entry.symbol = function.abiSymbol.empty() ? function.label : function.abiSymbol;
         entry.library = function.abiLibrary;
         entry.requiresMarshalling = CAbiNeedsMarshalling(function);
-        const bool languageAbi = function.abiConvention == "ChaLiBorrow" || function.abiConvention == "ChaLiValue";
+        const bool languageAbi = LibraryLanguageAbi(function.abiConvention);
         entry.borrowedResult = languageAbi && LibraryBorrowParameter(function.signature.result);
         entry.resultType = AotCType(languageAbi ? LibraryNativeType(function.signature.result) : CAbiType(function.signature.result));
         for (const auto &parameter : function.signature.params)
-            entry.parameterTypes.push_back(AotCType((function.abiConvention == "ChaLiBorrow" || function.abiConvention == "ChaLiValue") ? LibraryNativeType(parameter.type) : CAbiType(parameter.type)));
+            entry.parameterTypes.push_back(AotCType((LibraryLanguageAbi(function.abiConvention)) ? LibraryNativeType(parameter.type) : CAbiType(parameter.type)));
         out.push_back(std::move(entry));
     }
     return out;
