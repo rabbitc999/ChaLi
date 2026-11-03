@@ -250,7 +250,7 @@ void markHeaderBoundaries(Memory::String &source)
             blockComment = true;
         else if (ch == '$')
         {
-            for (const Memory::String keyword : { "$macro", "$match", "$regex", "$else", "$for", "$if" })
+            for (const Memory::String keyword : { "$macro", "$match", "$regex", "$else", "$elif", "$else_if", "$for", "$if" })
             {
                 const auto end = at + keyword.size();
                 if (source.compare(at, keyword.size(), keyword) == 0 && (end == source.size() || !(std::isalnum(static_cast<unsigned char>(source[end])) || source[end] == '_')))

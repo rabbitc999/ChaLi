@@ -387,3 +387,88 @@ void RecordEditorMacro(int call, int root)
     };
     chali_editor::compilerAnalysis.addMacro({ std::string(file.data(), file.size()), std::string(node.s.data(), node.s.size()), EditorMacroTree(root, 0, budget, symbols), line, column, complete });
 }
+
+/**
+ * @brief 从已登记类型与方法表导出宏生成的公开声明，不从模板文本猜测符号。
+ * @return 无返回值；跳过卫生私有名及未确定类型，声明总预算为十六 MiB。
+ */
+void RecordEditorGeneratedDeclarations()
+{
+    if (!chali_editor::compilerAnalysis.enabled()) return;
+    std::vector<chali_editor::GeneratedDeclaration> declarations;
+    std::size_t bytes = 0;
+    const auto visible = [](const Memory::String &name) {
+        return !name.empty() && name.find("__chali_") == Memory::String::npos;
+    };
+    const auto text = [](const Memory::String &value) { return std::string(value.data(), value.size()); };
+    const auto append = [&](const MNode &node, const Memory::String &name, const Memory::String &owner,
+                            const char *kind, const Memory::String &type, const Memory::String &signature, bool isStatic) {
+        if (!visible(name) || declarations.size() >= 100000 || !node.sourceLine) return;
+        const auto file = node.sourceLine <= g_sourceFiles.size() ? g_sourceFiles[node.sourceLine - 1] : g_sourceFallback;
+        if (file.empty() || file.front() == '<') return;
+        const auto amount = file.size() + name.size() + owner.size() + type.size() + signature.size() + node.module.size() + 128u;
+        if (amount > 16u * 1024u * 1024u - bytes) return;
+        bytes += amount;
+        chali_editor::GeneratedDeclaration declaration;
+        declaration.file = text(file);
+        declaration.name = text(BareTypeName(name));
+        declaration.module = text(node.module);
+        declaration.owner = text(BareTypeName(owner));
+        declaration.kind = kind;
+        declaration.type = text(type);
+        declaration.signature = text(signature);
+        declaration.line = node.sourceLine <= g_sourceLines.size() && g_sourceLines[node.sourceLine - 1]
+                               ? g_sourceLines[node.sourceLine - 1] : node.sourceLine;
+        declaration.column = node.sourceColumn;
+        declaration.isStatic = isStatic;
+        if (node.macroExpansion >= 0 && static_cast<std::size_t>(node.macroExpansion) < g_nodes.size())
+            declaration.macro = text(N(node.macroExpansion).s);
+        declarations.push_back(std::move(declaration));
+    };
+    for (const int id : g_top)
+    {
+        const auto &node = N(id);
+        if (node.kind != MNode::StructDecl || !visible(node.s)) continue;
+        const auto definition = g_structs.find(node.s);
+        if (definition == g_structs.end() || g_opcodeTypes.count(node.s)) continue;
+        const bool generated = node.generatedDeclaration || node.macroExpansion >= 0;
+        if (generated) append(node, node.s, {}, "struct", {}, "struct " + BareTypeName(node.s), false);
+        if (node.kids.empty()) continue;
+        for (const int memberId : N(node.kids[0]).kids)
+        {
+            const auto &member = N(memberId);
+            if ((!generated && !member.generatedDeclaration && member.macroExpansion < 0) || !visible(member.s)) continue;
+            if (member.kind == MNode::Field && member.type2 != 1)
+            {
+                const auto field = std::find_if(definition->second.fields.begin(), definition->second.fields.end(),
+                                                 [&](const MField &value) { return value.name == member.s; });
+                if (field == definition->second.fields.end()) continue;
+                const auto type = EditorTypeText(field->type);
+                if (visible(type)) append(member, member.s, node.s, "member", type, type + " " + member.s, false);
+            }
+            else if (member.kind == MNode::MethodDef)
+            {
+                for (const auto &method : definition->second.methods)
+                {
+                    if (method.implicitDeclaration || method.superseded || method.source != member.s
+                        || (member.kids.size() > 1u && method.bodyId != member.kids[1])) continue;
+                    const auto result = EditorTypeText(method.result);
+                    if (!visible(result)) continue;
+                    Memory::String signature = method.isStatic ? "static " : "";
+                    signature += result + " " + method.source + "(";
+                    bool valid = true;
+                    for (std::size_t index = 0; index < method.params.size(); ++index)
+                    {
+                        const auto &parameter = method.params[index];
+                        const auto type = EditorTypeText(parameter.type);
+                        if (!visible(type)) { valid = false; break; }
+                        if (index) signature += ", ";
+                        signature += type + (parameter.variadic ? "... " : " ") + EditorMacroName(parameter.source);
+                    }
+                    if (valid) append(member, method.source, node.s, "function", result, signature + ")", method.isStatic);
+                }
+            }
+        }
+    }
+    chali_editor::compilerAnalysis.setGeneratedDeclarations(std::move(declarations));
+}

@@ -3919,6 +3919,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 RestoreFirstDiagnostic();
                 return 1;
             }
+            RecordEditorGeneratedDeclarations();
             if (!ValidateDerivedFields())
             {
                 RestoreFirstDiagnostic();

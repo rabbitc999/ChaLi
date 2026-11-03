@@ -42,13 +42,14 @@ void CompilerAnalysis::begin(bool enabled)
     enabled_ = enabled;
     previewBytes_ = 0;
     types_.clear();
+    generated_.clear();
     macros_.clear();
 }
 
 /**
  * @brief 语义重放时撤销尚未完成一轮中的声明类型。
  */
-void CompilerAnalysis::resetPass() { types_.clear(); }
+void CompilerAnalysis::resetPass() { types_.clear(); generated_.clear(); }
 
 /**
  * @brief 查询调用方是否请求了真实语义数据。
@@ -63,6 +64,14 @@ bool CompilerAnalysis::enabled() const { return enabled_; }
 void CompilerAnalysis::addType(TypeHint hint)
 {
     if (enabled_ && types_.size() < 100000) types_.push_back(std::move(hint));
+}
+/**
+ * @brief 保存当前登记完成的生成声明，不依赖宏预览是否被截断。
+ * @param declarations 由生产符号表核对过的有界声明列表。
+ */
+void CompilerAnalysis::setGeneratedDeclarations(std::vector<GeneratedDeclaration> declarations)
+{
+    if (enabled_) generated_ = std::move(declarations);
 }
 
 /**
@@ -106,6 +115,19 @@ bool CompilerAnalysis::write(const std::string &path, bool complete, std::string
         first = false;
         out << "{\"file\":" << jsonString(hint.file) << ",\"name\":" << jsonString(hint.name) << ",\"type\":" << jsonString(hint.type)
             << ",\"line\":" << hint.line << ",\"column\":" << hint.column << '}';
+    }
+    out << "],\"generatedDeclarations\":[";
+    first = true;
+    for (const auto &declaration : generated_)
+    {
+        if (!first) out << ',';
+        first = false;
+        out << "{\"file\":" << jsonString(declaration.file) << ",\"name\":" << jsonString(declaration.name)
+            << ",\"module\":" << jsonString(declaration.module) << ",\"owner\":" << jsonString(declaration.owner)
+            << ",\"kind\":" << jsonString(declaration.kind) << ",\"type\":" << jsonString(declaration.type)
+            << ",\"signature\":" << jsonString(declaration.signature) << ",\"macro\":" << jsonString(declaration.macro)
+            << ",\"line\":" << declaration.line << ",\"column\":" << declaration.column
+            << ",\"static\":" << (declaration.isStatic ? "true" : "false") << '}';
     }
     out << "],\"macros\":[";
     first = true;

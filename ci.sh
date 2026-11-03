@@ -18,6 +18,8 @@
 set -u
 # 诊断与样例输出都是中文，显示语言固定，免得随执行主机变化。
 export CHALI_LANG=zh
+# 业务门禁只比较程序输出；完成提示由独立专项清除静默后核对。
+export CHALI_QUIET=1
 export PARSEENGINE_LANG=zh
 export PYTHONUTF8=1
 export PYTHONIOENCODING=utf-8
@@ -348,6 +350,9 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "检查学生管理服务器的统一错误类型" "$CHALI_BIN" check example/students-server/src/main.chl
     run_step "运行默认 program 模块回归" "$PYTHON" tests/chali_default_module.py --chali "$CHALI_BIN"
     run_step "运行默认模块与外部宏补全回归" "$PYTHON" tests/chali_lsp_macro_completion.py --chali "$CHALI_BIN"
+    run_step "运行宏生成结构体与成员的语言服务回归" "$PYTHON" tests/chali_lsp_generated_symbols.py --chali "$CHALI_BIN"
+    run_step "运行宏连续条件分支与 JSON_FIELDS 回归" "$PYTHON" tests/chali_macro_else_if.py --chali "$CHALI_BIN"
+    run_step "运行编译完成提示与静默边界回归" "$PYTHON" tests/chali_completion_notice.py --chali "$CHALI_BIN"
     run_step "运行函数与宏重载提示回归" "$PYTHON" tests/chali_lsp_overloads.py --chali "$CHALI_BIN"
     run_step "验证内嵌资产 SHA256 与中文输出" "$PYTHON" tests/embedded_asset_cache.py
     run_step "验证项目临时目录边界" "$PYTHON" tests/chali_temporary_paths.py

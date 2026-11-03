@@ -18,6 +18,8 @@
 %token MACRO_MEMBER "@!macromember"
 %token MACRO_MATCH "$match"
 %token MACRO_ELSE "$else"
+%token MACRO_ELIF "$elif"
+%token MACRO_ELSE_IF "$else_if"
 %token MACRO_END_MATCH "$end_match"
 %token MACRO_REGEX "$regex"
 %token MACRO_END_REGEX "$end_regex"

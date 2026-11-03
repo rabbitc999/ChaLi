@@ -101,8 +101,8 @@ void main(){assert(answer()==42 && hidden()==7);PublicRecord value;value.item=42
 ('bad_shape', '$macro BAD() -> stmt\n1\n$end_macro\nvoid main(){$BAD();}', '显式类别'),
 ('cycle', '$macro LOOP() -> item\n$LOOP();\n$end_macro\n$LOOP();\nvoid main(){}', '循环依赖'),
 ('invalid_item', '$macro BAD() -> item\nint64 value=1;\n$end_macro\n$BAD();\nvoid main(){}', '只能生成'),
-('unused_import', '$macro BAD() -> item\nimport helpers;\n$end_macro\nvoid main(){}', 'import 必须'),
-('unused_module', '$macro BAD() -> item\nmodule unexpected;\n$end_macro\nvoid main(){}', 'module 声明必须'),
+('unused_import', '$macro BAD() -> item\nimport helpers;\n$end_macro\nvoid main(){}', '声明宏只能生成'),
+('unused_module', '$macro BAD() -> item\nmodule unexpected;\n$end_macro\nvoid main(){}', '声明宏只能生成'),
 ('legacy_at_top', '$macro OLD()\n1\n$end_macro\n$OLD();\nvoid main(){}', '声明位置'),
 ]
     failures = []
@@ -115,6 +115,8 @@ void main(){assert(answer()==42 && hidden()==7);PublicRecord value;value.item=42
             if diagnostic:
                 if result.returncode == 0 or diagnostic not in result.stderr:
                     failures.append((name, result))
+                if name in ('unused_import', 'unused_module') and ('第 2 行第 1 列' not in result.stderr or path.name not in result.stderr):
+                    failures.append((name + '_source', result))
             else:
                 if (result.returncode, result.stdout, result.stderr) != (0, '', ''):
                     failures.append((name, result))

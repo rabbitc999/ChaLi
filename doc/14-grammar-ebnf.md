@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 167 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 169 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -125,6 +125,8 @@ Box<int64 fn(int64)> box;
 | `MACRO_MEMBER` | `@!macromember` |
 | `MACRO_MATCH` | `$match` |
 | `MACRO_ELSE` | `$else` |
+| `MACRO_ELIF` | `$elif` |
+| `MACRO_ELSE_IF` | `$else_if` |
 | `MACRO_END_MATCH` | `$end_match` |
 | `MACRO_REGEX` | `$regex` |
 | `MACRO_END_REGEX` | `$end_regex` |
@@ -985,7 +987,8 @@ macro_member_list = ""
 macro_member_template = macro_member_list ;
 
 macro_member_else = ""
-    | "$else", "@!macrobody", macro_member_template ;
+    | "$else", "@!macrobody", macro_member_template
+    | macro_elif, expr, "@!macrobody", macro_member_template, macro_member_else ;
 
 macro_generics = ""
     | "<", macro_generic_items, ">" ;
@@ -1037,7 +1040,7 @@ macro_control = "$match", name_token, "is", macro_category, "@!macrobody", macro
     | "$for", name_token, "in", name_token, "@!macrobody", macro_template, "$end_for"
     | "$for", name_token, "in", macro_metadata_source, "@!macrobody", macro_template, "$end_for"
     | "$for", "(", macro_zip_names, ")", "in", "(", macro_zip_names, ")", "@!macrobody", macro_template, "$end_for"
-    | "$if", expr, "@!macrobody", macro_template, macro_regex_else, "$end_if" ;
+    | "$if", expr, "@!macrobody", macro_template, macro_if_else, "$end_if" ;
 
 macro_metadata_source = macro_call
     | name_token, ".", name_token
@@ -1061,6 +1064,13 @@ macro_match_tail = ""
 
 macro_regex_else = ""
     | "$else", "@!macrobody", macro_template ;
+
+macro_elif = "$elif"
+    | "$else_if" ;
+
+macro_if_else = ""
+    | "$else", "@!macrobody", macro_template
+    | macro_elif, expr, "@!macrobody", macro_template, macro_if_else ;
 
 macro_call = MACRO_NAME
     | MACRO_NAME, macro_call_groups

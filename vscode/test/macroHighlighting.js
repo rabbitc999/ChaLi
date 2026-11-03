@@ -58,6 +58,11 @@ async function main() {
   assert(!protectedTokens[6][0].scopes.includes('meta.preprocessor.macro.body.chali'));
   const incomplete = tokenize(['$macro vec<T>[...list]', '{', '    $for var in list', '    println("{}", var);']);
   assert(incomplete[3][0].scopes.includes('meta.preprocessor.macro.body.chali'));
+  const branches = ['$macro choose() -> expr', '$if false', '1', '$elif false', '2', '$else_if true', '3', '$else', '4', '$end_if', '$end_macro'];
+  const branchTokens = tokenize(branches);
+  for (const line of [1, 3, 5, 7, 9]) {
+    assert(branchTokens[line][0].scopes.includes('keyword.control.macro.chali'), branches[line]);
+  }
   registry.dispose();
   console.log('真实 TextMate 宏头、独立宏体、两组循环、卫生局部变量、字符串/注释保护与结束恢复高亮通过。');
 }

@@ -132,6 +132,9 @@ J refactor(const std::string &method, const J &params, const std::string &u, con
         if (renaming) throw std::runtime_error("无法安全重命名：符号未知、重载有歧义或没有可编辑的原始声明");
         return A{};
     }
+    if (renaming && std::any_of(records.begin(), records.end(), [&](const Record &record) {
+            return record.generated && record.source == target.source && record.offset == target.offset;
+        })) throw std::runtime_error("宏生成声明不能直接重命名，请修改宏调用参数或模板定义");
     if (renaming && starts(target.source, "chali-stdlib:")) throw std::runtime_error("标准库源码只读，不能重命名");
     if (target.name == "main" || starts(target.name, "__chali"))
     {

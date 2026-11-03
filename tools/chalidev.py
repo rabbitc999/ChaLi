@@ -795,6 +795,18 @@ _MESSAGES = {
   ],
   "  --no-stdlib-cache      关闭内嵌标准库预编译（每次完整解析，不写缓存）\n": [
     "  --no-stdlib-cache      Disable the embedded standard-library unit (parse source without writing a cache)\n"
+  ],
+  "编译完成：%s\n": [
+    "Compilation completed: %s\n"
+  ],
+  "  --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n": [
+    "  --quiet                Suppress compilation completion notices; keep errors and program output\n"
+  ],
+  "  --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n": [
+    "  --out PREFIX           Output file prefix (default: beside the source)\n"
+  ],
+  "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n": [
+    "  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n"
   ]
 }
 # CHALI_CATALOG_END

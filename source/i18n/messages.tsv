@@ -253,3 +253,8 @@ chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 
 chali: --stdlib-cache-dir 已删除；标准库预编译资产由编译器内嵌。\n|chali: --stdlib-cache-dir has been removed; precompiled standard-library assets are embedded in the compiler.\n
 chali: 无法生成标准库二进制预编译资产\n|chali: cannot generate the standard-library binary asset\n
   --no-stdlib-cache      关闭内嵌标准库预编译（每次完整解析，不写缓存）\n|  --no-stdlib-cache      Disable the embedded standard-library unit (parse source without writing a cache)\n
+
+编译完成：%s\n|Compilation completed: %s\n
+  --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n|  --quiet                Suppress compilation completion notices; keep errors and program output\n
+  --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n|  --out PREFIX           Output file prefix (default: beside the source)\n
+  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n|  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n

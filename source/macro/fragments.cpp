@@ -240,10 +240,10 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
-        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if";
+        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "elif" || name == "else_if" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if";
         if (control)
         {
-            if (name == "for" || name == "if" || name == "match" || name == "regex" || name == "else")
+            if (name == "for" || name == "if" || name == "match" || name == "regex" || name == "else" || name == "elif" || name == "else_if")
                 directiveLineEnd = text.find('\n', at);
             output.append(text, start, at - start);
             continue;

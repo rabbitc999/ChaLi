@@ -67,16 +67,12 @@ $end_if
 output+=quoteJson(field.name)+":";
 $if field.type.name=="std::lang::String"
 output+=quoteJson($member(value,field));
-$else
-$if field.type.name=="int64"
+$else_if field.type.name=="int64"
 output+=format("{}",$member(value,field));
-$else
-$if field.type.name=="bool"
+$elif field.type.name=="bool"
 output+=boolText($member(value,field));
 $else
 $compile_error("JSON 示例不支持类型 "+field.type.name);
-$end_if
-$end_if
 $end_if
 $end_for
 output+"}"

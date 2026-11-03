@@ -25,6 +25,8 @@
 
 # 期望错误文件为中文，显示语言不随执行主机变化。
 export CHALI_LANG=zh
+# 业务门禁只比较程序输出；完成提示由独立专项清除静默后核对。
+export CHALI_QUIET=1
 # 门禁要确定性：样例缺输入时照旧报错，别去等标准输入（调试时才用那份兜底）。
 export CHALI_NO_STDIN_INPUT=1
 

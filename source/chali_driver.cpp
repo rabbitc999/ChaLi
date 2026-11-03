@@ -184,6 +184,7 @@ void PrintUsage(std::FILE *out)
              "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
              "  --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n",
              "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n",
+             "  --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n",
              "  --raw                  跳过前处理：源文件原样喂给解析器\n",
              "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
@@ -346,6 +347,8 @@ try
     bool ltoGiven = false;      /* 显式 LTO 开关优先于项目配置。 */
     bool libraryImplementationGiven = false; /* 显式库实现选择优先于项目配置。 */
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
+    const char *quietSetting = std::getenv("CHALI_QUIET");
+    bool quiet = quietSetting && std::strcmp(quietSetting, "1") == 0;
     int run = 1;
     bool checkOnly = false, jsonDiagnostics = false;
     chali_warnings::Options warningOptions;
@@ -424,6 +427,11 @@ try
         {
             PrintUsage(stdout);
             return 0;
+        }
+        if (argument == "--quiet")
+        {
+            quiet = true;
+            continue;
         }
         if (argument == "--library-license" || argument == "--library-license-asset" || argument == "--library-system-library" || argument == "--library-runtime-library")
         {
@@ -1738,11 +1746,11 @@ try
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
-        if (defaultArtifacts)
-        {
-            const char *extension = aotOptions.emitLLVMOnly ? ".ll" : aotOptions.emitObjectOnly ? ".o" :
+        const char *extension = aotOptions.emitLLVMOnly ? ".ll" : aotOptions.emitObjectOnly ? ".o" :
                                     aotOptions.emitAssemblyOnly ? ".s" : aotOptions.shared ? (selectedTarget.windows ? ".dll" : ".so") :
                                     selectedTarget.windows ? ".exe" : "";
+        if (defaultArtifacts)
+        {
             std::vector<const char *> products{ extension };
             if (std::filesystem::is_regular_file(Memory::u8path(prefix + ".h"))) products.push_back(".h");
             if ((aotOptions.emitObjectOnly || aotOptions.emitAssemblyOnly) && !request.abiGlue.empty()) products.push_back(".abi.cpp");
@@ -1755,6 +1763,11 @@ try
                     return 1;
                 }
             }
+        }
+        if (!quiet)
+        {
+            std::fprintf(stderr, CHALI_TEXT("编译完成：%s\n"), (exportPrefix + extension).c_str());
+            std::fflush(stderr);
         }
         if (run)
         {

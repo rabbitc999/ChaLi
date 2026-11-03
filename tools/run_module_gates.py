@@ -23,7 +23,7 @@ MODULES = {
     "defaults": ["chali_default_arguments", "chali_default_ambiguity", "chali_default_module"],
     "interfaces": ["chali_interface_values", "chali_interface_binding_move", "chali_copy_interface", "chali_interface_copy_scalar"],
     "abi": ["chali_link_abi", "chali_abi_values", "chali_abi_contracts", "chali_c_api_contract"],
-    "toolchain": ["chali_link_abi", "chali_linker", "chali_assembler", "chali_aot_assembly", "chali_package", "chali_aot_arguments", "chali_aot_project_config", "chali_default_outputs"],
+    "toolchain": ["chali_link_abi", "chali_linker", "chali_assembler", "chali_aot_assembly", "chali_package", "chali_aot_arguments", "chali_aot_project_config", "chali_default_outputs", "chali_completion_notice"],
     "warnings": ["chali_warnings", "chali_analysis_diagnostics", "chali_match_overlap", "chali_lsp_naming_scopes"],
     "stdlib": ["chali_standard_unit", "chali_precompiled", "chali_generic_scope", "chali_macro_generics"]
               + (["chali_precompiled_readonly"] if os.name == "nt" else []),
@@ -51,9 +51,9 @@ MODULES = {
                "chali_macro_branches", "chali_macro_groups", "chali_macro_generics",
                "chali_macro_result_inference", "chali_macro_variadics", "chali_macro_patterns",
                "chali_macro_declarations", "chali_macro_members", "chali_custom_derive", "chali_value_derive", "chali_debug_derive", "chali_json_derive", "chali_declaration_sugars", "chali_macro_metadata",
-               "chali_derive_contracts", "chali_derive_preview", "chali_macro_type_metadata", "chali_macro_member_contract", "chali_macro_provenance", "chali_macro_controls", "chali_macro_control_flow",
+               "chali_derive_contracts", "chali_derive_preview", "chali_macro_type_metadata", "chali_macro_member_contract", "chali_macro_provenance", "chali_macro_controls", "chali_macro_control_flow", "chali_macro_else_if",
                "chali_macro_diagnostics", "chali_macro_preview", "chali_macro_control_preview", "chali_macro_effects_preview", "chali_macro_editor",
-               "chali_lsp_macro_completion", "chali_lsp_macro_highlighting"],
+               "chali_lsp_macro_completion", "chali_lsp_macro_highlighting", "chali_lsp_generated_symbols"],
     "language": ["chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],
     "borrow": ["chali_borrow_flow", "chali_analysis_diagnostics", "chali_reference_values"],
     "memory": ["chali_type_memory", "chali_resource_lifetime"],
@@ -66,7 +66,7 @@ MODULES = {
     "lsp": ["chali_lsp_actions", "chali_lsp_editor", "chali_lsp_scheduler", "chali_lsp_pipeline", "chali_lsp_snapshots", "chali_lsp_closure_types", "chali_lsp_risks", "chali_lsp_receiver_types",
             "chali_lsp_overloads", "chali_lsp_naming_scopes", "chali_lsp_symbols",
             "chali_lsp_lambda_capture", "chali_lsp_semantic_features",
-            "chali_lsp_macro_completion", "chali_lsp_macro_highlighting",
+            "chali_lsp_macro_completion", "chali_lsp_macro_highlighting", "chali_lsp_generated_symbols",
             "chali_native_lsp_parity", "chali_lsp_performance", "chali_lsp_highlight_speed"],
 }
 
@@ -106,6 +106,9 @@ def main():
                                     "--chali", str(args.chali.resolve())]
                 if module == "lsp" and script == "chali_lsp_closure_types":
                     commands[script].append("--lsp-only")
+                if script == "chali_lsp_scheduler":
+                    if args.cxx: commands[script] += ["--cxx", args.cxx]
+                    if args.sysroot: commands[script] += ["--sysroot", str(args.sysroot.resolve())]
                 if module == "macros" and script == "chali_ast_macros":
                     commands[script].append("--default")
                 if script in ("chali_annotations", "chali_c_api_registry", "chali_numeric_list_storage", "chali_generator_assets", "chali_library_bitcode_header", "chali_standard_unit", "chali_backend_ownership", "chali_function_types"):

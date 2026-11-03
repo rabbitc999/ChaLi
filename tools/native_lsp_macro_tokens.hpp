@@ -16,7 +16,7 @@ struct LspMacroToken
 std::map<size_t, LspMacroToken> lspMacroTokens(const std::string &text, const std::vector<Token> &tokens)
 {
     std::map<size_t, LspMacroToken> result;
-    const std::set<std::string> directives{ "$macro", "$end_macro", "$for", "$end_for", "$match", "$regex", "$else", "$end_match", "$end_regex", "$replace" };
+    const std::set<std::string> directives{ "$macro", "$end_macro", "$for", "$end_for", "$if", "$elif", "$else_if", "$end_if", "$match", "$regex", "$else", "$end_match", "$end_regex", "$replace" };
     const std::set<std::string> values{ "$line", "$file", "$module" };
     std::set<std::string> parameters, locals;
     std::vector<std::string> loops;

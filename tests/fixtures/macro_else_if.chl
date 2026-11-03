@@ -1,0 +1,29 @@
+$macro JSON_FIELDS<T>(&value:value) -> expr
+$compile_assert(($fields<T>()).count > 0, "JSON 生成至少需要一个实例字段");
+String result = "{";
+$for field in $fields<T>()
+$if field.index > 0
+result = result + ",";
+$end_if
+$if field.type.name == "std::lang::String"
+result = result + "\"" + field.name + "\": \"" + $member(value, field) + "\"";
+$else_if field.type.name == "int64"
+result = result + "\"" + field.name + "\": " + $member(value, field).toString();
+$else_if field.type.name == "bool"
+result = result + "\"" + field.name + "\": " + $member(value, field).toString();
+$else
+$compile_error("JSON_FIELDS 不支持该字段类型: " + field.type.name);
+$end_if
+$end_for
+result + "}"
+$end_macro
+
+struct Data { String title; int64 count; bool enabled; }
+void main()
+{
+    Data value;
+    value.title = "ChaLi";
+    value.count = 42;
+    value.enabled = true;
+    println("{}", $JSON_FIELDS<Data>(value));
+}

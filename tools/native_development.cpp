@@ -789,6 +789,8 @@ struct Record
     std::string name, module, owner, qualified, signature, documentation, source,
         type, kind = "function";
     size_t offset = 0;
+    bool generated = false;
+    size_t generatedLength = 0;
     A parameters;
 };
 /**
@@ -3545,6 +3547,93 @@ class Server
         return object({ { "kind", "markdown" }, { "value", s } });
     }
     /**
+     * @brief 为函数体中尚未完成的输入核对外层宏声明，不发布修复文本。
+     * @param u 当前文档 URI。
+     * @param text 原始未保存源码。
+     * @param cursor 当前编辑位置。
+     * @param records 已确认的词法声明。
+     * @return 隔离检查的真实报告；位置不在普通函数体时返回空值。
+     */
+    J generatedDeclarationProbe(const std::string &u, const std::string &text, size_t cursor, const std::vector<Record> &records)
+    {
+        const auto tokens = lex(text);
+        for (const auto &record : records)
+        {
+            if (record.source != u || record.kind != "function" || !record.owner.empty() || record.offset >= cursor) continue;
+            size_t opening = 0;
+            while (opening < tokens.size() && tokens[opening].a <= record.offset) ++opening;
+            while (opening < tokens.size() && tokens[opening].word != "{" && tokens[opening].word != ";") ++opening;
+            if (opening == tokens.size() || tokens[opening].word != "{" || tokens[opening].a >= cursor) continue;
+            const auto stop = groupEnd(tokens, opening, "{", "}");
+            const bool closed = stop > opening && stop <= tokens.size() && tokens[stop - 1].word == "}";
+            const auto end = closed ? tokens[stop - 1].a : text.size();
+            if (cursor > end) continue;
+            auto candidate = text;
+            for (size_t at = tokens[opening].b; at < end; ++at)
+                if (candidate[at] != '\n' && candidate[at] != '\r') candidate[at] = ' ';
+            if (!closed) candidate += "\n}";
+            auto snapshot = documents;
+            snapshot[u] = std::make_shared<const Document>(candidate, documents.at(u)->second);
+            Server probe(*this, std::move(snapshot), roots, snapshotRevision);
+            probe.ephemeralAnalysis = true;
+            probe.sourceSnapshot = sourceSnapshot;
+            probe.sourceSnapshot.erase(u);
+            probe.requestCancelled = requestCancelled;
+            return probe.checkReport(u, [] { return false; }, 8);
+        }
+        return J();
+    }
+    /**
+     * @brief 合并编译器实际登记的宏生成声明，并保留调用点来源。
+     * @param analysis 当前源码快照的编译器分析结果。
+     * @param records 接收已核对声明的符号列表。
+     * @return 无返回值；没有可信来源或公开名称的条目被忽略。
+     */
+    void mergeGeneratedDeclarations(const J &analysis, std::vector<Record> &records)
+    {
+        for (const auto &entry : array(get(analysis, "generatedDeclarations")))
+        {
+            const auto file = str(entry, "file");
+            const auto name = str(entry, "name");
+            if (file.empty() || file.front() == '<' || name.empty() || name.find("__chali_") != name.npos) continue;
+            const auto declarationUri = uri(fs::u8path(file));
+            const auto body = source(declarationUri);
+            const auto line = integer(get(entry, "line"));
+            const auto column = integer(get(entry, "column"));
+            if (line < 1 || column < 1) continue;
+            size_t offset = 0;
+            for (int64_t current = 1; current < line && offset < body.size(); ++current)
+            {
+                const auto next = body.find('\n', offset);
+                offset = next == body.npos ? body.size() : next + 1;
+            }
+            const auto end = body.find('\n', offset);
+            offset = std::min(offset + static_cast<size_t>(column - 1), end == body.npos ? body.size() : end);
+            Record record;
+            record.name = name;
+            record.module = str(entry, "module");
+            record.owner = str(entry, "owner");
+            record.kind = str(entry, "kind");
+            record.type = str(entry, "type");
+            record.signature = str(entry, "signature");
+            record.source = declarationUri;
+            record.offset = offset;
+            record.generated = true;
+            record.generatedLength = body.compare(offset, name.size(), name) == 0 ? name.size() : 0;
+            record.qualified = qualified(record);
+            record.parameters = parameters(record.signature);
+            record.documentation = "宏生成声明；定位指向实际展开调用。";
+            const auto macro = str(entry, "macro");
+            if (!macro.empty()) record.documentation += " 来源：" + macro;
+            if (record.kind == "struct" || record.kind == "enum" || record.kind == "interface" || record.kind == "opcode")
+            { types.insert(record.name); types.insert(record.qualified); }
+            if (std::any_of(records.begin(), records.end(), [&](const Record &existing) {
+                    return existing.source == record.source && existing.qualified == record.qualified && existing.signature == record.signature;
+                })) continue;
+            records.push_back(std::move(record));
+        }
+    }
+    /**
      * @brief 将符号位置转换为 LSP 位置数组。
      * @param entries 待编码的位置或符号记录列表。
      * @retval 保存将符号位置转换为 LSP 位置数组结果的对象。
@@ -3565,7 +3654,7 @@ class Server
                     auto s = source(r.source);
                     out.push_back(object(
                         { { "uri", r.source },
-                          { "range", range(s, r.offset, r.offset + r.name.size()) } }));
+                          { "range", range(s, r.offset, r.offset + (r.generated ? r.generatedLength : r.name.size())) } }));
                 } catch (const std::exception &)
                 {
                 }
@@ -4124,6 +4213,23 @@ class Server
         LspIndexScope index(*unit);
         size_t cursor = offsetAt(s, get(params, "position"));
         auto records = collect(u, s);
+        J compilerReport;
+        if (s.find('$') != s.npos && (method == "textDocument/hover" || method == "textDocument/completion" ||
+                                     method == "textDocument/signatureHelp" || method == "textDocument/definition" ||
+                                     method == "textDocument/documentSymbol" || method == "textDocument/references" ||
+                                     method == "textDocument/prepareRename" || method == "textDocument/rename"))
+        {
+            try
+            {
+                compilerReport = checkReport(u, [] { return false; });
+                if (get(compilerReport, "analysis").isNull() && !inMacroTemplate(s, cursor))
+                    compilerReport = generatedDeclarationProbe(u, s, cursor, records);
+                mergeGeneratedDeclarations(get(compilerReport, "analysis"), records);
+            } catch (const std::exception &)
+            {
+                // 不完整源码仍使用已经确认的词法声明，不从宏模板猜测类型。
+            }
+        }
         if (method == "textDocument/semanticTokens/full")
             return semantic(s, records);
         auto vars = bindings(s, types);
@@ -4132,8 +4238,8 @@ class Server
         {
             try
             {
-                const auto report = checkReport(u, [] { return false; });
-                const auto &analysis = get(report, "analysis");
+                const auto &analysis = get(compilerReport, "analysis");
+                mergeGeneratedDeclarations(analysis, records);
                 const auto complete = get(analysis, "complete").asBool();
                 if (complete && *complete)
                     for (const auto &binding : vars)
@@ -4178,15 +4284,16 @@ class Server
         {
             A out;
             std::set<size_t> seen;
-            for (auto &r : unit->records)
+            for (auto &r : records)
             {
+                if (r.source != u) continue;
                 seen.insert(r.offset);
                 out.push_back(
                     object({ { "name", r.name },
                              { "kind", symbolKind(r) },
-                             { "range", range(s, r.offset, r.offset + r.name.size()) },
+                             { "range", range(s, r.offset, r.offset + (r.generated ? r.generatedLength : r.name.size())) },
                              { "selectionRange",
-                               range(s, r.offset, r.offset + r.name.size()) } }));
+                               range(s, r.offset, r.offset + (r.generated ? r.generatedLength : r.name.size())) } }));
             }
             for (auto &b : vars)
                 if (!seen.count(b.offset))

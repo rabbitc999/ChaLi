@@ -1,0 +1,34 @@
+$macro RECORD<T>(name:ident) -> item
+struct name
+{
+    T value;
+
+    static name create(T initial)
+    {
+        self.value = initial;
+        return self;
+    }
+}
+$end_macro
+
+$RECORD<int64>(Box);
+$RECORD<String>(Label);
+
+$macro GETTER(gname:ident, field:ident) -> member
+int64 gname() { return self.field; }
+$end_macro
+
+struct Counter
+{
+    int64 value;
+    $GETTER(read, value);
+}
+
+void main()
+{
+    Box box = Box::create(42);
+    Label label = Label::create("ChaLi");
+    Counter counter;
+    counter.value = 7;
+    assert(box.value == 42 && label.value == "ChaLi" && counter.read() == 7);
+}

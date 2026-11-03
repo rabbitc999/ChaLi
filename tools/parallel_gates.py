@@ -59,7 +59,7 @@ def run_tasks(tasks, output, jobs, cwd, env=None, metadata=None, index_offset=0)
     output.mkdir(parents=True, exist_ok=True)
     results = [None] * len(tasks)
     started = time.monotonic()
-    environment = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    environment = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONUTF8="1", PYTHONIOENCODING="utf-8", CHALI_QUIET="1")
     environment.update(env or {})
     print(f"门禁工作线程：{jobs}；日志：{output}", flush=True)
 

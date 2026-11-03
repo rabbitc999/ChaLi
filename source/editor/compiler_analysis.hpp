@@ -16,6 +16,13 @@ struct TypeHint
     std::string file, name, type;
     std::size_t line = 0, column = 0;
 };
+/** @brief 来自已登记生产 AST 的宏生成公开声明，不复用有截断预算的预览树。 */
+struct GeneratedDeclaration
+{
+    std::string file, name, module, owner, kind, type, signature, macro;
+    std::size_t line = 0, column = 0;
+    bool isStatic = false;
+};
 /**
  * @brief 一个成功实例化的宏及其结构化代码预览。
  */
@@ -57,6 +64,11 @@ public:
      */
     void addType(TypeHint hint);
     /**
+     * @brief 原子替换本轮已登记的宏生成声明，语义重放不遗留旧签名。
+     * @param declarations 已解析类型、所有者及真实调用位置的声明。
+     */
+    void setGeneratedDeclarations(std::vector<GeneratedDeclaration> declarations);
+    /**
      * @brief 保存去重后的卫生展开预览，限制编辑期输出规模。
      * @param expansion 已序列化的宏模板 AST 及调用位置。
      */
@@ -74,6 +86,7 @@ private:
     bool enabled_ = false;
     std::size_t previewBytes_ = 0;
     std::vector<TypeHint> types_;
+    std::vector<GeneratedDeclaration> generated_;
     std::vector<MacroExpansion> macros_;
 };
 /**
