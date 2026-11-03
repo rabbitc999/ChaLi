@@ -44,7 +44,7 @@ chali aot app.chl --emit-llvm --out build/app
 
 ## 资源与边界
 
-编译器内嵌标准库；实际用到的操作系统接口、动态库、网络、数据库和外设仍由目标环境提供。默认构建会清理 `.chali/` 下的中间文件，只有显式 `--keep-artifacts`、`--incremental`、`--emit-llvm` 或显式指定 `--out` 时才保留，详见[构建产物与中间文件](15-artifacts.md)。
+编译器内嵌标准库；实际用到的操作系统接口、动态库、网络、数据库和外设仍由目标环境提供。默认 run／aot 在源码旁生成最终产物并清理隐藏 `.chali/` 工作区；显式 `--keep-artifacts`、`--incremental` 或 `--out` 保留相应中间内容，`--emit-llvm` 等导出格式本身不会阻止工作区清理，详见[构建产物与中间文件](15-artifacts.md)。
 
 嵌入式 Linux 用同一套后端，但产物要按目标架构重新编译：LLVM 目标三元组、C++17 运行时和系统服务都要逐项核对。「能在嵌入式 Linux 上跑」不等于「一次构建、到处交付」。
 

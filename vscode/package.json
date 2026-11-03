@@ -32,7 +32,7 @@
     "test:extension": "node tools/test-extension-host.js",
     "embed": "node tools/embed-compiler.js",
     "check": "node tools/check-manifest.js",
-    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/build.js",
+    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/llvmConfiguration.js && node test/build.js",
     "vscode:prepublish": "node tools/embed-compiler.js",
     "package": "node tools/package.js"
   },
@@ -399,13 +399,15 @@
         },
         "chali.build.outputDirectory": {
           "type": "string",
-          "default": "build",
+          "default": "",
           "description": "%chali.build.outputDirectory.description%"
         },
         "chali.build.llvmPath": {
           "type": "string",
           "default": "",
-          "description": "%chali.build.llvmPath.description%"
+          "description": "%chali.build.llvmPath.description%",
+          "minLength": 1,
+          "pattern": "\\S"
         },
         "chali.build.checked": {
           "type": "boolean",

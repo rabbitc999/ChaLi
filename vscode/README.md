@@ -2,6 +2,8 @@
 
 **English** · [简体中文](README.cn.md)
 
+Default `run` and `aot` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
+
 The extension runs the compiler's native language server (`chali lsp`). The VSIX includes a compiler; Python is needed for repository build and verification tools, not for editor language services. The compiler and extension versions are 1.0.12.
 
 ## Editing

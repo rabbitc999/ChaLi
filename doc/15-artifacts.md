@@ -11,7 +11,7 @@ ChaLi 只有一条执行路径：语义检查后的 AST 直接生成 LLVM 代码
 
 | 命令 | 产物 | 缺省位置 |
 | --- | --- | --- |
-| `chali run app.chl` | 临时可执行文件 + 运行结果 | `.chali/chali_out*`，运行结束即删除 |
+| `chali run app.chl` | 原生可执行文件 + 运行结果 | 源码同级的 `app.exe`（Linux 为 `app`），运行结束保留 |
 | `chali aot app.chl` | 原生可执行文件（Windows 为 `.exe`，Linux 无后缀） | `.chali/` 临时前缀，最终产物位于源码同级 |
 | `chali aot app.chl --emit-llvm --out build/app` | `.ll` | 指定的 `build/app` 前缀 |
 | `chali aot app.chl --target linux-arm64 --emit-obj --out build/app` | ARM64 ELF `.o` | 指定的 `build/app` 前缀 |
@@ -20,21 +20,20 @@ ChaLi 只有一条执行路径：语义检查后的 AST 直接生成 LLVM 代码
 
 ## `.chali/` 目录
 
-不给 `--out` 时，`run` 与 `aot` 的中间产物前缀是 `.chali/chali_out`。首次使用时自动创建；在
-Windows 上该目录带隐藏属性，资源管理器默认不显示。
+不给 `--out` 时，`run` 与 `aot` 在源码旁的 `.chali/build-唯一编号/` 中生成中间文件。每次构建独占子目录，不覆盖已有用户文件；Windows 上 `.chali` 保留其他属性并添加隐藏属性，资源管理器默认不显示。最终 exe、对象、机器汇编、LLVM IR 及必要 ABI 头／封送源码发布到 `.chl` 同级，成功后或失败返回时清理本次子目录，再删除空的 `.chali`。已有用户文件或其他构建仍在使用该目录时保留其内容；`.chali` 被普通文件、符号链接或重解析点占用时明确拒绝。
 
 ```text
-.chali/
-  chali_out.ll           LLVM IR
-  chali_out.llvm.log     后端诊断
-  chali_out.abi.cpp      `#abi` 桥接源码（用到外部符号时才生成）
-  chali_out.h            导出头（带 `--export` 时生成，属交付物）
+.chali/build-唯一编号/
+  app.ll           LLVM IR
+  app.llvm.log     后端诊断
+  app.abi.cpp      `#abi` 桥接源码（用到外部符号时才生成）
+  app.h            导出头（带 `--export` 时生成，属交付物）
 ```
 
-标准库核心二进制直接内嵌在编译器中，常规运行不创建标准库磁盘缓存。以下中间文件在命令成功后删除：
+标准库核心二进制直接内嵌在编译器中，常规运行不创建标准库磁盘缓存。默认工作区在编译失败、工具失败和运行结束后均清理：
 
-- `run`：删掉 `.ll`、`.llvm.log`、`.abi.cpp`，连临时可执行文件一起删；
-- `aot`：删掉同一组中间文件，保留导出的 `app.exe`；带 `--export` 时保留 `.h`。
+- `run`：先发布源码旁的可执行文件，再运行；执行结束清理工作区，最终可执行文件保留；
+- `aot`：发布请求的最终格式并清理工作区；带 `--export` 时 `.h` 同样发布到源码旁。编译／链接失败保留既有最终文件。
 
 ## 什么时候不删
 
@@ -42,11 +41,11 @@ Windows 上该目录带隐藏属性，资源管理器默认不显示。
 | --- | --- |
 | `--keep-artifacts` | 显式要求保留，排查后端或看 IR 时用 |
 | `--incremental` | 下次运行要复用缓存与产物 |
-| `--emit-llvm` | 用户要的就是 `.ll` |
-| `--emit-obj` | 用户要的就是目标 `.o` |
+| `--emit-llvm` | `.ll` 是源码旁的最终产物，工作区仍清理 |
+| `--emit-obj`／`--emit-asm` | `.o`／`.s` 是源码旁的最终产物，工作区仍清理 |
 | 显式 `--out 前缀` | 用户点名了路径，编译器不动他的目录 |
 
-增量缓存目录是 `<前缀>.chali-cache`，由 `--incremental` 生成；它按模块内容与编译开关做签名，
+显式输出时增量缓存目录是 `<前缀>.chali-cache`，默认输出使用源码旁的 `.chali/cache`，由 `--incremental` 生成；它按模块内容与编译开关做签名，
 开关一变就重新预处理。
 
 ## 交付时需要带什么

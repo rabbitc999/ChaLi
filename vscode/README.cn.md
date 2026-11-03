@@ -2,6 +2,8 @@
 
 [English](README.md) · **简体中文**
 
+默认 `run` 与 `aot` 的最终产物位于 `.chl` 同级，run 生成的可执行文件也会保留。中间文件使用源码旁 `.chali` 中的独占工作区，Windows 下隐藏，成功或失败结束后清理并删除空目录；既有用户文件保留。显式输出与保留选项继续可用。VSCode 默认同样输出到源码旁；static VSIX 不提供 `Chali › Build: Llvm Path`，external 必须配置，构建和运行均传递 `--llvm`。
+
 扩展调用编译器的原生语言服务 `chali lsp`。VSIX 内嵌编译器，编辑器语言服务不需要 Python；仓库构建和验证工具仍使用 Python。编译器与扩展版本均为 1.0.12。
 
 ## 编辑

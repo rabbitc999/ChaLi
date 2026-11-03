@@ -5,6 +5,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const locator = require('./locator');
 const { findProject } = require('./dependencies');
+const { llvmOptions } = require('./llvmConfiguration');
 
 /**
  * 构造构建参数，保持文件名和工具路径为独立 argv，不进入 shell。
@@ -16,7 +17,8 @@ const { findProject } = require('./dependencies');
  */
 function buildArguments(format, source, prefix, options = {}) {
   if (!['exe', 'object', 'assembly', 'llvm'].includes(format)) throw new Error('未知构建格式');
-  const args = ['aot', source, '--out', prefix];
+  const args = ['aot', source];
+  if (prefix) args.push('--out', prefix);
   if (options.llvmPath) args.push('--llvm', options.llvmPath);
   if (options.checked) args.push('--checked');
   if (options.checked === false) args.push('--unchecked');
@@ -94,11 +96,12 @@ function registerBuild(vscode, context, deps) {
       const compiler = locator.resolveChaLi(cwd, deps.readConfig(), context.extensionPath).chali;
       if (!compiler) throw new Error(text('未找到 ChaLi 编译器，请设置 chali.path', 'ChaLi compiler not found; configure chali.path'));
       const config = vscode.workspace.getConfiguration('chali', selected);
-      const directory = path.resolve(cwd, config.get('build.outputDirectory', 'build'));
+      const configuredDirectory = config.get('build.outputDirectory', '').trim();
+      const directory = configuredDirectory ? path.resolve(cwd, configuredDirectory) : path.dirname(selected.fsPath);
       fs.mkdirSync(directory, { recursive: true });
       const prefix = path.join(directory, path.basename(selected.fsPath, path.extname(selected.fsPath)));
-      const args = buildArguments(format, selected.fsPath, prefix, {
-        llvmPath: config.get('build.llvmPath', '').trim(), checked: config.get('build.checked', false),
+      const args = buildArguments(format, selected.fsPath, configuredDirectory ? prefix : undefined, {
+        ...llvmOptions(context.extensionPath, config), checked: config.get('build.checked', false),
       });
       const product = prefix + (format === 'assembly' ? '.s' : format === 'object' ? '.o' : format === 'llvm' ? '.ll' : (project ? project.windows : process.platform === 'win32') ? '.exe' : '');
       output.show(true);

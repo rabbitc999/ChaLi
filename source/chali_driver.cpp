@@ -6,13 +6,15 @@
  *   ② **前处理**：`%if` / `%define` 等指令（source/preprocess，
  *      语言无关的那一份），默认用空行占位，所以行号与源文件一一对应；
  *   ③ 解析：文法动作在归约的那一刻就把自己的 C 语法树建好；
- *   ④ M_Compile：降级到 ast → 出 .quad / .data → stackvm 组装执行。
+ *   ④ M_Compile：完成语义检查与 AST 降级，再由 LLVM 生成原生产物或执行。
  *
  * %main 替换内建 demo main，外壳（stdio / string / parser.hpp）仍是模板给的，
  * 正文前面自动补了 `using namespace chali;`。
  * ============================================================ */
 #include <fstream>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -38,6 +40,7 @@
 #include "chali_project.hpp"
 #include "chali_cli.hpp"
 #include "chali_aot.hpp"
+#include "chali_native_tools.hpp"
 #include "ast/ast.hpp"
 #include "chali_aot_llvm.hpp"
 #include "abi/chali_abi_registry.hpp"
@@ -179,8 +182,8 @@ void PrintUsage(std::FILE *out)
              "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n",
              "  --no-stdlib-cache      关闭内嵌标准库预编译（每次完整解析，不写缓存）\n",
              "  --no-threads           关闭隔离的宿主线程执行（缺省启用）\n",
-             "  --out 前缀             生成产物的文件名前缀（缺省 .chali/chali_out）\n",
-             "  --keep-artifacts       保留 .chali 下的中间产物（缺省运行或导出完成后清理）\n",
+             "  --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n",
+             "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n",
              "  --raw                  跳过前处理：源文件原样喂给解析器\n",
              "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
@@ -206,35 +209,96 @@ const char *chali_development_tool(const char *name)
     return source.c_str();
 }
 
-/**
- * @brief 解析前端命令行参数并执行编译或运行任务。
- * @param argc 命令行参数数量。
- * @param argv 命令行参数指针数组。
- * @retval 进程退出状态，0 表示成功，非零表示失败。
- */
-/**
- * @brief 删除 .chali 下的中间产物，保留显式导出物。
- * @param prefix 中间产物前缀（缺省 .chali/chali_out）。
- * @param withExecutable 是否连运行用的临时可执行文件一起删除。
- * @param withHeader 是否连 ABI 导出头一起删除；带 `--export` 时头文件是交付物，必须留下。
- * @return 无。
- */
-static void RemoveIntermediateArtifacts(const Memory::String &prefix, bool withExecutable, bool withHeader)
+/** @brief 默认构建独占源码旁的隐藏工作区，仅回收本次创建的内容。 */
+struct DefaultArtifactDirectory
 {
-    for (const char *suffix : { ".quad", ".data.bin", ".layout", ".ll", ".llvm.log", ".abi.cpp" })
+    std::filesystem::path root, work;
+    bool retain;
+    /**
+     * @brief 在源码旁创建独占工作区，拒绝符号链接或非目录占用。
+     * @param source 源码路径；标准输入使用当前目录。
+     * @param keep 是否显式保留中间产物。
+     */
+    DefaultArtifactDirectory(const char *source, bool keep) : retain(keep)
     {
+        namespace fs = std::filesystem;
+        const auto parent = fs::weakly_canonical(source ? fs::absolute(fs::u8path(source)).parent_path() : fs::current_path());
+        root = parent / ".chali";
         std::error_code error;
-        std::filesystem::remove(Memory::u8path(prefix + suffix), error);
+        const auto status = fs::symlink_status(root, error);
+        if (fs::is_symlink(status) || (fs::exists(status) && !fs::is_directory(status)))
+            throw std::runtime_error("默认工作目录 .chali 必须是普通目录");
+        error.clear();
+        const bool createdRoot = fs::create_directory(root, error);
+        if (error) throw std::runtime_error("无法创建默认工作目录，系统错误码 " + std::to_string(error.value()));
+#ifdef _WIN32
+        const auto attributes = GetFileAttributesW(root.c_str());
+        if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_REPARSE_POINT)
+            || !SetFileAttributesW(root.c_str(), attributes | FILE_ATTRIBUTE_HIDDEN))
+        {
+            if (createdRoot) fs::remove(root, error);
+            throw std::runtime_error("无法设置默认工作目录的隐藏属性");
+        }
+#else
+        (void)createdRoot;
+#endif
+        for (unsigned attempt = 0; attempt < 100; ++attempt)
+        {
+            const auto ticks = std::chrono::steady_clock::now().time_since_epoch().count();
+            const auto candidate = root / ("build-" + std::to_string(ticks) + "-" + std::to_string(attempt));
+            if (fs::create_directory(candidate, error)) { work = candidate; return; }
+            if (error && error != std::errc::file_exists) break;
+            error.clear();
+        }
+        fs::remove(root, error);
+        throw std::runtime_error("无法创建独占的默认构建工作区");
     }
-    if (withHeader)
+    /** @brief 在所有成功及失败退出路径回收独占工作区，只删除空的 .chali 容器。 */
+    ~DefaultArtifactDirectory()
     {
+        if (retain || work.empty()) return;
         std::error_code error;
-        std::filesystem::remove(Memory::u8path(prefix + ".h"), error);
+        if (work.parent_path() != root || work.filename().u8string().rfind("build-", 0) != 0)
+        {
+            std::fputs("chali: 默认工作区身份不符，拒绝清理\n", stderr);
+            return;
+        }
+        const auto status = std::filesystem::symlink_status(work, error);
+        if ((!error && std::filesystem::is_symlink(status)) || std::filesystem::weakly_canonical(root, error) != root)
+        {
+            std::fputs("chali: 默认工作区已变为符号链接，拒绝清理\n", stderr);
+            return;
+        }
+        error.clear();
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        do
+        {
+            error.clear();
+            std::filesystem::remove_all(work, error);
+#ifdef _WIN32
+            if (error == std::errc::permission_denied && std::chrono::steady_clock::now() < deadline)
+                std::this_thread::sleep_for(std::chrono::milliseconds(25));
+            else break;
+#else
+            (void)deadline;
+            break;
+#endif
+        } while (true);
+        if (error)
+        {
+            std::fprintf(stderr, "chali: 默认工作区清理失败，系统错误码 %d\n", error.value());
+            return;
+        }
+        if (!std::filesystem::is_empty(root, error))
+        {
+            if (error) std::fprintf(stderr, "chali: 默认工作目录检查失败，系统错误码 %d\n", error.value());
+            return;
+        }
+        std::filesystem::remove(root, error);
+        if (error && error != std::errc::directory_not_empty)
+            std::fprintf(stderr, "chali: 默认工作目录清理失败，系统错误码 %d\n", error.value());
     }
-    if (!withExecutable) return;
-    std::error_code error;
-    std::filesystem::remove(Memory::u8path(prefix + ".exe"), error);
-}
+};
 
 /**
  * @brief 编译或执行源码，并将前端分配失败转换为有界的非零退出诊断。
@@ -787,16 +851,6 @@ try
         return 0;
     }
 
-    /* 缺省中间产物目录：Windows 上设为隐藏，避免污染工程目录；--out 显式指定时不动用户的目录。 */
-    if (!outGiven && prefix.rfind(".chali", 0) == 0)
-    {
-        std::error_code artifactDirectoryError;
-        std::filesystem::create_directories(".chali", artifactDirectoryError);
-#ifdef _WIN32
-        SetFileAttributesA(".chali", FILE_ATTRIBUTE_HIDDEN);
-#endif
-    }
-
     /* 硬实时禁止反射：默认开启的那份自动让位，只有用户显式点名要反射才算冲突。 */
     if (hardRealtime && reflectionEnabled)
     {
@@ -940,6 +994,20 @@ try
         PrintUsage(stdout);
         return 0;
     }
+    std::unique_ptr<DefaultArtifactDirectory> defaultArtifacts;
+    if (!outGiven && aot && !checkOnly && !depsOnly)
+    {
+        try
+        {
+            defaultArtifacts = std::make_unique<DefaultArtifactDirectory>(path, keepArtifacts || incremental);
+            const auto name = path ? std::filesystem::u8path(path).stem() : std::filesystem::path("chali_out");
+            prefix = (defaultArtifacts->work / name).u8string();
+        } catch (const std::exception &failure)
+        {
+            std::fprintf(stderr, "chali: %s\n", failure.what());
+            return 1;
+        }
+    }
     Memory::UniquePtr<chali_incremental::Cache> cache;
     if (incremental)
     {
@@ -951,7 +1019,9 @@ try
         for (const auto &directory : includeDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
         pathSignature += "import paths\n";
         for (const auto &directory : importDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
-        cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? prefix + ".chali-cache" : cacheDirectory, argv[0],
+        const Memory::String defaultCache = defaultArtifacts ? Memory::String((defaultArtifacts->root / "cache").u8string().c_str())
+                                                             : prefix + ".chali-cache";
+        cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? defaultCache : cacheDirectory, argv[0],
                                                              searchDirs, defineItems,
                                                              pathSignature,
                                                              Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n")
@@ -1622,14 +1692,16 @@ try
                 aotOptions.exports.push_back(label);
         /* 缺省导出物放在源文件同级（Windows 带 .exe，其他平台无后缀）；中间产物仍在 .chali/ 下。 */
         Memory::String exportPrefix = prefix;
-        if (!run && !outGiven && path != nullptr)
+        if (!outGiven && path != nullptr)
         {
             const std::filesystem::path sourcePath = std::filesystem::u8path(path);
             const std::filesystem::path directory = sourcePath.parent_path();
             const std::filesystem::path stem = std::filesystem::u8path(sourcePath.stem().u8string());
             exportPrefix = (directory.empty() ? stem : directory / stem).u8string();
         }
-        aotOptions.outputPrefix = exportPrefix;
+        else if (defaultArtifacts)
+            exportPrefix = (std::filesystem::current_path() / "chali_out").u8string();
+        aotOptions.outputPrefix = defaultArtifacts ? prefix : exportPrefix;
         aotOptions.memoryBytes = memoryBytes;
         aotOptions.stepLimit = stepLimit;
         aotOptions.threadsEnabled = threadsEnabled;
@@ -1666,22 +1738,29 @@ try
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
-        /* 缺省运行或导出完成后清理中间产物；--out 显式给路径时按用户要求全部保留，
-         * --keep-artifacts、--incremental 与 --emit-llvm 同样保留。 */
-        const bool cleanArtifacts = !outGiven && !keepArtifacts && !incremental && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly && !aotOptions.emitAssemblyOnly;
-        /* 带 `--export` 时 ABI 头是交给宿主代码的交付物，不能当中间产物删掉。 */
-        const bool withHeader = aotOptions.exports.empty();
+        if (defaultArtifacts)
+        {
+            const char *extension = aotOptions.emitLLVMOnly ? ".ll" : aotOptions.emitObjectOnly ? ".o" :
+                                    aotOptions.emitAssemblyOnly ? ".s" : aotOptions.shared ? (selectedTarget.windows ? ".dll" : ".so") :
+                                    selectedTarget.windows ? ".exe" : "";
+            std::vector<const char *> products{ extension };
+            if (std::filesystem::is_regular_file(Memory::u8path(prefix + ".h"))) products.push_back(".h");
+            if ((aotOptions.emitObjectOnly || aotOptions.emitAssemblyOnly) && !request.abiGlue.empty()) products.push_back(".abi.cpp");
+            for (const auto suffix : products)
+            {
+                std::string error;
+                if (!chali_native_tools::publish(Memory::u8path(prefix + suffix), Memory::u8path(exportPrefix + suffix), error))
+                {
+                    std::fprintf(stderr, "chali: 无法发布默认产物：%s\n", error.c_str());
+                    return 1;
+                }
+            }
+        }
         if (run)
         {
-            const int exitStatus = chali_aot::executeNative(request.options, programArguments);
-            if (cleanArtifacts) RemoveIntermediateArtifacts(prefix, true, withHeader);
-            return exitStatus;
-        }
-        if (cleanArtifacts)
-        {
-            /* 四元式产物留在 prefix（.chali/）下，LLVM 侧产物跟着导出前缀走，两边都要清。 */
-            RemoveIntermediateArtifacts(prefix, false, withHeader);
-            if (exportPrefix != prefix) RemoveIntermediateArtifacts(exportPrefix, false, withHeader);
+            auto executionOptions = request.options;
+            executionOptions.outputPrefix = exportPrefix;
+            return chali_aot::executeNative(executionOptions, programArguments);
         }
     }
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);

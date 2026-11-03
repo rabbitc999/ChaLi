@@ -188,7 +188,16 @@ async function runCurrentFile(context) {
   }
 
   const file = editor.document.uri.fsPath;
-  const command = runner.buildRunCommand(resolved.chali, file);
+  let command;
+  try {
+    const options = require('./src/llvmConfiguration').llvmOptions(context.extensionPath,
+      vscode.workspace.getConfiguration('chali', editor.document.uri));
+    command = runner.buildRunCommand(resolved.chali, file, options);
+  } catch (error) {
+    logLine(`运行失败：${error.message}`);
+    await vscode.window.showErrorMessage(error.message);
+    return;
+  }
   // 终端带着 cwd 建：命令里就不用 `cd`，Windows PowerShell / cmd / POSIX shell 都一样。
   if (runTerminal) {
     runTerminal.dispose();

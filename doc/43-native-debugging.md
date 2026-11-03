@@ -4,6 +4,8 @@
 [English](en/43-native-debugging.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
+Windows 的线程调试观察缓冲使用 FLS 管理的独立宿主状态；线程退出时撤销目录项并释放快照缓冲，模块卸载前释放槽及剩余状态，避免旧 MinGW 仿真 TLS 先释放存储、后调用 C++ 析构造成失效访问。其他平台继续使用原生 TLS 路径。
+
 ChaLi 1.0.8 的 `run` 使用 checked AOT 编译执行，`aot` 默认生成 unchecked 原生产物。编译器不再内置 VM 执行器；`.svmb` 导出已删除，新项目使用 AOT 原生产物。调试使用真实机器码、DWARF 源码行和帧槽，不依赖 VM 断点或解释执行状态。
 
 ## VS Code

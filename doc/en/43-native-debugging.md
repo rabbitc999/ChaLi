@@ -4,6 +4,8 @@
 **English** · [简体中文](../43-native-debugging.md)
 <!-- END LANGUAGE NAVIGATION -->
 
+On Windows, per-thread debug observation buffers use FLS-managed heap state. Thread exit retires the directory entry and releases its snapshot buffers; module unload releases the FLS slot and remaining states. This avoids accessing emulated TLS storage after older MinGW runtimes have freed it. Non-Windows builds retain their native TLS path.
+
 ChaLi 1.0.8 executes `run` through checked AOT compilation, while `aot` defaults to an unchecked native export. The compiler no longer embeds a VM execution engine; `.svmb` export has been removed; use native AOT artifacts. Debugging uses machine code, DWARF source locations and actual frame slots, rather than VM breakpoints or interpreter state.
 
 ## VS Code

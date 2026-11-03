@@ -62,7 +62,7 @@ async function main() {
       await client.request('initialize', { adapterID: 'chali' });
       await client.request('launch', { executable: prefix + (process.platform === 'win32' ? '.exe' : ''), cwd: work });
       await client.event('initialized');
-      await client.request('setBreakpoints', { source: { path: source }, breakpoints: [{ line: 7 }] });
+      await client.request('setBreakpoints', { source: { path: source }, breakpoints: [{ line: 7 }, { line: 23 }] });
       await client.request('configurationDone');
       const threads = [];
       let previous;
@@ -83,6 +83,14 @@ async function main() {
         await client.request('continue', { threadId: stop.threadId });
       }
       assert.notEqual(threads[0], threads[1]);
+      const returned = await client.event('stopped');
+      assert.equal(returned.reason, 'breakpoint', JSON.stringify(returned));
+      assert.equal(returned.threadId, threads[0]);
+      const remaining = (await client.request('threads')).threads;
+      assert.equal(remaining.some(thread => thread.id === threads[1]), false);
+      const frame = (await client.request('stackTrace', { threadId: returned.threadId })).stackFrames[0];
+      assert.equal((await client.request('evaluate', { frameId: frame.id, expression: 'rootData[0]' })).result, '111');
+      await client.request('continue', { threadId: returned.threadId });
       assert.equal((await client.event('exited')).exitCode, 0);
       await client.event('terminated');
     } finally { await client.close(); }

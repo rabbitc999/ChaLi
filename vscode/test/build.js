@@ -58,6 +58,15 @@ async function main() {
       result = spawnSync(prefix + '.exe', [], { cwd: directory, encoding: 'utf8' });
       assert.equal(result.status, 0, result.stderr); assert.equal(result.stdout.replace(/\r\n/g, '\n'), 'build 42\n');
     }
+    const configuredOutput = settings['build.outputDirectory'];
+    settings['build.outputDirectory'] = '';
+    await commands.get('chali.build')(uri(source));
+    assert.deepEqual(errors, []);
+    const adjacent = path.join(directory, 'hello & 中文') + (process.platform === 'win32' ? '.exe' : '');
+    assert.ok(fs.statSync(adjacent).size > 0);
+    assert.equal(fs.existsSync(path.join(directory, '.chali')), false);
+    assert.equal(fs.existsSync(path.join(directory, 'hello & 中文.ll')), false);
+    settings['build.outputDirectory'] = configuredOutput;
     const successes = messages.filter((s) => s.includes('构建完成')).length;
     fs.writeFileSync(source, 'void main() { missing_symbol(); }\n');
     await commands.get('chali.buildExe')(uri(source));
@@ -90,7 +99,8 @@ async function main() {
       async save() { ++configSaved; fs.writeFileSync(manifestPath, this.text); this.isDirty = false; return true; } };
     fs.writeFileSync(manifestPath, '');
     vscode.workspace.textDocuments.push(manifest);
-    settings['build.llvmPath'] = '';
+    if (JSON.parse(fs.readFileSync(path.join(context.extensionPath, 'bin/chali-build-info.json'), 'utf8')).llvm === 'static')
+      settings['build.llvmPath'] = '';
     try {
       await client.start(); await client.initialize();
       registerBuild(vscode, context, { readConfig: () => ({ chaliPath: compiler }),

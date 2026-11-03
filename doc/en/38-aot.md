@@ -4,6 +4,8 @@
 **English** · [简体中文](../38-aot.md)
 <!-- END LANGUAGE NAVIGATION -->
 
+Default `run` and `aot` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
+
 Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
 
 `chali aot input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.

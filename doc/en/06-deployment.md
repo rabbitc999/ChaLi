@@ -44,7 +44,7 @@ Writes `.quad`, `.data.bin` and `.layout` without linking or executing — usefu
 
 ## Resources and boundaries
 
-The compiler embeds its standard library; operating-system interfaces, dynamic libraries, networks, databases and peripherals remain provided by the target environment. Default builds clean the intermediates under `.chali/`; see [build artifacts and intermediates](../15-artifacts.md) for the four exceptions.
+The compiler embeds its standard library; operating-system interfaces, dynamic libraries, networks, databases and peripherals remain provided by the target environment. Default run/aot builds publish final files beside the source and clean their hidden `.chali/` workspace on success or failure. Explicit `--keep-artifacts`, `--incremental` or `--out` retains the corresponding intermediate content; selecting LLVM IR, object or assembly output alone does not retain the workspace. See [build artifacts and intermediates](../15-artifacts.md).
 
 Embedded Linux uses the same back end, but artifacts must be rebuilt for the target architecture: LLVM triple, C++17 runtime and system services all need checking. "Runs on embedded Linux" is not "build once, deliver anywhere".
 

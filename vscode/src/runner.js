@@ -27,8 +27,8 @@ function quote(value) {
  * @param {string} filePath 要运行的 `.chl` 文件。
  * @returns {string} 一行命令。
  */
-function buildRunCommand(chaliPath, filePath) {
-  return `${quote(chaliPath)} run ${quote(filePath)}`;
+function buildRunCommand(chaliPath, filePath, options = {}) {
+  return `${quote(chaliPath)} run ${quote(filePath)}` + (options.llvmPath ? ` --llvm ${quote(options.llvmPath)}` : '');
 }
 
 module.exports = { buildRunCommand, quote };

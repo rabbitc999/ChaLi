@@ -643,14 +643,49 @@ struct DebugMemoryState
         record->state = (previous | 1u) + 1;
     }
 };
+#ifdef _WIN32
+/**
+ * @brief 在线程退出或模块卸载时回收独立观察状态，不访问编译器仿真 TLS 存储。
+ * @param value 当前 FLS 槽拥有的观察状态，可为空。
+ * @return 无返回值。
+ */
+void NTAPI releaseDebugMemoryState(void *value) noexcept
+{
+    delete static_cast<DebugMemoryState *>(value);
+}
+/** @brief 用 Windows 生命周期回调管理观察状态，避开旧 MinGW 仿真 TLS 的析构顺序。 */
+struct DebugMemorySlot
+{
+    DWORD index;
+    /** @brief 分配单个模块级观察槽，资源不足时仅使观察发布失败。 */
+    DebugMemorySlot() : index(FlsAlloc(releaseDebugMemoryState))
+    {
+        if (index == FLS_OUT_OF_INDEXES) throw std::runtime_error("无法创建调试观察槽");
+    }
+    /** @brief 模块卸载前撤销槽及尚存状态，避免留下指向已卸载代码的回调。 */
+    ~DebugMemorySlot() { FlsFree(index); }
+};
+#endif
 /**
  * @brief 仅在调试发布首次使用时建立线程观察状态，避免发布程序初始化额外 TLS 析构。
  * @return 当前线程的调试观察状态。
  */
 DebugMemoryState &debugMemoryState()
 {
+#ifdef _WIN32
+    static DebugMemorySlot slot;
+    auto *state = static_cast<DebugMemoryState *>(FlsGetValue(slot.index));
+    if (!state)
+    {
+        auto created = std::make_unique<DebugMemoryState>();
+        if (!FlsSetValue(slot.index, created.get())) throw std::runtime_error("无法登记调试观察状态");
+        state = created.release();
+    }
+    return *state;
+#else
     static thread_local DebugMemoryState state;
     return state;
+#endif
 }
 
 /**

@@ -149,9 +149,11 @@ function main() {
     check(`注册了构建命令 ${command}`, commands.some((item) => item.command === command));
     check(`声明了构建激活事件 ${command}`, activationEvents.includes(`onCommand:${command}`));
   }
-  for (const setting of ['chali.build.outputDirectory', 'chali.build.llvmPath', 'chali.build.checked']) {
+  for (const setting of ['chali.build.outputDirectory', 'chali.build.checked']) {
     check(`声明了 ${setting}`, !!properties[setting]);
   }
+  check('LLVM 路径设置按发布变体提供', pkg.chaliLLVMVariant === 'static'
+    ? !properties['chali.build.llvmPath'] : !!properties['chali.build.llvmPath']);
 
   // 5. 折叠与图标。
   const menus = contributes.menus || {};

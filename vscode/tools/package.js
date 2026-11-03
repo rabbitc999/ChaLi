@@ -72,8 +72,9 @@ function run(command, args, shell = false) {
         stdio: 'inherit',
       });
   if (result.status !== 0) {
-    console.error(`\n失败（退出码 ${result.status ?? 'null'}）：${command}`);
-    process.exit(result.status || 1);
+    const error = new Error(`失败（退出码 ${result.status ?? 'null'}）：${command}`);
+    error.exitCode = result.status || 1;
+    throw error;
   }
 }
 
@@ -93,68 +94,68 @@ function vsce() {
 function main() {
   console.log(`== 打包 ${manifest.displayName || manifest.name} ${manifest.version} ==`);
   run(process.execPath, [path.join('tools', 'embed-compiler.js')]);
-  run(process.execPath, [path.join('tools', 'check-manifest.js')]);
-  if (!SKIP_TESTS) {
-    run(process.execPath, [path.join('test', 'debugConfiguration.js')]);
-    run(process.execPath, [path.join('test', 'debugIntegration.js')]);
-    run(process.execPath, [path.join('test', 'debugMetadata.js')]);
-    run(process.execPath, [path.join('test', 'debugMemory.js')]);
-    run(process.execPath, [path.join('test', 'debugFrameContext.js')]);
-    run(process.execPath, [path.join('test', 'debugReferencesNative.js')]);
-    run(process.execPath, [path.join('test', 'debugStorageLifetimeNative.js')]);
-    run(process.execPath, [path.join('test', 'debugValue.js')]);
-    run(process.execPath, [path.join('test', 'debugObjectMemory.js')]);
-    run(process.execPath, [path.join('test', 'debugContainers.js')]);
-    run(process.execPath, [path.join('test', 'debugContainerMetadata.js')]);
-    run(process.execPath, [path.join('test', 'debugContainersNative.js')]);
-    run(process.execPath, [path.join('test', 'debugCallbackContext.js')]);
-    run(process.execPath, [path.join('test', 'debugDynamicValues.js')]);
-    run(process.execPath, [path.join('test', 'debugInterfacesNative.js')]);
-    run(process.execPath, [path.join('test', 'debugClosureValues.js')]);
-    run(process.execPath, [path.join('test', 'debugClosuresNative.js')]);
-    run(process.execPath, [path.join('test', 'debugExpression.js')]);
-    run(process.execPath, [path.join('test', 'debugExpressionNative.js')]);
-    run(process.execPath, [path.join('test', 'debugAssignment.js')]);
-    run(process.execPath, [path.join('test', 'debugStringAssignment.js')]);
-    run(process.execPath, [path.join('test', 'debugStringAssignmentNative.js')]);
-    run(process.execPath, [path.join('test', 'debugAssignmentNative.js')]);
-    run(process.execPath, [path.join('test', 'debugMirrorAssignment.js')]);
-    run(process.execPath, [path.join('test', 'debugMirrorAssignmentNative.js')]);
-    run(process.execPath, [path.join('test', 'debugThreads.js')]);
-    run(process.execPath, [path.join('test', 'debugThreadsNative.js')]);
-    run(process.execPath, [path.join('test', 'debugIdentity.js')]);
-    run(process.execPath, [path.join('test', 'debugSourceMap.js')]);
-    run(process.execPath, [path.join('test', 'debugSourceMapNative.js')]);
-    run(process.execPath, [path.join('test', 'debugAttach.js')]);
-    run(process.execPath, [path.join('test', 'debugAttachNative.js')]);
-    run(process.execPath, [path.join('test', 'debugRemote.js')]);
-    run(process.execPath, [path.join('test', 'debugOptimized.js')]);
-    run(process.execPath, [path.join('test', 'debugOptimizedNative.js')]);
-    run(process.execPath, [path.join('test', 'debugLibraries.js')]);
-    run(process.execPath, [path.join('test', 'debugLibrariesNative.js')]);
-    run(process.execPath, [path.join('test', 'debugFrames.js')]);
-    run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
-    run(process.execPath, [path.join('test', 'debugFailure.js')]);
-    run(process.execPath, [path.join('test', 'debugBreakpoints.js')]);
-    run(process.execPath, [path.join('test', 'debugProtocol.js')]);
-    run(process.execPath, [path.join('test', 'smoke.js')]);
-    run(process.execPath, [path.join('test', 'dependencies.js')]);
-    run(process.execPath, [path.join('test', 'macros.js')]);
-    run(process.execPath, [path.join('test', 'lspCancellation.js')]);
-    run(process.execPath, [path.join('test', 'semanticProviders.js')]);
-    run(process.execPath, [path.join('test', 'editorIntegration.js')]);
-    run(process.execPath, [path.join('test', 'macroHighlighting.js')]);
-    run(process.execPath, [path.join('test', 'build.js')]);
-    run(process.execPath, [path.join('tools', 'test-extension-host.js')]);
-  }
-  const [command, prefix] = vsce();
-  fs.mkdirSync(outDir, { recursive: true });
   const manifestPath = path.join(EXT_ROOT, 'package.json');
   const original = fs.readFileSync(manifestPath);
   try {
-    const releaseManifest = JSON.parse(original);
-    releaseManifest.chaliLLVMVariant = variant;
-    fs.writeFileSync(manifestPath, JSON.stringify(releaseManifest, null, 2) + '\n');
+    const releaseManifest = require('../src/llvmConfiguration').variantManifest(JSON.parse(original), variant);
+    if (!DRY_RUN) fs.writeFileSync(manifestPath, JSON.stringify(releaseManifest, null, 2) + '\n');
+    run(process.execPath, [path.join('tools', 'check-manifest.js')]);
+    if (!SKIP_TESTS) {
+      run(process.execPath, [path.join('test', 'debugConfiguration.js')]);
+      run(process.execPath, [path.join('test', 'debugIntegration.js')]);
+      run(process.execPath, [path.join('test', 'debugMetadata.js')]);
+      run(process.execPath, [path.join('test', 'debugMemory.js')]);
+      run(process.execPath, [path.join('test', 'debugFrameContext.js')]);
+      run(process.execPath, [path.join('test', 'debugReferencesNative.js')]);
+      run(process.execPath, [path.join('test', 'debugStorageLifetimeNative.js')]);
+      run(process.execPath, [path.join('test', 'debugValue.js')]);
+      run(process.execPath, [path.join('test', 'debugObjectMemory.js')]);
+      run(process.execPath, [path.join('test', 'debugContainers.js')]);
+      run(process.execPath, [path.join('test', 'debugContainerMetadata.js')]);
+      run(process.execPath, [path.join('test', 'debugContainersNative.js')]);
+      run(process.execPath, [path.join('test', 'debugCallbackContext.js')]);
+      run(process.execPath, [path.join('test', 'debugDynamicValues.js')]);
+      run(process.execPath, [path.join('test', 'debugInterfacesNative.js')]);
+      run(process.execPath, [path.join('test', 'debugClosureValues.js')]);
+      run(process.execPath, [path.join('test', 'debugClosuresNative.js')]);
+      run(process.execPath, [path.join('test', 'debugExpression.js')]);
+      run(process.execPath, [path.join('test', 'debugExpressionNative.js')]);
+      run(process.execPath, [path.join('test', 'debugAssignment.js')]);
+      run(process.execPath, [path.join('test', 'debugStringAssignment.js')]);
+      run(process.execPath, [path.join('test', 'debugStringAssignmentNative.js')]);
+      run(process.execPath, [path.join('test', 'debugAssignmentNative.js')]);
+      run(process.execPath, [path.join('test', 'debugMirrorAssignment.js')]);
+      run(process.execPath, [path.join('test', 'debugMirrorAssignmentNative.js')]);
+      run(process.execPath, [path.join('test', 'debugThreads.js')]);
+      run(process.execPath, [path.join('test', 'debugThreadsNative.js')]);
+      run(process.execPath, [path.join('test', 'debugIdentity.js')]);
+      run(process.execPath, [path.join('test', 'debugSourceMap.js')]);
+      run(process.execPath, [path.join('test', 'debugSourceMapNative.js')]);
+      run(process.execPath, [path.join('test', 'debugAttach.js')]);
+      run(process.execPath, [path.join('test', 'debugAttachNative.js')]);
+      run(process.execPath, [path.join('test', 'debugRemote.js')]);
+      run(process.execPath, [path.join('test', 'debugOptimized.js')]);
+      run(process.execPath, [path.join('test', 'debugOptimizedNative.js')]);
+      run(process.execPath, [path.join('test', 'debugLibraries.js')]);
+      run(process.execPath, [path.join('test', 'debugLibrariesNative.js')]);
+      run(process.execPath, [path.join('test', 'debugFrames.js')]);
+      run(process.execPath, [path.join('test', 'debugDisassemble.js')]);
+      run(process.execPath, [path.join('test', 'debugFailure.js')]);
+      run(process.execPath, [path.join('test', 'debugBreakpoints.js')]);
+      run(process.execPath, [path.join('test', 'debugProtocol.js')]);
+      run(process.execPath, [path.join('test', 'smoke.js')]);
+      run(process.execPath, [path.join('test', 'dependencies.js')]);
+      run(process.execPath, [path.join('test', 'macros.js')]);
+      run(process.execPath, [path.join('test', 'lspCancellation.js')]);
+      run(process.execPath, [path.join('test', 'semanticProviders.js')]);
+      run(process.execPath, [path.join('test', 'editorIntegration.js')]);
+      run(process.execPath, [path.join('test', 'macroHighlighting.js')]);
+      run(process.execPath, [path.join('test', 'llvmConfiguration.js')]);
+      run(process.execPath, [path.join('test', 'build.js')]);
+      run(process.execPath, [path.join('tools', 'test-extension-host.js')]);
+    }
+    const [command, prefix] = vsce();
+    fs.mkdirSync(outDir, { recursive: true });
     run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository',
       '--baseContentUrl', 'https://github.com/rabbitc999/ChaLi/blob/master/vscode',
       '--baseImagesUrl', 'https://github.com/rabbitc999/ChaLi/raw/master/vscode'],
@@ -170,4 +171,4 @@ function main() {
   console.log(`\n已打包：${path.relative(EXT_ROOT, vsix)}（${(size / 1048576).toFixed(1)} MB）`);
 }
 
-main();
+try { main(); } catch (error) { console.error(error.message); process.exitCode = error.exitCode || 1; }
