@@ -345,7 +345,7 @@ class Converter:
             m = re.match(r'^第 (\d+) 章 (.+)$', text)
             if m:
                 return '\\chapter{%s}\n\\label{ch:%s}' % (m.group(2), m.group(1).zfill(2))
-            m = re.match(r'^附录 ([AB]) (.+)$', text)
+            m = re.match(r'^附录 ([ABC]) (.+)$', text)
             if m:
                 return '\\chapter{%s}\n\\label{ch:app%s}' % (m.group(2), m.group(1))
             return '\\chapter{%s}' % text
