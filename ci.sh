@@ -193,8 +193,7 @@ run_required_step "编译无墓碑分配身份回归" g++ -std=c++17 -O2 -DCHALI
 run_step "运行百万次分配身份回归" tmp/ci/allocation-identity
 run_required_step "编译地址视图与调试内存目录回归" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=1 -Isource -Ilibrary -Isource/allocator tests/chali_heap_address_view.cpp source/ircode/runtime_heap.cpp source/allocator/system_arena.cpp -o tmp/ci/heap-address-view
 run_step "运行地址视图与调试内存目录回归" tmp/ci/heap-address-view
-run_required_step "编译直通胶水入口表单元测试" g++ -O2 -Isource tests/chali_abi_table.cpp -x c source/abi/*.c -x none -o tmp/ci/chali-abi-table
-run_step "运行直通胶水入口表单元测试" tmp/ci/chali-abi-table
+run_step "运行 C ABI 契约与直通胶水入口表回归" "$PYTHON" tests/chali_c_api_contract.py
 run_step "运行数组按值传参与引用回归" "$PYTHON" tests/chali_array_parameters.py --chali "$CHALI_BIN"
 run_required_step "编译字面量数据合并单元测试" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=0 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 source/ast/test_ast.cpp source/ast/ast.cpp source/ast/ast_type.cpp source/ast/ast_node.cpp source/ast/ast_data.cpp -o tmp/ci/simple-ast-literals
 run_step "运行字面量数据合并单元测试" tmp/ci/simple-ast-literals
@@ -343,7 +342,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "核对番外原文与双语教程例程" "$PYTHON" tests/chali_book_rewrite.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
     run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
-    run_step "运行原生预编译库完整模块回归" "$PYTHON" tools/run_module_gates.py libraries --chali "$CHALI_BIN" --jobs 1
+    run_step "运行库包格式、摘要与生成器资产回归" "$PYTHON" tools/run_module_gates.py libraries --chali "$CHALI_BIN" --jobs 1
     run_step "运行真实 VSCode 扩展宿主调试与进程清理回归" "$PYTHON" tests/chali_vscode_extension_host.py --chali "$CHALI_BIN"
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"
     run_step "运行反射学生管理的持久化与校验回归" "$PYTHON" tests/chali_reflection_students.py --compiler "$CHALI_BIN"
@@ -352,6 +351,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行默认模块与外部宏补全回归" "$PYTHON" tests/chali_lsp_macro_completion.py --chali "$CHALI_BIN"
     run_step "运行宏生成结构体与成员的语言服务回归" "$PYTHON" tests/chali_lsp_generated_symbols.py --chali "$CHALI_BIN"
     run_step "运行宏连续条件分支与 JSON_FIELDS 回归" "$PYTHON" tests/chali_macro_else_if.py --chali "$CHALI_BIN"
+    run_step "运行宏类型模式、子字段和递归 JSON 回归" "$PYTHON" tests/chali_macro_type_patterns.py --chali "$CHALI_BIN"
     run_step "运行编译完成提示与静默边界回归" "$PYTHON" tests/chali_completion_notice.py --chali "$CHALI_BIN"
     run_step "运行函数与宏重载提示回归" "$PYTHON" tests/chali_lsp_overloads.py --chali "$CHALI_BIN"
     run_step "验证内嵌资产 SHA256 与中文输出" "$PYTHON" tests/embedded_asset_cache.py
